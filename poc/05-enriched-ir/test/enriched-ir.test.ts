@@ -143,8 +143,21 @@ describe('fixture-family sufficiency', () => {
 			'derived',
 		]);
 		expect(component.props.entries).toContainEqual(
-			expect.objectContaining({ sourceName: 'label', localName: 'displayLabel', alias: true }),
+			expect.objectContaining({ sourceName: 'label', localName: 'displayLabel', alias: true, graphNodeId: 'prop:props', path: ['label'] }),
 		);
+		expect(ir.records.aliases.find((alias) => alias.name === 'displayLabel')).toEqual(
+			expect.objectContaining({ target: 'props.label', graphNodeId: 'prop:props', path: ['label'] }),
+		);
+		expect(component.locals.find((local) => local.names.includes('prefix'))?.reads).toContainEqual(
+			{ graphNodeId: 'prop:props', path: ['label'], via: 'alias' },
+		);
+		const derived = ir.records.bindings.find((binding) => binding.id === 'computed:derived')!;
+		expect(derived.computed?.reads).toContainEqual(
+			{ graphNodeId: 'prop:props', path: ['label'], via: 'local' },
+		);
+		expect(derived.reads).toContainEqual({ graphNodeId: 'prop:props', path: ['label'] });
+		expect(component.evaluation).toEqual({ ordinaryLocals: 'once-per-instance', computedBindings: 'reactive' });
+		expect(ir.module.exports).toEqual([{ kind: 'named', componentName: 'RenderOnce', exportedName: 'RenderOnce' }]);
 		expect(callbackNames(component.locals[0]!.initializer!)).toEqual(['setup']);
 		expect(component.guards).toHaveLength(1);
 		expect(component.guards[0]!.whenTrue.kind).toBe('template');
@@ -167,6 +180,34 @@ describe('fixture-family sufficiency', () => {
 		expect(walkTemplate(repeat.row).filter((node) => node.kind === 'host').map((node) => (node as TemplateHost).tag)).toEqual([
 			'li', 'input', 'input', 'button',
 		]);
+		const summarize = (node: TemplateNode): unknown => node.kind === 'host' ? {
+			tag: node.tag,
+			staticAttributes: node.staticAttributes,
+			dynamicBindings: node.dynamicBindings.map(({ kind, name, reads }) => ({
+				kind,
+				name,
+				valuePath: reads.map((read) => `${read.graphNodeId}/${read.path.join('/')}/${read.via}`),
+			})),
+			children: node.children.map(summarize),
+		} : node.kind === 'text' ? { kind: 'text', value: node.value } : { kind: node.kind };
+		expect(repeat.row.map(summarize)).toEqual([{
+			tag: 'li',
+			staticAttributes: [],
+			dynamicBindings: [{ kind: 'attribute', name: 'data-oracle-row-key', valuePath: ['state:todos/id/repeat-item'] }],
+			children: [
+				{ tag: 'input', staticAttributes: [], dynamicBindings: [
+					{ kind: 'attribute', name: 'data-edit', valuePath: ['state:todos/id/repeat-item'] },
+					{ kind: 'property', name: 'value', valuePath: ['state:todos/title/repeat-item'] },
+				], children: [] },
+				{ tag: 'input', staticAttributes: [{ name: 'type', value: 'checkbox' }], dynamicBindings: [
+					{ kind: 'attribute', name: 'data-toggle', valuePath: ['state:todos/id/repeat-item'] },
+					{ kind: 'property', name: 'checked', valuePath: ['state:todos/done/repeat-item'] },
+				], children: [] },
+				{ tag: 'button', staticAttributes: [], dynamicBindings: [
+					{ kind: 'attribute', name: 'data-remove', valuePath: ['state:todos/id/repeat-item'] },
+				], children: [{ kind: 'text', value: 'remove' }] },
+			],
+		}]);
 
 		const complete = ir.records.bindings.find((binding) => binding.name === 'complete')!;
 		expect(complete.computed?.expression.type).toBe('ArrowFunctionExpression');
@@ -174,6 +215,38 @@ describe('fixture-family sufficiency', () => {
 		expect(fromSerializedAst.map((read) => read.graphNodeId)).toEqual(['state:todos']);
 		expect(complete.computed?.reads.map((read) => read.graphNodeId)).toEqual(['state:todos']);
 		expect(complete.computed?.reads.some((read) => read.path.some((part) => part.includes('filter(')))).toBe(false);
+	});
+
+	test('S2 event effects are exact and temporary receiver mutation is not a graph write', async () => {
+		const ir = await fixtureIr('s2-keyed-todo.tsrx');
+		const effects = ir.records.events.map((event) => ({
+			id: event.id,
+			eventName: event.eventName,
+			reads: event.handlers[0]!.reads.map((read) => `${read.graphNodeId}/${read.path.join('/')}/${read.via}`),
+			writes: event.handlers[0]!.writes.map((write) => `${write.graphNodeId}/${write.path.join('/')}/${write.operation}/${write.via}`),
+		}));
+		expect(effects).toEqual([
+			{ id: 'event:0', eventName: 'input', reads: [], writes: ['state:draft//assign/direct'] },
+			{ id: 'event:1', eventName: 'click', reads: [
+				'prop:props/onTrace/alias', 'state:draft//direct', 'state:next//direct', 'state:todos//direct',
+			], writes: ['state:draft//assign/direct', 'state:next//update/direct', 'state:todos//assign/direct'] },
+			{ id: 'event:2', eventName: 'input', reads: [
+				'prop:props/onTrace/alias', 'state:todos//direct', 'state:todos/id/repeat-item',
+			], writes: ['state:todos//assign/direct', 'state:todos/*/title/assign/handler-local-alias'] },
+			{ id: 'event:3', eventName: 'change', reads: [
+				'prop:props/onTrace/alias', 'state:todos//direct', 'state:todos/id/repeat-item',
+			], writes: ['state:todos//assign/direct', 'state:todos/*/done/assign/handler-local-alias'] },
+			{ id: 'event:4', eventName: 'click', reads: [
+				'prop:props/onTrace/alias', 'state:todos//direct', 'state:todos/id/repeat-item',
+			], writes: ['state:todos//assign/direct'] },
+			{ id: 'event:5', eventName: 'click', reads: [
+				'prop:props/onTrace/alias', 'state:todos//direct',
+			], writes: ['state:todos//assign/direct'] },
+			{ id: 'event:6', eventName: 'click', reads: [
+				'prop:props/onTrace/alias', 'state:todos/length/direct',
+			], writes: ['state:todos//assign/direct'] },
+		]);
+		expect(ir.records.stateWrites.some((write) => write.method === 'reverse')).toBe(false);
 	});
 
 	test('every scripted callback is present in a setup initializer or real event-handler AST', async () => {
@@ -234,6 +307,9 @@ describe('closure and honesty', () => {
 				if (Array.isArray(value)) return void value.forEach(visit);
 				for (const [key, child] of Object.entries(value)) {
 					if (key === 'graphNodeId' && typeof child === 'string') referenced.add(child);
+					if (key === 'path' && Array.isArray(child)) {
+						expect(child.every((part) => typeof part === 'string' && !/[()]/.test(part)), `degraded path ${String(child)}`).toBe(true);
+					}
 					visit(child);
 				}
 			};
@@ -258,25 +334,48 @@ describe('closure and honesty', () => {
 		});
 	}
 
-	test('the serialized contract contains no Markless web/render/resume artifacts or string expressions', async () => {
-		const forbidden = new Set([
-			'payloadArena', 'publicRenderPlan', 'publicRenderModule', 'symbolResolver',
-			'symbolModules', 'protocolState', 'protocolView', 'runtimeDemandMap',
-			'locator', 'locators', 'resume', 'handlerSources', 'functionSource',
-			'valueSource', 'testSource', 'collectionSource', 'keySource',
-		]);
+	test('the public contract has an allowlisted top-level shape and no public Markless type dependency', async () => {
+		const allowed = new Set(['version', 'filename', 'imports', 'module', 'components', 'records']);
+		const hasOnlyKnownTopLevelKeys = (value: object): boolean => Object.keys(value).every((key) => allowed.has(key));
 		for (const file of FIXTURES) {
 			const ir = await fixtureIr(file);
-			const visit = (value: unknown): void => {
-				if (!value || typeof value !== 'object') return;
-				if (Array.isArray(value)) return void value.forEach(visit);
-				for (const [key, child] of Object.entries(value)) {
-					expect(forbidden.has(key), `target-coupled key ${key}`).toBe(false);
-					visit(child);
-				}
-			};
-			visit(ir);
+			expect(hasOnlyKnownTopLevelKeys(ir)).toBe(true);
+			expect(hasOnlyKnownTopLevelKeys({ ...ir, unknownArtifact: {} })).toBe(false);
 		}
+		const schemaSource = readFileSync(new URL('../src/ir/schema.ts', import.meta.url), 'utf8');
+		expect(schemaSource).not.toContain('@markless/');
+	});
+
+	test('record tables use defined locale-independent sort keys and filenames are normalized', async () => {
+		const compare = (left: string, right: string): number => left < right ? -1 : left > right ? 1 : 0;
+		const sorted = <T>(values: readonly T[], key: (value: T) => string): T[] => [...values].sort((a, b) => compare(key(a), key(b)));
+		const sortedWrites = <T extends { graphNodeId: string; path: readonly string[]; operation: string; method?: string; sourceSpan?: { start: number; end: number } }>(values: readonly T[]): T[] =>
+			[...values].sort((a, b) =>
+				compare(a.graphNodeId, b.graphNodeId) || compare(a.path.join('\0'), b.path.join('\0')) ||
+				compare(a.operation, b.operation) || compare(a.method ?? '', b.method ?? '') ||
+				(a.sourceSpan?.start ?? -1) - (b.sourceSpan?.start ?? -1) ||
+				(a.sourceSpan?.end ?? -1) - (b.sourceSpan?.end ?? -1),
+			);
+		for (const file of FIXTURES) {
+			const ir = await fixtureIr(file);
+			expect(ir.records.bindings).toEqual(sorted(ir.records.bindings, (binding) => binding.id));
+			expect(ir.records.aliases).toEqual(sorted(ir.records.aliases, (alias) => alias.id));
+			expect(ir.records.events).toEqual(sorted(ir.records.events, (event) => event.id));
+			expect(ir.records.stateReads).toEqual(sorted(ir.records.stateReads, (read) => `${read.graphNodeId}\0${read.path.join('\0')}`));
+			expect(ir.records.stateWrites).toEqual(sortedWrites(ir.records.stateWrites));
+			for (const binding of ir.records.bindings) {
+				expect(binding.reads).toEqual(sorted(binding.reads, (read) => `${read.graphNodeId}\0${read.path.join('\0')}`));
+				expect(binding.writes).toEqual(sortedWrites(binding.writes));
+			}
+			for (const event of ir.records.events) {
+				expect(event.handlers).toEqual(sorted(event.handlers, (handler) => `${String(handler.expression.start).padStart(12, '0')}\0${String(handler.expression.end).padStart(12, '0')}`));
+				for (const handler of event.handlers) expect(handler.writes).toEqual(sortedWrites(handler.writes));
+			}
+		}
+		const source = readFileSync(new URL('../src/fixtures/s1-render-once.tsrx', import.meta.url), 'utf8');
+		const ir = await buildEnrichedIr({ filename: '/machine/private/project/src/fixtures/s1-render-once.tsrx', source });
+		expect(ir.filename).toBe('src/fixtures/s1-render-once.tsrx');
+		expect(dumpEnrichedIr(ir)).not.toContain('/machine/private/project');
 	});
 
 	test('lowered assignment and call writes carry AST operands instead of source fragments', async () => {

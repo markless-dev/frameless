@@ -1,6 +1,10 @@
 {
   "components": [
     {
+      "evaluation": {
+        "computedBindings": "reactive",
+        "ordinaryLocals": "once-per-instance"
+      },
       "guards": [],
       "locals": [
         {
@@ -907,23 +911,17 @@
   ],
   "filename": "src/fixtures/s2-keyed-todo.tsrx",
   "imports": [],
+  "module": {
+    "exports": [
+      {
+        "componentName": "KeyedTodo",
+        "exportedName": "KeyedTodo",
+        "kind": "named"
+      }
+    ]
+  },
   "records": {
     "aliases": [
-      {
-        "declarationKind": "const",
-        "graphNodeId": "prop:props",
-        "id": "alias:KeyedTodo:seed",
-        "name": "seed",
-        "path": [
-          "seed"
-        ],
-        "sourceSpan": {
-          "end": 83,
-          "filename": "src/fixtures/s2-keyed-todo.tsrx",
-          "start": 79
-        },
-        "target": "props.seed"
-      },
       {
         "declarationKind": "const",
         "graphNodeId": "prop:props",
@@ -938,496 +936,24 @@
           "start": 85
         },
         "target": "props.onTrace"
+      },
+      {
+        "declarationKind": "const",
+        "graphNodeId": "prop:props",
+        "id": "alias:KeyedTodo:seed",
+        "name": "seed",
+        "path": [
+          "seed"
+        ],
+        "sourceSpan": {
+          "end": 83,
+          "filename": "src/fixtures/s2-keyed-todo.tsrx",
+          "start": 79
+        },
+        "target": "props.seed"
       }
     ],
     "bindings": [
-      {
-        "declarationKind": "const",
-        "id": "prop:props",
-        "kind": "prop",
-        "name": "props",
-        "reads": [
-          {
-            "graphNodeId": "prop:props",
-            "path": [
-              "onTrace"
-            ]
-          }
-        ],
-        "valueKind": "object",
-        "writable": false,
-        "writes": []
-      },
-      {
-        "declarationKind": "let",
-        "id": "state:todos",
-        "initializer": {
-          "arguments": [
-            {
-              "async": false,
-              "body": {
-                "end": 149,
-                "properties": [
-                  {
-                    "argument": {
-                      "end": 147,
-                      "name": "todo",
-                      "start": 143,
-                      "type": "Identifier"
-                    },
-                    "end": 147,
-                    "start": 140,
-                    "type": "SpreadElement"
-                  }
-                ],
-                "start": 138,
-                "type": "ObjectExpression"
-              },
-              "end": 150,
-              "expression": true,
-              "generator": false,
-              "id": null,
-              "params": [
-                {
-                  "end": 132,
-                  "name": "todo",
-                  "start": 128,
-                  "type": "Identifier"
-                }
-              ],
-              "start": 127,
-              "type": "ArrowFunctionExpression"
-            }
-          ],
-          "callee": {
-            "computed": false,
-            "end": 126,
-            "object": {
-              "end": 122,
-              "name": "seed",
-              "start": 118,
-              "type": "Identifier"
-            },
-            "optional": false,
-            "property": {
-              "end": 126,
-              "name": "map",
-              "start": 123,
-              "type": "Identifier"
-            },
-            "start": 118,
-            "type": "MemberExpression"
-          },
-          "end": 151,
-          "optional": false,
-          "start": 118,
-          "type": "CallExpression"
-        },
-        "kind": "state",
-        "name": "todos",
-        "reads": [
-          {
-            "graphNodeId": "state:todos",
-            "path": [
-              "length"
-            ]
-          },
-          {
-            "graphNodeId": "state:todos",
-            "path": [
-              "filter((todo) => todo",
-              "done)",
-              "length"
-            ]
-          },
-          {
-            "graphNodeId": "state:todos",
-            "path": [
-              "concat"
-            ]
-          },
-          {
-            "graphNodeId": "state:todos",
-            "path": [
-              "find"
-            ]
-          },
-          {
-            "graphNodeId": "state:todos",
-            "path": [
-              "slice"
-            ]
-          },
-          {
-            "graphNodeId": "state:todos",
-            "path": [
-              "filter"
-            ]
-          }
-        ],
-        "valueKind": "unknown",
-        "writable": true,
-        "writes": [
-          {
-            "graphNodeId": "state:todos",
-            "operation": "assign",
-            "path": [],
-            "sourceSpan": {
-              "end": 615,
-              "filename": "src/fixtures/s2-keyed-todo.tsrx",
-              "start": 610
-            },
-            "value": {
-              "arguments": [
-                {
-                  "end": 635,
-                  "name": "item",
-                  "start": 631,
-                  "type": "Identifier"
-                }
-              ],
-              "callee": {
-                "computed": false,
-                "end": 630,
-                "object": {
-                  "end": 623,
-                  "name": "todos",
-                  "start": 618,
-                  "type": "Identifier"
-                },
-                "optional": false,
-                "property": {
-                  "end": 630,
-                  "name": "concat",
-                  "start": 624,
-                  "type": "Identifier"
-                },
-                "start": 618,
-                "type": "MemberExpression"
-              },
-              "end": 636,
-              "optional": false,
-              "start": 618,
-              "type": "CallExpression"
-            }
-          },
-          {
-            "graphNodeId": "state:todos",
-            "operation": "assign",
-            "path": [],
-            "sourceSpan": {
-              "end": 1168,
-              "filename": "src/fixtures/s2-keyed-todo.tsrx",
-              "start": 1163
-            },
-            "value": {
-              "arguments": [],
-              "callee": {
-                "computed": false,
-                "end": 1182,
-                "object": {
-                  "end": 1176,
-                  "name": "todos",
-                  "start": 1171,
-                  "type": "Identifier"
-                },
-                "optional": false,
-                "property": {
-                  "end": 1182,
-                  "name": "slice",
-                  "start": 1177,
-                  "type": "Identifier"
-                },
-                "start": 1171,
-                "type": "MemberExpression"
-              },
-              "end": 1184,
-              "optional": false,
-              "start": 1171,
-              "type": "CallExpression"
-            }
-          },
-          {
-            "graphNodeId": "state:todos",
-            "operation": "assign",
-            "path": [],
-            "sourceSpan": {
-              "end": 1579,
-              "filename": "src/fixtures/s2-keyed-todo.tsrx",
-              "start": 1574
-            },
-            "value": {
-              "end": 1586,
-              "name": "copy",
-              "start": 1582,
-              "type": "Identifier"
-            }
-          },
-          {
-            "graphNodeId": "state:todos",
-            "operation": "assign",
-            "path": [],
-            "sourceSpan": {
-              "end": 1752,
-              "filename": "src/fixtures/s2-keyed-todo.tsrx",
-              "start": 1747
-            },
-            "value": {
-              "arguments": [
-                {
-                  "async": false,
-                  "body": {
-                    "end": 1797,
-                    "left": {
-                      "computed": false,
-                      "end": 1785,
-                      "object": {
-                        "end": 1782,
-                        "name": "item",
-                        "start": 1778,
-                        "type": "Identifier"
-                      },
-                      "optional": false,
-                      "property": {
-                        "end": 1785,
-                        "name": "id",
-                        "start": 1783,
-                        "type": "Identifier"
-                      },
-                      "start": 1778,
-                      "type": "MemberExpression"
-                    },
-                    "operator": "!==",
-                    "right": {
-                      "computed": false,
-                      "end": 1797,
-                      "object": {
-                        "end": 1794,
-                        "name": "todo",
-                        "start": 1790,
-                        "type": "Identifier"
-                      },
-                      "optional": false,
-                      "property": {
-                        "end": 1797,
-                        "name": "id",
-                        "start": 1795,
-                        "type": "Identifier"
-                      },
-                      "start": 1790,
-                      "type": "MemberExpression"
-                    },
-                    "start": 1778,
-                    "type": "BinaryExpression"
-                  },
-                  "end": 1797,
-                  "expression": true,
-                  "generator": false,
-                  "id": null,
-                  "params": [
-                    {
-                      "end": 1773,
-                      "name": "item",
-                      "start": 1769,
-                      "type": "Identifier"
-                    }
-                  ],
-                  "start": 1768,
-                  "type": "ArrowFunctionExpression"
-                }
-              ],
-              "callee": {
-                "computed": false,
-                "end": 1767,
-                "object": {
-                  "end": 1760,
-                  "name": "todos",
-                  "start": 1755,
-                  "type": "Identifier"
-                },
-                "optional": false,
-                "property": {
-                  "end": 1767,
-                  "name": "filter",
-                  "start": 1761,
-                  "type": "Identifier"
-                },
-                "start": 1755,
-                "type": "MemberExpression"
-              },
-              "end": 1798,
-              "optional": false,
-              "start": 1755,
-              "type": "CallExpression"
-            }
-          },
-          {
-            "arguments": [],
-            "graphNodeId": "state:todos",
-            "method": "reverse",
-            "operation": "call",
-            "path": [
-              "slice()"
-            ],
-            "sourceSpan": {
-              "end": 2014,
-              "filename": "src/fixtures/s2-keyed-todo.tsrx",
-              "start": 2001
-            }
-          },
-          {
-            "graphNodeId": "state:todos",
-            "operation": "assign",
-            "path": [],
-            "sourceSpan": {
-              "end": 2035,
-              "filename": "src/fixtures/s2-keyed-todo.tsrx",
-              "start": 2030
-            },
-            "value": {
-              "end": 2043,
-              "name": "order",
-              "start": 2038,
-              "type": "Identifier"
-            }
-          },
-          {
-            "graphNodeId": "state:todos",
-            "operation": "assign",
-            "path": [],
-            "sourceSpan": {
-              "end": 2249,
-              "filename": "src/fixtures/s2-keyed-todo.tsrx",
-              "start": 2244
-            },
-            "value": {
-              "elements": [],
-              "end": 2254,
-              "start": 2252,
-              "type": "ArrayExpression"
-            }
-          }
-        ]
-      },
-      {
-        "declarationKind": "let",
-        "id": "state:draft",
-        "initializer": {
-          "end": 175,
-          "raw": "''",
-          "start": 173,
-          "type": "Literal",
-          "value": ""
-        },
-        "initialValue": "",
-        "kind": "state",
-        "name": "draft",
-        "reads": [
-          {
-            "graphNodeId": "state:draft",
-            "path": []
-          }
-        ],
-        "valueKind": "scalar",
-        "writable": true,
-        "writes": [
-          {
-            "graphNodeId": "state:draft",
-            "operation": "assign",
-            "path": [],
-            "sourceSpan": {
-              "end": 439,
-              "filename": "src/fixtures/s2-keyed-todo.tsrx",
-              "start": 434
-            },
-            "value": {
-              "computed": false,
-              "end": 467,
-              "object": {
-                "computed": false,
-                "end": 461,
-                "object": {
-                  "end": 447,
-                  "name": "event",
-                  "start": 442,
-                  "type": "Identifier"
-                },
-                "optional": false,
-                "property": {
-                  "end": 461,
-                  "name": "currentTarget",
-                  "start": 448,
-                  "type": "Identifier"
-                },
-                "start": 442,
-                "type": "MemberExpression"
-              },
-              "optional": false,
-              "property": {
-                "end": 467,
-                "name": "value",
-                "start": 462,
-                "type": "Identifier"
-              },
-              "start": 442,
-              "type": "MemberExpression"
-            }
-          },
-          {
-            "graphNodeId": "state:draft",
-            "operation": "assign",
-            "path": [],
-            "sourceSpan": {
-              "end": 647,
-              "filename": "src/fixtures/s2-keyed-todo.tsrx",
-              "start": 642
-            },
-            "value": {
-              "end": 652,
-              "raw": "''",
-              "start": 650,
-              "type": "Literal",
-              "value": ""
-            }
-          }
-        ]
-      },
-      {
-        "declarationKind": "let",
-        "id": "state:next",
-        "initializer": {
-          "end": 197,
-          "raw": "3",
-          "start": 196,
-          "type": "Literal",
-          "value": 3
-        },
-        "initialValue": 3,
-        "kind": "state",
-        "name": "next",
-        "reads": [
-          {
-            "graphNodeId": "state:next",
-            "path": []
-          }
-        ],
-        "valueKind": "scalar",
-        "writable": true,
-        "writes": [
-          {
-            "graphNodeId": "state:next",
-            "operation": "update",
-            "path": [],
-            "prefix": false,
-            "sourceSpan": {
-              "end": 602,
-              "filename": "src/fixtures/s2-keyed-todo.tsrx",
-              "start": 598
-            },
-            "updateOperator": "++"
-          }
-        ]
-      },
       {
         "async": false,
         "asyncCapable": false,
@@ -1532,12 +1058,495 @@
         "name": "complete",
         "reads": [
           {
-            "graphNodeId": "computed:complete",
+            "graphNodeId": "state:todos",
             "path": []
           }
         ],
         "writable": false,
         "writes": []
+      },
+      {
+        "declarationKind": "const",
+        "id": "prop:props",
+        "kind": "prop",
+        "name": "props",
+        "reads": [],
+        "valueKind": "object",
+        "writable": false,
+        "writes": []
+      },
+      {
+        "declarationKind": "let",
+        "id": "state:draft",
+        "initialValue": "",
+        "initializer": {
+          "end": 175,
+          "raw": "''",
+          "start": 173,
+          "type": "Literal",
+          "value": ""
+        },
+        "kind": "state",
+        "name": "draft",
+        "reads": [],
+        "valueKind": "scalar",
+        "writable": true,
+        "writes": [
+          {
+            "assignmentOperator": "=",
+            "graphNodeId": "state:draft",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 439,
+              "filename": "src/fixtures/s2-keyed-todo.tsrx",
+              "start": 434
+            },
+            "value": {
+              "computed": false,
+              "end": 467,
+              "object": {
+                "computed": false,
+                "end": 461,
+                "object": {
+                  "end": 447,
+                  "name": "event",
+                  "start": 442,
+                  "type": "Identifier"
+                },
+                "optional": false,
+                "property": {
+                  "end": 461,
+                  "name": "currentTarget",
+                  "start": 448,
+                  "type": "Identifier"
+                },
+                "start": 442,
+                "type": "MemberExpression"
+              },
+              "optional": false,
+              "property": {
+                "end": 467,
+                "name": "value",
+                "start": 462,
+                "type": "Identifier"
+              },
+              "start": 442,
+              "type": "MemberExpression"
+            },
+            "via": "direct"
+          },
+          {
+            "assignmentOperator": "=",
+            "graphNodeId": "state:draft",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 647,
+              "filename": "src/fixtures/s2-keyed-todo.tsrx",
+              "start": 642
+            },
+            "value": {
+              "end": 652,
+              "raw": "''",
+              "start": 650,
+              "type": "Literal",
+              "value": ""
+            },
+            "via": "direct"
+          }
+        ]
+      },
+      {
+        "declarationKind": "let",
+        "id": "state:next",
+        "initialValue": 3,
+        "initializer": {
+          "end": 197,
+          "raw": "3",
+          "start": 196,
+          "type": "Literal",
+          "value": 3
+        },
+        "kind": "state",
+        "name": "next",
+        "reads": [],
+        "valueKind": "scalar",
+        "writable": true,
+        "writes": [
+          {
+            "graphNodeId": "state:next",
+            "operation": "update",
+            "path": [],
+            "prefix": false,
+            "sourceSpan": {
+              "end": 602,
+              "filename": "src/fixtures/s2-keyed-todo.tsrx",
+              "start": 598
+            },
+            "updateOperator": "++",
+            "via": "direct"
+          }
+        ]
+      },
+      {
+        "declarationKind": "let",
+        "id": "state:todos",
+        "initializer": {
+          "arguments": [
+            {
+              "async": false,
+              "body": {
+                "end": 149,
+                "properties": [
+                  {
+                    "argument": {
+                      "end": 147,
+                      "name": "todo",
+                      "start": 143,
+                      "type": "Identifier"
+                    },
+                    "end": 147,
+                    "start": 140,
+                    "type": "SpreadElement"
+                  }
+                ],
+                "start": 138,
+                "type": "ObjectExpression"
+              },
+              "end": 150,
+              "expression": true,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 132,
+                  "name": "todo",
+                  "start": 128,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 127,
+              "type": "ArrowFunctionExpression"
+            }
+          ],
+          "callee": {
+            "computed": false,
+            "end": 126,
+            "object": {
+              "end": 122,
+              "name": "seed",
+              "start": 118,
+              "type": "Identifier"
+            },
+            "optional": false,
+            "property": {
+              "end": 126,
+              "name": "map",
+              "start": 123,
+              "type": "Identifier"
+            },
+            "start": 118,
+            "type": "MemberExpression"
+          },
+          "end": 151,
+          "optional": false,
+          "start": 118,
+          "type": "CallExpression"
+        },
+        "kind": "state",
+        "name": "todos",
+        "reads": [
+          {
+            "graphNodeId": "prop:props",
+            "path": [
+              "seed"
+            ]
+          }
+        ],
+        "valueKind": "unknown",
+        "writable": true,
+        "writes": [
+          {
+            "assignmentOperator": "=",
+            "graphNodeId": "state:todos",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 615,
+              "filename": "src/fixtures/s2-keyed-todo.tsrx",
+              "start": 610
+            },
+            "value": {
+              "arguments": [
+                {
+                  "end": 635,
+                  "name": "item",
+                  "start": 631,
+                  "type": "Identifier"
+                }
+              ],
+              "callee": {
+                "computed": false,
+                "end": 630,
+                "object": {
+                  "end": 623,
+                  "name": "todos",
+                  "start": 618,
+                  "type": "Identifier"
+                },
+                "optional": false,
+                "property": {
+                  "end": 630,
+                  "name": "concat",
+                  "start": 624,
+                  "type": "Identifier"
+                },
+                "start": 618,
+                "type": "MemberExpression"
+              },
+              "end": 636,
+              "optional": false,
+              "start": 618,
+              "type": "CallExpression"
+            },
+            "via": "direct"
+          },
+          {
+            "assignmentOperator": "=",
+            "graphNodeId": "state:todos",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 1168,
+              "filename": "src/fixtures/s2-keyed-todo.tsrx",
+              "start": 1163
+            },
+            "value": {
+              "arguments": [],
+              "callee": {
+                "computed": false,
+                "end": 1182,
+                "object": {
+                  "end": 1176,
+                  "name": "todos",
+                  "start": 1171,
+                  "type": "Identifier"
+                },
+                "optional": false,
+                "property": {
+                  "end": 1182,
+                  "name": "slice",
+                  "start": 1177,
+                  "type": "Identifier"
+                },
+                "start": 1171,
+                "type": "MemberExpression"
+              },
+              "end": 1184,
+              "optional": false,
+              "start": 1171,
+              "type": "CallExpression"
+            },
+            "via": "direct"
+          },
+          {
+            "assignmentOperator": "=",
+            "graphNodeId": "state:todos",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 1579,
+              "filename": "src/fixtures/s2-keyed-todo.tsrx",
+              "start": 1574
+            },
+            "value": {
+              "end": 1586,
+              "name": "copy",
+              "start": 1582,
+              "type": "Identifier"
+            },
+            "via": "direct"
+          },
+          {
+            "assignmentOperator": "=",
+            "graphNodeId": "state:todos",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 1752,
+              "filename": "src/fixtures/s2-keyed-todo.tsrx",
+              "start": 1747
+            },
+            "value": {
+              "arguments": [
+                {
+                  "async": false,
+                  "body": {
+                    "end": 1797,
+                    "left": {
+                      "computed": false,
+                      "end": 1785,
+                      "object": {
+                        "end": 1782,
+                        "name": "item",
+                        "start": 1778,
+                        "type": "Identifier"
+                      },
+                      "optional": false,
+                      "property": {
+                        "end": 1785,
+                        "name": "id",
+                        "start": 1783,
+                        "type": "Identifier"
+                      },
+                      "start": 1778,
+                      "type": "MemberExpression"
+                    },
+                    "operator": "!==",
+                    "right": {
+                      "computed": false,
+                      "end": 1797,
+                      "object": {
+                        "end": 1794,
+                        "name": "todo",
+                        "start": 1790,
+                        "type": "Identifier"
+                      },
+                      "optional": false,
+                      "property": {
+                        "end": 1797,
+                        "name": "id",
+                        "start": 1795,
+                        "type": "Identifier"
+                      },
+                      "start": 1790,
+                      "type": "MemberExpression"
+                    },
+                    "start": 1778,
+                    "type": "BinaryExpression"
+                  },
+                  "end": 1797,
+                  "expression": true,
+                  "generator": false,
+                  "id": null,
+                  "params": [
+                    {
+                      "end": 1773,
+                      "name": "item",
+                      "start": 1769,
+                      "type": "Identifier"
+                    }
+                  ],
+                  "start": 1768,
+                  "type": "ArrowFunctionExpression"
+                }
+              ],
+              "callee": {
+                "computed": false,
+                "end": 1767,
+                "object": {
+                  "end": 1760,
+                  "name": "todos",
+                  "start": 1755,
+                  "type": "Identifier"
+                },
+                "optional": false,
+                "property": {
+                  "end": 1767,
+                  "name": "filter",
+                  "start": 1761,
+                  "type": "Identifier"
+                },
+                "start": 1755,
+                "type": "MemberExpression"
+              },
+              "end": 1798,
+              "optional": false,
+              "start": 1755,
+              "type": "CallExpression"
+            },
+            "via": "direct"
+          },
+          {
+            "assignmentOperator": "=",
+            "graphNodeId": "state:todos",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 2035,
+              "filename": "src/fixtures/s2-keyed-todo.tsrx",
+              "start": 2030
+            },
+            "value": {
+              "end": 2043,
+              "name": "order",
+              "start": 2038,
+              "type": "Identifier"
+            },
+            "via": "direct"
+          },
+          {
+            "assignmentOperator": "=",
+            "graphNodeId": "state:todos",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 2249,
+              "filename": "src/fixtures/s2-keyed-todo.tsrx",
+              "start": 2244
+            },
+            "value": {
+              "elements": [],
+              "end": 2254,
+              "start": 2252,
+              "type": "ArrayExpression"
+            },
+            "via": "direct"
+          },
+          {
+            "assignmentOperator": "=",
+            "graphNodeId": "state:todos",
+            "operation": "assign",
+            "path": [
+              "*",
+              "done"
+            ],
+            "sourceSpan": {
+              "end": 1554,
+              "filename": "src/fixtures/s2-keyed-todo.tsrx",
+              "start": 1544
+            },
+            "value": {
+              "end": 1564,
+              "name": "checked",
+              "start": 1557,
+              "type": "Identifier"
+            },
+            "via": "handler-local-alias"
+          },
+          {
+            "assignmentOperator": "=",
+            "graphNodeId": "state:todos",
+            "operation": "assign",
+            "path": [
+              "*",
+              "title"
+            ],
+            "sourceSpan": {
+              "end": 1145,
+              "filename": "src/fixtures/s2-keyed-todo.tsrx",
+              "start": 1134
+            },
+            "value": {
+              "end": 1153,
+              "name": "title",
+              "start": 1148,
+              "type": "Identifier"
+            },
+            "via": "handler-local-alias"
+          }
+        ]
       }
     ],
     "events": [
@@ -1609,6 +1618,7 @@
             "reads": [],
             "writes": [
               {
+                "assignmentOperator": "=",
                 "graphNodeId": "state:draft",
                 "operation": "assign",
                 "path": [],
@@ -1648,7 +1658,8 @@
                   },
                   "start": 442,
                   "type": "MemberExpression"
-                }
+                },
+                "via": "direct"
               }
             ]
           }
@@ -2028,6 +2039,25 @@
             ],
             "writes": [
               {
+                "assignmentOperator": "=",
+                "graphNodeId": "state:draft",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 647,
+                  "filename": "src/fixtures/s2-keyed-todo.tsrx",
+                  "start": 642
+                },
+                "value": {
+                  "end": 652,
+                  "raw": "''",
+                  "start": 650,
+                  "type": "Literal",
+                  "value": ""
+                },
+                "via": "direct"
+              },
+              {
                 "graphNodeId": "state:next",
                 "operation": "update",
                 "path": [],
@@ -2037,9 +2067,11 @@
                   "filename": "src/fixtures/s2-keyed-todo.tsrx",
                   "start": 598
                 },
-                "updateOperator": "++"
+                "updateOperator": "++",
+                "via": "direct"
               },
               {
+                "assignmentOperator": "=",
                 "graphNodeId": "state:todos",
                 "operation": "assign",
                 "path": [],
@@ -2080,24 +2112,8 @@
                   "optional": false,
                   "start": 618,
                   "type": "CallExpression"
-                }
-              },
-              {
-                "graphNodeId": "state:draft",
-                "operation": "assign",
-                "path": [],
-                "sourceSpan": {
-                  "end": 647,
-                  "filename": "src/fixtures/s2-keyed-todo.tsrx",
-                  "start": 642
                 },
-                "value": {
-                  "end": 652,
-                  "raw": "''",
-                  "start": 650,
-                  "type": "Literal",
-                  "value": ""
-                }
+                "via": "direct"
               }
             ]
           }
@@ -2487,6 +2503,7 @@
             ],
             "writes": [
               {
+                "assignmentOperator": "=",
                 "graphNodeId": "state:todos",
                 "operation": "assign",
                 "path": [],
@@ -2520,7 +2537,29 @@
                   "optional": false,
                   "start": 1171,
                   "type": "CallExpression"
-                }
+                },
+                "via": "direct"
+              },
+              {
+                "assignmentOperator": "=",
+                "graphNodeId": "state:todos",
+                "operation": "assign",
+                "path": [
+                  "*",
+                  "title"
+                ],
+                "sourceSpan": {
+                  "end": 1145,
+                  "filename": "src/fixtures/s2-keyed-todo.tsrx",
+                  "start": 1134
+                },
+                "value": {
+                  "end": 1153,
+                  "name": "title",
+                  "start": 1148,
+                  "type": "Identifier"
+                },
+                "via": "handler-local-alias"
               }
             ]
           }
@@ -2935,6 +2974,7 @@
             ],
             "writes": [
               {
+                "assignmentOperator": "=",
                 "graphNodeId": "state:todos",
                 "operation": "assign",
                 "path": [],
@@ -2948,7 +2988,29 @@
                   "name": "copy",
                   "start": 1582,
                   "type": "Identifier"
-                }
+                },
+                "via": "direct"
+              },
+              {
+                "assignmentOperator": "=",
+                "graphNodeId": "state:todos",
+                "operation": "assign",
+                "path": [
+                  "*",
+                  "done"
+                ],
+                "sourceSpan": {
+                  "end": 1554,
+                  "filename": "src/fixtures/s2-keyed-todo.tsrx",
+                  "start": 1544
+                },
+                "value": {
+                  "end": 1564,
+                  "name": "checked",
+                  "start": 1557,
+                  "type": "Identifier"
+                },
+                "via": "handler-local-alias"
               }
             ]
           }
@@ -3185,6 +3247,7 @@
             ],
             "writes": [
               {
+                "assignmentOperator": "=",
                 "graphNodeId": "state:todos",
                 "operation": "assign",
                 "path": [],
@@ -3280,7 +3343,8 @@
                   "optional": false,
                   "start": 1755,
                   "type": "CallExpression"
-                }
+                },
+                "via": "direct"
               }
             ]
           }
@@ -3537,20 +3601,7 @@
             ],
             "writes": [
               {
-                "arguments": [],
-                "graphNodeId": "state:todos",
-                "method": "reverse",
-                "operation": "call",
-                "path": [
-                  "slice()"
-                ],
-                "sourceSpan": {
-                  "end": 2014,
-                  "filename": "src/fixtures/s2-keyed-todo.tsrx",
-                  "start": 2001
-                }
-              },
-              {
+                "assignmentOperator": "=",
                 "graphNodeId": "state:todos",
                 "operation": "assign",
                 "path": [],
@@ -3564,7 +3615,8 @@
                   "name": "order",
                   "start": 2038,
                   "type": "Identifier"
-                }
+                },
+                "via": "direct"
               }
             ]
           }
@@ -3739,6 +3791,7 @@
             ],
             "writes": [
               {
+                "assignmentOperator": "=",
                 "graphNodeId": "state:todos",
                 "operation": "assign",
                 "path": [],
@@ -3752,7 +3805,8 @@
                   "end": 2254,
                   "start": 2252,
                   "type": "ArrayExpression"
-                }
+                },
+                "via": "direct"
               }
             ]
           }
@@ -3767,9 +3821,15 @@
         "path": []
       },
       {
-        "graphNodeId": "state:todos",
+        "graphNodeId": "prop:props",
         "path": [
-          "length"
+          "onTrace"
+        ]
+      },
+      {
+        "graphNodeId": "prop:props",
+        "path": [
+          "seed"
         ]
       },
       {
@@ -3777,50 +3837,41 @@
         "path": []
       },
       {
-        "graphNodeId": "state:todos",
-        "path": [
-          "filter((todo) => todo",
-          "done)",
-          "length"
-        ]
-      },
-      {
         "graphNodeId": "state:next",
         "path": []
       },
       {
         "graphNodeId": "state:todos",
-        "path": [
-          "concat"
-        ]
+        "path": []
       },
       {
-        "graphNodeId": "prop:props",
+        "graphNodeId": "state:todos",
         "path": [
-          "onTrace"
+          "done"
         ]
       },
       {
         "graphNodeId": "state:todos",
         "path": [
-          "find"
+          "id"
         ]
       },
       {
         "graphNodeId": "state:todos",
         "path": [
-          "slice"
+          "length"
         ]
       },
       {
         "graphNodeId": "state:todos",
         "path": [
-          "filter"
+          "title"
         ]
       }
     ],
     "stateWrites": [
       {
+        "assignmentOperator": "=",
         "graphNodeId": "state:draft",
         "operation": "assign",
         "path": [],
@@ -3860,7 +3911,27 @@
           },
           "start": 442,
           "type": "MemberExpression"
-        }
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "graphNodeId": "state:draft",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 647,
+          "filename": "src/fixtures/s2-keyed-todo.tsrx",
+          "start": 642
+        },
+        "value": {
+          "end": 652,
+          "raw": "''",
+          "start": 650,
+          "type": "Literal",
+          "value": ""
+        },
+        "via": "direct"
       },
       {
         "graphNodeId": "state:next",
@@ -3872,9 +3943,11 @@
           "filename": "src/fixtures/s2-keyed-todo.tsrx",
           "start": 598
         },
-        "updateOperator": "++"
+        "updateOperator": "++",
+        "via": "direct"
       },
       {
+        "assignmentOperator": "=",
         "graphNodeId": "state:todos",
         "operation": "assign",
         "path": [],
@@ -3915,26 +3988,11 @@
           "optional": false,
           "start": 618,
           "type": "CallExpression"
-        }
-      },
-      {
-        "graphNodeId": "state:draft",
-        "operation": "assign",
-        "path": [],
-        "sourceSpan": {
-          "end": 647,
-          "filename": "src/fixtures/s2-keyed-todo.tsrx",
-          "start": 642
         },
-        "value": {
-          "end": 652,
-          "raw": "''",
-          "start": 650,
-          "type": "Literal",
-          "value": ""
-        }
+        "via": "direct"
       },
       {
+        "assignmentOperator": "=",
         "graphNodeId": "state:todos",
         "operation": "assign",
         "path": [],
@@ -3968,9 +4026,11 @@
           "optional": false,
           "start": 1171,
           "type": "CallExpression"
-        }
+        },
+        "via": "direct"
       },
       {
+        "assignmentOperator": "=",
         "graphNodeId": "state:todos",
         "operation": "assign",
         "path": [],
@@ -3984,9 +4044,11 @@
           "name": "copy",
           "start": 1582,
           "type": "Identifier"
-        }
+        },
+        "via": "direct"
       },
       {
+        "assignmentOperator": "=",
         "graphNodeId": "state:todos",
         "operation": "assign",
         "path": [],
@@ -4082,23 +4144,11 @@
           "optional": false,
           "start": 1755,
           "type": "CallExpression"
-        }
+        },
+        "via": "direct"
       },
       {
-        "arguments": [],
-        "graphNodeId": "state:todos",
-        "method": "reverse",
-        "operation": "call",
-        "path": [
-          "slice()"
-        ],
-        "sourceSpan": {
-          "end": 2014,
-          "filename": "src/fixtures/s2-keyed-todo.tsrx",
-          "start": 2001
-        }
-      },
-      {
+        "assignmentOperator": "=",
         "graphNodeId": "state:todos",
         "operation": "assign",
         "path": [],
@@ -4112,9 +4162,11 @@
           "name": "order",
           "start": 2038,
           "type": "Identifier"
-        }
+        },
+        "via": "direct"
       },
       {
+        "assignmentOperator": "=",
         "graphNodeId": "state:todos",
         "operation": "assign",
         "path": [],
@@ -4128,7 +4180,50 @@
           "end": 2254,
           "start": 2252,
           "type": "ArrayExpression"
-        }
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "graphNodeId": "state:todos",
+        "operation": "assign",
+        "path": [
+          "*",
+          "done"
+        ],
+        "sourceSpan": {
+          "end": 1554,
+          "filename": "src/fixtures/s2-keyed-todo.tsrx",
+          "start": 1544
+        },
+        "value": {
+          "end": 1564,
+          "name": "checked",
+          "start": 1557,
+          "type": "Identifier"
+        },
+        "via": "handler-local-alias"
+      },
+      {
+        "assignmentOperator": "=",
+        "graphNodeId": "state:todos",
+        "operation": "assign",
+        "path": [
+          "*",
+          "title"
+        ],
+        "sourceSpan": {
+          "end": 1145,
+          "filename": "src/fixtures/s2-keyed-todo.tsrx",
+          "start": 1134
+        },
+        "value": {
+          "end": 1153,
+          "name": "title",
+          "start": 1148,
+          "type": "Identifier"
+        },
+        "via": "handler-local-alias"
       }
     ]
   },

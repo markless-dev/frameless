@@ -1,6 +1,10 @@
 {
   "components": [
     {
+      "evaluation": {
+        "computedBindings": "reactive",
+        "ordinaryLocals": "once-per-instance"
+      },
       "guards": [],
       "locals": [
         {
@@ -316,6 +320,15 @@
   ],
   "filename": "src/fixtures/s3-event-form.tsrx",
   "imports": [],
+  "module": {
+    "exports": [
+      {
+        "componentName": "EventForm",
+        "exportedName": "EventForm",
+        "kind": "named"
+      }
+    ]
+  },
   "records": {
     "aliases": [
       {
@@ -355,85 +368,15 @@
         "id": "prop:props",
         "kind": "prop",
         "name": "props",
-        "reads": [
-          {
-            "graphNodeId": "prop:props",
-            "path": [
-              "onTrace"
-            ]
-          }
-        ],
+        "reads": [],
         "valueKind": "object",
         "writable": false,
         "writes": []
       },
       {
         "declarationKind": "let",
-        "id": "state:text",
-        "initializer": {
-          "end": 117,
-          "name": "initial",
-          "start": 110,
-          "type": "Identifier"
-        },
-        "kind": "state",
-        "name": "text",
-        "reads": [
-          {
-            "graphNodeId": "state:text",
-            "path": []
-          }
-        ],
-        "valueKind": "unknown",
-        "writable": true,
-        "writes": [
-          {
-            "graphNodeId": "state:text",
-            "operation": "assign",
-            "path": [],
-            "sourceSpan": {
-              "end": 420,
-              "filename": "src/fixtures/s3-event-form.tsrx",
-              "start": 416
-            },
-            "value": {
-              "computed": false,
-              "end": 448,
-              "object": {
-                "computed": false,
-                "end": 442,
-                "object": {
-                  "end": 428,
-                  "name": "event",
-                  "start": 423,
-                  "type": "Identifier"
-                },
-                "optional": false,
-                "property": {
-                  "end": 442,
-                  "name": "currentTarget",
-                  "start": 429,
-                  "type": "Identifier"
-                },
-                "start": 423,
-                "type": "MemberExpression"
-              },
-              "optional": false,
-              "property": {
-                "end": 448,
-                "name": "value",
-                "start": 443,
-                "type": "Identifier"
-              },
-              "start": 423,
-              "type": "MemberExpression"
-            }
-          }
-        ]
-      },
-      {
-        "declarationKind": "let",
         "id": "state:checked",
+        "initialValue": false,
         "initializer": {
           "end": 146,
           "raw": "false",
@@ -441,19 +384,14 @@
           "type": "Literal",
           "value": false
         },
-        "initialValue": false,
         "kind": "state",
         "name": "checked",
-        "reads": [
-          {
-            "graphNodeId": "state:checked",
-            "path": []
-          }
-        ],
+        "reads": [],
         "valueKind": "scalar",
         "writable": true,
         "writes": [
           {
+            "assignmentOperator": "=",
             "graphNodeId": "state:checked",
             "operation": "assign",
             "path": [],
@@ -493,13 +431,83 @@
               },
               "start": 641,
               "type": "MemberExpression"
-            }
+            },
+            "via": "direct"
+          }
+        ]
+      },
+      {
+        "declarationKind": "let",
+        "id": "state:text",
+        "initializer": {
+          "end": 117,
+          "name": "initial",
+          "start": 110,
+          "type": "Identifier"
+        },
+        "kind": "state",
+        "name": "text",
+        "reads": [
+          {
+            "graphNodeId": "prop:props",
+            "path": [
+              "initial"
+            ]
+          }
+        ],
+        "valueKind": "unknown",
+        "writable": true,
+        "writes": [
+          {
+            "assignmentOperator": "=",
+            "graphNodeId": "state:text",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 420,
+              "filename": "src/fixtures/s3-event-form.tsrx",
+              "start": 416
+            },
+            "value": {
+              "computed": false,
+              "end": 448,
+              "object": {
+                "computed": false,
+                "end": 442,
+                "object": {
+                  "end": 428,
+                  "name": "event",
+                  "start": 423,
+                  "type": "Identifier"
+                },
+                "optional": false,
+                "property": {
+                  "end": 442,
+                  "name": "currentTarget",
+                  "start": 429,
+                  "type": "Identifier"
+                },
+                "start": 423,
+                "type": "MemberExpression"
+              },
+              "optional": false,
+              "property": {
+                "end": 448,
+                "name": "value",
+                "start": 443,
+                "type": "Identifier"
+              },
+              "start": 423,
+              "type": "MemberExpression"
+            },
+            "via": "direct"
           }
         ]
       },
       {
         "declarationKind": "let",
         "id": "state:writes",
+        "initialValue": 0,
         "initializer": {
           "end": 170,
           "raw": "0",
@@ -507,19 +515,14 @@
           "type": "Literal",
           "value": 0
         },
-        "initialValue": 0,
         "kind": "state",
         "name": "writes",
-        "reads": [
-          {
-            "graphNodeId": "state:writes",
-            "path": []
-          }
-        ],
+        "reads": [],
         "valueKind": "scalar",
         "writable": true,
         "writes": [
           {
+            "assignmentOperator": "=",
             "graphNodeId": "state:writes",
             "operation": "assign",
             "path": [],
@@ -534,9 +537,11 @@
               "start": 871,
               "type": "Literal",
               "value": 1
-            }
+            },
+            "via": "direct"
           },
           {
+            "assignmentOperator": "=",
             "graphNodeId": "state:writes",
             "operation": "assign",
             "path": [],
@@ -551,7 +556,8 @@
               "start": 887,
               "type": "Literal",
               "value": 2
-            }
+            },
+            "via": "direct"
           }
         ]
       }
@@ -906,6 +912,7 @@
             ],
             "writes": [
               {
+                "assignmentOperator": "=",
                 "graphNodeId": "state:text",
                 "operation": "assign",
                 "path": [],
@@ -945,7 +952,8 @@
                   },
                   "start": 423,
                   "type": "MemberExpression"
-                }
+                },
+                "via": "direct"
               }
             ]
           }
@@ -1127,6 +1135,7 @@
             ],
             "writes": [
               {
+                "assignmentOperator": "=",
                 "graphNodeId": "state:checked",
                 "operation": "assign",
                 "path": [],
@@ -1166,7 +1175,8 @@
                   },
                   "start": 641,
                   "type": "MemberExpression"
-                }
+                },
+                "via": "direct"
               }
             ]
           }
@@ -1405,6 +1415,7 @@
             ],
             "writes": [
               {
+                "assignmentOperator": "=",
                 "graphNodeId": "state:writes",
                 "operation": "assign",
                 "path": [],
@@ -1419,9 +1430,11 @@
                   "start": 871,
                   "type": "Literal",
                   "value": 1
-                }
+                },
+                "via": "direct"
               },
               {
+                "assignmentOperator": "=",
                 "graphNodeId": "state:writes",
                 "operation": "assign",
                 "path": [],
@@ -1436,7 +1449,8 @@
                   "start": 887,
                   "type": "Literal",
                   "value": 2
-                }
+                },
+                "via": "direct"
               }
             ]
           }
@@ -1456,68 +1470,33 @@
     ],
     "stateReads": [
       {
-        "graphNodeId": "state:text",
-        "path": []
-      },
-      {
-        "graphNodeId": "state:checked",
-        "path": []
-      },
-      {
-        "graphNodeId": "state:writes",
-        "path": []
+        "graphNodeId": "prop:props",
+        "path": [
+          "initial"
+        ]
       },
       {
         "graphNodeId": "prop:props",
         "path": [
           "onTrace"
         ]
+      },
+      {
+        "graphNodeId": "state:checked",
+        "path": []
+      },
+      {
+        "graphNodeId": "state:text",
+        "path": []
+      },
+      {
+        "graphNodeId": "state:writes",
+        "path": []
       }
     ],
     "stateWrites": [
       {
-        "graphNodeId": "state:text",
-        "operation": "assign",
-        "path": [],
-        "sourceSpan": {
-          "end": 420,
-          "filename": "src/fixtures/s3-event-form.tsrx",
-          "start": 416
-        },
-        "value": {
-          "computed": false,
-          "end": 448,
-          "object": {
-            "computed": false,
-            "end": 442,
-            "object": {
-              "end": 428,
-              "name": "event",
-              "start": 423,
-              "type": "Identifier"
-            },
-            "optional": false,
-            "property": {
-              "end": 442,
-              "name": "currentTarget",
-              "start": 429,
-              "type": "Identifier"
-            },
-            "start": 423,
-            "type": "MemberExpression"
-          },
-          "optional": false,
-          "property": {
-            "end": 448,
-            "name": "value",
-            "start": 443,
-            "type": "Identifier"
-          },
-          "start": 423,
-          "type": "MemberExpression"
-        }
-      },
-      {
+        "assignmentOperator": "=",
         "graphNodeId": "state:checked",
         "operation": "assign",
         "path": [],
@@ -1557,9 +1536,55 @@
           },
           "start": 641,
           "type": "MemberExpression"
-        }
+        },
+        "via": "direct"
       },
       {
+        "assignmentOperator": "=",
+        "graphNodeId": "state:text",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 420,
+          "filename": "src/fixtures/s3-event-form.tsrx",
+          "start": 416
+        },
+        "value": {
+          "computed": false,
+          "end": 448,
+          "object": {
+            "computed": false,
+            "end": 442,
+            "object": {
+              "end": 428,
+              "name": "event",
+              "start": 423,
+              "type": "Identifier"
+            },
+            "optional": false,
+            "property": {
+              "end": 442,
+              "name": "currentTarget",
+              "start": 429,
+              "type": "Identifier"
+            },
+            "start": 423,
+            "type": "MemberExpression"
+          },
+          "optional": false,
+          "property": {
+            "end": 448,
+            "name": "value",
+            "start": 443,
+            "type": "Identifier"
+          },
+          "start": 423,
+          "type": "MemberExpression"
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
         "graphNodeId": "state:writes",
         "operation": "assign",
         "path": [],
@@ -1574,9 +1599,11 @@
           "start": 871,
           "type": "Literal",
           "value": 1
-        }
+        },
+        "via": "direct"
       },
       {
+        "assignmentOperator": "=",
         "graphNodeId": "state:writes",
         "operation": "assign",
         "path": [],
@@ -1591,7 +1618,8 @@
           "start": 887,
           "type": "Literal",
           "value": 2
-        }
+        },
+        "via": "direct"
       }
     ]
   },

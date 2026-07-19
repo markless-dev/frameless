@@ -1,10 +1,36 @@
 import type * as ESTree from '@tsrx/core/types/estree';
-import type {
-	SemanticGraphBinding,
-	SemanticModuleImport,
-	SemanticSyncPolicy,
-	SourceSpan,
-} from '@markless/compiler';
+
+/** Arcade-owned source coordinates. Filenames are normalized module-relative paths. */
+export interface SourceSpan {
+	readonly filename: string;
+	readonly start: number;
+	readonly end: number;
+}
+
+/** Structural module import contract exposed to emitters. */
+export interface ModuleImport {
+	readonly localName: string;
+	readonly source: string;
+	readonly kind: 'default' | 'named' | 'namespace';
+	readonly importedName?: string;
+}
+
+export type GraphBindingKind = 'state' | 'computed' | 'element' | 'prop';
+export type DeclarationKind = 'const' | 'let' | 'var';
+export type GraphValueKind = 'scalar' | 'object' | 'array' | 'unknown';
+
+export type SyncPolicyCondition =
+	| { readonly type: 'and'; readonly conditions: ReadonlyArray<SyncPolicyCondition> }
+	| { readonly type: 'or'; readonly conditions: ReadonlyArray<SyncPolicyCondition> }
+	| { readonly type: 'not'; readonly condition: SyncPolicyCondition }
+	| { readonly type: 'graph-truthy'; readonly graphNodeId: string; readonly path: ReadonlyArray<string> }
+	| { readonly type: 'constant-truthy'; readonly value: JsonValue }
+	| { readonly type: 'event-equals'; readonly field: string; readonly value: JsonValue };
+export type SyncPolicyBranch = {
+	readonly when: SyncPolicyCondition;
+	readonly actions: ReadonlyArray<'preventDefault' | 'stopPropagation'>;
+};
+export type SyncPolicy = SyncPolicyBranch | { readonly branches: ReadonlyArray<SyncPolicyBranch> };
 
 /** Discriminator for the first serialized Arcade emitter-input contract. */
 export const ENRICHED_IR_VERSION = 'arcade-enriched-ir/1' as const;
@@ -144,6 +170,12 @@ export interface LocalDeclaration {
 	readonly semanticRecordIds: ReadonlyArray<string>;
 }
 
+/** Component-body lifetime rules that every target emitter must preserve. */
+export interface ComponentEvaluationPolicy {
+	readonly ordinaryLocals: 'once-per-instance';
+	readonly computedBindings: 'reactive';
+}
+
 /** The return value selected by an early component guard. */
 export type GuardResult =
 	| { readonly kind: 'null' }
@@ -160,6 +192,7 @@ export interface GuardReturn {
 /** Everything an emitter needs from one component body and render tree. */
 export interface EnrichedComponent {
 	readonly name: string;
+	readonly evaluation: ComponentEvaluationPolicy;
 	readonly props: {
 		readonly graphNodeId: string;
 		readonly entries: ReadonlyArray<PropDestructuringEntry>;
@@ -187,16 +220,18 @@ export interface StateWriteRecord {
 	readonly value?: SerializableAstNode;
 	readonly arguments?: ReadonlyArray<SerializableAstNode>;
 	readonly sourceSpan?: SourceSpan;
+	/** Present when a handler-local alias mutation is projected back to state. */
+	readonly via?: 'direct' | 'handler-local-alias';
 }
 
 /** State, computed, element, and props records retained under compiler ids. */
 export interface EnrichedGraphBinding {
 	readonly id: string;
 	readonly name: string;
-	readonly kind: SemanticGraphBinding['kind'];
-	readonly declarationKind?: SemanticGraphBinding['declarationKind'];
+	readonly kind: GraphBindingKind;
+	readonly declarationKind?: DeclarationKind;
 	readonly writable: boolean;
-	readonly valueKind?: SemanticGraphBinding['valueKind'];
+	readonly valueKind?: GraphValueKind;
 	readonly async?: boolean;
 	readonly asyncCapable?: boolean;
 	readonly initialValue?: JsonValue;
@@ -213,7 +248,7 @@ export interface EnrichedAliasRecord {
 	readonly target: string;
 	readonly graphNodeId: string;
 	readonly path: ReadonlyArray<string>;
-	readonly declarationKind?: SemanticGraphBinding['declarationKind'];
+	readonly declarationKind?: DeclarationKind;
 	readonly sourceSpan?: SourceSpan;
 }
 
@@ -227,7 +262,7 @@ export interface EnrichedEventRecord {
 	readonly id: string;
 	readonly hostNodeId: string;
 	readonly eventName: string;
-	readonly syncPolicy?: SemanticSyncPolicy;
+	readonly syncPolicy?: SyncPolicy;
 	readonly handlers: ReadonlyArray<EventHandlerRecord>;
 }
 
@@ -238,6 +273,13 @@ export interface EnrichedRecordTable {
 	readonly events: ReadonlyArray<EnrichedEventRecord>;
 	readonly stateReads: ReadonlyArray<StateReadRecord>;
 	readonly stateWrites: ReadonlyArray<StateWriteRecord>;
+}
+
+/** One authored component export in the module's public shape. */
+export interface ComponentExport {
+	readonly kind: 'default' | 'named';
+	readonly componentName: string;
+	readonly exportedName: string;
 }
 
 /**
@@ -251,7 +293,8 @@ export interface EnrichedIR {
 	readonly version: typeof ENRICHED_IR_VERSION;
 	readonly filename: string;
 	/** Authored module imports retained as module semantics, not source text. */
-	readonly imports: ReadonlyArray<SemanticModuleImport>;
+	readonly imports: ReadonlyArray<ModuleImport>;
+	readonly module: { readonly exports: ReadonlyArray<ComponentExport> };
 	readonly components: ReadonlyArray<EnrichedComponent>;
 	readonly records: EnrichedRecordTable;
 }
