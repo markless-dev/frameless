@@ -2,8 +2,11 @@ export type TraceHandler = (name: string, payload: unknown, event?: Event) => vo
 
 let currentTrace: TraceHandler | null = null;
 
-export function setTrace(handler: TraceHandler | null): void {
+export function registerTrace(handler: TraceHandler): () => void {
   currentTrace = handler;
+  return () => {
+    if (currentTrace === handler) currentTrace = null;
+  };
 }
 
 export function emitTrace(name: string, payload: unknown, event?: Event): void {

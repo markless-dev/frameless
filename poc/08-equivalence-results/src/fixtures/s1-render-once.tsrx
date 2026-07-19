@@ -1,9 +1,9 @@
 import { computed, state } from '@markless/core';
 
-export function RenderOnce({ label: displayLabel, multiplier, visible, onTrace }) @{
+export function RenderOnce({ label, multiplier, visible, onTrace }) @{
 	const setup = onTrace('setup', { runs: 1 });
 	let count = state(1);
-	const prefix = `${displayLabel}:`;
+	const prefix = `${label}:`;
 	const derived = computed(() => `${prefix}${count * multiplier}`);
 
 	<div data-s1-root="">
@@ -18,9 +18,7 @@ export function RenderOnce({ label: displayLabel, multiplier, visible, onTrace }
 						count++;
 						onTrace('change', { count });
 					}}
-				>
-					increment
-				</button>
+				>increment</button>
 			</section>
 		}
 	</div>

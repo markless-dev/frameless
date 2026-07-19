@@ -20,6 +20,15 @@ three identity checks pass does it start the Chromium matrix. This ties native
 Markless execution to the exact sources that produced the enriched-IR goldens and
 both generated targets.
 
+Every zero-prop app wrapper has a `<div data-harness>` host root because of finding
+#5. `marklessAdapter.host()` returns that element, so the wrapper is mount plumbing
+and is not included in scenario observations. Before `render()` is called, the
+adapter registers the run's `onTrace` recorder with the mutable bridge; this ordering
+is required because `render()` executes S1's ordinary `setup` local synchronously.
+The returned registration release is identity-guarded, so an older run cannot clear a
+newer recorder. The listener-free `trace-bridge.node.test.ts` verifies mount/action
+phase attribution, recorder routing, cleanup, and that stale-release behavior.
+
 ## Verify
 
 ```sh
@@ -88,7 +97,7 @@ Vendored tarball SHA-256 receipts:
   callback to those wrapper apps. The bridge exists solely because of this root-prop
   limitation; it only forwards callback arguments and does not alter component
   behavior.
-- Markless 0.1.1 cannot production-bundle all of the child fixture's lazy event
+- Finding #4 — Markless 0.1.1 cannot production-bundle all of the child fixture's lazy event
   symbols after props flow through the wrapper. Its symbol lowering rewrites graph
   reads inside object-literal callback payloads into invalid property syntax. For S1,
   `onTrace('change', { count })` becomes
@@ -97,11 +106,28 @@ Vendored tarball SHA-256 receipts:
   `{ context.graph.read("state:checked"): event.currentTarget.checked }`; the submit
   payload fails the same way. Rolldown reports ``PARSE_ERROR: Expected `,` or `}` but
   found `.` `` in the corresponding `virtual:markless:symbol:` modules (S1 symbol 0;
-  S3 symbols 2 and 3), before any browser execution. This is a further callback-prop
-  / lazy-handler compilation limitation. Per the W-D1 stop condition, the harness
-  does not use internal APIs or rewrite the byte-authoritative fixtures to bypass it,
-  and the 24-comparison browser matrix cannot be regenerated from this wrapper state.
-- In the restricted worker sandbox, the three Node fixture-identity checks pass, but
+  S3 symbols 2 and 3), before any production-browser execution. The authored evidence
+  sites are `src/fixtures/s1-render-once.tsrx` line 19 and
+  `src/fixtures/s3-event-form.tsrx` lines 30 and 40. This is a further callback-prop /
+  lazy-handler production-bundling limitation. The comparison suite uses the Vite
+  development transform and does not rewrite the byte-authoritative fixtures.
+- Finding #5 — bare component at template root CSR-renders empty, silently.
+  Evidence: `src/wrappers/s1-visible.app.tsrx` formerly had
+  `<RenderOnce>` as its root; Markless's public-render `staticHtml()` returns `""`
+  when a component root is unavailable (`packages/compiler/src/passes/public-render/template.ts`
+  lines 164-170 in the read-only Markless checkout). All wrappers now use a host
+  `<div data-harness>`; `src/adapters/markless.ts` lines 18-21 deliberately observes
+  inside that host so harness structure never enters the oracle contract.
+- Finding #6 — aliased prop destructuring — `{ label: displayLabel }` — arrives
+  undefined in child-component composition; plain destructuring works, c6c. The
+  source mechanism is visible in
+  `packages/compiler/src/passes/public-render/shared.ts` lines 218-232: prop-name
+  collection chooses the local value name (`displayLabel`), while lines 49-50 later
+  emit plain `{ displayLabel } = props`, losing the authored `label` key. S1 now uses
+  plain `label`; `poc/05` retains equally strong aliased-destructuring and alias-record
+  assertions in the compile-only `alias-coverage.tsrx` fixture.
+- In the restricted worker sandbox, all five listener-free Node checks pass (three
+  fixture-identity checks and two bridge-wiring checks), but
   Chromium verification cannot start because Vitest's local browser server is denied
   `listen(127.0.0.1:51204)` with `EPERM`. Registry access also fails with `ENOTFOUND`
   and the isolated pnpm store lacks several tarballs, so verification reused exact

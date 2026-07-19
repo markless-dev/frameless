@@ -30,7 +30,7 @@ legacy source-string fields still fail with construct-level diagnostics.
 | Render-visible writable state | `createSignal` | Template/computed graph references determine visibility and provide fine-grained DOM updates. |
 | Invisible writable cell | Plain setup-local `let` | S2's next-id cell persists for the owner lifetime without unnecessary reactivity. |
 | Ordinary once-local | Ordered component-setup declaration or expression | Solid setup runs once per owner; S1's `prefix` captures the first label because the IR marks ordinary locals once-per-instance. |
-| Prop alias | `props.path` at each reactive read | No broad destructuring freezes reactive prop getters. First-value capture occurs only while evaluating an ordinary once-local or state initializer. |
+| Destructured prop binding | `props.path` at each reactive read | No broad destructuring freezes reactive prop getters. First-value capture occurs only while evaluating an ordinary once-local or state initializer; the runtime S1 golden contains no renamed prop alias. |
 | Computed binding | Zero-argument derived arrow | Signal and prop reads remain tracked without an effect. |
 | Direct handler state write/update | Ordered signal setter call | The handler AST supplies statement order, RHS expressions, and callback placement. Invisible-cell updates remain plain JavaScript updates. |
 | Handler-local deep alias write | Preserve alias mutation, then lower the recorded root assignment to a setter | This is the validated in-place-row plus array-refresh strategy, rather than an immutable row replacement that remounts `<For>` children. |

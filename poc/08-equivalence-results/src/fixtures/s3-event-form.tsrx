@@ -39,9 +39,7 @@ export function EventForm({ initial, onTrace }) @{
 				writes = 2;
 				onTrace('submit', { text, checked, writes: 2 }, event);
 			}}
-		>
-			submit
-		</button>
+		>submit</button>
 		<output data-writes="true">{writes}</output>
 		<span data-callback-marker="present" />
 	</form>
