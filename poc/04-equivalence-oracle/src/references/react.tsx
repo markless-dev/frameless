@@ -2,7 +2,9 @@ import { useRef, useState } from 'react';
 
 type Trace = (name:string,payload:unknown,event?:Event)=>void;
 export function ReactS1({label,multiplier,visible,onTrace}:{label:string;multiplier:number;visible:boolean;onTrace:Trace}) {
-  const [count,setCount]=useState(()=>{onTrace('setup',{runs:1});return 1;});
+  const didRunSetup=useRef(false);
+  if(!didRunSetup.current){didRunSetup.current=true;onTrace('setup',{runs:1});}
+  const [count,setCount]=useState(()=>1);
   const derived=`${label}:${count*multiplier}`; const report=()=>onTrace('change',{count:count+1});
   if(!visible) return <p data-branch="hidden">hidden</p>;
   return <section data-scenario="s1"><output data-value="derived">{derived}</output><button data-action="increment" onClick={()=>{setCount(v=>v+1);report();}}>increment</button></section>;

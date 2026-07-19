@@ -1,82 +1,68 @@
 // @vitest-environment node
 // esbuild's TextEncoder invariant breaks under jsdom; this suite needs no DOM.
-import { readFile } from 'node:fs/promises';
-import { parse } from '@babel/parser';
-import traverseModule from '@babel/traverse';
-import { ESLint } from 'eslint';
+import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import { transformWithEsbuild } from 'vite';
-import { describe, expect, test } from 'vitest';
+import { afterEach, describe, expect, test } from 'vitest';
+import { checkGeneratedFiles, checkSources, discoverGeneratedFiles } from '../src/gate/index.mjs';
 
-const traverse = traverseModule.default ?? traverseModule;
-const files = ['generated/S1.jsx', 'generated/S2.jsx', 'generated/S3.jsx'];
+const temporaryRoots = [];
+afterEach(async () => Promise.all(temporaryRoots.splice(0).map((root) => rm(root, { recursive: true, force: true }))));
 
-function parseGenerated(source) {
-  return parse(source, { sourceType: 'module', plugins: ['jsx'] });
+const component = (body, imports = 'useState') => `import { ${imports} } from 'react';
+export function Mutant({items = []}) {
+  ${body}
+  return <ul>{items.map((item, index) => <li key={item.id}>{item.id}</li>)}</ul>;
+}`;
+
+async function policies(source) {
+  const result = await checkSources([{ file: 'generated/Mutant.jsx', source }]);
+  return result.violations.map((entry) => entry.policy);
 }
 
-describe('C8 conventionality gate', () => {
-  test('Vite/esbuild compiles every React 18.3.1 component', async () => {
+describe('C8 reusable conventionality gate', () => {
+  test('discovers, compiles, and accepts every generated React component', async () => {
+    const files = await discoverGeneratedFiles();
+    expect(files).toEqual(['generated/S1.jsx', 'generated/S2.jsx', 'generated/S3.jsx']);
     for (const file of files) {
       const source = await readFile(file, 'utf8');
       const result = await transformWithEsbuild(source, file, { loader: 'jsx', jsx: 'automatic', jsxImportSource: 'react' });
       expect(result.code).toContain('react/jsx-runtime');
     }
+    const result = await checkGeneratedFiles();
+    expect(result.violations, JSON.stringify(result.violations, null, 2)).toEqual([]);
   });
 
-  test('React and Hooks recommended lint has zero errors and no disable comments', async () => {
-    const eslint = new ESLint({ cwd: process.cwd(), useEslintrc: true });
-    const results = await eslint.lintFiles(files);
-    expect(results.reduce((count, result) => count + result.errorCount, 0), JSON.stringify(results.flatMap((result) => result.messages), null, 2)).toBe(0);
-    for (const file of files) expect(await readFile(file, 'utf8')).not.toMatch(/eslint-(?:disable|enable)/);
+  test.each([
+    ['unused import', component('const [value, setValue] = useState(0);', 'useMemo, useState'), 'eslint:no-unused-vars'],
+    ['React recommended rule', component('const [value] = useState(0); value;').replace('<ul>', '<ul class="bad">'), 'eslint:react/no-unknown-property'],
+    ['Hooks recommended rule', component('useEffect(() => { console.log(items); }, []);', 'useEffect'), 'eslint:react-hooks/exhaustive-deps'],
+    ['index key', component('const [value, setValue] = useState(0); setValue;', 'useState').replace('key={item.id}', 'key={index}'), 'index-key'],
+    ['aliased setter', component('const [value, setValue] = useState(0); const update = setValue; update(1); value;'), 'render-phase-setter'],
+    ['member-wrapped setter', component('const [value, setValue] = useState(0); const updates = { run: setValue }; updates.run(1); value;'), 'render-phase-setter'],
+    ['helper-wrapped setter', component('const [value, setValue] = useState(0); const update = () => setValue(1); update(); value;'), 'render-phase-setter'],
+    ['disable directive', `/* eslint-disable no-unused-vars */\n${component('const [value] = useState(0); value;')}`, 'eslint-directive'],
+    ['enable directive', `/* eslint-enable no-unused-vars */\n${component('const [value] = useState(0); value;')}`, 'eslint-directive'],
+    ['inline rule config', `/* eslint no-unused-vars: "off" */\n${component('const [value] = useState(0); value;')}`, 'eslint-directive'],
+    ['undisclosed require', component("const fs = require('node:fs'); fs; const [value] = useState(0); value;"), 'undisclosed-import'],
+    ['undisclosed dynamic import', component("import('elsewhere'); const [value] = useState(0); value;"), 'undisclosed-import'],
+    ['dead expression', component('const [value] = useState(0); value;'), 'eslint:no-unused-expressions'],
+    ['unreachable statement', component('const [value] = useState(0); if (items.length) return null; return null; value;'), 'eslint:no-unreachable'],
+    ['hook after guard', component('if (!items.length) return null; const [value] = useState(0); value;'), 'hook-after-guard'],
+    ['aliased useEffect', component('useSideEffect(() => {});', 'useEffect as useSideEffect'), 'render-phase-effect'],
+    ['aliased useLayoutEffect', component('layout(() => {});', 'useLayoutEffect as layout'), 'render-phase-effect'],
+    ['aliased useInsertionEffect', component('insert(() => {});', 'useInsertionEffect as insert'), 'render-phase-effect'],
+  ])('rejects the %s bypass', async (_name, source, policy) => {
+    expect(await policies(source)).toContain(policy);
   });
 
-  test('imports, bindings, render phase, and hook sites satisfy AST policy', async () => {
-    for (const file of files) {
-      const ast = parseGenerated(await readFile(file, 'utf8'));
-      const imports = ast.program.body.filter((node) => node.type === 'ImportDeclaration');
-      expect(imports.map((node) => node.source.value)).toEqual(['react']);
-      traverse(ast, {
-        Program: {
-          exit(path) {
-            for (const [name, binding] of Object.entries(path.scope.bindings)) {
-              if (binding.path.isFunctionDeclaration() && binding.path.parentPath.isExportNamedDeclaration()) continue;
-              expect(binding.referenced, `${file}: unused ${name}`).toBe(true);
-            }
-          },
-        },
-        Function: {
-          exit(path) {
-            for (const [name, binding] of Object.entries(path.scope.bindings)) {
-              expect(binding.referenced, `${file}: unused ${name}`).toBe(true);
-            }
-          },
-        },
-        CallExpression(path) {
-          const isHook = path.node.callee.type === 'Identifier' && /^use[A-Z]/.test(path.node.callee.name);
-          if (isHook) {
-            const owner = path.getFunctionParent();
-            expect(owner?.isFunctionDeclaration(), `${file}: hook outside component top level`).toBe(true);
-            expect(owner.parentPath.isExportNamedDeclaration()).toBe(true);
-            expect(path.getStatementParent().parentPath.node).toBe(owner.node.body);
-            const firstGuard = owner.node.body.body.find((node) => node.type === 'IfStatement');
-            if (firstGuard) expect(path.node.start).toBeLessThan(firstGuard.start);
-          }
-          if (path.getFunctionParent()?.isFunctionDeclaration() && path.node.callee.type === 'Identifier' && /^set[A-Z]/.test(path.node.callee.name)) {
-            throw path.buildCodeFrameError('setState during render');
-          }
-          if (path.getFunctionParent()?.isFunctionDeclaration() && path.node.callee.type === 'Identifier' && /^useEffect$/.test(path.node.callee.name)) {
-            throw path.buildCodeFrameError('effect during render');
-          }
-        },
-      });
-    }
-  });
-
-  test('S2 uses the IR key expression, never the map index', async () => {
-    const ast = parseGenerated(await readFile('generated/S2.jsx', 'utf8'));
-    const keys = [];
-    traverse(ast, { JSXAttribute(path) { if (path.node.name.name === 'key') keys.push(path.node.value.expression); } });
-    expect(keys).toHaveLength(1);
-    expect(keys[0]).toMatchObject({ type: 'MemberExpression', object: { type: 'Identifier', name: 'todo' }, property: { type: 'Identifier', name: 'id' } });
+  test('a newly added generated file is discovered and cannot bypass the gate', async () => {
+    const root = await mkdtemp(resolve('.gate-mutation-'));
+    temporaryRoots.push(root);
+    await mkdir(resolve(root, 'generated'));
+    await writeFile(resolve(root, 'generated/New.jsx'), component('const [value] = useState(0); value;'));
+    const result = await checkGeneratedFiles({ cwd: root });
+    expect(result.files).toEqual(['generated/New.jsx']);
+    expect(result.violations.map((entry) => entry.policy)).toContain('eslint:no-unused-expressions');
   });
 });
