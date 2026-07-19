@@ -1,0 +1,34 @@
+{
+  "name": "arcade-poc-05-enriched-ir",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "tsc --noEmit && vitest run"
+  },
+  "dependencies": {
+    "@markless/compiler": "file:../vendor/markless-compiler-0.1.1.tgz",
+    "@tsrx/core": "0.1.32"
+  },
+  "devDependencies": {
+    "@types/node": "24.12.2",
+    "typescript": "5.9.3",
+    "vitest": "4.1.5"
+  },
+  "pnpm": {
+    "overrides": {
+      "@markless/bundler": "file:../vendor/markless-bundler-0.1.1.tgz",
+      "@markless/compiler": "file:../vendor/markless-compiler-0.1.1.tgz",
+      "@markless/core": "file:../vendor/markless-core-0.1.1.tgz",
+      "@markless/router": "file:../vendor/markless-router-0.1.1.tgz",
+      "@markless/runtime": "file:../vendor/markless-runtime-0.1.1.tgz",
+      "@markless/serializer": "file:../vendor/markless-serializer-0.1.1.tgz",
+      "@markless/web": "file:../vendor/markless-web-0.1.1.tgz",
+      "@tsrx/core": "0.1.32"
+    }
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@10.33.2"
+}
