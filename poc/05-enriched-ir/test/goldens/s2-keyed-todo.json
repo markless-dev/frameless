@@ -493,35 +493,35 @@
                 }
               ],
               "expression": {
-                "end": 771,
+                "end": 764,
                 "left": {
                   "computed": false,
-                  "end": 765,
+                  "end": 758,
                   "object": {
-                    "end": 758,
+                    "end": 751,
                     "name": "todos",
-                    "start": 753,
+                    "start": 746,
                     "type": "Identifier"
                   },
                   "optional": false,
                   "property": {
-                    "end": 765,
+                    "end": 758,
                     "name": "length",
-                    "start": 759,
+                    "start": 752,
                     "type": "Identifier"
                   },
-                  "start": 753,
+                  "start": 746,
                   "type": "MemberExpression"
                 },
                 "operator": "===",
                 "right": {
-                  "end": 771,
+                  "end": 764,
                   "raw": "0",
-                  "start": 770,
+                  "start": 763,
                   "type": "Literal",
                   "value": 0
                 },
-                "start": 753,
+                "start": 746,
                 "type": "BinaryExpression"
               },
               "id": "branch-site:0",
@@ -541,9 +541,9 @@
                 {
                   "collection": {
                     "expression": {
-                      "end": 860,
+                      "end": 853,
                       "name": "todos",
-                      "start": 855,
+                      "start": 848,
                       "type": "Identifier"
                     },
                     "reads": [
@@ -560,21 +560,21 @@
                   "key": {
                     "expression": {
                       "computed": false,
-                      "end": 873,
+                      "end": 866,
                       "object": {
-                        "end": 870,
+                        "end": 863,
                         "name": "todo",
-                        "start": 866,
+                        "start": 859,
                         "type": "Identifier"
                       },
                       "optional": false,
                       "property": {
-                        "end": 873,
+                        "end": 866,
                         "name": "id",
-                        "start": 871,
+                        "start": 864,
                         "type": "Identifier"
                       },
-                      "start": 866,
+                      "start": 859,
                       "type": "MemberExpression"
                     },
                     "reads": [
@@ -597,21 +597,21 @@
                             {
                               "expression": {
                                 "computed": false,
-                                "end": 955,
+                                "end": 948,
                                 "object": {
-                                  "end": 952,
+                                  "end": 945,
                                   "name": "todo",
-                                  "start": 948,
+                                  "start": 941,
                                   "type": "Identifier"
                                 },
                                 "optional": false,
                                 "property": {
-                                  "end": 955,
+                                  "end": 948,
                                   "name": "id",
-                                  "start": 953,
+                                  "start": 946,
                                   "type": "Identifier"
                                 },
-                                "start": 948,
+                                "start": 941,
                                 "type": "MemberExpression"
                               },
                               "kind": "attribute",
@@ -629,21 +629,21 @@
                             {
                               "expression": {
                                 "computed": false,
-                                "end": 981,
+                                "end": 974,
                                 "object": {
-                                  "end": 975,
+                                  "end": 968,
                                   "name": "todo",
-                                  "start": 971,
+                                  "start": 964,
                                   "type": "Identifier"
                                 },
                                 "optional": false,
                                 "property": {
-                                  "end": 981,
+                                  "end": 974,
                                   "name": "title",
-                                  "start": 976,
+                                  "start": 969,
                                   "type": "Identifier"
                                 },
-                                "start": 971,
+                                "start": 964,
                                 "type": "MemberExpression"
                               },
                               "kind": "property",
@@ -673,21 +673,21 @@
                             {
                               "expression": {
                                 "computed": false,
-                                "end": 1324,
+                                "end": 1317,
                                 "object": {
-                                  "end": 1321,
+                                  "end": 1314,
                                   "name": "todo",
-                                  "start": 1317,
+                                  "start": 1310,
                                   "type": "Identifier"
                                 },
                                 "optional": false,
                                 "property": {
-                                  "end": 1324,
+                                  "end": 1317,
                                   "name": "id",
-                                  "start": 1322,
+                                  "start": 1315,
                                   "type": "Identifier"
                                 },
-                                "start": 1317,
+                                "start": 1310,
                                 "type": "MemberExpression"
                               },
                               "kind": "attribute",
@@ -705,21 +705,21 @@
                             {
                               "expression": {
                                 "computed": false,
-                                "end": 1351,
+                                "end": 1344,
                                 "object": {
-                                  "end": 1346,
+                                  "end": 1339,
                                   "name": "todo",
-                                  "start": 1342,
+                                  "start": 1335,
                                   "type": "Identifier"
                                 },
                                 "optional": false,
                                 "property": {
-                                  "end": 1351,
+                                  "end": 1344,
                                   "name": "done",
-                                  "start": 1347,
+                                  "start": 1340,
                                   "type": "Identifier"
                                 },
-                                "start": 1342,
+                                "start": 1335,
                                 "type": "MemberExpression"
                               },
                               "kind": "property",
@@ -760,21 +760,21 @@
                             {
                               "expression": {
                                 "computed": false,
-                                "end": 1708,
+                                "end": 1701,
                                 "object": {
-                                  "end": 1705,
+                                  "end": 1698,
                                   "name": "todo",
-                                  "start": 1701,
+                                  "start": 1694,
                                   "type": "Identifier"
                                 },
                                 "optional": false,
                                 "property": {
-                                  "end": 1708,
+                                  "end": 1701,
                                   "name": "id",
-                                  "start": 1706,
+                                  "start": 1699,
                                   "type": "Identifier"
                                 },
-                                "start": 1701,
+                                "start": 1694,
                                 "type": "MemberExpression"
                               },
                               "kind": "attribute",
@@ -803,21 +803,21 @@
                         {
                           "expression": {
                             "computed": false,
-                            "end": 914,
+                            "end": 907,
                             "object": {
-                              "end": 911,
+                              "end": 904,
                               "name": "todo",
-                              "start": 907,
+                              "start": 900,
                               "type": "Identifier"
                             },
                             "optional": false,
                             "property": {
-                              "end": 914,
+                              "end": 907,
                               "name": "id",
-                              "start": 912,
+                              "start": 905,
                               "type": "Identifier"
                             },
-                            "start": 907,
+                            "start": 900,
                             "type": "MemberExpression"
                           },
                           "kind": "attribute",
@@ -1318,34 +1318,34 @@
             "operation": "assign",
             "path": [],
             "sourceSpan": {
-              "end": 1168,
+              "end": 1161,
               "filename": "src/fixtures/s2-keyed-todo.tsrx",
-              "start": 1163
+              "start": 1156
             },
             "value": {
               "arguments": [],
               "callee": {
                 "computed": false,
-                "end": 1182,
+                "end": 1175,
                 "object": {
-                  "end": 1176,
+                  "end": 1169,
                   "name": "todos",
-                  "start": 1171,
+                  "start": 1164,
                   "type": "Identifier"
                 },
                 "optional": false,
                 "property": {
-                  "end": 1182,
+                  "end": 1175,
                   "name": "slice",
-                  "start": 1177,
+                  "start": 1170,
                   "type": "Identifier"
                 },
-                "start": 1171,
+                "start": 1164,
                 "type": "MemberExpression"
               },
-              "end": 1184,
+              "end": 1177,
               "optional": false,
-              "start": 1171,
+              "start": 1164,
               "type": "CallExpression"
             },
             "via": "direct"
@@ -1356,14 +1356,14 @@
             "operation": "assign",
             "path": [],
             "sourceSpan": {
-              "end": 1579,
+              "end": 1572,
               "filename": "src/fixtures/s2-keyed-todo.tsrx",
-              "start": 1574
+              "start": 1567
             },
             "value": {
-              "end": 1586,
+              "end": 1579,
               "name": "copy",
-              "start": 1582,
+              "start": 1575,
               "type": "Identifier"
             },
             "via": "direct"
@@ -1374,96 +1374,96 @@
             "operation": "assign",
             "path": [],
             "sourceSpan": {
-              "end": 1752,
+              "end": 1745,
               "filename": "src/fixtures/s2-keyed-todo.tsrx",
-              "start": 1747
+              "start": 1740
             },
             "value": {
               "arguments": [
                 {
                   "async": false,
                   "body": {
-                    "end": 1797,
+                    "end": 1790,
                     "left": {
                       "computed": false,
-                      "end": 1785,
+                      "end": 1778,
                       "object": {
-                        "end": 1782,
+                        "end": 1775,
                         "name": "item",
-                        "start": 1778,
+                        "start": 1771,
                         "type": "Identifier"
                       },
                       "optional": false,
                       "property": {
-                        "end": 1785,
+                        "end": 1778,
                         "name": "id",
-                        "start": 1783,
+                        "start": 1776,
                         "type": "Identifier"
                       },
-                      "start": 1778,
+                      "start": 1771,
                       "type": "MemberExpression"
                     },
                     "operator": "!==",
                     "right": {
                       "computed": false,
-                      "end": 1797,
+                      "end": 1790,
                       "object": {
-                        "end": 1794,
+                        "end": 1787,
                         "name": "todo",
-                        "start": 1790,
+                        "start": 1783,
                         "type": "Identifier"
                       },
                       "optional": false,
                       "property": {
-                        "end": 1797,
+                        "end": 1790,
                         "name": "id",
-                        "start": 1795,
+                        "start": 1788,
                         "type": "Identifier"
                       },
-                      "start": 1790,
+                      "start": 1783,
                       "type": "MemberExpression"
                     },
-                    "start": 1778,
+                    "start": 1771,
                     "type": "BinaryExpression"
                   },
-                  "end": 1797,
+                  "end": 1790,
                   "expression": true,
                   "generator": false,
                   "id": null,
                   "params": [
                     {
-                      "end": 1773,
+                      "end": 1766,
                       "name": "item",
-                      "start": 1769,
+                      "start": 1762,
                       "type": "Identifier"
                     }
                   ],
-                  "start": 1768,
+                  "start": 1761,
                   "type": "ArrowFunctionExpression"
                 }
               ],
               "callee": {
                 "computed": false,
-                "end": 1767,
+                "end": 1760,
                 "object": {
-                  "end": 1760,
+                  "end": 1753,
                   "name": "todos",
-                  "start": 1755,
+                  "start": 1748,
                   "type": "Identifier"
                 },
                 "optional": false,
                 "property": {
-                  "end": 1767,
+                  "end": 1760,
                   "name": "filter",
-                  "start": 1761,
+                  "start": 1754,
                   "type": "Identifier"
                 },
-                "start": 1755,
+                "start": 1748,
                 "type": "MemberExpression"
               },
-              "end": 1798,
+              "end": 1791,
               "optional": false,
-              "start": 1755,
+              "start": 1748,
               "type": "CallExpression"
             },
             "via": "direct"
@@ -1474,14 +1474,14 @@
             "operation": "assign",
             "path": [],
             "sourceSpan": {
-              "end": 2035,
+              "end": 2013,
               "filename": "src/fixtures/s2-keyed-todo.tsrx",
-              "start": 2030
+              "start": 2008
             },
             "value": {
-              "end": 2043,
+              "end": 2021,
               "name": "order",
-              "start": 2038,
+              "start": 2016,
               "type": "Identifier"
             },
             "via": "direct"
@@ -1492,14 +1492,14 @@
             "operation": "assign",
             "path": [],
             "sourceSpan": {
-              "end": 2249,
+              "end": 2220,
               "filename": "src/fixtures/s2-keyed-todo.tsrx",
-              "start": 2244
+              "start": 2215
             },
             "value": {
               "elements": [],
-              "end": 2254,
-              "start": 2252,
+              "end": 2225,
+              "start": 2223,
               "type": "ArrayExpression"
             },
             "via": "direct"
@@ -1513,14 +1513,14 @@
               "done"
             ],
             "sourceSpan": {
-              "end": 1554,
+              "end": 1547,
               "filename": "src/fixtures/s2-keyed-todo.tsrx",
-              "start": 1544
+              "start": 1537
             },
             "value": {
-              "end": 1564,
+              "end": 1557,
               "name": "checked",
-              "start": 1557,
+              "start": 1550,
               "type": "Identifier"
             },
             "via": "handler-local-alias"
@@ -1534,14 +1534,14 @@
               "title"
             ],
             "sourceSpan": {
-              "end": 1145,
+              "end": 1138,
               "filename": "src/fixtures/s2-keyed-todo.tsrx",
-              "start": 1134
+              "start": 1127
             },
             "value": {
-              "end": 1153,
+              "end": 1146,
               "name": "title",
-              "start": 1148,
+              "start": 1141,
               "type": "Identifier"
             },
             "via": "handler-local-alias"
@@ -2132,62 +2132,62 @@
                   {
                     "declarations": [
                       {
-                        "end": 1059,
+                        "end": 1052,
                         "id": {
-                          "end": 1031,
+                          "end": 1024,
                           "name": "title",
-                          "start": 1026,
+                          "start": 1019,
                           "type": "Identifier"
                         },
                         "init": {
                           "computed": false,
-                          "end": 1059,
+                          "end": 1052,
                           "object": {
                             "computed": false,
-                            "end": 1053,
+                            "end": 1046,
                             "object": {
-                              "end": 1039,
+                              "end": 1032,
                               "name": "event",
-                              "start": 1034,
+                              "start": 1027,
                               "type": "Identifier"
                             },
                             "optional": false,
                             "property": {
-                              "end": 1053,
+                              "end": 1046,
                               "name": "currentTarget",
-                              "start": 1040,
+                              "start": 1033,
                               "type": "Identifier"
                             },
-                            "start": 1034,
+                            "start": 1027,
                             "type": "MemberExpression"
                           },
                           "optional": false,
                           "property": {
-                            "end": 1059,
+                            "end": 1052,
                             "name": "value",
-                            "start": 1054,
+                            "start": 1047,
                             "type": "Identifier"
                           },
-                          "start": 1034,
+                          "start": 1027,
                           "type": "MemberExpression"
                         },
-                        "start": 1026,
+                        "start": 1019,
                         "type": "VariableDeclarator"
                       }
                     ],
-                    "end": 1060,
+                    "end": 1053,
                     "kind": "const",
-                    "start": 1020,
+                    "start": 1013,
                     "type": "VariableDeclaration"
                   },
                   {
                     "declarations": [
                       {
-                        "end": 1124,
+                        "end": 1117,
                         "id": {
-                          "end": 1080,
+                          "end": 1073,
                           "name": "alias",
-                          "start": 1075,
+                          "start": 1068,
                           "type": "Identifier"
                         },
                         "init": {
@@ -2195,142 +2195,142 @@
                             {
                               "async": false,
                               "body": {
-                                "end": 1123,
+                                "end": 1116,
                                 "left": {
                                   "computed": false,
-                                  "end": 1111,
+                                  "end": 1104,
                                   "object": {
-                                    "end": 1108,
+                                    "end": 1101,
                                     "name": "item",
-                                    "start": 1104,
+                                    "start": 1097,
                                     "type": "Identifier"
                                   },
                                   "optional": false,
                                   "property": {
-                                    "end": 1111,
+                                    "end": 1104,
                                     "name": "id",
-                                    "start": 1109,
+                                    "start": 1102,
                                     "type": "Identifier"
                                   },
-                                  "start": 1104,
+                                  "start": 1097,
                                   "type": "MemberExpression"
                                 },
                                 "operator": "===",
                                 "right": {
                                   "computed": false,
-                                  "end": 1123,
+                                  "end": 1116,
                                   "object": {
-                                    "end": 1120,
+                                    "end": 1113,
                                     "name": "todo",
-                                    "start": 1116,
+                                    "start": 1109,
                                     "type": "Identifier"
                                   },
                                   "optional": false,
                                   "property": {
-                                    "end": 1123,
+                                    "end": 1116,
                                     "name": "id",
-                                    "start": 1121,
+                                    "start": 1114,
                                     "type": "Identifier"
                                   },
-                                  "start": 1116,
+                                  "start": 1109,
                                   "type": "MemberExpression"
                                 },
-                                "start": 1104,
+                                "start": 1097,
                                 "type": "BinaryExpression"
                               },
-                              "end": 1123,
+                              "end": 1116,
                               "expression": true,
                               "generator": false,
                               "id": null,
                               "params": [
                                 {
-                                  "end": 1099,
+                                  "end": 1092,
                                   "name": "item",
-                                  "start": 1095,
+                                  "start": 1088,
                                   "type": "Identifier"
                                 }
                               ],
-                              "start": 1094,
+                              "start": 1087,
                               "type": "ArrowFunctionExpression"
                             }
                           ],
                           "callee": {
                             "computed": false,
-                            "end": 1093,
+                            "end": 1086,
                             "object": {
-                              "end": 1088,
+                              "end": 1081,
                               "name": "todos",
-                              "start": 1083,
+                              "start": 1076,
                               "type": "Identifier"
                             },
                             "optional": false,
                             "property": {
-                              "end": 1093,
+                              "end": 1086,
                               "name": "find",
-                              "start": 1089,
+                              "start": 1082,
                               "type": "Identifier"
                             },
-                            "start": 1083,
+                            "start": 1076,
                             "type": "MemberExpression"
                           },
-                          "end": 1124,
+                          "end": 1117,
                           "optional": false,
-                          "start": 1083,
+                          "start": 1076,
                           "type": "CallExpression"
                         },
-                        "start": 1075,
+                        "start": 1068,
                         "type": "VariableDeclarator"
                       }
                     ],
-                    "end": 1125,
+                    "end": 1118,
                     "kind": "const",
-                    "start": 1069,
+                    "start": 1062,
                     "type": "VariableDeclaration"
                   },
                   {
-                    "end": 1154,
+                    "end": 1147,
                     "expression": {
-                      "end": 1153,
+                      "end": 1146,
                       "left": {
                         "computed": false,
-                        "end": 1145,
+                        "end": 1138,
                         "object": {
-                          "end": 1139,
+                          "end": 1132,
                           "name": "alias",
-                          "start": 1134,
+                          "start": 1127,
                           "type": "Identifier"
                         },
                         "optional": false,
                         "property": {
-                          "end": 1145,
+                          "end": 1138,
                           "name": "title",
-                          "start": 1140,
+                          "start": 1133,
                           "type": "Identifier"
                         },
-                        "start": 1134,
+                        "start": 1127,
                         "type": "MemberExpression"
                       },
                       "operator": "=",
                       "right": {
-                        "end": 1153,
+                        "end": 1146,
                         "name": "title",
-                        "start": 1148,
+                        "start": 1141,
                         "type": "Identifier"
                       },
-                      "start": 1134,
+                      "start": 1127,
                       "type": "AssignmentExpression"
                     },
-                    "start": 1134,
+                    "start": 1127,
                     "type": "ExpressionStatement"
                   },
                   {
-                    "end": 1185,
+                    "end": 1178,
                     "expression": {
-                      "end": 1184,
+                      "end": 1177,
                       "left": {
-                        "end": 1168,
+                        "end": 1161,
                         "name": "todos",
-                        "start": 1163,
+                        "start": 1156,
                         "type": "Identifier"
                       },
                       "operator": "=",
@@ -2338,146 +2338,146 @@
                         "arguments": [],
                         "callee": {
                           "computed": false,
-                          "end": 1182,
+                          "end": 1175,
                           "object": {
-                            "end": 1176,
+                            "end": 1169,
                             "name": "todos",
-                            "start": 1171,
+                            "start": 1164,
                             "type": "Identifier"
                           },
                           "optional": false,
                           "property": {
-                            "end": 1182,
+                            "end": 1175,
                             "name": "slice",
-                            "start": 1177,
+                            "start": 1170,
                             "type": "Identifier"
                           },
-                          "start": 1171,
+                          "start": 1164,
                           "type": "MemberExpression"
                         },
-                        "end": 1184,
+                        "end": 1177,
                         "optional": false,
-                        "start": 1171,
+                        "start": 1164,
                         "type": "CallExpression"
                       },
-                      "start": 1163,
+                      "start": 1156,
                       "type": "AssignmentExpression"
                     },
-                    "start": 1163,
+                    "start": 1156,
                     "type": "ExpressionStatement"
                   },
                   {
-                    "end": 1241,
+                    "end": 1234,
                     "expression": {
                       "arguments": [
                         {
-                          "end": 1208,
+                          "end": 1201,
                           "raw": "'edit'",
-                          "start": 1202,
+                          "start": 1195,
                           "type": "Literal",
                           "value": "edit"
                         },
                         {
-                          "end": 1232,
+                          "end": 1225,
                           "properties": [
                             {
                               "computed": false,
-                              "end": 1223,
+                              "end": 1216,
                               "key": {
-                                "end": 1214,
+                                "end": 1207,
                                 "name": "id",
-                                "start": 1212,
+                                "start": 1205,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 1212,
+                              "start": 1205,
                               "type": "Property",
                               "value": {
                                 "computed": false,
-                                "end": 1223,
+                                "end": 1216,
                                 "object": {
-                                  "end": 1220,
+                                  "end": 1213,
                                   "name": "todo",
-                                  "start": 1216,
+                                  "start": 1209,
                                   "type": "Identifier"
                                 },
                                 "optional": false,
                                 "property": {
-                                  "end": 1223,
+                                  "end": 1216,
                                   "name": "id",
-                                  "start": 1221,
+                                  "start": 1214,
                                   "type": "Identifier"
                                 },
-                                "start": 1216,
+                                "start": 1209,
                                 "type": "MemberExpression"
                               }
                             },
                             {
                               "computed": false,
-                              "end": 1230,
+                              "end": 1223,
                               "key": {
-                                "end": 1230,
+                                "end": 1223,
                                 "name": "title",
-                                "start": 1225,
+                                "start": 1218,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": true,
-                              "start": 1225,
+                              "start": 1218,
                               "type": "Property",
                               "value": {
-                                "end": 1230,
+                                "end": 1223,
                                 "name": "title",
-                                "start": 1225,
+                                "start": 1218,
                                 "type": "Identifier"
                               }
                             }
                           ],
-                          "start": 1210,
+                          "start": 1203,
                           "type": "ObjectExpression"
                         },
                         {
-                          "end": 1239,
+                          "end": 1232,
                           "name": "event",
-                          "start": 1234,
+                          "start": 1227,
                           "type": "Identifier"
                         }
                       ],
                       "callee": {
-                        "end": 1201,
+                        "end": 1194,
                         "name": "onTrace",
-                        "start": 1194,
+                        "start": 1187,
                         "type": "Identifier"
                       },
-                      "end": 1240,
+                      "end": 1233,
                       "optional": false,
-                      "start": 1194,
+                      "start": 1187,
                       "type": "CallExpression"
                     },
-                    "start": 1194,
+                    "start": 1187,
                     "type": "ExpressionStatement"
                   }
                 ],
-                "end": 1250,
-                "start": 1010,
+                "end": 1243,
+                "start": 1003,
                 "type": "BlockStatement"
               },
-              "end": 1250,
+              "end": 1243,
               "expression": false,
               "generator": false,
               "id": null,
               "params": [
                 {
-                  "end": 1005,
+                  "end": 998,
                   "name": "event",
-                  "start": 1000,
+                  "start": 993,
                   "type": "Identifier"
                 }
               ],
-              "start": 999,
+              "start": 992,
               "type": "ArrowFunctionExpression"
             },
             "reads": [
@@ -2508,34 +2508,34 @@
                 "operation": "assign",
                 "path": [],
                 "sourceSpan": {
-                  "end": 1168,
+                  "end": 1161,
                   "filename": "src/fixtures/s2-keyed-todo.tsrx",
-                  "start": 1163
+                  "start": 1156
                 },
                 "value": {
                   "arguments": [],
                   "callee": {
                     "computed": false,
-                    "end": 1182,
+                    "end": 1175,
                     "object": {
-                      "end": 1176,
+                      "end": 1169,
                       "name": "todos",
-                      "start": 1171,
+                      "start": 1164,
                       "type": "Identifier"
                     },
                     "optional": false,
                     "property": {
-                      "end": 1182,
+                      "end": 1175,
                       "name": "slice",
-                      "start": 1177,
+                      "start": 1170,
                       "type": "Identifier"
                     },
-                    "start": 1171,
+                    "start": 1164,
                     "type": "MemberExpression"
                   },
-                  "end": 1184,
+                  "end": 1177,
                   "optional": false,
-                  "start": 1171,
+                  "start": 1164,
                   "type": "CallExpression"
                 },
                 "via": "direct"
@@ -2549,14 +2549,14 @@
                   "title"
                 ],
                 "sourceSpan": {
-                  "end": 1145,
+                  "end": 1138,
                   "filename": "src/fixtures/s2-keyed-todo.tsrx",
-                  "start": 1134
+                  "start": 1127
                 },
                 "value": {
-                  "end": 1153,
+                  "end": 1146,
                   "name": "title",
-                  "start": 1148,
+                  "start": 1141,
                   "type": "Identifier"
                 },
                 "via": "handler-local-alias"
@@ -2578,107 +2578,107 @@
                   {
                     "declarations": [
                       {
-                        "end": 1434,
+                        "end": 1427,
                         "id": {
-                          "end": 1404,
+                          "end": 1397,
                           "name": "checked",
-                          "start": 1397,
+                          "start": 1390,
                           "type": "Identifier"
                         },
                         "init": {
                           "computed": false,
-                          "end": 1434,
+                          "end": 1427,
                           "object": {
                             "computed": false,
-                            "end": 1426,
+                            "end": 1419,
                             "object": {
-                              "end": 1412,
+                              "end": 1405,
                               "name": "event",
-                              "start": 1407,
+                              "start": 1400,
                               "type": "Identifier"
                             },
                             "optional": false,
                             "property": {
-                              "end": 1426,
+                              "end": 1419,
                               "name": "currentTarget",
-                              "start": 1413,
+                              "start": 1406,
                               "type": "Identifier"
                             },
-                            "start": 1407,
+                            "start": 1400,
                             "type": "MemberExpression"
                           },
                           "optional": false,
                           "property": {
-                            "end": 1434,
+                            "end": 1427,
                             "name": "checked",
-                            "start": 1427,
+                            "start": 1420,
                             "type": "Identifier"
                           },
-                          "start": 1407,
+                          "start": 1400,
                           "type": "MemberExpression"
                         },
-                        "start": 1397,
+                        "start": 1390,
                         "type": "VariableDeclarator"
                       }
                     ],
-                    "end": 1435,
+                    "end": 1428,
                     "kind": "const",
-                    "start": 1391,
+                    "start": 1384,
                     "type": "VariableDeclaration"
                   },
                   {
                     "declarations": [
                       {
-                        "end": 1470,
+                        "end": 1463,
                         "id": {
-                          "end": 1454,
+                          "end": 1447,
                           "name": "copy",
-                          "start": 1450,
+                          "start": 1443,
                           "type": "Identifier"
                         },
                         "init": {
                           "arguments": [],
                           "callee": {
                             "computed": false,
-                            "end": 1468,
+                            "end": 1461,
                             "object": {
-                              "end": 1462,
+                              "end": 1455,
                               "name": "todos",
-                              "start": 1457,
+                              "start": 1450,
                               "type": "Identifier"
                             },
                             "optional": false,
                             "property": {
-                              "end": 1468,
+                              "end": 1461,
                               "name": "slice",
-                              "start": 1463,
+                              "start": 1456,
                               "type": "Identifier"
                             },
-                            "start": 1457,
+                            "start": 1450,
                             "type": "MemberExpression"
                           },
-                          "end": 1470,
+                          "end": 1463,
                           "optional": false,
-                          "start": 1457,
+                          "start": 1450,
                           "type": "CallExpression"
                         },
-                        "start": 1450,
+                        "start": 1443,
                         "type": "VariableDeclarator"
                       }
                     ],
-                    "end": 1471,
+                    "end": 1464,
                     "kind": "const",
-                    "start": 1444,
+                    "start": 1437,
                     "type": "VariableDeclaration"
                   },
                   {
                     "declarations": [
                       {
-                        "end": 1534,
+                        "end": 1527,
                         "id": {
-                          "end": 1491,
+                          "end": 1484,
                           "name": "alias",
-                          "start": 1486,
+                          "start": 1479,
                           "type": "Identifier"
                         },
                         "init": {
@@ -2686,269 +2686,269 @@
                             {
                               "async": false,
                               "body": {
-                                "end": 1533,
+                                "end": 1526,
                                 "left": {
                                   "computed": false,
-                                  "end": 1521,
+                                  "end": 1514,
                                   "object": {
-                                    "end": 1518,
+                                    "end": 1511,
                                     "name": "item",
-                                    "start": 1514,
+                                    "start": 1507,
                                     "type": "Identifier"
                                   },
                                   "optional": false,
                                   "property": {
-                                    "end": 1521,
+                                    "end": 1514,
                                     "name": "id",
-                                    "start": 1519,
+                                    "start": 1512,
                                     "type": "Identifier"
                                   },
-                                  "start": 1514,
+                                  "start": 1507,
                                   "type": "MemberExpression"
                                 },
                                 "operator": "===",
                                 "right": {
                                   "computed": false,
-                                  "end": 1533,
+                                  "end": 1526,
                                   "object": {
-                                    "end": 1530,
+                                    "end": 1523,
                                     "name": "todo",
-                                    "start": 1526,
+                                    "start": 1519,
                                     "type": "Identifier"
                                   },
                                   "optional": false,
                                   "property": {
-                                    "end": 1533,
+                                    "end": 1526,
                                     "name": "id",
-                                    "start": 1531,
+                                    "start": 1524,
                                     "type": "Identifier"
                                   },
-                                  "start": 1526,
+                                  "start": 1519,
                                   "type": "MemberExpression"
                                 },
-                                "start": 1514,
+                                "start": 1507,
                                 "type": "BinaryExpression"
                               },
-                              "end": 1533,
+                              "end": 1526,
                               "expression": true,
                               "generator": false,
                               "id": null,
                               "params": [
                                 {
-                                  "end": 1509,
+                                  "end": 1502,
                                   "name": "item",
-                                  "start": 1505,
+                                  "start": 1498,
                                   "type": "Identifier"
                                 }
                               ],
-                              "start": 1504,
+                              "start": 1497,
                               "type": "ArrowFunctionExpression"
                             }
                           ],
                           "callee": {
                             "computed": false,
-                            "end": 1503,
+                            "end": 1496,
                             "object": {
-                              "end": 1498,
+                              "end": 1491,
                               "name": "copy",
-                              "start": 1494,
+                              "start": 1487,
                               "type": "Identifier"
                             },
                             "optional": false,
                             "property": {
-                              "end": 1503,
+                              "end": 1496,
                               "name": "find",
-                              "start": 1499,
+                              "start": 1492,
                               "type": "Identifier"
                             },
-                            "start": 1494,
+                            "start": 1487,
                             "type": "MemberExpression"
                           },
-                          "end": 1534,
+                          "end": 1527,
                           "optional": false,
-                          "start": 1494,
+                          "start": 1487,
                           "type": "CallExpression"
                         },
-                        "start": 1486,
+                        "start": 1479,
                         "type": "VariableDeclarator"
                       }
                     ],
-                    "end": 1535,
+                    "end": 1528,
                     "kind": "const",
-                    "start": 1480,
+                    "start": 1473,
                     "type": "VariableDeclaration"
                   },
                   {
-                    "end": 1565,
+                    "end": 1558,
                     "expression": {
-                      "end": 1564,
+                      "end": 1557,
                       "left": {
                         "computed": false,
-                        "end": 1554,
+                        "end": 1547,
                         "object": {
-                          "end": 1549,
+                          "end": 1542,
                           "name": "alias",
-                          "start": 1544,
+                          "start": 1537,
                           "type": "Identifier"
                         },
                         "optional": false,
                         "property": {
-                          "end": 1554,
+                          "end": 1547,
                           "name": "done",
-                          "start": 1550,
+                          "start": 1543,
                           "type": "Identifier"
                         },
-                        "start": 1544,
+                        "start": 1537,
                         "type": "MemberExpression"
                       },
                       "operator": "=",
                       "right": {
-                        "end": 1564,
+                        "end": 1557,
                         "name": "checked",
-                        "start": 1557,
+                        "start": 1550,
                         "type": "Identifier"
                       },
-                      "start": 1544,
+                      "start": 1537,
                       "type": "AssignmentExpression"
                     },
-                    "start": 1544,
+                    "start": 1537,
                     "type": "ExpressionStatement"
                   },
                   {
-                    "end": 1587,
+                    "end": 1580,
                     "expression": {
-                      "end": 1586,
+                      "end": 1579,
                       "left": {
-                        "end": 1579,
+                        "end": 1572,
                         "name": "todos",
-                        "start": 1574,
+                        "start": 1567,
                         "type": "Identifier"
                       },
                       "operator": "=",
                       "right": {
-                        "end": 1586,
+                        "end": 1579,
                         "name": "copy",
-                        "start": 1582,
+                        "start": 1575,
                         "type": "Identifier"
                       },
-                      "start": 1574,
+                      "start": 1567,
                       "type": "AssignmentExpression"
                     },
-                    "start": 1574,
+                    "start": 1567,
                     "type": "ExpressionStatement"
                   },
                   {
-                    "end": 1647,
+                    "end": 1640,
                     "expression": {
                       "arguments": [
                         {
-                          "end": 1612,
+                          "end": 1605,
                           "raw": "'toggle'",
-                          "start": 1604,
+                          "start": 1597,
                           "type": "Literal",
                           "value": "toggle"
                         },
                         {
-                          "end": 1638,
+                          "end": 1631,
                           "properties": [
                             {
                               "computed": false,
-                              "end": 1627,
+                              "end": 1620,
                               "key": {
-                                "end": 1618,
+                                "end": 1611,
                                 "name": "id",
-                                "start": 1616,
+                                "start": 1609,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 1616,
+                              "start": 1609,
                               "type": "Property",
                               "value": {
                                 "computed": false,
-                                "end": 1627,
+                                "end": 1620,
                                 "object": {
-                                  "end": 1624,
+                                  "end": 1617,
                                   "name": "todo",
-                                  "start": 1620,
+                                  "start": 1613,
                                   "type": "Identifier"
                                 },
                                 "optional": false,
                                 "property": {
-                                  "end": 1627,
+                                  "end": 1620,
                                   "name": "id",
-                                  "start": 1625,
+                                  "start": 1618,
                                   "type": "Identifier"
                                 },
-                                "start": 1620,
+                                "start": 1613,
                                 "type": "MemberExpression"
                               }
                             },
                             {
                               "computed": false,
-                              "end": 1636,
+                              "end": 1629,
                               "key": {
-                                "end": 1636,
+                                "end": 1629,
                                 "name": "checked",
-                                "start": 1629,
+                                "start": 1622,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": true,
-                              "start": 1629,
+                              "start": 1622,
                               "type": "Property",
                               "value": {
-                                "end": 1636,
+                                "end": 1629,
                                 "name": "checked",
-                                "start": 1629,
+                                "start": 1622,
                                 "type": "Identifier"
                               }
                             }
                           ],
-                          "start": 1614,
+                          "start": 1607,
                           "type": "ObjectExpression"
                         },
                         {
-                          "end": 1645,
+                          "end": 1638,
                           "name": "event",
-                          "start": 1640,
+                          "start": 1633,
                           "type": "Identifier"
                         }
                       ],
                       "callee": {
-                        "end": 1603,
+                        "end": 1596,
                         "name": "onTrace",
-                        "start": 1596,
+                        "start": 1589,
                         "type": "Identifier"
                       },
-                      "end": 1646,
+                      "end": 1639,
                       "optional": false,
-                      "start": 1596,
+                      "start": 1589,
                       "type": "CallExpression"
                     },
-                    "start": 1596,
+                    "start": 1589,
                     "type": "ExpressionStatement"
                   }
                 ],
-                "end": 1656,
-                "start": 1381,
+                "end": 1649,
+                "start": 1374,
                 "type": "BlockStatement"
               },
-              "end": 1656,
+              "end": 1649,
               "expression": false,
               "generator": false,
               "id": null,
               "params": [
                 {
-                  "end": 1376,
+                  "end": 1369,
                   "name": "event",
-                  "start": 1371,
+                  "start": 1364,
                   "type": "Identifier"
                 }
               ],
-              "start": 1370,
+              "start": 1363,
               "type": "ArrowFunctionExpression"
             },
             "reads": [
@@ -2979,14 +2979,14 @@
                 "operation": "assign",
                 "path": [],
                 "sourceSpan": {
-                  "end": 1579,
+                  "end": 1572,
                   "filename": "src/fixtures/s2-keyed-todo.tsrx",
-                  "start": 1574
+                  "start": 1567
                 },
                 "value": {
-                  "end": 1586,
+                  "end": 1579,
                   "name": "copy",
-                  "start": 1582,
+                  "start": 1575,
                   "type": "Identifier"
                 },
                 "via": "direct"
@@ -3000,14 +3000,14 @@
                   "done"
                 ],
                 "sourceSpan": {
-                  "end": 1554,
+                  "end": 1547,
                   "filename": "src/fixtures/s2-keyed-todo.tsrx",
-                  "start": 1544
+                  "start": 1537
                 },
                 "value": {
-                  "end": 1564,
+                  "end": 1557,
                   "name": "checked",
-                  "start": 1557,
+                  "start": 1550,
                   "type": "Identifier"
                 },
                 "via": "handler-local-alias"
@@ -3027,13 +3027,13 @@
               "body": {
                 "body": [
                   {
-                    "end": 1799,
+                    "end": 1792,
                     "expression": {
-                      "end": 1798,
+                      "end": 1791,
                       "left": {
-                        "end": 1752,
+                        "end": 1745,
                         "name": "todos",
-                        "start": 1747,
+                        "start": 1740,
                         "type": "Identifier"
                       },
                       "operator": "=",
@@ -3042,186 +3042,186 @@
                           {
                             "async": false,
                             "body": {
-                              "end": 1797,
+                              "end": 1790,
                               "left": {
                                 "computed": false,
-                                "end": 1785,
+                                "end": 1778,
                                 "object": {
-                                  "end": 1782,
+                                  "end": 1775,
                                   "name": "item",
-                                  "start": 1778,
+                                  "start": 1771,
                                   "type": "Identifier"
                                 },
                                 "optional": false,
                                 "property": {
-                                  "end": 1785,
+                                  "end": 1778,
                                   "name": "id",
-                                  "start": 1783,
+                                  "start": 1776,
                                   "type": "Identifier"
                                 },
-                                "start": 1778,
+                                "start": 1771,
                                 "type": "MemberExpression"
                               },
                               "operator": "!==",
                               "right": {
                                 "computed": false,
-                                "end": 1797,
+                                "end": 1790,
                                 "object": {
-                                  "end": 1794,
+                                  "end": 1787,
                                   "name": "todo",
-                                  "start": 1790,
+                                  "start": 1783,
                                   "type": "Identifier"
                                 },
                                 "optional": false,
                                 "property": {
-                                  "end": 1797,
+                                  "end": 1790,
                                   "name": "id",
-                                  "start": 1795,
+                                  "start": 1788,
                                   "type": "Identifier"
                                 },
-                                "start": 1790,
+                                "start": 1783,
                                 "type": "MemberExpression"
                               },
-                              "start": 1778,
+                              "start": 1771,
                               "type": "BinaryExpression"
                             },
-                            "end": 1797,
+                            "end": 1790,
                             "expression": true,
                             "generator": false,
                             "id": null,
                             "params": [
                               {
-                                "end": 1773,
+                                "end": 1766,
                                 "name": "item",
-                                "start": 1769,
+                                "start": 1762,
                                 "type": "Identifier"
                               }
                             ],
-                            "start": 1768,
+                            "start": 1761,
                             "type": "ArrowFunctionExpression"
                           }
                         ],
                         "callee": {
                           "computed": false,
-                          "end": 1767,
+                          "end": 1760,
                           "object": {
-                            "end": 1760,
+                            "end": 1753,
                             "name": "todos",
-                            "start": 1755,
+                            "start": 1748,
                             "type": "Identifier"
                           },
                           "optional": false,
                           "property": {
-                            "end": 1767,
+                            "end": 1760,
                             "name": "filter",
-                            "start": 1761,
+                            "start": 1754,
                             "type": "Identifier"
                           },
-                          "start": 1755,
+                          "start": 1748,
                           "type": "MemberExpression"
                         },
-                        "end": 1798,
+                        "end": 1791,
                         "optional": false,
-                        "start": 1755,
+                        "start": 1748,
                         "type": "CallExpression"
                       },
-                      "start": 1747,
+                      "start": 1740,
                       "type": "AssignmentExpression"
                     },
-                    "start": 1747,
+                    "start": 1740,
                     "type": "ExpressionStatement"
                   },
                   {
-                    "end": 1850,
+                    "end": 1843,
                     "expression": {
                       "arguments": [
                         {
-                          "end": 1824,
+                          "end": 1817,
                           "raw": "'remove'",
-                          "start": 1816,
+                          "start": 1809,
                           "type": "Literal",
                           "value": "remove"
                         },
                         {
-                          "end": 1841,
+                          "end": 1834,
                           "properties": [
                             {
                               "computed": false,
-                              "end": 1839,
+                              "end": 1832,
                               "key": {
-                                "end": 1830,
+                                "end": 1823,
                                 "name": "id",
-                                "start": 1828,
+                                "start": 1821,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 1828,
+                              "start": 1821,
                               "type": "Property",
                               "value": {
                                 "computed": false,
-                                "end": 1839,
+                                "end": 1832,
                                 "object": {
-                                  "end": 1836,
+                                  "end": 1829,
                                   "name": "todo",
-                                  "start": 1832,
+                                  "start": 1825,
                                   "type": "Identifier"
                                 },
                                 "optional": false,
                                 "property": {
-                                  "end": 1839,
+                                  "end": 1832,
                                   "name": "id",
-                                  "start": 1837,
+                                  "start": 1830,
                                   "type": "Identifier"
                                 },
-                                "start": 1832,
+                                "start": 1825,
                                 "type": "MemberExpression"
                               }
                             }
                           ],
-                          "start": 1826,
+                          "start": 1819,
                           "type": "ObjectExpression"
                         },
                         {
-                          "end": 1848,
+                          "end": 1841,
                           "name": "event",
-                          "start": 1843,
+                          "start": 1836,
                           "type": "Identifier"
                         }
                       ],
                       "callee": {
-                        "end": 1815,
+                        "end": 1808,
                         "name": "onTrace",
-                        "start": 1808,
+                        "start": 1801,
                         "type": "Identifier"
                       },
-                      "end": 1849,
+                      "end": 1842,
                       "optional": false,
-                      "start": 1808,
+                      "start": 1801,
                       "type": "CallExpression"
                     },
-                    "start": 1808,
+                    "start": 1801,
                     "type": "ExpressionStatement"
                   }
                 ],
-                "end": 1859,
-                "start": 1737,
+                "end": 1852,
+                "start": 1730,
                 "type": "BlockStatement"
               },
-              "end": 1859,
+              "end": 1852,
               "expression": false,
               "generator": false,
               "id": null,
               "params": [
                 {
-                  "end": 1732,
+                  "end": 1725,
                   "name": "event",
-                  "start": 1727,
+                  "start": 1720,
                   "type": "Identifier"
                 }
               ],
-              "start": 1726,
+              "start": 1719,
               "type": "ArrowFunctionExpression"
             },
             "reads": [
@@ -3252,96 +3252,96 @@
                 "operation": "assign",
                 "path": [],
                 "sourceSpan": {
-                  "end": 1752,
+                  "end": 1745,
                   "filename": "src/fixtures/s2-keyed-todo.tsrx",
-                  "start": 1747
+                  "start": 1740
                 },
                 "value": {
                   "arguments": [
                     {
                       "async": false,
                       "body": {
-                        "end": 1797,
+                        "end": 1790,
                         "left": {
                           "computed": false,
-                          "end": 1785,
+                          "end": 1778,
                           "object": {
-                            "end": 1782,
+                            "end": 1775,
                             "name": "item",
-                            "start": 1778,
+                            "start": 1771,
                             "type": "Identifier"
                           },
                           "optional": false,
                           "property": {
-                            "end": 1785,
+                            "end": 1778,
                             "name": "id",
-                            "start": 1783,
+                            "start": 1776,
                             "type": "Identifier"
                           },
-                          "start": 1778,
+                          "start": 1771,
                           "type": "MemberExpression"
                         },
                         "operator": "!==",
                         "right": {
                           "computed": false,
-                          "end": 1797,
+                          "end": 1790,
                           "object": {
-                            "end": 1794,
+                            "end": 1787,
                             "name": "todo",
-                            "start": 1790,
+                            "start": 1783,
                             "type": "Identifier"
                           },
                           "optional": false,
                           "property": {
-                            "end": 1797,
+                            "end": 1790,
                             "name": "id",
-                            "start": 1795,
+                            "start": 1788,
                             "type": "Identifier"
                           },
-                          "start": 1790,
+                          "start": 1783,
                           "type": "MemberExpression"
                         },
-                        "start": 1778,
+                        "start": 1771,
                         "type": "BinaryExpression"
                       },
-                      "end": 1797,
+                      "end": 1790,
                       "expression": true,
                       "generator": false,
                       "id": null,
                       "params": [
                         {
-                          "end": 1773,
+                          "end": 1766,
                           "name": "item",
-                          "start": 1769,
+                          "start": 1762,
                           "type": "Identifier"
                         }
                       ],
-                      "start": 1768,
+                      "start": 1761,
                       "type": "ArrowFunctionExpression"
                     }
                   ],
                   "callee": {
                     "computed": false,
-                    "end": 1767,
+                    "end": 1760,
                     "object": {
-                      "end": 1760,
+                      "end": 1753,
                       "name": "todos",
-                      "start": 1755,
+                      "start": 1748,
                       "type": "Identifier"
                     },
                     "optional": false,
                     "property": {
-                      "end": 1767,
+                      "end": 1760,
                       "name": "filter",
-                      "start": 1761,
+                      "start": 1754,
                       "type": "Identifier"
                     },
-                    "start": 1755,
+                    "start": 1748,
                     "type": "MemberExpression"
                   },
-                  "end": 1798,
+                  "end": 1791,
                   "optional": false,
-                  "start": 1755,
+                  "start": 1748,
                   "type": "CallExpression"
                 },
                 "via": "direct"
@@ -3363,118 +3363,118 @@
                   {
                     "declarations": [
                       {
-                        "end": 2024,
+                        "end": 2002,
                         "id": {
-                          "end": 1998,
+                          "end": 1976,
                           "name": "order",
-                          "start": 1993,
+                          "start": 1971,
                           "type": "Identifier"
                         },
                         "init": {
                           "arguments": [],
                           "callee": {
                             "computed": false,
-                            "end": 2022,
+                            "end": 2000,
                             "object": {
                               "arguments": [],
                               "callee": {
                                 "computed": false,
-                                "end": 2012,
+                                "end": 1990,
                                 "object": {
-                                  "end": 2006,
+                                  "end": 1984,
                                   "name": "todos",
-                                  "start": 2001,
+                                  "start": 1979,
                                   "type": "Identifier"
                                 },
                                 "optional": false,
                                 "property": {
-                                  "end": 2012,
+                                  "end": 1990,
                                   "name": "slice",
-                                  "start": 2007,
+                                  "start": 1985,
                                   "type": "Identifier"
                                 },
-                                "start": 2001,
+                                "start": 1979,
                                 "type": "MemberExpression"
                               },
-                              "end": 2014,
+                              "end": 1992,
                               "optional": false,
-                              "start": 2001,
+                              "start": 1979,
                               "type": "CallExpression"
                             },
                             "optional": false,
                             "property": {
-                              "end": 2022,
+                              "end": 2000,
                               "name": "reverse",
-                              "start": 2015,
+                              "start": 1993,
                               "type": "Identifier"
                             },
-                            "start": 2001,
+                            "start": 1979,
                             "type": "MemberExpression"
                           },
-                          "end": 2024,
+                          "end": 2002,
                           "optional": false,
-                          "start": 2001,
+                          "start": 1979,
                           "type": "CallExpression"
                         },
-                        "start": 1993,
+                        "start": 1971,
                         "type": "VariableDeclarator"
                       }
                     ],
-                    "end": 2025,
+                    "end": 2003,
                     "kind": "const",
-                    "start": 1987,
+                    "start": 1965,
                     "type": "VariableDeclaration"
                   },
                   {
-                    "end": 2044,
+                    "end": 2022,
                     "expression": {
-                      "end": 2043,
+                      "end": 2021,
                       "left": {
-                        "end": 2035,
+                        "end": 2013,
                         "name": "todos",
-                        "start": 2030,
+                        "start": 2008,
                         "type": "Identifier"
                       },
                       "operator": "=",
                       "right": {
-                        "end": 2043,
+                        "end": 2021,
                         "name": "order",
-                        "start": 2038,
+                        "start": 2016,
                         "type": "Identifier"
                       },
-                      "start": 2030,
+                      "start": 2008,
                       "type": "AssignmentExpression"
                     },
-                    "start": 2030,
+                    "start": 2008,
                     "type": "ExpressionStatement"
                   },
                   {
-                    "end": 2116,
+                    "end": 2094,
                     "expression": {
                       "arguments": [
                         {
-                          "end": 2066,
+                          "end": 2044,
                           "raw": "'reorder'",
-                          "start": 2057,
+                          "start": 2035,
                           "type": "Literal",
                           "value": "reorder"
                         },
                         {
-                          "end": 2107,
+                          "end": 2085,
                           "properties": [
                             {
                               "computed": false,
-                              "end": 2105,
+                              "end": 2083,
                               "key": {
-                                "end": 2075,
+                                "end": 2053,
                                 "name": "order",
-                                "start": 2070,
+                                "start": 2048,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 2070,
+                              "start": 2048,
                               "type": "Property",
                               "value": {
                                 "arguments": [
@@ -3482,107 +3482,107 @@
                                     "async": false,
                                     "body": {
                                       "computed": false,
-                                      "end": 2104,
+                                      "end": 2082,
                                       "object": {
-                                        "end": 2101,
+                                        "end": 2079,
                                         "name": "todo",
-                                        "start": 2097,
+                                        "start": 2075,
                                         "type": "Identifier"
                                       },
                                       "optional": false,
                                       "property": {
-                                        "end": 2104,
+                                        "end": 2082,
                                         "name": "id",
-                                        "start": 2102,
+                                        "start": 2080,
                                         "type": "Identifier"
                                       },
-                                      "start": 2097,
+                                      "start": 2075,
                                       "type": "MemberExpression"
                                     },
-                                    "end": 2104,
+                                    "end": 2082,
                                     "expression": true,
                                     "generator": false,
                                     "id": null,
                                     "params": [
                                       {
-                                        "end": 2092,
+                                        "end": 2070,
                                         "name": "todo",
-                                        "start": 2088,
+                                        "start": 2066,
                                         "type": "Identifier"
                                       }
                                     ],
-                                    "start": 2087,
+                                    "start": 2065,
                                     "type": "ArrowFunctionExpression"
                                   }
                                 ],
                                 "callee": {
                                   "computed": false,
-                                  "end": 2086,
+                                  "end": 2064,
                                   "object": {
-                                    "end": 2082,
+                                    "end": 2060,
                                     "name": "order",
-                                    "start": 2077,
+                                    "start": 2055,
                                     "type": "Identifier"
                                   },
                                   "optional": false,
                                   "property": {
-                                    "end": 2086,
+                                    "end": 2064,
                                     "name": "map",
-                                    "start": 2083,
+                                    "start": 2061,
                                     "type": "Identifier"
                                   },
-                                  "start": 2077,
+                                  "start": 2055,
                                   "type": "MemberExpression"
                                 },
-                                "end": 2105,
+                                "end": 2083,
                                 "optional": false,
-                                "start": 2077,
+                                "start": 2055,
                                 "type": "CallExpression"
                               }
                             }
                           ],
-                          "start": 2068,
+                          "start": 2046,
                           "type": "ObjectExpression"
                         },
                         {
-                          "end": 2114,
+                          "end": 2092,
                           "name": "event",
-                          "start": 2109,
+                          "start": 2087,
                           "type": "Identifier"
                         }
                       ],
                       "callee": {
-                        "end": 2056,
+                        "end": 2034,
                         "name": "onTrace",
-                        "start": 2049,
+                        "start": 2027,
                         "type": "Identifier"
                       },
-                      "end": 2115,
+                      "end": 2093,
                       "optional": false,
-                      "start": 2049,
+                      "start": 2027,
                       "type": "CallExpression"
                     },
-                    "start": 2049,
+                    "start": 2027,
                     "type": "ExpressionStatement"
                   }
                 ],
-                "end": 2121,
-                "start": 1981,
+                "end": 2099,
+                "start": 1959,
                 "type": "BlockStatement"
               },
-              "end": 2121,
+              "end": 2099,
               "expression": false,
               "generator": false,
               "id": null,
               "params": [
                 {
-                  "end": 1976,
+                  "end": 1954,
                   "name": "event",
-                  "start": 1971,
+                  "start": 1949,
                   "type": "Identifier"
                 }
               ],
-              "start": 1970,
+              "start": 1948,
               "type": "ArrowFunctionExpression"
             },
             "reads": [
@@ -3606,14 +3606,14 @@
                 "operation": "assign",
                 "path": [],
                 "sourceSpan": {
-                  "end": 2035,
+                  "end": 2013,
                   "filename": "src/fixtures/s2-keyed-todo.tsrx",
-                  "start": 2030
+                  "start": 2008
                 },
                 "value": {
-                  "end": 2043,
+                  "end": 2021,
                   "name": "order",
-                  "start": 2038,
+                  "start": 2016,
                   "type": "Identifier"
                 },
                 "via": "direct"
@@ -3635,142 +3635,142 @@
                   {
                     "declarations": [
                       {
-                        "end": 2238,
+                        "end": 2209,
                         "id": {
-                          "end": 2223,
+                          "end": 2194,
                           "name": "count",
-                          "start": 2218,
+                          "start": 2189,
                           "type": "Identifier"
                         },
                         "init": {
                           "computed": false,
-                          "end": 2238,
+                          "end": 2209,
                           "object": {
-                            "end": 2231,
+                            "end": 2202,
                             "name": "todos",
-                            "start": 2226,
+                            "start": 2197,
                             "type": "Identifier"
                           },
                           "optional": false,
                           "property": {
-                            "end": 2238,
+                            "end": 2209,
                             "name": "length",
-                            "start": 2232,
+                            "start": 2203,
                             "type": "Identifier"
                           },
-                          "start": 2226,
+                          "start": 2197,
                           "type": "MemberExpression"
                         },
-                        "start": 2218,
+                        "start": 2189,
                         "type": "VariableDeclarator"
                       }
                     ],
-                    "end": 2239,
+                    "end": 2210,
                     "kind": "const",
-                    "start": 2212,
+                    "start": 2183,
                     "type": "VariableDeclaration"
                   },
                   {
-                    "end": 2255,
+                    "end": 2226,
                     "expression": {
-                      "end": 2254,
+                      "end": 2225,
                       "left": {
-                        "end": 2249,
+                        "end": 2220,
                         "name": "todos",
-                        "start": 2244,
+                        "start": 2215,
                         "type": "Identifier"
                       },
                       "operator": "=",
                       "right": {
                         "elements": [],
-                        "end": 2254,
-                        "start": 2252,
+                        "end": 2225,
+                        "start": 2223,
                         "type": "ArrayExpression"
                       },
-                      "start": 2244,
+                      "start": 2215,
                       "type": "AssignmentExpression"
                     },
-                    "start": 2244,
+                    "start": 2215,
                     "type": "ExpressionStatement"
                   },
                   {
-                    "end": 2295,
+                    "end": 2266,
                     "expression": {
                       "arguments": [
                         {
-                          "end": 2275,
+                          "end": 2246,
                           "raw": "'clear'",
-                          "start": 2268,
+                          "start": 2239,
                           "type": "Literal",
                           "value": "clear"
                         },
                         {
-                          "end": 2286,
+                          "end": 2257,
                           "properties": [
                             {
                               "computed": false,
-                              "end": 2284,
+                              "end": 2255,
                               "key": {
-                                "end": 2284,
+                                "end": 2255,
                                 "name": "count",
-                                "start": 2279,
+                                "start": 2250,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": true,
-                              "start": 2279,
+                              "start": 2250,
                               "type": "Property",
                               "value": {
-                                "end": 2284,
+                                "end": 2255,
                                 "name": "count",
-                                "start": 2279,
+                                "start": 2250,
                                 "type": "Identifier"
                               }
                             }
                           ],
-                          "start": 2277,
+                          "start": 2248,
                           "type": "ObjectExpression"
                         },
                         {
-                          "end": 2293,
+                          "end": 2264,
                           "name": "event",
-                          "start": 2288,
+                          "start": 2259,
                           "type": "Identifier"
                         }
                       ],
                       "callee": {
-                        "end": 2267,
+                        "end": 2238,
                         "name": "onTrace",
-                        "start": 2260,
+                        "start": 2231,
                         "type": "Identifier"
                       },
-                      "end": 2294,
+                      "end": 2265,
                       "optional": false,
-                      "start": 2260,
+                      "start": 2231,
                       "type": "CallExpression"
                     },
-                    "start": 2260,
+                    "start": 2231,
                     "type": "ExpressionStatement"
                   }
                 ],
-                "end": 2300,
-                "start": 2206,
+                "end": 2271,
+                "start": 2177,
                 "type": "BlockStatement"
               },
-              "end": 2300,
+              "end": 2271,
               "expression": false,
               "generator": false,
               "id": null,
               "params": [
                 {
-                  "end": 2201,
+                  "end": 2172,
                   "name": "event",
-                  "start": 2196,
+                  "start": 2167,
                   "type": "Identifier"
                 }
               ],
-              "start": 2195,
+              "start": 2166,
               "type": "ArrowFunctionExpression"
             },
             "reads": [
@@ -3796,14 +3796,14 @@
                 "operation": "assign",
                 "path": [],
                 "sourceSpan": {
-                  "end": 2249,
+                  "end": 2220,
                   "filename": "src/fixtures/s2-keyed-todo.tsrx",
-                  "start": 2244
+                  "start": 2215
                 },
                 "value": {
                   "elements": [],
-                  "end": 2254,
-                  "start": 2252,
+                  "end": 2225,
+                  "start": 2223,
                   "type": "ArrayExpression"
                 },
                 "via": "direct"
@@ -3997,34 +3997,34 @@
         "operation": "assign",
         "path": [],
         "sourceSpan": {
-          "end": 1168,
+          "end": 1161,
           "filename": "src/fixtures/s2-keyed-todo.tsrx",
-          "start": 1163
+          "start": 1156
         },
         "value": {
           "arguments": [],
           "callee": {
             "computed": false,
-            "end": 1182,
+            "end": 1175,
             "object": {
-              "end": 1176,
+              "end": 1169,
               "name": "todos",
-              "start": 1171,
+              "start": 1164,
               "type": "Identifier"
             },
             "optional": false,
             "property": {
-              "end": 1182,
+              "end": 1175,
               "name": "slice",
-              "start": 1177,
+              "start": 1170,
               "type": "Identifier"
             },
-            "start": 1171,
+            "start": 1164,
             "type": "MemberExpression"
           },
-          "end": 1184,
+          "end": 1177,
           "optional": false,
-          "start": 1171,
+          "start": 1164,
           "type": "CallExpression"
         },
         "via": "direct"
@@ -4035,14 +4035,14 @@
         "operation": "assign",
         "path": [],
         "sourceSpan": {
-          "end": 1579,
+          "end": 1572,
           "filename": "src/fixtures/s2-keyed-todo.tsrx",
-          "start": 1574
+          "start": 1567
         },
         "value": {
-          "end": 1586,
+          "end": 1579,
           "name": "copy",
-          "start": 1582,
+          "start": 1575,
           "type": "Identifier"
         },
         "via": "direct"
@@ -4053,96 +4053,96 @@
         "operation": "assign",
         "path": [],
         "sourceSpan": {
-          "end": 1752,
+          "end": 1745,
           "filename": "src/fixtures/s2-keyed-todo.tsrx",
-          "start": 1747
+          "start": 1740
         },
         "value": {
           "arguments": [
             {
               "async": false,
               "body": {
-                "end": 1797,
+                "end": 1790,
                 "left": {
                   "computed": false,
-                  "end": 1785,
+                  "end": 1778,
                   "object": {
-                    "end": 1782,
+                    "end": 1775,
                     "name": "item",
-                    "start": 1778,
+                    "start": 1771,
                     "type": "Identifier"
                   },
                   "optional": false,
                   "property": {
-                    "end": 1785,
+                    "end": 1778,
                     "name": "id",
-                    "start": 1783,
+                    "start": 1776,
                     "type": "Identifier"
                   },
-                  "start": 1778,
+                  "start": 1771,
                   "type": "MemberExpression"
                 },
                 "operator": "!==",
                 "right": {
                   "computed": false,
-                  "end": 1797,
+                  "end": 1790,
                   "object": {
-                    "end": 1794,
+                    "end": 1787,
                     "name": "todo",
-                    "start": 1790,
+                    "start": 1783,
                     "type": "Identifier"
                   },
                   "optional": false,
                   "property": {
-                    "end": 1797,
+                    "end": 1790,
                     "name": "id",
-                    "start": 1795,
+                    "start": 1788,
                     "type": "Identifier"
                   },
-                  "start": 1790,
+                  "start": 1783,
                   "type": "MemberExpression"
                 },
-                "start": 1778,
+                "start": 1771,
                 "type": "BinaryExpression"
               },
-              "end": 1797,
+              "end": 1790,
               "expression": true,
               "generator": false,
               "id": null,
               "params": [
                 {
-                  "end": 1773,
+                  "end": 1766,
                   "name": "item",
-                  "start": 1769,
+                  "start": 1762,
                   "type": "Identifier"
                 }
               ],
-              "start": 1768,
+              "start": 1761,
               "type": "ArrowFunctionExpression"
             }
           ],
           "callee": {
             "computed": false,
-            "end": 1767,
+            "end": 1760,
             "object": {
-              "end": 1760,
+              "end": 1753,
               "name": "todos",
-              "start": 1755,
+              "start": 1748,
               "type": "Identifier"
             },
             "optional": false,
             "property": {
-              "end": 1767,
+              "end": 1760,
               "name": "filter",
-              "start": 1761,
+              "start": 1754,
               "type": "Identifier"
             },
-            "start": 1755,
+            "start": 1748,
             "type": "MemberExpression"
           },
-          "end": 1798,
+          "end": 1791,
           "optional": false,
-          "start": 1755,
+          "start": 1748,
           "type": "CallExpression"
         },
         "via": "direct"
@@ -4153,14 +4153,14 @@
         "operation": "assign",
         "path": [],
         "sourceSpan": {
-          "end": 2035,
+          "end": 2013,
           "filename": "src/fixtures/s2-keyed-todo.tsrx",
-          "start": 2030
+          "start": 2008
         },
         "value": {
-          "end": 2043,
+          "end": 2021,
           "name": "order",
-          "start": 2038,
+          "start": 2016,
           "type": "Identifier"
         },
         "via": "direct"
@@ -4171,14 +4171,14 @@
         "operation": "assign",
         "path": [],
         "sourceSpan": {
-          "end": 2249,
+          "end": 2220,
           "filename": "src/fixtures/s2-keyed-todo.tsrx",
-          "start": 2244
+          "start": 2215
         },
         "value": {
           "elements": [],
-          "end": 2254,
-          "start": 2252,
+          "end": 2225,
+          "start": 2223,
           "type": "ArrayExpression"
         },
         "via": "direct"
@@ -4192,14 +4192,14 @@
           "done"
         ],
         "sourceSpan": {
-          "end": 1554,
+          "end": 1547,
           "filename": "src/fixtures/s2-keyed-todo.tsrx",
-          "start": 1544
+          "start": 1537
         },
         "value": {
-          "end": 1564,
+          "end": 1557,
           "name": "checked",
-          "start": 1557,
+          "start": 1550,
           "type": "Identifier"
         },
         "via": "handler-local-alias"
@@ -4213,14 +4213,14 @@
           "title"
         ],
         "sourceSpan": {
-          "end": 1145,
+          "end": 1138,
           "filename": "src/fixtures/s2-keyed-todo.tsrx",
-          "start": 1134
+          "start": 1127
         },
         "value": {
-          "end": 1153,
+          "end": 1146,
           "name": "title",
-          "start": 1148,
+          "start": 1141,
           "type": "Identifier"
         },
         "via": "handler-local-alias"

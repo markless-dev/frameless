@@ -53,6 +53,11 @@ async function fixtureIr(file: (typeof FIXTURES)[number]): Promise<EnrichedIR> {
 	return buildEnrichedIr({ filename: `src/fixtures/${file}`, source });
 }
 
+async function compileOnlyFixtureIr(file: string): Promise<EnrichedIR> {
+	const source = readFileSync(new URL(`../src/fixtures/${file}`, import.meta.url), 'utf8');
+	return buildEnrichedIr({ filename: `src/fixtures/${file}`, source });
+}
+
 function walkTemplate(nodes: readonly TemplateNode[]): TemplateNode[] {
 	const found: TemplateNode[] = [];
 	for (const node of nodes) {
@@ -134,7 +139,7 @@ describe('fixture-family sufficiency', () => {
 		});
 	}
 
-	test('S1 carries ordered locals, a props alias, setup AST, and the root branch site', async () => {
+	test('S1 carries ordered locals, setup AST, and the root branch site', async () => {
 		const ir = await fixtureIr('s1-render-once.tsrx');
 		const component = ir.components[0]!;
 		expect(component.locals.flatMap((local) => local.names)).toEqual([
@@ -143,12 +148,6 @@ describe('fixture-family sufficiency', () => {
 			'prefix',
 			'derived',
 		]);
-		expect(component.props.entries).toContainEqual(
-			expect.objectContaining({ sourceName: 'label', localName: 'displayLabel', alias: true, graphNodeId: 'prop:props', path: ['label'] }),
-		);
-		expect(ir.records.aliases.find((alias) => alias.name === 'displayLabel')).toEqual(
-			expect.objectContaining({ target: 'props.label', graphNodeId: 'prop:props', path: ['label'] }),
-		);
 		expect(component.locals.find((local) => local.names.includes('prefix'))?.reads).toContainEqual(
 			{ graphNodeId: 'prop:props', path: ['label'], via: 'alias' },
 		);
@@ -178,6 +177,25 @@ describe('fixture-family sufficiency', () => {
 			['section', 'output', 'button'],
 		]);
 		expect(hosts(ir).map((host) => host.tag)).toEqual(['div', 'p', 'section', 'output', 'button']);
+	});
+
+	test('compile-only alias fixture preserves aliased prop destructuring and alias-record reads', async () => {
+		const ir = await compileOnlyFixtureIr('alias-coverage.tsrx');
+		const component = ir.components[0]!;
+		expect(component.props.entries).toContainEqual(
+			expect.objectContaining({ sourceName: 'label', localName: 'displayLabel', alias: true, graphNodeId: 'prop:props', path: ['label'] }),
+		);
+		expect(ir.records.aliases.find((alias) => alias.name === 'displayLabel')).toEqual(
+			expect.objectContaining({ target: 'props.label', graphNodeId: 'prop:props', path: ['label'] }),
+		);
+		expect(component.locals.find((local) => local.names.includes('prefix'))?.reads).toContainEqual(
+			{ graphNodeId: 'prop:props', path: ['label'], via: 'alias' },
+		);
+		const derived = ir.records.bindings.find((binding) => binding.id === 'computed:derived')!;
+		expect(derived.computed?.reads).toContainEqual(
+			{ graphNodeId: 'prop:props', path: ['label'], via: 'local' },
+		);
+		expect(derived.reads).toContainEqual({ graphNodeId: 'prop:props', path: ['label'] });
 	});
 
 	test('S2 carries complete branch and keyed-row subtrees plus structural computed dependencies', async () => {

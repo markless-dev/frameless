@@ -1,11 +1,11 @@
 import { render, type CsrRenderable, type CsrRenderContainer } from '@markless/web';
 import type { Adapter } from '../oracle/types.ts';
-import { setTrace } from '../support/trace-bridge.ts';
+import { registerTrace } from '../support/trace-bridge.ts';
 import { boundedBrowserQuiescence, dispatchDomAction } from './browser.ts';
 
 type Artifact = { renderCsr(props?: unknown): unknown };
 export type MarklessApp = Artifact | { visible: Artifact; hidden: Artifact };
-type Handle = { host: HTMLElement; container: CsrRenderContainer };
+type Handle = { host: HTMLElement; container: CsrRenderContainer; releaseTrace: () => void };
 
 function selectApp(app: MarklessApp, props: Record<string, unknown>): Artifact {
   if ('renderCsr' in app) return app;
@@ -20,11 +20,14 @@ export function marklessAdapter(app: MarklessApp): Adapter<Handle> {
     // harness element is adapter plumbing, not scenario DOM — observe inside it.
     host: (handle) => (handle.host.querySelector('[data-harness]') as HTMLElement) ?? handle.host,
     async mount(host, props) {
-      setTrace(props.onTrace as Parameters<typeof setTrace>[0]);
+      // Registration must precede render(): Markless executes ordinary component
+      // body locals, including S1's setup callback, during this call.
+      const releaseTrace = registerTrace(props.onTrace as Parameters<typeof registerTrace>[0]);
       try {
-        return { host, container: await render(selectApp(app, props) as CsrRenderable, { target: host }) };
+        const container = await render(selectApp(app, props) as CsrRenderable, { target: host });
+        return { host, container, releaseTrace };
       } catch (error) {
-        setTrace(null);
+        releaseTrace();
         throw error;
       }
     },
@@ -40,7 +43,7 @@ export function marklessAdapter(app: MarklessApp): Adapter<Handle> {
         (handle.container.runtime as { dispose?: () => void }).dispose?.();
         handle.host.replaceChildren();
       } finally {
-        setTrace(null);
+        handle.releaseTrace();
       }
     },
   };

@@ -12,7 +12,7 @@ this artifact, pass their conventionality gates, and pass the calibrated oracle.
 `arcade-enriched-ir/1` gives an emitter three deliberately separate views:
 
 - `components` contains source-order locals with initializer ASTs, a prop
-  destructuring map (including `label: displayLabel`), early guard-return
+  destructuring map (including aliases in the compile-only coverage fixture), early guard-return
   descriptions, and complete template trees. Host elements retain Markless host
   ids, tag names, static attributes and text, ordered children, dynamic
   attribute/property/text expression ASTs, event ids, branch arms, and keyed row
@@ -46,9 +46,14 @@ common IR.
 
 ## Fixture coverage and tests
 
-- `s1-render-once.tsrx` covers aliased/destructured props, a once-per-mount setup
+- `s1-render-once.tsrx` covers plain destructured props, a once-per-mount setup
   initializer, state, a render-once local captured by a computed function, a
   root-level `@if`/`@else` branch site, a dynamic text site, and an event callback.
+- `alias-coverage.tsrx` is compile-only coverage for renamed prop destructuring and
+  its alias records. Alias coverage is intentionally separate from the S1–S3 runtime
+  family because Markless 0.1.1 child composition supplies renamed destructured props
+  as `undefined`; moving the proof keeps the IR assertions equally strong without
+  imposing that runtime limitation on cross-target C9 evidence.
 - `s2-keyed-todo.tsrx` covers initial prop-derived state, scalar and collection
   writes, `filter(...).length` computed data, an empty branch, a keyed repeat with
   dynamic row attributes/properties, deep handler-local aliases, add/edit/toggle/
@@ -92,10 +97,11 @@ artifacts. `pnpm test` also runs strict TypeScript checking first.
   as a `handler-local-alias` write to `state:todos / * / title`. Rows selected from a
   shallow copied container retain row provenance, while mutations of the copied
   container itself are not state writes.
-- Markless's alias records make destructured props target `prop:props` paths. The IR
-  resolves `displayLabel` to `prop:props / label`, including through the render-once
-  `prefix` local captured by S1's computed function. Emitters therefore do not need
-  the public-render path to accept an alias spelling.
+- Markless's alias records make destructured props target `prop:props` paths. The
+  compile-only alias fixture proves that the IR resolves `displayLabel` to
+  `prop:props / label`, including through a render-once `prefix` local captured by a
+  computed function. S1 uses plain `label` because renamed destructuring is not
+  executable through Markless 0.1.1 child composition.
 - The original S2 empty/non-empty wrapper used by the handwritten references cannot be
   expressed through Markless 0.1.1's public render plan without a gap. Nesting the
   keyed repeat in the `@else` arm reports that the repeat/branch is unsupported and

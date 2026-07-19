@@ -2,6 +2,6 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    include: ['test/fixture-identity.test.ts'],
+    include: ['test/fixture-identity.test.ts', 'test/**/*.node.test.ts'],
   },
 });

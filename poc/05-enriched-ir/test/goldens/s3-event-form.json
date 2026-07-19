@@ -258,9 +258,9 @@
               "children": [
                 {
                   "expression": {
-                    "end": 1018,
+                    "end": 1011,
                     "name": "writes",
-                    "start": 1012,
+                    "start": 1005,
                     "type": "Identifier"
                   },
                   "id": "text:1",

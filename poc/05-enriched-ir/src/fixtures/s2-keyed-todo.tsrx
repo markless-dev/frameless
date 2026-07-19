@@ -22,9 +22,7 @@ export function KeyedTodo({ seed, onTrace }) @{
 				draft = '';
 				onTrace('add', { id: item.id, title: item.title }, event);
 			}}
-		>
-			add
-		</button>
+		>add</button>
 		@if (todos.length === 0) {
 			<p data-empty="true">empty</p>
 		} @else {
@@ -62,9 +60,7 @@ export function KeyedTodo({ seed, onTrace }) @{
 								todos = todos.filter((item) => item.id !== todo.id);
 								onTrace('remove', { id: todo.id }, event);
 							}}
-						>
-							remove
-						</button>
+						>remove</button>
 					</li>
 			}
 		</ul>
@@ -75,9 +71,7 @@ export function KeyedTodo({ seed, onTrace }) @{
 				todos = order;
 				onTrace('reorder', { order: order.map((todo) => todo.id) }, event);
 			}}
-		>
-			reorder
-		</button>
+		>reorder</button>
 		<button
 			data-action="clear"
 			onClick={(event) => {
@@ -85,8 +79,6 @@ export function KeyedTodo({ seed, onTrace }) @{
 				todos = [];
 				onTrace('clear', { count }, event);
 			}}
-		>
-			clear
-		</button>
+		>clear</button>
 	</section>
 }
