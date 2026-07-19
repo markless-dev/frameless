@@ -1,0 +1,29 @@
+{
+  "name": "arcade-poc-07-emit-solid",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "regenerate": "node scripts/regenerate.mjs",
+    "measure:size": "node scripts/measure-size.mjs",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@babel/generator": "7.29.7",
+    "@babel/types": "7.29.7",
+    "solid-js": "1.8.22"
+  },
+  "devDependencies": {
+    "@babel/parser": "7.29.7",
+    "@babel/traverse": "7.29.7",
+    "arcade-poc-04-equivalence-oracle": "file:../04-equivalence-oracle",
+    "eslint": "8.57.1",
+    "jsdom": "25.0.1",
+    "solid2": "npm:solid-js@2.0.0-experimental.16",
+    "vite": "5.4.11",
+    "vite-plugin-solid": "2.11.0",
+    "vitest": "2.1.9"
+  },
+  "engines": { "node": ">=22" },
+  "packageManager": "pnpm@10.33.2"
+}

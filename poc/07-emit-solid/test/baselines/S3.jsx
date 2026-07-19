@@ -1,0 +1,23 @@
+import { createSignal } from 'solid-js';
+
+export function BaselineS3(props) {
+  const [text, setText] = createSignal(props.initial);
+  const [checked, setChecked] = createSignal(false);
+  const [writes, setWrites] = createSignal(0);
+  return <form data-scenario="s3" onClick={(event) => {
+    if (event.target.dataset.action === 'submit') props.onTrace('bubble', { source: 'form' }, event);
+  }}>
+    <input data-action="text" attr:value={text()} value={text()} onInput={(event) => {
+      setText(event.currentTarget.value); props.onTrace('text', { value: event.currentTarget.value }, event);
+    }} />
+    <input type="checkbox" data-action="checked" checked={checked()} onChange={(event) => {
+      setChecked(event.currentTarget.checked); props.onTrace('checked', { checked: event.currentTarget.checked }, event);
+    }} />
+    <button type="button" data-action="submit" onClick={(event) => {
+      event.preventDefault(); setWrites(1); setWrites(2);
+      props.onTrace('submit', { text: text(), checked: checked(), writes: 2 }, event);
+    }}>submit</button>
+    <output data-writes="true">{writes()}</output>
+    <span data-callback-marker="present" />
+  </form>;
+}
