@@ -19,11 +19,15 @@
     "arcade-poc-04-equivalence-oracle": "file:../04-equivalence-oracle",
     "eslint": "8.57.1",
     "jsdom": "25.0.1",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
     "solid2": "npm:solid-js@2.0.0-experimental.16",
     "vite": "5.4.11",
     "vite-plugin-solid": "2.11.0",
     "vitest": "2.1.9"
   },
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "packageManager": "pnpm@10.33.2"
 }
