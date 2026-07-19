@@ -321,3 +321,15 @@ template branching (identical DOM contract; references unchanged); the guard-ele
 compiler-vs-bundler inconsistency is recorded as a markless finding (upstream should
 either lower it or reject it with a diagnostic — silent invalid output is exactly the
 C1-class failure markless otherwise avoids). Guard-return-null remains proven (C6e).
+
+# W-D1 adjudication 2 (2026-07-19): S1 final contract
+
+Markless findings #5 (bare component at template root CSR-renders empty, silently) and
+#6 (aliased prop destructuring — `{ label: displayLabel }` — arrives undefined in
+child-component composition; plain destructuring works, c6c). PM decision: the C9
+runtime fixture family must be executable on all three parties, so S1 drops the alias
+(plain `label`) and normalizes template text to single-line (markless preserves
+authored whitespace in text nodes — a real DOM difference, not oracle noise). Alias IR
+coverage moves to a dedicated compile-only fixture in poc/05 so C7/IR evidence is not
+weakened. Findings #4/#5/#6 join #1-#3 in the report's markless-gaps section: the
+composition surface is exactly where markless 0.1.1 is weakest, consistent with T002.
