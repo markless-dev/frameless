@@ -1,9 +1,7 @@
-import { buildSemanticGraph, lowerStateAccess } from '@markless/compiler';
+import { buildSemanticGraph } from '@markless/compiler';
 import type {
-	LoweredStateWrite,
 	SemanticGraphAlias,
 	SemanticGraphArtifact,
-	StateLoweringArtifact,
 } from '@markless/compiler';
 import { parseModule } from '@tsrx/core';
 import type { CompileError } from '@tsrx/core/types';
@@ -21,11 +19,13 @@ import {
 	type GuardResult,
 	type JsonValue,
 	type LocalDeclaration,
+	type ModuleImport,
 	type PropDestructuringEntry,
 	type SerializableAstNode,
 	type StateReadRecord,
 	type StateWriteRecord,
 	type StaticAttribute,
+	type SyncPolicy,
 	type TemplateBranchArm,
 	type TemplateHost,
 	type TemplateNode,
@@ -44,6 +44,7 @@ interface LocalInfo {
 }
 
 interface ReadEnvironment {
+	readonly filename: string;
 	readonly bindings: ReadonlyMap<string, { id: string }>;
 	readonly aliases: ReadonlyMap<string, { graphNodeId: string; path: readonly string[] }>;
 	readonly locals: ReadonlyMap<string, LocalInfo>;
@@ -52,6 +53,8 @@ interface ReadEnvironment {
 
 interface ComponentWork {
 	readonly name: string;
+	readonly exportKind: 'default' | 'named';
+	readonly exportedName: string;
 	readonly fn: AnyNode;
 	readonly body: AnyNode;
 	readonly locals: ReadonlyMap<string, LocalInfo>;
@@ -84,6 +87,7 @@ const OMITTED_AST_KEYS = new Set([
 
 /** Build the target-neutral emitter artifact from author source and semantic records. */
 export async function buildEnrichedIr({ filename, source }: BuildInput): Promise<EnrichedIR> {
+	filename = normalizeFilename(filename);
 	const parseErrors: CompileError[] = [];
 	const program = parseModule(source, filename, { collect: true, errors: parseErrors }) as AnyNode;
 	if (parseErrors.length > 0) {
@@ -93,8 +97,7 @@ export async function buildEnrichedIr({ filename, source }: BuildInput): Promise
 	// Deliberately stop after semantic graph + state lowering. Payload, public-render,
 	// locator, resume, and symbol passes are neither requested nor consumed here.
 	const semanticGraph = await buildSemanticGraph({ filename, source });
-	const stateLowering = lowerStateAccess({ semanticGraph });
-	const errors = [...semanticGraph.diagnostics, ...stateLowering.diagnostics].filter(
+	const errors = semanticGraph.diagnostics.filter(
 		(diagnostic) => diagnostic.severity === 'error',
 	);
 	if (errors.length > 0) {
@@ -113,9 +116,6 @@ export async function buildEnrichedIr({ filename, source }: BuildInput): Promise
 	const aliasesByName = new Map(
 		aliases.map((alias) => [alias.name, { graphNodeId: alias.graphNodeId, path: alias.path }]),
 	);
-	const allNodes = collectAstNodes(program);
-	const writes = stateLowering.writes.map((write) => enrichWrite(write, allNodes));
-	const reads = dedupeStateReads(stateLowering);
 	const aliasIds = new Map(aliases.map((alias) => [alias.name, alias.id]));
 
 	const templateContext: TemplateContext = {
@@ -133,6 +133,7 @@ export async function buildEnrichedIr({ filename, source }: BuildInput): Promise
 
 	const enrichedComponents = components.map((component) => {
 		const environment: ReadEnvironment = {
+			filename,
 			bindings: bindingsByName,
 			aliases: aliasesByName,
 			locals: component.locals,
@@ -156,23 +157,28 @@ export async function buildEnrichedIr({ filename, source }: BuildInput): Promise
 				`Event ${event.id} expected ${event.handlerCount} handler AST(s), found ${handlers.length}.`,
 			);
 		}
+		const enrichedHandlers = handlers.map(({ node, environment }): EventHandlerRecord => {
+			const effects = deriveHandlerEffects(node, environment);
+			return { expression: serializeAst(node), reads: effects.reads, writes: effects.writes };
+		}).sort((left, right) =>
+			Number(left.expression.start ?? -1) - Number(right.expression.start ?? -1) ||
+			Number(left.expression.end ?? -1) - Number(right.expression.end ?? -1),
+		);
 		return {
 			id: event.id,
 			hostNodeId: event.hostNodeId,
 			eventName: event.eventName,
-			...(event.syncPolicy ? { syncPolicy: event.syncPolicy } : {}),
-			handlers: handlers.map(({ node, environment }): EventHandlerRecord => ({
-				expression: serializeAst(node),
-				reads: deriveReads(node, environment),
-				writes: writes.filter((write) => spanInside(write.sourceSpan, node)),
-			})),
+			...(event.syncPolicy ? { syncPolicy: serializeUnknown(event.syncPolicy) as unknown as SyncPolicy } : {}),
+			handlers: enrichedHandlers,
 		};
 	});
+	const writes = sortWrites(events.flatMap((event) => event.handlers.flatMap((handler) => handler.writes)));
 
 	const bindings = semanticGraph.graphBindings.map((binding): EnrichedGraphBinding => {
 		const owner = components.find((component) => component.locals.has(binding.name));
 		const local = owner?.locals.get(binding.name);
 		const environment: ReadEnvironment = {
+			filename,
 			bindings: bindingsByName,
 			aliases: aliasesByName,
 			locals: owner?.locals ?? new Map(),
@@ -182,6 +188,9 @@ export async function buildEnrichedIr({ filename, source }: BuildInput): Promise
 		const computed = binding.kind === 'computed' && helperArgument
 			? expressionSite(helperArgument, environment)
 			: undefined;
+		const initializerReads = binding.kind === 'state' && helperArgument
+			? deriveReads(helperArgument, environment)
+			: [];
 
 		return compactObject({
 			id: binding.id,
@@ -196,23 +205,34 @@ export async function buildEnrichedIr({ filename, source }: BuildInput): Promise
 			initializer:
 				binding.kind === 'state' && helperArgument ? serializeAst(helperArgument) : undefined,
 			computed,
-			reads: reads.filter((read) => read.graphNodeId === binding.id),
+			reads: toStateReads(computed?.reads ?? initializerReads),
 			writes: writes.filter((write) => write.graphNodeId === binding.id),
 		}) as unknown as EnrichedGraphBinding;
 	});
 
+	const records = {
+		bindings: [...bindings].sort((left, right) => compareText(left.id, right.id)),
+		aliases: [...aliases].sort((left, right) => compareText(left.id, right.id)),
+		events: [...events].sort((left, right) => compareText(left.id, right.id)),
+		stateReads: collectCanonicalReads(enrichedComponents, bindings, events),
+		stateWrites: writes,
+	};
+
 	return {
 		version: ENRICHED_IR_VERSION,
 		filename,
-		imports: [...semanticGraph.moduleImports],
-		components: enrichedComponents,
-		records: {
-			bindings,
-			aliases,
-			events,
-			stateReads: reads,
-			stateWrites: writes,
+		imports: semanticGraph.moduleImports.map((entry): ModuleImport => ({ ...entry })),
+		module: {
+			exports: components
+				.map((component) => ({
+					kind: component.exportKind,
+					componentName: component.name,
+					exportedName: component.exportedName,
+				}))
+				.sort((left, right) => compareText(left.exportedName, right.exportedName)),
 		},
+		components: enrichedComponents,
+		records,
 	};
 }
 
@@ -239,6 +259,8 @@ function findComponents(program: AnyNode): ComponentWork[] {
 		}
 		found.push({
 			name: candidate.id?.name ?? 'default',
+			exportKind: statement.type === 'ExportDefaultDeclaration' ? 'default' : 'named',
+			exportedName: statement.type === 'ExportDefaultDeclaration' ? 'default' : candidate.id?.name ?? 'default',
 			fn: candidate,
 			body: candidate.body,
 			locals,
@@ -295,6 +317,10 @@ function enrichComponent(
 		: [];
 	return {
 		name: component.name,
+		evaluation: {
+			ordinaryLocals: 'once-per-instance',
+			computedBindings: 'reactive',
+		},
 		props: {
 			graphNodeId: graph.graphBindings.find((binding) => binding.kind === 'prop')?.id ?? 'prop:props',
 			entries: propsEntries(component.fn.params?.[0], graph),
@@ -694,67 +720,174 @@ function resolveAliases(
 			graphNodeId: binding.id,
 			path,
 			declarationKind: alias.declarationKind,
-			sourceSpan: alias.sourceSpan,
+			sourceSpan: alias.sourceSpan ? { ...alias.sourceSpan, filename: normalizeFilename(alias.sourceSpan.filename) } : undefined,
 		}) as unknown as EnrichedAliasRecord;
 	});
 }
 
-function dedupeStateReads(stateLowering: StateLoweringArtifact): StateReadRecord[] {
-	return dedupeBy(
-		stateLowering.reads.map((read) => ({ graphNodeId: read.graphNodeId, path: [...read.path] })),
-		(read) => `${read.graphNodeId}:${read.path.join('.')}`,
-	);
+interface StateProvenance {
+	readonly graphNodeId: string;
+	readonly path: readonly string[];
+	readonly receiverAliasesState: boolean;
+	readonly elementsAliasState: boolean;
+	readonly viaLocal: boolean;
 }
 
-function enrichWrite(write: LoweredStateWrite, nodes: readonly AnyNode[]): StateWriteRecord {
-	const matching = findWriteNode(write, nodes);
-	const value = matching?.type === 'AssignmentExpression' ? matching.right : undefined;
-	const arguments_ = matching?.type === 'CallExpression' ? matching.arguments : undefined;
-	return compactObject({
-		graphNodeId: write.graphNodeId,
-		path: [...write.path],
-		operation: write.operation,
-		assignmentOperator: write.assignmentOperator,
-		updateOperator: write.updateOperator,
-		prefix: write.prefix,
-		method: write.method,
-		value: value ? serializeAst(value) : undefined,
-		arguments: arguments_?.map((argument: AnyNode) => serializeAst(argument)),
-		sourceSpan: write.sourceSpan,
-	}) as unknown as StateWriteRecord;
-}
+const MUTATING_METHODS = new Set([
+	'copyWithin', 'fill', 'pop', 'push', 'reverse', 'shift', 'sort', 'splice', 'unshift',
+]);
+const ROW_SELECTING_METHODS = new Set(['at', 'find']);
+const SHALLOW_COLLECTION_METHODS = new Set(['concat', 'filter', 'map', 'slice']);
 
-function findWriteNode(write: LoweredStateWrite, nodes: readonly AnyNode[]): AnyNode | undefined {
-	const span = write.sourceSpan;
-	if (!span) return undefined;
-	if (write.operation === 'assign') {
-		return nodes.find(
-			(node) =>
-				node.type === 'AssignmentExpression' &&
-				node.left?.start === span.start &&
-				node.left?.end === span.end,
-		);
-	}
-	if (write.operation === 'update') {
-		return nodes.find(
-			(node) =>
-				node.type === 'UpdateExpression' &&
-				node.argument?.start === span.start &&
-				node.argument?.end === span.end,
-		);
-	}
-	if (write.operation === 'call') {
-		return nodes
-			.filter(
-				(node) =>
-					node.type === 'CallExpression' &&
-					(node.start ?? Infinity) <= span.start &&
-					(node.end ?? -Infinity) >= span.end &&
-					(!write.method || staticPropertyName(node.callee?.property) === write.method),
-			)
-			.sort((left, right) => (left.end! - left.start!) - (right.end! - right.start!))[0];
-	}
-	return undefined;
+/**
+ * Derive writes from assignment/update/delete targets and the actual call receiver.
+ * A local produced by `state.find(...)` aliases a state row and its member writes
+ * project to `state / * / member`. A shallow copied container does not alias the
+ * state container, although rows selected from it still alias the original rows.
+ */
+function deriveHandlerEffects(
+	node: AnyNode,
+	environment: ReadEnvironment,
+): { reads: GraphReadRef[]; writes: StateWriteRecord[] } {
+	const localProvenance = new Map<string, StateProvenance>();
+	const writes: StateWriteRecord[] = [];
+
+	const directState = (name: string): StateProvenance | undefined => {
+		const binding = environment.bindings.get(name);
+		return binding?.id.startsWith('state:')
+			? { graphNodeId: binding.id, path: [], receiverAliasesState: true, elementsAliasState: true, viaLocal: false }
+			: undefined;
+	};
+
+	const provenance = (expression: AnyNode | null | undefined): StateProvenance | undefined => {
+		if (!expression) return undefined;
+		if (expression.type === 'Identifier') return localProvenance.get(expression.name) ?? directState(expression.name);
+		if (expression.type === 'ChainExpression') return provenance(expression.expression);
+		if (expression.type === 'MemberExpression') {
+			const base = provenance(expression.object);
+			if (!base) return undefined;
+			const part = expression.computed
+				? expression.property?.type === 'Literal' ? String(expression.property.value) : '*'
+				: staticPropertyName(expression.property);
+			return { ...base, path: [...base.path, part] };
+		}
+		if (expression.type === 'CallExpression' && expression.callee?.type === 'MemberExpression') {
+			const base = provenance(expression.callee.object);
+			if (!base) return undefined;
+			const method = staticPropertyName(expression.callee.property);
+			if (ROW_SELECTING_METHODS.has(method)) {
+				return { ...base, path: [...base.path, '*'], receiverAliasesState: base.elementsAliasState, viaLocal: true };
+			}
+			if (SHALLOW_COLLECTION_METHODS.has(method)) {
+				return { ...base, receiverAliasesState: false, elementsAliasState: base.elementsAliasState, viaLocal: true };
+			}
+			return { ...base, viaLocal: true };
+		}
+		return undefined;
+	};
+
+	const span = (target: AnyNode) => target.start === undefined || target.end === undefined
+		? undefined
+		: { filename: environment.filename, start: target.start, end: target.end };
+	const target = (left: AnyNode): { provenance: StateProvenance; path: string[] } | undefined => {
+		if (left.type === 'Identifier') {
+			const found = directState(left.name);
+			return found ? { provenance: found, path: [...found.path] } : undefined;
+		}
+		if (left.type === 'MemberExpression') {
+			const found = provenance(left.object);
+			if (!found?.receiverAliasesState) return undefined;
+			const part = left.computed
+				? left.property?.type === 'Literal' ? String(left.property.value) : '*'
+				: staticPropertyName(left.property);
+			return { provenance: found, path: [...found.path, part] };
+		}
+		return undefined;
+	};
+	const addWrite = (record: StateWriteRecord): void => { writes.push(record); };
+
+	const visit = (current: AnyNode | null | undefined): void => {
+		if (!current || typeof current !== 'object') return;
+		if (current.type === 'BlockStatement') {
+			for (const statement of current.body ?? []) visit(statement);
+			return;
+		}
+		if (current.type === 'VariableDeclaration') {
+			for (const declarator of current.declarations ?? []) {
+				visit(declarator.init);
+				const found = provenance(declarator.init);
+				if (found) for (const name of patternNames(declarator.id)) localProvenance.set(name, { ...found, viaLocal: true });
+			}
+			return;
+		}
+		if (current.type === 'AssignmentExpression') {
+			const found = target(current.left);
+			if (found) addWrite(compactObject({
+				graphNodeId: found.provenance.graphNodeId,
+				path: found.path,
+				operation: 'assign',
+				assignmentOperator: current.operator,
+				value: serializeAst(current.right),
+				sourceSpan: span(current.left),
+				via: found.provenance.viaLocal ? 'handler-local-alias' : 'direct',
+			}) as StateWriteRecord);
+			visit(current.right);
+			if (current.left.computed) visit(current.left.property);
+			return;
+		}
+		if (current.type === 'UpdateExpression') {
+			const found = target(current.argument);
+			if (found) addWrite(compactObject({
+				graphNodeId: found.provenance.graphNodeId,
+				path: found.path,
+				operation: 'update',
+				updateOperator: current.operator,
+				prefix: current.prefix,
+				sourceSpan: span(current.argument),
+				via: found.provenance.viaLocal ? 'handler-local-alias' : 'direct',
+			}) as StateWriteRecord);
+			return;
+		}
+		if (current.type === 'UnaryExpression' && current.operator === 'delete') {
+			const found = target(current.argument);
+			if (found) addWrite(compactObject({
+				graphNodeId: found.provenance.graphNodeId,
+				path: found.path,
+				operation: 'delete',
+				sourceSpan: span(current.argument),
+				via: found.provenance.viaLocal ? 'handler-local-alias' : 'direct',
+			}) as StateWriteRecord);
+			return;
+		}
+		if (current.type === 'CallExpression') {
+			if (current.callee?.type === 'MemberExpression') {
+				const receiver = provenance(current.callee.object);
+				const method = staticPropertyName(current.callee.property);
+				if (receiver?.receiverAliasesState && MUTATING_METHODS.has(method)) addWrite(compactObject({
+					graphNodeId: receiver.graphNodeId,
+					path: [...receiver.path],
+					operation: 'call',
+					method,
+					arguments: (current.arguments ?? []).map((argument: AnyNode) => serializeAst(argument)),
+					sourceSpan: span(current.callee),
+					via: receiver.viaLocal ? 'handler-local-alias' : 'direct',
+				}) as StateWriteRecord);
+				visit(current.callee.object);
+				if (current.callee.computed) visit(current.callee.property);
+			} else visit(current.callee);
+			for (const argument of current.arguments ?? []) visit(argument);
+			return;
+		}
+		for (const [key, value] of Object.entries(current)) {
+			if (OMITTED_AST_KEYS.has(key) || key === 'type' || key === 'start' || key === 'end') continue;
+			if (Array.isArray(value)) {
+				for (const child of value) if (isNode(child)) visit(child);
+			} else if (isNode(value)) visit(value);
+		}
+	};
+
+	visit(node.body ?? node);
+	return { reads: deriveReads(node, environment), writes: sortWrites(writes) };
 }
 
 function helperCallArgument(initializer: AnyNode | null | undefined, kind: string): AnyNode | undefined {
@@ -763,10 +896,64 @@ function helperCallArgument(initializer: AnyNode | null | undefined, kind: strin
 	return initializer.arguments?.[0];
 }
 
-function spanInside(span: { start: number; end: number } | undefined, node: AnyNode): boolean {
-	return Boolean(
-		span && node.start !== undefined && node.end !== undefined && span.start >= node.start && span.end <= node.end,
+function toStateReads(reads: readonly GraphReadRef[]): StateReadRecord[] {
+	return dedupeBy(
+		reads.map((read) => ({ graphNodeId: read.graphNodeId, path: [...read.path] })),
+		(read) => `${read.graphNodeId}\u0000${read.path.join('\u0000')}`,
+	).sort(compareReads);
+}
+
+function collectCanonicalReads(
+	components: readonly EnrichedComponent[],
+	bindings: readonly EnrichedGraphBinding[],
+	events: readonly EnrichedEventRecord[],
+): StateReadRecord[] {
+	const gathered: GraphReadRef[] = [];
+	const visit = (value: unknown): void => {
+		if (!value || typeof value !== 'object') return;
+		if (Array.isArray(value)) return void value.forEach(visit);
+		for (const [key, child] of Object.entries(value)) {
+			if (key === 'reads' && Array.isArray(child)) {
+				for (const read of child) {
+					if (read && typeof read === 'object' && 'graphNodeId' in read && 'path' in read) {
+						gathered.push({ ...(read as GraphReadRef), via: (read as GraphReadRef).via ?? 'direct' });
+					}
+				}
+			} else visit(child);
+		}
+	};
+	visit(components);
+	visit(bindings);
+	visit(events);
+	return toStateReads(gathered);
+}
+
+function compareText(left: string, right: string): number {
+	return left < right ? -1 : left > right ? 1 : 0;
+}
+
+function compareReads(left: StateReadRecord, right: StateReadRecord): number {
+	return compareText(left.graphNodeId, right.graphNodeId) || compareText(left.path.join('\u0000'), right.path.join('\u0000'));
+}
+
+function sortWrites(writes: readonly StateWriteRecord[]): StateWriteRecord[] {
+	return [...writes].sort((left, right) =>
+		compareText(left.graphNodeId, right.graphNodeId) ||
+		compareText(left.path.join('\u0000'), right.path.join('\u0000')) ||
+		compareText(left.operation, right.operation) ||
+		compareText(left.method ?? '', right.method ?? '') ||
+		(left.sourceSpan?.start ?? -1) - (right.sourceSpan?.start ?? -1) ||
+		(left.sourceSpan?.end ?? -1) - (right.sourceSpan?.end ?? -1),
 	);
+}
+
+function normalizeFilename(filename: string): string {
+	const normalized = filename.replace(/\\/g, '/');
+	if (!/^(?:[A-Za-z]:\/|\/)/.test(normalized)) return normalized.replace(/^\.\//, '');
+	const fixtureMarker = '/src/fixtures/';
+	const fixtureIndex = normalized.lastIndexOf(fixtureMarker);
+	if (fixtureIndex >= 0) return normalized.slice(fixtureIndex + 1);
+	return normalized.slice(normalized.lastIndexOf('/') + 1);
 }
 
 function assertFullyConsumed(context: TemplateContext): void {
@@ -795,30 +982,13 @@ function patternNames(pattern: AnyNode | null | undefined): string[] {
 	return [];
 }
 
-function collectAstNodes(root: AnyNode): AnyNode[] {
-	const nodes: AnyNode[] = [];
-	const visit = (value: unknown): void => {
-		if (!value || typeof value !== 'object') return;
-		if (Array.isArray(value)) {
-			for (const child of value) visit(child);
-			return;
-		}
-		const node = value as AnyNode;
-		if (typeof node.type === 'string') nodes.push(node);
-		for (const [key, child] of Object.entries(node)) {
-			if (!OMITTED_AST_KEYS.has(key)) visit(child);
-		}
-	};
-	visit(root);
-	return nodes;
-}
-
 /** Exported for tests and downstream tooling that validates AST-derived dependencies. */
 export function collectGraphReads(
 	expression: SerializableAstNode,
 	bindings: ReadonlyArray<{ id: string; name: string }>,
 ): ReadonlyArray<GraphReadRef> {
 	return deriveReads(expression as AnyNode, {
+		filename: '',
 		bindings: new Map(bindings.map((binding) => [binding.name, binding])),
 		aliases: new Map(),
 		locals: new Map(),
@@ -868,9 +1038,9 @@ function normalizeJsxText(value: string): string {
 function dedupeReads(reads: readonly GraphReadRef[]): GraphReadRef[] {
 	return dedupeBy(reads, (read) => `${read.graphNodeId}:${read.path.join('.')}:${read.via}`).sort(
 		(left, right) =>
-			left.graphNodeId.localeCompare(right.graphNodeId) ||
-			left.path.join('.').localeCompare(right.path.join('.')) ||
-			left.via.localeCompare(right.via),
+			compareText(left.graphNodeId, right.graphNodeId) ||
+			compareText(left.path.join('\u0000'), right.path.join('\u0000')) ||
+			compareText(left.via, right.via),
 	);
 }
 

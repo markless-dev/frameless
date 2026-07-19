@@ -13,7 +13,7 @@ function sortObjectKeys(value: JsonValue): JsonValue {
 	if (value && typeof value === 'object') {
 		return Object.fromEntries(
 			Object.entries(value)
-				.sort(([left], [right]) => left.localeCompare(right))
+				.sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0)
 				.map(([key, child]) => [key, sortObjectKeys(child)]),
 		);
 	}

@@ -18,10 +18,10 @@ export function makeReactS2(mutation?:S2Mutation) {
     const complete=todos.filter(x=>x.done).length;
     return <section data-scenario="s2"><p data-count="complete">{mutation==='wrong-text'?complete+1:complete}/{todos.length}</p>
       <input data-action="new" value={draft} onInput={e=>setDraft(e.currentTarget.value)}/><button data-action="add" onClick={e=>{const item={id:`c${next.current++}`,title:draft,done:false};setTodos(v=>[...v,item]);setDraft('');emit('add',{id:item.id,title:item.title},e.nativeEvent);}}>add</button>
-      {todos.length===0?<p data-empty="true">empty</p>:<ul>{todos.map((todo,index)=><li key={mutation==='index-key'?index:todo.id} data-oracle-row-key={todo.id}>
+      {todos.length===0?<p data-empty="true">empty</p>:null}<ul>{todos.map((todo,index)=><li key={mutation==='index-key'?index:todo.id} data-oracle-row-key={todo.id}>
         <input data-edit={todo.id} value={todo.title} onInput={e=>edit(todo.id,e.currentTarget.value,e.nativeEvent)}/>
         <input type="checkbox" data-toggle={todo.id} checked={todo.done} onChange={e=>{const checked=e.currentTarget.checked;setTodos(v=>v.map(x=>x.id===todo.id?{...x,done:checked}:x));emit('toggle',{id:todo.id,checked},e.nativeEvent);}}/>
-        <button data-remove={todo.id} onClick={e=>{setTodos(v=>v.filter(x=>x.id!==todo.id));emit('remove',{id:todo.id},e.nativeEvent);}}>remove</button></li>)}</ul>}
+        <button data-remove={todo.id} onClick={e=>{setTodos(v=>v.filter(x=>x.id!==todo.id));emit('remove',{id:todo.id},e.nativeEvent);}}>remove</button></li>)}</ul>
       <button data-action="reorder" onClick={e=>{setTodos(v=>[...v].reverse());emit('reorder',{order:[...todos].reverse().map(x=>x.id)},e.nativeEvent);}}>reorder</button>
       <button data-action="clear" onClick={e=>{setTodos([]);emit('clear',{count:todos.length},e.nativeEvent);}}>clear</button></section>;
   };

@@ -1,6 +1,10 @@
 {
   "components": [
     {
+      "evaluation": {
+        "computedBindings": "reactive",
+        "ordinaryLocals": "once-per-instance"
+      },
       "guards": [
         {
           "id": "guard:RenderOnce:4",
@@ -467,6 +471,15 @@
   ],
   "filename": "src/fixtures/s1-render-once.tsrx",
   "imports": [],
+  "module": {
+    "exports": [
+      {
+        "componentName": "RenderOnce",
+        "exportedName": "RenderOnce",
+        "kind": "named"
+      }
+    ]
+  },
   "records": {
     "aliases": [
       {
@@ -502,21 +515,6 @@
       {
         "declarationKind": "const",
         "graphNodeId": "prop:props",
-        "id": "alias:RenderOnce:visible",
-        "name": "visible",
-        "path": [
-          "visible"
-        ],
-        "sourceSpan": {
-          "end": 120,
-          "filename": "src/fixtures/s1-render-once.tsrx",
-          "start": 113
-        },
-        "target": "props.visible"
-      },
-      {
-        "declarationKind": "const",
-        "graphNodeId": "prop:props",
         "id": "alias:RenderOnce:onTrace",
         "name": "onTrace",
         "path": [
@@ -528,68 +526,24 @@
           "start": 122
         },
         "target": "props.onTrace"
+      },
+      {
+        "declarationKind": "const",
+        "graphNodeId": "prop:props",
+        "id": "alias:RenderOnce:visible",
+        "name": "visible",
+        "path": [
+          "visible"
+        ],
+        "sourceSpan": {
+          "end": 120,
+          "filename": "src/fixtures/s1-render-once.tsrx",
+          "start": 113
+        },
+        "target": "props.visible"
       }
     ],
     "bindings": [
-      {
-        "declarationKind": "const",
-        "id": "prop:props",
-        "kind": "prop",
-        "name": "props",
-        "reads": [
-          {
-            "graphNodeId": "prop:props",
-            "path": [
-              "multiplier"
-            ]
-          },
-          {
-            "graphNodeId": "prop:props",
-            "path": [
-              "onTrace"
-            ]
-          }
-        ],
-        "valueKind": "object",
-        "writable": false,
-        "writes": []
-      },
-      {
-        "declarationKind": "let",
-        "id": "state:count",
-        "initializer": {
-          "end": 202,
-          "raw": "1",
-          "start": 201,
-          "type": "Literal",
-          "value": 1
-        },
-        "initialValue": 1,
-        "kind": "state",
-        "name": "count",
-        "reads": [
-          {
-            "graphNodeId": "state:count",
-            "path": []
-          }
-        ],
-        "valueKind": "scalar",
-        "writable": true,
-        "writes": [
-          {
-            "graphNodeId": "state:count",
-            "operation": "update",
-            "path": [],
-            "prefix": false,
-            "sourceSpan": {
-              "end": 519,
-              "filename": "src/fixtures/s1-render-once.tsrx",
-              "start": 514
-            },
-            "updateOperator": "++"
-          }
-        ]
-      },
       {
         "async": false,
         "asyncCapable": false,
@@ -695,12 +649,66 @@
         "name": "derived",
         "reads": [
           {
-            "graphNodeId": "computed:derived",
+            "graphNodeId": "prop:props",
+            "path": [
+              "label"
+            ]
+          },
+          {
+            "graphNodeId": "prop:props",
+            "path": [
+              "multiplier"
+            ]
+          },
+          {
+            "graphNodeId": "state:count",
             "path": []
           }
         ],
         "writable": false,
         "writes": []
+      },
+      {
+        "declarationKind": "const",
+        "id": "prop:props",
+        "kind": "prop",
+        "name": "props",
+        "reads": [],
+        "valueKind": "object",
+        "writable": false,
+        "writes": []
+      },
+      {
+        "declarationKind": "let",
+        "id": "state:count",
+        "initialValue": 1,
+        "initializer": {
+          "end": 202,
+          "raw": "1",
+          "start": 201,
+          "type": "Literal",
+          "value": 1
+        },
+        "kind": "state",
+        "name": "count",
+        "reads": [],
+        "valueKind": "scalar",
+        "writable": true,
+        "writes": [
+          {
+            "graphNodeId": "state:count",
+            "operation": "update",
+            "path": [],
+            "prefix": false,
+            "sourceSpan": {
+              "end": 519,
+              "filename": "src/fixtures/s1-render-once.tsrx",
+              "start": 514
+            },
+            "updateOperator": "++",
+            "via": "direct"
+          }
+        ]
       }
     ],
     "events": [
@@ -835,7 +843,8 @@
                   "filename": "src/fixtures/s1-render-once.tsrx",
                   "start": 514
                 },
-                "updateOperator": "++"
+                "updateOperator": "++",
+                "via": "direct"
               }
             ]
           }
@@ -850,8 +859,10 @@
         "path": []
       },
       {
-        "graphNodeId": "state:count",
-        "path": []
+        "graphNodeId": "prop:props",
+        "path": [
+          "label"
+        ]
       },
       {
         "graphNodeId": "prop:props",
@@ -864,6 +875,16 @@
         "path": [
           "onTrace"
         ]
+      },
+      {
+        "graphNodeId": "prop:props",
+        "path": [
+          "visible"
+        ]
+      },
+      {
+        "graphNodeId": "state:count",
+        "path": []
       }
     ],
     "stateWrites": [
@@ -877,7 +898,8 @@
           "filename": "src/fixtures/s1-render-once.tsrx",
           "start": 514
         },
-        "updateOperator": "++"
+        "updateOperator": "++",
+        "via": "direct"
       }
     ]
   },

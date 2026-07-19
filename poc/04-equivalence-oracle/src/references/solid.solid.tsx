@@ -11,12 +11,13 @@ type Todo={id:string;title:string;done:boolean};
 export function SolidS2(props:{seed:Todo[];onTrace:Trace}) {
   const [todos,setTodos]=createSignal(structuredClone(props.seed));const [draft,setDraft]=createSignal('');let next=3;
   const edit=(id:string,title:string,e:Event)=>{const copy=[...todos()];const alias=copy.find(x=>x.id===id)!;alias.title=title;setTodos(copy);props.onTrace('edit',{id,title},e);};
+  const row=(todo:Todo)=><li data-oracle-row-key={todo.id}>
+    <input data-edit={todo.id} attr:value={todos() && todo.title} value={todos() && todo.title} onInput={e=>edit(todo.id,e.currentTarget.value,e)}/>
+    <input type="checkbox" data-toggle={todo.id} checked={todo.done} onChange={e=>{const checked=e.currentTarget.checked;setTodos(v=>{const copy=[...v];copy.find(x=>x.id===todo.id)!.done=checked;return copy;});props.onTrace('toggle',{id:todo.id,checked},e);}}/>
+    <button data-remove={todo.id} onClick={e=>{setTodos(v=>v.filter(x=>x.id!==todo.id));props.onTrace('remove',{id:todo.id},e);}}>remove</button></li>;
   return <section data-scenario="s2"><p data-count="complete">{todos().filter(x=>x.done).length}/{todos().length}</p>
     <input data-action="new" attr:value={draft()} value={draft()} onInput={e=>setDraft(e.currentTarget.value)}/><button data-action="add" onClick={e=>{const item={id:`c${next++}`,title:draft(),done:false};setTodos(v=>[...v,item]);setDraft('');props.onTrace('add',{id:item.id,title:item.title},e);}}>add</button>
-    <Show when={todos().length} fallback={<p data-empty="true">empty</p>}><ul><For each={todos()}>{todo=><li data-oracle-row-key={todo.id}>
-      <input data-edit={todo.id} attr:value={todos() && todo.title} value={todos() && todo.title} onInput={e=>edit(todo.id,e.currentTarget.value,e)}/>
-      <input type="checkbox" data-toggle={todo.id} checked={todo.done} onChange={e=>{const checked=e.currentTarget.checked;setTodos(v=>{const copy=[...v];copy.find(x=>x.id===todo.id)!.done=checked;return copy;});props.onTrace('toggle',{id:todo.id,checked},e);}}/>
-      <button data-remove={todo.id} onClick={e=>{setTodos(v=>v.filter(x=>x.id!==todo.id));props.onTrace('remove',{id:todo.id},e);}}>remove</button></li>}</For></ul></Show>
+    <Show when={todos().length===0} fallback={<ul><For each={todos()}>{row}</For></ul>}><><p data-empty="true">empty</p><ul/></></Show>
     <button data-action="reorder" onClick={e=>{const order=[...todos()].reverse();setTodos(order);props.onTrace('reorder',{order:order.map(x=>x.id)},e);}}>reorder</button>
     <button data-action="clear" onClick={e=>{const count=todos().length;setTodos([]);props.onTrace('clear',{count},e);}}>clear</button></section>;
 }

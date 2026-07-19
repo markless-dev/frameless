@@ -26,14 +26,18 @@ this artifact, pass their conventionality gates, and pass the calibrated oracle.
 - `imports` retains semantic module imports when Markless reports any. Known
   authoring primitives are already identified by state/computed records; an
   emitter does not infer their meaning from import spelling.
+- `module.exports` records default/named export shape and component names. Each
+  component's `evaluation` policy states that ordinary body locals run once per
+  instance and computed bindings remain reactive.
 
 The builder calls `@tsrx/core`'s `parseModule()` and only Markless's
-`buildSemanticGraph()` plus `lowerStateAccess()`. It never requests or reads the
+`buildSemanticGraph()`. It never requests or reads state lowering, the
 payload arena, public DOM render plan, protocol payloads, symbol modules, locator
 plans, or resume planning. AST metadata/path cycles and comments are removed from
 serialized expression nodes, while syntax-bearing fields and source offsets stay.
-Object keys are recursively sorted in dumps; arrays retain authored or semantic
-order because that order is meaningful.
+Object keys are recursively sorted in dumps. Template/component arrays retain
+authored order; record-table arrays use structural id/path/span sort keys and a
+locale-independent comparator.
 
 This is the intended scope boundary. Less structure would force emitters to parse
 `functionSource`, `handlerSources`, `valueSource`, or template snippets again.
@@ -68,19 +72,31 @@ artifacts. `pnpm test` also runs strict TypeScript checking first.
   `todos.filter((todo) => todo.done).length` to string fragments such as
   `filter((todo) => todo`. The enriched record derives exactly `state:todos` with
   path `[]` by walking the call/member AST. No degraded compiler path is copied.
+- Read tables are rebuilt solely from expression AST sites, including binding
+  initializers and computed functions; neither `records.stateReads` nor per-binding
+  `reads` copies Markless's naive-split paths. Writes are also derived from AST
+  targets and receiver structure. Thus `todos.slice().reverse()` is a read plus the
+  subsequent root assignment, not a `reverse` mutation of `state:todos`.
+- A handler local selected from state rows (for example
+  `alias = todos.find(...)`) carries row provenance. `alias.title = title` is encoded
+  as a `handler-local-alias` write to `state:todos / * / title`. Rows selected from a
+  shallow copied container retain row provenance, while mutations of the copied
+  container itself are not state writes.
 - Markless's alias records make destructured props target `prop:props` paths. The IR
   resolves `displayLabel` to `prop:props / label`, including through the render-once
   `prefix` local captured by S1's computed function. Emitters therefore do not need
   the public-render path to accept an alias spelling.
-- The exact S2 empty/non-empty wrapper used by the handwritten references cannot be
+- The original S2 empty/non-empty wrapper used by the handwritten references cannot be
   expressed through Markless 0.1.1's public render plan without a gap. Nesting the
   keyed repeat in the `@else` arm reports that the repeat/branch is unsupported and
   drops the rows. The closest zero-diagnostic spelling keeps `@for` directly under
-  `<ul>` and uses a sibling `@if`/empty `@else` for the empty paragraph. All scripted non-empty
-  interactions are represented, but after `clear` the Markless variant has an empty
-  `<ul>` beside `<p data-empty="true">empty</p>` whereas the oracle reference has
-  only the paragraph. This POC records, rather than hides, that future emitter/oracle
-  delta.
+  `<ul>` and uses a sibling `@if`/empty `@else` for the empty paragraph. The oracle's
+  React and Solid references now intentionally use that same always-present `<ul>`
+  plus sibling empty paragraph, so this constraint is calibrated rather than left
+  as an emitter delta.
+- The public `schema.ts` contract owns its source-span, import, graph-kind,
+  value-kind, declaration-kind, and sync-policy structures. It has no public
+  `@markless/compiler` type import; only the private builder imports Markless types.
 - `@tsrx/core@0.1.32` exposes `parseModule` from JavaScript but its published main
   export is not discovered as a declaration by TypeScript 5.9.3. The package-local
   declaration in `src/tsrx-core.d.ts` describes only that real public function and
@@ -114,7 +130,7 @@ pnpm test
 ```
 
 The requested single verify entry point is `pnpm test`; it performs no network
-access. On the authoring sandbox, that command passed 15 tests after strict
+access. On the authoring sandbox, that command passed 17 tests after strict
 typechecking. PM-side clean reproduction needs registry access only for the frozen
 install; all Markless packages come from `../vendor/`.
 
