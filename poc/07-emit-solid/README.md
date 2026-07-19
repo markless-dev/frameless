@@ -25,7 +25,7 @@ legacy source-string fields still fail with construct-level diagnostics.
 | Host, text, static attribute | Direct JSX element/text/attribute | Tags, nesting, and authored attributes come only from the template tree. |
 | Dynamic text or attribute/property | Binding-aware ESTree conversion in a JSX expression | Free aliases become `props.path`, visible states and computed bindings become accessor calls, and lexical handler/repeat locals remain lexical. |
 | `property: value` | `value={...}` plus calibrated `attr:value={...}` | Preserves the live property and the attribute reflection observed by the oracle. |
-| Binary `then`/`else` branch | `<Show when={...} fallback={...}>` everywhere | One conditional rule handles rooted and nested sites. For an empty arm immediately before its always-present list, the list is structurally fused into both arms; the known-empty arm uses the repeat's empty row. |
+| Binary `then`/`else` branch | A plain JSX conditional expression (`test ? then : else`) | The test and ordered arms come directly from the branch record. Each authored arm is emitted as-is followed by the same remaining sibling continuation; no host/repeat shape or S2 expression is recognized. |
 | Keyed repeat | `<For each={...}>` with a recorded row-member key discipline | Solid reconciles row objects by identity. The emitter validates that the IR key is a row member path and is not deep-mutated. Handler ASTs mutate the selected row in place and publish an array refresh, preserving focus and row identity. |
 | Render-visible writable state | `createSignal` | Template/computed graph references determine visibility and provide fine-grained DOM updates. |
 | Invisible writable cell | Plain setup-local `let` | S2's next-id cell persists for the owner lifetime without unnecessary reactivity. |
@@ -57,6 +57,26 @@ adapter against its handwritten Solid references. All comparisons pass, includin
 node identity/focus preservation, S1 hidden-branch setup, and S3 callback order and
 cancellation. Divergences are logged as structured JSON before a failed assertion.
 
+## Generality boundary (adversarial critique)
+
+This Solid emitter is secondary evidence that `arcade-enriched-ir/1` is consumable by
+a second, paradigm-different backend for the S1/S2/S3 fixture family. It is not a
+production-general Solid backend. In particular, the keyed-repeat key expression is
+validated against its recorded row-member read but is not lowered into Solid output:
+`<For>` reconciles by row-object identity and therefore relies on the fixtures'
+in-place row mutation plus array-refresh discipline. Row-level reactivity beyond the
+implemented property-binding refresh dependency is not established; other dynamic
+row reads or immutable row replacement can require a different lowering.
+
+The gate's scope is the generated `*.jsx` files it discovers when the gate is invoked
+and the explicit syntax/policy checks listed above. It neither makes the emitter
+production-general nor prevents another build entry point from skipping the gate;
+repository workflow integration is outside this POC. The adversarial critique's full
+synthetic-runtime acceptance list is the roadmap for an Arcade production emitter,
+not acceptance scope for W-C2. This bounded repair therefore fails closed on every
+unconsumed schema field and unsupported construct instead of attempting those future
+semantics here.
+
 ## Size comparison
 
 `pnpm measure:size` compares clean handwritten S2/S3 baselines with generated output.
@@ -74,9 +94,10 @@ Physical nonblank component LOC is primary; Babel AST node count is secondary.
 - The original fixture-digest/component-builder implementation was fake generality.
   It is retained as a board finding, not evidence; this rebuild structurally consumes
   template, binding, event, write, evaluation-policy, and expression-AST records.
-- A plain conditional before the always-present `<ul>` creates a Solid marker text
-  node in the nonempty branch. Uniform `<Show>` lowering fuses that immediately
-  following list into both arms and exactly matches the calibrated DOM.
+- Plain branch lowering preserves each branch record arm and applies the same generic
+  sibling continuation to both ternary results. This avoids Solid's otherwise
+  observable empty anchor while matching the calibrated DOM, without inspecting or
+  rewriting the adjacent list as an S2-shaped special case.
 - S1 needs both setup-once capture and reactive props: `prefix` reads `props.label`
   once, while `derived` reads `props.multiplier` through the accessor. Broad prop
   destructuring would freeze the latter.
@@ -89,8 +110,9 @@ Physical nonblank component LOC is primary; Babel AST node count is secondary.
 Arcade targets Solid v2, but this package's runtime evidence is labeled exactly
 `solid-1.8.22-fallback`. `solid-js@2.0.0-experimental.16` has no `./web` export, while
 the available `vite-plugin-solid@2.11.0` is a Solid 1.x toolchain. A contract test
-records both blockers. The emitted `createSignal`, accessor, `<For>`, and `<Show>`
-idioms are forward-compatible where currently knowable, but this package is **not Solid 2 runtime-validated** and never implies otherwise.
+records both blockers. The emitted `createSignal`, accessor, `<For>`, and JSX
+conditional idioms are forward-compatible where currently knowable, but this package
+is **not Solid 2 runtime-validated** and never implies otherwise.
 
 ## Verify
 

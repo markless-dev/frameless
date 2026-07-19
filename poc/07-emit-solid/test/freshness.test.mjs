@@ -33,6 +33,36 @@ describe('checked-in generated output', () => {
     ir.components[0].template[0].children[0].kind = 'future-portal';
     expect(() => validateEnrichedIR(ir)).toThrow(/Unsupported template construct.*future-portal/);
   });
+  test('validates guard-result templates with construct-named diagnostics', async () => {
+    const ir = JSON.parse(await readFile(resolve('../05-enriched-ir/test/goldens/s1-render-once.json'), 'utf8'));
+    ir.components[0].guards.push({
+      id: 'guard:adversarial',
+      test: { expression: { type: 'Literal', value: true, raw: 'true', start: 0, end: 4 }, reads: [] },
+      whenTrue: { kind: 'template', children: [{ kind: 'future-portal' }] },
+    });
+    expect(() => emitSolid(ir)).toThrow(/Unsupported template construct at guard\[0\].*future-portal/);
+  });
+  test('rejects malformed template nodes without undefined-property crashes', async () => {
+    const ir = JSON.parse(await readFile(resolve('../05-enriched-ir/test/goldens/s1-render-once.json'), 'utf8'));
+    ir.components[0].template.push(null);
+    expect(() => emitSolid(ir)).toThrow(/Unsupported template construct at template\[1\]: expected a template node/);
+  });
+  test('rejects dangling local semanticRecordIds', async () => {
+    const ir = JSON.parse(await readFile(resolve('../05-enriched-ir/test/goldens/s1-render-once.json'), 'utf8'));
+    ir.components[0].locals[0].semanticRecordIds.push('state:missing');
+    expect(() => emitSolid(ir)).toThrow(/Unsupported dangling semanticRecordId in local.*state:missing/);
+  });
+  test('rejects async state with a descriptive construct error', async () => {
+    const ir = JSON.parse(await readFile(resolve('../05-enriched-ir/test/goldens/s1-render-once.json'), 'utf8'));
+    const state = ir.records.bindings.find((binding) => binding.kind === 'state');
+    state.async = true;
+    expect(() => emitSolid(ir)).toThrow(new RegExp(`Unsupported async state construct in state binding ${state.id}`));
+  });
+  test('explicitly rejects schema fields that this bounded emitter cannot consume', async () => {
+    const ir = JSON.parse(await readFile(resolve('../05-enriched-ir/test/goldens/s1-render-once.json'), 'utf8'));
+    ir.components[0].props.entries[0].defaultValue = { type: 'Literal', value: 'fallback', raw: "'fallback'" };
+    expect(() => emitSolid(ir)).toThrow(/Unsupported prop .* field\(s\): defaultValue/);
+  });
   test('regenerates a documented S1 variant without a fixture signature lock', async () => {
     const ir = JSON.parse(await readFile(resolve('../05-enriched-ir/test/goldens/s1-render-once.json'), 'utf8'));
     const original = emitSolid(ir);

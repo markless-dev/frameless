@@ -32,7 +32,48 @@ function assertArray(value, location) {
   if (!Array.isArray(value)) throw new Error(`Unsupported ${location}: expected an array`);
 }
 
+function assertString(value, location) {
+  if (typeof value !== 'string') throw new Error(`Unsupported ${location}: expected a string`);
+}
+
+function validatePath(value, location) {
+  assertArray(value, `${location} path`);
+  if (value.some((part) => typeof part !== 'string')) throw new Error(`Unsupported ${location} path construct`);
+}
+
+function validateRead(read, location, withVia = true) {
+  exactKeys(read, withVia ? ['graphNodeId', 'path', 'via'] : ['graphNodeId', 'path'], `${location} read`);
+  assertString(read.graphNodeId, `${location} read graphNodeId`);
+  validatePath(read.path, `${location} read`);
+  if (withVia && !['direct', 'alias', 'local', 'repeat-item'].includes(read.via)) throw new Error(`Unsupported ${location} read construct: ${String(read.via)}`);
+}
+
+function validateReads(reads, location, withVia = true) {
+  assertArray(reads, `${location} reads`);
+  reads.forEach((read, index) => validateRead(read, `${location}.reads[${index}]`, withVia));
+}
+
+function validateExpressionSite(site, location) {
+  exactKeys(site, ['expression', 'reads'], `${location} expression-site`);
+  if (!site.expression) throw new Error(`Unsupported ${location} expression construct: missing AST`);
+  fromEstree(site.expression);
+  validateReads(site.reads, location);
+}
+
+function validateSourceSpan(span, location) {
+  exactKeys(span, ['end', 'filename', 'start'], `${location} sourceSpan`);
+  assertString(span.filename, `${location} sourceSpan filename`);
+  if (!Number.isInteger(span.start) || !Number.isInteger(span.end)) throw new Error(`Unsupported ${location} sourceSpan construct`);
+}
+
 function validateWrite(write, location) {
+  const common = ['graphNodeId', 'operation', 'path', 'sourceSpan', 'via'];
+  const operationFields = write.operation === 'assign' ? ['assignmentOperator', 'value'] : write.operation === 'update' ? ['prefix', 'updateOperator'] : [];
+  exactKeys(write, [...common, ...operationFields], `${location} state-write`);
+  assertString(write.graphNodeId, `${location} state-write graphNodeId`);
+  validatePath(write.path, `${location} state-write`);
+  if (write.sourceSpan) validateSourceSpan(write.sourceSpan, location);
+  if (write.operation === 'assign') fromEstree(write.value);
   const path = write.path ?? [];
   if (write.operation === 'assign' && write.via === 'direct' && path.length === 0 && write.assignmentOperator === '=') return;
   if (write.operation === 'update' && write.via === 'direct' && path.length === 0 && ['++', '--'].includes(write.updateOperator)) return;
@@ -51,36 +92,49 @@ function itemMemberPath(expression, item) {
 }
 
 function validateTemplateNode(node, events, location) {
+  if (!node || typeof node !== 'object' || Array.isArray(node)) throw new Error(`Unsupported template construct at ${location}: expected a template node`);
   if (node.kind === 'text') {
+    exactKeys(node, ['id', 'kind', 'value'], `${location} text`);
     if (typeof node.value !== 'string') throw new Error(`Unsupported text construct at ${location}: value must be a string`);
     return;
   }
   if (node.kind === 'dynamic-text') {
+    exactKeys(node, ['expression', 'id', 'kind', 'reads'], `${location} dynamic-text`);
     if (!node.expression) throw new Error(`Unsupported dynamic-text construct at ${location}: missing expression AST`);
+    fromEstree(node.expression);
+    validateReads(node.reads, location);
     return;
   }
   if (node.kind === 'fragment') {
+    exactKeys(node, ['children', 'id', 'kind'], `${location} fragment`);
     assertArray(node.children, `${location} fragment children`);
     node.children.forEach((child, index) => validateTemplateNode(child, events, `${location}.children[${index}]`));
     return;
   }
   if (node.kind === 'branch') {
-    if (!node.expression || !Array.isArray(node.arms) || node.arms.length !== 2 || node.arms[0].kind !== 'then' || node.arms[1].kind !== 'else') {
+    exactKeys(node, ['arms', 'expression', 'id', 'kind', 'reads'], `${location} branch`);
+    if (!node.expression || !Array.isArray(node.arms) || node.arms.length !== 2 || node.arms[0]?.kind !== 'then' || node.arms[1]?.kind !== 'else') {
       throw new Error(`Unsupported branch construct at ${location}: expected ordered then/else arms`);
     }
+    fromEstree(node.expression);
+    validateReads(node.reads, location);
     node.arms.forEach((arm, armIndex) => {
+      exactKeys(arm, ['children', 'kind'], `${location} branch arm`);
       assertArray(arm.children, `${location} branch arm children`);
       arm.children.forEach((child, index) => validateTemplateNode(child, events, `${location}.arms[${armIndex}].children[${index}]`));
     });
     return;
   }
   if (node.kind === 'keyed-repeat') {
+    exactKeys(node, ['collection', 'empty', 'id', 'index', 'item', 'key', 'kind', 'row'], `${location} keyed-repeat`);
     if (node.index != null) throw new Error(`Unsupported keyed-repeat index binding at ${location}`);
     if (!node.collection?.expression || !node.key?.expression || typeof node.item !== 'string') {
       throw new Error(`Unsupported keyed-repeat construct at ${location}: collection, item, and key expression are required`);
     }
     if (!Array.isArray(node.empty) || node.empty.length !== 0) throw new Error(`Unsupported keyed-repeat empty arm at ${location}; lower it as a branch site`);
     assertArray(node.row, `${location} keyed-repeat row`);
+    validateExpressionSite(node.collection, `${location}.collection`);
+    validateExpressionSite(node.key, `${location}.key`);
     node.row.forEach((child, index) => validateTemplateNode(child, events, `${location}.row[${index}]`));
     const keyPath = itemMemberPath(node.key.expression, node.item);
     const keyRead = node.key.reads?.find((read) => read.via === 'repeat-item');
@@ -98,20 +152,25 @@ function validateTemplateNode(node, events, location) {
     return;
   }
   if (node.kind !== 'host') throw new Error(`Unsupported template construct at ${location}: ${String(node.kind)}`);
+  exactKeys(node, ['children', 'dynamicBindings', 'eventIds', 'id', 'kind', 'staticAttributes', 'tag'], `${location} host`);
   if (typeof node.tag !== 'string') throw new Error(`Unsupported host construct at ${location}: tag must be a string`);
   assertArray(node.staticAttributes, `${location} staticAttributes`);
   assertArray(node.dynamicBindings, `${location} dynamicBindings`);
   assertArray(node.eventIds, `${location} eventIds`);
   assertArray(node.children, `${location} children`);
   for (const attribute of node.staticAttributes) {
+    exactKeys(attribute, ['name', 'value'], `${location} static attribute`);
     if (typeof attribute.name !== 'string' || !['string', 'boolean'].includes(typeof attribute.value)) {
       throw new Error(`Unsupported static attribute construct at ${location}`);
     }
   }
   for (const binding of node.dynamicBindings) {
+    exactKeys(binding, ['expression', 'kind', 'name', 'reads'], `${location} dynamic binding`);
     if (!['attribute', 'property'].includes(binding.kind) || typeof binding.name !== 'string' || !binding.expression) {
       throw new Error(`Unsupported dynamic binding construct at ${location}: ${String(binding.kind)}`);
     }
+    fromEstree(binding.expression);
+    validateReads(binding.reads, `${location} dynamic binding`);
   }
   for (const eventId of node.eventIds) {
     const event = events.get(eventId);
@@ -136,23 +195,41 @@ function syncActions(event) {
 export function validateEnrichedIR(ir) {
   exactKeys(ir, TOP_KEYS, 'IR');
   if (ir.version !== VERSION) throw new Error(`Expected ${VERSION}, received ${String(ir.version)}`);
+  assertString(ir.filename, 'IR filename');
   if (!Array.isArray(ir.components) || ir.components.length !== 1) throw new Error('Fixture emitter requires exactly one component');
   const component = ir.components[0];
   exactKeys(component, COMPONENT_KEYS, 'component');
   exactKeys(ir.records, RECORD_KEYS, 'records');
   if (typeof component.name !== 'string' || !t.isValidIdentifier(component.name)) throw new Error(`Unsupported component name: ${String(component.name)}`);
+  exactKeys(component.evaluation, ['computedBindings', 'ordinaryLocals'], `${component.name} evaluation`);
   if (component.evaluation.ordinaryLocals !== 'once-per-instance' || component.evaluation.computedBindings !== 'reactive') {
     throw new Error(`Unsupported evaluation policy for ${component.name}`);
   }
   assertArray(ir.imports, 'imports');
   if (ir.imports.length) throw new Error('Fixture-family Solid emitter has no disclosed author import mapping');
+  exactKeys(ir.module, ['exports'], 'module');
+  assertArray(ir.module.exports, 'module exports');
+  ir.module.exports.forEach((entry, index) => exactKeys(entry, ['componentName', 'exportedName', 'kind'], `module export[${index}]`));
   const exported = ir.module.exports.find((entry) => entry.componentName === component.name);
   if (!exported || exported.kind !== 'named' || exported.exportedName !== component.name) throw new Error(`A same-name named export is required for ${component.name}`);
+  if (ir.module.exports.length !== 1) throw new Error(`Unsupported module export construct: expected only ${component.name}`);
+  exactKeys(component.props, ['entries', 'graphNodeId'], `${component.name} props`);
+  assertString(component.props.graphNodeId, `${component.name} props graphNodeId`);
+  assertArray(component.props.entries, `${component.name} props entries`);
   for (const prop of component.props.entries) {
+    exactKeys(prop, ['alias', 'graphNodeId', 'localName', 'path', 'sourceName'], `prop ${String(prop.localName)}`);
+    if (prop.alias !== (prop.localName !== prop.sourceName)) throw new Error(`Unsupported prop alias construct: ${String(prop.localName)}`);
+    validatePath(prop.path, `prop ${prop.localName}`);
     const alias = ir.records.aliases.find((entry) => entry.name === prop.localName);
     if (!alias || alias.graphNodeId !== prop.graphNodeId || alias.path.join('/') !== prop.path.join('/')) throw new Error(`Unresolved prop alias: ${prop.localName}`);
   }
+  assertArray(component.locals, `${component.name} locals`);
   for (const local of component.locals) {
+    exactKeys(local, ['declarationKind', 'initializer', 'names', 'order', 'pattern', 'reads', 'semanticRecordIds'], `local ${local.names?.join(',') ?? '<unknown>'}`);
+    validateReads(local.reads, `local ${local.names?.join(',') ?? '<unknown>'}`);
+    assertArray(local.semanticRecordIds, `local ${local.names?.join(',') ?? '<unknown>'} semanticRecordIds`);
+    if (local.initializer) fromEstree(local.initializer);
+    fromEstree(local.pattern);
     if (!['const', 'let'].includes(local.declarationKind)
       || local.names.length !== 1
       || local.pattern?.type !== 'Identifier'
@@ -161,6 +238,16 @@ export function validateEnrichedIR(ir) {
       throw new Error(`Unsupported local declaration construct: ${local.names?.join(',') ?? '<unknown>'}`);
     }
   }
+  for (const collection of ['aliases', 'bindings', 'events', 'stateReads', 'stateWrites']) assertArray(ir.records[collection], `records.${collection}`);
+  for (const [index, alias] of ir.records.aliases.entries()) {
+    exactKeys(alias, ['declarationKind', 'graphNodeId', 'id', 'name', 'path', 'sourceSpan', 'target'], `alias record[${index}]`);
+    if (!['const', 'let', 'var'].includes(alias.declarationKind)) throw new Error(`Unsupported alias declaration construct: ${String(alias.declarationKind)}`);
+    for (const field of ['graphNodeId', 'id', 'name', 'target']) assertString(alias[field], `alias record[${index}] ${field}`);
+    validatePath(alias.path, `alias record[${index}]`);
+    if (alias.sourceSpan) validateSourceSpan(alias.sourceSpan, `alias record[${index}]`);
+  }
+  ir.records.stateReads.forEach((read, index) => validateRead(read, `records.stateReads[${index}]`, false));
+  ir.records.stateWrites.forEach((write, index) => validateWrite(write, `records.stateWrites[${index}]`));
   walk(ir, (node) => {
     for (const field of LEGACY_STRING_FIELDS) if (field in node) throw new Error(`Legacy source-string field is forbidden: ${field}`);
     const unsupported = Object.keys(node).filter((field) => !ALLOWED_IR_FIELDS.has(field));
@@ -172,26 +259,72 @@ export function validateEnrichedIR(ir) {
   const supportedBindings = new Set(['prop', 'state', 'computed']);
   for (const binding of ir.records.bindings) {
     if (!supportedBindings.has(binding.kind)) throw new Error(`Unsupported binding construct: ${binding.kind}`);
+    const bindingFields = binding.kind === 'computed'
+      ? ['async', 'asyncCapable', 'computed', 'declarationKind', 'id', 'kind', 'name', 'reads', 'writable', 'writes']
+      : binding.kind === 'state'
+        ? ['async', 'asyncCapable', 'declarationKind', 'id', 'initialValue', 'initializer', 'kind', 'name', 'reads', 'valueKind', 'writable', 'writes']
+        : ['declarationKind', 'id', 'kind', 'name', 'reads', 'valueKind', 'writable', 'writes'];
+    exactKeys(binding, bindingFields, `${binding.kind} binding ${String(binding.id)}`);
+    if (binding.async === true || binding.asyncCapable === true) throw new Error(`Unsupported async state construct in ${binding.kind} binding ${binding.id}`);
+    if (binding.async != null && binding.async !== false) throw new Error(`Unsupported async state marker in ${binding.kind} binding ${binding.id}`);
+    if (binding.asyncCapable != null && binding.asyncCapable !== false) throw new Error(`Unsupported async-capable state marker in ${binding.kind} binding ${binding.id}`);
+    if (!['const', 'let'].includes(binding.declarationKind) || typeof binding.writable !== 'boolean') throw new Error(`Unsupported ${binding.kind} binding metadata: ${binding.id}`);
+    validateReads(binding.reads, `${binding.kind} binding ${binding.id}`, false);
+    assertArray(binding.writes, `${binding.kind} binding ${binding.id} writes`);
+    binding.writes.forEach((write, index) => validateWrite(write, `${binding.id}.writes[${index}]`));
     if (binding.kind === 'state') {
       if (!binding.initializer) throw new Error(`State ${binding.id} is missing an initializer AST`);
-      binding.writes.forEach((write, index) => validateWrite(write, `${binding.id}.writes[${index}]`));
+      if (!['scalar', 'object', 'array', 'unknown'].includes(binding.valueKind)) throw new Error(`Unsupported state valueKind for ${binding.id}: ${String(binding.valueKind)}`);
+      fromEstree(binding.initializer);
     }
     if (binding.kind === 'computed') {
+      validateExpressionSite(binding.computed, `computed binding ${binding.id}`);
       const expression = fromEstree(binding.computed?.expression);
-      if (!t.isArrowFunctionExpression(expression) || expression.params.length !== 0) throw new Error(`Unsupported computed construct ${binding.id}: expected a zero-argument arrow`);
+      if (!t.isArrowFunctionExpression(expression) || expression.async || expression.params.length !== 0) throw new Error(`Unsupported computed construct ${binding.id}: expected a synchronous zero-argument arrow`);
     }
+  }
+  const bindingIds = new Set(ir.records.bindings.map((binding) => binding.id));
+  for (const local of component.locals) for (const id of local.semanticRecordIds) {
+    if (!bindingIds.has(id)) throw new Error(`Unsupported dangling semanticRecordId in local ${local.names.join(',')}: ${id}`);
   }
   const events = new Map(ir.records.events.map((event) => [event.id, event]));
   if (events.size !== ir.records.events.length) throw new Error('Unsupported duplicate event id');
   for (const event of ir.records.events) {
+    exactKeys(event, ['eventName', 'handlers', 'hostNodeId', 'id', 'syncPolicy'], `event ${String(event.id)}`);
+    for (const field of ['eventName', 'hostNodeId', 'id']) assertString(event[field], `event ${String(event.id)} ${field}`);
+    assertArray(event.handlers, `event ${event.id} handlers`);
     if (!event.handlers.length) throw new Error(`Event ${event.id} has no handlers`);
+    if (event.syncPolicy) {
+      exactKeys(event.syncPolicy, ['actions', 'when'], `event ${event.id} sync-policy`);
+      exactKeys(event.syncPolicy.when, ['type', 'value'], `event ${event.id} sync-policy condition`);
+    }
     syncActions(event);
     event.handlers.forEach((handler, handlerIndex) => {
+      exactKeys(handler, ['expression', 'reads', 'writes'], `${event.id}.handlers[${handlerIndex}]`);
+      validateReads(handler.reads, `${event.id}.handlers[${handlerIndex}]`);
+      assertArray(handler.writes, `${event.id}.handlers[${handlerIndex}] writes`);
       const expression = fromEstree(handler.expression);
-      if (!t.isArrowFunctionExpression(expression)) throw new Error(`Unsupported event handler construct at ${event.id}.handlers[${handlerIndex}]`);
+      if (!t.isArrowFunctionExpression(expression) || expression.async) throw new Error(`Unsupported event handler construct at ${event.id}.handlers[${handlerIndex}]: expected a synchronous arrow`);
       handler.writes.forEach((write, writeIndex) => validateWrite(write, `${event.id}.handlers[${handlerIndex}].writes[${writeIndex}]`));
     });
   }
+  assertArray(component.guards, `${component.name} guards`);
+  component.guards.forEach((guard, index) => {
+    const location = `guard[${index}]`;
+    exactKeys(guard, ['id', 'test', 'whenTrue'], location);
+    validateExpressionSite(guard.test, `${location}.test`);
+    if (!guard.whenTrue || typeof guard.whenTrue !== 'object') throw new Error(`Unsupported guard result construct at ${location}: missing result`);
+    if (guard.whenTrue.kind === 'null') exactKeys(guard.whenTrue, ['kind'], `${location} null result`);
+    else if (guard.whenTrue.kind === 'expression') {
+      exactKeys(guard.whenTrue, ['kind', 'value'], `${location} expression result`);
+      validateExpressionSite(guard.whenTrue.value, `${location}.whenTrue.value`);
+    } else if (guard.whenTrue.kind === 'template') {
+      exactKeys(guard.whenTrue, ['children', 'kind'], `${location} template result`);
+      assertArray(guard.whenTrue.children, `${location} template result children`);
+      guard.whenTrue.children.forEach((node, nodeIndex) => validateTemplateNode(node, events, `${location}.whenTrue.children[${nodeIndex}]`));
+    } else throw new Error(`Unsupported guard result construct at ${location}: ${String(guard.whenTrue.kind)}`);
+  });
+  assertArray(component.template, `${component.name} template`);
   component.template.forEach((node, index) => validateTemplateNode(node, events, `template[${index}]`));
   return component;
 }
@@ -281,18 +414,12 @@ function expressionFromNodes(nodes, context) {
   return t.jsxFragment(t.jsxOpeningFragment(), t.jsxClosingFragment(), children);
 }
 
-function branchNode(node, context, consequentContinuation = [], alternateContinuation = consequentContinuation) {
-  context.imports.add('Show');
-  const when = rewriteEstree(node.expression, context);
-  const consequent = expressionFromNodes([...node.arms[0].children, ...consequentContinuation], context);
-  const alternate = expressionFromNodes([...node.arms[1].children, ...alternateContinuation], context);
-  const name = t.jsxIdentifier('Show');
-  return t.jsxElement(
-    t.jsxOpeningElement(name, [jsxAttribute('when', when), jsxAttribute('fallback', alternate)], false),
-    t.jsxClosingElement(t.jsxIdentifier('Show')),
-    [consequent],
-    false,
-  );
+function branchNode(node, context, continuation = []) {
+  return t.jsxExpressionContainer(t.conditionalExpression(
+    rewriteEstree(node.expression, context),
+    expressionFromNodes([...node.arms[0].children, ...continuation], context),
+    expressionFromNodes([...node.arms[1].children, ...continuation], context),
+  ));
 }
 
 function repeatNode(node, context) {
@@ -349,26 +476,11 @@ function templateChildren(nodes, context) {
   const children = [];
   for (let index = 0; index < nodes.length; index += 1) {
     const node = nodes[index];
-    const next = nodes[index + 1];
-    if (node.kind === 'branch' && node.arms[1].children.length === 0 && next?.kind === 'host') {
-      const repeat = next.children.length === 1 && next.children[0].kind === 'keyed-repeat' ? next.children[0] : null;
-      const test = node.expression;
-      const testsEmptyCollection = repeat
-        && test.type === 'BinaryExpression'
-        && test.operator === '==='
-        && test.right.type === 'Literal'
-        && test.right.value === 0
-        && test.left.type === 'MemberExpression'
-        && !test.left.computed
-        && test.left.property.type === 'Identifier'
-        && test.left.property.name === 'length'
-        && JSON.stringify(test.left.object, ['type', 'name']) === JSON.stringify(repeat.collection.expression, ['type', 'name']);
-      const emptyContinuation = testsEmptyCollection ? [{ ...next, children: repeat.empty }] : [next];
-      children.push(branchNode(node, context, emptyContinuation, [next]));
-      index += 1;
-    } else {
-      children.push(templateNode(node, context));
+    if (node.kind === 'branch') {
+      children.push(branchNode(node, context, nodes.slice(index + 1)));
+      break;
     }
+    children.push(templateNode(node, context));
   }
   return children;
 }
@@ -494,7 +606,7 @@ export function emitSolid(ir) {
     statesByName,
   };
   const exported = componentFunction(ir, component, context);
-  const importOrder = new Map(['createSignal', 'For', 'Show'].map((name, index) => [name, index]));
+  const importOrder = new Map(['createSignal', 'For'].map((name, index) => [name, index]));
   const importNames = [...context.imports].sort((left, right) => importOrder.get(left) - importOrder.get(right));
   const program = [];
   if (importNames.length) {
