@@ -133,7 +133,7 @@ describe('fixture-family sufficiency', () => {
 		});
 	}
 
-	test('S1 carries ordered locals, a props alias, setup AST, and the guard-return subtree', async () => {
+	test('S1 carries ordered locals, a props alias, setup AST, and the root branch site', async () => {
 		const ir = await fixtureIr('s1-render-once.tsrx');
 		const component = ir.components[0]!;
 		expect(component.locals.flatMap((local) => local.names)).toEqual([
@@ -159,8 +159,16 @@ describe('fixture-family sufficiency', () => {
 		expect(component.evaluation).toEqual({ ordinaryLocals: 'once-per-instance', computedBindings: 'reactive' });
 		expect(ir.module.exports).toEqual([{ kind: 'named', componentName: 'RenderOnce', exportedName: 'RenderOnce' }]);
 		expect(callbackNames(component.locals[0]!.initializer!)).toEqual(['setup']);
-		expect(component.guards).toHaveLength(1);
-		expect(component.guards[0]!.whenTrue.kind).toBe('template');
+		expect(component.guards).toHaveLength(0);
+		const branch = component.template.find((node) => node.kind === 'branch');
+		expect(branch?.kind).toBe('branch');
+		if (branch?.kind !== 'branch') throw new Error('missing S1 root branch');
+		expect(branch.id).toBe('branch-site:0');
+		expect(branch.arms.map((arm) => arm.kind)).toEqual(['then', 'else']);
+		expect(branch.arms.map((arm) => walkTemplate(arm.children).filter((node) => node.kind === 'host').map((node) => node.tag))).toEqual([
+			['p'],
+			['section', 'output', 'button'],
+		]);
 		expect(hosts(ir).map((host) => host.tag)).toEqual(['p', 'section', 'output', 'button']);
 	});
 

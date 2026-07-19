@@ -10,6 +10,16 @@ This package is the C9 evidence package. It runs the calibrated Arcade equivalen
 
 The suite machine-writes `results/verdict.json` (scenario × pair verdicts and mutant rejections) and generates `results/RESULTS.md` from that artifact before making its assertions. This intentionally preserves precise divergence evidence when a legitimate contract mismatch occurs.
 
+## Fixture vendoring identity
+
+The Markless Vite plugin transforms `.tsrx` only inside this package root, so the
+three poc/05 authoring fixtures are vendored under `src/fixtures/`. `pnpm test` first
+runs `test/fixture-identity.test.ts` in a listener-free Node Vitest config and compares
+all three copies byte-for-byte with `../05-enriched-ir/src/fixtures/`. Only after those
+three identity checks pass does it start the Chromium matrix. This ties native
+Markless execution to the exact sources that produced the enriched-IR goldens and
+both generated targets.
+
 ## Verify
 
 ```sh
@@ -58,8 +68,25 @@ Vendored tarball SHA-256 receipts:
 
 ## Findings
 
+- Markless 0.1.1 accepts `if (!visible) return <p
+  data-branch="hidden">hidden</p>` in the semantic compiler, but the bundler client
+  transform leaves that JSX raw. Vite then fails with the exact error: `Failed to
+  parse source for import analysis because the content contains invalid JS syntax.
+  You may need to install appropriate plugins to handle the .tsrx file format, or if
+  it's an asset, add "**/*.tsrx" to assetsInclude in your configuration.` S1 now uses
+  root-level `@if`/`@else` with the identical hidden/visible DOM contract. A direct
+  Markless client-transform check confirms the replacement contains no raw JSX and
+  parses as JavaScript. Guard-return-null remains proven by poc/03 fixture c6e; this
+  finding is specifically guard-returning-an-element.
 - `vite-plugin-solid@2.11.0` is incompatible with Vite 8 because it consumes a removed Vite server-conditions export. This package therefore uses the same include-filter boundary as `poc/07`, implemented directly with pinned `@babel/core` + `babel-preset-solid`; only Solid generated/reference `.jsx` is transformed as Solid, React JSX remains on Vite's React path, and `.tsrx` remains exclusively owned by `markless()`.
-- In the restricted worker sandbox, Chromium verification could not start because Vitest's local browser server was denied `listen(::1)` with `EPERM`. The registry was also unavailable and the isolated store lacked several tarballs. Consequently the checked-in verdict remains explicitly pending/failing until the PM-side command above machine-generates it; no behavioral divergence was observed or normalized away because no browser test executed.
+- In the restricted worker sandbox, the three Node fixture-identity checks pass, but
+  Chromium verification cannot start because Vitest's local browser server is denied
+  `listen(127.0.0.1:51204)` with `EPERM`. Registry access also fails with `ENOTFOUND`
+  and the isolated pnpm store lacks several tarballs, so verification reused exact
+  repo-local installed dependency trees. Consequently the checked-in verdict remains
+  explicitly pending/failing until the PM-side `pnpm test` command above
+  machine-generates it. No behavioral divergence was observed or normalized away:
+  the browser comparison process never started.
 
 ## What this does not prove
 

@@ -356,7 +356,10 @@ function componentFunction(ir, component, context, usedHooks) {
     else result = expressionFromChildren(guard.whenTrue.children, context);
     body.push(t.ifStatement(fromEstree(guard.test.expression), t.returnStatement(result)));
   }
-  body.push(t.returnStatement(expressionFromChildren(component.template, context)));
+  const rendered = component.template.length === 1 && component.template[0].kind === 'branch'
+    ? branchExpression(component.template[0], context)
+    : expressionFromChildren(component.template, context);
+  body.push(t.returnStatement(rendered));
   const fn = t.functionDeclaration(t.identifier(component.name), [t.objectPattern(props)], t.blockStatement(body));
   return t.exportNamedDeclaration(fn);
 }

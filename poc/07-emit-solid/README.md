@@ -20,6 +20,7 @@ combined with W-C0, the accepted React emitter, and the later cross-target verdi
 | Live input state | `value`/`checked`, plus calibrated `attr:value` | Preserves live properties and only the attribute reflection required by the oracle. |
 | Checkbox event | Native `onChange` | Preserves native checkbox change behavior. |
 | Keyed repeat | `<For>` over stable row objects | Solid keys by object identity; deep edits mutate the matched row then publish a copied array, preserving focus and row identity. |
+| Root template branch | Conditional-expression return | Matches Solid's existing S1 convention while preserving both authored DOM arms without an extra wrapper. |
 | Empty branch | `<Show>` with `<p>` plus `<ul>` true branch and `<ul>` fallback | Preserves the sibling empty paragraph and an always-present list without marker-text divergence. |
 | S1 setup probe | Direct component-setup call | Solid's owner setup is once per instance; no effect or lifecycle hook is needed in the calibrated CSR scope. |
 | Submit synchronization | `preventDefault`, two ordered signal writes, then trace | Exposes only final writes value `2`, allows bubbling, and keeps submit before form bubble. |
@@ -41,7 +42,7 @@ gate passed on all three generated files, and all bypass mutations were rejected
 
 The smoke suite runs all four calibrated scenario variants through poc/04's Solid
 adapter against its handwritten Solid references. All comparisons pass, including S2
-node identity/focus preservation, S1 hidden-guard setup, and S3 callback order and
+node identity/focus preservation, S1 hidden-branch setup, and S3 callback order and
 cancellation. Divergences are logged as structured JSON before a failed assertion.
 
 ## Size comparison
