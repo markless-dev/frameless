@@ -1,0 +1,193 @@
+# GoalBuddy v2 state.yaml
+# Board truth lives here. goal.md is the editable charter; notes/ holds long receipts only.
+
+version: 2
+
+goal:
+  title: "Frameless: Mitosis postmortem and markless-powered successor"
+  slug: "frameless-mitosis-successor"
+  kind: existing_plan
+  tranche: "Produce an evidence-backed Mitosis adoption postmortem, a markless-based successor design, and a top-level poc/ folder where every major claim has a runnable proof."
+  status: active
+  oracle:
+    signal: "A claims-to-POC map: every numbered claim in the research report points at a POC under poc/ with a verify command that passes on this machine; cross-framework 'works the same' claims are proven by an equivalence check, not prose."
+    cadence: "after each Worker package and at final audit"
+    final_proof: "Final Judge audit re-runs each POC verify command, confirms every report claim is either POC-backed or explicitly labeled as opinion/untested, and records full_outcome_complete: true."
+  intake:
+    original_request: "Analyze the entire mitosis codebase and figure out why it gained little adoption. Design a successor that uses the markless compiler and graph-based architecture (with an analyzer-like concept) to produce idiomatic per-framework code with identical behavior. This is also an adoption play for markless: authors of the syntax can use markless directly as a framework, and markless library authors automatically support all other frameworks. Look at ../mitosis and ../markless, research in depth, make the writing easy to understand, and prove each claim with a POC in a top-level poc folder."
+    interpreted_outcome: "An easy-to-read, deeply researched report explaining Mitosis's adoption failure and showing how markless can be its successor, with every major claim proven by a runnable POC in poc/."
+    input_shape: existing_plan
+    audience: "The user (markless author) and, eventually, the public as positioning material for the frameless/markless successor project."
+    authority: requested
+    proof_type: artifact
+    completion_proof: "Report exists in docs/, each numbered claim maps to a passing POC under poc/, and the final audit receipt records full_outcome_complete: true."
+    likely_misfire: "Writing a persuasive essay whose claims are never actually proven, or POCs that demo something adjacent without proving the specific claim they are attached to, or drifting into building the full successor compiler instead of claim-level proofs."
+    blind_spots_considered:
+      - "Mitosis's adoption failure is partly social/ecosystem (maintenance, docs, DX, Builder.io priorities), so code analysis alone is insufficient; external evidence (issues, discussions, download stats, community posts) is required."
+      - "'Output works the same' needs a concrete definition and an equivalence harness (same props/events in, same DOM/behavior out), or the core claim is unfalsifiable."
+      - "markless may not yet cover Mitosis's full component feature surface; POCs must surface real gaps honestly rather than hiding them, since gap analysis is itself valuable."
+      - "The two-sided adoption thesis (syntax users adopt markless-as-framework; markless library authors get all frameworks free) is a strategy claim; POCs can prove feasibility, not market outcome — the report must label which claims are provable vs strategic bets."
+    existing_plan_facts:
+      - "Analyze the entire mitosis codebase at /Users/jacksm5pro/dev/open-source/mitosis to determine where it went wrong and why adoption stayed low."
+      - "The successor uses the markless compiler and graph-based architecture at /Users/jacksm5pro/dev/open-source/markless, plus a concept similar to the markless analyzer."
+      - "Output must be idiomatic for each target framework while behaving identically."
+      - "Strategic thesis: shared syntax makes frameless an adoption funnel for markless in both directions (authors adopt markless as a framework; markless library authors automatically ship to all frameworks)."
+      - "Deliverables: in-depth research with easy-to-understand writing, plus a top-level poc/ folder in this repo with a POC proving each claim."
+
+rules:
+  pm_owns_state: true
+  one_active_task: true
+  max_write_workers: 1
+  no_implementation_without_worker_or_pm_task: true
+  no_completion_without_judge_or_pm_audit: true
+  planning_is_not_completion: true
+  queued_required_worker_blocks_completion: true
+  continuous_until_full_outcome: true
+  missing_input_or_credentials_do_not_stop_goal: true
+  preserve_and_validate_existing_plan: true
+  intake_misfire_must_be_audited: true
+  goal_pressure_requires_oracle: true
+  no_completion_on_weak_proof: true
+  slice_policy:
+    max_consecutive_tiny_tasks: 2
+    prefer_vertical_slices: true
+    judge_picks_largest_safe_slice: true
+    worker_completes_whole_slice: true
+
+agents:
+  # installed | bundled_not_installed | missing | unknown
+  scout: installed
+  worker: installed
+  judge: installed
+
+visual_board:
+  # none | local | unknown
+  selected: local
+  local:
+    status: live
+    url: "http://goalbuddy.localhost:41737/frameless-mitosis-successor/"
+    command: "npx goalbuddy board docs/goals/frameless-mitosis-successor"
+
+active_task: T001
+
+tasks:
+  - id: T001
+    type: scout
+    assignee: Scout
+    status: active
+    reasoning_hint: medium
+    objective: "Map the Mitosis codebase: architecture, compiler pipeline, JSX subset restrictions, per-framework generator quality, test/snapshot health, abandoned or half-finished areas, and in-repo pain evidence (TODOs, skipped tests, workaround density, git history signals)."
+    inputs:
+      - /Users/jacksm5pro/dev/open-source/mitosis
+    constraints:
+      - "Read-only; the mitosis repo is reference material and must never be modified."
+      - "Prefer concrete file-path evidence over generic advice; every pain point cited must name files/lines."
+      - "Explicitly assess: where idiomatic output breaks down per target framework, and which restrictions the Mitosis JSX subset imposes on authors."
+    expected_output:
+      - "notes/T001-mitosis-map.md with architecture map, generator-by-generator quality assessment, and ranked candidate failure causes each backed by file evidence"
+    receipt: null
+  - id: T002
+    type: scout
+    assignee: Scout
+    status: queued
+    reasoning_hint: medium
+    objective: "Map the markless codebase: compiler pipeline, graph-based architecture, analyzer, current emit targets, and which capabilities a mitosis-style multi-framework emitter could reuse today versus what is missing."
+    inputs:
+      - /Users/jacksm5pro/dev/open-source/markless
+    constraints:
+      - "Read-only; the markless repo is reference material and must never be modified."
+      - "Load the markless skill before reading .tsrx sources or markless internals."
+      - "Output a concrete reuse-vs-gap table: markless subsystem -> what a per-framework idiomatic emitter needs -> exists today / partial / missing, with file evidence."
+    expected_output:
+      - "notes/T002-markless-map.md with compiler/graph/analyzer map and reuse-vs-gap table for the successor thesis"
+    receipt: null
+  - id: T003
+    type: scout
+    assignee: Scout
+    status: queued
+    reasoning_hint: medium
+    objective: "Gather external adoption evidence for Mitosis: GitHub issues/discussions themes, npm download trends, maintenance cadence, community commentary and postmortems, and comparable tools (e.g. how competitors positioned against it)."
+    inputs:
+      - "Web research (GitHub, npm, blogs, HN/Reddit threads)"
+      - "/Users/jacksm5pro/dev/open-source/mitosis git log and issue references in commit messages"
+    constraints:
+      - "Read-only."
+      - "Separate verifiable facts (dates, download numbers, issue counts) from community opinion; cite sources for both."
+    expected_output:
+      - "notes/T003-adoption-evidence.md with a sourced timeline and ranked external failure causes"
+    receipt: null
+  - id: T004
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Validate the successor thesis against T001-T003 evidence and produce the canonical claim list: each claim atomic, numbered, and either POC-provable (with a sketch of its proof) or explicitly labeled strategic/unprovable. Then select the first Worker package."
+    inputs:
+      - "T001, T002, T003 receipts and notes"
+      - "goal.md existing plan facts"
+    constraints:
+      - "Do not implement."
+      - "Every POC-provable claim must get a proof sketch: what the POC builds, what command verifies it, what output counts as proof."
+      - "Define the cross-framework equivalence standard the POCs will use for 'output works the same'."
+      - "Pick the largest safe useful first Worker slice with allowed_files, verify, and stop_if."
+    expected_output:
+      - "notes/T004-claims.md: canonical numbered claim list with proof sketches"
+      - "Decision on report structure and POC ordering"
+      - "Exact Worker objective, allowed_files, verify, stop_if for T005/T006"
+    receipt: null
+  - id: T005
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Build the POCs in the top-level poc/ folder proving the POC-provable claims from T004, including the cross-framework equivalence harness for 'works the same' claims. Judge may split this into multiple packages."
+    allowed_files:
+      - "poc/**"
+    verify: []
+    stop_if:
+      - "Need files outside allowed_files."
+      - "A claim turns out unprovable as stated — report back so Judge can reword or relabel the claim rather than faking a proof."
+      - "Verification fails twice."
+      - "A markless capability gap blocks a POC — record the gap as a finding instead of patching the markless repo."
+    receipt: null
+  - id: T006
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Write the research report in docs/: easy-to-understand postmortem of Mitosis's adoption failure, the markless successor design, and the two-sided adoption thesis — with every numbered claim tagged as [POC: poc/<path>] or [strategic bet], matching the T004 claim list."
+    allowed_files:
+      - "docs/**"
+    verify: []
+    stop_if:
+      - "Need files outside allowed_files."
+      - "A claim lacks its POC or label — stop and report rather than shipping an unproven claim."
+      - "Verification fails twice."
+    receipt: null
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Final audit: re-run every POC verify command, check the report's claims-to-POC map is complete and honest, confirm the writing is genuinely easy to understand, and decide full outcome completion."
+    inputs:
+      - "All done task receipts"
+      - "Last verification"
+      - "Current dirty diff"
+    constraints:
+      - "Do not implement."
+      - "Reject completion if any report claim is neither POC-backed nor explicitly labeled strategic/opinion."
+      - "Reject completion if required Worker work is still queued or active."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "missing evidence"
+      - "next task if not complete"
+    receipt: null
+
+checks:
+  dirty_fingerprint: unknown
+  last_verification:
+    result: unknown
+    task: null
+    commands: []
