@@ -4,7 +4,7 @@
 version: 2
 
 goal:
-  title: "Frameless: Mitosis postmortem and markless-powered successor"
+  title: "Arcade: Mitosis postmortem and markless-powered successor"
   slug: "frameless-mitosis-successor"
   kind: existing_plan
   tranche: "Produce an evidence-backed Mitosis adoption postmortem, a markless-based successor design, and a top-level poc/ folder where every major claim has a runnable proof."
@@ -33,6 +33,7 @@ goal:
       - "Output must be idiomatic for each target framework while behaving identically."
       - "Strategic thesis: shared syntax makes frameless an adoption funnel for markless in both directions (authors adopt markless as a framework; markless library authors automatically ship to all frameworks)."
       - "Deliverables: in-depth research with easy-to-understand writing, plus a top-level poc/ folder in this repo with a POC proving each claim."
+      - "2026-07-19 user decision: the successor tool is named Arcade (user owns the arcade npm package); working title 'frameless' retired. Strategy: Arcade is the front door — using Arcade naturally means using markless. All public-facing artifacts use the Arcade name; goal slug unchanged for board continuity."
 
 rules:
   pm_owns_state: true
