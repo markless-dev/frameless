@@ -69,7 +69,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-mitosis-successor/"
     command: "npx goalbuddy board docs/goals/frameless-mitosis-successor"
 
-active_task: T006
+active_task: T999
 
 tasks:
   - id: T001
@@ -187,7 +187,7 @@ tasks:
   - id: T006
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Write the research report in docs/: easy-to-understand postmortem of Mitosis's adoption failure, the markless successor design, and the two-sided adoption thesis — with every numbered claim tagged as [POC: poc/<path>] or [strategic bet], matching the T004 claim list."
     allowed_files:
@@ -198,11 +198,18 @@ tasks:
       - "Need files outside allowed_files."
       - "A claim lacks its POC or label — stop and report rather than shipping an unproven claim."
       - "Verification fails twice."
-    receipt: null
+    receipt:
+      result: done
+      changed_files:
+        - docs/report.md
+      summary: "4,956-word report merged. PM claim-map audit: C1-C9,C11 all tagged with POC paths or labels; C10 as non-claim table; B1-B4 + framing opinions labeled; zero idiomatic-as-proven; all 8 markless findings with file/line evidence; inversion-thesis opening; honesty chapter frames findings as the harness catching the reference implementation."
+      commands:
+        - cmd: "PM claim-map grep audit"
+          status: pass
   - id: T999
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     objective: "Final audit: re-run every POC verify command, check the report's claims-to-POC map is complete and honest, confirm the writing is genuinely easy to understand, and decide full outcome completion."
     inputs:
