@@ -252,3 +252,18 @@ code actually supports (Solid 1.x), with the v2 incompatibility recorded as a fi
 no longer exports and offers no version targeting. W-C2 (poc/07-emit-solid) must emit
 Solid v2 idioms; if its toolchain (babel-preset-solid v2 line) blocks testing, record
 findings rather than silently falling back to v1.
+
+# Effect-model addendum (2026-07-19, user design direction)
+
+Markless deliberately has no author-facing effect primitive; the report must present
+this as a load-bearing design argument, evidence-backed:
+- The emitted React for S1-S3 contains ZERO useEffect: derived values compute in
+  render ("You Might Not Need an Effect", enforced by construction). Cite poc/06.
+- Where effects are genuinely required in React output (attach behaviors, async),
+  the compiler synthesizes them with exact dependency arrays derived from typed
+  path-level graph records — vs Mitosis's comma-split dep strings (T001 evidence).
+  Authors never write dep arrays; the stale-closure/missing-dep footgun class is
+  eliminated at the language level.
+- Honest caveat: React effect timing (passive vs layout) is target-specific;
+  attach-behavior mapping is future work outside the current fixture family and
+  must get its own oracle round before being claimed.
