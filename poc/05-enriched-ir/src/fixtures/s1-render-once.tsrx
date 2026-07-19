@@ -12,9 +12,9 @@ export function RenderOnce({ label: displayLabel, multiplier, visible, onTrace }
 		<output data-value="derived">{derived}</output>
 		<button
 			data-action="increment"
-			onClick={(event) => {
+			onClick={() => {
 				count++;
-				onTrace('change', { count }, event);
+				onTrace('change', { count });
 			}}
 		>
 			increment

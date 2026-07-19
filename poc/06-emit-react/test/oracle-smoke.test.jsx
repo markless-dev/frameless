@@ -17,6 +17,8 @@ describe('oracle viability against handwritten React references', () => {
     const id = scenario.id.split('/')[0];
     const reference = await runScenario(reactAdapter(reactReferences[id]), scenario);
     const generated = await runScenario(reactAdapter(emitted[id]), scenario);
-    expect(compareRuns(reference, generated)).toEqual({ equal: true, divergences: [] });
+    const verdict = compareRuns(reference, generated);
+    if (!verdict.equal) console.error(`[${scenario.id}] divergences:`, JSON.stringify(verdict.divergences, null, 2));
+    expect(verdict).toEqual({ equal: true, divergences: [] });
   });
 });

@@ -1,3 +1,5 @@
+// @vitest-environment node
+// esbuild's TextEncoder invariant breaks under jsdom; this suite needs no DOM.
 import { readFile } from 'node:fs/promises';
 import { parse } from '@babel/parser';
 import traverseModule from '@babel/traverse';

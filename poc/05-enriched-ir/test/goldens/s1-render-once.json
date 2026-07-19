@@ -701,9 +701,9 @@
             "path": [],
             "prefix": false,
             "sourceSpan": {
-              "end": 519,
+              "end": 514,
               "filename": "src/fixtures/s1-render-once.tsrx",
-              "start": 514
+              "start": 509
             },
             "updateOperator": "++",
             "via": "direct"
@@ -721,100 +721,87 @@
               "body": {
                 "body": [
                   {
-                    "end": 522,
+                    "end": 517,
                     "expression": {
                       "argument": {
-                        "end": 519,
+                        "end": 514,
                         "name": "count",
-                        "start": 514,
+                        "start": 509,
                         "type": "Identifier"
                       },
-                      "end": 521,
+                      "end": 516,
                       "operator": "++",
                       "prefix": false,
-                      "start": 514,
+                      "start": 509,
                       "type": "UpdateExpression"
                     },
-                    "start": 514,
+                    "start": 509,
                     "type": "ExpressionStatement"
                   },
                   {
-                    "end": 563,
+                    "end": 551,
                     "expression": {
                       "arguments": [
                         {
-                          "end": 543,
+                          "end": 538,
                           "raw": "'change'",
-                          "start": 535,
+                          "start": 530,
                           "type": "Literal",
                           "value": "change"
                         },
                         {
-                          "end": 554,
+                          "end": 549,
                           "properties": [
                             {
                               "computed": false,
-                              "end": 552,
+                              "end": 547,
                               "key": {
-                                "end": 552,
+                                "end": 547,
                                 "name": "count",
-                                "start": 547,
+                                "start": 542,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": true,
-                              "start": 547,
+                              "start": 542,
                               "type": "Property",
                               "value": {
-                                "end": 552,
+                                "end": 547,
                                 "name": "count",
-                                "start": 547,
+                                "start": 542,
                                 "type": "Identifier"
                               }
                             }
                           ],
-                          "start": 545,
+                          "start": 540,
                           "type": "ObjectExpression"
-                        },
-                        {
-                          "end": 561,
-                          "name": "event",
-                          "start": 556,
-                          "type": "Identifier"
                         }
                       ],
                       "callee": {
-                        "end": 534,
+                        "end": 529,
                         "name": "onTrace",
-                        "start": 527,
+                        "start": 522,
                         "type": "Identifier"
                       },
-                      "end": 562,
+                      "end": 550,
                       "optional": false,
-                      "start": 527,
+                      "start": 522,
                       "type": "CallExpression"
                     },
-                    "start": 527,
+                    "start": 522,
                     "type": "ExpressionStatement"
                   }
                 ],
-                "end": 568,
-                "start": 508,
+                "end": 556,
+                "start": 503,
                 "type": "BlockStatement"
               },
-              "end": 568,
+              "end": 556,
               "expression": false,
               "generator": false,
               "id": null,
-              "params": [
-                {
-                  "end": 503,
-                  "name": "event",
-                  "start": 498,
-                  "type": "Identifier"
-                }
-              ],
+              "params": [],
               "start": 497,
               "type": "ArrowFunctionExpression"
             },
@@ -839,9 +826,9 @@
                 "path": [],
                 "prefix": false,
                 "sourceSpan": {
-                  "end": 519,
+                  "end": 514,
                   "filename": "src/fixtures/s1-render-once.tsrx",
-                  "start": 514
+                  "start": 509
                 },
                 "updateOperator": "++",
                 "via": "direct"
@@ -894,9 +881,9 @@
         "path": [],
         "prefix": false,
         "sourceSpan": {
-          "end": 519,
+          "end": 514,
           "filename": "src/fixtures/s1-render-once.tsrx",
-          "start": 514
+          "start": 509
         },
         "updateOperator": "++",
         "via": "direct"
