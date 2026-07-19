@@ -213,8 +213,16 @@ tasks:
     receipt: null
 
 checks:
-  dirty_fingerprint: unknown
+  dirty_fingerprint: clean-at-1387448
   last_verification:
-    result: unknown
-    task: null
-    commands: []
+    result: pass
+    task: T005
+    commands:
+      - "poc/01-mitosis-static: pnpm test — 3/3 pass (C1,C2,C3) [PM-side]"
+      - "poc/02-mitosis-divergence: pnpm test — 2/2 pass (C4 + Solid v2 incompat finding) [PM-side]"
+      - "poc/03-markless-graph: pnpm test — 17/17 pass (C6,C7,C11) [worker + PM re-run]"
+  t005_progress:
+    - "W-A done+verified (crew, PM repairs at merge; second-model critique skipped: medium effort, no risk triggers, PM line-review + green verify)"
+    - "W-B done+verified (goal-worker fallback, codex auth was revoked mid-run; PM post-hoc review of README/tests + re-run green; critique skipped: medium effort, no public API surface)"
+    - "W-B findings feed W-C0: computed dependency paths degrade on composite expressions; branch arms/host structure absent from graph; alias template reads unsupported; destructure defaults rejected"
+    - "W-D0 dispatched via crew (auth restored)"

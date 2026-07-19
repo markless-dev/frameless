@@ -1,4 +1,8 @@
-# Frameless: Mitosis postmortem and markless-powered successor
+# Arcade: Mitosis postmortem and markless-powered successor
+
+> Naming (2026-07-19): the successor tool is **Arcade** (user owns the `arcade` npm
+> package); "frameless" was the working title and survives only in this goal's
+> slug/paths. Arcade-side code targets Solid v2 and Qwik v2 (see T004 addenda).
 
 ## Objective
 
