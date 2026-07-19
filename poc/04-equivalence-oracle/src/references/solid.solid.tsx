@@ -4,10 +4,8 @@ type Trace=(name:string,payload:unknown,event?:Event)=>void;
 export function SolidS1(props:{label:string;multiplier:number;visible:boolean;onTrace:Trace}) {
   const {label,multiplier,visible}=props; props.onTrace('setup',{runs:1}); const [count,setCount]=createSignal(1);
   const derived=()=>`${label}:${count()*multiplier}`; const report=(next:number)=>props.onTrace('change',{count:next});
-  // Same rooted-branch contract as the React reference (markless root-branch finding).
-  return <div data-s1-root="">{!visible
-    ? <p data-branch="hidden">hidden</p>
-    : <section data-scenario="s1"><output data-value="derived">{derived()}</output><button data-action="increment" onClick={()=>{const next=count()+1;setCount(next);report(next);}}>increment</button></section>}</div>;
+  if(!visible)return <p data-branch="hidden">hidden</p>;
+  return <section data-scenario="s1"><output data-value="derived">{derived()}</output><button data-action="increment" onClick={()=>{const next=count()+1;setCount(next);report(next);}}>increment</button></section>;
 }
 type Todo={id:string;title:string;done:boolean};
 export function SolidS2(props:{seed:Todo[];onTrace:Trace}) {
