@@ -241,3 +241,14 @@ public-facing artifacts (docs/report.md, POC READMEs' framing, emitter package n
 W-C0/W-C1/W-C2/W-D1/W-E packets) use Arcade. Strategic bet B1 restated: **Arcade is the
 front door — using Arcade naturally means using markless** (same syntax/semantics;
 Arcade compiles it to other frameworks, markless runs it natively).
+
+# Framework-version addendum (2026-07-19, user decision)
+
+Arcade-side POCs target **Solid v2** (`solid-js@2.0.0-experimental.16` — latest
+available; no stable 2.0 yet) and **Qwik v2** (`@qwik.dev/core@2.0.0-beta.38`) wherever
+those frameworks appear. Mitosis-output POCs stay on the versions mitosis's generated
+code actually supports (Solid 1.x), with the v2 incompatibility recorded as a finding
+(poc/02 test/solid2-compat.test.ts): mitosis emits `solid-js/web` imports that Solid v2
+no longer exports and offers no version targeting. W-C2 (poc/07-emit-solid) must emit
+Solid v2 idioms; if its toolchain (babel-preset-solid v2 line) blocks testing, record
+findings rather than silently falling back to v1.
