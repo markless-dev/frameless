@@ -29,8 +29,11 @@ async function mountReact(trace: string[]) {
 function mountSolid(trace: string[]) {
   const host = document.createElement('div');
   document.body.append(host);
+  // This test file is compiled with the React JSX transform, so JSX here would
+  // produce a React element. Solid components are plain functions — call it
+  // directly so solid-js/web receives real Solid DOM output.
   const dispose = renderSolid(
-    () => <SolidUpdateProbe onProbe={(event: string) => trace.push(event)} />,
+    () => SolidUpdateProbe({ onProbe: (event: string) => trace.push(event) }),
     host,
   );
   disposers.push(dispose);

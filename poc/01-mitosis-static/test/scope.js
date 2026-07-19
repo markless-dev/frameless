@@ -31,15 +31,15 @@ export function selfReferentialBindings(code, wantedName) {
 
   traverse(ast, {
     VariableDeclarator(path) {
-      if (path.get('id').isIdentifier({ name: wantedName })) {
-        const binding = path.scope.getBinding(wantedName);
-        if (
-          binding &&
-          binding.path.node === path.get('id').node &&
-          binding.referencePaths.some((reference) => reference.findParent((parent) => parent === path))
-        ) {
-          bindings.push(path.node);
-        }
+      const id = path.get('id');
+      const init = path.get('init');
+      if (!id.isIdentifier({ name: wantedName })) return;
+      if (!init.node || !init.isIdentifier({ name: wantedName })) return;
+      // A true TDZ self-reference: the initializer identifier resolves to the
+      // binding introduced by this very declarator.
+      const binding = init.scope.getBinding(wantedName);
+      if (binding && binding.path.node === path.node) {
+        bindings.push(path.node);
       }
     },
   });

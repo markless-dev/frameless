@@ -11,8 +11,18 @@ export default defineConfig({
     jsx: 'automatic',
     jsxImportSource: 'react',
   },
+  // Without browser conditions, solid-js/web resolves to its server build in
+  // Node and render() is a no-op — the divergence assertion would be vacuous.
+  resolve: {
+    conditions: ['development', 'browser'],
+  },
   test: {
     environment: 'jsdom',
     setupFiles: ['./test/setup.ts'],
+    server: {
+      deps: {
+        inline: [/solid-js/],
+      },
+    },
   },
 });
