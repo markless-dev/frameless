@@ -280,3 +280,22 @@ cannot cascade by construction and are provably emittable (React useEffect with
 machine-derived exact deps / useSyncExternalStore; Solid createEffect), oracle-checkable
 like callback traces. Present as stated direction, not a claim; nothing in the current
 fixture family exercises it.
+
+# Positioning addendum (2026-07-19, user-confirmed decision)
+
+Arcade is its OWN brand — not "Markless X", not a markless feature. Decided rationale
+(postmortem-grounded): a framework-tied name re-runs Mitosis's vendor-tool perception
+failure and triggers the design-system code-gen objection (Amplify RFC). Structure:
+- markless = the framework and semantic model; Arcade = portability compiler +
+  equivalence oracle + receipts, on the user-owned `arcade` npm name.
+- TSRX is the neutral middle term: "Arcade components are written in TSRX", with
+  plain disclosure that TSRX is markless's native language (one semantic model).
+- The enriched IR layer is a candidate to upstream into markless's pass pipeline
+  (it fixes real markless representation gaps); emitters/oracle/CLI stay Arcade.
+- Report framing (W-E): open with the inversion thesis — new frameworks die of
+  cold-start; Arcade inverts it (libraries ship everywhere before the framework has
+  share; exit-hatch reduces lock-in fear, countering the vendor-abandonment failure
+  cause). Contrast with the compat-in strategy (React-compatible runtimes e.g.
+  Octane): compat-in wins existing code but inherits React's semantic ceiling;
+  compile-out keeps the cleaner model and wins new code/libraries. Receipts are the
+  trust mechanism Mitosis lacked.
