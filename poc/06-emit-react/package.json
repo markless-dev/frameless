@@ -1,0 +1,33 @@
+{
+  "name": "arcade-poc-06-emit-react",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "regenerate": "node scripts/regenerate.mjs",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@babel/generator": "7.29.7",
+    "@babel/types": "7.29.7",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@babel/parser": "7.29.7",
+    "@babel/traverse": "7.29.7",
+    "@types/react": "18.3.3",
+    "@types/react-dom": "18.3.0",
+    "arcade-poc-04-equivalence-oracle": "file:../04-equivalence-oracle",
+    "eslint": "8.57.1",
+    "eslint-plugin-react": "7.37.5",
+    "eslint-plugin-react-hooks": "5.2.0",
+    "jsdom": "25.0.1",
+    "vite": "5.4.11",
+    "vitest": "2.1.9"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@10.33.2"
+}
