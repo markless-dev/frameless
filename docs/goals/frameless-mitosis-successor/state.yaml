@@ -68,7 +68,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-mitosis-successor/"
     command: "npx goalbuddy board docs/goals/frameless-mitosis-successor"
 
-active_task: T004
+active_task: T005
 
 tasks:
   - id: T001
@@ -154,16 +154,22 @@ tasks:
       - "notes/T004-claims.md: canonical numbered claim list with proof sketches"
       - "Decision on report structure and POC ordering"
       - "Exact Worker objective, allowed_files, verify, stop_if for T005/T006"
-    receipt: null
+    receipt:
+      result: done
+      decision: "approved-with-amendments"
+      note: notes/T004-claims.md
+      summary: "PM drafted claims; crew high-effort critique (run 2026-07-19T19-28-45-467Z) found C8 unimplementable from the semantic graph alone, weak proofs in C3/C6, and oracle loopholes in C9. PM accepted: enriched-IR package (W-C0), oracle-before-emitters (W-D0 first), React+Solid targets, 'conventionality gate' replacing 'idiomatic', tightened multi-phase equivalence standard with per-channel mutants, C10 demoted to non-claim table, C11 diagnostics claim added, source-maps named as open gap for both tools, hermetic vendored-tarball consumption of markless. Canonical set: C1-C9 (reworded) + C11 provable; B1-B4 strategic bets. Package plan W-A, W-B, W-D0, W-C0, W-C1, W-C2, W-D1, W-E sequential with PM diff-review; critique mandatory for high-effort W-C0/W-C1."
+      merge_review: "Read-only critique unit, no branch. Critique WAS the second model; PM adjudicated its findings in the note."
   - id: T005
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
-    objective: "Build the POCs in the top-level poc/ folder proving the POC-provable claims from T004, including the cross-framework equivalence harness for 'works the same' claims. Judge may split this into multiple packages."
+    objective: "Build the POCs in poc/ proving C1-C9+C11 per the T004 final package plan: W-A (mitosis postmortem), W-B (markless graph), W-D0 (equivalence oracle + hand-written references + mutants), W-C0 (enriched IR), W-C1 (React emitter), W-C2 (Solid emitter), W-D1 (equivalence results). Sequential crew packages, PM diff-review each merge, second-model critique for high-effort W-C0/W-C1."
     allowed_files:
       - "poc/**"
-    verify: []
+    verify:
+      - "pnpm -C poc/<package> test (per package, PM-side after merge)"
     stop_if:
       - "Need files outside allowed_files."
       - "A claim turns out unprovable as stated — report back so Judge can reword or relabel the claim rather than faking a proof."

@@ -1,0 +1,5 @@
+node_modules/
+dist/
+.fable-codex/
+*.log
+.DS_Store
