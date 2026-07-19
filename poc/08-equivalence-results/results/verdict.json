@@ -1,0 +1,14 @@
+{
+  "schema": "arcade-c9-evidence/1",
+  "generatedBy": "pending: run pnpm test",
+  "environment": {},
+  "scenarios": {},
+  "mutantRejections": {},
+  "summary": {
+    "requiredPairs": 24,
+    "equalPairs": 0,
+    "mutants": 5,
+    "rejectedMutants": 0,
+    "c9": "fail"
+  }
+}

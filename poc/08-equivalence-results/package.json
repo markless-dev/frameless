@@ -1,0 +1,43 @@
+{
+  "name": "arcade-poc-08-equivalence-results",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@markless/bundler": "file:../vendor/markless-bundler-0.1.1.tgz",
+    "@markless/compiler": "file:../vendor/markless-compiler-0.1.1.tgz",
+    "@markless/core": "file:../vendor/markless-core-0.1.1.tgz",
+    "@markless/web": "file:../vendor/markless-web-0.1.1.tgz",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "solid-js": "1.8.22"
+  },
+  "devDependencies": {
+    "@babel/core": "7.29.7",
+    "@vitest/browser-playwright": "4.1.5",
+    "playwright": "1.58.2",
+    "rolldown": "1.0.3",
+    "babel-preset-solid": "1.9.12",
+    "vite": "8.0.16",
+    "vitest": "4.1.5"
+  },
+  "pnpm": {
+    "overrides": {
+      "@markless/bundler": "file:../vendor/markless-bundler-0.1.1.tgz",
+      "@markless/compiler": "file:../vendor/markless-compiler-0.1.1.tgz",
+      "@markless/core": "file:../vendor/markless-core-0.1.1.tgz",
+      "@markless/router": "file:../vendor/markless-router-0.1.1.tgz",
+      "@markless/runtime": "file:../vendor/markless-runtime-0.1.1.tgz",
+      "@markless/serializer": "file:../vendor/markless-serializer-0.1.1.tgz",
+      "@markless/web": "file:../vendor/markless-web-0.1.1.tgz",
+      "@tsrx/core": "0.1.32"
+    }
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@10.33.2"
+}
