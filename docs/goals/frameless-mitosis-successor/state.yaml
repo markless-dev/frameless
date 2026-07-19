@@ -68,7 +68,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-mitosis-successor/"
     command: "npx goalbuddy board docs/goals/frameless-mitosis-successor"
 
-active_task: T003
+active_task: T004
 
 tasks:
   - id: T001
@@ -129,11 +129,17 @@ tasks:
       - "Separate verifiable facts (dates, download numbers, issue counts) from community opinion; cite sources for both."
     expected_output:
       - "notes/T003-adoption-evidence.md with a sourced timeline and ranked external failure causes"
-    receipt: null
+    receipt:
+      result: done
+      note: notes/T003-adoption-evidence.md
+      summary: "Web research agent (installed-agent fallback: crew workers lack web access). Headlines: 13.9k stars vs ~7.6k weekly downloads (~0.1% of Lit's volume) — bookmark, not dependency; verified adopters reduce to Builder's own SDKs + Deutsche Bahn (AWS Amplify adoption is unsupported folklore — their RFC chose hand-written per-framework components); commit collapse from July 2025 tracks Builder's AI pivot, never announced; Voorhoede field report recommends against production use over debugging DX; never 1.0 in 5.5 years; near-zero HN/Reddit discourse. Implication: execution + ownership failure in a real-but-niche market, not category impossibility. Evidence gaps flagged (no public 'LCD' quote, no migration-away postmortems)."
+      evidence:
+        - "All factual claims carry source URLs in the note"
+      merge_review: "No merge needed: read-only research, no files changed outside notes/. Second-model critique skipped: evidence-gathering receipt, claims will be re-validated by T004 judge critique."
   - id: T004
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     objective: "Validate the successor thesis against T001-T003 evidence and produce the canonical claim list: each claim atomic, numbered, and either POC-provable (with a sketch of its proof) or explicitly labeled strategic/unprovable. Then select the first Worker package."
     inputs:
