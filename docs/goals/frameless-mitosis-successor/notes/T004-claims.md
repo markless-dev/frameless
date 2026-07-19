@@ -230,3 +230,14 @@ section wins.
 APPROVED with the amendments above. Claims C1–C9 (as reworded) + C11 are the
 canonical provable set; B1–B4 strategic bets unchanged; C10 demoted to comparison
 table. Dispatch W-A first.
+
+---
+
+# Naming addendum (2026-07-19, user decision)
+
+The successor tool is named **Arcade** (user owns the `arcade` npm package). "Frameless"
+was the working title; the goal slug/directory stays as-is for board continuity, but all
+public-facing artifacts (docs/report.md, POC READMEs' framing, emitter package naming in
+W-C0/W-C1/W-C2/W-D1/W-E packets) use Arcade. Strategic bet B1 restated: **Arcade is the
+front door — using Arcade naturally means using markless** (same syntax/semantics;
+Arcade compiles it to other frameworks, markless runs it natively).
