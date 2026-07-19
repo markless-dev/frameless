@@ -221,8 +221,11 @@ checks:
       - "poc/01-mitosis-static: pnpm test — 3/3 pass (C1,C2,C3) [PM-side]"
       - "poc/02-mitosis-divergence: pnpm test — 2/2 pass (C4 + Solid v2 incompat finding) [PM-side]"
       - "poc/03-markless-graph: pnpm test — 17/17 pass (C6,C7,C11) [worker + PM re-run]"
+      - "poc/04-equivalence-oracle: pnpm install + pnpm test — 15/15 pass (oracle calibrated, 8 mutant classes rejected) [PM-side fresh install]"
   t005_progress:
     - "W-A done+verified (crew, PM repairs at merge; second-model critique skipped: medium effort, no risk triggers, PM line-review + green verify)"
     - "W-B done+verified (goal-worker fallback, codex auth was revoked mid-run; PM post-hoc review of README/tests + re-run green; critique skipped: medium effort, no public API surface)"
     - "W-B findings feed W-C0: computed dependency paths degrade on composite expressions; branch arms/host structure absent from graph; alias template reads unsupported; destructure defaults rejected"
-    - "W-D0 dispatched via crew (auth restored)"
+    - "W-D0 done+verified (crew; partial due to sandbox DNS, PM fresh-install re-run green 15/15; critique skipped: medium effort, oracle validated by its own mutant corpus). Finding: Solid v2 experimental has no ./web export and no v2 vite plugin line -> runtime calibration uses labeled solid-1.8.22-fallback adapter; feeds W-C2"
+    - "poc/04-mitosis... poc numbering final: 01 mitosis-static, 02 mitosis-divergence, 03 markless-graph, 04 equivalence-oracle, 05 enriched-ir, 06 emit-react, 07 emit-solid, 08 equivalence-results"
+    - "W-C0 dispatched via crew (high effort; second-model critique mandatory at merge)"
