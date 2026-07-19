@@ -1,6 +1,6 @@
-import MarklessS1 from '../../05-enriched-ir/src/fixtures/s1-render-once.tsrx';
-import MarklessS2 from '../../05-enriched-ir/src/fixtures/s2-keyed-todo.tsrx';
-import MarklessS3 from '../../05-enriched-ir/src/fixtures/s3-event-form.tsrx';
+import MarklessS1 from './fixtures/s1-render-once.tsrx';
+import MarklessS2 from './fixtures/s2-keyed-todo.tsrx';
+import MarklessS3 from './fixtures/s3-event-form.tsrx';
 import { RenderOnce as EmittedReactS1 } from '../../06-emit-react/generated/S1.jsx';
 import { KeyedTodo as EmittedReactS2 } from '../../06-emit-react/generated/S2.jsx';
 import { EventForm as EmittedReactS3 } from '../../06-emit-react/generated/S3.jsx';

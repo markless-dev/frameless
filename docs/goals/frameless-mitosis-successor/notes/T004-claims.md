@@ -299,3 +299,25 @@ failure and triggers the design-system code-gen objection (Amplify RFC). Structu
   Octane): compat-in wins existing code but inherits React's semantic ceiling;
   compile-out keeps the cleaner model and wins new code/libraries. Receipts are the
   trust mechanism Mitosis lacked.
+
+# Arcade-as-authoring-source addendum (2026-07-19, user question, follow-up for markless repo)
+
+For "Arcade code runs natively in markless" with identical APIs: `arcade` re-exports
+`@markless/core`'s authoring API; the markless compiler needs an accepted-import-source
+list (['@markless/core','arcade']) in its semantic-graph collectors (they key on the
+import specifier and currently reject aliasing). One config-level change, no new
+semantics; then the same file compiles via Arcade emitters OR runs natively, zero
+rewrites. Recorded as a markless-repo follow-up (out of scope for this goal per
+charter). Repo placement: markless-dev GitHub org is fine; brand = the `arcade` npm
+name + docs voice.
+
+# W-D1 adjudication (2026-07-19): S1 guard-element finding
+
+Markless 0.1.1 inconsistency found by the C9 integration: `if (cond) return <element>`
+passes the semantic compiler (poc/05 goldens exist, no diagnostics) but the bundler
+client transform emits invalid JS (raw JSX left in output). `return null` guards work
+end-to-end (poc/03 c6e). PM decision: S1 fixture rewritten to root-level @if/@else
+template branching (identical DOM contract; references unchanged); the guard-element
+compiler-vs-bundler inconsistency is recorded as a markless finding (upstream should
+either lower it or reject it with a diagnostic — silent invalid output is exactly the
+C1-class failure markless otherwise avoids). Guard-return-null remains proven (C6e).
