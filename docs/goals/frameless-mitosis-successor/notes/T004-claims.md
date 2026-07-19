@@ -356,3 +356,24 @@ branch lowering, note the key-lowering and row-reactivity boundaries in the READ
 The critique's full synthetic-runtime acceptance list is recorded as Arcade
 production-emitter roadmap, not POC scope. The W-E report must state C8's Solid
 scoping in exactly these terms.
+
+# W-D1 adjudication 3 (2026-07-19): C9 final scoping
+
+Markless findings #7 (multi-parameter callback props: lazy-symbol codegen references
+unbound parameters — 'payload is not defined' in wrapper callback symbol) and #8
+(prop-derived state in child components never wires into the runtime graph: S2 child
+handlers crash on null graph reads while mount DOM renders). With #3 (root props) /
+#5 (component-at-root) / #6 (aliased prop destructuring), markless 0.1.1 cannot yet
+execute the externally-parameterized fixture family as native CSR composition.
+
+PM decision — C9 reworded (sanctioned path: reword, never fake): "For the fixture
+family, Arcade-emitted React and Solid are behaviorally equivalent to each other and
+to hand-written references under the calibrated oracle (all emitted/handwritten cross
+pairs per scenario; mutants rejected). The markless-native leg is blocked by
+enumerated upstream 0.1.1 composition gaps (findings #3,#5,#6,#7,#8 — minimal repros
+committed); S1's DOM channel passed fully against both hand-written references before
+the callback-channel block, recorded as partial evidence." The report presents the
+markless findings as the harness catching the reference implementation — the
+strongest demonstration that receipts matter — and as the concrete markless
+pre-launch roadmap. poc/08 verdict artifacts must record markless pairs as
+blocked-by-upstream with finding references, never as passing or absent.
