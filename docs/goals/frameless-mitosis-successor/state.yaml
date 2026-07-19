@@ -69,7 +69,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-mitosis-successor/"
     command: "npx goalbuddy board docs/goals/frameless-mitosis-successor"
 
-active_task: T005
+active_task: T006
 
 tasks:
   - id: T001
@@ -164,7 +164,7 @@ tasks:
   - id: T005
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Build the POCs in poc/ proving C1-C9+C11 per the T004 final package plan: W-A (mitosis postmortem), W-B (markless graph), W-D0 (equivalence oracle + hand-written references + mutants), W-C0 (enriched IR), W-C1 (React emitter), W-C2 (Solid emitter), W-D1 (equivalence results). Sequential crew packages, PM diff-review each merge, second-model critique for high-effort W-C0/W-C1."
     allowed_files:
@@ -176,11 +176,18 @@ tasks:
       - "A claim turns out unprovable as stated — report back so Judge can reword or relabel the claim rather than faking a proof."
       - "Verification fails twice."
       - "A markless capability gap blocks a POC — record the gap as a finding instead of patching the markless repo."
-    receipt: null
+    receipt:
+      result: done
+      summary: "All 8 POC packages built, adjudicated, verified. Final suite states (PM-side): poc/01 3/3 (C1-C3), poc/02 2/2 (C4 + Solid-v2 finding), poc/03 17/17 (C6,C7,C11), poc/04 15/15 (oracle calibrated), poc/05 18 tests (enriched IR + alias-coverage fixture), poc/06 33/33 (React emitter, hardened gate), poc/07 40/40 (structural Solid emitter + fail-closed soundness, generality boundary documented), poc/08 C9 verdict PASS for emitted/handwritten scope (15/15 cross-pairs equal in Chromium, 5 mutant classes rejected; markless leg blocked-by-upstream findings #3-#8). Three crew critiques adjudicated (one reject->amend, one reject->rebuild->narrowed-claim); 8 markless findings with committed repros. Claim status: C1-C4,C6,C7,C11 proven; C8 proven (React primary, Solid scoped); C9 proven as reworded (adjudication 3); C5 sourced; C10 demoted to table; B1-B4 labeled bets."
+      changed_files:
+        - "poc/01..08 (see git log), poc/vendor/ tarballs"
+      commands:
+        - cmd: "per-package pnpm test (PM-side, final states above)"
+          status: pass
   - id: T006
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: "Write the research report in docs/: easy-to-understand postmortem of Mitosis's adoption failure, the markless successor design, and the two-sided adoption thesis — with every numbered claim tagged as [POC: poc/<path>] or [strategic bet], matching the T004 claim list."
     allowed_files:
