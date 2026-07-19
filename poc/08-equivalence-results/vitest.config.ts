@@ -5,10 +5,11 @@ import { transformAsync } from '@babel/core';
 import { markless } from '@markless/core/vite';
 import { playwright } from '@vitest/browser-playwright';
 import solidPreset from 'babel-preset-solid';
+import typescriptPreset from '@babel/preset-typescript';
 import { defineConfig } from 'vitest/config';
 
 const root = dirname(fileURLToPath(import.meta.url));
-const solidFiles = /(?:07-emit-solid\/generated\/.*\.jsx|\.solid\.jsx)$/;
+const solidFiles = /(?:07-emit-solid\/generated\/.*\.jsx|\.solid\.jsx|\.solid\.tsx)$/;
 
 const isolatedSolidTransform = {
   name: 'arcade:isolated-solid-jsx',
@@ -20,7 +21,10 @@ const isolatedSolidTransform = {
       babelrc: false,
       configFile: false,
       sourceMaps: true,
-      presets: [[solidPreset, { generate: 'dom', hydratable: false }]],
+      presets: [
+        ...(id.endsWith('.tsx') ? [[typescriptPreset, {}]] : []),
+        [solidPreset, { generate: 'dom', hydratable: false }],
+      ],
     });
     return result?.code ? { code: result.code, map: result.map } : null;
   },

@@ -15,7 +15,10 @@ function selectApp(app: MarklessApp, props: Record<string, unknown>): Artifact {
 export function marklessAdapter(app: MarklessApp): Adapter<Handle> {
   return {
     name: 'markless-web-0.1.1-csr',
-    host: (handle) => handle.host,
+    // Wrapper apps need a host-element root (markless finding #5: a bare
+    // component at the template root CSR-renders nothing, silently). The
+    // harness element is adapter plumbing, not scenario DOM — observe inside it.
+    host: (handle) => (handle.host.querySelector('[data-harness]') as HTMLElement) ?? handle.host,
     async mount(host, props) {
       setTrace(props.onTrace as Parameters<typeof setTrace>[0]);
       try {

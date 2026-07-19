@@ -9,7 +9,7 @@ import { RenderOnce as EmittedSolidS1 } from '../../07-emit-solid/generated/S1.j
 import { KeyedTodo as EmittedSolidS2 } from '../../07-emit-solid/generated/S2.jsx';
 import { EventForm as EmittedSolidS3 } from '../../07-emit-solid/generated/S3.jsx';
 import { ReactS1, ReactS2, ReactS3 } from '../../04-equivalence-oracle/src/references/react.tsx';
-import { SolidS1, SolidS2, SolidS3 } from './references/solid.solid.jsx';
+import { SolidS1, SolidS2, SolidS3 } from '../../04-equivalence-oracle/src/references/solid.solid.tsx';
 
 export const markless = {
   'S1-render-once-locals': { visible: MarklessS1Visible, hidden: MarklessS1Hidden },

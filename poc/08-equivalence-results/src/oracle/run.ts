@@ -14,13 +14,16 @@ export async function runScenario(adapter: Adapter<any>, scenario: Scenario): Pr
   const callbacks: CallbackRecord[] = []; let phase = 'mount'; const counts = new Map<string, number>();
   const props = { ...structuredClone(scenario.initialProps), onTrace: (name: string, payload: unknown, event?: Event) => { const invocation = (counts.get(name) ?? 0) + 1; counts.set(name, invocation); callbacks.push({ name, payload: normalize(payload), phase, defaultPrevented: event?.defaultPrevented ?? null, invocation }); } };
   const handle = await adapter.mount(host, props); const observer = new Observer(); const observations = [];
+  // Observe from the adapter's declared host (e.g. inside the markless harness
+  // wrapper), not the raw container — the Adapter contract exists for this.
+  const observed = adapter.host ? adapter.host(handle) : host;
   try {
-    observations.push(observer.observe(host, 'mount', callbacks));
+    observations.push(observer.observe(observed, 'mount', callbacks));
     for (let index = 0; index < scenario.actions.length; index++) {
-      phase = `action:${index}:before`; observations.push(observer.observe(host, phase, callbacks));
-      phase = `action:${index}:after`; adapter.dispatch(handle, scenario.actions[index]); observations.push(observer.observe(host, phase, callbacks));
-      phase = `action:${index}:microtask`; await Promise.resolve(); observations.push(observer.observe(host, phase, callbacks));
-      phase = `action:${index}:quiescence`; await adapter.settle(handle); observations.push(observer.observe(host, phase, callbacks));
+      phase = `action:${index}:before`; observations.push(observer.observe(observed, phase, callbacks));
+      phase = `action:${index}:after`; adapter.dispatch(handle, scenario.actions[index]); observations.push(observer.observe(observed, phase, callbacks));
+      phase = `action:${index}:microtask`; await Promise.resolve(); observations.push(observer.observe(observed, phase, callbacks));
+      phase = `action:${index}:quiescence`; await adapter.settle(handle); observations.push(observer.observe(observed, phase, callbacks));
     }
     return { contract: ORACLE_CONTRACT_VERSION, scenario: scenario.id, framework: adapter.name, observations };
   } finally { await adapter.unmount(handle); host.remove(); }

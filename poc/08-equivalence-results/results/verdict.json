@@ -19,1284 +19,12 @@
         "divergences": []
       },
       "emitted-solid__handwritten-solid": {
-        "equal": false,
-        "divergences": [
-          {
-            "channel": "dom",
-            "phase": "mount",
-            "path": "$[0].attributes[0][0]",
-            "left": [
-              {
-                "nodeType": "element",
-                "namespace": "http://www.w3.org/1999/xhtml",
-                "tag": "div",
-                "attributes": [
-                  [
-                    "data-s1-root",
-                    ""
-                  ]
-                ],
-                "properties": {},
-                "children": [
-                  {
-                    "nodeType": "element",
-                    "namespace": "http://www.w3.org/1999/xhtml",
-                    "tag": "section",
-                    "attributes": [
-                      [
-                        "data-scenario",
-                        "s1"
-                      ]
-                    ],
-                    "properties": {},
-                    "children": [
-                      {
-                        "nodeType": "element",
-                        "namespace": "http://www.w3.org/1999/xhtml",
-                        "tag": "output",
-                        "attributes": [
-                          [
-                            "data-value",
-                            "derived"
-                          ]
-                        ],
-                        "properties": {},
-                        "children": [
-                          {
-                            "nodeType": "text",
-                            "text": "Arcade:3"
-                          }
-                        ]
-                      },
-                      {
-                        "nodeType": "element",
-                        "namespace": "http://www.w3.org/1999/xhtml",
-                        "tag": "button",
-                        "attributes": [
-                          [
-                            "data-action",
-                            "increment"
-                          ]
-                        ],
-                        "properties": {
-                          "disabled": false
-                        },
-                        "children": [
-                          {
-                            "nodeType": "text",
-                            "text": "increment"
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ]
-              }
-            ],
-            "right": [
-              {
-                "nodeType": "element",
-                "namespace": "http://www.w3.org/1999/xhtml",
-                "tag": "section",
-                "attributes": [
-                  [
-                    "data-scenario",
-                    "s1"
-                  ]
-                ],
-                "properties": {},
-                "children": [
-                  {
-                    "nodeType": "element",
-                    "namespace": "http://www.w3.org/1999/xhtml",
-                    "tag": "output",
-                    "attributes": [
-                      [
-                        "data-value",
-                        "derived"
-                      ]
-                    ],
-                    "properties": {},
-                    "children": [
-                      {
-                        "nodeType": "text",
-                        "text": "Arcade:3"
-                      }
-                    ]
-                  },
-                  {
-                    "nodeType": "element",
-                    "namespace": "http://www.w3.org/1999/xhtml",
-                    "tag": "button",
-                    "attributes": [
-                      [
-                        "data-action",
-                        "increment"
-                      ]
-                    ],
-                    "properties": {
-                      "disabled": false
-                    },
-                    "children": [
-                      {
-                        "nodeType": "text",
-                        "text": "increment"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "channel": "dom",
-            "phase": "action:0:before",
-            "path": "$[0].attributes[0][0]",
-            "left": [
-              {
-                "nodeType": "element",
-                "namespace": "http://www.w3.org/1999/xhtml",
-                "tag": "div",
-                "attributes": [
-                  [
-                    "data-s1-root",
-                    ""
-                  ]
-                ],
-                "properties": {},
-                "children": [
-                  {
-                    "nodeType": "element",
-                    "namespace": "http://www.w3.org/1999/xhtml",
-                    "tag": "section",
-                    "attributes": [
-                      [
-                        "data-scenario",
-                        "s1"
-                      ]
-                    ],
-                    "properties": {},
-                    "children": [
-                      {
-                        "nodeType": "element",
-                        "namespace": "http://www.w3.org/1999/xhtml",
-                        "tag": "output",
-                        "attributes": [
-                          [
-                            "data-value",
-                            "derived"
-                          ]
-                        ],
-                        "properties": {},
-                        "children": [
-                          {
-                            "nodeType": "text",
-                            "text": "Arcade:3"
-                          }
-                        ]
-                      },
-                      {
-                        "nodeType": "element",
-                        "namespace": "http://www.w3.org/1999/xhtml",
-                        "tag": "button",
-                        "attributes": [
-                          [
-                            "data-action",
-                            "increment"
-                          ]
-                        ],
-                        "properties": {
-                          "disabled": false
-                        },
-                        "children": [
-                          {
-                            "nodeType": "text",
-                            "text": "increment"
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ]
-              }
-            ],
-            "right": [
-              {
-                "nodeType": "element",
-                "namespace": "http://www.w3.org/1999/xhtml",
-                "tag": "section",
-                "attributes": [
-                  [
-                    "data-scenario",
-                    "s1"
-                  ]
-                ],
-                "properties": {},
-                "children": [
-                  {
-                    "nodeType": "element",
-                    "namespace": "http://www.w3.org/1999/xhtml",
-                    "tag": "output",
-                    "attributes": [
-                      [
-                        "data-value",
-                        "derived"
-                      ]
-                    ],
-                    "properties": {},
-                    "children": [
-                      {
-                        "nodeType": "text",
-                        "text": "Arcade:3"
-                      }
-                    ]
-                  },
-                  {
-                    "nodeType": "element",
-                    "namespace": "http://www.w3.org/1999/xhtml",
-                    "tag": "button",
-                    "attributes": [
-                      [
-                        "data-action",
-                        "increment"
-                      ]
-                    ],
-                    "properties": {
-                      "disabled": false
-                    },
-                    "children": [
-                      {
-                        "nodeType": "text",
-                        "text": "increment"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "channel": "dom",
-            "phase": "action:0:after",
-            "path": "$[0].attributes[0][0]",
-            "left": [
-              {
-                "nodeType": "element",
-                "namespace": "http://www.w3.org/1999/xhtml",
-                "tag": "div",
-                "attributes": [
-                  [
-                    "data-s1-root",
-                    ""
-                  ]
-                ],
-                "properties": {},
-                "children": [
-                  {
-                    "nodeType": "element",
-                    "namespace": "http://www.w3.org/1999/xhtml",
-                    "tag": "section",
-                    "attributes": [
-                      [
-                        "data-scenario",
-                        "s1"
-                      ]
-                    ],
-                    "properties": {},
-                    "children": [
-                      {
-                        "nodeType": "element",
-                        "namespace": "http://www.w3.org/1999/xhtml",
-                        "tag": "output",
-                        "attributes": [
-                          [
-                            "data-value",
-                            "derived"
-                          ]
-                        ],
-                        "properties": {},
-                        "children": [
-                          {
-                            "nodeType": "text",
-                            "text": "Arcade:6"
-                          }
-                        ]
-                      },
-                      {
-                        "nodeType": "element",
-                        "namespace": "http://www.w3.org/1999/xhtml",
-                        "tag": "button",
-                        "attributes": [
-                          [
-                            "data-action",
-                            "increment"
-                          ]
-                        ],
-                        "properties": {
-                          "disabled": false
-                        },
-                        "children": [
-                          {
-                            "nodeType": "text",
-                            "text": "increment"
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ]
-              }
-            ],
-            "right": [
-              {
-                "nodeType": "element",
-                "namespace": "http://www.w3.org/1999/xhtml",
-                "tag": "section",
-                "attributes": [
-                  [
-                    "data-scenario",
-                    "s1"
-                  ]
-                ],
-                "properties": {},
-                "children": [
-                  {
-                    "nodeType": "element",
-                    "namespace": "http://www.w3.org/1999/xhtml",
-                    "tag": "output",
-                    "attributes": [
-                      [
-                        "data-value",
-                        "derived"
-                      ]
-                    ],
-                    "properties": {},
-                    "children": [
-                      {
-                        "nodeType": "text",
-                        "text": "Arcade:6"
-                      }
-                    ]
-                  },
-                  {
-                    "nodeType": "element",
-                    "namespace": "http://www.w3.org/1999/xhtml",
-                    "tag": "button",
-                    "attributes": [
-                      [
-                        "data-action",
-                        "increment"
-                      ]
-                    ],
-                    "properties": {
-                      "disabled": false
-                    },
-                    "children": [
-                      {
-                        "nodeType": "text",
-                        "text": "increment"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "channel": "dom",
-            "phase": "action:0:microtask",
-            "path": "$[0].attributes[0][0]",
-            "left": [
-              {
-                "nodeType": "element",
-                "namespace": "http://www.w3.org/1999/xhtml",
-                "tag": "div",
-                "attributes": [
-                  [
-                    "data-s1-root",
-                    ""
-                  ]
-                ],
-                "properties": {},
-                "children": [
-                  {
-                    "nodeType": "element",
-                    "namespace": "http://www.w3.org/1999/xhtml",
-                    "tag": "section",
-                    "attributes": [
-                      [
-                        "data-scenario",
-                        "s1"
-                      ]
-                    ],
-                    "properties": {},
-                    "children": [
-                      {
-                        "nodeType": "element",
-                        "namespace": "http://www.w3.org/1999/xhtml",
-                        "tag": "output",
-                        "attributes": [
-                          [
-                            "data-value",
-                            "derived"
-                          ]
-                        ],
-                        "properties": {},
-                        "children": [
-                          {
-                            "nodeType": "text",
-                            "text": "Arcade:6"
-                          }
-                        ]
-                      },
-                      {
-                        "nodeType": "element",
-                        "namespace": "http://www.w3.org/1999/xhtml",
-                        "tag": "button",
-                        "attributes": [
-                          [
-                            "data-action",
-                            "increment"
-                          ]
-                        ],
-                        "properties": {
-                          "disabled": false
-                        },
-                        "children": [
-                          {
-                            "nodeType": "text",
-                            "text": "increment"
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ]
-              }
-            ],
-            "right": [
-              {
-                "nodeType": "element",
-                "namespace": "http://www.w3.org/1999/xhtml",
-                "tag": "section",
-                "attributes": [
-                  [
-                    "data-scenario",
-                    "s1"
-                  ]
-                ],
-                "properties": {},
-                "children": [
-                  {
-                    "nodeType": "element",
-                    "namespace": "http://www.w3.org/1999/xhtml",
-                    "tag": "output",
-                    "attributes": [
-                      [
-                        "data-value",
-                        "derived"
-                      ]
-                    ],
-                    "properties": {},
-                    "children": [
-                      {
-                        "nodeType": "text",
-                        "text": "Arcade:6"
-                      }
-                    ]
-                  },
-                  {
-                    "nodeType": "element",
-                    "namespace": "http://www.w3.org/1999/xhtml",
-                    "tag": "button",
-                    "attributes": [
-                      [
-                        "data-action",
-                        "increment"
-                      ]
-                    ],
-                    "properties": {
-                      "disabled": false
-                    },
-                    "children": [
-                      {
-                        "nodeType": "text",
-                        "text": "increment"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "channel": "dom",
-            "phase": "action:0:quiescence",
-            "path": "$[0].attributes[0][0]",
-            "left": [
-              {
-                "nodeType": "element",
-                "namespace": "http://www.w3.org/1999/xhtml",
-                "tag": "div",
-                "attributes": [
-                  [
-                    "data-s1-root",
-                    ""
-                  ]
-                ],
-                "properties": {},
-                "children": [
-                  {
-                    "nodeType": "element",
-                    "namespace": "http://www.w3.org/1999/xhtml",
-                    "tag": "section",
-                    "attributes": [
-                      [
-                        "data-scenario",
-                        "s1"
-                      ]
-                    ],
-                    "properties": {},
-                    "children": [
-                      {
-                        "nodeType": "element",
-                        "namespace": "http://www.w3.org/1999/xhtml",
-                        "tag": "output",
-                        "attributes": [
-                          [
-                            "data-value",
-                            "derived"
-                          ]
-                        ],
-                        "properties": {},
-                        "children": [
-                          {
-                            "nodeType": "text",
-                            "text": "Arcade:6"
-                          }
-                        ]
-                      },
-                      {
-                        "nodeType": "element",
-                        "namespace": "http://www.w3.org/1999/xhtml",
-                        "tag": "button",
-                        "attributes": [
-                          [
-                            "data-action",
-                            "increment"
-                          ]
-                        ],
-                        "properties": {
-                          "disabled": false
-                        },
-                        "children": [
-                          {
-                            "nodeType": "text",
-                            "text": "increment"
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ]
-              }
-            ],
-            "right": [
-              {
-                "nodeType": "element",
-                "namespace": "http://www.w3.org/1999/xhtml",
-                "tag": "section",
-                "attributes": [
-                  [
-                    "data-scenario",
-                    "s1"
-                  ]
-                ],
-                "properties": {},
-                "children": [
-                  {
-                    "nodeType": "element",
-                    "namespace": "http://www.w3.org/1999/xhtml",
-                    "tag": "output",
-                    "attributes": [
-                      [
-                        "data-value",
-                        "derived"
-                      ]
-                    ],
-                    "properties": {},
-                    "children": [
-                      {
-                        "nodeType": "text",
-                        "text": "Arcade:6"
-                      }
-                    ]
-                  },
-                  {
-                    "nodeType": "element",
-                    "namespace": "http://www.w3.org/1999/xhtml",
-                    "tag": "button",
-                    "attributes": [
-                      [
-                        "data-action",
-                        "increment"
-                      ]
-                    ],
-                    "properties": {
-                      "disabled": false
-                    },
-                    "children": [
-                      {
-                        "nodeType": "text",
-                        "text": "increment"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        ]
+        "equal": true,
+        "divergences": []
       },
       "emitted-react__handwritten-solid": {
-        "equal": false,
-        "divergences": [
-          {
-            "channel": "dom",
-            "phase": "mount",
-            "path": "$[0].attributes[0][0]",
-            "left": [
-              {
-                "nodeType": "element",
-                "namespace": "http://www.w3.org/1999/xhtml",
-                "tag": "div",
-                "attributes": [
-                  [
-                    "data-s1-root",
-                    ""
-                  ]
-                ],
-                "properties": {},
-                "children": [
-                  {
-                    "nodeType": "element",
-                    "namespace": "http://www.w3.org/1999/xhtml",
-                    "tag": "section",
-                    "attributes": [
-                      [
-                        "data-scenario",
-                        "s1"
-                      ]
-                    ],
-                    "properties": {},
-                    "children": [
-                      {
-                        "nodeType": "element",
-                        "namespace": "http://www.w3.org/1999/xhtml",
-                        "tag": "output",
-                        "attributes": [
-                          [
-                            "data-value",
-                            "derived"
-                          ]
-                        ],
-                        "properties": {},
-                        "children": [
-                          {
-                            "nodeType": "text",
-                            "text": "Arcade:3"
-                          }
-                        ]
-                      },
-                      {
-                        "nodeType": "element",
-                        "namespace": "http://www.w3.org/1999/xhtml",
-                        "tag": "button",
-                        "attributes": [
-                          [
-                            "data-action",
-                            "increment"
-                          ]
-                        ],
-                        "properties": {
-                          "disabled": false
-                        },
-                        "children": [
-                          {
-                            "nodeType": "text",
-                            "text": "increment"
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ]
-              }
-            ],
-            "right": [
-              {
-                "nodeType": "element",
-                "namespace": "http://www.w3.org/1999/xhtml",
-                "tag": "section",
-                "attributes": [
-                  [
-                    "data-scenario",
-                    "s1"
-                  ]
-                ],
-                "properties": {},
-                "children": [
-                  {
-                    "nodeType": "element",
-                    "namespace": "http://www.w3.org/1999/xhtml",
-                    "tag": "output",
-                    "attributes": [
-                      [
-                        "data-value",
-                        "derived"
-                      ]
-                    ],
-                    "properties": {},
-                    "children": [
-                      {
-                        "nodeType": "text",
-                        "text": "Arcade:3"
-                      }
-                    ]
-                  },
-                  {
-                    "nodeType": "element",
-                    "namespace": "http://www.w3.org/1999/xhtml",
-                    "tag": "button",
-                    "attributes": [
-                      [
-                        "data-action",
-                        "increment"
-                      ]
-                    ],
-                    "properties": {
-                      "disabled": false
-                    },
-                    "children": [
-                      {
-                        "nodeType": "text",
-                        "text": "increment"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "channel": "dom",
-            "phase": "action:0:before",
-            "path": "$[0].attributes[0][0]",
-            "left": [
-              {
-                "nodeType": "element",
-                "namespace": "http://www.w3.org/1999/xhtml",
-                "tag": "div",
-                "attributes": [
-                  [
-                    "data-s1-root",
-                    ""
-                  ]
-                ],
-                "properties": {},
-                "children": [
-                  {
-                    "nodeType": "element",
-                    "namespace": "http://www.w3.org/1999/xhtml",
-                    "tag": "section",
-                    "attributes": [
-                      [
-                        "data-scenario",
-                        "s1"
-                      ]
-                    ],
-                    "properties": {},
-                    "children": [
-                      {
-                        "nodeType": "element",
-                        "namespace": "http://www.w3.org/1999/xhtml",
-                        "tag": "output",
-                        "attributes": [
-                          [
-                            "data-value",
-                            "derived"
-                          ]
-                        ],
-                        "properties": {},
-                        "children": [
-                          {
-                            "nodeType": "text",
-                            "text": "Arcade:3"
-                          }
-                        ]
-                      },
-                      {
-                        "nodeType": "element",
-                        "namespace": "http://www.w3.org/1999/xhtml",
-                        "tag": "button",
-                        "attributes": [
-                          [
-                            "data-action",
-                            "increment"
-                          ]
-                        ],
-                        "properties": {
-                          "disabled": false
-                        },
-                        "children": [
-                          {
-                            "nodeType": "text",
-                            "text": "increment"
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ]
-              }
-            ],
-            "right": [
-              {
-                "nodeType": "element",
-                "namespace": "http://www.w3.org/1999/xhtml",
-                "tag": "section",
-                "attributes": [
-                  [
-                    "data-scenario",
-                    "s1"
-                  ]
-                ],
-                "properties": {},
-                "children": [
-                  {
-                    "nodeType": "element",
-                    "namespace": "http://www.w3.org/1999/xhtml",
-                    "tag": "output",
-                    "attributes": [
-                      [
-                        "data-value",
-                        "derived"
-                      ]
-                    ],
-                    "properties": {},
-                    "children": [
-                      {
-                        "nodeType": "text",
-                        "text": "Arcade:3"
-                      }
-                    ]
-                  },
-                  {
-                    "nodeType": "element",
-                    "namespace": "http://www.w3.org/1999/xhtml",
-                    "tag": "button",
-                    "attributes": [
-                      [
-                        "data-action",
-                        "increment"
-                      ]
-                    ],
-                    "properties": {
-                      "disabled": false
-                    },
-                    "children": [
-                      {
-                        "nodeType": "text",
-                        "text": "increment"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "channel": "dom",
-            "phase": "action:0:after",
-            "path": "$[0].attributes[0][0]",
-            "left": [
-              {
-                "nodeType": "element",
-                "namespace": "http://www.w3.org/1999/xhtml",
-                "tag": "div",
-                "attributes": [
-                  [
-                    "data-s1-root",
-                    ""
-                  ]
-                ],
-                "properties": {},
-                "children": [
-                  {
-                    "nodeType": "element",
-                    "namespace": "http://www.w3.org/1999/xhtml",
-                    "tag": "section",
-                    "attributes": [
-                      [
-                        "data-scenario",
-                        "s1"
-                      ]
-                    ],
-                    "properties": {},
-                    "children": [
-                      {
-                        "nodeType": "element",
-                        "namespace": "http://www.w3.org/1999/xhtml",
-                        "tag": "output",
-                        "attributes": [
-                          [
-                            "data-value",
-                            "derived"
-                          ]
-                        ],
-                        "properties": {},
-                        "children": [
-                          {
-                            "nodeType": "text",
-                            "text": "Arcade:6"
-                          }
-                        ]
-                      },
-                      {
-                        "nodeType": "element",
-                        "namespace": "http://www.w3.org/1999/xhtml",
-                        "tag": "button",
-                        "attributes": [
-                          [
-                            "data-action",
-                            "increment"
-                          ]
-                        ],
-                        "properties": {
-                          "disabled": false
-                        },
-                        "children": [
-                          {
-                            "nodeType": "text",
-                            "text": "increment"
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ]
-              }
-            ],
-            "right": [
-              {
-                "nodeType": "element",
-                "namespace": "http://www.w3.org/1999/xhtml",
-                "tag": "section",
-                "attributes": [
-                  [
-                    "data-scenario",
-                    "s1"
-                  ]
-                ],
-                "properties": {},
-                "children": [
-                  {
-                    "nodeType": "element",
-                    "namespace": "http://www.w3.org/1999/xhtml",
-                    "tag": "output",
-                    "attributes": [
-                      [
-                        "data-value",
-                        "derived"
-                      ]
-                    ],
-                    "properties": {},
-                    "children": [
-                      {
-                        "nodeType": "text",
-                        "text": "Arcade:6"
-                      }
-                    ]
-                  },
-                  {
-                    "nodeType": "element",
-                    "namespace": "http://www.w3.org/1999/xhtml",
-                    "tag": "button",
-                    "attributes": [
-                      [
-                        "data-action",
-                        "increment"
-                      ]
-                    ],
-                    "properties": {
-                      "disabled": false
-                    },
-                    "children": [
-                      {
-                        "nodeType": "text",
-                        "text": "increment"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "channel": "dom",
-            "phase": "action:0:microtask",
-            "path": "$[0].attributes[0][0]",
-            "left": [
-              {
-                "nodeType": "element",
-                "namespace": "http://www.w3.org/1999/xhtml",
-                "tag": "div",
-                "attributes": [
-                  [
-                    "data-s1-root",
-                    ""
-                  ]
-                ],
-                "properties": {},
-                "children": [
-                  {
-                    "nodeType": "element",
-                    "namespace": "http://www.w3.org/1999/xhtml",
-                    "tag": "section",
-                    "attributes": [
-                      [
-                        "data-scenario",
-                        "s1"
-                      ]
-                    ],
-                    "properties": {},
-                    "children": [
-                      {
-                        "nodeType": "element",
-                        "namespace": "http://www.w3.org/1999/xhtml",
-                        "tag": "output",
-                        "attributes": [
-                          [
-                            "data-value",
-                            "derived"
-                          ]
-                        ],
-                        "properties": {},
-                        "children": [
-                          {
-                            "nodeType": "text",
-                            "text": "Arcade:6"
-                          }
-                        ]
-                      },
-                      {
-                        "nodeType": "element",
-                        "namespace": "http://www.w3.org/1999/xhtml",
-                        "tag": "button",
-                        "attributes": [
-                          [
-                            "data-action",
-                            "increment"
-                          ]
-                        ],
-                        "properties": {
-                          "disabled": false
-                        },
-                        "children": [
-                          {
-                            "nodeType": "text",
-                            "text": "increment"
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ]
-              }
-            ],
-            "right": [
-              {
-                "nodeType": "element",
-                "namespace": "http://www.w3.org/1999/xhtml",
-                "tag": "section",
-                "attributes": [
-                  [
-                    "data-scenario",
-                    "s1"
-                  ]
-                ],
-                "properties": {},
-                "children": [
-                  {
-                    "nodeType": "element",
-                    "namespace": "http://www.w3.org/1999/xhtml",
-                    "tag": "output",
-                    "attributes": [
-                      [
-                        "data-value",
-                        "derived"
-                      ]
-                    ],
-                    "properties": {},
-                    "children": [
-                      {
-                        "nodeType": "text",
-                        "text": "Arcade:6"
-                      }
-                    ]
-                  },
-                  {
-                    "nodeType": "element",
-                    "namespace": "http://www.w3.org/1999/xhtml",
-                    "tag": "button",
-                    "attributes": [
-                      [
-                        "data-action",
-                        "increment"
-                      ]
-                    ],
-                    "properties": {
-                      "disabled": false
-                    },
-                    "children": [
-                      {
-                        "nodeType": "text",
-                        "text": "increment"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "channel": "dom",
-            "phase": "action:0:quiescence",
-            "path": "$[0].attributes[0][0]",
-            "left": [
-              {
-                "nodeType": "element",
-                "namespace": "http://www.w3.org/1999/xhtml",
-                "tag": "div",
-                "attributes": [
-                  [
-                    "data-s1-root",
-                    ""
-                  ]
-                ],
-                "properties": {},
-                "children": [
-                  {
-                    "nodeType": "element",
-                    "namespace": "http://www.w3.org/1999/xhtml",
-                    "tag": "section",
-                    "attributes": [
-                      [
-                        "data-scenario",
-                        "s1"
-                      ]
-                    ],
-                    "properties": {},
-                    "children": [
-                      {
-                        "nodeType": "element",
-                        "namespace": "http://www.w3.org/1999/xhtml",
-                        "tag": "output",
-                        "attributes": [
-                          [
-                            "data-value",
-                            "derived"
-                          ]
-                        ],
-                        "properties": {},
-                        "children": [
-                          {
-                            "nodeType": "text",
-                            "text": "Arcade:6"
-                          }
-                        ]
-                      },
-                      {
-                        "nodeType": "element",
-                        "namespace": "http://www.w3.org/1999/xhtml",
-                        "tag": "button",
-                        "attributes": [
-                          [
-                            "data-action",
-                            "increment"
-                          ]
-                        ],
-                        "properties": {
-                          "disabled": false
-                        },
-                        "children": [
-                          {
-                            "nodeType": "text",
-                            "text": "increment"
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                ]
-              }
-            ],
-            "right": [
-              {
-                "nodeType": "element",
-                "namespace": "http://www.w3.org/1999/xhtml",
-                "tag": "section",
-                "attributes": [
-                  [
-                    "data-scenario",
-                    "s1"
-                  ]
-                ],
-                "properties": {},
-                "children": [
-                  {
-                    "nodeType": "element",
-                    "namespace": "http://www.w3.org/1999/xhtml",
-                    "tag": "output",
-                    "attributes": [
-                      [
-                        "data-value",
-                        "derived"
-                      ]
-                    ],
-                    "properties": {},
-                    "children": [
-                      {
-                        "nodeType": "text",
-                        "text": "Arcade:6"
-                      }
-                    ]
-                  },
-                  {
-                    "nodeType": "element",
-                    "namespace": "http://www.w3.org/1999/xhtml",
-                    "tag": "button",
-                    "attributes": [
-                      [
-                        "data-action",
-                        "increment"
-                      ]
-                    ],
-                    "properties": {
-                      "disabled": false
-                    },
-                    "children": [
-                      {
-                        "nodeType": "text",
-                        "text": "increment"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ]
-          }
-        ]
+        "equal": true,
+        "divergences": []
       },
       "emitted-solid__handwritten-react": {
         "equal": true,
@@ -1451,6 +179,23 @@
             ]
           },
           {
+            "channel": "callback",
+            "phase": "mount",
+            "path": "$.length",
+            "left": [],
+            "right": [
+              {
+                "name": "setup",
+                "payload": {
+                  "runs": 1
+                },
+                "phase": "mount",
+                "defaultPrevented": null,
+                "invocation": 1
+              }
+            ]
+          },
+          {
             "channel": "dom",
             "phase": "action:0:before",
             "path": "$[0].children[0].children[0].children[0].text",
@@ -1592,6 +337,23 @@
             ]
           },
           {
+            "channel": "callback",
+            "phase": "action:0:before",
+            "path": "$.length",
+            "left": [],
+            "right": [
+              {
+                "name": "setup",
+                "payload": {
+                  "runs": 1
+                },
+                "phase": "mount",
+                "defaultPrevented": null,
+                "invocation": 1
+              }
+            ]
+          },
+          {
             "channel": "dom",
             "phase": "action:0:after",
             "path": "$[0].children[0].children[0].children[0].text",
@@ -1736,17 +498,7 @@
             "channel": "callback",
             "phase": "action:0:after",
             "path": "$.length",
-            "left": [
-              {
-                "name": "setup",
-                "payload": {
-                  "runs": 1
-                },
-                "phase": "mount",
-                "defaultPrevented": null,
-                "invocation": 1
-              }
-            ],
+            "left": [],
             "right": [
               {
                 "name": "setup",
@@ -1913,17 +665,7 @@
             "channel": "callback",
             "phase": "action:0:microtask",
             "path": "$.length",
-            "left": [
-              {
-                "name": "setup",
-                "payload": {
-                  "runs": 1
-                },
-                "phase": "mount",
-                "defaultPrevented": null,
-                "invocation": 1
-              }
-            ],
+            "left": [],
             "right": [
               {
                 "name": "setup",
@@ -2090,17 +832,7 @@
             "channel": "callback",
             "phase": "action:0:quiescence",
             "path": "$.length",
-            "left": [
-              {
-                "name": "setup",
-                "payload": {
-                  "runs": 1
-                },
-                "phase": "mount",
-                "defaultPrevented": null,
-                "invocation": 1
-              }
-            ],
+            "left": [],
             "right": [
               {
                 "name": "setup",
@@ -2269,6 +1001,23 @@
             ]
           },
           {
+            "channel": "callback",
+            "phase": "mount",
+            "path": "$.length",
+            "left": [],
+            "right": [
+              {
+                "name": "setup",
+                "payload": {
+                  "runs": 1
+                },
+                "phase": "mount",
+                "defaultPrevented": null,
+                "invocation": 1
+              }
+            ]
+          },
+          {
             "channel": "dom",
             "phase": "action:0:before",
             "path": "$[0].children[0].children[0].children[0].text",
@@ -2410,6 +1159,23 @@
             ]
           },
           {
+            "channel": "callback",
+            "phase": "action:0:before",
+            "path": "$.length",
+            "left": [],
+            "right": [
+              {
+                "name": "setup",
+                "payload": {
+                  "runs": 1
+                },
+                "phase": "mount",
+                "defaultPrevented": null,
+                "invocation": 1
+              }
+            ]
+          },
+          {
             "channel": "dom",
             "phase": "action:0:after",
             "path": "$[0].children[0].children[0].children[0].text",
@@ -2554,17 +1320,7 @@
             "channel": "callback",
             "phase": "action:0:after",
             "path": "$.length",
-            "left": [
-              {
-                "name": "setup",
-                "payload": {
-                  "runs": 1
-                },
-                "phase": "mount",
-                "defaultPrevented": null,
-                "invocation": 1
-              }
-            ],
+            "left": [],
             "right": [
               {
                 "name": "setup",
@@ -2731,17 +1487,7 @@
             "channel": "callback",
             "phase": "action:0:microtask",
             "path": "$.length",
-            "left": [
-              {
-                "name": "setup",
-                "payload": {
-                  "runs": 1
-                },
-                "phase": "mount",
-                "defaultPrevented": null,
-                "invocation": 1
-              }
-            ],
+            "left": [],
             "right": [
               {
                 "name": "setup",
@@ -2908,17 +1654,7 @@
             "channel": "callback",
             "phase": "action:0:quiescence",
             "path": "$.length",
-            "left": [
-              {
-                "name": "setup",
-                "payload": {
-                  "runs": 1
-                },
-                "phase": "mount",
-                "defaultPrevented": null,
-                "invocation": 1
-              }
-            ],
+            "left": [],
             "right": [
               {
                 "name": "setup",
@@ -3087,6 +1823,23 @@
             ]
           },
           {
+            "channel": "callback",
+            "phase": "mount",
+            "path": "$.length",
+            "left": [],
+            "right": [
+              {
+                "name": "setup",
+                "payload": {
+                  "runs": 1
+                },
+                "phase": "mount",
+                "defaultPrevented": null,
+                "invocation": 1
+              }
+            ]
+          },
+          {
             "channel": "dom",
             "phase": "action:0:before",
             "path": "$[0].children[0].children[0].children[0].text",
@@ -3228,6 +1981,23 @@
             ]
           },
           {
+            "channel": "callback",
+            "phase": "action:0:before",
+            "path": "$.length",
+            "left": [],
+            "right": [
+              {
+                "name": "setup",
+                "payload": {
+                  "runs": 1
+                },
+                "phase": "mount",
+                "defaultPrevented": null,
+                "invocation": 1
+              }
+            ]
+          },
+          {
             "channel": "dom",
             "phase": "action:0:after",
             "path": "$[0].children[0].children[0].children[0].text",
@@ -3372,17 +2142,7 @@
             "channel": "callback",
             "phase": "action:0:after",
             "path": "$.length",
-            "left": [
-              {
-                "name": "setup",
-                "payload": {
-                  "runs": 1
-                },
-                "phase": "mount",
-                "defaultPrevented": null,
-                "invocation": 1
-              }
-            ],
+            "left": [],
             "right": [
               {
                 "name": "setup",
@@ -3549,17 +2309,7 @@
             "channel": "callback",
             "phase": "action:0:microtask",
             "path": "$.length",
-            "left": [
-              {
-                "name": "setup",
-                "payload": {
-                  "runs": 1
-                },
-                "phase": "mount",
-                "defaultPrevented": null,
-                "invocation": 1
-              }
-            ],
+            "left": [],
             "right": [
               {
                 "name": "setup",
@@ -3726,17 +2476,7 @@
             "channel": "callback",
             "phase": "action:0:quiescence",
             "path": "$.length",
-            "left": [
-              {
-                "name": "setup",
-                "payload": {
-                  "runs": 1
-                },
-                "phase": "mount",
-                "defaultPrevented": null,
-                "invocation": 1
-              }
-            ],
+            "left": [],
             "right": [
               {
                 "name": "setup",
@@ -25341,17 +24081,7 @@
             "channel": "callback",
             "phase": "action:7:quiescence",
             "path": "$.length",
-            "left": [
-              {
-                "name": "clear",
-                "payload": {
-                  "count": 2
-                },
-                "phase": "action:7:quiescence",
-                "defaultPrevented": false,
-                "invocation": 1
-              }
-            ],
+            "left": [],
             "right": [
               {
                 "name": "add",
@@ -46996,17 +45726,7 @@
             "channel": "callback",
             "phase": "action:7:quiescence",
             "path": "$.length",
-            "left": [
-              {
-                "name": "clear",
-                "payload": {
-                  "count": 2
-                },
-                "phase": "action:7:quiescence",
-                "defaultPrevented": false,
-                "invocation": 1
-              }
-            ],
+            "left": [],
             "right": [
               {
                 "name": "add",
@@ -68651,17 +67371,7 @@
             "channel": "callback",
             "phase": "action:7:quiescence",
             "path": "$.length",
-            "left": [
-              {
-                "name": "clear",
-                "payload": {
-                  "count": 2
-                },
-                "phase": "action:7:quiescence",
-                "defaultPrevented": false,
-                "invocation": 1
-              }
-            ],
+            "left": [],
             "right": [
               {
                 "name": "add",
@@ -69984,16 +68694,8 @@
           {
             "channel": "callback",
             "phase": "action:0:quiescence",
-            "path": "$[0].payload.value",
-            "left": [
-              {
-                "name": "text",
-                "payload": {},
-                "phase": "action:0:quiescence",
-                "defaultPrevented": false,
-                "invocation": 1
-              }
-            ],
+            "path": "$.length",
+            "left": [],
             "right": [
               {
                 "name": "text",
@@ -70244,16 +68946,8 @@
           {
             "channel": "callback",
             "phase": "action:1:before",
-            "path": "$[0].payload.value",
-            "left": [
-              {
-                "name": "text",
-                "payload": {},
-                "phase": "action:0:quiescence",
-                "defaultPrevented": false,
-                "invocation": 1
-              }
-            ],
+            "path": "$.length",
+            "left": [],
             "right": [
               {
                 "name": "text",
@@ -70505,15 +69199,7 @@
             "channel": "callback",
             "phase": "action:1:after",
             "path": "$.length",
-            "left": [
-              {
-                "name": "text",
-                "payload": {},
-                "phase": "action:0:quiescence",
-                "defaultPrevented": false,
-                "invocation": 1
-              }
-            ],
+            "left": [],
             "right": [
               {
                 "name": "text",
@@ -70774,15 +69460,7 @@
             "channel": "callback",
             "phase": "action:1:microtask",
             "path": "$.length",
-            "left": [
-              {
-                "name": "text",
-                "payload": {},
-                "phase": "action:0:quiescence",
-                "defaultPrevented": false,
-                "invocation": 1
-              }
-            ],
+            "left": [],
             "right": [
               {
                 "name": "text",
@@ -71043,15 +69721,7 @@
             "channel": "callback",
             "phase": "action:1:quiescence",
             "path": "$.length",
-            "left": [
-              {
-                "name": "text",
-                "payload": {},
-                "phase": "action:0:quiescence",
-                "defaultPrevented": false,
-                "invocation": 1
-              }
-            ],
+            "left": [],
             "right": [
               {
                 "name": "text",
@@ -71312,15 +69982,7 @@
             "channel": "callback",
             "phase": "action:2:before",
             "path": "$.length",
-            "left": [
-              {
-                "name": "text",
-                "payload": {},
-                "phase": "action:0:quiescence",
-                "defaultPrevented": false,
-                "invocation": 1
-              }
-            ],
+            "left": [],
             "right": [
               {
                 "name": "text",
@@ -71581,15 +70243,7 @@
             "channel": "callback",
             "phase": "action:2:after",
             "path": "$.length",
-            "left": [
-              {
-                "name": "text",
-                "payload": {},
-                "phase": "action:0:quiescence",
-                "defaultPrevented": false,
-                "invocation": 1
-              }
-            ],
+            "left": [],
             "right": [
               {
                 "name": "text",
@@ -71870,15 +70524,7 @@
             "channel": "callback",
             "phase": "action:2:microtask",
             "path": "$.length",
-            "left": [
-              {
-                "name": "text",
-                "payload": {},
-                "phase": "action:0:quiescence",
-                "defaultPrevented": false,
-                "invocation": 1
-              }
-            ],
+            "left": [],
             "right": [
               {
                 "name": "text",
@@ -72159,15 +70805,7 @@
             "channel": "callback",
             "phase": "action:2:quiescence",
             "path": "$.length",
-            "left": [
-              {
-                "name": "text",
-                "payload": {},
-                "phase": "action:0:quiescence",
-                "defaultPrevented": false,
-                "invocation": 1
-              }
-            ],
+            "left": [],
             "right": [
               {
                 "name": "text",
@@ -73426,16 +72064,8 @@
           {
             "channel": "callback",
             "phase": "action:0:quiescence",
-            "path": "$[0].payload.value",
-            "left": [
-              {
-                "name": "text",
-                "payload": {},
-                "phase": "action:0:quiescence",
-                "defaultPrevented": false,
-                "invocation": 1
-              }
-            ],
+            "path": "$.length",
+            "left": [],
             "right": [
               {
                 "name": "text",
@@ -73686,16 +72316,8 @@
           {
             "channel": "callback",
             "phase": "action:1:before",
-            "path": "$[0].payload.value",
-            "left": [
-              {
-                "name": "text",
-                "payload": {},
-                "phase": "action:0:quiescence",
-                "defaultPrevented": false,
-                "invocation": 1
-              }
-            ],
+            "path": "$.length",
+            "left": [],
             "right": [
               {
                 "name": "text",
@@ -73947,15 +72569,7 @@
             "channel": "callback",
             "phase": "action:1:after",
             "path": "$.length",
-            "left": [
-              {
-                "name": "text",
-                "payload": {},
-                "phase": "action:0:quiescence",
-                "defaultPrevented": false,
-                "invocation": 1
-              }
-            ],
+            "left": [],
             "right": [
               {
                 "name": "text",
@@ -74216,15 +72830,7 @@
             "channel": "callback",
             "phase": "action:1:microtask",
             "path": "$.length",
-            "left": [
-              {
-                "name": "text",
-                "payload": {},
-                "phase": "action:0:quiescence",
-                "defaultPrevented": false,
-                "invocation": 1
-              }
-            ],
+            "left": [],
             "right": [
               {
                 "name": "text",
@@ -74485,15 +73091,7 @@
             "channel": "callback",
             "phase": "action:1:quiescence",
             "path": "$.length",
-            "left": [
-              {
-                "name": "text",
-                "payload": {},
-                "phase": "action:0:quiescence",
-                "defaultPrevented": false,
-                "invocation": 1
-              }
-            ],
+            "left": [],
             "right": [
               {
                 "name": "text",
@@ -74754,15 +73352,7 @@
             "channel": "callback",
             "phase": "action:2:before",
             "path": "$.length",
-            "left": [
-              {
-                "name": "text",
-                "payload": {},
-                "phase": "action:0:quiescence",
-                "defaultPrevented": false,
-                "invocation": 1
-              }
-            ],
+            "left": [],
             "right": [
               {
                 "name": "text",
@@ -75023,15 +73613,7 @@
             "channel": "callback",
             "phase": "action:2:after",
             "path": "$.length",
-            "left": [
-              {
-                "name": "text",
-                "payload": {},
-                "phase": "action:0:quiescence",
-                "defaultPrevented": false,
-                "invocation": 1
-              }
-            ],
+            "left": [],
             "right": [
               {
                 "name": "text",
@@ -75312,15 +73894,7 @@
             "channel": "callback",
             "phase": "action:2:microtask",
             "path": "$.length",
-            "left": [
-              {
-                "name": "text",
-                "payload": {},
-                "phase": "action:0:quiescence",
-                "defaultPrevented": false,
-                "invocation": 1
-              }
-            ],
+            "left": [],
             "right": [
               {
                 "name": "text",
@@ -75601,15 +74175,7 @@
             "channel": "callback",
             "phase": "action:2:quiescence",
             "path": "$.length",
-            "left": [
-              {
-                "name": "text",
-                "payload": {},
-                "phase": "action:0:quiescence",
-                "defaultPrevented": false,
-                "invocation": 1
-              }
-            ],
+            "left": [],
             "right": [
               {
                 "name": "text",
@@ -76868,16 +75434,8 @@
           {
             "channel": "callback",
             "phase": "action:0:quiescence",
-            "path": "$[0].payload.value",
-            "left": [
-              {
-                "name": "text",
-                "payload": {},
-                "phase": "action:0:quiescence",
-                "defaultPrevented": false,
-                "invocation": 1
-              }
-            ],
+            "path": "$.length",
+            "left": [],
             "right": [
               {
                 "name": "text",
@@ -77128,16 +75686,8 @@
           {
             "channel": "callback",
             "phase": "action:1:before",
-            "path": "$[0].payload.value",
-            "left": [
-              {
-                "name": "text",
-                "payload": {},
-                "phase": "action:0:quiescence",
-                "defaultPrevented": false,
-                "invocation": 1
-              }
-            ],
+            "path": "$.length",
+            "left": [],
             "right": [
               {
                 "name": "text",
@@ -77389,15 +75939,7 @@
             "channel": "callback",
             "phase": "action:1:after",
             "path": "$.length",
-            "left": [
-              {
-                "name": "text",
-                "payload": {},
-                "phase": "action:0:quiescence",
-                "defaultPrevented": false,
-                "invocation": 1
-              }
-            ],
+            "left": [],
             "right": [
               {
                 "name": "text",
@@ -77658,15 +76200,7 @@
             "channel": "callback",
             "phase": "action:1:microtask",
             "path": "$.length",
-            "left": [
-              {
-                "name": "text",
-                "payload": {},
-                "phase": "action:0:quiescence",
-                "defaultPrevented": false,
-                "invocation": 1
-              }
-            ],
+            "left": [],
             "right": [
               {
                 "name": "text",
@@ -77927,15 +76461,7 @@
             "channel": "callback",
             "phase": "action:1:quiescence",
             "path": "$.length",
-            "left": [
-              {
-                "name": "text",
-                "payload": {},
-                "phase": "action:0:quiescence",
-                "defaultPrevented": false,
-                "invocation": 1
-              }
-            ],
+            "left": [],
             "right": [
               {
                 "name": "text",
@@ -78196,15 +76722,7 @@
             "channel": "callback",
             "phase": "action:2:before",
             "path": "$.length",
-            "left": [
-              {
-                "name": "text",
-                "payload": {},
-                "phase": "action:0:quiescence",
-                "defaultPrevented": false,
-                "invocation": 1
-              }
-            ],
+            "left": [],
             "right": [
               {
                 "name": "text",
@@ -78465,15 +76983,7 @@
             "channel": "callback",
             "phase": "action:2:after",
             "path": "$.length",
-            "left": [
-              {
-                "name": "text",
-                "payload": {},
-                "phase": "action:0:quiescence",
-                "defaultPrevented": false,
-                "invocation": 1
-              }
-            ],
+            "left": [],
             "right": [
               {
                 "name": "text",
@@ -78754,15 +77264,7 @@
             "channel": "callback",
             "phase": "action:2:microtask",
             "path": "$.length",
-            "left": [
-              {
-                "name": "text",
-                "payload": {},
-                "phase": "action:0:quiescence",
-                "defaultPrevented": false,
-                "invocation": 1
-              }
-            ],
+            "left": [],
             "right": [
               {
                 "name": "text",
@@ -79043,15 +77545,7 @@
             "channel": "callback",
             "phase": "action:2:quiescence",
             "path": "$.length",
-            "left": [
-              {
-                "name": "text",
-                "payload": {},
-                "phase": "action:0:quiescence",
-                "defaultPrevented": false,
-                "invocation": 1
-              }
-            ],
+            "left": [],
             "right": [
               {
                 "name": "text",
@@ -102578,7 +101072,7 @@
   },
   "summary": {
     "requiredPairs": 24,
-    "equalPairs": 13,
+    "equalPairs": 15,
     "mutants": 5,
     "rejectedMutants": 5,
     "c9": "fail"

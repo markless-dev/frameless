@@ -17,10 +17,11 @@
   },
   "devDependencies": {
     "@babel/core": "7.29.7",
+    "@babel/preset-typescript": "^8.0.1",
     "@vitest/browser-playwright": "4.1.5",
+    "babel-preset-solid": "1.9.12",
     "playwright": "1.58.2",
     "rolldown": "1.0.3",
-    "babel-preset-solid": "1.9.12",
     "vite": "8.0.16",
     "vitest": "4.1.5"
   },
