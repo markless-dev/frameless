@@ -19,7 +19,7 @@ describe('checked-in generated output', () => {
     ir.components[0].evaluation.ordinaryLocals = 'reactive';
     expect(() => validateEnrichedIR(ir)).toThrow(/Unsupported evaluation policy/);
     ir.components[0].evaluation.ordinaryLocals = 'once-per-instance';
-    ir.components[0].template[0].staticAttributes[0].value = 'silently-changed';
+    ir.components[0].template[0].arms[0].children[0].staticAttributes[0].value = 'silently-changed';
     expect(() => validateEnrichedIR(ir)).toThrow(/fixture contract changed/);
   });
   test('the emitter boundary contains no author-source parser or TSRX dependency', async () => {

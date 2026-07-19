@@ -48,7 +48,7 @@ common IR.
 
 - `s1-render-once.tsrx` covers aliased/destructured props, a once-per-mount setup
   initializer, state, a render-once local captured by a computed function, a
-  template-valued guard return, a dynamic text site, and an event callback.
+  root-level `@if`/`@else` branch site, a dynamic text site, and an event callback.
 - `s2-keyed-todo.tsrx` covers initial prop-derived state, scalar and collection
   writes, `filter(...).length` computed data, an empty branch, a keyed repeat with
   dynamic row attributes/properties, deep handler-local aliases, add/edit/toggle/
@@ -65,6 +65,13 @@ artifacts. `pnpm test` also runs strict TypeScript checking first.
 
 ## Findings
 
+- Markless 0.1.1 accepts S1's former `if (!visible) return <p
+  data-branch="hidden">hidden</p>` semantically, but its bundler client transform
+  leaves the JSX raw and emits invalid JavaScript. S1 therefore uses root-level
+  `@if`/`@else` with the identical DOM contract. Guard-return support remains in the
+  enriched-IR schema, and the end-to-end `return null` capability remains proven by
+  `poc/03-markless-graph` fixture c6e; only guard-returning-an-element is the recorded
+  compiler/bundler inconsistency.
 - S1's `change` callback deliberately carries no event argument. The scenario and
   handwritten-reference contract is authoritative; the fixture was fixed on
   2026-07-19 and the checked-in enriched-IR golden was regenerated.

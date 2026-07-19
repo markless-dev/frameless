@@ -11,7 +11,7 @@ const COMPONENT_KEYS = ['evaluation', 'guards', 'locals', 'name', 'props', 'temp
 const RECORD_KEYS = ['aliases', 'bindings', 'events', 'stateReads', 'stateWrites'];
 const LEGACY_STRING_FIELDS = new Set(['functionSource', 'handlerSources', 'valueSource']);
 const FIXTURE_DIGESTS = new Map([
-  ['RenderOnce', 'aad23ec960978a34126989309e1f5dda77c062ebf0b08f2874769458e4a32a6c'],
+  ['RenderOnce', 'fda8818e84463b4f02dcdafe82e2c1b54baea486404cea14844ddbea146bd8af'],
   ['KeyedTodo', 'c7833700cbb80507bb695eb3c7acf2391ad1e3f046e00e535d29677a5d5374f2'],
   ['EventForm', '0fe7d5e367e5fbd05a2becf826068b8f4f65f99e2dde21bed91b1f4281943590'],
 ]);

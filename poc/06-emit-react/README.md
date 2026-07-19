@@ -19,6 +19,7 @@ the conventionality gates, and cross-framework verdicts.
 | Root assignment in an event | Event-local next value, then setter | Callback payloads in the same handler observe post-write values despite React batching. |
 | `* / field` handler-alias write | Immutable keyed `map` plus object spread | Avoids mutating prior React state; the selector predicate and field value come from AST/write records. |
 | Keyed repeat | `.map` with the IR key expression as React `key` | Preserves row identity through reorder/remove and never substitutes the map index. |
+| Root template branch | Conditional-expression return | Produces the conventional single React return while preserving both authored DOM arms. |
 | Guard return | Early return after every hook | Keeps the authored guard shape while satisfying hook ordering. |
 | Event handler list / sync policy | Ordered inline handlers; IR-authored `preventDefault` | Preserves callback order and cancellation observed by the oracle. |
 
@@ -34,7 +35,7 @@ checks follow Babel bindings through aliases, helper functions, and object membe
 they do not guess from names. Mutation tests exercise each bypass, including a newly
 created generated file that is found without changing a file list.
 
-The smoke suite then runs every emitted component (including S1's hidden guard
+The smoke suite then runs every emitted component (including S1's hidden branch
 calibration) through the sibling oracle against the handwritten React reference and
 requires exact verdicts. Independent S1 assertions require setup exactly once per
 mount, exact `Arcade:3`/`Arcade:6` derived strings, and a real React-root rerender in
