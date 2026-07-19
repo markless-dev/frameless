@@ -75,7 +75,7 @@ tasks:
   - id: T001
     type: scout
     assignee: Scout
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Map the Mitosis codebase: architecture, compiler pipeline, JSX subset restrictions, per-framework generator quality, test/snapshot health, abandoned or half-finished areas, and in-repo pain evidence (TODOs, skipped tests, workaround density, git history signals)."
     inputs:
@@ -97,7 +97,7 @@ tasks:
   - id: T002
     type: scout
     assignee: Scout
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Map the markless codebase: compiler pipeline, graph-based architecture, analyzer, current emit targets, and which capabilities a mitosis-style multi-framework emitter could reuse today versus what is missing."
     inputs:
@@ -119,7 +119,7 @@ tasks:
   - id: T003
     type: scout
     assignee: Scout
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Gather external adoption evidence for Mitosis: GitHub issues/discussions themes, npm download trends, maintenance cadence, community commentary and postmortems, and comparable tools (e.g. how competitors positioned against it)."
     inputs:
@@ -140,7 +140,7 @@ tasks:
   - id: T004
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Validate the successor thesis against T001-T003 evidence and produce the canonical claim list: each claim atomic, numbered, and either POC-provable (with a sketch of its proof) or explicitly labeled strategic/unprovable. Then select the first Worker package."
     inputs:
