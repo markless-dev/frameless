@@ -267,3 +267,16 @@ this as a load-bearing design argument, evidence-backed:
 - Honest caveat: React effect timing (passive vs layout) is target-specific;
   attach-behavior mapping is future work outside the current fixture family and
   must get its own oracle round before being claimed.
+
+# Sink-model addendum (2026-07-19, design discussion, direction not decided API)
+
+User direction: markless needs no effects; the only residual class is state->external
+sink (localStorage persistence etc.). PM-endorsed framing for the report's successor
+design section: markless's four effect buckets each have a principled home — computed
+(derivation), attach (element lifecycle), async computed/events (data in) — and the
+remaining bucket is best served by a DECLARED one-way sink primitive (reads graph,
+cannot write it, owner-scoped cleanup) rather than handler-scattered writes. Sinks
+cannot cascade by construction and are provably emittable (React useEffect with
+machine-derived exact deps / useSyncExternalStore; Solid createEffect), oracle-checkable
+like callback traces. Present as stated direction, not a claim; nothing in the current
+fixture family exercises it.
