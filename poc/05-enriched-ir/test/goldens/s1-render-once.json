@@ -1,0 +1,885 @@
+{
+  "components": [
+    {
+      "guards": [
+        {
+          "id": "guard:RenderOnce:4",
+          "test": {
+            "expression": {
+              "argument": {
+                "end": 322,
+                "name": "visible",
+                "start": 315,
+                "type": "Identifier"
+              },
+              "end": 322,
+              "operator": "!",
+              "prefix": true,
+              "start": 314,
+              "type": "UnaryExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "visible"
+                ],
+                "via": "alias"
+              }
+            ]
+          },
+          "whenTrue": {
+            "children": [
+              {
+                "children": [
+                  {
+                    "id": "text:0",
+                    "kind": "text",
+                    "value": "hidden"
+                  }
+                ],
+                "dynamicBindings": [],
+                "eventIds": [],
+                "id": "h0",
+                "kind": "host",
+                "staticAttributes": [
+                  {
+                    "name": "data-branch",
+                    "value": "hidden"
+                  }
+                ],
+                "tag": "p"
+              }
+            ],
+            "kind": "template"
+          }
+        }
+      ],
+      "locals": [
+        {
+          "declarationKind": "const",
+          "initializer": {
+            "arguments": [
+              {
+                "end": 166,
+                "raw": "'setup'",
+                "start": 159,
+                "type": "Literal",
+                "value": "setup"
+              },
+              {
+                "end": 179,
+                "properties": [
+                  {
+                    "computed": false,
+                    "end": 177,
+                    "key": {
+                      "end": 174,
+                      "name": "runs",
+                      "start": 170,
+                      "type": "Identifier"
+                    },
+                    "kind": "init",
+                    "method": false,
+                    "shorthand": false,
+                    "start": 170,
+                    "type": "Property",
+                    "value": {
+                      "end": 177,
+                      "raw": "1",
+                      "start": 176,
+                      "type": "Literal",
+                      "value": 1
+                    }
+                  }
+                ],
+                "start": 168,
+                "type": "ObjectExpression"
+              }
+            ],
+            "callee": {
+              "end": 158,
+              "name": "onTrace",
+              "start": 151,
+              "type": "Identifier"
+            },
+            "end": 180,
+            "optional": false,
+            "start": 151,
+            "type": "CallExpression"
+          },
+          "names": [
+            "setup"
+          ],
+          "order": 0,
+          "pattern": {
+            "end": 148,
+            "name": "setup",
+            "start": 143,
+            "type": "Identifier"
+          },
+          "reads": [
+            {
+              "graphNodeId": "prop:props",
+              "path": [
+                "onTrace"
+              ],
+              "via": "alias"
+            }
+          ],
+          "semanticRecordIds": []
+        },
+        {
+          "declarationKind": "let",
+          "initializer": {
+            "arguments": [
+              {
+                "end": 202,
+                "raw": "1",
+                "start": 201,
+                "type": "Literal",
+                "value": 1
+              }
+            ],
+            "callee": {
+              "end": 200,
+              "name": "state",
+              "start": 195,
+              "type": "Identifier"
+            },
+            "end": 203,
+            "optional": false,
+            "start": 195,
+            "type": "CallExpression"
+          },
+          "names": [
+            "count"
+          ],
+          "order": 1,
+          "pattern": {
+            "end": 192,
+            "name": "count",
+            "start": 187,
+            "type": "Identifier"
+          },
+          "reads": [],
+          "semanticRecordIds": [
+            "state:count"
+          ]
+        },
+        {
+          "declarationKind": "const",
+          "initializer": {
+            "end": 239,
+            "expressions": [
+              {
+                "end": 236,
+                "name": "displayLabel",
+                "start": 224,
+                "type": "Identifier"
+              }
+            ],
+            "quasis": [
+              {
+                "end": 222,
+                "start": 222,
+                "tail": false,
+                "type": "TemplateElement",
+                "value": {
+                  "cooked": "",
+                  "raw": ""
+                }
+              },
+              {
+                "end": 238,
+                "start": 237,
+                "tail": true,
+                "type": "TemplateElement",
+                "value": {
+                  "cooked": ":",
+                  "raw": ":"
+                }
+              }
+            ],
+            "start": 221,
+            "type": "TemplateLiteral"
+          },
+          "names": [
+            "prefix"
+          ],
+          "order": 2,
+          "pattern": {
+            "end": 218,
+            "name": "prefix",
+            "start": 212,
+            "type": "Identifier"
+          },
+          "reads": [
+            {
+              "graphNodeId": "prop:props",
+              "path": [
+                "label"
+              ],
+              "via": "alias"
+            }
+          ],
+          "semanticRecordIds": []
+        },
+        {
+          "declarationKind": "const",
+          "initializer": {
+            "arguments": [
+              {
+                "async": false,
+                "body": {
+                  "end": 305,
+                  "expressions": [
+                    {
+                      "end": 282,
+                      "name": "prefix",
+                      "start": 276,
+                      "type": "Identifier"
+                    },
+                    {
+                      "end": 303,
+                      "left": {
+                        "end": 290,
+                        "name": "count",
+                        "start": 285,
+                        "type": "Identifier"
+                      },
+                      "operator": "*",
+                      "right": {
+                        "end": 303,
+                        "name": "multiplier",
+                        "start": 293,
+                        "type": "Identifier"
+                      },
+                      "start": 285,
+                      "type": "BinaryExpression"
+                    }
+                  ],
+                  "quasis": [
+                    {
+                      "end": 274,
+                      "start": 274,
+                      "tail": false,
+                      "type": "TemplateElement",
+                      "value": {
+                        "cooked": "",
+                        "raw": ""
+                      }
+                    },
+                    {
+                      "end": 283,
+                      "start": 283,
+                      "tail": false,
+                      "type": "TemplateElement",
+                      "value": {
+                        "cooked": "",
+                        "raw": ""
+                      }
+                    },
+                    {
+                      "end": 304,
+                      "start": 304,
+                      "tail": true,
+                      "type": "TemplateElement",
+                      "value": {
+                        "cooked": "",
+                        "raw": ""
+                      }
+                    }
+                  ],
+                  "start": 273,
+                  "type": "TemplateLiteral"
+                },
+                "end": 305,
+                "expression": true,
+                "generator": false,
+                "id": null,
+                "params": [],
+                "start": 267,
+                "type": "ArrowFunctionExpression"
+              }
+            ],
+            "callee": {
+              "end": 266,
+              "name": "computed",
+              "start": 258,
+              "type": "Identifier"
+            },
+            "end": 306,
+            "optional": false,
+            "start": 258,
+            "type": "CallExpression"
+          },
+          "names": [
+            "derived"
+          ],
+          "order": 3,
+          "pattern": {
+            "end": 255,
+            "name": "derived",
+            "start": 248,
+            "type": "Identifier"
+          },
+          "reads": [
+            {
+              "graphNodeId": "prop:props",
+              "path": [
+                "label"
+              ],
+              "via": "local"
+            },
+            {
+              "graphNodeId": "prop:props",
+              "path": [
+                "multiplier"
+              ],
+              "via": "alias"
+            },
+            {
+              "graphNodeId": "state:count",
+              "path": [],
+              "via": "direct"
+            }
+          ],
+          "semanticRecordIds": [
+            "computed:derived"
+          ]
+        }
+      ],
+      "name": "RenderOnce",
+      "props": {
+        "entries": [
+          {
+            "alias": true,
+            "graphNodeId": "prop:props",
+            "localName": "displayLabel",
+            "path": [
+              "label"
+            ],
+            "sourceName": "label"
+          },
+          {
+            "alias": false,
+            "graphNodeId": "prop:props",
+            "localName": "multiplier",
+            "path": [
+              "multiplier"
+            ],
+            "sourceName": "multiplier"
+          },
+          {
+            "alias": false,
+            "graphNodeId": "prop:props",
+            "localName": "visible",
+            "path": [
+              "visible"
+            ],
+            "sourceName": "visible"
+          },
+          {
+            "alias": false,
+            "graphNodeId": "prop:props",
+            "localName": "onTrace",
+            "path": [
+              "onTrace"
+            ],
+            "sourceName": "onTrace"
+          }
+        ],
+        "graphNodeId": "prop:props"
+      },
+      "template": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "expression": {
+                    "end": 437,
+                    "name": "derived",
+                    "start": 430,
+                    "type": "Identifier"
+                  },
+                  "id": "text:1",
+                  "kind": "dynamic-text",
+                  "reads": [
+                    {
+                      "graphNodeId": "computed:derived",
+                      "path": [],
+                      "via": "direct"
+                    }
+                  ]
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [],
+              "id": "h2",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-value",
+                  "value": "derived"
+                }
+              ],
+              "tag": "output"
+            },
+            {
+              "children": [
+                {
+                  "id": "text:2",
+                  "kind": "text",
+                  "value": "increment"
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [
+                "event:0"
+              ],
+              "id": "h3",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-action",
+                  "value": "increment"
+                }
+              ],
+              "tag": "button"
+            }
+          ],
+          "dynamicBindings": [],
+          "eventIds": [],
+          "id": "h1",
+          "kind": "host",
+          "staticAttributes": [
+            {
+              "name": "data-scenario",
+              "value": "s1"
+            }
+          ],
+          "tag": "section"
+        }
+      ]
+    }
+  ],
+  "filename": "src/fixtures/s1-render-once.tsrx",
+  "imports": [],
+  "records": {
+    "aliases": [
+      {
+        "declarationKind": "const",
+        "graphNodeId": "prop:props",
+        "id": "alias:RenderOnce:displayLabel",
+        "name": "displayLabel",
+        "path": [
+          "label"
+        ],
+        "sourceSpan": {
+          "end": 99,
+          "filename": "src/fixtures/s1-render-once.tsrx",
+          "start": 87
+        },
+        "target": "props.label"
+      },
+      {
+        "declarationKind": "const",
+        "graphNodeId": "prop:props",
+        "id": "alias:RenderOnce:multiplier",
+        "name": "multiplier",
+        "path": [
+          "multiplier"
+        ],
+        "sourceSpan": {
+          "end": 111,
+          "filename": "src/fixtures/s1-render-once.tsrx",
+          "start": 101
+        },
+        "target": "props.multiplier"
+      },
+      {
+        "declarationKind": "const",
+        "graphNodeId": "prop:props",
+        "id": "alias:RenderOnce:visible",
+        "name": "visible",
+        "path": [
+          "visible"
+        ],
+        "sourceSpan": {
+          "end": 120,
+          "filename": "src/fixtures/s1-render-once.tsrx",
+          "start": 113
+        },
+        "target": "props.visible"
+      },
+      {
+        "declarationKind": "const",
+        "graphNodeId": "prop:props",
+        "id": "alias:RenderOnce:onTrace",
+        "name": "onTrace",
+        "path": [
+          "onTrace"
+        ],
+        "sourceSpan": {
+          "end": 129,
+          "filename": "src/fixtures/s1-render-once.tsrx",
+          "start": 122
+        },
+        "target": "props.onTrace"
+      }
+    ],
+    "bindings": [
+      {
+        "declarationKind": "const",
+        "id": "prop:props",
+        "kind": "prop",
+        "name": "props",
+        "reads": [
+          {
+            "graphNodeId": "prop:props",
+            "path": [
+              "multiplier"
+            ]
+          },
+          {
+            "graphNodeId": "prop:props",
+            "path": [
+              "onTrace"
+            ]
+          }
+        ],
+        "valueKind": "object",
+        "writable": false,
+        "writes": []
+      },
+      {
+        "declarationKind": "let",
+        "id": "state:count",
+        "initializer": {
+          "end": 202,
+          "raw": "1",
+          "start": 201,
+          "type": "Literal",
+          "value": 1
+        },
+        "initialValue": 1,
+        "kind": "state",
+        "name": "count",
+        "reads": [
+          {
+            "graphNodeId": "state:count",
+            "path": []
+          }
+        ],
+        "valueKind": "scalar",
+        "writable": true,
+        "writes": [
+          {
+            "graphNodeId": "state:count",
+            "operation": "update",
+            "path": [],
+            "prefix": false,
+            "sourceSpan": {
+              "end": 519,
+              "filename": "src/fixtures/s1-render-once.tsrx",
+              "start": 514
+            },
+            "updateOperator": "++"
+          }
+        ]
+      },
+      {
+        "async": false,
+        "asyncCapable": false,
+        "computed": {
+          "expression": {
+            "async": false,
+            "body": {
+              "end": 305,
+              "expressions": [
+                {
+                  "end": 282,
+                  "name": "prefix",
+                  "start": 276,
+                  "type": "Identifier"
+                },
+                {
+                  "end": 303,
+                  "left": {
+                    "end": 290,
+                    "name": "count",
+                    "start": 285,
+                    "type": "Identifier"
+                  },
+                  "operator": "*",
+                  "right": {
+                    "end": 303,
+                    "name": "multiplier",
+                    "start": 293,
+                    "type": "Identifier"
+                  },
+                  "start": 285,
+                  "type": "BinaryExpression"
+                }
+              ],
+              "quasis": [
+                {
+                  "end": 274,
+                  "start": 274,
+                  "tail": false,
+                  "type": "TemplateElement",
+                  "value": {
+                    "cooked": "",
+                    "raw": ""
+                  }
+                },
+                {
+                  "end": 283,
+                  "start": 283,
+                  "tail": false,
+                  "type": "TemplateElement",
+                  "value": {
+                    "cooked": "",
+                    "raw": ""
+                  }
+                },
+                {
+                  "end": 304,
+                  "start": 304,
+                  "tail": true,
+                  "type": "TemplateElement",
+                  "value": {
+                    "cooked": "",
+                    "raw": ""
+                  }
+                }
+              ],
+              "start": 273,
+              "type": "TemplateLiteral"
+            },
+            "end": 305,
+            "expression": true,
+            "generator": false,
+            "id": null,
+            "params": [],
+            "start": 267,
+            "type": "ArrowFunctionExpression"
+          },
+          "reads": [
+            {
+              "graphNodeId": "prop:props",
+              "path": [
+                "label"
+              ],
+              "via": "local"
+            },
+            {
+              "graphNodeId": "prop:props",
+              "path": [
+                "multiplier"
+              ],
+              "via": "alias"
+            },
+            {
+              "graphNodeId": "state:count",
+              "path": [],
+              "via": "direct"
+            }
+          ]
+        },
+        "declarationKind": "const",
+        "id": "computed:derived",
+        "kind": "computed",
+        "name": "derived",
+        "reads": [
+          {
+            "graphNodeId": "computed:derived",
+            "path": []
+          }
+        ],
+        "writable": false,
+        "writes": []
+      }
+    ],
+    "events": [
+      {
+        "eventName": "click",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "end": 522,
+                    "expression": {
+                      "argument": {
+                        "end": 519,
+                        "name": "count",
+                        "start": 514,
+                        "type": "Identifier"
+                      },
+                      "end": 521,
+                      "operator": "++",
+                      "prefix": false,
+                      "start": 514,
+                      "type": "UpdateExpression"
+                    },
+                    "start": 514,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 563,
+                    "expression": {
+                      "arguments": [
+                        {
+                          "end": 543,
+                          "raw": "'change'",
+                          "start": 535,
+                          "type": "Literal",
+                          "value": "change"
+                        },
+                        {
+                          "end": 554,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 552,
+                              "key": {
+                                "end": 552,
+                                "name": "count",
+                                "start": 547,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": true,
+                              "start": 547,
+                              "type": "Property",
+                              "value": {
+                                "end": 552,
+                                "name": "count",
+                                "start": 547,
+                                "type": "Identifier"
+                              }
+                            }
+                          ],
+                          "start": 545,
+                          "type": "ObjectExpression"
+                        },
+                        {
+                          "end": 561,
+                          "name": "event",
+                          "start": 556,
+                          "type": "Identifier"
+                        }
+                      ],
+                      "callee": {
+                        "end": 534,
+                        "name": "onTrace",
+                        "start": 527,
+                        "type": "Identifier"
+                      },
+                      "end": 562,
+                      "optional": false,
+                      "start": 527,
+                      "type": "CallExpression"
+                    },
+                    "start": 527,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 568,
+                "start": 508,
+                "type": "BlockStatement"
+              },
+              "end": 568,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 503,
+                  "name": "event",
+                  "start": 498,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 497,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              },
+              {
+                "graphNodeId": "state:count",
+                "path": [],
+                "via": "direct"
+              }
+            ],
+            "writes": [
+              {
+                "graphNodeId": "state:count",
+                "operation": "update",
+                "path": [],
+                "prefix": false,
+                "sourceSpan": {
+                  "end": 519,
+                  "filename": "src/fixtures/s1-render-once.tsrx",
+                  "start": 514
+                },
+                "updateOperator": "++"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h3",
+        "id": "event:0"
+      }
+    ],
+    "stateReads": [
+      {
+        "graphNodeId": "computed:derived",
+        "path": []
+      },
+      {
+        "graphNodeId": "state:count",
+        "path": []
+      },
+      {
+        "graphNodeId": "prop:props",
+        "path": [
+          "multiplier"
+        ]
+      },
+      {
+        "graphNodeId": "prop:props",
+        "path": [
+          "onTrace"
+        ]
+      }
+    ],
+    "stateWrites": [
+      {
+        "graphNodeId": "state:count",
+        "operation": "update",
+        "path": [],
+        "prefix": false,
+        "sourceSpan": {
+          "end": 519,
+          "filename": "src/fixtures/s1-render-once.tsrx",
+          "start": 514
+        },
+        "updateOperator": "++"
+      }
+    ]
+  },
+  "version": "arcade-enriched-ir/1"
+}
