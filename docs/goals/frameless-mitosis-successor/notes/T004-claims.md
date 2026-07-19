@@ -333,3 +333,26 @@ authored whitespace in text nodes — a real DOM difference, not oracle noise). 
 coverage moves to a dedicated compile-only fixture in poc/05 so C7/IR evidence is not
 weakened. Findings #4/#5/#6 join #1-#3 in the report's markless-gaps section: the
 composition surface is exactly where markless 0.1.1 is weakest, consistent with T002.
+
+# W-C2 second-critique adjudication (2026-07-19)
+
+Second critique verdict on the structural Solid rebuild: reject — on GENERALITY
+(schema-valid extensions can lower silently wrong: repeat-row reactivity beyond
+property bindings, key expression validated but not lowered — For relies on the
+fixtures' in-place-mutation discipline, S2-shaped branch/list fusion, incomplete
+construct rejection, bypassable gate), while confirming the fixture-family behavior,
+record-driven sync policy, and evaluation-policy fidelity are real.
+
+PM decision: narrow the claim instead of chasing production generality inside a POC
+goal. C8 final wording: React emitter = primary evidence (structural, survived a
+fixture contract change unmodified, hardened gate). Solid emitter = secondary
+evidence that arcade-enriched-ir/1 is consumable by a second, paradigm-different
+backend for the fixture family — with its generality boundary explicitly documented
+by adversarial critique (a boundary Mitosis never measured for any of its 22
+targets). Required bounded repair (soundness only, not generality): fail-closed
+construct rejection everywhere (guard templates, dangling semanticRecordIds, async
+state, unconsumed schema fields), replace branch/list fusion with plain generic
+branch lowering, note the key-lowering and row-reactivity boundaries in the README.
+The critique's full synthetic-runtime acceptance list is recorded as Arcade
+production-emitter roadmap, not POC scope. The W-E report must state C8's Solid
+scoping in exactly these terms.
