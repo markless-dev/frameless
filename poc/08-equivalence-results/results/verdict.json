@@ -1,6 +1,6 @@
 {
   "schema": "arcade-c9-evidence/2",
-  "generatedBy": "vitest browser / headless Chromium; schema migrated after W-D1 adjudication 3",
+  "generatedBy": "vitest browser / headless Chromium",
   "environment": {
     "execution": "Vitest browser mode, headless Chromium; blocked Markless records are adjudicated upstream findings, not executed passes",
     "vitest": "4.1.5",
@@ -11,6 +11,49 @@
     "react": "18.3.1",
     "solid": "1.8.22 fallback",
     "oracle": "arcade-equivalence-oracle/1"
+  },
+  "findings": {
+    "3": {
+      "id": "3",
+      "quote": "root props",
+      "evidence": [
+        "@markless/web packages/web/src/render.ts:71 calls component.renderCsr() with no props",
+        "CsrRenderArtifact advertises renderCsr(props?: unknown) at packages/web/src/render.ts:25"
+      ]
+    },
+    "5": {
+      "id": "5",
+      "quote": "bare component at template root CSR-renders empty, silently",
+      "evidence": [
+        "Markless packages/compiler/src/passes/public-render/template.ts:164-170",
+        "local minimal repro wrappers/s1-visible.app.tsrx (host-element workaround at lines 5-12)"
+      ]
+    },
+    "6": {
+      "id": "6",
+      "quote": "aliased prop destructuring — `{ label: displayLabel }` — arrives undefined in child-component composition; plain destructuring works, c6c",
+      "evidence": [
+        "Markless packages/compiler/src/passes/public-render/shared.ts:218-232 and :49-50",
+        "compile-only repro ../05-enriched-ir/src/fixtures/alias-coverage.tsrx"
+      ]
+    },
+    "7": {
+      "id": "7",
+      "quote": "multi-parameter callback props: lazy-symbol codegen references unbound parameters — 'payload is not defined' in wrapper callback symbol",
+      "evidence": [
+        "src/wrappers/s1-visible.app.tsrx:10",
+        "src/wrappers/s2.app.tsrx:11",
+        "src/wrappers/s3.app.tsrx:8"
+      ]
+    },
+    "8": {
+      "id": "8",
+      "quote": "prop-derived state in child components never wires into the runtime graph: S2 child handlers crash on null graph reads while mount DOM renders",
+      "evidence": [
+        "src/fixtures/s2-keyed-todo.tsrx:4 (prop-derived state)",
+        "runtime repro dispatches in test/equivalence.browser.test.ts"
+      ]
+    }
   },
   "scenarios": {
     "S1-render-once-locals": {
@@ -23719,48 +23762,5 @@
     "rejectedMutants": 5,
     "c9": "pass",
     "marklessNativeLeg": "blocked-by-upstream"
-  },
-  "findings": {
-    "3": {
-      "id": "3",
-      "quote": "root props",
-      "evidence": [
-        "@markless/web packages/web/src/render.ts:71 calls component.renderCsr() with no props",
-        "CsrRenderArtifact advertises renderCsr(props?: unknown) at packages/web/src/render.ts:25"
-      ]
-    },
-    "5": {
-      "id": "5",
-      "quote": "bare component at template root CSR-renders empty, silently",
-      "evidence": [
-        "Markless packages/compiler/src/passes/public-render/template.ts:164-170",
-        "local minimal repro wrappers/s1-visible.app.tsrx (host-element workaround at lines 5-12)"
-      ]
-    },
-    "6": {
-      "id": "6",
-      "quote": "aliased prop destructuring — `{ label: displayLabel }` — arrives undefined in child-component composition; plain destructuring works, c6c",
-      "evidence": [
-        "Markless packages/compiler/src/passes/public-render/shared.ts:218-232 and :49-50",
-        "compile-only repro ../05-enriched-ir/src/fixtures/alias-coverage.tsrx"
-      ]
-    },
-    "7": {
-      "id": "7",
-      "quote": "multi-parameter callback props: lazy-symbol codegen references unbound parameters — 'payload is not defined' in wrapper callback symbol",
-      "evidence": [
-        "src/wrappers/s1-visible.app.tsrx:10",
-        "src/wrappers/s2.app.tsrx:11",
-        "src/wrappers/s3.app.tsrx:8"
-      ]
-    },
-    "8": {
-      "id": "8",
-      "quote": "prop-derived state in child components never wires into the runtime graph: S2 child handlers crash on null graph reads while mount DOM renders",
-      "evidence": [
-        "src/fixtures/s2-keyed-todo.tsrx:4 (prop-derived state)",
-        "runtime repro dispatches in test/equivalence.browser.test.ts"
-      ]
-    }
   }
 }
