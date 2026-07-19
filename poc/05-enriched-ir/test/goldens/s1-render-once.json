@@ -345,54 +345,91 @@
       },
       "template": [
         {
-          "arms": [
+          "children": [
             {
-              "children": [
-                {
-                  "children": [
-                    {
-                      "id": "text:0",
-                      "kind": "text",
-                      "value": "hidden"
-                    }
-                  ],
-                  "dynamicBindings": [],
-                  "eventIds": [],
-                  "id": "h0",
-                  "kind": "host",
-                  "staticAttributes": [
-                    {
-                      "name": "data-branch",
-                      "value": "hidden"
-                    }
-                  ],
-                  "tag": "p"
-                }
-              ],
-              "kind": "then"
-            },
-            {
-              "children": [
+              "arms": [
                 {
                   "children": [
                     {
                       "children": [
                         {
-                          "expression": {
-                            "end": 446,
-                            "name": "derived",
-                            "start": 439,
-                            "type": "Identifier"
-                          },
-                          "id": "text:1",
-                          "kind": "dynamic-text",
-                          "reads": [
+                          "id": "text:0",
+                          "kind": "text",
+                          "value": "hidden"
+                        }
+                      ],
+                      "dynamicBindings": [],
+                      "eventIds": [],
+                      "id": "h1",
+                      "kind": "host",
+                      "staticAttributes": [
+                        {
+                          "name": "data-branch",
+                          "value": "hidden"
+                        }
+                      ],
+                      "tag": "p"
+                    }
+                  ],
+                  "kind": "then"
+                },
+                {
+                  "children": [
+                    {
+                      "children": [
+                        {
+                          "children": [
                             {
-                              "graphNodeId": "computed:derived",
-                              "path": [],
-                              "via": "direct"
+                              "expression": {
+                                "end": 474,
+                                "name": "derived",
+                                "start": 467,
+                                "type": "Identifier"
+                              },
+                              "id": "text:1",
+                              "kind": "dynamic-text",
+                              "reads": [
+                                {
+                                  "graphNodeId": "computed:derived",
+                                  "path": [],
+                                  "via": "direct"
+                                }
+                              ]
                             }
-                          ]
+                          ],
+                          "dynamicBindings": [],
+                          "eventIds": [],
+                          "id": "h3",
+                          "kind": "host",
+                          "staticAttributes": [
+                            {
+                              "name": "data-value",
+                              "value": "derived"
+                            }
+                          ],
+                          "tag": "output"
+                        },
+                        {
+                          "children": [
+                            {
+                              "id": "text:2",
+                              "kind": "text",
+                              "value": "increment"
+                            }
+                          ],
+                          "dynamicBindings": [],
+                          "eventIds": [
+                            "event:0"
+                          ],
+                          "id": "h4",
+                          "kind": "host",
+                          "staticAttributes": [
+                            {
+                              "name": "data-action",
+                              "value": "increment"
+                            }
+                          ],
+                          "tag": "button"
                         }
                       ],
                       "dynamicBindings": [],
@@ -401,75 +438,53 @@
                       "kind": "host",
                       "staticAttributes": [
                         {
-                          "name": "data-value",
-                          "value": "derived"
+                          "name": "data-scenario",
+                          "value": "s1"
                         }
                       ],
-                      "tag": "output"
-                    },
-                    {
-                      "children": [
-                        {
-                          "id": "text:2",
-                          "kind": "text",
-                          "value": "increment"
-                        }
-                      ],
-                      "dynamicBindings": [],
-                      "eventIds": [
-                        "event:0"
-                      ],
-                      "id": "h3",
-                      "kind": "host",
-                      "staticAttributes": [
-                        {
-                          "name": "data-action",
-                          "value": "increment"
-                        }
-                      ],
-                      "tag": "button"
+                      "tag": "section"
                     }
                   ],
-                  "dynamicBindings": [],
-                  "eventIds": [],
-                  "id": "h1",
-                  "kind": "host",
-                  "staticAttributes": [
-                    {
-                      "name": "data-scenario",
-                      "value": "s1"
-                    }
-                  ],
-                  "tag": "section"
+                  "kind": "else"
                 }
               ],
-              "kind": "else"
+              "expression": {
+                "argument": {
+                  "end": 347,
+                  "name": "visible",
+                  "start": 340,
+                  "type": "Identifier"
+                },
+                "end": 347,
+                "operator": "!",
+                "prefix": true,
+                "start": 339,
+                "type": "UnaryExpression"
+              },
+              "id": "branch-site:0",
+              "kind": "branch",
+              "reads": [
+                {
+                  "graphNodeId": "prop:props",
+                  "path": [
+                    "visible"
+                  ],
+                  "via": "alias"
+                }
+              ]
             }
           ],
-          "expression": {
-            "argument": {
-              "end": 323,
-              "name": "visible",
-              "start": 316,
-              "type": "Identifier"
-            },
-            "end": 323,
-            "operator": "!",
-            "prefix": true,
-            "start": 315,
-            "type": "UnaryExpression"
-          },
-          "id": "branch-site:0",
-          "kind": "branch",
-          "reads": [
+          "dynamicBindings": [],
+          "eventIds": [],
+          "id": "h0",
+          "kind": "host",
+          "staticAttributes": [
             {
-              "graphNodeId": "prop:props",
-              "path": [
-                "visible"
-              ],
-              "via": "alias"
+              "name": "data-s1-root",
+              "value": ""
             }
-          ]
+          ],
+          "tag": "div"
         }
       ]
     }
@@ -706,9 +721,9 @@
             "path": [],
             "prefix": false,
             "sourceSpan": {
-              "end": 527,
+              "end": 559,
               "filename": "src/fixtures/s1-render-once.tsrx",
-              "start": 522
+              "start": 554
             },
             "updateOperator": "++",
             "via": "direct"
@@ -726,88 +741,88 @@
               "body": {
                 "body": [
                   {
-                    "end": 530,
+                    "end": 562,
                     "expression": {
                       "argument": {
-                        "end": 527,
+                        "end": 559,
                         "name": "count",
-                        "start": 522,
+                        "start": 554,
                         "type": "Identifier"
                       },
-                      "end": 529,
+                      "end": 561,
                       "operator": "++",
                       "prefix": false,
-                      "start": 522,
+                      "start": 554,
                       "type": "UpdateExpression"
                     },
-                    "start": 522,
+                    "start": 554,
                     "type": "ExpressionStatement"
                   },
                   {
-                    "end": 565,
+                    "end": 598,
                     "expression": {
                       "arguments": [
                         {
-                          "end": 552,
+                          "end": 585,
                           "raw": "'change'",
-                          "start": 544,
+                          "start": 577,
                           "type": "Literal",
                           "value": "change"
                         },
                         {
-                          "end": 563,
+                          "end": 596,
                           "properties": [
                             {
                               "computed": false,
-                              "end": 561,
+                              "end": 594,
                               "key": {
-                                "end": 561,
+                                "end": 594,
                                 "name": "count",
-                                "start": 556,
+                                "start": 589,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": true,
-                              "start": 556,
+                              "start": 589,
                               "type": "Property",
                               "value": {
-                                "end": 561,
+                                "end": 594,
                                 "name": "count",
-                                "start": 556,
+                                "start": 589,
                                 "type": "Identifier"
                               }
                             }
                           ],
-                          "start": 554,
+                          "start": 587,
                           "type": "ObjectExpression"
                         }
                       ],
                       "callee": {
-                        "end": 543,
+                        "end": 576,
                         "name": "onTrace",
-                        "start": 536,
+                        "start": 569,
                         "type": "Identifier"
                       },
-                      "end": 564,
+                      "end": 597,
                       "optional": false,
-                      "start": 536,
+                      "start": 569,
                       "type": "CallExpression"
                     },
-                    "start": 536,
+                    "start": 569,
                     "type": "ExpressionStatement"
                   }
                 ],
-                "end": 571,
-                "start": 515,
+                "end": 605,
+                "start": 546,
                 "type": "BlockStatement"
               },
-              "end": 571,
+              "end": 605,
               "expression": false,
               "generator": false,
               "id": null,
               "params": [],
-              "start": 509,
+              "start": 540,
               "type": "ArrowFunctionExpression"
             },
             "reads": [
@@ -831,9 +846,9 @@
                 "path": [],
                 "prefix": false,
                 "sourceSpan": {
-                  "end": 527,
+                  "end": 559,
                   "filename": "src/fixtures/s1-render-once.tsrx",
-                  "start": 522
+                  "start": 554
                 },
                 "updateOperator": "++",
                 "via": "direct"
@@ -841,7 +856,7 @@
             ]
           }
         ],
-        "hostNodeId": "h3",
+        "hostNodeId": "h4",
         "id": "event:0"
       }
     ],
@@ -886,9 +901,9 @@
         "path": [],
         "prefix": false,
         "sourceSpan": {
-          "end": 527,
+          "end": 559,
           "filename": "src/fixtures/s1-render-once.tsrx",
-          "start": 522
+          "start": 554
         },
         "updateOperator": "++",
         "via": "direct"

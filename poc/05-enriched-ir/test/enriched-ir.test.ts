@@ -18,6 +18,7 @@ const FIXTURES = [
 
 const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>> = {
 	's1-render-once.tsrx': [
+		['div', 'data-s1-root'],
 		['p', 'data-branch'],
 		['section', 'data-scenario'],
 		['output', 'data-value'],
@@ -160,7 +161,14 @@ describe('fixture-family sufficiency', () => {
 		expect(ir.module.exports).toEqual([{ kind: 'named', componentName: 'RenderOnce', exportedName: 'RenderOnce' }]);
 		expect(callbackNames(component.locals[0]!.initializer!)).toEqual(['setup']);
 		expect(component.guards).toHaveLength(0);
-		const branch = component.template.find((node) => node.kind === 'branch');
+		// Root-level branches silently compile to an empty CSR artifact in
+		// markless 0.1.1 (recorded finding), so S1 wraps the branch in a stable
+		// root element; the branch is the root's only child.
+		const rootHost = component.template.find((node) => node.kind === 'host');
+		expect(rootHost?.kind).toBe('host');
+		if (rootHost?.kind !== 'host') throw new Error('missing S1 root host');
+		expect(rootHost.tag).toBe('div');
+		const branch = rootHost.children.find((node) => node.kind === 'branch');
 		expect(branch?.kind).toBe('branch');
 		if (branch?.kind !== 'branch') throw new Error('missing S1 root branch');
 		expect(branch.id).toBe('branch-site:0');
@@ -169,7 +177,7 @@ describe('fixture-family sufficiency', () => {
 			['p'],
 			['section', 'output', 'button'],
 		]);
-		expect(hosts(ir).map((host) => host.tag)).toEqual(['p', 'section', 'output', 'button']);
+		expect(hosts(ir).map((host) => host.tag)).toEqual(['div', 'p', 'section', 'output', 'button']);
 	});
 
 	test('S2 carries complete branch and keyed-row subtrees plus structural computed dependencies', async () => {

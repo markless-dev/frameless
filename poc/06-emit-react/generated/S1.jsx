@@ -18,12 +18,12 @@ export function RenderOnce({
   });
   const [prefix] = useState(() => `${displayLabel}:`);
   const derived = `${prefix}${count * multiplier}`;
-  return !visible ? <p data-branch="hidden">hidden</p> : <section data-scenario="s1"><output data-value="derived">{derived}</output><button data-action="increment" onClick={() => {
-      let nextCount = count;
-      nextCount++;
-      setCount(nextCount);
-      onTrace("change", {
-        count: nextCount
-      });
-    }}>increment</button></section>;
+  return <div data-s1-root="">{!visible ? <p data-branch="hidden">hidden</p> : <section data-scenario="s1"><output data-value="derived">{derived}</output><button data-action="increment" onClick={() => {
+        let nextCount = count;
+        nextCount++;
+        setCount(nextCount);
+        onTrace("change", {
+          count: nextCount
+        });
+      }}>increment</button></section>}</div>;
 }
