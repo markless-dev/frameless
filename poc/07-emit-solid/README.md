@@ -1,29 +1,41 @@
 # Arcade Solid emitter
 
-This package is W-C2, the Solid half of the adjudicated C8 proof chain. It consumes
-only the three checked-in `arcade-enriched-ir/1` JSON goldens from
-`../05-enriched-ir/test/goldens/`, validates their complete fixture signatures, builds
-Babel AST, and prints Solid components. It does not read TSRX, reparse author source,
-or import Markless/TSRX at runtime. C8 remains claimable only when this result is
-combined with W-C0, the accepted React emitter, and the later cross-target verdicts.
+This package is W-C2, the Solid half of the adjudicated C8 proof chain. Its regeneration
+script reads the three checked-in `arcade-enriched-ir/1` JSON goldens from
+`../05-enriched-ir/test/goldens/`; the emitter itself accepts any component using the
+supported construct vocabulary below. It walks that IR, converts its expression and
+handler ASTs, builds Babel JSX AST, and prints Solid components. It does not read TSRX,
+reparse author source, or import Markless/TSRX at runtime. C8 remains claimable only
+when this result is combined with W-C0, the accepted React emitter, and the later
+cross-target verdicts.
+
+The emitter was rebuilt after PM review found that its first version selected three
+hand-written component builders by component name and SHA-256 of the exact fixture
+JSON. That version demonstrated handwritten Solid behavior, not IR sufficiency, and
+its C8 evidence is invalid. The replacement has no component-name dispatch or fixture
+digest. A test mutates S1 with a new static attribute and reorders its local records;
+regeneration succeeds, setup order remains semantic-order driven, and only the new
+attribute changes. Unknown fields, unsupported construct shapes, degraded paths, and
+legacy source-string fields still fail with construct-level diagnostics.
 
 ## Solid mapping
 
-| Markless / enriched-IR construct | Solid idiom | Why |
+| Enriched-IR construct | Uniform Solid lowering | Why |
 |---|---|---|
-| Render-visible writable state | `createSignal` | Gives fine-grained live DOM updates without component rerenders. |
-| Ordinary once-local | Component-setup `const` | Solid runs component setup once per owner; S1 captures the initial label in `prefix`. |
-| Reactive prop read | `props.x` inside an accessor | Avoids broad destructuring, so S1 multiplier changes remain reactive. |
-| Cheap computed binding | Zero-argument accessor | Tracks signal and prop reads without an effect. |
-| Invisible next-id storage | Plain setup-local `let` | Persists for the owner lifetime without creating render-visible reactive state. |
-| Ordered event handler list | One synchronous handler transaction | Every assignment is published in IR order, so callbacks observe preceding writes. |
-| Live input state | `value`/`checked`, plus calibrated `attr:value` | Preserves live properties and only the attribute reflection required by the oracle. |
-| Checkbox event | Native `onChange` | Preserves native checkbox change behavior. |
-| Keyed repeat | `<For>` over stable row objects | Solid keys by object identity; deep edits mutate the matched row then publish a copied array, preserving focus and row identity. |
-| Root template branch | Conditional-expression return | Matches Solid's existing S1 convention while preserving both authored DOM arms without an extra wrapper. |
-| Empty branch | `<Show>` with `<p>` plus `<ul>` true branch and `<ul>` fallback | Preserves the sibling empty paragraph and an always-present list without marker-text divergence. |
-| S1 setup probe | Direct component-setup call | Solid's owner setup is once per instance; no effect or lifecycle hook is needed in the calibrated CSR scope. |
-| Submit synchronization | `preventDefault`, two ordered signal writes, then trace | Exposes only final writes value `2`, allows bubbling, and keeps submit before form bubble. |
+| Host, text, static attribute | Direct JSX element/text/attribute | Tags, nesting, and authored attributes come only from the template tree. |
+| Dynamic text or attribute/property | Binding-aware ESTree conversion in a JSX expression | Free aliases become `props.path`, visible states and computed bindings become accessor calls, and lexical handler/repeat locals remain lexical. |
+| `property: value` | `value={...}` plus calibrated `attr:value={...}` | Preserves the live property and the attribute reflection observed by the oracle. |
+| Binary `then`/`else` branch | `<Show when={...} fallback={...}>` everywhere | One conditional rule handles rooted and nested sites. For an empty arm immediately before its always-present list, the list is structurally fused into both arms; the known-empty arm uses the repeat's empty row. |
+| Keyed repeat | `<For each={...}>` with a recorded row-member key discipline | Solid reconciles row objects by identity. The emitter validates that the IR key is a row member path and is not deep-mutated. Handler ASTs mutate the selected row in place and publish an array refresh, preserving focus and row identity. |
+| Render-visible writable state | `createSignal` | Template/computed graph references determine visibility and provide fine-grained DOM updates. |
+| Invisible writable cell | Plain setup-local `let` | S2's next-id cell persists for the owner lifetime without unnecessary reactivity. |
+| Ordinary once-local | Ordered component-setup declaration or expression | Solid setup runs once per owner; S1's `prefix` captures the first label because the IR marks ordinary locals once-per-instance. |
+| Prop alias | `props.path` at each reactive read | No broad destructuring freezes reactive prop getters. First-value capture occurs only while evaluating an ordinary once-local or state initializer. |
+| Computed binding | Zero-argument derived arrow | Signal and prop reads remain tracked without an effect. |
+| Direct handler state write/update | Ordered signal setter call | The handler AST supplies statement order, RHS expressions, and callback placement. Invisible-cell updates remain plain JavaScript updates. |
+| Handler-local deep alias write | Preserve alias mutation, then lower the recorded root assignment to a setter | This is the validated in-place-row plus array-refresh strategy, rather than an immutable row replacement that remounts `<For>` children. |
+| Event record | Native `onX` JSX handler built from the handler AST | Event names and host attachment come from records, not component-specific code. |
+| Constant-truthy `preventDefault` sync policy | Remove the duplicated authored AST call and prepend `event.preventDefault()` from the policy record | Synchronization placement is policy-driven rather than inferred by grepping names. Other policy actions/conditions are rejected descriptively. |
 
 ## Gates and oracle smoke
 
@@ -52,16 +64,19 @@ Physical nonblank component LOC is primary; Babel AST node count is secondary.
 
 | Scenario | Baseline physical LOC | Emitted physical LOC | LOC ratio | Baseline structural nodes | Emitted structural nodes |
 |---|---:|---:|---:|---:|---:|
-| S2 | 36 | 54 | 1.50x | 491 | 497 |
-| S3 | 21 | 31 | 1.48x | 229 | 223 |
+| S2 | 36 | 60 | 1.67x | 491 | 544 |
+| S3 | 21 | 31 | 1.48x | 229 | 224 |
 
 ## Findings
 
 - Stable row-object identity is load-bearing for Solid `<For>`: immutable replacement
   of the edited object remounts the row and fails the S2 focus oracle.
+- The original fixture-digest/component-builder implementation was fake generality.
+  It is retained as a board finding, not evidence; this rebuild structurally consumes
+  template, binding, event, write, evaluation-policy, and expression-AST records.
 - A plain conditional before the always-present `<ul>` creates a Solid marker text
-  node in the nonempty branch. `<Show>` with list fallback exactly matches the
-  calibrated DOM while retaining the empty paragraph branch.
+  node in the nonempty branch. Uniform `<Show>` lowering fuses that immediately
+  following list into both arms and exactly matches the calibrated DOM.
 - S1 needs both setup-once capture and reactive props: `prefix` reads `props.label`
   once, while `derived` reads `props.multiplier` through the accessor. Broad prop
   destructuring would freeze the latter.
@@ -81,8 +96,7 @@ idioms are forward-compatible where currently knowable, but this package is **no
 
 ```sh
 cd poc/07-emit-solid
-pnpm install
-pnpm test
+pnpm run regenerate && pnpm test
 ```
 
 Pinned versions: Solid fallback 1.8.22, Solid blocker evidence
@@ -93,8 +107,8 @@ Authored with Node.js 24.15.0 and pnpm 10.33.2.
 ## What this does not prove
 
 This package does not by itself prove C8, the subjective label “idiomatic,” Solid 2
-runtime compatibility, general TSRX/IR coverage, arbitrary prop updates, async
-semantics, cleanup/attach, slots/children/context, styling, custom components,
+runtime compatibility, constructs outside the explicitly rejected IR subset,
+arbitrary prop updates, async semantics, cleanup/attach, slots/children/context, styling, custom components,
 SVG/MathML, accessibility, performance or bundle size, SSR/hydration/resume, HMR,
 type-preserving emission, source maps, generated-code debugging, or behavior outside
 the S1/S2/S3 CSR fixture family and calibrated observation phases. It also does not

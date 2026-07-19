@@ -5,20 +5,20 @@ export function EventForm(props) {
   const [checked, setChecked] = createSignal(false);
   const [writes, setWrites] = createSignal(0);
   return <form data-scenario="s3" onClick={event => {
-    if (event.target.dataset.action === "submit") props.onTrace("bubble", {
-      source: "form"
-    }, event);
+    if (event.target.dataset.action === "submit") {
+      props.onTrace("bubble", {
+        source: "form"
+      }, event);
+    }
   }}><input data-action="text" value={text()} attr:value={text()} onInput={event => {
-      const text = event.currentTarget.value;
-      setText(text);
+      setText(event.currentTarget.value);
       props.onTrace("text", {
-        value: text
+        value: event.currentTarget.value
       }, event);
     }} /><input type="checkbox" data-action="checked" checked={checked()} onChange={event => {
-      const checked = event.currentTarget.checked;
-      setChecked(checked);
+      setChecked(event.currentTarget.checked);
       props.onTrace("checked", {
-        checked
+        checked: event.currentTarget.checked
       }, event);
     }} /><button type="button" data-action="submit" onClick={event => {
       event.preventDefault();

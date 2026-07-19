@@ -6,11 +6,8 @@ export function ReactS1({label,multiplier,visible,onTrace}:{label:string;multipl
   if(!didRunSetup.current){didRunSetup.current=true;onTrace('setup',{runs:1});}
   const [count,setCount]=useState(()=>1);
   const derived=`${label}:${count*multiplier}`; const report=()=>onTrace('change',{count:count+1});
-  // markless 0.1.1 cannot CSR-render a root-level branch (recorded finding), so
-  // the S1 contract wraps the branch in a stable root element on all sides.
-  return <div data-s1-root="">{!visible
-    ? <p data-branch="hidden">hidden</p>
-    : <section data-scenario="s1"><output data-value="derived">{derived}</output><button data-action="increment" onClick={()=>{setCount(v=>v+1);report();}}>increment</button></section>}</div>;
+  if(!visible) return <p data-branch="hidden">hidden</p>;
+  return <section data-scenario="s1"><output data-value="derived">{derived}</output><button data-action="increment" onClick={()=>{setCount(v=>v+1);report();}}>increment</button></section>;
 }
 
 type Todo={id:string;title:string;done:boolean};

@@ -7,13 +7,16 @@ export function KeyedTodo(props) {
   const [draft, setDraft] = createSignal("");
   let next = 3;
   const complete = () => todos().filter(todo => todo.done).length;
-  return <section data-scenario="s2"><p data-count="complete">{complete()}/{todos().length}</p><input data-action="new" value={draft()} attr:value={draft()} onInput={event => setDraft(event.currentTarget.value)} /><button data-action="add" onClick={event => {
+  return <section data-scenario="s2"><p data-count="complete">{complete()}/{todos().length}</p><input data-action="new" value={draft()} attr:value={draft()} onInput={event => {
+      return setDraft(event.currentTarget.value);
+    }} /><button data-action="add" onClick={event => {
       const item = {
-        id: `c${next++}`,
+        id: `c${next}`,
         title: draft(),
         done: false
       };
-      setTodos(value => [...value, item]);
+      next++;
+      setTodos(todos().concat(item));
       setDraft("");
       props.onTrace("add", {
         id: item.id,
@@ -21,16 +24,19 @@ export function KeyedTodo(props) {
       }, event);
     }}>add</button><Show when={todos().length === 0} fallback={<ul><For each={todos()}>{todo => <li data-oracle-row-key={todo.id}><input data-edit={todo.id} value={todos() && todo.title} attr:value={todos() && todo.title} onInput={event => {
             const title = event.currentTarget.value;
-            todo.title = title;
-            setTodos([...todos()]);
+            const alias = todos().find(item => item.id === todo.id);
+            alias.title = title;
+            setTodos(todos().slice());
             props.onTrace("edit", {
               id: todo.id,
               title
             }, event);
-          }} /><input type="checkbox" data-toggle={todo.id} checked={todo.done} onChange={event => {
+          }} /><input type="checkbox" data-toggle={todo.id} checked={todos() && todo.done} onChange={event => {
             const checked = event.currentTarget.checked;
-            todo.done = checked;
-            setTodos([...todos()]);
+            const copy = todos().slice();
+            const alias = copy.find(item => item.id === todo.id);
+            alias.done = checked;
+            setTodos(copy);
             props.onTrace("toggle", {
               id: todo.id,
               checked
@@ -41,10 +47,10 @@ export function KeyedTodo(props) {
               id: todo.id
             }, event);
           }}>remove</button></li>}</For></ul>}><><p data-empty="true">empty</p><ul /></></Show><button data-action="reorder" onClick={event => {
-      const order = [...todos()].reverse();
+      const order = todos().slice().reverse();
       setTodos(order);
       props.onTrace("reorder", {
-        order: order.map(item => item.id)
+        order: order.map(todo => todo.id)
       }, event);
     }}>reorder</button><button data-action="clear" onClick={event => {
       const count = todos().length;
