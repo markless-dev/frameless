@@ -71,3 +71,13 @@ semantics, cleanup/attach, slots/children/context composition, styling,
 multi-module builds, performance/bundle size, accessibility, HMR, type-preserving
 emission, or generated-code debugging. It does not prove a universal absence of
 cross-target semantics beyond the observed version-pinned divergence.
+
+## Finding: Solid v2 incompatibility (added after review)
+
+Mitosis 0.13.2's Solid output targets Solid v1 (`solid-js@1.8.22` here). Against
+`solid-js@2.0.0-experimental.16` the output cannot even be bundled: it relies on the
+`solid-js/web` entry point, which Solid v2 no longer exports
+(`test/solid2-compat.test.ts` proves this). Mitosis exposes no way to target a
+framework major version — the "no control over versioning" complaint from the
+Voorhoede report, made machine-checkable. Arcade-side emitters in this repo target
+Solid v2 and Qwik v2 (`@qwik.dev/core`) by decision (2026-07-19).
