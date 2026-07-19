@@ -68,7 +68,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-mitosis-successor/"
     command: "npx goalbuddy board docs/goals/frameless-mitosis-successor"
 
-active_task: T001
+active_task: T002
 
 tasks:
   - id: T001
@@ -85,11 +85,18 @@ tasks:
       - "Explicitly assess: where idiomatic output breaks down per target framework, and which restrictions the Mitosis JSX subset imposes on authors."
     expected_output:
       - "notes/T001-mitosis-map.md with architecture map, generator-by-generator quality assessment, and ranked candidate failure causes each backed by file evidence"
-    receipt: null
+    receipt:
+      result: done
+      note: notes/T001-mitosis-map.md
+      summary: "Two crew scout units (gpt-5.6-sol, medium) audited mitosis read-only. 10 ranked failure causes, all file-evidenced. Headlines: restrictive surprising JSX dialect enforced by 3 disagreeing layers; stringly-typed JSON IR (no AST/scopes/types); no common lifecycle semantics across targets; ~18K lines of handwritten string-concat generators; golden snapshots approving broken Qwik output; e2e parity assertions commented out/skipped; no source maps; maintenance collapse (558 commits 2021 -> 8 in 2026) with 63% from two contributors."
+      evidence:
+        - ".fable-codex/runs/2026-07-19T18-58-54-847Z/units/t001-arch/result.json"
+        - ".fable-codex/runs/2026-07-19T18-58-54-847Z/units/t001-quality/result.json"
+      merge_review: "No merge needed: read-only units, files_changed empty, no crew branches created. Second-model critique skipped for that reason (recorded per fable policy)."
   - id: T002
     type: scout
     assignee: Scout
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: "Map the markless codebase: compiler pipeline, graph-based architecture, analyzer, current emit targets, and which capabilities a mitosis-style multi-framework emitter could reuse today versus what is missing."
     inputs:
