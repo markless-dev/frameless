@@ -79,6 +79,28 @@ Vendored tarball SHA-256 receipts:
   parses as JavaScript. Guard-return-null remains proven by poc/03 fixture c6e; this
   finding is specifically guard-returning-an-element.
 - `vite-plugin-solid@2.11.0` is incompatible with Vite 8 because it consumes a removed Vite server-conditions export. This package therefore uses the same include-filter boundary as `poc/07`, implemented directly with pinned `@babel/core` + `babel-preset-solid`; only Solid generated/reference `.jsx` is transformed as Solid, React JSX remains on Vite's React path, and `.tsrx` remains exclusively owned by `markless()`.
+- @markless/web render() never forwards props — packages/web/src/render.ts line 71 calls `component.renderCsr()` zero-arg while the CsrRenderArtifact type at line 25 advertises `renderCsr(props?: unknown)`. There is no public way to pass root props at CSR mount in 0.1.1; even direct renderCsr(props) does not wire values into the lazy event symbols (observed: handlers crash with null graph reads).
+
+  The Markless harness therefore follows the app-owned composition pattern proven by
+  poc/03 c6c: zero-prop wrapper apps instantiate the byte-identical fixtures as
+  children with literal scenario props, and public `render()` mounts those apps with
+  no props. A small mutable trace bridge lets the adapter provide the oracle's current
+  callback to those wrapper apps. The bridge exists solely because of this root-prop
+  limitation; it only forwards callback arguments and does not alter component
+  behavior.
+- Markless 0.1.1 cannot production-bundle all of the child fixture's lazy event
+  symbols after props flow through the wrapper. Its symbol lowering rewrites graph
+  reads inside object-literal callback payloads into invalid property syntax. For S1,
+  `onTrace('change', { count })` becomes
+  `context.graph.read("prop:props", ["onTrace"])('change', {
+  context.graph.read("state:count") })`. For S3, the `checked` payload key becomes
+  `{ context.graph.read("state:checked"): event.currentTarget.checked }`; the submit
+  payload fails the same way. Rolldown reports ``PARSE_ERROR: Expected `,` or `}` but
+  found `.` `` in the corresponding `virtual:markless:symbol:` modules (S1 symbol 0;
+  S3 symbols 2 and 3), before any browser execution. This is a further callback-prop
+  / lazy-handler compilation limitation. Per the W-D1 stop condition, the harness
+  does not use internal APIs or rewrite the byte-authoritative fixtures to bypass it,
+  and the 24-comparison browser matrix cannot be regenerated from this wrapper state.
 - In the restricted worker sandbox, the three Node fixture-identity checks pass, but
   Chromium verification cannot start because Vitest's local browser server is denied
   `listen(127.0.0.1:51204)` with `EPERM`. Registry access also fails with `ENOTFOUND`
