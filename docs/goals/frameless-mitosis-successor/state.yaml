@@ -68,7 +68,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-mitosis-successor/"
     command: "npx goalbuddy board docs/goals/frameless-mitosis-successor"
 
-active_task: T002
+active_task: T003
 
 tasks:
   - id: T001
@@ -107,11 +107,18 @@ tasks:
       - "Output a concrete reuse-vs-gap table: markless subsystem -> what a per-framework idiomatic emitter needs -> exists today / partial / missing, with file evidence."
     expected_output:
       - "notes/T002-markless-map.md with compiler/graph/analyzer map and reuse-vs-gap table for the successor thesis"
-    receipt: null
+    receipt:
+      result: done
+      note: notes/T002-markless-map.md
+      summary: "Two crew scout units audited markless read-only. Reuse: semantic graph IR with path-level reads/writes/aliases/events/branches/keyed-repeats (far beyond Mitosis's string IR), validated pass/artifact pipeline with a natural fork point after state-lowering, structural @if/@for/@switch/@try, authoring broader than Mitosis (locals, closures, destructuring, ordinary mutation, async computed). Gaps: no retargetable emitter (9K lines of markless-specific string emission, no target interface), expression-level code still strings (no types in graph), analyzer/Witness is markless-protocol-specific (no cross-framework paired-run comparator), 5 hard semantic mismatches per target (rerender model, mutation, async, scheduling, composition). Bottom line: thesis well-supported on IR/pipeline/authoring; emitters + typed expression IR + equivalence harness are new work."
+      evidence:
+        - ".fable-codex/runs/2026-07-19T19-08-37-605Z/units/t002-internals/result.json"
+        - ".fable-codex/runs/2026-07-19T19-08-37-605Z/units/t002-gaps/result.json"
+      merge_review: "No merge needed: read-only units, files_changed empty, no crew branches. Second-model critique skipped for that reason."
   - id: T003
     type: scout
     assignee: Scout
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: "Gather external adoption evidence for Mitosis: GitHub issues/discussions themes, npm download trends, maintenance cadence, community commentary and postmortems, and comparable tools (e.g. how competitors positioned against it)."
     inputs:
