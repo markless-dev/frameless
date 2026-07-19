@@ -192,7 +192,8 @@ tasks:
     objective: "Write the research report in docs/: easy-to-understand postmortem of Mitosis's adoption failure, the markless successor design, and the two-sided adoption thesis — with every numbered claim tagged as [POC: poc/<path>] or [strategic bet], matching the T004 claim list."
     allowed_files:
       - "docs/**"
-    verify: []
+    verify:
+      - "PM claim-map audit: every numbered claim in docs/report.md carries [POC: poc/...] with a passing suite, or [strategic bet]/[opinion]"
     stop_if:
       - "Need files outside allowed_files."
       - "A claim lacks its POC or label — stop and report rather than shipping an unproven claim."
