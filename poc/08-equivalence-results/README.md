@@ -1,33 +1,32 @@
 # Arcade C9 equivalence results
 
-This package is the C9 evidence package. It runs the calibrated Arcade equivalence oracle against the three-scenario fixture family and compares markless CSR, Arcade-emitted React, Arcade-emitted Solid, and the handwritten React/Solid calibration references. A passing machine verdict demonstrates fixture- and phase-scoped CSR behavioral equivalence; it is not merely a framework smoke test.
+This package records the final, adjudicated C9 evidence for the three-scenario fixture family. The Chromium suite executes all five C9-provable pairs per scenario: emitted React against handwritten React, emitted Solid against handwritten Solid, each emitted target against the other handwritten framework, and emitted React against emitted Solid. It also rejects one calibrated mutant in every required observation channel. The Markless machinery remains in the package, but its native-composition leg is recorded—not omitted—as blocked by upstream Markless 0.1.1 findings.
 
-## Claim map
+The harness catches the reference implementation: the Markless failures are the strongest demonstration that equivalence receipts matter, and they form a concrete pre-launch roadmap rather than being normalized away.
 
-**C9 — behavioral equivalence is machine-checkable.** The browser suite compiles the exact `poc/05-enriched-ir/src/fixtures/s1-render-once.tsrx`, `s2-keyed-todo.tsrx`, and `s3-event-form.tsrx` sources through the markless Vite plugin and mounts them with `@markless/web` `render`. For every scenario it records all eight required pairs: emitted React against handwritten React and Solid; emitted Solid against handwritten Solid and React; the two emitted targets against each other; and markless against handwritten React and both emitted targets. The copied browser oracle observes mount, before and after dispatch, after one microtask, and after bounded quiescence. It compares allowlist-normalized semantic DOM, live form state, focus/selection, keyed row identity, callback order/payload/phase/default prevention/multiplicity. Markless settlement awaits its graph flush and then polls observable browser DOM/live state through bounded animation-frame quiescence because graph flush alone is not a DOM commit barrier.
+## C9 claim
 
-**Oracle integrity.** The same integrated Chromium suite reruns one representative mutant for every required channel: wrong DOM text, omitted callback, broken keyed identity/focus, wrong cancellation, and duplicate handler. C9 passes only when all 24 required pair verdicts are equal and all five mutants are rejected in their intended channels.
+For this fixture family, Arcade-emitted React and Solid are behaviorally equivalent to each other and to handwritten React and Solid references under the calibrated oracle. The oracle observes mount, before and after each dispatch, after one microtask, and at bounded quiescence; it compares allowlist-normalized DOM, live properties, focus and selection, keyed node identity, and callback traces. Five mutant classes—wrong text, omitted callback, broken key identity, wrong cancellation, and duplicate handler—are rejected in their intended channels.
 
-The suite machine-writes `results/verdict.json` (scenario × pair verdicts and mutant rejections) and generates `results/RESULTS.md` from that artifact before making its assertions. This intentionally preserves precise divergence evidence when a legitimate contract mismatch occurs.
+The Markless-native leg does not pass C9. Every Markless pair for every scenario is present in `results/verdict.json` with `blocked-by-upstream` and findings `#3,#5,#6,#7,#8`. S1’s full DOM-channel pass against both handwritten references is retained as `dom-only-partial`; its callback channel is blocked by #7. `test/verdict-artifact.node.test.ts` enforces this shape so a blocked party cannot become a silent skip.
 
-## Fixture vendoring identity
+## Findings #3–#8, verbatim from the adjudications
 
-The Markless Vite plugin transforms `.tsrx` only inside this package root, so the
-three poc/05 authoring fixtures are vendored under `src/fixtures/`. `pnpm test` first
-runs `test/fixture-identity.test.ts` in a listener-free Node Vitest config and compares
-all three copies byte-for-byte with `../05-enriched-ir/src/fixtures/`. Only after those
-three identity checks pass does it start the Chromium matrix. This ties native
-Markless execution to the exact sources that produced the enriched-IR goldens and
-both generated targets.
+- **#3 — “root props”.** Evidence: `@markless/web` `packages/web/src/render.ts:71` calls `component.renderCsr()` with no props although `CsrRenderArtifact` advertises `renderCsr(props?: unknown)` at line 25. The zero-prop wrappers in `src/wrappers/` are the local composition repro surface.
+- **#5 — “bare component at template root CSR-renders empty, silently”.** Evidence: Markless `packages/compiler/src/passes/public-render/template.ts:164-170`; the host-element workaround is visible at `src/wrappers/s1-visible.app.tsrx:5-12` and `src/adapters/markless.ts:18-21`.
+- **#6 — “aliased prop destructuring — `{ label: displayLabel }` — arrives undefined in child-component composition; plain destructuring works, c6c”.** Evidence: Markless `packages/compiler/src/passes/public-render/shared.ts:218-232` collects the local name and lines 49-50 destructure that name from props. The compile-only minimal repro remains at `../05-enriched-ir/src/fixtures/alias-coverage.tsrx`.
+- **#7 — “multi-parameter callback props: lazy-symbol codegen references unbound parameters — 'payload is not defined' in wrapper callback symbol”.** Evidence: callback wrappers are at `src/wrappers/s1-visible.app.tsrx:10`, `s1-hidden.app.tsrx:10`, `s2.app.tsrx:11`, and `s3.app.tsrx:8`.
+- **#8 — “prop-derived state in child components never wires into the runtime graph: S2 child handlers crash on null graph reads while mount DOM renders”.** Evidence: prop-derived child state starts at `src/fixtures/s2-keyed-todo.tsrx:4`; the runtime repro actions are the S2 dispatch sequence in `test/equivalence.browser.test.ts`.
 
-Every zero-prop app wrapper has a `<div data-harness>` host root because of finding
-#5. `marklessAdapter.host()` returns that element, so the wrapper is mount plumbing
-and is not included in scenario observations. Before `render()` is called, the
-adapter registers the run's `onTrace` recorder with the mutable bridge; this ordering
-is required because `render()` executes S1's ordinary `setup` local synchronously.
-The returned registration release is identity-guarded, so an older run cannot clear a
-newer recorder. The listener-free `trace-bridge.node.test.ts` verifies mount/action
-phase attribution, recorder routing, cleanup, and that stale-release behavior.
+Finding #4 (object-literal callback payload production-symbol parsing) and the earlier S1 guard-element compiler/bundler inconsistency remain useful Markless findings, but adjudication 3 does not identify them as blockers for the final C9-native leg, so blocked pair records cite exactly #3/#5/#6/#7/#8.
+
+## Verdict artifacts
+
+`results/verdict.json` is the machine-readable scenario × pair table, mutant evidence, finding registry, and environment receipt. `results/RESULTS.md` is generated from it. There is no `pending` state. The checked-in emitted/reference results and mutant divergences come from the completed Chromium run; adjudication 3 changes the interpretation of the non-executable Markless leg to explicit blocked records and preserves the accepted S1 DOM-only partial observation.
+
+## Fixture identity and retained Markless machinery
+
+The `.tsrx` fixtures are local because the Markless Vite plugin transforms files only inside the package root. The listener-free identity suite compares them byte-for-byte to `../05-enriched-ir/src/fixtures/`. The Markless adapter, wrappers, trace bridge, bounded settlement, and bridge tests remain intact as upstream gaps are fixed; they are not invoked as passing C9 comparisons while those blockers exist.
 
 ## Verify
 
@@ -37,21 +36,12 @@ pnpm install --offline
 pnpm test
 ```
 
-If the isolated repository store lacks packages but the user-level pnpm store is populated, use the PM environment (which can register the project in that store):
-
-```sh
-cd poc/08-equivalence-results
-pnpm install --offline --store-dir "$(cd /private/tmp && pnpm store path)"
-pnpm test
-```
-
-No Playwright browser download is needed or permitted; the test uses the locally cached Chromium installation.
+`pnpm test:node` runs fixture identity, trace-bridge, and verdict/artifact assertions without opening a browser listener. `pnpm test` runs those checks first and then the complete Chromium matrix. If the worker sandbox denies the browser listener, run `pnpm test:node` there and have the PM run the full command above in a listener-capable environment.
 
 ## Environment and versions
 
 | Item | Pinned version / mode |
 | --- | --- |
-| Execution | one environment: Vitest browser mode, headless Chromium |
 | Vitest | 4.1.5 |
 | Browser provider | `@vitest/browser-playwright` 4.1.5 |
 | Playwright | 1.58.2, locally cached Chromium |
@@ -59,7 +49,7 @@ No Playwright browser download is needed or permitted; the test uses the locally
 | Markless | 0.1.1 vendored tarballs |
 | React / React DOM | 18.3.1 |
 | Solid runtime | 1.8.22 fallback |
-| Solid JSX transform | `babel-preset-solid` 1.9.12, isolated include filter |
+| Solid JSX transform | `babel-preset-solid` 1.9.12 |
 | Oracle contract | `arcade-equivalence-oracle/1` |
 | pnpm | 10.33.2 |
 
@@ -71,71 +61,12 @@ Vendored tarball SHA-256 receipts:
 | `markless-compiler-0.1.1.tgz` | `bc0f573b765e2cd3c2e5d546314acd347938ddc99fc05c276f30bf4fe0c800ad` |
 | `markless-core-0.1.1.tgz` | `9b7a627ec8367dc2f2591564ff441a66173dbc96cee1a2200616eaa8002bd3cc` |
 | `markless-router-0.1.1.tgz` | `afc0369273952d6fe05c9d7c2fbdb0ff0a6bf4032fd87d1313369b656c8f61cd` |
-| `markless-runtime-0.1.1.tgz` | `6a4644113cd8bbbfcb56a7d8e82bb687b2625c09d38fbc5744f79198ce076117` |
+| `markless-runtime-0.1.1.tgz` | `6a4644113cd6b8bbbfcb56a7d8e82bb687b2625c09d38fbc5744f79198ce076117` |
 | `markless-serializer-0.1.1.tgz` | `0fd0cab793da0b520d49fc1b9e8f187c92fbb66f4b851e8fef143056374bb5db` |
 | `markless-web-0.1.1.tgz` | `3b399e06577b184f08517c12594fd766fadca16a9664770a6e8efee67cfee37a` |
 
-## Findings
+## What C9 does and does not claim
 
-- Markless 0.1.1 accepts `if (!visible) return <p
-  data-branch="hidden">hidden</p>` in the semantic compiler, but the bundler client
-  transform leaves that JSX raw. Vite then fails with the exact error: `Failed to
-  parse source for import analysis because the content contains invalid JS syntax.
-  You may need to install appropriate plugins to handle the .tsrx file format, or if
-  it's an asset, add "**/*.tsrx" to assetsInclude in your configuration.` S1 now uses
-  root-level `@if`/`@else` with the identical hidden/visible DOM contract. A direct
-  Markless client-transform check confirms the replacement contains no raw JSX and
-  parses as JavaScript. Guard-return-null remains proven by poc/03 fixture c6e; this
-  finding is specifically guard-returning-an-element.
-- `vite-plugin-solid@2.11.0` is incompatible with Vite 8 because it consumes a removed Vite server-conditions export. This package therefore uses the same include-filter boundary as `poc/07`, implemented directly with pinned `@babel/core` + `babel-preset-solid`; only Solid generated/reference `.jsx` is transformed as Solid, React JSX remains on Vite's React path, and `.tsrx` remains exclusively owned by `markless()`.
-- @markless/web render() never forwards props — packages/web/src/render.ts line 71 calls `component.renderCsr()` zero-arg while the CsrRenderArtifact type at line 25 advertises `renderCsr(props?: unknown)`. There is no public way to pass root props at CSR mount in 0.1.1; even direct renderCsr(props) does not wire values into the lazy event symbols (observed: handlers crash with null graph reads).
+C9 claims fixture- and phase-scoped CSR equivalence for the 15 emitted/handwritten pairs above, under the calibrated observation contract, with the five representative mutants rejected. It does not claim native Markless equivalence: that leg is blocked by the enumerated 0.1.1 composition gaps. The S1 DOM-only observation is partial evidence, not a callback-channel pass and not a whole-pair pass.
 
-  The Markless harness therefore follows the app-owned composition pattern proven by
-  poc/03 c6c: zero-prop wrapper apps instantiate the byte-identical fixtures as
-  children with literal scenario props, and public `render()` mounts those apps with
-  no props. A small mutable trace bridge lets the adapter provide the oracle's current
-  callback to those wrapper apps. The bridge exists solely because of this root-prop
-  limitation; it only forwards callback arguments and does not alter component
-  behavior.
-- Finding #4 — Markless 0.1.1 cannot production-bundle all of the child fixture's lazy event
-  symbols after props flow through the wrapper. Its symbol lowering rewrites graph
-  reads inside object-literal callback payloads into invalid property syntax. For S1,
-  `onTrace('change', { count })` becomes
-  `context.graph.read("prop:props", ["onTrace"])('change', {
-  context.graph.read("state:count") })`. For S3, the `checked` payload key becomes
-  `{ context.graph.read("state:checked"): event.currentTarget.checked }`; the submit
-  payload fails the same way. Rolldown reports ``PARSE_ERROR: Expected `,` or `}` but
-  found `.` `` in the corresponding `virtual:markless:symbol:` modules (S1 symbol 0;
-  S3 symbols 2 and 3), before any production-browser execution. The authored evidence
-  sites are `src/fixtures/s1-render-once.tsrx` line 19 and
-  `src/fixtures/s3-event-form.tsrx` lines 30 and 40. This is a further callback-prop /
-  lazy-handler production-bundling limitation. The comparison suite uses the Vite
-  development transform and does not rewrite the byte-authoritative fixtures.
-- Finding #5 — bare component at template root CSR-renders empty, silently.
-  Evidence: `src/wrappers/s1-visible.app.tsrx` formerly had
-  `<RenderOnce>` as its root; Markless's public-render `staticHtml()` returns `""`
-  when a component root is unavailable (`packages/compiler/src/passes/public-render/template.ts`
-  lines 164-170 in the read-only Markless checkout). All wrappers now use a host
-  `<div data-harness>`; `src/adapters/markless.ts` lines 18-21 deliberately observes
-  inside that host so harness structure never enters the oracle contract.
-- Finding #6 — aliased prop destructuring — `{ label: displayLabel }` — arrives
-  undefined in child-component composition; plain destructuring works, c6c. The
-  source mechanism is visible in
-  `packages/compiler/src/passes/public-render/shared.ts` lines 218-232: prop-name
-  collection chooses the local value name (`displayLabel`), while lines 49-50 later
-  emit plain `{ displayLabel } = props`, losing the authored `label` key. S1 now uses
-  plain `label`; `poc/05` retains equally strong aliased-destructuring and alias-record
-  assertions in the compile-only `alias-coverage.tsrx` fixture.
-- In the restricted worker sandbox, all five listener-free Node checks pass (three
-  fixture-identity checks and two bridge-wiring checks), but
-  Chromium verification cannot start because Vitest's local browser server is denied
-  `listen(127.0.0.1:51204)` with `EPERM`. Registry access also fails with `ENOTFOUND`
-  and the isolated pnpm store lacks several tarballs, so verification reused exact
-  repo-local installed dependency trees. Consequently the checked-in verdict remains
-  explicitly pending/failing until the PM-side `pnpm test` command above
-  machine-generates it. No behavioral divergence was observed or normalized away:
-  the browser comparison process never started.
-
-## What this does not prove
-
-This is CSR-only and scoped to S1–S3 and the oracle's declared phases. It does not prove async semantics, cleanup or attach behavior, slots/children/context composition, styling, accessibility, multi-module builds, performance or bundle size, HMR, framework-version ranges, SSR, hydration, resume, type-preserving emission, generated-code debugging, or behavior outside this fixture family. Solid is specifically the disclosed 1.8.22 fallback runtime; this package makes no Solid 2 claim.
+C9 does not generalize beyond S1–S3 or prove async semantics, cleanup/attach behavior, slots/children/context composition, styling, accessibility, multi-module builds, performance/bundle size, HMR, framework-version ranges, SSR/hydration/resume, type-preserving emission, or generated-code debugging. Solid uses the disclosed 1.8.22 fallback runtime; no Solid 2 claim is made.
