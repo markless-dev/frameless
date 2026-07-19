@@ -20,7 +20,13 @@ jsdom is sufficient because this fixture family needs standards DOM event propag
 
 ## Adapters and references
 
-React uses `createRoot`, `flushSync`, and React `act`; Solid uses `render` and synchronous reactive propagation followed by bounded microtask quiescence. References under `src/references/` are handwritten hooks/signal implementations and are the later conventionality size/complexity baseline. Scenario definitions under `src/scenarios/` contain only initial props, actions, expected callback names, and purpose.
+React uses `createRoot`, `flushSync`, and React `act`; Solid uses `render` and synchronous reactive propagation followed by bounded microtask quiescence. References under `src/references/` are handwritten hooks/signal implementations for oracle calibration; the emitter's mutation-free size baselines are separate files in `../06-emit-react/test/baselines/`. Scenario definitions under `src/scenarios/` contain only initial props, actions, expected callback names, and purpose.
+
+React S1 uses the same ref-guarded first-render setup strategy as the emitter, keeping
+the observable setup call out of the `useState` initializer. StrictMode and
+speculative/double-render replay are outside this calibrated contract: the adapter
+uses `createRoot` without `<StrictMode>`. The ref guard is therefore asserted once per
+ordinary adapter mount, not characterized under development replay.
 
 S2 keeps its `<ul>` in the empty shape and conditionally adds a sibling paragraph
 because that is the zero-diagnostic Markless constraint documented in

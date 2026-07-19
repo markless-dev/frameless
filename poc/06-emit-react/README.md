@@ -15,7 +15,7 @@ the conventionality gates, and cross-framework verdicts.
 | Invisible mutable S2 next-id cell | `useRef` plus an event-local sequenced value | The counter must persist without rendering; synchronizing the ref immediately after `++` makes later reads observe the write. |
 | Cheap reactive computed | Derived `const` during render | `derived` and `complete` are pure and inexpensive; `useMemo` would add cache machinery without a semantic need. |
 | Referenced ordinary once-local | One-value lazy `useState` | S1 `prefix` is fixed at instance creation even if props later change. |
-| Side-effect-only once-local | Fold into the next lazy state initializer | S1 `setup` stays in authored order, fires exactly once per mount, and creates no unused/dead binding. |
+| Side-effect-only once-local | Ref-guarded first-render execution | S1 `setup` stays in authored order and fires once for each calibrated mount without putting an observable side effect in a `useState` initializer. |
 | Root assignment in an event | Event-local next value, then setter | Callback payloads in the same handler observe post-write values despite React batching. |
 | `* / field` handler-alias write | Immutable keyed `map` plus object spread | Avoids mutating prior React state; the selector predicate and field value come from AST/write records. |
 | Keyed repeat | `.map` with the IR key expression as React `key` | Preserves row identity through reorder/remove and never substitutes the map index. |
@@ -24,45 +24,57 @@ the conventionality gates, and cross-framework verdicts.
 
 ## Gates and oracle smoke
 
-`pnpm test` checks byte freshness, React JSX compilation with Vite/esbuild, React and
-Hooks recommended ESLint rules with zero errors, no disable comments, and AST policies
-for imports, live bindings, keys, render-phase setters/effects, and hook placement. It
-then runs every emitted component (including S1's hidden guard calibration) through
-the sibling oracle against the handwritten React reference and requires exact verdicts.
+`src/gate/` exposes the reusable checker used by `pnpm test`. It discovers
+`generated/**/*.jsx` by glob, compiles every match, and applies `eslint:recommended`,
+React recommended, and React Hooks recommended. It rejects every ESLint directive
+comment (disable, enable, and inline configuration), undisclosed static/dynamic/CommonJS
+imports, unused bindings, dead expressions, unreachable statements, index keys, hooks
+after early returns, and render-reachable state setters/effect hooks. Setter/effect
+checks follow Babel bindings through aliases, helper functions, and object members;
+they do not guess from names. Mutation tests exercise each bypass, including a newly
+created generated file that is found without changing a file list.
+
+The smoke suite then runs every emitted component (including S1's hidden guard
+calibration) through the sibling oracle against the handwritten React reference and
+requires exact verdicts. Independent S1 assertions require setup exactly once per
+mount, exact `Arcade:3`/`Arcade:6` derived strings, and a real React-root rerender in
+which the initial `Arcade:` prefix remains captured while the multiplier update is
+reactive (`Arcade:10`).
 
 The React recommended preset's `prop-types` rule remains enabled with its documented
 `skipUndeclared` option because `arcade-enriched-ir/1` deliberately carries no prop
 types and type-preserving emission is out of scope. No generated-file lint rule is
 disabled or suppressed.
 
-| Gate | Implementation-run result |
-|---|---|
-| JSON validation + AST generation | Passed for S1/S2/S3; generated files parse as JSX. |
-| Byte freshness | Passed by regenerate-and-compare inspection. |
-| Vite/esbuild build | Environment-blocked: cached optional package omitted the native esbuild binary. |
-| React + Hooks recommended lint | Environment-blocked: both plugin tarballs and mirror metadata are absent. |
-| AST policies | Implemented; parser-level inspection passed, full Vitest gate awaits dependency install. |
-| Oracle smoke | Implemented; full run awaits the same Vite/esbuild dependency install. |
+S1's `change` callback deliberately receives **no event argument**. The scenario and
+handwritten-reference contract is authoritative; the TSRX fixture was corrected on
+2026-07-19 and its enriched-IR golden regenerated. Setup and change payload assertions
+preserve that adjudication.
+
+The calibrated contract excludes React StrictMode and speculative/double-render
+replay. The oracle adapter mounts with `createRoot` but no `<StrictMode>`, so the
+ref-guarded first-render strategy is claimed only for that scope. No StrictMode result
+is implied.
+
+Callback event records intentionally project framework events down to
+`defaultPrevented`. Native-versus-synthetic identity, class, pooling, and other event
+surface differences are normalized away and are not part of this equivalence claim.
 
 ## Size comparison
 
-The checked-in measurements come from the regenerated output and parsed handwritten
-component declarations.
+`pnpm measure:size` runs the checked-in `scripts/measure-size.mjs` against clean,
+mutation-free handwritten S2/S3 components in `test/baselines/`. Those files contain
+no mutant factories or type-only scaffolding. Physical nonblank LOC is the primary
+number; Babel AST node count is the secondary structural measure.
 
-| Scenario | Handwritten physical LOC | Generated physical LOC | Handwritten normalized LOC | Generated normalized LOC | Handwritten structural nodes | Generated structural nodes |
-|---|---:|---:|---:|---:|---:|---:|
-| S1 | 6 | 24 | 27 | 24 | 135 | 124 |
-| S2 | 14 | 86 | 70 | 86 | 568 | 554 |
-| S3 | 15 | 47 | 51 | 47 | 312 | 245 |
+| Scenario | Baseline physical LOC | Emitted physical LOC | LOC ratio | Baseline structural nodes | Emitted structural nodes |
+|---|---:|---:|---:|---:|---:|
+| S2 | 41 | 86 | 2.10x | 500 | 554 |
+| S3 | 26 | 47 | 1.81x | 225 | 245 |
 
-Physical LOC counts nonblank lines in each component's checked-in source span.
-Normalized LOC prints both component ASTs through the same default Babel printer; its
-ratios are 0.89x, 1.23x, and 0.92x. The structural metric is the Babel AST node count
-for the component declaration, at 0.92x, 0.98x, and 0.79x. The comparable-printer and
-structural measurements meet the 2x target. Raw physical LOC misses it (4.0x, 6.1x,
-and 3.1x) because the handwritten baseline packs whole components and multiple
-statements onto single lines. This report is not a gate, and the emitter intentionally
-does not use Babel's two-line `concise` output to manufacture a better raw ratio.
+The emitted S2 component is 2.10x the handwritten physical LOC, so it narrowly misses
+a hypothetical 2x ceiling; S3 is 1.81x. Structurally the outputs are 1.11x and 1.09x
+their baselines. Size remains a reported comparison, not a gate.
 
 ## Findings
 
@@ -70,13 +82,10 @@ does not use Babel's two-line `concise` output to manufacture a better raw ratio
   post-amendment goldens. Validation rejects either form rather than guessing.
 - The deep-write records were sufficient: alias provenance plus the handler's `find`
   predicate and `* / field` path produce immutable updates without source strings.
-- Physical LOC exceeds the requested 2x target because the handwritten baseline is
-  densely packed. Structural complexity is slightly lower for every scenario. This is
-  reported as a negative result; size comparison is non-gating per adjudication.
-- The repository locks currently resolve Babel 7.29.7 rather than the packet's suggested
-  7.28.4 set. The pnpm content store also lacks payloads needed for a clean offline
-  install. Registry DNS failed with `ENOTFOUND`, so Vite/oracle/lint verification is a
-  PM-side reproduction step rather than a claimed pass.
+- Physical LOC is the honest primary result: emitted S2 is 2.10x its clean baseline,
+  while S3 is 1.81x. Structural counts are close but do not override that S2 result.
+- The repository locks resolve Babel 7.29.7 rather than the packet's suggested 7.28.4
+  set.
 
 ## Verify
 
@@ -94,7 +103,8 @@ Authored with Node.js 24.15.0 and pnpm 10.33.2.
 ## What this does not prove
 
 This package does not by itself prove C8, the subjective label “idiomatic,” C9, Solid
-or other target emission, general TSRX coverage, prop updates beyond these scenarios,
+or other target emission, general TSRX coverage, prop updates beyond the documented
+S1 React-root rerender, StrictMode/double-render replay,
 async semantics, cleanup/attach, slots/children/context, styling, custom components,
 SVG/MathML, accessibility, performance or bundle size, SSR/hydration/resume, HMR,
 type-preserving emission, source maps, or generated-code debugging. The conventionality

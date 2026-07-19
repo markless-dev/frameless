@@ -65,6 +65,9 @@ artifacts. `pnpm test` also runs strict TypeScript checking first.
 
 ## Findings
 
+- S1's `change` callback deliberately carries no event argument. The scenario and
+  handwritten-reference contract is authoritative; the fixture was fixed on
+  2026-07-19 and the checked-in enriched-IR golden was regenerated.
 - Markless host records have ids and tags but no parent/child structure, attributes,
   static text, or control-flow subtrees. The builder joins them to TSRX template
   nodes in verified source preorder and fails if tags or record counts diverge.

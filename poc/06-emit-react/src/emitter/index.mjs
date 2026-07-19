@@ -82,9 +82,25 @@ function unwrapComputed(binding) {
   return fn.body;
 }
 
-function makeLazyInitializer(initializer, prefixExpressions) {
-  const body = [...prefixExpressions.map((expression) => t.expressionStatement(expression)), t.returnStatement(initializer)];
+function makeLazyInitializer(initializer) {
+  const body = [t.returnStatement(initializer)];
   return t.arrowFunctionExpression([], t.blockStatement(body));
+}
+
+function emitOnceGuard(expressions, body, usedHooks) {
+  if (expressions.length === 0) return;
+  usedHooks.add('useRef');
+  const ref = t.identifier('didRunSetup');
+  body.push(t.variableDeclaration('const', [
+    t.variableDeclarator(ref, t.callExpression(t.identifier('useRef'), [t.booleanLiteral(false)])),
+  ]));
+  body.push(t.ifStatement(
+    t.unaryExpression('!', member(t.cloneNode(ref), 'current')),
+    t.blockStatement([
+      t.expressionStatement(t.assignmentExpression('=', member(t.cloneNode(ref), 'current'), t.booleanLiteral(true))),
+      ...expressions.map((expression) => t.expressionStatement(expression)),
+    ]),
+  ));
 }
 
 function jsxName(name) {
@@ -306,12 +322,13 @@ function componentFunction(ir, component, context, usedHooks) {
     if (state) {
       const mapped = context.statesById.get(state.id);
       const initializer = fromEstree(state.initializer);
+      emitOnceGuard(pendingInitializers.splice(0), body, usedHooks);
       if (mapped.storage === 'ref') {
         usedHooks.add('useRef');
         body.push(t.variableDeclaration('const', [t.variableDeclarator(t.identifier(state.name), t.callExpression(t.identifier('useRef'), [initializer]))]));
       } else {
         usedHooks.add('useState');
-        const hook = t.callExpression(t.identifier('useState'), [makeLazyInitializer(initializer, pendingInitializers.splice(0))]);
+        const hook = t.callExpression(t.identifier('useState'), [makeLazyInitializer(initializer)]);
         body.push(t.variableDeclaration('const', [t.variableDeclarator(t.arrayPattern([t.identifier(state.name), t.identifier(setterName(state.name))]), hook)]));
       }
       continue;
