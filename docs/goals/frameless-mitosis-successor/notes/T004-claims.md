@@ -146,3 +146,87 @@ capability gap blocks a POC (record as finding).
 
 Approve claims C1–C10/B1–B4, equivalence standard, and W-A…W-E sequencing; dispatch
 W-A first.
+
+---
+
+# Critique adjudication (PM, final) — supersedes conflicting text above
+
+Crew critique (gpt-5.6-sol, high effort, run 2026-07-19T19-28-45-467Z) reviewed this
+plan. PM accepts the following amendments; where the draft above conflicts, this
+section wins.
+
+## Accepted amendments
+
+1. **C8 restructured.** `SemanticGraphArtifact` alone cannot reconstruct components
+   (host records lack structure/attrs; branch arms, locals' initializers, template
+   tree absent; expressions remain strings). New package **W-C0** builds an
+   **enriched IR** (TSRX AST + semantic records, dumped as an artifact) and C8 claims
+   only fixture-family sufficiency of that enriched IR. "Idiomatic" is replaced
+   throughout by a published, machine-checkable **conventionality gate**: pinned
+   builds + strict typecheck, recommended framework lint (incl. React Hooks rules),
+   AST policies (stable keys, no render-phase setters/effects, no unused/dead code,
+   hooks at valid sites, disclosed adapters only), plus size/complexity comparison
+   against the hand-written reference implementations from W-D0.
+2. **Targets: React + Solid** (not Vue). Rationale: Solid is semantically closest to
+   markless (fine-grained), React is farthest (rerender model), and the pair closes
+   the loop with C4's proven React/Solid divergence in Mitosis. Vue moves to
+   out-of-scope with no inference claimed.
+3. **Oracle-first sequencing.** W-D0 (observation model, hand-written React+Solid
+   reference implementations of the fixture family, mutant corpus) lands before any
+   emitter work. Emitters are then judged by a pre-validated oracle.
+4. **Equivalence standard tightened** (C9): observations at mount / before+after each
+   dispatch / after one microtask / at bounded quiescence (timeout = failure, no
+   sleeps); allowlist-only normalization (never blanket-strip data-*/classes);
+   compare namespaces, ordered children, semantic attrs, live properties (value,
+   checked, selected, disabled, focus, selection range), DOM-node identity and focus
+   preservation across keyed reorder/remove; callback order, payload fields, phase,
+   defaultPrevented, handler multiplicity; **mutant classes per observation channel**
+   (wrong text/property, omitted/reordered callback, broken key identity, wrong
+   cancellation, duplicate handler). Claim is explicitly fixture- and phase-scoped
+   CSR equivalence.
+5. **Claim rewordings accepted as proposed** for C1, C2, C4, C5, C7 (version-pinned,
+   fixture-scoped, no generalization beyond what the POC shows; C5 becomes
+   date-stamped atomic evidence claims with "research identified" phrasing).
+   **C3** becomes: 0.13.2 emits unresolved `myEvent` AND the same defect appears in
+   the repo's accepted golden snapshot (regenerate + scope-check + snapshot compare).
+   **C6** upgraded to behavioral proof: markless 0.1.1 accepts AND preserves
+   observable CSR behavior of the fixture family (full CSR execution against the
+   scenario oracle, not just zero diagnostics). **C10 dropped** as a claim; retained
+   as a non-claim comparison table fed by C1/C2/C6.
+6. **C11 added (scoped):** for the C1-class inputs Mitosis silently mangles, the
+   markless compiler emits actionable compile-time diagnostics (file/span/message) —
+   proven in W-B. Runtime **source maps remain an honest open gap for both mitosis
+   and markless** (markless production transform returns map:null) and the report
+   must say so prominently, since debugging was the #1 external complaint.
+7. **Hermeticity:** POCs consume markless via `pnpm pack --pack-destination` vendored
+   tarballs (checksums recorded in receipts) — no `file:` links to src exports, no
+   machine-specific absolute paths committed. Mitosis pinned at 0.13.2. Babel parser
+   + scope analysis (not bare acorn) for scope proofs. Toolchain versions recorded.
+8. **Scope-honesty additions:** out-of-scope now also names async semantics, cleanup/
+   attach, slots/children/context composition, styling, multi-module builds,
+   performance/bundle size, accessibility, framework-version ranges, SSR/hydration/
+   resume, HMR, type-preserving emission, and generated-code debugging. Market-size
+   statements phrased as "evidence is consistent with", adopter counts as "research
+   identified".
+
+## Final package plan (sequential crew runs; PM diff-review each; critique mandatory for high-effort packets)
+
+- **W-A** (`poc/01-mitosis-postmortem`, medium): unit A1 static failures C1+C2+C3;
+  unit A2 runtime divergence C4.
+- **W-B** (`poc/02-markless-graph`, medium): C6 (behavioral), C7 (reworded), C11.
+- **W-D0** (`poc/03-equivalence-oracle`, medium): observation model + hand-written
+  React/Solid references + mutant corpus; oracle validated before emitters exist.
+- **W-C0** (`poc/04-enriched-ir`, high — named judgment: designing the enriched IR
+  that closes the semantic-graph→template gap): enriched IR builder + dump.
+- **W-C1** (`poc/05-emit-react`, high — named judgment: React mapping for
+  render-once graph semantics that passes the oracle while staying conventional).
+- **W-C2** (`poc/06-emit-solid`, medium).
+- **W-D1** (`poc/07-equivalence-results`, medium): generated outputs into the oracle;
+  C9 verdicts + conventionality-gate results.
+- **W-E** (`docs/report.md`, medium): report with claim→POC map + PM claim audit.
+
+## Decision
+
+APPROVED with the amendments above. Claims C1–C9 (as reworded) + C11 are the
+canonical provable set; B1–B4 strategic bets unchanged; C10 demoted to comparison
+table. Dispatch W-A first.
