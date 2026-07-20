@@ -1,0 +1,163 @@
+# GoalBuddy v2 state.yaml
+# Board truth lives here. goal.md is the editable charter; notes/ holds long receipts only.
+
+version: 2
+
+goal:
+  title: "Frameless composition v1: children/slots, shared state, refs"
+  slug: "frameless-composition-v1"
+  kind: specific
+  tranche: "Ship the composition surface on the proven v0 pipeline: children/slots (cross-file composition), shared() lowered idiomatically per framework, refs — dossiers first, emitters implementing them, gates enforcing them, cross-target equivalence receipts covering composition scenarios, fresh-checkout command still green."
+  status: active
+  oracle:
+    signal: "From a fresh checkout, the documented command compiles a multi-component demo TSRX library (children/slots, shared() state across components, refs) into React 19 and Solid packages passing each gate, with green cross-target equivalence receipts in headless Chromium whose scenarios exercise composition (slot rendering, shared-state propagation across boundaries, ref-driven focus); every v0 product suite and poc evidence suite stays green."
+    cadence: "after each Worker package and at final audit"
+    final_proof: "Final Judge audit runs the fresh-checkout flow plus all suites and records full_outcome_complete: true."
+  intake:
+    original_request: "Yes give us this [composition surface: children/slots, context, refs — what library authors actually need], and make sure we're doing it the idiomatic way. I don't know if React Compiler makes it fast or not when doing context — context used to be pretty inefficient in React. Either way our shared function should make the conversion simple because they should have the info the framework needs for shared state."
+    interpreted_outcome: "Library authors can write multi-component TSRX with slots, shared state, and refs, and get idiomatic, behaviorally-equivalent React 19 and Solid packages with receipts — the same proven pipeline, one surface tier up."
+    input_shape: specific
+    audience: "The user (markless/Frameless author); library authors are the target beneficiary of this surface."
+    authority: requested
+    proof_type: test
+    completion_proof: "Fresh-checkout documented command green over a composition demo; cross-target receipts include composition scenarios; v0 + poc suites green; final audit records full_outcome_complete: true."
+    likely_misfire: "React shared-state lowering chosen by taste (context adopted or rejected without evidence, React Compiler impact assumed instead of validated); shared() conversion guessing at semantics instead of consuming IR records; composition demo that is single-file theater; scope creep into SSR/vendor-refresh/Solid-2/Qwik."
+    blind_spots_considered:
+      - "The PINNED vendored markless (0.1.1 tarballs) may not compile children/slots/shared/refs — upstream moved (slot/passthrough work) but the pin predates it; vendor refresh is gated on the user's markless fixing board. First Scout must establish pinned capability; insufficient support blocks that slice, not the goal."
+      - "React context performance: historical re-render propagation cost; React Compiler's effect on context consumers must be validated with evidence (user explicitly flagged uncertainty)."
+      - "Refs cross framework models: React 19 ref-as-prop vs Solid ref props/element access; markless element() handles are the authoring source — lowering must be evidenced per dossier protocol."
+      - "EnrichedIR/1 was locked for one component per file with no cross-file imports (v0 limit, fail-closed) — composition REQUIRES lifting that deliberately via a versioned /2 contract, both compiler-side and emitter-side validation."
+      - "Cross-target equivalence for shared state needs scenarios where two components interact through shared() — the oracle's scenario vocabulary (actions/observations) may need extension; analyzer changes are critique-mandatory."
+    existing_plan_facts:
+      - "v0 charter recorded: 'Composition surface (children/slots, shared->context, refs) is the NEXT tranche' — 'shared->context' was a sketch, not a decision; the dossier decides the actual React lowering with evidence."
+      - "User design principle (2026-07-20): markless shared()'s semantic records carry the info frameworks need for shared state — emitters consume recorded read/write granularity; the conversion should be simple BECAUSE the IR is rich, not because the emitter guesses."
+      - "Candidate React idioms to weigh: context + memo discipline, context selectors, useSyncExternalStore external store, prop threading; React Compiler interplay validated not assumed."
+      - "Queued-behind-gates (NOT this tranche): SSR tests (sketch at ../frameless-product-v0/notes/ssr-tranche-sketch.md), vendor refresh + IR upstreaming (markless fixing board), Solid 2 migration (beta.9 blocker overturn trigger), Qwik v2 target."
+      - "Process carry-over from v0: crew dispatch with PM diff-review, effort medium default, <15-min units, 2-wide worktree parallel for disjoint contracts, second-model critique for emitter/architecture packages, honest receipts, fresh-clone verification for anything dependency-shaped."
+
+rules:
+  pm_owns_state: true
+  one_active_task: true
+  max_write_workers: 1
+  no_implementation_without_worker_or_pm_task: true
+  no_completion_without_judge_or_pm_audit: true
+  planning_is_not_completion: true
+  queued_required_worker_blocks_completion: true
+  continuous_until_full_outcome: true
+  missing_input_or_credentials_do_not_stop_goal: true
+  intake_misfire_must_be_audited: true
+  goal_pressure_requires_oracle: true
+  no_completion_on_weak_proof: true
+  slice_policy:
+    max_consecutive_tiny_tasks: 2
+    prefer_vertical_slices: true
+    judge_picks_largest_safe_slice: true
+    worker_completes_whole_slice: true
+
+agents:
+  # installed | bundled_not_installed | missing | unknown
+  scout: installed
+  worker: installed
+  judge: installed
+
+visual_board:
+  # none | local | unknown
+  selected: local
+  local:
+    status: live
+    url: "http://goalbuddy.localhost:41737/frameless-composition-v1/"
+    command: "npx goalbuddy board docs/goals/frameless-composition-v1"
+
+active_task: T001
+
+tasks:
+  - id: T001
+    type: scout
+    assignee: Scout
+    status: active
+    reasoning_hint: medium
+    objective: "Pinned-capability + IR gap map: what the VENDORED markless 0.1.1 compiler actually supports for cross-file component imports, children/slots, shared(), and element()/refs (probe with real .tsrx inputs against the pinned tarballs, read their compiled surface — markless repo itself read-only reference); exactly which frameless-enriched-ir/1 v0 limits block composition (one-component-per-file, no relative imports, fail-closed template nodes) and what a /2 contract must add; whether the analyzer scenario vocabulary suffices for two-component shared-state/focus scenarios."
+    inputs:
+      - "vendor/*.tgz (pinned), packages/compiler (v0 limits + fail-closed sites), packages/analyzer scenario/action types"
+      - "/Users/jacksm5pro/dev/open-source/markless (read-only: upstream slot/shared/capture work, to size the pin gap)"
+      - "docs/goals/frameless-product-v0/state.yaml receipts (v0 limits provenance)"
+    constraints:
+      - "Read-only. Every capability claim probed or cited, not assumed. If the pin cannot compile a construct, record the exact diagnostic."
+    expected_output:
+      - "notes/T001-pinned-capability.md: construct -> pinned support (proven) -> upstream delta -> IR/2 requirement -> blocked-or-buildable verdict per slice"
+    receipt: null
+  - id: T002
+    type: scout
+    assignee: Scout
+    status: queued
+    reasoning_hint: medium
+    objective: "React composition idiom dossier: evidenced rulings for shared() lowering (context + memo discipline vs context selectors vs useSyncExternalStore store vs prop threading — re-render cost evidence, thresholds, and the React Compiler interplay VALIDATED with the actual compiler, per the user's explicit uncertainty), children/slots (ReactNode props patterns), refs (React 19 ref-as-prop, imperative focus), each with citations and overturn triggers; the deciding principle is that IR read/write granularity records drive the choice per shared cell."
+    constraints:
+      - "Read-only. No taste-only calls; corpus/docs/benchmark citations per ruling; React Compiler claims require executed validation, not memory."
+    expected_output:
+      - "notes/T002-react-composition-idioms.md: construct -> ruling -> evidence -> gate rule -> overturn trigger"
+    receipt: null
+  - id: T003
+    type: scout
+    assignee: Scout
+    status: queued
+    reasoning_hint: medium
+    objective: "Solid composition idiom dossier: children/slots (props.children, children() helper semantics), shared() lowering (createContext vs module-scope signals/stores vs props — with Solid's ownership/disposal rules), refs (ref props, element access), v2-forward notes; same evidence protocol."
+    constraints:
+      - "Read-only. Citations per ruling; local solid checkout + docs as corpora."
+    expected_output:
+      - "notes/T003-solid-composition-idioms.md: construct -> ruling -> evidence -> gate rule -> overturn trigger"
+    receipt: null
+  - id: T004
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Architecture lock: enriched-ir/2 contract design (what grows, what stays fail-closed, versioning + migration of /1 consumers), the shared()/slots/refs surface definition for this tranche (trim to what the pinned compiler proves — blocked slices recorded, not improvised), oracle scenario-vocabulary extensions, demo library shape, and the Worker package cut with allowed_files/verify/stop_if per slice. Flag any T001 finding that gates the whole tranche on the vendor refresh."
+    inputs:
+      - "notes/T001..T003"
+      - "v0 board receipts (process lessons)"
+    expected_output:
+      - "notes/T004-architecture.md: locked decisions + package definitions"
+    receipt: null
+  - id: T005
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Execute the T004-cut Worker packages in order (compiler /2 extension, emitter + gate work per framework implementing the dossiers, analyzer scenario extensions, composition demo + e2e extension) — each package crew-dispatched, PM-verified, critique per the carry-over rules; this card is the execution slot the PM re-cuts per package."
+    allowed_files: []
+    verify: []
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Dossier lacks evidence for a needed decision — report, do not taste-call."
+      - "Pinned compiler cannot produce a required construct — mark the slice blocked on the vendor-refresh gate, continue elsewhere."
+      - "Verification fails twice."
+    receipt: null
+  - id: T998
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Boundary review before final audit: as-built vs T004 lock, receipts honesty, gate strength for the new constructs, v0 regression posture, misfire pre-check (taste-called context decision, single-file demo theater, scope creep)."
+    receipt: null
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Final audit: fresh-checkout documented command over the composition demo, cross-target receipts incl. composition scenarios, all v0 + poc suites green, misfires audited; decide full_outcome_complete."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "missing evidence"
+      - "next task if not complete"
+    receipt: null
+
+checks:
+  dirty_fingerprint: "clean at 8db86c1 (prep only)"
+  last_verification:
+    result: pass
+    task: null
+    commands:
+      - "carried from frameless-product-v0 T999: fresh clone green across all lanes at 860db55"
