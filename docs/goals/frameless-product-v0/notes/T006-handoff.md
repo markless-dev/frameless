@@ -22,3 +22,14 @@ critique tail), T010 (demo + fresh-checkout e2e), T009, T999.
 Process rules in force (orchestrator.md 2026-07-20): medium default everywhere,
 high needs effortJustification; <15-min units; 2-wide parallel for disjoint work;
 partial = re-cut smaller, never inflate.
+
+## Update (cutover, final state)
+
+showNode conditional-fallback fix APPLIED and browser-verified (solid-browser
+17/17). Three node tests remain red, all mechanical follow-through of the
+adjudication: (1) regenerate S2.jsx (freshness — output now omits the empty
+fallback attr); (2) update the element-less-arm rejection test: a COMPLETELY empty
+arm is sanctioned (adjudicated) — the test should assert rejection only for
+non-empty element-less arms; (3) the AST-boundary test needs its expectation
+refreshed for the same change. After those: full lanes, metamorphics+beta.9 batch,
+critique re-check. Estimated: one small unit + one 2-wide batch.

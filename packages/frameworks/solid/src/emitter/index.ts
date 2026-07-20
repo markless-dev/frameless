@@ -855,15 +855,18 @@ function showNode(
 	context: EmitContext,
 ): t.JSXElement {
 	const name = t.jsxIdentifier(api(context, 'Show').name);
-	const fallback = expressionFromNodes(node.arms[1]!.children, context);
+	const elseChildren = node.arms[1]!.children;
 	const children = expressionFromNodes(node.arms[0]!.children, context);
+	// Empty else arm (sanctioned shape, e.g. S2's `@else {}`): Show without a
+	// fallback attribute — the Solid idiom, not an empty-fragment fallback.
+	const attributes = [jsxAttribute('when', rewriteExpression(node.expression, context))];
+	if (elseChildren.length > 0) {
+		attributes.push(jsxAttribute('fallback', expressionFromNodes(elseChildren, context)));
+	}
 	return t.jsxElement(
 		t.jsxOpeningElement(
 			name,
-			[
-				jsxAttribute('when', rewriteExpression(node.expression, context)),
-				jsxAttribute('fallback', fallback),
-			],
+			attributes,
 			false,
 		),
 		t.jsxClosingElement(t.cloneNode(name)),
