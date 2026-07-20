@@ -73,7 +73,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-product-v0/"
     command: "npx goalbuddy board docs/goals/frameless-product-v0"
 
-active_task: T004
+active_task: T007
 
 tasks:
   - id: T001
@@ -135,7 +135,7 @@ tasks:
   - id: T004
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Scaffold the product monorepo per the ADJUDICATED T001 note (ownership split; convention corrections) and migrate the enriched IR into packages/compiler with contract tests green; NO cross-package contract work. Carries the critique's verbatim instruction block (note section 9)."
     allowed_files:
@@ -151,7 +151,14 @@ tasks:
       - "Declarations/type-preserving output/sourcemaps turn out required — reopen IR decision, do not hack."
       - "A markless convention cannot be mirrored without touching poc/."
       - "Verification fails twice."
-    receipt: null
+    receipt:
+      result: done
+      summary: "Monorepo scaffolded per adjudicated T001: root workspace (markless lanes + catalogs), vite-plus config with poc/** excluded from all lanes, MIT license, .ruler/AGENTS/CONTRIBUTING/README, vendor/ with sha256 receipts (found+corrected a checksum typo in poc/08's recorded receipt — erratum, poc file untouched), specs/framework/00-05 incl. ownership-split target contract, packages/compiler with poc/05 migrated (byte-identical /1 goldens, fail-closed v0 limits, agent/frameless.md playbook), stubs for oracle/targets/cli/demo. PM verification: frozen install, tsc, vp pack, 23/23 product, 18/18 poc/05, checksums OK, poc/ diff empty. Critique skipped: scaffold executed the already-critiqued adjudicated architecture verbatim; targets/oracle get their own critiques."
+      changed_files:
+        - "root scaffold + vendor/ + specs/ + packages/compiler (see merge t004)"
+      commands:
+        - cmd: "pnpm install --frozen-lockfile && pnpm check && pnpm build && pnpm test; poc/05 pnpm test; shasum -c"
+          status: pass
   - id: T005
     type: worker
     assignee: Worker
@@ -180,13 +187,20 @@ tasks:
   - id: T007
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
-    objective: "oracle package: migrate the poc/04 oracle + poc/08 browser-matrix harness into the product's reusable per-target verification infrastructure (vitest browser mode, adapter registry, verdict/receipt artifacts)."
-    allowed_files: []
-    verify: []
+    objective: "oracle package (RESEQUENCED before targets per T001 adjudication): migrate poc/04 oracle core + poc/08 harness into @frameless/oracle — Adapter/scenario/trace/verdict/receipt ownership per the ownership split; frameless-receipts/1 schema; browser project wired into root vite config; framework adapters STAY OUT (they move to target packages later); handwritten references kept as calibration fixtures; full mutant calibration green in headless Chromium under the product lane."
+    allowed_files:
+      - "packages/oracle/**"
+      - "root vite.config.ts (browser project + pack entry), root package.json (scripts)"
+    verify:
+      - "pnpm check; pnpm build; pnpm test (node lane: compare/serialize/verdict units)"
+      - "browser lane: calibration green (references equal, ALL mutant classes rejected) in headless Chromium"
+      - "cd poc/04-equivalence-oracle && pnpm test green; poc/ diff empty"
     stop_if:
       - "Need files outside allowed_files."
+      - "Browser listener denied in sandbox — complete code, hand browser lane to PM, do not fake."
+      - "Adapter/framework types would need to enter the oracle package — ownership-split violation, stop and report."
       - "Verification fails twice."
     receipt: null
   - id: T008
