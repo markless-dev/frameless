@@ -19,6 +19,7 @@ instead of duplicating its evidence. The ownership split keeps emitter, gate, ad
 dependencies, JSX transform, and version matrix here rather than in the compiler or analyzer.
 The validated primary matrix entry is React/React DOM 19.2.3 with asynchronous `act` and
 `IS_REACT_ACT_ENVIRONMENT` enabled by the browser harness.
+Analyzer input dispatch uses native input/textarea value setters so React's value tracker observes the synthetic `input` event.
 
 ## Enriched IR mapping
 
@@ -35,6 +36,12 @@ The validated primary matrix entry is React/React DOM 19.2.3 with asynchronous `
 | Leaf control event | T002 ruling 9 | `value`/`checked` with `onChange`, reading `event.target`; `onInput` is never emitted. |
 | Component/module shape | T002 ruling 10 | One named exported PascalCase function, destructured props, `.jsx`, automatic JSX runtime. |
 | Analyzer lifecycle | T002 ruling 11 | Awaited async `act` for mount, dispatch, flush, and unmount. |
+
+## Analyzer normalization inventory
+
+| Analyzer behavior | Consequence for this package |
+| --- | --- |
+| Text nodes with content strictly equal to `''` are omitted; whitespace-only text is retained | Solid conditional-insert placeholders and React's absent-null renders serialize identically, so cross-target Show/null-conditional comparison is possible; authored empty text is unobservable and equally normalized. |
 
 The gate uses ESLint 9 flat configuration, `eslint-plugin-react-hooks` 6 recommended,
 `eslint-plugin-react` recommended plus automatic-runtime rules, `jsx-no-leaked-render`, and

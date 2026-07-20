@@ -12,9 +12,10 @@ mutant-class data, verdicts, and deterministic `frameless-receipts/1` result ren
   `action:n:after` observation.
 - Observation order is mount, before dispatch, after awaited dispatch, one additional
   microtask, then bounded framework-owned quiescence. Sleeps are forbidden.
-- Normalization removes only the two framework hydration markers listed by
-  `FRAMEWORK_ATTRIBUTE_ALLOWLIST`. Classes, styles, other attributes, live form properties,
-  focus, selection, keyed identity, and callbacks remain observable.
+- Normalization omits only text nodes whose content is strictly empty (`''`) and the two framework
+  hydration markers listed by `FRAMEWORK_ATTRIBUTE_ALLOWLIST`. Whitespace-only text remains
+  semantic. Classes, styles, other attributes, live form properties, focus, selection, keyed
+  identity, and callbacks remain observable.
 - Receipt pair states are `equal`, `different`, and `blocked-by-upstream`. Blocked legs require
   finding IDs and never count as passes.
 

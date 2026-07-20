@@ -5,15 +5,22 @@ component and checking conventional framework packages. `@frameless/compiler` ex
 Markless semantic graph with a versioned enriched IR; React and Solid own their adapters and
 browser calibration independently.
 
-The reserved product flow remains:
+## Demo: one command, two frameworks, receipts
+
+From a fresh checkout:
 
 ```sh
-pnpm install
-pnpm e2e
+pnpm install && pnpm e2e
 ```
 
-`pnpm e2e` intentionally fails until the demo build task lands. It must never report a skeleton as
-a passing product run.
+The command compiles all three ui-kit TSRX components to React and Solid JSX, runs every portable
+scenario against each target in its own headless-Chromium project, compares the serialized analyzer
+traces, and validates `demos/ui-kit/receipts/frameless-receipts.json`. A passing receipt proves that
+the two emitted targets behaved equally for those scripted scenarios under the analyzer.
+
+This is not proof over arbitrary user interaction, unsupported component features, SSR, hydration,
+accessibility, or performance. Equivalence authority remains the two browser capture lanes and the
+analyzer comparison; generated source shape or a node-only test is not a substitute.
 
 ## Packages
 
@@ -23,8 +30,8 @@ a passing product run.
 - `packages/frameworks/react` — React 19 adapter, handwritten reference, and browser calibration.
 - `packages/frameworks/solid` — Solid 1.8.22 adapter, handwritten reference, and isolated browser
   calibration.
-- `packages/cli` — reserved build entry and internal framework registration.
-- `demos/ui-kit` — reserved bounded product demonstration.
+- `packages/cli` — build entry and internal framework registration.
+- `demos/ui-kit` — bounded cross-target product demonstration.
 
 The isolated `poc/**` packages remain read-only historical evidence and are not workspace members.
 Owning package READMEs carry operational contracts and limits.

@@ -85,7 +85,8 @@ export class Observer {
 	private semanticChildren(node: Node): SerializedNode[] {
 		return Array.from(node.childNodes)
 			.filter((child) =>
-				child.nodeType === Node.ELEMENT_NODE || child.nodeType === Node.TEXT_NODE,
+				child.nodeType === Node.ELEMENT_NODE ||
+				(child.nodeType === Node.TEXT_NODE && child.textContent !== ''),
 			)
 			.map((child) => this.serialize(child));
 	}

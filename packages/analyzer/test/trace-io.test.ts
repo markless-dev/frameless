@@ -54,9 +54,12 @@ function representativeTrace(): RunTrace {
 }
 
 describe('RunTrace transport', () => {
-	test('round-trips the complete trace with deep equality', () => {
+	test('round-trips an observation without empty text nodes with deep equality', () => {
 		const trace = representativeTrace();
-		expect(deserializeRunTrace(serializeRunTrace(trace))).toEqual(trace);
+		const serialized = serializeRunTrace(trace);
+		expect(serialized).not.toContain('"text": ""');
+		const roundTripped = deserializeRunTrace(serialized);
+		expect(roundTripped).toEqual(trace);
 	});
 
 	test('serializes deterministically independent of object key insertion order', () => {

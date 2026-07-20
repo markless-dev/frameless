@@ -60,6 +60,8 @@ const productConfig = defineConfig({
 			},
 			'packages/frameworks/react/vitest.config.ts',
 			'packages/frameworks/solid/vitest.config.ts',
+			'demos/ui-kit/test/react/vitest.config.ts',
+			'demos/ui-kit/test/solid/vitest.config.ts',
 		],
 	},
 	lint: { ignorePatterns: ['dist/**', 'node_modules/**', 'poc/**'] },

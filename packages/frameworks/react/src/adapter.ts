@@ -40,14 +40,21 @@ function dispatchDomAction(host: HTMLElement, action: Action): void {
 		return;
 	}
 	if (action.type === 'input') {
-		const input = target as HTMLInputElement;
-		input.value = action.value;
+		const input = target as HTMLInputElement | HTMLTextAreaElement;
+		const prototype =
+			input instanceof HTMLTextAreaElement
+				? HTMLTextAreaElement.prototype
+				: HTMLInputElement.prototype;
+		const setValue = Object.getOwnPropertyDescriptor(prototype, 'value')!.set!;
+		setValue.call(input, action.value);
 		if (action.selection) input.setSelectionRange(...action.selection);
 		input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: action.value }));
 		return;
 	}
 	if (action.type === 'check') {
 		const input = target as HTMLInputElement;
+		// Seed React's tracker with the inverse; native click activation then toggles the live
+		// property to the requested value before React observes the change event.
 		input.checked = !action.checked;
 		input.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
 		return;
