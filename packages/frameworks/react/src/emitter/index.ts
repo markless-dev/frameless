@@ -21,6 +21,7 @@ type StateBinding = EnrichedGraphBinding & { storage: 'state' | 'ref' };
 type EmitContext = {
 	readonly statesById: ReadonlyMap<string, StateBinding>;
 	readonly events: ReadonlyMap<string, EnrichedEventRecord>;
+	readonly currentNames: ReadonlyMap<string, string>;
 };
 type RenderedNode =
 	| t.JSXElement
@@ -40,6 +41,11 @@ function walk(value: unknown, visit: (record: Record<string, unknown>) => void):
 
 /** Fail closed at the public emitter boundary before constructing output AST. */
 export function validateEnrichedIr(ir: EnrichedIR): void {
+	const keys = (construct: string, value: object, allowed: readonly string[]): void => {
+		const unknown = Object.keys(value).filter((key) => !allowed.includes(key));
+		if (unknown.length) throw new Error(`${construct} has unknown semantic field: ${unknown[0]}`);
+	};
+	keys('EnrichedIR', ir, ['version', 'filename', 'imports', 'module', 'components', 'records']);
 	if (ir.version !== ENRICHED_IR_VERSION) {
 		throw new Error(`Expected ${ENRICHED_IR_VERSION}, received ${String(ir.version)}`);
 	}
@@ -47,6 +53,13 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		throw new Error('Fixture-family React emitter requires exactly one component per IR artifact');
 	}
 	const component = ir.components[0]!;
+	keys('EnrichedComponent', component, ['name', 'evaluation', 'props', 'locals', 'guards', 'template']);
+	keys('ComponentEvaluationPolicy', component.evaluation, ['ordinaryLocals', 'computedBindings']);
+	keys('ComponentProps', component.props, ['graphNodeId', 'entries']);
+	keys('EnrichedRecordTable', ir.records, ['bindings', 'aliases', 'events', 'stateReads', 'stateWrites']);
+	keys('ModuleRecord', ir.module, ['exports']);
+	for (const imported of ir.imports) keys('ModuleImport', imported, ['localName', 'source', 'kind', 'importedName']);
+	for (const exportedEntry of ir.module.exports) keys('ComponentExport', exportedEntry, ['kind', 'componentName', 'exportedName']);
 	if (
 		component.evaluation.ordinaryLocals !== 'once-per-instance' ||
 		component.evaluation.computedBindings !== 'reactive'
@@ -57,7 +70,9 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 	if (!exported || exported.kind !== 'named' || exported.exportedName !== component.name) {
 		throw new Error(`Fixture-family React emitter requires a same-name named export for ${component.name}`);
 	}
+	const bindingIds = new Set(ir.records.bindings.map((binding) => binding.id));
 	for (const entry of component.props.entries) {
+		keys('PropDestructuringEntry', entry, ['sourceName', 'localName', 'path', 'alias', 'graphNodeId', 'defaultValue']);
 		const alias = ir.records.aliases.find((record) => record.name === entry.localName);
 		if (
 			!alias ||
@@ -66,7 +81,159 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		) {
 			throw new Error(`Prop alias map does not resolve ${entry.localName}`);
 		}
+		if (!bindingIds.has(entry.graphNodeId)) throw new Error(`PropDestructuringEntry has dangling graph record id: ${entry.graphNodeId}`);
 	}
+	const eventIds = new Set(ir.records.events.map((event) => event.id));
+	if (bindingIds.size !== ir.records.bindings.length) throw new Error('EnrichedRecordTable has duplicate binding record ids');
+	if (eventIds.size !== ir.records.events.length) throw new Error('EnrichedRecordTable has duplicate event record ids');
+	if (!bindingIds.has(component.props.graphNodeId)) throw new Error(`ComponentProps has dangling graph record id: ${component.props.graphNodeId}`);
+	const hostIds = new Set<string>();
+	const validateRead = (read: Record<string, unknown>, construct: string, graphRead: boolean): void => {
+		keys(construct, read, graphRead ? ['graphNodeId', 'path', 'via'] : ['graphNodeId', 'path']);
+		if (typeof read.graphNodeId !== 'string' || !bindingIds.has(read.graphNodeId)) throw new Error(`${construct} has dangling graph record id: ${String(read.graphNodeId)}`);
+		if (!Array.isArray(read.path) || read.path.some((part) => typeof part !== 'string')) throw new Error(`${construct} has malformed path`);
+		if (graphRead && !['direct', 'alias', 'local', 'repeat-item'].includes(String(read.via))) throw new Error(`${construct} has unsupported read shape`);
+	};
+	const validateExpressionSite = (construct: string, site: { expression: SerializableAstNode; reads: readonly { graphNodeId: string }[] }): void => {
+		keys(construct, site, ['expression', 'reads']);
+		if (!site.expression || typeof site.expression.type !== 'string' || !Array.isArray(site.reads)) throw new Error(`${construct} has malformed expression site`);
+		for (const read of site.reads) validateRead(read as unknown as Record<string, unknown>, `${construct} GraphReadRef`, true);
+	};
+	const validateTemplate = (node: TemplateNode): void => {
+		if (!node || typeof node !== 'object' || !['host', 'text', 'dynamic-text', 'fragment', 'branch', 'keyed-repeat'].includes((node as TemplateNode).kind)) {
+			throw new Error(`TemplateNode has malformed construct: ${String((node as { kind?: unknown })?.kind)}`);
+		}
+		if (node.kind === 'text') {
+			keys('TemplateText', node, ['kind', 'id', 'value']);
+			if (typeof node.value !== 'string') throw new Error('TemplateText has malformed value');
+			return;
+		}
+		if (node.kind === 'dynamic-text') {
+			keys('TemplateDynamicText', node, ['kind', 'id', 'expression', 'reads']);
+			validateExpressionSite('TemplateDynamicText expression site', { expression: node.expression, reads: node.reads });
+			return;
+		}
+		if (node.kind === 'fragment') {
+			keys('TemplateFragment', node, ['kind', 'id', 'children']);
+			if (!Array.isArray(node.children)) throw new Error('TemplateFragment has malformed children');
+			node.children.forEach(validateTemplate);
+			return;
+		}
+		if (node.kind === 'host') {
+			keys('TemplateHost', node, ['kind', 'id', 'tag', 'staticAttributes', 'dynamicBindings', 'eventIds', 'children']);
+			if (!node.tag || !Array.isArray(node.children) || !Array.isArray(node.eventIds) || !Array.isArray(node.staticAttributes) || !Array.isArray(node.dynamicBindings)) throw new Error(`TemplateHost ${node.id} is malformed`);
+			hostIds.add(node.id);
+			for (const attribute of node.staticAttributes) keys('StaticAttribute', attribute, ['name', 'value']);
+			for (const binding of node.dynamicBindings) {
+				keys('DynamicBinding', binding, ['kind', 'name', 'expression', 'reads']);
+				if (!['attribute', 'property'].includes(binding.kind)) throw new Error(`DynamicBinding has unsupported kind: ${binding.kind}`);
+				validateExpressionSite('DynamicBinding expression site', { expression: binding.expression, reads: binding.reads });
+			}
+			for (const id of node.eventIds) if (!eventIds.has(id)) throw new Error(`TemplateHost ${node.id} has dangling event record id: ${id}`);
+			node.children.forEach(validateTemplate);
+			return;
+		}
+		if (node.kind === 'branch') {
+			keys('TemplateBranch', node, ['kind', 'id', 'expression', 'reads', 'arms']);
+			if (!Array.isArray(node.arms) || node.arms.length === 0) throw new Error(`TemplateBranch ${node.id} has malformed arms`);
+			validateExpressionSite('TemplateBranch expression site', { expression: node.expression, reads: node.reads });
+			for (const arm of node.arms) {
+				keys('TemplateBranchArm', arm, ['kind', 'test', 'children']);
+				if (!['then', 'else-if', 'else'].includes(arm.kind) || !Array.isArray(arm.children)) throw new Error(`TemplateBranchArm has malformed construct: ${String(arm.kind)}`);
+				if (arm.kind === 'else-if' && !arm.test) throw new Error(`TemplateBranchArm ${arm.kind} has malformed test`);
+				if (arm.test) validateExpressionSite('TemplateBranchArm test', arm.test);
+				arm.children.forEach(validateTemplate);
+			}
+			return;
+		}
+		keys('TemplateKeyedRepeat', node, ['kind', 'id', 'item', 'index', 'collection', 'key', 'row', 'empty']);
+		if (!node.item || !Array.isArray(node.row) || !Array.isArray(node.empty)) throw new Error(`TemplateKeyedRepeat ${node.id} is malformed`);
+		if (node.empty.length) throw new Error(`TemplateKeyedRepeat ${node.id} has unsupported non-empty empty arm`);
+		validateExpressionSite('TemplateKeyedRepeat collection', node.collection);
+		validateExpressionSite('TemplateKeyedRepeat key', node.key);
+		node.row.forEach(validateTemplate);
+		node.empty.forEach(validateTemplate);
+	};
+	for (const local of component.locals) {
+		keys('LocalDeclaration', local, ['order', 'declarationKind', 'names', 'pattern', 'initializer', 'reads', 'semanticRecordIds']);
+		for (const id of local.semanticRecordIds) if (!bindingIds.has(id)) throw new Error(`LocalDeclaration has dangling semantic record id: ${id}`);
+		for (const read of local.reads) validateRead(read as unknown as Record<string, unknown>, 'LocalDeclaration GraphReadRef', true);
+	}
+	for (const binding of ir.records.bindings) {
+		keys('EnrichedGraphBinding', binding, ['id', 'name', 'kind', 'declarationKind', 'writable', 'valueKind', 'async', 'asyncCapable', 'initialValue', 'initializer', 'computed', 'reads', 'writes']);
+		for (const read of binding.reads) validateRead(read as unknown as Record<string, unknown>, `EnrichedGraphBinding ${binding.id} StateReadRecord`, false);
+		if (binding.kind === 'computed') {
+			if (!binding.computed) throw new Error(`EnrichedGraphBinding ${binding.id} has malformed computed expression`);
+			validateExpressionSite(`EnrichedGraphBinding ${binding.id} computed`, binding.computed);
+		}
+	}
+	for (const alias of ir.records.aliases) {
+		keys('EnrichedAliasRecord', alias, ['id', 'name', 'target', 'graphNodeId', 'path', 'declarationKind', 'sourceSpan']);
+		if (!bindingIds.has(alias.graphNodeId)) throw new Error(`EnrichedAliasRecord ${alias.id} has dangling graph record id: ${alias.graphNodeId}`);
+	}
+	for (const guard of component.guards) {
+		keys('GuardReturn', guard, ['id', 'test', 'whenTrue']);
+		validateExpressionSite(`GuardReturn ${guard.id} test`, guard.test);
+		keys(`GuardResult ${guard.id}`, guard.whenTrue, guard.whenTrue.kind === 'null' ? ['kind'] : guard.whenTrue.kind === 'expression' ? ['kind', 'value'] : ['kind', 'children']);
+		if (guard.whenTrue.kind === 'expression') validateExpressionSite(`GuardResult ${guard.id} expression`, guard.whenTrue.value);
+		else if (guard.whenTrue.kind === 'template') guard.whenTrue.children.forEach(validateTemplate);
+		else if (guard.whenTrue.kind !== 'null') throw new Error(`GuardResult ${guard.id} has malformed construct`);
+	}
+	component.template.forEach(validateTemplate);
+	const validateWrite = (write: EventHandlerRecord['writes'][number], construct: string): void => {
+		keys(construct, write, ['graphNodeId', 'path', 'operation', 'assignmentOperator', 'updateOperator', 'prefix', 'method', 'value', 'arguments', 'sourceSpan', 'via']);
+		if (!bindingIds.has(write.graphNodeId)) throw new Error(`${construct} has dangling graph record id: ${write.graphNodeId}`);
+		const directAssign = write.operation === 'assign' && write.assignmentOperator === '=' && (write.via ?? 'direct') === 'direct' && write.path.length === 0 && write.value;
+		const directUpdate = write.operation === 'update' && ['++', '--'].includes(write.updateOperator ?? '') && (write.via ?? 'direct') === 'direct' && write.path.length === 0;
+		const aliasAssign = write.operation === 'assign' && write.assignmentOperator === '=' && write.via === 'handler-local-alias' && write.path[0] === '*' && write.path.length > 1 && write.value;
+		if (!directAssign && !directUpdate && !aliasAssign) throw new Error(`${construct} has unsupported write shape for ${write.graphNodeId}`);
+	};
+	for (const binding of ir.records.bindings) {
+		binding.writes.forEach((write) => validateWrite(write, `EnrichedGraphBinding ${binding.id} StateWriteRecord`));
+	}
+	for (const write of ir.records.stateWrites) validateWrite(write, 'StateWriteRecord');
+	for (const read of ir.records.stateReads) validateRead(read as unknown as Record<string, unknown>, 'StateReadRecord', false);
+	const validateSyncCondition = (condition: Record<string, unknown>, eventId: string): void => {
+		const type = condition.type;
+		if (type === 'and' || type === 'or') {
+			keys(`SyncPolicyCondition ${eventId}`, condition, ['type', 'conditions']);
+			if (!Array.isArray(condition.conditions) || condition.conditions.length === 0) throw new Error(`SyncPolicy ${eventId} has unsupported sync shape`);
+			condition.conditions.forEach((entry) => validateSyncCondition(entry as Record<string, unknown>, eventId));
+		} else if (type === 'not') {
+			keys(`SyncPolicyCondition ${eventId}`, condition, ['type', 'condition']);
+			if (!condition.condition || typeof condition.condition !== 'object') throw new Error(`SyncPolicy ${eventId} has unsupported sync shape`);
+			validateSyncCondition(condition.condition as Record<string, unknown>, eventId);
+		} else if (type === 'graph-truthy') {
+			keys(`SyncPolicyCondition ${eventId}`, condition, ['type', 'graphNodeId', 'path']);
+			if (typeof condition.graphNodeId !== 'string' || !bindingIds.has(condition.graphNodeId)) throw new Error(`SyncPolicyCondition ${eventId} has dangling graph record id: ${String(condition.graphNodeId)}`);
+			if (!Array.isArray(condition.path) || condition.path.some((part) => typeof part !== 'string')) throw new Error(`SyncPolicyCondition ${eventId} has malformed path`);
+		} else if (type === 'constant-truthy') keys(`SyncPolicyCondition ${eventId}`, condition, ['type', 'value']);
+		else if (type === 'event-equals') keys(`SyncPolicyCondition ${eventId}`, condition, ['type', 'field', 'value']);
+		else throw new Error(`SyncPolicy ${eventId} has unsupported sync shape`);
+	};
+	for (const event of ir.records.events) {
+		keys('EnrichedEventRecord', event, ['id', 'hostNodeId', 'eventName', 'syncPolicy', 'handlers']);
+		if (!event.handlers.length) throw new Error(`EnrichedEventRecord ${event.id} has malformed handlers`);
+		for (const handler of event.handlers) {
+			keys('EventHandlerRecord', handler, ['expression', 'reads', 'writes']);
+			validateExpressionSite(`EventHandlerRecord ${event.id} expression site`, { expression: handler.expression, reads: handler.reads });
+			handler.writes.forEach((write) => validateWrite(write, `EventHandlerRecord ${event.id}`));
+		}
+		if (event.syncPolicy) {
+			const policy = event.syncPolicy as unknown as Record<string, unknown>;
+			keys(`SyncPolicy ${event.id}`, policy, 'branches' in policy ? ['branches'] : ['when', 'actions']);
+			const branches = 'branches' in policy ? policy.branches : [policy];
+			if (!Array.isArray(branches) || branches.length === 0 || branches.some((branch) => !branch || typeof branch !== 'object' || !Array.isArray((branch as { actions?: unknown }).actions) || (branch as { actions: unknown[] }).actions.some((action) => !['preventDefault', 'stopPropagation'].includes(String(action))))) {
+				throw new Error(`SyncPolicy ${event.id} has unsupported sync shape`);
+			}
+			for (const branch of branches as Record<string, unknown>[]) {
+				keys(`SyncPolicyBranch ${event.id}`, branch, ['when', 'actions']);
+				if (!branch.when || typeof branch.when !== 'object') throw new Error(`SyncPolicy ${event.id} has unsupported sync shape`);
+				validateSyncCondition(branch.when as Record<string, unknown>, event.id);
+			}
+		}
+	}
+	for (const event of ir.records.events) if (!hostIds.has(event.hostNodeId)) throw new Error(`EnrichedEventRecord ${event.id} has dangling host record id: ${event.hostNodeId}`);
 	walk(ir, (record) => {
 		for (const field of LEGACY_STRING_FIELDS) {
 			if (field in record) throw new Error(`Legacy source-string field is forbidden: ${field}`);
@@ -90,8 +257,6 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 
 const setterName = (name: string): string => `set${name[0]!.toUpperCase()}${name.slice(1)}`;
 const nextName = (name: string): string => `next${name[0]!.toUpperCase()}${name.slice(1)}`;
-const currentName = (name: string): string =>
-	name === 'next' ? 'id' : `current${name[0]!.toUpperCase()}${name.slice(1)}`;
 const member = (object: t.Expression, property: string): t.MemberExpression =>
 	t.memberExpression(object, t.identifier(property));
 
@@ -474,6 +639,9 @@ function emitMutableHandler(
 				(path.parentPath.isAssignmentExpression() && path.key === 'left') ||
 				(path.parentPath.isUpdateExpression() && path.key === 'argument');
 			if (!path.isReferencedIdentifier() && !isWriteTarget) return;
+			// State identifiers are free in the serialized handler. A same-spelled
+			// handler local or nested callback binding is a different lexical value.
+			if (path.scope.getBinding(path.node.name)) return;
 			path.replaceWith(t.identifier(replacement));
 			if (path.parentPath.isObjectProperty() && t.isObjectProperty(path.parent) && path.parent.shorthand) {
 				path.parent.shorthand = false;
@@ -569,6 +737,7 @@ function replaceVersionReads(node: t.Node, versions: ReadonlyMap<string, string>
 		Identifier(path) {
 			const replacement = versions.get(path.node.name);
 			if (!replacement || replacement === path.node.name || !path.isReferencedIdentifier()) return;
+			if (path.scope.getBinding(path.node.name)) return;
 			path.replaceWith(t.identifier(replacement));
 			if (path.parentPath.isObjectProperty() && t.isObjectProperty(path.parent) && path.parent.shorthand) {
 				path.parent.shorthand = false;
@@ -580,6 +749,7 @@ function replaceVersionReads(node: t.Node, versions: ReadonlyMap<string, string>
 function toConstSsa(
 	fn: t.ArrowFunctionExpression,
 	writable: readonly StateBinding[],
+	currentNames: ReadonlyMap<string, string>,
 ): t.ArrowFunctionExpression {
 	if (!t.isBlockStatement(fn.body)) return fn;
 	const nextToState = new Map(writable.map((state) => [nextName(state.name), state]));
@@ -597,7 +767,8 @@ function toConstSsa(
 			const state = nextToState.get(variable);
 			if (state) {
 				if (state.storage === 'ref') {
-					const current = currentName(state.name);
+					const current = currentNames.get(state.id);
+					if (!current) throw new Error(`StateBinding ${state.id} has no generated snapshot identifier`);
 					output.push(
 						t.variableDeclaration('const', [
 							t.variableDeclarator(
@@ -792,7 +963,7 @@ function emitSingleHandler(
 		if (!state) throw new Error(`Write refers to unknown state: ${id}`);
 		return state;
 	});
-	const fn = toConstSsa(emitMutableHandler(handler, event, context), writable);
+	const fn = toConstSsa(emitMutableHandler(handler, event, context), writable, context.currentNames);
 	if (leafControl) replaceLeafCurrentTarget(fn);
 	return fn;
 }
@@ -959,9 +1130,23 @@ export function emit(ir: EnrichedIR): string {
 			storage: visible.has(binding.id) ? 'state' : 'ref',
 		});
 	}
+	const occupied = new Set<string>();
+	walk(ir, (record) => {
+		if (record.type === 'Identifier' && typeof record.name === 'string') occupied.add(record.name);
+	});
+	const currentNames = new Map<string, string>();
+	[...statesById.values()].forEach((state, index) => {
+		const base = `currentState${index + 1}`;
+		let candidate = base;
+		let suffix = 2;
+		while (occupied.has(candidate)) candidate = `${base}_${suffix++}`;
+		occupied.add(candidate);
+		currentNames.set(state.id, candidate);
+	});
 	const context: EmitContext = {
 		statesById,
 		events: new Map(ir.records.events.map((event) => [event.id, event])),
+		currentNames,
 	};
 	const hooks = new Set<string>();
 	const exported = componentFunction(ir, component, context, hooks);

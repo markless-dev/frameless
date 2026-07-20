@@ -16,13 +16,13 @@ export function KeyedTodo({
       const nextDraft = event.target.value;
       setDraft(nextDraft);
     }} /><button data-action="add" onClick={event => {
-      const id = next.current;
+      const currentState2 = next.current;
       const item = {
-        id: `c${id}`,
+        id: `c${currentState2}`,
         title: draft,
         done: false
       };
-      next.current = id + 1;
+      next.current = currentState2 + 1;
       const nextTodos = todos.concat(item);
       setTodos(nextTodos);
       const nextDraft = "";

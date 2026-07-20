@@ -29,7 +29,6 @@ export type GateResult = {
 };
 
 export const REACT_GATE_POLICIES = [
-	{ id: 'eslint-recommended', dossierRef: 'T002 ruling 10' },
 	{ id: 'eslint-directive', dossierRef: 'T002 ruling 10' },
 	{ id: 'undisclosed-import', dossierRef: 'T002 ruling 10' },
 	{ id: 'react-import-allowlist', dossierRef: 'T002 ruling 2' },
@@ -37,6 +36,7 @@ export const REACT_GATE_POLICIES = [
 	{ id: 'component-shape', dossierRef: 'T002 ruling 10' },
 	{ id: 'controlled-input', dossierRef: 'T002 ruling 9' },
 	{ id: 'on-input', dossierRef: 'T002 ruling 9' },
+	{ id: 'leaf-event-target', dossierRef: 'T002 ruling 9' },
 	{ id: 'const-only-handlers', dossierRef: 'T002 ruling 5' },
 	{ id: 'one-call-per-setter', dossierRef: 'T002 ruling 5' },
 	{ id: 'ref-guard-shape', dossierRef: 'T002 ruling 3' },
@@ -56,6 +56,8 @@ const POLICIES = new Map<string, GatePolicy>(
 const traverse = ((traverseModule as any).default ?? traverseModule) as typeof traverseModule;
 const EFFECT_HOOKS = new Set(['useEffect', 'useLayoutEffect', 'useInsertionEffect']);
 const REACT_IMPORT_ALLOWLIST = new Set(['useState', 'useRef']);
+const isPrimitiveStateLiteral = (node: t.Node | null | undefined): boolean =>
+	Boolean(node && (t.isStringLiteral(node) || t.isNumericLiteral(node) || t.isBooleanLiteral(node) || t.isNullLiteral(node)));
 
 function dossierRefFor(policy: string): DossierRef {
 	const direct = POLICIES.get(policy)?.dossierRef;
@@ -382,48 +384,41 @@ function customPolicies(source: string, file: string): GateViolation[] {
 			const handler = path.get('value.expression') as NodePath;
 			if (!handler.isArrowFunctionExpression() && !handler.isFunctionExpression()) return;
 			const setterCalls = new Map<unknown, number>();
-			handler.traverse({
-				Function(nested) {
-					if (nested.node !== handler.node) nested.skip();
-				},
-				VariableDeclaration(declaration) {
-					if (declaration.node.kind !== 'const') {
-						violations.push(
-							violation(
-								file,
-								'const-only-handlers',
-								'JSX attribute handlers may declare only const bindings',
-								declaration.node,
-							),
-						);
-					}
-				},
-				CallExpression(call) {
-					const resolved = resolveCallable(call.get('callee') as NodePath);
-					if (resolved?.kind === 'setter') {
-						setterCalls.set(resolved.binding, (setterCalls.get(resolved.binding) ?? 0) + 1);
-					}
-					if (
-						t.isMemberExpression(call.node.callee) &&
-						propertyName(call.node.callee) === 'preventDefault'
-					) {
-						const eventParam = handler.node.params[0];
-						if (
-							!t.isIdentifier(eventParam) ||
-							!t.isIdentifier(call.node.callee.object, { name: eventParam.name })
-						) {
-							violations.push(
-								violation(
-									file,
-									'prevent-default-event',
-									'preventDefault must be called on the handler event parameter',
-									call.node,
-								),
-							);
+			const invokedHelpers = new Set<t.Node>();
+			const inspectHandlerExecution = (functionPath: NodePath<t.Function>): void => {
+				if (invokedHelpers.has(functionPath.node)) return;
+				invokedHelpers.add(functionPath.node);
+				functionPath.traverse({
+					Function(nested) { nested.skip(); },
+					VariableDeclaration(declaration) {
+						if (declaration.node.kind !== 'const') {
+							violations.push(violation(file, 'const-only-handlers', 'JSX attribute handlers may declare only const bindings', declaration.node));
 						}
-					}
-				},
-			});
+					},
+					MemberExpression(memberPath) {
+						const opening = path.findParent((parent) => parent.isJSXOpeningElement());
+						const leaf = opening?.isJSXOpeningElement() && t.isJSXIdentifier(opening.node.name) && ['input', 'textarea', 'select'].includes(opening.node.name.name);
+						if (leaf && propertyName(memberPath.node) === 'currentTarget') {
+							violations.push(violation(file, 'leaf-event-target', 'Leaf controls must read event.target, not event.currentTarget', memberPath.node));
+						}
+					},
+					CallExpression(call) {
+						const resolved = resolveCallable(call.get('callee') as NodePath);
+						if (resolved?.kind === 'setter') setterCalls.set(resolved.binding, (setterCalls.get(resolved.binding) ?? 0) + 1);
+						else if (resolved?.kind === 'helper') inspectHandlerExecution(resolved.path);
+						if (t.isMemberExpression(call.node.callee) && propertyName(call.node.callee) === 'preventDefault') {
+							const eventParam = handler.node.params[0];
+							const object = call.get('callee.object') as NodePath;
+							const parameterBinding = t.isIdentifier(eventParam) ? handler.scope.getBinding(eventParam.name) : null;
+							const objectBinding = object.isIdentifier() ? object.scope.getBinding(object.node.name) : null;
+							if (!parameterBinding || objectBinding !== parameterBinding) {
+								violations.push(violation(file, 'prevent-default-event', 'preventDefault must be called on the handler event parameter', call.node));
+							}
+						}
+					},
+				});
+			};
+			inspectHandlerExecution(handler as NodePath<t.Function>);
 			for (const count of setterCalls.values()) {
 				if (count > 1) {
 					violations.push(
@@ -518,7 +513,7 @@ function customPolicies(source: string, file: string): GateViolation[] {
 							const initial = call.node.arguments[0];
 							if (
 								initial &&
-								!t.isLiteral(initial) &&
+								!isPrimitiveStateLiteral(initial) &&
 								!t.isArrowFunctionExpression(initial)
 							) {
 								violations.push(
@@ -529,6 +524,12 @@ function customPolicies(source: string, file: string): GateViolation[] {
 										call.node,
 									),
 								);
+							}
+							if (t.isArrowFunctionExpression(initial)) {
+								const returned = t.isBlockStatement(initial.body)
+									? initial.body.body.find((entry): entry is t.ReturnStatement => t.isReturnStatement(entry))?.argument
+									: initial.body;
+								if (isPrimitiveStateLiteral(returned)) violations.push(violation(file, 'use-state-initializer', 'Literal useState initializers must not use a lazy wrapper', initial));
 							}
 						}
 					},
@@ -584,13 +585,21 @@ function customPolicies(source: string, file: string): GateViolation[] {
 			const memberPath = reference.parentPath;
 			const comparison = memberPath.parentPath;
 			if (!comparison) return false;
-			return (
+			const guard = comparison.parentPath;
+			if (!guard || !(
 				memberPath.isMemberExpression() &&
 				propertyName(memberPath.node) === 'current' &&
 				comparison.isBinaryExpression({ operator: '===' }) &&
 				t.isNullLiteral(comparison.node.right) &&
-				comparison.parentPath.isIfStatement({ test: comparison.node })
-			);
+				guard.isIfStatement({ test: comparison.node })
+			)) return false;
+			let flips = false;
+			guard.get('consequent').traverse({
+				AssignmentExpression(assignment) {
+					if (t.isMemberExpression(assignment.node.left) && t.isIdentifier(assignment.node.left.object, { name: ref.name }) && propertyName(assignment.node.left) === 'current' && !t.isNullLiteral(assignment.node.right)) flips = true;
+				},
+			});
+			return flips;
 		});
 		if (!guarded) {
 			violations.push(

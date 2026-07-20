@@ -9,8 +9,16 @@
 		"test": "vitest run --config vitest.node.config.ts",
 		"test:browser": "vitest run --config vitest.config.ts --project react-browser"
 	},
-	"exports": { ".": "./src/index.ts" },
-	"publishConfig": { "exports": { ".": { "default": "./dist/index.js" } } },
+	"exports": {
+		".": "./src/index.ts",
+		"./adapter": "./src/adapter.ts"
+	},
+	"publishConfig": {
+		"exports": {
+			".": { "default": "./dist/index.js" },
+			"./adapter": { "default": "./dist/adapter.js" }
+		}
+	},
 	"dependencies": {
 		"@frameless/analyzer": "workspace:*",
 		"@frameless/compiler": "workspace:*",
