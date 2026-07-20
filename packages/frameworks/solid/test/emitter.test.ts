@@ -1,0 +1,240 @@
+import { readFile } from 'node:fs/promises';
+import type { EnrichedIR } from '@frameless/compiler';
+import { resolve } from 'pathe';
+import { describe, expect, test } from 'vitest';
+import { emit, validateEnrichedIr } from '../src/emitter/index.ts';
+
+const root = resolve(import.meta.dirname, '..');
+const goldenRoot = resolve(root, '../../compiler/test/goldens');
+const fixtures = [
+	['S1.jsx', 's1-render-once.json'],
+	['S2.jsx', 's2-keyed-todo.json'],
+	['S3.jsx', 's3-event-form.json'],
+] as const;
+
+async function golden(name: string): Promise<EnrichedIR> {
+	return JSON.parse(await readFile(resolve(goldenRoot, name), 'utf8')) as EnrichedIR;
+}
+
+function clone<T>(value: T): T {
+	return structuredClone(value);
+}
+function visit(value: unknown, callback: (record: Record<string, any>) => void): void {
+	if (!value || typeof value !== 'object') return;
+	callback(value as Record<string, any>);
+	for (const child of Object.values(value)) {
+		if (Array.isArray(child)) child.forEach((entry) => visit(entry, callback));
+		else visit(child, callback);
+	}
+}
+function findKind(value: unknown, kind: string): Record<string, any> | null {
+	let found: Record<string, any> | null = null;
+	visit(value, (record) => {
+		if (!found && record.kind === kind) found = record;
+	});
+	return found;
+}
+
+describe('Solid structural emitter', () => {
+	for (const [output, goldenName] of fixtures) {
+		test(`${output} is fresh from the compiler EnrichedIR golden`, async () => {
+			const ir = await golden(goldenName);
+			validateEnrichedIr(ir);
+			expect(await readFile(resolve(root, 'generated', output), 'utf8')).toBe(emit(ir));
+		});
+	}
+
+	test('audits every T003 lowering delta in the actual generated files', async () => {
+		const [s1, s2, s3] = await Promise.all(
+			['S1.jsx', 'S2.jsx', 'S3.jsx'].map((file) =>
+				readFile(resolve(root, 'generated', file), 'utf8'),
+			),
+		);
+		expect(s1).toContain('untrack(() => props.onTrace');
+		expect(s1).toContain('const derived = () =>');
+		expect(s1).toContain('<Show when=');
+		expect(s2).toContain('createStore(untrack(() => props.seed.map');
+		expect(s2.match(/setTodos\(produce\(/g)).toHaveLength(2);
+		expect(s2.match(/setTodos\(reconcile\(/g)).toHaveLength(4);
+		expect(s2).toContain('key: "id"');
+		expect(s2).toContain('value={todo.title} attr:value={todo.title}');
+		expect(s2).not.toContain('todos() &&');
+		expect(s3).toContain('value={text()} attr:value={text()} onInput=');
+		expect(s3).toMatch(/setWrites\(1\);\s*setWrites\(2\);/);
+		expect(`${s1}\n${s2}\n${s3}`).not.toMatch(/createMemo|className=|htmlFor=/);
+	});
+
+	test('preserves authored multi-write order instead of applying React SSA collapse', async () => {
+		const source = emit(await golden('s3-event-form.json'));
+		const first = source.indexOf('setWrites(1)');
+		const second = source.indexOf('setWrites(2)');
+		const callback = source.indexOf('props.onTrace("submit"');
+		expect(first).toBeGreaterThan(-1);
+		expect(second).toBeGreaterThan(first);
+		expect(callback).toBeGreaterThan(second);
+	});
+
+	test('has an AST-only boundary without fixture signatures or source recovery', async () => {
+		const source = await readFile(resolve(root, 'src/emitter/index.ts'), 'utf8');
+		const regenerate = await readFile(resolve(root, 'scripts/regenerate.ts'), 'utf8');
+		expect(source).not.toMatch(/from ['"](?:@babel\/parser|@markless\/|@tsrx\/)/);
+		expect(source).not.toMatch(
+			/RenderOnce|KeyedTodo|EventForm|S1|S2|S3|FIXTURE_DIGEST|createHash/,
+		);
+		expect(regenerate).not.toContain('.tsrx');
+		expect(regenerate).toContain('../../compiler/test/goldens');
+	});
+
+	describe('metamorphic regeneration', () => {
+		test('an added static attribute changes only that host attribute', async () => {
+			const ir = clone(await golden('s1-render-once.json'));
+			const host = ir.components[0]!.template[0];
+			if (host?.kind !== 'host') throw new Error('expected host root');
+			(host.staticAttributes as any[]).push({ name: 'data-metamorphic', value: 'yes' });
+			const changed = emit(ir);
+			expect(changed.replace(' data-metamorphic="yes"', '')).toBe(
+				emit(await golden('s1-render-once.json')),
+			);
+		});
+
+		test('scrambled local storage order follows semantic order', async () => {
+			const ir = clone(await golden('s1-render-once.json'));
+			(ir.components[0]!.locals as any[]).reverse();
+			expect(emit(ir)).toBe(emit(await golden('s1-render-once.json')));
+		});
+
+		test('component, signal, store, row, key, and ordinary-local renames are data-driven', async () => {
+			const s1 = clone(await golden('s1-render-once.json')) as any;
+			const s1Renames = new Map([
+				['RenderOnce', 'ChangedView'],
+				['count', 'total'],
+				['prefix', 'caption'],
+			]);
+			visit(s1, (record) => {
+				if (typeof record.name === 'string' && s1Renames.has(record.name))
+					record.name = s1Renames.get(record.name);
+				if (record.type === 'Identifier' && s1Renames.has(record.name))
+					record.name = s1Renames.get(record.name);
+			});
+			s1.components[0].locals.forEach((local: any) => {
+				local.names = local.names.map((name: string) => s1Renames.get(name) ?? name);
+			});
+			s1.components[0].name = 'ChangedView';
+			s1.module.exports[0].componentName = 'ChangedView';
+			s1.module.exports[0].exportedName = 'ChangedView';
+			const changedS1 = emit(s1);
+			expect(changedS1).toContain('function ChangedView');
+			expect(changedS1).toContain('const [total, setTotal]');
+			expect(changedS1).toContain('const caption = untrack');
+
+			const s2 = clone(await golden('s2-keyed-todo.json')) as any;
+			visit(s2, (record) => {
+				if (record.type === 'Identifier' && record.name === 'todos')
+					record.name = 'records';
+				if (record.type === 'Identifier' && record.name === 'todo') record.name = 'entry';
+				if (record.name === 'todos') record.name = 'records';
+			});
+			s2.components[0].locals.find((local: any) => local.names.includes('todos')).names = [
+				'records',
+			];
+			const repeat = findKind(s2.components[0].template, 'keyed-repeat')!;
+			repeat.item = 'entry';
+			repeat.key.expression.property.name = 'identity';
+			repeat.key.reads[0].path = ['identity'];
+			const changedS2 = emit(s2);
+			expect(changedS2).toContain('const [records, setRecords] = createStore');
+			expect(changedS2).toContain('<For each={records}>{entry =>');
+			expect(changedS2).toContain('key: "identity"');
+		});
+
+		test('lexical shadowing and generated import collisions remain binding-safe', async () => {
+			const shadowed = clone(await golden('s1-render-once.json')) as any;
+			shadowed.records.events[0].handlers[0].expression.body.body.unshift({
+				type: 'ExpressionStatement',
+				expression: {
+					type: 'CallExpression',
+					optional: false,
+					callee: {
+						type: 'ArrowFunctionExpression',
+						async: false,
+						expression: true,
+						params: [{ type: 'Identifier', name: 'count' }],
+						body: { type: 'Identifier', name: 'count' },
+					},
+					arguments: [{ type: 'Literal', value: 7, raw: '7' }],
+				},
+			});
+			expect(emit(shadowed)).toContain('(count => count)(7)');
+
+			const collided = clone(await golden('s1-render-once.json')) as any;
+			visit(collided, (record) => {
+				if (record.type === 'Identifier' && record.name === 'count')
+					record.name = 'createSignal';
+				if (record.name === 'count') record.name = 'createSignal';
+			});
+			collided.components[0].locals.find((local: any) =>
+				local.names.includes('count'),
+			).names = ['createSignal'];
+			const source = emit(collided);
+			expect(source).toContain('createSignal as createSignal2');
+			expect(source).toContain('const [createSignal, setCreateSignal] = createSignal2(1)');
+		});
+	});
+
+	describe('fail-closed validation', () => {
+		test.each([
+			[
+				'unknown field',
+				(ir: any) => {
+					ir.records.bindings[0].futureSemantic = true;
+				},
+				/EnrichedGraphBinding has unknown semantic field/,
+			],
+			[
+				'dangling id',
+				(ir: any) => {
+					ir.components[0].locals[1].semanticRecordIds = ['state:missing'];
+				},
+				/LocalDeclaration has dangling semantic record id/,
+			],
+			[
+				'malformed node',
+				(ir: any) => {
+					ir.components[0].template[0].kind = 'portal';
+				},
+				/TemplateNode has malformed construct/,
+			],
+			[
+				'unsupported write',
+				(ir: any) => {
+					ir.records.events[0].handlers[0].writes[0].operation = 'delete';
+				},
+				/unsupported write shape/,
+			],
+			[
+				'legacy string',
+				(ir: any) => {
+					ir.records.events[0].handlers[0].handlerSources = ['ignored'];
+				},
+				/Legacy source-string field is forbidden/,
+			],
+		])('rejects %s', async (_name, mutate, message) => {
+			const ir = clone(await golden('s1-render-once.json')) as any;
+			mutate(ir);
+			expect(() => validateEnrichedIr(ir)).toThrow(message);
+		});
+
+		test('rejects dangling and mutated keyed semantics', async () => {
+			const dangling = clone(await golden('s2-keyed-todo.json')) as any;
+			findKind(dangling.components[0].template, 'keyed-repeat')!.key.reads = [];
+			expect(() => validateEnrichedIr(dangling)).toThrow(/unconsumed key semantics/);
+			const mutated = clone(await golden('s2-keyed-todo.json')) as any;
+			const write = mutated.records.events
+				.flatMap((event: any) => event.handlers)
+				.flatMap((handler: any) => handler.writes)
+				.find((entry: any) => entry.via === 'handler-local-alias');
+			write.path = ['*', 'id'];
+			expect(() => validateEnrichedIr(mutated)).toThrow(/unsupported identity mutation/);
+		});
+	});
+});
