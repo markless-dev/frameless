@@ -36,6 +36,7 @@ goal:
       - "Consume markless via pinned vendored artifacts (poc/vendor pattern) until the fixing board closes; then re-pack and re-verify."
       - "Composition surface (children/slots, shared->context, refs) is the NEXT tranche, designed per the recorded discussion; v0 covers the proven fixture-family surface."
       - "Migrate proven POC code; do not rewrite from scratch. POC packages stay intact as evidence."
+      - "2026-07-19 user constraint: per-target IDIOM DOSSIERS — before each target package, a corpus-evidenced research pass (grep MCP if connected, framework docs, and the local framework repos under /Users/jacksm5pro/dev/open-source e.g. solid/, qwik/) records the most idiomatic pattern per IR construct (e.g. derived state: Solid createMemo; React useMemo-vs-derived-in-render decided with evidence and thresholds), each decision with citations; the emitter implements the dossier and the conventionality gate enforces it. Verification is layered: (1) IR/compiler contract tests, (2) emitter golden/freshness tests, (3) conventionality gate (build+lint+AST policies from the dossier), (4) browser-mode runtime equivalence via the oracle, (5) fresh-checkout end-to-end."
       - "2026-07-19 user constraint: monorepo conventions MUST match the markless repo (it will be pushed to the markless GitHub org): pnpm workspace layout under packages/, package.json/tsconfig shapes, test lanes and doctor-script pattern, specs/ discipline, CONTRIBUTING package map, agent playbook file pattern (agent/<name>.md), and tooling choices (vitest, vite/rolldown) mirrored from /Users/jacksm5pro/dev/open-source/markless — read-only reference."
 
 rules:
@@ -94,6 +95,34 @@ tasks:
       - "notes/T001-architecture.md: locked decisions + Target interface spec + migration map + Worker package definitions"
     receipt: null
   - id: T002
+    type: scout
+    assignee: Scout
+    status: queued
+    reasoning_hint: medium
+    objective: "React 19 idiom dossier: corpus-evidenced pattern decisions per IR construct (state, derived/memo thresholds, refs-as-props, events, keyed lists, conditionals, once-per-instance setup) using grep MCP if connected, React docs, and local corpora; every decision cited; output feeds the targets/react emitter and gate."
+    inputs:
+      - "poc/06-emit-react mapping table + gate (current decisions to confirm or overturn)"
+      - "React 19 docs; grep MCP / local corpora"
+    constraints:
+      - "Read-only. Every pattern decision carries evidence (corpus frequency, docs citation, or maintainer guidance) — no taste-only calls."
+    expected_output:
+      - "notes/T002-react-idioms.md: construct -> chosen idiom -> evidence -> gate rule"
+    receipt: null
+  - id: T003
+    type: scout
+    assignee: Scout
+    status: queued
+    reasoning_hint: medium
+    objective: "Solid idiom dossier: same protocol for Solid (createMemo for derived, store-vs-signal thresholds, For/Show usage, props access patterns, v2-forward idioms), confirming or overturning poc/07 decisions and addressing the row-reactivity critique findings with evidenced patterns."
+    inputs:
+      - "poc/07-emit-solid mapping table + generality-boundary docs"
+      - "Solid docs (1.x + 2.0 experimental); grep MCP / local corpora incl. /Users/jacksm5pro/dev/open-source/solid"
+    constraints:
+      - "Read-only. Every pattern decision carries evidence."
+    expected_output:
+      - "notes/T003-solid-idioms.md: construct -> chosen idiom -> evidence -> gate rule"
+    receipt: null
+  - id: T004
     type: worker
     assignee: Worker
     status: queued
@@ -106,12 +135,12 @@ tasks:
       - "T001 architecture ambiguous on a needed decision."
       - "Verification fails twice."
     receipt: null
-  - id: T003
+  - id: T005
     type: worker
     assignee: Worker
     status: queued
     reasoning_hint: medium
-    objective: "targets/react: migrate the poc/06 emitter + hardened gate into the Target interface; execute the React 19 bump per T001 plan; suites green."
+    objective: "targets/react: migrate the poc/06 emitter + hardened gate into the Target interface, implement the T002 idiom dossier (emitter emits the dossier patterns; gate enforces them), execute the React 19 bump per T001 plan; all layers green."
     allowed_files: []
     verify: []
     stop_if:
@@ -119,19 +148,19 @@ tasks:
       - "React 19 bump breaks oracle/adapter semantics in a way T001 did not anticipate — report, do not improvise."
       - "Verification fails twice."
     receipt: null
-  - id: T004
+  - id: T006
     type: worker
     assignee: Worker
     status: queued
     reasoning_hint: medium
-    objective: "targets/solid: migrate the poc/07 structural emitter with its fail-closed soundness and documented generality boundary into the Target interface; suites green."
+    objective: "targets/solid: migrate the poc/07 structural emitter (fail-closed soundness + generality boundary docs) into the Target interface and implement the T003 idiom dossier (incl. createMemo for derived); all layers green."
     allowed_files: []
     verify: []
     stop_if:
       - "Need files outside allowed_files."
       - "Verification fails twice."
     receipt: null
-  - id: T005
+  - id: T007
     type: worker
     assignee: Worker
     status: queued
@@ -143,7 +172,7 @@ tasks:
       - "Need files outside allowed_files."
       - "Verification fails twice."
     receipt: null
-  - id: T006
+  - id: T008
     type: worker
     assignee: Worker
     status: queued
@@ -156,7 +185,7 @@ tasks:
       - "Demo library needs constructs outside the proven surface — trim the demo, do not extend the surface in this tranche."
       - "Verification fails twice."
     receipt: null
-  - id: T007
+  - id: T009
     type: judge
     assignee: Judge
     status: queued

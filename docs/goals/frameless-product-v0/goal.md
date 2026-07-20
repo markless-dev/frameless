@@ -96,3 +96,14 @@ package.json/tsconfig shapes, test lanes + doctor-script pattern, `specs/` as th
 normative contract home, CONTRIBUTING package map, and the `agent/<name>.md`
 playbook pattern — derived by T001 from the read-only markless checkout, not
 invented. Divergences require a recorded rationale in T001's architecture note.
+
+## Idiom-dossier + layered-verification constraint (2026-07-19, user)
+
+Each target package is preceded by a corpus-evidenced **idiom dossier** (grep MCP if
+connected, framework docs, local framework repos as corpora): the chosen idiom per IR
+construct with citations — e.g. derived state maps to Solid `createMemo`; React's
+`useMemo`-vs-derived-in-render is decided with evidence and thresholds, not taste.
+The emitter implements the dossier; the conventionality gate enforces it. Verification
+is explicitly layered: (1) IR/compiler contract tests, (2) emitter golden/freshness
+tests, (3) conventionality gate from the dossier, (4) browser-mode runtime
+equivalence via the oracle, (5) fresh-checkout end-to-end.
