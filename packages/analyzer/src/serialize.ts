@@ -94,7 +94,7 @@ export class Observer {
 		const parts: number[] = [];
 		let node: Node = element;
 		while (node !== host && node.parentNode) {
-			parts.unshift(Array.from(node.parentNode.childNodes).indexOf(node));
+			parts.unshift(Array.from(node.parentNode.childNodes).indexOf(node as ChildNode));
 			node = node.parentNode;
 		}
 		return parts.join('.');

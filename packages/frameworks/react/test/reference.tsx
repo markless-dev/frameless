@@ -200,10 +200,17 @@ export function makeReactS3(mutation?: S3Mutation) {
 							onTrace('bubble', { source: 'synthetic' }, event.nativeEvent);
 						}
 						if (mutation === 'timing') {
+							// Timing-channel contract under awaited act (recorded finding): act
+							// internally crosses macrotask boundaries, so microtask AND 0ms-timer
+							// delays can land before the after-dispatch observation. The calibrated
+							// sensitivity is "write lands beyond the immediate post-dispatch
+							// observation window": this delayed write shows stale DOM at the
+							// after/microtask phases (vs the clean run) and converges by
+							// quiescence — divergence at the early phases is the detection.
 							const output = event.currentTarget.form!.querySelector('output')!;
-							queueMicrotask(() => {
+							setTimeout(() => {
 								output.textContent = '2';
-							});
+							}, 30);
 						} else {
 							setWrites(1);
 							setWrites(2);
