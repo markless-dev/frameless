@@ -31,6 +31,9 @@ importers:
 
   .:
     devDependencies:
+      '@frameless/analyzer':
+        specifier: workspace:*
+        version: link:packages/analyzer
       '@types/node':
         specifier: 24.12.2
         version: 24.12.2
@@ -47,7 +50,35 @@ importers:
         specifier: 4.1.5
         version: 4.1.5(@types/node@24.12.2)(@vitest/browser-playwright@4.1.5)(vite@8.0.16(@types/node@24.12.2))
 
-  demos/ui-kit: {}
+  demos/ui-kit:
+    devDependencies:
+      '@frameless/analyzer':
+        specifier: workspace:*
+        version: link:../../packages/analyzer
+      '@frameless/react':
+        specifier: workspace:*
+        version: link:../../packages/frameworks/react
+      '@frameless/solid':
+        specifier: workspace:*
+        version: link:../../packages/frameworks/solid
+      '@vitest/browser-playwright':
+        specifier: 4.1.5
+        version: 4.1.5(playwright@1.58.2)(vite@8.0.16(@types/node@24.12.2))(vitest@4.1.5)
+      react:
+        specifier: 19.2.3
+        version: 19.2.3
+      react-dom:
+        specifier: 19.2.3
+        version: 19.2.3(react@19.2.3)
+      solid-js:
+        specifier: 1.8.22
+        version: 1.8.22
+      vite-plugin-solid:
+        specifier: 2.11.10
+        version: 2.11.10(solid-js@1.8.22)(vite@8.0.16(@types/node@24.12.2))
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.5(@types/node@24.12.2)(@vitest/browser-playwright@4.1.5)(vite@8.0.16(@types/node@24.12.2))
 
   packages/analyzer:
     dependencies:
@@ -66,6 +97,9 @@ importers:
       '@frameless/solid':
         specifier: workspace:*
         version: link:../frameworks/solid
+      pathe:
+        specifier: 'catalog:'
+        version: 2.0.3
 
   packages/compiler:
     dependencies:

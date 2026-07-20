@@ -5,5 +5,16 @@
 	"type": "module",
 	"scripts": {
 		"build": "node --experimental-transform-types ../../packages/cli/src/node.ts build src/PricingCard.tsrx --target react --target solid --out-dir dist/PricingCard && node --experimental-transform-types ../../packages/cli/src/node.ts build src/TaskList.tsrx --target react --target solid --out-dir dist/TaskList && node --experimental-transform-types ../../packages/cli/src/node.ts build src/NewsletterForm.tsrx --target react --target solid --out-dir dist/NewsletterForm"
+	},
+	"devDependencies": {
+		"@frameless/analyzer": "workspace:*",
+		"@frameless/react": "workspace:*",
+		"@frameless/solid": "workspace:*",
+		"@vitest/browser-playwright": "4.1.5",
+		"react": "19.2.3",
+		"react-dom": "19.2.3",
+		"solid-js": "1.8.22",
+		"vite-plugin-solid": "2.11.10",
+		"vitest": "catalog:"
 	}
 }

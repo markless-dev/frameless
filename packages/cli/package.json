@@ -22,6 +22,7 @@
 	"dependencies": {
 		"@frameless/compiler": "workspace:*",
 		"@frameless/react": "workspace:*",
-		"@frameless/solid": "workspace:*"
+		"@frameless/solid": "workspace:*",
+		"pathe": "catalog:"
 	}
 }
