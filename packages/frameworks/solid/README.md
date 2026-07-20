@@ -104,7 +104,7 @@ proxy over discovered generated files, not a proof for arbitrary source.
 
 ## Verify
 
-The checked-in suite inventory is 47 node tests (16 emitter/freshness, 28 gate, 2 adapter
+The checked-in suite inventory is 52 node tests (21 emitter/freshness, 28 gate, 2 adapter
 entry/import-graph, 1 size) and 17 browser tests (12 handwritten calibration including eight
 mutants, plus 5 emitted/reference and store-row smoke tests). These are source counts, not a claim
 that a particular environment executed them.
