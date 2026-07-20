@@ -4,5 +4,8 @@
 	"private": true,
 	"type": "module",
 	"exports": { ".": "./src/index.ts" },
-	"publishConfig": { "exports": { ".": { "default": "./dist/index.js" } } }
+	"publishConfig": { "exports": { ".": { "default": "./dist/index.js" } } },
+	"dependencies": {
+		"@markless/analyzer": "file:../../vendor/markless-analyzer-0.1.1.tgz"
+	}
 }

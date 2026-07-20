@@ -31,6 +31,7 @@
 	},
 	"pnpm": {
 		"overrides": {
+			"@markless/analyzer": "file:vendor/markless-analyzer-0.1.1.tgz",
 			"@markless/bundler": "file:vendor/markless-bundler-0.1.1.tgz",
 			"@markless/compiler": "file:vendor/markless-compiler-0.1.1.tgz",
 			"@markless/core": "file:vendor/markless-core-0.1.1.tgz",

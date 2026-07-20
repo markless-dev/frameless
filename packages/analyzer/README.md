@@ -22,6 +22,29 @@ mutant-class data, verdicts, and deterministic `frameless-receipts/1` result ren
 placement. `scenarios`, `calibrationScenarios`, and `mutantClasses` are data exports consumed by
 framework-owned browser calibration packages.
 
+## Substrate split
+
+Shared from `@markless/analyzer`:
+
+- `AnalyzerInvariantResult` is the portable result contract. Frameless pair results become
+  `MLA-EXT-FRAMELESS-EQUIVALENCE` entries and mutant checks become
+  `MLA-EXT-FRAMELESS-MUTANT` entries.
+- `createVerdictReport` owns report schema versioning, invariant validation, combination, and the
+  aggregate pass/fail bit. `createReceiptVerdictReport` exposes the composable Markless report,
+  while `createReceiptSummary` maps it to the compatible `frameless-receipts/1` summary.
+
+Kept local:
+
+- Equivalence engine (`Adapter`, multi-phase observation, serialization, comparison): Markless
+  analyzes browser invariants, not cross-framework trace equivalence.
+- Scenario, mutant, divergence, and per-pair receipt structures: these encode Frameless-specific
+  calibration evidence and the `blocked-by-upstream` state.
+- `RESULTS.md` rendering: Markless supplies the validated report contract, but not this
+  Frameless-specific scenario/mutant presentation.
+- Witness adaptation: `createWitnessVerdict` requires a receipt path, while this package is
+  filesystem-free and intentionally leaves receipt placement to callers. Adding a path shim here
+  would force a false abstraction.
+
 ## Scope and test lane
 
 The package has no React, Solid, browser-runner, or framework-transform dependency. Its node-only
