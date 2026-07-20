@@ -73,7 +73,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-product-v0/"
     command: "npx goalbuddy board docs/goals/frameless-product-v0"
 
-active_task: T003
+active_task: T004
 
 tasks:
   - id: T001
@@ -118,7 +118,7 @@ tasks:
   - id: T003
     type: scout
     assignee: Scout
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Solid idiom dossier: same protocol for Solid (createMemo for derived, store-vs-signal thresholds, For/Show usage, props access patterns, v2-forward idioms), confirming or overturning poc/07 decisions and addressing the row-reactivity critique findings with evidenced patterns."
     inputs:
@@ -128,11 +128,14 @@ tasks:
       - "Read-only. Every pattern decision carries evidence."
     expected_output:
       - "notes/T003-solid-idioms.md: construct -> chosen idiom -> evidence -> gate rule"
-    receipt: null
+    receipt:
+      result: done
+      note: notes/T003-solid-idioms.md
+      summary: "11 rulings, all cited (docs.solidjs.com live, solid v2.0.0-beta.9 local checkout, benchmark corpora, 1.8.22 runtime dist). Headline: createStore for S2 todos answers the W-C2 row-reactivity blocker structurally (bare row reads, produce edits, reconcile-keyed structural updates lowering the IR key); createMemo OVERTURNS the prior expectation — plain derived arrows confirmed by docs+corpus for single-subscriber derivations; Show-with-siblings-once is the S2 duplication fix, calibration-receipt-proven; attr:value kept with runtime Properties receipt; untrack once-captures as v2-forward hardening; full v2 ledger (For accessor children, attr: removal, microtask batching recalibration). 7 splits with overturn triggers. Critique skipped: research receipt, per-claim citations; enforcement lands in T006 with full critique."
   - id: T004
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: "Scaffold the product monorepo per the ADJUDICATED T001 note (ownership split; convention corrections) and migrate the enriched IR into packages/compiler with contract tests green; NO cross-package contract work. Carries the critique's verbatim instruction block (note section 9)."
     allowed_files:
