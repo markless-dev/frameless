@@ -597,12 +597,18 @@ function customPolicies(source: string, file: string): GateViolation[] {
 			if (!t.isJSXIdentifier(path.node.name)) return;
 			const primitive = imports.get(path.scope.getBinding(path.node.name.name))?.imported;
 			if (primitive === 'Show') {
-				if (!attribute(path.node, 'when') || !attribute(path.node, 'fallback'))
+				const fallback = attribute(path.node, 'fallback');
+				const fallbackValue = fallback?.value;
+				const hasEmptyFragmentFallback =
+					t.isJSXExpressionContainer(fallbackValue) &&
+					t.isJSXFragment(fallbackValue.expression) &&
+					fallbackValue.expression.children.length === 0;
+				if (!attribute(path.node, 'when') || hasEmptyFragmentFallback)
 					violations.push(
 						violation(
 							file,
 							'show-two-arm',
-							'Show requires explicit when and fallback arms',
+							'Show requires explicit when; empty-fragment fallback is forbidden',
 							path.node,
 						),
 					);

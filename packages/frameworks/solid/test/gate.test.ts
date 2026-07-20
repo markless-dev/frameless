@@ -20,7 +20,7 @@ export function Mutant(props) {
   const [items, setItems] = createStore(untrack(() => props.items));
   const [value, setValue] = createSignal(0);
   const label = () => props.label;
-  return <section><Show when={props.visible} fallback={<></>}><span>{label()}</span></Show><input value={value()} attr:value={value()} onInput={(event) => setValue(Number(event.currentTarget.value))} /><ul><For each={items}>{(item) => <li>{item.id}<button onClick={() => setItems(reconcile([], { key: 'id' }))}>clear</button></li>}</For></ul></section>;
+  return <section><Show when={props.visible}><span>{label()}</span></Show><input value={value()} attr:value={value()} onInput={(event) => setValue(Number(event.currentTarget.value))} /><ul><For each={items}>{(item) => <li>{item.id}<button onClick={() => setItems(reconcile([], { key: 'id' }))}>clear</button></li>}</For></ul></section>;
 }`;
 
 async function policies(source: string): Promise<string[]> {
@@ -106,7 +106,12 @@ describe('Solid dossier gate', () => {
 			valid.replace('<section>', '<section>{props.visible ? <i /> : <b />}'),
 			'structural-ternary',
 		],
-		['one-arm Show', valid.replace(' fallback={<></>}', ''), 'show-two-arm'],
+		['Show without when', valid.replace(' when={props.visible}', ''), 'show-two-arm'],
+		[
+			'Show with empty-fragment fallback',
+			valid.replace(' when={props.visible}', ' when={props.visible} fallback={<></>}'),
+			'show-two-arm',
+		],
 		['missing attr value', valid.replace(' attr:value={value()}', ''), 'controlled-input'],
 		[
 			'React text event',

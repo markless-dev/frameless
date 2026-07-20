@@ -187,9 +187,15 @@ importers:
       '@vitest/browser-playwright':
         specifier: 4.1.5
         version: 4.1.5(playwright@1.58.2)(vite@8.0.16(@types/node@24.12.2))(vitest@4.1.5)
+      babel-preset-solid:
+        specifier: 1.9.12
+        version: 1.9.12(@babel/core@7.29.7)(solid-js@1.8.22)
       playwright:
         specifier: 1.58.2
         version: 1.58.2
+      solid-beta9:
+        specifier: npm:solid-js@2.0.0-beta.9
+        version: solid-js@2.0.0-beta.9
       vite:
         specifier: catalog:default
         version: 8.0.16(@types/node@24.12.2)
@@ -780,6 +786,9 @@ packages:
 
   '@rolldown/pluginutils@1.0.1':
     resolution: {integrity: sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==}
+
+  '@solidjs/signals@2.0.0-beta.20':
+    resolution: {integrity: sha512-9fs7Bf9rkOeWQqHBPmt2wyEPo3TloRRJQ2yrqH7HOyYAHsUXicdL8334P0aUFwEK0teOIFeyEqBVAX8BHkKhDw==}
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
@@ -2068,6 +2077,9 @@ packages:
   solid-js@1.8.22:
     resolution: {integrity: sha512-VBzN5j+9Y4rqIKEnK301aBk+S7fvFSTs9ljg+YEdFxjNjH0hkjXPiQRcws9tE5fUzMznSS6KToL5hwMfHDgpLA==}
 
+  solid-js@2.0.0-beta.9:
+    resolution: {integrity: sha512-mvQphbOb/4wcrOicuZVPax19P4QfI0/q1NC/uy7Yt33TipSNj0wOnTA7uYMswBP6WC7vV7TgJ+pSqNX005E2ag==}
+
   solid-refresh@0.6.3:
     resolution: {integrity: sha512-F3aPsX6hVw9ttm5LYlth8Q15x6MlI/J3Dn+o3EQyRTtTxidepSTwAYdozt01/YA+7ObcciagGEyXIopGZzQtbA==}
     peerDependencies:
@@ -2791,6 +2803,8 @@ snapshots:
     optional: true
 
   '@rolldown/pluginutils@1.0.1': {}
+
+  '@solidjs/signals@2.0.0-beta.20': {}
 
   '@standard-schema/spec@1.1.0': {}
 
@@ -4259,6 +4273,13 @@ snapshots:
 
   solid-js@1.8.22:
     dependencies:
+      csstype: 3.2.3
+      seroval: 1.5.6
+      seroval-plugins: 1.5.6(seroval@1.5.6)
+
+  solid-js@2.0.0-beta.9:
+    dependencies:
+      '@solidjs/signals': 2.0.0-beta.20
       csstype: 3.2.3
       seroval: 1.5.6
       seroval-plugins: 1.5.6(seroval@1.5.6)
