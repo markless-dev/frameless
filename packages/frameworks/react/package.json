@@ -1,0 +1,19 @@
+{
+	"name": "@frameless/react",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"exports": { ".": "./src/index.ts" },
+	"publishConfig": { "exports": { ".": { "default": "./dist/index.js" } } },
+	"dependencies": {
+		"@frameless/analyzer": "workspace:*",
+		"react": "19.2.3",
+		"react-dom": "19.2.3"
+	},
+	"devDependencies": {
+		"@types/react": "19.2.14",
+		"@types/react-dom": "19.2.3",
+		"@vitest/browser-playwright": "4.1.5",
+		"playwright": "1.58.2"
+	}
+}
