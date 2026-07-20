@@ -73,7 +73,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-product-v0/"
     command: "npx goalbuddy board docs/goals/frameless-product-v0"
 
-active_task: T999
+active_task: T011
 
 tasks:
   - id: T001
@@ -336,6 +336,24 @@ tasks:
       result: done
       decision: not_complete
       summary: "Judge boundary review (installed goal-judge, high): ALL FIVE dimensions clean with executed evidence — architecture matches adjudicated T001 incl. every recorded addendum divergence (frameworks/ nesting, analyzer rename, specs/ removal directive, pathe); six receipt claims verified in code (provenance validator, stage-then-swap, native-setter fix, honest mutants=0, delegation-only equivalence, 237/237 re-executed); both gates per-policy mutation-covered with all critique-era closures present; migration complete with no silently dropped POC capability (theme mapping poc/04..08 -> product suites); misfire pre-check clean (no SSR/extra targets, e2e path real end-to-end). TWO BLOCKERS cut as pre-T999 fixes, both PM-level: B1 test:poc lacked --ignore-workspace (contradicting T007's recorded finding; no full green run existed) — fixed, full lane run pending; B2 vendor/PROVENANCE missing per addendum 9 — written with honest rev-level limits (analyzer @5e5a100; seven carried-over tarballs anchored to poc/vendor checksum identity, rev unrecorded at original pack). Nice-to-haves done: stray screenshot/attachment PNGs purged, CONTRIBUTING doctor claim reconciled."
+  - id: T011
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: medium
+    objective: "T999 first-run fix (manifest-only): declare every dependency the fresh-checkout audit proved undeclared — root devDep @frameless/analyzer (workspace:*); packages/cli dep pathe (catalog:); demos/ui-kit devDeps for its test harness (workspace packages + browser/test toolchain, proven-minimal set); pnpm-lock.yaml refresh. Verification MUST be a genuine fresh clone (the dev checkout's stale node_modules masks exactly this class)."
+    allowed_files:
+      - "package.json"
+      - "packages/cli/package.json"
+      - "demos/ui-kit/package.json"
+      - "pnpm-workspace.yaml"
+      - "pnpm-lock.yaml"
+    verify:
+      - "fresh clone: pnpm install && pnpm e2e (3/3 pairs equal, receipt pass); pnpm check/build/test; both browser lanes; pnpm test:poc"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "A dependency cannot be declared without changing code — report, do not patch source."
+    receipt: null
   - id: T999
     type: judge
     assignee: Judge
@@ -356,7 +374,8 @@ tasks:
       - "full_outcome_complete: true | false"
       - "missing evidence"
       - "next task if not complete"
-    receipt: null
+    receipt: null  # first run 2026-07-20: not_complete — oracle headline clause failed from fresh clone (undeclared deps masked by dev node_modules); diagnostic manifest-only patch restored FULL green (e2e 3/3 equal, 237/237, 19/19+17/17, check/build 0); poc lane green from fresh unpatched (exit 0, 137 tests); all three misfires clean; re-run after T011
+
 
 checks:
   dirty_fingerprint: "T009 fixes in progress on efed06b (test:poc flags, vendor/PROVENANCE, hygiene)"
