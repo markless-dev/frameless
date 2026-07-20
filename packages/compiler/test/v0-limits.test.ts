@@ -1,31 +1,44 @@
 import { describe, expect, test } from 'vitest';
 import { buildEnrichedIr } from '../src/build';
 
-describe('v0 module limits', () => {
-	test('fails closed when a module exports more than one component', async () => {
+describe('enriched-ir/2 module composition', () => {
+	test('accepts and exports more than one component', async () => {
 		const source = `
 			export function First() @{ <div>first</div> }
 			export function Second() @{ <div>second</div> }
 		`;
-		await expect(buildEnrichedIr({ filename: 'two.tsrx', source })).rejects.toThrow(
-			'exactly one exported component',
-		);
+		const ir = await buildEnrichedIr({ filename: 'two.tsrx', source });
+		expect(ir.components.map((component) => component.name)).toEqual(['First', 'Second']);
+		expect(ir.module.exports.map((entry) => entry.componentName)).toEqual(['First', 'Second']);
 	});
 
-	test('fails closed for cross-module relative imports', async () => {
+	test('retains relative TSRX imports as module records', async () => {
 		const source = `
 			import { Child } from './child.tsrx';
 			export function Parent() @{ <div>parent</div> }
 		`;
-		await expect(buildEnrichedIr({ filename: 'parent.tsrx', source })).rejects.toThrow(
-			'cross-TSRX component imports are unsupported',
-		);
+		const ir = await buildEnrichedIr({ filename: 'parent.tsrx', source });
+		expect(ir.imports).toEqual([
+			expect.objectContaining({ source: './child.tsrx', resolvesTo: 'tsrx-module' }),
+		]);
 	});
 
-	test('fails closed when the component is not exported', async () => {
+	test('retains an unexported local component without adding a module export', async () => {
 		const source = `function Private() @{ <div>private</div> }`;
-		await expect(buildEnrichedIr({ filename: 'private.tsrx', source })).rejects.toThrow(
-			'requires the component to be exported',
-		);
+		const ir = await buildEnrichedIr({ filename: 'private.tsrx', source });
+		expect(ir.components.map((component) => component.name)).toEqual(['Private']);
+		expect(ir.module.exports).toEqual([]);
+	});
+
+	test('uses the AST export table without changing the component id', async () => {
+		const source = `function LocalChild() @{ <div>child</div> } export { LocalChild as PublicChild };`;
+		const ir = await buildEnrichedIr({ filename: 'renamed.tsrx', source });
+		expect(ir.components[0]).toMatchObject({
+			id: 'component:0:LocalChild',
+			name: 'LocalChild',
+		});
+		expect(ir.module.exports).toEqual([
+			{ kind: 'named', componentName: 'LocalChild', exportedName: 'PublicChild' },
+		]);
 	});
 });

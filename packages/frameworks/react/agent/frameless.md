@@ -1,7 +1,7 @@
 # Frameless React target agent playbook
 
 Use this file as guidance for the installed `@frameless/react` version. The package consumes
-`frameless-enriched-ir/1`, emits automatic-runtime JSX, checks generated React conventionality,
+`frameless-enriched-ir/2`, emits automatic-runtime JSX, checks generated React conventionality,
 and supplies the browser analyzer adapter.
 
 ## Target boundaries

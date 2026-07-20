@@ -13,6 +13,7 @@ export interface ModuleImport {
 	readonly source: string;
 	readonly kind: 'default' | 'named' | 'namespace';
 	readonly importedName?: string;
+	readonly resolvesTo?: 'tsrx-module';
 }
 
 export type GraphBindingKind = 'state' | 'computed' | 'element' | 'prop';
@@ -23,7 +24,11 @@ export type SyncPolicyCondition =
 	| { readonly type: 'and'; readonly conditions: ReadonlyArray<SyncPolicyCondition> }
 	| { readonly type: 'or'; readonly conditions: ReadonlyArray<SyncPolicyCondition> }
 	| { readonly type: 'not'; readonly condition: SyncPolicyCondition }
-	| { readonly type: 'graph-truthy'; readonly graphNodeId: string; readonly path: ReadonlyArray<string> }
+	| {
+			readonly type: 'graph-truthy';
+			readonly graphNodeId: string;
+			readonly path: ReadonlyArray<string>;
+	  }
 	| { readonly type: 'constant-truthy'; readonly value: JsonValue }
 	| { readonly type: 'event-equals'; readonly field: string; readonly value: JsonValue };
 export type SyncPolicyBranch = {
@@ -33,7 +38,7 @@ export type SyncPolicyBranch = {
 export type SyncPolicy = SyncPolicyBranch | { readonly branches: ReadonlyArray<SyncPolicyBranch> };
 
 /** Discriminator for the first serialized Frameless emitter-input contract. */
-export const ENRICHED_IR_VERSION = 'frameless-enriched-ir/1' as const;
+export const ENRICHED_IR_VERSION = 'frameless-enriched-ir/2' as const;
 
 /** Values admitted by the deterministic JSON artifact. */
 export type JsonValue =
@@ -140,6 +145,50 @@ export interface TemplateFragment {
 	readonly children: ReadonlyArray<TemplateNode>;
 }
 
+/** One structured prop expression on a component-reference edge. */
+export interface ComponentPropExpression {
+	readonly name: string;
+	readonly kind: 'graph-reference' | 'callback' | 'serializable' | 'opaque';
+	readonly value: ExpressionSite;
+	readonly graphNodeId?: string;
+	readonly path?: ReadonlyArray<string>;
+}
+
+/** A framework-native component invocation joined to a Layer A edge. */
+export interface TemplateComponentReference {
+	readonly kind: 'component-reference';
+	readonly id: string;
+	readonly edgeId: string;
+	readonly target: { readonly localName: string } & (
+		| { readonly module: 'self' }
+		| { readonly module: string; readonly exportedName: string }
+	);
+	readonly props: ReadonlyArray<ComponentPropExpression>;
+	readonly children: ReadonlyArray<TemplateNode>;
+}
+
+/** The receiving component's opaque default-children projection site. */
+export interface TemplateDefaultSlotProjection {
+	readonly kind: 'default-slot-projection';
+	readonly id: string;
+	readonly site: ExpressionSite;
+}
+
+/** Type-only bridge removed when the separate framework /2 validator units land. */
+interface VersionOneEmitterCompatibility {
+	readonly item: string;
+	readonly index?: string;
+	readonly collection: ExpressionSite;
+	readonly key: ExpressionSite;
+	readonly row: ReadonlyArray<TemplateNode>;
+	readonly empty: ReadonlyArray<TemplateNode>;
+	readonly tag: string;
+	readonly staticAttributes: ReadonlyArray<StaticAttribute>;
+	readonly dynamicBindings: ReadonlyArray<DynamicBinding>;
+	readonly eventIds: ReadonlyArray<string>;
+	readonly children: ReadonlyArray<TemplateNode>;
+}
+
 /** Complete target-neutral template vocabulary covered by this artifact version. */
 export type TemplateNode =
 	| TemplateHost
@@ -147,7 +196,9 @@ export type TemplateNode =
 	| TemplateDynamicText
 	| TemplateBranch
 	| TemplateKeyedRepeat
-	| TemplateFragment;
+	| TemplateFragment
+	| (TemplateComponentReference & VersionOneEmitterCompatibility)
+	| (TemplateDefaultSlotProjection & VersionOneEmitterCompatibility);
 
 /** A destructured prop path and its source-local spelling. */
 export interface PropDestructuringEntry {
@@ -191,6 +242,7 @@ export interface GuardReturn {
 
 /** Everything an emitter needs from one component body and render tree. */
 export interface EnrichedComponent {
+	readonly id: string;
 	readonly name: string;
 	readonly evaluation: ComponentEvaluationPolicy;
 	readonly props: {
@@ -204,12 +256,14 @@ export interface EnrichedComponent {
 
 /** Path-level state read copied from Markless's lowering artifact. */
 export interface StateReadRecord {
+	readonly componentId: string;
 	readonly graphNodeId: string;
 	readonly path: ReadonlyArray<string>;
 }
 
 /** Path-level state write with AST values/arguments, never reparsable snippets. */
 export interface StateWriteRecord {
+	readonly componentId: string;
 	readonly graphNodeId: string;
 	readonly path: ReadonlyArray<string>;
 	readonly operation: 'assign' | 'update' | 'call' | 'delete';
@@ -226,6 +280,7 @@ export interface StateWriteRecord {
 
 /** State, computed, element, and props records retained under compiler ids. */
 export interface EnrichedGraphBinding {
+	readonly componentId: string;
 	readonly id: string;
 	readonly name: string;
 	readonly kind: GraphBindingKind;
@@ -243,6 +298,7 @@ export interface EnrichedGraphBinding {
 
 /** Alias record with a deterministic Frameless id and resolved graph/path target. */
 export interface EnrichedAliasRecord {
+	readonly componentId: string;
 	readonly id: string;
 	readonly name: string;
 	readonly target: string;
@@ -259,11 +315,115 @@ export interface EventHandlerRecord extends ExpressionSite {
 
 /** Event semantics retained under the Markless event id and host id. */
 export interface EnrichedEventRecord {
+	readonly componentId: string;
 	readonly id: string;
 	readonly hostNodeId: string;
 	readonly eventName: string;
 	readonly syncPolicy?: SyncPolicy;
 	readonly handlers: ReadonlyArray<EventHandlerRecord>;
+}
+
+export interface SharedDefinitionCell {
+	readonly name: string;
+	readonly graphNodeId: string;
+	readonly valueKind: GraphValueKind;
+}
+
+export interface SharedDefinitionMethod {
+	readonly name: string;
+	readonly site: SerializableAstNode;
+}
+
+export type SharedReturnProperty =
+	| {
+			readonly kind: 'graph';
+			readonly name: string;
+			readonly graphNodeId: string;
+			readonly path: ReadonlyArray<string>;
+	  }
+	| { readonly kind: 'method'; readonly name: string };
+
+export interface SharedDependency {
+	readonly definitionId: string;
+	readonly definitionName: string;
+}
+
+/** A module-owned shared factory and every semantic member it defines. */
+export interface SharedDefinition {
+	readonly id: string;
+	readonly scope: 'request' | 'container' | 'page';
+	readonly cells: ReadonlyArray<SharedDefinitionCell>;
+	readonly methods: ReadonlyArray<SharedDefinitionMethod>;
+	readonly graphBindings: ReadonlyArray<string>;
+	readonly returnProperties: ReadonlyArray<SharedReturnProperty>;
+	readonly dependencies: ReadonlyArray<SharedDependency>;
+}
+
+export interface SharedInstance {
+	readonly definitionId: string;
+	readonly componentId: string;
+	readonly localName: string;
+}
+
+export interface SharedRead {
+	readonly definitionId: string;
+	readonly propertyName: string;
+	readonly path: ReadonlyArray<string>;
+	readonly componentId: string;
+	readonly site: ExpressionSite;
+}
+
+export interface SharedCall {
+	readonly definitionId: string;
+	readonly methodName: string;
+	readonly arguments: ReadonlyArray<SerializableAstNode>;
+	readonly componentId: string;
+	readonly eventId?: string;
+	readonly site: ExpressionSite;
+	readonly order: number;
+}
+
+/** A definition-owned mutation inside a shared factory method. */
+export interface SharedWrite {
+	readonly definitionId: string;
+	readonly graphNodeId: string;
+	readonly path: ReadonlyArray<string>;
+	readonly operation: 'assign' | 'update' | 'call' | 'delete';
+	readonly assignmentOperator?: string;
+	readonly updateOperator?: '++' | '--';
+	readonly prefix?: boolean;
+	readonly method?: string;
+	readonly value?: SerializableAstNode;
+	readonly arguments?: ReadonlyArray<SerializableAstNode>;
+	readonly order: number;
+}
+
+export interface ElementHandleBinding {
+	readonly id: string;
+	readonly handleName: string;
+	readonly componentId: string;
+	readonly hostNodeId: string;
+}
+
+export interface BehaviorRecord {
+	readonly id: string;
+	readonly hostNodeId: string;
+	readonly componentId: string;
+	readonly behavior: SerializableAstNode;
+	readonly inputs: ReadonlyArray<GraphReadRef>;
+	readonly returnsCleanup: boolean;
+	readonly order: number;
+}
+
+export interface HandleCallRecord {
+	readonly handleBindingId: string;
+	readonly componentId: string;
+	readonly method: string;
+	readonly arguments: ReadonlyArray<SerializableAstNode>;
+	readonly optional: boolean;
+	readonly eventId?: string;
+	readonly site: ExpressionSite;
+	readonly order: number;
 }
 
 /** All id-addressable semantic records available to a framework emitter. */
@@ -273,6 +433,14 @@ export interface EnrichedRecordTable {
 	readonly events: ReadonlyArray<EnrichedEventRecord>;
 	readonly stateReads: ReadonlyArray<StateReadRecord>;
 	readonly stateWrites: ReadonlyArray<StateWriteRecord>;
+	readonly sharedDefinitions: ReadonlyArray<SharedDefinition>;
+	readonly sharedInstances: ReadonlyArray<SharedInstance>;
+	readonly sharedReads: ReadonlyArray<SharedRead>;
+	readonly sharedCalls: ReadonlyArray<SharedCall>;
+	readonly sharedWrites: ReadonlyArray<SharedWrite>;
+	readonly elementHandleBindings: ReadonlyArray<ElementHandleBinding>;
+	readonly behaviors: ReadonlyArray<BehaviorRecord>;
+	readonly handleCalls: ReadonlyArray<HandleCallRecord>;
 }
 
 /** One authored component export in the module's public shape. */

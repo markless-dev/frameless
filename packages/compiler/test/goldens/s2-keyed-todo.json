@@ -6,6 +6,7 @@
         "ordinaryLocals": "once-per-instance"
       },
       "guards": [],
+      "id": "component:0:KeyedTodo",
       "locals": [
         {
           "declarationKind": "let",
@@ -923,6 +924,7 @@
   "records": {
     "aliases": [
       {
+        "componentId": "component:0:KeyedTodo",
         "declarationKind": "const",
         "graphNodeId": "prop:props",
         "id": "alias:KeyedTodo:onTrace",
@@ -938,6 +940,7 @@
         "target": "props.onTrace"
       },
       {
+        "componentId": "component:0:KeyedTodo",
         "declarationKind": "const",
         "graphNodeId": "prop:props",
         "id": "alias:KeyedTodo:seed",
@@ -953,10 +956,12 @@
         "target": "props.seed"
       }
     ],
+    "behaviors": [],
     "bindings": [
       {
         "async": false,
         "asyncCapable": false,
+        "componentId": "component:0:KeyedTodo",
         "computed": {
           "expression": {
             "async": false,
@@ -1058,6 +1063,7 @@
         "name": "complete",
         "reads": [
           {
+            "componentId": "component:0:KeyedTodo",
             "graphNodeId": "state:todos",
             "path": []
           }
@@ -1066,6 +1072,7 @@
         "writes": []
       },
       {
+        "componentId": "component:0:KeyedTodo",
         "declarationKind": "const",
         "id": "prop:props",
         "kind": "prop",
@@ -1076,6 +1083,7 @@
         "writes": []
       },
       {
+        "componentId": "component:0:KeyedTodo",
         "declarationKind": "let",
         "id": "state:draft",
         "initialValue": "",
@@ -1094,6 +1102,7 @@
         "writes": [
           {
             "assignmentOperator": "=",
+            "componentId": "component:0:KeyedTodo",
             "graphNodeId": "state:draft",
             "operation": "assign",
             "path": [],
@@ -1138,6 +1147,7 @@
           },
           {
             "assignmentOperator": "=",
+            "componentId": "component:0:KeyedTodo",
             "graphNodeId": "state:draft",
             "operation": "assign",
             "path": [],
@@ -1158,6 +1168,7 @@
         ]
       },
       {
+        "componentId": "component:0:KeyedTodo",
         "declarationKind": "let",
         "id": "state:next",
         "initialValue": 3,
@@ -1175,6 +1186,7 @@
         "writable": true,
         "writes": [
           {
+            "componentId": "component:0:KeyedTodo",
             "graphNodeId": "state:next",
             "operation": "update",
             "path": [],
@@ -1190,6 +1202,7 @@
         ]
       },
       {
+        "componentId": "component:0:KeyedTodo",
         "declarationKind": "let",
         "id": "state:todos",
         "initializer": {
@@ -1258,6 +1271,7 @@
         "name": "todos",
         "reads": [
           {
+            "componentId": "component:0:KeyedTodo",
             "graphNodeId": "prop:props",
             "path": [
               "seed"
@@ -1269,6 +1283,7 @@
         "writes": [
           {
             "assignmentOperator": "=",
+            "componentId": "component:0:KeyedTodo",
             "graphNodeId": "state:todos",
             "operation": "assign",
             "path": [],
@@ -1314,6 +1329,7 @@
           },
           {
             "assignmentOperator": "=",
+            "componentId": "component:0:KeyedTodo",
             "graphNodeId": "state:todos",
             "operation": "assign",
             "path": [],
@@ -1352,6 +1368,7 @@
           },
           {
             "assignmentOperator": "=",
+            "componentId": "component:0:KeyedTodo",
             "graphNodeId": "state:todos",
             "operation": "assign",
             "path": [],
@@ -1370,6 +1387,7 @@
           },
           {
             "assignmentOperator": "=",
+            "componentId": "component:0:KeyedTodo",
             "graphNodeId": "state:todos",
             "operation": "assign",
             "path": [],
@@ -1470,6 +1488,7 @@
           },
           {
             "assignmentOperator": "=",
+            "componentId": "component:0:KeyedTodo",
             "graphNodeId": "state:todos",
             "operation": "assign",
             "path": [],
@@ -1488,6 +1507,7 @@
           },
           {
             "assignmentOperator": "=",
+            "componentId": "component:0:KeyedTodo",
             "graphNodeId": "state:todos",
             "operation": "assign",
             "path": [],
@@ -1506,6 +1526,7 @@
           },
           {
             "assignmentOperator": "=",
+            "componentId": "component:0:KeyedTodo",
             "graphNodeId": "state:todos",
             "operation": "assign",
             "path": [
@@ -1527,6 +1548,7 @@
           },
           {
             "assignmentOperator": "=",
+            "componentId": "component:0:KeyedTodo",
             "graphNodeId": "state:todos",
             "operation": "assign",
             "path": [
@@ -1549,8 +1571,10 @@
         ]
       }
     ],
+    "elementHandleBindings": [],
     "events": [
       {
+        "componentId": "component:0:KeyedTodo",
         "eventName": "input",
         "handlers": [
           {
@@ -1619,6 +1643,7 @@
             "writes": [
               {
                 "assignmentOperator": "=",
+                "componentId": "component:0:KeyedTodo",
                 "graphNodeId": "state:draft",
                 "operation": "assign",
                 "path": [],
@@ -1668,6 +1693,7 @@
         "id": "event:0"
       },
       {
+        "componentId": "component:0:KeyedTodo",
         "eventName": "click",
         "handlers": [
           {
@@ -2040,6 +2066,7 @@
             "writes": [
               {
                 "assignmentOperator": "=",
+                "componentId": "component:0:KeyedTodo",
                 "graphNodeId": "state:draft",
                 "operation": "assign",
                 "path": [],
@@ -2058,6 +2085,7 @@
                 "via": "direct"
               },
               {
+                "componentId": "component:0:KeyedTodo",
                 "graphNodeId": "state:next",
                 "operation": "update",
                 "path": [],
@@ -2072,6 +2100,7 @@
               },
               {
                 "assignmentOperator": "=",
+                "componentId": "component:0:KeyedTodo",
                 "graphNodeId": "state:todos",
                 "operation": "assign",
                 "path": [],
@@ -2122,6 +2151,7 @@
         "id": "event:1"
       },
       {
+        "componentId": "component:0:KeyedTodo",
         "eventName": "input",
         "handlers": [
           {
@@ -2504,6 +2534,7 @@
             "writes": [
               {
                 "assignmentOperator": "=",
+                "componentId": "component:0:KeyedTodo",
                 "graphNodeId": "state:todos",
                 "operation": "assign",
                 "path": [],
@@ -2542,6 +2573,7 @@
               },
               {
                 "assignmentOperator": "=",
+                "componentId": "component:0:KeyedTodo",
                 "graphNodeId": "state:todos",
                 "operation": "assign",
                 "path": [
@@ -2568,6 +2600,7 @@
         "id": "event:2"
       },
       {
+        "componentId": "component:0:KeyedTodo",
         "eventName": "change",
         "handlers": [
           {
@@ -2975,6 +3008,7 @@
             "writes": [
               {
                 "assignmentOperator": "=",
+                "componentId": "component:0:KeyedTodo",
                 "graphNodeId": "state:todos",
                 "operation": "assign",
                 "path": [],
@@ -2993,6 +3027,7 @@
               },
               {
                 "assignmentOperator": "=",
+                "componentId": "component:0:KeyedTodo",
                 "graphNodeId": "state:todos",
                 "operation": "assign",
                 "path": [
@@ -3019,6 +3054,7 @@
         "id": "event:3"
       },
       {
+        "componentId": "component:0:KeyedTodo",
         "eventName": "click",
         "handlers": [
           {
@@ -3248,6 +3284,7 @@
             "writes": [
               {
                 "assignmentOperator": "=",
+                "componentId": "component:0:KeyedTodo",
                 "graphNodeId": "state:todos",
                 "operation": "assign",
                 "path": [],
@@ -3353,6 +3390,7 @@
         "id": "event:4"
       },
       {
+        "componentId": "component:0:KeyedTodo",
         "eventName": "click",
         "handlers": [
           {
@@ -3602,6 +3640,7 @@
             "writes": [
               {
                 "assignmentOperator": "=",
+                "componentId": "component:0:KeyedTodo",
                 "graphNodeId": "state:todos",
                 "operation": "assign",
                 "path": [],
@@ -3625,6 +3664,7 @@
         "id": "event:5"
       },
       {
+        "componentId": "component:0:KeyedTodo",
         "eventName": "click",
         "handlers": [
           {
@@ -3792,6 +3832,7 @@
             "writes": [
               {
                 "assignmentOperator": "=",
+                "componentId": "component:0:KeyedTodo",
                 "graphNodeId": "state:todos",
                 "operation": "assign",
                 "path": [],
@@ -3815,54 +3856,70 @@
         "id": "event:6"
       }
     ],
+    "handleCalls": [],
+    "sharedCalls": [],
+    "sharedDefinitions": [],
+    "sharedInstances": [],
+    "sharedReads": [],
+    "sharedWrites": [],
     "stateReads": [
       {
+        "componentId": "component:0:KeyedTodo",
         "graphNodeId": "computed:complete",
         "path": []
       },
       {
+        "componentId": "component:0:KeyedTodo",
         "graphNodeId": "prop:props",
         "path": [
           "onTrace"
         ]
       },
       {
+        "componentId": "component:0:KeyedTodo",
         "graphNodeId": "prop:props",
         "path": [
           "seed"
         ]
       },
       {
+        "componentId": "component:0:KeyedTodo",
         "graphNodeId": "state:draft",
         "path": []
       },
       {
+        "componentId": "component:0:KeyedTodo",
         "graphNodeId": "state:next",
         "path": []
       },
       {
+        "componentId": "component:0:KeyedTodo",
         "graphNodeId": "state:todos",
         "path": []
       },
       {
+        "componentId": "component:0:KeyedTodo",
         "graphNodeId": "state:todos",
         "path": [
           "done"
         ]
       },
       {
+        "componentId": "component:0:KeyedTodo",
         "graphNodeId": "state:todos",
         "path": [
           "id"
         ]
       },
       {
+        "componentId": "component:0:KeyedTodo",
         "graphNodeId": "state:todos",
         "path": [
           "length"
         ]
       },
       {
+        "componentId": "component:0:KeyedTodo",
         "graphNodeId": "state:todos",
         "path": [
           "title"
@@ -3872,6 +3929,7 @@
     "stateWrites": [
       {
         "assignmentOperator": "=",
+        "componentId": "component:0:KeyedTodo",
         "graphNodeId": "state:draft",
         "operation": "assign",
         "path": [],
@@ -3916,6 +3974,7 @@
       },
       {
         "assignmentOperator": "=",
+        "componentId": "component:0:KeyedTodo",
         "graphNodeId": "state:draft",
         "operation": "assign",
         "path": [],
@@ -3934,6 +3993,7 @@
         "via": "direct"
       },
       {
+        "componentId": "component:0:KeyedTodo",
         "graphNodeId": "state:next",
         "operation": "update",
         "path": [],
@@ -3948,6 +4008,7 @@
       },
       {
         "assignmentOperator": "=",
+        "componentId": "component:0:KeyedTodo",
         "graphNodeId": "state:todos",
         "operation": "assign",
         "path": [],
@@ -3993,6 +4054,7 @@
       },
       {
         "assignmentOperator": "=",
+        "componentId": "component:0:KeyedTodo",
         "graphNodeId": "state:todos",
         "operation": "assign",
         "path": [],
@@ -4031,6 +4093,7 @@
       },
       {
         "assignmentOperator": "=",
+        "componentId": "component:0:KeyedTodo",
         "graphNodeId": "state:todos",
         "operation": "assign",
         "path": [],
@@ -4049,6 +4112,7 @@
       },
       {
         "assignmentOperator": "=",
+        "componentId": "component:0:KeyedTodo",
         "graphNodeId": "state:todos",
         "operation": "assign",
         "path": [],
@@ -4149,6 +4213,7 @@
       },
       {
         "assignmentOperator": "=",
+        "componentId": "component:0:KeyedTodo",
         "graphNodeId": "state:todos",
         "operation": "assign",
         "path": [],
@@ -4167,6 +4232,7 @@
       },
       {
         "assignmentOperator": "=",
+        "componentId": "component:0:KeyedTodo",
         "graphNodeId": "state:todos",
         "operation": "assign",
         "path": [],
@@ -4185,6 +4251,7 @@
       },
       {
         "assignmentOperator": "=",
+        "componentId": "component:0:KeyedTodo",
         "graphNodeId": "state:todos",
         "operation": "assign",
         "path": [
@@ -4206,6 +4273,7 @@
       },
       {
         "assignmentOperator": "=",
+        "componentId": "component:0:KeyedTodo",
         "graphNodeId": "state:todos",
         "operation": "assign",
         "path": [
@@ -4227,5 +4295,5 @@
       }
     ]
   },
-  "version": "frameless-enriched-ir/1"
+  "version": "frameless-enriched-ir/2"
 }

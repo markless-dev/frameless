@@ -131,6 +131,49 @@ describe('React structural emitter', () => {
 	});
 
 	describe('fail-closed enriched IR validation', () => {
+		test('rejects an exact /1 artifact with the version diagnostic', async () => {
+			const ir = clone(await golden('s1-render-once.json')) as any;
+			ir.version = 'frameless-enriched-ir/1';
+			expect(() => validateEnrichedIr(ir)).toThrow(
+				'Expected frameless-enriched-ir/2, received frameless-enriched-ir/1',
+			);
+		});
+
+		test('rejects a component-reference with its construct diagnostic', async () => {
+			const ir = clone(await golden('s1-render-once.json')) as any;
+			ir.components[0].template = [
+				{
+					kind: 'component-reference',
+					id: 'component-reference:child',
+					edgeId: 'edge:child',
+					target: { localName: 'Child', module: 'self' },
+					props: [],
+					children: [],
+				},
+			];
+			expect(() => validateEnrichedIr(ir)).toThrow(
+				/TemplateComponentReference cannot be lowered.*React composition package/,
+			);
+		});
+
+		test('rejects a non-empty SharedDefinition family with its construct diagnostic', async () => {
+			const ir = clone(await golden('s1-render-once.json')) as any;
+			ir.records.sharedDefinitions = [
+				{
+					id: 'shared:counter',
+					scope: 'container',
+					cells: [],
+					methods: [],
+					graphBindings: [],
+					returnProperties: [],
+					dependencies: [],
+				},
+			];
+			expect(() => validateEnrichedIr(ir)).toThrow(
+				/SharedDefinition cannot be lowered.*React composition package/,
+			);
+		});
+
 		test.each([
 			['unknown semantic field', (ir: any) => { ir.records.bindings[0].futureSemantic = true; }, /EnrichedGraphBinding has unknown semantic field/],
 			['dangling record id', (ir: any) => { ir.components[0].locals[1].semanticRecordIds = ['state:missing']; }, /LocalDeclaration has dangling semantic record id/],

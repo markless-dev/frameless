@@ -3,7 +3,7 @@ import type { SerializableAstNode } from '@frameless/compiler';
 
 type EstreeNode = SerializableAstNode & Record<string, any>;
 
-/** Convert the cycle-free ESTree subset in frameless-enriched-ir/1 into Babel AST. */
+/** Convert the cycle-free ESTree subset in frameless-enriched-ir/2 into Babel AST. */
 export function fromEstree(input: SerializableAstNode | null | undefined): t.Node | null {
 	if (input == null) return null;
 	const node = input as EstreeNode;
@@ -126,6 +126,6 @@ export function fromEstree(input: SerializableAstNode | null | undefined): t.Nod
 				Boolean(node.tail),
 			);
 		default:
-			throw new Error(`Unsupported frameless-enriched-ir/1 AST node: ${node.type}`);
+			throw new Error(`Unsupported frameless-enriched-ir/2 AST node: ${node.type}`);
 	}
 }

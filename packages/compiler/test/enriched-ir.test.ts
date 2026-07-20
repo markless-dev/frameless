@@ -3,18 +3,9 @@ import { basename } from 'pathe';
 import { describe, expect, test } from 'vitest';
 import { buildEnrichedIr, collectGraphReads } from '../src/build';
 import { dumpEnrichedIr } from '../src/dump';
-import type {
-	EnrichedIR,
-	SerializableAstNode,
-	TemplateHost,
-	TemplateNode,
-} from '../src/schema';
+import type { EnrichedIR, SerializableAstNode, TemplateHost, TemplateNode } from '../src/schema';
 
-const FIXTURES = [
-	's1-render-once.tsrx',
-	's2-keyed-todo.tsrx',
-	's3-event-form.tsrx',
-] as const;
+const FIXTURES = ['s1-render-once.tsrx', 's2-keyed-todo.tsrx', 's3-event-form.tsrx'] as const;
 
 const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>> = {
 	's1-render-once.tsrx': [
@@ -62,7 +53,8 @@ function walkTemplate(nodes: readonly TemplateNode[]): TemplateNode[] {
 	const found: TemplateNode[] = [];
 	for (const node of nodes) {
 		found.push(node);
-		if (node.kind === 'host' || node.kind === 'fragment') found.push(...walkTemplate(node.children));
+		if (node.kind === 'host' || node.kind === 'fragment' || node.kind === 'component-reference')
+			found.push(...walkTemplate(node.children));
 		if (node.kind === 'branch') {
 			for (const arm of node.arms) found.push(...walkTemplate(arm.children));
 		}
@@ -123,7 +115,10 @@ describe('fixture-family sufficiency', () => {
 			const ir = await fixtureIr(file);
 			const graphIds = new Set(ir.records.bindings.map((binding) => binding.id));
 			const nodes = allTemplateNodes(ir);
-			const sites: Array<{ expression: SerializableAstNode; reads: readonly { graphNodeId: string }[] }> = [];
+			const sites: Array<{
+				expression: SerializableAstNode;
+				reads: readonly { graphNodeId: string }[];
+			}> = [];
 			for (const node of nodes) {
 				if (node.kind === 'dynamic-text') sites.push(node);
 				if (node.kind === 'host') sites.push(...node.dynamicBindings);
@@ -148,16 +143,27 @@ describe('fixture-family sufficiency', () => {
 			'prefix',
 			'derived',
 		]);
-		expect(component.locals.find((local) => local.names.includes('prefix'))?.reads).toContainEqual(
-			{ graphNodeId: 'prop:props', path: ['label'], via: 'alias' },
-		);
+		expect(
+			component.locals.find((local) => local.names.includes('prefix'))?.reads,
+		).toContainEqual({ graphNodeId: 'prop:props', path: ['label'], via: 'alias' });
 		const derived = ir.records.bindings.find((binding) => binding.id === 'computed:derived')!;
-		expect(derived.computed?.reads).toContainEqual(
-			{ graphNodeId: 'prop:props', path: ['label'], via: 'local' },
-		);
-		expect(derived.reads).toContainEqual({ graphNodeId: 'prop:props', path: ['label'] });
-		expect(component.evaluation).toEqual({ ordinaryLocals: 'once-per-instance', computedBindings: 'reactive' });
-		expect(ir.module.exports).toEqual([{ kind: 'named', componentName: 'RenderOnce', exportedName: 'RenderOnce' }]);
+		expect(derived.computed?.reads).toContainEqual({
+			graphNodeId: 'prop:props',
+			path: ['label'],
+			via: 'local',
+		});
+		expect(derived.reads).toContainEqual({
+			componentId: component.id,
+			graphNodeId: 'prop:props',
+			path: ['label'],
+		});
+		expect(component.evaluation).toEqual({
+			ordinaryLocals: 'once-per-instance',
+			computedBindings: 'reactive',
+		});
+		expect(ir.module.exports).toEqual([
+			{ kind: 'named', componentName: 'RenderOnce', exportedName: 'RenderOnce' },
+		]);
 		expect(callbackNames(component.locals[0]!.initializer!)).toEqual(['setup']);
 		expect(component.guards).toHaveLength(0);
 		// Root-level branches silently compile to an empty CSR artifact in
@@ -172,30 +178,55 @@ describe('fixture-family sufficiency', () => {
 		if (branch?.kind !== 'branch') throw new Error('missing S1 root branch');
 		expect(branch.id).toBe('branch-site:0');
 		expect(branch.arms.map((arm) => arm.kind)).toEqual(['then', 'else']);
-		expect(branch.arms.map((arm) => walkTemplate(arm.children).filter((node) => node.kind === 'host').map((node) => node.tag))).toEqual([
-			['p'],
-			['section', 'output', 'button'],
+		expect(
+			branch.arms.map((arm) =>
+				walkTemplate(arm.children)
+					.filter((node) => node.kind === 'host')
+					.map((node) => node.tag),
+			),
+		).toEqual([['p'], ['section', 'output', 'button']]);
+		expect(hosts(ir).map((host) => host.tag)).toEqual([
+			'div',
+			'p',
+			'section',
+			'output',
+			'button',
 		]);
-		expect(hosts(ir).map((host) => host.tag)).toEqual(['div', 'p', 'section', 'output', 'button']);
 	});
 
 	test('compile-only alias fixture preserves aliased prop destructuring and alias-record reads', async () => {
 		const ir = await compileOnlyFixtureIr('alias-coverage.tsrx');
 		const component = ir.components[0]!;
 		expect(component.props.entries).toContainEqual(
-			expect.objectContaining({ sourceName: 'label', localName: 'displayLabel', alias: true, graphNodeId: 'prop:props', path: ['label'] }),
+			expect.objectContaining({
+				sourceName: 'label',
+				localName: 'displayLabel',
+				alias: true,
+				graphNodeId: 'prop:props',
+				path: ['label'],
+			}),
 		);
 		expect(ir.records.aliases.find((alias) => alias.name === 'displayLabel')).toEqual(
-			expect.objectContaining({ target: 'props.label', graphNodeId: 'prop:props', path: ['label'] }),
+			expect.objectContaining({
+				target: 'props.label',
+				graphNodeId: 'prop:props',
+				path: ['label'],
+			}),
 		);
-		expect(component.locals.find((local) => local.names.includes('prefix'))?.reads).toContainEqual(
-			{ graphNodeId: 'prop:props', path: ['label'], via: 'alias' },
-		);
+		expect(
+			component.locals.find((local) => local.names.includes('prefix'))?.reads,
+		).toContainEqual({ graphNodeId: 'prop:props', path: ['label'], via: 'alias' });
 		const derived = ir.records.bindings.find((binding) => binding.id === 'computed:derived')!;
-		expect(derived.computed?.reads).toContainEqual(
-			{ graphNodeId: 'prop:props', path: ['label'], via: 'local' },
-		);
-		expect(derived.reads).toContainEqual({ graphNodeId: 'prop:props', path: ['label'] });
+		expect(derived.computed?.reads).toContainEqual({
+			graphNodeId: 'prop:props',
+			path: ['label'],
+			via: 'local',
+		});
+		expect(derived.reads).toContainEqual({
+			componentId: component.id,
+			graphNodeId: 'prop:props',
+			path: ['label'],
+		});
 	});
 
 	test('S2 carries complete branch and keyed-row subtrees plus structural computed dependencies', async () => {
@@ -206,49 +237,112 @@ describe('fixture-family sufficiency', () => {
 		expect(branch?.kind).toBe('branch');
 		if (branch?.kind !== 'branch') throw new Error('missing S2 branch');
 		expect(branch.arms).toHaveLength(2);
-		expect(walkTemplate(branch.arms[0]!.children).some((node) => node.kind === 'host' && node.tag === 'p')).toBe(true);
+		expect(
+			walkTemplate(branch.arms[0]!.children).some(
+				(node) => node.kind === 'host' && node.tag === 'p',
+			),
+		).toBe(true);
 		expect(branch.arms[1]).toEqual({ kind: 'else', children: [] });
 		expect(repeat?.kind).toBe('keyed-repeat');
 		if (repeat?.kind !== 'keyed-repeat') throw new Error('missing S2 repeat');
 		expect(repeat.key.expression.type).toBe('MemberExpression');
-		expect(walkTemplate(repeat.row).filter((node) => node.kind === 'host').map((node) => (node as TemplateHost).tag)).toEqual([
-			'li', 'input', 'input', 'button',
+		expect(
+			walkTemplate(repeat.row)
+				.filter((node) => node.kind === 'host')
+				.map((node) => (node as TemplateHost).tag),
+		).toEqual(['li', 'input', 'input', 'button']);
+		const summarize = (node: TemplateNode): unknown =>
+			node.kind === 'host'
+				? {
+						tag: node.tag,
+						staticAttributes: node.staticAttributes,
+						dynamicBindings: node.dynamicBindings.map(({ kind, name, reads }) => ({
+							kind,
+							name,
+							valuePath: reads.map(
+								(read) => `${read.graphNodeId}/${read.path.join('/')}/${read.via}`,
+							),
+						})),
+						children: node.children.map(summarize),
+					}
+				: node.kind === 'text'
+					? { kind: 'text', value: node.value }
+					: { kind: node.kind };
+		expect(repeat.row.map(summarize)).toEqual([
+			{
+				tag: 'li',
+				staticAttributes: [],
+				dynamicBindings: [
+					{
+						kind: 'attribute',
+						name: 'data-oracle-row-key',
+						valuePath: ['state:todos/id/repeat-item'],
+					},
+				],
+				children: [
+					{
+						tag: 'input',
+						staticAttributes: [],
+						dynamicBindings: [
+							{
+								kind: 'attribute',
+								name: 'data-edit',
+								valuePath: ['state:todos/id/repeat-item'],
+							},
+							{
+								kind: 'property',
+								name: 'value',
+								valuePath: ['state:todos/title/repeat-item'],
+							},
+						],
+						children: [],
+					},
+					{
+						tag: 'input',
+						staticAttributes: [{ name: 'type', value: 'checkbox' }],
+						dynamicBindings: [
+							{
+								kind: 'attribute',
+								name: 'data-toggle',
+								valuePath: ['state:todos/id/repeat-item'],
+							},
+							{
+								kind: 'property',
+								name: 'checked',
+								valuePath: ['state:todos/done/repeat-item'],
+							},
+						],
+						children: [],
+					},
+					{
+						tag: 'button',
+						staticAttributes: [],
+						dynamicBindings: [
+							{
+								kind: 'attribute',
+								name: 'data-remove',
+								valuePath: ['state:todos/id/repeat-item'],
+							},
+						],
+						children: [{ kind: 'text', value: 'remove' }],
+					},
+				],
+			},
 		]);
-		const summarize = (node: TemplateNode): unknown => node.kind === 'host' ? {
-			tag: node.tag,
-			staticAttributes: node.staticAttributes,
-			dynamicBindings: node.dynamicBindings.map(({ kind, name, reads }) => ({
-				kind,
-				name,
-				valuePath: reads.map((read) => `${read.graphNodeId}/${read.path.join('/')}/${read.via}`),
-			})),
-			children: node.children.map(summarize),
-		} : node.kind === 'text' ? { kind: 'text', value: node.value } : { kind: node.kind };
-		expect(repeat.row.map(summarize)).toEqual([{
-			tag: 'li',
-			staticAttributes: [],
-			dynamicBindings: [{ kind: 'attribute', name: 'data-oracle-row-key', valuePath: ['state:todos/id/repeat-item'] }],
-			children: [
-				{ tag: 'input', staticAttributes: [], dynamicBindings: [
-					{ kind: 'attribute', name: 'data-edit', valuePath: ['state:todos/id/repeat-item'] },
-					{ kind: 'property', name: 'value', valuePath: ['state:todos/title/repeat-item'] },
-				], children: [] },
-				{ tag: 'input', staticAttributes: [{ name: 'type', value: 'checkbox' }], dynamicBindings: [
-					{ kind: 'attribute', name: 'data-toggle', valuePath: ['state:todos/id/repeat-item'] },
-					{ kind: 'property', name: 'checked', valuePath: ['state:todos/done/repeat-item'] },
-				], children: [] },
-				{ tag: 'button', staticAttributes: [], dynamicBindings: [
-					{ kind: 'attribute', name: 'data-remove', valuePath: ['state:todos/id/repeat-item'] },
-				], children: [{ kind: 'text', value: 'remove' }] },
-			],
-		}]);
 
 		const complete = ir.records.bindings.find((binding) => binding.name === 'complete')!;
 		expect(complete.computed?.expression.type).toBe('ArrowFunctionExpression');
-		const fromSerializedAst = collectGraphReads(complete.computed!.expression, ir.records.bindings);
+		const fromSerializedAst = collectGraphReads(
+			complete.computed!.expression,
+			ir.records.bindings,
+		);
 		expect(fromSerializedAst.map((read) => read.graphNodeId)).toEqual(['state:todos']);
 		expect(complete.computed?.reads.map((read) => read.graphNodeId)).toEqual(['state:todos']);
-		expect(complete.computed?.reads.some((read) => read.path.some((part) => part.includes('filter(')))).toBe(false);
+		expect(
+			complete.computed?.reads.some((read) =>
+				read.path.some((part) => part.includes('filter(')),
+			),
+		).toBe(false);
 	});
 
 	test('S2 event effects are exact and temporary receiver mutation is not a graph write', async () => {
@@ -256,29 +350,84 @@ describe('fixture-family sufficiency', () => {
 		const effects = ir.records.events.map((event) => ({
 			id: event.id,
 			eventName: event.eventName,
-			reads: event.handlers[0]!.reads.map((read) => `${read.graphNodeId}/${read.path.join('/')}/${read.via}`),
-			writes: event.handlers[0]!.writes.map((write) => `${write.graphNodeId}/${write.path.join('/')}/${write.operation}/${write.via}`),
+			reads: event.handlers[0]!.reads.map(
+				(read) => `${read.graphNodeId}/${read.path.join('/')}/${read.via}`,
+			),
+			writes: event.handlers[0]!.writes.map(
+				(write) =>
+					`${write.graphNodeId}/${write.path.join('/')}/${write.operation}/${write.via}`,
+			),
 		}));
 		expect(effects).toEqual([
-			{ id: 'event:0', eventName: 'input', reads: [], writes: ['state:draft//assign/direct'] },
-			{ id: 'event:1', eventName: 'click', reads: [
-				'prop:props/onTrace/alias', 'state:draft//direct', 'state:next//direct', 'state:todos//direct',
-			], writes: ['state:draft//assign/direct', 'state:next//update/direct', 'state:todos//assign/direct'] },
-			{ id: 'event:2', eventName: 'input', reads: [
-				'prop:props/onTrace/alias', 'state:todos//direct', 'state:todos/id/repeat-item',
-			], writes: ['state:todos//assign/direct', 'state:todos/*/title/assign/handler-local-alias'] },
-			{ id: 'event:3', eventName: 'change', reads: [
-				'prop:props/onTrace/alias', 'state:todos//direct', 'state:todos/id/repeat-item',
-			], writes: ['state:todos//assign/direct', 'state:todos/*/done/assign/handler-local-alias'] },
-			{ id: 'event:4', eventName: 'click', reads: [
-				'prop:props/onTrace/alias', 'state:todos//direct', 'state:todos/id/repeat-item',
-			], writes: ['state:todos//assign/direct'] },
-			{ id: 'event:5', eventName: 'click', reads: [
-				'prop:props/onTrace/alias', 'state:todos//direct',
-			], writes: ['state:todos//assign/direct'] },
-			{ id: 'event:6', eventName: 'click', reads: [
-				'prop:props/onTrace/alias', 'state:todos/length/direct',
-			], writes: ['state:todos//assign/direct'] },
+			{
+				id: 'event:0',
+				eventName: 'input',
+				reads: [],
+				writes: ['state:draft//assign/direct'],
+			},
+			{
+				id: 'event:1',
+				eventName: 'click',
+				reads: [
+					'prop:props/onTrace/alias',
+					'state:draft//direct',
+					'state:next//direct',
+					'state:todos//direct',
+				],
+				writes: [
+					'state:draft//assign/direct',
+					'state:next//update/direct',
+					'state:todos//assign/direct',
+				],
+			},
+			{
+				id: 'event:2',
+				eventName: 'input',
+				reads: [
+					'prop:props/onTrace/alias',
+					'state:todos//direct',
+					'state:todos/id/repeat-item',
+				],
+				writes: [
+					'state:todos//assign/direct',
+					'state:todos/*/title/assign/handler-local-alias',
+				],
+			},
+			{
+				id: 'event:3',
+				eventName: 'change',
+				reads: [
+					'prop:props/onTrace/alias',
+					'state:todos//direct',
+					'state:todos/id/repeat-item',
+				],
+				writes: [
+					'state:todos//assign/direct',
+					'state:todos/*/done/assign/handler-local-alias',
+				],
+			},
+			{
+				id: 'event:4',
+				eventName: 'click',
+				reads: [
+					'prop:props/onTrace/alias',
+					'state:todos//direct',
+					'state:todos/id/repeat-item',
+				],
+				writes: ['state:todos//assign/direct'],
+			},
+			{
+				id: 'event:5',
+				eventName: 'click',
+				reads: ['prop:props/onTrace/alias', 'state:todos//direct'],
+				writes: ['state:todos//assign/direct'],
+			},
+			{
+				id: 'event:6',
+				eventName: 'click',
+				reads: ['prop:props/onTrace/alias', 'state:todos/length/direct'],
+				writes: ['state:todos//assign/direct'],
+			},
 		]);
 		expect(ir.records.stateWrites.some((write) => write.method === 'reverse')).toBe(false);
 	});
@@ -293,15 +442,21 @@ describe('fixture-family sufficiency', () => {
 			const ir = await fixtureIr(file);
 			const names = [
 				...ir.components.flatMap((component) =>
-					component.locals.flatMap((local) => local.initializer ? callbackNames(local.initializer) : []),
+					component.locals.flatMap((local) =>
+						local.initializer ? callbackNames(local.initializer) : [],
+					),
 				),
-				...ir.records.events.flatMap((event) => event.handlers.flatMap((handler) => callbackNames(handler.expression))),
+				...ir.records.events.flatMap((event) =>
+					event.handlers.flatMap((handler) => callbackNames(handler.expression)),
+				),
 			];
 			expect([...new Set(names)].sort()).toEqual([...expected[file]].sort());
 			for (const event of ir.records.events) {
 				expect(event.handlers).toHaveLength(1);
 				expect(event.handlers[0]!.expression.type).toBe('ArrowFunctionExpression');
-				expect(event.handlers[0]!.reads.length + event.handlers[0]!.writes.length).toBeGreaterThan(0);
+				expect(
+					event.handlers[0]!.reads.length + event.handlers[0]!.writes.length,
+				).toBeGreaterThan(0);
 			}
 		}
 	});
@@ -314,8 +469,9 @@ describe('fixture-family sufficiency', () => {
 				.map((binding) => binding.name),
 		);
 		expect(properties.sort()).toEqual(['checked', 'value']);
-		const submit = ir.records.events.find((event) =>
-			event.syncPolicy && callbackNames(event.handlers[0]!.expression).includes('submit'),
+		const submit = ir.records.events.find(
+			(event) =>
+				event.syncPolicy && callbackNames(event.handlers[0]!.expression).includes('submit'),
 		)!;
 		expect(submit.syncPolicy).toEqual({
 			when: { type: 'constant-truthy', value: true },
@@ -342,7 +498,10 @@ describe('closure and honesty', () => {
 				for (const [key, child] of Object.entries(value)) {
 					if (key === 'graphNodeId' && typeof child === 'string') referenced.add(child);
 					if (key === 'path' && Array.isArray(child)) {
-						expect(child.every((part) => typeof part === 'string' && !/[()]/.test(part)), `degraded path ${String(child)}`).toBe(true);
+						expect(
+							child.every((part) => typeof part === 'string' && !/[()]/.test(part)),
+							`degraded path ${String(child)}`,
+						).toBe(true);
 					}
 					visit(child);
 				}
@@ -359,7 +518,8 @@ describe('closure and honesty', () => {
 			]);
 			for (const [tag, attribute] of EXPECTED_HOSTS[file]) {
 				const index = actual.findIndex(
-					([actualTag, attributes]) => actualTag === tag && (!attribute || attributes.includes(attribute)),
+					([actualTag, attributes]) =>
+						actualTag === tag && (!attribute || attributes.includes(attribute)),
 				);
 				expect(index, `missing <${tag} ${attribute}>`).toBeGreaterThanOrEqual(0);
 				actual.splice(index, 1);
@@ -369,8 +529,16 @@ describe('closure and honesty', () => {
 	}
 
 	test('the public contract has an allowlisted top-level shape and no public Markless type dependency', async () => {
-		const allowed = new Set(['version', 'filename', 'imports', 'module', 'components', 'records']);
-		const hasOnlyKnownTopLevelKeys = (value: object): boolean => Object.keys(value).every((key) => allowed.has(key));
+		const allowed = new Set([
+			'version',
+			'filename',
+			'imports',
+			'module',
+			'components',
+			'records',
+		]);
+		const hasOnlyKnownTopLevelKeys = (value: object): boolean =>
+			Object.keys(value).every((key) => allowed.has(key));
 		for (const file of FIXTURES) {
 			const ir = await fixtureIr(file);
 			expect(hasOnlyKnownTopLevelKeys(ir)).toBe(true);
@@ -381,33 +549,76 @@ describe('closure and honesty', () => {
 	});
 
 	test('record tables use defined locale-independent sort keys and filenames are normalized', async () => {
-		const compare = (left: string, right: string): number => left < right ? -1 : left > right ? 1 : 0;
-		const sorted = <T>(values: readonly T[], key: (value: T) => string): T[] => [...values].sort((a, b) => compare(key(a), key(b)));
-		const sortedWrites = <T extends { graphNodeId: string; path: readonly string[]; operation: string; method?: string; sourceSpan?: { start: number; end: number } }>(values: readonly T[]): T[] =>
-			[...values].sort((a, b) =>
-				compare(a.graphNodeId, b.graphNodeId) || compare(a.path.join('\0'), b.path.join('\0')) ||
-				compare(a.operation, b.operation) || compare(a.method ?? '', b.method ?? '') ||
-				(a.sourceSpan?.start ?? -1) - (b.sourceSpan?.start ?? -1) ||
-				(a.sourceSpan?.end ?? -1) - (b.sourceSpan?.end ?? -1),
+		const compare = (left: string, right: string): number =>
+			left < right ? -1 : left > right ? 1 : 0;
+		const sorted = <T>(values: readonly T[], key: (value: T) => string): T[] =>
+			[...values].sort((a, b) => compare(key(a), key(b)));
+		const sortedWrites = <
+			T extends {
+				componentId: string;
+				graphNodeId: string;
+				path: readonly string[];
+				operation: string;
+				method?: string;
+				sourceSpan?: { start: number; end: number };
+			},
+		>(
+			values: readonly T[],
+		): T[] =>
+			[...values].sort(
+				(a, b) =>
+					compare(a.componentId, b.componentId) ||
+					compare(a.graphNodeId, b.graphNodeId) ||
+					compare(a.path.join('\0'), b.path.join('\0')) ||
+					compare(a.operation, b.operation) ||
+					compare(a.method ?? '', b.method ?? '') ||
+					(a.sourceSpan?.start ?? -1) - (b.sourceSpan?.start ?? -1) ||
+					(a.sourceSpan?.end ?? -1) - (b.sourceSpan?.end ?? -1),
 			);
 		for (const file of FIXTURES) {
 			const ir = await fixtureIr(file);
-			expect(ir.records.bindings).toEqual(sorted(ir.records.bindings, (binding) => binding.id));
+			expect(ir.records.bindings).toEqual(
+				sorted(ir.records.bindings, (binding) => binding.id),
+			);
 			expect(ir.records.aliases).toEqual(sorted(ir.records.aliases, (alias) => alias.id));
 			expect(ir.records.events).toEqual(sorted(ir.records.events, (event) => event.id));
-			expect(ir.records.stateReads).toEqual(sorted(ir.records.stateReads, (read) => `${read.graphNodeId}\0${read.path.join('\0')}`));
+			expect(ir.records.stateReads).toEqual(
+				sorted(
+					ir.records.stateReads,
+					(read) => `${read.componentId}\0${read.graphNodeId}\0${read.path.join('\0')}`,
+				),
+			);
 			expect(ir.records.stateWrites).toEqual(sortedWrites(ir.records.stateWrites));
 			for (const binding of ir.records.bindings) {
-				expect(binding.reads).toEqual(sorted(binding.reads, (read) => `${read.graphNodeId}\0${read.path.join('\0')}`));
+				expect(binding.reads).toEqual(
+					sorted(
+						binding.reads,
+						(read) =>
+							`${read.componentId}\0${read.graphNodeId}\0${read.path.join('\0')}`,
+					),
+				);
 				expect(binding.writes).toEqual(sortedWrites(binding.writes));
 			}
 			for (const event of ir.records.events) {
-				expect(event.handlers).toEqual(sorted(event.handlers, (handler) => `${String(handler.expression.start).padStart(12, '0')}\0${String(handler.expression.end).padStart(12, '0')}`));
-				for (const handler of event.handlers) expect(handler.writes).toEqual(sortedWrites(handler.writes));
+				expect(event.handlers).toEqual(
+					sorted(
+						event.handlers,
+						(handler) =>
+							`${String(handler.expression.start).padStart(12, '0')}\0${String(handler.expression.end).padStart(12, '0')}`,
+					),
+				);
+				for (const handler of event.handlers)
+					expect(handler.writes).toEqual(sortedWrites(handler.writes));
 			}
 		}
-		const source = readFileSync(new URL('./fixtures/s1-render-once.tsrx', import.meta.url), 'utf8');
-		const ir = await buildEnrichedIr({ filename: '/machine/private/project/src/fixtures/s1-render-once.tsrx', source });
+		const source = readFileSync(
+			new URL('./fixtures/s1-render-once.tsrx', import.meta.url),
+			'utf8',
+		);
+		const ir = await buildEnrichedIr({
+			filename: '/machine/private/project/src/fixtures/s1-render-once.tsrx',
+			source,
+		});
 		expect(ir.filename).toBe('src/fixtures/s1-render-once.tsrx');
 		expect(dumpEnrichedIr(ir)).not.toContain('/machine/private/project');
 	});

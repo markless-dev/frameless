@@ -2,7 +2,7 @@
 
 Solid target package for Frameless. It owns the Solid-specific emitter, conventionality gate,
 browser-safe analyzer adapter, JSX transform, calibrated handwritten references, and emitted
-equivalence smoke. The emitter consumes `frameless-enriched-ir/1`; it never parses TSRX or imports
+equivalence smoke. The emitter consumes `frameless-enriched-ir/2`; it never parses TSRX or imports
 Markless at runtime.
 
 The public async `formatEmitted(source)` applies the repository's oxfmt configuration whenever
@@ -51,16 +51,16 @@ records rather than matching the state name or initializer spelling.
 
 The browser evidence uses `@frameless/analyzer` as follows:
 
-| Analyzer behavior                                                                               | Consequence for this package                                                                                 |
-| ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| Scenario ids may carry a `/variant` suffix                                                      | Emitted smoke resolves the component from the base id and includes the non-primary S1 hidden variant.        |
-| Input/check actions update live DOM properties before dispatch                                  | Controlled bindings are compared after native `input`/`click` dispatch, not by synthetic framework helpers.  |
-| Observations retain element/text nodes and omit framework marker attributes                     | Empty Solid anchors do not become semantic DOM, while authored empty elements still do.                      |
+| Analyzer behavior                                                                               | Consequence for this package                                                                                                                                                                                           |
+| ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Scenario ids may carry a `/variant` suffix                                                      | Emitted smoke resolves the component from the base id and includes the non-primary S1 hidden variant.                                                                                                                  |
+| Input/check actions update live DOM properties before dispatch                                  | Controlled bindings are compared after native `input`/`click` dispatch, not by synthetic framework helpers.                                                                                                            |
+| Observations retain element/text nodes and omit framework marker attributes                     | Empty Solid anchors do not become semantic DOM, while authored empty elements still do.                                                                                                                                |
 | Text nodes with content strictly equal to `''` are omitted; whitespace-only text is retained    | Solid conditional-insert placeholders and React's absent-null renders serialize identically, so cross-target Show/null-conditional comparison is possible; authored empty text is unobservable and equally normalized. |
-| Input `value` and `checked` are serialized as properties; authored attributes are also retained | `value` and `attr:value` must both match the handwritten reference.                                          |
-| Row node ids are normalized out of ordinary DOM comparison                                      | Identity and focus have separate violation channels, so keyed reuse is still enforced.                       |
-| Dispatch, microtask, and bounded-quiescence phases are distinct                                 | Solid's synchronous authored writes are visible in order before later observation phases.                    |
-| Callback payload objects are key-sorted                                                         | Field order is not treated as a framework divergence; callback invocation and phase order remain observable. |
+| Input `value` and `checked` are serialized as properties; authored attributes are also retained | `value` and `attr:value` must both match the handwritten reference.                                                                                                                                                    |
+| Row node ids are normalized out of ordinary DOM comparison                                      | Identity and focus have separate violation channels, so keyed reuse is still enforced.                                                                                                                                 |
+| Dispatch, microtask, and bounded-quiescence phases are distinct                                 | Solid's synchronous authored writes are visible in order before later observation phases.                                                                                                                              |
+| Callback payload objects are key-sorted                                                         | Field order is not treated as a framework divergence; callback invocation and phase order remain observable.                                                                                                           |
 
 ## Gate
 
@@ -118,7 +118,7 @@ wrappers do not excuse an identical nested list; a differing leaf does break the
 
 ## Verify
 
-The checked-in suite inventory is 76 node tests (26 emitter/freshness, 2 emitted-formatting, 41
+The checked-in suite inventory is 79 node tests (29 emitter/freshness, 2 emitted-formatting, 41
 gate, 2 adapter entry/import-graph, 1 size, 4 Solid 2 blocker contract) and 17 browser tests (12
 handwritten calibration including eight mutants, plus 5 emitted/reference and store-row smoke
 tests). These are source counts, not a claim that a particular environment executed them.

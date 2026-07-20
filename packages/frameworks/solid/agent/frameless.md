@@ -1,7 +1,7 @@
 # Frameless Solid target agent playbook
 
 Use this guidance for the installed `@frameless/solid` version. The package consumes
-`frameless-enriched-ir/1`, emits Solid fallback JSX, checks generated conventionality, and supplies
+`frameless-enriched-ir/2`, emits Solid fallback JSX, checks generated conventionality, and supplies
 the browser analyzer adapter.
 
 ## Target boundaries

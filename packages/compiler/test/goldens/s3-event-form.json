@@ -6,6 +6,7 @@
         "ordinaryLocals": "once-per-instance"
       },
       "guards": [],
+      "id": "component:0:EventForm",
       "locals": [
         {
           "declarationKind": "let",
@@ -332,6 +333,7 @@
   "records": {
     "aliases": [
       {
+        "componentId": "component:0:EventForm",
         "declarationKind": "const",
         "graphNodeId": "prop:props",
         "id": "alias:EventForm:initial",
@@ -347,6 +349,7 @@
         "target": "props.initial"
       },
       {
+        "componentId": "component:0:EventForm",
         "declarationKind": "const",
         "graphNodeId": "prop:props",
         "id": "alias:EventForm:onTrace",
@@ -362,8 +365,10 @@
         "target": "props.onTrace"
       }
     ],
+    "behaviors": [],
     "bindings": [
       {
+        "componentId": "component:0:EventForm",
         "declarationKind": "const",
         "id": "prop:props",
         "kind": "prop",
@@ -374,6 +379,7 @@
         "writes": []
       },
       {
+        "componentId": "component:0:EventForm",
         "declarationKind": "let",
         "id": "state:checked",
         "initialValue": false,
@@ -392,6 +398,7 @@
         "writes": [
           {
             "assignmentOperator": "=",
+            "componentId": "component:0:EventForm",
             "graphNodeId": "state:checked",
             "operation": "assign",
             "path": [],
@@ -437,6 +444,7 @@
         ]
       },
       {
+        "componentId": "component:0:EventForm",
         "declarationKind": "let",
         "id": "state:text",
         "initializer": {
@@ -449,6 +457,7 @@
         "name": "text",
         "reads": [
           {
+            "componentId": "component:0:EventForm",
             "graphNodeId": "prop:props",
             "path": [
               "initial"
@@ -460,6 +469,7 @@
         "writes": [
           {
             "assignmentOperator": "=",
+            "componentId": "component:0:EventForm",
             "graphNodeId": "state:text",
             "operation": "assign",
             "path": [],
@@ -505,6 +515,7 @@
         ]
       },
       {
+        "componentId": "component:0:EventForm",
         "declarationKind": "let",
         "id": "state:writes",
         "initialValue": 0,
@@ -523,6 +534,7 @@
         "writes": [
           {
             "assignmentOperator": "=",
+            "componentId": "component:0:EventForm",
             "graphNodeId": "state:writes",
             "operation": "assign",
             "path": [],
@@ -542,6 +554,7 @@
           },
           {
             "assignmentOperator": "=",
+            "componentId": "component:0:EventForm",
             "graphNodeId": "state:writes",
             "operation": "assign",
             "path": [],
@@ -562,8 +575,10 @@
         ]
       }
     ],
+    "elementHandleBindings": [],
     "events": [
       {
+        "componentId": "component:0:EventForm",
         "eventName": "click",
         "handlers": [
           {
@@ -739,6 +754,7 @@
         "id": "event:0"
       },
       {
+        "componentId": "component:0:EventForm",
         "eventName": "input",
         "handlers": [
           {
@@ -913,6 +929,7 @@
             "writes": [
               {
                 "assignmentOperator": "=",
+                "componentId": "component:0:EventForm",
                 "graphNodeId": "state:text",
                 "operation": "assign",
                 "path": [],
@@ -962,6 +979,7 @@
         "id": "event:1"
       },
       {
+        "componentId": "component:0:EventForm",
         "eventName": "change",
         "handlers": [
           {
@@ -1136,6 +1154,7 @@
             "writes": [
               {
                 "assignmentOperator": "=",
+                "componentId": "component:0:EventForm",
                 "graphNodeId": "state:checked",
                 "operation": "assign",
                 "path": [],
@@ -1185,6 +1204,7 @@
         "id": "event:2"
       },
       {
+        "componentId": "component:0:EventForm",
         "eventName": "click",
         "handlers": [
           {
@@ -1416,6 +1436,7 @@
             "writes": [
               {
                 "assignmentOperator": "=",
+                "componentId": "component:0:EventForm",
                 "graphNodeId": "state:writes",
                 "operation": "assign",
                 "path": [],
@@ -1435,6 +1456,7 @@
               },
               {
                 "assignmentOperator": "=",
+                "componentId": "component:0:EventForm",
                 "graphNodeId": "state:writes",
                 "operation": "assign",
                 "path": [],
@@ -1468,28 +1490,39 @@
         }
       }
     ],
+    "handleCalls": [],
+    "sharedCalls": [],
+    "sharedDefinitions": [],
+    "sharedInstances": [],
+    "sharedReads": [],
+    "sharedWrites": [],
     "stateReads": [
       {
+        "componentId": "component:0:EventForm",
         "graphNodeId": "prop:props",
         "path": [
           "initial"
         ]
       },
       {
+        "componentId": "component:0:EventForm",
         "graphNodeId": "prop:props",
         "path": [
           "onTrace"
         ]
       },
       {
+        "componentId": "component:0:EventForm",
         "graphNodeId": "state:checked",
         "path": []
       },
       {
+        "componentId": "component:0:EventForm",
         "graphNodeId": "state:text",
         "path": []
       },
       {
+        "componentId": "component:0:EventForm",
         "graphNodeId": "state:writes",
         "path": []
       }
@@ -1497,6 +1530,7 @@
     "stateWrites": [
       {
         "assignmentOperator": "=",
+        "componentId": "component:0:EventForm",
         "graphNodeId": "state:checked",
         "operation": "assign",
         "path": [],
@@ -1541,6 +1575,7 @@
       },
       {
         "assignmentOperator": "=",
+        "componentId": "component:0:EventForm",
         "graphNodeId": "state:text",
         "operation": "assign",
         "path": [],
@@ -1585,6 +1620,7 @@
       },
       {
         "assignmentOperator": "=",
+        "componentId": "component:0:EventForm",
         "graphNodeId": "state:writes",
         "operation": "assign",
         "path": [],
@@ -1604,6 +1640,7 @@
       },
       {
         "assignmentOperator": "=",
+        "componentId": "component:0:EventForm",
         "graphNodeId": "state:writes",
         "operation": "assign",
         "path": [],
@@ -1623,5 +1660,5 @@
       }
     ]
   },
-  "version": "frameless-enriched-ir/1"
+  "version": "frameless-enriched-ir/2"
 }

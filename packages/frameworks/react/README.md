@@ -2,7 +2,7 @@
 
 React 19 target package for Frameless. It owns four framework-specific surfaces:
 
-- `emit(ir)` consumes `frameless-enriched-ir/1` and returns one automatic-runtime `.jsx`
+- `emit(ir)` consumes `frameless-enriched-ir/2` and returns one automatic-runtime `.jsx`
   module built with Babel AST. It does not parse author source.
 - `formatEmitted(source)` asynchronously applies the repository's oxfmt configuration when emitted
   source becomes an artifact; `emit(ir)` remains synchronous and byte-stable.
@@ -83,7 +83,7 @@ family; it is not a proof that arbitrary generated React is idiomatic or semanti
 
 ## Verify
 
-The checked-in suite inventory is 66 node tests and 16 browser tests. These are source counts, not
+The checked-in suite inventory is 69 node tests and 16 browser tests. These are source counts, not
 a claim that a particular environment executed them.
 
 ```sh

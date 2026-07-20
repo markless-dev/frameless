@@ -93,8 +93,7 @@ function itemMemberPath(node: SerializableAstNode, item: string): string[] | nul
 function containsElement(node: TemplateNode): boolean {
 	if (node.kind === 'host') return true;
 	if (node.kind === 'fragment') return node.children.some(containsElement);
-	if (node.kind === 'branch')
-		return node.arms.some((arm) => arm.children.some(containsElement));
+	if (node.kind === 'branch') return node.arms.some((arm) => arm.children.some(containsElement));
 	if (node.kind === 'keyed-repeat') return node.row.some(containsElement);
 	return false;
 }
@@ -127,7 +126,9 @@ function reconcileReadSemantics(
 	const localsByName = new Map(
 		locals.flatMap((local) => local.names.map((name) => [name, local] as const)),
 	);
-	const recordedReads = new Map(reads.map((read) => [readKey(read.graphNodeId, read.path), read]));
+	const recordedReads = new Map(
+		reads.map((read) => [readKey(read.graphNodeId, read.path), read]),
+	);
 	const astReads = new Set<string>();
 	const wrapper = t.file(t.program([t.expressionStatement(ast)]));
 	traverse(wrapper, {
@@ -136,11 +137,7 @@ function reconcileReadSemantics(
 			let current = path as any;
 			while (current.parentPath?.isMemberExpression() && current.key === 'object')
 				current = current.parentPath;
-			if (
-				current.parentPath?.isAssignmentExpression() &&
-				current.key === 'left'
-			)
-				return;
+			if (current.parentPath?.isAssignmentExpression() && current.key === 'left') return;
 			const chain = babelMemberPath(current.node);
 			if (!chain) return;
 			let suffix = chain.path;
@@ -231,12 +228,17 @@ function reconcileHandlerWrites(
 		const mutation = mutations.find((candidate) => {
 			if (matched.has(candidate) || candidate.path.join('/') !== expectedPath.join('/'))
 				return false;
-			if (write.via === 'direct' && (candidate.locallyBound || candidate.root !== binding.name))
+			if (
+				write.via === 'direct' &&
+				(candidate.locallyBound || candidate.root !== binding.name)
+			)
 				return false;
 			if (write.via === 'handler-local-alias' && !candidate.locallyBound) return false;
 			if (write.operation === 'assign')
 				return (
-					t.isAssignmentExpression(candidate.node, { operator: write.assignmentOperator }) &&
+					t.isAssignmentExpression(candidate.node, {
+						operator: write.assignmentOperator,
+					}) &&
 					Boolean(write.value) &&
 					t.isNodesEquivalent(candidate.node.right, expression(write.value))
 				);
@@ -291,9 +293,11 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 	const component: EnrichedComponent = ir.components[0]!;
 	exactKeys(
 		component,
-		['name', 'evaluation', 'props', 'locals', 'guards', 'template'],
+		['id', 'name', 'evaluation', 'props', 'locals', 'guards', 'template'],
 		'EnrichedComponent',
 	);
+	if (typeof component.id !== 'string' || component.id.length === 0)
+		throw new Error('EnrichedComponent has malformed id');
 	if (!t.isValidIdentifier(component.name) || !/^\p{Lu}/u.test(component.name))
 		throw new Error(`Unsupported component name: ${component.name}`);
 	exactKeys(
@@ -326,10 +330,61 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 	exactKeys(component.props, ['graphNodeId', 'entries'], 'ComponentProps');
 	exactKeys(
 		ir.records,
-		['bindings', 'aliases', 'events', 'stateReads', 'stateWrites'],
+		[
+			'bindings',
+			'aliases',
+			'events',
+			'stateReads',
+			'stateWrites',
+			'sharedDefinitions',
+			'sharedInstances',
+			'sharedReads',
+			'sharedCalls',
+			'sharedWrites',
+			'elementHandleBindings',
+			'behaviors',
+			'handleCalls',
+		],
 		'EnrichedRecordTable',
 	);
+	for (const [family, records] of [
+		['bindings', ir.records.bindings],
+		['aliases', ir.records.aliases],
+		['events', ir.records.events],
+		['stateReads', ir.records.stateReads],
+		['stateWrites', ir.records.stateWrites],
+		['sharedDefinitions', ir.records.sharedDefinitions],
+		['sharedInstances', ir.records.sharedInstances],
+		['sharedReads', ir.records.sharedReads],
+		['sharedCalls', ir.records.sharedCalls],
+		['sharedWrites', ir.records.sharedWrites],
+		['elementHandleBindings', ir.records.elementHandleBindings],
+		['behaviors', ir.records.behaviors],
+		['handleCalls', ir.records.handleCalls],
+	] as const)
+		if (!Array.isArray(records))
+			throw new Error(`EnrichedRecordTable ${family} has malformed record family`);
+	for (const imported of ir.imports) {
+		exactKeys(
+			imported,
+			['localName', 'source', 'kind', 'importedName', 'resolvesTo'],
+			'ModuleImport',
+		);
+		if (
+			typeof imported.localName !== 'string' ||
+			typeof imported.source !== 'string' ||
+			!['default', 'named', 'namespace'].includes(imported.kind) ||
+			(imported.importedName !== undefined && typeof imported.importedName !== 'string') ||
+			(imported.resolvesTo !== undefined && imported.resolvesTo !== 'tsrx-module')
+		)
+			throw new Error('ModuleImport has malformed construct');
+	}
 	const bindingIds = new Set(ir.records.bindings.map((binding) => binding.id));
+	const componentIds = new Set(ir.components.map((entry) => entry.id));
+	const validateComponentId = (construct: string, componentId: unknown): void => {
+		if (typeof componentId !== 'string' || !componentIds.has(componentId))
+			throw new Error(`${construct} has unknown component id: ${String(componentId)}`);
+	};
 	const eventIds = new Set(ir.records.events.map((event) => event.id));
 	if (bindingIds.size !== ir.records.bindings.length)
 		throw new Error('EnrichedRecordTable has duplicate binding record ids');
@@ -341,7 +396,12 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		);
 
 	const validateRead = (read: RecordLike, construct: string, via: boolean): void => {
-		exactKeys(read, via ? ['graphNodeId', 'path', 'via'] : ['graphNodeId', 'path'], construct);
+		exactKeys(
+			read,
+			via ? ['graphNodeId', 'path', 'via'] : ['componentId', 'graphNodeId', 'path'],
+			construct,
+		);
+		if (!via) validateComponentId(construct, read.componentId);
 		if (typeof read.graphNodeId !== 'string' || !bindingIds.has(read.graphNodeId))
 			throw new Error(
 				`${construct} has dangling graph record id: ${String(read.graphNodeId)}`,
@@ -349,6 +409,23 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		validatePath(read.path, construct);
 		if (via && !['direct', 'alias', 'local', 'repeat-item'].includes(read.via))
 			throw new Error(`${construct} has unsupported read shape`);
+	};
+	const validateAst = (construct: string, value: unknown): void => {
+		if (
+			!value ||
+			typeof value !== 'object' ||
+			typeof (value as { type?: unknown }).type !== 'string'
+		)
+			throw new Error(`${construct} has malformed AST`);
+	};
+	const stringPath = (value: unknown): boolean =>
+		Array.isArray(value) && value.every((part) => typeof part === 'string');
+	const validateStructuralSite = (construct: string, site: RecordLike): void => {
+		exactKeys(site, ['expression', 'reads'], construct);
+		validateAst(`${construct} expression`, site.expression);
+		assertArray(site.reads, `${construct} reads`);
+		for (const read of site.reads)
+			validateRead(read as RecordLike, `${construct} GraphReadRef`, true);
 	};
 	const validateSite = (
 		site: RecordLike,
@@ -378,9 +455,10 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 	for (const entry of component.props.entries) {
 		exactKeys(
 			entry,
-			['sourceName', 'localName', 'path', 'alias', 'graphNodeId'],
+			['sourceName', 'localName', 'path', 'alias', 'graphNodeId', 'defaultValue'],
 			'PropDestructuringEntry',
 		);
+		if (entry.defaultValue !== undefined) expression(entry.defaultValue);
 		if (entry.alias !== (entry.sourceName !== entry.localName))
 			throw new Error(
 				`PropDestructuringEntry has inconsistent alias metadata: ${entry.localName}`,
@@ -399,6 +477,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		exactKeys(
 			write,
 			[
+				'componentId',
 				'graphNodeId',
 				'path',
 				'operation',
@@ -413,6 +492,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 			],
 			construct,
 		);
+		validateComponentId(construct, write.componentId);
 		if (!bindingIds.has(write.graphNodeId))
 			throw new Error(`${construct} has dangling graph record id: ${write.graphNodeId}`);
 		validatePath(write.path, construct);
@@ -482,6 +562,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		exactKeys(
 			binding,
 			[
+				'componentId',
 				'id',
 				'name',
 				'kind',
@@ -498,6 +579,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 			],
 			'EnrichedGraphBinding',
 		);
+		validateComponentId(`EnrichedGraphBinding ${binding.id}`, binding.componentId);
 		if (!['prop', 'state', 'computed'].includes(binding.kind))
 			throw new Error(`Unsupported binding construct: ${binding.kind}`);
 		if (binding.async || binding.asyncCapable)
@@ -559,9 +641,19 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 	for (const alias of ir.records.aliases) {
 		exactKeys(
 			alias,
-			['id', 'name', 'target', 'graphNodeId', 'path', 'declarationKind', 'sourceSpan'],
+			[
+				'componentId',
+				'id',
+				'name',
+				'target',
+				'graphNodeId',
+				'path',
+				'declarationKind',
+				'sourceSpan',
+			],
 			'EnrichedAliasRecord',
 		);
+		validateComponentId(`EnrichedAliasRecord ${alias.id}`, alias.componentId);
 		if (!bindingIds.has(alias.graphNodeId))
 			throw new Error(
 				`EnrichedAliasRecord ${alias.id} has dangling graph record id: ${alias.graphNodeId}`,
@@ -583,15 +675,79 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		location: string,
 		repeatItems: ReadonlyMap<string, string> = new Map(),
 	): void => {
+		if (!node || typeof node !== 'object')
+			throw new Error(
+				`TemplateNode has malformed construct at ${location}: ${String((node as any)?.kind)}`,
+			);
+		if (node.kind === 'component-reference') {
+			exactKeys(
+				node,
+				['kind', 'id', 'edgeId', 'target', 'props', 'children'],
+				'TemplateComponentReference',
+			);
+			if (
+				typeof node.id !== 'string' ||
+				typeof node.edgeId !== 'string' ||
+				!node.target ||
+				typeof node.target !== 'object' ||
+				!Array.isArray(node.props) ||
+				!Array.isArray(node.children)
+			)
+				throw new Error('TemplateComponentReference has malformed construct');
+			exactKeys(
+				node.target,
+				node.target.module === 'self'
+					? ['localName', 'module']
+					: ['localName', 'module', 'exportedName'],
+				'TemplateComponentReference target',
+			);
+			if (
+				typeof node.target.localName !== 'string' ||
+				typeof node.target.module !== 'string' ||
+				(node.target.module !== 'self' &&
+					(!('exportedName' in node.target) ||
+						typeof node.target.exportedName !== 'string'))
+			)
+				throw new Error('TemplateComponentReference target has malformed construct');
+			for (const prop of node.props) {
+				exactKeys(
+					prop,
+					['name', 'kind', 'value', 'graphNodeId', 'path'],
+					'ComponentPropExpression',
+				);
+				if (
+					typeof prop.name !== 'string' ||
+					!['graph-reference', 'callback', 'serializable', 'opaque'].includes(
+						prop.kind,
+					) ||
+					(prop.graphNodeId !== undefined && typeof prop.graphNodeId !== 'string') ||
+					(prop.path !== undefined &&
+						(!Array.isArray(prop.path) ||
+							prop.path.some((part: unknown) => typeof part !== 'string')))
+				)
+					throw new Error('ComponentPropExpression has malformed construct');
+					validateStructuralSite('ComponentPropExpression value', prop.value as RecordLike);
+			}
+			throw new Error(
+				'TemplateComponentReference cannot be lowered: composition constructs land in the Solid composition package',
+			);
+		}
+		if (node.kind === 'default-slot-projection') {
+			exactKeys(node, ['kind', 'id', 'site'], 'TemplateDefaultSlotProjection');
+			if (typeof node.id !== 'string' || !node.site || typeof node.site !== 'object')
+				throw new Error('TemplateDefaultSlotProjection has malformed construct');
+				validateStructuralSite('TemplateDefaultSlotProjection site', node.site as RecordLike);
+			throw new Error(
+				'TemplateDefaultSlotProjection cannot be lowered: composition constructs land in the Solid composition package',
+			);
+		}
 		if (
-			!node ||
-			typeof node !== 'object' ||
 			!['host', 'text', 'dynamic-text', 'fragment', 'branch', 'keyed-repeat'].includes(
-				(node as TemplateNode).kind,
+				node.kind,
 			)
 		)
 			throw new Error(
-				`TemplateNode has malformed construct at ${location}: ${String((node as any)?.kind)}`,
+				`TemplateNode has malformed construct at ${location}: ${String(node.kind)}`,
 			);
 		if (node.kind === 'text') {
 			exactKeys(node, ['kind', 'id', 'value'], 'TemplateText');
@@ -678,9 +834,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 				// content that carries no element fail closed (the anchor-visibility
 				// premise from T003 applies to non-empty arms).
 				if (arm.children.length > 0 && !arm.children.some(containsElement))
-					throw new Error(
-						`TemplateBranchArm ${arm.kind} in ${node.id} is element-less`,
-					);
+					throw new Error(`TemplateBranchArm ${arm.kind} in ${node.id} is element-less`);
 				arm.children.forEach((child, index) =>
 					validateTemplate(
 						child,
@@ -761,9 +915,10 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 	for (const event of ir.records.events) {
 		exactKeys(
 			event,
-			['id', 'hostNodeId', 'eventName', 'syncPolicy', 'handlers'],
+			['componentId', 'id', 'hostNodeId', 'eventName', 'syncPolicy', 'handlers'],
 			'EnrichedEventRecord',
 		);
+		validateComponentId(`EnrichedEventRecord ${event.id}`, event.componentId);
 		if (!event.handlers.length)
 			throw new Error(`EnrichedEventRecord ${event.id} has malformed handlers`);
 		for (const handler of event.handlers) {
@@ -809,6 +964,219 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		if (!hostIds.has(event.hostNodeId))
 			throw new Error(
 				`EnrichedEventRecord ${event.id} has dangling host record id: ${event.hostNodeId}`,
+			);
+	for (const definition of ir.records.sharedDefinitions) {
+		exactKeys(
+			definition,
+			[
+				'id',
+				'scope',
+				'cells',
+				'methods',
+				'graphBindings',
+				'returnProperties',
+				'dependencies',
+			],
+			'SharedDefinition',
+		);
+		if (
+			typeof definition.id !== 'string' ||
+			!['request', 'container', 'page'].includes(definition.scope) ||
+			!Array.isArray(definition.cells) ||
+			!Array.isArray(definition.methods) ||
+			!stringPath(definition.graphBindings) ||
+			!Array.isArray(definition.returnProperties) ||
+			!Array.isArray(definition.dependencies)
+		)
+			throw new Error('SharedDefinition has malformed construct');
+		for (const cell of definition.cells) {
+			exactKeys(cell, ['name', 'graphNodeId', 'valueKind'], 'SharedDefinitionCell');
+			if (
+				typeof cell.name !== 'string' ||
+				typeof cell.graphNodeId !== 'string' ||
+				!['scalar', 'object', 'array', 'unknown'].includes(cell.valueKind)
+			)
+				throw new Error('SharedDefinitionCell has malformed construct');
+		}
+		for (const method of definition.methods) {
+			exactKeys(method, ['name', 'site'], 'SharedDefinitionMethod');
+			if (typeof method.name !== 'string')
+				throw new Error('SharedDefinitionMethod has malformed construct');
+			validateAst('SharedDefinitionMethod site', method.site);
+		}
+		for (const property of definition.returnProperties) {
+			exactKeys(
+				property,
+				property.kind === 'graph'
+					? ['kind', 'name', 'graphNodeId', 'path']
+					: ['kind', 'name'],
+				'SharedReturnProperty',
+			);
+			if (
+				typeof property.name !== 'string' ||
+				(property.kind === 'graph'
+					? typeof property.graphNodeId !== 'string' || !stringPath(property.path)
+					: property.kind !== 'method')
+			)
+				throw new Error('SharedReturnProperty has malformed construct');
+		}
+		for (const dependency of definition.dependencies) {
+			exactKeys(dependency, ['definitionId', 'definitionName'], 'SharedDependency');
+			if (
+				typeof dependency.definitionId !== 'string' ||
+				typeof dependency.definitionName !== 'string'
+			)
+				throw new Error('SharedDependency has malformed construct');
+		}
+	}
+	for (const instance of ir.records.sharedInstances) {
+		exactKeys(instance, ['definitionId', 'componentId', 'localName'], 'SharedInstance');
+		validateComponentId('SharedInstance', instance.componentId);
+		if (typeof instance.definitionId !== 'string' || typeof instance.localName !== 'string')
+			throw new Error('SharedInstance has malformed construct');
+	}
+	for (const read of ir.records.sharedReads) {
+		exactKeys(
+			read,
+			['definitionId', 'propertyName', 'path', 'componentId', 'site'],
+			'SharedRead',
+		);
+		validateComponentId('SharedRead', read.componentId);
+		if (
+			typeof read.definitionId !== 'string' ||
+			typeof read.propertyName !== 'string' ||
+			!stringPath(read.path)
+		)
+			throw new Error('SharedRead has malformed construct');
+		validateStructuralSite('SharedRead site', read.site as RecordLike);
+	}
+	for (const call of ir.records.sharedCalls) {
+		exactKeys(
+			call,
+			['definitionId', 'methodName', 'arguments', 'componentId', 'eventId', 'site', 'order'],
+			'SharedCall',
+		);
+		validateComponentId('SharedCall', call.componentId);
+		if (
+			typeof call.definitionId !== 'string' ||
+			typeof call.methodName !== 'string' ||
+			!Array.isArray(call.arguments) ||
+			(call.eventId !== undefined && typeof call.eventId !== 'string') ||
+			typeof call.order !== 'number'
+		)
+			throw new Error('SharedCall has malformed construct');
+		call.arguments.forEach((argument) => validateAst('SharedCall argument', argument));
+		validateStructuralSite('SharedCall site', call.site as RecordLike);
+	}
+	for (const write of ir.records.sharedWrites) {
+		exactKeys(
+			write,
+			[
+				'definitionId',
+				'graphNodeId',
+				'path',
+				'operation',
+				'assignmentOperator',
+				'updateOperator',
+				'prefix',
+				'method',
+				'value',
+				'arguments',
+				'order',
+			],
+			'SharedWrite',
+		);
+		if (
+			typeof write.definitionId !== 'string' ||
+			typeof write.graphNodeId !== 'string' ||
+			!stringPath(write.path) ||
+			!['assign', 'update', 'call', 'delete'].includes(write.operation) ||
+			(write.assignmentOperator !== undefined &&
+				typeof write.assignmentOperator !== 'string') ||
+			(write.updateOperator !== undefined && !['++', '--'].includes(write.updateOperator)) ||
+			(write.prefix !== undefined && typeof write.prefix !== 'boolean') ||
+			(write.method !== undefined && typeof write.method !== 'string') ||
+			(write.arguments !== undefined && !Array.isArray(write.arguments)) ||
+			typeof write.order !== 'number'
+		)
+			throw new Error('SharedWrite has malformed construct');
+		if (write.value !== undefined) validateAst('SharedWrite value', write.value);
+		write.arguments?.forEach((argument) => validateAst('SharedWrite argument', argument));
+	}
+	for (const binding of ir.records.elementHandleBindings) {
+		exactKeys(
+			binding,
+			['id', 'handleName', 'componentId', 'hostNodeId'],
+			'ElementHandleBinding',
+		);
+		validateComponentId('ElementHandleBinding', binding.componentId);
+		if (
+			typeof binding.id !== 'string' ||
+			typeof binding.handleName !== 'string' ||
+			typeof binding.hostNodeId !== 'string'
+		)
+			throw new Error('ElementHandleBinding has malformed construct');
+	}
+	for (const behavior of ir.records.behaviors) {
+		exactKeys(
+			behavior,
+			['id', 'hostNodeId', 'componentId', 'behavior', 'inputs', 'returnsCleanup', 'order'],
+			'BehaviorRecord',
+		);
+		validateComponentId('BehaviorRecord', behavior.componentId);
+		if (
+			typeof behavior.id !== 'string' ||
+			typeof behavior.hostNodeId !== 'string' ||
+			!Array.isArray(behavior.inputs) ||
+			typeof behavior.returnsCleanup !== 'boolean' ||
+			typeof behavior.order !== 'number'
+		)
+			throw new Error('BehaviorRecord has malformed construct');
+		validateAst('BehaviorRecord behavior', behavior.behavior);
+		for (const input of behavior.inputs)
+			validateRead(input as RecordLike, 'BehaviorRecord GraphReadRef', true);
+	}
+	for (const call of ir.records.handleCalls) {
+		exactKeys(
+			call,
+			[
+				'handleBindingId',
+				'componentId',
+				'method',
+				'arguments',
+				'optional',
+				'eventId',
+				'site',
+				'order',
+			],
+			'HandleCallRecord',
+		);
+		validateComponentId('HandleCallRecord', call.componentId);
+		if (
+			typeof call.handleBindingId !== 'string' ||
+			typeof call.method !== 'string' ||
+			!Array.isArray(call.arguments) ||
+			typeof call.optional !== 'boolean' ||
+			(call.eventId !== undefined && typeof call.eventId !== 'string') ||
+			typeof call.order !== 'number'
+		)
+			throw new Error('HandleCallRecord has malformed construct');
+		call.arguments.forEach((argument) => validateAst('HandleCallRecord argument', argument));
+		validateStructuralSite('HandleCallRecord site', call.site as RecordLike);
+	}
+	for (const [construct, records] of [
+		['SharedDefinition', ir.records.sharedDefinitions],
+		['SharedInstance', ir.records.sharedInstances],
+		['SharedRead', ir.records.sharedReads],
+		['SharedCall', ir.records.sharedCalls],
+		['SharedWrite', ir.records.sharedWrites],
+		['ElementHandleBinding', ir.records.elementHandleBindings],
+		['BehaviorRecord', ir.records.behaviors],
+		['HandleCallRecord', ir.records.handleCalls],
+	] as const)
+		if (records.length)
+			throw new Error(
+				`${construct} cannot be lowered: composition constructs land in the Solid composition package`,
 			);
 	for (const binding of ir.records.bindings.filter(
 		(entry) => entry.kind === 'state' && entry.valueKind === 'array',
@@ -989,11 +1357,7 @@ function showNode(
 		attributes.push(jsxAttribute('fallback', expressionFromNodes(elseChildren, context)));
 	}
 	return t.jsxElement(
-		t.jsxOpeningElement(
-			name,
-			attributes,
-			false,
-		),
+		t.jsxOpeningElement(name, attributes, false),
 		t.jsxClosingElement(t.cloneNode(name)),
 		[children as t.JSXElement | t.JSXFragment],
 		false,
@@ -1100,14 +1464,14 @@ function lowerStoreMemberWrites(
 				!t.isExpressionStatement(statement) ||
 				!t.isAssignmentExpression(statement.expression)
 			)
-					return false;
+				return false;
 			const target = babelMemberPath(statement.expression.left);
 			return Boolean(
 				target &&
-					target.path.join('/') === expectedPath.join('/') &&
-					statement.expression.operator === write.assignmentOperator &&
-					write.value &&
-					t.isNodesEquivalent(statement.expression.right, expression(write.value)),
+				target.path.join('/') === expectedPath.join('/') &&
+				statement.expression.operator === write.assignmentOperator &&
+				write.value &&
+				t.isNodesEquivalent(statement.expression.right, expression(write.value)),
 			);
 		});
 		const assignment = statements[assignmentIndex];
@@ -1121,12 +1485,16 @@ function lowerStoreMemberWrites(
 		const aliasIndex = statements.findIndex(
 			(statement) =>
 				t.isVariableDeclaration(statement) &&
-				statement.declarations.some((entry) => t.isIdentifier(entry.id, { name: aliasName })),
+				statement.declarations.some((entry) =>
+					t.isIdentifier(entry.id, { name: aliasName }),
+				),
 		);
 		const aliasStatement = statements[aliasIndex];
 		const declaration =
 			aliasStatement && t.isVariableDeclaration(aliasStatement)
-				? aliasStatement.declarations.find((entry) => t.isIdentifier(entry.id, { name: aliasName }))
+				? aliasStatement.declarations.find((entry) =>
+						t.isIdentifier(entry.id, { name: aliasName }),
+					)
 				: null;
 		if (
 			assignmentIndex < 0 ||
@@ -1177,12 +1545,12 @@ function lowerStoreMemberWrites(
 		const rootIndex = statements.findIndex((statement) =>
 			Boolean(
 				publication &&
-					t.isExpressionStatement(statement) &&
-					t.isAssignmentExpression(statement.expression, {
-						operator: publication.assignmentOperator,
-					}) &&
-					t.isIdentifier(statement.expression.left, { name: state.name }) &&
-					t.isNodesEquivalent(statement.expression.right, expression(publication.value)),
+				t.isExpressionStatement(statement) &&
+				t.isAssignmentExpression(statement.expression, {
+					operator: publication.assignmentOperator,
+				}) &&
+				t.isIdentifier(statement.expression.left, { name: state.name }) &&
+				t.isNodesEquivalent(statement.expression.right, expression(publication.value)),
 			),
 		);
 		if (rootIndex < 0)
@@ -1443,7 +1811,7 @@ function collectStoreKeys(component: EnrichedComponent): Map<string, string> {
 	return keys;
 }
 
-/** Emit one Solid 1.x-compatible .jsx module from frameless-enriched-ir/1. */
+/** Emit one Solid 1.x-compatible .jsx module from frameless-enriched-ir/2. */
 export function emit(ir: EnrichedIR): string {
 	validateEnrichedIr(ir);
 	const component = ir.components[0]!;

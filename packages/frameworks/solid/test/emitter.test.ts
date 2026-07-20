@@ -197,7 +197,8 @@ describe('Solid structural emitter', () => {
 			expect(source).toContain('data-oracle-row-key={todo.identity}');
 			expect(source).not.toMatch(/\.id\b/);
 			expect(
-				(await checkSources([{ file: 'generated/CoherentKeyRename.jsx', source }])).violations,
+				(await checkSources([{ file: 'generated/CoherentKeyRename.jsx', source }]))
+					.violations,
 			).toEqual([]);
 		});
 
@@ -247,12 +248,18 @@ describe('Solid structural emitter', () => {
 						record[field] = graphIds.get(value);
 					else if (Array.isArray(value))
 						record[field] = value.map((entry) =>
-							typeof entry === 'string' && graphIds.has(entry) ? graphIds.get(entry) : entry,
+							typeof entry === 'string' && graphIds.has(entry)
+								? graphIds.get(entry)
+								: entry,
 						);
 				}
 			});
 			validateEnrichedIr(ir);
-			expect(ir.records.bindings.map((binding: any) => binding.id)).toEqual(['g0', 'g1', 'g2']);
+			expect(ir.records.bindings.map((binding: any) => binding.id)).toEqual([
+				'g0',
+				'g1',
+				'g2',
+			]);
 			expect(emit(ir)).toBe(baseline);
 		});
 
@@ -297,6 +304,49 @@ describe('Solid structural emitter', () => {
 	});
 
 	describe('fail-closed validation', () => {
+		test('rejects an exact /1 artifact with the version diagnostic', async () => {
+			const ir = clone(await golden('s1-render-once.json')) as any;
+			ir.version = 'frameless-enriched-ir/1';
+			expect(() => validateEnrichedIr(ir)).toThrow(
+				'Expected frameless-enriched-ir/2, received frameless-enriched-ir/1',
+			);
+		});
+
+		test('rejects a component-reference with its construct diagnostic', async () => {
+			const ir = clone(await golden('s1-render-once.json')) as any;
+			ir.components[0].template = [
+				{
+					kind: 'component-reference',
+					id: 'component-reference:child',
+					edgeId: 'edge:child',
+					target: { localName: 'Child', module: 'self' },
+					props: [],
+					children: [],
+				},
+			];
+			expect(() => validateEnrichedIr(ir)).toThrow(
+				/TemplateComponentReference cannot be lowered.*Solid composition package/,
+			);
+		});
+
+		test('rejects a non-empty SharedDefinition family with its construct diagnostic', async () => {
+			const ir = clone(await golden('s1-render-once.json')) as any;
+			ir.records.sharedDefinitions = [
+				{
+					id: 'shared:counter',
+					scope: 'container',
+					cells: [],
+					methods: [],
+					graphBindings: [],
+					returnProperties: [],
+					dependencies: [],
+				},
+			];
+			expect(() => validateEnrichedIr(ir)).toThrow(
+				/SharedDefinition cannot be lowered.*Solid composition package/,
+			);
+		});
+
 		test.each([
 			[
 				'unknown field',

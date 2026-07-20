@@ -6,6 +6,7 @@
         "ordinaryLocals": "once-per-instance"
       },
       "guards": [],
+      "id": "component:0:RenderOnce",
       "locals": [
         {
           "declarationKind": "const",
@@ -503,6 +504,7 @@
   "records": {
     "aliases": [
       {
+        "componentId": "component:0:RenderOnce",
         "declarationKind": "const",
         "graphNodeId": "prop:props",
         "id": "alias:RenderOnce:label",
@@ -518,6 +520,7 @@
         "target": "props.label"
       },
       {
+        "componentId": "component:0:RenderOnce",
         "declarationKind": "const",
         "graphNodeId": "prop:props",
         "id": "alias:RenderOnce:multiplier",
@@ -533,6 +536,7 @@
         "target": "props.multiplier"
       },
       {
+        "componentId": "component:0:RenderOnce",
         "declarationKind": "const",
         "graphNodeId": "prop:props",
         "id": "alias:RenderOnce:onTrace",
@@ -548,6 +552,7 @@
         "target": "props.onTrace"
       },
       {
+        "componentId": "component:0:RenderOnce",
         "declarationKind": "const",
         "graphNodeId": "prop:props",
         "id": "alias:RenderOnce:visible",
@@ -563,10 +568,12 @@
         "target": "props.visible"
       }
     ],
+    "behaviors": [],
     "bindings": [
       {
         "async": false,
         "asyncCapable": false,
+        "componentId": "component:0:RenderOnce",
         "computed": {
           "expression": {
             "async": false,
@@ -669,18 +676,21 @@
         "name": "derived",
         "reads": [
           {
+            "componentId": "component:0:RenderOnce",
             "graphNodeId": "prop:props",
             "path": [
               "label"
             ]
           },
           {
+            "componentId": "component:0:RenderOnce",
             "graphNodeId": "prop:props",
             "path": [
               "multiplier"
             ]
           },
           {
+            "componentId": "component:0:RenderOnce",
             "graphNodeId": "state:count",
             "path": []
           }
@@ -689,6 +699,7 @@
         "writes": []
       },
       {
+        "componentId": "component:0:RenderOnce",
         "declarationKind": "const",
         "id": "prop:props",
         "kind": "prop",
@@ -699,6 +710,7 @@
         "writes": []
       },
       {
+        "componentId": "component:0:RenderOnce",
         "declarationKind": "let",
         "id": "state:count",
         "initialValue": 1,
@@ -716,6 +728,7 @@
         "writable": true,
         "writes": [
           {
+            "componentId": "component:0:RenderOnce",
             "graphNodeId": "state:count",
             "operation": "update",
             "path": [],
@@ -731,8 +744,10 @@
         ]
       }
     ],
+    "elementHandleBindings": [],
     "events": [
       {
+        "componentId": "component:0:RenderOnce",
         "eventName": "click",
         "handlers": [
           {
@@ -841,6 +856,7 @@
             ],
             "writes": [
               {
+                "componentId": "component:0:RenderOnce",
                 "graphNodeId": "state:count",
                 "operation": "update",
                 "path": [],
@@ -860,42 +876,55 @@
         "id": "event:0"
       }
     ],
+    "handleCalls": [],
+    "sharedCalls": [],
+    "sharedDefinitions": [],
+    "sharedInstances": [],
+    "sharedReads": [],
+    "sharedWrites": [],
     "stateReads": [
       {
+        "componentId": "component:0:RenderOnce",
         "graphNodeId": "computed:derived",
         "path": []
       },
       {
+        "componentId": "component:0:RenderOnce",
         "graphNodeId": "prop:props",
         "path": [
           "label"
         ]
       },
       {
+        "componentId": "component:0:RenderOnce",
         "graphNodeId": "prop:props",
         "path": [
           "multiplier"
         ]
       },
       {
+        "componentId": "component:0:RenderOnce",
         "graphNodeId": "prop:props",
         "path": [
           "onTrace"
         ]
       },
       {
+        "componentId": "component:0:RenderOnce",
         "graphNodeId": "prop:props",
         "path": [
           "visible"
         ]
       },
       {
+        "componentId": "component:0:RenderOnce",
         "graphNodeId": "state:count",
         "path": []
       }
     ],
     "stateWrites": [
       {
+        "componentId": "component:0:RenderOnce",
         "graphNodeId": "state:count",
         "operation": "update",
         "path": [],
@@ -910,5 +939,5 @@
       }
     ]
   },
-  "version": "frameless-enriched-ir/1"
+  "version": "frameless-enriched-ir/2"
 }
