@@ -1,0 +1,19 @@
+# Vendored markless tarball provenance (recorded 2026-07-20, T009 boundary-review fix)
+
+Pinned via root pnpm overrides (`@markless/*` -> file:vendor/*.tgz); integrity via
+SHA256SUMS (verify: `shasum -a 256 -c vendor/SHA256SUMS`).
+
+- markless-analyzer-0.1.1.tgz — fresh-packed from the markless repo at rev 5e5a100
+  during T007 (after the stale-dist catch recorded in the T007 receipt).
+- markless-{bundler,compiler,core,router,runtime,serializer,web}-0.1.1.tgz — carried
+  over byte-identical from poc/vendor (verified by checksum diff, 2026-07-20), which
+  was packed with `pnpm pack --pack-destination` from the markless working tree
+  during the frameless-mitosis-successor goal (poc hermeticity rule, T004-claims.md
+  section 7). The exact markless rev for that original pack was not recorded at pack
+  time and the tarballs embed no gitHead; their identity is anchored to the POC
+  receipts' checksums rather than a rev. HONEST LIMIT: rev-level provenance for
+  these seven starts at the poc/vendor checksum identity.
+
+Open (recorded, not silent): refresh all tarballs from markless rev 5e5a100+ once
+the markless fixing board closes, re-verify both browser lanes and the C9 matrix,
+and record the packed-from rev here for every tarball at that point.

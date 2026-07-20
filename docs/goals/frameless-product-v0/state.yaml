@@ -73,7 +73,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-product-v0/"
     command: "npx goalbuddy board docs/goals/frameless-product-v0"
 
-active_task: T009
+active_task: T999
 
 tasks:
   - id: T001
@@ -329,10 +329,13 @@ tasks:
   - id: T009
     type: judge
     assignee: Judge
-    status: queued
+    status: done
     reasoning_hint: high
     objective: "End-to-end boundary review: architecture as built vs T001, receipts honesty, gate strength, migration completeness; decide remaining work before final audit."
-    receipt: null
+    receipt:
+      result: done
+      decision: not_complete
+      summary: "Judge boundary review (installed goal-judge, high): ALL FIVE dimensions clean with executed evidence — architecture matches adjudicated T001 incl. every recorded addendum divergence (frameworks/ nesting, analyzer rename, specs/ removal directive, pathe); six receipt claims verified in code (provenance validator, stage-then-swap, native-setter fix, honest mutants=0, delegation-only equivalence, 237/237 re-executed); both gates per-policy mutation-covered with all critique-era closures present; migration complete with no silently dropped POC capability (theme mapping poc/04..08 -> product suites); misfire pre-check clean (no SSR/extra targets, e2e path real end-to-end). TWO BLOCKERS cut as pre-T999 fixes, both PM-level: B1 test:poc lacked --ignore-workspace (contradicting T007's recorded finding; no full green run existed) — fixed, full lane run pending; B2 vendor/PROVENANCE missing per addendum 9 — written with honest rev-level limits (analyzer @5e5a100; seven carried-over tarballs anchored to poc/vendor checksum identity, rev unrecorded at original pack). Nice-to-haves done: stray screenshot/attachment PNGs purged, CONTRIBUTING doctor claim reconciled."
   - id: T999
     type: judge
     assignee: Judge
@@ -356,15 +359,16 @@ tasks:
     receipt: null
 
 checks:
-  dirty_fingerprint: "clean at a4af414 (board edits only)"
+  dirty_fingerprint: "T009 fixes in progress on efed06b (test:poc flags, vendor/PROVENANCE, hygiene)"
   last_verification:
     result: pass
-    task: T006
+    task: T010
     commands:
       - "pnpm check (0 errors)"
-      - "pnpm build (5 packages)"
-      - "pnpm test (node 169/169)"
+      - "pnpm test (node 237/237)"
+      - "npx vitest run --project react-browser (19/19)"
       - "npx vitest run --project solid-browser (17/17)"
-      - "npx vitest run --project react-browser (16/16)"
+      - "pnpm e2e (3 components, 3/3 cross-target pairs equal, frameless-receipts/1 verdict pass)"
+      - "shasum -c vendor/SHA256SUMS (8/8 OK)"
       - "git diff --stat -- poc/ (empty)"
-      - "PM re-executed all 3 critique-recheck probes: closed"
+      - "pnpm test:poc full lane: RUNNING (T009 fix B1)"

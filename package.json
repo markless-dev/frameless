@@ -20,7 +20,7 @@
 		"test:browser": "vp test --project react-browser --project solid-browser",
 		"test:react": "vp test --project react-browser",
 		"test:solid": "vp test --project solid-browser",
-		"test:poc": "for package in poc/*; do if [ -f \"$package/package.json\" ]; then pnpm --dir \"$package\" install --frozen-lockfile && pnpm --dir \"$package\" test || exit $?; fi; done"
+		"test:poc": "for package in poc/*; do if [ -f \"$package/package.json\" ]; then pnpm --dir \"$package\" install --ignore-workspace --frozen-lockfile && pnpm --dir \"$package\" --ignore-workspace test || exit $?; fi; done"
 	},
 	"devDependencies": {
 		"@types/node": "24.12.2",

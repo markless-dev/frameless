@@ -14,7 +14,7 @@ as part of wiring or relocation work.
 - `packages/frameworks/solid` owns Solid dependencies, adapter, handwritten reference, isolated Solid
   transform, browser project, and calibration.
 - `packages/cli` owns the command and internal framework registration.
-- `demos/ui-kit` owns the product demonstration and its doctor.
+- `demos/ui-kit` owns the product demonstration; its verification entry is the root `pnpm e2e` command (a demo doctor script is future work).
 
 There is no compiler-owned framework interface: compiler imports may not couple enriched IR to
 analyzer, DOM, React, Solid, Vite, gate, or dossier types. Protocol and configuration facts are
