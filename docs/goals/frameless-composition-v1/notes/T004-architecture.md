@@ -138,3 +138,58 @@ Order (oracle-machinery-before-emitters; every merge keeps all v0 lanes green):
 - **F5** — page-scope isolation unprovable single-root; no claim until the two-mount test exists.
 - **F6** — T001's build.ts:587 citation is line 588 in current source (same defect, verified).
 - No T001 finding gates the whole tranche on the vendor refresh: the buildable-on-pin surface covers every element of the oracle signal.
+
+---
+
+## PM ADJUDICATION of the lock critique (2026-07-20, verdict: reject — all five amendments accepted)
+
+The second-model critique rejected the first lock draft on five findings. Adjudications:
+
+1. **Ownership (blocker) — accepted in full.** `EnrichedComponent` gains a module-stable
+   `id` (module-relative ordinal + name, export-independent so unexported local children
+   are owned). Records split into COMPONENT-OWNED (bindings, aliases, events, reads,
+   writes, instances, handle bindings, behaviors, SharedRead/Call) vs MODULE-OWNED
+   (SharedDefinition, definition-level factory writes) — the universal-componentId claim
+   is withdrawn. The attribution algorithm + ambiguity diagnostics must be DESIGNED FROM
+   EXECUTED EVIDENCE: scout probes commissioned (duplicate local names, unexported
+   children, factory-owned writes, nested hosts, events) BEFORE the compiler unit is cut.
+   If attribution is unprovable for a record class, that construct is trimmed or
+   vendor-gated — recorded, not guessed.
+2. **Shared-method transaction semantics (high) — accepted.** Dossier addendum
+   commissioned with executed probes: multi-cell method atomicity, notification ordering,
+   intermediate-snapshot visibility, cross-target observation order. The tier decision
+   stands (owner); the transaction contract is added evidence-first.
+3. **P1 packaging (high) — accepted.** P1 becomes an atomic integration MILESTONE of
+   three transcribed crew units: P1a compiler (/2 schema+build+resolver), P1b React
+   validator, P1c Solid validator + coordinated golden regeneration with REVIEWED JSON
+   diffs, an explicit BYTE-IDENTICAL emitted-JSX negative control for S1-S3, exact verify
+   commands (the charter lanes verbatim), and stop_if for unexplained legacy drift or any
+   framework change beyond validation. The milestone merges as one PM-reviewed boundary.
+4. **Oracle observability (high) — accepted.** M-ATTACH-CLEANUP-OMIT: `runScenario` gains
+   an optional post-unmount observation of a caller-provided witness OUTSIDE the host
+   (document-level selector observed after unmount, before host removal) — exact
+   mechanism and versioning decided inside P2 under its mandatory critique, but the
+   observability REQUIREMENT is locked: no cleanup mutant may be claimed rejected without
+   a post-unmount witness. `dom-present` gains count semantics (`count: n` replaces
+   boolean presence where cardinality matters — M-SLOT-DUP asserts count 1). M-METHOD-ORDER
+   scenario must be noncommutative by construction (e.g. append-then-clear vs
+   clear-then-append distinguishable states).
+5. **Module-set resolver contract (medium) — accepted.** Locked here: canonical module
+   identity = POSIX-normalized path relative to the build invocation root, extensions
+   explicit (`./x.tsrx` only; no extensionless/index resolution — fail closed); duplicate
+   module = diagnostic; resolver input = `ReadonlyArray<{ moduleId, artifact }>`, output =
+   validated link table `{ moduleId, references: [{ nodeId, targetModuleId, exportedName }] }`
+   or construct-named diagnostics (missing module, unresolved export, cycle with the cycle
+   path); generated filename mapping = same basename, `.jsx`, per-target directory (v0 CLI
+   convention); CLI transition = `build` accepts MULTIPLE .tsrx inputs (repeated
+   positionals), compiles each, module-set-validates, emits per module — single-input
+   invocations remain valid and receipt-compatible (additive build-receipts change under
+   its own review in P5).
+
+Baseline note: the critique's sandbox `pnpm test` failure (vite-temp EPERM, 2
+formatting-test fallout) is a sandbox artifact, not a repo regression — PM re-verifies
+the green baseline at the P1a merge.
+
+Flags added: F7 ownership-attribution feasibility (scout-gated), F8 legacy golden/emitted
+byte-stability controls (P1 milestone), F9 shared transaction semantics (addendum-gated),
+F10 module-set/CLI mapping (locked above), F11 cleanup observability (P2 requirement).
