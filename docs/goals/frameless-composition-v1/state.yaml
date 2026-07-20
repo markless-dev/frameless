@@ -69,7 +69,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-composition-v1/"
     command: "npx goalbuddy board docs/goals/frameless-composition-v1"
 
-active_task: T004
+active_task: TA1  # lock critique (crew) runs concurrently, read-only
 
 tasks:
   - id: T001
@@ -121,7 +121,7 @@ tasks:
   - id: T004
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Architecture lock: enriched-ir/2 contract design (what grows, what stays fail-closed, versioning + migration of /1 consumers), the shared()/slots/refs surface definition for this tranche (trim to what the pinned compiler proves — blocked slices recorded, not improvised), oracle scenario-vocabulary extensions, demo library shape, and the Worker package cut with allowed_files/verify/stop_if per slice. Flag any T001 finding that gates the whole tranche on the vendor refresh."
     inputs:
@@ -130,20 +130,74 @@ tasks:
       - "OWNER DECISION (2026-07-20, via decision menu): React shared() lowering = TIERED RECORD-DRIVEN per the T002 ruling — IR records pick the idiom per shared shape; general case is provider-scoped store with per-cell subscriptions wrapped in ONE emitted hook named after the authored factory (components call useCounter() and read like hand-written React); plain props/context only where provably harmless; module store only for explicit page scope. This is binding for packet-cutting."
     expected_output:
       - "notes/T004-architecture.md: locked decisions + package definitions"
+    receipt:
+      result: done
+      decision: approved
+      note: notes/T004-architecture.md
+      summary: "Architecture locked: single-version enriched-ir/2 cutover (component ownership on every record, component-reference + default-slot-projection nodes with preserved subtrees, full shared/handle/behavior record families, fail-closed repairs of /1 silent-loss debts); module-link phase DEFERRED with not-a-compiler rationale (cross-module ref forwarding to vendor-refresh gate); surface = T001's five buildable-on-pin verdicts + F1 same-module ref forwarding (OWNER: include, A2 commissioned); lowering contracts bind the owner's tiered emitted-hook decision + T003 rulings into named gate policies (R-*/S-*); oracle gains scenario expectations + 7 calibrated composition mutant classes + composite-root mounting + two-mount scope test (F5: no scope-isolation claims until it exists); demo = new demos/composition-kit (5 files, C1-C3 scenarios); package order A1/A2 scouts -> P1 compiler cutover -> P2 analyzer -> P3 react -> P4 solid -> P5 demo/CLI/e2e -> T998 -> T999. Flags F1-F6 recorded, none silently resolved."
+  - id: TA1
+    type: scout
+    assignee: Scout
+    status: active
+    reasoning_hint: medium
+    objective: "React attach/behavior lowering addendum to T002 (F2, hard prerequisite of TP3): ref-callback cleanup returns vs useEffect groups for BehaviorRecord lowering — setup/cleanup, reinstall on tracked input change, reverse-order cleanup; evidenced protocol."
     receipt: null
-  - id: T005
+  - id: TA2
+    type: scout
+    assignee: Scout
+    status: queued
+    reasoning_hint: medium
+    objective: "Solid same-module forwarded-handle addendum to T003 (F1, owner-commissioned): evidenced ruling for parent-owned element handles passed to same-module children."
+    receipt: null
+  - id: TP1
     type: worker
     assignee: Worker
     status: queued
     reasoning_hint: medium
-    objective: "Execute the T004-cut Worker packages in order (compiler /2 extension, emitter + gate work per framework implementing the dossiers, analyzer scenario extensions, composition demo + e2e extension) — each package crew-dispatched, PM-verified, critique per the carry-over rules; this card is the execution slot the PM re-cuts per package."
-    allowed_files: []
-    verify: []
-    stop_if:
-      - "Need files outside allowed_files."
-      - "Dossier lacks evidence for a needed decision — report, do not taste-call."
-      - "Pinned compiler cannot produce a required construct — mark the slice blocked on the vendor-refresh gate, continue elsewhere."
-      - "Verification fails twice."
+    objective: "enriched-ir/2 cutover per T004 SS1: compiler /2 (ownership, new nodes, shared/handle/behavior records, module-set resolver, guard removals, fail-closed repairs) + mechanical emitter version bumps + golden regen. Critique of the LOCK must pass first; package critique mandatory."
+    allowed_files: ["packages/compiler/**", "packages/frameworks/react/**", "packages/frameworks/solid/**"]
+    verify: ["all v0 lanes green at merge; new contract tests (ownership, fail-closed unknown node, no-silent-loss, module-set resolver)"]
+    stop_if: ["ownership attribution ambiguous — report, do not guess", "need files outside allowed_files", "pin diagnostic contradicts a T001 verdict", "verification fails twice"]
+    receipt: null
+  - id: TP2
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Analyzer composition extension per T004 SS4: expectations vocabulary + version decision (F4 under critique), C1-C3 scenarios, handwritten composition references, 7 mutant classes calibrated both frameworks, composite-root pattern, two-mount scope test. Critique mandatory."
+    allowed_files: ["packages/analyzer/**", "packages/frameworks/react/**", "packages/frameworks/solid/**", "vite.config.ts"]
+    verify: ["browser calibration: all mutant classes rejected both frameworks; v0 lanes green"]
+    stop_if: ["RunTrace shape change without version decision", "browser denied — hand to PM", "verification fails twice"]
+    receipt: null
+  - id: TP3
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "React composition emitter + gate per T004 SS3.1 (requires TA1; owner tiered-lowering decision binding). Critique mandatory."
+    allowed_files: ["packages/frameworks/react/**"]
+    verify: ["node incl. metamorphics + per-policy mutations + e2e discovery; react-browser incl. composition calibration + emitted smoke; v0 lanes green"]
+    stop_if: ["dossier lacks evidence", "IR insufficiency — record /2 amendment, stop", "verification fails twice"]
+    receipt: null
+  - id: TP4
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Solid composition emitter + gate per T004 SS3.2 (+TA2 forwarding ruling). Sequential after TP3 preferred. Critique mandatory."
+    allowed_files: ["packages/frameworks/solid/**"]
+    verify: ["node + solid-browser incl. composition calibration; v0 lanes green"]
+    stop_if: ["dossier lacks evidence", "IR insufficiency — record /2 amendment, stop", "verification fails twice"]
+    receipt: null
+  - id: TP5
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Composition demo (demos/composition-kit) + CLI module-set orchestration + e2e extension + docs per T004 SS5/SS6. Fresh-clone verification mandatory (v0 T011 lesson)."
+    allowed_files: ["demos/composition-kit/**", "packages/cli/**", "scripts/e2e.mjs", "vite.config.ts", "package.json", "pnpm-workspace.yaml", "pnpm-lock.yaml", "README.md"]
+    verify: ["fresh clone: install + e2e (ui-kit 3/3 + composition pairs + expectations green), all lanes, test:poc"]
+    stop_if: ["demo needs out-of-surface construct — trim demo", "browser-in-CLI — delegation stands", "verification fails twice"]
     receipt: null
   - id: T998
     type: judge
