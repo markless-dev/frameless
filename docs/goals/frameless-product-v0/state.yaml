@@ -73,7 +73,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-product-v0/"
     command: "npx goalbuddy board docs/goals/frameless-product-v0"
 
-active_task: T010
+active_task: T009
 
 tasks:
   - id: T001
@@ -305,7 +305,7 @@ tasks:
   - id: T010
     type: worker
     assignee: Worker
-    status: queued
+    status: done
     reasoning_hint: medium
     objective: "Demo TSRX component library (within the proven fixture-family surface — trim the demo rather than extend the surface) + the TRUE cross-target browser lane (React output vs Solid output compared via analyzer RunTraces — does not exist yet, per T008 scout finding 3) + the ONE documented fresh-checkout command: demo lib -> CLI -> React 19 + Solid packages passing gates + green cross-target equivalence receipts under the oracle in headless Chromium; document the command in the root README."
     allowed_files: []
@@ -314,7 +314,18 @@ tasks:
       - "Need files outside allowed_files."
       - "Demo library needs constructs outside the proven surface — trim the demo, do not extend the surface in this tranche."
       - "Verification fails twice."
-    receipt: null
+    receipt:
+      result: done
+      summary: "T010 complete: the oracle signal's core works — `pnpm e2e` (documented in root README, `pnpm install && pnpm e2e` from fresh checkout) builds demos/ui-kit's three real TSRX components (PricingCard/TaskList/NewsletterForm, authored within the proven surface, no trims needed) through the CLI into oxfmt-formatted React 19 + Solid packages with zero gate violations, captures analyzer RunTraces per framework in dedicated headless-Chromium projects (vitest browser commands persist serialized traces), and compares CROSS-TARGET: 3/3 React-vs-Solid pairs behaviorally EQUAL, frameless-receipts/1 written (verdict pass; mutants honestly 0). First execution surfaced three REAL findings, each fixed with adjudication + regression tests: (1) React adapter input dispatch never fired onChange (value-tracker dedupe; native-setter fix; invisible to reference-symmetric calibration — the cross-target lane's expected-callback assertions caught it), (2) vitest browser-command nesting (PM config fix), (3) Solid null-insert empty-text placeholder vs React render-nothing (analyzer adjudication: strictly-empty text is not semantic DOM; whitespace stays; documented in normalization inventories). Prerequisite units: analyzer trace transport (serializeRunTrace/deserializeRunTrace, fail-closed), oxfmt formatting tranche (user directive). Critique: accept-with-amendments; all four amendments landed (semantic focus indexing closing the false-divergence probe, exact receipt variant validation, discriminated trace-node loading, textarea/checkbox adapter regressions). Final: node 237/237, react-browser 19/19, solid-browser 17/17, e2e 3/3 equal, check 0, poc clean."
+      changed_files:
+        - "demos/ui-kit/**"
+        - "scripts/e2e.mjs"
+        - "packages/analyzer/** (trace-io, empty-text normalization, validator tightening)"
+        - "packages/frameworks/react/src/adapter.ts + test"
+        - "vite.config.ts, package.json, README.md"
+      commands:
+        - cmd: "pnpm e2e (3/3 pairs equal, receipt pass); pnpm check/build/test; both browser lanes; poc/ diff empty"
+          status: pass
   - id: T009
     type: judge
     assignee: Judge
