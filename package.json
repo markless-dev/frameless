@@ -16,7 +16,8 @@
 		"lint": "vp lint",
 		"prepare": "git config core.hooksPath .githooks",
 		"rules": "npx -y @intellectronica/ruler apply",
-		"test": "vp test",
+		"test": "vp test --project node",
+		"test:browser": "vp test --project oracle-browser",
 		"test:poc": "for package in poc/*; do if [ -f \"$package/package.json\" ]; then pnpm --dir \"$package\" install --frozen-lockfile && pnpm --dir \"$package\" test || exit $?; fi; done"
 	},
 	"devDependencies": {
