@@ -69,7 +69,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-composition-v1/"
     command: "npx goalbuddy board docs/goals/frameless-composition-v1"
 
-active_task: T005  # lock critique (crew) runs concurrently, read-only
+active_task: T007
 
 tasks:
   - id: T001
@@ -138,10 +138,13 @@ tasks:
   - id: T005
     type: scout
     assignee: Scout
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "React attach/behavior lowering addendum to T002 (F2, hard prerequisite of T009): ref-callback cleanup returns vs useEffect groups for BehaviorRecord lowering — setup/cleanup, reinstall on tracked input change, reverse-order cleanup; evidenced protocol."
-    receipt: null
+    receipt:
+      result: done
+      note: notes/T005-react-attach-addendum.md
+      summary: "Ruling: React 19 callback ref with cleanup return, memoized via useCallback over the deduplicated tracked-input union — live-node exposure, ascending authored install, retained cleanups invoked descending, handle nulled after cleanup, cleanup-then-reinstall via ref identity change; doc-cited + probe-executed. F2 cleared for the React emitter package."
   - id: T006
     type: scout
     assignee: Scout
@@ -152,7 +155,7 @@ tasks:
   - id: T007
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: "enriched-ir/2 cutover per T004 SS1: compiler /2 (ownership, new nodes, shared/handle/behavior records, module-set resolver, guard removals, fail-closed repairs) + mechanical emitter version bumps + golden regen. Critique of the LOCK must pass first; package critique mandatory."
     allowed_files: ["packages/compiler/**", "packages/frameworks/react/**", "packages/frameworks/solid/**"]
