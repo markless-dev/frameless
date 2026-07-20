@@ -1,0 +1,191 @@
+# GoalBuddy v2 state.yaml
+# Board truth lives here. goal.md is the editable charter; notes/ holds long receipts only.
+
+version: 2
+
+goal:
+  title: "Frameless v0: the real product"
+  slug: "frameless-product-v0"
+  kind: existing_plan
+  tranche: "Turn the proven POC pipeline into the real Frameless product: a monorepo with a compiler-extension layer consuming the markless compiler, a targets/ architecture (React 19, Solid), the equivalence oracle as product test infrastructure, and one end-to-end build command demonstrated on a real demo component library with receipts."
+  status: active
+  oracle:
+    signal: "From a fresh checkout, one documented command compiles the demo TSRX component library into React 19 and Solid packages that (a) pass each target's conventionality gate, (b) produce green cross-target equivalence receipts (React output vs Solid output behaviorally equal under the oracle in headless Chromium, per scripted scenarios), and (c) the migrated POC evidence suites still pass."
+    cadence: "after each Worker package and at final audit"
+    final_proof: "Final Judge audit runs the fresh-checkout end-to-end flow plus all suites and records full_outcome_complete: true."
+  intake:
+    original_request: "I want the real frameless project, in reality — something that would change the game for frontend forever. Decide: compiler extension vs targets folder; vitest browser mode per framework for runtime checking; what all should we do."
+    interpreted_outcome: "Frameless exists as a consumable product skeleton: compiler-extension layer + per-target packages + oracle harness + build entry, proven end-to-end on a real demo library with equivalence receipts."
+    input_shape: existing_plan
+    audience: "The user (markless/Frameless author); next tranche audiences: library authors evaluating Frameless."
+    authority: requested
+    proof_type: test
+    completion_proof: "One documented command builds the demo library to both targets with gates + receipts green from a fresh checkout; POC evidence suites remain green; final audit records full_outcome_complete: true."
+    likely_misfire: "Scope explosion driven by 'change the game forever' energy (composition/SSR/more targets creeping into v0); a grand rewrite that discards proven POC code instead of migrating it; or skeleton theater — a beautiful folder structure with no working end-to-end command."
+    blind_spots_considered:
+      - "The markless fixing board owns the markless repo right now — this goal must not touch it; IR-upstreaming waits for that board to close."
+      - "React target bump 18.3.1 -> 19 changes the ref story and possibly act/testing semantics; must be validated, not assumed."
+      - "The demo library has no hand-written references — its receipts are CROSS-TARGET equivalence (React vs Solid outputs) plus scenario scripts; that is the product's actual value prop and must be exercised."
+      - "npm naming unresolved (frameless is squatted/stale) — publishing is out of scope; package names internal until resolved."
+      - "The POC packages are the evidence base for the shipped report — migration must not break their suites."
+    existing_plan_facts:
+      - "Architecture (user-confirmed): compiler extension AND targets folder at different layers — the enriched IR (poc/05, frameless-enriched-ir contract) is the compiler-extension pass consuming markless's semantic graph + TSRX AST; targets/react and targets/solid each own emitter + conventionality-gate config + oracle adapter + framework-version matrix."
+      - "Runtime verification: vitest browser mode per framework (poc/08 pattern) becomes the product test harness; receipts become the per-release support matrix."
+      - "React target: 19 (ref-as-prop, no forwardRef). Solid: v2-forward idioms, v1 runtime fallback documented until the v2 toolchain exists."
+      - "Write-on-change is regular state (user decision) — no sink primitive needed this tranche; mount-scoped work is a markless-language question queued behind the markless fixing board."
+      - "Consume markless via pinned vendored artifacts (poc/vendor pattern) until the fixing board closes; then re-pack and re-verify."
+      - "Composition surface (children/slots, shared->context, refs) is the NEXT tranche, designed per the recorded discussion; v0 covers the proven fixture-family surface."
+      - "Migrate proven POC code; do not rewrite from scratch. POC packages stay intact as evidence."
+
+rules:
+  pm_owns_state: true
+  one_active_task: true
+  max_write_workers: 1
+  no_implementation_without_worker_or_pm_task: true
+  no_completion_without_judge_or_pm_audit: true
+  planning_is_not_completion: true
+  queued_required_worker_blocks_completion: true
+  continuous_until_full_outcome: true
+  missing_input_or_credentials_do_not_stop_goal: true
+  preserve_and_validate_existing_plan: true
+  intake_misfire_must_be_audited: true
+  goal_pressure_requires_oracle: true
+  no_completion_on_weak_proof: true
+  slice_policy:
+    max_consecutive_tiny_tasks: 2
+    prefer_vertical_slices: true
+    judge_picks_largest_safe_slice: true
+    worker_completes_whole_slice: true
+
+agents:
+  # installed | bundled_not_installed | missing | unknown
+  scout: installed
+  worker: installed
+  judge: installed
+
+visual_board:
+  # none | local | unknown
+  selected: local
+  local:
+    status: live
+    url: "http://goalbuddy.localhost:41737/frameless-product-v0/"
+    command: "npx goalbuddy board docs/goals/frameless-product-v0"
+
+active_task: T001
+
+tasks:
+  - id: T001
+    type: judge
+    assignee: Judge
+    status: active
+    reasoning_hint: high
+    objective: "Architecture lock: from the POC evidence and prior-goal notes, decide the monorepo package layout, the frameless-enriched-ir contract ownership and version, the exact Target interface (what targets/<name> must provide: emitter, gate config, oracle adapter, version matrix), the build entry (CLI vs vite plugin first), the React 19 migration plan, and the migrate-vs-rewrite map for each poc package. Cut the first Worker packages."
+    inputs:
+      - "docs/goals/frameless-mitosis-successor/notes/T004-claims.md (all adjudications + addenda)"
+      - "poc/04..08 READMEs and source structure"
+      - "goal.intake.existing_plan_facts"
+    constraints:
+      - "Read-only; decisions with rationale, not implementation."
+      - "Validate the user-confirmed architecture against evidence; flag any contradiction rather than silently complying."
+      - "Every Worker package it cuts gets allowed_files, verify, stop_if."
+    expected_output:
+      - "notes/T001-architecture.md: locked decisions + Target interface spec + migration map + Worker package definitions"
+    receipt: null
+  - id: T002
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Scaffold the product monorepo per T001 and migrate the enriched IR into the compiler-extension package with its contract tests green (from poc/05), consuming markless via pinned vendored artifacts."
+    allowed_files: []
+    verify: []
+    stop_if:
+      - "Need files outside allowed_files."
+      - "T001 architecture ambiguous on a needed decision."
+      - "Verification fails twice."
+    receipt: null
+  - id: T003
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "targets/react: migrate the poc/06 emitter + hardened gate into the Target interface; execute the React 19 bump per T001 plan; suites green."
+    allowed_files: []
+    verify: []
+    stop_if:
+      - "Need files outside allowed_files."
+      - "React 19 bump breaks oracle/adapter semantics in a way T001 did not anticipate — report, do not improvise."
+      - "Verification fails twice."
+    receipt: null
+  - id: T004
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "targets/solid: migrate the poc/07 structural emitter with its fail-closed soundness and documented generality boundary into the Target interface; suites green."
+    allowed_files: []
+    verify: []
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Verification fails twice."
+    receipt: null
+  - id: T005
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "oracle package: migrate the poc/04 oracle + poc/08 browser-matrix harness into the product's reusable per-target verification infrastructure (vitest browser mode, adapter registry, verdict/receipt artifacts)."
+    allowed_files: []
+    verify: []
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Verification fails twice."
+    receipt: null
+  - id: T006
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Build entry + demo: implement the T001-chosen build entry (CLI or vite plugin) and a small real demo TSRX component library within the proven surface; end-to-end: demo lib -> React 19 + Solid packages passing gates + green cross-target equivalence receipts."
+    allowed_files: []
+    verify: []
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Demo library needs constructs outside the proven surface — trim the demo, do not extend the surface in this tranche."
+      - "Verification fails twice."
+    receipt: null
+  - id: T007
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "End-to-end boundary review: architecture as built vs T001, receipts honesty, gate strength, migration completeness; decide remaining work before final audit."
+    receipt: null
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Final audit: fresh-checkout end-to-end (documented command -> demo lib -> both targets -> gates + receipts green), all migrated suites + POC evidence suites green, oracle signal fully satisfied; decide full_outcome_complete."
+    inputs:
+      - "All done task receipts"
+      - "Last verification"
+      - "Current dirty diff"
+    constraints:
+      - "Do not implement."
+      - "Reject completion if the end-to-end command does not work from a fresh checkout."
+      - "Reject completion if any POC evidence suite broke."
+      - "Audit the recorded likely-misfire explicitly (scope explosion, rewrite-instead-of-migrate, skeleton theater)."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "missing evidence"
+      - "next task if not complete"
+    receipt: null
+
+checks:
+  dirty_fingerprint: unknown
+  last_verification:
+    result: unknown
+    task: null
+    commands: []
