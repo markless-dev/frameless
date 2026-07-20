@@ -5,13 +5,13 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  '@markless/bundler': file:../vendor/markless-bundler-0.1.1.tgz
-  '@markless/compiler': file:../vendor/markless-compiler-0.1.1.tgz
-  '@markless/core': file:../vendor/markless-core-0.1.1.tgz
-  '@markless/router': file:../vendor/markless-router-0.1.1.tgz
-  '@markless/runtime': file:../vendor/markless-runtime-0.1.1.tgz
-  '@markless/serializer': file:../vendor/markless-serializer-0.1.1.tgz
-  '@markless/web': file:../vendor/markless-web-0.1.1.tgz
+  '@markless/bundler': file:../vendor-fix/markless-bundler-0.1.1.tgz
+  '@markless/compiler': file:../vendor-fix/markless-compiler-0.1.1.tgz
+  '@markless/core': file:../vendor-fix/markless-core-0.1.1.tgz
+  '@markless/router': file:../vendor-fix/markless-router-0.1.1.tgz
+  '@markless/runtime': file:../vendor-fix/markless-runtime-0.1.1.tgz
+  '@markless/serializer': file:../vendor-fix/markless-serializer-0.1.1.tgz
+  '@markless/web': file:../vendor-fix/markless-web-0.1.1.tgz
   '@tsrx/core': 0.1.32
 
 importers:
@@ -19,17 +19,17 @@ importers:
   .:
     dependencies:
       '@markless/bundler':
-        specifier: file:../vendor/markless-bundler-0.1.1.tgz
-        version: file:../vendor/markless-bundler-0.1.1.tgz(rolldown@1.0.3)(vite@8.0.16)
+        specifier: file:../vendor-fix/markless-bundler-0.1.1.tgz
+        version: file:../vendor-fix/markless-bundler-0.1.1.tgz(rolldown@1.0.3)(vite@8.0.16)
       '@markless/compiler':
-        specifier: file:../vendor/markless-compiler-0.1.1.tgz
-        version: file:../vendor/markless-compiler-0.1.1.tgz
+        specifier: file:../vendor-fix/markless-compiler-0.1.1.tgz
+        version: file:../vendor-fix/markless-compiler-0.1.1.tgz
       '@markless/core':
-        specifier: file:../vendor/markless-core-0.1.1.tgz
-        version: file:../vendor/markless-core-0.1.1.tgz(rolldown@1.0.3)(vite@8.0.16)
+        specifier: file:../vendor-fix/markless-core-0.1.1.tgz
+        version: file:../vendor-fix/markless-core-0.1.1.tgz(rolldown@1.0.3)(vite@8.0.16)
       '@markless/web':
-        specifier: file:../vendor/markless-web-0.1.1.tgz
-        version: file:../vendor/markless-web-0.1.1.tgz
+        specifier: file:../vendor-fix/markless-web-0.1.1.tgz
+        version: file:../vendor-fix/markless-web-0.1.1.tgz
       react:
         specifier: 18.3.1
         version: 18.3.1
@@ -320,8 +320,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@markless/bundler@file:../vendor/markless-bundler-0.1.1.tgz':
-    resolution: {integrity: sha512-wjiEc8tjAzPsFwXen5cyzF1r5fNrUwtOW0+L/FOfB6e0Iil2hdLYFwjnbPUIVDDFUUuyxMcI2FKhrUbeLL/0Og==, tarball: file:../vendor/markless-bundler-0.1.1.tgz}
+  '@markless/bundler@file:../vendor-fix/markless-bundler-0.1.1.tgz':
+    resolution: {integrity: sha512-5Gt0qhMluZ6I4yz/JZaLJXsosx8Wq6pjI600S8i8VrM4G6cJkrIVi+uAdEwI1j9tnhh+aiidGT1mxjqI+QwsdA==, tarball: file:../vendor-fix/markless-bundler-0.1.1.tgz}
     version: 0.1.1
     peerDependencies:
       rolldown: 1.0.3
@@ -332,16 +332,16 @@ packages:
       vite:
         optional: true
 
-  '@markless/compiler@file:../vendor/markless-compiler-0.1.1.tgz':
-    resolution: {integrity: sha512-Da672TIIiOV8d8c8H6YNHSmwFAnusSDIplzIG6rU/XKH74USs957NlwzPdIvDasdCU07YZLV2NZoLsHb4VT4yQ==, tarball: file:../vendor/markless-compiler-0.1.1.tgz}
+  '@markless/compiler@file:../vendor-fix/markless-compiler-0.1.1.tgz':
+    resolution: {integrity: sha512-hzc5xYokc//F5DWiN7S391sRvDPWQ0m46CaRWoh/jSlMum+PHIJtvLdreAK9HTeoKytfq3tyfHM5ZcVo9VodgA==, tarball: file:../vendor-fix/markless-compiler-0.1.1.tgz}
     version: 0.1.1
 
-  '@markless/core@file:../vendor/markless-core-0.1.1.tgz':
-    resolution: {integrity: sha512-oh71kVRhSQVOAQSRPmiwufte+bPdPBGrIrnohZM2G6gCPwcXf+6lT1VIi3EVPOVlKApjzdTyTHdCpj2kILD19A==, tarball: file:../vendor/markless-core-0.1.1.tgz}
+  '@markless/core@file:../vendor-fix/markless-core-0.1.1.tgz':
+    resolution: {integrity: sha512-kUQ3FA9HuNeuw1XT8ZH53MpVLVD7dkFm1saksDdaJ0pkeNVhcYJlyg4RDSiMFzVbySGPl71E8hUV1BPfXlxqkQ==, tarball: file:../vendor-fix/markless-core-0.1.1.tgz}
     version: 0.1.1
 
-  '@markless/router@file:../vendor/markless-router-0.1.1.tgz':
-    resolution: {integrity: sha512-pKysbkTjQTIu+qIpdLLaOyLFdM58QNDvh0aTV4BGl90nPGjNGxb6sFeJxguoqr2kq+qw+y3MHk5tx1g73Zi24A==, tarball: file:../vendor/markless-router-0.1.1.tgz}
+  '@markless/router@file:../vendor-fix/markless-router-0.1.1.tgz':
+    resolution: {integrity: sha512-xG4wCejN8Ck6mDT2iqTGFpiokhhOwE3M7l9LI1VjkfnP4+gYCwUO+Y31r1ogwz6QdPaptd1srrnIB7TyqvNVtA==, tarball: file:../vendor-fix/markless-router-0.1.1.tgz}
     version: 0.1.1
     peerDependencies:
       vite: 8.0.16
@@ -349,16 +349,16 @@ packages:
       vite:
         optional: true
 
-  '@markless/runtime@file:../vendor/markless-runtime-0.1.1.tgz':
-    resolution: {integrity: sha512-GktLpE05hZdC1+g4s32krQe55kfdxD2L4wUoDAAi1YRTpPe0YffJvztuU56Fl0c8lTVMlx9u3DPyexg7q1BQcA==, tarball: file:../vendor/markless-runtime-0.1.1.tgz}
+  '@markless/runtime@file:../vendor-fix/markless-runtime-0.1.1.tgz':
+    resolution: {integrity: sha512-micMJYzg8dsg/egl3KRjsFM7uld7Hs2G9zPhNq3r0EH3X0J+8xltCNyBMjaZC3JGokhAhRWpE50SBebrcGSsgA==, tarball: file:../vendor-fix/markless-runtime-0.1.1.tgz}
     version: 0.1.1
 
-  '@markless/serializer@file:../vendor/markless-serializer-0.1.1.tgz':
-    resolution: {integrity: sha512-wAUfHp0f9K+ys3ixIB8OYNkyCqVMAR5EnBvPyfpm2bhIKiG27K6Uvn2IbXHNZVBepaZyfnxEJSX4wq9s2/Hzbw==, tarball: file:../vendor/markless-serializer-0.1.1.tgz}
+  '@markless/serializer@file:../vendor-fix/markless-serializer-0.1.1.tgz':
+    resolution: {integrity: sha512-0hG6vW5sOve1ZlKzyNMKiG8xWjwbmbJQskM+IzTG0ZD7b29OovtCfV+Sh8bnvzXIOVzfI3/J5zVQssqJO+XPkg==, tarball: file:../vendor-fix/markless-serializer-0.1.1.tgz}
     version: 0.1.1
 
-  '@markless/web@file:../vendor/markless-web-0.1.1.tgz':
-    resolution: {integrity: sha512-SxBE54fmyxIVprMJFm3jT2AZSyE/WYLuu6Q6ybl7fRXJY9CW+nrtH4cVqSZXzH0ycZZfU6sGNoMbdADpECxX+A==, tarball: file:../vendor/markless-web-0.1.1.tgz}
+  '@markless/web@file:../vendor-fix/markless-web-0.1.1.tgz':
+    resolution: {integrity: sha512-qrXWVd3mTSBTgIzp1lcpWw4uNOL5R4+wd2MBbMq4By//dwBvxg8qHuMPQD8aRDNgGBe77TxheTAkhPCegrFsKA==, tarball: file:../vendor-fix/markless-web-0.1.1.tgz}
     version: 0.1.1
 
   '@napi-rs/wasm-runtime@1.1.6':
@@ -1685,10 +1685,10 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  '@markless/bundler@file:../vendor/markless-bundler-0.1.1.tgz(rolldown@1.0.3)(vite@8.0.16)':
+  '@markless/bundler@file:../vendor-fix/markless-bundler-0.1.1.tgz(rolldown@1.0.3)(vite@8.0.16)':
     dependencies:
-      '@markless/compiler': file:../vendor/markless-compiler-0.1.1.tgz
-      '@markless/web': file:../vendor/markless-web-0.1.1.tgz
+      '@markless/compiler': file:../vendor-fix/markless-compiler-0.1.1.tgz
+      '@markless/web': file:../vendor-fix/markless-web-0.1.1.tgz
       '@thi.ng/dgraph': 2.1.210
       pathe: 2.0.3
       ufo: 1.6.4
@@ -1698,18 +1698,18 @@ snapshots:
     transitivePeerDependencies:
       - '@typescript-eslint/types'
 
-  '@markless/compiler@file:../vendor/markless-compiler-0.1.1.tgz':
+  '@markless/compiler@file:../vendor-fix/markless-compiler-0.1.1.tgz':
     dependencies:
-      '@markless/serializer': file:../vendor/markless-serializer-0.1.1.tgz
+      '@markless/serializer': file:../vendor-fix/markless-serializer-0.1.1.tgz
       '@tsrx/core': 0.1.32
     transitivePeerDependencies:
       - '@typescript-eslint/types'
 
-  '@markless/core@file:../vendor/markless-core-0.1.1.tgz(rolldown@1.0.3)(vite@8.0.16)':
+  '@markless/core@file:../vendor-fix/markless-core-0.1.1.tgz(rolldown@1.0.3)(vite@8.0.16)':
     dependencies:
-      '@markless/bundler': file:../vendor/markless-bundler-0.1.1.tgz(rolldown@1.0.3)(vite@8.0.16)
-      '@markless/router': file:../vendor/markless-router-0.1.1.tgz(rolldown@1.0.3)(vite@8.0.16)
-      '@markless/web': file:../vendor/markless-web-0.1.1.tgz
+      '@markless/bundler': file:../vendor-fix/markless-bundler-0.1.1.tgz(rolldown@1.0.3)(vite@8.0.16)
+      '@markless/router': file:../vendor-fix/markless-router-0.1.1.tgz(rolldown@1.0.3)(vite@8.0.16)
+      '@markless/web': file:../vendor-fix/markless-web-0.1.1.tgz
     transitivePeerDependencies:
       - '@azure/app-configuration'
       - '@azure/cosmos'
@@ -1752,10 +1752,10 @@ snapshots:
       - xml2js
       - zephyr-agent
 
-  '@markless/router@file:../vendor/markless-router-0.1.1.tgz(rolldown@1.0.3)(vite@8.0.16)':
+  '@markless/router@file:../vendor-fix/markless-router-0.1.1.tgz(rolldown@1.0.3)(vite@8.0.16)':
     dependencies:
-      '@markless/bundler': file:../vendor/markless-bundler-0.1.1.tgz(rolldown@1.0.3)(vite@8.0.16)
-      '@markless/web': file:../vendor/markless-web-0.1.1.tgz
+      '@markless/bundler': file:../vendor-fix/markless-bundler-0.1.1.tgz(rolldown@1.0.3)(vite@8.0.16)
+      '@markless/web': file:../vendor-fix/markless-web-0.1.1.tgz
       '@tsrx/core': 0.1.32
       '@virtualstate/navigation': 1.0.1-alpha.212
       hast-util-to-html: 9.0.5
@@ -1806,16 +1806,16 @@ snapshots:
       - xml2js
       - zephyr-agent
 
-  '@markless/runtime@file:../vendor/markless-runtime-0.1.1.tgz':
+  '@markless/runtime@file:../vendor-fix/markless-runtime-0.1.1.tgz':
     dependencies:
-      '@markless/serializer': file:../vendor/markless-serializer-0.1.1.tgz
+      '@markless/serializer': file:../vendor-fix/markless-serializer-0.1.1.tgz
 
-  '@markless/serializer@file:../vendor/markless-serializer-0.1.1.tgz': {}
+  '@markless/serializer@file:../vendor-fix/markless-serializer-0.1.1.tgz': {}
 
-  '@markless/web@file:../vendor/markless-web-0.1.1.tgz':
+  '@markless/web@file:../vendor-fix/markless-web-0.1.1.tgz':
     dependencies:
-      '@markless/runtime': file:../vendor/markless-runtime-0.1.1.tgz
-      '@markless/serializer': file:../vendor/markless-serializer-0.1.1.tgz
+      '@markless/runtime': file:../vendor-fix/markless-runtime-0.1.1.tgz
+      '@markless/serializer': file:../vendor-fix/markless-serializer-0.1.1.tgz
 
   '@napi-rs/wasm-runtime@1.1.6(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)':
     dependencies:

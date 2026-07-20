@@ -13,37 +13,39 @@ export type EqualPairResult = {
   status: 'equal';
   equal: true;
   divergences: Divergence[];
+  findingIds?: FindingId[];
+};
+
+export type DivergentPairResult = {
+  status: 'divergent';
+  equal: false;
+  divergences: Divergence[];
+  findingIds?: FindingId[];
 };
 
 export type BlockedPairResult = {
   status: 'blocked-by-upstream';
   findingIds: FindingId[];
-  partialEvidence?: {
-    status: 'dom-only-partial';
-    channel: 'dom';
-    equal: true;
-    against: 'handwritten-react' | 'handwritten-solid';
-    callbackChannel: 'blocked-by-upstream(#7)';
-    source: string;
-  };
+  failure: string;
 };
 
-export type PairResult = EqualPairResult | BlockedPairResult;
+export type PairResult = EqualPairResult | DivergentPairResult | BlockedPairResult;
 export type MutantResult = { scenario: string; expectedChannel: string; rejected: boolean; observedChannels: string[]; divergences: Divergence[] };
 export type Evidence = {
-  schema: 'frameless-c9-evidence/2'; generatedBy: string; environment: Record<string, string>;
+  schema: 'frameless-c9-evidence/3'; generatedBy: string; environment: Record<string, string>;
   findings: Record<FindingId, Finding>;
   scenarios: Record<string, Record<string, PairResult>>; mutantRejections: Record<string, MutantResult>;
   summary: {
-    provablePairs: number; equalPairs: number; blockedPairs: number; domOnlyPartialPairs: number;
-    mutants: number; rejectedMutants: number; c9: 'pass' | 'fail'; marklessNativeLeg: 'blocked-by-upstream';
+    provablePairs: number; equalPairs: number; divergentPairs: number; blockedPairs: number;
+    mutants: number; rejectedMutants: number; c9: 'pass' | 'fail'; marklessNativeLeg: 'pass' | `partial(#${string})` | 'blocked';
   };
 };
 
 function pairVerdict(result: PairResult): string {
-  if (result.status === 'equal') return 'equal';
-  const blocked = `blocked-by-upstream(#${result.findingIds.join(',#')})`;
-  return result.partialEvidence ? `${blocked}; dom-only-partial` : blocked;
+  const findings = result.findingIds?.length ? `; still-present(#${result.findingIds.join(',#')})` : '';
+  if (result.status === 'equal') return `equal${findings}`;
+  if (result.status === 'divergent') return `divergent${findings}`;
+  return `blocked-by-upstream(#${result.findingIds.join(',#')})`;
 }
 
 export function renderResults(evidence: Evidence): string {
@@ -58,7 +60,7 @@ export function renderResults(evidence: Evidence): string {
   for (const [scenario, pairs] of Object.entries(evidence.scenarios)) {
     for (const [pair, result] of Object.entries(pairs)) lines.push(`| ${scenario} | ${pair} | ${pairVerdict(result)} |`);
   }
-  lines.push('', '## Upstream findings carried by every blocked Markless pair', '');
+  lines.push('', '## Upstream finding registry', '');
   for (const finding of Object.values(evidence.findings)) {
     lines.push(`- **#${finding.id}:** “${finding.quote}” Evidence: ${finding.evidence.join('; ')}.`);
   }

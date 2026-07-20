@@ -1,30 +1,46 @@
 import { render, type CsrRenderable, type CsrRenderContainer } from '@markless/web';
 import type { Adapter } from '../oracle/types.ts';
-import { registerTrace } from '../support/trace-bridge.ts';
+import { emitTrace, registerTrace } from '../support/trace-bridge.ts';
 import { boundedBrowserQuiescence, dispatchDomAction } from './browser.ts';
 
-type Artifact = { renderCsr(props?: unknown): unknown };
-export type MarklessApp = Artifact | { visible: Artifact; hidden: Artifact };
+type Artifact = { renderCsr(props?: unknown): unknown; preload?: () => void | Promise<void> };
 type Handle = { host: HTMLElement; container: CsrRenderContainer; releaseTrace: () => void };
 
-function selectApp(app: MarklessApp, props: Record<string, unknown>): Artifact {
+export type MarklessFallbackApp = Artifact | { visible: Artifact; hidden: Artifact };
+type Mode = 'direct' | 'trace-fallback' | 'wrapper-fallback';
+
+function selectFallbackApp(app: MarklessFallbackApp, props: Record<string, unknown>): Artifact {
   if ('renderCsr' in app) return app;
   return props.visible === false ? app.hidden : app.visible;
 }
 
-export function marklessAdapter(app: MarklessApp): Adapter<Handle> {
+function adapter(appFor: (props: Record<string, unknown>) => Artifact, mode: Mode): Adapter<Handle> {
+  const wrapperFallback = mode === 'wrapper-fallback';
+  const traceFallback = mode !== 'direct';
   return {
-    name: 'markless-web-0.1.1-csr',
-    // Wrapper apps need a host-element root (markless finding #5: a bare
-    // component at the template root CSR-renders nothing, silently). The
-    // harness element is adapter plumbing, not scenario DOM — observe inside it.
-    host: (handle) => (handle.host.querySelector('[data-harness]') as HTMLElement) ?? handle.host,
+    name: `markless-web-0.1.1-csr-${mode}`,
+    host: (handle) => wrapperFallback
+      ? (handle.host.querySelector('[data-harness]') as HTMLElement) ?? handle.host
+      : handle.host,
     async mount(host, props) {
-      // Registration must precede render(): Markless executes ordinary component
-      // body locals, including S1's setup callback, during this call.
-      const releaseTrace = registerTrace(props.onTrace as Parameters<typeof registerTrace>[0]);
+      const artifact = appFor(props);
+      // The direct path deliberately bypasses finding #3's old zero-prop wrapper:
+      // @markless/web still owns mounting, while the artifact receives the exact
+      // scenario props (including the plain callback prop).
+      const renderable = wrapperFallback ? artifact : {
+        renderCsr: () => artifact.renderCsr(traceFallback ? { ...props, onTrace: emitTrace } : props),
+        ...(artifact.preload ? { preload: () => artifact.preload?.() } : {}),
+      };
+      // Registration precedes render because S1 emits during component setup.
+      const releaseTrace = traceFallback
+        ? registerTrace(props.onTrace as Parameters<typeof registerTrace>[0])
+        : () => {};
       try {
-        const container = await render(selectApp(app, props) as CsrRenderable, { target: host });
+        const container = await render(renderable as CsrRenderable, { target: host });
+        if (!wrapperFallback && !host.querySelector('[data-s1-root], [data-scenario="s2"], [data-scenario="s3"]')) {
+          (container.runtime as { dispose?: () => void }).dispose?.();
+          throw new Error('Markless direct mount rendered no observable DOM (#5-class)');
+        }
         return { host, container, releaseTrace };
       } catch (error) {
         releaseTrace();
@@ -47,4 +63,18 @@ export function marklessAdapter(app: MarklessApp): Adapter<Handle> {
       }
     },
   };
+}
+
+export function marklessAdapter(app: Artifact): Adapter<Handle> {
+  return adapter(() => app, 'direct');
+}
+
+/** Finding #7 fallback: direct fixture and props, changing only callback routing. */
+export function marklessTraceFallbackAdapter(app: Artifact): Adapter<Handle> {
+  return adapter(() => app, 'trace-fallback');
+}
+
+/** Findings #3/#5 fallback: old zero-prop wrapper and harness observation. */
+export function marklessFallbackAdapter(app: MarklessFallbackApp): Adapter<Handle> {
+  return adapter((props) => selectFallbackApp(app, props), 'wrapper-fallback');
 }
