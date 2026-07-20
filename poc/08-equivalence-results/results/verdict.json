@@ -1,13 +1,20 @@
 {
-  "schema": "frameless-c9-evidence/2",
+  "schema": "frameless-c9-evidence/3",
   "generatedBy": "vitest browser / headless Chromium",
   "environment": {
-    "execution": "Vitest browser mode, headless Chromium; blocked Markless records are adjudicated upstream findings, not executed passes",
+    "execution": "Vitest browser mode, headless Chromium; all 12 Markless pairs are live direct-first comparisons with attributed fallbacks only",
     "vitest": "4.1.5",
     "browserProvider": "@vitest/browser-playwright 4.1.5",
     "playwright": "1.58.2 (locally cached Chromium)",
     "vite": "8.0.16",
-    "markless": "@markless/web + compiler/core/bundler 0.1.1 vendored tarballs",
+    "markless": "@markless/web + compiler/core/bundler 0.1.1 vendored tarballs; built from local markless-frameless-fixes worktree @ 5e5a100",
+    "marklessTarballSha256.bundler": "301b5d6bcf2bd30b527b3836c0a6949681c7a60ccb83be5abb75569548a3e93d",
+    "marklessTarballSha256.compiler": "59e4fb0bf6b7f4edd9312f0355535e22b1b1ceeb071da9617628d55df6dc5848",
+    "marklessTarballSha256.core": "2e957f84d54d8bb2383455be7250ea71b6d9436ff455a657a2376cf9ccf99c97",
+    "marklessTarballSha256.router": "841739095013d31da3ec4adfeb3a84e9876b35116e6c05ff8c784985fc7ae573",
+    "marklessTarballSha256.runtime": "3c1c5ba9e1e024391539ca9d9325ad631882a9d2817f09f77019e268fe9e4ed8",
+    "marklessTarballSha256.serializer": "274d12df07964fc6821b71694ace652dee157d15fae4ff573e0cb78762a9a893",
+    "marklessTarballSha256.web": "5fdb1817dffcabad3690102b6d202e696c307060d9cd17f4ac6d134194258c8c",
     "react": "18.3.1",
     "solid": "1.8.22 fallback",
     "oracle": "frameless-equivalence-oracle/1"
@@ -34,6 +41,7 @@
       "quote": "aliased prop destructuring — `{ label: displayLabel }` — arrives undefined in child-component composition; plain destructuring works, c6c",
       "evidence": [
         "Markless packages/compiler/src/passes/public-render/shared.ts:218-232 and :49-50",
+        "direct runtime probe src/fixtures/s1-render-once.tsrx",
         "compile-only repro ../05-enriched-ir/src/fixtures/alias-coverage.tsrx"
       ]
     },
@@ -83,59 +91,2163 @@
         "divergences": []
       },
       "markless__handwritten-react": {
-        "status": "blocked-by-upstream",
-        "findingIds": [
-          "3",
-          "5",
-          "6",
-          "7",
-          "8"
+        "status": "divergent",
+        "equal": false,
+        "divergences": [
+          {
+            "channel": "dom",
+            "phase": "action:0:after",
+            "path": "$[0].children[0].children[0].children[0].text",
+            "left": [
+              {
+                "nodeType": "element",
+                "namespace": "http://www.w3.org/1999/xhtml",
+                "tag": "div",
+                "attributes": [
+                  [
+                    "data-s1-root",
+                    ""
+                  ]
+                ],
+                "properties": {},
+                "children": [
+                  {
+                    "nodeType": "element",
+                    "namespace": "http://www.w3.org/1999/xhtml",
+                    "tag": "section",
+                    "attributes": [
+                      [
+                        "data-scenario",
+                        "s1"
+                      ]
+                    ],
+                    "properties": {},
+                    "children": [
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "output",
+                        "attributes": [
+                          [
+                            "data-value",
+                            "derived"
+                          ]
+                        ],
+                        "properties": {},
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "Frameless:3"
+                          }
+                        ]
+                      },
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "button",
+                        "attributes": [
+                          [
+                            "data-action",
+                            "increment"
+                          ]
+                        ],
+                        "properties": {
+                          "disabled": false
+                        },
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "increment"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "right": [
+              {
+                "nodeType": "element",
+                "namespace": "http://www.w3.org/1999/xhtml",
+                "tag": "div",
+                "attributes": [
+                  [
+                    "data-s1-root",
+                    ""
+                  ]
+                ],
+                "properties": {},
+                "children": [
+                  {
+                    "nodeType": "element",
+                    "namespace": "http://www.w3.org/1999/xhtml",
+                    "tag": "section",
+                    "attributes": [
+                      [
+                        "data-scenario",
+                        "s1"
+                      ]
+                    ],
+                    "properties": {},
+                    "children": [
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "output",
+                        "attributes": [
+                          [
+                            "data-value",
+                            "derived"
+                          ]
+                        ],
+                        "properties": {},
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "Frameless:6"
+                          }
+                        ]
+                      },
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "button",
+                        "attributes": [
+                          [
+                            "data-action",
+                            "increment"
+                          ]
+                        ],
+                        "properties": {
+                          "disabled": false
+                        },
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "increment"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "channel": "callback",
+            "phase": "action:0:after",
+            "path": "$.length",
+            "left": [
+              {
+                "name": "setup",
+                "payload": {
+                  "runs": 1
+                },
+                "phase": "mount",
+                "defaultPrevented": null,
+                "invocation": 1
+              }
+            ],
+            "right": [
+              {
+                "name": "setup",
+                "payload": {
+                  "runs": 1
+                },
+                "phase": "mount",
+                "defaultPrevented": null,
+                "invocation": 1
+              },
+              {
+                "name": "change",
+                "payload": {
+                  "count": 2
+                },
+                "phase": "action:0:after",
+                "defaultPrevented": null,
+                "invocation": 1
+              }
+            ]
+          },
+          {
+            "channel": "dom",
+            "phase": "action:0:microtask",
+            "path": "$[0].children[0].children[0].children[0].text",
+            "left": [
+              {
+                "nodeType": "element",
+                "namespace": "http://www.w3.org/1999/xhtml",
+                "tag": "div",
+                "attributes": [
+                  [
+                    "data-s1-root",
+                    ""
+                  ]
+                ],
+                "properties": {},
+                "children": [
+                  {
+                    "nodeType": "element",
+                    "namespace": "http://www.w3.org/1999/xhtml",
+                    "tag": "section",
+                    "attributes": [
+                      [
+                        "data-scenario",
+                        "s1"
+                      ]
+                    ],
+                    "properties": {},
+                    "children": [
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "output",
+                        "attributes": [
+                          [
+                            "data-value",
+                            "derived"
+                          ]
+                        ],
+                        "properties": {},
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "Frameless:3"
+                          }
+                        ]
+                      },
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "button",
+                        "attributes": [
+                          [
+                            "data-action",
+                            "increment"
+                          ]
+                        ],
+                        "properties": {
+                          "disabled": false
+                        },
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "increment"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "right": [
+              {
+                "nodeType": "element",
+                "namespace": "http://www.w3.org/1999/xhtml",
+                "tag": "div",
+                "attributes": [
+                  [
+                    "data-s1-root",
+                    ""
+                  ]
+                ],
+                "properties": {},
+                "children": [
+                  {
+                    "nodeType": "element",
+                    "namespace": "http://www.w3.org/1999/xhtml",
+                    "tag": "section",
+                    "attributes": [
+                      [
+                        "data-scenario",
+                        "s1"
+                      ]
+                    ],
+                    "properties": {},
+                    "children": [
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "output",
+                        "attributes": [
+                          [
+                            "data-value",
+                            "derived"
+                          ]
+                        ],
+                        "properties": {},
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "Frameless:6"
+                          }
+                        ]
+                      },
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "button",
+                        "attributes": [
+                          [
+                            "data-action",
+                            "increment"
+                          ]
+                        ],
+                        "properties": {
+                          "disabled": false
+                        },
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "increment"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "channel": "callback",
+            "phase": "action:0:microtask",
+            "path": "$.length",
+            "left": [
+              {
+                "name": "setup",
+                "payload": {
+                  "runs": 1
+                },
+                "phase": "mount",
+                "defaultPrevented": null,
+                "invocation": 1
+              }
+            ],
+            "right": [
+              {
+                "name": "setup",
+                "payload": {
+                  "runs": 1
+                },
+                "phase": "mount",
+                "defaultPrevented": null,
+                "invocation": 1
+              },
+              {
+                "name": "change",
+                "payload": {
+                  "count": 2
+                },
+                "phase": "action:0:after",
+                "defaultPrevented": null,
+                "invocation": 1
+              }
+            ]
+          },
+          {
+            "channel": "dom",
+            "phase": "action:0:quiescence",
+            "path": "$[0].children[0].children[0].children[0].text",
+            "left": [
+              {
+                "nodeType": "element",
+                "namespace": "http://www.w3.org/1999/xhtml",
+                "tag": "div",
+                "attributes": [
+                  [
+                    "data-s1-root",
+                    ""
+                  ]
+                ],
+                "properties": {},
+                "children": [
+                  {
+                    "nodeType": "element",
+                    "namespace": "http://www.w3.org/1999/xhtml",
+                    "tag": "section",
+                    "attributes": [
+                      [
+                        "data-scenario",
+                        "s1"
+                      ]
+                    ],
+                    "properties": {},
+                    "children": [
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "output",
+                        "attributes": [
+                          [
+                            "data-value",
+                            "derived"
+                          ]
+                        ],
+                        "properties": {},
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "Frameless:3"
+                          }
+                        ]
+                      },
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "button",
+                        "attributes": [
+                          [
+                            "data-action",
+                            "increment"
+                          ]
+                        ],
+                        "properties": {
+                          "disabled": false
+                        },
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "increment"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "right": [
+              {
+                "nodeType": "element",
+                "namespace": "http://www.w3.org/1999/xhtml",
+                "tag": "div",
+                "attributes": [
+                  [
+                    "data-s1-root",
+                    ""
+                  ]
+                ],
+                "properties": {},
+                "children": [
+                  {
+                    "nodeType": "element",
+                    "namespace": "http://www.w3.org/1999/xhtml",
+                    "tag": "section",
+                    "attributes": [
+                      [
+                        "data-scenario",
+                        "s1"
+                      ]
+                    ],
+                    "properties": {},
+                    "children": [
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "output",
+                        "attributes": [
+                          [
+                            "data-value",
+                            "derived"
+                          ]
+                        ],
+                        "properties": {},
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "Frameless:6"
+                          }
+                        ]
+                      },
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "button",
+                        "attributes": [
+                          [
+                            "data-action",
+                            "increment"
+                          ]
+                        ],
+                        "properties": {
+                          "disabled": false
+                        },
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "increment"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "channel": "callback",
+            "phase": "action:0:quiescence",
+            "path": "$.length",
+            "left": [
+              {
+                "name": "setup",
+                "payload": {
+                  "runs": 1
+                },
+                "phase": "mount",
+                "defaultPrevented": null,
+                "invocation": 1
+              }
+            ],
+            "right": [
+              {
+                "name": "setup",
+                "payload": {
+                  "runs": 1
+                },
+                "phase": "mount",
+                "defaultPrevented": null,
+                "invocation": 1
+              },
+              {
+                "name": "change",
+                "payload": {
+                  "count": 2
+                },
+                "phase": "action:0:after",
+                "defaultPrevented": null,
+                "invocation": 1
+              }
+            ]
+          }
         ],
-        "partialEvidence": {
-          "status": "dom-only-partial",
-          "channel": "dom",
-          "equal": true,
-          "against": "handwritten-react",
-          "callbackChannel": "blocked-by-upstream(#7)",
-          "source": "W-D1 adjudication 3: full DOM-channel pass observed before the callback-channel block"
-        }
+        "findingIds": [
+          "7"
+        ]
       },
       "markless__handwritten-solid": {
-        "status": "blocked-by-upstream",
-        "findingIds": [
-          "3",
-          "5",
-          "6",
-          "7",
-          "8"
+        "status": "divergent",
+        "equal": false,
+        "divergences": [
+          {
+            "channel": "dom",
+            "phase": "action:0:after",
+            "path": "$[0].children[0].children[0].children[0].text",
+            "left": [
+              {
+                "nodeType": "element",
+                "namespace": "http://www.w3.org/1999/xhtml",
+                "tag": "div",
+                "attributes": [
+                  [
+                    "data-s1-root",
+                    ""
+                  ]
+                ],
+                "properties": {},
+                "children": [
+                  {
+                    "nodeType": "element",
+                    "namespace": "http://www.w3.org/1999/xhtml",
+                    "tag": "section",
+                    "attributes": [
+                      [
+                        "data-scenario",
+                        "s1"
+                      ]
+                    ],
+                    "properties": {},
+                    "children": [
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "output",
+                        "attributes": [
+                          [
+                            "data-value",
+                            "derived"
+                          ]
+                        ],
+                        "properties": {},
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "Frameless:3"
+                          }
+                        ]
+                      },
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "button",
+                        "attributes": [
+                          [
+                            "data-action",
+                            "increment"
+                          ]
+                        ],
+                        "properties": {
+                          "disabled": false
+                        },
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "increment"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "right": [
+              {
+                "nodeType": "element",
+                "namespace": "http://www.w3.org/1999/xhtml",
+                "tag": "div",
+                "attributes": [
+                  [
+                    "data-s1-root",
+                    ""
+                  ]
+                ],
+                "properties": {},
+                "children": [
+                  {
+                    "nodeType": "element",
+                    "namespace": "http://www.w3.org/1999/xhtml",
+                    "tag": "section",
+                    "attributes": [
+                      [
+                        "data-scenario",
+                        "s1"
+                      ]
+                    ],
+                    "properties": {},
+                    "children": [
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "output",
+                        "attributes": [
+                          [
+                            "data-value",
+                            "derived"
+                          ]
+                        ],
+                        "properties": {},
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "Frameless:6"
+                          }
+                        ]
+                      },
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "button",
+                        "attributes": [
+                          [
+                            "data-action",
+                            "increment"
+                          ]
+                        ],
+                        "properties": {
+                          "disabled": false
+                        },
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "increment"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "channel": "callback",
+            "phase": "action:0:after",
+            "path": "$.length",
+            "left": [
+              {
+                "name": "setup",
+                "payload": {
+                  "runs": 1
+                },
+                "phase": "mount",
+                "defaultPrevented": null,
+                "invocation": 1
+              }
+            ],
+            "right": [
+              {
+                "name": "setup",
+                "payload": {
+                  "runs": 1
+                },
+                "phase": "mount",
+                "defaultPrevented": null,
+                "invocation": 1
+              },
+              {
+                "name": "change",
+                "payload": {
+                  "count": 2
+                },
+                "phase": "action:0:after",
+                "defaultPrevented": null,
+                "invocation": 1
+              }
+            ]
+          },
+          {
+            "channel": "dom",
+            "phase": "action:0:microtask",
+            "path": "$[0].children[0].children[0].children[0].text",
+            "left": [
+              {
+                "nodeType": "element",
+                "namespace": "http://www.w3.org/1999/xhtml",
+                "tag": "div",
+                "attributes": [
+                  [
+                    "data-s1-root",
+                    ""
+                  ]
+                ],
+                "properties": {},
+                "children": [
+                  {
+                    "nodeType": "element",
+                    "namespace": "http://www.w3.org/1999/xhtml",
+                    "tag": "section",
+                    "attributes": [
+                      [
+                        "data-scenario",
+                        "s1"
+                      ]
+                    ],
+                    "properties": {},
+                    "children": [
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "output",
+                        "attributes": [
+                          [
+                            "data-value",
+                            "derived"
+                          ]
+                        ],
+                        "properties": {},
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "Frameless:3"
+                          }
+                        ]
+                      },
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "button",
+                        "attributes": [
+                          [
+                            "data-action",
+                            "increment"
+                          ]
+                        ],
+                        "properties": {
+                          "disabled": false
+                        },
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "increment"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "right": [
+              {
+                "nodeType": "element",
+                "namespace": "http://www.w3.org/1999/xhtml",
+                "tag": "div",
+                "attributes": [
+                  [
+                    "data-s1-root",
+                    ""
+                  ]
+                ],
+                "properties": {},
+                "children": [
+                  {
+                    "nodeType": "element",
+                    "namespace": "http://www.w3.org/1999/xhtml",
+                    "tag": "section",
+                    "attributes": [
+                      [
+                        "data-scenario",
+                        "s1"
+                      ]
+                    ],
+                    "properties": {},
+                    "children": [
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "output",
+                        "attributes": [
+                          [
+                            "data-value",
+                            "derived"
+                          ]
+                        ],
+                        "properties": {},
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "Frameless:6"
+                          }
+                        ]
+                      },
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "button",
+                        "attributes": [
+                          [
+                            "data-action",
+                            "increment"
+                          ]
+                        ],
+                        "properties": {
+                          "disabled": false
+                        },
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "increment"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "channel": "callback",
+            "phase": "action:0:microtask",
+            "path": "$.length",
+            "left": [
+              {
+                "name": "setup",
+                "payload": {
+                  "runs": 1
+                },
+                "phase": "mount",
+                "defaultPrevented": null,
+                "invocation": 1
+              }
+            ],
+            "right": [
+              {
+                "name": "setup",
+                "payload": {
+                  "runs": 1
+                },
+                "phase": "mount",
+                "defaultPrevented": null,
+                "invocation": 1
+              },
+              {
+                "name": "change",
+                "payload": {
+                  "count": 2
+                },
+                "phase": "action:0:after",
+                "defaultPrevented": null,
+                "invocation": 1
+              }
+            ]
+          },
+          {
+            "channel": "dom",
+            "phase": "action:0:quiescence",
+            "path": "$[0].children[0].children[0].children[0].text",
+            "left": [
+              {
+                "nodeType": "element",
+                "namespace": "http://www.w3.org/1999/xhtml",
+                "tag": "div",
+                "attributes": [
+                  [
+                    "data-s1-root",
+                    ""
+                  ]
+                ],
+                "properties": {},
+                "children": [
+                  {
+                    "nodeType": "element",
+                    "namespace": "http://www.w3.org/1999/xhtml",
+                    "tag": "section",
+                    "attributes": [
+                      [
+                        "data-scenario",
+                        "s1"
+                      ]
+                    ],
+                    "properties": {},
+                    "children": [
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "output",
+                        "attributes": [
+                          [
+                            "data-value",
+                            "derived"
+                          ]
+                        ],
+                        "properties": {},
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "Frameless:3"
+                          }
+                        ]
+                      },
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "button",
+                        "attributes": [
+                          [
+                            "data-action",
+                            "increment"
+                          ]
+                        ],
+                        "properties": {
+                          "disabled": false
+                        },
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "increment"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "right": [
+              {
+                "nodeType": "element",
+                "namespace": "http://www.w3.org/1999/xhtml",
+                "tag": "div",
+                "attributes": [
+                  [
+                    "data-s1-root",
+                    ""
+                  ]
+                ],
+                "properties": {},
+                "children": [
+                  {
+                    "nodeType": "element",
+                    "namespace": "http://www.w3.org/1999/xhtml",
+                    "tag": "section",
+                    "attributes": [
+                      [
+                        "data-scenario",
+                        "s1"
+                      ]
+                    ],
+                    "properties": {},
+                    "children": [
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "output",
+                        "attributes": [
+                          [
+                            "data-value",
+                            "derived"
+                          ]
+                        ],
+                        "properties": {},
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "Frameless:6"
+                          }
+                        ]
+                      },
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "button",
+                        "attributes": [
+                          [
+                            "data-action",
+                            "increment"
+                          ]
+                        ],
+                        "properties": {
+                          "disabled": false
+                        },
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "increment"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "channel": "callback",
+            "phase": "action:0:quiescence",
+            "path": "$.length",
+            "left": [
+              {
+                "name": "setup",
+                "payload": {
+                  "runs": 1
+                },
+                "phase": "mount",
+                "defaultPrevented": null,
+                "invocation": 1
+              }
+            ],
+            "right": [
+              {
+                "name": "setup",
+                "payload": {
+                  "runs": 1
+                },
+                "phase": "mount",
+                "defaultPrevented": null,
+                "invocation": 1
+              },
+              {
+                "name": "change",
+                "payload": {
+                  "count": 2
+                },
+                "phase": "action:0:after",
+                "defaultPrevented": null,
+                "invocation": 1
+              }
+            ]
+          }
         ],
-        "partialEvidence": {
-          "status": "dom-only-partial",
-          "channel": "dom",
-          "equal": true,
-          "against": "handwritten-solid",
-          "callbackChannel": "blocked-by-upstream(#7)",
-          "source": "W-D1 adjudication 3: full DOM-channel pass observed before the callback-channel block"
-        }
+        "findingIds": [
+          "7"
+        ]
       },
       "markless__emitted-react": {
-        "status": "blocked-by-upstream",
+        "status": "divergent",
+        "equal": false,
+        "divergences": [
+          {
+            "channel": "dom",
+            "phase": "action:0:after",
+            "path": "$[0].children[0].children[0].children[0].text",
+            "left": [
+              {
+                "nodeType": "element",
+                "namespace": "http://www.w3.org/1999/xhtml",
+                "tag": "div",
+                "attributes": [
+                  [
+                    "data-s1-root",
+                    ""
+                  ]
+                ],
+                "properties": {},
+                "children": [
+                  {
+                    "nodeType": "element",
+                    "namespace": "http://www.w3.org/1999/xhtml",
+                    "tag": "section",
+                    "attributes": [
+                      [
+                        "data-scenario",
+                        "s1"
+                      ]
+                    ],
+                    "properties": {},
+                    "children": [
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "output",
+                        "attributes": [
+                          [
+                            "data-value",
+                            "derived"
+                          ]
+                        ],
+                        "properties": {},
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "Frameless:3"
+                          }
+                        ]
+                      },
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "button",
+                        "attributes": [
+                          [
+                            "data-action",
+                            "increment"
+                          ]
+                        ],
+                        "properties": {
+                          "disabled": false
+                        },
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "increment"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "right": [
+              {
+                "nodeType": "element",
+                "namespace": "http://www.w3.org/1999/xhtml",
+                "tag": "div",
+                "attributes": [
+                  [
+                    "data-s1-root",
+                    ""
+                  ]
+                ],
+                "properties": {},
+                "children": [
+                  {
+                    "nodeType": "element",
+                    "namespace": "http://www.w3.org/1999/xhtml",
+                    "tag": "section",
+                    "attributes": [
+                      [
+                        "data-scenario",
+                        "s1"
+                      ]
+                    ],
+                    "properties": {},
+                    "children": [
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "output",
+                        "attributes": [
+                          [
+                            "data-value",
+                            "derived"
+                          ]
+                        ],
+                        "properties": {},
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "Frameless:6"
+                          }
+                        ]
+                      },
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "button",
+                        "attributes": [
+                          [
+                            "data-action",
+                            "increment"
+                          ]
+                        ],
+                        "properties": {
+                          "disabled": false
+                        },
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "increment"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "channel": "callback",
+            "phase": "action:0:after",
+            "path": "$.length",
+            "left": [
+              {
+                "name": "setup",
+                "payload": {
+                  "runs": 1
+                },
+                "phase": "mount",
+                "defaultPrevented": null,
+                "invocation": 1
+              }
+            ],
+            "right": [
+              {
+                "name": "setup",
+                "payload": {
+                  "runs": 1
+                },
+                "phase": "mount",
+                "defaultPrevented": null,
+                "invocation": 1
+              },
+              {
+                "name": "change",
+                "payload": {
+                  "count": 2
+                },
+                "phase": "action:0:after",
+                "defaultPrevented": null,
+                "invocation": 1
+              }
+            ]
+          },
+          {
+            "channel": "dom",
+            "phase": "action:0:microtask",
+            "path": "$[0].children[0].children[0].children[0].text",
+            "left": [
+              {
+                "nodeType": "element",
+                "namespace": "http://www.w3.org/1999/xhtml",
+                "tag": "div",
+                "attributes": [
+                  [
+                    "data-s1-root",
+                    ""
+                  ]
+                ],
+                "properties": {},
+                "children": [
+                  {
+                    "nodeType": "element",
+                    "namespace": "http://www.w3.org/1999/xhtml",
+                    "tag": "section",
+                    "attributes": [
+                      [
+                        "data-scenario",
+                        "s1"
+                      ]
+                    ],
+                    "properties": {},
+                    "children": [
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "output",
+                        "attributes": [
+                          [
+                            "data-value",
+                            "derived"
+                          ]
+                        ],
+                        "properties": {},
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "Frameless:3"
+                          }
+                        ]
+                      },
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "button",
+                        "attributes": [
+                          [
+                            "data-action",
+                            "increment"
+                          ]
+                        ],
+                        "properties": {
+                          "disabled": false
+                        },
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "increment"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "right": [
+              {
+                "nodeType": "element",
+                "namespace": "http://www.w3.org/1999/xhtml",
+                "tag": "div",
+                "attributes": [
+                  [
+                    "data-s1-root",
+                    ""
+                  ]
+                ],
+                "properties": {},
+                "children": [
+                  {
+                    "nodeType": "element",
+                    "namespace": "http://www.w3.org/1999/xhtml",
+                    "tag": "section",
+                    "attributes": [
+                      [
+                        "data-scenario",
+                        "s1"
+                      ]
+                    ],
+                    "properties": {},
+                    "children": [
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "output",
+                        "attributes": [
+                          [
+                            "data-value",
+                            "derived"
+                          ]
+                        ],
+                        "properties": {},
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "Frameless:6"
+                          }
+                        ]
+                      },
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "button",
+                        "attributes": [
+                          [
+                            "data-action",
+                            "increment"
+                          ]
+                        ],
+                        "properties": {
+                          "disabled": false
+                        },
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "increment"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "channel": "callback",
+            "phase": "action:0:microtask",
+            "path": "$.length",
+            "left": [
+              {
+                "name": "setup",
+                "payload": {
+                  "runs": 1
+                },
+                "phase": "mount",
+                "defaultPrevented": null,
+                "invocation": 1
+              }
+            ],
+            "right": [
+              {
+                "name": "setup",
+                "payload": {
+                  "runs": 1
+                },
+                "phase": "mount",
+                "defaultPrevented": null,
+                "invocation": 1
+              },
+              {
+                "name": "change",
+                "payload": {
+                  "count": 2
+                },
+                "phase": "action:0:after",
+                "defaultPrevented": null,
+                "invocation": 1
+              }
+            ]
+          },
+          {
+            "channel": "dom",
+            "phase": "action:0:quiescence",
+            "path": "$[0].children[0].children[0].children[0].text",
+            "left": [
+              {
+                "nodeType": "element",
+                "namespace": "http://www.w3.org/1999/xhtml",
+                "tag": "div",
+                "attributes": [
+                  [
+                    "data-s1-root",
+                    ""
+                  ]
+                ],
+                "properties": {},
+                "children": [
+                  {
+                    "nodeType": "element",
+                    "namespace": "http://www.w3.org/1999/xhtml",
+                    "tag": "section",
+                    "attributes": [
+                      [
+                        "data-scenario",
+                        "s1"
+                      ]
+                    ],
+                    "properties": {},
+                    "children": [
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "output",
+                        "attributes": [
+                          [
+                            "data-value",
+                            "derived"
+                          ]
+                        ],
+                        "properties": {},
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "Frameless:3"
+                          }
+                        ]
+                      },
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "button",
+                        "attributes": [
+                          [
+                            "data-action",
+                            "increment"
+                          ]
+                        ],
+                        "properties": {
+                          "disabled": false
+                        },
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "increment"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "right": [
+              {
+                "nodeType": "element",
+                "namespace": "http://www.w3.org/1999/xhtml",
+                "tag": "div",
+                "attributes": [
+                  [
+                    "data-s1-root",
+                    ""
+                  ]
+                ],
+                "properties": {},
+                "children": [
+                  {
+                    "nodeType": "element",
+                    "namespace": "http://www.w3.org/1999/xhtml",
+                    "tag": "section",
+                    "attributes": [
+                      [
+                        "data-scenario",
+                        "s1"
+                      ]
+                    ],
+                    "properties": {},
+                    "children": [
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "output",
+                        "attributes": [
+                          [
+                            "data-value",
+                            "derived"
+                          ]
+                        ],
+                        "properties": {},
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "Frameless:6"
+                          }
+                        ]
+                      },
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "button",
+                        "attributes": [
+                          [
+                            "data-action",
+                            "increment"
+                          ]
+                        ],
+                        "properties": {
+                          "disabled": false
+                        },
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "increment"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "channel": "callback",
+            "phase": "action:0:quiescence",
+            "path": "$.length",
+            "left": [
+              {
+                "name": "setup",
+                "payload": {
+                  "runs": 1
+                },
+                "phase": "mount",
+                "defaultPrevented": null,
+                "invocation": 1
+              }
+            ],
+            "right": [
+              {
+                "name": "setup",
+                "payload": {
+                  "runs": 1
+                },
+                "phase": "mount",
+                "defaultPrevented": null,
+                "invocation": 1
+              },
+              {
+                "name": "change",
+                "payload": {
+                  "count": 2
+                },
+                "phase": "action:0:after",
+                "defaultPrevented": null,
+                "invocation": 1
+              }
+            ]
+          }
+        ],
         "findingIds": [
-          "3",
-          "5",
-          "6",
-          "7",
-          "8"
+          "7"
         ]
       },
       "markless__emitted-solid": {
-        "status": "blocked-by-upstream",
+        "status": "divergent",
+        "equal": false,
+        "divergences": [
+          {
+            "channel": "dom",
+            "phase": "action:0:after",
+            "path": "$[0].children[0].children[0].children[0].text",
+            "left": [
+              {
+                "nodeType": "element",
+                "namespace": "http://www.w3.org/1999/xhtml",
+                "tag": "div",
+                "attributes": [
+                  [
+                    "data-s1-root",
+                    ""
+                  ]
+                ],
+                "properties": {},
+                "children": [
+                  {
+                    "nodeType": "element",
+                    "namespace": "http://www.w3.org/1999/xhtml",
+                    "tag": "section",
+                    "attributes": [
+                      [
+                        "data-scenario",
+                        "s1"
+                      ]
+                    ],
+                    "properties": {},
+                    "children": [
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "output",
+                        "attributes": [
+                          [
+                            "data-value",
+                            "derived"
+                          ]
+                        ],
+                        "properties": {},
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "Frameless:3"
+                          }
+                        ]
+                      },
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "button",
+                        "attributes": [
+                          [
+                            "data-action",
+                            "increment"
+                          ]
+                        ],
+                        "properties": {
+                          "disabled": false
+                        },
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "increment"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "right": [
+              {
+                "nodeType": "element",
+                "namespace": "http://www.w3.org/1999/xhtml",
+                "tag": "div",
+                "attributes": [
+                  [
+                    "data-s1-root",
+                    ""
+                  ]
+                ],
+                "properties": {},
+                "children": [
+                  {
+                    "nodeType": "element",
+                    "namespace": "http://www.w3.org/1999/xhtml",
+                    "tag": "section",
+                    "attributes": [
+                      [
+                        "data-scenario",
+                        "s1"
+                      ]
+                    ],
+                    "properties": {},
+                    "children": [
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "output",
+                        "attributes": [
+                          [
+                            "data-value",
+                            "derived"
+                          ]
+                        ],
+                        "properties": {},
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "Frameless:6"
+                          }
+                        ]
+                      },
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "button",
+                        "attributes": [
+                          [
+                            "data-action",
+                            "increment"
+                          ]
+                        ],
+                        "properties": {
+                          "disabled": false
+                        },
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "increment"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "channel": "callback",
+            "phase": "action:0:after",
+            "path": "$.length",
+            "left": [
+              {
+                "name": "setup",
+                "payload": {
+                  "runs": 1
+                },
+                "phase": "mount",
+                "defaultPrevented": null,
+                "invocation": 1
+              }
+            ],
+            "right": [
+              {
+                "name": "setup",
+                "payload": {
+                  "runs": 1
+                },
+                "phase": "mount",
+                "defaultPrevented": null,
+                "invocation": 1
+              },
+              {
+                "name": "change",
+                "payload": {
+                  "count": 2
+                },
+                "phase": "action:0:after",
+                "defaultPrevented": null,
+                "invocation": 1
+              }
+            ]
+          },
+          {
+            "channel": "dom",
+            "phase": "action:0:microtask",
+            "path": "$[0].children[0].children[0].children[0].text",
+            "left": [
+              {
+                "nodeType": "element",
+                "namespace": "http://www.w3.org/1999/xhtml",
+                "tag": "div",
+                "attributes": [
+                  [
+                    "data-s1-root",
+                    ""
+                  ]
+                ],
+                "properties": {},
+                "children": [
+                  {
+                    "nodeType": "element",
+                    "namespace": "http://www.w3.org/1999/xhtml",
+                    "tag": "section",
+                    "attributes": [
+                      [
+                        "data-scenario",
+                        "s1"
+                      ]
+                    ],
+                    "properties": {},
+                    "children": [
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "output",
+                        "attributes": [
+                          [
+                            "data-value",
+                            "derived"
+                          ]
+                        ],
+                        "properties": {},
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "Frameless:3"
+                          }
+                        ]
+                      },
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "button",
+                        "attributes": [
+                          [
+                            "data-action",
+                            "increment"
+                          ]
+                        ],
+                        "properties": {
+                          "disabled": false
+                        },
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "increment"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "right": [
+              {
+                "nodeType": "element",
+                "namespace": "http://www.w3.org/1999/xhtml",
+                "tag": "div",
+                "attributes": [
+                  [
+                    "data-s1-root",
+                    ""
+                  ]
+                ],
+                "properties": {},
+                "children": [
+                  {
+                    "nodeType": "element",
+                    "namespace": "http://www.w3.org/1999/xhtml",
+                    "tag": "section",
+                    "attributes": [
+                      [
+                        "data-scenario",
+                        "s1"
+                      ]
+                    ],
+                    "properties": {},
+                    "children": [
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "output",
+                        "attributes": [
+                          [
+                            "data-value",
+                            "derived"
+                          ]
+                        ],
+                        "properties": {},
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "Frameless:6"
+                          }
+                        ]
+                      },
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "button",
+                        "attributes": [
+                          [
+                            "data-action",
+                            "increment"
+                          ]
+                        ],
+                        "properties": {
+                          "disabled": false
+                        },
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "increment"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "channel": "callback",
+            "phase": "action:0:microtask",
+            "path": "$.length",
+            "left": [
+              {
+                "name": "setup",
+                "payload": {
+                  "runs": 1
+                },
+                "phase": "mount",
+                "defaultPrevented": null,
+                "invocation": 1
+              }
+            ],
+            "right": [
+              {
+                "name": "setup",
+                "payload": {
+                  "runs": 1
+                },
+                "phase": "mount",
+                "defaultPrevented": null,
+                "invocation": 1
+              },
+              {
+                "name": "change",
+                "payload": {
+                  "count": 2
+                },
+                "phase": "action:0:after",
+                "defaultPrevented": null,
+                "invocation": 1
+              }
+            ]
+          },
+          {
+            "channel": "dom",
+            "phase": "action:0:quiescence",
+            "path": "$[0].children[0].children[0].children[0].text",
+            "left": [
+              {
+                "nodeType": "element",
+                "namespace": "http://www.w3.org/1999/xhtml",
+                "tag": "div",
+                "attributes": [
+                  [
+                    "data-s1-root",
+                    ""
+                  ]
+                ],
+                "properties": {},
+                "children": [
+                  {
+                    "nodeType": "element",
+                    "namespace": "http://www.w3.org/1999/xhtml",
+                    "tag": "section",
+                    "attributes": [
+                      [
+                        "data-scenario",
+                        "s1"
+                      ]
+                    ],
+                    "properties": {},
+                    "children": [
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "output",
+                        "attributes": [
+                          [
+                            "data-value",
+                            "derived"
+                          ]
+                        ],
+                        "properties": {},
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "Frameless:3"
+                          }
+                        ]
+                      },
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "button",
+                        "attributes": [
+                          [
+                            "data-action",
+                            "increment"
+                          ]
+                        ],
+                        "properties": {
+                          "disabled": false
+                        },
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "increment"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "right": [
+              {
+                "nodeType": "element",
+                "namespace": "http://www.w3.org/1999/xhtml",
+                "tag": "div",
+                "attributes": [
+                  [
+                    "data-s1-root",
+                    ""
+                  ]
+                ],
+                "properties": {},
+                "children": [
+                  {
+                    "nodeType": "element",
+                    "namespace": "http://www.w3.org/1999/xhtml",
+                    "tag": "section",
+                    "attributes": [
+                      [
+                        "data-scenario",
+                        "s1"
+                      ]
+                    ],
+                    "properties": {},
+                    "children": [
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "output",
+                        "attributes": [
+                          [
+                            "data-value",
+                            "derived"
+                          ]
+                        ],
+                        "properties": {},
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "Frameless:6"
+                          }
+                        ]
+                      },
+                      {
+                        "nodeType": "element",
+                        "namespace": "http://www.w3.org/1999/xhtml",
+                        "tag": "button",
+                        "attributes": [
+                          [
+                            "data-action",
+                            "increment"
+                          ]
+                        ],
+                        "properties": {
+                          "disabled": false
+                        },
+                        "children": [
+                          {
+                            "nodeType": "text",
+                            "text": "increment"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "channel": "callback",
+            "phase": "action:0:quiescence",
+            "path": "$.length",
+            "left": [
+              {
+                "name": "setup",
+                "payload": {
+                  "runs": 1
+                },
+                "phase": "mount",
+                "defaultPrevented": null,
+                "invocation": 1
+              }
+            ],
+            "right": [
+              {
+                "name": "setup",
+                "payload": {
+                  "runs": 1
+                },
+                "phase": "mount",
+                "defaultPrevented": null,
+                "invocation": 1
+              },
+              {
+                "name": "change",
+                "payload": {
+                  "count": 2
+                },
+                "phase": "action:0:after",
+                "defaultPrevented": null,
+                "invocation": 1
+              }
+            ]
+          }
+        ],
         "findingIds": [
-          "3",
-          "5",
-          "6",
-          "7",
-          "8"
+          "7"
         ]
       }
     },
@@ -168,42 +2280,30 @@
       "markless__handwritten-react": {
         "status": "blocked-by-upstream",
         "findingIds": [
-          "3",
-          "5",
-          "6",
-          "7",
           "8"
-        ]
+        ],
+        "failure": "No behavior-preserving runtime workaround exists for diagnosed finding(s) #8"
       },
       "markless__handwritten-solid": {
         "status": "blocked-by-upstream",
         "findingIds": [
-          "3",
-          "5",
-          "6",
-          "7",
           "8"
-        ]
+        ],
+        "failure": "No behavior-preserving runtime workaround exists for diagnosed finding(s) #8"
       },
       "markless__emitted-react": {
         "status": "blocked-by-upstream",
         "findingIds": [
-          "3",
-          "5",
-          "6",
-          "7",
           "8"
-        ]
+        ],
+        "failure": "No behavior-preserving runtime workaround exists for diagnosed finding(s) #8"
       },
       "markless__emitted-solid": {
         "status": "blocked-by-upstream",
         "findingIds": [
-          "3",
-          "5",
-          "6",
-          "7",
           "8"
-        ]
+        ],
+        "failure": "No behavior-preserving runtime workaround exists for diagnosed finding(s) #8"
       }
     },
     "S3-event-form": {
@@ -235,42 +2335,30 @@
       "markless__handwritten-react": {
         "status": "blocked-by-upstream",
         "findingIds": [
-          "3",
-          "5",
-          "6",
-          "7",
           "8"
-        ]
+        ],
+        "failure": "No behavior-preserving runtime workaround exists for diagnosed finding(s) #8"
       },
       "markless__handwritten-solid": {
         "status": "blocked-by-upstream",
         "findingIds": [
-          "3",
-          "5",
-          "6",
-          "7",
           "8"
-        ]
+        ],
+        "failure": "No behavior-preserving runtime workaround exists for diagnosed finding(s) #8"
       },
       "markless__emitted-react": {
         "status": "blocked-by-upstream",
         "findingIds": [
-          "3",
-          "5",
-          "6",
-          "7",
           "8"
-        ]
+        ],
+        "failure": "No behavior-preserving runtime workaround exists for diagnosed finding(s) #8"
       },
       "markless__emitted-solid": {
         "status": "blocked-by-upstream",
         "findingIds": [
-          "3",
-          "5",
-          "6",
-          "7",
           "8"
-        ]
+        ],
+        "failure": "No behavior-preserving runtime workaround exists for diagnosed finding(s) #8"
       }
     }
   },
@@ -23756,11 +25844,11 @@
   "summary": {
     "provablePairs": 15,
     "equalPairs": 15,
-    "blockedPairs": 12,
-    "domOnlyPartialPairs": 2,
+    "divergentPairs": 4,
+    "blockedPairs": 8,
     "mutants": 5,
     "rejectedMutants": 5,
     "c9": "pass",
-    "marklessNativeLeg": "blocked-by-upstream"
+    "marklessNativeLeg": "blocked"
   }
 }
