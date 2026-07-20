@@ -112,6 +112,14 @@ describe('Solid dossier gate', () => {
 			valid.replace(' when={props.visible}', ' when={props.visible} fallback={<></>}'),
 			'show-two-arm',
 		],
+		[
+			'duplicated Show arms',
+			valid.replace(
+				'<Show when={props.visible}><span>{label()}</span></Show>',
+				'<Show when={props.visible} fallback={<ul><For each={items}>{(item) => <li>{item.id}</li>}</For></ul>}><span>{label()}</span><ul><For each={items}>{(item) => <li>{item.id}</li>}</For></ul></Show>',
+			),
+			'show-two-arm',
+		],
 		['missing attr value', valid.replace(' attr:value={value()}', ''), 'controlled-input'],
 		[
 			'React text event',
@@ -184,6 +192,11 @@ describe('Solid dossier gate', () => {
 				'const label',
 				'const update = () => setValue(1); update();\n  const label',
 			),
+			'render-phase-setter',
+		],
+		[
+			'inline-object setter call',
+			valid.replace('const label', '({ run: setValue }).run(1);\n  const label'),
 			'render-phase-setter',
 		],
 		[

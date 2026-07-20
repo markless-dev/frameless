@@ -109,18 +109,89 @@ function babelMemberPath(node: t.Node): { root: t.Identifier; path: string[] } |
 	return t.isIdentifier(current) ? { root: current, path } : null;
 }
 
-function reconcileHandlerSemantics(
+function readKey(graphNodeId: string, path: readonly string[]): string {
+	return `${graphNodeId}\u0000${path.join('\u0000')}`;
+}
+
+function reconcileReadSemantics(
+	ast: t.Expression,
+	reads: readonly { readonly graphNodeId: string; readonly path: readonly string[] }[],
+	construct: string,
+	bindings: readonly EnrichedGraphBinding[],
+	props: EnrichedComponent['props'],
+	locals: EnrichedComponent['locals'],
+	repeatItems: ReadonlyMap<string, string> = new Map(),
+): void {
+	const bindingsByName = new Map(bindings.map((binding) => [binding.name, binding]));
+	const propsByLocal = new Map(props.entries.map((entry) => [entry.localName, entry]));
+	const localsByName = new Map(
+		locals.flatMap((local) => local.names.map((name) => [name, local] as const)),
+	);
+	const recordedReads = new Map(reads.map((read) => [readKey(read.graphNodeId, read.path), read]));
+	const astReads = new Set<string>();
+	const wrapper = t.file(t.program([t.expressionStatement(ast)]));
+	traverse(wrapper, {
+		Identifier(path) {
+			if (!path.isReferencedIdentifier() || path.scope.getBinding(path.node.name)) return;
+			let current = path as any;
+			while (current.parentPath?.isMemberExpression() && current.key === 'object')
+				current = current.parentPath;
+			if (
+				current.parentPath?.isAssignmentExpression() &&
+				current.key === 'left'
+			)
+				return;
+			const chain = babelMemberPath(current.node);
+			if (!chain) return;
+			let suffix = chain.path;
+			if (current.parentPath?.isCallExpression() && current.key === 'callee' && suffix.length)
+				suffix = suffix.slice(0, -1);
+
+			const candidates: Array<{ graphNodeId: string; path: readonly string[] }> = [];
+			const prop = propsByLocal.get(path.node.name);
+			if (prop)
+				candidates.push({
+					graphNodeId: prop.graphNodeId,
+					path: [...prop.path, ...suffix],
+				});
+			const binding = bindingsByName.get(path.node.name);
+			if (binding) candidates.push({ graphNodeId: binding.id, path: suffix });
+			const repeatGraphNodeId = repeatItems.get(path.node.name);
+			if (repeatGraphNodeId)
+				candidates.push({ graphNodeId: repeatGraphNodeId, path: suffix });
+			if (!prop && !binding && !repeatGraphNodeId) {
+				const local = localsByName.get(path.node.name);
+				for (const read of local?.reads ?? [])
+					candidates.push({
+						graphNodeId: read.graphNodeId,
+						path: [...read.path, ...suffix],
+					});
+			}
+
+			for (const candidate of candidates) {
+				const key = readKey(candidate.graphNodeId, candidate.path);
+				astReads.add(key);
+				if (!recordedReads.has(key))
+					throw new Error(
+						`${construct} AST read absent from records: ${candidate.graphNodeId}/${candidate.path.join('/')}`,
+					);
+			}
+		},
+	});
+	for (const [key, read] of recordedReads)
+		if (!astReads.has(key))
+			throw new Error(
+				`${construct} read record absent from AST: ${read.graphNodeId}/${read.path.join('/')}`,
+			);
+}
+
+function reconcileHandlerWrites(
 	fn: t.ArrowFunctionExpression,
 	handler: EventHandlerRecord,
 	eventId: string,
 	bindings: readonly EnrichedGraphBinding[],
-	props: EnrichedComponent['props'],
 ): void {
 	const bindingsByName = new Map(bindings.map((binding) => [binding.name, binding]));
-	const propsByLocal = new Map(props.entries.map((entry) => [entry.localName, entry]));
-	const recordedReads = new Set(
-		handler.reads.map((read) => `${read.graphNodeId}\u0000${read.path.join('\u0000')}`),
-	);
 	const wrapper = t.file(t.program([t.expressionStatement(fn)]));
 	type Mutation = {
 		readonly node: t.AssignmentExpression | t.UpdateExpression;
@@ -149,35 +220,6 @@ function reconcileHandlerSemantics(
 					path: target.path,
 					locallyBound: Boolean(path.scope.getBinding(target.root.name)),
 				});
-		},
-		Identifier(path) {
-			if (!path.isReferencedIdentifier() || path.scope.getBinding(path.node.name)) return;
-			let current = path as any;
-			while (current.parentPath?.isMemberExpression() && current.key === 'object')
-				current = current.parentPath;
-			if (
-				current !== path &&
-				current.parentPath?.isAssignmentExpression() &&
-				current.key === 'left'
-			)
-				return;
-			if (current === path && path.parentPath.isAssignmentExpression() && path.key === 'left')
-				return;
-			const chain = babelMemberPath(current.node);
-			if (!chain) return;
-			let suffix = chain.path;
-			if (current.parentPath?.isCallExpression() && current.key === 'callee' && suffix.length)
-				suffix = suffix.slice(0, -1);
-			const prop = propsByLocal.get(path.node.name);
-			const binding = bindingsByName.get(path.node.name);
-			const graphNodeId = prop?.graphNodeId ?? binding?.id;
-			if (!graphNodeId) return;
-			const semanticPath = [...(prop?.path ?? []), ...suffix];
-			const key = `${graphNodeId}\u0000${semanticPath.join('\u0000')}`;
-			if (!recordedReads.has(key))
-				throw new Error(
-					`EventHandlerRecord ${eventId} has handler AST read absent from records: ${graphNodeId}/${semanticPath.join('/')}`,
-				);
 		},
 	});
 
@@ -308,14 +350,28 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		if (via && !['direct', 'alias', 'local', 'repeat-item'].includes(read.via))
 			throw new Error(`${construct} has unsupported read shape`);
 	};
-	const validateSite = (site: RecordLike, construct: string): void => {
+	const validateSite = (
+		site: RecordLike,
+		construct: string,
+		readConstruct: string,
+		repeatItems?: ReadonlyMap<string, string>,
+	): void => {
 		exactKeys(site, ['expression', 'reads'], construct);
 		if (!site.expression || typeof site.expression.type !== 'string')
 			throw new Error(`${construct} has malformed expression AST`);
-		expression(site.expression);
+		const ast = expression(site.expression);
 		assertArray(site.reads, `${construct} reads`);
 		site.reads.forEach((read: RecordLike) =>
 			validateRead(read, `${construct} GraphReadRef`, true),
+		);
+		reconcileReadSemantics(
+			ast,
+			site.reads,
+			readConstruct,
+			ir.records.bindings,
+			component.props,
+			component.locals,
+			repeatItems,
 		);
 	};
 
@@ -412,6 +468,15 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 				throw new Error(`LocalDeclaration has dangling semantic record id: ${id}`);
 		for (const read of local.reads)
 			validateRead(read as RecordLike, 'LocalDeclaration GraphReadRef', true);
+		if (local.initializer)
+			reconcileReadSemantics(
+				expression(local.initializer),
+				local.reads,
+				`LocalDeclaration ${local.names[0]} has local initializer`,
+				ir.records.bindings,
+				component.props,
+				component.locals,
+			);
 	}
 	for (const binding of ir.records.bindings) {
 		exactKeys(
@@ -459,17 +524,36 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 				throw new Error(
 					`State binding ${binding.id} has unsupported valueKind: ${String(binding.valueKind)}`,
 				);
-			expression(binding.initializer);
+			reconcileReadSemantics(
+				expression(binding.initializer),
+				binding.reads,
+				`State binding ${binding.id} has state initializer`,
+				ir.records.bindings,
+				component.props,
+				component.locals,
+			);
 		}
 		if (binding.kind === 'computed') {
 			if (!binding.computed)
 				throw new Error(`Computed binding ${binding.id} is missing its expression site`);
-			validateSite(binding.computed as RecordLike, `Computed binding ${binding.id}`);
+			validateSite(
+				binding.computed as RecordLike,
+				`Computed binding ${binding.id}`,
+				`Computed binding ${binding.id} has computed binding`,
+			);
 			const fn = expression(binding.computed.expression);
 			if (!t.isArrowFunctionExpression(fn) || fn.async || fn.params.length !== 0)
 				throw new Error(
 					`Computed binding ${binding.id} must be a synchronous zero-argument arrow`,
 				);
+			reconcileReadSemantics(
+				fn,
+				binding.reads,
+				`Computed binding ${binding.id} has binding read records`,
+				ir.records.bindings,
+				component.props,
+				component.locals,
+			);
 		}
 	}
 	for (const alias of ir.records.aliases) {
@@ -493,7 +577,12 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 
 	const hostIds = new Set<string>();
 	const keyByState = new Map<string, string>();
-	const validateTemplate = (node: TemplateNode, location: string): void => {
+	const repeatItemsByEventId = new Map<string, ReadonlyMap<string, string>>();
+	const validateTemplate = (
+		node: TemplateNode,
+		location: string,
+		repeatItems: ReadonlyMap<string, string> = new Map(),
+	): void => {
 		if (
 			!node ||
 			typeof node !== 'object' ||
@@ -515,13 +604,15 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 			validateSite(
 				{ expression: node.expression, reads: node.reads },
 				`TemplateDynamicText ${location}`,
+				`TemplateDynamicText ${location} has dynamic text`,
+				repeatItems,
 			);
 			return;
 		}
 		if (node.kind === 'fragment') {
 			exactKeys(node, ['kind', 'id', 'children'], 'TemplateFragment');
 			node.children.forEach((child, index) =>
-				validateTemplate(child, `${location}.children[${index}]`),
+				validateTemplate(child, `${location}.children[${index}]`, repeatItems),
 			);
 			return;
 		}
@@ -551,13 +642,17 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 				validateSite(
 					{ expression: binding.expression, reads: binding.reads },
 					`DynamicBinding ${node.id}/${binding.name}`,
+					`DynamicBinding ${node.id}/${binding.name} has ${binding.kind} binding`,
+					repeatItems,
 				);
 			}
-			for (const id of node.eventIds)
+			for (const id of node.eventIds) {
 				if (!eventIds.has(id))
 					throw new Error(`TemplateHost ${node.id} has dangling event record id: ${id}`);
+				repeatItemsByEventId.set(id, repeatItems);
+			}
 			node.children.forEach((child, index) =>
-				validateTemplate(child, `${location}.children[${index}]`),
+				validateTemplate(child, `${location}.children[${index}]`, repeatItems),
 			);
 			return;
 		}
@@ -566,6 +661,8 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 			validateSite(
 				{ expression: node.expression, reads: node.reads },
 				`TemplateBranch ${node.id}`,
+				`TemplateBranch ${node.id} has branch`,
+				repeatItems,
 			);
 			if (
 				node.arms.length !== 2 ||
@@ -585,7 +682,11 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 						`TemplateBranchArm ${arm.kind} in ${node.id} is element-less`,
 					);
 				arm.children.forEach((child, index) =>
-					validateTemplate(child, `${location}.arms[${armIndex}].children[${index}]`),
+					validateTemplate(
+						child,
+						`${location}.arms[${armIndex}].children[${index}]`,
+						repeatItems,
+					),
 				);
 			}
 			return;
@@ -599,11 +700,15 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 			throw new Error(`TemplateKeyedRepeat ${node.id} has unsupported index binding`);
 		if (node.empty.length !== 0)
 			throw new Error(`TemplateKeyedRepeat ${node.id} has unconsumed empty semantics`);
-		validateSite(node.collection as RecordLike, `TemplateKeyedRepeat ${node.id} collection`);
-		validateSite(node.key as RecordLike, `TemplateKeyedRepeat ${node.id} key`);
+		validateSite(
+			node.collection as RecordLike,
+			`TemplateKeyedRepeat ${node.id} collection`,
+			`TemplateKeyedRepeat ${node.id} has keyed-repeat collection`,
+			repeatItems,
+		);
+		const collectionRead = node.collection.reads.find((read) => read.via === 'direct');
 		const path = itemMemberPath(node.key.expression, node.item);
 		const keyRead = node.key.reads.find((read) => read.via === 'repeat-item');
-		const collectionRead = node.collection.reads.find((read) => read.via === 'direct');
 		if (
 			!path ||
 			path.length !== 1 ||
@@ -612,21 +717,39 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 			!collectionRead
 		)
 			throw new Error(`TemplateKeyedRepeat ${node.id} has unconsumed key semantics`);
+		const rowRepeatItems = new Map(repeatItems);
+		rowRepeatItems.set(node.item, collectionRead.graphNodeId);
+		validateSite(
+			node.key as RecordLike,
+			`TemplateKeyedRepeat ${node.id} key`,
+			`TemplateKeyedRepeat ${node.id} has keyed-repeat key`,
+			rowRepeatItems,
+		);
 		const prior = keyByState.get(collectionRead.graphNodeId);
 		if (prior && prior !== path[0])
 			throw new Error(`TemplateKeyedRepeat ${node.id} conflicts with key ${prior}`);
 		keyByState.set(collectionRead.graphNodeId, path[0]!);
-		node.row.forEach((child, index) => validateTemplate(child, `${location}.row[${index}]`));
+		node.row.forEach((child, index) =>
+			validateTemplate(child, `${location}.row[${index}]`, rowRepeatItems),
+		);
 	};
 	component.template.forEach((node, index) => validateTemplate(node, `template[${index}]`));
 	for (const guard of component.guards) {
 		exactKeys(guard, ['id', 'test', 'whenTrue'], 'GuardReturn');
-		validateSite(guard.test as RecordLike, `GuardReturn ${guard.id} test`);
+		validateSite(
+			guard.test as RecordLike,
+			`GuardReturn ${guard.id} test`,
+			`GuardReturn ${guard.id} has guard test`,
+		);
 		if (guard.whenTrue.kind === 'null')
 			exactKeys(guard.whenTrue, ['kind'], `GuardResult ${guard.id}`);
 		else if (guard.whenTrue.kind === 'expression') {
 			exactKeys(guard.whenTrue, ['kind', 'value'], `GuardResult ${guard.id}`);
-			validateSite(guard.whenTrue.value as RecordLike, `GuardResult ${guard.id} expression`);
+			validateSite(
+				guard.whenTrue.value as RecordLike,
+				`GuardResult ${guard.id} expression`,
+				`GuardResult ${guard.id} has guard result`,
+			);
 		} else if (guard.whenTrue.kind === 'template') {
 			exactKeys(guard.whenTrue, ['kind', 'children'], `GuardResult ${guard.id}`);
 			guard.whenTrue.children.forEach((node, index) =>
@@ -659,6 +782,8 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 			validateSite(
 				{ expression: handler.expression, reads: handler.reads },
 				`EventHandlerRecord ${event.id}`,
+				`EventHandlerRecord ${event.id} has handler`,
+				repeatItemsByEventId.get(event.id),
 			);
 			const fn = expression(handler.expression);
 			if (!t.isArrowFunctionExpression(fn) || fn.async)
@@ -666,7 +791,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 			handler.writes.forEach((write) =>
 				validateWrite(write as RecordLike, `EventHandlerRecord ${event.id}`),
 			);
-			reconcileHandlerSemantics(fn, handler, event.id, ir.records.bindings, component.props);
+			reconcileHandlerWrites(fn, handler, event.id, ir.records.bindings);
 		}
 		if (event.syncPolicy) {
 			const policy = event.syncPolicy as RecordLike;

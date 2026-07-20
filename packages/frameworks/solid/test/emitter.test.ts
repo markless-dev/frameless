@@ -372,6 +372,42 @@ describe('Solid structural emitter', () => {
 			expect(() => validateEnrichedIr(ir)).toThrow(/handler AST read absent from records/);
 		});
 
+		test('rejects branch AST reads absent from read records', async () => {
+			const ir = clone(await golden('s1-render-once.json')) as any;
+			const branch = findKind(ir.components[0].template, 'branch')!;
+			branch.expression = { type: 'Identifier', name: 'count' };
+			branch.reads = [];
+			expect(() => validateEnrichedIr(ir)).toThrow(/branch AST read absent from records/);
+		});
+
+		test('rejects branch read records absent from the AST', async () => {
+			const ir = clone(await golden('s1-render-once.json')) as any;
+			const branch = findKind(ir.components[0].template, 'branch')!;
+			branch.expression = { type: 'Literal', value: true, raw: 'true' };
+			expect(() => validateEnrichedIr(ir)).toThrow(/branch read record absent from AST/);
+		});
+
+		test('reconciles computed binding reads in both directions', async () => {
+			const absentRecord = clone(await golden('s1-render-once.json')) as any;
+			const computed = absentRecord.records.bindings.find(
+				(binding: any) => binding.kind === 'computed',
+			);
+			computed.computed.expression.body = { type: 'Identifier', name: 'count' };
+			computed.computed.reads = [];
+			expect(() => validateEnrichedIr(absentRecord)).toThrow(
+				/computed binding AST read absent from records/,
+			);
+
+			const absentAst = clone(await golden('s1-render-once.json')) as any;
+			const reverseComputed = absentAst.records.bindings.find(
+				(binding: any) => binding.kind === 'computed',
+			);
+			reverseComputed.computed.expression.body = { type: 'Literal', value: 1, raw: '1' };
+			expect(() => validateEnrichedIr(absentAst)).toThrow(
+				/computed binding read record absent from AST/,
+			);
+		});
+
 		test('rejects handler AST writes absent from write records', async () => {
 			const ir = clone(await golden('s1-render-once.json')) as any;
 			ir.records.events[0].handlers[0].expression.body.body.unshift({

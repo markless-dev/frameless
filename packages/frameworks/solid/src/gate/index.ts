@@ -179,6 +179,47 @@ function hasPropsRead(path: NodePath, binding: unknown): boolean {
 	return found;
 }
 
+const STRUCTURE_IGNORED_KEYS = new Set([
+	'loc',
+	'start',
+	'end',
+	'extra',
+	'leadingComments',
+	'innerComments',
+	'trailingComments',
+]);
+
+function jsxStructure(node: t.JSXElement | t.JSXFragment): string {
+	const normalize = (value: unknown): unknown => {
+		if (Array.isArray(value))
+			return value.map(normalize).filter((entry) => entry !== undefined);
+		if (!value || typeof value !== 'object') return value;
+		if (t.isJSXText(value as t.Node)) return undefined;
+		const normalized: Record<string, unknown> = {};
+		for (const [key, child] of Object.entries(value))
+			if (!STRUCTURE_IGNORED_KEYS.has(key)) normalized[key] = normalize(child);
+		return normalized;
+	};
+	return JSON.stringify(normalize(node));
+}
+
+function jsxSubtreeStructures(node: unknown): Set<string> {
+	const structures = new Set<string>();
+	const visit = (value: unknown): void => {
+		if (Array.isArray(value)) {
+			for (const child of value) visit(child);
+			return;
+		}
+		if (!value || typeof value !== 'object') return;
+		if (t.isJSXElement(value as t.Node) || t.isJSXFragment(value as t.Node))
+			structures.add(jsxStructure(value as t.JSXElement | t.JSXFragment));
+		for (const [key, child] of Object.entries(value))
+			if (!STRUCTURE_IGNORED_KEYS.has(key)) visit(child);
+	};
+	visit(node);
+	return structures;
+}
+
 function customPolicies(source: string, file: string): GateViolation[] {
 	const ast = parse(source, { sourceType: 'module', plugins: ['jsx'], attachComment: true });
 	const violations: GateViolation[] = [];
@@ -330,23 +371,45 @@ function customPolicies(source: string, file: string): GateViolation[] {
 		if (callee.isMemberExpression()) {
 			const object = callee.get('object');
 			const name = memberName(callee.node);
-			if (!object.isIdentifier() || name == null) return null;
+			if (name == null) return null;
+			const objectProperty = (value: NodePath<t.ObjectExpression>): Callable | null => {
+				const properties = value.get('properties');
+				const hasUnresolvedProperty = properties.some(
+					(entry) => !entry.isObjectProperty() || entry.node.computed,
+				);
+				if (hasUnresolvedProperty) {
+					let indirect: Callable | null = null;
+					for (const entry of properties) {
+						if (!entry.isObjectProperty()) continue;
+						const resolved = callable(entry.get('value') as NodePath, new Set(trail));
+						if (resolved?.kind === 'signal-setter' || resolved?.kind === 'store-setter')
+							return resolved;
+						indirect ??= resolved;
+					}
+					return indirect;
+				}
+				// With only direct statically named properties, an unmatched value cannot be
+				// selected by this member call. Walk backward because later duplicate keys win.
+				for (let index = properties.length - 1; index >= 0; index -= 1) {
+					const property = properties[index];
+					if (!property?.isObjectProperty()) continue;
+					const key = property.node.key;
+					if (
+						(!property.node.computed && t.isIdentifier(key, { name })) ||
+						t.isStringLiteral(key, { value: name })
+					)
+						return callable(property.get('value') as NodePath, trail);
+				}
+				return null;
+			};
+			if (object.isObjectExpression()) return objectProperty(object);
+			if (!object.isIdentifier()) return null;
 			const binding = object.scope.getBinding(object.node.name);
 			if (!binding?.path.isVariableDeclarator() || trail.has(binding)) return null;
 			trail.add(binding);
 			const init = binding.path.get('init');
 			if (!init.isObjectExpression()) return null;
-			const property = init.get('properties').find((entry) => {
-				if (!entry.isObjectProperty()) return false;
-				const key = entry.node.key;
-				return (
-					(!entry.node.computed && t.isIdentifier(key, { name })) ||
-					t.isStringLiteral(key, { value: name })
-				);
-			});
-			return property?.isObjectProperty()
-				? callable(property.get('value') as NodePath, trail)
-				: null;
+			return objectProperty(init);
 		}
 		return null;
 	};
@@ -612,6 +675,21 @@ function customPolicies(source: string, file: string): GateViolation[] {
 							path.node,
 						),
 					);
+				const show = path.parentPath;
+				const fallbackExpression = fallbackValue ? expressionValue(fallbackValue) : null;
+				if (show.isJSXElement() && fallbackExpression) {
+					const childStructures = jsxSubtreeStructures(show.node.children);
+					const fallbackStructures = jsxSubtreeStructures(fallbackExpression);
+					if ([...childStructures].some((structure) => fallbackStructures.has(structure)))
+						violations.push(
+							violation(
+								file,
+								'show-two-arm',
+								'Show contains duplicated-arm element content; hoist shared content outside the branch',
+								path.node,
+							),
+						);
+				}
 			}
 			if (['input', 'textarea', 'select'].includes(path.node.name.name)) {
 				const value = attribute(path.node, 'value');
