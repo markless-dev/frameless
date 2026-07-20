@@ -1,0 +1,23 @@
+{
+	"name": "@frameless/compiler",
+	"version": "0.0.0",
+	"description": "Frameless source-to-enriched-IR compiler pass.",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/markless-dev/frameless.git",
+		"directory": "packages/compiler"
+	},
+	"files": ["agent", "dist"],
+	"type": "module",
+	"sideEffects": false,
+	"exports": { ".": "./src/index.ts" },
+	"publishConfig": {
+		"access": "public",
+		"exports": { ".": { "default": "./dist/index.js" } }
+	},
+	"dependencies": {
+		"@markless/compiler": "file:../../vendor/markless-compiler-0.1.1.tgz",
+		"@tsrx/core": "catalog:default"
+	}
+}

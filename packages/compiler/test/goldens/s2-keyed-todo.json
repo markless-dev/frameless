@@ -1,0 +1,4231 @@
+{
+  "components": [
+    {
+      "evaluation": {
+        "computedBindings": "reactive",
+        "ordinaryLocals": "once-per-instance"
+      },
+      "guards": [],
+      "locals": [
+        {
+          "declarationKind": "let",
+          "initializer": {
+            "arguments": [
+              {
+                "arguments": [
+                  {
+                    "async": false,
+                    "body": {
+                      "end": 149,
+                      "properties": [
+                        {
+                          "argument": {
+                            "end": 147,
+                            "name": "todo",
+                            "start": 143,
+                            "type": "Identifier"
+                          },
+                          "end": 147,
+                          "start": 140,
+                          "type": "SpreadElement"
+                        }
+                      ],
+                      "start": 138,
+                      "type": "ObjectExpression"
+                    },
+                    "end": 150,
+                    "expression": true,
+                    "generator": false,
+                    "id": null,
+                    "params": [
+                      {
+                        "end": 132,
+                        "name": "todo",
+                        "start": 128,
+                        "type": "Identifier"
+                      }
+                    ],
+                    "start": 127,
+                    "type": "ArrowFunctionExpression"
+                  }
+                ],
+                "callee": {
+                  "computed": false,
+                  "end": 126,
+                  "object": {
+                    "end": 122,
+                    "name": "seed",
+                    "start": 118,
+                    "type": "Identifier"
+                  },
+                  "optional": false,
+                  "property": {
+                    "end": 126,
+                    "name": "map",
+                    "start": 123,
+                    "type": "Identifier"
+                  },
+                  "start": 118,
+                  "type": "MemberExpression"
+                },
+                "end": 151,
+                "optional": false,
+                "start": 118,
+                "type": "CallExpression"
+              }
+            ],
+            "callee": {
+              "end": 117,
+              "name": "state",
+              "start": 112,
+              "type": "Identifier"
+            },
+            "end": 152,
+            "optional": false,
+            "start": 112,
+            "type": "CallExpression"
+          },
+          "names": [
+            "todos"
+          ],
+          "order": 0,
+          "pattern": {
+            "end": 109,
+            "name": "todos",
+            "start": 104,
+            "type": "Identifier"
+          },
+          "reads": [
+            {
+              "graphNodeId": "prop:props",
+              "path": [
+                "seed"
+              ],
+              "via": "alias"
+            }
+          ],
+          "semanticRecordIds": [
+            "state:todos"
+          ]
+        },
+        {
+          "declarationKind": "let",
+          "initializer": {
+            "arguments": [
+              {
+                "end": 175,
+                "raw": "''",
+                "start": 173,
+                "type": "Literal",
+                "value": ""
+              }
+            ],
+            "callee": {
+              "end": 172,
+              "name": "state",
+              "start": 167,
+              "type": "Identifier"
+            },
+            "end": 176,
+            "optional": false,
+            "start": 167,
+            "type": "CallExpression"
+          },
+          "names": [
+            "draft"
+          ],
+          "order": 1,
+          "pattern": {
+            "end": 164,
+            "name": "draft",
+            "start": 159,
+            "type": "Identifier"
+          },
+          "reads": [],
+          "semanticRecordIds": [
+            "state:draft"
+          ]
+        },
+        {
+          "declarationKind": "let",
+          "initializer": {
+            "arguments": [
+              {
+                "end": 197,
+                "raw": "3",
+                "start": 196,
+                "type": "Literal",
+                "value": 3
+              }
+            ],
+            "callee": {
+              "end": 195,
+              "name": "state",
+              "start": 190,
+              "type": "Identifier"
+            },
+            "end": 198,
+            "optional": false,
+            "start": 190,
+            "type": "CallExpression"
+          },
+          "names": [
+            "next"
+          ],
+          "order": 2,
+          "pattern": {
+            "end": 187,
+            "name": "next",
+            "start": 183,
+            "type": "Identifier"
+          },
+          "reads": [],
+          "semanticRecordIds": [
+            "state:next"
+          ]
+        },
+        {
+          "declarationKind": "const",
+          "initializer": {
+            "arguments": [
+              {
+                "async": false,
+                "body": {
+                  "computed": false,
+                  "end": 273,
+                  "object": {
+                    "arguments": [
+                      {
+                        "async": false,
+                        "body": {
+                          "computed": false,
+                          "end": 265,
+                          "object": {
+                            "end": 260,
+                            "name": "todo",
+                            "start": 256,
+                            "type": "Identifier"
+                          },
+                          "optional": false,
+                          "property": {
+                            "end": 265,
+                            "name": "done",
+                            "start": 261,
+                            "type": "Identifier"
+                          },
+                          "start": 256,
+                          "type": "MemberExpression"
+                        },
+                        "end": 265,
+                        "expression": true,
+                        "generator": false,
+                        "id": null,
+                        "params": [
+                          {
+                            "end": 251,
+                            "name": "todo",
+                            "start": 247,
+                            "type": "Identifier"
+                          }
+                        ],
+                        "start": 246,
+                        "type": "ArrowFunctionExpression"
+                      }
+                    ],
+                    "callee": {
+                      "computed": false,
+                      "end": 245,
+                      "object": {
+                        "end": 238,
+                        "name": "todos",
+                        "start": 233,
+                        "type": "Identifier"
+                      },
+                      "optional": false,
+                      "property": {
+                        "end": 245,
+                        "name": "filter",
+                        "start": 239,
+                        "type": "Identifier"
+                      },
+                      "start": 233,
+                      "type": "MemberExpression"
+                    },
+                    "end": 266,
+                    "optional": false,
+                    "start": 233,
+                    "type": "CallExpression"
+                  },
+                  "optional": false,
+                  "property": {
+                    "end": 273,
+                    "name": "length",
+                    "start": 267,
+                    "type": "Identifier"
+                  },
+                  "start": 233,
+                  "type": "MemberExpression"
+                },
+                "end": 273,
+                "expression": true,
+                "generator": false,
+                "id": null,
+                "params": [],
+                "start": 227,
+                "type": "ArrowFunctionExpression"
+              }
+            ],
+            "callee": {
+              "end": 226,
+              "name": "computed",
+              "start": 218,
+              "type": "Identifier"
+            },
+            "end": 274,
+            "optional": false,
+            "start": 218,
+            "type": "CallExpression"
+          },
+          "names": [
+            "complete"
+          ],
+          "order": 3,
+          "pattern": {
+            "end": 215,
+            "name": "complete",
+            "start": 207,
+            "type": "Identifier"
+          },
+          "reads": [
+            {
+              "graphNodeId": "state:todos",
+              "path": [],
+              "via": "direct"
+            }
+          ],
+          "semanticRecordIds": [
+            "computed:complete"
+          ]
+        }
+      ],
+      "name": "KeyedTodo",
+      "props": {
+        "entries": [
+          {
+            "alias": false,
+            "graphNodeId": "prop:props",
+            "localName": "seed",
+            "path": [
+              "seed"
+            ],
+            "sourceName": "seed"
+          },
+          {
+            "alias": false,
+            "graphNodeId": "prop:props",
+            "localName": "onTrace",
+            "path": [
+              "onTrace"
+            ],
+            "sourceName": "onTrace"
+          }
+        ],
+        "graphNodeId": "prop:props"
+      },
+      "template": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "expression": {
+                    "end": 343,
+                    "name": "complete",
+                    "start": 335,
+                    "type": "Identifier"
+                  },
+                  "id": "text:0",
+                  "kind": "dynamic-text",
+                  "reads": [
+                    {
+                      "graphNodeId": "computed:complete",
+                      "path": [],
+                      "via": "direct"
+                    }
+                  ]
+                },
+                {
+                  "id": "text:1",
+                  "kind": "text",
+                  "value": "/"
+                },
+                {
+                  "expression": {
+                    "computed": false,
+                    "end": 358,
+                    "object": {
+                      "end": 351,
+                      "name": "todos",
+                      "start": 346,
+                      "type": "Identifier"
+                    },
+                    "optional": false,
+                    "property": {
+                      "end": 358,
+                      "name": "length",
+                      "start": 352,
+                      "type": "Identifier"
+                    },
+                    "start": 346,
+                    "type": "MemberExpression"
+                  },
+                  "id": "text:2",
+                  "kind": "dynamic-text",
+                  "reads": [
+                    {
+                      "graphNodeId": "state:todos",
+                      "path": [
+                        "length"
+                      ],
+                      "via": "direct"
+                    }
+                  ]
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [],
+              "id": "h1",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-count",
+                  "value": "complete"
+                }
+              ],
+              "tag": "p"
+            },
+            {
+              "children": [],
+              "dynamicBindings": [
+                {
+                  "expression": {
+                    "end": 409,
+                    "name": "draft",
+                    "start": 404,
+                    "type": "Identifier"
+                  },
+                  "kind": "property",
+                  "name": "value",
+                  "reads": [
+                    {
+                      "graphNodeId": "state:draft",
+                      "path": [],
+                      "via": "direct"
+                    }
+                  ]
+                }
+              ],
+              "eventIds": [
+                "event:0"
+              ],
+              "id": "h2",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-action",
+                  "value": "new"
+                }
+              ],
+              "tag": "input"
+            },
+            {
+              "children": [
+                {
+                  "id": "text:3",
+                  "kind": "text",
+                  "value": "add"
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [
+                "event:1"
+              ],
+              "id": "h3",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-action",
+                  "value": "add"
+                }
+              ],
+              "tag": "button"
+            },
+            {
+              "arms": [
+                {
+                  "children": [
+                    {
+                      "children": [
+                        {
+                          "id": "text:4",
+                          "kind": "text",
+                          "value": "empty"
+                        }
+                      ],
+                      "dynamicBindings": [],
+                      "eventIds": [],
+                      "id": "h4",
+                      "kind": "host",
+                      "staticAttributes": [
+                        {
+                          "name": "data-empty",
+                          "value": "true"
+                        }
+                      ],
+                      "tag": "p"
+                    }
+                  ],
+                  "kind": "then"
+                },
+                {
+                  "children": [],
+                  "kind": "else"
+                }
+              ],
+              "expression": {
+                "end": 764,
+                "left": {
+                  "computed": false,
+                  "end": 758,
+                  "object": {
+                    "end": 751,
+                    "name": "todos",
+                    "start": 746,
+                    "type": "Identifier"
+                  },
+                  "optional": false,
+                  "property": {
+                    "end": 758,
+                    "name": "length",
+                    "start": 752,
+                    "type": "Identifier"
+                  },
+                  "start": 746,
+                  "type": "MemberExpression"
+                },
+                "operator": "===",
+                "right": {
+                  "end": 764,
+                  "raw": "0",
+                  "start": 763,
+                  "type": "Literal",
+                  "value": 0
+                },
+                "start": 746,
+                "type": "BinaryExpression"
+              },
+              "id": "branch-site:0",
+              "kind": "branch",
+              "reads": [
+                {
+                  "graphNodeId": "state:todos",
+                  "path": [
+                    "length"
+                  ],
+                  "via": "direct"
+                }
+              ]
+            },
+            {
+              "children": [
+                {
+                  "collection": {
+                    "expression": {
+                      "end": 853,
+                      "name": "todos",
+                      "start": 848,
+                      "type": "Identifier"
+                    },
+                    "reads": [
+                      {
+                        "graphNodeId": "state:todos",
+                        "path": [],
+                        "via": "direct"
+                      }
+                    ]
+                  },
+                  "empty": [],
+                  "id": "repeat:0",
+                  "item": "todo",
+                  "key": {
+                    "expression": {
+                      "computed": false,
+                      "end": 866,
+                      "object": {
+                        "end": 863,
+                        "name": "todo",
+                        "start": 859,
+                        "type": "Identifier"
+                      },
+                      "optional": false,
+                      "property": {
+                        "end": 866,
+                        "name": "id",
+                        "start": 864,
+                        "type": "Identifier"
+                      },
+                      "start": 859,
+                      "type": "MemberExpression"
+                    },
+                    "reads": [
+                      {
+                        "graphNodeId": "state:todos",
+                        "path": [
+                          "id"
+                        ],
+                        "via": "repeat-item"
+                      }
+                    ]
+                  },
+                  "kind": "keyed-repeat",
+                  "row": [
+                    {
+                      "children": [
+                        {
+                          "children": [],
+                          "dynamicBindings": [
+                            {
+                              "expression": {
+                                "computed": false,
+                                "end": 948,
+                                "object": {
+                                  "end": 945,
+                                  "name": "todo",
+                                  "start": 941,
+                                  "type": "Identifier"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 948,
+                                  "name": "id",
+                                  "start": 946,
+                                  "type": "Identifier"
+                                },
+                                "start": 941,
+                                "type": "MemberExpression"
+                              },
+                              "kind": "attribute",
+                              "name": "data-edit",
+                              "reads": [
+                                {
+                                  "graphNodeId": "state:todos",
+                                  "path": [
+                                    "id"
+                                  ],
+                                  "via": "repeat-item"
+                                }
+                              ]
+                            },
+                            {
+                              "expression": {
+                                "computed": false,
+                                "end": 974,
+                                "object": {
+                                  "end": 968,
+                                  "name": "todo",
+                                  "start": 964,
+                                  "type": "Identifier"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 974,
+                                  "name": "title",
+                                  "start": 969,
+                                  "type": "Identifier"
+                                },
+                                "start": 964,
+                                "type": "MemberExpression"
+                              },
+                              "kind": "property",
+                              "name": "value",
+                              "reads": [
+                                {
+                                  "graphNodeId": "state:todos",
+                                  "path": [
+                                    "title"
+                                  ],
+                                  "via": "repeat-item"
+                                }
+                              ]
+                            }
+                          ],
+                          "eventIds": [
+                            "event:2"
+                          ],
+                          "id": "h7",
+                          "kind": "host",
+                          "staticAttributes": [],
+                          "tag": "input"
+                        },
+                        {
+                          "children": [],
+                          "dynamicBindings": [
+                            {
+                              "expression": {
+                                "computed": false,
+                                "end": 1317,
+                                "object": {
+                                  "end": 1314,
+                                  "name": "todo",
+                                  "start": 1310,
+                                  "type": "Identifier"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 1317,
+                                  "name": "id",
+                                  "start": 1315,
+                                  "type": "Identifier"
+                                },
+                                "start": 1310,
+                                "type": "MemberExpression"
+                              },
+                              "kind": "attribute",
+                              "name": "data-toggle",
+                              "reads": [
+                                {
+                                  "graphNodeId": "state:todos",
+                                  "path": [
+                                    "id"
+                                  ],
+                                  "via": "repeat-item"
+                                }
+                              ]
+                            },
+                            {
+                              "expression": {
+                                "computed": false,
+                                "end": 1344,
+                                "object": {
+                                  "end": 1339,
+                                  "name": "todo",
+                                  "start": 1335,
+                                  "type": "Identifier"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 1344,
+                                  "name": "done",
+                                  "start": 1340,
+                                  "type": "Identifier"
+                                },
+                                "start": 1335,
+                                "type": "MemberExpression"
+                              },
+                              "kind": "property",
+                              "name": "checked",
+                              "reads": [
+                                {
+                                  "graphNodeId": "state:todos",
+                                  "path": [
+                                    "done"
+                                  ],
+                                  "via": "repeat-item"
+                                }
+                              ]
+                            }
+                          ],
+                          "eventIds": [
+                            "event:3"
+                          ],
+                          "id": "h8",
+                          "kind": "host",
+                          "staticAttributes": [
+                            {
+                              "name": "type",
+                              "value": "checkbox"
+                            }
+                          ],
+                          "tag": "input"
+                        },
+                        {
+                          "children": [
+                            {
+                              "id": "text:5",
+                              "kind": "text",
+                              "value": "remove"
+                            }
+                          ],
+                          "dynamicBindings": [
+                            {
+                              "expression": {
+                                "computed": false,
+                                "end": 1701,
+                                "object": {
+                                  "end": 1698,
+                                  "name": "todo",
+                                  "start": 1694,
+                                  "type": "Identifier"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 1701,
+                                  "name": "id",
+                                  "start": 1699,
+                                  "type": "Identifier"
+                                },
+                                "start": 1694,
+                                "type": "MemberExpression"
+                              },
+                              "kind": "attribute",
+                              "name": "data-remove",
+                              "reads": [
+                                {
+                                  "graphNodeId": "state:todos",
+                                  "path": [
+                                    "id"
+                                  ],
+                                  "via": "repeat-item"
+                                }
+                              ]
+                            }
+                          ],
+                          "eventIds": [
+                            "event:4"
+                          ],
+                          "id": "h9",
+                          "kind": "host",
+                          "staticAttributes": [],
+                          "tag": "button"
+                        }
+                      ],
+                      "dynamicBindings": [
+                        {
+                          "expression": {
+                            "computed": false,
+                            "end": 907,
+                            "object": {
+                              "end": 904,
+                              "name": "todo",
+                              "start": 900,
+                              "type": "Identifier"
+                            },
+                            "optional": false,
+                            "property": {
+                              "end": 907,
+                              "name": "id",
+                              "start": 905,
+                              "type": "Identifier"
+                            },
+                            "start": 900,
+                            "type": "MemberExpression"
+                          },
+                          "kind": "attribute",
+                          "name": "data-oracle-row-key",
+                          "reads": [
+                            {
+                              "graphNodeId": "state:todos",
+                              "path": [
+                                "id"
+                              ],
+                              "via": "repeat-item"
+                            }
+                          ]
+                        }
+                      ],
+                      "eventIds": [],
+                      "id": "h6",
+                      "kind": "host",
+                      "staticAttributes": [],
+                      "tag": "li"
+                    }
+                  ]
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [],
+              "id": "h5",
+              "kind": "host",
+              "staticAttributes": [],
+              "tag": "ul"
+            },
+            {
+              "children": [
+                {
+                  "id": "text:6",
+                  "kind": "text",
+                  "value": "reorder"
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [
+                "event:5"
+              ],
+              "id": "h10",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-action",
+                  "value": "reorder"
+                }
+              ],
+              "tag": "button"
+            },
+            {
+              "children": [
+                {
+                  "id": "text:7",
+                  "kind": "text",
+                  "value": "clear"
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [
+                "event:6"
+              ],
+              "id": "h11",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-action",
+                  "value": "clear"
+                }
+              ],
+              "tag": "button"
+            }
+          ],
+          "dynamicBindings": [],
+          "eventIds": [],
+          "id": "h0",
+          "kind": "host",
+          "staticAttributes": [
+            {
+              "name": "data-scenario",
+              "value": "s2"
+            }
+          ],
+          "tag": "section"
+        }
+      ]
+    }
+  ],
+  "filename": "src/fixtures/s2-keyed-todo.tsrx",
+  "imports": [],
+  "module": {
+    "exports": [
+      {
+        "componentName": "KeyedTodo",
+        "exportedName": "KeyedTodo",
+        "kind": "named"
+      }
+    ]
+  },
+  "records": {
+    "aliases": [
+      {
+        "declarationKind": "const",
+        "graphNodeId": "prop:props",
+        "id": "alias:KeyedTodo:onTrace",
+        "name": "onTrace",
+        "path": [
+          "onTrace"
+        ],
+        "sourceSpan": {
+          "end": 92,
+          "filename": "src/fixtures/s2-keyed-todo.tsrx",
+          "start": 85
+        },
+        "target": "props.onTrace"
+      },
+      {
+        "declarationKind": "const",
+        "graphNodeId": "prop:props",
+        "id": "alias:KeyedTodo:seed",
+        "name": "seed",
+        "path": [
+          "seed"
+        ],
+        "sourceSpan": {
+          "end": 83,
+          "filename": "src/fixtures/s2-keyed-todo.tsrx",
+          "start": 79
+        },
+        "target": "props.seed"
+      }
+    ],
+    "bindings": [
+      {
+        "async": false,
+        "asyncCapable": false,
+        "computed": {
+          "expression": {
+            "async": false,
+            "body": {
+              "computed": false,
+              "end": 273,
+              "object": {
+                "arguments": [
+                  {
+                    "async": false,
+                    "body": {
+                      "computed": false,
+                      "end": 265,
+                      "object": {
+                        "end": 260,
+                        "name": "todo",
+                        "start": 256,
+                        "type": "Identifier"
+                      },
+                      "optional": false,
+                      "property": {
+                        "end": 265,
+                        "name": "done",
+                        "start": 261,
+                        "type": "Identifier"
+                      },
+                      "start": 256,
+                      "type": "MemberExpression"
+                    },
+                    "end": 265,
+                    "expression": true,
+                    "generator": false,
+                    "id": null,
+                    "params": [
+                      {
+                        "end": 251,
+                        "name": "todo",
+                        "start": 247,
+                        "type": "Identifier"
+                      }
+                    ],
+                    "start": 246,
+                    "type": "ArrowFunctionExpression"
+                  }
+                ],
+                "callee": {
+                  "computed": false,
+                  "end": 245,
+                  "object": {
+                    "end": 238,
+                    "name": "todos",
+                    "start": 233,
+                    "type": "Identifier"
+                  },
+                  "optional": false,
+                  "property": {
+                    "end": 245,
+                    "name": "filter",
+                    "start": 239,
+                    "type": "Identifier"
+                  },
+                  "start": 233,
+                  "type": "MemberExpression"
+                },
+                "end": 266,
+                "optional": false,
+                "start": 233,
+                "type": "CallExpression"
+              },
+              "optional": false,
+              "property": {
+                "end": 273,
+                "name": "length",
+                "start": 267,
+                "type": "Identifier"
+              },
+              "start": 233,
+              "type": "MemberExpression"
+            },
+            "end": 273,
+            "expression": true,
+            "generator": false,
+            "id": null,
+            "params": [],
+            "start": 227,
+            "type": "ArrowFunctionExpression"
+          },
+          "reads": [
+            {
+              "graphNodeId": "state:todos",
+              "path": [],
+              "via": "direct"
+            }
+          ]
+        },
+        "declarationKind": "const",
+        "id": "computed:complete",
+        "kind": "computed",
+        "name": "complete",
+        "reads": [
+          {
+            "graphNodeId": "state:todos",
+            "path": []
+          }
+        ],
+        "writable": false,
+        "writes": []
+      },
+      {
+        "declarationKind": "const",
+        "id": "prop:props",
+        "kind": "prop",
+        "name": "props",
+        "reads": [],
+        "valueKind": "object",
+        "writable": false,
+        "writes": []
+      },
+      {
+        "declarationKind": "let",
+        "id": "state:draft",
+        "initialValue": "",
+        "initializer": {
+          "end": 175,
+          "raw": "''",
+          "start": 173,
+          "type": "Literal",
+          "value": ""
+        },
+        "kind": "state",
+        "name": "draft",
+        "reads": [],
+        "valueKind": "scalar",
+        "writable": true,
+        "writes": [
+          {
+            "assignmentOperator": "=",
+            "graphNodeId": "state:draft",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 439,
+              "filename": "src/fixtures/s2-keyed-todo.tsrx",
+              "start": 434
+            },
+            "value": {
+              "computed": false,
+              "end": 467,
+              "object": {
+                "computed": false,
+                "end": 461,
+                "object": {
+                  "end": 447,
+                  "name": "event",
+                  "start": 442,
+                  "type": "Identifier"
+                },
+                "optional": false,
+                "property": {
+                  "end": 461,
+                  "name": "currentTarget",
+                  "start": 448,
+                  "type": "Identifier"
+                },
+                "start": 442,
+                "type": "MemberExpression"
+              },
+              "optional": false,
+              "property": {
+                "end": 467,
+                "name": "value",
+                "start": 462,
+                "type": "Identifier"
+              },
+              "start": 442,
+              "type": "MemberExpression"
+            },
+            "via": "direct"
+          },
+          {
+            "assignmentOperator": "=",
+            "graphNodeId": "state:draft",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 647,
+              "filename": "src/fixtures/s2-keyed-todo.tsrx",
+              "start": 642
+            },
+            "value": {
+              "end": 652,
+              "raw": "''",
+              "start": 650,
+              "type": "Literal",
+              "value": ""
+            },
+            "via": "direct"
+          }
+        ]
+      },
+      {
+        "declarationKind": "let",
+        "id": "state:next",
+        "initialValue": 3,
+        "initializer": {
+          "end": 197,
+          "raw": "3",
+          "start": 196,
+          "type": "Literal",
+          "value": 3
+        },
+        "kind": "state",
+        "name": "next",
+        "reads": [],
+        "valueKind": "scalar",
+        "writable": true,
+        "writes": [
+          {
+            "graphNodeId": "state:next",
+            "operation": "update",
+            "path": [],
+            "prefix": false,
+            "sourceSpan": {
+              "end": 602,
+              "filename": "src/fixtures/s2-keyed-todo.tsrx",
+              "start": 598
+            },
+            "updateOperator": "++",
+            "via": "direct"
+          }
+        ]
+      },
+      {
+        "declarationKind": "let",
+        "id": "state:todos",
+        "initializer": {
+          "arguments": [
+            {
+              "async": false,
+              "body": {
+                "end": 149,
+                "properties": [
+                  {
+                    "argument": {
+                      "end": 147,
+                      "name": "todo",
+                      "start": 143,
+                      "type": "Identifier"
+                    },
+                    "end": 147,
+                    "start": 140,
+                    "type": "SpreadElement"
+                  }
+                ],
+                "start": 138,
+                "type": "ObjectExpression"
+              },
+              "end": 150,
+              "expression": true,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 132,
+                  "name": "todo",
+                  "start": 128,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 127,
+              "type": "ArrowFunctionExpression"
+            }
+          ],
+          "callee": {
+            "computed": false,
+            "end": 126,
+            "object": {
+              "end": 122,
+              "name": "seed",
+              "start": 118,
+              "type": "Identifier"
+            },
+            "optional": false,
+            "property": {
+              "end": 126,
+              "name": "map",
+              "start": 123,
+              "type": "Identifier"
+            },
+            "start": 118,
+            "type": "MemberExpression"
+          },
+          "end": 151,
+          "optional": false,
+          "start": 118,
+          "type": "CallExpression"
+        },
+        "kind": "state",
+        "name": "todos",
+        "reads": [
+          {
+            "graphNodeId": "prop:props",
+            "path": [
+              "seed"
+            ]
+          }
+        ],
+        "valueKind": "unknown",
+        "writable": true,
+        "writes": [
+          {
+            "assignmentOperator": "=",
+            "graphNodeId": "state:todos",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 615,
+              "filename": "src/fixtures/s2-keyed-todo.tsrx",
+              "start": 610
+            },
+            "value": {
+              "arguments": [
+                {
+                  "end": 635,
+                  "name": "item",
+                  "start": 631,
+                  "type": "Identifier"
+                }
+              ],
+              "callee": {
+                "computed": false,
+                "end": 630,
+                "object": {
+                  "end": 623,
+                  "name": "todos",
+                  "start": 618,
+                  "type": "Identifier"
+                },
+                "optional": false,
+                "property": {
+                  "end": 630,
+                  "name": "concat",
+                  "start": 624,
+                  "type": "Identifier"
+                },
+                "start": 618,
+                "type": "MemberExpression"
+              },
+              "end": 636,
+              "optional": false,
+              "start": 618,
+              "type": "CallExpression"
+            },
+            "via": "direct"
+          },
+          {
+            "assignmentOperator": "=",
+            "graphNodeId": "state:todos",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 1161,
+              "filename": "src/fixtures/s2-keyed-todo.tsrx",
+              "start": 1156
+            },
+            "value": {
+              "arguments": [],
+              "callee": {
+                "computed": false,
+                "end": 1175,
+                "object": {
+                  "end": 1169,
+                  "name": "todos",
+                  "start": 1164,
+                  "type": "Identifier"
+                },
+                "optional": false,
+                "property": {
+                  "end": 1175,
+                  "name": "slice",
+                  "start": 1170,
+                  "type": "Identifier"
+                },
+                "start": 1164,
+                "type": "MemberExpression"
+              },
+              "end": 1177,
+              "optional": false,
+              "start": 1164,
+              "type": "CallExpression"
+            },
+            "via": "direct"
+          },
+          {
+            "assignmentOperator": "=",
+            "graphNodeId": "state:todos",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 1572,
+              "filename": "src/fixtures/s2-keyed-todo.tsrx",
+              "start": 1567
+            },
+            "value": {
+              "end": 1579,
+              "name": "copy",
+              "start": 1575,
+              "type": "Identifier"
+            },
+            "via": "direct"
+          },
+          {
+            "assignmentOperator": "=",
+            "graphNodeId": "state:todos",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 1745,
+              "filename": "src/fixtures/s2-keyed-todo.tsrx",
+              "start": 1740
+            },
+            "value": {
+              "arguments": [
+                {
+                  "async": false,
+                  "body": {
+                    "end": 1790,
+                    "left": {
+                      "computed": false,
+                      "end": 1778,
+                      "object": {
+                        "end": 1775,
+                        "name": "item",
+                        "start": 1771,
+                        "type": "Identifier"
+                      },
+                      "optional": false,
+                      "property": {
+                        "end": 1778,
+                        "name": "id",
+                        "start": 1776,
+                        "type": "Identifier"
+                      },
+                      "start": 1771,
+                      "type": "MemberExpression"
+                    },
+                    "operator": "!==",
+                    "right": {
+                      "computed": false,
+                      "end": 1790,
+                      "object": {
+                        "end": 1787,
+                        "name": "todo",
+                        "start": 1783,
+                        "type": "Identifier"
+                      },
+                      "optional": false,
+                      "property": {
+                        "end": 1790,
+                        "name": "id",
+                        "start": 1788,
+                        "type": "Identifier"
+                      },
+                      "start": 1783,
+                      "type": "MemberExpression"
+                    },
+                    "start": 1771,
+                    "type": "BinaryExpression"
+                  },
+                  "end": 1790,
+                  "expression": true,
+                  "generator": false,
+                  "id": null,
+                  "params": [
+                    {
+                      "end": 1766,
+                      "name": "item",
+                      "start": 1762,
+                      "type": "Identifier"
+                    }
+                  ],
+                  "start": 1761,
+                  "type": "ArrowFunctionExpression"
+                }
+              ],
+              "callee": {
+                "computed": false,
+                "end": 1760,
+                "object": {
+                  "end": 1753,
+                  "name": "todos",
+                  "start": 1748,
+                  "type": "Identifier"
+                },
+                "optional": false,
+                "property": {
+                  "end": 1760,
+                  "name": "filter",
+                  "start": 1754,
+                  "type": "Identifier"
+                },
+                "start": 1748,
+                "type": "MemberExpression"
+              },
+              "end": 1791,
+              "optional": false,
+              "start": 1748,
+              "type": "CallExpression"
+            },
+            "via": "direct"
+          },
+          {
+            "assignmentOperator": "=",
+            "graphNodeId": "state:todos",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 2013,
+              "filename": "src/fixtures/s2-keyed-todo.tsrx",
+              "start": 2008
+            },
+            "value": {
+              "end": 2021,
+              "name": "order",
+              "start": 2016,
+              "type": "Identifier"
+            },
+            "via": "direct"
+          },
+          {
+            "assignmentOperator": "=",
+            "graphNodeId": "state:todos",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 2220,
+              "filename": "src/fixtures/s2-keyed-todo.tsrx",
+              "start": 2215
+            },
+            "value": {
+              "elements": [],
+              "end": 2225,
+              "start": 2223,
+              "type": "ArrayExpression"
+            },
+            "via": "direct"
+          },
+          {
+            "assignmentOperator": "=",
+            "graphNodeId": "state:todos",
+            "operation": "assign",
+            "path": [
+              "*",
+              "done"
+            ],
+            "sourceSpan": {
+              "end": 1547,
+              "filename": "src/fixtures/s2-keyed-todo.tsrx",
+              "start": 1537
+            },
+            "value": {
+              "end": 1557,
+              "name": "checked",
+              "start": 1550,
+              "type": "Identifier"
+            },
+            "via": "handler-local-alias"
+          },
+          {
+            "assignmentOperator": "=",
+            "graphNodeId": "state:todos",
+            "operation": "assign",
+            "path": [
+              "*",
+              "title"
+            ],
+            "sourceSpan": {
+              "end": 1138,
+              "filename": "src/fixtures/s2-keyed-todo.tsrx",
+              "start": 1127
+            },
+            "value": {
+              "end": 1146,
+              "name": "title",
+              "start": 1141,
+              "type": "Identifier"
+            },
+            "via": "handler-local-alias"
+          }
+        ]
+      }
+    ],
+    "events": [
+      {
+        "eventName": "input",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "end": 467,
+                "left": {
+                  "end": 439,
+                  "name": "draft",
+                  "start": 434,
+                  "type": "Identifier"
+                },
+                "operator": "=",
+                "right": {
+                  "computed": false,
+                  "end": 467,
+                  "object": {
+                    "computed": false,
+                    "end": 461,
+                    "object": {
+                      "end": 447,
+                      "name": "event",
+                      "start": 442,
+                      "type": "Identifier"
+                    },
+                    "optional": false,
+                    "property": {
+                      "end": 461,
+                      "name": "currentTarget",
+                      "start": 448,
+                      "type": "Identifier"
+                    },
+                    "start": 442,
+                    "type": "MemberExpression"
+                  },
+                  "optional": false,
+                  "property": {
+                    "end": 467,
+                    "name": "value",
+                    "start": 462,
+                    "type": "Identifier"
+                  },
+                  "start": 442,
+                  "type": "MemberExpression"
+                },
+                "start": 434,
+                "type": "AssignmentExpression"
+              },
+              "end": 467,
+              "expression": true,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 429,
+                  "name": "event",
+                  "start": 424,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 423,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [],
+            "writes": [
+              {
+                "assignmentOperator": "=",
+                "graphNodeId": "state:draft",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 439,
+                  "filename": "src/fixtures/s2-keyed-todo.tsrx",
+                  "start": 434
+                },
+                "value": {
+                  "computed": false,
+                  "end": 467,
+                  "object": {
+                    "computed": false,
+                    "end": 461,
+                    "object": {
+                      "end": 447,
+                      "name": "event",
+                      "start": 442,
+                      "type": "Identifier"
+                    },
+                    "optional": false,
+                    "property": {
+                      "end": 461,
+                      "name": "currentTarget",
+                      "start": 448,
+                      "type": "Identifier"
+                    },
+                    "start": 442,
+                    "type": "MemberExpression"
+                  },
+                  "optional": false,
+                  "property": {
+                    "end": 467,
+                    "name": "value",
+                    "start": 462,
+                    "type": "Identifier"
+                  },
+                  "start": 442,
+                  "type": "MemberExpression"
+                },
+                "via": "direct"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h2",
+        "id": "event:0"
+      },
+      {
+        "eventName": "click",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "declarations": [
+                      {
+                        "end": 592,
+                        "id": {
+                          "end": 544,
+                          "name": "item",
+                          "start": 540,
+                          "type": "Identifier"
+                        },
+                        "init": {
+                          "end": 592,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 563,
+                              "key": {
+                                "end": 551,
+                                "name": "id",
+                                "start": 549,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 549,
+                              "type": "Property",
+                              "value": {
+                                "end": 563,
+                                "expressions": [
+                                  {
+                                    "end": 561,
+                                    "name": "next",
+                                    "start": 557,
+                                    "type": "Identifier"
+                                  }
+                                ],
+                                "quasis": [
+                                  {
+                                    "end": 555,
+                                    "start": 554,
+                                    "tail": false,
+                                    "type": "TemplateElement",
+                                    "value": {
+                                      "cooked": "c",
+                                      "raw": "c"
+                                    }
+                                  },
+                                  {
+                                    "end": 562,
+                                    "start": 562,
+                                    "tail": true,
+                                    "type": "TemplateElement",
+                                    "value": {
+                                      "cooked": "",
+                                      "raw": ""
+                                    }
+                                  }
+                                ],
+                                "start": 553,
+                                "type": "TemplateLiteral"
+                              }
+                            },
+                            {
+                              "computed": false,
+                              "end": 577,
+                              "key": {
+                                "end": 570,
+                                "name": "title",
+                                "start": 565,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 565,
+                              "type": "Property",
+                              "value": {
+                                "end": 577,
+                                "name": "draft",
+                                "start": 572,
+                                "type": "Identifier"
+                              }
+                            },
+                            {
+                              "computed": false,
+                              "end": 590,
+                              "key": {
+                                "end": 583,
+                                "name": "done",
+                                "start": 579,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 579,
+                              "type": "Property",
+                              "value": {
+                                "end": 590,
+                                "raw": "false",
+                                "start": 585,
+                                "type": "Literal",
+                                "value": false
+                              }
+                            }
+                          ],
+                          "start": 547,
+                          "type": "ObjectExpression"
+                        },
+                        "start": 540,
+                        "type": "VariableDeclarator"
+                      }
+                    ],
+                    "end": 593,
+                    "kind": "const",
+                    "start": 534,
+                    "type": "VariableDeclaration"
+                  },
+                  {
+                    "end": 605,
+                    "expression": {
+                      "argument": {
+                        "end": 602,
+                        "name": "next",
+                        "start": 598,
+                        "type": "Identifier"
+                      },
+                      "end": 604,
+                      "operator": "++",
+                      "prefix": false,
+                      "start": 598,
+                      "type": "UpdateExpression"
+                    },
+                    "start": 598,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 637,
+                    "expression": {
+                      "end": 636,
+                      "left": {
+                        "end": 615,
+                        "name": "todos",
+                        "start": 610,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "arguments": [
+                          {
+                            "end": 635,
+                            "name": "item",
+                            "start": 631,
+                            "type": "Identifier"
+                          }
+                        ],
+                        "callee": {
+                          "computed": false,
+                          "end": 630,
+                          "object": {
+                            "end": 623,
+                            "name": "todos",
+                            "start": 618,
+                            "type": "Identifier"
+                          },
+                          "optional": false,
+                          "property": {
+                            "end": 630,
+                            "name": "concat",
+                            "start": 624,
+                            "type": "Identifier"
+                          },
+                          "start": 618,
+                          "type": "MemberExpression"
+                        },
+                        "end": 636,
+                        "optional": false,
+                        "start": 618,
+                        "type": "CallExpression"
+                      },
+                      "start": 610,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 610,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 653,
+                    "expression": {
+                      "end": 652,
+                      "left": {
+                        "end": 647,
+                        "name": "draft",
+                        "start": 642,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "end": 652,
+                        "raw": "''",
+                        "start": 650,
+                        "type": "Literal",
+                        "value": ""
+                      },
+                      "start": 642,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 642,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 716,
+                    "expression": {
+                      "arguments": [
+                        {
+                          "end": 671,
+                          "raw": "'add'",
+                          "start": 666,
+                          "type": "Literal",
+                          "value": "add"
+                        },
+                        {
+                          "end": 707,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 686,
+                              "key": {
+                                "end": 677,
+                                "name": "id",
+                                "start": 675,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 675,
+                              "type": "Property",
+                              "value": {
+                                "computed": false,
+                                "end": 686,
+                                "object": {
+                                  "end": 683,
+                                  "name": "item",
+                                  "start": 679,
+                                  "type": "Identifier"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 686,
+                                  "name": "id",
+                                  "start": 684,
+                                  "type": "Identifier"
+                                },
+                                "start": 679,
+                                "type": "MemberExpression"
+                              }
+                            },
+                            {
+                              "computed": false,
+                              "end": 705,
+                              "key": {
+                                "end": 693,
+                                "name": "title",
+                                "start": 688,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 688,
+                              "type": "Property",
+                              "value": {
+                                "computed": false,
+                                "end": 705,
+                                "object": {
+                                  "end": 699,
+                                  "name": "item",
+                                  "start": 695,
+                                  "type": "Identifier"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 705,
+                                  "name": "title",
+                                  "start": 700,
+                                  "type": "Identifier"
+                                },
+                                "start": 695,
+                                "type": "MemberExpression"
+                              }
+                            }
+                          ],
+                          "start": 673,
+                          "type": "ObjectExpression"
+                        },
+                        {
+                          "end": 714,
+                          "name": "event",
+                          "start": 709,
+                          "type": "Identifier"
+                        }
+                      ],
+                      "callee": {
+                        "end": 665,
+                        "name": "onTrace",
+                        "start": 658,
+                        "type": "Identifier"
+                      },
+                      "end": 715,
+                      "optional": false,
+                      "start": 658,
+                      "type": "CallExpression"
+                    },
+                    "start": 658,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 721,
+                "start": 528,
+                "type": "BlockStatement"
+              },
+              "end": 721,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 523,
+                  "name": "event",
+                  "start": 518,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 517,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              },
+              {
+                "graphNodeId": "state:draft",
+                "path": [],
+                "via": "direct"
+              },
+              {
+                "graphNodeId": "state:next",
+                "path": [],
+                "via": "direct"
+              },
+              {
+                "graphNodeId": "state:todos",
+                "path": [],
+                "via": "direct"
+              }
+            ],
+            "writes": [
+              {
+                "assignmentOperator": "=",
+                "graphNodeId": "state:draft",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 647,
+                  "filename": "src/fixtures/s2-keyed-todo.tsrx",
+                  "start": 642
+                },
+                "value": {
+                  "end": 652,
+                  "raw": "''",
+                  "start": 650,
+                  "type": "Literal",
+                  "value": ""
+                },
+                "via": "direct"
+              },
+              {
+                "graphNodeId": "state:next",
+                "operation": "update",
+                "path": [],
+                "prefix": false,
+                "sourceSpan": {
+                  "end": 602,
+                  "filename": "src/fixtures/s2-keyed-todo.tsrx",
+                  "start": 598
+                },
+                "updateOperator": "++",
+                "via": "direct"
+              },
+              {
+                "assignmentOperator": "=",
+                "graphNodeId": "state:todos",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 615,
+                  "filename": "src/fixtures/s2-keyed-todo.tsrx",
+                  "start": 610
+                },
+                "value": {
+                  "arguments": [
+                    {
+                      "end": 635,
+                      "name": "item",
+                      "start": 631,
+                      "type": "Identifier"
+                    }
+                  ],
+                  "callee": {
+                    "computed": false,
+                    "end": 630,
+                    "object": {
+                      "end": 623,
+                      "name": "todos",
+                      "start": 618,
+                      "type": "Identifier"
+                    },
+                    "optional": false,
+                    "property": {
+                      "end": 630,
+                      "name": "concat",
+                      "start": 624,
+                      "type": "Identifier"
+                    },
+                    "start": 618,
+                    "type": "MemberExpression"
+                  },
+                  "end": 636,
+                  "optional": false,
+                  "start": 618,
+                  "type": "CallExpression"
+                },
+                "via": "direct"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h3",
+        "id": "event:1"
+      },
+      {
+        "eventName": "input",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "declarations": [
+                      {
+                        "end": 1052,
+                        "id": {
+                          "end": 1024,
+                          "name": "title",
+                          "start": 1019,
+                          "type": "Identifier"
+                        },
+                        "init": {
+                          "computed": false,
+                          "end": 1052,
+                          "object": {
+                            "computed": false,
+                            "end": 1046,
+                            "object": {
+                              "end": 1032,
+                              "name": "event",
+                              "start": 1027,
+                              "type": "Identifier"
+                            },
+                            "optional": false,
+                            "property": {
+                              "end": 1046,
+                              "name": "currentTarget",
+                              "start": 1033,
+                              "type": "Identifier"
+                            },
+                            "start": 1027,
+                            "type": "MemberExpression"
+                          },
+                          "optional": false,
+                          "property": {
+                            "end": 1052,
+                            "name": "value",
+                            "start": 1047,
+                            "type": "Identifier"
+                          },
+                          "start": 1027,
+                          "type": "MemberExpression"
+                        },
+                        "start": 1019,
+                        "type": "VariableDeclarator"
+                      }
+                    ],
+                    "end": 1053,
+                    "kind": "const",
+                    "start": 1013,
+                    "type": "VariableDeclaration"
+                  },
+                  {
+                    "declarations": [
+                      {
+                        "end": 1117,
+                        "id": {
+                          "end": 1073,
+                          "name": "alias",
+                          "start": 1068,
+                          "type": "Identifier"
+                        },
+                        "init": {
+                          "arguments": [
+                            {
+                              "async": false,
+                              "body": {
+                                "end": 1116,
+                                "left": {
+                                  "computed": false,
+                                  "end": 1104,
+                                  "object": {
+                                    "end": 1101,
+                                    "name": "item",
+                                    "start": 1097,
+                                    "type": "Identifier"
+                                  },
+                                  "optional": false,
+                                  "property": {
+                                    "end": 1104,
+                                    "name": "id",
+                                    "start": 1102,
+                                    "type": "Identifier"
+                                  },
+                                  "start": 1097,
+                                  "type": "MemberExpression"
+                                },
+                                "operator": "===",
+                                "right": {
+                                  "computed": false,
+                                  "end": 1116,
+                                  "object": {
+                                    "end": 1113,
+                                    "name": "todo",
+                                    "start": 1109,
+                                    "type": "Identifier"
+                                  },
+                                  "optional": false,
+                                  "property": {
+                                    "end": 1116,
+                                    "name": "id",
+                                    "start": 1114,
+                                    "type": "Identifier"
+                                  },
+                                  "start": 1109,
+                                  "type": "MemberExpression"
+                                },
+                                "start": 1097,
+                                "type": "BinaryExpression"
+                              },
+                              "end": 1116,
+                              "expression": true,
+                              "generator": false,
+                              "id": null,
+                              "params": [
+                                {
+                                  "end": 1092,
+                                  "name": "item",
+                                  "start": 1088,
+                                  "type": "Identifier"
+                                }
+                              ],
+                              "start": 1087,
+                              "type": "ArrowFunctionExpression"
+                            }
+                          ],
+                          "callee": {
+                            "computed": false,
+                            "end": 1086,
+                            "object": {
+                              "end": 1081,
+                              "name": "todos",
+                              "start": 1076,
+                              "type": "Identifier"
+                            },
+                            "optional": false,
+                            "property": {
+                              "end": 1086,
+                              "name": "find",
+                              "start": 1082,
+                              "type": "Identifier"
+                            },
+                            "start": 1076,
+                            "type": "MemberExpression"
+                          },
+                          "end": 1117,
+                          "optional": false,
+                          "start": 1076,
+                          "type": "CallExpression"
+                        },
+                        "start": 1068,
+                        "type": "VariableDeclarator"
+                      }
+                    ],
+                    "end": 1118,
+                    "kind": "const",
+                    "start": 1062,
+                    "type": "VariableDeclaration"
+                  },
+                  {
+                    "end": 1147,
+                    "expression": {
+                      "end": 1146,
+                      "left": {
+                        "computed": false,
+                        "end": 1138,
+                        "object": {
+                          "end": 1132,
+                          "name": "alias",
+                          "start": 1127,
+                          "type": "Identifier"
+                        },
+                        "optional": false,
+                        "property": {
+                          "end": 1138,
+                          "name": "title",
+                          "start": 1133,
+                          "type": "Identifier"
+                        },
+                        "start": 1127,
+                        "type": "MemberExpression"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "end": 1146,
+                        "name": "title",
+                        "start": 1141,
+                        "type": "Identifier"
+                      },
+                      "start": 1127,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 1127,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 1178,
+                    "expression": {
+                      "end": 1177,
+                      "left": {
+                        "end": 1161,
+                        "name": "todos",
+                        "start": 1156,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "arguments": [],
+                        "callee": {
+                          "computed": false,
+                          "end": 1175,
+                          "object": {
+                            "end": 1169,
+                            "name": "todos",
+                            "start": 1164,
+                            "type": "Identifier"
+                          },
+                          "optional": false,
+                          "property": {
+                            "end": 1175,
+                            "name": "slice",
+                            "start": 1170,
+                            "type": "Identifier"
+                          },
+                          "start": 1164,
+                          "type": "MemberExpression"
+                        },
+                        "end": 1177,
+                        "optional": false,
+                        "start": 1164,
+                        "type": "CallExpression"
+                      },
+                      "start": 1156,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 1156,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 1234,
+                    "expression": {
+                      "arguments": [
+                        {
+                          "end": 1201,
+                          "raw": "'edit'",
+                          "start": 1195,
+                          "type": "Literal",
+                          "value": "edit"
+                        },
+                        {
+                          "end": 1225,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 1216,
+                              "key": {
+                                "end": 1207,
+                                "name": "id",
+                                "start": 1205,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 1205,
+                              "type": "Property",
+                              "value": {
+                                "computed": false,
+                                "end": 1216,
+                                "object": {
+                                  "end": 1213,
+                                  "name": "todo",
+                                  "start": 1209,
+                                  "type": "Identifier"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 1216,
+                                  "name": "id",
+                                  "start": 1214,
+                                  "type": "Identifier"
+                                },
+                                "start": 1209,
+                                "type": "MemberExpression"
+                              }
+                            },
+                            {
+                              "computed": false,
+                              "end": 1223,
+                              "key": {
+                                "end": 1223,
+                                "name": "title",
+                                "start": 1218,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": true,
+                              "start": 1218,
+                              "type": "Property",
+                              "value": {
+                                "end": 1223,
+                                "name": "title",
+                                "start": 1218,
+                                "type": "Identifier"
+                              }
+                            }
+                          ],
+                          "start": 1203,
+                          "type": "ObjectExpression"
+                        },
+                        {
+                          "end": 1232,
+                          "name": "event",
+                          "start": 1227,
+                          "type": "Identifier"
+                        }
+                      ],
+                      "callee": {
+                        "end": 1194,
+                        "name": "onTrace",
+                        "start": 1187,
+                        "type": "Identifier"
+                      },
+                      "end": 1233,
+                      "optional": false,
+                      "start": 1187,
+                      "type": "CallExpression"
+                    },
+                    "start": 1187,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 1243,
+                "start": 1003,
+                "type": "BlockStatement"
+              },
+              "end": 1243,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 998,
+                  "name": "event",
+                  "start": 993,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 992,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              },
+              {
+                "graphNodeId": "state:todos",
+                "path": [],
+                "via": "direct"
+              },
+              {
+                "graphNodeId": "state:todos",
+                "path": [
+                  "id"
+                ],
+                "via": "repeat-item"
+              }
+            ],
+            "writes": [
+              {
+                "assignmentOperator": "=",
+                "graphNodeId": "state:todos",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 1161,
+                  "filename": "src/fixtures/s2-keyed-todo.tsrx",
+                  "start": 1156
+                },
+                "value": {
+                  "arguments": [],
+                  "callee": {
+                    "computed": false,
+                    "end": 1175,
+                    "object": {
+                      "end": 1169,
+                      "name": "todos",
+                      "start": 1164,
+                      "type": "Identifier"
+                    },
+                    "optional": false,
+                    "property": {
+                      "end": 1175,
+                      "name": "slice",
+                      "start": 1170,
+                      "type": "Identifier"
+                    },
+                    "start": 1164,
+                    "type": "MemberExpression"
+                  },
+                  "end": 1177,
+                  "optional": false,
+                  "start": 1164,
+                  "type": "CallExpression"
+                },
+                "via": "direct"
+              },
+              {
+                "assignmentOperator": "=",
+                "graphNodeId": "state:todos",
+                "operation": "assign",
+                "path": [
+                  "*",
+                  "title"
+                ],
+                "sourceSpan": {
+                  "end": 1138,
+                  "filename": "src/fixtures/s2-keyed-todo.tsrx",
+                  "start": 1127
+                },
+                "value": {
+                  "end": 1146,
+                  "name": "title",
+                  "start": 1141,
+                  "type": "Identifier"
+                },
+                "via": "handler-local-alias"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h7",
+        "id": "event:2"
+      },
+      {
+        "eventName": "change",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "declarations": [
+                      {
+                        "end": 1427,
+                        "id": {
+                          "end": 1397,
+                          "name": "checked",
+                          "start": 1390,
+                          "type": "Identifier"
+                        },
+                        "init": {
+                          "computed": false,
+                          "end": 1427,
+                          "object": {
+                            "computed": false,
+                            "end": 1419,
+                            "object": {
+                              "end": 1405,
+                              "name": "event",
+                              "start": 1400,
+                              "type": "Identifier"
+                            },
+                            "optional": false,
+                            "property": {
+                              "end": 1419,
+                              "name": "currentTarget",
+                              "start": 1406,
+                              "type": "Identifier"
+                            },
+                            "start": 1400,
+                            "type": "MemberExpression"
+                          },
+                          "optional": false,
+                          "property": {
+                            "end": 1427,
+                            "name": "checked",
+                            "start": 1420,
+                            "type": "Identifier"
+                          },
+                          "start": 1400,
+                          "type": "MemberExpression"
+                        },
+                        "start": 1390,
+                        "type": "VariableDeclarator"
+                      }
+                    ],
+                    "end": 1428,
+                    "kind": "const",
+                    "start": 1384,
+                    "type": "VariableDeclaration"
+                  },
+                  {
+                    "declarations": [
+                      {
+                        "end": 1463,
+                        "id": {
+                          "end": 1447,
+                          "name": "copy",
+                          "start": 1443,
+                          "type": "Identifier"
+                        },
+                        "init": {
+                          "arguments": [],
+                          "callee": {
+                            "computed": false,
+                            "end": 1461,
+                            "object": {
+                              "end": 1455,
+                              "name": "todos",
+                              "start": 1450,
+                              "type": "Identifier"
+                            },
+                            "optional": false,
+                            "property": {
+                              "end": 1461,
+                              "name": "slice",
+                              "start": 1456,
+                              "type": "Identifier"
+                            },
+                            "start": 1450,
+                            "type": "MemberExpression"
+                          },
+                          "end": 1463,
+                          "optional": false,
+                          "start": 1450,
+                          "type": "CallExpression"
+                        },
+                        "start": 1443,
+                        "type": "VariableDeclarator"
+                      }
+                    ],
+                    "end": 1464,
+                    "kind": "const",
+                    "start": 1437,
+                    "type": "VariableDeclaration"
+                  },
+                  {
+                    "declarations": [
+                      {
+                        "end": 1527,
+                        "id": {
+                          "end": 1484,
+                          "name": "alias",
+                          "start": 1479,
+                          "type": "Identifier"
+                        },
+                        "init": {
+                          "arguments": [
+                            {
+                              "async": false,
+                              "body": {
+                                "end": 1526,
+                                "left": {
+                                  "computed": false,
+                                  "end": 1514,
+                                  "object": {
+                                    "end": 1511,
+                                    "name": "item",
+                                    "start": 1507,
+                                    "type": "Identifier"
+                                  },
+                                  "optional": false,
+                                  "property": {
+                                    "end": 1514,
+                                    "name": "id",
+                                    "start": 1512,
+                                    "type": "Identifier"
+                                  },
+                                  "start": 1507,
+                                  "type": "MemberExpression"
+                                },
+                                "operator": "===",
+                                "right": {
+                                  "computed": false,
+                                  "end": 1526,
+                                  "object": {
+                                    "end": 1523,
+                                    "name": "todo",
+                                    "start": 1519,
+                                    "type": "Identifier"
+                                  },
+                                  "optional": false,
+                                  "property": {
+                                    "end": 1526,
+                                    "name": "id",
+                                    "start": 1524,
+                                    "type": "Identifier"
+                                  },
+                                  "start": 1519,
+                                  "type": "MemberExpression"
+                                },
+                                "start": 1507,
+                                "type": "BinaryExpression"
+                              },
+                              "end": 1526,
+                              "expression": true,
+                              "generator": false,
+                              "id": null,
+                              "params": [
+                                {
+                                  "end": 1502,
+                                  "name": "item",
+                                  "start": 1498,
+                                  "type": "Identifier"
+                                }
+                              ],
+                              "start": 1497,
+                              "type": "ArrowFunctionExpression"
+                            }
+                          ],
+                          "callee": {
+                            "computed": false,
+                            "end": 1496,
+                            "object": {
+                              "end": 1491,
+                              "name": "copy",
+                              "start": 1487,
+                              "type": "Identifier"
+                            },
+                            "optional": false,
+                            "property": {
+                              "end": 1496,
+                              "name": "find",
+                              "start": 1492,
+                              "type": "Identifier"
+                            },
+                            "start": 1487,
+                            "type": "MemberExpression"
+                          },
+                          "end": 1527,
+                          "optional": false,
+                          "start": 1487,
+                          "type": "CallExpression"
+                        },
+                        "start": 1479,
+                        "type": "VariableDeclarator"
+                      }
+                    ],
+                    "end": 1528,
+                    "kind": "const",
+                    "start": 1473,
+                    "type": "VariableDeclaration"
+                  },
+                  {
+                    "end": 1558,
+                    "expression": {
+                      "end": 1557,
+                      "left": {
+                        "computed": false,
+                        "end": 1547,
+                        "object": {
+                          "end": 1542,
+                          "name": "alias",
+                          "start": 1537,
+                          "type": "Identifier"
+                        },
+                        "optional": false,
+                        "property": {
+                          "end": 1547,
+                          "name": "done",
+                          "start": 1543,
+                          "type": "Identifier"
+                        },
+                        "start": 1537,
+                        "type": "MemberExpression"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "end": 1557,
+                        "name": "checked",
+                        "start": 1550,
+                        "type": "Identifier"
+                      },
+                      "start": 1537,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 1537,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 1580,
+                    "expression": {
+                      "end": 1579,
+                      "left": {
+                        "end": 1572,
+                        "name": "todos",
+                        "start": 1567,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "end": 1579,
+                        "name": "copy",
+                        "start": 1575,
+                        "type": "Identifier"
+                      },
+                      "start": 1567,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 1567,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 1640,
+                    "expression": {
+                      "arguments": [
+                        {
+                          "end": 1605,
+                          "raw": "'toggle'",
+                          "start": 1597,
+                          "type": "Literal",
+                          "value": "toggle"
+                        },
+                        {
+                          "end": 1631,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 1620,
+                              "key": {
+                                "end": 1611,
+                                "name": "id",
+                                "start": 1609,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 1609,
+                              "type": "Property",
+                              "value": {
+                                "computed": false,
+                                "end": 1620,
+                                "object": {
+                                  "end": 1617,
+                                  "name": "todo",
+                                  "start": 1613,
+                                  "type": "Identifier"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 1620,
+                                  "name": "id",
+                                  "start": 1618,
+                                  "type": "Identifier"
+                                },
+                                "start": 1613,
+                                "type": "MemberExpression"
+                              }
+                            },
+                            {
+                              "computed": false,
+                              "end": 1629,
+                              "key": {
+                                "end": 1629,
+                                "name": "checked",
+                                "start": 1622,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": true,
+                              "start": 1622,
+                              "type": "Property",
+                              "value": {
+                                "end": 1629,
+                                "name": "checked",
+                                "start": 1622,
+                                "type": "Identifier"
+                              }
+                            }
+                          ],
+                          "start": 1607,
+                          "type": "ObjectExpression"
+                        },
+                        {
+                          "end": 1638,
+                          "name": "event",
+                          "start": 1633,
+                          "type": "Identifier"
+                        }
+                      ],
+                      "callee": {
+                        "end": 1596,
+                        "name": "onTrace",
+                        "start": 1589,
+                        "type": "Identifier"
+                      },
+                      "end": 1639,
+                      "optional": false,
+                      "start": 1589,
+                      "type": "CallExpression"
+                    },
+                    "start": 1589,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 1649,
+                "start": 1374,
+                "type": "BlockStatement"
+              },
+              "end": 1649,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 1369,
+                  "name": "event",
+                  "start": 1364,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 1363,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              },
+              {
+                "graphNodeId": "state:todos",
+                "path": [],
+                "via": "direct"
+              },
+              {
+                "graphNodeId": "state:todos",
+                "path": [
+                  "id"
+                ],
+                "via": "repeat-item"
+              }
+            ],
+            "writes": [
+              {
+                "assignmentOperator": "=",
+                "graphNodeId": "state:todos",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 1572,
+                  "filename": "src/fixtures/s2-keyed-todo.tsrx",
+                  "start": 1567
+                },
+                "value": {
+                  "end": 1579,
+                  "name": "copy",
+                  "start": 1575,
+                  "type": "Identifier"
+                },
+                "via": "direct"
+              },
+              {
+                "assignmentOperator": "=",
+                "graphNodeId": "state:todos",
+                "operation": "assign",
+                "path": [
+                  "*",
+                  "done"
+                ],
+                "sourceSpan": {
+                  "end": 1547,
+                  "filename": "src/fixtures/s2-keyed-todo.tsrx",
+                  "start": 1537
+                },
+                "value": {
+                  "end": 1557,
+                  "name": "checked",
+                  "start": 1550,
+                  "type": "Identifier"
+                },
+                "via": "handler-local-alias"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h8",
+        "id": "event:3"
+      },
+      {
+        "eventName": "click",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "end": 1792,
+                    "expression": {
+                      "end": 1791,
+                      "left": {
+                        "end": 1745,
+                        "name": "todos",
+                        "start": 1740,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "arguments": [
+                          {
+                            "async": false,
+                            "body": {
+                              "end": 1790,
+                              "left": {
+                                "computed": false,
+                                "end": 1778,
+                                "object": {
+                                  "end": 1775,
+                                  "name": "item",
+                                  "start": 1771,
+                                  "type": "Identifier"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 1778,
+                                  "name": "id",
+                                  "start": 1776,
+                                  "type": "Identifier"
+                                },
+                                "start": 1771,
+                                "type": "MemberExpression"
+                              },
+                              "operator": "!==",
+                              "right": {
+                                "computed": false,
+                                "end": 1790,
+                                "object": {
+                                  "end": 1787,
+                                  "name": "todo",
+                                  "start": 1783,
+                                  "type": "Identifier"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 1790,
+                                  "name": "id",
+                                  "start": 1788,
+                                  "type": "Identifier"
+                                },
+                                "start": 1783,
+                                "type": "MemberExpression"
+                              },
+                              "start": 1771,
+                              "type": "BinaryExpression"
+                            },
+                            "end": 1790,
+                            "expression": true,
+                            "generator": false,
+                            "id": null,
+                            "params": [
+                              {
+                                "end": 1766,
+                                "name": "item",
+                                "start": 1762,
+                                "type": "Identifier"
+                              }
+                            ],
+                            "start": 1761,
+                            "type": "ArrowFunctionExpression"
+                          }
+                        ],
+                        "callee": {
+                          "computed": false,
+                          "end": 1760,
+                          "object": {
+                            "end": 1753,
+                            "name": "todos",
+                            "start": 1748,
+                            "type": "Identifier"
+                          },
+                          "optional": false,
+                          "property": {
+                            "end": 1760,
+                            "name": "filter",
+                            "start": 1754,
+                            "type": "Identifier"
+                          },
+                          "start": 1748,
+                          "type": "MemberExpression"
+                        },
+                        "end": 1791,
+                        "optional": false,
+                        "start": 1748,
+                        "type": "CallExpression"
+                      },
+                      "start": 1740,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 1740,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 1843,
+                    "expression": {
+                      "arguments": [
+                        {
+                          "end": 1817,
+                          "raw": "'remove'",
+                          "start": 1809,
+                          "type": "Literal",
+                          "value": "remove"
+                        },
+                        {
+                          "end": 1834,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 1832,
+                              "key": {
+                                "end": 1823,
+                                "name": "id",
+                                "start": 1821,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 1821,
+                              "type": "Property",
+                              "value": {
+                                "computed": false,
+                                "end": 1832,
+                                "object": {
+                                  "end": 1829,
+                                  "name": "todo",
+                                  "start": 1825,
+                                  "type": "Identifier"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 1832,
+                                  "name": "id",
+                                  "start": 1830,
+                                  "type": "Identifier"
+                                },
+                                "start": 1825,
+                                "type": "MemberExpression"
+                              }
+                            }
+                          ],
+                          "start": 1819,
+                          "type": "ObjectExpression"
+                        },
+                        {
+                          "end": 1841,
+                          "name": "event",
+                          "start": 1836,
+                          "type": "Identifier"
+                        }
+                      ],
+                      "callee": {
+                        "end": 1808,
+                        "name": "onTrace",
+                        "start": 1801,
+                        "type": "Identifier"
+                      },
+                      "end": 1842,
+                      "optional": false,
+                      "start": 1801,
+                      "type": "CallExpression"
+                    },
+                    "start": 1801,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 1852,
+                "start": 1730,
+                "type": "BlockStatement"
+              },
+              "end": 1852,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 1725,
+                  "name": "event",
+                  "start": 1720,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 1719,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              },
+              {
+                "graphNodeId": "state:todos",
+                "path": [],
+                "via": "direct"
+              },
+              {
+                "graphNodeId": "state:todos",
+                "path": [
+                  "id"
+                ],
+                "via": "repeat-item"
+              }
+            ],
+            "writes": [
+              {
+                "assignmentOperator": "=",
+                "graphNodeId": "state:todos",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 1745,
+                  "filename": "src/fixtures/s2-keyed-todo.tsrx",
+                  "start": 1740
+                },
+                "value": {
+                  "arguments": [
+                    {
+                      "async": false,
+                      "body": {
+                        "end": 1790,
+                        "left": {
+                          "computed": false,
+                          "end": 1778,
+                          "object": {
+                            "end": 1775,
+                            "name": "item",
+                            "start": 1771,
+                            "type": "Identifier"
+                          },
+                          "optional": false,
+                          "property": {
+                            "end": 1778,
+                            "name": "id",
+                            "start": 1776,
+                            "type": "Identifier"
+                          },
+                          "start": 1771,
+                          "type": "MemberExpression"
+                        },
+                        "operator": "!==",
+                        "right": {
+                          "computed": false,
+                          "end": 1790,
+                          "object": {
+                            "end": 1787,
+                            "name": "todo",
+                            "start": 1783,
+                            "type": "Identifier"
+                          },
+                          "optional": false,
+                          "property": {
+                            "end": 1790,
+                            "name": "id",
+                            "start": 1788,
+                            "type": "Identifier"
+                          },
+                          "start": 1783,
+                          "type": "MemberExpression"
+                        },
+                        "start": 1771,
+                        "type": "BinaryExpression"
+                      },
+                      "end": 1790,
+                      "expression": true,
+                      "generator": false,
+                      "id": null,
+                      "params": [
+                        {
+                          "end": 1766,
+                          "name": "item",
+                          "start": 1762,
+                          "type": "Identifier"
+                        }
+                      ],
+                      "start": 1761,
+                      "type": "ArrowFunctionExpression"
+                    }
+                  ],
+                  "callee": {
+                    "computed": false,
+                    "end": 1760,
+                    "object": {
+                      "end": 1753,
+                      "name": "todos",
+                      "start": 1748,
+                      "type": "Identifier"
+                    },
+                    "optional": false,
+                    "property": {
+                      "end": 1760,
+                      "name": "filter",
+                      "start": 1754,
+                      "type": "Identifier"
+                    },
+                    "start": 1748,
+                    "type": "MemberExpression"
+                  },
+                  "end": 1791,
+                  "optional": false,
+                  "start": 1748,
+                  "type": "CallExpression"
+                },
+                "via": "direct"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h9",
+        "id": "event:4"
+      },
+      {
+        "eventName": "click",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "declarations": [
+                      {
+                        "end": 2002,
+                        "id": {
+                          "end": 1976,
+                          "name": "order",
+                          "start": 1971,
+                          "type": "Identifier"
+                        },
+                        "init": {
+                          "arguments": [],
+                          "callee": {
+                            "computed": false,
+                            "end": 2000,
+                            "object": {
+                              "arguments": [],
+                              "callee": {
+                                "computed": false,
+                                "end": 1990,
+                                "object": {
+                                  "end": 1984,
+                                  "name": "todos",
+                                  "start": 1979,
+                                  "type": "Identifier"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 1990,
+                                  "name": "slice",
+                                  "start": 1985,
+                                  "type": "Identifier"
+                                },
+                                "start": 1979,
+                                "type": "MemberExpression"
+                              },
+                              "end": 1992,
+                              "optional": false,
+                              "start": 1979,
+                              "type": "CallExpression"
+                            },
+                            "optional": false,
+                            "property": {
+                              "end": 2000,
+                              "name": "reverse",
+                              "start": 1993,
+                              "type": "Identifier"
+                            },
+                            "start": 1979,
+                            "type": "MemberExpression"
+                          },
+                          "end": 2002,
+                          "optional": false,
+                          "start": 1979,
+                          "type": "CallExpression"
+                        },
+                        "start": 1971,
+                        "type": "VariableDeclarator"
+                      }
+                    ],
+                    "end": 2003,
+                    "kind": "const",
+                    "start": 1965,
+                    "type": "VariableDeclaration"
+                  },
+                  {
+                    "end": 2022,
+                    "expression": {
+                      "end": 2021,
+                      "left": {
+                        "end": 2013,
+                        "name": "todos",
+                        "start": 2008,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "end": 2021,
+                        "name": "order",
+                        "start": 2016,
+                        "type": "Identifier"
+                      },
+                      "start": 2008,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 2008,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 2094,
+                    "expression": {
+                      "arguments": [
+                        {
+                          "end": 2044,
+                          "raw": "'reorder'",
+                          "start": 2035,
+                          "type": "Literal",
+                          "value": "reorder"
+                        },
+                        {
+                          "end": 2085,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 2083,
+                              "key": {
+                                "end": 2053,
+                                "name": "order",
+                                "start": 2048,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 2048,
+                              "type": "Property",
+                              "value": {
+                                "arguments": [
+                                  {
+                                    "async": false,
+                                    "body": {
+                                      "computed": false,
+                                      "end": 2082,
+                                      "object": {
+                                        "end": 2079,
+                                        "name": "todo",
+                                        "start": 2075,
+                                        "type": "Identifier"
+                                      },
+                                      "optional": false,
+                                      "property": {
+                                        "end": 2082,
+                                        "name": "id",
+                                        "start": 2080,
+                                        "type": "Identifier"
+                                      },
+                                      "start": 2075,
+                                      "type": "MemberExpression"
+                                    },
+                                    "end": 2082,
+                                    "expression": true,
+                                    "generator": false,
+                                    "id": null,
+                                    "params": [
+                                      {
+                                        "end": 2070,
+                                        "name": "todo",
+                                        "start": 2066,
+                                        "type": "Identifier"
+                                      }
+                                    ],
+                                    "start": 2065,
+                                    "type": "ArrowFunctionExpression"
+                                  }
+                                ],
+                                "callee": {
+                                  "computed": false,
+                                  "end": 2064,
+                                  "object": {
+                                    "end": 2060,
+                                    "name": "order",
+                                    "start": 2055,
+                                    "type": "Identifier"
+                                  },
+                                  "optional": false,
+                                  "property": {
+                                    "end": 2064,
+                                    "name": "map",
+                                    "start": 2061,
+                                    "type": "Identifier"
+                                  },
+                                  "start": 2055,
+                                  "type": "MemberExpression"
+                                },
+                                "end": 2083,
+                                "optional": false,
+                                "start": 2055,
+                                "type": "CallExpression"
+                              }
+                            }
+                          ],
+                          "start": 2046,
+                          "type": "ObjectExpression"
+                        },
+                        {
+                          "end": 2092,
+                          "name": "event",
+                          "start": 2087,
+                          "type": "Identifier"
+                        }
+                      ],
+                      "callee": {
+                        "end": 2034,
+                        "name": "onTrace",
+                        "start": 2027,
+                        "type": "Identifier"
+                      },
+                      "end": 2093,
+                      "optional": false,
+                      "start": 2027,
+                      "type": "CallExpression"
+                    },
+                    "start": 2027,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 2099,
+                "start": 1959,
+                "type": "BlockStatement"
+              },
+              "end": 2099,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 1954,
+                  "name": "event",
+                  "start": 1949,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 1948,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              },
+              {
+                "graphNodeId": "state:todos",
+                "path": [],
+                "via": "direct"
+              }
+            ],
+            "writes": [
+              {
+                "assignmentOperator": "=",
+                "graphNodeId": "state:todos",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 2013,
+                  "filename": "src/fixtures/s2-keyed-todo.tsrx",
+                  "start": 2008
+                },
+                "value": {
+                  "end": 2021,
+                  "name": "order",
+                  "start": 2016,
+                  "type": "Identifier"
+                },
+                "via": "direct"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h10",
+        "id": "event:5"
+      },
+      {
+        "eventName": "click",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "declarations": [
+                      {
+                        "end": 2209,
+                        "id": {
+                          "end": 2194,
+                          "name": "count",
+                          "start": 2189,
+                          "type": "Identifier"
+                        },
+                        "init": {
+                          "computed": false,
+                          "end": 2209,
+                          "object": {
+                            "end": 2202,
+                            "name": "todos",
+                            "start": 2197,
+                            "type": "Identifier"
+                          },
+                          "optional": false,
+                          "property": {
+                            "end": 2209,
+                            "name": "length",
+                            "start": 2203,
+                            "type": "Identifier"
+                          },
+                          "start": 2197,
+                          "type": "MemberExpression"
+                        },
+                        "start": 2189,
+                        "type": "VariableDeclarator"
+                      }
+                    ],
+                    "end": 2210,
+                    "kind": "const",
+                    "start": 2183,
+                    "type": "VariableDeclaration"
+                  },
+                  {
+                    "end": 2226,
+                    "expression": {
+                      "end": 2225,
+                      "left": {
+                        "end": 2220,
+                        "name": "todos",
+                        "start": 2215,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "elements": [],
+                        "end": 2225,
+                        "start": 2223,
+                        "type": "ArrayExpression"
+                      },
+                      "start": 2215,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 2215,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 2266,
+                    "expression": {
+                      "arguments": [
+                        {
+                          "end": 2246,
+                          "raw": "'clear'",
+                          "start": 2239,
+                          "type": "Literal",
+                          "value": "clear"
+                        },
+                        {
+                          "end": 2257,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 2255,
+                              "key": {
+                                "end": 2255,
+                                "name": "count",
+                                "start": 2250,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": true,
+                              "start": 2250,
+                              "type": "Property",
+                              "value": {
+                                "end": 2255,
+                                "name": "count",
+                                "start": 2250,
+                                "type": "Identifier"
+                              }
+                            }
+                          ],
+                          "start": 2248,
+                          "type": "ObjectExpression"
+                        },
+                        {
+                          "end": 2264,
+                          "name": "event",
+                          "start": 2259,
+                          "type": "Identifier"
+                        }
+                      ],
+                      "callee": {
+                        "end": 2238,
+                        "name": "onTrace",
+                        "start": 2231,
+                        "type": "Identifier"
+                      },
+                      "end": 2265,
+                      "optional": false,
+                      "start": 2231,
+                      "type": "CallExpression"
+                    },
+                    "start": 2231,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 2271,
+                "start": 2177,
+                "type": "BlockStatement"
+              },
+              "end": 2271,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 2172,
+                  "name": "event",
+                  "start": 2167,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 2166,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              },
+              {
+                "graphNodeId": "state:todos",
+                "path": [
+                  "length"
+                ],
+                "via": "direct"
+              }
+            ],
+            "writes": [
+              {
+                "assignmentOperator": "=",
+                "graphNodeId": "state:todos",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 2220,
+                  "filename": "src/fixtures/s2-keyed-todo.tsrx",
+                  "start": 2215
+                },
+                "value": {
+                  "elements": [],
+                  "end": 2225,
+                  "start": 2223,
+                  "type": "ArrayExpression"
+                },
+                "via": "direct"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h11",
+        "id": "event:6"
+      }
+    ],
+    "stateReads": [
+      {
+        "graphNodeId": "computed:complete",
+        "path": []
+      },
+      {
+        "graphNodeId": "prop:props",
+        "path": [
+          "onTrace"
+        ]
+      },
+      {
+        "graphNodeId": "prop:props",
+        "path": [
+          "seed"
+        ]
+      },
+      {
+        "graphNodeId": "state:draft",
+        "path": []
+      },
+      {
+        "graphNodeId": "state:next",
+        "path": []
+      },
+      {
+        "graphNodeId": "state:todos",
+        "path": []
+      },
+      {
+        "graphNodeId": "state:todos",
+        "path": [
+          "done"
+        ]
+      },
+      {
+        "graphNodeId": "state:todos",
+        "path": [
+          "id"
+        ]
+      },
+      {
+        "graphNodeId": "state:todos",
+        "path": [
+          "length"
+        ]
+      },
+      {
+        "graphNodeId": "state:todos",
+        "path": [
+          "title"
+        ]
+      }
+    ],
+    "stateWrites": [
+      {
+        "assignmentOperator": "=",
+        "graphNodeId": "state:draft",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 439,
+          "filename": "src/fixtures/s2-keyed-todo.tsrx",
+          "start": 434
+        },
+        "value": {
+          "computed": false,
+          "end": 467,
+          "object": {
+            "computed": false,
+            "end": 461,
+            "object": {
+              "end": 447,
+              "name": "event",
+              "start": 442,
+              "type": "Identifier"
+            },
+            "optional": false,
+            "property": {
+              "end": 461,
+              "name": "currentTarget",
+              "start": 448,
+              "type": "Identifier"
+            },
+            "start": 442,
+            "type": "MemberExpression"
+          },
+          "optional": false,
+          "property": {
+            "end": 467,
+            "name": "value",
+            "start": 462,
+            "type": "Identifier"
+          },
+          "start": 442,
+          "type": "MemberExpression"
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "graphNodeId": "state:draft",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 647,
+          "filename": "src/fixtures/s2-keyed-todo.tsrx",
+          "start": 642
+        },
+        "value": {
+          "end": 652,
+          "raw": "''",
+          "start": 650,
+          "type": "Literal",
+          "value": ""
+        },
+        "via": "direct"
+      },
+      {
+        "graphNodeId": "state:next",
+        "operation": "update",
+        "path": [],
+        "prefix": false,
+        "sourceSpan": {
+          "end": 602,
+          "filename": "src/fixtures/s2-keyed-todo.tsrx",
+          "start": 598
+        },
+        "updateOperator": "++",
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "graphNodeId": "state:todos",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 615,
+          "filename": "src/fixtures/s2-keyed-todo.tsrx",
+          "start": 610
+        },
+        "value": {
+          "arguments": [
+            {
+              "end": 635,
+              "name": "item",
+              "start": 631,
+              "type": "Identifier"
+            }
+          ],
+          "callee": {
+            "computed": false,
+            "end": 630,
+            "object": {
+              "end": 623,
+              "name": "todos",
+              "start": 618,
+              "type": "Identifier"
+            },
+            "optional": false,
+            "property": {
+              "end": 630,
+              "name": "concat",
+              "start": 624,
+              "type": "Identifier"
+            },
+            "start": 618,
+            "type": "MemberExpression"
+          },
+          "end": 636,
+          "optional": false,
+          "start": 618,
+          "type": "CallExpression"
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "graphNodeId": "state:todos",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 1161,
+          "filename": "src/fixtures/s2-keyed-todo.tsrx",
+          "start": 1156
+        },
+        "value": {
+          "arguments": [],
+          "callee": {
+            "computed": false,
+            "end": 1175,
+            "object": {
+              "end": 1169,
+              "name": "todos",
+              "start": 1164,
+              "type": "Identifier"
+            },
+            "optional": false,
+            "property": {
+              "end": 1175,
+              "name": "slice",
+              "start": 1170,
+              "type": "Identifier"
+            },
+            "start": 1164,
+            "type": "MemberExpression"
+          },
+          "end": 1177,
+          "optional": false,
+          "start": 1164,
+          "type": "CallExpression"
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "graphNodeId": "state:todos",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 1572,
+          "filename": "src/fixtures/s2-keyed-todo.tsrx",
+          "start": 1567
+        },
+        "value": {
+          "end": 1579,
+          "name": "copy",
+          "start": 1575,
+          "type": "Identifier"
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "graphNodeId": "state:todos",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 1745,
+          "filename": "src/fixtures/s2-keyed-todo.tsrx",
+          "start": 1740
+        },
+        "value": {
+          "arguments": [
+            {
+              "async": false,
+              "body": {
+                "end": 1790,
+                "left": {
+                  "computed": false,
+                  "end": 1778,
+                  "object": {
+                    "end": 1775,
+                    "name": "item",
+                    "start": 1771,
+                    "type": "Identifier"
+                  },
+                  "optional": false,
+                  "property": {
+                    "end": 1778,
+                    "name": "id",
+                    "start": 1776,
+                    "type": "Identifier"
+                  },
+                  "start": 1771,
+                  "type": "MemberExpression"
+                },
+                "operator": "!==",
+                "right": {
+                  "computed": false,
+                  "end": 1790,
+                  "object": {
+                    "end": 1787,
+                    "name": "todo",
+                    "start": 1783,
+                    "type": "Identifier"
+                  },
+                  "optional": false,
+                  "property": {
+                    "end": 1790,
+                    "name": "id",
+                    "start": 1788,
+                    "type": "Identifier"
+                  },
+                  "start": 1783,
+                  "type": "MemberExpression"
+                },
+                "start": 1771,
+                "type": "BinaryExpression"
+              },
+              "end": 1790,
+              "expression": true,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 1766,
+                  "name": "item",
+                  "start": 1762,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 1761,
+              "type": "ArrowFunctionExpression"
+            }
+          ],
+          "callee": {
+            "computed": false,
+            "end": 1760,
+            "object": {
+              "end": 1753,
+              "name": "todos",
+              "start": 1748,
+              "type": "Identifier"
+            },
+            "optional": false,
+            "property": {
+              "end": 1760,
+              "name": "filter",
+              "start": 1754,
+              "type": "Identifier"
+            },
+            "start": 1748,
+            "type": "MemberExpression"
+          },
+          "end": 1791,
+          "optional": false,
+          "start": 1748,
+          "type": "CallExpression"
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "graphNodeId": "state:todos",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 2013,
+          "filename": "src/fixtures/s2-keyed-todo.tsrx",
+          "start": 2008
+        },
+        "value": {
+          "end": 2021,
+          "name": "order",
+          "start": 2016,
+          "type": "Identifier"
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "graphNodeId": "state:todos",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 2220,
+          "filename": "src/fixtures/s2-keyed-todo.tsrx",
+          "start": 2215
+        },
+        "value": {
+          "elements": [],
+          "end": 2225,
+          "start": 2223,
+          "type": "ArrayExpression"
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "graphNodeId": "state:todos",
+        "operation": "assign",
+        "path": [
+          "*",
+          "done"
+        ],
+        "sourceSpan": {
+          "end": 1547,
+          "filename": "src/fixtures/s2-keyed-todo.tsrx",
+          "start": 1537
+        },
+        "value": {
+          "end": 1557,
+          "name": "checked",
+          "start": 1550,
+          "type": "Identifier"
+        },
+        "via": "handler-local-alias"
+      },
+      {
+        "assignmentOperator": "=",
+        "graphNodeId": "state:todos",
+        "operation": "assign",
+        "path": [
+          "*",
+          "title"
+        ],
+        "sourceSpan": {
+          "end": 1138,
+          "filename": "src/fixtures/s2-keyed-todo.tsrx",
+          "start": 1127
+        },
+        "value": {
+          "end": 1146,
+          "name": "title",
+          "start": 1141,
+          "type": "Identifier"
+        },
+        "via": "handler-local-alias"
+      }
+    ]
+  },
+  "version": "frameless-enriched-ir/1"
+}

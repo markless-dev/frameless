@@ -1,0 +1,1627 @@
+{
+  "components": [
+    {
+      "evaluation": {
+        "computedBindings": "reactive",
+        "ordinaryLocals": "once-per-instance"
+      },
+      "guards": [],
+      "locals": [
+        {
+          "declarationKind": "let",
+          "initializer": {
+            "arguments": [
+              {
+                "end": 117,
+                "name": "initial",
+                "start": 110,
+                "type": "Identifier"
+              }
+            ],
+            "callee": {
+              "end": 109,
+              "name": "state",
+              "start": 104,
+              "type": "Identifier"
+            },
+            "end": 118,
+            "optional": false,
+            "start": 104,
+            "type": "CallExpression"
+          },
+          "names": [
+            "text"
+          ],
+          "order": 0,
+          "pattern": {
+            "end": 101,
+            "name": "text",
+            "start": 97,
+            "type": "Identifier"
+          },
+          "reads": [
+            {
+              "graphNodeId": "prop:props",
+              "path": [
+                "initial"
+              ],
+              "via": "alias"
+            }
+          ],
+          "semanticRecordIds": [
+            "state:text"
+          ]
+        },
+        {
+          "declarationKind": "let",
+          "initializer": {
+            "arguments": [
+              {
+                "end": 146,
+                "raw": "false",
+                "start": 141,
+                "type": "Literal",
+                "value": false
+              }
+            ],
+            "callee": {
+              "end": 140,
+              "name": "state",
+              "start": 135,
+              "type": "Identifier"
+            },
+            "end": 147,
+            "optional": false,
+            "start": 135,
+            "type": "CallExpression"
+          },
+          "names": [
+            "checked"
+          ],
+          "order": 1,
+          "pattern": {
+            "end": 132,
+            "name": "checked",
+            "start": 125,
+            "type": "Identifier"
+          },
+          "reads": [],
+          "semanticRecordIds": [
+            "state:checked"
+          ]
+        },
+        {
+          "declarationKind": "let",
+          "initializer": {
+            "arguments": [
+              {
+                "end": 170,
+                "raw": "0",
+                "start": 169,
+                "type": "Literal",
+                "value": 0
+              }
+            ],
+            "callee": {
+              "end": 168,
+              "name": "state",
+              "start": 163,
+              "type": "Identifier"
+            },
+            "end": 171,
+            "optional": false,
+            "start": 163,
+            "type": "CallExpression"
+          },
+          "names": [
+            "writes"
+          ],
+          "order": 2,
+          "pattern": {
+            "end": 160,
+            "name": "writes",
+            "start": 154,
+            "type": "Identifier"
+          },
+          "reads": [],
+          "semanticRecordIds": [
+            "state:writes"
+          ]
+        }
+      ],
+      "name": "EventForm",
+      "props": {
+        "entries": [
+          {
+            "alias": false,
+            "graphNodeId": "prop:props",
+            "localName": "initial",
+            "path": [
+              "initial"
+            ],
+            "sourceName": "initial"
+          },
+          {
+            "alias": false,
+            "graphNodeId": "prop:props",
+            "localName": "onTrace",
+            "path": [
+              "onTrace"
+            ],
+            "sourceName": "onTrace"
+          }
+        ],
+        "graphNodeId": "prop:props"
+      },
+      "template": [
+        {
+          "children": [
+            {
+              "children": [],
+              "dynamicBindings": [
+                {
+                  "expression": {
+                    "end": 385,
+                    "name": "text",
+                    "start": 381,
+                    "type": "Identifier"
+                  },
+                  "kind": "property",
+                  "name": "value",
+                  "reads": [
+                    {
+                      "graphNodeId": "state:text",
+                      "path": [],
+                      "via": "direct"
+                    }
+                  ]
+                }
+              ],
+              "eventIds": [
+                "event:1"
+              ],
+              "id": "h1",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-action",
+                  "value": "text"
+                }
+              ],
+              "tag": "input"
+            },
+            {
+              "children": [],
+              "dynamicBindings": [
+                {
+                  "expression": {
+                    "end": 599,
+                    "name": "checked",
+                    "start": 592,
+                    "type": "Identifier"
+                  },
+                  "kind": "property",
+                  "name": "checked",
+                  "reads": [
+                    {
+                      "graphNodeId": "state:checked",
+                      "path": [],
+                      "via": "direct"
+                    }
+                  ]
+                }
+              ],
+              "eventIds": [
+                "event:2"
+              ],
+              "id": "h2",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "type",
+                  "value": "checkbox"
+                },
+                {
+                  "name": "data-action",
+                  "value": "checked"
+                }
+              ],
+              "tag": "input"
+            },
+            {
+              "children": [
+                {
+                  "id": "text:0",
+                  "kind": "text",
+                  "value": "submit"
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [
+                "event:3"
+              ],
+              "id": "h3",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "type",
+                  "value": "button"
+                },
+                {
+                  "name": "data-action",
+                  "value": "submit"
+                }
+              ],
+              "tag": "button"
+            },
+            {
+              "children": [
+                {
+                  "expression": {
+                    "end": 1011,
+                    "name": "writes",
+                    "start": 1005,
+                    "type": "Identifier"
+                  },
+                  "id": "text:1",
+                  "kind": "dynamic-text",
+                  "reads": [
+                    {
+                      "graphNodeId": "state:writes",
+                      "path": [],
+                      "via": "direct"
+                    }
+                  ]
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [],
+              "id": "h4",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-writes",
+                  "value": "true"
+                }
+              ],
+              "tag": "output"
+            },
+            {
+              "children": [],
+              "dynamicBindings": [],
+              "eventIds": [],
+              "id": "h5",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-callback-marker",
+                  "value": "present"
+                }
+              ],
+              "tag": "span"
+            }
+          ],
+          "dynamicBindings": [],
+          "eventIds": [
+            "event:0"
+          ],
+          "id": "h0",
+          "kind": "host",
+          "staticAttributes": [
+            {
+              "name": "data-scenario",
+              "value": "s3"
+            }
+          ],
+          "tag": "form"
+        }
+      ]
+    }
+  ],
+  "filename": "src/fixtures/s3-event-form.tsrx",
+  "imports": [],
+  "module": {
+    "exports": [
+      {
+        "componentName": "EventForm",
+        "exportedName": "EventForm",
+        "kind": "named"
+      }
+    ]
+  },
+  "records": {
+    "aliases": [
+      {
+        "declarationKind": "const",
+        "graphNodeId": "prop:props",
+        "id": "alias:EventForm:initial",
+        "name": "initial",
+        "path": [
+          "initial"
+        ],
+        "sourceSpan": {
+          "end": 76,
+          "filename": "src/fixtures/s3-event-form.tsrx",
+          "start": 69
+        },
+        "target": "props.initial"
+      },
+      {
+        "declarationKind": "const",
+        "graphNodeId": "prop:props",
+        "id": "alias:EventForm:onTrace",
+        "name": "onTrace",
+        "path": [
+          "onTrace"
+        ],
+        "sourceSpan": {
+          "end": 85,
+          "filename": "src/fixtures/s3-event-form.tsrx",
+          "start": 78
+        },
+        "target": "props.onTrace"
+      }
+    ],
+    "bindings": [
+      {
+        "declarationKind": "const",
+        "id": "prop:props",
+        "kind": "prop",
+        "name": "props",
+        "reads": [],
+        "valueKind": "object",
+        "writable": false,
+        "writes": []
+      },
+      {
+        "declarationKind": "let",
+        "id": "state:checked",
+        "initialValue": false,
+        "initializer": {
+          "end": 146,
+          "raw": "false",
+          "start": 141,
+          "type": "Literal",
+          "value": false
+        },
+        "kind": "state",
+        "name": "checked",
+        "reads": [],
+        "valueKind": "scalar",
+        "writable": true,
+        "writes": [
+          {
+            "assignmentOperator": "=",
+            "graphNodeId": "state:checked",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 638,
+              "filename": "src/fixtures/s3-event-form.tsrx",
+              "start": 631
+            },
+            "value": {
+              "computed": false,
+              "end": 668,
+              "object": {
+                "computed": false,
+                "end": 660,
+                "object": {
+                  "end": 646,
+                  "name": "event",
+                  "start": 641,
+                  "type": "Identifier"
+                },
+                "optional": false,
+                "property": {
+                  "end": 660,
+                  "name": "currentTarget",
+                  "start": 647,
+                  "type": "Identifier"
+                },
+                "start": 641,
+                "type": "MemberExpression"
+              },
+              "optional": false,
+              "property": {
+                "end": 668,
+                "name": "checked",
+                "start": 661,
+                "type": "Identifier"
+              },
+              "start": 641,
+              "type": "MemberExpression"
+            },
+            "via": "direct"
+          }
+        ]
+      },
+      {
+        "declarationKind": "let",
+        "id": "state:text",
+        "initializer": {
+          "end": 117,
+          "name": "initial",
+          "start": 110,
+          "type": "Identifier"
+        },
+        "kind": "state",
+        "name": "text",
+        "reads": [
+          {
+            "graphNodeId": "prop:props",
+            "path": [
+              "initial"
+            ]
+          }
+        ],
+        "valueKind": "unknown",
+        "writable": true,
+        "writes": [
+          {
+            "assignmentOperator": "=",
+            "graphNodeId": "state:text",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 420,
+              "filename": "src/fixtures/s3-event-form.tsrx",
+              "start": 416
+            },
+            "value": {
+              "computed": false,
+              "end": 448,
+              "object": {
+                "computed": false,
+                "end": 442,
+                "object": {
+                  "end": 428,
+                  "name": "event",
+                  "start": 423,
+                  "type": "Identifier"
+                },
+                "optional": false,
+                "property": {
+                  "end": 442,
+                  "name": "currentTarget",
+                  "start": 429,
+                  "type": "Identifier"
+                },
+                "start": 423,
+                "type": "MemberExpression"
+              },
+              "optional": false,
+              "property": {
+                "end": 448,
+                "name": "value",
+                "start": 443,
+                "type": "Identifier"
+              },
+              "start": 423,
+              "type": "MemberExpression"
+            },
+            "via": "direct"
+          }
+        ]
+      },
+      {
+        "declarationKind": "let",
+        "id": "state:writes",
+        "initialValue": 0,
+        "initializer": {
+          "end": 170,
+          "raw": "0",
+          "start": 169,
+          "type": "Literal",
+          "value": 0
+        },
+        "kind": "state",
+        "name": "writes",
+        "reads": [],
+        "valueKind": "scalar",
+        "writable": true,
+        "writes": [
+          {
+            "assignmentOperator": "=",
+            "graphNodeId": "state:writes",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 868,
+              "filename": "src/fixtures/s3-event-form.tsrx",
+              "start": 862
+            },
+            "value": {
+              "end": 872,
+              "raw": "1",
+              "start": 871,
+              "type": "Literal",
+              "value": 1
+            },
+            "via": "direct"
+          },
+          {
+            "assignmentOperator": "=",
+            "graphNodeId": "state:writes",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 884,
+              "filename": "src/fixtures/s3-event-form.tsrx",
+              "start": 878
+            },
+            "value": {
+              "end": 888,
+              "raw": "2",
+              "start": 887,
+              "type": "Literal",
+              "value": 2
+            },
+            "via": "direct"
+          }
+        ]
+      }
+    ],
+    "events": [
+      {
+        "eventName": "click",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "alternate": null,
+                    "consequent": {
+                      "body": [
+                        {
+                          "end": 326,
+                          "expression": {
+                            "arguments": [
+                              {
+                                "end": 297,
+                                "raw": "'bubble'",
+                                "start": 289,
+                                "type": "Literal",
+                                "value": "bubble"
+                              },
+                              {
+                                "end": 317,
+                                "properties": [
+                                  {
+                                    "computed": false,
+                                    "end": 315,
+                                    "key": {
+                                      "end": 307,
+                                      "name": "source",
+                                      "start": 301,
+                                      "type": "Identifier"
+                                    },
+                                    "kind": "init",
+                                    "method": false,
+                                    "shorthand": false,
+                                    "start": 301,
+                                    "type": "Property",
+                                    "value": {
+                                      "end": 315,
+                                      "raw": "'form'",
+                                      "start": 309,
+                                      "type": "Literal",
+                                      "value": "form"
+                                    }
+                                  }
+                                ],
+                                "start": 299,
+                                "type": "ObjectExpression"
+                              },
+                              {
+                                "end": 324,
+                                "name": "event",
+                                "start": 319,
+                                "type": "Identifier"
+                              }
+                            ],
+                            "callee": {
+                              "end": 288,
+                              "name": "onTrace",
+                              "start": 281,
+                              "type": "Identifier"
+                            },
+                            "end": 325,
+                            "optional": false,
+                            "start": 281,
+                            "type": "CallExpression"
+                          },
+                          "start": 281,
+                          "type": "ExpressionStatement"
+                        }
+                      ],
+                      "end": 331,
+                      "start": 275,
+                      "type": "BlockStatement"
+                    },
+                    "end": 331,
+                    "start": 229,
+                    "test": {
+                      "end": 273,
+                      "left": {
+                        "computed": false,
+                        "end": 260,
+                        "object": {
+                          "computed": false,
+                          "end": 253,
+                          "object": {
+                            "computed": false,
+                            "end": 245,
+                            "object": {
+                              "end": 238,
+                              "name": "event",
+                              "start": 233,
+                              "type": "Identifier"
+                            },
+                            "optional": false,
+                            "property": {
+                              "end": 245,
+                              "name": "target",
+                              "start": 239,
+                              "type": "Identifier"
+                            },
+                            "start": 233,
+                            "type": "MemberExpression"
+                          },
+                          "optional": false,
+                          "property": {
+                            "end": 253,
+                            "name": "dataset",
+                            "start": 246,
+                            "type": "Identifier"
+                          },
+                          "start": 233,
+                          "type": "MemberExpression"
+                        },
+                        "optional": false,
+                        "property": {
+                          "end": 260,
+                          "name": "action",
+                          "start": 254,
+                          "type": "Identifier"
+                        },
+                        "start": 233,
+                        "type": "MemberExpression"
+                      },
+                      "operator": "===",
+                      "right": {
+                        "end": 273,
+                        "raw": "'submit'",
+                        "start": 265,
+                        "type": "Literal",
+                        "value": "submit"
+                      },
+                      "start": 233,
+                      "type": "BinaryExpression"
+                    },
+                    "type": "IfStatement"
+                  }
+                ],
+                "end": 335,
+                "start": 224,
+                "type": "BlockStatement"
+              },
+              "end": 335,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 219,
+                  "name": "event",
+                  "start": 214,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 213,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              }
+            ],
+            "writes": []
+          }
+        ],
+        "hostNodeId": "h0",
+        "id": "event:0"
+      },
+      {
+        "eventName": "input",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "end": 449,
+                    "expression": {
+                      "end": 448,
+                      "left": {
+                        "end": 420,
+                        "name": "text",
+                        "start": 416,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "computed": false,
+                        "end": 448,
+                        "object": {
+                          "computed": false,
+                          "end": 442,
+                          "object": {
+                            "end": 428,
+                            "name": "event",
+                            "start": 423,
+                            "type": "Identifier"
+                          },
+                          "optional": false,
+                          "property": {
+                            "end": 442,
+                            "name": "currentTarget",
+                            "start": 429,
+                            "type": "Identifier"
+                          },
+                          "start": 423,
+                          "type": "MemberExpression"
+                        },
+                        "optional": false,
+                        "property": {
+                          "end": 448,
+                          "name": "value",
+                          "start": 443,
+                          "type": "Identifier"
+                        },
+                        "start": 423,
+                        "type": "MemberExpression"
+                      },
+                      "start": 416,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 416,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 515,
+                    "expression": {
+                      "arguments": [
+                        {
+                          "end": 468,
+                          "raw": "'text'",
+                          "start": 462,
+                          "type": "Literal",
+                          "value": "text"
+                        },
+                        {
+                          "end": 506,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 504,
+                              "key": {
+                                "end": 477,
+                                "name": "value",
+                                "start": 472,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 472,
+                              "type": "Property",
+                              "value": {
+                                "computed": false,
+                                "end": 504,
+                                "object": {
+                                  "computed": false,
+                                  "end": 498,
+                                  "object": {
+                                    "end": 484,
+                                    "name": "event",
+                                    "start": 479,
+                                    "type": "Identifier"
+                                  },
+                                  "optional": false,
+                                  "property": {
+                                    "end": 498,
+                                    "name": "currentTarget",
+                                    "start": 485,
+                                    "type": "Identifier"
+                                  },
+                                  "start": 479,
+                                  "type": "MemberExpression"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 504,
+                                  "name": "value",
+                                  "start": 499,
+                                  "type": "Identifier"
+                                },
+                                "start": 479,
+                                "type": "MemberExpression"
+                              }
+                            }
+                          ],
+                          "start": 470,
+                          "type": "ObjectExpression"
+                        },
+                        {
+                          "end": 513,
+                          "name": "event",
+                          "start": 508,
+                          "type": "Identifier"
+                        }
+                      ],
+                      "callee": {
+                        "end": 461,
+                        "name": "onTrace",
+                        "start": 454,
+                        "type": "Identifier"
+                      },
+                      "end": 514,
+                      "optional": false,
+                      "start": 454,
+                      "type": "CallExpression"
+                    },
+                    "start": 454,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 520,
+                "start": 410,
+                "type": "BlockStatement"
+              },
+              "end": 520,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 405,
+                  "name": "event",
+                  "start": 400,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 399,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              }
+            ],
+            "writes": [
+              {
+                "assignmentOperator": "=",
+                "graphNodeId": "state:text",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 420,
+                  "filename": "src/fixtures/s3-event-form.tsrx",
+                  "start": 416
+                },
+                "value": {
+                  "computed": false,
+                  "end": 448,
+                  "object": {
+                    "computed": false,
+                    "end": 442,
+                    "object": {
+                      "end": 428,
+                      "name": "event",
+                      "start": 423,
+                      "type": "Identifier"
+                    },
+                    "optional": false,
+                    "property": {
+                      "end": 442,
+                      "name": "currentTarget",
+                      "start": 429,
+                      "type": "Identifier"
+                    },
+                    "start": 423,
+                    "type": "MemberExpression"
+                  },
+                  "optional": false,
+                  "property": {
+                    "end": 448,
+                    "name": "value",
+                    "start": 443,
+                    "type": "Identifier"
+                  },
+                  "start": 423,
+                  "type": "MemberExpression"
+                },
+                "via": "direct"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h1",
+        "id": "event:1"
+      },
+      {
+        "eventName": "change",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "end": 669,
+                    "expression": {
+                      "end": 668,
+                      "left": {
+                        "end": 638,
+                        "name": "checked",
+                        "start": 631,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "computed": false,
+                        "end": 668,
+                        "object": {
+                          "computed": false,
+                          "end": 660,
+                          "object": {
+                            "end": 646,
+                            "name": "event",
+                            "start": 641,
+                            "type": "Identifier"
+                          },
+                          "optional": false,
+                          "property": {
+                            "end": 660,
+                            "name": "currentTarget",
+                            "start": 647,
+                            "type": "Identifier"
+                          },
+                          "start": 641,
+                          "type": "MemberExpression"
+                        },
+                        "optional": false,
+                        "property": {
+                          "end": 668,
+                          "name": "checked",
+                          "start": 661,
+                          "type": "Identifier"
+                        },
+                        "start": 641,
+                        "type": "MemberExpression"
+                      },
+                      "start": 631,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 631,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 742,
+                    "expression": {
+                      "arguments": [
+                        {
+                          "end": 691,
+                          "raw": "'checked'",
+                          "start": 682,
+                          "type": "Literal",
+                          "value": "checked"
+                        },
+                        {
+                          "end": 733,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 731,
+                              "key": {
+                                "end": 702,
+                                "name": "checked",
+                                "start": 695,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 695,
+                              "type": "Property",
+                              "value": {
+                                "computed": false,
+                                "end": 731,
+                                "object": {
+                                  "computed": false,
+                                  "end": 723,
+                                  "object": {
+                                    "end": 709,
+                                    "name": "event",
+                                    "start": 704,
+                                    "type": "Identifier"
+                                  },
+                                  "optional": false,
+                                  "property": {
+                                    "end": 723,
+                                    "name": "currentTarget",
+                                    "start": 710,
+                                    "type": "Identifier"
+                                  },
+                                  "start": 704,
+                                  "type": "MemberExpression"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 731,
+                                  "name": "checked",
+                                  "start": 724,
+                                  "type": "Identifier"
+                                },
+                                "start": 704,
+                                "type": "MemberExpression"
+                              }
+                            }
+                          ],
+                          "start": 693,
+                          "type": "ObjectExpression"
+                        },
+                        {
+                          "end": 740,
+                          "name": "event",
+                          "start": 735,
+                          "type": "Identifier"
+                        }
+                      ],
+                      "callee": {
+                        "end": 681,
+                        "name": "onTrace",
+                        "start": 674,
+                        "type": "Identifier"
+                      },
+                      "end": 741,
+                      "optional": false,
+                      "start": 674,
+                      "type": "CallExpression"
+                    },
+                    "start": 674,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 747,
+                "start": 625,
+                "type": "BlockStatement"
+              },
+              "end": 747,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 620,
+                  "name": "event",
+                  "start": 615,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 614,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              }
+            ],
+            "writes": [
+              {
+                "assignmentOperator": "=",
+                "graphNodeId": "state:checked",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 638,
+                  "filename": "src/fixtures/s3-event-form.tsrx",
+                  "start": 631
+                },
+                "value": {
+                  "computed": false,
+                  "end": 668,
+                  "object": {
+                    "computed": false,
+                    "end": 660,
+                    "object": {
+                      "end": 646,
+                      "name": "event",
+                      "start": 641,
+                      "type": "Identifier"
+                    },
+                    "optional": false,
+                    "property": {
+                      "end": 660,
+                      "name": "currentTarget",
+                      "start": 647,
+                      "type": "Identifier"
+                    },
+                    "start": 641,
+                    "type": "MemberExpression"
+                  },
+                  "optional": false,
+                  "property": {
+                    "end": 668,
+                    "name": "checked",
+                    "start": 661,
+                    "type": "Identifier"
+                  },
+                  "start": 641,
+                  "type": "MemberExpression"
+                },
+                "via": "direct"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h2",
+        "id": "event:2"
+      },
+      {
+        "eventName": "click",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "end": 857,
+                    "expression": {
+                      "arguments": [],
+                      "callee": {
+                        "computed": false,
+                        "end": 854,
+                        "object": {
+                          "end": 839,
+                          "name": "event",
+                          "start": 834,
+                          "type": "Identifier"
+                        },
+                        "optional": false,
+                        "property": {
+                          "end": 854,
+                          "name": "preventDefault",
+                          "start": 840,
+                          "type": "Identifier"
+                        },
+                        "start": 834,
+                        "type": "MemberExpression"
+                      },
+                      "end": 856,
+                      "optional": false,
+                      "start": 834,
+                      "type": "CallExpression"
+                    },
+                    "start": 834,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 873,
+                    "expression": {
+                      "end": 872,
+                      "left": {
+                        "end": 868,
+                        "name": "writes",
+                        "start": 862,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "end": 872,
+                        "raw": "1",
+                        "start": 871,
+                        "type": "Literal",
+                        "value": 1
+                      },
+                      "start": 862,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 862,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 889,
+                    "expression": {
+                      "end": 888,
+                      "left": {
+                        "end": 884,
+                        "name": "writes",
+                        "start": 878,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "end": 888,
+                        "raw": "2",
+                        "start": 887,
+                        "type": "Literal",
+                        "value": 2
+                      },
+                      "start": 878,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 878,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 949,
+                    "expression": {
+                      "arguments": [
+                        {
+                          "end": 910,
+                          "raw": "'submit'",
+                          "start": 902,
+                          "type": "Literal",
+                          "value": "submit"
+                        },
+                        {
+                          "end": 940,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 918,
+                              "key": {
+                                "end": 918,
+                                "name": "text",
+                                "start": 914,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": true,
+                              "start": 914,
+                              "type": "Property",
+                              "value": {
+                                "end": 918,
+                                "name": "text",
+                                "start": 914,
+                                "type": "Identifier"
+                              }
+                            },
+                            {
+                              "computed": false,
+                              "end": 927,
+                              "key": {
+                                "end": 927,
+                                "name": "checked",
+                                "start": 920,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": true,
+                              "start": 920,
+                              "type": "Property",
+                              "value": {
+                                "end": 927,
+                                "name": "checked",
+                                "start": 920,
+                                "type": "Identifier"
+                              }
+                            },
+                            {
+                              "computed": false,
+                              "end": 938,
+                              "key": {
+                                "end": 935,
+                                "name": "writes",
+                                "start": 929,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 929,
+                              "type": "Property",
+                              "value": {
+                                "end": 938,
+                                "raw": "2",
+                                "start": 937,
+                                "type": "Literal",
+                                "value": 2
+                              }
+                            }
+                          ],
+                          "start": 912,
+                          "type": "ObjectExpression"
+                        },
+                        {
+                          "end": 947,
+                          "name": "event",
+                          "start": 942,
+                          "type": "Identifier"
+                        }
+                      ],
+                      "callee": {
+                        "end": 901,
+                        "name": "onTrace",
+                        "start": 894,
+                        "type": "Identifier"
+                      },
+                      "end": 948,
+                      "optional": false,
+                      "start": 894,
+                      "type": "CallExpression"
+                    },
+                    "start": 894,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 954,
+                "start": 828,
+                "type": "BlockStatement"
+              },
+              "end": 954,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 823,
+                  "name": "event",
+                  "start": 818,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 817,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              },
+              {
+                "graphNodeId": "state:checked",
+                "path": [],
+                "via": "direct"
+              },
+              {
+                "graphNodeId": "state:text",
+                "path": [],
+                "via": "direct"
+              }
+            ],
+            "writes": [
+              {
+                "assignmentOperator": "=",
+                "graphNodeId": "state:writes",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 868,
+                  "filename": "src/fixtures/s3-event-form.tsrx",
+                  "start": 862
+                },
+                "value": {
+                  "end": 872,
+                  "raw": "1",
+                  "start": 871,
+                  "type": "Literal",
+                  "value": 1
+                },
+                "via": "direct"
+              },
+              {
+                "assignmentOperator": "=",
+                "graphNodeId": "state:writes",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 884,
+                  "filename": "src/fixtures/s3-event-form.tsrx",
+                  "start": 878
+                },
+                "value": {
+                  "end": 888,
+                  "raw": "2",
+                  "start": 887,
+                  "type": "Literal",
+                  "value": 2
+                },
+                "via": "direct"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h3",
+        "id": "event:3",
+        "syncPolicy": {
+          "actions": [
+            "preventDefault"
+          ],
+          "when": {
+            "type": "constant-truthy",
+            "value": true
+          }
+        }
+      }
+    ],
+    "stateReads": [
+      {
+        "graphNodeId": "prop:props",
+        "path": [
+          "initial"
+        ]
+      },
+      {
+        "graphNodeId": "prop:props",
+        "path": [
+          "onTrace"
+        ]
+      },
+      {
+        "graphNodeId": "state:checked",
+        "path": []
+      },
+      {
+        "graphNodeId": "state:text",
+        "path": []
+      },
+      {
+        "graphNodeId": "state:writes",
+        "path": []
+      }
+    ],
+    "stateWrites": [
+      {
+        "assignmentOperator": "=",
+        "graphNodeId": "state:checked",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 638,
+          "filename": "src/fixtures/s3-event-form.tsrx",
+          "start": 631
+        },
+        "value": {
+          "computed": false,
+          "end": 668,
+          "object": {
+            "computed": false,
+            "end": 660,
+            "object": {
+              "end": 646,
+              "name": "event",
+              "start": 641,
+              "type": "Identifier"
+            },
+            "optional": false,
+            "property": {
+              "end": 660,
+              "name": "currentTarget",
+              "start": 647,
+              "type": "Identifier"
+            },
+            "start": 641,
+            "type": "MemberExpression"
+          },
+          "optional": false,
+          "property": {
+            "end": 668,
+            "name": "checked",
+            "start": 661,
+            "type": "Identifier"
+          },
+          "start": 641,
+          "type": "MemberExpression"
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "graphNodeId": "state:text",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 420,
+          "filename": "src/fixtures/s3-event-form.tsrx",
+          "start": 416
+        },
+        "value": {
+          "computed": false,
+          "end": 448,
+          "object": {
+            "computed": false,
+            "end": 442,
+            "object": {
+              "end": 428,
+              "name": "event",
+              "start": 423,
+              "type": "Identifier"
+            },
+            "optional": false,
+            "property": {
+              "end": 442,
+              "name": "currentTarget",
+              "start": 429,
+              "type": "Identifier"
+            },
+            "start": 423,
+            "type": "MemberExpression"
+          },
+          "optional": false,
+          "property": {
+            "end": 448,
+            "name": "value",
+            "start": 443,
+            "type": "Identifier"
+          },
+          "start": 423,
+          "type": "MemberExpression"
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "graphNodeId": "state:writes",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 868,
+          "filename": "src/fixtures/s3-event-form.tsrx",
+          "start": 862
+        },
+        "value": {
+          "end": 872,
+          "raw": "1",
+          "start": 871,
+          "type": "Literal",
+          "value": 1
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "graphNodeId": "state:writes",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 884,
+          "filename": "src/fixtures/s3-event-form.tsrx",
+          "start": 878
+        },
+        "value": {
+          "end": 888,
+          "raw": "2",
+          "start": 887,
+          "type": "Literal",
+          "value": 2
+        },
+        "via": "direct"
+      }
+    ]
+  },
+  "version": "frameless-enriched-ir/1"
+}
