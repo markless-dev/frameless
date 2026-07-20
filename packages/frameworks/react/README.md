@@ -6,7 +6,8 @@ React 19 target package for Frameless. It owns four framework-specific surfaces:
   module built with Babel AST. It does not parse author source.
 - `checkSources` / `checkGeneratedFiles` run the reusable conventionality gate. Every policy
   and violation carries a `dossierRef` into the normative dossier.
-- `createReactAdapter(component)` provides the asynchronous React 19 analyzer lifecycle.
+- `createReactAdapter(component)` is available from the browser-safe public
+  `@frameless/react/adapter` subpath and provides the asynchronous React 19 analyzer lifecycle.
 - the browser project owns React transforms, calibrated handwritten references, and emitted
   equivalence smoke coverage.
 
@@ -24,7 +25,7 @@ The validated primary matrix entry is React/React DOM 19.2.3 with asynchronous `
 | Visible state binding | T002 ruling 1 | Top-level `useState`; primitive literals are direct and prop-reading/non-literals use a lazy arrow. |
 | Cheap computed binding | T002 ruling 2 | A render-time `const`; no `useMemo`, `useCallback`, or `memo`. |
 | Side-effect-only once local | T002 ruling 3 | `useRef(null)` and `if (setupDone.current === null)` before later hooks/guards. |
-| Non-visible mutable binding | T002 ruling 4 | `useRef`; the S2 counter uses `const id = next.current; next.current = id + 1`. |
+| Non-visible mutable binding | T002 ruling 4 | `useRef`; the S2 counter snapshots `.current` into a collision-safe emitter-owned identifier before incrementing it. |
 | Event state writes | T002 ruling 5 | Const SSA snapshots, payload reads from the post-write snapshot, and one final setter call per state cell. |
 | Keyed repeat | T002 ruling 6 | `.map` with the IR key expression on the returned host root; immutable concat/filter/map/spread updates. |
 | Branch / empty arm | T002 ruling 7 | Conditional expressions with an explicit `null` arm; hooks precede early returns. |

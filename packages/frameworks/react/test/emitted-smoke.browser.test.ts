@@ -1,9 +1,9 @@
-import { compareRuns, runScenario, scenarios } from '@frameless/analyzer';
+import { calibrationScenarios, compareRuns, runScenario } from '@frameless/analyzer';
+import { createReactAdapter } from '@frameless/react/adapter';
 import { describe, expect, test } from 'vitest';
 import { EventForm } from '../generated/S3.jsx';
 import { KeyedTodo } from '../generated/S2.jsx';
 import { RenderOnce } from '../generated/S1.jsx';
-import { createReactAdapter } from '../src/adapter.ts';
 import { reactReferences } from './reference.tsx';
 
 const emitted = {
@@ -13,14 +13,15 @@ const emitted = {
 };
 
 describe('emitted React 19 components against calibrated handwritten references', () => {
-	for (const scenario of scenarios) {
+	for (const scenario of calibrationScenarios) {
 		test(scenario.id, async () => {
+			const componentId = scenario.id.split('/')[0]! as keyof typeof emitted;
 			const reference = await runScenario(
-				createReactAdapter(reactReferences[scenario.id]),
+				createReactAdapter(reactReferences[componentId]),
 				scenario,
 			);
 			const generated = await runScenario(
-				createReactAdapter(emitted[scenario.id as keyof typeof emitted]),
+				createReactAdapter(emitted[componentId]),
 				scenario,
 			);
 			expect(compareRuns(reference, generated)).toEqual({ equal: true, divergences: [] });

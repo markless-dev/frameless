@@ -54,7 +54,7 @@ describe('React dossier gate', () => {
 		}
 	});
 
-	test.each([
+	const mutationCases = [
 		['unused import', valid.replace('useState }', 'useMemo, useState }'), 'react-import-allowlist'],
 		['React recommended rule', valid.replace('<section>', '<section class="bad">'), 'eslint:react/no-unknown-property'],
 		['Hooks recommended rule', valid.replace("import { useState }", "import { useEffect, useState }").replace('const [value', 'useEffect(() => { console.log(items); }, []);\n  const [value'), 'eslint:react-hooks/exhaustive-deps'],
@@ -84,16 +84,28 @@ describe('React dossier gate', () => {
 		['onInput', valid.replace('<section>', '<section><input value={value} onInput={() => {}} />'), 'on-input'],
 		['let in handler', valid.replace('const nextValue = value + 1;', 'let nextValue = value + 1;'), 'const-only-handlers'],
 		['two setter calls', valid.replace('setValue(nextValue);', 'setValue(nextValue);\n    setValue(nextValue + 1);'), 'one-call-per-setter'],
+		['helper-mediated two setter calls', valid.replace('const [value, setValue] = useState(0);', 'const [value, setValue] = useState(0);\n  const updateTwice = () => { setValue(value + 1); setValue(value + 2); };').replace('const nextValue = value + 1;\n    setValue(nextValue);', 'updateTwice();'), 'one-call-per-setter'],
 		['nonliteral direct state initial', valid.replace('useState(0)', 'useState(items.length)'), 'use-state-initializer'],
+		['lazy-wrapped literal initial', valid.replace('useState(0)', 'useState(() => 0)'), 'use-state-initializer'],
 		['leaked render', valid.replace('{items.map', '{items.length && items.map'), 'eslint:react/jsx-no-leaked-render'],
 		['missing map key', valid.replace(' key={item.id}', ''), 'key-required'],
 		['wrong component shape', valid.replace('function Mutant({ items = [] })', 'const Mutant = ({ items = [] }) =>'), 'component-shape'],
 		['visible ref', valid.replace('useState }', 'useRef, useState }').replace('const [value, setValue] = useState(0);', 'const visible = useRef(0);\n  const [value, setValue] = useState(0);').replace('<section>', '<section>{visible.current}'), 'ref-visibility'],
 		['render-read setup ref', valid.replace('useState }', 'useRef, useState }').replace('const [value, setValue] = useState(0);', 'const setupDone = useRef(null);\n  if (setupDone.current === null) setupDone.current = true;\n  const leaked = setupDone.current;\n  leaked;\n  const [value, setValue] = useState(0);'), 'ref-visibility'],
 		['boolean setup guard', valid.replace('useState }', 'useRef, useState }').replace('const [value, setValue] = useState(0);', 'const setupDone = useRef(null);\n  if (!setupDone.current) setupDone.current = true;\n  const [value, setValue] = useState(0);'), 'ref-guard-shape'],
+		['null guard that never flips', valid.replace('useState }', 'useRef, useState }').replace('const [value, setValue] = useState(0);', 'const setupDone = useRef(null);\n  if (setupDone.current === null) { console.log("setup"); }\n  const [value, setValue] = useState(0);'), 'ref-guard-shape'],
+		['leaf currentTarget', valid.replace('<section>', '<section><input value={value} onChange={(event) => { const nextValue = event.currentTarget.value; setValue(nextValue); }} />'), 'leaf-event-target'],
+		['wrong-object preventDefault', valid.replace('const nextValue = value + 1;', 'const other = { preventDefault() {} };\n    other.preventDefault();\n    const nextValue = value + 1;'), 'prevent-default-event'],
 		['foreign import', `import value from 'elsewhere';\n${valid}`, 'undisclosed-import'],
-	])('rejects the %s bypass mutation', async (_name, source, policy) => {
+	] as const;
+
+	test.each(mutationCases)('rejects the %s bypass mutation', async (_name, source, policy) => {
 		expect(await policies(source)).toContain(policy);
+	});
+
+	test('has a mutation that exercises every published policy', () => {
+		const covered = new Set(mutationCases.map((entry) => entry[2]));
+		expect(REACT_GATE_POLICIES.map((policy) => policy.id).filter((id) => !covered.has(id))).toEqual([]);
 	});
 
 	test('a newly added generated file is discovered and cannot bypass the gate', async () => {
@@ -108,5 +120,15 @@ describe('React dossier gate', () => {
 		const result = await checkGeneratedFiles({ cwd: root });
 		expect(result.files).toEqual(['generated/New.jsx']);
 		expect(result.violations.map((entry) => entry.policy)).toContain('eslint:no-unused-expressions');
+	});
+
+	test('checkGeneratedFiles rejects two setter calls in a temporary generated directory', async () => {
+		const root = await realpath(await mkdtemp(resolve(tmpdir(), 'frameless-react-two-setter-')));
+		temporaryRoots.push(root);
+		await mkdir(resolve(root, 'generated'));
+		await writeFile(resolve(root, 'generated/TwoSetter.jsx'), valid.replace('setValue(nextValue);', 'setValue(nextValue);\n    setValue(nextValue + 1);'));
+		const result = await checkGeneratedFiles({ cwd: root });
+		expect(result.files).toEqual(['generated/TwoSetter.jsx']);
+		expect(result.violations.map((entry) => entry.policy)).toContain('one-call-per-setter');
 	});
 });
