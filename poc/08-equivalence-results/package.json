@@ -8,10 +8,10 @@
     "test": "pnpm test:node && vitest run"
   },
   "dependencies": {
-    "@markless/bundler": "file:../vendor/markless-bundler-0.1.1.tgz",
-    "@markless/compiler": "file:../vendor/markless-compiler-0.1.1.tgz",
-    "@markless/core": "file:../vendor/markless-core-0.1.1.tgz",
-    "@markless/web": "file:../vendor/markless-web-0.1.1.tgz",
+    "@markless/bundler": "file:../vendor-fix/markless-bundler-0.1.1.tgz",
+    "@markless/compiler": "file:../vendor-fix/markless-compiler-0.1.1.tgz",
+    "@markless/core": "file:../vendor-fix/markless-core-0.1.1.tgz",
+    "@markless/web": "file:../vendor-fix/markless-web-0.1.1.tgz",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "solid-js": "1.8.22"
@@ -28,13 +28,13 @@
   },
   "pnpm": {
     "overrides": {
-      "@markless/bundler": "file:../vendor/markless-bundler-0.1.1.tgz",
-      "@markless/compiler": "file:../vendor/markless-compiler-0.1.1.tgz",
-      "@markless/core": "file:../vendor/markless-core-0.1.1.tgz",
-      "@markless/router": "file:../vendor/markless-router-0.1.1.tgz",
-      "@markless/runtime": "file:../vendor/markless-runtime-0.1.1.tgz",
-      "@markless/serializer": "file:../vendor/markless-serializer-0.1.1.tgz",
-      "@markless/web": "file:../vendor/markless-web-0.1.1.tgz",
+      "@markless/bundler": "file:../vendor-fix/markless-bundler-0.1.1.tgz",
+      "@markless/compiler": "file:../vendor-fix/markless-compiler-0.1.1.tgz",
+      "@markless/core": "file:../vendor-fix/markless-core-0.1.1.tgz",
+      "@markless/router": "file:../vendor-fix/markless-router-0.1.1.tgz",
+      "@markless/runtime": "file:../vendor-fix/markless-runtime-0.1.1.tgz",
+      "@markless/serializer": "file:../vendor-fix/markless-serializer-0.1.1.tgz",
+      "@markless/web": "file:../vendor-fix/markless-web-0.1.1.tgz",
       "@tsrx/core": "0.1.32"
     }
   },
