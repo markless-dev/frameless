@@ -225,3 +225,21 @@ state in both frameworks — traces stay equal. Gate rules: R-SH3 extends to req
 deferred-notification + version-cached snapshots; mutant M-SHARED-TEAR (notify-per-
 write exposing intermediate state to a subscriber-driven observer) joins the
 calibration classes.
+
+---
+
+## Tooling note (owner question, 2026-07-20): why estree-to-babel instead of oxc
+
+Probed the installed toolchain: @oxc-project/types is types-only (one .d.ts, no
+runtime); oxfmt is format(source-text)->text; rolldown/vite-plus keep oxc parse/
+transform inside Rust binaries. Every oxc JS-facing entry point is SOURCE-TEXT-IN —
+transformative (the Qwik-optimizer shape). The emitters are GENERATIVE: they build
+programs in JS from IR JSON, needing (a) codegen accepting an externally-built AST
+and (b) JS-side scope/binding queries — neither exists in oxc's JS surface today;
+@babel/types+generator+traverse is the only mature constructive toolkit. Output
+bytes are still oxc-shaped via the oxfmt pass.
+
+OVERTURN TRIGGER (recorded): when oxc ships ESTree-input codegen + a JS semantic/
+scope API, migrate the emitters off Babel and DELETE estree-to-babel (the IR is
+already ESTree — the conversion layer evaporates). Re-probe at each vite-plus
+toolchain bump.
