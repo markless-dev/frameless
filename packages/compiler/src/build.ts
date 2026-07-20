@@ -33,7 +33,7 @@ import {
 	type TemplateBranchArm,
 	type TemplateHost,
 	type TemplateNode,
-} from './schema';
+} from './schema.ts';
 
 type AnyNode = { type: string; start?: number; end?: number; [key: string]: any };
 

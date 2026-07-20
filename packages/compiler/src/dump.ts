@@ -1,4 +1,4 @@
-import type { EnrichedIR, JsonValue } from './schema';
+import type { EnrichedIR, JsonValue } from './schema.ts';
 
 /**
  * Serialize an EnrichedIR with recursively sorted object keys and preserved

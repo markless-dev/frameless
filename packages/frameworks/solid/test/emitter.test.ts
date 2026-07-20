@@ -284,10 +284,13 @@ describe('Solid structural emitter', () => {
 			expect(() => validateEnrichedIr(mutated)).toThrow(/unsupported identity mutation/);
 		});
 
-		test('rejects element-less structural branch arms with a construct-named diagnostic', async () => {
+		test('sanctions empty branch arms but rejects non-empty element-less arms', async () => {
 			const ir = clone(await golden('s1-render-once.json')) as any;
 			const branch = findKind(ir.components[0].template, 'branch')!;
+			const text = clone(findKind(ir.components[0].template, 'text')!);
 			branch.arms[0].children = [];
+			expect(() => validateEnrichedIr(ir)).not.toThrow();
+			branch.arms[0].children = [text];
 			expect(() => validateEnrichedIr(ir)).toThrow(
 				/TemplateBranchArm then .* is element-less/,
 			);

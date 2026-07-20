@@ -5,7 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"measure:size": "node --experimental-strip-types scripts/measure-size.ts",
-		"regenerate": "node --experimental-strip-types scripts/regenerate.ts",
+		"regenerate": "node --experimental-transform-types scripts/regenerate.ts",
 		"test": "vitest run --config vitest.node.config.ts",
 		"test:browser": "vitest run --config vitest.config.ts --project react-browser"
 	},

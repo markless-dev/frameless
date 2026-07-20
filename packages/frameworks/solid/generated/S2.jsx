@@ -25,7 +25,7 @@ export function KeyedTodo(props) {
         id: item.id,
         title: item.title
       }, event);
-    }}>add</button><Show when={todos.length === 0} fallback={<></>}><p data-empty="true">empty</p></Show><ul><For each={todos}>{todo => <li data-oracle-row-key={todo.id}><input data-edit={todo.id} value={todo.title} attr:value={todo.title} onInput={event => {
+    }}>add</button><Show when={todos.length === 0}><p data-empty="true">empty</p></Show><ul><For each={todos}>{todo => <li data-oracle-row-key={todo.id}><input data-edit={todo.id} value={todo.title} attr:value={todo.title} onInput={event => {
             const title = event.currentTarget.value;
             setTodos(produce(storeDraft => {
               const alias = storeDraft.find(item => item.id === todo.id);

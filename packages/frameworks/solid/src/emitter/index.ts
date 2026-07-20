@@ -576,7 +576,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 			for (const [armIndex, arm] of node.arms.entries()) {
 				exactKeys(arm, ['kind', 'children'], 'TemplateBranchArm');
 				// PM adjudication (2026-07-20): a COMPLETELY empty arm is a sanctioned
-				// authored shape (S2's `@else {}`) lowering to <Show when> without a
+				// authored `@else {}` shape lowering to <Show when> without a
 				// fallback — a real Solid idiom, not a silent fragment. Only arms with
 				// content that carries no element fail closed (the anchor-visibility
 				// premise from T003 applies to non-empty arms).
@@ -857,7 +857,7 @@ function showNode(
 	const name = t.jsxIdentifier(api(context, 'Show').name);
 	const elseChildren = node.arms[1]!.children;
 	const children = expressionFromNodes(node.arms[0]!.children, context);
-	// Empty else arm (sanctioned shape, e.g. S2's `@else {}`): Show without a
+	// An authored empty `@else {}` is sanctioned: Show without a
 	// fallback attribute — the Solid idiom, not an empty-fragment fallback.
 	const attributes = [jsxAttribute('when', rewriteExpression(node.expression, context))];
 	if (elseChildren.length > 0) {

@@ -225,9 +225,11 @@ function customPolicies(source: string, file: string): GateViolation[] {
 			path.isFunctionExpression() ||
 			path.isFunctionDeclaration()
 		) {
-			const body = path.get('body');
-			if (!body.isBlockStatement()) return initialKind(body as NodePath, seen);
-			const returns = body.get('body').filter((statement) => statement.isReturnStatement());
+			const body = path.get('body') as NodePath;
+			if (!body.isBlockStatement()) return initialKind(body, seen);
+			const returns = (body.get('body') as NodePath[]).filter((statement) =>
+				statement.isReturnStatement(),
+			);
 			if (returns.length !== 1) return 'unknown';
 			return initialKind(returns[0]!.get('argument') as NodePath, seen);
 		}
