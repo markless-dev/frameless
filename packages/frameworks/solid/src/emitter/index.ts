@@ -29,6 +29,7 @@ type ApiName =
 	| 'Show';
 type EmitContext = {
 	readonly api: ReadonlyMap<ApiName, string>;
+	readonly bindingsById: ReadonlyMap<string, EnrichedGraphBinding>;
 	readonly computedByName: ReadonlyMap<string, EnrichedGraphBinding>;
 	readonly events: ReadonlyMap<string, EnrichedEventRecord>;
 	readonly imports: Set<ApiName>;
@@ -87,6 +88,136 @@ function itemMemberPath(node: SerializableAstNode, item: string): string[] | nul
 		current = current.object;
 	}
 	return current?.type === 'Identifier' && current.name === item && path.length ? path : null;
+}
+
+function containsElement(node: TemplateNode): boolean {
+	if (node.kind === 'host') return true;
+	if (node.kind === 'fragment') return node.children.some(containsElement);
+	if (node.kind === 'branch')
+		return node.arms.some((arm) => arm.children.some(containsElement));
+	if (node.kind === 'keyed-repeat') return node.row.some(containsElement);
+	return false;
+}
+
+function babelMemberPath(node: t.Node): { root: t.Identifier; path: string[] } | null {
+	const path: string[] = [];
+	let current = node;
+	while (t.isMemberExpression(current) && !current.computed && t.isIdentifier(current.property)) {
+		path.unshift(current.property.name);
+		current = current.object;
+	}
+	return t.isIdentifier(current) ? { root: current, path } : null;
+}
+
+function reconcileHandlerSemantics(
+	fn: t.ArrowFunctionExpression,
+	handler: EventHandlerRecord,
+	eventId: string,
+	bindings: readonly EnrichedGraphBinding[],
+	props: EnrichedComponent['props'],
+): void {
+	const bindingsByName = new Map(bindings.map((binding) => [binding.name, binding]));
+	const propsByLocal = new Map(props.entries.map((entry) => [entry.localName, entry]));
+	const recordedReads = new Set(
+		handler.reads.map((read) => `${read.graphNodeId}\u0000${read.path.join('\u0000')}`),
+	);
+	const wrapper = t.file(t.program([t.expressionStatement(fn)]));
+	type Mutation = {
+		readonly node: t.AssignmentExpression | t.UpdateExpression;
+		readonly root: string;
+		readonly path: readonly string[];
+		readonly locallyBound: boolean;
+	};
+	const mutations: Mutation[] = [];
+	traverse(wrapper, {
+		AssignmentExpression(path) {
+			const target = babelMemberPath(path.node.left);
+			if (target)
+				mutations.push({
+					node: path.node,
+					root: target.root.name,
+					path: target.path,
+					locallyBound: Boolean(path.scope.getBinding(target.root.name)),
+				});
+		},
+		UpdateExpression(path) {
+			const target = babelMemberPath(path.node.argument);
+			if (target)
+				mutations.push({
+					node: path.node,
+					root: target.root.name,
+					path: target.path,
+					locallyBound: Boolean(path.scope.getBinding(target.root.name)),
+				});
+		},
+		Identifier(path) {
+			if (!path.isReferencedIdentifier() || path.scope.getBinding(path.node.name)) return;
+			let current = path as any;
+			while (current.parentPath?.isMemberExpression() && current.key === 'object')
+				current = current.parentPath;
+			if (
+				current !== path &&
+				current.parentPath?.isAssignmentExpression() &&
+				current.key === 'left'
+			)
+				return;
+			if (current === path && path.parentPath.isAssignmentExpression() && path.key === 'left')
+				return;
+			const chain = babelMemberPath(current.node);
+			if (!chain) return;
+			let suffix = chain.path;
+			if (current.parentPath?.isCallExpression() && current.key === 'callee' && suffix.length)
+				suffix = suffix.slice(0, -1);
+			const prop = propsByLocal.get(path.node.name);
+			const binding = bindingsByName.get(path.node.name);
+			const graphNodeId = prop?.graphNodeId ?? binding?.id;
+			if (!graphNodeId) return;
+			const semanticPath = [...(prop?.path ?? []), ...suffix];
+			const key = `${graphNodeId}\u0000${semanticPath.join('\u0000')}`;
+			if (!recordedReads.has(key))
+				throw new Error(
+					`EventHandlerRecord ${eventId} has handler AST read absent from records: ${graphNodeId}/${semanticPath.join('/')}`,
+				);
+		},
+	});
+
+	const matched = new Set<Mutation>();
+	const aliasRoots = new Set<string>();
+	for (const write of handler.writes) {
+		const binding = bindings.find((entry) => entry.id === write.graphNodeId)!;
+		const expectedPath = write.via === 'handler-local-alias' ? write.path.slice(1) : write.path;
+		const mutation = mutations.find((candidate) => {
+			if (matched.has(candidate) || candidate.path.join('/') !== expectedPath.join('/'))
+				return false;
+			if (write.via === 'direct' && (candidate.locallyBound || candidate.root !== binding.name))
+				return false;
+			if (write.via === 'handler-local-alias' && !candidate.locallyBound) return false;
+			if (write.operation === 'assign')
+				return (
+					t.isAssignmentExpression(candidate.node, { operator: write.assignmentOperator }) &&
+					Boolean(write.value) &&
+					t.isNodesEquivalent(candidate.node.right, expression(write.value))
+				);
+			return (
+				t.isUpdateExpression(candidate.node, { operator: write.updateOperator }) &&
+				candidate.node.prefix === write.prefix
+			);
+		});
+		if (!mutation)
+			throw new Error(
+				`EventHandlerRecord ${eventId} has write record absent from handler AST: ${write.graphNodeId}/${write.path.join('/')}`,
+			);
+		matched.add(mutation);
+		if (write.via === 'handler-local-alias') aliasRoots.add(mutation.root);
+	}
+	for (const mutation of mutations) {
+		if (matched.has(mutation)) continue;
+		const binding = bindingsByName.get(mutation.root);
+		if ((!mutation.locallyBound && binding) || aliasRoots.has(mutation.root))
+			throw new Error(
+				`EventHandlerRecord ${eventId} has handler AST write absent from records: ${binding?.id ?? mutation.root}/${mutation.path.join('/')}`,
+			);
+	}
 }
 
 /** Fail closed before any target AST is constructed. */
@@ -444,6 +575,10 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 				throw new Error(`TemplateBranch ${node.id} requires ordered then/else arms`);
 			for (const [armIndex, arm] of node.arms.entries()) {
 				exactKeys(arm, ['kind', 'children'], 'TemplateBranchArm');
+				if (!arm.children.some(containsElement))
+					throw new Error(
+						`TemplateBranchArm ${arm.kind} in ${node.id} is element-less`,
+					);
 				arm.children.forEach((child, index) =>
 					validateTemplate(child, `${location}.arms[${armIndex}].children[${index}]`),
 				);
@@ -504,6 +639,17 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		if (!event.handlers.length)
 			throw new Error(`EnrichedEventRecord ${event.id} has malformed handlers`);
 		for (const handler of event.handlers) {
+			for (const write of handler.writes.filter(
+				(entry) => entry.via === 'handler-local-alias',
+			)) {
+				const key = keyByState.get(write.graphNodeId);
+				if (key && write.path.slice(1).join('/') === key)
+					throw new Error(
+						`TemplateKeyedRepeat has unsupported identity mutation: ${write.graphNodeId}/${key}`,
+					);
+			}
+		}
+		for (const handler of event.handlers) {
 			exactKeys(handler, ['expression', 'reads', 'writes'], 'EventHandlerRecord');
 			validateSite(
 				{ expression: handler.expression, reads: handler.reads },
@@ -515,6 +661,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 			handler.writes.forEach((write) =>
 				validateWrite(write as RecordLike, `EventHandlerRecord ${event.id}`),
 			);
+			reconcileHandlerSemantics(fn, handler, event.id, ir.records.bindings, component.props);
 		}
 		if (event.syncPolicy) {
 			const policy = event.syncPolicy as RecordLike;
@@ -526,17 +673,6 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 				policy.actions.some((action: string) => action !== 'preventDefault')
 			)
 				throw new Error(`SyncPolicy ${event.id} has unsupported sync shape`);
-		}
-		for (const handler of event.handlers) {
-			for (const write of handler.writes.filter(
-				(entry) => entry.via === 'handler-local-alias',
-			)) {
-				const key = keyByState.get(write.graphNodeId);
-				if (key && write.path.slice(1).join('/') === key)
-					throw new Error(
-						`TemplateKeyedRepeat has unsupported identity mutation: ${write.graphNodeId}/${key}`,
-					);
-			}
 		}
 	}
 	for (const event of ir.records.events)
@@ -825,51 +961,58 @@ function lowerStoreMemberWrites(
 		const state = context.statesById.get(write.graphNodeId);
 		if (!state || state.storage !== 'store')
 			throw new Error(`Member write ${write.graphNodeId} does not target a store cell`);
-		const leaf = write.path.at(-1)!;
-		let aliasIndex = -1;
-		let aliasName = '';
-		let receiverName = '';
-		let predicate: t.ArrowFunctionExpression | null = null;
-		for (let index = 0; index < statements.length; index++) {
-			const statement = statements[index];
-			if (!t.isVariableDeclaration(statement)) continue;
-			const declaration = statement.declarations.find(
-				(entry) =>
-					t.isIdentifier(entry.id) &&
-					t.isCallExpression(entry.init) &&
-					t.isMemberExpression(entry.init.callee) &&
-					t.isIdentifier(entry.init.callee.object) &&
-					t.isIdentifier(entry.init.callee.property, { name: 'find' }) &&
-					t.isArrowFunctionExpression(entry.init.arguments[0]),
+		const expectedPath = write.path.slice(1);
+		const assignmentIndex = statements.findIndex((statement) => {
+			if (
+				!t.isExpressionStatement(statement) ||
+				!t.isAssignmentExpression(statement.expression)
+			)
+					return false;
+			const target = babelMemberPath(statement.expression.left);
+			return Boolean(
+				target &&
+					target.path.join('/') === expectedPath.join('/') &&
+					statement.expression.operator === write.assignmentOperator &&
+					write.value &&
+					t.isNodesEquivalent(statement.expression.right, expression(write.value)),
 			);
-			if (
-				!declaration ||
-				!t.isIdentifier(declaration.id) ||
-				!t.isCallExpression(declaration.init) ||
-				!t.isMemberExpression(declaration.init.callee) ||
-				!t.isIdentifier(declaration.init.callee.object) ||
-				!t.isArrowFunctionExpression(declaration.init.arguments[0])
-			)
-				continue;
-			const assignment = statements[index + 1];
-			if (
-				!t.isExpressionStatement(assignment) ||
-				!t.isAssignmentExpression(assignment.expression) ||
-				!t.isMemberExpression(assignment.expression.left) ||
-				!t.isIdentifier(assignment.expression.left.object, { name: declaration.id.name }) ||
-				!t.isIdentifier(assignment.expression.left.property, { name: leaf })
-			)
-				continue;
-			aliasIndex = index;
-			aliasName = declaration.id.name;
-			receiverName = declaration.init.callee.object.name;
-			predicate = declaration.init.arguments[0];
-			break;
-		}
-		if (aliasIndex < 0 || !predicate)
+		});
+		const assignment = statements[assignmentIndex];
+		const assignmentTarget =
+			assignment &&
+			t.isExpressionStatement(assignment) &&
+			t.isAssignmentExpression(assignment.expression)
+				? babelMemberPath(assignment.expression.left)
+				: null;
+		const aliasName = assignmentTarget?.root.name ?? '';
+		const aliasIndex = statements.findIndex(
+			(statement) =>
+				t.isVariableDeclaration(statement) &&
+				statement.declarations.some((entry) => t.isIdentifier(entry.id, { name: aliasName })),
+		);
+		const aliasStatement = statements[aliasIndex];
+		const declaration =
+			aliasStatement && t.isVariableDeclaration(aliasStatement)
+				? aliasStatement.declarations.find((entry) => t.isIdentifier(entry.id, { name: aliasName }))
+				: null;
+		if (
+			assignmentIndex < 0 ||
+			aliasIndex < 0 ||
+			!assignment ||
+			!t.isExpressionStatement(assignment) ||
+			!t.isAssignmentExpression(assignment.expression) ||
+			!declaration ||
+			!t.isCallExpression(declaration.init) ||
+			!t.isMemberExpression(declaration.init.callee) ||
+			!t.isIdentifier(declaration.init.callee.object) ||
+			!t.isIdentifier(declaration.init.callee.property, { name: 'find' }) ||
+			!t.isArrowFunctionExpression(declaration.init.arguments[0])
+		)
 			throw new Error(
 				`Could not structurally lower store member write ${write.graphNodeId}/${write.path.join('/')}`,
 			);
+		const receiverName = declaration.init.callee.object.name;
+		const predicate = declaration.init.arguments[0];
 		let copyIndex = -1;
 		if (receiverName !== state.name) {
 			copyIndex = statements.findIndex(
@@ -889,13 +1032,25 @@ function lowerStoreMemberWrites(
 					`Store member write ${write.graphNodeId} has an unsupported copy receiver`,
 				);
 		}
-		const assignment = statements[aliasIndex + 1] as t.ExpressionStatement;
-		const rootIndex = statements.findIndex(
-			(statement, index) =>
-				index > aliasIndex &&
-				t.isExpressionStatement(statement) &&
-				t.isAssignmentExpression(statement.expression) &&
-				t.isIdentifier(statement.expression.left, { name: state.name }),
+		const publication = handler.writes.find(
+			(candidate) =>
+				candidate !== write &&
+				candidate.graphNodeId === write.graphNodeId &&
+				candidate.via === 'direct' &&
+				candidate.operation === 'assign' &&
+				candidate.path.length === 0 &&
+				candidate.value,
+		);
+		const rootIndex = statements.findIndex((statement) =>
+			Boolean(
+				publication &&
+					t.isExpressionStatement(statement) &&
+					t.isAssignmentExpression(statement.expression, {
+						operator: publication.assignmentOperator,
+					}) &&
+					t.isIdentifier(statement.expression.left, { name: state.name }) &&
+					t.isNodesEquivalent(statement.expression.right, expression(publication.value)),
+			),
 		);
 		if (rootIndex < 0)
 			throw new Error(
@@ -923,7 +1078,7 @@ function lowerStoreMemberWrites(
 		const insertion = copyIndex >= 0 ? copyIndex : aliasIndex;
 		replacements.set(insertion, call);
 		remove.add(aliasIndex);
-		remove.add(aliasIndex + 1);
+		remove.add(assignmentIndex);
 		remove.add(rootIndex);
 		if (copyIndex >= 0) remove.add(copyIndex);
 	}
@@ -1024,11 +1179,10 @@ function identifierIsUsed(ir: EnrichedIR, name: string): boolean {
 }
 
 function needsUntrack(reads: readonly { graphNodeId: string }[], context: EmitContext): boolean {
-	return reads.some(
-		(read) =>
-			read.graphNodeId === context.statesById.get(read.graphNodeId)?.id ||
-			read.graphNodeId.startsWith('prop:'),
-	);
+	return reads.some((read) => {
+		const kind = context.bindingsById.get(read.graphNodeId)?.kind;
+		return kind === 'state' || kind === 'prop';
+	});
 }
 
 function onceValue(
@@ -1203,6 +1357,7 @@ export function emit(ir: EnrichedIR): string {
 		);
 	const context: EmitContext = {
 		api: apiNames,
+		bindingsById: new Map(ir.records.bindings.map((binding) => [binding.id, binding])),
 		computedByName: new Map(
 			ir.records.bindings
 				.filter((binding) => binding.kind === 'computed')

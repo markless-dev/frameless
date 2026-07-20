@@ -34,6 +34,23 @@ function findKind(value: unknown, kind: string): Record<string, any> | null {
 	});
 	return found;
 }
+function addElementsToEmptyBranchArms(value: unknown): void {
+	visit(value, (record) => {
+		if (record.kind !== 'branch') return;
+		for (const [index, arm] of record.arms.entries()) {
+			if (arm.children.length) continue;
+			arm.children.push({
+				kind: 'host',
+				id: `${record.id}:metamorphic-arm:${index}`,
+				tag: 'span',
+				staticAttributes: [],
+				dynamicBindings: [],
+				eventIds: [],
+				children: [],
+			});
+		}
+	});
+}
 
 describe('Solid structural emitter', () => {
 	for (const [output, goldenName] of fixtures) {
@@ -128,6 +145,7 @@ describe('Solid structural emitter', () => {
 			expect(changedS1).toContain('const caption = untrack');
 
 			const s2 = clone(await golden('s2-keyed-todo.json')) as any;
+			addElementsToEmptyBranchArms(s2.components[0].template);
 			visit(s2, (record) => {
 				if (record.type === 'Identifier' && record.name === 'todos')
 					record.name = 'records';
@@ -179,6 +197,33 @@ describe('Solid structural emitter', () => {
 			expect(source).toContain('createSignal as createSignal2');
 			expect(source).toContain('const [createSignal, setCreateSignal] = createSignal2(1)');
 		});
+
+		test('once-capture classification follows binding kind instead of graph id spelling', async () => {
+			const ir = clone(await golden('s1-render-once.json')) as any;
+			visit(ir, (record) => {
+				if (record.id === 'prop:props') record.id = 'binding:component-input';
+				if (record.graphNodeId === 'prop:props')
+					record.graphNodeId = 'binding:component-input';
+			});
+			expect(emit(ir)).toContain('untrack(() => props.onTrace');
+		});
+
+		test('store-member lowering uses write structure without statement adjacency', async () => {
+			const ir = clone(await golden('s2-keyed-todo.json')) as any;
+			addElementsToEmptyBranchArms(ir.components[0].template);
+			const handler = ir.records.events
+				.flatMap((event: any) => event.handlers)
+				.find((entry: any) =>
+					entry.writes.some((write: any) => write.path.join('/') === '*/title'),
+				);
+			handler.expression.body.body.splice(2, 0, {
+				type: 'ExpressionStatement',
+				expression: { type: 'Literal', value: 0, raw: '0' },
+			});
+			const source = emit(ir);
+			expect(source).toContain('setTodos(produce(');
+			expect(source).toMatch(/0;\s*props\.onTrace\("edit"/);
+		});
 	});
 
 	describe('fail-closed validation', () => {
@@ -226,15 +271,49 @@ describe('Solid structural emitter', () => {
 
 		test('rejects dangling and mutated keyed semantics', async () => {
 			const dangling = clone(await golden('s2-keyed-todo.json')) as any;
+			addElementsToEmptyBranchArms(dangling.components[0].template);
 			findKind(dangling.components[0].template, 'keyed-repeat')!.key.reads = [];
 			expect(() => validateEnrichedIr(dangling)).toThrow(/unconsumed key semantics/);
 			const mutated = clone(await golden('s2-keyed-todo.json')) as any;
+			addElementsToEmptyBranchArms(mutated.components[0].template);
 			const write = mutated.records.events
 				.flatMap((event: any) => event.handlers)
 				.flatMap((handler: any) => handler.writes)
 				.find((entry: any) => entry.via === 'handler-local-alias');
 			write.path = ['*', 'id'];
 			expect(() => validateEnrichedIr(mutated)).toThrow(/unsupported identity mutation/);
+		});
+
+		test('rejects element-less structural branch arms with a construct-named diagnostic', async () => {
+			const ir = clone(await golden('s1-render-once.json')) as any;
+			const branch = findKind(ir.components[0].template, 'branch')!;
+			branch.arms[0].children = [];
+			expect(() => validateEnrichedIr(ir)).toThrow(
+				/TemplateBranchArm then .* is element-less/,
+			);
+		});
+
+		test('rejects handler AST reads absent from read records', async () => {
+			const ir = clone(await golden('s1-render-once.json')) as any;
+			ir.records.events[0].handlers[0].expression.body.body.unshift({
+				type: 'ExpressionStatement',
+				expression: { type: 'Identifier', name: 'label' },
+			});
+			expect(() => validateEnrichedIr(ir)).toThrow(/handler AST read absent from records/);
+		});
+
+		test('rejects handler AST writes absent from write records', async () => {
+			const ir = clone(await golden('s1-render-once.json')) as any;
+			ir.records.events[0].handlers[0].expression.body.body.unshift({
+				type: 'ExpressionStatement',
+				expression: {
+					type: 'AssignmentExpression',
+					operator: '=',
+					left: { type: 'Identifier', name: 'count' },
+					right: { type: 'Literal', value: 7, raw: '7' },
+				},
+			});
+			expect(() => validateEnrichedIr(ir)).toThrow(/handler AST write absent from records/);
 		});
 	});
 });
