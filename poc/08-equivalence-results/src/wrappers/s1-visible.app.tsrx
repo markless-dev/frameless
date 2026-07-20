@@ -1,4 +1,4 @@
-import { RenderOnce } from '../fixtures/s1-render-once.tsrx';
+import { RenderOnce } from '../fixtures/s1-render-once-plain.tsrx';
 import { emitTrace } from '../support/trace-bridge.ts';
 
 export function App() @{
