@@ -11,6 +11,7 @@ catalogs:
       version: 2.0.3
 
 overrides:
+  '@markless/analyzer': file:vendor/markless-analyzer-0.1.1.tgz
   '@markless/bundler': file:vendor/markless-bundler-0.1.1.tgz
   '@markless/compiler': file:vendor/markless-compiler-0.1.1.tgz
   '@markless/core': file:vendor/markless-core-0.1.1.tgz
@@ -42,7 +43,11 @@ importers:
 
   demos/ui-kit: {}
 
-  packages/analyzer: {}
+  packages/analyzer:
+    dependencies:
+      '@markless/analyzer':
+        specifier: file:../../vendor/markless-analyzer-0.1.1.tgz
+        version: file:vendor/markless-analyzer-0.1.1.tgz(playwright@1.58.2)
 
   packages/cli: {}
 
@@ -212,6 +217,15 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
+
+  '@markless/analyzer@file:vendor/markless-analyzer-0.1.1.tgz':
+    resolution: {integrity: sha512-ETNMGzdKMOjrUcXHsRZww6rwApHzcSycmp3WujTcH1Aqcu3FLy3GKDvMuoHBPh2X6veSJhocqNvao2ZNoFX18g==, tarball: file:vendor/markless-analyzer-0.1.1.tgz}
+    version: 0.1.1
+    peerDependencies:
+      playwright: '>=1.58.0'
+    peerDependenciesMeta:
+      playwright:
+        optional: true
 
   '@markless/compiler@file:vendor/markless-compiler-0.1.1.tgz':
     resolution: {integrity: sha512-Da672TIIiOV8d8c8H6YNHSmwFAnusSDIplzIG6rU/XKH74USs957NlwzPdIvDasdCU07YZLV2NZoLsHb4VT4yQ==, tarball: file:vendor/markless-compiler-0.1.1.tgz}
@@ -1230,6 +1244,9 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
+  ufo@1.6.4:
+    resolution: {integrity: sha512-JFNbkD1Svwe0KvGi8GOeLcP4kAWQ609twvCdcHxq1oSL8svv39ZuSvajcD8B+5D0eL4+s1Is2D/O6KN3qcTeRA==}
+
   undici-types@7.16.0:
     resolution: {integrity: sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==}
 
@@ -1518,6 +1535,12 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
+
+  '@markless/analyzer@file:vendor/markless-analyzer-0.1.1.tgz(playwright@1.58.2)':
+    dependencies:
+      ufo: 1.6.4
+    optionalDependencies:
+      playwright: 1.58.2
 
   '@markless/compiler@file:vendor/markless-compiler-0.1.1.tgz':
     dependencies:
@@ -2278,6 +2301,8 @@ snapshots:
     optional: true
 
   typescript@5.9.3: {}
+
+  ufo@1.6.4: {}
 
   undici-types@7.16.0: {}
 

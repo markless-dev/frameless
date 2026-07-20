@@ -1,6 +1,13 @@
+import {
+	createVerdictReport,
+	type AnalyzerInvariantResult,
+	type AnalyzerVerdictReportV2,
+} from '@markless/analyzer';
 import type { Divergence } from './types.ts';
 
 export const RECEIPT_SCHEMA_VERSION = 'frameless-receipts/1' as const;
+export const EQUIVALENCE_INVARIANT_ID = 'MLA-EXT-FRAMELESS-EQUIVALENCE' as const;
+export const MUTANT_INVARIANT_ID = 'MLA-EXT-FRAMELESS-MUTANT' as const;
 
 export type Finding = { id: string; summary: string; evidence: string[] };
 export type EqualPairResult = { status: 'equal'; equal: true; divergences: [] };
@@ -23,6 +30,15 @@ export type MutantResult = {
 	divergences: Divergence[];
 };
 
+export type ReceiptSummary = {
+	verdict: 'pass' | 'fail' | 'blocked-by-upstream';
+	equalPairs: number;
+	differentPairs: number;
+	blockedPairs: number;
+	mutants: number;
+	rejectedMutants: number;
+};
+
 export type Receipt = {
 	schema: typeof RECEIPT_SCHEMA_VERSION;
 	generatedBy: string;
@@ -30,15 +46,99 @@ export type Receipt = {
 	findings: Record<string, Finding>;
 	scenarios: Record<string, Record<string, PairResult>>;
 	mutantRejections: Record<string, MutantResult>;
-	summary: {
-		verdict: 'pass' | 'fail' | 'blocked-by-upstream';
-		equalPairs: number;
-		differentPairs: number;
-		blockedPairs: number;
-		mutants: number;
-		rejectedMutants: number;
-	};
+	summary: ReceiptSummary;
 };
+
+type ReceiptResults = Pick<Receipt, 'scenarios' | 'mutantRejections'>;
+
+export function createEquivalenceInvariantResult(
+	scenario: string,
+	pair: string,
+	result: PairResult,
+): AnalyzerInvariantResult {
+	const details = [`scenario: ${scenario}`, `pair: ${pair}`, `verdict: ${pairVerdict(result)}`];
+	if (result.status === 'different') {
+		details.push(
+			...result.divergences.map(
+				(divergence) => `${divergence.channel}:${divergence.phase}:${divergence.path}`,
+			),
+		);
+	}
+	return {
+		id: EQUIVALENCE_INVARIANT_ID,
+		status:
+			result.status === 'equal' ? 'pass' : result.status === 'different' ? 'fail' : 'not-run',
+		details,
+	};
+}
+
+function createMutantInvariantResult(id: string, result: MutantResult): AnalyzerInvariantResult {
+	return {
+		id: MUTANT_INVARIANT_ID,
+		status: result.rejected ? 'pass' : 'fail',
+		details: [
+			`mutant: ${id}`,
+			`scenario: ${result.scenario}`,
+			`expected channel: ${result.expectedChannel}`,
+			`observed channels: ${result.observedChannels.join(', ')}`,
+		],
+	};
+}
+
+function invariantResults(receipt: ReceiptResults): AnalyzerInvariantResult[] {
+	const results: AnalyzerInvariantResult[] = [];
+	for (const [scenario, pairs] of Object.entries(receipt.scenarios)) {
+		for (const [pair, result] of Object.entries(pairs)) {
+			results.push(createEquivalenceInvariantResult(scenario, pair, result));
+		}
+	}
+	for (const [id, result] of Object.entries(receipt.mutantRejections)) {
+		results.push(createMutantInvariantResult(id, result));
+	}
+	return results;
+}
+
+export function createReceiptVerdictReport(
+	receipt: ReceiptResults & Pick<Receipt, 'schema' | 'generatedBy' | 'environment'>,
+): AnalyzerVerdictReportV2 {
+	return createVerdictReport({
+		source: receipt.generatedBy,
+		lane: 'frameless-equivalence',
+		results: invariantResults(receipt),
+		metadata: { receiptSchema: receipt.schema, environment: receipt.environment },
+	});
+}
+
+export function createReceiptSummary(receipt: ReceiptResults): ReceiptSummary {
+	const pairs = Object.values(receipt.scenarios).flatMap((scenario) => Object.values(scenario));
+	const results = invariantResults(receipt);
+	const report = createVerdictReport({
+		source: '@frameless/analyzer',
+		lane: 'frameless-equivalence',
+		results,
+	});
+	const blockedPairs = pairs.filter((pair) => pair.status === 'blocked-by-upstream').length;
+	return {
+		verdict: !report.passed ? 'fail' : blockedPairs ? 'blocked-by-upstream' : 'pass',
+		equalPairs: pairs.filter((pair) => pair.status === 'equal').length,
+		differentPairs: pairs.filter((pair) => pair.status === 'different').length,
+		blockedPairs,
+		mutants: Object.keys(receipt.mutantRejections).length,
+		rejectedMutants: Object.values(receipt.mutantRejections).filter((result) => result.rejected)
+			.length,
+	};
+}
+
+function summariesEqual(left: ReceiptSummary, right: ReceiptSummary): boolean {
+	return (
+		left.verdict === right.verdict &&
+		left.equalPairs === right.equalPairs &&
+		left.differentPairs === right.differentPairs &&
+		left.blockedPairs === right.blockedPairs &&
+		left.mutants === right.mutants &&
+		left.rejectedMutants === right.rejectedMutants
+	);
+}
 
 export function validateReceipt(value: unknown): value is Receipt {
 	if (!value || typeof value !== 'object') return false;
@@ -55,9 +155,18 @@ export function validateReceipt(value: unknown): value is Receipt {
 		return false;
 	}
 	const allowed = new Set(['equal', 'different', 'blocked-by-upstream']);
-	return Object.values(receipt.scenarios).every((pairs) =>
-		Object.values(pairs).every((pair) => allowed.has(pair.status)),
-	);
+	if (
+		!Object.values(receipt.scenarios).every((pairs) =>
+			Object.values(pairs).every((pair) => allowed.has(pair.status)),
+		)
+	)
+		return false;
+	try {
+		createReceiptVerdictReport(receipt as Receipt);
+		return summariesEqual(receipt.summary, createReceiptSummary(receipt as Receipt));
+	} catch {
+		return false;
+	}
 }
 
 function pairVerdict(result: PairResult): string {
@@ -68,12 +177,15 @@ function pairVerdict(result: PairResult): string {
 }
 
 export function renderResults(receipt: Receipt): string {
+	const report = createReceiptVerdictReport(receipt);
+	const blocked = report.results.some((result) => result.status === 'not-run');
+	const verdict = !report.passed ? 'fail' : blocked ? 'blocked-by-upstream' : 'pass';
 	const lines = [
 		'# Frameless equivalence results',
 		'',
 		'> Machine-generated from the frameless-receipts/1 verdict artifact. Do not edit by hand.',
 		'',
-		`Overall verdict: **${receipt.summary.verdict.toUpperCase()}**.`,
+		`Overall verdict: **${verdict.toUpperCase()}**.`,
 		'',
 		'## Scenario × pair verdicts',
 		'',
