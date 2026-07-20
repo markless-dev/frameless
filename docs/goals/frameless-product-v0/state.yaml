@@ -73,7 +73,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-product-v0/"
     command: "npx goalbuddy board docs/goals/frameless-product-v0"
 
-active_task: T002
+active_task: T003
 
 tasks:
   - id: T001
@@ -101,7 +101,7 @@ tasks:
   - id: T002
     type: scout
     assignee: Scout
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "React 19 idiom dossier: corpus-evidenced pattern decisions per IR construct (state, derived/memo thresholds, refs-as-props, events, keyed lists, conditionals, once-per-instance setup) using grep MCP if connected, React docs, and local corpora; every decision cited; output feeds the targets/react emitter and gate."
     inputs:
@@ -111,11 +111,14 @@ tasks:
       - "Read-only. Every pattern decision carries evidence (corpus frequency, docs citation, or maintainer guidance) — no taste-only calls."
     expected_output:
       - "notes/T002-react-idioms.md: construct -> chosen idiom -> evidence -> gate rule"
-    receipt: null
+    receipt:
+      result: done
+      note: notes/T002-react-idioms.md
+      summary: "11 construct rulings, all cited (react.dev live-fetched, hooks-lint v6, corpus). Overturns: onInput->onChange, let-rebind->const SSA + one-set-per-cell, literal initials unwrapped, ref-guard null-shape. Confirms: derived-in-render (useMemo never in v0, threshold recorded), useRef counters, keyed idioms, ternary-null. Resolves T001 act decision: ASYNC act (React deprecation commitment) -> adapter migration + full mutant recalibration under 19 pins. 6 splits threshold-picked with overturn triggers. Gate diffs enumerated (ESLint 9 flat + hooks v6). Critique skipped: research receipt with per-claim citations; enforcement lands in T005 which gets full critique."
   - id: T003
     type: scout
     assignee: Scout
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: "Solid idiom dossier: same protocol for Solid (createMemo for derived, store-vs-signal thresholds, For/Show usage, props access patterns, v2-forward idioms), confirming or overturning poc/07 decisions and addressing the row-reactivity critique findings with evidenced patterns."
     inputs:
