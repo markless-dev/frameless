@@ -29,6 +29,8 @@ export const SOLID_GATE_POLICIES = [
 	{ id: 'undisclosed-import', dossierRef: 'T003 ruling 10' },
 	{ id: 'solid-import-allowlist', dossierRef: 'T003 ruling 10' },
 	{ id: 'cell-type', dossierRef: 'T003 ruling 1' },
+	{ id: 'signal-write-shape', dossierRef: 'T003 ruling 1' },
+	{ id: 'store-write-shape', dossierRef: 'T003 ruling 1' },
 	{ id: 'structural-ternary', dossierRef: 'T003 ruling 5' },
 	{ id: 'show-two-arm', dossierRef: 'T003 ruling 5' },
 	{ id: 'controlled-input', dossierRef: 'T003 ruling 7' },
@@ -36,6 +38,7 @@ export const SOLID_GATE_POLICIES = [
 	{ id: 'stop-propagation', dossierRef: 'T003 ruling 6' },
 	{ id: 'props-destructure', dossierRef: 'T003 ruling 8' },
 	{ id: 'untrack-once-capture', dossierRef: 'T003 ruling 8' },
+	{ id: 'untrack-capture-shape', dossierRef: 'T003 ruling 8' },
 	{ id: 'reconcile-key', dossierRef: 'T003 ruling 4' },
 	{ id: 'react-specific-props', dossierRef: 'T003 ruling 10' },
 	{ id: 'component-shape', dossierRef: 'T003 ruling 10' },
@@ -44,6 +47,10 @@ export const SOLID_GATE_POLICIES = [
 	{ id: 'render-phase-setter', dossierRef: 'T003 ruling 1' },
 	{ id: 'render-phase-effect', dossierRef: 'T003 ruling 2' },
 	{ id: 'prevent-default-event', dossierRef: 'T003 ruling 6' },
+	{ id: 'leaf-event-target', dossierRef: 'T003 ruling 7' },
+	{ id: 'eslint:no-unused-vars', dossierRef: 'T003 ruling 10' },
+	{ id: 'eslint:no-unused-expressions', dossierRef: 'T003 ruling 9' },
+	{ id: 'eslint:no-unreachable', dossierRef: 'T003 ruling 9' },
 ] as const satisfies readonly GatePolicy[];
 
 const POLICIES = new Map<string, GatePolicy>(
@@ -176,7 +183,8 @@ function customPolicies(source: string, file: string): GateViolation[] {
 	const ast = parse(source, { sourceType: 'module', plugins: ['jsx'], attachComment: true });
 	const violations: GateViolation[] = [];
 	const imports = importedBindings(ast);
-	const setters = new Set<unknown>();
+	const signalSetters = new Set<unknown>();
+	const storeSetters = new Set<unknown>();
 	const getters = new Set<unknown>();
 	const reconcileKeys: string[] = [];
 	const rowProperties = new Set<string>();
@@ -192,6 +200,70 @@ function customPolicies(source: string, file: string): GateViolation[] {
 				),
 			);
 
+	type InitialKind = 'scalar' | 'aggregate' | 'unknown';
+	const initialKind = (
+		path: NodePath | undefined,
+		seen = new Set<unknown>(),
+	): InitialKind => {
+		if (!path?.node) return 'unknown';
+		if (path.isArrayExpression() || path.isObjectExpression()) return 'aggregate';
+		if (
+			path.isStringLiteral() ||
+			path.isNumericLiteral() ||
+			path.isBooleanLiteral() ||
+			path.isNullLiteral()
+		)
+			return 'scalar';
+		if (path.isIdentifier()) {
+			const binding = path.scope.getBinding(path.node.name);
+			if (!binding || seen.has(binding) || !binding.path.isVariableDeclarator()) return 'unknown';
+			seen.add(binding);
+			return initialKind(binding.path.get('init') as NodePath, seen);
+		}
+		if (
+			path.isArrowFunctionExpression() ||
+			path.isFunctionExpression() ||
+			path.isFunctionDeclaration()
+		) {
+			const body = path.get('body');
+			if (!body.isBlockStatement()) return initialKind(body as NodePath, seen);
+			const returns = body.get('body').filter((statement) => statement.isReturnStatement());
+			if (returns.length !== 1) return 'unknown';
+			return initialKind(returns[0]!.get('argument') as NodePath, seen);
+		}
+		if (path.isCallExpression()) {
+			const callee = path.get('callee');
+			if (callee.isIdentifier()) {
+				const binding = callee.scope.getBinding(callee.node.name);
+				if (imports.get(binding)?.imported === 'untrack')
+					return initialKind(path.get('arguments')[0] as NodePath | undefined, seen);
+				if (!binding || seen.has(binding)) return 'unknown';
+				seen.add(binding);
+				if (binding.path.isFunctionDeclaration()) return initialKind(binding.path, seen);
+				if (binding.path.isVariableDeclarator())
+					return initialKind(binding.path.get('init') as NodePath, seen);
+			}
+			if (callee.isMemberExpression()) {
+				const method = memberName(callee.node);
+				if (method === 'map' || method === 'filter') return 'aggregate';
+				const object = callee.get('object');
+				if (object.isIdentifier({ name: 'Array' }) && method === 'from') return 'aggregate';
+			}
+		}
+		if (path.isConditionalExpression()) {
+			const consequent = initialKind(path.get('consequent') as NodePath, new Set(seen));
+			const alternate = initialKind(path.get('alternate') as NodePath, new Set(seen));
+			return consequent === alternate ? consequent : 'unknown';
+		}
+		if (path.isSequenceExpression()) {
+			const expressions = path.get('expressions');
+			return expressions.length
+				? initialKind(expressions[expressions.length - 1] as NodePath, seen)
+				: 'unknown';
+		}
+		return 'unknown';
+	};
+
 	traverse(ast, {
 		VariableDeclarator(path) {
 			if (
@@ -205,12 +277,14 @@ function customPolicies(source: string, file: string): GateViolation[] {
 			const getter = path.node.id.elements[0];
 			const setter = path.node.id.elements[1];
 			if (t.isIdentifier(getter)) getters.add(path.scope.getBinding(getter.name));
-			if (t.isIdentifier(setter)) setters.add(path.scope.getBinding(setter.name));
-			const initial = path.node.init.arguments[0];
-			if (
-				primitive.imported === 'createSignal' &&
-				(t.isArrayExpression(initial) || t.isObjectExpression(initial))
-			)
+			if (t.isIdentifier(setter)) {
+				const binding = path.scope.getBinding(setter.name);
+				if (primitive.imported === 'createSignal') signalSetters.add(binding);
+				else storeSetters.add(binding);
+			}
+			const init = path.get('init') as NodePath<t.CallExpression>;
+			const kind = initialKind(init.get('arguments')[0] as NodePath);
+			if (primitive.imported === 'createSignal' && kind === 'aggregate')
 				violations.push(
 					violation(
 						file,
@@ -219,35 +293,58 @@ function customPolicies(source: string, file: string): GateViolation[] {
 						path.node,
 					),
 				);
-			if (
-				primitive.imported === 'createStore' &&
-				initial &&
-				(t.isStringLiteral(initial) ||
-					t.isNumericLiteral(initial) ||
-					t.isBooleanLiteral(initial) ||
-					t.isNullLiteral(initial))
-			)
+			if (primitive.imported === 'createStore' && kind === 'scalar')
 				violations.push(
 					violation(file, 'cell-type', 'Scalar cells must use createSignal', path.node),
 				);
 		},
 	});
 
-	const callable = (
-		callee: NodePath,
-	): { kind: 'setter' | 'effect' | 'helper'; path?: NodePath<t.Function> } | null => {
-		if (!callee.isIdentifier()) return null;
-		const binding = callee.scope.getBinding(callee.node.name);
-		if (!binding) return null;
-		if (setters.has(binding)) return { kind: 'setter' };
-		const imported = imports.get(binding);
-		if (imported && EFFECTS.has(imported.imported)) return { kind: 'effect' };
-		if (binding.path.isFunctionDeclaration())
-			return { kind: 'helper', path: binding.path as NodePath<t.Function> };
-		if (binding.path.isVariableDeclarator()) {
+	type Callable =
+		| { readonly kind: 'signal-setter' | 'store-setter' | 'effect' }
+		| { readonly kind: 'helper'; readonly path: NodePath<t.Function> };
+	const callable = (callee: NodePath, trail = new Set<unknown>()): Callable | null => {
+		if (!callee.node) return null;
+		if (callee.isArrowFunctionExpression() || callee.isFunctionExpression())
+			return { kind: 'helper', path: callee as NodePath<t.Function> };
+		if (callee.isIdentifier()) {
+			const binding = callee.scope.getBinding(callee.node.name);
+			if (!binding || trail.has(binding)) return null;
+			if (signalSetters.has(binding)) return { kind: 'signal-setter' };
+			if (storeSetters.has(binding)) return { kind: 'store-setter' };
+			const imported = imports.get(binding);
+			if (imported && EFFECTS.has(imported.imported)) return { kind: 'effect' };
+			trail.add(binding);
+			if (binding.path.isFunctionDeclaration())
+				return { kind: 'helper', path: binding.path as NodePath<t.Function> };
+			if (binding.path.isVariableDeclarator()) {
+				const init = binding.path.get('init');
+				if (init.isArrowFunctionExpression() || init.isFunctionExpression())
+					return { kind: 'helper', path: init as NodePath<t.Function> };
+				return callable(init as NodePath, trail);
+			}
+			return null;
+		}
+		if (callee.isMemberExpression()) {
+			const object = callee.get('object');
+			const name = memberName(callee.node);
+			if (!object.isIdentifier() || name == null) return null;
+			const binding = object.scope.getBinding(object.node.name);
+			if (!binding?.path.isVariableDeclarator() || trail.has(binding)) return null;
+			trail.add(binding);
 			const init = binding.path.get('init');
-			if (init.isArrowFunctionExpression() || init.isFunctionExpression())
-				return { kind: 'helper', path: init as NodePath<t.Function> };
+			if (!init.isObjectExpression()) return null;
+			const property = init.get('properties').find((entry) => {
+				if (!entry.isObjectProperty()) return false;
+				const key = entry.node.key;
+				return (
+					(!entry.node.computed && t.isIdentifier(key, { name })) ||
+					t.isStringLiteral(key, { value: name })
+				);
+			});
+			return property?.isObjectProperty()
+				? callable(property.get('value') as NodePath, trail)
+				: null;
 		}
 		return null;
 	};
@@ -317,6 +414,24 @@ function customPolicies(source: string, file: string): GateViolation[] {
 				);
 			if (t.isIdentifier(path.node.callee)) {
 				const imported = imports.get(path.scope.getBinding(path.node.callee.name));
+				if (imported?.imported === 'untrack') {
+					const capture = path.node.arguments[0];
+					if (
+						path.node.arguments.length !== 1 ||
+						!t.isArrowFunctionExpression(capture) ||
+						capture.async ||
+						capture.params.length !== 0 ||
+						t.isBlockStatement(capture.body)
+					)
+						violations.push(
+							violation(
+								file,
+								'untrack-capture-shape',
+								'untrack once-captures require one synchronous zero-argument function',
+								path.node,
+							),
+						);
+				}
 				if (imported?.imported === 'reconcile') {
 					const options = path.node.arguments[1];
 					const key = t.isObjectExpression(options)
@@ -369,35 +484,112 @@ function customPolicies(source: string, file: string): GateViolation[] {
 			if (!t.isJSXExpressionContainer(path.node.value)) return;
 			const handler = path.get('value.expression') as NodePath;
 			if (!handler.isArrowFunctionExpression() && !handler.isFunctionExpression()) return;
-			handler.traverse({
-				Function(nested) {
-					nested.skip();
-				},
-				CallExpression(call) {
-					if (
-						!t.isMemberExpression(call.node.callee) ||
-						memberName(call.node.callee) !== 'preventDefault'
-					)
-						return;
-					const parameter = handler.node.params[0];
-					const object = call.get('callee.object') as NodePath;
-					const parameterBinding = t.isIdentifier(parameter)
-						? handler.scope.getBinding(parameter.name)
-						: null;
-					const objectBinding = object.isIdentifier()
-						? object.scope.getBinding(object.node.name)
-						: null;
-					if (!parameterBinding || parameterBinding !== objectBinding)
-						violations.push(
-							violation(
-								file,
-								'prevent-default-event',
-								'preventDefault must be called on the handler event parameter',
-								call.node,
-							),
-						);
-				},
-			});
+			const opening = path.findParent((parent) => parent.isJSXOpeningElement());
+			const leaf =
+				opening?.isJSXOpeningElement() &&
+				t.isJSXIdentifier(opening.node.name) &&
+				['input', 'textarea', 'select'].includes(opening.node.name.name);
+			const parameter = handler.node.params[0];
+			const eventBinding = t.isIdentifier(parameter)
+				? handler.scope.getBinding(parameter.name)
+				: null;
+			const inspecting = new Set<t.Node>();
+			const inspectHandler = (
+				functionPath: NodePath<t.Function>,
+				eventBindings: ReadonlySet<unknown>,
+			): void => {
+				if (inspecting.has(functionPath.node)) return;
+				inspecting.add(functionPath.node);
+				functionPath.traverse({
+						Function(nested) {
+							nested.skip();
+						},
+						MemberExpression(member) {
+							if (!leaf || memberName(member.node) !== 'target') return;
+							const object = member.get('object');
+							const binding = object.isIdentifier()
+								? object.scope.getBinding(object.node.name)
+								: null;
+							if (binding && eventBindings.has(binding))
+								violations.push(
+									violation(
+										file,
+										'leaf-event-target',
+										'Leaf controls must read event.currentTarget, not event.target',
+										member.node,
+									),
+								);
+						},
+						CallExpression(call) {
+							const resolved = callable(call.get('callee') as NodePath);
+							if (resolved?.kind === 'signal-setter' && call.node.arguments.length !== 1)
+								violations.push(
+									violation(
+										file,
+										'signal-write-shape',
+										'Signal setters require exactly one authored value',
+										call.node,
+									),
+								);
+							if (resolved?.kind === 'store-setter') {
+								const write = call.node.arguments[0];
+								const writePrimitive =
+									t.isCallExpression(write) && t.isIdentifier(write.callee)
+										? imports.get(call.scope.getBinding(write.callee.name))?.imported
+										: null;
+								if (
+									call.node.arguments.length !== 1 ||
+									!writePrimitive ||
+									!['produce', 'reconcile'].includes(writePrimitive)
+								)
+									violations.push(
+										violation(
+											file,
+											'store-write-shape',
+											'Store writes require one produce or reconcile operation',
+											call.node,
+										),
+									);
+							}
+							if (resolved?.kind === 'helper') {
+								const helperEvents = new Set<unknown>(eventBindings);
+								for (const [index, argument] of call.node.arguments.entries()) {
+									if (!t.isIdentifier(argument)) continue;
+									const argumentBinding = call.scope.getBinding(argument.name);
+									const helperParameter = resolved.path.node.params[index];
+									if (argumentBinding && eventBindings.has(argumentBinding) && t.isIdentifier(helperParameter)) {
+										const helperBinding = resolved.path.scope.getBinding(helperParameter.name);
+										if (helperBinding) helperEvents.add(helperBinding);
+									}
+								}
+								inspectHandler(resolved.path, helperEvents);
+							}
+							if (
+								t.isMemberExpression(call.node.callee) &&
+								memberName(call.node.callee) === 'preventDefault'
+							) {
+								const object = call.get('callee.object') as NodePath;
+								const objectBinding = object.isIdentifier()
+									? object.scope.getBinding(object.node.name)
+									: null;
+								if (!objectBinding || !eventBindings.has(objectBinding))
+									violations.push(
+										violation(
+											file,
+											'prevent-default-event',
+											'preventDefault must be called on the handler event parameter',
+											call.node,
+										),
+									);
+							}
+						},
+				});
+				inspecting.delete(functionPath.node);
+			};
+			inspectHandler(
+				handler as NodePath<t.Function>,
+				new Set(eventBinding ? [eventBinding] : []),
+			);
 		},
 		JSXOpeningElement(path) {
 			if (!t.isJSXIdentifier(path.node.name)) return;
@@ -637,7 +829,10 @@ function customPolicies(source: string, file: string): GateViolation[] {
 					},
 					CallExpression(call) {
 						const resolved = callable(call.get('callee') as NodePath);
-						if (resolved?.kind === 'setter')
+						if (
+							resolved?.kind === 'signal-setter' ||
+							resolved?.kind === 'store-setter'
+						)
 							violations.push(
 								violation(
 									file,
