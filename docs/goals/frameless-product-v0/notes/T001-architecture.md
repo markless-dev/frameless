@@ -181,3 +181,22 @@ Crew critique (high effort) verdict: REJECT as locked. PM accepts all amendments
    packages/frameworks/react and packages/frameworks/solid (workspace glob
    packages/frameworks/*). Internal names @frameless/react, @frameless/solid.
    The divergence-rationale requirement is satisfied by this recorded decision.
+
+# User directives addendum 2 (2026-07-19, binding, supersedes conflicts)
+
+4. ANALYZER NAMING: packages/oracle -> packages/analyzer (@frameless/analyzer),
+   mirroring markless's analyzer concept per the user's original brief ("similar
+   concept to the analyzer"). "Oracle" removed from public vocabulary; contract
+   renamed frameless-analyzer/1 (receipts stay frameless-receipts/1).
+5. FRAMEWORK DEPS ISOLATION: NO framework-specific dependencies or transforms at
+   root or in the analyzer (vite-plugin-solid, react, solid-js, fixtures). Each
+   packages/frameworks/<name> owns its deps, vitest project config, transforms, and
+   its calibration suite (running the analyzer's shared scenario/mutant data against
+   its own adapter + the handwritten references it owns).
+6. RULER RESET: .ruler/skills/poc-workflow removed (POC-era). AGENTS.md rebuilt:
+   transfer everything transferable from markless's .ruler/AGENTS.md, clean slate
+   otherwise.
+7. SPECS REMOVED: specs/ deleted — convention-mirroring did not license unilateral
+   contract content. Load-bearing bits fold into package READMEs; a future specs
+   pass happens with the owner.
+8. ROOT VITE CONFIG: no node: builtin imports (match markless practice).
