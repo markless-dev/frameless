@@ -575,7 +575,12 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 				throw new Error(`TemplateBranch ${node.id} requires ordered then/else arms`);
 			for (const [armIndex, arm] of node.arms.entries()) {
 				exactKeys(arm, ['kind', 'children'], 'TemplateBranchArm');
-				if (!arm.children.some(containsElement))
+				// PM adjudication (2026-07-20): a COMPLETELY empty arm is a sanctioned
+				// authored shape (S2's `@else {}`) lowering to <Show when> without a
+				// fallback — a real Solid idiom, not a silent fragment. Only arms with
+				// content that carries no element fail closed (the anchor-visibility
+				// premise from T003 applies to non-empty arms).
+				if (arm.children.length > 0 && !arm.children.some(containsElement))
 					throw new Error(
 						`TemplateBranchArm ${arm.kind} in ${node.id} is element-less`,
 					);
