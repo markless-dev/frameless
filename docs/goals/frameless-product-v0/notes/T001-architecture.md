@@ -162,3 +162,22 @@ Crew critique (high effort) verdict: REJECT as locked. PM accepts all amendments
    documented pnpm e2e + test:poc scripts (GH Actions workflow deferred, recorded);
    .gitignore extended for generated demo output.
 9. T004 packet carries the critique's verbatim instruction block.
+
+---
+
+# User directives addendum (2026-07-19, mid-T007, binding)
+
+1. NOT-A-COMPILER clarification: @frameless/compiler must never reimplement markless
+   compilation. It is an extension layer: @tsrx/core parse + vendored
+   @markless/compiler buildSemanticGraph -> EnrichedIR join. Spec/README lead with
+   "compiler extension over @markless/compiler".
+2. PASS SYSTEM (user directive): the extension adopts markless's pass architecture —
+   passes declare consumes/produces, registered in a topologically validated DAG with
+   dumpable artifacts, mirroring markless pass-registry/pass-pipeline conventions.
+   The enriched-ir pass declares consumes: tsrx-semantic-graph, produces:
+   frameless-enriched-ir. Rationale: makes extension-not-reimplementation structural,
+   and the pass slots into markless's own DAG at upstreaming time.
+3. LAYOUT (user directive, overrides the judge's flat ruling with owner authority):
+   packages/frameworks/react and packages/frameworks/solid (workspace glob
+   packages/frameworks/*). Internal names @frameless/react, @frameless/solid.
+   The divergence-rationale requirement is satisfied by this recorded decision.
