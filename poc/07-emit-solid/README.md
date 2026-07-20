@@ -1,7 +1,7 @@
-# Arcade Solid emitter
+# Frameless Solid emitter
 
 This package is W-C2, the Solid half of the adjudicated C8 proof chain. Its regeneration
-script reads the three checked-in `arcade-enriched-ir/1` JSON goldens from
+script reads the three checked-in `frameless-enriched-ir/1` JSON goldens from
 `../05-enriched-ir/test/goldens/`; the emitter itself accepts any component using the
 supported construct vocabulary below. It walks that IR, converts its expression and
 handler ASTs, builds Babel JSX AST, and prints Solid components. It does not read TSRX,
@@ -59,7 +59,7 @@ cancellation. Divergences are logged as structured JSON before a failed assertio
 
 ## Generality boundary (adversarial critique)
 
-This Solid emitter is secondary evidence that `arcade-enriched-ir/1` is consumable by
+This Solid emitter is secondary evidence that `frameless-enriched-ir/1` is consumable by
 a second, paradigm-different backend for the S1/S2/S3 fixture family. It is not a
 production-general Solid backend. In particular, the keyed-repeat key expression is
 validated against its recorded row-member read but is not lowered into Solid output:
@@ -72,7 +72,7 @@ The gate's scope is the generated `*.jsx` files it discovers when the gate is in
 and the explicit syntax/policy checks listed above. It neither makes the emitter
 production-general nor prevents another build entry point from skipping the gate;
 repository workflow integration is outside this POC. The adversarial critique's full
-synthetic-runtime acceptance list is the roadmap for an Arcade production emitter,
+synthetic-runtime acceptance list is the roadmap for an Frameless production emitter,
 not acceptance scope for W-C2. This bounded repair therefore fails closed on every
 unconsumed schema field and unsupported construct instead of attempting those future
 semantics here.
@@ -107,7 +107,7 @@ Physical nonblank component LOC is primary; Babel AST node count is secondary.
 
 ## Framework-version statement
 
-Arcade targets Solid v2, but this package's runtime evidence is labeled exactly
+Frameless targets Solid v2, but this package's runtime evidence is labeled exactly
 `solid-1.8.22-fallback`. `solid-js@2.0.0-experimental.16` has no `./web` export, while
 the available `vite-plugin-solid@2.11.0` is a Solid 1.x toolchain. A contract test
 records both blockers. The emitted `createSignal`, accessor, `<For>`, and JSX

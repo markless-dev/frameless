@@ -43,11 +43,11 @@ describe('direct S1 scenario invariants', () => {
       document.body.append(host);
       const root = createRoot(host);
       const calls = [];
-      act(() => root.render(<RenderOnce label="Arcade" multiplier={3} visible onTrace={(...args) => calls.push(args)} />));
-      expect(host.querySelector('[data-value="derived"]')?.textContent).toBe('Arcade:3');
+      act(() => root.render(<RenderOnce label="Frameless" multiplier={3} visible onTrace={(...args) => calls.push(args)} />));
+      expect(host.querySelector('[data-value="derived"]')?.textContent).toBe('Frameless:3');
       expect(calls.filter(([name]) => name === 'setup')).toHaveLength(1);
       act(() => host.querySelector('[data-action="increment"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true })));
-      expect(host.querySelector('[data-value="derived"]')?.textContent).toBe('Arcade:6');
+      expect(host.querySelector('[data-value="derived"]')?.textContent).toBe('Frameless:6');
       expect(calls.filter(([name]) => name === 'setup')).toHaveLength(1);
       expect(calls.find(([name]) => name === 'change')?.[2]).toBeUndefined();
       act(() => root.unmount());
@@ -60,10 +60,10 @@ describe('direct S1 scenario invariants', () => {
     document.body.append(host);
     const root = createRoot(host);
     const calls = [];
-    act(() => root.render(<RenderOnce label="Arcade" multiplier={3} visible onTrace={(...args) => calls.push(args)} />));
+    act(() => root.render(<RenderOnce label="Frameless" multiplier={3} visible onTrace={(...args) => calls.push(args)} />));
     act(() => host.querySelector('[data-action="increment"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true })));
     act(() => root.render(<RenderOnce label="Changed" multiplier={5} visible onTrace={(...args) => calls.push(args)} />));
-    expect(host.querySelector('[data-value="derived"]')?.textContent).toBe('Arcade:10');
+    expect(host.querySelector('[data-value="derived"]')?.textContent).toBe('Frameless:10');
     expect(calls.filter(([name]) => name === 'setup')).toHaveLength(1);
     act(() => root.unmount());
     host.remove();

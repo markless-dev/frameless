@@ -5,7 +5,7 @@ export type Scenario = { id: string; purpose: string; initialProps: Record<strin
 export const scenarios: Scenario[] = [
   {
     id: 'S1-render-once-locals', purpose: 'destructuring, derived local, closure, guard matrix, state, once-per-mount setup',
-    initialProps: { label: 'Arcade', multiplier: 3, visible: true },
+    initialProps: { label: 'Frameless', multiplier: 3, visible: true },
     actions: [{ type:'click', target:'[data-action="increment"]' }], expectedCallbacks:[{name:'setup',fields:['runs'],count:1},{name:'change',fields:['count'],count:1}],
   },
   {

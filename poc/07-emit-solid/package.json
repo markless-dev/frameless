@@ -1,5 +1,5 @@
 {
-  "name": "arcade-poc-07-emit-solid",
+  "name": "frameless-poc-07-emit-solid",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -16,7 +16,7 @@
   "devDependencies": {
     "@babel/parser": "7.29.7",
     "@babel/traverse": "7.29.7",
-    "arcade-poc-04-equivalence-oracle": "file:../04-equivalence-oracle",
+    "frameless-poc-04-equivalence-oracle": "file:../04-equivalence-oracle",
     "eslint": "8.57.1",
     "jsdom": "25.0.1",
     "react": "18.3.1",

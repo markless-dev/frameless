@@ -407,7 +407,7 @@ function buildTemplateNode(
 		const eventIds: string[] = [];
 		for (const attribute of node.openingElement.attributes ?? []) {
 			if (attribute.type !== 'JSXAttribute') {
-				throw new Error('Spread attributes are not representable in arcade-enriched-ir/1.');
+				throw new Error('Spread attributes are not representable in frameless-enriched-ir/1.');
 			}
 			const name = jsxName(attribute.name);
 			if (!name) continue;

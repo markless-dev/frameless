@@ -16,7 +16,7 @@ const marklessPairs = ['markless__handwritten-react', 'markless__handwritten-sol
 describe('checked-in C9 verdict artifact', () => {
   test('records every provable pair as equal and every Markless pair as blocked with finding ids', async () => {
     const evidence = JSON.parse(await readFile(path.join(process.cwd(), 'results/verdict.json'), 'utf8')) as Evidence;
-    expect(evidence.schema).toBe('arcade-c9-evidence/2');
+    expect(evidence.schema).toBe('frameless-c9-evidence/2');
     expect(Object.keys(evidence.scenarios).sort()).toEqual([...scenarios].sort());
     for (const scenario of scenarios) {
       expect(Object.keys(evidence.scenarios[scenario]).sort()).toEqual([...provablePairs, ...marklessPairs].sort());

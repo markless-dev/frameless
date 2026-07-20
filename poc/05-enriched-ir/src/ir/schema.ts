@@ -1,6 +1,6 @@
 import type * as ESTree from '@tsrx/core/types/estree';
 
-/** Arcade-owned source coordinates. Filenames are normalized module-relative paths. */
+/** Frameless-owned source coordinates. Filenames are normalized module-relative paths. */
 export interface SourceSpan {
 	readonly filename: string;
 	readonly start: number;
@@ -32,8 +32,8 @@ export type SyncPolicyBranch = {
 };
 export type SyncPolicy = SyncPolicyBranch | { readonly branches: ReadonlyArray<SyncPolicyBranch> };
 
-/** Discriminator for the first serialized Arcade emitter-input contract. */
-export const ENRICHED_IR_VERSION = 'arcade-enriched-ir/1' as const;
+/** Discriminator for the first serialized Frameless emitter-input contract. */
+export const ENRICHED_IR_VERSION = 'frameless-enriched-ir/1' as const;
 
 /** Values admitted by the deterministic JSON artifact. */
 export type JsonValue =
@@ -241,7 +241,7 @@ export interface EnrichedGraphBinding {
 	readonly writes: ReadonlyArray<StateWriteRecord>;
 }
 
-/** Alias record with a deterministic Arcade id and resolved graph/path target. */
+/** Alias record with a deterministic Frameless id and resolved graph/path target. */
 export interface EnrichedAliasRecord {
 	readonly id: string;
 	readonly name: string;

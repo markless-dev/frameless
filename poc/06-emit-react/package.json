@@ -1,5 +1,5 @@
 {
-  "name": "arcade-poc-06-emit-react",
+  "name": "frameless-poc-06-emit-react",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -19,7 +19,7 @@
     "@babel/traverse": "7.29.7",
     "@types/react": "18.3.3",
     "@types/react-dom": "18.3.0",
-    "arcade-poc-04-equivalence-oracle": "file:../04-equivalence-oracle",
+    "frameless-poc-04-equivalence-oracle": "file:../04-equivalence-oracle",
     "eslint": "8.57.1",
     "eslint-plugin-react": "7.37.5",
     "eslint-plugin-react-hooks": "5.2.0",

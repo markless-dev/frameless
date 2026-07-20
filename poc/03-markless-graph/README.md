@@ -1,6 +1,6 @@
 # Markless 0.1.1 semantic-graph proofs (C6, C7, C11)
 
-This self-contained POC proves the version-pinned, fixture-scoped claims C6, C7, and C11 (as reworded in the T004 critique adjudication) against the **local markless checkout at v0.1.1**, consumed exclusively through vendored tarballs in `../vendor/`. It is part of the Arcade evidence base: the same component shapes that Mitosis 0.13.2 silently mangles (proven in `poc/01-mitosis-static`) compile, mount, and behave correctly in markless — and the shapes markless does *not* support fail loudly with actionable diagnostics instead of silently dropping code.
+This self-contained POC proves the version-pinned, fixture-scoped claims C6, C7, and C11 (as reworded in the T004 critique adjudication) against the **local markless checkout at v0.1.1**, consumed exclusively through vendored tarballs in `../vendor/`. It is part of the Frameless evidence base: the same component shapes that Mitosis 0.13.2 silently mangles (proven in `poc/01-mitosis-static`) compile, mount, and behave correctly in markless — and the shapes markless does *not* support fail loudly with actionable diagnostics instead of silently dropping code.
 
 ## Claims and how they are proven
 

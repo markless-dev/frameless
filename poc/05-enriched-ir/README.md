@@ -1,6 +1,6 @@
-# Arcade enriched IR — fixture-family emitter input
+# Frameless enriched IR — fixture-family emitter input
 
-This package is the W-C0 foundation for claim C8 in the adjudicated Arcade plan. It
+This package is the W-C0 foundation for claim C8 in the adjudicated Frameless plan. It
 proves, for the three `poc/04-equivalence-oracle` scenarios, that a versioned,
 serializable artifact can join the TSRX syntax tree with Markless 0.1.1's typed
 semantic records and close the graph's template/expression gaps. It does **not**
@@ -9,7 +9,7 @@ this artifact, pass their conventionality gates, and pass the calibrated oracle.
 
 ## Schema rationale
 
-`arcade-enriched-ir/1` gives an emitter three deliberately separate views:
+`frameless-enriched-ir/1` gives an emitter three deliberately separate views:
 
 - `components` contains source-order locals with initializer ASTs, a prop
   destructuring map (including aliases in the compile-only coverage fixture), early guard-return
@@ -21,7 +21,7 @@ this artifact, pass their conventionality gates, and pass the calibrated oracle.
   State reads/writes retain graph ids and property paths; assignment values and
   call arguments are ASTs. Computed functions and event handlers are function
   ASTs with structurally recovered graph reads. Markless does not assign ids to
-  alias records, so Arcade adds deterministic `alias:<component>:<name>` ids while
+  alias records, so Frameless adds deterministic `alias:<component>:<name>` ids while
   retaining their compiler-provided target and span.
 - `imports` retains semantic module imports when Markless reports any. Known
   authoring primitives are already identified by state/computed records; an
@@ -41,7 +41,7 @@ locale-independent comparator.
 
 This is the intended scope boundary. Less structure would force emitters to parse
 `functionSource`, `handlerSources`, `valueSource`, or template snippets again.
-More structure would copy Markless's web-specific DOM/resume emitter into Arcade's
+More structure would copy Markless's web-specific DOM/resume emitter into Frameless's
 common IR.
 
 ## Fixture coverage and tests
@@ -163,4 +163,4 @@ multi-component or multi-module composition, type-preserving output, async seman
 cleanup/attach, slots/children/context, styling, custom components, SVG/MathML,
 accessibility, performance or bundle size, SSR/hydration/resume, HMR, source maps, or
 generated-code debugging. Markless's payload and DOM output remain one target, not
-the Arcade IR contract.
+the Frameless IR contract.

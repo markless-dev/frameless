@@ -54,8 +54,8 @@ describe('C9 integrated browser evidence', () => {
     const scenarioResults: Evidence['scenarios'] = {};
     for (const scenario of scenarios) {
       const traces: Record<string, RunTrace> = {
-        'emitted-react': await runScenario(reactAdapter(emittedReact[scenario.id], 'arcade-emitted-react-18.3.1'), scenario),
-        'emitted-solid': await runScenario(solidAdapter(emittedSolid[scenario.id], 'arcade-emitted-solid-1.8.22-fallback'), scenario),
+        'emitted-react': await runScenario(reactAdapter(emittedReact[scenario.id], 'frameless-emitted-react-18.3.1'), scenario),
+        'emitted-solid': await runScenario(solidAdapter(emittedSolid[scenario.id], 'frameless-emitted-solid-1.8.22-fallback'), scenario),
         'handwritten-react': await runScenario(reactAdapter(reactReferences[scenario.id], 'handwritten-react-18.3.1'), scenario),
         'handwritten-solid': await runScenario(solidAdapter(solidReferences[scenario.id], 'handwritten-solid-1.8.22'), scenario),
       };
@@ -99,7 +99,7 @@ describe('C9 integrated browser evidence', () => {
     const blockedPairs = allPairs.filter((result) => result.status === 'blocked-by-upstream');
     const allMutants = Object.values(mutantRejections);
     const evidence: Evidence = {
-      schema: 'arcade-c9-evidence/2',
+      schema: 'frameless-c9-evidence/2',
       generatedBy: 'vitest browser / headless Chromium',
       environment: {
         execution: 'Vitest browser mode, headless Chromium; blocked Markless records are adjudicated upstream findings, not executed passes',
@@ -110,7 +110,7 @@ describe('C9 integrated browser evidence', () => {
         markless: '@markless/web + compiler/core/bundler 0.1.1 vendored tarballs',
         react: '18.3.1',
         solid: '1.8.22 fallback',
-        oracle: 'arcade-equivalence-oracle/1',
+        oracle: 'frameless-equivalence-oracle/1',
       },
       findings,
       scenarios: scenarioResults,
