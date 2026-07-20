@@ -22,6 +22,10 @@ mutant-class data, verdicts, and deterministic `frameless-receipts/1` result ren
 placement. `scenarios`, `calibrationScenarios`, and `mutantClasses` are data exports consumed by
 framework-owned browser calibration packages.
 
+`serializeRunTrace(trace)` writes deterministic, newline-terminated JSON, and
+`deserializeRunTrace(text)` validates the complete analyzer contract on load. Trace files are the
+transport used to carry browser-captured runs into cross-target comparison.
+
 ## Substrate split
 
 Shared from `@markless/analyzer`:
