@@ -76,6 +76,32 @@ describe('Solid dossier gate', () => {
 			'cell-type',
 		],
 		[
+			'lazy object signal',
+			valid.replace('createSignal(0)', 'createSignal(() => ({ value: 0 }))'),
+			'cell-type',
+		],
+		[
+			'untrack-wrapped array signal',
+			valid.replace('createSignal(0)', 'createSignal(untrack(() => []))'),
+			'cell-type',
+		],
+		[
+			'nested helper with malformed signal write',
+			valid.replace(
+				'onInput={(event) => setValue(Number(event.currentTarget.value))}',
+				'onInput={() => { const write = () => setValue(); write(); }}',
+			),
+			'signal-write-shape',
+		],
+		[
+			'nested helper with raw store write',
+			valid.replace(
+				"onClick={() => setItems(reconcile([], { key: 'id' }))}",
+				'onClick={() => { const actions = { write: () => setItems([]) }; actions.write(); }}',
+			),
+			'store-write-shape',
+		],
+		[
 			'structural ternary',
 			valid.replace('<section>', '<section>{props.visible ? <i /> : <b />}'),
 			'structural-ternary',
@@ -112,6 +138,11 @@ describe('Solid dossier gate', () => {
 			'raw prop initializer',
 			valid.replace('untrack(() => props.items)', 'props.items'),
 			'untrack-once-capture',
+		],
+		[
+			'untrack capture with a parameter',
+			valid.replace('untrack(() => props.items)', 'untrack((tracked) => props.items)'),
+			'untrack-capture-shape',
 		],
 		['wrong reconcile key', valid.replace("key: 'id'", "key: 'missingKey'"), 'reconcile-key'],
 		[
@@ -164,6 +195,26 @@ describe('Solid dossier gate', () => {
 				'onInput={(event) => { props.preventDefault(); setValue(Number(event.currentTarget.value)); }}',
 			),
 			'prevent-default-event',
+		],
+		[
+			'leaf event target',
+			valid.replace('event.currentTarget.value', 'event.target.value'),
+			'leaf-event-target',
+		],
+		[
+			'unused binding',
+			valid.replace('const label', 'const unused = 1;\n  const label'),
+			'eslint:no-unused-vars',
+		],
+		[
+			'dead expression',
+			valid.replace('const label', 'props.label;\n  const label'),
+			'eslint:no-unused-expressions',
+		],
+		[
+			'unreachable statement',
+			valid.replace('const label', 'return null;\n  props.label;\n  const label'),
+			'eslint:no-unreachable',
 		],
 	] as const;
 
