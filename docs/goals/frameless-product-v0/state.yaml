@@ -8,7 +8,7 @@ goal:
   slug: "frameless-product-v0"
   kind: existing_plan
   tranche: "Turn the proven POC pipeline into the real Frameless product: a monorepo with a compiler-extension layer consuming the markless compiler, a targets/ architecture (React 19, Solid), the equivalence oracle as product test infrastructure, and one end-to-end build command demonstrated on a real demo component library with receipts."
-  status: active
+  status: done
   oracle:
     signal: "From a fresh checkout, one documented command compiles the demo TSRX component library into React 19 and Solid packages that (a) pass each target's conventionality gate, (b) produce green cross-target equivalence receipts (React output vs Solid output behaviorally equal under the oracle in headless Chromium, per scripted scenarios), and (c) the migrated POC evidence suites still pass."
     cadence: "after each Worker package and at final audit"
@@ -73,7 +73,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-product-v0/"
     command: "npx goalbuddy board docs/goals/frameless-product-v0"
 
-active_task: T011
+active_task: null
 
 tasks:
   - id: T001
@@ -339,7 +339,7 @@ tasks:
   - id: T011
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "T999 first-run fix (manifest-only): declare every dependency the fresh-checkout audit proved undeclared — root devDep @frameless/analyzer (workspace:*); packages/cli dep pathe (catalog:); demos/ui-kit devDeps for its test harness (workspace packages + browser/test toolchain, proven-minimal set); pnpm-lock.yaml refresh. Verification MUST be a genuine fresh clone (the dev checkout's stale node_modules masks exactly this class)."
     allowed_files:
@@ -353,11 +353,13 @@ tasks:
     stop_if:
       - "Need files outside allowed_files."
       - "A dependency cannot be declared without changing code — report, do not patch source."
-    receipt: null
+    receipt:
+      result: done
+      summary: "Manifest-only dependency declarations per the T999 first-run audit (crew unit; sandbox lost registry DNS mid-verify — PM restored and completed): root @frameless/analyzer devDep, cli pathe, demos/ui-kit test-harness devDeps mirroring framework pins; lockfile importer-only. Fresh-clone verification (PM, committed HEAD 860db55): install 0, pnpm e2e 3/3 pairs equal + receipt pass, check 0, build 5, node 237/237, react-browser 19/19, solid-browser 17/17, test:poc exit 0."
   - id: T999
     type: judge
     assignee: Judge
-    status: queued
+    status: done
     reasoning_hint: high
     objective: "Final audit: fresh-checkout end-to-end (documented command -> demo lib -> both targets -> gates + receipts green), all migrated suites + POC evidence suites green, oracle signal fully satisfied; decide full_outcome_complete."
     inputs:
@@ -374,11 +376,15 @@ tasks:
       - "full_outcome_complete: true | false"
       - "missing evidence"
       - "next task if not complete"
-    receipt: null  # first run 2026-07-20: not_complete — oracle headline clause failed from fresh clone (undeclared deps masked by dev node_modules); diagnostic manifest-only patch restored FULL green (e2e 3/3 equal, 237/237, 19/19+17/17, check/build 0); poc lane green from fresh unpatched (exit 0, 137 tests); all three misfires clean; re-run after T011
+    receipt:
+      result: done
+      decision: complete
+      full_outcome_complete: true
+      summary: "FINAL AUDIT COMPLETE (Judge, independent fresh-clone re-execution at HEAD 860db55, after first run caught the undeclared-dependency gap T011 closed): pnpm install 0 (373 pkgs); documented command pnpm e2e exit 0 — 3 demo components through CLI into both targets, gates zero-violation, 3/3 React-vs-Solid pairs behaviorally EQUAL in headless Chromium, frameless-receipts/1 verdict pass (mutants honestly 0); check 0; build 5; node 237/237; react-browser 19/19; solid-browser 17/17; test:poc 137 tests exit 0; delta since first run is manifests+lockfile+board only so the clean misfire/honesty/migration findings carry forward (no scope explosion, migrate-not-rewrite proven by shared POC lineage, real unmocked pipeline). CLOSING CAVEATS: equivalence proven over the scripted-scenario proven-surface demo (declared v0 scope, not arbitrary components); Solid ships the 1.8.22 v1 fallback with the executable beta.9 blocker contract + overturn trigger; vendor provenance rev-level only for analyzer@5e5a100 (seven tarballs anchored to poc/vendor checksums); demo receipts record mutants=0 with calibration authority in the framework lanes (12/12 each)."
 
 
 checks:
-  dirty_fingerprint: "T009 fixes in progress on efed06b (test:poc flags, vendor/PROVENANCE, hygiene)"
+  dirty_fingerprint: "clean at 860db55 + closing board edits"
   last_verification:
     result: pass
     task: T010
