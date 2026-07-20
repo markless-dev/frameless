@@ -36,6 +36,7 @@ goal:
       - "Consume markless via pinned vendored artifacts (poc/vendor pattern) until the fixing board closes; then re-pack and re-verify."
       - "Composition surface (children/slots, shared->context, refs) is the NEXT tranche, designed per the recorded discussion; v0 covers the proven fixture-family surface."
       - "Migrate proven POC code; do not rewrite from scratch. POC packages stay intact as evidence."
+      - "2026-07-19 user constraint: monorepo conventions MUST match the markless repo (it will be pushed to the markless GitHub org): pnpm workspace layout under packages/, package.json/tsconfig shapes, test lanes and doctor-script pattern, specs/ discipline, CONTRIBUTING package map, agent playbook file pattern (agent/<name>.md), and tooling choices (vitest, vite/rolldown) mirrored from /Users/jacksm5pro/dev/open-source/markless — read-only reference."
 
 rules:
   pm_owns_state: true
@@ -79,8 +80,9 @@ tasks:
     assignee: Judge
     status: active
     reasoning_hint: high
-    objective: "Architecture lock: from the POC evidence and prior-goal notes, decide the monorepo package layout, the frameless-enriched-ir contract ownership and version, the exact Target interface (what targets/<name> must provide: emitter, gate config, oracle adapter, version matrix), the build entry (CLI vs vite plugin first), the React 19 migration plan, and the migrate-vs-rewrite map for each poc package. Cut the first Worker packages."
+    objective: "Architecture lock: derive the markless repo's monorepo conventions (workspace layout, package.json/tsconfig shapes, test lanes, doctor script, specs/ + CONTRIBUTING + agent-playbook patterns) and lock the Frameless layout to match them; then decide the frameless-enriched-ir contract ownership and version, the exact Target interface (emitter, gate config, oracle adapter, version matrix per targets/<name>), the build entry (CLI vs vite plugin first), the React 19 migration plan, and the migrate-vs-rewrite map for each poc package. Cut the first Worker packages."
     inputs:
+      - "/Users/jacksm5pro/dev/open-source/markless (read-only: workspace layout, package manifests, tsconfigs, test/doctor scripts, specs/, CONTRIBUTING.md, packages/*/agent/*.md)"
       - "docs/goals/frameless-mitosis-successor/notes/T004-claims.md (all adjudications + addenda)"
       - "poc/04..08 READMEs and source structure"
       - "goal.intake.existing_plan_facts"

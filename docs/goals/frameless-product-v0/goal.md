@@ -87,3 +87,12 @@ disagree, state.yaml wins.
 3. Receipt, board update, next largest safe package; Judge only at phase/risk/final
    boundaries.
 4. Finish only with the T999 audit receipt recording full_outcome_complete: true.
+
+## Org-convention constraint (2026-07-19, user)
+
+Frameless will be pushed to the markless GitHub org. The monorepo must match the
+markless repo's conventions — pnpm workspace under `packages/`, matching
+package.json/tsconfig shapes, test lanes + doctor-script pattern, `specs/` as the
+normative contract home, CONTRIBUTING package map, and the `agent/<name>.md`
+playbook pattern — derived by T001 from the read-only markless checkout, not
+invented. Divergences require a recorded rationale in T001's architecture note.
