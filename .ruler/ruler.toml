@@ -1,0 +1,16 @@
+# .ruler/ is the single source for agent rules.
+default_agents = ["codex"]
+
+[gitignore]
+enabled = false
+
+[skills]
+enabled = true
+
+[mcp]
+enabled = true
+merge_strategy = "merge"
+
+[agents.codex]
+enabled = true
+output_path = "AGENTS.md"

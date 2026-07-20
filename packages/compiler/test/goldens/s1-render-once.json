@@ -1,0 +1,914 @@
+{
+  "components": [
+    {
+      "evaluation": {
+        "computedBindings": "reactive",
+        "ordinaryLocals": "once-per-instance"
+      },
+      "guards": [],
+      "locals": [
+        {
+          "declarationKind": "const",
+          "initializer": {
+            "arguments": [
+              {
+                "end": 152,
+                "raw": "'setup'",
+                "start": 145,
+                "type": "Literal",
+                "value": "setup"
+              },
+              {
+                "end": 165,
+                "properties": [
+                  {
+                    "computed": false,
+                    "end": 163,
+                    "key": {
+                      "end": 160,
+                      "name": "runs",
+                      "start": 156,
+                      "type": "Identifier"
+                    },
+                    "kind": "init",
+                    "method": false,
+                    "shorthand": false,
+                    "start": 156,
+                    "type": "Property",
+                    "value": {
+                      "end": 163,
+                      "raw": "1",
+                      "start": 162,
+                      "type": "Literal",
+                      "value": 1
+                    }
+                  }
+                ],
+                "start": 154,
+                "type": "ObjectExpression"
+              }
+            ],
+            "callee": {
+              "end": 144,
+              "name": "onTrace",
+              "start": 137,
+              "type": "Identifier"
+            },
+            "end": 166,
+            "optional": false,
+            "start": 137,
+            "type": "CallExpression"
+          },
+          "names": [
+            "setup"
+          ],
+          "order": 0,
+          "pattern": {
+            "end": 134,
+            "name": "setup",
+            "start": 129,
+            "type": "Identifier"
+          },
+          "reads": [
+            {
+              "graphNodeId": "prop:props",
+              "path": [
+                "onTrace"
+              ],
+              "via": "alias"
+            }
+          ],
+          "semanticRecordIds": []
+        },
+        {
+          "declarationKind": "let",
+          "initializer": {
+            "arguments": [
+              {
+                "end": 188,
+                "raw": "1",
+                "start": 187,
+                "type": "Literal",
+                "value": 1
+              }
+            ],
+            "callee": {
+              "end": 186,
+              "name": "state",
+              "start": 181,
+              "type": "Identifier"
+            },
+            "end": 189,
+            "optional": false,
+            "start": 181,
+            "type": "CallExpression"
+          },
+          "names": [
+            "count"
+          ],
+          "order": 1,
+          "pattern": {
+            "end": 178,
+            "name": "count",
+            "start": 173,
+            "type": "Identifier"
+          },
+          "reads": [],
+          "semanticRecordIds": [
+            "state:count"
+          ]
+        },
+        {
+          "declarationKind": "const",
+          "initializer": {
+            "end": 218,
+            "expressions": [
+              {
+                "end": 215,
+                "name": "label",
+                "start": 210,
+                "type": "Identifier"
+              }
+            ],
+            "quasis": [
+              {
+                "end": 208,
+                "start": 208,
+                "tail": false,
+                "type": "TemplateElement",
+                "value": {
+                  "cooked": "",
+                  "raw": ""
+                }
+              },
+              {
+                "end": 217,
+                "start": 216,
+                "tail": true,
+                "type": "TemplateElement",
+                "value": {
+                  "cooked": ":",
+                  "raw": ":"
+                }
+              }
+            ],
+            "start": 207,
+            "type": "TemplateLiteral"
+          },
+          "names": [
+            "prefix"
+          ],
+          "order": 2,
+          "pattern": {
+            "end": 204,
+            "name": "prefix",
+            "start": 198,
+            "type": "Identifier"
+          },
+          "reads": [
+            {
+              "graphNodeId": "prop:props",
+              "path": [
+                "label"
+              ],
+              "via": "alias"
+            }
+          ],
+          "semanticRecordIds": []
+        },
+        {
+          "declarationKind": "const",
+          "initializer": {
+            "arguments": [
+              {
+                "async": false,
+                "body": {
+                  "end": 284,
+                  "expressions": [
+                    {
+                      "end": 261,
+                      "name": "prefix",
+                      "start": 255,
+                      "type": "Identifier"
+                    },
+                    {
+                      "end": 282,
+                      "left": {
+                        "end": 269,
+                        "name": "count",
+                        "start": 264,
+                        "type": "Identifier"
+                      },
+                      "operator": "*",
+                      "right": {
+                        "end": 282,
+                        "name": "multiplier",
+                        "start": 272,
+                        "type": "Identifier"
+                      },
+                      "start": 264,
+                      "type": "BinaryExpression"
+                    }
+                  ],
+                  "quasis": [
+                    {
+                      "end": 253,
+                      "start": 253,
+                      "tail": false,
+                      "type": "TemplateElement",
+                      "value": {
+                        "cooked": "",
+                        "raw": ""
+                      }
+                    },
+                    {
+                      "end": 262,
+                      "start": 262,
+                      "tail": false,
+                      "type": "TemplateElement",
+                      "value": {
+                        "cooked": "",
+                        "raw": ""
+                      }
+                    },
+                    {
+                      "end": 283,
+                      "start": 283,
+                      "tail": true,
+                      "type": "TemplateElement",
+                      "value": {
+                        "cooked": "",
+                        "raw": ""
+                      }
+                    }
+                  ],
+                  "start": 252,
+                  "type": "TemplateLiteral"
+                },
+                "end": 284,
+                "expression": true,
+                "generator": false,
+                "id": null,
+                "params": [],
+                "start": 246,
+                "type": "ArrowFunctionExpression"
+              }
+            ],
+            "callee": {
+              "end": 245,
+              "name": "computed",
+              "start": 237,
+              "type": "Identifier"
+            },
+            "end": 285,
+            "optional": false,
+            "start": 237,
+            "type": "CallExpression"
+          },
+          "names": [
+            "derived"
+          ],
+          "order": 3,
+          "pattern": {
+            "end": 234,
+            "name": "derived",
+            "start": 227,
+            "type": "Identifier"
+          },
+          "reads": [
+            {
+              "graphNodeId": "prop:props",
+              "path": [
+                "label"
+              ],
+              "via": "local"
+            },
+            {
+              "graphNodeId": "prop:props",
+              "path": [
+                "multiplier"
+              ],
+              "via": "alias"
+            },
+            {
+              "graphNodeId": "state:count",
+              "path": [],
+              "via": "direct"
+            }
+          ],
+          "semanticRecordIds": [
+            "computed:derived"
+          ]
+        }
+      ],
+      "name": "RenderOnce",
+      "props": {
+        "entries": [
+          {
+            "alias": false,
+            "graphNodeId": "prop:props",
+            "localName": "label",
+            "path": [
+              "label"
+            ],
+            "sourceName": "label"
+          },
+          {
+            "alias": false,
+            "graphNodeId": "prop:props",
+            "localName": "multiplier",
+            "path": [
+              "multiplier"
+            ],
+            "sourceName": "multiplier"
+          },
+          {
+            "alias": false,
+            "graphNodeId": "prop:props",
+            "localName": "visible",
+            "path": [
+              "visible"
+            ],
+            "sourceName": "visible"
+          },
+          {
+            "alias": false,
+            "graphNodeId": "prop:props",
+            "localName": "onTrace",
+            "path": [
+              "onTrace"
+            ],
+            "sourceName": "onTrace"
+          }
+        ],
+        "graphNodeId": "prop:props"
+      },
+      "template": [
+        {
+          "children": [
+            {
+              "arms": [
+                {
+                  "children": [
+                    {
+                      "children": [
+                        {
+                          "id": "text:0",
+                          "kind": "text",
+                          "value": "hidden"
+                        }
+                      ],
+                      "dynamicBindings": [],
+                      "eventIds": [],
+                      "id": "h1",
+                      "kind": "host",
+                      "staticAttributes": [
+                        {
+                          "name": "data-branch",
+                          "value": "hidden"
+                        }
+                      ],
+                      "tag": "p"
+                    }
+                  ],
+                  "kind": "then"
+                },
+                {
+                  "children": [
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "expression": {
+                                "end": 453,
+                                "name": "derived",
+                                "start": 446,
+                                "type": "Identifier"
+                              },
+                              "id": "text:1",
+                              "kind": "dynamic-text",
+                              "reads": [
+                                {
+                                  "graphNodeId": "computed:derived",
+                                  "path": [],
+                                  "via": "direct"
+                                }
+                              ]
+                            }
+                          ],
+                          "dynamicBindings": [],
+                          "eventIds": [],
+                          "id": "h3",
+                          "kind": "host",
+                          "staticAttributes": [
+                            {
+                              "name": "data-value",
+                              "value": "derived"
+                            }
+                          ],
+                          "tag": "output"
+                        },
+                        {
+                          "children": [
+                            {
+                              "id": "text:2",
+                              "kind": "text",
+                              "value": "increment"
+                            }
+                          ],
+                          "dynamicBindings": [],
+                          "eventIds": [
+                            "event:0"
+                          ],
+                          "id": "h4",
+                          "kind": "host",
+                          "staticAttributes": [
+                            {
+                              "name": "data-action",
+                              "value": "increment"
+                            }
+                          ],
+                          "tag": "button"
+                        }
+                      ],
+                      "dynamicBindings": [],
+                      "eventIds": [],
+                      "id": "h2",
+                      "kind": "host",
+                      "staticAttributes": [
+                        {
+                          "name": "data-scenario",
+                          "value": "s1"
+                        }
+                      ],
+                      "tag": "section"
+                    }
+                  ],
+                  "kind": "else"
+                }
+              ],
+              "expression": {
+                "argument": {
+                  "end": 326,
+                  "name": "visible",
+                  "start": 319,
+                  "type": "Identifier"
+                },
+                "end": 326,
+                "operator": "!",
+                "prefix": true,
+                "start": 318,
+                "type": "UnaryExpression"
+              },
+              "id": "branch-site:0",
+              "kind": "branch",
+              "reads": [
+                {
+                  "graphNodeId": "prop:props",
+                  "path": [
+                    "visible"
+                  ],
+                  "via": "alias"
+                }
+              ]
+            }
+          ],
+          "dynamicBindings": [],
+          "eventIds": [],
+          "id": "h0",
+          "kind": "host",
+          "staticAttributes": [
+            {
+              "name": "data-s1-root",
+              "value": ""
+            }
+          ],
+          "tag": "div"
+        }
+      ]
+    }
+  ],
+  "filename": "src/fixtures/s1-render-once.tsrx",
+  "imports": [],
+  "module": {
+    "exports": [
+      {
+        "componentName": "RenderOnce",
+        "exportedName": "RenderOnce",
+        "kind": "named"
+      }
+    ]
+  },
+  "records": {
+    "aliases": [
+      {
+        "declarationKind": "const",
+        "graphNodeId": "prop:props",
+        "id": "alias:RenderOnce:label",
+        "name": "label",
+        "path": [
+          "label"
+        ],
+        "sourceSpan": {
+          "end": 85,
+          "filename": "src/fixtures/s1-render-once.tsrx",
+          "start": 80
+        },
+        "target": "props.label"
+      },
+      {
+        "declarationKind": "const",
+        "graphNodeId": "prop:props",
+        "id": "alias:RenderOnce:multiplier",
+        "name": "multiplier",
+        "path": [
+          "multiplier"
+        ],
+        "sourceSpan": {
+          "end": 97,
+          "filename": "src/fixtures/s1-render-once.tsrx",
+          "start": 87
+        },
+        "target": "props.multiplier"
+      },
+      {
+        "declarationKind": "const",
+        "graphNodeId": "prop:props",
+        "id": "alias:RenderOnce:onTrace",
+        "name": "onTrace",
+        "path": [
+          "onTrace"
+        ],
+        "sourceSpan": {
+          "end": 115,
+          "filename": "src/fixtures/s1-render-once.tsrx",
+          "start": 108
+        },
+        "target": "props.onTrace"
+      },
+      {
+        "declarationKind": "const",
+        "graphNodeId": "prop:props",
+        "id": "alias:RenderOnce:visible",
+        "name": "visible",
+        "path": [
+          "visible"
+        ],
+        "sourceSpan": {
+          "end": 106,
+          "filename": "src/fixtures/s1-render-once.tsrx",
+          "start": 99
+        },
+        "target": "props.visible"
+      }
+    ],
+    "bindings": [
+      {
+        "async": false,
+        "asyncCapable": false,
+        "computed": {
+          "expression": {
+            "async": false,
+            "body": {
+              "end": 284,
+              "expressions": [
+                {
+                  "end": 261,
+                  "name": "prefix",
+                  "start": 255,
+                  "type": "Identifier"
+                },
+                {
+                  "end": 282,
+                  "left": {
+                    "end": 269,
+                    "name": "count",
+                    "start": 264,
+                    "type": "Identifier"
+                  },
+                  "operator": "*",
+                  "right": {
+                    "end": 282,
+                    "name": "multiplier",
+                    "start": 272,
+                    "type": "Identifier"
+                  },
+                  "start": 264,
+                  "type": "BinaryExpression"
+                }
+              ],
+              "quasis": [
+                {
+                  "end": 253,
+                  "start": 253,
+                  "tail": false,
+                  "type": "TemplateElement",
+                  "value": {
+                    "cooked": "",
+                    "raw": ""
+                  }
+                },
+                {
+                  "end": 262,
+                  "start": 262,
+                  "tail": false,
+                  "type": "TemplateElement",
+                  "value": {
+                    "cooked": "",
+                    "raw": ""
+                  }
+                },
+                {
+                  "end": 283,
+                  "start": 283,
+                  "tail": true,
+                  "type": "TemplateElement",
+                  "value": {
+                    "cooked": "",
+                    "raw": ""
+                  }
+                }
+              ],
+              "start": 252,
+              "type": "TemplateLiteral"
+            },
+            "end": 284,
+            "expression": true,
+            "generator": false,
+            "id": null,
+            "params": [],
+            "start": 246,
+            "type": "ArrowFunctionExpression"
+          },
+          "reads": [
+            {
+              "graphNodeId": "prop:props",
+              "path": [
+                "label"
+              ],
+              "via": "local"
+            },
+            {
+              "graphNodeId": "prop:props",
+              "path": [
+                "multiplier"
+              ],
+              "via": "alias"
+            },
+            {
+              "graphNodeId": "state:count",
+              "path": [],
+              "via": "direct"
+            }
+          ]
+        },
+        "declarationKind": "const",
+        "id": "computed:derived",
+        "kind": "computed",
+        "name": "derived",
+        "reads": [
+          {
+            "graphNodeId": "prop:props",
+            "path": [
+              "label"
+            ]
+          },
+          {
+            "graphNodeId": "prop:props",
+            "path": [
+              "multiplier"
+            ]
+          },
+          {
+            "graphNodeId": "state:count",
+            "path": []
+          }
+        ],
+        "writable": false,
+        "writes": []
+      },
+      {
+        "declarationKind": "const",
+        "id": "prop:props",
+        "kind": "prop",
+        "name": "props",
+        "reads": [],
+        "valueKind": "object",
+        "writable": false,
+        "writes": []
+      },
+      {
+        "declarationKind": "let",
+        "id": "state:count",
+        "initialValue": 1,
+        "initializer": {
+          "end": 188,
+          "raw": "1",
+          "start": 187,
+          "type": "Literal",
+          "value": 1
+        },
+        "kind": "state",
+        "name": "count",
+        "reads": [],
+        "valueKind": "scalar",
+        "writable": true,
+        "writes": [
+          {
+            "graphNodeId": "state:count",
+            "operation": "update",
+            "path": [],
+            "prefix": false,
+            "sourceSpan": {
+              "end": 538,
+              "filename": "src/fixtures/s1-render-once.tsrx",
+              "start": 533
+            },
+            "updateOperator": "++",
+            "via": "direct"
+          }
+        ]
+      }
+    ],
+    "events": [
+      {
+        "eventName": "click",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "end": 541,
+                    "expression": {
+                      "argument": {
+                        "end": 538,
+                        "name": "count",
+                        "start": 533,
+                        "type": "Identifier"
+                      },
+                      "end": 540,
+                      "operator": "++",
+                      "prefix": false,
+                      "start": 533,
+                      "type": "UpdateExpression"
+                    },
+                    "start": 533,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 577,
+                    "expression": {
+                      "arguments": [
+                        {
+                          "end": 564,
+                          "raw": "'change'",
+                          "start": 556,
+                          "type": "Literal",
+                          "value": "change"
+                        },
+                        {
+                          "end": 575,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 573,
+                              "key": {
+                                "end": 573,
+                                "name": "count",
+                                "start": 568,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": true,
+                              "start": 568,
+                              "type": "Property",
+                              "value": {
+                                "end": 573,
+                                "name": "count",
+                                "start": 568,
+                                "type": "Identifier"
+                              }
+                            }
+                          ],
+                          "start": 566,
+                          "type": "ObjectExpression"
+                        }
+                      ],
+                      "callee": {
+                        "end": 555,
+                        "name": "onTrace",
+                        "start": 548,
+                        "type": "Identifier"
+                      },
+                      "end": 576,
+                      "optional": false,
+                      "start": 548,
+                      "type": "CallExpression"
+                    },
+                    "start": 548,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 584,
+                "start": 525,
+                "type": "BlockStatement"
+              },
+              "end": 584,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [],
+              "start": 519,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              },
+              {
+                "graphNodeId": "state:count",
+                "path": [],
+                "via": "direct"
+              }
+            ],
+            "writes": [
+              {
+                "graphNodeId": "state:count",
+                "operation": "update",
+                "path": [],
+                "prefix": false,
+                "sourceSpan": {
+                  "end": 538,
+                  "filename": "src/fixtures/s1-render-once.tsrx",
+                  "start": 533
+                },
+                "updateOperator": "++",
+                "via": "direct"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h4",
+        "id": "event:0"
+      }
+    ],
+    "stateReads": [
+      {
+        "graphNodeId": "computed:derived",
+        "path": []
+      },
+      {
+        "graphNodeId": "prop:props",
+        "path": [
+          "label"
+        ]
+      },
+      {
+        "graphNodeId": "prop:props",
+        "path": [
+          "multiplier"
+        ]
+      },
+      {
+        "graphNodeId": "prop:props",
+        "path": [
+          "onTrace"
+        ]
+      },
+      {
+        "graphNodeId": "prop:props",
+        "path": [
+          "visible"
+        ]
+      },
+      {
+        "graphNodeId": "state:count",
+        "path": []
+      }
+    ],
+    "stateWrites": [
+      {
+        "graphNodeId": "state:count",
+        "operation": "update",
+        "path": [],
+        "prefix": false,
+        "sourceSpan": {
+          "end": 538,
+          "filename": "src/fixtures/s1-render-once.tsrx",
+          "start": 533
+        },
+        "updateOperator": "++",
+        "via": "direct"
+      }
+    ]
+  },
+  "version": "frameless-enriched-ir/1"
+}

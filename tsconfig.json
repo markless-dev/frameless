@@ -1,0 +1,16 @@
+{
+	"compilerOptions": {
+		"allowImportingTsExtensions": true,
+		"lib": ["ES2022"],
+		"module": "ESNext",
+		"moduleResolution": "Bundler",
+		"noEmit": true,
+		"resolveJsonModule": true,
+		"skipLibCheck": true,
+		"strict": true,
+		"target": "ES2022",
+		"types": ["node", "vitest/globals"]
+	},
+	"exclude": ["dist", "node_modules", "poc", "packages/*/test", "tests"],
+	"include": ["packages/*/src/**/*.d.ts", "packages/*/src/**/*.ts", "vite.config.ts"]
+}
