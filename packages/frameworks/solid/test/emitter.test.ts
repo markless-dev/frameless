@@ -3,6 +3,7 @@ import type { EnrichedIR } from '@frameless/compiler';
 import { resolve } from 'pathe';
 import { describe, expect, test } from 'vitest';
 import { emit, validateEnrichedIr } from '../src/emitter/index.ts';
+import { checkSources } from '../src/gate/index.ts';
 
 const root = resolve(import.meta.dirname, '..');
 const goldenRoot = resolve(root, '../../compiler/test/goldens');
@@ -120,7 +121,7 @@ describe('Solid structural emitter', () => {
 			expect(emit(ir)).toBe(emit(await golden('s1-render-once.json')));
 		});
 
-		test('component, signal, store, row, key, and ordinary-local renames are data-driven', async () => {
+		test('component, signal, store, row, and ordinary-local renames are data-driven', async () => {
 			const s1 = clone(await golden('s1-render-once.json')) as any;
 			const s1Renames = new Map([
 				['RenderOnce', 'ChangedView'],
@@ -157,12 +158,44 @@ describe('Solid structural emitter', () => {
 			];
 			const repeat = findKind(s2.components[0].template, 'keyed-repeat')!;
 			repeat.item = 'entry';
-			repeat.key.expression.property.name = 'identity';
-			repeat.key.reads[0].path = ['identity'];
 			const changedS2 = emit(s2);
 			expect(changedS2).toContain('const [records, setRecords] = createStore');
 			expect(changedS2).toContain('<For each={records}>{entry =>');
-			expect(changedS2).toContain('key: "identity"');
+		});
+
+		test('a coherent row identity rename drives every keyed store use', async () => {
+			const ir = clone(await golden('s2-keyed-todo.json')) as any;
+			addElementsToEmptyBranchArms(ir.components[0].template);
+			visit(ir, (record) => {
+				if (
+					record.type === 'MemberExpression' &&
+					record.computed === false &&
+					record.property?.type === 'Identifier' &&
+					record.property.name === 'id'
+				)
+					record.property.name = 'identity';
+				if (
+					record.type === 'Property' &&
+					record.computed === false &&
+					record.key?.type === 'Identifier' &&
+					record.key.name === 'id'
+				)
+					record.key.name = 'identity';
+				if (Array.isArray(record.path))
+					record.path = record.path.map((part: string) =>
+						part === 'id' ? 'identity' : part,
+					);
+			});
+			validateEnrichedIr(ir);
+			const source = emit(ir);
+			expect(source).toContain('key: "identity"');
+			expect(source).toContain('identity: `c${next}`');
+			expect(source).toContain('item.identity === todo.identity');
+			expect(source).toContain('data-oracle-row-key={todo.identity}');
+			expect(source).not.toMatch(/\.id\b/);
+			expect(
+				(await checkSources([{ file: 'generated/CoherentKeyRename.jsx', source }])).violations,
+			).toEqual([]);
 		});
 
 		test('lexical shadowing and generated import collisions remain binding-safe', async () => {
@@ -198,14 +231,26 @@ describe('Solid structural emitter', () => {
 			expect(source).toContain('const [createSignal, setCreateSignal] = createSignal2(1)');
 		});
 
-		test('once-capture classification follows binding kind instead of graph id spelling', async () => {
-			const ir = clone(await golden('s1-render-once.json')) as any;
+		test('opaque graph ids leave binding-kind-driven output unchanged', async () => {
+			const baselineIr = await golden('s1-render-once.json');
+			const baseline = emit(baselineIr);
+			const ir = clone(baselineIr) as any;
+			const graphIds = new Map(
+				ir.records.bindings.map((binding: any, index: number) => [binding.id, `g${index}`]),
+			);
 			visit(ir, (record) => {
-				if (record.id === 'prop:props') record.id = 'binding:component-input';
-				if (record.graphNodeId === 'prop:props')
-					record.graphNodeId = 'binding:component-input';
+				for (const [field, value] of Object.entries(record)) {
+					if (typeof value === 'string' && graphIds.has(value))
+						record[field] = graphIds.get(value);
+					else if (Array.isArray(value))
+						record[field] = value.map((entry) =>
+							typeof entry === 'string' && graphIds.has(entry) ? graphIds.get(entry) : entry,
+						);
+				}
 			});
-			expect(emit(ir)).toContain('untrack(() => props.onTrace');
+			validateEnrichedIr(ir);
+			expect(ir.records.bindings.map((binding: any) => binding.id)).toEqual(['g0', 'g1', 'g2']);
+			expect(emit(ir)).toBe(baseline);
 		});
 
 		test('store-member lowering uses write structure without statement adjacency', async () => {
@@ -223,6 +268,28 @@ describe('Solid structural emitter', () => {
 			const source = emit(ir);
 			expect(source).toContain('setTodos(produce(');
 			expect(source).toMatch(/0;\s*props\.onTrace\("edit"/);
+		});
+
+		test('store-member lowering targets the recorded alias across predicate shadowing', async () => {
+			const ir = clone(await golden('s2-keyed-todo.json')) as any;
+			addElementsToEmptyBranchArms(ir.components[0].template);
+			const handler = ir.records.events
+				.flatMap((event: any) => event.handlers)
+				.find((entry: any) =>
+					entry.writes.some((write: any) => write.path.join('/') === '*/title'),
+				);
+			visit(handler.expression, (record) => {
+				if (record.type === 'Identifier' && record.name === 'alias') record.name = 'item';
+			});
+			validateEnrichedIr(ir);
+			const source = emit(ir);
+			expect(source).toMatch(
+				/setTodos\(produce\(storeDraft => \{\s*const item = storeDraft\.find\(item => item\.id === todo\.id\);\s*item\.title = title;/,
+			);
+			expect(source).not.toContain('const item = todos.find');
+			expect(
+				(await checkSources([{ file: 'generated/StoreShadow.jsx', source }])).violations,
+			).toEqual([]);
 		});
 	});
 
