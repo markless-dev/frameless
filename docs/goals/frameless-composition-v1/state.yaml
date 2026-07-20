@@ -29,6 +29,7 @@ goal:
       - "EnrichedIR/1 was locked for one component per file with no cross-file imports (v0 limit, fail-closed) — composition REQUIRES lifting that deliberately via a versioned /2 contract, both compiler-side and emitter-side validation."
       - "Cross-target equivalence for shared state needs scenarios where two components interact through shared() — the oracle's scenario vocabulary (actions/observations) may need extension; analyzer changes are critique-mandatory."
     existing_plan_facts:
+      - "USER GATE (2026-07-20): the React shared-state lowering tradeoff must be fully worked out BEFORE emitter work proceeds — T004 must weigh executed perf evidence x generated-output idiomaticity (would a human write it) x concurrent-rendering semantics (uSES sync-flush opt-out) x validated React Compiler behavior, and the PM presents the tradeoff + recommendation to the owner as a plain decision menu before cutting shared-lowering Worker packets."
       - "v0 charter recorded: 'Composition surface (children/slots, shared->context, refs) is the NEXT tranche' — 'shared->context' was a sketch, not a decision; the dossier decides the actual React lowering with evidence."
       - "User design principle (2026-07-20): markless shared()'s semantic records carry the info frameworks need for shared state — emitters consume recorded read/write granularity; the conversion should be simple BECAUSE the IR is rich, not because the emitter guesses."
       - "Candidate React idioms to weigh: context + memo discipline, context selectors, useSyncExternalStore external store, prop threading; React Compiler interplay validated not assumed."
@@ -68,7 +69,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-composition-v1/"
     command: "npx goalbuddy board docs/goals/frameless-composition-v1"
 
-active_task: T002  # T003 runs concurrently as read-only scout (recorded: disjoint, no writers)
+active_task: T004
 
 tasks:
   - id: T001
@@ -92,34 +93,41 @@ tasks:
   - id: T002
     type: scout
     assignee: Scout
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "React composition idiom dossier: evidenced rulings for shared() lowering (context + memo discipline vs context selectors vs useSyncExternalStore store vs prop threading — re-render cost evidence, thresholds, and the React Compiler interplay VALIDATED with the actual compiler, per the user's explicit uncertainty), children/slots (ReactNode props patterns), refs (React 19 ref-as-prop, imperative focus), each with citations and overturn triggers; the deciding principle is that IR read/write granularity records drive the choice per shared cell."
     constraints:
       - "Read-only. No taste-only calls; corpus/docs/benchmark citations per ruling; React Compiler claims require executed validation, not memory."
     expected_output:
       - "notes/T002-react-composition-idioms.md: construct -> ruling -> evidence -> gate rule -> overturn trigger"
-    receipt: null
+    receipt:
+      result: done
+      note: notes/T002-react-composition-idioms.md
+      summary: "Executed centerpiece: React Compiler does NOT change context-consumer re-renders (memoized context B re-renders on unrelated cell change, baseline AND compiled — verbatim run ledger in note); compiler only rescued naive prop threading; per-cell store subscription and disciplined props both achieve B=0. Rulings: tiered record-driven shared lowering (props/scalar-context for trivial shapes, provider-scoped store + per-cell subscriptions for multi-cell/method shapes, module store only for explicit page scope); children as opaque ReactNode prop (no Children API/cloneElement); useRef+ref-as-prop, forwardRef never; React Compiler neither required nor assumed (uncompiled correctness, additive compiled lane). Evidence limits recorded (minimal DOM host not jsdom, render counts not durations)."
   - id: T003
     type: scout
     assignee: Scout
-    status: queued
+    status: done
     reasoning_hint: medium
     objective: "Solid composition idiom dossier: children/slots (props.children, children() helper semantics), shared() lowering (createContext vs module-scope signals/stores vs props — with Solid's ownership/disposal rules), refs (ref props, element access), v2-forward notes; same evidence protocol."
     constraints:
       - "Read-only. Citations per ruling; local solid checkout + docs as corpora."
     expected_output:
       - "notes/T003-solid-composition-idioms.md: construct -> ruling -> evidence -> gate rule -> overturn trigger"
-    receipt: null
+    receipt:
+      result: done
+      note: notes/T003-solid-composition-idioms.md
+      summary: "Rulings: plain props.children for single opaque projection, children() helper only for multi-read/inspect cases (docs + 1.8.22 source + runtime probe cited); same-module shared() as module-defined store factory instantiated per scope with Solid ownership rules respected (createRoot/onCleanup cited); refs via ref attribute + null-guarded imperative access, cleanup mapping from recorded attach-return-cleanup to onCleanup; shared({scope}) CSR lifetimes mapped honestly with SSR boundary noted."
   - id: T004
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     objective: "Architecture lock: enriched-ir/2 contract design (what grows, what stays fail-closed, versioning + migration of /1 consumers), the shared()/slots/refs surface definition for this tranche (trim to what the pinned compiler proves — blocked slices recorded, not improvised), oracle scenario-vocabulary extensions, demo library shape, and the Worker package cut with allowed_files/verify/stop_if per slice. Flag any T001 finding that gates the whole tranche on the vendor refresh."
     inputs:
       - "notes/T001..T003"
       - "v0 board receipts (process lessons)"
+      - "OWNER DECISION (2026-07-20, via decision menu): React shared() lowering = TIERED RECORD-DRIVEN per the T002 ruling — IR records pick the idiom per shared shape; general case is provider-scoped store with per-cell subscriptions wrapped in ONE emitted hook named after the authored factory (components call useCounter() and read like hand-written React); plain props/context only where provably harmless; module store only for explicit page scope. This is binding for packet-cutting."
     expected_output:
       - "notes/T004-architecture.md: locked decisions + package definitions"
     receipt: null
