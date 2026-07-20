@@ -1,5 +1,5 @@
 {
-  "schema": "arcade-c9-evidence/2",
+  "schema": "frameless-c9-evidence/2",
   "generatedBy": "vitest browser / headless Chromium",
   "environment": {
     "execution": "Vitest browser mode, headless Chromium; blocked Markless records are adjudicated upstream findings, not executed passes",
@@ -10,7 +10,7 @@
     "markless": "@markless/web + compiler/core/bundler 0.1.1 vendored tarballs",
     "react": "18.3.1",
     "solid": "1.8.22 fallback",
-    "oracle": "arcade-equivalence-oracle/1"
+    "oracle": "frameless-equivalence-oracle/1"
   },
   "findings": {
     "3": {

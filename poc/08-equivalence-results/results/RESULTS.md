@@ -67,4 +67,4 @@ Markless-native leg: **blocked-by-upstream**.
 | markless | @markless/web + compiler/core/bundler 0.1.1 vendored tarballs |
 | react | 18.3.1 |
 | solid | 1.8.22 fallback |
-| oracle | arcade-equivalence-oracle/1 |
+| oracle | frameless-equivalence-oracle/1 |

@@ -4,11 +4,11 @@
 version: 2
 
 goal:
-  title: "Arcade: Mitosis postmortem and markless-powered successor"
+  title: "Frameless: Mitosis postmortem and markless-powered successor"
   slug: "frameless-mitosis-successor"
   kind: existing_plan
   tranche: "Produce an evidence-backed Mitosis adoption postmortem, a markless-based successor design, and a top-level poc/ folder where every major claim has a runnable proof."
-  status: active
+  status: done
   oracle:
     signal: "A claims-to-POC map: every numbered claim in the research report points at a POC under poc/ with a verify command that passes on this machine; cross-framework 'works the same' claims are proven by an equivalence check, not prose."
     cadence: "after each Worker package and at final audit"
@@ -229,7 +229,7 @@ tasks:
       result: done
       decision: "complete"
       full_outcome_complete: true
-      summary: "Independent goal-judge re-ran all 8 POC suites green on this machine (3,2,17,15,18,33,40,9+1 incl. live Chromium matrix regenerating verdict.json: 15/15 emitted/handwritten pairs equal, 5/5 mutants rejected, 12 markless pairs blocked-by-upstream findings #3/#5/#6/#7/#8, summary.c9=pass). Claim map clean: C1-C9+C11 at adjudicated wordings, C5 labeled source evidence, C10 non-claim table, B1-B4+opinions labeled, all 8 findings + Solid boundary + out-of-scope present. No intake misfire. Cosmetic: retag report lines 24/67/97 narrative context to T001 (folded into rename amendment). GOAL CLOSURE HELD pending user-mandated Arcade->Frameless rename amendment, dispatched immediately after this receipt."
+      summary: "Independent goal-judge re-ran all 8 POC suites green on this machine (3,2,17,15,18,33,40,9+1 incl. live Chromium matrix regenerating verdict.json: 15/15 emitted/handwritten pairs equal, 5/5 mutants rejected, 12 markless pairs blocked-by-upstream findings #3/#5/#6/#7/#8, summary.c9=pass). Claim map clean: C1-C9+C11 at adjudicated wordings, C5 labeled source evidence, C10 non-claim table, B1-B4+opinions labeled, all 8 findings + Solid boundary + out-of-scope present. No intake misfire. Cosmetic: retag report lines 24/67/97 narrative context to T001 (folded into rename amendment). GOAL CLOSURE HELD pending user-mandated Arcade->Frameless rename amendment, dispatched immediately after this receipt. POST-AMENDMENT PM CONFIRMATION: rename cascade merged and verified — all suites green under Frameless naming (05:18, 06:33, 07:40, 08: 9/9 node + 1/1 Chromium with verdict.json regenerated as frameless-c9-evidence/2, 15/15 pairs equal, mutants rejected), zero arcade survivors outside historical board receipts, audit retag applied. Rename was branding-only; the T999 verdict stands. Goal closed."
 
 checks:
   dirty_fingerprint: clean-at-1387448

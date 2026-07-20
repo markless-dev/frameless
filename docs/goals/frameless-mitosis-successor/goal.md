@@ -1,4 +1,4 @@
-# Arcade: Mitosis postmortem and markless-powered successor
+# Frameless: Mitosis postmortem and markless-powered successor
 
 > Naming (2026-07-19): the successor tool is **Arcade** (user owns the `arcade` npm
 > package); "frameless" was the working title and survives only in this goal's
