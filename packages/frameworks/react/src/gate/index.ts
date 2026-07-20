@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { readdir, readFile } from 'node:fs/promises';
 import { parse } from '@babel/parser';
 import traverseModule, { type NodePath } from '@babel/traverse';
@@ -7,7 +8,7 @@ import { ESLint } from 'eslint';
 import reactPlugin from 'eslint-plugin-react';
 import reactHooksPlugin from 'eslint-plugin-react-hooks';
 import globals from 'globals';
-import { normalize, relative, resolve } from 'pathe';
+import { dirname, normalize, relative, resolve } from 'pathe';
 
 export type DossierRef = `T002 ruling ${number}`;
 export type GatePolicy = {
@@ -97,10 +98,14 @@ async function collectJsxFiles(root: string, directory: string): Promise<string[
 	return files;
 }
 
+const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
+
 export async function discoverGeneratedFiles(
 	options: { readonly cwd?: string; readonly directory?: string } = {},
 ): Promise<string[]> {
-	const cwd = resolve(options.cwd ?? process.cwd());
+	// Discovery anchors to the package, not the invoking process — the root
+	// workspace runs this suite with cwd at the repo root.
+	const cwd = resolve(options.cwd ?? PACKAGE_ROOT);
 	return (await collectJsxFiles(cwd, options.directory ?? 'generated')).sort();
 }
 
@@ -601,7 +606,14 @@ function customPolicies(source: string, file: string): GateViolation[] {
 }
 
 function makeEslint(cwd: string): ESLint {
-	const recommendedHooks = (reactHooksPlugin.configs as Record<string, any>).flat?.recommended;
+	// eslint-plugin-react-hooks ^6 ships flat configs at runtime but not in its
+	// types, keyed as 'flat/recommended' (and interop may nest under default).
+	const hooksModule = reactHooksPlugin as unknown as {
+		default?: { configs?: Record<string, any> };
+		configs?: Record<string, any>;
+	};
+	const hooksConfigs = hooksModule.configs ?? hooksModule.default?.configs ?? {};
+	const recommendedHooks = hooksConfigs['flat/recommended'] ?? hooksConfigs['recommended-latest'];
 	if (!recommendedHooks) throw new Error('eslint-plugin-react-hooks ^6 flat recommended config is unavailable');
 	return new ESLint({
 		cwd,
@@ -611,7 +623,8 @@ function makeEslint(cwd: string): ESLint {
 			eslintJs.configs.recommended,
 			(reactPlugin.configs as Record<string, any>).flat.recommended,
 			(reactPlugin.configs as Record<string, any>).flat['jsx-runtime'],
-			recommendedHooks,
+			// 'flat/recommended' is an ARRAY of flat config entries — spread it.
+			...(Array.isArray(recommendedHooks) ? recommendedHooks : [recommendedHooks]),
 			{
 				files: ['**/*.jsx'],
 				languageOptions: {
@@ -637,7 +650,9 @@ export async function checkSources(
 	entries: ReadonlyArray<{ readonly file: string; readonly source: string }>,
 	options: { readonly cwd?: string } = {},
 ): Promise<GateResult> {
-	const cwd = resolve(options.cwd ?? process.cwd());
+	// Discovery anchors to the package, not the invoking process — the root
+	// workspace runs this suite with cwd at the repo root.
+	const cwd = resolve(options.cwd ?? PACKAGE_ROOT);
 	const eslint = makeEslint(cwd);
 	const violations: GateViolation[] = [];
 	for (const { file, source } of entries) {
@@ -651,7 +666,7 @@ export async function checkSources(
 			warnIgnored: false,
 		});
 		for (const message of result?.messages ?? []) {
-			if (message.severity === 0) continue;
+			if ((message.severity as number) === 0) continue;
 			const policy = `eslint:${message.ruleId ?? 'parse'}`;
 			violations.push({
 				file,
@@ -668,7 +683,9 @@ export async function checkSources(
 export async function checkGeneratedFiles(
 	options: { readonly cwd?: string; readonly directory?: string } = {},
 ): Promise<GateResult> {
-	const cwd = resolve(options.cwd ?? process.cwd());
+	// Discovery anchors to the package, not the invoking process — the root
+	// workspace runs this suite with cwd at the repo root.
+	const cwd = resolve(options.cwd ?? PACKAGE_ROOT);
 	const files = await discoverGeneratedFiles({ cwd, directory: options.directory });
 	const entries = await Promise.all(
 		files.map(async (file) => ({ file, source: await readFile(resolve(cwd, file), 'utf8') })),

@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest';
 import { EventForm } from '../generated/S3.jsx';
 import { KeyedTodo } from '../generated/S2.jsx';
 import { RenderOnce } from '../generated/S1.jsx';
-import { createReactAdapter } from '../src/index.ts';
+import { createReactAdapter } from '../src/adapter.ts';
 import { reactReferences } from './reference.tsx';
 
 const emitted = {

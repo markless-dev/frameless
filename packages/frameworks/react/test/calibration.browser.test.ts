@@ -6,7 +6,7 @@ import {
 	runScenario,
 	scenarioById,
 } from '@frameless/analyzer';
-import { createReactAdapter } from '../src/index.ts';
+import { createReactAdapter } from '../src/adapter.ts';
 import { makeReactS2, makeReactS3, reactReferences } from './reference.tsx';
 
 // Mutants are COMPONENT VARIANTS (the calibrated mechanism): the mutant component's

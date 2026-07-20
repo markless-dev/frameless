@@ -40,8 +40,10 @@ const productConfig = defineConfig({
 				test: {
 					name: 'node',
 					environment: 'node',
-					include: ['packages/*/test/**/*.test.ts', 'packages/compiler/test/**/*.test.ts'],
-					exclude: ['poc/**', 'packages/frameworks/**'],
+					include: ['packages/*/test/**/*.test.ts', 'packages/frameworks/*/test/**/*.test.ts', 'packages/compiler/test/**/*.test.ts'],
+					// frameworks' browser suites run in their own projects; node-lane
+					// tests in frameworks packages (emitter/gate) belong here.
+					exclude: ['poc/**', '**/*.browser.test.ts', '**/node_modules/**'],
 				},
 			},
 			'packages/frameworks/react/vitest.config.ts',
