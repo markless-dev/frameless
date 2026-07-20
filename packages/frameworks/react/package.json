@@ -3,17 +3,38 @@
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",
+	"scripts": {
+		"measure:size": "node --experimental-strip-types scripts/measure-size.ts",
+		"regenerate": "node --experimental-strip-types scripts/regenerate.ts",
+		"test": "vitest run --config vitest.node.config.ts",
+		"test:browser": "vitest run --config vitest.config.ts --project react-browser"
+	},
 	"exports": { ".": "./src/index.ts" },
 	"publishConfig": { "exports": { ".": { "default": "./dist/index.js" } } },
 	"dependencies": {
 		"@frameless/analyzer": "workspace:*",
+		"@frameless/compiler": "workspace:*",
+		"@babel/generator": "7.29.7",
+		"@babel/parser": "7.29.7",
+		"@babel/traverse": "7.29.7",
+		"@babel/types": "7.29.7",
+		"@eslint/js": "^9.39.2",
+		"eslint": "^9.39.2",
+		"eslint-plugin-react": "^7.37.5",
+		"eslint-plugin-react-hooks": "^6.1.1",
+		"globals": "^16.5.0",
+		"pathe": "catalog:",
 		"react": "19.2.3",
 		"react-dom": "19.2.3"
 	},
 	"devDependencies": {
+		"@types/babel__generator": "^7.27.0",
+		"@types/babel__traverse": "^7.28.0",
 		"@types/react": "19.2.14",
 		"@types/react-dom": "19.2.3",
 		"@vitest/browser-playwright": "4.1.5",
-		"playwright": "1.58.2"
+		"playwright": "1.58.2",
+		"vite": "catalog:default",
+		"vitest": "catalog:default"
 	}
 }

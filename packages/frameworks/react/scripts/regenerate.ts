@@ -1,0 +1,18 @@
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import type { EnrichedIR } from '@frameless/compiler';
+import { resolve } from 'pathe';
+import { emit } from '../src/emitter/index.ts';
+
+const root = resolve(import.meta.dirname, '..');
+const goldenRoot = resolve(root, '../../compiler/test/goldens');
+const fixtures = [
+	['S1.jsx', 's1-render-once.json'],
+	['S2.jsx', 's2-keyed-todo.json'],
+	['S3.jsx', 's3-event-form.json'],
+] as const;
+
+await mkdir(resolve(root, 'generated'), { recursive: true });
+for (const [output, golden] of fixtures) {
+	const ir = JSON.parse(await readFile(resolve(goldenRoot, golden), 'utf8')) as EnrichedIR;
+	await writeFile(resolve(root, 'generated', output), emit(ir));
+}
