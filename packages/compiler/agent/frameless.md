@@ -18,7 +18,7 @@ lets separately owned target packages emit framework code.
    serializer artifacts, stopping at `buildSemanticGraph()`.
 2. Enriched IR to generated JSX belongs exclusively to each target emitter and
    uses no Markless render/runtime pipeline.
-3. Generated JSX to browser modules belongs to the oracle's per-framework
+3. Generated JSX to browser modules belongs to the analyzer's per-framework
    Vite/Babel transforms.
 
 ## Run the project doctor

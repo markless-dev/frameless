@@ -1,72 +1,51 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-import { playwright } from '@vitest/browser-playwright';
 import { defineConfig } from 'vite-plus';
 import type { PackUserConfig } from 'vite-plus/pack';
-import solid from 'vite-plugin-solid';
 
-type Manifest = { dependencies?: Record<string, string> };
 const rootDir = import.meta.dirname;
-const packageDir = (name: string) => resolve(rootDir, 'packages', name);
-const packageImport = (name: string) => new RegExp(`^${name.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\$&')}(/.*)?$`);
-const pack = (name: string): PackUserConfig => {
-	const manifest = JSON.parse(readFileSync(resolve(packageDir(name), 'package.json'), 'utf8')) as Manifest;
-	return {
-		name: `@frameless/${name}`,
-		cwd: packageDir(name),
-		entry: { index: './src/index.ts' },
-		format: ['esm'],
-		outDir: './dist',
-		platform: 'neutral',
-		fixedExtension: false,
-		// v0 intentionally emits JavaScript only: declarations and sourcemaps reopen /1.
-		dts: false,
-		clean: true,
-		deps: {
-			neverBundle: [
-				/^node:.*$/,
-				...Object.keys(manifest.dependencies ?? {}).map(packageImport),
-			],
-			onlyBundle: false,
-		},
-	};
-};
+const packageImport = (name: string) => new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(/.*)?$`);
+const nodeBuiltinImport = /^node:.*$/;
+
+const pack = (
+	packagePath: string,
+	name: string,
+	dependencies: ReadonlyArray<string> = [],
+): PackUserConfig => ({
+	name,
+	cwd: `${rootDir}/${packagePath}`,
+	entry: { index: './src/index.ts' },
+	format: ['esm'],
+	outDir: './dist',
+	platform: 'neutral',
+	fixedExtension: false,
+	dts: false,
+	clean: true,
+	deps: {
+		neverBundle: [nodeBuiltinImport, ...dependencies.map(packageImport)],
+		onlyBundle: false,
+	},
+});
 
 const productConfig = defineConfig({
 	staged: { '*': 'vp check --fix' },
-	pack: ['compiler', 'oracle', 'target-react', 'target-solid', 'cli'].map(pack),
+	pack: [
+		pack('packages/compiler', '@frameless/compiler', ['@markless/compiler', '@tsrx/core']),
+		pack('packages/analyzer', '@frameless/analyzer'),
+		pack('packages/frameworks/react', '@frameless/react', ['@frameless/analyzer', 'react', 'react-dom']),
+		pack('packages/frameworks/solid', '@frameless/solid', ['@frameless/analyzer', 'solid-js']),
+		pack('packages/cli', '@frameless/cli'),
+	],
 	test: {
 		projects: [
 			{
 				test: {
 					name: 'node',
 					environment: 'node',
-					include: ['packages/*/test/**/*.test.ts'],
-					exclude: ['poc/**'],
+					include: ['packages/*/test/**/*.test.ts', 'packages/compiler/test/**/*.test.ts'],
+					exclude: ['poc/**', 'packages/frameworks/**'],
 				},
 			},
-			{
-				plugins: [
-					solid({ include: /packages\/oracle\/test\/fixtures\/.*\.solid\.tsx$/ }),
-				],
-				resolve: {
-					conditions: ['development', 'browser'],
-					dedupe: ['solid-js', 'react', 'react-dom'],
-				},
-				test: {
-					name: 'oracle-browser',
-					include: ['packages/oracle/test/**/*.browser.test.ts'],
-					exclude: ['poc/**'],
-					setupFiles: ['packages/oracle/test/setup.browser.ts'],
-					api: { host: '127.0.0.1' },
-					browser: {
-						enabled: true,
-						headless: true,
-						provider: playwright(),
-						instances: [{ browser: 'chromium' }],
-					},
-				},
-			},
+			'packages/frameworks/react/vitest.config.ts',
+			'packages/frameworks/solid/vitest.config.ts',
 		],
 	},
 	lint: { ignorePatterns: ['dist/**', 'node_modules/**', 'poc/**'] },
@@ -80,15 +59,9 @@ const productConfig = defineConfig({
 	},
 });
 
-// An isolated POC still discovers ancestor Vite config files. Give direct POC
-// invocations a package-local root without making poc/** part of a product lane.
-const pocRoot = resolve(rootDir, 'poc');
 const currentDirectory = process.cwd();
-const isDirectPocRun = currentDirectory === pocRoot || currentDirectory.startsWith(`${pocRoot}/`);
+const directPocRun = currentDirectory.includes('/poc/');
 
-export default isDirectPocRun
-	? defineConfig({
-				root: currentDirectory,
-				test: { environment: 'node', include: ['test/**/*.test.ts'] },
-			})
+export default directPocRun
+	? defineConfig({ root: currentDirectory, test: { environment: 'node', include: ['test/**/*.test.ts'] } })
 	: productConfig;

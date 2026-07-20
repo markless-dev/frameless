@@ -5,6 +5,9 @@ import type {
 } from '@markless/compiler';
 import { parseModule } from '@tsrx/core';
 import type { CompileError } from '@tsrx/core/types';
+import type { TsrxSemanticGraphArtifact } from './artifacts.ts';
+import { runCompilerPassPipeline } from './pass-pipeline.ts';
+import { enrichedIrPassDefinition } from './pass-registry.ts';
 import {
 	ENRICHED_IR_VERSION,
 	type DynamicBinding,
@@ -86,7 +89,33 @@ const OMITTED_AST_KEYS = new Set([
 ]);
 
 /** Build the target-neutral emitter artifact from author source and semantic records. */
-export async function buildEnrichedIr({ filename, source }: BuildInput): Promise<EnrichedIR> {
+export async function buildEnrichedIr(input: BuildInput): Promise<EnrichedIR> {
+	const filename = normalizeFilename(input.filename);
+	const semanticGraph = await buildSemanticGraph({ filename, source: input.source });
+	const initialArtifact: TsrxSemanticGraphArtifact = {
+		filename,
+		source: input.source,
+		semanticGraph,
+	};
+	const result = await runCompilerPassPipeline({
+		initialArtifacts: { 'tsrx-semantic-graph': initialArtifact },
+		passes: [{
+			...enrichedIrPassDefinition,
+			run: async (artifacts) => ({
+				'frameless-enriched-ir': await buildEnrichedIrArtifact(
+					artifacts['tsrx-semantic-graph'] as TsrxSemanticGraphArtifact,
+				),
+			}),
+		}],
+	});
+	return result.artifacts['frameless-enriched-ir'] as EnrichedIR;
+}
+
+async function buildEnrichedIrArtifact({
+	filename,
+	source,
+	semanticGraph,
+}: TsrxSemanticGraphArtifact): Promise<EnrichedIR> {
 	filename = normalizeFilename(filename);
 	const parseErrors: CompileError[] = [];
 	const program = parseModule(source, filename, { collect: true, errors: parseErrors }) as AnyNode;
@@ -97,7 +126,6 @@ export async function buildEnrichedIr({ filename, source }: BuildInput): Promise
 
 	// Deliberately stop after the semantic graph. Payload, public-render,
 	// locator, resume, and symbol passes are neither requested nor consumed here.
-	const semanticGraph = await buildSemanticGraph({ filename, source });
 	const errors = semanticGraph.diagnostics.filter(
 		(diagnostic) => diagnostic.severity === 'error',
 	);

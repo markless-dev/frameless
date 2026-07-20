@@ -332,7 +332,7 @@ describe('fixture-family sufficiency', () => {
 
 describe('closure and honesty', () => {
 	for (const file of FIXTURES) {
-		test(`${file}: every graphNodeId resolves and every oracle host shape is present`, async () => {
+		test(`${file}: every graphNodeId resolves and every analyzer host shape is present`, async () => {
 			const ir = await fixtureIr(file);
 			const bindingIds = new Set(ir.records.bindings.map((binding) => binding.id));
 			const referenced = new Set<string>();

@@ -1,8 +1,0 @@
-{
-	"name": "@frameless/target-react",
-	"version": "0.0.0",
-	"private": true,
-	"type": "module",
-	"exports": { ".": "./src/index.ts" },
-	"publishConfig": { "exports": { ".": { "default": "./dist/index.js" } } }
-}

@@ -1,7 +1,8 @@
 {
 	"compilerOptions": {
 		"allowImportingTsExtensions": true,
-		"lib": ["ES2022"],
+		"lib": ["ES2022", "DOM", "DOM.Iterable"],
+		"jsx": "preserve",
 		"module": "ESNext",
 		"moduleResolution": "Bundler",
 		"noEmit": true,
@@ -12,5 +13,11 @@
 		"types": ["node", "vitest/globals"]
 	},
 	"exclude": ["dist", "node_modules", "poc", "packages/*/test", "tests"],
-	"include": ["packages/*/src/**/*.d.ts", "packages/*/src/**/*.ts", "vite.config.ts"]
+	"include": [
+		"packages/*/src/**/*.d.ts",
+		"packages/*/src/**/*.ts",
+		"packages/frameworks/*/src/**/*.ts",
+		"packages/frameworks/*/vitest.config.ts",
+		"vite.config.ts"
+	]
 }

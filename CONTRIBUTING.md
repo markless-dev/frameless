@@ -1,22 +1,24 @@
 # Contributing to Frameless
 
-Read `AGENTS.md`, `specs/framework-design.md`, `specs/framework/00-overview.md`, the
-narrow owning spec, and `specs/state.md` before changing behavior.
+Read `AGENTS.md`, the owning package README, and any package playbook before changing behavior.
+Framework calibration references are governed by their dossier pointers and should not be rewritten
+as part of wiring or relocation work.
 
 ## Package map
 
-- `packages/compiler` is the public enriched-IR compiler boundary.
-- `packages/oracle` owns common behavioral observation and receipt contracts.
-- `packages/target-react` and `packages/target-solid` each own their emitter, gate,
-  adapter, dossier, and framework version matrix.
-- `packages/cli` owns the command and internal target registration.
+- `packages/compiler` owns only the enriched-IR extension pass and pass infrastructure.
+- `packages/analyzer` owns portable observation, comparison, scenario, mutant, verdict, and receipt
+  contracts. It has no framework or browser-runner dependencies.
+- `packages/frameworks/react` owns React dependencies, adapter, handwritten reference, transform-free
+  browser project, and calibration.
+- `packages/frameworks/solid` owns Solid dependencies, adapter, handwritten reference, isolated Solid
+  transform, browser project, and calibration.
+- `packages/cli` owns the command and internal framework registration.
 - `demos/ui-kit` owns the product demonstration and its doctor.
 
-There is intentionally no compiler-owned Target interface: compiler imports may not
-couple IR to oracle, DOM, framework, gate, or dossier types. There is intentionally
-no standalone gate, dossier, protocol, or test-utils package. There is intentionally
-no Vite plugin in v0. There are intentionally no declarations or sourcemaps until
-the enriched-IR version decision is reopened.
+There is no compiler-owned framework interface: compiler imports may not couple enriched IR to
+analyzer, DOM, React, Solid, Vite, gate, or dossier types. Protocol and configuration facts are
+imported from their owning package rather than copied.
 
 ## Local workflow
 
@@ -25,8 +27,10 @@ pnpm install --frozen-lockfile
 pnpm check
 pnpm test
 pnpm build
+pnpm test:browser
 ```
 
-Use `pnpm test:poc` only when the whole frozen POC evidence base is required. Never
-add `poc/**` to workspace globs or root tool lanes, and never update a POC lockfile
-from the product workspace.
+Use `pnpm test:poc` only when the complete frozen historical evidence base is required. Never add
+`poc/**` to workspace globs or root tool lanes, and never update a POC lockfile from the product
+workspace. Report commands that could not run and their exact blockers; never substitute an
+invented browser result.

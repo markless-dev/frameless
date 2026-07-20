@@ -1,0 +1,17 @@
+{
+	"name": "@frameless/solid",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"exports": { ".": "./src/index.ts" },
+	"publishConfig": { "exports": { ".": { "default": "./dist/index.js" } } },
+	"dependencies": {
+		"@frameless/analyzer": "workspace:*",
+		"solid-js": "1.8.22"
+	},
+	"devDependencies": {
+		"@vitest/browser-playwright": "4.1.5",
+		"playwright": "1.58.2",
+		"vite-plugin-solid": "2.11.10"
+	}
+}

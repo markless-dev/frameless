@@ -17,7 +17,9 @@
 		"prepare": "git config core.hooksPath .githooks",
 		"rules": "npx -y @intellectronica/ruler apply",
 		"test": "vp test --project node",
-		"test:browser": "vp test --project oracle-browser",
+		"test:browser": "vp test --project react-browser --project solid-browser",
+		"test:react": "vp test --project react-browser",
+		"test:solid": "vp test --project solid-browser",
 		"test:poc": "for package in poc/*; do if [ -f \"$package/package.json\" ]; then pnpm --dir \"$package\" install --frozen-lockfile && pnpm --dir \"$package\" test || exit $?; fi; done"
 	},
 	"devDependencies": {
