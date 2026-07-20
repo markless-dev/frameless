@@ -90,6 +90,11 @@ The executable package lane is named exactly `solid-1.8.22-fallback` and pins So
 **not Solid 2 runtime-validated**. Its v2 items remain recorded migration work; the fallback browser
 lane must not be reported as Solid 2 evidence.
 
+Solid 2 blocker evidence: beta.9 removes the `./web` and `./store` subpath exports that the v1
+toolchain output links against. `test/solid2-blocker.test.ts` is the executable contract; if a
+future Solid 2 pin restores either export or its replacement toolchain links successfully through
+the JSX runtime model, revisit the v1-fallback decision.
+
 ## Generality boundary
 
 This is production package code for the S1/S2/S3 fixture family, not proof of arbitrary Solid or
@@ -104,9 +109,8 @@ proxy over discovered generated files, not a proof for arbitrary source.
 
 ## Verify
 
-The checked-in suite inventory is 56 node tests (16 emitter/freshness, 37 gate, 2 adapter
-The checked-in suite inventory is 52 node tests (21 emitter/freshness, 28 gate, 2 adapter
-entry/import-graph, 1 size) and 17 browser tests (12 handwritten calibration including eight
+The checked-in suite inventory is 68 node tests (23 emitter/freshness, 38 gate, 2 adapter
+entry/import-graph, 1 size, 4 Solid 2 blocker contract) and 17 browser tests (12 handwritten calibration including eight
 mutants, plus 5 emitted/reference and store-row smoke tests). These are source counts, not a claim
 that a particular environment executed them.
 
