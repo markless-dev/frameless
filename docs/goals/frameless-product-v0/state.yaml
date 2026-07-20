@@ -216,8 +216,16 @@ tasks:
     reasoning_hint: medium
     objective: "oracle package (RESEQUENCED before targets per T001 adjudication): migrate poc/04 oracle core + poc/08 harness into @frameless/oracle — Adapter/scenario/trace/verdict/receipt ownership per the ownership split; frameless-receipts/1 schema; browser project wired into root vite config; framework adapters STAY OUT (they move to target packages later); handwritten references kept as calibration fixtures; full mutant calibration green in headless Chromium under the product lane."
     allowed_files:
-      - "packages/oracle/**"
-      - "root vite.config.ts (browser project + pack entry), root package.json (scripts)"
+      # widened mid-task by the owner-directive conformance (oracle->analyzer rename,
+      # framework-dep isolation moving calibration into framework packages)
+      - "packages/analyzer/**"
+      - "packages/frameworks/react/**"
+      - "packages/frameworks/solid/**"
+      - "vite.config.ts"
+      - "package.json"
+      - "pnpm-workspace.yaml"
+      - "pnpm-lock.yaml"
+      - "vendor/**"
     verify:
       - "pnpm check; pnpm build; pnpm test (node lane: compare/serialize/verdict units)"
       - "browser lane: calibration green (references equal, ALL mutant classes rejected) in headless Chromium"
