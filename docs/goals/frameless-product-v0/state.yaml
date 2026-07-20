@@ -73,13 +73,13 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-product-v0/"
     command: "npx goalbuddy board docs/goals/frameless-product-v0"
 
-active_task: T001
+active_task: T002
 
 tasks:
   - id: T001
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Architecture lock: derive the markless repo's monorepo conventions (workspace layout, package.json/tsconfig shapes, test lanes, doctor script, specs/ + CONTRIBUTING + agent-playbook patterns) and lock the Frameless layout to match them; then decide the frameless-enriched-ir contract ownership and version, the exact Target interface (emitter, gate config, oracle adapter, version matrix per targets/<name>), the build entry (CLI vs vite plugin first), the React 19 migration plan, and the migrate-vs-rewrite map for each poc package. Cut the first Worker packages."
     inputs:
@@ -93,11 +93,15 @@ tasks:
       - "Every Worker package it cuts gets allowed_files, verify, stop_if."
     expected_output:
       - "notes/T001-architecture.md: locked decisions + Target interface spec + migration map + Worker package definitions"
-    receipt: null
+    receipt:
+      result: done
+      decision: "approved-with-amendments"
+      note: notes/T001-architecture.md
+      summary: "Judge derived markless conventions from the checkout and locked layout/IR//1-deferral/CLI-first/React-19 plan with 3 charter flags (flat target packages, doctor placement, oracle-before-emitters resequencing). Crew critique REJECTED the initial lock: compiler-owned Target contract was a dependency cycle; worker packets untranscribed; convention over-generalizations; /1 deferral needed explicit v0 limits (one component/file, no .d.ts, no sourcemaps). PM adjudicated all amendments into the note (ownership split, pipeline trichotomy, per-POC frozen-install proof, T008 split). Merge review: read-only judge+critique, no branches; critique WAS the second model."
   - id: T002
     type: scout
     assignee: Scout
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: "React 19 idiom dossier: corpus-evidenced pattern decisions per IR construct (state, derived/memo thresholds, refs-as-props, events, keyed lists, conditionals, once-per-instance setup) using grep MCP if connected, React docs, and local corpora; every decision cited; output feeds the targets/react emitter and gate."
     inputs:
@@ -127,12 +131,19 @@ tasks:
     assignee: Worker
     status: queued
     reasoning_hint: medium
-    objective: "Scaffold the product monorepo per T001 and migrate the enriched IR into the compiler-extension package with its contract tests green (from poc/05), consuming markless via pinned vendored artifacts."
-    allowed_files: []
-    verify: []
+    objective: "Scaffold the product monorepo per the ADJUDICATED T001 note (ownership split; convention corrections) and migrate the enriched IR into packages/compiler with contract tests green; NO cross-package contract work. Carries the critique's verbatim instruction block (note section 9)."
+    allowed_files:
+      - "package.json, pnpm-workspace.yaml, pnpm-lock.yaml, vite.config.ts, tsconfig.json, LICENSE, AGENTS.md, CONTRIBUTING.md, README.md, .gitignore, .ruler/**, .githooks/**"
+      - "vendor/**, specs/**, packages/compiler/**"
+      - "stub manifests + src/index.ts for packages/{oracle,target-react,target-solid,cli} and demos/ui-kit/package.json"
+    verify:
+      - "pnpm install (frozen after first lock); pnpm check; pnpm build (vp pack); pnpm test (compiler suite green)"
+      - "vendored tarball sha256 == poc/08 receipts; cd poc/05-enriched-ir && pnpm test green; git diff --stat poc/ empty"
     stop_if:
       - "Need files outside allowed_files."
-      - "T001 architecture ambiguous on a needed decision."
+      - "Adjudicated note ambiguous on a needed decision."
+      - "Declarations/type-preserving output/sourcemaps turn out required — reopen IR decision, do not hack."
+      - "A markless convention cannot be mirrored without touching poc/."
       - "Verification fails twice."
     receipt: null
   - id: T005
