@@ -306,7 +306,6 @@ Frameless is the front door. A React-focused library author can adopt TSRX to ge
 
 > **How the funnel works technically**
 >
-> The npm package name is TBD. The eventual Frameless package should re-export the `@markless/core` authoring API. Markless's semantic collectors currently recognize APIs by import source and reject aliases, so the compiler needs a configurable accepted-import-source list containing `@markless/core` and the eventual Frameless package specifier. That is one configuration-level change, not a second semantic model. Then one file can go through Frameless's emitters or markless's native compiler with no source rewrite. This accepted-source change belongs in the markless repository and is outside the current goal. [strategic bet]
 
 ### B2 — design systems are the right wedge [strategic bet]
 
