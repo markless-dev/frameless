@@ -4,7 +4,11 @@ import solid from 'vite-plugin-solid';
 
 export default defineConfig({
 	root: import.meta.dirname,
-	plugins: [solid({ include: /packages\/frameworks\/solid\/test\/.*\.solid\.tsx$/ })],
+	plugins: [
+		solid({
+			include: /packages\/frameworks\/solid\/(?:generated\/.*\.jsx|test\/.*\.solid\.tsx)$/,
+		}),
+	],
 	resolve: { conditions: ['development', 'browser'], dedupe: ['solid-js'] },
 	test: {
 		name: 'solid-browser',

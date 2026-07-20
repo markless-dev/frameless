@@ -1,4 +1,5 @@
-import { createSignal, For, Show } from 'solid-js';
+import { createSignal, For, Show, untrack } from 'solid-js';
+import { createStore, produce, reconcile } from 'solid-js/store';
 
 type Trace = (name: string, payload: unknown, event?: Event) => void;
 type Todo = { id: string; title: string; done: boolean };
@@ -9,29 +10,32 @@ export function SolidS1(props: {
 	visible: boolean;
 	onTrace: Trace;
 }) {
-	const { label, multiplier, visible } = props;
-	props.onTrace('setup', { runs: 1 });
+	untrack(() => props.onTrace('setup', { runs: 1 }));
 	const [count, setCount] = createSignal(1);
-	const derived = () => `${label}:${count() * multiplier}`;
+	const prefix = untrack(() => `${props.label}:`);
+	const derived = () => `${prefix}${count() * props.multiplier}`;
 	return (
 		<div data-s1-root="">
-			{!visible ? (
+			<Show
+				when={!props.visible}
+				fallback={
+					<section data-scenario="s1">
+						<output data-value="derived">{derived()}</output>
+						<button
+							data-action="increment"
+							onClick={() => {
+								const next = count() + 1;
+								setCount(next);
+								props.onTrace('change', { count: next });
+							}}
+						>
+							increment
+						</button>
+					</section>
+				}
+			>
 				<p data-branch="hidden">hidden</p>
-			) : (
-				<section data-scenario="s1">
-					<output data-value="derived">{derived()}</output>
-					<button
-						data-action="increment"
-						onClick={() => {
-							const next = count() + 1;
-							setCount(next);
-							props.onTrace('change', { count: next });
-						}}
-					>
-						increment
-					</button>
-				</section>
-			)}
+			</Show>
 		</div>
 	);
 }
@@ -39,7 +43,9 @@ export function SolidS1(props: {
 type S2Mutation = 'index-key' | 'wrong-text' | 'duplicate-handler' | undefined;
 export function makeSolidS2(mutation?: S2Mutation) {
 	return function SolidS2(props: { seed: Todo[]; onTrace: Trace }) {
-		const [todos, setTodos] = createSignal(structuredClone(props.seed));
+		const [todos, setTodos] = createStore(
+			untrack(() => props.seed.map((todo) => ({ ...todo }))),
+		);
 		const [draft, setDraft] = createSignal('');
 		let next = 3;
 		const emit = (name: string, payload: unknown, event?: Event) => {
@@ -49,21 +55,24 @@ export function makeSolidS2(mutation?: S2Mutation) {
 			}
 		};
 		const edit = (id: string, title: string, event: Event) => {
-			const copy = [...todos()];
-			copy.find((todo) => todo.id === id)!.title = title;
-			setTodos(copy);
+			setTodos(
+				produce((draft) => {
+					draft.find((todo) => todo.id === id)!.title = title;
+				}),
+			);
 			emit('edit', { id, title }, event);
 		};
 		// Solid's <For> keys rows by object identity rather than an explicit key prop.
 		// Fresh clones on every collection update are the Solid-idiomatic equivalent
 		// of an index-key violation: === identity breaks and every row remounts.
-		const rows = () =>
-			mutation === 'index-key' ? todos().map((todo) => ({ ...todo })) : todos();
+		const rows = () => (mutation === 'index-key' ? todos.map((todo) => ({ ...todo })) : todos);
+		const complete = () => todos.filter((todo) => todo.done).length;
 		const row = (todo: Todo) => (
 			<li data-oracle-row-key={todo.id}>
 				<input
 					data-edit={todo.id}
-					value={todos() && todo.title}
+					value={todo.title}
+					attr:value={todo.title}
 					onInput={(event) => edit(todo.id, event.currentTarget.value, event)}
 				/>
 				<input
@@ -72,18 +81,23 @@ export function makeSolidS2(mutation?: S2Mutation) {
 					checked={todo.done}
 					onChange={(event) => {
 						const checked = event.currentTarget.checked;
-						setTodos((value) => {
-							const copy = [...value];
-							copy.find((item) => item.id === todo.id)!.done = checked;
-							return copy;
-						});
+						setTodos(
+							produce((draft) => {
+								draft.find((item) => item.id === todo.id)!.done = checked;
+							}),
+						);
 						emit('toggle', { id: todo.id, checked }, event);
 					}}
 				/>
 				<button
 					data-remove={todo.id}
 					onClick={(event) => {
-						setTodos((value) => value.filter((item) => item.id !== todo.id));
+						setTodos(
+							reconcile(
+								todos.filter((item) => item.id !== todo.id),
+								{ key: 'id' },
+							),
+						);
 						emit('remove', { id: todo.id }, event);
 					}}
 				>
@@ -94,47 +108,36 @@ export function makeSolidS2(mutation?: S2Mutation) {
 		return (
 			<section data-scenario="s2">
 				<p data-count="complete">
-					{mutation === 'wrong-text'
-						? todos().filter((todo) => todo.done).length + 1
-						: todos().filter((todo) => todo.done).length}
-					/{todos().length}
+					{mutation === 'wrong-text' ? complete() + 1 : complete()}/{todos.length}
 				</p>
 				<input
 					data-action="new"
 					value={draft()}
+					attr:value={draft()}
 					onInput={(event) => setDraft(event.currentTarget.value)}
 				/>
 				<button
 					data-action="add"
 					onClick={(event) => {
 						const item = { id: `c${next++}`, title: draft(), done: false };
-						setTodos((value) => [...value, item]);
+						setTodos(reconcile([...todos, item], { key: 'id' }));
 						setDraft('');
 						emit('add', { id: item.id, title: item.title }, event);
 					}}
 				>
 					add
 				</button>
-				<Show
-					when={todos().length === 0}
-					fallback={
-						<ul>
-							<For each={rows()}>
-								{row}
-							</For>
-						</ul>
-					}
-				>
-					<>
-						<p data-empty="true">empty</p>
-						<ul />
-					</>
+				<Show when={todos.length === 0} fallback={<></>}>
+					<p data-empty="true">empty</p>
 				</Show>
+				<ul>
+					<For each={rows()}>{row}</For>
+				</ul>
 				<button
 					data-action="reorder"
 					onClick={(event) => {
-						const order = [...todos()].reverse();
-						setTodos(order);
+						const order = [...todos].reverse();
+						setTodos(reconcile(order, { key: 'id' }));
 						emit('reorder', { order: order.map((todo) => todo.id) }, event);
 					}}
 				>
@@ -143,8 +146,8 @@ export function makeSolidS2(mutation?: S2Mutation) {
 				<button
 					data-action="clear"
 					onClick={(event) => {
-						const count = todos().length;
-						setTodos([]);
+						const count = todos.length;
+						setTodos(reconcile([], { key: 'id' }));
 						emit('clear', { count }, event);
 					}}
 				>
@@ -167,7 +170,7 @@ type S3Mutation =
 
 export function makeSolidS3(mutation?: S3Mutation) {
 	return function SolidS3(props: { initial: string; onTrace: Trace }) {
-		const [text, setText] = createSignal(props.initial);
+		const [text, setText] = createSignal(untrack(() => props.initial));
 		const [checked, setChecked] = createSignal(false);
 		const [writes, setWrites] = createSignal(0);
 		return (
@@ -185,6 +188,7 @@ export function makeSolidS3(mutation?: S3Mutation) {
 				<input
 					data-action="text"
 					value={mutation === 'wrong-property' ? `${text()}!` : text()}
+					attr:value={mutation === 'wrong-property' ? `${text()}!` : text()}
 					onInput={(event) => {
 						setText(event.currentTarget.value);
 						props.onTrace('text', { value: event.currentTarget.value }, event);
@@ -197,7 +201,11 @@ export function makeSolidS3(mutation?: S3Mutation) {
 					onChange={(event) => {
 						setChecked(event.currentTarget.checked);
 						if (mutation !== 'omit-callback') {
-							props.onTrace('checked', { checked: event.currentTarget.checked }, event);
+							props.onTrace(
+								'checked',
+								{ checked: event.currentTarget.checked },
+								event,
+							);
 						}
 					}}
 				/>
@@ -225,7 +233,11 @@ export function makeSolidS3(mutation?: S3Mutation) {
 							setWrites(1);
 							setWrites(2);
 						}
-						props.onTrace('submit', { text: text(), checked: checked(), writes: 2 }, event);
+						props.onTrace(
+							'submit',
+							{ text: text(), checked: checked(), writes: 2 },
+							event,
+						);
 					}}
 				>
 					submit

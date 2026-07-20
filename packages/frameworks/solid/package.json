@@ -3,15 +3,47 @@
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",
-	"exports": { ".": "./src/index.ts" },
-	"publishConfig": { "exports": { ".": { "default": "./dist/index.js" } } },
+	"exports": {
+		".": "./src/index.ts",
+		"./adapter": "./src/adapter.ts"
+	},
+	"publishConfig": {
+		"exports": {
+			".": {
+				"default": "./dist/index.js"
+			},
+			"./adapter": {
+				"default": "./dist/adapter.js"
+			}
+		}
+	},
+	"scripts": {
+		"measure:size": "node --experimental-strip-types scripts/measure-size.ts",
+		"regenerate": "node --experimental-strip-types scripts/regenerate.ts",
+		"test": "vitest run --config vitest.node.config.ts",
+		"test:browser": "vitest run --config vitest.config.ts --project solid-browser"
+	},
 	"dependencies": {
+		"@babel/generator": "7.29.7",
+		"@babel/parser": "7.29.7",
+		"@babel/traverse": "7.29.7",
+		"@babel/types": "7.29.7",
+		"@eslint/js": "^9.39.2",
 		"@frameless/analyzer": "workspace:*",
+		"@frameless/compiler": "workspace:*",
+		"eslint": "^9.39.2",
+		"eslint-plugin-solid": "0.14.5",
+		"globals": "^16.5.0",
+		"pathe": "catalog:",
 		"solid-js": "1.8.22"
 	},
 	"devDependencies": {
+		"@types/babel__generator": "^7.27.0",
+		"@types/babel__traverse": "^7.28.0",
 		"@vitest/browser-playwright": "4.1.5",
 		"playwright": "1.58.2",
-		"vite-plugin-solid": "2.11.10"
+		"vite": "catalog:default",
+		"vite-plugin-solid": "2.11.10",
+		"vitest": "catalog:default"
 	}
 }

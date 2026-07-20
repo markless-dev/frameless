@@ -6,7 +6,7 @@ import {
 	runScenario,
 	scenarioById,
 } from '@frameless/analyzer';
-import { createSolidAdapter } from '../src/index.ts';
+import { createSolidAdapter } from '@frameless/solid/adapter';
 import { makeSolidS2, makeSolidS3, solidReferences } from './reference.solid.tsx';
 
 // Mutants are COMPONENT VARIANTS (the calibrated mechanism): the mutant component's
@@ -36,8 +36,14 @@ describe('Solid handwritten reference calibration', () => {
 	for (const mutant of mutantClasses) {
 		test(`${mutant.id} is rejected in ${mutant.channel}`, async () => {
 			const scenario = scenarioById[mutant.scenario];
-			const clean = await runScenario(createSolidAdapter(solidReferences[mutant.scenario]), scenario);
-			const broken = await runScenario(createSolidAdapter(mutantComponents[mutant.id] as never), scenario);
+			const clean = await runScenario(
+				createSolidAdapter(solidReferences[mutant.scenario]),
+				scenario,
+			);
+			const broken = await runScenario(
+				createSolidAdapter(mutantComponents[mutant.id] as never),
+				scenario,
+			);
 			const verdict = compareRuns(clean, broken);
 			if (verdict.equal) {
 				const writes = (run: typeof clean) =>
@@ -45,17 +51,24 @@ describe('Solid handwritten reference calibration', () => {
 						.map((o) => {
 							const find = (n: any): string | null => {
 								if (n.tag === 'output') return n.children?.[0]?.text ?? '';
-								for (const c of n.children ?? []) { const r = find(c); if (r !== null) return r; }
+								for (const c of n.children ?? []) {
+									const r = find(c);
+									if (r !== null) return r;
+								}
 								return null;
 							};
 							return `${o.phase}=${o.dom.map(find).find((x) => x !== null)}`;
 						})
 						.join(' ');
-				console.error(`[${mutant.id}] equal! clean: ${writes(clean)} | broken: ${writes(broken)}`);
+				console.error(
+					`[${mutant.id}] equal! clean: ${writes(clean)} | broken: ${writes(broken)}`,
+				);
 			}
 			expect(verdict.equal).toBe(false);
 			if (!verdict.equal) {
-				expect(verdict.divergences.some((item) => item.channel === mutant.channel)).toBe(true);
+				expect(verdict.divergences.some((item) => item.channel === mutant.channel)).toBe(
+					true,
+				);
 			}
 		});
 	}
