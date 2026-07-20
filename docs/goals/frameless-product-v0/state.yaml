@@ -155,7 +155,10 @@ tasks:
       result: done
       summary: "Monorepo scaffolded per adjudicated T001: root workspace (markless lanes + catalogs), vite-plus config with poc/** excluded from all lanes, MIT license, .ruler/AGENTS/CONTRIBUTING/README, vendor/ with sha256 receipts (found+corrected a checksum typo in poc/08's recorded receipt — erratum, poc file untouched), specs/framework/00-05 incl. ownership-split target contract, packages/compiler with poc/05 migrated (byte-identical /1 goldens, fail-closed v0 limits, agent/frameless.md playbook), stubs for oracle/targets/cli/demo. PM verification: frozen install, tsc, vp pack, 23/23 product, 18/18 poc/05, checksums OK, poc/ diff empty. Critique skipped: scaffold executed the already-critiqued adjudicated architecture verbatim; targets/oracle get their own critiques."
       changed_files:
-        - "root scaffold + vendor/ + specs/ + packages/compiler (see merge t004)"
+        - "package.json"
+        - "vendor/**"
+        - "specs/**"
+        - "packages/compiler/**"
       commands:
         - cmd: "pnpm install --frozen-lockfile && pnpm check && pnpm build && pnpm test; poc/05 pnpm test; shasum -c"
           status: pass
