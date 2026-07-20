@@ -28,6 +28,7 @@ function representativeTrace(): RunTrace {
 							{
 								nodeType: 'element',
 								tag: 'input',
+								attributes: [],
 								properties: { checked: false, value: 'Ada' },
 								nodeId: 3,
 								children: [],
@@ -139,6 +140,24 @@ describe('RunTrace transport', () => {
 		expect(() => deserializeRunTrace(JSON.stringify(value))).toThrow(
 			/RunTrace observations\[0\] dom\[0\] children\[1\] attributes\[0\]\[1\]/,
 		);
+	});
+
+	test.each([
+		['text node with children', { nodeType: 'text', text: 'Name', nodeId: 1, children: [] }],
+		[
+			'element without tag',
+			{ nodeType: 'element', attributes: [], properties: {}, children: [], nodeId: 1 },
+		],
+		[
+			'text node with attributes',
+			{ nodeType: 'text', text: 'Name', nodeId: 1, attributes: [] },
+		],
+	])('rejects a %s', (_name, node) => {
+		const value = representativeTrace() as unknown as {
+			observations: Array<{ dom: Array<Record<string, unknown>> }>;
+		};
+		value.observations[0].dom = [node];
+		expect(() => deserializeRunTrace(JSON.stringify(value))).toThrow();
 	});
 
 	test('preserves equality when a trace crosses the text transport', () => {

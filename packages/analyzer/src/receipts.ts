@@ -154,10 +154,13 @@ export function validateReceipt(value: unknown): value is Receipt {
 	) {
 		return false;
 	}
-	const allowed = new Set(['equal', 'different', 'blocked-by-upstream']);
 	if (
-		!Object.values(receipt.scenarios).every((pairs) =>
-			Object.values(pairs).every((pair) => allowed.has(pair.status)),
+		!isRecord(receipt.findings) ||
+		!isRecord(receipt.scenarios) ||
+		!Object.values(receipt.scenarios).every(
+			(pairs) =>
+				isRecord(pairs) &&
+				Object.values(pairs).every((pair) => validatePairResult(pair, receipt.findings!)),
 		)
 	)
 		return false;
@@ -167,6 +170,66 @@ export function validateReceipt(value: unknown): value is Receipt {
 	} catch {
 		return false;
 	}
+}
+
+function validatePairResult(value: unknown, findings: Record<string, unknown>): boolean {
+	if (!isRecord(value)) return false;
+	if (value.status === 'equal') {
+		return (
+			hasExactKeys(value, ['status', 'equal', 'divergences']) &&
+			value.equal === true &&
+			Array.isArray(value.divergences) &&
+			value.divergences.length === 0
+		);
+	}
+	if (value.status === 'different') {
+		return (
+			hasExactKeys(value, ['status', 'equal', 'divergences']) &&
+			value.equal === false &&
+			Array.isArray(value.divergences) &&
+			value.divergences.length > 0
+		);
+	}
+	if (value.status === 'blocked-by-upstream') {
+		if (
+			!hasExactKeys(
+				value,
+				['status', 'findingIds'],
+				['status', 'findingIds', 'partialEvidence'],
+			) ||
+			!Array.isArray(value.findingIds) ||
+			value.findingIds.length === 0 ||
+			!value.findingIds.every(
+				(id) => typeof id === 'string' && id.length > 0 && Object.hasOwn(findings, id),
+			)
+		) {
+			return false;
+		}
+		if (!Object.hasOwn(value, 'partialEvidence')) return true;
+		return (
+			isRecord(value.partialEvidence) &&
+			hasExactKeys(value.partialEvidence, ['status', 'summary']) &&
+			typeof value.partialEvidence.status === 'string' &&
+			typeof value.partialEvidence.summary === 'string'
+		);
+	}
+	return false;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function hasExactKeys(
+	value: Record<string, unknown>,
+	required: readonly string[],
+	allowed: readonly string[] = required,
+): boolean {
+	return (
+		required.every((key) => Object.hasOwn(value, key)) &&
+		Object.getOwnPropertyNames(value).every((key) => allowed.includes(key)) &&
+		Object.getOwnPropertySymbols(value).length === 0
+	);
 }
 
 function pairVerdict(result: PairResult): string {

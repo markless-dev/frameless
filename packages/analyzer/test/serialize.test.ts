@@ -45,7 +45,11 @@ class TestElement extends TestNode {
 	}
 
 	contains(): boolean {
-		return false;
+		return true;
+	}
+
+	closest(): null {
+		return null;
 	}
 }
 
@@ -59,6 +63,19 @@ function observeChildren(...children: TestNode[]): SerializedNode[] {
 	const host = new TestElement('div');
 	host.append(...children);
 	return new Observer().observe(host as unknown as HTMLElement, 'mount', []).dom;
+}
+
+function observeFocusPath(...precedingSiblings: TestNode[]): string {
+	vi.stubGlobal('Node', TestNode);
+	vi.stubGlobal('Element', TestElement);
+	vi.stubGlobal('HTMLInputElement', class {});
+	vi.stubGlobal('HTMLTextAreaElement', class {});
+	vi.stubGlobal('HTMLOptionElement', class {});
+	const host = new TestElement('div');
+	const focused = new TestElement('button');
+	host.append(...precedingSiblings, focused);
+	vi.stubGlobal('document', { activeElement: focused });
+	return new Observer().observe(host as unknown as HTMLElement, 'mount', []).focus!.path;
 }
 
 afterEach(() => vi.unstubAllGlobals());
@@ -93,5 +110,11 @@ describe('serialization contract', () => {
 		expect(observeChildren(new TestText(text))).toEqual([
 			{ nodeType: 'text', text, nodeId: 1 },
 		]);
+	});
+
+	test('indexes focus paths in the same semantic child space as serialization', () => {
+		expect(observeFocusPath()).toBe('0');
+		expect(observeFocusPath(new TestText(''))).toBe('0');
+		expect(observeFocusPath(new TestText('semantic'))).toBe('1');
 	});
 });

@@ -83,19 +83,22 @@ export class Observer {
 	}
 
 	private semanticChildren(node: Node): SerializedNode[] {
-		return Array.from(node.childNodes)
-			.filter((child) =>
+		return this.semanticChildNodes(node).map((child) => this.serialize(child));
+	}
+
+	private semanticChildNodes(node: Node): ChildNode[] {
+		return Array.from(node.childNodes).filter(
+			(child) =>
 				child.nodeType === Node.ELEMENT_NODE ||
 				(child.nodeType === Node.TEXT_NODE && child.textContent !== ''),
-			)
-			.map((child) => this.serialize(child));
+		);
 	}
 
 	private path(host: HTMLElement, element: HTMLElement): string {
 		const parts: number[] = [];
 		let node: Node = element;
 		while (node !== host && node.parentNode) {
-			parts.unshift(Array.from(node.parentNode.childNodes).indexOf(node as ChildNode));
+			parts.unshift(this.semanticChildNodes(node.parentNode).indexOf(node as ChildNode));
 			node = node.parentNode;
 		}
 		return parts.join('.');

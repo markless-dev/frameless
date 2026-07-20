@@ -16,6 +16,9 @@ mutant-class data, verdicts, and deterministic `frameless-receipts/1` result ren
   hydration markers listed by `FRAMEWORK_ATTRIBUTE_ALLOWLIST`. Whitespace-only text remains
   semantic. Classes, styles, other attributes, live form properties, focus, selection, keyed
   identity, and callbacks remain observable.
+- The receipt boundary excludes raw DOM topology such as `childNodes` counts, Range offsets, and
+  MutationObserver-level structure. Semantic DOM and focus paths are compared in semantic index
+  space, after the normalization above.
 - Receipt pair states are `equal`, `different`, and `blocked-by-upstream`. Blocked legs require
   finding IDs and never count as passes.
 

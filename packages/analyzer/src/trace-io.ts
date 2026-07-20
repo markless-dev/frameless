@@ -106,51 +106,41 @@ function validateCallback(value: unknown, construct: string): asserts value is C
 
 function validateSerializedNode(value: unknown, construct: string): asserts value is SerializedNode {
 	assertRecord(value, construct);
-	exactKeys(
-		value,
-		['nodeType'],
-		construct,
-		[
-			'nodeType',
-			'namespace',
-			'tag',
-			'attributes',
-			'properties',
-			'text',
-			'children',
-			'nodeId',
-		],
-	);
-	if (value.nodeType !== 'element' && value.nodeType !== 'text') {
+	if (value.nodeType === 'text') {
+		exactKeys(value, ['nodeType', 'text', 'nodeId'], construct);
+		assertString(value.text, `${construct} text`);
+		assertFiniteNumber(value.nodeId, `${construct} nodeId`);
+		return;
+	}
+	if (value.nodeType !== 'element') {
 		throw new Error(`${construct} nodeType must be element or text`);
 	}
+	exactKeys(
+		value,
+		['nodeType', 'tag', 'attributes', 'properties', 'children', 'nodeId'],
+		construct,
+		['nodeType', 'namespace', 'tag', 'attributes', 'properties', 'children', 'nodeId'],
+	);
 	if (Object.hasOwn(value, 'namespace')) {
 		if (value.namespace !== null && typeof value.namespace !== 'string') {
 			throw new Error(`${construct} namespace is malformed: expected a string or null`);
 		}
 	}
-	if (Object.hasOwn(value, 'tag')) assertString(value.tag, `${construct} tag`);
-	if (Object.hasOwn(value, 'attributes')) {
-		assertArray(value.attributes, `${construct} attributes`);
-		for (const [index, attribute] of value.attributes.entries()) {
-			const attributeConstruct = `${construct} attributes[${index}]`;
-			assertTuple(attribute, 2, attributeConstruct);
-			assertString(attribute[0], `${attributeConstruct}[0]`);
-			assertString(attribute[1], `${attributeConstruct}[1]`);
-		}
+	assertString(value.tag, `${construct} tag`);
+	assertArray(value.attributes, `${construct} attributes`);
+	for (const [index, attribute] of value.attributes.entries()) {
+		const attributeConstruct = `${construct} attributes[${index}]`;
+		assertTuple(attribute, 2, attributeConstruct);
+		assertString(attribute[0], `${attributeConstruct}[0]`);
+		assertString(attribute[1], `${attributeConstruct}[1]`);
 	}
-	if (Object.hasOwn(value, 'properties')) {
-		assertRecord(value.properties, `${construct} properties`);
-		validateJsonValue(value.properties, `${construct} properties`, new Set());
+	assertRecord(value.properties, `${construct} properties`);
+	validateJsonValue(value.properties, `${construct} properties`, new Set());
+	assertArray(value.children, `${construct} children`);
+	for (const [index, child] of value.children.entries()) {
+		validateSerializedNode(child, `${construct} children[${index}]`);
 	}
-	if (Object.hasOwn(value, 'text')) assertString(value.text, `${construct} text`);
-	if (Object.hasOwn(value, 'children')) {
-		assertArray(value.children, `${construct} children`);
-		for (const [index, child] of value.children.entries()) {
-			validateSerializedNode(child, `${construct} children[${index}]`);
-		}
-	}
-	if (Object.hasOwn(value, 'nodeId')) assertFiniteNumber(value.nodeId, `${construct} nodeId`);
+	assertFiniteNumber(value.nodeId, `${construct} nodeId`);
 }
 
 function validateStringArray(value: unknown, construct: string): void {

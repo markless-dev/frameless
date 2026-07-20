@@ -45,6 +45,42 @@ describe('frameless-receipts/1', () => {
 		expect(renderResults(receipt)).toContain('blocked-by-upstream(#upstream)');
 	});
 
+	test('rejects dishonest equal pair variants', () => {
+		const dishonest = structuredClone(receipt) as unknown as {
+			scenarios: Record<string, Record<string, Record<string, unknown>>>;
+		};
+		dishonest.scenarios.scenario.reference = {
+			status: 'equal',
+			equal: false,
+			divergences: [{ channel: 'dom', phase: 'mount', path: 'dom.0', left: 'a', right: 'b' }],
+		};
+		expect(validateReceipt(dishonest)).toBe(false);
+	});
+
+	test.each([
+		{ status: 'different', equal: true, divergences: [] },
+		{ status: 'different', equal: false, divergences: [] },
+	])('rejects dishonest different pair variant %#', (variant) => {
+		const dishonest = structuredClone(receipt) as unknown as {
+			scenarios: Record<string, Record<string, Record<string, unknown>>>;
+			summary: Receipt['summary'];
+		};
+		dishonest.scenarios.scenario.reference = variant;
+		dishonest.summary = createReceiptSummary(dishonest as unknown as Receipt);
+		expect(validateReceipt(dishonest)).toBe(false);
+	});
+
+	test.each([
+		{ status: 'blocked-by-upstream', findingIds: [] },
+		{ status: 'blocked-by-upstream', findingIds: ['missing'] },
+	])('rejects dishonest blocked pair variant %#', (variant) => {
+		const dishonest = structuredClone(receipt) as unknown as {
+			scenarios: Record<string, Record<string, Record<string, unknown>>>;
+		};
+		dishonest.scenarios.scenario.upstream = variant;
+		expect(validateReceipt(dishonest)).toBe(false);
+	});
+
 	test('renders RESULTS.md deterministically', () => {
 		expect(renderResults(receipt)).toBe(renderResults(structuredClone(receipt)));
 	});
