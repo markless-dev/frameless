@@ -73,7 +73,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-product-v0/"
     command: "npx goalbuddy board docs/goals/frameless-product-v0"
 
-active_task: T005
+active_task: T006
 
 tasks:
   - id: T001
@@ -182,7 +182,7 @@ tasks:
   - id: T005
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     objective: "packages/frameworks/react emitter: migrate poc/06's structural emitter + hardened gate into the framework package, implement the T002 dossier in full (const SSA + one-set-per-cell, onChange, unwrapped literal initials, null-shape ref guard, e.target on leaf controls, ESLint 9 flat + hooks v6, dossier-ref'd gate policies), consuming @frameless/compiler EnrichedIR; smoke vs the calibrated references under React 19; all five verification layers green."
     allowed_files:
@@ -196,17 +196,30 @@ tasks:
       - "T002 dossier lacks evidence for a needed construct decision — report, do not taste-call."
       - "EnrichedIR insufficiency discovered — record as /2 requirement, do not hack /1."
       - "Verification fails twice."
-    receipt: null
+    receipt:
+      result: done
+      summary: "@frameless/react complete and critique-accepted. Crew build (killed mid-verify, PM salvaged + 7 last-mile repairs), critique verdict accept-with-amendments (checked-in output passed ALL dossier rulings; found: name-keyed emitter special case, spelling-based rewriting, 4 gate bypasses, and that a PM repair had masked a missing browser-safe public entry), amendment unit executed all 5 (binding-safe collision-safe emitter + metamorphic rename/shadowing tests, fail-closed IR validation, gate closure with per-policy mutations + e2e discovery test, public ./adapter subpath with browser-safety test, hidden-guard smoke + playbook). Final: 96 node, react-browser 16/16 under React 19, solid 12/12, poc/ untouched."
+      changed_files:
+        - "packages/frameworks/react/**"
+      commands:
+        - cmd: "pnpm check && pnpm build && pnpm test; vitest --project react-browser; --project solid-browser"
+          status: pass
   - id: T006
     type: worker
     assignee: Worker
-    status: queued
-    reasoning_hint: medium
-    objective: "targets/solid: migrate the poc/07 structural emitter (fail-closed soundness + generality boundary docs) into the Target interface and implement the T003 idiom dossier (incl. createMemo for derived); all layers green."
-    allowed_files: []
-    verify: []
+    status: active
+    reasoning_hint: high
+    objective: "packages/frameworks/solid emitter: migrate poc/07's structural emitter (fail-closed soundness + generality boundary) implementing the T003 dossier — store-backed rows with produce/reconcile-keyed structural updates, Show-with-siblings-once branch lowering, plain derived arrows (createMemo OVERTURNED by T003 — never emitted in v0), untrack once-captures, value+onInput/attr:value pairing — plus every T005-critique carry-over (binding-safe identifiers + metamorphic tests, fail-closed validation, per-policy gate mutations + e2e discovery, browser-safe adapter subpath, honest counts)."
+    allowed_files:
+      - "packages/frameworks/solid/**"
+    verify:
+      - "pnpm check; pnpm build; pnpm test (node incl. emitter metamorphics + gate mutations)"
+      - "npx vitest run --project solid-browser (calibration + emitted smoke incl. non-primary variants)"
+      - "poc/ diff empty"
     stop_if:
       - "Need files outside allowed_files."
+      - "T003 dossier lacks evidence for a needed decision — report, do not taste-call."
+      - "Branch/store lowering hits IR insufficiency — record /2 requirement, stop."
       - "Verification fails twice."
     receipt: null
   - id: T007
