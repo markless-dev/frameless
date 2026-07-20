@@ -3,6 +3,7 @@ import type { EnrichedIR } from '@frameless/compiler';
 import { resolve } from 'pathe';
 import { describe, expect, test } from 'vitest';
 import { emit, validateEnrichedIr } from '../src/emitter/index.ts';
+import { formatEmitted } from '../src/format-emitted.ts';
 
 const root = resolve(import.meta.dirname, '..');
 const goldenRoot = resolve(root, '../../compiler/test/goldens');
@@ -34,7 +35,9 @@ describe('React structural emitter', () => {
 		test(`${output} is fresh from the compiler EnrichedIR golden`, async () => {
 			const ir = JSON.parse(await readFile(resolve(goldenRoot, golden), 'utf8')) as EnrichedIR;
 			validateEnrichedIr(ir);
-			expect(await readFile(resolve(root, 'generated', output), 'utf8')).toBe(emit(ir));
+			expect(await readFile(resolve(root, 'generated', output), 'utf8')).toBe(
+				await formatEmitted(emit(ir)),
+			);
 		});
 	}
 

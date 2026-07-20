@@ -5,6 +5,9 @@ browser-safe analyzer adapter, JSX transform, calibrated handwritten references,
 equivalence smoke. The emitter consumes `frameless-enriched-ir/1`; it never parses TSRX or imports
 Markless at runtime.
 
+The public async `formatEmitted(source)` applies the repository's oxfmt configuration whenever
+emitted source becomes an artifact; synchronous `emit(ir)` remains unformatted and byte-stable.
+
 The normative input is `docs/goals/frameless-product-v0/notes/T003-solid-idioms.md`. This package
 points to that dossier rather than restating its research evidence. The browser adapter is exported
 from `@frameless/solid/adapter`; that subpath does not import the node-only emitter or ESLint gate.
@@ -71,16 +74,16 @@ mutation, and a temporary generated file exercises discovery through `checkGener
 
 ## Checked-in output and size
 
-`generated/S1.jsx`, `S2.jsx`, and `S3.jsx` are byte-checked against fresh emission from the compiler
-goldens. `pnpm --dir packages/frameworks/solid regenerate` refreshes them. Physical nonblank
-component LOC is primary; Babel node count is secondary. S2/S3 reference bodies include
+`generated/S1.jsx`, `S2.jsx`, and `S3.jsx` are byte-checked against formatted fresh emission from
+the compiler goldens. `pnpm --dir packages/frameworks/solid regenerate` refreshes them. Physical
+nonblank component LOC is primary; Babel node count is secondary. S2/S3 reference bodies include
 calibration mutant branches, so these comparisons are intentionally conservative.
 
 | Scenario | Reference physical LOC | Emitted physical LOC | LOC ratio | Reference AST nodes | Emitted AST nodes | Node ratio |
 | -------- | ---------------------: | -------------------: | --------: | ------------------: | ----------------: | ---------: |
-| S1       |                     35 |                   14 |     0.40x |                 165 |               136 |      0.82x |
-| S2       |                    114 |                   69 |     0.61x |                 640 |               546 |      0.85x |
-| S3       |                     78 |                   31 |     0.40x |                 326 |               227 |      0.70x |
+| S1       |                     35 |                   35 |     1.00x |                 165 |               143 |      0.87x |
+| S2       |                    114 |                  175 |     1.54x |                 640 |               560 |      0.88x |
+| S3       |                     78 |                   74 |     0.95x |                 326 |               233 |      0.71x |
 
 ## Framework-version honesty
 
@@ -114,10 +117,10 @@ wrappers do not excuse an identical nested list; a differing leaf does break the
 
 ## Verify
 
-The checked-in suite inventory is 74 node tests (26 emitter/freshness, 41 gate, 2 adapter
-entry/import-graph, 1 size, 4 Solid 2 blocker contract) and 17 browser tests (12 handwritten calibration including eight
-mutants, plus 5 emitted/reference and store-row smoke tests). These are source counts, not a claim
-that a particular environment executed them.
+The checked-in suite inventory is 76 node tests (26 emitter/freshness, 2 emitted-formatting, 41
+gate, 2 adapter entry/import-graph, 1 size, 4 Solid 2 blocker contract) and 17 browser tests (12
+handwritten calibration including eight mutants, plus 5 emitted/reference and store-row smoke
+tests). These are source counts, not a claim that a particular environment executed them.
 
 ```sh
 pnpm check

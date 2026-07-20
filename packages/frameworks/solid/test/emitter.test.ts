@@ -3,6 +3,7 @@ import type { EnrichedIR } from '@frameless/compiler';
 import { resolve } from 'pathe';
 import { describe, expect, test } from 'vitest';
 import { emit, validateEnrichedIr } from '../src/emitter/index.ts';
+import { formatEmitted } from '../src/format-emitted.ts';
 import { checkSources } from '../src/gate/index.ts';
 
 const root = resolve(import.meta.dirname, '..');
@@ -58,7 +59,9 @@ describe('Solid structural emitter', () => {
 		test(`${output} is fresh from the compiler EnrichedIR golden`, async () => {
 			const ir = await golden(goldenName);
 			validateEnrichedIr(ir);
-			expect(await readFile(resolve(root, 'generated', output), 'utf8')).toBe(emit(ir));
+			expect(await readFile(resolve(root, 'generated', output), 'utf8')).toBe(
+				await formatEmitted(emit(ir)),
+			);
 		});
 	}
 
@@ -68,16 +71,16 @@ describe('Solid structural emitter', () => {
 				readFile(resolve(root, 'generated', file), 'utf8'),
 			),
 		);
-		expect(s1).toContain('untrack(() => props.onTrace');
+		expect(s1).toMatch(/untrack\(\(\) =>\s*props\.onTrace/);
 		expect(s1).toContain('const derived = () =>');
-		expect(s1).toContain('<Show when=');
-		expect(s2).toContain('createStore(untrack(() => props.seed.map');
-		expect(s2.match(/setTodos\(produce\(/g)).toHaveLength(2);
-		expect(s2.match(/setTodos\(reconcile\(/g)).toHaveLength(4);
-		expect(s2).toContain('key: "id"');
-		expect(s2).toContain('value={todo.title} attr:value={todo.title}');
+		expect(s1).toMatch(/<Show\s+when=/);
+		expect(s2).toMatch(/createStore\(\s*untrack\(\(\) =>\s*props\.seed\.map/);
+		expect(s2.match(/setTodos\(\s*produce\(/g)).toHaveLength(2);
+		expect(s2.match(/setTodos\(\s*reconcile\(/g)).toHaveLength(4);
+		expect(s2).toContain("key: 'id'");
+		expect(s2).toMatch(/value=\{todo\.title\}\s+attr:value=\{todo\.title\}/);
 		expect(s2).not.toContain('todos() &&');
-		expect(s3).toContain('value={text()} attr:value={text()} onInput=');
+		expect(s3).toMatch(/value=\{text\(\)\}\s+attr:value=\{text\(\)\}\s+onInput=/);
 		expect(s3).toMatch(/setWrites\(1\);\s*setWrites\(2\);/);
 		expect(`${s1}\n${s2}\n${s3}`).not.toMatch(/createMemo|className=|htmlFor=/);
 	});

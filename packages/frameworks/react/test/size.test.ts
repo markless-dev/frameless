@@ -7,17 +7,17 @@ describe('honest emitted structure comparison', () => {
 			{
 				scenario: 'S1',
 				reference: { physicalLoc: 39, structuralNodes: 158 },
-				emitted: { physicalLoc: 24, structuralNodes: 145 },
+				emitted: { physicalLoc: 35, structuralNodes: 150 },
 			},
 			{
 				scenario: 'S2',
 				reference: { physicalLoc: 98, structuralNodes: 573 },
-				emitted: { physicalLoc: 75, structuralNodes: 518 },
+				emitted: { physicalLoc: 157, structuralNodes: 534 },
 			},
 			{
 				scenario: 'S3',
 				reference: { physicalLoc: 69, structuralNodes: 305 },
-				emitted: { physicalLoc: 38, structuralNodes: 219 },
+				emitted: { physicalLoc: 77, structuralNodes: 225 },
 			},
 		]);
 	});

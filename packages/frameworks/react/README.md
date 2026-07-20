@@ -4,6 +4,8 @@ React 19 target package for Frameless. It owns four framework-specific surfaces:
 
 - `emit(ir)` consumes `frameless-enriched-ir/1` and returns one automatic-runtime `.jsx`
   module built with Babel AST. It does not parse author source.
+- `formatEmitted(source)` asynchronously applies the repository's oxfmt configuration when emitted
+  source becomes an artifact; `emit(ir)` remains synchronous and byte-stable.
 - `checkSources` / `checkGeneratedFiles` run the reusable conventionality gate. Every policy
   and violation carries a `dossierRef` into the normative dossier.
 - `createReactAdapter(component)` is available from the browser-safe public
@@ -45,8 +47,8 @@ directive/import bypasses, and authored-event `preventDefault`.
 
 `generated/S1.jsx`, `generated/S2.jsx`, and `generated/S3.jsx` are emitted from the compiler's
 checked-in EnrichedIR goldens. `pnpm --dir packages/frameworks/react regenerate` refreshes them;
-the node suite compares every byte against a fresh `emit(ir)` result and checks that neither the
-emitter nor regeneration reaches `.tsrx`, Markless, or TSRX runtime APIs.
+the node suite compares every byte against a formatted fresh `emit(ir)` result and checks that
+neither the emitter nor regeneration reaches `.tsrx`, Markless, or TSRX runtime APIs.
 
 ## Conventionality evidence
 
@@ -58,9 +60,9 @@ are mutation-free production baselines.
 
 | Scenario | Reference physical LOC | Emitted physical LOC | LOC ratio | Reference AST nodes | Emitted AST nodes | Node ratio |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| S1 | 39 | 24 | 0.62x | 158 | 145 | 0.92x |
-| S2 | 98 | 75 | 0.77x | 573 | 518 | 0.90x |
-| S3 | 69 | 38 | 0.55x | 305 | 219 | 0.72x |
+| S1 | 39 | 35 | 0.90x | 158 | 150 | 0.95x |
+| S2 | 98 | 157 | 1.60x | 573 | 534 | 0.93x |
+| S3 | 69 | 77 | 1.12x | 305 | 225 | 0.74x |
 
 ## What this does not claim
 
@@ -73,6 +75,9 @@ generated-code debugging. The gate is a machine-checkable conventionality proxy 
 family; it is not a proof that arbitrary generated React is idiomatic or semantically equivalent.
 
 ## Verify
+
+The checked-in suite inventory is 66 node tests and 16 browser tests. These are source counts, not
+a claim that a particular environment executed them.
 
 ```sh
 pnpm check

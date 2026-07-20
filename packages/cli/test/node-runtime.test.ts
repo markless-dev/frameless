@@ -40,13 +40,14 @@ describe('target inventory integration', () => {
 	});
 
 	test.each(TARGET_INVENTORY)(
-		'$name exposes its emitter, validator, and gate',
+		'$name exposes its emitter, formatter, validator, and gate',
 		async (target) => {
 			const framework = (await import(
 				target.packageSpecifier
 			)) as Partial<FrameworkTargetModule>;
 
 			expect(framework.emit).toBeTypeOf('function');
+			expect(framework.formatEmitted).toBeTypeOf('function');
 			expect(framework.validateEnrichedIr).toBeTypeOf('function');
 			expect(framework.checkSources).toBeTypeOf('function');
 		},
@@ -93,6 +94,12 @@ test('builds the proven S1 fixture for both targets and records hashes and deleg
 	});
 	expect(receipt.targets.react?.emittedContentSha256).toBe(sha256(react));
 	expect(receipt.targets.solid?.emittedContentSha256).toBe(sha256(solid));
+	const [{ formatEmitted: formatReact }, { formatEmitted: formatSolid }] = await Promise.all([
+		import('@frameless/react'),
+		import('@frameless/solid'),
+	]);
+	expect(await formatReact(react)).toBe(react);
+	expect(await formatSolid(solid)).toBe(solid);
 	expect(receipt.input.contentSha256).toBe(sha256(input));
 	expect(receipt.equivalence).toEqual({
 		state: 'delegated',
@@ -127,6 +134,7 @@ test('rejects a seam-loaded fake that tries to issue a receipt for @frameless/re
 		executeBuildPlanInternal(plan, cwd, async () => ({
 			framework: {
 				emit: () => 'export function Fake() { return null; }',
+				formatEmitted: async (emitted) => emitted,
 				validateEnrichedIr: () => undefined,
 				checkSources: async ([entry]) => ({
 					files: [entry!.file],
@@ -165,6 +173,7 @@ test('leaves no target output behind when a gate rejects emitted source', async 
 		executeBuildPlanInternal(plan, cwd, async () => ({
 			framework: {
 				emit: () => 'export function Invalid() { return null; }',
+				formatEmitted: async (emitted) => emitted,
 				validateEnrichedIr: () => undefined,
 				checkSources: async ([entry]) => ({
 					files: [entry!.file],
@@ -219,6 +228,7 @@ test('leaves prior targets and receipts untouched when a later target cannot be 
 		executeBuildPlanInternal(plan, cwd, async (packageSpecifier) => ({
 			framework: {
 				emit: () => 'export function Output() { return null; }',
+				formatEmitted: async (emitted) => emitted,
 				validateEnrichedIr: () => undefined,
 				checkSources: async ([entry]) => ({
 					files: [entry!.file],

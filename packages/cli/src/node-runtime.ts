@@ -18,6 +18,7 @@ export const BUILD_RECEIPT_FILENAME = 'frameless-build-receipt.json' as const;
 
 export interface FrameworkTargetModule {
 	emit(ir: EnrichedIR): string;
+	formatEmitted(source: string): Promise<string>;
 	validateEnrichedIr(ir: EnrichedIR): void;
 	checkSources(
 		entries: ReadonlyArray<{ readonly file: string; readonly source: string }>,
@@ -75,6 +76,11 @@ export async function executeBuildPlanInternal(
 			content = framework.emit(ir);
 		} catch (error) {
 			throw new Error(`Target ${target.name} emission failed: ${errorMessage(error)}`);
+		}
+		try {
+			content = await framework.formatEmitted(content);
+		} catch (error) {
+			throw new Error(`Target ${target.name} formatting failed: ${errorMessage(error)}`);
 		}
 
 		const outputDirectory = resolveFrom(cwd, target.outputDirectory);
@@ -185,7 +191,7 @@ async function loadAndAssertTarget(
 		);
 	}
 	const { framework } = loadedTarget;
-	for (const member of ['emit', 'validateEnrichedIr', 'checkSources'] as const) {
+	for (const member of ['emit', 'formatEmitted', 'validateEnrichedIr', 'checkSources'] as const) {
 		if (typeof framework[member] !== 'function') {
 			throw new Error(
 				`Target ${targetName} package ${packageSpecifier} does not export ${member}`,

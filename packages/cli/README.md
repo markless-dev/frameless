@@ -1,8 +1,10 @@
 # @frameless/cli
 
 The CLI compiles one `.tsrx` input to enriched IR, then asks each selected framework package to
-validate that IR, emit its own JSX, and gate that emitted source. Target output is written beneath
-`<out-dir>/<target>/` only after every selected target passes validation and its gate.
+validate that IR, emit its own JSX, format it with that package's public `formatEmitted`, and gate
+the formatted source. Target output is written beneath `<out-dir>/<target>/` only after every
+selected target passes validation and its gate. Receipt hashes cover the same formatted bytes that
+the gate checks and the CLI writes.
 
 ```sh
 frameless build component.tsrx --target react --target solid --out-dir generated

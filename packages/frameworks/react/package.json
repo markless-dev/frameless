@@ -31,6 +31,7 @@
 		"eslint-plugin-react": "^7.37.5",
 		"eslint-plugin-react-hooks": "^6.1.1",
 		"globals": "^16.5.0",
+		"oxfmt": "0.46.0",
 		"pathe": "catalog:",
 		"react": "19.2.3",
 		"react-dom": "19.2.3"
