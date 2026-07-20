@@ -55,7 +55,17 @@ importers:
         specifier: file:../../vendor/markless-analyzer-0.1.1.tgz
         version: file:vendor/markless-analyzer-0.1.1.tgz(playwright@1.58.2)
 
-  packages/cli: {}
+  packages/cli:
+    dependencies:
+      '@frameless/compiler':
+        specifier: workspace:*
+        version: link:../compiler
+      '@frameless/react':
+        specifier: workspace:*
+        version: link:../frameworks/react
+      '@frameless/solid':
+        specifier: workspace:*
+        version: link:../frameworks/solid
 
   packages/compiler:
     dependencies:

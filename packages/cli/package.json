@@ -2,7 +2,26 @@
 	"name": "@frameless/cli",
 	"version": "0.0.0",
 	"private": true,
+	"bin": {
+		"frameless": "./src/node.ts"
+	},
 	"type": "module",
-	"exports": { ".": "./src/index.ts" },
-	"publishConfig": { "exports": { ".": { "default": "./dist/index.js" } } }
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"publishConfig": {
+		"bin": {
+			"frameless": "./dist/node.js"
+		},
+		"exports": {
+			".": {
+				"default": "./dist/index.js"
+			}
+		}
+	},
+	"dependencies": {
+		"@frameless/compiler": "workspace:*",
+		"@frameless/react": "workspace:*",
+		"@frameless/solid": "workspace:*"
+	}
 }

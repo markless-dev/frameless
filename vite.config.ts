@@ -9,13 +9,17 @@ const pack = (
 	packagePath: string,
 	name: string,
 	dependencies: ReadonlyArray<string> = [],
+	options: {
+		readonly entry?: Record<string, string>;
+		readonly platform?: PackUserConfig['platform'];
+	} = {},
 ): PackUserConfig => ({
 	name,
 	cwd: `${rootDir}/${packagePath}`,
-	entry: { index: './src/index.ts' },
+	entry: options.entry ?? { index: './src/index.ts' },
 	format: ['esm'],
 	outDir: './dist',
-	platform: 'neutral',
+	platform: options.platform ?? 'neutral',
 	fixedExtension: false,
 	dts: false,
 	clean: true,
@@ -32,7 +36,15 @@ const productConfig = defineConfig({
 		pack('packages/analyzer', '@frameless/analyzer'),
 		pack('packages/frameworks/react', '@frameless/react', ['@frameless/analyzer', 'react', 'react-dom']),
 		pack('packages/frameworks/solid', '@frameless/solid', ['@frameless/analyzer', 'solid-js']),
-		pack('packages/cli', '@frameless/cli'),
+		pack(
+			'packages/cli',
+			'@frameless/cli',
+			['@frameless/compiler', '@frameless/react', '@frameless/solid'],
+			{
+				platform: 'node',
+				entry: { index: './src/index.ts', node: './src/node.ts' },
+			},
+		),
 	],
 	test: {
 		projects: [
