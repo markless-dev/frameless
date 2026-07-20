@@ -68,13 +68,13 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-composition-v1/"
     command: "npx goalbuddy board docs/goals/frameless-composition-v1"
 
-active_task: T001
+active_task: T002  # T003 runs concurrently as read-only scout (recorded: disjoint, no writers)
 
 tasks:
   - id: T001
     type: scout
     assignee: Scout
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Pinned-capability + IR gap map: what the VENDORED markless 0.1.1 compiler actually supports for cross-file component imports, children/slots, shared(), and element()/refs (probe with real .tsrx inputs against the pinned tarballs, read their compiled surface — markless repo itself read-only reference); exactly which frameless-enriched-ir/1 v0 limits block composition (one-component-per-file, no relative imports, fail-closed template nodes) and what a /2 contract must add; whether the analyzer scenario vocabulary suffices for two-component shared-state/focus scenarios."
     inputs:
@@ -85,11 +85,14 @@ tasks:
       - "Read-only. Every capability claim probed or cited, not assumed. If the pin cannot compile a construct, record the exact diagnostic."
     expected_output:
       - "notes/T001-pinned-capability.md: construct -> pinned support (proven) -> upstream delta -> IR/2 requirement -> blocked-or-buildable verdict per slice"
-    receipt: null
+    receipt:
+      result: done
+      note: notes/T001-pinned-capability.md
+      summary: "Executed per-layer probe ledger. BUILDABLE-ON-PIN: multi-component modules, cross-file component references (Layer A records component-edges + import metadata; only frameless /1 guards block), default children projection (ordinary `children` authoring), same-module shared() (Layer A records full shared semantics), direct element()/attach refs. BLOCKED-ON-VENDOR-REFRESH: cross-file imported shared() (MARKLESS_STATE_HELPER_RETURN_UNSUPPORTED on the pin; upstream de15cdf adds it), typed capture-slots/passthrough ABI (upstream-only: 767f5c0/61e4634/b8844a6/1c2ce1a). NEEDS-DECISION: cross-component ref forwarding (child compiled alone rejects el={props.x}; needs incoming-edge context or module-link phase — vendor refresh alone insufficient). /1 debts found: shared + element-handle semantics SILENTLY LOST today (el/attach mangled to plain attrs), unknown template nodes dropped via [] fallback (build.ts:587 — fail-closed violation for /2 to fix), name-keyed binding envs unsafe multi-component. Analyzer: action vocabulary sufficient; Scenario needs expected DOM/focus assertions (cross-framework equality alone can't catch both-sides-omit-slot); single-root mount OK via composite roots."
   - id: T002
     type: scout
     assignee: Scout
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: "React composition idiom dossier: evidenced rulings for shared() lowering (context + memo discipline vs context selectors vs useSyncExternalStore store vs prop threading — re-render cost evidence, thresholds, and the React Compiler interplay VALIDATED with the actual compiler, per the user's explicit uncertainty), children/slots (ReactNode props patterns), refs (React 19 ref-as-prop, imperative focus), each with citations and overturn triggers; the deciding principle is that IR read/write granularity records drive the choice per shared cell."
     constraints:
