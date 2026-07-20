@@ -1,4 +1,4 @@
-export const ORACLE_CONTRACT_VERSION = 'arcade-equivalence-oracle/1';
+export const ORACLE_CONTRACT_VERSION = 'frameless-equivalence-oracle/1';
 
 export type Action =
   | { type: 'click'; target: string }

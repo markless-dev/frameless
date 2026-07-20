@@ -31,7 +31,7 @@ export type BlockedPairResult = {
 export type PairResult = EqualPairResult | BlockedPairResult;
 export type MutantResult = { scenario: string; expectedChannel: string; rejected: boolean; observedChannels: string[]; divergences: Divergence[] };
 export type Evidence = {
-  schema: 'arcade-c9-evidence/2'; generatedBy: string; environment: Record<string, string>;
+  schema: 'frameless-c9-evidence/2'; generatedBy: string; environment: Record<string, string>;
   findings: Record<FindingId, Finding>;
   scenarios: Record<string, Record<string, PairResult>>; mutantRejections: Record<string, MutantResult>;
   summary: {

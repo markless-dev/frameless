@@ -79,5 +79,5 @@ Mitosis 0.13.2's Solid output targets Solid v1 (`solid-js@1.8.22` here). Against
 `solid-js/web` entry point, which Solid v2 no longer exports
 (`test/solid2-compat.test.ts` proves this). Mitosis exposes no way to target a
 framework major version — the "no control over versioning" complaint from the
-Voorhoede report, made machine-checkable. Arcade-side emitters in this repo target
+Voorhoede report, made machine-checkable. Frameless-side emitters in this repo target
 Solid v2 and Qwik v2 (`@qwik.dev/core`) by decision (2026-07-19).

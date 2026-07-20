@@ -1,4 +1,4 @@
-# Arcade C9 equivalence results
+# Frameless C9 equivalence results
 
 This package records the final, adjudicated C9 evidence for the three-scenario fixture family. The Chromium suite executes all five C9-provable pairs per scenario: emitted React against handwritten React, emitted Solid against handwritten Solid, each emitted target against the other handwritten framework, and emitted React against emitted Solid. It also rejects one calibrated mutant in every required observation channel. The Markless machinery remains in the package, but its native-composition leg is recorded—not omitted—as blocked by upstream Markless 0.1.1 findings.
 
@@ -6,7 +6,7 @@ The harness catches the reference implementation: the Markless failures are the 
 
 ## C9 claim
 
-For this fixture family, Arcade-emitted React and Solid are behaviorally equivalent to each other and to handwritten React and Solid references under the calibrated oracle. The oracle observes mount, before and after each dispatch, after one microtask, and at bounded quiescence; it compares allowlist-normalized DOM, live properties, focus and selection, keyed node identity, and callback traces. Five mutant classes—wrong text, omitted callback, broken key identity, wrong cancellation, and duplicate handler—are rejected in their intended channels.
+For this fixture family, Frameless-emitted React and Solid are behaviorally equivalent to each other and to handwritten React and Solid references under the calibrated oracle. The oracle observes mount, before and after each dispatch, after one microtask, and at bounded quiescence; it compares allowlist-normalized DOM, live properties, focus and selection, keyed node identity, and callback traces. Five mutant classes—wrong text, omitted callback, broken key identity, wrong cancellation, and duplicate handler—are rejected in their intended channels.
 
 The Markless-native leg does not pass C9. Every Markless pair for every scenario is present in `results/verdict.json` with `blocked-by-upstream` and findings `#3,#5,#6,#7,#8`. S1’s full DOM-channel pass against both handwritten references is retained as `dom-only-partial`; its callback channel is blocked by #7. `test/verdict-artifact.node.test.ts` enforces this shape so a blocked party cannot become a silent skip.
 
@@ -50,7 +50,7 @@ pnpm test
 | React / React DOM | 18.3.1 |
 | Solid runtime | 1.8.22 fallback |
 | Solid JSX transform | `babel-preset-solid` 1.9.12 |
-| Oracle contract | `arcade-equivalence-oracle/1` |
+| Oracle contract | `frameless-equivalence-oracle/1` |
 | pnpm | 10.33.2 |
 
 Vendored tarball SHA-256 receipts:

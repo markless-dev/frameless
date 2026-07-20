@@ -24,7 +24,7 @@ importers:
       '@babel/traverse':
         specifier: 7.29.7
         version: 7.29.7
-      arcade-poc-04-equivalence-oracle:
+      frameless-poc-04-equivalence-oracle:
         specifier: file:../04-equivalence-oracle
         version: file:../04-equivalence-oracle
       eslint:
@@ -576,7 +576,7 @@ packages:
     resolution: {integrity: sha512-zbB9rCJAT1rbjiVDb2hqKFHNYLxgtk8NURxZ3IZwD3F6NtxbXZQCnnSi1Lkx+IDohdPlFp222wVALIheZJQSEg==}
     engines: {node: '>=8'}
 
-  arcade-poc-04-equivalence-oracle@file:../04-equivalence-oracle:
+  frameless-poc-04-equivalence-oracle@file:../04-equivalence-oracle:
     resolution: {directory: ../04-equivalence-oracle, type: directory}
     engines: {node: '>=20'}
 
@@ -1842,7 +1842,7 @@ snapshots:
     dependencies:
       color-convert: 2.0.1
 
-  arcade-poc-04-equivalence-oracle@file:../04-equivalence-oracle:
+  frameless-poc-04-equivalence-oracle@file:../04-equivalence-oracle:
     dependencies:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)

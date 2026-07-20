@@ -1,8 +1,8 @@
-# Arcade equivalence oracle calibration
+# Frameless equivalence oracle calibration
 
-This package validates the oracle that later Arcade emitters will be judged by. It does **not** claim C9: no generated output is present. The package is deliberately oracle-first and contains handwritten conventional React and Solid references plus a mutation corpus.
+This package validates the oracle that later Frameless emitters will be judged by. It does **not** claim C9: no generated output is present. The package is deliberately oracle-first and contains handwritten conventional React and Solid references plus a mutation corpus.
 
-## Oracle contract (`arcade-equivalence-oracle/1`)
+## Oracle contract (`frameless-equivalence-oracle/1`)
 
 An adapter mounts a component into a supplied host with props/callbacks, dispatches typed actions, waits for its own scheduler with bounded quiescence (500 ms timeout), and unmounts it. No sleeps are used. Every run observes mount, immediately before and after every dispatch, after one microtask, and after quiescence.
 
@@ -66,4 +66,4 @@ A fresh `pnpm install` in the authoring sandbox reached `registry.npmjs.org` but
 
 ## What this does not prove
 
-This proves that the fixture- and phase-scoped CSR oracle accepts the three clean handwritten pairs and rejects the enumerated defects. It does not prove C9 or any emitter, Markless/Arcade generated output, general framework equivalence, Solid v2 runtime equivalence, framework-version ranges, async semantics, cleanup/attach, slots/children/context, styling, multi-module builds, performance/bundle size, accessibility, SSR/hydration/resume, HMR, type-preserving emission, or generated-code debugging.
+This proves that the fixture- and phase-scoped CSR oracle accepts the three clean handwritten pairs and rejects the enumerated defects. It does not prove C9 or any emitter, Markless/Frameless generated output, general framework equivalence, Solid v2 runtime equivalence, framework-version ranges, async semantics, cleanup/attach, slots/children/context, styling, multi-module builds, performance/bundle size, accessibility, SSR/hydration/resume, HMR, type-preserving emission, or generated-code debugging.

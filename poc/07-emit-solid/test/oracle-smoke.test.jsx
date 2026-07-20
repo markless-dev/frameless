@@ -22,15 +22,15 @@ describe('oracle smoke on solid-1.8.22-fallback', () => {
     const host = document.createElement('div'); document.body.append(host); const calls = [];
     let setLabel; let setMultiplier;
     function Harness() {
-      const [label, updateLabel] = createSignal('Arcade'); const [multiplier, updateMultiplier] = createSignal(3);
+      const [label, updateLabel] = createSignal('Frameless'); const [multiplier, updateMultiplier] = createSignal(3);
       setLabel = updateLabel; setMultiplier = updateMultiplier;
       return <RenderOnce label={label()} multiplier={multiplier()} visible onTrace={(...args) => calls.push(args)} />;
     }
     const dispose = render(() => <Harness />, host);
-    expect(host.querySelector('[data-value="derived"]')?.textContent).toBe('Arcade:3');
+    expect(host.querySelector('[data-value="derived"]')?.textContent).toBe('Frameless:3');
     host.querySelector('[data-action="increment"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     setLabel('Changed'); setMultiplier(5);
-    expect(host.querySelector('[data-value="derived"]')?.textContent).toBe('Arcade:10');
+    expect(host.querySelector('[data-value="derived"]')?.textContent).toBe('Frameless:10');
     expect(calls.filter(([name]) => name === 'setup')).toHaveLength(1);
     expect(calls.find(([name]) => name === 'change')?.[2]).toBeUndefined();
     dispose();

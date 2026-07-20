@@ -1,7 +1,7 @@
-# Arcade React emitter
+# Frameless React emitter
 
 This package is the W-C1 React half of the adjudicated C8 proof chain. It consumes
-only the three checked-in `arcade-enriched-ir/1` JSON goldens from
+only the three checked-in `frameless-enriched-ir/1` JSON goldens from
 `../05-enriched-ir/test/goldens/`, constructs Babel AST, and prints React function
 components. It never reads TSRX, reparses author source, or imports Markless/TSRX at
 runtime. C8 remains claimable only after W-C2 and W-D1 combine both target emitters,
@@ -38,12 +38,12 @@ created generated file that is found without changing a file list.
 The smoke suite then runs every emitted component (including S1's hidden branch
 calibration) through the sibling oracle against the handwritten React reference and
 requires exact verdicts. Independent S1 assertions require setup exactly once per
-mount, exact `Arcade:3`/`Arcade:6` derived strings, and a real React-root rerender in
-which the initial `Arcade:` prefix remains captured while the multiplier update is
-reactive (`Arcade:10`).
+mount, exact `Frameless:3`/`Frameless:6` derived strings, and a real React-root rerender in
+which the initial `Frameless:` prefix remains captured while the multiplier update is
+reactive (`Frameless:10`).
 
 The React recommended preset's `prop-types` rule remains enabled with its documented
-`skipUndeclared` option because `arcade-enriched-ir/1` deliberately carries no prop
+`skipUndeclared` option because `frameless-enriched-ir/1` deliberately carries no prop
 types and type-preserving emission is out of scope. No generated-file lint rule is
 disabled or suppressed.
 

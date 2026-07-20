@@ -12,7 +12,7 @@ const root = dirname(fileURLToPath(import.meta.url));
 const solidFiles = /(?:07-emit-solid\/generated\/.*\.jsx|\.solid\.jsx|\.solid\.tsx)$/;
 
 const isolatedSolidTransform = {
-  name: 'arcade:isolated-solid-jsx',
+  name: 'frameless:isolated-solid-jsx',
   enforce: 'pre' as const,
   async transform(code: string, id: string) {
     if (!solidFiles.test(id.split('?')[0])) return null;

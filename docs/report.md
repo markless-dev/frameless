@@ -1,10 +1,10 @@
-# Arcade: ship the framework code before the framework wins
+# Frameless: ship the framework code before the framework wins
 
-New frameworks usually die of cold-start. A library author will not support a framework with few users, and users will not adopt a framework with few libraries. Arcade inverts that loop: write a component once in TSRX, ship ordinary React and Solid packages now, and attach machine-checkable receipts showing that the packages behave the same. A library can reach established ecosystems before markless itself has meaningful market share. If the framework never wins, consumers still own framework-native source. That compile-out exit hatch reverses the usual lock-in fear. [strategic bet]
+New frameworks usually die of cold-start. A library author will not support a framework with few users, and users will not adopt a framework with few libraries. Frameless inverts that loop: write a component once in TSRX, ship ordinary React and Solid packages now, and attach machine-checkable receipts showing that the packages behave the same. A library can reach established ecosystems before markless itself has meaningful market share. If the framework never wins, consumers still own framework-native source. That compile-out exit hatch reverses the usual lock-in fear. [strategic bet]
 
-Markless is the framework and semantic model. TSRX is its native component syntax. Arcade is a separate portability compiler, oracle, and receipt format. An **oracle** is a checker that sends the same interactions to two components and compares what a user can observe. Arcade components are written in TSRX, but Arcade is its own brand and its output does not require a markless runtime.
+Markless is the framework and semantic model. TSRX is its native component syntax. Frameless is a separate portability compiler, oracle, and receipt format. An **oracle** is a checker that sends the same interactions to two components and compares what a user can observe. Frameless components are written in TSRX, but Frameless is its own brand and its output does not require a markless runtime.
 
-There are two broad ways to enter an existing ecosystem. A compat-in runtime accepts existing React code, which makes migration easy but also accepts React's semantic ceiling. A compile-out tool starts from a cleaner source model and turns new components and libraries into React, Solid, and eventually other native targets. Arcade takes the second path and makes the translation testable.
+There are two broad ways to enter an existing ecosystem. A compat-in runtime accepts existing React code, which makes migration easy but also accepts React's semantic ceiling. A compile-out tool starts from a cleaner source model and turns new components and libraries into React, Solid, and eventually other native targets. Frameless takes the second path and makes the translation testable.
 
 The market has already confessed the pain. [TanStack Query](https://github.com/TanStack/query/releases) publishes separate React, Solid, Vue, Svelte, Angular, Lit, and Preact integrations in one release train. [Zag](https://github.com/chakra-ui/zag/tree/main/packages/frameworks) maintains framework adapters. Prime maintains separate [React](https://github.com/primefaces/primereact), [Vue](https://github.com/primefaces/primevue), and [Angular](https://github.com/primefaces/primeng) implementations. These are successful, rational workarounds. They also show that multi-framework maintenance is endemic: teams trusted hand-maintained adapters more than compile-to-framework output. Mitosis did not lose because the pain was imaginary. It lost because it did not produce trustworthy receipts. [opinion]
 
@@ -21,7 +21,7 @@ Mitosis tried to let authors write one JSX-like component and generate many fram
 
 ### The compiler forgot JavaScript structure
 
-Mitosis 0.13.2 parses JSX with Babel, but then stores component behavior mainly as strings inside a JSON template tree. Its intermediate representation, or **IR**, is the compiler's internal description of a program. Mitosis's IR has no complete symbol table, lexical scope model, closure model, or general statement control flow. Target generators recover meaning by reparsing and rewriting snippets, regexes, and names. Its major targets occupy roughly 18,000 lines of target-specific generator code, while output is assembled mainly by string concatenation and then handed to Prettier. [POC: poc/01-mitosis-static]
+Mitosis 0.13.2 parses JSX with Babel, but then stores component behavior mainly as strings inside a JSON template tree. Its intermediate representation, or **IR**, is the compiler's internal description of a program. Mitosis's IR has no complete symbol table, lexical scope model, closure model, or general statement control flow. Target generators recover meaning by reparsing and rewriting snippets, regexes, and names. Its major targets occupy roughly 18,000 lines of target-specific generator code, while output is assembled mainly by string concatenation and then handed to Prettier. [evidence: docs/goals/frameless-mitosis-successor/notes/T001-mitosis-map.md]
 
 That architecture explains a surprising authoring dialect. Ordinary component-body locals, early returns, state destructuring, general prop defaults/rest, and several normal JSX control-flow forms are missing, banned, or lossy. Validation is split among parser pattern matching, explicit parser errors, and a separate lint preset; the three do not always agree. [POC: poc/01-mitosis-static]
 
@@ -64,7 +64,7 @@ onChange$={$((event) => (state.name = myEvent.target.value))}
 
 `myEvent` is unbound. The regenerated bytes equal the repository's committed golden snapshot, and Babel scope analysis finds the same unresolved identifier in both. **C3:** Mitosis 0.13.2 emits unresolved `myEvent`, and the repository's accepted golden snapshot contains the same defect. [POC: poc/01-mitosis-static]
 
-This was not an isolated testing philosophy. The repository contained 46 core snapshot files totaling about 437,000 lines and 10 MB. Shared browser tests existed, but central todo-list count assertions were commented out; known target cases were skipped; and Angular's wrong `disabled` behavior was special-cased rather than rejected. Those observations are architecture evidence, not a claim that every Mitosis output is broken. [POC: poc/01-mitosis-static] [POC: poc/02-mitosis-divergence]
+This was not an isolated testing philosophy. The repository contained 46 core snapshot files totaling about 437,000 lines and 10 MB. Shared browser tests existed, but central todo-list count assertions were commented out; known target cases were skipped; and Angular's wrong `disabled` behavior was special-cased rather than rejected. Those observations are architecture evidence, not a claim that every Mitosis output is broken. [evidence: docs/goals/frameless-mitosis-successor/notes/T001-mitosis-map.md] [POC: poc/02-mitosis-divergence]
 
 ### One source did not mean one behavior
 
@@ -94,25 +94,25 @@ Mitosis 0.13.2 also emits Solid v1 imports that Solid 2 no longer exports, and i
 
 The same research identified two verified production adopters: Builder.io's own generated SDKs and Deutsche Bahn's DB UX design system. It did not verify the often-repeated AWS Amplify adoption. Amplify's public RFC instead chose hand-written framework implementations because it wanted each framework's components to feel native to that framework. [Builder SDK](https://www.npmjs.com/package/@builder.io/sdk-qwik), [DB UX](https://github.com/db-ux-design-system/core-web), [Amplify RFC #3933](https://github.com/aws-amplify/amplify-ui/issues/3933). **C5** does not claim that no other private adopters exist. [POC: not applicable; date-stamped source evidence]
 
-Maintenance also contracted. Local history counted 558 commits in 2021, 501 in 2022, 118 in 2025, and eight through June 5, 2026; the last substantial feature for primary framework outputs was recorded in 2025. The top two contributor names accounted for 63.4% of commits. Builder later shifted its public strategy toward Qwik governance and Fusion, but no source says it formally deprecated Mitosis, so the connection is an inference rather than an announced cause. [Qwik governance](https://www.builder.io/blog/qwik-next-leap), [Fusion launch](https://www.builder.io/blog/fusion). [POC: poc/01-mitosis-static]
+Maintenance also contracted. Local history counted 558 commits in 2021, 501 in 2022, 118 in 2025, and eight through June 5, 2026; the last substantial feature for primary framework outputs was recorded in 2025. The top two contributor names accounted for 63.4% of commits. Builder later shifted its public strategy toward Qwik governance and Fusion, but no source says it formally deprecated Mitosis, so the connection is an inference rather than an announced cause. [Qwik governance](https://www.builder.io/blog/qwik-next-leap), [Fusion launch](https://www.builder.io/blog/fusion). [evidence: docs/goals/frameless-mitosis-successor/notes/T001-mitosis-map.md]
 
 The strongest field report came from Voorhoede in September 2024. It described testing and debugging as painful, reported stripped logs, no generated-output validation, and no framework-version targeting, and recommended against making Mitosis the foundation of a design system. SAP Fundamental Library's 2022 evaluation liked the concept but said the development experience was not ready. These reports support an execution problem; neither proves the category cannot work. [Voorhoede](https://www.voorhoede.nl/en/blog/write-components-once-run-everywhere-with-mitosis-a-beautiful-dream-or-reality/), [SAP Fundamental Library](https://medium.com/fundamental-library/exploring-cross-framework-development-2bdcb26fe6a). **C5** is limited to those sourced observations. [POC: not applicable; date-stamped source evidence]
 
-## What Arcade does differently
+## What Frameless does differently
 
-Arcade treats trustworthy translation as a chain of evidence:
+Frameless treats trustworthy translation as a chain of evidence:
 
 ```text
 TSRX source
   -> markless semantic graph
-  -> Arcade enriched IR
+  -> Frameless enriched IR
   -> framework AST emitter
   -> React / Solid source
   -> same-scenario equivalence oracle
   -> receipt
 ```
 
-A semantic graph records identities and relationships: this state path was read, that handler wrote it, this computed value depends on it, and this keyed row owns these nodes. The **enriched IR** joins those records to the missing program structure: initializer expressions, complete template trees, branch arms, ordered children, attributes, and handler syntax. An **AST**, or abstract syntax tree, is code represented as structured nodes rather than a pasted string. Arcade's emitters build framework ASTs and print them. They do not use string templates for program logic. [POC: poc/03-markless-graph] [POC: poc/05-enriched-ir]
+A semantic graph records identities and relationships: this state path was read, that handler wrote it, this computed value depends on it, and this keyed row owns these nodes. The **enriched IR** joins those records to the missing program structure: initializer expressions, complete template trees, branch arms, ordered children, attributes, and handler syntax. An **AST**, or abstract syntax tree, is code represented as structured nodes rather than a pasted string. Frameless's emitters build framework ASTs and print them. They do not use string templates for program logic. [POC: poc/03-markless-graph] [POC: poc/05-enriched-ir]
 
 ### A concrete source-to-output example
 
@@ -139,7 +139,7 @@ export function RenderOnce({ label, multiplier, visible, onTrace }) @{
 }
 ```
 
-Arcade's React output maps visible state to `useState`, captures the render-once local once, and derives the cheap value during render:
+Frameless's React output maps visible state to `useState`, captures the render-once local once, and derives the cheap value during render:
 
 ```jsx
 const didRunSetup = useRef(false);
@@ -169,9 +169,9 @@ Those fragments are not asserted equivalent because they look similar. The oracl
 
 **C7:** for the todo fixture, `SemanticGraphArtifact` stores typed, ID-linked records for writable state, path-level reads and writes, computed dependencies, branch sites, keyed repeats, events, and destructuring aliases. It correctly links state to computed data and computed data to a host update. Expression bodies still contain source-string fields; the proof explicitly tests and discloses that limitation. [POC: poc/03-markless-graph]
 
-The semantic graph alone is not enough to recreate a component. It lacks full host-tree structure, static text and attributes, branch-arm templates, local initializers, and structured expressions. Arcade therefore builds `arcade-enriched-ir/1` from the TSRX syntax tree plus semantic records. The artifact is versioned and serializable, and its tests prove closure of graph IDs and coverage of every host shape for S1–S3. [POC: poc/05-enriched-ir]
+The semantic graph alone is not enough to recreate a component. It lacks full host-tree structure, static text and attributes, branch-arm templates, local initializers, and structured expressions. Frameless therefore builds `frameless-enriched-ir/1` from the TSRX syntax tree plus semantic records. The artifact is versioned and serializable, and its tests prove closure of graph IDs and coverage of every host shape for S1–S3. [POC: poc/05-enriched-ir]
 
-**C8:** for the S1–S3 fixture family, that enriched IR is sufficient input for real React and Solid AST emitters. React is the primary evidence: its emitter is structural, survived a fixture contract change without modification, passes strict type/build checks, React and Hooks lint, and AST policies that reject unused code, unstable keys, render-phase setters/effects, invalid hook sites, undisclosed imports, and bypass attempts. Solid is secondary evidence that `arcade-enriched-ir/1` is consumable by a second, paradigm-different backend for the fixture family. Its adversarially established generality boundary is explicit: keyed-repeat keys are validated but not lowered, row reactivity relies on the fixtures' in-place mutation plus array refresh, and constructs outside the supported vocabulary fail closed—they are rejected instead of guessed at. This is not a production-general Solid emitter. [POC: poc/05-enriched-ir] [POC: poc/06-emit-react] [POC: poc/07-emit-solid]
+**C8:** for the S1–S3 fixture family, that enriched IR is sufficient input for real React and Solid AST emitters. React is the primary evidence: its emitter is structural, survived a fixture contract change without modification, passes strict type/build checks, React and Hooks lint, and AST policies that reject unused code, unstable keys, render-phase setters/effects, invalid hook sites, undisclosed imports, and bypass attempts. Solid is secondary evidence that `frameless-enriched-ir/1` is consumable by a second, paradigm-different backend for the fixture family. Its adversarially established generality boundary is explicit: keyed-repeat keys are validated but not lowered, row reactivity relies on the fixtures' in-place mutation plus array refresh, and constructs outside the supported vocabulary fail closed—they are rejected instead of guessed at. This is not a production-general Solid emitter. [POC: poc/05-enriched-ir] [POC: poc/06-emit-react] [POC: poc/07-emit-solid]
 
 The gate is a published, machine-checkable **conventionality gate**, not a claim that generated style is subjectively perfect. React S2 is 2.10 times the handwritten baseline's nonblank lines, although its AST node count is 1.11 times the baseline. Solid S2 is 1.67 times the handwritten lines. Size is reported, not hidden or passed by redefining the metric. [POC: poc/06-emit-react] [POC: poc/07-emit-solid]
 
@@ -190,7 +190,7 @@ There are still real lifecycle needs. They fall into four buckets:
 
 A sink would read the graph but could not write it, so sinks could not cascade into each other. React could receive a generated effect or external-store adapter; Solid could receive `createEffect`. In either case, exact dependencies would come from typed path-level graph records, not from author-maintained arrays or Mitosis's comma-split dependency strings. This sink is a stated direction, not a current capability, and no fixture in this report exercises it. [opinion]
 
-Where attach behavior or async work genuinely requires React effects, Arcade's intended rule is compiler-derived exact dependencies. Under that design, authors cannot omit a dependency or hand the compiler a stale list; that footgun is removed at the language level. This has not yet been proved for attach or async output. Passive-versus-layout timing is target-specific, and attach mapping must get its own oracle round before any equivalence claim. [strategic bet]
+Where attach behavior or async work genuinely requires React effects, Frameless's intended rule is compiler-derived exact dependencies. Under that design, authors cannot omit a dependency or hand the compiler a stale list; that footgun is removed at the language level. This has not yet been proved for attach or async output. Passive-versus-layout timing is target-specific, and attach mapping must get its own oracle round before any equivalence claim. [strategic bet]
 
 ### The oracle, in plain language
 
@@ -200,7 +200,7 @@ Normalization is allowlist-only. The checker removes known framework-owned marke
 
 Most importantly, the checker is tested against lies. Calibration mutants produce wrong text, a wrong live input property, missing and reordered callbacks, a remounted keyed row, wrong `preventDefault`, a duplicate handler call, and a microtask-delayed update. Every mutant must be rejected in the expected observation channel. The final C9 run repeats representative DOM, callback, identity, cancellation, and multiplicity mutants in Chromium. [POC: poc/04-equivalence-oracle] [POC: poc/08-equivalence-results]
 
-**C9:** for S1–S3, Arcade-emitted React and Solid are behaviorally equivalent to each other and to handwritten React and Solid references under the calibrated oracle. All five emitted/handwritten cross-pairs per scenario pass, for 15 passing pairs. The markless-native leg is blocked by enumerated markless 0.1.1 composition gaps, findings #3, #5, #6, #7, and #8. S1's DOM channel passed fully against both handwritten references before the callback channel blocked; that is partial evidence, not a whole-pair pass. [POC: poc/08-equivalence-results]
+**C9:** for S1–S3, Frameless-emitted React and Solid are behaviorally equivalent to each other and to handwritten React and Solid references under the calibrated oracle. All five emitted/handwritten cross-pairs per scenario pass, for 15 passing pairs. The markless-native leg is blocked by enumerated markless 0.1.1 composition gaps, findings #3, #5, #6, #7, and #8. S1's DOM channel passed fully against both handwritten references before the callback channel blocked; that is partial evidence, not a whole-pair pass. [POC: poc/08-equivalence-results]
 
 Condensed from the machine-generated receipt:
 
@@ -242,7 +242,7 @@ Condensed from the machine-generated receipt:
 
 ## The honesty chapter: the harness caught the reference implementation
 
-The markless-native failures are not an embarrassing appendix. They are the strongest evidence for Arcade's method. The same harness intended to certify generated targets caught the reference framework itself. A tool that had normalized these differences away could have printed a clean matrix and shipped bugs. Receipts turned them into a concrete pre-launch roadmap. [opinion]
+The markless-native failures are not an embarrassing appendix. They are the strongest evidence for Frameless's method. The same harness intended to certify generated targets caught the reference framework itself. A tool that had normalized these differences away could have printed a clean matrix and shipped bugs. Receipts turned them into a concrete pre-launch roadmap. [opinion]
 
 These are the eight findings, at verbatim-level specificity:
 
@@ -270,7 +270,7 @@ The Solid emitter passed S1–S3 and consumes the enriched IR structurally. It a
 
 That limitation changes the roadmap, not the recorded pass. React remains the primary C8 evidence. Solid shows that a second and very different reactive backend can consume the IR for this family. It does not establish a general Solid compiler. [POC: poc/07-emit-solid]
 
-Solid version evidence is also bounded. Arcade intends to target Solid 2, but `solid-js@2.0.0-experimental.16` has no `./web` export and the available `vite-plugin-solid@2.11.0` toolchain is Solid 1-oriented. Runtime receipts therefore use the explicitly labeled Solid 1.8.22 fallback. No Solid 2 runtime-equivalence claim is made. [POC: poc/04-equivalence-oracle] [POC: poc/07-emit-solid] [POC: poc/08-equivalence-results]
+Solid version evidence is also bounded. Frameless intends to target Solid 2, but `solid-js@2.0.0-experimental.16` has no `./web` export and the available `vite-plugin-solid@2.11.0` toolchain is Solid 1-oriented. Runtime receipts therefore use the explicitly labeled Solid 1.8.22 fallback. No Solid 2 runtime-equivalence claim is made. [POC: poc/04-equivalence-oracle] [POC: poc/07-emit-solid] [POC: poc/08-equivalence-results]
 
 ### What remains out of scope
 
@@ -294,27 +294,27 @@ The current receipts do **not** cover:
 
 [POC: poc/03-markless-graph] [POC: poc/05-enriched-ir] [POC: poc/06-emit-react] [POC: poc/07-emit-solid] [POC: poc/08-equivalence-results]
 
-Generated-code debugging deserves special emphasis. It was the number-one external Mitosis complaint in the available field evidence, and it remains open for both tools. Mitosis has no generated-component source-map implementation in the examined code. Markless's production transform returns `map: null`. Arcade has not solved that. [Voorhoede](https://www.voorhoede.nl/en/blog/write-components-once-run-everywhere-with-mitosis-a-beautiful-dream-or-reality/) [POC: poc/03-markless-graph]
+Generated-code debugging deserves special emphasis. It was the number-one external Mitosis complaint in the available field evidence, and it remains open for both tools. Mitosis has no generated-component source-map implementation in the examined code. Markless's production transform returns `map: null`. Frameless has not solved that. [Voorhoede](https://www.voorhoede.nl/en/blog/write-components-once-run-everywhere-with-mitosis-a-beautiful-dream-or-reality/) [POC: poc/03-markless-graph]
 
-The five composition blockers in C9, plus guard-element lowering, are markless 0.1.1's immediate pre-launch roadmap. This is not ancillary cleanup. Composition is the unlock for design systems, the market Arcade is supposed to serve.
+The five composition blockers in C9, plus guard-element lowering, are markless 0.1.1's immediate pre-launch roadmap. This is not ancillary cleanup. Composition is the unlock for design systems, the market Frameless is supposed to serve.
 
 ## Strategic bets
 
-### B1 — Arcade creates a two-sided funnel [strategic bet]
+### B1 — Frameless creates a two-sided funnel [strategic bet]
 
-Arcade is the front door. A React-focused library author can adopt TSRX to generate React today, then add Solid without rewriting the source. Because TSRX is markless's native language, the same source can later run natively in markless. In the other direction, a markless library author can emit packages for ecosystems that already have users. More syntax users create more markless-ready libraries; more markless libraries become available to established frameworks through Arcade. The POCs show that this loop is technically possible for S1–S3. They do not prove adoption.
+Frameless is the front door. A React-focused library author can adopt TSRX to generate React today, then add Solid without rewriting the source. Because TSRX is markless's native language, the same source can later run natively in markless. In the other direction, a markless library author can emit packages for ecosystems that already have users. More syntax users create more markless-ready libraries; more markless libraries become available to established frameworks through Frameless. The POCs show that this loop is technically possible for S1–S3. They do not prove adoption.
 
 > **How the funnel works technically**
 >
-> The `arcade` package should re-export the `@markless/core` authoring API. Markless's semantic collectors currently recognize APIs by import source and reject aliases, so the compiler needs a configurable accepted-import-source list such as `['@markless/core', 'arcade']`. That is one configuration-level change, not a second semantic model. Then one file can go through Arcade's emitters or markless's native compiler with no source rewrite. This accepted-source change belongs in the markless repository and is outside the current goal. [strategic bet]
+> The npm package name is TBD. The eventual Frameless package should re-export the `@markless/core` authoring API. Markless's semantic collectors currently recognize APIs by import source and reject aliases, so the compiler needs a configurable accepted-import-source list containing `@markless/core` and the eventual Frameless package specifier. That is one configuration-level change, not a second semantic model. Then one file can go through Frameless's emitters or markless's native compiler with no source rewrite. This accepted-source change belongs in the markless repository and is outside the current goal. [strategic bet]
 
 ### B2 — design systems are the right wedge [strategic bet]
 
-Library and design-system teams feel multi-framework cost directly. TanStack, Zag, Prime, Deutsche Bahn, Builder's SDKs, and Amplify's framework-specific RFC all point at that burden. They also show the trust barrier: teams would rather staff multiple adapters than accept unverifiable generated code. Arcade's answer is not “trust the compiler.” It is “run the same public scenarios and inspect the receipts.” The addressable group is probably small; the evidence is consistent with a niche, not a mass-market replacement for application frameworks.
+Library and design-system teams feel multi-framework cost directly. TanStack, Zag, Prime, Deutsche Bahn, Builder's SDKs, and Amplify's framework-specific RFC all point at that burden. They also show the trust barrier: teams would rather staff multiple adapters than accept unverifiable generated code. Frameless's answer is not “trust the compiler.” It is “run the same public scenarios and inspect the receipts.” The addressable group is probably small; the evidence is consistent with a niche, not a mass-market replacement for application frameworks.
 
 ### B3 — graph plus AST emitters plus oracle can contain maintenance [strategic bet]
 
-Mitosis accumulated roughly 18,000 lines of target-specific generators around a string-heavy IR and validated much of the result through enormous snapshots. Arcade bets that explicit semantic records, a versioned enriched IR, AST emitters, fail-closed gates, and target-neutral behavior checks make each backend tractable. The React POC and bounded Solid POC are supporting evidence, not proof of long-term maintenance cost.
+Mitosis accumulated roughly 18,000 lines of target-specific generators around a string-heavy IR and validated much of the result through enormous snapshots. Frameless bets that explicit semantic records, a versioned enriched IR, AST emitters, fail-closed gates, and target-neutral behavior checks make each backend tractable. The React POC and bounded Solid POC are supporting evidence, not proof of long-term maintenance cost.
 
 ### B4 — AI makes receipts more valuable [opinion]
 
@@ -322,7 +322,7 @@ AI can produce a plausible framework port cheaply. It cannot make that port beha
 
 ## What would change our minds
 
-Arcade should be abandoned or materially redesigned if any of these happen:
+Frameless should be abandoned or materially redesigned if any of these happen:
 
 - A representative design-system composition suite cannot fit one target-neutral observable contract without pervasive target escape hatches.
 - Production React and Solid emitters require target-specific source forks for ordinary components rather than bounded adapters.
@@ -332,7 +332,7 @@ Arcade should be abandoned or materially redesigned if any of these happen:
 - Design-system maintainers try the receipt workflow and still prefer separate implementations because the authoring or debugging cost is higher.
 - Source maps and error localization prove infeasible across the source-to-enriched-IR-to-target-AST chain.
 
-Those are falsifiable product and engineering tests, not goals Arcade can declare complete by adding more targets. [opinion]
+Those are falsifiable product and engineering tests, not goals Frameless can declare complete by adding more targets. [opinion]
 
 ## Re-run every receipt
 
@@ -389,4 +389,4 @@ Second, turn the React backend into a production emitter: multi-component and mu
 
 Third, earn each new target. Vue, Svelte, Angular, Qwik, server rendering, hydration, and resume are roadmap items, not conclusions hidden inside “write once.” A target ships when its supported semantic surface, conventionality gate, mutants, framework versions, and blocked cases are public receipts.
 
-Arcade's thesis is therefore narrower—and stronger—than “compile to every framework.” It is: define a semantic surface, emit code people can leave with, and prove the tested behavior before asking anyone to trust the translation. [opinion]
+Frameless's thesis is therefore narrower—and stronger—than “compile to every framework.” It is: define a semantic surface, emit code people can leave with, and prove the tested behavior before asking anyone to trust the translation. [opinion]

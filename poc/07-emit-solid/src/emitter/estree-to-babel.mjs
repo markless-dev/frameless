@@ -28,6 +28,6 @@ export function fromEstree(node) {
     case 'IfStatement': return t.ifStatement(fromEstree(node.test), fromEstree(node.consequent), fromEstree(node.alternate));
     case 'TemplateLiteral': return t.templateLiteral(node.quasis.map(fromEstree), node.expressions.map(fromEstree));
     case 'TemplateElement': return t.templateElement({ raw: node.value.raw, cooked: node.value.cooked }, node.tail);
-    default: throw new Error(`Unsupported arcade-enriched-ir/1 AST node: ${node.type}`);
+    default: throw new Error(`Unsupported frameless-enriched-ir/1 AST node: ${node.type}`);
   }
 }

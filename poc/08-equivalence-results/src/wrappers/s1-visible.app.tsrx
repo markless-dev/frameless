@@ -4,7 +4,7 @@ import { emitTrace } from '../support/trace-bridge.ts';
 export function App() @{
 	<div data-harness="">
 		<RenderOnce
-			label="Arcade"
+			label="Frameless"
 			multiplier={3}
 			visible={true}
 			onTrace={(name, payload, event) => emitTrace(name, payload, event)}

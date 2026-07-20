@@ -5,7 +5,7 @@ import { FRAMEWORK_ATTRIBUTE_ALLOWLIST, ORACLE_CONTRACT_VERSION } from '../src/o
 const require=createRequire(import.meta.url);
 describe('oracle and framework-version contract',()=>{
   test('normalization is versioned and allowlist-only',()=>{
-    expect(ORACLE_CONTRACT_VERSION).toBe('arcade-equivalence-oracle/1');
+    expect(ORACLE_CONTRACT_VERSION).toBe('frameless-equivalence-oracle/1');
     expect([...FRAMEWORK_ATTRIBUTE_ALLOWLIST]).toEqual(['data-reactroot','data-solid-render-id']);
     expect(FRAMEWORK_ATTRIBUTE_ALLOWLIST.has('class')).toBe(false);
     expect(FRAMEWORK_ATTRIBUTE_ALLOWLIST.has('style')).toBe(false);
