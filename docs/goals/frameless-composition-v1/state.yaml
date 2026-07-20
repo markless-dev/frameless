@@ -69,7 +69,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-composition-v1/"
     command: "npx goalbuddy board docs/goals/frameless-composition-v1"
 
-active_task: TA1  # lock critique (crew) runs concurrently, read-only
+active_task: T005  # lock critique (crew) runs concurrently, read-only
 
 tasks:
   - id: T001
@@ -135,21 +135,21 @@ tasks:
       decision: approved
       note: notes/T004-architecture.md
       summary: "Architecture locked: single-version enriched-ir/2 cutover (component ownership on every record, component-reference + default-slot-projection nodes with preserved subtrees, full shared/handle/behavior record families, fail-closed repairs of /1 silent-loss debts); module-link phase DEFERRED with not-a-compiler rationale (cross-module ref forwarding to vendor-refresh gate); surface = T001's five buildable-on-pin verdicts + F1 same-module ref forwarding (OWNER: include, A2 commissioned); lowering contracts bind the owner's tiered emitted-hook decision + T003 rulings into named gate policies (R-*/S-*); oracle gains scenario expectations + 7 calibrated composition mutant classes + composite-root mounting + two-mount scope test (F5: no scope-isolation claims until it exists); demo = new demos/composition-kit (5 files, C1-C3 scenarios); package order A1/A2 scouts -> P1 compiler cutover -> P2 analyzer -> P3 react -> P4 solid -> P5 demo/CLI/e2e -> T998 -> T999. Flags F1-F6 recorded, none silently resolved."
-  - id: TA1
+  - id: T005
     type: scout
     assignee: Scout
     status: active
     reasoning_hint: medium
-    objective: "React attach/behavior lowering addendum to T002 (F2, hard prerequisite of TP3): ref-callback cleanup returns vs useEffect groups for BehaviorRecord lowering — setup/cleanup, reinstall on tracked input change, reverse-order cleanup; evidenced protocol."
+    objective: "React attach/behavior lowering addendum to T002 (F2, hard prerequisite of T009): ref-callback cleanup returns vs useEffect groups for BehaviorRecord lowering — setup/cleanup, reinstall on tracked input change, reverse-order cleanup; evidenced protocol."
     receipt: null
-  - id: TA2
+  - id: T006
     type: scout
     assignee: Scout
     status: queued
     reasoning_hint: medium
     objective: "Solid same-module forwarded-handle addendum to T003 (F1, owner-commissioned): evidenced ruling for parent-owned element handles passed to same-module children."
     receipt: null
-  - id: TP1
+  - id: T007
     type: worker
     assignee: Worker
     status: queued
@@ -159,7 +159,7 @@ tasks:
     verify: ["all v0 lanes green at merge; new contract tests (ownership, fail-closed unknown node, no-silent-loss, module-set resolver)"]
     stop_if: ["ownership attribution ambiguous — report, do not guess", "need files outside allowed_files", "pin diagnostic contradicts a T001 verdict", "verification fails twice"]
     receipt: null
-  - id: TP2
+  - id: T008
     type: worker
     assignee: Worker
     status: queued
@@ -169,27 +169,27 @@ tasks:
     verify: ["browser calibration: all mutant classes rejected both frameworks; v0 lanes green"]
     stop_if: ["RunTrace shape change without version decision", "browser denied — hand to PM", "verification fails twice"]
     receipt: null
-  - id: TP3
+  - id: T009
     type: worker
     assignee: Worker
     status: queued
     reasoning_hint: medium
-    objective: "React composition emitter + gate per T004 SS3.1 (requires TA1; owner tiered-lowering decision binding). Critique mandatory."
+    objective: "React composition emitter + gate per T004 SS3.1 (requires T005; owner tiered-lowering decision binding). Critique mandatory."
     allowed_files: ["packages/frameworks/react/**"]
     verify: ["node incl. metamorphics + per-policy mutations + e2e discovery; react-browser incl. composition calibration + emitted smoke; v0 lanes green"]
     stop_if: ["dossier lacks evidence", "IR insufficiency — record /2 amendment, stop", "verification fails twice"]
     receipt: null
-  - id: TP4
+  - id: T010
     type: worker
     assignee: Worker
     status: queued
     reasoning_hint: medium
-    objective: "Solid composition emitter + gate per T004 SS3.2 (+TA2 forwarding ruling). Sequential after TP3 preferred. Critique mandatory."
+    objective: "Solid composition emitter + gate per T004 SS3.2 (+T006 forwarding ruling). Sequential after T009 preferred. Critique mandatory."
     allowed_files: ["packages/frameworks/solid/**"]
     verify: ["node + solid-browser incl. composition calibration; v0 lanes green"]
     stop_if: ["dossier lacks evidence", "IR insufficiency — record /2 amendment, stop", "verification fails twice"]
     receipt: null
-  - id: TP5
+  - id: T011
     type: worker
     assignee: Worker
     status: queued
