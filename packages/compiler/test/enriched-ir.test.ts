@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync } from 'node:fs';
-import { basename } from 'node:path';
+import { basename } from 'pathe';
 import { describe, expect, test } from 'vitest';
 import { buildEnrichedIr, collectGraphReads } from '../src/build';
 import { dumpEnrichedIr } from '../src/dump';

@@ -1,3 +1,4 @@
+import { basename, isAbsolute, normalize } from 'pathe';
 import { buildSemanticGraph } from '@markless/compiler';
 import type {
 	SemanticGraphAlias,
@@ -991,12 +992,15 @@ function sortWrites(writes: readonly StateWriteRecord[]): StateWriteRecord[] {
 }
 
 function normalizeFilename(filename: string): string {
-	const normalized = filename.replace(/\\/g, '/');
-	if (!/^(?:[A-Za-z]:\/|\/)/.test(normalized)) return normalized.replace(/^\.\//, '');
-	const fixtureMarker = '/src/fixtures/';
-	const fixtureIndex = normalized.lastIndexOf(fixtureMarker);
+	const normalized = normalize(filename);
+	if (!isAbsolute(normalized)) {
+		return normalized.startsWith('./') ? normalized.slice(2) : normalized;
+	}
+	// Absolute inputs must not leak machine-specific prefixes into artifacts:
+	// keep the repo-meaningful tail (src/fixtures/...) or the basename.
+	const fixtureIndex = normalized.lastIndexOf('/src/fixtures/');
 	if (fixtureIndex >= 0) return normalized.slice(fixtureIndex + 1);
-	return normalized.slice(normalized.lastIndexOf('/') + 1);
+	return basename(normalized);
 }
 
 function assertFullyConsumed(context: TemplateContext): void {

@@ -8,6 +8,8 @@ packages:
 # poc/** deliberately owns separate lockfiles and never joins this workspace.
 catalogs:
     default:
+        pathe: ^2.0.3
+        ufo: ^1.6.4
         '@tsrx/core': ^0.1.32
         '@types/node': ^24.12.2
         typescript: ^5.9.3

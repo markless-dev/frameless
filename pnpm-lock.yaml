@@ -4,6 +4,12 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    pathe:
+      specifier: ^2.0.3
+      version: 2.0.3
+
 overrides:
   '@markless/bundler': file:vendor/markless-bundler-0.1.1.tgz
   '@markless/compiler': file:vendor/markless-compiler-0.1.1.tgz
@@ -48,6 +54,9 @@ importers:
       '@tsrx/core':
         specifier: 0.1.32
         version: 0.1.32
+      pathe:
+        specifier: 'catalog:'
+        version: 2.0.3
 
   packages/frameworks/react:
     dependencies:

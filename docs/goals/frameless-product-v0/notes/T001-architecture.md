@@ -200,3 +200,17 @@ Crew critique (high effort) verdict: REJECT as locked. PM accepts all amendments
    contract content. Load-bearing bits fold into package READMEs; a future specs
    pass happens with the owner.
 8. ROOT VITE CONFIG: no node: builtin imports (match markless practice).
+
+# User directives addendum 3 (2026-07-20, binding)
+
+9. LATEST-COMPILER DUTY: before any run consuming markless artifacts, verify dist
+   freshness vs src in the source worktree and re-pack; tarball dirs carry
+   SHA256SUMS + PROVENANCE (packed-from rev). Enforced this session: fixes-worktree
+   dist was STALE across all packages — rebuilt at 5e5a100, re-packed vendor-fix.
+   Pending deliberate step: refreshing the PRODUCT vendor/ baseline to the fixed
+   compiler (goldens may churn; do as its own verified change after the C9 flip).
+10. PATH HANDLING: pathe (and ufo for URLs) via catalog, mirroring markless — no
+    hand-rolled separators/drive-letter regexes/manual normalization anywhere in
+    product code. Applied: compiler build.ts normalizeFilename rewritten with
+    pathe normalize/isAbsolute/basename; tests swapped to pathe; both packages
+    registered in the workspace catalog.
