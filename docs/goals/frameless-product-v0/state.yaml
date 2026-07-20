@@ -73,7 +73,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-product-v0/"
     command: "npx goalbuddy board docs/goals/frameless-product-v0"
 
-active_task: T008
+active_task: T010
 
 tasks:
   - id: T001
@@ -272,7 +272,7 @@ tasks:
   - id: T008
     type: worker
     assignee: Worker
-    status: queued
+    status: done
     reasoning_hint: medium
     objective: "CLI build entry (T001: CLI-first; split from demo per T006 handoff): packages/cli compiles .tsrx through @frameless/compiler and emits via BOTH framework packages, per the T006 critique tail instructions — internal target inventory registering react->@frameless/react and solid->@frameless/solid; inventory integration test failing if either is absent; repeated --target flags; each target's own emitter + gate invoked; separate atomic output directories; receipts covering both generated packages and their cross-target analyzer comparison. Scope: CLI only; demo library and fresh-checkout e2e are T010."
     inputs:
@@ -292,7 +292,16 @@ tasks:
       - "Need files outside allowed_files."
       - "Receipt content would require browser execution inside the CLI — report, keep browser equivalence in the vitest lane."
       - "Verification fails twice."
-    receipt: null
+    receipt:
+      result: done
+      summary: "@frameless/cli complete through crew (3 units + critique + repair). Pure layer (2-wide): markless-convention hand-rolled parser, react/solid TARGET_INVENTORY as data, deterministic per-target plans (<out>/<target>/, .jsx — PM repaired worker's .tsx, gates discover .jsx only); frameless-build-receipts/1 with delegation-ONLY equivalence (structurally cannot claim browser equality; vitest lanes are the authority — per PM adjudication resolving the scout's schema-honesty conflict). Runtime unit (solo; blocked on sandbox-broken node_modules, PM restored + completed verification): executeBuildPlan prepares ALL targets (validate/emit/gate via each target package's OWN dynamically-imported API) before any write; markless atomic conventions; bin adapter; pack helper per-package platform/entry (CLI=node). Second-model critique: REJECT — receipt provenance forgeable via public loadTarget injection (probe: fake module recorded as @frameless/react), write phase non-transactional (probe: second-target mkdir failure left first target's output). Repair unit: injection removed from public API (internal test seam only), provenance recorded from the ACTUALLY resolved module's package.json with validator enforcing resolvedPackage.name==packageSpecifier, stage-then-swap directories with rollback, receipt last; PM re-executed both critique probes — forged receipt rejected, second-target failure leaves NO output. PM repairs: .jsx extension, node:path->pathe. Final: node 208/208, browser 17/17+16/16, check 0, build 5, poc clean; byte-identical receipts on repeat builds (critique-executed)."
+      changed_files:
+        - "packages/cli/**"
+        - "vite.config.ts"
+        - "pnpm-lock.yaml"
+      commands:
+        - cmd: "pnpm check && pnpm build && pnpm test; vitest solid-browser + react-browser; critique probes re-executed PM-side; poc/ diff empty"
+          status: pass
   - id: T010
     type: worker
     assignee: Worker

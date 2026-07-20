@@ -2,7 +2,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { open, mkdir, readFile, rename, rm } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { dirname, isAbsolute, join, relative, resolve } from 'pathe';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import type { EnrichedIR } from '@frameless/compiler';
 import type { BuildPlan } from './program.ts';
 import {
@@ -10,6 +10,7 @@ import {
 	createBuildReceipt,
 	serializeBuildReceipt,
 	type GateResult,
+	type ResolvedPackage,
 	type TargetBuildReceipt,
 } from './receipts.ts';
 
@@ -23,13 +24,15 @@ export interface FrameworkTargetModule {
 	): Promise<GateResult>;
 }
 
-export interface NodeRuntimeOptions {
-	readonly loadTarget?: (packageSpecifier: string) => Promise<FrameworkTargetModule>;
+export interface LoadedFrameworkTarget {
+	readonly framework: FrameworkTargetModule;
+	readonly resolvedPackage: ResolvedPackage;
 }
 
 interface PreparedTarget {
 	readonly content: string;
-	readonly outputPath: string;
+	readonly emittedFilename: string;
+	readonly finalDirectory: string;
 	readonly receipt: TargetBuildReceipt;
 }
 
@@ -37,22 +40,30 @@ interface PreparedTarget {
 export async function executeBuildPlan(
 	plan: BuildPlan,
 	workingDirectory: string,
-	options: NodeRuntimeOptions = {},
+): Promise<void> {
+	return executeBuildPlanInternal(plan, workingDirectory, importFrameworkTarget);
+}
+
+/** Test-only loader seam; deliberately omitted from the package index public API. */
+export async function executeBuildPlanInternal(
+	plan: BuildPlan,
+	workingDirectory: string,
+	loadTarget: (packageSpecifier: string) => Promise<LoadedFrameworkTarget>,
 ): Promise<void> {
 	const cwd = resolve(workingDirectory);
 	const inputPath = resolveFrom(cwd, plan.input);
 	const source = await readFile(inputPath, 'utf8');
 	const { buildEnrichedIr } = await import('@frameless/compiler');
 	const ir = await buildEnrichedIr({ filename: inputPath, source });
-	const loadTarget = options.loadTarget ?? importFrameworkTarget;
 	const preparedTargets: Array<readonly [string, PreparedTarget]> = [];
 
 	for (const target of plan.targets) {
-		const framework = await loadAndAssertTarget(
+		const loadedTarget = await loadAndAssertTarget(
 			loadTarget,
 			target.name,
 			target.packageSpecifier,
 		);
+		const { framework, resolvedPackage } = loadedTarget;
 		try {
 			framework.validateEnrichedIr(ir);
 		} catch (error) {
@@ -83,9 +94,11 @@ export async function executeBuildPlan(
 			target.name,
 			{
 				content,
-				outputPath,
+				emittedFilename: target.emittedFilename,
+				finalDirectory: outputDirectory,
 				receipt: {
 					packageSpecifier: target.packageSpecifier,
+					resolvedPackage,
 					emittedFilePath,
 					emittedContentSha256: sha256(content),
 					validation: { state: 'passed' },
@@ -117,32 +130,61 @@ export async function executeBuildPlan(
 	});
 	const serializedReceipt = serializeBuildReceipt(receipt);
 
-	for (const [, prepared] of preparedTargets) {
-		await mkdir(dirname(prepared.outputPath), { recursive: true });
-		await atomicWriteFile(prepared.outputPath, prepared.content);
+	const outputRoot = resolveFrom(cwd, plan.outDir);
+	const receiptPath = join(outputRoot, BUILD_RECEIPT_FILENAME);
+	const createdOutputRoot = await mkdir(outputRoot, { recursive: true });
+	const stagedTargets: Array<{
+		readonly finalDirectory: string;
+		readonly stagedDirectory: string;
+	}> = [];
+	try {
+		for (const [name, prepared] of preparedTargets) {
+			const stagedDirectory = join(outputRoot, `.${name}.${randomUUID()}.tmp`);
+			stagedTargets.push({ finalDirectory: prepared.finalDirectory, stagedDirectory });
+			const stagedOutputPath = join(stagedDirectory, prepared.emittedFilename);
+			await mkdir(dirname(stagedOutputPath), { recursive: true });
+			await atomicWriteFile(stagedOutputPath, prepared.content);
+		}
+	} catch (error) {
+		await cleanupStagedTargets(stagedTargets);
+		if (createdOutputRoot) await rm(outputRoot, { force: true, recursive: true });
+		throw error;
 	}
-	const receiptPath = join(resolveFrom(cwd, plan.outDir), BUILD_RECEIPT_FILENAME);
-	await mkdir(dirname(receiptPath), { recursive: true });
+
+	try {
+		for (const staged of stagedTargets) {
+			await rm(staged.finalDirectory, { force: true, recursive: true });
+			await rename(staged.stagedDirectory, staged.finalDirectory);
+		}
+	} catch (error) {
+		await cleanupStagedTargets(stagedTargets);
+		throw error;
+	}
 	await atomicWriteFile(receiptPath, serializedReceipt);
 }
 
-async function importFrameworkTarget(packageSpecifier: string): Promise<FrameworkTargetModule> {
-	return (await import(packageSpecifier)) as FrameworkTargetModule;
+async function importFrameworkTarget(packageSpecifier: string): Promise<LoadedFrameworkTarget> {
+	const resolvedEntry = createRequire(import.meta.url).resolve(packageSpecifier);
+	return {
+		framework: (await import(pathToFileURL(resolvedEntry).href)) as FrameworkTargetModule,
+		resolvedPackage: await packageIdentity(dirname(resolvedEntry)),
+	};
 }
 
 async function loadAndAssertTarget(
-	loadTarget: (packageSpecifier: string) => Promise<FrameworkTargetModule>,
+	loadTarget: (packageSpecifier: string) => Promise<LoadedFrameworkTarget>,
 	targetName: string,
 	packageSpecifier: string,
-): Promise<FrameworkTargetModule> {
-	let framework: FrameworkTargetModule;
+): Promise<LoadedFrameworkTarget> {
+	let loadedTarget: LoadedFrameworkTarget;
 	try {
-		framework = await loadTarget(packageSpecifier);
+		loadedTarget = await loadTarget(packageSpecifier);
 	} catch (error) {
 		throw new Error(
 			`Target ${targetName} package ${packageSpecifier} failed to load: ${errorMessage(error)}`,
 		);
 	}
+	const { framework } = loadedTarget;
 	for (const member of ['emit', 'validateEnrichedIr', 'checkSources'] as const) {
 		if (typeof framework[member] !== 'function') {
 			throw new Error(
@@ -150,7 +192,17 @@ async function loadAndAssertTarget(
 			);
 		}
 	}
-	return framework;
+	return loadedTarget;
+}
+
+async function cleanupStagedTargets(
+	targets: ReadonlyArray<{ readonly stagedDirectory: string }>,
+): Promise<void> {
+	await Promise.all(
+		targets.map(({ stagedDirectory }) =>
+			rm(stagedDirectory, { force: true, recursive: true }).catch(() => undefined),
+		),
+	);
 }
 
 async function atomicWriteFile(path: string, contents: string): Promise<void> {
@@ -181,6 +233,11 @@ async function packageVersion(packageName: string, moduleUrl?: string): Promise<
 	const start = moduleUrl
 		? dirname(fileURLToPath(moduleUrl))
 		: dirname(createRequire(import.meta.url).resolve(packageName));
+	const identity = await packageIdentity(start, packageName);
+	return identity.version;
+}
+
+async function packageIdentity(start: string, expectedName?: string): Promise<ResolvedPackage> {
 	let directory = start;
 	for (;;) {
 		try {
@@ -190,13 +247,19 @@ async function packageVersion(packageName: string, moduleUrl?: string): Promise<
 				name?: string;
 				version?: string;
 			};
-			if (packageJson.name === packageName && packageJson.version) return packageJson.version;
+			if (
+				packageJson.name &&
+				packageJson.version &&
+				(!expectedName || packageJson.name === expectedName)
+			) {
+				return { name: packageJson.name, version: packageJson.version };
+			}
 		} catch (error) {
 			if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
 		}
 		const parent = dirname(directory);
 		if (parent === directory)
-			throw new Error(`Could not resolve package version for ${packageName}`);
+			throw new Error(`Could not resolve package identity from ${start}`);
 		directory = parent;
 	}
 }

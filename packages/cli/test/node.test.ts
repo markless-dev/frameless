@@ -1,4 +1,7 @@
+import { existsSync } from 'node:fs';
 import { access, readFile } from 'node:fs/promises';
+import { spawn } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, test, vi } from 'vitest';
 import { main } from '../src/node.ts';
 
@@ -38,3 +41,27 @@ describe('node bin adapter', () => {
 		expect(stderr).toHaveBeenCalledWith('Missing input for build\n');
 	});
 });
+
+const packagedBin = fileURLToPath(new URL('../dist/node.js', import.meta.url));
+
+if (existsSync(packagedBin)) {
+	test('the packaged bin executes help with the published Node entry point', async () => {
+		const result = await new Promise<{ code: number | null; stdout: string; stderr: string }>(
+			(resolveResult, reject) => {
+				const child = spawn(process.execPath, [packagedBin, 'help']);
+				let stdout = '';
+				let stderr = '';
+				child.stdout.setEncoding('utf8').on('data', (chunk: string) => (stdout += chunk));
+				child.stderr.setEncoding('utf8').on('data', (chunk: string) => (stderr += chunk));
+				child.on('error', reject);
+				child.on('close', (code) => resolveResult({ code, stdout, stderr }));
+			},
+		);
+
+		expect(result).toMatchObject({ code: 0, stderr: '' });
+		expect(result.stdout).toContain('Usage:');
+		expect(result.stdout).toContain('frameless build');
+	});
+} else {
+	test.skip('the packaged bin executes help (dist/node.js absent; run pnpm build first)', () => {});
+}

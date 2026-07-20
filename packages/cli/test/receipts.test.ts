@@ -24,6 +24,7 @@ function receipt(): BuildReceipt {
 		targets: {
 			react: {
 				packageSpecifier: '@frameless/react',
+				resolvedPackage: { name: '@frameless/react', version: '0.0.0-test' },
 				emittedFilePath: 'generated/react/counter.tsx',
 				emittedContentSha256: SHA_C,
 				validation: { state: 'passed' },
@@ -35,6 +36,7 @@ function receipt(): BuildReceipt {
 			},
 			solid: {
 				packageSpecifier: '@frameless/solid',
+				resolvedPackage: { name: '@frameless/solid', version: '0.0.0-test' },
 				emittedFilePath: 'generated/solid/counter.tsx',
 				emittedContentSha256: SHA_A,
 				validation: { state: 'failed', diagnostic: 'generated module did not parse' },
@@ -95,6 +97,22 @@ describe('frameless-build-receipts/1', () => {
 		expect(() => validateBuildReceipt({ ...receipt(), targets: {} })).toThrow(
 			/BuildReceipt targets must contain at least one target/,
 		);
+	});
+
+	test('rejects a target whose resolved package name differs from its specifier', () => {
+		const value = receipt();
+		expect(() =>
+			validateBuildReceipt({
+				...value,
+				targets: {
+					...value.targets,
+					react: {
+						...value.targets.react,
+						resolvedPackage: { name: '@test/fake', version: '0.0.0-test' },
+					},
+				},
+			}),
+		).toThrow(/resolvedPackage name must match packageSpecifier/);
 	});
 
 	test('rejects non-sha256-shaped hashes', () => {

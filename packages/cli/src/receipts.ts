@@ -43,8 +43,14 @@ export type ValidationOutcome =
 	| { readonly state: 'passed' }
 	| { readonly state: 'failed'; readonly diagnostic: string };
 
+export type ResolvedPackage = {
+	readonly name: string;
+	readonly version: string;
+};
+
 export type TargetBuildReceipt = {
 	readonly packageSpecifier: string;
+	readonly resolvedPackage: ResolvedPackage;
 	readonly emittedFilePath: string;
 	readonly emittedContentSha256: string;
 	readonly validation: ValidationOutcome;
@@ -139,14 +145,35 @@ function validateTarget(value: unknown, construct: string): asserts value is Tar
 	assertRecord(value, construct);
 	exactKeys(
 		value,
-		['packageSpecifier', 'emittedFilePath', 'emittedContentSha256', 'validation', 'gate'],
+		[
+			'packageSpecifier',
+			'resolvedPackage',
+			'emittedFilePath',
+			'emittedContentSha256',
+			'validation',
+			'gate',
+		],
 		construct,
 	);
 	assertNonEmptyString(value.packageSpecifier, `${construct} packageSpecifier`);
+	validateResolvedPackage(value.resolvedPackage, `${construct} resolvedPackage`);
+	if (value.resolvedPackage.name !== value.packageSpecifier) {
+		throw new Error(`${construct} resolvedPackage name must match packageSpecifier`);
+	}
 	assertNonEmptyString(value.emittedFilePath, `${construct} emittedFilePath`);
 	assertSha256(value.emittedContentSha256, `${construct} emittedContentSha256`);
 	validateOutcome(value.validation, `${construct} validation`);
 	validateGateResult(value.gate, `${construct} GateResult`);
+}
+
+function validateResolvedPackage(
+	value: unknown,
+	construct: string,
+): asserts value is ResolvedPackage {
+	assertRecord(value, construct);
+	exactKeys(value, ['name', 'version'], construct);
+	assertNonEmptyString(value.name, `${construct} name`);
+	assertNonEmptyString(value.version, `${construct} version`);
 }
 
 function validateOutcome(value: unknown, construct: string): asserts value is ValidationOutcome {
