@@ -193,3 +193,35 @@ the green baseline at the P1a merge.
 Flags added: F7 ownership-attribution feasibility (scout-gated), F8 legacy golden/emitted
 byte-stability controls (P1 milestone), F9 shared transaction semantics (addendum-gated),
 F10 module-set/CLI mapping (locked above), F11 cleanup observability (P2 requirement).
+
+---
+
+## PM ADJUDICATION 2: probe results folded in (2026-07-20)
+
+**F7 RESOLVED (ownership, notes/T004a-ownership-probes.md):** the attribution algorithm
+is locked exactly as the probe evidence supports — span ownership from component AST
+ranges (single-candidate joins only), explicit coordinates preferred and cross-checked
+(componentName, sharedDefinitionId, edge names, hostNodeId), hosts by the executed
+source-order cursor join with host-linked records inheriting ownership, shared
+definitions/returned-properties/helper-writes MODULE-OWNED. TRIM (fail-closed, this
+pin): two components in one module declaring the SAME local binding name is a
+construct-named diagnostic (probe 1 proved no distinguishing coordinate exists;
+vendor identity refresh is the recorded path to lifting it). Never a module-global
+name-map fallback. Record classes not collision-probed (aliases, branch sites,
+keyed-repeat ownership in multi-component modules) attribute only via
+single-candidate joins and otherwise fail closed.
+
+**F9 RESOLVED (transactions, notes/T004b-shared-transactions.md):** the emitted React
+store contract is NOTIFICATION-ATOMIC — synchronous write-through in authored order
+inside methods (later statements read earlier writes), notifications suppressed
+during the method, ONE post-method notification phase notifying only cells whose
+final value changed (Object.is), version-cached snapshots (identical object for
+unchanged version — probes showed the per-read-rebuild failure mode: React cache
+warning, 54 renders, update-depth crash). Executed proof that React automatic
+batching is NOT sufficient (inline subscribers observed A-new/B-old under
+notify-per-write). Cross-target: Solid's synchronous batch within the event yields
+the same post-dispatch observation; the oracle's post-dispatch window sees final
+state in both frameworks — traces stay equal. Gate rules: R-SH3 extends to require
+deferred-notification + version-cached snapshots; mutant M-SHARED-TEAR (notify-per-
+write exposing intermediate state to a subscriber-driven observer) joins the
+calibration classes.
