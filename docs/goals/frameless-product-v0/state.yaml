@@ -276,8 +276,9 @@ tasks:
     reasoning_hint: medium
     objective: "CLI build entry (T001: CLI-first; split from demo per T006 handoff): packages/cli compiles .tsrx through @frameless/compiler and emits via BOTH framework packages, per the T006 critique tail instructions — internal target inventory registering react->@frameless/react and solid->@frameless/solid; inventory integration test failing if either is absent; repeated --target flags; each target's own emitter + gate invoked; separate atomic output directories; receipts covering both generated packages and their cross-target analyzer comparison. Scope: CLI only; demo library and fresh-checkout e2e are T010."
     inputs:
-      - "T008 scout receipt (crew, 2026-07-20)"
+      - "T008 scout receipt (notes/T008-scout.md, crew, 2026-07-20)"
       - "T006 critique tail instructions"
+      - "PM adjudications (2026-07-20, from scout conflict list): (1) T008's e2e test compiles a FIXTURE .tsrx, not the demo (demo=T010); (2) CLI emits its own frameless-build-receipts/1 schema (inputs, IR identity, emitted hashes, per-target validation, GateResult, and an explicit delegation record naming the vitest browser lane as the equivalence authority) — it must NOT emit frameless-receipts/1, whose pair states cannot be honest without a RunTrace; (3) the true React-vs-Solid cross-target browser lane is T010 scope; (4) pack helper extended for platform:'node' + bin, mirroring markless CLI shape"
     allowed_files:
       - "packages/cli/**"
       - "vite.config.ts"
@@ -297,7 +298,7 @@ tasks:
     assignee: Worker
     status: queued
     reasoning_hint: medium
-    objective: "Demo TSRX component library (within the proven fixture-family surface — trim the demo rather than extend the surface) + the ONE documented fresh-checkout command: demo lib -> CLI -> React 19 + Solid packages passing gates + green cross-target equivalence receipts under the oracle in headless Chromium; document the command in the root README."
+    objective: "Demo TSRX component library (within the proven fixture-family surface — trim the demo rather than extend the surface) + the TRUE cross-target browser lane (React output vs Solid output compared via analyzer RunTraces — does not exist yet, per T008 scout finding 3) + the ONE documented fresh-checkout command: demo lib -> CLI -> React 19 + Solid packages passing gates + green cross-target equivalence receipts under the oracle in headless Chromium; document the command in the root README."
     allowed_files: []
     verify: []
     stop_if:
