@@ -105,11 +105,16 @@ arbitrary keys or immutable row replacement, prop updates beyond calibration, as
 children/context, custom components, SVG/MathML, accessibility, SSR/hydration/resume, HMR,
 declarations, sourcemaps, or generated-code debugging. In Solid 1.x `<For>` still keys by object
 identity; the IR key is consumed by `reconcile`, not by For itself. The gate is a conventionality
-proxy over discovered generated files, not a proof for arbitrary source.
+proxy over discovered generated files, not a proof for arbitrary source. Known arbitrary-source
+channels outside that contract (confirm-critique, 2026-07-20): setter smuggling through nested
+object chains (`({ a: { run: set } }).a.run(1)`) and Show-arm duplication masked by attribute
+reordering — both unreachable from the deterministic emitter, which emits neither shape. Show-arm
+duplication is judged by identical element subtrees at any depth (PM adjudication): differing
+wrappers do not excuse an identical nested list; a differing leaf does break the match.
 
 ## Verify
 
-The checked-in suite inventory is 68 node tests (23 emitter/freshness, 38 gate, 2 adapter
+The checked-in suite inventory is 74 node tests (26 emitter/freshness, 41 gate, 2 adapter
 entry/import-graph, 1 size, 4 Solid 2 blocker contract) and 17 browser tests (12 handwritten calibration including eight
 mutants, plus 5 emitted/reference and store-row smoke tests). These are source counts, not a claim
 that a particular environment executed them.

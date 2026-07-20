@@ -247,6 +247,23 @@ describe('Solid dossier gate', () => {
 		).toEqual([]);
 	});
 
+	test('Show duplication is judged at any depth, not by outer-wrapper identity', async () => {
+		// PM adjudication (2026-07-20, confirm-critique follow-up): arms must share NO
+		// identical element subtree at any depth — an identical keyed list duplicated
+		// under differing wrappers is still the T003 ruling-5 duplication. A leaf that
+		// differs breaks the match, so distinct-content arms stay clean.
+		const arms = (fallback: string, children: string) =>
+			valid.replace(
+				'<Show when={props.visible}><span>{label()}</span></Show>',
+				`<Show when={props.visible} fallback={${fallback}}><span>{label()}</span>${children}</Show>`,
+			);
+		const list = '<ul><For each={items}>{(item) => <li>{item.id}</li>}</For></ul>';
+		const wrapped = '<ul data-arm="else"><For each={items}>{(item) => <li>{item.id}</li>}</For></ul>';
+		const distinct = '<ul><For each={items}>{(item) => <li data-arm="else">{item.id}</li>}</For></ul>';
+		expect(await policies(arms(wrapped, list))).toContain('show-two-arm');
+		expect(await policies(arms(distinct, list))).not.toContain('show-two-arm');
+	});
+
 	test('eslint-plugin-solid recommended is active', async () => {
 		expect(await policies(valid.replace('<section>', '<section className="bad">'))).toContain(
 			'eslint:solid/no-react-specific-props',

@@ -73,7 +73,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-product-v0/"
     command: "npx goalbuddy board docs/goals/frameless-product-v0"
 
-active_task: T006
+active_task: T008
 
 tasks:
   - id: T001
@@ -207,7 +207,7 @@ tasks:
   - id: T006
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     objective: "packages/frameworks/solid emitter: migrate poc/07's structural emitter (fail-closed soundness + generality boundary) implementing the T003 dossier — store-backed rows with produce/reconcile-keyed structural updates, Show-with-siblings-once branch lowering, plain derived arrows (createMemo OVERTURNED by T003 — never emitted in v0), untrack once-captures, value+onInput/attr:value pairing — plus every T005-critique carry-over (binding-safe identifiers + metamorphic tests, fail-closed validation, per-policy gate mutations + e2e discovery, browser-safe adapter subpath, honest counts)."
     allowed_files:
@@ -221,7 +221,16 @@ tasks:
       - "T003 dossier lacks evidence for a needed decision — report, do not taste-call."
       - "Branch/store lowering hits IR insufficiency — record /2 requirement, stop."
       - "Verification fails twice."
-    receipt: null
+    receipt:
+      result: done
+      summary: "@frameless/solid complete after a 3-round critique cycle. Round 1 (prior session): reject with 6-item re-entry list; gate/emitter fix units merged. Round 2 (this session, full re-check, notes/T006-critique-recheck.md): items 2/4/5/6 closed with executed probes; 3 residuals. Round 3: residuals repaired (crew 2-wide: inline-object setter resolution w/ duplicate-key+spread fail-closed semantics; any-depth Show-arm duplication detection; bidirectional AST/read-record reconciliation across branch/computed/initializer/key/text sites — validation only, goldens byte-identical), confirm-critique executed adversarial matrices: items 1/3 CLOSED; item 2's one-attribute negative control adjudicated by PM as strict any-depth contract (identical nested list under differing wrappers IS ruling-5 duplication) and pinned with the critic's probe pair as tests; two low-severity arbitrary-source channels (nested-chain smuggling, attr-order equivalence) documented as out-of-scope in the generality boundary (unreachable from the deterministic emitter). PM adjudication also amended ruling 5's empty-arm case: authored @else{} lowers to Show-without-fallback; gate rescoped (when required, fallback optional, empty-fragment fallback forbidden). Executable Solid 2 beta.9 blocker contract landed (subpath-export removal proven by resolution + real babel compile; overturn trigger recorded). PM infra repairs en route: both regenerate lanes were unrunnable (compiler extensionless imports vs markless .ts convention + strip-types/parameter-property clash -> transform-types), pre-existing gate typecheck errors, duplicated README count lines. Crew-worktree lesson recorded: vp-lint pre-commit fails without node_modules -> verified diffs harvested from worktrees (contract paths only), verification PM-side. Final: node 170 root-lane tests incl. solid 74/74 (26 emitter, 41 gate, 2 adapter, 1 size, 4 beta.9 blocker), solid-browser 17/17, react-browser 16/16, poc/ diff empty, checked-in goldens gate-clean."
+      changed_files:
+        - "packages/frameworks/solid/**"
+        - "packages/compiler/src/** (import-extension repair)"
+        - "packages/frameworks/react/package.json (regenerate flag repair)"
+      commands:
+        - cmd: "pnpm check && pnpm build && pnpm test; vitest --project solid-browser; --project react-browser; critique probes re-executed PM-side; poc/ diff empty"
+          status: pass
   - id: T007
     type: worker
     assignee: Worker
@@ -265,7 +274,30 @@ tasks:
     assignee: Worker
     status: queued
     reasoning_hint: medium
-    objective: "Build entry + demo: implement the T001-chosen build entry (CLI or vite plugin) and a small real demo TSRX component library within the proven surface; end-to-end: demo lib -> React 19 + Solid packages passing gates + green cross-target equivalence receipts."
+    objective: "CLI build entry (T001: CLI-first; split from demo per T006 handoff): packages/cli compiles .tsrx through @frameless/compiler and emits via BOTH framework packages, per the T006 critique tail instructions — internal target inventory registering react->@frameless/react and solid->@frameless/solid; inventory integration test failing if either is absent; repeated --target flags; each target's own emitter + gate invoked; separate atomic output directories; receipts covering both generated packages and their cross-target analyzer comparison. Scope: CLI only; demo library and fresh-checkout e2e are T010."
+    inputs:
+      - "T008 scout receipt (crew, 2026-07-20)"
+      - "T006 critique tail instructions"
+    allowed_files:
+      - "packages/cli/**"
+      - "vite.config.ts"
+      - "package.json"
+      - "pnpm-workspace.yaml"
+      - "pnpm-lock.yaml"
+    verify:
+      - "pnpm check; pnpm build; pnpm test (node incl. CLI inventory integration test)"
+      - "poc/ diff empty"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Receipt content would require browser execution inside the CLI — report, keep browser equivalence in the vitest lane."
+      - "Verification fails twice."
+    receipt: null
+  - id: T010
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Demo TSRX component library (within the proven fixture-family surface — trim the demo rather than extend the surface) + the ONE documented fresh-checkout command: demo lib -> CLI -> React 19 + Solid packages passing gates + green cross-target equivalence receipts under the oracle in headless Chromium; document the command in the root README."
     allowed_files: []
     verify: []
     stop_if:
@@ -303,8 +335,15 @@ tasks:
     receipt: null
 
 checks:
-  dirty_fingerprint: unknown
+  dirty_fingerprint: "clean at a4af414 (board edits only)"
   last_verification:
-    result: unknown
-    task: null
-    commands: []
+    result: pass
+    task: T006
+    commands:
+      - "pnpm check (0 errors)"
+      - "pnpm build (5 packages)"
+      - "pnpm test (node 169/169)"
+      - "npx vitest run --project solid-browser (17/17)"
+      - "npx vitest run --project react-browser (16/16)"
+      - "git diff --stat -- poc/ (empty)"
+      - "PM re-executed all 3 critique-recheck probes: closed"
