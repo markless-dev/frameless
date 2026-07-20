@@ -73,7 +73,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-product-v0/"
     command: "npx goalbuddy board docs/goals/frameless-product-v0"
 
-active_task: T007
+active_task: T005
 
 tasks:
   - id: T001
@@ -182,14 +182,19 @@ tasks:
   - id: T005
     type: worker
     assignee: Worker
-    status: queued
-    reasoning_hint: medium
-    objective: "targets/react: migrate the poc/06 emitter + hardened gate into the Target interface, implement the T002 idiom dossier (emitter emits the dossier patterns; gate enforces them), execute the React 19 bump per T001 plan; all layers green."
-    allowed_files: []
-    verify: []
+    status: active
+    reasoning_hint: high
+    objective: "packages/frameworks/react emitter: migrate poc/06's structural emitter + hardened gate into the framework package, implement the T002 dossier in full (const SSA + one-set-per-cell, onChange, unwrapped literal initials, null-shape ref guard, e.target on leaf controls, ESLint 9 flat + hooks v6, dossier-ref'd gate policies), consuming @frameless/compiler EnrichedIR; smoke vs the calibrated references under React 19; all five verification layers green."
+    allowed_files:
+      - "packages/frameworks/react/**"
+    verify:
+      - "pnpm check; pnpm build; pnpm test (node lanes incl. emitter goldens + gate with bypass mutations)"
+      - "npx vitest run --project react-browser (calibration + emitted-vs-reference smoke green under React 19)"
+      - "poc/ diff empty; poc/06 suite untouched"
     stop_if:
       - "Need files outside allowed_files."
-      - "React 19 bump breaks oracle/adapter semantics in a way T001 did not anticipate — report, do not improvise."
+      - "T002 dossier lacks evidence for a needed construct decision — report, do not taste-call."
+      - "EnrichedIR insufficiency discovered — record as /2 requirement, do not hack /1."
       - "Verification fails twice."
     receipt: null
   - id: T006
@@ -207,7 +212,7 @@ tasks:
   - id: T007
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "oracle package (RESEQUENCED before targets per T001 adjudication): migrate poc/04 oracle core + poc/08 harness into @frameless/oracle — Adapter/scenario/trace/verdict/receipt ownership per the ownership split; frameless-receipts/1 schema; browser project wired into root vite config; framework adapters STAY OUT (they move to target packages later); handwritten references kept as calibration fixtures; full mutant calibration green in headless Chromium under the product lane."
     allowed_files:
@@ -222,7 +227,18 @@ tasks:
       - "Browser listener denied in sandbox — complete code, hand browser lane to PM, do not fake."
       - "Adapter/framework types would need to enter the oracle package — ownership-split violation, stop and report."
       - "Verification fails twice."
-    receipt: null
+    receipt:
+      result: done
+      summary: "@frameless/analyzer complete: framework-free core (contract, serialize/compare/run, scenarios, mutants-as-data, frameless-receipts/1) now composing into @markless/analyzer v2 verdict reports (user directive: substrate shared, equivalence engine local, Witness non-adaptation documented). Framework calibration lanes live in packages/frameworks/{react,solid}: react 12/12 UNDER REACT 19 with async-act adaptation and component-variant mutants (DOM-surgery mutants removed both lanes — passing-for-wrong-reason found by React 19 commit crash); solid 12/12 with newly-authored variant factories (poc/04 never had solid mutants — product exceeds POC calibration). Findings: act crosses macrotasks -> timing-channel contract redefined (write beyond post-dispatch observation window); root-tsconfig jsx-preserve leaked into poc .jsx (fixed via poc/06 local tsconfig); pnpm-in-poc resolves to product workspace (test:poc must use --ignore-workspace). Node 32, react-browser 12/12, solid-browser 12/12. BONUS MILESTONE: C9 live matrix vs fixed markless 5e5a100 (fresh-packed after stale-dist catch): #3/#5 confirmed fixed, #7/#8 incomplete with attributed residuals — precise repro handed to the markless board. pathe/ufo directive applied to compiler."
+      changed_files:
+        - "packages/analyzer/**"
+        - "packages/frameworks/react/**"
+        - "packages/frameworks/solid/**"
+        - "vite.config.ts"
+        - "package.json"
+      commands:
+        - cmd: "pnpm check && pnpm build && pnpm test; vitest --project react-browser; --project solid-browser"
+          status: pass
   - id: T008
     type: worker
     assignee: Worker
