@@ -66,6 +66,12 @@ describe('React structural emitter', () => {
 			const ir = JSON.parse(
 				await readFile(resolve(goldenRoot, golden), 'utf8'),
 			) as EnrichedIR;
+			visit(ir.components, (record) => {
+				if (record.kind === 'host')
+					expect(record.staticAttributes).not.toContainEqual(
+						expect.objectContaining({ value: true }),
+					);
+			});
 			validateEnrichedIr(ir);
 			expect(await readFile(resolve(root, 'generated', output), 'utf8')).toBe(
 				await formatEmitted(emit(ir)),
@@ -382,6 +388,20 @@ describe('React structural emitter', () => {
 
 	describe('frameless-enriched-ir/2 composition emission', () => {
 		const build = (filename: string, source: string) => buildEnrichedIr({ filename, source });
+
+		test('emits bare-authored static attributes as explicit empty strings', async () => {
+			const ir = await build(
+				'src/static-attributes.tsrx',
+				`export function StaticAttributes() @{ <main data-bare data-explicit="" /> }`,
+			);
+			const root = ir.components[0]!.template[0];
+			if (root?.kind !== 'host') throw new Error('expected host root');
+			expect(root.staticAttributes).toEqual([
+				{ name: 'data-bare', value: true },
+				{ name: 'data-explicit', value: '' },
+			]);
+			expect(emit(ir)).toContain('<main data-bare="" data-explicit="" />');
+		});
 
 		test('emits every local/exported component, nested JSX, slots, and generated-extension imports', async () => {
 			const local = await build(

@@ -120,6 +120,11 @@ describe('React dossier gate', async () => {
 			'eslint:react/no-unknown-property',
 		],
 		[
+			'bare static attribute',
+			valid.replace('<section>', '<section data-probe>'),
+			'explicit-static-attribute-value',
+		],
+		[
 			'Hooks recommended rule',
 			valid
 				.replace('import { useState }', 'import { useEffect, useState }')

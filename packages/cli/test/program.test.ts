@@ -19,10 +19,17 @@ describe('target inventory', () => {
 describe('program argument parsing', () => {
 	test('accepts one target', () => {
 		expect(
-			parseProgramArgs(['build', 'components/button.tsrx', '--target', 'react', '--out-dir', 'dist']),
+			parseProgramArgs([
+				'build',
+				'components/button.tsrx',
+				'--target',
+				'react',
+				'--out-dir',
+				'dist',
+			]),
 		).toEqual({
 			command: 'build',
-			input: 'components/button.tsrx',
+			inputs: ['components/button.tsrx'],
 			outDir: 'dist',
 			targets: ['react'],
 		});
@@ -40,9 +47,28 @@ describe('program argument parsing', () => {
 			]),
 		).toEqual({
 			command: 'build',
-			input: 'components/button.tsrx',
+			inputs: ['components/button.tsrx'],
 			outDir: 'generated',
 			targets: ['react', 'solid'],
+		});
+	});
+
+	test('accepts multiple input positionals while preserving their authored order', () => {
+		expect(
+			parseProgramArgs([
+				'build',
+				'src/frame.tsrx',
+				'src/page.tsrx',
+				'--target',
+				'react',
+				'--out-dir',
+				'dist',
+			]),
+		).toEqual({
+			command: 'build',
+			inputs: ['src/frame.tsrx', 'src/page.tsrx'],
+			outDir: 'dist',
+			targets: ['react'],
 		});
 	});
 
@@ -71,7 +97,7 @@ describe('program argument parsing', () => {
 					'Frameless CLI',
 					'',
 					'Usage:',
-					'  frameless build <input.tsrx> --target <name> [--target <name>] --out-dir <dir>',
+					'  frameless build <input.tsrx> [input.tsrx ...] --target <name> [--target <name>] --out-dir <dir>',
 					'',
 					'Options:',
 					'  --target <name>  Build react or solid. Repeat to build both.',
@@ -88,15 +114,11 @@ describe('program argument parsing', () => {
 		[['build', 'button.tsrx', '--wat'], 'Unknown option --wat'],
 		[['build', 'button.tsrx', '--target'], 'Missing value for --target'],
 		[['build', 'button.tsrx', '--target='], 'Missing value for --target'],
-		[
-			['build', 'button.tsrx', '--target', '--out-dir', 'dist'],
-			'Missing value for --target',
-		],
+		[['build', 'button.tsrx', '--target', '--out-dir', 'dist'], 'Missing value for --target'],
 		[['build', 'button.tsrx', '--target', 'react', '--out-dir'], 'Missing value for --out-dir'],
-		[['build', 'button.tsrx', '--target', 'react', '--out-dir='], 'Missing value for --out-dir'],
 		[
-			['build', 'button.tsrx', 'y', '--target', 'react', '--out-dir', 'dist'],
-			'Unexpected argument y',
+			['build', 'button.tsrx', '--target', 'react', '--out-dir='],
+			'Missing value for --out-dir',
 		],
 		[
 			['build', 'button.tsrx', '--target', 'vue', '--out-dir', 'dist'],
@@ -130,23 +152,42 @@ describe('build plan', () => {
 		expect(first).toEqual(second);
 		expect(first).toEqual({
 			command: 'build',
-			input: 'src/widgets/button.tsrx',
+			inputs: [
+				{
+					emittedFilename: 'button.jsx',
+					sourcePath: 'src/widgets/button.tsrx',
+				},
+			],
 			outDir: 'generated',
 			targets: [
 				{
-					emittedFilename: 'button.jsx',
 					name: 'react',
 					outputDirectory: 'generated/react/',
 					packageSpecifier: '@frameless/react',
 				},
 				{
-					emittedFilename: 'button.jsx',
 					name: 'solid',
 					outputDirectory: 'generated/solid/',
 					packageSpecifier: '@frameless/solid',
 				},
 			],
 		});
+	});
+
+	test('rejects inputs whose locked basename mapping would overwrite an output', () => {
+		const parsed = parseProgramArgs([
+			'build',
+			'src/one/card.tsrx',
+			'src/two/card.tsrx',
+			'--target',
+			'react',
+			'--out-dir',
+			'generated',
+		]);
+		if (parsed.command !== 'build') throw new Error('Expected build arguments.');
+		expect(() => createBuildPlan(parsed)).toThrow(
+			'Multiple inputs map to emitted filename card.jsx',
+		);
 	});
 });
 

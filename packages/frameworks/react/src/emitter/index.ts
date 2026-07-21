@@ -1375,7 +1375,7 @@ function templateNode(node: TemplateNode, context: EmitContext): RenderedNode {
 		attributes.push(
 			t.jsxAttribute(
 				t.jsxIdentifier(jsxName(attribute.name)),
-				attribute.value === true ? null : t.jsxStringValue(attribute.value),
+				t.jsxStringValue(attribute.value === true ? '' : attribute.value),
 			),
 		);
 	}

@@ -1,0 +1,20 @@
+{
+	"name": "@frameless/demo-composition-kit",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"build": "node --experimental-transform-types ../../packages/cli/src/node.ts build src/frame.tsrx src/dashboard.tsrx src/status.tsrx src/search.tsrx src/page.tsrx --target react --target solid --out-dir dist"
+	},
+	"devDependencies": {
+		"@frameless/analyzer": "workspace:*",
+		"@frameless/react": "workspace:*",
+		"@frameless/solid": "workspace:*",
+		"@vitest/browser-playwright": "4.1.5",
+		"react": "19.2.3",
+		"react-dom": "19.2.3",
+		"solid-js": "1.8.22",
+		"vite-plugin-solid": "2.11.10",
+		"vitest": "catalog:"
+	}
+}

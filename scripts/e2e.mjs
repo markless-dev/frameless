@@ -6,25 +6,24 @@ import {
 	compareRuns,
 	createReceiptSummary,
 	deserializeRunTrace,
+	evaluateExpectations,
 	validateReceipt,
 } from '@frameless/analyzer';
+import { compositionKitScenarios } from '../demos/composition-kit/scenarios.ts';
 import { uiKitScenarios } from '../demos/ui-kit/scenarios.ts';
 
 const workspace = resolve(import.meta.dirname, '..');
-const demo = resolve(workspace, 'demos/ui-kit');
-const components = ['PricingCard', 'TaskList', 'NewsletterForm'];
-const targets = ['react', 'solid'];
-const traceRoot = resolve(demo, 'traces');
-const receiptDirectory = resolve(demo, 'receipts');
-const receiptPath = resolve(receiptDirectory, 'frameless-receipts.json');
+const uiDemo = resolve(workspace, 'demos/ui-kit');
+const compositionDemo = resolve(workspace, 'demos/composition-kit');
+const uiComponents = ['PricingCard', 'TaskList', 'NewsletterForm'];
 const componentName = (component) =>
 	component.replace(/[A-Z]/g, (letter, index) => `${index ? '-' : ''}${letter.toLowerCase()}`);
-const scenarioEntries = components.flatMap((component) =>
+const uiScenarioEntries = uiComponents.flatMap((component) =>
 	uiKitScenarios
 		.filter(({ id }) => id === `ui-kit/${componentName(component)}`)
 		.map((scenario) => ({ component, scenario })),
 );
-if (scenarioEntries.length !== uiKitScenarios.length) {
+if (uiScenarioEntries.length !== uiKitScenarios.length) {
 	throw new Error('Every portable ui-kit scenario must map to exactly one demo component.');
 }
 
@@ -35,78 +34,163 @@ function run(label, args) {
 	if (result.status !== 0) process.exit(result.status ?? 1);
 }
 
-await rm(traceRoot, { recursive: true, force: true });
-await rm(receiptDirectory, { recursive: true, force: true });
+async function resetDemoArtifacts(demo) {
+	await rm(resolve(demo, 'traces'), { recursive: true, force: true });
+	await rm(resolve(demo, 'receipts'), { recursive: true, force: true });
+}
 
-for (const component of components) {
-	run(`build ${component}`, [
+async function readTrace(demo, target, filename, scenarioId) {
+	const path = resolve(demo, 'traces', target, filename);
+	let text;
+	try {
+		text = await readFile(path, 'utf8');
+	} catch (error) {
+		throw new Error(`Missing ${target} trace after successful capture phase: ${path}`, {
+			cause: error,
+		});
+	}
+	const trace = deserializeRunTrace(text);
+	if (trace.scenario !== scenarioId) {
+		throw new Error(
+			`Trace ${path} contains scenario ${trace.scenario}, expected ${scenarioId}.`,
+		);
+	}
+	return trace;
+}
+
+function assertExpectations(trace, scenario) {
+	const failures = evaluateExpectations(trace, scenario.expectations ?? []).filter(
+		({ outcome }) => outcome === 'fail',
+	);
+	if (failures.length) {
+		throw new Error(
+			`${trace.framework} expectation failure for ${scenario.id}: ${JSON.stringify(failures)}`,
+		);
+	}
+}
+
+async function writeReceipt(demo, scenarios, label) {
+	const receiptResults = { scenarios, mutantRejections: {} };
+	const receipt = {
+		schema: RECEIPT_SCHEMA_VERSION,
+		generatedBy: 'scripts/e2e.mjs',
+		environment: {
+			node: process.version,
+			browser: 'headless Chromium via Vitest browser projects',
+			pair: `CLI-emitted React vs CLI-emitted Solid (${label})`,
+		},
+		findings: {},
+		...receiptResults,
+		summary: createReceiptSummary(receiptResults),
+	};
+	if (!validateReceipt(receipt)) {
+		throw new Error(`Generated ${label} frameless-receipts/1 receipt failed validation.`);
+	}
+	const receiptDirectory = resolve(demo, 'receipts');
+	const receiptPath = resolve(receiptDirectory, 'frameless-receipts.json');
+	await mkdir(receiptDirectory, { recursive: true });
+	await writeFile(receiptPath, `${JSON.stringify(receipt, null, 2)}\n`, 'utf8');
+	return { receipt, receiptPath };
+}
+
+await Promise.all([resetDemoArtifacts(uiDemo), resetDemoArtifacts(compositionDemo)]);
+
+for (const component of uiComponents) {
+	run(`build ui-kit ${component}`, [
 		'--experimental-transform-types',
 		resolve(workspace, 'packages/cli/src/node.ts'),
 		'build',
-		resolve(demo, `src/${component}.tsrx`),
+		resolve(uiDemo, `src/${component}.tsrx`),
 		'--target',
 		'react',
 		'--target',
 		'solid',
 		'--out-dir',
-		resolve(demo, `dist/${component}`),
+		resolve(uiDemo, `dist/${component}`),
 	]);
 }
 
-const vitest = resolve(workspace, 'node_modules/vitest/vitest.mjs');
-run('capture React traces', [vitest, 'run', '--project', 'demo-react-browser']);
-run('capture Solid traces', [vitest, 'run', '--project', 'demo-solid-browser']);
+run('build composition-kit module set', [
+	'--experimental-transform-types',
+	resolve(workspace, 'packages/cli/src/node.ts'),
+	'build',
+	...['frame', 'dashboard', 'status', 'search', 'page'].map((module) =>
+		resolve(compositionDemo, `src/${module}.tsrx`),
+	),
+	'--target',
+	'react',
+	'--target',
+	'solid',
+	'--out-dir',
+	resolve(compositionDemo, 'dist'),
+]);
 
-const scenarios = {};
+const vitest = resolve(workspace, 'node_modules/vitest/vitest.mjs');
+run('capture ui-kit React traces', [vitest, 'run', '--project', 'demo-react-browser']);
+run('capture ui-kit Solid traces', [vitest, 'run', '--project', 'demo-solid-browser']);
+run('capture composition-kit React traces', [
+	vitest,
+	'run',
+	'--project',
+	'composition-demo-react-browser',
+]);
+run('capture composition-kit Solid traces', [
+	vitest,
+	'run',
+	'--project',
+	'composition-demo-solid-browser',
+]);
+
+const uiScenarios = {};
+const compositionScenarios = {};
 const differences = [];
-for (const { component, scenario } of scenarioEntries) {
+for (const { component, scenario } of uiScenarioEntries) {
 	const scenarioName = scenario.id.split('/').at(-1);
 	if (!scenarioName) throw new Error(`Scenario ${scenario.id} has no file-safe name.`);
-	const traces = {};
-	for (const target of targets) {
-		const path = resolve(traceRoot, target, `${component}.${scenarioName}.json`);
-		let text;
-		try {
-			text = await readFile(path, 'utf8');
-		} catch (error) {
-			throw new Error(`Missing ${target} trace after successful capture phase: ${path}`, {
-				cause: error,
-			});
-		}
-		traces[target] = deserializeRunTrace(text);
-		if (traces[target].scenario !== scenario.id) {
-			throw new Error(
-				`Trace ${path} contains scenario ${traces[target].scenario}, expected ${scenario.id}.`,
-			);
-		}
-	}
-	const verdict = compareRuns(traces.react, traces.solid);
-	const pair = verdict.equal
-		? { status: 'equal', equal: true, divergences: [] }
-		: { status: 'different', equal: false, divergences: verdict.divergences };
-	scenarios[scenario.id] = { 'react-vs-solid': pair };
-	if (!verdict.equal) {
-		differences.push({ component, scenario: scenario.id, divergences: verdict.divergences });
-	}
+	const react = await readTrace(
+		uiDemo,
+		'react',
+		`${component}.${scenarioName}.json`,
+		scenario.id,
+	);
+	const solid = await readTrace(
+		uiDemo,
+		'solid',
+		`${component}.${scenarioName}.json`,
+		scenario.id,
+	);
+	const verdict = compareRuns(react, solid);
+	uiScenarios[scenario.id] = {
+		'react-vs-solid': verdict.equal
+			? { status: 'equal', equal: true, divergences: [] }
+			: { status: 'different', equal: false, divergences: verdict.divergences },
+	};
+	if (!verdict.equal) differences.push({ demo: 'ui-kit', scenario: scenario.id, ...verdict });
 }
 
-const receiptResults = { scenarios, mutantRejections: {} };
-const receipt = {
-	schema: RECEIPT_SCHEMA_VERSION,
-	generatedBy: 'scripts/e2e.mjs',
-	environment: {
-		node: process.version,
-		browser: 'headless Chromium via Vitest browser projects',
-		pair: 'CLI-emitted React vs CLI-emitted Solid',
-	},
-	findings: {},
-	...receiptResults,
-	summary: createReceiptSummary(receiptResults),
-};
-if (!validateReceipt(receipt))
-	throw new Error('Generated frameless-receipts/1 receipt failed validation.');
-await mkdir(receiptDirectory, { recursive: true });
-await writeFile(receiptPath, `${JSON.stringify(receipt, null, 2)}\n`, 'utf8');
+for (const scenario of compositionKitScenarios) {
+	const scenarioName = scenario.id.split('/').at(-1);
+	if (!scenarioName) throw new Error(`Scenario ${scenario.id} has no file-safe name.`);
+	const react = await readTrace(compositionDemo, 'react', `${scenarioName}.json`, scenario.id);
+	const solid = await readTrace(compositionDemo, 'solid', `${scenarioName}.json`, scenario.id);
+	assertExpectations(react, scenario);
+	assertExpectations(solid, scenario);
+	const verdict = compareRuns(react, solid);
+	compositionScenarios[scenario.id] = {
+		'react-vs-solid': verdict.equal
+			? { status: 'equal', equal: true, divergences: [] }
+			: { status: 'different', equal: false, divergences: verdict.divergences },
+	};
+	if (!verdict.equal)
+		differences.push({ demo: 'composition-kit', scenario: scenario.id, ...verdict });
+}
+
+const uiReceipt = await writeReceipt(uiDemo, uiScenarios, 'ui-kit');
+const compositionReceipt = await writeReceipt(
+	compositionDemo,
+	compositionScenarios,
+	'composition-kit',
+);
 
 if (differences.length) {
 	console.error('\n[e2e] Cross-target divergence:');
@@ -115,9 +199,12 @@ if (differences.length) {
 }
 
 console.log('\n[e2e] PASS');
-console.log(`Components built: ${components.length}`);
-console.log(`Scenarios captured: react=${scenarioEntries.length}, solid=${scenarioEntries.length}`);
+console.log(`Modules built: ui-kit=${uiComponents.length}, composition-kit=5`);
 console.log(
-	`Trace pairs: equal=${receipt.summary.equalPairs}, different=${receipt.summary.differentPairs}`,
+	`Scenarios captured: ui-kit react=${uiScenarioEntries.length}, solid=${uiScenarioEntries.length}; composition-kit react=${compositionKitScenarios.length}, solid=${compositionKitScenarios.length}`,
 );
-console.log(`Receipt: ${receiptPath}`);
+console.log(
+	`Trace pairs: ui-kit equal=${uiReceipt.receipt.summary.equalPairs}; composition-kit equal=${compositionReceipt.receipt.summary.equalPairs}`,
+);
+console.log(`UI receipt: ${uiReceipt.receiptPath}`);
+console.log(`Composition receipt: ${compositionReceipt.receiptPath}`);

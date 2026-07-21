@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 import { pathToFileURL } from 'node:url';
 import { createBuildPlan, parseProgramArgs } from './program.ts';
-import { executeBuildPlan } from './node-runtime.ts';
 
 export interface MainOptions {
 	readonly cwd?: string;
@@ -18,6 +17,7 @@ export async function main(argv: readonly string[], options: MainOptions = {}): 
 			stdout(parsed.usage);
 			return 0;
 		}
+		const { executeBuildPlan } = await import('./node-runtime.ts');
 		await executeBuildPlan(createBuildPlan(parsed), options.cwd ?? process.cwd());
 		return 0;
 	} catch (error) {

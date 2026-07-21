@@ -49,6 +49,7 @@ export const REACT_GATE_POLICIES = [
 	{ id: 'react-import-allowlist', dossierRef: 'T002 ruling 2' },
 	{ id: 'no-forwardRef', dossierRef: 'T002 ruling 8' },
 	{ id: 'component-shape', dossierRef: 'T002 ruling 10' },
+	{ id: 'explicit-static-attribute-value', dossierRef: 'T002 ruling 10' },
 	{ id: 'controlled-input', dossierRef: 'T002 ruling 9' },
 	{ id: 'on-input', dossierRef: 'T002 ruling 9' },
 	{ id: 'leaf-event-target', dossierRef: 'T002 ruling 9' },

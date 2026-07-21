@@ -3,10 +3,11 @@ import { open, mkdir, readFile, rename, rm } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { dirname, isAbsolute, join, relative, resolve } from 'pathe';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import type { EnrichedIR } from '@frameless/compiler';
+import type { EnrichedIR, ModuleSetLinkTable } from '@frameless/compiler';
 import type { BuildPlan } from './program.ts';
 import {
 	BUILD_EQUIVALENCE_AUTHORITY,
+	ENRICHED_IR_VERSION,
 	createBuildReceipt,
 	serializeBuildReceipt,
 	type GateResult,
@@ -21,7 +22,11 @@ export interface FrameworkTargetModule {
 	formatEmitted(source: string): Promise<string>;
 	validateEnrichedIr(ir: EnrichedIR): void;
 	checkSources(
-		entries: ReadonlyArray<{ readonly file: string; readonly source: string }>,
+		entries: ReadonlyArray<{
+			readonly file: string;
+			readonly source: string;
+			readonly artifact?: EnrichedIR;
+		}>,
 	): Promise<GateResult>;
 }
 
@@ -31,17 +36,24 @@ export interface LoadedFrameworkTarget {
 }
 
 interface PreparedTarget {
-	readonly content: string;
-	readonly emittedFilename: string;
+	readonly modules: ReadonlyArray<{
+		readonly content: string;
+		readonly emittedFilename: string;
+	}>;
 	readonly finalDirectory: string;
 	readonly receipt: TargetBuildReceipt;
 }
 
+interface CompiledModule {
+	readonly moduleId: string;
+	readonly sourcePath: string;
+	readonly emittedFilename: string;
+	readonly source: string;
+	readonly artifact: EnrichedIR;
+}
+
 /** Compile, validate, gate, and atomically write every target in a build plan. */
-export async function executeBuildPlan(
-	plan: BuildPlan,
-	workingDirectory: string,
-): Promise<void> {
+export async function executeBuildPlan(plan: BuildPlan, workingDirectory: string): Promise<void> {
 	return executeBuildPlanInternal(plan, workingDirectory, importFrameworkTarget);
 }
 
@@ -52,10 +64,23 @@ export async function executeBuildPlanInternal(
 	loadTarget: (packageSpecifier: string) => Promise<LoadedFrameworkTarget>,
 ): Promise<void> {
 	const cwd = resolve(workingDirectory);
-	const inputPath = resolveFrom(cwd, plan.input);
-	const source = await readFile(inputPath, 'utf8');
-	const { buildEnrichedIr } = await import('@frameless/compiler');
-	const ir = await buildEnrichedIr({ filename: inputPath, source });
+	const { buildEnrichedIr, resolveModuleSet } = await import('@frameless/compiler');
+	const compiledModules: CompiledModule[] = await Promise.all(
+		plan.inputs.map(async (input) => {
+			const inputPath = resolveFrom(cwd, input.sourcePath);
+			const source = await readFile(inputPath, 'utf8');
+			return {
+				moduleId: relative(cwd, inputPath) || input.sourcePath,
+				sourcePath: relative(cwd, inputPath) || input.sourcePath,
+				emittedFilename: input.emittedFilename,
+				source,
+				artifact: await buildEnrichedIr({ filename: inputPath, source }),
+			};
+		}),
+	);
+	const linkTable = resolveModuleSet(
+		compiledModules.map(({ moduleId, artifact }) => ({ moduleId, artifact })),
+	);
 	const preparedTargets: Array<readonly [string, PreparedTarget]> = [];
 
 	for (const target of plan.targets) {
@@ -65,66 +90,127 @@ export async function executeBuildPlanInternal(
 			target.packageSpecifier,
 		);
 		const { framework, resolvedPackage } = loadedTarget;
-		try {
-			framework.validateEnrichedIr(ir);
-		} catch (error) {
-			throw new Error(`Target ${target.name} validation failed: ${errorMessage(error)}`);
-		}
-
-		let content: string;
-		try {
-			content = framework.emit(ir);
-		} catch (error) {
-			throw new Error(`Target ${target.name} emission failed: ${errorMessage(error)}`);
-		}
-		try {
-			content = await framework.formatEmitted(content);
-		} catch (error) {
-			throw new Error(`Target ${target.name} formatting failed: ${errorMessage(error)}`);
-		}
-
 		const outputDirectory = resolveFrom(cwd, target.outputDirectory);
-		const outputPath = join(outputDirectory, target.emittedFilename);
-		const emittedFilePath = relative(cwd, outputPath) || target.emittedFilename;
-		const gate = await framework.checkSources([
-			{ file: target.emittedFilename, source: content },
-		]);
-		const violation = gate.violations[0];
-		if (violation) {
-			throw new Error(
-				`Target ${target.name} gate failed (policy ${violation.policy}): ${violation.message}`,
-			);
+		const preparedModules = [];
+		for (const module of compiledModules) {
+			try {
+				framework.validateEnrichedIr(module.artifact);
+			} catch (error) {
+				throw new Error(
+					`Target ${target.name} validation failed for ${module.moduleId}: ${errorMessage(error)}`,
+				);
+			}
+
+			let content: string;
+			try {
+				content = framework.emit(module.artifact);
+			} catch (error) {
+				throw new Error(
+					`Target ${target.name} emission failed for ${module.moduleId}: ${errorMessage(error)}`,
+				);
+			}
+			try {
+				content = await framework.formatEmitted(content);
+			} catch (error) {
+				throw new Error(
+					`Target ${target.name} formatting failed for ${module.moduleId}: ${errorMessage(error)}`,
+				);
+			}
+
+			const outputPath = join(outputDirectory, module.emittedFilename);
+			const emittedFilePath = relative(cwd, outputPath) || module.emittedFilename;
+			const rawGate = await framework.checkSources([
+				{ file: module.emittedFilename, source: content, artifact: module.artifact },
+			]);
+			const gate = enumerableGate(rawGate);
+			const violation = gate.violations[0];
+			if (violation) {
+				throw new Error(
+					`Target ${target.name} gate failed for ${module.moduleId} (policy ${violation.policy}): ${violation.message}`,
+				);
+			}
+			const unevaluated = gate.unevaluated[0];
+			if (unevaluated) {
+				throw new Error(
+					`Target ${target.name} gate failed for ${module.moduleId}: policy ${unevaluated.policy} was unevaluated (${unevaluated.reason})`,
+				);
+			}
+			preparedModules.push({
+				moduleId: module.moduleId,
+				content,
+				emittedFilename: module.emittedFilename,
+				emittedFilePath,
+				emittedContentSha256: sha256(content),
+				validation: { state: 'passed' } as const,
+				gate,
+				provenance: { artifactSupplied: true, allPoliciesEvaluated: true } as const,
+			});
 		}
+		const firstModule = preparedModules[0]!;
 
 		preparedTargets.push([
 			target.name,
 			{
-				content,
-				emittedFilename: target.emittedFilename,
+				modules: preparedModules.map(({ content, emittedFilename }) => ({
+					content,
+					emittedFilename,
+				})),
 				finalDirectory: outputDirectory,
 				receipt: {
 					packageSpecifier: target.packageSpecifier,
 					resolvedPackage,
-					emittedFilePath,
-					emittedContentSha256: sha256(content),
+					emittedFilePath: firstModule.emittedFilePath,
+					emittedContentSha256: firstModule.emittedContentSha256,
 					validation: { state: 'passed' },
-					gate,
+					gate: firstModule.gate,
+					modules: preparedModules.map(
+						({
+							moduleId,
+							emittedFilePath,
+							emittedContentSha256,
+							validation,
+							gate,
+							provenance,
+						}) => ({
+							moduleId,
+							emittedFilePath,
+							emittedContentSha256,
+							validation,
+							gate,
+							provenance,
+						}),
+					),
 				},
 			},
 		]);
 	}
 
+	const firstModule = compiledModules[0]!;
 	const receipt = createBuildReceipt({
 		generator: {
 			toolName: '@frameless/cli',
 			toolVersion: await packageVersion('@frameless/cli', import.meta.url),
 		},
 		input: {
-			sourcePath: relative(cwd, inputPath) || plan.input,
-			contentSha256: sha256(source),
+			sourcePath: firstModule.sourcePath,
+			contentSha256: sha256(firstModule.source),
 			compilerPackageVersion: await packageVersion('@frameless/compiler'),
 		},
-		ir: { version: 'frameless-enriched-ir/1', digestSha256: sha256(JSON.stringify(ir)) },
+		ir: {
+			version: ENRICHED_IR_VERSION,
+			digestSha256: sha256(JSON.stringify(firstModule.artifact)),
+		},
+		modules: compiledModules.map((module) => ({
+			moduleId: module.moduleId,
+			sourcePath: module.sourcePath,
+			contentSha256: sha256(module.source),
+			emittedFilename: module.emittedFilename,
+			ir: {
+				version: ENRICHED_IR_VERSION,
+				digestSha256: sha256(JSON.stringify(module.artifact)),
+			},
+		})),
+		linkTable: summarizeLinkTable(linkTable),
 		targets: Object.fromEntries(
 			preparedTargets.map(([name, prepared]) => [name, prepared.receipt]),
 		),
@@ -147,9 +233,11 @@ export async function executeBuildPlanInternal(
 		for (const [name, prepared] of preparedTargets) {
 			const stagedDirectory = join(outputRoot, `.${name}.${randomUUID()}.tmp`);
 			stagedTargets.push({ finalDirectory: prepared.finalDirectory, stagedDirectory });
-			const stagedOutputPath = join(stagedDirectory, prepared.emittedFilename);
-			await mkdir(dirname(stagedOutputPath), { recursive: true });
-			await atomicWriteFile(stagedOutputPath, prepared.content);
+			for (const module of prepared.modules) {
+				const stagedOutputPath = join(stagedDirectory, module.emittedFilename);
+				await mkdir(dirname(stagedOutputPath), { recursive: true });
+				await atomicWriteFile(stagedOutputPath, module.content);
+			}
 		}
 	} catch (error) {
 		await cleanupStagedTargets(stagedTargets);
@@ -167,6 +255,23 @@ export async function executeBuildPlanInternal(
 		throw error;
 	}
 	await atomicWriteFile(receiptPath, serializedReceipt);
+}
+
+function enumerableGate(gate: GateResult): GateResult {
+	return {
+		files: [...gate.files],
+		policies: [...gate.policies],
+		violations: [...gate.violations],
+		unevaluated: [...(gate.unevaluated ?? [])],
+	};
+}
+
+function summarizeLinkTable(linkTable: ModuleSetLinkTable) {
+	return {
+		moduleCount: linkTable.length,
+		referenceCount: linkTable.reduce((count, module) => count + module.references.length, 0),
+		modules: linkTable,
+	};
 }
 
 async function importFrameworkTarget(packageSpecifier: string): Promise<LoadedFrameworkTarget> {

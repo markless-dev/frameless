@@ -118,11 +118,10 @@ test('rejects a seam-loaded fake that tries to issue a receipt for @frameless/re
 	await writeFile(join(cwd, 'input.tsrx'), source);
 	const plan: BuildPlan = {
 		command: 'build',
-		input: 'input.tsrx',
+		inputs: [{ sourcePath: 'input.tsrx', emittedFilename: 'input.jsx' }],
 		outDir: 'output',
 		targets: [
 			{
-				emittedFilename: 'input.jsx',
 				name: 'react',
 				outputDirectory: 'output/react/',
 				packageSpecifier: '@frameless/react',
@@ -140,6 +139,7 @@ test('rejects a seam-loaded fake that tries to issue a receipt for @frameless/re
 					files: [entry!.file],
 					policies: [{ id: 'fake-pass', dossierRef: 'test policy' }],
 					violations: [],
+					unevaluated: [],
 				}),
 			},
 			resolvedPackage: { name: '@test/fake', version: '0.0.0-test' },
@@ -157,11 +157,10 @@ test('leaves no target output behind when a gate rejects emitted source', async 
 	await writeFile(join(cwd, 'input.tsrx'), source);
 	const plan: BuildPlan = {
 		command: 'build',
-		input: 'input.tsrx',
+		inputs: [{ sourcePath: 'input.tsrx', emittedFilename: 'input.jsx' }],
 		outDir: 'output',
 		targets: [
 			{
-				emittedFilename: 'input.jsx',
 				name: 'rejecting',
 				outputDirectory: 'output/rejecting/',
 				packageSpecifier: '@test/rejecting',
@@ -187,12 +186,127 @@ test('leaves no target output behind when a gate rejects emitted source', async 
 							line: 1,
 						},
 					],
+					unevaluated: [],
 				}),
 			},
 			resolvedPackage: { name: '@test/rejecting', version: '0.0.0-test' },
 		})),
-	).rejects.toThrow('Target rejecting gate failed (policy fixture-policy): fixture rejection');
+	).rejects.toThrow(
+		'Target rejecting gate failed for input.tsrx (policy fixture-policy): fixture rejection',
+	);
 	await expect(access(join(cwd, 'output/rejecting'))).rejects.toMatchObject({ code: 'ENOENT' });
+});
+
+test('builds and links multiple TSRX modules for both targets with artifact-evaluated gates', async () => {
+	const cwd = await temporaryDirectory();
+	await mkdir(join(cwd, 'src'));
+	await writeFile(
+		join(cwd, 'src/frame.tsrx'),
+		'export function Frame({ children }) @{ <section data-frame>{children}</section> }',
+	);
+	await writeFile(
+		join(cwd, 'src/page.tsrx'),
+		'import { Frame } from "./frame.tsrx"; export function Page() @{ <Frame><strong data-child>linked</strong></Frame> }',
+	);
+	const parsed = parseProgramArgs([
+		'build',
+		'src/frame.tsrx',
+		'src/page.tsrx',
+		'--target',
+		'react',
+		'--target',
+		'solid',
+		'--out-dir',
+		'output',
+	]);
+	if (parsed.command !== 'build') throw new Error('Expected build arguments.');
+
+	await executeBuildPlan(createBuildPlan(parsed), cwd);
+
+	const [reactPage, solidPage, receiptSource] = await Promise.all([
+		readFile(join(cwd, 'output/react/page.jsx'), 'utf8'),
+		readFile(join(cwd, 'output/solid/page.jsx'), 'utf8'),
+		readFile(join(cwd, 'output/frameless-build-receipt.json'), 'utf8'),
+	]);
+	const receipt = validateBuildReceipt(JSON.parse(receiptSource));
+	expect(reactPage).toMatch(/from ['"]\.\/frame\.jsx['"]/);
+	expect(solidPage).toMatch(/from ['"]\.\/frame\.jsx['"]/);
+	expect(receipt.modules.map(({ moduleId }) => moduleId)).toEqual([
+		'src/frame.tsrx',
+		'src/page.tsrx',
+	]);
+	expect(receipt.linkTable).toMatchObject({ moduleCount: 2, referenceCount: 1 });
+	for (const target of Object.values(receipt.targets)) {
+		expect(target.modules).toHaveLength(2);
+		for (const module of target.modules) {
+			expect(module.gate.violations).toEqual([]);
+			expect(module.gate.unevaluated).toEqual([]);
+			expect(module.provenance).toEqual({
+				artifactSupplied: true,
+				allPoliciesEvaluated: true,
+			});
+		}
+	}
+});
+
+test('surfaces module-set resolver diagnostics verbatim before target loading', async () => {
+	const cwd = await temporaryDirectory();
+	await mkdir(join(cwd, 'src'));
+	await writeFile(
+		join(cwd, 'src/page.tsrx'),
+		'import { Frame } from "./frame.tsrx"; export function Page() @{ <Frame /> }',
+	);
+	const parsed = parseProgramArgs([
+		'build',
+		'src/page.tsrx',
+		'--target',
+		'react',
+		'--out-dir',
+		'output',
+	]);
+	if (parsed.command !== 'build') throw new Error('Expected build arguments.');
+	await expect(executeBuildPlan(createBuildPlan(parsed), cwd)).rejects.toThrow(
+		'TemplateComponentReference component-reference:component-edge:0 in src/page.tsrx has missing module: src/frame.tsrx',
+	);
+});
+
+test('fails a CLI gate when any artifact-dependent policy remains unevaluated', async () => {
+	const cwd = await temporaryDirectory();
+	const source = await readFile(
+		new URL('./fixtures/s1-render-once.tsrx', import.meta.url),
+		'utf8',
+	);
+	await writeFile(join(cwd, 'input.tsrx'), source);
+	const plan: BuildPlan = {
+		command: 'build',
+		inputs: [{ sourcePath: 'input.tsrx', emittedFilename: 'input.jsx' }],
+		outDir: 'output',
+		targets: [
+			{
+				name: 'unevaluated',
+				outputDirectory: 'output/unevaluated/',
+				packageSpecifier: '@test/unevaluated',
+			},
+		],
+	};
+	await expect(
+		executeBuildPlanInternal(plan, cwd, async (packageSpecifier) => ({
+			framework: {
+				emit: () => 'export function Output() { return null; }',
+				formatEmitted: async (emitted) => emitted,
+				validateEnrichedIr: () => undefined,
+				checkSources: async ([entry]) => ({
+					files: [entry!.file],
+					policies: [{ id: 'requires-provenance', dossierRef: 'test policy' }],
+					violations: [],
+					unevaluated: [{ policy: 'requires-provenance', reason: 'requires-artifact' }],
+				}),
+			},
+			resolvedPackage: { name: packageSpecifier, version: '0.0.0-test' },
+		})),
+	).rejects.toThrow(
+		'Target unevaluated gate failed for input.tsrx: policy requires-provenance was unevaluated (requires-artifact)',
+	);
 });
 
 test('leaves prior targets and receipts untouched when a later target cannot be staged', async () => {
@@ -202,21 +316,23 @@ test('leaves prior targets and receipts untouched when a later target cannot be 
 		'utf8',
 	);
 	await writeFile(join(cwd, 'input.tsrx'), source);
+	await writeFile(join(cwd, 'second.tsrx'), source);
 	await mkdir(join(cwd, 'output/first'), { recursive: true });
 	await writeFile(join(cwd, 'output/first/prior.jsx'), 'prior output');
 	const plan: BuildPlan = {
 		command: 'build',
-		input: 'input.tsrx',
+		inputs: [
+			{ sourcePath: 'input.tsrx', emittedFilename: 'input.jsx' },
+			{ sourcePath: 'second.tsrx', emittedFilename: 'blocked\0input.jsx' },
+		],
 		outDir: 'output',
 		targets: [
 			{
-				emittedFilename: 'input.jsx',
 				name: 'first',
 				outputDirectory: 'output/first/',
 				packageSpecifier: '@test/first',
 			},
 			{
-				emittedFilename: 'blocked\0input.jsx',
 				name: 'second',
 				outputDirectory: 'output/second/',
 				packageSpecifier: '@test/second',
@@ -234,6 +350,7 @@ test('leaves prior targets and receipts untouched when a later target cannot be 
 					files: [entry!.file],
 					policies: [{ id: 'fake-pass', dossierRef: 'test policy' }],
 					violations: [],
+					unevaluated: [],
 				}),
 			},
 			resolvedPackage: { name: packageSpecifier, version: '0.0.0-test' },
@@ -243,7 +360,9 @@ test('leaves prior targets and receipts untouched when a later target cannot be 
 	await expect(readFile(join(cwd, 'output/first/prior.jsx'), 'utf8')).resolves.toBe(
 		'prior output',
 	);
-	await expect(access(join(cwd, 'output/first/input.jsx'))).rejects.toMatchObject({ code: 'ENOENT' });
+	await expect(access(join(cwd, 'output/first/input.jsx'))).rejects.toMatchObject({
+		code: 'ENOENT',
+	});
 	await expect(access(join(cwd, 'output/second'))).rejects.toMatchObject({ code: 'ENOENT' });
 	await expect(access(join(cwd, 'output/frameless-build-receipt.json'))).rejects.toMatchObject({
 		code: 'ENOENT',

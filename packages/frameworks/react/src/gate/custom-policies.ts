@@ -373,6 +373,15 @@ export function customPolicies(
 		},
 		JSXAttribute(node: Node) {
 			const name = is(node.name, 'JSXIdentifier') ? node.name.name : '';
+			if (node.value == null)
+				violations.push(
+					violation(
+						file,
+						'explicit-static-attribute-value',
+						'Static attributes must have an explicit value',
+						node,
+					),
+				);
 			if (name === 'onInput')
 				violations.push(
 					violation(

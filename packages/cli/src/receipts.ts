@@ -1,5 +1,7 @@
+import { ENRICHED_IR_VERSION as COMPILER_ENRICHED_IR_VERSION } from '@frameless/compiler';
+
 export const BUILD_RECEIPT_SCHEMA_VERSION = 'frameless-build-receipts/1' as const;
-export const ENRICHED_IR_VERSION = 'frameless-enriched-ir/1' as const;
+export const ENRICHED_IR_VERSION = COMPILER_ENRICHED_IR_VERSION;
 export const BUILD_EQUIVALENCE_AUTHORITY =
 	'vitest browser lanes (react-browser, solid-browser; cross-target lane per T010)' as const;
 
@@ -24,6 +26,12 @@ export type GateResult = {
 	readonly files: readonly string[];
 	readonly policies: readonly GatePolicy[];
 	readonly violations: readonly GateViolation[];
+	readonly unevaluated: readonly GateUnevaluated[];
+};
+
+export type GateUnevaluated = {
+	readonly policy: string;
+	readonly reason: 'requires-artifact';
 };
 
 export type GatePolicy = {
@@ -55,6 +63,40 @@ export type TargetBuildReceipt = {
 	readonly emittedContentSha256: string;
 	readonly validation: ValidationOutcome;
 	readonly gate: GateResult;
+	readonly modules: readonly TargetModuleBuildReceipt[];
+};
+
+export type TargetModuleBuildReceipt = {
+	readonly moduleId: string;
+	readonly emittedFilePath: string;
+	readonly emittedContentSha256: string;
+	readonly validation: ValidationOutcome;
+	readonly gate: GateResult;
+	readonly provenance: {
+		readonly artifactSupplied: true;
+		readonly allPoliciesEvaluated: true;
+	};
+};
+
+export type BuildModuleRecord = {
+	readonly moduleId: string;
+	readonly sourcePath: string;
+	readonly contentSha256: string;
+	readonly emittedFilename: string;
+	readonly ir: IrIdentity;
+};
+
+export type LinkTableSummary = {
+	readonly moduleCount: number;
+	readonly referenceCount: number;
+	readonly modules: ReadonlyArray<{
+		readonly moduleId: string;
+		readonly references: ReadonlyArray<{
+			readonly nodeId: string;
+			readonly targetModuleId: string;
+			readonly exportedName: string;
+		}>;
+	}>;
 };
 
 export type EquivalenceDelegation = {
@@ -68,6 +110,8 @@ export type BuildReceipt = {
 	readonly generator: GeneratorInfo;
 	readonly input: BuildInputRecord;
 	readonly ir: IrIdentity;
+	readonly modules: readonly BuildModuleRecord[];
+	readonly linkTable: LinkTableSummary;
 	readonly targets: Readonly<Record<string, TargetBuildReceipt>>;
 	readonly equivalence: EquivalenceDelegation;
 };
@@ -85,13 +129,20 @@ export function validateBuildReceipt(value: unknown): BuildReceipt {
 			`BuildReceipt schema must be ${BUILD_RECEIPT_SCHEMA_VERSION}, received ${String(value.schema)}`,
 		);
 	}
-	exactKeys(value, ['schema', 'generator', 'input', 'ir', 'targets', 'equivalence'], 'BuildReceipt');
+	exactKeys(
+		value,
+		['schema', 'generator', 'input', 'ir', 'modules', 'linkTable', 'targets', 'equivalence'],
+		'BuildReceipt',
+	);
 
 	validateGenerator(value.generator);
 	validateInput(value.input);
 	validateIr(value.ir);
+	validateModules(value.modules);
+	validateLinkTable(value.linkTable);
 	validateTargets(value.targets);
 	validateEquivalence(value.equivalence);
+	validateReceiptConsistency(value as unknown as BuildReceipt);
 	return value as BuildReceipt;
 }
 
@@ -152,6 +203,7 @@ function validateTarget(value: unknown, construct: string): asserts value is Tar
 			'emittedContentSha256',
 			'validation',
 			'gate',
+			'modules',
 		],
 		construct,
 	);
@@ -164,6 +216,92 @@ function validateTarget(value: unknown, construct: string): asserts value is Tar
 	assertSha256(value.emittedContentSha256, `${construct} emittedContentSha256`);
 	validateOutcome(value.validation, `${construct} validation`);
 	validateGateResult(value.gate, `${construct} GateResult`);
+	assertArray(value.modules, `${construct} modules`);
+	if (!value.modules.length) throw new Error(`${construct} modules must not be empty`);
+	for (const [index, module] of value.modules.entries())
+		validateTargetModule(module, `${construct} modules[${index}]`);
+}
+
+function validateTargetModule(
+	value: unknown,
+	construct: string,
+): asserts value is TargetModuleBuildReceipt {
+	assertRecord(value, construct);
+	exactKeys(
+		value,
+		['moduleId', 'emittedFilePath', 'emittedContentSha256', 'validation', 'gate', 'provenance'],
+		construct,
+	);
+	assertNonEmptyString(value.moduleId, `${construct} moduleId`);
+	assertNonEmptyString(value.emittedFilePath, `${construct} emittedFilePath`);
+	assertSha256(value.emittedContentSha256, `${construct} emittedContentSha256`);
+	validateOutcome(value.validation, `${construct} validation`);
+	validateGateResult(value.gate, `${construct} GateResult`);
+	assertRecord(value.provenance, `${construct} provenance`);
+	exactKeys(
+		value.provenance,
+		['artifactSupplied', 'allPoliciesEvaluated'],
+		`${construct} provenance`,
+	);
+	if (value.provenance.artifactSupplied !== true)
+		throw new Error(`${construct} provenance artifactSupplied must be true`);
+	if (value.provenance.allPoliciesEvaluated !== true)
+		throw new Error(`${construct} provenance allPoliciesEvaluated must be true`);
+	if (value.gate.unevaluated.length)
+		throw new Error(`${construct} cannot confirm provenance with unevaluated gate policies`);
+}
+
+function validateModules(value: unknown): asserts value is readonly BuildModuleRecord[] {
+	assertArray(value, 'BuildReceipt modules');
+	if (!value.length) throw new Error('BuildReceipt modules must not be empty');
+	const moduleIds = new Set<string>();
+	for (const [index, module] of value.entries()) {
+		const construct = `BuildReceipt modules[${index}]`;
+		assertRecord(module, construct);
+		exactKeys(
+			module,
+			['moduleId', 'sourcePath', 'contentSha256', 'emittedFilename', 'ir'],
+			construct,
+		);
+		assertNonEmptyString(module.moduleId, `${construct} moduleId`);
+		if (moduleIds.has(module.moduleId))
+			throw new Error(`BuildReceipt duplicate module ${module.moduleId}`);
+		moduleIds.add(module.moduleId);
+		assertNonEmptyString(module.sourcePath, `${construct} sourcePath`);
+		assertSha256(module.contentSha256, `${construct} contentSha256`);
+		assertNonEmptyString(module.emittedFilename, `${construct} emittedFilename`);
+		validateIr(module.ir);
+	}
+}
+
+function validateLinkTable(value: unknown): asserts value is LinkTableSummary {
+	const construct = 'BuildReceipt linkTable';
+	assertRecord(value, construct);
+	exactKeys(value, ['moduleCount', 'referenceCount', 'modules'], construct);
+	assertNonNegativeInteger(value.moduleCount, `${construct} moduleCount`);
+	assertNonNegativeInteger(value.referenceCount, `${construct} referenceCount`);
+	assertArray(value.modules, `${construct} modules`);
+	if (value.modules.length !== value.moduleCount)
+		throw new Error(`${construct} moduleCount must match modules length`);
+	let referenceCount = 0;
+	for (const [index, module] of value.modules.entries()) {
+		const moduleConstruct = `${construct} modules[${index}]`;
+		assertRecord(module, moduleConstruct);
+		exactKeys(module, ['moduleId', 'references'], moduleConstruct);
+		assertNonEmptyString(module.moduleId, `${moduleConstruct} moduleId`);
+		assertArray(module.references, `${moduleConstruct} references`);
+		referenceCount += module.references.length;
+		for (const [referenceIndex, reference] of module.references.entries()) {
+			const referenceConstruct = `${moduleConstruct} references[${referenceIndex}]`;
+			assertRecord(reference, referenceConstruct);
+			exactKeys(reference, ['nodeId', 'targetModuleId', 'exportedName'], referenceConstruct);
+			assertNonEmptyString(reference.nodeId, `${referenceConstruct} nodeId`);
+			assertNonEmptyString(reference.targetModuleId, `${referenceConstruct} targetModuleId`);
+			assertNonEmptyString(reference.exportedName, `${referenceConstruct} exportedName`);
+		}
+	}
+	if (referenceCount !== value.referenceCount)
+		throw new Error(`${construct} referenceCount must match references length`);
 }
 
 function validateResolvedPackage(
@@ -192,7 +330,7 @@ function validateOutcome(value: unknown, construct: string): asserts value is Va
 
 function validateGateResult(value: unknown, construct: string): asserts value is GateResult {
 	assertRecord(value, construct);
-	exactKeys(value, ['files', 'policies', 'violations'], construct);
+	exactKeys(value, ['files', 'policies', 'violations', 'unevaluated'], construct);
 	assertArray(value.files, `${construct} files`);
 	for (const [index, file] of value.files.entries())
 		assertNonEmptyString(file, `${construct} files[${index}]`);
@@ -225,6 +363,15 @@ function validateGateResult(value: unknown, construct: string): asserts value is
 		)
 			throw new Error(`${violationConstruct} line must be a positive integer or null`);
 	}
+	assertArray(value.unevaluated, `${construct} unevaluated`);
+	for (const [index, unevaluated] of value.unevaluated.entries()) {
+		const unevaluatedConstruct = `${construct} unevaluated[${index}]`;
+		assertRecord(unevaluated, unevaluatedConstruct);
+		exactKeys(unevaluated, ['policy', 'reason'], unevaluatedConstruct);
+		assertNonEmptyString(unevaluated.policy, `${unevaluatedConstruct} policy`);
+		if (unevaluated.reason !== 'requires-artifact')
+			throw new Error(`${unevaluatedConstruct} reason must be requires-artifact`);
+	}
 }
 
 function validateEquivalence(value: unknown): asserts value is EquivalenceDelegation {
@@ -237,12 +384,53 @@ function validateEquivalence(value: unknown): asserts value is EquivalenceDelega
 	assertNonEmptyString(value.command, `${construct} command`);
 }
 
+function validateReceiptConsistency(value: BuildReceipt): void {
+	const firstModule = value.modules[0]!;
+	if (
+		value.input.sourcePath !== firstModule.sourcePath ||
+		value.input.contentSha256 !== firstModule.contentSha256
+	)
+		throw new Error('BuildReceipt input must alias the first modules entry');
+	if (
+		value.ir.version !== firstModule.ir.version ||
+		value.ir.digestSha256 !== firstModule.ir.digestSha256
+	)
+		throw new Error('BuildReceipt IR identity must alias the first modules entry');
+	const moduleIds = value.modules.map(({ moduleId }) => moduleId);
+	const linkedModuleIds = value.linkTable.modules.map(({ moduleId }) => moduleId);
+	if (
+		moduleIds.length !== linkedModuleIds.length ||
+		moduleIds.some((moduleId) => !linkedModuleIds.includes(moduleId))
+	)
+		throw new Error('BuildReceipt linkTable modules must match modules');
+	for (const [targetName, target] of Object.entries(value.targets)) {
+		const targetModuleIds = target.modules.map(({ moduleId }) => moduleId);
+		if (
+			moduleIds.length !== targetModuleIds.length ||
+			moduleIds.some((moduleId, index) => targetModuleIds[index] !== moduleId)
+		)
+			throw new Error(
+				`BuildReceipt target ${targetName} modules must match modules in order`,
+			);
+		const firstTargetModule = target.modules[0]!;
+		if (
+			target.emittedFilePath !== firstTargetModule.emittedFilePath ||
+			target.emittedContentSha256 !== firstTargetModule.emittedContentSha256
+		)
+			throw new Error(`BuildReceipt target ${targetName} output must alias its first module`);
+	}
+}
+
 function assertRecord(value: unknown, construct: string): asserts value is Record<string, unknown> {
 	if (!value || typeof value !== 'object' || Array.isArray(value))
 		throw new Error(`${construct} is malformed: expected an object`);
 }
 
-function exactKeys(value: Record<string, unknown>, allowed: readonly string[], construct: string): void {
+function exactKeys(
+	value: Record<string, unknown>,
+	allowed: readonly string[],
+	construct: string,
+): void {
 	const missing = allowed.find((key) => !Object.hasOwn(value, key));
 	if (missing) throw new Error(`${construct} is missing field: ${missing}`);
 	const unknown = Object.keys(value).find((key) => !allowed.includes(key));
@@ -261,6 +449,11 @@ function assertNonEmptyString(value: unknown, construct: string): asserts value 
 function assertSha256(value: unknown, construct: string): asserts value is string {
 	if (typeof value !== 'string' || !/^[a-f\d]{64}$/i.test(value))
 		throw new Error(`${construct} must be a 64-character hexadecimal sha256`);
+}
+
+function assertNonNegativeInteger(value: unknown, construct: string): asserts value is number {
+	if (typeof value !== 'number' || !Number.isInteger(value) || value < 0)
+		throw new Error(`${construct} must be a non-negative integer`);
 }
 
 type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };

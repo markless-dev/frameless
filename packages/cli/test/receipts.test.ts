@@ -16,11 +16,25 @@ function receipt(): BuildReceipt {
 	return createBuildReceipt({
 		generator: { toolName: '@frameless/cli', toolVersion: '0.0.0-test' },
 		input: {
-			sourcePath: './fixtures/counter.tsrx',
+			sourcePath: 'fixtures/counter.tsrx',
 			contentSha256: SHA_A,
 			compilerPackageVersion: '0.0.0-test',
 		},
-		ir: { version: 'frameless-enriched-ir/1', digestSha256: SHA_B },
+		ir: { version: 'frameless-enriched-ir/2', digestSha256: SHA_B },
+		modules: [
+			{
+				moduleId: 'fixtures/counter.tsrx',
+				sourcePath: 'fixtures/counter.tsrx',
+				contentSha256: SHA_A,
+				emittedFilename: 'counter.jsx',
+				ir: { version: 'frameless-enriched-ir/2', digestSha256: SHA_B },
+			},
+		],
+		linkTable: {
+			moduleCount: 1,
+			referenceCount: 0,
+			modules: [{ moduleId: 'fixtures/counter.tsrx', references: [] }],
+		},
 		targets: {
 			react: {
 				packageSpecifier: '@frameless/react',
@@ -32,7 +46,23 @@ function receipt(): BuildReceipt {
 					files: ['generated/react/counter.tsx'],
 					policies: [{ id: 'component-shape', dossierRef: 'T002 ruling 10' }],
 					violations: [],
+					unevaluated: [],
 				},
+				modules: [
+					{
+						moduleId: 'fixtures/counter.tsrx',
+						emittedFilePath: 'generated/react/counter.tsx',
+						emittedContentSha256: SHA_C,
+						validation: { state: 'passed' },
+						gate: {
+							files: ['generated/react/counter.tsx'],
+							policies: [{ id: 'component-shape', dossierRef: 'T002 ruling 10' }],
+							violations: [],
+							unevaluated: [],
+						},
+						provenance: { artifactSupplied: true, allPoliciesEvaluated: true },
+					},
+				],
 			},
 			solid: {
 				packageSpecifier: '@frameless/solid',
@@ -52,12 +82,40 @@ function receipt(): BuildReceipt {
 							line: 1,
 						},
 					],
+					unevaluated: [],
 				},
+				modules: [
+					{
+						moduleId: 'fixtures/counter.tsrx',
+						emittedFilePath: 'generated/solid/counter.tsx',
+						emittedContentSha256: SHA_A,
+						validation: {
+							state: 'failed',
+							diagnostic: 'generated module did not parse',
+						},
+						gate: {
+							files: ['generated/solid/counter.tsx'],
+							policies: [{ id: 'component-shape', dossierRef: 'T003 ruling 10' }],
+							violations: [
+								{
+									file: 'generated/solid/counter.tsx',
+									policy: 'component-shape',
+									dossierRef: 'T003 ruling 10',
+									message: 'expected one component',
+									line: 1,
+								},
+							],
+							unevaluated: [],
+						},
+						provenance: { artifactSupplied: true, allPoliciesEvaluated: true },
+					},
+				],
 			},
 		},
 		equivalence: {
 			state: 'delegated',
-			authority: 'vitest browser lanes (react-browser, solid-browser; cross-target lane per T010)',
+			authority:
+				'vitest browser lanes (react-browser, solid-browser; cross-target lane per T010)',
 			command: 'pnpm test:browser',
 		},
 	});
@@ -73,9 +131,9 @@ describe('frameless-build-receipts/1', () => {
 	});
 
 	test('rejects the wrong schema tag', () => {
-		expect(() => validateBuildReceipt({ ...receipt(), schema: 'frameless-receipts/1' })).toThrow(
-			/BuildReceipt schema/,
-		);
+		expect(() =>
+			validateBuildReceipt({ ...receipt(), schema: 'frameless-receipts/1' }),
+		).toThrow(/BuildReceipt schema/);
 	});
 
 	test('rejects unknown fields at every schema boundary', () => {
@@ -89,11 +147,51 @@ describe('frameless-build-receipts/1', () => {
 				generator: { ...value.generator, generatedAt: 'not part of this pure schema' },
 			}),
 		).toThrow(/BuildReceipt generator has unknown field: generatedAt/);
+		expect(() =>
+			validateBuildReceipt({
+				...value,
+				targets: {
+					...value.targets,
+					react: {
+						...value.targets.react,
+						gate: { ...value.targets.react!.gate, artifactSupplied: true },
+					},
+				},
+			}),
+		).toThrow(/GateResult has unknown field: artifactSupplied/);
+	});
+
+	test('rejects provenance confirmation when a per-module gate is unevaluated', () => {
+		const value = receipt();
+		const react = value.targets.react!;
+		const module = react.modules[0]!;
+		expect(() =>
+			validateBuildReceipt({
+				...value,
+				targets: {
+					...value.targets,
+					react: {
+						...react,
+						modules: [
+							{
+								...module,
+								gate: {
+									...module.gate,
+									unevaluated: [{ policy: 'R-CH2', reason: 'requires-artifact' }],
+								},
+							},
+						],
+					},
+				},
+			}),
+		).toThrow(/cannot confirm provenance with unevaluated gate policies/);
 	});
 
 	test('rejects a missing target section and an empty target map', () => {
 		const { targets: _targets, ...withoutTargets } = receipt();
-		expect(() => validateBuildReceipt(withoutTargets)).toThrow(/BuildReceipt is missing field: targets/);
+		expect(() => validateBuildReceipt(withoutTargets)).toThrow(
+			/BuildReceipt is missing field: targets/,
+		);
 		expect(() => validateBuildReceipt({ ...receipt(), targets: {} })).toThrow(
 			/BuildReceipt targets must contain at least one target/,
 		);
@@ -156,6 +254,8 @@ describe('frameless-build-receipts/1', () => {
 		const reordered = {
 			equivalence: value.equivalence,
 			targets: { solid: value.targets.solid, react: value.targets.react },
+			linkTable: value.linkTable,
+			modules: value.modules,
 			ir: value.ir,
 			input: value.input,
 			generator: value.generator,

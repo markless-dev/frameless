@@ -12,7 +12,7 @@ export const PROGRAM_USAGE = [
 	'Frameless CLI',
 	'',
 	'Usage:',
-	'  frameless build <input.tsrx> --target <name> [--target <name>] --out-dir <dir>',
+	'  frameless build <input.tsrx> [input.tsrx ...] --target <name> [--target <name>] --out-dir <dir>',
 	'',
 	'Options:',
 	'  --target <name>  Build react or solid. Repeat to build both.',
@@ -24,7 +24,7 @@ export const PROGRAM_USAGE = [
 
 export interface ParsedBuildArgs {
 	readonly command: 'build';
-	readonly input: string;
+	readonly inputs: readonly string[];
 	readonly outDir: string;
 	readonly targets: readonly string[];
 }
@@ -37,15 +37,19 @@ export interface ParsedHelpArgs {
 export type ParsedProgramArgs = ParsedBuildArgs | ParsedHelpArgs;
 
 export interface BuildPlanTarget {
-	readonly emittedFilename: string;
 	readonly name: string;
 	readonly outputDirectory: string;
 	readonly packageSpecifier: string;
 }
 
+export interface BuildPlanInput {
+	readonly sourcePath: string;
+	readonly emittedFilename: string;
+}
+
 export interface BuildPlan {
 	readonly command: 'build';
-	readonly input: string;
+	readonly inputs: readonly BuildPlanInput[];
 	readonly outDir: string;
 	readonly targets: readonly BuildPlanTarget[];
 }
@@ -62,7 +66,7 @@ export function parseProgramArgs(
 		throw new Error(args[0] ? `Unexpected argument ${args[0]}` : 'Unexpected argument');
 	}
 
-	let input: string | undefined;
+	const inputs: string[] = [];
 	let outDir: string | undefined;
 	const targets: string[] = [];
 
@@ -87,22 +91,32 @@ export function parseProgramArgs(
 		}
 
 		if (arg.startsWith('-')) throw new Error(`Unknown option ${arg}`);
-		if (input !== undefined) throw new Error(`Unexpected argument ${arg}`);
-		input = arg;
+		inputs.push(arg);
 	}
 
-	if (!input) throw new Error('Missing input for build');
+	if (inputs.length === 0) throw new Error('Missing input for build');
 	if (targets.length === 0) throw new Error('At least one --target is required');
 	if (!outDir) throw new Error('Missing value for --out-dir');
 
-	return { command: 'build', input, outDir, targets };
+	return { command: 'build', inputs, outDir, targets };
 }
 
 export function createBuildPlan(
 	args: ParsedBuildArgs,
 	inventory: readonly TargetInventoryEntry[] = TARGET_INVENTORY,
 ): BuildPlan {
-	const emittedFilename = emittedFilenameFor(args.input);
+	const inputs = args.inputs.map((sourcePath) => ({
+		sourcePath,
+		emittedFilename: emittedFilenameFor(sourcePath),
+	}));
+	const duplicateFilename = inputs.find(
+		(input, index) =>
+			inputs.findIndex((other) => other.emittedFilename === input.emittedFilename) !== index,
+	);
+	if (duplicateFilename)
+		throw new Error(
+			`Multiple inputs map to emitted filename ${duplicateFilename.emittedFilename}`,
+		);
 	const targets = args.targets.map((name) => {
 		const target = inventory.find((entry) => entry.name === name);
 		if (!target) {
@@ -110,7 +124,6 @@ export function createBuildPlan(
 		}
 
 		return {
-			emittedFilename,
 			name,
 			outputDirectory: targetOutputDirectory(args.outDir, name),
 			packageSpecifier: target.packageSpecifier,
@@ -119,7 +132,7 @@ export function createBuildPlan(
 
 	return {
 		command: 'build',
-		input: args.input,
+		inputs,
 		outDir: args.outDir,
 		targets,
 	};
@@ -136,10 +149,7 @@ function readOptionValue(
 	return value;
 }
 
-function assertKnownTarget(
-	name: string,
-	inventory: readonly TargetInventoryEntry[],
-): void {
+function assertKnownTarget(name: string, inventory: readonly TargetInventoryEntry[]): void {
 	if (!inventory.some((entry) => entry.name === name)) {
 		throw new Error(`Unknown target ${name} (known: ${knownTargetNames(inventory)})`);
 	}
