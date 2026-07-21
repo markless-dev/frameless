@@ -369,6 +369,34 @@ describe('Solid structural emitter', () => {
 	});
 
 	describe('fail-closed validation', () => {
+		test('accepts behavior-input provenance structurally before lowering rejects behavior', async () => {
+			const ir = clone(await golden('s1-render-once.json')) as any;
+			ir.records.behaviors = [
+				{
+					id: 'behavior:0',
+					hostNodeId: 'h0',
+					componentId: ir.components[0].id,
+					behavior: {
+						type: 'ArrowFunctionExpression',
+						params: [],
+						body: { type: 'Literal', value: null },
+					},
+					inputs: [
+						{
+							graphNodeId: ir.records.bindings[0].id,
+							path: [],
+							via: 'direct',
+							provenance: 'layer-a',
+						},
+					],
+					returnsCleanup: false,
+					order: 0,
+				},
+			];
+			expect(() => validateEnrichedIr(ir)).toThrow(
+				/BehaviorRecord cannot be lowered: composition constructs land in the Solid composition package/,
+			);
+		});
 		test('rejects the same multi-component fixture as React with the Solid composition diagnostic', async () => {
 			const ir = clone(await golden('s1-render-once.json')) as any;
 			ir.components.push({

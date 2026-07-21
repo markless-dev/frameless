@@ -8,6 +8,7 @@ import { runCompilerPassPipeline } from './pass-pipeline.ts';
 import { enrichedIrPassDefinition } from './pass-registry.ts';
 import {
 	ENRICHED_IR_VERSION,
+	type BehaviorInput,
 	type DynamicBinding,
 	type BehaviorRecord,
 	type ComponentPropExpression,
@@ -58,6 +59,7 @@ interface ReadEnvironment {
 	readonly componentId: string;
 	readonly filename: string;
 	readonly bindings: ReadonlyMap<string, { id: string }>;
+	readonly bindingCandidates: ReadonlyMap<string, ReadonlyArray<{ id: string }>>;
 	readonly aliases: ReadonlyMap<string, { graphNodeId: string; path: readonly string[] }>;
 	readonly locals: ReadonlyMap<string, LocalInfo>;
 	readonly repeatItems: ReadonlyMap<string, { graphNodeId: string; path: readonly string[] }>;
@@ -184,11 +186,22 @@ async function buildEnrichedIrArtifact({
 	const bindingsByComponent = new Map(
 		components.map((component) => [component.id, new Map<string, { id: string }>()]),
 	);
+	const bindingCandidatesByComponent = new Map(
+		components.map((component) => [
+			component.id,
+			new Map<string, Array<{ id: string }>>(),
+		]),
+	);
 	for (const binding of semanticGraph.graphBindings) {
 		if (binding.sharedDefinitionId) continue;
 		const owner = bindingOwners.get(binding);
 		if (!owner) throw new Error(`Graph binding ${binding.id} has no component owner.`);
 		bindingsByComponent.get(owner.id)!.set(binding.name, { id: binding.id });
+		const candidates = bindingCandidatesByComponent.get(owner.id)!;
+		candidates.set(binding.name, [
+			...(candidates.get(binding.name) ?? []),
+			{ id: binding.id },
+		]);
 	}
 	const aliases = resolveAliases(semanticGraph, components, bindingOwners);
 	const aliasesByComponent = new Map(
@@ -252,6 +265,7 @@ async function buildEnrichedIrArtifact({
 			componentId: component.id,
 			filename,
 			bindings: bindingsByComponent.get(component.id)!,
+			bindingCandidates: bindingCandidatesByComponent.get(component.id)!,
 			aliases: aliasesByComponent.get(component.id)!,
 			locals: component.locals,
 			repeatItems: new Map(),
@@ -325,6 +339,7 @@ async function buildEnrichedIrArtifact({
 				componentId: owner.id,
 				filename,
 				bindings: bindingsByComponent.get(owner.id)!,
+				bindingCandidates: bindingCandidatesByComponent.get(owner.id)!,
 				aliases: aliasesByComponent.get(owner.id)!,
 				locals: owner?.locals ?? new Map(),
 				repeatItems: new Map(),
@@ -1086,7 +1101,11 @@ function assertNoInlineSharedFactoryCall(
 	visit(node, new Set());
 }
 
-function deriveReads(node: AnyNode, environment: ReadEnvironment): GraphReadRef[] {
+function deriveReads(
+	node: AnyNode,
+	environment: ReadEnvironment,
+	options: { readonly ambiguityConstruct?: string } = {},
+): GraphReadRef[] {
 	const reads: GraphReadRef[] = [];
 	const expanding = new Set<string>();
 
@@ -1096,6 +1115,12 @@ function deriveReads(node: AnyNode, environment: ReadEnvironment): GraphReadRef[
 		bound: ReadonlySet<string>,
 	): boolean => {
 		if (bound.has(name)) return false;
+		const candidates = environment.bindingCandidates.get(name) ?? [];
+		if (options.ambiguityConstruct && candidates.length > 1) {
+			throw new Error(
+				`${options.ambiguityConstruct} "${name}" joined ${candidates.length} graph bindings; expected exactly one.`,
+			);
+		}
 		const direct = environment.bindings.get(name);
 		if (direct) {
 			reads.push({ graphNodeId: direct.id, path: [...path], via: 'direct' });
@@ -1134,7 +1159,7 @@ function deriveReads(node: AnyNode, environment: ReadEnvironment): GraphReadRef[
 		const local = environment.locals.get(name);
 		if (local?.initializer && !expanding.has(name)) {
 			expanding.add(name);
-			for (const read of deriveReads(local.initializer, environment)) {
+			for (const read of deriveReads(local.initializer, environment, options)) {
 				reads.push({ ...read, via: 'local' });
 			}
 			expanding.delete(name);
@@ -1944,11 +1969,30 @@ function buildBehaviors(graph: SemanticGraphArtifact, context: TemplateContext):
 			throw new Error(
 				`Behavior ${order} on ${behavior.hostNodeId} has no authored attach AST.`,
 			);
-		const inputs = deriveReads(authored.node, authored.environment);
-		if (inputs.length !== behavior.inputSources.length) {
-			throw new Error(
-				`Behavior ${order} on ${behavior.hostNodeId} input mapping is incomplete (${inputs.length}/${behavior.inputSources.length}).`,
+		const construct = `Behavior ${order} on ${behavior.hostNodeId}`;
+		const derivedInputs = deriveReads(authored.node, authored.environment, {
+			ambiguityConstruct: `${construct} AST read`,
+		});
+		let inputs: BehaviorInput[];
+		if (behavior.inputSources.length === 0) {
+			inputs = derivedInputs.map((input) => ({
+				...input,
+				provenance: 'derived-from-ast',
+			}));
+		} else {
+			const layerAInputs = behavior.inputSources.flatMap((source) =>
+				deriveLayerABehaviorInput(source, authored.environment, construct),
 			);
+			if (
+				derivedInputs.length !== behavior.inputSources.length ||
+				layerAInputs.length !== behavior.inputSources.length ||
+				!sameGraphReads(derivedInputs, layerAInputs)
+			) {
+				throw new Error(
+					`${construct} input mapping is incomplete (${derivedInputs.length}/${behavior.inputSources.length}).`,
+				);
+			}
+			inputs = layerAInputs.map((input) => ({ ...input, provenance: 'layer-a' }));
 		}
 		return {
 			id: `behavior:${order}`,
@@ -1965,6 +2009,41 @@ function buildBehaviors(graph: SemanticGraphArtifact, context: TemplateContext):
 			throw new Error(`Attach behavior on ${hostNodeId} was not represented by Layer A.`);
 	}
 	return records;
+}
+
+function deriveLayerABehaviorInput(
+	source: string,
+	environment: ReadEnvironment,
+	construct: string,
+): GraphReadRef[] {
+	// Layer A exposes authored inputs as source expressions. Parse only
+	// for the cross-check; the enriched record still carries the original attach AST.
+	const errors: CompileError[] = [];
+	const program = parseModule(
+		`const __framelessBehaviorInput = (${source});`,
+		environment.filename,
+		{ collect: true, errors },
+	) as AnyNode;
+	if (errors.length > 0) return [];
+	const initializer = program.body?.[0]?.declarations?.[0]?.init;
+	if (!initializer) return [];
+	return deriveReads(initializer, environment, {
+		ambiguityConstruct: `${construct} Layer A input`,
+	});
+}
+
+function sameGraphReads(
+	left: readonly GraphReadRef[],
+	right: readonly GraphReadRef[],
+): boolean {
+	const key = (read: GraphReadRef): string =>
+		`${read.graphNodeId}\0${read.path.join('\0')}`;
+	const leftKeys = left.map(key).sort(compareText);
+	const rightKeys = right.map(key).sort(compareText);
+	return (
+		leftKeys.length === rightKeys.length &&
+		leftKeys.every((value, index) => value === rightKeys[index])
+	);
 }
 
 function buildHandleCalls(
@@ -2481,6 +2560,9 @@ export function collectGraphReads(
 		componentId: '',
 		filename: '',
 		bindings: bindingsByName,
+		bindingCandidates: new Map(
+			[...bindingsByName].map(([name, binding]) => [name, [binding]]),
+		),
 		aliases: new Map(),
 		locals: new Map(),
 		repeatItems: new Map(),

@@ -648,7 +648,9 @@ describe('closure and honesty', () => {
 describe('golden dumps', () => {
 	for (const file of FIXTURES) {
 		test(`${file}: deterministic across builds and byte-equal to its checked-in golden`, async () => {
-			const first = dumpEnrichedIr(await fixtureIr(file));
+			const firstIr = await fixtureIr(file);
+			expect(firstIr.records.behaviors).toEqual([]);
+			const first = dumpEnrichedIr(firstIr);
 			const second = dumpEnrichedIr(await fixtureIr(file));
 			expect(second).toBe(first);
 			const goldenUrl = new URL(`./goldens/${basename(file, '.tsrx')}.json`, import.meta.url);

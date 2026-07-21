@@ -590,6 +590,33 @@ describe('React structural emitter', () => {
 	});
 
 	describe('fail-closed enriched IR validation', () => {
+		test('accepts behavior-input provenance structurally', async () => {
+			const ir = clone(await golden('s1-render-once.json')) as any;
+			ir.records.behaviors = [
+				{
+					id: 'behavior:0',
+					hostNodeId: 'h0',
+					componentId: ir.components[0].id,
+					behavior: {
+						type: 'ArrowFunctionExpression',
+						params: [],
+						body: { type: 'Literal', value: null },
+					},
+					inputs: [
+						{
+							graphNodeId: ir.records.bindings[0].id,
+							path: [],
+							via: 'direct',
+							provenance: 'derived-from-ast',
+						},
+					],
+					returnsCleanup: false,
+					order: 0,
+				},
+			];
+			expect(() => validateEnrichedIr(ir)).not.toThrow();
+		});
+
 		test('rejects malformed cloned multi-component ownership records', async () => {
 			const ir = clone(await golden('s1-render-once.json')) as any;
 			ir.components.push({

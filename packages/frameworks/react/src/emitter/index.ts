@@ -314,11 +314,14 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		read: Record<string, unknown>,
 		construct: string,
 		graphRead: boolean,
+		behaviorInput = false,
 	): void => {
 		keys(
 			construct,
 			read,
-			graphRead ? ['graphNodeId', 'path', 'via'] : ['componentId', 'graphNodeId', 'path'],
+			graphRead
+				? ['graphNodeId', 'path', 'via', ...(behaviorInput ? ['provenance'] : [])]
+				: ['componentId', 'graphNodeId', 'path'],
 		);
 		if (!graphRead) validateComponentId(construct, read.componentId);
 		if (
@@ -332,6 +335,11 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 			throw new Error(`${construct} has malformed path`);
 		if (graphRead && !['direct', 'alias', 'local', 'repeat-item'].includes(String(read.via)))
 			throw new Error(`${construct} has unsupported read shape`);
+		if (
+			behaviorInput &&
+			!['layer-a', 'derived-from-ast'].includes(String(read.provenance))
+		)
+			throw new Error(`${construct} has unsupported provenance`);
 	};
 	const validateExpressionSite = (
 		construct: string,
@@ -983,6 +991,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 			validateRead(
 				input as unknown as Record<string, unknown>,
 				'BehaviorRecord GraphReadRef',
+				true,
 				true,
 			);
 	}

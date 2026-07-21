@@ -431,12 +431,16 @@ export interface HandleForwardRecord {
 	readonly childHostNodeId: string;
 }
 
+export interface BehaviorInput extends GraphReadRef {
+	readonly provenance: 'layer-a' | 'derived-from-ast';
+}
+
 export interface BehaviorRecord {
 	readonly id: string;
 	readonly hostNodeId: string;
 	readonly componentId: string;
 	readonly behavior: SerializableAstNode;
-	readonly inputs: ReadonlyArray<GraphReadRef>;
+	readonly inputs: ReadonlyArray<BehaviorInput>;
 	readonly returnsCleanup: boolean;
 	readonly order: number;
 }

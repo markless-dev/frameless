@@ -463,10 +463,17 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 			`ComponentProps has dangling graph record id: ${component.props.graphNodeId}`,
 		);
 
-	const validateRead = (read: RecordLike, construct: string, via: boolean): void => {
+	const validateRead = (
+		read: RecordLike,
+		construct: string,
+		via: boolean,
+		behaviorInput = false,
+	): void => {
 		exactKeys(
 			read,
-			via ? ['graphNodeId', 'path', 'via'] : ['componentId', 'graphNodeId', 'path'],
+			via
+				? ['graphNodeId', 'path', 'via', ...(behaviorInput ? ['provenance'] : [])]
+				: ['componentId', 'graphNodeId', 'path'],
 			construct,
 		);
 		if (!via) validateComponentId(construct, read.componentId);
@@ -477,6 +484,11 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		validatePath(read.path, construct);
 		if (via && !['direct', 'alias', 'local', 'repeat-item'].includes(read.via))
 			throw new Error(`${construct} has unsupported read shape`);
+		if (
+			behaviorInput &&
+			!['layer-a', 'derived-from-ast'].includes(read.provenance)
+		)
+			throw new Error(`${construct} has unsupported provenance`);
 	};
 	const validateAst = (construct: string, value: unknown): void => {
 		if (
@@ -1259,7 +1271,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 			throw new Error('BehaviorRecord has malformed construct');
 		validateAst('BehaviorRecord behavior', behavior.behavior);
 		for (const input of behavior.inputs)
-			validateRead(input as RecordLike, 'BehaviorRecord GraphReadRef', true);
+			validateRead(input as RecordLike, 'BehaviorRecord GraphReadRef', true, true);
 	}
 	for (const call of ir.records.handleCalls) {
 		exactKeys(

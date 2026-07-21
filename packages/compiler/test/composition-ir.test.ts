@@ -146,6 +146,26 @@ describe('frameless-enriched-ir/2 composition contracts', () => {
 		).not.toContain('"name":"attach"');
 	});
 
+	test('derives attach inputs from graph-bound AST reads when Layer A reports none', async () => {
+		const ir = await fixture('composition-attach-input');
+		expect(ir.records.behaviors).toHaveLength(1);
+		expect(ir.records.behaviors[0]!.inputs).toEqual([
+			{
+				graphNodeId: expect.stringContaining('state:status'),
+				path: [],
+				via: 'direct',
+				provenance: 'derived-from-ast',
+			},
+		]);
+		expect(ir.records.behaviors[0]!.returnsCleanup).toBe(true);
+	});
+
+	test('fails closed when an attach AST read has an ambiguous graph-binding join', async () => {
+		await expect(fixture('composition-attach-input-ambiguous')).rejects.toThrow(
+			'Behavior 0 on h0 AST read "mode" joined 2 graph bindings; expected exactly one.',
+		);
+	});
+
 	test('links a parent-owned handle through a same-module component edge to the child host', async () => {
 		const source = `import { element } from "@markless/core";
 			function Child(props) @{ <input el={props.input} /> }
