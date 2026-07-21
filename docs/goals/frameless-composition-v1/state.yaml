@@ -69,7 +69,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-composition-v1/"
     command: "npx goalbuddy board docs/goals/frameless-composition-v1"
 
-active_task: T008  # P2 analyzer oracle
+active_task: T009  # P3 react composition emitter
 
 tasks:
   - id: T001
@@ -167,17 +167,19 @@ tasks:
   - id: T008
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Analyzer composition extension per T004 SS4: expectations vocabulary + version decision (F4 under critique), C1-C3 scenarios, handwritten composition references, 7 mutant classes calibrated both frameworks, composite-root pattern, two-mount scope test. Critique mandatory."
     allowed_files: ["packages/analyzer/**", "packages/frameworks/react/**", "packages/frameworks/solid/**", "vite.config.ts"]
     verify: ["browser calibration: all mutant classes rejected both frameworks; v0 lanes green"]
     stop_if: ["RunTrace shape change without version decision", "browser denied — hand to PM", "verification fails twice"]
-    receipt: null
+    receipt:
+      result: done
+      summary: "Composition oracle complete through P2a core + P2b calibration + critique cycle: scenario expectations (dom-text/dom-present-count/focus/dom-path structural) evaluated per framework over serialized DOM with fail-closed selector + phase validation; post-unmount witness phase with cleanup CAUSALITY (attached->cleaned transition); receipts expectationResults exact-variant validated; /1 additive-optional (F4 resolved with rationale). Calibration: C1-C4 scenarios, dossier-conformant handwritten references both frameworks, THIRTEEN mutant classes per framework all rejected in Chromium (orig 8 incl. M-SHARED-TEAR + critique-born M-SLOT-WRAPPER/M-CLEANUP-EARLY-WRITE/M-REINSTALL-OMIT/M-CLEANUP-ORDER/M-HANDLE-CLEAR-OMIT), F5 two-mount scope test green. Critique REJECT (5 findings: phase fail-open, cleanup causality, symmetric-wrong, calibration depth, receipt tests) -> all repaired; Oracle limits recorded honestly in analyzer README. Final: node 355/355, react-browser 37/37, solid-browser 35/35, e2e 3/3 equal."
   - id: T009
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: "React composition emitter + gate per T004 SS3.1 (requires T005; owner tiered-lowering decision binding). Critique mandatory."
     allowed_files: ["packages/frameworks/react/**"]
