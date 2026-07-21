@@ -35,6 +35,10 @@ const matches = (value: unknown, type: string, properties?: Properties): boolean
 export const identifier = (name: string): any => node('Identifier', { name });
 export const stringLiteral = (value: string): any =>
 	node('Literal', { value, raw: JSON.stringify(value) });
+// Yuku prints Literal.raw verbatim in quoted JSX attributes. Values that HTML/JSX
+// would reinterpret or that cannot stay on one quoted line use a JS expression.
+export const jsxStringValue = (value: string): any =>
+	/[&"\r\n]/.test(value) ? jsxExpressionContainer(stringLiteral(value)) : stringLiteral(value);
 export const numericLiteral = (value: number): any =>
 	node('Literal', { value, raw: String(value) });
 export const booleanLiteral = (value: boolean): any =>

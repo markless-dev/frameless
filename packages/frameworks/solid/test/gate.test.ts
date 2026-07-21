@@ -200,6 +200,21 @@ describe('Solid dossier gate', () => {
 			'render-phase-setter',
 		],
 		[
+			'computed-member setter',
+			valid.replace('const label', "const key = 'run'; ({ [key]: setValue })[key](1);\n  const label"),
+			'render-phase-setter',
+		],
+		[
+			'dynamic computed-member setter',
+			valid.replace('const label', "const key = props.label; ({ [key]: setValue })[key](1);\n  const label"),
+			'render-phase-setter',
+		],
+		[
+			'dynamic-access static-member setter',
+			valid.replace('const label', 'const key = props.action; ({ run: setValue })[key](1);\n  const label'),
+			'render-phase-setter',
+		],
+		[
 			'effect alias',
 			valid
 				.replace('createSignal,', 'createEffect as side, createSignal,')

@@ -1,6 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import type { EnrichedIR } from '@frameless/compiler';
 import { resolve } from 'pathe';
+import { parse } from 'yuku-parser';
+import { analyze } from 'yuku-analyzer';
 import { describe, expect, test } from 'vitest';
 import { emit, validateEnrichedIr } from '../src/emitter/index.ts';
 import { formatEmitted } from '../src/format-emitted.ts';
@@ -28,6 +30,23 @@ function visit(value: unknown, callback: (record: Record<string, any>) => void):
 		if (Array.isArray(child)) child.forEach((entry) => visit(entry, callback));
 		else visit(child, callback);
 	}
+}
+function staticAttributeValue(source: string, name: string): string {
+	const parsed = parse(source, { lang: 'jsx', sourceType: 'module', preserveParens: false });
+	expect(parsed.diagnostics).toEqual([]);
+	const module = analyze(source, { lang: 'jsx', sourceType: 'module', preserveParens: false });
+	let result: string | undefined;
+	visit(module.ast, (record) => {
+		if (record.type !== 'JSXAttribute' || record.name?.name !== name || result !== undefined)
+			return;
+		const value =
+			record.value?.type === 'JSXExpressionContainer'
+				? record.value.expression
+				: record.value;
+		if (value?.type === 'Literal' && typeof value.value === 'string') result = value.value;
+	});
+	if (result === undefined) throw new Error(`missing ${name}`);
+	return result;
 }
 function findKind(value: unknown, kind: string): Record<string, any> | null {
 	let found: Record<string, any> | null = null;
@@ -118,6 +137,29 @@ describe('Solid structural emitter', () => {
 	});
 
 	describe('metamorphic regeneration', () => {
+		test.each(['a"b', "a'b", 'a\nb', 'a{b}', '雪☃', '&quot;&amp;'])(
+			'static JSX attributes round-trip with value fidelity: %j',
+			async (value) => {
+				const ir = clone(await golden('s1-render-once.json'));
+				const host = ir.components[0]!.template[0];
+				if (host?.kind !== 'host') throw new Error('expected host root');
+				(host.staticAttributes as any[]).push({ name: 'data-probe', value });
+				const source = emit(ir);
+				const module = analyze(source, { lang: 'jsx', sourceType: 'module' });
+				expect(module.diagnostics).toEqual([]);
+				let actual: unknown;
+				module.walk({
+					JSXAttribute(node: any) {
+						if (node.name.name !== 'data-probe') return;
+						actual =
+							node.value.type === 'Literal'
+								? node.value.value
+								: node.value.expression.value;
+					},
+				});
+				expect(actual).toBe(value);
+			},
+		);
 		test('an added static attribute changes only that host attribute', async () => {
 			const ir = clone(await golden('s1-render-once.json'));
 			const host = ir.components[0]!.template[0];
@@ -128,6 +170,18 @@ describe('Solid structural emitter', () => {
 				emit(await golden('s1-render-once.json')),
 			);
 		});
+
+		test.each(['a"b', "a'b", 'a\nb', 'a{b}', '雪❄', 'a&amp;b'])(
+			'round-trips the static JSX attribute value %j',
+			async (value) => {
+				const ir = clone(await golden('s1-render-once.json'));
+				const host = ir.components[0]!.template[0];
+				if (host?.kind !== 'host') throw new Error('expected host root');
+				(host.staticAttributes as any[]).push({ name: 'data-probe', value });
+				const source = emit(ir);
+				expect(staticAttributeValue(source, 'data-probe')).toBe(value);
+			},
+		);
 
 		test('scrambled local storage order follows semantic order', async () => {
 			const ir = clone(await golden('s1-render-once.json'));

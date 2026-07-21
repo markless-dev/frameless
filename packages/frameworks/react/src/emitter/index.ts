@@ -19,6 +19,11 @@ type EmitContext = {
 	readonly statesById: ReadonlyMap<string, StateBinding>;
 	readonly events: ReadonlyMap<string, EnrichedEventRecord>;
 	readonly currentNames: ReadonlyMap<string, string>;
+	readonly hookNames: ReadonlyMap<'useRef' | 'useState', string>;
+	readonly nextNames: ReadonlyMap<string, string>;
+	readonly setterNames: ReadonlyMap<string, string>;
+	readonly setupRefName: string;
+	readonly names: NameAllocator;
 };
 type RenderedNode =
 	| t.JSXElement
@@ -957,6 +962,36 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 
 const setterName = (name: string): string => `set${name[0]!.toUpperCase()}${name.slice(1)}`;
 const nextName = (name: string): string => `next${name[0]!.toUpperCase()}${name.slice(1)}`;
+class NameAllocator {
+	readonly #used: Set<string>;
+	constructor(used: Iterable<string>) {
+		this.#used = new Set(used);
+	}
+	claim(preferred: string, separator = ''): string {
+		let candidate = preferred;
+		let suffix = 2;
+		while (this.#used.has(candidate)) candidate = `${preferred}${separator}${suffix++}`;
+		this.#used.add(candidate);
+		return candidate;
+	}
+}
+function collectAuthoredNames(ir: EnrichedIR): Set<string> {
+	const names = new Set<string>();
+	walk(ir, (record) => {
+		if (record.type === 'Identifier' && typeof record.name === 'string') names.add(record.name);
+		if (typeof record.item === 'string') names.add(record.item);
+		if (typeof record.index === 'string') names.add(record.index);
+	});
+	for (const binding of ir.records.bindings) names.add(binding.name);
+	for (const local of ir.components[0]!.locals) local.names.forEach((name) => names.add(name));
+	return names;
+}
+const hookName = (context: EmitContext, hook: 'useRef' | 'useState'): string =>
+	context.hookNames.get(hook)!;
+const setterFor = (context: EmitContext, state: StateBinding): string =>
+	context.setterNames.get(state.id)!;
+const nextFor = (context: EmitContext, state: StateBinding): string =>
+	context.nextNames.get(state.id)!;
 const member = (object: t.Expression, property: string): t.MemberExpression =>
 	t.memberExpression(object, t.identifier(property));
 
@@ -1036,13 +1071,17 @@ function emitOnceGuard(
 	expressions: t.Expression[],
 	body: t.Statement[],
 	usedHooks: Set<string>,
+	context: EmitContext,
 ): void {
 	if (expressions.length === 0) return;
 	usedHooks.add('useRef');
-	const ref = t.identifier('setupDone');
+	const ref = t.identifier(context.setupRefName);
 	body.push(
 		t.variableDeclaration('const', [
-			t.variableDeclarator(ref, t.callExpression(t.identifier('useRef'), [t.nullLiteral()])),
+			t.variableDeclarator(
+				ref,
+				t.callExpression(t.identifier(hookName(context, 'useRef')), [t.nullLiteral()]),
+			),
 		]),
 	);
 	body.push(
@@ -1146,7 +1185,7 @@ function templateNode(node: TemplateNode, context: EmitContext): RenderedNode {
 		attributes.push(
 			t.jsxAttribute(
 				t.jsxIdentifier(jsxName(attribute.name)),
-				attribute.value === true ? null : t.stringLiteral(attribute.value),
+				attribute.value === true ? null : t.jsxStringValue(attribute.value),
 			),
 		);
 	}
@@ -1325,7 +1364,7 @@ function emitMutableHandler(
 		writable.set(state.name, state);
 	}
 	const nextByState = new Map(
-		[...writable.values()].map((state) => [state.name, nextName(state.name)]),
+		[...writable.values()].map((state) => [state.name, nextFor(context, state)]),
 	);
 	reanalyzeFunction(fn, (module) => {
 		for (const reference of module.unresolvedReferences) {
@@ -1357,7 +1396,7 @@ function emitMutableHandler(
 			(statement: any) =>
 				t.isExpressionStatement(statement) &&
 				t.isAssignmentExpression(statement.expression) &&
-				t.isIdentifier(statement.expression.left, { name: nextName(plan.state.name) }),
+				t.isIdentifier(statement.expression.left, { name: nextFor(context, plan.state) }),
 		);
 		if (redundantRoot) removedAssignments.add(redundantRoot);
 	}
@@ -1368,12 +1407,12 @@ function emitMutableHandler(
 					t.assignmentExpression(
 						'=',
 						member(t.identifier(state.name), 'current'),
-						t.identifier(nextName(state.name)),
+						t.identifier(nextFor(context, state)),
 					),
 				)
 			: t.expressionStatement(
-					t.callExpression(t.identifier(setterName(state.name)), [
-						t.identifier(nextName(state.name)),
+					t.callExpression(t.identifier(setterFor(context, state)), [
+						t.identifier(nextFor(context, state)),
 					]),
 				);
 
@@ -1385,7 +1424,7 @@ function emitMutableHandler(
 				: t.identifier(state.name);
 		body.push(
 			t.variableDeclaration('let', [
-				t.variableDeclarator(t.identifier(nextName(state.name)), initial),
+				t.variableDeclarator(t.identifier(nextFor(context, state)), initial),
 			]),
 		);
 	}
@@ -1405,7 +1444,7 @@ function emitMutableHandler(
 				expression(plan.write.value),
 			);
 			const mapped = t.callExpression(
-				member(t.identifier(nextName(plan.state.name)), 'map'),
+				member(t.identifier(nextFor(context, plan.state)), 'map'),
 				[
 					t.arrowFunctionExpression(
 						[t.identifier(item.name)],
@@ -1419,7 +1458,7 @@ function emitMutableHandler(
 			);
 			body.push(
 				t.expressionStatement(
-					t.assignmentExpression('=', t.identifier(nextName(plan.state.name)), mapped),
+					t.assignmentExpression('=', t.identifier(nextFor(context, plan.state)), mapped),
 				),
 				syncStatement(plan.state),
 			);
@@ -1437,7 +1476,7 @@ function emitMutableHandler(
 				: statement.expression.argument;
 			if (t.isIdentifier(target)) {
 				const state = [...writable.values()].find(
-					(candidate) => nextName(candidate.name) === target.name,
+					(candidate) => nextFor(context, candidate) === target.name,
 				);
 				if (state) body.push(syncStatement(state));
 			}
@@ -1454,10 +1493,10 @@ function replaceVersionReads(node: t.Node, versions: ReadonlyMap<string, string>
 function toConstSsa(
 	fn: t.ArrowFunctionExpression,
 	writable: readonly StateBinding[],
-	currentNames: ReadonlyMap<string, string>,
+	context: EmitContext,
 ): t.ArrowFunctionExpression {
 	if (!t.isBlockStatement(fn.body)) return fn;
-	const nextToState = new Map(writable.map((state) => [nextName(state.name), state]));
+	const nextToState = new Map(writable.map((state) => [nextFor(context, state), state]));
 	const versions = new Map<string, string>();
 	const counters = new Map<string, number>();
 	const output: t.Statement[] = [];
@@ -1472,7 +1511,7 @@ function toConstSsa(
 			const state = nextToState.get(variable);
 			if (state) {
 				if (state.storage === 'ref') {
-					const current = currentNames.get(state.id);
+					const current = context.currentNames.get(state.id);
 					if (!current)
 						throw new Error(
 							`StateBinding ${state.id} has no generated snapshot identifier`,
@@ -1502,7 +1541,8 @@ function toConstSsa(
 			const variable = statement.expression.left.name;
 			const count = (counters.get(variable) ?? 0) + 1;
 			counters.set(variable, count);
-			const version = `${variable}${count === 1 ? '' : count}`;
+			const version =
+				count === 1 ? variable : context.names.claim(`${variable}${count}`);
 			const initializer = statement.expression.right;
 			replaceVersionReads(initializer, versions);
 			output.push(
@@ -1523,7 +1563,8 @@ function toConstSsa(
 			const variable = statement.expression.argument.name;
 			const count = (counters.get(variable) ?? 0) + 1;
 			counters.set(variable, count);
-			const version = `${variable}${count === 1 ? '' : count}`;
+			const version =
+				count === 1 ? variable : context.names.claim(`${variable}${count}`);
 			const prior = t.identifier(versions.get(variable) ?? variable);
 			const operator = statement.expression.operator === '++' ? '+' : '-';
 			output.push(
@@ -1538,7 +1579,7 @@ function toConstSsa(
 			continue;
 		}
 
-		const syncVariable = syncVariableName(statement, writable);
+		const syncVariable = syncVariableName(statement, writable, context);
 		if (syncVariable) {
 			const cloned = t.cloneNode(statement, true);
 			replaceVersionReads(cloned, versions);
@@ -1555,16 +1596,16 @@ function toConstSsa(
 	// sync per cell, at its authored final-write position (T002 rulings 4 and 5).
 	const finalSync = new Map<string, number>();
 	for (let index = 0; index < output.length; index += 1) {
-		const variable = syncVariableName(output[index]!, writable);
+		const variable = syncVariableName(output[index]!, writable, context);
 		if (variable) finalSync.set(variable, index);
 	}
 	fn.body.body = output.filter((statement, index) => {
-		const variable = syncVariableName(statement, writable);
+		const variable = syncVariableName(statement, writable, context);
 		return !variable || finalSync.get(variable) === index;
 	});
 	collapseRefSyncVersions(fn, writable);
 	removeDeadPureVersions(fn);
-	normalizeSoleVersionNames(fn, writable);
+	normalizeSoleVersionNames(fn, writable, context);
 	return fn;
 }
 
@@ -1607,10 +1648,11 @@ function collapseRefSyncVersions(
 function normalizeSoleVersionNames(
 	fn: t.ArrowFunctionExpression,
 	writable: readonly StateBinding[],
+	context: EmitContext,
 ): void {
 	reanalyzeFunction(fn, (module, analyzed) => {
 		for (const state of writable.filter((candidate) => candidate.storage === 'state')) {
-			const base = nextName(state.name);
+			const base = nextFor(context, state);
 			if (module.resolve(base, module.scopeOf(analyzed as any))) continue;
 			const versions = module.symbols.filter(
 				(symbol) =>
@@ -1633,13 +1675,14 @@ function normalizeSoleVersionNames(
 function syncVariableName(
 	statement: t.Statement,
 	writable: readonly StateBinding[],
+	context: EmitContext,
 ): string | null {
 	if (!t.isExpressionStatement(statement)) return null;
 	const value = statement.expression;
 	if (t.isCallExpression(value) && t.isIdentifier(value.callee)) {
 		const calleeName = value.callee.name;
-		const state = writable.find((candidate) => setterName(candidate.name) === calleeName);
-		return state ? nextName(state.name) : null;
+		const state = writable.find((candidate) => setterFor(context, candidate) === calleeName);
+		return state ? nextFor(context, state) : null;
 	}
 	if (
 		t.isAssignmentExpression(value, { operator: '=' }) &&
@@ -1649,7 +1692,7 @@ function syncVariableName(
 	) {
 		const object = value.left.object as t.Identifier;
 		const state = writable.find((candidate) => candidate.name === object.name);
-		return state ? nextName(state.name) : null;
+		return state ? nextFor(context, state) : null;
 	}
 	return null;
 }
@@ -1714,7 +1757,7 @@ function emitSingleHandler(
 	const fn = toConstSsa(
 		emitMutableHandler(handler, event, context),
 		writable,
-		context.currentNames,
+		context,
 	);
 	if (leafControl) replaceLeafCurrentTarget(fn);
 	return fn;
@@ -1790,14 +1833,14 @@ function componentFunction(
 		if (state) {
 			const mapped = context.statesById.get(state.id)!;
 			const initializer = expression(state.initializer);
-			emitOnceGuard(pendingInitializers.splice(0), body, usedHooks);
+			emitOnceGuard(pendingInitializers.splice(0), body, usedHooks, context);
 			if (mapped.storage === 'ref') {
 				usedHooks.add('useRef');
 				body.push(
 					t.variableDeclaration('const', [
 						t.variableDeclarator(
 							t.identifier(state.name),
-							t.callExpression(t.identifier('useRef'), [initializer]),
+							t.callExpression(t.identifier(hookName(context, 'useRef')), [initializer]),
 						),
 					]),
 				);
@@ -1808,9 +1851,9 @@ function componentFunction(
 						t.variableDeclarator(
 							t.arrayPattern([
 								t.identifier(state.name),
-								t.identifier(setterName(state.name)),
+								t.identifier(setterFor(context, mapped)),
 							]),
-							t.callExpression(t.identifier('useState'), [
+							t.callExpression(t.identifier(hookName(context, 'useState')), [
 								useStateInitializer(initializer),
 							]),
 						),
@@ -1844,7 +1887,7 @@ function componentFunction(
 			t.variableDeclaration('const', [
 				t.variableDeclarator(
 					t.arrayPattern([pattern]),
-					t.callExpression(t.identifier('useState'), [
+					t.callExpression(t.identifier(hookName(context, 'useState')), [
 						t.arrowFunctionExpression([], initializer),
 					]),
 				),
@@ -1890,29 +1933,44 @@ export function emit(ir: EnrichedIR): string {
 			storage: visible.has(binding.id) ? 'state' : 'ref',
 		});
 	}
-	const occupied = new Set<string>();
-	walk(ir, (record) => {
-		if (record.type === 'Identifier' && typeof record.name === 'string')
-			occupied.add(record.name);
-	});
+	const allocator = new NameAllocator(collectAuthoredNames(ir));
+	const hookNames = new Map<'useRef' | 'useState', string>([
+		['useRef', allocator.claim('useRef')],
+		['useState', allocator.claim('useState')],
+	]);
+	const setterNames = new Map<string, string>();
+	const nextNames = new Map<string, string>();
+	for (const state of statesById.values()) {
+		setterNames.set(state.id, allocator.claim(setterName(state.name)));
+		nextNames.set(state.id, allocator.claim(nextName(state.name)));
+	}
+	const setupRefName = allocator.claim('setupDone');
 	const currentNames = new Map<string, string>();
 	[...statesById.values()].forEach((state, index) => {
 		const base = `currentState${index + 1}`;
-		let candidate = base;
-		let suffix = 2;
-		while (occupied.has(candidate)) candidate = `${base}_${suffix++}`;
-		occupied.add(candidate);
-		currentNames.set(state.id, candidate);
+		currentNames.set(state.id, allocator.claim(base, '_'));
 	});
 	const context: EmitContext = {
 		statesById,
 		events: new Map(ir.records.events.map((event) => [event.id, event])),
 		currentNames,
+		hookNames,
+		nextNames,
+		setterNames,
+		setupRefName,
+		names: allocator,
 	};
 	const hooks = new Set<string>();
 	const exported = componentFunction(ir, component, context, hooks);
 	const imports = t.importDeclaration(
-		[...hooks].sort().map((hook) => t.importSpecifier(t.identifier(hook), t.identifier(hook))),
+		[...hooks]
+			.sort()
+			.map((hook) =>
+				t.importSpecifier(
+					t.identifier(hookName(context, hook as 'useRef' | 'useState')),
+					t.identifier(hook),
+				),
+			),
 		t.stringLiteral('react'),
 	);
 	imports.comments = [
@@ -1944,6 +2002,50 @@ export function emit(ir: EnrichedIR): string {
 			verified.resolve(reference.name, reference.scope, reference.space) !== reference.symbol
 		) {
 			throw new Error(`Emitted React module failed scope verification for ${reference.name}`);
+		}
+	}
+	const reactImports = new Map(
+		verified.imports
+			.filter((entry) => entry.specifier === 'react' && entry.name && entry.local)
+			.map((entry) => [entry.name!, entry.local!]),
+	);
+	for (const hook of hooks) {
+		const localName = hookName(context, hook as 'useRef' | 'useState');
+		const imported = reactImports.get(hook);
+		if (!imported || imported.name !== localName) {
+			throw new Error(`Emitted React module failed import identity verification for ${hook}`);
+		}
+		let calls = 0;
+		verified.walk({
+			CallExpression(node: any) {
+				if (!t.isIdentifier(node.callee, { name: localName })) return;
+				calls += 1;
+				if (verified.symbolOf(node.callee) !== imported) {
+					throw new Error(
+						`Emitted React module failed hook identity verification for ${hook}`,
+					);
+				}
+			},
+		});
+		if (calls === 0)
+			throw new Error(`Emitted React module failed hook use verification for ${hook}`);
+	}
+	for (const state of statesById.values()) {
+		if (state.storage !== 'state') continue;
+		const name = setterFor(context, state);
+		let setterSymbol: ReturnType<typeof verified.symbolOf> = null;
+		verified.walk({
+			VariableDeclarator(node: any) {
+				const setter = node.id?.type === 'ArrayPattern' ? node.id.elements[1] : null;
+				if (t.isIdentifier(setter, { name })) setterSymbol = verified.symbolOf(setter);
+			},
+		});
+		if (!setterSymbol)
+			throw new Error(`Emitted React module failed setter declaration verification for ${name}`);
+		for (const reference of verified.references) {
+			if (reference.name === name && reference.symbol !== setterSymbol) {
+				throw new Error(`Emitted React module failed setter identity verification for ${name}`);
+			}
 		}
 	}
 	return source;

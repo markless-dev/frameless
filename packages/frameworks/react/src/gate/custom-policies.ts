@@ -143,6 +143,26 @@ export function customPolicies(
 		return null;
 	}
 
+	function constantString(node: Node, trail = new Set<YukuSymbol>()): string | null {
+		if (is(node, 'Literal') && typeof node.value === 'string') return node.value;
+		if (!is(node, 'Identifier')) return null;
+		const symbol = module.symbolOf(node);
+		if (!symbol || trail.has(symbol)) return null;
+		trail.add(symbol);
+		const owner = declarationOwner(symbol);
+		const declaration = owner ? module.parentOf(owner) : null;
+		return is(owner, 'VariableDeclarator') &&
+			is(declaration, 'VariableDeclaration', { kind: 'const' })
+			? constantString(owner.init, trail)
+			: null;
+	}
+
+	function callablePropertyName(node: Node): string | null {
+		if (!is(node, 'MemberExpression') && !is(node, 'Property')) return null;
+		const key = is(node, 'MemberExpression') ? node.property : node.key;
+		return node.computed ? constantString(key) : propertyName(node);
+	}
+
 	function resolveCallable(callee: Node, trail = new Set<YukuSymbol>()): Callable | null {
 		if (is(callee, 'Identifier')) {
 			const symbol = module.symbolOf(callee);
@@ -164,7 +184,7 @@ export function customPolicies(
 			return null;
 		}
 		if (is(callee, 'MemberExpression')) {
-			const name = propertyName(callee);
+			const name = callablePropertyName(callee);
 			let object = callee.object;
 			if (is(object, 'Identifier')) {
 				const symbol = module.symbolOf(object);
@@ -172,11 +192,19 @@ export function customPolicies(
 				if (!is(owner, 'VariableDeclarator')) return null;
 				object = owner.init;
 			}
-			if (!is(object, 'ObjectExpression') || name == null) return null;
-			const property = object.properties.find(
-				(entry: Node) => is(entry, 'Property') && propertyName(entry) === name,
-			);
-			return property ? resolveCallable(property.value, trail) : null;
+			if (!is(object, 'ObjectExpression')) return null;
+			if (name != null) {
+				const property = object.properties.find(
+					(entry: Node) =>
+						is(entry, 'Property') && callablePropertyName(entry) === name,
+				);
+				return property ? resolveCallable(property.value, trail) : null;
+			}
+			for (const property of object.properties) {
+				if (!is(property, 'Property')) continue;
+				const resolved = resolveCallable(property.value, new Set(trail));
+				if (resolved?.kind === 'setter') return resolved;
+			}
 		}
 		return null;
 	}

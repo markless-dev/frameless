@@ -31,3 +31,5 @@ the browser analyzer adapter.
 - Run `npx vitest run --project solid-browser` for reference calibration, hidden-variant smoke,
   emitted equivalence, and store row reuse.
 - Run affected consuming-application checks when this package changes their generated output.
+
+Yuku pin rule: parser/analyzer/codegen pinned at 0.7.0; any pin change requires re-executing the parity suite (collision families, printer round-trips, gate verdicts) per docs/goals/frameless-composition-v1/notes/yuku-parity-evaluation.md.

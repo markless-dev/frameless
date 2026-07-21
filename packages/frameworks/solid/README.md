@@ -131,3 +131,11 @@ pnpm --dir packages/frameworks/solid test
 npx vitest run --project solid-browser
 git diff --stat -- poc/
 ```
+
+## Yuku toolchain pin
+
+yuku-parser/yuku-analyzer/yuku-codegen are pinned exactly at 0.7.0 (young toolchain,
+single maintainer). Before ANY pin change, re-execute the parity suite — collision
+families, printer edge-case round-trips, and gate verdict preservation — per
+docs/goals/frameless-composition-v1/notes/yuku-parity-evaluation.md. A pin bump
+without that re-execution is not a mechanical update.

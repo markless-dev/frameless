@@ -1,6 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import type { EnrichedIR } from '@frameless/compiler';
 import { resolve } from 'pathe';
+import { analyze } from 'yuku-analyzer';
+import { parse } from 'yuku-parser';
 import { describe, expect, test } from 'vitest';
 import { emit, validateEnrichedIr } from '../src/emitter/index.ts';
 import { formatEmitted } from '../src/format-emitted.ts';
@@ -28,6 +30,38 @@ function visit(value: unknown, callback: (record: Record<string, any>) => void):
 		if (Array.isArray(child)) child.forEach((entry) => visit(entry, callback));
 		else visit(child, callback);
 	}
+}
+
+function renameIdentifier(ir: EnrichedIR, from: string, to: string): void {
+	visit(ir, (record) => {
+		if (record.type === 'Identifier' && record.name === from) record.name = to;
+		if (record.name === from) record.name = to;
+	});
+	ir.components[0]!.locals.forEach((local: any) => {
+		local.names = local.names.map((name: string) => (name === from ? to : name));
+	});
+}
+
+function staticAttributeValue(source: string, name: string): string {
+	const parsed = parse(source, { lang: 'jsx', sourceType: 'module', preserveParens: false });
+	expect(parsed.diagnostics).toEqual([]);
+	const module = analyze(source, { lang: 'jsx', sourceType: 'module', preserveParens: false });
+	let result: string | undefined;
+	visit(module.ast, (record) => {
+		if (
+			record.type === 'JSXAttribute' &&
+			record.name?.name === name &&
+			result === undefined
+		) {
+			const value =
+				record.value?.type === 'JSXExpressionContainer'
+					? record.value.expression
+					: record.value;
+			if (value?.type === 'Literal' && typeof value.value === 'string') result = value.value;
+		}
+	});
+	if (result === undefined) throw new Error(`missing ${name}`);
+	return result;
 }
 
 describe('React structural emitter', () => {
@@ -84,6 +118,54 @@ describe('React structural emitter', () => {
 	});
 
 	describe('metamorphic regeneration from the checked-in golden', () => {
+		test.each(['a"b', "a'b", 'a\nb', 'a{b}', '雪☃', '&quot;&amp;'])(
+			'static JSX attributes round-trip with value fidelity: %j',
+			async (value) => {
+				const ir = clone(await golden('s1-render-once.json'));
+				const root = ir.components[0]!.template[0];
+				if (root?.kind !== 'host') throw new Error('expected host root');
+				(root.staticAttributes as any[]).push({ name: 'data-probe', value });
+				const source = emit(ir);
+				const module = analyze(source, { lang: 'jsx', sourceType: 'module' });
+				expect(module.diagnostics).toEqual([]);
+				let actual: unknown;
+				module.walk({
+					JSXAttribute(node: any) {
+						if (node.name.name !== 'data-probe') return;
+						actual =
+							node.value.type === 'Literal'
+								? node.value.value
+								: node.value.expression.value;
+					},
+				});
+				expect(actual).toBe(value);
+			},
+		);
+
+		test.each([
+			['hook import', 'count', 'useState', /useState as useState2/, /const \[useState, setUseState\] = useState2\(1\)/],
+			['ref hook import', 'count', 'useRef', /useRef as useRef2/, /const setupDone = useRef2\(/],
+			['setter', 'prefix', 'setCount', /const \[count, setCount2\]/, /setCount2\(nextCount\)/],
+			['next snapshot', 'prefix', 'nextCount', /const nextCount2 = count \+ 1/, /setCount\(nextCount2\)/],
+			['ref snapshot', 'complete', 'currentState2', /const currentState2_2 = next\.current/, /next\.current = currentState2_2 \+ 1/],
+			['once guard', 'prefix', 'setupDone', /const setupDone2 = useRef\(null\)/, /setupDone2\.current/],
+		] as const)(
+			'allocates the generated %s family around authored identifiers',
+			async (_family, from, to, declaration, use) => {
+				const fixture = to === 'currentState2' ? 's2-keyed-todo.json' : 's1-render-once.json';
+				const ir = clone(await golden(fixture)) as any;
+				visit(ir, (record) => {
+					if (record.type === 'Identifier' && record.name === from) record.name = to;
+					if (record.name === from) record.name = to;
+				});
+				ir.components[0].locals.forEach((local: any) => {
+					local.names = local.names.map((name: string) => (name === from ? to : name));
+				});
+				const source = emit(ir);
+				expect(source).toMatch(declaration);
+				expect(source).toMatch(use);
+			},
+		);
 		// These mutations mirror the poc/07 regeneration stance: mutate the semantic
 		// artifact in memory, emit it through the public boundary, and compare only
 		// the output dimension that the mutation is allowed to change.
@@ -160,6 +242,89 @@ describe('React structural emitter', () => {
 			expect(changed).toContain('((count) => count)(7)');
 			expect(changed).toContain('const nextCount = count + 1');
 		});
+
+		test('allocates every generated identifier family around authored names', async () => {
+			const hook = clone(await golden('s1-render-once.json'));
+			renameIdentifier(hook, 'count', 'useState');
+			const hookSource = emit(hook);
+			expect(hookSource).toContain('useState as useState2');
+			expect(hookSource).toContain('const [useState, setUseState] = useState2(1)');
+			const hookModule = analyze(hookSource, {
+				lang: 'jsx',
+				sourceType: 'module',
+				preserveParens: false,
+			});
+			const hookImport = hookModule.symbols.find((symbol) =>
+				symbol.declarations.some((node: any) => node.type === 'Identifier' && node.name === 'useState2'),
+			);
+			expect(hookImport?.references.length).toBeGreaterThan(0);
+			expect(hookImport?.references.every((reference) => reference.symbol === hookImport)).toBe(true);
+
+			const setter = clone(await golden('s1-render-once.json')) as any;
+			setter.records.events[0].handlers[0].expression.body.body.unshift({
+				type: 'VariableDeclaration',
+				kind: 'const',
+				declarations: [{
+					type: 'VariableDeclarator',
+					id: { type: 'Identifier', name: 'setCount' },
+					init: { type: 'Literal', value: 0, raw: '0' },
+				}],
+			});
+			expect(emit(setter)).toContain('const [count, setCount2] = useState(1)');
+
+			const next = clone(await golden('s1-render-once.json')) as any;
+			next.records.events[0].handlers[0].expression.body.body.unshift({
+				type: 'VariableDeclaration',
+				kind: 'const',
+				declarations: [{
+					type: 'VariableDeclarator',
+					id: { type: 'Identifier', name: 'nextCount' },
+					init: { type: 'Literal', value: 0, raw: '0' },
+				}],
+			});
+			expect(emit(next)).toContain('const nextCount2 = count + 1');
+
+			const setup = clone(await golden('s1-render-once.json'));
+			renameIdentifier(setup, 'prefix', 'setupDone');
+			expect(emit(setup)).toContain('const setupDone2 = useRef(null)');
+
+			const snapshot = clone(await golden('s2-keyed-todo.json')) as any;
+			snapshot.records.events[1].handlers[0].expression.body.body.unshift({
+				type: 'VariableDeclaration',
+				kind: 'const',
+				declarations: [{
+					type: 'VariableDeclarator',
+					id: { type: 'Identifier', name: 'currentState2' },
+					init: { type: 'Literal', value: 0, raw: '0' },
+				}],
+			});
+			expect(emit(snapshot)).toContain('const currentState2_2 = next.current');
+		});
+
+		test('keeps duplicate authored setCount declarations fail-closed', async () => {
+			const ir = clone(await golden('s1-render-once.json')) as any;
+			ir.records.events[0].handlers[0].expression.body.body.unshift({
+				type: 'VariableDeclaration',
+				kind: 'const',
+				declarations: [
+					{ type: 'VariableDeclarator', id: { type: 'Identifier', name: 'setCount' }, init: { type: 'Literal', value: 0, raw: '0' } },
+					{ type: 'VariableDeclarator', id: { type: 'Identifier', name: 'setCount' }, init: { type: 'Literal', value: 1, raw: '1' } },
+				],
+			});
+			expect(() => emit(ir)).toThrow(/yuku-analyzer rejected emitted handler|collision verification/);
+		});
+
+		test.each(['a"b', "a'b", 'a\nb', 'a{b}', '雪❄', 'a&amp;b'])(
+			'round-trips the static JSX attribute value %j',
+			async (value) => {
+				const ir = clone(await golden('s1-render-once.json'));
+				const root = ir.components[0]!.template[0];
+				if (root?.kind !== 'host') throw new Error('expected host root');
+				(root.staticAttributes as any[]).push({ name: 'data-probe', value });
+				const source = emit(ir);
+				expect(staticAttributeValue(source, 'data-probe')).toBe(value);
+			},
+		);
 	});
 
 	describe('fail-closed enriched IR validation', () => {

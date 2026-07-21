@@ -20,3 +20,5 @@ and supplies the browser analyzer adapter.
 - Run `pnpm --dir packages/frameworks/react test` for the offline emitter and gate lanes.
 - Run `npx vitest run --project react-browser` for adapter calibration and emitted oracle smoke.
 - A package-only pass is not evidence for a consuming application known to be affected.
+
+Yuku pin rule: parser/analyzer/codegen pinned at 0.7.0; any pin change requires re-executing the parity suite (collision families, printer round-trips, gate verdicts) per docs/goals/frameless-composition-v1/notes/yuku-parity-evaluation.md.
