@@ -30,7 +30,7 @@ from `@frameless/solid/adapter`; that subpath does not import the node-only emit
 | Props and once-local        | 8           | Reactive reads stay `props.path`; prop-reading setup initializers and once-captures use `untrack(() => ...)`.                                                      |
 | Invisible scalar cell       | 9           | Plain component-local `let`; it is never rendered.                                                                                                                 |
 | Component/module            | 10          | One named exported PascalCase function, one props identifier only when records contain prop reads, `.jsx`, `class`/`for`, and only dossier-allowed Solid imports. |
-| Forward ledger              | 11          | v0 retains the recorded v2 migration debt: For child accessors, attr namespace removal, store API moves, microtask batching recalibration, and adapter relocation. |
+| Forward ledger              | 11          | v0 retains the recorded v2 migration debt: For child accessors, attr namespace removal, store API moves, microtask batching recalibration, adapter relocation, and the generated `useX`-with-throw context accessor (Solid 2 RFC: drop the wrapper, call `useContext` directly — composition-era addition). |
 
 ## Fail-closed boundary and binding safety
 
