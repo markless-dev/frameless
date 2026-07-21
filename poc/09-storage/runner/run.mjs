@@ -151,6 +151,15 @@ async function runFramework(browser, port, fw) {
     await page.goto(`http://127.0.0.1:${port}/`);
     await page.waitForFunction("window.__READY__ === true");
     await page.click("#toggle");
+    // Reactive UI updates may be scheduled (e.g. Angular zoneless renders on a
+    // later frame); allow a bounded settle window — the assertion still fails
+    // if the component never updates.
+    await page
+      .waitForFunction(
+        "document.getElementById('value') && document.getElementById('value').textContent === 'dark'",
+        { timeout: 2000 }
+      )
+      .catch(() => {});
     const s1 = await snapshot(page);
     check(fw, "write", "component updated", s1.value === "dark", `value=${s1.value}`);
     check(fw, "write", "root attr maintained", s1.attr === "dark", `attr=${s1.attr}`);
