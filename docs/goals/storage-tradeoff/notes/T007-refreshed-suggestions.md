@@ -57,3 +57,16 @@ Every observed system — including the 24.5M/week category winner — fails on 
 ## 5. Misfire self-check
 
 Nothing above is ratified; the owner ratifies or nothing does. At-risk sentences named: (1) "recommendation STRENGTHENED" is evidence-weighing, not convergence; (2) "Option 4 demoted" is a Judge ranking, not a kill; (3) the "two faces of one contract" amendment is a NEW synthesis the owner has not seen — highest risk of decision-reading; (4) the compiler-advantage paragraph argues one side; the fumadocs delegate-don't-own counter-path is stated so the owner sees both.
+
+## Post-T007 probe attempt (PM, night session) — browser round remains priced
+
+Attempted a real-browser probe of seed-script ordering (scratch vitest+chromium).
+Blocked by an environment triangle: vite refuses to serve test files outside the
+repo root (scratchpad), the isolated worktree lacks node_modules, and the main
+checkout is write-guarded for this session. EVIDENCE note in lieu: synchronous
+classic <script> elements execute during parsing/insertion before subsequent
+scripts by HTML spec semantics — the ordering the seed relies on is
+spec-guaranteed, and next-themes' 24.5M/wk deployment is production proof of the
+same mechanism — but OUR generated artifact's executed-browser proof (chunk
+ordering in markless progressive output especially) remains a priced unknown for
+the implementation phase, unchanged from section 4.
