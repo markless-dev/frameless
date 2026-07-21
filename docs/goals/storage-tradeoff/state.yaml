@@ -68,7 +68,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/storage-tradeoff/"
     command: "npx goalbuddy board docs/goals/storage-tradeoff"
 
-active_task: T006
+active_task: T007
 
 tasks:
   - id: T001
@@ -124,9 +124,19 @@ tasks:
   - id: T006
     type: scout
     assignee: Scout
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Empirical survey of EXISTING device-state solutions (owner-directed): what production systems actually do and which shapes won — adoption evidence (npm downloads/usage), API surfaces of next-themes/zustand-persist/jotai-storage/TanStack-persist/Capacitor-Preferences/AsyncStorage/SharedPreferences-class solutions, how each handles first paint, consent, keys, drivers, sync; LOCAL CORPUS mining (qwik-ui, qwik-design-system, solid, fumadocs and other checkouts under /Users/jacksm5pro/dev/open-source) for real in-repo device-state patterns. Output: evidence-ranked observations feeding a refreshed suggestions note. SUGGESTIONS ONLY — no implementation, no ratification."
+    receipt:
+      result: done
+      note: "notes/T006-web-empirics.md + notes/T006-corpus-empirics.md"
+      summary: "Empirical survey complete, both halves. WEB: next-themes 24.5M/wk (provider family, order-of-magnitude category winner); @nuxtjs/color-mode = mass-adopted build-module family instance; zustand/jotai persisted-cell family ~11M/wk combined; app-owned-cells family has NO mass-adopted instance; MMKV validates sync-read-before-render demand on native. CORPUS: 9/10 local repos have device-state code; 6 independently-authored theme-persistence families (9 physical copies incl. 3 byte-identical) — the owner's 'everyone hand-rolls it, same bugs' thesis proven IN THEIR OWN REPOS; keys mostly hardcoded, consent gates ZERO across all systems, cross-tab sync mostly absent; Qwik UI themes uses a rendered pre-slot sync script mutating <html> (provider shape, configurable key + CSP nonce, NO useVisibleTask$ for initial read); fumadocs delegates to next-themes; frameless goalbuddy boards read theme after async settings (flash-prone)."
+  - id: T007
+    type: judge
+    assignee: Judge
+    status: active
+    reasoning_hint: high
+    objective: "Fold both empirical halves into refreshed BEST SUGGESTIONS (owner-directed: suggestions only, no implementation, no ratification): re-weigh the four menu families against the adoption + corpus evidence, state what existing systems converged on and where they all fail identically (keys, consent, sync), and produce the morning owner summary — evidence-first, suggestions clearly labeled as suggestions."
     receipt: null
   - id: T999
     type: judge
