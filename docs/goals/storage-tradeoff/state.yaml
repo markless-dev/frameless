@@ -68,7 +68,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/storage-tradeoff/"
     command: "npx goalbuddy board docs/goals/storage-tradeoff"
 
-active_task: null  # T008 dig round done (browser proof executed + winner internals read); awaiting owner response again; T999 queued
+active_task: null  # T009 SSR probe done (owner-named gap executed, all assertions pass); awaiting owner ratification; T999 queued
 
 tasks:
   - id: T001
@@ -152,6 +152,16 @@ tasks:
       result: done
       note: notes/T008-dig-round.md
       summary: "Both digs EXECUTED. (a) Real-browser probe (Chromium hs-1228, standalone scratch root, playwright-core from sibling checkout — env triangle sidestepped): seed ran before first paint in both cases (13.5ms vs 32ms cold; 2.7ms vs 12ms stored), root attribute correct AT first paint (no-flash proven with stored value, honest fallback cold), seed ordered before deferred-ESM, classic, AND late-injected progressive chunks, landing slot visible to all three — the chunk-ordering unknown RETIRED for the artifact shape (residue: re-run against real markless output at implementation time). (b) Winner internals source-read: 'two faces of one contract' CONFIRMED at source level — both winners generate the identical artifact triple (sync seed mutating root pre-paint + reactive cell initialized from seeded result + write-back); next-themes renders its script in-place before children (the exact Qwik UI shape, NOT head-injected) but double-reads storage with duplicated resolution logic (no landing slot); @nuxtjs/color-mode is a build-time template mini-compiler (static key/driver/fallback substitution, module.mjs:127-129) whose seed writes window.__NUXT_COLOR_MODE__ and whose client plugin initializes state FROM the slot — our P1 landing-slot design in production at ecosystem scale. CORRECTION banked against our own claim: next-themes HAS cross-tab sync; the four-axis 'sync universally absent' softens to 'inconsistently present' (recorded, not smoothed). Keys/consent/flash axes stand. Owner has ratified nothing."
+  - id: T009
+    type: pm
+    assignee: PM
+    status: done
+    reasoning_hint: medium
+    objective: "Owner-named gap (2026-07-21: 'Would you say you feel confident with storage function being able to create scripts on render? Inlining a script? Especially in cases like ssr'): execute the SSR+hydration probe on our stack shape — real renderToString + hydrateRoot (React 19 dev build, StrictMode, Chromium), seed script rendered by provider, fallback-parity state init, landing-slot patch. SUGGESTIONS ONLY."
+    receipt:
+      result: done
+      note: notes/T009-ssr-probe.md
+      summary: "EXECUTED, all assertions pass in both cases (cold + stored value): inline seed script present in renderToString output and runs pre-paint (root attr correct AT first paint, 12-20ms); ZERO hydration mismatch/recoverable-error messages under dev build + StrictMode (fallback-parity makes server HTML and client first render identical by construction); stored value patched to content exactly once post-hydration; ZERO client driver reads (landing-slot handshake consumed — combining the provider channel with the Nuxt-style slot, which no surveyed library does). Retires the C3-SSR unknown for React. Residue: Solid SSR + streaming not separately probed; real markless emitted output re-run at implementation time; server-truthful content requires the cookie driver (unprobed). Owner has ratified nothing."
   - id: T999
     type: judge
     assignee: Judge
