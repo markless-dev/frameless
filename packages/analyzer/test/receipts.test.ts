@@ -39,9 +39,9 @@ describe('frameless-receipts/1', () => {
 	test('validates its version and preserves blocked-by-upstream', () => {
 		expect(validateReceipt(receipt)).toBe(true);
 		expect(validateReceipt({ ...receipt, schema: 'old' })).toBe(false);
-		expect(validateReceipt({ ...receipt, summary: { ...receipt.summary, equalPairs: 2 } })).toBe(
-			false,
-		);
+		expect(
+			validateReceipt({ ...receipt, summary: { ...receipt.summary, equalPairs: 2 } }),
+		).toBe(false);
 		expect(renderResults(receipt)).toContain('blocked-by-upstream(#upstream)');
 	});
 
@@ -152,6 +152,122 @@ describe('frameless-receipts/1', () => {
 	])('rejects dishonest expectation result variant %#', (variant) => {
 		const dishonest = structuredClone(receipt) as unknown as Record<string, unknown>;
 		dishonest.expectationResults = { scenario: { react: [variant] } };
+		expect(validateReceipt(dishonest)).toBe(false);
+	});
+
+	test.each([
+		{
+			expectation: { kind: 'dom-text', phase: 'mount', selector: 'output', text: 'ready' },
+			observed: null,
+		},
+		{
+			expectation: {
+				kind: 'dom-present',
+				phase: 'mount',
+				selector: 'output',
+				count: 1,
+			},
+			observed: 0,
+		},
+		{
+			expectation: {
+				kind: 'dom-path',
+				phase: 'mount',
+				selector: 'output',
+				parentTags: ['section'],
+			},
+			observed: ['main', 'section'],
+		},
+		{
+			expectation: { kind: 'focus', phase: 'mount', selector: 'input' },
+			observed: { focused: false, selection: null },
+		},
+	])(
+		'accepts the kind-specific failed expectation observation for $expectation.kind',
+		(result) => {
+			const withFailure = structuredClone(receipt) as Receipt;
+			withFailure.expectationResults = {
+				scenario: {
+					react: [
+						{
+							...result,
+							phase: result.expectation.phase,
+							outcome: 'fail',
+						} as never,
+					],
+				},
+			};
+			withFailure.summary = createReceiptSummary(withFailure);
+			expect(validateReceipt(withFailure)).toBe(true);
+		},
+	);
+
+	test.each([
+		{
+			expectation: { kind: 'dom-text', phase: 'mount', selector: 'output', text: 'ready' },
+			observed: 0,
+		},
+		{
+			expectation: {
+				kind: 'dom-present',
+				phase: 'mount',
+				selector: 'output',
+				count: 1,
+			},
+			observed: 'zero',
+		},
+		{
+			expectation: {
+				kind: 'dom-path',
+				phase: 'mount',
+				selector: 'output',
+				parentTags: ['section'],
+			},
+			observed: { parent: 'section' },
+		},
+		{
+			expectation: { kind: 'focus', phase: 'mount', selector: 'input' },
+			observed: false,
+		},
+	])('rejects an observed value from the wrong $expectation.kind variant', (result) => {
+		const dishonest = structuredClone(receipt) as unknown as Record<string, unknown>;
+		dishonest.expectationResults = {
+			scenario: {
+				react: [{ ...result, phase: result.expectation.phase, outcome: 'fail' }],
+			},
+		};
+		expect(validateReceipt(dishonest)).toBe(false);
+	});
+
+	test.each([
+		{ kind: 'dom-text', phase: 'mount', selector: 'output', text: 'ready' },
+		{ kind: 'dom-present', phase: 'mount', selector: 'output', count: 1 },
+		{ kind: 'dom-path', phase: 'mount', selector: 'output', parentTags: ['section'] },
+		{ kind: 'focus', phase: 'mount', selector: 'input' },
+	])('requires the exact pass result shape for $kind', (expectation) => {
+		const honest = structuredClone(receipt) as unknown as Record<string, unknown>;
+		honest.expectationResults = {
+			scenario: { react: [{ expectation, phase: expectation.phase, outcome: 'pass' }] },
+		};
+		expect(validateReceipt(honest)).toBe(true);
+
+		const dishonest = structuredClone(honest) as {
+			expectationResults: { scenario: { react: Record<string, unknown>[] } };
+		};
+		dishonest.expectationResults.scenario.react[0].observed = null;
+		expect(validateReceipt(dishonest)).toBe(false);
+	});
+
+	test.each([
+		{ kind: 'dom-text', phase: 'mount', selector: 'output', text: 'ready' },
+		{ kind: 'dom-present', phase: 'mount', selector: 'output', count: 1 },
+		{ kind: 'dom-path', phase: 'mount', selector: 'output', parentTags: ['section'] },
+		{ kind: 'focus', phase: 'mount', selector: 'input' },
+	])('requires an observed value in the exact fail result shape for $kind', (expectation) => {
+		const dishonest = structuredClone(receipt) as unknown as Record<string, unknown>;
+		dishonest.expectationResults = {
+			scenario: { react: [{ expectation, phase: expectation.phase, outcome: 'fail' }] },
+		};
 		expect(validateReceipt(dishonest)).toBe(false);
 	});
 

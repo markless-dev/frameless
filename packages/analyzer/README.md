@@ -28,6 +28,10 @@ mutant-class data, verdicts, and deterministic `frameless-receipts/1` result ren
 - `dom-present` uses exact cardinality: `count: 1` means exactly one match and `count: 0` means
   absence. `dom-text` reads the first serialized match's recursive text, matching
   `querySelector(...).textContent` semantics.
+- `dom-path` selects one serialized element and compares its exact root-to-parent HTML tag chain.
+  Parent tags use lowercase custom-element-capable HTML names (`[a-z][a-z0-9-]*`); malformed tags,
+  unsupported selectors, a missing element, and a missing phase all fail closed. This deliberately
+  pins structure without exposing raw DOM indices or framework marker nodes.
 - A caller may request one document-level post-unmount witness. Its selected element is serialized
   after adapter unmount and before host removal as the optional trailing `unmount` observation.
 
@@ -46,6 +50,16 @@ framework-owned browser calibration packages.
 `serializeRunTrace(trace)` writes deterministic, newline-terminated JSON, and
 `deserializeRunTrace(text)` validates the complete analyzer contract on load. Trace files are the
 transport used to carry browser-captured runs into cross-target comparison.
+
+## Oracle limits
+
+Cross-framework equality is not ground truth: if React and Solid make the same mistake, their
+traces can still be equal. Scenario expectations carry the independent per-framework truth for the
+calibrated fixture and phase. Emitter gate policies are the third leg: the slot-projection rules
+planned for P3 and P4 land in `packages/frameworks/react/src/gate/` and
+`packages/frameworks/solid/src/gate/`, where generated structure is checked before browser
+equivalence is considered. Together these checks reduce symmetric-error risk; they do not prove
+arbitrary framework behavior beyond the stated scenario surface.
 
 ## Substrate split
 

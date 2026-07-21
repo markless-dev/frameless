@@ -114,6 +114,49 @@ describe('scenario expectation evaluation', () => {
 		});
 	});
 
+	test('fails a zero-cardinality expectation when the named phase is absent', () => {
+		const expectation = {
+			kind: 'dom-present' as const,
+			phase: 'action:99:after',
+			selector: '[data-does-not-exist]',
+			count: 0,
+		};
+		expect(evaluate(expectation)).toEqual({
+			expectation,
+			phase: 'action:99:after',
+			outcome: 'fail',
+			observed: 0,
+		});
+	});
+
+	test('pins an element to its exact serialized parent chain', () => {
+		const expectation = {
+			kind: 'dom-path' as const,
+			phase: 'mount',
+			selector: '[data-cell=count]',
+			parentTags: ['main'],
+		};
+		expect(evaluate(expectation)).toEqual({ expectation, phase: 'mount', outcome: 'pass' });
+		expect(evaluate({ ...expectation, parentTags: ['main', 'section'] })).toMatchObject({
+			outcome: 'fail',
+			observed: ['main'],
+		});
+	});
+
+	test.each([['Main'], ['main output'], ['']])(
+		'fails closed on malformed parent tag %j',
+		(parentTag) => {
+			expect(() =>
+				evaluate({
+					kind: 'dom-path',
+					phase: 'mount',
+					selector: '[data-cell]',
+					parentTags: [parentTag],
+				}),
+			).toThrow(/dom-path expectation is malformed/);
+		},
+	);
+
 	test.each(['.cell', 'main output', '[data-cell][title]', '[data-cell^="c"]'])(
 		'fails closed on unsupported selector syntax %s',
 		(selector) => {

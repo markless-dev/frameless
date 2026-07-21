@@ -20,18 +20,34 @@ export type DomPresentExpectation = {
 	selector: string;
 	count: number;
 };
+export type DomPathExpectation = {
+	kind: 'dom-path';
+	phase: string;
+	selector: string;
+	parentTags: string[];
+};
 export type FocusExpectation = {
 	kind: 'focus';
 	phase: string;
 	selector: string;
 	selection?: [number, number];
 };
-export type Expectation = DomTextExpectation | DomPresentExpectation | FocusExpectation;
+export type Expectation =
+	| DomTextExpectation
+	| DomPresentExpectation
+	| DomPathExpectation
+	| FocusExpectation;
 
 export type ExpectationResult =
 	| { expectation: Expectation; phase: string; outcome: 'pass' }
 	| { expectation: DomTextExpectation; phase: string; outcome: 'fail'; observed: string | null }
 	| { expectation: DomPresentExpectation; phase: string; outcome: 'fail'; observed: number }
+	| {
+			expectation: DomPathExpectation;
+			phase: string;
+			outcome: 'fail';
+			observed: string[] | null;
+	  }
 	| {
 			expectation: FocusExpectation;
 			phase: string;

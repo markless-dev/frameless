@@ -1,9 +1,19 @@
-import { batch, createContext, createSignal, type JSX, onCleanup, useContext } from 'solid-js';
+import {
+	type Accessor,
+	batch,
+	createContext,
+	createEffect,
+	createSignal,
+	type JSX,
+	onCleanup,
+	untrack,
+	useContext,
+} from 'solid-js';
 
 declare module 'solid-js' {
 	namespace JSX {
 		interface Directives {
-			cleanupWitness: boolean;
+			cleanupWitness: string;
 		}
 	}
 }
@@ -11,10 +21,15 @@ declare module 'solid-js' {
 export type SolidCompositionMutant =
 	| 'M-SLOT-OMIT'
 	| 'M-SLOT-DUP'
+	| 'M-SLOT-WRAPPER'
 	| 'M-SHARED-DESYNC'
 	| 'M-SHARED-STALE'
 	| 'M-REF-FOCUS-OMIT'
 	| 'M-ATTACH-CLEANUP-OMIT'
+	| 'M-CLEANUP-EARLY-WRITE'
+	| 'M-REINSTALL-OMIT'
+	| 'M-CLEANUP-ORDER'
+	| 'M-HANDLE-CLEAR-OMIT'
 	| 'M-METHOD-ORDER'
 	| 'M-SHARED-TEAR';
 
@@ -94,10 +109,17 @@ function Frame(props: { children: JSX.Element }) {
 	return <section data-frame>{props.children}</section>;
 }
 
-function SlotPage(props: { variant?: 'reference' | 'omit' | 'duplicate' }) {
+function SlotPage(props: { variant?: 'reference' | 'omit' | 'duplicate' | 'wrapper' }) {
 	return (
 		<Frame>
-			{props.variant !== 'omit' && <strong data-projected-node>Projected composition</strong>}
+			{props.variant !== 'omit' &&
+				(props.variant === 'wrapper' ? (
+					<div>
+						<strong data-projected-node>Projected composition</strong>
+					</div>
+				) : (
+					<strong data-projected-node>Projected composition</strong>
+				))}
 			{props.variant === 'duplicate' && (
 				<strong data-projected-node>Projected composition</strong>
 			)}
@@ -173,23 +195,47 @@ function SharedPage(props: { variant?: StoreVariant | 'desync' }) {
 	);
 }
 
-function FocusField(props: { input: (node: HTMLInputElement | undefined) => void }) {
+function FocusField(props: {
+	input: (node: HTMLInputElement | undefined) => void;
+	omitClear?: boolean;
+}) {
 	return (
 		<input
 			data-focus-target
 			ref={(node) => {
 				props.input(node);
-				onCleanup(() => props.input(undefined));
+				onCleanup(() => {
+					if (!props.omitClear) props.input(undefined);
+				});
 			}}
 		/>
 	);
 }
 
-function FocusPage(props: { omitFocus?: boolean }) {
+function FocusPage(props: { omitFocus?: boolean; omitClear?: boolean }) {
 	let input: HTMLInputElement | undefined;
+	let localState: HTMLOutputElement | undefined;
+	let externalWitness: HTMLElement | undefined;
+	const setInput = (node: HTMLInputElement | undefined) => {
+		input = node;
+		if (node) {
+			localState = node.parentElement?.querySelector('[data-handle-state]') ?? undefined;
+			if (!externalWitness) {
+				externalWitness = document.createElement('section');
+				externalWitness.dataset.handleWitness = '';
+				externalWitness.innerHTML = '<output data-handle-state></output>';
+				document.body.append(externalWitness);
+			}
+		}
+		const state = node ? 'set' : 'cleared';
+		if (localState) localState.textContent = state;
+		const externalState = externalWitness?.querySelector('[data-handle-state]');
+		if (externalState) externalState.textContent = state;
+	};
 	return (
-		<>
-			<FocusField input={(node) => (input = node)} />
+		<section data-handle-witness>
+			<output data-handle-state />
+			<FocusField input={setInput} omitClear={props.omitClear} />
 			<button
 				data-action="focus-composed"
 				onClick={() => {
@@ -198,23 +244,63 @@ function FocusPage(props: { omitFocus?: boolean }) {
 			>
 				Focus
 			</button>
-		</>
+		</section>
 	);
 }
 
-function CleanupPage(props: { omitCleanup?: boolean }) {
+type CleanupVariant =
+	| 'reference'
+	| 'omit-cleanup'
+	| 'early-write'
+	| 'reinstall-omit'
+	| 'cleanup-order';
+
+function CleanupPage(props: { variant?: CleanupVariant }) {
+	const variant = props.variant ?? 'reference';
+	const [behaviorInput, setBehaviorInput] = createSignal('one');
+	const events: string[] = [];
+	let externalWitness: HTMLElement | undefined;
 	// eslint-disable-next-line no-unused-vars -- Solid resolves this identifier from use:cleanupWitness.
-	const cleanupWitness = (node: HTMLDivElement) => {
-		const witness = document.createElement('output');
-		witness.dataset.compositionCleanup = '';
-		witness.textContent = 'attached';
-		document.body.append(witness);
-		node.dataset.attached = 'true';
-		onCleanup(() => {
-			if (!props.omitCleanup) witness.textContent = 'cleaned';
-		});
+	const cleanupWitness = (node: HTMLElement, input: Accessor<string>) => {
+		externalWitness = document.createElement('section');
+		externalWitness.dataset.compositionWitness = '';
+		externalWitness.innerHTML =
+			'<output data-composition-cleanup></output><output data-behavior-log></output>';
+		document.body.append(externalWitness);
+		const sync = (selector: string, text: string) => {
+			const local = node.querySelector(selector);
+			const external = externalWitness?.querySelector(selector);
+			if (local) local.textContent = text;
+			if (external) external.textContent = text;
+		};
+		const syncLog = () => sync('[data-behavior-log]', events.join('|'));
+		const install = (value: string) => {
+			sync('[data-composition-cleanup]', variant === 'early-write' ? 'cleaned' : 'attached');
+			events.push(`install:A:${value}`, `install:B:${value}`);
+			syncLog();
+			onCleanup(() => {
+				if (variant === 'omit-cleanup') return;
+				const cleanupOrder = variant === 'cleanup-order' ? ['A', 'B'] : ['B', 'A'];
+				for (const behavior of cleanupOrder) events.push(`cleanup:${behavior}:${value}`);
+				syncLog();
+				sync('[data-composition-cleanup]', 'cleaned');
+			});
+		};
+		if (variant === 'reinstall-omit') {
+			install(untrack(input));
+			return;
+		}
+		createEffect(() => install(input()));
 	};
-	return <div data-cleanup-host use:cleanupWitness={true} />;
+	return (
+		<section data-composition-witness use:cleanupWitness={behaviorInput()}>
+			<output data-composition-cleanup />
+			<output data-behavior-log />
+			<button data-action="change-behavior-input" onClick={() => setBehaviorInput('two')}>
+				Change behavior input
+			</button>
+		</section>
+	);
 }
 
 export const solidCompositionReferences: Record<string, () => JSX.Element> = {
@@ -230,6 +316,8 @@ export function makeSolidCompositionMutant(mutant: SolidCompositionMutant): () =
 			return () => <SlotPage variant="omit" />;
 		case 'M-SLOT-DUP':
 			return () => <SlotPage variant="duplicate" />;
+		case 'M-SLOT-WRAPPER':
+			return () => <SlotPage variant="wrapper" />;
 		case 'M-SHARED-DESYNC':
 			return () => <SharedPage variant="desync" />;
 		case 'M-SHARED-STALE':
@@ -237,7 +325,15 @@ export function makeSolidCompositionMutant(mutant: SolidCompositionMutant): () =
 		case 'M-REF-FOCUS-OMIT':
 			return () => <FocusPage omitFocus />;
 		case 'M-ATTACH-CLEANUP-OMIT':
-			return () => <CleanupPage omitCleanup />;
+			return () => <CleanupPage variant="omit-cleanup" />;
+		case 'M-CLEANUP-EARLY-WRITE':
+			return () => <CleanupPage variant="early-write" />;
+		case 'M-REINSTALL-OMIT':
+			return () => <CleanupPage variant="reinstall-omit" />;
+		case 'M-CLEANUP-ORDER':
+			return () => <CleanupPage variant="cleanup-order" />;
+		case 'M-HANDLE-CLEAR-OMIT':
+			return () => <FocusPage omitClear />;
 		case 'M-METHOD-ORDER':
 			return () => <SharedPage variant="method-order" />;
 		case 'M-SHARED-TEAR':

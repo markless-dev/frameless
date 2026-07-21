@@ -1,7 +1,6 @@
 import {
 	createContext,
 	type ReactNode,
-	type RefObject,
 	useCallback,
 	useContext,
 	useRef,
@@ -12,10 +11,15 @@ import {
 export type ReactCompositionMutant =
 	| 'M-SLOT-OMIT'
 	| 'M-SLOT-DUP'
+	| 'M-SLOT-WRAPPER'
 	| 'M-SHARED-DESYNC'
 	| 'M-SHARED-STALE'
 	| 'M-REF-FOCUS-OMIT'
 	| 'M-ATTACH-CLEANUP-OMIT'
+	| 'M-CLEANUP-EARLY-WRITE'
+	| 'M-REINSTALL-OMIT'
+	| 'M-CLEANUP-ORDER'
+	| 'M-HANDLE-CLEAR-OMIT'
 	| 'M-METHOD-ORDER'
 	| 'M-SHARED-TEAR';
 
@@ -132,11 +136,15 @@ function Frame({ children }: { children: ReactNode }) {
 	return <section data-frame>{children}</section>;
 }
 
-function SlotPage({ variant = 'reference' }: { variant?: 'reference' | 'omit' | 'duplicate' }) {
+function SlotPage({
+	variant = 'reference',
+}: {
+	variant?: 'reference' | 'omit' | 'duplicate' | 'wrapper';
+}) {
 	const projected = <strong data-projected-node>Projected composition</strong>;
 	return (
 		<Frame>
-			{variant !== 'omit' && projected}
+			{variant !== 'omit' && (variant === 'wrapper' ? <div>{projected}</div> : projected)}
 			{variant === 'duplicate' && projected}
 		</Frame>
 	);
@@ -213,15 +221,57 @@ function SharedPage({ variant = 'reference' }: { variant?: StoreVariant | 'desyn
 	);
 }
 
-function FocusField({ inputRef }: { inputRef: RefObject<HTMLInputElement | null> }) {
-	return <input data-focus-target ref={inputRef} />;
+function FocusField({
+	input,
+	omitClear = false,
+}: {
+	input: (node: HTMLInputElement | undefined) => void;
+	omitClear?: boolean;
+}) {
+	return (
+		<input
+			data-focus-target
+			ref={(node) => {
+				input(node);
+				return () => {
+					if (!omitClear) input(undefined);
+				};
+			}}
+		/>
+	);
 }
 
-function FocusPage({ omitFocus = false }: { omitFocus?: boolean }) {
+function FocusPage({
+	omitFocus = false,
+	omitClear = false,
+}: {
+	omitFocus?: boolean;
+	omitClear?: boolean;
+}) {
 	const input = useRef<HTMLInputElement>(null);
+	const localState = useRef<HTMLOutputElement | null>(null);
+	const externalWitness = useRef<HTMLElement | null>(null);
+	const setInput = (node: HTMLInputElement | undefined) => {
+		input.current = node ?? null;
+		if (node) {
+			localState.current = node.parentElement?.querySelector('[data-handle-state]') ?? null;
+			if (!externalWitness.current) {
+				const witness = document.createElement('section');
+				witness.dataset.handleWitness = '';
+				witness.innerHTML = '<output data-handle-state></output>';
+				document.body.append(witness);
+				externalWitness.current = witness;
+			}
+		}
+		const state = node ? 'set' : 'cleared';
+		if (localState.current) localState.current.textContent = state;
+		const externalState = externalWitness.current?.querySelector('[data-handle-state]');
+		if (externalState) externalState.textContent = state;
+	};
 	return (
-		<>
-			<FocusField inputRef={input} />
+		<section data-handle-witness>
+			<output data-handle-state />
+			<FocusField input={setInput} omitClear={omitClear} />
 			<button
 				data-action="focus-composed"
 				onClick={() => {
@@ -230,25 +280,62 @@ function FocusPage({ omitFocus = false }: { omitFocus?: boolean }) {
 			>
 				Focus
 			</button>
-		</>
+		</section>
 	);
 }
 
-function CleanupPage({ omitCleanup = false }: { omitCleanup?: boolean }) {
+type CleanupVariant =
+	| 'reference'
+	| 'omit-cleanup'
+	| 'early-write'
+	| 'reinstall-omit'
+	| 'cleanup-order';
+
+function CleanupPage({ variant = 'reference' }: { variant?: CleanupVariant }) {
+	const [behaviorInput, setBehaviorInput] = useState('one');
+	const events = useRef<string[]>([]);
+	const externalWitness = useRef<HTMLElement | null>(null);
 	const attachCleanupWitness = useCallback(
-		(node: HTMLDivElement) => {
-			const witness = document.createElement('output');
-			witness.dataset.compositionCleanup = '';
-			witness.textContent = 'attached';
-			document.body.append(witness);
-			node.dataset.attached = 'true';
+		(node: HTMLElement) => {
+			if (!externalWitness.current) {
+				const witness = document.createElement('section');
+				witness.dataset.compositionWitness = '';
+				witness.innerHTML =
+					'<output data-composition-cleanup></output><output data-behavior-log></output>';
+				document.body.append(witness);
+				externalWitness.current = witness;
+			}
+			const sync = (selector: string, text: string) => {
+				const local = node.querySelector(selector);
+				const external = externalWitness.current?.querySelector(selector);
+				if (local) local.textContent = text;
+				if (external) external.textContent = text;
+			};
+			const syncLog = () => sync('[data-behavior-log]', events.current.join('|'));
+			sync('[data-composition-cleanup]', variant === 'early-write' ? 'cleaned' : 'attached');
+			events.current.push(`install:A:${behaviorInput}`, `install:B:${behaviorInput}`);
+			syncLog();
 			return () => {
-				if (!omitCleanup) witness.textContent = 'cleaned';
+				if (variant === 'omit-cleanup') return;
+				const cleanupOrder = variant === 'cleanup-order' ? ['A', 'B'] : ['B', 'A'];
+				for (const behavior of cleanupOrder) {
+					events.current.push(`cleanup:${behavior}:${behaviorInput}`);
+				}
+				syncLog();
+				sync('[data-composition-cleanup]', 'cleaned');
 			};
 		},
-		[omitCleanup],
+		[variant === 'reinstall-omit' ? null : behaviorInput, variant],
 	);
-	return <div data-cleanup-host ref={attachCleanupWitness} />;
+	return (
+		<section data-composition-witness ref={attachCleanupWitness}>
+			<output data-composition-cleanup />
+			<output data-behavior-log />
+			<button data-action="change-behavior-input" onClick={() => setBehaviorInput('two')}>
+				Change behavior input
+			</button>
+		</section>
+	);
 }
 
 export const reactCompositionReferences: Record<string, () => ReactNode> = {
@@ -264,6 +351,8 @@ export function makeReactCompositionMutant(mutant: ReactCompositionMutant): () =
 			return () => <SlotPage variant="omit" />;
 		case 'M-SLOT-DUP':
 			return () => <SlotPage variant="duplicate" />;
+		case 'M-SLOT-WRAPPER':
+			return () => <SlotPage variant="wrapper" />;
 		case 'M-SHARED-DESYNC':
 			return () => <SharedPage variant="desync" />;
 		case 'M-SHARED-STALE':
@@ -271,7 +360,15 @@ export function makeReactCompositionMutant(mutant: ReactCompositionMutant): () =
 		case 'M-REF-FOCUS-OMIT':
 			return () => <FocusPage omitFocus />;
 		case 'M-ATTACH-CLEANUP-OMIT':
-			return () => <CleanupPage omitCleanup />;
+			return () => <CleanupPage variant="omit-cleanup" />;
+		case 'M-CLEANUP-EARLY-WRITE':
+			return () => <CleanupPage variant="early-write" />;
+		case 'M-REINSTALL-OMIT':
+			return () => <CleanupPage variant="reinstall-omit" />;
+		case 'M-CLEANUP-ORDER':
+			return () => <CleanupPage variant="cleanup-order" />;
+		case 'M-HANDLE-CLEAR-OMIT':
+			return () => <FocusPage omitClear />;
 		case 'M-METHOD-ORDER':
 			return () => <SharedPage variant="method-order" />;
 		case 'M-SHARED-TEAR':

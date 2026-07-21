@@ -264,6 +264,15 @@ function validateExpectationResult(value: unknown): value is ExpectationResult {
 	if (value.expectation.kind === 'dom-present') {
 		return Number.isInteger(value.observed) && (value.observed as number) >= 0;
 	}
+	if (value.expectation.kind === 'dom-path') {
+		return (
+			value.observed === null ||
+			(Array.isArray(value.observed) &&
+				value.observed.every(
+					(tag) => typeof tag === 'string' && /^[a-z][a-z0-9-]*$/.test(tag),
+				))
+		);
+	}
 	return (
 		isRecord(value.observed) &&
 		hasExactKeys(value.observed, ['focused', 'selection']) &&

@@ -15,7 +15,8 @@ import {
 	type ReactCompositionMutant,
 } from './composition-reference.tsx';
 
-const cleanupSelector = '[data-composition-cleanup]';
+const cleanupSelector = '[data-composition-witness]';
+const handleSelector = '[data-handle-witness]';
 const scenarioById = Object.fromEntries(
 	compositionScenarios.map((scenario) => [scenario.id, scenario]),
 );
@@ -36,6 +37,11 @@ const rejections: Rejection[] = [
 		mutant: 'M-SLOT-DUP',
 		scenario: 'C1-slot-rendering',
 		expectation: { kind: 'dom-present', phase: 'mount', selector: '[data-projected-node]' },
+	},
+	{
+		mutant: 'M-SLOT-WRAPPER',
+		scenario: 'C1-slot-rendering',
+		expectation: { kind: 'dom-path', phase: 'mount', selector: '[data-projected-node]' },
 	},
 	{
 		mutant: 'M-SHARED-DESYNC',
@@ -63,7 +69,43 @@ const rejections: Rejection[] = [
 	{
 		mutant: 'M-ATTACH-CLEANUP-OMIT',
 		scenario: 'C4-attach-cleanup',
-		expectation: { kind: 'dom-text', phase: 'unmount', selector: cleanupSelector },
+		expectation: {
+			kind: 'dom-text',
+			phase: 'unmount',
+			selector: '[data-composition-cleanup]',
+		},
+	},
+	{
+		mutant: 'M-CLEANUP-EARLY-WRITE',
+		scenario: 'C4-attach-cleanup',
+		expectation: {
+			kind: 'dom-text',
+			phase: 'mount',
+			selector: '[data-composition-cleanup]',
+		},
+	},
+	{
+		mutant: 'M-REINSTALL-OMIT',
+		scenario: 'C4-attach-cleanup',
+		expectation: {
+			kind: 'dom-text',
+			phase: 'action:0:after',
+			selector: '[data-behavior-log]',
+		},
+	},
+	{
+		mutant: 'M-CLEANUP-ORDER',
+		scenario: 'C4-attach-cleanup',
+		expectation: {
+			kind: 'dom-text',
+			phase: 'action:0:after',
+			selector: '[data-behavior-log]',
+		},
+	},
+	{
+		mutant: 'M-HANDLE-CLEAR-OMIT',
+		scenario: 'C3-ref-driven-focus',
+		expectation: { kind: 'dom-text', phase: 'unmount', selector: '[data-handle-state]' },
 	},
 	{
 		mutant: 'M-METHOD-ORDER',
@@ -86,12 +128,19 @@ const rejections: Rejection[] = [
 ];
 
 function removeCleanupWitnesses() {
-	document.querySelectorAll(cleanupSelector).forEach((node) => node.remove());
+	document
+		.querySelectorAll(`${cleanupSelector}, ${handleSelector}`)
+		.forEach((node) => node.remove());
 }
 
 async function runComposition(component: unknown, scenarioId: string) {
 	const scenario = scenarioById[scenarioId];
-	const witness = scenarioId === 'C4-attach-cleanup' ? { selector: cleanupSelector } : undefined;
+	const witness =
+		scenarioId === 'C4-attach-cleanup'
+			? { selector: cleanupSelector }
+			: scenarioId === 'C3-ref-driven-focus'
+				? { selector: handleSelector }
+				: undefined;
 	return runScenario(createReactAdapter(component as never), scenario, witness);
 }
 

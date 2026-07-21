@@ -51,7 +51,8 @@ export const scenarios: Scenario[] = [
 	},
 	{
 		id: 'S3-event-form',
-		purpose: 'live text/checkbox, callback payload/order, bubbling, cancellation, batched writes',
+		purpose:
+			'live text/checkbox, callback payload/order, bubbling, cancellation, batched writes',
 		initialProps: { initial: 'seed' },
 		actions: [
 			{ type: 'input', target: '[data-action="text"]', value: 'hello', selection: [2, 4] },
@@ -96,6 +97,12 @@ export const compositionScenarios: Scenario[] = [
 				phase: 'mount',
 				selector: '[data-projected-node]',
 				count: 1,
+			},
+			{
+				kind: 'dom-path',
+				phase: 'mount',
+				selector: '[data-projected-node]',
+				parentTags: ['section'],
 			},
 			{
 				kind: 'dom-text',
@@ -160,20 +167,57 @@ export const compositionScenarios: Scenario[] = [
 				phase: 'action:0:after',
 				selector: '[data-focus-target]',
 			},
+			{
+				kind: 'dom-text',
+				phase: 'unmount',
+				selector: '[data-handle-state]',
+				text: 'cleared',
+			},
 		],
 	},
 	{
 		id: 'C4-attach-cleanup',
-		purpose: 'host-owned attach cleanup observed outside the component host after unmount',
+		purpose:
+			'host-owned attach transition, dependency reinstall, and reverse cleanup order witnessed across update and unmount',
 		initialProps: {},
-		actions: [],
+		actions: [{ type: 'click', target: '[data-action="change-behavior-input"]' }],
 		expectedCallbacks: [],
 		expectations: [
+			{
+				kind: 'dom-text',
+				phase: 'mount',
+				selector: '[data-composition-cleanup]',
+				text: 'attached',
+			},
+			{
+				kind: 'dom-text',
+				phase: 'mount',
+				selector: '[data-behavior-log]',
+				text: 'install:A:one|install:B:one',
+			},
+			{
+				kind: 'dom-text',
+				phase: 'action:0:after',
+				selector: '[data-composition-cleanup]',
+				text: 'attached',
+			},
+			{
+				kind: 'dom-text',
+				phase: 'action:0:after',
+				selector: '[data-behavior-log]',
+				text: 'install:A:one|install:B:one|cleanup:B:one|cleanup:A:one|install:A:two|install:B:two',
+			},
 			{
 				kind: 'dom-text',
 				phase: 'unmount',
 				selector: '[data-composition-cleanup]',
 				text: 'cleaned',
+			},
+			{
+				kind: 'dom-text',
+				phase: 'unmount',
+				selector: '[data-behavior-log]',
+				text: 'install:A:one|install:B:one|cleanup:B:one|cleanup:A:one|install:A:two|install:B:two|cleanup:B:two|cleanup:A:two',
 			},
 		],
 	},

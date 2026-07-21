@@ -78,6 +78,18 @@ export function assertValidExpectation(value: unknown): asserts value is Expecta
 		}
 		return;
 	}
+	if (value.kind === 'dom-path') {
+		if (
+			!exactKeys(value, ['kind', 'phase', 'selector', 'parentTags']) ||
+			!Array.isArray(value.parentTags) ||
+			!value.parentTags.every(
+				(tag) => typeof tag === 'string' && /^[a-z][a-z0-9-]*$/.test(tag),
+			)
+		) {
+			throw new Error('dom-path expectation is malformed');
+		}
+		return;
+	}
 	if (value.kind === 'focus') {
 		if (
 			!exactKeys(
@@ -94,11 +106,19 @@ export function assertValidExpectation(value: unknown): asserts value is Expecta
 	throw new Error(`Expectation kind is unsupported: ${String(value.kind)}`);
 }
 
-function elements(nodes: readonly SerializedNode[]): SerializedNode[] {
-	const found: SerializedNode[] = [];
+type SerializedElement = { node: SerializedNode; parentTags: string[] };
+
+function elements(
+	nodes: readonly SerializedNode[],
+	parentTags: readonly string[] = [],
+): SerializedElement[] {
+	const found: SerializedElement[] = [];
 	for (const node of nodes) {
 		if (node.nodeType !== 'element') continue;
-		found.push(node, ...elements(node.children ?? []));
+		found.push(
+			{ node, parentTags: [...parentTags] },
+			...elements(node.children ?? [], [...parentTags, node.tag ?? '']),
+		);
 	}
 	return found;
 }
@@ -121,15 +141,33 @@ export function evaluateExpectations(
 	trace: RunTrace,
 	expectations: readonly Expectation[],
 ): ExpectationResult[] {
+	const phases = new Set(trace.observations.map(({ phase }) => phase));
 	return expectations.map((expectation) => {
 		assertValidExpectation(expectation);
+		if (!phases.has(expectation.phase)) {
+			if (expectation.kind === 'dom-text') {
+				return { expectation, phase: expectation.phase, outcome: 'fail', observed: null };
+			}
+			if (expectation.kind === 'dom-present') {
+				return { expectation, phase: expectation.phase, outcome: 'fail', observed: 0 };
+			}
+			if (expectation.kind === 'dom-path') {
+				return { expectation, phase: expectation.phase, outcome: 'fail', observed: null };
+			}
+			return {
+				expectation,
+				phase: expectation.phase,
+				outcome: 'fail',
+				observed: { focused: false, selection: null },
+			};
+		}
 		const selector = parseSelector(expectation.selector);
 		const observation = trace.observations.find(({ phase }) => phase === expectation.phase);
 		const selected = observation
-			? elements(observation.dom).filter((node) => matches(node, selector))
+			? elements(observation.dom).filter(({ node }) => matches(node, selector))
 			: [];
 		if (expectation.kind === 'dom-text') {
-			const observed = selected[0] ? textContent(selected[0]) : null;
+			const observed = selected[0] ? textContent(selected[0].node) : null;
 			return observed === expectation.text
 				? { expectation, phase: expectation.phase, outcome: 'pass' }
 				: { expectation, phase: expectation.phase, outcome: 'fail', observed };
@@ -144,7 +182,19 @@ export function evaluateExpectations(
 						observed: selected.length,
 					};
 		}
-		const focused = selected.some(({ nodeId }) => nodeId === observation?.focus?.nodeId);
+		if (expectation.kind === 'dom-path') {
+			const observed = selected[0]?.parentTags ?? null;
+			const matchesPath =
+				observed !== null &&
+				observed.length === expectation.parentTags.length &&
+				observed.every((tag, index) => tag === expectation.parentTags[index]);
+			return matchesPath
+				? { expectation, phase: expectation.phase, outcome: 'pass' }
+				: { expectation, phase: expectation.phase, outcome: 'fail', observed };
+		}
+		const focused = selected.some(
+			({ node: { nodeId } }) => nodeId === observation?.focus?.nodeId,
+		);
 		const observed = { focused, selection: observation?.focus?.selection ?? null };
 		const selectionMatches =
 			expectation.selection === undefined ||
