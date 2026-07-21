@@ -57,8 +57,14 @@ describe('frameless-enriched-ir/2 composition contracts', () => {
 			name: 'useCounter',
 			scope: 'request',
 			cells: [
-				{ name: 'count', initializer: { type: 'Literal', value: 0 } },
-				{ name: 'status', initializer: { type: 'Literal', value: 'ready' } },
+				{ kind: 'state', name: 'count', initializer: { type: 'Literal', value: 0 } },
+				{ kind: 'state', name: 'status', initializer: { type: 'Literal', value: 'ready' } },
+				{
+					kind: 'computed',
+					name: 'total',
+					expression: { type: 'ArrowFunctionExpression' },
+					dependencies: [expect.stringContaining('state:count')],
+				},
 			],
 			methods: [
 				{
@@ -71,6 +77,9 @@ describe('frameless-enriched-ir/2 composition contracts', () => {
 				},
 			],
 		});
+		const computedCell = ir.records.sharedDefinitions[0]!.cells[2]!;
+		expect(computedCell).not.toHaveProperty('valueKind');
+		expect(computedCell).not.toHaveProperty('initializer');
 	});
 
 	test('fails closed when a shared cell initializer has no authored argument AST', async () => {
@@ -83,6 +92,17 @@ describe('frameless-enriched-ir/2 composition contracts', () => {
 				source,
 			}),
 		).rejects.toThrow(/cell value has no mappable state initializer AST/);
+	});
+
+	test('fails closed when a computed shared cell expression is uncapturable', async () => {
+		const source = `import { computed, shared } from "@markless/core";
+			export const useValue = shared(() => { const total = computed(); return { total }; });
+			export function Reader() @{ const sharedValue = useValue(); <output>{sharedValue.total}</output> }`;
+		await expect(
+			buildEnrichedIr({ filename: 'src/shared-missing-computed-expression.tsrx', source }),
+		).rejects.toThrow(
+			'Shared definition shared:src/shared-missing-computed-expression.tsrx#useValue cell total has no mappable computed expression AST.',
+		);
 	});
 
 	test('fails closed when a shared factory has no declarator binding', async () => {
@@ -111,6 +131,7 @@ describe('frameless-enriched-ir/2 composition contracts', () => {
 		const ir = await fixture('composition-handles');
 		expect(ir.records.elementHandleBindings).toHaveLength(1);
 		expect(ir.records.behaviors).toHaveLength(1);
+		expect(ir.records.behaviors[0]!.returnsCleanup).toBe(true);
 		expect(ir.records.handleCalls).toHaveLength(1);
 		expect(ir.records.handleCalls[0]).toMatchObject({
 			method: 'focus',
@@ -123,6 +144,58 @@ describe('frameless-enriched-ir/2 composition contracts', () => {
 		expect(
 			ir.components.flatMap((component) => JSON.stringify(component.template)),
 		).not.toContain('"name":"attach"');
+	});
+
+	test('links a parent-owned handle through a same-module component edge to the child host', async () => {
+		const source = `import { element } from "@markless/core";
+			function Child(props) @{ <input el={props.input} /> }
+			export function Parent() @{
+				const input = element<HTMLInputElement>();
+				<Child input={input} />
+			}`;
+		const ir = await buildEnrichedIr({ filename: 'src/forward-handle.tsrx', source });
+		const parent = ir.components.find((component) => component.name === 'Parent')!;
+		const child = ir.components.find((component) => component.name === 'Child')!;
+		const forwarded = ir.records.handleForwards[0]!;
+		expect(ir.records.handleForwards).toHaveLength(1);
+		expect(forwarded).toEqual({
+			handleBindingId: expect.any(String),
+			edgeId: 'component-edge:0',
+			childComponentId: child.id,
+			childHostNodeId: 'h0',
+		});
+		expect(ir.records.elementHandleBindings).toContainEqual(
+			expect.objectContaining({
+				id: forwarded.handleBindingId,
+				handleName: 'input',
+				componentId: parent.id,
+				hostNodeId: 'h0',
+			}),
+		);
+	});
+
+	test('fails closed when a forwarded handle edge has no resolvable child host binding', async () => {
+		const source = `import { element } from "@markless/core";
+			function Child() @{ <input /> }
+			export function Parent() @{
+				const input = element<HTMLInputElement>();
+				<Child input={input} />
+			}`;
+		await expect(
+			buildEnrichedIr({ filename: 'src/unresolved-forward-handle.tsrx', source }),
+		).rejects.toThrow(
+			'Forwarded element handle on component-edge:0 cannot resolve exactly one parent binding and child host.',
+		);
+	});
+
+	test('rejects non-literal attach expressions with the v1 trim diagnostic', async () => {
+		const source = `const install = (node) => { node.dataset.ready = "yes"; };
+			export function Search() @{ <input attach={install} /> }`;
+		await expect(
+			buildEnrichedIr({ filename: 'src/non-literal-attach.tsrx', source }),
+		).rejects.toThrow(
+			'Attach construct on h0 is outside the v1 literal-attach trim: attach expressions must be literal functions or arrows.',
+		);
 	});
 
 	test('lowers component references with preserved children and default projections', async () => {

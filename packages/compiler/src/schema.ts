@@ -323,12 +323,21 @@ export interface EnrichedEventRecord {
 	readonly handlers: ReadonlyArray<EventHandlerRecord>;
 }
 
-export interface SharedDefinitionCell {
-	readonly name: string;
-	readonly graphNodeId: string;
-	readonly valueKind: GraphValueKind;
-	readonly initializer: SerializableAstNode;
-}
+export type SharedDefinitionCell =
+	| {
+			readonly kind: 'state';
+			readonly name: string;
+			readonly graphNodeId: string;
+			readonly valueKind: GraphValueKind;
+			readonly initializer: SerializableAstNode;
+	  }
+	| {
+			readonly kind: 'computed';
+			readonly name: string;
+			readonly graphNodeId: string;
+			readonly expression: SerializableAstNode;
+			readonly dependencies: ReadonlyArray<string>;
+	  };
 
 export interface SharedDefinitionMethod {
 	readonly name: string;
@@ -415,6 +424,13 @@ export interface ElementHandleBinding {
 	readonly hostNodeId: string;
 }
 
+export interface HandleForwardRecord {
+	readonly handleBindingId: string;
+	readonly edgeId: string;
+	readonly childComponentId: string;
+	readonly childHostNodeId: string;
+}
+
 export interface BehaviorRecord {
 	readonly id: string;
 	readonly hostNodeId: string;
@@ -449,6 +465,7 @@ export interface EnrichedRecordTable {
 	readonly sharedCalls: ReadonlyArray<SharedCall>;
 	readonly sharedWrites: ReadonlyArray<SharedWrite>;
 	readonly elementHandleBindings: ReadonlyArray<ElementHandleBinding>;
+	readonly handleForwards: ReadonlyArray<HandleForwardRecord>;
 	readonly behaviors: ReadonlyArray<BehaviorRecord>;
 	readonly handleCalls: ReadonlyArray<HandleCallRecord>;
 }

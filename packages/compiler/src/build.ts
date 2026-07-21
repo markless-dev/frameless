@@ -21,6 +21,7 @@ import {
 	type ExpressionSite,
 	type GraphReadRef,
 	type GuardResult,
+	type HandleForwardRecord,
 	type JsonValue,
 	type HandleCallRecord,
 	type LocalDeclaration,
@@ -375,7 +376,7 @@ async function buildEnrichedIrArtifact({
 		sharedProperties,
 	);
 	const sharedCalls = buildSharedCalls(semanticGraph, events, sharedInstances, components);
-	const elementHandleBindings = buildElementHandleBindings(
+	const { elementHandleBindings, handleForwards } = buildElementHandleRecords(
 		semanticGraph,
 		components,
 		templateContext.hostOwners,
@@ -394,6 +395,7 @@ async function buildEnrichedIrArtifact({
 		sharedCalls,
 		sharedWrites,
 		elementHandleBindings,
+		handleForwards,
 		behaviors,
 		handleCalls,
 	};
@@ -662,6 +664,11 @@ export function buildTemplateNode(
 				if (attribute.value?.type !== 'JSXExpressionContainer') {
 					throw new Error(
 						`Behavior attach on ${semanticHost.id} must contain an expression.`,
+					);
+				}
+				if (!isFunctionNode(attribute.value.expression)) {
+					throw new Error(
+						`Attach construct on ${semanticHost.id} is outside the v1 literal-attach trim: attach expressions must be literal functions or arrows.`,
 					);
 				}
 				assertNoInlineSharedFactoryCall(
@@ -1447,28 +1454,73 @@ function buildSharedDefinitions(
 		const graphBindings = graph.graphBindings.filter(
 			(binding) => binding.sharedDefinitionId === definition.id,
 		);
-		const cells = (definition.returnProperties ?? [])
-			.filter((property) => property.kind === 'graph')
-			.map((property) => {
-				const binding = graphBindings.find(
-					(candidate) => candidate.id === property.graphNodeId,
+		const cellProperties = (definition.returnProperties ?? []).filter(
+			(property) => property.kind === 'graph',
+		);
+		const cellIds = new Set(cellProperties.map((property) => property.graphNodeId));
+		const cells = cellProperties.map((property) => {
+			const binding = graphBindings.find(
+				(candidate) => candidate.id === property.graphNodeId,
+			);
+			if (!binding)
+				throw new Error(
+					`Shared definition ${definition.id} cell ${property.name} has no graph binding.`,
 				);
-				if (!binding?.valueKind)
+			if (binding.kind === 'state') {
+				if (!binding.valueKind)
 					throw new Error(
-						`Shared definition ${definition.id} cell ${property.name} has no valueKind.`,
+						`Shared definition ${definition.id} state cell ${property.name} has no valueKind.`,
 					);
 				return {
+					kind: 'state' as const,
 					name: property.name,
 					graphNodeId: property.graphNodeId,
 					valueKind: binding.valueKind,
-					initializer: sharedBindingInitializer(
+					initializer: sharedBindingArgument(
 						definition.id,
 						binding.name,
 						binding.kind,
 						declarator.factory,
 					),
 				};
-			});
+			}
+			if (binding.kind === 'computed') {
+				if (!Array.isArray(binding.dependencies))
+					throw new Error(
+						`Shared definition ${definition.id} computed cell ${property.name} has uncapturable dependencies.`,
+					);
+				const dependencies = binding.dependencies.map((dependency) => {
+					if (
+						typeof dependency.graphNodeId !== 'string' ||
+						!cellIds.has(dependency.graphNodeId)
+					)
+						throw new Error(
+							`Shared definition ${definition.id} computed cell ${property.name} has uncapturable dependency ${dependency.source}.`,
+						);
+					return dependency.graphNodeId;
+				});
+				const expression = sharedBindingArgument(
+					definition.id,
+					binding.name,
+					binding.kind,
+					declarator.factory,
+				);
+				if (!isFunctionNode(expression as AnyNode))
+					throw new Error(
+						`Shared definition ${definition.id} computed cell ${property.name} has no mappable expression AST.`,
+					);
+				return {
+					kind: 'computed' as const,
+					name: property.name,
+					graphNodeId: property.graphNodeId,
+					expression,
+					dependencies,
+				};
+			}
+			throw new Error(
+				`Shared definition ${definition.id} cell ${property.name} has unsupported binding kind ${binding.kind}.`,
+			);
+		});
 		const methods = (definition.returnProperties ?? [])
 			.filter((property) => property.kind === 'method')
 			.map((property) => {
@@ -1570,7 +1622,7 @@ function findSharedFactoryDeclarators(
 	return output;
 }
 
-function sharedBindingInitializer(
+function sharedBindingArgument(
 	definitionId: string,
 	bindingName: string,
 	bindingKind: string,
@@ -1593,8 +1645,9 @@ function sharedBindingInitializer(
 		});
 	}
 	if (candidates.length !== 1) {
+		const capturedConstruct = bindingKind === 'computed' ? 'expression' : 'initializer';
 		throw new Error(
-			`Shared definition ${definitionId} cell ${bindingName} has no mappable ${bindingKind} initializer AST.`,
+			`Shared definition ${definitionId} cell ${bindingName} has no mappable ${bindingKind} ${capturedConstruct} AST.`,
 		);
 	}
 	return serializeAst(candidates[0]!);
@@ -1785,12 +1838,15 @@ function buildSharedWrites(program: AnyNode, graph: SemanticGraphArtifact): Shar
 		});
 }
 
-function buildElementHandleBindings(
+function buildElementHandleRecords(
 	graph: SemanticGraphArtifact,
 	components: readonly ComponentWork[],
 	hostOwners: ReadonlyMap<string, string>,
-): ElementHandleBinding[] {
-	return graph.elementHandleBindings.map((binding) => {
+): {
+	readonly elementHandleBindings: ElementHandleBinding[];
+	readonly handleForwards: HandleForwardRecord[];
+} {
+	const elementHandleBindings = graph.elementHandleBindings.map((binding) => {
 		const componentId = ownerForHostLinked(
 			'Element handle binding',
 			binding.hostNodeId,
@@ -1821,6 +1877,61 @@ function buildElementHandleBindings(
 			hostNodeId: binding.hostNodeId,
 		};
 	});
+	const handleForwards: HandleForwardRecord[] = [];
+	for (const edge of graph.componentEdges) {
+		for (const prop of edge.props) {
+			if (prop.kind !== 'graph-reference' || prop.graphBindingKind !== 'element') continue;
+			const parent = components.filter(
+				(component) => component.name === edge.parentComponentName,
+			);
+			const child = components.filter(
+				(component) => component.name === edge.childComponentName,
+			);
+			const graphBinding = graph.graphBindings.filter(
+				(binding) => binding.id === prop.graphNodeId && binding.kind === 'element',
+			);
+			const childBindings = graph.elementHandleBindings.filter(
+				(binding) =>
+					binding.componentName === edge.childComponentName &&
+					binding.handleName.split('.').at(-1) === prop.name,
+			);
+			if (
+				parent.length !== 1 ||
+				child.length !== 1 ||
+				graphBinding.length !== 1 ||
+				childBindings.length !== 1
+			) {
+				throw new Error(
+					`Forwarded element handle on ${edge.id} cannot resolve exactly one parent binding and child host.`,
+				);
+			}
+			const childBinding = childBindings[0]!;
+			if (hostOwners.get(childBinding.hostNodeId) !== child[0]!.id) {
+				throw new Error(
+					`Forwarded element handle on ${edge.id} child host ownership is unresolved.`,
+				);
+			}
+			const id = `element-handle:${childBinding.hostNodeId}:${graphBinding[0]!.name}`;
+			if (elementHandleBindings.some((binding) => binding.id === id)) {
+				throw new Error(
+					`Forwarded element handle on ${edge.id} collides with an existing handle binding.`,
+				);
+			}
+			elementHandleBindings.push({
+				id,
+				handleName: graphBinding[0]!.name,
+				componentId: parent[0]!.id,
+				hostNodeId: childBinding.hostNodeId,
+			});
+			handleForwards.push({
+				handleBindingId: id,
+				edgeId: edge.id,
+				childComponentId: child[0]!.id,
+				childHostNodeId: childBinding.hostNodeId,
+			});
+		}
+	}
+	return { elementHandleBindings, handleForwards };
 }
 
 function buildBehaviors(graph: SemanticGraphArtifact, context: TemplateContext): BehaviorRecord[] {
@@ -1956,11 +2067,24 @@ function unwrapCall(node: AnyNode): AnyNode | undefined {
 }
 
 function functionReturnsCleanup(node: AnyNode): boolean {
+	if (node.type === 'ArrowFunctionExpression' && isFunctionNode(node.body)) return true;
 	let returns = false;
-	walkAst(node.body ?? node, (candidate) => {
-		if (candidate.type === 'ReturnStatement' && isFunctionNode(candidate.argument))
+	const visit = (candidate: AnyNode | null | undefined): void => {
+		if (!candidate || returns) return;
+		if (candidate !== node && isFunctionNode(candidate)) return;
+		if (candidate.type === 'ReturnStatement' && isFunctionNode(candidate.argument)) {
 			returns = true;
-	});
+			return;
+		}
+		for (const [key, value] of Object.entries(candidate)) {
+			if (OMITTED_AST_KEYS.has(key) || key === 'type' || key === 'start' || key === 'end')
+				continue;
+			if (Array.isArray(value)) {
+				for (const child of value) if (isNode(child)) visit(child);
+			} else if (isNode(value)) visit(value);
+		}
+	};
+	visit(node);
 	return returns;
 }
 

@@ -469,9 +469,10 @@ describe('React structural emitter', () => {
 			);
 		});
 
-		test('requires a structurally valid initializer on every shared cell', async () => {
+		test('enforces exact per-kind shared cell shapes', async () => {
 			const ir = clone(await golden('s1-render-once.json')) as any;
 			const cell = {
+				kind: 'state',
 				name: 'count',
 				graphNodeId: 'shared:counter/state:count',
 				valueKind: 'scalar',
@@ -496,11 +497,67 @@ describe('React structural emitter', () => {
 			expect(() => validateEnrichedIr(ir)).toThrow(/SharedDefinitionCell/);
 			ir.records.sharedDefinitions[0].cells = [{ ...cell, initializer: { value: 0 } }];
 			expect(() => validateEnrichedIr(ir)).toThrow(/SharedDefinitionCell initializer/);
+			const computed = {
+				kind: 'computed',
+				name: 'double',
+				graphNodeId: 'shared:counter/computed:double',
+				expression: {
+					type: 'ArrowFunctionExpression',
+					params: [],
+					body: { type: 'Identifier', name: 'count' },
+				},
+				dependencies: [cell.graphNodeId],
+			};
+			ir.records.sharedDefinitions[0].graphBindings.push(computed.graphNodeId);
+			ir.records.sharedDefinitions[0].cells = [cell, computed];
+			expect(() => validateEnrichedIr(ir)).toThrow(
+				/SharedDefinition cannot be lowered.*React composition package/,
+			);
+			ir.records.sharedDefinitions[0].cells = [
+				{ ...computed, dependencies: ['shared:counter/state:missing'] },
+			];
+			expect(() => validateEnrichedIr(ir)).toThrow(
+				/SharedDefinitionCell has malformed construct/,
+			);
+			ir.records.sharedDefinitions[0].cells = [{ ...computed, valueKind: 'scalar' }];
+			expect(() => validateEnrichedIr(ir)).toThrow(
+				/SharedDefinitionCell has unknown semantic field/,
+			);
 			ir.records.sharedDefinitions[0].cells = [cell];
 			ir.records.sharedDefinitions[0].methods = [
 				{ name: 'increment', site: { type: 'Property' } },
 			];
 			expect(() => validateEnrichedIr(ir)).toThrow(/SharedDefinitionMethod/);
+		});
+
+		test('requires structurally valid and resolving handle-forward records', async () => {
+			const ir = clone(await golden('s1-render-once.json')) as any;
+			const componentId = ir.components[0].id;
+			const binding = {
+				id: 'element-handle:h0:input',
+				handleName: 'input',
+				componentId,
+				hostNodeId: 'h0',
+			};
+			const forward = {
+				handleBindingId: binding.id,
+				edgeId: 'component-edge:0',
+				childComponentId: componentId,
+				childHostNodeId: 'h0',
+			};
+			ir.records.elementHandleBindings = [binding];
+			ir.records.handleForwards = [forward];
+			expect(() => validateEnrichedIr(ir)).toThrow(
+				/cannot be lowered.*React composition package/,
+			);
+			ir.records.handleForwards = [{ ...forward, handleBindingId: 'element-handle:missing' }];
+			expect(() => validateEnrichedIr(ir)).toThrow(
+				/HandleForwardRecord has dangling handleBindingId/,
+			);
+			ir.records.handleForwards = [{ ...forward, childComponentId: 'component:missing' }];
+			expect(() => validateEnrichedIr(ir)).toThrow(
+				/HandleForwardRecord has dangling componentId/,
+			);
 		});
 
 		test.each([

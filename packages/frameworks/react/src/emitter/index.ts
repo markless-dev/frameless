@@ -189,6 +189,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		'sharedCalls',
 		'sharedWrites',
 		'elementHandleBindings',
+		'handleForwards',
 		'behaviors',
 		'handleCalls',
 	]);
@@ -204,6 +205,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		['sharedCalls', ir.records.sharedCalls],
 		['sharedWrites', ir.records.sharedWrites],
 		['elementHandleBindings', ir.records.elementHandleBindings],
+		['handleForwards', ir.records.handleForwards],
 		['behaviors', ir.records.behaviors],
 		['handleCalls', ir.records.handleCalls],
 	] as const)
@@ -792,14 +794,29 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		)
 			throw new Error('SharedDefinition has malformed construct');
 		for (const cell of definition.cells) {
-			keys('SharedDefinitionCell', cell, ['name', 'graphNodeId', 'valueKind', 'initializer']);
+			keys(
+				'SharedDefinitionCell',
+				cell,
+				cell.kind === 'state'
+					? ['kind', 'name', 'graphNodeId', 'valueKind', 'initializer']
+					: ['kind', 'name', 'graphNodeId', 'expression', 'dependencies'],
+			);
 			if (
 				typeof cell.name !== 'string' ||
 				typeof cell.graphNodeId !== 'string' ||
-				!['scalar', 'object', 'array', 'unknown'].includes(cell.valueKind)
+				(cell.kind === 'state'
+					? !['scalar', 'object', 'array', 'unknown'].includes(cell.valueKind)
+					: cell.kind !== 'computed' ||
+						!Array.isArray(cell.dependencies) ||
+						!cell.dependencies.every(
+							(dependency: unknown) =>
+								typeof dependency === 'string' &&
+								definition.graphBindings.includes(dependency),
+						))
 			)
 				throw new Error('SharedDefinitionCell has malformed construct');
-			ast('SharedDefinitionCell initializer', cell.initializer);
+			if (cell.kind === 'state') ast('SharedDefinitionCell initializer', cell.initializer);
+			else ast('SharedDefinitionCell expression', cell.expression);
 		}
 		for (const method of definition.methods) {
 			keys('SharedDefinitionMethod', method, ['name', 'site', 'writes']);
@@ -885,6 +902,32 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		)
 			throw new Error('ElementHandleBinding has malformed construct');
 	}
+	const handleBindingIds = new Set(ir.records.elementHandleBindings.map((binding) => binding.id));
+	for (const forward of ir.records.handleForwards) {
+		keys('HandleForwardRecord', forward, [
+			'handleBindingId',
+			'edgeId',
+			'childComponentId',
+			'childHostNodeId',
+		]);
+		if (
+			typeof forward.handleBindingId !== 'string' ||
+			typeof forward.edgeId !== 'string' ||
+			typeof forward.childComponentId !== 'string' ||
+			typeof forward.childHostNodeId !== 'string'
+		)
+			throw new Error('HandleForwardRecord has malformed construct');
+		if (!handleBindingIds.has(forward.handleBindingId))
+			throw new Error('HandleForwardRecord has dangling handleBindingId');
+		if (!componentIds.has(forward.childComponentId))
+			throw new Error('HandleForwardRecord has dangling componentId');
+		if (
+			ir.records.elementHandleBindings.find(
+				(binding) => binding.id === forward.handleBindingId,
+			)?.hostNodeId !== forward.childHostNodeId
+		)
+			throw new Error('HandleForwardRecord child host disagrees with its handle binding');
+	}
 	for (const behavior of ir.records.behaviors) {
 		keys('BehaviorRecord', behavior, [
 			'id',
@@ -943,6 +986,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		['SharedCall', ir.records.sharedCalls],
 		['SharedWrite', ir.records.sharedWrites],
 		['ElementHandleBinding', ir.records.elementHandleBindings],
+		['HandleForwardRecord', ir.records.handleForwards],
 		['BehaviorRecord', ir.records.behaviors],
 		['HandleCallRecord', ir.records.handleCalls],
 	] as const)

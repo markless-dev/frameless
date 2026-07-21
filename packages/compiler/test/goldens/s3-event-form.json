@@ -1491,6 +1491,7 @@
       }
     ],
     "handleCalls": [],
+    "handleForwards": [],
     "sharedCalls": [],
     "sharedDefinitions": [],
     "sharedInstances": [],
