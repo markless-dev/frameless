@@ -62,21 +62,37 @@ has cross-file imports, children, shared state, and element access with
 cleanup) into React 19 and Solid, runs them in a headless browser, and writes
 a report under each demo's `receipts/` folder.
 
-## Could AI Not Just Do This?
+## Why Not the Alternatives?
 
-An AI translation often looks right. Looks right is the problem: it is a
-guess, it changes every run, it can quietly change behavior, and someone has
-to review every file for every framework after every change.
+**Mitosis.** Mitosis compiles a restricted JSX dialect to many frameworks, and
+it supports more targets than Frameless does today. But it translates syntax,
+so every framework gets roughly the same lowest-common-denominator component,
+and its output is verified by snapshot tests: string comparisons, not
+behavior. Unsupported patterns can quietly produce wrong code. Frameless
+compiles a semantic record of what your component means, emits what each
+framework's own best practice calls for, rejects what it cannot prove, and
+verifies behavior in a real browser.
 
-Frameless works from a semantic record of what each component does, so the
-generators cannot misread your code. Same input, same output, style-checked,
-behavior proven in a browser, rerun in CI on every change.
+**AI-written outputs per framework.** An AI translation often looks right, and
+looks right is the problem: it is a guess, it changes every run, it can
+quietly change behavior, and someone has to review every file for every
+framework after every change. Frameless generators work from the semantic
+record, so they cannot misread your code. Same input, same output,
+style-checked, behavior proven, rerun in CI. The two work best together: let
+AI write your Frameless components (one small model to be good at, instead of
+five frameworks to be mediocre at) and let the compiler carry them everywhere
+with proof.
 
-The two work best together: let AI write your Frameless components (one small
-model to be good at, instead of five frameworks to be mediocre at) and let the
-compiler carry them everywhere with proof. And if you ever truly need to
-maintain a framework by hand, start from the compiled output. It is real,
-idiomatic code. Eject when you get there, not before.
+**Writing each framework by hand.** That is N times the work, N times the
+bugs, and drift between versions the moment one port gets a fix the others do
+not. If you ever truly need hand-maintained framework code, start from the
+compiled output. It is real, idiomatic code. Eject when you get there, not
+before.
+
+**Web components.** One runtime shared by every framework, but native to none
+of them: frameworks treat custom elements as foreigners, with friction around
+props, events, and SSR. Frameless goes the other way and emits code that is
+native to each framework.
 
 ## What It Does Not Do
 
