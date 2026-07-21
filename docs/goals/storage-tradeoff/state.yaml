@@ -68,7 +68,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/storage-tradeoff/"
     command: "npx goalbuddy board docs/goals/storage-tradeoff"
 
-active_task: T007
+active_task: null  # awaiting owner response to the refreshed suggestions (morning summary delivered); T999 queued
 
 tasks:
   - id: T001
@@ -134,10 +134,14 @@ tasks:
   - id: T007
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Fold both empirical halves into refreshed BEST SUGGESTIONS (owner-directed: suggestions only, no implementation, no ratification): re-weigh the four menu families against the adoption + corpus evidence, state what existing systems converged on and where they all fail identically (keys, consent, sync), and produce the morning owner summary — evidence-first, suggestions clearly labeled as suggestions."
-    receipt: null
+    receipt:
+      result: done
+      decision: approved
+      note: notes/T007-refreshed-suggestions.md
+      summary: "Suggestions refreshed with both empirical halves. Ordering changed with reasons: Option 4 (app-owned cells) DEMOTED — no mass-adopted instance exists and the corpus hand-rolls are its documented failure mode; Option 2 (build-config) RAISED to production-proven via @nuxtjs/color-mode. T004 synthesis (provider switch + honest persisted-cell semantic + plain-cell staging) strengthened on every leg (next-themes 24.5M/wk, ~11M/wk cell family, Qwik UI independent convergence, P3 upgrade framing matching observed practice); one labeled NEW amendment (build-level switch as the markless-native face of the same contract — flagged as highest decision-reading risk). Compiler-advantage statement tied to the four identical library failures (keys/consent/sync/flash) with the fumadocs delegate-path counter-option stated. Unknowns priced. Everything SUGGESTION; owner ratifies; T999 queued pending owner response."
   - id: T999
     type: judge
     assignee: Judge
