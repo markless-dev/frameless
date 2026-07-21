@@ -5,7 +5,14 @@ import type { GateViolation } from './index.ts';
 type Node = any;
 type Violate = (file: string, policy: string, message: string, node?: Node) => GateViolation;
 const EFFECT_HOOKS = new Set(['useEffect', 'useLayoutEffect', 'useInsertionEffect']);
-const REACT_IMPORT_ALLOWLIST = new Set(['useState', 'useRef']);
+const REACT_IMPORT_ALLOWLIST = new Set([
+	'createContext',
+	'useCallback',
+	'useContext',
+	'useRef',
+	'useState',
+	'useSyncExternalStore',
+]);
 const is = (node: unknown, type: string, properties?: Record<string, unknown>): boolean =>
 	Boolean(
 		node &&
@@ -195,8 +202,7 @@ export function customPolicies(
 			if (!is(object, 'ObjectExpression')) return null;
 			if (name != null) {
 				const property = object.properties.find(
-					(entry: Node) =>
-						is(entry, 'Property') && callablePropertyName(entry) === name,
+					(entry: Node) => is(entry, 'Property') && callablePropertyName(entry) === name,
 				);
 				return property ? resolveCallable(property.value, trail) : null;
 			}
@@ -498,6 +504,12 @@ export function customPolicies(
 				);
 		},
 		JSXExpressionContainer(node: Node) {
+			const attribute = module.parentOf(node);
+			if (
+				is(attribute, 'JSXAttribute') &&
+				is((attribute as Node).name, 'JSXIdentifier', { name: 'ref' })
+			)
+				return;
 			module.walk(
 				{
 					enter(child: Node, context: any) {
@@ -569,10 +581,14 @@ export function customPolicies(
 							);
 						if (hook === 'useState') {
 							const initial = call.arguments[0];
+							const initialOwner = is(initial, 'Identifier')
+								? declarationOwner(module.symbolOf(initial)!)
+								: null;
 							if (
 								initial &&
 								!primitive(initial) &&
-								!is(initial, 'ArrowFunctionExpression')
+								!is(initial, 'ArrowFunctionExpression') &&
+								!is(initialOwner, 'FunctionDeclaration')
 							)
 								violations.push(
 									violation(
@@ -606,15 +622,538 @@ export function customPolicies(
 		},
 	});
 
-	if (exportedComponents.length !== 1)
+	const structural = (value: unknown): unknown => {
+		if (Array.isArray(value)) return value.map(structural);
+		if (!value || typeof value !== 'object') return value;
+		return Object.fromEntries(
+			Object.entries(value as Node)
+				.filter(
+					([key]) =>
+						![
+							'start',
+							'end',
+							'loc',
+							'raw',
+							'comments',
+							'leadingComments',
+							'trailingComments',
+						].includes(key),
+				)
+				.map(([key, child]) => [key, structural(child)]),
+		);
+	};
+	const equivalent = (left: unknown, right: unknown): boolean =>
+		JSON.stringify(structural(left)) === JSON.stringify(structural(right));
+	const keyName = (node: Node): string | null => {
+		if (!node) return null;
+		if (is(node, 'Identifier')) return node.name;
+		if (is(node, 'Literal') && typeof node.value === 'string') return node.value;
+		return null;
+	};
+	const callUsesReact = (node: Node, hook: string): boolean =>
+		is(node, 'CallExpression') &&
+		is(node.callee, 'Identifier') &&
+		reactBindings.get(module.symbolOf(node.callee)!) === hook;
+	const returnedObjects: Array<{ fn: Node; object: Node }> = [];
+	const contextSymbols = new Set<YukuSymbol>();
+	const reactNamespaceSymbols = new Set<YukuSymbol>();
+	for (const imported of module.imports)
+		if (
+			imported.specifier === 'react' &&
+			imported.local &&
+			(imported.name === 'default' || imported.name === '*')
+		)
+			reactNamespaceSymbols.add(imported.local);
+	module.walk({
+		VariableDeclarator(node: Node) {
+			if (!is(node.id, 'Identifier') || !callUsesReact(node.init, 'createContext')) return;
+			const symbol = module.symbolOf(node.id);
+			if (symbol) contextSymbols.add(symbol);
+			if (!/Context\d*$/.test(node.id.name))
+				violations.push(
+					violation(
+						file,
+						'R-SH5',
+						'Emitted shared context names must end in Context',
+						node.id,
+					),
+				);
+		},
+		FunctionDeclaration(node: Node) {
+			let usesSharedHook = false;
+			module.walk(
+				{
+					CallExpression(call: Node) {
+						if (
+							callUsesReact(call, 'useContext') ||
+							callUsesReact(call, 'useSyncExternalStore')
+						)
+							usesSharedHook = true;
+					},
+					ReturnStatement(statement: Node) {
+						if (is(statement.argument, 'ObjectExpression'))
+							returnedObjects.push({ fn: node, object: statement.argument });
+					},
+				},
+				node.body,
+			);
+			if (usesSharedHook && (!node.id || !/^use\p{Lu}/u.test(node.id.name)))
+				violations.push(
+					violation(
+						file,
+						'R-SH5',
+						'Emitted shared hooks must retain the authored useName',
+						node,
+					),
+				);
+		},
+		CallExpression(node: Node) {
+			if (callUsesReact(node, 'useSyncExternalStore')) {
+				const owner = functionParent(module, node);
+				if (
+					!is(owner, 'FunctionDeclaration') ||
+					owner.params.length !== 1 ||
+					!is(owner.params[0], 'Identifier') ||
+					node.arguments.length !== 3 ||
+					!equivalent(node.arguments[1], node.arguments[2])
+				)
+					violations.push(
+						violation(
+							file,
+							'R-SH1',
+							'useSyncExternalStore must appear in the complete emitted store-hook shape',
+							node,
+						),
+					);
+			}
+			if (
+				is(node.callee, 'MemberExpression') &&
+				is(node.callee.object, 'Identifier') &&
+				reactNamespaceSymbols.has(module.symbolOf(node.callee.object)!) &&
+				['cloneElement', 'Children'].includes(propertyName(node.callee) ?? '')
+			)
+				violations.push(
+					violation(file, 'R-CH1', 'React child traversal or cloning is forbidden', node),
+				);
+			if (
+				is(node.callee, 'Identifier') &&
+				ancestors(module, node.callee).some((parent) => {
+					if (!is(parent, 'FunctionDeclaration')) return false;
+					const parameter = parent.params[0];
+					if (!is(parameter, 'ObjectPattern')) return false;
+					return parameter.properties.some(
+						(property: Node) =>
+							is(property, 'Property') &&
+							keyName(property.key) === 'children' &&
+							is(property.value, 'Identifier') &&
+							module.symbolOf(property.value) === module.symbolOf(node.callee),
+					);
+				})
+			)
+				violations.push(
+					violation(
+						file,
+						'R-CH1',
+						'Default-slot children may not be invoked as a render prop',
+						node,
+					),
+				);
+		},
+		ImportDeclaration(node: Node) {
+			const specifier = String(node.source.value);
+			if (/react(?:-compiler|\/compiler)|compiler-runtime/.test(specifier))
+				violations.push(
+					violation(file, 'R-CP1', 'React Compiler runtime imports are forbidden', node),
+				);
+			if (specifier !== 'react') return;
+			for (const item of node.specifiers) {
+				const imported = is(item, 'ImportSpecifier')
+					? (item.imported.name ?? item.imported.value)
+					: null;
+				if (['Children', 'cloneElement'].includes(imported))
+					violations.push(
+						violation(file, 'R-CH1', `React ${imported} synthesis is forbidden`, item),
+					);
+				if (['forwardRef', 'useImperativeHandle'].includes(imported))
+					violations.push(
+						violation(file, 'R-RF4', `React ${imported} is forbidden`, item),
+					);
+			}
+		},
+		ExpressionStatement(node: Node) {
+			if (
+				is(node.expression, 'Literal') &&
+				['use memo', 'use no memo'].includes(node.expression.value)
+			)
+				violations.push(
+					violation(file, 'R-CP1', 'React Compiler directives are forbidden', node),
+				);
+		},
+		JSXAttribute(node: Node) {
+			const name = is(node.name, 'JSXIdentifier') ? node.name.name : null;
+			if (name === 'ref' && is(node.value, 'Literal') && typeof node.value.value === 'string')
+				violations.push(violation(file, 'R-RF4', 'String refs are forbidden', node));
+			if (name !== 'ref' || !is(node.value, 'JSXExpressionContainer')) return;
+			const value = node.value.expression;
+			if (!is(value, 'Identifier'))
+				violations.push(
+					violation(
+						file,
+						'R-RF2',
+						'Emitted refs must resolve directly to a recorded handle or callback binding',
+						node,
+					),
+				);
+		},
+		JSXOpeningElement(node: Node) {
+			if (!is(node.name, 'JSXIdentifier')) return;
+			const context = module.symbolOf(node.name);
+			if (!contextSymbols.has(context!)) return;
+			const value = node.attributes.find(
+				(attribute: Node) =>
+					is(attribute, 'JSXAttribute') &&
+					is(attribute.name, 'JSXIdentifier', { name: 'value' }),
+			)?.value?.expression;
+			if (is(value, 'ObjectExpression'))
+				violations.push(
+					violation(
+						file,
+						'R-SH2',
+						'Context provider object values must be memoized and method-free',
+						node,
+					),
+				);
+		},
+		MemberExpression(node: Node) {
+			if (
+				propertyName(node) === 'Children' &&
+				is(node.object, 'Identifier') &&
+				reactNamespaceSymbols.has(module.symbolOf(node.object)!)
+			)
+				violations.push(
+					violation(file, 'R-CH1', 'React.Children traversal is forbidden', node),
+				);
+			if (
+				is(node.object, 'Identifier') &&
+				reactNamespaceSymbols.has(module.symbolOf(node.object)!) &&
+				['forwardRef', 'useImperativeHandle'].includes(propertyName(node) ?? '')
+			)
+				violations.push(
+					violation(
+						file,
+						'R-RF4',
+						'Legacy or imperative React ref APIs are forbidden',
+						node,
+					),
+				);
+		},
+	});
+	for (const component of exportedComponents) {
+		let providesContext = false;
+		module.walk(
+			{
+				JSXOpeningElement(node: Node) {
+					if (
+						is(node.name, 'JSXIdentifier') &&
+						contextSymbols.has(module.symbolOf(node.name)!)
+					)
+						providesContext = true;
+				},
+			},
+			component.body,
+		);
+		if (providesContext && !/Provider\d*$/.test(component.id?.name ?? ''))
+			violations.push(
+				violation(
+					file,
+					'R-SH5',
+					'Emitted shared provider names must retain the factory-derived Provider suffix',
+					component,
+				),
+			);
+	}
+	for (const context of contextSymbols) {
+		let reads = 0;
+		let providers = 0;
+		module.walk({
+			CallExpression(node: Node) {
+				if (
+					callUsesReact(node, 'useContext') &&
+					is(node.arguments[0], 'Identifier') &&
+					module.symbolOf(node.arguments[0]) === context
+				)
+					reads += 1;
+			},
+			JSXOpeningElement(node: Node) {
+				if (is(node.name, 'JSXIdentifier') && module.symbolOf(node.name) === context)
+					providers += 1;
+			},
+		});
+		if (reads !== 1 || providers !== 1)
+			violations.push(
+				violation(
+					file,
+					'R-SH1',
+					'Context lowering requires exactly one emitted hook read and one provider shape',
+				),
+			);
+	}
+
+	for (const { fn, object } of returnedObjects) {
+		const properties = new Map<string, Node>();
+		for (const property of object.properties)
+			if (is(property, 'Property') && keyName(property.key))
+				properties.set(keyName(property.key)!, property);
+		const subscriptions = [...properties].filter(([name]) => /^subscribe\p{Lu}/u.test(name));
+		if (subscriptions.length === 0) continue;
+		for (const [name, property] of subscriptions) {
+			const suffix = name.slice('subscribe'.length);
+			if (!properties.has(`get${suffix}`))
+				violations.push(
+					violation(
+						file,
+						'R-SH1',
+						`Store subscription ${name} has no matching snapshot getter`,
+						property,
+					),
+				);
+			let adds = 0;
+			let deletes = 0;
+			module.walk(
+				{
+					CallExpression(call: Node) {
+						if (!is(call.callee, 'MemberExpression')) return;
+						if (propertyName(call.callee) === 'add') adds += 1;
+						if (propertyName(call.callee) === 'delete') deletes += 1;
+					},
+				},
+				property.value,
+			);
+			if (adds === 0 || deletes === 0)
+				violations.push(
+					violation(
+						file,
+						'R-SH3',
+						`${name} must add and remove its per-cell listener`,
+						property,
+					),
+				);
+		}
+		for (const [name, property] of properties) {
+			if (!/^get\p{Lu}/u.test(name) || !is(property.value, 'ArrowFunctionExpression'))
+				continue;
+			if (!is(property.value.body, 'BlockStatement')) continue;
+			const returned = property.value.body.body.find((entry: Node) =>
+				is(entry, 'ReturnStatement'),
+			);
+			const versionGuard = property.value.body.body.some((entry: Node) =>
+				is(entry, 'IfStatement'),
+			);
+			if (!versionGuard || !is(returned?.argument, 'Identifier'))
+				violations.push(
+					violation(
+						file,
+						'R-SH3',
+						`${name} must return a version-cached snapshot identity`,
+						property,
+					),
+				);
+		}
+		for (const property of object.properties) {
+			if (!is(property, 'Property') || !property.method) continue;
+			const statements = property.value.body?.body ?? [];
+			const notification = statements.findIndex((entry: Node) => is(entry, 'ForOfStatement'));
+			const changed = statements.find(
+				(entry: Node) =>
+					is(entry, 'VariableDeclaration') &&
+					entry.declarations.some(
+						(declaration: Node) =>
+							is(declaration.init, 'NewExpression') &&
+							is(declaration.init.callee, 'Identifier', { name: 'Set' }),
+					),
+			);
+			let guardedNotification = false;
+			let listenerCall = false;
+			if (notification >= 0)
+				module.walk(
+					{
+						CallExpression(call: Node) {
+							if (
+								is(call.callee, 'MemberExpression') &&
+								propertyName(call.callee) === 'is' &&
+								is(call.callee.object, 'Identifier', { name: 'Object' })
+							)
+								guardedNotification = true;
+							if (is(call.callee, 'Identifier') && call.arguments.length === 0)
+								listenerCall = true;
+						},
+					},
+					statements[notification],
+				);
+			if (
+				!changed ||
+				notification < 0 ||
+				notification !== statements.length - 1 ||
+				!guardedNotification ||
+				!listenerCall
+			)
+				violations.push(
+					violation(
+						file,
+						'R-SH3',
+						'Shared methods require one deferred post-method notification phase',
+						property,
+					),
+				);
+		}
+		if (!fn.id)
+			violations.push(
+				violation(file, 'R-SH1', 'Store creation must have stable module identity', fn),
+			);
+		else {
+			const creator = module.symbolOf(fn.id);
+			for (const reference of creator?.references ?? []) {
+				const call = module.parentOf(reference.node);
+				if (
+					is(call, 'CallExpression') &&
+					(call as Node).callee === reference.node &&
+					functionParent(module, call) !== null
+				)
+					violations.push(
+						violation(
+							file,
+							'R-SH3',
+							'Store construction may not run directly during component render',
+							call,
+						),
+					);
+			}
+		}
+	}
+
+	module.walk({
+		VariableDeclarator(node: Node) {
+			if (
+				!is(node.init, 'ArrowFunctionExpression') ||
+				node.init.params.length !== 2 ||
+				!is(node.init.params[1], 'Identifier')
+			)
+				return;
+			const changed = module.symbolOf(node.init.params[1]);
+			let recordsChange = false;
+			let equalityGuard = false;
+			let inlineNotification = false;
+			module.walk(
+				{
+					CallExpression(call: Node) {
+						if (
+							is(call.callee, 'MemberExpression') &&
+							module.symbolOf(call.callee.object) === changed &&
+							propertyName(call.callee) === 'add'
+						)
+							recordsChange = true;
+						if (
+							is(call.callee, 'MemberExpression') &&
+							propertyName(call.callee) === 'is' &&
+							is(call.callee.object, 'Identifier', { name: 'Object' })
+						)
+							equalityGuard = true;
+						if (is(call.callee, 'Identifier') && call.arguments.length === 0)
+							inlineNotification = true;
+					},
+				},
+				node.init.body,
+			);
+			if (recordsChange && (!equalityGuard || inlineNotification))
+				violations.push(
+					violation(
+						file,
+						'R-SH3',
+						'Store writes must use Object.is and defer listener notification until method completion',
+						node,
+					),
+				);
+		},
+	});
+
+	for (const [symbol, ref] of refs) {
+		const jsxRef = symbol.references.some((reference) => {
+			const expression = module.parentOf(reference.node);
+			const attribute = expression ? module.parentOf(expression) : null;
+			return (
+				is(expression, 'JSXExpressionContainer') &&
+				is(attribute, 'JSXAttribute') &&
+				is((attribute as Node).name, 'JSXIdentifier', { name: 'ref' })
+			);
+		});
+		const handlerUse = symbol.references.some((reference) => {
+			const fn = functionParent(module, reference.node);
+			return is(fn, 'ArrowFunctionExpression') || is(fn, 'FunctionExpression');
+		});
+		const setupUse = symbol.references.some((reference) =>
+			ancestors(module, reference.node).some(
+				(parent) => is(parent, 'IfStatement') && is(parent.test, 'BinaryExpression'),
+			),
+		);
+		if (!jsxRef && !handlerUse && !setupUse)
+			violations.push(
+				violation(
+					file,
+					'R-RF1',
+					`${ref.name} is not backed by an emitted handle or setup record`,
+				),
+			);
+		for (const reference of symbol.references) {
+			const current = module.parentOf(reference.node);
+			const memberCall = current ? module.parentOf(current) : null;
+			const call = memberCall ? module.parentOf(memberCall) : null;
+			if (
+				!is(current, 'MemberExpression') ||
+				propertyName(current) !== 'current' ||
+				!is(memberCall, 'MemberExpression') ||
+				!is(call, 'CallExpression') ||
+				(call as Node).callee !== memberCall
+			)
+				continue;
+			const guarded = ancestors(module, call).some(
+				(parent) =>
+					is(parent, 'IfStatement') &&
+					is(parent.test, 'BinaryExpression', { operator: '!==' }) &&
+					is(parent.test.left, 'MemberExpression') &&
+					module.symbolOf(parent.test.left.object) === symbol &&
+					propertyName(parent.test.left) === 'current' &&
+					parent.test.right?.value === null,
+			);
+			if (!guarded)
+				violations.push(
+					violation(
+						file,
+						'R-RF3',
+						'Imperative handle access requires a null guard',
+						call,
+					),
+				);
+		}
+	}
+
+	if (exportedComponents.length < 1)
 		violations.push(
 			violation(
 				file,
 				'component-shape',
-				`Expected exactly one exported function component; found ${exportedComponents.length}`,
+				`Expected at least one exported function component; found ${exportedComponents.length}`,
 			),
 		);
 	for (const [symbol, ref] of refs) {
+		const usedAsJsxRef = symbol.references.some((reference) => {
+			const expression = module.parentOf(reference.node);
+			const attribute = expression ? module.parentOf(expression) : null;
+			return (
+				is(expression, 'JSXExpressionContainer') &&
+				is(attribute, 'JSXAttribute') &&
+				is((attribute as Node).name, 'JSXIdentifier', { name: 'ref' })
+			);
+		});
 		for (const reference of symbol.references) {
 			const fn = functionParent(module, reference.node);
 			const componentRender =
@@ -630,7 +1169,13 @@ export function customPolicies(
 					primitive(entry.test.right) &&
 					entry.test.right.value === null,
 			);
-			if (componentRender && !setupGuard)
+			const expression = module.parentOf(reference.node);
+			const attribute = expression ? module.parentOf(expression) : null;
+			const jsxRef =
+				is(expression, 'JSXExpressionContainer') &&
+				is(attribute, 'JSXAttribute') &&
+				is((attribute as Node).name, 'JSXIdentifier', { name: 'ref' });
+			if (componentRender && !setupGuard && !jsxRef)
 				violations.push(
 					violation(
 						file,
@@ -640,7 +1185,7 @@ export function customPolicies(
 					),
 				);
 		}
-		if (!is(ref.initial, 'Literal') || ref.initial.value !== null) continue;
+		if (usedAsJsxRef || !is(ref.initial, 'Literal') || ref.initial.value !== null) continue;
 		const guarded = symbol.references.some((reference) =>
 			ancestors(module, reference.node).some((guard) => {
 				if (

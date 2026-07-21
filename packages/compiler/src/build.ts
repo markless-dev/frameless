@@ -94,6 +94,7 @@ interface TemplateContext {
 		string,
 		{ node: AnyNode; environment: ReadEnvironment; order: number }[]
 	>;
+	readonly sharedSites: SharedExpressionSite[];
 	readonly edges: SemanticGraphArtifact['componentEdges'];
 	currentComponent: ComponentWork | null;
 	hostCursor: number;
@@ -101,6 +102,13 @@ interface TemplateContext {
 	repeatCursor: number;
 	textCursor: number;
 	fragmentCursor: number;
+}
+
+interface SharedExpressionSite {
+	readonly node: AnyNode;
+	readonly environment: ReadEnvironment;
+	readonly construct: 'dynamic text' | 'attribute' | 'handler' | 'behavior' | 'branch' | 'repeat';
+	readonly eventId?: string;
 }
 
 interface SharedFactoryDeclarator {
@@ -187,10 +195,7 @@ async function buildEnrichedIrArtifact({
 		components.map((component) => [component.id, new Map<string, { id: string }>()]),
 	);
 	const bindingCandidatesByComponent = new Map(
-		components.map((component) => [
-			component.id,
-			new Map<string, Array<{ id: string }>>(),
-		]),
+		components.map((component) => [component.id, new Map<string, Array<{ id: string }>>()]),
 	);
 	for (const binding of semanticGraph.graphBindings) {
 		if (binding.sharedDefinitionId) continue;
@@ -198,10 +203,7 @@ async function buildEnrichedIrArtifact({
 		if (!owner) throw new Error(`Graph binding ${binding.id} has no component owner.`);
 		bindingsByComponent.get(owner.id)!.set(binding.name, { id: binding.id });
 		const candidates = bindingCandidatesByComponent.get(owner.id)!;
-		candidates.set(binding.name, [
-			...(candidates.get(binding.name) ?? []),
-			{ id: binding.id },
-		]);
+		candidates.set(binding.name, [...(candidates.get(binding.name) ?? []), { id: binding.id }]);
 	}
 	const aliases = resolveAliases(semanticGraph, components, bindingOwners);
 	const aliasesByComponent = new Map(
@@ -250,6 +252,7 @@ async function buildEnrichedIrArtifact({
 		eventHandlers: new Map(),
 		hostOwners: new Map(),
 		behaviorNodes: new Map(),
+		sharedSites: [],
 		edges: semanticGraph.componentEdges,
 		currentComponent: null,
 		hostCursor: 0,
@@ -259,6 +262,7 @@ async function buildEnrichedIrArtifact({
 		fragmentCursor: 0,
 	};
 
+	const componentEnvironments = new Map<string, ReadEnvironment>();
 	const enrichedComponents = components.map((component) => {
 		templateContext.currentComponent = component;
 		const environment: ReadEnvironment = {
@@ -271,6 +275,7 @@ async function buildEnrichedIrArtifact({
 			repeatItems: new Map(),
 			sharedInstances: sharedInstancesByComponent.get(component.id)!,
 		};
+		componentEnvironments.set(component.id, environment);
 		return enrichComponent(component, environment, templateContext, semanticGraph, aliasIds);
 	});
 	templateContext.currentComponent = null;
@@ -384,13 +389,18 @@ async function buildEnrichedIrArtifact({
 		sharedWrites,
 	);
 	const sharedReads = buildSharedReads(
-		program,
+		templateContext.sharedSites,
 		semanticGraph,
-		components,
-		sharedInstances,
 		sharedProperties,
 	);
-	const sharedCalls = buildSharedCalls(semanticGraph, events, sharedInstances, components);
+	const sharedCalls = buildSharedCalls(templateContext.sharedSites, semanticGraph);
+	assertCompleteSharedSurface(
+		semanticGraph,
+		components,
+		componentEnvironments,
+		sharedReads,
+		sharedCalls,
+	);
 	const { elementHandleBindings, handleForwards } = buildElementHandleRecords(
 		semanticGraph,
 		components,
@@ -699,6 +709,11 @@ export function buildTemplateNode(
 					order: existing.length,
 				});
 				context.behaviorNodes.set(semanticHost.id, existing);
+				context.sharedSites.push({
+					node: attribute.value.expression,
+					environment,
+					construct: 'behavior',
+				});
 				continue;
 			}
 			const eventName = jsxEventName(name);
@@ -717,6 +732,12 @@ export function buildTemplateNode(
 				const existing = context.eventHandlers.get(event.id) ?? [];
 				existing.push({ node: attribute.value.expression, environment });
 				context.eventHandlers.set(event.id, existing);
+				context.sharedSites.push({
+					node: attribute.value.expression,
+					environment,
+					construct: 'handler',
+					eventId: event.id,
+				});
 				continue;
 			}
 			if (attribute.value === null) {
@@ -738,6 +759,7 @@ export function buildTemplateNode(
 						read.sourceSpan?.end === expression.end,
 				);
 				const target = semanticRead?.target;
+				context.sharedSites.push({ node: expression, environment, construct: 'attribute' });
 				dynamicBindings.push({
 					kind: target?.kind === 'property' ? 'property' : 'attribute',
 					name:
@@ -778,6 +800,11 @@ export function buildTemplateNode(
 			'template expression',
 		);
 		const site = expressionSite(node.expression, environment);
+		context.sharedSites.push({
+			node: node.expression,
+			environment,
+			construct: 'dynamic text',
+		});
 		if (
 			site.reads.length === 1 &&
 			site.reads[0]!.graphNodeId.startsWith('prop:') &&
@@ -821,6 +848,7 @@ export function buildTemplateNode(
 			context.graph,
 			'template expression',
 		);
+		context.sharedSites.push({ node: node.test, environment, construct: 'branch' });
 		const arms: TemplateBranchArm[] = [
 			{
 				kind: 'then',
@@ -874,6 +902,7 @@ export function buildTemplateNode(
 			context.graph,
 			'template expression',
 		);
+		context.sharedSites.push({ node: node.right, environment, construct: 'repeat' });
 		const collection = expressionSite(node.right, environment);
 		const repeatItems = new Map(environment.repeatItems);
 		if (repeat.collectionGraphNodeId) {
@@ -883,6 +912,11 @@ export function buildTemplateNode(
 			});
 		}
 		const rowEnvironment = { ...environment, repeatItems };
+		context.sharedSites.push({
+			node: node.key,
+			environment: rowEnvironment,
+			construct: 'repeat',
+		});
 		return [
 			{
 				kind: 'keyed-repeat',
@@ -974,6 +1008,7 @@ function buildComponentReference(
 			context.graph,
 			'template expression',
 		);
+		context.sharedSites.push({ node: expression, environment, construct: 'attribute' });
 		if (
 			prop.sourceSpan &&
 			(expression.start !== prop.sourceSpan.start || expression.end !== prop.sourceSpan.end)
@@ -1679,76 +1714,53 @@ function sharedBindingArgument(
 }
 
 function buildSharedReads(
-	program: AnyNode,
+	sites: readonly SharedExpressionSite[],
 	graph: SemanticGraphArtifact,
-	components: readonly ComponentWork[],
-	instances: readonly SharedInstance[],
 	properties: ReadonlyMap<
 		string,
 		ReadonlyMap<string, { graphNodeId: string; path: readonly string[] }>
 	>,
 ): SharedRead[] {
-	const candidates = [
-		...graph.templateReads,
-		...graph.stateReads.filter((read) => !read.sharedDefinitionId),
-	];
 	const output: SharedRead[] = [];
-	for (const read of candidates) {
-		const [localName, propertyName, ...path] = read.source.replace(/\?\./g, '.').split('.');
-		if (!read.sourceSpan) {
-			if (instances.some((candidate) => candidate.localName === localName)) {
+	const methods = sharedMethodMaps(graph);
+	for (const site of sites) {
+		const callCalleeSpans = new Set(
+			sharedCallCandidates(site.node, site.environment).map(
+				({ callee }) => `${String(callee.start)}:${String(callee.end)}`,
+			),
+		);
+		for (const { node, chain, instance } of sharedMemberCandidates(
+			site.node,
+			site.environment,
+		)) {
+			if (callCalleeSpans.has(`${String(node.start)}:${String(node.end)}`)) continue;
+			const [propertyName, ...path] = chain.path;
+			const graphProperty = propertyName
+				? properties.get(instance.definitionId)?.get(propertyName)
+				: undefined;
+			if (!propertyName || !graphProperty) {
+				if (propertyName && methods.get(instance.definitionId)?.has(propertyName)) continue;
 				throw new Error(
-					`Shared read ${read.source} has no source span for definition/property attribution.`,
+					`Shared read ${chain.root}.${chain.path.join('.')} for definition ${instance.definitionId} has unmapped property ${propertyName ?? '<missing>'}.`,
 				);
 			}
-			continue;
-		}
-		const component = componentForSpan(
-			`Shared read ${read.source}`,
-			read.sourceSpan,
-			components,
-		);
-		const instance = instances.find(
-			(candidate) =>
-				candidate.componentId === component.id && candidate.localName === localName,
-		);
-		if (!instance) continue;
-		if (!propertyName || !properties.get(instance.definitionId)?.has(propertyName)) {
-			let isCallCallee = false;
-			walkAst(program, (node) => {
-				const call = unwrapCall(node);
-				const callee = call?.callee;
-				if (
-					callee?.start === read.sourceSpan?.start &&
-					callee.end === read.sourceSpan?.end
-				) {
-					isCallCallee = true;
-				}
+			output.push({
+				definitionId: instance.definitionId,
+				propertyName,
+				path: [...graphProperty.path, ...path],
+				componentId: site.environment.componentId,
+				site: {
+					expression: serializeAst(node),
+					reads: [
+						{
+							graphNodeId: graphProperty.graphNodeId,
+							path: [...graphProperty.path, ...path],
+							via: 'direct',
+						},
+					],
+				},
 			});
-			if (isCallCallee) continue;
-			throw new Error(
-				`Shared read ${read.source} for definition ${instance.definitionId} has unmapped property ${propertyName ?? '<missing>'}.`,
-			);
 		}
-		const node = findNodeBySpan(program, read.sourceSpan);
-		if (!node) throw new Error(`Shared read ${read.source} has no AST site.`);
-		const graphProperty = properties.get(instance.definitionId)!.get(propertyName)!;
-		output.push({
-			definitionId: instance.definitionId,
-			propertyName,
-			path: [...graphProperty.path, ...path],
-			componentId: component.id,
-			site: {
-				expression: serializeAst(node),
-				reads: [
-					{
-						graphNodeId: graphProperty.graphNodeId,
-						path: [...graphProperty.path, ...path],
-						via: 'direct',
-					},
-				],
-			},
-		});
 	}
 	return dedupeBy(
 		output,
@@ -1758,12 +1770,47 @@ function buildSharedReads(
 }
 
 function buildSharedCalls(
+	sites: readonly SharedExpressionSite[],
 	graph: SemanticGraphArtifact,
-	events: readonly EnrichedEventRecord[],
-	instances: readonly SharedInstance[],
-	components: readonly ComponentWork[],
 ): SharedCall[] {
-	const methods = new Map(
+	const methods = sharedMethodMaps(graph);
+	const output: SharedCall[] = [];
+	for (const site of sites) {
+		for (const { node, call, chain, instance } of sharedCallCandidates(
+			site.node,
+			site.environment,
+		)) {
+			const propertyName = chain.path[0] ?? '<missing>';
+			if (chain.path.length !== 1 || !methods.get(instance.definitionId)?.has(propertyName)) {
+				throw new Error(
+					`Shared call ${chain.root}.${chain.path.join('.')} for definition ${instance.definitionId} has unmapped property ${propertyName}.`,
+				);
+			}
+			output.push({
+				definitionId: instance.definitionId,
+				methodName: propertyName,
+				arguments: (call.arguments ?? []).map((argument: AnyNode) =>
+					serializeAst(argument),
+				),
+				componentId: site.environment.componentId,
+				...(site.eventId ? { eventId: site.eventId } : {}),
+				site: {
+					expression: serializeAst(node),
+					reads: deriveReads(site.node, site.environment),
+				},
+				order: output.length,
+			});
+		}
+	}
+	return dedupeBy(
+		output,
+		(record) =>
+			`${record.componentId}\0${record.definitionId}\0${record.methodName}\0${String(record.site.expression.start)}\0${String(record.site.expression.end)}`,
+	).map((record, order) => ({ ...record, order }));
+}
+
+function sharedMethodMaps(graph: SemanticGraphArtifact): Map<string, Set<string>> {
+	return new Map(
 		graph.sharedDefinitions.map((definition) => [
 			definition.id,
 			new Set(
@@ -1773,45 +1820,177 @@ function buildSharedCalls(
 			),
 		]),
 	);
-	const output: SharedCall[] = [];
-	let order = 0;
-	for (const event of events) {
-		const component = components.find((candidate) => candidate.id === event.componentId)!;
-		for (const handler of event.handlers)
-			walkAst(handler.expression as AnyNode, (node) => {
-				const call = unwrapCall(node);
-				if (!call || call.callee?.type !== 'MemberExpression') return;
-				const chain = memberChain(call.callee);
-				if (!chain) return;
-				const instance = instances.find(
-					(candidate) =>
-						candidate.componentId === component.id &&
-						candidate.localName === chain.root,
-				);
-				if (!instance) return;
-				const propertyName = chain.path[0] ?? '<missing>';
-				if (
-					chain.path.length !== 1 ||
-					!methods.get(instance.definitionId)?.has(propertyName)
-				) {
-					throw new Error(
-						`Shared call ${chain.root}.${chain.path.join('.')} for definition ${instance.definitionId} has unmapped property ${propertyName}.`,
-					);
-				}
-				output.push({
-					definitionId: instance.definitionId,
-					methodName: propertyName,
-					arguments: (call.arguments ?? []).map((argument: AnyNode) =>
-						serializeAst(argument),
-					),
-					componentId: component.id,
-					eventId: event.id,
-					site: { expression: serializeAst(node), reads: handler.reads },
-					order: order++,
-				});
+}
+
+function sharedMemberCandidates(
+	root: AnyNode,
+	environment: ReadEnvironment,
+): Array<{
+	readonly node: AnyNode;
+	readonly chain: NonNullable<ReturnType<typeof memberChain>>;
+	readonly instance: NonNullable<ReturnType<ReadEnvironment['sharedInstances']['get']>>;
+}> {
+	const candidates: Array<{
+		node: AnyNode;
+		chain: NonNullable<ReturnType<typeof memberChain>>;
+		instance: NonNullable<ReturnType<ReadEnvironment['sharedInstances']['get']>>;
+	}> = [];
+	walkAst(root, (candidate) => {
+		if (candidate.type !== 'MemberExpression') return;
+		const chain = memberChain(candidate);
+		if (!chain) return;
+		const instance = environment.sharedInstances.get(chain.root);
+		if (instance) candidates.push({ node: candidate, chain, instance });
+	});
+	return candidates.filter(
+		(candidate) =>
+			!candidates.some(
+				(parent) =>
+					parent !== candidate &&
+					parent.node.start === candidate.node.start &&
+					(parent.node.end ?? -Infinity) > (candidate.node.end ?? Infinity),
+			),
+	);
+}
+
+function sharedCallCandidates(
+	root: AnyNode,
+	environment: ReadEnvironment,
+): Array<{
+	readonly node: AnyNode;
+	readonly call: AnyNode;
+	readonly callee: AnyNode;
+	readonly chain: NonNullable<ReturnType<typeof memberChain>>;
+	readonly instance: NonNullable<ReturnType<ReadEnvironment['sharedInstances']['get']>>;
+}> {
+	const candidates: Array<{
+		node: AnyNode;
+		call: AnyNode;
+		callee: AnyNode;
+		chain: NonNullable<ReturnType<typeof memberChain>>;
+		instance: NonNullable<ReturnType<ReadEnvironment['sharedInstances']['get']>>;
+	}> = [];
+	walkAst(root, (node) => {
+		const call = unwrapCall(node);
+		if (!call) return;
+		const callee =
+			call.callee?.type === 'ChainExpression' ? call.callee.expression : call.callee;
+		if (callee?.type !== 'MemberExpression') return;
+		const chain = memberChain(callee);
+		if (!chain) return;
+		const instance = environment.sharedInstances.get(chain.root);
+		if (instance) candidates.push({ node, call, callee, chain, instance });
+	});
+	return candidates;
+}
+
+function assertCompleteSharedSurface(
+	graph: SemanticGraphArtifact,
+	components: readonly ComponentWork[],
+	environments: ReadonlyMap<string, ReadEnvironment>,
+	reads: readonly SharedRead[],
+	calls: readonly SharedCall[],
+): void {
+	type ExpectedSurface = {
+		readonly kind: 'read' | 'call';
+		readonly source: string;
+		readonly componentId: string;
+		readonly definitionId: string;
+		readonly propertyName: string;
+		readonly path: readonly string[];
+	};
+	const methods = sharedMethodMaps(graph);
+	const expected: ExpectedSurface[] = [];
+	for (const semantic of [
+		...graph.templateReads,
+		...graph.stateReads.filter((read) => !read.sharedDefinitionId),
+	]) {
+		const component = componentForSpan(
+			`Layer A shared semantic ${semantic.source}`,
+			semantic.sourceSpan,
+			components,
+		);
+		const environment = environments.get(component.id);
+		if (!environment)
+			throw new Error(
+				`Layer A shared semantic ${semantic.source} has no component environment.`,
+			);
+		const errors: CompileError[] = [];
+		const parsed = parseModule(
+			`const __framelessSharedSurface = (${semantic.source});`,
+			graph.filename,
+			{ collect: true, errors },
+		) as AnyNode;
+		if (errors.length > 0) {
+			throw new Error(
+				`Layer A shared semantic ${semantic.source} has no mappable expression AST.`,
+			);
+		}
+		const expression = parsed.body?.[0]?.declarations?.[0]?.init;
+		if (!expression) continue;
+		for (const { chain, instance } of sharedMemberCandidates(expression, environment)) {
+			const [propertyName, ...path] = chain.path;
+			if (!propertyName) continue;
+			const kind = methods.get(instance.definitionId)?.has(propertyName) ? 'call' : 'read';
+			const graphProperty = instance.properties.get(propertyName);
+			expected.push({
+				kind,
+				source: `${chain.root}.${chain.path.join('.')}`,
+				componentId: component.id,
+				definitionId: instance.definitionId,
+				propertyName,
+				path: kind === 'read' && graphProperty ? [...graphProperty.path, ...path] : path,
 			});
+		}
 	}
-	return output;
+
+	const key = (surface: ExpectedSurface): string =>
+		`${surface.kind}\0${surface.componentId}\0${surface.definitionId}\0${surface.propertyName}\0${surface.path.join('\0')}`;
+	const expectedCounts = countBy(expected, key);
+	const mappedCounts = countBy(
+		[
+			...reads.map(
+				(read): ExpectedSurface => ({
+					kind: 'read',
+					source: read.propertyName,
+					componentId: read.componentId,
+					definitionId: read.definitionId,
+					propertyName: read.propertyName,
+					path: read.path,
+				}),
+			),
+			...calls.map(
+				(call): ExpectedSurface => ({
+					kind: 'call',
+					source: call.methodName,
+					componentId: call.componentId,
+					definitionId: call.definitionId,
+					propertyName: call.methodName,
+					path: [],
+				}),
+			),
+		],
+		key,
+	);
+	for (const surface of expected) {
+		const surfaceKey = key(surface);
+		const missing = (expectedCounts.get(surfaceKey) ?? 0) - (mappedCounts.get(surfaceKey) ?? 0);
+		if (missing > 0) {
+			const construct = surface.kind === 'call' ? 'Shared call' : 'Shared read';
+			throw new Error(
+				`${construct} ${surface.source} in ${surface.componentId} is missing ${missing} frameless-enriched-ir/2 record${missing === 1 ? '' : 's'}.`,
+			);
+		}
+	}
+}
+
+function countBy<T>(values: readonly T[], key: (value: T) => string): Map<string, number> {
+	const counts = new Map<string, number>();
+	for (const value of values) {
+		const item = key(value);
+		counts.set(item, (counts.get(item) ?? 0) + 1);
+	}
+	return counts;
 }
 
 function buildSharedWrites(program: AnyNode, graph: SemanticGraphArtifact): SharedWrite[] {
@@ -2032,12 +2211,8 @@ function deriveLayerABehaviorInput(
 	});
 }
 
-function sameGraphReads(
-	left: readonly GraphReadRef[],
-	right: readonly GraphReadRef[],
-): boolean {
-	const key = (read: GraphReadRef): string =>
-		`${read.graphNodeId}\0${read.path.join('\0')}`;
+function sameGraphReads(left: readonly GraphReadRef[], right: readonly GraphReadRef[]): boolean {
+	const key = (read: GraphReadRef): string => `${read.graphNodeId}\0${read.path.join('\0')}`;
 	const leftKeys = left.map(key).sort(compareText);
 	const rightKeys = right.map(key).sort(compareText);
 	return (
@@ -2560,9 +2735,7 @@ export function collectGraphReads(
 		componentId: '',
 		filename: '',
 		bindings: bindingsByName,
-		bindingCandidates: new Map(
-			[...bindingsByName].map(([name, binding]) => [name, [binding]]),
-		),
+		bindingCandidates: new Map([...bindingsByName].map(([name, binding]) => [name, [binding]])),
 		aliases: new Map(),
 		locals: new Map(),
 		repeatItems: new Map(),

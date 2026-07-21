@@ -9,6 +9,46 @@ const fixture = async (name: string) =>
 	});
 
 describe('frameless-enriched-ir/2 composition contracts', () => {
+	test('collects every shared read nested in the exact C2 dynamic-text fixture', async () => {
+		const source = readFileSync(
+			new URL(
+				'../../frameworks/react/test/composition-fixtures/C2-shared.tsrx',
+				import.meta.url,
+			),
+			'utf8',
+		);
+		const ir = await buildEnrichedIr({
+			filename: 'packages/frameworks/react/test/composition-fixtures/C2-shared.tsrx',
+			source,
+		});
+		expect(
+			ir.records.sharedReads.map(({ componentId, propertyName }) => ({
+				componentId,
+				propertyName,
+			})),
+		).toEqual([
+			{ componentId: 'component:1:Reader', propertyName: 'history' },
+			{ componentId: 'component:1:Reader', propertyName: 'count' },
+			{ componentId: 'component:2:SharedAudit', propertyName: 'audit' },
+		]);
+	});
+
+	test('collects a shared read nested in a handler template literal', async () => {
+		const source = `import { shared, state } from "@markless/core";
+			export const useValue = shared(() => { let value = state("seed"); return { value, record(next) { value = next; } }; });
+			export function Writer() @{
+				const sharedValue = useValue();
+				<button onClick={() => sharedValue.record(\`next:\${sharedValue.value}\`)}>record</button>
+			}`;
+		const ir = await buildEnrichedIr({ filename: 'src/shared-handler-template.tsrx', source });
+		expect(ir.records.sharedReads).toEqual([
+			expect.objectContaining({
+				componentId: 'component:0:Writer',
+				propertyName: 'value',
+			}),
+		]);
+	});
+
 	test('attributes distinct component records and retains an unexported local child', async () => {
 		const ir = await buildEnrichedIr({
 			filename: 'src/ownership.tsrx',

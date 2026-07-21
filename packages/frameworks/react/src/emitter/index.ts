@@ -335,10 +335,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 			throw new Error(`${construct} has malformed path`);
 		if (graphRead && !['direct', 'alias', 'local', 'repeat-item'].includes(String(read.via)))
 			throw new Error(`${construct} has unsupported read shape`);
-		if (
-			behaviorInput &&
-			!['layer-a', 'derived-from-ast'].includes(String(read.provenance))
-		)
+		if (behaviorInput && !['layer-a', 'derived-from-ast'].includes(String(read.provenance)))
 			throw new Error(`${construct} has unsupported provenance`);
 	};
 	const validateExpressionSite = (
@@ -2999,6 +2996,7 @@ function componentFunction(
 			t.returnStatement(t.arrowFunctionExpression([], t.blockStatement(cleanupBody))),
 		);
 		const dependencies = new Map<string, t.Expression>();
+		if (forwardedHandle) dependencies.set('forwarded-handle', t.identifier('ref'));
 		for (const behavior of behaviors)
 			for (const input of behavior.inputs) {
 				const binding = bindingById.get(input.graphNodeId);

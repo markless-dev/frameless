@@ -3,12 +3,6 @@
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",
-	"scripts": {
-		"measure:size": "node --experimental-strip-types scripts/measure-size.ts",
-		"regenerate": "node --experimental-transform-types scripts/regenerate.ts",
-		"test": "vitest run --config vitest.node.config.ts",
-		"test:browser": "vitest run --config vitest.config.ts --project react-browser"
-	},
 	"exports": {
 		".": "./src/index.ts",
 		"./adapter": "./src/adapter.ts"
@@ -22,6 +16,13 @@
 				"default": "./dist/adapter.js"
 			}
 		}
+	},
+	"scripts": {
+		"measure:size": "node --experimental-strip-types scripts/measure-size.ts",
+		"regenerate": "node --experimental-transform-types scripts/regenerate.ts",
+		"regenerate:composition": "node --experimental-transform-types scripts/regenerate-composition.ts",
+		"test": "vitest run --config vitest.node.config.ts",
+		"test:browser": "vitest run --config vitest.config.ts --project react-browser"
 	},
 	"dependencies": {
 		"@eslint/js": "^9.39.2",
