@@ -3,11 +3,13 @@ import {
 	type AnalyzerInvariantResult,
 	type AnalyzerVerdictReportV2,
 } from '@markless/analyzer';
-import type { Divergence } from './types.ts';
+import { assertValidExpectation } from './expectations.ts';
+import type { Divergence, ExpectationResult } from './types.ts';
 
 export const RECEIPT_SCHEMA_VERSION = 'frameless-receipts/1' as const;
 export const EQUIVALENCE_INVARIANT_ID = 'MLA-EXT-FRAMELESS-EQUIVALENCE' as const;
 export const MUTANT_INVARIANT_ID = 'MLA-EXT-FRAMELESS-MUTANT' as const;
+export const EXPECTATION_INVARIANT_ID = 'MLA-EXT-FRAMELESS-EXPECTATION' as const;
 
 export type Finding = { id: string; summary: string; evidence: string[] };
 export type EqualPairResult = { status: 'equal'; equal: true; divergences: [] };
@@ -46,10 +48,11 @@ export type Receipt = {
 	findings: Record<string, Finding>;
 	scenarios: Record<string, Record<string, PairResult>>;
 	mutantRejections: Record<string, MutantResult>;
+	expectationResults?: Record<string, Record<string, ExpectationResult[]>>;
 	summary: ReceiptSummary;
 };
 
-type ReceiptResults = Pick<Receipt, 'scenarios' | 'mutantRejections'>;
+type ReceiptResults = Pick<Receipt, 'scenarios' | 'mutantRejections' | 'expectationResults'>;
 
 export function createEquivalenceInvariantResult(
 	scenario: string,
@@ -85,6 +88,23 @@ function createMutantInvariantResult(id: string, result: MutantResult): Analyzer
 	};
 }
 
+function createExpectationInvariantResult(
+	scenario: string,
+	framework: string,
+	result: ExpectationResult,
+): AnalyzerInvariantResult {
+	return {
+		id: EXPECTATION_INVARIANT_ID,
+		status: result.outcome === 'pass' ? 'pass' : 'fail',
+		details: [
+			`scenario: ${scenario}`,
+			`framework: ${framework}`,
+			`expectation: ${result.expectation.kind}`,
+			`phase: ${result.phase}`,
+		],
+	};
+}
+
 function invariantResults(receipt: ReceiptResults): AnalyzerInvariantResult[] {
 	const results: AnalyzerInvariantResult[] = [];
 	for (const [scenario, pairs] of Object.entries(receipt.scenarios)) {
@@ -94,6 +114,13 @@ function invariantResults(receipt: ReceiptResults): AnalyzerInvariantResult[] {
 	}
 	for (const [id, result] of Object.entries(receipt.mutantRejections)) {
 		results.push(createMutantInvariantResult(id, result));
+	}
+	for (const [scenario, frameworks] of Object.entries(receipt.expectationResults ?? {})) {
+		for (const [framework, expectationResults] of Object.entries(frameworks)) {
+			for (const result of expectationResults) {
+				results.push(createExpectationInvariantResult(scenario, framework, result));
+			}
+		}
 	}
 	return results;
 }
@@ -141,7 +168,32 @@ function summariesEqual(left: ReceiptSummary, right: ReceiptSummary): boolean {
 }
 
 export function validateReceipt(value: unknown): value is Receipt {
-	if (!value || typeof value !== 'object') return false;
+	if (!isRecord(value)) return false;
+	if (
+		!hasExactKeys(
+			value,
+			[
+				'schema',
+				'generatedBy',
+				'environment',
+				'findings',
+				'scenarios',
+				'mutantRejections',
+				'summary',
+			],
+			[
+				'schema',
+				'generatedBy',
+				'environment',
+				'findings',
+				'scenarios',
+				'mutantRejections',
+				'expectationResults',
+				'summary',
+			],
+		)
+	)
+		return false;
 	const receipt = value as Partial<Receipt>;
 	if (
 		receipt.schema !== RECEIPT_SCHEMA_VERSION ||
@@ -164,12 +216,63 @@ export function validateReceipt(value: unknown): value is Receipt {
 		)
 	)
 		return false;
+	if (
+		Object.hasOwn(receipt, 'expectationResults') &&
+		!validateExpectationResults(receipt.expectationResults)
+	)
+		return false;
 	try {
 		createReceiptVerdictReport(receipt as Receipt);
 		return summariesEqual(receipt.summary, createReceiptSummary(receipt as Receipt));
 	} catch {
 		return false;
 	}
+}
+
+function validateExpectationResults(value: unknown): boolean {
+	return (
+		isRecord(value) &&
+		Object.values(value).every(
+			(frameworks) =>
+				isRecord(frameworks) &&
+				Object.values(frameworks).every(
+					(results) => Array.isArray(results) && results.every(validateExpectationResult),
+				),
+		)
+	);
+}
+
+function validateExpectationResult(value: unknown): value is ExpectationResult {
+	if (!isRecord(value) || !isRecord(value.expectation)) return false;
+	try {
+		assertValidExpectation(value.expectation);
+	} catch {
+		return false;
+	}
+	if (value.phase !== value.expectation.phase) return false;
+	if (value.outcome === 'pass') {
+		return hasExactKeys(value, ['expectation', 'phase', 'outcome']);
+	}
+	if (
+		value.outcome !== 'fail' ||
+		!hasExactKeys(value, ['expectation', 'phase', 'outcome', 'observed'])
+	)
+		return false;
+	if (value.expectation.kind === 'dom-text') {
+		return value.observed === null || typeof value.observed === 'string';
+	}
+	if (value.expectation.kind === 'dom-present') {
+		return Number.isInteger(value.observed) && (value.observed as number) >= 0;
+	}
+	return (
+		isRecord(value.observed) &&
+		hasExactKeys(value.observed, ['focused', 'selection']) &&
+		typeof value.observed.focused === 'boolean' &&
+		(value.observed.selection === null ||
+			(Array.isArray(value.observed.selection) &&
+				value.observed.selection.length === 2 &&
+				value.observed.selection.every((item) => Number.isInteger(item) && item >= 0)))
+	);
 }
 
 function validatePairResult(value: unknown, findings: Record<string, unknown>): boolean {
@@ -279,6 +382,24 @@ export function renderResults(receipt: Receipt): string {
 		lines.push(
 			`| ${id} | ${result.expectedChannel} | ${result.rejected ? 'yes' : 'no'} | ${result.observedChannels.join(', ')} |`,
 		);
+	}
+	if (receipt.expectationResults) {
+		lines.push(
+			'',
+			'## Scenario expectations',
+			'',
+			'| Scenario | Framework | Expectation | Phase | Outcome |',
+			'| --- | --- | --- | --- | --- |',
+		);
+		for (const [scenario, frameworks] of Object.entries(receipt.expectationResults)) {
+			for (const [framework, results] of Object.entries(frameworks)) {
+				for (const result of results) {
+					lines.push(
+						`| ${scenario} | ${framework} | ${result.expectation.kind} | ${result.phase} | ${result.outcome} |`,
+					);
+				}
+			}
+		}
 	}
 	lines.push('', '## Environment', '', '| Item | Version/mode |', '| --- | --- |');
 	for (const [item, version] of Object.entries(receipt.environment)) {

@@ -8,6 +8,37 @@ export type Action =
 	| { type: 'check'; target: string; checked: boolean }
 	| { type: 'focus'; target: string; selection?: [number, number] };
 
+export type DomTextExpectation = {
+	kind: 'dom-text';
+	phase: string;
+	selector: string;
+	text: string;
+};
+export type DomPresentExpectation = {
+	kind: 'dom-present';
+	phase: string;
+	selector: string;
+	count: number;
+};
+export type FocusExpectation = {
+	kind: 'focus';
+	phase: string;
+	selector: string;
+	selection?: [number, number];
+};
+export type Expectation = DomTextExpectation | DomPresentExpectation | FocusExpectation;
+
+export type ExpectationResult =
+	| { expectation: Expectation; phase: string; outcome: 'pass' }
+	| { expectation: DomTextExpectation; phase: string; outcome: 'fail'; observed: string | null }
+	| { expectation: DomPresentExpectation; phase: string; outcome: 'fail'; observed: number }
+	| {
+			expectation: FocusExpectation;
+			phase: string;
+			outcome: 'fail';
+			observed: { focused: boolean; selection: [number, number] | null };
+	  };
+
 export type CallbackRecord = {
 	name: string;
 	payload: unknown;
@@ -71,3 +102,5 @@ export interface Adapter<Handle = unknown> {
 	unmount(handle: Handle): void | Promise<void>;
 	host(handle: Handle): HTMLElement;
 }
+
+export type PostUnmountWitness = { selector: string };

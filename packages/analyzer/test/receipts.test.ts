@@ -81,6 +81,80 @@ describe('frameless-receipts/1', () => {
 		expect(validateReceipt(dishonest)).toBe(false);
 	});
 
+	test('validates optional per-framework expectation results', () => {
+		const expectation = {
+			kind: 'dom-present' as const,
+			phase: 'mount',
+			selector: '[data-slot]',
+			count: 1,
+		};
+		const withExpectations: Receipt = {
+			...receipt,
+			expectationResults: {
+				scenario: {
+					react: [{ expectation, phase: 'mount', outcome: 'pass' }],
+					solid: [{ expectation, phase: 'mount', outcome: 'fail', observed: 0 }],
+				},
+			},
+		};
+		withExpectations.summary = createReceiptSummary(withExpectations);
+		expect(validateReceipt(withExpectations)).toBe(true);
+		expect(withExpectations.summary.verdict).toBe('fail');
+		expect(renderResults(withExpectations)).toContain(
+			'| scenario | solid | dom-present | mount | fail |',
+		);
+	});
+
+	test.each([
+		{
+			expectation: {
+				kind: 'dom-present',
+				phase: 'mount',
+				selector: '[data-slot]',
+				count: 1,
+			},
+			phase: 'mount',
+			outcome: 'pass',
+			observed: 1,
+		},
+		{
+			expectation: {
+				kind: 'dom-present',
+				phase: 'mount',
+				selector: '[data-slot]',
+				count: 1,
+			},
+			phase: 'mount',
+			outcome: 'fail',
+		},
+		{
+			expectation: {
+				kind: 'dom-present',
+				phase: 'mount',
+				selector: '[data-slot]',
+				count: 1,
+			},
+			phase: 'mount',
+			outcome: 'fail',
+			observed: 'one',
+		},
+		{
+			expectation: {
+				kind: 'dom-present',
+				phase: 'mount',
+				selector: '[data-slot]',
+				count: 1,
+				present: true,
+			},
+			phase: 'mount',
+			outcome: 'pass',
+		},
+	])('rejects dishonest expectation result variant %#', (variant) => {
+		const dishonest = structuredClone(receipt) as unknown as Record<string, unknown>;
+		dishonest.expectationResults = { scenario: { react: [variant] } };
+		expect(validateReceipt(dishonest)).toBe(false);
+	});
+
 	test('renders RESULTS.md deterministically', () => {
 		expect(renderResults(receipt)).toBe(renderResults(structuredClone(receipt)));
 	});

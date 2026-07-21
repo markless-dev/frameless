@@ -19,6 +19,24 @@ export class Observer {
 	}
 
 	observe(host: HTMLElement, phase: string, callbacks: Observation['callbacks']): Observation {
+		return this.createObservation(host, phase, callbacks, this.semanticChildren(host));
+	}
+
+	/** Serialize a document-level witness including the selected element itself. */
+	observeElement(
+		element: HTMLElement,
+		phase: string,
+		callbacks: Observation['callbacks'],
+	): Observation {
+		return this.createObservation(element, phase, callbacks, [this.serialize(element)]);
+	}
+
+	private createObservation(
+		host: HTMLElement,
+		phase: string,
+		callbacks: Observation['callbacks'],
+		dom: SerializedNode[],
+	): Observation {
 		const rows: Record<string, number> = {};
 		host.querySelectorAll<HTMLElement>('[data-oracle-row-key]').forEach((row) => {
 			rows[row.dataset.oracleRowKey!] = this.id(row);
@@ -40,7 +58,7 @@ export class Observer {
 		this.priorFocusRow = activeRow;
 		return {
 			phase,
-			dom: this.semanticChildren(host),
+			dom,
 			callbacks: structuredClone(callbacks),
 			rows,
 			identityViolations,

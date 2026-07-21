@@ -1,4 +1,4 @@
-import type { Action } from './types.ts';
+import type { Action, Expectation } from './types.ts';
 
 export type ExpectedCallback = { name: string; fields: string[]; count: number };
 export type Scenario = {
@@ -7,6 +7,7 @@ export type Scenario = {
 	initialProps: Record<string, unknown>;
 	actions: Action[];
 	expectedCallbacks: ExpectedCallback[];
+	expectations?: Expectation[];
 };
 
 export const scenarios: Scenario[] = [

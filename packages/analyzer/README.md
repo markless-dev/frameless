@@ -21,6 +21,23 @@ mutant-class data, verdicts, and deterministic `frameless-receipts/1` result ren
   space, after the normalization above.
 - Receipt pair states are `equal`, `different`, and `blocked-by-upstream`. Blocked legs require
   finding IDs and never count as passes.
+- Scenario expectations are evaluated independently for every framework against serialized
+  observations. Supported selectors deliberately use only `tag`, `[attr]`, `[attr=value]`,
+  `tag[attr]`, and `tag[attr=value]`; attribute values may be quoted or unquoted. Combinators,
+  classes, IDs, pseudo-selectors, multiple attributes, and attribute operators fail closed.
+- `dom-present` uses exact cardinality: `count: 1` means exactly one match and `count: 0` means
+  absence. `dom-text` reads the first serialized match's recursive text, matching
+  `querySelector(...).textContent` semantics.
+- A caller may request one document-level post-unmount witness. Its selected element is serialized
+  after adapter unmount and before host removal as the optional trailing `unmount` observation.
+
+The analyzer contract remains `frameless-analyzer/1` for these additions. This is a deliberate
+fail-closed version decision: `RunTrace` has no new record keys, and its validator now accepts only
+the existing lifecycle phases plus one optional trailing `unmount` observation. Scenario
+expectations and receipt `expectationResults` are additive optional fields; when the receipt section
+is present, exact expectation/result variants are required. Existing no-witness traces therefore
+retain their serialized bytes, while a consumer that compares a witness trace with a non-witness
+trace sees the extra observation as a trace divergence rather than silently ignoring it.
 
 `renderResults(receipt)` deterministically generates `RESULTS.md`; callers own filesystem
 placement. `scenarios`, `calibrationScenarios`, and `mutantClasses` are data exports consumed by

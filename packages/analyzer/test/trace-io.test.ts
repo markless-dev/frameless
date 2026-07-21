@@ -63,6 +63,30 @@ describe('RunTrace transport', () => {
 		expect(roundTripped).toEqual(trace);
 	});
 
+	test('round-trips an optional trailing unmount observation', () => {
+		const trace = representativeTrace();
+		trace.observations.push({
+			...structuredClone(trace.observations[0]),
+			phase: 'unmount',
+		});
+		expect(deserializeRunTrace(serializeRunTrace(trace))).toEqual(trace);
+	});
+
+	test('rejects an unmount observation that is not trailing', () => {
+		const trace = representativeTrace();
+		trace.observations.unshift({
+			...structuredClone(trace.observations[0]),
+			phase: 'unmount',
+		});
+		expect(() => serializeRunTrace(trace)).toThrow(/unmount observation must be trailing/);
+	});
+
+	test('rejects an unsupported observation phase', () => {
+		const trace = representativeTrace();
+		trace.observations[0].phase = 'cleanup';
+		expect(() => serializeRunTrace(trace)).toThrow(/unsupported observation phase cleanup/);
+	});
+
 	test('serializes deterministically independent of object key insertion order', () => {
 		const trace = representativeTrace();
 		const reordered = {

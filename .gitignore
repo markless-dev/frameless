@@ -13,3 +13,4 @@ demos/ui-kit/generated/
 demos/ui-kit/dist/
 demos/ui-kit/traces/
 demos/ui-kit/receipts/
+.claude/worktrees/

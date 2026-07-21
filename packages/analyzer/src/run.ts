@@ -3,6 +3,7 @@ import {
 	ANALYZER_CONTRACT_VERSION,
 	type Adapter,
 	type CallbackRecord,
+	type PostUnmountWitness,
 	type RunTrace,
 } from './types.ts';
 import type { Scenario } from './scenarios.ts';
@@ -20,11 +21,13 @@ function normalize(value: unknown): unknown {
 export async function runScenario<Handle>(
 	adapter: Adapter<Handle>,
 	scenario: Scenario,
+	witness?: PostUnmountWitness,
 ): Promise<RunTrace> {
 	const host = document.createElement('div');
 	document.body.append(host);
 	const callbacks: CallbackRecord[] = [];
 	let phase = 'mount';
+	let trace: RunTrace | undefined;
 	const counts = new Map<string, number>();
 	const props = {
 		...structuredClone(scenario.initialProps),
@@ -59,14 +62,37 @@ export async function runScenario<Handle>(
 			await adapter.settle(handle);
 			observations.push(observer.observe(observed, phase, callbacks));
 		}
-		return {
+		trace = {
 			contract: ANALYZER_CONTRACT_VERSION,
 			scenario: scenario.id,
 			framework: adapter.name,
 			observations,
 		};
 	} finally {
-		await adapter.unmount(handle);
-		host.remove();
+		// Cleanup only: the witness path runs after a SUCCESSFUL scenario so a
+		// witness failure can never mask an in-flight error (no-unsafe-finally).
+		if (trace === undefined || !witness) {
+			await adapter.unmount(handle);
+			host.remove();
+		}
 	}
+	if (witness) {
+		phase = 'unmount';
+		try {
+			await adapter.unmount(handle);
+			const element = document.querySelector<HTMLElement>(witness.selector);
+			if (!element) {
+				throw new Error(`Post-unmount witness did not match: ${witness.selector}`);
+			}
+			if (host.contains(element)) {
+				throw new Error(
+					`Post-unmount witness must be outside the component host: ${witness.selector}`,
+				);
+			}
+			observations.push(observer.observeElement(element, phase, callbacks));
+		} finally {
+			host.remove();
+		}
+	}
+	return trace;
 }

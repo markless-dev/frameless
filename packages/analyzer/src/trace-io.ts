@@ -40,6 +40,9 @@ function validateRunTrace(value: unknown): asserts value is RunTrace {
 	assertArray(value.observations, 'RunTrace observations');
 	for (const [index, observation] of value.observations.entries()) {
 		validateObservation(observation, `RunTrace observations[${index}]`);
+		if (observation.phase === 'unmount' && index !== value.observations.length - 1) {
+			throw new Error('RunTrace unmount observation must be trailing');
+		}
 	}
 }
 
@@ -58,7 +61,7 @@ function validateObservation(value: unknown, construct: string): asserts value i
 		],
 		construct,
 	);
-	assertString(value.phase, `${construct} phase`);
+	validatePhase(value.phase, `${construct} phase`);
 	assertArray(value.dom, `${construct} dom`);
 	for (const [index, node] of value.dom.entries()) {
 		validateSerializedNode(node, `${construct} dom[${index}]`);
@@ -97,7 +100,7 @@ function validateCallback(value: unknown, construct: string): asserts value is C
 	);
 	assertString(value.name, `${construct} name`);
 	validateJsonValue(value.payload, `${construct} payload`, new Set());
-	assertString(value.phase, `${construct} phase`);
+	validatePhase(value.phase, `${construct} phase`);
 	if (value.defaultPrevented !== null && typeof value.defaultPrevented !== 'boolean') {
 		throw new Error(`${construct} defaultPrevented is malformed: expected a boolean or null`);
 	}
@@ -242,6 +245,17 @@ function assertTuple(
 
 function assertString(value: unknown, construct: string): asserts value is string {
 	if (typeof value !== 'string') throw new Error(`${construct} is malformed: expected a string`);
+}
+
+function validatePhase(value: unknown, construct: string): asserts value is string {
+	assertString(value, construct);
+	if (
+		value !== 'mount' &&
+		value !== 'unmount' &&
+		!/^action:\d+:(?:before|after|microtask|quiescence)$/.test(value)
+	) {
+		throw new Error(`${construct} is malformed: unsupported observation phase ${value}`);
+	}
 }
 
 function assertFiniteNumber(value: unknown, construct: string): asserts value is number {
