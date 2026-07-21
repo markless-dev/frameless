@@ -395,3 +395,17 @@ WITHOUT an artifact, relative imports remain violations (fail-closed — the CLI
 path always supplies artifacts; artifact-less checking stays strict). Mutations
 required: unrecorded-with-artifact -> violation; recorded-without-artifact ->
 violation; recorded-with-artifact -> clean.
+
+## PM ADJUDICATION 11 (2026-07-21): T999 first-run findings
+
+1. Fresh-test determinism: generated-composition artifacts become COMMITTED
+   goldens with freshness tests (the repo's established golden discipline —
+   generated/ pattern), replacing the gitignore; regenerate scripts stay the
+   refresh path. 2. The React composition reference updates its bare attributes
+   to explicit ="" per the record-keyed policy; RECEIPT CORRECTION recorded: the
+   P5-era 'lanes green' claim did not include a post-bare-attr-fix react-browser
+   run (first executed at T999 — e2e masked reference drift because both
+   emitters agree; the emitted-vs-reference lane is the guard that caught it).
+3. T013 disposition: carried to the successor board (the owner's research fork
+   owns it). 4. markless dirty files: flagged to owner as fixing-board
+   attribution (this goal wrote nothing there — T999 verified vendor/ untouched).
