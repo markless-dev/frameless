@@ -1,19 +1,25 @@
 # Frameless
 
-Frameless is a compiler that turns one Markless component into idiomatic
-packages for existing frameworks — and proves the outputs behave the same.
+Write your components once. Compile them to any framework. Get code that looks
+hand-written and works the same everywhere.
 
-You write `.tsrx` files once: HTML-like markup, JavaScript variables, plain
-reads and writes. The Markless compiler records what that UI means — state,
-derived values, events, shared state, element handles. Frameless takes that
-recorded meaning and emits real framework code from it:
+You write `.tsrx` files. They look like normal components: HTML-like markup,
+JavaScript variables, plain reads and writes. Frameless understands what your
+component does (its state, its events, its updates) and generates real
+framework code from that understanding:
 
-- React 19 packages that read like a careful React developer wrote them;
-- Solid packages that read like a careful Solid developer wrote them;
-- future targets.
+- React 19 packages that look like a careful React developer wrote them;
+- Solid packages that look like a careful Solid developer wrote them;
+- more frameworks over time.
+
+There is no wrapper and no runtime layer. Each output is real code for that
+framework. Solid output uses signals. React output uses hooks and works with
+the React ecosystem. When we add a resumable framework, that output will be
+resumable. You write the component once, and each framework's strengths come
+free with the compile.
 
 ```tsx
-import { state } from '@markless/core';
+import { state } from '@frameless.md/core';
 
 export function Counter() @{
   let count = state(0);
@@ -24,131 +30,119 @@ export function Counter() @{
 }
 ```
 
-From that one source, Frameless emits per-framework idioms — not a wrapper, not
-a runtime adapter, and not a lowest-common-denominator translation:
+From that one file, Frameless generates code the way each framework wants it
+written:
 
 ```jsx
 // React 19 output
 const [count, setCount] = useState(0);
-// click: const nextCount = count + 1; setCount(nextCount);
+// on click: const nextCount = count + 1; setCount(nextCount);
 ```
 
 ```jsx
 // Solid output
 const [count, setCount] = createSignal(0);
-// click: setCount(count() + 1); reads stay count()
+// on click: setCount(count() + 1); reads stay count()
 ```
 
-Each output goes through that framework's own conventionality gate — rules
-derived from the framework's documentation and real-world code, enforced per
-construct with tests that prove each rule can fail. Then both outputs run in
-headless Chromium against scripted scenarios, and their behavior is compared
-channel by channel: DOM, callbacks, keyed identity, focus. The result is a
-validated receipt, not a claim.
+Then Frameless checks its own work, twice:
 
-In short:
+1. Every output is checked against style rules for that framework. The rules
+   come from the framework's docs and from real-world code, and every rule has
+   a test proving it can catch a violation.
+2. Both outputs run in a real headless browser against the same scripted user
+   actions. Frameless compares what each one did: the DOM, the callbacks, list
+   item identity, focus. If they match, it writes a report file. If they do
+   not match, the build fails.
+
+The short version:
 
 ```txt
-Markless .tsrx source
-  -> Markless semantic graph
-  -> Frameless enriched IR (frameless-enriched-ir/2)
-  -> React 19 emitter + gate
-  -> Solid emitter + gate
-  -> behavioral equivalence receipts (frameless-receipts/1)
+your .tsrx file
+  -> what the component means (state, events, shared state, element access)
+  -> React 19 output, checked
+  -> Solid output, checked
+  -> browser test report proving both behave the same
 ```
 
-## What It Is
+## What You Get
 
-- A compiler extension: `@frameless/compiler` extends the Markless semantic
-  graph into a versioned, fail-closed enriched IR.
-- Per-framework emitters that consume recorded semantics — state, derived
-  values, events, keyed lists, conditionals, children/slots, shared state,
-  element handles and attach behaviors — and never rediscover meaning from
-  source text.
-- Conventionality gates per framework: dossier-derived policies with a bypass
-  mutation test behind every rule.
-- A framework-free behavioral analyzer: scenarios, traces, comparison, mutant
-  calibration, and `frameless-receipts/1` results in headless Chromium.
-- A CLI that builds multi-file `.tsrx` module sets into both targets at once,
-  gates the output at full strength, and writes build receipts.
-- One documented command that proves the whole story end to end.
+- One authoring model. Components, state, derived values, events, lists,
+  conditionals, children, shared state, and element access.
+- Generated code that follows each framework's best practices, not a
+  one-size-fits-all translation.
+- Style checks for every output, with tests behind every rule.
+- Real browser tests that compare the outputs' behavior action by action.
+- A command line tool that builds a whole folder of components into every
+  framework at once.
+- One command that runs the entire story end to end.
 
-## Demo: one command, two frameworks, receipts
+## Try It
 
 ```sh
 pnpm install
 pnpm e2e
 ```
 
-The command builds two demo libraries — `demos/ui-kit` (three single-file
-components) and `demos/composition-kit` (five modules with cross-file imports,
-slot projection, shared state across sibling components, element handles, and
-attach cleanup) — into React 19 and Solid packages, runs every scripted
-scenario against both outputs in separate headless-Chromium projects, compares
-React-emitted and Solid-emitted traces from the same authored sources, and
-validates a receipt under each demo's `receipts/` directory.
+This builds the two demo libraries in this repo. `demos/ui-kit` has three
+simple components. `demos/composition-kit` has five files that import each
+other, pass children around, share state between components, and use element
+access with cleanup. Both demos compile to React 19 and Solid, run in a
+headless browser, and produce a report file under each demo's `receipts/`
+folder showing the outputs behaved the same.
 
-## What This Does Not Mean
+## What It Does Not Do
 
-Frameless does not claim proof over arbitrary programs. The receipts cover the
-scripted scenario families the demos exercise. They do not cover unsupported
-component features, SSR, hydration, accessibility, or performance.
+Frameless does not promise that any possible program works. The browser tests
+cover the scripted scenarios in the demos. They do not cover features we have
+not built yet, server-side rendering, accessibility, or performance.
 
-Frameless also does not translate frameworks into each other's idioms. The
-cross-target bar is behavioral: the same authored source may lower to a
-provider in Solid and a props tier in React when each framework's own evidence
-says so, as long as the rendered behavior is equal. The framework owns its
-idiom. The receipts own the equality.
+Frameless also does not force frameworks to copy each other. The bar is
+behavior. The same component may compile to different shapes in React and
+Solid when that is what each framework's own best practice says. Each
+framework owns its style. The tests own the proof that behavior matches.
 
-## Receipts
+## How We Test
 
-Every claim in this repository is backed by something that runs:
+Every claim in this repo is backed by something that runs:
 
-- emitter goldens with byte-freshness tests;
-- gate policies with per-policy bypass mutations;
-- calibration lanes where named mutant classes must be rejected before any
-  emitted output is judged;
-- cross-framework comparison receipts produced by the one documented command;
-- fresh-checkout audits recorded on the goal boards under `docs/goals/`.
-
-If a receipt cannot be produced honestly, the build fails instead.
+- generated output is saved in the repo and tests fail if it drifts;
+- every style rule has a test that proves it catches a bad output;
+- the browser tests are checked against intentionally broken components first,
+  so we know they can fail;
+- the demo command writes a report file, and the build fails if the report
+  cannot be produced honestly;
+- each finished milestone was verified from a fresh clone of the repo, and the
+  full decision trail lives under `docs/goals/`.
 
 ## Packages
 
-- `packages/compiler` — Markless compiler extension producing
-  `frameless-enriched-ir/2`.
-- `packages/analyzer` — framework-free scenarios, traces, comparison, mutant
-  data, and `frameless-receipts/1` results.
-- `packages/frameworks/react` — React 19 emitter, conventionality gate,
-  browser-safe adapter, handwritten references, and calibration.
-- `packages/frameworks/solid` — Solid emitter, gate, adapter, references, and
-  isolated calibration (Solid 1.8.22 runtime fallback; the Solid 2 blocker is
-  an executable contract test).
-- `packages/cli` — build entry, module-set resolution, and internal framework
-  registration.
-- `demos/ui-kit` — bounded cross-target product demonstration.
-- `demos/composition-kit` — five-module composition, shared-state, handle, and
-  cleanup demonstration.
+- `packages/compiler` compiles `.tsrx` files into a record of what each
+  component means.
+- `packages/analyzer` runs the scripted browser scenarios and compares
+  behavior between outputs.
+- `packages/frameworks/react` generates and checks the React 19 output.
+- `packages/frameworks/solid` generates and checks the Solid output.
+- `packages/cli` is the build command. It compiles many files at once and
+  writes build reports.
+- `demos/ui-kit` and `demos/composition-kit` are the demo libraries.
 
-The isolated `poc/**` packages are read-only historical evidence, not
-workspace members. Owning package READMEs carry operational contracts and
-limits.
+The `poc/` folder is early proof work. It is kept as evidence and is not part
+of the product.
 
 ## Status
 
-Frameless is under active implementation against the Markless compiler,
-consumed as pinned vendored artifacts. Two milestones are complete, each
-closed by a fresh-checkout audit:
+Two milestones are done. Each one was verified from a fresh clone before we
+called it done:
 
-- **v0** — the proven single-component surface: state, derived values, events,
-  keyed lists, conditionals, controlled inputs.
-- **Composition** — multi-component and multi-file: children/slots, shared
-  state lowered per framework from recorded read/write granularity, element
-  handles with attach cleanup, and cross-file module-set builds.
+- **v0**: single components with state, derived values, events, keyed lists,
+  conditionals, and controlled inputs.
+- **Composition**: multiple components and multiple files, with children,
+  shared state, and element access with cleanup.
 
-Recorded and gated, not yet built: cross-file shared state, named capture
-slots, and cross-module handle forwarding (pending a Markless vendor refresh);
-SSR lanes; persistence; additional targets.
+Planned next, in the open: shared state across files, named slots, passing
+element access between files, server-side rendering tests, saved state
+(localStorage and friends), and more frameworks.
 
 ## Development
 
@@ -164,17 +158,27 @@ pnpm test:browser
 pnpm test:poc
 ```
 
-Browser lanes require the locally cached Playwright Chromium build.
+The browser tests need the locally cached Playwright Chromium build.
 
 Read these first when changing the repo:
 
 - [CONTRIBUTING.md](./CONTRIBUTING.md) for the package map and workflow.
 - [AGENTS.md](./AGENTS.md) for project rules.
-- `docs/goals/` for the decision and receipt trail behind the current design.
+- `docs/goals/` for the decisions and evidence behind the current design.
+
+## Markless
+
+The components you write for Frameless are API-compatible with
+[Markless](https://github.com/markless-dev/markless), a resumable UI framework
+that renders the same component model to the web and to native apps (UIKit on
+iOS, AppKit on macOS) with no hydration and no virtual DOM. Frameless is built
+on the Markless compiler.
+
+Same components, two ways to ship: run them on Markless itself, or compile
+them with Frameless into the framework your team already uses.
 
 ## Agent Guidance
 
-AI agent rules are sourced from [`.ruler/`](.ruler/) and generated with
+AI agent rules come from [`.ruler/`](.ruler/) and are generated with
 [Ruler](https://github.com/intellectronica/ruler) via `pnpm rules`.
-`AGENTS.md` is a generated file — edit `.ruler/` instead and rerun
-`pnpm rules`.
+`AGENTS.md` is a generated file. Edit `.ruler/` and rerun `pnpm rules`.
