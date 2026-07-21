@@ -259,3 +259,54 @@ let tab   = storage('a', { key: 'ui.tab', in: 'session' });  // full form
   landing slot, T004b write-through, gate rules P-SEED/P-WT/P-SYNC/P-QWK) — they
   were never coupled to surface syntax.
 - The persist: option design above is superseded by this section.
+
+---
+
+## OWNER DESIGN SESSION (2026-07-20 evening, Slack w/ Patrick Stapleton) — SUPERSEDING DECISIONS
+
+1. storage() CONFIRMED as the primitive — but it moves OUT of core:
+   `@markless/storage`, a separate first-party package like the router.
+   Rationale (Patrick, adopted by owner): don't mix sync storage into the
+   signal layer; storage() USES signals but is its own layer — correct
+   separation; "adapter-like: create storage, platform functions for get/set;
+   too much magic isn't great"; if it needs that machinery it doesn't belong in
+   the framework. DRIVER/REPOSITORY pattern for platform backends: web ->
+   localStorage/cookie, native -> SQLite (goal is multi-platform within
+   reason; webview-first native with selective native-view upgrades discussed).
+2. SURFACE (owner's current sketch, supersedes derived-key-default):
+   `const theme = storage('theme', 'light')` — EXPLICIT key first, initial
+   second. "Similar to state in feeling but clearer that what's happening is
+   reads and writes to the storage layer, not your state layer." (The derived-
+   key idea from earlier today is superseded unless owner revives it; the
+   rename-orphan trade it carried disappears with explicit keys.)
+3. SCOPE CHARTER (owner's engineer-lens list, adopted): SOLVE DEVICE STATE,
+   NOT DATA. Device state (theme/prefs/drafts) has a built-in fallback — the
+   default value — safe to own. Data needs sync + conflict resolution — a
+   separate system, never this package. Old frameworks died on data; new ones
+   shipped nothing; the line goes in the docs in one sentence.
+4. DELIVERY MECHANISM REFRAMED — progressive runtime execution: "only the
+   possible functions you need at runtime... basically the same as a script
+   tag performance-wise but readable." For MARKLESS the pre-paint seed rides
+   the chunked runtime / payload-script machinery (native to the language) —
+   persistence is A PROPERTY ON THE DATAFLOW GRAPH, explicitly NOT an effect.
+   For FRAMELESS TARGETS (React/Solid, monolithic runtimes) the generated
+   read+seed script + landing slot remains the lowering — the graph property
+   is what makes both derivable. All T013 lowering contracts (seed slot,
+   T004b write-through, gate rules, Qwik never-visible-task) stand.
+5. NEW DESIGN THREAD OPENED (future tranche input): the compiler EXTENSION
+   surface — how first/third parties hook the semantic graph (vite-plugin
+   layer exposure, no internals reliance, "don't expose too much power").
+   Discovery method (Patrick, adopted): build the ROUTER and STORAGE packages
+   first-party and let their DX needs define the API — "if a first-party
+   package can't reach the DX you want, it's cooked." Code-splitting/placement
+   answer recorded: the compiler decides render-phase vs interaction-phase and
+   what-runs-where AT COMPILE TIME and writes decisions as metadata; every
+   platform is a translation layer from metadata to action (explicit contrast
+   with NativeScript, which crosses the whole platform over the boundary —
+   markless crosses only application metadata).
+
+Open for the spec update the owner is writing: exact @markless/storage API
+(driver registration shape, get/set contract, sync/async story for SQLite),
+whether frameless targets consume storage() via the same compiler records
+(they must — the graph property is the cross-target contract), cookie/maxAge
+option shape for the server-readable case.
