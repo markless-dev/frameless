@@ -68,7 +68,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/storage-tradeoff/"
     command: "npx goalbuddy board docs/goals/storage-tradeoff"
 
-active_task: T004
+active_task: T005
 
 tasks:
   - id: T001
@@ -104,14 +104,18 @@ tasks:
   - id: T004
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Tradeoff matrix + decision menu: score every surviving candidate PER MODE (markless ideal-ness, frameless ideal-ness — asymmetries explicit, never averaged), against the constraints (inertness principle, consent ownership, branding, device-state-not-data), with the evidence trail per cell; produce the owner decision menu (2-4 real options, each with what-you-get/what-you-give-up, a recommendation with reasoning, and the named unknowns each option carries). NO ratification — menu preparation only."
-    receipt: null
+    receipt:
+      result: done
+      decision: approved
+      note: notes/T004-tradeoff-matrix.md
+      summary: "Matrix built: all 8 surviving candidates scored per-mode (asymmetries explicit) against 8 constraint rows, every cell cited to E1-E5/P1-P5/S1-S8 or labeled INF; executed probes moved scores (payload viability, fallback-then-patch soundness, pre-paint-as-upgrade-only, facade rejection, seed budget). Menu: 4 headlined options (provider/root switch; build-config+include; plain-cell-now/no-flash-later; app-owned cells) + promotable alternates (manifest, directive) + module-scope add-on; recommendation (C1 with C4's semantic framing, C3 as staging) clearly subordinate. Misfire self-check included, five risky-reading spots named. Nothing ratified."
   - id: T005
     type: pm
     assignee: PM
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: "Deliver the decision menu to the owner (plain-language, understandable without goal context, per AGENTS.md decision-menu rules) and record the owner's choice or their named evidence gap; if a gap — spawn the targeted follow-up scout and loop."
     receipt: null
