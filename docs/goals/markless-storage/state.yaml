@@ -1,0 +1,132 @@
+version: 2
+
+goal:
+  slug: markless-storage
+  title: "storage() in the markless compiler, consumed by frameless"
+  status: active
+  charter: goal.md
+  kind: specific
+  tranche: "Implement storage(key, fallback) as a compiler-known declaration in markless (dedicated branch; suite green), wire the unified seed channel (payload for native, early script for browser targets), then consume it in frameless (React first) with executed end-to-end proof on both sides; critique at API/cross-repo boundaries; owner checkpoints on key-identity and consent-API details."
+  oracle:
+    signal: "One authored source using storage('theme','light') proven executed on BOTH sides: markless-native (seed in graph before runtime start, reactive round-trip, consent deferral; repo suite green) AND frameless-compiled React (seed script in SSR output, no-flash at first paint, zero double reads, round-trip via storage-poc contract assertions)."
+    cadence: "at each worker receipt and both boundary reviews"
+    final_proof: "Final audit maps executed both-sides evidence to the original ask; full_outcome_complete requires executed browser/native proof, not compiling code."
+  intake:
+    original_request: "The markless compiler needs to support storage, so let's figure out how this is going to work directly in markless, then consume that in frameless"
+    interpreted_outcome: "storage() implemented in the markless compiler+runtime on a dedicated branch, seeded via the unified channel, consumed by frameless React output with the identical executed contract."
+    input_shape: specific
+    audience: "owner (Jack); markless + frameless users downstream"
+    authority: "requested; markless WRITE ACCESS GRANTED by owner 2026-07-21 (intake answer: 'Yes — write markless now'), superseding the session read-only constraint; markless main remains untouchable without explicit owner confirmation"
+    proof_type: test
+    completion_proof: "Executed proof both sides + suites green + boundary critiques + boards receipted."
+    likely_misfire: "Stale-pin confusion (implementing against wrong markless); scope creep into promotion/driver zoo; inventing unratified details (key namespacing, consent surface) without owner checkpoints; compile-green-but-never-executed completion."
+    existing_plan_facts: "Ratified direction from qds-primitives loop (storage() only new API; auto seed from reachability; consent switch; inert/lazy/landing-slot contract). P1 probe: payload seeding worked without core changes on the old pin. P5: MARKLESS_FRAMEWORK_IMPORT_REQUIRED; accepted-import-sources now unlockable markless-side. storage-poc runner (65/65) = executable contract reference. T009 SSR probe = React emission pattern. Frameless vendors a pinned markless; vendor-refresh question must be settled early."
+    non_goals:
+      - "attach-promotion implementation (separate future goal; keep channel compatible)"
+      - "Driver zoo / non-string values (v1 = localStorage + strings)"
+      - "markless main-branch writes without explicit owner confirmation"
+      - "Qwik/Svelte/Angular frameless emitters (React first, Solid stretch)"
+
+policies:
+  one_active_task: true
+  parallel_workers: "crew serial in-checkout per repo (worktrees lack node_modules); disjoint-repo slices may overlap only with PM approval per dispatch"
+  max_consecutive_tiny_tasks: 2
+
+agents:
+  scout: installed
+  worker: installed
+  judge: installed
+
+active_task: T001
+
+tasks:
+  - id: T001
+    type: pm
+    assignee: PM
+    status: active
+    reasoning_hint: medium
+    objective: "Stage: record the qds-primitives closure (owner's commission = ratification of the storage() direction; run its T999), create the markless working branch/worktree, establish the pin question (current markless HEAD vs frameless vendor pin: what moved since P1/P5; vendor-refresh plan), and verify markless suite baseline green + test/verify commands."
+    receipt: null
+  - id: T002
+    type: scout
+    assignee: Scout
+    status: queued
+    reasoning_hint: medium
+    objective: "Map the markless integration surface (crew, read-only): where declarations (state/shared/element) are recognized in the compiler (symbol/module handling), the payload/resume seed channel internals, SSR/HTML emission points for a browser seed script, runtime cell/graph implementation + notify contract (T004b atomic-write context), package layout for a new declaration, accepted-import-sources / import-validation site (P5 fix location), and test conventions."
+    expected_output:
+      - "notes/T002-markless-surface.md with file:line map"
+    receipt: null
+  - id: T003
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Integration design + slice plan: exact storage() home (package/module), compiler recognition record, seed emission per output mode (payload vs early script), write-back/sync/consent runtime shape, accepted-import-sources decision for the frameless branding constraint, key-identity DESIGN OPTIONS (owner checkpoint — do not decide), slice sequence with allowed_files/verify/stop_if per worker."
+    expected_output:
+      - "notes/T003-design.md + worker slice contracts"
+    receipt: null
+  - id: T004
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Markless slice 1 (crew, markless branch): storage() declaration + runtime persisted cell (inert/lazy/write-back) + compiler recognition + unit tests; suite green."
+    allowed_files:
+      - "markless worktree paths fixed by T003 design"
+    verify:
+      - "markless suite green (exact command from T001 baseline)"
+    stop_if:
+      - "Need files outside T003 contract"
+      - "Suite red twice on same cause"
+      - "Design ambiguity on ratified-vs-open detail (escalate to PM)"
+    receipt: null
+  - id: T005
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Markless slice 2 (crew, markless branch): seed channel — payload seeding for native output + early-script emission for browser/SSR output (shared generation machinery, slot keying left promotion-compatible) + consent-deferral gate; executed seed proof (probe-class run) + suite green."
+    allowed_files:
+      - "markless worktree paths fixed by T003 design"
+    verify:
+      - "markless suite green + executed seed probe"
+    stop_if:
+      - "Need files outside T003 contract"
+      - "Suite red twice on same cause"
+    receipt: null
+  - id: T006
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Markless boundary review (public API surface -> second-model critique REQUIRED per merge rules): API shape fidelity to ratified direction, channel promotion-compatibility, suite health, accepted-import-sources correctness; go/no-go for frameless consumption."
+    receipt: null
+  - id: T007
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Frameless consumption (crew, frameless worktree): vendor refresh per T001 plan, compiler recognition of storage() through the enriched IR, React emitter wiring (seed script emission per T009 pattern + cell lowering per storage-poc adapter), e2e proof through the storage-poc contract assertions; full frameless lane green (no composition regressions). Solid = stretch, only if React lands cleanly."
+    allowed_files:
+      - "frameless worktree paths fixed by T003 design"
+    verify:
+      - "frameless full lane green + storage e2e assertions green"
+    stop_if:
+      - "Need files outside contract"
+      - "Vendor refresh breaks composition lane (escalate)"
+    receipt: null
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Final audit: both oracle halves executed green; branches reviewed/critiqued/merged per charter (markless main only with owner confirmation); owner checkpoints honored (key-identity, consent surface); full_outcome_complete accordingly."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "per-side executed-proof verdict"
+    receipt: null
+
+checks:
+  dirty_fingerprint: "board prepped on worktree-storage-poc (docs-only); markless branch created at /goal start"
+  last_verification: null
