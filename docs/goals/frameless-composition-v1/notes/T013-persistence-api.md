@@ -202,3 +202,31 @@ fallback, write-through in the post-method notification phase, per-target
 lowerings (React/Solid seed-read; markless payload channel; Qwik seed-preferring
 reads now CORPUS-VERIFIED), gate rules P-SEED1/2, P-WT1, P-SYNC1 (+ new
 P-SYNC2: reject sync+session), P-QWK1. T013 evidence obligations: CLOSED.
+
+---
+
+## OWNER AMENDMENT (2026-07-20): surface collapsed — derived keys, options cut
+
+Owner: key shouldn't be required (derive from the var — the compiler has the
+name); the options bag was too big. Adopted:
+
+```ts
+persist: true                    // 90% case — key DERIVED from /2 ownership
+                                 // records: <pkg>:<component|factory>.<varName>
+persist: 'stable.key'            // explicit key: data that must survive renames
+persist: { key?, in?, sync? }    // rare full form (3 options total)
+```
+
+- Derived-key trade RECORDED: renaming the var/component orphans stored data ->
+  falls back to authored initial (safe-but-lossy; correct for prefs-shaped
+  state; opt into a string key for refactor-surviving data).
+- CUT `version`: explicit keys are free-form — bump the string itself. Same
+  orphaning semantics, zero API.
+- CUT `serialize`/`deserialize` from v1: values must be JSON-serializable,
+  fail-closed diagnostic otherwise. Also eliminates user code in the pre-paint
+  script entirely (the inline-deserializer safety question dissolves).
+  Overturn trigger: a real non-JSON need (Date/Map-heavy state) reopens this as
+  a recorded decision.
+- KEPT `sync` (intent, not derivable) and `in` (object form only).
+- Key note: the key is NOT framework-specific — it is the cross-target contract
+  (same stored data under React and Solid); it is simply DERIVABLE.
