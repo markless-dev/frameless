@@ -72,7 +72,7 @@ describe('Solid dossier gate', () => {
 			SOLID_GATE_POLICIES.filter((policy) => policy.requiresArtifact).map(
 				(policy) => policy.id,
 			),
-		).toEqual(['S-CH5', 'S-SH3', 'S-SH7', 'S-RF5', 'S-RF7']);
+		).toEqual(['S-CH5', 'S-SH3', 'S-SH4', 'S-SH7', 'S-RF5', 'S-RF7']);
 	});
 
 	test('discovers and accepts every checked-in generated component', async () => {
@@ -301,6 +301,7 @@ describe('Solid dossier gate', () => {
 	const shared = compositionSources.get('C2-shared')!;
 	const refs = compositionSources.get('C3-ref')!;
 	const attach = compositionSources.get('C4-attach')!;
+	const props = compositionSources.get('C5-props')!;
 	const page = compositionSources.get('C8-page-store')!;
 	const compositionMutationCases = [
 		['synthesized children prop', slot.replace('<Frame>', '<Frame children={<i />}>'), 'S-CH1'],
@@ -344,6 +345,7 @@ describe('Solid dossier gate', () => {
 			'missing provider',
 			shared.replaceAll('CompositionSharedContext.Provider', 'section'),
 			'S-SH4',
+			compositionArtifacts.get('C2-shared'),
 		],
 		[
 			'container creator alias at module scope',
@@ -352,6 +354,29 @@ describe('Solid dossier gate', () => {
 				'const createAlias = createCompositionSharedShared;\nconst illicitShared = createAlias();\nconst CompositionSharedContext',
 			),
 			'S-SH4',
+			compositionArtifacts.get('C2-shared'),
+		],
+		[
+			'member-extracted container creator at module scope',
+			props
+				.replace('value={value}', 'value={leaked}')
+				.replace(
+					'const PropsValueContext',
+					'const leaked = ({ make: createPropsValueShared }).make();\nconst PropsValueContext',
+				),
+			'S-SH4',
+			compositionArtifacts.get('C5-props'),
+		],
+		[
+			'wrapped member-extracted container creator at module scope',
+			props
+				.replace('value={value}', 'value={leaked}')
+				.replace(
+					'const PropsValueContext',
+					'const wrap = (factory) => ({ make: factory });\nconst leaked = wrap(createPropsValueShared).make();\nconst PropsValueContext',
+				),
+			'S-SH4',
+			compositionArtifacts.get('C5-props'),
 		],
 		[
 			'rebuilt provider value',

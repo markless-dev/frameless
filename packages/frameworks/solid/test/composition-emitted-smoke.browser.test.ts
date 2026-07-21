@@ -200,4 +200,29 @@ describe('emitted Solid composition against the calibrated handwritten reference
 			hosts.forEach((host) => host.remove());
 		}
 	});
+
+	test('C2 emitted container provider isolates two independent mounts', async () => {
+		const adapter = createSolidAdapter(
+			withProvider(CompositionSharedProvider, SharedParticipants) as never,
+		);
+		const hosts = Array.from({ length: 2 }, () => document.createElement('div'));
+		document.body.append(...hosts);
+		const mounts = await Promise.all(hosts.map((host) => adapter.mount(host, {})));
+		try {
+			expect(
+				hosts.map((host) => host.querySelector('[data-shared-reader]')?.textContent),
+			).toEqual(['seed|0', 'seed|0']);
+			await adapter.dispatch(mounts[0], {
+				type: 'click',
+				target: '[data-action="advance-shared"]',
+			});
+			expect(
+				hosts.map((host) => host.querySelector('[data-shared-reader]')?.textContent),
+			).toEqual(['seed:0|1', 'seed|0']);
+		} finally {
+			await adapter.unmount(mounts[0]);
+			await adapter.unmount(mounts[1]);
+			hosts.forEach((host) => host.remove());
+		}
+	});
 });

@@ -34,7 +34,9 @@ export type GateResult = {
 	}>;
 };
 
-function artifactPolicy<const Id extends 'S-CH5' | 'S-SH3' | 'S-SH7' | 'S-RF5' | 'S-RF7'>(id: Id) {
+function artifactPolicy<const Id extends 'S-CH5' | 'S-SH3' | 'S-SH4' | 'S-SH7' | 'S-RF5' | 'S-RF7'>(
+	id: Id,
+) {
 	const policy = { id, dossierRef: `T004 §3.2 ${id}` as const };
 	Object.defineProperty(policy, 'requiresArtifact', { enumerable: false, value: true });
 	return policy as typeof policy & { readonly requiresArtifact: true };
@@ -72,7 +74,7 @@ export const SOLID_GATE_POLICIES = [
 	{ id: 'S-SH1', dossierRef: 'T004 §3.2 S-SH1' },
 	{ id: 'S-SH2', dossierRef: 'T004 §3.2 S-SH2' },
 	artifactPolicy('S-SH3'),
-	{ id: 'S-SH4', dossierRef: 'T004 §3.2 S-SH4' },
+	artifactPolicy('S-SH4'),
 	{ id: 'S-SH5', dossierRef: 'T004 §3.2 S-SH5' },
 	{ id: 'S-SH6', dossierRef: 'T004 §3.2 S-SH6' },
 	artifactPolicy('S-SH7'),
@@ -171,6 +173,147 @@ function moduleSharedCount(source: string): number {
 	}
 	return count;
 }
+
+type AliasValue = {
+	readonly constructsShared: boolean;
+	readonly factory: boolean;
+	readonly callable?: AstNode;
+	readonly properties?: ReadonlyMap<string, AliasValue>;
+};
+const EMPTY_ALIAS: AliasValue = { constructsShared: false, factory: false };
+
+function containerCreatorNames(program: AstNode): Set<string> {
+	const functionNames = new Set<string>();
+	for (const statement of program.body ?? []) {
+		const declaration =
+			statement.type === 'ExportNamedDeclaration' ? statement.declaration : statement;
+		if (declaration?.type !== 'FunctionDeclaration' || !declaration.id?.name) continue;
+		let provider = false;
+		walkAst(declaration.body, (node) => {
+			if (
+				node.type === 'JSXMemberExpression' &&
+				node.property?.type === 'JSXIdentifier' &&
+				node.property.name === 'Provider'
+			)
+				provider = true;
+		});
+		if (!provider) continue;
+		walkAst(declaration.body, (node) => {
+			if (
+				node.type === 'CallExpression' &&
+				node.callee?.type === 'Identifier' &&
+				/^create.+Shared\d*$/.test(node.callee.name)
+			)
+				functionNames.add(node.callee.name);
+		});
+	}
+	return functionNames;
+}
+
+function providerCount(program: AstNode): number {
+	let count = 0;
+	walkAst(program, (node) => {
+		if (
+			node.type === 'JSXMemberExpression' &&
+			node.property?.type === 'JSXIdentifier' &&
+			node.property.name === 'Provider'
+		)
+			count += 1;
+	});
+	return count;
+}
+
+function moduleConstructsShared(program: AstNode, creators: ReadonlySet<string>): boolean {
+	const environment = new Map<string, AliasValue>(
+		[...creators].map((name) => [name, { constructsShared: false, factory: true }]),
+	);
+	const evaluate = (
+		node: AstNode | null | undefined,
+		scope: ReadonlyMap<string, AliasValue>,
+		depth = 0,
+	): AliasValue => {
+		if (!node || depth > 24) return EMPTY_ALIAS;
+		if (node.type === 'Identifier') return scope.get(node.name) ?? EMPTY_ALIAS;
+		if (node.type === 'ObjectExpression') {
+			const properties = new Map<string, AliasValue>();
+			let constructsShared = false;
+			for (const property of node.properties ?? []) {
+				if (property.type !== 'Property' || property.computed) continue;
+				const name = property.key?.name ?? property.key?.value;
+				if (typeof name !== 'string') continue;
+				const value = evaluate(property.value, scope, depth + 1);
+				properties.set(name, value);
+				constructsShared ||= value.constructsShared;
+			}
+			return { constructsShared, factory: false, properties };
+		}
+		if (node.type === 'MemberExpression' && !node.computed) {
+			const owner = evaluate(node.object, scope, depth + 1);
+			const name = node.property?.name;
+			const member = typeof name === 'string' ? owner.properties?.get(name) : undefined;
+			return member
+				? { ...member, constructsShared: owner.constructsShared || member.constructsShared }
+				: { ...EMPTY_ALIAS, constructsShared: owner.constructsShared };
+		}
+		if (node.type === 'ArrowFunctionExpression' || node.type === 'FunctionExpression')
+			return { constructsShared: false, factory: false, callable: node };
+		if (node.type === 'CallExpression') {
+			const callee = evaluate(node.callee, scope, depth + 1);
+			const arguments_ = (node.arguments ?? []).map((argument: AstNode) =>
+				evaluate(argument, scope, depth + 1),
+			);
+			const argumentConstruction = arguments_.some(
+				(value: AliasValue) => value.constructsShared,
+			);
+			if (callee.factory) return { constructsShared: true, factory: false };
+			if (callee.callable) {
+				const callScope = new Map(scope);
+				for (const [index, parameter] of (callee.callable.params ?? []).entries())
+					if (parameter.type === 'Identifier')
+						callScope.set(parameter.name, arguments_[index] ?? EMPTY_ALIAS);
+				const body = callee.callable.body;
+				const returned =
+					body.type === 'BlockStatement'
+						? body.body.find(
+								(statement: AstNode) => statement.type === 'ReturnStatement',
+							)?.argument
+						: body;
+				const result = evaluate(returned, callScope, depth + 1);
+				return {
+					...result,
+					constructsShared:
+						callee.constructsShared || argumentConstruction || result.constructsShared,
+				};
+			}
+			return {
+				constructsShared: callee.constructsShared || argumentConstruction,
+				factory: false,
+			};
+		}
+		return EMPTY_ALIAS;
+	};
+	for (const statement of program.body ?? []) {
+		const declaration =
+			statement.type === 'ExportNamedDeclaration' ? statement.declaration : statement;
+		if (declaration?.type === 'FunctionDeclaration' && declaration.id?.name) {
+			if (!creators.has(declaration.id.name))
+				environment.set(declaration.id.name, {
+					constructsShared: false,
+					factory: false,
+					callable: declaration,
+				});
+			continue;
+		}
+		if (declaration?.type !== 'VariableDeclaration') continue;
+		for (const variable of declaration.declarations ?? []) {
+			if (variable.id?.type !== 'Identifier') continue;
+			const value = evaluate(variable.init, environment);
+			environment.set(variable.id.name, value);
+			if (value.constructsShared) return true;
+		}
+	}
+	return false;
+}
 function hasProjectionProvenance(artifact: EnrichedIR): boolean {
 	let found = false;
 	const inspect = (value: unknown): void => {
@@ -196,6 +339,8 @@ async function provenanceViolations(
 		formatEmitted(emit(artifact)),
 	]);
 	const violations: GateViolation[] = [];
+	const actualProgram = parseModule(actual);
+	const expectedProgram = parseModule(expected);
 	if (
 		artifact.records.sharedDefinitions.some((entry) => entry.scope === 'page') &&
 		moduleSharedCount(actual) !== moduleSharedCount(expected)
@@ -207,6 +352,20 @@ async function provenanceViolations(
 				'Page shared lowering does not match the artifact-recorded module singleton',
 			),
 		);
+	if (artifact.records.sharedDefinitions.some((entry) => entry.scope !== 'page')) {
+		const creators = containerCreatorNames(expectedProgram);
+		if (
+			providerCount(actualProgram) !== providerCount(expectedProgram) ||
+			moduleConstructsShared(actualProgram, creators)
+		)
+			violations.push(
+				violation(
+					file,
+					'S-SH4',
+					'Container/request shared construction must remain provider-owned and below module scope',
+				),
+			);
+	}
 	if (
 		hasProjectionProvenance(artifact) &&
 		jsxSignatures(actual).join('\0') !== jsxSignatures(expected).join('\0')

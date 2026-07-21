@@ -943,72 +943,17 @@ export function customPolicies(
 		const contextNames = [
 			...source.matchAll(/\bconst\s+(\w*Context\d*)\s*=\s*createContext\s*\(/g),
 		].map((match) => match[1]!);
-		const sharedCreators = new Set<string>();
-		for (const statement of module.ast.body as Node[])
-			if (
-				is(statement, 'FunctionDeclaration') &&
-				is(statement.id, 'Identifier') &&
-				/^create\w*Shared\d*$/.test(statement.id.name)
-			)
-				sharedCreators.add(statement.id.name);
-		let addedAlias = true;
-		while (addedAlias) {
-			addedAlias = false;
-			for (const statement of module.ast.body as Node[]) {
-				if (!is(statement, 'VariableDeclaration')) continue;
-				for (const declaration of statement.declarations) {
-					if (
-						is(declaration.id, 'Identifier') &&
-						is(declaration.init, 'Identifier') &&
-						sharedCreators.has(declaration.init.name) &&
-						!sharedCreators.has(declaration.id.name)
-					) {
-						sharedCreators.add(declaration.id.name);
-						addedAlias = true;
-					}
-				}
-			}
-		}
-		let moduleSharedCreations = 0;
-		for (const statement of module.ast.body as Node[]) {
-			if (!is(statement, 'VariableDeclaration')) continue;
-			for (const declaration of statement.declarations)
-				if (
-					is(declaration.init, 'CallExpression') &&
-					is(declaration.init.callee, 'Identifier') &&
-					sharedCreators.has(declaration.init.callee.name)
-				)
-					moduleSharedCreations += 1;
-		}
-		if (contextNames.length > 0 && moduleSharedCreations > 0)
-			violations.push(
-				violation(
-					file,
-					'S-SH4',
-					'Container/request shared creators, including aliases, must not run at module scope',
-				),
-			);
 		for (const context of contextNames) {
 			const escaped = context.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 			const reads = (
 				source.match(new RegExp(`useContext\\s*\\(\\s*${escaped}\\s*\\)`, 'g')) ?? []
 			).length;
-			const providers = (source.match(new RegExp(`<${escaped}\\.Provider\\b`, 'g')) ?? [])
-				.length;
 			if (reads !== 1)
 				violations.push(
 					violation(
 						file,
 						'S-SH1',
 						`${context} requires exactly one record-resolved useContext reader`,
-					),
-				);
-			if (providers !== 1)
-				violations.push(
-					violation(
-						file,
-						'S-SH4',
-						`${context} requires exactly one provider enclosing its consumers`,
 					),
 				);
 		}
@@ -1094,9 +1039,15 @@ export function customPolicies(
 			/const\s+(\w+)\s*=\s*\(node\)\s*=>\s*\{([\s\S]*?)\n\s*\};/g,
 		)) {
 			if (!/^attach\w*/.test(match[1]!)) continue;
-			const hasTrackedInput =
-				/\bconst\s+\w+Input\d*\s*=\s*\w+\(\)\s*;/.test(match[2]!);
-			if (hasTrackedInput && !/\bcreateEffect\s*\(/.test(match[2]!))
+			const hasTrackedInput = /\b(?:const|let)\s+\w+Input\d*\s*=\s*\w+\(\)\s*;/.test(
+				match[2]!,
+			);
+			const componentReturn = source.indexOf('\n\treturn', match.index);
+			const directiveSource = source.slice(
+				match.index,
+				componentReturn < 0 ? source.length : componentReturn,
+			);
+			if (hasTrackedInput && !/\bcreateEffect\s*\(/.test(directiveSource))
 				violations.push(
 					violation(
 						file,

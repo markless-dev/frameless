@@ -118,18 +118,27 @@ describe('Solid structural emitter', () => {
 		const build = (filename: string, source: string) => buildEnrichedIr({ filename, source });
 
 		test('emits every component, nested children, projection, and generated imports', async () => {
-			const local = await build('src/composition.tsrx', `function Frame({ children }) @{ <section>{children}</section> } export function Page() @{ <Frame><strong>projected</strong></Frame> }`);
+			const local = await build(
+				'src/composition.tsrx',
+				`function Frame({ children }) @{ <section>{children}</section> } export function Page() @{ <Frame><strong>projected</strong></Frame> }`,
+			);
 			const source = emit(local);
 			expect(source).toMatch(/function Frame\(props\d*\)/);
 			expect(source).toMatch(/export function Page\(props\d*\)/);
 			expect(source).toContain('<Frame><strong>projected</strong></Frame>');
 			expect(source).toMatch(/<section>\{props\d*\.children\}<\/section>/);
-			const external = await build('src/parent.tsrx', `import { Child } from "./child.tsrx"; export function Parent() @{ <Child value={1}><span>nested</span></Child> }`);
+			const external = await build(
+				'src/parent.tsrx',
+				`import { Child } from "./child.tsrx"; export function Parent() @{ <Child value={1}><span>nested</span></Child> }`,
+			);
 			expect(emit(external)).toContain("import { Child } from './child.jsx'");
 		});
 
 		test('scope-switches shared cells, emits derived arrows, stable actions, and providers', async () => {
-			const ir = await build('src/shared.tsrx', `import { computed, shared, state } from "@markless/core"; export const useCounter = shared(() => { let count = state(0); let pair = state({ value: 1 }); const double = computed(() => count * 2); return { count, pair, double, increment() { count++; } }; }, { scope: "container" }); export function Counter() @{ const counter = useCounter(); <button onClick={() => counter.increment()}>{counter.double}</button> }`);
+			const ir = await build(
+				'src/shared.tsrx',
+				`import { computed, shared, state } from "@markless/core"; export const useCounter = shared(() => { let count = state(0); let pair = state({ value: 1 }); const double = computed(() => count * 2); return { count, pair, double, increment() { count++; } }; }, { scope: "container" }); export function Counter() @{ const counter = useCounter(); <button onClick={() => counter.increment()}>{counter.double}</button> }`,
+			);
 			const source = emit(ir);
 			expect(source).toContain('const CounterContext = createContext()');
 			expect(source).toContain('function createCounterShared()');
@@ -145,36 +154,64 @@ describe('Solid structural emitter', () => {
 		});
 
 		test('emits direct and forwarded refs, null guards, and named tracked directives', async () => {
-			const forwarded = await build('src/forward.tsrx', `import { element } from "@markless/core"; function Field(props) @{ <input el={props.input} /> } export function Page() @{ const input = element<HTMLInputElement>(); <><Field input={input} /><button onClick={() => input?.focus()}>focus</button></> }`);
+			const forwarded = await build(
+				'src/forward.tsrx',
+				`import { element } from "@markless/core"; function Field(props) @{ <input el={props.input} /> } export function Page() @{ const input = element<HTMLInputElement>(); <><Field input={input} /><button onClick={() => input?.focus()}>focus</button></> }`,
+			);
 			const refSource = emit(forwarded);
 			expect(refSource).toContain('let input;');
 			expect(refSource).toMatch(/props\d*\.input\(node\)/);
 			expect(refSource).toMatch(/onCleanup\(\(\) => props\d*\.input\(undefined\)\)/);
 			expect(refSource).toContain('input?.focus()');
-			const attach = await build('src/attach.tsrx', `import { state } from "@markless/core"; export function Page() @{ let value = state("a"); <div attach={(node) => { node.dataset.value = value; return () => { delete node.dataset.value; }; }} /> }`);
+			const attach = await build(
+				'src/attach.tsrx',
+				`import { state } from "@markless/core"; export function Page() @{ let value = state("a"); <div attach={(node) => { node.dataset.value = value; return () => { delete node.dataset.value; }; }} /> }`,
+			);
 			const attachSource = emit(attach);
 			expect(attachSource).toContain('use:attachHost');
 			expect(attachSource).toMatch(/import \{[^}]*onMount[^}]*\} from 'solid-js'/);
-			expect(attachSource).toMatch(/const attachHost\d* = \(node\) => \{\s*onMount\(\(\) => \{/);
+			expect(attachSource).toMatch(
+				/const attachHost\d* = \(node\) => \{\s*onMount\(\(\) => \{/,
+			);
 			expect(attachSource).toContain('createEffect(() =>');
 			expect(attachSource).toContain('onCleanup(() =>');
-			expect(attachSource).toMatch(/const valueInput = value\(\);[\s\S]*dataset\.value = valueInput/);
+			expect(attachSource).toMatch(
+				/let valueInput = value\(\);[\s\S]*dataset\.value = valueInput/,
+			);
 		});
 
 		test('installs zero-input behaviors bare and tracks only behaviors with inputs', async () => {
-			const zeroInput = await build('src/zero-input-attach.tsrx', `export function Page() @{ <div attach={(node) => { node.dataset.install = "zero"; return () => { node.dataset.cleanup = "zero"; }; }} /> }`);
+			const zeroInput = await build(
+				'src/zero-input-attach.tsrx',
+				`export function Page() @{ <div attach={(node) => { node.dataset.install = "zero"; return () => { node.dataset.cleanup = "zero"; }; }} /> }`,
+			);
 			const zeroInputSource = emit(zeroInput);
 			expect(zeroInputSource).not.toContain('createEffect');
-			expect(zeroInputSource).toMatch(/onMount\(\(\) => \{[\s\S]*const cleanup\d* = \(\(node\) => \{[\s\S]*dataset\.install = 'zero'[\s\S]*\}\)\(node\);[\s\S]*onCleanup\(\(\) =>/);
+			expect(zeroInputSource).toMatch(
+				/onMount\(\(\) => \{[\s\S]*let cleanup\d* = undefined;[\s\S]*cleanup\d* = \(\(node\) => \{[\s\S]*dataset\.install = 'zero'[\s\S]*\}\)\(node\);[\s\S]*onCleanup\(\(\) =>/,
+			);
 
-			const tracked = await build('src/tracked-attach.tsrx', `import { state } from "@markless/core"; export function Page() @{ let value = state("tracked"); <div attach={(node) => { node.dataset.install = value; return () => { node.dataset.cleanup = value; }; }} /> }`);
+			const tracked = await build(
+				'src/tracked-attach.tsrx',
+				`import { state } from "@markless/core"; export function Page() @{ let value = state("tracked"); <div attach={(node) => { node.dataset.install = value; return () => { node.dataset.cleanup = value; }; }} /> }`,
+			);
 			const trackedSource = emit(tracked);
-			expect(trackedSource).toMatch(/onMount\(\(\) => \{[\s\S]*createEffect\(\(\) => \{[\s\S]*const valueInput = value\(\);[\s\S]*dataset\.install = valueInput/);
+			expect(trackedSource).toMatch(
+				/onMount\(\(\) => \{[\s\S]*let valueInput = value\(\);[\s\S]*dataset\.install = valueInput[\s\S]*createEffect\(\(\) => \{[\s\S]*const valueInputNext = value\(\)/,
+			);
 		});
 
 		test('preserves authored behavior install order and emits reverse cleanup order', async () => {
-			const zeroInput = await build('src/first-attach.tsrx', `export function Page() @{ <div attach={(node) => { node.dataset.install = "first"; return () => { node.dataset.cleanup = "first"; }; }} /> }`);
-			const mixed = clone(await build('src/mixed-attach.tsrx', `import { state } from "@markless/core"; export function Page() @{ let value = state("second"); <div attach={(node) => { node.dataset.install = value; return () => { node.dataset.cleanup = value; }; }} /> }`)) as any;
+			const zeroInput = await build(
+				'src/first-attach.tsrx',
+				`export function Page() @{ <div attach={(node) => { node.dataset.install = "first"; return () => { node.dataset.cleanup = "first"; }; }} /> }`,
+			);
+			const mixed = clone(
+				await build(
+					'src/mixed-attach.tsrx',
+					`import { state } from "@markless/core"; export function Page() @{ let value = state("second"); <div attach={(node) => { node.dataset.install = value; return () => { node.dataset.cleanup = value; }; }} /> }`,
+				),
+			) as any;
 			const first = clone(zeroInput.records.behaviors[0]) as any;
 			const second = mixed.records.behaviors[0];
 			first.id = 'behavior:first';
@@ -189,45 +226,177 @@ describe('Solid structural emitter', () => {
 			const secondInstall = source.indexOf('dataset.install = valueInput');
 			expect(firstInstall).toBeGreaterThan(-1);
 			expect(secondInstall).toBeGreaterThan(firstInstall);
-			expect(source).toMatch(/onCleanup\(\(\) => \{[\s\S]*typeof cleanup3[\s\S]*cleanup3\(\);[\s\S]*typeof cleanup2[\s\S]*cleanup2\(\);/);
+			expect(source).toMatch(
+				/onCleanup\(\(\) => \{[\s\S]*typeof cleanup3[\s\S]*cleanup3\(\);[\s\S]*typeof cleanup2[\s\S]*cleanup2\(\);/,
+			);
+		});
+
+		test('installs a tracked behavior before a later zero-input behavior in authored order', async () => {
+			const tracked = clone(
+				await build(
+					'src/tracked-first.tsrx',
+					`import { state } from "@markless/core"; export function Page() @{ let value = state("tracked"); <div attach={(node) => { node.dataset.tracked = value; return () => { node.dataset.trackedCleanup = value; }; }} /> }`,
+				),
+			) as any;
+			const zeroInput = await build(
+				'src/zero-second.tsrx',
+				`export function Page() @{ <div attach={(node) => { node.dataset.zero = "zero"; return () => { node.dataset.zeroCleanup = "zero"; }; }} /> }`,
+			);
+			const first = tracked.records.behaviors[0];
+			const second = clone(zeroInput.records.behaviors[0]) as any;
+			first.order = 0;
+			second.id = 'behavior:zero-second';
+			second.componentId = first.componentId;
+			second.hostNodeId = first.hostNodeId;
+			second.order = 1;
+			tracked.records.behaviors = [first, second];
+
+			const source = emit(tracked);
+			const mount =
+				source.match(/onMount\(\(\) => \{([\s\S]*?)createEffect\(\(\) => \{/)?.[1] ?? '';
+			expect(mount.indexOf('dataset.tracked = valueInput')).toBeGreaterThan(-1);
+			expect(mount.indexOf("dataset.zero = 'zero'")).toBeGreaterThan(
+				mount.indexOf('dataset.tracked = valueInput'),
+			);
+		});
+
+		test('reinstalls every affected behavior as one authored group with duplicate-safe cleanup', async () => {
+			const first = clone(
+				await build(
+					'src/group-a.tsrx',
+					`import { state } from "@markless/core"; export function Page() @{ let value = state("one"); <div attach={(node) => { node.dataset.log += "install:A:" + value; return () => { node.dataset.log += "cleanup:A:" + value; }; }} /> }`,
+				),
+			) as any;
+			const secondIr = await build(
+				'src/group-b.tsrx',
+				`import { state } from "@markless/core"; export function Page() @{ let value = state("one"); <div attach={(node) => { node.dataset.log += "install:B:" + value; return () => { node.dataset.log += "cleanup:B:" + value; }; }} /> }`,
+			);
+			const behaviorA = first.records.behaviors[0];
+			const behaviorB = clone(secondIr.records.behaviors[0]) as any;
+			behaviorA.order = 0;
+			behaviorB.id = 'behavior:group-b';
+			behaviorB.componentId = behaviorA.componentId;
+			behaviorB.hostNodeId = behaviorA.hostNodeId;
+			behaviorB.inputs[0].graphNodeId = behaviorA.inputs[0].graphNodeId;
+			behaviorB.order = 1;
+			first.records.behaviors = [behaviorA, behaviorB];
+
+			const source = emit(first);
+			expect(source.match(/createEffect\(\(\) =>/g)).toHaveLength(1);
+			const effect = source.slice(source.indexOf('createEffect(() =>'));
+			const cleanupB = effect.indexOf('cleanup2()');
+			const cleanupA = effect.indexOf('cleanup()');
+			const installA = effect.indexOf("'install:A:' + valueInput");
+			const installB = effect.indexOf("'install:B:' + valueInput2");
+			expect(cleanupB).toBeGreaterThan(-1);
+			expect(cleanupA).toBeGreaterThan(cleanupB);
+			expect(installA).toBeGreaterThan(cleanupA);
+			expect(installB).toBeGreaterThan(installA);
+			expect(effect).toMatch(/cleanup2\(\);\s*cleanup2 = undefined;/);
+			expect(effect).toMatch(/cleanup\(\);\s*cleanup = undefined;/);
 		});
 
 		test('allocates generated composition families around authored collisions', async () => {
-			const ir = await build('src/collisions.tsrx', `import { shared, state } from "@markless/core"; export const useLedger = shared(() => { let balance = state(0); let setBalance = state(1); let createLedgerShared = state(2); return { balance, setBalance, createLedgerShared, increment() { balance++; } }; }); function LedgerContext() @{ <i /> } export function LedgerProvider() @{ <i /> } export function Ledger() @{ const ledger = useLedger(); <button onClick={() => ledger.increment()}>{ledger.balance}</button> }`);
+			const ir = await build(
+				'src/collisions.tsrx',
+				`import { shared, state } from "@markless/core"; export const useLedger = shared(() => { let balance = state(0); let setBalance = state(1); let createLedgerShared = state(2); return { balance, setBalance, createLedgerShared, increment() { balance++; } }; }); function LedgerContext() @{ <i /> } export function LedgerProvider() @{ <i /> } export function Ledger() @{ const ledger = useLedger(); <button onClick={() => ledger.increment()}>{ledger.balance}</button> }`,
+			);
 			const source = emit(ir);
 			expect(source).toContain('const LedgerContext2 = createContext()');
 			expect(source).toContain('function createLedgerShared2()');
 			expect(source).toContain('export function LedgerProvider2(');
 			expect(source).toContain('const [balance, setBalance2] = createSignal(0)');
 
-			const directive = await build('src/directive-collision.tsrx', `export function DirectiveCollision() @{ const attachHost = 1; <div attach={(node) => { node.dataset.ready = "yes"; }} /> }`);
+			const directive = await build(
+				'src/directive-collision.tsrx',
+				`export function DirectiveCollision() @{ const attachHost = 1; <div attach={(node) => { node.dataset.ready = "yes"; }} /> }`,
+			);
 			expect(emit(directive)).toContain('use:attachHost2');
 		});
 
+		test('allocates every shared, behavior-capture, cleanup, and lifecycle collision family', async () => {
+			const page = await build(
+				'src/page-singleton-collision.tsrx',
+				`import { shared, state } from "@markless/core"; export const useLedger = shared(() => { let ledgerShared = state(0); return { ledgerShared }; }, { scope: "page" }); export function Ledger() @{ const ledger = useLedger(); <output>{ledger.ledgerShared}</output> }`,
+			);
+			expect(emit(page)).toContain('const ledgerShared2 = createLedgerShared()');
+
+			const method = await build(
+				'src/action-import-collision.tsrx',
+				`import { shared, state } from "@markless/core"; export const useActions = shared(() => { let value = state(0); return { value, createSignal() { value++; }, onMount() { value++; } }; }); export function Actions() @{ const actions = useActions(); <button onClick={() => { actions.createSignal(); actions.onMount(); }}>{actions.value}</button> }`,
+			);
+			const methodSource = emit(method);
+			expect(methodSource).toMatch(/import \{ createSignal as createSignal2/);
+			expect(methodSource).toContain('const createSignal = () =>');
+
+			const behavior = await build(
+				'src/behavior-local-collisions.tsrx',
+				`import { state } from "@markless/core"; export function Page() @{ let value = state("one"); const cleanup = 1; const valueInput = 2; const onMount = 3; <div data-values={String(cleanup) + ":" + valueInput + ":" + onMount} attach={(node) => { node.dataset.value = value; return () => { delete node.dataset.value; }; }} /> }`,
+			);
+			const behaviorSource = emit(behavior);
+			expect(behaviorSource).toMatch(/import \{[^}]*onMount as onMount2[^}]*\}/);
+			expect(behaviorSource).toContain('let cleanup2 = undefined');
+			expect(behaviorSource).toContain('let valueInput2 = value()');
+			expect(behaviorSource).toContain('onMount2(() =>');
+		});
+
 		test('rejects unknown semantic fields in composition records', async () => {
-			const ir = structuredClone(await build('src/unknown.tsrx', `import { shared, state } from "@markless/core"; export const useValue = shared(() => { let value = state(1); return { value }; }); export function Value() @{ const shared = useValue(); <output>{shared.value}</output> }`)) as any;
+			const ir = structuredClone(
+				await build(
+					'src/unknown.tsrx',
+					`import { shared, state } from "@markless/core"; export const useValue = shared(() => { let value = state(1); return { value }; }); export function Value() @{ const shared = useValue(); <output>{shared.value}</output> }`,
+				),
+			) as any;
 			ir.records.sharedDefinitions[0].futureSemantic = true;
-			expect(() => validateEnrichedIr(ir)).toThrow(/SharedDefinition has unknown semantic field/);
+			expect(() => validateEnrichedIr(ir)).toThrow(
+				/SharedDefinition has unknown semantic field/,
+			);
 		});
 
 		test('fails closed when shared writes or handle linkage are incomplete', async () => {
-			const shared = structuredClone(await build('src/missing.tsrx', `import { shared, state } from "@markless/core"; export const useCounter = shared(() => { let count = state(0); return { count, increment() { count++; } }; }); export function Counter() @{ const counter = useCounter(); <button onClick={() => counter.increment()}>{counter.count}</button> }`)) as any;
+			const shared = structuredClone(
+				await build(
+					'src/missing.tsrx',
+					`import { shared, state } from "@markless/core"; export const useCounter = shared(() => { let count = state(0); return { count, increment() { count++; } }; }); export function Counter() @{ const counter = useCounter(); <button onClick={() => counter.increment()}>{counter.count}</button> }`,
+				),
+			) as any;
 			shared.records.sharedWrites = [];
-			expect(() => emit(shared)).toThrow(/SharedWrite records are incomplete for SharedDefinition useCounter/);
-			const handle = structuredClone(await build('src/handle.tsrx', `import { element } from "@markless/core"; export function Search() @{ const input = element<HTMLInputElement>(); <><input el={input} /><button onClick={() => input?.focus()}>focus</button></> }`)) as any;
+			expect(() => emit(shared)).toThrow(
+				/SharedWrite records are incomplete for SharedDefinition useCounter/,
+			);
+			const handle = structuredClone(
+				await build(
+					'src/handle.tsrx',
+					`import { element } from "@markless/core"; export function Search() @{ const input = element<HTMLInputElement>(); <><input el={input} /><button onClick={() => input?.focus()}>focus</button></> }`,
+				),
+			) as any;
 			handle.records.elementHandleBindings = [];
-			expect(() => emit(handle)).toThrow(/HandleCallRecord has dangling ElementHandleBinding/);
+			expect(() => emit(handle)).toThrow(
+				/HandleCallRecord has dangling ElementHandleBinding/,
+			);
 		});
 
 		test('fails closed on unchecked composition event and shared-return linkage', async () => {
-			const event = structuredClone(await build('src/event-link.tsrx', `import { state } from "@markless/core"; function Child() @{ <i /> } export function EventLink() @{ let count = state(0); <><Child /><button onClick={() => count++}>{count}</button></> }`)) as any;
+			const event = structuredClone(
+				await build(
+					'src/event-link.tsrx',
+					`import { state } from "@markless/core"; function Child() @{ <i /> } export function EventLink() @{ let count = state(0); <><Child /><button onClick={() => count++}>{count}</button></> }`,
+				),
+			) as any;
 			const host = findKind(event.components[0].template, 'host')!;
 			host.eventIds = ['event:missing'];
 			expect(() => emit(event)).toThrow(/TemplateHost has dangling event id/);
 
-			const shared = structuredClone(await build('src/return-link.tsrx', `import { shared, state } from "@markless/core"; export const useValue = shared(() => { let value = state(1); return { value }; }); export function Value() @{ const sharedValue = useValue(); <output>{sharedValue.value}</output> }`)) as any;
+			const shared = structuredClone(
+				await build(
+					'src/return-link.tsrx',
+					`import { shared, state } from "@markless/core"; export const useValue = shared(() => { let value = state(1); return { value }; }); export function Value() @{ const sharedValue = useValue(); <output>{sharedValue.value}</output> }`,
+				),
+			) as any;
 			shared.records.sharedDefinitions[0].returnProperties[0].graphNodeId = 'shared:missing';
-			expect(() => emit(shared)).toThrow(/SharedReturnProperty value does not resolve to its shared cell/);
+			expect(() => emit(shared)).toThrow(
+				/SharedReturnProperty value does not resolve to its shared cell/,
+			);
 		});
 	});
 
@@ -524,7 +693,9 @@ describe('Solid structural emitter', () => {
 				componentName: 'Additional',
 				exportedName: 'Additional',
 			});
-			expect(() => validateEnrichedIr(ir)).toThrow(/ComponentProps has dangling graph record id/);
+			expect(() => validateEnrichedIr(ir)).toThrow(
+				/ComponentProps has dangling graph record id/,
+			);
 		});
 
 		test('rejects an exact /1 artifact with the version diagnostic', async () => {
@@ -547,7 +718,9 @@ describe('Solid structural emitter', () => {
 					children: [],
 				},
 			];
-			expect(() => validateEnrichedIr(ir)).toThrow(/TemplateComponentReference has dangling local component/);
+			expect(() => validateEnrichedIr(ir)).toThrow(
+				/TemplateComponentReference has dangling local component/,
+			);
 		});
 
 		test('rejects a non-empty SharedDefinition family with its construct diagnostic', async () => {
@@ -564,7 +737,9 @@ describe('Solid structural emitter', () => {
 					dependencies: [],
 				},
 			];
-			expect(() => validateEnrichedIr(ir)).toThrow(/SharedDefinition useCounter has no SharedInstance/);
+			expect(() => validateEnrichedIr(ir)).toThrow(
+				/SharedDefinition useCounter has no SharedInstance/,
+			);
 		});
 
 		test('requires a non-empty authored name before rejecting the shared family', async () => {
@@ -589,7 +764,9 @@ describe('Solid structural emitter', () => {
 				/SharedDefinition has malformed construct/,
 			);
 			ir.records.sharedDefinitions = [definition];
-			expect(() => validateEnrichedIr(ir)).toThrow(/SharedDefinition useCounter has no SharedInstance/);
+			expect(() => validateEnrichedIr(ir)).toThrow(
+				/SharedDefinition useCounter has no SharedInstance/,
+			);
 		});
 
 		test('enforces exact per-kind shared cell shapes', async () => {
@@ -633,7 +810,9 @@ describe('Solid structural emitter', () => {
 			};
 			ir.records.sharedDefinitions[0].graphBindings.push(computed.graphNodeId);
 			ir.records.sharedDefinitions[0].cells = [cell, computed];
-			expect(() => validateEnrichedIr(ir)).toThrow(/SharedDefinition useCounter has no SharedInstance/);
+			expect(() => validateEnrichedIr(ir)).toThrow(
+				/SharedDefinition useCounter has no SharedInstance/,
+			);
 			ir.records.sharedDefinitions[0].cells = [
 				{ ...computed, dependencies: ['shared:counter/state:missing'] },
 			];

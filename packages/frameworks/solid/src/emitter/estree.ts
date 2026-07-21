@@ -76,6 +76,10 @@ export const assignmentExpression = (operator: string, left: any, right: any): a
 	node('AssignmentExpression', { operator, left, right });
 export const binaryExpression = (operator: string, left: any, right: any): any =>
 	node('BinaryExpression', { operator, left, right });
+export const logicalExpression = (operator: string, left: any, right: any): any =>
+	node('LogicalExpression', { operator, left, right });
+export const unaryExpression = (operator: string, argument: any): any =>
+	node('UnaryExpression', { operator, argument, prefix: true });
 export const conditionalExpression = (test: any, consequent: any, alternate: any): any =>
 	node('ConditionalExpression', { test, consequent, alternate });
 export const returnStatement = (argument: any): any => node('ReturnStatement', { argument });
