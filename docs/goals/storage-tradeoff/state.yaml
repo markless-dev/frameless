@@ -68,7 +68,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/storage-tradeoff/"
     command: "npx goalbuddy board docs/goals/storage-tradeoff"
 
-active_task: T005
+active_task: T006
 
 tasks:
   - id: T001
@@ -115,9 +115,18 @@ tasks:
   - id: T005
     type: pm
     assignee: PM
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Deliver the decision menu to the owner (plain-language, understandable without goal context, per AGENTS.md decision-menu rules) and record the owner's choice or their named evidence gap; if a gap — spawn the targeted follow-up scout and loop."
+    receipt:
+      result: done
+      summary: "Menu delivered; owner reviewed and declined to choose — NAMED GAP (verbatim intent): 'I want empirical data to figure out the solution based on what's existing, but I only want the best suggestions no implementation.' Loop per board design: T006 empirical-evidence scout spawned (existing production systems: adoption data, winning API shapes, real first-paint/consent/key handling — corpus + web); suggestions refreshed after. Implementation permanently out of scope for this goal (charter already says so; owner re-affirmed)."
+  - id: T006
+    type: scout
+    assignee: Scout
+    status: active
+    reasoning_hint: medium
+    objective: "Empirical survey of EXISTING device-state solutions (owner-directed): what production systems actually do and which shapes won — adoption evidence (npm downloads/usage), API surfaces of next-themes/zustand-persist/jotai-storage/TanStack-persist/Capacitor-Preferences/AsyncStorage/SharedPreferences-class solutions, how each handles first paint, consent, keys, drivers, sync; LOCAL CORPUS mining (qwik-ui, qwik-design-system, solid, fumadocs and other checkouts under /Users/jacksm5pro/dev/open-source) for real in-repo device-state patterns. Output: evidence-ranked observations feeding a refreshed suggestions note. SUGGESTIONS ONLY — no implementation, no ratification."
     receipt: null
   - id: T999
     type: judge
