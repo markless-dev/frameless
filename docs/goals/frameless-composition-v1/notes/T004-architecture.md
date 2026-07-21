@@ -359,3 +359,13 @@ compiler DERIVES BehaviorRecord.inputs from AST reads joined to graph bindings
 mismatched) still fails closed. Preserves the calibrated T005 reinstall surface
 honestly. Also: the emitted-composition smoke follows the calibration file's
 naming (.browser.test.ts importing generated .jsx) — no vite config change.
+
+## PM ADJUDICATION 8 (2026-07-21): P3 critique items
+
+Finding 3 (method-calling-method): RETAINED AS V1 TRIM — the compiler already
+fails closed (SharedWrite incompleteness diagnostic); nested shared-method calls
+are recorded unsupported-this-tranche (documented in the React package README with
+the diagnostic named); T004b outermost-completion semantics implement when the
+construct is admitted (overturn trigger). Findings 1/2 (gate bypasses), 4 (tier
+browser coverage + subscriber-observer scenario), 5 (durable collision tests):
+repair unit dispatched.
