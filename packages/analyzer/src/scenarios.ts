@@ -81,3 +81,100 @@ export const calibrationScenarios: Scenario[] = [
 		expectedCallbacks: [{ name: 'setup', fields: ['runs'], count: 1 }],
 	},
 ];
+
+/** Framework-neutral composition calibration shared by both browser targets. */
+export const compositionScenarios: Scenario[] = [
+	{
+		id: 'C1-slot-rendering',
+		purpose: 'one opaque default-slot projection through a composite Page and Frame root',
+		initialProps: {},
+		actions: [],
+		expectedCallbacks: [],
+		expectations: [
+			{
+				kind: 'dom-present',
+				phase: 'mount',
+				selector: '[data-projected-node]',
+				count: 1,
+			},
+			{
+				kind: 'dom-text',
+				phase: 'mount',
+				selector: '[data-projected-node]',
+				text: 'Projected composition',
+			},
+		],
+	},
+	{
+		id: 'C2-shared-propagation',
+		purpose:
+			'two-cell shared method propagation, notification atomicity, stale-cell rejection, and authored method order',
+		initialProps: {},
+		actions: [
+			{ type: 'click', target: '[data-action="advance-shared"]' },
+			{ type: 'click', target: '[data-action="append-shared"]' },
+		],
+		expectedCallbacks: [],
+		expectations: [
+			{
+				kind: 'dom-text',
+				phase: 'mount',
+				selector: '[data-shared-reader]',
+				text: 'seed|0',
+			},
+			{
+				kind: 'dom-text',
+				phase: 'action:0:after',
+				selector: '[data-shared-reader]',
+				text: 'seed:0|1',
+			},
+			{
+				kind: 'dom-text',
+				phase: 'action:0:after',
+				selector: '[data-shared-audit]',
+				text: 'seed:0|1',
+			},
+			{
+				kind: 'dom-text',
+				phase: 'action:1:after',
+				selector: '[data-shared-reader]',
+				text: 'seed:0!|1',
+			},
+		],
+	},
+	{
+		id: 'C3-ref-driven-focus',
+		purpose: 'an imperative handle forwarded to a child host and null-guarded focus dispatch',
+		initialProps: {},
+		actions: [{ type: 'click', target: '[data-action="focus-composed"]' }],
+		expectedCallbacks: [],
+		expectations: [
+			{
+				kind: 'dom-present',
+				phase: 'mount',
+				selector: '[data-focus-target]',
+				count: 1,
+			},
+			{
+				kind: 'focus',
+				phase: 'action:0:after',
+				selector: '[data-focus-target]',
+			},
+		],
+	},
+	{
+		id: 'C4-attach-cleanup',
+		purpose: 'host-owned attach cleanup observed outside the component host after unmount',
+		initialProps: {},
+		actions: [],
+		expectedCallbacks: [],
+		expectations: [
+			{
+				kind: 'dom-text',
+				phase: 'unmount',
+				selector: '[data-composition-cleanup]',
+				text: 'cleaned',
+			},
+		],
+	},
+];
