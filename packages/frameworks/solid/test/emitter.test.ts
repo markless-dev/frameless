@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import type { EnrichedIR } from '@frameless/compiler';
+import { buildEnrichedIr, type EnrichedIR } from '@frameless/compiler';
 import { resolve } from 'pathe';
 import { parse } from 'yuku-parser';
 import { analyze } from 'yuku-analyzer';
@@ -112,6 +112,79 @@ describe('Solid structural emitter', () => {
 		expect(first).toBeGreaterThan(-1);
 		expect(second).toBeGreaterThan(first);
 		expect(callback).toBeGreaterThan(second);
+	});
+
+	describe('frameless-enriched-ir/2 composition emission', () => {
+		const build = (filename: string, source: string) => buildEnrichedIr({ filename, source });
+
+		test('emits every component, nested children, projection, and generated imports', async () => {
+			const local = await build('src/composition.tsrx', `function Frame({ children }) @{ <section>{children}</section> } export function Page() @{ <Frame><strong>projected</strong></Frame> }`);
+			const source = emit(local);
+			expect(source).toMatch(/function Frame\(props\d*\)/);
+			expect(source).toMatch(/export function Page\(props\d*\)/);
+			expect(source).toContain('<Frame><strong>projected</strong></Frame>');
+			expect(source).toMatch(/<section>\{props\d*\.children\}<\/section>/);
+			const external = await build('src/parent.tsrx', `import { Child } from "./child.tsrx"; export function Parent() @{ <Child value={1}><span>nested</span></Child> }`);
+			expect(emit(external)).toContain("import { Child } from './child.jsx'");
+		});
+
+		test('scope-switches shared cells, emits derived arrows, stable actions, and providers', async () => {
+			const ir = await build('src/shared.tsrx', `import { computed, shared, state } from "@markless/core"; export const useCounter = shared(() => { let count = state(0); let pair = state({ value: 1 }); const double = computed(() => count * 2); return { count, pair, double, increment() { count++; } }; }, { scope: "container" }); export function Counter() @{ const counter = useCounter(); <button onClick={() => counter.increment()}>{counter.double}</button> }`);
+			const source = emit(ir);
+			expect(source).toContain('const CounterContext = createContext()');
+			expect(source).toContain('function createCounterShared()');
+			expect(source).toContain('const double = () =>');
+			expect(source).toMatch(/export function CounterProvider\(props\d*\)/);
+			expect(source).toContain('function useCounter()');
+			expect(source).not.toContain('createMemo');
+			const page = structuredClone(ir) as any;
+			page.records.sharedDefinitions[0].scope = 'page';
+			const pageSource = emit(page);
+			expect(pageSource).toContain('const counterShared = createCounterShared()');
+			expect(pageSource).not.toContain('CounterProvider');
+		});
+
+		test('emits direct and forwarded refs, null guards, and named tracked directives', async () => {
+			const forwarded = await build('src/forward.tsrx', `import { element } from "@markless/core"; function Field(props) @{ <input el={props.input} /> } export function Page() @{ const input = element<HTMLInputElement>(); <><Field input={input} /><button onClick={() => input?.focus()}>focus</button></> }`);
+			const refSource = emit(forwarded);
+			expect(refSource).toContain('let input;');
+			expect(refSource).toMatch(/props\d*\.input\(node\)/);
+			expect(refSource).toMatch(/onCleanup\(\(\) => props\d*\.input\(undefined\)\)/);
+			expect(refSource).toContain('input?.focus()');
+			const attach = await build('src/attach.tsrx', `import { state } from "@markless/core"; export function Page() @{ let value = state("a"); <div attach={(node) => { node.dataset.value = value; return () => { delete node.dataset.value; }; }} /> }`);
+			const attachSource = emit(attach);
+			expect(attachSource).toContain('use:attachHost');
+			expect(attachSource).toContain('createEffect(() =>');
+			expect(attachSource).toContain('onCleanup(() =>');
+			expect(attachSource).toMatch(/const valueInput = value\(\);[\s\S]*dataset\.value = valueInput/);
+		});
+
+		test('allocates generated composition families around authored collisions', async () => {
+			const ir = await build('src/collisions.tsrx', `import { shared, state } from "@markless/core"; export const useLedger = shared(() => { let balance = state(0); let setBalance = state(1); let createLedgerShared = state(2); return { balance, setBalance, createLedgerShared, increment() { balance++; } }; }); function LedgerContext() @{ <i /> } export function LedgerProvider() @{ <i /> } export function Ledger() @{ const ledger = useLedger(); <button onClick={() => ledger.increment()}>{ledger.balance}</button> }`);
+			const source = emit(ir);
+			expect(source).toContain('const LedgerContext2 = createContext()');
+			expect(source).toContain('function createLedgerShared2()');
+			expect(source).toContain('export function LedgerProvider2(');
+			expect(source).toContain('const [balance, setBalance2] = createSignal(0)');
+
+			const directive = await build('src/directive-collision.tsrx', `export function DirectiveCollision() @{ const attachHost = 1; <div attach={(node) => { node.dataset.ready = "yes"; }} /> }`);
+			expect(emit(directive)).toContain('use:attachHost2');
+		});
+
+		test('rejects unknown semantic fields in composition records', async () => {
+			const ir = structuredClone(await build('src/unknown.tsrx', `import { shared, state } from "@markless/core"; export const useValue = shared(() => { let value = state(1); return { value }; }); export function Value() @{ const shared = useValue(); <output>{shared.value}</output> }`)) as any;
+			ir.records.sharedDefinitions[0].futureSemantic = true;
+			expect(() => validateEnrichedIr(ir)).toThrow(/SharedDefinition has unknown semantic field/);
+		});
+
+		test('fails closed when shared writes or handle linkage are incomplete', async () => {
+			const shared = structuredClone(await build('src/missing.tsrx', `import { shared, state } from "@markless/core"; export const useCounter = shared(() => { let count = state(0); return { count, increment() { count++; } }; }); export function Counter() @{ const counter = useCounter(); <button onClick={() => counter.increment()}>{counter.count}</button> }`)) as any;
+			shared.records.sharedWrites = [];
+			expect(() => emit(shared)).toThrow(/SharedWrite records are incomplete for SharedDefinition useCounter/);
+			const handle = structuredClone(await build('src/handle.tsrx', `import { element } from "@markless/core"; export function Search() @{ const input = element<HTMLInputElement>(); <><input el={input} /><button onClick={() => input?.focus()}>focus</button></> }`)) as any;
+			handle.records.elementHandleBindings = [];
+			expect(() => emit(handle)).toThrow(/HandleCallRecord has dangling ElementHandleBinding/);
+		});
 	});
 
 	test('has an AST-only boundary without fixture signatures or source recovery', async () => {
@@ -369,7 +442,7 @@ describe('Solid structural emitter', () => {
 	});
 
 	describe('fail-closed validation', () => {
-		test('accepts behavior-input provenance structurally before lowering rejects behavior', async () => {
+		test('accepts behavior-input provenance structurally for directive lowering', async () => {
 			const ir = clone(await golden('s1-render-once.json')) as any;
 			ir.records.behaviors = [
 				{
@@ -393,11 +466,9 @@ describe('Solid structural emitter', () => {
 					order: 0,
 				},
 			];
-			expect(() => validateEnrichedIr(ir)).toThrow(
-				/BehaviorRecord cannot be lowered: composition constructs land in the Solid composition package/,
-			);
+			expect(() => validateEnrichedIr(ir)).not.toThrow();
 		});
-		test('rejects the same multi-component fixture as React with the Solid composition diagnostic', async () => {
+		test('rejects malformed cloned multi-component ownership records', async () => {
 			const ir = clone(await golden('s1-render-once.json')) as any;
 			ir.components.push({
 				...clone(ir.components[0]),
@@ -409,9 +480,7 @@ describe('Solid structural emitter', () => {
 				componentName: 'Additional',
 				exportedName: 'Additional',
 			});
-			expect(() => validateEnrichedIr(ir)).toThrow(
-				'EnrichedComponent cannot be lowered: multi-component modules land in the Solid composition package',
-			);
+			expect(() => validateEnrichedIr(ir)).toThrow(/ComponentProps has dangling graph record id/);
 		});
 
 		test('rejects an exact /1 artifact with the version diagnostic', async () => {
@@ -422,7 +491,7 @@ describe('Solid structural emitter', () => {
 			);
 		});
 
-		test('rejects a component-reference with its construct diagnostic', async () => {
+		test('rejects a dangling local component-reference with its construct diagnostic', async () => {
 			const ir = clone(await golden('s1-render-once.json')) as any;
 			ir.components[0].template = [
 				{
@@ -434,9 +503,7 @@ describe('Solid structural emitter', () => {
 					children: [],
 				},
 			];
-			expect(() => validateEnrichedIr(ir)).toThrow(
-				/TemplateComponentReference cannot be lowered.*Solid composition package/,
-			);
+			expect(() => validateEnrichedIr(ir)).toThrow(/TemplateComponentReference has dangling local component/);
 		});
 
 		test('rejects a non-empty SharedDefinition family with its construct diagnostic', async () => {
@@ -453,9 +520,7 @@ describe('Solid structural emitter', () => {
 					dependencies: [],
 				},
 			];
-			expect(() => validateEnrichedIr(ir)).toThrow(
-				/SharedDefinition cannot be lowered.*Solid composition package/,
-			);
+			expect(() => validateEnrichedIr(ir)).toThrow(/SharedDefinition useCounter has no SharedInstance/);
 		});
 
 		test('requires a non-empty authored name before rejecting the shared family', async () => {
@@ -480,9 +545,7 @@ describe('Solid structural emitter', () => {
 				/SharedDefinition has malformed construct/,
 			);
 			ir.records.sharedDefinitions = [definition];
-			expect(() => validateEnrichedIr(ir)).toThrow(
-				/SharedDefinition cannot be lowered.*Solid composition package/,
-			);
+			expect(() => validateEnrichedIr(ir)).toThrow(/SharedDefinition useCounter has no SharedInstance/);
 		});
 
 		test('enforces exact per-kind shared cell shapes', async () => {
@@ -526,9 +589,7 @@ describe('Solid structural emitter', () => {
 			};
 			ir.records.sharedDefinitions[0].graphBindings.push(computed.graphNodeId);
 			ir.records.sharedDefinitions[0].cells = [cell, computed];
-			expect(() => validateEnrichedIr(ir)).toThrow(
-				/SharedDefinition cannot be lowered.*Solid composition package/,
-			);
+			expect(() => validateEnrichedIr(ir)).toThrow(/SharedDefinition useCounter has no SharedInstance/);
 			ir.records.sharedDefinitions[0].cells = [
 				{ ...computed, dependencies: ['shared:counter/state:missing'] },
 			];
@@ -563,16 +624,14 @@ describe('Solid structural emitter', () => {
 			};
 			ir.records.elementHandleBindings = [binding];
 			ir.records.handleForwards = [forward];
-			expect(() => validateEnrichedIr(ir)).toThrow(
-				/cannot be lowered.*Solid composition package/,
-			);
+			expect(() => validateEnrichedIr(ir)).toThrow(/HandleForwardRecord has dangling edge/);
 			ir.records.handleForwards = [{ ...forward, handleBindingId: 'element-handle:missing' }];
 			expect(() => validateEnrichedIr(ir)).toThrow(
 				/HandleForwardRecord has dangling handleBindingId/,
 			);
 			ir.records.handleForwards = [{ ...forward, childComponentId: 'component:missing' }];
 			expect(() => validateEnrichedIr(ir)).toThrow(
-				/HandleForwardRecord has dangling componentId/,
+				/HandleForwardRecord has unknown component id/,
 			);
 		});
 

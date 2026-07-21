@@ -20,6 +20,7 @@
 	"scripts": {
 		"measure:size": "node --experimental-strip-types scripts/measure-size.ts",
 		"regenerate": "node --experimental-transform-types scripts/regenerate.ts",
+		"regenerate:composition": "node --experimental-transform-types scripts/regenerate-composition.ts",
 		"test": "vitest run --config vitest.node.config.ts",
 		"test:browser": "vitest run --config vitest.config.ts --project solid-browser"
 	},

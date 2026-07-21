@@ -101,12 +101,15 @@ the JSX runtime model, revisit the v1-fallback decision.
 
 ## Generality boundary
 
-This is production package code for the S1/S2/S3 fixture family, not proof of arbitrary Solid or
-TSRX coverage. It supports one exported component, the validated host/text/branch/keyed-repeat
-vocabulary, scalar signals, keyed collection stores, the observed member-write shape, synchronous
-handlers, and CSR mounting. It does not claim cross-TSRX composition, arbitrary object stores,
-arbitrary keys or immutable row replacement, prop updates beyond calibration, async/cleanup,
-children/context, custom components, SVG/MathML, accessibility, SSR/hydration/resume, HMR,
+This is production package code for the proven fixture families, not proof of arbitrary Solid or
+TSRX coverage. It supports the validated host/text/branch/keyed-repeat vocabulary, scalar signals,
+keyed collection stores, the observed member-write shape, synchronous handlers, and the P4a
+composition emitter surface: multiple components, cross-TSRX JSX imports, opaque default children,
+scope-switched shared cells/actions, direct and same-module forwarded handles, and literal attach
+directives with tracked cleanup. The composition gate and emitted browser smoke remain P4b work.
+It does not claim arbitrary object stores, arbitrary keys or immutable row replacement, prop
+updates beyond calibration, async behavior methods, named slots, cross-file shared state or handle
+forwarding, custom components beyond recorded references, SVG/MathML, accessibility, SSR/hydration/resume, HMR,
 declarations, sourcemaps, or generated-code debugging. In Solid 1.x `<For>` still keys by object
 identity; the IR key is consumed by `reconcile`, not by For itself. The gate is a conventionality
 proxy over discovered generated files, not a proof for arbitrary source. Known arbitrary-source
@@ -118,8 +121,7 @@ wrappers do not excuse an identical nested list; a differing leaf does break the
 
 ## Verify
 
-The checked-in suite inventory is 80 node tests (30 emitter/freshness, 2 emitted-formatting, 41
-gate, 2 adapter entry/import-graph, 1 size, 4 Solid 2 blocker contract) and 17 browser tests (12
+The checked-in suite inventory is 105 node tests and 17 browser tests (12
 handwritten calibration including eight mutants, plus 5 emitted/reference and store-row smoke
 tests). These are source counts, not a claim that a particular environment executed them.
 

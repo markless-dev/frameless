@@ -8,6 +8,7 @@ import {
 	type EnrichedIR,
 	type EventHandlerRecord,
 	type SerializableAstNode,
+	type SharedDefinition,
 	type TemplateNode,
 } from '@frameless/compiler';
 import * as t from './estree.ts';
@@ -23,7 +24,11 @@ type ApiName =
 	| 'reconcile'
 	| 'untrack'
 	| 'For'
-	| 'Show';
+	| 'Show'
+	| 'createContext'
+	| 'useContext'
+	| 'createEffect'
+	| 'onCleanup';
 type EmitContext = {
 	readonly api: ReadonlyMap<ApiName, string>;
 	readonly bindingsById: ReadonlyMap<string, EnrichedGraphBinding>;
@@ -326,6 +331,10 @@ function reconcileHandlerWrites(
 
 /** Fail closed before any target AST is constructed. */
 export function validateEnrichedIr(ir: EnrichedIR): void {
+	if (hasComposition(ir)) {
+		validateCompositionIr(ir);
+		return;
+	}
 	walk(ir, (record) => {
 		for (const field of LEGACY_STRING_FIELDS)
 			if (field in record)
@@ -1324,6 +1333,197 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 	}
 }
 
+function hasComposition(ir: EnrichedIR): boolean {
+	return (
+		ir.components.length !== 1 ||
+		ir.imports.length > 0 ||
+		ir.records.sharedDefinitions.length > 0 ||
+		ir.records.elementHandleBindings.length > 0 ||
+		ir.records.handleForwards.length > 0 ||
+		ir.records.behaviors.length > 0 ||
+		ir.records.handleCalls.length > 0 ||
+		ir.components.some((component) =>
+			JSON.stringify(component.template).match(/component-reference|default-slot-projection/),
+		)
+	);
+}
+
+function validateCompositionIr(ir: EnrichedIR): void {
+	exactKeys(ir, ['version', 'filename', 'imports', 'module', 'components', 'records'], 'EnrichedIR');
+	if (ir.version !== ENRICHED_IR_VERSION)
+		throw new Error(`Expected ${ENRICHED_IR_VERSION}, received ${String(ir.version)}`);
+	if (typeof ir.filename !== 'string' || ir.components.length === 0)
+		throw new Error('Composition EnrichedIR has malformed module shape');
+	const componentIds = new Set(ir.components.map((component) => component.id));
+	if (componentIds.size !== ir.components.length)
+		throw new Error('EnrichedComponent has duplicate component id');
+	const bindingIds = new Set(ir.records.bindings.map((binding) => binding.id));
+	const sharedGraphIds = new Set(
+		ir.records.sharedDefinitions.flatMap((definition) => definition.graphBindings),
+	);
+	const _eventIds = new Set(ir.records.events.map((event) => event.id));
+	const hostIds = new Set<string>();
+	const edgeIds = new Set<string>();
+	const validateComponentId = (construct: string, componentId: unknown): void => {
+		if (typeof componentId !== 'string' || !componentIds.has(componentId))
+			throw new Error(`${construct} has unknown component id: ${String(componentId)}`);
+	};
+	const validateAst = (construct: string, value: unknown): void => {
+		if (!value || typeof value !== 'object' || typeof (value as RecordLike).type !== 'string')
+			throw new Error(`${construct} has malformed AST`);
+	};
+	const validateSite = (construct: string, site: any): void => {
+		exactKeys(site, ['expression', 'reads'], construct);
+		validateAst(`${construct} expression`, site.expression);
+		assertArray(site.reads, `${construct} reads`);
+		for (const read of site.reads) {
+			exactKeys(read, ['graphNodeId', 'path', 'via'], `${construct} GraphReadRef`);
+			if (
+				typeof read.graphNodeId !== 'string' ||
+				(!bindingIds.has(read.graphNodeId) && !sharedGraphIds.has(read.graphNodeId)) ||
+				!Array.isArray(read.path) ||
+				read.path.some((part: unknown) => typeof part !== 'string') ||
+				!['direct', 'alias', 'local', 'repeat-item'].includes(read.via)
+			)
+				throw new Error(`${construct} has malformed GraphReadRef`);
+		}
+	};
+	const validateTemplate = (node: TemplateNode): void => {
+		if (node.kind === 'component-reference') {
+			exactKeys(node, ['kind', 'id', 'edgeId', 'target', 'props', 'children'], 'TemplateComponentReference');
+			if (typeof node.id !== 'string' || typeof node.edgeId !== 'string' || !Array.isArray(node.props) || !Array.isArray(node.children))
+				throw new Error('TemplateComponentReference has malformed construct');
+			edgeIds.add(node.edgeId);
+			exactKeys(node.target, node.target.module === 'self' ? ['localName', 'module'] : ['localName', 'module', 'exportedName'], 'TemplateComponentReference target');
+			if (typeof node.target.localName !== 'string' || typeof node.target.module !== 'string')
+				throw new Error('TemplateComponentReference target has malformed construct');
+			if (node.target.module === 'self' && !ir.components.some((component) => component.name === node.target.localName))
+				throw new Error(`TemplateComponentReference has dangling local component: ${node.target.localName}`);
+			for (const prop of node.props) {
+				exactKeys(prop, ['name', 'kind', 'value', 'graphNodeId', 'path'], 'ComponentPropExpression');
+				if (typeof prop.name !== 'string' || !['graph-reference', 'callback', 'serializable', 'opaque'].includes(prop.kind))
+					throw new Error('ComponentPropExpression has malformed construct');
+				validateSite('ComponentPropExpression value', prop.value);
+			}
+			node.children.forEach(validateTemplate);
+			return;
+		}
+		if (node.kind === 'default-slot-projection') {
+			exactKeys(node, ['kind', 'id', 'site'], 'TemplateDefaultSlotProjection');
+			validateSite('TemplateDefaultSlotProjection site', node.site);
+			return;
+		}
+		if (node.kind === 'host') {
+			hostIds.add(node.id);
+			node.children.forEach(validateTemplate);
+			return;
+		}
+		if (node.kind === 'fragment') {
+			node.children.forEach(validateTemplate);
+			return;
+		}
+		if (node.kind === 'branch') {
+			node.arms.forEach((arm) => arm.children.forEach(validateTemplate));
+			return;
+		}
+		if (node.kind === 'keyed-repeat') {
+			node.row.forEach(validateTemplate);
+			node.empty.forEach(validateTemplate);
+			return;
+		}
+		if (!['text', 'dynamic-text'].includes(node.kind))
+			throw new Error(`TemplateNode has malformed construct: ${String((node as any).kind)}`);
+	};
+	for (const component of ir.components) {
+		exactKeys(component, ['id', 'name', 'evaluation', 'props', 'locals', 'guards', 'template'], 'EnrichedComponent');
+		if (!t.isValidIdentifier(component.name) || !/^\p{Lu}/u.test(component.name))
+			throw new Error(`Unsupported component name: ${component.name}`);
+		if (component.evaluation.ordinaryLocals !== 'once-per-instance' || component.evaluation.computedBindings !== 'reactive')
+			throw new Error(`Unsupported evaluation policy for ${component.name}`);
+		if (
+			component.props.entries.length > 0 &&
+			!ir.records.bindings.some(
+				(binding) =>
+					binding.componentId === component.id && binding.id === component.props.graphNodeId,
+			)
+		)
+			throw new Error(`ComponentProps has dangling graph record id: ${component.props.graphNodeId}`);
+		component.template.forEach(validateTemplate);
+	}
+	for (const imported of ir.imports) {
+		exactKeys(imported, ['localName', 'source', 'kind', 'importedName', 'resolvesTo'], 'ModuleImport');
+		if (imported.resolvesTo !== 'tsrx-module' || !imported.source.endsWith('.tsrx'))
+			throw new Error(`ModuleImport cannot be lowered: ${imported.source}`);
+	}
+	for (const exported of ir.module.exports) {
+		exactKeys(exported, ['kind', 'componentName', 'exportedName'], 'ComponentExport');
+		if (!ir.components.some((component) => component.name === exported.componentName))
+			throw new Error(`ComponentExport has unknown component: ${exported.componentName}`);
+	}
+	for (const definition of ir.records.sharedDefinitions) {
+		exactKeys(definition, ['id', 'name', 'scope', 'cells', 'methods', 'graphBindings', 'returnProperties', 'dependencies'], 'SharedDefinition');
+		if (typeof definition.name !== 'string' || definition.name.length === 0 || !t.isValidIdentifier(definition.name) || !['request', 'container', 'page'].includes(definition.scope))
+			throw new Error('SharedDefinition has malformed construct');
+		for (const cell of definition.cells) {
+			if (cell.kind === 'state') {
+				exactKeys(cell, ['kind', 'name', 'graphNodeId', 'valueKind', 'initializer'], 'SharedDefinitionCell');
+				if (!['scalar', 'object', 'array'].includes(cell.valueKind))
+					throw new Error(`SharedDefinitionCell ${cell.name} has unsupported valueKind`);
+				validateAst('SharedDefinitionCell initializer', cell.initializer);
+			} else {
+				exactKeys(cell, ['kind', 'name', 'graphNodeId', 'expression', 'dependencies'], 'SharedDefinitionCell');
+				if (cell.kind !== 'computed') throw new Error('SharedDefinitionCell has malformed construct');
+				validateAst('SharedDefinitionCell expression', cell.expression);
+				if (cell.dependencies.some((dependency) => !definition.graphBindings.includes(dependency)))
+					throw new Error('SharedDefinitionCell has malformed construct');
+			}
+		}
+		for (const method of definition.methods) {
+			exactKeys(method, ['name', 'site', 'writes'], 'SharedDefinitionMethod');
+			if (typeof method.name !== 'string' || !Array.isArray(method.writes))
+				throw new Error('SharedDefinitionMethod has malformed construct');
+			validateAst('SharedDefinitionMethod site', method.site);
+		}
+		const instances = ir.records.sharedInstances.filter((instance) => instance.definitionId === definition.id);
+		if (instances.length === 0)
+			throw new Error(`SharedDefinition ${definition.name} has no SharedInstance records`);
+		const recordedWrites = ir.records.sharedWrites.filter((write) => write.definitionId === definition.id);
+		const methodWrites = definition.methods.flatMap((method) => method.writes);
+		if (recordedWrites.length !== methodWrites.length || methodWrites.some((write, index) => recordedWrites[index]?.graphNodeId !== write.graphNodeId || recordedWrites[index]?.order !== write.order || recordedWrites[index]?.operation !== write.operation))
+			throw new Error(`SharedWrite records are incomplete for SharedDefinition ${definition.name}`);
+	}
+	const definitionIds = new Set(ir.records.sharedDefinitions.map((definition) => definition.id));
+	for (const [construct, records] of [['SharedInstance', ir.records.sharedInstances], ['SharedRead', ir.records.sharedReads], ['SharedCall', ir.records.sharedCalls], ['SharedWrite', ir.records.sharedWrites]] as const)
+		for (const record of records)
+			if (!definitionIds.has(record.definitionId)) throw new Error(`${construct} has dangling SharedDefinition: ${record.definitionId}`);
+	for (const record of [...ir.records.bindings, ...ir.records.aliases, ...ir.records.events, ...ir.records.stateReads, ...ir.records.stateWrites, ...ir.records.sharedInstances, ...ir.records.sharedReads, ...ir.records.sharedCalls, ...ir.records.elementHandleBindings, ...ir.records.behaviors, ...ir.records.handleCalls])
+		validateComponentId(record.constructor?.name ?? 'Composition record', (record as any).componentId);
+	const handleIds = new Set(ir.records.elementHandleBindings.map((binding) => binding.id));
+	for (const call of ir.records.handleCalls) {
+		if (!handleIds.has(call.handleBindingId)) throw new Error(`HandleCallRecord has dangling ElementHandleBinding: ${call.handleBindingId}`);
+		if (!call.optional) throw new Error('HandleCallRecord requires null-guarded optional access');
+	}
+	for (const forward of ir.records.handleForwards) {
+		if (!handleIds.has(forward.handleBindingId)) throw new Error('HandleForwardRecord has dangling handleBindingId');
+		validateComponentId('HandleForwardRecord', forward.childComponentId);
+		if (!edgeIds.has(forward.edgeId)) throw new Error(`HandleForwardRecord has dangling edge: ${forward.edgeId}`);
+	}
+	for (const behavior of ir.records.behaviors) {
+		if (!hostIds.has(behavior.hostNodeId)) throw new Error(`BehaviorRecord has dangling host: ${behavior.hostNodeId}`);
+		if (typeof behavior.returnsCleanup !== 'boolean') throw new Error('BehaviorRecord has malformed cleanup provenance');
+		for (const input of behavior.inputs) {
+			exactKeys(input, ['graphNodeId', 'path', 'via', 'provenance'], 'BehaviorRecord GraphReadRef');
+			if (!['layer-a', 'derived-from-ast'].includes(input.provenance))
+				throw new Error('BehaviorRecord GraphReadRef has unsupported provenance');
+		}
+	}
+	for (const handle of ir.records.elementHandleBindings)
+		if (!hostIds.has(handle.hostNodeId)) throw new Error(`ElementHandleBinding has dangling host: ${handle.hostNodeId}`);
+	walk(ir, (record) => {
+		for (const field of LEGACY_STRING_FIELDS) if (field in record) throw new Error(`Legacy source-string field is forbidden: ${field}`);
+	});
+}
+
 class NameAllocator {
 	readonly #used: Set<string>;
 	constructor(used: Iterable<string>) {
@@ -1960,9 +2160,627 @@ function collectStoreKeys(component: EnrichedComponent): Map<string, string> {
 	return keys;
 }
 
+type CompositionNames = {
+	readonly context: string;
+	readonly provider: string;
+	readonly createShared: string;
+	readonly moduleShared: string;
+};
+
+type CompositionContext = {
+	readonly ir: EnrichedIR;
+	readonly component: EnrichedComponent;
+	readonly base: EmitContext;
+	readonly propsName: string;
+	readonly sharedLocals: ReadonlyMap<string, SharedDefinition>;
+	readonly sharedNames: ReadonlyMap<string, CompositionNames>;
+	readonly directiveNames: ReadonlyMap<string, string>;
+};
+
+function compositionAuthoredNames(ir: EnrichedIR): Set<string> {
+	const names = collectAuthoredNames(ir);
+	for (const component of ir.components) {
+		names.add(component.name);
+		for (const local of component.locals) local.names.forEach((name) => names.add(name));
+	}
+	for (const definition of ir.records.sharedDefinitions) {
+		names.add(definition.name);
+		definition.cells.forEach((cell) => names.add(cell.name));
+		definition.methods.forEach((method) => names.add(method.name));
+	}
+	return names;
+}
+
+function sharedStem(definition: SharedDefinition): string {
+	return definition.name.startsWith('use') && definition.name.length > 3
+		? definition.name.slice(3)
+		: `${definition.name[0]!.toUpperCase()}${definition.name.slice(1)}`;
+}
+
+function replaceChild(parent: any, current: any, replacement: any): void {
+	for (const [key, value] of Object.entries(parent)) {
+		if (value === current) {
+			parent[key] = replacement;
+			return;
+		}
+		if (Array.isArray(value)) {
+			const index = value.indexOf(current);
+			if (index >= 0) {
+				value[index] = replacement;
+				return;
+			}
+		}
+	}
+	throw new Error('Composition expression rewrite could not replace a node');
+}
+
+function rewriteCompositionExpression(
+	node: SerializableAstNode,
+	context: CompositionContext,
+): t.Expression {
+	const rewritten = rewriteExpression(node, context.base);
+	return reanalyzeExpression(rewritten, (module, analyzed) => {
+		const members: any[] = [];
+		module.walk({ MemberExpression(value: any) { members.push(value); } }, analyzed);
+		for (const value of members.reverse()) {
+			if (value.computed || !t.isIdentifier(value.object) || !t.isIdentifier(value.property))
+				continue;
+			const definition = context.sharedLocals.get(value.object.name);
+			if (!definition) continue;
+			const returned = definition.returnProperties.find(
+				(property) => property.name === value.property.name,
+			);
+			if (!returned || returned.kind !== 'graph') continue;
+			const parent = module.parentOf(value) as any;
+			if (parent?.type === 'CallExpression' && parent.callee === value) continue;
+			replaceChild(parent, value, t.callExpression(t.cloneNode(value, true), []));
+		}
+	});
+}
+
+function captureBehaviorInputs(
+	value: t.Expression,
+	captures: ReadonlyMap<string, string>,
+): t.Expression {
+	if (captures.size === 0) return value;
+	return reanalyzeExpression(value, (module, analyzed) => {
+		const calls: any[] = [];
+		module.walk({ CallExpression(call: any) { calls.push(call); } }, analyzed);
+		for (const call of calls.reverse()) {
+			if (!t.isIdentifier(call.callee) || call.arguments.length !== 0) continue;
+			const capture = captures.get(call.callee.name);
+			if (!capture) continue;
+			replaceChild(module.parentOf(call), call, t.identifier(capture));
+		}
+	});
+}
+
+function compositionTemplateNode(node: TemplateNode, context: CompositionContext): RenderedNode {
+	if (node.kind === 'text') return t.jsxText(node.value);
+	if (node.kind === 'dynamic-text')
+		return t.jsxExpressionContainer(rewriteCompositionExpression(node.expression, context));
+	if (node.kind === 'default-slot-projection')
+		return t.jsxExpressionContainer(member(t.identifier(context.propsName), 'children'));
+	if (node.kind === 'fragment')
+		return t.jsxFragment(
+			t.jsxOpeningFragment(),
+			t.jsxClosingFragment(),
+			node.children.map((child) => compositionTemplateNode(child, context)),
+		);
+	if (node.kind === 'component-reference') {
+		const attributes: t.JSXAttribute[] = [];
+		const forward = context.ir.records.handleForwards.find(
+			(record) => record.edgeId === node.edgeId,
+		);
+		for (const prop of node.props) {
+			let value: t.Expression;
+			if (forward && prop.graphNodeId) {
+				const handle = context.ir.records.elementHandleBindings.find(
+					(binding) => binding.id === forward.handleBindingId,
+				);
+				if (!handle) throw new Error('HandleForwardRecord lost its parent handle');
+				value = t.arrowFunctionExpression(
+					[t.identifier('node')],
+					t.assignmentExpression('=', t.identifier(handle.handleName), t.identifier('node')),
+				);
+			} else value = rewriteCompositionExpression(prop.value.expression, context);
+			attributes.push(jsxAttribute(prop.name, value));
+		}
+		const name = t.jsxIdentifier(node.target.localName);
+		const children = node.children.map((child) => compositionTemplateNode(child, context));
+		const selfClosing = children.length === 0;
+		return t.jsxElement(
+			t.jsxOpeningElement(name, attributes, selfClosing),
+			selfClosing ? null : t.jsxClosingElement(t.cloneNode(name)),
+			children,
+			selfClosing,
+		);
+	}
+	if (node.kind === 'branch') {
+		const name = t.jsxIdentifier(api(context.base, 'Show').name);
+		const attributes = [
+			jsxAttribute('when', rewriteCompositionExpression(node.expression, context)),
+		];
+		if (node.arms[1]!.children.length)
+			attributes.push(
+				jsxAttribute(
+					'fallback',
+					expressionFromCompositionNodes(node.arms[1]!.children, context),
+				),
+			);
+		return t.jsxElement(
+			t.jsxOpeningElement(name, attributes, false),
+			t.jsxClosingElement(t.cloneNode(name)),
+			[expressionFromCompositionNodes(node.arms[0]!.children, context) as any],
+			false,
+		);
+	}
+	if (node.kind === 'keyed-repeat') {
+		const lexicalNames = new Set(context.base.lexicalNames).add(node.item);
+		if (node.index) lexicalNames.add(node.index);
+		const rowContext = { ...context, base: { ...context.base, lexicalNames } };
+		const name = t.jsxIdentifier(api(context.base, 'For').name);
+		return t.jsxElement(
+			t.jsxOpeningElement(
+				name,
+				[
+					jsxAttribute(
+						'each',
+						rewriteCompositionExpression(node.collection.expression, context),
+					),
+				],
+				false,
+			),
+			t.jsxClosingElement(t.cloneNode(name)),
+			[
+				t.jsxExpressionContainer(
+					t.arrowFunctionExpression(
+						[t.identifier(node.item)],
+						expressionFromCompositionNodes(node.row, rowContext),
+					),
+				),
+			],
+			false,
+		);
+	}
+	const attributes: t.JSXAttribute[] = node.staticAttributes.map((attribute) =>
+		jsxAttribute(attribute.name, attribute.value),
+	);
+	for (const binding of node.dynamicBindings)
+		attributes.push(
+			jsxAttribute(binding.name, rewriteCompositionExpression(binding.expression, context)),
+		);
+	const forward = context.ir.records.handleForwards.find(
+		(record) =>
+			record.childComponentId === context.component.id && record.childHostNodeId === node.id,
+	);
+	if (forward) {
+		const parentHandle = context.ir.records.elementHandleBindings.find(
+			(binding) => binding.id === forward.handleBindingId,
+		)!;
+		const prop = context.component.props.entries.find(
+			(entry) => entry.sourceName === parentHandle.handleName || entry.localName === parentHandle.handleName,
+		);
+		const propName = prop?.sourceName ?? parentHandle.handleName.split('.').at(-1)!;
+		const callback = t.arrowFunctionExpression(
+			[t.identifier('node')],
+			t.blockStatement([
+				t.expressionStatement(
+					t.callExpression(member(t.identifier(context.propsName), propName), [
+						t.identifier('node'),
+					]),
+				),
+				t.expressionStatement(
+					t.callExpression(api(context.base, 'onCleanup'), [
+						t.arrowFunctionExpression(
+							[],
+							t.callExpression(member(t.identifier(context.propsName), propName), [
+								t.identifier('undefined'),
+							]),
+						),
+					]),
+				),
+			]),
+		);
+		attributes.push(jsxAttribute('ref', callback));
+	} else {
+		const handle = context.ir.records.elementHandleBindings.find(
+			(binding) => binding.componentId === context.component.id && binding.hostNodeId === node.id,
+		);
+		if (handle && !handle.handleName.includes('.'))
+			attributes.push(jsxAttribute('ref', t.identifier(handle.handleName)));
+	}
+	const directive = context.directiveNames.get(node.id);
+	if (directive) attributes.push(jsxAttribute(`use:${directive}`, true));
+	for (const eventId of node.eventIds) {
+		const event = context.base.events.get(eventId);
+		if (!event) throw new Error(`Unknown event record: ${eventId}`);
+		const emitted = emitEvent(event, context.base);
+		attributes.push(
+			jsxAttribute(
+				eventAttributeName(event.eventName),
+				rewriteCompositionExpression(emitted as SerializableAstNode, context) as any,
+			),
+		);
+	}
+	const name = t.jsxIdentifier(node.tag);
+	const children = node.children.map((child) => compositionTemplateNode(child, context));
+	const selfClosing = children.length === 0;
+	return t.jsxElement(
+		t.jsxOpeningElement(name, attributes, selfClosing),
+		selfClosing ? null : t.jsxClosingElement(t.cloneNode(name)),
+		children,
+		selfClosing,
+	);
+}
+
+function expressionFromCompositionNodes(
+	nodes: readonly TemplateNode[],
+	context: CompositionContext,
+): t.Expression {
+	const children = nodes.map((node) => compositionTemplateNode(node, context));
+	if (children.length === 0)
+		return t.jsxFragment(t.jsxOpeningFragment(), t.jsxClosingFragment(), []);
+	if (children.length === 1 && (t.isJSXElement(children[0]) || t.isJSXFragment(children[0])))
+		return children[0];
+	return t.jsxFragment(t.jsxOpeningFragment(), t.jsxClosingFragment(), children);
+}
+
+function sharedMethodArrow(
+	definition: SharedDefinition,
+	method: SharedDefinition['methods'][number],
+	context: EmitContext,
+): t.ArrowFunctionExpression {
+	const site = method.site as any;
+	const fn = site.type === 'Property' ? site.value : site;
+	if (!fn || !['FunctionExpression', 'ArrowFunctionExpression'].includes(fn.type))
+		throw new Error(`SharedDefinitionMethod ${method.name} has unsupported AST`);
+	const arrow = t.arrowFunctionExpression(
+		structuredClone(fn.params ?? []),
+		structuredClone(fn.body),
+	);
+	const rewritten = rewriteExpressionAst(arrow, context);
+	if (!t.isArrowFunctionExpression(rewritten))
+		throw new Error(`SharedDefinitionMethod ${method.name} lost its action shape`);
+	return rewritten;
+}
+
+function emitSharedFamily(
+	ir: EnrichedIR,
+	definition: SharedDefinition,
+	names: CompositionNames,
+	base: EmitContext,
+): t.Statement[] {
+	const body: t.Statement[] = [];
+	const statesById = new Map<string, StateBinding>();
+	const statesByName = new Map<string, StateBinding>();
+	const settersById = new Map<string, string>();
+	const computedByName = new Map<string, EnrichedGraphBinding>();
+	for (const cell of definition.cells) {
+		if (cell.kind === 'state') {
+			const storage: StateBinding['storage'] = cell.valueKind === 'scalar' ? 'signal' : 'store';
+			const state = {
+				componentId: '', id: cell.graphNodeId, name: cell.name, kind: 'state', writable: true,
+				valueKind: cell.valueKind, reads: [], writes: [], storage,
+			} as StateBinding;
+			statesById.set(state.id, state);
+			statesByName.set(state.name, state);
+			settersById.set(state.id, base.names.claim(setterBase(state.name)));
+		} else {
+			computedByName.set(cell.name, {
+				componentId: '', id: cell.graphNodeId, name: cell.name, kind: 'computed', writable: false,
+				reads: [], writes: [], computed: { expression: cell.expression, reads: [] },
+			} as EnrichedGraphBinding);
+		}
+	}
+	const sharedContext: EmitContext = {
+		...base,
+		bindingsById: new Map(statesById),
+		computedByName,
+		lexicalNames: new Set(),
+		propsByLocal: new Map(),
+		propsName: base.names.claim('sharedProps'),
+		settersById,
+		statesById,
+		statesByName,
+		storeKeys: new Map(),
+	};
+	for (const cell of definition.cells) {
+		if (cell.kind === 'state') {
+			const state = statesById.get(cell.graphNodeId)!;
+			body.push(
+				t.variableDeclaration('const', [
+					t.variableDeclarator(
+						t.arrayPattern([
+							t.identifier(cell.name),
+							t.identifier(settersById.get(cell.graphNodeId)!),
+						]),
+						t.callExpression(
+							api(base, state.storage === 'signal' ? 'createSignal' : 'createStore'),
+							[expression(cell.initializer)],
+						),
+					),
+				]),
+			);
+		} else {
+			body.push(
+				t.variableDeclaration('const', [
+					t.variableDeclarator(
+						t.identifier(cell.name),
+						rewriteExpressionAst(expression(cell.expression), sharedContext),
+					),
+				]),
+			);
+		}
+	}
+	for (const method of definition.methods)
+		body.push(
+			t.variableDeclaration('const', [
+				t.variableDeclarator(
+					t.identifier(method.name),
+					sharedMethodArrow(definition, method, sharedContext),
+				),
+			]),
+		);
+	const properties = definition.returnProperties.map((property) => {
+		const _cell = definition.cells.find((candidate) => candidate.name === property.name);
+		return t.objectProperty(
+			t.identifier(property.name),
+			t.identifier(property.name),
+			false,
+			true,
+		);
+	});
+	body.push(t.returnStatement(t.objectExpression(properties)));
+	const output: t.Statement[] = [
+		t.functionDeclaration(t.identifier(names.createShared), [], t.blockStatement(body)),
+	];
+	if (definition.scope === 'page') {
+		output.push(
+			t.variableDeclaration('const', [
+				t.variableDeclarator(
+					t.identifier(names.moduleShared),
+					t.callExpression(t.identifier(names.createShared), []),
+				),
+			]),
+			t.functionDeclaration(
+				t.identifier(definition.name),
+				[],
+				t.blockStatement([t.returnStatement(t.identifier(names.moduleShared))]),
+			),
+		);
+		return output;
+	}
+	output.push(
+		t.variableDeclaration('const', [
+			t.variableDeclarator(
+				t.identifier(names.context),
+				t.callExpression(api(base, 'createContext'), []),
+			),
+		]),
+		t.functionDeclaration(
+			t.identifier(definition.name),
+			[],
+			t.blockStatement([
+				t.variableDeclaration('const', [
+					t.variableDeclarator(
+						t.identifier('value'),
+						t.callExpression(api(base, 'useContext'), [t.identifier(names.context)]),
+					),
+				]),
+				t.ifStatement(
+					{ type: 'UnaryExpression', operator: '!', prefix: true, argument: t.identifier('value') },
+					t.blockStatement([
+						{ type: 'ThrowStatement', argument: { type: 'NewExpression', callee: t.identifier('Error'), arguments: [t.stringLiteral(`${definition.name} is missing its provider`)] } },
+					]),
+				),
+				t.returnStatement(t.identifier('value')),
+			]),
+		),
+	);
+	const providerProps = base.names.claim('props');
+	const providerName = t.jsxIdentifier(`${names.context}.Provider`);
+	output.push(
+		t.exportNamedDeclaration(
+			t.functionDeclaration(
+				t.identifier(names.provider),
+				[t.identifier(providerProps)],
+				t.blockStatement([
+					t.variableDeclaration('const', [
+						t.variableDeclarator(
+							t.identifier('value'),
+							t.callExpression(t.identifier(names.createShared), []),
+						),
+					]),
+					t.returnStatement(
+						t.jsxElement(
+							t.jsxOpeningElement(providerName, [jsxAttribute('value', t.identifier('value'))], false),
+							t.jsxClosingElement(t.cloneNode(providerName)),
+							[t.jsxExpressionContainer(member(t.identifier(providerProps), 'children'))],
+							false,
+						),
+					),
+				]),
+			),
+		),
+	);
+	return output;
+}
+
+function compositionComponent(
+	ir: EnrichedIR,
+	component: EnrichedComponent,
+	base: EmitContext,
+	sharedNames: ReadonlyMap<string, CompositionNames>,
+	exportedNames: ReadonlyMap<string, string>,
+): t.Statement {
+	const body: t.Statement[] = [];
+	const propsName = base.names.claim('props');
+	const sharedLocals = new Map<string, SharedDefinition>();
+	for (const instance of ir.records.sharedInstances.filter(
+		(record) => record.componentId === component.id,
+	)) {
+		const definition = ir.records.sharedDefinitions.find(
+			(candidate) => candidate.id === instance.definitionId,
+		)!;
+		sharedLocals.set(instance.localName, definition);
+	}
+	const directiveNames = new Map<string, string>();
+	for (const hostId of new Set(
+		ir.records.behaviors
+			.filter((behavior) => behavior.componentId === component.id)
+			.map((behavior) => behavior.hostNodeId),
+	))
+		directiveNames.set(hostId, base.names.claim('attachHost'));
+	const _propsBinding = ir.records.bindings.find(
+		(binding) => binding.componentId === component.id && binding.kind === 'prop',
+	);
+	const componentBindings = ir.records.bindings.filter(
+		(binding) => binding.componentId === component.id,
+	);
+	const storeKeys = collectStoreKeys(component);
+	const statesById = new Map<string, StateBinding>();
+	const statesByName = new Map<string, StateBinding>();
+	for (const binding of componentBindings.filter((entry) => entry.kind === 'state')) {
+		const storage: StateBinding['storage'] =
+			binding.valueKind === 'object' || binding.valueKind === 'array' || storeKeys.has(binding.id)
+				? 'store'
+				: 'signal';
+		const mapped = { ...binding, storage } as StateBinding;
+		statesById.set(mapped.id, mapped);
+		statesByName.set(mapped.name, mapped);
+	}
+	const settersById = new Map<string, string>();
+	for (const state of statesById.values())
+		settersById.set(state.id, base.names.claim(setterBase(state.name)));
+	const componentBase: EmitContext = {
+		...base,
+		bindingsById: new Map(componentBindings.map((binding) => [binding.id, binding])),
+		computedByName: new Map(componentBindings.filter((binding) => binding.kind === 'computed').map((binding) => [binding.name, binding])),
+		lexicalNames: new Set(),
+		propsByLocal: new Map(component.props.entries.map((entry) => [entry.localName, entry])),
+		propsName,
+		settersById,
+		statesById,
+		statesByName,
+		storeKeys,
+	};
+	const context: CompositionContext = { ir, component, base: componentBase, propsName, sharedLocals, sharedNames, directiveNames };
+	for (const local of [...component.locals].sort((left, right) => left.order - right.order)) {
+		const handle = ir.records.elementHandleBindings.find(
+			(binding) => binding.componentId === component.id && local.names.includes(binding.handleName),
+		);
+		if (handle) {
+			body.push(t.variableDeclaration('let', [t.variableDeclarator(t.identifier(handle.handleName), null)]));
+			continue;
+		}
+		const definition = sharedLocals.get(local.names[0]!);
+		if (definition) {
+			body.push(t.variableDeclaration('const', [t.variableDeclarator(t.identifier(local.names[0]!), t.callExpression(t.identifier(definition.name), []))]));
+			continue;
+		}
+		const state = local.semanticRecordIds.map((id) => statesById.get(id)).find(Boolean);
+		if (state) {
+			body.push(
+				t.variableDeclaration('const', [
+					t.variableDeclarator(
+						t.arrayPattern([t.identifier(state.name), t.identifier(settersById.get(state.id)!)]),
+						t.callExpression(api(componentBase, state.storage === 'signal' ? 'createSignal' : 'createStore'), [rewriteCompositionExpression(state.initializer!, context)]),
+					),
+				]),
+			);
+			continue;
+		}
+		if (local.initializer)
+			body.push(t.variableDeclaration(local.declarationKind, [t.variableDeclarator(structuredClone(local.pattern), rewriteCompositionExpression(local.initializer, context))]));
+	}
+	for (const [hostId, directiveName] of directiveNames) {
+		const behaviors = ir.records.behaviors.filter((behavior) => behavior.componentId === component.id && behavior.hostNodeId === hostId).sort((left, right) => left.order - right.order);
+		const cleanupNames = behaviors.map(() => base.names.claim('cleanup'));
+		const install: t.Statement[] = [];
+		const captures = new Map<string, string>();
+		for (const behavior of behaviors)
+			for (const input of behavior.inputs) {
+				const state = statesById.get(input.graphNodeId);
+				if (!state || captures.has(state.name)) continue;
+				const capture = base.names.claim(`${state.name}Input`);
+				captures.set(state.name, capture);
+				const current =
+					state.storage === 'signal'
+						? t.callExpression(t.identifier(state.name), [])
+						: pathMember(t.identifier(state.name), input.path);
+				install.push(
+					t.variableDeclaration('const', [
+						t.variableDeclarator(t.identifier(capture), current),
+					]),
+				);
+			}
+		for (const [index, behavior] of behaviors.entries()) {
+			const behaviorExpression = captureBehaviorInputs(
+				rewriteCompositionExpression(behavior.behavior, context),
+				captures,
+			);
+			install.push(t.variableDeclaration('const', [t.variableDeclarator(t.identifier(cleanupNames[index]!), t.callExpression(behaviorExpression, [t.identifier('node')]))]));
+		}
+		const cleanupBody: t.Statement[] = [];
+		for (let index = behaviors.length - 1; index >= 0; index -= 1) {
+			if (!behaviors[index]!.returnsCleanup) continue;
+			cleanupBody.push(t.ifStatement(t.binaryExpression('===', { type: 'UnaryExpression', operator: 'typeof', prefix: true, argument: t.identifier(cleanupNames[index]!) }, t.stringLiteral('function')), t.blockStatement([t.expressionStatement(t.callExpression(t.identifier(cleanupNames[index]!), []))])));
+		}
+		install.push(t.expressionStatement(t.callExpression(api(componentBase, 'onCleanup'), [t.arrowFunctionExpression([], t.blockStatement(cleanupBody))])));
+		body.push(t.variableDeclaration('const', [t.variableDeclarator(t.identifier(directiveName), t.arrowFunctionExpression([t.identifier('node')], t.blockStatement([t.expressionStatement(t.callExpression(api(componentBase, 'createEffect'), [t.arrowFunctionExpression([], t.blockStatement(install))]))]))) ]));
+	}
+	body.push(t.returnStatement(expressionFromCompositionNodes(component.template, context)));
+	const declaration = t.functionDeclaration(t.identifier(component.name), [t.identifier(propsName)], t.blockStatement(body));
+	return exportedNames.has(component.name) ? t.exportNamedDeclaration(declaration) : declaration;
+}
+
+function emitComposition(ir: EnrichedIR): string {
+	const allocator = new NameAllocator(compositionAuthoredNames(ir));
+	const apiNames = new Map<ApiName, string>();
+	for (const name of ['createSignal', 'createStore', 'produce', 'reconcile', 'untrack', 'For', 'Show', 'createContext', 'useContext', 'createEffect', 'onCleanup'] as const)
+		apiNames.set(name, allocator.claim(name));
+	const base: EmitContext = {
+		api: apiNames,
+		bindingsById: new Map(), computedByName: new Map(), events: new Map(ir.records.events.map((event) => [event.id, event])), imports: new Set(), lexicalNames: new Set(), names: allocator, propsByLocal: new Map(), propsName: allocator.claim('moduleProps'), settersById: new Map(), statesById: new Map(), statesByName: new Map(), storeKeys: new Map(),
+	};
+	const sharedNames = new Map<string, CompositionNames>();
+	for (const definition of ir.records.sharedDefinitions) {
+		const stem = sharedStem(definition);
+		sharedNames.set(definition.id, {
+			context: allocator.claim(`${stem}Context`),
+			provider: allocator.claim(`${stem}Provider`),
+			createShared: allocator.claim(`create${stem}Shared`),
+			moduleShared: allocator.claim(`${stem[0]!.toLowerCase()}${stem.slice(1)}Shared`),
+		});
+	}
+	const declarations: t.Statement[] = [];
+	for (const imported of ir.imports) {
+		if (imported.kind !== 'named') throw new Error(`ModuleImport ${imported.localName} has unsupported import kind`);
+		declarations.push(t.importDeclaration([t.importSpecifier(t.identifier(imported.localName), t.identifier(imported.importedName!))], t.stringLiteral(imported.source.replace(/\.tsrx$/, '.jsx'))));
+	}
+	for (const definition of ir.records.sharedDefinitions)
+		declarations.push(...emitSharedFamily(ir, definition, sharedNames.get(definition.id)!, base));
+	const exportedNames = new Map(ir.module.exports.map((entry) => [entry.componentName, entry.exportedName]));
+	for (const component of ir.components)
+		declarations.push(compositionComponent(ir, component, base, sharedNames, exportedNames));
+	const imports: t.Statement[] = [];
+	const addImport = (source: string, candidates: ApiName[]): void => {
+		const names = candidates.filter((name) => base.imports.has(name));
+		if (names.length) imports.push(t.importDeclaration(names.map((name) => t.importSpecifier(t.identifier(base.api.get(name)!), t.identifier(name))), t.stringLiteral(source)));
+	};
+	addImport('solid-js', ['createSignal', 'untrack', 'For', 'Show', 'createContext', 'useContext', 'createEffect', 'onCleanup']);
+	addImport('solid-js/store', ['createStore', 'produce', 'reconcile']);
+	const source = `// @generated by @frameless/solid; do not edit.\n// Solid event batching exposes final post-dispatch state while preserving authored write order (T004b); no deferred notifications are needed.\n${printProgram(t.program([...imports, ...declarations]))}\n`;
+	const verified = analyze(source, { lang: 'jsx', sourceType: 'module', preserveParens: false });
+	if (verified.diagnostics.length) throw new Error(`Emitted Solid composition module failed output verification: ${verified.diagnostics.map((item) => item.message).join('; ')}`);
+	return source;
+}
+
 /** Emit one Solid 1.x-compatible .jsx module from frameless-enriched-ir/2. */
 export function emit(ir: EnrichedIR): string {
 	validateEnrichedIr(ir);
+	if (hasComposition(ir)) return emitComposition(ir);
 	const component = ir.components[0]!;
 	const authored = collectAuthoredNames(ir);
 	const allocator = new NameAllocator(authored);
