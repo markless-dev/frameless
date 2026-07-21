@@ -36,7 +36,7 @@ agents:
   worker: installed
   judge: installed
 
-active_task: T004
+active_task: T005
 
 tasks:
   - id: T001
@@ -79,9 +79,45 @@ tasks:
   - id: T004
     type: pm
     assignee: PM
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Deliver the 'what we need' answer to the owner in plain language (per decision-menu rules: understandable without goal context) and record their decision or named follow-up."
+    receipt:
+      result: done
+      summary: "Delivered. Owner engagement (2026-07-21, verbatim anchors): 'So what is this primitive?' -> early() sketch delivered; 'Seems like a lot of steps here? Surely this can be simplified' -> simplified to early(handle, fn, fallback) with defaults-not-options; 'early is still weird, yeah ideally no new api?' -> zero-new-API design surfaced: attach+cell with COMPILER PROMOTION (3 statically-checkable rules: serializable body, static-inputs-only via BehaviorRecord provenance, returnsCleanup=false; promoted -> parse-time inline script seeding cells via landing slot; demoted -> unchanged attach; correct either way, promotion buys no-flash). PM revised its explicit-boundary lean on the record: that evidence came from library-land without compilers; promotion is on-thesis for markless. NAMED FOLLOW-UP (owner, verbatim): 'Yeah do some more research then get back with the result, and should we still need storage? etc.' -> T005-T008 spawned."
+  - id: T005
+    type: scout
+    assignee: Scout
+    status: active
+    reasoning_hint: medium
+    objective: "Promotion prior-art research, two halves: (a) crew mines the LOCAL qwik checkout for the $ serialization contract (what may cross a QRL boundary, captured-scope rules, unserializable-capture error modes, resume mechanics, any inline-script emission in core) as the direct constraint model for promotion rules; (b) PM-direct web research on the implicit-vs-explicit compiler-boundary track record: Marko automatic partial hydration (closest prior art to promotion), Qwik $ explicitness DX reception, Svelte's implicit-reactivity -> explicit-runes reversal (counter-datapoint), React Compiler auto-memoization reception."
+    expected_output:
+      - "notes/T005-promotion-prior-art.md"
+    receipt: null
+  - id: T006
+    type: pm
+    assignee: PM
+    status: queued
+    reasoning_hint: medium
+    objective: "Executed promotion probe: extend the poc/09-storage harness with a promoted-attach emulation — SSR HTML containing an element followed by a compiler-style inline script (measures children, corrects DOM, lands value in an element-scoped slot), runtime adapter consumes the seeded cell without re-measuring; assert pre-paint correction + zero duplicate measurement + storage-as-same-channel."
+    expected_output:
+      - "runner output banked in notes/T006-promotion-probe.md"
+    receipt: null
+  - id: T007
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Synthesis: refined promotion design (rules, diagnostics, failure modes priced from T005 constraints + T006 execution) AND the storage-survival analysis — does storage() remain a primitive, become a compiler-known std-lib cell over the same promotion channel, or collapse entirely (write-back/cross-tab/consent/key-identity accounted); owner menu, SUGGESTIONS ONLY."
+    expected_output:
+      - "notes/T007-promotion-and-storage.md"
+    receipt: null
+  - id: T008
+    type: pm
+    assignee: PM
+    status: queued
+    reasoning_hint: medium
+    objective: "Deliver the research result + storage answer to the owner in plain language; record decision or next follow-up."
     receipt: null
   - id: T999
     type: judge
