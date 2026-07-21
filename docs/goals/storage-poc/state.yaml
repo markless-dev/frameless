@@ -36,24 +36,26 @@ agents:
   worker: installed
   judge: installed
 
-active_task: T001
+active_task: T002  # T003 co-dispatched two-wide per policy (disjoint adapter dirs)
 
 tasks:
   - id: T001
     type: pm
     assignee: PM
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Stage the goal: create the fresh git worktree from main (owner directive), cross-link this commission as the owner's named gap on the storage-tradeoff board, verify local availability of vue/svelte/@angular packages (PM installs with network into the POC workspace if absent — never inside crew sandboxes), and scaffold the shared POC skeleton: neutral-named core (storage cell + seed-script generator + landing-slot handshake, ported from the T008/T009 probe patterns) plus the shared browser assertion runner, proven by executing the runner against a bare no-framework page."
     expected_output:
       - "Worktree path + branch name"
       - "Dependency inventory (found locally vs installed)"
       - "Shared core + runner committed; runner executes green on the bare page"
-    receipt: null
+    receipt:
+      result: done
+      summary: "Worktree .claude/worktrees/storage-poc (branch worktree-storage-poc) created from main (which now includes composition-v1 GOAL COMPLETE). Cross-link recorded earlier via storage-tradeoff T010/T999. Deps INSTALLED into poc/ with network (none of vue/svelte/angular were local): react@19.2.8 react-dom vue@3.5.40 svelte@5.56.7 @angular/{core,common,platform-browser,compiler}@22.0.7 rxjs tslib esbuild@0.28.1 esbuild-svelte playwright-core@1.61.1 (matches cached Chromium hs-1228). Scaffold committed: poc/core/storage.js (cell: inert-at-creation, lazy driver read, landing-slot consumption, write-back + root-attr maintenance), poc/core/seed.js (compiler-derived seed emulation), poc/runner/run.mjs (shared 4-case assertion set: cold/warm/write+round-trip/inert), poc/bare (no-framework target). Runner EXECUTED GREEN on bare: 13/13 assertions (fallback+stored value at first paint, exactly 1 driver read seeded, round-trip after reload, ZERO reads inert). Two runner bugs found+fixed during bring-up (summary aggregation let PASS overwrite FAIL; snapshot raced first paint)."
   - id: T002
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: "React + Vue adapters: idiomatic cell bindings (React hook, Vue ref) over the shared core, one demo page each, wired into the shared assertion runner; both frameworks green on the full assertion set. Crew dispatch two-wide (disjoint adapter dirs) or one unit if sizing says under ~15min each."
     allowed_files:
