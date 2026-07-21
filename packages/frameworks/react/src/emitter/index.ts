@@ -1129,6 +1129,34 @@ function collectAuthoredNames(ir: EnrichedIR): Set<string> {
 	for (const handle of ir.records.elementHandleBindings) names.add(handle.handleName);
 	return names;
 }
+function componentAuthoredNames(ir: EnrichedIR, component: EnrichedComponent): Set<string> {
+	const names = new Set<string>();
+	const scopedRecords = {
+		component,
+		bindings: ir.records.bindings.filter((record) => record.componentId === component.id),
+		events: ir.records.events.filter((record) => record.componentId === component.id),
+		sharedInstances: ir.records.sharedInstances.filter(
+			(record) => record.componentId === component.id,
+		),
+		sharedReads: ir.records.sharedReads.filter((record) => record.componentId === component.id),
+		sharedCalls: ir.records.sharedCalls.filter((record) => record.componentId === component.id),
+		elementHandles: ir.records.elementHandleBindings.filter(
+			(record) => record.componentId === component.id,
+		),
+		behaviors: ir.records.behaviors.filter((record) => record.componentId === component.id),
+		handleCalls: ir.records.handleCalls.filter((record) => record.componentId === component.id),
+	};
+	walk(scopedRecords, (record) => {
+		if (record.type === 'Identifier' && typeof record.name === 'string') names.add(record.name);
+		if (typeof record.item === 'string') names.add(record.item);
+		if (typeof record.index === 'string') names.add(record.index);
+	});
+	for (const binding of scopedRecords.bindings)
+		if (binding.id !== component.props.graphNodeId) names.add(binding.name);
+	for (const entry of component.props.entries) names.add(entry.localName);
+	for (const local of component.locals) local.names.forEach((name) => names.add(name));
+	return names;
+}
 const hookName = (context: EmitContext, hook: ReactHook): string => context.hookNames.get(hook)!;
 const setterFor = (context: EmitContext, state: StateBinding): string =>
 	context.setterNames.get(state.id)!;
@@ -3287,6 +3315,30 @@ export function emit(ir: EnrichedIR): string {
 	if (composition) body.push(...emitSharedDeclarations(ir, sharedContext, hooks));
 	const deferredExports: t.Statement[] = [];
 	for (const component of ir.components) {
+		const componentNames = new NameAllocator([
+			...componentAuthoredNames(ir, component),
+			...hookNames.values(),
+			...ir.imports.map((entry) => entry.localName),
+			...ir.components.map((entry) => entry.name),
+			...ir.records.sharedDefinitions.map((entry) => entry.name),
+			...[...sharedPropRoutes.values()].map((entry) => entry.propName),
+		]);
+		const componentStates = [...statesById.values()].filter(
+			(state) => state.componentId === component.id,
+		);
+		const componentSetterNames = new Map<string, string>();
+		const componentNextNames = new Map<string, string>();
+		for (const state of componentStates) {
+			componentSetterNames.set(state.id, componentNames.claim(setterName(state.name)));
+			componentNextNames.set(state.id, componentNames.claim(nextName(state.name)));
+		}
+		const componentCurrentNames = new Map<string, string>();
+		componentStates.forEach((state, index) => {
+			componentCurrentNames.set(
+				state.id,
+				componentNames.claim(`currentState${index + 1}`, '_'),
+			);
+		});
 		const hostRefNames = new Map<string, string>();
 		const edgeRefNames = new Map<string, string>();
 		for (const handle of ir.records.elementHandleBindings.filter(
@@ -3306,7 +3358,7 @@ export function emit(ir: EnrichedIR): string {
 			hostRefNames.set(
 				handle.hostNodeId,
 				behaviors
-					? allocator.claim(
+					? componentNames.claim(
 							`attach${handle.handleName[0]!.toUpperCase()}${handle.handleName.slice(1)}`,
 						)
 					: handle.handleName,
@@ -3316,7 +3368,7 @@ export function emit(ir: EnrichedIR): string {
 			(item) => item.componentId === component.id,
 		))
 			if (!hostRefNames.has(behavior.hostNodeId))
-				hostRefNames.set(behavior.hostNodeId, allocator.claim('attachHost'));
+				hostRefNames.set(behavior.hostNodeId, componentNames.claim('attachHost'));
 		for (const forward of ir.records.handleForwards) {
 			if (
 				forward.childComponentId === component.id &&
@@ -3336,8 +3388,13 @@ export function emit(ir: EnrichedIR): string {
 		const context: EmitContext = {
 			...baseContext,
 			componentId: component.id,
+			currentNames: componentCurrentNames,
 			hostRefNames,
 			edgeRefNames,
+			nextNames: componentNextNames,
+			names: componentNames,
+			setterNames: componentSetterNames,
+			setupRefName: componentNames.claim('setupDone'),
 		};
 		const declaration = componentFunction(ir, component, context, hooks);
 		const exports = ir.module.exports.filter((entry) => entry.componentName === component.name);

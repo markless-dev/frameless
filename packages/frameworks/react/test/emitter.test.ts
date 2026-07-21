@@ -401,6 +401,23 @@ describe('React structural emitter', () => {
 	describe('frameless-enriched-ir/2 composition emission', () => {
 		const build = (filename: string, source: string) => buildEnrichedIr({ filename, source });
 
+		test('allocates generated locals per component scope while preserving authored props', async () => {
+			const ir = await build(
+				'src/component-scopes.tsrx',
+				`import { state } from "@markless/core";
+				function Colliding({ first }) @{ let collision = state(1); let node = state(2); <output attach={(host) => { host.dataset.value = String(first + collision); }}>{node}</output> }
+				function Clean() @{ <output attach={(host) => { host.dataset.value = "clean"; }}>clean</output> }
+				export function Page() @{ <><Colliding first={1} /><Clean /></> }`,
+			);
+			renameIdentifier(ir, 'collision', 'props');
+			const source = emit(ir);
+			expect(source).toContain('function Colliding({ first })');
+			expect(source).toContain('function Clean()');
+			expect(source).toMatch(/const attachHost\d* = useCallback\(\(node2\) =>/);
+			expect(source).toMatch(/const attachHost\d* = useCallback\(\(node\) =>/);
+			expect(source).not.toContain('(node3) =>');
+		});
+
 		test('emits bare-authored static attributes as explicit empty strings', async () => {
 			const ir = await build(
 				'src/static-attributes.tsrx',

@@ -316,15 +316,15 @@ describe('Solid dossier gate', async () => {
 		['synthesized children prop', slot.replace('<Frame>', '<Frame children={<i />}>'), 'S-CH1'],
 		[
 			'wrapped single projection',
-			slot.replace('{props2.children}', 'String(props2.children)'),
+			slot.replace('{props.children}', 'String(props.children)'),
 			'S-CH2',
 		],
 		[
 			'duplicated direct projection',
-			slot.replace('{props2.children}', '{props2.children}{props2.children}'),
+			slot.replace('{props.children}', '{props.children}{props.children}'),
 			'S-CH3',
 		],
-		['called default slot', slot.replace('{props2.children}', '{props2.children()}'), 'S-CH4'],
+		['called default slot', slot.replace('{props.children}', '{props.children()}'), 'S-CH4'],
 		[
 			'artifact projection drift',
 			slot.replace('Projected composition', 'Changed projection'),
@@ -449,6 +449,14 @@ describe('Solid dossier gate', async () => {
 
 	test.each(mutationCases)('rejects the %s bypass mutation', async (_name, source, policy) => {
 		expect(await policies(source)).toContain(policy);
+	});
+
+	test('accepts identifier props parameters uniformly and rejects destructured shapes', async () => {
+		expect(await policies(valid)).toEqual([]);
+		expect(await policies(valid.replaceAll('props', 'props2'))).toEqual([]);
+		expect(
+			await policies(valid.replace('function Mutant(props)', 'function Mutant({ items })')),
+		).toContain('component-shape');
 	});
 
 	test('unrecorded-with-artifact -> violation', async () => {

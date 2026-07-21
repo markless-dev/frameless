@@ -2333,6 +2333,34 @@ function compositionAuthoredNames(ir: EnrichedIR): Set<string> {
 	return names;
 }
 
+function componentAuthoredNames(ir: EnrichedIR, component: EnrichedComponent): Set<string> {
+	const names = new Set<string>();
+	const scopedRecords = {
+		component,
+		bindings: ir.records.bindings.filter((record) => record.componentId === component.id),
+		events: ir.records.events.filter((record) => record.componentId === component.id),
+		sharedInstances: ir.records.sharedInstances.filter(
+			(record) => record.componentId === component.id,
+		),
+		sharedReads: ir.records.sharedReads.filter((record) => record.componentId === component.id),
+		sharedCalls: ir.records.sharedCalls.filter((record) => record.componentId === component.id),
+		elementHandles: ir.records.elementHandleBindings.filter(
+			(record) => record.componentId === component.id,
+		),
+		behaviors: ir.records.behaviors.filter((record) => record.componentId === component.id),
+		handleCalls: ir.records.handleCalls.filter((record) => record.componentId === component.id),
+	};
+	walk(scopedRecords, (record) => {
+		if (record.type === 'Identifier' && typeof record.name === 'string') names.add(record.name);
+		if (typeof record.item === 'string') names.add(record.item);
+		if (typeof record.index === 'string') names.add(record.index);
+	});
+	for (const binding of scopedRecords.bindings)
+		if (binding.id !== component.props.graphNodeId) names.add(binding.name);
+	for (const local of component.locals) local.names.forEach((name) => names.add(name));
+	return names;
+}
+
 function sharedStem(definition: SharedDefinition): string {
 	return definition.name.startsWith('use') && definition.name.length > 3
 		? definition.name.slice(3)
@@ -2808,7 +2836,7 @@ function emitSharedFamily(
 			]),
 		),
 	);
-	const providerProps = base.names.claim('props');
+	const providerProps = new NameAllocator(['value', names.createShared]).claim('props');
 	const providerName = t.jsxIdentifier(`${names.context}.Provider`);
 	output.push(
 		t.exportNamedDeclaration(
@@ -2853,7 +2881,15 @@ function compositionComponent(
 	exportedNames: ReadonlyMap<string, string>,
 ): t.Statement {
 	const body: t.Statement[] = [];
-	const propsName = base.names.claim('props');
+	const componentNames = new NameAllocator([
+		...componentAuthoredNames(ir, component),
+		...base.api.values(),
+		...ir.imports.map((entry) => entry.localName),
+		...ir.components.map((entry) => entry.name),
+		...ir.records.sharedDefinitions.map((entry) => entry.name),
+		...[...sharedNames.values()].flatMap((entry) => Object.values(entry)),
+	]);
+	const propsName = componentNames.claim('props');
 	const sharedLocals = new Map<string, SharedDefinition>();
 	for (const instance of ir.records.sharedInstances.filter(
 		(record) => record.componentId === component.id,
@@ -2869,7 +2905,7 @@ function compositionComponent(
 			.filter((behavior) => behavior.componentId === component.id)
 			.map((behavior) => behavior.hostNodeId),
 	))
-		directiveNames.set(hostId, base.names.claim('attachHost'));
+		directiveNames.set(hostId, componentNames.claim('attachHost'));
 	const componentBindings = ir.records.bindings.filter(
 		(binding) => binding.componentId === component.id,
 	);
@@ -2890,9 +2926,10 @@ function compositionComponent(
 	const settersById = new Map<string, string>();
 	for (const state of statesById.values())
 		if (state.writes.length > 0)
-			settersById.set(state.id, base.names.claim(setterBase(state.name)));
+			settersById.set(state.id, componentNames.claim(setterBase(state.name)));
 	const componentBase: EmitContext = {
 		...base,
+		names: componentNames,
 		bindingsById: new Map(componentBindings.map((binding) => [binding.id, binding])),
 		computedByName: new Map(
 			componentBindings
@@ -2979,7 +3016,7 @@ function compositionComponent(
 					behavior.componentId === component.id && behavior.hostNodeId === hostId,
 			)
 			.sort((left, right) => left.order - right.order);
-		const cleanupNames = behaviors.map(() => base.names.claim('cleanup'));
+		const cleanupNames = behaviors.map(() => componentNames.claim('cleanup'));
 		const directiveBody: t.Statement[] = [];
 		type BehaviorCapture = {
 			readonly current: t.Expression;
@@ -3000,7 +3037,7 @@ function compositionComponent(
 			for (const input of behavior.inputs) {
 				const state = statesById.get(input.graphNodeId);
 				if (!state || captures.has(state.name)) continue;
-				const capture = base.names.claim(`${state.name}Input`);
+				const capture = componentNames.claim(`${state.name}Input`);
 				captures.set(state.name, capture);
 				const current =
 					state.storage === 'signal'
@@ -3009,7 +3046,7 @@ function compositionComponent(
 				behaviorCaptures.push({
 					current,
 					name: capture,
-					nextName: base.names.claim(`${capture}Next`),
+					nextName: componentNames.claim(`${capture}Next`),
 				});
 			}
 			const behaviorExpression = captureBehaviorInputs(
@@ -3021,7 +3058,9 @@ function compositionComponent(
 				behavior,
 				call: behaviorCall,
 				captures: behaviorCaptures,
-				changedName: behaviorCaptures.length ? base.names.claim('behaviorChanged') : null,
+				changedName: behaviorCaptures.length
+					? componentNames.claim('behaviorChanged')
+					: null,
 				cleanupName: cleanupNames[index]!,
 			});
 		}
@@ -3048,7 +3087,7 @@ function compositionComponent(
 		}
 		const trackedPlans = plans.filter((plan) => plan.captures.length > 0);
 		if (trackedPlans.length > 0) {
-			const readyName = base.names.claim('behaviorInputsReady');
+			const readyName = componentNames.claim('behaviorInputsReady');
 			directiveBody.push(
 				t.variableDeclaration('let', [
 					t.variableDeclarator(t.identifier(readyName), t.booleanLiteral(false)),

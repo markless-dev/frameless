@@ -35,6 +35,16 @@ function visit(value: unknown, callback: (record: Record<string, any>) => void):
 		else visit(child, callback);
 	}
 }
+function renameIdentifier(ir: EnrichedIR, from: string, to: string): void {
+	visit(ir, (record) => {
+		if (record.type === 'Identifier' && record.name === from) record.name = to;
+		if (record.name === from) record.name = to;
+	});
+	for (const component of ir.components)
+		component.locals.forEach((local: any) => {
+			local.names = local.names.map((name: string) => (name === from ? to : name));
+		});
+}
 function staticAttributeValue(source: string, name: string): string {
 	const parsed = parse(source, { lang: 'jsx', sourceType: 'module', preserveParens: false });
 	expect(parsed.diagnostics).toEqual([]);
@@ -128,6 +138,20 @@ describe('Solid structural emitter', () => {
 
 	describe('frameless-enriched-ir/2 composition emission', () => {
 		const build = (filename: string, source: string) => buildEnrichedIr({ filename, source });
+
+		test('allocates props and generated locals per component scope', async () => {
+			const ir = await build(
+				'src/component-scopes.tsrx',
+				`import { shared, state } from "@markless/core";
+				export const useLedger = shared(() => { let value = state(1); return { value }; });
+				export function Colliding({ first }) @{ const collision = 1; const ledger = useLedger(); <output>{first + collision + ledger.value}</output> }`,
+			);
+			renameIdentifier(ir, 'collision', 'props');
+			const source = emit(ir);
+			expect(source).toContain('export function LedgerProvider(props)');
+			expect(source).toContain('function Colliding(props2)');
+			expect(source).not.toContain('function LedgerProvider(props2)');
+		});
 
 		test('emits every component, nested children, projection, and generated imports', async () => {
 			const local = await build(
