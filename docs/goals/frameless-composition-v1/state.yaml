@@ -214,6 +214,13 @@ tasks:
     verify: ["full node lane; both browser lanes; e2e 3/3; reviewed golden diffs; fresh-clone check (new deps)"]
     stop_if: ["gate queries cannot port cleanly — report, do not hand-roll scopes", "semantic diff in any regenerated golden", "verification fails twice"]
     receipt: null
+  - id: T013
+    type: scout
+    assignee: Scout
+    status: queued
+    reasoning_hint: medium
+    objective: "Persistence/external-state design dossier (owner-commissioned, read-only, may run parallel to any write package): API-shape exploration for markless storage-backed state (localStorage family) bound by notes/persistence-design-input.md — needed-at tiers, record shape, per-target lowering evidence (React uSES/getSnapshot patterns, Solid, markless chunk-wake, QWIK constraint: no eager visible task — cite Qwik docs), first-paint anti-flash technique inventory, SSR boundary honesty. Output feeds the markless language tranche when the fixing board closes."
+    receipt: null
   - id: T998
     type: judge
     assignee: Judge
