@@ -62,6 +62,17 @@ function staticAttributeValue(source: string, name: string): string {
 	if (result === undefined) throw new Error(`missing ${name}`);
 	return result;
 }
+function expectTopLevelSpacing(source: string): void {
+	const parsed = parse(source, { lang: 'jsx', sourceType: 'module', preserveParens: false });
+	expect(parsed.diagnostics).toEqual([]);
+	for (let index = 1; index < parsed.program.body.length; index += 1) {
+		const previous = parsed.program.body[index - 1]!;
+		const current = parsed.program.body[index]!;
+		const bothImports =
+			previous.type === 'ImportDeclaration' && current.type === 'ImportDeclaration';
+		expect(source.slice(previous.end, current.start)).toBe(bothImports ? '\n' : '\n\n');
+	}
+}
 function findKind(value: unknown, kind: string): Record<string, any> | null {
 	let found: Record<string, any> | null = null;
 	visit(value, (record) => {
@@ -105,6 +116,21 @@ describe('Solid structural emitter', () => {
 			);
 		});
 	}
+
+	test('formats a multi-declaration module with one blank line between top-level declarations', async () => {
+		expectTopLevelSpacing(await emitCompositionFixture('C2-shared'));
+		const withImportedComponent = await buildEnrichedIr({
+			filename: 'test/spacing-parent.tsrx',
+			source: `import { state } from "@markless/core";
+				import { Child } from "./spacing-child.tsrx";
+				export function Parent() @{ let count = state(0); <Child>{count}</Child> }`,
+		});
+		expectTopLevelSpacing(await formatEmitted(emit(withImportedComponent)));
+	});
+
+	test('formats the single-component v0 shape with a blank line after its import block', async () => {
+		expectTopLevelSpacing(await formatEmitted(emit(await golden('s1-render-once.json'))));
+	});
 
 	test('audits every T003 lowering delta in the actual generated files', async () => {
 		const [s1, s2, s3] = await Promise.all(

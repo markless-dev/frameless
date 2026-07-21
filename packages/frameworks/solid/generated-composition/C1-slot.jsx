@@ -3,6 +3,7 @@
 function Frame(props) {
 	return <section data-frame>{props.children}</section>;
 }
+
 export function SlotPage() {
 	return (
 		<Frame>

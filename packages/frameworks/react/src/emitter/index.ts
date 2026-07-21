@@ -91,6 +91,17 @@ function printProgram(program: any): string {
 	return result.code;
 }
 
+function printTopLevel(program: any): string {
+	const imports = program.body.filter((statement: any) => statement.type === 'ImportDeclaration');
+	const declarations = program.body.filter(
+		(statement: any) => statement.type !== 'ImportDeclaration',
+	);
+	return [
+		...(imports.length ? [printProgram(t.program(imports))] : []),
+		...declarations.map((declaration: any) => printProgram(t.program([declaration]))),
+	].join('\n\n');
+}
+
 function declaredNames(program: t.Node): string[] {
 	const names: string[] = [];
 	const pattern = (node: any): void => {
@@ -3437,7 +3448,7 @@ export function emit(ir: EnrichedIR): string {
 		];
 	const program = t.program(hooks.size ? [imports, ...body] : body);
 	const expectedNames = declaredNames(program);
-	const source = `${printProgram(program)}\n`;
+	const source = `${printTopLevel(program)}\n`;
 	const verified = analyze(source, { lang: 'jsx', sourceType: 'module', preserveParens: false });
 	if (verified.diagnostics.length) {
 		throw new Error(

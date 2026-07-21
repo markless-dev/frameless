@@ -2,6 +2,7 @@
 function Frame({ children }) {
 	return <section data-frame="">{children}</section>;
 }
+
 export function SlotPage() {
 	return (
 		<Frame>
