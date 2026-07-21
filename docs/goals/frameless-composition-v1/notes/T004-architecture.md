@@ -409,3 +409,10 @@ violation; recorded-with-artifact -> clean.
 3. T013 disposition: carried to the successor board (the owner's research fork
    owns it). 4. markless dirty files: flagged to owner as fixing-board
    attribution (this goal wrote nothing there — T999 verified vendor/ untouched).
+
+## Post-close owner ruling (2026-07-21): shared-factory naming
+
+Authored-name pass-through stays in BOTH targets (owner: "keep it name wise until
+someone complains") — use* context accessors are doc-sanctioned Solid and correct
+React; create* stays reserved for creators. FIX authorized: generated-name suffix
+dedupe (createCompositionSharedShared class).
