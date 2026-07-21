@@ -369,3 +369,17 @@ the diagnostic named); T004b outermost-completion semantics implement when the
 construct is admitted (overturn trigger). Findings 1/2 (gate bypasses), 4 (tier
 browser coverage + subscriber-observer scenario), 5 (durable collision tests):
 repair unit dispatched.
+
+## PM ADJUDICATION 9 (2026-07-21): C3 install timing + C5 reference correction
+
+C3: emitter defect confirmed — behaviors must install SYNCHRONOUSLY at host
+attachment (T003 SS3); tracked reinstall machinery (createEffect) wraps ONLY
+behaviors with derived/recorded inputs; zero-input behaviors install bare. Fix the
+emitter.
+C5: the EMITTER IS CORRECT (container scope, no edge prop routes -> provider per
+SS3.2). The Solid C5 REFERENCE + smoke harness are corrected to the provider
+lowering. Principle recorded: per-framework idiom conformance follows THAT
+framework's dossier rulings — the React props tier and the Solid provider are both
+correct for the same authored source; the cross-target bar is BEHAVIORAL equality
+(same rendered values/interactions), never structural idiom mirroring. The
+authored fixture stays canonical and untouched.
