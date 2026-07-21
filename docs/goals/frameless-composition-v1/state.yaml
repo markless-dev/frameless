@@ -69,7 +69,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-composition-v1/"
     command: "npx goalbuddy board docs/goals/frameless-composition-v1"
 
-active_task: T009  # P3 react composition emitter
+active_task: T010  # P4 solid composition emitter (after P3 critique)
 
 tasks:
   - id: T001
@@ -179,17 +179,19 @@ tasks:
   - id: T009
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "React composition emitter + gate per T004 SS3.1 (requires T005; owner tiered-lowering decision binding). Critique mandatory."
     allowed_files: ["packages/frameworks/react/**"]
     verify: ["node incl. metamorphics + per-policy mutations + e2e discovery; react-browser incl. composition calibration + emitted smoke; v0 lanes green"]
     stop_if: ["dossier lacks evidence", "IR insufficiency — record /2 amendment, stop", "verification fails twice"]
-    receipt: null
+    receipt:
+      result: done
+      summary: "React composition emitter + gate complete through 3 P3a issues (two CORRECT IR-insufficiency blocks -> 4 adjudicated /2 amendment rounds incl. completeness sweep) + 3 P3b issues (provenance-aware gate adjudication, behavior-input derivation, then implementation): all shared tiers record-driven (factory-named hook, notification-atomic store, provider wrapper, page module-store), children projection, HandleForwardRecord forwarding, T005 literal-attach callback refs; 13 R-* policies published + mutation-tested (artifact-aware pair honestly unevaluated without IR); emitted-vs-reference Chromium smoke 4/4 EQUAL vs the calibrated reference. The verification stack caught a real compiler defect end-to-end (template-literal shared reads silently dropped; guard made set-complete). React 122/122, react-browser 41/41, node 399/399, F8 held throughout."
   - id: T010
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: "Solid composition emitter + gate per T004 SS3.2 (+T006 forwarding ruling). Sequential after T009 preferred. Critique mandatory."
     allowed_files: ["packages/frameworks/solid/**"]
