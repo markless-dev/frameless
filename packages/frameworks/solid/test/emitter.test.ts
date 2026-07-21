@@ -185,6 +185,17 @@ describe('Solid structural emitter', () => {
 			handle.records.elementHandleBindings = [];
 			expect(() => emit(handle)).toThrow(/HandleCallRecord has dangling ElementHandleBinding/);
 		});
+
+		test('fails closed on unchecked composition event and shared-return linkage', async () => {
+			const event = structuredClone(await build('src/event-link.tsrx', `import { state } from "@markless/core"; function Child() @{ <i /> } export function EventLink() @{ let count = state(0); <><Child /><button onClick={() => count++}>{count}</button></> }`)) as any;
+			const host = findKind(event.components[0].template, 'host')!;
+			host.eventIds = ['event:missing'];
+			expect(() => emit(event)).toThrow(/TemplateHost has dangling event id/);
+
+			const shared = structuredClone(await build('src/return-link.tsrx', `import { shared, state } from "@markless/core"; export const useValue = shared(() => { let value = state(1); return { value }; }); export function Value() @{ const sharedValue = useValue(); <output>{sharedValue.value}</output> }`)) as any;
+			shared.records.sharedDefinitions[0].returnProperties[0].graphNodeId = 'shared:missing';
+			expect(() => emit(shared)).toThrow(/SharedReturnProperty value does not resolve to its shared cell/);
+		});
 	});
 
 	test('has an AST-only boundary without fixture signatures or source recovery', async () => {

@@ -1361,7 +1361,7 @@ function validateCompositionIr(ir: EnrichedIR): void {
 	const sharedGraphIds = new Set(
 		ir.records.sharedDefinitions.flatMap((definition) => definition.graphBindings),
 	);
-	const _eventIds = new Set(ir.records.events.map((event) => event.id));
+	const eventIds = new Set(ir.records.events.map((event) => event.id));
 	const hostIds = new Set<string>();
 	const edgeIds = new Set<string>();
 	const validateComponentId = (construct: string, componentId: unknown): void => {
@@ -1415,6 +1415,9 @@ function validateCompositionIr(ir: EnrichedIR): void {
 		}
 		if (node.kind === 'host') {
 			hostIds.add(node.id);
+			for (const eventId of node.eventIds)
+				if (!eventIds.has(eventId))
+					throw new Error(`TemplateHost has dangling event id: ${eventId}`);
 			node.children.forEach(validateTemplate);
 			return;
 		}
@@ -1483,6 +1486,19 @@ function validateCompositionIr(ir: EnrichedIR): void {
 			if (typeof method.name !== 'string' || !Array.isArray(method.writes))
 				throw new Error('SharedDefinitionMethod has malformed construct');
 			validateAst('SharedDefinitionMethod site', method.site);
+		}
+		for (const property of definition.returnProperties) {
+			if (property.kind === 'graph') {
+				const cell = definition.cells.find((candidate) => candidate.name === property.name);
+				if (!cell || cell.graphNodeId !== property.graphNodeId)
+					throw new Error(
+						`SharedReturnProperty ${property.name} does not resolve to its shared cell`,
+					);
+			} else if (!definition.methods.some((method) => method.name === property.name)) {
+				throw new Error(
+					`SharedReturnProperty ${property.name} does not resolve to its shared method`,
+				);
+			}
 		}
 		const instances = ir.records.sharedInstances.filter((instance) => instance.definitionId === definition.id);
 		if (instances.length === 0)
@@ -2523,7 +2539,6 @@ function emitSharedFamily(
 			]),
 		);
 	const properties = definition.returnProperties.map((property) => {
-		const _cell = definition.cells.find((candidate) => candidate.name === property.name);
 		return t.objectProperty(
 			t.identifier(property.name),
 			t.identifier(property.name),
@@ -2632,9 +2647,6 @@ function compositionComponent(
 			.map((behavior) => behavior.hostNodeId),
 	))
 		directiveNames.set(hostId, base.names.claim('attachHost'));
-	const _propsBinding = ir.records.bindings.find(
-		(binding) => binding.componentId === component.id && binding.kind === 'prop',
-	);
 	const componentBindings = ir.records.bindings.filter(
 		(binding) => binding.componentId === component.id,
 	);

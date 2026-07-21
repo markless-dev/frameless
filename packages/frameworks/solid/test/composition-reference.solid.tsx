@@ -374,3 +374,45 @@ export function SolidPageScopeReference() {
 		</SharedContext.Provider>
 	);
 }
+
+export function SolidPropsTierReference() {
+	return <output data-tier-props>5</output>;
+}
+
+export function SolidScalarContextTierReference() {
+	return (
+		<>
+			<output data-tier-scalar="left">6</output>
+			<output data-tier-scalar="right">6</output>
+		</>
+	);
+}
+
+export function SolidObjectContextTierReference() {
+	return (
+		<>
+			<output data-tier-object="first">7|seven</output>
+			<output data-tier-object="second">7|seven</output>
+		</>
+	);
+}
+
+const [pageTierCount, setPageTierCount] = createSignal(0);
+
+export function resetSolidPageTierReference() {
+	setPageTierCount(0);
+}
+
+export function SolidPageStoreTierReference() {
+	return (
+		<>
+			<button
+				data-action="increment-page-tier"
+				onClick={() => setPageTierCount(pageTierCount() + 1)}
+			>
+				Increment
+			</button>
+			<output data-tier-page>{pageTierCount()}</output>
+		</>
+	);
+}

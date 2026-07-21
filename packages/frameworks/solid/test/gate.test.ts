@@ -2,6 +2,7 @@ import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promi
 import { tmpdir } from 'node:os';
 import { resolve } from 'pathe';
 import { afterEach, describe, expect, test } from 'vitest';
+import { buildEnrichedIr, type EnrichedIR } from '@frameless/compiler';
 import {
 	checkGeneratedFiles,
 	checkSources,
@@ -10,6 +11,33 @@ import {
 } from '../src/gate/index.ts';
 
 const temporaryRoots: string[] = [];
+const packageRoot = resolve(import.meta.dirname, '..');
+const compositionNames = [
+	'C1-slot',
+	'C2-shared',
+	'C3-ref',
+	'C4-attach',
+	'C5-props',
+	'C6-scalar-context',
+	'C7-object-context',
+	'C8-page-store',
+] as const;
+const compositionArtifacts = new Map<string, EnrichedIR>();
+const compositionSources = new Map<string, string>();
+for (const name of compositionNames) {
+	const filename = `test/composition-fixtures/${name}.tsrx`;
+	compositionArtifacts.set(
+		name,
+		await buildEnrichedIr({
+			filename,
+			source: await readFile(resolve(packageRoot, filename), 'utf8'),
+		}),
+	);
+	compositionSources.set(
+		name,
+		await readFile(resolve(packageRoot, `generated-composition/${name}.jsx`), 'utf8'),
+	);
+}
 afterEach(async () =>
 	Promise.all(temporaryRoots.splice(0).map((root) => rm(root, { recursive: true, force: true }))),
 );
@@ -23,19 +51,28 @@ export function Mutant(props) {
   return <section><Show when={props.visible}><span>{label()}</span></Show><input value={value()} attr:value={value()} onInput={(event) => setValue(Number(event.currentTarget.value))} /><ul><For each={items}>{(item) => <li>{item.id}<button onClick={() => setItems(reconcile([], { key: 'id' }))}>clear</button></li>}</For></ul></section>;
 }`;
 
-async function policies(source: string): Promise<string[]> {
-	const result = await checkSources([{ file: 'generated/Mutant.jsx', source }]);
-	expect(result.violations.every((entry) => /^T003 ruling \d+$/.test(entry.dossierRef))).toBe(
-		true,
-	);
+async function policies(source: string, artifact?: EnrichedIR): Promise<string[]> {
+	const result = await checkSources([{ file: 'generated/Mutant.jsx', source, artifact }]);
+	expect(
+		result.violations.every((entry) =>
+			/^(?:T003 ruling \d+|T004 §3\.2 S-[A-Z]+\d+)$/.test(entry.dossierRef),
+		),
+	).toBe(true);
 	return result.violations.map((entry) => entry.policy);
 }
 
 describe('Solid dossier gate', () => {
 	test('publishes a dossier reference on every policy', () => {
 		expect(
-			SOLID_GATE_POLICIES.every((policy) => /^T003 ruling \d+$/.test(policy.dossierRef)),
+			SOLID_GATE_POLICIES.every((policy) =>
+				/^(?:T003 ruling \d+|T004 §3\.2 S-[A-Z]+\d+)$/.test(policy.dossierRef),
+			),
 		).toBe(true);
+		expect(
+			SOLID_GATE_POLICIES.filter((policy) => policy.requiresArtifact).map(
+				(policy) => policy.id,
+			),
+		).toEqual(['S-CH5', 'S-SH3', 'S-SH7', 'S-RF5', 'S-RF7']);
 	});
 
 	test('discovers and accepts every checked-in generated component', async () => {
@@ -201,17 +238,26 @@ describe('Solid dossier gate', () => {
 		],
 		[
 			'computed-member setter',
-			valid.replace('const label', "const key = 'run'; ({ [key]: setValue })[key](1);\n  const label"),
+			valid.replace(
+				'const label',
+				"const key = 'run'; ({ [key]: setValue })[key](1);\n  const label",
+			),
 			'render-phase-setter',
 		],
 		[
 			'dynamic computed-member setter',
-			valid.replace('const label', "const key = props.label; ({ [key]: setValue })[key](1);\n  const label"),
+			valid.replace(
+				'const label',
+				'const key = props.label; ({ [key]: setValue })[key](1);\n  const label',
+			),
 			'render-phase-setter',
 		],
 		[
 			'dynamic-access static-member setter',
-			valid.replace('const label', 'const key = props.action; ({ run: setValue })[key](1);\n  const label'),
+			valid.replace(
+				'const label',
+				'const key = props.action; ({ run: setValue })[key](1);\n  const label',
+			),
 			'render-phase-setter',
 		],
 		[
@@ -251,15 +297,157 @@ describe('Solid dossier gate', () => {
 		],
 	] as const;
 
+	const slot = compositionSources.get('C1-slot')!;
+	const shared = compositionSources.get('C2-shared')!;
+	const refs = compositionSources.get('C3-ref')!;
+	const attach = compositionSources.get('C4-attach')!;
+	const page = compositionSources.get('C8-page-store')!;
+	const compositionMutationCases = [
+		['synthesized children prop', slot.replace('<Frame>', '<Frame children={<i />}>'), 'S-CH1'],
+		[
+			'wrapped single projection',
+			slot.replace('{props2.children}', 'String(props2.children)'),
+			'S-CH2',
+		],
+		[
+			'duplicated direct projection',
+			slot.replace('{props2.children}', '{props2.children}{props2.children}'),
+			'S-CH3',
+		],
+		['called default slot', slot.replace('{props2.children}', '{props2.children()}'), 'S-CH4'],
+		[
+			'artifact projection drift',
+			slot.replace('Projected composition', 'Changed projection'),
+			'S-CH5',
+			compositionArtifacts.get('C1-slot'),
+		],
+		[
+			'missing context read',
+			shared.replace('useContext(CompositionSharedContext)', 'useContext()'),
+			'S-SH1',
+		],
+		[
+			'aggregate primitive for scalar',
+			shared.replace('createSignal(0)', 'createStore(0)'),
+			'S-SH2',
+		],
+		[
+			'missing page singleton',
+			page.replace(
+				'const pageLedgerShared = createPageLedgerShared();',
+				'const pageLedgerShared = {};',
+			),
+			'S-SH3',
+			compositionArtifacts.get('C8-page-store'),
+		],
+		[
+			'missing provider',
+			shared.replaceAll('CompositionSharedContext.Provider', 'section'),
+			'S-SH4',
+		],
+		[
+			'container creator alias at module scope',
+			shared.replace(
+				'const CompositionSharedContext',
+				'const createAlias = createCompositionSharedShared;\nconst illicitShared = createAlias();\nconst CompositionSharedContext',
+			),
+			'S-SH4',
+		],
+		[
+			'rebuilt provider value',
+			shared.replace('value={value}', 'value={createCompositionSharedShared()}'),
+			'S-SH5',
+		],
+		[
+			'owner primitive in page creator',
+			page.replace(
+				'function createPageLedgerShared() {',
+				'function createPageLedgerShared() {\n\tcreateEffect(() => {});',
+			),
+			'S-SH6',
+		],
+		[
+			'shared method order drift',
+			shared.replace(
+				'setHistory(`${history()}:${count()}`);\n\t\tsetCount(count() + 1);',
+				'setCount(count() + 1);\n\t\tsetHistory(`${history()}:${count()}`);',
+			),
+			'S-SH7',
+			compositionArtifacts.get('C2-shared'),
+		],
+		[
+			'unbound handle declaration',
+			refs.replace('let input;', 'let input;\n\tlet spare;'),
+			'S-RF1',
+		],
+		[
+			'authored attach attribute leak',
+			refs.replace('use:attachHost', 'attach={attachHost}'),
+			'S-RF2',
+		],
+		[
+			'setter callback ref',
+			refs.replace('(node) => (input = node)', '(node) => setInput(node)'),
+			'S-RF3',
+		],
+		['unguarded handle call', refs.replace('input?.focus()', 'input.focus()'), 'S-RF4'],
+		[
+			'dropped directive consumption',
+			attach.replace(' use:attachHost', ''),
+			'S-RF5',
+			compositionArtifacts.get('C4-attach'),
+		],
+		[
+			'directive reinstall omitted',
+			attach.replace('createEffect(() => {', 'runEffect(() => {'),
+			'S-RF6',
+		],
+		[
+			'cleanup order drift',
+			attach.replace(
+				'`cleanup:B:${behaviorInputInput}`, `cleanup:A:${behaviorInputInput}`',
+				'`cleanup:A:${behaviorInputInput}`, `cleanup:B:${behaviorInputInput}`',
+			),
+			'S-RF7',
+			compositionArtifacts.get('C4-attach'),
+		],
+	] as const;
+
 	test.each(mutationCases)('rejects the %s bypass mutation', async (_name, source, policy) => {
 		expect(await policies(source)).toContain(policy);
 	});
 
+	test.each(compositionMutationCases)(
+		'rejects the %s composition bypass mutation',
+		async (_name, source, policy, artifact) => {
+			expect(await policies(source, artifact)).toContain(policy);
+		},
+	);
+
 	test('has a syntactically valid mutation for every published policy', () => {
-		const covered = new Set(mutationCases.map((entry) => entry[2]));
+		const covered = new Set(
+			[...mutationCases, ...compositionMutationCases].map((entry) => entry[2]),
+		);
 		expect(
 			SOLID_GATE_POLICIES.map((policy) => policy.id).filter((id) => !covered.has(id)),
 		).toEqual([]);
+	});
+
+	test('discovers and gates every generated composition module with artifact provenance', async () => {
+		const files = await discoverGeneratedFiles({ directory: 'generated-composition' });
+		expect(files).toEqual(compositionNames.map((name) => `generated-composition/${name}.jsx`));
+		const result = await checkSources(
+			files.map((file) => {
+				const name = file.slice('generated-composition/'.length, -'.jsx'.length);
+				return {
+					file,
+					source: compositionSources.get(name)!,
+					artifact: compositionArtifacts.get(name)!,
+				};
+			}),
+		);
+		expect(result.unevaluated).toEqual([]);
+		expect(result.violations, JSON.stringify(result.violations, null, 2)).toEqual([]);
 	});
 
 	test('Show duplication is judged at any depth, not by outer-wrapper identity', async () => {
@@ -273,8 +461,10 @@ describe('Solid dossier gate', () => {
 				`<Show when={props.visible} fallback={${fallback}}><span>{label()}</span>${children}</Show>`,
 			);
 		const list = '<ul><For each={items}>{(item) => <li>{item.id}</li>}</For></ul>';
-		const wrapped = '<ul data-arm="else"><For each={items}>{(item) => <li>{item.id}</li>}</For></ul>';
-		const distinct = '<ul><For each={items}>{(item) => <li data-arm="else">{item.id}</li>}</For></ul>';
+		const wrapped =
+			'<ul data-arm="else"><For each={items}>{(item) => <li>{item.id}</li>}</For></ul>';
+		const distinct =
+			'<ul><For each={items}>{(item) => <li data-arm="else">{item.id}</li>}</For></ul>';
 		expect(await policies(arms(wrapped, list))).toContain('show-two-arm');
 		expect(await policies(arms(distinct, list))).not.toContain('show-two-arm');
 	});

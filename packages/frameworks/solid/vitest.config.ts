@@ -6,7 +6,7 @@ export default defineConfig({
 	root: import.meta.dirname,
 	plugins: [
 		solid({
-			include: /packages\/frameworks\/solid\/(?:generated\/.*\.jsx|test\/.*\.solid\.tsx)$/,
+			include: /packages\/frameworks\/solid\/(?:generated(?:-composition)?\/.*\.jsx|test\/.*\.solid\.tsx)$/,
 		}),
 	],
 	resolve: { conditions: ['development', 'browser'], dedupe: ['solid-js'] },

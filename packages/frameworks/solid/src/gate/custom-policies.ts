@@ -6,7 +6,19 @@ type Node = any;
 type Violate = (file: string, policy: string, message: string, node?: Node) => GateViolation;
 type Imported = { readonly source: string; readonly imported: string };
 const ALLOWED_IMPORTS = new Map([
-	['solid-js', new Set(['createSignal', 'untrack', 'For', 'Show'])],
+	[
+		'solid-js',
+		new Set([
+			'createSignal',
+			'untrack',
+			'For',
+			'Show',
+			'createContext',
+			'useContext',
+			'createEffect',
+			'onCleanup',
+		]),
+	],
 	['solid-js/store', new Set(['createStore', 'produce', 'reconcile'])],
 ]);
 const EFFECTS = new Set(['createEffect', 'createRenderEffect', 'createComputed', 'onMount']);
@@ -327,10 +339,7 @@ export function customPolicies(
 			for (const property of object.properties) {
 				if (!is(property, 'Property')) continue;
 				const resolved = callable(property.value, new Set(trail));
-				if (
-					resolved?.kind === 'signal-setter' ||
-					resolved?.kind === 'store-setter'
-				)
+				if (resolved?.kind === 'signal-setter' || resolved?.kind === 'store-setter')
 					return resolved;
 			}
 		}
@@ -877,14 +886,226 @@ export function customPolicies(
 		},
 	});
 
-	if (exported.length !== 1)
+	if (exported.length < 1)
 		violations.push(
 			violation(
 				file,
 				'component-shape',
-				`Expected exactly one exported function component; found ${exported.length}`,
+				`Expected at least one exported function component; found ${exported.length}`,
 			),
 		);
+
+	// Composition policies deliberately inspect only generated composition shapes. The
+	// artifact-aware half of the gate lives in index.ts; these checks cover hazards that
+	// remain provable from bindings and output structure alone.
+	const composition =
+		/\b(?:createContext|useContext|createEffect|onCleanup)\b|\buse:|\.children\b/.test(source);
+	if (composition) {
+		const directChildren = [...source.matchAll(/\b([A-Za-z_$][\w$]*)\.children\b(?!\s*\()/g)];
+		const calledChildren = [...source.matchAll(/\b([A-Za-z_$][\w$]*)\.children\s*\(/g)];
+		for (const match of calledChildren)
+			violations.push(
+				violation(file, 'S-CH4', 'Default-slot props.children must not be invoked', {
+					start: match.index,
+				}),
+			);
+		const childrenByOwner = new Map<string, number>();
+		for (const match of directChildren)
+			childrenByOwner.set(match[1]!, (childrenByOwner.get(match[1]!) ?? 0) + 1);
+		for (const [owner, count] of childrenByOwner) {
+			if (count > 1)
+				violations.push(
+					violation(
+						file,
+						'S-CH3',
+						`${owner}.children has multiple reads without one children() binding`,
+					),
+				);
+			if (!new RegExp(`\\{\\s*${owner}\\.children\\s*\\}`).test(source))
+				violations.push(
+					violation(
+						file,
+						'S-CH2',
+						'A single opaque projection must remain a direct props.children expression',
+					),
+				);
+		}
+		if (/\bchildren\s*=\s*\{/.test(source))
+			violations.push(
+				violation(
+					file,
+					'S-CH1',
+					'Projected component children must remain owned JSX children, not a synthesized children prop',
+				),
+			);
+
+		const contextNames = [
+			...source.matchAll(/\bconst\s+(\w*Context\d*)\s*=\s*createContext\s*\(/g),
+		].map((match) => match[1]!);
+		const sharedCreators = new Set<string>();
+		for (const statement of module.ast.body as Node[])
+			if (
+				is(statement, 'FunctionDeclaration') &&
+				is(statement.id, 'Identifier') &&
+				/^create\w*Shared\d*$/.test(statement.id.name)
+			)
+				sharedCreators.add(statement.id.name);
+		let addedAlias = true;
+		while (addedAlias) {
+			addedAlias = false;
+			for (const statement of module.ast.body as Node[]) {
+				if (!is(statement, 'VariableDeclaration')) continue;
+				for (const declaration of statement.declarations) {
+					if (
+						is(declaration.id, 'Identifier') &&
+						is(declaration.init, 'Identifier') &&
+						sharedCreators.has(declaration.init.name) &&
+						!sharedCreators.has(declaration.id.name)
+					) {
+						sharedCreators.add(declaration.id.name);
+						addedAlias = true;
+					}
+				}
+			}
+		}
+		let moduleSharedCreations = 0;
+		for (const statement of module.ast.body as Node[]) {
+			if (!is(statement, 'VariableDeclaration')) continue;
+			for (const declaration of statement.declarations)
+				if (
+					is(declaration.init, 'CallExpression') &&
+					is(declaration.init.callee, 'Identifier') &&
+					sharedCreators.has(declaration.init.callee.name)
+				)
+					moduleSharedCreations += 1;
+		}
+		if (contextNames.length > 0 && moduleSharedCreations > 0)
+			violations.push(
+				violation(
+					file,
+					'S-SH4',
+					'Container/request shared creators, including aliases, must not run at module scope',
+				),
+			);
+		for (const context of contextNames) {
+			const escaped = context.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+			const reads = (
+				source.match(new RegExp(`useContext\\s*\\(\\s*${escaped}\\s*\\)`, 'g')) ?? []
+			).length;
+			const providers = (source.match(new RegExp(`<${escaped}\\.Provider\\b`, 'g')) ?? [])
+				.length;
+			if (reads !== 1)
+				violations.push(
+					violation(
+						file,
+						'S-SH1',
+						`${context} requires exactly one record-resolved useContext reader`,
+					),
+				);
+			if (providers !== 1)
+				violations.push(
+					violation(
+						file,
+						'S-SH4',
+						`${context} requires exactly one provider enclosing its consumers`,
+					),
+				);
+		}
+		if (/\.Provider\s+value=\{\s*(?:\{|[\w$]+\s*\()/m.test(source))
+			violations.push(
+				violation(
+					file,
+					'S-SH5',
+					'Provider values must use one referentially stable local binding',
+				),
+			);
+		for (const creator of source.matchAll(
+			/function\s+create\w*Shared\d*\s*\([^)]*\)\s*\{([\s\S]*?)\n\}/g,
+		))
+			if (/\b(?:createEffect|onCleanup|useContext)\s*\(/.test(creator[1]!))
+				violations.push(
+					violation(
+						file,
+						'S-SH6',
+						'Page/shared creators must not use owner-dependent primitives',
+						{
+							start: creator.index,
+						},
+					),
+				);
+		if (
+			/createSignal\s*\(\s*[[{]/m.test(source) ||
+			/createStore\s*\(\s*(?:null|true|false|[-+]?\d+|['"])/m.test(source)
+		)
+			violations.push(
+				violation(
+					file,
+					'S-SH2',
+					'Shared cell lowering must match its scalar or aggregate value kind',
+				),
+			);
+
+		if (/\s(?:el|attach)=/.test(source))
+			violations.push(
+				violation(
+					file,
+					'S-RF2',
+					'Authored el/attach names must never remain DOM attributes',
+				),
+			);
+		const handleLets = [...source.matchAll(/\blet\s+([A-Za-z_$][\w$]*)\s*;/g)].map(
+			(match) => match[1]!,
+		);
+		for (const handle of handleLets) {
+			const escaped = handle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+			const assignments = (source.match(new RegExp(`\\b${escaped}\\s*=(?!\\{)`, 'g')) ?? [])
+				.length;
+			if (assignments !== 1)
+				violations.push(
+					violation(
+						file,
+						'S-RF1',
+						`${handle} must resolve to exactly one native host ref`,
+					),
+				);
+			if (new RegExp(`\\b${escaped}\\.(?:focus|select|scrollIntoView)\\s*\\(`).test(source))
+				violations.push(
+					violation(
+						file,
+						'S-RF4',
+						`${handle} imperative calls must preserve optional access`,
+					),
+				);
+		}
+		for (const callback of source.matchAll(
+			/(ref|\w+)=\{\s*\([^)]*\)\s*=>\s*\{?\s*(?:set\w+\s*\(|\w+\.\w+\s*=)/gm,
+		))
+			if (callback[1] === 'ref' || !/^on\p{Lu}/u.test(callback[1]!))
+				violations.push(
+					violation(
+						file,
+						'S-RF3',
+						'Native handle refs require plain assignment or the recorded forwarded callback',
+						{ start: callback.index },
+					),
+				);
+		for (const match of source.matchAll(
+			/const\s+(\w+)\s*=\s*\(node\)\s*=>\s*\{([\s\S]*?)\n\s*\};/g,
+		)) {
+			if (!/^attach\w*/.test(match[1]!)) continue;
+			if (!/\bcreateEffect\s*\(/.test(match[2]!))
+				violations.push(
+					violation(
+						file,
+						'S-RF6',
+						'Tracked directives require createEffect reinstall discipline',
+						{
+							start: match.index,
+						},
+					),
+				);
+		}
+	}
 	for (const key of reconcileKeys)
 		if (!rowProperties.has(key))
 			violations.push(
