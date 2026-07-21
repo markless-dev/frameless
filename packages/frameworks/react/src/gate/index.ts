@@ -43,6 +43,8 @@ function artifactPolicy<const Id extends 'R-SH4' | 'R-CH2'>(id: Id) {
 
 export const REACT_GATE_POLICIES = [
 	{ id: 'eslint-directive', dossierRef: 'T002 ruling 10' },
+	// Always evaluated (requiresArtifact is false): only a recorded relative-import
+	// acceptance branch consults the optional artifact.
 	{ id: 'undisclosed-import', dossierRef: 'T002 ruling 10' },
 	{ id: 'react-import-allowlist', dossierRef: 'T002 ruling 2' },
 	{ id: 'no-forwardRef', dossierRef: 'T002 ruling 8' },
@@ -249,6 +251,39 @@ function hasProjectionProvenance(artifact: EnrichedIR): boolean {
 	return found;
 }
 
+function recordedRelativeImportSpecifiers(artifact: EnrichedIR | undefined): Set<string> {
+	if (!artifact) return new Set();
+	const externalTargets = new Set<string>();
+	const inspect = (value: unknown): void => {
+		if (!value || typeof value !== 'object') return;
+		const record = value as Record<string, unknown>;
+		if (record.kind === 'component-reference') {
+			const target = record.target as Record<string, unknown> | undefined;
+			if (target && target.module !== 'self' && typeof target.module === 'string')
+				externalTargets.add(target.module);
+		}
+		for (const child of Object.values(record)) {
+			if (Array.isArray(child)) child.forEach(inspect);
+			else inspect(child);
+		}
+	};
+	inspect(artifact.components);
+	return new Set(
+		artifact.imports.flatMap((imported) => {
+			if (
+				imported.resolvesTo !== 'tsrx-module' ||
+				!externalTargets.has(imported.source) ||
+				!imported.source.startsWith('./') ||
+				imported.source.includes('\\') ||
+				!imported.source.endsWith('.tsrx')
+			)
+				return [];
+			const basename = imported.source.slice(imported.source.lastIndexOf('/') + 1);
+			return [`./${basename.slice(0, -'.tsrx'.length)}.jsx`];
+		}),
+	);
+}
+
 async function provenanceViolations(
 	source: string,
 	file: string,
@@ -342,13 +377,22 @@ export async function checkSources(
 	const unevaluatedPolicies = new Set<string>();
 	for (const { file, source, artifact } of entries) {
 		try {
-			violations.push(...customPolicies(source, file, violation));
+			violations.push(
+				...customPolicies(
+					source,
+					file,
+					violation,
+					recordedRelativeImportSpecifiers(artifact),
+				),
+			);
 		} catch (error) {
 			violations.push(violation(file, 'component-shape', (error as Error).message));
 		}
 		if (artifact) {
 			violations.push(...(await provenanceViolations(source, file, artifact)));
 		} else {
+			// An artifact-less relative import is present but unverifiable. That is a
+			// violation, not unevaluated: undisclosed-import itself always ran above.
 			for (const policy of REACT_GATE_POLICIES)
 				if ('requiresArtifact' in policy && policy.requiresArtifact)
 					unevaluatedPolicies.add(policy.id);

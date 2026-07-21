@@ -135,6 +135,7 @@ export function customPolicies(
 	source: string,
 	file: string,
 	makeViolation: Violate,
+	recordedRelativeImports: ReadonlySet<string> = new Set(),
 ): GateViolation[] {
 	const parsed = parse(source, {
 		lang: 'jsx',
@@ -469,6 +470,7 @@ export function customPolicies(
 	const exported: Node[] = [];
 	module.walk({
 		ImportDeclaration(node: Node) {
+			if (recordedRelativeImports.has(node.source.value)) return;
 			const allowed = ALLOWED_IMPORTS.get(node.source.value);
 			if (!allowed) {
 				violations.push(

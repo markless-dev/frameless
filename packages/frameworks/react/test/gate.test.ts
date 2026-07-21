@@ -69,6 +69,13 @@ async function policies(source: string): Promise<string[]> {
 }
 
 describe('React dossier gate', async () => {
+	const relativeImportArtifact = await buildEnrichedIr({
+		filename: 'test/relative-import-parent.tsrx',
+		source: `import { Child } from "./relative-import-child.tsrx";
+			export function Parent() @{ <Child /> }`,
+	});
+	const recordedRelativeImport = await formatEmitted(emit(relativeImportArtifact));
+
 	test('publishes a dossier reference on every policy object', () => {
 		expect(REACT_GATE_POLICIES.length).toBeGreaterThan(0);
 		expect(REACT_GATE_POLICIES.every((policy) => dossierRef.test(policy.dossierRef))).toBe(
@@ -543,6 +550,39 @@ describe('React dossier gate', async () => {
 
 	test.each(mutationCases)('rejects the %s bypass mutation', async (_name, source, policy) => {
 		expect(await policies(source)).toContain(policy);
+	});
+
+	test('unrecorded-with-artifact -> violation', async () => {
+		const result = await checkSources([
+			{
+				file: 'generated/relative-import-parent.jsx',
+				source: recordedRelativeImport.replace(
+					'./relative-import-child.jsx',
+					'./unrecorded-child.jsx',
+				),
+				artifact: relativeImportArtifact,
+			},
+		]);
+		expect(result.violations.map((entry) => entry.policy)).toContain('undisclosed-import');
+	});
+
+	test('recorded-without-artifact -> violation', async () => {
+		const result = await checkSources([
+			{ file: 'generated/relative-import-parent.jsx', source: recordedRelativeImport },
+		]);
+		expect(result.violations.map((entry) => entry.policy)).toContain('undisclosed-import');
+		expect(result.unevaluated.map((entry) => entry.policy)).not.toContain('undisclosed-import');
+	});
+
+	test('recorded-with-artifact -> clean', async () => {
+		const result = await checkSources([
+			{
+				file: 'generated/relative-import-parent.jsx',
+				source: recordedRelativeImport,
+				artifact: relativeImportArtifact,
+			},
+		]);
+		expect(result.violations, JSON.stringify(result.violations, null, 2)).toEqual([]);
 	});
 
 	test.each(compositionMutationCases)(
