@@ -69,7 +69,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-composition-v1/"
     command: "npx goalbuddy board docs/goals/frameless-composition-v1"
 
-active_task: T012
+active_task: T008  # P2 analyzer oracle
 
 tasks:
   - id: T001
@@ -167,7 +167,7 @@ tasks:
   - id: T008
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: "Analyzer composition extension per T004 SS4: expectations vocabulary + version decision (F4 under critique), C1-C3 scenarios, handwritten composition references, 7 mutant classes calibrated both frameworks, composite-root pattern, two-mount scope test. Critique mandatory."
     allowed_files: ["packages/analyzer/**", "packages/frameworks/react/**", "packages/frameworks/solid/**", "vite.config.ts"]
@@ -207,13 +207,15 @@ tasks:
   - id: T012
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "OWNER-DECIDED (2026-07-20): Babel->Yuku migration BEFORE the composition emitters — port both v0 emitters + both gates to yuku-parser/yuku-analyzer/yuku-codegen, delete estree-to-babel, one reviewed golden regeneration, gate-query probe-first step (blocked-return if gate patterns cannot port — PM decides split-stack fallback), full second-model critique; all v0 lanes green at merge. Evidence: notes/yuku-parity-evaluation.md incl. PM addendum (executed binding-safe rename)."
     allowed_files: ["packages/frameworks/react/**", "packages/frameworks/solid/**", "package.json", "pnpm-workspace.yaml", "pnpm-lock.yaml"]
     verify: ["full node lane; both browser lanes; e2e 3/3; reviewed golden diffs; fresh-clone check (new deps)"]
     stop_if: ["gate queries cannot port cleanly — report, do not hand-roll scopes", "semantic diff in any regenerated golden", "verification fails twice"]
-    receipt: null
+    receipt:
+      result: done
+      summary: "Babel->Yuku migration complete through 5 crew units + critique cycle: T012a gate-port probes (PORTABLE, per-capability executed table), T012b react port (70/70, estree-to-babel deleted), T012c solid port (80/80, 35 mutations zero flips), T012d cleanup (measure-size ported, honest re-measures, @babel pruned to the solid2-blocker toolchain-under-test), critique REJECT (4 findings: authored-name collision accepted by self-check — TDZ-crashing useState case; JSX attr quoting invalid BOTH emitters incl. pre-existing-not-regression proof; computed-member setter gate bypass; pin trigger not durable) -> repair unit (worker died mid-flight, PM completed last mile: handler-index fix, mutation dedupe, pin notes) with 39 net new regression tests. PM re-probed: useState -> import aliasing; a-quote-b -> expression container; computed folds green. Emitters construct pure ESTree, print via yuku-codegen, self-check via print->re-analyze with expected-symbol-identity; gates on yuku-analyzer module queries; goldens regenerated with per-file semantic-equality proofs; fresh-clone verified earlier at bde8554. Final: node 317/317, react-browser 19/19, solid-browser 17/17, e2e 3/3 equal, poc clean."
   - id: T013
     type: scout
     assignee: Scout
