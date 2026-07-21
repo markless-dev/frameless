@@ -69,7 +69,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-composition-v1/"
     command: "npx goalbuddy board docs/goals/frameless-composition-v1"
 
-active_task: T011  # P5 composition demo + CLI module-set + e2e
+active_task: T998
 
 tasks:
   - id: T001
@@ -203,13 +203,15 @@ tasks:
   - id: T011
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Composition demo (demos/composition-kit) + CLI module-set orchestration + e2e extension + docs per T004 SS5/SS6. Fresh-clone verification mandatory (v0 T011 lesson)."
     allowed_files: ["demos/composition-kit/**", "packages/cli/**", "scripts/e2e.mjs", "vite.config.ts", "package.json", "pnpm-workspace.yaml", "pnpm-lock.yaml", "README.md"]
     verify: ["fresh clone: install + e2e (ui-kit 3/3 + composition pairs + expectations green), all lanes, test:poc"]
     stop_if: ["demo needs out-of-surface construct — trim demo", "browser-in-CLI — delegation stands", "verification fails twice"]
-    receipt: null
+    receipt:
+      result: done
+      summary: "Tranche finale complete: demos/composition-kit (5 real multi-file TSRX modules — cross-file Frame import with slot projection, multi-component shared dashboard, light-tier status, element/attach search, composing page), CLI multi-input module-set builds (locked resolver contract, verbatim diagnostics, additive frameless-build-receipts/1 with link table + per-module gates), FULL-STRENGTH artifact gating in the CLI (unevaluated = build failure; 10/10 provenance confirmations), e2e extension: composition scenarios captured per framework, CROSS-FRAMEWORK comparison green — 4/4 composition pairs + 3/3 ui-kit pairs behaviorally equal in Chromium, receipts both demos. Two adjudication-driven gate/emitter completions en route (provenance-verified relative imports; bare-attribute parity with preventive policy — a genuine cross-framework fingerprint caught on first execution). Node 453/453, F8 held, pnpm e2e is THE documented command."
   - id: T012
     type: worker
     assignee: Worker
@@ -232,7 +234,7 @@ tasks:
   - id: T998
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     objective: "Boundary review before final audit: as-built vs T004 lock, receipts honesty, gate strength for the new constructs, v0 regression posture, misfire pre-check (taste-called context decision, single-file demo theater, scope creep)."
     receipt: null
