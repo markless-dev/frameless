@@ -262,3 +262,17 @@ byte-compare, attribute-value quirk minimal repro, traverse/semantic availabilit
 maintenance-risk assessment — single-maintainer, days-old release). Migration, if
 it survives evaluation, is its own post-tranche package; the composition emitters
 proceed on Babel meanwhile (churn mid-tranche loses the byte-stability baselines).
+
+## OWNER DIRECTIVE (2026-07-20): Yuku preferred over Babel, gated on capability parity
+
+Verbatim intent: "I would prefer yuku over babel for sure if it is able to work /
+give us the same value needed to complete the task / compiler." Binding rule: the
+evaluation scout decides FEASIBILITY against the four emitter needs (construct
+ESTree incl. JSX; transform recorded fragments with collision-safe scope handling;
+print faithfully — byte-goal: oxfmt-formatted output identical to today's; parse +
+analyze for the gates). The owner preference decides the CHOICE wherever parity
+holds. Sequencing consequence adopted: if the evaluation verdict is PASS, the
+migration package is inserted BEFORE the composition emitter packages (P3/P4 get
+authored on yuku, not migrated after); PARTIAL verdicts (e.g. printing parity
+without a scope API) return to the owner with the hybrid tradeoff; FAIL leaves
+Babel with the re-probe trigger at each yuku release.
