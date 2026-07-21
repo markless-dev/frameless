@@ -298,3 +298,13 @@ ID is forbidden rediscovery. AMENDED: SharedDefinition gains required `name`
 (authored declarator identifier), compiler-populated, fail-closed when
 undeterminable; both validators require it; /2 tag unchanged (unshipped contract,
 additive-before-first-consumer). P3a reissues after the amendment lands.
+
+## PM ADJUDICATION 4 (2026-07-20): /2 amendment 2 — cell initializers + completeness sweep
+
+P3a's second correct block: SharedDefinitionCell drops the authored initializer.
+AMENDED: required structured `initializer` per cell (recorded-AST family),
+compiler-populated, fail-closed, validator-required both frameworks; /2 tag
+unchanged. ADDITIONALLY: a full SS3.1+SS3.2 lowering-input completeness sweep
+against the amended schema (executed-probe verified), additive-obvious gaps fixed
+in the same unit (method bodies + write order explicitly checked for the T004b
+contract), judgment-laden gaps escalated in one batch — no more one-field bounces.
