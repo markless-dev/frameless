@@ -3,7 +3,7 @@ version: 2
 goal:
   slug: storage-poc
   title: "POC of storage() across Angular, React, Svelte, Vue"
-  status: active
+  status: done
   charter: goal.md
   tranche: "Build a hand-authored runtime POC of the recommended storage() contract (cell + seed script + landing slot + per-framework adapter) in a fresh git worktree, prove it with one shared browser assertion set executed green in all four frameworks, and audit the evidence against the original ask — WITHOUT presenting POC success as API ratification."
   oracle:
@@ -36,7 +36,7 @@ agents:
   worker: installed
   judge: installed
 
-active_task: T002  # T003 co-dispatched two-wide per policy (disjoint adapter dirs)
+active_task: null  # GOAL COMPLETE — T999 audit recorded full_outcome_complete: true
 
 tasks:
   - id: T001
@@ -55,51 +55,81 @@ tasks:
   - id: T002
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "React + Vue adapters: idiomatic cell bindings (React hook, Vue ref) over the shared core, one demo page each, wired into the shared assertion runner; both frameworks green on the full assertion set. Crew dispatch two-wide (disjoint adapter dirs) or one unit if sizing says under ~15min each."
     allowed_files:
-      - "poc/ (goal worktree) — react/ and vue/ adapter dirs + runner registration"
+      - "poc/09-storage/react/**"
+      - "poc/09-storage/vue/**"
     verify:
       - "shared runner: react green, vue green (all 4 assertions each)"
     stop_if:
       - "Need changes to shared core contract (escalate to PM instead)"
       - "Verification fails twice on the same assertion"
-    receipt: null
+    receipt:
+      result: done
+      changed_files:
+        - poc/09-storage/react/main.jsx
+        - poc/09-storage/react/build.mjs
+        - poc/09-storage/vue/main.js
+        - poc/09-storage/vue/build.mjs
+      commands:
+        - cmd: "node runner/run.mjs react vue"
+          status: pass
+      summary: "Crew unit poc-react-vue (serial shared-checkout dispatch after crew refused parallel without worktree isolation). React: useSyncExternalStore binding (most idiomatic), READY via useEffect, inert mounts Ready-only tree. Vue: shallowRef + subscribe in setup, h() render functions (no template compiler in bundler build), inert mounts null-render app. Both import the single shared core. Unit verified green in-sandbox; PM re-verified in full table; Judge re-executed independently. Committed d69146a."
   - id: T003
     type: worker
     assignee: Worker
-    status: queued
+    status: done
     reasoning_hint: medium
     objective: "Svelte + Angular adapters: idiomatic cell bindings (Svelte store/rune, Angular signal with zoneless standalone bootstrap) over the shared core, one demo page each, wired into the shared runner; both green on the full assertion set. Angular is the named high-risk leg: if its build tooling cannot be made to work without the CLI within the slice, return blocked with the exact obstacle rather than a degraded fake."
     allowed_files:
-      - "poc/ (goal worktree) — svelte/ and angular/ adapter dirs + runner registration"
+      - "poc/09-storage/svelte/**"
+      - "poc/09-storage/angular/**"
     verify:
       - "shared runner: svelte green, angular green (all 4 assertions each)"
     stop_if:
       - "Need changes to shared core contract (escalate to PM instead)"
       - "Angular requires a fundamentally different harness (blocked receipt with specifics)"
       - "Verification fails twice on the same assertion"
-    receipt: null
+    receipt:
+      result: done
+      changed_files:
+        - poc/09-storage/svelte/App.svelte
+        - poc/09-storage/svelte/main.js
+        - poc/09-storage/svelte/build.mjs
+        - poc/09-storage/angular/main.ts
+        - poc/09-storage/angular/build.mjs
+      commands:
+        - cmd: "node runner/run.mjs svelte angular"
+          status: pass
+      summary: "Crew unit poc-svelte-angular. Svelte 5: runes ($props/$state), subscription in onMount, inert skips mount() entirely (cell creation still module-level). Angular 22: EXECUTED GREEN, not excused — standalone JIT component (import @angular/compiler), provideZonelessChangeDetection, signal synced via cell.subscribe, @if(!inert) never instantiates the reading component; TS decorators via tsconfigRaw. Unit was honest-partial in sandbox (macOS seatbelt blocked browser; build-only fallback passed); PM executed the browser table: one real finding — Angular zoneless renders on a later frame, runner given bounded 2s settle-wait on the write UI assertion (assertions still fail on non-settle; attr+driver writes are synchronous). Judge ruled the settle-wait honest eventual-consistency. Committed d69146a."
   - id: T004
     type: judge
     assignee: Judge
-    status: queued
+    status: done
     reasoning_hint: high
     objective: "Cross-framework audit: same contract, same assertions, all four frameworks — verify the runner output is real (executed, not mocked), the shared core wasn't forked per framework, per-framework deviations are named honestly, and the receipts keep SUGGESTION framing (POC success is evidence, not ratification). Name what the POC does and does not prove for the storage-tradeoff decision."
-    receipt: null
+    receipt:
+      result: done
+      decision: approved
+      summary: "Judge (goal-judge agent, independent) RE-EXECUTED the runner: SUMMARY bare/react/vue/svelte/angular all GREEN, exit 0, 65/65. No core forking, no DOM mocks, no runner bypass — all five targets import ../core/storage.js and assertions live only in the runner against real Chromium. Settle-wait ruled honest (bounded eventual-consistency for UI text; attr+driver sync; still fails on non-settle) with recorded caveat: write UI assertion is now updates-within-2s for all frameworks. Deviations recorded per framework (Angular JIT+zoneless+@if inert; Svelte mount-skip inert + onMount subscribe gap; Vue manual shallowRef bridge; React useEffect READY). PROVES: recommended contract implementable idiomatically in all four with identical observable behavior. DOES NOT PROVE: ratification (artifacts correctly disclaim), SSR beyond React, real compiler emission, Solid/Qwik (frameless primary targets untested), multi-cell/non-string/async drivers/cross-tab/consent."
   - id: T999
     type: judge
     assignee: Judge
-    status: queued
+    status: done
     reasoning_hint: high
     objective: "Final audit: does the executed evidence satisfy the original ask ('POC across angular, react, svelte, vue, and see if it works... in a new git worktree')? full_outcome_complete requires executed browser proof per framework (or honest blocked receipt), POC committed on the goal worktree branch, and the storage-tradeoff cross-link recorded."
     expected_output:
       - "complete | not_complete"
       - "full_outcome_complete: true | false"
       - "per-framework works/blocked verdict"
-    receipt: null
+    receipt:
+      result: done
+      decision: complete
+      full_outcome_complete: true
+      summary: "Original ask fully mapped: POC of storage() built and independently executed green in real Chromium for angular/react/svelte/vue (each WORKS, none blocked) via one shared assertion runner; work committed on worktree-storage-poc in the fresh dedicated worktree per owner directive; storage-tradeoff T010/T999 cross-link recorded. Angular executed, not excused. POC remains EVIDENCE for the still-open API decision — nothing ratified. Second-model branch critique skipped with reason: medium effort, no public API/protocol/security surface, verification executed independently by Judge, workers in scope."
 
 checks:
   dirty_fingerprint: "board prepped on worktree-persistence-api-note; POC executes in its own fresh worktree per owner directive"
-  last_verification: null
+  last_verification: "2026-07-21 node runner/run.mjs bare react vue svelte angular -> SUMMARY: bare=GREEN react=GREEN vue=GREEN svelte=GREEN angular=GREEN (exit 0; PM run + independent Judge re-run)"
