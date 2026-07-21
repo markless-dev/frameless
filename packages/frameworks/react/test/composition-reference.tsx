@@ -410,3 +410,57 @@ export function ReactPageScopeReference() {
 		</SharedContext>
 	);
 }
+
+export function ReactPropsTierReference() {
+	return <output data-tier-props>5</output>;
+}
+
+export function ReactScalarContextTierReference() {
+	return (
+		<>
+			<output data-tier-scalar="left">6</output>
+			<output data-tier-scalar="right">6</output>
+		</>
+	);
+}
+
+export function ReactObjectContextTierReference() {
+	return (
+		<>
+			<output data-tier-object="first">7|seven</output>
+			<output data-tier-object="second">7|seven</output>
+		</>
+	);
+}
+
+let pageTierCount = 0;
+const pageTierListeners = new Set<() => void>();
+
+export function resetReactPageTierReference() {
+	pageTierCount = 0;
+}
+
+export function ReactPageStoreTierReference() {
+	const count = useSyncExternalStore(
+		(listener) => {
+			pageTierListeners.add(listener);
+			return () => pageTierListeners.delete(listener);
+		},
+		() => pageTierCount,
+		() => pageTierCount,
+	);
+	return (
+		<>
+			<button
+				data-action="increment-page-tier"
+				onClick={() => {
+					pageTierCount += 1;
+					for (const listener of pageTierListeners) listener();
+				}}
+			>
+				Increment
+			</button>
+			<output data-tier-page>{count}</output>
+		</>
+	);
+}

@@ -562,6 +562,39 @@ describe('React structural emitter', () => {
 			expect(analyze(source, { lang: 'jsx', sourceType: 'module' }).diagnostics).toEqual([]);
 		});
 
+		test('durably allocates every shared generated name family around authored collisions', async () => {
+			const ir = await build(
+				'src/shared-family-collisions.tsrx',
+				`import { shared, state } from "@markless/core";
+				export const useLedger = shared(() => { let balance = state(0); return { balance, increment() { balance++; } }; }, { scope: "container" });
+				function LedgerContext() @{ <i>context</i> }
+				function createLedgerStore() @{ <i>creator</i> }
+				function subscribeLedgerToNothing() @{ <i>subscribe</i> }
+				function getLedgerNothing() @{ <i>get</i> }
+				function ledgerStore() @{ <i>module store</i> }
+				export function Ledger() @{ const ledger = useLedger(); <button onClick={() => ledger.increment()}>{ledger.balance}</button> }`,
+			);
+			const containerSource = emit(ir);
+			expect(containerSource).toContain('const LedgerContext2 = createContext(null)');
+			expect(containerSource).toContain('function createLedgerStore2()');
+			expect(containerSource).toContain('const subscribeLedgerToNothing2 =');
+			expect(containerSource).toContain('const getLedgerNothing2 =');
+			expect(
+				analyze(containerSource, { lang: 'jsx', sourceType: 'module' }).diagnostics,
+			).toEqual([]);
+
+			const page = clone(ir) as any;
+			page.records.sharedDefinitions[0].scope = 'page';
+			const pageSource = emit(page);
+			expect(pageSource).toContain('function createLedgerStore2()');
+			expect(pageSource).toContain('const ledgerStore2 = createLedgerStore2()');
+			expect(pageSource).toContain('const subscribeLedgerToNothing2 =');
+			expect(pageSource).toContain('const getLedgerNothing2 =');
+			expect(analyze(pageSource, { lang: 'jsx', sourceType: 'module' }).diagnostics).toEqual(
+				[],
+			);
+		});
+
 		test('fails closed with construct-named diagnostics when composition records are missing', async () => {
 			const shared = clone(
 				await build(

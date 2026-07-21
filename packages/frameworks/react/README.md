@@ -82,10 +82,16 @@ accessibility, performance or bundle size, SSR/hydration/resume, HMR, declaratio
 generated-code debugging. The gate is a machine-checkable conventionality proxy for this fixture
 family; it is not a proof that arbitrary generated React is idiomatic or semantically equivalent.
 
+Nested calls between shared methods are unsupported in this tranche. The compiler fails closed with
+the `SharedWrite records are incomplete for SharedDefinition …` diagnostic instead of emitting an
+incomplete transaction. This trim is overturned when the construct is admitted with T004b's
+outermost-method completion semantics: synchronous nested writes in authored order, followed by one
+notification phase after the outermost method completes.
+
 ## Verify
 
-The checked-in suite inventory is 70 node tests and 16 browser tests. These are source counts, not
-a claim that a particular environment executed them.
+The checked-in suite inventory expands to 128 node tests and 45 browser tests. These are source
+counts, not a claim that a particular environment executed them.
 
 ```sh
 pnpm check

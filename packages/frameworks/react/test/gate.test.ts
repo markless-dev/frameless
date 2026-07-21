@@ -33,7 +33,16 @@ export function Mutant({ items = [] }) {
 }`;
 
 const dossierRef = /^(?:T002 ruling \d+|T004 §3\.1 R-[A-Z]+\d+)$/;
-const compositionNames = ['C1-slot', 'C2-shared', 'C3-ref', 'C4-attach'] as const;
+const compositionNames = [
+	'C1-slot',
+	'C2-shared',
+	'C3-ref',
+	'C4-attach',
+	'C5-props',
+	'C6-scalar-context',
+	'C7-object-context',
+	'C8-page-store',
+] as const;
 const compositionArtifacts = new Map<string, EnrichedIR>();
 const compositionSources = new Map<string, string>();
 for (const name of compositionNames) {
@@ -429,10 +438,57 @@ describe('React dossier gate', async () => {
 			'R-SH3',
 		],
 		[
+			'helper-hidden notify-per-write shared tear',
+			store
+				.replace(
+					'const writeCount = (nextCount, changed) => {',
+					'const notify = (listeners) => { for (const listener of listeners) listener(); };\n\tconst writeCount = (nextCount, changed) => {',
+				)
+				.replace("changed.add('count');", "notify(countListeners);\n\t\tchanged.add('count');"),
+			'R-SH3',
+		],
+		[
+			'member-helper-hidden notify-per-write shared tear',
+			store
+				.replace(
+					'const writeCount = (nextCount, changed) => {',
+					'const notifier = { run(listeners) { for (const listener of listeners) listener(); } };\n\tconst writeCount = (nextCount, changed) => {',
+				)
+				.replace(
+					"changed.add('count');",
+					"notifier.run(countListeners);\n\t\tchanged.add('count');",
+				),
+			'R-SH3',
+		],
+		[
+			'direct listener iteration notify-per-write shared tear',
+			store.replace(
+				"changed.add('count');",
+				"for (const listener of countListeners) listener();\n\t\tchanged.add('count');",
+			),
+			'R-SH3',
+		],
+		[
 			'per-render store identity',
 			store.replace(
 				'const [store] = useState(createCompositionSharedStore);',
 				'const store = createCompositionSharedStore();',
+			),
+			'R-SH3',
+		],
+		[
+			'aliased per-render store identity',
+			store.replace(
+				'const [store] = useState(createCompositionSharedStore);',
+				'const indirectCreate = createCompositionSharedStore;\n\tconst store = indirectCreate();',
+			),
+			'R-SH3',
+		],
+		[
+			'wrapper-function store identity',
+			store.replace(
+				'const [store] = useState(createCompositionSharedStore);',
+				'const indirectCreate = () => createCompositionSharedStore();\n\tconst [store] = useState(indirectCreate);',
 			),
 			'R-SH3',
 		],

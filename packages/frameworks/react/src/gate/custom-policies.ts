@@ -171,6 +171,8 @@ export function customPolicies(
 	}
 
 	function resolveCallable(callee: Node, trail = new Set<YukuSymbol>()): Callable | null {
+		if (is(callee, 'ArrowFunctionExpression') || is(callee, 'FunctionExpression'))
+			return { kind: 'helper', node: callee };
 		if (is(callee, 'Identifier')) {
 			const symbol = module.symbolOf(callee);
 			if (!symbol || trail.has(symbol)) return null;
@@ -899,6 +901,7 @@ export function customPolicies(
 			);
 	}
 
+	const listenerSets = new Set<YukuSymbol>();
 	for (const { fn, object } of returnedObjects) {
 		const properties = new Map<string, Node>();
 		for (const property of object.properties)
@@ -923,7 +926,13 @@ export function customPolicies(
 				{
 					CallExpression(call: Node) {
 						if (!is(call.callee, 'MemberExpression')) return;
-						if (propertyName(call.callee) === 'add') adds += 1;
+						if (propertyName(call.callee) === 'add') {
+							adds += 1;
+							if (is(call.callee.object, 'Identifier')) {
+								const symbol = module.symbolOf(call.callee.object);
+								if (symbol) listenerSets.add(symbol);
+							}
+						}
 						if (propertyName(call.callee) === 'delete') deletes += 1;
 					},
 				},
@@ -1012,23 +1021,142 @@ export function customPolicies(
 			);
 		else {
 			const creator = module.symbolOf(fn.id);
-			for (const reference of creator?.references ?? []) {
-				const call = module.parentOf(reference.node);
-				if (
-					is(call, 'CallExpression') &&
-					(call as Node).callee === reference.node &&
-					functionParent(module, call) !== null
-				)
-					violations.push(
-						violation(
-							file,
-							'R-SH3',
-							'Store construction may not run directly during component render',
-							call,
-						),
-					);
+			const aliases = new Set<YukuSymbol>();
+			const pending = creator ? [creator] : [];
+			let hasOnceLatchedConstruction = false;
+			while (pending.length > 0) {
+				const symbol = pending.pop()!;
+				if (aliases.has(symbol)) continue;
+				aliases.add(symbol);
+				for (const reference of symbol.references) {
+					const parent: Node = module.parentOf(reference.node);
+					if (is(parent, 'VariableDeclarator') && parent.init === reference.node) {
+						if (is(parent.id, 'Identifier')) {
+							const alias = module.symbolOf(parent.id);
+							if (alias) pending.push(alias);
+						}
+						continue;
+					}
+					if (
+						is(parent, 'CallExpression') &&
+						parent.arguments[0] === reference.node &&
+						callUsesReact(parent, 'useState')
+					) {
+						hasOnceLatchedConstruction = true;
+						continue;
+					}
+					if (!is(parent, 'CallExpression') || parent.callee !== reference.node) continue;
+					const owner = functionParent(module, parent);
+					const ownerCall: Node = owner ? module.parentOf(owner) : null;
+					const isUseStateLazyCall =
+						is(owner, 'ArrowFunctionExpression') &&
+						owner.params.length === 0 &&
+						is(ownerCall, 'CallExpression') &&
+						ownerCall.arguments[0] === owner &&
+						callUsesReact(ownerCall, 'useState');
+					if (owner === null || isUseStateLazyCall) hasOnceLatchedConstruction = true;
+					else
+						violations.push(
+							violation(
+								file,
+								'R-SH3',
+								'Store construction must use a once-latched creator path',
+								parent,
+							),
+						);
+				}
 			}
+			if (!hasOnceLatchedConstruction)
+				violations.push(
+					violation(
+						file,
+						'R-SH3',
+						'Store provider initializer must resolve to its once-latched creator',
+						fn,
+					),
+				);
 		}
+	}
+
+	function invokesListenerSet(
+		fn: Node,
+		tainted = new Set<YukuSymbol>(),
+		visiting = new Set<Node>(),
+	): boolean {
+		if (visiting.has(fn)) return false;
+		visiting.add(fn);
+		let invokes = false;
+		const reachesSet = (node: Node): boolean => {
+			if (!is(node, 'Identifier')) return false;
+			const symbol = module.symbolOf(node);
+			return Boolean(symbol && (listenerSets.has(symbol) || tainted.has(symbol)));
+		};
+		module.walk(
+			{
+				enter(node: Node, context: any) {
+					if (
+						node !== fn &&
+						['FunctionDeclaration', 'FunctionExpression', 'ArrowFunctionExpression'].includes(
+							node.type,
+						)
+					)
+						context.skip();
+				},
+				ForOfStatement(statement: Node) {
+					if (!reachesSet(statement.right)) return;
+					const declaration = statement.left?.declarations?.[0];
+					if (is(declaration?.id, 'Identifier')) {
+						const symbol = module.symbolOf(declaration.id);
+						if (symbol) tainted.add(symbol);
+					}
+				},
+				CallExpression(call: Node) {
+					if (invokes) return;
+					if (is(call.callee, 'Identifier')) {
+						const symbol = module.symbolOf(call.callee);
+						if (symbol && tainted.has(symbol)) {
+							invokes = true;
+							return;
+						}
+					}
+					if (
+						is(call.callee, 'MemberExpression') &&
+						propertyName(call.callee) === 'forEach' &&
+						reachesSet(call.callee.object)
+					) {
+						const callback = call.arguments[0];
+						if (
+							(is(callback, 'ArrowFunctionExpression') ||
+								is(callback, 'FunctionExpression')) &&
+							is(callback.params[0], 'Identifier')
+						) {
+							const parameter = module.symbolOf(callback.params[0]);
+							if (
+								parameter &&
+								invokesListenerSet(callback, new Set([parameter]), visiting)
+							)
+								invokes = true;
+						}
+						return;
+					}
+					const resolved = resolveCallable(call.callee);
+					if (resolved?.kind !== 'helper') return;
+					const forwarded = new Set<YukuSymbol>();
+					for (let index = 0; index < resolved.node.params.length; index += 1) {
+						if (!reachesSet(call.arguments[index])) continue;
+						const parameter = resolved.node.params[index];
+						if (is(parameter, 'Identifier')) {
+							const symbol = module.symbolOf(parameter);
+							if (symbol) forwarded.add(symbol);
+						}
+					}
+					if (invokesListenerSet(resolved.node, forwarded, visiting)) invokes = true;
+				},
+			},
+			fn,
+		);
+		visiting.delete(fn);
+		return invokes;
 	}
 
 	module.walk({
@@ -1042,7 +1170,6 @@ export function customPolicies(
 			const changed = module.symbolOf(node.init.params[1]);
 			let recordsChange = false;
 			let equalityGuard = false;
-			let inlineNotification = false;
 			module.walk(
 				{
 					CallExpression(call: Node) {
@@ -1058,13 +1185,11 @@ export function customPolicies(
 							is(call.callee.object, 'Identifier', { name: 'Object' })
 						)
 							equalityGuard = true;
-						if (is(call.callee, 'Identifier') && call.arguments.length === 0)
-							inlineNotification = true;
 					},
 				},
 				node.init.body,
 			);
-			if (recordsChange && (!equalityGuard || inlineNotification))
+			if (recordsChange && (!equalityGuard || invokesListenerSet(node.init)))
 				violations.push(
 					violation(
 						file,

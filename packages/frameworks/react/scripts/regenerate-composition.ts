@@ -7,7 +7,16 @@ import { formatEmitted } from '../src/format-emitted.ts';
 const root = resolve(import.meta.dirname, '..');
 const fixtureRoot = resolve(root, 'test/composition-fixtures');
 const outputRoot = resolve(root, 'generated-composition');
-const fixtures = ['C1-slot', 'C2-shared', 'C3-ref', 'C4-attach'] as const;
+const fixtures = [
+	'C1-slot',
+	'C2-shared',
+	'C3-ref',
+	'C4-attach',
+	'C5-props',
+	'C6-scalar-context',
+	'C7-object-context',
+	'C8-page-store',
+] as const;
 
 await mkdir(outputRoot, { recursive: true });
 for (const fixture of fixtures) {
