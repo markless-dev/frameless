@@ -289,3 +289,12 @@ sharedInstances:0/sharedReads:0 and a bare dynamic-text with empty reads — sem
 lost without a diagnostic. Queued as micro-repair (guard: template expressions
 containing shared-factory call results must map to instance+read records or fail
 closed). P1 does not close until this lands.
+
+## PM ADJUDICATION 3 (2026-07-20): /2 amendment — SharedDefinition.name
+
+P3a blocked correctly on IR insufficiency: the owner-decided hook naming requires
+the authored factory identifier, absent from SharedDefinition; parsing the opaque
+ID is forbidden rediscovery. AMENDED: SharedDefinition gains required `name`
+(authored declarator identifier), compiler-populated, fail-closed when
+undeterminable; both validators require it; /2 tag unchanged (unshipped contract,
+additive-before-first-consumer). P3a reissues after the amendment lands.
