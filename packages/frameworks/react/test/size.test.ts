@@ -6,18 +6,18 @@ describe('honest emitted structure comparison', () => {
 		expect(await measureAll()).toEqual([
 			{
 				scenario: 'S1',
-				reference: { physicalLoc: 39, structuralNodes: 158 },
-				emitted: { physicalLoc: 35, structuralNodes: 150 },
+				reference: { physicalLoc: 39, structuralNodes: 161 },
+				emitted: { physicalLoc: 31, structuralNodes: 153 },
 			},
 			{
 				scenario: 'S2',
-				reference: { physicalLoc: 98, structuralNodes: 573 },
-				emitted: { physicalLoc: 157, structuralNodes: 534 },
+				reference: { physicalLoc: 98, structuralNodes: 576 },
+				emitted: { physicalLoc: 102, structuralNodes: 537 },
 			},
 			{
 				scenario: 'S3',
-				reference: { physicalLoc: 69, structuralNodes: 305 },
-				emitted: { physicalLoc: 77, structuralNodes: 225 },
+				reference: { physicalLoc: 69, structuralNodes: 307 },
+				emitted: { physicalLoc: 51, structuralNodes: 226 },
 			},
 		]);
 	});

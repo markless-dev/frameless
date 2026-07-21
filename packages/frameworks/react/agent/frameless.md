@@ -8,7 +8,7 @@ and supplies the browser analyzer adapter.
 
 1. Import the analyzer lifecycle from `@frameless/react/adapter` in browser projects. That
    subpath contains only the adapter and its browser/runtime dependencies.
-2. Keep compiler-enriched IR target-neutral. React lowering, Babel generation, ESLint policy,
+2. Keep compiler-enriched IR target-neutral. React lowering, ESTree/Yuku generation, ESLint policy,
    and browser transforms belong in this package.
 3. Treat generated JSX as output. Change the enriched IR emitter or gate and regenerate; do not
    hand-edit generated component behavior.

@@ -1,8 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
-import { parse } from '@babel/parser';
 import { resolve } from 'pathe';
 import { describe, expect, test } from 'vitest';
+import { parse } from 'yuku-parser';
 
 const root = resolve(import.meta.dirname, '..');
 const nodeRequire = createRequire(import.meta.url);
@@ -20,7 +20,7 @@ interface PackageManifest {
 }
 
 function importSources(source: string): string[] {
-	const program = parse(source, { sourceType: 'module', plugins: ['jsx'] }).program;
+	const program = parse(source, { sourceType: 'module', lang: 'jsx' }).program;
 	return program.body.flatMap((statement) =>
 		statement.type === 'ImportDeclaration' ? [statement.source.value] : [],
 	);
@@ -57,6 +57,7 @@ describe('Solid 2 toolchain blocker contract', () => {
 	});
 
 	test('the installed Solid 1 JSX toolchain links DOM output to the web subpath', async () => {
+		// @babel/core and babel-preset-solid are the Solid v1 toolchain under contract test.
 		const presetPath = nodeRequire.resolve('babel-preset-solid');
 		const presetRequire = createRequire(presetPath);
 		const { transformAsync } = presetRequire('@babel/core') as BabelCore;

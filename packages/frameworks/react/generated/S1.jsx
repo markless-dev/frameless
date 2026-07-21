@@ -4,9 +4,7 @@ export function RenderOnce({ label, multiplier, visible, onTrace }) {
 	const setupDone = useRef(null);
 	if (setupDone.current === null) {
 		setupDone.current = true;
-		onTrace('setup', {
-			runs: 1,
-		});
+		onTrace('setup', { runs: 1 });
 	}
 	const [count, setCount] = useState(1);
 	const [prefix] = useState(() => `${label}:`);
@@ -23,9 +21,7 @@ export function RenderOnce({ label, multiplier, visible, onTrace }) {
 						onClick={() => {
 							const nextCount = count + 1;
 							setCount(nextCount);
-							onTrace('change', {
-								count: nextCount,
-							});
+							onTrace('change', { count: nextCount });
 						}}
 					>
 						increment

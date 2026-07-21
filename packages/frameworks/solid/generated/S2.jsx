@@ -2,13 +2,7 @@
 import { createSignal, untrack, For, Show } from 'solid-js';
 import { createStore, produce, reconcile } from 'solid-js/store';
 export function KeyedTodo(props) {
-	const [todos, setTodos] = createStore(
-		untrack(() =>
-			props.seed.map((todo) => ({
-				...todo,
-			})),
-		),
-	);
+	const [todos, setTodos] = createStore(untrack(() => props.seed.map((todo) => ({ ...todo }))));
 	const [draft, setDraft] = createSignal('');
 	let next = 3;
 	const complete = () => todos.filter((todo) => todo.done).length;
@@ -28,26 +22,11 @@ export function KeyedTodo(props) {
 			<button
 				data-action="add"
 				onClick={(event) => {
-					const item = {
-						id: `c${next}`,
-						title: draft(),
-						done: false,
-					};
+					const item = { id: `c${next}`, title: draft(), done: false };
 					next++;
-					setTodos(
-						reconcile(todos.concat(item), {
-							key: 'id',
-						}),
-					);
+					setTodos(reconcile(todos.concat(item), { key: 'id' }));
 					setDraft('');
-					props.onTrace(
-						'add',
-						{
-							id: item.id,
-							title: item.title,
-						},
-						event,
-					);
+					props.onTrace('add', { id: item.id, title: item.title }, event);
 				}}
 			>
 				add
@@ -73,14 +52,7 @@ export function KeyedTodo(props) {
 											alias.title = title;
 										}),
 									);
-									props.onTrace(
-										'edit',
-										{
-											id: todo.id,
-											title,
-										},
-										event,
-									);
+									props.onTrace('edit', { id: todo.id, title }, event);
 								}}
 							/>
 							<input
@@ -97,14 +69,7 @@ export function KeyedTodo(props) {
 											alias.done = checked;
 										}),
 									);
-									props.onTrace(
-										'toggle',
-										{
-											id: todo.id,
-											checked,
-										},
-										event,
-									);
+									props.onTrace('toggle', { id: todo.id, checked }, event);
 								}}
 							/>
 							<button
@@ -113,18 +78,10 @@ export function KeyedTodo(props) {
 									setTodos(
 										reconcile(
 											todos.filter((item) => item.id !== todo.id),
-											{
-												key: 'id',
-											},
+											{ key: 'id' },
 										),
 									);
-									props.onTrace(
-										'remove',
-										{
-											id: todo.id,
-										},
-										event,
-									);
+									props.onTrace('remove', { id: todo.id }, event);
 								}}
 							>
 								remove
@@ -137,18 +94,8 @@ export function KeyedTodo(props) {
 				data-action="reorder"
 				onClick={(event) => {
 					const order = todos.slice().reverse();
-					setTodos(
-						reconcile(order, {
-							key: 'id',
-						}),
-					);
-					props.onTrace(
-						'reorder',
-						{
-							order: order.map((todo) => todo.id),
-						},
-						event,
-					);
+					setTodos(reconcile(order, { key: 'id' }));
+					props.onTrace('reorder', { order: order.map((todo) => todo.id) }, event);
 				}}
 			>
 				reorder
@@ -157,18 +104,8 @@ export function KeyedTodo(props) {
 				data-action="clear"
 				onClick={(event) => {
 					const count = todos.length;
-					setTodos(
-						reconcile([], {
-							key: 'id',
-						}),
-					);
-					props.onTrace(
-						'clear',
-						{
-							count,
-						},
-						event,
-					);
+					setTodos(reconcile([], { key: 'id' }));
+					props.onTrace('clear', { count }, event);
 				}}
 			>
 				clear

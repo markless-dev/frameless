@@ -33,7 +33,9 @@ function visit(value: unknown, callback: (record: Record<string, any>) => void):
 describe('React structural emitter', () => {
 	for (const [output, golden] of fixtures) {
 		test(`${output} is fresh from the compiler EnrichedIR golden`, async () => {
-			const ir = JSON.parse(await readFile(resolve(goldenRoot, golden), 'utf8')) as EnrichedIR;
+			const ir = JSON.parse(
+				await readFile(resolve(goldenRoot, golden), 'utf8'),
+			) as EnrichedIR;
 			validateEnrichedIr(ir);
 			expect(await readFile(resolve(root, 'generated', output), 'utf8')).toBe(
 				await formatEmitted(emit(ir)),
@@ -63,12 +65,20 @@ describe('React structural emitter', () => {
 	});
 
 	test('has an AST-only target boundary', async () => {
-		const emitter = await readFile(resolve(root, 'src/emitter/index.ts'), 'utf8');
-		const converter = await readFile(resolve(root, 'src/emitter/estree-to-babel.ts'), 'utf8');
+		const emitter = await Promise.all(
+			['index.ts', 'estree.ts'].map((file) =>
+				readFile(resolve(root, 'src/emitter', file), 'utf8'),
+			),
+		).then((files) => files.join('\n'));
+		const gate = await Promise.all(
+			['index.ts', 'custom-policies.ts'].map((file) =>
+				readFile(resolve(root, 'src/gate', file), 'utf8'),
+			),
+		).then((files) => files.join('\n'));
 		const regenerate = await readFile(resolve(root, 'scripts/regenerate.ts'), 'utf8');
-		expect(`${emitter}\n${converter}`).not.toMatch(/from ['"](?:@babel\/parser|@markless\/|@tsrx\/)/);
-		expect(`${emitter}\n${converter}`).toContain("from '@babel/types'");
-		expect(emitter).toContain("from '@babel/generator'");
+		expect(`${emitter}\n${gate}`).not.toMatch(/from ['"](?:@babel\/|@markless\/|@tsrx\/)/);
+		expect(emitter).toContain("from 'yuku-codegen'");
+		expect(`${emitter}\n${gate}`).toContain("from 'yuku-analyzer'");
 		expect(regenerate).not.toContain('.tsrx');
 		expect(regenerate).toContain('../../compiler/test/goldens');
 	});
@@ -85,7 +95,9 @@ describe('React structural emitter', () => {
 			(root.staticAttributes as any[]).push({ name: 'data-metamorphic', value: 'yes' });
 			const changed = emit(ir);
 			expect(changed).toContain('data-metamorphic="yes"');
-			expect(changed.replace(' data-metamorphic="yes"', '')).toBe(emit(await golden('s1-render-once.json')));
+			expect(changed.replace(' data-metamorphic="yes"', '')).toBe(
+				emit(await golden('s1-render-once.json')),
+			);
 		});
 
 		test('scrambled local storage order still follows the semantic order field', async () => {
@@ -96,12 +108,20 @@ describe('React structural emitter', () => {
 
 		test('component, state, and ordinary-local renames are spelling-invariant', async () => {
 			const ir = clone(await golden('s1-render-once.json'));
-			const renames = new Map([['RenderOnce', 'RenamedRender'], ['count', 'total'], ['prefix', 'caption']]);
+			const renames = new Map([
+				['RenderOnce', 'RenamedRender'],
+				['count', 'total'],
+				['prefix', 'caption'],
+			]);
 			visit(ir, (record) => {
-				if (typeof record.name === 'string' && renames.has(record.name)) record.name = renames.get(record.name);
-				if (record.type === 'Identifier' && renames.has(record.name)) record.name = renames.get(record.name);
+				if (typeof record.name === 'string' && renames.has(record.name))
+					record.name = renames.get(record.name);
+				if (record.type === 'Identifier' && renames.has(record.name))
+					record.name = renames.get(record.name);
 			});
-			ir.components[0]!.locals.forEach((local: any) => { local.names = local.names.map((name: string) => renames.get(name) ?? name); });
+			ir.components[0]!.locals.forEach((local: any) => {
+				local.names = local.names.map((name: string) => renames.get(name) ?? name);
+			});
 			(ir.components[0] as any).name = 'RenamedRender';
 			(ir.module.exports[0] as any).componentName = 'RenamedRender';
 			(ir.module.exports[0] as any).exportedName = 'RenamedRender';
@@ -109,7 +129,12 @@ describe('React structural emitter', () => {
 			expect(changed).toContain('function RenamedRender');
 			expect(changed).toContain('const [total, setTotal]');
 			expect(changed).toContain('const [caption]');
-			const normalized = changed.replaceAll('RenamedRender', 'RenderOnce').replaceAll('setTotal', 'setCount').replaceAll('nextTotal', 'nextCount').replaceAll('total', 'count').replaceAll('caption', 'prefix');
+			const normalized = changed
+				.replaceAll('RenamedRender', 'RenderOnce')
+				.replaceAll('setTotal', 'setCount')
+				.replaceAll('nextTotal', 'nextCount')
+				.replaceAll('total', 'count')
+				.replaceAll('caption', 'prefix');
 			expect(normalized).toBe(emit(await golden('s1-render-once.json')));
 		});
 
@@ -119,13 +144,20 @@ describe('React structural emitter', () => {
 			handler.body.body.unshift({
 				type: 'ExpressionStatement',
 				expression: {
-					type: 'CallExpression', optional: false,
-					callee: { type: 'ArrowFunctionExpression', async: false, expression: true, params: [{ type: 'Identifier', name: 'count' }], body: { type: 'Identifier', name: 'count' } },
+					type: 'CallExpression',
+					optional: false,
+					callee: {
+						type: 'ArrowFunctionExpression',
+						async: false,
+						expression: true,
+						params: [{ type: 'Identifier', name: 'count' }],
+						body: { type: 'Identifier', name: 'count' },
+					},
 					arguments: [{ type: 'Literal', value: 7, raw: '7' }],
 				},
 			});
 			const changed = emit(ir);
-			expect(changed).toContain('(count => count)(7)');
+			expect(changed).toContain('((count) => count)(7)');
 			expect(changed).toContain('const nextCount = count + 1');
 		});
 	});
@@ -133,8 +165,16 @@ describe('React structural emitter', () => {
 	describe('fail-closed enriched IR validation', () => {
 		test('rejects the same multi-component fixture as Solid with the React composition diagnostic', async () => {
 			const ir = clone(await golden('s1-render-once.json')) as any;
-			ir.components.push({ ...clone(ir.components[0]), id: 'component:1:Additional', name: 'Additional' });
-			ir.module.exports.push({ kind: 'named', componentName: 'Additional', exportedName: 'Additional' });
+			ir.components.push({
+				...clone(ir.components[0]),
+				id: 'component:1:Additional',
+				name: 'Additional',
+			});
+			ir.module.exports.push({
+				kind: 'named',
+				componentName: 'Additional',
+				exportedName: 'Additional',
+			});
 			expect(() => validateEnrichedIr(ir)).toThrow(
 				'EnrichedComponent cannot be lowered: multi-component modules land in the React composition package',
 			);
@@ -184,11 +224,44 @@ describe('React structural emitter', () => {
 		});
 
 		test.each([
-			['unknown semantic field', (ir: any) => { ir.records.bindings[0].futureSemantic = true; }, /EnrichedGraphBinding has unknown semantic field/],
-			['dangling record id', (ir: any) => { ir.components[0].locals[1].semanticRecordIds = ['state:missing']; }, /LocalDeclaration has dangling semantic record id/],
-			['unsupported write shape', (ir: any) => { ir.records.events[0].handlers[0].writes[0].operation = 'delete'; }, /EventHandlerRecord .* unsupported write shape/],
-			['unsupported sync shape', (ir: any) => { ir.records.events[0].syncPolicy = { when: { type: 'future-condition' }, actions: ['preventDefault'] }; }, /SyncPolicy .* unsupported sync shape/],
-			['malformed template construct', (ir: any) => { ir.components[0].template[0].kind = 'portal'; }, /TemplateNode has malformed construct/],
+			[
+				'unknown semantic field',
+				(ir: any) => {
+					ir.records.bindings[0].futureSemantic = true;
+				},
+				/EnrichedGraphBinding has unknown semantic field/,
+			],
+			[
+				'dangling record id',
+				(ir: any) => {
+					ir.components[0].locals[1].semanticRecordIds = ['state:missing'];
+				},
+				/LocalDeclaration has dangling semantic record id/,
+			],
+			[
+				'unsupported write shape',
+				(ir: any) => {
+					ir.records.events[0].handlers[0].writes[0].operation = 'delete';
+				},
+				/EventHandlerRecord .* unsupported write shape/,
+			],
+			[
+				'unsupported sync shape',
+				(ir: any) => {
+					ir.records.events[0].syncPolicy = {
+						when: { type: 'future-condition' },
+						actions: ['preventDefault'],
+					};
+				},
+				/SyncPolicy .* unsupported sync shape/,
+			],
+			[
+				'malformed template construct',
+				(ir: any) => {
+					ir.components[0].template[0].kind = 'portal';
+				},
+				/TemplateNode has malformed construct/,
+			],
 		])('rejects %s with a construct-named diagnostic', async (_name, mutate, message) => {
 			const ir = clone(await golden('s1-render-once.json')) as any;
 			mutate(ir);

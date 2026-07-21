@@ -37,7 +37,7 @@ from `@frameless/solid/adapter`; that subpath does not import the node-only emit
 Validation rejects unknown semantic fields, malformed nodes, dangling graph/event/host ids,
 legacy source strings, degraded paths, unsupported write/sync shapes, mutable keys, keyed repeats
 whose key cannot be consumed, and arrays without a keyed identity record. The emitter maps free
-references through compiler graph bindings while respecting Babel lexical bindings and explicit
+references through compiler graph bindings while respecting analyzer-resolved lexical bindings and explicit
 repeat-item scope. Generated imports, setters, and draft parameters use collision-safe allocation;
 tests cover component, scalar state, store, row, key, ordinary-local, and import-collision renames,
 plus nested lexical shadowing.
@@ -77,14 +77,14 @@ mutation, and a temporary generated file exercises discovery through `checkGener
 
 `generated/S1.jsx`, `S2.jsx`, and `S3.jsx` are byte-checked against formatted fresh emission from
 the compiler goldens. `pnpm --dir packages/frameworks/solid regenerate` refreshes them. Physical
-nonblank component LOC is primary; Babel node count is secondary. S2/S3 reference bodies include
+nonblank component LOC is primary; structural ESTree node count is secondary. S2/S3 reference bodies include
 calibration mutant branches, so these comparisons are intentionally conservative.
 
 | Scenario | Reference physical LOC | Emitted physical LOC | LOC ratio | Reference AST nodes | Emitted AST nodes | Node ratio |
 | -------- | ---------------------: | -------------------: | --------: | ------------------: | ----------------: | ---------: |
-| S1       |                     35 |                   35 |     1.00x |                 165 |               143 |      0.87x |
-| S2       |                    114 |                  175 |     1.54x |                 640 |               560 |      0.88x |
-| S3       |                     78 |                   74 |     0.95x |                 326 |               233 |      0.71x |
+| S1       |                     35 |                   29 |     0.83x |                 166 |               144 |      0.87x |
+| S2       |                    114 |                  112 |     0.98x |                 645 |               563 |      0.87x |
+| S3       |                     78 |                   48 |     0.62x |                 328 |               234 |      0.71x |
 
 ## Framework-version honesty
 
@@ -118,7 +118,7 @@ wrappers do not excuse an identical nested list; a differing leaf does break the
 
 ## Verify
 
-The checked-in suite inventory is 79 node tests (29 emitter/freshness, 2 emitted-formatting, 41
+The checked-in suite inventory is 80 node tests (30 emitter/freshness, 2 emitted-formatting, 41
 gate, 2 adapter entry/import-graph, 1 size, 4 Solid 2 blocker contract) and 17 browser tests (12
 handwritten calibration including eight mutants, plus 5 emitted/reference and store-row smoke
 tests). These are source counts, not a claim that a particular environment executed them.

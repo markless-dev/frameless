@@ -2,9 +2,7 @@
 import { useRef, useState } from 'react';
 export function KeyedTodo({ seed, onTrace }) {
 	const [todos, setTodos] = useState(() => {
-		return seed.map((todo) => ({
-			...todo,
-		}));
+		return seed.map((todo) => ({ ...todo }));
 	});
 	const [draft, setDraft] = useState('');
 	const next = useRef(3);
@@ -26,24 +24,13 @@ export function KeyedTodo({ seed, onTrace }) {
 				data-action="add"
 				onClick={(event) => {
 					const currentState2 = next.current;
-					const item = {
-						id: `c${currentState2}`,
-						title: draft,
-						done: false,
-					};
+					const item = { id: `c${currentState2}`, title: draft, done: false };
 					next.current = currentState2 + 1;
 					const nextTodos = todos.concat(item);
 					setTodos(nextTodos);
 					const nextDraft = '';
 					setDraft(nextDraft);
-					onTrace(
-						'add',
-						{
-							id: item.id,
-							title: item.title,
-						},
-						event,
-					);
+					onTrace('add', { id: item.id, title: item.title }, event);
 				}}
 			>
 				add
@@ -58,22 +45,10 @@ export function KeyedTodo({ seed, onTrace }) {
 							onChange={(event) => {
 								const title = event.target.value;
 								const nextTodos = todos.map((item) =>
-									item.id === todo.id
-										? {
-												...item,
-												title: title,
-											}
-										: item,
+									item.id === todo.id ? { ...item, title: title } : item,
 								);
 								setTodos(nextTodos);
-								onTrace(
-									'edit',
-									{
-										id: todo.id,
-										title,
-									},
-									event,
-								);
+								onTrace('edit', { id: todo.id, title }, event);
 							}}
 						/>
 						<input
@@ -83,22 +58,10 @@ export function KeyedTodo({ seed, onTrace }) {
 							onChange={(event) => {
 								const checked = event.target.checked;
 								const nextTodos = todos.map((item) =>
-									item.id === todo.id
-										? {
-												...item,
-												done: checked,
-											}
-										: item,
+									item.id === todo.id ? { ...item, done: checked } : item,
 								);
 								setTodos(nextTodos);
-								onTrace(
-									'toggle',
-									{
-										id: todo.id,
-										checked,
-									},
-									event,
-								);
+								onTrace('toggle', { id: todo.id, checked }, event);
 							}}
 						/>
 						<button
@@ -106,13 +69,7 @@ export function KeyedTodo({ seed, onTrace }) {
 							onClick={(event) => {
 								const nextTodos = todos.filter((item) => item.id !== todo.id);
 								setTodos(nextTodos);
-								onTrace(
-									'remove',
-									{
-										id: todo.id,
-									},
-									event,
-								);
+								onTrace('remove', { id: todo.id }, event);
 							}}
 						>
 							remove
@@ -126,13 +83,7 @@ export function KeyedTodo({ seed, onTrace }) {
 					const order = todos.slice().reverse();
 					const nextTodos = order;
 					setTodos(nextTodos);
-					onTrace(
-						'reorder',
-						{
-							order: order.map((todo) => todo.id),
-						},
-						event,
-					);
+					onTrace('reorder', { order: order.map((todo) => todo.id) }, event);
 				}}
 			>
 				reorder
@@ -143,13 +94,7 @@ export function KeyedTodo({ seed, onTrace }) {
 					const count = todos.length;
 					const nextTodos = [];
 					setTodos(nextTodos);
-					onTrace(
-						'clear',
-						{
-							count,
-						},
-						event,
-					);
+					onTrace('clear', { count }, event);
 				}}
 			>
 				clear

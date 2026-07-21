@@ -89,17 +89,28 @@ describe('Solid structural emitter', () => {
 		const source = emit(await golden('s3-event-form.json'));
 		const first = source.indexOf('setWrites(1)');
 		const second = source.indexOf('setWrites(2)');
-		const callback = source.indexOf('props.onTrace("submit"');
+		const callback = source.indexOf("props.onTrace('submit'");
 		expect(first).toBeGreaterThan(-1);
 		expect(second).toBeGreaterThan(first);
 		expect(callback).toBeGreaterThan(second);
 	});
 
 	test('has an AST-only boundary without fixture signatures or source recovery', async () => {
-		const source = await readFile(resolve(root, 'src/emitter/index.ts'), 'utf8');
+		const emitter = await Promise.all(
+			['index.ts', 'estree.ts'].map((file) =>
+				readFile(resolve(root, 'src/emitter', file), 'utf8'),
+			),
+		).then((files) => files.join('\n'));
+		const gate = await Promise.all(
+			['index.ts', 'custom-policies.ts'].map((file) =>
+				readFile(resolve(root, 'src/gate', file), 'utf8'),
+			),
+		).then((files) => files.join('\n'));
 		const regenerate = await readFile(resolve(root, 'scripts/regenerate.ts'), 'utf8');
-		expect(source).not.toMatch(/from ['"](?:@babel\/parser|@markless\/|@tsrx\/)/);
-		expect(source).not.toMatch(
+		expect(`${emitter}\n${gate}`).not.toMatch(/from ['"](?:@babel\/|@markless\/|@tsrx\/)/);
+		expect(emitter).toContain("from 'yuku-codegen'");
+		expect(`${emitter}\n${gate}`).toContain("from 'yuku-analyzer'");
+		expect(emitter).not.toMatch(
 			/RenderOnce|KeyedTodo|EventForm|S1|S2|S3|FIXTURE_DIGEST|createHash/,
 		);
 		expect(regenerate).not.toContain('.tsrx');
@@ -163,7 +174,7 @@ describe('Solid structural emitter', () => {
 			repeat.item = 'entry';
 			const changedS2 = emit(s2);
 			expect(changedS2).toContain('const [records, setRecords] = createStore');
-			expect(changedS2).toContain('<For each={records}>{entry =>');
+			expect(changedS2).toContain('<For each={records}>{(entry) =>');
 		});
 
 		test('a coherent row identity rename drives every keyed store use', async () => {
@@ -191,7 +202,7 @@ describe('Solid structural emitter', () => {
 			});
 			validateEnrichedIr(ir);
 			const source = emit(ir);
-			expect(source).toContain('key: "identity"');
+			expect(source).toContain("key: 'identity'");
 			expect(source).toContain('identity: `c${next}`');
 			expect(source).toContain('item.identity === todo.identity');
 			expect(source).toContain('data-oracle-row-key={todo.identity}');
@@ -219,7 +230,7 @@ describe('Solid structural emitter', () => {
 					arguments: [{ type: 'Literal', value: 7, raw: '7' }],
 				},
 			});
-			expect(emit(shadowed)).toContain('(count => count)(7)');
+			expect(emit(shadowed)).toContain('((count) => count)(7)');
 
 			const collided = clone(await golden('s1-render-once.json')) as any;
 			visit(collided, (record) => {
@@ -277,7 +288,7 @@ describe('Solid structural emitter', () => {
 			});
 			const source = emit(ir);
 			expect(source).toContain('setTodos(produce(');
-			expect(source).toMatch(/0;\s*props\.onTrace\("edit"/);
+			expect(source).toMatch(/0;\s*props\.onTrace\('edit'/);
 		});
 
 		test('store-member lowering targets the recorded alias across predicate shadowing', async () => {
@@ -294,7 +305,7 @@ describe('Solid structural emitter', () => {
 			validateEnrichedIr(ir);
 			const source = emit(ir);
 			expect(source).toMatch(
-				/setTodos\(produce\(storeDraft => \{\s*const item = storeDraft\.find\(item => item\.id === todo\.id\);\s*item\.title = title;/,
+				/setTodos\(produce\(\(storeDraft\) => \{\s*const item = storeDraft\.find\(\(item\) => item\.id === todo\.id\);\s*item\.title = title;/,
 			);
 			expect(source).not.toContain('const item = todos.find');
 			expect(

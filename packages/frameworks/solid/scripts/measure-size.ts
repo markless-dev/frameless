@@ -1,7 +1,6 @@
 import { readFile } from 'node:fs/promises';
-import { parse } from '@babel/parser';
-import * as t from '@babel/types';
 import { resolve } from 'pathe';
+import { parse, walk, type Node } from 'yuku-parser';
 
 const root = resolve(import.meta.dirname, '..');
 const pairs = [
@@ -10,63 +9,37 @@ const pairs = [
 	{ scenario: 'S3', referenceName: 'SolidS3', emittedName: 'EventForm', emitted: 'S3.jsx' },
 ] as const;
 
-function findFunction(
-	value: unknown,
-	name: string,
-): t.FunctionDeclaration | t.FunctionExpression | null {
-	if (!value || typeof value !== 'object') return null;
-	const node = value as t.Node;
-	if ((t.isFunctionDeclaration(node) || t.isFunctionExpression(node)) && node.id?.name === name)
-		return node;
-	for (const [key, child] of Object.entries(value)) {
-		if (['loc', 'start', 'end'].includes(key)) continue;
-		if (Array.isArray(child)) {
-			for (const entry of child) {
-				const found = findFunction(entry, name);
-				if (found) return found;
-			}
-		} else {
-			const found = findFunction(child, name);
-			if (found) return found;
+function findFunction(program: Node, name: string): Node | null {
+	let found: Node | null = null;
+	const match = (node: Node, context: { stop(): void }) => {
+		if ('id' in node && node.id?.type === 'Identifier' && node.id.name === name) {
+			found = node;
+			context.stop();
 		}
-	}
-	return null;
+	};
+	walk(program, { FunctionDeclaration: match, FunctionExpression: match });
+	return found;
 }
 
-function structuralNodes(value: unknown): number {
-	if (!value || typeof value !== 'object') return 0;
-	const record = value as Record<string, unknown>;
-	return (
-		(typeof record.type === 'string' ? 1 : 0) +
-		Object.entries(record).reduce((count, [key, child]) => {
-			if (
-				[
-					'loc',
-					'start',
-					'end',
-					'leadingComments',
-					'trailingComments',
-					'innerComments',
-				].includes(key)
-			)
-				return count;
-			return (
-				count +
-				(Array.isArray(child)
-					? child.reduce((sum, entry) => sum + structuralNodes(entry), 0)
-					: structuralNodes(child))
-			);
-		}, 0)
-	);
+function structuralNodes(node: Node): number {
+	let count = 0;
+	walk(node, {
+		enter() {
+			count += 1;
+		},
+	});
+	return count;
 }
 
 async function measure(file: string, name: string, typescript: boolean) {
 	const source = await readFile(file, 'utf8');
-	const ast = parse(source, {
+	const parsed = parse(source, {
 		sourceType: 'module',
-		plugins: typescript ? ['jsx', 'typescript'] : ['jsx'],
+		lang: typescript ? 'tsx' : 'jsx',
 	});
-	const component = findFunction(ast, name);
+	if (parsed.diagnostics.length)
+		throw new Error(parsed.diagnostics.map((entry) => entry.message).join('; '));
+	const component = findFunction(parsed.program, name);
 	if (!component || component.start == null || component.end == null)
 		throw new Error(`Expected function ${name} in ${file}`);
 	return {
@@ -74,6 +47,7 @@ async function measure(file: string, name: string, typescript: boolean) {
 			.slice(component.start, component.end)
 			.split(/\r?\n/)
 			.filter((line) => line.trim()).length,
+		// Reference and emitted bodies use the same parser, keeping their comparison honest.
 		structuralNodes: structuralNodes(component),
 	};
 }

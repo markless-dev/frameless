@@ -11,13 +11,7 @@ export function EventForm({ initial, onTrace }) {
 			data-scenario="s3"
 			onClick={(event) => {
 				if (event.target.dataset.action === 'submit') {
-					onTrace(
-						'bubble',
-						{
-							source: 'form',
-						},
-						event,
-					);
+					onTrace('bubble', { source: 'form' }, event);
 				}
 			}}
 		>
@@ -27,13 +21,7 @@ export function EventForm({ initial, onTrace }) {
 				onChange={(event) => {
 					const nextText = event.target.value;
 					setText(nextText);
-					onTrace(
-						'text',
-						{
-							value: event.target.value,
-						},
-						event,
-					);
+					onTrace('text', { value: event.target.value }, event);
 				}}
 			/>
 			<input
@@ -43,13 +31,7 @@ export function EventForm({ initial, onTrace }) {
 				onChange={(event) => {
 					const nextChecked = event.target.checked;
 					setChecked(nextChecked);
-					onTrace(
-						'checked',
-						{
-							checked: event.target.checked,
-						},
-						event,
-					);
+					onTrace('checked', { checked: event.target.checked }, event);
 				}}
 			/>
 			<button
@@ -59,15 +41,7 @@ export function EventForm({ initial, onTrace }) {
 					event.preventDefault();
 					const nextWrites = 2;
 					setWrites(nextWrites);
-					onTrace(
-						'submit',
-						{
-							text,
-							checked,
-							writes: 2,
-						},
-						event,
-					);
+					onTrace('submit', { text, checked, writes: 2 }, event);
 				}}
 			>
 				submit

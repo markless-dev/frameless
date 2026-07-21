@@ -3,7 +3,7 @@
 React 19 target package for Frameless. It owns four framework-specific surfaces:
 
 - `emit(ir)` consumes `frameless-enriched-ir/2` and returns one automatic-runtime `.jsx`
-  module built with Babel AST. It does not parse author source.
+  module built as plain ESTree and printed with Yuku. It does not parse author source.
 - `formatEmitted(source)` asynchronously applies the repository's oxfmt configuration when emitted
   source becomes an artifact; `emit(ir)` remains synchronous and byte-stable.
 - `checkSources` / `checkGeneratedFiles` run the reusable conventionality gate. Every policy
@@ -43,7 +43,8 @@ Analyzer input dispatch uses native input/textarea value setters so React's valu
 | --- | --- |
 | Text nodes with content strictly equal to `''` are omitted; whitespace-only text is retained | Solid conditional-insert placeholders and React's absent-null renders serialize identically, so cross-target Show/null-conditional comparison is possible; authored empty text is unobservable and equally normalized. |
 
-The gate uses ESLint 9 flat configuration, `eslint-plugin-react-hooks` 6 recommended,
+The gate uses Yuku parser/analyzer queries for its custom AST policies and ESLint 9 flat
+configuration, `eslint-plugin-react-hooks` 6 recommended,
 `eslint-plugin-react` recommended plus automatic-runtime rules, `jsx-no-leaked-render`, and
 `no-array-index-key`. Defense-in-depth AST policies cover the React import allowlist
 (`useState`, `useRef`), `no-forwardRef`, controlled inputs, const-only handlers,
@@ -61,15 +62,15 @@ neither the emitter nor regeneration reaches `.tsrx`, Markless, or TSRX runtime 
 
 `pnpm --dir packages/frameworks/react measure:size` measures the actual component bodies in the
 calibrated `test/reference.tsx` and the checked-in generated modules. Physical nonblank LOC is
-primary; Babel AST node count is secondary structure evidence. The S2/S3 reference bodies include
+primary; Yuku AST node count is secondary structure evidence. The S2/S3 reference bodies include
 their calibration-only mutant switches, so the table is conservative and does not pretend they
 are mutation-free production baselines.
 
 | Scenario | Reference physical LOC | Emitted physical LOC | LOC ratio | Reference AST nodes | Emitted AST nodes | Node ratio |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| S1 | 39 | 35 | 0.90x | 158 | 150 | 0.95x |
-| S2 | 98 | 157 | 1.60x | 573 | 534 | 0.93x |
-| S3 | 69 | 77 | 1.12x | 305 | 225 | 0.74x |
+| S1 | 39 | 31 | 0.79x | 161 | 153 | 0.95x |
+| S2 | 98 | 102 | 1.04x | 576 | 537 | 0.93x |
+| S3 | 69 | 51 | 0.74x | 307 | 226 | 0.74x |
 
 ## What this does not claim
 
@@ -83,7 +84,7 @@ family; it is not a proof that arbitrary generated React is idiomatic or semanti
 
 ## Verify
 
-The checked-in suite inventory is 69 node tests and 16 browser tests. These are source counts, not
+The checked-in suite inventory is 70 node tests and 16 browser tests. These are source counts, not
 a claim that a particular environment executed them.
 
 ```sh

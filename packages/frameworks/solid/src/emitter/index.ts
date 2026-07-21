@@ -1,6 +1,5 @@
-import generateModule from '@babel/generator';
-import traverseModule from '@babel/traverse';
-import * as t from '@babel/types';
+import { analyze } from 'yuku-analyzer';
+import { generate } from 'yuku-codegen';
 import {
 	ENRICHED_IR_VERSION,
 	type EnrichedComponent,
@@ -11,10 +10,8 @@ import {
 	type SerializableAstNode,
 	type TemplateNode,
 } from '@frameless/compiler';
-import { fromEstree } from './estree-to-babel.ts';
+import * as t from './estree.ts';
 
-const generate = ((generateModule as any).default ?? generateModule) as typeof generateModule;
-const traverse = ((traverseModule as any).default ?? traverseModule) as typeof traverseModule;
 const LEGACY_STRING_FIELDS = new Set(['functionSource', 'handlerSources', 'valueSource']);
 
 type RecordLike = Record<string, any>;
@@ -69,7 +66,7 @@ function validatePath(value: unknown, construct: string): asserts value is strin
 }
 
 function expression(node: SerializableAstNode | null | undefined): t.Expression {
-	const converted = fromEstree(node);
+	const converted = node ? structuredClone(node) : null;
 	if (!converted || !t.isExpression(converted)) {
 		throw new Error(`Expected an expression, received ${converted?.type ?? 'null'}`);
 	}
@@ -98,7 +95,7 @@ function containsElement(node: TemplateNode): boolean {
 	return false;
 }
 
-function babelMemberPath(node: t.Node): { root: t.Identifier; path: string[] } | null {
+function memberPath(node: t.Node): { root: t.Identifier; path: string[] } | null {
 	const path: string[] = [];
 	let current = node;
 	while (t.isMemberExpression(current) && !current.computed && t.isIdentifier(current.property)) {
@@ -106,6 +103,63 @@ function babelMemberPath(node: t.Node): { root: t.Identifier; path: string[] } |
 		current = current.object;
 	}
 	return t.isIdentifier(current) ? { root: current, path } : null;
+}
+
+function equivalent(left: unknown, right: unknown): boolean {
+	const ignored = new Set([
+		'start',
+		'end',
+		'loc',
+		'raw',
+		'comments',
+		'leadingComments',
+		'trailingComments',
+	]);
+	const normalize = (value: any): any => {
+		if (Array.isArray(value)) return value.map(normalize);
+		if (!value || typeof value !== 'object') return value;
+		return Object.fromEntries(
+			Object.entries(value)
+				.filter(([key]) => !ignored.has(key))
+				.sort(([left], [right]) => left.localeCompare(right))
+				.map(([key, child]) => [key, normalize(child)]),
+		);
+	};
+	return JSON.stringify(normalize(left)) === JSON.stringify(normalize(right));
+}
+
+function printProgram(program: any): string {
+	const result = generate(program, { comments: true, quotes: 'single' });
+	if (result.errors.length)
+		throw new Error(
+			`yuku-codegen failed: ${result.errors.map((error) => error.message).join('; ')}`,
+		);
+	return result.code;
+}
+
+function reanalyzeExpression(
+	value: t.Expression,
+	transform: (module: ReturnType<typeof analyze>, expression: t.Expression) => void,
+): t.Expression {
+	const source = printProgram(
+		t.program([
+			t.variableDeclaration('const', [
+				t.variableDeclarator(
+					t.identifier('__framelessExpression'),
+					t.cloneNode(value, true),
+				),
+			]),
+		]),
+	);
+	const module = analyze(source, { lang: 'jsx', sourceType: 'module', preserveParens: false });
+	if (module.diagnostics.length)
+		throw new Error(
+			`yuku-analyzer rejected emitted expression: ${module.diagnostics.map((item) => item.message).join('; ')}`,
+		);
+	const declaration = module.ast.body[0] as any;
+	const analyzed = declaration.declarations[0].init as t.Expression;
+	transform(module, analyzed);
+	return declaration.declarations[0].init as t.Expression;
 }
 
 function readKey(graphNodeId: string, path: readonly string[]): string {
@@ -130,34 +184,36 @@ function reconcileReadSemantics(
 		reads.map((read) => [readKey(read.graphNodeId, read.path), read]),
 	);
 	const astReads = new Set<string>();
-	const wrapper = t.file(t.program([t.expressionStatement(ast)]));
-	traverse(wrapper, {
-		Identifier(path) {
-			if (!path.isReferencedIdentifier() || path.scope.getBinding(path.node.name)) return;
-			let current = path as any;
-			while (current.parentPath?.isMemberExpression() && current.key === 'object')
-				current = current.parentPath;
-			if (current.parentPath?.isAssignmentExpression() && current.key === 'left') return;
-			const chain = babelMemberPath(current.node);
+	reanalyzeExpression(ast, (module) => {
+		for (const reference of module.unresolvedReferences) {
+			const path = reference.node as any;
+			let current = path;
+			let parent = module.parentOf(current) as any;
+			while (parent?.type === 'MemberExpression' && parent.object === current) {
+				current = parent;
+				parent = module.parentOf(current) as any;
+			}
+			if (parent?.type === 'AssignmentExpression' && parent.left === current) continue;
+			const chain = memberPath(current);
 			if (!chain) return;
 			let suffix = chain.path;
-			if (current.parentPath?.isCallExpression() && current.key === 'callee' && suffix.length)
+			if (parent?.type === 'CallExpression' && parent.callee === current && suffix.length)
 				suffix = suffix.slice(0, -1);
 
 			const candidates: Array<{ graphNodeId: string; path: readonly string[] }> = [];
-			const prop = propsByLocal.get(path.node.name);
+			const prop = propsByLocal.get(path.name);
 			if (prop)
 				candidates.push({
 					graphNodeId: prop.graphNodeId,
 					path: [...prop.path, ...suffix],
 				});
-			const binding = bindingsByName.get(path.node.name);
+			const binding = bindingsByName.get(path.name);
 			if (binding) candidates.push({ graphNodeId: binding.id, path: suffix });
-			const repeatGraphNodeId = repeatItems.get(path.node.name);
+			const repeatGraphNodeId = repeatItems.get(path.name);
 			if (repeatGraphNodeId)
 				candidates.push({ graphNodeId: repeatGraphNodeId, path: suffix });
 			if (!prop && !binding && !repeatGraphNodeId) {
-				const local = localsByName.get(path.node.name);
+				const local = localsByName.get(path.name);
 				for (const read of local?.reads ?? [])
 					candidates.push({
 						graphNodeId: read.graphNodeId,
@@ -173,7 +229,7 @@ function reconcileReadSemantics(
 						`${construct} AST read absent from records: ${candidate.graphNodeId}/${candidate.path.join('/')}`,
 					);
 			}
-		},
+		}
 	});
 	for (const [key, read] of recordedReads)
 		if (!astReads.has(key))
@@ -189,7 +245,6 @@ function reconcileHandlerWrites(
 	bindings: readonly EnrichedGraphBinding[],
 ): void {
 	const bindingsByName = new Map(bindings.map((binding) => [binding.name, binding]));
-	const wrapper = t.file(t.program([t.expressionStatement(fn)]));
 	type Mutation = {
 		readonly node: t.AssignmentExpression | t.UpdateExpression;
 		readonly root: string;
@@ -197,27 +252,32 @@ function reconcileHandlerWrites(
 		readonly locallyBound: boolean;
 	};
 	const mutations: Mutation[] = [];
-	traverse(wrapper, {
-		AssignmentExpression(path) {
-			const target = babelMemberPath(path.node.left);
-			if (target)
-				mutations.push({
-					node: path.node,
-					root: target.root.name,
-					path: target.path,
-					locallyBound: Boolean(path.scope.getBinding(target.root.name)),
-				});
-		},
-		UpdateExpression(path) {
-			const target = babelMemberPath(path.node.argument);
-			if (target)
-				mutations.push({
-					node: path.node,
-					root: target.root.name,
-					path: target.path,
-					locallyBound: Boolean(path.scope.getBinding(target.root.name)),
-				});
-		},
+	reanalyzeExpression(fn, (module, analyzed) => {
+		module.walk(
+			{
+				AssignmentExpression(node: any) {
+					const target = memberPath(node.left);
+					if (target)
+						mutations.push({
+							node,
+							root: target.root.name,
+							path: target.path,
+							locallyBound: Boolean(module.symbolOf(target.root)),
+						});
+				},
+				UpdateExpression(node: any) {
+					const target = memberPath(node.argument);
+					if (target)
+						mutations.push({
+							node,
+							root: target.root.name,
+							path: target.path,
+							locallyBound: Boolean(module.symbolOf(target.root)),
+						});
+				},
+			},
+			analyzed,
+		);
 	});
 
 	const matched = new Set<Mutation>();
@@ -240,7 +300,7 @@ function reconcileHandlerWrites(
 						operator: write.assignmentOperator,
 					}) &&
 					Boolean(write.value) &&
-					t.isNodesEquivalent(candidate.node.right, expression(write.value))
+					equivalent(candidate.node.right, expression(write.value))
 				);
 			return (
 				t.isUpdateExpression(candidate.node, { operator: write.updateOperator }) &&
@@ -792,7 +852,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 				],
 				'TemplateHost',
 			);
-			if (!node.tag || !t.isValidIdentifier(node.tag, false))
+			if (!node.tag || !t.isValidIdentifier(node.tag))
 				throw new Error(`TemplateHost ${node.id} has malformed tag`);
 			hostIds.add(node.id);
 			for (const attribute of node.staticAttributes)
@@ -1233,23 +1293,72 @@ function api(context: EmitContext, name: ApiName): t.Identifier {
 	return t.identifier(context.api.get(name)!);
 }
 
-function rewriteBabelExpression(result: t.Expression, context: EmitContext): t.Expression {
-	const wrapper = t.file(t.program([t.expressionStatement(result)]));
-	traverse(wrapper, {
-		AssignmentExpression: {
-			exit(path) {
-				if (
-					!t.isIdentifier(path.node.left) ||
-					path.scope.getBinding(path.node.left.name) ||
-					context.lexicalNames.has(path.node.left.name)
-				)
+function rewriteExpressionAst(result: t.Expression, context: EmitContext): t.Expression {
+	return reanalyzeExpression(result, (module, analyzed) => {
+		const replace = (current: any, replacement: any): void => {
+			const parent = module.parentOf(current) as any;
+			if (!parent) throw new Error('Expression rewrite lost its parent');
+			for (const [key, value] of Object.entries(parent)) {
+				if (value === current) {
+					parent[key] = replacement;
 					return;
-				const state = context.statesByName.get(path.node.left.name);
-				if (!state || state.storage === 'local') return;
-				if (path.node.operator !== '=')
-					throw new Error(`Unsupported state assignment operator: ${path.node.operator}`);
-				const setter = t.identifier(context.settersById.get(state.id)!);
-				let value = path.node.right;
+				}
+				if (Array.isArray(value)) {
+					const index = value.indexOf(current);
+					if (index >= 0) {
+						value[index] = replacement;
+						return;
+					}
+				}
+			}
+			throw new Error('Expression rewrite could not replace a node');
+		};
+		const unresolved = new Set(module.unresolvedReferences.map((reference) => reference.node));
+		for (const reference of module.unresolvedReferences) {
+			const node = reference.node as any;
+			const parent = module.parentOf(node) as any;
+			const writeTarget =
+				(parent?.type === 'AssignmentExpression' && parent.left === node) ||
+				(parent?.type === 'UpdateExpression' && parent.argument === node);
+			if (writeTarget || context.lexicalNames.has(node.name)) continue;
+			const prop = context.propsByLocal.get(node.name);
+			const state = context.statesByName.get(node.name);
+			const computed = context.computedByName.get(node.name);
+			let replacement: t.Expression | null = null;
+			if (prop) replacement = pathMember(t.identifier(context.propsName), prop.path);
+			else if (state?.storage === 'signal')
+				replacement = t.callExpression(t.identifier(state.name), []);
+			else if (computed) replacement = t.callExpression(t.identifier(computed.name), []);
+			if (!replacement) continue;
+			if (parent?.type === 'Property' && parent.shorthand) parent.shorthand = false;
+			replace(node, replacement);
+		}
+		const writes: any[] = [];
+		module.walk(
+			{
+				AssignmentExpression(node: any) {
+					writes.push(node);
+				},
+				UpdateExpression(node: any) {
+					writes.push(node);
+				},
+			},
+			analyzed,
+		);
+		for (const node of writes.reverse()) {
+			const target = node.type === 'AssignmentExpression' ? node.left : node.argument;
+			if (
+				!t.isIdentifier(target) ||
+				!unresolved.has(target) ||
+				context.lexicalNames.has(target.name)
+			)
+				continue;
+			const state = context.statesByName.get(target.name);
+			if (!state || state.storage === 'local') continue;
+			if (node.type === 'AssignmentExpression') {
+				if (node.operator !== '=')
+					throw new Error(`Unsupported state assignment operator: ${node.operator}`);
+				let value = node.right;
 				if (state.storage === 'store') {
 					const key = context.storeKeys.get(state.id);
 					const options = key
@@ -1261,26 +1370,19 @@ function rewriteBabelExpression(result: t.Expression, context: EmitContext): t.E
 						: [];
 					value = t.callExpression(api(context, 'reconcile'), [value, ...options]);
 				}
-				path.replaceWith(t.callExpression(setter, [value]));
-				path.skip();
-			},
-		},
-		UpdateExpression: {
-			exit(path) {
-				if (
-					!t.isIdentifier(path.node.argument) ||
-					path.scope.getBinding(path.node.argument.name) ||
-					context.lexicalNames.has(path.node.argument.name)
-				)
-					return;
-				const state = context.statesByName.get(path.node.argument.name);
-				if (!state || state.storage === 'local') return;
-				if (state.storage !== 'signal' || !path.parentPath.isExpressionStatement())
+				replace(
+					node,
+					t.callExpression(t.identifier(context.settersById.get(state.id)!), [value]),
+				);
+			} else {
+				const parent = module.parentOf(node) as any;
+				if (state.storage !== 'signal' || parent?.type !== 'ExpressionStatement')
 					throw new Error(
-						`Unsupported value-observed state update: ${state.name}${path.node.operator}`,
+						`Unsupported value-observed state update: ${state.name}${node.operator}`,
 					);
-				const operator = path.node.operator === '++' ? '+' : '-';
-				path.replaceWith(
+				const operator = node.operator === '++' ? '+' : '-';
+				replace(
+					node,
 					t.callExpression(t.identifier(context.settersById.get(state.id)!), [
 						t.binaryExpression(
 							operator,
@@ -1289,44 +1391,13 @@ function rewriteBabelExpression(result: t.Expression, context: EmitContext): t.E
 						),
 					]),
 				);
-				path.skip();
-			},
-		},
-		Identifier(path) {
-			const name = path.node.name;
-			const writeTarget =
-				(path.parentPath.isAssignmentExpression() && path.key === 'left') ||
-				(path.parentPath.isUpdateExpression() && path.key === 'argument');
-			if (
-				writeTarget ||
-				!path.isReferencedIdentifier() ||
-				path.scope.getBinding(name) ||
-				context.lexicalNames.has(name)
-			)
-				return;
-			const prop = context.propsByLocal.get(name);
-			const state = context.statesByName.get(name);
-			const computed = context.computedByName.get(name);
-			let replacement: t.Expression | null = null;
-			if (prop) replacement = pathMember(t.identifier(context.propsName), prop.path);
-			else if (state?.storage === 'signal')
-				replacement = t.callExpression(t.identifier(state.name), []);
-			else if (computed) replacement = t.callExpression(t.identifier(computed.name), []);
-			if (!replacement) return;
-			path.replaceWith(replacement);
-			if (path.parentPath.isObjectProperty() && path.parentPath.node.shorthand)
-				path.parentPath.node.shorthand = false;
-			path.skip();
-		},
+			}
+		}
 	});
-	const statement = wrapper.program.body[0];
-	if (!t.isExpressionStatement(statement))
-		throw new Error('Expression rewrite lost its wrapper statement');
-	return statement.expression;
 }
 
 function rewriteExpression(node: SerializableAstNode, context: EmitContext): t.Expression {
-	return rewriteBabelExpression(expression(node), context);
+	return rewriteExpressionAst(expression(node), context);
 }
 
 function jsxAttribute(name: string, value: string | true | t.Expression): t.JSXAttribute {
@@ -1457,7 +1528,7 @@ function lowerStoreMemberWrites(
 	if (!t.isBlockStatement(fn.body)) return;
 	const deepWrites = handler.writes.filter((write) => write.via === 'handler-local-alias');
 	if (!deepWrites.length) return;
-	const statements = fn.body.body;
+	const statements: t.Statement[] = fn.body.body;
 	const remove = new Set<number>();
 	const replacements = new Map<number, t.Statement>();
 	for (const write of deepWrites) {
@@ -1471,13 +1542,13 @@ function lowerStoreMemberWrites(
 				!t.isAssignmentExpression(statement.expression)
 			)
 				return false;
-			const target = babelMemberPath(statement.expression.left);
+			const target = memberPath(statement.expression.left);
 			return Boolean(
 				target &&
 				target.path.join('/') === expectedPath.join('/') &&
 				statement.expression.operator === write.assignmentOperator &&
 				write.value &&
-				t.isNodesEquivalent(statement.expression.right, expression(write.value)),
+				equivalent(statement.expression.right, expression(write.value)),
 			);
 		});
 		const assignment = statements[assignmentIndex];
@@ -1485,20 +1556,20 @@ function lowerStoreMemberWrites(
 			assignment &&
 			t.isExpressionStatement(assignment) &&
 			t.isAssignmentExpression(assignment.expression)
-				? babelMemberPath(assignment.expression.left)
+				? memberPath(assignment.expression.left)
 				: null;
 		const aliasName = assignmentTarget?.root.name ?? '';
 		const aliasIndex = statements.findIndex(
 			(statement) =>
 				t.isVariableDeclaration(statement) &&
-				statement.declarations.some((entry) =>
+				statement.declarations.some((entry: t.VariableDeclarator) =>
 					t.isIdentifier(entry.id, { name: aliasName }),
 				),
 		);
 		const aliasStatement = statements[aliasIndex];
 		const declaration =
 			aliasStatement && t.isVariableDeclaration(aliasStatement)
-				? aliasStatement.declarations.find((entry) =>
+				? aliasStatement.declarations.find((entry: t.VariableDeclarator) =>
 						t.isIdentifier(entry.id, { name: aliasName }),
 					)
 				: null;
@@ -1526,7 +1597,7 @@ function lowerStoreMemberWrites(
 				(statement) =>
 					t.isVariableDeclaration(statement) &&
 					statement.declarations.some(
-						(entry) =>
+						(entry: t.VariableDeclarator) =>
 							t.isIdentifier(entry.id, { name: receiverName }) &&
 							t.isCallExpression(entry.init) &&
 							t.isMemberExpression(entry.init.callee) &&
@@ -1556,7 +1627,7 @@ function lowerStoreMemberWrites(
 					operator: publication.assignmentOperator,
 				}) &&
 				t.isIdentifier(statement.expression.left, { name: state.name }) &&
-				t.isNodesEquivalent(statement.expression.right, expression(publication.value)),
+				equivalent(statement.expression.right, expression(publication.value)),
 			),
 		);
 		if (rootIndex < 0)
@@ -1617,7 +1688,7 @@ function normalizeHandler(
 		throw new Error(`Sync policy ${event.id} requires an identifier event parameter`);
 	if (t.isIdentifier(parameter)) {
 		let authored = false;
-		fn.body.body = fn.body.body.filter((statement) => {
+		fn.body.body = fn.body.body.filter((statement: t.Statement) => {
 			if (!isPreventDefault(statement, parameter.name)) return true;
 			authored = true;
 			return false;
@@ -1625,7 +1696,7 @@ function normalizeHandler(
 		if (authored && !actions.includes('preventDefault'))
 			throw new Error(`Undeclared preventDefault synchronization in ${event.id}`);
 	}
-	const rewritten = rewriteBabelExpression(fn, context);
+	const rewritten = rewriteExpressionAst(fn, context);
 	if (!t.isArrowFunctionExpression(rewritten) || !t.isBlockStatement(rewritten.body))
 		throw new Error(`Event handler ${event.id} was not preserved as an arrow`);
 	if (actions.length) {
@@ -1776,7 +1847,7 @@ function componentFunction(
 		if (identifierIsUsed(ir, local.names[0]!))
 			body.push(
 				t.variableDeclaration(local.declarationKind, [
-					t.variableDeclarator(fromEstree(local.pattern) as t.LVal, initializer),
+					t.variableDeclarator(structuredClone(local.pattern) as t.LVal, initializer),
 				]),
 			);
 		else body.push(t.expressionStatement(initializer));
@@ -1899,12 +1970,6 @@ export function emit(ir: EnrichedIR): string {
 	};
 	addImport('solid-js', solidNames);
 	addImport('solid-js/store', storeNames);
-	(declarations[0] ?? exported).leadingComments = [
-		{
-			type: 'CommentLine',
-			value: ' @generated by @frameless/solid; do not edit.',
-		} as t.CommentLine,
-	];
 	declarations.push(exported);
-	return `${generate(t.program(declarations, [], 'module'), { comments: true, jsescOption: { minimal: true } }).code}\n`;
+	return `// @generated by @frameless/solid; do not edit.\n${printProgram(t.program(declarations))}\n`;
 }

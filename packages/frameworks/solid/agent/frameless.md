@@ -8,7 +8,7 @@ the browser analyzer adapter.
 
 1. Import the analyzer lifecycle from `@frameless/solid/adapter` in browser projects. That subpath
    contains only the adapter and browser/runtime dependencies.
-2. Keep EnrichedIR target-neutral. Solid lowering, Babel generation, ESLint policy, stores, and JSX
+2. Keep EnrichedIR target-neutral. Solid lowering, ESTree generation, ESLint policy, stores, and JSX
    transforms stay in this package.
 3. Treat `generated/*.jsx` as output. Change the structural emitter or gate and regenerate; never
    hand-edit component behavior.
