@@ -1,4 +1,7 @@
-# Frameless
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/banner-dark.svg">
+  <img alt="Frameless. Write components once. Compile to any framework. Prove it." src="assets/banner-light.svg" width="720">
+</picture>
 
 Write your components once. Compile them to any framework. Get code that looks
 hand-written and provably works the same everywhere.
@@ -24,17 +27,34 @@ export function Counter() @{
 
 From that one file:
 
-```jsx
-// React 19 output
-const [count, setCount] = useState(0);
-// on click: const nextCount = count + 1; setCount(nextCount);
-```
+<table>
+<tr>
+<th>React 19 output</th>
+<th>Solid output</th>
+</tr>
+<tr>
+<td>
 
 ```jsx
-// Solid output
-const [count, setCount] = createSignal(0);
-// on click: setCount(count() + 1); reads stay count()
+const [count, setCount] = useState(0);
+// on click:
+// const nextCount = count + 1;
+// setCount(nextCount);
 ```
+
+</td>
+<td>
+
+```jsx
+const [count, setCount] = createSignal(0);
+// on click:
+// setCount(count() + 1);
+// reads stay count()
+```
+
+</td>
+</tr>
+</table>
 
 Every output is checked against style rules for its framework, and every rule
 has a test proving it can catch a violation. Then both outputs run in a real
@@ -42,12 +62,17 @@ headless browser against the same scripted actions, and their behavior is
 compared: DOM, callbacks, list identity, focus. Match, and a report file is
 written. Mismatch, and the build fails.
 
-```txt
-your .tsrx file
-  -> what the component means
-  -> React 19 output, checked
-  -> Solid output, checked
-  -> browser report proving both behave the same
+```mermaid
+flowchart LR
+    A["your .tsrx file"] --> B["semantic record:<br/>what the component means"]
+    B --> C["React 19 output"]
+    B --> D["Solid output"]
+    C --> SC["style rules"]
+    D --> SD["style rules"]
+    SC --> E{"same behavior<br/>in a real browser?"}
+    SD --> E
+    E -- yes --> F["report written"]
+    E -- no --> G["build fails"]
 ```
 
 ## Try It
@@ -64,35 +89,25 @@ a report under each demo's `receipts/` folder.
 
 ## Why Not the Alternatives?
 
-**Mitosis.** Mitosis compiles a restricted JSX dialect to many frameworks, and
-it supports more targets than Frameless does today. But it translates syntax,
-so every framework gets roughly the same lowest-common-denominator component,
-and its output is verified by snapshot tests: string comparisons, not
-behavior. Unsupported patterns can quietly produce wrong code. Frameless
-compiles a semantic record of what your component means, emits what each
-framework's own best practice calls for, rejects what it cannot prove, and
-verifies behavior in a real browser.
+| Alternative                | How it works                                                                              | The catch                                                                                                                                                           |
+| -------------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Mitosis**                | Translates a restricted JSX dialect, syntax to syntax. More targets than Frameless today. | Every framework gets the same lowest-common-denominator component. Verified by string snapshots, not behavior. Unsupported patterns can quietly produce wrong code. |
+| **AI ports per framework** | An AI rewrites your component for each framework.                                         | It is a guess. It changes every run, it can quietly change behavior, and someone has to review every file for every framework after every change.                   |
+| **Hand-written ports**     | You maintain one codebase per framework.                                                  | N times the work, N times the bugs, and drift the moment one port gets a fix the others do not.                                                                     |
+| **Web components**         | One runtime shared by every framework.                                                    | Native to none of them. Friction around props, events, and SSR.                                                                                                     |
 
-**AI-written outputs per framework.** An AI translation often looks right, and
-looks right is the problem: it is a guess, it changes every run, it can
-quietly change behavior, and someone has to review every file for every
-framework after every change. Frameless generators work from the semantic
-record, so they cannot misread your code. Same input, same output,
-style-checked, behavior proven, rerun in CI. The two work best together: let
-AI write your Frameless components (one small model to be good at, instead of
-five frameworks to be mediocre at) and let the compiler carry them everywhere
-with proof.
+Frameless takes the other road: compile a semantic record of what your
+component means, emit what each framework's own best practice calls for,
+reject what it cannot prove, and verify behavior in a real browser.
 
-**Writing each framework by hand.** That is N times the work, N times the
-bugs, and drift between versions the moment one port gets a fix the others do
-not. If you ever truly need hand-maintained framework code, start from the
-compiled output. It is real, idiomatic code. Eject when you get there, not
-before.
+> [!TIP]
+> AI and Frameless work best together. Let AI write your Frameless components
+> (one small model to be good at, instead of five frameworks to be mediocre
+> at) and let the compiler carry them everywhere with proof.
 
-**Web components.** One runtime shared by every framework, but native to none
-of them: frameworks treat custom elements as foreigners, with friction around
-props, events, and SSR. Frameless goes the other way and emits code that is
-native to each framework.
+> [!NOTE]
+> Need hand-maintained framework code someday? Start from the compiled
+> output. It is real, idiomatic code. Eject when you get there, not before.
 
 ## What It Does Not Do
 
@@ -117,23 +132,25 @@ matches.
 
 ## Packages
 
-- `packages/compiler` compiles `.tsrx` into a record of component meaning.
-- `packages/analyzer` runs browser scenarios and compares behavior.
-- `packages/frameworks/react` generates and checks React 19 output.
-- `packages/frameworks/solid` generates and checks Solid output.
-- `packages/cli` builds many files at once and writes build reports.
-- `demos/` holds the two demo libraries. `poc/` is early evidence, not
-  product.
+| Package                     | What it does                                                   |
+| --------------------------- | -------------------------------------------------------------- |
+| `packages/compiler`         | Compiles `.tsrx` into a record of component meaning.           |
+| `packages/analyzer`         | Runs browser scenarios and compares behavior.                  |
+| `packages/frameworks/react` | Generates and checks React 19 output.                          |
+| `packages/frameworks/solid` | Generates and checks Solid output.                             |
+| `packages/cli`              | Builds many files at once and writes build reports.            |
+| `demos/`                    | The two demo libraries. `poc/` is early evidence, not product. |
 
 ## Status
 
-Done, each verified from a fresh clone: **v0** (single components: state,
-derived values, events, keyed lists, conditionals, inputs) and **Composition**
-(multiple components and files: children, shared state, element access with
-cleanup).
-
-Planned: shared state across files, named slots, SSR tests, saved state
-(localStorage and friends), more frameworks.
+| Milestone                                                                                    | Status                                  |
+| -------------------------------------------------------------------------------------------- | --------------------------------------- |
+| **v0**: single components (state, derived values, events, keyed lists, conditionals, inputs) | ✅ Shipped, verified from a fresh clone |
+| **Composition**: children, shared state, element access with cleanup                         | ✅ Shipped, verified from a fresh clone |
+| Shared state across files, named slots                                                       | Planned                                 |
+| SSR tests                                                                                    | Planned                                 |
+| Saved state (localStorage and friends)                                                       | Planned                                 |
+| More frameworks                                                                              | Planned                                 |
 
 ## Development
 

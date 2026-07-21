@@ -1,0 +1,25 @@
+<svg width="720" height="140" viewBox="0 0 720 140" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .word { font: 700 44px ui-sans-serif, -apple-system, 'Segoe UI', sans-serif; fill: #1f2328; }
+    .tag  { font: 400 17px ui-sans-serif, -apple-system, 'Segoe UI', sans-serif; fill: #57606a; }
+    .box  { fill: none; stroke: #d0d7de; stroke-width: 1.5; rx: 8; }
+    .lbl  { font: 600 13px ui-monospace, 'SF Mono', monospace; fill: #1a7f37; }
+    .lblb { font: 600 13px ui-monospace, 'SF Mono', monospace; fill: #0969da; }
+    .lblg { font: 600 13px ui-monospace, 'SF Mono', monospace; fill: #8250df; }
+    .arrow { stroke: #8c959f; stroke-width: 1.5; fill: none; }
+  </style>
+  <text x="24" y="62" class="word">Frameless</text>
+  <text x="26" y="94" class="tag">Write components once. Compile to any framework. Prove it.</text>
+  <rect x="452" y="20" width="100" height="34" class="box"/>
+  <text x="470" y="42" class="lbl">.tsrx</text>
+  <path d="M552 37 h28 m0 0 l-6 -4 m6 4 l-6 4" class="arrow"/>
+  <path d="M580 37 c20 0 20 -18 40 -18" class="arrow"/>
+  <path d="M580 37 c20 0 20 18 40 18" class="arrow"/>
+  <rect x="622" y="4" width="84" height="30" class="box"/>
+  <text x="636" y="24" class="lblb">React 19</text>
+  <rect x="622" y="42" width="84" height="30" class="box"/>
+  <text x="644" y="62" class="lblg">Solid</text>
+  <rect x="622" y="86" width="84" height="30" class="box"/>
+  <text x="632" y="106" class="lbl">receipts</text>
+  <path d="M664 74 v10 m0 0 l-4 -6 m4 6 l4 -6" class="arrow"/>
+</svg>
