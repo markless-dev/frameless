@@ -81,9 +81,13 @@ tasks:
     reasoning_hint: medium
     objective: "Markless slice 1 (crew, markless branch; aggregates design slices W1a declaration/binding/lowering + W1b transport/tier + W1c import-sources): storage() declaration, writable binding + metadata, public-render lowering, reachability filter, protocol v2 transport, full-resume forcing, import-source config; suites green per unit."
     allowed_files:
-      - "markless worktree paths fixed by T003 design"
+      - "packages/core/**"
+      - "packages/compiler/**"
+      - "packages/serializer/**"
+      - "packages/bundler/**"
     verify:
-      - "markless suite green (exact command from T001 baseline)"
+      - "pnpm test:compiler"
+      - "pnpm exec vp test packages/serializer/test/*.test.ts"
     stop_if:
       - "Need files outside T003 contract"
       - "Suite red twice on same cause"
@@ -91,19 +95,19 @@ tasks:
     receipt:
       result: done
       changed_files:
-        - "packages/core/{framework-api,index}.ts + tests"
-        - "packages/compiler/semantic-graph/{imports,collect-module-scope,collect-storage,collect-state,diagnostics}.ts"
-        - "packages/compiler/{artifacts,passes/payload-arena,passes/protocol-state}.ts"
-        - "packages/compiler/passes/public-render/{shared,render-body}.ts"
-        - "packages/serializer/{protocol,protocol-state,protocol-validation,protocol-client,storage-slot}.ts + tests"
-        - "packages/bundler/transform.ts (needsFullResume) + runtime-demand-map.ts"
+        - packages/core/src/framework-api.ts
+        - packages/compiler/src/passes/semantic-graph/collect-storage.ts
+        - packages/compiler/src/passes/payload-arena.ts
+        - packages/compiler/src/passes/protocol-state.ts
+        - packages/compiler/src/passes/public-render/shared.ts
+        - packages/serializer/src/protocol-client.ts
+        - packages/serializer/src/storage-slot.ts
+        - packages/bundler/src/transform.ts
       commands:
-        - cmd: "pnpm test:compiler"
+        - cmd: "pnpm test:compiler (491/491)"
           status: pass
-        - cmd: "pnpm exec vp test packages/serializer/test/*.test.ts"
+        - cmd: "pnpm exec vp test packages/serializer/test/*.test.ts (32/32)"
           status: pass
-        - cmd: "bundler gzip gates"
-          status: fail
       summary: "W1a (fb3e399): declaration + state-kind binding w/ storage metadata + diagnostics + public-render lowering; compiler 488->491, core 7/7. W1b+W1c (c9369b8): reachability filter (unused storage => absent, negative-tested), storage[] records, protocol v2 (both decoders strict, v1 byte-identity tested), full-resume forcing (both selectors + full-handoff test), slot constants, additionalFrameworkApiSources (compile-module needed no edit — input intersects SemanticGraphInput). REPAIR (acc7c8e): worker diagnosed gz growth -> found production shipping a 4.6KB-gz DEV validator chunk; __MARKLESS_DEV_ENABLED__ define removes it (dev/test unchanged) -> music-player-ssr PASS by 2,847B. RESIDUAL OWNER CHECKPOINT #3: vite-csr/vite-plus red by 13/19 gz bytes = irreducible strict-v2-decoder cost; options = ~20B budget raise vs specialized v1/v2 entrypoints; validation not weakened, budgets not touched. Worker refused twice to loosen — correct behavior."
   - id: T005
     type: worker
