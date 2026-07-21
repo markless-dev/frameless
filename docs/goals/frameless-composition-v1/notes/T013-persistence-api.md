@@ -330,3 +330,20 @@ SEMANTICS live in the graph, and the graph is what Frameless consumes:
 4. Storage is thereby the FORCING FUNCTION for the compiler extension API:
    the first non-core package producing graph semantics; its blessing
    mechanism seeds the extension surface (router next, per the discovery plan).
+
+## OWNER AMENDMENT 3 (2026-07-20): Frameless-branded authoring facade
+
+Owner: requiring frameless consumers to import markless is bad DX. Adopted —
+and the issue is general (demo TSRX already imports @markless/core for state/
+computed): Frameless ships an authoring FACADE package re-exporting the entire
+authoring surface (state, computed, element, shared, storage) so frameless
+consumers never type "markless". Exact npm name pending the recorded naming
+resolution (bare `frameless` squatted since v0 intake).
+Implementation routes: (a) NOW, markless untouched — deterministic import-source
+rewrite (facade -> markless packages) in the frameless compiler before
+buildSemanticGraph; pure aliasing, no invented semantics; (b) PROPER — the
+`accepted-import-sources` mechanism already named in the v0 charter as a
+markless change gated on the fixing board: the facade registers as an accepted
+authoring source. Two audiences, one graph: markless-app authors import
+@markless/* (runtime); frameless library authors import the facade (compiled
+output).
