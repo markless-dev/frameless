@@ -444,13 +444,51 @@ describe('Solid structural emitter', () => {
 			};
 			const { name: _missingName, ...missingName } = definition;
 			ir.records.sharedDefinitions = [missingName];
-			expect(() => validateEnrichedIr(ir)).toThrow(/SharedDefinition has malformed construct/);
+			expect(() => validateEnrichedIr(ir)).toThrow(
+				/SharedDefinition has malformed construct/,
+			);
 			ir.records.sharedDefinitions = [{ ...definition, name: '' }];
-			expect(() => validateEnrichedIr(ir)).toThrow(/SharedDefinition has malformed construct/);
+			expect(() => validateEnrichedIr(ir)).toThrow(
+				/SharedDefinition has malformed construct/,
+			);
 			ir.records.sharedDefinitions = [definition];
 			expect(() => validateEnrichedIr(ir)).toThrow(
 				/SharedDefinition cannot be lowered.*Solid composition package/,
 			);
+		});
+
+		test('requires a structurally valid initializer on every shared cell', async () => {
+			const ir = clone(await golden('s1-render-once.json')) as any;
+			const cell = {
+				name: 'count',
+				graphNodeId: 'shared:counter/state:count',
+				valueKind: 'scalar',
+				initializer: { type: 'Literal', value: 0 },
+			};
+			ir.records.sharedDefinitions = [
+				{
+					id: 'shared:counter',
+					name: 'useCounter',
+					scope: 'container',
+					cells: [cell],
+					methods: [],
+					graphBindings: [cell.graphNodeId],
+					returnProperties: [
+						{ kind: 'graph', name: 'count', graphNodeId: cell.graphNodeId, path: [] },
+					],
+					dependencies: [],
+				},
+			];
+			const { initializer: _initializer, ...missingInitializer } = cell;
+			ir.records.sharedDefinitions[0].cells = [missingInitializer];
+			expect(() => validateEnrichedIr(ir)).toThrow(/SharedDefinitionCell/);
+			ir.records.sharedDefinitions[0].cells = [{ ...cell, initializer: { value: 0 } }];
+			expect(() => validateEnrichedIr(ir)).toThrow(/SharedDefinitionCell initializer/);
+			ir.records.sharedDefinitions[0].cells = [cell];
+			ir.records.sharedDefinitions[0].methods = [
+				{ name: 'increment', site: { type: 'Property' } },
+			];
+			expect(() => validateEnrichedIr(ir)).toThrow(/SharedDefinitionMethod/);
 		});
 
 		test.each([

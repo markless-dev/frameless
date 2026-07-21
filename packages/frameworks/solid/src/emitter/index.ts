@@ -1031,6 +1031,49 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 			throw new Error(
 				`EnrichedEventRecord ${event.id} has dangling host record id: ${event.hostNodeId}`,
 			);
+	const validateSharedWrite = (write: any, construct: string): void => {
+		exactKeys(
+			write,
+			[
+				'definitionId',
+				'graphNodeId',
+				'path',
+				'operation',
+				'assignmentOperator',
+				'updateOperator',
+				'prefix',
+				'method',
+				'value',
+				'arguments',
+				'sourceSpan',
+				'order',
+			],
+			construct,
+		);
+		const span = write.sourceSpan;
+		if (
+			typeof write.definitionId !== 'string' ||
+			typeof write.graphNodeId !== 'string' ||
+			!stringPath(write.path) ||
+			!['assign', 'update', 'call', 'delete'].includes(write.operation) ||
+			(write.assignmentOperator !== undefined &&
+				typeof write.assignmentOperator !== 'string') ||
+			(write.updateOperator !== undefined && !['++', '--'].includes(write.updateOperator)) ||
+			(write.prefix !== undefined && typeof write.prefix !== 'boolean') ||
+			(write.method !== undefined && typeof write.method !== 'string') ||
+			(write.arguments !== undefined && !Array.isArray(write.arguments)) ||
+			!span ||
+			typeof span.filename !== 'string' ||
+			typeof span.start !== 'number' ||
+			typeof span.end !== 'number' ||
+			typeof write.order !== 'number'
+		)
+			throw new Error(`${construct} has malformed construct`);
+		if (write.value !== undefined) validateAst(`${construct} value`, write.value);
+		write.arguments?.forEach((argument: unknown) =>
+			validateAst(`${construct} argument`, argument),
+		);
+	};
 	for (const definition of ir.records.sharedDefinitions) {
 		exactKeys(
 			definition,
@@ -1059,19 +1102,27 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		)
 			throw new Error('SharedDefinition has malformed construct');
 		for (const cell of definition.cells) {
-			exactKeys(cell, ['name', 'graphNodeId', 'valueKind'], 'SharedDefinitionCell');
+			exactKeys(
+				cell,
+				['name', 'graphNodeId', 'valueKind', 'initializer'],
+				'SharedDefinitionCell',
+			);
 			if (
 				typeof cell.name !== 'string' ||
 				typeof cell.graphNodeId !== 'string' ||
 				!['scalar', 'object', 'array', 'unknown'].includes(cell.valueKind)
 			)
 				throw new Error('SharedDefinitionCell has malformed construct');
+			validateAst('SharedDefinitionCell initializer', cell.initializer);
 		}
 		for (const method of definition.methods) {
-			exactKeys(method, ['name', 'site'], 'SharedDefinitionMethod');
-			if (typeof method.name !== 'string')
+			exactKeys(method, ['name', 'site', 'writes'], 'SharedDefinitionMethod');
+			if (typeof method.name !== 'string' || !Array.isArray(method.writes))
 				throw new Error('SharedDefinitionMethod has malformed construct');
 			validateAst('SharedDefinitionMethod site', method.site);
+			method.writes.forEach((write: any) =>
+				validateSharedWrite(write, 'SharedDefinitionMethod write'),
+			);
 		}
 		for (const property of definition.returnProperties) {
 			exactKeys(
@@ -1137,41 +1188,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		call.arguments.forEach((argument) => validateAst('SharedCall argument', argument));
 		validateStructuralSite('SharedCall site', call.site as RecordLike);
 	}
-	for (const write of ir.records.sharedWrites) {
-		exactKeys(
-			write,
-			[
-				'definitionId',
-				'graphNodeId',
-				'path',
-				'operation',
-				'assignmentOperator',
-				'updateOperator',
-				'prefix',
-				'method',
-				'value',
-				'arguments',
-				'order',
-			],
-			'SharedWrite',
-		);
-		if (
-			typeof write.definitionId !== 'string' ||
-			typeof write.graphNodeId !== 'string' ||
-			!stringPath(write.path) ||
-			!['assign', 'update', 'call', 'delete'].includes(write.operation) ||
-			(write.assignmentOperator !== undefined &&
-				typeof write.assignmentOperator !== 'string') ||
-			(write.updateOperator !== undefined && !['++', '--'].includes(write.updateOperator)) ||
-			(write.prefix !== undefined && typeof write.prefix !== 'boolean') ||
-			(write.method !== undefined && typeof write.method !== 'string') ||
-			(write.arguments !== undefined && !Array.isArray(write.arguments)) ||
-			typeof write.order !== 'number'
-		)
-			throw new Error('SharedWrite has malformed construct');
-		if (write.value !== undefined) validateAst('SharedWrite value', write.value);
-		write.arguments?.forEach((argument) => validateAst('SharedWrite argument', argument));
-	}
+	for (const write of ir.records.sharedWrites) validateSharedWrite(write, 'SharedWrite');
 	for (const binding of ir.records.elementHandleBindings) {
 		exactKeys(
 			binding,
@@ -1408,7 +1425,7 @@ function jsxAttribute(name: string, value: string | true | t.Expression): t.JSXA
 		t.jsxIdentifier(name),
 		value === true
 			? null
-		: typeof value === 'string'
+			: typeof value === 'string'
 				? t.jsxStringValue(value)
 				: t.jsxExpressionContainer(value),
 	);

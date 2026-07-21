@@ -47,29 +47,42 @@ describe('frameless-enriched-ir/2 composition contracts', () => {
 	});
 
 	test('preserves every shared semantic record from the pinned probe', async () => {
-		const ir = await buildEnrichedIr({
-			filename: 'src/shared-probe.tsrx',
-			source: `import { shared, state } from "@markless/core";
-				export const useCounter = shared(() => {
-					let count = state(0);
-					return { count, increment() { count++; } };
-				});
-				export function Counter() @{
-					const counter = useCounter();
-					<button onClick={() => counter.increment()}>{counter.count}</button>
-				}`,
-		});
+		const ir = await fixture('composition-shared');
 		expect(ir.records.sharedDefinitions).toHaveLength(1);
 		expect(ir.records.sharedInstances).toHaveLength(1);
 		expect(ir.records.sharedReads).toHaveLength(1);
 		expect(ir.records.sharedCalls).toHaveLength(1);
-		expect(ir.records.sharedWrites).toHaveLength(1);
+		expect(ir.records.sharedWrites).toHaveLength(2);
 		expect(ir.records.sharedDefinitions[0]).toMatchObject({
 			name: 'useCounter',
 			scope: 'request',
-			cells: [{ name: 'count', valueKind: 'scalar' }],
-			methods: [{ name: 'increment' }],
+			cells: [
+				{ name: 'count', initializer: { type: 'Literal', value: 0 } },
+				{ name: 'status', initializer: { type: 'Literal', value: 'ready' } },
+			],
+			methods: [
+				{
+					name: 'increment',
+					site: { type: 'Property', value: { type: 'FunctionExpression' } },
+					writes: [
+						{ graphNodeId: expect.stringContaining('state:count'), order: 0 },
+						{ graphNodeId: expect.stringContaining('state:status'), order: 1 },
+					],
+				},
+			],
 		});
+	});
+
+	test('fails closed when a shared cell initializer has no authored argument AST', async () => {
+		const source = `import { shared, state } from "@markless/core";
+			export const useValue = shared(() => { let value = state(); return { value }; });
+			export function Reader() @{ const sharedValue = useValue(); <output>{sharedValue.value}</output> }`;
+		await expect(
+			buildEnrichedIr({
+				filename: 'src/shared-missing-initializer.tsrx',
+				source,
+			}),
+		).rejects.toThrow(/cell value has no mappable state initializer AST/);
 	});
 
 	test('fails closed when a shared factory has no declarator binding', async () => {
@@ -169,7 +182,10 @@ describe('frameless-enriched-ir/2 composition contracts', () => {
 			export const useC = shared(() => { let count = state(0); return { count, increment() { count++; } }; });
 			export function A() @{ <button onClick={() => useC().increment()}>go</button> }`;
 		await expect(
-			buildEnrichedIr({ filename: 'src/shared-inline-handler.tsrx', source: inlineSharedCall }),
+			buildEnrichedIr({
+				filename: 'src/shared-inline-handler.tsrx',
+				source: inlineSharedCall,
+			}),
 		).rejects.toThrow(
 			'Shared factory useC is called inline in a handler expression; bind the instance to a local first, or the property increment is unmapped.',
 		);

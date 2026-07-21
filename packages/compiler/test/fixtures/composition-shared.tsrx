@@ -2,9 +2,14 @@ import { shared, state } from "@markless/core";
 
 export const useCounter = shared(() => {
 	let count = state(0);
+	let status = state("ready");
 	return {
 		count,
-		increment() { count++; },
+		status,
+		increment() {
+			count++;
+			status = "updated";
+		},
 	};
 });
 

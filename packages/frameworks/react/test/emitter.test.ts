@@ -48,11 +48,7 @@ function staticAttributeValue(source: string, name: string): string {
 	const module = analyze(source, { lang: 'jsx', sourceType: 'module', preserveParens: false });
 	let result: string | undefined;
 	visit(module.ast, (record) => {
-		if (
-			record.type === 'JSXAttribute' &&
-			record.name?.name === name &&
-			result === undefined
-		) {
+		if (record.type === 'JSXAttribute' && record.name?.name === name && result === undefined) {
 			const value =
 				record.value?.type === 'JSXExpressionContainer'
 					? record.value.expression
@@ -143,16 +139,53 @@ describe('React structural emitter', () => {
 		);
 
 		test.each([
-			['hook import', 'count', 'useState', /useState as useState2/, /const \[useState, setUseState\] = useState2\(1\)/],
-			['ref hook import', 'count', 'useRef', /useRef as useRef2/, /const setupDone = useRef2\(/],
-			['setter', 'prefix', 'setCount', /const \[count, setCount2\]/, /setCount2\(nextCount\)/],
-			['next snapshot', 'prefix', 'nextCount', /const nextCount2 = count \+ 1/, /setCount\(nextCount2\)/],
-			['ref snapshot', 'complete', 'currentState2', /const currentState2_2 = next\.current/, /next\.current = currentState2_2 \+ 1/],
-			['once guard', 'prefix', 'setupDone', /const setupDone2 = useRef\(null\)/, /setupDone2\.current/],
+			[
+				'hook import',
+				'count',
+				'useState',
+				/useState as useState2/,
+				/const \[useState, setUseState\] = useState2\(1\)/,
+			],
+			[
+				'ref hook import',
+				'count',
+				'useRef',
+				/useRef as useRef2/,
+				/const setupDone = useRef2\(/,
+			],
+			[
+				'setter',
+				'prefix',
+				'setCount',
+				/const \[count, setCount2\]/,
+				/setCount2\(nextCount\)/,
+			],
+			[
+				'next snapshot',
+				'prefix',
+				'nextCount',
+				/const nextCount2 = count \+ 1/,
+				/setCount\(nextCount2\)/,
+			],
+			[
+				'ref snapshot',
+				'complete',
+				'currentState2',
+				/const currentState2_2 = next\.current/,
+				/next\.current = currentState2_2 \+ 1/,
+			],
+			[
+				'once guard',
+				'prefix',
+				'setupDone',
+				/const setupDone2 = useRef\(null\)/,
+				/setupDone2\.current/,
+			],
 		] as const)(
 			'allocates the generated %s family around authored identifiers',
 			async (_family, from, to, declaration, use) => {
-				const fixture = to === 'currentState2' ? 's2-keyed-todo.json' : 's1-render-once.json';
+				const fixture =
+					to === 'currentState2' ? 's2-keyed-todo.json' : 's1-render-once.json';
 				const ir = clone(await golden(fixture)) as any;
 				visit(ir, (record) => {
 					if (record.type === 'Identifier' && record.name === from) record.name = to;
@@ -255,20 +288,26 @@ describe('React structural emitter', () => {
 				preserveParens: false,
 			});
 			const hookImport = hookModule.symbols.find((symbol) =>
-				symbol.declarations.some((node: any) => node.type === 'Identifier' && node.name === 'useState2'),
+				symbol.declarations.some(
+					(node: any) => node.type === 'Identifier' && node.name === 'useState2',
+				),
 			);
 			expect(hookImport?.references.length).toBeGreaterThan(0);
-			expect(hookImport?.references.every((reference) => reference.symbol === hookImport)).toBe(true);
+			expect(
+				hookImport?.references.every((reference) => reference.symbol === hookImport),
+			).toBe(true);
 
 			const setter = clone(await golden('s1-render-once.json')) as any;
 			setter.records.events[0].handlers[0].expression.body.body.unshift({
 				type: 'VariableDeclaration',
 				kind: 'const',
-				declarations: [{
-					type: 'VariableDeclarator',
-					id: { type: 'Identifier', name: 'setCount' },
-					init: { type: 'Literal', value: 0, raw: '0' },
-				}],
+				declarations: [
+					{
+						type: 'VariableDeclarator',
+						id: { type: 'Identifier', name: 'setCount' },
+						init: { type: 'Literal', value: 0, raw: '0' },
+					},
+				],
 			});
 			expect(emit(setter)).toContain('const [count, setCount2] = useState(1)');
 
@@ -276,11 +315,13 @@ describe('React structural emitter', () => {
 			next.records.events[0].handlers[0].expression.body.body.unshift({
 				type: 'VariableDeclaration',
 				kind: 'const',
-				declarations: [{
-					type: 'VariableDeclarator',
-					id: { type: 'Identifier', name: 'nextCount' },
-					init: { type: 'Literal', value: 0, raw: '0' },
-				}],
+				declarations: [
+					{
+						type: 'VariableDeclarator',
+						id: { type: 'Identifier', name: 'nextCount' },
+						init: { type: 'Literal', value: 0, raw: '0' },
+					},
+				],
 			});
 			expect(emit(next)).toContain('const nextCount2 = count + 1');
 
@@ -292,11 +333,13 @@ describe('React structural emitter', () => {
 			snapshot.records.events[1].handlers[0].expression.body.body.unshift({
 				type: 'VariableDeclaration',
 				kind: 'const',
-				declarations: [{
-					type: 'VariableDeclarator',
-					id: { type: 'Identifier', name: 'currentState2' },
-					init: { type: 'Literal', value: 0, raw: '0' },
-				}],
+				declarations: [
+					{
+						type: 'VariableDeclarator',
+						id: { type: 'Identifier', name: 'currentState2' },
+						init: { type: 'Literal', value: 0, raw: '0' },
+					},
+				],
 			});
 			expect(emit(snapshot)).toContain('const currentState2_2 = next.current');
 		});
@@ -307,11 +350,21 @@ describe('React structural emitter', () => {
 				type: 'VariableDeclaration',
 				kind: 'const',
 				declarations: [
-					{ type: 'VariableDeclarator', id: { type: 'Identifier', name: 'setCount' }, init: { type: 'Literal', value: 0, raw: '0' } },
-					{ type: 'VariableDeclarator', id: { type: 'Identifier', name: 'setCount' }, init: { type: 'Literal', value: 1, raw: '1' } },
+					{
+						type: 'VariableDeclarator',
+						id: { type: 'Identifier', name: 'setCount' },
+						init: { type: 'Literal', value: 0, raw: '0' },
+					},
+					{
+						type: 'VariableDeclarator',
+						id: { type: 'Identifier', name: 'setCount' },
+						init: { type: 'Literal', value: 1, raw: '1' },
+					},
 				],
 			});
-			expect(() => emit(ir)).toThrow(/yuku-analyzer rejected emitted handler|collision verification/);
+			expect(() => emit(ir)).toThrow(
+				/yuku-analyzer rejected emitted handler|collision verification/,
+			);
 		});
 
 		test.each(['a"b', "a'b", 'a\nb', 'a{b}', '雪❄', 'a&amp;b'])(
@@ -403,13 +456,51 @@ describe('React structural emitter', () => {
 			};
 			const { name: _missingName, ...missingName } = definition;
 			ir.records.sharedDefinitions = [missingName];
-			expect(() => validateEnrichedIr(ir)).toThrow(/SharedDefinition has malformed construct/);
+			expect(() => validateEnrichedIr(ir)).toThrow(
+				/SharedDefinition has malformed construct/,
+			);
 			ir.records.sharedDefinitions = [{ ...definition, name: '' }];
-			expect(() => validateEnrichedIr(ir)).toThrow(/SharedDefinition has malformed construct/);
+			expect(() => validateEnrichedIr(ir)).toThrow(
+				/SharedDefinition has malformed construct/,
+			);
 			ir.records.sharedDefinitions = [definition];
 			expect(() => validateEnrichedIr(ir)).toThrow(
 				/SharedDefinition cannot be lowered.*React composition package/,
 			);
+		});
+
+		test('requires a structurally valid initializer on every shared cell', async () => {
+			const ir = clone(await golden('s1-render-once.json')) as any;
+			const cell = {
+				name: 'count',
+				graphNodeId: 'shared:counter/state:count',
+				valueKind: 'scalar',
+				initializer: { type: 'Literal', value: 0 },
+			};
+			ir.records.sharedDefinitions = [
+				{
+					id: 'shared:counter',
+					name: 'useCounter',
+					scope: 'container',
+					cells: [cell],
+					methods: [],
+					graphBindings: [cell.graphNodeId],
+					returnProperties: [
+						{ kind: 'graph', name: 'count', graphNodeId: cell.graphNodeId, path: [] },
+					],
+					dependencies: [],
+				},
+			];
+			const { initializer: _initializer, ...missingInitializer } = cell;
+			ir.records.sharedDefinitions[0].cells = [missingInitializer];
+			expect(() => validateEnrichedIr(ir)).toThrow(/SharedDefinitionCell/);
+			ir.records.sharedDefinitions[0].cells = [{ ...cell, initializer: { value: 0 } }];
+			expect(() => validateEnrichedIr(ir)).toThrow(/SharedDefinitionCell initializer/);
+			ir.records.sharedDefinitions[0].cells = [cell];
+			ir.records.sharedDefinitions[0].methods = [
+				{ name: 'increment', site: { type: 'Property' } },
+			];
+			expect(() => validateEnrichedIr(ir)).toThrow(/SharedDefinitionMethod/);
 		});
 
 		test.each([

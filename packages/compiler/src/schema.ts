@@ -327,11 +327,13 @@ export interface SharedDefinitionCell {
 	readonly name: string;
 	readonly graphNodeId: string;
 	readonly valueKind: GraphValueKind;
+	readonly initializer: SerializableAstNode;
 }
 
 export interface SharedDefinitionMethod {
 	readonly name: string;
 	readonly site: SerializableAstNode;
+	readonly writes: ReadonlyArray<SharedWrite>;
 }
 
 export type SharedReturnProperty =
@@ -350,8 +352,9 @@ export interface SharedDependency {
 
 /**
  * A module-owned shared factory and every semantic member it defines.
- * `name` was added before the first /2 consumer shipped, so the additive contract correction
- * deliberately keeps the `frameless-enriched-ir/2` version tag.
+ * `name`, cell initializers, and method-owned writes were added before the first /2 consumer
+ * shipped, so these additive contract corrections deliberately keep the
+ * `frameless-enriched-ir/2` version tag.
  */
 export interface SharedDefinition {
 	readonly id: string;
@@ -401,6 +404,7 @@ export interface SharedWrite {
 	readonly method?: string;
 	readonly value?: SerializableAstNode;
 	readonly arguments?: ReadonlyArray<SerializableAstNode>;
+	readonly sourceSpan: SourceSpan;
 	readonly order: number;
 }
 

@@ -731,6 +731,43 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 	};
 	const stringPath = (value: unknown): boolean =>
 		Array.isArray(value) && value.every((part) => typeof part === 'string');
+	const validateSharedWrite = (write: any, construct: string): void => {
+		keys(construct, write, [
+			'definitionId',
+			'graphNodeId',
+			'path',
+			'operation',
+			'assignmentOperator',
+			'updateOperator',
+			'prefix',
+			'method',
+			'value',
+			'arguments',
+			'sourceSpan',
+			'order',
+		]);
+		const span = write.sourceSpan;
+		if (
+			typeof write.definitionId !== 'string' ||
+			typeof write.graphNodeId !== 'string' ||
+			!stringPath(write.path) ||
+			!['assign', 'update', 'call', 'delete'].includes(write.operation) ||
+			(write.assignmentOperator !== undefined &&
+				typeof write.assignmentOperator !== 'string') ||
+			(write.updateOperator !== undefined && !['++', '--'].includes(write.updateOperator)) ||
+			(write.prefix !== undefined && typeof write.prefix !== 'boolean') ||
+			(write.method !== undefined && typeof write.method !== 'string') ||
+			(write.arguments !== undefined && !Array.isArray(write.arguments)) ||
+			!span ||
+			typeof span.filename !== 'string' ||
+			typeof span.start !== 'number' ||
+			typeof span.end !== 'number' ||
+			typeof write.order !== 'number'
+		)
+			throw new Error(`${construct} has malformed construct`);
+		if (write.value !== undefined) ast(`${construct} value`, write.value);
+		write.arguments?.forEach((argument: unknown) => ast(`${construct} argument`, argument));
+	};
 	for (const definition of ir.records.sharedDefinitions) {
 		keys('SharedDefinition', definition, [
 			'id',
@@ -755,19 +792,23 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		)
 			throw new Error('SharedDefinition has malformed construct');
 		for (const cell of definition.cells) {
-			keys('SharedDefinitionCell', cell, ['name', 'graphNodeId', 'valueKind']);
+			keys('SharedDefinitionCell', cell, ['name', 'graphNodeId', 'valueKind', 'initializer']);
 			if (
 				typeof cell.name !== 'string' ||
 				typeof cell.graphNodeId !== 'string' ||
 				!['scalar', 'object', 'array', 'unknown'].includes(cell.valueKind)
 			)
 				throw new Error('SharedDefinitionCell has malformed construct');
+			ast('SharedDefinitionCell initializer', cell.initializer);
 		}
 		for (const method of definition.methods) {
-			keys('SharedDefinitionMethod', method, ['name', 'site']);
-			if (typeof method.name !== 'string')
+			keys('SharedDefinitionMethod', method, ['name', 'site', 'writes']);
+			if (typeof method.name !== 'string' || !Array.isArray(method.writes))
 				throw new Error('SharedDefinitionMethod has malformed construct');
 			ast('SharedDefinitionMethod site', method.site);
+			method.writes.forEach((write: any) =>
+				validateSharedWrite(write, 'SharedDefinitionMethod write'),
+			);
 		}
 		for (const property of definition.returnProperties) {
 			keys(
@@ -833,37 +874,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		call.arguments.forEach((argument) => ast('SharedCall argument', argument));
 		validateExpressionSite('SharedCall site', call.site);
 	}
-	for (const write of ir.records.sharedWrites) {
-		keys('SharedWrite', write, [
-			'definitionId',
-			'graphNodeId',
-			'path',
-			'operation',
-			'assignmentOperator',
-			'updateOperator',
-			'prefix',
-			'method',
-			'value',
-			'arguments',
-			'order',
-		]);
-		if (
-			typeof write.definitionId !== 'string' ||
-			typeof write.graphNodeId !== 'string' ||
-			!stringPath(write.path) ||
-			!['assign', 'update', 'call', 'delete'].includes(write.operation) ||
-			(write.assignmentOperator !== undefined &&
-				typeof write.assignmentOperator !== 'string') ||
-			(write.updateOperator !== undefined && !['++', '--'].includes(write.updateOperator)) ||
-			(write.prefix !== undefined && typeof write.prefix !== 'boolean') ||
-			(write.method !== undefined && typeof write.method !== 'string') ||
-			(write.arguments !== undefined && !Array.isArray(write.arguments)) ||
-			typeof write.order !== 'number'
-		)
-			throw new Error('SharedWrite has malformed construct');
-		if (write.value !== undefined) ast('SharedWrite value', write.value);
-		write.arguments?.forEach((argument) => ast('SharedWrite argument', argument));
-	}
+	for (const write of ir.records.sharedWrites) validateSharedWrite(write, 'SharedWrite');
 	for (const binding of ir.records.elementHandleBindings) {
 		keys('ElementHandleBinding', binding, ['id', 'handleName', 'componentId', 'hostNodeId']);
 		validateComponentId('ElementHandleBinding', binding.componentId);
@@ -1544,8 +1555,7 @@ function toConstSsa(
 			const variable = statement.expression.left.name;
 			const count = (counters.get(variable) ?? 0) + 1;
 			counters.set(variable, count);
-			const version =
-				count === 1 ? variable : context.names.claim(`${variable}${count}`);
+			const version = count === 1 ? variable : context.names.claim(`${variable}${count}`);
 			const initializer = statement.expression.right;
 			replaceVersionReads(initializer, versions);
 			output.push(
@@ -1566,8 +1576,7 @@ function toConstSsa(
 			const variable = statement.expression.argument.name;
 			const count = (counters.get(variable) ?? 0) + 1;
 			counters.set(variable, count);
-			const version =
-				count === 1 ? variable : context.names.claim(`${variable}${count}`);
+			const version = count === 1 ? variable : context.names.claim(`${variable}${count}`);
 			const prior = t.identifier(versions.get(variable) ?? variable);
 			const operator = statement.expression.operator === '++' ? '+' : '-';
 			output.push(
@@ -1757,11 +1766,7 @@ function emitSingleHandler(
 		if (!state) throw new Error(`Write refers to unknown state: ${id}`);
 		return state;
 	});
-	const fn = toConstSsa(
-		emitMutableHandler(handler, event, context),
-		writable,
-		context,
-	);
+	const fn = toConstSsa(emitMutableHandler(handler, event, context), writable, context);
 	if (leafControl) replaceLeafCurrentTarget(fn);
 	return fn;
 }
@@ -1843,7 +1848,9 @@ function componentFunction(
 					t.variableDeclaration('const', [
 						t.variableDeclarator(
 							t.identifier(state.name),
-							t.callExpression(t.identifier(hookName(context, 'useRef')), [initializer]),
+							t.callExpression(t.identifier(hookName(context, 'useRef')), [
+								initializer,
+							]),
 						),
 					]),
 				);
@@ -2044,10 +2051,14 @@ export function emit(ir: EnrichedIR): string {
 			},
 		});
 		if (!setterSymbol)
-			throw new Error(`Emitted React module failed setter declaration verification for ${name}`);
+			throw new Error(
+				`Emitted React module failed setter declaration verification for ${name}`,
+			);
 		for (const reference of verified.references) {
 			if (reference.name === name && reference.symbol !== setterSymbol) {
-				throw new Error(`Emitted React module failed setter identity verification for ${name}`);
+				throw new Error(
+					`Emitted React module failed setter identity verification for ${name}`,
+				);
 			}
 		}
 	}

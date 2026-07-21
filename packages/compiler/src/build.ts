@@ -104,6 +104,7 @@ interface SharedFactoryDeclarator {
 	readonly name: string;
 	readonly callStart: number;
 	readonly callEnd: number;
+	readonly factory: AnyNode;
 }
 
 const OMITTED_AST_KEYS = new Set([
@@ -359,10 +360,12 @@ async function buildEnrichedIrArtifact({
 			}) as unknown as EnrichedGraphBinding;
 		});
 
+	const sharedWrites = buildSharedWrites(program, semanticGraph);
 	const sharedDefinitions = buildSharedDefinitions(
 		program,
 		semanticGraph,
 		sharedFactoryDeclarators,
+		sharedWrites,
 	);
 	const sharedReads = buildSharedReads(
 		program,
@@ -372,7 +375,6 @@ async function buildEnrichedIrArtifact({
 		sharedProperties,
 	);
 	const sharedCalls = buildSharedCalls(semanticGraph, events, sharedInstances, components);
-	const sharedWrites = buildSharedWrites(program, semanticGraph);
 	const elementHandleBindings = buildElementHandleBindings(
 		semanticGraph,
 		components,
@@ -1424,6 +1426,7 @@ function buildSharedDefinitions(
 	program: AnyNode,
 	graph: SemanticGraphArtifact,
 	declarators: readonly SharedFactoryDeclarator[],
+	sharedWrites: readonly SharedWrite[],
 ): SharedDefinition[] {
 	return graph.sharedDefinitions.map((definition) => {
 		const declarator = declarators.find(
@@ -1458,6 +1461,12 @@ function buildSharedDefinitions(
 					name: property.name,
 					graphNodeId: property.graphNodeId,
 					valueKind: binding.valueKind,
+					initializer: sharedBindingInitializer(
+						definition.id,
+						binding.name,
+						binding.kind,
+						declarator.factory,
+					),
 				};
 			});
 		const methods = (definition.returnProperties ?? [])
@@ -1468,7 +1477,13 @@ function buildSharedDefinitions(
 					throw new Error(
 						`Shared definition ${definition.id} method ${property.name} has no AST site.`,
 					);
-				return { name: property.name, site: serializeAst(node) };
+				const writes = sharedWrites.filter(
+					(write) =>
+						write.definitionId === definition.id &&
+						write.sourceSpan.start >= (node.start ?? Infinity) &&
+						write.sourceSpan.end <= (node.end ?? -Infinity),
+				);
+				return { name: property.name, site: serializeAst(node), writes };
 			});
 		return {
 			id: definition.id,
@@ -1540,10 +1555,7 @@ function findSharedFactoryDeclarators(
 			if (nestedInFunction) return;
 			throw new Error(`Shared factory in ${filename} has no identifier declarator binding.`);
 		}
-		if (
-			typeof node.start !== 'number' ||
-			typeof node.end !== 'number'
-		) {
+		if (typeof node.start !== 'number' || typeof node.end !== 'number') {
 			throw new Error(
 				`Shared factory ${declarator.id.name} in ${filename} has no mappable factory span.`,
 			);
@@ -1552,9 +1564,40 @@ function findSharedFactoryDeclarators(
 			name: declarator.id.name,
 			callStart: node.start,
 			callEnd: node.end,
+			factory: node.arguments?.[0],
 		});
 	});
 	return output;
+}
+
+function sharedBindingInitializer(
+	definitionId: string,
+	bindingName: string,
+	bindingKind: string,
+	factory: AnyNode | undefined,
+): SerializableAstNode {
+	const candidates: AnyNode[] = [];
+	if (factory) {
+		walkAst(factory.body ?? factory, (node) => {
+			if (
+				node.type === 'VariableDeclarator' &&
+				node.id?.type === 'Identifier' &&
+				node.id.name === bindingName &&
+				node.init?.type === 'CallExpression' &&
+				node.init.callee?.type === 'Identifier' &&
+				node.init.callee.name === bindingKind &&
+				node.init.arguments?.[0]?.type
+			) {
+				candidates.push(node.init.arguments[0]);
+			}
+		});
+	}
+	if (candidates.length !== 1) {
+		throw new Error(
+			`Shared definition ${definitionId} cell ${bindingName} has no mappable ${bindingKind} initializer AST.`,
+		);
+	}
+	return serializeAst(candidates[0]!);
 }
 
 function buildSharedReads(
@@ -1696,7 +1739,16 @@ function buildSharedCalls(
 function buildSharedWrites(program: AnyNode, graph: SemanticGraphArtifact): SharedWrite[] {
 	return graph.stateWrites
 		.filter((write) => write.sharedDefinitionId)
+		.sort(
+			(left, right) =>
+				(left.targetSpan?.start ?? Infinity) - (right.targetSpan?.start ?? Infinity),
+		)
 		.map((write, order) => {
+			if (!write.targetSpan) {
+				throw new Error(
+					`Shared write ${write.target} has no source span for method attribution.`,
+				);
+			}
 			const binding = graph.graphBindings.find(
 				(candidate) =>
 					candidate.sharedDefinitionId === write.sharedDefinitionId &&
@@ -1724,6 +1776,10 @@ function buildSharedWrites(program: AnyNode, graph: SemanticGraphArtifact): Shar
 								serializeAst(argument),
 							)
 						: undefined,
+				sourceSpan: {
+					...write.targetSpan,
+					filename: normalizeFilename(write.targetSpan.filename),
+				},
 				order,
 			}) as unknown as SharedWrite;
 		});
