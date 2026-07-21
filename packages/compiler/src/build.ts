@@ -718,24 +718,37 @@ export function buildTemplateNode(
 
 	if (node.type === 'JSXExpressionContainer') {
 		if (!node.expression || node.expression.type === 'JSXEmptyExpression') return [];
-		const projected =
-			node.expression.type === 'Identifier'
-				? environment.aliases.get(node.expression.name)
-				: undefined;
-		if (projected?.graphNodeId.startsWith('prop:') && projected.path.join('.') === 'children') {
+		const site = expressionSite(node.expression, environment);
+		if (
+			site.reads.length === 1 &&
+			site.reads[0]!.graphNodeId.startsWith('prop:') &&
+			site.reads[0]!.path.join('.') === 'children'
+		) {
 			return [
 				{
 					kind: 'default-slot-projection',
 					id: `slot:${environment.componentId}:${node.expression.start ?? context.textCursor++}`,
-					site: expressionSite(node.expression, environment),
+					site,
 				} as unknown as TemplateNode,
 			];
+		}
+		const chain = memberChain(node.expression);
+		if (
+			site.reads.some(
+				(read) => read.graphNodeId.startsWith('prop:') && read.path[0] === 'children',
+			) ||
+			(node.expression.type === 'Identifier' && node.expression.name === 'children') ||
+			(chain?.root === 'props' && chain.path[0] === 'children')
+		) {
+			throw new Error(
+				`DefaultSlotProjection children read ${chain ? `${chain.root}.${chain.path.join('.')}` : 'children'} in ${environment.componentId} cannot be mapped to the props children graph binding.`,
+			);
 		}
 		return [
 			{
 				kind: 'dynamic-text',
 				id: `text:${context.textCursor++}`,
-				...expressionSite(node.expression, environment),
+				...site,
 			},
 		];
 	}
@@ -1344,19 +1357,42 @@ function buildSharedReads(
 	];
 	const output: SharedRead[] = [];
 	for (const read of candidates) {
-		if (!read.sourceSpan) continue;
+		const [localName, propertyName, ...path] = read.source.replace(/\?\./g, '.').split('.');
+		if (!read.sourceSpan) {
+			if (instances.some((candidate) => candidate.localName === localName)) {
+				throw new Error(
+					`Shared read ${read.source} has no source span for definition/property attribution.`,
+				);
+			}
+			continue;
+		}
 		const component = componentForSpan(
 			`Shared read ${read.source}`,
 			read.sourceSpan,
 			components,
 		);
-		const [localName, propertyName, ...path] = read.source.replace(/\?\./g, '.').split('.');
 		const instance = instances.find(
 			(candidate) =>
 				candidate.componentId === component.id && candidate.localName === localName,
 		);
-		if (!instance || !propertyName || !properties.get(instance.definitionId)?.has(propertyName))
-			continue;
+		if (!instance) continue;
+		if (!propertyName || !properties.get(instance.definitionId)?.has(propertyName)) {
+			let isCallCallee = false;
+			walkAst(program, (node) => {
+				const call = unwrapCall(node);
+				const callee = call?.callee;
+				if (
+					callee?.start === read.sourceSpan?.start &&
+					callee.end === read.sourceSpan?.end
+				) {
+					isCallCallee = true;
+				}
+			});
+			if (isCallCallee) continue;
+			throw new Error(
+				`Shared read ${read.source} for definition ${instance.definitionId} has unmapped property ${propertyName ?? '<missing>'}.`,
+			);
+		}
 		const node = findNodeBySpan(program, read.sourceSpan);
 		if (!node) throw new Error(`Shared read ${read.source} has no AST site.`);
 		const graphProperty = properties.get(instance.definitionId)!.get(propertyName)!;
@@ -1409,16 +1445,25 @@ function buildSharedCalls(
 				const call = unwrapCall(node);
 				if (!call || call.callee?.type !== 'MemberExpression') return;
 				const chain = memberChain(call.callee);
-				if (!chain || chain.path.length !== 1) return;
+				if (!chain) return;
 				const instance = instances.find(
 					(candidate) =>
 						candidate.componentId === component.id &&
 						candidate.localName === chain.root,
 				);
-				if (!instance || !methods.get(instance.definitionId)?.has(chain.path[0]!)) return;
+				if (!instance) return;
+				const propertyName = chain.path[0] ?? '<missing>';
+				if (
+					chain.path.length !== 1 ||
+					!methods.get(instance.definitionId)?.has(propertyName)
+				) {
+					throw new Error(
+						`Shared call ${chain.root}.${chain.path.join('.')} for definition ${instance.definitionId} has unmapped property ${propertyName}.`,
+					);
+				}
 				output.push({
 					definitionId: instance.definitionId,
-					methodName: chain.path[0]!,
+					methodName: propertyName,
 					arguments: (call.arguments ?? []).map((argument: AnyNode) =>
 						serializeAst(argument),
 					),
@@ -2026,10 +2071,20 @@ export function collectGraphReads(
 	expression: SerializableAstNode,
 	bindings: ReadonlyArray<{ id: string; name: string }>,
 ): ReadonlyArray<GraphReadRef> {
+	const bindingsByName = new Map<string, { id: string; name: string }>();
+	for (const binding of bindings) {
+		const existing = bindingsByName.get(binding.name);
+		if (existing) {
+			throw new Error(
+				`GraphRead binding name collision for "${binding.name}" between "${existing.id}" and "${binding.id}"; component ownership is required.`,
+			);
+		}
+		bindingsByName.set(binding.name, binding);
+	}
 	return deriveReads(expression as AnyNode, {
 		componentId: '',
 		filename: '',
-		bindings: new Map(bindings.map((binding) => [binding.name, binding])),
+		bindings: bindingsByName,
 		aliases: new Map(),
 		locals: new Map(),
 		repeatItems: new Map(),

@@ -284,7 +284,13 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 	if (ir.version !== ENRICHED_IR_VERSION)
 		throw new Error(`Expected ${ENRICHED_IR_VERSION}, received ${String(ir.version)}`);
 	if (typeof ir.filename !== 'string') throw new Error('EnrichedIR filename is malformed');
-	if (!Array.isArray(ir.components) || ir.components.length !== 1)
+	if (!Array.isArray(ir.components))
+		throw new Error('Fixture-family Solid emitter requires exactly one component');
+	if (ir.components.length > 1)
+		throw new Error(
+			'EnrichedComponent cannot be lowered: multi-component modules land in the Solid composition package',
+		);
+	if (ir.components.length !== 1)
 		throw new Error('Fixture-family Solid emitter requires exactly one component');
 	if (ir.imports.length !== 0)
 		throw new Error(
@@ -726,7 +732,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 							prop.path.some((part: unknown) => typeof part !== 'string')))
 				)
 					throw new Error('ComponentPropExpression has malformed construct');
-					validateStructuralSite('ComponentPropExpression value', prop.value as RecordLike);
+				validateStructuralSite('ComponentPropExpression value', prop.value as RecordLike);
 			}
 			throw new Error(
 				'TemplateComponentReference cannot be lowered: composition constructs land in the Solid composition package',
@@ -736,7 +742,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 			exactKeys(node, ['kind', 'id', 'site'], 'TemplateDefaultSlotProjection');
 			if (typeof node.id !== 'string' || !node.site || typeof node.site !== 'object')
 				throw new Error('TemplateDefaultSlotProjection has malformed construct');
-				validateStructuralSite('TemplateDefaultSlotProjection site', node.site as RecordLike);
+			validateStructuralSite('TemplateDefaultSlotProjection site', node.site as RecordLike);
 			throw new Error(
 				'TemplateDefaultSlotProjection cannot be lowered: composition constructs land in the Solid composition package',
 			);

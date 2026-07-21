@@ -276,3 +276,16 @@ migration package is inserted BEFORE the composition emitter packages (P3/P4 get
 authored on yuku, not migrated after); PARTIAL verdicts (e.g. printing parity
 without a scope API) return to the owner with the hybrid tradeoff; FAIL leaves
 Babel with the re-probe trigger at each yuku release.
+
+## PM residual finding after P1 repair (2026-07-20, executed)
+
+The five critique probes are closed (re-executed PM-side: name-collapse fixed,
+props.children -> default-slot-projection, instance-bound shared.missing and
+unclassified calls REJECTED with named diagnostics, resolver accepts local children,
+validator parity aligned). RESIDUAL, same silent-loss class, different authored
+shape the critique did not probe: an INLINE chained shared access
+(`{useC().missing}` with no instance binding) yields sharedDefinitions:1 but
+sharedInstances:0/sharedReads:0 and a bare dynamic-text with empty reads — semantics
+lost without a diagnostic. Queued as micro-repair (guard: template expressions
+containing shared-factory call results must map to instance+read records or fail
+closed). P1 does not close until this lands.

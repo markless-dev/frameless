@@ -29,6 +29,7 @@ export type ModuleSetLinkTable = ReadonlyArray<ModuleSetModuleLinks>;
 type CanonicalModule = {
 	readonly moduleId: string;
 	readonly artifact: EnrichedIR;
+	readonly componentNames: ReadonlySet<string>;
 	readonly exportsByName: ReadonlyMap<string, ComponentExport>;
 	readonly exportsByComponent: ReadonlyMap<string, ComponentExport>;
 	readonly imports: ReadonlyArray<ModuleImport>;
@@ -271,6 +272,7 @@ function canonicalModules(modules: ReadonlyArray<ModuleSetInput>): CanonicalModu
 			moduleId,
 			artifact,
 			imports,
+			componentNames: new Set(artifact.components.map((component) => component.name)),
 			exportsByName: new Map(exports.map((entry) => [entry.exportedName, entry])),
 			exportsByComponent: new Map(
 				[...exports]
@@ -340,15 +342,16 @@ export function resolveModuleSet(modules: ReadonlyArray<ModuleSetInput>): Module
 		for (const reference of references) {
 			const target = validateTarget(reference.target, reference.id, module.moduleId);
 			if (target.module === 'self') {
-				const exported = module.exportsByComponent.get(target.localName);
-				if (!exported)
+				if (!module.componentNames.has(target.localName))
 					throw new Error(
-						`TemplateComponentReference ${reference.id} in ${module.moduleId} has unresolved export "${target.localName}" in module ${module.moduleId}`,
+						`TemplateComponentReference ${reference.id} in ${module.moduleId} has unresolved component "${target.localName}" in module ${module.moduleId}`,
 					);
 				links.push({
 					nodeId: reference.id,
 					targetModuleId: module.moduleId,
-					exportedName: exported.exportedName,
+					exportedName:
+						module.exportsByComponent.get(target.localName)?.exportedName ??
+						target.localName,
 				});
 				continue;
 			}

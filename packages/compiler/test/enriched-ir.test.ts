@@ -345,6 +345,17 @@ describe('fixture-family sufficiency', () => {
 		).toBe(false);
 	});
 
+	test('collectGraphReads fails closed when alpha-count and beta-count share the name count', () => {
+		expect(() =>
+			collectGraphReads({ type: 'Identifier', name: 'count' }, [
+				{ id: 'alpha-count', name: 'count' },
+				{ id: 'beta-count', name: 'count' },
+			]),
+		).toThrow(
+			'GraphRead binding name collision for "count" between "alpha-count" and "beta-count"; component ownership is required.',
+		);
+	});
+
 	test('S2 event effects are exact and temporary receiver mutation is not a graph write', async () => {
 		const ir = await fixtureIr('s2-keyed-todo.tsrx');
 		const effects = ir.records.events.map((event) => ({

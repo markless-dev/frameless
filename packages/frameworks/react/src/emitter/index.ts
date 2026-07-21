@@ -49,6 +49,11 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 	if (ir.version !== ENRICHED_IR_VERSION) {
 		throw new Error(`Expected ${ENRICHED_IR_VERSION}, received ${String(ir.version)}`);
 	}
+	if (ir.components.length > 1) {
+		throw new Error(
+			'EnrichedComponent cannot be lowered: multi-component modules land in the React composition package',
+		);
+	}
 	if (ir.components.length !== 1) {
 		throw new Error('Fixture-family React emitter requires exactly one component per IR artifact');
 	}

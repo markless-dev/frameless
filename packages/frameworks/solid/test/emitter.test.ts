@@ -304,6 +304,23 @@ describe('Solid structural emitter', () => {
 	});
 
 	describe('fail-closed validation', () => {
+		test('rejects the same multi-component fixture as React with the Solid composition diagnostic', async () => {
+			const ir = clone(await golden('s1-render-once.json')) as any;
+			ir.components.push({
+				...clone(ir.components[0]),
+				id: 'component:1:Additional',
+				name: 'Additional',
+			});
+			ir.module.exports.push({
+				kind: 'named',
+				componentName: 'Additional',
+				exportedName: 'Additional',
+			});
+			expect(() => validateEnrichedIr(ir)).toThrow(
+				'EnrichedComponent cannot be lowered: multi-component modules land in the Solid composition package',
+			);
+		});
+
 		test('rejects an exact /1 artifact with the version diagnostic', async () => {
 			const ir = clone(await golden('s1-render-once.json')) as any;
 			ir.version = 'frameless-enriched-ir/1';

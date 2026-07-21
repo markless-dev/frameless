@@ -64,6 +64,27 @@ describe('module-set resolver', () => {
 		]);
 	});
 
+	test('resolves self references against all artifact components, including a local Child', async () => {
+		const artifact = await build(
+			'src/page.tsrx',
+			`function Child() @{ <section>child</section> }
+			export function Parent() @{ <Child /> }`,
+		);
+
+		expect(resolveModuleSet([{ moduleId: 'src/page.tsrx', artifact }])).toEqual([
+			{
+				moduleId: 'src/page.tsrx',
+				references: [
+					{
+						nodeId: 'component-reference:component-edge:0',
+						targetModuleId: 'src/page.tsrx',
+						exportedName: 'Child',
+					},
+				],
+			},
+		]);
+	});
+
 	test('resolves sibling specifiers from a root-level module id', async () => {
 		const [parentArtifact, childArtifact] = await Promise.all([importedParent(), child()]);
 		expect(

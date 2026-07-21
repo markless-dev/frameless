@@ -103,6 +103,50 @@ describe('frameless-enriched-ir/2 composition contracts', () => {
 		expect(JSON.stringify(reference)).toContain('projected');
 	});
 
+	test('lowers props.children member access to a default-slot-projection', async () => {
+		const ir = await buildEnrichedIr({
+			filename: 'src/member-children.tsrx',
+			source: 'export function Frame(props) @{ <section>{props.children}</section> }',
+		});
+		const template = JSON.stringify(ir.components[0]!.template);
+		expect(template).toContain('default-slot-projection');
+		expect(template).not.toContain('dynamic-text');
+		await expect(
+			buildEnrichedIr({
+				filename: 'src/unmappable-member-children.tsrx',
+				source: 'export function Frame(props) @{ <section>{props.children.value}</section> }',
+			}),
+		).rejects.toThrow(/DefaultSlotProjection children read/);
+	});
+
+	test('fails closed for the counter.missing shared-read probe', async () => {
+		const missingProperty = `import { shared, state } from "@markless/core";
+			export const useCounter = shared(() => { let count = state(0); return { count }; });
+			export function Reader() @{ const counter = useCounter(); <output>{counter.missing}</output> }`;
+		await expect(
+			buildEnrichedIr({ filename: 'src/shared-missing.tsrx', source: missingProperty }),
+		).rejects.toThrow(/Shared read .*counter\.missing.*definition.*property/i);
+	});
+
+	test('fails closed for the returned-function counter.increment shared-call probe', async () => {
+		const returnedFunction = `import { shared, state } from "@markless/core";
+			export const useCounter = shared(() => {
+				let count = state(0);
+				const increment = () => count++;
+				return { count, increment };
+			});
+			export function Incrementer() @{
+				const counter = useCounter();
+				<button onClick={() => counter.increment()}>increment</button>
+			}`;
+		await expect(
+			buildEnrichedIr({
+				filename: 'src/shared-returned-function.tsrx',
+				source: returnedFunction,
+			}),
+		).rejects.toThrow(/Shared call .*counter\.increment.*definition.*property/i);
+	});
+
 	test('marks relative TSRX imports and preserves structured component props', async () => {
 		const ir = await fixture('composition-import');
 		expect(ir.imports).toEqual([
