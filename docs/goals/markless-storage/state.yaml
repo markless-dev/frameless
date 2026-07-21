@@ -37,20 +37,22 @@ agents:
   worker: installed
   judge: installed
 
-active_task: T001
+active_task: T002
 
 tasks:
   - id: T001
     type: pm
     assignee: PM
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Stage: record the qds-primitives closure (owner's commission = ratification of the storage() direction; run its T999), create the markless working branch/worktree, establish the pin question (current markless HEAD vs frameless vendor pin: what moved since P1/P5; vendor-refresh plan), and verify markless suite baseline green + test/verify commands."
-    receipt: null
+    receipt:
+      result: done
+      summary: "Staged. (1) qds-primitives CLOSED with ratification-by-commission receipt (T999 full_outcome_complete: true). (2) markless worktree created: markless/.claude/worktrees/storage, branch feat/storage @ c1c4599 (HEAD of the feat/markless-docs line; main checkout untouched — it holds the fixing-board session's uncommitted state). (3) PIN ANSWERED: frameless vendors 0.1.1 tarballs — analyzer packed at rev 5e5a100 (ancestor, 46 commits behind HEAD), the other seven checksum-anchored to the older POC pack; vendor/PROVENANCE already schedules the refresh — T007 packs ALL tarballs from feat/storage and records revs. (4) BASELINE GREEN: pnpm install clean; pnpm test:compiler = 43 files / 482 tests. Full-suite command recorded (vp test + boxes lanes + bench guard). Write-authority memory recorded (branch-only, main untouchable)."
   - id: T002
     type: scout
     assignee: Scout
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: "Map the markless integration surface (crew, read-only): where declarations (state/shared/element) are recognized in the compiler (symbol/module handling), the payload/resume seed channel internals, SSR/HTML emission points for a browser seed script, runtime cell/graph implementation + notify contract (T004b atomic-write context), package layout for a new declaration, accepted-import-sources / import-validation site (P5 fix location), and test conventions."
     expected_output:
