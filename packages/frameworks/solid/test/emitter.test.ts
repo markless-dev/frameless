@@ -416,6 +416,7 @@ describe('Solid structural emitter', () => {
 			ir.records.sharedDefinitions = [
 				{
 					id: 'shared:counter',
+					name: 'useCounter',
 					scope: 'container',
 					cells: [],
 					methods: [],
@@ -424,6 +425,29 @@ describe('Solid structural emitter', () => {
 					dependencies: [],
 				},
 			];
+			expect(() => validateEnrichedIr(ir)).toThrow(
+				/SharedDefinition cannot be lowered.*Solid composition package/,
+			);
+		});
+
+		test('requires a non-empty authored name before rejecting the shared family', async () => {
+			const ir = clone(await golden('s1-render-once.json')) as any;
+			const definition = {
+				id: 'shared:counter',
+				name: 'useCounter',
+				scope: 'container',
+				cells: [],
+				methods: [],
+				graphBindings: [],
+				returnProperties: [],
+				dependencies: [],
+			};
+			const { name: _missingName, ...missingName } = definition;
+			ir.records.sharedDefinitions = [missingName];
+			expect(() => validateEnrichedIr(ir)).toThrow(/SharedDefinition has malformed construct/);
+			ir.records.sharedDefinitions = [{ ...definition, name: '' }];
+			expect(() => validateEnrichedIr(ir)).toThrow(/SharedDefinition has malformed construct/);
+			ir.records.sharedDefinitions = [definition];
 			expect(() => validateEnrichedIr(ir)).toThrow(
 				/SharedDefinition cannot be lowered.*Solid composition package/,
 			);

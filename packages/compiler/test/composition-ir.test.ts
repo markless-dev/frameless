@@ -47,17 +47,40 @@ describe('frameless-enriched-ir/2 composition contracts', () => {
 	});
 
 	test('preserves every shared semantic record from the pinned probe', async () => {
-		const ir = await fixture('composition-shared');
+		const ir = await buildEnrichedIr({
+			filename: 'src/shared-probe.tsrx',
+			source: `import { shared, state } from "@markless/core";
+				export const useCounter = shared(() => {
+					let count = state(0);
+					return { count, increment() { count++; } };
+				});
+				export function Counter() @{
+					const counter = useCounter();
+					<button onClick={() => counter.increment()}>{counter.count}</button>
+				}`,
+		});
 		expect(ir.records.sharedDefinitions).toHaveLength(1);
 		expect(ir.records.sharedInstances).toHaveLength(1);
 		expect(ir.records.sharedReads).toHaveLength(1);
 		expect(ir.records.sharedCalls).toHaveLength(1);
 		expect(ir.records.sharedWrites).toHaveLength(1);
 		expect(ir.records.sharedDefinitions[0]).toMatchObject({
+			name: 'useCounter',
 			scope: 'request',
 			cells: [{ name: 'count', valueKind: 'scalar' }],
 			methods: [{ name: 'increment' }],
 		});
+	});
+
+	test('fails closed when a shared factory has no declarator binding', async () => {
+		const source = `import { shared, state } from "@markless/core";
+			export default shared(() => { let count = state(0); return { count }; });
+			export function Reader() @{ <output>reader</output> }`;
+		await expect(
+			buildEnrichedIr({ filename: 'src/shared-anonymous.tsrx', source }),
+		).rejects.toThrow(
+			'Shared factory in src/shared-anonymous.tsrx has no identifier declarator binding.',
+		);
 	});
 
 	test.each(['request', 'container', 'page'] as const)(

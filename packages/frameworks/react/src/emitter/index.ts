@@ -734,6 +734,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 	for (const definition of ir.records.sharedDefinitions) {
 		keys('SharedDefinition', definition, [
 			'id',
+			'name',
 			'scope',
 			'cells',
 			'methods',
@@ -743,6 +744,8 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		]);
 		if (
 			typeof definition.id !== 'string' ||
+			typeof definition.name !== 'string' ||
+			definition.name.trim().length === 0 ||
 			!['request', 'container', 'page'].includes(definition.scope) ||
 			!Array.isArray(definition.cells) ||
 			!Array.isArray(definition.methods) ||

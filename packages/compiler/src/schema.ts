@@ -348,9 +348,15 @@ export interface SharedDependency {
 	readonly definitionName: string;
 }
 
-/** A module-owned shared factory and every semantic member it defines. */
+/**
+ * A module-owned shared factory and every semantic member it defines.
+ * `name` was added before the first /2 consumer shipped, so the additive contract correction
+ * deliberately keeps the `frameless-enriched-ir/2` version tag.
+ */
 export interface SharedDefinition {
 	readonly id: string;
+	/** The authored identifier bound to the shared factory declarator. */
+	readonly name: string;
 	readonly scope: 'request' | 'container' | 'page';
 	readonly cells: ReadonlyArray<SharedDefinitionCell>;
 	readonly methods: ReadonlyArray<SharedDefinitionMethod>;

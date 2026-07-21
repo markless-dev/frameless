@@ -100,6 +100,12 @@ interface TemplateContext {
 	fragmentCursor: number;
 }
 
+interface SharedFactoryDeclarator {
+	readonly name: string;
+	readonly callStart: number;
+	readonly callEnd: number;
+}
+
 const OMITTED_AST_KEYS = new Set([
 	'metadata',
 	'parent',
@@ -150,6 +156,7 @@ async function buildEnrichedIrArtifact({
 	if (parseErrors.length > 0) {
 		throw new Error(`TSRX parse failed for ${filename}: ${String(parseErrors[0])}`);
 	}
+	const sharedFactoryDeclarators = findSharedFactoryDeclarators(program, filename);
 	const components = findComponents(program);
 
 	// Deliberately stop after the semantic graph. Payload, public-render,
@@ -352,7 +359,11 @@ async function buildEnrichedIrArtifact({
 			}) as unknown as EnrichedGraphBinding;
 		});
 
-	const sharedDefinitions = buildSharedDefinitions(program, semanticGraph);
+	const sharedDefinitions = buildSharedDefinitions(
+		program,
+		semanticGraph,
+		sharedFactoryDeclarators,
+	);
 	const sharedReads = buildSharedReads(
 		program,
 		semanticGraph,
@@ -1412,8 +1423,24 @@ function sharedPropertyMaps(
 function buildSharedDefinitions(
 	program: AnyNode,
 	graph: SemanticGraphArtifact,
+	declarators: readonly SharedFactoryDeclarator[],
 ): SharedDefinition[] {
 	return graph.sharedDefinitions.map((definition) => {
+		const declarator = declarators.find(
+			(candidate) =>
+				candidate.callStart === definition.sourceSpan?.start &&
+				candidate.callEnd === definition.sourceSpan?.end,
+		);
+		if (!declarator) {
+			throw new Error(
+				`Shared definition ${definition.id} has no identifier declarator binding.`,
+			);
+		}
+		if (typeof definition.name !== 'string' || definition.name !== declarator.name) {
+			throw new Error(
+				`Shared definition ${definition.id} declarator binding disagrees with Layer A.`,
+			);
+		}
 		const graphBindings = graph.graphBindings.filter(
 			(binding) => binding.sharedDefinitionId === definition.id,
 		);
@@ -1445,6 +1472,7 @@ function buildSharedDefinitions(
 			});
 		return {
 			id: definition.id,
+			name: declarator.name,
 			scope: definition.scope ?? 'request',
 			cells,
 			methods,
@@ -1464,6 +1492,69 @@ function buildSharedDefinitions(
 			),
 		};
 	});
+}
+
+function findSharedFactoryDeclarators(
+	program: AnyNode,
+	filename: string,
+): SharedFactoryDeclarator[] {
+	const sharedImports = new Set<string>();
+	const declaratorsByInitializer = new Map<AnyNode, AnyNode>();
+	walkAst(program, (node) => {
+		if (node.type === 'ImportDeclaration' && node.source?.value === '@markless/core') {
+			for (const specifier of node.specifiers ?? []) {
+				if (
+					specifier.type === 'ImportSpecifier' &&
+					(specifier.imported?.name ?? specifier.imported?.value) === 'shared' &&
+					typeof specifier.local?.name === 'string'
+				) {
+					sharedImports.add(specifier.local.name);
+				}
+			}
+		}
+		if (node.type === 'VariableDeclarator' && node.init) {
+			declaratorsByInitializer.set(node.init, node);
+		}
+	});
+
+	const output: SharedFactoryDeclarator[] = [];
+	walkAst(program, (node) => {
+		if (
+			node.type !== 'CallExpression' ||
+			node.callee?.type !== 'Identifier' ||
+			!sharedImports.has(node.callee.name)
+		)
+			return;
+		const declarator = declaratorsByInitializer.get(node);
+		if (declarator?.id?.type !== 'Identifier') {
+			let nestedInFunction = false;
+			walkAst(program, (candidate) => {
+				if (
+					isFunctionNode(candidate) &&
+					(candidate.start ?? Infinity) < (node.start ?? -Infinity) &&
+					(candidate.end ?? -Infinity) > (node.end ?? Infinity)
+				) {
+					nestedInFunction = true;
+				}
+			});
+			if (nestedInFunction) return;
+			throw new Error(`Shared factory in ${filename} has no identifier declarator binding.`);
+		}
+		if (
+			typeof node.start !== 'number' ||
+			typeof node.end !== 'number'
+		) {
+			throw new Error(
+				`Shared factory ${declarator.id.name} in ${filename} has no mappable factory span.`,
+			);
+		}
+		output.push({
+			name: declarator.id.name,
+			callStart: node.start,
+			callEnd: node.end,
+		});
+	});
+	return output;
 }
 
 function buildSharedReads(
