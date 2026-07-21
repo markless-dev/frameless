@@ -68,7 +68,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/storage-tradeoff/"
     command: "npx goalbuddy board docs/goals/storage-tradeoff"
 
-active_task: T003
+active_task: T004
 
 tasks:
   - id: T001
@@ -94,14 +94,17 @@ tasks:
   - id: T003
     type: scout
     assignee: Scout
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Evidence pass per candidate: corpus probes (scratch-only — markless payload-script contract shapes, progressive-chunk feasibility for an early storage chunk, qwik v2 patch-script status) + web where load-bearing (provider-pattern variants beyond next-themes; manifest/file-convention precedents e.g. route files, app manifests; any framework shipping library-declared page behavior and the outcome). Executed vs cited vs inferred labeled per claim."
-    receipt: null
+    receipt:
+      result: done
+      note: notes/T003-probes.md
+      summary: "Five choice-changing probes EXECUTED: (1) markless seed channel VIABLE without core changes — early script populated the payload, value in graph before runtime start (verbatim: graph.read(theme-cell)=dark-from-early-script); browser chunk-ordering stays priced. (2) React 19 + Solid 1.8.22: seed-first initialization commits seeded value on first render, StrictMode-safe (no double-consume), consent-gated late enablement updates exactly once (driverReads:1, notifyCalls:1). (3) NO candidate requires pre-paint access for reactive correctness — pre-paint buys only the no-flash initial paint; fallback-then-patch is universally sound. (4) Consolidated seed script cost: ~0.006ms @1 key, ~0.022ms @10, ~0.094ms @50 (Node V8, rough budget, browser caveats stated). (5) Facade NOT accepted on today's pin — verbatim MARKLESS_FRAMEWORK_IMPORT_REQUIRED; import-rewrite is the available frameless-side mechanism now, accepted-import-sources is a markless-side change. Implementation-phase unknowns intentionally priced, not probed."
   - id: T004
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     objective: "Tradeoff matrix + decision menu: score every surviving candidate PER MODE (markless ideal-ness, frameless ideal-ness — asymmetries explicit, never averaged), against the constraints (inertness principle, consent ownership, branding, device-state-not-data), with the evidence trail per cell; produce the owner decision menu (2-4 real options, each with what-you-get/what-you-give-up, a recommendation with reasoning, and the named unknowns each option carries). NO ratification — menu preparation only."
     receipt: null
