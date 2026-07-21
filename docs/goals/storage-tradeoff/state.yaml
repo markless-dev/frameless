@@ -68,7 +68,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/storage-tradeoff/"
     command: "npx goalbuddy board docs/goals/storage-tradeoff"
 
-active_task: T002
+active_task: T003
 
 tasks:
   - id: T001
@@ -84,14 +84,17 @@ tasks:
   - id: T002
     type: scout
     assignee: Scout
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Steelman candidates A-E (charter list): for each, write the strongest honest version — exact authored surface, what each mode (markless runtime / frameless targets) does with it, how it answers every cross-cutting axis (key identity, package home + frameless branding, enablement, driver sync/async, consent/CSP ownership), and the sharpest argument AGAINST it. Extend the space if a real candidate is missing; kill duplicates with reasons."
-    receipt: null
+    receipt:
+      result: done
+      note: notes/T002-steelman.md
+      summary: "Candidate space steelmanned (34k chars): surviving candidates incl. inert-declaration + provider/boot-boundary enablement (dual-surface samples for markless AND frameless authoring — no markless import for frameless consumers), build-owned enablement contract (explicit-include and build-option merged), compiled-upgrade reframe, module-scope restriction, file conventions, visible directive. Killed with reasons: state-option-as-separate-candidate (same semantics, syntax-only), derived-key-as-candidate (identity policy not architecture; rename-orphan risk), auto-installing provider (recreates inertness+consent problem), consent-granting directive (library choosing app consent timing). Per-mode behavior + all axes answered per candidate; sharpest-against + failure modes written. Unknowns list produced for T003."
   - id: T003
     type: scout
     assignee: Scout
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: "Evidence pass per candidate: corpus probes (scratch-only — markless payload-script contract shapes, progressive-chunk feasibility for an early storage chunk, qwik v2 patch-script status) + web where load-bearing (provider-pattern variants beyond next-themes; manifest/file-convention precedents e.g. route files, app manifests; any framework shipping library-declared page behavior and the outcome). Executed vs cited vs inferred labeled per claim."
     receipt: null
