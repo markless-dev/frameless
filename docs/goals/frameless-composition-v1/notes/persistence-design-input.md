@@ -26,3 +26,27 @@ Sequencing (owner-aligned): persistence dossier BEFORE any Qwik target work —
 Qwik's serialization boundaries must consume settled external-state semantics.
 Dossier is read-only (markless repo untouched; fixing board owns it); language
 implementation waits for that board.
+
+## Owner idea 2 (2026-07-20): render-time storage reads lower to a generated pre-paint script
+
+Owner: "what about the idea of localStorage access on render always creating a
+script tag somehow?" PM synthesis (for T013 to evidence, leading candidate):
+
+- The generated inline pre-paint script generalizes the anti-flash trick: values
+  materialize BEFORE any framework exists client-side — markless: no chunk wake
+  needed; React: state slot seeded pre-mount; Qwik: serialized state patched
+  before resume (state lives in the DOM — a pre-paint rewrite is resumability-
+  perfect, zero tasks). Only a compiler with semantic records can do this
+  generally and correctly.
+- REFINEMENT replacing 'always': the compiler DERIVES the tier via template
+  reachability over read records — storage read reachable at first paint ->
+  consolidated pre-paint script; behind interaction/visibility -> lazy lowering.
+  needed-at becomes an analysis, not an author annotation (markless philosophy).
+- Landmines to design, not discover: value-landing channel per target (React SSR
+  hydration-match is the hard one — do not corner the design; SSR next tranche);
+  ONE consolidated script with a paint budget (+ inlining pure derivations whose
+  inputs are static — the ASTs are recorded); CSP hash/nonce emitted with build
+  receipts; writes remain runtime write-through.
+- T013 must evidence: Qwik serialized-state patching feasibility (docs/corpus),
+  React seed-slot pattern vs uSES interplay, real-world anti-flash inventories,
+  paint-cost data for blocking inline scripts.
