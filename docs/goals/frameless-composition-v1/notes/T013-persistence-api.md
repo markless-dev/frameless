@@ -230,3 +230,32 @@ persist: { key?, in?, sync? }    // rare full form (3 options total)
 - KEPT `sync` (intent, not derivable) and `in` (object form only).
 - Key note: the key is NOT framework-specific — it is the cross-target contract
   (same stored data under React and Solid); it is simply DERIVABLE.
+
+---
+
+## OWNER AMENDMENT 2 (2026-07-20): dedicated primitive, not a state() option — FINAL SURFACE
+
+Owner: "shouldn't it just be a storage function?" Adopted — it matches the
+language's own grain (each semantic kind is a named primitive: shared/computed/
+element are not state() options; a persisted cell is a distinct kind: external
+identity, session-outliving, pre-paint-seeded).
+
+```ts
+let theme = storage('light');                                // key derived
+let draft = storage('', { key: 'compose.draft' });           // rename-surviving
+let tab   = storage('a', { key: 'ui.tab', in: 'session' });  // full form
+// options: { key?: string, in?: 'local'|'session', sync?: boolean }
+```
+
+- Signature `storage(initial, options?)` mirrors the pinned `shared(create,
+  options?)` exactly; markless ask shrinks further: ONE new export, state()
+  untouched.
+- Flatter than the persist-option form (wrapper layer gone).
+- Compiler detection = the proven shared() pattern (import-tracked call sites ->
+  distinct record kind) — cleaner than statically analyzing an options object on
+  state().
+- Reads/writes stay ordinary assignment; composes inside shared() unchanged.
+- ALL downstream contracts unchanged (derived immediacy, read+seed script,
+  landing slot, T004b write-through, gate rules P-SEED/P-WT/P-SYNC/P-QWK) — they
+  were never coupled to surface syntax.
+- The persist: option design above is superseded by this section.
