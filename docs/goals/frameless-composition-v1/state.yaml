@@ -69,7 +69,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-composition-v1/"
     command: "npx goalbuddy board docs/goals/frameless-composition-v1"
 
-active_task: T007
+active_task: T012
 
 tasks:
   - id: T001
@@ -155,13 +155,15 @@ tasks:
   - id: T007
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "enriched-ir/2 cutover per T004 SS1: compiler /2 (ownership, new nodes, shared/handle/behavior records, module-set resolver, guard removals, fail-closed repairs) + mechanical emitter version bumps + golden regen. Critique of the LOCK must pass first; package critique mandatory."
     allowed_files: ["packages/compiler/**", "packages/frameworks/react/**", "packages/frameworks/solid/**"]
     verify: ["all v0 lanes green at merge; new contract tests (ownership, fail-closed unknown node, no-silent-loss, module-set resolver)"]
     stop_if: ["ownership attribution ambiguous — report, do not guess", "need files outside allowed_files", "pin diagnostic contradicts a T001 verdict", "verification fails twice"]
-    receipt: null
+    receipt:
+      result: done
+      summary: "P1 milestone complete through 6 crew units + full critique cycle: P1a1 compiler /2 cutover (probe-locked ownership, composition record families, fail-closed repairs, F8-stable goldens), P1b/P1c validator cutover (byte-identity proven both frameworks), P1a2 module-set resolver (locked contract, 15 tests), implementation critique REJECT (5 probe-backed findings: surviving name-map, props.children silent mis-lowering, shared silent-loss x2 paths, resolver local-child gap, validator parity) -> repair unit closed all 5 with regression tests + PM re-executed every probe, PM found + crew fixed one residual (inline chained shared access -> construct-named diagnostic, diagnose-not-synthesize per Layer A evidence). Final: node 278/278, browser 17/17+19/19, e2e 3/3 equal, F8 byte-identity, poc clean."
   - id: T008
     type: worker
     assignee: Worker
@@ -205,7 +207,7 @@ tasks:
   - id: T012
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: "OWNER-DECIDED (2026-07-20): Babel->Yuku migration BEFORE the composition emitters — port both v0 emitters + both gates to yuku-parser/yuku-analyzer/yuku-codegen, delete estree-to-babel, one reviewed golden regeneration, gate-query probe-first step (blocked-return if gate patterns cannot port — PM decides split-stack fallback), full second-model critique; all v0 lanes green at merge. Evidence: notes/yuku-parity-evaluation.md incl. PM addendum (executed binding-safe rename)."
     allowed_files: ["packages/frameworks/react/**", "packages/frameworks/solid/**", "package.json", "pnpm-workspace.yaml", "pnpm-lock.yaml"]
