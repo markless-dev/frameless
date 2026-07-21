@@ -202,6 +202,16 @@ tasks:
     verify: ["fresh clone: install + e2e (ui-kit 3/3 + composition pairs + expectations green), all lanes, test:poc"]
     stop_if: ["demo needs out-of-surface construct — trim demo", "browser-in-CLI — delegation stands", "verification fails twice"]
     receipt: null
+  - id: T012
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "OWNER-DECIDED (2026-07-20): Babel->Yuku migration BEFORE the composition emitters — port both v0 emitters + both gates to yuku-parser/yuku-analyzer/yuku-codegen, delete estree-to-babel, one reviewed golden regeneration, gate-query probe-first step (blocked-return if gate patterns cannot port — PM decides split-stack fallback), full second-model critique; all v0 lanes green at merge. Evidence: notes/yuku-parity-evaluation.md incl. PM addendum (executed binding-safe rename)."
+    allowed_files: ["packages/frameworks/react/**", "packages/frameworks/solid/**", "package.json", "pnpm-workspace.yaml", "pnpm-lock.yaml"]
+    verify: ["full node lane; both browser lanes; e2e 3/3; reviewed golden diffs; fresh-clone check (new deps)"]
+    stop_if: ["gate queries cannot port cleanly — report, do not hand-roll scopes", "semantic diff in any regenerated golden", "verification fails twice"]
+    receipt: null
   - id: T998
     type: judge
     assignee: Judge
