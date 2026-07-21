@@ -50,3 +50,25 @@ script tag somehow?" PM synthesis (for T013 to evidence, leading candidate):
 - T013 must evidence: Qwik serialized-state patching feasibility (docs/corpus),
   React seed-slot pattern vs uSES interplay, real-world anti-flash inventories,
   paint-cost data for blocking inline scripts.
+
+## API sketch (PM, owner-reviewed direction, 2026-07-20)
+
+Authored surface — an option, not a primitive; no annotations, ordinary writes:
+
+    let theme = state<'light'|'dark'>('light', { persist: { key: 'theme' } });
+
+- initial value IS the pre-storage fallback (no extra concept)
+- options minimal: { key, serialize?, deserialize?, sync? } (sync: cross-tab
+  storage-event subscription, opt-in)
+- family generalization later: persist.in: 'local'|'session'|'cookie'|'url' —
+  cookie/url are server-readable, future-proofing SSR tiering
+- compiler derives: storage-cell record, first-paint reachability per read,
+  consolidated pre-paint script per build (landing slot per target: markless
+  none-needed, React sync-read seed slot, Qwik pre-resume serialized-state
+  patch), write-through on assignment, gate policies (Qwik: never eager task)
+- integration seam (honest): compiled-library model emits the script as a build
+  artifact + CSP hash in receipts; consuming app includes it in <head> — one
+  documented manual step
+- ecosystem comparison anchoring 'why compiler-layer': next-themes (hand script +
+  suppressHydrationWarning, one hardcoded case), Qwik (no general answer),
+  Remix/RSC (routes around via cookies) — none can see the template graph.
