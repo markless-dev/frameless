@@ -121,6 +121,36 @@ not v1.
 - Order: W1a → W1b (+W1c riding) → T006 mid-critique → W2a → W2b → W2c →
   T006 full boundary critique → W4 frameless (unchanged from v1).
 
+## [v3] Confirm-pass deltas (B1/B2/B3/M12 closures)
+
+- B1 CLOSURE: the module-scope `storage(...)` call itself is lowered by the
+  public-render pass — packages/compiler/src/passes/public-render/shared.ts
+  (which owns module-scope preserved calls) and render-body.ts (which today
+  lowers only literal `state(...)`) BOTH gain storage handling so no
+  executable `storage()` call survives into output. These two files are in
+  W1a's allowed set (M12 closure). The core stub remains throw-on-execute;
+  compiled output must never retain the call — asserted by a compile test.
+- B2 CLOSURE: reachability is a named artifact — `usedStorageBindings`:
+  computed from the semantic graph's component expression/read-write
+  records (collect-expressions products) as the set of storage bindings
+  referenced by any emitted component closure; produced as part of the
+  payload-arena pass input (a small pre-filter step in payload-arena.ts,
+  which currently emits every state binding — the filter is the insertion
+  point). Both the payload cells AND the seed metadata derive from this
+  same set. Negative test: unused storage definition ⇒ absent from
+  payload, absent from seed metadata, zero driver access in the browser
+  lane.
+- B3 CLOSURE: explicit VERSION BUMP, old-decoder-visible: payloads whose
+  `storage[]` is non-empty emit `version: 2`; the current v1 decoder
+  validates the version field and rejects unknown versions (verify in
+  W1b and cite the rejection site in its receipt — if v1 decoders do NOT
+  reject unknown versions, make version validation strict first, as part
+  of W1b). Storage-free payloads remain version 1, byte-identical.
+  Capabilities array is DROPPED from the design (version bump supersedes).
+- M12 CLOSURE: W1a allowed_files += packages/compiler/src/passes/
+  public-render/shared.ts, packages/compiler/src/passes/public-render/
+  render-body.ts (and their tests).
+
 ---
 (v1 text below, superseded where marked)
 
