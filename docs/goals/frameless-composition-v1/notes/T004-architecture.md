@@ -308,3 +308,24 @@ unchanged. ADDITIONALLY: a full SS3.1+SS3.2 lowering-input completeness sweep
 against the amended schema (executed-probe verified), additive-obvious gaps fixed
 in the same unit (method bodies + write order explicitly checked for the T004b
 contract), judgment-laden gaps escalated in one batch — no more one-field bounces.
+
+## PM ADJUDICATION 5 (2026-07-20): the four escalated /2 gaps
+
+1. COMPUTED SHARED CELLS: cells gain `kind: 'state' | 'computed'`. State cells
+   require valueKind + initializer (as amended). Computed cells carry the computed
+   expression AST + their cell dependencies, NO initializer/valueKind (they are
+   derived selectors: React lowers them inside the emitted hook over subscribed
+   cells; Solid as derived arrows). Fail-closed when expression/deps uncapturable.
+2. PROVIDER PLACEMENT: NO routing record. The emitter emits the provider as an
+   exported wrapper component named from the factory scope group; composing it
+   around consumers is the consumer's EXPLICIT act (matches the calibration
+   references). Inference from export order is rejected as unsafe — recorded.
+3. FORWARDED-HANDLE LINKAGE: additive record HandleForwardRecord
+   { handleBindingId (parent-owned), edgeId, childComponentId, childHostNodeId },
+   compiler-populated from Layer A's edge element-reference (T001 proved the pin
+   records it same-module); fail-closed when the child host cannot be resolved.
+4. returnsCleanup PROVENANCE: v1 TRIM — attach must be a LITERAL function/arrow
+   (returnsCleanup statically determined by return analysis); non-literal attach
+   (imported/factory behaviors) is a construct-named fail-closed diagnostic,
+   recorded as vendor-refresh/next-tranche surface. Dossier rulings + references
+   already use literal attach.
