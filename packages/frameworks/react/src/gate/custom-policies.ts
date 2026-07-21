@@ -557,14 +557,14 @@ export function customPolicies(
 			if (
 				!node.id ||
 				!/^\p{Lu}/u.test(node.id.name) ||
-				node.params.length !== 1 ||
-				!is(node.params[0], 'ObjectPattern')
+				node.params.length > 1 ||
+				(node.params.length === 1 && !is(node.params[0], 'ObjectPattern'))
 			)
 				violations.push(
 					violation(
 						file,
 						'component-shape',
-						'Exported component must be one PascalCase function with one destructured-props parameter',
+						'Exported component must be one PascalCase function with zero parameters or one destructured-props parameter',
 						node,
 					),
 				);

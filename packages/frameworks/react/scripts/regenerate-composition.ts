@@ -7,7 +7,7 @@ import { formatEmitted } from '../src/format-emitted.ts';
 const root = resolve(import.meta.dirname, '..');
 const fixtureRoot = resolve(root, 'test/composition-fixtures');
 const outputRoot = resolve(root, 'generated-composition');
-const fixtures = [
+export const compositionFixtures = [
 	'C1-slot',
 	'C2-shared',
 	'C3-ref',
@@ -18,10 +18,22 @@ const fixtures = [
 	'C8-page-store',
 ] as const;
 
-await mkdir(outputRoot, { recursive: true });
-for (const fixture of fixtures) {
+export async function emitCompositionFixture(
+	fixture: (typeof compositionFixtures)[number],
+): Promise<string> {
 	const filename = `test/composition-fixtures/${fixture}.tsrx`;
 	const source = await readFile(resolve(fixtureRoot, `${fixture}.tsrx`), 'utf8');
 	const artifact = await buildEnrichedIr({ filename, source });
-	await writeFile(resolve(outputRoot, `${fixture}.jsx`), await formatEmitted(emit(artifact)));
+	return formatEmitted(emit(artifact));
+}
+
+export async function regenerateComposition(): Promise<void> {
+	await mkdir(outputRoot, { recursive: true });
+	for (const fixture of compositionFixtures) {
+		await writeFile(resolve(outputRoot, `${fixture}.jsx`), await emitCompositionFixture(fixture));
+	}
+}
+
+if (import.meta.main) {
+	await regenerateComposition();
 }

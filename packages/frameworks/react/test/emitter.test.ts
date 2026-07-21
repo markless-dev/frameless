@@ -4,6 +4,10 @@ import { resolve } from 'pathe';
 import { analyze } from 'yuku-analyzer';
 import { parse } from 'yuku-parser';
 import { describe, expect, test } from 'vitest';
+import {
+	compositionFixtures,
+	emitCompositionFixture,
+} from '../scripts/regenerate-composition.ts';
 import { emit, validateEnrichedIr } from '../src/emitter/index.ts';
 import { formatEmitted } from '../src/format-emitted.ts';
 
@@ -61,6 +65,14 @@ function staticAttributeValue(source: string, name: string): string {
 }
 
 describe('React structural emitter', () => {
+	for (const fixture of compositionFixtures) {
+		test(`generated-composition/${fixture}.jsx is fresh from its composition fixture`, async () => {
+			expect(
+				await readFile(resolve(root, 'generated-composition', `${fixture}.jsx`), 'utf8'),
+			).toBe(await emitCompositionFixture(fixture));
+		});
+	}
+
 	for (const [output, golden] of fixtures) {
 		test(`${output} is fresh from the compiler EnrichedIR golden`, async () => {
 			const ir = JSON.parse(
@@ -411,7 +423,7 @@ describe('React structural emitter', () => {
 			);
 			const source = emit(local);
 			expect(source).toContain('function Frame({ children })');
-			expect(source).toContain('export function Page({})');
+			expect(source).toContain('export function Page()');
 			expect(source).toContain('<Frame><strong>projected</strong></Frame>');
 			expect(source).toContain('<section>{children}</section>');
 
@@ -459,6 +471,7 @@ describe('React structural emitter', () => {
 			const propsSource = emit(props);
 			expect(propsSource).toContain('const [valueSharedValue] = useState(1)');
 			expect(propsSource).toContain('function Reader({ valueSharedValue })');
+			expect(propsSource).toContain('export function Page()');
 			expect(propsSource).toContain('<Reader valueSharedValue={valueSharedValue} />');
 			expect(propsSource).not.toContain('ValueContext');
 

@@ -2211,25 +2211,25 @@ function componentFunction(
 				context,
 			);
 			if (mapped.storage === 'signal') {
+				const elements: Array<t.Node | null> = [t.identifier(state.name)];
+				if (state.writes.length > 0)
+					elements.push(t.identifier(context.settersById.get(state.id)!));
 				body.push(
 					t.variableDeclaration('const', [
 						t.variableDeclarator(
-							t.arrayPattern([
-								t.identifier(state.name),
-								t.identifier(context.settersById.get(state.id)!),
-							]),
+							t.arrayPattern(elements),
 							t.callExpression(api(context, 'createSignal'), [initializer]),
 						),
 					]),
 				);
 			} else if (mapped.storage === 'store') {
+				const elements: Array<t.Node | null> = [t.identifier(state.name)];
+				if (state.writes.length > 0)
+					elements.push(t.identifier(context.settersById.get(state.id)!));
 				body.push(
 					t.variableDeclaration('const', [
 						t.variableDeclarator(
-							t.arrayPattern([
-								t.identifier(state.name),
-								t.identifier(context.settersById.get(state.id)!),
-							]),
+							t.arrayPattern(elements),
 							t.callExpression(api(context, 'createStore'), [initializer]),
 						),
 					]),
@@ -2283,7 +2283,7 @@ function componentFunction(
 	return t.exportNamedDeclaration(
 		t.functionDeclaration(
 			t.identifier(component.name),
-			[t.identifier(context.propsName)],
+			component.props.entries.length > 0 ? [t.identifier(context.propsName)] : [],
 			t.blockStatement(body),
 		),
 	);
@@ -2510,6 +2510,7 @@ function compositionTemplateNode(node: TemplateNode, context: CompositionContext
 		attributes.push(
 			jsxAttribute(binding.name, rewriteCompositionExpression(binding.expression, context)),
 		);
+	const attach = context.directiveNames.get(node.id);
 	const forward = context.ir.records.handleForwards.find(
 		(record) =>
 			record.childComponentId === context.component.id && record.childHostNodeId === node.id,
@@ -2524,9 +2525,7 @@ function compositionTemplateNode(node: TemplateNode, context: CompositionContext
 				entry.localName === parentHandle.handleName,
 		);
 		const propName = prop?.sourceName ?? parentHandle.handleName.split('.').at(-1)!;
-		const callback = t.arrowFunctionExpression(
-			[t.identifier('node')],
-			t.blockStatement([
+		const callbackBody: t.Statement[] = [
 				t.expressionStatement(
 					t.callExpression(member(t.identifier(context.propsName), propName), [
 						t.identifier('node'),
@@ -2542,7 +2541,16 @@ function compositionTemplateNode(node: TemplateNode, context: CompositionContext
 						),
 					]),
 				),
-			]),
+			];
+		if (attach)
+			callbackBody.push(
+				t.expressionStatement(
+					t.callExpression(t.identifier(attach), [t.identifier('node')]),
+				),
+			);
+		const callback = t.arrowFunctionExpression(
+			[t.identifier('node')],
+			t.blockStatement(callbackBody),
 		);
 		attributes.push(jsxAttribute('ref', callback));
 	} else {
@@ -2550,11 +2558,31 @@ function compositionTemplateNode(node: TemplateNode, context: CompositionContext
 			(binding) =>
 				binding.componentId === context.component.id && binding.hostNodeId === node.id,
 		);
-		if (handle && !handle.handleName.includes('.'))
-			attributes.push(jsxAttribute('ref', t.identifier(handle.handleName)));
+		if (handle && !handle.handleName.includes('.')) {
+			if (attach)
+				attributes.push(
+					jsxAttribute(
+						'ref',
+						t.arrowFunctionExpression(
+							[t.identifier('node')],
+							t.blockStatement([
+								t.expressionStatement(
+									t.assignmentExpression(
+										'=',
+										t.identifier(handle.handleName),
+										t.identifier('node'),
+									),
+								),
+								t.expressionStatement(
+									t.callExpression(t.identifier(attach), [t.identifier('node')]),
+								),
+							]),
+						),
+					),
+				);
+			else attributes.push(jsxAttribute('ref', t.identifier(handle.handleName)));
+		} else if (attach) attributes.push(jsxAttribute('ref', t.identifier(attach)));
 	}
-	const directive = context.directiveNames.get(node.id);
-	if (directive) attributes.push(jsxAttribute(`use:${directive}`, true));
 	for (const eventId of node.eventIds) {
 		const event = context.base.events.get(eventId);
 		if (!event) throw new Error(`Unknown event record: ${eventId}`);
@@ -2618,6 +2646,9 @@ function emitSharedFamily(
 	const statesById = new Map<string, StateBinding>();
 	const statesByName = new Map<string, StateBinding>();
 	const settersById = new Map<string, string>();
+	const writtenCellIds = new Set(
+		definition.methods.flatMap((method) => method.writes.map((write) => write.graphNodeId)),
+	);
 	const computedByName = new Map<string, EnrichedGraphBinding>();
 	for (const cell of definition.cells) {
 		if (cell.kind === 'state') {
@@ -2636,7 +2667,8 @@ function emitSharedFamily(
 			} as StateBinding;
 			statesById.set(state.id, state);
 			statesByName.set(state.name, state);
-			settersById.set(state.id, base.names.claim(setterBase(state.name)));
+			if (writtenCellIds.has(state.id))
+				settersById.set(state.id, base.names.claim(setterBase(state.name)));
 		} else {
 			computedByName.set(cell.name, {
 				componentId: '',
@@ -2665,13 +2697,13 @@ function emitSharedFamily(
 	for (const cell of definition.cells) {
 		if (cell.kind === 'state') {
 			const state = statesById.get(cell.graphNodeId)!;
+			const elements: Array<t.Node | null> = [t.identifier(cell.name)];
+			const setter = settersById.get(cell.graphNodeId);
+			if (setter) elements.push(t.identifier(setter));
 			body.push(
 				t.variableDeclaration('const', [
 					t.variableDeclarator(
-						t.arrayPattern([
-							t.identifier(cell.name),
-							t.identifier(settersById.get(cell.graphNodeId)!),
-						]),
+						t.arrayPattern(elements),
 						t.callExpression(
 							api(base, state.storage === 'signal' ? 'createSignal' : 'createStore'),
 							[expression(cell.initializer)],
@@ -2849,7 +2881,8 @@ function compositionComponent(
 	}
 	const settersById = new Map<string, string>();
 	for (const state of statesById.values())
-		settersById.set(state.id, base.names.claim(setterBase(state.name)));
+		if (state.writes.length > 0)
+			settersById.set(state.id, base.names.claim(setterBase(state.name)));
 	const componentBase: EmitContext = {
 		...base,
 		bindingsById: new Map(componentBindings.map((binding) => [binding.id, binding])),
@@ -2902,13 +2935,13 @@ function compositionComponent(
 		}
 		const state = local.semanticRecordIds.map((id) => statesById.get(id)).find(Boolean);
 		if (state) {
+			const elements: Array<t.Node | null> = [t.identifier(state.name)];
+			const setter = settersById.get(state.id);
+			if (setter) elements.push(t.identifier(setter));
 			body.push(
 				t.variableDeclaration('const', [
 					t.variableDeclarator(
-						t.arrayPattern([
-							t.identifier(state.name),
-							t.identifier(settersById.get(state.id)!),
-						]),
+						t.arrayPattern(elements),
 						t.callExpression(
 							api(
 								componentBase,
@@ -3175,7 +3208,10 @@ function compositionComponent(
 	body.push(t.returnStatement(expressionFromCompositionNodes(component.template, context)));
 	const declaration = t.functionDeclaration(
 		t.identifier(component.name),
-		[t.identifier(propsName)],
+		component.props.entries.length > 0 ||
+			ir.records.handleForwards.some((forward) => forward.childComponentId === component.id)
+			? [t.identifier(propsName)]
+			: [],
 		t.blockStatement(body),
 	);
 	return exportedNames.has(component.name) ? t.exportNamedDeclaration(declaration) : declaration;
@@ -3320,7 +3356,7 @@ export function emit(ir: EnrichedIR): string {
 	}
 	const settersById = new Map<string, string>();
 	for (const state of statesById.values())
-		if (state.storage !== 'local')
+		if (state.storage !== 'local' && state.writes.length > 0)
 			settersById.set(state.id, allocator.claim(setterBase(state.name)));
 	const propsBinding = ir.records.bindings.find(
 		(binding) => binding.id === component.props.graphNodeId,

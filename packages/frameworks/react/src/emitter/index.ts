@@ -2399,10 +2399,16 @@ function createStoreDeclaration(
 		]),
 	);
 	const writeNames = new Map(
-		stateCells.map((cell) => [
-			cell.graphNodeId,
-			context.names.claim(`write${cell.name[0]!.toUpperCase()}${cell.name.slice(1)}`),
-		]),
+		stateCells
+			.filter((cell) =>
+				definition.methods.some((method) =>
+					method.writes.some((write) => write.graphNodeId === cell.graphNodeId),
+				),
+			)
+			.map((cell) => [
+				cell.graphNodeId,
+				context.names.claim(`write${cell.name[0]!.toUpperCase()}${cell.name.slice(1)}`),
+			]),
 	);
 	const listenerName = (cell: { graphNodeId: string }) => listenerNames.get(cell.graphNodeId)!;
 	const versionName = (cell: { graphNodeId: string }) => versionNames.get(cell.graphNodeId)!;
@@ -2436,6 +2442,7 @@ function createStoreDeclaration(
 		);
 	}
 	for (const cell of stateCells) {
+		if (!writeNames.has(cell.graphNodeId)) continue;
 		const next = context.names.claim(`next${cell.name[0]!.toUpperCase()}${cell.name.slice(1)}`);
 		body.push(
 			t.variableDeclaration('const', [
@@ -3077,13 +3084,13 @@ function componentFunction(
 				);
 			} else {
 				usedHooks.add('useState');
+				const elements: Array<t.Node | null> = [t.identifier(state.name)];
+				if (state.writes.length > 0)
+					elements.push(t.identifier(setterFor(context, mapped)));
 				body.push(
 					t.variableDeclaration('const', [
 						t.variableDeclarator(
-							t.arrayPattern([
-								t.identifier(state.name),
-								t.identifier(setterFor(context, mapped)),
-							]),
+							t.arrayPattern(elements),
 							t.callExpression(t.identifier(hookName(context, 'useState')), [
 								useStateInitializer(initializer),
 							]),
@@ -3147,7 +3154,7 @@ function componentFunction(
 	body.push(t.returnStatement(rendered));
 	const fn = t.functionDeclaration(
 		t.identifier(component.name),
-		[t.objectPattern(props)],
+		props.length > 0 ? [t.objectPattern(props)] : [],
 		t.blockStatement(body),
 	);
 	return fn;
@@ -3409,7 +3416,7 @@ export function emit(ir: EnrichedIR): string {
 			throw new Error(`Emitted React module failed hook use verification for ${hook}`);
 	}
 	for (const state of statesById.values()) {
-		if (state.storage !== 'state') continue;
+		if (state.storage !== 'state' || state.writes.length === 0) continue;
 		const name = setterFor(sharedContext, state);
 		let setterSymbol: ReturnType<typeof verified.symbolOf> = null;
 		verified.walk({

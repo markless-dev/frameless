@@ -757,14 +757,14 @@ export function customPolicies(
 			if (
 				!node.id ||
 				!/^\p{Lu}/u.test(node.id.name) ||
-				node.params.length !== 1 ||
-				!is(node.params[0], 'Identifier')
+				node.params.length > 1 ||
+				(node.params.length === 1 && !is(node.params[0], 'Identifier'))
 			)
 				violations.push(
 					violation(
 						file,
 						'component-shape',
-						'Exported component must be one PascalCase function with one props identifier',
+						'Exported component must be one PascalCase function with zero parameters or one props identifier',
 						node,
 					),
 				);

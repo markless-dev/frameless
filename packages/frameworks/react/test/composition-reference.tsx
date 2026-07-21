@@ -133,7 +133,7 @@ function SharedProvider({ children, variant }: { children: ReactNode; variant?: 
 }
 
 function Frame({ children }: { children: ReactNode }) {
-	return <section data-frame>{children}</section>;
+	return <section data-frame="">{children}</section>;
 }
 
 function SlotPage({
@@ -141,7 +141,7 @@ function SlotPage({
 }: {
 	variant?: 'reference' | 'omit' | 'duplicate' | 'wrapper';
 }) {
-	const projected = <strong data-projected-node>Projected composition</strong>;
+	const projected = <strong data-projected-node="">Projected composition</strong>;
 	return (
 		<Frame>
 			{variant !== 'omit' && (variant === 'wrapper' ? <div>{projected}</div> : projected)}
@@ -167,7 +167,7 @@ function Incrementer() {
 function Reader() {
 	const history = useCompositionShared('history');
 	const count = useCompositionShared('count');
-	return <output data-shared-reader>{`${history}|${count}`}</output>;
+	return <output data-shared-reader="">{`${history}|${count}`}</output>;
 }
 
 function SharedAudit() {
@@ -184,7 +184,7 @@ function SharedAudit() {
 		[store],
 	);
 	return (
-		<output data-shared-audit ref={attachAudit}>
+		<output data-shared-audit="" ref={attachAudit}>
 			pending
 		</output>
 	);
@@ -230,7 +230,7 @@ function FocusField({
 }) {
 	return (
 		<input
-			data-focus-target
+			data-focus-target=""
 			ref={(node) => {
 				input(node);
 				return () => {
@@ -258,7 +258,7 @@ function FocusPage({
 			if (!externalWitness.current) {
 				const witness = document.createElement('section');
 				witness.dataset.handleWitness = '';
-				witness.innerHTML = '<output data-handle-state></output>';
+				witness.innerHTML = '<output data-handle-state=""></output>';
 				document.body.append(witness);
 				externalWitness.current = witness;
 			}
@@ -269,8 +269,8 @@ function FocusPage({
 		if (externalState) externalState.textContent = state;
 	};
 	return (
-		<section data-handle-witness>
-			<output data-handle-state />
+		<section data-handle-witness="">
+			<output data-handle-state="" />
 			<FocusField input={setInput} omitClear={omitClear} />
 			<button
 				data-action="focus-composed"
@@ -301,7 +301,7 @@ function CleanupPage({ variant = 'reference' }: { variant?: CleanupVariant }) {
 				const witness = document.createElement('section');
 				witness.dataset.compositionWitness = '';
 				witness.innerHTML =
-					'<output data-composition-cleanup></output><output data-behavior-log></output>';
+					'<output data-composition-cleanup=""></output><output data-behavior-log=""></output>';
 				document.body.append(witness);
 				externalWitness.current = witness;
 			}
@@ -328,9 +328,9 @@ function CleanupPage({ variant = 'reference' }: { variant?: CleanupVariant }) {
 		[variant === 'reinstall-omit' ? null : behaviorInput, variant],
 	);
 	return (
-		<section data-composition-witness ref={attachCleanupWitness}>
-			<output data-composition-cleanup />
-			<output data-behavior-log />
+		<section data-composition-witness="" ref={attachCleanupWitness}>
+			<output data-composition-cleanup="" />
+			<output data-behavior-log="" />
 			<button data-action="change-behavior-input" onClick={() => setBehaviorInput('two')}>
 				Change behavior input
 			</button>
@@ -412,7 +412,7 @@ export function ReactPageScopeReference() {
 }
 
 export function ReactPropsTierReference() {
-	return <output data-tier-props>5</output>;
+	return <output data-tier-props="">5</output>;
 }
 
 export function ReactScalarContextTierReference() {
@@ -460,7 +460,7 @@ export function ReactPageStoreTierReference() {
 			>
 				Increment
 			</button>
-			<output data-tier-page>{count}</output>
+			<output data-tier-page="">{count}</output>
 		</>
 	);
 }

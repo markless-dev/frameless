@@ -34,7 +34,7 @@ Analyzer input dispatch uses native input/textarea value setters so React's valu
 | Branch / empty arm | T002 ruling 7 | Conditional expressions with an explicit `null` arm; hooks precede early returns. |
 | Ref surface | T002 ruling 8 | React 19 ref-as-prop policy; generated files never use `forwardRef` or string refs. |
 | Leaf control event | T002 ruling 9 | `value`/`checked` with `onChange`, reading `event.target`; `onInput` is never emitted. |
-| Component/module shape | T002 ruling 10 | One named exported PascalCase function, destructured props, `.jsx`, automatic JSX runtime. |
+| Component/module shape | T002 ruling 10 | One named exported PascalCase function, destructured props only when records contain prop reads, `.jsx`, automatic JSX runtime. |
 | Analyzer lifecycle | T002 ruling 11 | Awaited async `act` for mount, dispatch, flush, and unmount. |
 
 ## Analyzer normalization inventory
@@ -57,6 +57,11 @@ directive/import bypasses, and authored-event `preventDefault`.
 checked-in EnrichedIR goldens. `pnpm --dir packages/frameworks/react regenerate` refreshes them;
 the node suite compares every byte against a formatted fresh `emit(ir)` result and checks that
 neither the emitter nor regeneration reaches `.tsrx`, Markless, or TSRX runtime APIs.
+
+`generated-composition/*.jsx` is also checked in. The node suite rebuilds every file through the
+composition regeneration path and byte-compares it with the committed golden. After composition
+fixtures, compiler records, or emitter behavior change, refresh these files with
+`pnpm --dir packages/frameworks/react regenerate:composition` and review the resulting diff.
 
 ## Conventionality evidence
 

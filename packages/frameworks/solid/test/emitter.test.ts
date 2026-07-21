@@ -4,6 +4,10 @@ import { resolve } from 'pathe';
 import { parse } from 'yuku-parser';
 import { analyze } from 'yuku-analyzer';
 import { describe, expect, test } from 'vitest';
+import {
+	compositionFixtures,
+	emitCompositionFixture,
+} from '../scripts/regenerate-composition.ts';
 import { emit, validateEnrichedIr } from '../src/emitter/index.ts';
 import { formatEmitted } from '../src/format-emitted.ts';
 import { checkSources } from '../src/gate/index.ts';
@@ -74,6 +78,14 @@ function addElementsToEmptyBranchArms(value: unknown): void {
 }
 
 describe('Solid structural emitter', () => {
+	for (const fixture of compositionFixtures) {
+		test(`generated-composition/${fixture}.jsx is fresh from its composition fixture`, async () => {
+			expect(
+				await readFile(resolve(root, 'generated-composition', `${fixture}.jsx`), 'utf8'),
+			).toBe(await emitCompositionFixture(fixture));
+		});
+	}
+
 	for (const [output, goldenName] of fixtures) {
 		test(`${output} is fresh from the compiler EnrichedIR golden`, async () => {
 			const ir = await golden(goldenName);
@@ -124,7 +136,7 @@ describe('Solid structural emitter', () => {
 			);
 			const source = emit(local);
 			expect(source).toMatch(/function Frame\(props\d*\)/);
-			expect(source).toMatch(/export function Page\(props\d*\)/);
+			expect(source).toContain('export function Page()');
 			expect(source).toContain('<Frame><strong>projected</strong></Frame>');
 			expect(source).toMatch(/<section>\{props\d*\.children\}<\/section>/);
 			const external = await build(
@@ -143,6 +155,8 @@ describe('Solid structural emitter', () => {
 			expect(source).toContain('const CounterContext = createContext()');
 			expect(source).toContain('function createCounterShared()');
 			expect(source).toContain('const double = () =>');
+			expect(source).toMatch(/const \[count, setCount\d*\] = createSignal\(0\)/);
+			expect(source).toMatch(/const \[pair\] = createStore\(\{ value: 1 \}\)/);
 			expect(source).toMatch(/export function CounterProvider\(props\d*\)/);
 			expect(source).toContain('function useCounter()');
 			expect(source).not.toContain('createMemo');
@@ -168,7 +182,7 @@ describe('Solid structural emitter', () => {
 				`import { state } from "@markless/core"; export function Page() @{ let value = state("a"); <div attach={(node) => { node.dataset.value = value; return () => { delete node.dataset.value; }; }} /> }`,
 			);
 			const attachSource = emit(attach);
-			expect(attachSource).toContain('use:attachHost');
+			expect(attachSource).toMatch(/ref=\{attachHost\d*\}/);
 			expect(attachSource).toMatch(/import \{[^}]*onMount[^}]*\} from 'solid-js'/);
 			expect(attachSource).toMatch(
 				/const attachHost\d* = \(node\) => \{\s*onMount\(\(\) => \{/,
@@ -311,7 +325,7 @@ describe('Solid structural emitter', () => {
 				'src/directive-collision.tsrx',
 				`export function DirectiveCollision() @{ const attachHost = 1; <div attach={(node) => { node.dataset.ready = "yes"; }} /> }`,
 			);
-			expect(emit(directive)).toContain('use:attachHost2');
+			expect(emit(directive)).toContain('ref={attachHost2}');
 		});
 
 		test('allocates every shared, behavior-capture, cleanup, and lifecycle collision family', async () => {

@@ -29,7 +29,7 @@ from `@frameless/solid/adapter`; that subpath does not import the node-only emit
 | Checkbox control            | 7           | `checked` plus `onChange`.                                                                                                                                         |
 | Props and once-local        | 8           | Reactive reads stay `props.path`; prop-reading setup initializers and once-captures use `untrack(() => ...)`.                                                      |
 | Invisible scalar cell       | 9           | Plain component-local `let`; it is never rendered.                                                                                                                 |
-| Component/module            | 10          | One named exported PascalCase function, one props identifier, `.jsx`, `class`/`for`, and only dossier-allowed Solid imports.                                       |
+| Component/module            | 10          | One named exported PascalCase function, one props identifier only when records contain prop reads, `.jsx`, `class`/`for`, and only dossier-allowed Solid imports. |
 | Forward ledger              | 11          | v0 retains the recorded v2 migration debt: For child accessors, attr namespace removal, store API moves, microtask batching recalibration, and adapter relocation. |
 
 ## Fail-closed boundary and binding safety
@@ -80,6 +80,11 @@ the compiler goldens. `pnpm --dir packages/frameworks/solid regenerate` refreshe
 nonblank component LOC is primary; structural ESTree node count is secondary. S2/S3 reference bodies include
 calibration mutant branches, so these comparisons are intentionally conservative.
 
+`generated-composition/*.jsx` is also checked in. The node suite rebuilds every file through the
+composition regeneration path and byte-compares it with the committed golden. After composition
+fixtures, compiler records, or emitter behavior change, refresh these files with
+`pnpm --dir packages/frameworks/solid regenerate:composition` and review the resulting diff.
+
 | Scenario | Reference physical LOC | Emitted physical LOC | LOC ratio | Reference AST nodes | Emitted AST nodes | Node ratio |
 | -------- | ---------------------: | -------------------: | --------: | ------------------: | ----------------: | ---------: |
 | S1       |                     35 |                   29 |     0.83x |                 166 |               144 |      0.87x |
@@ -105,8 +110,8 @@ This is production package code for the proven fixture families, not proof of ar
 TSRX coverage. It supports the validated host/text/branch/keyed-repeat vocabulary, scalar signals,
 keyed collection stores, the observed member-write shape, synchronous handlers, and the P4a
 composition emitter surface: multiple components, cross-TSRX JSX imports, opaque default children,
-scope-switched shared cells/actions, direct and same-module forwarded handles, and literal attach
-directives with tracked cleanup. The composition gate and emitted browser smoke remain P4b work.
+scope-switched shared cells/actions, direct and same-module forwarded handles, and attach ref
+callbacks with tracked cleanup. The composition gate and emitted browser smoke remain P4b work.
 It does not claim arbitrary object stores, arbitrary keys or immutable row replacement, prop
 updates beyond calibration, async behavior methods, named slots, cross-file shared state or handle
 forwarding, custom components beyond recorded references, SVG/MathML, accessibility, SSR/hydration/resume, HMR,

@@ -416,7 +416,7 @@ describe('Solid dossier gate', async () => {
 		],
 		[
 			'authored attach attribute leak',
-			refs.replace('use:attachHost', 'attach={attachHost}'),
+			refs.replace('ref={(node)', 'attach={(node)'),
 			'S-RF2',
 		],
 		[
@@ -427,7 +427,7 @@ describe('Solid dossier gate', async () => {
 		['unguarded handle call', refs.replace('input?.focus()', 'input.focus()'), 'S-RF4'],
 		[
 			'dropped directive consumption',
-			attach.replace(' use:attachHost', ''),
+			attach.replace(' ref={attachHost}', ''),
 			'S-RF5',
 			compositionArtifacts.get('C4-attach'),
 		],
