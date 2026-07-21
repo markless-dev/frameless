@@ -131,3 +131,74 @@ Qwik v2 serialized-state mechanics; inline-deserializer safety policy; CSP
 hash-vs-nonce practice; paint-cost budget data for the consolidated script;
 storage-event edge cases inventory. The web research pass that died must be
 re-run (crew scout or direct search — NOT workflows) before the emitter packet.
+
+---
+
+## EVIDENCE PASS (2026-07-20, PM-executed: local qwik build/v2 corpus + web) — owed items closed
+
+1. QWIK V2 (decisive, from /Users/jacksm5pro/dev/open-source/qwik @ build/v2):
+   serialization.md states restore is LAZY BY DESIGN ("To avoid blocking the main
+   thread on wake, we lazily restore the roots... a proxy deserializes properties
+   on demand"); state ships in `<script type="qwik/state">`; and v2 has a NATIVE
+   state-PATCH-script mechanism (process-segment-state.ts, QStatePatchAttrSelector
+   — experimental/suspense-gated today). RULING: seed-slot-preferring reads are
+   cleanly safe (nothing is deserialized before first access, and our script runs
+   pre-paint, long before any interaction); the native patch-script channel is the
+   eventual first-class landing once stable. Visible task: never needed, confirmed
+   at the architecture level.
+2. PRIOR ART (next-themes, verified): inline blocking head script + React
+   suppressHydrationWarning are a matched pair for the SSR case; script accepts a
+   CSP nonce and wraps in silent try/catch. Confirms our script rules (silent,
+   never-throw) and confirms the mismatch problem is SSR-only — our CSR v1 dodges
+   it entirely by seeding state instead of patching DOM.
+3. SCARS ADOPTED INTO THE API:
+   - zustand persist: version/migrate exists because schema drift breaks apps;
+     stale persisted closures broke prod deploys. -> add `version?: number`,
+     implemented as key suffix (`<pkg>:<key>@v<N>`): a bump ORPHANS old data =
+     drift-to-initial by construction, zero migration machinery in v1 (recorded
+     boundary; migrate hooks are a future option that the envelope-free format
+     does not preclude).
+   - jotai atomWithStorage: getOnInit defaults FALSE, so SPA first renders show
+     the initial instead of the stored value — the exact bug class the pre-paint
+     seed abolishes (our reads are always stored-value-first with no SSR cost in
+     CSR).
+4. CSP (web.dev strict-csp, MDN, OWASP): hashes suit stable build-generated
+   scripts; nonces suit per-request content. Ours is stable per build -> sha256 in
+   the build receipt (already specified) PLUS the emitted snippet documents a
+   nonce attribute passthrough for apps on nonce-based CSP. Both policies work
+   with 'strict-dynamic'.
+5. STORAGE EVENT (MDN, verified): does NOT fire in the writing tab (by spec);
+   sessionStorage's event never reaches other tabs. -> API rule: `sync: true`
+   with `in: 'session'` is a contradiction and FAILS CLOSED at compile time;
+   sync's same-tab consistency needs no event (the writing tab already applied
+   the write through the store).
+
+Sources: qwik build/v2 serialization.md + process-segment-state.ts (local corpus);
+https://github.com/pacocoursey/next-themes; https://nextjs.org/docs/app/guides/preventing-flash-before-hydration;
+https://zustand.docs.pmnd.rs/reference/integrations/persisting-store-data;
+https://github.com/pmndrs/zustand/discussions/2556; https://jotai.org/docs/utilities/storage;
+https://github.com/pmndrs/jotai/issues/2240; https://web.dev/articles/strict-csp;
+https://developer.mozilla.org/en-US/docs/Web/API/Window/storage_event
+
+## FINAL API (v1, evidence-complete)
+
+```ts
+let theme = state<'light' | 'dark'>('light', {
+	persist: {
+		key: 'app.theme',            // required; fullKey = <pkg>:<key>[@v<version>]
+		in?: 'local' | 'session',    // default 'local'
+		version?: number,            // key-suffix orphaning; drift -> initial
+		serialize?: (v) => string,   // default JSON.stringify
+		deserialize?: (raw) => v,    // default JSON.parse; throw -> initial
+		sync?: boolean,              // default false; REJECTED with in:'session'
+	},
+});
+```
+
+Everything else unchanged from the decision above: derived immediacy (render read
+-> consolidated read+seed pre-paint script; handler-only -> no script), landing
+slot `window.__FRAMELESS_STATE__[fullKey]`, authored initial as the universal
+fallback, write-through in the post-method notification phase, per-target
+lowerings (React/Solid seed-read; markless payload channel; Qwik seed-preferring
+reads now CORPUS-VERIFIED), gate rules P-SEED1/2, P-WT1, P-SYNC1 (+ new
+P-SYNC2: reject sync+session), P-QWK1. T013 evidence obligations: CLOSED.
