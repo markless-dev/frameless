@@ -14,3 +14,6 @@ demos/ui-kit/dist/
 demos/ui-kit/traces/
 demos/ui-kit/receipts/
 .claude/worktrees/
+
+# GoalBuddy board viewers (generated tooling, not product)
+.goalbuddy-board/
