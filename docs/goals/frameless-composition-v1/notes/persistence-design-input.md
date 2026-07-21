@@ -72,3 +72,26 @@ Authored surface — an option, not a primitive; no annotations, ordinary writes
 - ecosystem comparison anchoring 'why compiler-layer': next-themes (hand script +
   suppressHydrationWarning, one hardcoded case), Qwik (no general answer),
   Remix/RSC (routes around via cookies) — none can see the template graph.
+
+## OWNER-CONFIRMED DIRECTION (2026-07-20, ~9:55pm): the persistence API is settled in shape
+
+Owner, verbatim intent: the framework needs a persistence API; compiling to
+Qwik/React/etc., localStorage access ON RENDER compiles to an inline script — the
+initial state is already known — and THE REST IS DONE FROM THE FRAMEWORK.
+
+Locked split (supersedes 'candidate' status):
+- RULE (v1, owner's simplification adopted over reachability tiers): any RENDER
+  access -> consolidated pre-paint script (read + seed ONLY); any handler access
+  -> plain runtime read. Uniform no-flash semantics; reachability analysis is a
+  future size optimization if receipts show need, not day-one complexity.
+- Script = closed-form compile artifact (keys, authored-initial fallbacks,
+  landing slots statically known). Framework runtime owns everything after the
+  seed: render from seeded value, ordinary-assignment write-through, opt-in sync.
+- Division of labor across repos: markless only ACCEPTS + RECORDS
+  persist:{key,...} on state() (small language addition behind the fixing-board
+  gate); Frameless owns script generation, landing slots, write-through, gates.
+T013 dossier now evidences SPECIFICS (not candidates): corrupted-storage fallback
+(never throw pre-paint), key namespacing across compiled libraries, per-target
+seed-slot contract, write-through timing vs the notification-atomic store
+contract, script-artifact seam (head include + CSP hash in build receipts), Qwik
+serialized-state patch mechanics.
