@@ -1,0 +1,103 @@
+version: 2
+
+goal:
+  slug: storage-poc
+  title: "POC of storage() across Angular, React, Svelte, Vue"
+  status: active
+  charter: goal.md
+  tranche: "Build a hand-authored runtime POC of the recommended storage() contract (cell + seed script + landing slot + per-framework adapter) in a fresh git worktree, prove it with one shared browser assertion set executed green in all four frameworks, and audit the evidence against the original ask — WITHOUT presenting POC success as API ratification."
+  oracle:
+    signal: "One runner output showing the shared assertion table green per framework (seed-before-first-paint + no-flash, zero extra driver reads via landing slot, reactive write-back + persistence round-trip, inert import) for angular, react, svelte, vue."
+    cadence: "at each framework-pair receipt and at the final audit"
+    final_proof: "Final audit maps the green (or honestly-blocked) per-framework evidence to the original ask; full_outcome_complete requires executed browser proof, not code that merely compiles."
+  intake:
+    original_request: "ok I want you to make a POC of the storage function across several different frameworks, angular, react, svelte, vue, and see if it works. Do this in a new git worktree"
+    interpreted_outcome: "Working POC of the recommended storage() runtime contract in Angular, React, Svelte, and Vue with executed browser evidence per framework, built in a new dedicated git worktree."
+    input_shape: specific
+    audience: "owner (Jack) — evidence feeding the still-open storage-tradeoff API decision"
+    authority: requested
+    proof_type: demo
+    completion_proof: "Shared assertion set executed green in all four frameworks (or 3 green + one honest specific blocked receipt), receipted with runner output; POC committed on the goal worktree branch."
+    likely_misfire: "Treating POC success as API ratification (owner has ratified nothing); scope inflation into compiler/emitter work; hand-waving Angular instead of executing or honestly blocking it."
+    existing_plan_facts: "Contract + harness are design inputs from docs/goals/storage-tradeoff/notes/ (T003 fallback-then-patch, T008 seed-ordering probe harness: playwright-core + cached Chromium hs-1228 + esbuild, T009 SSR shape). Locally available deps proven: react@19.2.7 (oxc-tsrx), esbuild (react-to-qwik); vue/svelte/@angular availability to be verified in T001. Owner directive: new git worktree."
+    non_goals:
+      - "Compiler/emitter integration (runtime POC only this tranche)"
+      - "Shipping storage() into product packages"
+      - "API ratification — POC is evidence for the owner's decision, not the decision"
+      - "markless repo changes (read-only)"
+
+policies:
+  one_active_task: true
+  parallel_workers: "crew two-wide only with disjoint file contracts (framework pairs are disjoint by construction)"
+  max_consecutive_tiny_tasks: 2
+
+agents:
+  scout: installed
+  worker: installed
+  judge: installed
+
+active_task: T001
+
+tasks:
+  - id: T001
+    type: pm
+    assignee: PM
+    status: active
+    reasoning_hint: medium
+    objective: "Stage the goal: create the fresh git worktree from main (owner directive), cross-link this commission as the owner's named gap on the storage-tradeoff board, verify local availability of vue/svelte/@angular packages (PM installs with network into the POC workspace if absent — never inside crew sandboxes), and scaffold the shared POC skeleton: neutral-named core (storage cell + seed-script generator + landing-slot handshake, ported from the T008/T009 probe patterns) plus the shared browser assertion runner, proven by executing the runner against a bare no-framework page."
+    expected_output:
+      - "Worktree path + branch name"
+      - "Dependency inventory (found locally vs installed)"
+      - "Shared core + runner committed; runner executes green on the bare page"
+    receipt: null
+  - id: T002
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "React + Vue adapters: idiomatic cell bindings (React hook, Vue ref) over the shared core, one demo page each, wired into the shared assertion runner; both frameworks green on the full assertion set. Crew dispatch two-wide (disjoint adapter dirs) or one unit if sizing says under ~15min each."
+    allowed_files:
+      - "poc/ (goal worktree) — react/ and vue/ adapter dirs + runner registration"
+    verify:
+      - "shared runner: react green, vue green (all 4 assertions each)"
+    stop_if:
+      - "Need changes to shared core contract (escalate to PM instead)"
+      - "Verification fails twice on the same assertion"
+    receipt: null
+  - id: T003
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Svelte + Angular adapters: idiomatic cell bindings (Svelte store/rune, Angular signal with zoneless standalone bootstrap) over the shared core, one demo page each, wired into the shared runner; both green on the full assertion set. Angular is the named high-risk leg: if its build tooling cannot be made to work without the CLI within the slice, return blocked with the exact obstacle rather than a degraded fake."
+    allowed_files:
+      - "poc/ (goal worktree) — svelte/ and angular/ adapter dirs + runner registration"
+    verify:
+      - "shared runner: svelte green, angular green (all 4 assertions each)"
+    stop_if:
+      - "Need changes to shared core contract (escalate to PM instead)"
+      - "Angular requires a fundamentally different harness (blocked receipt with specifics)"
+      - "Verification fails twice on the same assertion"
+    receipt: null
+  - id: T004
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Cross-framework audit: same contract, same assertions, all four frameworks — verify the runner output is real (executed, not mocked), the shared core wasn't forked per framework, per-framework deviations are named honestly, and the receipts keep SUGGESTION framing (POC success is evidence, not ratification). Name what the POC does and does not prove for the storage-tradeoff decision."
+    receipt: null
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Final audit: does the executed evidence satisfy the original ask ('POC across angular, react, svelte, vue, and see if it works... in a new git worktree')? full_outcome_complete requires executed browser proof per framework (or honest blocked receipt), POC committed on the goal worktree branch, and the storage-tradeoff cross-link recorded."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "per-framework works/blocked verdict"
+    receipt: null
+
+checks:
+  dirty_fingerprint: "board prepped on worktree-persistence-api-note; POC executes in its own fresh worktree per owner directive"
+  last_verification: null
