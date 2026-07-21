@@ -8,7 +8,7 @@ goal:
   slug: "frameless-composition-v1"
   kind: specific
   tranche: "Ship the composition surface on the proven v0 pipeline: children/slots (cross-file composition), shared() lowered idiomatically per framework, refs — dossiers first, emitters implementing them, gates enforcing them, cross-target equivalence receipts covering composition scenarios, fresh-checkout command still green."
-  status: active
+  status: complete
   oracle:
     signal: "From a fresh checkout, the documented command compiles a multi-component demo TSRX library (children/slots, shared() state across components, refs) into React 19 and Solid packages passing each gate, with green cross-target equivalence receipts in headless Chromium whose scenarios exercise composition (slot rendering, shared-state propagation across boundaries, ref-driven focus); every v0 product suite and poc evidence suite stays green."
     cadence: "after each Worker package and at final audit"
@@ -69,7 +69,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-composition-v1/"
     command: "npx goalbuddy board docs/goals/frameless-composition-v1"
 
-active_task: T999
+active_task: null
 
 tasks:
   - id: T001
@@ -230,10 +230,12 @@ tasks:
   - id: T013
     type: scout
     assignee: Scout
-    status: queued
+    status: done
     reasoning_hint: medium
     objective: "Persistence/external-state design dossier (owner-commissioned, read-only, may run parallel to any write package): API-shape exploration for markless storage-backed state (localStorage family) bound by notes/persistence-design-input.md — needed-at tiers, record shape, per-target lowering evidence (React uSES/getSnapshot patterns, Solid, markless chunk-wake, QWIK constraint: no eager visible task — cite Qwik docs), first-paint anti-flash technique inventory, SSR boundary honesty. Output feeds the markless language tranche when the fixing board closes."
-    receipt: null
+    receipt:
+      result: done
+      summary: "Carried to the successor board per T999: the owner's research fork (storage-API session) owns the persistence dossier; binding inputs live in notes/persistence-design-input.md."
   - id: T998
     type: judge
     assignee: Judge
@@ -247,7 +249,7 @@ tasks:
   - id: T999
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Final audit: fresh-checkout documented command over the composition demo, cross-target receipts incl. composition scenarios, all v0 + poc suites green, misfires audited; decide full_outcome_complete."
     expected_output:
@@ -255,12 +257,20 @@ tasks:
       - "full_outcome_complete: true | false"
       - "missing evidence"
       - "next task if not complete"
-    receipt: null
+    receipt:
+      result: done
+      decision: complete
+      full_outcome_complete: true
+      summary: "FINAL AUDIT COMPLETE (independent Judge fresh-clone re-execution at bc870fc after the first run caught two fresh-checkout gaps, both repaired): pnpm install/check/build clean; documented command pnpm e2e PASS — ui-kit 3/3 + composition-kit 4/4 cross-framework pairs behaviorally EQUAL in headless Chromium, both frameless-receipts/1 verdict pass; node 469/469; react-browser 45/45; solid-browser 44/44; test:poc all green; 16 composition goldens tracked, zero manual steps. Delta review confined to the repairs + record-driven emitted-quality pass; prior clean findings (misfires, board coherence, receipts honesty) carry forward. CLOSING CAVEATS: (1) scripted-scenario composition scope (C1-C8 families); (2) vendored markless 0.1.1 with three vendor-gated constructs recorded (cross-file shared, capture slots, cross-module ref forwarding); (3) Solid 1.8.22 fallback under the beta.9 contract; (4) Yuku 0.7.0 pins with re-evaluation trigger; (5) behavioral-not-structural cross-target principle; (6) T013 persistence scout carried to the successor board (owner research fork); (7) markless repo untouched by this goal — dirty files attributed to the owner fixing board."
 
 checks:
-  dirty_fingerprint: "clean at 8db86c1 (prep only)"
+  dirty_fingerprint: "clean at bc870fc + closing board edits"
   last_verification:
     result: pass
-    task: null
+    task: T999
     commands:
-      - "carried from frameless-product-v0 T999: fresh clone green across all lanes at 860db55"
+      - "fresh clone @bc870fc: pnpm install (0), pnpm e2e (ui-kit 3/3 + composition 4/4 pairs equal, receipts pass)"
+      - "pnpm check (0), pnpm build (0), pnpm test (469/469)"
+      - "react-browser 45/45, solid-browser 44/44"
+      - "pnpm test:poc (all green)"
+      - "judge-independent re-execution; full_outcome_complete: true"
