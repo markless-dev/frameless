@@ -6,6 +6,8 @@ export type ArrowFunctionExpression = any;
 export type AssignmentPattern = any;
 export type ExportNamedDeclaration = any;
 export type ExpressionStatement = any;
+export type FunctionDeclaration = any;
+export type IfStatement = any;
 export type JSXAttribute = any;
 export type JSXElement = any;
 export type JSXExpressionContainer = any;
@@ -77,6 +79,14 @@ export const binaryExpression = (operator: string, left: any, right: any): any =
 	node('BinaryExpression', { operator, left, right });
 export const conditionalExpression = (test: any, consequent: any, alternate: any): any =>
 	node('ConditionalExpression', { test, consequent, alternate });
+export const logicalExpression = (operator: string, left: any, right: any): any =>
+	node('LogicalExpression', { operator, left, right });
+export const unaryExpression = (operator: string, argument: any): any =>
+	node('UnaryExpression', { operator, argument, prefix: true });
+export const updateExpression = (operator: string, argument: any, prefix = false): any =>
+	node('UpdateExpression', { operator, argument, prefix });
+export const newExpression = (callee: any, args: any[]): any =>
+	node('NewExpression', { callee, arguments: args });
 export const returnStatement = (argument: any): any => node('ReturnStatement', { argument });
 export const ifStatement = (test: any, consequent: any): any =>
 	node('IfStatement', { test, consequent, alternate: null });
@@ -91,8 +101,18 @@ export const functionDeclaration = (id: any, params: any[], body: any): any =>
 	});
 export const exportNamedDeclaration = (declaration: any): any =>
 	node('ExportNamedDeclaration', { declaration, specifiers: [], source: null });
+export const exportDefaultDeclaration = (declaration: any): any =>
+	node('ExportDefaultDeclaration', { declaration });
+export const exportSpecifier = (local: any, exported: any): any =>
+	node('ExportSpecifier', { local, exported, exportKind: 'value' });
+export const exportNamedSpecifiers = (specifiers: any[]): any =>
+	node('ExportNamedDeclaration', { declaration: null, specifiers, source: null });
 export const importSpecifier = (local: any, imported: any): any =>
 	node('ImportSpecifier', { local, imported, importKind: 'value' });
+export const importDefaultSpecifier = (local: any): any =>
+	node('ImportDefaultSpecifier', { local });
+export const importNamespaceSpecifier = (local: any): any =>
+	node('ImportNamespaceSpecifier', { local });
 export const importDeclaration = (specifiers: any[], source: any): any =>
 	node('ImportDeclaration', { specifiers, source, importKind: 'value' });
 export const program = (body: any[]): any => node('Program', { body, sourceType: 'module' });

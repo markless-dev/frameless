@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import type { EnrichedIR } from '@frameless/compiler';
+import { buildEnrichedIr, type EnrichedIR } from '@frameless/compiler';
 import { resolve } from 'pathe';
 import { analyze } from 'yuku-analyzer';
 import { parse } from 'yuku-parser';
@@ -380,8 +380,217 @@ describe('React structural emitter', () => {
 		);
 	});
 
+	describe('frameless-enriched-ir/2 composition emission', () => {
+		const build = (filename: string, source: string) => buildEnrichedIr({ filename, source });
+
+		test('emits every local/exported component, nested JSX, slots, and generated-extension imports', async () => {
+			const local = await build(
+				'src/composition.tsrx',
+				`function Frame({ children }) @{ <section>{children}</section> }
+				export function Page() @{ <Frame><strong>projected</strong></Frame> }`,
+			);
+			const source = emit(local);
+			expect(source).toContain('function Frame({ children })');
+			expect(source).toContain('export function Page({})');
+			expect(source).toContain('<Frame><strong>projected</strong></Frame>');
+			expect(source).toContain('<section>{children}</section>');
+
+			const external = await build(
+				'src/parent.tsrx',
+				`import { Child } from "./child.tsrx";
+				export function Parent() @{ <Child value={1}><span>nested</span></Child> }`,
+			);
+			expect(emit(external)).toContain("import { Child } from './child.jsx'");
+		});
+
+		test('emits the authored hook and notification-atomic per-cell store tier', async () => {
+			const ir = await build(
+				'src/shared.tsrx',
+				`import { shared, state } from "@markless/core";
+				export const useCounter = shared(() => { let count = state(0); let status = state("ready"); return { count, status, increment() { count++; status = "updated"; } }; }, { scope: "container" });
+				export function Counter() @{ const counter = useCounter(); <button onClick={() => counter.increment()}>{counter.count}</button> }`,
+			);
+			const source = emit(ir);
+			expect(source).toContain('function createCounterStore()');
+			expect(source).toContain('function useCounter(cell)');
+			expect(source).toContain('export function CounterProvider({ children })');
+			expect(source).toContain('Object.is(count, nextCount)');
+			expect(source).toContain("changed.add('count')");
+			expect(source.indexOf('writeCount(count + 1, changed)')).toBeLessThan(
+				source.indexOf("writeStatus('updated', changed)"),
+			);
+			expect(source.indexOf("writeStatus('updated', changed)")).toBeLessThan(
+				source.indexOf('for (const changedCell of changed)'),
+			);
+			expect(source).toContain('countVersion++');
+			expect(source).toContain('countSnapshot = count');
+			expect(source).toContain('countSnapshotVersion !== countVersion');
+			expect(source).toContain("count: useCounter('count')");
+		});
+
+		test('selects scalar context and page module-store tiers from SharedDefinition records', async () => {
+			const props = await build(
+				'src/props-tier.tsrx',
+				`import { shared, state } from "@markless/core";
+				export const useValue = shared(() => { let value = state(1); return { value }; }, { scope: "container" });
+				function Reader() @{ const sharedValue = useValue(); <output>{sharedValue.value}</output> }
+				export function Page() @{ <Reader /> }`,
+			);
+			const propsSource = emit(props);
+			expect(propsSource).toContain('const [valueSharedValue] = useState(1)');
+			expect(propsSource).toContain('function Reader({ valueSharedValue })');
+			expect(propsSource).toContain('<Reader valueSharedValue={valueSharedValue} />');
+			expect(propsSource).not.toContain('ValueContext');
+
+			const scalar = await build(
+				'src/scalar.tsrx',
+				`import { shared, state } from "@markless/core";
+				export const useValue = shared(() => { let value = state(1); return { value }; }, { scope: "container" });
+				export function Reader() @{ const sharedValue = useValue(); <output>{sharedValue.value}</output> }`,
+			);
+			const scalarSource = emit(scalar);
+			expect(scalarSource).toContain('const ValueContext = createContext(null)');
+			expect(scalarSource).toContain('function useValue()');
+			expect(scalarSource).not.toContain('useSyncExternalStore');
+
+			const object = await build(
+				'src/object-context.tsrx',
+				`import { shared, state } from "@markless/core";
+				export const usePair = shared(() => { let left = state(1); let right = state(2); return { left, right }; }, { scope: "container" });
+				export function Pair() @{ const pair = usePair(); <output>{pair.left}:{pair.right}</output> }`,
+			);
+			const objectSource = emit(object);
+			expect(objectSource).toContain('const PairContext = createContext(null)');
+			expect(objectSource).toContain('const [value] = useState(');
+			expect(objectSource).toContain('const pair = usePair()');
+			expect(objectSource).not.toContain('useSyncExternalStore');
+
+			const page = clone(scalar) as any;
+			page.records.sharedDefinitions[0].scope = 'page';
+			page.records.sharedDefinitions[0].methods = [
+				{
+					name: 'set',
+					site: {
+						type: 'Property',
+						value: {
+							type: 'FunctionExpression',
+							params: [],
+							body: { type: 'BlockStatement', body: [] },
+						},
+					},
+					writes: [],
+				},
+			];
+			page.records.sharedDefinitions[0].returnProperties.push({
+				kind: 'method',
+				name: 'set',
+			});
+			const pageSource = emit(page);
+			expect(pageSource).toContain('const valueStore = createValueStore()');
+			expect(pageSource).not.toContain('ValueProvider');
+		});
+
+		test('emits direct handles and one memoized callback ref with reverse cleanup', async () => {
+			const ir = await build(
+				'src/handles.tsrx',
+				`import { element } from "@markless/core";
+				export function Search() @{ const input = element<HTMLInputElement>(); <><input el={input} attach={(node) => { node.dataset.ready = "yes"; return () => { delete node.dataset.ready; }; }} /><button onClick={() => input?.focus()}>focus</button></> }`,
+			);
+			const source = emit(ir);
+			expect(source).toContain('const input = useRef(null)');
+			expect(source).toContain('const attachInput = useCallback(');
+			expect(source).toContain('input.current = node');
+			expect(source).toContain("if (typeof cleanup === 'function')");
+			expect(source.indexOf('cleanup();')).toBeLessThan(
+				source.indexOf('input.current = null'),
+			);
+			expect(source).toContain('if (input.current !== null)');
+			expect(source).not.toMatch(/forwardRef|useImperativeHandle|Children\.|cloneElement/);
+		});
+
+		test('forwards a parent-owned handle through a same-module component edge', async () => {
+			const ir = await build(
+				'src/forward.tsrx',
+				`import { element } from "@markless/core";
+				function Field(props) @{ <input el={props.input} /> }
+				export function Page() @{ const input = element<HTMLInputElement>(); <Field input={input} /> }`,
+			);
+			const source = emit(ir);
+			expect(source).toContain('function Field({ ref })');
+			expect(source).toContain('<input ref={ref} />');
+			expect(source).toContain('<Field ref={input} />');
+			expect(source).not.toMatch(/forwardRef|useImperativeHandle/);
+		});
+
+		test('renames the authored shared hook and cell coherently', async () => {
+			const ir = (await build(
+				'src/rename-shared.tsrx',
+				`import { shared, state } from "@markless/core";
+				export const useCounter = shared(() => { let count = state(0); return { count, increment() { count++; } }; });
+				export function Counter() @{ const counter = useCounter(); <button onClick={() => counter.increment()}>{counter.count}</button> }`,
+			)) as any;
+			visit(ir, (record) => {
+				if (record.type === 'Identifier' && record.name === 'count') record.name = 'total';
+				if (record.type === 'Identifier' && record.name === 'useCounter')
+					record.name = 'useMeter';
+			});
+			ir.records.sharedDefinitions[0].name = 'useMeter';
+			ir.records.sharedDefinitions[0].cells[0].name = 'total';
+			ir.records.sharedDefinitions[0].returnProperties[0].name = 'total';
+			ir.records.sharedReads[0].propertyName = 'total';
+			const source = emit(ir);
+			expect(source).toContain('function useMeter(cell)');
+			expect(source).toContain('let total = 0');
+			expect(source).toContain("total: useMeter('total')");
+			expect(source).not.toContain('function useCounter');
+		});
+
+		test('allocates provider and store-internal generated families around authored names', async () => {
+			const ir = await build(
+				'src/collisions.tsrx',
+				`import { shared, state } from "@markless/core";
+				export const useCounter = shared(() => { let count = state(0); let countVersion = state(1); let countSnapshot = state(2); let countListeners = state(3); let writeCount = state(4); let nextCount = state(5); return { count, countVersion, countSnapshot, countListeners, writeCount, nextCount, increment() { count++; } }; });
+				export function CounterProvider() @{ <aside>authored</aside> }
+				export function Counter() @{ const counter = useCounter(); <button onClick={() => counter.increment()}>{counter.count}</button> }`,
+			);
+			const source = emit(ir);
+			expect(source).toContain('export function CounterProvider2({ children })');
+			expect(source).toContain('let countVersion2 = 0');
+			expect(source).toContain('let countSnapshot2 = count');
+			expect(source).toContain('const countListeners2 = new Set()');
+			expect(source).toContain('const writeCount2 =');
+			expect(analyze(source, { lang: 'jsx', sourceType: 'module' }).diagnostics).toEqual([]);
+		});
+
+		test('fails closed with construct-named diagnostics when composition records are missing', async () => {
+			const shared = clone(
+				await build(
+					'src/missing-shared.tsrx',
+					`import { shared, state } from "@markless/core";
+					export const useCounter = shared(() => { let count = state(0); return { count, increment() { count++; } }; });
+					export function Counter() @{ const counter = useCounter(); <button onClick={() => counter.increment()}>{counter.count}</button> }`,
+				),
+			) as any;
+			shared.records.sharedWrites = [];
+			expect(() => emit(shared)).toThrow(
+				/SharedWrite records are incomplete for SharedDefinition useCounter/,
+			);
+
+			const handles = clone(
+				await build(
+					'src/missing-handle.tsrx',
+					`import { element } from "@markless/core"; export function Search() @{ const input = element<HTMLInputElement>(); <><input el={input} /><button onClick={() => input?.focus()}>focus</button></> }`,
+				),
+			) as any;
+			handles.records.elementHandleBindings = [];
+			expect(() => emit(handles)).toThrow(
+				/HandleCallRecord has dangling ElementHandleBinding/,
+			);
+		});
+	});
+
 	describe('fail-closed enriched IR validation', () => {
-		test('rejects the same multi-component fixture as Solid with the React composition diagnostic', async () => {
+		test('rejects malformed cloned multi-component ownership records', async () => {
 			const ir = clone(await golden('s1-render-once.json')) as any;
 			ir.components.push({
 				...clone(ir.components[0]),
@@ -393,9 +602,7 @@ describe('React structural emitter', () => {
 				componentName: 'Additional',
 				exportedName: 'Additional',
 			});
-			expect(() => validateEnrichedIr(ir)).toThrow(
-				'EnrichedComponent cannot be lowered: multi-component modules land in the React composition package',
-			);
+			expect(() => validateEnrichedIr(ir)).toThrow(/Prop alias map does not resolve/);
 		});
 
 		test('rejects an exact /1 artifact with the version diagnostic', async () => {
@@ -418,9 +625,7 @@ describe('React structural emitter', () => {
 					children: [],
 				},
 			];
-			expect(() => validateEnrichedIr(ir)).toThrow(
-				/TemplateComponentReference cannot be lowered.*React composition package/,
-			);
+			expect(() => validateEnrichedIr(ir)).toThrow(/dangling host record id/);
 		});
 
 		test('rejects a non-empty SharedDefinition family with its construct diagnostic', async () => {
@@ -438,7 +643,7 @@ describe('React structural emitter', () => {
 				},
 			];
 			expect(() => validateEnrichedIr(ir)).toThrow(
-				/SharedDefinition cannot be lowered.*React composition package/,
+				/SharedDefinition useCounter has no SharedInstance/,
 			);
 		});
 
@@ -465,7 +670,7 @@ describe('React structural emitter', () => {
 			);
 			ir.records.sharedDefinitions = [definition];
 			expect(() => validateEnrichedIr(ir)).toThrow(
-				/SharedDefinition cannot be lowered.*React composition package/,
+				/SharedDefinition useCounter has no SharedInstance/,
 			);
 		});
 
@@ -511,7 +716,7 @@ describe('React structural emitter', () => {
 			ir.records.sharedDefinitions[0].graphBindings.push(computed.graphNodeId);
 			ir.records.sharedDefinitions[0].cells = [cell, computed];
 			expect(() => validateEnrichedIr(ir)).toThrow(
-				/SharedDefinition cannot be lowered.*React composition package/,
+				/SharedDefinition useCounter has no SharedInstance/,
 			);
 			ir.records.sharedDefinitions[0].cells = [
 				{ ...computed, dependencies: ['shared:counter/state:missing'] },
@@ -547,9 +752,7 @@ describe('React structural emitter', () => {
 			};
 			ir.records.elementHandleBindings = [binding];
 			ir.records.handleForwards = [forward];
-			expect(() => validateEnrichedIr(ir)).toThrow(
-				/cannot be lowered.*React composition package/,
-			);
+			expect(() => validateEnrichedIr(ir)).not.toThrow();
 			ir.records.handleForwards = [{ ...forward, handleBindingId: 'element-handle:missing' }];
 			expect(() => validateEnrichedIr(ir)).toThrow(
 				/HandleForwardRecord has dangling handleBindingId/,
