@@ -6,6 +6,7 @@ import {
 	createSignal,
 	type JSX,
 	onCleanup,
+	onMount,
 	untrack,
 	useContext,
 } from 'solid-js';
@@ -203,9 +204,11 @@ function FocusField(props: {
 		<input
 			data-focus-target
 			ref={(node) => {
-				props.input(node);
-				onCleanup(() => {
-					if (!props.omitClear) props.input(undefined);
+				onMount(() => {
+					props.input(node);
+					onCleanup(() => {
+						if (!props.omitClear) props.input(undefined);
+					});
 				});
 			}}
 		/>
@@ -375,8 +378,33 @@ export function SolidPageScopeReference() {
 	);
 }
 
+type SolidPropsValue = ReturnType<typeof createSolidPropsValue>;
+
+function createSolidPropsValue() {
+	const [value] = createSignal(5);
+	return { value };
+}
+
+const SolidPropsValueContext = createContext<SolidPropsValue>();
+
+function useSolidPropsValue() {
+	const value = useContext(SolidPropsValueContext);
+	if (!value) throw new Error('useSolidPropsValue is missing its provider');
+	return value;
+}
+
+export function SolidPropsValueProvider(props: { children: JSX.Element }) {
+	const value = createSolidPropsValue();
+	return (
+		<SolidPropsValueContext.Provider value={value}>
+			{props.children}
+		</SolidPropsValueContext.Provider>
+	);
+}
+
 export function SolidPropsTierReference() {
-	return <output data-tier-props>5</output>;
+	const shared = useSolidPropsValue();
+	return <output data-tier-props>{shared.value()}</output>;
 }
 
 export function SolidScalarContextTierReference() {

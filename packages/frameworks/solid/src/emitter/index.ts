@@ -28,6 +28,7 @@ type ApiName =
 	| 'createContext'
 	| 'useContext'
 	| 'createEffect'
+	| 'onMount'
 	| 'onCleanup';
 type EmitContext = {
 	readonly api: ReadonlyMap<ApiName, string>;
@@ -2709,9 +2710,10 @@ function compositionComponent(
 	for (const [hostId, directiveName] of directiveNames) {
 		const behaviors = ir.records.behaviors.filter((behavior) => behavior.componentId === component.id && behavior.hostNodeId === hostId).sort((left, right) => left.order - right.order);
 		const cleanupNames = behaviors.map(() => base.names.claim('cleanup'));
-		const install: t.Statement[] = [];
-		const captures = new Map<string, string>();
-		for (const behavior of behaviors)
+		const directiveBody: t.Statement[] = [];
+		for (const [index, behavior] of behaviors.entries()) {
+			const captures = new Map<string, string>();
+			const install: t.Statement[] = [];
 			for (const input of behavior.inputs) {
 				const state = statesById.get(input.graphNodeId);
 				if (!state || captures.has(state.name)) continue;
@@ -2727,20 +2729,89 @@ function compositionComponent(
 					]),
 				);
 			}
-		for (const [index, behavior] of behaviors.entries()) {
 			const behaviorExpression = captureBehaviorInputs(
 				rewriteCompositionExpression(behavior.behavior, context),
 				captures,
 			);
-			install.push(t.variableDeclaration('const', [t.variableDeclarator(t.identifier(cleanupNames[index]!), t.callExpression(behaviorExpression, [t.identifier('node')]))]));
+			const behaviorCall = t.callExpression(behaviorExpression, [t.identifier('node')]);
+			if (behavior.inputs.length === 0) {
+				directiveBody.push(
+					behavior.returnsCleanup
+						? t.variableDeclaration('const', [
+								t.variableDeclarator(t.identifier(cleanupNames[index]!), behaviorCall),
+							])
+						: t.expressionStatement(behaviorCall),
+				);
+				continue;
+			}
+			if (behavior.returnsCleanup) {
+				directiveBody.push(
+					t.variableDeclaration('let', [
+						t.variableDeclarator(
+							t.identifier(cleanupNames[index]!),
+							t.identifier('undefined'),
+						),
+					]),
+				);
+				install.push(
+					t.ifStatement(
+						t.binaryExpression(
+							'===',
+							{
+								type: 'UnaryExpression',
+								operator: 'typeof',
+								prefix: true,
+								argument: t.identifier(cleanupNames[index]!),
+							},
+							t.stringLiteral('function'),
+						),
+						t.blockStatement([
+							t.expressionStatement(
+								t.callExpression(t.identifier(cleanupNames[index]!), []),
+							),
+						]),
+					),
+					t.expressionStatement(
+						t.assignmentExpression(
+							'=',
+							t.identifier(cleanupNames[index]!),
+							behaviorCall,
+						),
+					),
+				);
+			} else install.push(t.expressionStatement(behaviorCall));
+			directiveBody.push(
+				t.expressionStatement(
+					t.callExpression(api(componentBase, 'createEffect'), [
+						t.arrowFunctionExpression([], t.blockStatement(install)),
+					]),
+				),
+			);
 		}
 		const cleanupBody: t.Statement[] = [];
 		for (let index = behaviors.length - 1; index >= 0; index -= 1) {
 			if (!behaviors[index]!.returnsCleanup) continue;
 			cleanupBody.push(t.ifStatement(t.binaryExpression('===', { type: 'UnaryExpression', operator: 'typeof', prefix: true, argument: t.identifier(cleanupNames[index]!) }, t.stringLiteral('function')), t.blockStatement([t.expressionStatement(t.callExpression(t.identifier(cleanupNames[index]!), []))])));
 		}
-		install.push(t.expressionStatement(t.callExpression(api(componentBase, 'onCleanup'), [t.arrowFunctionExpression([], t.blockStatement(cleanupBody))])));
-		body.push(t.variableDeclaration('const', [t.variableDeclarator(t.identifier(directiveName), t.arrowFunctionExpression([t.identifier('node')], t.blockStatement([t.expressionStatement(t.callExpression(api(componentBase, 'createEffect'), [t.arrowFunctionExpression([], t.blockStatement(install))]))]))) ]));
+		if (cleanupBody.length)
+			directiveBody.push(t.expressionStatement(t.callExpression(api(componentBase, 'onCleanup'), [t.arrowFunctionExpression([], t.blockStatement(cleanupBody))])));
+		body.push(
+			t.variableDeclaration('const', [
+				t.variableDeclarator(
+					t.identifier(directiveName),
+					t.arrowFunctionExpression(
+						[t.identifier('node')],
+						t.blockStatement([
+							t.expressionStatement(
+								t.callExpression(api(componentBase, 'onMount'), [
+									t.arrowFunctionExpression([], t.blockStatement(directiveBody)),
+								]),
+							),
+						]),
+					),
+				),
+			]),
+		);
 	}
 	body.push(t.returnStatement(expressionFromCompositionNodes(component.template, context)));
 	const declaration = t.functionDeclaration(t.identifier(component.name), [t.identifier(propsName)], t.blockStatement(body));
@@ -2750,7 +2821,7 @@ function compositionComponent(
 function emitComposition(ir: EnrichedIR): string {
 	const allocator = new NameAllocator(compositionAuthoredNames(ir));
 	const apiNames = new Map<ApiName, string>();
-	for (const name of ['createSignal', 'createStore', 'produce', 'reconcile', 'untrack', 'For', 'Show', 'createContext', 'useContext', 'createEffect', 'onCleanup'] as const)
+	for (const name of ['createSignal', 'createStore', 'produce', 'reconcile', 'untrack', 'For', 'Show', 'createContext', 'useContext', 'createEffect', 'onMount', 'onCleanup'] as const)
 		apiNames.set(name, allocator.claim(name));
 	const base: EmitContext = {
 		api: apiNames,
@@ -2781,7 +2852,7 @@ function emitComposition(ir: EnrichedIR): string {
 		const names = candidates.filter((name) => base.imports.has(name));
 		if (names.length) imports.push(t.importDeclaration(names.map((name) => t.importSpecifier(t.identifier(base.api.get(name)!), t.identifier(name))), t.stringLiteral(source)));
 	};
-	addImport('solid-js', ['createSignal', 'untrack', 'For', 'Show', 'createContext', 'useContext', 'createEffect', 'onCleanup']);
+	addImport('solid-js', ['createSignal', 'untrack', 'For', 'Show', 'createContext', 'useContext', 'createEffect', 'onMount', 'onCleanup']);
 	addImport('solid-js/store', ['createStore', 'produce', 'reconcile']);
 	const source = `// @generated by @frameless/solid; do not edit.\n// Solid event batching exposes final post-dispatch state while preserving authored write order (T004b); no deferred notifications are needed.\n${printProgram(t.program([...imports, ...declarations]))}\n`;
 	const verified = analyze(source, { lang: 'jsx', sourceType: 'module', preserveParens: false });

@@ -16,6 +16,7 @@ const ALLOWED_IMPORTS = new Map([
 			'createContext',
 			'useContext',
 			'createEffect',
+			'onMount',
 			'onCleanup',
 		]),
 	],
@@ -1093,7 +1094,9 @@ export function customPolicies(
 			/const\s+(\w+)\s*=\s*\(node\)\s*=>\s*\{([\s\S]*?)\n\s*\};/g,
 		)) {
 			if (!/^attach\w*/.test(match[1]!)) continue;
-			if (!/\bcreateEffect\s*\(/.test(match[2]!))
+			const hasTrackedInput =
+				/\bconst\s+\w+Input\d*\s*=\s*\w+\(\)\s*;/.test(match[2]!);
+			if (hasTrackedInput && !/\bcreateEffect\s*\(/.test(match[2]!))
 				violations.push(
 					violation(
 						file,

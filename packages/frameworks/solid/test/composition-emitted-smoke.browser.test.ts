@@ -15,7 +15,7 @@ import {
 } from '../generated-composition/C2-shared.jsx';
 import { FocusPage } from '../generated-composition/C3-ref.jsx';
 import { CleanupPage } from '../generated-composition/C4-attach.jsx';
-import { PropsPage } from '../generated-composition/C5-props.jsx';
+import { PropsPage, PropsValueProvider } from '../generated-composition/C5-props.jsx';
 import { ScalarFanoutProvider, ScalarPage } from '../generated-composition/C6-scalar-context.jsx';
 import { FullPairProvider, ObjectPage } from '../generated-composition/C7-object-context.jsx';
 import { PageLedger } from '../generated-composition/C8-page-store.jsx';
@@ -24,6 +24,7 @@ import {
 	SolidObjectContextTierReference,
 	SolidPageStoreTierReference,
 	SolidPropsTierReference,
+	SolidPropsValueProvider,
 	SolidScalarContextTierReference,
 	solidCompositionReferences,
 } from './composition-reference.solid.tsx';
@@ -93,12 +94,12 @@ const tierScenarios: Scenario[] = [
 ];
 
 const tierReferences: Record<string, Component> = {
-	'C5-props-tier': SolidPropsTierReference,
+	'C5-props-tier': withProvider(SolidPropsValueProvider, SolidPropsTierReference),
 	'C6-scalar-context': SolidScalarContextTierReference,
 	'C7-object-context': SolidObjectContextTierReference,
 };
 const emittedTiers: Record<string, Component> = {
-	'C5-props-tier': PropsPage,
+	'C5-props-tier': withProvider(PropsValueProvider, PropsPage),
 	'C6-scalar-context': withProvider(ScalarFanoutProvider, ScalarPage),
 	'C7-object-context': withProvider(FullPairProvider, ObjectPage),
 };

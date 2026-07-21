@@ -154,9 +154,42 @@ describe('Solid structural emitter', () => {
 			const attach = await build('src/attach.tsrx', `import { state } from "@markless/core"; export function Page() @{ let value = state("a"); <div attach={(node) => { node.dataset.value = value; return () => { delete node.dataset.value; }; }} /> }`);
 			const attachSource = emit(attach);
 			expect(attachSource).toContain('use:attachHost');
+			expect(attachSource).toMatch(/import \{[^}]*onMount[^}]*\} from 'solid-js'/);
+			expect(attachSource).toMatch(/const attachHost\d* = \(node\) => \{\s*onMount\(\(\) => \{/);
 			expect(attachSource).toContain('createEffect(() =>');
 			expect(attachSource).toContain('onCleanup(() =>');
 			expect(attachSource).toMatch(/const valueInput = value\(\);[\s\S]*dataset\.value = valueInput/);
+		});
+
+		test('installs zero-input behaviors bare and tracks only behaviors with inputs', async () => {
+			const zeroInput = await build('src/zero-input-attach.tsrx', `export function Page() @{ <div attach={(node) => { node.dataset.install = "zero"; return () => { node.dataset.cleanup = "zero"; }; }} /> }`);
+			const zeroInputSource = emit(zeroInput);
+			expect(zeroInputSource).not.toContain('createEffect');
+			expect(zeroInputSource).toMatch(/onMount\(\(\) => \{[\s\S]*const cleanup\d* = \(\(node\) => \{[\s\S]*dataset\.install = 'zero'[\s\S]*\}\)\(node\);[\s\S]*onCleanup\(\(\) =>/);
+
+			const tracked = await build('src/tracked-attach.tsrx', `import { state } from "@markless/core"; export function Page() @{ let value = state("tracked"); <div attach={(node) => { node.dataset.install = value; return () => { node.dataset.cleanup = value; }; }} /> }`);
+			const trackedSource = emit(tracked);
+			expect(trackedSource).toMatch(/onMount\(\(\) => \{[\s\S]*createEffect\(\(\) => \{[\s\S]*const valueInput = value\(\);[\s\S]*dataset\.install = valueInput/);
+		});
+
+		test('preserves authored behavior install order and emits reverse cleanup order', async () => {
+			const zeroInput = await build('src/first-attach.tsrx', `export function Page() @{ <div attach={(node) => { node.dataset.install = "first"; return () => { node.dataset.cleanup = "first"; }; }} /> }`);
+			const mixed = clone(await build('src/mixed-attach.tsrx', `import { state } from "@markless/core"; export function Page() @{ let value = state("second"); <div attach={(node) => { node.dataset.install = value; return () => { node.dataset.cleanup = value; }; }} /> }`)) as any;
+			const first = clone(zeroInput.records.behaviors[0]) as any;
+			const second = mixed.records.behaviors[0];
+			first.id = 'behavior:first';
+			first.componentId = second.componentId;
+			first.hostNodeId = second.hostNodeId;
+			first.order = 0;
+			second.order = 1;
+			mixed.records.behaviors = [first, second];
+
+			const source = emit(mixed);
+			const firstInstall = source.indexOf("dataset.install = 'first'");
+			const secondInstall = source.indexOf('dataset.install = valueInput');
+			expect(firstInstall).toBeGreaterThan(-1);
+			expect(secondInstall).toBeGreaterThan(firstInstall);
+			expect(source).toMatch(/onCleanup\(\(\) => \{[\s\S]*typeof cleanup3[\s\S]*cleanup3\(\);[\s\S]*typeof cleanup2[\s\S]*cleanup2\(\);/);
 		});
 
 		test('allocates generated composition families around authored collisions', async () => {

@@ -405,7 +405,7 @@ describe('Solid dossier gate', () => {
 		[
 			'cleanup order drift',
 			attach.replace(
-				'`cleanup:B:${behaviorInputInput}`, `cleanup:A:${behaviorInputInput}`',
+				/`cleanup:B:\$\{behaviorInputInput\}`,\s*`cleanup:A:\$\{behaviorInputInput\}`/,
 				'`cleanup:A:${behaviorInputInput}`, `cleanup:B:${behaviorInputInput}`',
 			),
 			'S-RF7',
