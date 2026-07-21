@@ -1,0 +1,90 @@
+version: 2
+
+goal:
+  slug: qds-primitives
+  title: "Audit Qwik Design System; determine needed primitives"
+  status: active
+  charter: goal.md
+  kind: audit
+  tranche: "Sweep the entire QDS component library for imperative browser-machinery patterns (inline/minified scripts, observers, measurement, focus/scroll, visible tasks), characterize why each exists, classify into primitive-requirement classes, assess attach-fit per class, and deliver an owner-facing 'what we need' menu — suggestions only, owner ratifies."
+  oracle:
+    signal: "Owner reads the audit dossier + primitive-requirements menu and can decide what to build without re-doing the research; every QDS claim cites file:line; every requirement traces to audited cases; open questions are options with tradeoffs."
+    cadence: "at each scout/judge receipt and at the final delivery"
+    final_proof: "Final audit confirms the inventory was full-library (not just carousel), the why-per-case survived classification, the menu was delivered, and nothing was presented as decided."
+  intake:
+    original_request: "I want you to audit Qwik Design System and figure out what is needed primitive wise to solve the problems there... carousel I think had a script that gets minified and it does it through some browser API... to prevent flashes... there may even be use cases with a Resizer, Mutation Observer, etc. ... figure out if attach makes sense, or if something else is needed etc. So do the audit, then let me know what we need"
+    interpreted_outcome: "Source-backed full-library QDS audit of imperative browser-machinery patterns, classified by why they exist, mapped to the markless/frameless primitive surface: what existing/planned primitives cover, what gaps need something new — delivered as an owner decision menu."
+    input_shape: audit
+    audience: "owner (Jack) — decides which primitives to build for markless/frameless"
+    authority: requested
+    proof_type: source_backed_answer
+    completion_proof: "Owner-facing 'what we need' menu delivered, backed by a cited full-library inventory with per-case why and per-class attach-fit assessment; final audit records delivery and the no-ratification misfire check."
+    likely_misfire: "Presenting primitive choices as decided; stopping at the carousel example; collapsing distinct why-classes (flash-prevention vs measurement vs observation vs lifecycle) into one requirement; requirements not traced to cited cases."
+    existing_plan_facts: "Owner's recollection to VERIFY (and correct honestly if it differs): carousel has a minified script using a browser API, believed flash-prevention. Expected classes: ResizeObserver, MutationObserver. Open question named by owner: does attach fit, or is something else needed. Prior evidence: storage-tradeoff T006 corpus notes (QDS/Qwik UI theme = pre-slot sync script, configurable key, CSP nonce, no useVisibleTask$ for initial read); recommended storage() contract + green 4-framework POC (poc/09-storage) as settled evidence input, not re-opened."
+    non_goals:
+      - "Implementing any primitive (out of tranche)"
+      - "QDS or markless repo changes (both read-only)"
+      - "Re-opening the storage()/device-state decision (cross-reference only)"
+      - "Ratifying primitive designs — owner decides"
+
+policies:
+  one_active_task: true
+  max_consecutive_tiny_tasks: 2
+
+agents:
+  scout: installed
+  worker: installed
+  judge: installed
+
+active_task: T001
+
+tasks:
+  - id: T001
+    type: scout
+    assignee: Scout
+    status: active
+    reasoning_hint: medium
+    objective: "Full-library QDS pattern inventory (crew, read-only): sweep every component in the local qwik-design-system checkout for imperative browser machinery — inline/injected/minified scripts (verify the owner's carousel recollection against source: which script, which browser API, minified how, flash-prevention or not), useVisibleTask$/useTask$ with DOM access, ResizeObserver/MutationObserver/IntersectionObserver, measurement reads (getBoundingClientRect/offsetWidth), focus/scroll management, event-listener wiring outside JSX, matchMedia, rAF loops — each with file:line, when it runs (SSR/pre-paint/resume/visible), WHY it exists (flash prevention, measurement, reactive observation, a11y/focus, lifecycle), and what breaks without it."
+    expected_output:
+      - "notes/T001-qds-inventory.md: full pattern inventory with citations, per-case why, frequency counts, carousel recollection verified/corrected"
+    receipt: null
+  - id: T002
+    type: scout
+    assignee: Scout
+    status: queued
+    reasoning_hint: medium
+    objective: "Primitive-surface map (PM/crew, read-only): establish what 'attach' and the adjacent surface actually are today — element-scoped behaviors/refs (ElementHandle/Behavior/HandleCall) in the frameless enriched IR + composition notes, markless-side equivalents (read-only), the recommended storage() contract — and characterize each primitive's execution timing/capabilities so T003 can honestly assess fit per audited class."
+    expected_output:
+      - "notes/T002-surface-map.md: current + planned primitive surface with execution-timing semantics, cited to repo sources"
+    receipt: null
+  - id: T003
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Synthesis: classify the T001 inventory into primitive-requirement classes (by WHY, never collapsing classes), assess per class whether attach/existing surface covers it (with timing semantics from T002), name the gaps that need something new (e.g. pre-paint element-scoped script, observer primitive, measure primitive), and produce the owner-facing 'what we need' menu — options with tradeoffs where open, SUGGESTIONS ONLY."
+    expected_output:
+      - "notes/T003-what-we-need.md: requirement classes -> covered/gap verdicts -> owner menu"
+    receipt: null
+  - id: T004
+    type: pm
+    assignee: PM
+    status: queued
+    reasoning_hint: medium
+    objective: "Deliver the 'what we need' answer to the owner in plain language (per decision-menu rules: understandable without goal context) and record their decision or named follow-up."
+    receipt: null
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Final audit: was the inventory full-library with per-case why; were classes kept distinct; was every requirement traced to cited cases; was the menu delivered and nothing presented as decided; record owner response state and full_outcome_complete accordingly."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "owner decision or named follow-up"
+    receipt: null
+
+checks:
+  dirty_fingerprint: "board prepped on worktree-storage-poc (docs-only)"
+  last_verification: null
