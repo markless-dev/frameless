@@ -360,7 +360,7 @@ describe('Solid dossier gate', async () => {
 			'container creator alias at module scope',
 			shared.replace(
 				'const CompositionSharedContext',
-				'const createAlias = createCompositionSharedShared;\nconst illicitShared = createAlias();\nconst CompositionSharedContext',
+				'const createAlias = createCompositionShared;\nconst illicitShared = createAlias();\nconst CompositionSharedContext',
 			),
 			'S-SH4',
 			compositionArtifacts.get('C2-shared'),
@@ -389,7 +389,7 @@ describe('Solid dossier gate', async () => {
 		],
 		[
 			'rebuilt provider value',
-			shared.replace('value={value}', 'value={createCompositionSharedShared()}'),
+			shared.replace('value={value}', 'value={createCompositionShared()}'),
 			'S-SH5',
 		],
 		[

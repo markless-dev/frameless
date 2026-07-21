@@ -167,6 +167,43 @@ describe('Solid structural emitter', () => {
 			expect(pageSource).not.toContain('CounterProvider');
 		});
 
+		test('deduplicates generated shared suffixes without changing authored or non-overlapping names', async () => {
+			const overlapping = await build(
+				'src/shared-suffix.tsrx',
+				`import { shared, state } from "@markless/core"; export const useCompositionShared = shared(() => { let value = state(0); return { value, increment() { value++; } }; }); export function Reader() @{ const sharedValue = useCompositionShared(); <button onClick={() => sharedValue.increment()}>{sharedValue.value}</button> }`,
+			);
+			const overlappingSource = emit(overlapping);
+			expect(overlappingSource).toContain('function createCompositionShared()');
+			expect(overlappingSource).not.toContain('createCompositionSharedShared');
+			expect(overlappingSource).toContain('function useCompositionShared()');
+			const pageShared = clone(overlapping) as any;
+			pageShared.records.sharedDefinitions[0].scope = 'page';
+			expect(emit(pageShared)).toContain(
+				'const compositionShared = createCompositionShared()',
+			);
+
+			const context = await build(
+				'src/context-suffix.tsrx',
+				`import { shared, state } from "@markless/core"; export const useCompositionContext = shared(() => { let value = state(0); return { value }; }); export function Reader() @{ const sharedValue = useCompositionContext(); <output>{sharedValue.value}</output> }`,
+			);
+			expect(emit(context)).toContain('const CompositionContext = createContext()');
+
+			const provider = await build(
+				'src/provider-suffix.tsrx',
+				`import { shared, state } from "@markless/core"; export const useCompositionProvider = shared(() => { let value = state(0); return { value }; }); export function Reader() @{ const sharedValue = useCompositionProvider(); <output>{sharedValue.value}</output> }`,
+			);
+			expect(emit(provider)).toMatch(/export function CompositionProvider\(props\d*\)/);
+
+			const nonOverlapping = await build(
+				'src/ledger-suffix.tsrx',
+				`import { shared, state } from "@markless/core"; export const useLedger = shared(() => { let value = state(0); return { value, increment() { value++; } }; }); export function Reader() @{ const ledger = useLedger(); <button onClick={() => ledger.increment()}>{ledger.value}</button> }`,
+			);
+			const nonOverlappingSource = emit(nonOverlapping);
+			expect(nonOverlappingSource).toContain('function createLedgerShared()');
+			expect(nonOverlappingSource).toContain('const LedgerContext = createContext()');
+			expect(nonOverlappingSource).toMatch(/export function LedgerProvider\(props\d*\)/);
+		});
+
 		test('emits direct and forwarded refs, null guards, and named tracked directives', async () => {
 			const forwarded = await build(
 				'src/forward.tsrx',

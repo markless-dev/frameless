@@ -2339,6 +2339,14 @@ function sharedStem(definition: SharedDefinition): string {
 		: `${definition.name[0]!.toUpperCase()}${definition.name.slice(1)}`;
 }
 
+function withGeneratedSuffix(base: string, suffix: string): string {
+	return base.endsWith(suffix) ? base : `${base}${suffix}`;
+}
+
+function lowercaseFirst(name: string): string {
+	return `${name[0]!.toLowerCase()}${name.slice(1)}`;
+}
+
 function replaceChild(parent: any, current: any, replacement: any): void {
 	for (const [key, value] of Object.entries(parent)) {
 		if (value === current) {
@@ -3254,10 +3262,12 @@ function emitComposition(ir: EnrichedIR): string {
 	for (const definition of ir.records.sharedDefinitions) {
 		const stem = sharedStem(definition);
 		sharedNames.set(definition.id, {
-			context: allocator.claim(`${stem}Context`),
-			provider: allocator.claim(`${stem}Provider`),
-			createShared: allocator.claim(`create${stem}Shared`),
-			moduleShared: allocator.claim(`${stem[0]!.toLowerCase()}${stem.slice(1)}Shared`),
+			context: allocator.claim(withGeneratedSuffix(stem, 'Context')),
+			provider: allocator.claim(withGeneratedSuffix(stem, 'Provider')),
+			createShared: allocator.claim(`create${withGeneratedSuffix(stem, 'Shared')}`),
+			moduleShared: allocator.claim(
+				lowercaseFirst(withGeneratedSuffix(stem, 'Shared')),
+			),
 		});
 	}
 	const declarations: t.Statement[] = [];

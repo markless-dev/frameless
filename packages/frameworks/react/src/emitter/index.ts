@@ -2141,13 +2141,25 @@ function sharedNames(definition: SharedDefinition, allocator: NameAllocator) {
 			? definition.name.slice(3)
 			: `${definition.name[0]!.toUpperCase()}${definition.name.slice(1)}`;
 	return {
-		context: allocator.claim(`${stem}Context`),
-		provider: allocator.claim(`${stem}Provider`),
-		createStore: allocator.claim(`create${stem}Store`),
-		moduleStore: allocator.claim(`${stem[0]!.toLowerCase()}${stem.slice(1)}Store`),
-		subscribeNothing: allocator.claim(`subscribe${stem}ToNothing`),
-		getNothing: allocator.claim(`get${stem}Nothing`),
+		context: allocator.claim(withGeneratedSuffix(stem, 'Context')),
+		provider: allocator.claim(withGeneratedSuffix(stem, 'Provider')),
+		createStore: allocator.claim(`create${withGeneratedSuffix(stem, 'Store')}`),
+		moduleStore: allocator.claim(
+			lowercaseFirst(withGeneratedSuffix(stem, 'Store')),
+		),
+		subscribeNothing: allocator.claim(
+			`subscribe${withGeneratedSuffix(stem, 'ToNothing')}`,
+		),
+		getNothing: allocator.claim(`get${withGeneratedSuffix(stem, 'Nothing')}`),
 	};
+}
+
+function withGeneratedSuffix(base: string, suffix: string): string {
+	return base.endsWith(suffix) ? base : `${base}${suffix}`;
+}
+
+function lowercaseFirst(name: string): string {
+	return `${name[0]!.toLowerCase()}${name.slice(1)}`;
 }
 
 function functionProperty(name: string, params: t.Node[], body: t.Statement[]): t.Node {

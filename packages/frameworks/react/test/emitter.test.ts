@@ -460,6 +460,52 @@ describe('React structural emitter', () => {
 			expect(source).toContain("count: useCounter('count')");
 		});
 
+		test('deduplicates generated shared-family suffixes without changing authored or non-overlapping names', async () => {
+			const store = await build(
+				'src/store-suffix.tsrx',
+				`import { shared, state } from "@markless/core"; export const useCompositionStore = shared(() => { let value = state(0); return { value, increment() { value++; } }; }); export function Reader() @{ const sharedValue = useCompositionStore(); <button onClick={() => sharedValue.increment()}>{sharedValue.value}</button> }`,
+			);
+			const storeSource = emit(store);
+			expect(storeSource).toContain('function createCompositionStore()');
+			expect(storeSource).not.toContain('createCompositionStoreStore');
+			expect(storeSource).toContain('function useCompositionStore(cell)');
+			const pageStore = clone(store) as any;
+			pageStore.records.sharedDefinitions[0].scope = 'page';
+			expect(emit(pageStore)).toContain(
+				'const compositionStore = createCompositionStore()',
+			);
+
+			const context = await build(
+				'src/context-suffix.tsrx',
+				`import { shared, state } from "@markless/core"; export const useCompositionContext = shared(() => { let value = state(0); return { value }; }); export function Reader() @{ const sharedValue = useCompositionContext(); <output>{sharedValue.value}</output> }`,
+			);
+			expect(emit(context)).toContain('const CompositionContext = createContext(null)');
+
+			const provider = await build(
+				'src/provider-suffix.tsrx',
+				`import { shared, state } from "@markless/core"; export const useCompositionProvider = shared(() => { let value = state(0); return { value }; }); export function Reader() @{ const sharedValue = useCompositionProvider(); <output>{sharedValue.value}</output> }`,
+			);
+			expect(emit(provider)).toContain('export function CompositionProvider({ children })');
+
+			const fallback = await build(
+				'src/fallback-suffix.tsrx',
+				`import { shared, state } from "@markless/core"; export const useCompositionToNothing = shared(() => { let value = state(0); return { value, increment() { value++; } }; }); export function Reader() @{ const sharedValue = useCompositionToNothing(); <button onClick={() => sharedValue.increment()}>{sharedValue.value}</button> }`,
+			);
+			const fallbackSource = emit(fallback);
+			expect(fallbackSource).toContain('const subscribeCompositionToNothing =');
+			expect(fallbackSource).toContain('const getCompositionToNothing =');
+			expect(fallbackSource).not.toContain('ToNothingToNothing');
+
+			const ledger = await build(
+				'src/ledger-suffix.tsrx',
+				`import { shared, state } from "@markless/core"; export const useLedger = shared(() => { let value = state(0); return { value, increment() { value++; } }; }); export function Reader() @{ const ledger = useLedger(); <button onClick={() => ledger.increment()}>{ledger.value}</button> }`,
+			);
+			const ledgerSource = emit(ledger);
+			expect(ledgerSource).toContain('function createLedgerStore()');
+			expect(ledgerSource).toContain('const LedgerContext = createContext(null)');
+			expect(ledgerSource).toContain('export function LedgerProvider({ children })');
+		});
+
 		test('selects scalar context and page module-store tiers from SharedDefinition records', async () => {
 			const props = await build(
 				'src/props-tier.tsrx',
