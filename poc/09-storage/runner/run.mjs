@@ -176,10 +176,22 @@ async function runFramework(browser, port, fw) {
   }
 }
 
-const frameworks = process.argv.slice(2);
+const args = process.argv.slice(2);
+const buildOnly = args.includes("--build-only");
+const frameworks = args.filter((a) => a !== "--build-only");
 if (frameworks.length === 0) {
-  console.error("usage: node runner/run.mjs <framework...>");
+  console.error("usage: node runner/run.mjs [--build-only] <framework...>");
   process.exit(2);
+}
+
+if (buildOnly) {
+  // Sandbox-friendly verification: prove the adapter bundles (imports resolve,
+  // plugins wired) without needing a browser.
+  for (const fw of frameworks) {
+    const js = await bundle(fw);
+    console.log(`BUILD-ONLY ${fw}: OK (${(js.length / 1024).toFixed(0)}kb)`);
+  }
+  process.exit(0);
 }
 
 const execPath =
