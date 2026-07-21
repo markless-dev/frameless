@@ -102,6 +102,30 @@ behavior. The same component may compile to different shapes in React and
 Solid when that is what each framework's own best practice says. Each
 framework owns its style. The tests own the proof that behavior matches.
 
+## Could AI Not Just Do This?
+
+It is fair to ask. An AI can translate a component from one framework to
+another, and the result often looks right. Looks right is the problem.
+
+A translation is a guess. It can quietly change behavior, it comes out
+different every time you run it, and someone has to review every file, for
+every framework, after every change. That does not scale past a handful of
+components.
+
+Frameless works from a semantic graph instead. The compiler records exactly
+what each component does: which events write which state, which text depends
+on which value, what runs on cleanup. The generators work from that record, so
+they cannot misread your code. The same input produces the same output every
+time, the output is checked against each framework's rules, and the behavior
+is proven in a real browser. Change a component and the whole pipeline reruns
+in CI with a fresh report.
+
+The two work best together. Let AI write your Frameless components: it is one
+small, simple model to be good at, instead of five frameworks to be mediocre
+at. Then let the compiler carry them to every framework, because the compiler
+can prove what it produced. AI writes once. Frameless multiplies it with
+receipts.
+
 ## How We Test
 
 Every claim in this repo is backed by something that runs:
