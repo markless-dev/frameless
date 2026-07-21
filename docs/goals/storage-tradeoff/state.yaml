@@ -68,7 +68,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/storage-tradeoff/"
     command: "npx goalbuddy board docs/goals/storage-tradeoff"
 
-active_task: null  # awaiting owner response to the refreshed suggestions (morning summary delivered); T999 queued
+active_task: null  # T008 dig round done (browser proof executed + winner internals read); awaiting owner response again; T999 queued
 
 tasks:
   - id: T001
@@ -142,6 +142,16 @@ tasks:
       decision: approved
       note: notes/T007-refreshed-suggestions.md
       summary: "Suggestions refreshed with both empirical halves. Ordering changed with reasons: Option 4 (app-owned cells) DEMOTED — no mass-adopted instance exists and the corpus hand-rolls are its documented failure mode; Option 2 (build-config) RAISED to production-proven via @nuxtjs/color-mode. T004 synthesis (provider switch + honest persisted-cell semantic + plain-cell staging) strengthened on every leg (next-themes 24.5M/wk, ~11M/wk cell family, Qwik UI independent convergence, P3 upgrade framing matching observed practice); one labeled NEW amendment (build-level switch as the markless-native face of the same contract — flagged as highest decision-reading risk). Compiler-advantage statement tied to the four identical library failures (keys/consent/sync/flash) with the fumadocs delegate-path counter-option stated. Unknowns priced. Everything SUGGESTION; owner ratifies; T999 queued pending owner response."
+  - id: T008
+    type: pm
+    assignee: PM
+    status: active
+    reasoning_hint: medium
+    objective: "Owner-continued dig round (owner: 'Not deciding yet — name the next dig', no unknown named — PM picks the two priced unknowns most blocking the decision, both flagged weakest-evidence in T007): (a) EXECUTED real-browser seed-ordering probe — build in a standalone scratch root outside the repo (cached Playwright chromium + local playwright-core; sidesteps the T007 env triangle), emulate the generated artifact shape (pre-content sync seed script + later module chunks), assert ordering and first-paint state; (b) winner-internals source read — fetch next-themes and @nuxtjs/color-mode actual source (npm tarballs), verify the 'two faces of one contract / same artifact underneath' amendment against real code with file:line citations (currently adoption-inferred only). Output: notes/T008 evidence note + refreshed suggestion deltas. SUGGESTIONS ONLY."
+    receipt:
+      result: done
+      note: notes/T008-dig-round.md
+      summary: "Both digs EXECUTED. (a) Real-browser probe (Chromium hs-1228, standalone scratch root, playwright-core from sibling checkout — env triangle sidestepped): seed ran before first paint in both cases (13.5ms vs 32ms cold; 2.7ms vs 12ms stored), root attribute correct AT first paint (no-flash proven with stored value, honest fallback cold), seed ordered before deferred-ESM, classic, AND late-injected progressive chunks, landing slot visible to all three — the chunk-ordering unknown RETIRED for the artifact shape (residue: re-run against real markless output at implementation time). (b) Winner internals source-read: 'two faces of one contract' CONFIRMED at source level — both winners generate the identical artifact triple (sync seed mutating root pre-paint + reactive cell initialized from seeded result + write-back); next-themes renders its script in-place before children (the exact Qwik UI shape, NOT head-injected) but double-reads storage with duplicated resolution logic (no landing slot); @nuxtjs/color-mode is a build-time template mini-compiler (static key/driver/fallback substitution, module.mjs:127-129) whose seed writes window.__NUXT_COLOR_MODE__ and whose client plugin initializes state FROM the slot — our P1 landing-slot design in production at ecosystem scale. CORRECTION banked against our own claim: next-themes HAS cross-tab sync; the four-axis 'sync universally absent' softens to 'inconsistently present' (recorded, not smoothed). Keys/consent/flash axes stand. Owner has ratified nothing."
   - id: T999
     type: judge
     assignee: Judge
