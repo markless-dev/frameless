@@ -1,5 +1,130 @@
 # T003 — Integration design + slice contracts (Judge)
 
+> REVISION NOTE: v1 of this design was REJECTED by second-model critique
+> (12 findings, 6 blockers — banked in the T003 receipt). Sections marked
+> [v2] below supersede the corresponding v1 text; unmarked sections stand.
+> The v1 text is preserved underneath for the audit trail.
+
+## [v2] D1'. Representation: writable state-kind binding + storage metadata
+
+storage() does NOT ride shared()'s factory/member lowering (critique B1 —
+that path resolves member accesses through returned properties and a bare
+SemanticStorageDefinition would be invisible to graph-path lookup, lowering,
+payload DOM updates, and symbol generation). Instead:
+
+- A storage declaration lowers to a WRITABLE BINDING REUSING kind: 'state'
+  with an attached `storage: { key }` metadata field on the binding record
+  (artifacts.ts). Every existing kind-discriminating consumer treats it as
+  state; only payload-arena/protocol-state/seed generation discriminate on
+  the metadata. Graph id: definition-owned `storage:<moduleId>#<key>` (NOT
+  claimed instance-scoped — see D3' slot schema).
+- Module-scope declaration; v1 usage scope = whatever shared() supports
+  for imports today, matched exactly (no new cross-file machinery).
+- REACHABILITY (critique B2): storage cells/metadata/seed entries are
+  emitted ONLY for definitions whose binding is used by an emitted
+  component closure. Unused declaration ⇒ nothing in payload, nothing in
+  seed, ZERO driver access — enforced by a negative test.
+
+## [v2] D2'. Transport: explicit capability policy
+
+- payload-arena + the COMPILER protocol-state producer (passes/
+  protocol-state.ts — critique M4: the producer is compiler-side, not
+  serializer-side) carry storage cells (fallback values) + `storage[]`
+  records {graphNodeId, key}.
+- COMPATIBILITY POLICY (critique B3 — unknown-field tolerance would make
+  old runtimes silently drop persistence): protocol gains a `capabilities`
+  array; decoders REJECT unknown capabilities; payloads with storage emit
+  `capabilities: ['storage']`. Storage-free payloads are byte-identical to
+  today's. This is the named T006 critique item.
+- Full-tier enforcement (critique B8): the storage requirement threads into
+  BOTH runtime-demand planning AND `transform.needsFullResume` (the actual
+  selector), with a negative build test asserting a storage page never
+  emits a lean dispatcher.
+
+## [v2] D3'. Seed: render-time generation, neutral slot, two host contracts
+
+- Seed is NOT a prebuilt static head injection (critique B5 — headInjections
+  are serialized into immutable artifact metadata before render options
+  exist, so a render-level consent flag could never suppress a prebuilt
+  script). Instead: the compiler/bundler carries STRUCTURED storage seed
+  metadata ({graphNodeId, key, fallback} list) on the SSR artifact; the
+  executable script is GENERATED during container assembly
+  (render-to-string) after applying `RenderToStringOptions.storageAccess:
+  'immediate' | 'deferred'` (new option). Deferred ⇒ the emitted script
+  fills the slot with fallbacks WITHOUT touching the driver.
+- TWO HOST CONTRACTS, both tested (critique M6): router hosts get the seed
+  relocated into <head> (create-server-entry path); direct renderToString
+  hosts receive it as the LEADING executable fragment of the returned HTML
+  (documented contract — renderToString does not insert into a head it
+  does not own).
+- SLOT (critique B11): branding-neutral, protocol-owned:
+  `globalThis[Symbol.for('tsrx.storage/1')]` — a map keyed by a
+  collision-free schema `<moduleId>#<key>` (definition identity), reserving
+  a future `@<elementInstance>` suffix for promotion. The symbol key and
+  entry schema are protocol constants exported by @markless/serializer;
+  frameless consumes the constant, not a branded literal. No claim that
+  current graphNodeId construction proves promotion-compat — the SCHEMA is
+  the compatibility surface.
+
+## [v2] D4'. Runtime: lazy-cell capability in the graph + hardened plane
+
+- LAZY READS (critique B7 — RuntimeGraph.read hits the cell map directly;
+  no first-read hook exists): packages/runtime/src/graph.ts gains an
+  explicit lazy-cell capability — a cell may carry a `read initializer`
+  invoked EXACTLY ONCE on first read (replacing the stored value, marking
+  dirty, honoring consent suppression), with tests for exactly-once,
+  failure (initializer throws ⇒ fallback + no retry storm), and
+  notification semantics. The storage plane supplies initializers; the
+  graph owns the hook.
+- WRITE-BACK HARDENING (critique M9): every driver write and root-attr
+  update wrapped per-subscription try/catch (quota/security errors must
+  not reject the flush or starve later subscriptions); tested.
+- ATTR POLICY (fold into key checkpoint): v1 keys must match
+  `[a-z][a-z0-9-]*` (new diagnostic) — keys are then valid data-* names by
+  construction; escaping schemes are a later owner choice.
+- CONSENT ACTIVATION (critique B5 tail): deferred-mode activation is a
+  HOST/CONTROL-PLANE api on the container/runtime handle (working name
+  `container.enableStorage()`), NOT a core authoring export.
+  [OWNER-CHECKPOINT: naming + surface placement, presented at delivery.]
+
+## [v2] D5'. Import sources: real threading, scoped
+
+`additionalFrameworkApiSources` threads through SemanticGraphInput →
+buildSemanticGraph → CompileTsrxModuleInput (compile-module.ts) — the
+actual entry points (critique M10). v1 SCOPE: direct compiler consumers
+only (frameless invokes the compiler directly); bundler/Vite/Rolldown
+option plumbing and TS-plugin auto-import behavior are RECORDED follow-ups,
+not v1.
+
+## [v2] D6'. Slices (recut per critique M12)
+
+- W1a declaration+binding: core stub/types/exports; collect-module-scope +
+  new collect-storage; artifacts.ts binding metadata; semantic-graph
+  index/types/diagnostics; reachability + unused-storage negative test;
+  state-lowering only if discrimination leaks (escalate if structural).
+- W1b transport+tier: payload-arena; compiler passes/protocol-state.ts;
+  serializer protocol/protocol-state/protocol-validation (capabilities);
+  runtime-demand-map + bundler transform.needsFullResume + chunking
+  metadata; negative lean-tier test; tests.
+- W1c import-sources (small; direct-compiler scope only).
+- W2a seed+render policy: SSR-artifact seed metadata (bundler transform/
+  source-module); serializer storage-seed helper + slot constants;
+  render-to-string storageAccess + generation + nonce; render-to-stream
+  parity; two-host-contract tests.
+- W2b runtime: graph.ts lazy-cell capability + tests; storage plane
+  (write-back, try/catch, attr) in web; payload-graph-construct slot
+  override; resume-runtime wiring; enableStorage control surface.
+- W2c browser proof: vitest-browser harness extension (ssr-plugin render
+  options — currently hardcoded/rejecting options, so harness work is IN
+  SCOPE) + fixtures executing the storage-poc contract: cold/warm/
+  write+reload/deferred-consent.
+- Order: W1a → W1b (+W1c riding) → T006 mid-critique → W2a → W2b → W2c →
+  T006 full boundary critique → W4 frameless (unchanged from v1).
+
+---
+(v1 text below, superseded where marked)
+
+
 Inputs: T002 surface map (all citations there), ratified direction (charter),
 storage-poc contract (65/65 reference), T009 SSR pattern. DETAILS marked
 [OWNER-CHECKPOINT] are presented before/at delivery, not silently decided.
