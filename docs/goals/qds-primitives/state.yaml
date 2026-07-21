@@ -36,7 +36,7 @@ agents:
   worker: installed
   judge: installed
 
-active_task: T005
+active_task: T008
 
 tasks:
   - id: T001
@@ -88,34 +88,44 @@ tasks:
   - id: T005
     type: scout
     assignee: Scout
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Promotion prior-art research, two halves: (a) crew mines the LOCAL qwik checkout for the $ serialization contract (what may cross a QRL boundary, captured-scope rules, unserializable-capture error modes, resume mechanics, any inline-script emission in core) as the direct constraint model for promotion rules; (b) PM-direct web research on the implicit-vs-explicit compiler-boundary track record: Marko automatic partial hydration (closest prior art to promotion), Qwik $ explicitness DX reception, Svelte's implicit-reactivity -> explicit-runes reversal (counter-datapoint), React Compiler auto-memoization reception."
     expected_output:
       - "notes/T005-promotion-prior-art.md"
-    receipt: null
+    receipt:
+      result: done
+      note: notes/T005-promotion-prior-art.md
+      summary: "Both halves banked. QWIK (crew, cited): capture discovery syntactic; serializability enforced by FIVE layers (type-aware lint, optimizer C02/C03, dev-runtime throw, serializer, resume) because $ is SEMANTIC; element identity needs VNode/container machinery; Qwik runs ZERO user code at parse time (loader installs infrastructure only; qFuncs = serialized-uninvoked precedent); qwikloader itself is a Terser+mangled inline script (QDS recipe). WEB: Marko = automatic hydration via cross-template analysis (feasible, niche); Svelte retreated from implicit SEMANTICS to runes; React Compiler = implicit OPTIMIZATION shipped at scale, silent bailouts managed by tooling + opt-out. Distinction: implicit semantics failed; implicit optimization won."
   - id: T006
     type: pm
     assignee: PM
-    status: queued
+    status: done
     reasoning_hint: medium
     objective: "Executed promotion probe: extend the poc/09-storage harness with a promoted-attach emulation — SSR HTML containing an element followed by a compiler-style inline script (measures children, corrects DOM, lands value in an element-scoped slot), runtime adapter consumes the seeded cell without re-measuring; assert pre-paint correction + zero duplicate measurement + storage-as-same-channel."
     expected_output:
       - "runner output banked in notes/T006-promotion-probe.md"
-    receipt: null
+    receipt:
+      result: done
+      note: "poc/09-storage/promoted/probe.mjs (executed)"
+      summary: "EXECUTED, real Chromium, ALL PASS. Promoted: attr correct AT first paint, exactly one measurement (in early script), runtime consumed seed. Demoted (120ms runtime latency): uncorrected attr at first paint (accepted flash), identical converged final state, still one measurement. Proves: promotion = timing upgrade, demotion = same semantics later. En-route fixes: runtime served with latency (trivial-page defer beat paint), seeded-flag boolean coercion."
   - id: T007
     type: judge
     assignee: Judge
-    status: queued
+    status: done
     reasoning_hint: high
     objective: "Synthesis: refined promotion design (rules, diagnostics, failure modes priced from T005 constraints + T006 execution) AND the storage-survival analysis — does storage() remain a primitive, become a compiler-known std-lib cell over the same promotion channel, or collapse entirely (write-back/cross-tab/consent/key-identity accounted); owner menu, SUGGESTIONS ONLY."
     expected_output:
       - "notes/T007-promotion-and-storage.md"
-    receipt: null
+    receipt:
+      result: done
+      decision: approved
+      note: notes/T007-promotion-and-storage.md
+      summary: "Promotion refined: 4 static rules (no runtime captures; static-only inputs via provenance; returnsCleanup=false; slot-seedable writes); benign demotion makes it implicit OPTIMIZATION (React Compiler/Marko class — shipped) not implicit SEMANTICS (Svelte-retreat class); ONE visibility layer needed vs Qwik's five error layers; currentScript adjacency replaces VNode identity; retries default; first-in-class novelty priced. STORAGE: promotion subsumes the SEED not the CONTRACT (write-back returns cleanup = never promotable; keys/consent/sync/driver are declaration features; document scope has no host) — raw recipe recreates corpus failures. Menu: (a) RECOMMENDED keep storage() as compiler-known declaration over unified channel; (b) drop (costly); (c) defer. Unproven: analyzer-at-scale, arbitrary-position streaming, multi-instance slot keying, report UX."
   - id: T008
     type: pm
     assignee: PM
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: "Deliver the research result + storage answer to the owner in plain language; record decision or next follow-up."
     receipt: null
