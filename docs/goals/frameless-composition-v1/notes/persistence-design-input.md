@@ -95,3 +95,17 @@ T013 dossier now evidences SPECIFICS (not candidates): corrupted-storage fallbac
 seed-slot contract, write-through timing vs the notification-atomic store
 contract, script-artifact seam (head include + CSP hash in build receipts), Qwik
 serialized-state patch mechanics.
+
+## Repo-side evidence (PM, 2026-07-20, read from pinned markless-core 0.1.1 d.ts)
+
+- Pinned signatures: `state<T>(initial: T): T` (NO options today);
+  `shared<T>(create, options?: SharedOptions)` (options-bag precedent exists).
+  => the language ask is an ADDITIVE second parameter on state() mirroring
+  shared()'s existing style — signature-compatible, small.
+- The pinned core ALREADY exports `resumeFromPayloadScripts` /
+  `ResumePayloadScriptsInput` / `ResumePayloadDocumentInput`: markless has a
+  script-fed resume-payload mechanism in the language runtime TODAY. The
+  persistence pre-paint script may land its seed through existing payload
+  machinery on markless targets (script-feeds-state is native to the language,
+  not an add-on) — T013 dossier should verify the payload-scripts contract as
+  the markless-side landing slot.
