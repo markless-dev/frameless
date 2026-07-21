@@ -69,7 +69,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-composition-v1/"
     command: "npx goalbuddy board docs/goals/frameless-composition-v1"
 
-active_task: T010  # P4 solid composition emitter (after P3 critique)
+active_task: T011  # P5 composition demo + CLI module-set + e2e
 
 tasks:
   - id: T001
@@ -191,17 +191,19 @@ tasks:
   - id: T010
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Solid composition emitter + gate per T004 SS3.2 (+T006 forwarding ruling). Sequential after T009 preferred. Critique mandatory."
     allowed_files: ["packages/frameworks/solid/**"]
     verify: ["node + solid-browser incl. composition calibration; v0 lanes green"]
     stop_if: ["dossier lacks evidence", "IR insufficiency — record /2 amendment, stop", "verification fails twice"]
-    receipt: null
+    receipt:
+      result: done
+      summary: "Solid composition emitter + gate complete through P4a (1 issue) + 3 emitter repair rounds + P4b + critique cycle (reject -> repair -> PM-verified): scope-switched shared (provider wrappers container/request, module singletons page), computed derived arrows (dependency-correct, probe-verified), T006 callback-prop forwarded refs, behaviors installing AT ATTACHMENT (onMount — the use:-timing crash taught Solid's creation-vs-attachment boundary) with GROUP semantics (authored-order install, deferred-first tracked effect, reverse-clean/authored-reinstall); 19 S-* policies mutation-tested incl. artifact-aware S-SH4 with member-alias leak closure; emitted-vs-reference Chromium smoke 8/8 scenarios + emitted container/page two-mount isolation. Adjudication 9 recorded the behavioral-not-structural cross-target principle (C5 vindicated the emitter over the reference). Solid 134/134, solid-browser 44/44, node 440/440, F8 held throughout."
   - id: T011
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: "Composition demo (demos/composition-kit) + CLI module-set orchestration + e2e extension + docs per T004 SS5/SS6. Fresh-clone verification mandatory (v0 T011 lesson)."
     allowed_files: ["demos/composition-kit/**", "packages/cli/**", "scripts/e2e.mjs", "vite.config.ts", "package.json", "pnpm-workspace.yaml", "pnpm-lock.yaml", "README.md"]
