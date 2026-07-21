@@ -151,6 +151,34 @@ not v1.
   public-render/shared.ts, packages/compiler/src/passes/public-render/
   render-body.ts (and their tests).
 
+## [v4] B2 final closure — reachability at state's own granularity
+
+Confirm-2 established payload-arena has no emitted-root artifact — and that
+today it emits EVERY state binding of a compiled module (critic's citation,
+artifacts.ts:520-523 / payload-arena semantics). Inventing a root-selection
+artifact for storage would give storage STRICTER reachability than state
+itself has. v4 therefore defines two-stage reachability matching existing
+semantics exactly:
+
+1. COMPILE-TIME (the new filter): `usedStorageBindings` = storage bindings
+   appearing in at least one component read/write record of the compiled
+   module. A declared-but-unreferenced storage() is dropped from payload
+   cells AND seed metadata — the inert-declaration guarantee (declare
+   without use ⇒ zero driver access) holds at the place the owner stated
+   it.
+2. MODULE-LEVEL: modules not shipped into a page contribute nothing — the
+   bundler's existing module pruning, no new artifact, cite in W1b receipt.
+
+RECORDED LIMIT (same limit state has today): a storage binding used by a
+component that ships in the page bundle but never renders will still seed.
+This is byte-consistent with how state payload cells behave and is the
+promotion-compatible boundary; tightening both together is possible future
+work, not a storage-specific gap.
+
+PM adjudication: three critique rounds converged to this single granularity
+question; accepted PM-side on the critic's own evidence (matching existing
+state semantics cannot introduce a new violation). Packet-cutting proceeds.
+
 ---
 (v1 text below, superseded where marked)
 

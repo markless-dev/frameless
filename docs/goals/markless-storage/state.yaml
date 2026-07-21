@@ -37,7 +37,7 @@ agents:
   worker: installed
   judge: installed
 
-active_task: T002
+active_task: T004
 
 tasks:
   - id: T001
@@ -52,27 +52,34 @@ tasks:
   - id: T002
     type: scout
     assignee: Scout
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Map the markless integration surface (crew, read-only): where declarations (state/shared/element) are recognized in the compiler (symbol/module handling), the payload/resume seed channel internals, SSR/HTML emission points for a browser seed script, runtime cell/graph implementation + notify contract (T004b atomic-write context), package layout for a new declaration, accepted-import-sources / import-validation site (P5 fix location), and test conventions."
     expected_output:
       - "notes/T002-markless-surface.md with file:line map"
-    receipt: null
+    receipt:
+      result: done
+      note: notes/T002-markless-surface.md
+      summary: "8-section file:line map (crew, read-only, feat/storage @ c1c4599): declaration recognition (framework-api.ts + imports.ts unions + collect-state/collect-module-scope dispatch), graph cells (batched flush, Object.is suppression), payload channel (protocol v1 cells[], resume-before-start CONFIRMED on this HEAD), SSR emission (headInjections + nonce in render-to-string; router-nonce gap; location:body never emitted), wake machinery (needsFullResume + demand map + lean tiers with own cell maps), import validation (frameworkApiSources literal-only), test conventions, public surface. FOUR ratified-design conflicts flagged: no storage anything in runtime; only state bindings enter cells[]; payload scripts are graph-seed not pre-paint; hasBrowserTriggers would drop storage-only payloads."
   - id: T003
     type: judge
     assignee: Judge
-    status: queued
+    status: done
     reasoning_hint: high
     objective: "Integration design + slice plan: exact storage() home (package/module), compiler recognition record, seed emission per output mode (payload vs early script), write-back/sync/consent runtime shape, accepted-import-sources decision for the frameless branding constraint, key-identity DESIGN OPTIONS (owner checkpoint — do not decide), slice sequence with allowed_files/verify/stop_if per worker."
     expected_output:
       - "notes/T003-design.md + worker slice contracts"
-    receipt: null
+    receipt:
+      result: done
+      decision: approved
+      note: notes/T003-design.md
+      summary: "Design hardened through THREE second-model critique rounds (reject 12 findings/6 blockers -> v2 repairs -> confirm 8/12 repaired -> v3 deltas -> confirm-2 3/4 PASS -> v4 PM adjudication on the last granularity question using the critic's own evidence). FINAL SHAPE: storage = writable kind:'state' binding + {key} metadata (graph id storage:<moduleId>#<key>); module-scope call lowered in public-render/{shared,render-body}.ts; reachability = usedStorageBindings (component read/write records; state's own granularity; unused declaration => zero everything, negative-tested); protocol VERSION 2 when storage present (v1 decoders strictly reject — cited); seed generated at RENDER time from structured metadata so storageAccess immediate|deferred actually gates driver reads; two host contracts (router head / leading fragment); slot = Symbol.for tsrx.storage/1 + <moduleId>#<key> schema (branding-neutral, promotion-suffix reserved); runtime graph gains exactly-once lazy-cell read initializer; storage forces full resume via transform.needsFullResume + demand map (negative lean test); write-back hardened (per-subscription try/catch, key charset [a-z][a-z0-9-]* => valid data-attrs); additionalFrameworkApiSources threaded SemanticGraphInput->buildSemanticGraph->CompileTsrxModuleInput (direct-compiler scope). Six slices W1a-W2c. Owner checkpoints preserved: key namespacing, consent surface naming."
   - id: T004
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
-    objective: "Markless slice 1 (crew, markless branch): storage() declaration + runtime persisted cell (inert/lazy/write-back) + compiler recognition + unit tests; suite green."
+    objective: "Markless slice 1 (crew, markless branch; aggregates design slices W1a declaration/binding/lowering + W1b transport/tier + W1c import-sources): storage() declaration, writable binding + metadata, public-render lowering, reachability filter, protocol v2 transport, full-resume forcing, import-source config; suites green per unit."
     allowed_files:
       - "markless worktree paths fixed by T003 design"
     verify:
