@@ -273,6 +273,12 @@ async function buildEnrichedIrArtifact({
 						`Event ${event.id} host ownership disagrees with its handler span ownership.`,
 					);
 				}
+				assertNoInlineSharedFactoryCall(
+					node,
+					environment,
+					semanticGraph,
+					'handler expression',
+				);
 				const effects = deriveHandlerEffects(node, environment);
 				return {
 					expression: serializeAst(node),
@@ -645,6 +651,12 @@ export function buildTemplateNode(
 						`Behavior attach on ${semanticHost.id} must contain an expression.`,
 					);
 				}
+				assertNoInlineSharedFactoryCall(
+					attribute.value.expression,
+					environment,
+					context.graph,
+					'template expression',
+				);
 				const existing = context.behaviorNodes.get(semanticHost.id) ?? [];
 				existing.push({
 					node: attribute.value.expression,
@@ -678,6 +690,12 @@ export function buildTemplateNode(
 				staticAttributes.push({ name, value: String(attribute.value.value) });
 			} else if (attribute.value.type === 'JSXExpressionContainer') {
 				const expression = attribute.value.expression;
+				assertNoInlineSharedFactoryCall(
+					expression,
+					environment,
+					context.graph,
+					'template expression',
+				);
 				const semanticRead = context.graph.templateReads.find(
 					(read) =>
 						read.hostNodeId === semanticHost.id &&
@@ -718,6 +736,12 @@ export function buildTemplateNode(
 
 	if (node.type === 'JSXExpressionContainer') {
 		if (!node.expression || node.expression.type === 'JSXEmptyExpression') return [];
+		assertNoInlineSharedFactoryCall(
+			node.expression,
+			environment,
+			context.graph,
+			'template expression',
+		);
 		const site = expressionSite(node.expression, environment);
 		if (
 			site.reads.length === 1 &&
@@ -756,6 +780,12 @@ export function buildTemplateNode(
 	if (node.type === 'JSXIfExpression') {
 		const site = context.branchSites[context.branchCursor++];
 		if (!site) throw new Error('A TSRX branch has no SemanticGraphArtifact branch record.');
+		assertNoInlineSharedFactoryCall(
+			node.test,
+			environment,
+			context.graph,
+			'template expression',
+		);
 		const arms: TemplateBranchArm[] = [
 			{
 				kind: 'then',
@@ -797,6 +827,18 @@ export function buildTemplateNode(
 				`Keyed repeat ${repeat.id} host ownership disagrees with its AST component.`,
 			);
 		}
+		assertNoInlineSharedFactoryCall(
+			node.right,
+			environment,
+			context.graph,
+			'template expression',
+		);
+		assertNoInlineSharedFactoryCall(
+			node.key,
+			environment,
+			context.graph,
+			'template expression',
+		);
 		const collection = expressionSite(node.right, environment);
 		const repeatItems = new Map(environment.repeatItems);
 		if (repeat.collectionGraphNodeId) {
@@ -891,6 +933,12 @@ function buildComponentReference(
 				: attribute.value?.type === 'Literal'
 					? attribute.value
 					: { type: 'Literal', value: true, start: attribute.start, end: attribute.end };
+		assertNoInlineSharedFactoryCall(
+			expression,
+			environment,
+			context.graph,
+			'template expression',
+		);
 		if (
 			prop.sourceSpan &&
 			(expression.start !== prop.sourceSpan.start || expression.end !== prop.sourceSpan.end)
@@ -939,6 +987,83 @@ function blockTemplate(
 
 function expressionSite(node: AnyNode, environment: ReadEnvironment): ExpressionSite {
 	return { expression: serializeAst(node), reads: deriveReads(node, environment) };
+}
+
+function assertNoInlineSharedFactoryCall(
+	node: AnyNode,
+	environment: ReadEnvironment,
+	graph: SemanticGraphArtifact,
+	construct: 'template expression' | 'handler expression',
+): void {
+	const factories = new Set(graph.sharedDefinitions.map((definition) => definition.name));
+	if (factories.size === 0) return;
+
+	const resolvesToFactory = (name: string, bound: ReadonlySet<string>): boolean =>
+		factories.has(name) &&
+		!bound.has(name) &&
+		!environment.bindings.has(name) &&
+		!environment.aliases.has(name) &&
+		!environment.locals.has(name) &&
+		!environment.repeatItems.has(name) &&
+		!environment.sharedInstances.has(name);
+
+	const failForCall = (
+		call: AnyNode | undefined,
+		propertyName: string,
+		bound: ReadonlySet<string>,
+	): void => {
+		if (call?.callee?.type !== 'Identifier' || !resolvesToFactory(call.callee.name, bound))
+			return;
+		throw new Error(
+			`Shared factory ${call.callee.name} is called inline in a ${construct}; bind the instance to a local first, or the property ${propertyName} is unmapped.`,
+		);
+	};
+
+	const visit = (current: AnyNode | null | undefined, bound: ReadonlySet<string>): void => {
+		if (!current || typeof current !== 'object') return;
+		if (isFunctionNode(current)) {
+			const nextBound = new Set(bound);
+			for (const parameter of current.params ?? []) {
+				for (const name of patternNames(parameter)) nextBound.add(name);
+			}
+			visit(current.body, nextBound);
+			return;
+		}
+		if (current.type === 'BlockStatement') {
+			const nextBound = new Set(bound);
+			for (const statement of current.body ?? []) {
+				if (statement.type === 'VariableDeclaration') {
+					for (const declaration of statement.declarations ?? []) {
+						for (const name of patternNames(declaration.id)) nextBound.add(name);
+					}
+				}
+				if (statement.type === 'FunctionDeclaration' && statement.id?.name)
+					nextBound.add(statement.id.name);
+			}
+			for (const statement of current.body ?? []) visit(statement, nextBound);
+			return;
+		}
+		const unwrapped = current.type === 'ChainExpression' ? current.expression : current;
+		if (unwrapped.type === 'MemberExpression') {
+			failForCall(
+				unwrapCall(unwrapped.object),
+				staticPropertyName(unwrapped.property) || '<computed>',
+				bound,
+			);
+		}
+		if (unwrapped.type === 'CallExpression') {
+			failForCall(unwrapped, '<result>', bound);
+		}
+		for (const [key, value] of Object.entries(unwrapped)) {
+			if (OMITTED_AST_KEYS.has(key) || key === 'type' || key === 'start' || key === 'end')
+				continue;
+			if (Array.isArray(value)) {
+				for (const child of value) if (isNode(child)) visit(child, bound);
+			} else if (isNode(value)) visit(value, bound);
+		}
+	};
+
+	visit(node, new Set());
 }
 
 function deriveReads(node: AnyNode, environment: ReadEnvironment): GraphReadRef[] {

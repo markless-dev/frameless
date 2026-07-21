@@ -125,7 +125,31 @@ describe('frameless-enriched-ir/2 composition contracts', () => {
 			export function Reader() @{ const counter = useCounter(); <output>{counter.missing}</output> }`;
 		await expect(
 			buildEnrichedIr({ filename: 'src/shared-missing.tsrx', source: missingProperty }),
-		).rejects.toThrow(/Shared read .*counter\.missing.*definition.*property/i);
+		).rejects.toThrow(
+			'Shared read counter.missing for definition shared:src/shared-missing.tsrx#useCounter has unmapped property missing.',
+		);
+	});
+
+	test('fails closed when a shared factory is called inline in a template expression', async () => {
+		const inlineSharedRead = `import { shared, state } from "@markless/core";
+			export const useC = shared(() => { let count = state(0); return { count, increment() { count++; } }; });
+			export function A() @{\n\t<output>{useC().missing}</output>\n}`;
+		await expect(
+			buildEnrichedIr({ filename: 'src/shared-inline.tsrx', source: inlineSharedRead }),
+		).rejects.toThrow(
+			'Shared factory useC is called inline in a template expression; bind the instance to a local first, or the property missing is unmapped.',
+		);
+	});
+
+	test('fails closed when a shared factory is called inline in an event handler', async () => {
+		const inlineSharedCall = `import { shared, state } from "@markless/core";
+			export const useC = shared(() => { let count = state(0); return { count, increment() { count++; } }; });
+			export function A() @{ <button onClick={() => useC().increment()}>go</button> }`;
+		await expect(
+			buildEnrichedIr({ filename: 'src/shared-inline-handler.tsrx', source: inlineSharedCall }),
+		).rejects.toThrow(
+			'Shared factory useC is called inline in a handler expression; bind the instance to a local first, or the property increment is unmapped.',
+		);
 	});
 
 	test('fails closed for the returned-function counter.increment shared-call probe', async () => {
@@ -144,7 +168,9 @@ describe('frameless-enriched-ir/2 composition contracts', () => {
 				filename: 'src/shared-returned-function.tsrx',
 				source: returnedFunction,
 			}),
-		).rejects.toThrow(/Shared call .*counter\.increment.*definition.*property/i);
+		).rejects.toThrow(
+			'Shared call counter.increment for definition shared:src/shared-returned-function.tsrx#useCounter has unmapped property increment.',
+		);
 	});
 
 	test('marks relative TSRX imports and preserves structured component props', async () => {
