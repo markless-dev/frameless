@@ -1,0 +1,126 @@
+# GoalBuddy v2 state.yaml
+# Board truth lives here. goal.md is the editable charter; notes/ holds long receipts only.
+
+version: 2
+
+goal:
+  title: "Storage tradeoff study: device state for markless AND frameless"
+  slug: "storage-tradeoff"
+  kind: specific
+  tranche: "Steelman the candidate space for device-state handling, score every candidate against BOTH consumption modes with executed/cited evidence, and deliver an owner decision menu that makes the choice evident. Exploration only — the owner ratifies."
+  status: active
+  oracle:
+    signal: "The owner reads the final tradeoff dossier + decision menu and can decide without further research — every candidate scored against both modes, rejections reasoned, unknowns priced."
+    cadence: "at each scout/judge receipt and at the final decision menu"
+    final_proof: "Final audit records the owner's decision (or the named evidence gap that prevented one). full_outcome_complete requires the owner-facing menu was DELIVERED and answered."
+  intake:
+    original_request: "You're going to explore what the best tradeoff is here for handling this type of state and how we can keep it both ideal for both frameless and markless."
+    interpreted_outcome: "An evidence-complete tradeoff analysis of device-state handling across both consumption modes, ending in an owner decision menu — research until the answer is super evident."
+    input_shape: specific
+    audience: "The owner (markless/Frameless author), deciding the storage/device-state design."
+    authority: requested
+    proof_type: decision
+    completion_proof: "Owner-facing decision menu delivered with evidence-complete backing; owner decision (or named gap) recorded by the final audit."
+    likely_misfire: "Premature convergence — presenting one candidate as conclusion or recording exploration as decisions (occurred 2026-07-20, owner-corrected twice); candidate-space theater (strawmen instead of steelmanned options)."
+    blind_spots_considered:
+      - "Both-modes asymmetry can hide in averaged scores — the board mandates explicit per-mode scoring."
+      - "The declaration-inertness principle (no other declaration does client stuff) may rule out entire candidate families — must be tested against each, not assumed."
+      - "Consent/ePrivacy ownership may force app-level enablement regardless of DX preference — legal line already evidenced, must be carried into every candidate."
+      - "Frameless branding constraint (no markless imports for frameless consumers) interacts with package-home options non-obviously."
+      - "Driver sync/async (localStorage vs SQLite) may be the hidden decider for the native path."
+    existing_plan_facts:
+      - "T013-persistence-api.md holds the full prior trail; post-evidence-pass sections are UNSETTLED exploration the owner declined to ratify — candidate material only."
+      - "Slack session (2026-07-20): storage() leaning; separate-package direction (@markless/storage, driver/repository); device-state-not-data charter (owner's engineer-lens list); progressive runtime execution insight; explicit-key sketch storage('theme','light'); 'too much magic isn't great' (Patrick); declaration-inertness concern (owner)."
+      - "Tonight's evidence convergence to be banked verbatim by T001: ePrivacy 5(3) technology-neutral (app owns storage-access timing); explicit-boundary ecosystem pattern; next-themes provider-as-enablement precedent."
+      - "Proven repo facts available: T004b notification-atomic write contract; resumeFromPayloadScripts in pinned core; qwik build/v2 lazy-restore + native state-patch scripts (corpus-verified 2026-07-20)."
+      - "Process: crew for repo/corpus probes (scratch-only execution), PM-direct for web research (crew sandbox lacks web + flaky DNS — evidenced); workflows BANNED (owner)."
+
+rules:
+  pm_owns_state: true
+  one_active_task: true
+  max_write_workers: 1
+  no_implementation_without_worker_or_pm_task: true
+  no_completion_without_judge_or_pm_audit: true
+  planning_is_not_completion: true
+  queued_required_worker_blocks_completion: true
+  continuous_until_full_outcome: true
+  missing_input_or_credentials_do_not_stop_goal: true
+  intake_misfire_must_be_audited: true
+  goal_pressure_requires_oracle: true
+  no_completion_on_weak_proof: true
+  slice_policy:
+    max_consecutive_tiny_tasks: 2
+    prefer_vertical_slices: true
+    judge_picks_largest_safe_slice: true
+    worker_completes_whole_slice: true
+
+agents:
+  # installed | bundled_not_installed | missing | unknown
+  scout: installed
+  worker: installed
+  judge: installed
+
+visual_board:
+  # none | local | unknown
+  selected: local
+  local:
+    status: live
+    url: "http://goalbuddy.localhost:41737/storage-tradeoff/"
+    command: "npx goalbuddy board docs/goals/storage-tradeoff"
+
+active_task: T001
+
+tasks:
+  - id: T001
+    type: pm
+    assignee: PM
+    status: active
+    reasoning_hint: medium
+    objective: "Bank the chat-only evidence verbatim into notes/ (tonight's three-line convergence with citations; the declaration-inertness analysis incl. the compiled-upgrade reframe and module-scope option; the capability-vs-enablement split sketch) so no evidence lives only in conversation; annotate T013-persistence-api.md's status caveat by reference, not by editing that file."
+    receipt: null
+  - id: T002
+    type: scout
+    assignee: Scout
+    status: queued
+    reasoning_hint: medium
+    objective: "Steelman candidates A-E (charter list): for each, write the strongest honest version — exact authored surface, what each mode (markless runtime / frameless targets) does with it, how it answers every cross-cutting axis (key identity, package home + frameless branding, enablement, driver sync/async, consent/CSP ownership), and the sharpest argument AGAINST it. Extend the space if a real candidate is missing; kill duplicates with reasons."
+    receipt: null
+  - id: T003
+    type: scout
+    assignee: Scout
+    status: queued
+    reasoning_hint: medium
+    objective: "Evidence pass per candidate: corpus probes (scratch-only — markless payload-script contract shapes, progressive-chunk feasibility for an early storage chunk, qwik v2 patch-script status) + web where load-bearing (provider-pattern variants beyond next-themes; manifest/file-convention precedents e.g. route files, app manifests; any framework shipping library-declared page behavior and the outcome). Executed vs cited vs inferred labeled per claim."
+    receipt: null
+  - id: T004
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Tradeoff matrix + decision menu: score every surviving candidate PER MODE (markless ideal-ness, frameless ideal-ness — asymmetries explicit, never averaged), against the constraints (inertness principle, consent ownership, branding, device-state-not-data), with the evidence trail per cell; produce the owner decision menu (2-4 real options, each with what-you-get/what-you-give-up, a recommendation with reasoning, and the named unknowns each option carries). NO ratification — menu preparation only."
+    receipt: null
+  - id: T005
+    type: pm
+    assignee: PM
+    status: queued
+    reasoning_hint: medium
+    objective: "Deliver the decision menu to the owner (plain-language, understandable without goal context, per AGENTS.md decision-menu rules) and record the owner's choice or their named evidence gap; if a gap — spawn the targeted follow-up scout and loop."
+    receipt: null
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Final audit: was the menu evidence-complete and delivered; did the owner decide (record it) or name a gap (record the loop state); misfire check — was anything presented as decided that the owner did not ratify; full_outcome_complete accordingly."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "owner decision or named gap"
+    receipt: null
+
+checks:
+  dirty_fingerprint: "prep-only (worktree branch worktree-persistence-api-note)"
+  last_verification:
+    result: unknown
+    task: null
+    commands: []
