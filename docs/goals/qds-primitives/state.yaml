@@ -36,40 +36,50 @@ agents:
   worker: installed
   judge: installed
 
-active_task: T001
+active_task: T004
 
 tasks:
   - id: T001
     type: scout
     assignee: Scout
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Full-library QDS pattern inventory (crew, read-only): sweep every component in the local qwik-design-system checkout for imperative browser machinery — inline/injected/minified scripts (verify the owner's carousel recollection against source: which script, which browser API, minified how, flash-prevention or not), useVisibleTask$/useTask$ with DOM access, ResizeObserver/MutationObserver/IntersectionObserver, measurement reads (getBoundingClientRect/offsetWidth), focus/scroll management, event-listener wiring outside JSX, matchMedia, rAF loops — each with file:line, when it runs (SSR/pre-paint/resume/visible), WHY it exists (flash prevention, measurement, reactive observation, a11y/focus, lifecycle), and what breaks without it."
     expected_output:
       - "notes/T001-qds-inventory.md: full pattern inventory with citations, per-case why, frequency counts, carousel recollection verified/corrected"
-    receipt: null
+    receipt:
+      result: done
+      note: notes/T001-qds-inventory.md
+      summary: "Crew scout, full-library, read-only, all claims cited. HEADLINES: (1) owner recollection CORRECTED — the carousel script (view-navigation.script.ts, injected via dangerouslySetInnerHTML after the slot, minified by a bespoke rolldown plugin with oxc-minify) is primarily PRE-RESUME LAYOUT MEASUREMENT (parse-time elementsFromPoint + getBoundingClientRect via document.currentScript, retry on load/fonts.ready) landing results on window.carouselState for resumed code; flash-prevention (CSS-hidden nav triggers revealed on measure) is a side effect. (2) ZERO ResizeObserver/IntersectionObserver in the whole library; one shared MutationObserver exists only as an unmount-cleanup hack (use-unmount). (3) .browser.tsx = Playwright test files, not shipped code. (4) Duplication: roving focus in 12 families, 3 TreeWalker routines, 18 getBoundingClientRect sites with caching only in carousel, global pointer tracking in 3 inconsistent forms. (5) Explicit Qwik friction: menu sync key suppression (v1 serialization), select render-order label tradeoff naming a script tag as the avoided alternative, visible-task eagerness hacks with in-code warnings. Static-read limits recorded (T001 note F)."
   - id: T002
     type: scout
     assignee: Scout
-    status: queued
+    status: done
     reasoning_hint: medium
     objective: "Primitive-surface map (PM/crew, read-only): establish what 'attach' and the adjacent surface actually are today — element-scoped behaviors/refs (ElementHandle/Behavior/HandleCall) in the frameless enriched IR + composition notes, markless-side equivalents (read-only), the recommended storage() contract — and characterize each primitive's execution timing/capabilities so T003 can honestly assess fit per audited class."
     expected_output:
       - "notes/T002-surface-map.md: current + planned primitive surface with execution-timing semantics, cited to repo sources"
-    receipt: null
+    receipt:
+      result: done
+      note: notes/T002-surface-map.md
+      summary: "PM-executed (quick-lookup class, done while crew swept). attach = element() handle + attach={(node)=>cleanup}: IR BehaviorRecord (serialized AST, host binding, provenance-tracked inputs, cleanup flag, order), HandleCall for structured method calls. TIMING (the load-bearing facts): React lowers behaviors into ONE useCallback callback ref (commit-time = pre-paint on client mounts, but first run on SSR content is at HYDRATION — after the user saw server HTML); Solid = onMount/onCleanup class. storage() seed family is the ONLY surface reaching HTML-parse/pre-first-paint on SSR. BehaviorRecord is single-run+cleanup; no re-run-on-input-change semantics in emitters (flagged). Timing ladder written for T003 scoring."
   - id: T003
     type: judge
     assignee: Judge
-    status: queued
+    status: done
     reasoning_hint: high
     objective: "Synthesis: classify the T001 inventory into primitive-requirement classes (by WHY, never collapsing classes), assess per class whether attach/existing surface covers it (with timing semantics from T002), name the gaps that need something new (e.g. pre-paint element-scoped script, observer primitive, measure primitive), and produce the owner-facing 'what we need' menu — options with tradeoffs where open, SUGGESTIONS ONLY."
     expected_output:
       - "notes/T003-what-we-need.md: requirement classes -> covered/gap verdicts -> owner menu"
-    receipt: null
+    receipt:
+      result: done
+      decision: approved
+      note: notes/T003-what-we-need.md
+      summary: "Synthesis (PM as Judge; classes kept distinct; every requirement traced to citations). VERDICTS: R1 parse-time element work = THE one true primitive gap (carousel script + select avoided-script-tag + menu sync gate + eagerness hacks all live there; attach is structurally too late on SSR; QDS hand-built a 5-part compiler pipeline for one script; same landing-slot architecture as our storage seed) -> owner chooses attach-variant vs distinct early-script primitive, sharing the seed machinery either way. R2 observers/lifecycle = attach CONFIRMED as host (cleanup-tracked records delete the use-unmount MutationObserver hack + leak-suspects); riders: eagerness hint vs inference, single-run semantics sufficient today. R3 reactive measurement = std-lib size/rect cell over attach, not a language primitive. R4 focus/roving-tabindex = std-lib focus-group behavior (biggest duplication: 12 families). R5 animation/gesture math = no primitive need. Corrections banked: carousel = measurement-first; zero observers exist to generalize from (need inferred from 2 stale-layout gaps, labeled)."
   - id: T004
     type: pm
     assignee: PM
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: "Deliver the 'what we need' answer to the owner in plain language (per decision-menu rules: understandable without goal context) and record their decision or named follow-up."
     receipt: null
