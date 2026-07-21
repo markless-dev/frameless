@@ -68,20 +68,23 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/storage-tradeoff/"
     command: "npx goalbuddy board docs/goals/storage-tradeoff"
 
-active_task: T001
+active_task: T002
 
 tasks:
   - id: T001
     type: pm
     assignee: PM
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Bank the chat-only evidence verbatim into notes/ (tonight's three-line convergence with citations; the declaration-inertness analysis incl. the compiled-upgrade reframe and module-scope option; the capability-vs-enablement split sketch) so no evidence lives only in conversation; annotate T013-persistence-api.md's status caveat by reference, not by editing that file."
-    receipt: null
+    receipt:
+      result: done
+      note: notes/T001-banked-evidence.md
+      summary: "Chat-only evidence banked verbatim with citations: consent law (app owns storage-access timing), explicit-boundary ecosystem pattern, next-themes capability/enablement precedent, executed repo/corpus facts (qwik lazy restore + patch scripts, resumeFromPayloadScripts, T004b contract, storage-event spec), the declaration-inertness asymmetry analysis, and six candidate sketches as steelman targets. T013 status caveat annotated by reference, file untouched."
   - id: T002
     type: scout
     assignee: Scout
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: "Steelman candidates A-E (charter list): for each, write the strongest honest version — exact authored surface, what each mode (markless runtime / frameless targets) does with it, how it answers every cross-cutting axis (key identity, package home + frameless branding, enablement, driver sync/async, consent/CSP ownership), and the sharpest argument AGAINST it. Extend the space if a real candidate is missing; kill duplicates with reasons."
     receipt: null
