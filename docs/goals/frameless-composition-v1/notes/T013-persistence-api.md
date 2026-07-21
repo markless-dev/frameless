@@ -310,3 +310,23 @@ Open for the spec update the owner is writing: exact @markless/storage API
 whether frameless targets consume storage() via the same compiler records
 (they must — the graph property is the cross-target contract), cookie/maxAge
 option shape for the server-readable case.
+
+## RESOLUTION (owner + PM, 2026-07-20): package boundary != semantics boundary
+
+Owner: "frameless has this exact same concept — people are definitely going to
+want storage." Resolved: @markless/storage is a DISTRIBUTION boundary only. The
+SEMANTICS live in the graph, and the graph is what Frameless consumes:
+1. The compiler blesses @markless/storage as a semantic import (same import-
+   tracking mechanism that recognizes state/shared/element today — the blessed
+   list grows from one package to two). storage() calls produce TARGET-AGNOSTIC
+   records: { key, initial, medium hint, sync }.
+2. Frameless emitters lower from records, never from the package runtime —
+   all T013 lowering contracts apply unchanged (seed slot, script, write-
+   through, gates). No markless runtime ever ships in compiled output.
+3. Driver pattern splits by consumption mode: markless apps = RUNTIME drivers
+   (dynamic, platform-configured, SQLite on native); frameless targets =
+   COMPILE-TIME driver selection per target. Same records, two translators —
+   the metadata thesis applied.
+4. Storage is thereby the FORCING FUNCTION for the compiler extension API:
+   the first non-core package producing graph semantics; its blessing
+   mechanism seeds the extension surface (router next, per the discovery plan).
