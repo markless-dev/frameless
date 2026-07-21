@@ -8,7 +8,7 @@ goal:
   slug: "storage-tradeoff"
   kind: specific
   tranche: "Steelman the candidate space for device-state handling, score every candidate against BOTH consumption modes with executed/cited evidence, and deliver an owner decision menu that makes the choice evident. Exploration only — the owner ratifies."
-  status: active
+  status: done
   oracle:
     signal: "The owner reads the final tradeoff dossier + decision menu and can decide without further research — every candidate scored against both modes, rejections reasoned, unknowns priced."
     cadence: "at each scout/judge receipt and at the final decision menu"
@@ -68,7 +68,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/storage-tradeoff/"
     command: "npx goalbuddy board docs/goals/storage-tradeoff"
 
-active_task: null  # T009 SSR probe done (owner-named gap executed, all assertions pass); awaiting owner ratification; T999 queued
+active_task: null  # goal closed: owner answered the menu with a named evidence gap (cross-framework POC, commissioned as goal storage-poc); T999 audit recorded
 
 tasks:
   - id: T001
@@ -162,17 +162,30 @@ tasks:
       result: done
       note: notes/T009-ssr-probe.md
       summary: "EXECUTED, all assertions pass in both cases (cold + stored value): inline seed script present in renderToString output and runs pre-paint (root attr correct AT first paint, 12-20ms); ZERO hydration mismatch/recoverable-error messages under dev build + StrictMode (fallback-parity makes server HTML and client first render identical by construction); stored value patched to content exactly once post-hydration; ZERO client driver reads (landing-slot handshake consumed — combining the provider channel with the Nuxt-style slot, which no surveyed library does). Retires the C3-SSR unknown for React. Residue: Solid SSR + streaming not separately probed; real markless emitted output re-run at implementation time; server-truthful content requires the cookie driver (unprobed). Owner has ratified nothing."
+  - id: T010
+    type: pm
+    assignee: PM
+    status: done
+    reasoning_hint: medium
+    objective: "Record the owner's response to the refreshed menu + clarifications + T008/T009 evidence."
+    receipt:
+      result: done
+      summary: "Owner response 2026-07-21 (verbatim): 'ok I want you to make a POC of the storage function across several different frameworks, angular, react, svelte, vue, and see if it works. Do this in a new git worktree' — a NAMED EVIDENCE GAP (executed cross-framework proof), not a ratification. Preceding owner engagement in the same session: asked what the API decisions concretely are (answered with code-level breakdown of the three decision points), asked about persist-true removal/eagerness/core-vs-package (answered with recommendation: standalone storage() in core, lazy driver reads inert at import, optional consent gate, per-platform seed switch), asked about script-on-render SSR confidence (answered with the executed T009 probe). No option ratified. The gap is delegated to successor goal storage-poc (docs/goals/storage-poc/), whose charter records that POC success is evidence for this decision, never ratification of it."
   - id: T999
     type: judge
     assignee: Judge
-    status: queued
+    status: done
     reasoning_hint: high
     objective: "Final audit: was the menu evidence-complete and delivered; did the owner decide (record it) or name a gap (record the loop state); misfire check — was anything presented as decided that the owner did not ratify; full_outcome_complete accordingly."
     expected_output:
       - "complete | not_complete"
       - "full_outcome_complete: true | false"
       - "owner decision or named gap"
-    receipt: null
+    receipt:
+      result: done
+      decision: complete
+      full_outcome_complete: true
+      summary: "AUDIT: (1) Menu evidence-complete and DELIVERED — T004 matrix/menu, T005 delivery, T006 empirical survey (owner-directed), T007 refreshed suggestions, T008 executed browser-ordering probe + winner source-reads, T009 executed SSR+hydration probe (owner-named gap), plus plain-language API breakdown and an explicit recommendation on all three decision points. (2) Menu ANSWERED — not with a ratification but with a named evidence gap per T010 (cross-framework POC commission, verbatim recorded), which the charter's final_proof explicitly accepts ('the owner's decision or the named evidence gap that prevented one'); full_outcome_complete: true by the charter's own definition (menu delivered AND answered). (3) MISFIRE CHECK PASSED: no receipt or note presents anything as decided/ratified; all outputs labeled SUGGESTION/EVIDENCE; two self-corrections banked against our own claims (sync-axis softening in T008; env-blocked probe recorded honestly before being executed for real). (4) Decision state at close: API shape NOT ratified — storage(key,fallback) standalone/core, lazy+gate, per-platform seed switch stand as the RECOMMENDATION; the decision now waits on storage-poc evidence. Residual priced unknowns carried in T008/T009 notes (key stability, async-driver lifecycle, facade timing, Solid/streaming SSR)."
 
 checks:
   dirty_fingerprint: "prep-only (worktree branch worktree-persistence-api-note)"
