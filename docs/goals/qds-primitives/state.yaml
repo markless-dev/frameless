@@ -3,7 +3,7 @@ version: 2
 goal:
   slug: qds-primitives
   title: "Audit Qwik Design System; determine needed primitives"
-  status: active
+  status: done
   charter: goal.md
   kind: audit
   tranche: "Sweep the entire QDS component library for imperative browser-machinery patterns (inline/minified scripts, observers, measurement, focus/scroll, visible tasks), characterize why each exists, classify into primitive-requirement classes, assess attach-fit per class, and deliver an owner-facing 'what we need' menu — suggestions only, owner ratifies."
@@ -36,7 +36,7 @@ agents:
   worker: installed
   judge: installed
 
-active_task: T008
+active_task: null  # goal closed: owner ratified the storage() direction by commissioning markless-storage; T999 recorded
 
 tasks:
   - id: T001
@@ -125,21 +125,27 @@ tasks:
   - id: T008
     type: pm
     assignee: PM
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Deliver the research result + storage answer to the owner in plain language; record decision or next follow-up."
-    receipt: null
+    receipt:
+      result: done
+      summary: "Delivered (promotion research + storage answer). Owner follow-ups answered: 'Ok so only new API would be storage()?' (yes — confirmed), 'How good do you feel about this API?' (high on core two-arg shape — jotai-convergent signature, 65/65 executed, SSR-proven; edges named: driver surface, non-string values, key stability), 'And should it be injecting a script?' (declaration inert; compiler injects from reachability — enablement switch dropped as library-world thinking; consent switch = the one policy gate). OWNER RESPONSE = RATIFICATION BY COMMISSION (verbatim): 'The markless compiler needs to support storage, so let's figure out how this is going to work directly in markless, then consume that in frameless' -> goal markless-storage created; markless write access granted at its intake."
   - id: T999
     type: judge
     assignee: Judge
-    status: queued
+    status: done
     reasoning_hint: high
     objective: "Final audit: was the inventory full-library with per-case why; were classes kept distinct; was every requirement traced to cited cases; was the menu delivered and nothing presented as decided; record owner response state and full_outcome_complete accordingly."
     expected_output:
       - "complete | not_complete"
       - "full_outcome_complete: true | false"
       - "owner decision or named follow-up"
-    receipt: null
+    receipt:
+      result: done
+      decision: complete
+      full_outcome_complete: true
+      summary: "AUDIT: inventory was full-library (28 components + base + motion, cited) with why-classes kept distinct; carousel recollection and observer expectation both corrected honestly; every requirement traced to citations; 'what we need' menu DELIVERED and iterated with the owner through four rounds (primitive sketch -> simplification -> zero-new-API -> research round with executed promotion probe + Qwik constraint model + storage-survival analysis). Owner ANSWERED by ratifying the direction and commissioning implementation (markless-storage goal) — the charter's decision deliverable is satisfied. Misfire check PASSED: options presented as menus throughout; the zero-new-API pivot was owner-pushed and recorded as such; details (key identity, consent surface) explicitly reserved as owner checkpoints in the successor goal. Priced unknowns carried into markless-storage: promotion analyzer at scale, multi-instance slot keying, key stability."
 
 checks:
   dirty_fingerprint: "board prepped on worktree-storage-poc (docs-only)"
