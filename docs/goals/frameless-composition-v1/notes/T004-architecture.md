@@ -243,3 +243,22 @@ OVERTURN TRIGGER (recorded): when oxc ships ESTree-input codegen + a JS semantic
 scope API, migrate the emitters off Babel and DELETE estree-to-babel (the IR is
 already ESTree — the conversion layer evaporates). Re-probe at each vite-plus
 toolchain bump.
+
+## Tooling note UPDATE (2026-07-20, executed): yuku-codegen changes the answer
+
+Owner pointed at the Yuku toolchain (Zig, arshad-yaseen). Probed live: the bare
+`yuku` npm package is a one-line placeholder, but `yuku-codegen@0.7.0` (published
+2026-07-19) exports print/generate/minify/strip and — EXECUTED PROOF — printed a
+hand-constructed ESTree Program containing JSX with zero errors and no source
+text: `export function Reader(props) { return <output data-cell=>{useCounter("count")}</output>; }`.
+This is the ESTree-input codegen capability oxc lacks; the babel-vs-oxc rationale
+above is now PARTIALLY SUPERSEDED. Caveats found in the same probe: a JSX
+attribute value printed EMPTY (data-cell= — fidelity bug or AST-shape expectation;
+must be chased), and the scope/semantic story for our collision-safe rename
+machinery is unverified (@yuku-toolchain/{traverse,semantic} not npm-published as
+of today; yuku-parser exports under inspection). DECISION: full evaluation scout
+queued (fidelity round-trip of all six emitted goldens via yuku print + oxfmt
+byte-compare, attribute-value quirk minimal repro, traverse/semantic availability,
+maintenance-risk assessment — single-maintainer, days-old release). Migration, if
+it survives evaluation, is its own post-tranche package; the composition emitters
+proceed on Babel meanwhile (churn mid-tranche loses the byte-stability baselines).
