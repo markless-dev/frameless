@@ -344,3 +344,18 @@ supplies artifacts (it holds them at build time — wire in P5); package discove
 tests supply the golden/fixture IRs. Cross-framework: the Solid gate adopts the
 same contract in P4. This strengthens the gate's honest role (third leg per the
 Oracle-limits note): verifying output against its records, not guessing from text.
+
+## PM ADJUDICATION 7 (2026-07-21): behavior-input derivation + smoke file naming
+
+P3b's pin-limit block: pinned Layer A reports ZERO behavior inputs while the
+behavior AST reads a state cell (compiler cross-check 1/0 failed closed —
+correctly). Per the attribution algorithm's own rule (explicit coordinates
+PREFERRED WHEN PRESENT, span/AST derivation otherwise): Layer A reporting zero
+inputs is an ABSENT coordinate, not a contradiction. ADJUDICATED: when Layer A
+supplies no behavior inputs and the behavior AST contains graph-bound reads, the
+compiler DERIVES BehaviorRecord.inputs from AST reads joined to graph bindings
+(single-candidate rule, ambiguity fails closed) and records provenance
+'derived-from-ast' on the record; a real DISAGREEMENT (Layer A nonzero but
+mismatched) still fails closed. Preserves the calibrated T005 reinstall surface
+honestly. Also: the emitted-composition smoke follows the calibration file's
+naming (.browser.test.ts importing generated .jsx) — no vite config change.
