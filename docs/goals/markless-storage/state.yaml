@@ -37,7 +37,7 @@ agents:
   worker: installed
   judge: installed
 
-active_task: T004
+active_task: T005
 
 tasks:
   - id: T001
@@ -77,7 +77,7 @@ tasks:
   - id: T004
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Markless slice 1 (crew, markless branch; aggregates design slices W1a declaration/binding/lowering + W1b transport/tier + W1c import-sources): storage() declaration, writable binding + metadata, public-render lowering, reachability filter, protocol v2 transport, full-resume forcing, import-source config; suites green per unit."
     allowed_files:
@@ -88,13 +88,29 @@ tasks:
       - "Need files outside T003 contract"
       - "Suite red twice on same cause"
       - "Design ambiguity on ratified-vs-open detail (escalate to PM)"
-    receipt: null
+    receipt:
+      result: done
+      changed_files:
+        - "packages/core/{framework-api,index}.ts + tests"
+        - "packages/compiler/semantic-graph/{imports,collect-module-scope,collect-storage,collect-state,diagnostics}.ts"
+        - "packages/compiler/{artifacts,passes/payload-arena,passes/protocol-state}.ts"
+        - "packages/compiler/passes/public-render/{shared,render-body}.ts"
+        - "packages/serializer/{protocol,protocol-state,protocol-validation,protocol-client,storage-slot}.ts + tests"
+        - "packages/bundler/transform.ts (needsFullResume) + runtime-demand-map.ts"
+      commands:
+        - cmd: "pnpm test:compiler"
+          status: pass
+        - cmd: "pnpm exec vp test packages/serializer/test/*.test.ts"
+          status: pass
+        - cmd: "bundler gzip gates"
+          status: fail
+      summary: "W1a (fb3e399): declaration + state-kind binding w/ storage metadata + diagnostics + public-render lowering; compiler 488->491, core 7/7. W1b+W1c (c9369b8): reachability filter (unused storage => absent, negative-tested), storage[] records, protocol v2 (both decoders strict, v1 byte-identity tested), full-resume forcing (both selectors + full-handoff test), slot constants, additionalFrameworkApiSources (compile-module needed no edit — input intersects SemanticGraphInput). REPAIR (acc7c8e): worker diagnosed gz growth -> found production shipping a 4.6KB-gz DEV validator chunk; __MARKLESS_DEV_ENABLED__ define removes it (dev/test unchanged) -> music-player-ssr PASS by 2,847B. RESIDUAL OWNER CHECKPOINT #3: vite-csr/vite-plus red by 13/19 gz bytes = irreducible strict-v2-decoder cost; options = ~20B budget raise vs specialized v1/v2 entrypoints; validation not weakened, budgets not touched. Worker refused twice to loosen — correct behavior."
   - id: T005
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
-    objective: "Markless slice 2 (crew, markless branch): seed channel — payload seeding for native output + early-script emission for browser/SSR output (shared generation machinery, slot keying left promotion-compatible) + consent-deferral gate; executed seed proof (probe-class run) + suite green."
+    objective: "Markless slice 2 (crew, markless branch; aggregates W2a seed/render policy + W2b runtime lazy-cell/plane/consent + W2c browser proof): render-time seed generation with storageAccess, slot override on wake, graph lazy-cell capability, storage plane write-back, enableStorage control surface, browser-lane contract proof."
     allowed_files:
       - "markless worktree paths fixed by T003 design"
     verify:
