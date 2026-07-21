@@ -145,7 +145,7 @@ tasks:
   - id: T008
     type: pm
     assignee: PM
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Owner-continued dig round (owner: 'Not deciding yet — name the next dig', no unknown named — PM picks the two priced unknowns most blocking the decision, both flagged weakest-evidence in T007): (a) EXECUTED real-browser seed-ordering probe — build in a standalone scratch root outside the repo (cached Playwright chromium + local playwright-core; sidesteps the T007 env triangle), emulate the generated artifact shape (pre-content sync seed script + later module chunks), assert ordering and first-paint state; (b) winner-internals source read — fetch next-themes and @nuxtjs/color-mode actual source (npm tarballs), verify the 'two faces of one contract / same artifact underneath' amendment against real code with file:line citations (currently adoption-inferred only). Output: notes/T008 evidence note + refreshed suggestion deltas. SUGGESTIONS ONLY."
     receipt:
