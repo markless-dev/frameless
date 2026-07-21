@@ -329,3 +329,18 @@ contract), judgment-laden gaps escalated in one batch — no more one-field boun
    (imported/factory behaviors) is a construct-named fail-closed diagnostic,
    recorded as vendor-refresh/next-tranche surface. Dossier rulings + references
    already use literal attach.
+
+## PM ADJUDICATION 6 (2026-07-21): provenance-aware gates
+
+P3b blocked correctly: R-SH4 (page-scope module store) and R-CH2 (projection
+completeness) need IR provenance that emitted JSX cannot prove; output markers
+(comments/naming) are forgeable noise and were rejected. ADJUDICATED: the gate API
+extends ADDITIVELY — checkSources entries gain optional `artifact?: EnrichedIR`;
+provenance-dependent policies (R-SH4, R-CH2, and any future ones — record them as
+such in the policy table) evaluate ONLY when the artifact is supplied; when absent
+they are reported in a new additive GateResult.unevaluated
+[{ policy, reason: 'requires-artifact' }] — never silently passed. The CLI always
+supplies artifacts (it holds them at build time — wire in P5); package discovery
+tests supply the golden/fixture IRs. Cross-framework: the Solid gate adopts the
+same contract in P4. This strengthens the gate's honest role (third leg per the
+Oracle-limits note): verifying output against its records, not guessing from text.
