@@ -383,3 +383,15 @@ framework's dossier rulings — the React props tier and the Solid provider are 
 correct for the same authored source; the cross-target bar is BEHAVIORAL equality
 (same rendered values/interactions), never structural idiom mirroring. The
 authored fixture stays canonical and untouched.
+
+## PM ADJUDICATION 10 (2026-07-21): provenance-verified relative imports in both gates
+
+P5 blocked correctly: undisclosed-import (T002/T003 ruling 10) rejects the
+module-set emission's legitimate `./x.jsx` imports. ADJUDICATED: with an artifact
+supplied, a relative import is ACCEPTED iff it maps to a recorded tsrx-module
+ModuleImport/component-reference target through the locked filename rewrite
+(same basename, .jsx); any unrecorded relative import remains a violation.
+WITHOUT an artifact, relative imports remain violations (fail-closed — the CLI
+path always supplies artifacts; artifact-less checking stays strict). Mutations
+required: unrecorded-with-artifact -> violation; recorded-without-artifact ->
+violation; recorded-with-artifact -> clean.
