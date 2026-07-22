@@ -32,9 +32,32 @@ markless feat/storage commits (newest first):
 - c9369b8  W1b transport (protocol v2) + W1c import sources
 - fb3e399  W1a declaration + binding + lowering
 
-## ⚠️ STATUS: 2 fixes applied for the 2/4 failures; browser 4/4 NOT yet executed-confirmed
+## STATUS: warm/write reconcile fix now EXECUTED-PROVEN in Node; browser 4/4 still pending a clean env
 
-markless HEAD is now **4784d70** (two-root-cause fix), on top of a893f14
+markless HEAD is now **259f89c**. Three commits address the 2/4 browser
+failures, and the fix is now proven at the graph level in Node (which runs
+here; the browser lane does not — see env block below):
+- 4784d70: two root-cause fixes (slot-key anchor + readInitializer in
+  payload-graph-construct). But fix #2 alone had a GAP: readInitializer only
+  fires on a READ, and an SSR-rendered text binding never re-reads itself, so
+  nothing triggered the reconcile in immediate/warm mode.
+- 259f89c: CLOSES that gap — the storage plane now reads each cell on
+  immediate-mode mount, firing the slot-backed initializer -> dirty -> flush
+  -> dependents reconcile fallback->seeded. NEW Node test
+  'immediate warm mount reconciles a dependent from fallback to the seeded
+  value' (packages/web/test/storage-plane.test.ts) reproduces the EXACT
+  browser-failure scenario and passes: subscriber notified 'dark' exactly
+  once, zero extra driver read. web+runtime 334 green.
+
+CONFIDENCE NOW: high — the specific failing behavior (a dependent stuck on the
+fallback) is executed-proven fixed in Node. The browser lane would additionally
+prove the real SSR->resume->DOM wiring; run it in a clean env to fully close
+W2c (command + gotchas below). If it somehow still fails, the Node test shows
+the graph mechanism is correct, so any residual would be in the DOM-patch
+layer, not the adoption logic.
+
+### (superseded) earlier note: browser 4/4 NOT yet executed-confirmed
+markless earlier HEAD was 4784d70, on top of a893f14
 (red marker) / b21d6fd (W2c WIP). The two warm/write failures were diagnosed
 to TWO root causes, both fixed, both unit-green (compiler 492, web units 289):
 1. SLOT-KEY MISMATCH: the seed script wrote the landing slot under a key built
