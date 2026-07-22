@@ -1,0 +1,35 @@
+{
+	"name": "@frameless.md/core",
+	"version": "0.0.0",
+	"description": "Frameless authoring surface: the compile-time constructs (state, computed, element, shared) re-exported under the README import specifier.",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/markless-dev/frameless.git",
+		"directory": "packages/core"
+	},
+	"files": [
+		"dist"
+	],
+	"type": "module",
+	"sideEffects": false,
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"publishConfig": {
+		"access": "public",
+		"exports": {
+			".": {
+				"default": "./dist/index.js"
+			}
+		}
+	},
+	"dependencies": {
+		"@markless/core": "file:../../vendor/markless-core-0.1.1.tgz"
+	},
+	"devDependencies": {
+		"@frameless/compiler": "workspace:*",
+		"@tsrx/core": "catalog:default",
+		"pathe": "catalog:"
+	}
+}

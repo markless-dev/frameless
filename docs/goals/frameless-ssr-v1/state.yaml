@@ -1,0 +1,203 @@
+version: 2
+goal:
+  slug: frameless-ssr-v1
+  title: "SSR behavioral proof via witness + @frameless.md/core package"
+  status: active
+  classification: existing_plan
+  oracle:
+    signal: "pnpm e2e (the one documented command; pnpm e2e:ssr convenience): server-render both frameworks' CLI-built demo apps -> assert scenario initial-state expectations against pre-activation HTML (analyzer evaluateExpectations reuse) -> clean activation (consoleErrors:0/failedRequests:0; hydrate is the React/Solid instance, never the contract) -> post-activation scenarios pass -> cross-framework equality; witness receipts under demos/ssr/.witness/receipts/; boxes calibrated against intentionally broken activation."
+    final_proof: "T999 Judge audit from a fresh clone: documented commands green end-to-end, witness receipts + calibration evidence present, @frameless.md/core import test green, gated cards intact, markless repo untouched; receipt records full_outcome_complete: true."
+  intake:
+    original_request: "SSR tranche next (behavior-first, via my witness package), plus @frameless.md/core re-export package, plus Solid 2 / Qwik tracked as gated items — not now."
+    interpreted_outcome: "Both frameworks' emitted output proven to SSR + hydrate + behave identically via @async/witness boxes with receipts; @frameless.md/core makes the README hero import real; Solid2/Qwik boarded as blocked cards with exact triggers."
+    input_shape: existing_plan
+    authority: requested
+    proof_type: test
+    completion_proof: "Documented SSR e2e command green from a fresh clone (T999 audit, full_outcome_complete), witness receipts present, calibration proven, core package import test green."
+    goal_oracle: "SSR lane: server-render -> pre-activation scenario expectations -> clean activation -> post-activation scenarios -> cross-framework equality; boxes calibrated against intentionally broken activation first (activation-model-neutral per T003 lock)."
+    likely_misfire: "HTML normalizer resurrected; library-mount SSR instead of witness apps; apps bypassing CLI-built output; uncalibrated boxes; markless repo touched while storage agent works; persistence/publish scope creep."
+    existing_plan_facts: "See goal.md: owner-approved witness reframing (no HTML normalizer), ssr-tranche-sketch.md preconditions (Solid generate:'ssr' lane, receipts schema bump, solid2-blocker applies), witness 0.7.0 pin discipline, core package = re-export only (no npm publish), Solid2/Qwik triggers."
+agents:
+  scout: installed
+  worker: installed
+  judge: installed
+active_task: T004
+tasks:
+  - id: T001
+    type: scout
+    assignee: Scout
+    status: done
+    objective: "Evidence map: @async/witness 0.7.0 as an external consumer (box API surface, SSR/hydration assertions, receipt shape, Vite/vitest interplay, what a non-markless repo needs to run `witness run`) AND the SSR/hydrate toolchain facts (React 19 renderToString/hydrateRoot exact current API, vite-plugin-solid generate:'ssr' + hydrate on the 1.x pin, how demo APPS consuming CLI-built emitted output must be shaped for witness routes)."
+    inputs:
+      - "node_modules of markless repo READ-ONLY for witness README/dist inspection (or npm registry metadata) — do not modify anything there"
+      - "docs/goals/frameless-product-v0/notes/ssr-tranche-sketch.md"
+      - "demos/ (ui-kit, composition-kit), scripts/e2e.mjs, vite.config.ts"
+      - "packages/frameworks/*/vitest.config.ts, test/solid2-blocker.test.ts"
+    constraints:
+      - "Read-only. Markless repo strictly untouched (active storage agent)."
+      - "Record witness 0.7.0 pin re-evaluation triggers (same discipline as yuku pins)."
+    expected_output:
+      - "notes/T001-witness-ssr-evidence.md: witness consumer requirements, box/receipt capability inventory vs our four claims (pre-interactive content, clean ACTIVATION, post-activation scenarios, build parity), SSR lane facts per framework, demo-app shape witness requires, open risks"
+      - "Plus a short Qwik-resume-model section (docs-level only, no implementation, Qwik v2 ONLY: QwikDev/qwik main branch / @qwik.dev/core 2.0.0-beta.38 line — never v1/@builder.io/qwik): what v2 serializes into HTML, how it becomes interactive without hydrating, and which hydration-shaped assumptions would break under it — feeds T003's resumability fitness check"
+    receipt:
+      result: done
+      note: notes/T001-witness-ssr-evidence.md
+      summary: "Witness 0.7.0 fully inventoried from dist types + real markless SSR box/receipt: NO dedicated SSR/hydrate API — pre-activation via preview.request + expect.html.contains (string-only), clean activation via browser.visit + expect.page.outcome({consoleErrors:0}); four-witness receipt shape read from a real receipt.json; needs vite ^8 (we have 8.0.16), node>=22, *.box.ts under run root. npm: witness latest 0.8.0; @qwik.dev/core latest=2.0.0-beta.38. Toolchain: react-dom 19.2.3 (renderToString/prerender/hydrateRoot), solid-js 1.8.22 + vite-plugin-solid 2.11.10 (ssr:true, solid.generate:'ssr', hydratable). Qwik v2 resume model from main-branch source: qwik/json state script, q:container='paused', q-e:* listener attrs, qwikloader per-interaction wake, no hydrate call/completion event; six hydration-shaped assumptions flagged."
+      evidence:
+        - notes/T001-witness-ssr-evidence.md
+        - packages/frameworks/solid/test/solid2-blocker.test.ts
+        - packages/frameworks/solid/node_modules/vite-plugin-solid/dist/types/src/index.d.ts
+      ambiguity_requiring_judge:
+        - "SSR serving strategy: witness preview serves static built output; frameless demos have no server integration (markless used nitro) — dev-mode SSR environments vs build-time prerender is T003's call"
+        - "Single root with two previews vs two per-demo witness runs (receipt-tree aggregation for the documented command)"
+        - "How dom-text/dom-present/dom-path expectations map onto pre-activation HTML (in-box DOM parsing vs analyzer reuse) given witness offers string contains only"
+        - "Witness pin: 0.7.0 (markless parity) vs 0.8.0 (npm latest)"
+  - id: T002
+    type: worker
+    assignee: Worker
+    status: done
+    objective: "Create @frameless.md/core: real workspace package re-exporting the authoring API (state, shared, element, and the rest of the authoring surface) so `import { state } from '@frameless.md/core'` resolves as written in the README hero example. Add an import/compile test proving the specifier resolves and the surface is complete vs the compiler's recognized authoring API. Wire into workspace + root verify lanes. No npm publish."
+    allowed_files:
+      - "packages/core/**"
+      - "pnpm-workspace.yaml"
+      - "pnpm-lock.yaml"
+      - "package.json"
+      - "README.md"
+      - "tsconfig*.json"
+    verify:
+      - "pnpm check"
+      - "pnpm lint"
+      - "pnpm test"
+      - "pnpm build"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "The authoring surface to re-export is ambiguous (compiler recognizes constructs not exported anywhere) — blocked-return with the exact list."
+      - "Verification fails twice."
+    receipt:
+      result: done
+      changed_files:
+        - packages/core/package.json
+        - packages/core/README.md
+        - packages/core/src/index.ts
+        - packages/core/src/surface-contract.ts
+        - packages/core/test/authoring-surface.test.ts
+        - pnpm-lock.yaml
+      commands:
+        - cmd: "pnpm check"
+          status: pass
+        - cmd: "pnpm lint"
+          status: pass
+        - cmd: "pnpm test"
+          status: pass
+        - cmd: "pnpm build"
+          status: pass
+        - cmd: "git diff --stat -- poc/"
+          status: pass
+      summary: "@frameless.md/core created re-exporting the canonical authoring surface from vendored @markless/core (state, computed, element, shared = compiler-recognized constructs; markers throw FrameworkApiRuntimeError outside compiled context). Completeness gated twice: type-level surface-contract.ts (pnpm check) + AST-derived exact-match test; both calibrated via negative control (dropping element broke 2 tests + check). README hero import resolves as written; no README text change needed. Residual noted: vite.config.ts pack entry only if a published dist is ever wanted."
+  - id: T003
+    type: judge
+    assignee: Judge
+    status: done
+    objective: "Architecture lock for the SSR lane (phase boundary): from T001 evidence, decide demo-app shape (per-framework SSR apps consuming CLI-built output), witness box inventory mapped to the four behavioral claims, calibration plan (intentionally broken activation first), receipts-schema bump shape with an activation-model discriminant (hydrate | resume — NO hydration-only fields), cross-framework equality mechanism reusing scenario initial-state expectations pre-activation, and the documented command surface (pnpm e2e extension vs e2e:ssr). MUST include the resumability fitness check: map each box claim and schema field onto the Qwik resume model on paper (from T001's section) and reject any contract piece that assumes a hydrate step. Emit bounded Worker packages with allowed_files/verify/stop_if."
+    inputs:
+      - "notes/T001-witness-ssr-evidence.md"
+      - "goal.md existing plan facts (incl. activation-model neutrality directive)"
+      - "docs/goals/frameless-composition-v1/notes/persistence-design-input.md (no-eager-visible-task rule — the future Qwik constraint the contract must not contradict)"
+    expected_output:
+      - "Decision note notes/T003-ssr-architecture.md incl. the resumability fitness check verdict per box claim and schema field"
+      - "Exact Worker objectives with allowed_files, verify, stop_if for T004/T005"
+    receipt:
+      result: done
+      decision: approved
+      note: notes/T003-ssr-architecture.md
+      full_outcome_complete: false
+      rationale: "Locked: build-time prerender + static witness preview (all primitives proven by markless's real SSR box); single demos/ssr root with mandatory two-previews-one-run probe; pnpm e2e stays THE documented command; pre-activation via parse5 -> SerializedNode -> analyzer evaluateExpectations reuse (no HTML normalizer, no expect.html.contains as mechanism); witness pinned 0.7.0 (0.8.0 unreviewable — registry READMEs byte-identical; five re-evaluation triggers); frameless-receipts/2 with activation: hydrate|resume discriminant, hydration-only fields rejected by name. Resumability fitness check PASS (full claim/field mapping table vs Qwik v2 resume model). Flags: ui-kit scenarios have ZERO initial-state expectations (T005 adds them; T999 verifies); React 19 mismatch console shape is a T005 stop_if until calibration proves visibility; fresh-clone browser provisioning documented for T999."
+  - id: T004
+    type: worker
+    assignee: Worker
+    status: active
+    objective: "SSR infrastructure per T003 lock (notes/T003-ssr-architecture.md Decision 8 is the authority): demos/ssr/ witness root with react-app (renderToString prerender + hydrateRoot client entry, react-dom 19.2.3) and solid-app (NEW vite lane: ssr:true, solid.generate:'ssr', hydratable, server-condition resolution, hydrate + generateHydrationScript, solid-js 1.8.22), both consuming CLI-built emitted output (never authored .tsrx); build-time prerender via local vite plugin (fallback: in-box prerender via project.edit.create); @async/witness pinned 0.7.0 with five re-evaluation triggers recorded; boxes: two-previews-one-run PROBE first, then first passing render box per framework (bounded expect.html.contains smoke sanctioned here only); e2e:ssr script stub."
+    allowed_files:
+      - "demos/ssr/**"
+      - "package.json"
+      - "pnpm-workspace.yaml"
+      - "pnpm-lock.yaml"
+      - "scripts/e2e.mjs"
+    verify:
+      - "pnpm check && pnpm lint && pnpm test && pnpm build"
+      - "witness run in demos/ssr: probe + both render boxes pass; receipts under demos/ssr/.witness/receipts/"
+      - "git diff --stat -- poc/ empty"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Witness 0.7.0 cannot express a required assertion — blocked-return with the exact gap (owner owns witness; product feedback, not a workaround site)."
+      - "Two-previews-one-run probe fails — blocked-return with the receipt (fallback topology is a PM/Judge decision)."
+      - "Neither prerender mechanism works — blocked-return with evidence."
+      - "Anything requires touching the markless repo — hard stop."
+      - "Verification fails twice."
+    receipt: null
+  - id: T005
+    type: worker
+    assignee: Worker
+    status: queued
+    objective: "Box suite + calibration + equality + schema + docs per T003 lock (Decision 8): pre-activation adapter (parse5 -> SerializedNode -> evaluateExpectations, dom-* only); ADD mount-phase dom-* initial-state expectations to demos/ui-kit/scenarios.ts (flagged corpus gap); full box inventory claims a/b/c + build-parity per framework; calibration boxes incl. React-19 mismatch-console-shape verification; equality aggregation + verdict folding in scripts/e2e.mjs (pnpm e2e remains THE documented command); receipts bump to frameless-receipts/2 with ssr entry EXACTLY per Decision 6 (activation: hydrate|resume; rejected fields stay out); README/docs honesty update + fresh-clone browser provisioning documented."
+    allowed_files:
+      - "demos/ssr/**"
+      - "demos/ui-kit/scenarios.ts"
+      - "demos/composition-kit/scenarios.ts"
+      - "packages/analyzer/src/**"
+      - "packages/analyzer/test/**"
+      - "scripts/e2e.mjs"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "README.md"
+    verify:
+      - "pnpm check && pnpm lint && pnpm test && pnpm build"
+      - "pnpm e2e full lane green incl. SSR; receipts carry ssr entry with equality.outcomesEqual true + calibration.proven true per framework"
+      - "calibration evidence (mismatch console captures) present under demos/ssr/.witness/receipts/"
+      - "grep guard: no hydrationMismatch/hydration: field in schema or receipts"
+      - "git diff --stat -- poc/ empty"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "A cross-framework SSR divergence appears in a node-assertable path — blocked-return verbatim; product finding for PM adjudication."
+      - "React 19 hydration mismatches do NOT surface in consoleMessages as errors — blocked-return with calibration receipt (clean-activation box would be blind)."
+      - "Witness 0.7.0 cannot express a required assertion — blocked-return (product feedback)."
+      - "A schema field cannot be expressed without a hydrate-only assumption — blocked-return citing Decision 7."
+      - "Verification fails twice."
+    receipt: null
+  - id: T900
+    type: pm
+    assignee: PM
+    status: blocked
+    objective: "GATED TARGET — Solid 2 support. Do not start. When unblocked: ship as EXPERIMENTAL behind an explicit flag; Solid v1 stays the default target."
+    constraints:
+      - "Trigger: solid2-blocker overturn (packages/frameworks/solid/test/solid2-blocker.test.ts) — Solid 2 beta restores a workable toolchain (beta.9 dropped ./web entry). Re-evaluate on each Solid 2 beta release."
+      - "Owner version policy (2026-07-21): v1 = default, v2 = additional experimental flag-gated target. v2 never silently replaces v1."
+    receipt:
+      result: blocked
+      summary: "Deliberately gated at board creation (owner directive 2026-07-21: 'Not now'). Unblocks only when the solid2-blocker toolchain-under-test overturns; then lands as experimental/flag-gated alongside the v1 default. Until then all Solid work stays on the 1.x pin, including the SSR lane."
+  - id: T901
+    type: pm
+    assignee: PM
+    status: blocked
+    objective: "GATED TARGET — Qwik emitter work (Qwik v2 ONLY: @qwik.dev/core 2.0.0-beta line; v1/@builder.io/qwik is never a target). Do not start."
+    constraints:
+      - "Trigger 1: frameless state semantics settle (persistence tranche shipped — itself gated on markless storage() landing)."
+      - "Trigger 2: the no-eager-visible-task gate rule from notes/persistence-design-input.md (frameless-composition-v1) must be expressible as a Qwik gate policy before any Qwik emitter exists."
+    receipt:
+      result: blocked
+      summary: "Deliberately gated at board creation (owner directive 2026-07-21: 'Not now'). Qwik queues behind persistence/state semantics; the no-eager-visible-task rule is a hard gate-policy precondition."
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: queued
+    objective: "Final audit from a fresh clone: does the tranche satisfy the original outcome — SSR behavioral proof green via the documented command with witness receipts and calibration evidence, @frameless.md/core import real and tested, the lane contract activation-model-neutral (T003 fitness check honored in the shipped schema/boxes: no hydration-only fields), gated cards intact, docs honest, markless repo untouched?"
+    inputs:
+      - "All done task receipts"
+      - "Fresh-clone run of the documented commands"
+      - "Current dirty diff"
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "missing evidence"
+      - "next task if not complete"
+    receipt: null
