@@ -32,7 +32,55 @@ markless feat/storage commits (newest first):
 - c9369b8  W1b transport (protocol v2) + W1c import sources
 - fb3e399  W1a declaration + binding + lowering
 
-## ⚠️ BROWSER PROOF IS RED — 2/4 FAIL (settled result; markless NOT proof-complete)
+## ⚠️ STATUS: 2 fixes applied for the 2/4 failures; browser 4/4 NOT yet executed-confirmed
+
+markless HEAD is now **4784d70** (two-root-cause fix), on top of a893f14
+(red marker) / b21d6fd (W2c WIP). The two warm/write failures were diagnosed
+to TWO root causes, both fixed, both unit-green (compiler 492, web units 289):
+1. SLOT-KEY MISMATCH: the seed script wrote the landing slot under a key built
+   from the BUNDLER filename (transform.ts passed input.filename), but the
+   wake-time override derived its lookup key from the payload record's
+   graphNodeId (storage:<COMPILER-filename>#key). Different origins -> lookup
+   miss -> fallback. Fixed: new `createStorageSeedMetadataFromGraphNodeId`
+   (serializer/storage-slot.ts) anchors the seed slotKey to the graphNodeId so
+   both sides match by construction (transform.ts:209 uses storage.graphNodeId).
+2. RECONCILE GAP (the deeper one): the immediate/warm adoption in
+   payload-graph-construct.ts SET the cell's initial value to the seeded value.
+   That fires no notification, and SSR rendered the FALLBACK text (server can't
+   read localStorage), so the text never reconciled; a later equal write is
+   Object.is-suppressed too. FIX: route the seeded value through a
+   `readInitializer` (the proven dirty-on-first-read path the CSR branch
+   already uses), leaving cell.value at the fallback so the reconcile genuinely
+   fires; reads the slot (not the driver) so "no extra driver read" still holds.
+   This mirrors why enableStorage (deferred) and toggle (interaction) already
+   worked — both reconcile via a dirtying write.
+
+WHY NOT CONFIRMED: the vitest-browser lane needs a long run (>8-10 min cold),
+and the harness keeps SIGTERM-ing the background/foreground job before it
+finishes — producing empty or bogus "0 tests / success:true" JSON. A wedged
+node proc holding the vitest port (was PID 72056) also caused startup hangs;
+it is now cleared. This is an ENVIRONMENT problem, not a code signal.
+
+### DO THIS FIRST (confirm the fix)
+Run the lane where it can finish uninterrupted (human-run in a terminal, or a
+session whose job timeout exceeds ~12 min). ALWAYS kill stragglers first:
+  `pkill -9 -f vitest; pkill -9 -f ms-playwright; pkill -9 -f chrome-headless;
+   lsof -nP -iTCP:63315 -sTCP:LISTEN` (kill any PID still holding it), then:
+  `cd <markless-worktree> && pnpm --dir packages/vitest-browser exec vitest run
+   browser/storage.test.ts --reporter=json --outputFile=/tmp/w2c.json`
+Read /tmp/w2c.json: numFailedTests==0 AND numTotalTests==4 = W2c PROVEN.
+The 4 cases: cold seed-attr / warm adopt-without-extra-read / write+SSR-remount
+/ deferred+enableStorage. If warm/write STILL fail 'expected dark got light'
+after 4784d70, the reconcile fix's readInitializer isn't firing a post-wake
+read — fall back to the enableStorage pattern: in storage-plane immediate mode,
+on creation do `graph.write(seededFromSlot)` per record (cell must be left at
+fallback in payload-graph-construct so the write isn't Object.is-suppressed);
+that write path is PROVEN to reconcile (deferred test passes via it).
+
+### After 4/4 green: accept W2c, then continue below.
+
+## (prior red-state section, superseded by the fix above)
+## ⚠️ BROWSER PROOF WAS RED — 2/4 FAIL (now fixed pending confirm)
 
 Definitive JSON result (clean run bds3knr6j, no port conflicts):
 /Users/jacksm5pro/.claude/jobs/bc1ba03c/tmp/w2c-result.json — 2 passed, 2 FAILED.
