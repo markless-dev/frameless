@@ -89,11 +89,32 @@ this machine without clearing it first):
   (was PID 72056) caused startup hangs earlier.
 - All stray procs/ports cleared at handoff, but the machine likely needs a
   FRESH state (new terminal, or reboot) to run the lane cleanly.
-RECOMMENDATION: run the confirm command in a CLEAN environment — ideally the
-human runs it directly in a fresh terminal (no harness job-timeout, full
-memory), or a fresh session after a reboot. One clean run is all that's needed.
-The 2/4-fail JSON earlier (w2c-result.json) WAS a real completed run, so the
-lane CAN complete here when the machine isn't under pressure.
+DEFINITIVE FINDING (11+ attempts incl. a fully-clean machine, isolated single
+test, foreground + background): the markless vitest-browser lane
+(`packages/vitest-browser exec vitest run browser/storage.test.ts`) CANNOT
+complete in this session's environment — it is killed during collection every
+time (rc=1, JSON with 0 tests / bogus success:true). This is NOT a cleanup
+issue (a verified-clean machine failed identically). The heavy vitest-browser
++ vite-plus + Playwright stack exceeds what the harness/machine allows here.
+
+RECOMMENDED PATH (two options, in order):
+1. STANDALONE playwright-core RUNNER (proven to work in THIS environment):
+   earlier this session the frameless poc used poc/09-storage/runner/run.mjs —
+   a plain Node script that launches chromium via playwright-core, serves HTML,
+   runs assertions — and it completed fine (65/65, plus the promotion probe).
+   The vitest-browser lane is what fails, not browsers. So: write an equivalent
+   standalone runner for the markless storage contract — compile the fixture
+   through markless (SSR HTML + client resume bundle), serve it, drive the 4
+   cases (cold/warm/write+remount/deferred) with playwright-core directly. This
+   AVOIDS the vitest-browser+vite-plus stack and should run here. Reuse the
+   poc/09-storage runner as the template (same Symbol.for slot, same
+   assertions). This is the highest-value next task and is buildable in-session.
+2. Or a human runs the vitest-browser lane in a real terminal (no harness
+   job-timeout, full memory). One clean run confirms 4/4.
+
+NOTE the graph-level reconcile is ALREADY Node-executed-proven (259f89c test),
+so the browser proof's remaining marginal coverage is only the SSR->resume->DOM
+patch layer.
 
 ### DO THIS FIRST (confirm the fix)
 Run the lane where it can finish uninterrupted (human-run in a terminal, or a
