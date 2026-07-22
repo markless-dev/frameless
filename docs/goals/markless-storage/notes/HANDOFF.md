@@ -55,11 +55,22 @@ to TWO root causes, both fixed, both unit-green (compiler 492, web units 289):
    This mirrors why enableStorage (deferred) and toggle (interaction) already
    worked — both reconcile via a dirtying write.
 
-WHY NOT CONFIRMED: the vitest-browser lane needs a long run (>8-10 min cold),
-and the harness keeps SIGTERM-ing the background/foreground job before it
-finishes — producing empty or bogus "0 tests / success:true" JSON. A wedged
-node proc holding the vitest port (was PID 72056) also caused startup hangs;
-it is now cleared. This is an ENVIRONMENT problem, not a code signal.
+WHY NOT CONFIRMED — ENVIRONMENTAL, not a code signal (do NOT keep retrying on
+this machine without clearing it first):
+- The vitest-browser lane needs >8-10 min cold. The harness SIGTERMs the
+  background/foreground job before it finishes -> empty or bogus
+  "0 tests / success:true" JSON (that JSON shape = a KILLED run, not a pass).
+- After many launches the machine hit MEMORY PRESSURE: the last isolated
+  warm-only run was SIGKILL-ed (OOM), each vitest+chromium worker is ~300-400MB
+  and killed runs left residue. A wedged node proc holding the vitest port
+  (was PID 72056) caused startup hangs earlier.
+- All stray procs/ports cleared at handoff, but the machine likely needs a
+  FRESH state (new terminal, or reboot) to run the lane cleanly.
+RECOMMENDATION: run the confirm command in a CLEAN environment — ideally the
+human runs it directly in a fresh terminal (no harness job-timeout, full
+memory), or a fresh session after a reboot. One clean run is all that's needed.
+The 2/4-fail JSON earlier (w2c-result.json) WAS a real completed run, so the
+lane CAN complete here when the machine isn't under pressure.
 
 ### DO THIS FIRST (confirm the fix)
 Run the lane where it can finish uninterrupted (human-run in a terminal, or a
