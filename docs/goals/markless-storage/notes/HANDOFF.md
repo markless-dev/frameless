@@ -44,12 +44,20 @@ trustworthy pass. A re-run was launched with full capture to a FIXED FILE:
   browser/storage.test.ts` from the markless worktree.
 - Log: **/Users/jacksm5pro/.claude/jobs/bc1ba03c/tmp/w2c-browser.log**
   (also background id bmw7wpv97 if still tracked).
-1. READ that log for the real Test Files / Tests pass-fail summary. If it shows
-   all storage tests passed, W2c is proven. If the log is absent/incomplete,
-   RE-RUN the command from the markless worktree (needs a real localhost
-   listener — crew sandbox CANNOT do this, PM runs it directly, not via crew;
-   vitest browser cold start is slow, ~5-7 min, so use a long timeout or
-   background + poll the log file).
+1. READ the result. NOTE: plain stdout redirection TRUNCATES (vitest's summary
+   stream is lost whenever the harness backgrounds the process — happened 3x,
+   all exit 0 but 4-line logs). Exit 0 from `vitest run` = all passed (it
+   returns 1 on any failure), so 3 consecutive exit-0 runs is strong evidence
+   W2c passes — but for a STRUCTURED result use the JSON reporter, which vitest
+   writes atomically at the end:
+     Detached run in flight at handoff: background id **byfp6jqb8**, writing
+     **/Users/jacksm5pro/.claude/jobs/bc1ba03c/tmp/w2c-result.json**
+     (numTotalTests/numPassedTests/numFailedTests + per-assertion status).
+     Command (re-run if the json is missing — the lane needs >8 min, so run
+     DETACHED/background, never a foreground timeout which sends SIGALRM/144):
+     `pnpm --dir packages/vitest-browser exec vitest run browser/storage.test.ts
+      --reporter=json --outputFile=<path>` from the markless worktree.
+   If numFailedTests==0, W2c is proven; accept it and proceed to T006.
 2. If 4/4 GREEN: accept W2c, amend/replace b21d6fd's message to drop "PENDING",
    receipt T005 on the board (both oracle-half-a items proven:
    suite-green + executed browser). Then T006.
