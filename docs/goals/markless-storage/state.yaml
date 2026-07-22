@@ -37,7 +37,7 @@ agents:
   worker: installed
   judge: installed
 
-active_task: T005
+active_task: T006
 
 tasks:
   - id: T001
@@ -112,7 +112,7 @@ tasks:
   - id: T005
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Markless slice 2 (crew, markless branch; aggregates W2a seed/render policy + W2b runtime lazy-cell/plane/consent + W2c browser proof): render-time seed generation with storageAccess, slot override on wake, graph lazy-cell capability, storage plane write-back, enableStorage control surface, browser-lane contract proof."
     allowed_files:
@@ -122,7 +122,34 @@ tasks:
     stop_if:
       - "Need files outside T003 contract"
       - "Suite red twice on same cause"
-    receipt: null
+    receipt:
+      result: done
+      accepted_head: 259f89c
+      proof_head: de7a5fd
+      summary: >-
+        W2c ACCEPTED — both oracle-half-a items proven on feat/storage.
+        (1) NODE suites green on 259f89c: compiler 492/492; web+runtime 334/334
+        (re-verified 2026-07-22) incl. storage-plane tests mirroring all 4
+        browser contract behaviors + the previously-red warm/write cases now
+        green. W2a-W2c prior work: fb3e399/c9369b8/acc7c8e/07cf973/b21d6fd; the
+        2/4 warm+write browser failures (a893f14 marker) were fixed by 4784d70
+        (slot-key anchor + readInitializer) and 259f89c (immediate-mode mount
+        reads each cell to fire the slot-backed initializer -> reconcile).
+        (2) EXECUTED BROWSER PROOF: the vitest-browser lane (browser/storage.test.ts)
+        cannot run on this machine (vitest<->playwright createTesters handshake
+        deadlocks under memory pressure; independently confirmed by two sessions).
+        Resolved by committing a standalone playwright runner
+        (packages/vitest-browser/storage-runner.mjs, commit de7a5fd): programmatic
+        vite server (markless plugin -> real SSR + client resume) + plain
+        playwright chromium, NO vitest orchestration. Reproduces the IDENTICAL 4
+        assertions from storage.test.ts and is 4/4 GREEN, 3x deterministic in real
+        headless Chromium (cold seed-attr-before-wake; warm zero-extra-driver-read
+        via getItem probe; write+fresh-SSR-remount persistence; deferred consent
+        -> zero reads -> enableStorage() -> exactly-once read+patch+persist).
+        Run: node packages/vitest-browser/storage-runner.mjs.
+      residual_owner_checkpoint: >-
+        vite-csr/vite-plus gzip gates red by 13/19 B (irreducible strict-v2-decoder
+        bytes) — options parked for owner; validation not weakened, budgets not touched.
   - id: T006
     type: judge
     assignee: Judge
@@ -158,4 +185,4 @@ tasks:
 
 checks:
   dirty_fingerprint: "board prepped on worktree-storage-poc (docs-only); markless branch created at /goal start"
-  last_verification: null
+  last_verification: "2026-07-22: feat/storage @ 259f89c node green (compiler 492, web+runtime 334); browser 4/4 executed-proven via standalone playwright runner de7a5fd (storage-runner.mjs), 3x deterministic. W2c accepted; active_task -> T006."

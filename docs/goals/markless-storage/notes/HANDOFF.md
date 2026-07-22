@@ -32,7 +32,33 @@ markless feat/storage commits (newest first):
 - c9369b8  W1b transport (protocol v2) + W1c import sources
 - fb3e399  W1a declaration + binding + lowering
 
-## STATUS: warm/write reconcile fix now EXECUTED-PROVEN in Node; browser 4/4 still pending a clean env
+## ✅ RESOLVED 2026-07-22: browser 4/4 EXECUTED-PROVEN; W2c ACCEPTED
+
+The browser gate is closed. Because the vitest-browser lane deadlocks on this
+machine (createTesters handshake under memory pressure — see the env analysis
+below, confirmed by two sessions), a STANDALONE playwright runner was built and
+committed: `packages/vitest-browser/storage-runner.mjs` (markless commit
+**de7a5fd** on feat/storage). It uses a programmatic vite server (markless
+plugin -> real SSR + client resume modules) + plain playwright chromium, with NO
+vitest orchestration (the layer that deadlocks), and reproduces the IDENTICAL 4
+assertions from storage.test.ts. Result: **4/4 GREEN, 3x deterministic** in real
+headless Chromium (cold seed-attr-before-wake; warm zero-extra-driver-read via a
+getItem probe; write + fresh full-page SSR remount persistence; deferred consent
+-> zero reads -> enableStorage() -> exactly-once read+patch+persist).
+Run it anytime: `node packages/vitest-browser/storage-runner.mjs`.
+
+W2c is ACCEPTED (board T005 done, active_task -> T006). Both oracle-half-a items
+proven: node suites green (compiler 492, web+runtime 334 on 259f89c) AND executed
+real-browser 4/4. NEXT: T006 boundary critique (second-model review before
+frameless consumption), then T007 frameless consumption, then T999 audit.
+NOTE: the original vitest-browser storage.test.ts is retained (it's the same
+contract and will pass on a non-pressured machine); the runner is the durable,
+environment-robust proof. If you prefer the vitest lane as the canonical gate,
+run it on a quiet/rebooted machine — it should pass 4/4 there too.
+
+--- historical detail below (kept for context) ---
+
+## STATUS (superseded by RESOLVED above): warm/write reconcile fix EXECUTED-PROVEN in Node; browser 4/4 was pending a clean env
 
 markless HEAD is now **259f89c**. Three commits address the 2/4 browser
 failures, and the fix is now proven at the graph level in Node (which runs
