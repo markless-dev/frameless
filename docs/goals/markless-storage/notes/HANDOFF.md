@@ -34,17 +34,22 @@ markless feat/storage commits (newest first):
 
 ## IMMEDIATE NEXT STEP (do this first)
 
-A browser-lane run was IN FLIGHT at handoff: background id **ba2vki10z**,
-command `pnpm --dir packages/vitest-browser exec vitest run
-browser/storage.test.ts` run from the markless worktree. It executes the 4
-storage contract cases (cold fallback-attr-before-wake; warm dark + ZERO extra
-driver reads; write+reload round-trip; deferred consent -> zero reads ->
-enableStorage() -> exactly-once read+patch+persist).
-1. Check its output: /private/tmp/claude-501/-Users-jacksm5pro-dev-open-source-
-   frameless/bc1ba03c-4e4b-48ae-90b9-8fe5676cb056/tasks/ba2vki10z.output
-   (was 0 bytes / slow cold start at handoff). If the job is gone, RE-RUN it
-   from the markless worktree (it needs a real localhost listener — crew
-   sandbox CANNOT do this, so the PM runs it directly, not via crew).
+The browser lane executes the 4 storage contract cases (cold
+fallback-attr-before-wake; warm dark + ZERO extra driver reads; write+reload
+round-trip; deferred consent -> zero reads -> enableStorage() -> exactly-once
+read+patch+persist). First run `ba2vki10z` exited 0 but its captured log was
+truncated to 4 lines (background-move lost the vitest summary stream) — NOT a
+trustworthy pass. A re-run was launched with full capture to a FIXED FILE:
+- Command: `pnpm --dir packages/vitest-browser exec vitest run
+  browser/storage.test.ts` from the markless worktree.
+- Log: **/Users/jacksm5pro/.claude/jobs/bc1ba03c/tmp/w2c-browser.log**
+  (also background id bmw7wpv97 if still tracked).
+1. READ that log for the real Test Files / Tests pass-fail summary. If it shows
+   all storage tests passed, W2c is proven. If the log is absent/incomplete,
+   RE-RUN the command from the markless worktree (needs a real localhost
+   listener — crew sandbox CANNOT do this, PM runs it directly, not via crew;
+   vitest browser cold start is slow, ~5-7 min, so use a long timeout or
+   background + poll the log file).
 2. If 4/4 GREEN: accept W2c, amend/replace b21d6fd's message to drop "PENDING",
    receipt T005 on the board (both oracle-half-a items proven:
    suite-green + executed browser). Then T006.
