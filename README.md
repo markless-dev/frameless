@@ -112,7 +112,8 @@ reject what it cannot prove, and verify behavior in a real browser.
 ## What It Does Not Do
 
 The browser tests cover the scripted scenarios in the demos, not every
-possible program, and not yet SSR, accessibility, or performance.
+possible program. SSR behavior is proven for CLI-emitted React and Solid output;
+accessibility and performance are not yet proven.
 
 Frameworks are not forced to copy each other. The same component may compile
 to different shapes in React and Solid when that is each framework's own best
@@ -148,7 +149,7 @@ matches.
 | **v0**: single components (state, derived values, events, keyed lists, conditionals, inputs) | ✅ Shipped, verified from a fresh clone |
 | **Composition**: children, shared state, element access with cleanup                         | ✅ Shipped, verified from a fresh clone |
 | Shared state across files, named slots                                                       | Planned                                 |
-| SSR tests                                                                                    | Planned                                 |
+| SSR tests                                                                                    | Proven (behavioral, via witness — `pnpm e2e`) |
 | Saved state (localStorage and friends)                                                       | Planned                                 |
 | More frameworks                                                                              | Planned                                 |
 
@@ -164,8 +165,9 @@ pnpm build
 pnpm e2e
 ```
 
-Browser tests need the locally cached Playwright Chromium build. Read
-[CONTRIBUTING.md](./CONTRIBUTING.md) and [AGENTS.md](./AGENTS.md) before
+Browser tests need the locally cached Playwright Chromium build. The SSR witness lane can also use
+a system Chromium-family browser; see [demos/ssr/README.md](./demos/ssr/README.md) for provisioning
+and receipt details. Read [CONTRIBUTING.md](./CONTRIBUTING.md) and [AGENTS.md](./AGENTS.md) before
 changing the repo.
 
 ## Markless

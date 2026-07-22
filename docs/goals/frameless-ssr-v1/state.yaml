@@ -2,7 +2,7 @@ version: 2
 goal:
   slug: frameless-ssr-v1
   title: "SSR behavioral proof via witness + @frameless.md/core package"
-  status: active
+  status: done
   classification: existing_plan
   oracle:
     signal: "pnpm e2e (the one documented command; pnpm e2e:ssr convenience): server-render both frameworks' CLI-built demo apps -> assert scenario initial-state expectations against pre-activation HTML (analyzer evaluateExpectations reuse) -> clean activation (consoleErrors:0/failedRequests:0; hydrate is the React/Solid instance, never the contract) -> post-activation scenarios pass -> cross-framework equality; witness receipts under demos/ssr/.witness/receipts/; boxes calibrated against intentionally broken activation."
@@ -21,7 +21,7 @@ agents:
   scout: installed
   worker: installed
   judge: installed
-active_task: T004
+active_task: null
 tasks:
   - id: T001
     type: scout
@@ -115,7 +115,7 @@ tasks:
   - id: T004
     type: worker
     assignee: Worker
-    status: active
+    status: done
     objective: "SSR infrastructure per T003 lock (notes/T003-ssr-architecture.md Decision 8 is the authority): demos/ssr/ witness root with react-app (renderToString prerender + hydrateRoot client entry, react-dom 19.2.3) and solid-app (NEW vite lane: ssr:true, solid.generate:'ssr', hydratable, server-condition resolution, hydrate + generateHydrationScript, solid-js 1.8.22), both consuming CLI-built emitted output (never authored .tsrx); build-time prerender via local vite plugin (fallback: in-box prerender via project.edit.create); @async/witness pinned 0.7.0 with five re-evaluation triggers recorded; boxes: two-previews-one-run PROBE first, then first passing render box per framework (bounded expect.html.contains smoke sanctioned here only); e2e:ssr script stub."
     allowed_files:
       - "demos/ssr/**"
@@ -134,11 +134,44 @@ tasks:
       - "Neither prerender mechanism works — blocked-return with evidence."
       - "Anything requires touching the markless repo — hard stop."
       - "Verification fails twice."
-    receipt: null
+    receipt:
+      result: done
+      note: notes/T004-dispatch-plan.md
+      changed_files:
+        - "demos/ssr/package.json"
+        - "demos/ssr/WITNESS-PIN.md"
+        - "demos/ssr/tsconfig.json"
+        - "demos/ssr/.gitignore"
+        - "demos/ssr/src/PricingCard.tsrx"
+        - "demos/ssr/dist/PricingCard/{react,solid}/PricingCard.jsx (+ frameless-build-receipt.json)"
+        - "demos/ssr/react-app/** (vite.config.ts prerender plugin, index.html, src/{app,server-entry,client-entry,emitted.d.ts})"
+        - "demos/ssr/solid-app/** (NEW vite lane; env-gated solid plugins ssr/dom + hydratable; generateHydrationScript injected)"
+        - "demos/ssr/react-render.box.ts"
+        - "demos/ssr/solid-render.box.ts"
+        - "demos/ssr/two-previews-probe.box.ts"
+        - "package.json"
+        - "pnpm-lock.yaml"
+      commands:
+        - cmd: "pnpm check"
+          status: pass
+        - cmd: "pnpm lint"
+          status: pass
+          detail: "0 warnings / 0 errors, 152 files"
+        - cmd: "pnpm test"
+          status: pass
+          detail: "31 files, 481 tests"
+        - cmd: "pnpm build"
+          status: pass
+        - cmd: "witness (demos/ssr) — PM-run (crew sandbox blocks loopback listener)"
+          status: pass
+          detail: "3/3 boxes: react render, solid render, two-previews probe; receipt 2026-07-22T03-52-31.342Z; all pipeline+ corroborate, no contradiction"
+        - cmd: "git diff --stat -- poc/"
+          status: pass
+      summary: "demos/ssr witness root shipped: single ONE-package root, both react-app (renderToString + hydrateRoot) and solid-app (NEW vite lane: env-gated vite-plugin-solid ssr/dom + hydratable, node/browser resolve conditions, renderToString + generateHydrationScript server entry, hydrate client entry) consume CLI-EMITTED output (dist/PricingCard/{react,solid}/PricingCard.jsx), never authored .tsrx. Build-time prerender via local vite plugin (PRIMARY mechanism, both frameworks) writes static index.html carrying real server markup ($20 computed content + Solid data-hk hydration keys + hydration script). @async/witness pinned EXACTLY 0.7.0 with the five re-evaluation triggers in WITNESS-PIN.md. KEY FINDING: the two-previews-one-run PROBE PASSES — two static vite previews coexist in one witness run, so the single-root topology holds (the one-preview-per-run limit markless recorded was nitro-specific; no two-root fallback needed). e2e:ssr stub wired (full verdict/equality integration is T005). PricingCard is a self-contained source copy for T004 — T005 must reconcile the canonical scenario-corpus source. Executed via crew (fable): two learnings recorded — crew sandbox has NO network (PM pre-installs deps; a worker install purged+broke node_modules, PM restored) and BLOCKS the loopback listener (witness preview verified PM-side). Critique gate: SKIPPED — medium effort; diff touches only demos/ssr + a root script + lockfile (no public API/exports, compiler emit, protocol/payload compat, resume/event dispatch, release/auth, or security surface); PM independently ran all verify lanes + 3/3 witness boxes green; no material scope deviation."
   - id: T005
     type: worker
     assignee: Worker
-    status: queued
+    status: done
     objective: "Box suite + calibration + equality + schema + docs per T003 lock (Decision 8): pre-activation adapter (parse5 -> SerializedNode -> evaluateExpectations, dom-* only); ADD mount-phase dom-* initial-state expectations to demos/ui-kit/scenarios.ts (flagged corpus gap); full box inventory claims a/b/c + build-parity per framework; calibration boxes incl. React-19 mismatch-console-shape verification; equality aggregation + verdict folding in scripts/e2e.mjs (pnpm e2e remains THE documented command); receipts bump to frameless-receipts/2 with ssr entry EXACTLY per Decision 6 (activation: hydrate|resume; rejected fields stay out); README/docs honesty update + fresh-clone browser provisioning documented."
     allowed_files:
       - "demos/ssr/**"
@@ -163,7 +196,35 @@ tasks:
       - "Witness 0.7.0 cannot express a required assertion — blocked-return (product feedback)."
       - "A schema field cannot be expressed without a hydrate-only assumption — blocked-return citing Decision 7."
       - "Verification fails twice."
-    receipt: null
+    receipt:
+      result: done
+      note: notes/T004-dispatch-plan.md
+      changed_files:
+        - "demos/ssr/** (13 witness boxes: claim-a/b/c react+solid, 4 calibration, 2 render smokes, probe; src/{pre-activation,post-activation,ssr-receipt}.ts; react-app/ + solid-app/ route-per-scenario apps; src/{PricingCard,TaskList,NewsletterForm}.tsrx CLI inputs; test/ + fixtures; READMEs)"
+        - "demos/ui-kit/scenarios.ts"
+        - "packages/analyzer/src/receipts.ts"
+        - "packages/analyzer/test/receipts.test.ts"
+        - "scripts/e2e.mjs"
+        - "README.md"
+        - "package.json"
+        - "pnpm-lock.yaml"
+      commands:
+        - cmd: "pnpm check"
+          status: pass
+        - cmd: "pnpm lint"
+          status: pass
+          detail: "0/0, 167 files"
+        - cmd: "pnpm test"
+          status: pass
+          detail: "31 files, 485 tests"
+        - cmd: "pnpm build"
+          status: pass
+        - cmd: "pnpm e2e (ORACLE — PM-run on browser+loopback host)"
+          status: pass
+          detail: "browser lane (ui-kit+composition-kit) + SSR lane 13/13 boxes; SSR PASS pre react=12/12 solid=12/12; equality corpus=true outcomes=true; [e2e] PASS"
+        - cmd: "git diff --stat -- poc/"
+          status: pass
+      summary: "SSR behavioral proof COMPLETE and oracle-green. Executed as a crew sub-tranche (T005a-f, PM-shepherded): (a) parse5 pre-activation adapter reusing analyzer evaluateExpectations, zero analyzer changes; (b) ui-kit mount dom-* expectations (24/24 verified vs real react+solid DOM); (c) receipts frameless-receipts/2 with OPTIONAL ssr entry EXACTLY per Decision 6 (activation:hydrate|resume discriminant; hydration-only fields rejected by name + negative test — Decision 7 fitness honored); (d1) both apps refactored to route-per-scenario serving the full ui-kit corpus from CLI-EMITTED output, claim-(a) boxes; (d2) claim-(b) clean-activation boxes; (d3) claim-(c) post-activation boxes; (d4/d4b) calibration for all 4 claim types; (e) scripts/e2e.mjs folds the ssr entry + equality verdict into pnpm e2e (the one documented command) and wires ui-kit assertExpectations; (f) README/docs honesty + demos/ssr/README browser provisioning. FINAL RECEIPT: demos/ssr/receipts/frameless-receipts.json, schema /2, validateReceipt-valid, activation:hydrate both frameworks, preActivation 12/0, postActivation 7/0, calibration.proven true (claims a/b/c), equality {corpusIdentical:true, outcomesEqual:true}. KEY FINDINGS: (1) React 19 hydration mismatch (error #418) DOES surface in consoleErrors — claim-(b) stop_if RESOLVED FAVORABLY, clean-activation box trustworthy (empirically calibrated). (2) Two real defects the witness proof caught that in-process checks missed: SPA-fallback routing bug (fixed appType:mpa + trailing-slash) and a wrong asserted price constant. (3) Calibration boxes must assert the EXPECTED-BROKEN outcome (contested-pass) — witness records assertion failures permanently. PRODUCT FEEDBACK for owner (owns witness): witness 0.7.0 PageHandle has no text-input primitive (only click) — text-input scenario steps not replayable in the SSR lane (Decision 5 anticipated this: 'as expressible'); a bounded text-input primitive would enable full scenario replay. Critique: T005c (schema/payload-compat) received second-model review (Opus reviewing gpt-5.6-sol diff) = PASS; other sub-units low-risk (no public API/emit/protocol surface). Crew-model learnings recorded: sandbox has no network (PM pre-installs deps) and no loopback listener/browser (witness + pnpm e2e verified PM-side)."
   - id: T900
     type: pm
     assignee: PM
@@ -189,7 +250,7 @@ tasks:
   - id: T999
     type: judge
     assignee: Judge
-    status: queued
+    status: done
     objective: "Final audit from a fresh clone: does the tranche satisfy the original outcome — SSR behavioral proof green via the documented command with witness receipts and calibration evidence, @frameless.md/core import real and tested, the lane contract activation-model-neutral (T003 fitness check honored in the shipped schema/boxes: no hydration-only fields), gated cards intact, docs honest, markless repo untouched?"
     inputs:
       - "All done task receipts"
@@ -200,4 +261,9 @@ tasks:
       - "full_outcome_complete: true | false"
       - "missing evidence"
       - "next task if not complete"
-    receipt: null
+    receipt:
+      result: done
+      decision: complete
+      full_outcome_complete: true
+      note: notes/T004-dispatch-plan.md
+      summary: "COMPLETE. Fresh-environment audit run in an isolated copy of the working tree (rsync minus node_modules/.git/.fable-codex → git init → fresh `pnpm install` of 458 pkgs → documented commands), simulating a fresh clone with the (uncommitted) tranche work. Results: `pnpm check` PASS, `pnpm lint` PASS, `pnpm test` PASS (485/485, incl. packages/core/test/authoring-surface.test.ts — the @frameless.md/core hero-import test, T002), `pnpm build` PASS, and the ORACLE `pnpm e2e` PASS: browser lane (ui-kit+composition-kit) + SSR lane 13/13 boxes (2 intended contested calibration passes), SSR PASS pre react=12/12 solid=12/12, equality corpus=true outcomes=true, [e2e] PASS. Witness receipts present under demos/ssr/.witness/receipts/; calibration evidence present (4 calibration boxes, all claim types proven able to fail). demos/ssr/receipts/frameless-receipts.json: schema frameless-receipts/2, activation:hydrate both frameworks, calibration.proven true, equality both true. ACTIVATION-MODEL-NEUTRAL confirmed: grep for hydrationMismatch/hydration:/hydrateCompletedAt across analyzer src + demos/ssr src/boxes/receipts → NONE (T003 Decision 7 fitness honored in shipped schema/boxes). GATED CARDS intact: T900 (Solid 2) blocked, T901 (Qwik) blocked. DOCS honest (README: SSR proven for React/Solid only; not Qwik/publish/a11y/perf; markless no-hydration line untouched; demos/ssr/README documents browser provisioning + WITNESS_BROWSER_PATH). MARKLESS untouched by this tranche (no markless paths in the frameless diff; this session issued zero writes to the markless repo). Original owner outcome satisfied: (1) SSR proven behaviorally for both targets via @async/witness with receipts; (2) @frameless.md/core is a real package whose hero import resolves and is tested; (3) Solid2/Qwik boarded as blocked cards with exact triggers. NOTE for owner: local working tree is dirty/uncommitted — committing/pushing to main requires an explicit owner directive per changeset (AGENTS.md); the audit copy was disposable and did not commit to the real repo."

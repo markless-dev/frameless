@@ -6,7 +6,7 @@ import {
 import { assertValidExpectation } from './expectations.ts';
 import type { Divergence, ExpectationResult } from './types.ts';
 
-export const RECEIPT_SCHEMA_VERSION = 'frameless-receipts/1' as const;
+export const RECEIPT_SCHEMA_VERSION = 'frameless-receipts/2' as const;
 export const EQUIVALENCE_INVARIANT_ID = 'MLA-EXT-FRAMELESS-EQUIVALENCE' as const;
 export const MUTANT_INVARIANT_ID = 'MLA-EXT-FRAMELESS-MUTANT' as const;
 export const EXPECTATION_INVARIANT_ID = 'MLA-EXT-FRAMELESS-EXPECTATION' as const;
@@ -49,6 +49,25 @@ export type Receipt = {
 	scenarios: Record<string, Record<string, PairResult>>;
 	mutantRejections: Record<string, MutantResult>;
 	expectationResults?: Record<string, Record<string, ExpectationResult[]>>;
+	ssr?: {
+		witness: {
+			version: string;
+			runId: string;
+			receiptPath: string;
+			receiptVersionMarker: string;
+		};
+		frameworks: Record<
+			string,
+			{
+				activation: 'hydrate' | 'resume';
+				preActivation: { expectations: number; failures: number };
+				activationClean: boolean;
+				postActivation: { expectations: number; failures: number };
+				calibration: { claims: string[]; proven: boolean };
+			}
+		>;
+		equality: { corpusIdentical: boolean; outcomesEqual: boolean };
+	};
 	summary: ReceiptSummary;
 };
 
@@ -189,6 +208,7 @@ export function validateReceipt(value: unknown): value is Receipt {
 				'scenarios',
 				'mutantRejections',
 				'expectationResults',
+				'ssr',
 				'summary',
 			],
 		)
@@ -221,12 +241,80 @@ export function validateReceipt(value: unknown): value is Receipt {
 		!validateExpectationResults(receipt.expectationResults)
 	)
 		return false;
+	if (Object.hasOwn(receipt, 'ssr') && !validateSsr(receipt.ssr)) return false;
 	try {
 		createReceiptVerdictReport(receipt as Receipt);
 		return summariesEqual(receipt.summary, createReceiptSummary(receipt as Receipt));
 	} catch {
 		return false;
 	}
+}
+
+function validateSsr(value: unknown): boolean {
+	if (!isRecord(value) || !hasExactKeys(value, ['witness', 'frameworks', 'equality'])) {
+		return false;
+	}
+	if (
+		!isRecord(value.witness) ||
+		!hasExactKeys(value.witness, [
+			'version',
+			'runId',
+			'receiptPath',
+			'receiptVersionMarker',
+		]) ||
+		!Object.values(value.witness).every((field) => typeof field === 'string')
+	) {
+		return false;
+	}
+	if (
+		!isRecord(value.frameworks) ||
+		!Object.values(value.frameworks).every(validateSsrFramework)
+	) {
+		return false;
+	}
+	return (
+		isRecord(value.equality) &&
+		hasExactKeys(value.equality, ['corpusIdentical', 'outcomesEqual']) &&
+		typeof value.equality.corpusIdentical === 'boolean' &&
+		typeof value.equality.outcomesEqual === 'boolean'
+	);
+}
+
+function validateSsrFramework(value: unknown): boolean {
+	if (
+		!isRecord(value) ||
+		!hasExactKeys(value, [
+			'activation',
+			'preActivation',
+			'activationClean',
+			'postActivation',
+			'calibration',
+		]) ||
+		(value.activation !== 'hydrate' && value.activation !== 'resume') ||
+		typeof value.activationClean !== 'boolean' ||
+		!validateSsrOutcomeCounts(value.preActivation) ||
+		!validateSsrOutcomeCounts(value.postActivation)
+	) {
+		return false;
+	}
+	return (
+		isRecord(value.calibration) &&
+		hasExactKeys(value.calibration, ['claims', 'proven']) &&
+		Array.isArray(value.calibration.claims) &&
+		value.calibration.claims.every((claim) => typeof claim === 'string') &&
+		typeof value.calibration.proven === 'boolean'
+	);
+}
+
+function validateSsrOutcomeCounts(value: unknown): boolean {
+	return (
+		isRecord(value) &&
+		hasExactKeys(value, ['expectations', 'failures']) &&
+		Number.isInteger(value.expectations) &&
+		(value.expectations as number) >= 0 &&
+		Number.isInteger(value.failures) &&
+		(value.failures as number) >= 0
+	);
 }
 
 function validateExpectationResults(value: unknown): boolean {
@@ -358,7 +446,7 @@ export function renderResults(receipt: Receipt): string {
 	const lines = [
 		'# Frameless equivalence results',
 		'',
-		'> Machine-generated from the frameless-receipts/1 verdict artifact. Do not edit by hand.',
+		'> Machine-generated from the frameless-receipts/2 verdict artifact. Do not edit by hand.',
 		'',
 		`Overall verdict: **${verdict.toUpperCase()}**.`,
 		'',

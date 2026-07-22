@@ -6,12 +6,18 @@ type Action =
 	| { type: 'check'; target: string; checked: boolean }
 	| { type: 'focus'; target: string; selection?: [number, number] };
 
+type Expectation =
+	| { kind: 'dom-present'; phase: 'mount'; selector: string; count: number }
+	| { kind: 'dom-text'; phase: 'mount'; selector: string; text: string }
+	| { kind: 'dom-path'; phase: 'mount'; selector: string; parentTags: string[] };
+
 type Scenario = {
 	id: string;
 	purpose: string;
 	initialProps: Record<string, unknown>;
 	actions: Action[];
 	expectedCallbacks: { name: string; fields: string[]; count: number }[];
+	expectations?: Expectation[];
 };
 
 export const uiKitScenarios: Scenario[] = [
@@ -21,6 +27,12 @@ export const uiKitScenarios: Scenario[] = [
 		initialProps: { planName: 'Studio', basePrice: 12, multiplier: 2, visible: true },
 		actions: [{ type: 'click', target: '[data-action="add-seat"]' }],
 		expectedCallbacks: [{ name: 'seat-added', fields: ['seats'], count: 1 }],
+		expectations: [
+			{ kind: 'dom-present', phase: 'mount', selector: '[data-component="pricing-card"]', count: 1 },
+			{ kind: 'dom-present', phase: 'mount', selector: '[data-pricing-state="visible"]', count: 1 },
+			{ kind: 'dom-text', phase: 'mount', selector: '[data-seat-count]', text: '1' },
+			{ kind: 'dom-text', phase: 'mount', selector: '[data-price-total]', text: '$24' },
+		],
 	},
 	{
 		id: 'ui-kit/task-list',
@@ -47,6 +59,12 @@ export const uiKitScenarios: Scenario[] = [
 			{ name: 'task-removed', fields: ['id'], count: 1 },
 			{ name: 'tasks-cleared', fields: ['count'], count: 1 },
 		],
+		expectations: [
+			{ kind: 'dom-present', phase: 'mount', selector: '[data-component="task-list"]', count: 1 },
+			{ kind: 'dom-present', phase: 'mount', selector: '[data-task-title]', count: 2 },
+			{ kind: 'dom-present', phase: 'mount', selector: '[data-oracle-row-key]', count: 2 },
+			{ kind: 'dom-text', phase: 'mount', selector: '[data-open-count]', text: '2 open' },
+		],
 	},
 	{
 		id: 'ui-kit/newsletter-form',
@@ -67,6 +85,12 @@ export const uiKitScenarios: Scenario[] = [
 				fields: ['name', 'email', 'productUpdates', 'status'],
 				count: 1,
 			},
+		],
+		expectations: [
+			{ kind: 'dom-present', phase: 'mount', selector: '[data-component="newsletter-form"]', count: 1 },
+			{ kind: 'dom-present', phase: 'mount', selector: '[data-field]', count: 3 },
+			{ kind: 'dom-present', phase: 'mount', selector: '[data-field="product-updates"]', count: 1 },
+			{ kind: 'dom-text', phase: 'mount', selector: '[data-submit-status]', text: 'idle' },
 		],
 	},
 ];

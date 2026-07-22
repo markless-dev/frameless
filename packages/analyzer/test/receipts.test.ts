@@ -35,14 +35,68 @@ const receipt: Receipt = {
 	summary: createReceiptSummary(results),
 };
 
-describe('frameless-receipts/1', () => {
-	test('validates its version and preserves blocked-by-upstream', () => {
+describe('frameless-receipts/2', () => {
+	test('validates without the optional ssr entry and preserves blocked-by-upstream', () => {
 		expect(validateReceipt(receipt)).toBe(true);
 		expect(validateReceipt({ ...receipt, schema: 'old' })).toBe(false);
 		expect(
 			validateReceipt({ ...receipt, summary: { ...receipt.summary, equalPairs: 2 } }),
 		).toBe(false);
 		expect(renderResults(receipt)).toContain('blocked-by-upstream(#upstream)');
+	});
+
+	test('validates a well-formed ssr entry for both hydrating frameworks', () => {
+		const withSsr: Receipt = {
+			...receipt,
+			ssr: {
+				witness: {
+					version: '0.7.0',
+					runId: 'run-123',
+					receiptPath: '.witness/receipts/run-123/receipt.json',
+					receiptVersionMarker: 'async-witness-receipt/1',
+				},
+				frameworks: {
+					react: {
+						activation: 'hydrate',
+						preActivation: { expectations: 4, failures: 0 },
+						activationClean: true,
+						postActivation: { expectations: 8, failures: 0 },
+						calibration: { claims: ['pre-activation', 'activation'], proven: true },
+					},
+					solid: {
+						activation: 'hydrate',
+						preActivation: { expectations: 4, failures: 0 },
+						activationClean: true,
+						postActivation: { expectations: 8, failures: 0 },
+						calibration: { claims: ['pre-activation', 'activation'], proven: true },
+					},
+				},
+				equality: { corpusIdentical: true, outcomesEqual: true },
+			},
+		};
+
+		expect(validateReceipt(withSsr)).toBe(true);
+	});
+
+	test('rejects an invalid ssr activation discriminant', () => {
+		const dishonest = structuredClone(receipt) as unknown as Record<string, unknown>;
+		dishonest.ssr = createSsrEntry();
+		(dishonest.ssr as SsrEntry).frameworks.react.activation = 'mount';
+		expect(validateReceipt(dishonest)).toBe(false);
+	});
+
+	test('rejects a hydration-only extra field in an ssr framework entry', () => {
+		const dishonest = structuredClone(receipt) as unknown as Record<string, unknown>;
+		dishonest.ssr = createSsrEntry();
+		(dishonest.ssr as SsrEntry).frameworks.react.hydrationMismatches = 0;
+		expect(validateReceipt(dishonest)).toBe(false);
+	});
+
+	test('rejects an ssr entry missing a required sub-field', () => {
+		const dishonest = structuredClone(receipt) as unknown as Record<string, unknown>;
+		dishonest.ssr = createSsrEntry();
+		delete (dishonest.ssr as SsrEntry).frameworks.react.activationClean;
+		expect(validateReceipt(dishonest)).toBe(false);
 	});
 
 	test('rejects dishonest equal pair variants', () => {
@@ -290,3 +344,28 @@ describe('frameless-receipts/1', () => {
 		]);
 	});
 });
+
+type SsrEntry = Record<string, unknown> & {
+	frameworks: Record<string, Record<string, unknown>>;
+};
+
+function createSsrEntry(): SsrEntry {
+	return {
+		witness: {
+			version: '0.7.0',
+			runId: 'run-123',
+			receiptPath: '.witness/receipts/run-123/receipt.json',
+			receiptVersionMarker: 'async-witness-receipt/1',
+		},
+		frameworks: {
+			react: {
+				activation: 'hydrate',
+				preActivation: { expectations: 4, failures: 0 },
+				activationClean: true,
+				postActivation: { expectations: 8, failures: 0 },
+				calibration: { claims: ['pre-activation', 'activation'], proven: true },
+			},
+		},
+		equality: { corpusIdentical: true, outcomesEqual: true },
+	};
+}

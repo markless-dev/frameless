@@ -1,0 +1,21 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"allowJs": true,
+		"checkJs": false,
+		"jsx": "react-jsx",
+		"noEmit": true,
+		"types": ["node"]
+	},
+	"include": [
+		"src/**/*.ts",
+		"../ui-kit/scenarios.ts",
+		"test/**/*.ts",
+		"react-app/**/*.ts",
+		"react-app/**/*.tsx",
+		"solid-app/**/*.ts",
+		"solid-app/**/*.tsx",
+		"*.box.ts"
+	],
+	"exclude": [".witness", "dist", "node_modules", "react-app/dist", "solid-app/dist"]
+}

@@ -1,0 +1,5 @@
+.witness/
+node_modules/
+react-app/dist/
+solid-app/dist/
+receipts/

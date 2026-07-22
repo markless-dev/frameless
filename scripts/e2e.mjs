@@ -10,11 +10,13 @@ import {
 	validateReceipt,
 } from '@frameless/analyzer';
 import { compositionKitScenarios } from '../demos/composition-kit/scenarios.ts';
+import { buildSsrEntry, getSsrLaneVerdict } from '../demos/ssr/src/ssr-receipt.ts';
 import { uiKitScenarios } from '../demos/ui-kit/scenarios.ts';
 
 const workspace = resolve(import.meta.dirname, '..');
 const uiDemo = resolve(workspace, 'demos/ui-kit');
 const compositionDemo = resolve(workspace, 'demos/composition-kit');
+const ssrDemo = resolve(workspace, 'demos/ssr');
 const uiComponents = ['PricingCard', 'TaskList', 'NewsletterForm'];
 const componentName = (component) =>
 	component.replace(/[A-Z]/g, (letter, index) => `${index ? '-' : ''}${letter.toLowerCase()}`);
@@ -30,6 +32,13 @@ if (uiScenarioEntries.length !== uiKitScenarios.length) {
 function run(label, args) {
 	console.log(`\n[e2e] ${label}`);
 	const result = spawnSync(process.execPath, args, { cwd: workspace, stdio: 'inherit' });
+	if (result.error) throw result.error;
+	if (result.status !== 0) process.exit(result.status ?? 1);
+}
+
+function runExecutable(label, command, args, cwd = workspace) {
+	console.log(`\n[e2e] ${label}`);
+	const result = spawnSync(command, args, { cwd, stdio: 'inherit' });
 	if (result.error) throw result.error;
 	if (result.status !== 0) process.exit(result.status ?? 1);
 }
@@ -59,7 +68,8 @@ async function readTrace(demo, target, filename, scenarioId) {
 }
 
 function assertExpectations(trace, scenario) {
-	const failures = evaluateExpectations(trace, scenario.expectations ?? []).filter(
+	const results = evaluateExpectations(trace, scenario.expectations ?? []);
+	const failures = results.filter(
 		({ outcome }) => outcome === 'fail',
 	);
 	if (failures.length) {
@@ -67,10 +77,11 @@ function assertExpectations(trace, scenario) {
 			`${trace.framework} expectation failure for ${scenario.id}: ${JSON.stringify(failures)}`,
 		);
 	}
+	return results;
 }
 
-async function writeReceipt(demo, scenarios, label) {
-	const receiptResults = { scenarios, mutantRejections: {} };
+async function writeReceipt(demo, scenarios, expectationResults, label) {
+	const receiptResults = { scenarios, mutantRejections: {}, expectationResults };
 	const receipt = {
 		schema: RECEIPT_SCHEMA_VERSION,
 		generatedBy: 'scripts/e2e.mjs',
@@ -84,7 +95,7 @@ async function writeReceipt(demo, scenarios, label) {
 		summary: createReceiptSummary(receiptResults),
 	};
 	if (!validateReceipt(receipt)) {
-		throw new Error(`Generated ${label} frameless-receipts/1 receipt failed validation.`);
+		throw new Error(`Generated ${label} ${RECEIPT_SCHEMA_VERSION} receipt failed validation.`);
 	}
 	const receiptDirectory = resolve(demo, 'receipts');
 	const receiptPath = resolve(receiptDirectory, 'frameless-receipts.json');
@@ -93,7 +104,36 @@ async function writeReceipt(demo, scenarios, label) {
 	return { receipt, receiptPath };
 }
 
-await Promise.all([resetDemoArtifacts(uiDemo), resetDemoArtifacts(compositionDemo)]);
+async function writeSsrReceipt(ssr) {
+	const receiptResults = { scenarios: {}, mutantRejections: {} };
+	const receipt = {
+		schema: RECEIPT_SCHEMA_VERSION,
+		generatedBy: 'scripts/e2e.mjs',
+		environment: {
+			node: process.version,
+			browser: 'Chromium via @async/witness',
+			pair: 'CLI-emitted React SSR vs CLI-emitted Solid SSR',
+		},
+		findings: {},
+		...receiptResults,
+		ssr,
+		summary: createReceiptSummary(receiptResults),
+	};
+	if (!validateReceipt(receipt)) {
+		throw new Error(`Generated SSR ${RECEIPT_SCHEMA_VERSION} receipt failed validation.`);
+	}
+	const receiptDirectory = resolve(ssrDemo, 'receipts');
+	const receiptPath = resolve(receiptDirectory, 'frameless-receipts.json');
+	await mkdir(receiptDirectory, { recursive: true });
+	await writeFile(receiptPath, `${JSON.stringify(receipt, null, 2)}\n`, 'utf8');
+	return receiptPath;
+}
+
+await Promise.all([
+	resetDemoArtifacts(uiDemo),
+	resetDemoArtifacts(compositionDemo),
+	resetDemoArtifacts(ssrDemo),
+]);
 
 for (const component of uiComponents) {
 	run(`build ui-kit ${component}`, [
@@ -143,6 +183,8 @@ run('capture composition-kit Solid traces', [
 
 const uiScenarios = {};
 const compositionScenarios = {};
+const uiExpectationResults = {};
+const compositionExpectationResults = {};
 const differences = [];
 for (const { component, scenario } of uiScenarioEntries) {
 	const scenarioName = scenario.id.split('/').at(-1);
@@ -159,6 +201,10 @@ for (const { component, scenario } of uiScenarioEntries) {
 		`${component}.${scenarioName}.json`,
 		scenario.id,
 	);
+	uiExpectationResults[scenario.id] = {
+		react: assertExpectations(react, scenario),
+		solid: assertExpectations(solid, scenario),
+	};
 	const verdict = compareRuns(react, solid);
 	uiScenarios[scenario.id] = {
 		'react-vs-solid': verdict.equal
@@ -173,8 +219,10 @@ for (const scenario of compositionKitScenarios) {
 	if (!scenarioName) throw new Error(`Scenario ${scenario.id} has no file-safe name.`);
 	const react = await readTrace(compositionDemo, 'react', `${scenarioName}.json`, scenario.id);
 	const solid = await readTrace(compositionDemo, 'solid', `${scenarioName}.json`, scenario.id);
-	assertExpectations(react, scenario);
-	assertExpectations(solid, scenario);
+	compositionExpectationResults[scenario.id] = {
+		react: assertExpectations(react, scenario),
+		solid: assertExpectations(solid, scenario),
+	};
 	const verdict = compareRuns(react, solid);
 	compositionScenarios[scenario.id] = {
 		'react-vs-solid': verdict.equal
@@ -185,10 +233,16 @@ for (const scenario of compositionKitScenarios) {
 		differences.push({ demo: 'composition-kit', scenario: scenario.id, ...verdict });
 }
 
-const uiReceipt = await writeReceipt(uiDemo, uiScenarios, 'ui-kit');
+const uiReceipt = await writeReceipt(
+	uiDemo,
+	uiScenarios,
+	uiExpectationResults,
+	'ui-kit',
+);
 const compositionReceipt = await writeReceipt(
 	compositionDemo,
 	compositionScenarios,
+	compositionExpectationResults,
 	'composition-kit',
 );
 
@@ -197,6 +251,40 @@ if (differences.length) {
 	console.error(JSON.stringify(differences, null, 2));
 	process.exit(1);
 }
+
+// Build the SSR demo's emitted output (dist/ is gitignored — regenerate on every clone) so the
+// witness apps have CLI-emitted components to import before `witness run`.
+for (const component of ['PricingCard', 'TaskList', 'NewsletterForm']) {
+	run(`build ssr ${component}`, [
+		'--experimental-transform-types',
+		resolve(workspace, 'packages/cli/src/node.ts'),
+		'build',
+		resolve(ssrDemo, `src/${component}.tsrx`),
+		'--target',
+		'react',
+		'--target',
+		'solid',
+		'--out-dir',
+		resolve(ssrDemo, `dist/${component}`),
+	]);
+}
+
+runExecutable('run SSR witness', 'pnpm', ['exec', 'witness', 'run'], ssrDemo);
+const witnessReceipts = resolve(ssrDemo, '.witness/receipts');
+const witnessRunId = (await readFile(resolve(witnessReceipts, 'latest'), 'utf8')).trim();
+if (!witnessRunId || witnessRunId.includes('/') || witnessRunId.includes('\\')) {
+	throw new Error(`Invalid SSR witness latest pointer: ${JSON.stringify(witnessRunId)}`);
+}
+const witnessReceiptPath = resolve(witnessReceipts, witnessRunId, 'receipt.json');
+const witnessReceipt = JSON.parse(await readFile(witnessReceiptPath, 'utf8'));
+const storedWitnessReceiptPath = `demos/ssr/.witness/receipts/${witnessRunId}/receipt.json`;
+const ssr = buildSsrEntry(witnessReceipt, storedWitnessReceiptPath);
+const ssrVerdict = getSsrLaneVerdict(witnessReceipt, ssr);
+const ssrReceiptPath = await writeSsrReceipt(ssr);
+console.log(
+	`[e2e] SSR ${ssrVerdict}: pre react=${ssr.frameworks.react.preActivation.expectations - ssr.frameworks.react.preActivation.failures}/${ssr.frameworks.react.preActivation.expectations}, solid=${ssr.frameworks.solid.preActivation.expectations - ssr.frameworks.solid.preActivation.failures}/${ssr.frameworks.solid.preActivation.expectations}; equality corpus=${ssr.equality.corpusIdentical}, outcomes=${ssr.equality.outcomesEqual}`,
+);
+if (ssrVerdict === 'FAIL') process.exit(1);
 
 console.log('\n[e2e] PASS');
 console.log(`Modules built: ui-kit=${uiComponents.length}, composition-kit=5`);
@@ -208,3 +296,4 @@ console.log(
 );
 console.log(`UI receipt: ${uiReceipt.receiptPath}`);
 console.log(`Composition receipt: ${compositionReceipt.receiptPath}`);
+console.log(`SSR receipt: ${ssrReceiptPath}`);

@@ -12,6 +12,7 @@
 		"build": "vp pack",
 		"check": "tsc --noEmit",
 		"e2e": "node scripts/e2e.mjs",
+		"e2e:ssr": "pnpm --dir demos/ssr exec witness run",
 		"fmt": "vp fmt",
 		"lint": "vp lint",
 		"prepare": "git config core.hooksPath .githooks",
