@@ -32,7 +32,45 @@ markless feat/storage commits (newest first):
 - c9369b8  W1b transport (protocol v2) + W1c import sources
 - fb3e399  W1a declaration + binding + lowering
 
-## IMMEDIATE NEXT STEP (do this first)
+## ⚠️ BROWSER PROOF IS RED — 2/4 FAIL (settled result; markless NOT proof-complete)
+
+Definitive JSON result (clean run bds3knr6j, no port conflicts):
+/Users/jacksm5pro/.claude/jobs/bc1ba03c/tmp/w2c-result.json — 2 passed, 2 FAILED.
+The earlier "exit 0" runs were FALSE POSITIVES from port-conflicted runs that
+never truly executed (lesson: never trust exit-0 alone here; use the json).
+
+- PASS: "cold load seeds the fallback before framework wake"
+- PASS: "deferred storage waits for enableStorage and persists later writes"
+- FAIL: "warm load adopts the seed without an extra runtime driver read"
+        (storage.test.ts:78) — expected 'dark', got 'light'
+- FAIL: "writes update every plane and survive a fresh SSR mount"
+        (storage.test.ts:109) — expected 'dark', got 'light'
+
+DIAGNOSIS (single root cause): the component's reactive `{theme}` text renders
+the FALLBACK, not the seeded/written value. Cold passes (attribute seeded) and
+deferred passes, so the seed script, the data-<key> attr, and the slot WRITE
+all work. The broken link is WAKE-TIME ADOPTION: the value in
+window[Symbol.for('tsrx.storage/1')] slot (warm) / the persisted write is not
+reaching the graph cell that the component's `{theme}` read resolves to.
+LOOK AT: packages/web/src/payload-graph-construct.ts (the v2 storage slot
+override before createRuntimeGraph — is it matching the cell by the right
+graphNodeId/slotKey and actually replacing the value the component reads?);
+how the compiled fixture lowers `{theme}` (does the text binding read the
+storage graph node, or a separate payload cell that keeps the fallback?);
+resume-runtime.ts storage-plane wiring. The storage-poc reference
+(poc/09-storage) shows the intended behavior: seed -> landing slot ->
+runtime consumes slot value, zero re-read. Likely the slot key schema
+(<moduleId>#<key>) used by the render-time seed (W2a) and the lookup in
+payload-graph-construct (W2b) DISAGREE, or the override runs but the text
+binding reads a pre-seeded fallback cell.
+
+REPAIR PATH: cut a crew packet to fix the adoption path, re-run the browser
+lane (detached + json + port-cleanup per gotchas below), require 4/4 before
+accepting W2c. Only THEN un-pend b21d6fd, receipt T005, go to T006.
+Current markless HEAD: a893f14 (empty marker recording this red state) on
+top of b21d6fd (W2c WIP).
+
+## IMMEDIATE NEXT STEP (after the repair above lands 4/4)
 
 The browser lane executes the 4 storage contract cases (cold
 fallback-attr-before-wake; warm dark + ZERO extra driver reads; write+reload
@@ -50,13 +88,24 @@ trustworthy pass. A re-run was launched with full capture to a FIXED FILE:
    returns 1 on any failure), so 3 consecutive exit-0 runs is strong evidence
    W2c passes — but for a STRUCTURED result use the JSON reporter, which vitest
    writes atomically at the end:
-     Detached run in flight at handoff: background id **byfp6jqb8**, writing
-     **/Users/jacksm5pro/.claude/jobs/bc1ba03c/tmp/w2c-result.json**
+     Target file: **/Users/jacksm5pro/.claude/jobs/bc1ba03c/tmp/w2c-result.json**
      (numTotalTests/numPassedTests/numFailedTests + per-assertion status).
-     Command (re-run if the json is missing — the lane needs >8 min, so run
-     DETACHED/background, never a foreground timeout which sends SIGALRM/144):
-     `pnpm --dir packages/vitest-browser exec vitest run browser/storage.test.ts
-      --reporter=json --outputFile=<path>` from the markless worktree.
+     Latest clean detached run: background id **bds3knr6j** (log w2c-clean.log).
+   GOTCHAS learned the hard way (do not repeat):
+     - Run DETACHED (run_in_background), NEVER a foreground timeout: the lane
+       needs >8 min; foreground SIGALRMs it (exit 144) before it writes json.
+     - Launching multiple runs leaves ZOMBIE vitest/chromium procs holding the
+       port ("Port 63315 is in use") which SIGTERM the next run (exit 143).
+       Before a fresh run: `pkill -f "vitest.*storage.test"; pkill -f
+       chrome-headless; pkill -f vitest-browser; sleep 2` then launch ONE.
+     - Plain stdout redirect truncates to 4 lines; only the --reporter=json
+       --outputFile path gives a durable structured result.
+   Command: `pnpm --dir packages/vitest-browser exec vitest run
+     browser/storage.test.ts --reporter=json --outputFile=<path>` from the
+     markless worktree.
+   EVIDENCE SO FAR: 2 clean exit-0 runs (ba2vki10z, bmw7wpv97) — vitest run
+     returns 0 only if all pass, so this strongly indicates W2c passes; the
+     json just makes it structured/auditable.
    If numFailedTests==0, W2c is proven; accept it and proceed to T006.
 2. If 4/4 GREEN: accept W2c, amend/replace b21d6fd's message to drop "PENDING",
    receipt T005 on the board (both oracle-half-a items proven:
