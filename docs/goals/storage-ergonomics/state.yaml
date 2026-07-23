@@ -36,7 +36,7 @@ agents:
   worker: installed
   judge: installed
 
-active_task: T003
+active_task: T004
 
 tasks:
   - id: T001
@@ -141,7 +141,20 @@ tasks:
     expected_output:
       - "Decision (build manifest guard | v1 fallback + doc norm)"
       - "Worker objective + allowed_files + verify + stop_if (if build)"
-    receipt: null
+    receipt:
+      result: done
+      note: notes/T003-rename-safety-design.md
+      decision: "build the manifest guard — FEASIBLE via the vite plugin's build-aggregation pattern (sharedDuringBuild + transform + build-end)"
+      summary: >-
+        Confirmed the markless vite plugin (bundler/src/vite/index.ts) can aggregate
+        storage keys during transform and diff a manifest at build end. Design: a
+        markless-storage-keys.json map (driverKey -> {graphNodeId, identifier, derived}),
+        warn-only (never error), DERIVED keys only (explicit verbatim exempt), production
+        build only, warns when a previously-produced derived key disappears (rename ->
+        data-orphan) with the storage('markless:theme',...) pin as the inline remedy.
+      owner_ruling_needed:
+        - "Go/no-go on building the guard now"
+        - "Manifest location: committed markless-storage-keys.json (A, recommended — catches cross-developer renames) vs gitignored .markless/ cache (B, weaker)"
   - id: T004
     type: worker
     assignee: Worker
