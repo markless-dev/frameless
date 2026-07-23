@@ -1,0 +1,188 @@
+version: 2
+
+goal:
+  slug: storage-ergonomics
+  title: "Refine markless storage(): drop consent surface, optional identifier-derived keys with rename-safety; research best-DX for implicit-key persistence"
+  status: active
+  charter: goal.md
+  kind: specific
+  tranche: "Land the agreed storage() API refinements (remove deferred consent; optional identifier-derived key markless:<id>; verbatim explicit key; sanitized data-markless-<id> no-flash attr; stable-literal key bake; rename-safety key-manifest guard) with EXECUTED proof (standalone runner 3 QDS cases + node suites + new key-behavior checks), then deliver a DX research recommendation on implicit-key persistence. Judge decides whether research revises the shipped design."
+  oracle:
+    signal: "BOTH: (1) EXECUTED implementation proof — standalone runner green on cold/warm/write; storage('light')->key markless:theme + attr data-markless-theme; storage('theme','light')->verbatim theme + data-theme; deferred/storageAccess/enableStorage grep-clean; derived key a baked literal; node suites (compiler/web/runtime/serializer) green with deferred tests removed + key tests added; rename drift warning fires (or Judge-approved v1 fallback). (2) DX research artifact evaluating identifier-derivation vs ecosystem alternatives with a concrete keep/adjust/replace recommendation + rename-footgun verdict."
+    cadence: "at each worker receipt, the rename-safety design review, and the research decision"
+    final_proof: "Final audit maps executed implementation proof + delivered research recommendation to the owner's ask; full_outcome_complete requires executed proof (not compiling code) AND a decision-ready research recommendation."
+  intake:
+    original_request: "Implement everything we've talked about, and then do some research on best DX for the ergonomic storage API where the identifier becomes the key. Maybe there's other info that makes more sense instead."
+    interpreted_outcome: "Land the co-designed storage() refinements executed-proven, then research best-DX for implicit-key persistence and return an owner-facing recommendation that may revise the ergonomic design."
+    input_shape: existing_plan
+    audience: "owner (Jack); markless storage users downstream"
+    authority: "requested; markless WRITE ACCESS granted (branch-only, feat/storage; main untouchable without explicit owner confirm)"
+    proof_type: test
+    completion_proof: "Executed implementation proof (runner + node suites + key checks + rename guard) AND a delivered DX research recommendation with owner decision surfaced."
+    likely_misfire: "Skipping/weakening the rename-safety guard; hand-wavy research with no decision; breaking the QDS 3-case contract; letting a minified/mangled name leak into the baked key; re-adding any consent surface."
+    existing_plan_facts: "Agreed decisions (goal.md): remove deferred consent (storageAccess+enableStorage+mode slot); optional key derives markless:<identifier>; explicit key VERBATIM (owner ruling); no-flash attr sanitized to data-markless-<id> (owner ruling); bake derived key as stable literal; rename-safety via compiler key manifest diffed build-over-build. QDS/storage-poc reference = 3 cases (cold/warm/write), storage(key,fallback), no consent. Standalone runner (packages/vitest-browser/storage-runner.mjs, markless de7a5fd) is the executed browser proof; vitest-browser lane deadlocks here. Current markless feat/storage HEAD 259f89c + de7a5fd."
+    non_goals:
+      - "Re-adding consent/deferred surface"
+      - "frameless consumption of storage (separate markless-storage goal T007+)"
+      - "Driver zoo / non-string values (v1 = localStorage + strings)"
+
+policies:
+  one_active_task: true
+  parallel_workers: "single active writer; markless suites run in the feat/storage worktree (has node_modules). In this fable session crew is the producer; PM directs/reviews/merges."
+  max_consecutive_tiny_tasks: 2
+
+agents:
+  scout: installed
+  worker: installed
+  judge: installed
+
+active_task: T002
+
+tasks:
+  - id: T001
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: medium
+    objective: "Remove deferred consent entirely: delete the storageAccess render option (render-to-string), the runtime enableStorage() method (resume.ts/resume-runtime.ts/resume-types.ts) + createStoragePlane enable/activated/deferred logic (storage-plane.ts, always-enabled write-back), and the storage-slot mode marker (storage-slot.ts / payload-graph-construct.ts seed). Remove the vitest-browser storageAccess option + the deferred browser/node tests + the deferred case from storage-runner.mjs (leaving cold/warm/write). Storage is always immediate."
+    allowed_files:
+      - "packages/web/src/render-to-string.ts"
+      - "packages/web/src/storage-plane.ts"
+      - "packages/web/src/resume-runtime.ts"
+      - "packages/web/src/resume.ts"
+      - "packages/web/src/resume-types.ts"
+      - "packages/web/src/payload-graph-construct.ts"
+      - "packages/serializer/src/storage-slot.ts"
+      - "packages/vitest-browser/src/ssr-plugin.ts"
+      - "packages/vitest-browser/storage-runner.mjs"
+      - "packages/web/test/**"
+      - "packages/serializer/test/**"
+      - "packages/vitest-browser/test/**"
+      - "packages/vitest-browser/browser/storage.test.ts"
+    verify:
+      - "grep -r 'storageAccess\\|enableStorage\\|STORAGE_SLOT_MODE\\|deferred' packages/web/src packages/serializer/src returns nothing storage-related"
+      - "pnpm test:compiler"
+      - "pnpm exec vp test packages/web/test/*.test.ts packages/runtime/test/*.test.ts packages/serializer/test/*.test.ts"
+      - "node packages/vitest-browser/storage-runner.mjs  (3/3 cold/warm/write green)"
+    stop_if:
+      - "Removing deferred breaks the immediate reconcile (cold/warm/write) — escalate, do not weaken assertions"
+      - "Need files outside allowed_files"
+      - "Suite red twice on same cause"
+    receipt:
+      result: done
+      commit: f4240a1
+      changed_files: 14
+      summary: >-
+        Deferred consent fully removed (PM-executed in feat/storage worktree, +21/-231).
+        Deleted storageAccess render option + deferred seed branch + ::mode slot marker
+        (render-to-string, storage-slot); enableStorage() (resume/resume-runtime/resume-types)
+        + createStoragePlane enable/deferred gating (storage-plane now always-enabled write-back);
+        mode read in payload-graph-construct; vitest-browser storageAccess option + all deferred
+        tests + runner deferred case. Immediate reconcile (slot-backed readInitializer on mount)
+        unchanged. API is now storage(key,fallback), always immediate.
+      commands:
+        - cmd: "grep storageAccess|enableStorage|STORAGE_SLOT_MODE across packages/*/src"
+          status: pass (zero storage-related hits)
+        - cmd: "pnpm test:compiler (492/492)"
+          status: pass
+        - cmd: "vp test web+runtime+serializer+vitest-browser node (371/371)"
+          status: pass
+        - cmd: "node packages/vitest-browser/storage-runner.mjs (3/3 cold/warm/write)"
+          status: pass
+  - id: T002
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Optional identifier-derived key. Compiler: when storage() is called with ONE arg (fallback only), derive the key from the binding identifier and bake the LITERAL 'markless:<identifier>' at compile time (minification-safe); when called with two args, use the explicit key VERBATIM (no prefix). Render: no-flash attribute sanitized to data-markless-<identifier> for derived keys (colon->hyphen), data-<key> for explicit. Add executed proof: a runner/fixture pair covering derived vs explicit key + the sanitized attr, plus compiler unit tests for arity dispatch + literal baking."
+    allowed_files:
+      - "markless compiler storage recognition/lowering paths (framework-api.ts, collect-storage.ts, public-render/*, transform.ts) fixed by exploration"
+      - "packages/web/src/render-to-string.ts (attr sanitization)"
+      - "packages/serializer/src/storage-slot.ts (key/attr helpers)"
+      - "packages/vitest-browser/browser/fixtures/** + storage-runner.mjs (derived/explicit fixtures)"
+      - "corresponding test files"
+    verify:
+      - "pnpm test:compiler (arity dispatch + baked-literal key tests)"
+      - "pnpm exec vp test packages/web/test/*.test.ts packages/serializer/test/*.test.ts"
+      - "node packages/vitest-browser/storage-runner.mjs proves derived key markless:theme + attr data-markless-theme AND verbatim explicit key theme + data-theme"
+    stop_if:
+      - "Identifier not statically available at the lowering site (escalate design)"
+      - "Need files outside contract"
+      - "Suite red twice on same cause"
+    receipt: null
+  - id: T003
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Design-validate the rename-safety mechanism BEFORE building it. A stateless compiler cannot detect a rename, so the real mechanism is a compiler-emitted key manifest diffed build-over-build (a produced key disappearing => renamed binding => data-orphan warning). Assess: manifest location/format, where it hooks into the build, diff semantics, false-positive risk (deleted-on-purpose vs renamed), and whether it's feasible/worth it for v1 vs the fallback (stable-literal + documented 'pin before ship'). Output: decision + exact Worker contract (allowed_files/verify/stop_if) OR an owner checkpoint if it needs a ruling."
+    expected_output:
+      - "Decision (build manifest guard | v1 fallback + doc norm)"
+      - "Worker objective + allowed_files + verify + stop_if (if build)"
+    receipt: null
+  - id: T004
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Implement the rename-safety guard per T003 (manifest + build-over-build drift/rename warning, or the approved v1 fallback). Executed proof: a build that renames a storage binding surfaces the warning (or the fallback + docs are in place)."
+    allowed_files:
+      - "paths fixed by T003 decision"
+    verify:
+      - "executed: rename a storage binding -> drift/rename warning appears (or fallback verified)"
+      - "node suites stay green"
+    stop_if:
+      - "Approach diverges from T003 decision"
+      - "Need files outside contract"
+    receipt: null
+  - id: T005
+    type: scout
+    assignee: Scout
+    status: done
+    reasoning_hint: medium
+    objective: "DX research (read-only) on implicit-key persistence. Survey how the ecosystem handles it: Zustand persist (explicit name), Jotai atomWithStorage (explicit key), VueUse useStorage (explicit key), nanostores/persistent, Svelte stores + svelte-persisted-store, Solid signals persistence, Redux-persist, React Query persist, and any framework that DERIVES keys (file+export, decorators, macros). Evaluate identifier-derivation vs alternatives on: write-time ergonomics, refactor/rename safety, discoverability/debuggability, prod/minification safety, collision safety, migration path. Produce notes/T005-dx-research.md with a comparison table and a CONCRETE recommendation (keep markless:<id> derivation as-is | adjust | replace) + the rename-footgun verdict."
+    expected_output:
+      - "notes/T005-dx-research.md with comparison + concrete recommendation"
+    receipt:
+      result: done
+      note: notes/T005-dx-research.md
+      summary: >-
+        Ran early in parallel with T001. Surveyed Zustand persist, Jotai atomWithStorage,
+        VueUse useStorage, nanostores/persistent, svelte-persisted-store, Solid makePersisted,
+        redux-persist, Legend-State, and the CSS-Modules localIdentName precedent.
+        FINDING: every mainstream client-persistence library REQUIRES an explicit key and
+        deliberately decouples it from the code symbol — because a RUNTIME library can't derive
+        safely from an identifier a minifier will mangle. markless is uniquely able to offer the
+        zero-ceremony storage('light') form safely BECAUSE it's a compiler: bake a stable literal
+        (kills minification risk) + diff a build-time key manifest (kills rename risk).
+        RECOMMENDATION: keep markless:<identifier> as the default AND ship the build-time
+        key-manifest guard — do NOT rely on "pin before ship" alone (it fails silently in review,
+        passes tests, surfaces only as anonymous production data-loss). Guard should WARN (not
+        error), print old->new key, and offer the storage('theme',...) pin as the inline remedy.
+        Open ruling for T003/owner: manifest granularity/location (committed storage-keys.json
+        vs .markless/ cache) — an implementation detail, not a design fork.
+      informs:
+        - T003
+        - T006
+  - id: T006
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Given T005 research + the shipped implementation, decide whether the ergonomic design is best-DX or should be revised. Surface any revision as an owner-facing recommendation with a concrete Worker contract; do not silently change the ratified explicit-verbatim / derived-prefix rulings without flagging."
+    receipt: null
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Final audit: executed implementation proof (deferred removed + optional key + sanitized attr + stable-literal + rename guard, all green via runner + node suites) AND delivered DX research recommendation. full_outcome_complete accordingly; markless stays on feat/storage (main only with explicit owner confirm)."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "missing evidence + next task if not complete"
+    receipt: null
+
+checks:
+  dirty_fingerprint: "board prepped 2026-07-22; markless feat/storage @ 259f89c + de7a5fd (runner). Implementation happens in the markless storage worktree."
+  last_verification: null
