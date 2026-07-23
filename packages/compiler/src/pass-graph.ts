@@ -9,14 +9,21 @@ export type CompilerPassGraphErrorReason =
 	| 'undeclared-pass-output';
 
 export class CompilerPassGraphError extends Error {
+	readonly reason: CompilerPassGraphErrorReason;
+	readonly passId: string;
+	readonly artifactKeys: ReadonlyArray<string>;
+
 	constructor(
 		message: string,
-		readonly reason: CompilerPassGraphErrorReason,
-		readonly passId: string,
-		readonly artifactKeys: ReadonlyArray<string>,
+		reason: CompilerPassGraphErrorReason,
+		passId: string,
+		artifactKeys: ReadonlyArray<string>,
 	) {
 		super(message);
 		this.name = 'CompilerPassGraphError';
+		this.reason = reason;
+		this.passId = passId;
+		this.artifactKeys = artifactKeys;
 	}
 }
 

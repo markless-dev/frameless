@@ -4,7 +4,7 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"build": "node --experimental-transform-types ../../packages/cli/src/node.ts build src/frame.tsrx src/dashboard.tsrx src/status.tsrx src/search.tsrx src/page.tsrx --target react --target solid --out-dir dist"
+		"build": "node ../../packages/cli/src/node.ts build src/frame.tsrx src/dashboard.tsrx src/status.tsrx src/search.tsrx src/page.tsrx --target react --target solid --out-dir dist"
 	},
 	"devDependencies": {
 		"@frameless/analyzer": "workspace:*",

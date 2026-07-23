@@ -137,7 +137,6 @@ await Promise.all([
 
 for (const component of uiComponents) {
 	run(`build ui-kit ${component}`, [
-		'--experimental-transform-types',
 		resolve(workspace, 'packages/cli/src/node.ts'),
 		'build',
 		resolve(uiDemo, `src/${component}.tsrx`),
@@ -151,7 +150,6 @@ for (const component of uiComponents) {
 }
 
 run('build composition-kit module set', [
-	'--experimental-transform-types',
 	resolve(workspace, 'packages/cli/src/node.ts'),
 	'build',
 	...['frame', 'dashboard', 'status', 'search', 'page'].map((module) =>
@@ -256,7 +254,6 @@ if (differences.length) {
 // witness apps have CLI-emitted components to import before `witness run`.
 for (const component of ['PricingCard', 'TaskList', 'NewsletterForm']) {
 	run(`build ssr ${component}`, [
-		'--experimental-transform-types',
 		resolve(workspace, 'packages/cli/src/node.ts'),
 		'build',
 		resolve(ssrDemo, `src/${component}.tsrx`),

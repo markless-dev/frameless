@@ -4,7 +4,7 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"build": "node --experimental-transform-types ../../packages/cli/src/node.ts build src/PricingCard.tsrx --target react --target solid --out-dir dist/PricingCard && node --experimental-transform-types ../../packages/cli/src/node.ts build src/TaskList.tsrx --target react --target solid --out-dir dist/TaskList && node --experimental-transform-types ../../packages/cli/src/node.ts build src/NewsletterForm.tsrx --target react --target solid --out-dir dist/NewsletterForm",
+		"build": "node ../../packages/cli/src/node.ts build src/PricingCard.tsrx --target react --target solid --out-dir dist/PricingCard && node ../../packages/cli/src/node.ts build src/TaskList.tsrx --target react --target solid --out-dir dist/TaskList && node ../../packages/cli/src/node.ts build src/NewsletterForm.tsrx --target react --target solid --out-dir dist/NewsletterForm",
 		"test": "node --test test/*.test.ts",
 		"test:boxes": "witness run"
 	},
