@@ -36,7 +36,7 @@ agents:
   worker: installed
   judge: installed
 
-active_task: T002
+active_task: T003
 
 tasks:
   - id: T001
@@ -109,7 +109,29 @@ tasks:
       - "Identifier not statically available at the lowering site (escalate design)"
       - "Need files outside contract"
       - "Suite red twice on same cause"
-    receipt: null
+    receipt:
+      result: done
+      commit: 5fa9298
+      changed_files: 14
+      summary: >-
+        Optional identifier-derived keys shipped (PM-executed, +167/-32).
+        storage(fallback) derives markless:<identifier> as a compile-time BAKED LITERAL
+        from the authored identifier (minification-safe, satisfies the stable-literal
+        requirement inherently); storage(key,fallback) uses the explicit key VERBATIM
+        (charset restriction dropped). No-flash attr sanitized to data-markless-<id>
+        (colon->hyphen) via shared storageAttributeName(); both resume decoders relaxed
+        to a shared isValidStorageKey (accepts markless: colon + verbatim, rejects
+        whitespace/malformed). collect-storage arity dispatch + shared.ts lowering.
+      commands:
+        - cmd: "pnpm test:compiler (494/494; +derived +verbatim +baked-literal tests)"
+          status: pass
+        - cmd: "vp test web+serializer+runtime+vitest-browser node (371/371)"
+          status: pass
+        - cmd: "node storage-runner.mjs (5/5: 3 explicit QDS + derived cold/write + derived warm)"
+          status: pass
+      note: >-
+        The stable-literal requirement is satisfied by construction (compile-time
+        derivation from the source identifier); the rename-safety guard is T003/T004.
   - id: T003
     type: judge
     assignee: Judge
