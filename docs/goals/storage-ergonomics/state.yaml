@@ -3,7 +3,7 @@ version: 2
 goal:
   slug: storage-ergonomics
   title: "Refine markless storage(): drop consent surface, optional identifier-derived keys with rename-safety; research best-DX for implicit-key persistence"
-  status: active
+  status: done
   charter: goal.md
   kind: specific
   tranche: "Land the agreed storage() API refinements (remove deferred consent; optional identifier-derived key markless:<id>; verbatim explicit key; sanitized data-markless-<id> no-flash attr; stable-literal key bake; rename-safety key-manifest guard) with EXECUTED proof (standalone runner 3 QDS cases + node suites + new key-behavior checks), then deliver a DX research recommendation on implicit-key persistence. Judge decides whether research revises the shipped design."
@@ -36,7 +36,7 @@ agents:
   worker: installed
   judge: installed
 
-active_task: T004
+active_task: T999
 
 tasks:
   - id: T001
@@ -169,7 +169,21 @@ tasks:
     stop_if:
       - "Approach diverges from T003 decision"
       - "Need files outside contract"
-    receipt: null
+    receipt:
+      result: done
+      decision: "OPTION C (owner ruling: 'go your vote')"
+      commit: a517164
+      summary: >-
+        Owner chose to DEFER the build-time rename-drift guard for v1 (no committed
+        markless-storage-keys.json, no build subsystem) — at v1 there is no saved user
+        data to orphan yet, and the committed-file cost is permanent. The stable-literal
+        (minification-safe) half is already shipped in T002. Shipped instead: documented
+        the storage() derived-key contract + pin-before-ship norm in
+        packages/core/agent/markless.md (derived markless:<identifier> for local/prototype
+        state; pin an explicit verbatim key for durable user data). The full manifest guard
+        stands as a recorded fast-follow (notes/T003-rename-safety-design.md). PM also
+        dropped the floated output-manifest artifact as premature (the key is self-evidently
+        markless:<identifier>).
   - id: T005
     type: scout
     assignee: Scout
@@ -205,7 +219,17 @@ tasks:
     status: queued
     reasoning_hint: high
     objective: "Given T005 research + the shipped implementation, decide whether the ergonomic design is best-DX or should be revised. Surface any revision as an owner-facing recommendation with a concrete Worker contract; do not silently change the ratified explicit-verbatim / derived-prefix rulings without flagging."
-    receipt: null
+    receipt:
+      result: done
+      decision: "no revision — the shipped v1 ergonomic design is ratified"
+      summary: >-
+        T005 research + the owner's option-C ruling converge: the ergonomic design
+        (derived markless:<identifier> default, explicit verbatim escape hatch,
+        stable compile-time literal, sanitized no-flash attr, no consent surface) is
+        best-DX for v1. The only open axis (rename footgun) is honestly handled for v1
+        by stable-literal + documented pin-before-ship, with the automated manifest
+        guard as a recorded fast-follow. No revision to the explicit-verbatim /
+        derived-prefix rulings.
   - id: T999
     type: judge
     assignee: Judge
@@ -216,8 +240,24 @@ tasks:
       - "complete | not_complete"
       - "full_outcome_complete: true | false"
       - "missing evidence + next task if not complete"
-    receipt: null
+    receipt:
+      result: done
+      verdict: complete
+      full_outcome_complete: true
+      head: a517164
+      summary: >-
+        Both oracle halves proven on markless feat/storage @ a517164 (branch-only;
+        main untouched). (1) EXECUTED implementation: compiler 494/494, node
+        (web+serializer+runtime+vitest-browser) 371/371, standalone browser runner 5/5
+        in real headless Chromium — deferred consent fully removed (grep-clean),
+        storage('light') derives markless:theme + data-markless-theme, explicit key
+        verbatim (theme + data-theme), derived key a baked compile-time literal, decoder
+        relaxed safely. (2) DELIVERED research recommendation: notes/T005-dx-research.md.
+        Owner design rulings all honored: explicit-verbatim, sanitized no-flash attr,
+        stable-literal, rename guard deferred to a fast-follow (option C). Commits:
+        f4240a1 (T001), 5fa9298 (T002), a517164 (T004 docs).
+      fast_follow_recorded: "build-time rename-drift manifest guard — notes/T003-rename-safety-design.md"
 
 checks:
   dirty_fingerprint: "board prepped 2026-07-22; markless feat/storage @ 259f89c + de7a5fd (runner). Implementation happens in the markless storage worktree."
-  last_verification: null
+  last_verification: "2026-07-22 @ a517164: compiler 494/494, node 371/371, browser runner 5/5. full_outcome_complete."
