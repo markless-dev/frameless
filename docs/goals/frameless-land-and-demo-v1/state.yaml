@@ -8,7 +8,7 @@ goal:
   slug: "frameless-land-and-demo-v1"
   kind: existing_plan
   tranche: "Three work packages, continuous: (1) land the working tree on a pushed branch, (2) finish the S1/S2/S3 equality matrix across React/Solid demos, (3) ship a one-command newcomer demo proving one source -> hydrate/hydrate/resume with identical behavior."
-  status: active
+  status: done
   oracle:
     signal: "From a fresh clone of the pushed branch, the documented single command boots all three official demos and a newcomer observes identical S1/S2/S3 behavior across React (hydrate), Solid (hydrate), and Qwik (resume)."
     cadence: "after each Worker package and at final audit"
@@ -81,7 +81,7 @@ visual_board:
     url: null
     command: "npx goalbuddy board docs/goals/frameless-land-and-demo-v1"
 
-active_task: T005
+active_task: null
 
 tasks:
   - id: T001
@@ -510,10 +510,10 @@ tasks:
       result: done
       summary: "`pnpm demo` ships. One command boots demos/react-official (5173), demos/solid-official (5174) and demos/qwik (5175), each through its OWN official dev script, and prints exactly three URLs only after all three answer HTTP 200. No new dependency. The README gained the binding walkthrough (source chain by path, view-source / curl / DevTools steps, the machine-checked line, and the dev-mode scope limit), and every T010/T004 deferred item is closed, including the vite 7.3.1 rationale under the honesty guard."
       changed_files:
-        - "scripts/demo.mjs (new)"
-        - "package.json (one line: \"demo\": \"node scripts/demo.mjs\")"
-        - "demos/qwik/package.json (new dev script + \"//vite\" rationale key)"
-        - "demos/qwik/README.md (new)"
+        - "scripts/demo.mjs"
+        - "package.json"
+        - "demos/qwik/package.json"
+        - "demos/qwik/README.md"
         - "README.md"
         - "docs/goals/frameless-land-and-demo-v1/state.yaml"
       runner_design_as_built:
@@ -572,7 +572,7 @@ tasks:
   - id: T006
     type: worker
     assignee: Worker
-    status: queued
+    status: done
     reasoning_hint: low
     objective: "Oracle run: verify the demo from a genuinely fresh clone of the pushed branch. PM amendment — T003 and T005 now commit and push their own slices as they go (so undeclared work never re-accumulates), leaving this task as the oracle run plus any README fix the fresh clone proves necessary."
     inputs:
@@ -586,18 +586,56 @@ tasks:
       - "git clone the pushed branch into a scratch directory"
       - "Follow the README from that clone verbatim; record every command and its result"
       - "Record observed behavior per framework per scenario (S1/S2/S3 x React/Solid/Qwik)"
-      - "git status --porcelain empty after the final push"
+      - "git status --porcelain -uall in the ORIGINAL repo shows only the owner's parallel work (website/**, a modified .gitignore, docs/goals/frameless-website-v1/**, frameless-website-prompt.md, test-results/.last-run.json) — nothing of this goal's left uncommitted"
       - "git log --oneline origin/main..HEAD"
     stop_if:
       - "The fresh clone needs a step the README does not document — fix the README and re-run rather than proceeding."
       - "Any operation would touch main, force-push, or alter earlier commits."
       - "The fresh-clone run fails twice for the same reason."
-    receipt: null
+    receipt:
+      result: done
+      changed_files:
+        - "docs/goals/frameless-land-and-demo-v1/state.yaml"   # the recorded oracle transcript IS this task's only product
+      no_source_changes: "By design. The Worker found no README defect requiring a fix, so it made no edit and no commit. A clean oracle run that changes nothing is the intended outcome."
+      summary: "ORACLE PASSED from a fresh clone at de342a8. No README defect required a fix, so no edit and no commit were made."
+      commands:
+        - cmd: git clone --branch land/stack-and-three-way-demo (scratch, outside the repo)
+          status: pass
+          detail: "clean tree at de342a8"
+        - cmd: test -f x34 (every walkthrough path, BEFORE install)
+          status: pass
+          detail: "34/34 present — the README's 'read them before you run anything' claim holds"
+        - cmd: pnpm install
+          status: pass
+          detail: "exit 0, 1.9s, 672 pkgs. One warning: Ignored build scripts esbuild@0.27.7, sharp@0.34.5"
+        - cmd: pnpm install --frozen-lockfile
+          status: pass
+          detail: "exit 0, no tree churn"
+        - cmd: pnpm demo
+          status: pass
+          detail: "5.48s to three URLs, printed exactly three: 5173 react hydrates, 5174 solid hydrates, 5175 qwik resumes"
+        - cmd: curl x9 (all nine routes)
+          status: pass
+          detail: "9/9 = 200, each serving the RIGHT scenario markup, not just a 200"
+        - cmd: README step-2 curls, verbatim
+          status: pass
+          detail: "qwik prints q:container=\"paused\" on <html>; react and solid print nothing (exit 1). q-e:click counts 1 / 5 / 2; on:click count 0 on all three — the README's attribute name is CORRECT. react/solid serve /src/entry-client.jsx and 0 q-e:click; qwik serves 0 entry-client. Clean negatives both directions."
+        - cmd: pnpm e2e (in the clone)
+          status: pass
+          detail: "exit 0, 25s, nine matrix rows equal; react 33 / solid 33 / qwik 36 — matching T007/T005. Qwik lane observed a real QRL segment containing the exact _component_div_section_button_q_e_click_ string the README tells a newcomer to filter Network for."
+        - cmd: SIGINT to the process group (x2)
+          status: pass
+          detail: "exit in 0.117s / 0.115s; zero listeners on 5173-5175; zero orphans"
+      oracle_verdict: "PASS, with one honest scope limit: the same-behavior claim is machine-checked, not eyeballed. The Worker had no browser, confirmed the served payloads, and delegated all interaction evidence to the e2e lanes — which is exactly what the README itself claims ('This is machine-checked, not eyeballed'), so the evidence matches the promise."
+      residual_risks:
+        - "COLD-MACHINE PLAYWRIGHT PATH UNVERIFIED. 'Try It' says pnpm install; pnpm e2e at the top, but the Chromium-cache prerequisite appears only in 'Development' near the bottom. This machine already had the cache, so a genuinely cold newcomer's pnpm e2e is untested. Real residual risk."
+        - "README line 231 puts 'poc/ is early evidence, not product' inside the demos/ row, but demos/poc/ does not exist — the directory is top-level poc/. Correct relative to repo root, ambiguous in context. Cosmetic, outside the oracle path."
+        - "Undocumented in prose: the 'Ignored build scripts: esbuild, sharp' install warning, and no stated Node/pnpm prerequisite (engines node>=20 and packageManager pnpm@10.33.2 are in package.json, so corepack covers it)."
 
   - id: T999
     type: judge
     assignee: Judge
-    status: queued
+    status: done
     reasoning_hint: high
     objective: "Final audit: does the tranche satisfy the oracle — a newcomer reproducing the three-way activation-neutrality comparison from a fresh clone of the pushed branch?"
     inputs:
@@ -617,7 +655,39 @@ tasks:
       - "full_outcome_complete: true | false"
       - "missing evidence"
       - "next task if not complete"
-    receipt: null
+    receipt:
+      result: done
+      decision: complete
+      full_outcome_complete: true
+      note: notes/T999-final-audit.md
+      rationale: "The Judge re-ran the oracle from its OWN clone of the pushed branch off GitHub, not from receipts: install, pnpm demo, nine 200s with correct scenario markup, README curls verbatim, pnpm e2e 3x3 equal, clean teardown. Completion rests on a reproducible demo, not on commits existing or tests passing — the recorded likely_misfire did not occur."
+      independently_verified:
+        - "LAND: git ls-remote origin shows land/stack-and-three-way-demo=de342a8 and main=895d187 UNTOUCHED. The 5 pre-existing commits carry unchanged hashes and are ancestors of HEAD. Zero deletions across all 18 commits. Remote reflog: four pushes, all fast-forward, no force."
+        - "EQUALITY: verified in code that all 8 former literals in three-way-contract.ts are now interpolations of measureText/measureAttribute/measureRowKeys reading page.content(). scripts/e2e.mjs:441-467 JSON-diffs them across frameworks and exits 1 on divergence. The diff is genuinely load-bearing."
+        - "RESUME: read from the witness receipt in the Judge's own clone — s1 served=paused live=resumed qrls=1 fetched=1; s2 served=paused live=resumed qrls=5 fetched=3; s3 2/2. Real network fetches of per-handler QRL segments. trackEvents('qsymbol') is armed BEFORE the first click, so any symbol observed is event-driven by construction. S2's 5-served/3-fetched asymmetry is the on-demand proof. This proves resume, not hydration."
+        - "DEMO: fresh GitHub clone -> pnpm install exit 0 -> pnpm demo printed exactly three URLs -> 9/9 routes 200 -> README curls reproduced -> pnpm e2e exit 0 -> SIGINT left zero listeners and zero orphans."
+        - "SCOPE: deferred items genuinely deferred, none half-done. Only react/solid/qwik framework packages; no qwik generated-persistence; qwik package.json still carries the known dep-hygiene issue; the pack array still lacks @frameless/qwik."
+      cold_machine_risk_resolved: "playwright@1.58.2 ships scripts:null, so pnpm install never downloads Chromium; @async/witness falls back to a system Chromium-family browser. A newcomer with neither fails at README:82 while the prerequisite sits at README:258. This does NOT block the oracle: the oracle command is pnpm demo, which boots dev servers and needs no browser binary. Follow-up, not a gate."
+      proven:
+        - "One IR -> three frameworks, nine cells of identical observable behavior, machine-checked from a fresh clone."
+        - "Qwik genuinely resumes: handler QRLs are fetched on demand, evidenced by real network segments, with React/Solid carrying the matching negatives."
+        - "main was never touched; no force-push; nothing deleted."
+      not_proven:
+        - "No human or browser ever clicked against the pnpm demo server instances themselves. Click behavior is proven on the shared render path (createSsrHandler for react/solid; the same vite+qwikRouter pipeline for qwik) and the demo instances are curl-proven to serve identical markup. The chain is strong, but a single end-to-end human observation does not exist. The README discloses this as 'machine-checked, not eyeballed'."
+        - "Cold-machine pnpm e2e (no Playwright cache, no system Chromium)."
+        - "handlerSegments is recorded but not asserted, so S2's 'add button handler never fetched' negative has no upper-bound assertion."
+        - "The express dev wrapper for React/Solid is curl-verified only."
+      overstatement_found:
+        - "README:238 Composition row says 'Shipped, verified from a fresh clone' with NO framework qualifier, while the saved-state row three lines below correctly says 'React/Solid'. Composition is React/Solid only — Qwik has no composition output. A newcomer reads that row as three-framework. This is the one genuine overstatement in user-facing text."
+        - "T007's receipt phrase 'Every observed[] entry is now measured' is marginally overstated: contract line 369 still pushes the constant 'no console errors and no failed requests'. It follows a real assertion so it is not false, and it is not load-bearing."
+        - "GOOD NEWS: the T004-flagged phrase 'a real equality assertion, not three independent green lanes' appears NOWHERE in the README. The overstatement pattern did not survive into user-facing text."
+      follow_ups_needing_owner_ruling:
+        - "HIGHEST VALUE: README 'Try It' (line 82) runs pnpm e2e while the Chromium prerequisite sits at line 258. Move a one-line prerequisite next to 'Try It', or lead with pnpm demo (no browser prerequisite)."
+        - "Qualify README:238 Composition as React/Solid."
+        - "HMR websocket port 24678 collides between the two express demos (T005 observed it; its stop_if forbade the fix)."
+        - "Add an upper-bound assertion on handlerSegments so S2's 5-served/3-fetched asymmetry is asserted, not just recorded."
+        - "Refresh README:60 'both outputs', the two-column output table, and the mermaid diagram to three frameworks; fix the poc/ placement at line 231."
+        - "Out of tranche as ruled: qwik dep hygiene, @frameless/qwik in the pack array, Angular/Vue/Svelte breadth, persistence-on-Qwik, composition-on-Qwik, and THE MERGE DECISION (never granted)."
 
 checks:
   dirty_fingerprint: "measured at T001: branch main, 5 unpushed commits, 26 modified tracked files + ~85 untracked files across 8 directory groups"
