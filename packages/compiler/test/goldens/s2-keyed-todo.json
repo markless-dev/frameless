@@ -3858,6 +3858,7 @@
     ],
     "handleCalls": [],
     "handleForwards": [],
+    "persistence": [],
     "sharedCalls": [],
     "sharedDefinitions": [],
     "sharedInstances": [],

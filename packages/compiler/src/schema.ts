@@ -1,4 +1,5 @@
 import type * as ESTree from '@tsrx/core/types/estree';
+import type { FramelessPersistenceRecord } from './persistence.ts';
 
 /** Frameless-owned source coordinates. Filenames are normalized module-relative paths. */
 export interface SourceSpan {
@@ -472,6 +473,7 @@ export interface EnrichedRecordTable {
 	readonly handleForwards: ReadonlyArray<HandleForwardRecord>;
 	readonly behaviors: ReadonlyArray<BehaviorRecord>;
 	readonly handleCalls: ReadonlyArray<HandleCallRecord>;
+	readonly persistence: ReadonlyArray<FramelessPersistenceRecord>;
 }
 
 /** One authored component export in the module's public shape. */

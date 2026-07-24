@@ -5,6 +5,7 @@ import { dirname, isAbsolute, join, relative, resolve } from 'pathe';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import type { EnrichedIR, ModuleSetLinkTable } from '@frameless/compiler';
 import type { BuildPlan } from './program.ts';
+import { generatePrePaintPersistenceScript } from './persistence.ts';
 import {
 	BUILD_EQUIVALENCE_AUTHORITY,
 	ENRICHED_IR_VERSION,
@@ -16,6 +17,7 @@ import {
 } from './receipts.ts';
 
 export const BUILD_RECEIPT_FILENAME = 'frameless-build-receipt.json' as const;
+export const PERSISTENCE_SCRIPT_FILENAME = 'frameless-persistence-pre-paint.js' as const;
 
 export interface FrameworkTargetModule {
 	emit(ir: EnrichedIR): string;
@@ -186,6 +188,11 @@ export async function executeBuildPlanInternal(
 	}
 
 	const firstModule = compiledModules[0]!;
+	const outputRoot = resolveFrom(cwd, plan.outDir);
+	const persistenceScript = generatePrePaintPersistenceScript(
+		compiledModules.flatMap(({ artifact }) => artifact.records.persistence),
+	);
+	const persistenceScriptPath = join(outputRoot, PERSISTENCE_SCRIPT_FILENAME);
 	const receipt = createBuildReceipt({
 		generator: {
 			toolName: '@frameless/cli',
@@ -219,16 +226,28 @@ export async function executeBuildPlanInternal(
 			authority: BUILD_EQUIVALENCE_AUTHORITY,
 			command: 'pnpm test:browser',
 		},
+		...(persistenceScript
+			? {
+					persistence: {
+						scriptPath:
+							relative(cwd, persistenceScriptPath) || PERSISTENCE_SCRIPT_FILENAME,
+						contentSha256: persistenceScript.contentSha256,
+						cspHash: persistenceScript.cspHash,
+						records: persistenceScript.records,
+						placement: 'head-before-framework' as const,
+					},
+				}
+			: {}),
 	});
 	const serializedReceipt = serializeBuildReceipt(receipt);
 
-	const outputRoot = resolveFrom(cwd, plan.outDir);
 	const receiptPath = join(outputRoot, BUILD_RECEIPT_FILENAME);
 	const createdOutputRoot = await mkdir(outputRoot, { recursive: true });
 	const stagedTargets: Array<{
 		readonly finalDirectory: string;
 		readonly stagedDirectory: string;
 	}> = [];
+	let stagedPersistencePath: string | undefined;
 	try {
 		for (const [name, prepared] of preparedTargets) {
 			const stagedDirectory = join(outputRoot, `.${name}.${randomUUID()}.tmp`);
@@ -239,8 +258,17 @@ export async function executeBuildPlanInternal(
 				await atomicWriteFile(stagedOutputPath, module.content);
 			}
 		}
+		if (persistenceScript) {
+			stagedPersistencePath = join(
+				outputRoot,
+				`.${PERSISTENCE_SCRIPT_FILENAME}.${randomUUID()}.tmp`,
+			);
+			await atomicWriteFile(stagedPersistencePath, persistenceScript.content);
+		}
 	} catch (error) {
 		await cleanupStagedTargets(stagedTargets);
+		if (stagedPersistencePath)
+			await rm(stagedPersistencePath, { force: true }).catch(() => undefined);
 		if (createdOutputRoot) await rm(outputRoot, { force: true, recursive: true });
 		throw error;
 	}
@@ -250,8 +278,16 @@ export async function executeBuildPlanInternal(
 			await rm(staged.finalDirectory, { force: true, recursive: true });
 			await rename(staged.stagedDirectory, staged.finalDirectory);
 		}
+		if (stagedPersistencePath) {
+			await rename(stagedPersistencePath, persistenceScriptPath);
+			stagedPersistencePath = undefined;
+		} else {
+			await rm(persistenceScriptPath, { force: true });
+		}
 	} catch (error) {
 		await cleanupStagedTargets(stagedTargets);
+		if (stagedPersistencePath)
+			await rm(stagedPersistencePath, { force: true }).catch(() => undefined);
 		throw error;
 	}
 	await atomicWriteFile(receiptPath, serializedReceipt);

@@ -1,5 +1,11 @@
-import { readFile } from 'node:fs/promises';
-import { buildEnrichedIr, type EnrichedIR } from '@frameless/compiler';
+import { readFile, writeFile } from 'node:fs/promises';
+import { runInNewContext } from 'node:vm';
+import {
+	buildEnrichedIr,
+	FRAMELESS_STATE_GLOBAL,
+	type EnrichedIR,
+	type FramelessPersistenceRecord,
+} from '@frameless/compiler';
 import { resolve } from 'pathe';
 import { analyze } from 'yuku-analyzer';
 import { parse } from 'yuku-parser';
@@ -10,6 +16,7 @@ import {
 } from '../scripts/regenerate-composition.ts';
 import { emit, validateEnrichedIr } from '../src/emitter/index.ts';
 import { formatEmitted } from '../src/format-emitted.ts';
+import { checkSources } from '../src/gate/index.ts';
 
 const root = resolve(import.meta.dirname, '..');
 const goldenRoot = resolve(root, '../../compiler/test/goldens');
@@ -25,6 +32,49 @@ async function golden(name: string): Promise<EnrichedIR> {
 
 function clone<T>(value: T): T {
 	return structuredClone(value);
+}
+
+function persistenceRecord(
+	graphNodeId: string,
+	bindingName: string,
+	authoredInitial: string,
+	moduleId: string,
+): FramelessPersistenceRecord {
+	return {
+		version: 'frameless-persistence-record/1',
+		graphNodeId,
+		moduleId,
+		bindingName,
+		driver: 'localStorage',
+		key: {
+			origin: 'derived',
+			sourceIdentifier: bindingName,
+			literal: `markless:${bindingName}`,
+			bakedAtCompileTime: true,
+		},
+		authoredInitial,
+		antiFlashAttribute: `data-markless-${bindingName}`,
+		access: { render: true, handler: true },
+		seed: {
+			lowering: 'pre-paint',
+			readFailure: 'authored-initial',
+			corruptedValue: 'authored-initial',
+			landings: [
+				{
+					target: 'react',
+					kind: 'sync-read-seed-slot',
+					graphNodeId,
+				},
+			],
+		},
+		writeThrough: {
+			trigger: 'ordinary-assignment',
+			value: 'final-committed-string',
+			timing: 'commit-before-notify',
+			writeFailure: 'swallow',
+			crossTabSync: 'off',
+		},
+	};
 }
 
 function visit(value: unknown, callback: (record: Record<string, any>) => void): void {
@@ -746,6 +796,110 @@ describe('React structural emitter', () => {
 	});
 
 	describe('fail-closed enriched IR validation', () => {
+		test('emits a persisted useState fixture that passes the artifact gate', async () => {
+			const ir = clone(await golden('s2-keyed-todo.json')) as any;
+			const state = ir.records.bindings.find((binding: any) => binding.id === 'state:draft');
+			state.initializer = { type: 'Literal', value: 'light', raw: "'light'" };
+			ir.records.persistence = [
+				persistenceRecord(state.id, state.name, 'light', ir.filename),
+			];
+
+			const source = emit(ir);
+			const formatted = await formatEmitted(source);
+			expect(source).toContain(
+				`useState(() => globalThis.${FRAMELESS_STATE_GLOBAL}?.['markless:draft'] ?? 'light')`,
+			);
+			expect(source).not.toContain(`window.${FRAMELESS_STATE_GLOBAL}`);
+			expect(source).not.toMatch(
+				new RegExp(`use(?:Effect|LayoutEffect)[\\s\\S]*${FRAMELESS_STATE_GLOBAL}`),
+			);
+			const setter = source.indexOf('setDraft(nextDraft)');
+			const write = source.indexOf(
+				"__framelessWrite('markless:draft', 'data-markless-draft', nextDraft)",
+				setter,
+			);
+			expect(setter).toBeGreaterThan(-1);
+			expect(write).toBeGreaterThan(setter);
+			expect(source).toMatch(
+				/function __framelessWrite\(key, attr, value\) \{\s*try \{\s*localStorage\.setItem\(key, value\);\s*\} catch \{\s*void 0;\s*\}\s*document\.documentElement\.setAttribute\(attr, value\);\s*\}/,
+			);
+			expect(source.match(/^import .* from 'react';$/gm)).toHaveLength(1);
+			if (process.env.UPDATE_GOLDENS === '1')
+				await writeFile(resolve(root, 'generated-persistence/P1.jsx'), formatted);
+			expect(await readFile(resolve(root, 'generated-persistence/P1.jsx'), 'utf8')).toBe(
+				formatted,
+			);
+			const gate = await checkSources([
+				{ file: 'generated-persistence/P1.jsx', source: formatted, artifact: ir },
+			]);
+			expect(gate.violations, JSON.stringify(gate.violations, null, 2)).toEqual([]);
+		});
+
+		test('reads the persisted fallback without throwing during no-window SSR', async () => {
+			const sandbox = Object.create(null);
+			expect(runInNewContext('typeof window', sandbox)).toBe('undefined');
+			expect(
+				runInNewContext(
+					`globalThis.${FRAMELESS_STATE_GLOBAL}?.['markless:draft'] ?? 'light'`,
+					sandbox,
+				),
+			).toBe('light');
+
+			const persistedGolden = await readFile(
+				resolve(root, 'generated-persistence/P1.jsx'),
+				'utf8',
+			);
+			expect(persistedGolden).toContain(`globalThis.${FRAMELESS_STATE_GLOBAL}`);
+			expect(persistedGolden).not.toContain(`window.${FRAMELESS_STATE_GLOBAL}`);
+		});
+
+		test('emits separate persisted external-store client/server snapshots and persists before notify', async () => {
+			const filename = 'test/composition-fixtures/C2-shared.tsrx';
+			const ir = clone(
+				await buildEnrichedIr({
+					filename,
+					source: await readFile(resolve(root, filename), 'utf8'),
+				}),
+			) as any;
+			const definition = ir.records.sharedDefinitions[0];
+			const cell = definition.cells.find((candidate: any) => candidate.name === 'history');
+			ir.records.persistence = [
+				persistenceRecord(cell.graphNodeId, cell.name, 'seed', ir.filename),
+			];
+
+			const source = emit(ir);
+			expect(source).toContain(
+				`let history = globalThis.${FRAMELESS_STATE_GLOBAL}?.['markless:history'] ?? 'seed'`,
+			);
+			expect(source).toContain("getServerHistory: () => 'seed'");
+			expect(source).toMatch(
+				/useSyncExternalStore\([\s\S]*?store\.getHistory[\s\S]*?store\.getServerHistory/,
+			);
+			const allWrites = source.indexOf('advance()');
+			const write = source.indexOf(
+				"__framelessWrite('markless:history', 'data-markless-history', history)",
+				allWrites,
+			);
+			const notify = source.indexOf('for (const listener', write);
+			expect(allWrites).toBeGreaterThan(-1);
+			expect(write).toBeGreaterThan(allWrites);
+			expect(notify).toBeGreaterThan(write);
+			expect(
+				source.match(
+					/__framelessWrite\('markless:history', 'data-markless-history', history\)/g,
+				),
+			).toHaveLength(definition.methods.length);
+		});
+
+		test('keeps an artifact with no persistence records byte-identical', async () => {
+			const ir = await golden('s1-render-once.json');
+			const before = emit(ir);
+			const explicitEmpty = clone(ir);
+			explicitEmpty.records.persistence = [];
+			expect(emit(explicitEmpty)).toBe(before);
+			expect(before).not.toContain('__framelessWrite');
+		});
+
 		test('accepts behavior-input provenance structurally', async () => {
 			const ir = clone(await golden('s1-render-once.json')) as any;
 			ir.records.behaviors = [

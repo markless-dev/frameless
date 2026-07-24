@@ -1,6 +1,9 @@
-import { ENRICHED_IR_VERSION as COMPILER_ENRICHED_IR_VERSION } from '@frameless/compiler';
+import {
+	ENRICHED_IR_VERSION as COMPILER_ENRICHED_IR_VERSION,
+	type PersistenceLanding,
+} from '@frameless/compiler';
 
-export const BUILD_RECEIPT_SCHEMA_VERSION = 'frameless-build-receipts/1' as const;
+export const BUILD_RECEIPT_SCHEMA_VERSION = 'frameless-build-receipts/2' as const;
 export const ENRICHED_IR_VERSION = COMPILER_ENRICHED_IR_VERSION;
 export const BUILD_EQUIVALENCE_AUTHORITY =
 	'vitest browser lanes (react-browser, solid-browser; cross-target lane per T010)' as const;
@@ -105,6 +108,21 @@ export type EquivalenceDelegation = {
 	readonly command: string;
 };
 
+export type PersistenceArtifactRecord = {
+	readonly graphNodeId: string;
+	readonly moduleId: string;
+	readonly resolvedKey: string;
+	readonly landings: readonly PersistenceLanding[];
+};
+
+export type PersistenceBuildArtifact = {
+	readonly scriptPath: string;
+	readonly contentSha256: string;
+	readonly cspHash: string;
+	readonly records: readonly PersistenceArtifactRecord[];
+	readonly placement: 'head-before-framework';
+};
+
 export type BuildReceipt = {
 	readonly schema: typeof BUILD_RECEIPT_SCHEMA_VERSION;
 	readonly generator: GeneratorInfo;
@@ -114,6 +132,7 @@ export type BuildReceipt = {
 	readonly linkTable: LinkTableSummary;
 	readonly targets: Readonly<Record<string, TargetBuildReceipt>>;
 	readonly equivalence: EquivalenceDelegation;
+	readonly persistence?: PersistenceBuildArtifact;
 };
 
 export type BuildReceiptInput = Omit<BuildReceipt, 'schema'>;
@@ -129,9 +148,19 @@ export function validateBuildReceipt(value: unknown): BuildReceipt {
 			`BuildReceipt schema must be ${BUILD_RECEIPT_SCHEMA_VERSION}, received ${String(value.schema)}`,
 		);
 	}
+	const keys = [
+		'schema',
+		'generator',
+		'input',
+		'ir',
+		'modules',
+		'linkTable',
+		'targets',
+		'equivalence',
+	] as const;
 	exactKeys(
 		value,
-		['schema', 'generator', 'input', 'ir', 'modules', 'linkTable', 'targets', 'equivalence'],
+		Object.hasOwn(value, 'persistence') ? [...keys, 'persistence'] : keys,
 		'BuildReceipt',
 	);
 
@@ -142,6 +171,7 @@ export function validateBuildReceipt(value: unknown): BuildReceipt {
 	validateLinkTable(value.linkTable);
 	validateTargets(value.targets);
 	validateEquivalence(value.equivalence);
+	if (Object.hasOwn(value, 'persistence')) validatePersistenceArtifact(value.persistence);
 	validateReceiptConsistency(value as unknown as BuildReceipt);
 	return value as BuildReceipt;
 }
@@ -382,6 +412,90 @@ function validateEquivalence(value: unknown): asserts value is EquivalenceDelega
 	if (value.authority !== BUILD_EQUIVALENCE_AUTHORITY)
 		throw new Error(`${construct} authority must name the adjudicated vitest browser lanes`);
 	assertNonEmptyString(value.command, `${construct} command`);
+}
+
+function validatePersistenceArtifact(
+	value: unknown,
+): asserts value is PersistenceBuildArtifact {
+	const construct = 'BuildReceipt persistence';
+	assertRecord(value, construct);
+	exactKeys(
+		value,
+		['scriptPath', 'contentSha256', 'cspHash', 'records', 'placement'],
+		construct,
+	);
+	assertNonEmptyString(value.scriptPath, `${construct} scriptPath`);
+	assertSha256(value.contentSha256, `${construct} contentSha256`);
+	if (
+		typeof value.cspHash !== 'string' ||
+		!/^sha256-[A-Za-z\d+/]{43}=$/.test(value.cspHash)
+	)
+		throw new Error(`${construct} cspHash must be a base64 sha256 CSP hash`);
+	if (value.placement !== 'head-before-framework')
+		throw new Error(`${construct} placement must be head-before-framework`);
+	assertArray(value.records, `${construct} records`);
+	if (!value.records.length) throw new Error(`${construct} records must not be empty`);
+	let previous: { readonly moduleId: string; readonly resolvedKey: string } | undefined;
+	for (const [index, record] of value.records.entries()) {
+		const recordConstruct = `${construct} records[${index}]`;
+		assertRecord(record, recordConstruct);
+		exactKeys(
+			record,
+			['graphNodeId', 'moduleId', 'resolvedKey', 'landings'],
+			recordConstruct,
+		);
+		assertNonEmptyString(record.graphNodeId, `${recordConstruct} graphNodeId`);
+		assertNonEmptyString(record.moduleId, `${recordConstruct} moduleId`);
+		if (typeof record.resolvedKey !== 'string')
+			throw new Error(`${recordConstruct} resolvedKey must be a string`);
+		validatePersistenceLandings(record.landings, recordConstruct);
+		if (
+			previous &&
+			(previous.moduleId > record.moduleId ||
+				(previous.moduleId === record.moduleId &&
+					previous.resolvedKey > record.resolvedKey))
+		)
+			throw new Error(`${construct} records must be ordered by moduleId then resolvedKey`);
+		previous = record as unknown as {
+			readonly moduleId: string;
+			readonly resolvedKey: string;
+		};
+	}
+}
+
+function validatePersistenceLandings(
+	value: unknown,
+	construct: string,
+): asserts value is readonly PersistenceLanding[] {
+	assertArray(value, `${construct} landings`);
+	if (!value.length) throw new Error(`${construct} landings must not be empty`);
+	let react = false;
+	let solid = false;
+	for (const [index, landing] of value.entries()) {
+		const landingConstruct = `${construct} landings[${index}]`;
+		assertRecord(landing, landingConstruct);
+		if (landing.target === 'markless') {
+			exactKeys(landing, ['target', 'kind', 'slotSymbolKey'], landingConstruct);
+			if (
+				landing.kind !== 'payload-scripts' ||
+				landing.slotSymbolKey !== 'tsrx.storage/1'
+			)
+				throw new Error(`${landingConstruct} is not a valid markless landing`);
+			continue;
+		}
+		if (landing.target === 'react' || landing.target === 'solid') {
+			exactKeys(landing, ['target', 'kind', 'graphNodeId'], landingConstruct);
+			if (landing.kind !== 'sync-read-seed-slot')
+				throw new Error(`${landingConstruct} kind must be sync-read-seed-slot`);
+			assertNonEmptyString(landing.graphNodeId, `${landingConstruct} graphNodeId`);
+			if (landing.target === 'react') react = true;
+			else solid = true;
+			continue;
+		}
+		throw new Error(`${landingConstruct} target is unknown`);
+	}
+	if (!react || !solid)
+		throw new Error(`${construct} landings must contain React and Solid seed slots`);
 }
 
 function validateReceiptConsistency(value: BuildReceipt): void {

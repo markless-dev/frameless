@@ -2,7 +2,11 @@ import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promi
 import { tmpdir } from 'node:os';
 import { resolve } from 'pathe';
 import { afterEach, describe, expect, test } from 'vitest';
-import { buildEnrichedIr, type EnrichedIR } from '@frameless/compiler';
+import {
+	buildEnrichedIr,
+	type EnrichedIR,
+	type FramelessPersistenceRecord,
+} from '@frameless/compiler';
 import {
 	checkGeneratedFiles,
 	checkSources,
@@ -57,10 +61,61 @@ async function policies(source: string, artifact?: EnrichedIR): Promise<string[]
 	const result = await checkSources([{ file: 'generated/Mutant.jsx', source, artifact }]);
 	expect(
 		result.violations.every((entry) =>
-			/^(?:T003 ruling \d+|T004 §3\.2 S-[A-Z]+\d+)$/.test(entry.dossierRef),
+			/^(?:T003 ruling \d+|T004 §3\.2 S-[A-Z]+\d+|T002-persistence-architecture Decision 6)$/.test(
+				entry.dossierRef,
+			),
 		),
 	).toBe(true);
 	return result.violations.map((entry) => entry.policy);
+}
+
+function withRenderPersistence(
+	artifact: EnrichedIR,
+	target: 'react' | 'solid',
+): EnrichedIR {
+	const binding =
+		artifact.records.bindings.find((candidate) => candidate.kind === 'state') ??
+		artifact.records.sharedDefinitions
+			.flatMap((definition) => definition.cells)
+			.find((candidate) => candidate.kind === 'state');
+	if (!binding) throw new Error('Persistence gate fixture requires a state binding');
+	const graphNodeId = 'id' in binding ? binding.id : binding.graphNodeId;
+	const persistence: FramelessPersistenceRecord = {
+		version: 'frameless-persistence-record/1',
+		graphNodeId,
+		moduleId: artifact.filename,
+		bindingName: binding.name,
+		driver: 'localStorage',
+		key: {
+			origin: 'derived',
+			sourceIdentifier: binding.name,
+			literal: `markless:${binding.name}`,
+			bakedAtCompileTime: true,
+		},
+		authoredInitial: 'light',
+		antiFlashAttribute: `data-markless-${binding.name}`,
+		access: { render: true, handler: true },
+		seed: {
+			lowering: 'pre-paint',
+			readFailure: 'authored-initial',
+			corruptedValue: 'authored-initial',
+			landings: [
+				{
+					target,
+					kind: 'sync-read-seed-slot',
+					graphNodeId,
+				},
+			],
+		},
+		writeThrough: {
+			trigger: 'ordinary-assignment',
+			value: 'final-committed-string',
+			timing: 'commit-before-notify',
+			writeFailure: 'swallow',
+			crossTabSync: 'off',
+		},
+	};
+	return { ...artifact, records: { ...artifact.records, persistence: [persistence] } };
 }
 
 describe('Solid dossier gate', async () => {
@@ -74,14 +129,24 @@ describe('Solid dossier gate', async () => {
 	test('publishes a dossier reference on every policy', () => {
 		expect(
 			SOLID_GATE_POLICIES.every((policy) =>
-				/^(?:T003 ruling \d+|T004 §3\.2 S-[A-Z]+\d+)$/.test(policy.dossierRef),
+				/^(?:T003 ruling \d+|T004 §3\.2 S-[A-Z]+\d+|T002-persistence-architecture Decision 6)$/.test(
+					policy.dossierRef,
+				),
 			),
 		).toBe(true);
 		expect(
 			SOLID_GATE_POLICIES.filter((policy) => policy.requiresArtifact).map(
 				(policy) => policy.id,
 			),
-		).toEqual(['S-CH5', 'S-SH3', 'S-SH4', 'S-SH7', 'S-RF5', 'S-RF7']);
+		).toEqual([
+			'persistence-render-lowering',
+			'S-CH5',
+			'S-SH3',
+			'S-SH4',
+			'S-SH7',
+			'S-RF5',
+			'S-RF7',
+		]);
 	});
 
 	test('discovers and accepts every checked-in generated component', async () => {
@@ -492,6 +557,53 @@ describe('Solid dossier gate', async () => {
 		expect(result.violations, JSON.stringify(result.violations, null, 2)).toEqual([]);
 	});
 
+	test('requires a pre-paint Solid landing for render-access persistence', async () => {
+		const artifact = compositionArtifacts.get('C2-shared')!;
+		const source = compositionSources.get('C2-shared')!;
+		const persistenceArtifact = withRenderPersistence(artifact, 'solid');
+		const validResult = await checkSources([
+			{
+				file: 'generated-composition/C2-shared.jsx',
+				source,
+				artifact: persistenceArtifact,
+			},
+		]);
+		expect(validResult.violations.map((entry) => entry.policy)).not.toContain(
+			'persistence-render-lowering',
+		);
+
+		const [record] = persistenceArtifact.records.persistence;
+		const mutantArtifact = {
+			...persistenceArtifact,
+			records: {
+				...persistenceArtifact.records,
+				persistence: [
+					{
+						...record,
+						seed: { ...record.seed, lowering: 'eager-visible-task' },
+					},
+				],
+			},
+		} as unknown as EnrichedIR;
+		const mutantResult = await checkSources([
+			{
+				file: 'generated-composition/C2-shared.jsx',
+				source,
+				artifact: mutantArtifact,
+			},
+		]);
+		expect(mutantResult.violations.map((entry) => entry.policy)).toContain(
+			'persistence-render-lowering',
+		);
+
+		const absentResult = await checkSources([
+			{ file: 'generated-composition/C2-shared.jsx', source },
+		]);
+		expect(absentResult.unevaluated.map((entry) => entry.policy)).toContain(
+			'persistence-render-lowering',
+		);
+	});
+
 	test.each(compositionMutationCases)(
 		'rejects the %s composition bypass mutation',
 		async (_name, source, policy, artifact) => {
@@ -503,6 +615,7 @@ describe('Solid dossier gate', async () => {
 		const covered = new Set(
 			[...mutationCases, ...compositionMutationCases].map((entry) => entry[2]),
 		);
+		covered.add('persistence-render-lowering');
 		expect(
 			SOLID_GATE_POLICIES.map((policy) => policy.id).filter((id) => !covered.has(id)),
 		).toEqual([]);

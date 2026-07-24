@@ -4,7 +4,11 @@ import { resolve } from 'pathe';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'pathe';
 import { afterEach, describe, expect, test } from 'vitest';
-import { buildEnrichedIr, type EnrichedIR } from '@frameless/compiler';
+import {
+	buildEnrichedIr,
+	type EnrichedIR,
+	type FramelessPersistenceRecord,
+} from '@frameless/compiler';
 
 const PACKAGE_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 import {
@@ -32,7 +36,8 @@ export function Mutant({ items = [] }) {
   }}>change</button><ul>{items.map((item) => <li key={item.id}>{item.id}</li>)}</ul></section>;
 }`;
 
-const dossierRef = /^(?:T002 ruling \d+|T004 §3\.1 R-[A-Z]+\d+)$/;
+const dossierRef =
+	/^(?:T002 ruling \d+|T004 §3\.1 R-[A-Z]+\d+|T002-persistence-architecture Decision 6)$/;
 const compositionNames = [
 	'C1-slot',
 	'C2-shared',
@@ -68,11 +73,56 @@ async function policies(source: string): Promise<string[]> {
 	return result.violations.map((entry) => entry.policy);
 }
 
+function withRenderPersistence(
+	artifact: EnrichedIR,
+	target: 'react' | 'solid',
+): EnrichedIR {
+	const binding = artifact.records.bindings.find((candidate) => candidate.kind === 'state');
+	if (!binding) throw new Error('Persistence gate fixture has no state binding');
+	const persistence: FramelessPersistenceRecord = {
+		version: 'frameless-persistence-record/1',
+		graphNodeId: binding.id,
+		moduleId: 'gate-fixture',
+		bindingName: binding.name,
+		driver: 'localStorage',
+		key: {
+			origin: 'derived',
+			sourceIdentifier: 'theme',
+			literal: 'markless:theme',
+			bakedAtCompileTime: true,
+		},
+		authoredInitial: 'light',
+		antiFlashAttribute: 'data-markless-theme',
+		access: { render: true, handler: true },
+		seed: {
+			lowering: 'pre-paint',
+			readFailure: 'authored-initial',
+			corruptedValue: 'authored-initial',
+			landings: [
+				{
+					target,
+					kind: 'sync-read-seed-slot',
+					graphNodeId: binding.id,
+				},
+			],
+		},
+		writeThrough: {
+			trigger: 'ordinary-assignment',
+			value: 'final-committed-string',
+			timing: 'commit-before-notify',
+			writeFailure: 'swallow',
+			crossTabSync: 'off',
+		},
+	};
+	return { ...artifact, records: { ...artifact.records, persistence: [persistence] } };
+}
+
 describe('React dossier gate', async () => {
 	const relativeImportArtifact = await buildEnrichedIr({
 		filename: 'test/relative-import-parent.tsrx',
-		source: `import { Child } from "./relative-import-child.tsrx";
-			export function Parent() @{ <Child /> }`,
+		source: `import { state } from "@markless/core";
+			import { Child } from "./relative-import-child.tsrx";
+			export function Parent() @{ let theme = state("light"); <><span>{theme}</span><Child /></> }`,
 	});
 	const recordedRelativeImport = await formatEmitted(emit(relativeImportArtifact));
 
@@ -85,7 +135,7 @@ describe('React dossier gate', async () => {
 			REACT_GATE_POLICIES.filter((policy) => policy.requiresArtifact).map(
 				(policy) => policy.id,
 			),
-		).toEqual(['R-SH4', 'R-CH2']);
+		).toEqual(['persistence-render-lowering', 'R-SH4', 'R-CH2']);
 	});
 
 	test('discovers, parses, and accepts every checked-in generated component', async () => {
@@ -96,10 +146,10 @@ describe('React dossier gate', async () => {
 		]);
 		const result = await checkGeneratedFiles();
 		expect(result.violations, JSON.stringify(result.violations, null, 2)).toEqual([]);
-		expect(result.unevaluated).toHaveLength(2);
+		expect(result.unevaluated).toHaveLength(3);
 		expect(Object.keys(result)).toEqual(['files', 'policies', 'violations']);
 		expect(new Set(result.unevaluated.map((entry) => entry.policy))).toEqual(
-			new Set(['R-SH4', 'R-CH2']),
+			new Set(['persistence-render-lowering', 'R-SH4', 'R-CH2']),
 		);
 		for (const file of result.files) {
 			expect(await readFile(resolve(PACKAGE_ROOT, file), 'utf8')).toContain(
@@ -590,6 +640,51 @@ describe('React dossier gate', async () => {
 		expect(result.violations, JSON.stringify(result.violations, null, 2)).toEqual([]);
 	});
 
+	test('requires a pre-paint React landing for render-access persistence', async () => {
+		const persistenceArtifact = withRenderPersistence(relativeImportArtifact, 'react');
+		const validResult = await checkSources([
+			{
+				file: 'generated/relative-import-parent.jsx',
+				source: recordedRelativeImport,
+				artifact: persistenceArtifact,
+			},
+		]);
+		expect(validResult.violations.map((entry) => entry.policy)).not.toContain(
+			'persistence-render-lowering',
+		);
+
+		const [record] = persistenceArtifact.records.persistence;
+		const mutantArtifact = {
+			...persistenceArtifact,
+			records: {
+				...persistenceArtifact.records,
+				persistence: [
+					{
+						...record,
+						seed: { ...record.seed, lowering: 'eager-visible-task' },
+					},
+				],
+			},
+		} as unknown as EnrichedIR;
+		const mutantResult = await checkSources([
+			{
+				file: 'generated/relative-import-parent.jsx',
+				source: recordedRelativeImport,
+				artifact: mutantArtifact,
+			},
+		]);
+		expect(mutantResult.violations.map((entry) => entry.policy)).toContain(
+			'persistence-render-lowering',
+		);
+
+		const absentResult = await checkSources([
+			{ file: 'generated/relative-import-parent.jsx', source: recordedRelativeImport },
+		]);
+		expect(absentResult.unevaluated.map((entry) => entry.policy)).toContain(
+			'persistence-render-lowering',
+		);
+	});
+
 	test.each(compositionMutationCases)(
 		'rejects the %s composition bypass mutation',
 		async (_name, source, policy, options) => {
@@ -604,6 +699,7 @@ describe('React dossier gate', async () => {
 		const covered = new Set(
 			[...mutationCases, ...compositionMutationCases].map((entry) => entry[2]),
 		);
+		covered.add('persistence-render-lowering');
 		expect(
 			REACT_GATE_POLICIES.map((policy) => policy.id).filter((id) => !covered.has(id)),
 		).toEqual([]);

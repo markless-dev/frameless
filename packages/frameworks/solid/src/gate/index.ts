@@ -11,7 +11,10 @@ import { parse } from 'yuku-parser';
 import { dirname, normalize, relative, resolve } from 'pathe';
 import { customPolicies } from './custom-policies.ts';
 
-export type DossierRef = `T003 ruling ${number}` | `T004 §3.2 ${`S-${string}`}`;
+export type DossierRef =
+	| `T003 ruling ${number}`
+	| `T004 §3.2 ${`S-${string}`}`
+	| 'T002-persistence-architecture Decision 6';
 export type GatePolicy = {
 	readonly id: string;
 	readonly dossierRef: DossierRef;
@@ -42,6 +45,15 @@ function artifactPolicy<const Id extends 'S-CH5' | 'S-SH3' | 'S-SH4' | 'S-SH7' |
 	return policy as typeof policy & { readonly requiresArtifact: true };
 }
 
+function persistenceArtifactPolicy() {
+	const policy = {
+		id: 'persistence-render-lowering',
+		dossierRef: 'T002-persistence-architecture Decision 6',
+	} as const;
+	Object.defineProperty(policy, 'requiresArtifact', { enumerable: false, value: true });
+	return policy as typeof policy & { readonly requiresArtifact: true };
+}
+
 export const SOLID_GATE_POLICIES = [
 	{ id: 'eslint-directive', dossierRef: 'T003 ruling 10' },
 	// Always evaluated (requiresArtifact is false): only a recorded relative-import
@@ -68,6 +80,7 @@ export const SOLID_GATE_POLICIES = [
 	{ id: 'render-phase-effect', dossierRef: 'T003 ruling 2' },
 	{ id: 'prevent-default-event', dossierRef: 'T003 ruling 6' },
 	{ id: 'leaf-event-target', dossierRef: 'T003 ruling 7' },
+	persistenceArtifactPolicy(),
 	{ id: 'S-CH1', dossierRef: 'T004 §3.2 S-CH1' },
 	{ id: 'S-CH2', dossierRef: 'T004 §3.2 S-CH2' },
 	{ id: 'S-CH3', dossierRef: 'T004 §3.2 S-CH3' },
@@ -442,6 +455,91 @@ async function provenanceViolations(
 	return violations;
 }
 
+const FORBIDDEN_PERSISTENCE_TASK_MARKER = /(?:visible|eager|effect|mount)/i;
+
+function hasForbiddenPersistenceTaskMarker(value: unknown, path: readonly string[] = []): boolean {
+	if (!value || typeof value !== 'object') return false;
+	for (const [key, child] of Object.entries(value)) {
+		const childPath = [...path, key];
+		const markerPath = childPath.some((part) => /(?:lowering|task)/i.test(part));
+		if (
+			markerPath &&
+			((typeof child === 'string' && FORBIDDEN_PERSISTENCE_TASK_MARKER.test(child)) ||
+				(child === true && FORBIDDEN_PERSISTENCE_TASK_MARKER.test(key)))
+		)
+			return true;
+		if (hasForbiddenPersistenceTaskMarker(child, childPath)) return true;
+	}
+	return false;
+}
+
+function persistenceLoweringViolations(
+	file: string,
+	artifact: EnrichedIR,
+): GateViolation[] | undefined {
+	const persistence = (artifact.records as { readonly persistence?: unknown }).persistence;
+	if (!Array.isArray(persistence)) return undefined;
+	const violations: GateViolation[] = [];
+	for (const record of persistence) {
+		if (!record || typeof record !== 'object') continue;
+		const entry = record as Record<string, any>;
+		if (entry.access?.render !== true) continue;
+		const validPrePaintSeed =
+			entry.seed?.lowering === 'pre-paint' &&
+			Array.isArray(entry.seed.landings) &&
+			entry.seed.landings.some((landing: unknown) => {
+				const candidate = landing as Record<string, unknown> | null;
+				return candidate?.target === 'solid';
+			});
+		if (!validPrePaintSeed || hasForbiddenPersistenceTaskMarker(entry))
+			violations.push(
+				violation(
+					file,
+					'persistence-render-lowering',
+					'Render-access persistence must use a Solid pre-paint seed landing and must not use an eager/visible/effect/mount task',
+				),
+			);
+	}
+	return violations;
+}
+
+function persistenceEffectViolations(source: string, file: string): GateViolation[] {
+	const violations: GateViolation[] = [];
+	const seedMarker = /(?=.*(?:persist|storage))(?=.*seed)/i;
+	walkAst(parseModule(source), (node) => {
+		if (
+			node.type !== 'CallExpression' ||
+			node.callee?.type !== 'Identifier' ||
+			!['createEffect', 'onMount'].includes(node.callee.name)
+		)
+			return;
+		let readsPersistence = false;
+		walkAst(node.arguments?.[0], (child) => {
+			if (
+				(child.type === 'CallExpression' &&
+					child.callee?.type === 'MemberExpression' &&
+					(child.callee.property?.name === 'getItem' ||
+						child.callee.property?.value === 'getItem')) ||
+				(child.type === 'Identifier' && seedMarker.test(child.name)) ||
+				((child.type === 'Literal' || child.type === 'StringLiteral') &&
+					typeof child.value === 'string' &&
+					seedMarker.test(child.value))
+			)
+				readsPersistence = true;
+		});
+		if (readsPersistence)
+			violations.push(
+				violation(
+					file,
+					'persistence-render-lowering',
+					'Persistence seed reads must not run in createEffect or onMount',
+					node,
+				),
+			);
+	});
+	return violations;
+}
+
 function dossierRefFor(policy: string): DossierRef {
 	const direct = POLICIES.get(policy)?.dossierRef;
 	if (direct) return direct;
@@ -557,7 +655,17 @@ export async function checkSources(
 		} catch (error) {
 			violations.push(violation(file, 'component-shape', (error as Error).message));
 		}
-		if (artifact) violations.push(...(await provenanceViolations(source, file, artifact)));
+		try {
+			violations.push(...persistenceEffectViolations(source, file));
+		} catch {
+			// The main parser/custom-policy path reports malformed source.
+		}
+		if (artifact) {
+			const persistenceViolations = persistenceLoweringViolations(file, artifact);
+			if (persistenceViolations) violations.push(...persistenceViolations);
+			else unevaluatedPolicies.add('persistence-render-lowering');
+			violations.push(...(await provenanceViolations(source, file, artifact)));
+		}
 		else {
 			// An artifact-less relative import is present but unverifiable. That is a
 			// violation, not unevaluated: undisclosed-import itself always ran above.

@@ -101,6 +101,10 @@ test('builds the proven S1 fixture for both targets and records hashes and deleg
 	expect(await formatReact(react)).toBe(react);
 	expect(await formatSolid(solid)).toBe(solid);
 	expect(receipt.input.contentSha256).toBe(sha256(input));
+	expect(receipt).not.toHaveProperty('persistence');
+	await expect(
+		access(join(cwd, 'output/frameless-persistence-pre-paint.js')),
+	).rejects.toMatchObject({ code: 'ENOENT' });
 	expect(receipt.equivalence).toEqual({
 		state: 'delegated',
 		authority:

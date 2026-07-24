@@ -6,13 +6,55 @@ import {
 	serializeBuildReceipt,
 	validateBuildReceipt,
 	type BuildReceipt,
+	type PersistenceArtifactRecord,
+	type PersistenceBuildArtifact,
 } from '../src/receipts.ts';
 
 const SHA_A = 'a'.repeat(64);
 const SHA_B = 'b'.repeat(64);
 const SHA_C = 'c'.repeat(64);
 
-function receipt(): BuildReceipt {
+function persistenceRecord(
+	moduleId: string,
+	graphNodeId: string,
+	resolvedKey: string,
+): PersistenceArtifactRecord {
+	return {
+		graphNodeId,
+		moduleId,
+		resolvedKey,
+		landings: [
+		{
+			target: 'markless',
+			kind: 'payload-scripts',
+			slotSymbolKey: 'tsrx.storage/1',
+		},
+		{
+			target: 'react',
+			kind: 'sync-read-seed-slot',
+			graphNodeId,
+		},
+		{
+			target: 'solid',
+			kind: 'sync-read-seed-slot',
+			graphNodeId,
+		},
+		],
+	};
+}
+
+const PERSISTENCE: PersistenceBuildArtifact = {
+	scriptPath: 'generated/frameless-persistence-pre-paint.js',
+	contentSha256: SHA_C,
+	cspHash: `sha256-${Buffer.alloc(32, 3).toString('base64')}`,
+	records: [
+		persistenceRecord('fixtures/account.tsrx', 'state:locale', 'preferences:locale'),
+		persistenceRecord('fixtures/counter.tsrx', 'state:theme', 'markless:theme'),
+	],
+	placement: 'head-before-framework',
+};
+
+function receipt(persistence?: PersistenceBuildArtifact): BuildReceipt {
 	return createBuildReceipt({
 		generator: { toolName: '@frameless/cli', toolVersion: '0.0.0-test' },
 		input: {
@@ -118,10 +160,11 @@ function receipt(): BuildReceipt {
 				'vitest browser lanes (react-browser, solid-browser; cross-target lane per T010)',
 			command: 'pnpm test:browser',
 		},
+		...(persistence ? { persistence } : {}),
 	});
 }
 
-describe('frameless-build-receipts/1', () => {
+describe('frameless-build-receipts/2', () => {
 	test('round-trips through deterministic JSON and validation', () => {
 		const created = receipt();
 		const parsed: unknown = JSON.parse(serializeBuildReceipt(created));
@@ -134,6 +177,56 @@ describe('frameless-build-receipts/1', () => {
 		expect(() =>
 			validateBuildReceipt({ ...receipt(), schema: 'frameless-receipts/1' }),
 		).toThrow(/BuildReceipt schema/);
+	});
+
+	test('validates the optional persistence artifact and keeps it absent for zero records', () => {
+		const artifact = validateBuildReceipt(receipt(PERSISTENCE)).persistence;
+		expect(artifact).toEqual(PERSISTENCE);
+		expect(artifact?.records.map(({ moduleId }) => moduleId)).toEqual([
+			'fixtures/account.tsrx',
+			'fixtures/counter.tsrx',
+		]);
+		expect(receipt()).not.toHaveProperty('persistence');
+	});
+
+	test('rejects a malformed persistence artifact at exact-key boundaries', () => {
+		expect(() =>
+			validateBuildReceipt({
+				...receipt(PERSISTENCE),
+				persistence: { ...PERSISTENCE, futureField: true },
+			}),
+		).toThrow(/BuildReceipt persistence has unknown field: futureField/);
+		expect(() =>
+			validateBuildReceipt({
+				...receipt(PERSISTENCE),
+				persistence: { ...PERSISTENCE, contentSha256: 'not-a-hash' },
+			}),
+		).toThrow(/BuildReceipt persistence contentSha256/);
+		expect(() =>
+			validateBuildReceipt({
+				...receipt(PERSISTENCE),
+				persistence: {
+					...PERSISTENCE,
+					records: [
+						{
+							...PERSISTENCE.records[0],
+							landings: PERSISTENCE.records[0]!.landings.filter(
+								({ target }) => target !== 'solid',
+							),
+						},
+					],
+				},
+			}),
+		).toThrow(/landings must contain React and Solid seed slots/);
+		expect(() =>
+			validateBuildReceipt({
+				...receipt(PERSISTENCE),
+				persistence: {
+					...PERSISTENCE,
+					records: [...PERSISTENCE.records].reverse(),
+				},
+			}),
+		).toThrow(/records must be ordered by moduleId then resolvedKey/);
 	});
 
 	test('rejects unknown fields at every schema boundary', () => {

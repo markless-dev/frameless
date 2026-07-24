@@ -6,7 +6,7 @@ import {
 import { assertValidExpectation } from './expectations.ts';
 import type { Divergence, ExpectationResult } from './types.ts';
 
-export const RECEIPT_SCHEMA_VERSION = 'frameless-receipts/2' as const;
+export const RECEIPT_SCHEMA_VERSION = 'frameless-receipts/3' as const;
 export const EQUIVALENCE_INVARIANT_ID = 'MLA-EXT-FRAMELESS-EQUIVALENCE' as const;
 export const MUTANT_INVARIANT_ID = 'MLA-EXT-FRAMELESS-MUTANT' as const;
 export const EXPECTATION_INVARIANT_ID = 'MLA-EXT-FRAMELESS-EXPECTATION' as const;
@@ -67,6 +67,20 @@ export type Receipt = {
 			}
 		>;
 		equality: { corpusIdentical: boolean; outcomesEqual: boolean };
+	};
+	persistence?: {
+		witness: {
+			version: string;
+			runId: string;
+			receiptPath: string;
+			receiptVersionMarker: string;
+		};
+		frameworks: {
+			react: { noFlash: boolean; writeThrough: boolean };
+			solid: { noFlash: boolean; writeThrough: boolean };
+		};
+		equality: { outcomesEqual: boolean };
+		calibration: { claims: string[]; proven: boolean };
 	};
 	summary: ReceiptSummary;
 };
@@ -209,6 +223,7 @@ export function validateReceipt(value: unknown): value is Receipt {
 				'mutantRejections',
 				'expectationResults',
 				'ssr',
+				'persistence',
 				'summary',
 			],
 		)
@@ -242,12 +257,67 @@ export function validateReceipt(value: unknown): value is Receipt {
 	)
 		return false;
 	if (Object.hasOwn(receipt, 'ssr') && !validateSsr(receipt.ssr)) return false;
+	if (Object.hasOwn(receipt, 'persistence') && !validatePersistence(receipt.persistence)) {
+		return false;
+	}
 	try {
 		createReceiptVerdictReport(receipt as Receipt);
 		return summariesEqual(receipt.summary, createReceiptSummary(receipt as Receipt));
 	} catch {
 		return false;
 	}
+}
+
+function validatePersistence(value: unknown): boolean {
+	if (
+		!isRecord(value) ||
+		!hasExactKeys(value, ['witness', 'frameworks', 'equality', 'calibration'])
+	) {
+		return false;
+	}
+	if (
+		!isRecord(value.witness) ||
+		!hasExactKeys(value.witness, [
+			'version',
+			'runId',
+			'receiptPath',
+			'receiptVersionMarker',
+		]) ||
+		!Object.values(value.witness).every((field) => typeof field === 'string')
+	) {
+		return false;
+	}
+	if (
+		!isRecord(value.frameworks) ||
+		!hasExactKeys(value.frameworks, ['react', 'solid']) ||
+		!validatePersistenceFramework(value.frameworks.react) ||
+		!validatePersistenceFramework(value.frameworks.solid)
+	) {
+		return false;
+	}
+	if (
+		!isRecord(value.equality) ||
+		!hasExactKeys(value.equality, ['outcomesEqual']) ||
+		typeof value.equality.outcomesEqual !== 'boolean'
+	) {
+		return false;
+	}
+	return (
+		isRecord(value.calibration) &&
+		hasExactKeys(value.calibration, ['claims', 'proven']) &&
+		Array.isArray(value.calibration.claims) &&
+		value.calibration.claims.every((claim) => typeof claim === 'string') &&
+		typeof value.calibration.proven === 'boolean'
+	);
+}
+
+function validatePersistenceFramework(value: unknown): boolean {
+	return (
+		isRecord(value) &&
+		hasExactKeys(value, ['noFlash', 'writeThrough']) &&
+		typeof value.noFlash === 'boolean' &&
+		typeof value.writeThrough === 'boolean'
+	);
 }
 
 function validateSsr(value: unknown): boolean {
@@ -446,7 +516,7 @@ export function renderResults(receipt: Receipt): string {
 	const lines = [
 		'# Frameless equivalence results',
 		'',
-		'> Machine-generated from the frameless-receipts/2 verdict artifact. Do not edit by hand.',
+		'> Machine-generated from the frameless-receipts/3 verdict artifact. Do not edit by hand.',
 		'',
 		`Overall verdict: **${verdict.toUpperCase()}**.`,
 		'',

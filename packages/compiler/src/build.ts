@@ -7,6 +7,12 @@ import type { TsrxSemanticGraphArtifact } from './artifacts.ts';
 import { runCompilerPassPipeline } from './pass-pipeline.ts';
 import { enrichedIrPassDefinition } from './pass-registry.ts';
 import {
+	adaptPersistenceFacts,
+	extractPersistenceSourceFacts,
+	type MarklessStorageSourceFact,
+	type PersistenceAccess,
+} from './persistence.ts';
+import {
 	ENRICHED_IR_VERSION,
 	type BehaviorInput,
 	type DynamicBinding,
@@ -133,10 +139,12 @@ const OMITTED_AST_KEYS = new Set([
 export async function buildEnrichedIr(input: BuildInput): Promise<EnrichedIR> {
 	const filename = normalizeFilename(input.filename);
 	const semanticGraph = await buildSemanticGraph({ filename, source: input.source });
+	const persistenceSourceFacts = extractPersistenceSourceFacts(semanticGraph);
 	const initialArtifact: TsrxSemanticGraphArtifact = {
 		filename,
 		source: input.source,
 		semanticGraph,
+		persistenceSourceFacts,
 	};
 	const result = await runCompilerPassPipeline({
 		initialArtifacts: { 'tsrx-semantic-graph': initialArtifact },
@@ -158,6 +166,7 @@ async function buildEnrichedIrArtifact({
 	filename,
 	source,
 	semanticGraph,
+	persistenceSourceFacts,
 }: TsrxSemanticGraphArtifact): Promise<EnrichedIR> {
 	filename = normalizeFilename(filename);
 	const parseErrors: CompileError[] = [];
@@ -408,6 +417,13 @@ async function buildEnrichedIrArtifact({
 	);
 	const behaviors = buildBehaviors(semanticGraph, templateContext);
 	const handleCalls = buildHandleCalls(events, elementHandleBindings);
+	const persistence = buildPersistenceRecords(
+		semanticGraph,
+		persistenceSourceFacts,
+		enrichedComponents,
+		bindings,
+		events,
+	);
 	const records = {
 		bindings: [...bindings].sort((left, right) => compareText(left.id, right.id)),
 		aliases: [...aliases].sort((left, right) => compareText(left.id, right.id)),
@@ -423,6 +439,7 @@ async function buildEnrichedIrArtifact({
 		handleForwards,
 		behaviors,
 		handleCalls,
+		persistence,
 	};
 
 	return {
@@ -449,6 +466,69 @@ async function buildEnrichedIrArtifact({
 		components: enrichedComponents,
 		records,
 	};
+}
+
+function buildPersistenceRecords(
+	semanticGraph: SemanticGraphArtifact,
+	sourceFacts: readonly MarklessStorageSourceFact[],
+	components: readonly EnrichedComponent[],
+	bindings: readonly EnrichedGraphBinding[],
+	events: readonly EnrichedEventRecord[],
+) {
+	const bindingsById = new Map<string, EnrichedGraphBinding>();
+	for (const binding of bindings) {
+		if (bindingsById.has(binding.id))
+			throw new Error(`Persistence graph correlation is ambiguous for "${binding.id}".`);
+		bindingsById.set(binding.id, binding);
+	}
+	const renderReads = collectReadGraphNodeIds([...components, ...bindings]);
+	const handlerReads = collectReadGraphNodeIds(events);
+	const access = (graphNodeId: string): PersistenceAccess => {
+		const binding = bindingsById.get(graphNodeId);
+		if (!binding)
+			throw new Error(
+				`Persistence source fact "${graphNodeId}" has no exact enriched graph binding.`,
+			);
+		return {
+			render: renderReads.has(graphNodeId),
+			handler: handlerReads.has(graphNodeId),
+		};
+	};
+	for (const fact of sourceFacts) {
+		const binding = bindingsById.get(fact.graphNodeId);
+		if (
+			!binding ||
+			fact.moduleId !== semanticGraph.filename ||
+			fact.bindingName !== binding.name ||
+			fact.writable !== binding.writable
+		)
+			throw new Error(
+				`Persistence source fact "${fact.graphNodeId}" does not exactly correlate with its semantic graph binding.`,
+			);
+	}
+	return adaptPersistenceFacts(sourceFacts, access);
+}
+
+function collectReadGraphNodeIds(values: readonly unknown[]): Set<string> {
+	const result = new Set<string>();
+	const visit = (value: unknown): void => {
+		if (!value || typeof value !== 'object') return;
+		if (Array.isArray(value)) return void value.forEach(visit);
+		for (const [key, child] of Object.entries(value)) {
+			if (key === 'reads' && Array.isArray(child)) {
+				for (const read of child) {
+					if (
+						read &&
+						typeof read === 'object' &&
+						typeof (read as { graphNodeId?: unknown }).graphNodeId === 'string'
+					)
+						result.add((read as { graphNodeId: string }).graphNodeId);
+				}
+			} else visit(child);
+		}
+	};
+	for (const value of values) visit(value);
+	return result;
 }
 
 function findComponents(program: AnyNode): ComponentWork[] {

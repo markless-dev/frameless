@@ -2,11 +2,13 @@ import { analyze } from 'yuku-analyzer';
 import { generate } from 'yuku-codegen';
 import {
 	ENRICHED_IR_VERSION,
+	FRAMELESS_STATE_GLOBAL,
 	type EnrichedComponent,
 	type EnrichedEventRecord,
 	type EnrichedGraphBinding,
 	type EnrichedIR,
 	type EventHandlerRecord,
+	type FramelessPersistenceRecord,
 	type SerializableAstNode,
 	type SharedDefinition,
 	type TemplateNode,
@@ -33,6 +35,7 @@ type EmitContext = {
 	readonly edgeSharedProps: ReadonlyMap<string, ReadonlyArray<{ name: string; value: string }>>;
 	readonly sharedHookNames: ReadonlyMap<string, string>;
 	readonly names: NameAllocator;
+	readonly persistenceWrites: { emitted: boolean };
 };
 type ReactHook =
 	| 'createContext'
@@ -226,6 +229,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		'handleForwards',
 		'behaviors',
 		'handleCalls',
+		'persistence',
 	]);
 	for (const [family, records] of [
 		['bindings', ir.records.bindings],
@@ -242,9 +246,16 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		['handleForwards', ir.records.handleForwards],
 		['behaviors', ir.records.behaviors],
 		['handleCalls', ir.records.handleCalls],
+		['persistence', ir.records.persistence],
 	] as const)
 		if (!Array.isArray(records))
 			throw new Error(`EnrichedRecordTable ${family} has malformed record family`);
+	if (
+		ir.records.persistence.some(
+			(record) => !record || typeof record !== 'object' || Array.isArray(record),
+		)
+	)
+		throw new Error('EnrichedRecordTable persistence has malformed record family');
 	keys('ModuleRecord', ir.module, ['exports']);
 	for (const imported of ir.imports) {
 		keys('ModuleImport', imported, [
@@ -308,6 +319,24 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		throw new Error('EnrichedRecordTable has duplicate binding record ids');
 	if (eventIds.size !== ir.records.events.length)
 		throw new Error('EnrichedRecordTable has duplicate event record ids');
+	const persistenceIds = new Set(ir.records.persistence.map((record) => record.graphNodeId));
+	if (persistenceIds.size !== ir.records.persistence.length)
+		throw new Error('EnrichedRecordTable has duplicate persistence graph node ids');
+	for (const record of ir.records.persistence) {
+		const binding = ir.records.bindings.find(
+			(candidate) => candidate.id === record.graphNodeId && candidate.kind === 'state',
+		);
+		const sharedCell = ir.records.sharedDefinitions
+			.flatMap((definition) => definition.cells)
+			.find(
+				(candidate) =>
+					candidate.kind === 'state' && candidate.graphNodeId === record.graphNodeId,
+			);
+		if (!binding && !sharedCell)
+			throw new Error(`Persistence record has no React state binding: ${record.graphNodeId}`);
+		if ((binding ?? sharedCell)!.name !== record.bindingName)
+			throw new Error(`Persistence record binding name does not match ${record.graphNodeId}`);
+	}
 	for (const component of ir.components)
 		if (
 			component.props.entries.length > 0 &&
@@ -1176,6 +1205,87 @@ const nextFor = (context: EmitContext, state: StateBinding): string =>
 const member = (object: t.Expression, property: string): t.MemberExpression =>
 	t.memberExpression(object, t.identifier(property));
 
+function persistenceForGraph(
+	context: EmitContext,
+	graphNodeId: string,
+): FramelessPersistenceRecord | undefined {
+	return context.ir.records.persistence.find((record) => record.graphNodeId === graphNodeId);
+}
+
+function persistenceSeed(record: FramelessPersistenceRecord): t.Expression {
+	if (!record.access.render) return t.stringLiteral(record.authoredInitial);
+	if (record.seed.lowering !== 'pre-paint') return t.stringLiteral(record.authoredInitial);
+	const landing = record.seed.landings.find(
+		(candidate) =>
+			candidate.target === 'react' &&
+			candidate.kind === 'sync-read-seed-slot' &&
+			candidate.graphNodeId === record.graphNodeId,
+	);
+	if (!landing) return t.stringLiteral(record.authoredInitial);
+	const container = t.memberExpression(
+		t.identifier('globalThis'),
+		t.identifier(FRAMELESS_STATE_GLOBAL),
+	);
+	const slot = t.memberExpression(container, t.stringLiteral(record.key.literal), true);
+	slot.optional = true;
+	return t.logicalExpression(
+		'??',
+		{ type: 'ChainExpression', expression: slot },
+		t.stringLiteral(record.authoredInitial),
+	);
+}
+
+function persistenceStatements(
+	context: EmitContext,
+	record: FramelessPersistenceRecord,
+	value: t.Expression,
+): t.Statement[] {
+	context.persistenceWrites.emitted = true;
+	return [
+		t.expressionStatement(
+			t.callExpression(t.identifier('__framelessWrite'), [
+				t.stringLiteral(record.key.literal),
+				t.stringLiteral(record.antiFlashAttribute),
+				t.cloneNode(value, true),
+			]),
+		),
+	];
+}
+
+function persistenceHelperDeclaration(): t.Statement {
+	return t.functionDeclaration(
+		t.identifier('__framelessWrite'),
+		[t.identifier('key'), t.identifier('attr'), t.identifier('value')],
+		t.blockStatement([
+			{
+				type: 'TryStatement',
+				block: t.blockStatement([
+					t.expressionStatement(
+						t.callExpression(member(t.identifier('localStorage'), 'setItem'), [
+							t.identifier('key'),
+							t.identifier('value'),
+						]),
+					),
+				]),
+				handler: {
+					type: 'CatchClause',
+					param: null,
+					body: t.blockStatement([
+						t.expressionStatement(t.unaryExpression('void', t.numericLiteral(0))),
+					]),
+				},
+				finalizer: null,
+			},
+			t.expressionStatement(
+				t.callExpression(
+					member(member(t.identifier('document'), 'documentElement'), 'setAttribute'),
+					[t.identifier('attr'), t.identifier('value')],
+				),
+			),
+		]),
+	);
+}
+
 function referencedGraphIds(
 	component: EnrichedComponent,
 	records: EnrichedIR['records'],
@@ -1838,6 +1948,17 @@ function toConstSsa(
 	collapseRefSyncVersions(fn, writable);
 	removeDeadPureVersions(fn);
 	normalizeSoleVersionNames(fn, writable, context);
+	fn.body.body = fn.body.body.flatMap((statement: t.Statement) => {
+		const variable = syncVariableName(statement, writable, context);
+		if (!variable) return [statement];
+		const state = writable.find((candidate) => nextFor(context, candidate) === variable);
+		const persistence = state ? persistenceForGraph(context, state.id) : undefined;
+		if (!state || !persistence) return [statement];
+		const sync = (statement as t.ExpressionStatement).expression;
+		const finalValue =
+			state.storage === 'ref' ? (sync as any).right : (sync as any).arguments[0];
+		return [statement, ...persistenceStatements(context, persistence, finalValue)];
+	});
 	return fn;
 }
 
@@ -2295,7 +2416,13 @@ function emitSharedDeclarations(
 				});
 			const initial =
 				tier === 'scalar-context'
-					? expression(stateCells[0]!.initializer)
+					? (() => {
+							const cell = stateCells[0]!;
+							const persistence = persistenceForGraph(context, cell.graphNodeId);
+							return persistence
+								? persistenceSeed(persistence)
+								: expression(cell.initializer);
+						})()
 					: t.callExpression(
 							t.arrowFunctionExpression(
 								[],
@@ -2304,7 +2431,14 @@ function emitSharedDeclarations(
 										t.variableDeclaration('const', [
 											t.variableDeclarator(
 												t.identifier(cell.name),
-												expression(cell.initializer),
+												persistenceForGraph(context, cell.graphNodeId)
+													? persistenceSeed(
+															persistenceForGraph(
+																context,
+																cell.graphNodeId,
+															)!,
+														)
+													: expression(cell.initializer),
 											),
 										]),
 									),
@@ -2468,9 +2602,13 @@ function createStoreDeclaration(
 		snapshotVersionNames.get(cell.graphNodeId)!;
 	const writeName = (cell: { graphNodeId: string }) => writeNames.get(cell.graphNodeId)!;
 	for (const cell of stateCells) {
+		const persistence = persistenceForGraph(context, cell.graphNodeId);
 		body.push(
 			t.variableDeclaration('let', [
-				t.variableDeclarator(t.identifier(cell.name), expression(cell.initializer)),
+				t.variableDeclarator(
+					t.identifier(cell.name),
+					persistence ? persistenceSeed(persistence) : expression(cell.initializer),
+				),
 			]),
 			t.variableDeclaration('let', [
 				t.variableDeclarator(t.identifier(versionName(cell)), t.numericLiteral(0)),
@@ -2575,6 +2713,16 @@ function createStoreDeclaration(
 					t.arrowFunctionExpression([], unwrapSharedComputed(cell.expression)),
 				),
 			);
+		if (cell.kind === 'state') {
+			const persistence = persistenceForGraph(context, cell.graphNodeId);
+			if (persistence)
+				properties.push(
+					t.objectProperty(
+						t.identifier(`getServer${cap}`),
+						t.arrowFunctionExpression([], t.stringLiteral(persistence.authoredInitial)),
+					),
+				);
+		}
 		const dependencies = cell.kind === 'state' ? [cell.graphNodeId] : cell.dependencies;
 		const dependentCells = dependencies
 			.map((id) => stateCells.find((candidate) => candidate.graphNodeId === id))
@@ -2720,6 +2868,20 @@ function createStoreDeclaration(
 				),
 			);
 		}
+		for (const cell of stateCells) {
+			const persistence = persistenceForGraph(context, cell.graphNodeId);
+			if (!persistence) continue;
+			methodBody.push(
+				t.ifStatement(
+					t.callExpression(member(t.identifier(changedName), 'has'), [
+						t.stringLiteral(cell.name),
+					]),
+					t.blockStatement(
+						persistenceStatements(context, persistence, t.identifier(cell.name)),
+					),
+				),
+			);
+		}
 		const changedCellName = context.names.claim('changedCell');
 		const notificationBody: t.Statement[] = [];
 		for (const cell of stateCells) {
@@ -2847,6 +3009,7 @@ function storeHookDeclaration(
 	}
 	let subscribe: t.Expression = t.identifier(names.subscribeNothing);
 	let snapshot: t.Expression = t.identifier(names.getNothing);
+	let serverSnapshot: t.Expression = t.identifier(names.getNothing);
 	const graphProperties = definition.returnProperties.filter(
 		(property) => property.kind === 'graph',
 	);
@@ -2868,6 +3031,12 @@ function storeHookDeclaration(
 			member(t.identifier('store'), `get${cap}`),
 			snapshot,
 		);
+		const persistence = persistenceForGraph(context, property.graphNodeId);
+		serverSnapshot = t.conditionalExpression(
+			t.cloneNode(test, true),
+			member(t.identifier('store'), persistence ? `getServer${cap}` : `get${cap}`),
+			serverSnapshot,
+		);
 	}
 	body.push(
 		t.variableDeclaration('const', [
@@ -2876,7 +3045,7 @@ function storeHookDeclaration(
 				t.callExpression(t.identifier(hookName(context, 'useSyncExternalStore')), [
 					subscribe,
 					snapshot,
-					t.cloneNode(snapshot, true),
+					serverSnapshot,
 				]),
 			),
 		]),
@@ -2957,12 +3126,16 @@ function componentFunction(
 					`SharedDefinition ${definition.name} has no props-tier scalar cell`,
 				);
 			usedHooks.add('useState');
+			const persistence = persistenceForGraph(context, cell.graphNodeId);
+			const initializer = persistence
+				? persistenceSeed(persistence)
+				: expression(cell.initializer);
 			body.push(
 				t.variableDeclaration('const', [
 					t.variableDeclarator(
 						t.arrayPattern([t.identifier(route.propName)]),
 						t.callExpression(t.identifier(hookName(context, 'useState')), [
-							expression(cell.initializer),
+							persistence ? t.arrowFunctionExpression([], initializer) : initializer,
 						]),
 					),
 				]),
@@ -3119,7 +3292,10 @@ function componentFunction(
 		const computed = semantic.find((binding) => binding.kind === 'computed');
 		if (state) {
 			const mapped = context.statesById.get(state.id)!;
-			const initializer = expression(state.initializer);
+			const persistence = persistenceForGraph(context, state.id);
+			const initializer = persistence
+				? persistenceSeed(persistence)
+				: expression(state.initializer);
 			emitOnceGuard(pendingInitializers.splice(0), body, usedHooks, context);
 			if (mapped.storage === 'ref') {
 				usedHooks.add('useRef');
@@ -3143,7 +3319,9 @@ function componentFunction(
 						t.variableDeclarator(
 							t.arrayPattern(elements),
 							t.callExpression(t.identifier(hookName(context, 'useState')), [
-								useStateInitializer(initializer),
+								persistence
+									? t.arrowFunctionExpression([], initializer)
+									: useStateInitializer(initializer),
 							]),
 						),
 					]),
@@ -3286,6 +3464,7 @@ export function emit(ir: EnrichedIR): string {
 		}
 	}
 	const hooks = new Set<ReactHook>();
+	const persistenceWrites = { emitted: false };
 	const baseContext = {
 		ir,
 		statesById,
@@ -3300,6 +3479,7 @@ export function emit(ir: EnrichedIR): string {
 		sharedPropRoutes,
 		edgeSharedProps,
 		names: allocator,
+		persistenceWrites,
 	};
 	const body: t.Statement[] = [];
 	for (const imported of ir.imports) {
@@ -3446,7 +3626,15 @@ export function emit(ir: EnrichedIR): string {
 				value: ' @generated by @frameless/react; do not edit.',
 			},
 		];
-	const program = t.program(hooks.size ? [imports, ...body] : body);
+	const programBody = hooks.size ? [imports, ...body] : body;
+	if (persistenceWrites.emitted) {
+		let lastImport = -1;
+		programBody.forEach((statement, index) => {
+			if (statement.type === 'ImportDeclaration') lastImport = index;
+		});
+		programBody.splice(lastImport + 1, 0, persistenceHelperDeclaration());
+	}
+	const program = t.program(programBody);
 	const expectedNames = declaredNames(program);
 	const source = `${printTopLevel(program)}\n`;
 	const verified = analyze(source, { lang: 'jsx', sourceType: 'module', preserveParens: false });

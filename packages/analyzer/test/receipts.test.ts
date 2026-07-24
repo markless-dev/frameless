@@ -35,7 +35,7 @@ const receipt: Receipt = {
 	summary: createReceiptSummary(results),
 };
 
-describe('frameless-receipts/2', () => {
+describe('frameless-receipts/3', () => {
 	test('validates without the optional ssr entry and preserves blocked-by-upstream', () => {
 		expect(validateReceipt(receipt)).toBe(true);
 		expect(validateReceipt({ ...receipt, schema: 'old' })).toBe(false);
@@ -96,6 +96,29 @@ describe('frameless-receipts/2', () => {
 		const dishonest = structuredClone(receipt) as unknown as Record<string, unknown>;
 		dishonest.ssr = createSsrEntry();
 		delete (dishonest.ssr as SsrEntry).frameworks.react.activationClean;
+		expect(validateReceipt(dishonest)).toBe(false);
+	});
+
+	test('validates a well-formed optional persistence entry', () => {
+		const withPersistence: Receipt = {
+			...receipt,
+			persistence: createPersistenceEntry(),
+		};
+
+		expect(validateReceipt(withPersistence)).toBe(true);
+	});
+
+	test('rejects a hydration-only extra field in a persistence framework entry', () => {
+		const dishonest = structuredClone(receipt) as unknown as Record<string, unknown>;
+		dishonest.persistence = createPersistenceEntry();
+		(dishonest.persistence as PersistenceEntry).frameworks.react.hydrationMismatches = 0;
+		expect(validateReceipt(dishonest)).toBe(false);
+	});
+
+	test('rejects an invalid persistence entry shape', () => {
+		const dishonest = structuredClone(receipt) as unknown as Record<string, unknown>;
+		dishonest.persistence = createPersistenceEntry();
+		delete (dishonest.persistence as PersistenceEntry).frameworks.solid.writeThrough;
 		expect(validateReceipt(dishonest)).toBe(false);
 	});
 
@@ -367,5 +390,29 @@ function createSsrEntry(): SsrEntry {
 			},
 		},
 		equality: { corpusIdentical: true, outcomesEqual: true },
+	};
+}
+
+type PersistenceEntry = ReturnType<typeof createPersistenceEntry> & {
+	frameworks: {
+		react: Record<string, unknown>;
+		solid: Record<string, unknown>;
+	};
+};
+
+function createPersistenceEntry() {
+	return {
+		witness: {
+			version: '0.7.0',
+			runId: 'run-123',
+			receiptPath: '.witness/receipts/run-123/receipt.json',
+			receiptVersionMarker: '1',
+		},
+		frameworks: {
+			react: { noFlash: true, writeThrough: true },
+			solid: { noFlash: true, writeThrough: true },
+		},
+		equality: { outcomesEqual: true },
+		calibration: { claims: ['no-flash', 'write-through'], proven: true },
 	};
 }

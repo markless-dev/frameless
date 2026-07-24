@@ -1,10 +1,12 @@
 import type { SemanticGraphArtifact } from '@markless/compiler';
+import type { MarklessStorageSourceFact } from './persistence.ts';
 import type { EnrichedIR } from './schema.ts';
 
 export type TsrxSemanticGraphArtifact = {
 	readonly filename: string;
 	readonly source: string;
 	readonly semanticGraph: SemanticGraphArtifact;
+	readonly persistenceSourceFacts: ReadonlyArray<MarklessStorageSourceFact>;
 };
 
 export type FramelessCompilerArtifactMap = {

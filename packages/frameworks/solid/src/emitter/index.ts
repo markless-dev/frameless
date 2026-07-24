@@ -2,11 +2,13 @@ import { analyze } from 'yuku-analyzer';
 import { generate } from 'yuku-codegen';
 import {
 	ENRICHED_IR_VERSION,
+	FRAMELESS_STATE_GLOBAL,
 	type EnrichedComponent,
 	type EnrichedEventRecord,
 	type EnrichedGraphBinding,
 	type EnrichedIR,
 	type EventHandlerRecord,
+	type FramelessPersistenceRecord,
 	type SerializableAstNode,
 	type SharedDefinition,
 	type TemplateNode,
@@ -38,6 +40,8 @@ type EmitContext = {
 	readonly imports: Set<ApiName>;
 	readonly lexicalNames: ReadonlySet<string>;
 	readonly names: NameAllocator;
+	readonly persistenceByGraph: ReadonlyMap<string, FramelessPersistenceRecord>;
+	readonly persistenceWrites: { emitted: boolean };
 	readonly propsByLocal: ReadonlyMap<string, EnrichedComponent['props']['entries'][number]>;
 	readonly propsName: string;
 	readonly settersById: ReadonlyMap<string, string>;
@@ -345,6 +349,7 @@ function reconcileHandlerWrites(
 export function validateEnrichedIr(ir: EnrichedIR): void {
 	if (hasComposition(ir)) {
 		validateCompositionIr(ir);
+		validatePersistenceCorrelation(ir);
 		return;
 	}
 	walk(ir, (record) => {
@@ -432,6 +437,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 			'handleForwards',
 			'behaviors',
 			'handleCalls',
+			'persistence',
 		],
 		'EnrichedRecordTable',
 	);
@@ -450,9 +456,17 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		['handleForwards', ir.records.handleForwards],
 		['behaviors', ir.records.behaviors],
 		['handleCalls', ir.records.handleCalls],
+		['persistence', ir.records.persistence],
 	] as const)
 		if (!Array.isArray(records))
 			throw new Error(`EnrichedRecordTable ${family} has malformed record family`);
+	if (
+		ir.records.persistence.some(
+			(record) => !record || typeof record !== 'object' || Array.isArray(record),
+		)
+	)
+		throw new Error('EnrichedRecordTable persistence has malformed record family');
+	validatePersistenceCorrelation(ir);
 	for (const imported of ir.imports) {
 		exactKeys(
 			imported,
@@ -1677,6 +1691,27 @@ function validateCompositionIr(ir: EnrichedIR): void {
 	});
 }
 
+function validatePersistenceCorrelation(ir: EnrichedIR): void {
+	const persistenceIds = new Set(ir.records.persistence.map((record) => record.graphNodeId));
+	if (persistenceIds.size !== ir.records.persistence.length)
+		throw new Error('EnrichedRecordTable has duplicate persistence graph node ids');
+	for (const record of ir.records.persistence) {
+		const binding = ir.records.bindings.find(
+			(candidate) => candidate.id === record.graphNodeId && candidate.kind === 'state',
+		);
+		const sharedCell = ir.records.sharedDefinitions
+			.flatMap((definition) => definition.cells)
+			.find(
+				(candidate) =>
+					candidate.kind === 'state' && candidate.graphNodeId === record.graphNodeId,
+			);
+		if (!binding && !sharedCell)
+			throw new Error(`Persistence record has no Solid state binding: ${record.graphNodeId}`);
+		if ((binding ?? sharedCell)!.name !== record.bindingName)
+			throw new Error(`Persistence record binding name does not match ${record.graphNodeId}`);
+	}
+}
+
 class NameAllocator {
 	readonly #used: Set<string>;
 	constructor(used: Iterable<string>) {
@@ -1716,6 +1751,106 @@ function pathMember(root: t.Expression, path: readonly string[]): t.Expression {
 function api(context: EmitContext, name: ApiName): t.Identifier {
 	context.imports.add(name);
 	return t.identifier(context.api.get(name)!);
+}
+
+function persistenceSeed(record: FramelessPersistenceRecord): t.Expression {
+	if (!record.access.render || record.seed.lowering !== 'pre-paint')
+		return t.stringLiteral(record.authoredInitial);
+	const landing = record.seed.landings.find(
+		(candidate) =>
+			candidate.target === 'solid' &&
+			candidate.kind === 'sync-read-seed-slot' &&
+			candidate.graphNodeId === record.graphNodeId,
+	);
+	if (!landing) return t.stringLiteral(record.authoredInitial);
+	const container = t.memberExpression(
+		t.identifier('globalThis'),
+		t.identifier(FRAMELESS_STATE_GLOBAL),
+	);
+	const slot = t.memberExpression(container, t.stringLiteral(record.key.literal), true);
+	slot.optional = true;
+	return t.logicalExpression(
+		'??',
+		{ type: 'ChainExpression', expression: slot },
+		t.stringLiteral(record.authoredInitial),
+	);
+}
+
+function persistenceStatements(
+	context: EmitContext,
+	record: FramelessPersistenceRecord,
+	value: t.Expression,
+): t.Statement[] {
+	context.persistenceWrites.emitted = true;
+	return [
+		t.expressionStatement(
+			t.callExpression(t.identifier('__framelessWrite'), [
+				t.stringLiteral(record.key.literal),
+				t.stringLiteral(record.antiFlashAttribute),
+				t.cloneNode(value, true),
+			]),
+		),
+	];
+}
+
+function persistenceHelperDeclaration(): t.Statement {
+	return t.functionDeclaration(
+		t.identifier('__framelessWrite'),
+		[t.identifier('key'), t.identifier('attr'), t.identifier('value')],
+		t.blockStatement([
+			{
+				type: 'TryStatement',
+				block: t.blockStatement([
+					t.expressionStatement(
+						t.callExpression(member(t.identifier('localStorage'), 'setItem'), [
+							t.identifier('key'),
+							t.identifier('value'),
+						]),
+					),
+				]),
+				handler: {
+					type: 'CatchClause',
+					param: null,
+					body: t.blockStatement([
+						t.expressionStatement(t.unaryExpression('void', t.numericLiteral(0))),
+					]),
+				},
+				finalizer: null,
+			},
+			t.expressionStatement(
+				t.callExpression(
+					member(member(t.identifier('document'), 'documentElement'), 'setAttribute'),
+					[t.identifier('attr'), t.identifier('value')],
+				),
+			),
+		]),
+	);
+}
+
+function appendPersistenceWrites(fn: t.ArrowFunctionExpression, context: EmitContext): void {
+	if (!t.isBlockStatement(fn.body)) return;
+	const stateBySetter = new Map(
+		[...context.statesById.values()]
+			.filter((state) => context.settersById.has(state.id))
+			.map((state) => [context.settersById.get(state.id)!, state]),
+	);
+	fn.body.body = fn.body.body.flatMap((statement: t.Statement) => {
+		if (
+			!t.isExpressionStatement(statement) ||
+			!t.isCallExpression(statement.expression) ||
+			!t.isIdentifier(statement.expression.callee)
+		)
+			return [statement];
+		const state = stateBySetter.get(statement.expression.callee.name);
+		const persistence = state ? context.persistenceByGraph.get(state.id) : undefined;
+		if (!state || !persistence) return [statement];
+		const argument = statement.expression.arguments[0];
+		const finalValue =
+			state.storage === 'signal' && argument && t.isExpression(argument)
+				? argument
+				: t.identifier(state.name);
+		return [statement, ...persistenceStatements(context, persistence, finalValue)];
+	});
 }
 
 function rewriteExpressionAst(result: t.Expression, context: EmitContext): t.Expression {
@@ -2134,6 +2269,7 @@ function normalizeHandler(
 			),
 		);
 	}
+	appendPersistenceWrites(rewritten, context);
 	return rewritten;
 }
 
@@ -2216,11 +2352,10 @@ function componentFunction(
 		const computed = semantic.find((binding) => binding.kind === 'computed');
 		if (state) {
 			const mapped = context.statesById.get(state.id)!;
-			const initializer = onceValue(
-				rewriteExpression(state.initializer!, context),
-				local.reads,
-				context,
-			);
+			const persistence = context.persistenceByGraph.get(state.id);
+			const initializer = persistence
+				? persistenceSeed(persistence)
+				: onceValue(rewriteExpression(state.initializer!, context), local.reads, context);
 			if (mapped.storage === 'signal') {
 				const elements: Array<t.Node | null> = [t.identifier(state.name)];
 				if (state.writes.length > 0)
@@ -2680,6 +2815,7 @@ function sharedMethodArrow(
 	const rewritten = rewriteExpressionAst(arrow, context);
 	if (!t.isArrowFunctionExpression(rewritten))
 		throw new Error(`SharedDefinitionMethod ${method.name} lost its action shape`);
+	appendPersistenceWrites(rewritten, context);
 	return rewritten;
 }
 
@@ -2744,6 +2880,7 @@ function emitSharedFamily(
 	for (const cell of definition.cells) {
 		if (cell.kind === 'state') {
 			const state = statesById.get(cell.graphNodeId)!;
+			const persistence = sharedContext.persistenceByGraph.get(cell.graphNodeId);
 			const elements: Array<t.Node | null> = [t.identifier(cell.name)];
 			const setter = settersById.get(cell.graphNodeId);
 			if (setter) elements.push(t.identifier(setter));
@@ -2753,7 +2890,11 @@ function emitSharedFamily(
 						t.arrayPattern(elements),
 						t.callExpression(
 							api(base, state.storage === 'signal' ? 'createSignal' : 'createStore'),
-							[expression(cell.initializer)],
+							[
+								persistence
+									? persistenceSeed(persistence)
+									: expression(cell.initializer),
+							],
 						),
 					),
 				]),
@@ -2991,6 +3132,7 @@ function compositionComponent(
 		}
 		const state = local.semanticRecordIds.map((id) => statesById.get(id)).find(Boolean);
 		if (state) {
+			const persistence = componentBase.persistenceByGraph.get(state.id);
 			const elements: Array<t.Node | null> = [t.identifier(state.name)];
 			const setter = settersById.get(state.id);
 			if (setter) elements.push(t.identifier(setter));
@@ -3003,7 +3145,11 @@ function compositionComponent(
 								componentBase,
 								state.storage === 'signal' ? 'createSignal' : 'createStore',
 							),
-							[rewriteCompositionExpression(state.initializer!, context)],
+							[
+								persistence
+									? persistenceSeed(persistence)
+									: rewriteCompositionExpression(state.initializer!, context),
+							],
 						),
 					),
 				]),
@@ -3293,6 +3439,7 @@ function emitComposition(ir: EnrichedIR): string {
 		'onCleanup',
 	] as const)
 		apiNames.set(name, allocator.claim(name));
+	const persistenceWrites = { emitted: false };
 	const base: EmitContext = {
 		api: apiNames,
 		bindingsById: new Map(),
@@ -3301,6 +3448,10 @@ function emitComposition(ir: EnrichedIR): string {
 		imports: new Set(),
 		lexicalNames: new Set(),
 		names: allocator,
+		persistenceByGraph: new Map(
+			ir.records.persistence.map((record) => [record.graphNodeId, record]),
+		),
+		persistenceWrites,
 		propsByLocal: new Map(),
 		propsName: allocator.claim('moduleProps'),
 		settersById: new Map(),
@@ -3370,7 +3521,15 @@ function emitComposition(ir: EnrichedIR): string {
 		'onCleanup',
 	]);
 	addImport('solid-js/store', ['createStore', 'produce', 'reconcile']);
-	const source = `// @generated by @frameless/solid; do not edit.\n// Solid event batching exposes final post-dispatch state while preserving authored write order (T004b); no deferred notifications are needed.\n${printTopLevel(t.program([...imports, ...declarations]))}\n`;
+	const programBody = [...imports, ...declarations];
+	if (persistenceWrites.emitted) {
+		let lastImport = -1;
+		programBody.forEach((statement, index) => {
+			if (statement.type === 'ImportDeclaration') lastImport = index;
+		});
+		programBody.splice(lastImport + 1, 0, persistenceHelperDeclaration());
+	}
+	const source = `// @generated by @frameless/solid; do not edit.\n// Solid event batching exposes final post-dispatch state while preserving authored write order (T004b); no deferred notifications are needed.\n${printTopLevel(t.program(programBody))}\n`;
 	const verified = analyze(source, { lang: 'jsx', sourceType: 'module', preserveParens: false });
 	if (verified.diagnostics.length)
 		throw new Error(
@@ -3425,6 +3584,7 @@ export function emit(ir: EnrichedIR): string {
 		throw new Error(
 			`ComponentProps has dangling graph record id: ${component.props.graphNodeId}`,
 		);
+	const persistenceWrites = { emitted: false };
 	const context: EmitContext = {
 		api: apiNames,
 		bindingsById: new Map(ir.records.bindings.map((binding) => [binding.id, binding])),
@@ -3437,6 +3597,10 @@ export function emit(ir: EnrichedIR): string {
 		imports: new Set(),
 		lexicalNames: new Set(),
 		names: allocator,
+		persistenceByGraph: new Map(
+			ir.records.persistence.map((record) => [record.graphNodeId, record]),
+		),
+		persistenceWrites,
 		propsByLocal: new Map(component.props.entries.map((entry) => [entry.localName, entry])),
 		propsName: propsBinding.name,
 		settersById,
@@ -3462,6 +3626,7 @@ export function emit(ir: EnrichedIR): string {
 	};
 	addImport('solid-js', solidNames);
 	addImport('solid-js/store', storeNames);
+	if (persistenceWrites.emitted) declarations.push(persistenceHelperDeclaration());
 	declarations.push(exported);
 	const source = `// @generated by @frameless/solid; do not edit.\n${printTopLevel(t.program(declarations))}\n`;
 	const verified = analyze(source, { lang: 'jsx', sourceType: 'module', preserveParens: false });
