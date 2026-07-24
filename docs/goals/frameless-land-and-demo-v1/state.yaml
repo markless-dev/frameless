@@ -81,7 +81,7 @@ visual_board:
     url: null
     command: "npx goalbuddy board docs/goals/frameless-land-and-demo-v1"
 
-active_task: T003
+active_task: T005
 
 tasks:
   - id: T001
@@ -230,6 +230,10 @@ tasks:
         - "F1: demos/qwik/.gitignore (server/, .qwik/, tmp/) — server/ is now ignored and still present on disk (8 paths)"
         - "F2: demos/qwik copy-emitted gains mkdirSync('src/emitted',{recursive:true}), verbatim from the react/solid form"
         - "F3: demos/qwik gains \"preview\": \"pnpm build && vite preview\" — F3 is KEPT; stock vite preview works, no vite config change and no hand-rolled harness"
+      changed_files:
+        - demos/qwik/.gitignore
+        - demos/qwik/package.json
+        - docs/goals/frameless-land-and-demo-v1/state.yaml
       commits:
         - "a24552a docs(goals): frameless-persistence-v1 board"
         - "a7ef296 feat(persistence): render-time localStorage reads with pre-paint seed and write-through"
@@ -240,7 +244,7 @@ tasks:
         - "2941d7e demo(react,solid): official vite SSR scaffolds proving hydrate neutrality"
         - "540aedf chore(deps): lockfile for the persistence, qwik and official-demo workspaces"
         - "(this commit) docs(goals): frameless-land-and-demo-v1 board"
-      verification:
+      commands:
         - cmd: pnpm e2e
           when: before the first commit
           status: pass
@@ -272,7 +276,7 @@ tasks:
   - id: T003
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Close the equality matrix: wire S2 and S3 into demos/react-official and demos/solid-official so all three official demos run all three scenarios, AND add automated e2e lanes so the three-way identical-behavior claim is proven by a repo command rather than manual observation. Commit the slice on the existing branch."
     inputs:
@@ -283,7 +287,7 @@ tasks:
     allowed_files:
       - "demos/react-official/**"
       - "demos/solid-official/**"
-      - "demos/qwik/** (only if an e2e lane needs a hook there; no vite.config.ts changes)"
+      - "demos/qwik/**"   # only if an e2e lane needs a hook there; no vite.config.ts changes
       - "scripts/e2e.mjs"
       - "docs/goals/frameless-land-and-demo-v1/state.yaml"
       - "<git index and branch state: commit + push on land/stack-and-three-way-demo ONLY>"
@@ -302,12 +306,49 @@ tasks:
       - "A behavioral difference between frameworks appears that is not explainable by the intended hydrate-vs-resume distinction. Report it; do NOT paper over it to make the matrix look equal."
       - "Any operation would touch main, force-push, merge, open a PR, or alter existing commits."
       - "Verification fails twice."
-    receipt: null
+    receipt:
+      result: done
+      note: notes/T003-equality-matrix.md
+      summary: "Equality matrix closed AND the oracle gap closed. S2/S3 wired into both official hydrate demos via URL branching on the parameter the stock scaffold already threaded into render(url) — no router, no new dependency, pnpm-lock.yaml untouched. Three @async/witness lanes now run one shared contract across react-official, solid-official and qwik, and scripts/e2e.mjs diffs their observations and exits 1 on divergence. All 9 cells identical."
+      changed_files:
+        - demos/react-official/{package.json,server.js,ssr-handler.js,.gitignore,three-way-contract.ts,scenarios.box.ts}
+        - demos/react-official/src/{App.jsx,entry-server.jsx,entry-client.jsx,emitted/KeyedTodo.jsx,emitted/EventForm.jsx}
+        - demos/solid-official/{package.json,server.js,ssr-handler.js,.gitignore,scenarios.box.ts}
+        - demos/solid-official/src/{App.jsx,entry-server.jsx,entry-client.jsx,emitted/KeyedTodo.jsx,emitted/EventForm.jsx}
+        - demos/qwik/{scenarios.box.ts,.gitignore}
+        - scripts/e2e.mjs
+        - docs/goals/frameless-land-and-demo-v1/state.yaml
+      matrix_observed_by_automated_lanes:
+        - "S1 — React/Solid/Qwik: SSR kit:2, one click -> kit:4. Identical."
+        - "S2 — React/Solid/Qwik: SSR rows a,b 1/2; reorder -> b,a still 1/2; remove b -> a, 0/1; clear -> empty, 0/0. Identical."
+        - "S3 — React/Solid/Qwik: SSR hello, writes 0; submit -> writes 2. Identical."
+        - "0 console errors and 0 failed requests in all three. Lane assertions: react 24, solid 24, qwik 27."
+      findings_not_papered_over:
+        - "Qwik's LIVE q:container reads 'resumed', not 'paused'. The served payload is 'paused' in both dev and preview. The pause assertion was moved onto the served response where hydrate-vs-resume is actually observable. The live attribute is NOT a usable pause oracle."
+        - "Qwik records 1 same-URL main-frame navigation per page; React/Solid record 0. Not asserted."
+        - "three-way-contract.ts sits in demos/react-official/ and is imported by the solid and qwik boxes by relative path, only because allowed_files confined the Worker to the demo packages. A neutral shared home would be better."
+        - "Solid SSR emits duplicate value attributes for S2/S3 inputs (emitter writes value= and attr:value=). Pre-existing, no behavioral difference, out of scope."
+        - "The lanes exercise the dev-mode SSR path (what the newcomer command runs). The express production path was verified by curl only, not by a browser lane."
+      commands:
+        - cmd: pnpm e2e
+          status: pass
+          detail: "exit 0; pre-existing lanes unchanged; three-way matrix 3x3 all observations equal"
+        - cmd: pnpm test
+          status: pass
+          detail: "35 files, 520/520"
+        - cmd: git push
+          status: pass
+          detail: "36cc3ae..8646c7a on land/stack-and-three-way-demo; origin/main 895d187 unchanged"
+      commits:
+        - "7eceb98 demo(react,solid): run S2 and S3 from the emitted output"
+        - "a1a3d3c test(e2e): three-way witness lanes for the official react, solid and qwik demos"
+        - "8646c7a docs(goals): frameless-land-and-demo-v1 board — T002 done, T003 active"
+      unrelated_observation: "website/** (fonts, framework logos incl. angular/svelte/vue, variant-1..3/) appeared untracked mid-run, created the same day. Not produced by this task, never staged, untouched. Almost certainly the owner's parallel design work."
 
   - id: T004
     type: judge
     assignee: Judge
-    status: queued
+    status: done
     reasoning_hint: high
     objective: "Phase boundary: confirm the matrix is genuinely equal across 3 frameworks x 3 scenarios, and specify the exact demo runner + walkthrough the next Worker must build."
     inputs:
@@ -325,30 +366,144 @@ tasks:
       - "verify"
       - "stop_if"
       - "Any owner question that must be escalated"
-    receipt: null
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      note: notes/T004-phase-gate.md
+      rationale: "Nine cells are genuinely equal: one shared contract with exact expected values, run three times; a divergent kit:3 fails the box and exits non-zero before the diff. But e2e's diff is tautological (observed[] are literals) and the Qwik resume claim rests on one substring every Qwik SSR page emits, while React/Solid carry an affirmative hydrate marker. The thesis is true but under-evidenced. T003 approved as honest; T007 inserted to harden resume evidence; T005 fully specified."
+      equality_verdict: "equal — but via a shared-oracle contract, not a value diff. The T003 note's phrase 'a real equality assertion, not three independent green lanes' is OVERSTATED and must not be repeated in the README."
+      missing_evidence:
+        - "No assertion that Qwik runs no hydration pass, or that handlers are pulled on demand (qsymbol / lazy segment fetch)."
+        - "No assertion that live q:container transitions paused -> resumed after interaction."
+        - "No negative assertion that React/Solid served payloads lack q:container and lack data-frameless-activated."
+        - "navigations excluded from expect.page.outcome despite a known 1-vs-0 cross-framework difference (resolved as benign: exactly one Document request, a history entry not a reload)."
+        - "Recorded observations are literals, not measured values, so the receipt does not record per-framework measurements as the oracle's final_proof asks."
+        - "Express production path browser-unverified (curl only) — acceptable only if the README says so."
+      board_hygiene_defect: "state.yaml is modified and notes/T003-equality-matrix.md is UNTRACKED — the pushed branch at 8646c7a lacks T003's receipt and note. T003's 'git status empty after commit' verify line is stale. T005 must commit both."
+      rulings:
+        - "three-way-contract.ts STAYS in demos/react-official/. Not moved in T005, not in T007. Pure churn against the only equality machinery; precedent exists (demos/ssr imports demos/ui-kit/scenarios.ts); the README will cite its path."
+        - "Ports: react 5173, solid 5174, qwik 5175. demos/{react,solid}-official/server.js:6 already honours process.env.PORT so NEITHER needs editing; only qwik needs a new dev script."
+        - "vite 7.3.1 honesty guard: the ONLY record is docs/goals/frameless-qwik-v1/state.yaml:421 'per the pnpm-create-qwik scaffold'. There is NO evidence vite 8 breaks Qwik. T005 must not invent an incompatibility."
+      spawned_tasks:
+        - T007
+
+  - id: T007
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Harden the resume oracle so the Qwik claim is as strongly evidenced as the hydrate claim, and make the equality diff load-bearing. Commit on the existing branch."
+    inputs:
+      - "notes/T004-phase-gate.md — the q:container analysis and the exact deliverables (AUTHORITATIVE)"
+      - "demos/qwik/.witness/receipts/*/receipt.json — already contains the unasserted QRL segment evidence"
+      - "@async/witness APIs: PageHandle.trackEvents, PageOutcomeExpectation.events.detailIncludes, page.networkRequests()"
+    allowed_files:
+      - "demos/react-official/three-way-contract.ts"
+      - "demos/react-official/scenarios.box.ts"
+      - "demos/solid-official/scenarios.box.ts"
+      - "demos/qwik/scenarios.box.ts"
+      - "docs/goals/frameless-land-and-demo-v1/state.yaml"
+      - "docs/goals/frameless-land-and-demo-v1/notes/**"
+      - "<git index and branch state: commit + push on land/stack-and-three-way-demo ONLY>"
+    verify:
+      - "pnpm e2e green; the three-way matrix still prints nine equal rows"
+      - "The qwik lane's assertion count increases"
+      - "NEGATIVE CONTROL: deliberately break one expected value locally, confirm pnpm e2e exits non-zero, then revert. This proves the harness can actually fail."
+      - "git status --porcelain -uall shows only website/**; branch unchanged; origin/main unchanged"
+    stop_if:
+      - "The qsymbol event does not fire in dev — report and escalate. Do NOT substitute a weaker proxy and call it resume; that is the exact failure this task exists to fix."
+      - "Any assertion would require a new dependency."
+      - "three-way-contract.ts is moved or renamed (T004 ruled it stays)."
+      - "pnpm e2e goes red."
+      - "Any git operation touching main, merging, opening a PR, force-pushing, or amending earlier commits."
+      - "Verification fails twice."
+    receipt:
+      result: done
+      note: notes/T007-resume-evidence.md
+      resume_claim_verdict: "AFFIRMATIVELY EVIDENCED. qsymbol fires in dev and carries the per-handler QRL symbol; no proxy was substituted. The claim no longer rests on q:container='paused'."
+      summary: "The resume oracle is now as strong as the hydrate oracle. Qwik asserts the handler QRLs its clicks pulled on demand (tracked qsymbol events with hash-free detailIncludes), the served-paused -> live-resumed transition, and the serialized q-e:click QRL attributes. React and Solid carry the matching negatives: their served payloads contain neither q:container nor data-frameless-activated, and they ship a client entry that must run first. navigations is asserted per activation (0 hydrate / 1 resume) and backed by an asserted single Document request per page. Every observed[] entry is now measured out of the live DOM via page.content(), so e2e's cross-lane diff compares data instead of constants. scripts/e2e.mjs untouched."
+      changed_files:
+        - demos/react-official/three-way-contract.ts
+        - demos/react-official/scenarios.box.ts
+        - demos/solid-official/scenarios.box.ts
+        - demos/qwik/scenarios.box.ts
+        - docs/goals/frameless-land-and-demo-v1/notes/T007-resume-evidence.md
+        - docs/goals/frameless-land-and-demo-v1/state.yaml
+      assertion_counts:
+        before: "react 24 / solid 24 / qwik 27"
+        after: "react 33 / solid 33 / qwik 36"
+      new_assertions:
+        - "qwik: page.trackEvents('qsymbol') before the first click + expect.page.outcome events.qsymbol {atLeast, detailIncludes} — proves the clicked handler's QRL was IMPORTED ON DEMAND (qwikloader resolves a handler only from a dispatched event). s1 '_component_div_section_button_q_e_click_' x1; s2 '_button_q_e_click_' x3; s3 '_component_form_button_q_e_click_' x1."
+        - "qwik: expect.page.attribute(page,'html','q:container','resumed') after the clicks — proves the RESUME TRANSITION (served paused -> live resumed). T003 had read this backwards as noise."
+        - "qwik: expect.response.matches(served, {contains: 'q-e:click=\"'}) — proves the served markup already names its handlers as QRLs with nothing to run."
+        - "react+solid: forbidInServedPayload(served, ['q:container','data-frameless-activated']) — proves the served payload is INERT until hydration; the marker only ever appears after hydrateRoot/onMount."
+        - "react+solid: expect.response.matches(served, {contains: '/src/entry-client.jsx'}) — proves a client entry module must run before the page reacts."
+        - "react+solid: expect.page.attribute(page,'html','q:container',null) — live negative; a hydrating framework never grows a Qwik container."
+        - "all three: expect.page.outcome navigations = 0 hydrate / 1 resume, plus a thrown check that exactly one resourceType:'Document' request occurred per page — makes Qwik's extra navigation provably a same-URL router history entry and NOT a reload."
+      load_bearing_diff: "All eight hardcoded observed[] literals replaced by values measured from page.content() (measureText / measureAttribute / measureRowKeys), which strip only the frameworks' own hydration bookkeeping (React <!--$--> boundaries, split interpolation comments). Plus one new measured column: '1 document request served this page'. scripts/e2e.mjs was NOT in allowed_files and was not touched."
+      sharpest_observation: "S2's served Qwik payload carries 5 q-e:click QRL attributes but only 3 handler segments are ever fetched — the 'add' button is never clicked, so its handler is never downloaded. On-demand loading demonstrated by absence."
+      negative_control:
+        result: pass
+        breaks:
+          - "resumeSymbols.s1.includes -> '_component_div_section_button_q_e_dblclick_': full pnpm e2e EXIT 1 — 'events.qsymbol: expected at least 1 event(s) with detail containing ... observed 0 within 5000ms'. Reverted."
+          - "live q:container expectation 'resumed' -> 'paused': qwik lane EXIT 1 — 'expected html attribute q:container to be \"paused\", but it was \"resumed\"'. Reverted."
+          - "'entry-client' added to React's served-payload forbid list: react lane EXIT 1 with the helper's message. Reverted."
+      commands:
+        - cmd: pnpm e2e
+          when: baseline before edits
+          status: pass
+          detail: "exit 0; react 24 / solid 24 / qwik 27 assertions; 3x3 matrix equal"
+        - cmd: pnpm e2e
+          when: after edits
+          status: pass
+          detail: "exit 0; react 33 / solid 33 / qwik 36; 3x3 matrix still nine equal rows"
+        - cmd: pnpm test
+          status: pass
+          detail: "35 files, 520/520"
+      correction_for_t005: "T004's binding README step 3 says the served Qwik payload shows `on:click` QRL attributes. It does NOT. In @qwik.dev/core 2.0.0-beta.38 the attribute is `q-e:click`, and in dev its value is an indirection (`q-e:click=\"/@qwik-handlers#_run#4\"`), not the segment path. The segment URL the DevTools walkthrough targets appears only as the lazily imported script. T004's `_component_div_section_button_q_e_click_` Network filter and the `q:container` curl line are both correct; only `on:click` must be rewritten as `q-e:click`."
+      board_hygiene_closed: "notes/T003-equality-matrix.md and notes/T004-phase-gate.md were untracked and state.yaml was modified (the T004 defect). Both notes and the board are committed here, so T005 inherits a clean tree."
+      commits:
+        - "7f4c04d chore(lint): ignore website/ in the monorepo lint pass (PM's edit, owner ruling (b))"
+        - "459d56a test(e2e): affirmative resume evidence and a measured three-way diff"
+        - "(this commit) docs(goals): frameless-land-and-demo-v1 board — T003/T004 notes and the T007 receipt"
+      commit_blocker_resolved: "The pre-commit hook (.githooks/pre-commit) runs `vp lint --deny-warnings` over the WHOLE tree and failed on 4 no-unused-vars warnings in untracked website/shared/{springs,embroidery,peel}.js — the owner's parallel design work, outside this change. `--no-verify` was denied by the permission system and was NOT used. The owner ruled option (b): the PM added 'website/**' to lint.ignorePatterns in vite.config.ts, committed here as 7f4c04d. Every commit in this slice passed the hook cleanly (0 warnings, 0 errors over 235 files)."
 
   - id: T005
     type: worker
     assignee: Worker
     status: queued
     reasoning_hint: medium
-    objective: "Build the newcomer demo: one documented command that boots all three official demos and prints their URLs, plus a README walkthrough showing the shared IR source and the three emitted outputs. Also carries the deferred README work — the Qwik row, the stale 'More frameworks: Planned' row — and a comment documenting WHY demos/qwik pins vite 7.3.1 (guards against a silent catalog bump)."
+    objective: "Build the newcomer demo: `pnpm demo` boots all three official demos on fixed ports and prints their URLs, plus the README walkthrough. Also close the T010 deferred README items and the vite 7.3.1 rationale, and commit the T003 board trail that never made it onto the branch."
     inputs:
-      - "T004 Judge spec"
-      - "T010 deferred list (README rows, vite 7.3.1 rationale, runner ports)"
+      - "notes/T004-phase-gate.md — binding runner design, README contents, and deferred-item closeout (AUTHORITATIVE)"
+      - "notes/T010-landing-rulings.md — the deferred list"
     allowed_files:
-      - "(set by T004 Judge — expected: root package.json scripts, scripts/**, README.md, demos/**/README.md, docs/**)"
+      - "package.json"
+      - "scripts/demo.mjs"
+      - "demos/qwik/package.json"
+      - "demos/qwik/README.md"
+      - "README.md"
       - "docs/goals/frameless-land-and-demo-v1/state.yaml"
+      - "docs/goals/frameless-land-and-demo-v1/notes/**"
+      - "<git index and branch state: commit + push on land/stack-and-three-way-demo ONLY>"
     verify:
-      - "The single command starts all three demos on deterministic non-colliding ports and prints reachable URLs"
-      - "Each URL serves the working demo; S1/S2/S3 behave identically across the three"
-      - "The walkthrough names the one shared source and the three emitted outputs by path, and those paths exist"
-      - "Ctrl-C cleanly stops all three processes"
-      - "pnpm e2e"
+      - "pnpm demo prints exactly three URLs, and only after all three answer 200 — record them"
+      - "curl -s -o /dev/null -w '%{http_code}' returns 200 for all nine URLs (/, /s2, /s3 for react+solid; /, /s2/, /s3/ for qwik) — record the nine codes"
+      - "SIGINT the pnpm demo process: within 5s it exits, `lsof -nP -iTCP:5173-5175 -sTCP:LISTEN` is empty, and `pgrep -f 'demos/(react-official|solid-official|qwik)'` is empty"
+      - "Determinism: occupy 5174, run pnpm demo, confirm it exits non-zero, kills the other two, and leaves no listeners or orphans"
+      - "Every path named in the walkthrough resolves — git ls-files --error-unmatch <path> for each"
+      - "pnpm e2e green"
+      - "pnpm install --frozen-lockfile exits 0 AND git diff --stat -- pnpm-lock.yaml pnpm-workspace.yaml is EMPTY"
+      - "git status --porcelain -uall shows only website/** after the commit; notes/T003-equality-matrix.md is now TRACKED; branch unchanged; origin/main unchanged; pushed without force"
     stop_if:
-      - "The runner would require hand-rolling a build or SSR harness."
-      - "A new runtime dependency is needed — escalate to the owner instead of adding it."
-      - "The command cannot be made to work from a clean checkout without undocumented manual setup."
+      - "The runner would need any new dependency (concurrently, npm-run-all, wait-on, ...) — escalate to the owner, do not add it."
+      - "Making it work would require editing any vite.config, ssr-handler, entry-*, or server.js, or writing any server of your own — STOP. That is the recorded hand-rolled-harness trap."
+      - "After two attempts Ctrl-C still leaves a listening port or an orphan process."
+      - "pnpm-lock.yaml or pnpm-workspace.yaml changes for any reason."
+      - "You would state a REASON for the vite 7.3.1 pin that no receipt supports. The only record is 'per the pnpm-create-qwik scaffold'; there is NO evidence vite 8 is broken."
+      - "You would report any browser-observed behavior such as a click result — you have NO browser; that evidence comes only from pnpm e2e's lanes. Do not simulate or infer it."
+      - "Any git operation touching main, merging, opening a PR, force-pushing, or amending earlier commits."
       - "Verification fails twice."
     receipt: null
 
@@ -406,7 +561,8 @@ checks:
   dirty_fingerprint: "measured at T001: branch main, 5 unpushed commits, 26 modified tracked files + ~85 untracked files across 8 directory groups"
   last_verification:
     result: pass
-    task: T001
+    task: T007
     commands:
-      - "pnpm e2e (exit 0)"
+      - "pnpm e2e (exit 0) — three-way matrix 3x3, all nine observations equal and now MEASURED; react 33 / solid 33 / qwik 36 assertions"
       - "pnpm test (exit 0, 35 files / 520 tests)"
+      - "negative control: three deliberate breaks each drove a non-zero exit with a precise message, then reverted"
