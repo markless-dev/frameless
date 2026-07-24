@@ -1,5 +1,9 @@
 import { box } from '@async/witness'
-import { runScenario, scenarioIds } from '../react-official/three-way-contract.ts'
+import {
+	assertServedActivation,
+	runScenario,
+	scenarioIds,
+} from '../react-official/three-way-contract.ts'
 import { createSsrHandler } from './ssr-handler.js'
 
 const paths = { s1: '/', s2: '/s2', s3: '/s3' } as const
@@ -34,17 +38,17 @@ export default box(
 			}),
 		})
 
+		const activation = { kind: 'hydrate', framework: 'solid' } as const
 		const results = []
 		for (const scenario of scenarioIds) {
+			// What the server actually sent, before any JS ran: a client entry
+			// module and inert markup — no Qwik container, no activation marker.
+			const served = await browser.fetch(paths[scenario])
+			const servedEvidence = await assertServedActivation({ served, expect, activation })
+
 			const page = await browser.visit(paths[scenario])
-			results.push(
-				await runScenario({
-					scenario,
-					page,
-					expect,
-					activation: { kind: 'hydrate', framework: 'solid' },
-				}),
-			)
+			const result = await runScenario({ scenario, page, expect, activation })
+			results.push({ ...result, evidence: { ...servedEvidence, ...result.evidence } })
 		}
 
 		receipt.note(
