@@ -1,3 +1,4 @@
 server/
 .qwik/
 tmp/
+.witness/

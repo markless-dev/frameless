@@ -1,4 +1,5 @@
 import { readFile, rm, mkdir, writeFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 import {
@@ -23,6 +24,21 @@ const compositionDemo = resolve(workspace, 'demos/composition-kit');
 const persistenceDemo = resolve(workspace, 'demos/persistence');
 const ssrDemo = resolve(workspace, 'demos/ssr');
 const uiComponents = ['PricingCard', 'TaskList', 'NewsletterForm'];
+// The three official framework scaffolds. One shared IR, three emitters, three
+// activation models — React and Solid hydrate, Qwik resumes. Each runs the same
+// contract in demos/react-official/three-way-contract.ts.
+const officialDemos = [
+	{ framework: 'react', activation: 'hydrate', directory: resolve(workspace, 'demos/react-official') },
+	{ framework: 'solid', activation: 'hydrate', directory: resolve(workspace, 'demos/solid-official') },
+	{ framework: 'qwik', activation: 'resume', directory: resolve(workspace, 'demos/qwik') },
+];
+const threeWayScenarios = ['s1', 's2', 's3'];
+// @async/witness is a dev tool of the workspace, already installed for the ssr
+// and persistence demos. The runner aliases '@async/witness' for the box files
+// it loads, so the official demos run boxes without depending on it themselves.
+const witnessCli = createRequire(resolve(workspace, 'demos/ssr/package.json')).resolve(
+	'@async/witness/cli',
+);
 const componentName = (component) =>
 	component.replace(/[A-Z]/g, (letter, index) => `${index ? '-' : ''}${letter.toLowerCase()}`);
 const uiScenarioEntries = uiComponents.flatMap((component) =>
@@ -46,6 +62,51 @@ function runExecutable(label, command, args, cwd = workspace) {
 	const result = spawnSync(command, args, { cwd, stdio: 'inherit' });
 	if (result.error) throw result.error;
 	if (result.status !== 0) process.exit(result.status ?? 1);
+}
+
+/**
+ * Reads the three-way results a demo's witness box recorded. Throws unless the
+ * box actually ran, passed, and wrote its per-scenario observations — an empty
+ * or missing receipt must never read as a pass.
+ */
+async function readThreeWayResults(demo) {
+	const receiptsDirectory = resolve(demo.directory, '.witness/receipts');
+	const runId = (await readFile(resolve(receiptsDirectory, 'latest'), 'utf8')).trim();
+	if (!runId || runId.includes('/') || runId.includes('\\')) {
+		throw new Error(`Invalid ${demo.framework} witness latest pointer: ${JSON.stringify(runId)}`);
+	}
+	const receiptPath = resolve(receiptsDirectory, runId, 'receipt.json');
+	const receipt = JSON.parse(await readFile(receiptPath, 'utf8'));
+	const box = (receipt.boxes ?? []).find(({ tags }) => (tags ?? []).includes('three-way'));
+	if (!box) throw new Error(`No three-way box in ${receiptPath}.`);
+	if (box.status !== 'passed') {
+		throw new Error(`Three-way box for ${demo.framework} did not pass: ${box.status}.`);
+	}
+	const note = (box.notes ?? [])
+		.map((text) => {
+			try {
+				return JSON.parse(text);
+			} catch {
+				return null;
+			}
+		})
+		.find((parsed) => parsed?.kind === 'three-way-results');
+	if (!note) throw new Error(`No three-way-results note in ${receiptPath}.`);
+	const observed = {};
+	for (const result of note.results) {
+		if (result.activation !== demo.activation) {
+			throw new Error(
+				`${demo.framework} reported activation ${result.activation}, expected ${demo.activation}.`,
+			);
+		}
+		observed[result.scenario] = result.observed;
+	}
+	for (const scenario of threeWayScenarios) {
+		if (!observed[scenario]) {
+			throw new Error(`${demo.framework} recorded no observations for ${scenario}.`);
+		}
+	}
+	return { observed, receiptPath: `${receiptPath.slice(workspace.length + 1)}` };
 }
 
 async function resetDemoArtifacts(demo) {
@@ -355,6 +416,56 @@ console.log(
 );
 if (persistenceVerdict === 'FAIL') process.exit(1);
 
+// The three-way lanes. Each official demo is served by its own scaffold — the
+// react/solid vite SSR servers and the qwik router — and driven through the same
+// scenario contract, so "identical behavior" is compared, not asserted.
+const threeWay = {};
+for (const demo of officialDemos) {
+	runExecutable(
+		`refresh ${demo.framework} emitted output`,
+		'pnpm',
+		['--dir', demo.directory, 'copy-emitted'],
+	);
+	runExecutable(
+		`run ${demo.framework} official-demo witness`,
+		process.execPath,
+		[witnessCli, 'run'],
+		demo.directory,
+	);
+	threeWay[demo.framework] = await readThreeWayResults(demo);
+}
+
+const [reference, ...others] = officialDemos;
+const threeWayDivergences = [];
+for (const scenario of threeWayScenarios) {
+	const expected = JSON.stringify(threeWay[reference.framework].observed[scenario]);
+	for (const demo of others) {
+		const actual = JSON.stringify(threeWay[demo.framework].observed[scenario]);
+		if (actual !== expected) {
+			threeWayDivergences.push({
+				scenario,
+				reference: reference.framework,
+				framework: demo.framework,
+				expected: threeWay[reference.framework].observed[scenario],
+				observed: threeWay[demo.framework].observed[scenario],
+			});
+		}
+	}
+}
+console.log('\n[e2e] three-way matrix (one IR -> three emitters):');
+for (const scenario of threeWayScenarios) {
+	for (const demo of officialDemos) {
+		console.log(
+			`  ${scenario} ${demo.framework.padEnd(5)} ${demo.activation.padEnd(7)} ${threeWay[demo.framework].observed[scenario].join(' | ')}`,
+		);
+	}
+}
+if (threeWayDivergences.length) {
+	console.error('\n[e2e] Three-way divergence:');
+	console.error(JSON.stringify(threeWayDivergences, null, 2));
+	process.exit(1);
+}
+
 console.log('\n[e2e] PASS');
 console.log(`Modules built: ui-kit=${uiComponents.length}, composition-kit=5`);
 console.log(
@@ -367,3 +478,9 @@ console.log(`UI receipt: ${uiReceipt.receiptPath}`);
 console.log(`Composition receipt: ${compositionReceipt.receiptPath}`);
 console.log(`SSR receipt: ${ssrReceiptPath}`);
 console.log(`Persistence receipt: ${persistenceReceiptPath}`);
+console.log(
+	`Three-way: ${officialDemos.length} demos x ${threeWayScenarios.length} scenarios, all observations equal`,
+);
+for (const demo of officialDemos) {
+	console.log(`${demo.framework} official-demo receipt: ${threeWay[demo.framework].receiptPath}`);
+}
