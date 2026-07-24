@@ -3,12 +3,12 @@ import { renderToString } from 'react-dom/server'
 import App from './App'
 
 /**
- * @param {string} _url
+ * @param {string} url
  */
-export function render(_url) {
+export function render(url) {
   const html = renderToString(
     <StrictMode>
-      <App />
+      <App url={url} />
     </StrictMode>,
   )
   return { html }
