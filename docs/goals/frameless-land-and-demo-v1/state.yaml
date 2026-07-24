@@ -472,7 +472,7 @@ tasks:
   - id: T005
     type: worker
     assignee: Worker
-    status: queued
+    status: done
     reasoning_hint: medium
     objective: "Build the newcomer demo: `pnpm demo` boots all three official demos on fixed ports and prints their URLs, plus the README walkthrough. Also close the T010 deferred README items and the vite 7.3.1 rationale, and commit the T003 board trail that never made it onto the branch."
     inputs:
@@ -495,8 +495,9 @@ tasks:
       - "Every path named in the walkthrough resolves — git ls-files --error-unmatch <path> for each"
       - "pnpm e2e green"
       - "pnpm install --frozen-lockfile exits 0 AND git diff --stat -- pnpm-lock.yaml pnpm-workspace.yaml is EMPTY"
-      - "git status --porcelain -uall shows only website/** after the commit; notes/T003-equality-matrix.md is now TRACKED; branch unchanged; origin/main unchanged; pushed without force"
+      - "git status --porcelain -uall shows only website/** and a modified .gitignore after the commit; notes/T003-equality-matrix.md is now TRACKED; branch unchanged; origin/main unchanged; pushed without force"
     stop_if:
+      - "You would stage, commit, or edit .gitignore — it carries an IN-FLIGHT OWNER EDIT (ignoring licensed Que Grotesque webfonts). Leave it strictly alone; never use git add -A or git add .; it would commit licensed font files."
       - "The runner would need any new dependency (concurrently, npm-run-all, wait-on, ...) — escalate to the owner, do not add it."
       - "Making it work would require editing any vite.config, ssr-handler, entry-*, or server.js, or writing any server of your own — STOP. That is the recorded hand-rolled-harness trap."
       - "After two attempts Ctrl-C still leaves a listening port or an orphan process."
@@ -505,7 +506,68 @@ tasks:
       - "You would report any browser-observed behavior such as a click result — you have NO browser; that evidence comes only from pnpm e2e's lanes. Do not simulate or infer it."
       - "Any git operation touching main, merging, opening a PR, force-pushing, or amending earlier commits."
       - "Verification fails twice."
-    receipt: null
+    receipt:
+      result: done
+      summary: "`pnpm demo` ships. One command boots demos/react-official (5173), demos/solid-official (5174) and demos/qwik (5175), each through its OWN official dev script, and prints exactly three URLs only after all three answer HTTP 200. No new dependency. The README gained the binding walkthrough (source chain by path, view-source / curl / DevTools steps, the machine-checked line, and the dev-mode scope limit), and every T010/T004 deferred item is closed, including the vite 7.3.1 rationale under the honesty guard."
+      changed_files:
+        - "scripts/demo.mjs (new)"
+        - "package.json (one line: \"demo\": \"node scripts/demo.mjs\")"
+        - "demos/qwik/package.json (new dev script + \"//vite\" rationale key)"
+        - "demos/qwik/README.md (new)"
+        - "README.md"
+        - "docs/goals/frameless-land-and-demo-v1/state.yaml"
+      runner_design_as_built:
+        - "Ports live in one table in scripts/demo.mjs. PORT is injected for react/solid (server.js:6 already honours it — NEITHER server.js was edited). Qwik carries `--port 5175 --strictPort` in its own new dev script because vite ignores PORT."
+        - "Each child is `pnpm --dir demos/<name> dev`, spawned detached:true. SIGINT/SIGTERM is forwarded with process.kill(-child.pid,'SIGINT') to the whole process GROUP, then SIGKILL after a 3s grace."
+        - "Readiness is polled (250ms, bounded 60s) against http://localhost:<port>/ until 200, with a 10s heartbeat naming which demo is still silent. URLs print only after all three are 200."
+        - "Child output is buffered until ready and dumped ONLY on failure, so the success path prints exactly three URLs; after ready it streams prefixed. Teardown noise is suppressed on Ctrl-C but never on failure."
+        - "No concurrently / npm-run-all / wait-on. No vite.config, ssr-handler, entry-*, or server.js was touched. Nothing was hand-rolled."
+      commands:
+        - cmd: pnpm demo
+          status: pass
+          detail: "prints exactly three URLs — http://localhost:5173/ (react, hydrates), http://localhost:5174/ (solid, hydrates), http://localhost:5175/ (qwik, resumes) — and only after all three answered 200."
+        - cmd: "curl -s -o /dev/null -w '%{http_code}' x9"
+          status: pass
+          detail: "5173 / =200, /s2 =200, /s3 =200; 5174 / =200, /s2 =200, /s3 =200; 5175 / =200, /s2/ =200, /s3/ =200. Nine of nine."
+        - cmd: "kill -INT <pnpm demo>"
+          status: pass
+          detail: "exited in 0.21s (bound was 5s). lsof -nP -iTCP:5173-5175 -sTCP:LISTEN empty; pgrep -f 'demos/(react-official|solid-official|qwik)' empty. Verified twice."
+        - cmd: "occupy 5174 (IPv4 + IPv6), then pnpm demo"
+          status: pass
+          detail: "exit 1 after the 60s bound with 'timed out ... waiting for HTTP 200 from: solid. Check that port(s) 5174 are free'. React and Qwik were killed cleanly — only the test occupier still listened on 5174, nothing on 5173/5175, zero orphans. Buffered child logs were dumped for diagnosis."
+        - cmd: "git ls-files --error-unmatch <every path named in the walkthrough>"
+          status: pass
+          detail: "39 paths checked (3 fixtures, 3 goldens, 9 generated/*.jsx, 9 demo src/emitted/*.jsx, three-way-contract.ts, both entry-client.jsx, qwik vite.config/scenarios.box/3 routes, scripts/e2e.mjs, demos/ssr/README.md, CONTRIBUTING.md, AGENTS.md, docs/goals/frameless-qwik-v1/state.yaml). Zero missing."
+        - cmd: pnpm e2e
+          status: pass
+          detail: "exit 0. Three-way matrix 3x3, all nine observations equal. Lane assertions react 33 / solid 33 / qwik 36 — unchanged from T007, confirming the new demos/qwik `dev` script does not disturb the lanes (witness drives vite's createServer API, not the package script)."
+        - cmd: pnpm install --frozen-lockfile
+          status: pass
+          detail: "exit 0; git diff --stat -- pnpm-lock.yaml pnpm-workspace.yaml EMPTY."
+        - cmd: pnpm lint
+          status: pass
+          detail: "0 warnings, 0 errors over 236 files — the pre-commit hook's gate."
+      deferred_items_closed:
+        - "README.md 'More frameworks | Planned' replaced: a shipped Qwik row (activation-neutrality across three frameworks) plus a narrowed 'More frameworks (Angular, Vue, Svelte) | Planned'."
+        - "README.md 'SSR behavior is proven for CLI-emitted React and Solid output' now reads React, Solid, and Qwik."
+        - "Packages table gained packages/frameworks/qwik."
+        - "README.md 'demos/ | The two demo libraries' replaced with the actual seven demos."
+        - "vite 7.3.1 rationale recorded in BOTH demos/qwik/README.md (a dedicated section) and a top-level \"//vite\" key in demos/qwik/package.json."
+        - "Intro prose 'When we add a resumable framework, that output will be resumable' was stale on the same fact and now states Qwik output is resumable."
+      honesty_guards_observed:
+        - "vite 7.3.1: the ONLY stated reason is 'the version the official pnpm create qwik scaffold produced for @qwik.dev/core 2.0.0-beta.38', cited to docs/goals/frameless-qwik-v1/state.yaml:421. Both places say explicitly that NO vite 8 incompatibility has been observed or tested and that moving to catalog: is unverified, not forbidden, and needs a green pnpm e2e first."
+        - "T004's README step 3 said the served Qwik attribute is `on:click`. It is NOT. The README publishes `q-e:click` and states that in dev its value is the indirection `/@qwik-handlers#_run#4`, with the real segment URL appearing only in the Network panel. Confirmed live: curl of :5175/ returns q-e:click=\"/@qwik-handlers#_run#4\"."
+        - "The T003 phrase 'a real equality assertion, not three independent green lanes' was NOT repeated. The README says each lane records what it measured out of the live DOM and scripts/e2e.mjs diffs those measurements — which is what T007 actually established."
+        - "Scope limit published in 'What It Does Not Do': pnpm demo and the three-way lanes exercise the dev-mode SSR path; the express production build is curl-verified only, not browser-verified."
+        - "NO browser was used and no click result is reported here. The curl evidence is server-payload only: :5175/ carries q:container=\"paused\"; :5173/ and :5174/ carry no q:container and do carry /src/entry-client.jsx."
+      incidents:
+        - "SELF-INFLICTED, FULLY REVERTED: `pnpm fmt` (a documented repo script) reformatted ~190 tracked files across packages/, demos/, docs/ and vite.config.ts — far outside allowed_files. All of it was restored with `git restore --source=HEAD --worktree` and re-verified: the final diff is only the six files listed above. No fmt churn was committed. Lesson for future Workers on this repo: the committed tree is NOT `vp fmt`-clean, so never run `pnpm fmt` for a scoped change."
+        - "COLLATERAL DAMAGE, RECONSTRUCTED: that restore also reverted the PM's uncommitted edit to this file (3+/2-). It was identified from the dispatch brief and re-applied verbatim: T005 status active, the '.gitignore' clause in the last verify line, and the .gitignore stop_if. If the PM had made any other unrecorded change, it is lost — please re-check this card."
+        - "OBSERVED, NOT FIXED (needs a ruling): demos/react-official and demos/solid-official both run vite in middleware mode and both default to HMR websocket port 24678, so the second to boot logs 'WebSocket server error: Port 24678 is already in use'. SSR and serving are unaffected (all nine URLs 200, e2e green) but HMR is likely degraded in one of the two. Fixing it needs a vite.config or server.js edit, which T005's stop_if forbids. The runner buffers pre-ready output, so a newcomer does not see the warning on the success path."
+        - "OBSERVED: express 5 SWALLOWS EADDRINUSE — app.listen() fires its success callback, srv.address() stays null, no error is thrown, and the process stays alive without listening. This is exactly why T004's poll-to-200 design is load-bearing: a port collision on 5173/5174 is invisible to the child and detectable ONLY by the runner's HTTP probe. Verified directly."
+        - "UNTOUCHED: .gitignore (in-flight owner edit), website/**, frameless-website-prompt.md, docs/goals/frameless-website-v1/** and test-results/.last-run.json were never staged. Only explicit paths were used; git add -A / git add . were never run."
+      commits:
+        - "(see commits key below)"
 
   - id: T006
     type: worker
@@ -561,8 +623,12 @@ checks:
   dirty_fingerprint: "measured at T001: branch main, 5 unpushed commits, 26 modified tracked files + ~85 untracked files across 8 directory groups"
   last_verification:
     result: pass
-    task: T007
+    task: T005
     commands:
-      - "pnpm e2e (exit 0) — three-way matrix 3x3, all nine observations equal and now MEASURED; react 33 / solid 33 / qwik 36 assertions"
-      - "pnpm test (exit 0, 35 files / 520 tests)"
-      - "negative control: three deliberate breaks each drove a non-zero exit with a precise message, then reverted"
+      - "pnpm demo (exit 0 path) — three URLs printed only after all three answered 200: :5173 react hydrate, :5174 solid hydrate, :5175 qwik resume"
+      - "nine curls, nine 200s (/, /s2, /s3 on react+solid; /, /s2/, /s3/ on qwik)"
+      - "SIGINT -> exit in 0.21s, no listener on 5173-5175, no orphan process"
+      - "port 5174 occupied -> exit 1, survivors killed, no listeners or orphans left behind"
+      - "pnpm e2e (exit 0) — three-way matrix 3x3, all nine observations equal; react 33 / solid 33 / qwik 36 assertions"
+      - "pnpm install --frozen-lockfile (exit 0) with an EMPTY diff on pnpm-lock.yaml and pnpm-workspace.yaml"
+      - "pnpm lint (0 warnings, 0 errors, 236 files)"
