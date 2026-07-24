@@ -81,7 +81,7 @@ visual_board:
     url: null
     command: "npx goalbuddy board docs/goals/frameless-land-and-demo-v1"
 
-active_task: T002
+active_task: T003
 
 tasks:
   - id: T001
@@ -186,7 +186,7 @@ tasks:
   - id: T002
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Land the stack: cut branch land/stack-and-three-way-demo off main, apply the three authorised fixes, commit the tree as the nine T010 changesets, and push the branch."
     inputs:
@@ -272,17 +272,21 @@ tasks:
   - id: T003
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
-    objective: "Close the equality matrix: wire S2 and S3 into demos/react-official and demos/solid-official so all three official demos run all three scenarios with observably identical behavior."
+    objective: "Close the equality matrix: wire S2 and S3 into demos/react-official and demos/solid-official so all three official demos run all three scenarios, AND add automated e2e lanes so the three-way identical-behavior claim is proven by a repo command rather than manual observation. Commit the slice on the existing branch."
     inputs:
-      - "demos/qwik (reference — already runs S1/S2/S3)"
-      - "T001 repo map"
+      - "demos/qwik (reference — already runs S1/S2/S3 at /, /s2, /s3)"
+      - "packages/frameworks/{react,solid}/generated/{S1,S2,S3}.jsx (all tracked; the demos currently copy S1 only)"
+      - "demos/persistence and demos/ssr — the existing @async/witness box pattern the new lanes should follow"
+      - "notes/T001-landing-map.md (oracle gap section)"
     allowed_files:
       - "demos/react-official/**"
       - "demos/solid-official/**"
+      - "demos/qwik/** (only if an e2e lane needs a hook there; no vite.config.ts changes)"
       - "scripts/e2e.mjs"
       - "docs/goals/frameless-land-and-demo-v1/state.yaml"
+      - "<git index and branch state: commit + push on land/stack-and-three-way-demo ONLY>"
     verify:
       - "Each demo builds and serves"
       - "S1 behaves identically in all three (the known kit:2 -> kit:4 on click)"
@@ -290,10 +294,13 @@ tasks:
       - "scripts/e2e.mjs gains automated lanes for demos/{react-official,solid-official,qwik} so the three-way claim is reproducible by a repo command, not manual observation (closes the T001 oracle gap)"
       - "pnpm e2e"
       - "No console errors or hydration/resume warnings in any demo"
+      - "git status --porcelain -uall empty after the commit; branch still land/stack-and-three-way-demo; origin/main unchanged"
     stop_if:
       - "The wiring turns out not to be mechanical — a scenario needs emitter or compiler changes to work in React/Solid."
       - "Making a scenario work would require hand-rolling a build/SSR harness instead of using the official scaffold."
-      - "A behavioral difference between frameworks appears that is not explainable by the intended hydrate-vs-resume distinction."
+      - "Serving S2/S3 would require adding a router or any other new runtime dependency — escalate instead."
+      - "A behavioral difference between frameworks appears that is not explainable by the intended hydrate-vs-resume distinction. Report it; do NOT paper over it to make the matrix look equal."
+      - "Any operation would touch main, force-push, merge, open a PR, or alter existing commits."
       - "Verification fails twice."
     receipt: null
 
@@ -350,7 +357,7 @@ tasks:
     assignee: Worker
     status: queued
     reasoning_hint: low
-    objective: "Oracle run: verify the demo from a genuinely fresh clone of the pushed branch, then commit and push the matrix + demo work."
+    objective: "Oracle run: verify the demo from a genuinely fresh clone of the pushed branch. PM amendment — T003 and T005 now commit and push their own slices as they go (so undeclared work never re-accumulates), leaving this task as the oracle run plus any README fix the fresh clone proves necessary."
     inputs:
       - "T005 receipt"
       - "goal.md oracle"
