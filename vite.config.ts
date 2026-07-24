@@ -66,7 +66,7 @@ const productConfig = defineConfig({
 			'demos/composition-kit/test/solid/vitest.config.ts',
 		],
 	},
-	lint: { ignorePatterns: ['dist/**', 'node_modules/**', 'poc/**'] },
+	lint: { ignorePatterns: ['dist/**', 'node_modules/**', 'poc/**', 'website/**'] },
 	fmt: {
 		useTabs: true,
 		tabWidth: 4,
