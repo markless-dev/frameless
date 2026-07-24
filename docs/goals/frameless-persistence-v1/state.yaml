@@ -1,0 +1,394 @@
+version: 2
+goal:
+  slug: frameless-persistence-v1
+  title: "Render-time persistence via a closed-form pre-paint seed script (Qwik-safe)"
+  status: done
+  classification: existing_plan
+  oracle:
+    signal: "pnpm e2e (or a persistence lane): for React + Solid emitted output, via @async/witness with receipts — a persisted value seeds from the closed-form PRE-PAINT script (present in the pre-activation DOM before framework activation; no fallback flash; anti-flash attr data-markless-<key>); ordinary-assignment WRITE-THROUGH to localStorage; cross-framework equality over the same corpus; a MUTATION/POLICY test proving a render-reachable storage read lowers to the pre-paint seed and never an eager visible task (Qwik-safe gate); the pre-paint script is a closed-form build artifact with a CSP hash in build receipts. Boxes calibrated against an intentionally broken seed first."
+    final_proof: "T999 Judge audit from a fresh clone: documented command green (pre-paint seed + no-flash + write-through + equality, React+Solid), witness receipts + calibration evidence present, gate-policy mutation test green (Qwik-safety recorded), script artifact + CSP hash in receipts, docs honest, markless repo untouched, Qwik/Solid2 cards intact; records full_outcome_complete: true."
+  intake:
+    original_request: "Start the next tranche (owner named Qwik/Solid 2); resolved to frameless persistence — the buildable unblock. markless is finalizing storage() ergonomics: reference, don't block."
+    interpreted_outcome: "Frameless compiles render-time persistence reads to a closed-form pre-paint seed script (no flash) + per-target landing slots (markless/React/Solid) + runtime write-through, made Qwik-safe now via a gate policy + mutation test; proven behaviorally via witness, green from a fresh clone; consumes the settled markless storage() contract without touching markless."
+    input_shape: existing_plan
+    authority: requested
+    proof_type: test
+    completion_proof: "Fresh-clone documented command green (pre-paint seed + no-flash + write-through + cross-framework equality for React+Solid via witness), gate-policy mutation test green, script artifact + CSP hash in receipts, docs honest, markless untouched (T999 audit, full_outcome_complete)."
+    goal_oracle: "Persistence lane: pre-paint seed (no-flash) -> post-activation write-through -> cross-framework equality -> gate-policy mutation test (render read never eager task) -> script artifact + CSP hash in receipts; boxes calibrated against a broken seed first."
+    likely_misfire: "Skipping/weakening the Qwik-safe gate policy; hardcoding the theme case vs general compiler-derivation; structural not behavioral tests; actual flash (fallback before seed); mangled name leaking into the baked key; cornering React SSR hydration-match; touching markless."
+    existing_plan_facts: "See goal.md: OWNER-LOCKED design (persistence-design-input.md) — markless records persist:{key}; frameless owns script gen/landing/write-through/gates; v1 rule (render access -> pre-paint read+seed, handler access -> plain runtime read); script = closed-form artifact; settled storage() ergonomics (derived key markless:<id>, verbatim explicit key, anti-flash attr data-markless-<key>, baked literal, rename-safety manifest); markless payload-scripts as the markless landing slot; corrupted-storage never throws; key namespacing across libraries."
+agents:
+  scout: installed
+  worker: installed
+  judge: installed
+active_task: null
+tasks:
+  - id: T001
+    type: scout
+    assignee: Scout
+    status: done
+    objective: "Evidence map the persistence implementation SEAM (read-only): how markless emits storage()/persist:{key} records into the CLI-emitted output + build receipts (read markless read-only as reference — never modify it); the settled storage() contract surface (derived key markless:<id>, verbatim explicit key, anti-flash attr data-markless-<key>, baked literal — from storage-ergonomics/goal.md); how the frameless compiler/CLI/framework packages currently lower state() and where a pre-paint seed script + per-target seed slots would hook (react/solid emitters, the build-receipt schema, the demos build); the markless payload-scripts landing slot (resumeFromPayloadScripts); and how the SSR witness harness (demos/ssr/) would extend to prove no-flash pre-paint + write-through behaviorally. Record open risks + the exact contract seam frameless must consume."
+    inputs:
+      - "docs/goals/frameless-composition-v1/notes/persistence-design-input.md (owner-locked design)"
+      - "docs/goals/storage-ergonomics/goal.md (settled storage() ergonomics — reference)"
+      - "markless repo node_modules / emitted output READ-ONLY (storage() record shape, payload-scripts); do NOT modify anything there"
+      - "packages/compiler, packages/cli, packages/frameworks/{react,solid}, packages/analyzer; demos/ssr (witness harness); scripts/e2e.mjs; build-receipt schema"
+    constraints:
+      - "Read-only. Markless repo strictly untouched (active storage-ergonomics agent)."
+      - "Pin to the SETTLED storage() contract; note (do not depend on) the in-flight ergonomic touches."
+    expected_output:
+      - "notes/T001-persistence-seam.md: the storage()/persist record shape frameless consumes, the pre-paint-script + per-target seed-slot hook points, the build-receipt/CSP-hash seam, the write-through timing question vs the store contract, the gate-policy/mutation-test surface for Qwik-safety, the witness-proof plan (extending demos/ssr), and open risks/ambiguities for the Judge."
+    receipt:
+      result: done
+      note: notes/T001-persistence-seam.md
+      summary: "Seam mapped (crew scout, read-only). VERDICT: the vendor refresh is a PRODUCTION-INPUT dependency, not a machinery dependency — frameless can build+test all downstream persistence machinery NOW against a normalized fixture record. Deliverables in the note: (1) a Frameless-owned FramelessPersistenceRecord contract fed by a MarklessStorageSourceFact via a narrow adapter at the buildSemanticGraph boundary (build.ts:133-140), fixture-fed until the refresh; (2) precise file:line hook points — enriched IR (build.ts:411-450/schema.ts), React/Solid seed-slot init + write-through (emitter file:lines), CLI closed-form script assembly + CSP sha256 (node-runtime.ts:188-257), build receipt (cli/receipts.ts) + analyzer receipt (analyzer/receipts.ts); (3) write-through timing = commit-before-notify inside the same lowered commit (for React shared store, between the all-writes phase and the notify phase — preserves notification atomicity); (4) Qwik-safe gate = an artifact-required persistence policy on both gate suites (render access => seed.lowering pre-paint, never eager/visible/effect/mount) + a mutation test flipping a record to eager-visible-task; (5) witness plan = a new demos/persistence/ lane with an ACTIVATION BARRIER (probe before framework import) — KEY LIMITATION: an inline <head> script seeds <html> attrs + JS slots but CANNOT patch un-parsed body DOM, so React SSR *body* no-flash needs a parser-time serialized-state patch (owner already deferred this to 'SSR next tranche'). Also resolved the anti-flash attr ambiguity: data-${sanitizedResolvedKey} => data-markless-theme (derived) / data-theme (explicit); the charter's data-markless-<key> is the derived shorthand. Read markless feat/storage READ-ONLY (git show @f4240a1) confirming it records storage:{key} on SemanticGraphBinding but only the OLD explicit (key,fallback) form — reference, not final. 8 open questions raised for the Judge (React SSR landing; corrupt-value def; derived-key collisions; attr spelling; rename-manifest ownership; CSP placement; receipt versioning; markless payload compat)."
+  - id: T002
+    type: judge
+    assignee: Judge
+    status: done
+    objective: "Architecture lock for the persistence lane (phase boundary): from T001 evidence, decide the closed-form pre-paint script generation design, the per-target landing slots (markless payload-scripts / React seed-slot vs useSyncExternalStore / Solid seed-slot), write-through timing vs the notification-atomic store contract, the Qwik-safe GATE POLICY + mutation-test shape (render read never lowers to an eager visible task), the build-receipt addition (script artifact + CSP hash) via a deliberate version bump, corrupted-storage/no-throw + key-namespacing rules, and the witness behavioral-proof plan (calibrated against a broken seed). MUST keep the contract activation-model-neutral and Qwik-safe on paper (map the gate rule onto the future Qwik serialized-state patch). Emit bounded Worker packages with allowed_files/verify/stop_if."
+    inputs:
+      - "notes/T001-persistence-seam.md"
+      - "goal.md existing plan facts (owner-locked design)"
+      - "docs/goals/frameless-ssr-v1 (witness harness + receipts-schema precedent)"
+    expected_output:
+      - "Decision note notes/T002-persistence-architecture.md incl. the gate-policy mutation-test design and the per-target seed-slot contract"
+      - "Exact Worker objectives with allowed_files, verify, stop_if"
+    receipt:
+      result: done
+      decision: approved
+      note: notes/T002-persistence-architecture.md
+      full_outcome_complete: false
+      rationale: "Locked (PM adjudication of the T001 seam): build-against-normalized-contract-now stance (vendor refresh = production-input switchover, not permission to begin); adapter at buildSemanticGraph feeding a Frameless-owned FramelessPersistenceRecord (fixture-fed until refresh, fail-closed); CLI-generated closed-form byte-deterministic pre-paint script + CSP sha256 + build-receipt artifact; per-target seed slots (React lazy-useState / Solid createSignal initializer / markless payload-slot refresh-gated); commit-before-notify write-through inside the same lowered commit (React shared store: between all-writes and notify — atomicity preserved); Qwik-safe artifact-required gate policy + mutation test on both suites; corrupt-value = unreadable/undecodable only (v1 string driver); derived-key cross-library collision = documented v1 constraint (explicit key = escape hatch); anti-flash attr = data-${sanitizedResolvedKey} (data-markless-theme derived / data-theme explicit); receipt exact-key bumps (build + analyzer /2->/3). React SSR *body* no-flash DEFERRED per owner ('SSR next tranche') to gated card T901 — v1 proves the pre-paint SEED mechanism via an activation-barrier witness (client no-flash), keeping the claim honest. Resumability fitness PASS (record + gate map onto Qwik pre-resume patch, no hydrate-only assumption). 6 Worker packages cut (W1 record+adapter+IR+fixtures -> T003; W2 gate; W3 CLI script+CSP+receipt; W4 React emitter; W5 Solid emitter; W6 witness+analyzer receipt+e2e fold). Critique gate: W1 low-risk (node-verifiable data contract) dispatch without pre-critique; W3/W4/W6 get second-model critique."
+      blocked_tasks:
+        - T901
+  - id: T003
+    type: worker
+    assignee: Worker
+    status: done
+    objective: "W1 — persistence record contract + adapter + enriched IR + fixtures (T002 Decision 1). Build FramelessPersistenceRecord (version frameless-persistence-record/1) + MarklessStorageSourceFact types; adaptPersistenceFacts(semanticGraph, sourceFacts) at the buildSemanticGraph boundary (build.ts:133-140) with fail-closed validation + normalization (key origin derived/explicit, resolved anti-flash attr data-${key.replaceAll(':','-')}, render/handler access split, seed lowering pre-paint|none, write-through policy commit-before-notify); thread records.persistence through enriched IR (build.ts:411-450, schema.ts); a fixture MarklessStorageSourceFact corpus (derived+explicit key; render vs handler; cold/warm) + unit tests incl. negatives (fail-closed on missing vendor field; wrong shape rejected). Production buildEnrichedIr emits ZERO persistence records for pinned 0.1.1 (no storage()/persist grep/reparse — no shadow language impl)."
+    allowed_files:
+      - "packages/compiler/src/**"
+      - "packages/compiler/test/**"
+      - "packages/frameworks/react/src/emitter/**"
+      - "packages/frameworks/solid/src/emitter/**"
+      - "packages/frameworks/react/test/**"
+      - "packages/frameworks/solid/test/**"
+    verify:
+      - "pnpm check && pnpm lint && pnpm test && pnpm build"
+      - "compiler unit tests green incl. adapter fixtures (positive) + fail-closed negatives"
+      - "git diff --stat -- poc/ empty"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "The enriched-IR record cannot be threaded without a markless-side change — blocked-return with the exact gap (do NOT touch markless)."
+      - "Anything requires touching the markless repo — hard stop."
+      - "Verification fails twice."
+    receipt:
+      result: done
+      note: notes/T002-persistence-architecture.md
+      changed_files:
+        - "packages/compiler/src/persistence.ts (FramelessPersistenceRecord frameless-persistence-record/1 + MarklessStorageSourceFact + adaptPersistenceFacts, fail-closed)"
+        - "packages/compiler/src/{schema,build,artifacts,index}.ts (additive records.persistence threaded through enriched IR; defensive binding.storage extraction — [] for pinned 0.1.1, no source reparse)"
+        - "packages/compiler/test/** (persistence fixtures + tests: positive derived/explicit/render/handler + fail-closed negatives + zero-record production test; regenerated s1-s3 IR goldens)"
+        - "packages/frameworks/react/src/emitter/index.ts"
+        - "packages/frameworks/react/test/emitter.test.ts"
+        - "packages/frameworks/solid/src/emitter/index.ts"
+        - "packages/frameworks/solid/test/emitter.test.ts"
+      commands:
+        - cmd: "pnpm check"
+          status: pass
+        - cmd: "pnpm lint"
+          status: pass
+          detail: "0/0, 170 files"
+        - cmd: "pnpm test"
+          status: pass
+          detail: "32 files, 494 tests (compiler 26 incl. 7 persistence; React 146; Solid 151)"
+        - cmd: "pnpm build"
+          status: pass
+        - cmd: "git diff --stat -- packages/frameworks/*/generated*"
+          status: pass
+          detail: "empty — persistence field is inert (byte-identical emitted output, proven by a test)"
+        - cmd: "git diff --stat -- poc/"
+          status: pass
+      summary: "W1 (record contract + adapter + enriched-IR threading + emitter acceptance) COMPLETE. Executed as 2 crew units: the compiler contract (persistence.ts adapter, fail-closed normalization, defensive binding.storage extraction yielding [] for pinned markless 0.1.1 without reparsing storage() source, additive enriched-IR records.persistence) blocked cleanly on a scope miss (the React/Solid emitters exact-key-validate the EnrichedRecordTable, outside the compiler contract); the W1b continuation added 'persistence' to both emitter allowlists + accepts the family WITHOUT consuming it (seed-slot/write-through are W4/W5), proven inert by a non-empty-family byte-identical-output test. Full lane green (494/494), emitted goldens unchanged. LESSON (applied to W3-W6): any enriched-IR schema change touches the emitter validators — include packages/frameworks/*/src/emitter in those contracts from the start. The vendor-refresh switchover is now a sourceFacts swap on the settled adapter."
+  - id: T004
+    type: worker
+    assignee: Worker
+    status: done
+    objective: "W2 (T002 Decision 6) — Qwik-safe gate policy + mutation test on BOTH gate suites. Add an artifact-required policy 'persistence-render-lowering' to packages/frameworks/{react,solid}/src/gate: for each records.persistence render-access entry assert seed.lowering==='pre-paint' && landings contains the target && no lowering/task record is visible/eager/effect/mount; reject emitted code moving the seed read into a React effect / Solid createEffect/onMount. Mutation test: flip one render-reachable record to seed.lowering:'eager-visible-task' (or drop the pre-paint landing) -> policy id MUST appear in violations; valid fixture artifact passes. Add the persistence DossierRef deliberately. Record/lowering based (no fake Qwik syntax)."
+    allowed_files:
+      - "packages/frameworks/react/src/gate/**"
+      - "packages/frameworks/solid/src/gate/**"
+      - "packages/frameworks/react/test/gate.test.ts"
+      - "packages/frameworks/solid/test/gate.test.ts"
+      - "packages/frameworks/react/src/emitter/**"
+      - "packages/frameworks/solid/src/emitter/**"
+    verify:
+      - "pnpm check && pnpm lint && pnpm test && pnpm build"
+      - "gate mutation tests: valid artifact passes; eager-visible-task mutant flagged (both suites)"
+      - "git diff --stat -- packages/frameworks/*/generated* empty (no emitted-output change); git diff --stat -- poc/ empty"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "The gate cannot express the render-read/never-eager assertion against the persistence records — blocked-return citing Decision 6."
+      - "Verification fails twice."
+    receipt:
+      result: done
+      note: notes/T002-persistence-architecture.md
+      changed_files:
+        - "packages/frameworks/react/src/gate/index.ts"
+        - "packages/frameworks/react/test/gate.test.ts"
+        - "packages/frameworks/solid/src/gate/index.ts"
+        - "packages/frameworks/solid/test/gate.test.ts"
+      commands:
+        - cmd: "pnpm check && pnpm lint && pnpm test && pnpm build"
+          status: pass
+          detail: "496/496; gate suites 149/149"
+        - cmd: "gate mutation (PM-verified both suites)"
+          status: pass
+          detail: "valid artifact excludes persistence-render-lowering; eager-visible-task mutant (gate.test.ts:574) is flagged; absent-IR = UNEVALUATED"
+        - cmd: "git diff --stat -- packages/frameworks/*/generated*"
+          status: pass
+          detail: "empty — no emitted-output change"
+        - cmd: "git diff --stat -- poc/"
+          status: pass
+      summary: "W2 COMPLETE — the Qwik-safety guarantee (the tranche's headline / the named misfire) is locked in and MUTATION-PROOF. Artifact-required persistence-render-lowering policy on both gate suites: for each render-access persistence record it requires seed.lowering==='pre-paint' + the target's landing + no eager/visible/effect/mount marker; artifact-required (UNEVALUATED when the IR is absent, never silent-pass); a source guard rejects seed reads inside React/Solid effects (dormant until W4/W5 emit real seed reads). Deliberate DossierRef (Decision 6). Mutation test in both suites flips a record to seed.lowering:'eager-visible-task' and requires the policy in violations — PM-confirmed it bites. Record/lowering based (no fake Qwik syntax), so the Qwik-safe contract is proven before any Qwik emitter exists. Emitted output unchanged (gate-only slice)."
+  - id: T005
+    type: worker
+    assignee: Worker
+    status: done
+    objective: "W3 (Decision 3/10) — CLI closed-form pre-paint script generator (byte-deterministic over a stable record sort; baked literals + bounded getItem try/catch -> authored-initial -> landing slot -> anti-flash attr; no framework/task/runtime-discovery) + content SHA-256 + CSP sha256-<base64> + build-receipt persistence artifact record (deliberate exact-key schema bump). CRITIQUE-GATED (receipt compat)."
+    allowed_files:
+      - "packages/cli/src/**"
+      - "packages/cli/test/**"
+      - "packages/compiler/src/**"
+      - "packages/compiler/test/**"
+    verify:
+      - "pnpm check && pnpm lint && pnpm test && pnpm build"
+      - "script bytes deterministic + CSP hash matches; build receipt carries the persistence artifact"
+      - "git diff --stat -- poc/ empty"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Verification fails twice."
+    receipt:
+      result: done
+      note: notes/T002-persistence-architecture.md
+      changed_files:
+        - "packages/compiler/src/persistence.ts (Decision 4a: export FRAMELESS_PERSISTENCE_SEED_SYMBOL_KEY; module-qualified slotKey on react/solid landings)"
+        - "packages/compiler/test/persistence.test.ts (slotKey resolution + cross-module collision safety)"
+        - "packages/cli/src/persistence.ts (closed-form byte-deterministic pre-paint script generator + SHA-256 + CSP)"
+        - "packages/cli/src/{index,node-runtime,receipts}.ts (assembly hook; frameless-build-receipts/2 optional persistence artifact)"
+        - "packages/cli/test/{persistence,receipts,node-runtime}.test.ts"
+      commands:
+        - cmd: "pnpm check && pnpm lint && pnpm test && pnpm build"
+          status: pass
+          detail: "502/502 (33 files); 172 lint files; 5 packages built"
+        - cmd: "pnpm e2e (PM-run — receipt-compat verification)"
+          status: pass
+          detail: "SSR e2e green with frameless-build-receipts/2; existing zero-persistence demo receipts validate (persistence key absent) — /2 bump is optional-additive"
+        - cmd: "git diff --stat -- packages/frameworks/*/generated*"
+          status: pass
+          detail: "empty — no emitted-component change"
+        - cmd: "git diff --stat -- poc/"
+          status: pass
+      summary: "W3 COMPLETE (re-scoped after a principled blocked-return that caught a missing seed-slot ADDRESSING protocol — adjudicated as Decision 4a). Compiler now OWNS + exports FRAMELESS_PERSISTENCE_SEED_SYMBOL_KEY ('frameless.persistence.seed/1' Symbol.for registry, mirroring markless tsrx.storage/1) and bakes a module-qualified slotKey (<moduleId>#<graphNodeId>, cross-module collision-tested) onto each react/solid landing. CLI generates ONE closed-form byte-deterministic pre-paint script (stable sort; per record: let v=<initial>; try v=getItem(key)??initial catch{}; write g[slotKey]=v into globalThis[Symbol.for(...)]; try setAttribute(anti-flash,v) — Decision 3+7 correct: never throws, no framework/task/idle, baked literals only) + SHA-256 + CSP sha256-<base64>; zero pre-paint records => no script. frameless-build-receipts bumped /1->/2 with an OPTIONAL validated persistence artifact (absent for zero-persistence builds — existing ui-kit/composition/ssr receipts still validate; no external exact-key consumer). CRITIQUE (Opus reviewing gpt-5.6-sol): PASS — schema is optional-additive exact-key; compat verified by a PM pnpm e2e run (SSR 13/13 green with /2 receipts). Emitted-component output unchanged."
+  - id: T006
+    type: worker
+    assignee: Worker
+    status: done
+    objective: "W4 (Decision 4/5) — React emitter: seed-slot init (lazy useState initializer; hydration-safe separate server/client snapshot for external stores) + write-through lowering (commit-before-notify, same lowered commit; between all-writes and notify for the shared store; never a reactive effect). Consumes records.persistence. CRITIQUE-GATED (compiler emit / React SSR interplay)."
+    allowed_files:
+      - "packages/frameworks/react/src/emitter/**"
+      - "packages/frameworks/react/test/**"
+      - "packages/frameworks/react/generated*/**"
+    verify:
+      - "pnpm check && pnpm lint && pnpm test && pnpm build"
+      - "emitter goldens for a persisted fixture show seed init + commit-before-notify write-through"
+      - "git diff --stat -- poc/ empty"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Write-through cannot be placed without a reactive effect (would fail the Qwik gate) — blocked-return citing Decision 5/6."
+      - "Verification fails twice."
+    receipt:
+      result: done
+      note: notes/T002-persistence-architecture.md
+      changed_files:
+        - "packages/frameworks/react/src/emitter/index.ts"
+        - "packages/frameworks/react/test/emitter.test.ts"
+        - "packages/frameworks/react/test/gate.test.ts"
+        - "packages/frameworks/react/generated-persistence/P1.jsx"
+      commands:
+        - cmd: "pnpm check && pnpm lint && pnpm test && pnpm build"
+          status: pass
+          detail: "504/504 (33 files); React node 149/149; 173 lint files"
+        - cmd: "git diff --stat -- packages/frameworks/react/generated packages/frameworks/react/generated-composition"
+          status: pass
+          detail: "empty — existing (non-persisted) goldens byte-identical; only the new P1 persisted golden added"
+        - cmd: "git diff --stat -- poc/"
+          status: pass
+      summary: "W4 COMPLETE — React emitter consumes persistence records (correlated by graphNodeId). PM-reviewed P1.jsx golden (CRITIQUE PASS): seed read in the LAZY useState initializer — `useState(() => globalThis[Symbol.for('frameless.persistence.seed/1')]?.['<moduleId>#state:draft'] ?? '<authoredInitial>')` (owned protocol imported, module-qualified slotKey, NOT in an effect); write-through in the assignment handler AFTER the setter (commit-before-notify) — `try{localStorage.setItem('markless:draft', v)}catch{}` + `try{setAttribute('data-markless-draft', v)}catch{}`, swallowed failures, never a reactive effect. External stores: client seed-slot init + separate authored-initial server snapshot (SSR-body no-flash stays deferred to T901). Shared-store write-through placed once per changed cell after all mutations + before notify (atomicity preserved). Gate (W2) PASSES on the emitted output (asserted). Existing goldens byte-identical (non-persisted components unaffected); new generated-persistence/P1.jsx. Key/attr match the shipped markless design (markless:draft / data-markless-draft)."
+  - id: T007
+    type: worker
+    assignee: Worker
+    status: done
+    objective: "W5 (Decision 4/5) — Solid emitter: seed-slot init (createSignal/createStore initializer) + write-through in the setter/commit wrapper (never createEffect/onMount). Symmetric to W4."
+    allowed_files:
+      - "packages/frameworks/solid/src/emitter/**"
+      - "packages/frameworks/solid/test/**"
+      - "packages/frameworks/solid/generated*/**"
+    verify:
+      - "pnpm check && pnpm lint && pnpm test && pnpm build"
+      - "git diff --stat -- poc/ empty"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Verification fails twice."
+    receipt:
+      result: done
+      note: notes/T002-persistence-architecture.md
+      changed_files:
+        - "packages/frameworks/solid/src/emitter/index.ts"
+        - "packages/frameworks/solid/test/emitter.test.ts"
+        - "packages/frameworks/solid/test/gate.test.ts"
+        - "packages/frameworks/solid/generated-persistence/P1.jsx"
+      commands:
+        - cmd: "pnpm check && pnpm lint && pnpm test && pnpm build"
+          status: pass
+          detail: "505/505 (33 files); 5 packages built"
+        - cmd: "git diff --stat -- packages/frameworks/solid/generated packages/frameworks/solid/generated-composition"
+          status: pass
+          detail: "empty — existing goldens byte-identical; only the new P1 persisted golden added"
+        - cmd: "git diff --stat -- poc/"
+          status: pass
+      summary: "W5 COMPLETE — Solid emitter consumes persistence records, SYMMETRIC to React (PM-reviewed P1.jsx golden, CRITIQUE PASS): `createSignal(globalThis[Symbol.for('frameless.persistence.seed/1')]?.['<moduleId>#state:draft'] ?? '<authoredInitial>')` (owned protocol, same module-qualified slotKey as React, NOT in an effect); setter-then-persist write-through — `setDraft(...); try{localStorage.setItem('markless:draft', v)}catch{}` + anti-flash attr, swallowed failures, never createEffect/onMount. createStore seeded analogously; shared-state write-through in the setter/commit path. Gate (W2) PASSES. Existing goldens byte-identical; new generated-persistence/P1.jsx. CRITICALLY: React and Solid now seed from the IDENTICAL slotKey and persist to the IDENTICAL key/attr (markless:draft / data-markless-draft) — the basis for cross-framework equality (claim d) in W6. All emitter machinery (W1-W5) done; only the behavioral witness proof (W6) remains."
+  - id: T008
+    type: worker
+    assignee: Worker
+    status: done
+    objective: "W6 (Decision 9/10) — witness lane demos/persistence/ (activation-barrier no-flash: seeded value present before framework activation via probe; write-through; cross-framework equality; broken-seed calibration) + analyzer receipt persistence section (exact-key bump /2->/3) + pnpm e2e fold. PM runs witness (browser+loopback). Depends on W3+W4+W5. CRITIQUE-GATED."
+    allowed_files:
+      - "demos/persistence/**"
+      - "packages/analyzer/src/**"
+      - "packages/analyzer/test/**"
+      - "scripts/e2e.mjs"
+      - "package.json"
+      - "pnpm-lock.yaml"
+    verify:
+      - "pnpm check && pnpm lint && pnpm test && pnpm build"
+      - "pnpm e2e (PM-run): persistence lane green — activation-barrier no-flash + write-through + equality React+Solid; calibration (broken seed) proven; receipt persistence section present"
+      - "git diff --stat -- poc/ empty"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "The activation-barrier no-flash cannot be expressed in witness 0.7.0 — blocked-return (product feedback)."
+      - "A real cross-framework divergence appears — blocked-return verbatim."
+      - "Verification fails twice."
+    receipt:
+      result: done
+      note: notes/T002a-markless-shipped-alignment.md
+      changed_files:
+        - "demos/persistence/** (fixture-IR->emit() build.ts, react-app/solid-app client apps + activation barrier via /setup.html + probe, 7 witness boxes, src/persistence-receipt.ts fold + fixture test)"
+        - "packages/analyzer/src/receipts.ts + test (frameless-receipts/2->/3, optional persistence entry)"
+        - "scripts/e2e.mjs"
+      commands:
+        - cmd: "pnpm check && pnpm lint && pnpm test && pnpm build"
+          status: pass
+          detail: "507/507 (33 files); 191 lint files; 5 packages"
+        - cmd: "witness (demos/persistence) — PM-run"
+          status: pass
+          detail: "7/7 boxes all [pipeline+ client+ driver+]: no-flash react+solid, write-through react+solid, equality, 2 calibrations"
+        - cmd: "pnpm e2e (ORACLE — PM-run)"
+          status: pass
+          detail: "[e2e] persistence PASS: no-flash react/solid=true, write-through react/solid=true, equality=true, calibration=true; [e2e] PASS (full lane incl. SSR 13/13). validateReceipt(persistence)=true, ssr still valid under /3."
+        - cmd: "git diff --stat -- poc/"
+          status: pass
+      summary: "W6 COMPLETE — persistence proven BEHAVIORALLY end-to-end and folded into pnpm e2e (the oracle). demos/persistence witness lane (fixture-IR->emit()+generatePrePaintPersistenceScript, no .tsrx): the pre-paint <head> script materializes the STORED value into window.__FRAMELESS_STATE__ + the data-markless-draft attr BEFORE the framework activates (activation barrier: /setup.html seeds localStorage + redirects; a sync probe records data-probe-seed/attribute while data-framework-activated is absent) — genuine pre-activation no-flash; write-through on assignment; React≡Solid equality; both calibrations (wrong-seed, setItem-no-op) prove the boxes can fail. 7/7 witness boxes green. Analyzer frameless-receipts/2->/3 with an OPTIONAL persistence entry (SSR/ui-kit/composition still validate). pnpm e2e persistence lane folds the verdict. NOTE: between W5 and W6 the seed mechanism was REWORKED to the POC shape (owner correction 2026-07-23): globalThis[Symbol.for('frameless.persistence.seed/1')][module#slotKey] -> window.__FRAMELESS_STATE__[storageKey] (poc/09-storage/core/seed.js), touching compiler/cli/react+solid emitters + goldens (corrected Decision 4a); the framework reads the pre-materialized slot, never the driver. Contract alignment with the SHIPPED markless storage() verified (notes/T002a): derived markless:<id>, verbatim explicit, data-markless-<key>, string+localStorage all match; vendor refresh = a future sourceFacts swap (extraction maps key<-binding.storage.key, initial<-binding.initialValue, origin=unavailable)."
+  - id: T900
+    type: pm
+    assignee: PM
+    status: blocked
+    objective: "GATED — Qwik emitter (Qwik v2 ONLY: @qwik.dev/core 2.0.0-beta line). Do not start. This tranche only builds the Qwik-SAFE gate policy + mutation test; the emitter itself stays gated (mirrors frameless-ssr-v1 T901)."
+    constraints:
+      - "Trigger 1: this persistence tranche settles external-state semantics (in progress)."
+      - "Trigger 2: the no-eager-visible-task gate rule must be expressible + mutation-tested as a Qwik gate policy (this tranche's deliverable) before any Qwik emitter exists."
+    receipt:
+      result: blocked
+      summary: "Qwik emitter stays gated; this persistence tranche makes the contract Qwik-safe (gate policy + mutation test) so a future Qwik emitter can consume settled semantics. No Qwik implementation here."
+  - id: T901
+    type: pm
+    assignee: PM
+    status: blocked
+    objective: "GATED (T002 Decision 9) — React SSR *body* no-flash value-landing: a parser-time serialized-state patch so a warm persisted value changes the server-rendered BODY DOM without a hydration mismatch. Owner deferred ('React SSR hydration-match is the hard one — SSR next tranche'). This tranche proves only the pre-paint SEED mechanism via an activation-barrier witness (client no-flash)."
+    constraints:
+      - "Trigger: owner direction to solve SSR-body value-landing; must not corner the persistence design."
+      - "An inline <head> script cannot patch un-parsed body DOM (T001 §F) — needs a parser-time patch / serialized-state landing per target."
+    receipt:
+      result: blocked
+      summary: "Deliberately gated at the T002 lock. v1 persistence proves pre-paint seed + write-through (client no-flash, activation-barrier witness); the SSR-server-body-vs-client-value hydration-safe landing is a follow-on the owner deferred to the SSR-interplay tranche."
+  - id: T009
+    type: worker
+    assignee: Worker
+    status: done
+    objective: "SSR-SAFETY FIX (owner caught 2026-07-23): the emitted seed read uses bare window.__FRAMELESS_STATE__ which THROWS ReferenceError in SSR. Change window -> globalThis (SSR-safe, no guard) in the CLI pre-paint script + both emitters + regenerate goldens; add a test proving the seed read renders the fallback under a server (no-window) renderToString WITHOUT throwing. The client witness lane must stay green (globalThis===window in browser). SSR-body value mismatch stays T901."
+    allowed_files:
+      - "packages/compiler/src/**"
+      - "packages/cli/src/**"
+      - "packages/cli/test/**"
+      - "packages/frameworks/react/src/emitter/**"
+      - "packages/frameworks/react/test/**"
+      - "packages/frameworks/react/generated-persistence/**"
+      - "packages/frameworks/solid/src/emitter/**"
+      - "packages/frameworks/solid/test/**"
+      - "packages/frameworks/solid/generated-persistence/**"
+      - "demos/persistence/**"
+    verify:
+      - "pnpm check && pnpm lint && pnpm test && pnpm build"
+      - "SSR smoke: the seed read renders fallback under renderToString with no window (no throw)"
+      - "git diff --stat -- poc/ empty"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Verification fails twice."
+    receipt:
+      result: done
+      note: notes/T002-persistence-architecture.md
+      changed_files:
+        - "packages/compiler/src/persistence.ts"
+        - "packages/cli/src/persistence.ts"
+        - "packages/cli/test/persistence.test.ts"
+        - "packages/frameworks/react/src/emitter/index.ts"
+        - "packages/frameworks/react/test/emitter.test.ts"
+        - "packages/frameworks/react/generated-persistence/P1.jsx"
+        - "packages/frameworks/solid/src/emitter/index.ts"
+        - "packages/frameworks/solid/test/emitter.test.ts"
+        - "packages/frameworks/solid/generated-persistence/P1.jsx"
+        - "demos/persistence/**"
+      commands:
+        - cmd: "pnpm check && pnpm lint && pnpm test && pnpm build"
+          status: pass
+          detail: "509 tests (incl. React+Solid no-window VM SSR-safety tests); 191 lint files"
+        - cmd: "server-context render of the emitted seed read (PM-verified)"
+          status: pass
+          detail: "typeof window undefined → globalThis.__FRAMELESS_STATE__?.['markless:draft'] ?? 'light' returns 'light' (fallback, NO throw); the old window.* form throws ReferenceError (the bug)"
+        - cmd: "pnpm e2e (client witness) + fresh-clone re-audit"
+          status: pass
+          detail: "SSR 13/13 + persistence 7/7 green on the working tree AND from a clone-equivalent fresh env; regenerated emit uses globalThis"
+        - cmd: "git diff --stat -- poc/"
+          status: pass
+      summary: "SSR-SAFETY FIX COMPLETE (owner caught the bug). The emitted seed read was bare `window.__FRAMELESS_STATE__?.[key]` which THROWS ReferenceError in a server (no-window) context — the `?.` doesn't help (undeclared identifier). Root cause: my POC-alignment rework swapped my original SSR-safe globalThis[Symbol.for] for bare `window` (the POC guarded with typeof window; I didn't). AND the proof had been client-only, so nothing SSR'd a persisted component. FIX: `window` -> `globalThis` (defined on server AND client; globalThis===window in the browser so client behavior + witness lane unchanged) across the CLI pre-paint script + both emitters + goldens; React+Solid no-window VM tests assert the seed renders the fallback without throwing. PM cascade fixes into demos/persistence (excluded from the worker contract, hence the allowed_files expansion): build.ts seed-read assertion + probe → globalThis; calibration-no-flash project.edit strings → globalThis (so the replace matches the regenerated globalThis script); box note strings. `__FRAMELESS_RELEASE_ACTIVATION__` (a different global) untouched. Verified: 509 tests, e2e 13/13+7/7 on working tree AND fresh clone, direct server-context render proof. HONEST SCOPE: persisted components are now SSR-SAFE (render the fallback, no crash) and CSS-attr theming is flash-free even in SSR; but a warm value shown as SSR body TEXT still shows a fallback→stored hydration mismatch — the deferred T901 parser-time patch. A full persisted-component-through-the-vite-SSR-pipeline box in demos/ssr is the recommended belt-and-suspenders composition follow-up (not blocking)."
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: done
+    objective: "Final audit from a fresh clone: does the tranche satisfy the outcome — pre-paint seed (no-flash) + write-through behaviorally proven for React+Solid via the documented command with witness receipts and calibration evidence; the Qwik-safe gate-policy mutation test green; the pre-paint script a closed-form artifact with a CSP hash in build receipts; docs honest (not Qwik, not publish); markless repo untouched; Qwik/Solid2 gated cards intact?"
+    inputs:
+      - "All done task receipts"
+      - "Fresh-clone run of the documented commands"
+      - "Current dirty diff"
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "missing evidence"
+      - "next task if not complete"
+    receipt:
+      result: done
+      decision: complete
+      full_outcome_complete: true
+      note: notes/T002a-markless-shipped-alignment.md
+      summary: "COMPLETE. Audited from a clone-equivalent fresh environment (rsync honoring .gitignore → generated persistence artifacts ABSENT, forcing node build.ts regeneration → git init → fresh pnpm install → documented commands). Results: pnpm check PASS, pnpm lint PASS, pnpm test PASS (506 + 1 skipped), pnpm build PASS, and the ORACLE pnpm e2e PASS — SSR lane 13/13 AND persistence lane 7/7: [e2e] persistence PASS no-flash react/solid=true, write-through react/solid=true, equality=true, calibration=true; [e2e] PASS. The persistence lane regenerated everything (PersistedApp.jsx, pre-paint script, copied golden IR) from committed source via build.ts — fresh-clone-safe. validateReceipt(persistence)=true (frameless-receipts/3), ssr still valid under /3. T999 checks: ACTIVATION-NEUTRAL (grep hydrationMismatch/hydration:/hydrateCompletedAt across analyzer + demos/persistence → NONE); QWIK-SAFE gate mutation tests present + green (persistence-render-lowering, both suites — the render read never lowers to an eager visible task); CSP hash tested in cli persistence tests; GATED cards intact (T900 Qwik blocked, T901 React-SSR-body blocked); DOCS honest (README saved-state → 'Proven (behavioral, React/Solid, via witness — pnpm e2e)', not overclaiming Qwik/SSR-body/vendor-integration); MARKLESS untouched (no markless paths in the frameless diff). Owner outcome satisfied: render-time storage reads compile to a closed-form pre-paint <head> script that materializes the STORED value into window.__FRAMELESS_STATE__ (POC shape, poc/09-storage) + the anti-flash attr BEFORE the framework activates (proven via an activation-barrier witness), with commit-before-notify write-through, cross-framework equality, and a mutation-proof Qwik-safe gate — all consuming the SHIPPED markless storage() contract (verified aligned, notes/T002a) WITHOUT touching markless (vendor refresh = a future sourceFacts swap). NOTE for owner: work is uncommitted (committing/pushing needs an explicit owner directive per changeset, AGENTS.md). RE-AUDIT (2026-07-23, after reopen): owner caught that the emitted seed read used bare `window.__FRAMELESS_STATE__` which THROWS in SSR — fixed in T009 (window→globalThis, SSR-safe; the summary's 'window.__FRAMELESS_STATE__' is now globalThis). Re-verified: 509 tests, a direct server-context (no-window) render of the emitted seed returns the fallback without throwing (old form threw ReferenceError), and pnpm e2e is green on the working tree AND from a fresh clone-equivalent of the FIXED code (regenerated emit uses globalThis). HONEST SCOPE restated: persisted components are SSR-SAFE (render fallback, no crash) + CSS-attr theming is flash-free in SSR; SSR body-TEXT warm value still mismatches on hydration (deferred T901). A full persisted-component-through-vite-SSR box in demos/ssr is the recommended composition follow-up (non-blocking)."
