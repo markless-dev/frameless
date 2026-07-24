@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "//vite": "vite is pinned to an exact 7.3.1, not `catalog:`, because 7.3.1 is the version the official `pnpm create qwik` scaffold produced for @qwik.dev/core 2.0.0-beta.38 — recorded at docs/goals/frameless-qwik-v1/state.yaml:421. That is the whole reason. NO incompatibility with the root catalog's vite 8 has been observed or tested; moving this to `catalog:` is unverified, not forbidden, and needs a green `pnpm e2e` (the qwik three-way lane) first. See ./README.md.",
   "scripts": {
+    "dev": "pnpm copy-emitted && vite --port 5175 --strictPort",
     "build.client": "vite build",
     "build.preview": "vite build --ssr src/entry.preview.tsx",
     "build": "pnpm copy-emitted && pnpm build.client && pnpm build.preview",

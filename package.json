@@ -11,6 +11,7 @@
 	"scripts": {
 		"build": "vp pack",
 		"check": "tsc --noEmit",
+		"demo": "node scripts/demo.mjs",
 		"e2e": "node scripts/e2e.mjs",
 		"e2e:ssr": "pnpm --dir demos/ssr exec witness run",
 		"fmt": "vp fmt",
