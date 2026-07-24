@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Frameless persistence — React</title>
+		<script data-frameless-pre-paint>
+(()=>{
+{
+(globalThis.__FRAMELESS_STATE__??={});
+let v="light";
+try{v=localStorage.getItem("markless:draft")??"light"}catch{}
+globalThis.__FRAMELESS_STATE__["markless:draft"]=v;
+document.documentElement.setAttribute("data-markless-draft",v)
+}
+})();
+		</script>
+		<script data-frameless-pre-activation-probe>
+			(() => {
+				const root = document.documentElement;
+				root.setAttribute(
+					'data-probe-seed',
+					globalThis.__FRAMELESS_STATE__?.["markless:draft"] ?? 'missing',
+				);
+				root.setAttribute(
+					'data-probe-attribute',
+					root.getAttribute("data-markless-draft") ?? 'missing',
+				);
+			})();
+		</script>
+		<script type="module" data-frameless-deferred-entry>
+			window.__FRAMELESS_RELEASE_ACTIVATION__ = async () => {
+				if (document.documentElement.hasAttribute('data-framework-activated')) return;
+				await import('/src/client-entry.tsx');
+			};
+		</script>
+	</head>
+	<body>
+		<div id="root">
+			<p data-activation-state>Framework not activated</p>
+			<button type="button" data-action="activate">Activate React</button>
+		</div>
+		<button type="button" data-action="observe-storage">Observe storage</button>
+		<script>
+			document.querySelector('[data-action="activate"]').addEventListener('click', () => {
+				window.__FRAMELESS_RELEASE_ACTIVATION__();
+			});
+			document.querySelector('[data-action="observe-storage"]').addEventListener('click', () => {
+				const draft = document.querySelector('[data-action="new"]');
+				document.documentElement.setAttribute(
+					'data-probe-storage-json',
+					JSON.stringify(localStorage.getItem("markless:draft")),
+				);
+				document.documentElement.setAttribute(
+					'data-probe-draft-json',
+					JSON.stringify(draft instanceof HTMLInputElement ? draft.value : null),
+				);
+			});
+		</script>
+	</body>
+</html>

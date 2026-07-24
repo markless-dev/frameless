@@ -1,0 +1,10 @@
+dist/
+receipts/
+react-app/dist/
+solid-app/dist/
+.witness/
+fixtures/s2-keyed-todo.json
+react-app/public/frameless-persistence-pre-paint.js
+react-app/src/PersistedApp.jsx
+solid-app/public/frameless-persistence-pre-paint.js
+solid-app/src/PersistedApp.jsx

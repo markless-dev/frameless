@@ -1,0 +1,17 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"allowImportingTsExtensions": true,
+		"jsx": "preserve",
+		"types": ["node", "vite/client"]
+	},
+	"include": [
+		"*.box.ts",
+		"*.ts",
+		"react-app/**/*.ts",
+		"react-app/**/*.tsx",
+		"solid-app/**/*.ts",
+		"solid-app/**/*.tsx",
+		"src/**/*.ts"
+	]
+}

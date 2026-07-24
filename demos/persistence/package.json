@@ -1,0 +1,29 @@
+{
+	"name": "@frameless/demo-persistence",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"build": "node build.ts && vite build --config react-app/vite.config.ts && vite build --config solid-app/vite.config.ts",
+		"test": "node --test test/*.test.ts",
+		"test:boxes": "witness run"
+	},
+	"dependencies": {
+		"react": "19.2.3",
+		"react-dom": "19.2.3",
+		"solid-js": "1.8.22"
+	},
+	"devDependencies": {
+		"@async/witness": "0.7.0",
+		"@frameless/analyzer": "workspace:*",
+		"@frameless/cli": "workspace:*",
+		"@frameless/compiler": "workspace:*",
+		"@frameless/react": "workspace:*",
+		"@frameless/solid": "workspace:*",
+		"@types/react": "19.2.14",
+		"@types/react-dom": "19.2.3",
+		"parse5": "7.2.1",
+		"vite": "catalog:",
+		"vite-plugin-solid": "2.11.10"
+	}
+}

@@ -150,7 +150,7 @@ matches.
 | **Composition**: children, shared state, element access with cleanup                         | ✅ Shipped, verified from a fresh clone |
 | Shared state across files, named slots                                                       | Planned                                 |
 | SSR tests                                                                                    | Proven (behavioral, via witness — `pnpm e2e`) |
-| Saved state (localStorage and friends)                                                       | Planned                                 |
+| Saved state (localStorage): render-time reads → pre-paint seed + write-through                | Proven (behavioral, React/Solid, via witness — `pnpm e2e`) |
 | More frameworks                                                                              | Planned                                 |
 
 ## Development

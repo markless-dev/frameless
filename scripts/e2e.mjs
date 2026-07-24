@@ -10,12 +10,17 @@ import {
 	validateReceipt,
 } from '@frameless/analyzer';
 import { compositionKitScenarios } from '../demos/composition-kit/scenarios.ts';
+import {
+	buildPersistenceEntry,
+	getPersistenceLaneVerdict,
+} from '../demos/persistence/src/persistence-receipt.ts';
 import { buildSsrEntry, getSsrLaneVerdict } from '../demos/ssr/src/ssr-receipt.ts';
 import { uiKitScenarios } from '../demos/ui-kit/scenarios.ts';
 
 const workspace = resolve(import.meta.dirname, '..');
 const uiDemo = resolve(workspace, 'demos/ui-kit');
 const compositionDemo = resolve(workspace, 'demos/composition-kit');
+const persistenceDemo = resolve(workspace, 'demos/persistence');
 const ssrDemo = resolve(workspace, 'demos/ssr');
 const uiComponents = ['PricingCard', 'TaskList', 'NewsletterForm'];
 const componentName = (component) =>
@@ -129,10 +134,38 @@ async function writeSsrReceipt(ssr) {
 	return receiptPath;
 }
 
+async function writePersistenceReceipt(persistence) {
+	const receiptResults = { scenarios: {}, mutantRejections: {} };
+	const receipt = {
+		schema: RECEIPT_SCHEMA_VERSION,
+		generatedBy: 'scripts/e2e.mjs',
+		environment: {
+			node: process.version,
+			browser: 'Chromium via @async/witness',
+			pair: 'CLI-emitted React persistence vs CLI-emitted Solid persistence',
+		},
+		findings: {},
+		...receiptResults,
+		persistence,
+		summary: createReceiptSummary(receiptResults),
+	};
+	if (!validateReceipt(receipt)) {
+		throw new Error(
+			`Generated persistence ${RECEIPT_SCHEMA_VERSION} receipt failed validation.`,
+		);
+	}
+	const receiptDirectory = resolve(persistenceDemo, 'receipts');
+	const receiptPath = resolve(receiptDirectory, 'frameless-receipts.json');
+	await mkdir(receiptDirectory, { recursive: true });
+	await writeFile(receiptPath, `${JSON.stringify(receipt, null, 2)}\n`, 'utf8');
+	return receiptPath;
+}
+
 await Promise.all([
 	resetDemoArtifacts(uiDemo),
 	resetDemoArtifacts(compositionDemo),
 	resetDemoArtifacts(ssrDemo),
+	resetDemoArtifacts(persistenceDemo),
 ]);
 
 for (const component of uiComponents) {
@@ -283,6 +316,45 @@ console.log(
 );
 if (ssrVerdict === 'FAIL') process.exit(1);
 
+run('build persistence witness fixture', [resolve(persistenceDemo, 'build.ts')]);
+runExecutable('run persistence witness', 'pnpm', ['exec', 'witness', 'run'], persistenceDemo);
+const persistenceWitnessReceipts = resolve(persistenceDemo, '.witness/receipts');
+const persistenceWitnessRunId = (
+	await readFile(resolve(persistenceWitnessReceipts, 'latest'), 'utf8')
+).trim();
+if (
+	!persistenceWitnessRunId ||
+	persistenceWitnessRunId.includes('/') ||
+	persistenceWitnessRunId.includes('\\')
+) {
+	throw new Error(
+		`Invalid persistence witness latest pointer: ${JSON.stringify(persistenceWitnessRunId)}`,
+	);
+}
+const persistenceWitnessReceiptPath = resolve(
+	persistenceWitnessReceipts,
+	persistenceWitnessRunId,
+	'receipt.json',
+);
+const persistenceWitnessReceipt = JSON.parse(
+	await readFile(persistenceWitnessReceiptPath, 'utf8'),
+);
+const storedPersistenceWitnessReceiptPath =
+	`demos/persistence/.witness/receipts/${persistenceWitnessRunId}/receipt.json`;
+const persistence = buildPersistenceEntry(
+	persistenceWitnessReceipt,
+	storedPersistenceWitnessReceiptPath,
+);
+const persistenceVerdict = getPersistenceLaneVerdict(
+	persistenceWitnessReceipt,
+	persistence,
+);
+const persistenceReceiptPath = await writePersistenceReceipt(persistence);
+console.log(
+	`[e2e] persistence ${persistenceVerdict}: no-flash react=${persistence.frameworks.react.noFlash}, solid=${persistence.frameworks.solid.noFlash}; write-through react=${persistence.frameworks.react.writeThrough}, solid=${persistence.frameworks.solid.writeThrough}; equality=${persistence.equality.outcomesEqual}; calibration=${persistence.calibration.proven}`,
+);
+if (persistenceVerdict === 'FAIL') process.exit(1);
+
 console.log('\n[e2e] PASS');
 console.log(`Modules built: ui-kit=${uiComponents.length}, composition-kit=5`);
 console.log(
@@ -294,3 +366,4 @@ console.log(
 console.log(`UI receipt: ${uiReceipt.receiptPath}`);
 console.log(`Composition receipt: ${compositionReceipt.receiptPath}`);
 console.log(`SSR receipt: ${ssrReceiptPath}`);
+console.log(`Persistence receipt: ${persistenceReceiptPath}`);
