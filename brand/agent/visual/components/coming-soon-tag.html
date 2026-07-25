@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frameless — coming-soon-tag</title>
+<link rel="icon" href="../assets/wordmark/favicon.svg">
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="./component-tokens.css">
+<link rel="stylesheet" href="./specimen.css">
+<link rel="stylesheet" href="../motion/motion.css">
+
+<style>
+/* ============================================================================
+ * COMING-SOON-TAG — the Studio teaser, and the one thing that is not out yet
+ *
+ * WHAT IT IS FOR
+ * Saying that Frameless Studio exists as an intention without implying it is
+ * available. Studio is genuinely not shipped, and this component's entire job
+ * is to make that impossible to misread.
+ *
+ * WHEN TO USE IT
+ * On the Studio section of a page (section 8 of the mandatory composition),
+ * and anywhere Studio is named.
+ *
+ * WHEN NOT TO USE IT
+ * On anything that IS available. A "coming soon" tag on a shipped feature
+ * spends the credibility this brand is built on.
+ *
+ * ── NEVER MANUFACTURE URGENCY ───────────────────────────────────────────────
+ * No countdown. No waitlist pressure. No "be the first". Nothing to sign up
+ * for. This brand's confidence comes from naming exactly what it does, and a
+ * scarcity device is the loudest possible contradiction of that.
+ *
+ * Approved copy, from ../../verbal/messaging.md:
+ *     "Frameless Studio — coming soon"
+ *     "Studio is coming. Nothing to sign up for yet."
+ *     "A quieter way to see your components. In progress."
+ *
+ * ── WHY IT IS GEOMETRY, NOT COLOUR ──────────────────────────────────────────
+ * The tag has NO band, NO fill, NO SHADOW and a DASHED keyline. In this brand
+ * the die-cut band and the drop shadow are what a real printed collectible
+ * thing has — so an unprinted thing has no cut edge and does not lie on the
+ * page. It is the only element in the kit that is deliberately flat, and that
+ * flatness is the message.
+ *
+ * That reads correctly in grayscale, in a crop, and in a screenshot with no alt
+ * text, none of which is true of a dimmed badge or a colour swap.
+ *
+ * A dimmed badge reads as hover or as a loading skeleton. A colour-only badge
+ * dies in grayscale. A word plus a different geometry survives everything.
+ * ==========================================================================*/
+
+.coming-soon-tag {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2xs);
+
+	font-size: var(--step--2);
+	font-weight: 700;
+	line-height: 1;
+	text-transform: uppercase;
+	letter-spacing: var(--tracking-caps);
+
+	padding: 0.55em 0.85em;
+	color: var(--ink-muted);
+
+	/* No band. No fill. No shadow. No solid keyline. An unprinted thing has no
+	   cut edge and does not stand off the page. This is the one element in the
+	   kit that is flat on purpose. */
+	background: none;
+	border: var(--sticker-keyline, 2px) dashed var(--ink-muted);
+	border-radius: var(--sticker-radius-small, 0.6rem);
+	filter: none;
+
+	/* Not tilted. Every real sticker in this system is rotated at rest; this one
+	   sits square precisely because it is not a sticker yet. The absence of the
+	   tilt is doing the same work as the absence of the band. */
+	rotate: none;
+}
+
+/* On the dark bed the ink-muted role becomes the warm paper (10.14:1). */
+.coming-soon-tag--deep {
+	color: var(--ink-muted);
+	border-color: var(--ink-muted);
+}
+
+/* ── The teaser block ───────────────────────────────────────────────────── */
+
+.studio-teaser {
+	display: grid;
+	gap: var(--space-xs);
+	justify-items: start;
+	padding: var(--space-l);
+	background: none;
+	border: var(--sticker-keyline, 2px) dashed var(--ink-muted);
+	border-radius: var(--sticker-radius-small, 0.6rem);
+	color: var(--ink);
+	filter: none;
+	max-inline-size: 44rem;
+}
+
+.studio-teaser__title {
+	font-size: var(--step-4);
+	font-weight: 700;
+	line-height: var(--leading-heading);
+	margin: 0;
+}
+
+.studio-teaser__body {
+	font-size: var(--step-0);
+	line-height: var(--leading-body);
+	margin: 0;
+	max-width: 46ch;
+}
+
+/* There is deliberately no CTA style in this component. There is nothing to
+   sign up for, so there is no button to give it. If you find yourself adding
+   one, the copy is wrong before the design is. */
+</style>
+</head>
+
+<body>
+<main class="spec">
+
+<header>
+	<p class="spec__kicker">Frameless component · honesty</p>
+	<h1>coming-soon-tag</h1>
+	<p class="spec__lede">Studio is the one thing that genuinely isn't out yet. This component's whole job is to say so in a way that cannot be misread as availability.</p>
+</header>
+
+<div class="spec__use">
+	<div>
+		<h2>Use it when</h2>
+		<ul>
+			<li>Naming Frameless Studio, anywhere.</li>
+			<li>Section 8 of the mandatory page composition.</li>
+			<li>You want the reader to know something is intended without thinking they can have it.</li>
+		</ul>
+	</div>
+	<div class="spec__use--no">
+		<h2>Don't use it when</h2>
+		<ul>
+			<li>The thing is available. That spends the credibility the brand runs on.</li>
+			<li>You were going to add a countdown, a waitlist, or "be the first".</li>
+			<li>You were going to add a CTA. There is nothing to sign up for yet.</li>
+		</ul>
+	</div>
+</div>
+
+<hr class="spec__rule">
+
+<section>
+	<h2>The tag</h2>
+	<div class="spec__stage">
+		<span class="coming-soon-tag">Coming soon</span>
+		<span class="coming-soon-tag">In progress</span>
+	</div>
+	<p class="spec__note">No band, no shadow, dashed keyline, no tilt. Four absences, each of which is a signal in this system: the band and the shadow mean printed, the solid keyline means cut, the tilt means placed. Something that is none of those is not here yet.</p>
+</section>
+
+<section>
+	<h2>Next to a real badge</h2>
+	<p class="spec__note">The contrast is the point, and it is a contrast in <em>geometry</em>, so it survives grayscale, a crop, and a screenshot with no alt text.</p>
+	<div class="spec__stage">
+		<span style="display:inline-flex;align-items:center;gap:.5rem;padding:.55em .85em;font-size:var(--step--2);font-weight:700;line-height:1;text-transform:uppercase;letter-spacing:var(--tracking-caps);background:var(--band);border:var(--sticker-keyline,2px) solid var(--ink);rotate:var(--tilt-1);">Shipped</span>
+		<span class="coming-soon-tag">Coming soon</span>
+	</div>
+</section>
+
+<section>
+	<h2>The Studio teaser</h2>
+	<p class="spec__note">Approved copy, lifted from <code>../../verbal/messaging.md</code>. Note what is absent: no button, no field, no date.</p>
+	<div class="spec__stage">
+		<section class="studio-teaser">
+			<span class="coming-soon-tag">Coming soon</span>
+			<h3 class="studio-teaser__title">Frameless Studio</h3>
+			<p class="studio-teaser__body">See your components in every state, in every framework you compile to. A simpler Storybook that works wherever your code does.</p>
+		</section>
+	</div>
+</section>
+
+<section>
+	<h2>On the dark bed</h2>
+	<div class="spec__stage">
+		<section class="studio-teaser">
+			<span class="coming-soon-tag coming-soon-tag--deep">Coming soon</span>
+			<h3 class="studio-teaser__title">Frameless Studio</h3>
+			<p class="studio-teaser__body">Studio is coming. Nothing to sign up for yet.</p>
+		</section>
+	</div>
+</section>
+
+<section>
+	<h2>Approved copy</h2>
+	<table class="spec__table">
+		<thead><tr><th>Say</th><th>Never say</th></tr></thead>
+		<tbody>
+			<tr><td>Frameless Studio — coming soon</td><td>Launching soon · Get early access</td></tr>
+			<tr><td>Studio is coming. Nothing to sign up for yet.</td><td>Join the waitlist · Be the first</td></tr>
+			<tr><td>A quieter way to see your components. In progress.</td><td>Available now in beta</td></tr>
+		</tbody>
+	</table>
+	<p class="spec__verdict spec__verdict--no">A countdown, a waitlist, or any device that manufactures scarcity.</p>
+	<p class="spec__verdict spec__verdict--yes">A plain statement of what it will be, with nothing to do about it yet.</p>
+</section>
+
+</main>
+</body>
+</html>

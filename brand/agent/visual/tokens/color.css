@@ -1,0 +1,343 @@
+/* Frameless — colour tokens
+ * ============================================================================
+ * REBUILT from brand/_source/concept/CONCEPT-ART-AUTHORITATIVE.jpeg.
+ *
+ * Machine-readable twin: ./color.json (carries every contrast ratio as data,
+ * plus permitted_pairs and forbidden_pairs). This file is the same system as
+ * custom properties. If the two ever disagree, color.json wins.
+ *
+ * Every value below is either a pixel measured from the concept art or a
+ * documented derivation from one. The art was sampled in Chromium by drawing it
+ * to a canvas and reading getImageData, taking TWO statistics per region:
+ *
+ *   block average          what a naive sample gives — pulled toward the cream
+ *                          die-cut band and the paper grain, so it always reads
+ *                          washed out
+ *   top 5% by saturation   what the fill actually is
+ *
+ * Everything saturated here is anchored on the second statistic. Anchoring on
+ * the first is the exact error that produced the previous, rejected palette.
+ *
+ * ── THE THREE LAWS ──────────────────────────────────────────────────────────
+ *
+ *   1. LIME IS NEVER AN INK ON LIGHT.  #cce007 has luminance 0.6616 — it is a
+ *      highlighter, not a pigment. It fails on every light bed by a factor of
+ *      three. Unchanged by the rebuild, because it was never a taste call.
+ *
+ *   2. EVERY DIE-CUT OBJECT CASTS A SHADOW.  See ./elevation.css. Depth is the
+ *      single most recognisable quality of the concept art.
+ *
+ *   3. THE BED IS NEVER A FLAT FILL.  Grain always; a ruled grid when the
+ *      section can carry it. Also ./elevation.css.
+ *
+ * ── THE PAGE BED IS THE SKY ─────────────────────────────────────────────────
+ *
+ * The concept art is a BRIGHT COASTAL SCENE. Its wordmark and its six badges
+ * sit on a cyan-blue sky, not on a near-black page. A near-black default was an
+ * invention of the previous kit, arrived at by copying avara.xyz and react.gg
+ * rather than by looking at the art, and it is what made every earlier build
+ * read as somebody else's site with our colours in it.
+ *
+ * So :root is the SKY column: the measured sky #91c3c7, lifted toward the art's
+ * cloud #dddfc8 until reading copy clears AA comfortably.
+ *
+ * Dark did not go away. It became a SECONDARY surface — [data-surface="deep"]
+ * — and it is where code blocks, detail panels, the carousel stage and any
+ * lime-typed band belong. That is the same role the art gives it: the
+ * "COMPILED OUTPUTS" chip is a dark object ON the sky, not the sky itself.
+ *
+ * ── THREE COLUMNS ───────────────────────────────────────────────────────────
+ *
+ *   sky     :root, and [data-surface="sky"] to get back to it   THE PAGE
+ *   deep    [data-surface="deep"]      code, panels, lime display bands
+ *   light   [data-surface="light"]     the paper island, for reading-length prose
+ *
+ * The role tokens flip as a SET. Never one at a time.
+ *
+ * ── WHY color.json STILL RECORDS THE DEEP VALUE AS `value` ──────────────────
+ *
+ * In ./color.json each role token carries `value` (deep), `sky_value` and
+ * `light_value`. `value` stays the DEEP column even though :root is the sky,
+ * because every law in that file is anchored on the deep column — it is the one
+ * bed lime display type is legal on, and brand/tools/structural-gate.mjs
+ * recomputes the lime law against it. `sky_value` is what :root resolves to
+ * below. If the two files look like they disagree, this paragraph is the reason;
+ * `meta.default_column` in color.json says the same thing from the other side.
+ * ============================================================================ */
+
+:root {
+  color-scheme: light;
+
+  /* ── Beds — THE SKY COLUMN ────────────────────────────────────────────── */
+
+  /* THE PAGE. The concept art's sky. Measured #91c3c7, lifted about a third of
+     the way toward the art's cloud #dddfc8 so that --ink-muted and the link
+     colour both clear AA on it with margin rather than by a hair.
+     NEVER render it flat: ./elevation.css lays grain over it, and a flat bed is
+     the failure the owner named by name. */
+  --surface: #a2cbd0;
+
+  /* A panel laid ON the sky: cards, spec tables, the light half of a section.
+     The art's cloud. It is only 1.62:1 against the bed on purpose — a raised
+     panel is separated by its SHADOW and its band, not by a value step. If you
+     find yourself brightening this to make a card visible, you have forgotten
+     the shadow. */
+  --surface-raised: #dfe3cd;
+
+  /* Cut INTO the sky rather than laid on it: inset fields, wells.
+     Pair with --elev-inset, never with an outer shadow.
+     --ink only. --ink-muted lands at 4.53:1 here and the link, success and
+     danger inks do not clear AA at all — a code well wants [data-surface="deep"]
+     instead, which is what that column is for. */
+  --surface-sunk: #8fbac1;
+
+  /* ── Ink ──────────────────────────────────────────────────────────────── */
+
+  /* All reading copy on the sky. A near-black with the sea's blue-green cast,
+     so it belongs to the scene rather than reading as a UI grey. 10.16:1. */
+  --ink: #0c1a1c;
+
+  /* Captions, metadata, spec-table labels. 5.45:1. Not reading copy at body
+     length — it is a second tier, not a body tier. */
+  --ink-muted: #2b4a50;
+
+  /* ── Accents ──────────────────────────────────────────────────────────── */
+
+  /* The brand colour. Primary button fills, the wordmark fill, the outer focus
+     ring, and DISPLAY type — but only where something separates it from the bed.
+     The art measures #c7da00 at peak saturation; the owner's canonical value is
+     #cce007 and JPEG averaging is what pulls the sample down.
+
+     ON THE SKY BED LIME IS 1.19:1 — invisible as type. Two legal shapes, and
+     they are the two the art itself uses:
+       · inside the die-cut treatment (lime fill, black keyline, cream band),
+         where the KEYLINE does the separating, not the colour — .display-cut in
+         ../colors_and_type.css and the wordmark;
+       · on a [data-surface="deep"] band, where it clears 12.41:1.
+     NEVER a framework logo. NEVER reading copy. */
+  --accent: #cce007;
+
+  /* The one ink that goes on lime, 13.08:1. It does NOT flip with the surface,
+     because a lime fill is a light surface wherever it appears. */
+  --accent-ink: #0b0f0c;
+
+  /* THE ACCENT THAT CAN BE AN INK. Links, inline emphasis — anywhere you wanted
+     accent colour on TEXT. 5.17:1 on the sky. Measured from the art's sky cyan
+     (#73b3bf) and deepened until it clears AA on the sky it came from. Without
+     this token the palette reads as monochrome plus a highlighter. */
+  --accent-cool: #08505e;
+
+  /* ── Printed ink and printed paper: these do NOT flip ─────────────────── */
+
+  /* The thick cream band that rings a die-cut object — the paper it was cut
+     from. NEUTRAL cream is the wordmark's band. Framework stickers tint their
+     band to their own hue; see the --fw-* block below.
+     Never a page bed, never a text colour on light. */
+  --band: #e0dfca;
+
+  /* The heavy near-black stroke between a fill and its band. Neutral black is
+     correct for the wordmark, which is what the art shows. Framework stickers
+     use the dark end of their own hue instead — a neutral keyline on a
+     saturated sticker is what made the previous badges look printed-out rather
+     than die-cut. */
+  --keyline: #0a0d09;
+
+  /* ── Semantic states ──────────────────────────────────────────────────── */
+
+  --success: #0d5424;  /* 5.19:1 on the sky */
+  --warning: #f2b705;  /* 1.04:1 on the sky — FILL ONLY, never as an ink here.
+                          It is an ink only on [data-surface="deep"] (10.07:1). */
+  --danger:  #8f2416;  /* 4.93:1 on the sky */
+
+  /* ── The carousel's grey ──────────────────────────────────────────────── */
+
+  /* What a framework sticker collapses to when another one is selected. It
+     loses colour ENTIRELY rather than merely dimming — that total loss is what
+     makes the selected sticker read as lit, and it is the whole mechanic
+     avara.xyz is built on. A dimmed sticker just looks disabled. */
+  --silhouette: #4a5a55;
+  --silhouette-band: #7d8b86;
+
+  /* ── Focus ring: one rule, works on every surface ─────────────────────── */
+
+  /* Two-tone by design. Inner near-black carries the indicator contrast on
+     light beds and on saturated sticker fills (11.16:1 on the sky); outer lime
+     carries it on dark (12.41:1). On ANY surface one half clears 3:1, so there
+     is no per-surface focus style to forget. The bed lift did not change this,
+     which is exactly why the ring was built with two halves. */
+  --focus-inner: #0a0d09;
+  --focus-outer: #cce007;
+  --focus-width: 2px;
+
+  /* ── The ruled grid's hairline ────────────────────────────────────────── */
+
+  /* ./elevation.css draws the react.gg-style ruled grid; the ink it draws in
+     belongs to the COLUMN, not to the texture. A cream hairline is invisible on
+     the sky and a dark one is invisible on the deep bed, so this flips with the
+     rest of the set. */
+  --texture-rule: rgb(12 26 28 / 0.075);
+
+  /* ── The bed is never a flat fill, part two ───────────────────────────── */
+
+  /* The sky in the concept art is not one colour: it is deeper overhead and
+     hazier toward the horizon. A flat #a2cbd0 rectangle is the same mistake as
+     a flat near-black one, so the bed carries an atmospheric wash under the
+     grain. Both endpoints are held inside the band where every sky ink still
+     clears AA — the top stop #99c4ca gives --ink-muted 5.05:1 and --danger
+     4.57:1, and that is the floor this gradient is allowed to reach. Do not
+     deepen it. */
+  --bed-wash: linear-gradient(180deg, #99c4ca 0%, #a2cbd0 40%, #b7d3cf 100%);
+
+  /* ── Framework brand colours ──────────────────────────────────────────────
+   * Six saturated fills, measured from the six die-cut badges in the concept
+   * art. `peak` is the top-5%-saturation sample; `avg` is the block average and
+   * is recorded only so the difference between them stays visible — the block
+   * average is what the rejected version shipped.
+   *
+   * `logo` is that project's OWN brand colour, restated here so a badge can be
+   * built with no network request. Frameless does not own these values; take
+   * them from the project's own guidelines if you need canonical ones.
+   *
+   * These never flip with the surface. A React sticker is the same blue on any
+   * bed — that is what makes it an object rather than a themed div.
+   * ---------------------------------------------------------------------- */
+
+  /* React — peak #0059a0, avg #598fb7. Name on fill 5.23:1. */
+  --fw-react: #1b6fb8;
+  --fw-react-keyline: #0a3560;
+  --fw-react-band: #e3ecf2;
+  --fw-react-logo: #61dafb;
+
+  /* Vue — peak #00703f, avg #549e78. Name on fill 4.93:1. */
+  --fw-vue: #12805a;
+  --fw-vue-keyline: #063524;
+  --fw-vue-band: #dfeee6;
+  --fw-vue-logo: #42b883;
+
+  /* Svelte — peak #e04000, avg #ef7f50. Name on fill 4.59:1; the fill is held
+     just dark enough for the white label to clear AA. */
+  --fw-svelte: #d93b02;
+  --fw-svelte-keyline: #5c1600;
+  --fw-svelte-band: #f7e6db;
+  --fw-svelte-logo: #ffffff;
+
+  /* Solid — peak #000f6e, avg #6066a1. Name on fill 6.16:1. */
+  --fw-solid: #2f5fb3;
+  --fw-solid-keyline: #12275c;
+  --fw-solid-band: #e4eaf6;
+  --fw-solid-logo: #76b3e1;
+
+  /* Angular — peak #94001f, avg #ce5b6c. Name on fill 5.88:1. */
+  --fw-angular: #c8102f;
+  --fw-angular-keyline: #4d0410;
+  --fw-angular-band: #f6e2e5;
+  --fw-angular-logo: #ffffff;
+
+  /* Qwik — peak #26065e, avg #8469a6. Name on fill 6.34:1. */
+  --fw-qwik: #6d3fd4;
+  --fw-qwik-keyline: #2a0f6b;
+  --fw-qwik-band: #e9e4f9;
+  --fw-qwik-logo: #18b6f6;
+
+  color: var(--ink);
+  background-color: var(--surface);
+}
+
+/* ============================================================================
+ * THE OTHER TWO COLUMNS
+ *
+ * FLIP THEM AS A SET. Flipping one at a time is how the deep column's cream ink
+ * ends up on light paper at 1.05:1 — invisible, and the most expensive mistake
+ * available. Every direction of that failure is recorded in color.json's
+ * forbidden_pairs, so the structural gate proves they are real rather than
+ * asserted.
+ *
+ * --band, --keyline, --accent, --accent-ink and every --fw-* value do NOT flip.
+ * Those are printed ink and printed paper, not roles.
+ * ============================================================================ */
+
+/* ── DEEP — the secondary surface, and the only bed lime type is legal on ──
+ *
+ * Code blocks, terminal output, detail panels, the carousel stage, and any band
+ * that carries lime display type as plain type rather than as a die-cut.
+ *
+ * This is the art's own role for dark: the "COMPILED OUTPUTS" chip is a dark
+ * object laid ON the sky. Use it as an object. A whole page of it is the
+ * near-black default this rebuild removed. */
+[data-surface="deep"],
+.surface-deep {
+  color-scheme: dark;
+
+  /* Deep ocean, lifted off near-black for the same reason as --surface-sunk. */
+  --surface: #143d43;
+  --surface-raised: #1b4a51;
+  /* DEEP OCEAN, not near-black.
+     #060f0d was a PM invention with no counterpart anywhere in the concept art —
+     the art is a bright coastal scene and contains no such value. It held 27% of
+     every page. This is the art's own deep water: it keeps lime at 9.28:1 and
+     cream ink at 11.31:1, so nothing that depended on the old bed loses contrast,
+     and the page stops reading as a dev-tool dark theme. */
+  --surface-sunk: #0f3238;
+
+  --ink: #eceada;            /* 15.13:1 */
+  --ink-muted: #9fb3ac;      /* 8.30:1 */
+
+  --accent-cool: #6fd3e6;    /* 10.58:1 */
+  --success: #7bd96a;        /* 10.44:1 */
+  --danger: #ff6b5e;         /* 6.55:1 */
+
+  --texture-rule: rgb(236 234 218 / 0.05);
+  --bed-wash: linear-gradient(180deg, #12211d 0%, #0b1714 55%);
+
+  color: var(--ink);
+  background-color: var(--surface);
+}
+
+/* ── LIGHT — the paper island ─────────────────────────────────────────────
+ *
+ * Reading-length prose, spec tables, and anything that wants to be a sheet of
+ * paper laid on the sky rather than a piece of the sky. */
+[data-surface="light"],
+.surface-light {
+  color-scheme: light;
+
+  --surface: #f2f0dd;        /* cool cream. NOT #ffffff. */
+  --surface-raised: #ffffff; /* a card on the paper, legal INSIDE an island */
+  --surface-sunk: #e7e5cf;
+
+  --ink: #0f1410;            /* 16.21:1 */
+  --ink-muted: #4d5a4f;      /* 6.32:1 */
+
+  --accent-cool: #10707f;    /* 5.01:1 — the link colour on paper */
+  --success: #14682c;        /* 6.00:1 */
+  --danger: #a32c1e;         /* 6.23:1 */
+
+  --texture-rule: rgb(15 20 16 / 0.06);
+  --bed-wash: linear-gradient(180deg, #f6f4e4 0%, #f2f0dd 60%);
+
+  color: var(--ink);
+  background-color: var(--surface);
+}
+
+/* ── SKY — back to the page bed from inside another column ───────────────── */
+[data-surface="sky"],
+.surface-sky {
+  color-scheme: light;
+
+  --surface: #a2cbd0;
+  --surface-raised: #dfe3cd;
+  --surface-sunk: #8fbac1;
+
+  --ink: #0c1a1c;            /* 10.16:1 */
+  --ink-muted: #2b4a50;      /* 5.45:1 */
+
+  --accent-cool: #08505e;    /* 5.17:1 */
+  --success: #0d5424;        /* 5.19:1 */
+  --danger: #8f2416;         /* 4.93:1 */
+
+  --texture-rule: rgb(12 26 28 / 0.075);
+  --bed-wash: linear-gradient(180deg, #99c4ca 0%, #a2cbd0 40%, #b7d3cf 100%);
+
+  color: var(--ink);
+  background-color: var(--surface);
+}

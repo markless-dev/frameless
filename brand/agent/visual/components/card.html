@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frameless — card</title>
+<link rel="icon" href="../assets/wordmark/favicon.svg">
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="./component-tokens.css">
+<link rel="stylesheet" href="./specimen.css">
+<link rel="stylesheet" href="../motion/motion.css">
+
+<style>
+/* ============================================================================
+ * CARD — a content panel on paper, optionally sticker-treated
+ *
+ * WHAT IT IS FOR
+ * Grouping related content that is longer than a label and shorter than a
+ * section. An audience segment, a feature, an objection and its answer, a
+ * bounded photograph.
+ *
+ * WHEN TO USE IT
+ *   plain      the default. A quiet panel on the page bed. Use it when the
+ *              content matters more than the container.
+ *   sticker    tilted, die-cut, collectible. Use it when the card itself is
+ *              part of the argument — the set of six, the specimen sheet.
+ *   photo      a bounded die-cut image. THE preferred way to use the coast.
+ *
+ * WHEN NOT TO USE IT
+ * As a page section. As a wrapper around one line of text — that is a
+ * callout or a badge. As a grid of nine identical cards, which is what a page
+ * looks like when nobody decided what mattered.
+ *
+ * ── THE PHOTOGRAPH BELONGS HERE ─────────────────────────────────────────────
+ * Tier 2, the preferred usage: the photo as a BOUNDED die-cut image inside a
+ * card, with no text on it. The coast is a photo sticker, not wallpaper. If
+ * you were about to put the coast behind a headline, put it in one of these
+ * instead.
+ *
+ * ── A CARD IS A STICKER-CARD ────────────────────────────────────────────────
+ * react.gg's cards are the reference: a saturated block with a thick cream
+ * border and a hard offset shadow, laid on a near-black bed. They read as
+ * trading cards. That is what a Frameless card is.
+ *
+ * The previous version of this file said "a card does not float" and shipped a
+ * flat cream rectangle with a hairline. On the dark bed that would also have
+ * been unreadable: --ink resolves to cream there, so cream text on a cream
+ * card is invisible. The card is a RAISED DARK PANEL by default, and the light
+ * paper version is the .card--island variant, which flips the role tokens as a
+ * set rather than hand-picking colours at the boundary.
+ *
+ * Elevation is filter: var(--elev-card) — a stacked drop-shadow, not a
+ * box-shadow, so it follows the card's rounded silhouette.
+ * ==========================================================================*/
+
+.card {
+	display: grid;
+	gap: var(--space-xs);
+	align-content: start;
+	padding: var(--space-s-l);
+	background: var(--surface-raised);
+	border: var(--sticker-keyline-bold, 3px) solid var(--band);
+	border-radius: var(--sticker-radius-small, 0.6rem);
+	color: var(--ink);
+	filter: var(--elev-card);
+}
+
+.card__eyebrow {
+	font-size: var(--step--2);
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: var(--tracking-caps);
+	color: var(--ink-muted);
+}
+
+.card__title {
+	font-size: var(--step-3);
+	font-weight: 700;
+	line-height: var(--leading-heading);
+	margin: 0;
+	text-wrap: balance;
+}
+
+.card__body {
+	font-size: var(--step-0);
+	line-height: var(--leading-body);
+	margin: 0;
+	max-width: 42ch;
+}
+
+.card__footer {
+	margin-block-start: var(--space-2xs);
+	font-size: var(--step--1);
+	color: var(--ink-muted);
+}
+
+/* ── sticker-treated ────────────────────────────────────────────────────── */
+/* Tilted and peelable. Use when the card is itself part of the argument.
+   Cycle --tilt-1/2/3 across siblings so a group looks placed by hand. */
+.card--sticker {
+	rotate: var(--tilt-1);
+	/* The thick cream border is the die-cut band. At this width it stops being a
+	   border and starts being paper, which is the whole difference between a
+	   panel and a sticker. */
+	border-width: 0.5rem;
+}
+
+/* ── photo ──────────────────────────────────────────────────────────────── */
+/* A bounded die-cut image. No text on it, ever. The <picture> element is how
+   the 669KB source is kept off a phone; the width-limited variants are not
+   generated yet, so until they are, use the photo SMALL — which is what this
+   component is for anyway. */
+.card--photo {
+	padding: var(--sticker-band-fixed);
+	gap: var(--space-2xs);
+}
+
+.card__image {
+	display: block;
+	inline-size: 100%;
+	aspect-ratio: 16 / 9;
+	object-fit: cover;
+	border: var(--sticker-keyline, 2px) solid var(--keyline);
+	border-radius: 0.35rem;
+}
+
+.card__caption {
+	font-size: var(--step--1);
+	color: var(--ink-muted);
+	padding-inline: 0.2em;
+	max-width: none;
+}
+
+/* ── on the dark bed ────────────────────────────────────────────────────── */
+/* The card becomes a light ISLAND on a dark section — the role tokens are
+   restored by data-surface="light", so nothing inside has to be hand-coloured
+   at the boundary. */
+/* Put data-surface="light" on it in the markup and the role tokens flip as a
+   set, so nothing inside has to be hand-coloured at the boundary. */
+.card--island {
+	background: var(--surface);
+	border-color: var(--keyline);
+}
+
+/* A card that stays dark inside a dark section: transparent fill, cream
+   keyline. Use it when the card should recede rather than come forward. */
+/* A card that recedes: no fill of its own, a hairline instead of a band, and
+   no shadow — because a card that is not raised should not pretend to be. */
+.card--quiet {
+	background: none;
+	border-width: var(--sticker-keyline, 2px);
+	border-color: color-mix(in srgb, var(--band) 30%, transparent);
+	color: var(--ink);
+	filter: none;
+}
+
+/* ── COLOUR ─────────────────────────────────────────────────────────────────
+ * react.gg's page is built out of saturated colour blocks with thick cream
+ * borders, and that is the register a Frameless section should reach for when
+ * it wants to be loud. A page of dark-on-dark cards is tasteful and quiet; the
+ * brand is neither.
+ *
+ * Set --card-fill and --card-ink and the whole card retunes, including its
+ * eyebrow and footer. Any of the six --fw-* fills works, and so does --accent.
+ * ==========================================================================*/
+
+.card--colour {
+	background-color: var(--card-fill, var(--accent));
+	background-image: var(--gloss);
+	/* The border stays the CREAM BAND. Setting it to the keyline was tried and
+	   the card lost its die-cut edge entirely: a dark border on a dark bed is
+	   invisible, and the thick cream band is the whole reason a colour block
+	   reads as a sticker rather than as a coloured div. */
+	border-color: var(--band);
+	color: var(--card-ink, #ffffff);
+}
+
+.card--colour .card__eyebrow,
+.card--colour .card--colour .card__footer,
+.card--colour .card__footer {
+	color: color-mix(in srgb, var(--card-ink, #ffffff) 78%, transparent);
+}
+
+/* Lime is a fill and its label is --accent-ink, 13.08:1. Never white on lime. */
+.card--lime {
+	--card-fill: var(--accent);
+	--card-ink: var(--accent-ink, #0b0f0c);
+}
+
+.card-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+	gap: var(--space-m);
+	align-items: start;
+}
+</style>
+</head>
+
+<body>
+<main class="spec">
+
+<header>
+	<p class="spec__kicker">Frameless component · container</p>
+	<h1>card</h1>
+	<p class="spec__lede">A panel of paper on a sheet of paper. Longer than a label, shorter than a section — and the preferred home for the photograph.</p>
+</header>
+
+<div class="spec__use">
+	<div>
+		<h2>Use it when</h2>
+		<ul>
+			<li>Grouping content that is longer than a label and shorter than a section.</li>
+			<li>An audience segment, a feature, an objection and its answer.</li>
+			<li>You need the coast image on the page — bounded, die-cut, with no text on it.</li>
+		</ul>
+	</div>
+	<div class="spec__use--no">
+		<h2>Don't use it when</h2>
+		<ul>
+			<li>It is really a page section. Sections are beds, not panels.</li>
+			<li>It holds one line — use <code>callout</code> or a badge.</li>
+			<li>You are about to render nine identical ones. That is what a page looks like when nobody decided what mattered.</li>
+		</ul>
+	</div>
+</div>
+
+<hr class="spec__rule">
+
+<section>
+	<h2>Plain</h2>
+	<div class="spec__stage spec__stage--block">
+		<div class="card-grid">
+			<article class="card">
+				<p class="card__eyebrow">Differentiator</p>
+				<h3 class="card__title">Activation-neutrality</h3>
+				<p class="card__body">React, Vue, Svelte, Solid and Angular hydrate. Qwik resumes. These are architecturally different ways to bring a page to life, and porting between them by hand is a rewrite.</p>
+			</article>
+			<article class="card">
+				<p class="card__eyebrow">Proof</p>
+				<h3 class="card__title">The oracle</h3>
+				<p class="card__body">An equivalence check that can't fail proves nothing. Ours is mutation-tested: we deliberately break the compiler and confirm the tests catch it.</p>
+			</article>
+			<article class="card">
+				<p class="card__eyebrow">Exit plan</p>
+				<h3 class="card__title">Ejectable by design</h3>
+				<p class="card__body">There's no Frameless runtime in your bundle. Delete the compiler tomorrow and the code keeps working. That's the entire exit plan, and it's deliberate.</p>
+			</article>
+		</div>
+	</div>
+	<p class="spec__note">Copy lifted verbatim from <code>../../verbal/messaging.md</code>. Prefer lifting to writing — the messaging file exists so a page does not have to invent its own claims.</p>
+</section>
+
+<section>
+	<h2>Colour</h2>
+	<p class="spec__note">A card is allowed to be loud. react.gg's page is built out of saturated blocks with thick cream borders and hard offset shadows, and that is the register to reach for when a section needs to carry weight rather than carry text. Set <code>--card-fill</code> and <code>--card-ink</code>; the eyebrow and footer retune with them.</p>
+
+	<div class="spec__stage spec__stage--block">
+		<div class="card-grid">
+			<article class="card card--sticker card--colour tilt-1" style="--card-fill: var(--fw-react);">
+				<p class="card__eyebrow">Target</p>
+				<h3 class="card__title">React</h3>
+				<p class="card__body">Hydrates. The output uses React patterns, because the compiler works from meaning rather than syntax.</p>
+			</article>
+			<article class="card card--sticker card--colour tilt-3" style="--card-fill: var(--fw-qwik);">
+				<p class="card__eyebrow">Target</p>
+				<h3 class="card__title">Qwik</h3>
+				<p class="card__body">Resumes rather than hydrates — a different activation model entirely, from the same source.</p>
+			</article>
+			<article class="card card--sticker card--colour card--lime tilt-2">
+				<p class="card__eyebrow">The claim</p>
+				<h3 class="card__title">Compile once, output anywhere.</h3>
+				<p class="card__body">Lime is a fill and its label is <code>--accent-ink</code> at 13.08:1. A white label on lime is 1.48:1 and is forbidden.</p>
+			</article>
+		</div>
+	</div>
+	<p class="spec__verdict spec__verdict--yes">Saturated fill, cream band, hard shadow, slight tilt.</p>
+</section>
+
+<section>
+	<h2>Sticker-treated</h2>
+	<p class="spec__note">Tilted and peelable. Use when the card is itself part of the argument — a set of specimens rather than a set of panels. Hover or tab.</p>
+	<div class="spec__stage spec__stage--block">
+		<div class="card-grid">
+			<article class="card card--sticker peelable tilt-1">
+				<p class="card__eyebrow">Specimen 01</p>
+				<h3 class="card__title">One source</h3>
+				<p class="card__body">A single <code>.tsrx</code> file. State, markup, composition — the parts you'd write anyway.</p>
+			</article>
+			<article class="card card--sticker peelable tilt-2">
+				<p class="card__eyebrow">Specimen 02</p>
+				<h3 class="card__title">Six outputs</h3>
+				<p class="card__body">Each target gets code that reads like it was written for that framework, because it was.</p>
+			</article>
+			<article class="card card--sticker peelable tilt-3">
+				<p class="card__eyebrow">Specimen 03</p>
+				<h3 class="card__title">One behaviour</h3>
+				<p class="card__body">Every build diffs behaviour across all six targets in a real browser.</p>
+			</article>
+		</div>
+	</div>
+</section>
+
+<section>
+	<h2>Photo — the preferred way to use the coast</h2>
+	<p class="spec__note">A bounded die-cut image with no text on it. This is Tier 2, and it is more on-brand than any full-bleed treatment: the coast is a photo <em>sticker</em>. The caption sits outside the cut, on the cream, where its contrast is a property of a known colour rather than of a photograph.</p>
+	<div class="spec__stage spec__stage--block">
+		<div class="card-grid">
+			<figure class="card card--photo card--sticker tilt-2" style="max-inline-size: 26rem;">
+				<img class="card__image" src="../assets/photos/coast-environment.jpg" alt="A lighthouse on coastal cliffs, printed in an aged halftone.">
+				<figcaption class="card__caption">The environment layer. Sage sky, not blue — the whole print is aged and desaturated.</figcaption>
+			</figure>
+		</div>
+	</div>
+	<p class="spec__verdict spec__verdict--no">Text sitting on the photograph.</p>
+	<p class="spec__verdict spec__verdict--yes">The photograph bounded, cut, and captioned on the cream.</p>
+</section>
+
+<section>
+	<h2>On the dark bed</h2>
+	<p class="spec__note">Two behaviours. A light <em>island</em> comes forward and restores the light role tokens, so nothing inside is hand-coloured. A <em>quiet</em> card stays on the dark bed and recedes.</p>
+	<div class="spec__stage spec__stage--block">
+		<div class="card-grid">
+			<article class="card card--island" data-surface="light">
+				<p class="card__eyebrow">Light island</p>
+				<h3 class="card__title">Comes forward</h3>
+				<p class="card__body">The role tokens are restored as a set, so this reads exactly as it would on a paper page.</p>
+			</article>
+			<article class="card card--quiet">
+				<p class="card__eyebrow">Quiet</p>
+				<h3 class="card__title">Recedes</h3>
+				<p class="card__body">Transparent fill, cream keyline. Still <code>--ink</code>; it is just that <code>--ink</code> means cream here.</p>
+			</article>
+		</div>
+	</div>
+</section>
+
+</main>
+</body>
+</html>

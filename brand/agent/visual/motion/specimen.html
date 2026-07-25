@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en" data-motion="system">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frameless — motion specimen</title>
+<!-- GENERATED FILE. DO NOT EDIT. source: ./motion.json · generator: ./build-motion.mjs -->
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="./motion.css">
+<style>
+  body { padding: var(--space-l) var(--space-m) var(--space-3xl); }
+  .wrap { max-width: 78rem; margin-inline: auto; }
+  .intro { max-width: 60ch; }
+  .lede { font-size: var(--step-2); font-weight: 500; line-height: 1.35; max-width: 46ch; }
+
+  .rule { border: 0; border-top: 2px solid var(--ink); margin-block: var(--space-xl); opacity: 0.16; }
+
+  /* Die-cut chrome. Halo + keyline, no shadow anywhere. */
+  .cut {
+    background: var(--halo);
+    border: var(--sticker-keyline, 2px) solid var(--ink);
+    padding: var(--sticker-halo-fixed);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
+    gap: var(--space-m);
+  }
+
+  .curve { padding: var(--space-s); background: var(--halo); border: var(--sticker-keyline, 2px) solid var(--ink); }
+  .curve__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2xs); flex-wrap: wrap; }
+  .curve__name { font-size: var(--step-3); font-weight: 700; line-height: 1.1; margin: 0; }
+  .curve__meta { font-size: var(--step--2); color: var(--ink-muted); margin: 0; }
+  .curve__meta code { font-family: var(--font-mono); }
+  .curve__for { font-size: var(--step--1); font-weight: 500; margin-block: var(--space-2xs) var(--space-xs); max-width: none; }
+  .curve__why { font-size: var(--step--2); color: var(--ink-muted); margin-block: var(--space-xs) 0; max-width: none; }
+  .curve__plot { margin-block: var(--space-xs); }
+  .curve__plot svg { display: block; width: 100%; height: auto; }
+
+  .track {
+    position: relative;
+    height: 3rem;
+    margin-block: var(--space-2xs);
+    border-top: 2px dashed color-mix(in srgb, var(--ink) 25%, transparent);
+    border-bottom: 2px dashed color-mix(in srgb, var(--ink) 25%, transparent);
+  }
+  .track__chip {
+    position: absolute;
+    inset-block: 0.5rem;
+    left: 0.25rem;
+    width: 2rem;
+    background: var(--accent);
+    border: var(--sticker-keyline, 2px) solid var(--ink);
+    rotate: var(--tilt-2);
+    translate: 0 0;
+  }
+
+  .btn {
+    font-family: inherit;
+    font-weight: 700;
+    font-size: var(--step--1);
+    line-height: 1;
+    padding: 0.7em 1.1em;
+    background: var(--accent);
+    color: var(--ink);
+    border: var(--sticker-keyline, 2px) solid var(--ink);
+    cursor: pointer;
+  }
+  .btn--ghost { background: transparent; }
+  .btn--deep { background: var(--surface-deep); color: var(--halo); border-color: var(--ink); }
+
+  .pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: var(--space-m); }
+  .pad { display: grid; place-items: center; height: 9rem; background: var(--halo); border: var(--sticker-keyline, 2px) solid var(--ink); }
+  .pad__label { font-size: var(--step--2); text-transform: uppercase; letter-spacing: var(--tracking-caps); font-weight: 700; }
+
+  .sticker-demo { width: 9rem; aspect-ratio: 3 / 4; background: var(--halo); border: var(--sticker-keyline, 2px) solid var(--ink); display: grid; place-items: center; rotate: var(--tilt-1); font-weight: 900; font-size: var(--step-2); }
+
+  /* The wrong/right press pair. .press-both deliberately uses one curve in both
+     directions so the asymmetry can be FELT rather than described. */
+  .press-both { transition: transform var(--motion-press); }
+  .press-both:active { transform: var(--transform-press); }
+
+  .swap { position: relative; height: 8rem; overflow: hidden; background: var(--halo); border: var(--sticker-keyline, 2px) solid var(--ink); }
+  .swap__panel { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 900; font-size: var(--step-3); background: var(--halo); }
+  .swap__panel[data-panel="b"] { background: var(--surface-deep); color: var(--accent); }
+  .swap__panel { transition: transform var(--motion-slide); }
+  .swap[data-showing="a"] .swap__panel[data-panel="a"] { transform: translateX(0); }
+  .swap[data-showing="a"] .swap__panel[data-panel="b"] { transform: translateX(100%); }
+  .swap[data-showing="b"] .swap__panel[data-panel="a"] { transform: translateX(-100%); }
+  .swap[data-showing="b"] .swap__panel[data-panel="b"] { transform: translateX(0); }
+
+  .settle-demo { transition: transform var(--motion-settle), opacity var(--motion-settle); }
+  .settle-demo[data-state="out"] { transform: translateY(-2rem); opacity: 0; }
+
+  .status { display: inline-flex; align-items: center; gap: var(--space-2xs); font-size: var(--step--1); font-weight: 700; padding: 0.4em 0.8em; background: var(--halo); border: var(--sticker-keyline, 2px) solid var(--ink); }
+  .status[data-on="true"] { background: var(--accent); }
+
+  .deep { background: var(--surface-deep); color: var(--halo); padding: var(--space-l) var(--space-m); margin-block: var(--space-xl); }
+  .deep h2 { color: var(--accent); }
+
+  table { border-collapse: collapse; width: 100%; font-size: var(--step--1); }
+  th, td { text-align: left; padding: 0.5em 0.7em; border-bottom: 1px solid color-mix(in srgb, var(--ink) 20%, transparent); vertical-align: top; }
+  th { font-weight: 700; }
+  td code { font-family: var(--font-mono); font-size: 0.95em; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="intro">
+    <p class="text-caption">Frameless · motion specimen · generated from <code>motion.json</code></p>
+    <h1>Motion you can feel</h1>
+    <p class="lede">A sticker is a physical object on paper. It presses down instantly and comes back up gently, because that is what a thumb and a piece of vinyl actually do. Every curve here is asymmetric or springy for a physical reason, never because a designer liked the shape.</p>
+    <p class="text-body">Every value on this page was read out of <code>motion.json</code> at build time. Nothing here is hand-typed, so if a curve on screen disagrees with the JSON, the generator is broken — not the documentation.</p>
+    <p>
+      <span class="status" id="rm-status" data-on="false">prefers-reduced-motion: <span id="rm-value">no-preference</span></span>
+      <button type="button" class="btn btn--ghost pressable" id="rm-toggle">Simulate reduced motion</button>
+    </p>
+  </header>
+
+  <hr class="rule">
+
+  <section>
+    <h2>The six curves</h2>
+    <p class="text-body">Six is the whole vocabulary. If a motion does not fit one of them, the motion is wrong.</p>
+    <div class="grid">
+        <article class="curve" data-curve="press">
+          <header class="curve__head">
+            <h3 class="curve__name">press</h3>
+            <p class="curve__meta"><code>cubic-bezier(0.4, 0, 1, 1)</code> · <strong>90ms</strong></p>
+          </header>
+          <div class="curve__plot" aria-hidden="true"></div>
+          <p class="curve__for">Pressing a sticker down is instant.</p>
+          <div class="track" aria-hidden="true"><span class="track__chip" data-chip="press"></span></div>
+          <button type="button" class="btn btn--ghost pressable" data-play="press">Play press</button>
+          <p class="curve__why">Ease-in with no deceleration: it starts moving and never slows, so the motion ends at full speed the way contact does. 90ms is below the threshold where a press reads as laggy.</p>
+        </article>
+        <article class="curve" data-curve="release">
+          <header class="curve__head">
+            <h3 class="curve__name">release</h3>
+            <p class="curve__meta"><code>cubic-bezier(0, 0, 0.2, 1)</code> · <strong>160ms</strong></p>
+          </header>
+          <div class="curve__plot" aria-hidden="true"></div>
+          <p class="curve__for">Deliberately asymmetric with press — down fast, up gentle.</p>
+          <div class="track" aria-hidden="true"><span class="track__chip" data-chip="release"></span></div>
+          <button type="button" class="btn btn--ghost pressable" data-play="release">Play release</button>
+          <p class="curve__why">The asymmetry IS the design. A press and release that share one curve feels like a state toggle; a fast press and a slow release feels like a finger lifting off vinyl. If you find yourself using one curve for both directions, you have removed the point.</p>
+        </article>
+        <article class="curve" data-curve="peel">
+          <header class="curve__head">
+            <h3 class="curve__name">peel</h3>
+            <p class="curve__meta"><code>cubic-bezier(0.34, 1.56, 0.64, 1)</code> · <strong>260ms</strong></p>
+          </header>
+          <div class="curve__plot" aria-hidden="true"></div>
+          <p class="curve__for">Overshoot = a physical object with springiness.</p>
+          <div class="track" aria-hidden="true"><span class="track__chip" data-chip="peel"></span></div>
+          <button type="button" class="btn btn--ghost pressable" data-play="peel">Play peel</button>
+          <p class="curve__why">The second control point sits above 1, so the value passes its target and comes back. That overshoot is the only place in the system where something behaves elastically, and it is reserved for the one gesture that is literally physical: a die-cut corner lifting off the page.</p>
+        </article>
+        <article class="curve" data-curve="slide">
+          <header class="curve__head">
+            <h3 class="curve__name">slide</h3>
+            <p class="curve__meta"><code>cubic-bezier(0.65, 0, 0.35, 1)</code> · <strong>300ms</strong></p>
+          </header>
+          <div class="curve__plot" aria-hidden="true"></div>
+          <p class="curve__for">Output-switcher; A to B swaps.</p>
+          <div class="track" aria-hidden="true"><span class="track__chip" data-chip="slide"></span></div>
+          <button type="button" class="btn btn--ghost pressable" data-play="slide">Play slide</button>
+          <p class="curve__why">Symmetric ease-in-out. A swap has no privileged direction — going from React to Solid should feel exactly like going back — so the curve is its own mirror. This is the curve the six-output switcher runs on, which makes it the most-seen motion in the brand.</p>
+        </article>
+        <article class="curve" data-curve="settle">
+          <header class="curve__head">
+            <h3 class="curve__name">settle</h3>
+            <p class="curve__meta"><code>cubic-bezier(0.22, 1, 0.36, 1)</code> · <strong>420ms</strong></p>
+          </header>
+          <div class="curve__plot" aria-hidden="true"></div>
+          <p class="curve__for">Long tail, no overshoot — it settles, it does not bounce twice.</p>
+          <div class="track" aria-hidden="true"><span class="track__chip" data-chip="settle"></span></div>
+          <button type="button" class="btn btn--ghost pressable" data-play="settle">Play settle</button>
+          <p class="curve__why">Reaches most of the distance early and then takes a long time to arrive. Used for things that come to rest: a panel arriving, a sticker being placed. Distinct from peel because it never passes its target — a settling object that bounces reads as a bug.</p>
+        </article>
+        <article class="curve" data-curve="instant">
+          <header class="curve__head">
+            <h3 class="curve__name">instant</h3>
+            <p class="curve__meta"><code>linear</code> · <strong>0ms</strong></p>
+          </header>
+          <div class="curve__plot" aria-hidden="true"></div>
+          <p class="curve__for">prefers-reduced-motion fallback.</p>
+          <div class="track" aria-hidden="true"><span class="track__chip" data-chip="instant"></span></div>
+          <button type="button" class="btn btn--ghost pressable" data-play="instant">Play instant</button>
+          <p class="curve__why">Not a design choice — the escape hatch. Every other curve collapses to this one when the user has asked for reduced motion, which is why it is in the vocabulary rather than being an absence of one.</p>
+        </article>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <section>
+    <h2>Press and release are not the same curve</h2>
+    <p class="text-body">Hold each pad down for a second and let go. The left one uses <code>press</code> in both directions — it reads as a state toggle. The right one presses on <code>press</code> and returns on <code>release</code> — it reads as a thumb coming off vinyl. This asymmetry is the single most load-bearing decision in the motion system, and it only exists to be felt.</p>
+    <div class="pair">
+      <div>
+        <div class="pad"><span class="sticker-demo press-both">hold</span></div>
+        <p class="text-caption">One curve both ways — <code>press</code> / <code>press</code>. Wrong.</p>
+      </div>
+      <div>
+        <div class="pad"><span class="sticker-demo pressable">hold</span></div>
+        <p class="text-caption">Asymmetric — <code>press</code> down, <code>release</code> up. Right.</p>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <section>
+    <h2>Peel</h2>
+    <p class="text-body">Hover it, or tab to it and it lifts on focus. <code>peel</code> is the only curve that overshoots, and the peel state is where the elevation scale steps up — <code>--shadow-peel</code>, a stacked <code>drop-shadow()</code> that follows the die-cut silhouette. Every die-cut object already casts <code>--elev-sticker</code> at rest; the peel raises it to <code>--elev-lifted</code>. <strong>box-shadow is not used in this system — a filter follows the alpha silhouette, a box-shadow follows the box.</strong></p>
+    <div class="pad">
+      <button type="button" class="sticker-demo peelable" style="cursor:pointer">peel me</button>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <section>
+    <h2>Slide — the A to B swap</h2>
+    <p class="text-body">This is the curve the <code>output-switcher</code> runs on, which makes it the most-seen motion in the brand. Symmetric, because a swap has no privileged direction.</p>
+    <div class="swap" id="swap" data-showing="a">
+      <div class="swap__panel" data-panel="a">React</div>
+      <div class="swap__panel" data-panel="b">Solid</div>
+    </div>
+    <p><button type="button" class="btn pressable" id="swap-btn">Swap</button></p>
+  </section>
+
+  <hr class="rule">
+
+  <section>
+    <h2>Settle</h2>
+    <p class="text-body">Long tail, and it never passes its target. A settling object that bounces reads as a bug.</p>
+    <div class="pad"><span class="sticker-demo settle-demo" id="settle" data-state="in">placed</span></div>
+    <p><button type="button" class="btn pressable" id="settle-btn">Drop it in</button></p>
+  </section>
+
+  <div class="deep">
+    <h2>Reduced motion is mandatory</h2>
+    <p>Under <code>(prefers-reduced-motion: reduce)</code> every duration collapses to <strong>0ms</strong>, every easing becomes <strong>linear</strong>, every transform token becomes <strong>none</strong>, and the only motion left is an opacity fade capped at <strong>120ms</strong>.</p>
+    <p>Vestibular triggers are movement, not change. Removing transform and collapsing duration removes the trigger; a short opacity fade does not reintroduce it and keeps state changes from being jarringly abrupt. 120ms is the ceiling, not a target.</p>
+    <p>Press <em>Simulate reduced motion</em> at the top of the page and play the curves again. Everything on this page still works; nothing on it moves.</p>
+  </div>
+
+  <section>
+    <h2>Reference</h2>
+    <table>
+      <thead><tr><th>Name</th><th>CSS variable</th><th>Timing function</th><th>Duration</th><th>For</th></tr></thead>
+      <tbody>
+        <tr><td><strong>press</strong></td><td><code>--motion-press</code></td><td><code>cubic-bezier(0.4, 0, 1, 1)</code></td><td><code>90ms</code></td><td>Pressing a sticker down is instant.</td></tr>
+        <tr><td><strong>release</strong></td><td><code>--motion-release</code></td><td><code>cubic-bezier(0, 0, 0.2, 1)</code></td><td><code>160ms</code></td><td>Deliberately asymmetric with press — down fast, up gentle.</td></tr>
+        <tr><td><strong>peel</strong></td><td><code>--motion-peel</code></td><td><code>cubic-bezier(0.34, 1.56, 0.64, 1)</code></td><td><code>260ms</code></td><td>Overshoot = a physical object with springiness.</td></tr>
+        <tr><td><strong>slide</strong></td><td><code>--motion-slide</code></td><td><code>cubic-bezier(0.65, 0, 0.35, 1)</code></td><td><code>300ms</code></td><td>Output-switcher; A to B swaps.</td></tr>
+        <tr><td><strong>settle</strong></td><td><code>--motion-settle</code></td><td><code>cubic-bezier(0.22, 1, 0.36, 1)</code></td><td><code>420ms</code></td><td>Long tail, no overshoot — it settles, it does not bounce twice.</td></tr>
+        <tr><td><strong>instant</strong></td><td><code>--motion-instant</code></td><td><code>linear</code></td><td><code>0ms</code></td><td>prefers-reduced-motion fallback.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+</div>
+
+<script type="application/json" id="motion-data">
+{
+  "easings": {
+    "press": {
+      "cubic_bezier": [
+        0.4,
+        0,
+        1,
+        1
+      ],
+      "css_timing_function": "cubic-bezier(0.4, 0, 1, 1)",
+      "duration_ms": 90,
+      "for": "Pressing a sticker down is instant.",
+      "why": "Ease-in with no deceleration: it starts moving and never slows, so the motion ends at full speed the way contact does. 90ms is below the threshold where a press reads as laggy.",
+      "pairs_with": "release",
+      "use_for": [
+        "button :active",
+        "sticker press-down",
+        "tab selection commit"
+      ]
+    },
+    "release": {
+      "cubic_bezier": [
+        0,
+        0,
+        0.2,
+        1
+      ],
+      "css_timing_function": "cubic-bezier(0, 0, 0.2, 1)",
+      "duration_ms": 160,
+      "for": "Deliberately asymmetric with press — down fast, up gentle.",
+      "why": "The asymmetry IS the design. A press and release that share one curve feels like a state toggle; a fast press and a slow release feels like a finger lifting off vinyl. If you find yourself using one curve for both directions, you have removed the point.",
+      "pairs_with": "press",
+      "use_for": [
+        "button release",
+        "sticker settling back down",
+        "hover-out"
+      ]
+    },
+    "peel": {
+      "cubic_bezier": [
+        0.34,
+        1.56,
+        0.64,
+        1
+      ],
+      "css_timing_function": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+      "duration_ms": 260,
+      "for": "Overshoot = a physical object with springiness.",
+      "why": "The second control point sits above 1, so the value passes its target and comes back. That overshoot is the only place in the system where something behaves elastically, and it is reserved for the one gesture that is literally physical: a die-cut corner lifting off the page.",
+      "overshoots": true,
+      "use_for": [
+        ".is-peeling",
+        "sticker lift on hover",
+        "the peel affordance"
+      ]
+    },
+    "slide": {
+      "cubic_bezier": [
+        0.65,
+        0,
+        0.35,
+        1
+      ],
+      "css_timing_function": "cubic-bezier(0.65, 0, 0.35, 1)",
+      "duration_ms": 300,
+      "for": "Output-switcher; A to B swaps.",
+      "why": "Symmetric ease-in-out. A swap has no privileged direction — going from React to Solid should feel exactly like going back — so the curve is its own mirror. This is the curve the six-output switcher runs on, which makes it the most-seen motion in the brand.",
+      "symmetric": true,
+      "use_for": [
+        "output-switcher panel swap",
+        "tab content transition",
+        "carousel"
+      ]
+    },
+    "settle": {
+      "cubic_bezier": [
+        0.22,
+        1,
+        0.36,
+        1
+      ],
+      "css_timing_function": "cubic-bezier(0.22, 1, 0.36, 1)",
+      "duration_ms": 420,
+      "for": "Long tail, no overshoot — it settles, it does not bounce twice.",
+      "why": "Reaches most of the distance early and then takes a long time to arrive. Used for things that come to rest: a panel arriving, a sticker being placed. Distinct from peel because it never passes its target — a settling object that bounces reads as a bug.",
+      "overshoots": false,
+      "use_for": [
+        "panel entrance",
+        "scroll reveal",
+        "sticker placed on the sheet"
+      ]
+    },
+    "instant": {
+      "cubic_bezier": null,
+      "css_timing_function": "linear",
+      "duration_ms": 0,
+      "for": "prefers-reduced-motion fallback.",
+      "why": "Not a design choice — the escape hatch. Every other curve collapses to this one when the user has asked for reduced motion, which is why it is in the vocabulary rather than being an absence of one.",
+      "use_for": [
+        "reduced-motion fallback",
+        "anything that must not animate"
+      ]
+    }
+  },
+  "transforms": {
+    "peel": {
+      "css": "rotate(-1.5deg) translateY(-3px) scale(1.015)",
+      "filter": "var(--shadow-peel)",
+      "for": "The lifted state. A corner physically off the page.",
+      "notes": "The peel raises the object one step on the elevation scale, from --elev-sticker to --elev-lifted. Both are stacked drop-shadow() filters, so the shadow follows the die-cut silhouette rather than the bounding box. Never a box-shadow."
+    },
+    "press": {
+      "css": "translateY(1px) scale(0.985)",
+      "filter": "none",
+      "for": "The pressed state. A thumb on the sticker.",
+      "notes": "No rotation. Pressing is straight down. Adding rotation here makes it read as a wobble rather than a press, and the peel curve already owns rotation."
+    },
+    "rest": {
+      "css": "none",
+      "tilts": {
+        "--tilt-1": "-3deg",
+        "--tilt-2": "-1.5deg",
+        "--tilt-3": "-4.25deg",
+        "--tilt-4": "2deg"
+      },
+      "for": "The resting state. Not an animation — where a sticker lives.",
+      "notes": "Declared in ../tokens/sticker.css, restated here because motion returns to it. The rest value is -3deg, measured off Sticker Forge's own overall-tilt slider rather than guessed. The four values are deliberately unequal and deliberately not mirrored so a group looks placed by hand. Cycle them across siblings; do not invent a fifth. A decorative sticker at 0deg reads as a div."
+    }
+  },
+  "reduced_motion": {
+    "media_query": "(prefers-reduced-motion: reduce)",
+    "mandatory": true,
+    "durations_ms": 0,
+    "timing_function": "linear",
+    "transforms": "none",
+    "opacity_fade_max_ms": 120,
+    "rationale": "Vestibular triggers are movement, not change. Removing transform and collapsing duration removes the trigger; a short opacity fade does not reintroduce it and keeps state changes from being jarringly abrupt. 120ms is the ceiling, not a target.",
+    "utility_class": ".motion-fade"
+  }
+}
+</script>
+<script>
+  // Everything below reads the inlined motion.json payload. The specimen cannot
+  // drift from the source of truth because it has no values of its own.
+  const DATA = JSON.parse(document.getElementById('motion-data').textContent);
+
+  /* ── Bezier plots, drawn from the coefficients ──────────────────────────── */
+  const S = 132, PAD = 14;
+  for (const [name, easing] of Object.entries(DATA.easings)) {
+    const host = document.querySelector('.curve[data-curve="' + name + '"] .curve__plot');
+    if (!host) continue;
+    const c = easing.cubic_bezier;
+    const x = (t) => PAD + t * (S - 2 * PAD);
+    const y = (v) => S - PAD - v * (S - 2 * PAD);
+    const path = c
+      ? 'M ' + x(0) + ' ' + y(0) + ' C ' + x(c[0]) + ' ' + y(c[1]) + ', ' + x(c[2]) + ' ' + y(c[3]) + ', ' + x(1) + ' ' + y(1)
+      : 'M ' + x(0) + ' ' + y(0) + ' L ' + x(1) + ' ' + y(1);
+    host.innerHTML =
+      '<svg viewBox="0 0 ' + S + ' ' + S + '" role="img" aria-label="' + name + ' easing curve">' +
+      '<rect x="' + PAD + '" y="' + PAD + '" width="' + (S - 2 * PAD) + '" height="' + (S - 2 * PAD) + '" fill="none" stroke="currentColor" stroke-opacity="0.18" stroke-width="1"/>' +
+      '<path d="' + path + '" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>' +
+      '</svg>';
+  }
+
+  /* ── Play buttons — the chip actually travels on the real curve ─────────── */
+  document.querySelectorAll('[data-play]').forEach((button) => {
+    const name = button.dataset.play;
+    const easing = DATA.easings[name];
+    const chip = document.querySelector('[data-chip="' + name + '"]');
+    let out = false;
+    button.addEventListener('click', () => {
+      // Read the token off the cascade so simulated reduced motion is honoured.
+      const styles = getComputedStyle(document.documentElement);
+      const dur = styles.getPropertyValue('--duration-' + name).trim() || easing.duration_ms + 'ms';
+      const ease = styles.getPropertyValue('--ease-' + name).trim() || easing.css_timing_function;
+      chip.style.transition = 'translate ' + dur + ' ' + ease;
+      out = !out;
+      const track = chip.parentElement;
+      const distance = track.clientWidth - chip.offsetWidth - 8;
+      chip.style.translate = out ? distance + 'px 0' : '0 0';
+    });
+  });
+
+  /* ── Swap, settle ──────────────────────────────────────────────────────── */
+  const swap = document.getElementById('swap');
+  document.getElementById('swap-btn').addEventListener('click', () => {
+    swap.dataset.showing = swap.dataset.showing === 'a' ? 'b' : 'a';
+  });
+
+  const settle = document.getElementById('settle');
+  document.getElementById('settle-btn').addEventListener('click', () => {
+    settle.dataset.state = 'out';
+    requestAnimationFrame(() => requestAnimationFrame(() => { settle.dataset.state = 'in'; }));
+  });
+
+  /* ── Reduced-motion readout and simulator ──────────────────────────────── */
+  const mq = matchMedia(DATA.reduced_motion.media_query);
+  const statusEl = document.getElementById('rm-status');
+  const valueEl = document.getElementById('rm-value');
+  const toggle = document.getElementById('rm-toggle');
+  let simulated = false;
+  const render = () => {
+    const on = simulated || mq.matches;
+    document.documentElement.dataset.motion = on ? 'reduced' : 'system';
+    statusEl.dataset.on = String(on);
+    valueEl.textContent = mq.matches ? 'reduce (system)' : simulated ? 'reduce (simulated)' : 'no-preference';
+    toggle.textContent = simulated ? 'Stop simulating' : 'Simulate reduced motion';
+  };
+  mq.addEventListener('change', render);
+  toggle.addEventListener('click', () => { simulated = !simulated; render(); });
+  render();
+</script>
+</body>
+</html>

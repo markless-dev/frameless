@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frameless — hero</title>
+<link rel="icon" href="../assets/wordmark/favicon.svg">
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="./component-tokens.css">
+<link rel="stylesheet" href="./specimen.css">
+<link rel="stylesheet" href="../motion/motion.css">
+<link rel="stylesheet" href="../assets/wordmark/wordmark.css">
+
+<style>
+/* ============================================================================
+ * HERO — the display band, and the one place lime type is legal
+ *
+ * WHAT IT IS FOR
+ * Stating what this is in one breath. A dark band at the top of a page,
+ * carrying the wordmark, one --step-7 headline, a subhead, and two CTAs.
+ *
+ * WHEN TO USE IT
+ * Once per page, at the top. Never twice.
+ *
+ * ⚠ A HERO IS NOT A LANDING PAGE.
+ * The most common failure when building from a brand kit is producing one
+ * beautiful full-screen hero and stopping. A Frameless landing page has at
+ * least SEVEN sections — read ../artifacts/web/page-composition.md before you
+ * build one. If you have built only this component, you are one ninth done.
+ *
+ * ── WHY IT IS DARK ──────────────────────────────────────────────────────────
+ * the dark bed #0b1714 gives lime 9.91:1, which is the ONLY ratio in the
+ * system that makes lime display type legal. That is not a styling choice, it
+ * is the reason this component exists on this bed and not on paper.
+ *
+ * Lime type here is still gated on size: --step-3 or larger. Both display
+ * roles clear it comfortably. Body copy is never lime, on any surface.
+ *
+ * ── THE PHOTOGRAPH ──────────────────────────────────────────────────────────
+ * FORBIDDEN: a full-bleed photo hero with a headline sitting on the
+ * photograph. Named explicitly because it is exactly what a cold agent reaches
+ * for by default, and because a real generated page got it wrong: local
+ * luminance in coast-environment.jpg swings 1.02:1 to 3.38:1 against lime
+ * depending on where a glyph lands. Contrast is a property of the pixel under
+ * the glyph, not of the image.
+ *
+ * PERMITTED: the photo behind a MANDATORY scrim — a flat 78% wash of the page
+ * bed, declared as --hero-scrim below. Once the scrim is applied, treat the
+ * region as that solid colour and apply its whole column of rules. That is
+ * .hero--view below.
+ *
+ * PREFERRED: no photo in the hero at all. Put the coast in a bounded die-cut
+ * frame further down the page — see card--photo. The coast is a photo sticker,
+ * not wallpaper.
+ * ==========================================================================*/
+
+/* THE HEADLINE IS FIXED: "Compile once, output anywhere."
+   Do not rewrite it, do not A/B it, and never count the targets — see
+   ../../verbal/messaging.md. Counting turns the promise into an inventory. */
+.hero {
+	position: relative;
+	isolation: isolate;
+	overflow: hidden;
+	padding: var(--space-2xl) var(--space-l);
+	background-color: var(--surface);
+	background-image: var(--texture-grid);
+	color: var(--ink);
+
+	/* The scrim, declared here rather than as a global token, because it is only
+	   ever used by this component and a scrim that exists as a system token gets
+	   reached for in places that should not have a photograph at all. */
+	--hero-scrim: rgb(11 23 20 / 0.78);
+}
+
+.hero__inner {
+	position: relative;
+	z-index: 1;
+	max-width: 62rem;
+	margin-inline: auto;
+	display: grid;
+	gap: var(--space-m);
+	justify-items: start;
+}
+
+/* The one legal lime headline — the DIE-CUT treatment, four layers.
+ *
+ *   lime fill -> black keyline -> cream band -> stacked drop-shadow
+ *
+ * This is the concept art's own construction, and all four layers are load
+ * bearing. A keyline alone muddies on a dark bed because the outline has
+ * nothing to separate FROM; the cream band is what turns the letters into a
+ * die-cut object sitting on the page rather than coloured text. The owner
+ * compared keyline-only against band+keyline side by side and picked this.
+ *
+ * HOW: one element cannot carry two strokes, so the band and keyline are
+ * ::before / ::after copies driven by data-text, sent behind the real glyphs
+ * with negative z-index. `isolation: isolate` keeps those negatives inside the
+ * headline instead of punching through the section behind it.
+ *
+ * The shadow is a FILTER on the element, not a text-shadow: it must follow the
+ * silhouette of the outermost BAND, and a text-shadow follows the glyphs.
+ */
+.hero__headline {
+	--hd-band: 0.26em;    /* outermost cream. em-relative so the treatment holds at any size. */
+	--hd-keyline: 0.10em; /* black, inside the band */
+
+	position: relative;
+	isolation: isolate;
+	font-size: var(--step-7);
+	font-weight: 900;
+	/* NOT --leading-display (0.95).
+	   The band is a CENTRED stroke, so it extends --hd-band/2 outside every
+	   glyph — and it must clear the band of the line above, not merely the ink.
+	   1.06 clears the ink and still lets the two cream bands merge into each
+	   other, which reads as one connected blob at the joins. Measured: the band
+	   needs --hd-band of separation on top of the ink gap, which lands at 1.22. */
+	line-height: 1.22;
+	letter-spacing: var(--tracking-display);
+	color: var(--accent);
+	margin: 0;
+	max-width: 16ch;
+	text-wrap: balance;
+	filter:
+		drop-shadow(0 0.035em 0 rgb(0 0 0 / 0.42))
+		drop-shadow(0 0.08em 0.09em rgb(0 0 0 / 0.5));
+}
+
+.hero__headline::before,
+.hero__headline::after {
+	content: attr(data-text);
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	letter-spacing: inherit;
+	text-wrap: inherit;
+	-webkit-text-stroke-color: currentColor;
+	/* stroke UNDER fill, or each layer eats its own counters */
+	paint-order: stroke fill;
+}
+
+/* the cream band — outermost, furthest back */
+.hero__headline::before {
+	z-index: -2;
+	color: var(--band);
+	-webkit-text-stroke-width: var(--hd-band);
+}
+
+/* the black keyline — between band and fill */
+.hero__headline::after {
+	z-index: -1;
+	color: var(--keyline);
+	-webkit-text-stroke-width: var(--hd-keyline);
+}
+
+/* A die-cut edge needs room to exist. Without this the band is clipped by the
+   inline box and reads as a hard rectangle rather than a cut line. */
+.hero__inner { overflow: visible; }
+
+@media (prefers-reduced-motion: reduce) {
+	.hero__headline { filter: drop-shadow(0 0.035em 0 rgb(0 0 0 / 0.42)); }
+}
+
+/* The subhead is NOT lime. Body-weight copy is never lime on any surface, and
+   the cream reads at 13.74:1 here. */
+.hero__subhead {
+	font-size: var(--step-2);
+	font-weight: 500;
+	line-height: 1.35;
+	color: var(--ink);
+	max-width: 46ch;
+	margin: 0;
+	text-wrap: pretty;
+}
+
+.hero__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-s);
+	margin-block-start: var(--space-xs);
+}
+
+.hero__btn {
+	display: inline-flex;
+	align-items: center;
+	font-family: var(--font-sans);
+	font-size: var(--step-0);
+	font-weight: 700;
+	line-height: 1;
+	padding: 0.85em 1.4em;
+	border: var(--sticker-keyline, 2px) solid var(--keyline);
+	border-radius: var(--sticker-radius-small, 0.6rem);
+	background-color: var(--band);
+	background-image: var(--band-sheen);
+	color: var(--accent-ink, #0b0f0c);
+	cursor: pointer;
+	text-decoration: none;
+	filter: var(--elev-sticker);
+}
+
+/* A lime fill IS a light surface — relative luminance 0.6616. So the primary
+   button is a nested light island inside the dark hero, and it carries
+   data-surface="light" in the markup to say so. That restores the light column
+   of role tokens, which is what makes --ink resolve to #11160f here and gives
+   the label its 12.43:1. Hardcoding a hex would have produced the same pixels
+   and lost the reason. */
+.hero__btn--primary {
+	background-color: var(--accent);
+	background-image: var(--gloss);
+	color: var(--accent-ink, #0b0f0c);
+	border-color: var(--keyline);
+}
+
+/* ── .hero--view — the photograph, behind a mandatory scrim ─────────────── */
+
+.hero--view .hero__view {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	background-image: url("../assets/photos/coast-environment.jpg");
+	background-size: cover;
+	background-position: center 62%;
+}
+
+/* THE SCRIM IS NOT OPTIONAL. Removing it produces the one composition the kit
+   forbids by name. It is declared as its own element rather than as an
+   ::after so it is visible in the markup and harder to delete by accident. */
+.hero--view .hero__scrim {
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	background: var(--hero-scrim);
+}
+
+/* ── decorative stickers ────────────────────────────────────────────────── */
+/* Margins, gutters, section seams. NEVER behind readable text — if a sticker
+   lands behind a paragraph, move the sticker, never lighten the text. */
+.hero__sticker {
+	position: absolute;
+	z-index: 1;
+	inline-size: 7rem;
+	pointer-events: none;
+	filter: var(--elev-sticker);
+}
+
+.hero__sticker--right { inset-inline-end: 4%; inset-block-start: 12%; rotate: var(--tilt-2); }
+.hero__sticker--corner { inset-inline-end: 12%; inset-block-end: 8%; rotate: var(--tilt-3); inline-size: 5rem; }
+
+@media (max-width: 60rem) {
+	/* Scattered absolute placement collapses on mobile. The stacked fallback is
+	   simply: no decoration. The page must work at 390px. */
+	.hero__sticker { display: none; }
+}
+</style>
+</head>
+
+<body>
+<main class="spec">
+
+<header>
+	<p class="spec__kicker">Frameless component · section</p>
+	<h1>hero</h1>
+	<p class="spec__lede">The display band. Dark bed, one headline, two calls to action — and the only place in the entire system where lime type is legal.</p>
+</header>
+
+<div class="spec__use">
+	<div>
+		<h2>Use it when</h2>
+		<ul>
+			<li>Opening a page. Once, at the top.</li>
+			<li>You need one big statement in lime — this is the surface that makes 12.41:1 possible.</li>
+			<li>You have already read <code>../artifacts/web/page-composition.md</code> and know the other eight sections are coming.</li>
+		</ul>
+	</div>
+	<div class="spec__use--no">
+		<h2>Don't use it when</h2>
+		<ul>
+			<li>It would be the whole page. <strong>A hero is not a landing page.</strong></li>
+			<li>You want a headline sitting directly on the photograph. Forbidden by name.</li>
+			<li>There is already a hero above it.</li>
+		</ul>
+	</div>
+</div>
+
+<hr class="spec__rule">
+
+<section>
+	<h2>Default — no photograph</h2>
+	<p class="spec__note">The preferred hero. The coast belongs in a bounded frame further down the page, not behind the headline.</p>
+</section>
+</main>
+
+<section class="hero" data-surface="deep">
+	<div class="hero__inner">
+		<span class="wordmark wordmark--compact">
+			<span class="wordmark__layer wordmark__band" aria-hidden="true">frameless</span>
+			<span class="wordmark__layer wordmark__keyline" aria-hidden="true">frameless</span>
+			<span class="wordmark__layer wordmark__cut">frameless</span>
+		</span>
+		<h2 class="hero__headline" data-text="Compile once, output anywhere.">Compile once, output anywhere.</h2>
+		<p class="hero__subhead">Write your component once. It compiles to real, idiomatic framework code — and the outputs are proven to behave the same in a real browser.</p>
+		<div class="hero__actions">
+			<button type="button" class="hero__btn hero__btn--primary pressable" data-surface="light">Run the demo</button>
+			<button type="button" class="hero__btn pressable">See the output</button>
+		</div>
+	</div>
+	<img class="hero__sticker hero__sticker--right" src="../assets/stickers/pine.png" alt="">
+	<img class="hero__sticker hero__sticker--corner" src="../assets/stickers/seagull.png" alt="">
+</section>
+
+<main class="spec">
+<section>
+	<h2>With the view — photograph behind a mandatory scrim</h2>
+	<p class="spec__note">Tier 1 usage. <code>--hero-scrim</code> at 78% removes the variable instead of testing it; once it is applied the region is treated as the solid <code>#0b1714</code> and every rule that applies there applies here. Delete the scrim and this becomes the one composition the kit forbids by name.</p>
+</section>
+</main>
+
+<section class="hero hero--view" data-surface="deep">
+	<div class="hero__view" aria-hidden="true"></div>
+	<div class="hero__scrim" aria-hidden="true"></div>
+	<div class="hero__inner">
+		<span class="wordmark wordmark--compact">
+			<span class="wordmark__layer wordmark__band" aria-hidden="true">frameless</span>
+			<span class="wordmark__layer wordmark__keyline" aria-hidden="true">frameless</span>
+			<span class="wordmark__layer wordmark__cut">frameless</span>
+		</span>
+		<h2 class="hero__headline" data-text="Compile once, output anywhere.">Compile once, output anywhere.</h2>
+		<p class="hero__subhead">One source in. Framework-native code out. No runtime, no wrapper, no lock-in.</p>
+		<div class="hero__actions">
+			<button type="button" class="hero__btn hero__btn--primary pressable" data-surface="light">Get started</button>
+			<button type="button" class="hero__btn pressable">Browse the source</button>
+		</div>
+	</div>
+</section>
+
+<main class="spec">
+
+<section>
+	<h2>The headline is fixed</h2>
+	<p class="spec__note">One line, and it is not a matter of taste: <strong>Compile once, output anywhere.</strong> It is on the concept art, it is the brand's whole promise, and <code>../../verbal/messaging.md</code> states it as production copy rather than as guidance about copy.</p>
+	<p class="spec__note"><strong>Never count the targets.</strong> Not "Ship six", not "One source. Six outputs.", not "six frameworks". Counting makes the promise sound conditional and small — as if the answer to "does it work with mine?" were a list you have to check. Name individual frameworks where a specific reader needs to find their own; never as a total.</p>
+	<table class="spec__table">
+		<thead><tr><th>Slot</th><th>Copy</th></tr></thead>
+		<tbody>
+			<tr><td>Headline</td><td>Compile once, output anywhere.</td></tr>
+			<tr><td>Subhead A</td><td>Write your component once. It compiles to real, idiomatic framework code — and the outputs are proven to behave the same in a real browser.</td></tr>
+			<tr><td>Subhead B</td><td>One source in. Framework-native code out. No runtime, no wrapper, no lock-in.</td></tr>
+			<tr><td>Subhead C</td><td>Not a runtime. Not a wrapper. A compiler with a test suite that can fail.</td></tr>
+		</tbody>
+	</table>
+</section>
+
+<section>
+	<h2>The rules this component enforces</h2>
+	<ul class="spec__note">
+		<li>Headline is <code>--step-7</code>, Black 900, lime, on the dark bed. One per page.</li>
+		<li>Subhead is <strong>never</strong> lime — body-weight copy is never lime on any surface.</li>
+		<li>If the photograph appears, the scrim is mandatory and is a real element in the markup.</li>
+		<li>Decorative stickers sit in the margins and disappear below 60rem, because scattered absolute placement collapses at 390px.</li>
+		<li>The wordmark, the buttons and the decorative stickers all carry <code>filter: var(--elev-*)</code>. A flat hero is the failure this rebuild exists to correct.</li>
+	</ul>
+	<p class="spec__verdict spec__verdict--no">A full-bleed photo hero with a headline on the photograph.</p>
+	<p class="spec__verdict spec__verdict--yes">A dark textured band, one lime statement with real depth, and the coast in a frame further down.</p>
+</section>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,713 @@
+version: 2
+
+goal:
+  slug: frameless-website-v1
+  title: "Frameless homepage — interactive nature-sticker landing, 2-3 variants"
+  status: active
+  mode: open_ended
+  charter: docs/goals/frameless-website-v1/goal.md
+  oracle:
+    signal: >-
+      Playwright interaction-contract suite passes against every shipped variant: each
+      framework sticker opens and closes a popup, the popup body contains that framework's
+      compiled output, the peel-sticker section changes geometry in response to pointer
+      movement, computed font-family resolves to Que Grotesque rather than a fallback, the
+      Frameless Studio coming-soon element is present, and the layout holds at mobile
+      widths.
+    final_proof: >-
+      T999 Judge receipt with full_outcome_complete: true, backed by a green run of
+      "node website/tests/interaction-contract.mjs" covering all
+      variants, plus Judge having opened at least one popup per framework per variant and
+      confirmed the code shown is byte-traceable to this repo's React/Solid/Qwik emitter
+      output rather than hand-written.
+  intake:
+    input_shape: existing_plan
+    authority: requested
+    proof_type: demo
+    completion_proof: >-
+      2-3 SCROLLING LANDING PAGE variants under website/, each running locally, each
+      passing the full interaction contract, each displaying real emitter output in its
+      framework showcase section, each containing the peel section and a Studio coming-soon
+      moment, and none of them built with a component framework. Superseded 2026-07-24: the
+      earlier "genuinely different core interaction mechanic per variant" framing came from
+      the rejected single-viewport reading. Variants are now landing page designs sharing
+      one interaction set.
+    likely_misfire: >-
+      Two now, both live. Original: three pretty but static pages with fake code snippets
+      and a decorative peel - still guarded by the 23 assertions. Added 2026-07-24 after the
+      owner rejected the first build: mistaking a reference site's ARCHITECTURE for its
+      MECHANIC. avara.xyz is a one-screen fixed stage; copying that wholesale produced a toy
+      instead of a landing page. The sticker popup was the thing to borrow, not the
+      single-viewport shell.
+    existing_plan_facts:
+      - "Theme reference image: /Users/jacksm5pro/Downloads/image (3).png (verified present)"
+      - "Font: /Users/jacksm5pro/Downloads/Que_Grotesque_Professional_License_typeberka.com (verified; OTF/TTF/Variable/WOFF + EULA)"
+      - "Sticker popup mechanic reference: https://avara.xyz/ — owner wants 'exactly like this but with the frameworks'"
+      - "Peel effect reference: https://sticker.oooo.so/ — required in one section"
+      - "Energy reference: https://react.gg/"
+      - "Icons: Game Icons via https://icon-sets.iconify.design/game-icons/"
+      - "codex CLI available for image generation when a needed asset does not exist"
+      - "Frameless Studio = simpler Storybook (components + states, works everywhere), coming soon, not shipped"
+      - "Homepage only, plain HTML/CSS/JS, no framework"
+      - "Owner selected: variants differ by interaction concept; research before code"
+
+active_task: T007
+
+agents:
+  scout: installed
+  worker: installed
+  judge: installed
+
+verification:
+  command: "node website/tests/interaction-contract.mjs"
+  status: unknown
+  note: >-
+    Harness does not exist yet; created in T004. NOT @playwright/test — that package is
+    not installed in this repo and the Worker sandbox has no network. The harness uses the
+    playwright library resolved via createRequire against
+    packages/frameworks/react/package.json, matching the existing precedent in
+    scripts/e2e.mjs:36-38.
+
+tasks:
+  - id: T001
+    type: scout
+    assignee: Scout
+    status: done
+    reasoning_hint: medium
+    objective: >-
+      Map what Frameless actually is and what its compilers emit, so the site shows
+      truthful output. Answer: what is the authoring input format, which framework
+      emitters exist and are working today, and what is the shortest honest
+      one-source -> many-frameworks story to dramatize on a landing page.
+    inputs:
+      - README.md
+      - AGENTS.md
+      - packages/
+      - demos/react-official/
+      - demos/solid-official/
+      - demos/qwik/
+      - docs/goals/frameless-qwik-v1/state.yaml
+      - docs/goals/frameless-composition-v1/state.yaml
+    constraints:
+      - "Read-only. No edits anywhere."
+      - "Report what is genuinely working today, not what is aspirational."
+      - "Identify the exact command or code path that produces per-framework output from one source."
+    expected_output:
+      - "One-paragraph plain-English description of Frameless suitable for a hero headline"
+      - "List of framework emitters that work today, with the file/command that produces each"
+      - "A concrete small example component + its real emitted output per framework (or the exact way to generate it)"
+      - "Whether output can be produced at build time for the website, or must be pre-captured"
+      - "Any claim on the site that would be false or overstated today"
+    receipt:
+      result: done
+      note: docs/goals/frameless-website-v1/notes/T001-frameless-pipeline-map.md
+      summary: >-
+        Frameless compiles .tsrx into a semantic IR, then emits idiomatic per-framework
+        code. Exactly three emitters exist and are proven: React 19, Solid, Qwik. The
+        programmatic path is two hops - buildEnrichedIr({filename, source}) then
+        emit(ir)/formatEmitted(...) from each framework package; there is no single
+        compile(source, {target}) helper. Committed input->IR->output triples exist for
+        S1/S2/S3. Reading the committed generated/*.jsx with fs is safer than importing
+        the compiler, because packages export raw src TS, are private, unbuilt, v0.0.0,
+        and @frameless/compiler depends on a vendored tarball.
+      evidence:
+        - packages/compiler/test/fixtures/s1-render-once.tsrx
+        - packages/compiler/test/goldens/s1-render-once.json
+        - packages/frameworks/react/generated/S1.jsx
+        - packages/frameworks/solid/generated/S1.jsx
+        - packages/frameworks/qwik/generated/S1.jsx
+        - packages/compiler/src/build.ts:139
+        - packages/frameworks/qwik/scripts/regenerate.ts
+        - packages/cli/src/program.ts:6-10
+      key_facts:
+        - "Authoring format .tsrx; state()/computed() imported from @markless/core in every real fixture"
+        - "Only packages/frameworks/{react,solid,qwik} exist - no vue, svelte, angular"
+        - "Best showcase is S1 RenderOnce: Solid emits <Show fallback=> where React and Qwik emit ternaries"
+        - "CLI TARGET_INVENTORY is react+solid only; qwik unreachable via `frameless build`"
+      honesty_flags:
+        - "'Compile to any framework' is false today - three emitters, Angular/Vue/Svelte are Planned"
+        - "README hero imports @frameless.md/core but every on-disk fixture imports @markless/core"
+        - "Frameless Studio does not exist anywhere in the codebase"
+        - "All packages are version 0.0.0 and private - nothing is published"
+        - "Persistence is React+Solid only, not Qwik; a11y and perf are not proven"
+
+  - id: T002
+    type: pm
+    assignee: PM
+    status: done
+    reasoning_hint: medium
+    objective: >-
+      Tear down the three inspiration sites interactively and inventory the brand inputs,
+      so the build starts from mechanics rather than guesses.
+    inputs:
+      - "https://avara.xyz/ — sticker popup mechanic (owner: 'exactly like this')"
+      - "https://sticker.oooo.so/ — peeling sticker effect"
+      - "https://react.gg/ — overall energy and pacing"
+      - "/Users/jacksm5pro/Downloads/image (3).png — theme reference image"
+      - "/Users/jacksm5pro/Downloads/Que_Grotesque_Professional_License_typeberka.com"
+      - "https://icon-sets.iconify.design/game-icons/"
+    constraints:
+      - "Read-only. No edits anywhere."
+      - "Actually drive avara.xyz and sticker.oooo.so with a real browser — click, drag, hover. Do not describe from a screenshot alone."
+      - "Read the theme reference image and describe its palette, texture, and sticker language concretely."
+      - "Inventory the font folder: list available weights/styles and which WOFF/WOFF2 files are usable. Note EULA constraints on redistribution."
+      - "Do not download or vendor any asset from the inspiration sites."
+    expected_output:
+      - "Sticker-popup mechanic teardown: trigger, open/close animation, layering, dismissal, how content is presented"
+      - "Peel effect teardown: what it tracks (pointer? scroll?), how the shadow/curl is produced, rough technique (CSS mask / canvas / SVG / WebGL)"
+      - "react.gg: 2-3 pacing or delight devices worth stealing"
+      - "Palette + texture spec extracted from the reference image (hex values, surface treatment, sticker outline/shadow language)"
+      - "Font inventory: usable web weights, exact file paths, licensing constraints"
+      - "Candidate Game Icons picks for framework/nature motifs"
+      - "Asset gap list: which stickers/mascots/textures must be generated because no real asset exists"
+    receipt:
+      result: done
+      note: docs/goals/frameless-website-v1/notes/T002-inspiration-and-brand-inputs.md
+      summary: >-
+        Drove all three sites in real Chromium. avara.xyz is fully decoded: fixed
+        full-viewport black stage, a loose pile of draggable die-cut stickers with three
+        nested transform layers (float / drag / resting tilt), and on click the sticker
+        scales up while every other sticker desaturates to silhouette and a 448px-wide
+        panel slides in from the right carrying a title, description, and a label/value
+        spec table, plus prev/next controls to cycle the pile. sticker.oooo.so's peel is
+        three.js r185 WebGL exposed as role=slider with aria-valuenow = percent peeled and
+        arrow-key support; its control panel gives the full parameter model (curl radius,
+        stiffness, wind, peel sound). react.gg contributes a fanned card deck, a near-black
+        fine-grid backdrop, and cream-on-black display type with one saturated CTA. The
+        reference image is near-finished key art and yields a 10-colour palette plus the
+        die-cut sticker language.
+      evidence:
+        - "https://avara.xyz/ — button.styles_draggable__ > div(translateY) > div(drag) > div.styles_logo__(rotate) > img"
+        - "https://sticker.oooo.so/ — <canvas data-engine='three.js r185' role='slider' aria-valuetext='0% peeled'>"
+        - "https://react.gg/ — scrollHeight 11898, Paytone One + Outfit, no canvas/video"
+        - "/Users/jacksm5pro/Downloads/image (3).png"
+        - "/Users/jacksm5pro/Downloads/Que_Grotesque_Professional_License_typeberka.com/WOFF (9 weights, woff+woff2)"
+      key_facts:
+        - "avara selection state: chosen sticker scales ~2x, others desaturate to silhouette, right panel 448px inset 8px, footer fades to opacity 0"
+        - "avara spec-table pattern maps directly onto per-framework metadata rows"
+        - "avara prev/next cycling is the best device to steal - flipping frameworks on one pinned source IS the product thesis"
+        - "Peel is WebGL in the reference, but role=slider + aria-valuenow makes peel state machine-assertable - keep that regardless of technique"
+        - "Peel parameter model: curl radius, stiffness, wind, plus a peel sound"
+        - "Palette: lime #C3D93A, deep green #173A22, cream #F5EFDD, ink #12100E, sky #A6CDE0, teal #3B8CA0, cliff #6E9B4E, sand #D9C9A3"
+        - "Que Grotesque ships 9 web weights as woff2 - no conversion needed; do not ship the variable file"
+        - "Game Icons is CC BY 3.0 - footer attribution required"
+      conflicts_for_judge:
+        - "Reference art shows SIX framework stickers; T001 proves only THREE emitters exist. Candidate resolution: React/Solid/Qwik are full-colour and clickable, while Vue/Svelte/Angular become the peel stickers whose adhesive underside reads COMING SOON."
+        - "three.js is ~600KB for one section. CSS/SVG fold-line peel is the recommended default with three.js as fallback."
+
+  - id: T003
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: >-
+      Turn Scout evidence into the build contract: define the three distinct interaction
+      concepts, the shared foundation, and the written interaction contract every variant
+      must pass. This is the decision that prevents three-pretty-static-pages.
+    inputs:
+      - "T001 receipt"
+      - "T002 receipt"
+      - "docs/goals/frameless-website-v1/goal.md"
+    constraints:
+      - "Read-only. No edits anywhere."
+      - "Each variant must have a materially different core interaction mechanic, not a different palette."
+      - "Every variant must include: framework sticker popups with real output, a peel-sticker section, a Studio coming-soon moment."
+      - "The interaction contract must be machine-checkable by Playwright. No subjective assertions."
+      - "Reject any concept whose framework popups would need hand-written code samples."
+    expected_output:
+      - "Decision"
+      - "Variant 1/2/3: name, core mechanic, what the user does, why it is memorable, honest difficulty rating"
+      - "Shared foundation scope: tokens, font pipeline, emitter-output capture, sticker asset kit"
+      - "The interaction contract as an explicit numbered assertion list"
+      - "Where the peel section lives in each variant"
+      - "Exact T004 Worker objective, allowed_files, verify, stop_if"
+    receipt:
+      result: done
+      decision: approved
+      note: docs/goals/frameless-website-v1/notes/T003-build-contract.md
+      full_outcome_complete: false
+      rationale: >-
+        Build contract issued. Six-vs-three resolved as a hardened two-tier sticker board
+        that is honest at rest, not only after peeling, and that gives the peel a semantic
+        job instead of leaving it decorative. Three variants separated by how the user
+        causes output - selection, progression, causation. CSS peel chosen because the
+        oracle is a headless run and the WebGL reference renders nothing there. Emitter
+        output read from committed, git-clean files behind a provenance gate. Judge also
+        found that the board's original verify command could not run at all.
+      blockers_found:
+        - "@playwright/test is in no package.json and not in the pnpm store; a spec importing it fails outright. Zero-install path proven instead: createRequire(packages/frameworks/react/package.json)('playwright') launches Chromium, matching scripts/e2e.mjs:36-38."
+        - "website/ does not exist (T001 called it an empty directory), and .gitignore already ignores website/assets/fonts/, so the font assertions only go green after an explicit install step."
+      decisions:
+        framework_honesty: >-
+          Two-tier sticker board. React/Solid/Qwik are full-colour, clickable,
+          data-status=shipped, and the only stickers inside the COMPILED OUTPUTS group.
+          Vue/Svelte/Angular sit in a separately labelled "PLANNED - peel to check" group:
+          desaturated, visible PLANNED tag, aria-disabled=true, cannot open a code panel.
+          Peeling reveals NOT SHIPPED YET. Keeps the owner's six-sticker key art while
+          staying true at every frame.
+        peel_technique: >-
+          CSS/SVG fold-line peel, no three.js in any variant. Decisive reason is
+          testability, not bundle size - the reference WebGL peel renders nothing under
+          default headless Chromium and the whole oracle is a headless run. clip-path fold
+          plus reflected flap under perspective, single --peel 0->1 mirrored to
+          aria-valuenow, role=slider and arrow keys retained. Fallback is a hard stop, not
+          a Worker judgment call.
+        emitter_output: >-
+          T001 confirmed. fs-read the committed files (all nine verified git-tracked and
+          clean) into one committed ES module, website/src/data/emitter-output.js. Hero
+          scenario is S1 RenderOnce because `grep -l '<Show'` matches solid only. The
+          capture script carries a provenance gate - each output's first line must be
+          exactly "// @generated by @frameless/<fw>; do not edit." or it exits 1.
+        asset_policy: >-
+          T004 generates zero images. The wordmark is live CSS text in Que Grotesque Black,
+          because assertion 16 checks the computed font-family of [data-wordmark], which is
+          unverifiable if it is an image. Texture via inline feTurbulence, backdrop via the
+          react.gg near-black grid. Coastal parallax, framework logo SVGs, nature stickers
+          and peel sound all deferred - asset generation is the second named misfire.
+      contract: "23 machine-checkable assertions in section 5.2 of the note"
+      anti_gaming_assertions:
+        - "#9 harness reads packages/frameworks/<fw>/generated/S1.jsx from disk at test time and asserts normalize(panelText) === normalize(fileContents) - hand-written snippets become impossible"
+        - "#15 peel geometry must actually move, not just aria-valuenow"
+        - "#17 a QueGrotesque*.woff2 resource must have decodedBodySize > 0, defeating a false green from a desktop-installed copy"
+        - "#20 no framework bundle may be loaded by the page"
+      parallel_safety: >-
+        T005 and T006 both declare allowed_files website/** and are NOT provably disjoint;
+        they must run sequentially after T004. T004 must complete first regardless, since
+        it creates the foundation and the shared harness both later tasks extend.
+
+  - id: T004
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: >-
+      Build the shared foundation plus Variant 1 "The Pile" end to end, and stand up the
+      interaction-contract harness so it runs green against Variant 1. Follow
+      docs/goals/frameless-website-v1/notes/T003-build-contract.md exactly; it is binding.
+      Foundation: website/ scaffold per contract section 6.1; install-fonts.mjs copying the
+      four licensed Que Grotesque woff2 weights into the gitignored website/assets/fonts/;
+      tokens.css from the T002 palette; capture-emitter-output.mjs producing the committed
+      website/src/data/emitter-output.js from the twelve committed fixture and generated
+      files, with the "@generated by @frameless/<fw>" provenance gate; serve.mjs, a
+      zero-dependency node:http static server; and the CSS fold-line peel with
+      role="slider" + aria-valuenow. Variant 1 is the avara mechanic: a fixed non-scrolling
+      full-viewport stage of draggable die-cut stickers, click to select (6px drag
+      threshold), others desaturate, a 448px right-hand panel showing that framework's real
+      compiled S1 output verbatim plus the spec table, and < > controls that cycle
+      React/Solid/Qwik with the .tsrx source pinned. React/Solid/Qwik are data-status=shipped
+      and clickable; Vue/Svelte/Angular are data-status=planned, aria-disabled, in a
+      separately labelled PLANNED group, and are the peel stickers whose underside reads NOT
+      SHIPPED YET. Include the Frameless Studio coming-soon sticker. The harness is plain
+      Node against the playwright library resolved via createRequire — NOT @playwright/test,
+      which is not installed and cannot be installed. It must auto-discover
+      website/variants/*/index.html so T005 and T006 inherit the contract for free. All 23
+      assertions in contract section 5.2 must pass for Variant 1. It must be a running,
+      interactive page, not a mockup.
+    allowed_files:
+      - "website/**"
+      - "package.json"
+      - ".gitignore"
+    verify:
+      - "node website/scripts/install-fonts.mjs"
+      - "node website/scripts/capture-emitter-output.mjs"
+      - "git diff --quiet website/src/data/emitter-output.js"
+      - "node website/tests/interaction-contract.mjs"
+      - "git status --porcelain website/assets/fonts | grep . ; test $? -eq 1"
+    stop_if:
+      - "Need files outside allowed_files — packages/, demos/ and poc/ are read-only."
+      - "Any new npm dependency appears necessary, including @playwright/test or three.js. The sandbox has no network. Stop and report; do not install, do not vendor."
+      - "The licensed font folder is missing at /Users/jacksm5pro/Downloads/Que_Grotesque_Professional_License_typeberka.com/WOFF/."
+      - "Any generated S1.jsx first line is not exactly '// @generated by @frameless/<fw>; do not edit.' — upstream moved; stop rather than adapt."
+      - "You are about to hand-write, reformat, re-indent, truncate or abbreviate any compiled output, or inject line numbers inside [data-output-code]."
+      - "You are about to set aria-valuenow on the peel without moving real geometry."
+      - "The CSS peel cannot reach aria-valuenow >= 90 without visible artifacts at 390px width."
+      - "Verification fails twice."
+    receipt:
+      result: done
+      summary: >-
+        Built the website/ foundation, Variant 1 "The Pile", and the 23-assertion contract
+        harness. 23/23 green, re-verified independently by PM. The page really runs: a
+        160px drag moves a sticker and opens nothing while a 4px nudge still activates, so
+        the 6px threshold works; the panel opens, swaps and closes; < > cycles
+        react->solid->qwik with the .tsrx source byte-identical across cycles; the peel
+        deforms real geometry and reveals NOT SHIPPED YET under the Vue sticker. Panel code
+        is byte-identical to packages/frameworks/*/generated/S1.jsx.
+      changed_files:
+        - website/index.html
+        - website/variants/pile/index.html
+        - website/src/css/{tokens,base,sticker,peel,pile}.css
+        - website/src/js/{pile,stickers,peel,emitter-panel,studio}.js
+        - website/src/data/emitter-output.js
+        - website/scripts/{install-fonts,capture-emitter-output,serve}.mjs
+        - website/tests/{interaction-contract,contract-assertions}.mjs
+        - website/README.md
+        - package.json
+      commands:
+        - cmd: node website/scripts/install-fonts.mjs
+          status: pass
+        - cmd: node website/scripts/capture-emitter-output.mjs
+          status: pass
+        - cmd: git diff --quiet website/src/data/emitter-output.js
+          status: pass
+        - cmd: node website/tests/interaction-contract.mjs
+          status: pass
+        - cmd: "git status --porcelain website/assets/fonts | grep . ; test $? -eq 1"
+          status: pass
+      assertions: "23/23"
+      worker_decisions:
+        - "capture records the last commit touching the twelve inputs plus a dirty flag rather than HEAD, because HEAD would break the contract's own determinism check on the next unrelated commit"
+        - "selected-sticker scale is 1.7x in place rather than a 2x move to a spotlight slot, so the React->Solid swap stays clickable at 1100px"
+        - "files live at src/css/tokens.css per contract 6.1, not the task text's src/styles/"
+      load_bearing: >-
+        renderCode in website/src/js/emitter-panel.js walks the string by index and emits
+        every character exactly once. That lossless walk is the only reason assertion 9's
+        byte equality survives syntax colouring. T005/T006 must preserve it.
+      pm_review: >-
+        Mechanics and honesty are excellent and fully verified. Art direction is NOT yet on
+        brief: the page is react.gg's dark grid with rounded rectangles, with no coastal
+        nature scene, no paper texture, no die-cut organic shapes and no framework logos.
+        This is the direct consequence of the T003 asset policy deferring all imagery,
+        which was correct for de-risking the build but leaves the owner's primary stated
+        goal - nature-like sticker theme that leaves an impression - unmet. Spawned T004b
+        and T004c before T005 so the two remaining variants inherit correct art rather than
+        replicating the gap three times.
+      spawned_tasks:
+        - T010
+        - T011
+
+  - id: T010
+    type: pm
+    assignee: PM
+    status: done
+    reasoning_hint: medium
+    objective: >-
+      Generate the nature-sticker art kit with codex image generation, which only the PM
+      can do because the Worker sandbox has no network. Verified working: `codex exec
+      --sandbox workspace-write --skip-git-repo-check "<prompt>"` produces on-brand die-cut
+      sticker art at 1254x1254. Deliver, into website/assets/art/: a coastal/meadow poster
+      backdrop in separable parallax layers, six framework die-cut sticker plates, a paper
+      grain/crinkle tile, a peel backing texture, and a handful of loose nature stickers
+      (leaf, mushroom, seagull, wildflower). Framework logos come from official marks, not
+      generation. Generate on a pure magenta #FF00FF field and key it out, because the
+      cream die-cut border is too close to white to key against a white background.
+    allowed_files:
+      - "website/assets/art/**"
+      - "docs/goals/frameless-website-v1/**"
+    verify:
+      - "every generated asset opens as a valid image and has a transparent background where required"
+      - "node website/tests/interaction-contract.mjs still 23/23 (art alone must not break the contract)"
+    stop_if:
+      - "codex image generation stops working or returns off-brand art twice in a row for the same asset."
+      - "An asset would embed a framework's trademark in generated art rather than using the official mark."
+    receipt:
+      result: done
+      summary: >-
+        Generated and installed the art kit into website/assets/art/ - 14 files, 1.0 MB
+        total. The magenta-key technique works: generating each sticker on a pure #FF00FF
+        field and keying it out gives clean die-cut cutouts, which a white field could not
+        because the cream border is too close to white. First pass left magenta fringing
+        where the baked drop shadow blended into the field; fixed by widening the fuzz to
+        45-55% and eroding the alpha channel, which removes the baked shadow entirely -
+        T011 must re-add shadows in CSS via filter: drop-shadow.
+      changed_files:
+        - website/assets/art/texture/coast.jpg
+        - website/assets/art/texture/paper.jpg
+        - website/assets/art/texture/backing.jpg
+        - website/assets/art/stickers/{mushroom,seagull,flower,pine,leaf}.png
+        - website/assets/art/logos/{react,solid,qwik,vue,svelte,angular}.svg
+      commands:
+        - cmd: "codex exec --sandbox workspace-write --skip-git-repo-check '<prompt>'"
+          status: pass
+        - cmd: "magick <in> -fuzz 45% -transparent '#FF00FF' -channel A -morphology Erode Octagon:2 +channel -trim +repage -resize 640x640 -colors 64"
+          status: pass
+      assets:
+        backdrop: >-
+          coast.jpg, 2400px wide, 653 KB - vintage screen-print coastal cliff meadow with
+          lighthouse, teal ocean, wildflower foreground and halftone paper grain. The
+          middle of the frame was deliberately prompted calm so content sits on top.
+        textures: "paper.jpg (41 KB) sticker fill grain; backing.jpg (49 KB) adhesive underside for the peel"
+        stickers: "mushroom, seagull, flower, pine, leaf - transparent PNG, <=640px, 20-113 KB each"
+        logos: >-
+          Six official marks from simple-icons via jsDelivr, each verified by its <title>
+          element. Note the correct slug for SolidJS is `solid`; `solidity` is a different
+          project and was fetched and discarded on the first attempt.
+      notes_for_t011:
+        - "Stickers have NO baked drop shadow - add it in CSS with filter: drop-shadow, which also keeps the shadow correct when a sticker rotates."
+        - "Logos are single-path monochrome SVGs with currentColor-friendly markup; tint them per framework rather than expecting full-colour brand art."
+        - "coast.jpg is a single flat image, not parallax layers. Separable layers were prompted for but the model returned one composed scene. Parallax, if wanted, needs either a re-prompt or CSS depth faked with the loose nature stickers."
+
+  - id: T011
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: >-
+      Art-direction pass on the shared foundation and Variant 1, using the T004b asset kit.
+      Bring the page onto the owner's brief: the coastal/meadow poster backdrop replacing
+      the react.gg dark grid, real die-cut organic sticker shapes replacing rounded
+      rectangles, official framework logos on the plates, paper texture on sticker fills,
+      and a wordmark treatment that survives Que Grotesque Black's closed 'e'. Also fix the
+      source card clipping its code on the right. All 23 assertions must stay green - this
+      is a re-skin of the foundation, not a rewrite of the mechanics, and the lossless
+      renderCode walk in emitter-panel.js must not be touched.
+    allowed_files:
+      - "website/**"
+    verify:
+      - "node website/tests/interaction-contract.mjs"
+      - "git diff --quiet website/src/data/emitter-output.js"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "An assertion goes red and the fix would require changing what the assertion checks."
+      - "You are about to modify renderCode's character-by-character walk in website/src/js/emitter-panel.js."
+      - "Verification fails twice."
+    receipt:
+      result: done
+      summary: >-
+        Re-skinned Variant 1 to the vintage-coastal nature-sticker brief without touching
+        the mechanics. coast.jpg replaces the dark grid under three CSS scrims plus corner
+        ramps; framework plates became organic die-cut SVG wobble paths with a fat cream
+        stroke, ink outline and paper.jpg grain, carrying inlined simple-icons marks tinted
+        per brand; five loose nature stickers joined the draggable pile; the peel reveals a
+        die-cut backing.jpg underside on a backing-textured flap; the source card now fades
+        on both axes instead of hard-clipping; the composition clusters and overlaps with a
+        stage scrim on selection. PM independently re-verified 23/23 and screenshotted idle,
+        selected and peeled states.
+      changed_files:
+        - website/variants/pile/index.html
+        - website/src/css/{tokens,base,sticker,peel,pile}.css
+        - website/src/js/{stickers,pile}.js
+        - website/README.md
+      commands:
+        - cmd: node website/tests/interaction-contract.mjs
+          status: pass
+        - cmd: git diff --quiet website/src/data/emitter-output.js
+          status: pass
+      assertions: "23/23"
+      worker_decisions:
+        - "Logo SVGs are inlined in a shared <defs> and drawn with <use>, not fetched. Load-bearing: a request for /assets/art/logos/react.svg matches assertion 20's resource regex and would have turned that assertion red."
+        - "Selected-plate scale dropped 1.7 -> 1.6 (1.35 between 1100-1439px) because plates now sit ~209px apart in an overlapping cluster; at 1.7 a selected plate covers its neighbour's centre and breaks assertion 10's React->Solid swap."
+        - "The wordmark's stroke moved to ::before/::after twins so the live text keeps open counters — this is what fixed 'frameless' reading as 'framcless'."
+        - "NOT SHIPPED YET reads dark grey rather than red because the whole planned sticker sits under filter: grayscale(1), which is the at-rest honesty signal the contract requires."
+      page_weight: "1.14 MB / 23 requests, of which ~1.01 MB is the T010 art kit and 94 KB is four font weights. Nature PNGs are fetchpriority=low; coast.jpg is preloaded."
+      pm_review: >-
+        Large improvement — the page now genuinely reads as the brief: coastal poster
+        backdrop, organic die-cut plates with real logos, loose nature stickers, peel tabs.
+        Four polish items carried forward rather than blocking: (1) the three scrims leave
+        the backdrop noticeably darker and greyer than the source art, losing the airy
+        vintage-poster quality; (2) Que Grotesque's closed 'e' was fixed on the wordmark but
+        still reads oddly in the tagline and body copy - an owner typography call, not a
+        bug; (3) the peel flap curls boxily, more folded card than curled vinyl - T006 owns
+        the best peel expression; (4) the composition leaves a large empty ocean region
+        centre-right.
+
+  - id: T005
+    type: worker
+    assignee: Worker
+    status: blocked
+    reasoning_hint: medium
+    objective: >-
+      Build Variant 2 "The Compile Lane" on the shared foundation. Core mechanic: scroll
+      position IS compilation progress, and it is reversible — a scan line consumes the
+      .tsrx source while three output columns write themselves in; scroll back and they
+      un-write. Per contract section 2. It inherits the interaction contract automatically
+      via harness auto-discovery of website/variants/*/index.html.
+    allowed_files:
+      - "website/**"
+    verify:
+      - "node website/tests/interaction-contract.mjs"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Variant 2's mechanic collapses into a reskin of Variant 1 — scroll must drive compilation, not just reveal a finished page."
+      - "Any new npm dependency appears necessary. The sandbox has no network."
+      - "Verification fails twice."
+    receipt:
+      result: blocked
+      summary: >-
+        Stopped mid-build by the owner. Superseded by the 2026-07-24 course correction: the
+        deliverable is a scrolling landing page, not a single-viewport stage, so "Variant 2
+        as a different core interaction mechanic" is no longer the right unit of work. The
+        scroll-scrub compile lane may still return later as a SECTION of a landing page,
+        but not as a whole variant.
+      superseded_by: T013
+
+  - id: T012
+    type: pm
+    assignee: PM
+    status: done
+    reasoning_hint: medium
+    objective: >-
+      After the owner rejected the single-viewport architecture, produce static landing-page
+      structure mockups so the page shape can be settled visually before any rebuild. The
+      owner's words were "What landing structure? You showed me nothing?" - the failure was
+      describing structure in prose instead of showing it.
+    allowed_files:
+      - "website/mockups/**"
+    receipt:
+      result: done
+      summary: >-
+        Built three static, full-scroll landing-page structures at website/mockups/ using
+        the real art kit and real Que Grotesque, and sent full-page screenshots to the
+        owner. A "Poster": cream paper page, full-bleed coastal hero, alternating
+        cream/sand/deep-green bands, closest to the reference art (4828px). B "Field
+        Guide": paper texture throughout, numbered specimen plates, frameworks as
+        catalogue entries rather than a grid, quietest and most typographic (3789px).
+        C "Trail": dark react.gg energy with a dashed trail rail through numbered steps and
+        a sticky code panel in the showcase (5420px). No interactivity by design - these
+        settle shape only.
+      changed_files:
+        - website/mockups/shared.css
+        - website/mockups/{a-poster,b-fieldguide,c-trail}/index.html
+      commands:
+        - cmd: "full-page screenshots at 1440px, zero failed requests on all three"
+          status: pass
+      awaiting_owner: "which structure to build for real"
+
+  - id: T013
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: >-
+      Rebuild the homepage as a real scrolling landing page, replacing the rejected
+      single-viewport stage. Build a shared section system - hero, the problem, one source,
+      the framework showcase, the divergence proof, the peel section, the Studio teaser,
+      CTA/footer - with the existing interactions wired into the right sections rather than
+      spread across the whole viewport. Skin it as structure A "Poster" first, since that is
+      closest to the owner's reference art, but build the sections so B "Field Guide" and
+      C "Trail" are reskins of the same markup rather than rewrites. The sticker board from
+      Variant 1 becomes the framework showcase SECTION, keeping click-to-open, the spec
+      table, and prev/next cycling. The peel becomes its own section. All 23 assertions must
+      pass against the new page.
+    allowed_files:
+      - "website/**"
+    verify:
+      - "node website/tests/interaction-contract.mjs"
+      - "git diff --quiet website/src/data/emitter-output.js"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to modify renderCode's character-by-character walk in website/src/js/emitter-panel.js."
+      - "You are about to hand-write, reformat or abbreviate any compiled output."
+      - "An assertion goes red and the fix would require changing what the assertion checks."
+      - "Any new npm dependency appears necessary. The sandbox has no network."
+      - "Verification fails twice."
+    receipt:
+      result: done
+      summary: >-
+        Built the real scrolling landing page at website/variants/poster/ - 6213px at 1440
+        wide, 8110px at 390 - as eight restylable [data-section] bands: hero, problem,
+        source, divergence proof, framework showcase, peel, Studio, CTA/footer. avara's
+        sticker-popup mechanic is now confined to the showcase section instead of being the
+        whole page. Structure lives in page.css (layout only, five --surface-* tokens per
+        band); the skin lives in skin-poster.css, so structures B and C are one new
+        stylesheet plus one changed <link>, not a fork. PM independently re-ran the contract
+        (69/69 across lane, pile, poster) and screenshotted the full scroll.
+      changed_files:
+        - website/variants/poster/index.html
+        - website/src/css/{page,skin-poster,tokens}.css
+        - website/src/js/page.js
+        - website/src/js/emitter-panel.js
+        - website/variants/{pile,lane}/index.html
+        - website/index.html
+        - website/tests/contract-assertions.mjs
+        - website/README.md
+      commands:
+        - cmd: node website/tests/interaction-contract.mjs
+          status: pass
+        - cmd: git diff --quiet website/src/data/emitter-output.js
+          status: pass
+      assertions: "69/69 (23 per variant across lane, pile, poster)"
+      worker_decisions:
+        - "Section order puts the divergence proof BEFORE the showcase. Partly editorial - write it / here is what comes out / now read a whole file - but also load-bearing: assertion 13 drags the first [data-peel] using viewport coordinates captured right after clicking a framework plate, and Playwright's boundingBox() does not scroll, so a tall band between showcase and peel would land the drag on empty page."
+        - "The divergence section prints all three generated files IN FULL rather than excerpting, on the grounds that an abbreviated compiled output would be an editorial claim rather than a fact."
+        - "Root-absolute paths became relative repo-wide under website/, so opening a variant off disk now renders fully skinned. It is still not interactive over file:// - Chromium refuses ES module imports from an opaque origin - so reveal animations are guarded on html[data-js=on] and an un-run page shows all content."
+      test_file_edit_reviewed_by_pm: >-
+        The Worker edited website/tests/contract-assertions.mjs. PM inspected it: assertion
+        2's hardcoded ['pile','lane','press'] became an exported KNOWN_VARIANTS registry
+        with poster/fieldguide/trail added. The assertion body is unchanged -
+        KNOWN_VARIANTS.includes(variant) - so the check was not weakened, only the list of
+        legitimate variant names grew. Accepted.
+      pm_review: >-
+        This is a genuine landing page and the correction has landed. One investigation
+        closed: the CTA band appears blank in a Playwright fullPage screenshot, but at real
+        viewport size every child is opacity 1 with correct colours and boxes - it is a
+        fullPage capture artifact with scroll-reveal content, not a defect. Remaining
+        polish, none blocking: the showcase plates read small relative to the mockup, and
+        the divergence section is very dense with three full files side by side - honest,
+        but heavy.
+
+  - id: T006
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: >-
+      Second landing page variant: reskin the T013 section system to structure B "Field
+      Guide" or C "Trail" per the owner's pick, reusing the same markup and interactions.
+      Variants now differ as landing page designs, not as different interaction mechanics -
+      see the 2026-07-24 course correction in goal.md.
+    allowed_files:
+      - "website/**"
+    verify:
+      - "node website/tests/interaction-contract.mjs"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "The reskin requires forking the section markup instead of restyling it."
+      - "Any new npm dependency appears necessary. The sandbox has no network."
+      - "Verification fails twice."
+    receipt: null
+
+  - id: T007
+    type: pm
+    assignee: PM
+    status: active
+    reasoning_hint: medium
+    objective: >-
+      Produce the owner comparison package: capture screenshots and short interaction
+      recordings of each variant, write a one-page note covering what each variant does,
+      its strongest moment, its weakest, and a recommendation, and record how to run the
+      site locally.
+    allowed_files:
+      - "website/README.md"
+      - "docs/goals/frameless-website-v1/notes/**"
+      - "docs/goals/frameless-website-v1/state.yaml"
+    verify:
+      - "Each variant serves locally and its screenshots exist"
+    stop_if:
+      - "A variant does not run."
+    receipt: null
+
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: >-
+      Audit whether the full owner outcome is met: 2-3 variants with genuinely different
+      interaction concepts, all passing the interaction contract, all showing real emitter
+      output, peel section present, Studio reading as coming-soon, no framework used to
+      build the site.
+    inputs:
+      - "All done task receipts"
+      - "Last verification"
+      - "Current dirty diff"
+      - "docs/goals/frameless-website-v1/goal.md"
+    constraints:
+      - "Read-only."
+      - "Be skeptical about the likely misfire. Open a variant's popup content and confirm the code is emitter-produced."
+      - "A passing test suite that only asserts element presence is not proof of interactivity."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "Per-variant contract results"
+      - "Evidence that popup code is real emitter output"
+      - "missing evidence"
+      - "next task if not complete"
+    receipt: null
+
+notes:
+  - "Prior website/ attempt was rejected by the owner and moved out of the repo during prep. Do not restore it."
+  - "Owner did not require a live browser review or a perf/no-JS gate as completion conditions; the oracle is the interaction contract plus real emitter output. Variant selection is still the owner's call at T007."
+  - "Font is licensed and purchased. Self-host subset WOFF/WOFF2 only; never commit OTF/TTF/Variable sources."
+  - "@playwright/test is NOT installed and the Worker sandbox has no network. The contract harness uses the playwright library via createRequire against packages/frameworks/react/package.json, matching the precedent in scripts/e2e.mjs:36-38."
+  - "Variant names are fixed by T003 so mechanics cannot drift into reskins: T004 = V1 The Pile (selection), T005 = V2 The Compile Lane (progression), T006 = V3 The Press (causation)."
+  - "T005 and T006 both write website/** and are not provably disjoint; they must run sequentially after T004."

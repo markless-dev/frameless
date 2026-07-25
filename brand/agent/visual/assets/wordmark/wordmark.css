@@ -1,0 +1,353 @@
+/* Frameless — the wordmark, live
+ * ============================================================================
+ * THIS IS THE PRIMARY WORDMARK ARTEFACT. The outlined SVGs in this folder are
+ * the derivative: they exist for favicons and OG cards, where live text cannot
+ * be relied on. Everywhere a browser is doing the rendering, use this.
+ *
+ * Why live text is primary: it stays editable. It resizes fluidly, it recolours
+ * by one custom property, it is selectable and searchable, it costs no extra
+ * request, and it cannot drift from the type system because it IS the type
+ * system.
+ *
+ * Link two stylesheets from your page, in this order — the kit entry point
+ * first, then this file. Paths are written from the kit root:
+ *
+ *     brand/agent/visual/colors_and_type.css
+ *     brand/agent/visual/assets/wordmark/wordmark.css
+ *
+ * (Written as plain paths rather than as a markup snippet on purpose: a
+ * relative href inside a CSS comment resolves against THIS file, not against
+ * your page, so a copyable snippet here would be wrong wherever it was pasted.)
+ *
+ * ── THE MARK HAS FOUR LAYERS, AND THE FOURTH IS THE SHADOW ──────────────────
+ *
+ * Outward, exactly as in brand/_source/concept/CONCEPT-ART-AUTHORITATIVE.jpeg:
+ *
+ *     1. lime fill          #cce007
+ *     2. thick black keyline, ITSELF OFFSET DOWN-RIGHT
+ *     3. thick cream band   #e0dfca
+ *     4. A HEAVY OFFSET DROP SHADOW
+ *
+ * Layer 2 is offset, not centred. In the art the black around each letter is
+ * visibly thicker at the bottom-right than at the top-left, which is what makes
+ * the lime read as sitting ON the black rather than inside it. A centred
+ * outline is why the previous lockup read as flat even before its cast shadow
+ * was removed. The offset (2.8% of ink height) is smaller than the keyline's
+ * own width (9.0%), so the black still fully surrounds the lime on the light
+ * side; push it past the width and the mark comes apart at the top-left.
+ *
+ * The previous version of this file had a section headed "NO SHADOW" that said
+ * adding one was "a system violation rather than a taste call". That was wrong,
+ * it was the most visible thing wrong with the whole kit, and the shadow is the
+ * single quality the owner named when identifying what the art has and the kit
+ * did not. It is not decoration. Without it this is a coloured word.
+ *
+ * It is a `filter: drop-shadow()`, never a `box-shadow` and never a
+ * `text-shadow`. drop-shadow follows the element's ALPHA SILHOUETTE, which for
+ * this lockup means the outside of the cream band — the actual die-cut edge,
+ * including the letter counters. A box-shadow would draw a rectangle behind the
+ * word, and a text-shadow follows the glyphs rather than the band, which would
+ * put the shadow INSIDE the cut.
+ *
+ * ── RECOLOURING: ONE PROPERTY ───────────────────────────────────────────────
+ *
+ *     .wordmark { --wordmark-fill: var(--warning); }
+ *
+ * That is the whole API. --wordmark-keyline, --wordmark-band and
+ * --wordmark-shadow exist so the die-cut can be inverted for a special surface,
+ * but you should almost never touch them.
+ *
+ * ── WHERE IT MAY SIT ────────────────────────────────────────────────────────
+ *
+ * The dark bed is home:
+ *
+ *     lime on --surface #0b1714 .......  12.41:1  ✓
+ *     lime on the paper island .........  1.28:1  ✗ as TYPE
+ *     lime on the cream band ...........  1.09:1  ✗ as TYPE
+ *     lime on white ....................  1.48:1  ✗ as TYPE
+ *
+ * On the light paper island use .wordmark--paper. The lime STAYS — those three
+ * failures are lime used as an INK, and this lockup's boundary is a black
+ * keyline nine times the weight of a hairline, which is exactly what the
+ * concept art does over a bright sky. What --paper changes is the band, which
+ * goes white because cream on cream is 1.09:1 and disappears.
+ *
+ * .wordmark--ink is the one-colour fallback for print, not the light-bed
+ * variant. Do not reach for it just because the bed is pale.
+ *
+ * ── THE GEOMETRY IS MEASURED, NOT EYEBALLED ─────────────────────────────────
+ *
+ * Every number below is generated into ./metrics.json by ./build-wordmark.mjs,
+ * under `liveCssEquivalents`, from the ink height of the real Que Grotesque
+ * Black outlines in the shipped WOFF2 (0.7275em for "frameless"). The ratios,
+ * as a proportion of that ink height:
+ *
+ *     keyline   9.0%     the black stroke is nearly as heavy as the band
+ *     band     11.5%     chunky — the previous kit used 3.2% and it read as a
+ *                        border rather than as cut paper
+ *     shadow    dx 1.8%, dy 8.5%
+ *
+ * -webkit-text-stroke is CENTRED on the glyph edge, so a visible width of W
+ * needs a stroke-width of 2W. The two stroke values below are already doubled.
+ * If ./metrics.json changes, these are what must change with it.
+ * ============================================================================ */
+
+.wordmark {
+	/* ── THE ONE PROPERTY ────────────────────────────────────────────────── */
+	--wordmark-fill: var(--accent);
+
+	/* Touch these only to invert the die-cut for a special surface. */
+	--wordmark-keyline: var(--keyline);
+	--wordmark-band: var(--band);
+	--wordmark-shadow: rgb(0 0 0 / 0.95);
+
+	/* From ./metrics.json → liveCssEquivalents. Not chosen. */
+	--wordmark-keyline-stroke: 0.131em;
+	--wordmark-band-stroke: 0.2983em;
+	--wordmark-keyline-dx: 0.0087em;
+	--wordmark-keyline-dy: 0.0204em;
+	--wordmark-shadow-dx: 0.0131em;
+	--wordmark-shadow-dy: 0.0618em;
+
+	display: inline-grid;
+	font-family: var(--font-sans);
+	font-weight: 900;
+
+	/* The lockup is 4.83em wide — measured, and recorded in ./metrics.json. So a
+	   wordmark that has to fit inside the viewport cannot exceed
+	   (100vw - gutters) / 4.83. The 16vw cap leaves 23% of the viewport for
+	   gutters, which is what holds the full lockup on a 390px phone. Above
+	   roughly 740px the fluid step is the smaller of the two and the cap stops
+	   mattering, so this is a floor-side correction only. */
+	font-size: min(var(--step-6), 16vw);
+	line-height: 1;
+	letter-spacing: var(--tracking-display);
+	white-space: nowrap;
+
+	/* THE SHADOW. Em-based, so it stays in proportion at every size — a fixed
+	   px shadow is correct at exactly one font-size and wrong at all the others.
+	   Hard offset first, soft ambient second: the hard copy is what reads as
+	   printed depth, the soft one seats the object on the page. */
+	filter:
+		drop-shadow(var(--wordmark-shadow-dx) var(--wordmark-shadow-dy) 0 var(--wordmark-shadow))
+		drop-shadow(0 0.08em 0.06em rgb(0 0 0 / 0.55));
+
+	/* Decorative rotation is the SECTION's decision, not the wordmark's. A
+	   wordmark in running text or in a nav must sit square; a wordmark used as
+	   a die-cut sticker on a hero should carry a --tilt. Add .tilt-1/2/3/4. */
+	rotate: none;
+}
+
+/* ── THE KEYLINE IS ALWAYS THE DARK KEYLINE ─────────────────────────────────
+ *
+ * A lime fill IS a light surface — relative luminance 0.6616. The die-cut edge
+ * is drawn ON the lime, so its stroke is the fixed near-black --keyline even
+ * when the whole lockup sits on the dark page bed.
+ *
+ * This is why --keyline and --band are declared in color.css as printed ink and
+ * printed paper that do NOT flip with the surface. If the keyline inherited the
+ * dark bed's --ink it would resolve to cream, and a cream keyline on a cream
+ * band is one undifferentiated blob — it would not look broken, only softer,
+ * which is exactly the kind of failure nobody catches.
+ * ==========================================================================*/
+
+/* The three die-cut layers, stacked in one grid cell so they register exactly.
+   All three carry the same text; only the visible one is exposed to assistive
+   tech.
+
+   Layer 1 (band):     a fat cream stroke — the paper the letter was cut from.
+   Layer 2 (keyline):  the black, DISPLACED down and right. Its own fill is also
+                       black, so it is a solid offset copy of the word rather
+                       than a hollow outline.
+   Layer 3 (cut):      the lime, at zero offset, with a thin stroke of its own
+                       colour so the two agree at the joins.
+
+   paint-order: stroke fill is what keeps a fill from being eaten by its own
+   stroke.
+
+   The cast shadow is NOT a layer here. It is the filter on .wordmark above, so
+   it follows the union of all three rather than any one of them. */
+/* z-index, and it is load-bearing.
+ *
+ * The keyline layer carries a `translate`, which makes it a transformed element
+ * — and transformed elements paint in the positioned-descendants phase, ABOVE
+ * every non-positioned in-flow sibling regardless of DOM order. Without an
+ * explicit z-index the black keyline paints on top of the lime and the mark
+ * renders as a black-and-cream blob with no fill visible at all. This was
+ * observed, not theorised.
+ *
+ * Grid items accept z-index without needing `position`, which is why the layers
+ * are grid-stacked rather than absolutely positioned. */
+.wordmark__layer {
+	grid-area: 1 / 1;
+	-webkit-text-stroke-color: currentColor;
+	paint-order: stroke fill;
+}
+
+.wordmark__band {
+	z-index: 1;
+	color: var(--wordmark-band);
+	-webkit-text-stroke-width: var(--wordmark-band-stroke);
+}
+
+.wordmark__keyline {
+	z-index: 2;
+	color: var(--wordmark-keyline);
+	-webkit-text-stroke-width: var(--wordmark-keyline-stroke);
+	translate: var(--wordmark-keyline-dx) var(--wordmark-keyline-dy);
+}
+
+.wordmark__cut {
+	z-index: 3;
+	color: var(--wordmark-fill);
+}
+
+/* Backwards compatibility: a two-layer lockup (band + cut, no keyline layer)
+   still draws a correct centred keyline instead of no keyline at all. Any
+   markup that DOES carry .wordmark__keyline wins, because a sibling combinator
+   beats a bare class. */
+.wordmark__cut {
+	-webkit-text-stroke-color: var(--wordmark-keyline);
+	-webkit-text-stroke-width: var(--wordmark-keyline-stroke);
+}
+
+.wordmark__keyline ~ .wordmark__cut {
+	-webkit-text-stroke-width: 0.02em;
+	-webkit-text-stroke-color: var(--wordmark-fill);
+}
+
+/* ============================================================================
+ * LOCKUPS — three, and no more
+ *
+ * full     wordmark + descriptor. The introduction. Use it once, at the top of
+ *          a page or a document, where the reader may not know what this is.
+ * compact  wordmark alone. Nav bars, footers, anywhere the context is already
+ *          established. This is the default.
+ * mark     the die-cut 'f' tile. Avatars, favicons, app icons, a stamp in the
+ *          corner of a card. Never use it as the first appearance of the brand
+ *          on a page — a mark identifies, it does not introduce.
+ * ==========================================================================*/
+
+.wordmark-lockup {
+	display: inline-grid;
+	justify-items: start;
+	gap: var(--space-2xs);
+}
+
+/* full ─────────────────────────────────────────────────────────────────── */
+
+.wordmark-lockup__descriptor {
+	font-size: var(--step-1);
+	font-weight: 500;
+	line-height: 1.2;
+	letter-spacing: 0;
+	color: var(--ink);
+}
+
+/* compact ──────────────────────────────────────────────────────────────── */
+
+.wordmark--compact {
+	font-size: var(--step-4);
+}
+
+/* mark ─────────────────────────────────────────────────────────────────── */
+
+/* A small-format lockup carries a HEAVIER cut than the ratio gives. That is
+   the rule applied rather than broken: the keyline exists because it is the
+   only thing separating the object from its bed, and below one device pixel it
+   stops doing that. Same override, same reason, as ./favicon.svg. */
+.wordmark--mark {
+	--wordmark-keyline-stroke: 0.09em;
+	--wordmark-band-stroke: 0.24em;
+
+	font-size: var(--step-5);
+	place-content: center;
+	inline-size: 1.55em;
+	block-size: 1.55em;
+	border-radius: var(--sticker-radius-small, 0.6rem);
+	background: var(--surface-raised);
+}
+
+/* ============================================================================
+ * SURFACE VARIANTS
+ * ==========================================================================*/
+
+/* ON A LIGHT PAPER ISLAND — and the lime STAYS.
+ *
+ * This looks like a violation of the lime law and is not. The law governs lime
+ * as an INK: a glyph whose only boundary is its own colour. This lockup's
+ * boundary is a black keyline four times the weight of a hairline, and the art
+ * itself puts exactly this mark on a bright sky. The lime is a fill inside a
+ * black cut, which is a different object from lime type.
+ *
+ * What DOES change: the cream band is 1.09:1 against the cream paper — it
+ * disappears — so on paper the band goes white to stay visible as cut paper,
+ * and the shadow lightens, because a near-black shadow on cream reads as a hole
+ * punched in the page rather than as depth.
+ *
+ * Do not "fix" this by filling the mark in ink. That was tried: fill and
+ * keyline the same colour closes the counters of Que Grotesque Black at this
+ * stroke weight and the word renders as an unreadable black blob. */
+.wordmark--paper {
+	--wordmark-band: #ffffff;
+	--wordmark-shadow: rgb(15 20 16 / 0.32);
+}
+
+/* One-colour reproduction where lime cannot be trusted to print: the fill goes
+   to the light-column ink and the band stays white. The keyline has to become
+   the BAND colour rather than staying black, or fill and keyline are the same
+   value and the letterforms close up. */
+.wordmark--ink {
+	--wordmark-fill: #0f1410;
+	--wordmark-keyline: #ffffff;
+	--wordmark-band: #0f1410;
+	--wordmark-shadow: rgb(15 20 16 / 0.32);
+}
+
+/* Monochrome, for a stamp, a watermark, a fax, or anywhere colour is not
+   guaranteed to survive. Everything collapses to currentColor and the shadow
+   goes, because a one-colour mark with a shadow is neither one thing nor the
+   other. */
+.wordmark--mono {
+	--wordmark-fill: currentColor;
+	--wordmark-keyline: currentColor;
+	--wordmark-band: transparent;
+
+	filter: none;
+}
+
+/* ============================================================================
+ * CLEAR SPACE
+ *
+ * Minimum clear space around any lockup is the cap height of the wordmark —
+ * 0.7275em at the wordmark's own font-size, so it scales with the mark instead
+ * of being a fixed pixel figure that stops being true at --step-7. The shadow
+ * lives inside that clear space; it is part of the object, not an intrusion
+ * into the margin.
+ * ==========================================================================*/
+
+.wordmark-clear {
+	padding: 0.7275em;
+}
+
+/* ============================================================================
+ * REDUCED MOTION
+ *
+ * The wordmark has no animation of its own, and the shadow is not motion — a
+ * static shadow is a resting state and it stays. If the mark is used as a
+ * peelable sticker, ../../motion/motion.css already handles the transform.
+ * ==========================================================================*/
+
+/* ============================================================================
+ * FORCED COLOURS
+ *
+ * The filter is dropped by the OS here, so the mark loses its shadow and falls
+ * back to band + keyline. That still reads, which is the reason the keyline is
+ * a real stroke rather than something the shadow implies.
+ * ==========================================================================*/
+
+@media (forced-colors: active) {
+	.wordmark {
+		filter: none;
+	}
+}

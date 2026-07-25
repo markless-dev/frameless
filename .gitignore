@@ -17,3 +17,6 @@ demos/ui-kit/receipts/
 
 # GoalBuddy board viewers (generated tooling, not product)
 .goalbuddy-board/
+
+# Licensed Que Grotesque webfonts (TypeBerka professional license — do not commit)
+website/assets/fonts/

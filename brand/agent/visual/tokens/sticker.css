@@ -1,0 +1,234 @@
+/* Frameless — die-cut sticker vocabulary
+ * ============================================================================
+ * The brand's physical metaphor: a printed sheet, die-cut into collectible
+ * stickers, laid ON a dark textured page — and casting a shadow onto it.
+ *
+ * Depends on ./color.css for --band and --keyline, and on ./elevation.css for
+ * --elev-sticker and --gloss.
+ *
+ * ── THE STACK, OUTWARD ──────────────────────────────────────────────────────
+ *
+ *     fill  →  tinted dark keyline  →  thick band  →  DROP SHADOW
+ *
+ * All four are required. The previous version of this file ended that sentence
+ * at "band" and wrote, in a box, that shadows were forbidden system-wide. That
+ * was measured off four flat vector PNGs and it deleted the defining quality of
+ * the concept art. Elevation is now mandatory; see ./elevation.css.
+ *
+ * ── THE FOUR THINGS THAT MAKE A STICKER READ AS AN OBJECT ───────────────────
+ *
+ *   1. the band       thick, 6–8% of the object's width, and allowed to be a
+ *                     gradient (lighter top-left)
+ *   2. the keyline    the DARK END OF THE STICKER'S OWN HUE, not neutral black
+ *   3. the shadow     `filter: var(--elev-sticker)` — a stacked drop-shadow(),
+ *                     never a box-shadow, because a box-shadow would draw a
+ *                     rounded rectangle behind a die-cut shape
+ *   4. the tilt       a constant small rotation at rest, varied per instance
+ *
+ * Drop any one of them and it stops being a sticker. Drop the shadow and it
+ * becomes a printed-out rectangle, which is exactly what happened last time.
+ * ============================================================================ */
+
+:root {
+  /* ── Band geometry ────────────────────────────────────────────────────── */
+
+  /* 6–8% of the object's WIDTH. Measured on avara.xyz's stickers by zooming in,
+     and corroborated by the concept art's badges. 7% is the midpoint.
+     The previous kit used 3.2%, measured off flat PNG exports, and the result
+     was a hairline that read as a border rather than as cut paper. Chunky is
+     the point. Kept as a raw ratio so a canvas or SVG renderer can apply the
+     same rule outside CSS. */
+  --sticker-band-ratio: 0.07;
+
+  /* The same rule in CSS. `cqw` IS "a percent of the container's width", so
+     this expresses the measurement exactly.
+
+     Floor 0.5rem: below that a cut edge stops reading as cut.
+     Ceiling 2rem: past that the band starts eating the artwork.
+
+     REQUIRES A CONTAINER ON AN ANCESTOR. An element cannot query itself — put
+     `container-type: inline-size` on the element that also consumes this and
+     cqw silently resolves against the nearest ANCESTOR container, or against
+     the viewport if there is none. No error, wrong everywhere. The correct
+     shape, and the one .sticker-frame below sets up:
+
+         .sticker-frame { container-type: inline-size; inline-size: 18rem; }
+         .sticker-frame > .sticker-cut { padding: var(--sticker-band); }
+
+     Width-only is deliberate. The previous kit used cqmax, which needs
+     `container-type: size` and therefore a definite height in both axes — so
+     the band silently fell back to the viewport on any auto-height sticker. A
+     band is a percentage of width; asking for the block axis was the bug. */
+  --sticker-band: clamp(0.5rem, 7cqw, 2rem);
+
+  /* For anywhere container units are unavailable: inside SVG, in email, in a
+     fragment with no container, or at control scale where the ratio is not
+     meaningful. Not a lesser option — it is the right answer on a button. */
+  --sticker-band-fixed: 0.7rem;
+
+  /* ── Keyline ──────────────────────────────────────────────────────────── */
+
+  /* The stroke between a fill and its band.
+     A band is a REGION of paper, so it scales with the object. A keyline is a
+     STROKE, so it does not — it scales with the resolution of the surface it is
+     drawn on. Applied as a ratio, the measured value produces 0.6px on a 44px
+     button, which deletes the only hard boundary the object has.
+
+     2px specifically, because it equals --focus-width: a focused die-cut
+     component then shifts by exactly zero pixels, since its keyline already IS
+     the inner focus ring. At 1px or 3px every focusable component jumps on
+     focus. 1px is also unreliable at fractional device pixel ratios. */
+  --sticker-keyline: 2px;
+
+  /* Large die-cut display objects: the hero lockup, a carousel sticker, a
+     poster-scale mark. On a button it reads as a mistake. */
+  --sticker-keyline-bold: 3px;
+
+  /* The selected carousel sticker at ~2x, and nothing smaller. */
+  --sticker-keyline-heavy: 4px;
+
+  /* Dividers, table rules, the inner rules of a panel. NEVER a die-cut
+     boundary — that distinction is the whole point of the token. */
+  --sticker-keyline-hair: 1px;
+
+  /* ── Corner ───────────────────────────────────────────────────────────── */
+
+  /* A die-cut never has a sharp corner: the blade has a radius and the paper
+     tears if it does not. Every sticker in the concept art is generously
+     rounded. Square corners are for tables and code, not for objects. */
+  --sticker-radius: 1.25rem;
+  --sticker-radius-small: 0.6rem;
+
+  /* ── Rest tilt ────────────────────────────────────────────────────────── */
+
+  /* A sticker placed perfectly square reads as a div.
+     −3.0° is not a guess: it is the "overall tilt" default exposed as a labelled
+     slider by Sticker Forge (sticker.oooo.so), which is a real sticker tool
+     rather than an intuition about one.
+
+     One constant rest tilt, VARIED per instance so a row looks placed by hand
+     rather than generated. Cycle --tilt-1…--tilt-4 across siblings; they are
+     deliberately unequal, deliberately not mirrored, and all within ±1.5° of
+     the −3° rest value. Do not invent a fifth. */
+  --tilt-rest: -3deg;
+  --tilt-1: -3deg;
+  --tilt-2: -1.5deg;
+  --tilt-3: -4.25deg;
+  --tilt-4: 2deg;
+
+  /* ── The peel ─────────────────────────────────────────────────────────── */
+
+  /* A corner physically lifting off the page. It casts a LARGER shadow than the
+     resting object, which is the whole reason to draw it. */
+  --shadow-peel: var(--elev-lifted, drop-shadow(0 18px 0 rgb(3 8 7 / 0.92)) drop-shadow(0 26px 34px rgb(0 0 0 / 0.55)));
+}
+
+/* ============================================================================
+ * THE DIE-CUT PRIMITIVE
+ *
+ * The shape every sticker in the kit is built on. Set --cut-fill, --cut-keyline
+ * and --cut-band and you have a sticker; the shadow, radius and tilt come free.
+ *
+ *     <span class="die-cut" style="--cut-fill: var(--fw-react);
+ *                                  --cut-keyline: var(--fw-react-keyline);
+ *                                  --cut-band: var(--fw-react-band);">…</span>
+ *
+ * The band is drawn as PADDING on an outer box whose background is the band
+ * colour, with the fill as an inner box. That is genuinely how a die-cut works
+ * — paper around artwork — and it means the band and the fill can carry
+ * different gradients without fighting.
+ *
+ * The shadow is a `filter` on the OUTER element, so it follows the whole
+ * die-cut silhouette including the band's rounded corners. Never a box-shadow.
+ * ==========================================================================*/
+
+.die-cut {
+  --cut-fill: var(--surface-raised);
+  --cut-keyline: var(--keyline);
+  --cut-band: var(--band);
+
+  display: inline-block;
+  padding: var(--sticker-band-fixed);
+  background-color: var(--cut-band);
+  background-image: var(--band-sheen);
+  border-radius: var(--sticker-radius);
+  filter: var(--elev-sticker);
+  rotate: var(--tilt-rest);
+}
+
+.die-cut > .die-cut__fill {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  background-color: var(--cut-fill);
+  border: var(--sticker-keyline-bold, 3px) solid var(--cut-keyline);
+  border-radius: calc(var(--sticker-radius) - var(--sticker-band-fixed) + 2px);
+}
+
+/* The gloss. An ::after over the fill, never the fill's own background, so the
+   fill stays one readable token. */
+.die-cut > .die-cut__fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: var(--gloss);
+  pointer-events: none;
+}
+
+/* Scale the band with the object instead of using the fixed value. Needs the
+   .sticker-frame container on an ANCESTOR — see the note on --sticker-band. */
+.sticker-frame {
+  container-type: inline-size;
+}
+
+.sticker-frame .die-cut {
+  padding: var(--sticker-band);
+}
+
+/* ============================================================================
+ * THE PEEL STATE
+ * ==========================================================================*/
+
+.is-peeling {
+  filter: var(--shadow-peel);
+}
+
+/* ============================================================================
+ * REST-TILT UTILITIES
+ *
+ * Cycle these across siblings. A row all at --tilt-1 reads as a mistake;
+ * alternating them reads as a hand. Nothing decorative should be at 0deg.
+ * ==========================================================================*/
+
+.tilt-1 { rotate: var(--tilt-1); }
+.tilt-2 { rotate: var(--tilt-2); }
+.tilt-3 { rotate: var(--tilt-3); }
+.tilt-4 { rotate: var(--tilt-4); }
+.tilt-none { rotate: none; }
+
+/* ============================================================================
+ * REDUCED MOTION
+ *
+ * The tilts are a RESTING state, not an animation — they stay. So does the
+ * shadow; elevation is not motion. What must not happen is the peel transform,
+ * which is a movement. Timing lives in ../motion/.
+ * ==========================================================================*/
+
+@media (prefers-reduced-motion: reduce) {
+  .is-peeling {
+    filter: var(--elev-sticker, none);
+  }
+}
+
+/* ============================================================================
+ * FORCED COLOURS
+ *
+ * Shadows and gradients are dropped by the OS here, so the keyline is the only
+ * boundary left — which is why every die-cut object carries one as a real
+ * border rather than leaning on the shadow to separate it from the page.
+ * ==========================================================================*/
+
+@media (forced-colors: active) {
+  .die-cut > .die-cut__fill::after { display: none; }
+}

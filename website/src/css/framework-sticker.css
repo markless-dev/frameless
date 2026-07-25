@@ -1,0 +1,252 @@
+/* Lifted VERBATIM from brand/agent/visual/components/framework-badge.html
+ *
+ * WHOLE <style> BLOCK, not a filtered subset. An earlier version of this file
+ * extracted only the rules whose selector matched a prefix, and silently dropped
+ * .carousel__track { display:flex } — which turned the six-item row into a block
+ * layout that wrapped to two lines. Copying the block entire is the only version
+ * that cannot lose a rule. Unused specimen selectors ride along harmlessly.
+ *
+ * FOLLOW-UP: these belong in the kit as real component stylesheets that both the
+ * specimen and the site link, instead of being copied at all.
+ */
+
+/* ============================================================================
+ * FRAMEWORK-BADGE — the six compilation targets, as die-cut collectibles
+ *
+ * WHAT IT IS FOR
+ * Naming the frameworks Frameless emits into, as physical objects. This is the
+ * component the concept art is mostly made of, and it is the one the previous
+ * version of this kit got most wrong: flat outlined rectangles with monochrome
+ * logos, where the art has glossy full-colour stickers with drop shadows.
+ *
+ * ── CONSTRUCTION, OUTWARD ───────────────────────────────────────────────────
+ *
+ *   1. saturated fill        the framework's own colour, measured from the art
+ *   2. gloss                 light from the top-left, shade at the bottom-right
+ *   3. keyline               THE DARK END OF THAT HUE, never neutral black
+ *   4. band                  tinted to that hue, ~7% of the sticker's width
+ *   5. drop shadow           filter: var(--elev-sticker)
+ *   6. tilt                  about -3deg, varied across a row
+ *
+ * The logo goes inside in FULL COLOUR, and the name in white beneath it.
+ *
+ * ── WHY THE MARKS ARE INLINE <svg> AND NOT MASKS ────────────────────────────
+ *
+ * A CSS mask can only carry one colour, so choosing masks WAS choosing
+ * monochrome. And a mask-image or an SVG fetched by url() is CORS-blocked on
+ * file://, where this kit has to keep working. So the geometry is inlined once
+ * as a sprite of <symbol>s at the top of <body> and referenced with <use>.
+ *
+ * ── TWO RULES THAT ARE NOT NEGOTIABLE ───────────────────────────────────────
+ *
+ * 1. CANONICAL ORDER: React, Vue, Svelte, Solid, Angular, Qwik.
+ *    It opens on the most recognised and closes on Qwik, which is the one that
+ *    makes the technical point — it resumes rather than hydrates.
+ *
+ * 2. A FRAMEWORK MARK MAY NEVER RENDER IN --accent. Nominative trademark use
+ *    requires the mark stay recognisable; a lime React logo is both a trademark
+ *    risk and brand confusion. Marks render in their own brand colours, in
+ *    white, or as the carousel's grey silhouette. Nothing else.
+ *
+ * ── THE NAME IS ALWAYS IN THE STICKER ───────────────────────────────────────
+ * Not a tooltip, not an aria-label, not a caption. A word, inside the sticker,
+ * always. A logo alone is not identification for anyone who does not already
+ * know the logo, and a word is the only treatment that survives a crop, a
+ * grayscale conversion, and being screenshotted with no alt text.
+ * ==========================================================================*/
+
+.fw-sticker {
+	/* Overridden per framework below. The defaults are deliberately the neutral
+	   die-cut values, so a sticker with an unknown data-framework still renders
+	   as a sticker rather than as an unstyled box. */
+	--fw-fill: var(--surface-raised);
+	--fw-keyline: var(--keyline);
+	--fw-band: var(--band);
+
+	/* The band. 0.55rem against a 6.6rem face is 7.1% of the sticker's total
+	   width — the middle of the measured 6–8%. It is a fixed length rather than
+	   a container query because a badge is control-sized, and at control scale
+	   the ratio is a proportion to hit, not a rule to compute. */
+	--fw-band-width: 0.55rem;
+
+	display: inline-block;
+	padding: var(--fw-band-width);
+	background-color: var(--fw-band);
+	background-image: var(--band-sheen);
+	border-radius: var(--sticker-radius, 1.25rem);
+	filter: var(--elev-sticker);
+	rotate: var(--tilt-rest, -3deg);
+	text-decoration: none;
+	-webkit-tap-highlight-color: transparent;
+}
+
+.fw-sticker__face {
+	position: relative;
+	display: grid;
+	justify-items: center;
+	align-content: center;
+	gap: 0.5em;
+	inline-size: 6.6rem;
+	min-block-size: var(--control-min-size, 2.75rem);
+	padding: 0.85rem 0.6rem 0.7rem;
+	background-color: var(--fw-fill);
+	border: var(--sticker-keyline-bold, 3px) solid var(--fw-keyline);
+	border-radius: calc(var(--sticker-radius, 1.25rem) - var(--fw-band-width));
+	overflow: hidden;
+}
+
+/* The gloss. An overlay, never the fill's own background, so --fw-fill stays a
+   single readable token that a generator can reason about. */
+.fw-sticker__face::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	background-image: var(--gloss);
+	pointer-events: none;
+}
+
+/* Grain inside the sticker. The concept art's badges have visible print
+   texture; --texture-noise-opacity-strong exists because at this size the page
+   default disappears entirely. */
+.fw-sticker__face::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	background-image: var(--texture-noise);
+	opacity: var(--texture-noise-opacity-strong);
+	pointer-events: none;
+	mix-blend-mode: overlay;
+}
+
+.fw-sticker__mark {
+	position: relative;
+	z-index: 1;
+	inline-size: 2.6rem;
+	block-size: 2.6rem;
+	/* The mark casts its own small shadow onto the sticker face. That is what
+	   makes it read as printed ON the sticker rather than as part of the fill. */
+	filter: drop-shadow(0 2px 0 rgb(0 0 0 / 0.34));
+}
+
+.fw-sticker__name {
+	position: relative;
+	z-index: 1;
+	color: #ffffff;
+	font-size: var(--step-0);
+	font-weight: 900;
+	line-height: 1;
+	letter-spacing: -0.01em;
+	/* The same offset-dark treatment the wordmark uses, at label scale. In the
+	   art every badge name carries it. */
+	text-shadow: 0 2px 0 rgb(0 0 0 / 0.38);
+}
+
+/* The second line, when the sticker is carrying the activation model. */
+.fw-sticker__activation {
+	position: relative;
+	z-index: 1;
+	color: rgb(255 255 255 / 0.86);
+	font-size: var(--step--2);
+	font-weight: 700;
+	line-height: 1;
+	text-transform: uppercase;
+	letter-spacing: var(--tracking-caps);
+}
+
+/* ── The six ─────────────────────────────────────────────────────────────── */
+
+.fw-sticker[data-framework="react"]   { --fw-fill: var(--fw-react);   --fw-keyline: var(--fw-react-keyline);   --fw-band: var(--fw-react-band); }
+.fw-sticker[data-framework="vue"]     { --fw-fill: var(--fw-vue);     --fw-keyline: var(--fw-vue-keyline);     --fw-band: var(--fw-vue-band); }
+.fw-sticker[data-framework="svelte"]  { --fw-fill: var(--fw-svelte);  --fw-keyline: var(--fw-svelte-keyline);  --fw-band: var(--fw-svelte-band); }
+.fw-sticker[data-framework="solid"]   { --fw-fill: var(--fw-solid);   --fw-keyline: var(--fw-solid-keyline);   --fw-band: var(--fw-solid-band); }
+.fw-sticker[data-framework="angular"] { --fw-fill: var(--fw-angular); --fw-keyline: var(--fw-angular-keyline); --fw-band: var(--fw-angular-band); }
+.fw-sticker[data-framework="qwik"]    { --fw-fill: var(--fw-qwik);    --fw-keyline: var(--fw-qwik-keyline);    --fw-band: var(--fw-qwik-band); }
+
+/* ── Sizes ───────────────────────────────────────────────────────────────── */
+
+.fw-sticker--small {
+	--fw-band-width: 0.34rem;
+}
+
+.fw-sticker--small .fw-sticker__face {
+	display: flex;
+	align-items: center;
+	gap: 0.5em;
+	inline-size: auto;
+	padding: 0.5rem 0.7rem;
+	border-width: var(--sticker-keyline, 2px);
+}
+
+.fw-sticker--small .fw-sticker__mark {
+	inline-size: 1.35rem;
+	block-size: 1.35rem;
+}
+
+.fw-sticker--small .fw-sticker__name {
+	font-size: var(--step--1);
+	text-shadow: 0 1px 0 rgb(0 0 0 / 0.38);
+}
+
+.fw-sticker--large {
+	--fw-band-width: 0.8rem;
+}
+
+.fw-sticker--large .fw-sticker__face {
+	inline-size: 9.5rem;
+	padding: 1.3rem 0.8rem 1.1rem;
+	border-width: var(--sticker-keyline-heavy, 4px);
+}
+
+.fw-sticker--large .fw-sticker__mark {
+	inline-size: 4rem;
+	block-size: 4rem;
+}
+
+.fw-sticker--large .fw-sticker__name {
+	font-size: var(--step-2);
+}
+
+/* ── The grey silhouette ─────────────────────────────────────────────────── */
+
+/* What a sticker collapses to when a sibling is selected. It loses colour
+   ENTIRELY rather than dimming — that total loss is what makes the selected one
+   read as lit. A dimmed sticker reads as disabled, which is a different and
+   wrong message. */
+.fw-sticker--silhouette {
+	--fw-fill: var(--silhouette);
+	--fw-keyline: #26312e;
+	--fw-band: var(--silhouette-band);
+
+	filter: var(--elev-sticker) grayscale(1);
+}
+
+.fw-sticker--silhouette .fw-sticker__name,
+.fw-sticker--silhouette .fw-sticker__activation {
+	color: rgb(255 255 255 / 0.82);
+}
+
+/* ── The row ─────────────────────────────────────────────────────────────── */
+
+.fw-set {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-m);
+	align-items: flex-start;
+}
+
+/* Interactive stickers. */
+button.fw-sticker,
+a.fw-sticker {
+	cursor: pointer;
+	font-family: inherit;
+	border: 0;
+	padding: var(--fw-band-width);
+}
+
+/* This rule exists to be READ, not used. It is what a mark in --accent looks
+   like, and it is forbidden. */
+.forbidden-demo .fw-sticker__mark path {
+	fill: var(--accent);
+}

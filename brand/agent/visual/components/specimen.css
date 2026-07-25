@@ -1,0 +1,226 @@
+/* Frameless — specimen page chrome
+ * ============================================================================
+ * THIS IS NOT PART OF ANY COMPONENT.
+ *
+ * It styles the documentation page each component ships inside — the heading,
+ * the "use it when" panel, the stages, the do/don't strips. None of it is meant
+ * to be copied into a product page.
+ *
+ * The component's own CSS is always in the <style> block of its own HTML file,
+ * so a component stays a single readable, pasteable file. That is the split:
+ *
+ *     specimen.css        the page you are reading
+ *     <style> in the file the thing being documented
+ *
+ * If you are an agent building a page, ignore this file entirely.
+ *
+ * Note that the specimen page itself follows the system: dark bed, grain,
+ * die-cut panels with real shadows. A documentation page that contradicted the
+ * thing it documents would be the first thing a reader disbelieved.
+ * ============================================================================ */
+
+body {
+	padding: var(--space-l) var(--space-m) var(--space-3xl);
+	background-image: var(--texture-grid);
+}
+
+.spec {
+	max-width: 76rem;
+	margin-inline: auto;
+}
+
+.spec__kicker {
+	font-size: var(--step--2);
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: var(--tracking-caps);
+	color: var(--accent);
+	margin-block: 0 var(--space-2xs);
+}
+
+.spec__lede {
+	font-size: var(--step-2);
+	font-weight: 500;
+	line-height: 1.35;
+	max-width: 48ch;
+	text-wrap: pretty;
+	color: var(--ink);
+}
+
+.spec__use {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+	gap: var(--space-m);
+	margin-block: var(--space-l);
+	padding: var(--space-s);
+	background: var(--surface-raised);
+	border: var(--sticker-keyline, 2px) solid var(--band);
+	border-radius: var(--sticker-radius-small, 0.6rem);
+	filter: var(--elev-card);
+}
+
+.spec__use h2 {
+	font-size: var(--step-1);
+	margin-block: 0 var(--space-2xs);
+}
+
+.spec__use ul {
+	margin: 0;
+	padding-inline-start: 1.1em;
+	font-size: var(--step--1);
+}
+
+.spec__use li + li {
+	margin-block-start: 0.35em;
+}
+
+.spec__use--no h2 {
+	color: var(--danger);
+}
+
+.spec section {
+	margin-block: var(--space-xl);
+}
+
+/* --step-5, not --step-7. These headings are component names like
+   "framework-carousel": long, hyphenated, unbreakable at display scale. At
+   --step-7 a single one is wider than a 390px viewport and the whole document
+   scrolls sideways. */
+.spec h1 {
+	font-size: var(--step-5);
+	overflow-wrap: anywhere;
+	color: var(--accent);
+}
+
+.spec h2 {
+	font-size: var(--step-3);
+}
+
+.spec h3 {
+	font-size: var(--step-1);
+	margin-block: var(--space-m) var(--space-2xs);
+}
+
+.spec__note {
+	font-size: var(--step--1);
+	color: var(--ink-muted);
+	max-width: 62ch;
+}
+
+/* A stage is the bed a specimen is shown ON. It is dark and ruled by default,
+   because that is the kit's default bed — showing a sticker on white would be
+   showing it on a surface the system does not have. */
+.spec__stage {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	gap: var(--space-l);
+	padding: var(--space-l) var(--space-m);
+	background-color: var(--surface-sunk);
+	background-image: var(--texture-grid);
+	border: var(--sticker-keyline-hair, 1px) solid color-mix(in srgb, var(--band) 22%, transparent);
+	border-radius: var(--sticker-radius-small, 0.6rem);
+}
+
+/* The light paper island, for the handful of specimens that must be shown on
+   paper. */
+.spec__stage--paper {
+	background-color: var(--surface);
+	background-image: none;
+	border-color: color-mix(in srgb, var(--ink) 25%, transparent);
+}
+
+/* A stage whose child is itself a grid needs to be a block, not a flex row: as a
+   flex item a grid gets a content-based base size and collapses to one column,
+   which silently turns a three-up specimen into a stack. */
+.spec__stage--block {
+	display: block;
+}
+
+.spec__grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+	gap: var(--space-l);
+}
+
+.spec__rule {
+	border: 0;
+	border-top: var(--sticker-keyline, 2px) solid var(--band);
+	opacity: 0.2;
+	margin-block: var(--space-xl);
+}
+
+.spec__code {
+	font-family: var(--font-mono);
+	font-size: var(--step--1);
+	background: var(--surface-sunk);
+	color: var(--ink);
+	border: var(--sticker-keyline-hair, 1px) solid color-mix(in srgb, var(--band) 20%, transparent);
+	border-radius: 0.4rem;
+	box-shadow: var(--elev-inset);
+	padding: var(--space-xs);
+	overflow-x: auto;
+}
+
+/* table-layout: fixed plus overflow-wrap keeps these inside a 390px viewport.
+   Without it a single long token — a path, a sha256 — sets the column width and
+   the whole document scrolls sideways on a phone. */
+.spec__table {
+	border-collapse: collapse;
+	table-layout: fixed;
+	width: 100%;
+	font-size: var(--step--1);
+}
+
+.spec__table th,
+.spec__table td {
+	text-align: left;
+	vertical-align: top;
+	padding: 0.5em 0.7em;
+	border-bottom: var(--sticker-keyline-hair, 1px) solid color-mix(in srgb, var(--band) 18%, transparent);
+	overflow-wrap: anywhere;
+}
+
+.spec__table th {
+	font-weight: 700;
+}
+
+.spec__table code {
+	font-family: var(--font-mono);
+	font-size: 0.95em;
+}
+
+/* A swatch, for the token specimens. */
+.spec__swatch {
+	display: grid;
+	gap: 0.35rem;
+	font-size: var(--step--2);
+}
+
+.spec__swatch b {
+	display: block;
+	block-size: 4.5rem;
+	border: var(--sticker-keyline, 2px) solid var(--keyline);
+	border-radius: var(--sticker-radius-small, 0.6rem);
+	filter: var(--elev-sticker);
+}
+
+/* Do / don't strips. The don't strip is marked with a WORD, never with colour
+   alone — the same reason every framework sticker carries its name. */
+.spec__verdict {
+	font-size: var(--step--2);
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: var(--tracking-caps);
+	margin-block: var(--space-2xs) 0;
+}
+
+.spec__verdict--yes::before {
+	content: "Do — ";
+	color: var(--success);
+}
+
+.spec__verdict--no::before {
+	content: "Don't — ";
+	color: var(--danger);
+}

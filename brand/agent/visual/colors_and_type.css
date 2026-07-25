@@ -1,0 +1,688 @@
+/* Frameless — colours and type
+ * ============================================================================
+ * THE SINGLE ENTRY POINT. Link this one file and you have the whole visual
+ * foundation: fluid type, fluid space, colour, the die-cut vocabulary, the
+ * four fonts, the typographic roles and the focus ring.
+ *
+ *     <link rel="stylesheet" href="brand/agent/visual/colors_and_type.css">
+ *
+ * It works in a bare HTML page with no build step and no other stylesheet.
+ * Element defaults are set with :where(), so every one of them has zero
+ * specificity and your own rules win without !important.
+ *
+ * What it pulls in:
+ *   tokens/fluid-type.css   Utopia type scale, --step--2 … --step-7
+ *   tokens/fluid-space.css  Utopia space scale, --space-3xs … --space-3xl
+ *   tokens/color.css        the colour system + THE LIME LAW (read it)
+ *   tokens/elevation.css    the shadow scale + the page grain — ELEVATION IS
+ *                           MANDATORY and the bed is never a flat fill
+ *   tokens/sticker.css      the die-cut band, the keyline, the rest tilts
+ *
+ * Machine-readable twins for the parts that carry rules:
+ *   tokens/color.json       every contrast ratio, permitted and forbidden pairs
+ *   tokens/utopia.config.json  the parameters every clamp() is computed from
+ *   fonts/quegrotesque.json    measured glyph coverage and font metrics
+ *
+ * ── THE BED IS THE SKY, AND IT IS TEXTURED ──────────────────────────────────
+ * Linking this file gives you the concept art's coastal sky with an atmospheric
+ * wash and grain already on it. That is not decoration: a flat fill is the
+ * failure this rebuild exists to correct, and a near-black page was an invention
+ * of the previous kit rather than anything the art contains.
+ *
+ * The two other columns are opt-in regions:
+ *   [data-surface="deep"]   code blocks, detail panels, lime display bands
+ *   [data-surface="light"]  the paper island, for reading-length prose
+ *
+ * ── LIME TYPE ON THE SKY ────────────────────────────────────────────────────
+ * #cce007 is 1.19:1 on the sky. It is legal in exactly two shapes, and both are
+ * shapes the art itself uses: inside .display-cut / the wordmark, where a black
+ * keyline and a cream band do the separating; or on a [data-surface="deep"]
+ * band, where it clears 12.41:1. Plain lime type on the sky is invisible.
+ * ============================================================================ */
+
+@import url("./tokens/fluid-type.css");
+@import url("./tokens/fluid-space.css");
+@import url("./tokens/color.css");
+@import url("./tokens/elevation.css");
+@import url("./tokens/sticker.css");
+
+/* ============================================================================
+ * FONTS — Que Grotesque, self-hosted WOFF2 subsets
+ *
+ * Four static weights. There is no italic and no oblique in this set, and
+ * there is no variable font. See fonts/LICENSE.md before you copy these files
+ * anywhere, and fonts/quegrotesque.json for measured coverage and metrics.
+ *
+ * WOFF2 only. Never add OTF, TTF or a variable source to this repository.
+ *
+ * No local() source is declared, deliberately. The binaries' name table
+ * reports the family as "Que Grotesk" (typographic family "Que Grotesque"),
+ * so a local() lookup is ambiguous — and a self-hosted brand font should
+ * resolve to the file that was tested, not to whatever a visitor happens to
+ * have installed.
+ * ============================================================================ */
+
+@font-face {
+  font-family: "Que Grotesque";
+  src: url("./fonts/QueGrotesque-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Que Grotesque";
+  src: url("./fonts/QueGrotesque-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Que Grotesque";
+  src: url("./fonts/QueGrotesque-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Que Grotesque";
+  src: url("./fonts/QueGrotesque-Black.woff2") format("woff2");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* The brand face, with its fallback stack.
+     The fallbacks are chosen from the MEASURED coverage of the subsets, not
+     assumed: the files carry 294 mapped codepoints — Latin-1 plus a slice of
+     Latin Extended-A. That is complete for English, French, German, Spanish,
+     Italian, Portuguese, Dutch, Danish, Norwegian, Swedish, Finnish and
+     Icelandic, and INCOMPLETE for Polish, Czech, Turkish, Romanian,
+     Hungarian, Croatian, Vietnamese and Welsh. Greek and Cyrillic are absent
+     entirely (only U+03BC is present).
+     The fallbacks are neo-grotesques with broad coverage and a similar
+     x-height, so per-glyph fallback stays visually tolerable. */
+  --font-sans:
+    "Que Grotesque", "Helvetica Neue", Helvetica, Arial, Roboto, "Segoe UI",
+    system-ui, sans-serif;
+
+  /* Set copy that is NOT Western-European Latin in this stack directly, rather
+     than letting the browser fall back glyph by glyph. A run that switches
+     face mid-word looks broken; a run set entirely in the fallback does not.
+     Practical rule: no non-English display copy in Que Grotesque unless you
+     have checked the characters against fonts/quegrotesque.json. */
+  --font-fallback:
+    "Helvetica Neue", Helvetica, Arial, Roboto, "Segoe UI", system-ui,
+    sans-serif;
+
+  /* Que Grotesque is NOT monospace and must never set code. Code blocks,
+     terminal output, file paths and diffs use this. */
+  --font-mono:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+
+  /* Line heights. Display type is set tight because the face is large on the
+     body; reading copy is set open because the aged-paper world is calm. */
+  --leading-display: 0.95;
+  --leading-heading: 1.1;
+  --leading-body: 1.55;
+
+  /* Tracking. Both values are mandated by the type system: display type is
+     tightened, and uppercase badge labels are opened up so the caps do not
+     jam together. */
+  --tracking-display: -0.02em;
+  --tracking-caps: 0.06em;
+}
+
+/* ============================================================================
+ * font-synthesis: none — MANDATORY, GLOBAL
+ *
+ * There is no italic and no oblique in a four-weight static subset set, and
+ * the weights that exist are 400 / 500 / 700 / 900.
+ *
+ * Without this rule the browser INVENTS the missing ones: it slants the
+ * roman to fake an italic and smears the outline to fake a bold. The brand
+ * then degrades silently — nothing errors, the page just stops being set in
+ * Que Grotesque and nobody notices.
+ *
+ * With it, <em> stays upright and a font-weight the family does not have
+ * snaps to the nearest one that exists. If you need emphasis, use weight,
+ * colour or --tracking-caps. Do not reach for italic; there isn't one.
+ * ============================================================================ */
+
+* {
+  font-synthesis: none;
+}
+
+/* ============================================================================
+ * BASE
+ * ============================================================================ */
+
+:where(html) {
+  font-family: var(--font-sans);
+  font-size: 100%;
+  color: var(--ink);
+  background-color: var(--surface);
+  -webkit-text-size-adjust: 100%;
+}
+
+:where(body) {
+  margin: 0;
+  font-size: var(--step-0);
+  font-weight: 400;
+  line-height: var(--leading-body);
+  color: var(--ink);
+  background-color: var(--surface);
+
+  /* The atmospheric wash. Declared per colour column in tokens/color.css, and
+     attached to the viewport rather than to the document so a long page does not
+     run out of gradient halfway down. If a page needs another background-image
+     — the ruled grid, say — compose it: `background-image: var(--texture-grid),
+     var(--bed-wash);`. Replacing it outright flattens the bed. */
+  background-image: var(--bed-wash, none);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* THE PAGE GRAIN, ON BY DEFAULT.
+ *
+ * The owner asked for "a little bit of noise textures" and the honest way to
+ * deliver that is to make it impossible to forget: link the entry point and the
+ * bed already has grain. Fixed rather than absolute, because printed grain
+ * belongs to the paper and does not scroll with the words on it.
+ *
+ * It is declared with :where() so it has zero specificity — override or cancel
+ * it with a single ordinary rule if a particular page needs to.
+ *
+ * The tile is a self-contained SVG data URI (tokens/elevation.css), so it also
+ * works when the file is opened from file://, where an external image request
+ * for a texture would be the thing that quietly fails. */
+:where(body)::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: var(--texture-noise);
+  background-repeat: repeat;
+  opacity: var(--texture-noise-opacity);
+}
+
+@media (forced-colors: active) {
+  :where(body)::before { display: none; }
+}
+
+/* Reading measure. Long lines are the fastest way to make a warm, calm page
+   feel like a wall of text. */
+:where(p, li, blockquote, dd) {
+  max-width: 68ch;
+}
+
+:where(p) {
+  margin-block: 0 var(--space-s);
+}
+
+/* ============================================================================
+ * TYPOGRAPHIC ROLES
+ *
+ * Four weights, and each one owns a band of the scale. This mapping is the
+ * type system — do not mix a weight with a step outside its band.
+ *
+ *   Black 900     --step-7, --step-6        display ONLY, tracking -0.02em
+ *   Bold 700      --step-5 … --step-3       headings, button labels,
+ *                                           badge labels (uppercase, +0.06em)
+ *   Medium 500    --step-2                  lead paragraphs, UI labels, nav
+ *   Regular 400   --step-0 … --step--2      reading copy, captions, legal
+ *
+ * --step-1 is deliberately left without an assigned weight: the type system
+ * does not name one. .text-emphasis below sets the size only and inherits the
+ * weight. There are four weights. Do not invent a fifth.
+ * ============================================================================ */
+
+/* ── Black 900 — display only ─────────────────────────────────────────────
+   One --display-hero per page, maximum. This is the poster voice, and it is
+   heavy on purpose: the concept art's wordmark is the heaviest thing on the
+   page and the type system has to agree with it.
+   As PLAIN type these roles are --ink. They may be --accent only on a
+   [data-surface="deep"] band (12.41:1), and only at --step-3 or larger. To get
+   lime display type on the sky, use .display-cut below — the die-cut treatment,
+   where a black keyline and a cream band do the separating instead of the
+   colour. */
+
+.display-hero,
+:where(h1) {
+  font-size: var(--step-7);
+  font-weight: 900;
+  line-height: var(--leading-display);
+  letter-spacing: var(--tracking-display);
+  margin-block: 0 var(--space-m);
+  text-wrap: balance;
+}
+
+.display-section {
+  font-size: var(--step-6);
+  font-weight: 900;
+  line-height: var(--leading-display);
+  letter-spacing: var(--tracking-display);
+  margin-block: 0 var(--space-m);
+  text-wrap: balance;
+}
+
+/* ── THE DIE-CUT DISPLAY TREATMENT ─────────────────────────────────────────
+ *
+ * .display-cut is how display type gets to be lime on the sky. It is the
+ * concept art's own construction, applied to live text instead of to the
+ * wordmark, and it is the treatment the owner chose out of four.
+ *
+ *     lime fill  →  thick black keyline  →  CREAM BAND  →  stacked drop-shadow
+ *
+ * WHY THE CREAM BAND IS NOT OPTIONAL. A keyline alone muddies: the outline has
+ * nothing to separate FROM, so on any bed with value near the keyline's the
+ * letterform's edge disappears into the page and the word reads as a smudge.
+ * The cream band is what makes the type read as a die-cut object sitting ON the
+ * page rather than as coloured text printed into it. Look at the wordmark in
+ * brand/_source/concept/CONCEPT-ART-AUTHORITATIVE.jpeg: fill, black, cream,
+ * shadow, in that order, outward. Delete the band and you have deleted the
+ * reason this works.
+ *
+ * ── THE MARKUP IS A PER-LINE STACK ─────────────────────────────────────────
+ *
+ *   <h1 class="display-cut">
+ *     <span class="display-cut__line">
+ *       <span class="display-cut__layer display-cut__band" aria-hidden="true">Compile once,</span>
+ *       <span class="display-cut__layer display-cut__key"  aria-hidden="true">Compile once,</span>
+ *       <span class="display-cut__layer display-cut__fill">Compile once,</span>
+ *     </span>
+ *     <span class="display-cut__line"> … second line, same three layers … </span>
+ *   </h1>
+ *
+ * Lines are broken by hand. Display type at this size always is, and the layers
+ * have to register glyph for glyph, which an automatic wrap cannot guarantee.
+ * Only the fill layer is exposed to assistive tech; the other two are aria-hidden
+ * copies of the same string.
+ *
+ * ── z-index, AND IT IS LOAD-BEARING (TWICE) ────────────────────────────────
+ *
+ * 1. Within a line: ../assets/wordmark/wordmark.css records that a transformed
+ *    layer paints in the positioned-descendants phase, ABOVE every non-positioned
+ *    in-flow sibling regardless of DOM order. Explicit z-index per layer is
+ *    required or the black paints over the lime.
+ *
+ * 2. Across lines, and this is the fix for a real defect: the band adds
+ *    0.149em of ink in EVERY direction, so line two's band overlaps line one's
+ *    descenders. Because .display-cut carries a filter it is a stacking context,
+ *    and because the lines are grid items at z-index:auto they are NOT, so all
+ *    the layers of all the lines resolve their z-index against .display-cut
+ *    together: every band paints (1), then every keyline (2), then every fill
+ *    (3). Line two's band therefore cannot paint over line one's letters, no
+ *    matter how much they overlap. Give a line its own z-index and you break
+ *    this, and the descenders start disappearing again.
+ *
+ * ── LEADING ────────────────────────────────────────────────────────────────
+ *
+ * --leading-display is 0.95 and it is WRONG for this treatment: at 0.95 the
+ * cream bands of adjacent lines fuse into one slab and the two lines stop
+ * reading as two lines. --cut-leading is the treatment's own value and is set
+ * from the band's actual reach rather than from taste — see its note below.
+ * ------------------------------------------------------------------------- */
+
+.display-cut {
+  /* THE ONE PROPERTY. Recolour the fill and nothing else. */
+  --cut-fill: var(--accent);
+
+  /* Touch these only to invert the die-cut for a special surface. */
+  --cut-keyline: var(--keyline);
+  --cut-band: var(--band);
+
+  /* The same measured ratios the wordmark uses, from
+     ../assets/wordmark/metrics.json → liveCssEquivalents. -webkit-text-stroke is
+     CENTRED on the glyph edge, so a visible width of W needs a stroke-width of
+     2W; both values are already doubled. Visible keyline 0.0655em, visible band
+     a further 0.0837em, total reach 0.1492em in every direction. */
+  --cut-keyline-stroke: 0.131em;
+  --cut-band-stroke: 0.2983em;
+
+  /* Leading, and it is computed rather than chosen. The ink extents are the
+     shipped Black subset's own, measured with TextMetrics at 100px on the real
+     strings of the fixed headline:
+
+         line one descends 0.133em      + band 0.149em
+       + line two ascends  0.651em      + band 0.149em
+       ---------------------------------------------------
+       = 1.082em before the two bands touch at all
+
+     A join that only just avoids touching still reads as one slab, so the
+     value carries ~0.2em of clear paper on top of that. 1.28.
+
+     NOT 1.06, which was the estimate made before the band's reach was counted
+     on BOTH sides of the join. Screenshot-verified at 390, 768 and 1440px: at
+     0.95 the two lines fuse into a single cream slab, at 1.06 and 1.16 the
+     bands still touch. Do not tighten this to match --leading-display. */
+  --cut-leading: 1.28;
+
+  display: grid;
+  justify-items: start;
+  font-family: var(--font-sans);
+  font-weight: 900;
+  line-height: var(--cut-leading);
+  letter-spacing: var(--tracking-display);
+  margin-block: 0 var(--space-m);
+
+  /* THE SHADOW, on the whole lockup so it follows the union of every line's
+     band — one die-cut silhouette, not one per line. Em-based so it holds at
+     every size; a px shadow is correct at exactly one font-size. */
+  filter:
+    drop-shadow(0 0.08em 0 var(--shadow-hard, rgb(3 8 7 / 0.92)))
+    drop-shadow(0 0.18em 0.2em var(--shadow-soft, rgb(0 0 0 / 0.55)));
+}
+
+/* Hero scale and section scale. Both clear the --step-3 floor the lime law
+   sets for display type by a wide margin. */
+.display-cut--hero { font-size: var(--step-7); }
+.display-cut--section { font-size: var(--step-6); }
+
+.display-cut__line {
+  display: inline-grid;
+}
+
+.display-cut__layer {
+  grid-area: 1 / 1;
+  -webkit-text-stroke-color: currentColor;
+  paint-order: stroke fill;
+}
+
+.display-cut__band {
+  z-index: 1;
+  color: var(--cut-band);
+  -webkit-text-stroke-width: var(--cut-band-stroke);
+}
+
+.display-cut__key {
+  z-index: 2;
+  color: var(--cut-keyline);
+  -webkit-text-stroke-width: var(--cut-keyline-stroke);
+}
+
+/* A hair of stroke in the fill's OWN colour, so fill and keyline agree at the
+   joins instead of leaving a dark seam where two curves meet. */
+.display-cut__fill {
+  z-index: 3;
+  color: var(--cut-fill);
+  -webkit-text-stroke-width: 0.02em;
+  -webkit-text-stroke-color: var(--cut-fill);
+}
+
+/* On the paper island the cream band is 1.09:1 against the paper and vanishes,
+   exactly as it does for the wordmark. Same fix, same reason. */
+[data-surface="light"] .display-cut,
+.display-cut--paper {
+  --cut-band: #ffffff;
+}
+
+@media (forced-colors: active) {
+  /* The OS drops the filter here, so the mark falls back to band + keyline.
+     That still reads, which is why the keyline is a real stroke rather than
+     something the shadow implies. */
+  .display-cut { filter: none; }
+}
+
+/* ── Bold 700 — headings ──────────────────────────────────────────────── */
+
+.heading-1,
+:where(h2) {
+  font-size: var(--step-5);
+  font-weight: 700;
+  line-height: var(--leading-heading);
+  margin-block: 0 var(--space-s);
+  text-wrap: balance;
+}
+
+.heading-2,
+:where(h3) {
+  font-size: var(--step-4);
+  font-weight: 700;
+  line-height: var(--leading-heading);
+  margin-block: 0 var(--space-s);
+  text-wrap: balance;
+}
+
+.heading-3,
+:where(h4) {
+  font-size: var(--step-3);
+  font-weight: 700;
+  line-height: var(--leading-heading);
+  margin-block: 0 var(--space-xs);
+  text-wrap: balance;
+}
+
+/* h5 and h6 sit below the heading band the type system defines. They are
+   given values so a bare HTML document does not fall back to browser
+   defaults — prefer h1–h4 and a deeper section structure instead. */
+:where(h5) {
+  font-size: var(--step-2);
+  font-weight: 700;
+  line-height: var(--leading-heading);
+  margin-block: 0 var(--space-xs);
+}
+
+:where(h6) {
+  font-size: var(--step-1);
+  font-weight: 700;
+  line-height: var(--leading-heading);
+  margin-block: 0 var(--space-xs);
+}
+
+/* ── Bold 700 — labels ────────────────────────────────────────────────── */
+
+/* Button labels. Size comes from the button, not from here, so a small and a
+   large button both get the right weight. */
+.button-label {
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Badge labels: uppercase and opened up. Every badge state carries a WORD
+   rendered inside it — the framework name — because a word is the only
+   treatment that survives a crop, a grayscale conversion and an alt-text-free
+   repost. Colour alone dies in grayscale; opacity alone reads as a loading
+   skeleton. */
+.badge-label {
+  font-size: var(--step--2);
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+}
+
+/* ── Medium 500 — lead, UI, nav ───────────────────────────────────────── */
+
+.text-lead {
+  font-size: var(--step-2);
+  font-weight: 500;
+  line-height: 1.35;
+  max-width: 46ch;
+  text-wrap: pretty;
+}
+
+.ui-label,
+.nav-item {
+  font-size: var(--step-2);
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+/* ── --step-1: size only, weight unassigned by the type system ─────────── */
+
+.text-emphasis {
+  font-size: var(--step-1);
+  line-height: 1.4;
+}
+
+/* ── Regular 400 — reading copy, captions, legal ──────────────────────── */
+
+.text-body {
+  font-size: var(--step-0);
+  font-weight: 400;
+  line-height: var(--leading-body);
+}
+
+.text-caption,
+:where(figcaption, small) {
+  font-size: var(--step--1);
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--ink-muted);
+}
+
+.text-legal {
+  font-size: var(--step--2);
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--ink-muted);
+}
+
+/* Emphasis without italics — there is no italic in this family, and
+   font-synthesis: none means the browser will not fake one. */
+:where(em, i) {
+  font-style: normal;
+  font-weight: 500;
+}
+
+:where(strong, b) {
+  font-weight: 700;
+}
+
+/* ============================================================================
+ * LINKS
+ *
+ * --accent-cool, not --accent. Lime is never an ink, and a link is ink.
+ * 10.58:1 on the dark bed, 5.01:1 on the light paper island.
+ * ============================================================================ */
+
+:where(a) {
+  color: var(--accent-cool);
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18em;
+}
+
+:where(a:hover) {
+  color: var(--ink);
+}
+
+/* ============================================================================
+ * CODE
+ *
+ * Que Grotesque is not monospace and must never set code. The product IS
+ * code, so this matters more here than it would elsewhere.
+ * ============================================================================ */
+
+:where(code, kbd, samp, pre) {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+:where(pre) {
+  font-size: var(--step--1);
+  line-height: 1.5;
+  overflow-x: auto;
+}
+
+/* ============================================================================
+ * FOCUS RING — two-tone, one rule, every surface
+ *
+ * Inner near-black 2px, outer lime 2px. On a light bed and on any saturated
+ * sticker fill the dark half carries the contrast; on the dark bed the lime
+ * half does (12.41:1). One rule that needs no per-surface variant, and the two
+ * halves are 13.08:1 apart from each other, so the ring reads as one deliberate
+ * object rather than a smudge.
+ *
+ * Built from `border` + `outline` rather than from box-shadow — not because
+ * box-shadow is forbidden (it is required elsewhere in this kit and carries the
+ * elevation), but because every die-cut component already spends its box-shadow
+ * on its drop shadow. A focus ring drawn as a shadow would have to be composed
+ * with the elevation on every component, and the first component to forget
+ * would silently lose either its depth or its focus state.
+ *
+ * How it works: on :focus-visible the element takes a 2px --ink border (the
+ * inner ring) and a 2px --accent outline sits immediately outside it at
+ * outline-offset 0 (the outer ring).
+ *
+ * Controls reserve that border as transparent at rest, so nothing shifts when
+ * focus arrives.
+ *
+ * Links deliberately do NOT reserve it. Measured in Chromium: a reserved 2px
+ * border inflates every inline link in body copy by 4px, permanently, in
+ * exchange for avoiding a 4px shift at the moment of focus. A permanent
+ * typographic defect on every link in the document is the worse trade. Line
+ * height is unaffected either way.
+ *
+ * Components that already carry a permanent keyline — most of this kit's
+ * primitives do — need nothing extra and shift by nothing: their keyline
+ * already IS the inner ring, and focus just adds the lime outline against it.
+ * That equality holds because --sticker-keyline and --focus-width are both 2px,
+ * which is the reason both are 2px.
+ * ============================================================================ */
+
+:where(button, input, select, textarea, summary, [tabindex]) {
+  border: var(--focus-width) solid transparent;
+}
+
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  border: var(--focus-width) solid var(--focus-inner);
+  outline: var(--focus-width) solid var(--focus-outer);
+  outline-offset: 0;
+}
+
+/* Opt-in utility for anything that manages its own focus target. */
+.focus-ring:focus-visible {
+  border: var(--focus-width) solid var(--focus-inner);
+  outline: var(--focus-width) solid var(--focus-outer);
+  outline-offset: 0;
+}
+
+/* ============================================================================
+ * SELECTION
+ *
+ * Lime as a SURFACE with an --accent-ink label — the lime law's flagship shape,
+ * applied to text selection. 13.08:1.
+ * ============================================================================ */
+
+::selection {
+  background-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* ============================================================================
+ * MEDIA
+ * ============================================================================ */
+
+:where(img, svg, picture, video) {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* FRAMEWORK MARKS ARE FULL COLOUR.
+ *
+ * In the concept art every badge carries its framework's real logo in its real
+ * colours. The previous kit rendered them as monochrome CSS masks, which was
+ * the single most visible thing wrong with the badges — a mask physically
+ * cannot carry more than one colour, so the decision to use one WAS the
+ * decision to make them monochrome.
+ *
+ * Marks are therefore inlined as real <svg>, and inlined rather than
+ * url()-referenced for a second reason: a CSS mask or an SVG fetched by url()
+ * is blocked by CORS when a page is opened from file://, and this kit has to
+ * work when someone double-clicks a component.
+ *
+ * The one prohibition that survives: A FRAMEWORK MARK MAY NEVER RENDER IN
+ * --accent. Nominative trademark use requires the mark stay recognisable, and a
+ * lime React logo is both a trademark risk and brand confusion. Marks render in
+ * their own brand colours, in white, or as the carousel's grey silhouette. */
+:where(.framework-mark) {
+  display: block;
+  flex: none;
+}

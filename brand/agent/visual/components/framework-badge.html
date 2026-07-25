@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frameless — framework-badge</title>
+<link rel="icon" href="../assets/wordmark/favicon.svg">
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="./component-tokens.css">
+<link rel="stylesheet" href="./specimen.css">
+<link rel="stylesheet" href="../motion/motion.css">
+
+<style>
+/* ============================================================================
+ * FRAMEWORK-BADGE — the six compilation targets, as die-cut collectibles
+ *
+ * WHAT IT IS FOR
+ * Naming the frameworks Frameless emits into, as physical objects. This is the
+ * component the concept art is mostly made of, and it is the one the previous
+ * version of this kit got most wrong: flat outlined rectangles with monochrome
+ * logos, where the art has glossy full-colour stickers with drop shadows.
+ *
+ * ── CONSTRUCTION, OUTWARD ───────────────────────────────────────────────────
+ *
+ *   1. saturated fill        the framework's own colour, measured from the art
+ *   2. gloss                 light from the top-left, shade at the bottom-right
+ *   3. keyline               THE DARK END OF THAT HUE, never neutral black
+ *   4. band                  tinted to that hue, ~7% of the sticker's width
+ *   5. drop shadow           filter: var(--elev-sticker)
+ *   6. tilt                  about -3deg, varied across a row
+ *
+ * The logo goes inside in FULL COLOUR, and the name in white beneath it.
+ *
+ * ── WHY THE MARKS ARE INLINE <svg> AND NOT MASKS ────────────────────────────
+ *
+ * A CSS mask can only carry one colour, so choosing masks WAS choosing
+ * monochrome. And a mask-image or an SVG fetched by url() is CORS-blocked on
+ * file://, where this kit has to keep working. So the geometry is inlined once
+ * as a sprite of <symbol>s at the top of <body> and referenced with <use>.
+ *
+ * ── TWO RULES THAT ARE NOT NEGOTIABLE ───────────────────────────────────────
+ *
+ * 1. CANONICAL ORDER: React, Vue, Svelte, Solid, Angular, Qwik.
+ *    It opens on the most recognised and closes on Qwik, which is the one that
+ *    makes the technical point — it resumes rather than hydrates.
+ *
+ * 2. A FRAMEWORK MARK MAY NEVER RENDER IN --accent. Nominative trademark use
+ *    requires the mark stay recognisable; a lime React logo is both a trademark
+ *    risk and brand confusion. Marks render in their own brand colours, in
+ *    white, or as the carousel's grey silhouette. Nothing else.
+ *
+ * ── THE NAME IS ALWAYS IN THE STICKER ───────────────────────────────────────
+ * Not a tooltip, not an aria-label, not a caption. A word, inside the sticker,
+ * always. A logo alone is not identification for anyone who does not already
+ * know the logo, and a word is the only treatment that survives a crop, a
+ * grayscale conversion, and being screenshotted with no alt text.
+ * ==========================================================================*/
+
+.fw-sticker {
+	/* Overridden per framework below. The defaults are deliberately the neutral
+	   die-cut values, so a sticker with an unknown data-framework still renders
+	   as a sticker rather than as an unstyled box. */
+	--fw-fill: var(--surface-raised);
+	--fw-keyline: var(--keyline);
+	--fw-band: var(--band);
+
+	/* The band. 0.55rem against a 6.6rem face is 7.1% of the sticker's total
+	   width — the middle of the measured 6–8%. It is a fixed length rather than
+	   a container query because a badge is control-sized, and at control scale
+	   the ratio is a proportion to hit, not a rule to compute. */
+	--fw-band-width: 0.55rem;
+
+	display: inline-block;
+	padding: var(--fw-band-width);
+	background-color: var(--fw-band);
+	background-image: var(--band-sheen);
+	border-radius: var(--sticker-radius, 1.25rem);
+	filter: var(--elev-sticker);
+	rotate: var(--tilt-rest, -3deg);
+	text-decoration: none;
+	-webkit-tap-highlight-color: transparent;
+}
+
+.fw-sticker__face {
+	position: relative;
+	display: grid;
+	justify-items: center;
+	align-content: center;
+	gap: 0.5em;
+	inline-size: 6.6rem;
+	min-block-size: var(--control-min-size, 2.75rem);
+	padding: 0.85rem 0.6rem 0.7rem;
+	background-color: var(--fw-fill);
+	border: var(--sticker-keyline-bold, 3px) solid var(--fw-keyline);
+	border-radius: calc(var(--sticker-radius, 1.25rem) - var(--fw-band-width));
+	overflow: hidden;
+}
+
+/* The gloss. An overlay, never the fill's own background, so --fw-fill stays a
+   single readable token that a generator can reason about. */
+.fw-sticker__face::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	background-image: var(--gloss);
+	pointer-events: none;
+}
+
+/* Grain inside the sticker. The concept art's badges have visible print
+   texture; --texture-noise-opacity-strong exists because at this size the page
+   default disappears entirely. */
+.fw-sticker__face::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	background-image: var(--texture-noise);
+	opacity: var(--texture-noise-opacity-strong);
+	pointer-events: none;
+	mix-blend-mode: overlay;
+}
+
+.fw-sticker__mark {
+	position: relative;
+	z-index: 1;
+	inline-size: 2.6rem;
+	block-size: 2.6rem;
+	/* The mark casts its own small shadow onto the sticker face. That is what
+	   makes it read as printed ON the sticker rather than as part of the fill. */
+	filter: drop-shadow(0 2px 0 rgb(0 0 0 / 0.34));
+}
+
+.fw-sticker__name {
+	position: relative;
+	z-index: 1;
+	color: #ffffff;
+	font-size: var(--step-0);
+	font-weight: 900;
+	line-height: 1;
+	letter-spacing: -0.01em;
+	/* The same offset-dark treatment the wordmark uses, at label scale. In the
+	   art every badge name carries it. */
+	text-shadow: 0 2px 0 rgb(0 0 0 / 0.38);
+}
+
+/* The second line, when the sticker is carrying the activation model. */
+.fw-sticker__activation {
+	position: relative;
+	z-index: 1;
+	color: rgb(255 255 255 / 0.86);
+	font-size: var(--step--2);
+	font-weight: 700;
+	line-height: 1;
+	text-transform: uppercase;
+	letter-spacing: var(--tracking-caps);
+}
+
+/* ── The six ─────────────────────────────────────────────────────────────── */
+
+.fw-sticker[data-framework="react"]   { --fw-fill: var(--fw-react);   --fw-keyline: var(--fw-react-keyline);   --fw-band: var(--fw-react-band); }
+.fw-sticker[data-framework="vue"]     { --fw-fill: var(--fw-vue);     --fw-keyline: var(--fw-vue-keyline);     --fw-band: var(--fw-vue-band); }
+.fw-sticker[data-framework="svelte"]  { --fw-fill: var(--fw-svelte);  --fw-keyline: var(--fw-svelte-keyline);  --fw-band: var(--fw-svelte-band); }
+.fw-sticker[data-framework="solid"]   { --fw-fill: var(--fw-solid);   --fw-keyline: var(--fw-solid-keyline);   --fw-band: var(--fw-solid-band); }
+.fw-sticker[data-framework="angular"] { --fw-fill: var(--fw-angular); --fw-keyline: var(--fw-angular-keyline); --fw-band: var(--fw-angular-band); }
+.fw-sticker[data-framework="qwik"]    { --fw-fill: var(--fw-qwik);    --fw-keyline: var(--fw-qwik-keyline);    --fw-band: var(--fw-qwik-band); }
+
+/* ── Sizes ───────────────────────────────────────────────────────────────── */
+
+.fw-sticker--small {
+	--fw-band-width: 0.34rem;
+}
+
+.fw-sticker--small .fw-sticker__face {
+	display: flex;
+	align-items: center;
+	gap: 0.5em;
+	inline-size: auto;
+	padding: 0.5rem 0.7rem;
+	border-width: var(--sticker-keyline, 2px);
+}
+
+.fw-sticker--small .fw-sticker__mark {
+	inline-size: 1.35rem;
+	block-size: 1.35rem;
+}
+
+.fw-sticker--small .fw-sticker__name {
+	font-size: var(--step--1);
+	text-shadow: 0 1px 0 rgb(0 0 0 / 0.38);
+}
+
+.fw-sticker--large {
+	--fw-band-width: 0.8rem;
+}
+
+.fw-sticker--large .fw-sticker__face {
+	inline-size: 9.5rem;
+	padding: 1.3rem 0.8rem 1.1rem;
+	border-width: var(--sticker-keyline-heavy, 4px);
+}
+
+.fw-sticker--large .fw-sticker__mark {
+	inline-size: 4rem;
+	block-size: 4rem;
+}
+
+.fw-sticker--large .fw-sticker__name {
+	font-size: var(--step-2);
+}
+
+/* ── The grey silhouette ─────────────────────────────────────────────────── */
+
+/* What a sticker collapses to when a sibling is selected. It loses colour
+   ENTIRELY rather than dimming — that total loss is what makes the selected one
+   read as lit. A dimmed sticker reads as disabled, which is a different and
+   wrong message. */
+.fw-sticker--silhouette {
+	--fw-fill: var(--silhouette);
+	--fw-keyline: #26312e;
+	--fw-band: var(--silhouette-band);
+
+	filter: var(--elev-sticker) grayscale(1);
+}
+
+.fw-sticker--silhouette .fw-sticker__name,
+.fw-sticker--silhouette .fw-sticker__activation {
+	color: rgb(255 255 255 / 0.82);
+}
+
+/* ── The row ─────────────────────────────────────────────────────────────── */
+
+.fw-set {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-m);
+	align-items: flex-start;
+}
+
+/* Interactive stickers. */
+button.fw-sticker,
+a.fw-sticker {
+	cursor: pointer;
+	font-family: inherit;
+	border: 0;
+	padding: var(--fw-band-width);
+}
+
+/* This rule exists to be READ, not used. It is what a mark in --accent looks
+   like, and it is forbidden. */
+.forbidden-demo .fw-sticker__mark path {
+	fill: var(--accent);
+}
+</style>
+</head>
+
+<body>
+
+<!-- ============================================================================
+     THE SIX FRAMEWORK MARKS, IN FULL COLOUR, INLINE.
+
+     INLINE, not url()-referenced, and not a CSS mask. Two reasons, both real:
+
+       1. A CSS mask can only carry ONE colour. Using masks WAS the decision to
+          make these marks monochrome, which was the most visible thing wrong
+          with the previous badges. The concept art shows all six in their own
+          colours.
+       2. A mask-image or an SVG fetched by url() is blocked by CORS when a page
+          is opened from file://. This kit has to work when someone
+          double-clicks a component, so the geometry has to be in the document.
+
+     Geometry: Simple Icons (CC0). Colours: each project's own brand values.
+     The CC0 dedication covers the PATH DATA, not the trademarks — copying the
+     geometry is free and displaying it still binds you to each project's
+     trademark policy. See footer-marks.html.
+
+     A framework mark may never render in --accent.
+     ============================================================================ -->
+<svg class="fw-sprite" aria-hidden="true" focusable="false" width="0" height="0" style="position:absolute">
+	<defs>
+		<linearGradient id="fwg-solid" x1="0" y1="0" x2="1" y2="1">
+			<stop offset="0" stop-color="#b8dcff"/>
+			<stop offset="0.55" stop-color="#76b3e1"/>
+			<stop offset="1" stop-color="#4f88c6"/>
+		</linearGradient>
+		<linearGradient id="fwg-qwik" x1="0" y1="0" x2="0.6" y2="1">
+			<stop offset="0" stop-color="#ffffff"/>
+			<stop offset="0.45" stop-color="#8ce0ff"/>
+			<stop offset="1" stop-color="#18b6f6"/>
+		</linearGradient>
+	</defs>
+
+	<!-- React: one path, and cyan IS its full colour. -->
+	<symbol id="fwlogo-react" viewBox="0 0 24 24"><path d="M14.23 12.004a2.236 2.236 0 0 1-2.235 2.236 2.236 2.236 0 0 1-2.236-2.236 2.236 2.236 0 0 1 2.235-2.236 2.236 2.236 0 0 1 2.236 2.236zm2.648-10.69c-1.346 0-3.107.96-4.888 2.622-1.78-1.653-3.542-2.602-4.887-2.602-.41 0-.783.093-1.106.278-1.375.793-1.683 3.264-.973 6.365C1.98 8.917 0 10.42 0 12.004c0 1.59 1.99 3.097 5.043 4.03-.704 3.113-.39 5.588.988 6.38.32.187.69.275 1.102.275 1.345 0 3.107-.96 4.888-2.624 1.78 1.654 3.542 2.603 4.887 2.603.41 0 .783-.09 1.106-.275 1.374-.792 1.683-3.263.973-6.365C22.02 15.096 24 13.59 24 12.004c0-1.59-1.99-3.097-5.043-4.032.704-3.11.39-5.587-.988-6.38-.318-.184-.688-.277-1.092-.278zm-.005 1.09v.006c.225 0 .406.044.558.127.666.382.955 1.835.73 3.704-.054.46-.142.945-.25 1.44-.96-.236-2.006-.417-3.107-.534-.66-.905-1.345-1.727-2.035-2.447 1.592-1.48 3.087-2.292 4.105-2.295zm-9.77.02c1.012 0 2.514.808 4.11 2.28-.686.72-1.37 1.537-2.02 2.442-1.107.117-2.154.298-3.113.538-.112-.49-.195-.964-.254-1.42-.23-1.868.054-3.32.714-3.707.19-.09.4-.127.563-.132zm4.882 3.05c.455.468.91.992 1.36 1.564-.44-.02-.89-.034-1.345-.034-.46 0-.915.01-1.36.034.44-.572.895-1.096 1.345-1.565zM12 8.1c.74 0 1.477.034 2.202.093.406.582.802 1.203 1.183 1.86.372.64.71 1.29 1.018 1.946-.308.655-.646 1.31-1.013 1.95-.38.66-.773 1.288-1.18 1.87-.728.063-1.466.098-2.21.098-.74 0-1.477-.035-2.202-.093-.406-.582-.802-1.204-1.183-1.86-.372-.64-.71-1.29-1.018-1.946.303-.657.646-1.313 1.013-1.954.38-.66.773-1.286 1.18-1.868.728-.064 1.466-.098 2.21-.098zm-3.635.254c-.24.377-.48.763-.704 1.16-.225.39-.435.782-.635 1.174-.265-.656-.49-1.31-.676-1.947.64-.15 1.315-.283 2.015-.386zm7.26 0c.695.103 1.365.23 2.006.387-.18.632-.405 1.282-.66 1.933-.2-.39-.41-.783-.64-1.174-.225-.392-.465-.774-.705-1.146zm3.063.675c.484.15.944.317 1.375.498 1.732.74 2.852 1.708 2.852 2.476-.005.768-1.125 1.74-2.857 2.475-.42.18-.88.342-1.355.493-.28-.958-.646-1.956-1.1-2.98.45-1.017.81-2.01 1.085-2.964zm-13.395.004c.278.96.645 1.957 1.1 2.98-.45 1.017-.812 2.01-1.086 2.964-.484-.15-.944-.318-1.37-.5-1.732-.737-2.852-1.706-2.852-2.474 0-.768 1.12-1.742 2.852-2.476.42-.18.88-.342 1.356-.494zm11.678 4.28c.265.657.49 1.312.676 1.948-.64.157-1.316.29-2.016.39.24-.375.48-.762.705-1.158.225-.39.435-.788.636-1.18zm-9.945.02c.2.392.41.783.64 1.175.23.39.465.772.705 1.143-.695-.102-1.365-.23-2.006-.386.18-.63.406-1.282.66-1.933zM17.92 16.32c.112.493.2.968.254 1.423.23 1.868-.054 3.32-.714 3.708-.147.09-.338.128-.563.128-1.012 0-2.514-.807-4.11-2.28.686-.72 1.37-1.536 2.02-2.44 1.107-.118 2.154-.3 3.113-.54zm-11.83.01c.96.234 2.006.415 3.107.532.66.905 1.345 1.727 2.035 2.446-1.595 1.483-3.092 2.295-4.11 2.295-.22-.005-.406-.05-.553-.132-.666-.38-.955-1.834-.73-3.703.054-.46.142-.944.25-1.438zm4.56.64c.44.02.89.034 1.345.034.46 0 .915-.01 1.36-.034-.44.572-.895 1.095-1.345 1.565-.455-.47-.91-.993-1.36-1.565z" fill="#61dafb"/></symbol>
+
+	<!-- Vue: the single Simple Icons path splits at its one Z into exactly the
+	     two chevrons of the real two-tone mark. -->
+	<symbol id="fwlogo-vue" viewBox="0 0 24 24"><path d="M24,1.61H14.06L12,5.16,9.94,1.61H0L12,22.39Z" fill="#42b883"/><path d="M12,14.08,5.16,2.23H9.59L12,6.41l2.41-4.18h4.43Z" fill="#35495e"/></symbol>
+
+	<!-- Svelte: white S. The badge fill is the Svelte orange, so the sticker as a
+	     whole is the logo's real colour pairing rather than a recolouring of it. -->
+	<symbol id="fwlogo-svelte" viewBox="0 0 24 24"><path d="M10.354 21.125a4.44 4.44 0 0 1-4.765-1.767 4.109 4.109 0 0 1-.703-3.107 3.898 3.898 0 0 1 .134-.522l.105-.321.287.21a7.21 7.21 0 0 0 2.186 1.092l.208.063-.02.208a1.253 1.253 0 0 0 .226.83 1.337 1.337 0 0 0 1.435.533 1.231 1.231 0 0 0 .343-.15l5.59-3.562a1.164 1.164 0 0 0 .524-.778 1.242 1.242 0 0 0-.211-.937 1.338 1.338 0 0 0-1.435-.533 1.23 1.23 0 0 0-.343.15l-2.133 1.36a4.078 4.078 0 0 1-1.135.499 4.44 4.44 0 0 1-4.765-1.766 4.108 4.108 0 0 1-.702-3.108 3.855 3.855 0 0 1 1.742-2.582l5.589-3.563a4.072 4.072 0 0 1 1.135-.499 4.44 4.44 0 0 1 4.765 1.767 4.109 4.109 0 0 1 .703 3.107 3.943 3.943 0 0 1-.134.522l-.105.321-.286-.21a7.204 7.204 0 0 0-2.187-1.093l-.208-.063.02-.207a1.255 1.255 0 0 0-.226-.831 1.337 1.337 0 0 0-1.435-.532 1.231 1.231 0 0 0-.343.15L8.62 9.368a1.162 1.162 0 0 0-.524.778 1.24 1.24 0 0 0 .211.937 1.338 1.338 0 0 0 1.435.533 1.235 1.235 0 0 0 .344-.151l2.132-1.36a4.067 4.067 0 0 1 1.135-.498 4.44 4.44 0 0 1 4.765 1.766 4.108 4.108 0 0 1 .702 3.108 3.857 3.857 0 0 1-1.742 2.583l-5.589 3.562a4.072 4.072 0 0 1-1.135.499m10.358-17.95C18.484-.015 14.082-.96 10.9 1.068L5.31 4.63a6.412 6.412 0 0 0-2.896 4.295 6.753 6.753 0 0 0 .666 4.336 6.43 6.43 0 0 0-.96 2.396 6.833 6.833 0 0 0 1.168 5.167c2.229 3.19 6.63 4.135 9.812 2.108l5.59-3.562a6.41 6.41 0 0 0 2.896-4.295 6.756 6.756 0 0 0-.665-4.336 6.429 6.429 0 0 0 .958-2.396 6.831 6.831 0 0 0-1.167-5.168Z" fill="#ffffff"/></symbol>
+
+	<!-- Solid: the mark's own blue ramp. -->
+	<symbol id="fwlogo-solid" viewBox="0 0 24 24"><path d="M11.558.788A9.082 9.082 0 0 0 9.776.99l-.453.15c-.906.303-1.656.755-2.1 1.348l-.301.452-2.035 3.528c.426-.387.974-.698 1.643-.894h.001l.613-.154h.001a8.82 8.82 0 0 1 1.777-.206c2.916-.053 6.033 1.148 8.423 2.36 2.317 1.175 3.888 2.32 3.987 2.39L24 5.518c-.082-.06-1.66-1.21-3.991-2.386-2.393-1.206-5.521-2.396-8.45-2.343zM8.924 5.366a8.634 8.634 0 0 0-1.745.203l-.606.151c-1.278.376-2.095 1.16-2.43 2.108-.334.948-.188 2.065.487 3.116.33.43.747.813 1.216 1.147L12.328 10h.001a6.943 6.943 0 0 1 6.013 1.013l2.844-.963c-.17-.124-1.663-1.2-3.91-2.34-2.379-1.206-5.479-2.396-8.352-2.344zm5.435 4.497a6.791 6.791 0 0 0-1.984.283L2.94 13.189 0 18.334l9.276-2.992a6.945 6.945 0 0 1 7.408 2.314v.001c.695.903.89 1.906.66 2.808l2.572-4.63c.595-1.041.45-2.225-.302-3.429a6.792 6.792 0 0 0-5.255-2.543zm-3.031 5.341a6.787 6.787 0 0 0-2.006.283L.008 18.492c.175.131 2.02 1.498 4.687 2.768 2.797 1.332 6.37 2.467 9.468 1.712l.454-.152h.002c1.278-.376 2.134-1.162 2.487-2.09.353-.93.207-2.004-.541-2.978a6.791 6.791 0 0 0-5.237-2.548z" fill="url(#fwg-solid)"/></symbol>
+
+	<!-- Angular: the white A on the crimson sticker — the pairing Angular ships. -->
+	<symbol id="fwlogo-angular" viewBox="0 0 24 24"><path d="M16.712 17.711H7.288l-1.204 2.916L12 24l5.916-3.373-1.204-2.916ZM14.692 0l7.832 16.855.814-12.856L14.692 0ZM9.308 0 .662 3.999l.814 12.856L9.308 0Zm-.405 13.93h6.198L12 6.396 8.903 13.93Z" fill="#ffffff"/></symbol>
+
+	<!-- Qwik: the bolt in Qwik's blue, on Qwik's violet. -->
+	<symbol id="fwlogo-qwik" viewBox="0 0 24 24"><path d="M7.5469 0a2.957 2.957 0 0 0-2.5606 1.4785L.5332 9.1915a2.957 2.957 0 0 0 0 2.957l4.4531 7.7128A2.955 2.955 0 0 0 7.547 21.338H12l8.5938 2.6484c.2409.0742.4512-.1782.3359-.4023l-1.916-3.7227 4.4531-7.7129a2.957 2.957 0 0 0 0-2.957l-4.4531-7.7129A2.957 2.957 0 0 0 16.453 0zm0 .7656L17.7324 10.67l-1.8965 1.8985.5782 7.5332L6.2676 10.67l2.371-2.373z" fill="url(#fwg-qwik)"/></symbol>
+</svg>
+
+<main class="spec">
+
+<header>
+	<p class="spec__kicker">Frameless component · the collectible set</p>
+	<h1>framework-badge</h1>
+	<p class="spec__lede">Die-cut stickers, one per compilation target, in that framework's own colour, with its real logo in full colour and its name in white.</p>
+</header>
+
+<div class="spec__use">
+	<div>
+		<h2>Use it when</h2>
+		<ul>
+			<li>Naming the targets: a targets section, a nav, a table header, the footer.</li>
+			<li>You want breadth to be <em>checkable</em> — a reader should find their own framework on the page.</li>
+			<li>In canonical order: React, Vue, Svelte, Solid, Angular, Qwik.</li>
+		</ul>
+	</div>
+	<div class="spec__use--no">
+		<h2>Don't use it when</h2>
+		<ul>
+			<li>You need decoration. These are trademarks used nominatively, not brand texture.</li>
+			<li>You were going to <em>count</em> them. Never total the targets — see <code>../../verbal/messaging.md</code>.</li>
+			<li>You were going to colour a mark in <code>--accent</code>. Never.</li>
+		</ul>
+	</div>
+</div>
+
+<hr class="spec__rule">
+
+<section>
+	<h2>The set</h2>
+	<p class="spec__note">Full colour, glossy, elevated, tilted. Each band is tinted to its own hue and each keyline is the dark end of that hue — a neutral black keyline on a saturated fill is what made the previous version read as printed-out rather than die-cut.</p>
+
+	<div class="spec__stage spec__stage--block">
+		<div class="fw-set" id="canonical-set">
+			<span class="fw-sticker tilt-1" data-framework="react"><span class="fw-sticker__face"><svg class="fw-sticker__mark framework-mark" viewBox="0 0 24 24" aria-hidden="true"><use href="#fwlogo-react"/></svg><span class="fw-sticker__name">React</span></span></span>
+			<span class="fw-sticker tilt-2" data-framework="vue"><span class="fw-sticker__face"><svg class="fw-sticker__mark framework-mark" viewBox="0 0 24 24" aria-hidden="true"><use href="#fwlogo-vue"/></svg><span class="fw-sticker__name">Vue</span></span></span>
+			<span class="fw-sticker tilt-3" data-framework="svelte"><span class="fw-sticker__face"><svg class="fw-sticker__mark framework-mark" viewBox="0 0 24 24" aria-hidden="true"><use href="#fwlogo-svelte"/></svg><span class="fw-sticker__name">Svelte</span></span></span>
+			<span class="fw-sticker tilt-4" data-framework="solid"><span class="fw-sticker__face"><svg class="fw-sticker__mark framework-mark" viewBox="0 0 24 24" aria-hidden="true"><use href="#fwlogo-solid"/></svg><span class="fw-sticker__name">Solid</span></span></span>
+			<span class="fw-sticker tilt-1" data-framework="angular"><span class="fw-sticker__face"><svg class="fw-sticker__mark framework-mark" viewBox="0 0 24 24" aria-hidden="true"><use href="#fwlogo-angular"/></svg><span class="fw-sticker__name">Angular</span></span></span>
+			<span class="fw-sticker tilt-2" data-framework="qwik"><span class="fw-sticker__face"><svg class="fw-sticker__mark framework-mark" viewBox="0 0 24 24" aria-hidden="true"><use href="#fwlogo-qwik"/></svg><span class="fw-sticker__name">Qwik</span></span></span>
+		</div>
+	</div>
+</section>
+
+<section>
+	<h2>Large — carrying the activation model</h2>
+	<p class="spec__note">React, Vue, Svelte, Solid and Angular hydrate. Qwik resumes. Two architecturally different ways to bring a page to life, from one source — the strongest technical hook the brand has, and this is where a sticker can carry it.</p>
+
+	<div class="spec__stage spec__stage--block">
+		<div class="fw-set">
+			<span class="fw-sticker fw-sticker--large tilt-1" data-framework="react"><span class="fw-sticker__face"><svg class="fw-sticker__mark framework-mark" viewBox="0 0 24 24" aria-hidden="true"><use href="#fwlogo-react"/></svg><span class="fw-sticker__name">React</span><span class="fw-sticker__activation">Hydrates</span></span></span>
+			<span class="fw-sticker fw-sticker--large tilt-3" data-framework="solid"><span class="fw-sticker__face"><svg class="fw-sticker__mark framework-mark" viewBox="0 0 24 24" aria-hidden="true"><use href="#fwlogo-solid"/></svg><span class="fw-sticker__name">Solid</span><span class="fw-sticker__activation">Hydrates</span></span></span>
+			<span class="fw-sticker fw-sticker--large tilt-2" data-framework="qwik"><span class="fw-sticker__face"><svg class="fw-sticker__mark framework-mark" viewBox="0 0 24 24" aria-hidden="true"><use href="#fwlogo-qwik"/></svg><span class="fw-sticker__name">Qwik</span><span class="fw-sticker__activation">Resumes</span></span></span>
+		</div>
+	</div>
+</section>
+
+<section>
+	<h2>Small — for a dense row</h2>
+	<p class="spec__note">The mark and the name on one line. Everything else is unchanged: still a fill, still a tinted keyline, still a band, still a shadow. A sticker does not stop being a sticker because it got smaller.</p>
+
+	<div class="spec__stage spec__stage--block">
+		<div class="fw-set">
+			<span class="fw-sticker fw-sticker--small tilt-1" data-framework="react"><span class="fw-sticker__face"><svg class="fw-sticker__mark framework-mark" viewBox="0 0 24 24" aria-hidden="true"><use href="#fwlogo-react"/></svg><span class="fw-sticker__name">React</span></span></span>
+			<span class="fw-sticker fw-sticker--small tilt-2" data-framework="vue"><span class="fw-sticker__face"><svg class="fw-sticker__mark framework-mark" viewBox="0 0 24 24" aria-hidden="true"><use href="#fwlogo-vue"/></svg><span class="fw-sticker__name">Vue</span></span></span>
+			<span class="fw-sticker fw-sticker--small tilt-3" data-framework="svelte"><span class="fw-sticker__face"><svg class="fw-sticker__mark framework-mark" viewBox="0 0 24 24" aria-hidden="true"><use href="#fwlogo-svelte"/></svg><span class="fw-sticker__name">Svelte</span></span></span>
+			<span class="fw-sticker fw-sticker--small tilt-4" data-framework="solid"><span class="fw-sticker__face"><svg class="fw-sticker__mark framework-mark" viewBox="0 0 24 24" aria-hidden="true"><use href="#fwlogo-solid"/></svg><span class="fw-sticker__name">Solid</span></span></span>
+			<span class="fw-sticker fw-sticker--small tilt-1" data-framework="angular"><span class="fw-sticker__face"><svg class="fw-sticker__mark framework-mark" viewBox="0 0 24 24" aria-hidden="true"><use href="#fwlogo-angular"/></svg><span class="fw-sticker__name">Angular</span></span></span>
+			<span class="fw-sticker fw-sticker--small tilt-2" data-framework="qwik"><span class="fw-sticker__face"><svg class="fw-sticker__mark framework-mark" viewBox="0 0 24 24" aria-hidden="true"><use href="#fwlogo-qwik"/></svg><span class="fw-sticker__name">Qwik</span></span></span>
+		</div>
+	</div>
+</section>
+
+<section>
+	<h2>The grey silhouette</h2>
+	<p class="spec__note">What a sticker collapses to when one of its siblings is selected — the state <code>framework-carousel</code> is built on. It loses colour <em>entirely</em>. A dimmed sticker reads as disabled; a desaturated one reads as simply not the one you are looking at, and it is what makes the selected sticker read as lit.</p>
+
+	<div class="spec__stage spec__stage--block">
+		<div class="fw-set">
+			<span class="fw-sticker tilt-1" data-framework="react"><span class="fw-sticker__face"><svg class="fw-sticker__mark framework-mark" viewBox="0 0 24 24" aria-hidden="true"><use href="#fwlogo-react"/></svg><span class="fw-sticker__name">React</span></span></span>
+			<span class="fw-sticker fw-sticker--silhouette tilt-2" data-framework="vue"><span class="fw-sticker__face"><svg class="fw-sticker__mark framework-mark" viewBox="0 0 24 24" aria-hidden="true"><use href="#fwlogo-vue"/></svg><span class="fw-sticker__name">Vue</span></span></span>
+			<span class="fw-sticker fw-sticker--silhouette tilt-3" data-framework="svelte"><span class="fw-sticker__face"><svg class="fw-sticker__mark framework-mark" viewBox="0 0 24 24" aria-hidden="true"><use href="#fwlogo-svelte"/></svg><span class="fw-sticker__name">Svelte</span></span></span>
+			<span class="fw-sticker fw-sticker--silhouette tilt-4" data-framework="solid"><span class="fw-sticker__face"><svg class="fw-sticker__mark framework-mark" viewBox="0 0 24 24" aria-hidden="true"><use href="#fwlogo-solid"/></svg><span class="fw-sticker__name">Solid</span></span></span>
+		</div>
+	</div>
+</section>
+
+<section>
+	<h2>Interactive</h2>
+	<p class="spec__note">Hover or tab through these. The object rises a couple of pixels and its shadow grows a step — the growing shadow is the part the eye actually reads as lift.</p>
+	<div class="spec__stage spec__stage--block">
+		<div class="fw-set">
+			<button type="button" class="fw-sticker lift tilt-1" data-framework="react"><span class="fw-sticker__face"><svg class="fw-sticker__mark framework-mark" viewBox="0 0 24 24" aria-hidden="true"><use href="#fwlogo-react"/></svg><span class="fw-sticker__name">React</span></span></button>
+			<button type="button" class="fw-sticker lift tilt-3" data-framework="solid"><span class="fw-sticker__face"><svg class="fw-sticker__mark framework-mark" viewBox="0 0 24 24" aria-hidden="true"><use href="#fwlogo-solid"/></svg><span class="fw-sticker__name">Solid</span></span></button>
+			<button type="button" class="fw-sticker lift tilt-2" data-framework="qwik"><span class="fw-sticker__face"><svg class="fw-sticker__mark framework-mark" viewBox="0 0 24 24" aria-hidden="true"><use href="#fwlogo-qwik"/></svg><span class="fw-sticker__name">Qwik</span></span></button>
+		</div>
+	</div>
+</section>
+
+<section>
+	<h2>The measured colours</h2>
+	<p class="spec__note">Sampled from the concept art in Chromium, by drawing it to a canvas and reading pixels. Two statistics per badge: the block average, which is what a naive sample gives, and the mean of the top 5% most saturated pixels, which is what the fill actually is. The kit is anchored on the second. Anchoring on the first produced the version the owner rejected.</p>
+
+	<table class="spec__table">
+		<thead><tr><th>Framework</th><th>Fill (shipped)</th><th>Peak saturation</th><th>Block average</th><th>Name on fill</th></tr></thead>
+		<tbody>
+			<tr><td>React</td><td><code>#1b6fb8</code></td><td><code>#0059a0</code></td><td><code>#598fb7</code></td><td>5.23:1</td></tr>
+			<tr><td>Vue</td><td><code>#12805a</code></td><td><code>#00703f</code></td><td><code>#549e78</code></td><td>4.93:1</td></tr>
+			<tr><td>Svelte</td><td><code>#d93b02</code></td><td><code>#e04000</code></td><td><code>#ef7f50</code></td><td>4.59:1</td></tr>
+			<tr><td>Solid</td><td><code>#2f5fb3</code></td><td><code>#000f6e</code></td><td><code>#6066a1</code></td><td>6.16:1</td></tr>
+			<tr><td>Angular</td><td><code>#c8102f</code></td><td><code>#94001f</code></td><td><code>#ce5b6c</code></td><td>5.88:1</td></tr>
+			<tr><td>Qwik</td><td><code>#6d3fd4</code></td><td><code>#26065e</code></td><td><code>#8469a6</code></td><td>6.34:1</td></tr>
+		</tbody>
+	</table>
+	<p class="spec__note">Every white name label clears AA normal text against its own fill. The Svelte fill is held a shade darker than its peak sample for exactly that reason — at the sampled value the white label lands at 4.03:1 and fails.</p>
+</section>
+
+<section>
+	<h2>Colour: what is permitted, and the one thing that is not</h2>
+
+	<table class="spec__table">
+		<thead><tr><th>Mark colour</th><th>Allowed</th><th>Notes</th></tr></thead>
+		<tbody>
+			<tr><td>The project's own brand colours</td><td>Yes — the default</td><td>What the concept art shows and what this component ships.</td></tr>
+			<tr><td>White</td><td>Yes</td><td>Where the project's own pairing is a white mark on its colour — Svelte and Angular.</td></tr>
+			<tr><td>The grey silhouette</td><td>Yes</td><td>The deselected carousel state, and only that.</td></tr>
+			<tr><td><code>--accent</code></td><td><strong>Never</strong></td><td>Trademark risk and brand confusion. A lime React logo reads as a Frameless product rather than as a reference to React.</td></tr>
+		</tbody>
+	</table>
+
+	<h3>What the forbidden version looks like</h3>
+	<p class="spec__note">Shown once, so it is recognisable when it turns up by accident. Note that it does not look broken — which is exactly why the rule has to be written down.</p>
+	<div class="spec__stage spec__stage--block forbidden-demo">
+		<span class="fw-sticker tilt-2" data-framework="react"><span class="fw-sticker__face"><svg class="fw-sticker__mark framework-mark" viewBox="0 0 24 24" aria-hidden="true"><use href="#fwlogo-react"/></svg><span class="fw-sticker__name">React</span></span></span>
+		<p class="spec__verdict spec__verdict--no">A framework mark in <code>--accent</code>.</p>
+	</div>
+</section>
+
+<section>
+	<h2>Trademarks</h2>
+	<p class="spec__note">React, Vue, Svelte, Solid, Angular and Qwik are trademarks of their respective owners. Frameless is not affiliated with, endorsed by, or sponsored by any of them. The marks are used nominatively, to identify compilation targets. Simple Icons' CC0 dedication covers the <em>path data</em>, not the trademarks — you are free to copy the geometry and still bound by each project's trademark policy when you display it. Use <code>footer-marks</code> on any page that shows these.</p>
+</section>
+
+</main>
+
+<script>
+	// The canonical order is a rule, so the component checks itself rather than
+	// trusting whoever wrote the markup.
+	const CANONICAL = ['react', 'vue', 'svelte', 'solid', 'angular', 'qwik'];
+	const rendered = [...document.querySelectorAll('#canonical-set [data-framework]')].map((el) => el.dataset.framework);
+	if (rendered.join() !== CANONICAL.join()) {
+		console.error('framework-badge: canonical order violated', rendered);
+	}
+
+	// No mark may resolve to --accent. The comparison value is read from the
+	// token rather than hardcoded, so the check survives --accent changing.
+	const probe = document.createElement('span');
+	probe.style.color = 'var(--accent)';
+	document.body.append(probe);
+	const accent = getComputedStyle(probe).color;
+	probe.remove();
+
+	for (const sticker of document.querySelectorAll('.fw-sticker')) {
+		if (sticker.closest('.forbidden-demo')) continue;
+		const symbol = document.querySelector(sticker.querySelector('use').getAttribute('href'));
+		for (const path of symbol.querySelectorAll('path')) {
+			const fill = getComputedStyle(path).fill;
+			if (fill === accent) console.error('framework-badge: mark rendered in --accent', sticker.dataset.framework);
+		}
+	}
+
+	// Every sticker has to be elevated. Checking the rendered filter catches the
+	// real failure mode — a later rule resetting `filter` and silently flattening
+	// the whole set, which is what the previous version of this kit shipped.
+	for (const sticker of document.querySelectorAll('.fw-sticker')) {
+		if (!getComputedStyle(sticker).filter.includes('drop-shadow')) {
+			console.error('framework-badge: sticker is flat', sticker.dataset.framework);
+		}
+	}
+</script>
+</body>
+</html>

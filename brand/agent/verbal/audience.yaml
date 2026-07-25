@@ -1,0 +1,106 @@
+> Machine-readable audience model. Agents: pick ONE segment before writing anything.
+> Copy written for "developers" in general lands for nobody. Each segment below has a
+> different pain, a different objection, and a different proof that moves them.
+
+meta:
+  default_segment: design_system_authors
+  default_rationale: >-
+    The largest concentration of pain, and the segment where six verified targets changes
+    the arithmetic outright rather than marginally.
+
+segments:
+
+  - id: design_system_authors
+    name: "Design-system and component-library authors shipping multiple framework targets"
+    priority: 1
+    is_the_wedge: true
+
+    pain:
+      - "They maintain a separate codebase per framework for one component library."
+      - "A bug fixed in the React version silently persists in the Vue one."
+      - "Every new component multiplies by the number of targets. Every design change does too."
+      - "Drift is not hypothetical — it starts the first time one port gets a fix the others don't."
+
+    what_moves_them: "Behavioral proof. They have been burned by output that looked right and behaved wrong."
+    objection: "I've seen cross-framework codegen before. The output is unidiomatic and I can't own it."
+    answer: "Semantic IR, not syntax translation. The output is code your team would have written, and you can eject at any time."
+    proof_to_show: "The same component, compiled out and shown side by side — then the behavioral diff that proves they match."
+
+  - id: multi_framework_orgs
+    name: "Organizations running more than one framework at once"
+    priority: 2
+
+    pain:
+      - "Acquisitions, legacy surfaces and team preference left them on three frameworks with no path to one."
+      - "A shared design system is either impossible or maintained N times."
+      - "Consistency is enforced by review and goodwill rather than by tooling."
+
+    what_moves_them: "One source of truth that emits into every stack they already run, without a migration."
+    objection: "We can't rewrite anything right now."
+    answer: "You don't. Frameless emits into the frameworks you already use — the existing code stays."
+
+  - id: qwik_curious
+    name: "Teams evaluating Qwik's resumability"
+    priority: 3
+
+    pain:
+      - "Resumability is genuinely compelling and adopting it normally means rewriting components."
+      - "A port to Qwik is not a translation — hydration and resumption are different activation models."
+      - "There is no low-risk way to evaluate it against what they already run."
+
+    what_moves_them: "One source, running hydrated in five frameworks and resumed in Qwik, provably identical."
+    objection: "Does it actually resume, or does it just compile and appear to work?"
+    answer: "It resumes, on official Qwik tooling. Run the demo and watch them side by side."
+
+  - id: ai_port_burned
+    name: "Teams who tried having an LLM port components per framework"
+    priority: 4
+
+    pain:
+      - "The port changes every run — non-deterministic output for a deterministic problem."
+      - "It can silently alter behavior while looking correct in review."
+      - "Someone must review every file, for every framework, after every change."
+
+    what_moves_them: "The oracle, NOT the codegen. They already have codegen. What they lack is a way to know it's right."
+    objection: "How is your generated code different from what I get from a model?"
+    answer: "Determinism plus a browser-verified equivalence check that is itself mutation-tested. It can fail, which is what makes a pass mean something."
+
+  - id: markless_adopters
+    name: "Markless users and prospects"
+    priority: 5
+
+    pain:
+      - "Wanting Markless's authoring model without betting the whole stack on one runtime."
+
+    what_moves_them: "Components are API-compatible. Run on Markless, or compile into your team's framework. The choice stays open."
+
+  - id: eject_anxious
+    name: "Teams whose real blocker is lock-in fear"
+    priority: 6
+
+    pain:
+      - "Codegen historically means a trapdoor: adopt it and you cannot leave."
+
+    what_moves_them: "Output is real idiomatic code with no Frameless runtime shim. Delete the compiler and keep the code."
+    objection: "What happens when I outgrow this?"
+    answer: "You keep the output. That's the whole exit plan."
+    real_world_anchor: >-
+      AWS Amplify publicly rejected codegen in RFC #3933 — "We want React components to feel
+      like React components." That objection is real and named, and semantic-IR emission
+      exists precisely to answer it. Meet it head-on rather than arguing around it.
+
+anti_audience:
+  - segment: "Teams happily shipping to exactly one framework, with no second target in sight"
+    why: "There is no cost being paid, so there is nothing to solve. The value starts at two targets."
+    instruction: >-
+      Do not write copy targeting them — it sounds like a solution hunting for a problem.
+      If they must be addressed, concede it directly: for one target, write the framework
+      code. Conceding this makes every other claim more credible.
+
+universal_rules:
+  - "The headline is fixed: 'Compile once, output anywhere.' Never count the targets."
+  - "Canonical order when frameworks are shown individually: React, Vue, Svelte, Solid, Angular, Qwik."
+  - "Say 'no Frameless runtime', never 'zero runtime'."
+  - "Behavior is verified identical; output is deliberately different per framework."
+  - "Frameless Studio is the one thing not yet available. Never imply otherwise."
+  - "Lead with proof, not promise. This audience has heard the promise before and stopped believing it."

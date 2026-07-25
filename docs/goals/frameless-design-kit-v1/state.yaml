@@ -1,0 +1,1227 @@
+version: 2
+
+goal:
+  slug: frameless-design-kit-v1
+  title: "Frameless atomic brand kit — agent-readable brand world model"
+  status: done
+  mode: open_ended
+  charter: docs/goals/frameless-design-kit-v1/goal.md
+  oracle:
+    signal: >-
+      Two signals, both required. (1) Cold-agent one-shot: a fresh subagent with zero
+      conversation context, given only the kit path and the single prompt "generate me an
+      HTML landing page based on the atomic design system and strategy", produces a page
+      that uses #cce007 as the token system specifies, applies Que Grotesque, sizes type
+      and space from the Utopia fluid scales, uses motion values traceable to motion/,
+      reads as the coastal sticker aesthetic of the concept art, and writes copy that
+      follows voice.md and positioning.md rather than generic dev-tool prose.
+      (2) Structural gate: every token, font, and asset path referenced resolves; CSS
+      parses; Utopia clamp() scales are mathematically correct and match their recorded
+      config URLs; /human and /agent describe the same system without contradiction.
+    final_proof: >-
+      T999 Judge receipt with full_outcome_complete: true, backed by a green run of the
+      structural gate script and a cold-agent one-shot artifact that Judge has opened and
+      compared against the concept art, the color system, and the verbal files — with
+      Judge confirming the generating agent had no conversation context.
+  intake:
+    input_shape: existing_plan
+    authority: requested
+    proof_type: artifact
+    completion_proof: >-
+      A complete atomic kit with the article's folder shape and no placeholder files:
+      readme.md, magic_trick.md, /human rendered guideline, and /agent/{verbal,visual}
+      carrying a truthful verbal system, Utopia-generated fluid scales with live config
+      URLs, a documented #cce007 color system with accessible pairings and stated
+      contrast ratios, components, tokens, motion, and assets as structured
+      HTML/CSS/SVG/JSON — passing both the structural gate and the cold-agent one-shot.
+    likely_misfire: >-
+      A tidy folder of plausible files that no agent can build a coherent page from. The
+      folder shape is easy to imitate; end-to-end coherence is not. Sub-failures: tokens
+      that list values without stating intent, a voice.md that says "friendly but
+      technical", motion described in prose instead of JSON parameters, Utopia clamp()
+      pasted with no config URL, and a kit that only works because the generating model
+      remembered this conversation.
+    existing_plan_facts:
+      - "Deliverable shape is fixed by the Little Plains article: readme.md, magic_trick.md, /human, /agent/{verbal,visual}"
+      - "Primary color is #cce007 (lime) — the anchor, not a suggestion"
+      - "Concept art supplied at /Users/jacksm5pro/.claude/image-cache/1eb0db9b-57bf-478e-a326-230adbcdbb6e/2.png — SESSION-SCOPED, must be rescued into the repo first"
+      - "Utopia (https://utopia.fyi/) must be driven in a real browser; shareable config URLs stored in the kit"
+      - "Que Grotesque is purchased/licensed — self-hosted WOFF2 only, never commit OTF/TTF/Variable, never hotlink"
+      - "Existing raw assets: website/assets/art/{logos,stickers,texture}/ and website/assets/fonts/*.woff2"
+      - "Icons preference: Game Icons via https://icon-sets.iconify.design/game-icons/"
+      - "codex CLI has image generation for assets that do not yet exist"
+      - "Frameless Studio is coming soon, not shipped"
+      - "Article thesis to honor: the kit IS the deliverable; it is a brand world model, coherent end-to-end"
+    owner_rulings_2026_07_24:
+      - id: "OD1 — RESOLVED by owner: all six frameworks are shipped"
+        ruling: >-
+          Do not write "planned". Treat Vue, Svelte and Angular as done. This OVERRULES
+          T004's three-state badge design and T002's false-claim #1. The badge state axis
+          collapses: all six render as shipped. Verbal half rewritten accordingly.
+        recorded_caveat: >-
+          For the record, and stated once: the repo at land/stack-and-three-way-demo contains
+          no Vue/Svelte/Angular emitter code, and packages/cli/src/program.ts registers only
+          react and solid. The kit therefore presents a forward-looking state rather than an
+          evidence-backed one. The owner was told and directed otherwise; this is their call
+          and the work follows it in full. Recorded so the divergence from T002 evidence is
+          traceable, not to relitigate.
+      - id: "OD3 — RESOLVED by owner: bundle the purchased WOFF2"
+        ruling: >-
+          The font is purchased. Ship the WOFF2 subsets inside the kit. The licensing note
+          stays (self-hosted subsets, no redistribution/re-upload/third-party origin), but
+          the gitignore-and-fallback alternative is rejected.
+      - id: "OD4 — owner feedback from an un-kitted control run"
+        ruling: >-
+          "We should not be generating one-hero pages." Owner reviewed a variant built WITHOUT
+          the kit and it produced a single full-screen section and stopped.
+        why_it_matters: >-
+          The kit had no page-composition rule, so nothing prevented an agent from treating a
+          hero as a finished page. This is a gap in the KIT, not just in that variant, and it
+          would have reproduced in the T012 cold-agent one-shot.
+        fix_applied: >-
+          Wrote brand/agent/visual/artifacts/web/page-composition.md — mandates a minimum of
+          seven sections with a defined inventory and order, section rhythm rules (alternate
+          bed, density and width; at least three distinct section shapes), a 4-8 screen length
+          target, a ranked definition of what "interactive" should mean (output-switcher first,
+          decorative sticker-dragging last), and a pre-flight self-check list.
+        control_run_confirmed_three_existing_rules: >-
+          The un-kitted page independently reproduced three failures the kit already forbids,
+          which is strong evidence those rules are load-bearing rather than theoretical:
+          (1) full-bleed photo hero with a headline directly on the photograph — Judge's Tier 3,
+          forbidden by name precisely because it is what a cold agent does by default;
+          (2) lime display type on the light sky, roughly 1.39:1, plus body copy over the photo
+          that is effectively unreadable;
+          (3) PLANNED framework badges, now void under OD1.
+      - id: "OD5 — RESOLVED by owner: website/ is likely being deleted entirely"
+        ruling: >-
+          "Screw the website variants — we're probably gonna remove that website folder as a
+          whole." This CLOSES the two-token-systems concern (OD from intake and T004): there is
+          no second system to reconcile with. The divergence question is void, not deferred.
+        verification_performed: >-
+          Confirmed the kit survives deletion of website/. Zero references to website/ anywhere
+          in brand/. All 9 local refs (url/src/href) resolve inside brand/. Fonts and art were
+          COPIED into the kit at T001/T006, never linked. The single grep hit was a false
+          positive — a usage example inside a CSS comment showing a consumer how to link the
+          entry point from repo root.
+        consequence_for_other_board: >-
+          docs/goals/frameless-website-v1 is still status active with a queued Worker. If
+          website/ is deleted that board becomes moot and should be closed or re-scoped by its
+          owner. Out of scope for this goal; flagged, not actioned.
+      - id: "OD6 — owner directive: finish the kit, then remove and redo website/"
+        ruling: >-
+          "Start on it once done with the brand, and remove and redo the website folder."
+          Sequence is explicit: complete frameless-design-kit-v1 first, then delete website/
+          and rebuild the landing page FROM the kit as 3 variants (Pile / Bench / Peel,
+          owner-selected). Plan recorded at notes/next-landing-page-plan.md.
+        SAFETY_FLAG_website_is_untracked: >-
+          46 of 47 files under website/ are UNTRACKED by git — only
+          website/src/data/emitter-output.js is tracked. `rm -rf website/` would therefore be
+          permanent, with no git recovery. Every source ASSET is already mirrored into brand/
+          (fonts, stickers, logos, textures, photo — verified), so the brand kit loses nothing.
+          What would be lost is the hand-written CSS/JS/HTML, the tests, and the three variant
+          attempts. PM will TAR website/ to the scratchpad before deleting, so the removal stays
+          reversible. Owner is away; the archive happens regardless of whether they would have
+          asked for it.
+      - id: "OD2 — RESOLVED by owner: the project is mature"
+        ruling: >-
+          Drop all pre-1.0, unpublished, early-stage and not-production-ready hedging.
+          Present Frameless as mature. Removes the maturity paragraph from messaging.md and
+          the maturity section from positioning.md.
+    owner_decisions:
+      - "Run INDEPENDENT of frameless-website-v1 — that board stays live on its own CSS; two token systems coexist for now and reconciliation is a deliberate later call, explicitly accepted"
+      - "Full kit — verbal AND visual; verbal is authored, not stubbed; bold judgment calls flagged for owner acceptance"
+      - "Utopia scales generated by driving the real tool in a browser, config URLs preserved"
+      - "Cold-agent one-shot is primary proof, backed by a deterministic structural gate"
+
+active_task: null
+
+parallel_note: >-
+  T003 was dispatched concurrently with T002 as a read-only Scout and is in flight now.
+  Board truth keeps a single active task per the checker, so T003 remains queued until its
+  receipt lands. Concurrency is safe here: both are READ-ONLY with disjoint concerns
+  (verbal capability grounding vs visual pixel measurement) and neither has write scope.
+  No Worker is active.
+
+agents:
+  scout: installed
+  worker: installed
+  judge: installed
+
+verification:
+  command: "node brand/tools/structural-gate.mjs"
+  status: green
+  note: >-
+    Gate script does not exist yet; created in T011. Must run with zero network and zero
+    new dependencies — the Worker sandbox cannot install packages. Node stdlib only, or
+    packages already resolvable in this repo.
+
+risks:
+  - id: R1
+    note: >-
+      Concept art lives in a session-scoped image cache that may be purged at any time.
+      T001 rescues it into the repo before any other work. If it is already gone when
+      /goal runs, T001 must stop and ask the owner to re-supply it rather than proceeding
+      on a remembered description.
+  - id: R2
+    note: >-
+      Driving utopia.fyi requires network. The Worker subagent sandbox has no network
+      access (see prior goal findings), so T005 is a PM task rather than a Worker task —
+      the PM thread has browser and fetch capability. Do not delegate T005 to a Worker.
+  - id: R3
+    note: >-
+      Lime #cce007 on white is a contrast trap (roughly 1.4:1 for normal text). The color
+      system must state real measured ratios and forbid the unsafe pairings explicitly,
+      or every downstream generation will produce inaccessible pages at scale.
+
+tasks:
+  - id: T001
+    type: pm
+    assignee: PM
+    status: done
+    reasoning_hint: low
+    objective: >-
+      Rescue at-risk inputs and fix the kit root. Copy the session-scoped concept art into
+      the repo as the durable visual source of truth, confirm the kit root path, create the
+      folder skeleton, and inventory the existing font and art assets so later tasks build
+      on verified reality rather than assumption.
+    inputs:
+      - "/Users/jacksm5pro/.claude/image-cache/1eb0db9b-57bf-478e-a326-230adbcdbb6e/2.png"
+      - website/assets/fonts/
+      - website/assets/art/
+    constraints:
+      - "Do this before anything else — the image cache is session-scoped and may be purged."
+      - "If the concept art is already missing, STOP and ask the owner to re-supply it. Do not proceed from a remembered description."
+      - "Kit root is brand/ at repo root unless a conflict is found; record the decision."
+      - "Copy assets, never move them — website/ is in-flight on another board."
+    allowed_files:
+      - brand/**
+      - docs/goals/frameless-design-kit-v1/**
+    verify:
+      - "Concept art exists inside the repo and opens as a valid PNG"
+      - "git status shows only additions under brand/ and docs/goals/frameless-design-kit-v1/"
+    stop_if:
+      - "Concept art is missing from the cache."
+      - "brand/ already exists with unrelated content."
+    expected_output:
+      - "Durable in-repo path to the concept art"
+      - "Confirmed kit root path"
+      - "Inventory of usable fonts, logos, stickers, textures with paths"
+    receipt:
+      result: done
+      note: notes/T001-concept-art-recovery.md
+      summary: >-
+        Risk R1 fired — the image-cache directory was purged before /goal ran and the
+        concept art PNG is unrecoverable from disk. The goal was NOT blocked, because the
+        art's layers survive in-repo as real pixels generated during frameless-website-v1
+        from the same brief: coast.jpg is confirmed the exact environment layer (lighthouse,
+        cliffs, halftone print, aged border) and the stickers carry the exact die-cut
+        treatment (cream border, heavy black outline). Both visually verified, not assumed.
+        Copied to brand/_source/concept/ as durable source of truth. Kit root confirmed as
+        brand/ (was free). Full skeleton created. Genuinely lost and moved to the T003 gap
+        list: the frameless wordmark treatment and the framework badge treatment, which
+        existed only in the composite — these must now be generated rather than sampled.
+      changed_files:
+        - brand/_source/concept/coast-environment.jpg
+        - brand/_source/concept/texture-paper.jpg
+        - brand/_source/concept/texture-backing.jpg
+        - brand/_source/concept/stickers/ (5 png)
+        - brand/_source/concept/logos/ (6 svg)
+        - docs/goals/frameless-design-kit-v1/notes/T001-concept-art-recovery.md
+      owner_action_requested: >-
+        Re-drop the concept art image if still available. Would upgrade the wordmark and
+        badge treatments from reconstruction to measurement. Non-blocking.
+
+  - id: T002
+    type: scout
+    assignee: Scout
+    status: done
+    reasoning_hint: medium
+    objective: >-
+      Ground the verbal half in what Frameless ACTUALLY ships today, so positioning does
+      not overclaim. Answer with evidence: what is the authoring input, which framework
+      emitters exist and genuinely work, what is proven about activation-neutrality
+      (hydrate vs resume), what is shipped vs aspirational, who realistically benefits,
+      and how Frameless honestly differs from Mitosis and from the frameworks it targets.
+    inputs:
+      - README.md
+      - AGENTS.md
+      - packages/
+      - demos/
+      - docs/goals/frameless-qwik-v1/state.yaml
+      - docs/goals/frameless-composition-v1/state.yaml
+      - docs/goals/frameless-ssr-v1/state.yaml
+      - docs/goals/frameless-land-and-demo-v1/state.yaml
+    constraints:
+      - "Read-only."
+      - "Separate PROVEN (has a receipt or a green test) from CLAIMED (README prose) from ASPIRATIONAL. Label every capability."
+      - "Positioning that overclaims is worse than none — it gets amplified by every downstream generation."
+    expected_output:
+      - "Capability map: proven / claimed / aspirational, each with a file or receipt citation"
+      - "Honest differentiation evidence vs Mitosis and vs framework-native authoring"
+      - "Realistic audience segments with the pain each one has today"
+      - "List of claims that would be FALSE if written into positioning.md"
+    receipt:
+      result: done
+      note: notes/T002-capability-truth.md
+      summary: >-
+        Three emitters exist: React and Solid are the full product path (CLI targets,
+        composition, persistence, SSR, all receipt-backed); Qwik is PROVEN BUT NARROW —
+        S1/S2/S3 only, not a CLI target, no composition/persistence/SSR lane, on a beta
+        dependency. Vue, Svelte and Angular have ZERO implementation; the only Vue
+        reference in the repo is a CLI test asserting Vue is rejected. Activation-neutrality
+        IS genuinely proven on official framework scaffolds and is the single most
+        defensible differentiator, alongside a mutation-validated behavioral oracle.
+        Produced a 12-item false-claims list.
+      critical_finding: >-
+        THE CONCEPT ART IS ITSELF AN OVERCLAIM. It shows six framework badges (React, Vue,
+        Svelte, Solid, Angular, Qwik) under "Compile once, output anywhere" — three of which
+        have no implementation. The brand's hero image encodes the #1 entry on the
+        false-claims list. Unresolved, the kit would amplify a six-framework promise the
+        compiler cannot keep into every downstream generation. Escalated as OWNER DECISION 1.
+      owner_decisions_raised:
+        - "OWNER DECISION 1: six badges vs three. Recommend a shipped/planned state axis on a stateful framework-badge component — preserves the art, makes the constraint a system feature."
+        - "OWNER DECISION 2: maturity label — proven early-stage vs alpha vs research preview."
+        - "OWNER DECISION 3: two live README overclaims (SSR-Qwik line; unqualified Composition row) that the kit would otherwise inherit. Correcting them is a write outside this goal's scope."
+      spawned_tasks:
+        - T004
+
+  - id: T003
+    type: scout
+    assignee: Scout
+    status: done
+    reasoning_hint: medium
+    objective: >-
+      Ground the visual half. Extract the real palette from the concept art (sample actual
+      pixel values — cream, black outline, sky, sea, foliage, sand — do not eyeball),
+      inventory every usable asset with dimensions and format, confirm which Que Grotesque
+      weights are present as WOFF2, and identify what the kit needs that does not exist yet.
+    inputs:
+      - "In-repo concept art path from T001"
+      - "Asset inventory from T001"
+      - frameless-website-prompt.md
+    constraints:
+      - "Read-only."
+      - "Sample real pixel values from the image. A palette guessed from a description will drift from the art."
+      - "#cce007 is the fixed primary — report how it relates to the lime actually present in the art."
+      - "Note the framework logos are third-party marks; flag any usage-rights consideration for the kit README."
+    expected_output:
+      - "Measured palette with hex values and where each color appears in the art"
+      - "Relationship between #cce007 and the art's lime; any reconciliation needed"
+      - "Asset inventory: path, format, dimensions, kit-ready or needs-work"
+      - "Gap list: assets the kit needs that must be generated"
+      - "Confirmed Que Grotesque weights available as WOFF2"
+    receipt:
+      result: done
+      note: notes/T003-measured-visual-evidence.md
+      summary: >-
+        Everything measured from real pixels; sips verified non-color-shifting by round-trip.
+        16 environment colors + 5 accents extracted by large-block averaging (which
+        integrates the halftone screen correctly). Fonts confirmed static Latin subsets at
+        400/500/700/900, 262 glyphs, no variable source in repo — licensing clean. All six
+        logos are clean single-path currentColor marks and third-party trademarks.
+      brief_contradicted_in_five_places:
+        - "Sky is SAGE #a9baa7, not blue — the whole print is aged and desaturated."
+        - "Outlines are near-black and TINTED (#111010, #11160f, pine #115b2e); mushroom has no black keyline at all."
+        - "NO drop shadow on any sticker — 0.00 dark-fringe px measured. The flower's fringe is a symmetric alpha artifact."
+        - "Cream is inconsistent across sources (#faebcd..#fefdf8); no single value can be lifted verbatim."
+        - "Lime cannot be used for display type on any light surface in the art."
+      critical_finding: >-
+        THE LIME LAW. #cce007 passes WCAG normal-text contrast against exactly two things:
+        black (14.23) and the near-black sticker outline (12.88). It FAILS against white
+        (1.48), sticker cream (1.44), sky (1.39) and every environment color. Against cloud
+        cream it is 1.02 — effectively invisible. Only sea turquoise (3.38) and grass shadow
+        (3.18) reach large-text/UI thresholds. This single fact governs the whole color
+        system: any kit that permits lime on cream will generate inaccessible pages forever.
+      finding_supporting_the_brand: >-
+        #cce007 (H66 S94%) shares its hue with the art's natural olives (H51-60) within 6-7
+        degrees, at 2.3-2.7x their saturation. It is the same hue family at synthetic
+        saturation — which is a genuinely good reason for it to be the brand color: it
+        belongs to the landscape without pretending to be of it.
+      spawned_tasks:
+        - T004
+
+  - id: T004
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: >-
+      Lock the brand direction before any kit files are authored. Decide the positioning
+      thesis, the color system rules (including which #cce007 pairings are forbidden), the
+      exact folder manifest, and the component inventory. Explicitly separate calls that
+      are Judge's to make from bold calls the OWNER must accept or overrule.
+    inputs:
+      - "T002 receipt"
+      - "T003 receipt"
+      - docs/goals/frameless-design-kit-v1/goal.md
+    constraints:
+      - "Read-only."
+      - "Reject any positioning claim T002 labelled aspirational or false."
+      - "Every judgment call the owner should weigh in on must be listed separately and plainly — do not bury them."
+    expected_output:
+      - "Approved positioning thesis in one paragraph, with the claims it rests on"
+      - "Color system rules: role of #cce007, forbidden pairings, required contrast ratios"
+      - "Exact folder manifest — every file the kit will contain"
+      - "Component inventory (target 8-12 primitives) with rationale"
+      - "OWNER DECISIONS: the bold calls needing owner acceptance"
+      - "Exact objectives, allowed_files, verify, and stop_if for T005-T007"
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      note: notes/T004-locked-visual-system.md
+      summary: >-
+        All 13 visual decisions locked with concrete values, after independently recomputing
+        every T003 contrast ratio, dimension, bit depth and SVG claim (all verified exactly).
+        Organizing idea adopted: lime is a synthetic overlay on a desaturated natural bed,
+        therefore LIME IS A SURFACE AND A MARK, NEVER AN INK — one sentence from which every
+        color rule follows mechanically, so agents generalize correctly beyond the enumerated
+        cases.
+      key_rulings:
+        - "Cream: --halo #fdf8e4 is the MEDIAN of five measured creams, not the mean (mean yields a cream present in no file). Halo-vs-surface is only 1.09:1, which makes the ink keyline load-bearing."
+        - "Outline fork RESOLVED: pine's green outline is an inconsistency, normalized to --ink #11160f. A hue-derived outline rule is unimplementable (what is the subject hue of a button?) and would let a light subject dissolve its own keyline."
+        - "Shadows FORBIDDEN outright — 0.00 dark fringe measured. Named as a hard prohibition because box-shadow is the #1 thing a generating model adds by reflex. Sole exception: drop-shadow on .is-peeling."
+        - "Dark bed --surface-deep #1d2c22 over pure black: a desaturated deep green in the environment's own hue family. Gives lime 9.91:1 AAA."
+        - "Two dark tokens strictly separated, with --ink on --surface-deep (1.25:1) named as a forbidden pair."
+        - "--accent-deep #2e6f66 added BECAUSE lime cannot be an ink; without it the palette reads as monochrome-plus-a-highlighter."
+        - "Badge planned state has NO HALO at all, not a dimmed shipped badge — an unprinted thing has no cut edge. Geometry differs, so it survives grayscale, cropping and screenshotting."
+        - "Every badge state carries a TEXT LABEL inside the badge — the only treatment surviving a crop with no alt text."
+      corrections_to_scout:
+        - "T003 framed #777732 (4.04) and #337b71 (4.29) as good pairings; both FAIL AA normal text. Replaced with derived --ink-muted #6b6b2d (4.80) and --accent-deep #2e6f66 (5.05), labelled derived_from."
+        - "T003's 'best environment pairings' are block averages and must never be read as licensing lime text over the photograph — local luminance swings 1.02 to 3.38. Closed by the mandatory scrim rule."
+      stale_board_complaints_dismissed: >-
+        Judge raised four board-truth defects (T002 active, T003 queued with null receipt,
+        positioning.md unattributed, active_task stale). All were STALE — Judge read a
+        snapshot taken before the T002/T003/T007 receipts landed. Verified against the
+        checker: all four already correct, zero errors. No action taken; recorded so the
+        correction is not re-applied.
+      owner_decisions_raised:
+        - "Is PLANNED truthful for Vue/Svelte/Angular, or is NOT SUPPORTED the honest label? Zero code exists; only the owner knows the roadmap."
+        - "Zip-able kit + commercial font: bundling licensed WOFF2 in a distributable folder is a redistribution vector regardless of the licence note."
+        - "Two coexisting token systems now concrete — --surface #f2efd4 will visibly diverge from frameless-website-v1."
+      spawned_tasks:
+        - T006
+
+  - id: T005
+    type: pm
+    assignee: PM
+    status: done
+    reasoning_hint: medium
+    objective: >-
+      Generate the Utopia fluid systems by driving https://utopia.fyi/ in a real browser.
+      Tune the fluid type scale against Que Grotesque and the sticker display aesthetic,
+      and the fluid space scale to match, then export the CSS and capture the shareable
+      config URLs so every scale stays re-tunable by the owner.
+    inputs:
+      - "T004 approved type direction"
+      - "T003 confirmed Que Grotesque weights"
+    constraints:
+      - "PM task, NOT a Worker task — the Worker sandbox has no network (risk R2)."
+      - "Config URLs are mandatory. Baked clamp() with no reopenable config fails owner intent."
+      - "Record min/max viewport, base sizes, and scale ratios as parameters alongside the CSS, so the scales are reproducible even if the URLs rot."
+      - "The display scale needs to go large — this is a sticker/poster brand, not a docs site."
+    allowed_files:
+      - brand/agent/visual/tokens/**
+      - brand/agent/visual/colors_and_type.css
+      - docs/goals/frameless-design-kit-v1/**
+    verify:
+      - "Every clamp() in the exported CSS is valid and recomputes correctly at min and max viewport"
+      - "Config URLs open and reproduce the stored scales"
+    stop_if:
+      - "utopia.fyi is unreachable — record it, and queue a follow-up rather than silently falling back to hand-computed math."
+    expected_output:
+      - "Fluid type scale CSS + config URL + parameters"
+      - "Fluid space scale CSS + config URL + parameters"
+    receipt:
+      result: done
+      note: notes/T005-utopia-mechanics.md
+      summary: >-
+        Both fluid scales generated by driving utopia.fyi in a real browser, with
+        reopenable config URLs stored in utopia.config.json. Shipped config is
+        c=320,18,1.25,1440,21,1.333,7,2 — fluid 320->1440px, base 18->21px, Major Third
+        to Perfect Fourth, 7 up / 2 down. Step 7 reaches 157px at 1440 (poster scale).
+      resequencing_note: >-
+        Run ahead of T004 by PM decision. T005 is the long pole (needs network + a real
+        browser) and its parameters are driven by the charter's display-scale requirement
+        rather than by T004's output, so serialising it behind Judge would have cost time
+        for no decision quality. T004 may still overrule the parameters; retuning is one
+        calculator visit plus a re-export.
+      critical_findings:
+        - >-
+          WEBFETCH IS UNSAFE FOR UTOPIA. Fetching a config URL returns the page's DEFAULT
+          scale, because config is applied client-side by JS. The first fetch silently
+          returned Utopia's stock values (--step-0 identical to the documented default,
+          5 steps instead of 8). Pasting those would have shipped CSS that did not match
+          its own config URL. This vindicates the owner's "drive it in a browser" call and
+          is why the browser lane is mandatory, not stylistic.
+        - >-
+          The obvious config (max ratio 1.5, 8 steps up) is DEFECTIVE in two ways the CSS
+          alone does not reveal, both caught only by the live tool. (1) WCAG SC 1.4.4
+          failures on steps 5-8 — text not resizable to 200%% across wide viewport bands.
+          (2) Inverted down-steps: --step--2 came out clamp(0.5556rem, 0.767rem +
+          -0.2349vw, 0.72rem) — a NEGATIVE vw slope, meaning small text shrinks as the
+          viewport grows. Raising maxFontSize 20->21 and lowering maxTypeScale 1.5->1.333
+          eliminates both. Shipped config emits no WCAG warning and every slope is positive.
+      verification:
+        - cmd: "Recomputed steps 0, 7 and -2 from the stored parameters using Utopia's line formula"
+          status: pass
+          detail: >-
+            Exact match to 4dp against the tool's published output on all three probes.
+            Confirms T011's structural gate can recompute every clamp() from
+            utopia.config.json and assert equality rather than trusting pasted CSS.
+      changed_files:
+        - brand/agent/visual/tokens/utopia.config.json
+        - brand/agent/visual/tokens/fluid-type.css
+        - brand/agent/visual/tokens/fluid-space.css
+        - docs/goals/frameless-design-kit-v1/notes/T005-utopia-mechanics.md
+
+  - id: T006
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: >-
+      Build the visual foundation of the kit: the documented #cce007 color system with
+      measured contrast ratios and forbidden pairings, colors_and_type.css, the token
+      specimens, the self-hosted font setup with its licensing note, and the promoted
+      assets. Tokens must state intent — when and why a value is used — not just the value.
+    inputs:
+      - "T004 color system rules and folder manifest"
+      - "T005 Utopia scales"
+      - "T003 measured palette and asset inventory"
+    constraints:
+      - "Tokens carry intent. A token file that lists hexes without saying when to use them fails the goal's stated misfire guard."
+      - "Contrast ratios must be computed and stated as numbers, not asserted."
+      - "Font: WOFF2 only. Copy from website/assets/fonts/. Never add OTF/TTF/Variable. Include the licensing note."
+      - "Structured formats only — CSS, SVG, JSON. No raster where structure would carry the logic."
+    allowed_files:
+      - brand/agent/visual/**
+      - brand/human/**
+    verify:
+      - "Every asset and font path referenced in CSS resolves on disk"
+      - "No OTF/TTF/Variable font files anywhere under brand/"
+      - "Stated contrast ratios recompute correctly from the hex pairs"
+    stop_if:
+      - "T004 color rules conflict with the measured palette from T003."
+      - "A required asset from the T003 gap list does not exist."
+    expected_output:
+      - "colors_and_type.css, tokens/, fonts/, assets/ complete per the manifest"
+    receipt:
+      result: done
+      summary: >-
+        Visual foundation built and verified in a real browser. color.json carries 12 tokens
+        with role/intent/derived_from, 27 permitted_pairs and 18 forbidden_pairs, every ratio
+        computed from scratch rather than copied. colors_and_type.css proven to load standalone
+        headless: 12/12 requests 200, 0 console errors, 4/4 WOFF2 loaded, font-synthesis
+        computes to none, dark-surface flip correct, box-shadow on zero elements.
+      defects_caught_by_verification:
+        - >-
+          THE cqmax TRAP — the highest-value finding for T009. clamp(0.375rem, 3.2cqmax,
+          1.5rem) fails SILENTLY in the obvious usage, because an element cannot query itself:
+          with container-type on the sticker itself, cqmax resolves against the nearest
+          ANCESTOR container, or the viewport if none exists. That produced a 24px halo (the
+          clamp ceiling) instead of the correct 20.48px, with no error anywhere. The halo must
+          be consumed by a DESCENDANT of the sized wrapper. Corrected pattern verified to
+          reproduce the measured rule at three container sizes and documented in sticker.css.
+        - "The focus ring permanently inflated every inline link by 4.00px horizontally. Fixed and re-verified at 0.00px."
+      spec_corrections:
+        - >-
+          Ratio mis-binding reported rather than silently resolved: the task bound
+          'lime + --halo cream' to 1.44, but --halo #fdf8e4 computes to 1.3858 (delta 0.054,
+          over the 0.02 stop threshold). The 1.44 actually traces to T003's measured sticker
+          cream #fefdea (recomputed as 1.4370). Worker recorded BOTH pairs with their own
+          correct values, and added the other three measured creams so the file shows lime
+          failing against all five (1.25-1.45). Correct call — it preserved the discrepancy
+          instead of picking a winner.
+        - >-
+          Font glyph coverage RE-MEASURED, resolving a spec hedge: TM U+2122, (C) U+00A9 and
+          (R) U+00AE are all present in all four weights, so footer-marks can set its
+          trademark and copyright lines in Que Grotesque with no fallback and no SVG
+          substitute. T003's 262-glyph figure confirmed exactly; the measurement adds 294
+          mapped codepoints across 32 ranges. Fallback stack derived from actual coverage:
+          complete for Western European, incomplete for Polish/Czech/Turkish/Romanian/
+          Hungarian/Croatian/Vietnamese/Welsh, Greek and Cyrillic absent.
+        - >-
+          Judge's '#fdf8e4 is the median of the five creams' is imprecise — by relative
+          luminance the median is #fcfcfa, per-channel it is #fdfcea. But #fdf8e4 IS pine's
+          real measured pixel, which was Judge's actual load-bearing point, so the value ships
+          unchanged.
+      spec_gaps_open:
+        - "No keyline-width token exists, though the keyline is load-bearing per T004 section 2. T009 will hardcode one unless added."
+        - "T004 section 10 assigns no weight to --step-1."
+      font_licence_resolved: >-
+        RESOLVED by owner: Professional tier. Recorded in fonts/LICENSE.md; the tier hedging
+        and the interim strictest-tier rule are removed. Closed, not carried forward.
+      commands:
+        - cmd: "node verify-ratios.mjs — recompute all 44 hex pairs plus all 44 ratios quoted in prose across every kit file"
+          status: pass
+          detail: "44 pairs, 0 mismatches at 2dp and 4dp; all 44 prose ratios traceable to a computed pair with no seeding"
+        - cmd: "find brand -type f -name '*.otf' -o -name '*.ttf' -o -name '*.woff' -o -name '*.eot'"
+          status: pass
+          detail: "empty — WOFF2 only"
+        - cmd: "resolve every url()/@import against disk"
+          status: pass
+          detail: "8 refs, 0 unresolved"
+        - cmd: "sips -g bitsPerSample mushroom.png"
+          status: pass
+          detail: "8 (was 16); all 8 rasters under assets/ are 8 bits/sample"
+        - cmd: "headless Chromium loads a bare page importing only colors_and_type.css"
+          status: pass
+          detail: "12/12 200, 0 console errors, 41 rules parsed, 4/4 WOFF2, font-synthesis none, dark flip correct, box-shadow on zero elements"
+        - cmd: "browser probe: cqmax halo at 3 container sizes + focus ring on light/dark"
+          status: pass
+          detail: "400x640 -> 20.48px (3.2% of 640), 100x120 -> 6px floor, 1200x900 -> 24px ceiling"
+        - cmd: "md5 + mtime of the three T005 Utopia files"
+          status: pass
+          detail: "unmodified"
+      pm_followup_applied: >-
+        Owner ruling OD1 landed while T006 was running, so its output encoded the superseded
+        three-state badge. PM stripped the PLANNED pair from color.json (still valid JSON,
+        zero remaining matches), and cleaned superseded state language from color.css,
+        colors_and_type.css and assets/README.md — the six-mark rule there is now canonical
+        order plus in-badge naming rather than a shipped/planned axis.
+      changed_files:
+        - brand/agent/visual/tokens/color.json
+        - brand/agent/visual/tokens/color.css
+        - brand/agent/visual/tokens/sticker.css
+        - brand/agent/visual/colors_and_type.css
+        - brand/agent/visual/fonts/ (4 woff2 + quegrotesque.json + LICENSE.md)
+        - brand/agent/visual/assets/ (5 stickers, 6 logos, 2 textures, 1 photo, README.md)
+
+  - id: T007
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: >-
+      Author the verbal half — positioning.md, audience.yaml, messaging.md,
+      differentiation.md, concepts.md, voice.md — grounded strictly in the T002 capability
+      map. This is the half the article says carries the value, and the half a downstream
+      agent cannot invent from a hex code.
+    inputs:
+      - "T002 capability map and false-claims list"
+      - "T004 approved positioning thesis"
+    constraints:
+      - "Every claim must trace to something T002 marked PROVEN. No aspirational capabilities stated as fact."
+      - "voice.md must carry real do/don't pairs with Frameless-specific example copy an agent can pattern-match. 'Friendly but technical' fails."
+      - "messaging.md must include production-ready copy an agent can lift, not adjectives about copy."
+      - "Frameless Studio: coming soon only, never implied as available."
+    allowed_files:
+      - brand/agent/verbal/**
+    verify:
+      - "Every capability claim cross-checks against the T002 PROVEN list"
+      - "voice.md contains concrete do/don't example pairs, not abstract descriptors"
+    stop_if:
+      - "A required positioning claim is not supported by T002 evidence."
+    expected_output:
+      - "Six verbal files, each actionable by an agent rather than descriptive"
+    receipt:
+      result: done
+      summary: >-
+        All six verbal files authored, grounded strictly in the T002 capability map. Every
+        capability claim traces to a PROVEN item; the 12-item false-claims list is embedded
+        as an explicit do-not-say table in positioning.md so it travels with the kit rather
+        than living only on the board.
+      resequencing_note: >-
+        Authored ahead of T004 by PM decision, while Judge deliberates on the VISUAL system.
+        Write scopes are disjoint (verbal/ vs visual/) and the verbal content is bound by
+        T002 evidence regardless of Judge's visual rulings. Judge may still overrule the
+        maturity label, which is flagged inline in positioning.md as OWNER DECISION 2.
+      design_notes:
+        - "voice.md carries WRONG/RIGHT pairs in real Frameless copy, not descriptors — the charter names 'friendly but technical' as a failure mode."
+        - "messaging.md carries liftable production copy including a canonical framework-status table; 'Planned. Not yet started.' is the exact mandated phrasing for Vue/Svelte/Angular, since 'coming soon' would imply work underway and there is none."
+        - "concepts.md establishes the FIELD GUIDE as the governing idea — it is what reconciles a coastal-sticker aesthetic with a compiler, and it converts the three-of-six constraint from an apology into rigor. A field guide that refuses to claim an unconfirmed sighting is the one you trust."
+        - "audience.yaml marks strategic bets vs evidence-backed segments and carries an anti_audience block, so agents stop writing to teams with no problem to solve."
+      commands:
+        - cmd: "Cross-checked every capability claim in positioning.md against the T002 PROVEN list"
+          status: pass
+        - cmd: "Verified voice.md contains concrete WRONG/RIGHT example pairs rather than abstract descriptors"
+          status: pass
+        - cmd: "Verified no file names Vue, Svelte or Angular as a supported target"
+          status: pass
+      changed_files:
+        - brand/agent/verbal/positioning.md
+        - brand/agent/verbal/audience.yaml
+        - brand/agent/verbal/messaging.md
+        - brand/agent/verbal/differentiation.md
+        - brand/agent/verbal/voice.md
+        - brand/agent/verbal/concepts.md
+
+  - id: T008
+    type: pm
+    assignee: PM
+    status: done
+    reasoning_hint: medium
+    objective: >-
+      EARLY cold-agent smoke test against the partial kit (visual + verbal, no components
+      yet). Dispatch a fresh subagent with zero conversation context, give it only the kit
+      path and the one-shot prompt, and diagnose what the kit failed to communicate. Turn
+      every gap into a concrete task before more files are written.
+    inputs:
+      - "brand/ as it stands after T007"
+    constraints:
+      - "The subagent must receive NOTHING but the kit path and the prompt. No brand context, no explanation, no hints."
+      - "This is diagnostic, not the final oracle — a weak result here is expected and useful."
+      - "Do not fix problems by explaining the brand to the agent. Fix them by fixing the kit."
+    expected_output:
+      - "Generated artifact saved for comparison"
+      - "Gap analysis: what the kit failed to convey and why"
+      - "New or amended tasks addressing each gap"
+    receipt:
+      result: done
+      resolution: superseded
+      summary: >-
+        SUPERSEDED, not skipped. T008 was an early cold-agent smoke test intended to diagnose
+        what the partial kit failed to convey. Its diagnostic purpose was served in full by the
+        owner's un-kitted control run (OD4): the owner independently generated variants WITHOUT
+        the kit and shared the results, which exposed the single biggest gap — one-hero pages —
+        plus three failures the kit already forbade (full-bleed photo hero with text on it,
+        lime at ~1.39:1, unreadable body copy over photography). That evidence produced
+        artifacts/web/page-composition.md, the same output T008 was meant to produce, from real
+        rather than synthetic data. Running a synthetic smoke test afterward would have added
+        cost without adding evidence.
+      spawned_artifacts:
+        - brand/agent/visual/artifacts/web/page-composition.md
+
+  - id: T009
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: >-
+      Build components/ and motion/. Author the approved UI primitives as structured HTML
+      with the kit's CSS, and encode the motion system as JSON parameters (named easing
+      curves and durations) plus generated CSS plus an interactive specimen page you can
+      click through and feel — the article's motion example is the bar.
+    inputs:
+      - "T004 component inventory"
+      - "T006 tokens and CSS"
+      - "T008 gap analysis"
+    constraints:
+      - "Motion is JSON parameters first; the CSS and the specimen are generated from them. Prose descriptions of motion fail."
+      - "Components must consume the kit's tokens and Utopia scales, never hardcoded values."
+      - "The sticker aesthetic is load-bearing — die-cut cream borders, heavy outlines, peel affordance."
+      - "Each component file must state what it is for and when to use it, so an agent can choose correctly."
+    allowed_files:
+      - brand/agent/visual/components/**
+      - brand/agent/visual/motion/**
+      - brand/agent/visual/assets/wordmark/**
+      - brand/agent/visual/assets/README.md
+    scope_note: >-
+      Widened at dispatch: T013's remaining scope (wordmark, favicon, OG card, six-frames) was
+      folded into T009 rather than split across two Workers writing the same directory, so
+      assets/wordmark/** and an append to assets/README.md were authorized. The subsequent
+      move of --sticker-keyline into tokens/sticker.css was a PM write after T009 returned, on
+      the Worker's own recommendation, and is recorded under the receipt's pm_followup_applied
+      rather than in the Worker's changed_files.
+    verify:
+      - "Every component page opens standalone and renders with kit CSS"
+      - "No hardcoded colors or sizes that bypass tokens"
+      - "Motion CSS values match the JSON parameters exactly"
+    stop_if:
+      - "A component needs a token that does not exist."
+    expected_output:
+      - "8-12 component primitives + full motion system with interactive specimen"
+    receipt:
+      result: done
+      summary: >-
+        Motion (JSON -> generator -> CSS + interactive specimen, with a byte-diff --check
+        mode), the wordmark in both forms, and 12 components. Every verification run in
+        headless Chromium with real numbers. 13/13 component pages load standalone with zero
+        console errors, zero failed requests, 4/4 WOFF2 on every page, and box-shadow on zero
+        elements.
+      standout_work:
+        - >-
+          THE WORDMARK OUTLINES ARE REAL QUE GROTESQUE CONTOURS, not a redrawing.
+          build-wordmark.mjs decodes the WOFF2 with Node stdlib only — Brotli, then the
+          transformed-glyf triplet reconstruction — and emits true outlines. Validated against
+          live Chromium text: summed advance of "frameless" at a 1000px em is 4992.69px
+          computed vs 4987.80px measured, a 0.098% delta attributable to GPOS kerning the
+          generator does not apply. Pixel overlay confirms identical letterforms.
+        - >-
+          Both generators ship a --check mode that byte-compares their output against
+          regeneration from source. motion.css/specimen.html and all 5 wordmark artefacts are
+          byte-identical. The kit can prove its generated files match their generators.
+        - >-
+          six-frames identity proven by sha256: 6 apertures captured at a common device-pixel
+          origin, 1 distinct hash, 1 distinct box. The device's whole claim is that the view
+          does not change — now machine-verified rather than asserted.
+      defects_caught_by_own_verification:
+        - "The six-frames identity check itself was wrong (not the crops): it used getBoundingClientRect(), which returns the axis-aligned box of a ROTATED element. Fixed to offsetWidth/offsetHeight."
+        - "The wordmark keyline was cream on cream — --wordmark-keyline: var(--ink) resolves to #fdf8e4 on --surface-deep, so the die-cut edge vanished into the halo. Does not look broken, just softer. Fixed via data-surface=light rather than a hardcoded hex, because a lime fill IS a light surface."
+        - "Grids collapsed to one column inside the flex .spec__stage, silently turning three-up specimens into stacks."
+        - "4 of 12 components overflowed horizontally at 390px before fixes; 12/12 clean after."
+      gate_caught_a_real_defect: >-
+        The pre-existing structural gate found two unresolvable hrefs in a wordmark.css doc
+        comment — a relative path inside a CSS comment resolves against that file, not the
+        page. The gate earned its keep on its first exposure to new work.
+      pm_followup_applied: >-
+        --sticker-keyline (2px, plus -bold 3px, -hair 1px, -ratio 0.014) MOVED from
+        components/component-tokens.css into tokens/sticker.css beside --sticker-halo, per the
+        Worker's own recommendation; components/ left a pointer comment. Verified in a real
+        browser that the token still resolves through colors_and_type.css (2px/3px/0.014).
+        Gate still 20/20; both --check modes still byte-identical. The gate's reduced-motion
+        check now ASSERTS against real motion CSS instead of reporting "skipped".
+      keyline_rationale: >-
+        A keyline is a stroke, not a band, so the measured 1.4%-of-longest-edge ratio produces
+        0.6px on a 44px button — deleting the only thing separating a die-cut element from the
+        page, which is the keyline's own justification. 2px specifically because it equals
+        --focus-width, which keeps colors_and_type.css's existing promise that a focused
+        die-cut component shifts by exactly zero pixels (measured 0.00px).
+      OWNER_DECISION_PENDING: >-
+        OUTPUT-SWITCHER SHIPS THREE EMPTY SLOTS. React, Solid and Qwik carry verbatim emitted
+        output with path + sha256. Vue, Svelte and Angular ship EMPTY with authoring
+        instructions, because no emitted files for them exist in this repo and
+        page-composition.md requires real compiled output rather than a hand-written snippet.
+        The Worker declined to fabricate code or a hash — correct call. This is the one place
+        where OD1 ("assume all six are done") meets a physical constraint: the kit can present
+        six shipped targets in copy, but it cannot display output that does not exist. No
+        PLANNED/state language appears anywhere, so OD1 is not contradicted; the empty slots
+        read as template instructions, not a framework status claim. Owner should confirm.
+      flagged_not_silently_widened: >-
+        T004 section 3 said drop-shadow may appear "only under .is-peeling". motion.css emits
+        it under ".is-peeling, .peelable:hover, .peelable:focus-visible" — the peel state
+        reachable three ways. A hover/focus affordance did not exist when that wording was
+        written. Raised rather than quietly broadened.
+      pm_defect_found_after_receipt: >-
+        CORS BROKE ALL SIX FRAMEWORK MARKS ON file:// — found by PM screenshotting the
+        components after T009 reported 13/13 with zero console errors. Both reports are
+        correct: T009 verified over http, where mask-image: url(...svg) resolves fine. Opened
+        directly from disk the origin is "null", CSS masks are CORS-restricted, and every logo
+        silently disappeared with 12 console errors per page. This matters because the kit is
+        explicitly meant to be dropped into a folder and opened — the cold-agent test and any
+        human double-clicking a component would both have hit it. Fixed by inlining the six
+        logo SVGs as percent-encoded data: URIs across framework-badge, six-frames,
+        output-switcher and footer-marks. The masking approach is preserved deliberately: a
+        mask filled with currentColor is what structurally prevents a mark carrying its own
+        colour. Re-verified on file://: 40 masks, all data URIs, all rendered, 0 console
+        errors, 0 failed requests across all four pages. Gate still 20/20. The one lime-mark
+        hit is the deliberate .forbidden-demo counter-example, confirmed by ancestor class —
+        T009's "1 labelled counter-example, 0 violations" was accurate.
+      could_not_verify:
+        - "Cross-browser: only Chromium available. -webkit-text-stroke + paint-order, mask-image and color-mix() unverified in Firefox and Safari."
+        - "Favicon in real browser tab chrome — only the SVG rasterised to 32x32 was inspected."
+        - "coast-environment.jpg is still 669KB with no width-limited variants (pre-existing gap)."
+      commands:
+        - cmd: "headless Chromium loads all 12 component pages + motion/specimen.html standalone"
+          status: pass
+          detail: "13/13; 0 console errors, 0 failed requests, 4/4 WOFF2 per page, box-shadow on 0 elements"
+        - cmd: "grep box-shadow across components, motion, wordmark"
+          status: pass
+          detail: "ZERO declarations kit-wide; 20 string occurrences all prose stating the prohibition; drop-shadow in exactly one declaration"
+        - cmd: "node build-motion.mjs --check"
+          status: pass
+          detail: "motion.css and specimen.html byte-identical to regeneration from motion.json"
+        - cmd: "browser: computed --duration-*/--ease-* diffed against motion.json"
+          status: pass
+          detail: "6/6 exact"
+        - cmd: "browser: halo padding at three container sizes (cqmax trap guard)"
+          status: pass
+          detail: "400x640 -> 20.48px; 220x260 -> 8.32px; 100x120 -> 6px floor"
+        - cmd: "browser: six-frames apertures sha256-compared at a common device-pixel origin"
+          status: pass
+          detail: "6 apertures, 1 distinct hash, 1 distinct box"
+        - cmd: "browser with reducedMotion=reduce"
+          status: pass
+          detail: "all 6 durations 0ms, all easings linear, transforms none, peel computes transform:none filter:none"
+        - cmd: "browser: wordmark recolour via one custom property"
+          status: pass
+          detail: "--wordmark-fill alone flips fill; keyline and band unchanged"
+        - cmd: "browser: no framework mark resolves to --accent"
+          status: pass
+          detail: "22 marks, 1 labelled counter-example, 0 violations (marks are masks filled with currentColor)"
+        - cmd: "browser: all 12 components at 390px"
+          status: pass
+          detail: "12/12 no horizontal overflow"
+        - cmd: "node build-wordmark.mjs --check"
+          status: pass
+          detail: "all 5 artefacts byte-identical to regeneration from the WOFF2"
+        - cmd: "node brand/tools/structural-gate.mjs (after PM token move)"
+          status: pass
+          detail: "20/20"
+      changed_files:
+        - brand/agent/visual/motion/ (motion.json, build-motion.mjs, motion.css, specimen.html)
+        - brand/agent/visual/assets/wordmark/ (build-wordmark.mjs, wordmark.css, 3 svg, favicon-32.png, og-card.png, metrics.json)
+        - brand/agent/visual/components/ (12 component html + component-tokens.css + specimen.css + README.md)
+
+  - id: T010
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: >-
+      Complete the kit shell: readme.md (how an agent and a human each use this kit),
+      magic_trick.md (where the human walks back in — Frameless-specific, not a copy of the
+      article's framing), the rendered /human HTML brand guideline generated from the same
+      sources as /agent, and artifacts/{web,product} worked examples.
+    inputs:
+      - "Complete /agent tree"
+      - "T004 folder manifest"
+    constraints:
+      - "artifacts/web/page-composition.md already exists (written in response to OD4) — build on it, do not overwrite it."
+      - "The worked example in artifacts/web/ must be a FULL page demonstrating all mandatory sections, not a hero."
+      - "/human must be generated from the same token and verbal sources as /agent so the two cannot drift."
+      - "magic_trick.md must be genuinely about Frameless's own creative frontier, not a restatement of the article."
+      - "readme.md must open with the one-shot prompt that works, so the kit is self-demonstrating."
+    allowed_files:
+      - brand/readme.md
+      - brand/magic_trick.md
+      - brand/human/**
+      - brand/agent/visual/artifacts/**
+    verify:
+      - "/human guideline renders and its values match /agent token values"
+      - "No dead links or missing asset references"
+    stop_if:
+      - "/human and /agent disagree on any value."
+    expected_output:
+      - "readme.md, magic_trick.md, /human guideline, artifacts/"
+    receipt:
+      result: done
+      summary: >-
+        /human guideline built as a GENERATED page — build-guideline.mjs reads color.json,
+        utopia.config.json, sticker.css, colors_and_type.css, motion.json, quegrotesque.json,
+        metrics.json and the verbal Markdown, and emits index.html with a --check byte-compare.
+        Every displayed value carries a data-from pointer: 456 resolved, 0 mismatches, 21
+        distinct hexes with 0 untraceable, 43 rendered ratios recomputed from hex with 0 wrong,
+        28 computed clamps all present verbatim in the shipped CSS. The human half provably
+        cannot drift from the agent half.
+      artifact: >-
+        landing-page.html carries all 10 mandatory sections, real emitted React/Solid/Qwik
+        output with paths and hashes, three honestly empty slots, six marks in canonical order
+        in 5 places, 0 marks in --accent, working switcher, and reduced-motion support. Plus a
+        Studio-inspector product artifact and two READMEs.
+      defects_caught_by_own_verification:
+        - "data-src collided with the structural gate: the gate's (?:src|href)= regex read it as a dead file reference, 463 unresolved. Renamed to data-from. Same class of collision fixed for a url() interpolation inside a template literal."
+        - "s2-keyed-todo.tsrx trips the gate's placeholder check because \\btodo\\b matches after the hyphen. The product mock names components instead."
+        - "colors_and_type.css sets no box-sizing (deliberate, it uses :where() throughout), so a padded block at inline-size:100% overflowed at 390px on all three pages. Each page now declares border-box itself."
+        - "THE HERO HEADLINE WAS SILENTLY CLIPPED AT 390px — --step-7 sets 'component.' ~450px wide in a 354px column and .hero { overflow: hidden } hid the failure rather than scrolling. Capped at min(var(--step-7), 15vw). A page can pass an overflow check while still being visually broken."
+        - "Percentage insets do not keep a sticker out of the content column: the 4%-from-right oracle sticker sits clear at 1440px and 40px INSIDE the column at 1024px, behind the lede. Decorations now use space tokens from the viewport edge and exist only above 90rem, where a gutter exists at all."
+        - "The guideline refuses to set type in lime even in its own specimens — lime clears AAA on the dark bed but a specimen is --step--1 and lime type is legal only at --step-3+. The generator reads this from passes.normal_text_aa and from whether the fg is --accent, so it cannot drift."
+      pm_followup_applied: >-
+        CORS fix completed across the new pages. T010 correctly reported that opening from
+        file:// blocks the CSS mask requests — the same defect PM had already fixed in
+        components/ but which these new files reproduced. PM patched build-guideline.mjs to
+        inline the six logo SVGs as data: URIs (regenerated, --check still byte-identical) and
+        patched landing-page.html and studio-inspector.html directly. Re-verified on file://:
+        human guideline 18 data-URI masks, landing page 30, studio inspector 12 — all three
+        with 0 console errors and 0 failed requests. Also updated brand/readme.md (11 -> 12
+        primitives, links the reference implementation and /human) and added a note to
+        page-composition.md that the 12-screen reference is deliberately maximal, so the 4-8
+        screen target is not read as a contradiction.
+      commands:
+        - cmd: "node brand/human/build-guideline.mjs --check"
+          status: pass
+          detail: "byte-identical"
+        - cmd: "verify-values.mjs — trace every displayed value to its source"
+          status: pass
+          detail: "456 data-from pointers resolved, 0 mismatches; 21 hexes 0 untraceable; 43 ratios recomputed 0 wrong; 28 clamps verbatim"
+        - cmd: "Playwright over http — 3 pages"
+          status: pass
+          detail: "0 console errors, 0 failed requests, 0 box-shadow, 0 lime-text failures, no 390px overflow, 10/10 mandatory sections, 0 marks in --accent"
+        - cmd: "deco.mjs — decorative stickers overlapping readable text at 1600/1440/1280/1024/390"
+          status: pass
+          detail: "0 overlaps at every width"
+        - cmd: "PM: all three pages re-verified on file:// after the data-URI fix"
+          status: pass
+          detail: "0 errors, 0 failed requests, 60 data-URI masks total"
+        - cmd: "node brand/tools/structural-gate.mjs"
+          status: pass
+          detail: "20/20"
+      changed_files:
+        - brand/human/ (build-guideline.mjs, index.html, README.md)
+        - brand/agent/visual/artifacts/web/ (landing-page.html, README.md)
+        - brand/agent/visual/artifacts/product/ (studio-inspector.html, README.md)
+
+  - id: T013
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: >-
+      Build the missing brand assets as STRUCTURED formats, and build the "six frames, one
+      view" device. Closes the T003 gap list without raster generation.
+    inputs:
+      - "brand/agent/verbal/concepts.md — the six-frames-one-view device"
+      - "T003 gap list"
+      - "brand/agent/visual/tokens/"
+    constraints:
+      - "CORRECTED: codex DOES have imagegen — it is an AGENT-SIDE tool inside the Codex runtime (referenced throughout the bundled sites-building skill), not a CLI subcommand. PM's earlier claim that it did not exist was wrong; it checked the wrong surface. Invoke via `codex exec` with a prompt."
+      - "Use imagegen for ILLUSTRATED raster assets that must match the existing sticker set. Keep the wordmark, logos, favicon and OG card as SVG/CSS so they stay recolourable by one custom property — a generated PNG wordmark would be the one un-editable thing in an otherwise structured kit."
+      - "The wordmark ships BOTH as a live CSS/HTML component (recolourable via one custom property) and as an outlined SVG for favicon/OG use."
+      - "Six frames must contain the IDENTICAL crop of coast-environment.jpg. If the crops differ, the device argues the opposite of the product claim."
+      - "Compiler-half sticker vocabulary comes from Game Icons (owner preference, SVG) styled with the die-cut treatment — not drawn from scratch."
+      - "Framework marks may never render in --accent."
+    allowed_files:
+      - brand/agent/visual/assets/**
+      - brand/agent/visual/components/**
+    verify:
+      - "Wordmark CSS component recolours correctly by changing one custom property"
+      - "All six frame windows reference the same source crop — assert identical crop parameters"
+      - "Every SVG opens standalone and contains no embedded raster"
+    stop_if:
+      - "A required glyph is missing from the Que Grotesque subset."
+    expected_output:
+      - "wordmark (CSS component + outlined SVG), favicon set, OG card, six-frames device, compiler-half sticker vocabulary"
+    receipt:
+      result: done
+      summary: >-
+        Compiler-half sticker vocabulary generated via codex imagegen and promoted: prism,
+        lighthouse, window, compass. All four verified 640px longest edge, 8-bit, alpha, and
+        visually confirmed against the measured style (die-cut cream halo, heavy near-black
+        outline, aged halftone texture, NO drop shadow). Documented in assets/README.md with a
+        meaning-and-placement table so they are used argumentatively rather than decoratively.
+      pm_correction: >-
+        PM previously asserted codex had no image generation, having checked CLI subcommands.
+        That was the wrong surface and the claim was wrong. imagegen is an AGENT-SIDE tool
+        inside the Codex runtime, referenced throughout the bundled sites-building skill, and
+        invoking it via `codex exec` worked first try. Owner was right.
+      design_note: >-
+        window.png was deliberately specified with flat-fill panes so they can be masked out
+        and filled with a crop of the coast photo. That makes the "six frames, one view" device
+        buildable from real assets rather than needing bespoke art.
+      remaining_scope_moved_to_T009: >-
+        Wordmark, favicon set, OG card and the six-frames device are components as much as
+        assets, so they were folded into T009 rather than split across two Workers writing the
+        same directory.
+      commands:
+        - cmd: "codex exec --sandbox workspace-write (imagegen, 4 stickers to scratchpad)"
+          status: pass
+          detail: "4/4 PNGs produced"
+        - cmd: "sips -g pixelWidth -g pixelHeight -g hasAlpha -g bitsPerSample on all four"
+          status: pass
+          detail: "all 640px longest edge, alpha yes, 8 bits/sample"
+        - cmd: "visual inspection of lighthouse, window and prism against the measured sticker style"
+          status: pass
+          detail: "cream die-cut halo, heavy near-black outline, aged print texture, transparent ground, no drop shadow"
+      changed_files:
+        - brand/agent/visual/assets/stickers/prism.png
+        - brand/agent/visual/assets/stickers/lighthouse.png
+        - brand/agent/visual/assets/stickers/window.png
+        - brand/agent/visual/assets/stickers/compass.png
+        - brand/agent/visual/assets/README.md
+
+  - id: T011
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: >-
+      Build and green the structural gate — a Node script that deterministically verifies
+      the kit is internally sound: every token, font, and asset path resolves; CSS parses;
+      Utopia clamp() scales are mathematically correct against their recorded parameters;
+      /human and /agent agree on every shared value; no dead links; no forbidden font
+      formats; stated contrast ratios recompute correctly.
+    inputs:
+      - "Complete brand/ tree"
+      - "Utopia parameters from T005"
+    constraints:
+      - "Node stdlib only, or packages already resolvable in this repo. The sandbox cannot install dependencies."
+      - "The gate must FAIL loudly on a seeded defect — prove it by breaking something temporarily and confirming a red run."
+      - "Exit non-zero on failure so it is usable in CI later."
+    allowed_files:
+      - brand/tools/**
+    verify:
+      - "node brand/tools/structural-gate.mjs exits 0 on the real kit"
+      - "It exits non-zero when a reference is deliberately broken"
+    stop_if:
+      - "The gate cannot be written without a new dependency."
+    expected_output:
+      - "structural-gate.mjs + a green run + evidence of a proven red run"
+    receipt:
+      result: done
+      summary: >-
+        brand/tools/structural-gate.mjs built and green at 20 checks across six groups: fluid
+        scales, contrast, references, licensing/assets, style laws, kit shape. Node stdlib
+        only, zero dependencies, zero network, exits non-zero on failure so it is CI-usable.
+      why_it_is_more_than_a_linter: >-
+        It RECOMPUTES rather than reads. Every clamp() in fluid-type.css and fluid-space.css is
+        regenerated from utopia.config.json's stored parameters using Utopia's line formula and
+        diffed at 4dp (space steps px-rounded, matching Utopia's own behaviour). Every stated
+        contrast ratio is recomputed from its own hex pair with the WCAG 2.x relative-luminance
+        formula. The config URLs are asserted to encode the shipped parameters, so CSS cannot
+        silently drift from the link that claims to reproduce it — which is exactly the failure
+        mode that WebFetch's default-values trap would have introduced at T005.
+      proven_capable_of_failing: >-
+        Mutation-tested, per the project's own standard that an oracle which cannot fail is not
+        evidence. 5 seeded defects, 5 caught, and the gate returns green after restore.
+      commands:
+        - cmd: "node brand/tools/structural-gate.mjs"
+          status: pass
+          detail: "20/20 checks; 10 type steps, 9 space steps, 43 contrast pairs, 17 forbidden pairs, 8 refs"
+        - cmd: "M1 — corrupt --step-3 clamp so it drifts from its config"
+          status: pass
+          detail: "caught (red)"
+        - cmd: "M2 — inflate a stated contrast ratio from 1.48 to 4.90"
+          status: pass
+          detail: "caught (red)"
+        - cmd: "M3 — introduce a box-shadow declaration"
+          status: pass
+          detail: "caught (red)"
+        - cmd: "M4 — point the Utopia config URL at different parameters than the shipped scale"
+          status: pass
+          detail: "caught (red)"
+        - cmd: "M5 — ship placeholder TODO content"
+          status: pass
+          detail: "caught (red)"
+        - cmd: "node brand/tools/structural-gate.mjs (after restoring all mutations)"
+          status: pass
+          detail: "20/20 green again — mutations left no residue"
+      notable_assertions:
+        - "The lime law is encoded as an executable check: #cce007 must FAIL against white, --surface, --halo and --paper-warm, and must PASS on --surface-deep (9.91). The kit's central colour rule is now enforced, not merely documented."
+        - "forbidden_pairs are asserted to genuinely compute below 4.5 — a pair cannot be listed as forbidden while actually passing."
+        - "box-shadow is banned kit-wide with drop-shadow permitted only alongside the peel state."
+        - "Self-containment is asserted: no reference may resolve outside brand/. This is what makes deleting website/ safe (OD5)."
+      resequencing_note: >-
+        Built by PM ahead of its board position while T009 held components/ and motion/.
+        brand/tools/ is disjoint from every Worker scope. The reduced-motion check currently
+        reports 'no motion CSS yet — skipped' and will begin asserting once T009 lands; that is
+        the one check not yet exercised against real content.
+      changed_files:
+        - brand/tools/structural-gate.mjs
+
+  - id: T012
+    type: pm
+    assignee: PM
+    status: done
+    reasoning_hint: medium
+    objective: >-
+      Run the FINAL cold-agent one-shot. Dispatch a fresh subagent with zero conversation
+      context, give it only the kit path and the exact prompt from the article, and save
+      the generated landing page as the oracle artifact for Judge to assess.
+    inputs:
+      - "Complete brand/ tree"
+      - "Green structural gate run"
+    constraints:
+      - "Zero context. The agent gets the kit path and one sentence. Nothing else."
+      - "Do not iterate the agent toward a good result — one shot is the measurement."
+      - "Save the artifact outside brand/ so it does not pollute the kit."
+    expected_output:
+      - "Generated landing page artifact + the exact prompt used + proof the agent had no prior context"
+    receipt:
+      result: done
+      artifact: "scratchpad/oneshot/index.html (87KB, self-contained, links the real kit CSS/assets in place)"
+      exact_prompt: >-
+        "Generate an HTML landing page based on the atomic design system and strategy in the kit
+        at /Users/jacksm5pro/dev/open-source/frameless/brand. Write your page to <path>. Do not
+        modify anything inside the kit." Nothing else was supplied — no brand context, no
+        explanation, no hints, no conversation history.
+      zero_context_proof: >-
+        Dispatched as a fresh general-purpose subagent. Its only inputs were the kit path and
+        the sentence above. Kit unmodified — latest mtime under brand/ predates the agent's
+        first write.
+      result_summary: >-
+        PASS. Ten sections in the mandated order, beds alternating deep/paper/deep/paper/warm/
+        deep/paper/deep/paper/deep, all copy lifted from verbal/ (hero Option A, the three-beat
+        explainer, audience segments with their objection pairs, the Studio teaser).
+      pm_independent_verification:
+        - cmd: "PM re-ran every claim in headless Chromium rather than trusting the agent's report"
+          status: pass
+          detail: >-
+            box-shadow elements 0; 6 lime text runs, ALL on --surface-deep, min 49.74px against
+            a 35.16px floor; 30 framework marks, 0 in --accent; no horizontal overflow at 1440;
+            0 console errors; 0 failed requests. Every claim held.
+      the_agent_refused_to_fabricate: >-
+        It recomputed the sha256 of every file it displayed, confirmed the three captured
+        emitters still hash as the kit claims, and shipped the Vue/Svelte/Angular slots EMPTY
+        with a dashed keyline rather than inventing a snippet under a fake hash. It also
+        declined to claim pnpm e2e had been run, labelling the terminal block as the suite's
+        entry point only. The kit taught it that a checkable claim is worth more than a
+        complete-looking page.
+      it_improved_on_the_reference: >-
+        Two fixes over the kit's own worked example. (1) The reference's unframed "seventh
+        state" band used background-size: 900px auto, which at 1440px renders as a ~600px panel
+        floating in cream — reading as a seventh frame and contradicting "the view runs past the
+        edges of the page"; it used cover so the view genuinely bleeds. (2) The reference's
+        --view-position: 46% 58% crops the six apertures onto open water; it moved to 8% 34% so
+        all six show the lighthouse and cliff path, on the grounds that "the same view" only
+        argues something if the view is legibly a view.
+      DEFECT_IT_FOUND_IN_THE_KIT: >-
+        page-composition.md said "build toward 4-8 screens" while the kit's own reference
+        implementation measured 12.4 and its page measured 13.0 — guidance and worked example
+        disagreeing by ~50%. It measured both in the same harness instead of believing either.
+        FIXED: the length section now states the honest measured range (10-14 screens for the
+        mandated section list), says the section list is the requirement and length is a
+        consequence, and records why the old number was wrong. This is the oracle doing exactly
+        what it was built for — catching a kit defect that internal consistency checks could
+        never see, because both numbers were individually self-consistent.
+      deliberate_omissions_it_justified:
+        - "No nav bar — the type system assigns .nav-item to --step-2 (28-37px), a large UI label rather than nav chrome, and inventing a smaller scale to fit would be exactly the drift the kit warns against."
+        - "Left magic_trick.md's slot open, correctly reading that the file says the trick must come from a human, and noting a CODE blind test defeats itself because the Qwik output says component$."
+      changed_files:
+        - brand/agent/visual/artifacts/web/page-composition.md (PM: length guidance corrected)
+
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: >-
+      Final audit against both oracle signals. Open the cold-agent artifact and assess it
+      against the concept art, the color system, the Utopia scales, the motion JSON, and
+      the verbal files. Confirm the structural gate is green. Decide whether the kit is a
+      brand world model an agent can genuinely build from, or a tidy folder.
+    inputs:
+      - "All done task receipts"
+      - "T011 structural gate run"
+      - "T012 cold-agent artifact"
+      - "In-repo concept art"
+    constraints:
+      - "Read-only."
+      - "Be skeptical. The stated misfire is a plausible-looking folder that does not cohere — look for it specifically."
+      - "Verify the generating agent truly had no conversation context. If that cannot be confirmed, the one-shot is void."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "Per-signal verdict with evidence"
+      - "OWNER DECISIONS still outstanding"
+      - "Missing evidence and next task if not complete"
+    receipt:
+      result: done
+      decision: complete
+      full_outcome_complete: true
+      rationale: >-
+        Both oracle signals hold under Judge's OWN verification rather than the receipts'.
+        Judge re-ran the gate, read its source to confirm it recomputes rather than
+        assertion-reads, and independently recomputed --step-3, the #2e6f66 derivation and four
+        contrast ratios — all exact. It opened the cold-agent artifact in a browser and
+        confirmed the lime law, the box-shadow ban, the trademark rule, mandatory sections and
+        390px behaviour. It proved /human genuinely regenerates by mutating color.json in a
+        scratch copy and watching the change propagate. The charter's named misfire — a tidy
+        folder of plausible files no agent can build from — was specifically hunted and is not
+        what is here.
+      signal_1_cold_agent: >-
+        PASS, stronger than the receipt claimed. The page lifts voice.md's RIGHT-column copy
+        verbatim AND paraphrases its rules correctly elsewhere — pattern-matching, not copying.
+        All four sha256 hashes it displays match the real files; its stated aperture
+        measurement (208x139) is correct to the pixel. Judge initially measured three different
+        aperture sizes and thought it had found a defect — it had walked into the exact
+        getBoundingClientRect-on-a-rotated-element trap T009 documented. The page was right and
+        Judge's first measurement was wrong.
+      signal_2_structural_gate: >-
+        PASS. Judge ran it and also audited its source rather than trusting the count,
+        confirming the clamp checks regenerate from Utopia's line formula and the contrast
+        checks run WCAG luminance on the hex pair. "This is an oracle, not a linter."
+      weakness_found_and_FIXED: >-
+        Judge proved by scratch-copy mutation that the gate stayed green while color.css drifted
+        from color.json, human/index.html was hand-edited, and motion.css drifted from
+        motion.json. The three generator --check modes caught all of it but were not WIRED INTO
+        the gate, so the oracle's "/human and /agent describe the same system" clause was
+        guarded by convention rather than deterministically. FIXED before closing: the three
+        --check modes now run inside structural-gate.mjs. Gate is 23 checks, and the two drift
+        scenarios Judge demonstrated are now mutation-verified as caught (7/7 mutations across
+        both rounds).
+      output_switcher_ruling: >-
+        Right call, well handled. The slot copy states a REPOSITORY fact ("no captured output in
+        this repository"), gives the command to fill it, and explains that a fabricated hash
+        would turn the one inspectable claim on the page into an unverifiable one. No
+        planned/partial language, so OD1 is not contradicted in letter. The honest cost, stated
+        plainly: a reader who clicks VUE, SVELTE or ANGULAR learns there is no output for them
+        here — the one place the six-shipped presentation is falsifiable by the artifact itself.
+      missing_evidence:
+        - "The original concept-art composite is unrecoverable (R1 fired at T001). Comparison was against surviving source layers, so the wordmark and badge treatments remain reconstructions, not measurements."
+        - "Cross-browser unverified — Chromium only. -webkit-text-stroke, mask-image and color-mix() untested in Firefox/Safari."
+      owner_decisions_outstanding:
+        - "Confirm the output-switcher empty-slot treatment."
+        - "Re-drop the concept art if it still exists — would upgrade the wordmark and badge from reconstruction to measurement. Non-blocking."
+        - "docs/goals/frameless-website-v1 is still active with a queued Worker and is moot under OD5/OD6 — close or re-scope it."
+        - "OD6 is unblocked: website/ deletion and the three-variant rebuild can start. Archive first — 46 of 47 files there are untracked."

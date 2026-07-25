@@ -1,0 +1,570 @@
+{
+  "$comment": "Frameless colour system, REBUILT from brand/_source/concept/CONCEPT-ART-AUTHORITATIVE.jpeg. AGENTS: read `lime_law` before you use #cce007 anywhere, and read `depth_law` before you build any surface. Every ratio here is computed with the WCAG 2.x relative-luminance formula and is re-derivable from the hex pair beside it; brand/tools/structural-gate.mjs recomputes all of them.",
+  "meta": {
+    "system": "Frameless",
+    "source_of_truth": "brand/_source/concept/CONCEPT-ART-AUTHORITATIVE.jpeg",
+    "rebuild_spec": "docs/goals/frameless-design-kit-v1/notes/REBUILD-SPEC.md",
+    "reference_study": "docs/goals/frameless-design-kit-v1/notes/REFERENCE-STUDY.md",
+    "css_mirror": "./color.css",
+    "organizing_idea": "Saturated, cool, physical. Vivid die-cut stickers with a real drop shadow, laid on a dark textured bed. Colour is used in confident blocks — never desaturated, never aged.",
+    "how_values_were_obtained": "Real pixels, sampled in Chromium by drawing the concept art to a canvas and reading getImageData. Two statistics per region: the block average (what a naive sample gives, and what gets pulled toward the cream band and the paper grain) and the mean of the top 5% most saturated pixels (what the fill actually is). Every framework fill below is anchored on the SATURATED statistic — anchoring on the block average is the exact error that produced the rejected first attempt.",
+    "supersedes": "The pre-rebuild palette (#f2efd4 / #1d2c22 / #fdf8e4 / #ebd5a0), which was measured from a generated stand-in rather than from the concept art. It was desaturated, green-shifted and warm. The real art is cooler, bluer, brighter and saturated.",
+    "default_bed_is_dark": "The kit defaults to the DARK bed. Saturated colour needs a dark ground to read as lit, all three named references (avara.xyz, react.gg, sticker.oooo.so) are dark, and lime display type is only legal on dark. A light paper island is available with [data-surface=\"light\"] for reading-length copy.",
+    "pure_white_rule": "#ffffff is FORBIDDEN as a page bed. It is permitted INSIDE a saturated framework sticker, where it is the name label and carries a measured ratio against that fill."
+  },
+  "lime_law": {
+    "one_sentence": "Lime is a surface, a mark and a display voice. Never an ink on light.",
+    "why": "#cce007 has a relative luminance of 0.6616 — it is a LIGHT colour that behaves like a highlighter. It cannot carry reading copy on any light bed, at any size, in any weight.",
+    "still_true_after_the_rebuild": "This rule survived the rebuild intact. It was never a taste call: lime on light genuinely fails, and it fails by a factor of three. What changed around it is that the kit now defaults to a dark bed, so the surface where lime is legal is the common case rather than the exception.",
+    "rules": {
+      "body_text_on_light": "NEVER. Any light surface, any size, any weight.",
+      "body_text_on_dark": "Avoid. Legal by ratio, wrong by role — reading copy is --ink cream. Lime is for display and for marks.",
+      "display_text": "Legal on --surface (dark) at 12.41:1, at --step-3 or larger. This is where the hero headline lives.",
+      "button_fill": "Primary CTA = lime fill + --accent-ink label (13.08:1). The flagship usage of the colour.",
+      "the_wordmark": "The lime wordmark fill is a FILL, not type in the accessibility sense — it is ringed by a black keyline and a cream band and carries a drop shadow, and its accessible name comes from the surrounding markup. Do not \"fix\" its contrast by changing the fill.",
+      "framework_marks": "A framework logo may NEVER render in --accent. Marks render in that project's own brand colours, in white, or as the grey silhouette used for the deselected carousel state. Nothing else."
+    },
+    "measured_failures": [
+      {
+        "fg_value": "#cce007",
+        "bg_value": "#ffffff",
+        "ratio": 1.48,
+        "context": "lime on white",
+        "note": "the worst common case"
+      },
+      {
+        "fg_value": "#cce007",
+        "bg_value": "#f2f0dd",
+        "ratio": 1.28,
+        "context": "lime on the light paper island"
+      },
+      {
+        "fg_value": "#cce007",
+        "bg_value": "#e0dfca",
+        "ratio": 1.09,
+        "context": "lime on the cream die-cut band"
+      }
+    ]
+  },
+  "depth_law": {
+    "one_sentence": "Every die-cut object casts a real shadow. Elevation is the brand.",
+    "why": "The most defining quality of the concept art is depth — the wordmark and all six badges sit above the page on a heavy offset shadow. The previous version of this kit BANNED box-shadow kit-wide, having measured four flat vector PNGs and generalised from them. That deleted the one thing the art is most recognisable for.",
+    "the_stack_outward": "fill -> tinted dark keyline -> thick band (6-8% of width) -> drop shadow",
+    "use_drop_shadow_not_box_shadow": "filter: drop-shadow() EVERYWHERE. box-shadow casts a shadow of the element's BOX — a rounded rectangle behind a die-cut shape, which instantly kills the illusion. drop-shadow() follows the actual alpha silhouette: the cut edge, the lettering, the wobble of the band. Stack two of them (a hard offset plus a soft ambient) for the register the concept art's wordmark reads in.",
+    "where_the_shadow_goes": "On the element that owns the alpha — the PNG, the SVG, or the outermost die-cut wrapper. A filter on a parent shadows the whole subtree as ONE silhouette, which is right for a sticker and never right for a text block.",
+    "the_one_box_shadow": "--elev-inset, and only that. A filter can only draw outside an alpha silhouette, never inside it, so a well cut INTO the page has no drop-shadow equivalent.",
+    "filter_side_effects": "A non-none filter creates a stacking context AND a containing block for fixed/absolute descendants. A position: fixed child of a filtered element is fixed to that element, not to the viewport — this matters for any slide-in panel.",
+    "texture": "The page bed is NEVER a flat fill. A fine noise grain is applied globally, with an optional faint ruled grid. See ./elevation.css."
+  },
+  "tokens": {
+    "--surface": {
+      "value": "#0b1714",
+      "light_value": "#f2f0dd",
+      "role": "page bed",
+      "intent": "The default page bed, and it is DARK. A deep teal-black in the same family as the \"COMPILED OUTPUTS\" chip in the concept art, which is the art's own piece of UI.",
+      "source": "measured",
+      "measured_as": "the dark green-black of the concept art's tag chip (top-5%-saturation sample #011c0d), opened up until cream reading copy clears AA comfortably",
+      "never": "Never #ffffff, and never flat. A page bed with no texture is the failure the owner named directly."
+    },
+    "--surface-raised": {
+      "value": "#14231f",
+      "role": "raised panel on the bed",
+      "intent": "Cards, detail panels, the carousel stage. It is only 1.12:1 against the bed on purpose — a raised panel is separated by its SHADOW and its band, not by a value step.",
+      "source": "derived",
+      "derived_from": "--surface lightened along the same teal-black hue line"
+    },
+    "--surface-sunk": {
+      "value": "#060f0d",
+      "role": "inset well",
+      "intent": "Code wells, and anything that should read as cut INTO the page rather than laid on it. Pair with an inset shadow, never an outer one.",
+      "source": "derived"
+    },
+    "--ink": {
+      "value": "#eceada",
+      "light_value": "#0f1410",
+      "role": "reading copy and labels",
+      "intent": "All reading copy. On the dark bed a bright cool cream; on the light paper island a near-black with a faint green cast.",
+      "source": "measured",
+      "measured_as": "the concept art's die-cut band cream #e0dfca, brightened for type"
+    },
+    "--ink-muted": {
+      "value": "#9fb3ac",
+      "light_value": "#4d5a4f",
+      "role": "secondary text",
+      "intent": "Captions, metadata, spec-table labels. Not reading copy at body length.",
+      "source": "derived"
+    },
+    "--accent": {
+      "value": "#cce007",
+      "role": "the brand colour",
+      "intent": "The lime. Display type on dark, primary button fills, the wordmark fill, the outer focus ring. Governed entirely by `lime_law`.",
+      "source": "owner-canonical",
+      "measured_as": "the concept art measures #c7da00 at peak saturation; the owner's canonical #cce007 is correct and JPEG averaging is what pulls the sample down",
+      "never": "Never a framework logo. Never reading copy."
+    },
+    "--accent-ink": {
+      "value": "#0b0f0c",
+      "role": "the label on a lime fill",
+      "intent": "The one ink that goes on lime. Fixed — it does NOT flip with the surface, because a lime fill is a light surface wherever it appears.",
+      "source": "derived"
+    },
+    "--accent-cool": {
+      "value": "#6fd3e6",
+      "light_value": "#10707f",
+      "role": "the accent that CAN be an ink",
+      "intent": "Links, inline emphasis, secondary emphasis — anywhere you wanted accent colour on TEXT. This token exists precisely because lime cannot be an ink; without it the palette reads as monochrome plus a highlighter.",
+      "source": "measured",
+      "measured_as": "the concept art's sky cyan (#73b3bf top-5% sample), brightened for the dark bed and deepened for the light island"
+    },
+    "--band": {
+      "value": "#e0dfca",
+      "role": "the die-cut band",
+      "intent": "The thick cream band ringing a die-cut object — the paper it was cut from. Neutral cream is for the WORDMARK; framework stickers tint their band to their own hue (see `framework_colors`).",
+      "source": "measured",
+      "measured_as": "the wordmark band in the concept art",
+      "never": "Never a page bed, and never a text colour on light.",
+      "geometry": "6-8% of the object's width. Chunky. See ./sticker.css."
+    },
+    "--keyline": {
+      "value": "#0a0d09",
+      "role": "the drawn edge of a die-cut object",
+      "intent": "The heavy near-black stroke between a fill and its band. Neutral black is correct for the WORDMARK, which is what the art shows; framework stickers use the dark end of their own hue instead.",
+      "source": "measured",
+      "measured_as": "the wordmark keyline in the concept art (darkest sample #010000)"
+    },
+    "--success": {
+      "value": "#7bd96a",
+      "light_value": "#14682c",
+      "role": "passing state",
+      "intent": "Checks that pass, verified output.",
+      "source": "derived"
+    },
+    "--warning": {
+      "value": "#f2b705",
+      "role": "caution / in progress",
+      "intent": "Coming-soon tags and in-progress states. FILL ONLY on light, always with an --accent-ink label.",
+      "source": "derived"
+    },
+    "--danger": {
+      "value": "#ff6b5e",
+      "light_value": "#a32c1e",
+      "role": "failing state",
+      "intent": "Errors, destructive actions, failed checks.",
+      "source": "derived"
+    },
+    "--silhouette": {
+      "value": "#4a5a55",
+      "role": "deselected carousel sticker",
+      "intent": "The grey a framework sticker collapses to when another is selected. It must lose colour ENTIRELY rather than merely dim — that total loss is what makes the selected sticker read as lit, and it is the mechanic avara.xyz is built on.",
+      "source": "reference",
+      "derived_from": "avara.xyz rest/selected states, studied in a browser"
+    },
+    "--silhouette-band": {
+      "value": "#7d8b86",
+      "role": "deselected sticker band",
+      "intent": "The band of a desaturated sticker. Grey, not cream — a cream band on a grey fill still reads as a live sticker.",
+      "source": "reference"
+    },
+    "--focus-inner": {
+      "value": "#0a0d09",
+      "role": "inner focus ring",
+      "intent": "Carries the indicator contrast on light and on any saturated fill.",
+      "source": "derived"
+    },
+    "--focus-outer": {
+      "value": "#cce007",
+      "role": "outer focus ring",
+      "intent": "Carries the indicator contrast on dark.",
+      "source": "derived"
+    }
+  },
+  "framework_colors": {
+    "$comment": "Six frameworks, six saturated fills — the die-cut sticker colours from the concept art, anchored on the top-5%-saturation sample rather than the block average. The logo colours are each project's own; Frameless does not own them and states them here only so a badge can be built without a network request.",
+    "canonical_order": [
+      "react",
+      "vue",
+      "svelte",
+      "solid",
+      "angular",
+      "qwik"
+    ],
+    "construction": "saturated fill (glossy, lighter at top-left) -> keyline in the dark end of that hue -> band tinted to that hue -> drop shadow -> about -3deg of tilt",
+    "name_label": "The framework name is set in white INSIDE the sticker, always. Not a tooltip, not a caption. A word is the only treatment that survives a crop, a grayscale conversion and a screenshot with no alt text.",
+    "values": {
+      "react": {
+        "title": "React",
+        "fill": "#1b6fb8",
+        "keyline": "#0a3560",
+        "band": "#e3ecf2",
+        "logo": "#61dafb",
+        "measured_peak_saturation": "#0059a0",
+        "measured_block_average": "#598fb7",
+        "name_on_fill": 5.23,
+        "fill_on_bed": 3.5,
+        "keyline_on_band": 10.38
+      },
+      "vue": {
+        "title": "Vue",
+        "fill": "#12805a",
+        "keyline": "#063524",
+        "band": "#dfeee6",
+        "logo": "#42b883",
+        "measured_peak_saturation": "#00703f",
+        "measured_block_average": "#549e78",
+        "name_on_fill": 4.93,
+        "fill_on_bed": 3.72,
+        "keyline_on_band": 11.35
+      },
+      "svelte": {
+        "title": "Svelte",
+        "fill": "#d93b02",
+        "keyline": "#5c1600",
+        "band": "#f7e6db",
+        "logo": "#ffffff",
+        "measured_peak_saturation": "#e04000",
+        "measured_block_average": "#ef7f50",
+        "name_on_fill": 4.59,
+        "fill_on_bed": 3.99,
+        "keyline_on_band": 11.02
+      },
+      "solid": {
+        "title": "Solid",
+        "fill": "#2f5fb3",
+        "keyline": "#12275c",
+        "band": "#e4eaf6",
+        "logo": "#76b3e1",
+        "measured_peak_saturation": "#000f6e",
+        "measured_block_average": "#6066a1",
+        "name_on_fill": 6.16,
+        "fill_on_bed": 2.97,
+        "keyline_on_band": 11.83
+      },
+      "angular": {
+        "title": "Angular",
+        "fill": "#c8102f",
+        "keyline": "#4d0410",
+        "band": "#f6e2e5",
+        "logo": "#ffffff",
+        "measured_peak_saturation": "#94001f",
+        "measured_block_average": "#ce5b6c",
+        "name_on_fill": 5.88,
+        "fill_on_bed": 3.11,
+        "keyline_on_band": 12.63
+      },
+      "qwik": {
+        "title": "Qwik",
+        "fill": "#6d3fd4",
+        "keyline": "#2a0f6b",
+        "band": "#e9e4f9",
+        "logo": "#18b6f6",
+        "measured_peak_saturation": "#26065e",
+        "measured_block_average": "#8469a6",
+        "name_on_fill": 6.34,
+        "fill_on_bed": 2.89,
+        "keyline_on_band": 12.28
+      }
+    }
+  },
+  "permitted_pairs": [
+    {
+      "fg_value": "#eceada",
+      "bg_value": "#0b1714",
+      "ratio": 15.13,
+      "context": "reading copy on the page bed"
+    },
+    {
+      "fg_value": "#eceada",
+      "bg_value": "#14231f",
+      "ratio": 13.45,
+      "context": "reading copy on a raised panel"
+    },
+    {
+      "fg_value": "#9fb3ac",
+      "bg_value": "#0b1714",
+      "ratio": 8.3,
+      "context": "captions and metadata on the bed"
+    },
+    {
+      "fg_value": "#cce007",
+      "bg_value": "#0b1714",
+      "ratio": 12.41,
+      "context": "lime display type on the bed — --step-3 and larger"
+    },
+    {
+      "fg_value": "#0b0f0c",
+      "bg_value": "#cce007",
+      "ratio": 13.08,
+      "context": "the label on a primary lime button"
+    },
+    {
+      "fg_value": "#6fd3e6",
+      "bg_value": "#0b1714",
+      "ratio": 10.58,
+      "context": "links and inline emphasis on the bed"
+    },
+    {
+      "fg_value": "#7bd96a",
+      "bg_value": "#0b1714",
+      "ratio": 10.44,
+      "context": "a passing check on the bed"
+    },
+    {
+      "fg_value": "#f2b705",
+      "bg_value": "#0b1714",
+      "ratio": 10.07,
+      "context": "a coming-soon tag on the bed"
+    },
+    {
+      "fg_value": "#ff6b5e",
+      "bg_value": "#0b1714",
+      "ratio": 6.55,
+      "context": "a failing check on the bed"
+    },
+    {
+      "fg_value": "#0f1410",
+      "bg_value": "#f2f0dd",
+      "ratio": 16.21,
+      "context": "reading copy on the light paper island"
+    },
+    {
+      "fg_value": "#4d5a4f",
+      "bg_value": "#f2f0dd",
+      "ratio": 6.32,
+      "context": "captions on the light paper island"
+    },
+    {
+      "fg_value": "#10707f",
+      "bg_value": "#f2f0dd",
+      "ratio": 5.01,
+      "context": "links on the light paper island"
+    },
+    {
+      "fg_value": "#14682c",
+      "bg_value": "#f2f0dd",
+      "ratio": 6,
+      "context": "a passing check on the light island"
+    },
+    {
+      "fg_value": "#a32c1e",
+      "bg_value": "#f2f0dd",
+      "ratio": 6.23,
+      "context": "a failing check on the light island"
+    },
+    {
+      "fg_value": "#0b0f0c",
+      "bg_value": "#e0dfca",
+      "ratio": 14.32,
+      "context": "ink on the cream die-cut band"
+    },
+    {
+      "fg_value": "#0a0d09",
+      "bg_value": "#e0dfca",
+      "ratio": 14.5,
+      "context": "the wordmark keyline against its own band"
+    },
+    {
+      "fg_value": "#ffffff",
+      "bg_value": "#1b6fb8",
+      "ratio": 5.23,
+      "context": "the React sticker's name label on its own fill"
+    },
+    {
+      "fg_value": "#ffffff",
+      "bg_value": "#12805a",
+      "ratio": 4.93,
+      "context": "the Vue sticker's name label on its own fill"
+    },
+    {
+      "fg_value": "#ffffff",
+      "bg_value": "#d93b02",
+      "ratio": 4.59,
+      "context": "the Svelte sticker's name label on its own fill"
+    },
+    {
+      "fg_value": "#ffffff",
+      "bg_value": "#2f5fb3",
+      "ratio": 6.16,
+      "context": "the Solid sticker's name label on its own fill"
+    },
+    {
+      "fg_value": "#ffffff",
+      "bg_value": "#c8102f",
+      "ratio": 5.88,
+      "context": "the Angular sticker's name label on its own fill"
+    },
+    {
+      "fg_value": "#ffffff",
+      "bg_value": "#6d3fd4",
+      "ratio": 6.34,
+      "context": "the Qwik sticker's name label on its own fill"
+    },
+    {
+      "fg_value": "#0a3560",
+      "bg_value": "#e3ecf2",
+      "ratio": 10.38,
+      "context": "the React sticker's keyline against its own band"
+    },
+    {
+      "fg_value": "#063524",
+      "bg_value": "#dfeee6",
+      "ratio": 11.35,
+      "context": "the Vue sticker's keyline against its own band"
+    },
+    {
+      "fg_value": "#5c1600",
+      "bg_value": "#f7e6db",
+      "ratio": 11.02,
+      "context": "the Svelte sticker's keyline against its own band"
+    },
+    {
+      "fg_value": "#12275c",
+      "bg_value": "#e4eaf6",
+      "ratio": 11.83,
+      "context": "the Solid sticker's keyline against its own band"
+    },
+    {
+      "fg_value": "#4d0410",
+      "bg_value": "#f6e2e5",
+      "ratio": 12.63,
+      "context": "the Angular sticker's keyline against its own band"
+    },
+    {
+      "fg_value": "#2a0f6b",
+      "bg_value": "#e9e4f9",
+      "ratio": 12.28,
+      "context": "the Qwik sticker's keyline against its own band"
+    }
+  ],
+  "forbidden_pairs": [
+    {
+      "fg_value": "#cce007",
+      "bg_value": "#ffffff",
+      "ratio": 1.48,
+      "context": "lime on white"
+    },
+    {
+      "fg_value": "#cce007",
+      "bg_value": "#f2f0dd",
+      "ratio": 1.28,
+      "context": "lime on the light paper island"
+    },
+    {
+      "fg_value": "#cce007",
+      "bg_value": "#e0dfca",
+      "ratio": 1.09,
+      "context": "lime on the cream die-cut band"
+    },
+    {
+      "fg_value": "#cce007",
+      "bg_value": "#f7e6db",
+      "ratio": 1.22,
+      "context": "lime on the Svelte sticker band"
+    },
+    {
+      "fg_value": "#f2b705",
+      "bg_value": "#f2f0dd",
+      "ratio": 1.58,
+      "context": "the warning amber as text on light"
+    },
+    {
+      "fg_value": "#f2b705",
+      "bg_value": "#ffffff",
+      "ratio": 1.82,
+      "context": "the warning amber as text on white"
+    },
+    {
+      "fg_value": "#9fb3ac",
+      "bg_value": "#f2f0dd",
+      "ratio": 1.92,
+      "context": "the dark-bed muted ink used on the light island — flip the roles as a set"
+    },
+    {
+      "fg_value": "#eceada",
+      "bg_value": "#f2f0dd",
+      "ratio": 1.05,
+      "context": "the dark-bed reading ink used on the light island — the most expensive swap available"
+    },
+    {
+      "fg_value": "#0f1410",
+      "bg_value": "#0b1714",
+      "ratio": 1.02,
+      "context": "the light-island ink used on the dark bed"
+    },
+    {
+      "fg_value": "#6fd3e6",
+      "bg_value": "#f2f0dd",
+      "ratio": 1.51,
+      "context": "the dark-bed link colour used on the light island"
+    },
+    {
+      "fg_value": "#7bd96a",
+      "bg_value": "#f2f0dd",
+      "ratio": 1.53,
+      "context": "the dark-bed success green used on the light island"
+    },
+    {
+      "fg_value": "#ff6b5e",
+      "bg_value": "#f2f0dd",
+      "ratio": 2.43,
+      "context": "the dark-bed danger used on the light island"
+    },
+    {
+      "fg_value": "#4a5a55",
+      "bg_value": "#0b1714",
+      "ratio": 2.52,
+      "context": "the deselected-sticker grey used as text on the bed"
+    },
+    {
+      "fg_value": "#1b6fb8",
+      "bg_value": "#0b1714",
+      "ratio": 3.5,
+      "context": "the React fill used as TEXT on the bed — these are FILLS, never inks"
+    },
+    {
+      "fg_value": "#12805a",
+      "bg_value": "#0b1714",
+      "ratio": 3.72,
+      "context": "the Vue fill used as TEXT on the bed — these are FILLS, never inks"
+    },
+    {
+      "fg_value": "#2f5fb3",
+      "bg_value": "#0b1714",
+      "ratio": 2.97,
+      "context": "the Solid fill used as TEXT on the bed — these are FILLS, never inks"
+    },
+    {
+      "fg_value": "#c8102f",
+      "bg_value": "#0b1714",
+      "ratio": 3.11,
+      "context": "the Angular fill used as TEXT on the bed — these are FILLS, never inks"
+    },
+    {
+      "fg_value": "#6d3fd4",
+      "bg_value": "#0b1714",
+      "ratio": 2.89,
+      "context": "the Qwik fill used as TEXT on the bed — these are FILLS, never inks"
+    }
+  ],
+  "surface_flip": {
+    "how": "Put [data-surface=\"light\"] on a region for the light paper island; [data-surface=\"deep\"] switches back. The role tokens flip as a SET.",
+    "why_as_a_set": "Flipping one at a time is how the dark-bed cream ink ends up on the light paper at 1.1:1 — invisible, and the single most expensive mistake available. Both failure directions are listed in forbidden_pairs so the gate proves they are real.",
+    "does_not_flip": [
+      "--band",
+      "--keyline",
+      "--accent",
+      "--accent-ink",
+      "every value under framework_colors"
+    ],
+    "why_those_do_not_flip": "They are printed ink and printed paper, not roles. A die-cut band is the same cream on any bed, and a React sticker is the same blue on any bed. That is what makes a sticker a physical object rather than a themed div."
+  },
+  "computation": {
+    "formula": "WCAG 2.x relative luminance; channel = c <= 0.03928 ? c/12.92 : ((c+0.055)/1.055)^2.4; L = 0.2126R + 0.7152G + 0.0722B; ratio = (Lmax+0.05)/(Lmin+0.05)",
+    "thresholds": {
+      "normal_text_AA": 4.5,
+      "large_text_AA": 3,
+      "non_text_AA": 3
+    },
+    "large_text_token_gate": "--step-2 and above clears the WCAG large-text threshold at every viewport in the shipped Utopia scale, so size gating is expressed as a TOKEN and stays checkable.",
+    "verified_by": "brand/tools/structural-gate.mjs recomputes every ratio in this file from its own hex pair."
+  }
+}

@@ -1,0 +1,877 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frameless — framework-carousel</title>
+<link rel="icon" href="../assets/wordmark/favicon.svg">
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="./component-tokens.css">
+<link rel="stylesheet" href="./specimen.css">
+<link rel="stylesheet" href="../motion/motion.css">
+
+<style>
+/* ============================================================================
+ * FRAMEWORK-CAROUSEL — the selection mechanic, and the page's one interaction
+ *
+ * WHAT IT IS FOR
+ * Letting a reader pick a framework and immediately see that framework's REAL
+ * compiled output. It is the thesis, demonstrated: one source in, framework
+ * native code out. If a page ships exactly one interaction, make it this one.
+ *
+ * ── THE MODEL, FROM avara.xyz ───────────────────────────────────────────────
+ *
+ * Studied in a browser, not guessed at. It is the Nintendo Switch home row:
+ *
+ *   · the FOCAL POSITION IS FIXED. The row slides beneath it. The selection
+ *     marker does not travel along a static row — that is the difference
+ *     between this and an ordinary carousel, and it is what makes arrowing
+ *     through it feel like one continuous gesture.
+ *   · the selected sticker scales up about 2x and colourises
+ *   · every other sticker DESATURATES TO A GREY SILHOUETTE. It loses colour
+ *     entirely rather than dimming. That total loss is what makes the selected
+ *     one read as lit; a dimmed sticker reads as disabled.
+ *   · a label chip appears above the selected sticker, slightly before the
+ *     panel arrives
+ *   · a detail panel slides in from the right, about 430px wide
+ *   · prev/next chevrons sit bottom-centre as a visible affordance
+ *
+ * ── WHAT IS REAL AND WHAT IS NOT ────────────────────────────────────────────
+ *
+ * Three panels show genuinely emitted files, read out of this repository at
+ * build time with their real line counts and sha256 prefixes. Three panels say
+ * plainly that there is no captured output for that target. That asymmetry is
+ * deliberate and it is the honest state of the repository — a fabricated sample
+ * would turn the one inspectable claim on this page into an unverifiable one.
+ *
+ * ── FILTER AND POSITIONING ──────────────────────────────────────────────────
+ *
+ * Every sticker carries a drop-shadow filter, and a non-none filter creates a
+ * containing block for fixed/absolute descendants plus a stacking context. The
+ * panel is therefore positioned against .carousel, which has no filter of its
+ * own, and never against a sticker.
+ * ==========================================================================*/
+
+/* ── The sticker, as built in framework-badge.html ───────────────────────── */
+
+.fw-sticker {
+	--fw-fill: var(--surface-raised);
+	--fw-keyline: var(--keyline);
+	--fw-band: var(--band);
+	--fw-band-width: 0.55rem;
+
+	display: inline-block;
+	padding: var(--fw-band-width);
+	background-color: var(--fw-band);
+	background-image: var(--band-sheen);
+	border-radius: var(--sticker-radius, 1.25rem);
+	filter: var(--elev-sticker);
+	rotate: var(--tilt-rest, -3deg);
+}
+
+.fw-sticker__face {
+	position: relative;
+	display: grid;
+	justify-items: center;
+	align-content: center;
+	gap: 0.5em;
+	inline-size: 6.6rem;
+	padding: 0.85rem 0.6rem 0.7rem;
+	background-color: var(--fw-fill);
+	border: var(--sticker-keyline-bold, 3px) solid var(--fw-keyline);
+	border-radius: calc(var(--sticker-radius, 1.25rem) - var(--fw-band-width));
+	overflow: hidden;
+}
+
+.fw-sticker__face::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	background-image: var(--gloss);
+	pointer-events: none;
+}
+
+.fw-sticker__face::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	background-image: var(--texture-noise);
+	opacity: var(--texture-noise-opacity-strong);
+	mix-blend-mode: overlay;
+	pointer-events: none;
+}
+
+.fw-sticker__mark {
+	position: relative;
+	z-index: 1;
+	inline-size: 2.6rem;
+	block-size: 2.6rem;
+	filter: drop-shadow(0 2px 0 rgb(0 0 0 / 0.34));
+}
+
+.fw-sticker__name {
+	position: relative;
+	z-index: 1;
+	color: #ffffff;
+	font-size: var(--step-0);
+	font-weight: 900;
+	line-height: 1;
+	letter-spacing: -0.01em;
+	text-shadow: 0 2px 0 rgb(0 0 0 / 0.38);
+}
+
+.fw-sticker[data-framework="react"]   { --fw-fill: var(--fw-react);   --fw-keyline: var(--fw-react-keyline);   --fw-band: var(--fw-react-band); }
+.fw-sticker[data-framework="vue"]     { --fw-fill: var(--fw-vue);     --fw-keyline: var(--fw-vue-keyline);     --fw-band: var(--fw-vue-band); }
+.fw-sticker[data-framework="svelte"]  { --fw-fill: var(--fw-svelte);  --fw-keyline: var(--fw-svelte-keyline);  --fw-band: var(--fw-svelte-band); }
+.fw-sticker[data-framework="solid"]   { --fw-fill: var(--fw-solid);   --fw-keyline: var(--fw-solid-keyline);   --fw-band: var(--fw-solid-band); }
+.fw-sticker[data-framework="angular"] { --fw-fill: var(--fw-angular); --fw-keyline: var(--fw-angular-keyline); --fw-band: var(--fw-angular-band); }
+.fw-sticker[data-framework="qwik"]    { --fw-fill: var(--fw-qwik);    --fw-keyline: var(--fw-qwik-keyline);    --fw-band: var(--fw-qwik-band); }
+
+/* ── The carousel ────────────────────────────────────────────────────────── */
+
+.carousel {
+	position: relative;
+	isolation: isolate;
+	background-color: var(--surface-sunk);
+	background-image: var(--texture-grid);
+	border: var(--sticker-keyline, 2px) solid color-mix(in srgb, var(--band) 20%, transparent);
+	border-radius: var(--sticker-radius, 1.25rem);
+	overflow: hidden;
+}
+
+/* The stage clips the row horizontally so the track can slide beneath the focal
+   point. overflow: hidden clips BOTH axes, so the block padding has to be
+   generous enough to hold a 2x sticker and its shadow — there is no
+   overflow-x-only in CSS and reaching for one is how the shadows get cut off. */
+.carousel__stage {
+	position: relative;
+	overflow: hidden;
+	/* The top padding is not taste. The chip sits above the item and is scaled
+	   WITH it, so its distance above the item's centre is multiplied by the
+	   selected scale: 1.95 x (half the item + the gap + the chip) is about
+	   215px of headroom before anything is clipped. At 5.5rem the chip was cut
+	   in half by the stage's overflow, which is the sort of thing that only
+	   shows up in a screenshot. */
+	padding-block: 10rem 4.5rem;
+	/* min-block-size resolves against the CONTENT box, so this is 12rem of stage
+	   ON TOP of the 14.5rem of padding above. Set it to 20rem and the stage ends
+	   up 552px tall with 214px of dead bed under the sticker. */
+	min-block-size: 12rem;
+}
+
+/* WHEN THE PANEL IS OPEN THE STAGE GETS NARROWER.
+   Without this the row runs on underneath the panel: the stickers are still
+   there, still hit-testable by a screen reader, and completely unclickable with
+   a mouse. Found by trying to click the sixth sticker and having the panel eat
+   the event. Narrowing the stage is also what keeps the focal point meaningful,
+   because the focal fraction is measured against the stage's own width. */
+@media (min-width: 60.0625rem) {
+	.carousel[data-open="true"] .carousel__stage {
+		inline-size: calc(100% - min(430px, 92%));
+	}
+}
+
+.carousel__track {
+	display: flex;
+	align-items: center;
+	gap: var(--space-l);
+	inline-size: max-content;
+	transition: translate var(--motion-settle, 420ms ease);
+	will-change: translate;
+}
+
+.carousel__item {
+	position: relative;
+	display: block;
+	padding: 0;
+	background: none;
+	border: 0;
+	cursor: pointer;
+	font: inherit;
+	color: inherit;
+	transition: scale var(--motion-settle, 420ms ease);
+	scale: 1;
+	transform-origin: center center;
+}
+
+/* The focus ring goes on the STICKER, not on the button.
+   The button's box is upright and the sticker inside it is tilted, so a ring on
+   the button draws an axis-aligned rectangle floating around a rotated object —
+   it reads as a rendering bug rather than as focus. Putting it on the sticker
+   makes it rotate and scale with the thing it is indicating. */
+.carousel__item:focus-visible {
+	outline: none;
+}
+
+.carousel__item:focus-visible .fw-sticker {
+	outline: var(--focus-width, 2px) solid var(--focus-outer, #cce007);
+	outline-offset: 3px;
+	border-radius: var(--sticker-radius, 1.25rem);
+}
+
+/* THE SELECTED STATE. Scale, and nothing else moves — the row does the moving. */
+.carousel__item[aria-selected="true"] {
+	scale: 1.95;
+	z-index: 2;
+}
+
+.carousel__item[aria-selected="true"] .fw-sticker {
+	filter: var(--elev-lifted);
+}
+
+/* THE DESELECTED STATE. Grey, entirely. */
+.carousel__item[aria-selected="false"] .fw-sticker {
+	--fw-fill: var(--silhouette);
+	--fw-keyline: #26312e;
+	--fw-band: var(--silhouette-band);
+
+	filter: var(--elev-sticker) grayscale(1);
+	transition: filter var(--motion-settle, 420ms ease);
+}
+
+.carousel__item[aria-selected="false"] .fw-sticker__name {
+	color: rgb(255 255 255 / 0.82);
+}
+
+/* The label chip. It sits above the selected sticker and it is scaled DOWN by
+   the inverse of the sticker's scale, so the chip's own type stays at its real
+   size instead of being blown up to 2x with everything else. */
+.carousel__chip {
+	position: absolute;
+	inset-block-end: calc(100% + 0.5rem);
+	inset-inline-start: 50%;
+	translate: -50% 0;
+	scale: calc(1 / 1.95);
+	transform-origin: bottom center;
+	display: block;
+	padding: 0.3rem 0.75rem;
+	background: var(--surface-raised);
+	border: var(--sticker-keyline, 2px) solid var(--band);
+	border-radius: 999px;
+	color: var(--ink);
+	font-size: var(--step--1);
+	font-weight: 700;
+	line-height: 1.2;
+	white-space: nowrap;
+	filter: var(--elev-sticker);
+	opacity: 0;
+	transition: opacity var(--motion-release, 160ms ease);
+	pointer-events: none;
+}
+
+.carousel__item[aria-selected="true"] .carousel__chip {
+	opacity: 1;
+}
+
+/* ── Prev / next ─────────────────────────────────────────────────────────── */
+
+/* Bottom-centre of the STAGE rather than of the whole carousel, so the
+   affordance stays under the row when the panel takes the right-hand side. */
+.carousel__nav {
+	position: absolute;
+	inset-block-end: var(--space-s);
+	inset-inline-start: 50%;
+	translate: -50% 0;
+	z-index: 3;
+	display: flex;
+	gap: var(--space-2xs);
+}
+
+.carousel__arrow {
+	display: grid;
+	place-items: center;
+	inline-size: var(--control-min-size, 2.75rem);
+	block-size: var(--control-min-size, 2.75rem);
+	padding: 0;
+	background: var(--band);
+	border: var(--sticker-keyline, 2px) solid var(--keyline);
+	border-radius: 999px;
+	color: var(--keyline);
+	cursor: pointer;
+	filter: var(--elev-sticker);
+}
+
+.carousel__arrow svg {
+	inline-size: 1.1rem;
+	block-size: 1.1rem;
+}
+
+/* ── The detail panel ────────────────────────────────────────────────────── */
+
+.carousel__panel {
+	position: absolute;
+	inset-block: 0;
+	inset-inline-end: 0;
+	z-index: 4;
+	inline-size: min(430px, 92%);
+	overflow-y: auto;
+	padding: var(--space-l) var(--space-m);
+	background: var(--surface-raised);
+	border-inline-start: var(--sticker-keyline, 2px) solid color-mix(in srgb, var(--band) 30%, transparent);
+	translate: 100% 0;
+	transition: translate var(--motion-slide, 300ms ease);
+}
+
+.carousel[data-open="true"] .carousel__panel {
+	translate: 0 0;
+}
+
+.carousel__title {
+	font-size: var(--step-4);
+	font-weight: 900;
+	line-height: 1.05;
+	letter-spacing: var(--tracking-display);
+	margin-block: 0 var(--space-2xs);
+	color: var(--ink);
+}
+
+.carousel__lede {
+	font-size: var(--step--1);
+	color: var(--ink-muted);
+	max-width: none;
+	margin-block: 0 var(--space-s);
+}
+
+.carousel__spec {
+	margin: 0 0 var(--space-s);
+	font-size: var(--step--1);
+}
+
+.carousel__spec > div {
+	display: flex;
+	justify-content: space-between;
+	gap: var(--space-s);
+	padding-block: 0.5em;
+	border-block-end: 1px solid color-mix(in srgb, var(--band) 16%, transparent);
+}
+
+.carousel__spec dt {
+	color: var(--ink-muted);
+	flex: none;
+}
+
+.carousel__spec dd {
+	margin: 0;
+	text-align: end;
+	overflow-wrap: anywhere;
+	font-weight: 700;
+}
+
+.carousel__code {
+	margin: 0;
+	padding: var(--space-xs);
+	background: var(--surface-sunk);
+	border-radius: 0.4rem;
+	box-shadow: var(--elev-inset);
+	font-size: var(--step--2);
+	line-height: 1.5;
+	overflow-x: auto;
+	tab-size: 2;
+}
+
+.carousel__empty {
+	font-size: var(--step--1);
+	color: var(--ink);
+	max-width: none;
+}
+
+.carousel__empty--why {
+	color: var(--ink-muted);
+}
+
+.carousel__close {
+	position: absolute;
+	inset-block-start: var(--space-2xs);
+	inset-inline-end: var(--space-2xs);
+	inline-size: 2.25rem;
+	block-size: 2.25rem;
+	display: grid;
+	place-items: center;
+	padding: 0;
+	background: none;
+	border: var(--focus-width, 2px) solid transparent;
+	border-radius: 999px;
+	color: var(--ink-muted);
+	cursor: pointer;
+	font-size: var(--step-1);
+	line-height: 1;
+}
+
+/* ── Small screens ───────────────────────────────────────────────────────── */
+
+@media (max-width: 60rem) {
+	/* The panel stops being a slide-in and becomes a block underneath. A 430px
+	   drawer on a 390px viewport is the whole screen, and a drawer that covers
+	   everything is a page, not a drawer. */
+	.carousel__panel {
+		position: static;
+		inline-size: auto;
+		translate: none;
+		border-inline-start: 0;
+		border-block-start: var(--sticker-keyline, 2px) solid color-mix(in srgb, var(--band) 30%, transparent);
+	}
+
+	.carousel__stage {
+		/* Same arithmetic at the smaller selected scale: 1.6 x 110px is 177px. */
+		/* The bottom padding has to clear the SCALED sticker, or the chevrons sit
+		   on top of it. At 1.6x the sticker's bottom edge lands 277px down and
+		   4rem left the chevrons at 268px. */
+		padding-block: 7.5rem 5.5rem;
+		min-block-size: 9rem;
+	}
+
+	.carousel__item[aria-selected="true"] {
+		scale: 1.6;
+	}
+
+	.carousel__chip {
+		scale: calc(1 / 1.6);
+	}
+
+	.carousel__close {
+		display: none;
+	}
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────────────── */
+
+/* The SCALE and the DESATURATION stay: they are states, not movement, and they
+   are the entire selection language. What goes is the sliding — the track jumps
+   to position and the panel appears rather than travelling. */
+@media (prefers-reduced-motion: reduce) {
+	.carousel__track,
+	.carousel__item,
+	.carousel__panel,
+	.carousel__chip,
+	.carousel__item .fw-sticker {
+		transition: none;
+	}
+}
+</style>
+</head>
+
+<body>
+
+<!-- ============================================================================
+     THE SIX FRAMEWORK MARKS, IN FULL COLOUR, INLINE.
+
+     INLINE, not url()-referenced, and not a CSS mask. Two reasons, both real:
+
+       1. A CSS mask can only carry ONE colour. Using masks WAS the decision to
+          make these marks monochrome, which was the most visible thing wrong
+          with the previous badges. The concept art shows all six in their own
+          colours.
+       2. A mask-image or an SVG fetched by url() is blocked by CORS when a page
+          is opened from file://. This kit has to work when someone
+          double-clicks a component, so the geometry has to be in the document.
+
+     Geometry: Simple Icons (CC0). Colours: each project's own brand values.
+     The CC0 dedication covers the PATH DATA, not the trademarks — copying the
+     geometry is free and displaying it still binds you to each project's
+     trademark policy. See footer-marks.html.
+
+     A framework mark may never render in --accent.
+     ============================================================================ -->
+<svg class="fw-sprite" aria-hidden="true" focusable="false" width="0" height="0" style="position:absolute">
+	<defs>
+		<linearGradient id="fwg-solid" x1="0" y1="0" x2="1" y2="1">
+			<stop offset="0" stop-color="#b8dcff"/>
+			<stop offset="0.55" stop-color="#76b3e1"/>
+			<stop offset="1" stop-color="#4f88c6"/>
+		</linearGradient>
+		<linearGradient id="fwg-qwik" x1="0" y1="0" x2="0.6" y2="1">
+			<stop offset="0" stop-color="#ffffff"/>
+			<stop offset="0.45" stop-color="#8ce0ff"/>
+			<stop offset="1" stop-color="#18b6f6"/>
+		</linearGradient>
+	</defs>
+
+	<!-- React: one path, and cyan IS its full colour. -->
+	<symbol id="fwlogo-react" viewBox="0 0 24 24"><path d="M14.23 12.004a2.236 2.236 0 0 1-2.235 2.236 2.236 2.236 0 0 1-2.236-2.236 2.236 2.236 0 0 1 2.235-2.236 2.236 2.236 0 0 1 2.236 2.236zm2.648-10.69c-1.346 0-3.107.96-4.888 2.622-1.78-1.653-3.542-2.602-4.887-2.602-.41 0-.783.093-1.106.278-1.375.793-1.683 3.264-.973 6.365C1.98 8.917 0 10.42 0 12.004c0 1.59 1.99 3.097 5.043 4.03-.704 3.113-.39 5.588.988 6.38.32.187.69.275 1.102.275 1.345 0 3.107-.96 4.888-2.624 1.78 1.654 3.542 2.603 4.887 2.603.41 0 .783-.09 1.106-.275 1.374-.792 1.683-3.263.973-6.365C22.02 15.096 24 13.59 24 12.004c0-1.59-1.99-3.097-5.043-4.032.704-3.11.39-5.587-.988-6.38-.318-.184-.688-.277-1.092-.278zm-.005 1.09v.006c.225 0 .406.044.558.127.666.382.955 1.835.73 3.704-.054.46-.142.945-.25 1.44-.96-.236-2.006-.417-3.107-.534-.66-.905-1.345-1.727-2.035-2.447 1.592-1.48 3.087-2.292 4.105-2.295zm-9.77.02c1.012 0 2.514.808 4.11 2.28-.686.72-1.37 1.537-2.02 2.442-1.107.117-2.154.298-3.113.538-.112-.49-.195-.964-.254-1.42-.23-1.868.054-3.32.714-3.707.19-.09.4-.127.563-.132zm4.882 3.05c.455.468.91.992 1.36 1.564-.44-.02-.89-.034-1.345-.034-.46 0-.915.01-1.36.034.44-.572.895-1.096 1.345-1.565zM12 8.1c.74 0 1.477.034 2.202.093.406.582.802 1.203 1.183 1.86.372.64.71 1.29 1.018 1.946-.308.655-.646 1.31-1.013 1.95-.38.66-.773 1.288-1.18 1.87-.728.063-1.466.098-2.21.098-.74 0-1.477-.035-2.202-.093-.406-.582-.802-1.204-1.183-1.86-.372-.64-.71-1.29-1.018-1.946.303-.657.646-1.313 1.013-1.954.38-.66.773-1.286 1.18-1.868.728-.064 1.466-.098 2.21-.098zm-3.635.254c-.24.377-.48.763-.704 1.16-.225.39-.435.782-.635 1.174-.265-.656-.49-1.31-.676-1.947.64-.15 1.315-.283 2.015-.386zm7.26 0c.695.103 1.365.23 2.006.387-.18.632-.405 1.282-.66 1.933-.2-.39-.41-.783-.64-1.174-.225-.392-.465-.774-.705-1.146zm3.063.675c.484.15.944.317 1.375.498 1.732.74 2.852 1.708 2.852 2.476-.005.768-1.125 1.74-2.857 2.475-.42.18-.88.342-1.355.493-.28-.958-.646-1.956-1.1-2.98.45-1.017.81-2.01 1.085-2.964zm-13.395.004c.278.96.645 1.957 1.1 2.98-.45 1.017-.812 2.01-1.086 2.964-.484-.15-.944-.318-1.37-.5-1.732-.737-2.852-1.706-2.852-2.474 0-.768 1.12-1.742 2.852-2.476.42-.18.88-.342 1.356-.494zm11.678 4.28c.265.657.49 1.312.676 1.948-.64.157-1.316.29-2.016.39.24-.375.48-.762.705-1.158.225-.39.435-.788.636-1.18zm-9.945.02c.2.392.41.783.64 1.175.23.39.465.772.705 1.143-.695-.102-1.365-.23-2.006-.386.18-.63.406-1.282.66-1.933zM17.92 16.32c.112.493.2.968.254 1.423.23 1.868-.054 3.32-.714 3.708-.147.09-.338.128-.563.128-1.012 0-2.514-.807-4.11-2.28.686-.72 1.37-1.536 2.02-2.44 1.107-.118 2.154-.3 3.113-.54zm-11.83.01c.96.234 2.006.415 3.107.532.66.905 1.345 1.727 2.035 2.446-1.595 1.483-3.092 2.295-4.11 2.295-.22-.005-.406-.05-.553-.132-.666-.38-.955-1.834-.73-3.703.054-.46.142-.944.25-1.438zm4.56.64c.44.02.89.034 1.345.034.46 0 .915-.01 1.36-.034-.44.572-.895 1.095-1.345 1.565-.455-.47-.91-.993-1.36-1.565z" fill="#61dafb"/></symbol>
+
+	<!-- Vue: the single Simple Icons path splits at its one Z into exactly the
+	     two chevrons of the real two-tone mark. -->
+	<symbol id="fwlogo-vue" viewBox="0 0 24 24"><path d="M24,1.61H14.06L12,5.16,9.94,1.61H0L12,22.39Z" fill="#42b883"/><path d="M12,14.08,5.16,2.23H9.59L12,6.41l2.41-4.18h4.43Z" fill="#35495e"/></symbol>
+
+	<!-- Svelte: white S. The badge fill is the Svelte orange, so the sticker as a
+	     whole is the logo's real colour pairing rather than a recolouring of it. -->
+	<symbol id="fwlogo-svelte" viewBox="0 0 24 24"><path d="M10.354 21.125a4.44 4.44 0 0 1-4.765-1.767 4.109 4.109 0 0 1-.703-3.107 3.898 3.898 0 0 1 .134-.522l.105-.321.287.21a7.21 7.21 0 0 0 2.186 1.092l.208.063-.02.208a1.253 1.253 0 0 0 .226.83 1.337 1.337 0 0 0 1.435.533 1.231 1.231 0 0 0 .343-.15l5.59-3.562a1.164 1.164 0 0 0 .524-.778 1.242 1.242 0 0 0-.211-.937 1.338 1.338 0 0 0-1.435-.533 1.23 1.23 0 0 0-.343.15l-2.133 1.36a4.078 4.078 0 0 1-1.135.499 4.44 4.44 0 0 1-4.765-1.766 4.108 4.108 0 0 1-.702-3.108 3.855 3.855 0 0 1 1.742-2.582l5.589-3.563a4.072 4.072 0 0 1 1.135-.499 4.44 4.44 0 0 1 4.765 1.767 4.109 4.109 0 0 1 .703 3.107 3.943 3.943 0 0 1-.134.522l-.105.321-.286-.21a7.204 7.204 0 0 0-2.187-1.093l-.208-.063.02-.207a1.255 1.255 0 0 0-.226-.831 1.337 1.337 0 0 0-1.435-.532 1.231 1.231 0 0 0-.343.15L8.62 9.368a1.162 1.162 0 0 0-.524.778 1.24 1.24 0 0 0 .211.937 1.338 1.338 0 0 0 1.435.533 1.235 1.235 0 0 0 .344-.151l2.132-1.36a4.067 4.067 0 0 1 1.135-.498 4.44 4.44 0 0 1 4.765 1.766 4.108 4.108 0 0 1 .702 3.108 3.857 3.857 0 0 1-1.742 2.583l-5.589 3.562a4.072 4.072 0 0 1-1.135.499m10.358-17.95C18.484-.015 14.082-.96 10.9 1.068L5.31 4.63a6.412 6.412 0 0 0-2.896 4.295 6.753 6.753 0 0 0 .666 4.336 6.43 6.43 0 0 0-.96 2.396 6.833 6.833 0 0 0 1.168 5.167c2.229 3.19 6.63 4.135 9.812 2.108l5.59-3.562a6.41 6.41 0 0 0 2.896-4.295 6.756 6.756 0 0 0-.665-4.336 6.429 6.429 0 0 0 .958-2.396 6.831 6.831 0 0 0-1.167-5.168Z" fill="#ffffff"/></symbol>
+
+	<!-- Solid: the mark's own blue ramp. -->
+	<symbol id="fwlogo-solid" viewBox="0 0 24 24"><path d="M11.558.788A9.082 9.082 0 0 0 9.776.99l-.453.15c-.906.303-1.656.755-2.1 1.348l-.301.452-2.035 3.528c.426-.387.974-.698 1.643-.894h.001l.613-.154h.001a8.82 8.82 0 0 1 1.777-.206c2.916-.053 6.033 1.148 8.423 2.36 2.317 1.175 3.888 2.32 3.987 2.39L24 5.518c-.082-.06-1.66-1.21-3.991-2.386-2.393-1.206-5.521-2.396-8.45-2.343zM8.924 5.366a8.634 8.634 0 0 0-1.745.203l-.606.151c-1.278.376-2.095 1.16-2.43 2.108-.334.948-.188 2.065.487 3.116.33.43.747.813 1.216 1.147L12.328 10h.001a6.943 6.943 0 0 1 6.013 1.013l2.844-.963c-.17-.124-1.663-1.2-3.91-2.34-2.379-1.206-5.479-2.396-8.352-2.344zm5.435 4.497a6.791 6.791 0 0 0-1.984.283L2.94 13.189 0 18.334l9.276-2.992a6.945 6.945 0 0 1 7.408 2.314v.001c.695.903.89 1.906.66 2.808l2.572-4.63c.595-1.041.45-2.225-.302-3.429a6.792 6.792 0 0 0-5.255-2.543zm-3.031 5.341a6.787 6.787 0 0 0-2.006.283L.008 18.492c.175.131 2.02 1.498 4.687 2.768 2.797 1.332 6.37 2.467 9.468 1.712l.454-.152h.002c1.278-.376 2.134-1.162 2.487-2.09.353-.93.207-2.004-.541-2.978a6.791 6.791 0 0 0-5.237-2.548z" fill="url(#fwg-solid)"/></symbol>
+
+	<!-- Angular: the white A on the crimson sticker — the pairing Angular ships. -->
+	<symbol id="fwlogo-angular" viewBox="0 0 24 24"><path d="M16.712 17.711H7.288l-1.204 2.916L12 24l5.916-3.373-1.204-2.916ZM14.692 0l7.832 16.855.814-12.856L14.692 0ZM9.308 0 .662 3.999l.814 12.856L9.308 0Zm-.405 13.93h6.198L12 6.396 8.903 13.93Z" fill="#ffffff"/></symbol>
+
+	<!-- Qwik: the bolt in Qwik's blue, on Qwik's violet. -->
+	<symbol id="fwlogo-qwik" viewBox="0 0 24 24"><path d="M7.5469 0a2.957 2.957 0 0 0-2.5606 1.4785L.5332 9.1915a2.957 2.957 0 0 0 0 2.957l4.4531 7.7128A2.955 2.955 0 0 0 7.547 21.338H12l8.5938 2.6484c.2409.0742.4512-.1782.3359-.4023l-1.916-3.7227 4.4531-7.7129a2.957 2.957 0 0 0 0-2.957l-4.4531-7.7129A2.957 2.957 0 0 0 16.453 0zm0 .7656L17.7324 10.67l-1.8965 1.8985.5782 7.5332L6.2676 10.67l2.371-2.373z" fill="url(#fwg-qwik)"/></symbol>
+</svg>
+
+<main class="spec">
+
+<header>
+	<p class="spec__kicker">Frameless component · the one interaction</p>
+	<h1>framework-carousel</h1>
+	<p class="spec__lede">Pick a framework and read what it actually compiled to. The row slides beneath a fixed focal point, everything unselected goes grey, and the panel carries the real file.</p>
+</header>
+
+<div class="spec__use">
+	<div>
+		<h2>Use it when</h2>
+		<ul>
+			<li>You have one interaction to spend. Spend it here.</li>
+			<li>The claim is "the output is code your team would have written" and a reader should be able to check.</li>
+			<li>You want breadth to be navigable rather than listed.</li>
+		</ul>
+	</div>
+	<div class="spec__use--no">
+		<h2>Don't use it when</h2>
+		<ul>
+			<li>You do not have real emitted files to show. Do not fabricate output.</li>
+			<li>You want a logo wall. That is <code>framework-badge</code>.</li>
+			<li>You were going to autoplay it. Nothing in this kit moves on its own.</li>
+		</ul>
+	</div>
+</div>
+
+<hr class="spec__rule">
+
+<section>
+	<h2>Live</h2>
+	<p class="spec__note">Click a sticker, or focus the row and use <kbd>←</kbd> <kbd>→</kbd> <kbd>Home</kbd> <kbd>End</kbd>. The row moves; the focal point does not.</p>
+</section>
+</main>
+
+<div class="carousel" data-carousel data-open="false">
+	<div class="carousel__stage">
+		<div class="carousel__track" role="tablist" aria-label="Compilation targets">
+			<button type="button" class="carousel__item" role="tab" id="cartab-react" aria-controls="carpanel" aria-selected="true" tabindex="0" data-framework="react">
+				<span class="carousel__chip" aria-hidden="true">React</span>
+				<span class="fw-sticker tilt-1 " data-framework="react"><span class="fw-sticker__face"><svg class="fw-sticker__mark framework-mark" viewBox="0 0 24 24" aria-hidden="true"><use href="#fwlogo-react"/></svg><span class="fw-sticker__name">React</span></span></span>
+			</button>
+			<button type="button" class="carousel__item" role="tab" id="cartab-vue" aria-controls="carpanel" aria-selected="false" tabindex="-1" data-framework="vue">
+				<span class="carousel__chip" aria-hidden="true">Vue</span>
+				<span class="fw-sticker tilt-2 " data-framework="vue"><span class="fw-sticker__face"><svg class="fw-sticker__mark framework-mark" viewBox="0 0 24 24" aria-hidden="true"><use href="#fwlogo-vue"/></svg><span class="fw-sticker__name">Vue</span></span></span>
+			</button>
+			<button type="button" class="carousel__item" role="tab" id="cartab-svelte" aria-controls="carpanel" aria-selected="false" tabindex="-1" data-framework="svelte">
+				<span class="carousel__chip" aria-hidden="true">Svelte</span>
+				<span class="fw-sticker tilt-3 " data-framework="svelte"><span class="fw-sticker__face"><svg class="fw-sticker__mark framework-mark" viewBox="0 0 24 24" aria-hidden="true"><use href="#fwlogo-svelte"/></svg><span class="fw-sticker__name">Svelte</span></span></span>
+			</button>
+			<button type="button" class="carousel__item" role="tab" id="cartab-solid" aria-controls="carpanel" aria-selected="false" tabindex="-1" data-framework="solid">
+				<span class="carousel__chip" aria-hidden="true">Solid</span>
+				<span class="fw-sticker tilt-4 " data-framework="solid"><span class="fw-sticker__face"><svg class="fw-sticker__mark framework-mark" viewBox="0 0 24 24" aria-hidden="true"><use href="#fwlogo-solid"/></svg><span class="fw-sticker__name">Solid</span></span></span>
+			</button>
+			<button type="button" class="carousel__item" role="tab" id="cartab-angular" aria-controls="carpanel" aria-selected="false" tabindex="-1" data-framework="angular">
+				<span class="carousel__chip" aria-hidden="true">Angular</span>
+				<span class="fw-sticker tilt-1 " data-framework="angular"><span class="fw-sticker__face"><svg class="fw-sticker__mark framework-mark" viewBox="0 0 24 24" aria-hidden="true"><use href="#fwlogo-angular"/></svg><span class="fw-sticker__name">Angular</span></span></span>
+			</button>
+			<button type="button" class="carousel__item" role="tab" id="cartab-qwik" aria-controls="carpanel" aria-selected="false" tabindex="-1" data-framework="qwik">
+				<span class="carousel__chip" aria-hidden="true">Qwik</span>
+				<span class="fw-sticker tilt-2 " data-framework="qwik"><span class="fw-sticker__face"><svg class="fw-sticker__mark framework-mark" viewBox="0 0 24 24" aria-hidden="true"><use href="#fwlogo-qwik"/></svg><span class="fw-sticker__name">Qwik</span></span></span>
+			</button>
+		</div>
+
+		<div class="carousel__nav">
+			<button type="button" class="carousel__arrow" data-carousel-prev aria-label="Previous framework">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg>
+			</button>
+			<button type="button" class="carousel__arrow" data-carousel-next aria-label="Next framework">
+			<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>
+			</button>
+		</div>
+	</div>
+
+	<aside class="carousel__panel" id="carpanel" role="tabpanel" aria-labelledby="cartab-react" tabindex="0">
+		<button type="button" class="carousel__close focus-ring" data-carousel-close aria-label="Close the detail panel">×</button>
+		<div class="carousel__page" id="carpage-react" data-framework="react" hidden>
+			<h3 class="carousel__title">React</h3>
+			<p class="carousel__lede">Compiled from one source, emitted as code that reads like it was written for this framework — because it was.</p>
+				<dl class="carousel__spec">
+					<div><dt>Activation</dt><dd>hydrates</dd></div>
+					<div><dt>Output</dt><dd><code>packages/frameworks/react/generated/S1.jsx</code></dd></div>
+					<div><dt>Lines</dt><dd>34</dd></div>
+					<div><dt>sha256</dt><dd><code>b2a8e9a74187…</code></dd></div>
+				</dl>
+				<pre class="carousel__code"><code>// @generated by @frameless/react; do not edit.
+import { useRef, useState } from 'react';
+
+export function RenderOnce({ label, multiplier, visible, onTrace }) {
+	const setupDone = useRef(null);
+	if (setupDone.current === null) {
+		setupDone.current = true;
+		onTrace('setup', { runs: 1 });
+	}
+	const [count, setCount] = useState(1);
+	const [prefix] = useState(() =&gt; `${label}:`);
+	const derived = `${prefix}${count * multiplier}`;
+	return (
+		&lt;div data-s1-root=""&gt;
+			{!visible ? (
+				&lt;p data-branch="hidden"&gt;hidden&lt;/p&gt;
+			) : (
+				&lt;section data-scenario="s1"&gt;
+					&lt;output data-value="derived"&gt;{derived}&lt;/output&gt;
+					&lt;button
+						data-action="increment"
+						onClick={() =&gt; {
+							const nextCount = count + 1;
+							setCount(nextCount);
+							onTrace('change', { count: nextCount });
+						}}
+					&gt;
+						increment
+					&lt;/button&gt;
+				&lt;/section&gt;
+			)}
+		&lt;/div&gt;
+	);
+}</code></pre>
+		</div>
+		<div class="carousel__page" id="carpage-vue" data-framework="vue" hidden>
+			<h3 class="carousel__title">Vue</h3>
+			<p class="carousel__lede">Compiled from one source, emitted as code that reads like it was written for this framework — because it was.</p>
+				<dl class="carousel__spec">
+					<div><dt>Activation</dt><dd>hydrates</dd></div>
+					<div><dt>Output</dt><dd>none captured in this repository</dd></div>
+					<div><dt>Lines</dt><dd>—</dd></div>
+					<div><dt>sha256</dt><dd>—</dd></div>
+				</dl>
+				<p class="carousel__empty"><strong>No emitted Vue output is captured in this repository.</strong> The three panels that show code — React, Solid and Qwik — are reading real files at <code>packages/frameworks/&lt;target&gt;/generated/S1.jsx</code>, with their real line counts and hashes. There is no Vue file to read, so this panel shows nothing rather than showing something.</p>
+				<p class="carousel__empty carousel__empty--why">A fabricated sample here would turn the one inspectable claim on the page into an unverifiable one, and this component's whole argument is that the output is real enough to read.</p>
+		</div>
+		<div class="carousel__page" id="carpage-svelte" data-framework="svelte" hidden>
+			<h3 class="carousel__title">Svelte</h3>
+			<p class="carousel__lede">Compiled from one source, emitted as code that reads like it was written for this framework — because it was.</p>
+				<dl class="carousel__spec">
+					<div><dt>Activation</dt><dd>hydrates</dd></div>
+					<div><dt>Output</dt><dd>none captured in this repository</dd></div>
+					<div><dt>Lines</dt><dd>—</dd></div>
+					<div><dt>sha256</dt><dd>—</dd></div>
+				</dl>
+				<p class="carousel__empty"><strong>No emitted Svelte output is captured in this repository.</strong> The three panels that show code — React, Solid and Qwik — are reading real files at <code>packages/frameworks/&lt;target&gt;/generated/S1.jsx</code>, with their real line counts and hashes. There is no Svelte file to read, so this panel shows nothing rather than showing something.</p>
+				<p class="carousel__empty carousel__empty--why">A fabricated sample here would turn the one inspectable claim on the page into an unverifiable one, and this component's whole argument is that the output is real enough to read.</p>
+		</div>
+		<div class="carousel__page" id="carpage-solid" data-framework="solid" hidden>
+			<h3 class="carousel__title">Solid</h3>
+			<p class="carousel__lede">Compiled from one source, emitted as code that reads like it was written for this framework — because it was.</p>
+				<dl class="carousel__spec">
+					<div><dt>Activation</dt><dd>hydrates</dd></div>
+					<div><dt>Output</dt><dd><code>packages/frameworks/solid/generated/S1.jsx</code></dd></div>
+					<div><dt>Lines</dt><dd>32</dd></div>
+					<div><dt>sha256</dt><dd><code>d4011e110328…</code></dd></div>
+				</dl>
+				<pre class="carousel__code"><code>// @generated by @frameless/solid; do not edit.
+import { createSignal, untrack, Show } from 'solid-js';
+
+export function RenderOnce(props) {
+	untrack(() =&gt; props.onTrace('setup', { runs: 1 }));
+	const [count, setCount] = createSignal(1);
+	const prefix = untrack(() =&gt; `${props.label}:`);
+	const derived = () =&gt; `${prefix}${count() * props.multiplier}`;
+	return (
+		&lt;div data-s1-root=""&gt;
+			&lt;Show
+				when={!props.visible}
+				fallback={
+					&lt;section data-scenario="s1"&gt;
+						&lt;output data-value="derived"&gt;{derived()}&lt;/output&gt;
+						&lt;button
+							data-action="increment"
+							onClick={() =&gt; {
+								setCount(count() + 1);
+								props.onTrace('change', { count: count() });
+							}}
+						&gt;
+							increment
+						&lt;/button&gt;
+					&lt;/section&gt;
+				}
+			&gt;
+				&lt;p data-branch="hidden"&gt;hidden&lt;/p&gt;
+			&lt;/Show&gt;
+		&lt;/div&gt;
+	);
+}</code></pre>
+		</div>
+		<div class="carousel__page" id="carpage-angular" data-framework="angular" hidden>
+			<h3 class="carousel__title">Angular</h3>
+			<p class="carousel__lede">Compiled from one source, emitted as code that reads like it was written for this framework — because it was.</p>
+				<dl class="carousel__spec">
+					<div><dt>Activation</dt><dd>hydrates</dd></div>
+					<div><dt>Output</dt><dd>none captured in this repository</dd></div>
+					<div><dt>Lines</dt><dd>—</dd></div>
+					<div><dt>sha256</dt><dd>—</dd></div>
+				</dl>
+				<p class="carousel__empty"><strong>No emitted Angular output is captured in this repository.</strong> The three panels that show code — React, Solid and Qwik — are reading real files at <code>packages/frameworks/&lt;target&gt;/generated/S1.jsx</code>, with their real line counts and hashes. There is no Angular file to read, so this panel shows nothing rather than showing something.</p>
+				<p class="carousel__empty carousel__empty--why">A fabricated sample here would turn the one inspectable claim on the page into an unverifiable one, and this component's whole argument is that the output is real enough to read.</p>
+		</div>
+		<div class="carousel__page" id="carpage-qwik" data-framework="qwik" hidden>
+			<h3 class="carousel__title">Qwik</h3>
+			<p class="carousel__lede">Qwik resumes rather than hydrates — a different activation model entirely. Same source, and the observable behavior is verified identical.</p>
+				<dl class="carousel__spec">
+					<div><dt>Activation</dt><dd>resumes</dd></div>
+					<div><dt>Output</dt><dd><code>packages/frameworks/qwik/generated/S1.jsx</code></dd></div>
+					<div><dt>Lines</dt><dd>31</dd></div>
+					<div><dt>sha256</dt><dd><code>6b2d6ecbe045…</code></dd></div>
+				</dl>
+				<pre class="carousel__code"><code>// @generated by @frameless/qwik; do not edit.
+import { $, component$, useComputed$, useSignal, useTask$ } from '@qwik.dev/core';
+
+export const RenderOnce = component$((props) =&gt; {
+	useTask$(async () =&gt; {
+		await props.onTrace$('setup', { runs: 1 });
+	});
+	const count = useSignal(1);
+	const prefix = useSignal(() =&gt; `${props.label}:`);
+	const derived = useComputed$(() =&gt; `${prefix.value}${count.value * props.multiplier}`);
+	return (
+		&lt;div data-s1-root=""&gt;
+			{!props.visible ? (
+				&lt;p data-branch="hidden"&gt;hidden&lt;/p&gt;
+			) : (
+				&lt;section data-scenario="s1"&gt;
+					&lt;output data-value="derived"&gt;{derived.value}&lt;/output&gt;
+					&lt;button
+						data-action="increment"
+						onClick$={$(async () =&gt; {
+							count.value += 1;
+							await props.onTrace$('change', { count: count.value });
+						})}
+					&gt;
+						increment
+					&lt;/button&gt;
+				&lt;/section&gt;
+			)}
+		&lt;/div&gt;
+	);
+});</code></pre>
+		</div>
+	</aside>
+</div>
+
+<main class="spec">
+
+<section>
+	<h2>What is real here</h2>
+	<p class="spec__note">Three of the six panels show a genuinely emitted file, read out of this repository with its real line count and sha256 prefix. Three say plainly that there is nothing to show. That asymmetry is the honest state of the repository, and a fabricated sample would turn the one inspectable claim on the page into an unverifiable one.</p>
+
+	<table class="spec__table">
+		<thead><tr><th>Framework</th><th>Output</th><th>Lines</th><th>sha256</th></tr></thead>
+		<tbody>
+			<tr><td>React</td><td><code>packages/frameworks/react/generated/S1.jsx</code></td><td>34</td><td><code>b2a8e9a74187…</code></td></tr>
+			<tr><td>Vue</td><td>none captured in this repository</td><td>—</td><td>—</td></tr>
+			<tr><td>Svelte</td><td>none captured in this repository</td><td>—</td><td>—</td></tr>
+			<tr><td>Solid</td><td><code>packages/frameworks/solid/generated/S1.jsx</code></td><td>32</td><td><code>d4011e110328…</code></td></tr>
+			<tr><td>Angular</td><td>none captured in this repository</td><td>—</td><td>—</td></tr>
+			<tr><td>Qwik</td><td><code>packages/frameworks/qwik/generated/S1.jsx</code></td><td>31</td><td><code>6b2d6ecbe045…</code></td></tr>
+		</tbody>
+	</table>
+</section>
+
+<section>
+	<h2>Keyboard</h2>
+	<table class="spec__table">
+		<thead><tr><th>Key</th><th>Does</th></tr></thead>
+		<tbody>
+			<tr><td><kbd>←</kbd> / <kbd>→</kbd></td><td>Move selection. The row slides; the focal point stays put.</td></tr>
+			<tr><td><kbd>Home</kbd> / <kbd>End</kbd></td><td>First / last framework.</td></tr>
+			<tr><td><kbd>Tab</kbd></td><td>Enters the row ONCE and lands on the selected sticker — roving tabindex. Six stops in a row would make the rest of the page unreachable for anyone tabbing through it.</td></tr>
+			<tr><td><kbd>Esc</kbd></td><td>Closes the panel.</td></tr>
+		</tbody>
+	</table>
+	<p class="spec__note">The row is a <code>tablist</code> and the panel is its <code>tabpanel</code>, because that is exactly what this is: one row of choices, one region that changes with them. Arrow-key selection inside a tablist is the expected behaviour rather than an invention.</p>
+</section>
+
+<section>
+	<h2>Reduced motion</h2>
+	<p class="spec__note">The scale and the desaturation <em>stay</em> — they are states, not movement, and they are the whole selection language. What goes is the travel: the row jumps to position and the panel appears rather than sliding.</p>
+</section>
+
+</main>
+
+<script>
+(() => {
+	const carousel = document.querySelector('[data-carousel]');
+	const track = carousel.querySelector('.carousel__track');
+	const items = [...carousel.querySelectorAll('.carousel__item')];
+	const pages = [...carousel.querySelectorAll('.carousel__page')];
+	const panel = carousel.querySelector('.carousel__panel');
+	const stage = carousel.querySelector('.carousel__stage');
+
+	// THE FOCAL POINT. A fraction of the stage rather than a pixel value, so it
+	// stays put through a resize. Left of centre on a wide viewport because the
+	// panel takes the right-hand side; centred once the panel goes below.
+	const focalFraction = () => (window.matchMedia('(max-width: 60rem)').matches ? 0.5 : 0.34);
+
+	let index = 0;
+
+	function layout() {
+		const item = items[index];
+		// offsetLeft is measured against the TRACK, so it is unaffected by the
+		// translate already applied to it — which is what makes this idempotent.
+		// getBoundingClientRect would feed the current translate back in and the
+		// row would creep a little further every time it is called.
+		const centre = item.offsetLeft + item.offsetWidth / 2;
+		const focal = stage.clientWidth * focalFraction();
+		track.style.translate = `${Math.round(focal - centre)}px 0`;
+	}
+
+	function select(next, { focus = false } = {}) {
+		index = (next + items.length) % items.length;
+		items.forEach((item, i) => {
+			const on = i === index;
+			item.setAttribute('aria-selected', String(on));
+			item.tabIndex = on ? 0 : -1;
+		});
+		pages.forEach((page) => {
+			page.hidden = page.dataset.framework !== items[index].dataset.framework;
+		});
+		panel.setAttribute('aria-labelledby', items[index].id);
+		carousel.dataset.open = 'true';
+		layout();
+		if (focus) items[index].focus();
+	}
+
+	items.forEach((item, i) => {
+		item.addEventListener('click', () => select(i, { focus: true }));
+	});
+
+	track.addEventListener('keydown', (event) => {
+		const keys = {
+			ArrowRight: () => select(index + 1, { focus: true }),
+			ArrowLeft: () => select(index - 1, { focus: true }),
+			Home: () => select(0, { focus: true }),
+			End: () => select(items.length - 1, { focus: true }),
+		};
+		if (keys[event.key]) {
+			event.preventDefault();
+			keys[event.key]();
+		}
+	});
+
+	carousel.querySelector('[data-carousel-prev]').addEventListener('click', () => select(index - 1));
+	carousel.querySelector('[data-carousel-next]').addEventListener('click', () => select(index + 1));
+	carousel.querySelector('[data-carousel-close]').addEventListener('click', () => {
+		carousel.dataset.open = 'false';
+		items[index].focus();
+	});
+
+	carousel.addEventListener('keydown', (event) => {
+		if (event.key === 'Escape' && carousel.dataset.open === 'true') {
+			carousel.dataset.open = 'false';
+			items[index].focus();
+		}
+	});
+
+	// Relayout on resize, and once fonts have settled — the track's geometry
+	// depends on text metrics, so measuring before the webfont lands puts the
+	// focal point in the wrong place until something else forces a reflow.
+	addEventListener('resize', layout);
+	if (document.fonts) document.fonts.ready.then(layout);
+	select(0);
+})();
+</script>
+</body>
+</html>

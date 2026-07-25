@@ -1,0 +1,285 @@
+/* Frameless — elevation and texture
+ * ============================================================================
+ * THE POINT OF THE BRAND. Read this before you build any surface.
+ *
+ * Depends on ./color.css for --surface, --band and --keyline.
+ *
+ * ┌──────────────────────────────────────────────────────────────────────────┐
+ * │  ELEVATION IS MANDATORY, AND IT IS drop-shadow().                        │
+ * │                                                                          │
+ * │  Every die-cut object in this system sits ABOVE the page on a real       │
+ * │  shadow. Shadows are REQUIRED, not forbidden.                            │
+ * │                                                                          │
+ * │  USE `filter: drop-shadow()`. NOT `box-shadow`.                          │
+ * │                                                                          │
+ * │  box-shadow casts a shadow of the element's BOX — a rectangle, or a      │
+ * │  rounded rectangle. A die-cut sticker is an irregular shape with a cut   │
+ * │  edge, so box-shadow draws a rectangle floating behind it and instantly  │
+ * │  kills the illusion. drop-shadow() follows the element's actual ALPHA    │
+ * │  SILHOUETTE — the cut edge, the lettering, the wobble of the band. It is │
+ * │  the only correct shadow for this brand.                                 │
+ * │                                                                          │
+ * │  A previous version of this kit banned shadows across the whole system,  │
+ * │  having measured four flat vector PNGs and generalised from them. The    │
+ * │  concept art's wordmark has an obvious heavy offset shadow and all six   │
+ * │  badges have depth. That ban deleted the most recognisable quality of    │
+ * │  the brand, and it is gone. If you find a comment anywhere in this kit   │
+ * │  that says shadows are forbidden, it is a leftover and it is wrong.      │
+ * └──────────────────────────────────────────────────────────────────────────┘
+ *
+ * ┌──────────────────────────────────────────────────────────────────────────┐
+ * │  THE BED IS NEVER A FLAT FILL.                                           │
+ * │                                                                          │
+ * │  Grain over the whole page, always. A faint ruled grid where a section   │
+ * │  can carry one. Both are below, both are free, and neither can fail to   │
+ * │  load — the noise is a self-contained SVG data URI, so it also works     │
+ * │  from file:// where an external image request would be blocked.          │
+ * └──────────────────────────────────────────────────────────────────────────┘
+ *
+ * ── THE SHADOW HAS TWO PARTS, AND THAT IS WHY IT READS ──────────────────────
+ *
+ * Each step below stacks a HARD offset drop-shadow and a SOFT ambient one:
+ *
+ *   hard    a solid, unblurred copy displaced straight down. This is the part
+ *           that reads as printed depth — it is what the concept art has, and
+ *           it is what react.gg's sticker-cards have.
+ *   soft    a wide, low-opacity blur that seats the object on the page.
+ *
+ * Both inks stayed near-black when the page bed lifted to the sky, and that is
+ * deliberate: the shadow under the wordmark in the concept art is a dark, almost
+ * solid offset cast ONTO a bright sky. Lightening it for a light bed is the
+ * change that would make the mark stop looking cut out.
+ *
+ * A soft shadow alone is invisible on a dark bed. A hard shadow alone looks
+ * like a graphic-design cliché. Together they read as a physical sticker.
+ * Stacked drop-shadow() filters compose exactly this way: each one takes the
+ * result of the previous as its input silhouette.
+ *
+ * ── WHICH STEP ─────────────────────────────────────────────────────────────
+ *
+ *   --elev-sticker   badges, tags, buttons, small die-cut objects  (default)
+ *   --elev-card      cards, panels, code wells, the carousel stage
+ *   --elev-lifted    the selected carousel sticker, hover, the hero lockup
+ *   --elev-inset     the ONE box-shadow in the system — see its note below
+ *
+ * ── WHERE TO PUT IT ────────────────────────────────────────────────────────
+ *
+ * On the element that owns the ALPHA: the PNG, the SVG, or the outermost
+ * die-cut wrapper. A filter on a parent shadows the whole subtree as ONE
+ * silhouette, which is exactly right for a sticker and never right for a text
+ * block — put --elev-card on a card's wrapper and the card casts one shadow;
+ * put it on the card's contents and every paragraph inside casts its own.
+ *
+ * ── TWO THINGS filter CHANGES ABOUT LAYOUT ─────────────────────────────────
+ *
+ * A non-none `filter` creates a containing block for fixed and absolutely
+ * positioned descendants, and it creates a stacking context. Consequences you
+ * will actually hit:
+ *
+ *   · a `position: fixed` child of a filtered element is fixed to THAT element,
+ *     not to the viewport — relevant to any slide-in panel
+ *   · z-index inside a filtered subtree is scoped to that subtree
+ *   · the filter is applied to the element's whole rendered result, so an
+ *     element that overflows its parent still casts a complete shadow
+ * ============================================================================ */
+
+:root {
+  /* ── The two shadow inks ──────────────────────────────────────────────── */
+
+  /* Not pure black. A hair of the bed's own teal keeps the shadow in the same
+     world as the page instead of reading as a hole punched in it. */
+  --shadow-hard: rgb(3 8 7 / 0.92);
+  --shadow-soft: rgb(0 0 0 / 0.55);
+
+  /* ── The scale. Every value is a `filter`, not a `box-shadow`. ─────────── */
+
+  /* Badges, tags, buttons, small die-cut objects. The default. */
+  --elev-sticker:
+    drop-shadow(0 6px 0 var(--shadow-hard))
+    drop-shadow(0 10px 12px var(--shadow-soft));
+
+  /* Cards, panels, code wells, the carousel stage. */
+  --elev-card:
+    drop-shadow(0 10px 0 var(--shadow-hard))
+    drop-shadow(0 18px 22px var(--shadow-soft));
+
+  /* The selected carousel sticker, hover, a peeling corner, the hero lockup. */
+  --elev-lifted:
+    drop-shadow(0 18px 0 var(--shadow-hard))
+    drop-shadow(0 26px 34px var(--shadow-soft));
+
+  /* THE ONE box-shadow IN THE SYSTEM, and it is inset.
+     There is no inset drop-shadow — a filter can only draw outside the alpha,
+     never inside it — so a well cut INTO the page has no filter equivalent and
+     this is the exception rather than a relapse. Pair it with --surface-sunk,
+     and never with an outer shadow on the same element: an object cannot be
+     simultaneously above the page and below it. */
+  --elev-inset:
+    inset 0 2px 0 0 rgb(0 0 0 / 0.5),
+    inset 0 10px 18px -10px rgb(0 0 0 / 0.8);
+
+  /* Aliases kept because "cut" reads better on an irregular silhouette. They
+     are the same values: after the drop-shadow correction there is no longer a
+     separate box-shadow family to distinguish them from. */
+  --elev-cut: var(--elev-sticker);
+  --elev-cut-lifted: var(--elev-lifted);
+
+  /* ── Gloss ────────────────────────────────────────────────────────────── */
+
+  /* Laid OVER a saturated fill. Light from the top-left, shade at the bottom
+     right — the same lighting the concept art's badges are painted with. This
+     is what makes a colour fill read as a moulded object rather than a swatch.
+     Apply as an ::after with pointer-events: none, never as the element's own
+     background, so the fill stays a single readable token. */
+  --gloss:
+    linear-gradient(
+      158deg,
+      rgb(255 255 255 / 0.30) 0%,
+      rgb(255 255 255 / 0.08) 34%,
+      rgb(0 0 0 / 0) 58%,
+      rgb(0 0 0 / 0.22) 100%
+    );
+
+  /* The band is allowed to be a gradient — measured on avara's stickers, where
+     the outer die-cut band is lighter at the top-left and more saturated toward
+     the bottom-right. Use it as a background-image over the band colour. */
+  --band-sheen:
+    linear-gradient(
+      145deg,
+      rgb(255 255 255 / 0.55) 0%,
+      rgb(255 255 255 / 0) 52%,
+      rgb(0 0 0 / 0.10) 100%
+    );
+
+  /* ── Texture ──────────────────────────────────────────────────────────── */
+
+  /* Tileable fractal grain. feTurbulence rendered once into a 160x160 tile and
+     desaturated, so it costs one paint and no request. Self-contained: it is a
+     data URI, which is the only form of image that is guaranteed to work when
+     the kit is opened from file:// — an external <img> or CSS url() to a PNG is
+     fine, but a mask or fetch is not, and a texture that vanishes on disk is a
+     texture nobody will trust. */
+  /* The filter reference inside the tile is written %75rl%28%23g%29 rather than
+     url(#g). It decodes to exactly that before the SVG is parsed, and encoding
+     it keeps a nested `url(` and a stray `)` out of the CSS token — which
+     otherwise makes every naive url()-extracting regex (including the kit's own
+     structural gate) capture a fragment of the data URI and try to resolve it
+     as a file path. Cheap here, and it keeps the asset greppable. */
+  --texture-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='%75rl%28%23g%29'/%3E%3C/svg%3E");
+
+  /* How much grain. Low. It should be felt, not seen — if you can identify
+     individual specks at 100% zoom it is too strong. */
+  --texture-noise-opacity: 0.055;
+
+  /* A coarser, more visible grain for small saturated objects, where the tile
+     is only a few hundred pixels across and the default disappears. */
+  --texture-noise-opacity-strong: 0.10;
+
+  /* react.gg's ruled grid. Never on top of reading copy — it belongs to section
+     beds and empty space.
+
+     The hairline's INK comes from --texture-rule, which ./color.css flips with
+     the rest of the colour column. It used to be hard-coded to the ink cream,
+     which was correct on a near-black bed and completely invisible on the sky
+     the page bed became — a texture that silently disappears is the same
+     failure as a flat fill, only harder to notice. */
+  --texture-grid-size: 48px;
+  --texture-grid:
+    repeating-linear-gradient(
+      to right,
+      var(--texture-rule, rgb(12 26 28 / 0.075)) 0 1px,
+      transparent 1px var(--texture-grid-size)
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      var(--texture-rule, rgb(12 26 28 / 0.075)) 0 1px,
+      transparent 1px var(--texture-grid-size)
+    );
+}
+
+/* ============================================================================
+ * UTILITIES
+ *
+ * .grained is the one that matters. Put it on <body> and the page bed stops
+ * being flat. Everything else is optional.
+ * ==========================================================================*/
+
+/* Grain over any element. Uses ::before so the element's own background stays
+   whatever it was, and the grain composites on top of it. isolation keeps the
+   pseudo-element from escaping into a parent stacking context. */
+.grained {
+  position: relative;
+  isolation: isolate;
+}
+
+.grained::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: var(--texture-noise);
+  background-repeat: repeat;
+  opacity: var(--texture-noise-opacity);
+}
+
+/* The page bed. Fixed rather than absolute so the grain does not scroll with
+   the content — printed grain belongs to the paper, not to the text on it. */
+.grained-page::before {
+  position: fixed;
+}
+
+.grained--strong::before {
+  opacity: var(--texture-noise-opacity-strong);
+}
+
+/* The ruled grid. Compose it with .grained; they are different textures doing
+   different jobs and the page wants both. */
+.ruled {
+  background-image: var(--texture-grid);
+  background-position: center;
+}
+
+/* ── Elevation utilities ────────────────────────────────────────────────── */
+
+.elev-sticker { filter: var(--elev-sticker); }
+.elev-card    { filter: var(--elev-card); }
+.elev-lifted  { filter: var(--elev-lifted); }
+.elev-cut     { filter: var(--elev-cut); }
+.elev-cut-lifted { filter: var(--elev-cut-lifted); }
+
+/* The inset exception. A box-shadow, because a filter cannot draw inside an
+   alpha silhouette. */
+.elev-inset   { box-shadow: var(--elev-inset); }
+
+/* The gloss overlay. Requires position: relative and overflow: hidden (or a
+   matching border-radius) on the host. */
+.glossy {
+  position: relative;
+}
+
+.glossy::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: var(--gloss);
+  pointer-events: none;
+}
+
+/* ============================================================================
+ * FORCED COLOURS
+ *
+ * In forced-colours mode every shadow and gradient is dropped by the OS, so a
+ * component whose only boundary is a shadow loses its boundary. Every die-cut
+ * object in this kit also carries a real border — the keyline — which survives.
+ * That redundancy is deliberate: the shadow carries the depth, the keyline
+ * carries the boundary, and neither is doing the other's job.
+ * ==========================================================================*/
+
+@media (forced-colors: active) {
+  .grained::before,
+  .glossy::after {
+    display: none;
+  }
+}

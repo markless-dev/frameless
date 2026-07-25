@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frameless — wordmark</title>
+<link rel="icon" href="../assets/wordmark/favicon.svg">
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="./component-tokens.css">
+<link rel="stylesheet" href="./specimen.css">
+<link rel="stylesheet" href="../motion/motion.css">
+<link rel="stylesheet" href="../assets/wordmark/wordmark.css">
+
+<style>
+/* ============================================================================
+ * WORDMARK — the brand's hero object
+ *
+ * The component's CSS lives in ../assets/wordmark/wordmark.css, next to the
+ * generator that produces its outlined twin and the metrics.json both of them
+ * are measured from. This file documents it.
+ *
+ * FOUR LAYERS, OUTWARD:
+ *   1. lime fill          #cce007
+ *   2. thick black keyline
+ *   3. thick cream band   #e0dfca
+ *   4. a heavy offset drop shadow
+ *
+ * Layer 4 is the one the previous kit banned by name. It is the most defining
+ * quality of the concept art, and without it this is a coloured word rather
+ * than a sticker.
+ * ==========================================================================*/
+
+.wm-stage {
+	display: grid;
+	justify-items: center;
+	gap: var(--space-l);
+	padding-block: var(--space-xl);
+	inline-size: 100%;
+}
+
+/* The comparison strip. Two lockups, identical except that one has the shadow
+   suppressed — so a reader can see what layer 4 is doing rather than take it on
+   trust. */
+.wm-compare {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+	gap: var(--space-l);
+	inline-size: 100%;
+}
+
+.wm-compare > div {
+	display: grid;
+	justify-items: center;
+	gap: var(--space-s);
+	padding: var(--space-m);
+	border: var(--sticker-keyline-hair, 1px) dashed color-mix(in srgb, var(--band) 25%, transparent);
+	border-radius: var(--sticker-radius-small, 0.6rem);
+}
+
+.wm-flat .wordmark {
+	filter: none;
+}
+
+.wm-caption {
+	font-size: var(--step--2);
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: var(--tracking-caps);
+	color: var(--ink-muted);
+	margin: 0;
+}
+
+/* The outlined twin, shown large, so a reader can see that the live CSS lockup
+   and the generated SVG are the same object. */
+.wm-svg {
+	inline-size: min(34rem, 100%);
+}
+
+.wm-row {
+	display: grid;
+	gap: var(--space-s);
+	justify-items: start;
+}
+</style>
+</head>
+
+<body>
+<main class="spec">
+
+<header>
+	<p class="spec__kicker">Frameless component · the hero object</p>
+	<h1>wordmark</h1>
+	<p class="spec__lede">Real Que Grotesque Black outlines, die-cut in lime, ringed in black and cream, and standing off the page on a heavy offset shadow.</p>
+</header>
+
+<div class="spec__use">
+	<div>
+		<h2>Use it when</h2>
+		<ul>
+			<li>Identifying the product: the hero, the nav, the footer, an OG card.</li>
+			<li>You have a dark bed under it. Lime needs one.</li>
+			<li>You want the brand's loudest voice. Once per page.</li>
+		</ul>
+	</div>
+	<div class="spec__use--no">
+		<h2>Don't use it when</h2>
+		<ul>
+			<li>The bed is light and you have not switched to <code>.wordmark--paper</code>.</li>
+			<li>You were going to remove the shadow. It <em>is</em> the mark.</li>
+			<li>You need a heading. This is a logo, not an <code>h1</code> substitute.</li>
+		</ul>
+	</div>
+</div>
+
+<hr class="spec__rule">
+
+<section>
+	<h2>The mark</h2>
+	<p class="spec__note">Set live, in real text. It resizes fluidly, it is selectable, and it cannot drift from the type system because it <em>is</em> the type system.</p>
+
+	<div class="spec__stage spec__stage--block">
+		<div class="wm-stage">
+			<span class="wordmark tilt-2">
+				<span class="wordmark__layer wordmark__band" aria-hidden="true">frameless</span>
+				<span class="wordmark__layer wordmark__keyline" aria-hidden="true">frameless</span>
+				<span class="wordmark__layer wordmark__cut">frameless</span>
+			</span>
+		</div>
+	</div>
+</section>
+
+<section>
+	<h2>Layer 4, on and off</h2>
+	<p class="spec__note">Same lockup, same colours, same letterforms. The only difference is the <code>drop-shadow()</code> filter. The right-hand one is what this kit used to ship, and it is what the owner rejected on sight: <em>"this image was so great because the depth, and the text shadow / sticker feel. That doesn't exist anywhere on these pages."</em></p>
+
+	<div class="spec__stage spec__stage--block">
+		<div class="wm-compare">
+			<div>
+				<span class="wordmark wordmark--compact tilt-1">
+					<span class="wordmark__layer wordmark__band" aria-hidden="true">frameless</span>
+					<span class="wordmark__layer wordmark__keyline" aria-hidden="true">frameless</span>
+					<span class="wordmark__layer wordmark__cut">frameless</span>
+				</span>
+				<p class="wm-caption">With the shadow — correct</p>
+			</div>
+			<div class="wm-flat">
+				<span class="wordmark wordmark--compact tilt-1">
+					<span class="wordmark__layer wordmark__band" aria-hidden="true">frameless</span>
+					<span class="wordmark__layer wordmark__keyline" aria-hidden="true">frameless</span>
+					<span class="wordmark__layer wordmark__cut">frameless</span>
+				</span>
+				<p class="wm-caption">Flat — the rejected version</p>
+			</div>
+		</div>
+	</div>
+	<p class="spec__verdict spec__verdict--no">A flat lockup. It is not a softer version of the mark; it is a different mark.</p>
+</section>
+
+<section>
+	<h2>The outlined twin</h2>
+	<p class="spec__note">Generated by <code>../assets/wordmark/build-wordmark.mjs</code> straight out of the shipped WOFF2 — every path is a real Que Grotesque contour, not a redrawing. The shadow is drawn as a displaced copy of the band silhouette rather than as an SVG filter, so it survives rasterisers that do not run filters. This is what a favicon and an OG card use, where a webfont cannot be relied on.</p>
+
+	<div class="spec__stage spec__stage--block">
+		<div class="wm-stage">
+			<img class="wm-svg" src="../assets/wordmark/frameless-wordmark.svg" alt="frameless">
+		</div>
+	</div>
+</section>
+
+<section>
+	<h2>Lockups — three, and no more</h2>
+
+	<div class="spec__stage">
+		<div class="wm-row">
+			<span class="wordmark-lockup">
+				<span class="wordmark wordmark--compact">
+					<span class="wordmark__layer wordmark__band" aria-hidden="true">frameless</span>
+					<span class="wordmark__layer wordmark__keyline" aria-hidden="true">frameless</span>
+					<span class="wordmark__layer wordmark__cut">frameless</span>
+				</span>
+				<span class="wordmark-lockup__descriptor">Compile once, output anywhere.</span>
+			</span>
+			<p class="wm-caption">full — the introduction, once per document</p>
+		</div>
+
+		<div class="wm-row">
+			<span class="wordmark wordmark--compact">
+				<span class="wordmark__layer wordmark__band" aria-hidden="true">frameless</span>
+				<span class="wordmark__layer wordmark__keyline" aria-hidden="true">frameless</span>
+				<span class="wordmark__layer wordmark__cut">frameless</span>
+			</span>
+			<p class="wm-caption">compact — the default</p>
+		</div>
+
+		<div class="wm-row">
+			<span class="wordmark wordmark--mark tilt-4">
+				<span class="wordmark__layer wordmark__band" aria-hidden="true">f</span>
+				<span class="wordmark__layer wordmark__keyline" aria-hidden="true">f</span>
+				<span class="wordmark__layer wordmark__cut">f</span>
+			</span>
+			<p class="wm-caption">mark — identifies, never introduces</p>
+		</div>
+	</div>
+</section>
+
+<section>
+	<h2>On the light paper island</h2>
+	<p class="spec__note">The lime stays, and that is not a violation of the lime law: the law governs lime as an <em>ink</em>, and this lockup’s boundary is a black keyline four times the weight of a hairline. The art itself puts exactly this mark on a bright sky. <code>.wordmark--paper</code> keeps the lime, turns the band white so it stays visible as cut paper against the cream, and lightens the shadow so it reads as depth rather than as a hole punched in the page.</p>
+
+	<div class="spec__stage spec__stage--paper" data-surface="light">
+		<span class="wordmark wordmark--paper wordmark--compact tilt-3">
+			<span class="wordmark__layer wordmark__band" aria-hidden="true">frameless</span>
+			<span class="wordmark__layer wordmark__cut">frameless</span>
+		</span>
+	</div>
+</section>
+
+<section>
+	<h2>The geometry is measured</h2>
+	<p class="spec__note">Every number is generated into <code>../assets/wordmark/metrics.json</code> from the real outlines in the WOFF2 — ink height 0.7275em for the string "frameless" — and both the live CSS and the outlined SVG read from it. Change the measurement and both change together.</p>
+
+	<table class="spec__table">
+		<thead><tr><th>Layer</th><th>Ratio of ink height</th><th>Live CSS</th></tr></thead>
+		<tbody>
+			<tr><td>Keyline</td><td>9.0%, offset 1.2% across and 2.8% down</td><td><code>0.131em</code> text-stroke, <code>translate</code>d</td></tr>
+			<tr><td>Band</td><td>11.5%</td><td><code>0.2983em</code> text-stroke (centred, so doubled)</td></tr>
+			<tr><td>Cast shadow</td><td>1.8% across, 8.5% down</td><td><code>drop-shadow(0.0131em 0.0618em 0 …)</code></td></tr>
+		</tbody>
+	</table>
+	<p class="spec__note">The band was 3.2% in the previous kit, measured off flat PNG exports. At that width it reads as a border rather than as cut paper, which is why the rebuild puts the band at 6–8% of width and the wordmark at the heavy end of it.</p>
+</section>
+
+<section>
+	<h2>Recolouring</h2>
+	<p class="spec__note">One property. <code>--wordmark-keyline</code>, <code>--wordmark-band</code> and <code>--wordmark-shadow</code> exist so the die-cut can be inverted for a special surface, and you should almost never touch them.</p>
+	<pre class="spec__code">.wordmark { --wordmark-fill: var(--warning); }</pre>
+</section>
+
+</main>
+
+<script>
+	// The mark has to have a shadow. This checks the RENDERED result rather than
+	// trusting the stylesheet, because the failure mode is a later rule that
+	// resets `filter` on a container and silently flattens every lockup on the
+	// page — exactly the class of failure that produced the rejected version.
+	for (const wm of document.querySelectorAll('.wordmark:not(.wordmark--mono)')) {
+		if (wm.closest('.wm-flat')) continue;
+		const filter = getComputedStyle(wm).filter;
+		if (!filter.includes('drop-shadow')) {
+			console.error('wordmark: layer 4 is missing — the mark is flat', filter, wm);
+		}
+	}
+</script>
+</body>
+</html>

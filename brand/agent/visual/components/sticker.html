@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frameless — sticker</title>
+<link rel="icon" href="../assets/wordmark/favicon.svg">
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="./component-tokens.css">
+<link rel="stylesheet" href="./specimen.css">
+<link rel="stylesheet" href="../motion/motion.css">
+
+<style>
+/* ============================================================================
+ * STICKER — the physical primitive
+ *
+ * A printed thing, die-cut out of a sheet, laid ON the page and casting a
+ * shadow onto it. Every collectible element in the kit is this shape: the
+ * framework badges, the carousel items, the coming-soon tag, the wordmark.
+ *
+ * ── THE STACK, OUTWARD ──────────────────────────────────────────────────────
+ *
+ *     artwork  →  tinted dark keyline  →  thick band  →  DROP SHADOW
+ *
+ * All four. The previous version of this file ended that sentence at "band"
+ * and stated, at length, that the absence of a shadow was the whole point. It
+ * was measured off four flat vector PNG exports and it was wrong: the concept
+ * art's objects are elevated, and elevation is the quality the brand is most
+ * recognisable for.
+ *
+ * ── WHY THE SHADOW IS A FILTER ──────────────────────────────────────────────
+ *
+ * A die-cut shape is irregular. box-shadow casts the element's BOX, so on a
+ * cut-out silhouette it draws a rounded rectangle floating behind the object —
+ * the exact tell that the thing is fake. filter: drop-shadow() follows the
+ * ALPHA, so on the PNGs below it traces the cut edge of the illustration
+ * itself rather than the edge of its bounding box.
+ *
+ * ── WHY THE KEYLINE IS STILL LOAD-BEARING ───────────────────────────────────
+ *
+ * The band against the page is a weak contrast by design — it is paper on
+ * paper. The keyline is the hard boundary, and it is the one that survives
+ * forced-colours mode, where the OS drops every shadow and gradient. Shadow
+ * carries the depth; keyline carries the boundary; neither does the other's
+ * job.
+ * ==========================================================================*/
+
+/* The illustrated stickers ship as PNGs that ALREADY carry their own cream
+   die-cut edge — they were drawn that way. So they take the shadow directly on
+   the image, with no wrapper: the filter follows the illustration's own alpha,
+   which is a better cut than any box we could put around it. */
+.sticker-art {
+	display: block;
+	inline-size: 8rem;
+	filter: var(--elev-sticker);
+	rotate: var(--tilt-rest);
+}
+
+.sticker-art--large { inline-size: 13rem; }
+.sticker-art--small { inline-size: 4.5rem; }
+
+/* A sticker built from MARKUP rather than from a PNG uses .die-cut out of
+   ../tokens/sticker.css: an outer box painted in the band colour, padded, with
+   the fill as an inner box. That is genuinely how a die-cut works — paper
+   around artwork. */
+.demo-cut {
+	inline-size: 9rem;
+}
+
+.demo-cut .die-cut__fill {
+	display: grid;
+	place-items: center;
+	min-block-size: 6rem;
+	padding: var(--space-s);
+	color: #ffffff;
+	font-weight: 900;
+	font-size: var(--step-1);
+	text-shadow: 0 2px 0 rgb(0 0 0 / 0.38);
+}
+
+/* The container-query form: the band scales with the object instead of being a
+   fixed length. Needs .sticker-frame on an ANCESTOR — an element cannot query
+   itself. */
+.frame-160 { inline-size: 160px; }
+.frame-260 { inline-size: 260px; }
+.frame-420 { inline-size: 420px; }
+
+.probe {
+	font-family: var(--font-mono);
+	font-size: var(--step--2);
+	color: var(--ink-muted);
+	max-width: none;
+}
+
+.flat-demo {
+	filter: none;
+}
+
+.row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: var(--space-l);
+}
+</style>
+</head>
+
+<body>
+<main class="spec">
+
+<header>
+	<p class="spec__kicker">Frameless component · the physical primitive</p>
+	<h1>sticker</h1>
+	<p class="spec__lede">A printed thing, die-cut out of a sheet and laid on the page — with a real shadow underneath it. Every collectible element in this kit is this shape.</p>
+</header>
+
+<div class="spec__use">
+	<div>
+		<h2>Use it when</h2>
+		<ul>
+			<li>Anything should read as an object rather than as a div.</li>
+			<li>You are building a badge, a tag, a chip, a lockup or a card.</li>
+			<li>You want depth. That is what this primitive is for.</li>
+		</ul>
+	</div>
+	<div class="spec__use--no">
+		<h2>Don't use it when</h2>
+		<ul>
+			<li>It is running text. Words are not objects.</li>
+			<li>You were going to use <code>box-shadow</code>. Use the filter.</li>
+			<li>You were going to place it at <code>0deg</code>. Decorative stickers are never square.</li>
+		</ul>
+	</div>
+</div>
+
+<hr class="spec__rule">
+
+<section>
+	<h2>The illustrated set</h2>
+	<p class="spec__note">These PNGs already carry their own cream cut edge, so the shadow goes straight on the image. <code>filter: drop-shadow()</code> follows the illustration's alpha, which traces the actual die-cut outline — a <code>box-shadow</code> here would draw a rectangle behind a leaf.</p>
+
+	<div class="spec__stage">
+		<img class="sticker-art tilt-1" src="../assets/stickers/leaf.png" alt="">
+		<img class="sticker-art tilt-3" src="../assets/stickers/pine.png" alt="">
+		<img class="sticker-art tilt-2" src="../assets/stickers/flower.png" alt="">
+		<img class="sticker-art tilt-4" src="../assets/stickers/mushroom.png" alt="">
+		<img class="sticker-art tilt-1" src="../assets/stickers/seagull.png" alt="">
+	</div>
+</section>
+
+<section>
+	<h2>With the shadow, and without</h2>
+	<p class="spec__note">The same image twice. The right-hand one is what this kit shipped before the rebuild, and it is the difference the owner named: <em>"this image was so great because the depth, and the text shadow / sticker feel."</em></p>
+
+	<div class="spec__stage">
+		<div>
+			<img class="sticker-art sticker-art--large tilt-1" src="../assets/stickers/mushroom.png" alt="">
+			<p class="probe">--elev-sticker</p>
+		</div>
+		<div>
+			<img class="sticker-art sticker-art--large flat-demo tilt-1" src="../assets/stickers/mushroom.png" alt="">
+			<p class="probe">filter: none</p>
+		</div>
+	</div>
+	<p class="spec__verdict spec__verdict--no">A die-cut object lying flat on the page.</p>
+	<p class="spec__verdict spec__verdict--yes">Fill, tinted keyline, thick band, drop shadow, tilt.</p>
+</section>
+
+<section>
+	<h2>Built from markup</h2>
+	<p class="spec__note">The <code>.die-cut</code> primitive from <code>../tokens/sticker.css</code>. Set three custom properties and you have a sticker; the band geometry, the corner radius, the shadow and the rest tilt come with it.</p>
+
+	<pre class="spec__code">&lt;span class="die-cut" style="--cut-fill: var(--fw-react);
+                            --cut-keyline: var(--fw-react-keyline);
+                            --cut-band: var(--fw-react-band);"&gt;
+  &lt;span class="die-cut__fill"&gt;React&lt;/span&gt;
+&lt;/span&gt;</pre>
+
+	<div class="spec__stage">
+		<span class="die-cut demo-cut tilt-1" style="--cut-fill: var(--fw-react); --cut-keyline: var(--fw-react-keyline); --cut-band: var(--fw-react-band);"><span class="die-cut__fill">React</span></span>
+		<span class="die-cut demo-cut tilt-3" style="--cut-fill: var(--fw-svelte); --cut-keyline: var(--fw-svelte-keyline); --cut-band: var(--fw-svelte-band);"><span class="die-cut__fill">Svelte</span></span>
+		<span class="die-cut demo-cut tilt-2" style="--cut-fill: var(--fw-qwik); --cut-keyline: var(--fw-qwik-keyline); --cut-band: var(--fw-qwik-band);"><span class="die-cut__fill">Qwik</span></span>
+	</div>
+</section>
+
+<section>
+	<h2>The band is 6–8% of the object's width</h2>
+	<p class="spec__note">Chunky, and measured — on avara.xyz's stickers by zooming in, and corroborated against the concept art. The previous kit used 3.2%, taken off flat PNG exports, and at that width a band reads as a border rather than as cut paper.</p>
+
+	<p class="spec__note">Two forms. <code>--sticker-band-fixed</code> (0.7rem) is right at control scale, where a proportion of a 44px button is not a meaningful quantity. <code>--sticker-band</code> is <code>clamp(0.5rem, 7cqw, 2rem)</code> and scales with the object — but <strong>an element cannot query itself</strong>. Put <code>container-type: inline-size</code> on the element that also consumes it and <code>cqw</code> resolves against the nearest <em>ancestor</em> container, or against the viewport if there is none. No error, wrong everywhere.</p>
+
+	<pre class="spec__code">.sticker-frame          { container-type: inline-size; }  /* WRAPPER */
+.sticker-frame .die-cut { padding: var(--sticker-band); }  /* DESCENDANT */</pre>
+
+	<div class="spec__stage spec__stage--block">
+		<div class="row">
+			<div class="sticker-frame frame-160">
+				<span class="die-cut" style="--cut-fill: var(--fw-vue); --cut-keyline: var(--fw-vue-keyline); --cut-band: var(--fw-vue-band); display:block;"><span class="die-cut__fill" style="min-block-size:4rem"></span></span>
+			</div>
+			<div class="sticker-frame frame-260">
+				<span class="die-cut" style="--cut-fill: var(--fw-vue); --cut-keyline: var(--fw-vue-keyline); --cut-band: var(--fw-vue-band); display:block;"><span class="die-cut__fill" style="min-block-size:5rem"></span></span>
+			</div>
+			<div class="sticker-frame frame-420">
+				<span class="die-cut" style="--cut-fill: var(--fw-vue); --cut-keyline: var(--fw-vue-keyline); --cut-band: var(--fw-vue-band); display:block;"><span class="die-cut__fill" style="min-block-size:6rem"></span></span>
+			</div>
+		</div>
+		<p class="probe" id="band-probe">measuring…</p>
+	</div>
+</section>
+
+<section>
+	<h2>The peel</h2>
+	<p class="spec__note">A corner physically lifting off the page. It raises the object one step on the elevation scale, from <code>--elev-sticker</code> to <code>--elev-lifted</code> — the shadow growing is the part the eye reads as lift. Hover or tab to it.</p>
+
+	<div class="spec__stage">
+		<button type="button" class="peelable" style="background:none;border:0;padding:0;cursor:pointer">
+			<img class="sticker-art sticker-art--large tilt-2" src="../assets/stickers/pine.png" alt="Pine sticker">
+		</button>
+	</div>
+</section>
+
+<section>
+	<h2>Rest tilt</h2>
+	<p class="spec__note">−3.0° is not a guess. It is the "overall tilt" default exposed as a labelled slider by Sticker Forge (<code>sticker.oooo.so</code>), which is a real sticker tool rather than an intuition about one. Four values, all within ±1.5° of it, deliberately unequal and deliberately not mirrored, cycled across siblings so a row looks placed by hand.</p>
+
+	<table class="spec__table">
+		<thead><tr><th>Token</th><th>Value</th></tr></thead>
+		<tbody>
+			<tr><td><code>--tilt-rest</code></td><td>−3deg — the measured resting value</td></tr>
+			<tr><td><code>--tilt-1</code></td><td>−3deg</td></tr>
+			<tr><td><code>--tilt-2</code></td><td>−1.5deg</td></tr>
+			<tr><td><code>--tilt-3</code></td><td>−4.25deg</td></tr>
+			<tr><td><code>--tilt-4</code></td><td>2deg</td></tr>
+		</tbody>
+	</table>
+	<p class="spec__note">The tilts are a resting state, not an animation, so <code>prefers-reduced-motion</code> leaves them alone. So does the shadow: elevation is not movement.</p>
+</section>
+
+</main>
+
+<script>
+	// Measure the container-query band at three widths, so the ratio is
+	// demonstrated rather than asserted.
+	const readings = [...document.querySelectorAll('.sticker-frame')].map((frame) => {
+		const cut = frame.querySelector('.die-cut');
+		const band = parseFloat(getComputedStyle(cut).paddingLeft);
+		const width = frame.clientWidth;
+		return `${width}px → ${band.toFixed(2)}px (${((band / (width)) * 100).toFixed(1)}%)`;
+	});
+	document.getElementById('band-probe').textContent = `band computed: ${readings.join('   ·   ')}   (rule: clamp(0.5rem, 7cqw, 2rem))`;
+
+	// Every sticker must be elevated. The real failure mode is a later rule
+	// resetting `filter` and silently flattening the page, which is what the
+	// previous version of this kit shipped.
+	for (const art of document.querySelectorAll('.sticker-art:not(.flat-demo)')) {
+		if (!getComputedStyle(art).filter.includes('drop-shadow')) {
+			console.error('sticker: flat sticker', art.src);
+		}
+	}
+</script>
+</body>
+</html>

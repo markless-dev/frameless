@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="frameless-mark-title">
+  <title id="frameless-mark-title">Frameless</title>
+  <!-- GENERATED. source: ../../fonts/QueGrotesque-Black.woff2 via ./build-wordmark.mjs -->
+  <defs>
+    <path id="frameless-f" d="M40.28 -56.48Q39.72 -56.63 39.1 -56.78Q38.54 -56.89 37.85 -56.99Q37.16 -57.09 36.39 -57.09Q35.46 -57.09 34.57 -56.89Q33.67 -56.68 32.95 -56.2Q32.24 -55.71 31.77 -54.81Q31.31 -53.91 31.31 -52.53L31.31 -51.66L38.64 -51.66L38.64 -34.34L31.42 -34.34Q31.42 -31.42 31.42 -28.37Q31.42 -25.32 31.42 -22.34Q31.42 -19.37 31.39 -16.55Q31.36 -13.73 31.36 -11.27Q31.36 -5.43 31.31 0L6.2 0L6.2 -34.34L2.05 -34.34L2.05 -51.66L6.2 -51.66Q6.2 -57.25 7.64 -61.68Q9.07 -66.11 11.92 -69.19Q14.76 -72.26 19.01 -73.88Q23.27 -75.49 28.9 -75.49Q32.29 -75.49 35.21 -74.98Q38.13 -74.47 40.28 -73.75L40.28 -56.48Z"/>
+  </defs>
+  <rect x="0" y="0" width="128" height="128" rx="20.48" fill="var(--wordmark-bed, #0b1714)"/>
+  <g transform="translate(42.16 98.54)">
+    <use href="#frameless-f" transform="translate(1.36 6.42)" fill="var(--wordmark-shadow, #000000)" stroke="var(--wordmark-shadow, #000000)" stroke-width="22.65" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>
+    <use href="#frameless-f" fill="var(--wordmark-halo, #e0dfca)" stroke="var(--wordmark-halo, #e0dfca)" stroke-width="22.65" stroke-linejoin="round" stroke-linecap="round"/>
+    <use href="#frameless-f" transform="translate(0.91 2.11)" fill="var(--wordmark-keyline, #0a0d09)" stroke="var(--wordmark-keyline, #0a0d09)" stroke-width="9.06" stroke-linejoin="round" stroke-linecap="round"/>
+    <use href="#frameless-f" fill="var(--wordmark-fill, #cce007)"/>
+  </g>
+</svg>

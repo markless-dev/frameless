@@ -1,0 +1,293 @@
+/* Frameless — motion
+ * ============================================================================
+ * GENERATED FILE. DO NOT EDIT.
+ *   source:    ./motion.json
+ *   generator: ./build-motion.mjs
+ *   regenerate: node brand/agent/visual/motion/build-motion.mjs
+ *
+ * Edits made here are lost the next time the generator runs, and the --check
+ * mode will fail in the meantime. Change motion.json instead.
+ *
+ * ── THE GOVERNING IDEA ──────────────────────────────────────────────────────
+ * A sticker is a physical object on paper. It presses down instantly and
+ * comes back up gently, because that is what a thumb and a piece of vinyl
+ * actually do. Every curve here is asymmetric or springy for a physical
+ * reason, never because a designer liked the shape.
+ *
+ * ── HARD RULES ──────────────────────────────────────────────────────────────
+ * 1. Shadows are REQUIRED, and they are filter: drop-shadow(), never
+ *    box-shadow. A box-shadow casts the element's BOX, and a rounded rectangle
+ *    behind a die-cut shape kills the illusion. The elevation scale is
+ *    --elev-sticker / --elev-card / --elev-lifted in ../tokens/elevation.css;
+ *    motion transitions BETWEEN those steps rather than inventing shadows of
+ *    its own.
+ *
+ * 2. prefers-reduced-motion: reduce is mandatory, not optional. Under it every
+ *    duration collapses to 0ms, every transform token becomes none, and the
+ *    only motion permitted is an opacity fade capped at 120ms.
+ *
+ * 3. Decorative stickers are never at 0deg at rest. The constant rest tilt is
+ *    -3deg (Sticker Forge's own default), varied per instance across --tilt-1
+ *    to --tilt-4.
+ *
+ * 4. Do not invent a seventh curve. Six is the whole vocabulary.
+ * ============================================================================ */
+
+:root {
+  /* Pressing a sticker down is instant.
+     Ease-in with no deceleration: it starts moving and never slows, so the
+     motion ends at full speed the way contact does. 90ms is below the
+     threshold where a press reads as laggy.
+     Pairs with: --motion-release.
+     Use for: button :active, sticker press-down, tab selection commit. */
+  --ease-press: cubic-bezier(0.4, 0, 1, 1);
+  --duration-press: 90ms;
+  --motion-press: var(--duration-press) var(--ease-press);
+
+  /* Deliberately asymmetric with press — down fast, up gentle.
+     The asymmetry IS the design. A press and release that share one curve
+     feels like a state toggle; a fast press and a slow release feels like
+     a finger lifting off vinyl. If you find yourself using one curve for
+     both directions, you have removed the point.
+     Pairs with: --motion-press.
+     Use for: button release, sticker settling back down, hover-out. */
+  --ease-release: cubic-bezier(0, 0, 0.2, 1);
+  --duration-release: 160ms;
+  --motion-release: var(--duration-release) var(--ease-release);
+
+  /* Overshoot = a physical object with springiness.
+     The second control point sits above 1, so the value passes its target
+     and comes back. That overshoot is the only place in the system where
+     something behaves elastically, and it is reserved for the one gesture
+     that is literally physical: a die-cut corner lifting off the page.
+     Use for: .is-peeling, sticker lift on hover, the peel affordance. */
+  --ease-peel: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-peel: 260ms;
+  --motion-peel: var(--duration-peel) var(--ease-peel);
+
+  /* Output-switcher; A to B swaps.
+     Symmetric ease-in-out. A swap has no privileged direction — going from
+     React to Solid should feel exactly like going back — so the curve is
+     its own mirror. This is the curve the six-output switcher runs on,
+     which makes it the most-seen motion in the brand.
+     Use for: output-switcher panel swap, tab content transition, carousel. */
+  --ease-slide: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-slide: 300ms;
+  --motion-slide: var(--duration-slide) var(--ease-slide);
+
+  /* Long tail, no overshoot — it settles, it does not bounce twice.
+     Reaches most of the distance early and then takes a long time to
+     arrive. Used for things that come to rest: a panel arriving, a sticker
+     being placed. Distinct from peel because it never passes its target —
+     a settling object that bounces reads as a bug.
+     Use for: panel entrance, scroll reveal, sticker placed on the sheet. */
+  --ease-settle: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-settle: 420ms;
+  --motion-settle: var(--duration-settle) var(--ease-settle);
+
+  /* prefers-reduced-motion fallback.
+     Not a design choice — the escape hatch. Every other curve collapses to
+     this one when the user has asked for reduced motion, which is why it
+     is in the vocabulary rather than being an absence of one.
+     Use for: reduced-motion fallback, anything that must not animate. */
+  --ease-instant: linear;
+  --duration-instant: 0ms;
+  --motion-instant: var(--duration-instant) var(--ease-instant);
+
+  /* The lifted state. A corner physically off the page.
+     The peel raises the object one step on the elevation scale, from
+     --elev-sticker to --elev-lifted. Both are stacked drop-shadow()
+     filters, so the shadow follows the die-cut silhouette rather than the
+     bounding box. Never a box-shadow. */
+  --transform-peel: rotate(-1.5deg) translateY(-3px) scale(1.015);
+
+  /* The pressed state. A thumb on the sticker.
+     No rotation. Pressing is straight down. Adding rotation here makes it
+     read as a wobble rather than a press, and the peel curve already owns
+     rotation. */
+  --transform-press: translateY(1px) scale(0.985);
+
+  /* The resting state. Not an animation — where a sticker lives.
+     Declared in ../tokens/sticker.css, restated here because motion
+     returns to it. The rest value is -3deg, measured off Sticker Forge's
+     own overall-tilt slider rather than guessed. The four values are
+     deliberately unequal and deliberately not mirrored so a group looks
+     placed by hand. Cycle them across siblings; do not invent a fifth. A
+     decorative sticker at 0deg reads as a div. */
+  --transform-rest: none;
+
+  /* Ceiling for the one thing that may still move under reduced motion.
+     Vestibular triggers are movement, not change. Removing transform and
+     collapsing duration removes the trigger; a short opacity fade does not
+     reintroduce it and keeps state changes from being jarringly abrupt.
+     120ms is the ceiling, not a target. */
+  --motion-fade-max: 120ms;
+}
+
+/* ============================================================================
+ * UTILITIES — one per curve
+ *
+ * Each sets a transition; none of them sets a transform. The transform is the
+ * component's business, the timing is this file's. That separation is why a
+ * button and a sticker can share a curve without sharing a shape.
+ * ============================================================================ */
+
+.motion-press {
+  transition: transform var(--motion-press), opacity var(--motion-press), filter var(--motion-press);
+}
+
+.motion-release {
+  transition: transform var(--motion-release), opacity var(--motion-release), filter var(--motion-release);
+}
+
+.motion-peel {
+  transition: transform var(--motion-peel), opacity var(--motion-peel), filter var(--motion-peel);
+}
+
+.motion-slide {
+  transition: transform var(--motion-slide), opacity var(--motion-slide), filter var(--motion-slide);
+}
+
+.motion-settle {
+  transition: transform var(--motion-settle), opacity var(--motion-settle), filter var(--motion-settle);
+}
+
+.motion-instant {
+  transition: none;
+}
+
+/* Opacity only, and the one utility that survives reduced motion.
+   Everything else collapses to 0ms; this one is capped at 120ms. */
+.motion-fade {
+  transition: opacity var(--motion-slide);
+}
+
+/* ============================================================================
+ * THE TWO PHYSICAL STATES
+ *
+ * .pressable — down fast, up gentle. The asymmetry is the whole point: one
+ * curve in both directions reads as a state toggle, not as a thumb.
+ *
+ * .peelable  — a die-cut corner lifting off the page.
+ * ============================================================================ */
+
+.pressable {
+  transition: transform var(--motion-release);
+}
+
+.pressable:active {
+  transition: transform var(--motion-press);
+  transform: var(--transform-press);
+}
+
+.peelable {
+  transition: transform var(--motion-release), filter var(--motion-release);
+}
+
+/* THE PEEL STATE — reachable three ways. It raises the object one step on the
+   elevation scale, from --elev-sticker to --elev-lifted (../tokens/elevation.css).
+   --shadow-peel is a stacked drop-shadow() filter, never a box-shadow, because
+   it has to follow the die-cut silhouette rather than the element's bounding
+   box. Every object here already casts a shadow at rest; the peel makes it
+   bigger, which is the part the eye reads as lift. */
+.is-peeling,
+.peelable:hover,
+.peelable:focus-visible {
+  transition: transform var(--motion-peel), filter var(--motion-peel);
+  transform: var(--transform-peel);
+  filter: var(--shadow-peel);
+}
+
+/* ============================================================================
+ * REDUCED MOTION — MANDATORY
+ *
+ * Vestibular triggers are movement, not change. Removing transform and
+ * collapsing duration removes the trigger; a short opacity fade does not
+ * reintroduce it and keeps state changes from being jarringly abrupt. 120ms
+ * is the ceiling, not a target.
+ *
+ * Two selectors, one body. The media query is the real rule; the attribute is
+ * an authoring and test hook so the fallback can be felt (and asserted) without
+ * changing an operating-system setting.
+ * ============================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+  --ease-press: linear;
+  --duration-press: 0ms;
+  --ease-release: linear;
+  --duration-release: 0ms;
+  --ease-peel: linear;
+  --duration-peel: 0ms;
+  --ease-slide: linear;
+  --duration-slide: 0ms;
+  --ease-settle: linear;
+  --duration-settle: 0ms;
+  --ease-instant: linear;
+  --duration-instant: 0ms;
+  --transform-peel: none;
+  --transform-press: none;
+  --transform-rest: none;
+  }
+
+  /* Belt and braces: a component that hardcoded a duration instead of using a
+     token still stops moving. Opacity is exempt and capped. */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .motion-fade {
+    transition-duration: var(--motion-fade-max) !important;
+    transition-property: opacity !important;
+  }
+
+  .is-peeling,
+  .peelable:hover,
+  .peelable:focus-visible {
+    transform: none;
+    filter: none;
+  }
+}
+
+[data-motion="reduced"] {
+  --ease-press: linear;
+  --duration-press: 0ms;
+  --ease-release: linear;
+  --duration-release: 0ms;
+  --ease-peel: linear;
+  --duration-peel: 0ms;
+  --ease-slide: linear;
+  --duration-slide: 0ms;
+  --ease-settle: linear;
+  --duration-settle: 0ms;
+  --ease-instant: linear;
+  --duration-instant: 0ms;
+  --transform-peel: none;
+  --transform-press: none;
+  --transform-rest: none;
+}
+
+[data-motion="reduced"] *,
+[data-motion="reduced"] *::before,
+[data-motion="reduced"] *::after {
+  animation-duration: 0ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0ms !important;
+}
+
+[data-motion="reduced"] .motion-fade {
+  transition-duration: var(--motion-fade-max) !important;
+  transition-property: opacity !important;
+}
+
+[data-motion="reduced"] .is-peeling,
+[data-motion="reduced"] .peelable:hover,
+[data-motion="reduced"] .peelable:focus-visible {
+  transform: none;
+  filter: none;
+}

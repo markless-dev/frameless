@@ -1,0 +1,1048 @@
+version: 2
+
+goal:
+  slug: frameless-variants-v1
+  title: "Frameless landing page — 2-3 variants built from the rebuilt kit"
+  status: active
+  mode: existing_plan
+  charter: docs/goals/frameless-variants-v1/goal.md
+  oracle:
+    signal: >-
+      Three signals, all required per variant. (1) VISUAL GRADE >= B section by section,
+      screenshotted in a real browser and compared against
+      brand/_source/concept/CONCEPT-ART-AUTHORITATIVE.jpeg on five criteria: belongs beside the
+      art, real elevation, texture not flat fill, survives next to avara.xyz/react.gg, type
+      heavy and confident. Below a B is rebuilt before moving on. (2) Interaction contract
+      passes, Playwright-verified from file://: signature mechanic works, real emitted output
+      shown, all mandatory sections present, Que Grotesque loads, holds at 390px,
+      prefers-reduced-motion honoured, zero console errors. (3) structural gate green.
+    final_proof: >-
+      T999 Judge receipt with full_outcome_complete: true, backed by per-section visual grades
+      for every variant, a green interaction contract per variant, a green structural gate, and
+      Judge having opened each variant beside the concept art and confirmed it would not be
+      rejected on sight the way the first attempt was.
+  intake:
+    input_shape: existing_plan
+    authority: requested
+    proof_type: artifact
+    completion_proof: >-
+      2-3 variants under website/, each running from file://, each with all mandatory sections,
+      each a genuinely different mechanic, every section graded >= B, contract green per
+      variant, structural gate green, plus a comparison note for the owner.
+    likely_misfire: >-
+      SHIPPING VARIANTS THAT ARE TECHNICALLY CORRECT AND STILL UGLY. The previous attempt passed
+      23 structural checks, a zero-context cold-agent test and a skeptical Judge audit, and the
+      owner rejected it on sight. Every check verified internal consistency; none asked whether
+      it looked good beside the art. A green gate is not evidence of a good-looking page.
+      Secondary misfire: rebuilding the kit again instead of building pages.
+    existing_plan_facts:
+      - "Build ONE section-complete skeleton first, then fork it — changing only the hero mechanic and the output-exploration section. This is what makes variants comparable and stops one-hero pages."
+      - "A reference contributes ONE MECHANIC. Page shape comes from the kit, never from the reference. The previous failure took avara as architecture and shipped one scattered screen."
+      - "CORRECTION: the 'Bench' mechanic (six frames, one view) is VOID — an invention the owner rejected; component and concept deleted. Replaced by 'The Shelf', the avara mechanic actually asked for."
+      - "Variant A - The Shelf: framework-carousel.html ALREADY BUILT and graded A-."
+      - "Variant B - The Pile: scattered draggable stickers, click opens compiled output. To build."
+      - "Variant C - The Peel: .tsrx source as a sticker, peel the corner to reveal emitted code. Sticker Forge params: stroke 18px, tilt -3deg, curl 0.120, stiffness 72%. To build."
+      - "Two variants acceptable, three is the target. A + C is the strongest pair if time forces a choice."
+    owner_constraints_non_negotiable:
+      - "Hero text FIXED: 'Compile once, output anywhere.' Never rewrite."
+      - "NEVER count the targets. No 'ship six', no totals."
+      - "filter: drop-shadow(), NEVER box-shadow. A die-cut sticker is irregular; box-shadow casts a rectangle and kills the illusion."
+      - "Elevation is mandatory. The kit-wide shadow ban was the single worst error of the first attempt."
+      - "Noise texture everywhere. The background is never a flat fill."
+      - "Saturated palette from the REAL art, per REBUILD-SPEC.md."
+      - "Minimum seven sections per variant."
+      - "Must work opened from file://, not only over http."
+      - "All six framework marks, canonical order, never in --accent."
+      - "Frameless Studio is coming soon; never imply availability."
+    pm_decisions_owner_delegated:
+      - "HERO TREATMENT = OPTION D: lime fill -> thick black keyline -> CREAM BAND -> stacked drop-shadow. The comparison render showed keyline-alone muddies on a dark bed because the outline has nothing to separate from; the cream band is what makes the type read as a die-cut object. It is the concept art's own construction."
+      - "PAGE BED LIFTS toward the art's brightness. Near-black was a PM invention, not the art's. Dark stays as a SECONDARY surface for code blocks and detail panels."
+      - "Known hero defect to fix: the cream band adds ~26px of stroke in every direction, so at line-height .92 the band on line two eats line one's descenders. Needs ~1.06 and a per-line stack."
+
+active_task: T999
+
+agents:
+  scout: installed
+  worker: installed
+  judge: installed
+
+verification:
+  command: "node brand/tools/structural-gate.mjs"
+  status: green
+  note: >-
+    Currently RED, and correctly so — it asserts rules the owner OVERTURNED (the kit-wide
+    box-shadow ban, and drop-shadow permitted only in the peel state). It also catches two real
+    breaks: dead references to deleted stickers from artifacts/, and build-guideline.mjs
+    throwing. T001 rewrites the assertions to match the new system and fixes the real breaks.
+
+risks:
+  - id: R1
+    note: >-
+      THE ORACLE THAT PASSED A REJECTED DESIGN. Every automated check in the previous attempt
+      was numeric and every one passed while the result was, in the owner's words, horrible.
+      Visual grading is therefore signal ONE, not a nicety, and every Worker must screenshot and
+      grade rather than assert. If a Worker reports grades without screenshots, the grades are
+      void.
+  - id: R2
+    note: >-
+      Owner is asleep and has delegated all decisions. Do NOT block. Where a call is needed,
+      make it, record it with reasoning in the receipt, and continue. Blocking until morning
+      wastes the entire window.
+  - id: R3
+    note: >-
+      file:// is the real delivery surface. CSS mask/image url() is CORS-blocked from disk, which
+      silently blanked all six framework marks once already. Verify every page from file://, not
+      only over http.
+
+tasks:
+  - id: T001
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: >-
+      Repair the four known breaks so the kit is a sound base to build on. Rewrite the
+      structural gate to assert the NEW rules (elevation required; drop-shadow preferred;
+      box-shadow discouraged) instead of the overturned ones. Fix build-guideline.mjs. Refresh
+      assets/README.md. Retokenise or delete the two broken artifacts pages.
+    inputs:
+      - docs/goals/frameless-design-kit-v1/notes/REBUILD-SPEC.md
+      - docs/goals/frameless-design-kit-v1/notes/REFERENCE-STUDY.md
+      - brand/tools/structural-gate.mjs
+    constraints:
+      - "The gate must still RECOMPUTE rather than read — keep the clamp and contrast recomputation, which is its real value."
+      - "Mutation-test any assertion you change: prove it can still go red."
+      - "Do NOT rebuild the visual system. It is rebuilt and graded. Fix breaks only."
+    allowed_files:
+      - brand/tools/**
+      - brand/human/**
+      - brand/agent/visual/assets/README.md
+      - brand/agent/visual/artifacts/**
+    verify:
+      - "node brand/tools/structural-gate.mjs exits 0"
+      - "Seed a defect and confirm the gate still goes red"
+      - "node brand/human/build-guideline.mjs --check passes"
+    stop_if:
+      - "A fix would require rebuilding the visual system."
+    expected_output:
+      - "Green structural gate asserting the new rules, mutation-proven"
+    receipt:
+      result: done
+      summary: >-
+        All four breaks fixed. Gate green at 26/26 and mutation-proven 16/16. The two void
+        shadow assertions are replaced by four that enforce the NEW law: the elevation scale
+        exists and every step is a drop-shadow; elevation is actually USED in declaration
+        position, not merely declared; box-shadow permitted only as the documented --elev-inset
+        exception; and no file still claims the overturned ban.
+      best_idea_in_the_receipt: >-
+        SELF-EXPIRING EXEMPTIONS. Known-stale locations of the old shadow ban live in a
+        SHADOW_BAN_EXEMPTIONS list, and a STALE exemption also fails the gate — so the entry
+        self-destructs when the debt is paid. Technical debt that cannot be silently forgotten.
+      gate_bug_it_found_in_itself: >-
+        Mutation M04 initially escaped: "elevation is actually USED" counted the /human
+        guideline QUOTING --shadow-peel's value in a table cell as a use. Every elevation step
+        could have gone dead while the gate stayed green on the strength of the docs describing
+        them. Now requires declaration position. Three other seeds also missed and each exposed
+        a weak seed rather than a weak check (a surviving second drop-shadow; a ../../ escape
+        that lands back inside brand/; a mutation that reproduced the correct clamp).
+      second_real_find: >-
+        The lime-law check was hard-coding #f2efd4 / #fdf8e4 / #ebd5a0 / #1d2c22 — four hexes the
+        rebuild superseded. It was PASSING while testing colours the kit no longer contains.
+        Now reads the beds from color.json (9 beds including every framework band) and asserts
+        the --ink-on-lime trap fails at 1.22:1.
+      build_guideline_was_worse_than_one_crash: >-
+        The missing hero section was hiding a stack of dead reads — --halo,
+        --sticker-halo-ratio, color.scrims, passes.normal_text_aa,
+        motion.forbidden['drop-shadow'] and a "six frames, one view" section, none of which
+        exist. It was publishing a section headed "Nothing floats." Rewritten against current
+        sources with a new 02-depth section rendering the elevation scale.
+      artifacts_decision: >-
+        Middle path, reasoned in artifacts/web/README.md. landing-page.html DELETED — the token
+        rename was the small part; the page is COMPOSED for a light paper bed with flat objects,
+        so correcting it is rebuilding it, which trips the stop condition and competes with the
+        real variants. studio-inspector.html RETOKENISED since nothing replaces it: --ink labels
+        on lime fills corrected to --accent-ink (1.22:1 -> 13.08:1, recomputed) and --elev-card
+        added so it stops teaching "no shadow to reach for".
+      also_corrected: >-
+        artifacts/web/page-composition.md — binding input for the next tasks, and it still taught
+        --scrim-*, counted targets, and said drop-shadow was peel-only.
+      commands:
+        - cmd: "node brand/tools/structural-gate.mjs"
+          status: pass
+          detail: "exit 0, 26/26"
+        - cmd: "mutation harness, 16 seeded defects"
+          status: pass
+          detail: "16/16 caught; restore byte-identical per sha256; gate green after restore"
+        - cmd: "node brand/human/build-guideline.mjs --check"
+          status: pass
+        - cmd: "playwright file:// smoke on studio-inspector + human/index.html"
+          status: pass
+          detail: "0 console errors, 0 failed requests, no overflow at 1440 or 390"
+      routed_to_T002:
+        - "components/callout.html:240 still asserts the overturned rule. Carried as the gate's ONE declared exemption — it will fail the gate if fixed and the entry is not removed."
+        - "motion/specimen.html and build-motion.mjs still reference dead --halo and --sticker-halo-fixed tokens (render unstyled, not broken)."
+      changed_files:
+        - brand/tools/structural-gate.mjs
+        - brand/human/ (build-guideline.mjs, index.html, README.md)
+        - brand/agent/visual/assets/README.md
+        - brand/agent/visual/artifacts/ (landing-page.html deleted; web/README.md, page-composition.md, product/studio-inspector.html, product/README.md)
+
+  - id: T002
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: >-
+      Fix the hero to option D (lime -> black keyline -> cream band -> stacked drop-shadow),
+      correct the line-height so the band stops eating descenders, and lift the page bed toward
+      the art's brightness. Re-grade the affected components against the brighter bed.
+    inputs:
+      - "PM decision: option D, recorded in the charter"
+      - brand/agent/visual/assets/wordmark/wordmark.css
+    constraints:
+      - "line-height ~1.06 with a per-line stack — the band adds ~26px of stroke in every direction."
+      - "Dark bed survives as a SECONDARY surface for code blocks and detail panels."
+      - "Re-grade every component that sat on the dark bed; contrast pairs must be recomputed, not assumed."
+    allowed_files:
+      - brand/agent/visual/**
+      - brand/tools/structural-gate.mjs
+    scope_note: >-
+      structural-gate.mjs added because T001 designed its SHADOW_BAN_EXEMPTIONS list to fail on
+      a stale entry — so the task that pays the debt is the task that must remove the entry.
+      Executed by PM, not a Worker: two dispatched Workers stalled on the watchdog with no
+      progress, so PM fell back to doing the slice directly.
+    verify:
+      - "Screenshot the hero and grade it >= B"
+      - "Recompute contrast for every pair affected by the bed change"
+      - "Structural gate still green"
+    stop_if:
+      - "The brighter bed drops any required contrast pair below its threshold and cannot be resolved by adjusting the bed."
+    expected_output:
+      - "Hero at option D, corrected leading, brighter bed, components re-graded"
+    receipt:
+      result: done
+      summary: >-
+        Hero display type now carries the full die-cut treatment: lime fill -> black keyline ->
+        cream band -> stacked drop-shadow. Implemented as ::before/::after copies driven by
+        data-text with negative z-index behind the real glyphs, since one element cannot carry
+        two strokes. isolation: isolate keeps those negatives inside the headline. The shadow is
+        a FILTER, not a text-shadow, so it follows the silhouette of the outermost band rather
+        than the glyphs.
+      grade: "A-"
+      the_leading_finding: >-
+        The known descender defect was real but the fix was bigger than specified. 1.06 clears
+        the INK, and the measurement said CLEARS — but the screenshot showed the cream BANDS of
+        adjacent lines merging into one connected blob at the joins. The band is a CENTRED
+        stroke extending band/2 outside every glyph, so consecutive lines must clear each
+        other's BANDS, not each other's ink. Landed at 1.22: band-to-band clearance 68.9px at
+        1440 and 39.4px at 390, both separating cleanly. Caught by looking, not by the numeric
+        check — which had reported CLEARS.
+      escalations_from_T001_handled:
+        - "components/callout.html rewritten: the 0.00 dark-fringe measurement is kept as a fact about the flat PNG exports, and the void generalisation is replaced by why the kit casts elevation in CSS instead."
+        - "SELF-EXPIRING EXEMPTION WORKED AS DESIGNED. Removing that sentence made the gate go RED on a stale exemption at the very next run, exactly as T001 built it to. Entry removed and the list emptied with a note explaining the mechanism."
+      still_open:
+        - "motion/specimen.html and build-motion.mjs still reference dead --halo and --sticker-halo-fixed tokens. Renders unstyled, not broken. Carried to a later task."
+      bed_note: >-
+        The brighter bed was already in place from the kit rebuild — --surface is #a2cbd0, the
+        cyan-blue measured from the real art. The hero keeps its dark bed deliberately: it is a
+        nested dark island, and with the cream band now doing the separating, lime display type
+        is no longer strictly dependent on it. That unlocks lime display on light beds for the
+        variants.
+      commands:
+        - cmd: "node brand/tools/structural-gate.mjs"
+          status: pass
+          detail: "26/26"
+        - cmd: "playwright file:// hero at 1440 and 390"
+          status: pass
+          detail: "0 console errors; band-to-band clearance 68.9px / 39.4px, bands separate at both"
+      changed_files:
+        - brand/agent/visual/components/hero.html
+        - brand/agent/visual/components/callout.html
+        - brand/tools/structural-gate.mjs
+
+  - id: T003
+    type: pm
+    assignee: PM
+    status: done
+    reasoning_hint: low
+    objective: >-
+      Delete website/ and scaffold it fresh for the variants. The archive already exists at
+      scratchpad/archive/website-pre-rebuild.tar.gz — verify it is readable BEFORE deleting.
+    constraints:
+      - "46 of 47 files are untracked; deletion is otherwise irreversible. Verify the archive first."
+      - "Do not touch packages/, demos/ or poc/."
+    allowed_files:
+      - website/**
+      - docs/goals/frameless-variants-v1/**
+    verify:
+      - "tar -tzf the archive lists the expected files before any rm"
+    expected_output:
+      - "Clean website/ scaffold ready for the skeleton"
+    receipt:
+      result: done
+      summary: >-
+        Archive verified readable BEFORE any deletion (68 entries, spot-checked for index.html,
+        tokens.css and emitter-output.js). website/ deleted and rescaffolded as
+        variants/ src/{css,js,data} assets/ scripts/.
+      preserved_deliberately: >-
+        website/src/data/emitter-output.js (29,091 bytes) was the ONE git-tracked file in the
+        folder AND is the captured real compiled output the variants need to show. Restored into
+        the new scaffold rather than deleted — git confirms it unmodified. Also kept
+        scripts/capture-emitter-output.mjs so the capture can be re-run against packages/ rather
+        than trusting a stale snapshot.
+      resequencing_note: >-
+        Run ahead of its board position while T001 held brand/tools, brand/human and artifacts/.
+        Disjoint scope, and it unblocks T004 the moment the skeleton work starts.
+      commands:
+        - cmd: "tar -tzf website-pre-rebuild.tar.gz"
+          status: pass
+          detail: "archive reads OK, 68 entries"
+        - cmd: "rm -rf website && rescaffold"
+          status: pass
+        - cmd: "git status --short website/"
+          status: pass
+          detail: "tracked emitter-output.js unmodified; only the untracked scripts/ dir is new"
+      changed_files:
+        - website/ (deleted and rescaffolded)
+
+  - id: T004
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: >-
+      Build ONE section-complete skeleton at website/ from the kit — every mandatory section,
+      real emitted output, correct hero, no signature mechanic yet. This is the shared spine
+      all variants fork from, and it is what structurally prevents a one-hero page.
+    constraints:
+      - "Minimum seven sections. Compose from kit components; do not reinvent them."
+      - "Copy lifted from brand/agent/verbal/messaging.md. Hero text is fixed."
+      - "GRADE EVERY SECTION as you build it. Below a B, rebuild before moving on."
+    allowed_files:
+      - website/**
+    verify:
+      - "Loads from file:// with zero console errors and zero failed requests"
+      - "Every section screenshotted and graded >= B"
+      - "Holds at 390px"
+    stop_if:
+      - "A required kit component is missing or broken."
+    expected_output:
+      - "Section-complete skeleton, every section graded >= B"
+    receipt:
+      result: done
+      grade: "B+"
+      summary: >-
+        website/index.html — the shared spine every variant forks. Nine sections in the
+        mandated order, bed sequence dark -> sky -> deep -> paper -> sky -> deep -> paper ->
+        sky -> deep (4 distinct beds), 7.2 screens, copy lifted from messaging.md, hero at
+        option D. Loads from file:// with ZERO console errors and zero failed requests at both
+        1440 and 390, no horizontal overflow, Que Grotesque confirmed loaded.
+      the_silent_failure_it_exposed: >-
+        The hero rendered on the LIGHT bed in page context while rendering dark as a standalone
+        component. Cause: the token system renamed its dark column from data-surface="dark" to
+        data-surface="deep", and an UNRECOGNISED attribute value does not error — it simply
+        fails to match, and the element quietly keeps the wrong bed. Nothing warns. Caught by
+        looking at the page, not by any check. Fixed on 4 elements; the only valid values are
+        deep / light / sky.
+      provenance_decision: >-
+        The .fw-* badge CSS and the .hero* CSS live INLINE inside their specimen components, so
+        the site could not link them. Extracted verbatim into website/src/css/
+        framework-sticker.css and hero.css rather than re-authoring, because a second
+        hand-written copy drifts from the kit within a day. FOLLOW-UP: these belong in the kit
+        as real component stylesheets linked by both the specimen and the site.
+      honest_weakness: >-
+        Every section is currently the same shape — eyebrow, title, body, left-aligned at 68rem.
+        page-composition.md asks for at least three distinct section shapes. The variants add
+        that where their mechanic lands; if a variant does not, that is a B- section and must be
+        reworked.
+      commands:
+        - cmd: "playwright file:// at 1440 and 390"
+          status: pass
+          detail: "9 sections, 6 framework marks, 0 console errors, 0 failed requests, no overflow, font loaded"
+        - cmd: "bed sequence check"
+          status: pass
+          detail: "4 distinct beds, alternating"
+      changed_files:
+        - website/index.html
+        - website/src/css/page.css
+        - website/src/css/hero.css
+        - website/src/css/framework-sticker.css
+
+  - id: T005
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: >-
+      Variant A — The Shelf. Fork the skeleton and wire in the existing framework-carousel
+      (the avara mechanic, already graded A-) as the hero mechanic and output-exploration
+      section.
+    allowed_files:
+      - website/**
+    verify:
+      - "Click and arrow-key selection both work; others desaturate; panel shows real output"
+      - "Every section graded >= B"
+      - "file:// clean, 390px holds, reduced-motion honoured"
+    stop_if:
+      - "The carousel cannot be lifted without re-authoring it — that means it was never reusable and the kit needs fixing first."
+    expected_output:
+      - "Variant A complete and graded"
+    receipt:
+      result: done
+      grade: "B"
+      summary: >-
+        website/variants/shelf/index.html — the skeleton forked with the avara mechanic wired
+        into the output-exploration slot. Mechanic VERIFIED WORKING: click selects React with
+        the other five desaturated to grey silhouettes, ArrowRight carousels react -> vue ->
+        svelte, the panel shows real emitted output with activation model, output path, line
+        count and sha256. Zero console errors and zero failed requests from file:// at 1440 and
+        390, no horizontal overflow, 9 sections intact.
+      the_extraction_bug_worth_remembering: >-
+        My first pass extracted component CSS by regex, keeping only rules whose SELECTOR
+        matched a prefix. It silently dropped `.carousel__track { display: flex }`, which turned
+        the six-item row into a block layout wrapping onto two lines. The page looked broken and
+        nothing errored. Replaced with WHOLE <style> block copies — the only method that cannot
+        lose a rule. Unused specimen selectors ride along harmlessly. Never filter CSS by regex.
+      also_fixed:
+        - "The carousel markup dragged the specimen's <main class='spec'> documentation into the page (sections went 9 -> 12, and 'What is real here' rendered as page content). Stripped."
+        - "Added .band--bleed: the carousel gives 430px of its width to the detail panel the moment it opens, so inside any contained measure the row has nowhere to go. It was designed against the full viewport."
+      KNOWN_DEFECTS_UNFIXED:
+        - "At 1440 the detail panel still clips its own code block at the carousel's lower edge. Overrides in page.css lose to the component's own positioning; fixing it properly means adjusting the component, which is kit scope."
+        - "The chevrons overlap the scaled selected sticker at both widths. Same cause."
+        - "Both are INTEGRATION faults, not component faults — the carousel grades A- on its own specimen page where it sits in a taller container."
+      honest_grade_rationale: >-
+        B, not higher. The mechanic is right and the data is real, but two visible layout
+        defects survive at the widest breakpoint, and the section is still the same left-aligned
+        shape as every other band. A fair reviewer opening this at 1440 would see the clipped
+        panel immediately.
+      commands:
+        - cmd: "playwright file:// — click + ArrowRight x2"
+          status: pass
+          detail: "open=true, panel react -> vue -> svelte, 5 others desaturated"
+        - cmd: "playwright file:// at 1440 and 390"
+          status: pass
+          detail: "0 console errors, 0 failed requests, no h-overflow"
+        - cmd: "panel clipping / chevron overlap probe"
+          status: pass
+          detail: >-
+            Probe RAN correctly and REPORTED TWO REAL DEFECTS: panel clipped=true at 1440,
+            chevrons overlap the selected sticker at both widths. The check passed; the layout
+            did not. Carried in KNOWN_DEFECTS_UNFIXED and in T999's inputs so the final audit
+            cannot miss them.
+      changed_files:
+        - website/variants/shelf/index.html
+        - website/src/css/carousel.css
+        - website/src/css/hero.css
+        - website/src/css/framework-sticker.css
+        - website/src/css/page.css
+        - website/src/js/carousel.js
+
+  - id: T006
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: >-
+      Variant C — The Peel. Fork the skeleton; the .tsrx source is a sticker whose corner peels
+      to reveal the emitted framework code underneath. Sticker Forge params: stroke 18px, tilt
+      -3deg, curl 0.120, stiffness 72%.
+    constraints:
+      - "The peel is the one place a lifting corner genuinely casts a shadow — use drop-shadow, and make it the motion system's standout moment."
+      - "Must degrade sensibly under prefers-reduced-motion and on touch."
+    allowed_files:
+      - website/**
+    verify:
+      - "Peel responds to pointer position, not just hover"
+      - "Revealed code is real emitted output"
+      - "Every section graded >= B"
+    stop_if:
+      - "The peel cannot be made to respond to pointer position without a physics dependency — the sandbox cannot install packages."
+    expected_output:
+      - "Variant C complete and graded"
+    receipt:
+      result: done
+      grade: "B+"
+      summary: >-
+        website/variants/peel/index.html — the .tsrx source is a lime sticker laid over its own
+        compiled output. The corner peels back under the pointer and the emitted framework code
+        is literally underneath. Verified: pointer at the corner drives --peel to 0.849, click
+        latches it fully open, the framework picker swaps to genuinely emitted Solid and Qwik
+        files read out of packages/frameworks/*/generated/S1.jsx. Zero console errors, zero
+        failed requests from file://.
+      THE_BUG_THAT_MATTERED: >-
+        The first build made the curl the SAME SIZE as the cut, so the flap covered the entire
+        area it uncovered and the compiled code was never visible. The mechanic looked
+        completely right in a screenshot and communicated nothing — the one thing the whole
+        variant exists to show was hidden by its own animation. A real peeled corner folds back
+        ON ITSELF, so the flap is a fraction of what it reveals. Now 38%: curl 181px against a
+        764px card, and the payload reads.
+      why_this_variant_earns_its_place: >-
+        It is the only surface in the system where a shadow is doing genuinely physical work
+        rather than implying depth — a corner is actually lifting, and filter: drop-shadow()
+        follows the curl's triangular silhouette. box-shadow would draw a rectangle behind a
+        triangle and kill it outright. It is the strongest argument for the owner's
+        drop-shadow-not-box-shadow correction.
+      commands:
+        - cmd: "playwright file:// — pointer toward corner"
+          status: pass
+          detail: "--peel 0.849, curl 405px, drop-shadow present, React output underneath"
+        - cmd: "playwright file:// — click to latch, switch to Qwik"
+          status: pass
+          detail: "aria-expanded true; label 'Qwik · resumes'; real @frameless/qwik output"
+        - cmd: "curl coverage after fix"
+          status: pass
+          detail: "24% of card width, down from 62% — payload legible"
+      changed_files:
+        - website/variants/peel/index.html
+        - website/src/css/peel.css
+        - website/src/js/peel.js
+
+  - id: T007
+    type: pm
+    assignee: PM
+    status: done
+    reasoning_hint: medium
+    objective: >-
+      Variant B — The Pile. Fork the skeleton; scattered draggable framework stickers with
+      physics, click one to open its compiled output. Build ONLY if A and C are both green —
+      two strong variants beat three mediocre ones.
+    constraints:
+      - "Needs a defined stacked fallback at 390px; scatter layouts collapse on mobile."
+    allowed_files:
+      - website/**
+    verify:
+      - "Drag works; click opens real output; stacked fallback holds at 390px"
+      - "Every section graded >= B"
+    stop_if:
+      - "A or C is not yet green — finish those first."
+    expected_output:
+      - "Variant B complete and graded, or a receipt explaining why two variants was the right call"
+    receipt:
+      result: done
+      resolution: "not built — deliberate, per the charter"
+      retyped_from_worker_to_pm: >-
+        This card was seeded as a Worker, but the outcome is a SCOPE DECISION that wrote no
+        files. A Worker receipt with no changed_files is a contradiction, so the card is retyped
+        to PM — which is what actually made the call.
+      summary: >-
+        The charter states plainly: "Two variants is acceptable, three is the target... A + C is
+        the strongest pair if time forces a choice." That is the call. The Shelf and the Peel
+        are genuinely different mechanics — one is selection-and-inspection, the other is a
+        physical reveal — and both are green from file:// with real emitted output.
+      why_not_a_third: >-
+        The Pile (scattered draggable stickers) is the weakest of the three by the kit's own
+        ranking of what interactivity should mean: it decorates rather than demonstrates. The
+        Shelf makes the claim inspectable and the Peel makes the compile step physical; dragging
+        stickers around does neither. Building it would also have meant leaving the Shelf's two
+        known layout defects unfixed in order to add a variant nobody would pick.
+      recommendation: >-
+        If a third is wanted later, build it as a genuine third ARGUMENT rather than a third
+        decoration — the strongest unbuilt candidate is the activation-neutrality demo (hydrate
+        vs resume, side by side, at the moment of activation), which is the most technically
+        interesting thing the project has and currently has no visual moment anywhere.
+
+  - id: T008
+    type: pm
+    assignee: PM
+    status: done
+    reasoning_hint: low
+    objective: >-
+      Write the comparison note for the owner: what each variant does, its grades, screenshots,
+      and a recommendation. Close docs/goals/frameless-website-v1, which is moot.
+    allowed_files:
+      - docs/goals/**
+    expected_output:
+      - "Comparison note with screenshots and a recommendation"
+    receipt:
+      result: done
+      summary: >-
+        website/README.md — the comparison note. Both variants, their mechanics, honest grades,
+        the known defects stated rather than hidden, why there is no third, and what is real on
+        the pages.
+      the_recommendation: >-
+        SHIP THE SHELF AS PRIMARY, KEEP THE PEEL AS A MOMENT FURTHER DOWN. They are not
+        competing for the same job. The Shelf makes the claim inspectable — it answers "does it
+        work with mine?" with a real file, path, line count and hash, which is what a skeptical
+        engineer needs. The Peel makes the compile step physical — a better first impression and
+        a worse reference, because you cannot scan six frameworks with it but nobody forgets it.
+        A page carrying both, Peel high as the hook and Shelf below as the proof, beats either
+        alone. That is the actual finding from building them.
+      changed_files:
+        - website/README.md
+
+  - id: T009
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: >-
+      Fix the six shared visual failures Judge found. One slice, because all six live in shared
+      CSS and hit both variants: constrain the hero at 390 so the fixed line renders complete;
+      rebuild the band as a die-cut offset without miter spikes; put noise on every page bed;
+      lift the deep bed off near-black toward the art's measured values and reserve near-black
+      for code blocks and panels; bring the Shelf panel inside the page measure so it occludes
+      no mark; make the Peel curl meet its fold line and put the under-layer on a distinct
+      surface.
+    inputs:
+      - "T999 receipt — the six ship-blocking defects"
+      - docs/goals/frameless-design-kit-v1/notes/REBUILD-SPEC.md
+      - brand/_source/concept/CONCEPT-ART-AUTHORITATIVE.jpeg
+    constraints:
+      - "MEASURE getBoundingClientRect().right AGAINST innerWidth. Never document.scrollWidth — an ancestor's overflow:hidden makes it read clean over a clipped page. That false green is how these defects shipped."
+      - "Screenshot every section and grade it against the art. Grades without screenshots are void."
+    allowed_files:
+      - website/src/**
+      - website/index.html
+      - website/variants/**
+      - brand/agent/visual/tokens/color.css
+      - brand/agent/visual/components/hero.html
+    scope_note: >-
+      Widened during execution. website/src/js was needed because Judge located defect 5's root
+      cause in carousel.js (focalFraction). The two brand/ files were needed because defects 2
+      and 4 — the band's miter spikes and the near-black bed — live in the kit's own tokens and
+      hero component, not in the site. Both are the minimum surface required by defects Judge
+      identified, and both were executed by PM under R2 rather than by a Worker.
+    verify:
+      - "At 390px no element has getBoundingClientRect().right > innerWidth"
+      - "Hero renders 'anywhere.' complete at 390px"
+      - ".band--deep and .band--paper compute a non-none background-image"
+      - "Shelf panel sits within the carousel measure and all six marks stay visible with it open"
+      - "Every section screenshotted and graded >= B against the concept art"
+      - "node brand/tools/structural-gate.mjs exits 0"
+    stop_if:
+      - "Fixing the band requires replacing the wordmark asset pipeline."
+      - "Lifting the deep bed drops a required contrast pair below threshold."
+    expected_output:
+      - "Six defects fixed, every section re-graded >= B with screenshots"
+    receipt:
+      result: done
+      summary: >-
+        All six ship-blocking defects addressed. 1-4 independently confirmed fixed by Judge.
+        5 (Shelf) confirmed fixed by Judge on a stricter hit-test than PM ran. 6 (Peel) took
+        three attempts and was resolved only by changing the reveal GEOMETRY from a corner
+        wedge to a bottom-edge fold — the shape, not the numbers, was the bug.
+      commands:
+        - cmd: "playwright file:// — Shelf marks whole at 1440/1200/1024, panel open"
+          status: pass
+          detail: "6/6 at every width; nav overlapping a mark: 0"
+        - cmd: "playwright file:// — Peel latched, flap forced to pointer-events:auto so it counts as an occluder"
+          status: pass
+          detail: "complete terminated lines of emitted React legible under the flap; confirmed by screenshot, which is the criterion Judge set"
+        - cmd: "node brand/tools/structural-gate.mjs"
+          status: pass
+          detail: "26/26"
+      changed_files:
+        - website/src/css/peel.css
+        - website/src/css/carousel.css
+        - website/src/css/page.css
+        - website/src/js/carousel.js
+        - brand/agent/visual/tokens/color.css
+        - brand/agent/visual/components/hero.html
+    progress:
+      done:
+        - >-
+          DEFECT 1 FIXED — the 390px hero truncation. Cause was the band, not the type:
+          --step-7 is only ~90px at 390, but the cream band adds --hd-band of stroke on every
+          side, so the PAINTED width far exceeds the type width. Capped to min(--step-7, 13vw)
+          with the band and keyline scaled down to match. Verified by measuring
+          getBoundingClientRect().right against innerWidth — the method Judge prescribed, not
+          the scrollWidth check that produced the false green. h1 right=354 of vw=390 on all
+          three pages; skeleton now has ZERO overflowing elements.
+        - >-
+          Also removed the clipped ancestor at 390 (overflow: clip visible) so a future
+          regression is VISIBLE rather than silently cropped. The overflow:hidden is what hid
+          this failure in the first place.
+      also_done:
+        - >-
+          DEFECT 2 FIXED — the band's miter spikes. Cause: -webkit-text-stroke joins segments
+          with a MITER, so at 0.26em (40.8px at display size) every sharp corner in the
+          letterforms threw a rectangular growth. Replaced the band with a 24-step ring of
+          text-shadows: each copy is the glyph itself, offset, so the union is a true outline
+          with no joins to miter and the letterform's own curvature preserved. The keyline stays
+          a stroke at 0.075em, thin enough that miters never show. Verified by screenshot —
+          the growths above Compile's l/i and across utput are gone.
+        - >-
+          DEFECT 3 FIXED — noise now on 9/9 page beds. .grained was on <body> only, so every
+          band's own background painted straight over it. The grain has to sit on the element
+          that paints the bed; applied via ::after on .band, .pagefoot and .hero, with the
+          stronger opacity on deep beds because a dark bed shows less of the same grain.
+        - >-
+          DEFECT 4 FIXED — near-black lifted to the art's own deep water. --surface-sunk
+          #060f0d -> #0f3238, --surface #0b1714 -> #143d43, --surface-raised -> #1b4a51. Every
+          affected contrast pair RECOMPUTED, not assumed: lime holds 9.28 / 8.00 / 6.64 and
+          cream ink 11.31 / 9.76 / 8.09. This also resolves the contradiction Judge found
+          between the shipped page and the board's own recorded decision.
+      remaining:
+        - >-
+          DEFECT 5 PARTIALLY FIXED, and the remainder is a DESIGN DECISION rather than a bug.
+          FIXED: the panel no longer bleeds to the window — the carousel is wrapped in a
+          .carousel-measure and ends at x=1302 of 1440, inside the page.
+          STILL OPEN: 4 of 6 marks visible with the panel open, and the code block clips.
+          Cascade-winning overrides were appended to carousel.css (a gentler selected scale,
+          tighter gaps, smaller marks, more height) and the numbers did not move — which is the
+          signal that this is not a CSS problem. The stage is calc(100% - 430px) when open, so
+          inside a page measure roughly four marks fit; a carousel showing a WINDOW onto a row
+          is what a carousel is. Judge is right that the canonical six should be visible in the
+          signature moment, but satisfying both means changing the mechanic — panel below rather
+          than beside, or a two-row shelf — and that is an owner-facing design call, not a
+          defect to grind at. RECOMMENDED: move the panel BELOW the row at desktop, which the
+          component already does under 60rem. That single change would satisfy both constraints.
+        - >-
+          DEFECT 6 FIXED — the Peel curl. Judge's physics was the spec and it was right: the
+          flap has to HINGE ON THE FOLD, and it is smaller than what it revealed because it
+          ROLLS, not because it is arbitrarily scaled. Rebuilt with transform-origin on the
+          diagonal, a curved free corner (border-end-end-radius), and a five-stop gradient
+          running from a shadowed underside against the fold to a lit crest at the free edge.
+          The under-layer moved off --surface-sunk — that was the section bed, so the revealed
+          wedge read as a HOLE PUNCHED THROUGH the card rather than a second sheet; it now uses
+          --surface-raised and reads as distinct paper. Verified by screenshot: the compiled
+          React is legible on its own sheet and the flap is believable. Grade B+.
+      DEFECT_5_NOW_FIXED: >-
+        PM made the design call the charter's R2 requires rather than blocking on the owner:
+        THE PANEL MOVES BELOW THE ROW AT EVERY WIDTH. The component already did this under 60rem
+        with a stated reason — "a 430px drawer on a 390px viewport is the whole screen, and a
+        drawer that covers everything is a page, not a drawer." The same logic holds at desktop
+        inside a measured container: 430px of a 1164px carousel is 37% of it. Promoting that
+        behaviour to all widths REMOVES a breakpoint rather than adding one, and satisfies both
+        constraints at once. Result at 1440: 6/6 marks visible, code no longer clipped, zero
+        elements past the viewport, zero console errors.
+      THE_MEASUREMENT_LESSON_IN_FULL: >-
+        Three checks in this goal were wrong in two opposite directions, and the pair is the
+        real lesson. document.scrollWidth UNDER-reports: an ancestor's overflow:hidden masks a
+        genuinely broken page, which is how the truncated 390px hero shipped green. A raw
+        getBoundingClientRect().right sweep OVER-reports: it flagged 33 "overflowing" elements
+        on the Shelf that were the carousel track sliding inside its own clipped stage and code
+        blocks scrolling in their own container — all correct by design. THE CORRECT CHECK IS
+        BOTH: does the page actually scroll sideways, AND is there any overflow NOT contained by
+        a clipping or scrolling ancestor. Under that check all three pages are clean at 390.
+      receipt_note: >-
+        Closed with all six defects addressed. Defects 1-4 were independently confirmed fixed by
+        Judge. Defect 5 (Shelf) confirmed fixed by Judge on a STRICTER test than PM ran — a 9x9
+        elementFromPoint hit-test, because visFrac against the stage tests CLIPPING but not
+        COVERING. Defect 6 (Peel) took three attempts and was only resolved by changing the
+        GEOMETRY rather than the numbers — see peel_resolution.
+      peel_resolution: >-
+        THE SHAPE WAS THE BUG. A corner triangle is the wrong reveal for a code block: code
+        renders as full-width rectangular lines and a diagonal wedge only ever catches their
+        ragged ends. That is why every tuning attempt traded legibility against composition —
+        at 62% the wedge caught only closing braces, at 88% the code read but the card became a
+        diagonal wipe. Replaced with a BOTTOM-EDGE FOLD: clip-path inset lifting the whole
+        bottom edge, so the reveal is the same shape as the thing revealed. The flap hinges on
+        that horizontal fold and lies back ON THE SOURCE above it, mirrored, which is what a
+        folded sheet does and the only arrangement that leaves the hole empty. Verified by
+        screenshot: complete terminated lines of emitted React are legible under a rolled cream
+        flap that casts a real shadow.
+      my_worst_mistake_this_tranche: >-
+        Fixing Judge's "the flap does not span its fold" by setting scale: 1 made the flap
+        CONGRUENT to the hole — reinstating verbatim the bug T006 had already found and written
+        a receipt about ("the curl the SAME SIZE as the cut, so the flap covered the entire area
+        it uncovered"). I reintroduced a documented defect while fixing a different one, and
+        only caught it because Judge hit-tested rather than trusting the receipt.
+      three_bad_metrics_in_a_row: >-
+        On this component alone: (1) scrollWidth <= clientWidth is TAUTOLOGICAL for a
+        block-level pre — it passed on 3px type; (2) counting a mark "visible" on partial
+        overlap rather than whole visibility produced a false 6/6; (3) sampling the whole code
+        box counted area legitimately behind the source card. Each was confidently reported.
+        The pattern: when a metric keeps agreeing with me, it is measuring the wrong thing.
+        Judge caught all three by preferring a screenshot to a number.
+      a_measurement_error_worth_recording: >-
+        One attempt to constrain the carousel set max-inline-size: 92rem. That is 1472px — WIDER
+        than the 1440 viewport — so it did nothing at all while the measurement kept reporting
+        1440 and looking like a failed selector. A max-width above the viewport is not a
+        constraint. Same family of mistake as the scrollWidth false green: the check was fine,
+        the value made it meaningless.
+    receipt: null
+
+  - id: T010
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: >-
+      Fix the two mobile-only failures Judge found: the Peel's unreachable payload at 390, and
+      the Shelf's focal sticker scrolling off-screen.
+    allowed_files:
+      - website/src/css/peel.css
+      - website/src/css/carousel.css
+      - website/src/js/carousel.js
+    verify:
+      - "390: peel payload reachable; shelf selected sticker visFrac > 0.9; no desktop regression"
+    stop_if:
+      - "A fix would require editing the emitted code — both texts are byte-identical to repo files."
+    expected_output:
+      - "Both mechanics usable at 390"
+    receipt:
+      result: done
+      summary: >-
+        Shelf 390 fixed by replacing translate with scroll-snap: the stage became a snap
+        container and layout() scrolls the selection into view, because translating a
+        scrollable track was fighting the scroll position. Selected Solid went from visFrac
+        0.10 at left=-144 to 1.0 at left=96 — Judge confirmed independently. Peel 390 fixed by
+        dropping the gesture below 40rem and stacking the two layers, since a peel needs a card
+        wider than a line of code.
+      the_bug_inside_the_fix: >-
+        The first stacking attempt looked right and failed: .peel__under kept
+        display:flex/align-items:flex-end from the desktop corner-wedge rule, so a 555px pre sat
+        360px ABOVE a 224px box. Overflow past a scroll container's block-START edge is
+        UNREACHABLE, so overflow:auto bought nothing — maxScrollTop was 0 and ~23 of 33 lines
+        could not be reached at all. Neutralising the flex alignment fixed it: preTop -360 ->
+        +29, maxScrollTop 0 -> 389.
+      commands:
+        - cmd: "playwright file:// 390, isMobile true and false"
+          status: pass
+          detail: "byte-identical results; first line reads '// @generated by @frameless/react; do not edit' complete"
+        - cmd: "desktop regression check at 1440"
+          status: pass
+          detail: "peel position:absolute, curl:block, 17 terminated lines; shelf 6/6, nav overlap 0"
+      changed_files:
+        - website/src/css/peel.css
+        - website/src/css/carousel.css
+        - website/src/js/carousel.js
+
+  - id: T011
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: low
+    objective: >-
+      Remove the Peel's horizontal crop at 390 and the contradictory hint copy.
+    allowed_files:
+      - website/src/css/peel.css
+    verify:
+      - "under-pre overflow <= 140 for react/solid/qwik at 390; font >= 9px; desktop unchanged"
+    stop_if:
+      - "Any desktop number moves, or the fix needs a file outside peel.css."
+    expected_output:
+      - "Lines readable without mid-token crops; hint honest"
+    receipt:
+      result: done
+      summary: >-
+        Judge located the cause and pre-verified the fix: .peel pre computed the browser default
+        tab-size: 8 while the Shelf's code block uses 2. Applied tab-size 2, added a right-edge
+        fade plus a thin persistent scrollbar so a cut line READS as scrollable rather than
+        truncated, and rewrote the 390 hint — it had been instructing a drag gesture the page
+        does not offer at that width, then contradicting itself, then claiming both files were
+        "shown in full" when the right half of each was hidden.
+      result_measured: >-
+        Under-layer overflow at 390: react 330 -> 74, solid -> 55, qwik 418 -> 176. React and
+        Solid clear Judge's <=140 target; QWIK DOES NOT, and cannot.
+      the_constraint_that_cannot_be_fixed: >-
+        Qwik's longest emitted line is 88 characters against React's 69. At the 9px legibility
+        floor Judge set, 88ch needs roughly 390px of text width and the container is 273px. The
+        only ways to reach <=140 are to drop below 9px — which Judge already rejected as
+        "texture, not evidence" — or to edit the emitted code, which the stop_if forbids because
+        both texts are byte-identical to packages/frameworks/*/generated/S1.jsx. So Qwik scrolls
+        176px, WITH the affordance now present. Legibility beats zero-overflow; the trade is
+        deliberate and recorded rather than hidden.
+      commands:
+        - cmd: "playwright file:// 390 across all three frameworks"
+          status: pass
+          detail: "react 74, solid 55, qwik 176; font 9.28px, above the floor"
+        - cmd: "desktop unchanged at 1440"
+          status: pass
+          detail: "under position:absolute, curl:block"
+        - cmd: "node brand/tools/structural-gate.mjs"
+          status: pass
+          detail: "26/26"
+      changed_files:
+        - website/src/css/peel.css
+
+  - id: T012
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: >-
+      Remove the Peel's horizontal crop at 390 for ALL THREE frameworks, including Qwik.
+    allowed_files:
+      - website/src/css/peel.css
+    verify:
+      - "0 horizontal overflow at 390 for react/solid/qwik; font >= 9px; desktop unchanged"
+    stop_if:
+      - "The fix needs a file outside peel.css, or any desktop number moves."
+    expected_output:
+      - "Every emitted line fully on-screen at 390"
+    receipt:
+      result: done
+      summary: >-
+        Soft-wrap below 40rem: white-space: pre-wrap with overflow-wrap: anywhere and a hanging
+        indent (padding-inline-start 1.5em / text-indent -1.5em) so a wrapped line still reads
+        as one logical line. Horizontal overflow 330/214/418 -> 0/0/0. Judge verified per-glyph:
+        react 33/33, solid 31/31, qwik 30/30 lines fully visible, identical with isMobile true
+        and false. Desktop still computes white-space: pre — the wrap is genuinely mobile-only.
+      the_reframe_that_solved_it: >-
+        I had declared this UNFIXABLE one round earlier: 88 characters at the 9px legibility
+        floor needs ~390px in a 273px box, and the emitted text cannot be edited. That was
+        anchored on the wrong question — "how do I make the text narrower until it fits". Every
+        route was blocked because I was trying to MANAGE the width trade. Wrapping DISSOLVES it.
+        The constraint was in my framing, not in the problem.
+      process_note: >-
+        The first attempt at this rule silently did nothing — it landed in one of two
+        @media (max-width: 40rem) blocks and computed white-space: pre while claiming to wrap.
+        I removed it rather than ship inert CSS, then re-appended it as the final block in the
+        file where there is no ambiguity about which query it lands in.
+      commands:
+        - cmd: "playwright file:// 390, all three frameworks, isMobile true and false"
+          status: pass
+          detail: "h-overflow 0/0/0; white-space pre-wrap; font 10.56px"
+        - cmd: "desktop 1440 regression check"
+          status: pass
+          detail: "white-space: pre, position absolute, curl block"
+      changed_files:
+        - website/src/css/peel.css
+
+  - id: T013
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: low
+    objective: >-
+      Fix the 390 hint, which rendered as a one-word-per-line ladder.
+    allowed_files:
+      - website/src/css/peel.css
+    verify:
+      - "390: hint width > 250 and height < 90; 1440 unchanged"
+    stop_if:
+      - "The fix needs a file outside peel.css."
+    expected_output:
+      - "Hint renders as normal wrapped prose at every width"
+    receipt:
+      result: done
+      summary: >-
+        .peel-hint used font-size: 0 so ::after could replace the desktop sentence — but a
+        ch-based max-width resolves against the ELEMENT's own font-size, so it computed
+        max-width: 0 and the replacement copy rendered as a 561px vertical ladder of single
+        words, two-thirds of a 390 viewport, directly under the mechanic. Judge mutation-proved
+        it (max-width:none -> 335x67). Fixed with a rem-based measure, which does not collapse
+        with the zeroed font-size. Now 335x67 at 390 and 602x49 at 1440.
+      why_it_survived_every_check: >-
+        Desktop was unaffected, so every desktop check stayed green — and the task that
+        introduced it was verified against the metric it TARGETED (horizontal overflow) while
+        nobody measured the element it actually EDITED. That is this board's signature failure
+        recurring, and Judge named it as such.
+      commands:
+        - cmd: "playwright file:// 390 and 1440"
+          status: pass
+          detail: "hint 335x67 and 602x49; peel h-overflow still 0"
+        - cmd: "node brand/tools/structural-gate.mjs"
+          status: pass
+          detail: "26/26"
+      changed_files:
+        - website/src/css/peel.css
+
+  - id: T014
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: low
+    objective: >-
+      Correct the 390 peel hint, which claimed a scrolling gesture the page no longer offers,
+      and attempt end-of-rail centring on the shelf.
+    allowed_files:
+      - website/src/css/peel.css
+      - website/src/css/carousel.css
+    verify:
+      - "hint 390 width > 250 height < 90; 1440 ~602x49; gate 26/26"
+    stop_if:
+      - "The shelf fix needs carousel.js or moves a desktop number — ship the copy fix alone."
+    expected_output:
+      - "Hint copy true to the mechanic; rail clipping fixed or accepted"
+    receipt:
+      result: done
+      summary: >-
+        Hint rewritten to describe WRAPPING. It had ended "Each scrolls sideways" while Judge
+        proved nothing scrolls — pre, .peel__layer, .peel, both wrappers and the section all
+        report canScrollX 0, and a real 300px drag left scrollLeft at [0,0]. Hint still 335x67
+        at 390.
+      the_recurrence_worth_noting: >-
+        This is the SECOND time this one sentence described a gesture the page does not offer.
+        T011 fixed it once; T012 replaced the horizontal scroll with soft-wrap and falsified it
+        again; T013 edited the CSS rule three lines above the ::after that carries the string
+        and measured only the box. Copy that describes a mechanic has to be re-read whenever the
+        mechanic changes — a comment now says so at the declaration.
+      end_of_rail_accepted_not_fixed: >-
+        scroll-padding-inline was tried and is INERT here — react stayed 0.81, qwik 0.83. A
+        scroll-snap rail has nothing beyond its ends to centre against; doing it properly needs
+        spacer elements or carousel.js, which this task's stop_if excludes. Removed the dead
+        rule rather than leave CSS that looks like a fix, and recorded the limitation in
+        carousel.css at the point of failure. Four of six selections centre perfectly, desktop
+        is 6/6, and the logo and name stay legible in the clipped state.
+      commands:
+        - cmd: "playwright file:// 390 click-then-measure, all six"
+          status: pass
+          detail: "vue/svelte/solid/angular 1.0; react 0.81, qwik 0.83 — accepted end-of-rail"
+        - cmd: "node brand/tools/structural-gate.mjs"
+          status: pass
+          detail: "26/26"
+      changed_files:
+        - website/src/css/peel.css
+        - website/src/css/carousel.css
+
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: active
+    reasoning_hint: high
+    objective: >-
+      Final audit. Open every variant beside the concept art and judge whether it would be
+      rejected on sight the way the first attempt was. Confirm the interaction contract and the
+      structural gate.
+    inputs:
+      - "All done receipts and their screenshots"
+      - brand/_source/concept/CONCEPT-ART-AUTHORITATIVE.jpeg
+    constraints:
+      - "Read-only."
+      - "THE PREVIOUS ATTEMPT PASSED EVERY AUTOMATED CHECK AND WAS REJECTED ON SIGHT. Judge the pixels, not the receipts. A green gate is not evidence of a good-looking page."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "Per-variant visual verdict with evidence"
+      - "Next task if not complete"
+    receipt:
+      result: done
+      decision: not_complete
+      full_outcome_complete: false
+      rationale: >-
+        Gate green 26/26 and both mechanics verified from file://, but signal 1 fails. Judge
+        regenerated every visual grade with screenshots and disagrees with the PM on 4 of 5.
+      judge_grades_vs_pm:
+        hero: "PM A- / JUDGE C"
+        badges: "PM A- / JUDGE A- (agreed — the best thing here)"
+        skeleton: "PM B+ / JUDGE C+"
+        shelf: "PM B / JUDGE C"
+        peel: "PM B+ / JUDGE C-"
+      THE_PM_VERIFICATION_WAS_FALSE_GREEN: >-
+        The most serious finding, and it is against the PM's own method. Three receipts claim
+        "no horizontal overflow at 390px". Judge measured element rects instead of document
+        scrollWidth and found the hero h1 is 430px wide in a 390px viewport (right=467), with 37
+        overflowing elements on the Shelf — the FIXED hero line renders as "Compile once, output
+        anywher". scrollWidth reads 390 only because an ancestor has overflow: hidden, so the
+        content is clipped off-screen rather than scrolling. A numeric check reported green over
+        a visibly broken page — exactly the misfire this charter names. Measure
+        getBoundingClientRect().right against innerWidth, never scrollWidth behind a clipped
+        ancestor.
+      ship_blocking:
+        - "Hero headline overflows and truncates at 390px, on both variants and the skeleton."
+        - "Cream band carries miter-join spikes: -webkit-text-stroke-width 0.26em = 40.8px at a 157px size, producing rectangular growths above the l/i of Compile, a slab across utput, a block above wh in anywhere. The art's band is a smooth die-cut offset following the silhouette."
+        - "52% of each page is a FLAT UNTEXTURED FILL and noise reaches ZERO page beds — it appears only inside sticker faces. Direct violation of the non-negotiable 'noise texture everywhere; the background is never a flat fill'."
+        - "Near-black #060f0d holds 27-28% of every page and carries the hero, the signature mechanic and the oracle section — contradicting the board's OWN recorded decision that near-black was a PM invention and dark stays a SECONDARY surface. The palette also collapses the art's polychrome landscape into three values."
+        - "Shelf detail panel sits at x=1438 of 1440 — flush to the window, outside any page measure — clips its code block on two edges, and with the panel open the Qwik sticker is FULLY OCCLUDED and Angular half-covered, so the canonical six are not visible in the variant's signature moment."
+        - "Peel curl is geometrically detached from its own fold line: a flat cream triangle floating inside the revealed wedge with a visible gap. The T006 receipt's physics is wrong — folding back on itself makes the flap CONGRUENT to the revealed area mirrored across the fold; a curl is smaller because it ROLLS, which needs a curved silhouette and a gradient, not a flat 38% triangle. The under-layer also uses --surface-sunk, reading as the same near-black as the section bed, so it looks like a hole punched in the card rather than a second sheet."
+      what_holds: >-
+        Nothing is fabricated — Judge diffed all three embedded outputs against
+        packages/frameworks/{react,solid,qwik}/generated/S1.jsx: VERBATIM MATCH. Vue/Svelte/
+        Angular panels say "none captured in this repository" rather than inventing a sample.
+        Hero string exact in all three files. No target counting anywhere. drop-shadow
+        throughout with the single box-shadow being the documented --elev-inset exception.
+        Studio marked coming soon. Badges would survive beside the art.
+      two_variant_decision: >-
+        UPHELD as defensible, not a shortfall dressed up. The charter permits it explicitly and
+        Shelf (selection-and-inspection) vs Peel (physical reveal) are genuinely different
+        arguments. Judge would not block on it.
+      would_the_owner_reject_on_sight: >-
+        YES — less violently than last time, because the badges and the lime are real progress,
+        but the first screenful is a headline with rectangular growths on its band, on a
+        near-black bed the charter already ruled out, and on a phone that headline is cut
+        mid-word.
+      spawned_tasks:
+        - T009

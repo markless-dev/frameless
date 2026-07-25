@@ -1,0 +1,93 @@
+/* Frameless — component tokens
+ * ============================================================================
+ *     <link rel="stylesheet" href="../colors_and_type.css">
+ *     <link rel="stylesheet" href="./component-tokens.css">
+ *
+ * Every component in this folder links both. Every component ALSO writes
+ * var(--sticker-keyline, 2px) rather than var(--sticker-keyline), so a snippet
+ * copied out of one of these files into a page that only linked
+ * colors_and_type.css still draws a correct keyline instead of no border at
+ * all. Copy-paste is the actual delivery mechanism for a kit like this, and a
+ * component that silently loses its only boundary when pasted is broken.
+ *
+ * ── WHAT MOVED, AND WHERE IT WENT ───────────────────────────────────────────
+ *
+ * The die-cut vocabulary is not here any more. It is system-level, so it lives
+ * with the rest of the system:
+ *
+ *   ../tokens/sticker.css     .die-cut, --sticker-band, --sticker-keyline,
+ *                             --sticker-radius, the rest tilts, the peel
+ *   ../tokens/elevation.css   --elev-sticker / -card / -lifted, the page grain,
+ *                             the gloss and band-sheen gradients
+ *   ../tokens/color.css       --band, --keyline, and the six --fw-* families
+ *
+ * All three arrive through ../colors_and_type.css. This file carries only the
+ * few values that are genuinely about components rather than about the system.
+ *
+ * ── THE SHAPE EVERY COMPONENT IN THIS FOLDER BUILDS ON ──────────────────────
+ *
+ *     fill  →  tinted dark keyline  →  thick band  →  drop shadow  →  tilt
+ *
+ * The shadow is `filter: var(--elev-sticker)`, never a box-shadow — a
+ * box-shadow casts the element's BOX, and a rounded rectangle floating behind a
+ * die-cut shape is exactly the tell that the object is fake.
+ * ============================================================================ */
+
+:root {
+	/* The inner padding of a control-sized die-cut object: buttons, tags,
+	   chips. Distinct from --sticker-band, which is the CUT PAPER around an
+	   object and is a percentage of its width. This is just breathing room. */
+	--control-padding-block: 0.8em;
+	--control-padding-inline: 1.25em;
+
+	/* The minimum hit target. 44px is the smallest reliably tappable size and it
+	   is stated as a token so no component has to remember it. Components tilt,
+	   which does NOT shrink the hit area — a rotated element keeps its own box
+	   for hit testing — but it does mean two tilted controls can visually
+	   collide while their boxes do not, so keep the gap at least --space-2xs. */
+	--control-min-size: 2.75rem;
+
+	/* How far an interactive die-cut object rises on hover. Small: the shadow
+	   doing more work is what reads as lift, not the travel. */
+	--lift-travel: 2px;
+}
+
+/* ============================================================================
+ * The interactive lift
+ *
+ * One rule, used by every clickable die-cut object in the folder. It moves the
+ * object up slightly and swaps --elev-sticker for --elev-lifted, so the shadow
+ * grows as the object rises — which is the part the eye actually reads.
+ *
+ * Timing comes from ../motion/motion.css. Under prefers-reduced-motion the
+ * TRANSFORM goes and the shadow change stays: the shadow is a state, not a
+ * movement, and removing it would remove the only remaining hover feedback.
+ * ==========================================================================*/
+
+.lift {
+	transition:
+		translate var(--motion-release, 160ms ease-out),
+		filter var(--motion-release, 160ms ease-out);
+}
+
+.lift:hover,
+.lift:focus-visible {
+	translate: 0 calc(var(--lift-travel) * -1);
+	filter: var(--elev-lifted);
+}
+
+.lift:active {
+	translate: 0 1px;
+	filter: var(--elev-sticker);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.lift {
+		transition: none;
+	}
+
+	.lift:hover,
+	.lift:focus-visible {
+		translate: none;
+	}
+}

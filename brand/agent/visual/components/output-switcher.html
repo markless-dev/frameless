@@ -1,0 +1,612 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frameless — output-switcher</title>
+<link rel="icon" href="../assets/wordmark/favicon.svg">
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="./component-tokens.css">
+<link rel="stylesheet" href="./specimen.css">
+<link rel="stylesheet" href="../motion/motion.css">
+
+<style>
+/* ============================================================================
+ * OUTPUT-SWITCHER — the most important component in the kit
+ *
+ * WHAT IT IS FOR
+ * Tabbing through six framework outputs of ONE source. It is the only
+ * component that DEMONSTRATES the thesis rather than asserting it: the reader
+ * does not have to believe "idiomatic per target", they can look at Solid
+ * reaching for &lt;Show when= fallback=&gt; while React emits a ternary, from the
+ * same twenty-five lines.
+ *
+ * WHEN TO USE IT
+ * On any page that makes the compile claim. It is section 3 of the mandatory
+ * page composition, and it is ranked first in "what interactive should mean
+ * here" — above the peel, above badge expansion, far above dragging stickers.
+ * If a page has exactly one interaction, make it this one.
+ *
+ * WHEN NOT TO USE IT
+ * With hand-written code in it. See the provenance rule below; it is the whole
+ * point of the component.
+ *
+ * ── SOURCE STAYS, OUTPUT SWAPS ──────────────────────────────────────────────
+ * The source panel never moves. Only the output changes. That layout IS the
+ * argument — one thing on the left, six on the right — and it is why this is a
+ * two-column switcher rather than a tabbed code block.
+ *
+ * ── PROVENANCE IS NOT OPTIONAL ──────────────────────────────────────────────
+ * Every filled slot carries the path of the file it came from and the sha256
+ * of that file. "Real compiled output, not a hand-written snippet" is a claim
+ * this page makes, and the provenance line is what makes it checkable.
+ *
+ * Three slots below are filled from output captured out of this repository.
+ * The other three ship EMPTY, with instructions. That is deliberate: fabricating
+ * plausible code and stamping a hash under it would convert the one inspectable
+ * claim on the page into an unverifiable one, which is strictly worse than an
+ * empty box that says what to put in it.
+ *
+ * ── MOTION ──────────────────────────────────────────────────────────────────
+ * Panels swap on the `slide` curve, cubic-bezier(0.65, 0, 0.35, 1) at 300ms.
+ * Symmetric, because a swap has no privileged direction — React to Solid
+ * should feel exactly like Solid to React. Under prefers-reduced-motion the
+ * swap is instant and only the opacity fades, capped at 120ms.
+ *
+ * ── ACCESSIBILITY ───────────────────────────────────────────────────────────
+ * Real WAI-ARIA tabs: roving tabindex, arrow keys, Home and End. The tab list
+ * is in canonical order and each tab carries the framework NAME, not only its
+ * mark — a logo alone is not identification for anyone who does not already
+ * know the logo.
+ * ==========================================================================*/
+
+.switcher {
+	display: grid;
+	gap: var(--space-s);
+	background: var(--surface-raised);
+	border: var(--sticker-keyline, 2px) solid var(--ink);
+	padding: var(--space-s);
+}
+
+.switcher__tablist {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2xs);
+}
+
+.switcher__tab {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2xs);
+	font-family: var(--font-sans);
+	font-size: var(--step--2);
+	font-weight: 700;
+	line-height: 1;
+	text-transform: uppercase;
+	letter-spacing: var(--tracking-caps);
+	padding: 0.6em 0.8em;
+	background: transparent;
+	color: var(--ink);
+	border: var(--sticker-keyline, 2px) solid var(--ink);
+	cursor: pointer;
+}
+
+/* Selected state is a FILL, not a colour change — lime as a surface with an
+   --ink label, 12.43:1. And it is not carried by colour alone: the selected
+   tab also loses its tilt and squares up, so the state survives grayscale. */
+.switcher__tab[aria-selected="true"] {
+	background: var(--accent);
+	color: var(--ink);
+	rotate: none;
+}
+
+.switcher__mark {
+	inline-size: 1.35em;
+	block-size: 1.35em;
+	flex: none;
+	background-color: currentColor;
+	-webkit-mask-position: center;
+	mask-position: center;
+	-webkit-mask-repeat: no-repeat;
+	mask-repeat: no-repeat;
+	-webkit-mask-size: contain;
+	mask-size: contain;
+}
+
+.switcher__tab[data-framework="react"] .switcher__mark { -webkit-mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3EReact%3C/title%3E%3Cpath d=%22M14.23 12.004a2.236 2.236 0 0 1-2.235 2.236 2.236 2.236 0 0 1-2.236-2.236 2.236 2.236 0 0 1 2.235-2.236 2.236 2.236 0 0 1 2.236 2.236zm2.648-10.69c-1.346 0-3.107.96-4.888 2.622-1.78-1.653-3.542-2.602-4.887-2.602-.41 0-.783.093-1.106.278-1.375.793-1.683 3.264-.973 6.365C1.98 8.917 0 10.42 0 12.004c0 1.59 1.99 3.097 5.043 4.03-.704 3.113-.39 5.588.988 6.38.32.187.69.275 1.102.275 1.345 0 3.107-.96 4.888-2.624 1.78 1.654 3.542 2.603 4.887 2.603.41 0 .783-.09 1.106-.275 1.374-.792 1.683-3.263.973-6.365C22.02 15.096 24 13.59 24 12.004c0-1.59-1.99-3.097-5.043-4.032.704-3.11.39-5.587-.988-6.38-.318-.184-.688-.277-1.092-.278zm-.005 1.09v.006c.225 0 .406.044.558.127.666.382.955 1.835.73 3.704-.054.46-.142.945-.25 1.44-.96-.236-2.006-.417-3.107-.534-.66-.905-1.345-1.727-2.035-2.447 1.592-1.48 3.087-2.292 4.105-2.295zm-9.77.02c1.012 0 2.514.808 4.11 2.28-.686.72-1.37 1.537-2.02 2.442-1.107.117-2.154.298-3.113.538-.112-.49-.195-.964-.254-1.42-.23-1.868.054-3.32.714-3.707.19-.09.4-.127.563-.132zm4.882 3.05c.455.468.91.992 1.36 1.564-.44-.02-.89-.034-1.345-.034-.46 0-.915.01-1.36.034.44-.572.895-1.096 1.345-1.565zM12 8.1c.74 0 1.477.034 2.202.093.406.582.802 1.203 1.183 1.86.372.64.71 1.29 1.018 1.946-.308.655-.646 1.31-1.013 1.95-.38.66-.773 1.288-1.18 1.87-.728.063-1.466.098-2.21.098-.74 0-1.477-.035-2.202-.093-.406-.582-.802-1.204-1.183-1.86-.372-.64-.71-1.29-1.018-1.946.303-.657.646-1.313 1.013-1.954.38-.66.773-1.286 1.18-1.868.728-.064 1.466-.098 2.21-.098zm-3.635.254c-.24.377-.48.763-.704 1.16-.225.39-.435.782-.635 1.174-.265-.656-.49-1.31-.676-1.947.64-.15 1.315-.283 2.015-.386zm7.26 0c.695.103 1.365.23 2.006.387-.18.632-.405 1.282-.66 1.933-.2-.39-.41-.783-.64-1.174-.225-.392-.465-.774-.705-1.146zm3.063.675c.484.15.944.317 1.375.498 1.732.74 2.852 1.708 2.852 2.476-.005.768-1.125 1.74-2.857 2.475-.42.18-.88.342-1.355.493-.28-.958-.646-1.956-1.1-2.98.45-1.017.81-2.01 1.085-2.964zm-13.395.004c.278.96.645 1.957 1.1 2.98-.45 1.017-.812 2.01-1.086 2.964-.484-.15-.944-.318-1.37-.5-1.732-.737-2.852-1.706-2.852-2.474 0-.768 1.12-1.742 2.852-2.476.42-.18.88-.342 1.356-.494zm11.678 4.28c.265.657.49 1.312.676 1.948-.64.157-1.316.29-2.016.39.24-.375.48-.762.705-1.158.225-.39.435-.788.636-1.18zm-9.945.02c.2.392.41.783.64 1.175.23.39.465.772.705 1.143-.695-.102-1.365-.23-2.006-.386.18-.63.406-1.282.66-1.933zM17.92 16.32c.112.493.2.968.254 1.423.23 1.868-.054 3.32-.714 3.708-.147.09-.338.128-.563.128-1.012 0-2.514-.807-4.11-2.28.686-.72 1.37-1.536 2.02-2.44 1.107-.118 2.154-.3 3.113-.54zm-11.83.01c.96.234 2.006.415 3.107.532.66.905 1.345 1.727 2.035 2.446-1.595 1.483-3.092 2.295-4.11 2.295-.22-.005-.406-.05-.553-.132-.666-.38-.955-1.834-.73-3.703.054-.46.142-.944.25-1.438zm4.56.64c.44.02.89.034 1.345.034.46 0 .915-.01 1.36-.034-.44.572-.895 1.095-1.345 1.565-.455-.47-.91-.993-1.36-1.565z%22/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3EReact%3C/title%3E%3Cpath d=%22M14.23 12.004a2.236 2.236 0 0 1-2.235 2.236 2.236 2.236 0 0 1-2.236-2.236 2.236 2.236 0 0 1 2.235-2.236 2.236 2.236 0 0 1 2.236 2.236zm2.648-10.69c-1.346 0-3.107.96-4.888 2.622-1.78-1.653-3.542-2.602-4.887-2.602-.41 0-.783.093-1.106.278-1.375.793-1.683 3.264-.973 6.365C1.98 8.917 0 10.42 0 12.004c0 1.59 1.99 3.097 5.043 4.03-.704 3.113-.39 5.588.988 6.38.32.187.69.275 1.102.275 1.345 0 3.107-.96 4.888-2.624 1.78 1.654 3.542 2.603 4.887 2.603.41 0 .783-.09 1.106-.275 1.374-.792 1.683-3.263.973-6.365C22.02 15.096 24 13.59 24 12.004c0-1.59-1.99-3.097-5.043-4.032.704-3.11.39-5.587-.988-6.38-.318-.184-.688-.277-1.092-.278zm-.005 1.09v.006c.225 0 .406.044.558.127.666.382.955 1.835.73 3.704-.054.46-.142.945-.25 1.44-.96-.236-2.006-.417-3.107-.534-.66-.905-1.345-1.727-2.035-2.447 1.592-1.48 3.087-2.292 4.105-2.295zm-9.77.02c1.012 0 2.514.808 4.11 2.28-.686.72-1.37 1.537-2.02 2.442-1.107.117-2.154.298-3.113.538-.112-.49-.195-.964-.254-1.42-.23-1.868.054-3.32.714-3.707.19-.09.4-.127.563-.132zm4.882 3.05c.455.468.91.992 1.36 1.564-.44-.02-.89-.034-1.345-.034-.46 0-.915.01-1.36.034.44-.572.895-1.096 1.345-1.565zM12 8.1c.74 0 1.477.034 2.202.093.406.582.802 1.203 1.183 1.86.372.64.71 1.29 1.018 1.946-.308.655-.646 1.31-1.013 1.95-.38.66-.773 1.288-1.18 1.87-.728.063-1.466.098-2.21.098-.74 0-1.477-.035-2.202-.093-.406-.582-.802-1.204-1.183-1.86-.372-.64-.71-1.29-1.018-1.946.303-.657.646-1.313 1.013-1.954.38-.66.773-1.286 1.18-1.868.728-.064 1.466-.098 2.21-.098zm-3.635.254c-.24.377-.48.763-.704 1.16-.225.39-.435.782-.635 1.174-.265-.656-.49-1.31-.676-1.947.64-.15 1.315-.283 2.015-.386zm7.26 0c.695.103 1.365.23 2.006.387-.18.632-.405 1.282-.66 1.933-.2-.39-.41-.783-.64-1.174-.225-.392-.465-.774-.705-1.146zm3.063.675c.484.15.944.317 1.375.498 1.732.74 2.852 1.708 2.852 2.476-.005.768-1.125 1.74-2.857 2.475-.42.18-.88.342-1.355.493-.28-.958-.646-1.956-1.1-2.98.45-1.017.81-2.01 1.085-2.964zm-13.395.004c.278.96.645 1.957 1.1 2.98-.45 1.017-.812 2.01-1.086 2.964-.484-.15-.944-.318-1.37-.5-1.732-.737-2.852-1.706-2.852-2.474 0-.768 1.12-1.742 2.852-2.476.42-.18.88-.342 1.356-.494zm11.678 4.28c.265.657.49 1.312.676 1.948-.64.157-1.316.29-2.016.39.24-.375.48-.762.705-1.158.225-.39.435-.788.636-1.18zm-9.945.02c.2.392.41.783.64 1.175.23.39.465.772.705 1.143-.695-.102-1.365-.23-2.006-.386.18-.63.406-1.282.66-1.933zM17.92 16.32c.112.493.2.968.254 1.423.23 1.868-.054 3.32-.714 3.708-.147.09-.338.128-.563.128-1.012 0-2.514-.807-4.11-2.28.686-.72 1.37-1.536 2.02-2.44 1.107-.118 2.154-.3 3.113-.54zm-11.83.01c.96.234 2.006.415 3.107.532.66.905 1.345 1.727 2.035 2.446-1.595 1.483-3.092 2.295-4.11 2.295-.22-.005-.406-.05-.553-.132-.666-.38-.955-1.834-.73-3.703.054-.46.142-.944.25-1.438zm4.56.64c.44.02.89.034 1.345.034.46 0 .915-.01 1.36-.034-.44.572-.895 1.095-1.345 1.565-.455-.47-.91-.993-1.36-1.565z%22/%3E%3C/svg%3E"); }
+.switcher__tab[data-framework="vue"] .switcher__mark { -webkit-mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3EVue.js%3C/title%3E%3Cpath d=%22M24,1.61H14.06L12,5.16,9.94,1.61H0L12,22.39ZM12,14.08,5.16,2.23H9.59L12,6.41l2.41-4.18h4.43Z%22/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3EVue.js%3C/title%3E%3Cpath d=%22M24,1.61H14.06L12,5.16,9.94,1.61H0L12,22.39ZM12,14.08,5.16,2.23H9.59L12,6.41l2.41-4.18h4.43Z%22/%3E%3C/svg%3E"); }
+.switcher__tab[data-framework="svelte"] .switcher__mark { -webkit-mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3ESvelte%3C/title%3E%3Cpath d=%22M10.354 21.125a4.44 4.44 0 0 1-4.765-1.767 4.109 4.109 0 0 1-.703-3.107 3.898 3.898 0 0 1 .134-.522l.105-.321.287.21a7.21 7.21 0 0 0 2.186 1.092l.208.063-.02.208a1.253 1.253 0 0 0 .226.83 1.337 1.337 0 0 0 1.435.533 1.231 1.231 0 0 0 .343-.15l5.59-3.562a1.164 1.164 0 0 0 .524-.778 1.242 1.242 0 0 0-.211-.937 1.338 1.338 0 0 0-1.435-.533 1.23 1.23 0 0 0-.343.15l-2.133 1.36a4.078 4.078 0 0 1-1.135.499 4.44 4.44 0 0 1-4.765-1.766 4.108 4.108 0 0 1-.702-3.108 3.855 3.855 0 0 1 1.742-2.582l5.589-3.563a4.072 4.072 0 0 1 1.135-.499 4.44 4.44 0 0 1 4.765 1.767 4.109 4.109 0 0 1 .703 3.107 3.943 3.943 0 0 1-.134.522l-.105.321-.286-.21a7.204 7.204 0 0 0-2.187-1.093l-.208-.063.02-.207a1.255 1.255 0 0 0-.226-.831 1.337 1.337 0 0 0-1.435-.532 1.231 1.231 0 0 0-.343.15L8.62 9.368a1.162 1.162 0 0 0-.524.778 1.24 1.24 0 0 0 .211.937 1.338 1.338 0 0 0 1.435.533 1.235 1.235 0 0 0 .344-.151l2.132-1.36a4.067 4.067 0 0 1 1.135-.498 4.44 4.44 0 0 1 4.765 1.766 4.108 4.108 0 0 1 .702 3.108 3.857 3.857 0 0 1-1.742 2.583l-5.589 3.562a4.072 4.072 0 0 1-1.135.499m10.358-17.95C18.484-.015 14.082-.96 10.9 1.068L5.31 4.63a6.412 6.412 0 0 0-2.896 4.295 6.753 6.753 0 0 0 .666 4.336 6.43 6.43 0 0 0-.96 2.396 6.833 6.833 0 0 0 1.168 5.167c2.229 3.19 6.63 4.135 9.812 2.108l5.59-3.562a6.41 6.41 0 0 0 2.896-4.295 6.756 6.756 0 0 0-.665-4.336 6.429 6.429 0 0 0 .958-2.396 6.831 6.831 0 0 0-1.167-5.168Z%22/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3ESvelte%3C/title%3E%3Cpath d=%22M10.354 21.125a4.44 4.44 0 0 1-4.765-1.767 4.109 4.109 0 0 1-.703-3.107 3.898 3.898 0 0 1 .134-.522l.105-.321.287.21a7.21 7.21 0 0 0 2.186 1.092l.208.063-.02.208a1.253 1.253 0 0 0 .226.83 1.337 1.337 0 0 0 1.435.533 1.231 1.231 0 0 0 .343-.15l5.59-3.562a1.164 1.164 0 0 0 .524-.778 1.242 1.242 0 0 0-.211-.937 1.338 1.338 0 0 0-1.435-.533 1.23 1.23 0 0 0-.343.15l-2.133 1.36a4.078 4.078 0 0 1-1.135.499 4.44 4.44 0 0 1-4.765-1.766 4.108 4.108 0 0 1-.702-3.108 3.855 3.855 0 0 1 1.742-2.582l5.589-3.563a4.072 4.072 0 0 1 1.135-.499 4.44 4.44 0 0 1 4.765 1.767 4.109 4.109 0 0 1 .703 3.107 3.943 3.943 0 0 1-.134.522l-.105.321-.286-.21a7.204 7.204 0 0 0-2.187-1.093l-.208-.063.02-.207a1.255 1.255 0 0 0-.226-.831 1.337 1.337 0 0 0-1.435-.532 1.231 1.231 0 0 0-.343.15L8.62 9.368a1.162 1.162 0 0 0-.524.778 1.24 1.24 0 0 0 .211.937 1.338 1.338 0 0 0 1.435.533 1.235 1.235 0 0 0 .344-.151l2.132-1.36a4.067 4.067 0 0 1 1.135-.498 4.44 4.44 0 0 1 4.765 1.766 4.108 4.108 0 0 1 .702 3.108 3.857 3.857 0 0 1-1.742 2.583l-5.589 3.562a4.072 4.072 0 0 1-1.135.499m10.358-17.95C18.484-.015 14.082-.96 10.9 1.068L5.31 4.63a6.412 6.412 0 0 0-2.896 4.295 6.753 6.753 0 0 0 .666 4.336 6.43 6.43 0 0 0-.96 2.396 6.833 6.833 0 0 0 1.168 5.167c2.229 3.19 6.63 4.135 9.812 2.108l5.59-3.562a6.41 6.41 0 0 0 2.896-4.295 6.756 6.756 0 0 0-.665-4.336 6.429 6.429 0 0 0 .958-2.396 6.831 6.831 0 0 0-1.167-5.168Z%22/%3E%3C/svg%3E"); }
+.switcher__tab[data-framework="solid"] .switcher__mark { -webkit-mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3ESolid%3C/title%3E%3Cpath d=%22M11.558.788A9.082 9.082 0 0 0 9.776.99l-.453.15c-.906.303-1.656.755-2.1 1.348l-.301.452-2.035 3.528c.426-.387.974-.698 1.643-.894h.001l.613-.154h.001a8.82 8.82 0 0 1 1.777-.206c2.916-.053 6.033 1.148 8.423 2.36 2.317 1.175 3.888 2.32 3.987 2.39L24 5.518c-.082-.06-1.66-1.21-3.991-2.386-2.393-1.206-5.521-2.396-8.45-2.343zM8.924 5.366a8.634 8.634 0 0 0-1.745.203l-.606.151c-1.278.376-2.095 1.16-2.43 2.108-.334.948-.188 2.065.487 3.116.33.43.747.813 1.216 1.147L12.328 10h.001a6.943 6.943 0 0 1 6.013 1.013l2.844-.963c-.17-.124-1.663-1.2-3.91-2.34-2.379-1.206-5.479-2.396-8.352-2.344zm5.435 4.497a6.791 6.791 0 0 0-1.984.283L2.94 13.189 0 18.334l9.276-2.992a6.945 6.945 0 0 1 7.408 2.314v.001c.695.903.89 1.906.66 2.808l2.572-4.63c.595-1.041.45-2.225-.302-3.429a6.792 6.792 0 0 0-5.255-2.543zm-3.031 5.341a6.787 6.787 0 0 0-2.006.283L.008 18.492c.175.131 2.02 1.498 4.687 2.768 2.797 1.332 6.37 2.467 9.468 1.712l.454-.152h.002c1.278-.376 2.134-1.162 2.487-2.09.353-.93.207-2.004-.541-2.978a6.791 6.791 0 0 0-5.237-2.548z%22/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3ESolid%3C/title%3E%3Cpath d=%22M11.558.788A9.082 9.082 0 0 0 9.776.99l-.453.15c-.906.303-1.656.755-2.1 1.348l-.301.452-2.035 3.528c.426-.387.974-.698 1.643-.894h.001l.613-.154h.001a8.82 8.82 0 0 1 1.777-.206c2.916-.053 6.033 1.148 8.423 2.36 2.317 1.175 3.888 2.32 3.987 2.39L24 5.518c-.082-.06-1.66-1.21-3.991-2.386-2.393-1.206-5.521-2.396-8.45-2.343zM8.924 5.366a8.634 8.634 0 0 0-1.745.203l-.606.151c-1.278.376-2.095 1.16-2.43 2.108-.334.948-.188 2.065.487 3.116.33.43.747.813 1.216 1.147L12.328 10h.001a6.943 6.943 0 0 1 6.013 1.013l2.844-.963c-.17-.124-1.663-1.2-3.91-2.34-2.379-1.206-5.479-2.396-8.352-2.344zm5.435 4.497a6.791 6.791 0 0 0-1.984.283L2.94 13.189 0 18.334l9.276-2.992a6.945 6.945 0 0 1 7.408 2.314v.001c.695.903.89 1.906.66 2.808l2.572-4.63c.595-1.041.45-2.225-.302-3.429a6.792 6.792 0 0 0-5.255-2.543zm-3.031 5.341a6.787 6.787 0 0 0-2.006.283L.008 18.492c.175.131 2.02 1.498 4.687 2.768 2.797 1.332 6.37 2.467 9.468 1.712l.454-.152h.002c1.278-.376 2.134-1.162 2.487-2.09.353-.93.207-2.004-.541-2.978a6.791 6.791 0 0 0-5.237-2.548z%22/%3E%3C/svg%3E"); }
+.switcher__tab[data-framework="angular"] .switcher__mark { -webkit-mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3EAngular%3C/title%3E%3Cpath d=%22M16.712 17.711H7.288l-1.204 2.916L12 24l5.916-3.373-1.204-2.916ZM14.692 0l7.832 16.855.814-12.856L14.692 0ZM9.308 0 .662 3.999l.814 12.856L9.308 0Zm-.405 13.93h6.198L12 6.396 8.903 13.93Z%22/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3EAngular%3C/title%3E%3Cpath d=%22M16.712 17.711H7.288l-1.204 2.916L12 24l5.916-3.373-1.204-2.916ZM14.692 0l7.832 16.855.814-12.856L14.692 0ZM9.308 0 .662 3.999l.814 12.856L9.308 0Zm-.405 13.93h6.198L12 6.396 8.903 13.93Z%22/%3E%3C/svg%3E"); }
+.switcher__tab[data-framework="qwik"] .switcher__mark { -webkit-mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3EQwik%3C/title%3E%3Cpath d=%22M7.5469 0a2.957 2.957 0 0 0-2.5606 1.4785L.5332 9.1915a2.957 2.957 0 0 0 0 2.957l4.4531 7.7128A2.955 2.955 0 0 0 7.547 21.338H12l8.5938 2.6484c.2409.0742.4512-.1782.3359-.4023l-1.916-3.7227 4.4531-7.7129a2.957 2.957 0 0 0 0-2.957l-4.4531-7.7129A2.957 2.957 0 0 0 16.453 0zm0 .7656L17.7324 10.67l-1.8965 1.8985.5782 7.5332L6.2676 10.67l2.371-2.373z%22/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3EQwik%3C/title%3E%3Cpath d=%22M7.5469 0a2.957 2.957 0 0 0-2.5606 1.4785L.5332 9.1915a2.957 2.957 0 0 0 0 2.957l4.4531 7.7128A2.955 2.955 0 0 0 7.547 21.338H12l8.5938 2.6484c.2409.0742.4512-.1782.3359-.4023l-1.916-3.7227 4.4531-7.7129a2.957 2.957 0 0 0 0-2.957l-4.4531-7.7129A2.957 2.957 0 0 0 16.453 0zm0 .7656L17.7324 10.67l-1.8965 1.8985.5782 7.5332L6.2676 10.67l2.371-2.373z%22/%3E%3C/svg%3E"); }
+
+.switcher__grid {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+	gap: var(--space-s);
+	align-items: start;
+}
+
+@media (max-width: 60rem) {
+	.switcher__grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+.switcher__panels {
+	display: grid;
+}
+
+.switcher__panel {
+	grid-area: 1 / 1;
+	min-inline-size: 0;
+	display: grid;
+	gap: var(--space-2xs);
+	transition: opacity var(--motion-slide), translate var(--motion-slide);
+}
+
+.switcher__panel[hidden] {
+	display: none;
+}
+
+.switcher__panel[data-entering] {
+	opacity: 0;
+	translate: 1.5rem 0;
+}
+
+.switcher__lede {
+	font-size: var(--step--1);
+	color: var(--ink-muted);
+	margin: 0;
+	max-width: 52ch;
+}
+
+.switcher__caption {
+	font-size: var(--step--2);
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: var(--tracking-caps);
+	color: var(--ink-muted);
+	margin: 0 0 var(--space-2xs);
+}
+
+/* The code block, restated locally so this component is pasteable on its own.
+   Que Grotesque must never set code. */
+.code-block {
+	display: grid;
+	min-inline-size: 0;
+	background: var(--surface-sunk);
+	border: var(--sticker-keyline, 2px) solid var(--ink);
+	color: var(--ink);
+	overflow: hidden;
+}
+
+.code-block__head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: var(--space-2xs);
+	padding: var(--space-2xs) var(--space-xs);
+	border-block-end: var(--sticker-keyline-hair, 1px) solid color-mix(in srgb, var(--band) 28%, transparent);
+}
+
+.code-block__label {
+	font-size: var(--step--2);
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: var(--tracking-caps);
+}
+
+.code-block__path {
+	font-family: var(--font-mono);
+	font-size: var(--step--2);
+	color: var(--ink-muted);
+}
+
+.code-block pre {
+	margin: 0;
+	padding: var(--space-xs);
+	font-family: var(--font-mono);
+	font-size: var(--step--2);
+	line-height: 1.55;
+	tab-size: 2;
+	overflow: auto;
+	max-block-size: 34rem;
+}
+
+.code-block code { font-family: inherit; font-size: inherit; }
+
+.code-block__provenance {
+	font-family: var(--font-mono);
+	font-size: var(--step--2);
+	padding: var(--space-2xs) var(--space-xs);
+	border-block-start: var(--sticker-keyline-hair, 1px) solid color-mix(in srgb, var(--band) 28%, transparent);
+	color: var(--ink-muted);
+	margin: 0;
+	overflow-wrap: anywhere;
+}
+
+/* An empty slot is marked by GEOMETRY, not by colour or opacity: a dashed
+   keyline reads as "not printed yet", which is this brand's own vocabulary for
+   a thing that is not there. */
+.code-block--empty {
+	border-style: dashed;
+	background: transparent;
+	color: var(--ink);
+}
+
+.code-block--empty .code-block__head,
+.code-block--empty .code-block__provenance {
+	border-color: color-mix(in srgb, var(--ink) 30%, transparent);
+	color: var(--ink-muted);
+}
+</style>
+</head>
+
+<body>
+<main class="spec">
+
+<header>
+	<p class="spec__kicker">Frameless component · the thesis</p>
+	<h1>output-switcher</h1>
+	<p class="spec__lede">One source on the left, its real emitted output on the right. Superseded by <code>framework-carousel</code>, which is the same argument with the avara selection mechanic — reach for that one first. This remains the compact, no-JavaScript form of the same demonstrating it — so if a page ships exactly one interaction, make it this one.</p>
+</header>
+
+<div class="spec__use">
+	<div>
+		<h2>Use it when</h2>
+		<ul>
+			<li>The page makes the compile claim. It is section 3 of the mandatory composition.</li>
+			<li>You want the reader to check rather than believe.</li>
+			<li>You have real emitted files, with paths and hashes.</li>
+		</ul>
+	</div>
+	<div class="spec__use--no">
+		<h2>Don't use it when</h2>
+		<ul>
+			<li>You would fill it with hand-written code. That defeats the entire component.</li>
+			<li>You would show fewer than six tabs. Show the set; leave the unfilled ones empty and labelled.</li>
+			<li>You are tempted to fabricate a sha256. Never.</li>
+		</ul>
+	</div>
+</div>
+
+<hr class="spec__rule">
+
+<section>
+	<h2>Live</h2>
+	<div class="switcher">
+		<div class="switcher__tablist" role="tablist" aria-label="Compilation target">
+				<button type="button" class="switcher__tab tilt-1" id="tab-react" role="tab" aria-controls="panel-react" aria-selected="true" tabindex="0" data-framework="react"><span class="switcher__mark" aria-hidden="true"></span><span class="switcher__name">React</span></button>
+				<button type="button" class="switcher__tab tilt-2" id="tab-vue" role="tab" aria-controls="panel-vue" aria-selected="false" tabindex="-1" data-framework="vue"><span class="switcher__mark" aria-hidden="true"></span><span class="switcher__name">Vue</span></button>
+				<button type="button" class="switcher__tab tilt-3" id="tab-svelte" role="tab" aria-controls="panel-svelte" aria-selected="false" tabindex="-1" data-framework="svelte"><span class="switcher__mark" aria-hidden="true"></span><span class="switcher__name">Svelte</span></button>
+				<button type="button" class="switcher__tab tilt-1" id="tab-solid" role="tab" aria-controls="panel-solid" aria-selected="false" tabindex="-1" data-framework="solid"><span class="switcher__mark" aria-hidden="true"></span><span class="switcher__name">Solid</span></button>
+				<button type="button" class="switcher__tab tilt-2" id="tab-angular" role="tab" aria-controls="panel-angular" aria-selected="false" tabindex="-1" data-framework="angular"><span class="switcher__mark" aria-hidden="true"></span><span class="switcher__name">Angular</span></button>
+				<button type="button" class="switcher__tab tilt-3" id="tab-qwik" role="tab" aria-controls="panel-qwik" aria-selected="false" tabindex="-1" data-framework="qwik"><span class="switcher__mark" aria-hidden="true"></span><span class="switcher__name">Qwik</span></button>
+		</div>
+
+		<div class="switcher__grid">
+			<div>
+				<p class="switcher__caption">One source</p>
+				<div class="code-block">
+					<div class="code-block__head">
+						<span class="code-block__label">Source · .tsrx</span>
+						<span class="code-block__path">packages/compiler/test/fixtures/s1-render-once.tsrx</span>
+					</div>
+<pre><code>import { computed, state } from '@markless/core';
+
+export function RenderOnce({ label, multiplier, visible, onTrace }) @{
+	const setup = onTrace('setup', { runs: 1 });
+	let count = state(1);
+	const prefix = `${label}:`;
+	const derived = computed(() =&gt; `${prefix}${count * multiplier}`);
+
+	&lt;div data-s1-root=""&gt;
+		@if (!visible) {
+			&lt;p data-branch="hidden"&gt;hidden&lt;/p&gt;
+		} @else {
+			&lt;section data-scenario="s1"&gt;
+				&lt;output data-value="derived"&gt;{derived}&lt;/output&gt;
+				&lt;button
+					data-action="increment"
+					onClick={() =&gt; {
+						count++;
+						onTrace('change', { count });
+					}}
+				&gt;increment&lt;/button&gt;
+			&lt;/section&gt;
+		}
+	&lt;/div&gt;
+}</code></pre>
+					<p class="code-block__provenance" data-provenance="verbatim">25 lines · verbatim from this repository</p>
+				</div>
+			</div>
+
+			<div>
+				<p class="switcher__caption">Compiled output</p>
+				<div class="switcher__panels">
+			<div class="switcher__panel" id="panel-react" role="tabpanel" aria-labelledby="tab-react" data-framework="react" hidden>
+				<div class="code-block">
+					<div class="code-block__head">
+						<span class="code-block__label">React output · Hydrates</span>
+						<span class="code-block__path">packages/frameworks/react/generated/S1.jsx</span>
+					</div>
+<pre><code>// @generated by @frameless/react; do not edit.
+import { useRef, useState } from 'react';
+
+export function RenderOnce({ label, multiplier, visible, onTrace }) {
+	const setupDone = useRef(null);
+	if (setupDone.current === null) {
+		setupDone.current = true;
+		onTrace('setup', { runs: 1 });
+	}
+	const [count, setCount] = useState(1);
+	const [prefix] = useState(() =&gt; `${label}:`);
+	const derived = `${prefix}${count * multiplier}`;
+	return (
+		&lt;div data-s1-root=""&gt;
+			{!visible ? (
+				&lt;p data-branch="hidden"&gt;hidden&lt;/p&gt;
+			) : (
+				&lt;section data-scenario="s1"&gt;
+					&lt;output data-value="derived"&gt;{derived}&lt;/output&gt;
+					&lt;button
+						data-action="increment"
+						onClick={() =&gt; {
+							const nextCount = count + 1;
+							setCount(nextCount);
+							onTrace('change', { count: nextCount });
+						}}
+					&gt;
+						increment
+					&lt;/button&gt;
+				&lt;/section&gt;
+			)}
+		&lt;/div&gt;
+	);
+}</code></pre>
+					<p class="code-block__provenance" data-provenance="verbatim">verbatim from this repository · sha256 b2a8e9a7418780fd39d5b2d7114afb6226ce28c224e5cba3049394824bce7157</p>
+				</div>
+				<p class="switcher__lede">Hooks, a ternary for the branch, and a plain template literal for the derived value. Nothing clever — which is the point.</p>
+			</div>
+			<div class="switcher__panel" id="panel-vue" role="tabpanel" aria-labelledby="tab-vue" data-framework="vue" hidden>
+				<div class="code-block code-block--empty">
+					<div class="code-block__head">
+						<span class="code-block__label">Vue output</span>
+						<span class="code-block__path">paste your build output here</span>
+					</div>
+<pre><code>/* This slot ships EMPTY on purpose.
+ *
+ * Fill it with the real emitted file from your own build:
+ *
+ *     frameless build --target vue
+ *
+ * Then set data-provenance on the line below to the path and sha256 of the
+ * file you pasted, exactly as the React, Solid and Qwik slots do.
+ *
+ * Do NOT hand-write a plausible-looking snippet here. The whole value of this
+ * component is that a reader can check it, and a hand-written snippet with a
+ * fabricated hash under it is worse than an empty box — it turns the one
+ * inspectable claim on the page into an unverifiable one.
+ */</code></pre>
+					<p class="code-block__provenance" data-provenance="empty">empty slot · fill from your build output before shipping this page</p>
+				</div>
+				<p class="switcher__lede">This component is a template. The three filled slots are a worked example using output captured from this repository; the rest are yours to fill.</p>
+			</div>
+			<div class="switcher__panel" id="panel-svelte" role="tabpanel" aria-labelledby="tab-svelte" data-framework="svelte" hidden>
+				<div class="code-block code-block--empty">
+					<div class="code-block__head">
+						<span class="code-block__label">Svelte output</span>
+						<span class="code-block__path">paste your build output here</span>
+					</div>
+<pre><code>/* This slot ships EMPTY on purpose.
+ *
+ * Fill it with the real emitted file from your own build:
+ *
+ *     frameless build --target svelte
+ *
+ * Then set data-provenance on the line below to the path and sha256 of the
+ * file you pasted, exactly as the React, Solid and Qwik slots do.
+ *
+ * Do NOT hand-write a plausible-looking snippet here. The whole value of this
+ * component is that a reader can check it, and a hand-written snippet with a
+ * fabricated hash under it is worse than an empty box — it turns the one
+ * inspectable claim on the page into an unverifiable one.
+ */</code></pre>
+					<p class="code-block__provenance" data-provenance="empty">empty slot · fill from your build output before shipping this page</p>
+				</div>
+				<p class="switcher__lede">This component is a template. The three filled slots are a worked example using output captured from this repository; the rest are yours to fill.</p>
+			</div>
+			<div class="switcher__panel" id="panel-solid" role="tabpanel" aria-labelledby="tab-solid" data-framework="solid" hidden>
+				<div class="code-block">
+					<div class="code-block__head">
+						<span class="code-block__label">Solid output · Hydrates</span>
+						<span class="code-block__path">packages/frameworks/solid/generated/S1.jsx</span>
+					</div>
+<pre><code>// @generated by @frameless/solid; do not edit.
+import { createSignal, untrack, Show } from 'solid-js';
+
+export function RenderOnce(props) {
+	untrack(() =&gt; props.onTrace('setup', { runs: 1 }));
+	const [count, setCount] = createSignal(1);
+	const prefix = untrack(() =&gt; `${props.label}:`);
+	const derived = () =&gt; `${prefix}${count() * props.multiplier}`;
+	return (
+		&lt;div data-s1-root=""&gt;
+			&lt;Show
+				when={!props.visible}
+				fallback={
+					&lt;section data-scenario="s1"&gt;
+						&lt;output data-value="derived"&gt;{derived()}&lt;/output&gt;
+						&lt;button
+							data-action="increment"
+							onClick={() =&gt; {
+								setCount(count() + 1);
+								props.onTrace('change', { count: count() });
+							}}
+						&gt;
+							increment
+						&lt;/button&gt;
+					&lt;/section&gt;
+				}
+			&gt;
+				&lt;p data-branch="hidden"&gt;hidden&lt;/p&gt;
+			&lt;/Show&gt;
+		&lt;/div&gt;
+	);
+}</code></pre>
+					<p class="code-block__provenance" data-provenance="verbatim">verbatim from this repository · sha256 d4011e110328f672d2db7cf61e9d5639883937e11011274eb4eadfb7e78b99fa</p>
+				</div>
+				<p class="switcher__lede">Signals plus <Show when= fallback=>. Solid gets Solid idiom, not translated React.</p>
+			</div>
+			<div class="switcher__panel" id="panel-angular" role="tabpanel" aria-labelledby="tab-angular" data-framework="angular" hidden>
+				<div class="code-block code-block--empty">
+					<div class="code-block__head">
+						<span class="code-block__label">Angular output</span>
+						<span class="code-block__path">paste your build output here</span>
+					</div>
+<pre><code>/* This slot ships EMPTY on purpose.
+ *
+ * Fill it with the real emitted file from your own build:
+ *
+ *     frameless build --target angular
+ *
+ * Then set data-provenance on the line below to the path and sha256 of the
+ * file you pasted, exactly as the React, Solid and Qwik slots do.
+ *
+ * Do NOT hand-write a plausible-looking snippet here. The whole value of this
+ * component is that a reader can check it, and a hand-written snippet with a
+ * fabricated hash under it is worse than an empty box — it turns the one
+ * inspectable claim on the page into an unverifiable one.
+ */</code></pre>
+					<p class="code-block__provenance" data-provenance="empty">empty slot · fill from your build output before shipping this page</p>
+				</div>
+				<p class="switcher__lede">This component is a template. The three filled slots are a worked example using output captured from this repository; the rest are yours to fill.</p>
+			</div>
+			<div class="switcher__panel" id="panel-qwik" role="tabpanel" aria-labelledby="tab-qwik" data-framework="qwik" hidden>
+				<div class="code-block">
+					<div class="code-block__head">
+						<span class="code-block__label">Qwik output · Resumes</span>
+						<span class="code-block__path">packages/frameworks/qwik/generated/S1.jsx</span>
+					</div>
+<pre><code>// @generated by @frameless/qwik; do not edit.
+import { $, component$, useComputed$, useSignal, useTask$ } from '@qwik.dev/core';
+
+export const RenderOnce = component$((props) =&gt; {
+	useTask$(async () =&gt; {
+		await props.onTrace$('setup', { runs: 1 });
+	});
+	const count = useSignal(1);
+	const prefix = useSignal(() =&gt; `${props.label}:`);
+	const derived = useComputed$(() =&gt; `${prefix.value}${count.value * props.multiplier}`);
+	return (
+		&lt;div data-s1-root=""&gt;
+			{!props.visible ? (
+				&lt;p data-branch="hidden"&gt;hidden&lt;/p&gt;
+			) : (
+				&lt;section data-scenario="s1"&gt;
+					&lt;output data-value="derived"&gt;{derived.value}&lt;/output&gt;
+					&lt;button
+						data-action="increment"
+						onClick$={$(async () =&gt; {
+							count.value += 1;
+							await props.onTrace$('change', { count: count.value });
+						})}
+					&gt;
+						increment
+					&lt;/button&gt;
+				&lt;/section&gt;
+			)}
+		&lt;/div&gt;
+	);
+});</code></pre>
+					<p class="code-block__provenance" data-provenance="verbatim">verbatim from this repository · sha256 6b2d6ecbe045732de25f0a589c6b9b98309850f5a50179bbfb5236431e8e55e7</p>
+				</div>
+				<p class="switcher__lede">component$, useTask$ and $-wrapped handlers. Same source, a completely different activation model.</p>
+			</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+<section>
+	<h2>What the reader is supposed to notice</h2>
+	<p class="spec__note">One source, one conditional branch, one derived value. The cheapest possible proof that the emitters are not doing lowest-common-denominator syntax translation: Solid reaches for &lt;Show when= fallback=&gt;, React and Qwik emit a ternary.</p>
+	<p class="spec__note">That difference is the product working. No lowest-common-denominator shape, no wrapper components — the React output uses React patterns and the Solid output uses Solid patterns, because the compiler works from meaning rather than from syntax.</p>
+</section>
+
+<section>
+	<h2>Provenance</h2>
+	<p class="spec__note">Every filled slot carries the path it came from and the sha256 of that file. This capture is attested against commit <code>de781286f9cf071eb59cde952322f82168d17f57</code>, with a clean tree, and verified by <code>pnpm e2e — 3 frameworks x 3 scenarios, real browser</code>.</p>
+	<p class="spec__note">The three empty slots are empty deliberately. Fabricating plausible code and stamping a hash under it would turn the one inspectable claim on the page into an unverifiable one — strictly worse than an empty box that says what to put in it. Fill them from your own build before shipping a page that uses this component.</p>
+	<p class="spec__verdict spec__verdict--yes">Real emitted files, with a path and a hash.</p>
+	<p class="spec__verdict spec__verdict--no">A plausible snippet with a fabricated hash under it.</p>
+</section>
+
+<section>
+	<h2>Motion and reduced motion</h2>
+	<p class="spec__note">Panels swap on <code>slide</code> — <code>cubic-bezier(0.65, 0, 0.35, 1)</code> at 300ms, symmetric because a swap has no privileged direction. Under <code>prefers-reduced-motion: reduce</code> the translate is removed entirely and only the opacity moves, capped at 120ms.</p>
+</section>
+
+<section>
+	<h2>Keyboard</h2>
+	<table class="spec__table">
+		<thead><tr><th>Key</th><th>Does</th></tr></thead>
+		<tbody>
+			<tr><td><kbd>Tab</kbd></td><td>Moves into the tab list, then out of it. One stop, not six.</td></tr>
+			<tr><td><kbd>←</kbd> <kbd>→</kbd></td><td>Moves between targets and selects.</td></tr>
+			<tr><td><kbd>Home</kbd> <kbd>End</kbd></td><td>First and last target.</td></tr>
+		</tbody>
+	</table>
+</section>
+
+</main>
+
+<script>
+	const tablist = document.querySelector('.switcher__tablist');
+	const tabs = [...tablist.querySelectorAll('[role="tab"]')];
+	const panels = [...document.querySelectorAll('[role="tabpanel"]')];
+
+	const CANONICAL = ['react', 'vue', 'svelte', 'solid', 'angular', 'qwik'];
+	if (tabs.map((t) => t.dataset.framework).join() !== CANONICAL.join()) {
+		console.error('output-switcher: canonical order violated');
+	}
+
+	function select(tab, { focus = true } = {}) {
+		for (const other of tabs) {
+			const on = other === tab;
+			other.setAttribute('aria-selected', String(on));
+			other.tabIndex = on ? 0 : -1;
+		}
+		for (const panel of panels) {
+			const on = panel.dataset.framework === tab.dataset.framework;
+			if (!on) { panel.hidden = true; continue; }
+			panel.hidden = false;
+			// Enter on the slide curve. Two frames so the initial state paints
+			// before the transition begins.
+			panel.dataset.entering = '';
+			requestAnimationFrame(() => requestAnimationFrame(() => { delete panel.dataset.entering; }));
+		}
+		if (focus) tab.focus();
+	}
+
+	tablist.addEventListener('click', (event) => {
+		const tab = event.target.closest('[role="tab"]');
+		if (tab) select(tab);
+	});
+
+	tablist.addEventListener('keydown', (event) => {
+		const index = tabs.indexOf(document.activeElement);
+		if (index === -1) return;
+		let next = null;
+		if (event.key === 'ArrowRight') next = tabs[(index + 1) % tabs.length];
+		else if (event.key === 'ArrowLeft') next = tabs[(index - 1 + tabs.length) % tabs.length];
+		else if (event.key === 'Home') next = tabs[0];
+		else if (event.key === 'End') next = tabs[tabs.length - 1];
+		if (next) { event.preventDefault(); select(next); }
+	});
+
+	select(tabs[0], { focus: false });
+</script>
+</body>
+</html>

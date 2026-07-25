@@ -1,0 +1,1456 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frameless — brand guideline</title>
+<meta name="description" content="The Frameless brand, rendered as one page. Generated from the same sources /agent reads.">
+<link rel="icon" href="../agent/visual/assets/wordmark/favicon.svg">
+<link rel="stylesheet" href="../agent/visual/colors_and_type.css">
+<link rel="stylesheet" href="../agent/visual/motion/motion.css">
+<link rel="stylesheet" href="../agent/visual/assets/wordmark/wordmark.css">
+
+<!--
+	GENERATED FILE. DO NOT EDIT.
+	  generator:  ./build-guideline.mjs
+	  regenerate: node brand/human/build-guideline.mjs
+	  verify:     node brand/human/build-guideline.mjs --check
+
+	Every value on this page is read out of the /agent sources at build time and
+	carries a data-from pointer back to the file it came from. A hand-written
+	guideline is the drifting PDF this kit exists to replace.
+-->
+
+<style>
+/* Page chrome only. Every colour, size, duration and shadow below comes from
+   the kit's own tokens — this stylesheet names no value of its own. */
+
+/* border-box, globally. colors_and_type.css deliberately does not set it — it
+   uses :where() so a host page's own reset always wins — so a page that links
+   it has to say this itself. Without it a list's own padding is added OUTSIDE
+   its 100% width and the page overflows at 390px. */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* Long file paths and token names are the one place a mid-word break is
+   correct. Without this a path in running copy pushes the page sideways on a
+   phone. */
+code { overflow-wrap: anywhere; }
+
+.page { --measure: 72rem; }
+
+/* The measure is held by the BAND's padding rather than by a width on each
+   child. Centring every child with margin-inline: auto looks identical until a
+   child has its own max-width — a paragraph inherits max-width: 68ch from the
+   kit's entry stylesheet — and then that child centres inside the column while
+   its siblings do not. Measured in Chromium: the kicker, the heading and the
+   lede each started at a different x. Holding the measure once, here, keeps
+   everything on one left edge. */
+.band {
+	padding-block: var(--space-2xl-3xl);
+	padding-inline: max(var(--space-m), calc((100% - var(--measure)) / 2));
+	background-color: var(--surface);
+	color: var(--ink);
+}
+
+/* The ruled grid, on the bands that carry no reading-length copy. Composed with
+   the page grain, which colors_and_type.css already puts on the body. */
+.band--ruled { background-image: var(--texture-grid); }
+
+.band--rule { border-block-start: var(--sticker-keyline-hair, 1px) solid color-mix(in srgb, var(--ink) 22%, transparent); }
+
+.kicker {
+	font-size: var(--step--2);
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: var(--tracking-caps);
+	color: var(--ink-muted);
+	margin: 0 0 var(--space-2xs);
+}
+
+.band h2 { margin-block-end: var(--space-s); }
+.lede { font-size: var(--step-2); font-weight: 500; line-height: 1.35; max-width: 46ch; }
+
+.masthead { display: grid; gap: var(--space-m); justify-items: start; }
+.masthead__display {
+	font-size: var(--step-6);
+	font-weight: 900;
+	line-height: 1.06;
+	letter-spacing: var(--tracking-display);
+	color: var(--accent);
+	margin: 0;
+	max-width: 18ch;
+}
+.masthead__meta { font-size: var(--step--1); color: var(--ink-muted); max-width: 78ch; }
+.masthead__meta p { max-width: 68ch; }
+.masthead__meta ul { margin: var(--space-2xs) 0 0; padding-inline-start: 1.2em; columns: 2; column-gap: var(--space-l); }
+.masthead__meta li { break-inside: avoid; }
+.masthead__meta code { font-size: 0.95em; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: var(--space-m); align-items: start; }
+
+/* A swatch is a die-cut object, so it carries the band, the keyline and the
+   shadow like everything else. A guideline that documents mandatory elevation
+   on flat rectangles is arguing against itself. */
+.swatch {
+	display: grid;
+	gap: var(--space-3xs);
+	padding: var(--space-s);
+	background: var(--surface-raised);
+	border: var(--sticker-keyline, 2px) solid var(--keyline);
+	border-radius: var(--sticker-radius-small);
+	color: var(--ink);
+	filter: var(--elev-card);
+}
+.swatch__chip { block-size: 4.5rem; border: var(--sticker-keyline, 2px) solid var(--keyline); border-radius: var(--sticker-radius-small); }
+.swatch__chip--sm { display: inline-block; inline-size: 1.6rem; block-size: 1.6rem; vertical-align: middle; }
+.swatch__pair { display: flex; align-items: center; gap: var(--space-2xs); }
+.swatch__name { font-family: var(--font-mono); font-size: var(--step-0); font-weight: 700; margin: var(--space-2xs) 0 0; }
+.swatch__hex { font-family: var(--font-mono); font-size: var(--step--1); margin: 0; }
+.swatch__role { font-size: var(--step--2); font-weight: 700; text-transform: uppercase; letter-spacing: var(--tracking-caps); color: var(--ink-muted); margin: 0; }
+.swatch__meta { font-size: var(--step--2); color: var(--ink-muted); }
+.swatch__intent { font-size: var(--step--1); margin: var(--space-2xs) 0 0; max-width: none; }
+.swatch__never { font-size: var(--step--1); margin: 0; color: var(--danger); max-width: none; }
+.swatch__source { font-family: var(--font-mono); font-size: var(--step--2); color: var(--ink-muted); margin: 0; max-width: none; }
+
+.law { display: grid; gap: var(--space-s); }
+.law__statement {
+	font-size: var(--step-5);
+	font-weight: 900;
+	line-height: 1.06;
+	letter-spacing: var(--tracking-display);
+	color: var(--accent);
+	margin: 0;
+	max-width: 20ch;
+}
+.law__why { max-width: 62ch; }
+.law__rules { display: grid; gap: var(--space-2xs); }
+.law__rule { display: grid; grid-template-columns: minmax(9rem, 12rem) 1fr; gap: var(--space-s); font-size: var(--step--1); }
+.law__rule dt { font-family: var(--font-mono); font-weight: 700; }
+.law__rule dd { margin: 0; }
+
+table { border-collapse: collapse; inline-size: 100%; font-size: var(--step--1); }
+caption { text-align: start; font-size: var(--step--1); color: var(--ink-muted); padding-block-end: var(--space-2xs); }
+th, td { text-align: start; vertical-align: top; padding: var(--space-2xs); border-block-end: var(--sticker-keyline-hair, 1px) solid color-mix(in srgb, var(--ink) 20%, transparent); }
+th { font-size: var(--step--2); text-transform: uppercase; letter-spacing: var(--tracking-caps); }
+td.num { font-family: var(--font-mono); white-space: nowrap; }
+td.passes { font-family: var(--font-mono); font-size: var(--step--2); white-space: nowrap; }
+td.ctx { max-inline-size: 26rem; }
+.muted { color: var(--ink-muted); }
+.yes { color: var(--success); font-weight: 700; }
+.no { color: var(--danger); font-weight: 700; }
+.scroll { overflow-x: auto; }
+
+.chipline { display: inline-flex; align-items: center; gap: 0.4em; font-family: var(--font-mono); }
+.chipline__dot { inline-size: 0.9em; block-size: 0.9em; flex: none; border: var(--sticker-keyline-hair, 1px) solid color-mix(in srgb, var(--ink) 40%, transparent); }
+
+.specimen {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2xs);
+	min-inline-size: 13rem;
+	padding: 0.5em 0.7em;
+	border: var(--sticker-keyline, 2px) solid var(--keyline);
+	font-size: var(--step--1);
+	white-space: nowrap;
+}
+.specimen--fill { justify-content: flex-start; }
+.specimen__bar { inline-size: 2.5rem; block-size: 1.1rem; flex: none; border: var(--sticker-keyline-hair, 1px) solid var(--keyline); }
+.specimen__note { font-size: var(--step--2); white-space: normal; }
+
+.type-row { display: grid; gap: var(--space-2xs); padding-block: var(--space-s); border-block-end: var(--sticker-keyline-hair, 1px) solid color-mix(in srgb, var(--ink) 20%, transparent); }
+.type-row__meta { font-family: var(--font-mono); font-size: var(--step--2); color: var(--ink-muted); overflow-wrap: anywhere; }
+.type-row__sample { margin: 0; max-width: none; overflow-wrap: anywhere; }
+
+.space-row { display: grid; grid-template-columns: 7rem 1fr; gap: var(--space-s); align-items: center; padding-block: var(--space-2xs); }
+.space-row__bar { block-size: 1.1rem; background: var(--accent); border: var(--sticker-keyline-hair, 1px) solid var(--keyline); }
+.space-row__name { font-family: var(--font-mono); font-size: var(--step--1); font-weight: 700; }
+.space-row__clamp { font-family: var(--font-mono); font-size: var(--step--2); color: var(--ink-muted); grid-column: 1 / -1; overflow-wrap: anywhere; }
+
+/* ── elevation specimens ─────────────────────────────────────────────────── */
+
+.elevations { display: flex; flex-wrap: wrap; gap: var(--space-l); align-items: flex-start; }
+.elev-demo { display: grid; gap: var(--space-2xs); justify-items: center; }
+.elev-demo__tile {
+	inline-size: 8.5rem;
+	block-size: 5.5rem;
+	display: grid;
+	place-items: center;
+	padding: var(--sticker-band-fixed);
+	background-color: var(--band);
+	background-image: var(--band-sheen);
+	border-radius: var(--sticker-radius);
+	font-weight: 900;
+	font-size: var(--step-1);
+	color: var(--keyline);
+	rotate: var(--tilt-rest);
+}
+.elev-demo--sticker .elev-demo__tile { filter: var(--elev-sticker); }
+.elev-demo--card .elev-demo__tile { filter: var(--elev-card); }
+.elev-demo--lifted .elev-demo__tile { filter: var(--elev-lifted); }
+.elev-demo--inset .elev-demo__tile { background: var(--surface-sunk); background-image: none; color: var(--ink-muted); rotate: none; box-shadow: var(--elev-inset); }
+.elev-demo__name { font-family: var(--font-mono); font-size: var(--step--2); color: var(--ink-muted); }
+
+/* ── framework stickers ──────────────────────────────────────────────────── */
+
+.badges { display: flex; flex-wrap: wrap; gap: var(--space-l); align-items: flex-start; }
+.badge {
+	display: grid;
+	gap: var(--space-2xs);
+	justify-items: center;
+	margin: 0;
+	inline-size: 9.5rem;
+}
+.badge__fill {
+	inline-size: 100%;
+	display: grid;
+	justify-items: center;
+	gap: var(--space-2xs);
+	padding: var(--space-s) var(--space-xs);
+	background-color: var(--cut-fill);
+	background-image: var(--gloss);
+	border: var(--sticker-keyline-bold, 3px) solid var(--cut-keyline);
+	border-radius: var(--sticker-radius);
+	outline: var(--sticker-band-fixed) solid var(--cut-band);
+	filter: var(--elev-sticker);
+	rotate: var(--tilt-rest);
+}
+.badge.tilt-2 .badge__fill { rotate: var(--tilt-2); }
+.badge.tilt-3 .badge__fill { rotate: var(--tilt-3); }
+.badge.tilt-4 .badge__fill { rotate: var(--tilt-4); }
+.badge__mark {
+	inline-size: 2.2rem;
+	block-size: 2.2rem;
+	background-color: var(--logo);
+	-webkit-mask-position: center;
+	mask-position: center;
+	-webkit-mask-repeat: no-repeat;
+	mask-repeat: no-repeat;
+	-webkit-mask-size: contain;
+	mask-size: contain;
+}
+/* The name is a WORD inside the sticker, in white, always. A logo alone is not
+   identification for anyone who does not already know the logo. */
+.badge__name { font-size: var(--step--1); font-weight: 900; color: #ffffff; letter-spacing: var(--tracking-caps); }
+.badge__spec { font-family: var(--font-mono); font-size: var(--step--2); color: var(--ink-muted); text-align: center; margin-block-start: var(--space-2xs); }
+.badge[data-framework="react"] .badge__mark,
+.footer-marks__mark[data-framework="react"] { -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20role%3D%22img%22%20viewBox%3D%220%200%2024%2024%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Ctitle%3EReact%3C%2Ftitle%3E%3Cpath%20d%3D%22M14.23%2012.004a2.236%202.236%200%200%201-2.235%202.236%202.236%202.236%200%200%201-2.236-2.236%202.236%202.236%200%200%201%202.235-2.236%202.236%202.236%200%200%201%202.236%202.236zm2.648-10.69c-1.346%200-3.107.96-4.888%202.622-1.78-1.653-3.542-2.602-4.887-2.602-.41%200-.783.093-1.106.278-1.375.793-1.683%203.264-.973%206.365C1.98%208.917%200%2010.42%200%2012.004c0%201.59%201.99%203.097%205.043%204.03-.704%203.113-.39%205.588.988%206.38.32.187.69.275%201.102.275%201.345%200%203.107-.96%204.888-2.624%201.78%201.654%203.542%202.603%204.887%202.603.41%200%20.783-.09%201.106-.275%201.374-.792%201.683-3.263.973-6.365C22.02%2015.096%2024%2013.59%2024%2012.004c0-1.59-1.99-3.097-5.043-4.032.704-3.11.39-5.587-.988-6.38-.318-.184-.688-.277-1.092-.278zm-.005%201.09v.006c.225%200%20.406.044.558.127.666.382.955%201.835.73%203.704-.054.46-.142.945-.25%201.44-.96-.236-2.006-.417-3.107-.534-.66-.905-1.345-1.727-2.035-2.447%201.592-1.48%203.087-2.292%204.105-2.295zm-9.77.02c1.012%200%202.514.808%204.11%202.28-.686.72-1.37%201.537-2.02%202.442-1.107.117-2.154.298-3.113.538-.112-.49-.195-.964-.254-1.42-.23-1.868.054-3.32.714-3.707.19-.09.4-.127.563-.132zm4.882%203.05c.455.468.91.992%201.36%201.564-.44-.02-.89-.034-1.345-.034-.46%200-.915.01-1.36.034.44-.572.895-1.096%201.345-1.565zM12%208.1c.74%200%201.477.034%202.202.093.406.582.802%201.203%201.183%201.86.372.64.71%201.29%201.018%201.946-.308.655-.646%201.31-1.013%201.95-.38.66-.773%201.288-1.18%201.87-.728.063-1.466.098-2.21.098-.74%200-1.477-.035-2.202-.093-.406-.582-.802-1.204-1.183-1.86-.372-.64-.71-1.29-1.018-1.946.303-.657.646-1.313%201.013-1.954.38-.66.773-1.286%201.18-1.868.728-.064%201.466-.098%202.21-.098zm-3.635.254c-.24.377-.48.763-.704%201.16-.225.39-.435.782-.635%201.174-.265-.656-.49-1.31-.676-1.947.64-.15%201.315-.283%202.015-.386zm7.26%200c.695.103%201.365.23%202.006.387-.18.632-.405%201.282-.66%201.933-.2-.39-.41-.783-.64-1.174-.225-.392-.465-.774-.705-1.146zm3.063.675c.484.15.944.317%201.375.498%201.732.74%202.852%201.708%202.852%202.476-.005.768-1.125%201.74-2.857%202.475-.42.18-.88.342-1.355.493-.28-.958-.646-1.956-1.1-2.98.45-1.017.81-2.01%201.085-2.964zm-13.395.004c.278.96.645%201.957%201.1%202.98-.45%201.017-.812%202.01-1.086%202.964-.484-.15-.944-.318-1.37-.5-1.732-.737-2.852-1.706-2.852-2.474%200-.768%201.12-1.742%202.852-2.476.42-.18.88-.342%201.356-.494zm11.678%204.28c.265.657.49%201.312.676%201.948-.64.157-1.316.29-2.016.39.24-.375.48-.762.705-1.158.225-.39.435-.788.636-1.18zm-9.945.02c.2.392.41.783.64%201.175.23.39.465.772.705%201.143-.695-.102-1.365-.23-2.006-.386.18-.63.406-1.282.66-1.933zM17.92%2016.32c.112.493.2.968.254%201.423.23%201.868-.054%203.32-.714%203.708-.147.09-.338.128-.563.128-1.012%200-2.514-.807-4.11-2.28.686-.72%201.37-1.536%202.02-2.44%201.107-.118%202.154-.3%203.113-.54zm-11.83.01c.96.234%202.006.415%203.107.532.66.905%201.345%201.727%202.035%202.446-1.595%201.483-3.092%202.295-4.11%202.295-.22-.005-.406-.05-.553-.132-.666-.38-.955-1.834-.73-3.703.054-.46.142-.944.25-1.438zm4.56.64c.44.02.89.034%201.345.034.46%200%20.915-.01%201.36-.034-.44.572-.895%201.095-1.345%201.565-.455-.47-.91-.993-1.36-1.565z%22%2F%3E%3C%2Fsvg%3E"); mask-image: url("data:image/svg+xml,%3Csvg%20role%3D%22img%22%20viewBox%3D%220%200%2024%2024%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Ctitle%3EReact%3C%2Ftitle%3E%3Cpath%20d%3D%22M14.23%2012.004a2.236%202.236%200%200%201-2.235%202.236%202.236%202.236%200%200%201-2.236-2.236%202.236%202.236%200%200%201%202.235-2.236%202.236%202.236%200%200%201%202.236%202.236zm2.648-10.69c-1.346%200-3.107.96-4.888%202.622-1.78-1.653-3.542-2.602-4.887-2.602-.41%200-.783.093-1.106.278-1.375.793-1.683%203.264-.973%206.365C1.98%208.917%200%2010.42%200%2012.004c0%201.59%201.99%203.097%205.043%204.03-.704%203.113-.39%205.588.988%206.38.32.187.69.275%201.102.275%201.345%200%203.107-.96%204.888-2.624%201.78%201.654%203.542%202.603%204.887%202.603.41%200%20.783-.09%201.106-.275%201.374-.792%201.683-3.263.973-6.365C22.02%2015.096%2024%2013.59%2024%2012.004c0-1.59-1.99-3.097-5.043-4.032.704-3.11.39-5.587-.988-6.38-.318-.184-.688-.277-1.092-.278zm-.005%201.09v.006c.225%200%20.406.044.558.127.666.382.955%201.835.73%203.704-.054.46-.142.945-.25%201.44-.96-.236-2.006-.417-3.107-.534-.66-.905-1.345-1.727-2.035-2.447%201.592-1.48%203.087-2.292%204.105-2.295zm-9.77.02c1.012%200%202.514.808%204.11%202.28-.686.72-1.37%201.537-2.02%202.442-1.107.117-2.154.298-3.113.538-.112-.49-.195-.964-.254-1.42-.23-1.868.054-3.32.714-3.707.19-.09.4-.127.563-.132zm4.882%203.05c.455.468.91.992%201.36%201.564-.44-.02-.89-.034-1.345-.034-.46%200-.915.01-1.36.034.44-.572.895-1.096%201.345-1.565zM12%208.1c.74%200%201.477.034%202.202.093.406.582.802%201.203%201.183%201.86.372.64.71%201.29%201.018%201.946-.308.655-.646%201.31-1.013%201.95-.38.66-.773%201.288-1.18%201.87-.728.063-1.466.098-2.21.098-.74%200-1.477-.035-2.202-.093-.406-.582-.802-1.204-1.183-1.86-.372-.64-.71-1.29-1.018-1.946.303-.657.646-1.313%201.013-1.954.38-.66.773-1.286%201.18-1.868.728-.064%201.466-.098%202.21-.098zm-3.635.254c-.24.377-.48.763-.704%201.16-.225.39-.435.782-.635%201.174-.265-.656-.49-1.31-.676-1.947.64-.15%201.315-.283%202.015-.386zm7.26%200c.695.103%201.365.23%202.006.387-.18.632-.405%201.282-.66%201.933-.2-.39-.41-.783-.64-1.174-.225-.392-.465-.774-.705-1.146zm3.063.675c.484.15.944.317%201.375.498%201.732.74%202.852%201.708%202.852%202.476-.005.768-1.125%201.74-2.857%202.475-.42.18-.88.342-1.355.493-.28-.958-.646-1.956-1.1-2.98.45-1.017.81-2.01%201.085-2.964zm-13.395.004c.278.96.645%201.957%201.1%202.98-.45%201.017-.812%202.01-1.086%202.964-.484-.15-.944-.318-1.37-.5-1.732-.737-2.852-1.706-2.852-2.474%200-.768%201.12-1.742%202.852-2.476.42-.18.88-.342%201.356-.494zm11.678%204.28c.265.657.49%201.312.676%201.948-.64.157-1.316.29-2.016.39.24-.375.48-.762.705-1.158.225-.39.435-.788.636-1.18zm-9.945.02c.2.392.41.783.64%201.175.23.39.465.772.705%201.143-.695-.102-1.365-.23-2.006-.386.18-.63.406-1.282.66-1.933zM17.92%2016.32c.112.493.2.968.254%201.423.23%201.868-.054%203.32-.714%203.708-.147.09-.338.128-.563.128-1.012%200-2.514-.807-4.11-2.28.686-.72%201.37-1.536%202.02-2.44%201.107-.118%202.154-.3%203.113-.54zm-11.83.01c.96.234%202.006.415%203.107.532.66.905%201.345%201.727%202.035%202.446-1.595%201.483-3.092%202.295-4.11%202.295-.22-.005-.406-.05-.553-.132-.666-.38-.955-1.834-.73-3.703.054-.46.142-.944.25-1.438zm4.56.64c.44.02.89.034%201.345.034.46%200%20.915-.01%201.36-.034-.44.572-.895%201.095-1.345%201.565-.455-.47-.91-.993-1.36-1.565z%22%2F%3E%3C%2Fsvg%3E"); }
+.badge[data-framework="vue"] .badge__mark,
+.footer-marks__mark[data-framework="vue"] { -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20role%3D%22img%22%20viewBox%3D%220%200%2024%2024%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Ctitle%3EVue.js%3C%2Ftitle%3E%3Cpath%20d%3D%22M24%2C1.61H14.06L12%2C5.16%2C9.94%2C1.61H0L12%2C22.39ZM12%2C14.08%2C5.16%2C2.23H9.59L12%2C6.41l2.41-4.18h4.43Z%22%2F%3E%3C%2Fsvg%3E"); mask-image: url("data:image/svg+xml,%3Csvg%20role%3D%22img%22%20viewBox%3D%220%200%2024%2024%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Ctitle%3EVue.js%3C%2Ftitle%3E%3Cpath%20d%3D%22M24%2C1.61H14.06L12%2C5.16%2C9.94%2C1.61H0L12%2C22.39ZM12%2C14.08%2C5.16%2C2.23H9.59L12%2C6.41l2.41-4.18h4.43Z%22%2F%3E%3C%2Fsvg%3E"); }
+.badge[data-framework="svelte"] .badge__mark,
+.footer-marks__mark[data-framework="svelte"] { -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20role%3D%22img%22%20viewBox%3D%220%200%2024%2024%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Ctitle%3ESvelte%3C%2Ftitle%3E%3Cpath%20d%3D%22M10.354%2021.125a4.44%204.44%200%200%201-4.765-1.767%204.109%204.109%200%200%201-.703-3.107%203.898%203.898%200%200%201%20.134-.522l.105-.321.287.21a7.21%207.21%200%200%200%202.186%201.092l.208.063-.02.208a1.253%201.253%200%200%200%20.226.83%201.337%201.337%200%200%200%201.435.533%201.231%201.231%200%200%200%20.343-.15l5.59-3.562a1.164%201.164%200%200%200%20.524-.778%201.242%201.242%200%200%200-.211-.937%201.338%201.338%200%200%200-1.435-.533%201.23%201.23%200%200%200-.343.15l-2.133%201.36a4.078%204.078%200%200%201-1.135.499%204.44%204.44%200%200%201-4.765-1.766%204.108%204.108%200%200%201-.702-3.108%203.855%203.855%200%200%201%201.742-2.582l5.589-3.563a4.072%204.072%200%200%201%201.135-.499%204.44%204.44%200%200%201%204.765%201.767%204.109%204.109%200%200%201%20.703%203.107%203.943%203.943%200%200%201-.134.522l-.105.321-.286-.21a7.204%207.204%200%200%200-2.187-1.093l-.208-.063.02-.207a1.255%201.255%200%200%200-.226-.831%201.337%201.337%200%200%200-1.435-.532%201.231%201.231%200%200%200-.343.15L8.62%209.368a1.162%201.162%200%200%200-.524.778%201.24%201.24%200%200%200%20.211.937%201.338%201.338%200%200%200%201.435.533%201.235%201.235%200%200%200%20.344-.151l2.132-1.36a4.067%204.067%200%200%201%201.135-.498%204.44%204.44%200%200%201%204.765%201.766%204.108%204.108%200%200%201%20.702%203.108%203.857%203.857%200%200%201-1.742%202.583l-5.589%203.562a4.072%204.072%200%200%201-1.135.499m10.358-17.95C18.484-.015%2014.082-.96%2010.9%201.068L5.31%204.63a6.412%206.412%200%200%200-2.896%204.295%206.753%206.753%200%200%200%20.666%204.336%206.43%206.43%200%200%200-.96%202.396%206.833%206.833%200%200%200%201.168%205.167c2.229%203.19%206.63%204.135%209.812%202.108l5.59-3.562a6.41%206.41%200%200%200%202.896-4.295%206.756%206.756%200%200%200-.665-4.336%206.429%206.429%200%200%200%20.958-2.396%206.831%206.831%200%200%200-1.167-5.168Z%22%2F%3E%3C%2Fsvg%3E"); mask-image: url("data:image/svg+xml,%3Csvg%20role%3D%22img%22%20viewBox%3D%220%200%2024%2024%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Ctitle%3ESvelte%3C%2Ftitle%3E%3Cpath%20d%3D%22M10.354%2021.125a4.44%204.44%200%200%201-4.765-1.767%204.109%204.109%200%200%201-.703-3.107%203.898%203.898%200%200%201%20.134-.522l.105-.321.287.21a7.21%207.21%200%200%200%202.186%201.092l.208.063-.02.208a1.253%201.253%200%200%200%20.226.83%201.337%201.337%200%200%200%201.435.533%201.231%201.231%200%200%200%20.343-.15l5.59-3.562a1.164%201.164%200%200%200%20.524-.778%201.242%201.242%200%200%200-.211-.937%201.338%201.338%200%200%200-1.435-.533%201.23%201.23%200%200%200-.343.15l-2.133%201.36a4.078%204.078%200%200%201-1.135.499%204.44%204.44%200%200%201-4.765-1.766%204.108%204.108%200%200%201-.702-3.108%203.855%203.855%200%200%201%201.742-2.582l5.589-3.563a4.072%204.072%200%200%201%201.135-.499%204.44%204.44%200%200%201%204.765%201.767%204.109%204.109%200%200%201%20.703%203.107%203.943%203.943%200%200%201-.134.522l-.105.321-.286-.21a7.204%207.204%200%200%200-2.187-1.093l-.208-.063.02-.207a1.255%201.255%200%200%200-.226-.831%201.337%201.337%200%200%200-1.435-.532%201.231%201.231%200%200%200-.343.15L8.62%209.368a1.162%201.162%200%200%200-.524.778%201.24%201.24%200%200%200%20.211.937%201.338%201.338%200%200%200%201.435.533%201.235%201.235%200%200%200%20.344-.151l2.132-1.36a4.067%204.067%200%200%201%201.135-.498%204.44%204.44%200%200%201%204.765%201.766%204.108%204.108%200%200%201%20.702%203.108%203.857%203.857%200%200%201-1.742%202.583l-5.589%203.562a4.072%204.072%200%200%201-1.135.499m10.358-17.95C18.484-.015%2014.082-.96%2010.9%201.068L5.31%204.63a6.412%206.412%200%200%200-2.896%204.295%206.753%206.753%200%200%200%20.666%204.336%206.43%206.43%200%200%200-.96%202.396%206.833%206.833%200%200%200%201.168%205.167c2.229%203.19%206.63%204.135%209.812%202.108l5.59-3.562a6.41%206.41%200%200%200%202.896-4.295%206.756%206.756%200%200%200-.665-4.336%206.429%206.429%200%200%200%20.958-2.396%206.831%206.831%200%200%200-1.167-5.168Z%22%2F%3E%3C%2Fsvg%3E"); }
+.badge[data-framework="solid"] .badge__mark,
+.footer-marks__mark[data-framework="solid"] { -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20role%3D%22img%22%20viewBox%3D%220%200%2024%2024%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Ctitle%3ESolid%3C%2Ftitle%3E%3Cpath%20d%3D%22M11.558.788A9.082%209.082%200%200%200%209.776.99l-.453.15c-.906.303-1.656.755-2.1%201.348l-.301.452-2.035%203.528c.426-.387.974-.698%201.643-.894h.001l.613-.154h.001a8.82%208.82%200%200%201%201.777-.206c2.916-.053%206.033%201.148%208.423%202.36%202.317%201.175%203.888%202.32%203.987%202.39L24%205.518c-.082-.06-1.66-1.21-3.991-2.386-2.393-1.206-5.521-2.396-8.45-2.343zM8.924%205.366a8.634%208.634%200%200%200-1.745.203l-.606.151c-1.278.376-2.095%201.16-2.43%202.108-.334.948-.188%202.065.487%203.116.33.43.747.813%201.216%201.147L12.328%2010h.001a6.943%206.943%200%200%201%206.013%201.013l2.844-.963c-.17-.124-1.663-1.2-3.91-2.34-2.379-1.206-5.479-2.396-8.352-2.344zm5.435%204.497a6.791%206.791%200%200%200-1.984.283L2.94%2013.189%200%2018.334l9.276-2.992a6.945%206.945%200%200%201%207.408%202.314v.001c.695.903.89%201.906.66%202.808l2.572-4.63c.595-1.041.45-2.225-.302-3.429a6.792%206.792%200%200%200-5.255-2.543zm-3.031%205.341a6.787%206.787%200%200%200-2.006.283L.008%2018.492c.175.131%202.02%201.498%204.687%202.768%202.797%201.332%206.37%202.467%209.468%201.712l.454-.152h.002c1.278-.376%202.134-1.162%202.487-2.09.353-.93.207-2.004-.541-2.978a6.791%206.791%200%200%200-5.237-2.548z%22%2F%3E%3C%2Fsvg%3E"); mask-image: url("data:image/svg+xml,%3Csvg%20role%3D%22img%22%20viewBox%3D%220%200%2024%2024%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Ctitle%3ESolid%3C%2Ftitle%3E%3Cpath%20d%3D%22M11.558.788A9.082%209.082%200%200%200%209.776.99l-.453.15c-.906.303-1.656.755-2.1%201.348l-.301.452-2.035%203.528c.426-.387.974-.698%201.643-.894h.001l.613-.154h.001a8.82%208.82%200%200%201%201.777-.206c2.916-.053%206.033%201.148%208.423%202.36%202.317%201.175%203.888%202.32%203.987%202.39L24%205.518c-.082-.06-1.66-1.21-3.991-2.386-2.393-1.206-5.521-2.396-8.45-2.343zM8.924%205.366a8.634%208.634%200%200%200-1.745.203l-.606.151c-1.278.376-2.095%201.16-2.43%202.108-.334.948-.188%202.065.487%203.116.33.43.747.813%201.216%201.147L12.328%2010h.001a6.943%206.943%200%200%201%206.013%201.013l2.844-.963c-.17-.124-1.663-1.2-3.91-2.34-2.379-1.206-5.479-2.396-8.352-2.344zm5.435%204.497a6.791%206.791%200%200%200-1.984.283L2.94%2013.189%200%2018.334l9.276-2.992a6.945%206.945%200%200%201%207.408%202.314v.001c.695.903.89%201.906.66%202.808l2.572-4.63c.595-1.041.45-2.225-.302-3.429a6.792%206.792%200%200%200-5.255-2.543zm-3.031%205.341a6.787%206.787%200%200%200-2.006.283L.008%2018.492c.175.131%202.02%201.498%204.687%202.768%202.797%201.332%206.37%202.467%209.468%201.712l.454-.152h.002c1.278-.376%202.134-1.162%202.487-2.09.353-.93.207-2.004-.541-2.978a6.791%206.791%200%200%200-5.237-2.548z%22%2F%3E%3C%2Fsvg%3E"); }
+.badge[data-framework="angular"] .badge__mark,
+.footer-marks__mark[data-framework="angular"] { -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20role%3D%22img%22%20viewBox%3D%220%200%2024%2024%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Ctitle%3EAngular%3C%2Ftitle%3E%3Cpath%20d%3D%22M16.712%2017.711H7.288l-1.204%202.916L12%2024l5.916-3.373-1.204-2.916ZM14.692%200l7.832%2016.855.814-12.856L14.692%200ZM9.308%200%20.662%203.999l.814%2012.856L9.308%200Zm-.405%2013.93h6.198L12%206.396%208.903%2013.93Z%22%2F%3E%3C%2Fsvg%3E"); mask-image: url("data:image/svg+xml,%3Csvg%20role%3D%22img%22%20viewBox%3D%220%200%2024%2024%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Ctitle%3EAngular%3C%2Ftitle%3E%3Cpath%20d%3D%22M16.712%2017.711H7.288l-1.204%202.916L12%2024l5.916-3.373-1.204-2.916ZM14.692%200l7.832%2016.855.814-12.856L14.692%200ZM9.308%200%20.662%203.999l.814%2012.856L9.308%200Zm-.405%2013.93h6.198L12%206.396%208.903%2013.93Z%22%2F%3E%3C%2Fsvg%3E"); }
+.badge[data-framework="qwik"] .badge__mark,
+.footer-marks__mark[data-framework="qwik"] { -webkit-mask-image: url("data:image/svg+xml,%3Csvg%20role%3D%22img%22%20viewBox%3D%220%200%2024%2024%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Ctitle%3EQwik%3C%2Ftitle%3E%3Cpath%20d%3D%22M7.5469%200a2.957%202.957%200%200%200-2.5606%201.4785L.5332%209.1915a2.957%202.957%200%200%200%200%202.957l4.4531%207.7128A2.955%202.955%200%200%200%207.547%2021.338H12l8.5938%202.6484c.2409.0742.4512-.1782.3359-.4023l-1.916-3.7227%204.4531-7.7129a2.957%202.957%200%200%200%200-2.957l-4.4531-7.7129A2.957%202.957%200%200%200%2016.453%200zm0%20.7656L17.7324%2010.67l-1.8965%201.8985.5782%207.5332L6.2676%2010.67l2.371-2.373z%22%2F%3E%3C%2Fsvg%3E"); mask-image: url("data:image/svg+xml,%3Csvg%20role%3D%22img%22%20viewBox%3D%220%200%2024%2024%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Ctitle%3EQwik%3C%2Ftitle%3E%3Cpath%20d%3D%22M7.5469%200a2.957%202.957%200%200%200-2.5606%201.4785L.5332%209.1915a2.957%202.957%200%200%200%200%202.957l4.4531%207.7128A2.955%202.955%200%200%200%207.547%2021.338H12l8.5938%202.6484c.2409.0742.4512-.1782.3359-.4023l-1.916-3.7227%204.4531-7.7129a2.957%202.957%200%200%200%200-2.957l-4.4531-7.7129A2.957%202.957%200%200%200%2016.453%200zm0%20.7656L17.7324%2010.67l-1.8965%201.8985.5782%207.5332L6.2676%2010.67l2.371-2.373z%22%2F%3E%3C%2Fsvg%3E"); }
+
+.curves { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: var(--space-m); }
+.curve-card { display: grid; gap: var(--space-2xs); padding: var(--space-s); background: var(--surface-raised); border: var(--sticker-keyline, 2px) solid var(--keyline); border-radius: var(--sticker-radius-small); filter: var(--elev-card); }
+.curve { inline-size: 100%; max-inline-size: 9rem; color: var(--accent); }
+.curve-card__name { font-family: var(--font-mono); font-size: var(--step-0); font-weight: 700; margin: 0; }
+.curve-card__spec { font-family: var(--font-mono); font-size: var(--step--2); color: var(--ink-muted); margin: 0; overflow-wrap: anywhere; }
+.curve-card__for { font-size: var(--step--1); margin: 0; max-width: none; }
+
+.pairs { display: grid; gap: var(--space-m); }
+.pair { display: grid; gap: var(--space-2xs); padding: var(--space-s); border: var(--sticker-keyline, 2px) solid var(--keyline); border-radius: var(--sticker-radius-small); background: var(--surface-raised); filter: var(--elev-card); }
+.pair h3 { font-size: var(--step-1); margin: 0 0 var(--space-2xs); }
+.pair__line { display: grid; grid-template-columns: 5.5rem 1fr; gap: var(--space-s); font-size: var(--step--1); }
+.pair__tag { font-size: var(--step--2); font-weight: 700; text-transform: uppercase; letter-spacing: var(--tracking-caps); }
+.pair__tag--no { color: var(--danger); }
+.pair__tag--yes { color: var(--success); }
+
+.beats { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: var(--space-m); }
+.beat { display: grid; gap: var(--space-2xs); align-content: start; }
+.beat__n { font-size: var(--step-4); font-weight: 900; line-height: 1; letter-spacing: var(--tracking-display); color: var(--accent); }
+.beat__title { font-size: var(--step-2); font-weight: 700; line-height: var(--leading-heading); margin: 0; }
+
+.notes { font-size: var(--step--1); color: var(--ink-muted); }
+
+.island { padding: var(--space-l); border-radius: var(--sticker-radius); border: var(--sticker-keyline, 2px) solid var(--keyline); filter: var(--elev-card); }
+
+.footer-marks { display: grid; gap: var(--space-m); padding: var(--space-l) var(--space-m); background: var(--surface-sunk); color: var(--ink); border-block-start: var(--sticker-keyline, 2px) solid var(--keyline); }
+.footer-marks__inner { inline-size: min(100%, var(--measure)); margin-inline: auto; display: grid; gap: var(--space-m); }
+.footer-marks__top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-m); }
+.footer-marks__set { display: flex; flex-wrap: wrap; gap: var(--space-s); align-items: center; }
+.footer-marks__mark { inline-size: 1.5rem; block-size: 1.5rem; flex: none; background-color: currentColor; -webkit-mask-position: center; mask-position: center; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-size: contain; mask-size: contain; }
+.footer-marks__legal { display: grid; gap: var(--space-xs); font-size: var(--step--2); line-height: 1.5; color: var(--ink-muted); }
+.footer-marks__legal p { margin: 0; max-width: 78ch; }
+.footer-marks__rule { border: 0; border-block-start: var(--sticker-keyline-hair, 1px) solid color-mix(in srgb, var(--ink) 25%, transparent); margin: 0; }
+
+@media (max-width: 48rem) {
+	.masthead__meta ul { columns: 1; }
+	.law__rule { grid-template-columns: 1fr; gap: var(--space-3xs); }
+	.pair__line { grid-template-columns: 1fr; gap: var(--space-3xs); }
+	.space-row { grid-template-columns: 5.5rem 1fr; }
+}
+</style>
+</head>
+
+<body class="page">
+
+<header class="band band--ruled">
+	<div class="masthead">
+		<span class="wordmark wordmark--compact "><span class="wordmark__layer wordmark__band" aria-hidden="true">frameless</span><span class="wordmark__layer wordmark__keyline" aria-hidden="true">frameless</span><span class="wordmark__layer wordmark__cut">frameless</span></span>
+		<p class="masthead__display"><span class="v" data-from="text:agent/verbal/messaging.md">Compile once, output anywhere.</span></p>
+		<p class="lede"><span class="v" data-from="text:agent/verbal/positioning.md">Compile once, output anywhere. Frameless compiles one .tsrx component into idiomatic, framework-native code — and proves the outputs behave identically in a real browser.</span></p>
+		<div class="masthead__meta">
+			<p>This page is <strong>generated</strong>. It is not a document about the system; it is a rendering of it. Every hex, ratio, <code>clamp()</code>, shadow, duration and quoted line below was read at build time from:</p>
+			<ul>
+        <li><code>agent/visual/tokens/color.json</code></li>
+        <li><code>agent/visual/tokens/utopia.config.json</code></li>
+        <li><code>agent/visual/tokens/elevation.css</code></li>
+        <li><code>agent/visual/tokens/sticker.css</code></li>
+        <li><code>agent/visual/colors_and_type.css</code></li>
+        <li><code>agent/visual/motion/motion.json</code></li>
+        <li><code>agent/visual/fonts/quegrotesque.json</code></li>
+        <li><code>agent/visual/assets/wordmark/metrics.json</code></li>
+        <li><code>agent/verbal/positioning.md</code></li>
+        <li><code>agent/verbal/voice.md</code></li>
+        <li><code>agent/verbal/messaging.md</code></li>
+        <li><code>agent/verbal/concepts.md</code></li>
+			</ul>
+			<p>Regenerate with <code>node brand/human/build-guideline.mjs</code>; prove it has not drifted with <code>--check</code>. Every value carries a <code>data-from</code> pointer back to its source file.</p>
+		</div>
+	</div>
+</header>
+
+<main>
+
+<section class="band band--rule" aria-labelledby="brand">
+	<p class="kicker">01 — the brand</p>
+	<h2 id="brand">The whole thing, on one screen</h2>
+	<p class="lede"><span class="v" data-from="text:agent/verbal/messaging.md">Write your component once. It compiles to real, idiomatic framework code — and the outputs are proven to behave the same in a real browser.</span></p>
+	<p class="notes"><span class="v" data-from="text:agent/verbal/concepts.md">Frameless is a naturalist's field guide, not a tech brand.</span></p>
+	<p class="notes"><span class="v" data-from="text:agent/verbal/concepts.md">Stickers are how you mark that you were actually there. A park sticker is a small proof of presence — not an advertisement, a receipt.</span></p>
+
+	<div class="badges" style="margin-block: var(--space-l)">
+			<figure class="badge tilt-1" data-framework="react" style="--cut-fill:#1b6fb8; --cut-keyline:#0a3560; --cut-band:#e3ecf2; --logo:#61dafb">
+				<span class="badge__fill">
+					<span class="badge__mark" aria-hidden="true"></span>
+					<span class="badge__name">React</span>
+				</span>
+				<figcaption class="badge__spec"><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/react/fill">#1b6fb8</span> · name <span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/react/name_on_fill">5.23</span>:1 · keyline on band <span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/react/keyline_on_band">10.38</span>:1</figcaption>
+			</figure>
+			<figure class="badge tilt-2" data-framework="vue" style="--cut-fill:#12805a; --cut-keyline:#063524; --cut-band:#dfeee6; --logo:#42b883">
+				<span class="badge__fill">
+					<span class="badge__mark" aria-hidden="true"></span>
+					<span class="badge__name">Vue</span>
+				</span>
+				<figcaption class="badge__spec"><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/vue/fill">#12805a</span> · name <span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/vue/name_on_fill">4.93</span>:1 · keyline on band <span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/vue/keyline_on_band">11.35</span>:1</figcaption>
+			</figure>
+			<figure class="badge tilt-3" data-framework="svelte" style="--cut-fill:#d93b02; --cut-keyline:#5c1600; --cut-band:#f7e6db; --logo:#ffffff">
+				<span class="badge__fill">
+					<span class="badge__mark" aria-hidden="true"></span>
+					<span class="badge__name">Svelte</span>
+				</span>
+				<figcaption class="badge__spec"><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/svelte/fill">#d93b02</span> · name <span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/svelte/name_on_fill">4.59</span>:1 · keyline on band <span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/svelte/keyline_on_band">11.02</span>:1</figcaption>
+			</figure>
+			<figure class="badge tilt-4" data-framework="solid" style="--cut-fill:#2f5fb3; --cut-keyline:#12275c; --cut-band:#e4eaf6; --logo:#76b3e1">
+				<span class="badge__fill">
+					<span class="badge__mark" aria-hidden="true"></span>
+					<span class="badge__name">Solid</span>
+				</span>
+				<figcaption class="badge__spec"><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/solid/fill">#2f5fb3</span> · name <span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/solid/name_on_fill">6.16</span>:1 · keyline on band <span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/solid/keyline_on_band">11.83</span>:1</figcaption>
+			</figure>
+			<figure class="badge tilt-1" data-framework="angular" style="--cut-fill:#c8102f; --cut-keyline:#4d0410; --cut-band:#f6e2e5; --logo:#ffffff">
+				<span class="badge__fill">
+					<span class="badge__mark" aria-hidden="true"></span>
+					<span class="badge__name">Angular</span>
+				</span>
+				<figcaption class="badge__spec"><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/angular/fill">#c8102f</span> · name <span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/angular/name_on_fill">5.88</span>:1 · keyline on band <span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/angular/keyline_on_band">12.63</span>:1</figcaption>
+			</figure>
+			<figure class="badge tilt-2" data-framework="qwik" style="--cut-fill:#6d3fd4; --cut-keyline:#2a0f6b; --cut-band:#e9e4f9; --logo:#18b6f6">
+				<span class="badge__fill">
+					<span class="badge__mark" aria-hidden="true"></span>
+					<span class="badge__name">Qwik</span>
+				</span>
+				<figcaption class="badge__spec"><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/qwik/fill">#6d3fd4</span> · name <span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/qwik/name_on_fill">6.34</span>:1 · keyline on band <span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/qwik/keyline_on_band">12.28</span>:1</figcaption>
+			</figure>
+	</div>
+	<p class="notes">Canonical order: <span class="v" data-from="text:agent/verbal/messaging.md">React, Vue, Svelte, Solid, Angular, Qwik.</span> It opens on the most recognised and closes on the one that makes the technical point. Keep this order in badges, tables, nav and prose.</p>
+	<p class="notes"><strong>Never total them up.</strong> <span class="v" data-from="text:agent/verbal/messaging.md">Do not write &quot;Ship six&quot;, &quot;One source. Six outputs.&quot;, &quot;six frameworks&quot;, or any variant that turns the promise into an inventory.</span></p>
+	<p class="notes">saturated fill (glossy, lighter at top-left) -&gt; keyline in the dark end of that hue -&gt; band tinted to that hue -&gt; drop shadow -&gt; about -3deg of tilt</p>
+	<p class="notes">The framework name is set in white INSIDE the sticker, always. Not a tooltip, not a caption. A word is the only treatment that survives a crop, a grayscale conversion and a screenshot with no alt text.</p>
+
+	<h3 style="margin-block-start: var(--space-l)">The three-beat explainer</h3>
+	<div class="beats">
+		<article class="beat">
+			<span class="beat__n">1</span>
+			<h4 class="beat__title">Write it once.</h4>
+			<p><span class="v" data-from="text:agent/verbal/messaging.md">One component, in .tsrx. State, markup, composition — the parts you'd write anyway.</span></p>
+		</article>
+		<article class="beat">
+			<span class="beat__n">2</span>
+			<h4 class="beat__title">Compile it out.</h4>
+			<p><span class="v" data-from="text:agent/verbal/messaging.md">Frameless compiles to a semantic representation first, then emits per framework. Each target gets code that reads like it was written for that framework, because it was.</span></p>
+		</article>
+		<article class="beat">
+			<span class="beat__n">3</span>
+			<h4 class="beat__title">Prove it matches.</h4>
+			<p><span class="v" data-from="text:agent/verbal/messaging.md">Every build diffs behavior across every target in a real browser. The checker is itself mutation-tested, so a pass actually means something.</span></p>
+		</article>
+	</div>
+
+	<h3 style="margin-block-start: var(--space-l)">Lines that are always wrong</h3>
+	<ul class="notes">
+		<li><span class="v" data-from="text:agent/verbal/messaging.md">&quot;Zero runtime.&quot; → use &quot;No Frameless runtime.&quot; The output still needs the framework's</span></li>
+		<li><span class="v" data-from="text:agent/verbal/messaging.md">&quot;Guaranteed identical output.&quot; → behavior is verified identical; the output is</span></li>
+		<li><span class="v" data-from="text:agent/verbal/messaging.md">&quot;Replaces your framework.&quot; → it emits into frameworks and depends on them being good.</span></li>
+	</ul>
+
+	<h3 style="margin-block-start: var(--space-l)">Frameless Studio is not out</h3>
+	<p class="notes"><span class="v" data-from="text:agent/verbal/messaging.md">Frameless Studio — coming soon</span> — <span class="v" data-from="text:agent/verbal/messaging.md">See your components in every state, in every framework you compile to. A simpler Storybook that works wherever your code does.</span>. Never imply availability, never manufacture urgency.</p>
+</section>
+
+<section class="band band--rule" aria-labelledby="depth">
+	<p class="kicker">02 — depth</p>
+	<h2 id="depth"><span class="v" data-from="agent/visual/tokens/color.json#/depth_law/one_sentence">Every die-cut object casts a real shadow. Elevation is the brand.</span></h2>
+	<p class="lede">fill -&gt; tinted dark keyline -&gt; thick band (6-8% of width) -&gt; drop shadow</p>
+	<p class="law__why">The most defining quality of the concept art is depth — the wordmark and all six badges sit above the page on a heavy offset shadow. The previous version of this kit BANNED box-shadow kit-wide, having measured four flat vector PNGs and generalised from them. That deleted the one thing the art is most recognisable for.</p>
+
+	<div class="elevations" style="margin-block: var(--space-l)">
+		<div class="elev-demo elev-demo--sticker"><span class="elev-demo__tile">sticker</span><span class="elev-demo__name">--elev-sticker</span></div>
+		<div class="elev-demo elev-demo--card"><span class="elev-demo__tile">card</span><span class="elev-demo__name">--elev-card</span></div>
+		<div class="elev-demo elev-demo--lifted"><span class="elev-demo__tile">lifted</span><span class="elev-demo__name">--elev-lifted</span></div>
+		<div class="elev-demo elev-demo--inset"><span class="elev-demo__tile">inset</span><span class="elev-demo__name">--elev-inset</span></div>
+	</div>
+
+	<div class="scroll">
+	<table>
+		<caption>The scale, read out of <code>agent/visual/tokens/elevation.css</code></caption>
+		<thead><tr><th>Token</th><th>Value</th><th>For</th></tr></thead>
+		<tbody>
+			<tr><td><code>--elev-sticker</code></td><td class="num"><span class="v" data-from="css:agent/visual/tokens/elevation.css#--elev-sticker">drop-shadow(0 6px 0 var(--shadow-hard)) drop-shadow(0 10px 12px var(--shadow-soft))</span></td><td>Badges, tags, buttons, small die-cut objects. The default.</td></tr>
+			<tr><td><code>--elev-card</code></td><td class="num"><span class="v" data-from="css:agent/visual/tokens/elevation.css#--elev-card">drop-shadow(0 10px 0 var(--shadow-hard)) drop-shadow(0 18px 22px var(--shadow-soft))</span></td><td>Cards, panels, code wells, the carousel stage.</td></tr>
+			<tr><td><code>--elev-lifted</code></td><td class="num"><span class="v" data-from="css:agent/visual/tokens/elevation.css#--elev-lifted">drop-shadow(0 18px 0 var(--shadow-hard)) drop-shadow(0 26px 34px var(--shadow-soft))</span></td><td>The selected carousel sticker, hover, a peeling corner, the hero lockup.</td></tr>
+			<tr><td><code>--elev-inset</code></td><td class="num"><span class="v" data-from="css:agent/visual/tokens/elevation.css#--elev-inset">inset 0 2px 0 0 rgb(0 0 0 / 0.5), inset 0 10px 18px -10px rgb(0 0 0 / 0.8)</span></td><td>--elev-inset, and only that. A filter can only draw outside an alpha silhouette, never inside it, so a well cut INTO the page has no drop-shadow equivalent.</td></tr>
+			<tr><td><code>--shadow-peel</code></td><td class="num"><span class="v" data-from="css:agent/visual/tokens/sticker.css#--shadow-peel">var(--elev-lifted, drop-shadow(0 18px 0 rgb(3 8 7 / 0.92)) drop-shadow(0 26px 34px rgb(0 0 0 / 0.55)))</span></td><td>The peel raises the object one step on the elevation scale, from --elev-sticker to --elev-lifted. Both are stacked drop-shadow() filters, so the shadow follows the die-cut silhouette rather than the bounding box. Never a box-shadow.</td></tr>
+		</tbody>
+	</table>
+	</div>
+
+	<div class="pairs" style="margin-block-start: var(--space-l)">
+		<article class="pair">
+			<h3>The primitive</h3>
+			<div class="pair__line"><span class="pair__tag pair__tag--yes">Use</span><span><span class="v" data-from="agent/visual/tokens/color.json#/depth_law/use_drop_shadow_not_box_shadow">filter: drop-shadow() EVERYWHERE. box-shadow casts a shadow of the element's BOX — a rounded rectangle behind a die-cut shape, which instantly kills the illusion. drop-shadow() follows the actual alpha silhouette: the cut edge, the lettering, the wobble of the band. Stack two of them (a hard offset plus a soft ambient) for the register the concept art's wordmark reads in.</span></span></div>
+			<div class="pair__line"><span class="pair__tag pair__tag--no">Never</span><span><span class="v" data-from="agent/visual/motion/motion.json#/forbidden/box-shadow">Use filter: drop-shadow() instead, everywhere except --elev-inset. A filter follows the alpha silhouette; a box-shadow follows the border box, which is wrong for every die-cut object in this kit.</span></span></div>
+			<div class="pair__line"><span class="pair__tag pair__tag--no">Never</span><span><span class="v" data-from="agent/visual/motion/motion.json#/forbidden/shadowless_depth">A die-cut object with no shadow. Elevation is mandatory — it is the quality the concept art is most recognisable for.</span></span></div>
+		</article>
+		<article class="pair">
+			<h3>Where it goes, and what it costs</h3>
+			<div class="pair__line"><span class="pair__tag">On</span><span><span class="v" data-from="agent/visual/tokens/color.json#/depth_law/where_the_shadow_goes">On the element that owns the alpha — the PNG, the SVG, or the outermost die-cut wrapper. A filter on a parent shadows the whole subtree as ONE silhouette, which is right for a sticker and never right for a text block.</span></span></div>
+			<div class="pair__line"><span class="pair__tag">Watch</span><span><span class="v" data-from="agent/visual/tokens/color.json#/depth_law/filter_side_effects">A non-none filter creates a stacking context AND a containing block for fixed/absolute descendants. A position: fixed child of a filtered element is fixed to that element, not to the viewport — this matters for any slide-in panel.</span></span></div>
+		</article>
+	</div>
+
+	<h3 style="margin-block-start: var(--space-l)">Texture — the bed is never a flat fill</h3>
+	<p><span class="v" data-from="agent/visual/tokens/color.json#/depth_law/texture">The page bed is NEVER a flat fill. A fine noise grain is applied globally, with an optional faint ruled grid. See ./elevation.css.</span></p>
+	<p class="notes">The grain is a self-contained <code>data:</code> URI, which is the only form of image guaranteed to work when the kit is opened from <code>file://</code>: <span class="v" data-as="bool" data-from="css:agent/visual/tokens/elevation.css#--texture-noise">✓</span> self-contained. It is applied to <code>body</code> by <code>agent/visual/colors_and_type.css</code>, so a page that links the entry stylesheet has grain without asking. Strength <span class="v" data-from="css:agent/visual/tokens/elevation.css#--texture-noise-opacity">0.055</span>, or <span class="v" data-from="css:agent/visual/tokens/elevation.css#--texture-noise-opacity-strong">0.10</span> on small saturated objects where the default disappears. The ruled grid is on a <span class="v" data-from="css:agent/visual/tokens/elevation.css#--texture-grid-size">48px</span> pitch and belongs to section beds and empty space, never under reading copy.</p>
+</section>
+
+<section class="band band--rule" aria-labelledby="colour">
+	<p class="kicker">03 — colour</p>
+	<h2 id="colour"><span class="v" data-as="length" data-from="agent/visual/tokens/color.json#/permitted_pairs">28</span> permitted pairs, <span class="v" data-as="length" data-from="agent/visual/tokens/color.json#/forbidden_pairs">18</span> forbidden ones, and 17 tokens</h2>
+	<p class="lede">Saturated, cool, physical. Vivid die-cut stickers with a real drop shadow, laid on a dark textured bed. Colour is used in confident blocks — never desaturated, never aged.</p>
+	<p class="notes">The kit defaults to the DARK bed. Saturated colour needs a dark ground to read as lit, all three named references (avara.xyz, react.gg, sticker.oooo.so) are dark, and lime display type is only legal on dark. A light paper island is available with [data-surface=&quot;light&quot;] for reading-length copy.</p>
+	<p class="notes">#ffffff is FORBIDDEN as a page bed. It is permitted INSIDE a saturated framework sticker, where it is the name label and carries a measured ratio against that fill.</p>
+	<p class="notes">Real pixels, sampled in Chromium by drawing the concept art to a canvas and reading getImageData. Two statistics per region: the block average (what a naive sample gives, and what gets pulled toward the cream band and the paper grain) and the mean of the top 5% most saturated pixels (what the fill actually is). Every framework fill below is anchored on the SATURATED statistic — anchoring on the block average is the exact error that produced the rejected first attempt.</p>
+
+	<div class="grid" style="margin-block-start: var(--space-l)">
+
+			<article class="swatch">
+				<div class="swatch__chip" style="background:#0b1714"></div>
+				<h3 class="swatch__name">--surface</h3>
+				<p class="swatch__hex"><span class="v" data-from="agent/visual/tokens/color.json#/tokens/--surface/value">#0b1714</span></p>
+				<p class="swatch__role">page bed</p>
+				<div class="swatch__pair"><span class="swatch__chip swatch__chip--sm" style="background:#f2f0dd"></span><span class="swatch__meta">on the paper island <span class="v" data-from="agent/visual/tokens/color.json#/tokens/--surface/light_value">#f2f0dd</span></span></div>
+				<p class="swatch__intent">The default page bed, and it is DARK. A deep teal-black in the same family as the &quot;COMPILED OUTPUTS&quot; chip in the concept art, which is the art's own piece of UI.</p>
+				<p class="swatch__never">Never #ffffff, and never flat. A page bed with no texture is the failure the owner named directly.</p>
+				<p class="swatch__source">source: measured — the dark green-black of the concept art's tag chip (top-5%-saturation sample #011c0d), opened up until cream reading copy clears AA comfortably</p>
+			</article>
+
+			<article class="swatch">
+				<div class="swatch__chip" style="background:#14231f"></div>
+				<h3 class="swatch__name">--surface-raised</h3>
+				<p class="swatch__hex"><span class="v" data-from="agent/visual/tokens/color.json#/tokens/--surface-raised/value">#14231f</span></p>
+				<p class="swatch__role">raised panel on the bed</p>
+				
+				<p class="swatch__intent">Cards, detail panels, the carousel stage. It is only 1.12:1 against the bed on purpose — a raised panel is separated by its SHADOW and its band, not by a value step.</p>
+				
+				<p class="swatch__source">source: derived</p>
+			</article>
+
+			<article class="swatch">
+				<div class="swatch__chip" style="background:#060f0d"></div>
+				<h3 class="swatch__name">--surface-sunk</h3>
+				<p class="swatch__hex"><span class="v" data-from="agent/visual/tokens/color.json#/tokens/--surface-sunk/value">#060f0d</span></p>
+				<p class="swatch__role">inset well</p>
+				
+				<p class="swatch__intent">Code wells, and anything that should read as cut INTO the page rather than laid on it. Pair with an inset shadow, never an outer one.</p>
+				
+				<p class="swatch__source">source: derived</p>
+			</article>
+
+			<article class="swatch">
+				<div class="swatch__chip" style="background:#eceada"></div>
+				<h3 class="swatch__name">--ink</h3>
+				<p class="swatch__hex"><span class="v" data-from="agent/visual/tokens/color.json#/tokens/--ink/value">#eceada</span></p>
+				<p class="swatch__role">reading copy and labels</p>
+				<div class="swatch__pair"><span class="swatch__chip swatch__chip--sm" style="background:#0f1410"></span><span class="swatch__meta">on the paper island <span class="v" data-from="agent/visual/tokens/color.json#/tokens/--ink/light_value">#0f1410</span></span></div>
+				<p class="swatch__intent">All reading copy. On the dark bed a bright cool cream; on the light paper island a near-black with a faint green cast.</p>
+				
+				<p class="swatch__source">source: measured — the concept art's die-cut band cream #e0dfca, brightened for type</p>
+			</article>
+
+			<article class="swatch">
+				<div class="swatch__chip" style="background:#9fb3ac"></div>
+				<h3 class="swatch__name">--ink-muted</h3>
+				<p class="swatch__hex"><span class="v" data-from="agent/visual/tokens/color.json#/tokens/--ink-muted/value">#9fb3ac</span></p>
+				<p class="swatch__role">secondary text</p>
+				<div class="swatch__pair"><span class="swatch__chip swatch__chip--sm" style="background:#4d5a4f"></span><span class="swatch__meta">on the paper island <span class="v" data-from="agent/visual/tokens/color.json#/tokens/--ink-muted/light_value">#4d5a4f</span></span></div>
+				<p class="swatch__intent">Captions, metadata, spec-table labels. Not reading copy at body length.</p>
+				
+				<p class="swatch__source">source: derived</p>
+			</article>
+
+			<article class="swatch">
+				<div class="swatch__chip" style="background:#cce007"></div>
+				<h3 class="swatch__name">--accent</h3>
+				<p class="swatch__hex"><span class="v" data-from="agent/visual/tokens/color.json#/tokens/--accent/value">#cce007</span></p>
+				<p class="swatch__role">the brand colour</p>
+				
+				<p class="swatch__intent">The lime. Display type on dark, primary button fills, the wordmark fill, the outer focus ring. Governed entirely by `lime_law`.</p>
+				<p class="swatch__never">Never a framework logo. Never reading copy.</p>
+				<p class="swatch__source">source: owner-canonical — the concept art measures #c7da00 at peak saturation; the owner's canonical #cce007 is correct and JPEG averaging is what pulls the sample down</p>
+			</article>
+
+			<article class="swatch">
+				<div class="swatch__chip" style="background:#0b0f0c"></div>
+				<h3 class="swatch__name">--accent-ink</h3>
+				<p class="swatch__hex"><span class="v" data-from="agent/visual/tokens/color.json#/tokens/--accent-ink/value">#0b0f0c</span></p>
+				<p class="swatch__role">the label on a lime fill</p>
+				
+				<p class="swatch__intent">The one ink that goes on lime. Fixed — it does NOT flip with the surface, because a lime fill is a light surface wherever it appears.</p>
+				
+				<p class="swatch__source">source: derived</p>
+			</article>
+
+			<article class="swatch">
+				<div class="swatch__chip" style="background:#6fd3e6"></div>
+				<h3 class="swatch__name">--accent-cool</h3>
+				<p class="swatch__hex"><span class="v" data-from="agent/visual/tokens/color.json#/tokens/--accent-cool/value">#6fd3e6</span></p>
+				<p class="swatch__role">the accent that CAN be an ink</p>
+				<div class="swatch__pair"><span class="swatch__chip swatch__chip--sm" style="background:#10707f"></span><span class="swatch__meta">on the paper island <span class="v" data-from="agent/visual/tokens/color.json#/tokens/--accent-cool/light_value">#10707f</span></span></div>
+				<p class="swatch__intent">Links, inline emphasis, secondary emphasis — anywhere you wanted accent colour on TEXT. This token exists precisely because lime cannot be an ink; without it the palette reads as monochrome plus a highlighter.</p>
+				
+				<p class="swatch__source">source: measured — the concept art's sky cyan (#73b3bf top-5% sample), brightened for the dark bed and deepened for the light island</p>
+			</article>
+
+			<article class="swatch">
+				<div class="swatch__chip" style="background:#e0dfca"></div>
+				<h3 class="swatch__name">--band</h3>
+				<p class="swatch__hex"><span class="v" data-from="agent/visual/tokens/color.json#/tokens/--band/value">#e0dfca</span></p>
+				<p class="swatch__role">the die-cut band</p>
+				
+				<p class="swatch__intent">The thick cream band ringing a die-cut object — the paper it was cut from. Neutral cream is for the WORDMARK; framework stickers tint their band to their own hue (see `framework_colors`).</p>
+				<p class="swatch__never">Never a page bed, and never a text colour on light.</p>
+				<p class="swatch__source">source: measured — the wordmark band in the concept art</p>
+			</article>
+
+			<article class="swatch">
+				<div class="swatch__chip" style="background:#0a0d09"></div>
+				<h3 class="swatch__name">--keyline</h3>
+				<p class="swatch__hex"><span class="v" data-from="agent/visual/tokens/color.json#/tokens/--keyline/value">#0a0d09</span></p>
+				<p class="swatch__role">the drawn edge of a die-cut object</p>
+				
+				<p class="swatch__intent">The heavy near-black stroke between a fill and its band. Neutral black is correct for the WORDMARK, which is what the art shows; framework stickers use the dark end of their own hue instead.</p>
+				
+				<p class="swatch__source">source: measured — the wordmark keyline in the concept art (darkest sample #010000)</p>
+			</article>
+
+			<article class="swatch">
+				<div class="swatch__chip" style="background:#7bd96a"></div>
+				<h3 class="swatch__name">--success</h3>
+				<p class="swatch__hex"><span class="v" data-from="agent/visual/tokens/color.json#/tokens/--success/value">#7bd96a</span></p>
+				<p class="swatch__role">passing state</p>
+				<div class="swatch__pair"><span class="swatch__chip swatch__chip--sm" style="background:#14682c"></span><span class="swatch__meta">on the paper island <span class="v" data-from="agent/visual/tokens/color.json#/tokens/--success/light_value">#14682c</span></span></div>
+				<p class="swatch__intent">Checks that pass, verified output.</p>
+				
+				<p class="swatch__source">source: derived</p>
+			</article>
+
+			<article class="swatch">
+				<div class="swatch__chip" style="background:#f2b705"></div>
+				<h3 class="swatch__name">--warning</h3>
+				<p class="swatch__hex"><span class="v" data-from="agent/visual/tokens/color.json#/tokens/--warning/value">#f2b705</span></p>
+				<p class="swatch__role">caution / in progress</p>
+				
+				<p class="swatch__intent">Coming-soon tags and in-progress states. FILL ONLY on light, always with an --accent-ink label.</p>
+				
+				<p class="swatch__source">source: derived</p>
+			</article>
+
+			<article class="swatch">
+				<div class="swatch__chip" style="background:#ff6b5e"></div>
+				<h3 class="swatch__name">--danger</h3>
+				<p class="swatch__hex"><span class="v" data-from="agent/visual/tokens/color.json#/tokens/--danger/value">#ff6b5e</span></p>
+				<p class="swatch__role">failing state</p>
+				<div class="swatch__pair"><span class="swatch__chip swatch__chip--sm" style="background:#a32c1e"></span><span class="swatch__meta">on the paper island <span class="v" data-from="agent/visual/tokens/color.json#/tokens/--danger/light_value">#a32c1e</span></span></div>
+				<p class="swatch__intent">Errors, destructive actions, failed checks.</p>
+				
+				<p class="swatch__source">source: derived</p>
+			</article>
+
+			<article class="swatch">
+				<div class="swatch__chip" style="background:#4a5a55"></div>
+				<h3 class="swatch__name">--silhouette</h3>
+				<p class="swatch__hex"><span class="v" data-from="agent/visual/tokens/color.json#/tokens/--silhouette/value">#4a5a55</span></p>
+				<p class="swatch__role">deselected carousel sticker</p>
+				
+				<p class="swatch__intent">The grey a framework sticker collapses to when another is selected. It must lose colour ENTIRELY rather than merely dim — that total loss is what makes the selected sticker read as lit, and it is the mechanic avara.xyz is built on.</p>
+				
+				<p class="swatch__source">source: reference</p>
+			</article>
+
+			<article class="swatch">
+				<div class="swatch__chip" style="background:#7d8b86"></div>
+				<h3 class="swatch__name">--silhouette-band</h3>
+				<p class="swatch__hex"><span class="v" data-from="agent/visual/tokens/color.json#/tokens/--silhouette-band/value">#7d8b86</span></p>
+				<p class="swatch__role">deselected sticker band</p>
+				
+				<p class="swatch__intent">The band of a desaturated sticker. Grey, not cream — a cream band on a grey fill still reads as a live sticker.</p>
+				
+				<p class="swatch__source">source: reference</p>
+			</article>
+
+			<article class="swatch">
+				<div class="swatch__chip" style="background:#0a0d09"></div>
+				<h3 class="swatch__name">--focus-inner</h3>
+				<p class="swatch__hex"><span class="v" data-from="agent/visual/tokens/color.json#/tokens/--focus-inner/value">#0a0d09</span></p>
+				<p class="swatch__role">inner focus ring</p>
+				
+				<p class="swatch__intent">Carries the indicator contrast on light and on any saturated fill.</p>
+				
+				<p class="swatch__source">source: derived</p>
+			</article>
+
+			<article class="swatch">
+				<div class="swatch__chip" style="background:#cce007"></div>
+				<h3 class="swatch__name">--focus-outer</h3>
+				<p class="swatch__hex"><span class="v" data-from="agent/visual/tokens/color.json#/tokens/--focus-outer/value">#cce007</span></p>
+				<p class="swatch__role">outer focus ring</p>
+				
+				<p class="swatch__intent">Carries the indicator contrast on dark.</p>
+				
+				<p class="swatch__source">source: derived</p>
+			</article>
+	</div>
+
+	<h3 style="margin-block-start: var(--space-l)">The surface flip</h3>
+	<p><span class="v" data-from="agent/visual/tokens/color.json#/surface_flip/how">Put [data-surface=&quot;light&quot;] on a region for the light paper island; [data-surface=&quot;deep&quot;] switches back. The role tokens flip as a SET.</span></p>
+	<p class="notes">Flipping one at a time is how the dark-bed cream ink ends up on the light paper at 1.1:1 — invisible, and the single most expensive mistake available. Both failure directions are listed in forbidden_pairs so the gate proves they are real.</p>
+	<p class="notes">Does not flip: <code>--band</code>, <code>--keyline</code>, <code>--accent</code>, <code>--accent-ink</code>, <code>every value under framework_colors</code>. They are printed ink and printed paper, not roles. A die-cut band is the same cream on any bed, and a React sticker is the same blue on any bed. That is what makes a sticker a physical object rather than a themed div.</p>
+</section>
+
+<section class="band band--ruled band--rule" aria-labelledby="lime">
+	<p class="kicker">03a — the one rule that generalises</p>
+	<h2 id="lime">The lime law</h2>
+	<div class="law">
+		<p class="law__statement"><span class="v" data-from="agent/visual/tokens/color.json#/lime_law/one_sentence">Lime is a surface, a mark and a display voice. Never an ink on light.</span></p>
+		<p class="law__why">#cce007 has a relative luminance of 0.6616 — it is a LIGHT colour that behaves like a highlighter. It cannot carry reading copy on any light bed, at any size, in any weight.</p>
+		<p class="notes">This rule survived the rebuild intact. It was never a taste call: lime on light genuinely fails, and it fails by a factor of three. What changed around it is that the kit now defaults to a dark bed, so the surface where lime is legal is the common case rather than the exception.</p>
+		<dl class="law__rules">
+			<div class="law__rule"><dt>body_text_on_light</dt><dd><span class="v" data-from="agent/visual/tokens/color.json#/lime_law/rules/body_text_on_light">NEVER. Any light surface, any size, any weight.</span></dd></div>
+			<div class="law__rule"><dt>body_text_on_dark</dt><dd><span class="v" data-from="agent/visual/tokens/color.json#/lime_law/rules/body_text_on_dark">Avoid. Legal by ratio, wrong by role — reading copy is --ink cream. Lime is for display and for marks.</span></dd></div>
+			<div class="law__rule"><dt>display_text</dt><dd><span class="v" data-from="agent/visual/tokens/color.json#/lime_law/rules/display_text">Legal on --surface (dark) at 12.41:1, at --step-3 or larger. This is where the hero headline lives.</span></dd></div>
+			<div class="law__rule"><dt>button_fill</dt><dd><span class="v" data-from="agent/visual/tokens/color.json#/lime_law/rules/button_fill">Primary CTA = lime fill + --accent-ink label (13.08:1). The flagship usage of the colour.</span></dd></div>
+			<div class="law__rule"><dt>the_wordmark</dt><dd><span class="v" data-from="agent/visual/tokens/color.json#/lime_law/rules/the_wordmark">The lime wordmark fill is a FILL, not type in the accessibility sense — it is ringed by a black keyline and a cream band and carries a drop shadow, and its accessible name comes from the surrounding markup. Do not &quot;fix&quot; its contrast by changing the fill.</span></dd></div>
+			<div class="law__rule"><dt>framework_marks</dt><dd><span class="v" data-from="agent/visual/tokens/color.json#/lime_law/rules/framework_marks">A framework logo may NEVER render in --accent. Marks render in that project's own brand colours, in white, or as the grey silhouette used for the deselected carousel state. Nothing else.</span></dd></div>
+		</dl>
+	</div>
+</section>
+
+<section class="band band--rule" aria-labelledby="pairs">
+	<p class="kicker">03b — measured, not asserted</p>
+	<h2 id="pairs">Every pair, with its real ratio</h2>
+	<p>Computed rather than transcribed: WCAG 2.x relative luminance; channel = c &lt;= 0.03928 ? c/12.92 : ((c+0.055)/1.055)^2.4; L = 0.2126R + 0.7152G + 0.0722B; ratio = (Lmax+0.05)/(Lmin+0.05)</p>
+	<p class="notes">AA normal text is 4.5, large text is 3, non-text is 3. --step-2 and above clears the WCAG large-text threshold at every viewport in the shipped Utopia scale, so size gating is expressed as a TOKEN and stays checkable.</p>
+	<p class="notes"><strong>This page will not set type in a pairing whose recomputed ratio fails AA normal text, and it will not set type in lime at all.</strong> Those rows show a fill bar instead of a word. Both rules are applied by recomputing at build time rather than by remembering, which is why a demonstration of a forbidden pairing cannot accidentally become an instance of one. Lime clears AAA on the dark bed, but a specimen is set at <code>--step--1</code> and lime type is legal only at <code>--step-3</code> or larger: its display specimen is the law's own statement in the section above.</p>
+
+	<div class="scroll">
+	<table>
+		<caption>Permitted — <span class="v" data-as="length" data-from="agent/visual/tokens/color.json#/permitted_pairs">28</span> pairs</caption>
+		<thead><tr><th>Pair</th><th>Ratio</th><th>Passes</th><th>Specimen</th><th>Context</th></tr></thead>
+		<tbody>
+
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#eceada"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/0/fg_value">#eceada</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#0b1714"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/0/bg_value">#0b1714</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/0/ratio">15.13</span>:1</td>
+					<td class="passes"><span class="yes">✓</span> AA &nbsp; <span class="yes">✓</span> AAA &nbsp; <span class="yes">✓</span> large &nbsp; <span class="yes">✓</span> UI</td>
+					<td><span class="specimen" style="background:#0b1714;color:#eceada">Compile once, output anywhere.</span></td>
+					<td class="ctx">reading copy on the page bed</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#eceada"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/1/fg_value">#eceada</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#14231f"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/1/bg_value">#14231f</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/1/ratio">13.45</span>:1</td>
+					<td class="passes"><span class="yes">✓</span> AA &nbsp; <span class="yes">✓</span> AAA &nbsp; <span class="yes">✓</span> large &nbsp; <span class="yes">✓</span> UI</td>
+					<td><span class="specimen" style="background:#14231f;color:#eceada">Compile once, output anywhere.</span></td>
+					<td class="ctx">reading copy on a raised panel</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#9fb3ac"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/2/fg_value">#9fb3ac</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#0b1714"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/2/bg_value">#0b1714</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/2/ratio">8.3</span>:1</td>
+					<td class="passes"><span class="yes">✓</span> AA &nbsp; <span class="yes">✓</span> AAA &nbsp; <span class="yes">✓</span> large &nbsp; <span class="yes">✓</span> UI</td>
+					<td><span class="specimen" style="background:#0b1714;color:#9fb3ac">Compile once, output anywhere.</span></td>
+					<td class="ctx">captions and metadata on the bed</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#cce007"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/3/fg_value">#cce007</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#0b1714"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/3/bg_value">#0b1714</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/3/ratio">12.41</span>:1</td>
+					<td class="passes"><span class="yes">✓</span> AA &nbsp; <span class="yes">✓</span> AAA &nbsp; <span class="yes">✓</span> large &nbsp; <span class="yes">✓</span> UI</td>
+					<td><span class="specimen specimen--fill" style="background:#0b1714"><span class="specimen__bar" style="background:#cce007"></span><span class="specimen__note" style="color:#eceada">shown as a fill — lime is a surface, never an ink</span></span></td>
+					<td class="ctx">lime display type on the bed — --step-3 and larger</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#0b0f0c"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/4/fg_value">#0b0f0c</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#cce007"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/4/bg_value">#cce007</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/4/ratio">13.08</span>:1</td>
+					<td class="passes"><span class="yes">✓</span> AA &nbsp; <span class="yes">✓</span> AAA &nbsp; <span class="yes">✓</span> large &nbsp; <span class="yes">✓</span> UI</td>
+					<td><span class="specimen" style="background:#cce007;color:#0b0f0c">Compile once, output anywhere.</span></td>
+					<td class="ctx">the label on a primary lime button</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#6fd3e6"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/5/fg_value">#6fd3e6</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#0b1714"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/5/bg_value">#0b1714</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/5/ratio">10.58</span>:1</td>
+					<td class="passes"><span class="yes">✓</span> AA &nbsp; <span class="yes">✓</span> AAA &nbsp; <span class="yes">✓</span> large &nbsp; <span class="yes">✓</span> UI</td>
+					<td><span class="specimen" style="background:#0b1714;color:#6fd3e6">Compile once, output anywhere.</span></td>
+					<td class="ctx">links and inline emphasis on the bed</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#7bd96a"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/6/fg_value">#7bd96a</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#0b1714"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/6/bg_value">#0b1714</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/6/ratio">10.44</span>:1</td>
+					<td class="passes"><span class="yes">✓</span> AA &nbsp; <span class="yes">✓</span> AAA &nbsp; <span class="yes">✓</span> large &nbsp; <span class="yes">✓</span> UI</td>
+					<td><span class="specimen" style="background:#0b1714;color:#7bd96a">Compile once, output anywhere.</span></td>
+					<td class="ctx">a passing check on the bed</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#f2b705"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/7/fg_value">#f2b705</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#0b1714"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/7/bg_value">#0b1714</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/7/ratio">10.07</span>:1</td>
+					<td class="passes"><span class="yes">✓</span> AA &nbsp; <span class="yes">✓</span> AAA &nbsp; <span class="yes">✓</span> large &nbsp; <span class="yes">✓</span> UI</td>
+					<td><span class="specimen" style="background:#0b1714;color:#f2b705">Compile once, output anywhere.</span></td>
+					<td class="ctx">a coming-soon tag on the bed</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#ff6b5e"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/8/fg_value">#ff6b5e</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#0b1714"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/8/bg_value">#0b1714</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/8/ratio">6.55</span>:1</td>
+					<td class="passes"><span class="yes">✓</span> AA &nbsp; <span class="no">✗</span> AAA &nbsp; <span class="yes">✓</span> large &nbsp; <span class="yes">✓</span> UI</td>
+					<td><span class="specimen" style="background:#0b1714;color:#ff6b5e">Compile once, output anywhere.</span></td>
+					<td class="ctx">a failing check on the bed</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#0f1410"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/9/fg_value">#0f1410</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#f2f0dd"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/9/bg_value">#f2f0dd</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/9/ratio">16.21</span>:1</td>
+					<td class="passes"><span class="yes">✓</span> AA &nbsp; <span class="yes">✓</span> AAA &nbsp; <span class="yes">✓</span> large &nbsp; <span class="yes">✓</span> UI</td>
+					<td><span class="specimen" style="background:#f2f0dd;color:#0f1410">Compile once, output anywhere.</span></td>
+					<td class="ctx">reading copy on the light paper island</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#4d5a4f"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/10/fg_value">#4d5a4f</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#f2f0dd"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/10/bg_value">#f2f0dd</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/10/ratio">6.32</span>:1</td>
+					<td class="passes"><span class="yes">✓</span> AA &nbsp; <span class="no">✗</span> AAA &nbsp; <span class="yes">✓</span> large &nbsp; <span class="yes">✓</span> UI</td>
+					<td><span class="specimen" style="background:#f2f0dd;color:#4d5a4f">Compile once, output anywhere.</span></td>
+					<td class="ctx">captions on the light paper island</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#10707f"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/11/fg_value">#10707f</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#f2f0dd"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/11/bg_value">#f2f0dd</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/11/ratio">5.01</span>:1</td>
+					<td class="passes"><span class="yes">✓</span> AA &nbsp; <span class="no">✗</span> AAA &nbsp; <span class="yes">✓</span> large &nbsp; <span class="yes">✓</span> UI</td>
+					<td><span class="specimen" style="background:#f2f0dd;color:#10707f">Compile once, output anywhere.</span></td>
+					<td class="ctx">links on the light paper island</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#14682c"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/12/fg_value">#14682c</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#f2f0dd"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/12/bg_value">#f2f0dd</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/12/ratio">6</span>:1</td>
+					<td class="passes"><span class="yes">✓</span> AA &nbsp; <span class="no">✗</span> AAA &nbsp; <span class="yes">✓</span> large &nbsp; <span class="yes">✓</span> UI</td>
+					<td><span class="specimen" style="background:#f2f0dd;color:#14682c">Compile once, output anywhere.</span></td>
+					<td class="ctx">a passing check on the light island</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#a32c1e"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/13/fg_value">#a32c1e</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#f2f0dd"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/13/bg_value">#f2f0dd</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/13/ratio">6.23</span>:1</td>
+					<td class="passes"><span class="yes">✓</span> AA &nbsp; <span class="no">✗</span> AAA &nbsp; <span class="yes">✓</span> large &nbsp; <span class="yes">✓</span> UI</td>
+					<td><span class="specimen" style="background:#f2f0dd;color:#a32c1e">Compile once, output anywhere.</span></td>
+					<td class="ctx">a failing check on the light island</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#0b0f0c"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/14/fg_value">#0b0f0c</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#e0dfca"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/14/bg_value">#e0dfca</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/14/ratio">14.32</span>:1</td>
+					<td class="passes"><span class="yes">✓</span> AA &nbsp; <span class="yes">✓</span> AAA &nbsp; <span class="yes">✓</span> large &nbsp; <span class="yes">✓</span> UI</td>
+					<td><span class="specimen" style="background:#e0dfca;color:#0b0f0c">Compile once, output anywhere.</span></td>
+					<td class="ctx">ink on the cream die-cut band</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#0a0d09"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/15/fg_value">#0a0d09</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#e0dfca"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/15/bg_value">#e0dfca</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/15/ratio">14.5</span>:1</td>
+					<td class="passes"><span class="yes">✓</span> AA &nbsp; <span class="yes">✓</span> AAA &nbsp; <span class="yes">✓</span> large &nbsp; <span class="yes">✓</span> UI</td>
+					<td><span class="specimen" style="background:#e0dfca;color:#0a0d09">Compile once, output anywhere.</span></td>
+					<td class="ctx">the wordmark keyline against its own band</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#ffffff"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/16/fg_value">#ffffff</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#1b6fb8"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/16/bg_value">#1b6fb8</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/16/ratio">5.23</span>:1</td>
+					<td class="passes"><span class="yes">✓</span> AA &nbsp; <span class="no">✗</span> AAA &nbsp; <span class="yes">✓</span> large &nbsp; <span class="yes">✓</span> UI</td>
+					<td><span class="specimen" style="background:#1b6fb8;color:#ffffff">Compile once, output anywhere.</span></td>
+					<td class="ctx">the React sticker's name label on its own fill</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#ffffff"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/17/fg_value">#ffffff</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#12805a"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/17/bg_value">#12805a</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/17/ratio">4.93</span>:1</td>
+					<td class="passes"><span class="yes">✓</span> AA &nbsp; <span class="no">✗</span> AAA &nbsp; <span class="yes">✓</span> large &nbsp; <span class="yes">✓</span> UI</td>
+					<td><span class="specimen" style="background:#12805a;color:#ffffff">Compile once, output anywhere.</span></td>
+					<td class="ctx">the Vue sticker's name label on its own fill</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#ffffff"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/18/fg_value">#ffffff</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#d93b02"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/18/bg_value">#d93b02</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/18/ratio">4.59</span>:1</td>
+					<td class="passes"><span class="yes">✓</span> AA &nbsp; <span class="no">✗</span> AAA &nbsp; <span class="yes">✓</span> large &nbsp; <span class="yes">✓</span> UI</td>
+					<td><span class="specimen" style="background:#d93b02;color:#ffffff">Compile once, output anywhere.</span></td>
+					<td class="ctx">the Svelte sticker's name label on its own fill</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#ffffff"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/19/fg_value">#ffffff</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#2f5fb3"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/19/bg_value">#2f5fb3</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/19/ratio">6.16</span>:1</td>
+					<td class="passes"><span class="yes">✓</span> AA &nbsp; <span class="no">✗</span> AAA &nbsp; <span class="yes">✓</span> large &nbsp; <span class="yes">✓</span> UI</td>
+					<td><span class="specimen" style="background:#2f5fb3;color:#ffffff">Compile once, output anywhere.</span></td>
+					<td class="ctx">the Solid sticker's name label on its own fill</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#ffffff"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/20/fg_value">#ffffff</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#c8102f"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/20/bg_value">#c8102f</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/20/ratio">5.88</span>:1</td>
+					<td class="passes"><span class="yes">✓</span> AA &nbsp; <span class="no">✗</span> AAA &nbsp; <span class="yes">✓</span> large &nbsp; <span class="yes">✓</span> UI</td>
+					<td><span class="specimen" style="background:#c8102f;color:#ffffff">Compile once, output anywhere.</span></td>
+					<td class="ctx">the Angular sticker's name label on its own fill</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#ffffff"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/21/fg_value">#ffffff</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#6d3fd4"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/21/bg_value">#6d3fd4</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/21/ratio">6.34</span>:1</td>
+					<td class="passes"><span class="yes">✓</span> AA &nbsp; <span class="no">✗</span> AAA &nbsp; <span class="yes">✓</span> large &nbsp; <span class="yes">✓</span> UI</td>
+					<td><span class="specimen" style="background:#6d3fd4;color:#ffffff">Compile once, output anywhere.</span></td>
+					<td class="ctx">the Qwik sticker's name label on its own fill</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#0a3560"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/22/fg_value">#0a3560</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#e3ecf2"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/22/bg_value">#e3ecf2</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/22/ratio">10.38</span>:1</td>
+					<td class="passes"><span class="yes">✓</span> AA &nbsp; <span class="yes">✓</span> AAA &nbsp; <span class="yes">✓</span> large &nbsp; <span class="yes">✓</span> UI</td>
+					<td><span class="specimen" style="background:#e3ecf2;color:#0a3560">Compile once, output anywhere.</span></td>
+					<td class="ctx">the React sticker's keyline against its own band</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#063524"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/23/fg_value">#063524</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#dfeee6"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/23/bg_value">#dfeee6</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/23/ratio">11.35</span>:1</td>
+					<td class="passes"><span class="yes">✓</span> AA &nbsp; <span class="yes">✓</span> AAA &nbsp; <span class="yes">✓</span> large &nbsp; <span class="yes">✓</span> UI</td>
+					<td><span class="specimen" style="background:#dfeee6;color:#063524">Compile once, output anywhere.</span></td>
+					<td class="ctx">the Vue sticker's keyline against its own band</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#5c1600"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/24/fg_value">#5c1600</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#f7e6db"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/24/bg_value">#f7e6db</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/24/ratio">11.02</span>:1</td>
+					<td class="passes"><span class="yes">✓</span> AA &nbsp; <span class="yes">✓</span> AAA &nbsp; <span class="yes">✓</span> large &nbsp; <span class="yes">✓</span> UI</td>
+					<td><span class="specimen" style="background:#f7e6db;color:#5c1600">Compile once, output anywhere.</span></td>
+					<td class="ctx">the Svelte sticker's keyline against its own band</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#12275c"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/25/fg_value">#12275c</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#e4eaf6"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/25/bg_value">#e4eaf6</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/25/ratio">11.83</span>:1</td>
+					<td class="passes"><span class="yes">✓</span> AA &nbsp; <span class="yes">✓</span> AAA &nbsp; <span class="yes">✓</span> large &nbsp; <span class="yes">✓</span> UI</td>
+					<td><span class="specimen" style="background:#e4eaf6;color:#12275c">Compile once, output anywhere.</span></td>
+					<td class="ctx">the Solid sticker's keyline against its own band</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#4d0410"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/26/fg_value">#4d0410</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#f6e2e5"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/26/bg_value">#f6e2e5</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/26/ratio">12.63</span>:1</td>
+					<td class="passes"><span class="yes">✓</span> AA &nbsp; <span class="yes">✓</span> AAA &nbsp; <span class="yes">✓</span> large &nbsp; <span class="yes">✓</span> UI</td>
+					<td><span class="specimen" style="background:#f6e2e5;color:#4d0410">Compile once, output anywhere.</span></td>
+					<td class="ctx">the Angular sticker's keyline against its own band</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#2a0f6b"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/27/fg_value">#2a0f6b</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#e9e4f9"></span><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/27/bg_value">#e9e4f9</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/permitted_pairs/27/ratio">12.28</span>:1</td>
+					<td class="passes"><span class="yes">✓</span> AA &nbsp; <span class="yes">✓</span> AAA &nbsp; <span class="yes">✓</span> large &nbsp; <span class="yes">✓</span> UI</td>
+					<td><span class="specimen" style="background:#e9e4f9;color:#2a0f6b">Compile once, output anywhere.</span></td>
+					<td class="ctx">the Qwik sticker's keyline against its own band</td>
+				</tr>
+		</tbody>
+	</table>
+	</div>
+
+	<div class="scroll" style="margin-block-start: var(--space-l)">
+	<table>
+		<caption>Forbidden — <span class="v" data-as="length" data-from="agent/visual/tokens/color.json#/forbidden_pairs">18</span> pairs</caption>
+		<thead><tr><th>Pair</th><th>Ratio</th><th>Passes</th><th>Specimen</th><th>Why not</th></tr></thead>
+		<tbody>
+
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#cce007"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/0/fg_value">#cce007</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#ffffff"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/0/bg_value">#ffffff</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/0/ratio">1.48</span>:1</td>
+					<td class="passes"><span class="no">✗</span> AA &nbsp; <span class="no">✗</span> AAA &nbsp; <span class="no">✗</span> large &nbsp; <span class="no">✗</span> UI</td>
+					<td><span class="specimen specimen--fill" style="background:#ffffff"><span class="specimen__bar" style="background:#cce007"></span><span class="specimen__note" style="color:#0f1410">shown as a fill — lime is a surface, never an ink</span></span></td>
+					<td class="ctx">lime on white</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#cce007"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/1/fg_value">#cce007</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#f2f0dd"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/1/bg_value">#f2f0dd</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/1/ratio">1.28</span>:1</td>
+					<td class="passes"><span class="no">✗</span> AA &nbsp; <span class="no">✗</span> AAA &nbsp; <span class="no">✗</span> large &nbsp; <span class="no">✗</span> UI</td>
+					<td><span class="specimen specimen--fill" style="background:#f2f0dd"><span class="specimen__bar" style="background:#cce007"></span><span class="specimen__note" style="color:#0f1410">shown as a fill — lime is a surface, never an ink</span></span></td>
+					<td class="ctx">lime on the light paper island</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#cce007"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/2/fg_value">#cce007</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#e0dfca"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/2/bg_value">#e0dfca</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/2/ratio">1.09</span>:1</td>
+					<td class="passes"><span class="no">✗</span> AA &nbsp; <span class="no">✗</span> AAA &nbsp; <span class="no">✗</span> large &nbsp; <span class="no">✗</span> UI</td>
+					<td><span class="specimen specimen--fill" style="background:#e0dfca"><span class="specimen__bar" style="background:#cce007"></span><span class="specimen__note" style="color:#0f1410">shown as a fill — lime is a surface, never an ink</span></span></td>
+					<td class="ctx">lime on the cream die-cut band</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#cce007"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/3/fg_value">#cce007</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#f7e6db"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/3/bg_value">#f7e6db</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/3/ratio">1.22</span>:1</td>
+					<td class="passes"><span class="no">✗</span> AA &nbsp; <span class="no">✗</span> AAA &nbsp; <span class="no">✗</span> large &nbsp; <span class="no">✗</span> UI</td>
+					<td><span class="specimen specimen--fill" style="background:#f7e6db"><span class="specimen__bar" style="background:#cce007"></span><span class="specimen__note" style="color:#0f1410">shown as a fill — lime is a surface, never an ink</span></span></td>
+					<td class="ctx">lime on the Svelte sticker band</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#f2b705"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/4/fg_value">#f2b705</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#f2f0dd"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/4/bg_value">#f2f0dd</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/4/ratio">1.58</span>:1</td>
+					<td class="passes"><span class="no">✗</span> AA &nbsp; <span class="no">✗</span> AAA &nbsp; <span class="no">✗</span> large &nbsp; <span class="no">✗</span> UI</td>
+					<td><span class="specimen specimen--fill" style="background:#f2f0dd"><span class="specimen__bar" style="background:#f2b705"></span><span class="specimen__note" style="color:#0f1410">shown as a fill — this pair may not set type</span></span></td>
+					<td class="ctx">the warning amber as text on light</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#f2b705"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/5/fg_value">#f2b705</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#ffffff"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/5/bg_value">#ffffff</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/5/ratio">1.82</span>:1</td>
+					<td class="passes"><span class="no">✗</span> AA &nbsp; <span class="no">✗</span> AAA &nbsp; <span class="no">✗</span> large &nbsp; <span class="no">✗</span> UI</td>
+					<td><span class="specimen specimen--fill" style="background:#ffffff"><span class="specimen__bar" style="background:#f2b705"></span><span class="specimen__note" style="color:#0f1410">shown as a fill — this pair may not set type</span></span></td>
+					<td class="ctx">the warning amber as text on white</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#9fb3ac"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/6/fg_value">#9fb3ac</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#f2f0dd"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/6/bg_value">#f2f0dd</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/6/ratio">1.92</span>:1</td>
+					<td class="passes"><span class="no">✗</span> AA &nbsp; <span class="no">✗</span> AAA &nbsp; <span class="no">✗</span> large &nbsp; <span class="no">✗</span> UI</td>
+					<td><span class="specimen specimen--fill" style="background:#f2f0dd"><span class="specimen__bar" style="background:#9fb3ac"></span><span class="specimen__note" style="color:#0f1410">shown as a fill — this pair may not set type</span></span></td>
+					<td class="ctx">the dark-bed muted ink used on the light island — flip the roles as a set</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#eceada"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/7/fg_value">#eceada</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#f2f0dd"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/7/bg_value">#f2f0dd</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/7/ratio">1.05</span>:1</td>
+					<td class="passes"><span class="no">✗</span> AA &nbsp; <span class="no">✗</span> AAA &nbsp; <span class="no">✗</span> large &nbsp; <span class="no">✗</span> UI</td>
+					<td><span class="specimen specimen--fill" style="background:#f2f0dd"><span class="specimen__bar" style="background:#eceada"></span><span class="specimen__note" style="color:#0f1410">shown as a fill — this pair may not set type</span></span></td>
+					<td class="ctx">the dark-bed reading ink used on the light island — the most expensive swap available</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#0f1410"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/8/fg_value">#0f1410</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#0b1714"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/8/bg_value">#0b1714</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/8/ratio">1.02</span>:1</td>
+					<td class="passes"><span class="no">✗</span> AA &nbsp; <span class="no">✗</span> AAA &nbsp; <span class="no">✗</span> large &nbsp; <span class="no">✗</span> UI</td>
+					<td><span class="specimen specimen--fill" style="background:#0b1714"><span class="specimen__bar" style="background:#0f1410"></span><span class="specimen__note" style="color:#eceada">shown as a fill — this pair may not set type</span></span></td>
+					<td class="ctx">the light-island ink used on the dark bed</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#6fd3e6"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/9/fg_value">#6fd3e6</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#f2f0dd"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/9/bg_value">#f2f0dd</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/9/ratio">1.51</span>:1</td>
+					<td class="passes"><span class="no">✗</span> AA &nbsp; <span class="no">✗</span> AAA &nbsp; <span class="no">✗</span> large &nbsp; <span class="no">✗</span> UI</td>
+					<td><span class="specimen specimen--fill" style="background:#f2f0dd"><span class="specimen__bar" style="background:#6fd3e6"></span><span class="specimen__note" style="color:#0f1410">shown as a fill — this pair may not set type</span></span></td>
+					<td class="ctx">the dark-bed link colour used on the light island</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#7bd96a"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/10/fg_value">#7bd96a</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#f2f0dd"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/10/bg_value">#f2f0dd</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/10/ratio">1.53</span>:1</td>
+					<td class="passes"><span class="no">✗</span> AA &nbsp; <span class="no">✗</span> AAA &nbsp; <span class="no">✗</span> large &nbsp; <span class="no">✗</span> UI</td>
+					<td><span class="specimen specimen--fill" style="background:#f2f0dd"><span class="specimen__bar" style="background:#7bd96a"></span><span class="specimen__note" style="color:#0f1410">shown as a fill — this pair may not set type</span></span></td>
+					<td class="ctx">the dark-bed success green used on the light island</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#ff6b5e"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/11/fg_value">#ff6b5e</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#f2f0dd"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/11/bg_value">#f2f0dd</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/11/ratio">2.43</span>:1</td>
+					<td class="passes"><span class="no">✗</span> AA &nbsp; <span class="no">✗</span> AAA &nbsp; <span class="no">✗</span> large &nbsp; <span class="no">✗</span> UI</td>
+					<td><span class="specimen specimen--fill" style="background:#f2f0dd"><span class="specimen__bar" style="background:#ff6b5e"></span><span class="specimen__note" style="color:#0f1410">shown as a fill — this pair may not set type</span></span></td>
+					<td class="ctx">the dark-bed danger used on the light island</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#4a5a55"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/12/fg_value">#4a5a55</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#0b1714"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/12/bg_value">#0b1714</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/12/ratio">2.52</span>:1</td>
+					<td class="passes"><span class="no">✗</span> AA &nbsp; <span class="no">✗</span> AAA &nbsp; <span class="no">✗</span> large &nbsp; <span class="no">✗</span> UI</td>
+					<td><span class="specimen specimen--fill" style="background:#0b1714"><span class="specimen__bar" style="background:#4a5a55"></span><span class="specimen__note" style="color:#eceada">shown as a fill — this pair may not set type</span></span></td>
+					<td class="ctx">the deselected-sticker grey used as text on the bed</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#1b6fb8"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/13/fg_value">#1b6fb8</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#0b1714"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/13/bg_value">#0b1714</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/13/ratio">3.5</span>:1</td>
+					<td class="passes"><span class="no">✗</span> AA &nbsp; <span class="no">✗</span> AAA &nbsp; <span class="yes">✓</span> large &nbsp; <span class="yes">✓</span> UI</td>
+					<td><span class="specimen specimen--fill" style="background:#0b1714"><span class="specimen__bar" style="background:#1b6fb8"></span><span class="specimen__note" style="color:#eceada">shown as a fill — this pair may not set type</span></span></td>
+					<td class="ctx">the React fill used as TEXT on the bed — these are FILLS, never inks</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#12805a"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/14/fg_value">#12805a</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#0b1714"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/14/bg_value">#0b1714</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/14/ratio">3.72</span>:1</td>
+					<td class="passes"><span class="no">✗</span> AA &nbsp; <span class="no">✗</span> AAA &nbsp; <span class="yes">✓</span> large &nbsp; <span class="yes">✓</span> UI</td>
+					<td><span class="specimen specimen--fill" style="background:#0b1714"><span class="specimen__bar" style="background:#12805a"></span><span class="specimen__note" style="color:#eceada">shown as a fill — this pair may not set type</span></span></td>
+					<td class="ctx">the Vue fill used as TEXT on the bed — these are FILLS, never inks</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#2f5fb3"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/15/fg_value">#2f5fb3</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#0b1714"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/15/bg_value">#0b1714</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/15/ratio">2.97</span>:1</td>
+					<td class="passes"><span class="no">✗</span> AA &nbsp; <span class="no">✗</span> AAA &nbsp; <span class="no">✗</span> large &nbsp; <span class="no">✗</span> UI</td>
+					<td><span class="specimen specimen--fill" style="background:#0b1714"><span class="specimen__bar" style="background:#2f5fb3"></span><span class="specimen__note" style="color:#eceada">shown as a fill — this pair may not set type</span></span></td>
+					<td class="ctx">the Solid fill used as TEXT on the bed — these are FILLS, never inks</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#c8102f"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/16/fg_value">#c8102f</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#0b1714"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/16/bg_value">#0b1714</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/16/ratio">3.11</span>:1</td>
+					<td class="passes"><span class="no">✗</span> AA &nbsp; <span class="no">✗</span> AAA &nbsp; <span class="yes">✓</span> large &nbsp; <span class="yes">✓</span> UI</td>
+					<td><span class="specimen specimen--fill" style="background:#0b1714"><span class="specimen__bar" style="background:#c8102f"></span><span class="specimen__note" style="color:#eceada">shown as a fill — this pair may not set type</span></span></td>
+					<td class="ctx">the Angular fill used as TEXT on the bed — these are FILLS, never inks</td>
+				</tr>
+				<tr>
+					<td><span class="chipline"><span class="chipline__dot" style="background:#6d3fd4"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/17/fg_value">#6d3fd4</span></span><br><span class="muted">on</span> <span class="chipline"><span class="chipline__dot" style="background:#0b1714"></span><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/17/bg_value">#0b1714</span></span></td>
+					<td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/forbidden_pairs/17/ratio">2.89</span>:1</td>
+					<td class="passes"><span class="no">✗</span> AA &nbsp; <span class="no">✗</span> AAA &nbsp; <span class="no">✗</span> large &nbsp; <span class="no">✗</span> UI</td>
+					<td><span class="specimen specimen--fill" style="background:#0b1714"><span class="specimen__bar" style="background:#6d3fd4"></span><span class="specimen__note" style="color:#eceada">shown as a fill — this pair may not set type</span></span></td>
+					<td class="ctx">the Qwik fill used as TEXT on the bed — these are FILLS, never inks</td>
+				</tr>
+		</tbody>
+	</table>
+	</div>
+
+	<h3 style="margin-block-start: var(--space-l)">The framework fills</h3>
+	<p class="notes">Six frameworks, six saturated fills — the die-cut sticker colours from the concept art, anchored on the top-5%-saturation sample rather than the block average. The logo colours are each project's own; Frameless does not own them and states them here only so a badge can be built without a network request.</p>
+	<div class="scroll">
+	<table>
+		<thead><tr><th>Framework</th><th>Fill</th><th>Keyline</th><th>Band</th><th>Logo</th><th>Name on fill</th><th>Fill on bed</th></tr></thead>
+		<tbody>
+			<tr><td>React</td><td><span class="chipline"><span class="chipline__dot" style="background:#1b6fb8"></span><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/react/fill">#1b6fb8</span></span></td><td><span class="chipline"><span class="chipline__dot" style="background:#0a3560"></span><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/react/keyline">#0a3560</span></span></td><td><span class="chipline"><span class="chipline__dot" style="background:#e3ecf2"></span><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/react/band">#e3ecf2</span></span></td><td><span class="chipline"><span class="chipline__dot" style="background:#61dafb"></span><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/react/logo">#61dafb</span></span></td><td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/react/name_on_fill">5.23</span>:1</td><td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/react/fill_on_bed">3.5</span>:1</td></tr>
+			<tr><td>Vue</td><td><span class="chipline"><span class="chipline__dot" style="background:#12805a"></span><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/vue/fill">#12805a</span></span></td><td><span class="chipline"><span class="chipline__dot" style="background:#063524"></span><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/vue/keyline">#063524</span></span></td><td><span class="chipline"><span class="chipline__dot" style="background:#dfeee6"></span><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/vue/band">#dfeee6</span></span></td><td><span class="chipline"><span class="chipline__dot" style="background:#42b883"></span><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/vue/logo">#42b883</span></span></td><td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/vue/name_on_fill">4.93</span>:1</td><td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/vue/fill_on_bed">3.72</span>:1</td></tr>
+			<tr><td>Svelte</td><td><span class="chipline"><span class="chipline__dot" style="background:#d93b02"></span><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/svelte/fill">#d93b02</span></span></td><td><span class="chipline"><span class="chipline__dot" style="background:#5c1600"></span><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/svelte/keyline">#5c1600</span></span></td><td><span class="chipline"><span class="chipline__dot" style="background:#f7e6db"></span><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/svelte/band">#f7e6db</span></span></td><td><span class="chipline"><span class="chipline__dot" style="background:#ffffff"></span><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/svelte/logo">#ffffff</span></span></td><td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/svelte/name_on_fill">4.59</span>:1</td><td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/svelte/fill_on_bed">3.99</span>:1</td></tr>
+			<tr><td>Solid</td><td><span class="chipline"><span class="chipline__dot" style="background:#2f5fb3"></span><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/solid/fill">#2f5fb3</span></span></td><td><span class="chipline"><span class="chipline__dot" style="background:#12275c"></span><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/solid/keyline">#12275c</span></span></td><td><span class="chipline"><span class="chipline__dot" style="background:#e4eaf6"></span><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/solid/band">#e4eaf6</span></span></td><td><span class="chipline"><span class="chipline__dot" style="background:#76b3e1"></span><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/solid/logo">#76b3e1</span></span></td><td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/solid/name_on_fill">6.16</span>:1</td><td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/solid/fill_on_bed">2.97</span>:1</td></tr>
+			<tr><td>Angular</td><td><span class="chipline"><span class="chipline__dot" style="background:#c8102f"></span><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/angular/fill">#c8102f</span></span></td><td><span class="chipline"><span class="chipline__dot" style="background:#4d0410"></span><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/angular/keyline">#4d0410</span></span></td><td><span class="chipline"><span class="chipline__dot" style="background:#f6e2e5"></span><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/angular/band">#f6e2e5</span></span></td><td><span class="chipline"><span class="chipline__dot" style="background:#ffffff"></span><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/angular/logo">#ffffff</span></span></td><td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/angular/name_on_fill">5.88</span>:1</td><td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/angular/fill_on_bed">3.11</span>:1</td></tr>
+			<tr><td>Qwik</td><td><span class="chipline"><span class="chipline__dot" style="background:#6d3fd4"></span><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/qwik/fill">#6d3fd4</span></span></td><td><span class="chipline"><span class="chipline__dot" style="background:#2a0f6b"></span><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/qwik/keyline">#2a0f6b</span></span></td><td><span class="chipline"><span class="chipline__dot" style="background:#e9e4f9"></span><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/qwik/band">#e9e4f9</span></span></td><td><span class="chipline"><span class="chipline__dot" style="background:#18b6f6"></span><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/qwik/logo">#18b6f6</span></span></td><td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/qwik/name_on_fill">6.34</span>:1</td><td class="num"><span class="v" data-from="agent/visual/tokens/color.json#/framework_colors/values/qwik/fill_on_bed">2.89</span>:1</td></tr>
+		</tbody>
+	</table>
+	</div>
+</section>
+
+<section class="band band--rule" aria-labelledby="type">
+	<p class="kicker">04 — type</p>
+	<h2 id="type">10 fluid steps, 4 weights, one face</h2>
+	<p class="lede">Que Grotesque, self-hosted WOFF2 subsets. There is no italic and no oblique in this set, which is why `font-synthesis: none` is mandatory and global. Without it the browser fakes both.</p>
+	<p class="notes">Fluid between <span class="v" data-from="agent/visual/tokens/utopia.config.json#/shared/minViewport">320</span>px and <span class="v" data-from="agent/visual/tokens/utopia.config.json#/shared/maxViewport">1440</span>px. Base <span class="v" data-from="agent/visual/tokens/utopia.config.json#/shared/minFontSize">18</span>px → <span class="v" data-from="agent/visual/tokens/utopia.config.json#/shared/maxFontSize">21</span>px, on a <span class="v" data-from="agent/visual/tokens/utopia.config.json#/shared/minTypeScaleName">Major Third</span> (<span class="v" data-from="agent/visual/tokens/utopia.config.json#/shared/minTypeScale">1.25</span>) at the small end and a <span class="v" data-from="agent/visual/tokens/utopia.config.json#/shared/maxTypeScaleName">Perfect Fourth</span> (<span class="v" data-from="agent/visual/tokens/utopia.config.json#/shared/maxTypeScale">1.333</span>) at the large end. Every <code>clamp()</code> below is recomputed from those parameters at build time — the CSS is not read, it is reproduced.</p>
+
+	<div style="margin-block-start: var(--space-l)">
+		<div class="type-row">
+			<p class="type-row__sample" style="font-size: var(--step-7); line-height: var(--leading-heading); letter-spacing: var(--tracking-display)">Compile once, output anywhere.</p>
+			<p class="type-row__meta"><strong>--step-7</strong> · <span class="v" data-from="clamp:type/7">clamp(5.3644rem, 4.0927rem + 6.3586vw, 9.8155rem)</span> · 85.83px → 157.05px</p>
+		</div>
+		<div class="type-row">
+			<p class="type-row__sample" style="font-size: var(--step-6); line-height: var(--leading-heading); letter-spacing: var(--tracking-display)">Compile once, output anywhere.</p>
+			<p class="type-row__meta"><strong>--step-6</strong> · <span class="v" data-from="clamp:type/6">clamp(4.2915rem, 3.4138rem + 4.3884vw, 7.3634rem)</span> · 68.66px → 117.81px</p>
+		</div>
+		<div class="type-row">
+			<p class="type-row__sample" style="font-size: var(--step-5); line-height: var(--leading-heading); letter-spacing: var(--tracking-display)">Compile once, output anywhere.</p>
+			<p class="type-row__meta"><strong>--step-5</strong> · <span class="v" data-from="clamp:type/5">clamp(3.4332rem, 2.8359rem + 2.9868vw, 5.524rem)</span> · 54.93px → 88.38px</p>
+		</div>
+		<div class="type-row">
+			<p class="type-row__sample" style="font-size: var(--step-4); line-height: var(--leading-heading); letter-spacing: var(--tracking-display)">Compile once, output anywhere.</p>
+			<p class="type-row__meta"><strong>--step-4</strong> · <span class="v" data-from="clamp:type/4">clamp(2.7466rem, 2.3473rem + 1.9963vw, 4.144rem)</span> · 43.95px → 66.30px</p>
+		</div>
+		<div class="type-row">
+			<p class="type-row__sample" style="font-size: var(--step-3); line-height: var(--leading-heading); letter-spacing: var(--tracking-display)">Compile once, output anywhere.</p>
+			<p class="type-row__meta"><strong>--step-3</strong> · <span class="v" data-from="clamp:type/3">clamp(2.1973rem, 1.9368rem + 1.3022vw, 3.1088rem)</span> · 35.16px → 49.74px</p>
+		</div>
+		<div class="type-row">
+			<p class="type-row__sample" style="font-size: var(--step-2); line-height: var(--leading-heading); letter-spacing: var(--tracking-display)">Compile once, output anywhere.</p>
+			<p class="type-row__meta"><strong>--step-2</strong> · <span class="v" data-from="clamp:type/2">clamp(1.7578rem, 1.5937rem + 0.8205vw, 2.3322rem)</span> · 28.13px → 37.31px</p>
+		</div>
+		<div class="type-row">
+			<p class="type-row__sample" style="font-size: var(--step-1); line-height: var(--leading-heading); letter-spacing: var(--tracking-display)">Compile once, output anywhere.</p>
+			<p class="type-row__meta"><strong>--step-1</strong> · <span class="v" data-from="clamp:type/1">clamp(1.4063rem, 1.3082rem + 0.4904vw, 1.7496rem)</span> · 22.50px → 27.99px</p>
+		</div>
+		<div class="type-row">
+			<p class="type-row__sample" style="font-size: var(--step-0); line-height: var(--leading-heading); letter-spacing: var(--tracking-display)">Compile once, output anywhere.</p>
+			<p class="type-row__meta"><strong>--step-0</strong> · <span class="v" data-from="clamp:type/0">clamp(1.125rem, 1.0714rem + 0.2679vw, 1.3125rem)</span> · 18.00px → 21.00px</p>
+		</div>
+		<div class="type-row">
+			<p class="type-row__sample" style="font-size: var(--step--1); line-height: var(--leading-heading); letter-spacing: var(--tracking-display)">Compile once, output anywhere.</p>
+			<p class="type-row__meta"><strong>--step--1</strong> · <span class="v" data-from="clamp:type/-1">clamp(0.9rem, 0.8758rem + 0.1209vw, 0.9846rem)</span> · 14.40px → 15.75px</p>
+		</div>
+		<div class="type-row">
+			<p class="type-row__sample" style="font-size: var(--step--2); line-height: var(--leading-heading); letter-spacing: var(--tracking-display)">Compile once, output anywhere.</p>
+			<p class="type-row__meta"><strong>--step--2</strong> · <span class="v" data-from="clamp:type/-2">clamp(0.72rem, 0.7147rem + 0.0266vw, 0.7387rem)</span> · 11.52px → 11.82px</p>
+		</div>
+	</div>
+
+	<h3 style="margin-block-start: var(--space-l)">The typographic roles</h3>
+	<p class="notes">Read out of <code>agent/visual/colors_and_type.css</code> at build time: every rule in the kit's entry stylesheet that binds a named role to a step. Four weights, and each owns a band of the scale.</p>
+	<div class="scroll">
+	<table>
+		<thead><tr><th>Selector</th><th>Step</th><th>Weight</th><th>Line height</th><th>Tracking</th></tr></thead>
+		<tbody>
+			<tr><td><code>.display-hero, :where(h1)</code></td><td><code>--step-7</code></td><td>900 — Black</td><td><code>var(--leading-display)</code></td><td><code>var(--tracking-display)</code></td></tr>
+			<tr><td><code>.display-section</code></td><td><code>--step-6</code></td><td>900 — Black</td><td><code>var(--leading-display)</code></td><td><code>var(--tracking-display)</code></td></tr>
+			<tr><td><code>.display-cut--hero</code></td><td><code>--step-7</code></td><td><span class="muted">unassigned</span></td><td><code>—</code></td><td><code>—</code></td></tr>
+			<tr><td><code>.display-cut--section</code></td><td><code>--step-6</code></td><td><span class="muted">unassigned</span></td><td><code>—</code></td><td><code>—</code></td></tr>
+			<tr><td><code>.heading-1, :where(h2)</code></td><td><code>--step-5</code></td><td>700 — Bold</td><td><code>var(--leading-heading)</code></td><td><code>—</code></td></tr>
+			<tr><td><code>.heading-2, :where(h3)</code></td><td><code>--step-4</code></td><td>700 — Bold</td><td><code>var(--leading-heading)</code></td><td><code>—</code></td></tr>
+			<tr><td><code>.heading-3, :where(h4)</code></td><td><code>--step-3</code></td><td>700 — Bold</td><td><code>var(--leading-heading)</code></td><td><code>—</code></td></tr>
+			<tr><td><code>.badge-label</code></td><td><code>--step--2</code></td><td>700 — Bold</td><td><code>1</code></td><td><code>var(--tracking-caps)</code></td></tr>
+			<tr><td><code>.text-lead</code></td><td><code>--step-2</code></td><td>500 — Medium</td><td><code>1.35</code></td><td><code>—</code></td></tr>
+			<tr><td><code>.ui-label, .nav-item</code></td><td><code>--step-2</code></td><td>500 — Medium</td><td><code>1.2</code></td><td><code>—</code></td></tr>
+			<tr><td><code>.text-emphasis</code></td><td><code>--step-1</code></td><td><span class="muted">unassigned</span></td><td><code>1.4</code></td><td><code>—</code></td></tr>
+			<tr><td><code>.text-body</code></td><td><code>--step-0</code></td><td>400 — Regular</td><td><code>var(--leading-body)</code></td><td><code>—</code></td></tr>
+			<tr><td><code>.text-caption, :where(figcaption, small)</code></td><td><code>--step--1</code></td><td>400 — Regular</td><td><code>1.4</code></td><td><code>—</code></td></tr>
+			<tr><td><code>.text-legal</code></td><td><code>--step--2</code></td><td>400 — Regular</td><td><code>1.5</code></td><td><code>—</code></td></tr>
+		</tbody>
+	</table>
+	</div>
+	<p class="notes">Measured, not assumed: the subsets carry 294 mapped codepoints and Que Grotesque is not monospace — Que Grotesque must never set code. Use ui-monospace (--font-mono). <code>font-synthesis: none</code> is global and mandatory: there is no italic in this set, so without it the browser invents one. Display leading is <span class="v" data-from="css:agent/visual/colors_and_type.css#--leading-display">0.95</span> and display tracking <span class="v" data-from="css:agent/visual/colors_and_type.css#--tracking-display">-0.02em</span>.</p>
+</section>
+
+<section class="band band--ruled band--rule" aria-labelledby="space">
+	<p class="kicker">05 — space</p>
+	<h2 id="space">The same parameters, applied to distance</h2>
+	<p class="lede">Space and type are generated from one config, so they scale together. The one-up pairs travel further between small and large viewports than a single step does — use them for section rhythm.</p>
+
+	<div style="margin-block-start: var(--space-l)">
+		<div class="space-row">
+			<span class="space-row__name">--space-3xs</span>
+			<span class="space-row__bar" style="inline-size: var(--space-3xs)"></span>
+			<span class="space-row__clamp"><span class="v" data-from="clamp:space/3xs">clamp(0.3125rem, 0.3125rem + 0vw, 0.3125rem)</span> · 5px → 5px</span>
+		</div>
+		<div class="space-row">
+			<span class="space-row__name">--space-2xs</span>
+			<span class="space-row__bar" style="inline-size: var(--space-2xs)"></span>
+			<span class="space-row__clamp"><span class="v" data-from="clamp:space/2xs">clamp(0.5625rem, 0.5268rem + 0.1786vw, 0.6875rem)</span> · 9px → 11px</span>
+		</div>
+		<div class="space-row">
+			<span class="space-row__name">--space-xs</span>
+			<span class="space-row__bar" style="inline-size: var(--space-xs)"></span>
+			<span class="space-row__clamp"><span class="v" data-from="clamp:space/xs">clamp(0.875rem, 0.8393rem + 0.1786vw, 1rem)</span> · 14px → 16px</span>
+		</div>
+		<div class="space-row">
+			<span class="space-row__name">--space-s</span>
+			<span class="space-row__bar" style="inline-size: var(--space-s)"></span>
+			<span class="space-row__clamp"><span class="v" data-from="clamp:space/s">clamp(1.125rem, 1.0714rem + 0.2679vw, 1.3125rem)</span> · 18px → 21px</span>
+		</div>
+		<div class="space-row">
+			<span class="space-row__name">--space-m</span>
+			<span class="space-row__bar" style="inline-size: var(--space-m)"></span>
+			<span class="space-row__clamp"><span class="v" data-from="clamp:space/m">clamp(1.6875rem, 1.5982rem + 0.4464vw, 2rem)</span> · 27px → 32px</span>
+		</div>
+		<div class="space-row">
+			<span class="space-row__name">--space-l</span>
+			<span class="space-row__bar" style="inline-size: var(--space-l)"></span>
+			<span class="space-row__clamp"><span class="v" data-from="clamp:space/l">clamp(2.25rem, 2.1429rem + 0.5357vw, 2.625rem)</span> · 36px → 42px</span>
+		</div>
+		<div class="space-row">
+			<span class="space-row__name">--space-xl</span>
+			<span class="space-row__bar" style="inline-size: var(--space-xl)"></span>
+			<span class="space-row__clamp"><span class="v" data-from="clamp:space/xl">clamp(3.375rem, 3.2143rem + 0.8036vw, 3.9375rem)</span> · 54px → 63px</span>
+		</div>
+		<div class="space-row">
+			<span class="space-row__name">--space-2xl</span>
+			<span class="space-row__bar" style="inline-size: var(--space-2xl)"></span>
+			<span class="space-row__clamp"><span class="v" data-from="clamp:space/2xl">clamp(4.5rem, 4.2857rem + 1.0714vw, 5.25rem)</span> · 72px → 84px</span>
+		</div>
+		<div class="space-row">
+			<span class="space-row__name">--space-3xl</span>
+			<span class="space-row__bar" style="inline-size: var(--space-3xl)"></span>
+			<span class="space-row__clamp"><span class="v" data-from="clamp:space/3xl">clamp(6.75rem, 6.4286rem + 1.6071vw, 7.875rem)</span> · 108px → 126px</span>
+		</div>
+	</div>
+
+	<h3 style="margin-block-start: var(--space-l)">One-up pairs</h3>
+	<div>
+		<div class="space-row">
+			<span class="space-row__name">--space-3xs-2xs</span>
+			<span class="space-row__bar" style="inline-size: var(--space-3xs-2xs)"></span>
+			<span class="space-row__clamp"><span class="v" data-from="clamp:space/3xs-2xs">clamp(0.3125rem, 0.2054rem + 0.5357vw, 0.6875rem)</span> · 5px → 11px</span>
+		</div>
+		<div class="space-row">
+			<span class="space-row__name">--space-2xs-xs</span>
+			<span class="space-row__bar" style="inline-size: var(--space-2xs-xs)"></span>
+			<span class="space-row__clamp"><span class="v" data-from="clamp:space/2xs-xs">clamp(0.5625rem, 0.4375rem + 0.625vw, 1rem)</span> · 9px → 16px</span>
+		</div>
+		<div class="space-row">
+			<span class="space-row__name">--space-xs-s</span>
+			<span class="space-row__bar" style="inline-size: var(--space-xs-s)"></span>
+			<span class="space-row__clamp"><span class="v" data-from="clamp:space/xs-s">clamp(0.875rem, 0.75rem + 0.625vw, 1.3125rem)</span> · 14px → 21px</span>
+		</div>
+		<div class="space-row">
+			<span class="space-row__name">--space-s-m</span>
+			<span class="space-row__bar" style="inline-size: var(--space-s-m)"></span>
+			<span class="space-row__clamp"><span class="v" data-from="clamp:space/s-m">clamp(1.125rem, 0.875rem + 1.25vw, 2rem)</span> · 18px → 32px</span>
+		</div>
+		<div class="space-row">
+			<span class="space-row__name">--space-m-l</span>
+			<span class="space-row__bar" style="inline-size: var(--space-m-l)"></span>
+			<span class="space-row__clamp"><span class="v" data-from="clamp:space/m-l">clamp(1.6875rem, 1.4196rem + 1.3393vw, 2.625rem)</span> · 27px → 42px</span>
+		</div>
+		<div class="space-row">
+			<span class="space-row__name">--space-l-xl</span>
+			<span class="space-row__bar" style="inline-size: var(--space-l-xl)"></span>
+			<span class="space-row__clamp"><span class="v" data-from="clamp:space/l-xl">clamp(2.25rem, 1.7679rem + 2.4107vw, 3.9375rem)</span> · 36px → 63px</span>
+		</div>
+		<div class="space-row">
+			<span class="space-row__name">--space-xl-2xl</span>
+			<span class="space-row__bar" style="inline-size: var(--space-xl-2xl)"></span>
+			<span class="space-row__clamp"><span class="v" data-from="clamp:space/xl-2xl">clamp(3.375rem, 2.8393rem + 2.6786vw, 5.25rem)</span> · 54px → 84px</span>
+		</div>
+		<div class="space-row">
+			<span class="space-row__name">--space-2xl-3xl</span>
+			<span class="space-row__bar" style="inline-size: var(--space-2xl-3xl)"></span>
+			<span class="space-row__clamp"><span class="v" data-from="clamp:space/2xl-3xl">clamp(4.5rem, 3.5357rem + 4.8214vw, 7.875rem)</span> · 72px → 126px</span>
+		</div>
+		<div class="space-row">
+			<span class="space-row__name">--space-s-l</span>
+			<span class="space-row__bar" style="inline-size: var(--space-s-l)"></span>
+			<span class="space-row__clamp"><span class="v" data-from="clamp:space/s-l">clamp(1.125rem, 0.6964rem + 2.1429vw, 2.625rem)</span> · 18px → 42px · custom pair</span>
+		</div>
+	</div>
+</section>
+
+<section class="band band--rule" aria-labelledby="sticker">
+	<p class="kicker">06 — the die-cut vocabulary</p>
+	<h2 id="sticker">Printed, cut, and sitting above the page</h2>
+	<p class="lede">A sticker is a printed thing, cut out of a band of paper and laid on a dark textured bed. Four things make it read as an object, and dropping any one of them stops it being a sticker: the band, the keyline, the tilt, and the shadow.</p>
+
+	<div class="scroll">
+	<table>
+		<thead><tr><th>Token</th><th>Value</th><th>What it is</th></tr></thead>
+		<tbody>
+			<tr><td><code>--sticker-band-ratio</code></td><td class="num"><span class="v" data-from="css:agent/visual/tokens/sticker.css#--sticker-band-ratio">0.07</span></td><td>The band as a proportion of the object's <em>width</em>: 7.0%, the midpoint of the 6–8% measured on real die-cut stickers. Kept as a raw ratio so a canvas or SVG renderer can apply the same rule outside CSS.</td></tr>
+			<tr><td><code>--sticker-band</code></td><td class="num"><span class="v" data-from="css:agent/visual/tokens/sticker.css#--sticker-band">clamp(0.5rem, 7cqw, 2rem)</span></td><td>The same rule in CSS. <code>cqw</code> <em>is</em> "a percent of the container's width", so this expresses the measurement rather than approximating it. Needs <code>container-type: inline-size</code> on an ancestor — an element cannot query itself.</td></tr>
+			<tr><td><code>--sticker-band-fixed</code></td><td class="num"><span class="v" data-from="css:agent/visual/tokens/sticker.css#--sticker-band-fixed">0.7rem</span></td><td>For anywhere container units are unavailable. Not a lesser option — it is the right answer on a button.</td></tr>
+			<tr><td><code>--sticker-keyline</code></td><td class="num"><span class="v" data-from="css:agent/visual/tokens/sticker.css#--sticker-keyline">2px</span></td><td>The default die-cut stroke. It equals <code>--focus-width</code>, which is what makes a focused die-cut component shift by zero pixels. It is also the boundary that survives forced-colours mode, where the shadow is dropped by the OS.</td></tr>
+			<tr><td><code>--sticker-keyline-bold</code></td><td class="num"><span class="v" data-from="css:agent/visual/tokens/sticker.css#--sticker-keyline-bold">3px</span></td><td>Large display die-cuts only. On a button it reads as a mistake.</td></tr>
+			<tr><td><code>--sticker-keyline-heavy</code></td><td class="num"><span class="v" data-from="css:agent/visual/tokens/sticker.css#--sticker-keyline-heavy">4px</span></td><td>The selected carousel sticker at roughly 2×, and nothing smaller.</td></tr>
+			<tr><td><code>--sticker-keyline-hair</code></td><td class="num"><span class="v" data-from="css:agent/visual/tokens/sticker.css#--sticker-keyline-hair">1px</span></td><td>Dividers and inner rules. Never a die-cut boundary — that is the whole distinction.</td></tr>
+			<tr><td><code>--sticker-radius</code></td><td class="num"><span class="v" data-from="css:agent/visual/tokens/sticker.css#--sticker-radius">1.25rem</span></td><td>A die-cut never has a sharp corner: the blade has a radius and the paper tears if it does not.</td></tr>
+			<tr><td><code>--tilt-rest</code></td><td class="num"><span class="v" data-from="css:agent/visual/tokens/sticker.css#--tilt-rest">-3deg</span></td><td>Declared in ../tokens/sticker.css, restated here because motion returns to it. The rest value is -3deg, measured off Sticker Forge's own overall-tilt slider rather than guessed. The four values are deliberately unequal and deliberately not mirrored so a group looks placed by hand. Cycle them across siblings; do not invent a fifth. A decorative sticker at 0deg reads as a div.</td></tr>
+		</tbody>
+	</table>
+	</div>
+
+	<p class="notes">The wordmark applies the same rules with the <em>letterform</em> as the die-cut object, so the basis is its ink height: <span class="v" data-from="agent/visual/assets/wordmark/metrics.json#/at100px/inkHeight">72.75</span> at 100px, measured off the shipped WOFF2 by <code>build-wordmark.mjs</code> rather than assumed. Band <span class="v" data-from="agent/visual/assets/wordmark/metrics.json#/dieCutRatios/band">0.115</span>, keyline <span class="v" data-from="agent/visual/assets/wordmark/metrics.json#/dieCutRatios/keyline">0.09</span>, shadow offset <span class="v" data-from="agent/visual/assets/wordmark/metrics.json#/dieCutRatios/shadowDx">0.018</span> / <span class="v" data-from="agent/visual/assets/wordmark/metrics.json#/dieCutRatios/shadowDy">0.085</span> of that height. <span class="v" data-from="agent/visual/assets/wordmark/metrics.json#/dieCutRatios/note">The shadow is the fourth layer and it is not optional. A lockup drawn without it is not this wordmark.</span></p>
+</section>
+
+<section class="band band--rule" aria-labelledby="motion">
+	<p class="kicker">07 — motion</p>
+	<h2 id="motion">6 curves. Six named curves. If a motion does not fit one of them, the motion is wrong, not the vocabulary.</h2>
+	<p class="lede">A sticker is a physical object on paper. It presses down instantly and comes back up gently, because that is what a thumb and a piece of vinyl actually do. Every curve here is asymmetric or springy for a physical reason, never because a designer liked the shape.</p>
+
+	<div class="curves" style="margin-block-start: var(--space-l)">
+		<article class="curve-card">
+			<svg class="curve" viewBox="0 0 120 120" role="img" aria-label="press easing curve"><rect x="12" y="12" width="96" height="96" fill="none" stroke="currentColor" stroke-opacity="0.2" stroke-width="1"/><path d="M 12 108 C 50.4 108, 108 12, 108 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+			<h3 class="curve-card__name">press</h3>
+			<p class="curve-card__spec"><span class="v" data-from="agent/visual/motion/motion.json#/easings/press/css_timing_function">cubic-bezier(0.4, 0, 1, 1)</span><br><span class="v" data-from="agent/visual/motion/motion.json#/easings/press/duration_ms">90</span>ms</p>
+			<p class="curve-card__for"><span class="v" data-from="agent/visual/motion/motion.json#/easings/press/for">Pressing a sticker down is instant.</span></p>
+			<p class="curve-card__spec">Ease-in with no deceleration: it starts moving and never slows, so the motion ends at full speed the way contact does. 90ms is below the threshold where a press reads as laggy.</p>
+		</article>
+		<article class="curve-card">
+			<svg class="curve" viewBox="0 0 120 120" role="img" aria-label="release easing curve"><rect x="12" y="12" width="96" height="96" fill="none" stroke="currentColor" stroke-opacity="0.2" stroke-width="1"/><path d="M 12 108 C 12 108, 31.2 12, 108 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+			<h3 class="curve-card__name">release</h3>
+			<p class="curve-card__spec"><span class="v" data-from="agent/visual/motion/motion.json#/easings/release/css_timing_function">cubic-bezier(0, 0, 0.2, 1)</span><br><span class="v" data-from="agent/visual/motion/motion.json#/easings/release/duration_ms">160</span>ms</p>
+			<p class="curve-card__for"><span class="v" data-from="agent/visual/motion/motion.json#/easings/release/for">Deliberately asymmetric with press — down fast, up gentle.</span></p>
+			<p class="curve-card__spec">The asymmetry IS the design. A press and release that share one curve feels like a state toggle; a fast press and a slow release feels like a finger lifting off vinyl. If you find yourself using one curve for both directions, you have removed the point.</p>
+		</article>
+		<article class="curve-card">
+			<svg class="curve" viewBox="0 0 120 120" role="img" aria-label="peel easing curve"><rect x="12" y="12" width="96" height="96" fill="none" stroke="currentColor" stroke-opacity="0.2" stroke-width="1"/><path d="M 12 108 C 44.64 -41.76, 73.44 12, 108 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+			<h3 class="curve-card__name">peel</h3>
+			<p class="curve-card__spec"><span class="v" data-from="agent/visual/motion/motion.json#/easings/peel/css_timing_function">cubic-bezier(0.34, 1.56, 0.64, 1)</span><br><span class="v" data-from="agent/visual/motion/motion.json#/easings/peel/duration_ms">260</span>ms</p>
+			<p class="curve-card__for"><span class="v" data-from="agent/visual/motion/motion.json#/easings/peel/for">Overshoot = a physical object with springiness.</span></p>
+			<p class="curve-card__spec">The second control point sits above 1, so the value passes its target and comes back. That overshoot is the only place in the system where something behaves elastically, and it is reserved for the one gesture that is literally physical: a die-cut corner lifting off the page.</p>
+		</article>
+		<article class="curve-card">
+			<svg class="curve" viewBox="0 0 120 120" role="img" aria-label="slide easing curve"><rect x="12" y="12" width="96" height="96" fill="none" stroke="currentColor" stroke-opacity="0.2" stroke-width="1"/><path d="M 12 108 C 74.4 108, 45.6 12, 108 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+			<h3 class="curve-card__name">slide</h3>
+			<p class="curve-card__spec"><span class="v" data-from="agent/visual/motion/motion.json#/easings/slide/css_timing_function">cubic-bezier(0.65, 0, 0.35, 1)</span><br><span class="v" data-from="agent/visual/motion/motion.json#/easings/slide/duration_ms">300</span>ms</p>
+			<p class="curve-card__for"><span class="v" data-from="agent/visual/motion/motion.json#/easings/slide/for">Output-switcher; A to B swaps.</span></p>
+			<p class="curve-card__spec">Symmetric ease-in-out. A swap has no privileged direction — going from React to Solid should feel exactly like going back — so the curve is its own mirror. This is the curve the six-output switcher runs on, which makes it the most-seen motion in the brand.</p>
+		</article>
+		<article class="curve-card">
+			<svg class="curve" viewBox="0 0 120 120" role="img" aria-label="settle easing curve"><rect x="12" y="12" width="96" height="96" fill="none" stroke="currentColor" stroke-opacity="0.2" stroke-width="1"/><path d="M 12 108 C 33.12 12, 46.56 12, 108 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+			<h3 class="curve-card__name">settle</h3>
+			<p class="curve-card__spec"><span class="v" data-from="agent/visual/motion/motion.json#/easings/settle/css_timing_function">cubic-bezier(0.22, 1, 0.36, 1)</span><br><span class="v" data-from="agent/visual/motion/motion.json#/easings/settle/duration_ms">420</span>ms</p>
+			<p class="curve-card__for"><span class="v" data-from="agent/visual/motion/motion.json#/easings/settle/for">Long tail, no overshoot — it settles, it does not bounce twice.</span></p>
+			<p class="curve-card__spec">Reaches most of the distance early and then takes a long time to arrive. Used for things that come to rest: a panel arriving, a sticker being placed. Distinct from peel because it never passes its target — a settling object that bounces reads as a bug.</p>
+		</article>
+		<article class="curve-card">
+			<svg class="curve" viewBox="0 0 120 120" role="img" aria-label="instant easing curve"><rect x="12" y="12" width="96" height="96" fill="none" stroke="currentColor" stroke-opacity="0.2" stroke-width="1"/><path d="M 12 108 L 108 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+			<h3 class="curve-card__name">instant</h3>
+			<p class="curve-card__spec"><span class="v" data-from="agent/visual/motion/motion.json#/easings/instant/css_timing_function">linear</span><br><span class="v" data-from="agent/visual/motion/motion.json#/easings/instant/duration_ms">0</span>ms</p>
+			<p class="curve-card__for"><span class="v" data-from="agent/visual/motion/motion.json#/easings/instant/for">prefers-reduced-motion fallback.</span></p>
+			<p class="curve-card__spec">Not a design choice — the escape hatch. Every other curve collapses to this one when the user has asked for reduced motion, which is why it is in the vocabulary rather than being an absence of one.</p>
+		</article>
+	</div>
+
+	<h3 style="margin-block-start: var(--space-l)">Transforms</h3>
+	<div class="scroll">
+	<table>
+		<thead><tr><th>Token</th><th>Value</th><th>State</th></tr></thead>
+		<tbody>
+			<tr><td><code>--transform-peel</code></td><td class="num"><span class="v" data-from="agent/visual/motion/motion.json#/transforms/peel/css">rotate(-1.5deg) translateY(-3px) scale(1.015)</span></td><td>The lifted state. A corner physically off the page.</td></tr>
+			<tr><td><code>--transform-press</code></td><td class="num"><span class="v" data-from="agent/visual/motion/motion.json#/transforms/press/css">translateY(1px) scale(0.985)</span></td><td>The pressed state. A thumb on the sticker.</td></tr>
+			<tr><td><code>--transform-rest</code></td><td class="num"><span class="v" data-from="agent/visual/motion/motion.json#/transforms/rest/css">none</span></td><td>The resting state. Not an animation — where a sticker lives.</td></tr>
+		</tbody>
+	</table>
+	</div>
+
+	<h3 style="margin-block-start: var(--space-l)">Reduced motion is mandatory</h3>
+	<p>Under <code><span class="v" data-from="agent/visual/motion/motion.json#/reduced_motion/media_query">(prefers-reduced-motion: reduce)</span></code> every duration collapses to <span class="v" data-from="agent/visual/motion/motion.json#/reduced_motion/durations_ms">0</span>ms, every easing becomes <span class="v" data-from="agent/visual/motion/motion.json#/reduced_motion/timing_function">linear</span>, every transform token becomes <span class="v" data-from="agent/visual/motion/motion.json#/reduced_motion/transforms">none</span>, and the only motion left is an opacity fade capped at <span class="v" data-from="agent/visual/motion/motion.json#/reduced_motion/opacity_fade_max_ms">120</span>ms.</p>
+	<p class="notes">Vestibular triggers are movement, not change. Removing transform and collapsing duration removes the trigger; a short opacity fade does not reintroduce it and keeps state changes from being jarringly abrupt. 120ms is the ceiling, not a target.</p>
+	<p class="notes"><strong>The tilts and the shadows stay.</strong> A resting rotation is where a sticker lives, and elevation is not motion. What must not happen is the peel transform, which is a movement.</p>
+
+	<h3 style="margin-block-start: var(--space-l)">Hard rules</h3>
+	<ul class="notes">
+		<li><span class="v" data-from="agent/visual/motion/motion.json#/meta/hard_rules/0">Shadows are REQUIRED, and they are filter: drop-shadow(), never box-shadow. A box-shadow casts the element's BOX, and a rounded rectangle behind a die-cut shape kills the illusion. The elevation scale is --elev-sticker / --elev-card / --elev-lifted in ../tokens/elevation.css; motion transitions BETWEEN those steps rather than inventing shadows of its own.</span></li>
+		<li><span class="v" data-from="agent/visual/motion/motion.json#/meta/hard_rules/1">prefers-reduced-motion: reduce is mandatory, not optional. Under it every duration collapses to 0ms, every transform token becomes none, and the only motion permitted is an opacity fade capped at 120ms.</span></li>
+		<li><span class="v" data-from="agent/visual/motion/motion.json#/meta/hard_rules/2">Decorative stickers are never at 0deg at rest. The constant rest tilt is -3deg (Sticker Forge's own default), varied per instance across --tilt-1 to --tilt-4.</span></li>
+		<li><span class="v" data-from="agent/visual/motion/motion.json#/meta/hard_rules/3">Do not invent a seventh curve. Six is the whole vocabulary.</span></li>
+	</ul>
+</section>
+
+<section class="band band--rule" aria-labelledby="voice">
+	<p class="kicker">08 — voice</p>
+	<h2 id="voice">Precision as personality</h2>
+	<p class="lede"><span class="v" data-from="text:agent/verbal/voice.md">A careful engineer who has done the work, is quietly certain, and refuses to overstate by even one word.</span></p>
+	<p class="notes"><span class="v" data-from="text:agent/verbal/voice.md">Banned outright: blazing-fast, powerful, seamless, effortless, revolutionary, game-changing, next-generation, cutting-edge, robust, world-class, magical.</span></p>
+
+	<div class="pairs" style="margin-block-start: var(--space-l)">
+		<article class="pair">
+			<h3>Say the promise plainly. Never count.</h3>
+			<div class="pair__line"><span class="pair__tag pair__tag--no">WRONG</span><span><span class="v" data-from="text:agent/verbal/voice.md">&quot;Ship six.&quot; / &quot;One source. Six outputs.&quot; / &quot;Six targets, all verified.&quot;</span></span></div>
+			<div class="pair__line"><span class="pair__tag pair__tag--yes">RIGHT</span><span><span class="v" data-from="text:agent/verbal/voice.md">&quot;Compile once, output anywhere.&quot;</span></span></div>
+		</article>
+		<article class="pair">
+			<h3>Show the receipt</h3>
+			<div class="pair__line"><span class="pair__tag pair__tag--no">WRONG</span><span><span class="v" data-from="text:agent/verbal/voice.md">&quot;Rigorously tested for correctness.&quot;</span></span></div>
+			<div class="pair__line"><span class="pair__tag pair__tag--yes">RIGHT</span><span><span class="v" data-from="text:agent/verbal/voice.md">&quot;Behavior diffed across every target, in a real browser, on every build.&quot;</span></span></div>
+			<div class="pair__line"><span class="pair__tag pair__tag--no">WRONG</span><span><span class="v" data-from="text:agent/verbal/voice.md">&quot;Our equivalence checking is thorough.&quot;</span></span></div>
+			<div class="pair__line"><span class="pair__tag pair__tag--yes">RIGHT</span><span><span class="v" data-from="text:agent/verbal/voice.md">&quot;We mutation-test the checker. An oracle that cannot fail is not evidence.&quot;</span></span></div>
+		</article>
+		<article class="pair">
+			<h3>Verbs over adjectives</h3>
+			<div class="pair__line"><span class="pair__tag pair__tag--no">WRONG</span><span><span class="v" data-from="text:agent/verbal/voice.md">&quot;A powerful, modern, blazing-fast compiler.&quot;</span></span></div>
+			<div class="pair__line"><span class="pair__tag pair__tag--yes">RIGHT</span><span><span class="v" data-from="text:agent/verbal/voice.md">&quot;It compiles one file. It emits framework-native code. It proves they match.&quot;</span></span></div>
+		</article>
+		<article class="pair">
+			<h3>Short sentences carry the weight</h3>
+			<div class="pair__line"><span class="pair__tag pair__tag--yes">RIGHT</span><span><span class="v" data-from="text:agent/verbal/voice.md">&quot;Most frameworks hydrate. Qwik resumes. Same source. Same behavior. Proven.&quot;</span></span></div>
+		</article>
+		<article class="pair">
+			<h3>Precision about what is and isn't identical</h3>
+			<div class="pair__line"><span class="pair__tag pair__tag--no">WRONG</span><span><span class="v" data-from="text:agent/verbal/voice.md">&quot;Identical output across every framework.&quot;</span></span></div>
+			<div class="pair__line"><span class="pair__tag pair__tag--yes">RIGHT</span><span><span class="v" data-from="text:agent/verbal/voice.md">&quot;Different output for every framework. Identical behavior. That's the point.&quot;</span></span></div>
+		</article>
+		<article class="pair">
+			<h3>Own the corrections out loud</h3>
+			<div class="pair__line"><span class="pair__tag pair__tag--no">WRONG</span><span><span class="v" data-from="text:agent/verbal/voice.md">(silence about past mistakes)</span></span></div>
+			<div class="pair__line"><span class="pair__tag pair__tag--yes">RIGHT</span><span><span class="v" data-from="text:agent/verbal/voice.md">&quot;We once shipped a broken test harness and it told us Qwik didn't work. It did. The harness was wrong. That's in the log.&quot;</span></span></div>
+		</article>
+		<article class="pair">
+			<h3>Dry humor, never zany</h3>
+			<div class="pair__line"><span class="pair__tag pair__tag--no">WRONG</span><span><span class="v" data-from="text:agent/verbal/voice.md">&quot;Frameworks hate this one weird trick!&quot;</span></span></div>
+			<div class="pair__line"><span class="pair__tag pair__tag--yes">RIGHT</span><span><span class="v" data-from="text:agent/verbal/voice.md">&quot;Write once, run anywhere has been promised since 1995. This time there's a test suite.&quot;</span></span></div>
+		</article>
+		<article class="pair">
+			<h3>Second person, present tense</h3>
+			<div class="pair__line"><span class="pair__tag pair__tag--no">WRONG</span><span><span class="v" data-from="text:agent/verbal/voice.md">&quot;Developers can leverage Frameless to enable multi-framework workflows.&quot;</span></span></div>
+			<div class="pair__line"><span class="pair__tag pair__tag--yes">RIGHT</span><span><span class="v" data-from="text:agent/verbal/voice.md">&quot;You write one component. You ship it anywhere.&quot;</span></span></div>
+		</article>
+		<article class="pair">
+			<h3>Never bury the reader in the compiler</h3>
+			<div class="pair__line"><span class="pair__tag pair__tag--no">WRONG</span><span><span class="v" data-from="text:agent/verbal/voice.md">&quot;Frameless lowers .tsrx to a semantic IR and emits per-target.&quot;</span></span></div>
+			<div class="pair__line"><span class="pair__tag pair__tag--yes">RIGHT</span><span><span class="v" data-from="text:agent/verbal/voice.md">&quot;You maintain one component instead of six. It compiles to a semantic representation first, so each framework gets idiomatic code rather than a translation.&quot;</span></span></div>
+		</article>
+		<article class="pair">
+			<h3>Concede the case where the tool isn't the answer</h3>
+			<div class="pair__line"><span class="pair__tag pair__tag--yes">RIGHT</span><span><span class="v" data-from="text:agent/verbal/voice.md">&quot;Shipping to one framework? Write the framework code.&quot;</span></span></div>
+		</article>
+	</div>
+</section>
+
+<section class="band band--rule" data-surface="light" aria-labelledby="using">
+	<p class="kicker">09 — using this</p>
+	<h2 id="using">Where to go next</h2>
+	<p class="notes">This band is the light paper island — <code>[data-surface="light"]</code>. The role tokens flip as a set; the band, the keyline and the lime do not, because they are printed ink and printed paper rather than roles.</p>
+	<div class="grid">
+		<article class="swatch">
+			<h3 class="swatch__name">Building a page</h3>
+			<p class="swatch__intent">Read <code>agent/visual/artifacts/web/page-composition.md</code> first — it is binding. The worked examples are the landing page variants under <code>website/</code>. A hero is not a landing page; the minimum is seven sections.</p>
+		</article>
+		<article class="swatch">
+			<h3 class="swatch__name">Building a product surface</h3>
+			<p class="swatch__intent">Start from <code>agent/visual/artifacts/product/studio-inspector.html</code>. The same tokens, applied to an interface rather than to a page: density up, type down, one altitude instead of six.</p>
+		</article>
+		<article class="swatch">
+			<h3 class="swatch__name">Changing the system</h3>
+			<p class="swatch__intent">Edit the source, not this page. Colours in <code>tokens/color.json</code>; depth in <code>tokens/elevation.css</code>; scales via the <code>configUrl</code> in <code>tokens/utopia.config.json</code>; motion in <code>motion/motion.json</code>; voice in <code>agent/verbal/</code>. Then re-run the generators and <code>node brand/tools/structural-gate.mjs</code>.</p>
+		</article>
+	</div>
+</section>
+
+</main>
+
+<footer class="footer-marks">
+	<div class="footer-marks__inner">
+		<div class="footer-marks__top">
+			<span class="wordmark wordmark--compact "><span class="wordmark__layer wordmark__band" aria-hidden="true">frameless</span><span class="wordmark__layer wordmark__keyline" aria-hidden="true">frameless</span><span class="wordmark__layer wordmark__cut">frameless</span></span>
+			<div class="footer-marks__set" aria-label="Compilation targets">
+				<span class="footer-marks__mark" data-framework="react" role="img" aria-label="React"></span>
+				<span class="footer-marks__mark" data-framework="vue" role="img" aria-label="Vue"></span>
+				<span class="footer-marks__mark" data-framework="svelte" role="img" aria-label="Svelte"></span>
+				<span class="footer-marks__mark" data-framework="solid" role="img" aria-label="Solid"></span>
+				<span class="footer-marks__mark" data-framework="angular" role="img" aria-label="Angular"></span>
+				<span class="footer-marks__mark" data-framework="qwik" role="img" aria-label="Qwik"></span>
+			</div>
+		</div>
+
+		<hr class="footer-marks__rule">
+
+		<div class="footer-marks__legal">
+			<p>React, Vue, Svelte, Solid, Angular and Qwik are trademarks™ of their respective owners. Frameless is not affiliated with, endorsed by, or sponsored by any of them. The marks are used nominatively, to identify compilation targets.</p>
+			<p>Framework logo geometry is used under Simple Icons' CC0 dedication. <strong>CC0 covers the path data, not the trademarks</strong> — copying the drawing is permitted and each project's trademark policy still applies when you display the mark.</p>
+			<p>Que Grotesque is licensed to Frameless. The WOFF2 files in this kit are self-hosted subsets and may not be redistributed, re-uploaded, or served from another origin. Que Grotesque is a trademark™ of TypeBerka. © 2024 Que Grotesque Font. All rights reserved.</p>
+		</div>
+
+		<hr class="footer-marks__rule">
+
+		<div class="footer-marks__legal">
+			<p>© 2026 Frameless · This page is generated from <code>brand/agent/</code> by <code>brand/human/build-guideline.mjs</code>. If it disagrees with the kit, the kit wins and this page is stale — regenerate it.</p>
+		</div>
+	</div>
+</footer>
+
+<script>
+	// The two claims that are cheapest to break and most expensive to miss,
+	// asserted in the DOM rather than promised in prose. Same checks the
+	// components run: a guideline is not exempt from them.
+	const CANONICAL = ["react","vue","svelte","solid","angular","qwik"];
+
+	for (const set of document.querySelectorAll('.badges, .footer-marks__set')) {
+		const order = [...set.querySelectorAll('[data-framework]')].map((el) => el.dataset.framework);
+		if (order.join() !== CANONICAL.join()) console.error('canonical order violated', order);
+	}
+
+	// No framework mark may render in --accent. The masks are filled with a
+	// background-color, so this reads the computed fill of each one.
+	const probe = document.createElement('span');
+	probe.style.color = 'var(--accent)';
+	document.body.append(probe);
+	const accent = getComputedStyle(probe).color;
+	probe.remove();
+	for (const mark of document.querySelectorAll('.badge__mark')) {
+		if (getComputedStyle(mark).backgroundColor === accent) {
+			console.error('a framework mark is rendering in --accent', mark);
+		}
+	}
+</script>
+</body>
+</html>

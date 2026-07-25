@@ -1,0 +1,116 @@
+{
+  "$comment": "Frameless motion system. THIS FILE IS THE SOURCE OF TRUTH. motion.css and specimen.html are GENERATED from it by ./build-motion.mjs — do not hand-edit either. Change a number here, re-run `node brand/agent/visual/motion/build-motion.mjs`, and both regenerate.",
+
+  "meta": {
+    "name": "Frameless motion",
+    "generator": "./build-motion.mjs",
+    "generates": ["./motion.css", "./specimen.html"],
+    "governing_idea": "A sticker is a physical object on paper. It presses down instantly and comes back up gently, because that is what a thumb and a piece of vinyl actually do. Every curve here is asymmetric or springy for a physical reason, never because a designer liked the shape.",
+    "hard_rules": [
+      "Shadows are REQUIRED, and they are filter: drop-shadow(), never box-shadow. A box-shadow casts the element's BOX, and a rounded rectangle behind a die-cut shape kills the illusion. The elevation scale is --elev-sticker / --elev-card / --elev-lifted in ../tokens/elevation.css; motion transitions BETWEEN those steps rather than inventing shadows of its own.",
+      "prefers-reduced-motion: reduce is mandatory, not optional. Under it every duration collapses to 0ms, every transform token becomes none, and the only motion permitted is an opacity fade capped at 120ms.",
+      "Decorative stickers are never at 0deg at rest. The constant rest tilt is -3deg (Sticker Forge's own default), varied per instance across --tilt-1 to --tilt-4.",
+      "Do not invent a seventh curve. Six is the whole vocabulary."
+    ]
+  },
+
+  "easings": {
+    "press": {
+      "cubic_bezier": [0.4, 0, 1, 1],
+      "css_timing_function": "cubic-bezier(0.4, 0, 1, 1)",
+      "duration_ms": 90,
+      "for": "Pressing a sticker down is instant.",
+      "why": "Ease-in with no deceleration: it starts moving and never slows, so the motion ends at full speed the way contact does. 90ms is below the threshold where a press reads as laggy.",
+      "pairs_with": "release",
+      "use_for": ["button :active", "sticker press-down", "tab selection commit"]
+    },
+    "release": {
+      "cubic_bezier": [0, 0, 0.2, 1],
+      "css_timing_function": "cubic-bezier(0, 0, 0.2, 1)",
+      "duration_ms": 160,
+      "for": "Deliberately asymmetric with press — down fast, up gentle.",
+      "why": "The asymmetry IS the design. A press and release that share one curve feels like a state toggle; a fast press and a slow release feels like a finger lifting off vinyl. If you find yourself using one curve for both directions, you have removed the point.",
+      "pairs_with": "press",
+      "use_for": ["button release", "sticker settling back down", "hover-out"]
+    },
+    "peel": {
+      "cubic_bezier": [0.34, 1.56, 0.64, 1],
+      "css_timing_function": "cubic-bezier(0.34, 1.56, 0.64, 1)",
+      "duration_ms": 260,
+      "for": "Overshoot = a physical object with springiness.",
+      "why": "The second control point sits above 1, so the value passes its target and comes back. That overshoot is the only place in the system where something behaves elastically, and it is reserved for the one gesture that is literally physical: a die-cut corner lifting off the page.",
+      "overshoots": true,
+      "use_for": [".is-peeling", "sticker lift on hover", "the peel affordance"]
+    },
+    "slide": {
+      "cubic_bezier": [0.65, 0, 0.35, 1],
+      "css_timing_function": "cubic-bezier(0.65, 0, 0.35, 1)",
+      "duration_ms": 300,
+      "for": "Output-switcher; A to B swaps.",
+      "why": "Symmetric ease-in-out. A swap has no privileged direction — going from React to Solid should feel exactly like going back — so the curve is its own mirror. This is the curve the six-output switcher runs on, which makes it the most-seen motion in the brand.",
+      "symmetric": true,
+      "use_for": ["output-switcher panel swap", "tab content transition", "carousel"]
+    },
+    "settle": {
+      "cubic_bezier": [0.22, 1, 0.36, 1],
+      "css_timing_function": "cubic-bezier(0.22, 1, 0.36, 1)",
+      "duration_ms": 420,
+      "for": "Long tail, no overshoot — it settles, it does not bounce twice.",
+      "why": "Reaches most of the distance early and then takes a long time to arrive. Used for things that come to rest: a panel arriving, a sticker being placed. Distinct from peel because it never passes its target — a settling object that bounces reads as a bug.",
+      "overshoots": false,
+      "use_for": ["panel entrance", "scroll reveal", "sticker placed on the sheet"]
+    },
+    "instant": {
+      "cubic_bezier": null,
+      "css_timing_function": "linear",
+      "duration_ms": 0,
+      "for": "prefers-reduced-motion fallback.",
+      "why": "Not a design choice — the escape hatch. Every other curve collapses to this one when the user has asked for reduced motion, which is why it is in the vocabulary rather than being an absence of one.",
+      "use_for": ["reduced-motion fallback", "anything that must not animate"]
+    }
+  },
+
+  "transforms": {
+    "peel": {
+      "css": "rotate(-1.5deg) translateY(-3px) scale(1.015)",
+      "filter": "var(--shadow-peel)",
+      "for": "The lifted state. A corner physically off the page.",
+      "notes": "The peel raises the object one step on the elevation scale, from --elev-sticker to --elev-lifted. Both are stacked drop-shadow() filters, so the shadow follows the die-cut silhouette rather than the bounding box. Never a box-shadow."
+    },
+    "press": {
+      "css": "translateY(1px) scale(0.985)",
+      "filter": "none",
+      "for": "The pressed state. A thumb on the sticker.",
+      "notes": "No rotation. Pressing is straight down. Adding rotation here makes it read as a wobble rather than a press, and the peel curve already owns rotation."
+    },
+    "rest": {
+      "css": "none",
+      "tilts": {
+        "--tilt-1": "-3deg",
+        "--tilt-2": "-1.5deg",
+        "--tilt-3": "-4.25deg",
+        "--tilt-4": "2deg"
+      },
+      "for": "The resting state. Not an animation — where a sticker lives.",
+      "notes": "Declared in ../tokens/sticker.css, restated here because motion returns to it. The rest value is -3deg, measured off Sticker Forge's own overall-tilt slider rather than guessed. The four values are deliberately unequal and deliberately not mirrored so a group looks placed by hand. Cycle them across siblings; do not invent a fifth. A decorative sticker at 0deg reads as a div."
+    }
+  },
+
+  "reduced_motion": {
+    "media_query": "(prefers-reduced-motion: reduce)",
+    "mandatory": true,
+    "durations_ms": 0,
+    "timing_function": "linear",
+    "transforms": "none",
+    "opacity_fade_max_ms": 120,
+    "rationale": "Vestibular triggers are movement, not change. Removing transform and collapsing duration removes the trigger; a short opacity fade does not reintroduce it and keeps state changes from being jarringly abrupt. 120ms is the ceiling, not a target.",
+    "utility_class": ".motion-fade"
+  },
+
+  "forbidden": {
+    "box-shadow": "Use filter: drop-shadow() instead, everywhere except --elev-inset. A filter follows the alpha silhouette; a box-shadow follows the border box, which is wrong for every die-cut object in this kit.",
+    "shadowless_depth": "A die-cut object with no shadow. Elevation is mandatory — it is the quality the concept art is most recognisable for.",
+    "infinite_animation": "Nothing in this kit loops forever. Motion is a response to an action.",
+    "seventh_curve": "Six named curves. If a motion does not fit one of them, the motion is wrong, not the vocabulary."
+  }
+}

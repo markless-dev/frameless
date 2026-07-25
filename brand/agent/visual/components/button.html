@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frameless — button</title>
+<link rel="icon" href="../assets/wordmark/favicon.svg">
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="./component-tokens.css">
+<link rel="stylesheet" href="./specimen.css">
+<link rel="stylesheet" href="../motion/motion.css">
+
+<style>
+/* ============================================================================
+ * BUTTON — three levels, and the lime law's flagship usage
+ *
+ * WHAT IT IS FOR
+ * Committing to an action. The primary variant is where lime finally does what
+ * lime is for: a FILL with an --ink label on it, at 12.43:1. That pairing is
+ * the single most important colour relationship in the brand.
+ *
+ * WHEN TO USE WHICH
+ *   primary    the one thing you want done on this screen. One per section,
+ *              rarely more than two per page. Lime fill, --ink label.
+ *   secondary  the real alternative. An --ink keyline on the page bed.
+ *   ghost      tertiary, in-context, low-commitment. No fill, no keyline until
+ *              hover. Never the only button in a group.
+ *
+ * ── THE TWO MISTAKES THE LIME LAW EXISTS TO PREVENT ─────────────────────────
+ *     lime fill + white label ....  1.48:1  ✗
+ *     lime fill + cream label ....  1.39:1  ✗
+ * Both look plausible in a design tool and both are unreadable. The label on a
+ * lime fill is --ink. Always.
+ *
+ * ── FOCUS COSTS NOTHING HERE ────────────────────────────────────────────────
+ * These carry a permanent --ink keyline at exactly --focus-width, so the
+ * keyline already IS the inner half of the two-tone focus ring and focus just
+ * adds the lime outline against it. Measured shift on focus: 0px. That is why
+ * --sticker-keyline is 2px and not 1px or 3px — see ./component-tokens.css.
+ *
+ * ── A BUTTON IS A STICKER, SO IT IS ELEVATED ────────────────────────────────
+ * Every button carries filter: var(--elev-sticker). Press drops it back to the
+ * page and hover raises it a step — the shadow growing and shrinking is what
+ * reads as a physical control, and it is the whole reason the previous
+ * flat-button version felt like a form field.
+ *
+ * Shadows here are drop-shadow(), never box-shadow — the primary button is a
+ * lime chip with a dark keyline, and the shadow has to follow that silhouette
+ * including its rounded corners.
+ * ==========================================================================*/
+
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-2xs);
+
+	font-family: var(--font-sans);
+	font-size: var(--step-0);
+	font-weight: 700;
+	line-height: 1;
+	text-decoration: none;
+
+	padding: var(--control-padding-block, 0.8em) var(--control-padding-inline, 1.25em);
+	min-block-size: var(--control-min-size, 2.75rem);
+	border: var(--sticker-keyline, 2px) solid var(--keyline);
+	background: var(--band);
+	background-image: var(--band-sheen);
+	color: var(--accent-ink, #0b0f0c);
+	cursor: pointer;
+
+	/* A die-cut never has a sharp corner — the blade has a radius and the paper
+	   tears if it does not. The previous version set border-radius: 0 and called
+	   square edges "the die-cut vocabulary"; nothing in the concept art has a
+	   square corner. */
+	border-radius: var(--sticker-radius-small, 0.6rem);
+
+	/* The elevation. Not optional, and not a box-shadow. */
+	filter: var(--elev-sticker);
+	transition: filter var(--motion-release, 160ms ease), translate var(--motion-release, 160ms ease);
+}
+
+.btn:hover {
+	translate: 0 -2px;
+	filter: var(--elev-lifted);
+}
+
+.btn:active {
+	translate: 0 2px;
+	filter: var(--elev-sticker);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.btn { transition: none; }
+	.btn:hover { translate: none; }
+}
+
+/* ── primary — THE flagship lime usage ──────────────────────────────────── */
+/* Lime FILL with --accent-ink on it, 13.08:1. --accent-ink rather than --ink
+   because a lime fill is a light surface wherever it appears, so its label must
+   not flip with the surrounding bed. */
+.btn--primary {
+	background: var(--accent);
+	background-image: var(--gloss);
+	color: var(--accent-ink, #0b0f0c);
+	border-color: var(--keyline);
+}
+
+/* ── secondary — the real alternative ───────────────────────────────────── */
+/* A cream chip. Still a sticker, still elevated, just not the loud one. */
+.btn--secondary {
+	background: var(--band);
+	background-image: var(--band-sheen);
+	color: var(--accent-ink, #0b0f0c);
+	border-color: var(--keyline);
+}
+
+/* ── ghost — tertiary, in context ───────────────────────────────────────── */
+/* The one button that is NOT a sticker, and therefore the one with no shadow.
+   That is the point of it: a tertiary action should not read as an object. */
+.btn--ghost {
+	background: none;
+	color: var(--accent-cool);
+	border-color: transparent;
+	padding-inline: 0.6em;
+	filter: none;
+}
+
+.btn--ghost:hover {
+	color: var(--ink);
+	border-color: color-mix(in srgb, var(--band) 40%, transparent);
+	filter: none;
+	translate: none;
+}
+
+/* ── sizes ──────────────────────────────────────────────────────────────── */
+.btn--small { font-size: var(--step--1); padding: 0.7em 1.1em; }
+.btn--large { font-size: var(--step-2); padding: 0.8em 1.5em; }
+
+/* ── disabled ───────────────────────────────────────────────────────────── */
+/* Geometry, not opacity. An opacity-dimmed button reads as a loading skeleton;
+   losing the fill and keeping a dashed keyline reads as "not printed yet",
+   which is the brand's own vocabulary for a thing that is not there. */
+.btn[disabled] {
+	background: none;
+	color: var(--ink-muted);
+	border-color: var(--ink-muted);
+	border-style: dashed;
+	cursor: not-allowed;
+	/* No shadow. A thing that is not printed yet does not lie on the page. */
+	filter: none;
+	translate: none;
+}
+
+/* ── a button that is also a sticker ────────────────────────────────────── */
+/* For a hero CTA that should read as a collectible rather than as a control. */
+.btn--sticker {
+	rotate: var(--tilt-2);
+}
+
+.btn-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-s);
+}
+
+/* Specimen-only: the two forbidden label colours, shown once so they are
+   recognisable when they appear by accident.
+
+   #ffffff is the ONLY hardcoded colour anywhere in this component set, and it
+   is hardcoded because there is deliberately no white token: pure white is
+   forbidden as a surface in this system, so the kit does not name it. Writing
+   it as a literal here is the point — the literal is what a generating model
+   reaches for, and this is the page that says what happens when it does. */
+.forbidden-white { background: var(--accent); color: #ffffff; border-color: var(--keyline); }
+.forbidden-cream { background: var(--accent); color: var(--band); border-color: var(--keyline); }
+
+.probe { font-family: var(--font-mono); font-size: var(--step--2); color: var(--ink-muted); }
+</style>
+</head>
+
+<body>
+<main class="spec">
+
+<header>
+	<p class="spec__kicker">Frameless component · action</p>
+	<h1>button</h1>
+	<p class="spec__lede">Three levels. The primary one is where lime does what lime is for — a fill with an ink label on it, at 12.43:1.</p>
+</header>
+
+<div class="spec__use">
+	<div>
+		<h2>Use it when</h2>
+		<ul>
+			<li><strong>primary</strong> for the one thing you want done. One per section.</li>
+			<li><strong>secondary</strong> for the real alternative — "See the output" next to "Run the demo".</li>
+			<li><strong>ghost</strong> for tertiary, in-context actions.</li>
+		</ul>
+	</div>
+	<div class="spec__use--no">
+		<h2>Don't use it when</h2>
+		<ul>
+			<li>The label on a lime fill is white (1.48:1) or cream (1.39:1).</li>
+			<li>You want three primaries in a row. Then none of them is primary.</li>
+			<li>You are reaching for <code>box-shadow</code> to make it look clickable.</li>
+		</ul>
+	</div>
+</div>
+
+<hr class="spec__rule">
+
+<section>
+	<h2>The three levels</h2>
+	<div class="spec__stage">
+		<div class="btn-row">
+			<button type="button" class="btn btn--primary pressable" id="probe-primary">Run the demo</button>
+			<button type="button" class="btn btn--secondary pressable">See the output</button>
+			<button type="button" class="btn btn--ghost pressable">Read the proof</button>
+		</div>
+	</div>
+	<p class="spec__note">Approved CTA copy, lifted from <code>../../verbal/messaging.md</code>. Primary: "Run the demo", "See the output", "Get started". Secondary: "Read the proof", "Browse the source".</p>
+	<p class="probe" id="focus-probe">&nbsp;</p>
+</section>
+
+<section>
+	<h2>Sizes</h2>
+	<div class="spec__stage">
+		<div class="btn-row">
+			<button type="button" class="btn btn--primary btn--small pressable">Small</button>
+			<button type="button" class="btn btn--primary pressable">Default</button>
+			<button type="button" class="btn btn--primary btn--large pressable">Large</button>
+		</div>
+	</div>
+</section>
+
+<section>
+	<h2>On the dark bed</h2>
+	<p class="spec__note">The role tokens flip as a set, so the same three classes work without a per-surface variant. Note the secondary button's keyline becomes cream — it is still <code>--ink</code>, it is just that <code>--ink</code> means something different here.</p>
+	<div class="spec__stage">
+		<div class="btn-row">
+			<button type="button" class="btn btn--primary pressable">Run the demo</button>
+			<button type="button" class="btn btn--secondary pressable">See the output</button>
+			<button type="button" class="btn btn--ghost pressable">Read the proof</button>
+		</div>
+	</div>
+</section>
+
+<section>
+	<h2>Disabled — geometry, not opacity</h2>
+	<p class="spec__note">An opacity-dimmed button reads as a loading skeleton. A dashed keyline with no fill reads as a thing that has not been printed yet, which is the vocabulary this brand already has for something that is not there.</p>
+	<div class="spec__stage">
+		<div class="btn-row">
+			<button type="button" class="btn btn--primary" disabled>Unavailable</button>
+			<button type="button" class="btn btn--secondary" disabled>Unavailable</button>
+		</div>
+	</div>
+</section>
+
+<section>
+	<h2>As a sticker</h2>
+	<p class="spec__note">For a hero CTA that should read as a collectible rather than as a control. Tilt it, and let it peel.</p>
+	<div class="spec__stage">
+		<div class="btn-row">
+			<button type="button" class="btn btn--primary btn--large btn--sticker peelable">Get started</button>
+		</div>
+	</div>
+</section>
+
+<section>
+	<h2>The two label colours that are always wrong</h2>
+	<p class="spec__note">Shown once, at full size, because both look plausible in a design tool and neither is readable. Name them and an agent stops producing them.</p>
+	<div class="spec__stage">
+		<div>
+			<button type="button" class="btn forbidden-white">White on lime</button>
+			<p class="spec__verdict spec__verdict--no">1.48:1. Fails everything.</p>
+		</div>
+		<div>
+			<button type="button" class="btn forbidden-cream">Cream on lime</button>
+			<p class="spec__verdict spec__verdict--no">1.39:1. Fails everything.</p>
+		</div>
+		<div>
+			<button type="button" class="btn btn--primary">Ink on lime</button>
+			<p class="spec__verdict spec__verdict--yes">12.43:1. The flagship pairing.</p>
+		</div>
+	</div>
+</section>
+
+<section>
+	<h2>Focus</h2>
+	<p class="spec__note">Tab through this page. The ring is two-tone by design — inner <code>--ink</code>, outer <code>--accent</code> — so on any surface one half clears 3:1 and no per-surface focus style is needed. Because these buttons already carry an <code>--ink</code> keyline at exactly <code>--focus-width</code>, focusing one shifts nothing.</p>
+</section>
+
+</main>
+
+<script>
+	// Measures the layout shift on focus rather than claiming there is none.
+	const button = document.getElementById('probe-primary');
+	const before = button.getBoundingClientRect();
+	button.focus({ focusVisible: true });
+	requestAnimationFrame(() => {
+		const after = button.getBoundingClientRect();
+		const dx = Math.abs(after.width - before.width);
+		const dy = Math.abs(after.height - before.height);
+		document.getElementById('focus-probe').textContent =
+			`layout shift on focus: ${dx.toFixed(2)}px wide, ${dy.toFixed(2)}px tall (expected 0.00, 0.00 — the keyline is the inner ring)`;
+		button.blur();
+	});
+</script>
+</body>
+</html>

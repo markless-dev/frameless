@@ -1,0 +1,934 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frameless Studio — component inspector (static mock)</title>
+<meta name="description" content="A static mock of the Frameless Studio component inspector, built from the Frameless brand kit. Studio is not available.">
+<link rel="icon" href="../../assets/wordmark/favicon.svg">
+<link rel="stylesheet" href="../../colors_and_type.css">
+<link rel="stylesheet" href="../../components/component-tokens.css">
+<link rel="stylesheet" href="../../motion/motion.css">
+<link rel="stylesheet" href="../../assets/wordmark/wordmark.css">
+
+<!--
+	================================================================================
+	THE PRODUCT ARTIFACT — the same system, applied to an interface.
+
+	The web artifact next door is a page you read. This is a surface you WORK in,
+	and the difference changes what the kit has to do:
+
+	  · density goes up and type goes down — --step--1 and --step-0 do the work,
+	    and the display steps appear exactly once, in the app chrome
+	  · every panel is a die-cut object with an --ink keyline, and the window
+	    itself sits on --elev-card, so structure comes from a cut edge and real
+	    depth rather than from a stack of filled "elevation" greys
+	  · lime stops being a poster colour and becomes a SELECTION FILL, which is
+	    the same rule (lime is a surface with an --ink label on it) doing a
+	    different job
+	  · the decorative stickers are gone entirely. A tool is not a poster.
+
+	── STUDIO IS NOT AVAILABLE ─────────────────────────────────────────────────────
+	This is a STATIC MOCK. Frameless Studio is the one thing in this project that
+	genuinely is not out yet, and nothing here may read as though it ships:
+	no countdown, no waitlist, no "be the first", no sign-up. The window chrome
+	carries the coming-soon tag, the page says so above the fold, and the footer
+	says so again.
+
+	── WHAT IS REAL IN IT ──────────────────────────────────────────────────────────
+	The component being inspected is real: RenderOnce, from
+	packages/compiler/test/fixtures/s1-render-once.tsrx. The three filled output
+	panes are the real emitted files with their paths and sha256 hashes. The three
+	targets with no captured output in this repository show an empty pane rather
+	than a fabricated snippet. A mock of a verification tool that fakes its
+	evidence would be a strange thing to build.
+	================================================================================
+-->
+
+<style>
+/* ============================================================================
+ * PAGE
+ * ==========================================================================*/
+
+/* border-box, globally. colors_and_type.css deliberately does not set it — it
+   uses :where() so a host page's own reset always wins — so a page that links
+   it has to say this itself. Without it a padded block at inline-size 100% is
+   wider than its container and the page scrolls sideways at 390px. */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* Long file paths are the one place a mid-word break is correct. */
+code { overflow-wrap: anywhere; }
+
+.page {
+	padding: var(--space-l) var(--space-m);
+	display: grid;
+	gap: var(--space-l);
+	justify-items: center;
+}
+
+.page__intro {
+	inline-size: min(100%, 68rem);
+	display: grid;
+	gap: var(--space-xs);
+}
+
+.kicker {
+	font-size: var(--step--2);
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: var(--tracking-caps);
+	color: var(--ink-muted);
+	margin: 0;
+}
+
+.page__title { font-size: var(--step-4); font-weight: 700; line-height: var(--leading-heading); margin: 0; }
+.page__lede { font-size: var(--step-0); max-width: 62ch; margin: 0; }
+.note { font-size: var(--step--1); color: var(--ink-muted); }
+
+/* ============================================================================
+ * THE APP FRAME
+ *
+ * One die-cut object containing the whole tool. No rounded chrome and no fake
+ * window controls — the keyline is the window, and --elev-card lifts it off the
+ * bed the way every other object in this kit sits above the page.
+ * ==========================================================================*/
+
+.app {
+	inline-size: min(100%, 68rem);
+	display: grid;
+	grid-template-rows: auto auto 1fr auto;
+	background: var(--surface);
+	border: var(--sticker-keyline-bold, 3px) solid var(--ink);
+	color: var(--ink);
+	overflow: hidden;
+
+	/* Elevation is mandatory, and it is a filter. The window is a rectangle, so
+	   this is the one shape where a box-shadow would have looked identical —
+	   which is exactly why it is worth doing correctly here: one primitive
+	   across the kit means a die-cut object and a panel never disagree about
+	   what a shadow is. The border carries the boundary, the shadow carries the
+	   depth, and forced-colours mode drops the second without losing the first.
+
+	   Safe on this element because nothing inside it is position: fixed or
+	   absolute — a filter would otherwise become their containing block. */
+	filter: var(--elev-card);
+}
+
+.app__bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-s);
+	padding: var(--space-xs) var(--space-s);
+	background: var(--surface-sunk);
+	color: var(--ink);
+	border-block-end: var(--sticker-keyline, 2px) solid var(--ink);
+}
+
+.app__brand { display: inline-flex; align-items: baseline; gap: var(--space-2xs); }
+
+.app__product {
+	font-size: var(--step--1);
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: var(--tracking-caps);
+	color: var(--ink-muted);
+}
+
+/* No halo, dashed keyline, no tilt. In this brand the die-cut halo is the
+   signal of a real printed thing — an unprinted thing has no cut edge. */
+.coming-soon-tag {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2xs);
+	font-size: var(--step--2);
+	font-weight: 700;
+	line-height: 1;
+	text-transform: uppercase;
+	letter-spacing: var(--tracking-caps);
+	padding: 0.55em 0.85em;
+	color: var(--ink-muted);
+	background: transparent;
+	border: var(--sticker-keyline, 2px) dashed var(--ink-muted);
+	rotate: none;
+}
+
+/* The target toolbar. All six, canonical order, each with its name as a word.
+   Selection is a lime FILL with an --ink label — 12.43:1, the flagship
+   pairing — and it is not carried by colour alone: the selected chip also
+   squares up its tilt, so the state survives a grayscale screenshot. */
+.targets {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-2xs);
+	padding: var(--space-2xs) var(--space-s);
+	background: var(--surface-raised);
+	border-block-end: var(--sticker-keyline, 2px) solid var(--ink);
+}
+
+.targets__label {
+	font-size: var(--step--2);
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: var(--tracking-caps);
+	color: var(--ink-muted);
+	margin-inline-end: var(--space-2xs);
+}
+
+.chip {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2xs);
+	font-family: var(--font-sans);
+	font-size: var(--step--2);
+	font-weight: 700;
+	line-height: 1;
+	text-transform: uppercase;
+	letter-spacing: var(--tracking-caps);
+	padding: 0.5em 0.7em;
+	background: transparent;
+	color: var(--ink);
+	border: var(--sticker-keyline, 2px) solid var(--ink);
+	cursor: pointer;
+}
+
+.chip[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); rotate: none; }
+
+/* A target with nothing captured is marked by GEOMETRY — a dashed edge — and
+   by a word, never by opacity. A dimmed chip reads as a loading skeleton. */
+.chip[data-capture="none"] { border-style: dashed; color: var(--ink-muted); }
+.chip[data-capture="none"][aria-selected="true"] { background: transparent; color: var(--ink); border-color: var(--ink); }
+
+.mark {
+	inline-size: 1.35em;
+	block-size: 1.35em;
+	flex: none;
+	background-color: currentColor;
+	-webkit-mask-position: center;
+	mask-position: center;
+	-webkit-mask-repeat: no-repeat;
+	mask-repeat: no-repeat;
+	-webkit-mask-size: contain;
+	mask-size: contain;
+}
+
+[data-framework="react"] .mark { -webkit-mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3EReact%3C/title%3E%3Cpath d=%22M14.23 12.004a2.236 2.236 0 0 1-2.235 2.236 2.236 2.236 0 0 1-2.236-2.236 2.236 2.236 0 0 1 2.235-2.236 2.236 2.236 0 0 1 2.236 2.236zm2.648-10.69c-1.346 0-3.107.96-4.888 2.622-1.78-1.653-3.542-2.602-4.887-2.602-.41 0-.783.093-1.106.278-1.375.793-1.683 3.264-.973 6.365C1.98 8.917 0 10.42 0 12.004c0 1.59 1.99 3.097 5.043 4.03-.704 3.113-.39 5.588.988 6.38.32.187.69.275 1.102.275 1.345 0 3.107-.96 4.888-2.624 1.78 1.654 3.542 2.603 4.887 2.603.41 0 .783-.09 1.106-.275 1.374-.792 1.683-3.263.973-6.365C22.02 15.096 24 13.59 24 12.004c0-1.59-1.99-3.097-5.043-4.032.704-3.11.39-5.587-.988-6.38-.318-.184-.688-.277-1.092-.278zm-.005 1.09v.006c.225 0 .406.044.558.127.666.382.955 1.835.73 3.704-.054.46-.142.945-.25 1.44-.96-.236-2.006-.417-3.107-.534-.66-.905-1.345-1.727-2.035-2.447 1.592-1.48 3.087-2.292 4.105-2.295zm-9.77.02c1.012 0 2.514.808 4.11 2.28-.686.72-1.37 1.537-2.02 2.442-1.107.117-2.154.298-3.113.538-.112-.49-.195-.964-.254-1.42-.23-1.868.054-3.32.714-3.707.19-.09.4-.127.563-.132zm4.882 3.05c.455.468.91.992 1.36 1.564-.44-.02-.89-.034-1.345-.034-.46 0-.915.01-1.36.034.44-.572.895-1.096 1.345-1.565zM12 8.1c.74 0 1.477.034 2.202.093.406.582.802 1.203 1.183 1.86.372.64.71 1.29 1.018 1.946-.308.655-.646 1.31-1.013 1.95-.38.66-.773 1.288-1.18 1.87-.728.063-1.466.098-2.21.098-.74 0-1.477-.035-2.202-.093-.406-.582-.802-1.204-1.183-1.86-.372-.64-.71-1.29-1.018-1.946.303-.657.646-1.313 1.013-1.954.38-.66.773-1.286 1.18-1.868.728-.064 1.466-.098 2.21-.098zm-3.635.254c-.24.377-.48.763-.704 1.16-.225.39-.435.782-.635 1.174-.265-.656-.49-1.31-.676-1.947.64-.15 1.315-.283 2.015-.386zm7.26 0c.695.103 1.365.23 2.006.387-.18.632-.405 1.282-.66 1.933-.2-.39-.41-.783-.64-1.174-.225-.392-.465-.774-.705-1.146zm3.063.675c.484.15.944.317 1.375.498 1.732.74 2.852 1.708 2.852 2.476-.005.768-1.125 1.74-2.857 2.475-.42.18-.88.342-1.355.493-.28-.958-.646-1.956-1.1-2.98.45-1.017.81-2.01 1.085-2.964zm-13.395.004c.278.96.645 1.957 1.1 2.98-.45 1.017-.812 2.01-1.086 2.964-.484-.15-.944-.318-1.37-.5-1.732-.737-2.852-1.706-2.852-2.474 0-.768 1.12-1.742 2.852-2.476.42-.18.88-.342 1.356-.494zm11.678 4.28c.265.657.49 1.312.676 1.948-.64.157-1.316.29-2.016.39.24-.375.48-.762.705-1.158.225-.39.435-.788.636-1.18zm-9.945.02c.2.392.41.783.64 1.175.23.39.465.772.705 1.143-.695-.102-1.365-.23-2.006-.386.18-.63.406-1.282.66-1.933zM17.92 16.32c.112.493.2.968.254 1.423.23 1.868-.054 3.32-.714 3.708-.147.09-.338.128-.563.128-1.012 0-2.514-.807-4.11-2.28.686-.72 1.37-1.536 2.02-2.44 1.107-.118 2.154-.3 3.113-.54zm-11.83.01c.96.234 2.006.415 3.107.532.66.905 1.345 1.727 2.035 2.446-1.595 1.483-3.092 2.295-4.11 2.295-.22-.005-.406-.05-.553-.132-.666-.38-.955-1.834-.73-3.703.054-.46.142-.944.25-1.438zm4.56.64c.44.02.89.034 1.345.034.46 0 .915-.01 1.36-.034-.44.572-.895 1.095-1.345 1.565-.455-.47-.91-.993-1.36-1.565z%22/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3EReact%3C/title%3E%3Cpath d=%22M14.23 12.004a2.236 2.236 0 0 1-2.235 2.236 2.236 2.236 0 0 1-2.236-2.236 2.236 2.236 0 0 1 2.235-2.236 2.236 2.236 0 0 1 2.236 2.236zm2.648-10.69c-1.346 0-3.107.96-4.888 2.622-1.78-1.653-3.542-2.602-4.887-2.602-.41 0-.783.093-1.106.278-1.375.793-1.683 3.264-.973 6.365C1.98 8.917 0 10.42 0 12.004c0 1.59 1.99 3.097 5.043 4.03-.704 3.113-.39 5.588.988 6.38.32.187.69.275 1.102.275 1.345 0 3.107-.96 4.888-2.624 1.78 1.654 3.542 2.603 4.887 2.603.41 0 .783-.09 1.106-.275 1.374-.792 1.683-3.263.973-6.365C22.02 15.096 24 13.59 24 12.004c0-1.59-1.99-3.097-5.043-4.032.704-3.11.39-5.587-.988-6.38-.318-.184-.688-.277-1.092-.278zm-.005 1.09v.006c.225 0 .406.044.558.127.666.382.955 1.835.73 3.704-.054.46-.142.945-.25 1.44-.96-.236-2.006-.417-3.107-.534-.66-.905-1.345-1.727-2.035-2.447 1.592-1.48 3.087-2.292 4.105-2.295zm-9.77.02c1.012 0 2.514.808 4.11 2.28-.686.72-1.37 1.537-2.02 2.442-1.107.117-2.154.298-3.113.538-.112-.49-.195-.964-.254-1.42-.23-1.868.054-3.32.714-3.707.19-.09.4-.127.563-.132zm4.882 3.05c.455.468.91.992 1.36 1.564-.44-.02-.89-.034-1.345-.034-.46 0-.915.01-1.36.034.44-.572.895-1.096 1.345-1.565zM12 8.1c.74 0 1.477.034 2.202.093.406.582.802 1.203 1.183 1.86.372.64.71 1.29 1.018 1.946-.308.655-.646 1.31-1.013 1.95-.38.66-.773 1.288-1.18 1.87-.728.063-1.466.098-2.21.098-.74 0-1.477-.035-2.202-.093-.406-.582-.802-1.204-1.183-1.86-.372-.64-.71-1.29-1.018-1.946.303-.657.646-1.313 1.013-1.954.38-.66.773-1.286 1.18-1.868.728-.064 1.466-.098 2.21-.098zm-3.635.254c-.24.377-.48.763-.704 1.16-.225.39-.435.782-.635 1.174-.265-.656-.49-1.31-.676-1.947.64-.15 1.315-.283 2.015-.386zm7.26 0c.695.103 1.365.23 2.006.387-.18.632-.405 1.282-.66 1.933-.2-.39-.41-.783-.64-1.174-.225-.392-.465-.774-.705-1.146zm3.063.675c.484.15.944.317 1.375.498 1.732.74 2.852 1.708 2.852 2.476-.005.768-1.125 1.74-2.857 2.475-.42.18-.88.342-1.355.493-.28-.958-.646-1.956-1.1-2.98.45-1.017.81-2.01 1.085-2.964zm-13.395.004c.278.96.645 1.957 1.1 2.98-.45 1.017-.812 2.01-1.086 2.964-.484-.15-.944-.318-1.37-.5-1.732-.737-2.852-1.706-2.852-2.474 0-.768 1.12-1.742 2.852-2.476.42-.18.88-.342 1.356-.494zm11.678 4.28c.265.657.49 1.312.676 1.948-.64.157-1.316.29-2.016.39.24-.375.48-.762.705-1.158.225-.39.435-.788.636-1.18zm-9.945.02c.2.392.41.783.64 1.175.23.39.465.772.705 1.143-.695-.102-1.365-.23-2.006-.386.18-.63.406-1.282.66-1.933zM17.92 16.32c.112.493.2.968.254 1.423.23 1.868-.054 3.32-.714 3.708-.147.09-.338.128-.563.128-1.012 0-2.514-.807-4.11-2.28.686-.72 1.37-1.536 2.02-2.44 1.107-.118 2.154-.3 3.113-.54zm-11.83.01c.96.234 2.006.415 3.107.532.66.905 1.345 1.727 2.035 2.446-1.595 1.483-3.092 2.295-4.11 2.295-.22-.005-.406-.05-.553-.132-.666-.38-.955-1.834-.73-3.703.054-.46.142-.944.25-1.438zm4.56.64c.44.02.89.034 1.345.034.46 0 .915-.01 1.36-.034-.44.572-.895 1.095-1.345 1.565-.455-.47-.91-.993-1.36-1.565z%22/%3E%3C/svg%3E"); }
+[data-framework="vue"] .mark { -webkit-mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3EVue.js%3C/title%3E%3Cpath d=%22M24,1.61H14.06L12,5.16,9.94,1.61H0L12,22.39ZM12,14.08,5.16,2.23H9.59L12,6.41l2.41-4.18h4.43Z%22/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3EVue.js%3C/title%3E%3Cpath d=%22M24,1.61H14.06L12,5.16,9.94,1.61H0L12,22.39ZM12,14.08,5.16,2.23H9.59L12,6.41l2.41-4.18h4.43Z%22/%3E%3C/svg%3E"); }
+[data-framework="svelte"] .mark { -webkit-mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3ESvelte%3C/title%3E%3Cpath d=%22M10.354 21.125a4.44 4.44 0 0 1-4.765-1.767 4.109 4.109 0 0 1-.703-3.107 3.898 3.898 0 0 1 .134-.522l.105-.321.287.21a7.21 7.21 0 0 0 2.186 1.092l.208.063-.02.208a1.253 1.253 0 0 0 .226.83 1.337 1.337 0 0 0 1.435.533 1.231 1.231 0 0 0 .343-.15l5.59-3.562a1.164 1.164 0 0 0 .524-.778 1.242 1.242 0 0 0-.211-.937 1.338 1.338 0 0 0-1.435-.533 1.23 1.23 0 0 0-.343.15l-2.133 1.36a4.078 4.078 0 0 1-1.135.499 4.44 4.44 0 0 1-4.765-1.766 4.108 4.108 0 0 1-.702-3.108 3.855 3.855 0 0 1 1.742-2.582l5.589-3.563a4.072 4.072 0 0 1 1.135-.499 4.44 4.44 0 0 1 4.765 1.767 4.109 4.109 0 0 1 .703 3.107 3.943 3.943 0 0 1-.134.522l-.105.321-.286-.21a7.204 7.204 0 0 0-2.187-1.093l-.208-.063.02-.207a1.255 1.255 0 0 0-.226-.831 1.337 1.337 0 0 0-1.435-.532 1.231 1.231 0 0 0-.343.15L8.62 9.368a1.162 1.162 0 0 0-.524.778 1.24 1.24 0 0 0 .211.937 1.338 1.338 0 0 0 1.435.533 1.235 1.235 0 0 0 .344-.151l2.132-1.36a4.067 4.067 0 0 1 1.135-.498 4.44 4.44 0 0 1 4.765 1.766 4.108 4.108 0 0 1 .702 3.108 3.857 3.857 0 0 1-1.742 2.583l-5.589 3.562a4.072 4.072 0 0 1-1.135.499m10.358-17.95C18.484-.015 14.082-.96 10.9 1.068L5.31 4.63a6.412 6.412 0 0 0-2.896 4.295 6.753 6.753 0 0 0 .666 4.336 6.43 6.43 0 0 0-.96 2.396 6.833 6.833 0 0 0 1.168 5.167c2.229 3.19 6.63 4.135 9.812 2.108l5.59-3.562a6.41 6.41 0 0 0 2.896-4.295 6.756 6.756 0 0 0-.665-4.336 6.429 6.429 0 0 0 .958-2.396 6.831 6.831 0 0 0-1.167-5.168Z%22/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3ESvelte%3C/title%3E%3Cpath d=%22M10.354 21.125a4.44 4.44 0 0 1-4.765-1.767 4.109 4.109 0 0 1-.703-3.107 3.898 3.898 0 0 1 .134-.522l.105-.321.287.21a7.21 7.21 0 0 0 2.186 1.092l.208.063-.02.208a1.253 1.253 0 0 0 .226.83 1.337 1.337 0 0 0 1.435.533 1.231 1.231 0 0 0 .343-.15l5.59-3.562a1.164 1.164 0 0 0 .524-.778 1.242 1.242 0 0 0-.211-.937 1.338 1.338 0 0 0-1.435-.533 1.23 1.23 0 0 0-.343.15l-2.133 1.36a4.078 4.078 0 0 1-1.135.499 4.44 4.44 0 0 1-4.765-1.766 4.108 4.108 0 0 1-.702-3.108 3.855 3.855 0 0 1 1.742-2.582l5.589-3.563a4.072 4.072 0 0 1 1.135-.499 4.44 4.44 0 0 1 4.765 1.767 4.109 4.109 0 0 1 .703 3.107 3.943 3.943 0 0 1-.134.522l-.105.321-.286-.21a7.204 7.204 0 0 0-2.187-1.093l-.208-.063.02-.207a1.255 1.255 0 0 0-.226-.831 1.337 1.337 0 0 0-1.435-.532 1.231 1.231 0 0 0-.343.15L8.62 9.368a1.162 1.162 0 0 0-.524.778 1.24 1.24 0 0 0 .211.937 1.338 1.338 0 0 0 1.435.533 1.235 1.235 0 0 0 .344-.151l2.132-1.36a4.067 4.067 0 0 1 1.135-.498 4.44 4.44 0 0 1 4.765 1.766 4.108 4.108 0 0 1 .702 3.108 3.857 3.857 0 0 1-1.742 2.583l-5.589 3.562a4.072 4.072 0 0 1-1.135.499m10.358-17.95C18.484-.015 14.082-.96 10.9 1.068L5.31 4.63a6.412 6.412 0 0 0-2.896 4.295 6.753 6.753 0 0 0 .666 4.336 6.43 6.43 0 0 0-.96 2.396 6.833 6.833 0 0 0 1.168 5.167c2.229 3.19 6.63 4.135 9.812 2.108l5.59-3.562a6.41 6.41 0 0 0 2.896-4.295 6.756 6.756 0 0 0-.665-4.336 6.429 6.429 0 0 0 .958-2.396 6.831 6.831 0 0 0-1.167-5.168Z%22/%3E%3C/svg%3E"); }
+[data-framework="solid"] .mark { -webkit-mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3ESolid%3C/title%3E%3Cpath d=%22M11.558.788A9.082 9.082 0 0 0 9.776.99l-.453.15c-.906.303-1.656.755-2.1 1.348l-.301.452-2.035 3.528c.426-.387.974-.698 1.643-.894h.001l.613-.154h.001a8.82 8.82 0 0 1 1.777-.206c2.916-.053 6.033 1.148 8.423 2.36 2.317 1.175 3.888 2.32 3.987 2.39L24 5.518c-.082-.06-1.66-1.21-3.991-2.386-2.393-1.206-5.521-2.396-8.45-2.343zM8.924 5.366a8.634 8.634 0 0 0-1.745.203l-.606.151c-1.278.376-2.095 1.16-2.43 2.108-.334.948-.188 2.065.487 3.116.33.43.747.813 1.216 1.147L12.328 10h.001a6.943 6.943 0 0 1 6.013 1.013l2.844-.963c-.17-.124-1.663-1.2-3.91-2.34-2.379-1.206-5.479-2.396-8.352-2.344zm5.435 4.497a6.791 6.791 0 0 0-1.984.283L2.94 13.189 0 18.334l9.276-2.992a6.945 6.945 0 0 1 7.408 2.314v.001c.695.903.89 1.906.66 2.808l2.572-4.63c.595-1.041.45-2.225-.302-3.429a6.792 6.792 0 0 0-5.255-2.543zm-3.031 5.341a6.787 6.787 0 0 0-2.006.283L.008 18.492c.175.131 2.02 1.498 4.687 2.768 2.797 1.332 6.37 2.467 9.468 1.712l.454-.152h.002c1.278-.376 2.134-1.162 2.487-2.09.353-.93.207-2.004-.541-2.978a6.791 6.791 0 0 0-5.237-2.548z%22/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3ESolid%3C/title%3E%3Cpath d=%22M11.558.788A9.082 9.082 0 0 0 9.776.99l-.453.15c-.906.303-1.656.755-2.1 1.348l-.301.452-2.035 3.528c.426-.387.974-.698 1.643-.894h.001l.613-.154h.001a8.82 8.82 0 0 1 1.777-.206c2.916-.053 6.033 1.148 8.423 2.36 2.317 1.175 3.888 2.32 3.987 2.39L24 5.518c-.082-.06-1.66-1.21-3.991-2.386-2.393-1.206-5.521-2.396-8.45-2.343zM8.924 5.366a8.634 8.634 0 0 0-1.745.203l-.606.151c-1.278.376-2.095 1.16-2.43 2.108-.334.948-.188 2.065.487 3.116.33.43.747.813 1.216 1.147L12.328 10h.001a6.943 6.943 0 0 1 6.013 1.013l2.844-.963c-.17-.124-1.663-1.2-3.91-2.34-2.379-1.206-5.479-2.396-8.352-2.344zm5.435 4.497a6.791 6.791 0 0 0-1.984.283L2.94 13.189 0 18.334l9.276-2.992a6.945 6.945 0 0 1 7.408 2.314v.001c.695.903.89 1.906.66 2.808l2.572-4.63c.595-1.041.45-2.225-.302-3.429a6.792 6.792 0 0 0-5.255-2.543zm-3.031 5.341a6.787 6.787 0 0 0-2.006.283L.008 18.492c.175.131 2.02 1.498 4.687 2.768 2.797 1.332 6.37 2.467 9.468 1.712l.454-.152h.002c1.278-.376 2.134-1.162 2.487-2.09.353-.93.207-2.004-.541-2.978a6.791 6.791 0 0 0-5.237-2.548z%22/%3E%3C/svg%3E"); }
+[data-framework="angular"] .mark { -webkit-mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3EAngular%3C/title%3E%3Cpath d=%22M16.712 17.711H7.288l-1.204 2.916L12 24l5.916-3.373-1.204-2.916ZM14.692 0l7.832 16.855.814-12.856L14.692 0ZM9.308 0 .662 3.999l.814 12.856L9.308 0Zm-.405 13.93h6.198L12 6.396 8.903 13.93Z%22/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3EAngular%3C/title%3E%3Cpath d=%22M16.712 17.711H7.288l-1.204 2.916L12 24l5.916-3.373-1.204-2.916ZM14.692 0l7.832 16.855.814-12.856L14.692 0ZM9.308 0 .662 3.999l.814 12.856L9.308 0Zm-.405 13.93h6.198L12 6.396 8.903 13.93Z%22/%3E%3C/svg%3E"); }
+[data-framework="qwik"] .mark { -webkit-mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3EQwik%3C/title%3E%3Cpath d=%22M7.5469 0a2.957 2.957 0 0 0-2.5606 1.4785L.5332 9.1915a2.957 2.957 0 0 0 0 2.957l4.4531 7.7128A2.955 2.955 0 0 0 7.547 21.338H12l8.5938 2.6484c.2409.0742.4512-.1782.3359-.4023l-1.916-3.7227 4.4531-7.7129a2.957 2.957 0 0 0 0-2.957l-4.4531-7.7129A2.957 2.957 0 0 0 16.453 0zm0 .7656L17.7324 10.67l-1.8965 1.8985.5782 7.5332L6.2676 10.67l2.371-2.373z%22/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3EQwik%3C/title%3E%3Cpath d=%22M7.5469 0a2.957 2.957 0 0 0-2.5606 1.4785L.5332 9.1915a2.957 2.957 0 0 0 0 2.957l4.4531 7.7128A2.955 2.955 0 0 0 7.547 21.338H12l8.5938 2.6484c.2409.0742.4512-.1782.3359-.4023l-1.916-3.7227 4.4531-7.7129a2.957 2.957 0 0 0 0-2.957l-4.4531-7.7129A2.957 2.957 0 0 0 16.453 0zm0 .7656L17.7324 10.67l-1.8965 1.8985.5782 7.5332L6.2676 10.67l2.371-2.373z%22/%3E%3C/svg%3E"); }
+
+/* ── the three-pane body ─────────────────────────────────────────────────── */
+
+.app__body {
+	display: grid;
+	grid-template-columns: minmax(0, 13rem) minmax(0, 1fr) minmax(0, 16rem);
+	min-block-size: 0;
+}
+
+@media (max-width: 60rem) {
+	.app__body { grid-template-columns: minmax(0, 1fr); }
+	.rail, .inspector { border-inline: 0; }
+	.rail { border-block-end: var(--sticker-keyline, 2px) solid var(--ink); }
+	.inspector { border-block-start: var(--sticker-keyline, 2px) solid var(--ink); }
+}
+
+.pane { padding: var(--space-s); display: grid; gap: var(--space-s); align-content: start; min-inline-size: 0; }
+
+.rail { border-inline-end: var(--sticker-keyline, 2px) solid var(--ink); background: var(--surface-raised); }
+.inspector { border-inline-start: var(--sticker-keyline, 2px) solid var(--ink); background: var(--surface-raised); }
+
+.pane__title {
+	font-size: var(--step--2);
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: var(--tracking-caps);
+	color: var(--ink-muted);
+	margin: 0;
+}
+
+/* ── component tree ──────────────────────────────────────────────────────── */
+
+.tree { display: grid; gap: var(--space-3xs); margin: 0; padding: 0; list-style: none; }
+
+.tree__item {
+	display: grid;
+	gap: 0.1em;
+	inline-size: 100%;
+	text-align: start;
+	font-family: var(--font-sans);
+	font-size: var(--step--1);
+	padding: 0.45em 0.6em;
+	background: transparent;
+	color: var(--ink);
+	border: var(--sticker-keyline, 2px) solid transparent;
+	cursor: pointer;
+}
+
+.tree__item:hover { border-color: var(--ink); }
+
+/* Selection: a lime fill with an --ink label, plus a solid keyline. Two
+   signals, so the state does not depend on colour alone. */
+.tree__item[aria-current="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--keyline); font-weight: 700; }
+
+.tree__file { font-family: var(--font-mono); font-size: var(--step--2); color: var(--ink-muted); overflow-wrap: anywhere; }
+.tree__item[aria-current="true"] .tree__file { color: var(--accent-ink); }
+
+/* ── the preview canvas ──────────────────────────────────────────────────── */
+
+.canvas { background: var(--surface); }
+
+.canvas__grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+	gap: var(--space-s);
+}
+
+.state {
+	display: grid;
+	gap: var(--space-2xs);
+	padding: var(--space-s);
+	background: var(--surface-raised);
+	border: var(--sticker-keyline, 2px) solid var(--ink);
+}
+
+.state__name {
+	font-size: var(--step--2);
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: var(--tracking-caps);
+	color: var(--ink-muted);
+}
+
+.state__props { font-family: var(--font-mono); font-size: var(--step--2); color: var(--ink-muted); overflow-wrap: anywhere; }
+
+/* The rendered component under inspection. This is the S1 scenario's real
+   shape: a derived output and an increment button. */
+.render { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2xs); }
+
+.render output {
+	font-family: var(--font-mono);
+	font-size: var(--step--1);
+	padding: 0.35em 0.6em;
+	background: var(--surface);
+	border: var(--sticker-keyline-hair, 1px) solid var(--ink);
+}
+
+.render__branch { font-family: var(--font-mono); font-size: var(--step--1); color: var(--ink-muted); }
+
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-family: var(--font-sans);
+	font-size: var(--step--1);
+	font-weight: 700;
+	line-height: 1;
+	padding: 0.7em 1.1em;
+	border: var(--sticker-keyline, 2px) solid var(--ink);
+	background: var(--accent);
+	color: var(--accent-ink);
+	cursor: pointer;
+	border-radius: 0;
+}
+
+.btn:hover { outline: var(--sticker-keyline, 2px) solid var(--ink); outline-offset: 0; }
+
+/* ── the inspector rail ──────────────────────────────────────────────────── */
+
+.props { display: grid; gap: var(--space-2xs); margin: 0; font-size: var(--step--1); }
+.props div { display: grid; grid-template-columns: minmax(0, 5.5rem) minmax(0, 1fr); gap: var(--space-2xs); align-items: baseline; }
+.props dt { font-family: var(--font-mono); font-size: var(--step--2); color: var(--ink-muted); overflow-wrap: anywhere; }
+.props dd { margin: 0; font-family: var(--font-mono); font-size: var(--step--2); overflow-wrap: anywhere; }
+
+.trace { display: grid; gap: var(--space-3xs); margin: 0; padding: 0; list-style: none; font-family: var(--font-mono); font-size: var(--step--2); }
+.trace li { padding: 0.3em 0.4em; border-inline-start: var(--sticker-keyline-bold, 3px) solid var(--success); background: var(--surface); overflow-wrap: anywhere; }
+
+/* ── the output pane ─────────────────────────────────────────────────────── */
+
+.output { border-block-start: var(--sticker-keyline, 2px) solid var(--ink); }
+
+.output__panels { display: grid; }
+
+.output__panel {
+	grid-area: 1 / 1;
+	min-inline-size: 0;
+	display: grid;
+	gap: var(--space-2xs);
+	transition: opacity var(--motion-slide), translate var(--motion-slide);
+}
+
+.output__panel[hidden] { display: none; }
+.output__panel[data-entering] { opacity: 0; translate: 1.5rem 0; }
+
+.code-block {
+	display: grid;
+	min-inline-size: 0;
+	background: var(--surface-sunk);
+	border: var(--sticker-keyline, 2px) solid var(--ink);
+	color: var(--ink);
+	overflow: hidden;
+}
+
+.code-block__head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: var(--space-2xs);
+	padding: var(--space-2xs) var(--space-xs);
+	border-block-end: var(--sticker-keyline-hair, 1px) solid color-mix(in srgb, var(--ink) 28%, transparent);
+}
+
+.code-block__label { font-size: var(--step--2); font-weight: 700; text-transform: uppercase; letter-spacing: var(--tracking-caps); }
+.code-block__path { font-family: var(--font-mono); font-size: var(--step--2); color: var(--ink-muted); overflow-wrap: anywhere; }
+
+.code-block pre {
+	margin: 0;
+	padding: var(--space-xs);
+	font-family: var(--font-mono);
+	font-size: var(--step--2);
+	line-height: 1.55;
+	tab-size: 2;
+	overflow: auto;
+	max-block-size: 26rem;
+}
+
+.code-block code { font-family: inherit; font-size: inherit; }
+
+.code-block__provenance {
+	font-family: var(--font-mono);
+	font-size: var(--step--2);
+	padding: var(--space-2xs) var(--space-xs);
+	border-block-start: var(--sticker-keyline-hair, 1px) solid color-mix(in srgb, var(--ink) 28%, transparent);
+	color: var(--ink-muted);
+	margin: 0;
+	overflow-wrap: anywhere;
+}
+
+.code-block--empty { border-style: dashed; background: transparent; color: var(--ink); }
+.code-block--empty .code-block__head,
+.code-block--empty .code-block__provenance { border-color: color-mix(in srgb, var(--ink) 30%, transparent); color: var(--ink-muted); }
+
+/* ── status bar ──────────────────────────────────────────────────────────── */
+
+.app__status {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-s);
+	padding: var(--space-2xs) var(--space-s);
+	background: var(--surface-sunk);
+	color: var(--ink-muted);
+	border-block-start: var(--sticker-keyline, 2px) solid var(--ink);
+	font-family: var(--font-mono);
+	font-size: var(--step--2);
+}
+
+/* Cream, not lime. The --success role clears AAA on this bed, but a status bar
+   is body text and a semantic colour is not a reading ink. The one place a
+   semantic colour is legal at this size is a non-text signal: see .trace, which
+   carries --success as a border rather than as a word. */
+.app__status strong { color: var(--ink); font-weight: 700; }
+
+/* ── notes under the mock ────────────────────────────────────────────────── */
+
+.decisions { inline-size: min(100%, 68rem); display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: var(--space-m); }
+
+.decision {
+	display: grid;
+	gap: var(--space-2xs);
+	padding: var(--space-s);
+	background: var(--surface-raised);
+	border: var(--sticker-keyline, 2px) solid var(--ink);
+	border-inline-start-width: 0.75rem;
+	border-inline-start-color: var(--accent);
+}
+
+.decision h3 { font-size: var(--step-1); margin: 0; }
+.decision p { margin: 0; font-size: var(--step--1); max-width: none; }
+
+/* ── footer-marks ────────────────────────────────────────────────────────── */
+
+.footer-marks {
+	inline-size: 100%;
+	display: grid;
+	gap: var(--space-s);
+	padding: var(--space-l) var(--space-m);
+	background: var(--surface-sunk);
+	color: var(--ink);
+	border-block-start: var(--sticker-keyline, 2px) solid var(--ink);
+}
+
+.footer-marks__inner { inline-size: min(100%, 68rem); margin-inline: auto; display: grid; gap: var(--space-m); }
+.footer-marks__top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-m); }
+.footer-marks__set { display: flex; flex-wrap: wrap; gap: var(--space-s); align-items: center; }
+
+.footer-marks__mark {
+	inline-size: 1.5rem;
+	block-size: 1.5rem;
+	flex: none;
+	background-color: currentColor;
+	-webkit-mask-position: center;
+	mask-position: center;
+	-webkit-mask-repeat: no-repeat;
+	mask-repeat: no-repeat;
+	-webkit-mask-size: contain;
+	mask-size: contain;
+}
+
+.footer-marks__mark[data-framework="react"] { -webkit-mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3EReact%3C/title%3E%3Cpath d=%22M14.23 12.004a2.236 2.236 0 0 1-2.235 2.236 2.236 2.236 0 0 1-2.236-2.236 2.236 2.236 0 0 1 2.235-2.236 2.236 2.236 0 0 1 2.236 2.236zm2.648-10.69c-1.346 0-3.107.96-4.888 2.622-1.78-1.653-3.542-2.602-4.887-2.602-.41 0-.783.093-1.106.278-1.375.793-1.683 3.264-.973 6.365C1.98 8.917 0 10.42 0 12.004c0 1.59 1.99 3.097 5.043 4.03-.704 3.113-.39 5.588.988 6.38.32.187.69.275 1.102.275 1.345 0 3.107-.96 4.888-2.624 1.78 1.654 3.542 2.603 4.887 2.603.41 0 .783-.09 1.106-.275 1.374-.792 1.683-3.263.973-6.365C22.02 15.096 24 13.59 24 12.004c0-1.59-1.99-3.097-5.043-4.032.704-3.11.39-5.587-.988-6.38-.318-.184-.688-.277-1.092-.278zm-.005 1.09v.006c.225 0 .406.044.558.127.666.382.955 1.835.73 3.704-.054.46-.142.945-.25 1.44-.96-.236-2.006-.417-3.107-.534-.66-.905-1.345-1.727-2.035-2.447 1.592-1.48 3.087-2.292 4.105-2.295zm-9.77.02c1.012 0 2.514.808 4.11 2.28-.686.72-1.37 1.537-2.02 2.442-1.107.117-2.154.298-3.113.538-.112-.49-.195-.964-.254-1.42-.23-1.868.054-3.32.714-3.707.19-.09.4-.127.563-.132zm4.882 3.05c.455.468.91.992 1.36 1.564-.44-.02-.89-.034-1.345-.034-.46 0-.915.01-1.36.034.44-.572.895-1.096 1.345-1.565zM12 8.1c.74 0 1.477.034 2.202.093.406.582.802 1.203 1.183 1.86.372.64.71 1.29 1.018 1.946-.308.655-.646 1.31-1.013 1.95-.38.66-.773 1.288-1.18 1.87-.728.063-1.466.098-2.21.098-.74 0-1.477-.035-2.202-.093-.406-.582-.802-1.204-1.183-1.86-.372-.64-.71-1.29-1.018-1.946.303-.657.646-1.313 1.013-1.954.38-.66.773-1.286 1.18-1.868.728-.064 1.466-.098 2.21-.098zm-3.635.254c-.24.377-.48.763-.704 1.16-.225.39-.435.782-.635 1.174-.265-.656-.49-1.31-.676-1.947.64-.15 1.315-.283 2.015-.386zm7.26 0c.695.103 1.365.23 2.006.387-.18.632-.405 1.282-.66 1.933-.2-.39-.41-.783-.64-1.174-.225-.392-.465-.774-.705-1.146zm3.063.675c.484.15.944.317 1.375.498 1.732.74 2.852 1.708 2.852 2.476-.005.768-1.125 1.74-2.857 2.475-.42.18-.88.342-1.355.493-.28-.958-.646-1.956-1.1-2.98.45-1.017.81-2.01 1.085-2.964zm-13.395.004c.278.96.645 1.957 1.1 2.98-.45 1.017-.812 2.01-1.086 2.964-.484-.15-.944-.318-1.37-.5-1.732-.737-2.852-1.706-2.852-2.474 0-.768 1.12-1.742 2.852-2.476.42-.18.88-.342 1.356-.494zm11.678 4.28c.265.657.49 1.312.676 1.948-.64.157-1.316.29-2.016.39.24-.375.48-.762.705-1.158.225-.39.435-.788.636-1.18zm-9.945.02c.2.392.41.783.64 1.175.23.39.465.772.705 1.143-.695-.102-1.365-.23-2.006-.386.18-.63.406-1.282.66-1.933zM17.92 16.32c.112.493.2.968.254 1.423.23 1.868-.054 3.32-.714 3.708-.147.09-.338.128-.563.128-1.012 0-2.514-.807-4.11-2.28.686-.72 1.37-1.536 2.02-2.44 1.107-.118 2.154-.3 3.113-.54zm-11.83.01c.96.234 2.006.415 3.107.532.66.905 1.345 1.727 2.035 2.446-1.595 1.483-3.092 2.295-4.11 2.295-.22-.005-.406-.05-.553-.132-.666-.38-.955-1.834-.73-3.703.054-.46.142-.944.25-1.438zm4.56.64c.44.02.89.034 1.345.034.46 0 .915-.01 1.36-.034-.44.572-.895 1.095-1.345 1.565-.455-.47-.91-.993-1.36-1.565z%22/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3EReact%3C/title%3E%3Cpath d=%22M14.23 12.004a2.236 2.236 0 0 1-2.235 2.236 2.236 2.236 0 0 1-2.236-2.236 2.236 2.236 0 0 1 2.235-2.236 2.236 2.236 0 0 1 2.236 2.236zm2.648-10.69c-1.346 0-3.107.96-4.888 2.622-1.78-1.653-3.542-2.602-4.887-2.602-.41 0-.783.093-1.106.278-1.375.793-1.683 3.264-.973 6.365C1.98 8.917 0 10.42 0 12.004c0 1.59 1.99 3.097 5.043 4.03-.704 3.113-.39 5.588.988 6.38.32.187.69.275 1.102.275 1.345 0 3.107-.96 4.888-2.624 1.78 1.654 3.542 2.603 4.887 2.603.41 0 .783-.09 1.106-.275 1.374-.792 1.683-3.263.973-6.365C22.02 15.096 24 13.59 24 12.004c0-1.59-1.99-3.097-5.043-4.032.704-3.11.39-5.587-.988-6.38-.318-.184-.688-.277-1.092-.278zm-.005 1.09v.006c.225 0 .406.044.558.127.666.382.955 1.835.73 3.704-.054.46-.142.945-.25 1.44-.96-.236-2.006-.417-3.107-.534-.66-.905-1.345-1.727-2.035-2.447 1.592-1.48 3.087-2.292 4.105-2.295zm-9.77.02c1.012 0 2.514.808 4.11 2.28-.686.72-1.37 1.537-2.02 2.442-1.107.117-2.154.298-3.113.538-.112-.49-.195-.964-.254-1.42-.23-1.868.054-3.32.714-3.707.19-.09.4-.127.563-.132zm4.882 3.05c.455.468.91.992 1.36 1.564-.44-.02-.89-.034-1.345-.034-.46 0-.915.01-1.36.034.44-.572.895-1.096 1.345-1.565zM12 8.1c.74 0 1.477.034 2.202.093.406.582.802 1.203 1.183 1.86.372.64.71 1.29 1.018 1.946-.308.655-.646 1.31-1.013 1.95-.38.66-.773 1.288-1.18 1.87-.728.063-1.466.098-2.21.098-.74 0-1.477-.035-2.202-.093-.406-.582-.802-1.204-1.183-1.86-.372-.64-.71-1.29-1.018-1.946.303-.657.646-1.313 1.013-1.954.38-.66.773-1.286 1.18-1.868.728-.064 1.466-.098 2.21-.098zm-3.635.254c-.24.377-.48.763-.704 1.16-.225.39-.435.782-.635 1.174-.265-.656-.49-1.31-.676-1.947.64-.15 1.315-.283 2.015-.386zm7.26 0c.695.103 1.365.23 2.006.387-.18.632-.405 1.282-.66 1.933-.2-.39-.41-.783-.64-1.174-.225-.392-.465-.774-.705-1.146zm3.063.675c.484.15.944.317 1.375.498 1.732.74 2.852 1.708 2.852 2.476-.005.768-1.125 1.74-2.857 2.475-.42.18-.88.342-1.355.493-.28-.958-.646-1.956-1.1-2.98.45-1.017.81-2.01 1.085-2.964zm-13.395.004c.278.96.645 1.957 1.1 2.98-.45 1.017-.812 2.01-1.086 2.964-.484-.15-.944-.318-1.37-.5-1.732-.737-2.852-1.706-2.852-2.474 0-.768 1.12-1.742 2.852-2.476.42-.18.88-.342 1.356-.494zm11.678 4.28c.265.657.49 1.312.676 1.948-.64.157-1.316.29-2.016.39.24-.375.48-.762.705-1.158.225-.39.435-.788.636-1.18zm-9.945.02c.2.392.41.783.64 1.175.23.39.465.772.705 1.143-.695-.102-1.365-.23-2.006-.386.18-.63.406-1.282.66-1.933zM17.92 16.32c.112.493.2.968.254 1.423.23 1.868-.054 3.32-.714 3.708-.147.09-.338.128-.563.128-1.012 0-2.514-.807-4.11-2.28.686-.72 1.37-1.536 2.02-2.44 1.107-.118 2.154-.3 3.113-.54zm-11.83.01c.96.234 2.006.415 3.107.532.66.905 1.345 1.727 2.035 2.446-1.595 1.483-3.092 2.295-4.11 2.295-.22-.005-.406-.05-.553-.132-.666-.38-.955-1.834-.73-3.703.054-.46.142-.944.25-1.438zm4.56.64c.44.02.89.034 1.345.034.46 0 .915-.01 1.36-.034-.44.572-.895 1.095-1.345 1.565-.455-.47-.91-.993-1.36-1.565z%22/%3E%3C/svg%3E"); }
+.footer-marks__mark[data-framework="vue"] { -webkit-mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3EVue.js%3C/title%3E%3Cpath d=%22M24,1.61H14.06L12,5.16,9.94,1.61H0L12,22.39ZM12,14.08,5.16,2.23H9.59L12,6.41l2.41-4.18h4.43Z%22/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3EVue.js%3C/title%3E%3Cpath d=%22M24,1.61H14.06L12,5.16,9.94,1.61H0L12,22.39ZM12,14.08,5.16,2.23H9.59L12,6.41l2.41-4.18h4.43Z%22/%3E%3C/svg%3E"); }
+.footer-marks__mark[data-framework="svelte"] { -webkit-mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3ESvelte%3C/title%3E%3Cpath d=%22M10.354 21.125a4.44 4.44 0 0 1-4.765-1.767 4.109 4.109 0 0 1-.703-3.107 3.898 3.898 0 0 1 .134-.522l.105-.321.287.21a7.21 7.21 0 0 0 2.186 1.092l.208.063-.02.208a1.253 1.253 0 0 0 .226.83 1.337 1.337 0 0 0 1.435.533 1.231 1.231 0 0 0 .343-.15l5.59-3.562a1.164 1.164 0 0 0 .524-.778 1.242 1.242 0 0 0-.211-.937 1.338 1.338 0 0 0-1.435-.533 1.23 1.23 0 0 0-.343.15l-2.133 1.36a4.078 4.078 0 0 1-1.135.499 4.44 4.44 0 0 1-4.765-1.766 4.108 4.108 0 0 1-.702-3.108 3.855 3.855 0 0 1 1.742-2.582l5.589-3.563a4.072 4.072 0 0 1 1.135-.499 4.44 4.44 0 0 1 4.765 1.767 4.109 4.109 0 0 1 .703 3.107 3.943 3.943 0 0 1-.134.522l-.105.321-.286-.21a7.204 7.204 0 0 0-2.187-1.093l-.208-.063.02-.207a1.255 1.255 0 0 0-.226-.831 1.337 1.337 0 0 0-1.435-.532 1.231 1.231 0 0 0-.343.15L8.62 9.368a1.162 1.162 0 0 0-.524.778 1.24 1.24 0 0 0 .211.937 1.338 1.338 0 0 0 1.435.533 1.235 1.235 0 0 0 .344-.151l2.132-1.36a4.067 4.067 0 0 1 1.135-.498 4.44 4.44 0 0 1 4.765 1.766 4.108 4.108 0 0 1 .702 3.108 3.857 3.857 0 0 1-1.742 2.583l-5.589 3.562a4.072 4.072 0 0 1-1.135.499m10.358-17.95C18.484-.015 14.082-.96 10.9 1.068L5.31 4.63a6.412 6.412 0 0 0-2.896 4.295 6.753 6.753 0 0 0 .666 4.336 6.43 6.43 0 0 0-.96 2.396 6.833 6.833 0 0 0 1.168 5.167c2.229 3.19 6.63 4.135 9.812 2.108l5.59-3.562a6.41 6.41 0 0 0 2.896-4.295 6.756 6.756 0 0 0-.665-4.336 6.429 6.429 0 0 0 .958-2.396 6.831 6.831 0 0 0-1.167-5.168Z%22/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3ESvelte%3C/title%3E%3Cpath d=%22M10.354 21.125a4.44 4.44 0 0 1-4.765-1.767 4.109 4.109 0 0 1-.703-3.107 3.898 3.898 0 0 1 .134-.522l.105-.321.287.21a7.21 7.21 0 0 0 2.186 1.092l.208.063-.02.208a1.253 1.253 0 0 0 .226.83 1.337 1.337 0 0 0 1.435.533 1.231 1.231 0 0 0 .343-.15l5.59-3.562a1.164 1.164 0 0 0 .524-.778 1.242 1.242 0 0 0-.211-.937 1.338 1.338 0 0 0-1.435-.533 1.23 1.23 0 0 0-.343.15l-2.133 1.36a4.078 4.078 0 0 1-1.135.499 4.44 4.44 0 0 1-4.765-1.766 4.108 4.108 0 0 1-.702-3.108 3.855 3.855 0 0 1 1.742-2.582l5.589-3.563a4.072 4.072 0 0 1 1.135-.499 4.44 4.44 0 0 1 4.765 1.767 4.109 4.109 0 0 1 .703 3.107 3.943 3.943 0 0 1-.134.522l-.105.321-.286-.21a7.204 7.204 0 0 0-2.187-1.093l-.208-.063.02-.207a1.255 1.255 0 0 0-.226-.831 1.337 1.337 0 0 0-1.435-.532 1.231 1.231 0 0 0-.343.15L8.62 9.368a1.162 1.162 0 0 0-.524.778 1.24 1.24 0 0 0 .211.937 1.338 1.338 0 0 0 1.435.533 1.235 1.235 0 0 0 .344-.151l2.132-1.36a4.067 4.067 0 0 1 1.135-.498 4.44 4.44 0 0 1 4.765 1.766 4.108 4.108 0 0 1 .702 3.108 3.857 3.857 0 0 1-1.742 2.583l-5.589 3.562a4.072 4.072 0 0 1-1.135.499m10.358-17.95C18.484-.015 14.082-.96 10.9 1.068L5.31 4.63a6.412 6.412 0 0 0-2.896 4.295 6.753 6.753 0 0 0 .666 4.336 6.43 6.43 0 0 0-.96 2.396 6.833 6.833 0 0 0 1.168 5.167c2.229 3.19 6.63 4.135 9.812 2.108l5.59-3.562a6.41 6.41 0 0 0 2.896-4.295 6.756 6.756 0 0 0-.665-4.336 6.429 6.429 0 0 0 .958-2.396 6.831 6.831 0 0 0-1.167-5.168Z%22/%3E%3C/svg%3E"); }
+.footer-marks__mark[data-framework="solid"] { -webkit-mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3ESolid%3C/title%3E%3Cpath d=%22M11.558.788A9.082 9.082 0 0 0 9.776.99l-.453.15c-.906.303-1.656.755-2.1 1.348l-.301.452-2.035 3.528c.426-.387.974-.698 1.643-.894h.001l.613-.154h.001a8.82 8.82 0 0 1 1.777-.206c2.916-.053 6.033 1.148 8.423 2.36 2.317 1.175 3.888 2.32 3.987 2.39L24 5.518c-.082-.06-1.66-1.21-3.991-2.386-2.393-1.206-5.521-2.396-8.45-2.343zM8.924 5.366a8.634 8.634 0 0 0-1.745.203l-.606.151c-1.278.376-2.095 1.16-2.43 2.108-.334.948-.188 2.065.487 3.116.33.43.747.813 1.216 1.147L12.328 10h.001a6.943 6.943 0 0 1 6.013 1.013l2.844-.963c-.17-.124-1.663-1.2-3.91-2.34-2.379-1.206-5.479-2.396-8.352-2.344zm5.435 4.497a6.791 6.791 0 0 0-1.984.283L2.94 13.189 0 18.334l9.276-2.992a6.945 6.945 0 0 1 7.408 2.314v.001c.695.903.89 1.906.66 2.808l2.572-4.63c.595-1.041.45-2.225-.302-3.429a6.792 6.792 0 0 0-5.255-2.543zm-3.031 5.341a6.787 6.787 0 0 0-2.006.283L.008 18.492c.175.131 2.02 1.498 4.687 2.768 2.797 1.332 6.37 2.467 9.468 1.712l.454-.152h.002c1.278-.376 2.134-1.162 2.487-2.09.353-.93.207-2.004-.541-2.978a6.791 6.791 0 0 0-5.237-2.548z%22/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3ESolid%3C/title%3E%3Cpath d=%22M11.558.788A9.082 9.082 0 0 0 9.776.99l-.453.15c-.906.303-1.656.755-2.1 1.348l-.301.452-2.035 3.528c.426-.387.974-.698 1.643-.894h.001l.613-.154h.001a8.82 8.82 0 0 1 1.777-.206c2.916-.053 6.033 1.148 8.423 2.36 2.317 1.175 3.888 2.32 3.987 2.39L24 5.518c-.082-.06-1.66-1.21-3.991-2.386-2.393-1.206-5.521-2.396-8.45-2.343zM8.924 5.366a8.634 8.634 0 0 0-1.745.203l-.606.151c-1.278.376-2.095 1.16-2.43 2.108-.334.948-.188 2.065.487 3.116.33.43.747.813 1.216 1.147L12.328 10h.001a6.943 6.943 0 0 1 6.013 1.013l2.844-.963c-.17-.124-1.663-1.2-3.91-2.34-2.379-1.206-5.479-2.396-8.352-2.344zm5.435 4.497a6.791 6.791 0 0 0-1.984.283L2.94 13.189 0 18.334l9.276-2.992a6.945 6.945 0 0 1 7.408 2.314v.001c.695.903.89 1.906.66 2.808l2.572-4.63c.595-1.041.45-2.225-.302-3.429a6.792 6.792 0 0 0-5.255-2.543zm-3.031 5.341a6.787 6.787 0 0 0-2.006.283L.008 18.492c.175.131 2.02 1.498 4.687 2.768 2.797 1.332 6.37 2.467 9.468 1.712l.454-.152h.002c1.278-.376 2.134-1.162 2.487-2.09.353-.93.207-2.004-.541-2.978a6.791 6.791 0 0 0-5.237-2.548z%22/%3E%3C/svg%3E"); }
+.footer-marks__mark[data-framework="angular"] { -webkit-mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3EAngular%3C/title%3E%3Cpath d=%22M16.712 17.711H7.288l-1.204 2.916L12 24l5.916-3.373-1.204-2.916ZM14.692 0l7.832 16.855.814-12.856L14.692 0ZM9.308 0 .662 3.999l.814 12.856L9.308 0Zm-.405 13.93h6.198L12 6.396 8.903 13.93Z%22/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3EAngular%3C/title%3E%3Cpath d=%22M16.712 17.711H7.288l-1.204 2.916L12 24l5.916-3.373-1.204-2.916ZM14.692 0l7.832 16.855.814-12.856L14.692 0ZM9.308 0 .662 3.999l.814 12.856L9.308 0Zm-.405 13.93h6.198L12 6.396 8.903 13.93Z%22/%3E%3C/svg%3E"); }
+.footer-marks__mark[data-framework="qwik"] { -webkit-mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3EQwik%3C/title%3E%3Cpath d=%22M7.5469 0a2.957 2.957 0 0 0-2.5606 1.4785L.5332 9.1915a2.957 2.957 0 0 0 0 2.957l4.4531 7.7128A2.955 2.955 0 0 0 7.547 21.338H12l8.5938 2.6484c.2409.0742.4512-.1782.3359-.4023l-1.916-3.7227 4.4531-7.7129a2.957 2.957 0 0 0 0-2.957l-4.4531-7.7129A2.957 2.957 0 0 0 16.453 0zm0 .7656L17.7324 10.67l-1.8965 1.8985.5782 7.5332L6.2676 10.67l2.371-2.373z%22/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg role=%22img%22 viewBox=%220 0 24 24%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Ctitle%3EQwik%3C/title%3E%3Cpath d=%22M7.5469 0a2.957 2.957 0 0 0-2.5606 1.4785L.5332 9.1915a2.957 2.957 0 0 0 0 2.957l4.4531 7.7128A2.955 2.955 0 0 0 7.547 21.338H12l8.5938 2.6484c.2409.0742.4512-.1782.3359-.4023l-1.916-3.7227 4.4531-7.7129a2.957 2.957 0 0 0 0-2.957l-4.4531-7.7129A2.957 2.957 0 0 0 16.453 0zm0 .7656L17.7324 10.67l-1.8965 1.8985.5782 7.5332L6.2676 10.67l2.371-2.373z%22/%3E%3C/svg%3E"); }
+
+.footer-marks__legal { display: grid; gap: var(--space-xs); font-size: var(--step--2); line-height: 1.5; color: var(--ink-muted); }
+.footer-marks__legal p { margin: 0; max-width: 78ch; }
+.footer-marks__rule { border: 0; border-block-start: var(--sticker-keyline-hair, 1px) solid color-mix(in srgb, var(--ink) 25%, transparent); margin: 0; }
+</style>
+</head>
+
+<body>
+
+<div class="page">
+
+	<div class="page__intro">
+		<p class="kicker">Frameless brand kit · product artifact</p>
+		<h1 class="page__title">The system, applied to a tool rather than to a page</h1>
+		<p class="page__lede">A static mock of the Frameless Studio component inspector. <strong>Studio is not available</strong> — this exists to show what the tokens do when the surface is dense, working software instead of marketing: keylines and real depth instead of a palette of elevation greys, lime as a selection fill instead of a poster colour, and the display steps used exactly once.</p>
+		<p class="note">Nothing here is running. The component under inspection is real (<code>RenderOnce</code>, from <code>packages/compiler/test/fixtures/s1-render-once.tsrx</code>), the three filled output panes are the real emitted files with their sha256 hashes, and the three targets with no captured output in this repository show an empty pane rather than a plausible snippet.</p>
+	</div>
+
+	<!-- ═══ THE MOCK ═════════════════════════════════════════════════════════ -->
+	<div class="app" role="img" aria-label="A static mock of the Frameless Studio component inspector.">
+
+		<div class="app__bar" data-surface="deep">
+			<span class="app__brand">
+				<span class="wordmark wordmark--compact" data-surface="light" style="font-size: var(--step-2)">
+					<span class="wordmark__layer wordmark__band" aria-hidden="true">frameless</span>
+					<span class="wordmark__layer wordmark__cut">frameless</span>
+				</span>
+				<span class="app__product">Studio</span>
+			</span>
+			<span class="coming-soon-tag">Coming soon</span>
+		</div>
+
+		<div class="targets" role="tablist" aria-label="Compilation target">
+			<span class="targets__label">Target</span>
+			<button type="button" class="chip tilt-1" role="tab" id="t-react" aria-controls="o-react" aria-selected="true" tabindex="0" data-framework="react" data-capture="file"><span class="mark" aria-hidden="true"></span>React</button>
+			<button type="button" class="chip tilt-2" role="tab" id="t-vue" aria-controls="o-vue" aria-selected="false" tabindex="-1" data-framework="vue" data-capture="none"><span class="mark" aria-hidden="true"></span>Vue</button>
+			<button type="button" class="chip tilt-3" role="tab" id="t-svelte" aria-controls="o-svelte" aria-selected="false" tabindex="-1" data-framework="svelte" data-capture="none"><span class="mark" aria-hidden="true"></span>Svelte</button>
+			<button type="button" class="chip tilt-1" role="tab" id="t-solid" aria-controls="o-solid" aria-selected="false" tabindex="-1" data-framework="solid" data-capture="file"><span class="mark" aria-hidden="true"></span>Solid</button>
+			<button type="button" class="chip tilt-2" role="tab" id="t-angular" aria-controls="o-angular" aria-selected="false" tabindex="-1" data-framework="angular" data-capture="none"><span class="mark" aria-hidden="true"></span>Angular</button>
+			<button type="button" class="chip tilt-3" role="tab" id="t-qwik" aria-controls="o-qwik" aria-selected="false" tabindex="-1" data-framework="qwik" data-capture="file"><span class="mark" aria-hidden="true"></span>Qwik</button>
+		</div>
+
+		<div class="app__body">
+
+			<!-- ── component tree ──────────────────────────────────────────── -->
+			<div class="pane rail">
+				<p class="pane__title">Components</p>
+				<p class="tree__file">packages/compiler/test/fixtures/</p>
+				<ul class="tree">
+					<li><button type="button" class="tree__item" aria-current="true">RenderOnce<span class="tree__file">4 props · 1 branch</span></button></li>
+					<li><button type="button" class="tree__item">KeyedTodo<span class="tree__file">2 props · keyed list</span></button></li>
+					<li><button type="button" class="tree__item">EventForm<span class="tree__file">2 props · 3 controls</span></button></li>
+				</ul>
+				<p class="pane__title">Scenarios</p>
+				<ul class="tree">
+					<li><button type="button" class="tree__item" aria-current="true">S1 · render once<span class="tree__file">derived value, one branch</span></button></li>
+					<li><button type="button" class="tree__item">S2 · keyed list<span class="tree__file">identity across reorders</span></button></li>
+					<li><button type="button" class="tree__item">S3 · events<span class="tree__file">input, checkbox, bubbling</span></button></li>
+				</ul>
+			</div>
+
+			<!-- ── preview canvas: the state matrix ────────────────────────── -->
+			<div class="pane canvas">
+				<p class="pane__title">States · RenderOnce</p>
+				<div class="canvas__grid">
+					<div class="state">
+						<span class="state__name">Visible · default</span>
+						<span class="state__props">label "s1" · multiplier 2 · visible true</span>
+						<div class="render">
+							<output>s1:2</output>
+							<button type="button" class="btn pressable">increment</button>
+						</div>
+					</div>
+					<div class="state">
+						<span class="state__name">Visible · after one change</span>
+						<span class="state__props">label "s1" · multiplier 2 · count 2</span>
+						<div class="render">
+							<output>s1:4</output>
+							<button type="button" class="btn pressable">increment</button>
+						</div>
+					</div>
+					<div class="state">
+						<span class="state__name">Hidden branch</span>
+						<span class="state__props">visible false</span>
+						<div class="render">
+							<span class="render__branch">hidden</span>
+						</div>
+					</div>
+					<div class="state">
+						<span class="state__name">Multiplier 3</span>
+						<span class="state__props">label "s1" · multiplier 3 · count 1</span>
+						<div class="render">
+							<output>s1:3</output>
+							<button type="button" class="btn pressable">increment</button>
+						</div>
+					</div>
+				</div>
+				<p class="note">Every state, side by side, in whichever target is selected above. It is a comparison plate: put the things next to each other and label the difference precisely.</p>
+			</div>
+
+			<!-- ── inspector ───────────────────────────────────────────────── -->
+			<div class="pane inspector">
+				<p class="pane__title">Props</p>
+				<dl class="props">
+					<div><dt>label</dt><dd>"s1"</dd></div>
+					<div><dt>multiplier</dt><dd>2</dd></div>
+					<div><dt>visible</dt><dd>true</dd></div>
+					<div><dt>onTrace</dt><dd>fn</dd></div>
+				</dl>
+
+				<p class="pane__title">State</p>
+				<dl class="props">
+					<div><dt>count</dt><dd>1</dd></div>
+					<div><dt>prefix</dt><dd>"s1:"</dd></div>
+					<div><dt>derived</dt><dd>"s1:2"</dd></div>
+				</dl>
+
+				<p class="pane__title">Trace</p>
+				<ul class="trace">
+					<li>setup · runs 1</li>
+					<li>change · count 2</li>
+					<li>change · count 3</li>
+				</ul>
+			</div>
+		</div>
+
+		<!-- ── the emitted output for the selected target ────────────────── -->
+		<div class="pane output">
+			<p class="pane__title">Emitted output</p>
+			<div class="output__panels">
+
+				<div class="output__panel" id="o-react" role="tabpanel" aria-labelledby="t-react" data-framework="react" hidden>
+					<div class="code-block">
+						<div class="code-block__head">
+							<span class="code-block__label">React · Hydrates</span>
+							<span class="code-block__path">packages/frameworks/react/generated/S1.jsx</span>
+						</div>
+<pre><code>// @generated by @frameless/react; do not edit.
+import { useRef, useState } from 'react';
+
+export function RenderOnce({ label, multiplier, visible, onTrace }) {
+	const setupDone = useRef(null);
+	if (setupDone.current === null) {
+		setupDone.current = true;
+		onTrace('setup', { runs: 1 });
+	}
+	const [count, setCount] = useState(1);
+	const [prefix] = useState(() =&gt; `${label}:`);
+	const derived = `${prefix}${count * multiplier}`;
+	return (
+		&lt;div data-s1-root=""&gt;
+			{!visible ? (
+				&lt;p data-branch="hidden"&gt;hidden&lt;/p&gt;
+			) : (
+				&lt;section data-scenario="s1"&gt;
+					&lt;output data-value="derived"&gt;{derived}&lt;/output&gt;
+					&lt;button
+						data-action="increment"
+						onClick={() =&gt; {
+							const nextCount = count + 1;
+							setCount(nextCount);
+							onTrace('change', { count: nextCount });
+						}}
+					&gt;
+						increment
+					&lt;/button&gt;
+				&lt;/section&gt;
+			)}
+		&lt;/div&gt;
+	);
+}</code></pre>
+						<p class="code-block__provenance">verbatim from this repository · sha256 b2a8e9a7418780fd39d5b2d7114afb6226ce28c224e5cba3049394824bce7157</p>
+					</div>
+				</div>
+
+				<div class="output__panel" id="o-vue" role="tabpanel" aria-labelledby="t-vue" data-framework="vue" hidden>
+					<div class="code-block code-block--empty">
+						<div class="code-block__head">
+							<span class="code-block__label">Vue</span>
+							<span class="code-block__path">no captured output in this repository</span>
+						</div>
+<pre><code>/* Nothing captured for this target, so nothing is shown.
+
+   A mock of a verification tool that fakes its evidence would be a strange
+   thing to build. The empty state is marked by geometry — a dashed keyline
+   and a dashed chip — rather than by a dimmed colour, which would read as a
+   loading skeleton. */</code></pre>
+						<p class="code-block__provenance">empty · nothing captured, so nothing claimed</p>
+					</div>
+				</div>
+
+				<div class="output__panel" id="o-svelte" role="tabpanel" aria-labelledby="t-svelte" data-framework="svelte" hidden>
+					<div class="code-block code-block--empty">
+						<div class="code-block__head">
+							<span class="code-block__label">Svelte</span>
+							<span class="code-block__path">no captured output in this repository</span>
+						</div>
+<pre><code>/* Nothing captured for this target, so nothing is shown.
+
+   A mock of a verification tool that fakes its evidence would be a strange
+   thing to build. The empty state is marked by geometry — a dashed keyline
+   and a dashed chip — rather than by a dimmed colour, which would read as a
+   loading skeleton. */</code></pre>
+						<p class="code-block__provenance">empty · nothing captured, so nothing claimed</p>
+					</div>
+				</div>
+
+				<div class="output__panel" id="o-solid" role="tabpanel" aria-labelledby="t-solid" data-framework="solid" hidden>
+					<div class="code-block">
+						<div class="code-block__head">
+							<span class="code-block__label">Solid · Hydrates</span>
+							<span class="code-block__path">packages/frameworks/solid/generated/S1.jsx</span>
+						</div>
+<pre><code>// @generated by @frameless/solid; do not edit.
+import { createSignal, untrack, Show } from 'solid-js';
+
+export function RenderOnce(props) {
+	untrack(() =&gt; props.onTrace('setup', { runs: 1 }));
+	const [count, setCount] = createSignal(1);
+	const prefix = untrack(() =&gt; `${props.label}:`);
+	const derived = () =&gt; `${prefix}${count() * props.multiplier}`;
+	return (
+		&lt;div data-s1-root=""&gt;
+			&lt;Show
+				when={!props.visible}
+				fallback={
+					&lt;section data-scenario="s1"&gt;
+						&lt;output data-value="derived"&gt;{derived()}&lt;/output&gt;
+						&lt;button
+							data-action="increment"
+							onClick={() =&gt; {
+								setCount(count() + 1);
+								props.onTrace('change', { count: count() });
+							}}
+						&gt;
+							increment
+						&lt;/button&gt;
+					&lt;/section&gt;
+				}
+			&gt;
+				&lt;p data-branch="hidden"&gt;hidden&lt;/p&gt;
+			&lt;/Show&gt;
+		&lt;/div&gt;
+	);
+}</code></pre>
+						<p class="code-block__provenance">verbatim from this repository · sha256 d4011e110328f672d2db7cf61e9d5639883937e11011274eb4eadfb7e78b99fa</p>
+					</div>
+				</div>
+
+				<div class="output__panel" id="o-angular" role="tabpanel" aria-labelledby="t-angular" data-framework="angular" hidden>
+					<div class="code-block code-block--empty">
+						<div class="code-block__head">
+							<span class="code-block__label">Angular</span>
+							<span class="code-block__path">no captured output in this repository</span>
+						</div>
+<pre><code>/* Nothing captured for this target, so nothing is shown.
+
+   A mock of a verification tool that fakes its evidence would be a strange
+   thing to build. The empty state is marked by geometry — a dashed keyline
+   and a dashed chip — rather than by a dimmed colour, which would read as a
+   loading skeleton. */</code></pre>
+						<p class="code-block__provenance">empty · nothing captured, so nothing claimed</p>
+					</div>
+				</div>
+
+				<div class="output__panel" id="o-qwik" role="tabpanel" aria-labelledby="t-qwik" data-framework="qwik" hidden>
+					<div class="code-block">
+						<div class="code-block__head">
+							<span class="code-block__label">Qwik · Resumes</span>
+							<span class="code-block__path">packages/frameworks/qwik/generated/S1.jsx</span>
+						</div>
+<pre><code>// @generated by @frameless/qwik; do not edit.
+import { $, component$, useComputed$, useSignal, useTask$ } from '@qwik.dev/core';
+
+export const RenderOnce = component$((props) =&gt; {
+	useTask$(async () =&gt; {
+		await props.onTrace$('setup', { runs: 1 });
+	});
+	const count = useSignal(1);
+	const prefix = useSignal(() =&gt; `${props.label}:`);
+	const derived = useComputed$(() =&gt; `${prefix.value}${count.value * props.multiplier}`);
+	return (
+		&lt;div data-s1-root=""&gt;
+			{!props.visible ? (
+				&lt;p data-branch="hidden"&gt;hidden&lt;/p&gt;
+			) : (
+				&lt;section data-scenario="s1"&gt;
+					&lt;output data-value="derived"&gt;{derived.value}&lt;/output&gt;
+					&lt;button
+						data-action="increment"
+						onClick$={$(async () =&gt; {
+							count.value += 1;
+							await props.onTrace$('change', { count: count.value });
+						})}
+					&gt;
+						increment
+					&lt;/button&gt;
+				&lt;/section&gt;
+			)}
+		&lt;/div&gt;
+	);
+});</code></pre>
+						<p class="code-block__provenance">verbatim from this repository · sha256 6b2d6ecbe045732de25f0a589c6b9b98309850f5a50179bbfb5236431e8e55e7</p>
+					</div>
+				</div>
+
+			</div>
+		</div>
+
+		<div class="app__status" data-surface="deep">
+			<span>RenderOnce · S1</span>
+			<span><strong>3 targets captured</strong> · 3 empty</span>
+			<span>behavior diffed in a real browser</span>
+			<span>static mock — nothing is running</span>
+		</div>
+	</div>
+
+	<!-- ═══ WHY IT LOOKS LIKE THIS ═══════════════════════════════════════════ -->
+	<div class="decisions">
+		<article class="decision">
+			<h3>Keylines, and one shadow</h3>
+			<p>A product UI usually separates panels with a ladder of grey fills. There is no elevation grey here: structure comes from the <code>--ink</code> keyline and the <code>--surface-raised</code> / <code>--surface-sunk</code> pair, and depth arrives once, as <code>--elev-card</code> on the window itself. A tool does not need six altitudes; it needs one cut edge you can trust.</p>
+		</article>
+		<article class="decision">
+			<h3>Lime is the selection</h3>
+			<p>On a page lime is a poster colour. In a tool it is the selected row and the selected target — a fill with an <code>--ink</code> label at 12.43:1, which is the same rule doing a different job. Selection never depends on colour alone: the selected chip also loses its tilt.</p>
+		</article>
+		<article class="decision">
+			<h3>Empty states have no cut edge</h3>
+			<p>A target with nothing captured gets a dashed keyline and a word, never a dimmed one. Dimming reads as a loading skeleton and dies in grayscale; the missing die-cut edge reads as "not printed yet", which is this brand's own vocabulary for a thing that is not there.</p>
+		</article>
+		<article class="decision">
+			<h3>No stickers</h3>
+			<p>The decorative nature stickers are absent entirely. They belong on a page, in the margins, at section seams — not in a workspace, where every pixel is doing a job and a charming distraction is just a distraction.</p>
+		</article>
+	</div>
+
+	<div class="page__intro">
+		<p class="note"><strong>Studio is coming. Nothing to sign up for yet.</strong> There is deliberately no call to action on this page and no way to register interest: this brand's confidence comes from naming exactly what it does, and a scarcity device is the loudest possible contradiction of that.</p>
+	</div>
+
+</div>
+
+<footer class="footer-marks" data-surface="deep">
+	<div class="footer-marks__inner">
+		<div class="footer-marks__top">
+			<span class="wordmark wordmark--compact" data-surface="light">
+				<span class="wordmark__layer wordmark__band" aria-hidden="true">frameless</span>
+				<span class="wordmark__layer wordmark__cut">frameless</span>
+			</span>
+			<div class="footer-marks__set" aria-label="Compilation targets">
+				<span class="footer-marks__mark" data-framework="react" role="img" aria-label="React"></span>
+				<span class="footer-marks__mark" data-framework="vue" role="img" aria-label="Vue"></span>
+				<span class="footer-marks__mark" data-framework="svelte" role="img" aria-label="Svelte"></span>
+				<span class="footer-marks__mark" data-framework="solid" role="img" aria-label="Solid"></span>
+				<span class="footer-marks__mark" data-framework="angular" role="img" aria-label="Angular"></span>
+				<span class="footer-marks__mark" data-framework="qwik" role="img" aria-label="Qwik"></span>
+			</div>
+		</div>
+
+		<hr class="footer-marks__rule">
+
+		<div class="footer-marks__legal">
+			<p>React, Vue, Svelte, Solid, Angular and Qwik are trademarks™ of their respective owners. Frameless is not affiliated with, endorsed by, or sponsored by any of them. The marks are used nominatively, to identify compilation targets.</p>
+
+			<p>Framework logo geometry is used under Simple Icons' CC0 dedication. <strong>CC0 covers the path data, not the trademarks</strong> — copying the drawing is permitted and each project's trademark policy still applies when you display the mark.</p>
+
+			<p>Que Grotesque is licensed to Frameless. The WOFF2 files in this kit are self-hosted subsets and may not be redistributed, re-uploaded, or served from another origin. Que Grotesque is a trademark™ of TypeBerka. © 2024 Que Grotesque Font. All rights reserved.</p>
+
+			<p>© 2026 Frameless · Frameless Studio is not available. This page is a static mock built from the Frameless brand kit.</p>
+		</div>
+	</div>
+</footer>
+
+<script>
+	/* The target toolbar is a real WAI-ARIA tab list: roving tabindex, arrow
+	   keys, Home and End. Selecting a target with no captured output shows the
+	   empty pane — that is the point of the interaction, not a gap in it. */
+
+	const CANONICAL = ['react', 'vue', 'svelte', 'solid', 'angular', 'qwik'];
+	const tablist = document.querySelector('.targets');
+	const tabs = [...tablist.querySelectorAll('[role="tab"]')];
+	const panels = [...document.querySelectorAll('[role="tabpanel"]')];
+
+	function select(tab, { focus = true } = {}) {
+		for (const other of tabs) {
+			const on = other === tab;
+			other.setAttribute('aria-selected', String(on));
+			other.tabIndex = on ? 0 : -1;
+		}
+		for (const panel of panels) {
+			const on = panel.dataset.framework === tab.dataset.framework;
+			if (!on) { panel.hidden = true; continue; }
+			panel.hidden = false;
+			panel.dataset.entering = '';
+			requestAnimationFrame(() => requestAnimationFrame(() => { delete panel.dataset.entering; }));
+		}
+		if (focus) tab.focus();
+	}
+
+	tablist.addEventListener('click', (event) => {
+		const tab = event.target.closest('[role="tab"]');
+		if (tab) select(tab);
+	});
+
+	tablist.addEventListener('keydown', (event) => {
+		const index = tabs.indexOf(document.activeElement);
+		if (index === -1) return;
+		let next = null;
+		if (event.key === 'ArrowRight') next = tabs[(index + 1) % tabs.length];
+		else if (event.key === 'ArrowLeft') next = tabs[(index - 1 + tabs.length) % tabs.length];
+		else if (event.key === 'Home') next = tabs[0];
+		else if (event.key === 'End') next = tabs[tabs.length - 1];
+		if (next) { event.preventDefault(); select(next); }
+	});
+
+	select(tabs[0], { focus: false });
+
+	// The component tree is a mock, but its selection behaviour is not: one
+	// current item per list, carried by a fill AND a keyline rather than by
+	// colour alone.
+	for (const list of document.querySelectorAll('.tree')) {
+		list.addEventListener('click', (event) => {
+			const item = event.target.closest('.tree__item');
+			if (!item) return;
+			for (const other of list.querySelectorAll('.tree__item')) other.removeAttribute('aria-current');
+			item.setAttribute('aria-current', 'true');
+		});
+	}
+
+	// Canonical order, and no framework mark in --accent. Same two checks the
+	// components run — a product surface is not exempt from them.
+	const order = tabs.map((t) => t.dataset.framework);
+	if (order.join() !== CANONICAL.join()) console.error('canonical order violated', order);
+
+	const probe = document.createElement('span');
+	probe.style.color = 'var(--accent)';
+	document.body.append(probe);
+	const accent = getComputedStyle(probe).color;
+	probe.remove();
+	for (const mark of document.querySelectorAll('.mark, .footer-marks__mark')) {
+		if (getComputedStyle(mark).backgroundColor === accent) console.error('a framework mark rendered in --accent', mark);
+	}
+</script>
+</body>
+</html>

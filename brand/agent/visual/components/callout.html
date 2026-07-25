@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frameless — callout</title>
+<link rel="icon" href="../assets/wordmark/favicon.svg">
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="./component-tokens.css">
+<link rel="stylesheet" href="./specimen.css">
+<link rel="stylesheet" href="../motion/motion.css">
+
+<style>
+/* ============================================================================
+ * CALLOUT — a truth, a constraint, or a measurement, given its own object
+ *
+ * WHAT IT IS FOR
+ * Making precision a design element. This brand is a naturalist's field guide,
+ * and a field guide that refuses to claim an unconfirmed sighting is the one
+ * you trust. A callout is where a page says the exact thing — including the
+ * limits, including the number, including what is not true.
+ *
+ * WHEN TO USE IT
+ *   note        an aside the reader benefits from but does not need.
+ *   constraint  a limit stated plainly. "There is no Frameless runtime in your
+ *               bundle" belongs here; so does "Studio is not out yet".
+ *   measured    a number with its provenance. The eyebrow carries where it came
+ *               from, so the figure is checkable rather than asserted.
+ *   caution     a real risk of getting it wrong. Rare. If everything is a
+ *               caution, nothing is.
+ *
+ * WHEN NOT TO USE IT
+ * For emphasis. A callout around ordinary marketing copy is the fastest way to
+ * make every future callout invisible. If the sentence would be just as true
+ * in a paragraph, put it in a paragraph.
+ *
+ * ── WHY IT LOOKS LIKE THIS ──────────────────────────────────────────────────
+ * A callout is a die-cut object with a heavy left edge — a specimen label
+ * pinned to the page. The left edge is the only place in the kit where a
+ * coloured bar carries meaning, and it never carries it ALONE: every variant
+ * also has a word in the eyebrow. Colour dies in grayscale and for colourblind
+ * readers; the word does not.
+ *
+ * ── COLOUR RULES THAT APPLY HERE ────────────────────────────────────────────
+ *   --success  #115b2e  7.06:1 on --surface. Confirmed, verified, passing.
+ *   --warning  #eeab00  FILL ONLY on light, always with an --ink label. As
+ *                       TEXT on --surface it is 1.73:1 and fails everything.
+ *   --danger   #9c5839  4.67:1. A TEXT colour, not a fill with an ink label —
+ *                       --ink on --danger is only 3.38:1.
+ *   --accent   never as text. The edge bar is a FILL, which is legal.
+ * ==========================================================================*/
+
+.callout {
+	display: grid;
+	gap: var(--space-2xs);
+	padding: var(--space-s);
+	padding-inline-start: calc(var(--space-s) + 0.5rem);
+	background: var(--surface-raised);
+	border: var(--sticker-keyline, 2px) solid color-mix(in srgb, var(--band) 28%, transparent);
+	border-inline-start: 0.75rem solid var(--ink-muted);
+	border-radius: var(--sticker-radius-small, 0.6rem);
+	color: var(--ink);
+	filter: var(--elev-sticker);
+}
+
+.callout__eyebrow {
+	font-size: var(--step--2);
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: var(--tracking-caps);
+	color: var(--ink-muted);
+}
+
+.callout__body {
+	font-size: var(--step-0);
+	line-height: var(--leading-body);
+	margin: 0;
+	max-width: 58ch;
+}
+
+.callout__source {
+	font-family: var(--font-mono);
+	font-size: var(--step--2);
+	color: var(--ink-muted);
+}
+
+/* ── note — the default ─────────────────────────────────────────────────── */
+.callout--note {
+	border-inline-start-color: var(--ink-muted);
+}
+
+/* ── constraint — a limit, stated plainly ───────────────────────────────── */
+/* --accent-cool is the accent that CAN be an ink: 5.05:1 on --surface. It
+   exists precisely because lime cannot be one. */
+.callout--constraint {
+	border-inline-start-color: var(--accent-cool);
+}
+
+.callout--constraint .callout__eyebrow {
+	color: var(--accent-cool);
+}
+
+/* ── measured — a number with its provenance ────────────────────────────── */
+.callout--measured {
+	border-inline-start-color: var(--success);
+}
+
+.callout--measured .callout__eyebrow {
+	color: var(--success);
+}
+
+.callout__figure {
+	font-size: var(--step-4);
+	font-weight: 900;
+	line-height: 1;
+	letter-spacing: var(--tracking-display);
+}
+
+/* ── caution — rare ─────────────────────────────────────────────────────── */
+/* The bar is --warning as a FILL, which is legal. --warning as TEXT on light
+   is 1.73:1 and would be unreadable, so the eyebrow is --ink instead. */
+.callout--caution {
+	border-inline-start-color: var(--warning);
+}
+
+.callout--caution .callout__eyebrow {
+	color: var(--warning);
+}
+
+/* ── on the dark bed ────────────────────────────────────────────────────── */
+/* No fill and no shadow: a callout that sits in the page rather than on it. */
+.callout--quiet {
+	background: none;
+	color: var(--ink);
+	filter: none;
+}
+
+/* ── sticker-treated ────────────────────────────────────────────────────── */
+/* A callout can be a specimen label pinned at an angle. Use sparingly: a
+   tilted callout draws more attention than a straight one, and the point of
+   this component is accuracy rather than volume. */
+.callout--pinned {
+	rotate: var(--tilt-3);
+}
+</style>
+</head>
+
+<body>
+<main class="spec">
+
+<header>
+	<p class="spec__kicker">Frameless component · precision</p>
+	<h1>callout</h1>
+	<p class="spec__lede">Where the page says the exact thing — the limit, the number, the part that is not true. A field guide that refuses to claim an unconfirmed sighting is the one you trust.</p>
+</header>
+
+<div class="spec__use">
+	<div>
+		<h2>Use it when</h2>
+		<ul>
+			<li>Stating a real constraint, including one that is inconvenient.</li>
+			<li>Giving a number with where it came from.</li>
+			<li>Warning about a way to get it genuinely wrong.</li>
+		</ul>
+	</div>
+	<div class="spec__use--no">
+		<h2>Don't use it when</h2>
+		<ul>
+			<li>You want emphasis. That is what weight and space are for.</li>
+			<li>The sentence would be just as true in a paragraph.</li>
+			<li>You already used three on this page. Then none of them reads as important.</li>
+		</ul>
+	</div>
+</div>
+
+<hr class="spec__rule">
+
+<section>
+	<h2>Note</h2>
+	<div class="spec__stage">
+		<div class="callout callout--note">
+			<p class="callout__eyebrow">Note</p>
+			<p class="callout__body">The React output uses React patterns and the Svelte output uses Svelte patterns, because the compiler works from meaning rather than from syntax. There is no lowest-common-denominator shape and no wrapper component.</p>
+		</div>
+	</div>
+</section>
+
+<section>
+	<h2>Constraint</h2>
+	<p class="spec__note">A limit, stated plainly — including when it is inconvenient. This is the variant that does the most brand work, because a page that names its own limits is the one whose other claims are worth reading.</p>
+	<div class="spec__stage">
+		<div class="callout callout--constraint">
+			<p class="callout__eyebrow">Constraint</p>
+			<p class="callout__body">Behaviour is verified identical. The <em>output</em> is deliberately different per framework — "guaranteed identical output" is a claim Frameless does not make and would not want to.</p>
+		</div>
+	</div>
+</section>
+
+<section>
+	<h2>Measured</h2>
+	<p class="spec__note">A number with its provenance. The source line is the component's whole reason for existing: a figure with a path under it is checkable, and a figure on its own is decoration.</p>
+	<div class="spec__stage">
+		<div class="callout callout--measured">
+			<p class="callout__eyebrow">Measured</p>
+			<p class="callout__figure">1.09:1</p>
+			<p class="callout__body">Contrast between the die-cut cream band and the light paper island. The band is nearly invisible on paper — which is correct sticker physics, and it is why the keyline and the drop shadow are what actually separate a sticker from the page.</p>
+			<p class="callout__source">--band #e0dfca vs the paper island #f2f0dd · tokens/color.json</p>
+		</div>
+	</div>
+</section>
+
+<section>
+	<h2>Caution</h2>
+	<p class="spec__note">Rare. If everything is a caution, nothing is. Note that the bar is <code>--warning</code> as a <strong>fill</strong> — legal — while the eyebrow is <code>--warning</code> only because this bed is dark. On the light paper island <code>--warning</code> as text is 1.73:1.</p>
+	<div class="spec__stage">
+		<div class="callout callout--caution">
+			<p class="callout__eyebrow">Caution</p>
+			<p class="callout__body">An element cannot query itself. Put <code>container-type: inline-size</code> on the same element that consumes <code>--sticker-band</code> and <code>cqw</code> resolves against the nearest ancestor container — or against the viewport — instead — silently, with no error, and every halo on the page is wrong.</p>
+		</div>
+	</div>
+</section>
+
+<section>
+	<h2>On the dark bed</h2>
+	<div class="spec__stage">
+		<div class="callout callout--quiet callout--constraint" style="inline-size: min(100%, 40rem);">
+			<p class="callout__eyebrow">Constraint</p>
+			<p class="callout__body">There is no Frameless runtime in your bundle. Delete the compiler tomorrow and the code keeps working. That is the entire exit plan, and it is deliberate.</p>
+		</div>
+	</div>
+</section>
+
+<section>
+	<h2>Pinned</h2>
+	<p class="spec__note">A specimen label at an angle. Sparingly — this component's job is accuracy, not volume.</p>
+	<div class="spec__stage">
+		<div class="callout callout--measured callout--pinned" style="inline-size: min(100%, 28rem);">
+			<p class="callout__eyebrow">Measured</p>
+			<p class="callout__figure">0.00</p>
+			<p class="callout__body">Dark-fringe pixels per edge, across all five source stickers. Those flat PNG exports carry no baked-in shadow — which is why the kit casts elevation in CSS instead, with <code>drop-shadow</code> following each cut edge.</p>
+			<p class="callout__source">T003 measured visual evidence</p>
+		</div>
+	</div>
+</section>
+
+<section>
+	<h2>Every variant carries a word</h2>
+	<p class="spec__note">The coloured left edge never carries the meaning alone. Colour dies in a grayscale conversion and for colourblind readers, so the eyebrow always says which kind of callout this is — the same reason every framework badge carries its name.</p>
+</section>
+
+</main>
+</body>
+</html>
