@@ -82,17 +82,19 @@ Honesty about the limits of this evidence:
 
 ## Recommended next step
 
-A dedicated task that, in order:
+Unchanged in shape — proof before fix — but the fix is now known rather than open:
 
-1. writes a browser-level assertion that the default action is prevented in all
-   three frameworks (extending the three-way contract, which currently cannot
-   see this);
-2. watches it **fail for Qwik** — confirming the divergence rather than assuming
-   it;
-3. then fixes the emitter and watches it pass.
+1. Write a browser-level assertion that the default action is prevented, in all
+   three frameworks. The three-way contract currently cannot see this: it asserts
+   text content and write counts only.
+2. Watch it **fail for Qwik**, confirming the divergence rather than assuming it.
+3. Emit `preventdefault:click` for S3's unconditional case and watch it pass.
+4. Separately, decide how the IR represents conditional cancellation, whether
+   `sync$()` lowering is in scope, and what the gate policy and fail-closed
+   message look like when a conditional cancel depends on reactive state.
 
-That sequence keeps the proof ahead of the fix, which is how everything else in
-this repo is verified.
+Steps 1-3 are a bug fix. Step 4 is a design decision and should not be rushed
+into the same change.
 
 ## Status in the test suite
 

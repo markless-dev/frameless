@@ -62,16 +62,35 @@ upstream: `@qwik.dev/core` peer-requires `vitest ">=2 <4"`, workspace is on
 `pnpm e2e`'s three-way contract asserts text content and write counts — not
 whether the default action was actually prevented.
 
+**The fix is known** — guidance from the repo owner, who is on the Qwik core
+team. Qwik has two mechanisms:
+
+- **Unconditional cancellation** → the `preventdefault:click` attribute on the
+  element. **This is S3's case**: `s3-event-form.tsrx:37` calls
+  `event.preventDefault()` as the first statement with no guard.
+- **Conditional cancellation** → `sync$()`, which runs synchronously so
+  `preventDefault()` works. Canonical case: a keydown that cancels only for
+  certain keys. **Hard constraint: `sync$()` cannot close over reactive state** —
+  no signals, no stores, because it runs before the container resumes. It may
+  only read what is synchronously on the event, such as `e.target` attributes.
+
 **Do this first, in order:**
 
 1. Extend the three-way contract to assert the default action is prevented in all
-   three frameworks. It currently cannot see this.
+   three frameworks. It currently cannot see this — it checks text and write
+   counts only.
 2. Watch it **fail for Qwik**. Confirm the divergence rather than assuming it —
    the rule fired, but no runtime failure has been demonstrated.
-3. Then fix the emitter, and decide how the IR represents "this handler cancels"
-   so all three emitters lower it correctly.
+3. Emit `preventdefault:click` for the unconditional case; watch it pass.
 
-Proof ahead of fix, which is how everything else in this repo is verified.
+**Then, as a separate design decision — do not rush it into the same change:**
+the IR currently treats `preventDefault()` as just another statement in the
+handler body, which is fine for React and Solid (synchronous handlers) and wrong
+for Qwik. Deciding how it represents *conditional* cancellation pulls in
+`sync$()` lowering, a gate policy proving a `sync$` body references no reactive
+state, and a fail-closed path for the case Qwik genuinely cannot express — a
+conditional cancel that depends on signal state. That last one is a new v-limit
+in the same family as `unknown-template-node.test.ts`.
 
 **Currently held as:** a known-failing expectation in
 `packages/frameworks/qwik/test/gate.test.ts` under exact equality, so it cannot
