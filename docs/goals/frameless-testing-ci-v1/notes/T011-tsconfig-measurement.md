@@ -22,6 +22,7 @@ single root config cannot type-check both framework test trees because Solid's
 | naive config | 28 | 26 |
 | **+ `allowJs`, + ambient `tsrx-core.d.ts` in `include`** | **14** | **14** |
 | **+ widened component registries, + typed the strictmode map** | **9** | **10** |
+| **+ three local fixes (see below)** | **6** | 10 |
 
 The second attempt resolved both *config* categories. Everything that remains is
 a genuine type defect in test or reference code:
@@ -84,6 +85,28 @@ That is a bounded slice with a known cost, which is the point of this note.
   it produces a union of three differently-shaped prop signatures. That error was
   introduced by this goal, so it was fixed here rather than left for the
   follow-up.
+
+### Round three — the small local ones (react 9 -> 6)
+
+- `composition-calibration.browser.test.ts` — the rejection table's `scenario`
+  key is `string | number`; wrapped in `String()` at the call site.
+- `composition-reference.tsx` — a ref callback receives `HTMLInputElement | null`
+  while the setter models "cleared" as `undefined`. Passed `node ?? undefined`,
+  which matches the cleanup path immediately below it that already passes
+  `undefined`.
+- `emitter.test.ts` — assignment to the readonly `records.persistence`. The
+  object being mutated is a `clone()` made precisely to be mutated, so the cast
+  states that intent rather than loosening the contract anywhere real.
+
+Suite green at 551 tests after each round.
+
+### What is left (react 6, solid 10)
+
+Two in `composition-reference.tsx` (an overload signature incompatible with its
+implementation, and a `(() => number) | (() => string)` union) and four in
+`gate.test.ts` (policy-id union narrowing across `test.each` tables). These need
+reading the surrounding declarations rather than a local edit, which is why they
+were not attempted blind.
 
 ## The complete error inventory
 

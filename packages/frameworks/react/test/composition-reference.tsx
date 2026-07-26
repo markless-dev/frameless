@@ -233,7 +233,9 @@ function FocusField({
 		<input
 			data-focus-target=""
 			ref={(node) => {
-				input(node);
+				// React hands back null on detach; this setter models "cleared" as
+				// undefined - see the cleanup below, which passes undefined.
+				input(node ?? undefined);
 				return () => {
 					if (!omitClear) input(undefined);
 				};

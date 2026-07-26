@@ -895,7 +895,10 @@ describe('React structural emitter', () => {
 			const ir = await golden('s1-render-once.json');
 			const before = emit(ir);
 			const explicitEmpty = clone(ir);
-			explicitEmpty.records.persistence = [];
+			// The IR type is readonly by design; this is a clone made precisely to
+			// be mutated, so the cast states that intent rather than loosening the
+			// contract anywhere real.
+			(explicitEmpty.records as { persistence?: unknown }).persistence = [];
 			expect(emit(explicitEmpty)).toBe(before);
 			expect(before).not.toContain('__framelessWrite');
 		});
