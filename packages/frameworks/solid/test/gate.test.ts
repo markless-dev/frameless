@@ -135,7 +135,10 @@ describe('Solid dossier gate', async () => {
 			),
 		).toBe(true);
 		expect(
-			SOLID_GATE_POLICIES.filter((policy) => policy.requiresArtifact).map(
+			// requiresArtifact is present on only some members of the policy union.
+			SOLID_GATE_POLICIES.filter(
+				(policy) => 'requiresArtifact' in policy && policy.requiresArtifact,
+			).map(
 				(policy) => policy.id,
 			),
 		).toEqual([
@@ -612,7 +615,7 @@ describe('Solid dossier gate', async () => {
 	);
 
 	test('has a syntactically valid mutation for every published policy', () => {
-		const covered = new Set(
+		const covered = new Set<string>(
 			[...mutationCases, ...compositionMutationCases].map((entry) => entry[2]),
 		);
 		covered.add('persistence-render-lowering');

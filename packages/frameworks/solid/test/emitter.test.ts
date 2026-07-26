@@ -865,7 +865,8 @@ describe('Solid structural emitter', () => {
 			const ir = await golden('s1-render-once.json');
 			const before = emit(ir);
 			const explicitEmpty = clone(ir);
-			explicitEmpty.records.persistence = [];
+			// Readonly by design; this is a clone made precisely to be mutated.
+			(explicitEmpty.records as { persistence?: unknown }).persistence = [];
 			expect(emit(explicitEmpty)).toBe(before);
 			expect(before).not.toContain('__framelessWrite');
 		});

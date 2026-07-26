@@ -24,6 +24,7 @@ single root config cannot type-check both framework test trees because Solid's
 | **+ widened component registries, + typed the strictmode map** | **9** | **10** |
 | **+ three local fixes** | **6** | 10 |
 | **+ overload return type, getter-union cast, gate narrowing** | **1** | 10 |
+| **+ the same four fixes transferred to Solid** | 1 | **5** |
 
 The second attempt resolved both *config* categories. Everything that remains is
 a genuine type defect in test or reference code:
@@ -122,9 +123,24 @@ signature against a large tuple union. This is the one place where a careless
 narrowing could weaken the policy assertions the gate depends on, so it was left
 rather than guessed at.
 
-**Solid: ten**, not yet worked. They mirror the React set closely (the same
-composition-reference and gate.test shapes), so the four rounds above should
-transfer almost directly.
+**Solid: five.** The transferable fixes moved it 10 -> 5. What remains splits
+into two groups:
+
+- **One `test.each` signature** in `gate.test.ts`, the exact twin of React's last
+  one. Same reasoning for leaving it: a careless narrowing here weakens the
+  policy assertions the gate depends on.
+- **One ref-callback variance** in `composition-reference.solid.tsx(162)`.
+- **Three `attr:value` errors in `reference.solid.tsx` — these are FINDING 002**,
+  and their appearance here is informative. The *handwritten* Solid references
+  use `attr:value` too, not just emitted output. So the emitter is reproducing a
+  deliberate house idiom rather than inventing something, and the real question
+  is whether solid-js's `InputHTMLAttributes` should admit `attr:*` at all.
+  Closing them means either a JSX namespace augmentation or an upstream fix -
+  see findings-002-solid-attr-namespace.md. Not a type-annotation problem.
+
+So of the original 54 errors across both packages, 48 are resolved, 2 are the
+same deliberately-deferred `test.each` narrowing, 1 is a small variance fix, and
+3 are a known open finding rather than a defect in the configuration work.
 
 ## The complete error inventory
 
