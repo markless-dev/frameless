@@ -1,0 +1,406 @@
+# GoalBuddy v2 state.yaml
+# Board truth lives here. goal.md is the editable charter; notes/ holds long receipts only.
+
+version: 2
+
+goal:
+  title: "Frameless testing enforcement layer: CI, output type-checking, matrix, Qwik parity, generative + metamorphic corpus"
+  slug: "frameless-testing-ci-v1"
+  kind: existing_plan
+  tranche: >-
+    Implement audit items 1-7 and 11 from frameless-testing-strategy-v1 as
+    successive verified Worker packages inside a dedicated git worktree, each
+    lane calibrated to prove it can fail, until the whole suite is green on
+    GitHub Actions on branch goal/frameless-testing-ci-v1. Merge is the owner's
+    action and is outside this goal.
+  status: active
+  oracle:
+    signal: >-
+      Two required signals. (1) A green GitHub Actions run on branch
+      goal/frameless-testing-ci-v1, identified by URL - not a local pass, since
+      "it works on my laptop" is the exact failure audit item 1 exists to kill.
+      (2) Every lane added by this goal ships a calibrated failure demonstration:
+      a deliberately broken input that the lane rejects, matching this repo's
+      existing culture in packages/analyzer/src/mutants.ts and the
+      calibration.browser.test.ts suites.
+    cadence: "after each Worker package and at final audit"
+    final_proof: >-
+      A final audit receipt that links the green Actions run URL, and enumerates
+      all eight in-scope items with, for each, the file that implements it and
+      the calibration proving it can fail. Any item not implemented must be
+      marked blocked with a receipt naming the blocker. A receipt that lists
+      green checks without a witnessed failure per lane does not close this goal.
+  intake:
+    original_request: >-
+      Work on everything we talked about in the audit. Frameless is now public so
+      it has unlimited GitHub CI minutes. Do it in a separate git worktree, then
+      we will merge it back into main and also our current branch.
+    interpreted_outcome: >-
+      Audit items 1-7 and 11 implemented and calibrated, green on GitHub Actions
+      on a dedicated branch, left unmerged for the owner.
+    input_shape: existing_plan
+    audience: "Frameless maintainer, hardening the compiler before public use"
+    authority: approved
+    proof_type: test
+    completion_proof: >-
+      Green Actions run URL on goal/frameless-testing-ci-v1 plus a per-item
+      calibration table in the final receipt.
+    likely_misfire: >-
+      Producing a large volume of green CI that proves nothing - a matrix that
+      only runs one cell, a tsc invocation that cannot fail, fast-check
+      arbitraries that only emit the three shapes already in the corpus,
+      metamorphic transforms over programs too simple for the invariant to bite.
+      The calibration requirement in the oracle exists to make this detectable.
+    blind_spots_considered:
+      - "CI may be red on arrival: nothing has ever been verified on Linux.
+         T002 establishes the cold-checkout baseline before any workflow is written."
+      - "Qwik pins Vite 7.3.1 while the root workspace is on Vite 8.0.16 - a live
+         collision hazard for the Qwik browser project in T006, not hypothetical."
+      - "Qwik is on 2.0.0-beta.38; a version matrix across a pre-release may
+         measure churn rather than compatibility. T003 decides whether Qwik gets
+         a matrix axis at all."
+      - "A generative corpus will likely surface real miscompiles, which would
+         blow scope if fixed inline; constraints route them to escalation."
+      - "CI-first means most later tasks touch the same workflow file; T003 must
+         confirm that ordering rather than let it emerge."
+      - "'Current branch' moved mid-session (land/stack-and-three-way-demo ->
+         goal/frameless-idiom-policy-v1) because a concurrent session drives the
+         shared checkout. Merge targets are pinned in goal.md, not guessed."
+    existing_plan_facts:
+      - "No .github/ exists; .githooks/pre-commit runs vp lint only."
+      - "Emitted output is all .jsx and never type-checked; root tsconfig.json
+         excludes packages/*/test so pnpm check skips tests."
+      - "One version pinned per framework: React 19.2.3, Solid 1.8.22, Qwik
+         2.0.0-beta.38. Chromium only, dev mode only, no StrictMode lane."
+      - "Qwik: 9 test cases vs React 64 / Solid 79; 163-LOC gate vs 547/713; no
+         eslint-plugin-qwik; no browser test project; absent from test.projects
+         in vite.config.ts."
+      - "Zero fast-check/fuzz hits anywhere in the workspace."
+      - "'Jitter testing' is non-standard; implemented as StrictMode lane,
+         randomised action ordering, throttled Qwik resumption."
+      - "Metamorphic invariants: rename-all, reorder-siblings, extract-child,
+         split-file -> identical traces."
+      - "VERIFIED AT PREP: repo is public at github.com/markless-dev/frameless,
+         default branch main, so Actions minutes are unmetered."
+
+rules:
+  pm_owns_state: true
+  one_active_task: true
+  max_write_workers: 1
+  no_implementation_without_worker_or_pm_task: true
+  no_completion_without_judge_or_pm_audit: true
+  planning_is_not_completion: true
+  queued_required_worker_blocks_completion: true
+  continuous_until_full_outcome: true
+  missing_input_or_credentials_do_not_stop_goal: true
+  preserve_and_validate_existing_plan: true
+  intake_misfire_must_be_audited: true
+  goal_pressure_requires_oracle: true
+  no_completion_on_weak_proof: true
+  slice_policy:
+    max_consecutive_tiny_tasks: 2
+    prefer_vertical_slices: true
+    judge_picks_largest_safe_slice: true
+    worker_completes_whole_slice: true
+
+agents:
+  scout: installed
+  worker: installed
+  judge: installed
+  # Verified at prep: ~/.claude/agents/goal-{scout,worker,judge}.md all present.
+
+visual_board:
+  selected: local
+  local:
+    status: live
+    url: "http://goalbuddy.localhost:41737/frameless-testing-ci-v1/"
+    command: "npx goalbuddy board docs/goals/frameless-testing-ci-v1"
+
+worktree:
+  required: true
+  branch: "goal/frameless-testing-ci-v1"
+  path: ".claude/worktrees/frameless-testing-ci-v1"
+  base: "main"
+  primary_checkout_offlimits: true
+  note: >-
+    The primary checkout is being actively driven by a concurrent session
+    (currently on goal/frameless-idiom-policy-v1). All Worker writes happen in
+    the worktree. Merge is the owner's action; this goal ends at a pushed green
+    branch and must not merge, rebase onto main, or force-push.
+  collision_warning: >-
+    OBSERVED AT PREP, UNCOMMITTED IN THE PRIMARY CHECKOUT: the concurrent
+    frameless-idiom-policy-v1 goal is actively editing exactly the files T006
+    needs - packages/frameworks/qwik/src/emitter/index.ts,
+    packages/frameworks/qwik/test/emitter.test.ts, and all three
+    packages/frameworks/qwik/generated/S*.jsx. Branching from main isolates this
+    goal from that work in progress, but the two WILL conflict in
+    packages/frameworks/qwik/ at merge time. Two consequences the PM must honor:
+    (1) T006 must be sequenced late, or re-based on the idiom-policy result once
+    it lands, rather than racing it; (2) the owner must be told at merge time
+    that qwik/ is a contested path, not surprised by it.
+
+execution_mode:
+  delegation: pm_fallback
+  reason: >-
+    Agents are installed, but subagent dispatch is disabled by session policy in
+    this environment, so the PM performs Scout/Judge/Worker-shaped tasks directly.
+    GoalBuddy supports this explicitly. Each card records the shape it ran under
+    via `executed_as`. This does not relax any task's constraints, write scope,
+    or stop conditions - a Scout-shaped PM task is still read-only.
+  board_truth: >-
+    The primary checkout copy of this state.yaml is canonical while the goal runs,
+    because the live board server watches that path. It is synced into the
+    worktree and committed at each task boundary so the trail merges with the work.
+
+active_task: T002
+
+tasks:
+  - id: T001
+    type: pm
+    assignee: PM
+    status: done
+    reasoning_hint: medium
+    objective: "Create the worktree and branch, and seed this board into it so the work and its trail land together."
+    inputs:
+      - "goal.md worktree + merge-target sections"
+      - "git worktree list"
+    constraints:
+      - "Do not modify the primary checkout beyond docs/goals/frameless-testing-ci-v1/."
+      - "Branch from main, not from the current checkout branch."
+      - "Do not merge, rebase onto main, or force-push at any point."
+    expected_output:
+      - "Worktree created at .claude/worktrees/frameless-testing-ci-v1 on branch goal/frameless-testing-ci-v1"
+      - "goal.md + state.yaml present inside the worktree"
+      - "Confirmation the primary checkout is otherwise untouched"
+    receipt:
+      result: done
+      summary: >-
+        Worktree live at .claude/worktrees/frameless-testing-ci-v1 on branch
+        goal/frameless-testing-ci-v1, based on main @ eb15408. Both this board and
+        the frameless-testing-strategy-v1 audit that produced the plan are seeded
+        inside it so the reasoning merges with the work. Primary checkout not
+        modified by this goal.
+      finding: >-
+        MERGE-TARGET AMBIGUITY RESOLVED: land/stack-and-three-way-demo and main are
+        the SAME commit (eb15408) - `git merge-base --is-ancestor` confirms land is
+        an ancestor of main, and both rev-parse identically. The land branch was
+        already merged, so the two merge targets named in goal.md collapse into
+        one. This also means main already contains all shipped frameless work, so
+        branching from main was correct and loses nothing.
+      commands:
+        - cmd: "git fetch origin && git rev-parse main origin/main"
+          status: pass
+          detail: "main == origin/main == eb15408; no divergence to reconcile."
+        - cmd: "git worktree add .claude/worktrees/frameless-testing-ci-v1 -b goal/frameless-testing-ci-v1 main"
+          status: pass
+        - cmd: "git status --porcelain -- ':!docs/goals'"
+          status: pass
+          detail: >-
+            Only the concurrent session's uncommitted Qwik edits appear
+            (qwik/src/emitter/index.ts, qwik/test/emitter.test.ts, three
+            qwik/generated/S*.jsx) plus its untracked docs/emitter-idiom-policy.md.
+            None touched by this goal - confirms worktree isolation is working and
+            re-confirms the worktree.collision_warning is live, not theoretical.
+      changed_files:
+        - "docs/goals/frameless-testing-ci-v1/ (new, primary checkout)"
+        - ".claude/worktrees/frameless-testing-ci-v1/ (new worktree, gitignored path)"
+      spawned_tasks:
+        - T002
+
+  - id: T002
+    type: scout
+    assignee: Scout
+    status: active
+    reasoning_hint: medium
+    executed_as: "Scout-shaped, read-only, PM fallback (see execution_mode)"
+    objective: "Establish the cold-checkout verification baseline before any workflow is written."
+    inputs:
+      - "package.json scripts"
+      - "vite.config.ts test.projects"
+      - "scripts/e2e.mjs, scripts/demo.mjs"
+      - "packages/frameworks/qwik/** (vite version constraint)"
+      - "tsconfig.json"
+    constraints:
+      - "Read-only. Report what is true, including bad news."
+      - "Do NOT fix anything found. Red is a finding, not a task."
+      - "Report per-command wall-clock time - it decides matrix width."
+    expected_output:
+      - "Which of check/lint/test/test:browser/e2e pass from a cold install, and which do not"
+      - "Per-command runtime and Playwright/browser provisioning needs"
+      - "Whether the Qwik Vite 7.3.1 pin collides with the root Vite 8.0.16"
+      - "What tsc over emitted .jsx would require (config, types, strictness)"
+      - "Anything that would make a Linux runner behave differently from macOS"
+    receipt: null
+
+  - id: T003
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Validate the owner's plan against Scout evidence and pin the slice order and matrix axes."
+    inputs:
+      - "T002 receipt"
+      - "goal.md existing plan facts and blind spots"
+    constraints:
+      - "Do not implement."
+      - "Preserve the owner's ranking unless evidence contradicts it; if it does, say so explicitly and justify the change."
+      - "Decide matrix axes concretely - exact versions per framework, Node versions, OS set, whether Qwik gets an axis given its beta pin, and whether Firefox/WebKit survive."
+      - "Rule on worktree.collision_warning: decide whether T006 runs now and accepts a merge conflict in packages/frameworks/qwik/, waits for frameless-idiom-policy-v1 to land, or is re-scoped to the non-contested parts (browser project registration, eslint-plugin-qwik) only."
+    expected_output:
+      - "Validated or amended slice order for T004-T009"
+      - "Exact matrix cells, enumerated"
+      - "Ruling on the CI-first ordering and shared-workflow-file contention"
+      - "Ruling on how a generative-corpus miscompile finding gets escalated rather than fixed inline"
+      - "Any plan item that Scout evidence says is infeasible as written"
+    receipt: null
+
+  - id: T004
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Land the CI foundation and widen tsconfig: audit items 1 and 2's config half."
+    allowed_files:
+      - ".github/workflows/**"
+      - "tsconfig.json"
+      - "package.json"
+    verify:
+      - "pnpm check"
+      - "pnpm lint"
+      - "pnpm test"
+      - "git push origin goal/frameless-testing-ci-v1 && gh run watch"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "CI is red for a reason that is a pre-existing product defect rather than a workflow defect - record it and escalate."
+      - "Widening tsconfig surfaces type errors in test files that require product changes to fix."
+      - "Verification fails twice."
+    receipt: null
+
+  - id: T005
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Type-check emitted output as an independent oracle, calibrated to prove it rejects a bad emit (audit item 2)."
+    allowed_files:
+      - "packages/frameworks/*/test/**"
+      - "packages/frameworks/*/*.config.ts"
+      - "packages/frameworks/*/package.json"
+      - ".github/workflows/**"
+    verify:
+      - "pnpm test"
+      - "the new lane rejects a deliberately broken emitted file"
+    stop_if:
+      - "Making the lane pass would require regenerating a committed golden."
+      - "Need to change emitter behavior to make output type-check - that is a finding, escalate it."
+      - "Verification fails twice."
+    receipt: null
+
+  - id: T006
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Bring the Qwik lane to React/Solid parity: browser project, test.projects registration, eslint-plugin-qwik, gate expansion (audit item 4)."
+    allowed_files:
+      - "packages/frameworks/qwik/**"
+      - "vite.config.ts"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/**"
+    verify:
+      - "pnpm test"
+      - "pnpm test:browser"
+      - "each new Qwik gate policy rejects a violating input"
+    stop_if:
+      - "The Qwik Vite 7.3.1 pin collides irreconcilably with root Vite 8.0.16 - record the collision and escalate rather than upgrading Qwik or downgrading the root."
+      - "Need files outside allowed_files."
+      - "Verification fails twice."
+    receipt: null
+
+  - id: T007
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Build the matrix: framework versions, Node, OS, dev/prod, StrictMode lane (audit items 3 and 7)."
+    allowed_files:
+      - ".github/workflows/**"
+      - "packages/frameworks/*/*.config.ts"
+      - "packages/frameworks/*/test/**"
+      - "demos/*/test/**"
+    verify:
+      - "every declared matrix cell actually executes - no silently-skipped cells"
+      - "the StrictMode lane is calibrated: it detects a double-invocation-sensitive regression"
+      - "gh run watch on the pushed branch"
+    stop_if:
+      - "A matrix cell fails for a real compatibility reason - that is a finding to record, not a cell to delete."
+      - "Firefox/WebKit prove impractical - cut that axis only, record why, and continue."
+      - "Verification fails twice."
+    receipt: null
+
+  - id: T008
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Metamorphic invariants plus randomised action ordering and throttled Qwik resumption (audit items 6 and 11)."
+    allowed_files:
+      - "packages/analyzer/**"
+      - "packages/compiler/test/**"
+      - "packages/frameworks/*/test/**"
+      - "demos/*/test/**"
+      - ".github/workflows/**"
+    verify:
+      - "rename-all, reorder-siblings, extract-child, split-file each produce identical traces"
+      - "each transform is calibrated: a seeded miscompile breaks the invariant"
+      - "pnpm test && pnpm e2e"
+    stop_if:
+      - "An invariant fails on real code - that is a compiler finding, escalate rather than weakening the invariant."
+      - "Need files outside allowed_files."
+      - "Verification fails twice."
+    receipt: null
+
+  - id: T009
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    objective: "Generative fast-check corpus over the IR grammar, feeding the existing differential oracle (audit item 5)."
+    allowed_files:
+      - "packages/compiler/test/**"
+      - "packages/analyzer/**"
+      - "packages/frameworks/*/test/**"
+      - "package.json"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/**"
+    verify:
+      - "arbitraries cover every template node kind and cell kind in packages/compiler/src/schema.ts"
+      - "the generator is calibrated: a seeded emitter bug is found and shrunk to a minimal .tsrx"
+      - "a fixed seed runs in CI within the T002-measured budget"
+    stop_if:
+      - "The generator finds a real miscompile - record it, escalate, do NOT fix it inside this task."
+      - "Generation cannot cover a node kind without emitter changes - record the uncovered kind."
+      - "Verification fails twice."
+    receipt: null
+
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Audit whether all eight in-scope items are implemented, calibrated, and green on GitHub Actions."
+    inputs:
+      - "All done task receipts"
+      - "The GitHub Actions run URL for goal/frameless-testing-ci-v1"
+      - "Current worktree diff"
+    constraints:
+      - "Be skeptical of green. For each item demand the calibration - the witnessed failure - not just the passing check."
+      - "A lane nobody has watched fail is not evidence."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "Per-item table: item, implementing file, calibration evidence"
+      - "Any escalated compiler findings, listed for the owner"
+      - "Confirmation the branch is pushed, green, and unmerged"
+      - "next task if not complete"
+    receipt: null
