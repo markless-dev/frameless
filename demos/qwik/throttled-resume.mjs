@@ -38,11 +38,18 @@ const check = (label, ok) => {
 	if (!ok) failed = true;
 };
 
-await page.goto(url, { waitUntil: 'domcontentloaded' });
+// Assert "served markup is paused" against the RESPONSE BODY, not the live DOM.
+// Reading the attribute after load is racy by construction: on a fast unthrottled
+// connection Qwik has already resumed by the time the DOM is queried, so the
+// check would fail for the right reason at the wrong moment. The served bytes are
+// what the claim is actually about - this is how the e2e lane checks it too.
+const served = await (await fetch(url)).text();
+check(
+	'served markup carries a paused container',
+	/q:container="paused"/.test(served),
+);
 
-// Served markup is paused: resumption has not happened yet.
-const container = await page.getAttribute('html', 'q:container');
-check(`served container is paused (got ${container})`, container === 'paused');
+await page.goto(url, { waitUntil: 'domcontentloaded' });
 
 const value = () => page.textContent('[data-value="derived"]');
 check(`server-rendered value is kit:2 (got ${await value()})`, (await value())?.trim() === 'kit:2');
