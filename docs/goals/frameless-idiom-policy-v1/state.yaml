@@ -30,6 +30,7 @@ goal:
     existing_plan_facts:
       - "CORRECTED BY T002 (2026-07-26): the owner-supplied mechanism was partly wrong, though its conclusion holds. implicit$FirstArg (core.mjs:3007) unconditionally wraps arg0 via $() and applies ONLY to $-suffixed API functions (useTask$, useComputed$, event$, ...). It is NOT involved in JSX event props like onInput$ - those are rewritten by the Rust optimizer at build time. Both onInput$={$((e, el) => ...)} and onInput$={(e, el) => ...} are still valid, but for a different reason than stated at intake. Original owner wording preserved in goal.md."
       - "T002 also found that explicit $() INSIDE an implicit$FirstArg API - useTask$($(fn)) - is a hard optimizer error (C03) that emits a broken chunk. Frameless does not emit this shape, but the policy must not accidentally license it."
+      - "OVERTURNED BY T004 (2026-07-26): T002's headline A/B claim - that explicit and raw produce identical symbol hash and identical chunk count - is FALSE on the toolchain this repo ships. T002 drove @qwik.dev/optimizer@2.1.0-beta.5, which is not resolvable from demos/qwik (MODULE_NOT_FOUND); the demo builds with the optimizer bundled inside @qwik.dev/core@2.0.0-beta.38. On the real build the two forms differ in symbol hash, chunk count (7 vs 8), captures, and ctxKind (function/'$' vs eventHandler/'onClick$'). T002's own PROVISIONAL flag was warranted and is what caught this."
       - "Current frameless emitter output (explicit inner $()) works today. This is polish, not a defect; there is no regression pressure."
       - "Owner is genuinely undecided on whether the extra emitter handling is worth its cost."
       - "land/stack-and-three-way-demo must be merged into main and pushed before new work; owner is sole committer, no review gate."
@@ -68,7 +69,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-idiom-policy-v1/"
     command: "npx goalbuddy board docs/goals/frameless-idiom-policy-v1"
 
-active_task: T004
+active_task: T005
 
 tasks:
   - id: T001
@@ -253,7 +254,7 @@ tasks:
   - id: T004
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Ratify the emitter idiom-sugar policy and decide the Qwik $-prop case in one direction, with an exact bounded Worker objective."
     inputs:
@@ -275,25 +276,113 @@ tasks:
       - "verify"
       - "stop_if"
       - "Held-out cold-agent test case (named, expected answer withheld from repo files)"
-    receipt: null
+    receipt:
+      result: done
+      decision: sugar
+      full_outcome_complete: false
+      note: notes/T004-policy-decision.md
+      summary: "Ruled SUGAR - emit the raw handler - after overturning T002's central A/B on measured evidence from the shipped build. Ratified a six-gate decision procedure with a repair step, a later-pass rider, and DEFERRED as a first-class outcome. The procedure yields sugar on its own instance case, so it is not a preference wearing a procedure's clothes."
+      overturned_t002:
+        what: "T002 claimed explicit and raw produce identical symbol hash and identical chunk count."
+        why_wrong: "T002 drove @qwik.dev/optimizer@2.1.0-beta.5 directly. demos/qwik/vite.config.ts imports qwikVite from @qwik.dev/core/optimizer, and @qwik.dev/optimizer is not resolvable from demos/qwik (MODULE_NOT_FOUND). The demo builds with the optimizer bundled inside @qwik.dev/core@2.0.0-beta.38 (dist/optimizer.mjs, a separate 142KB artifact)."
+        measured_on_shipped_build:
+          explicit: "symbol s_4v8OrUB0hCk, ctxKind function, ctxName '$', captures true, 7 bundles"
+          raw: "symbol s_qlHKEUv0vBw, ctxKind eventHandler, ctxName 'onClick$', captures false, 8 bundles"
+          real_manifest_before: "{emittedSymbols:18, eventHandler:0, eventNames:[], dollarNamed:12, capturing:15} - zero eventHandler symbols in the entire manifest"
+        why_it_matters: "The optimizer's own symbol-priority sort puts eventHandler symbols first, ranked by an event list beginning with 'click'. function symbols rank against a list that does not contain '$'. The current output places every interactive handler at the BOTTOM of that ordering. T004 measured no latency benefit and claims none; the case is classification correctness plus capture elimination."
+      policy:
+        location_commissioned: docs/emitter-idiom-policy.md
+        shape: "Six gates, all run, no short-circuit. Any FAIL or UNKNOWN -> no-sugar. Gate 6 DEFERRED with the rest passing -> deferred, not denied. All pass -> sugar."
+        gates:
+          - "G1 Sanctioned and measured - docs are a hypothesis, not evidence; measure against the lockfile build."
+          - "G2 Locality - nothing asked of another module or the build graph."
+          - "G3 Declared trigger - no inference over contents, with a hard later-pass rider."
+          - "G4 Totality over a stated, emitter-decidable domain - plus a repair step (narrow the domain using declared facts, re-run) and a phrasing requirement banning folklore domains."
+          - "G5 Behavioral neutrality - artifact shape is explicitly NOT a G5 failure; that is G6's business."
+          - "G6 Pinned by a standing check against the shipped build - three outcomes including DEFERRED."
+        angular_fix: "The baseline is THE MOST PERMISSIVE SANCTIONED FORM, never 'the literal form'. Angular's forced lowering (no const, arrow functions, destructuring, ++ in templates) is declared out of the procedure's scope entirely. This is what makes the rule applicable in a framework with no naive-literal form."
+      policy_tested_against:
+        - "Qwik $-prop: sugar (its own instance case)"
+        - "Vue shorthands: deferred"
+        - "Vue defineEmits: no-sugar (G5)"
+        - "Angular [(prop)]: no-sugar (G2+G5)"
+        - "Angular @if/@for: deferred"
+        - "Svelte onclick: deferred after repair"
+        - "Svelte $props() fallbacks: no-sugar (G5)"
+        - "Retro-validation: existing React onChange/className rulings come out sugar, G6 passes"
+      later_pass_hazard:
+        sharpened: "T003 said 'a later compiler pass silently mutated a handler'. More precisely: buildPersistenceRecords (packages/compiler/src/build.ts:420) lands records on the IR (schema.ts:476), and the React emitter injects __framelessWrite(...) during ITS OWN lowering (packages/frameworks/react/src/emitter/index.ts:1246). The mutation happens downstream of where a content-matcher would run, from an IR channel orthogonal to EventHandlerRecord."
+        rule: "Gate 3 forbids content triggers outright. If one is ever admitted it must run on FINAL LOWERED OUTPUT and ship a fail-closed enumeration of contributing channels."
+        qwik_exposure: "None today - the Qwik emitter fails closed on persistence-bearing IR (packages/frameworks/qwik/test/emitter.test.ts:81-85)."
+      held_out_case:
+        id: H3
+        description: "Angular's whole-component member-declaration form choice."
+        why_chosen: "The only shortlist case where a plausible wrong heuristic is available and directional - it reads rhetorically identical to the Qwik case and is structurally a different granularity, so a wrong answer is diagnostic rather than noise. It resolves on G2/G4/G5 substantively rather than on a single gate, and it forces the 'baseline is not literal' fix to do real work. T003 independently rated it the sharpest discriminator."
+        expected_answer: "DELIBERATELY NOT RECORDED, here or in any repo file. T006 must re-derive it independently."
+        contamination_guard: "Part C.2 of the note forbids docs/emitter-idiom-policy.md from mentioning Angular input()/output()/@Input()/@Output()/EventEmitter or the decorator-vs-signal choice in any form. Worked example 4 says 'two-way capable' rather than naming the API."
+      dissent:
+        - "T004 overrode T002's central A/B finding on measured evidence. T002's VERDICT SHAPE - declining to rule, flagging the caveat as PROVISIONAL - was right, and is what made the catch possible."
+        - "T004's raw-side numbers are one component, production mode, in a scratch build; the explicit side is from the real build. T005 verify step 9 confirms the raw side on the real build - that is why it is in the package."
+        - "Under-evidenced and accepted: whether the raw form survives an optimizer-bypassed runtime-only JSX setup (T002 unknown 4). Gate 6 pins the optimizer lane; the narrowing is recorded in the policy so it is not rediscovered as a surprise."
+        - "STANDING GAP for the expansion boards: pnpm check (tsc --noEmit) does not typecheck generated/ - the root tsconfig includes only packages/*/src/** and packages/frameworks/*/src/**. And demos/qwik/scenarios.box.ts is modes:['dev'], so pnpm e2e pins dev mode only. Production coverage exists solely because verify step 9 adds it, per-task."
+      missing_evidence:
+        - "Raw-form manifest classification on the full demos/qwik router build (T005 verify step 9)."
+        - "Whether raw-form output survives an optimizer-bypassed runtime-only JSX setup."
+        - "No production-mode standing coverage for demos/qwik; e2e is dev-only."
+      spawned_tasks: []
 
   - id: T005
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
-    objective: "Implement the ratified Qwik $-prop decision and write the idiom policy document, keeping all demos green."
-    allowed_files: []
-    verify: []
+    objective: "Emit the raw handler for $-suffixed Qwik JSX event props, regenerate the goldens and update the three asserts that pin the old shape, transcribe the ratified policy into docs/emitter-idiom-policy.md, record the ruling as a comment at the decision site, and confirm on a real demos/qwik build that the shipped optimizer now classifies frameless handlers as eventHandler."
+    spec: "notes/T004-policy-decision.md Part C (authoritative). Part B is the verbatim policy text to transcribe."
+    allowed_files:
+      - packages/frameworks/qwik/src/emitter/index.ts
+      - packages/frameworks/qwik/generated/S1.jsx
+      - packages/frameworks/qwik/generated/S2.jsx
+      - packages/frameworks/qwik/generated/S3.jsx
+      - packages/frameworks/qwik/test/emitter.test.ts
+      - demos/qwik/src/emitted/RenderOnce.jsx
+      - demos/qwik/src/emitted/KeyedTodo.jsx
+      - demos/qwik/src/emitted/EventForm.jsx
+      - "demos/react-official/three-way-contract.ts (CONDITIONAL - only the narrow resumeSymbols allowance in Part C.4)"
+      - docs/emitter-idiom-policy.md
+      - docs/goals/frameless-idiom-policy-v1/notes/T005-shipped-optimizer-confirmation.md
+    scope_within_files:
+      emitter: "ONLY emitEvent (:592-598): return handler, drop context.imports.add('$'), add a one-line ruling comment above the return in the style of packages/frameworks/react/src/emitter/index.ts:1405-1406. Nothing else."
+      goldens: "REGENERATED ONLY via `pnpm --dir packages/frameworks/qwik regenerate`. Never hand-edited."
+      emitter_test: "ONLY the three regex asserts at :41, :54, :55 that pin `$(`. Do NOT touch the byte-exact golden freshness check at :26, the fail-closed persistence test, or any other assertion."
+      demo_emitted: "REGENERATED ONLY via `pnpm --dir demos/qwik copy-emitted`. Tracked files; must end up byte-identical to what copy-emitted produces."
+    out_of_scope:
+      - "demos/qwik/src/routes/*.tsx and demos/qwik/src/root.tsx - hand-written harness files whose $() usage is on component callback props, not host event props. Different case; this ruling does not cover it."
+      - "packages/frameworks/qwik/test/gate.test.ts - its mutation anchor does not reference $(."
+    verify:
+      - "pnpm --dir packages/frameworks/qwik regenerate"
+      - "git diff --stat packages/frameworks/qwik/generated/   # must show exactly S1.jsx, S2.jsx, S3.jsx and nothing else"
+      - "pnpm --dir packages/frameworks/qwik test"
+      - "pnpm test"
+      - "pnpm check"
+      - "pnpm test:browser"
+      - "pnpm --dir demos/qwik copy-emitted"
+      - "pnpm --dir demos/qwik build"
+      - "SHIPPED-OPTIMIZER CONFIRMATION (resolves T002's PROVISIONAL caveat) - read demos/qwik/dist/q-manifest.json, filter symbols whose origin includes 'emitted', and require eventHandler > 0 and dollarNamed === 0. Exact command in notes/T004-policy-decision.md Part C.5 step 9. Recorded BEFORE figures: {emittedSymbols:18, eventHandler:0, dollarNamed:12, capturing:15}."
+      - "pnpm e2e"
+      - "git status --short   # no files changed outside allowed_files"
     stop_if:
-      - "Need files outside allowed_files."
-      - "The ratified direction is ambiguous or the Judge decision does not name a decision procedure."
-      - "Activation neutrality breaks in any demo."
-      - "Verification fails twice."
+      - "Any file outside allowed_files needs to change."
+      - "pnpm e2e fails and the only available fix is a three-way-contract.ts change outside the narrow Part C.4 allowance."
+      - "Verify step 9 reports zero eventHandler symbols from emitted/ after the change - the raw form did not take effect on the shipped optimizer. Stop and report; do NOT write worked example 1 into the policy document as though it had."
+      - "Verify step 9 reports dollarNamed greater than zero after the change."
+      - "A golden or a demos/qwik/src/emitted/*.jsx file is hand-edited rather than regenerated, or differs from what its regeneration command produces."
+      - "The policy document would need to mention Angular input()/output()/@Input()/@Output()/EventEmitter or the decorator-vs-signal member declaration choice to make sense. It does not need to; if you believe it does, stop."
+      - "Any verification fails twice."
+      - "You find yourself changing what a gate says in Part B. The gates are ratified; transcribe them."
     constraints:
-      - "allowed_files and verify are filled in by the T004 Judge decision; do not start until they are set."
-      - "If the ratified direction is no-sugar, the deliverable is the policy document plus the recorded rationale - not a no-op commit."
-      - "Do not weaken or skip any existing activation-neutrality check to make verification pass."
+      - "CONTAMINATION GUARD: one T003 case is held out for the T006 cold-agent test. docs/emitter-idiom-policy.md must not name it, resolve it, or use it as a worked example. Concretely it must not mention Angular input(), output(), @Input(), @Output(), EventEmitter, or the decorator-vs-signal member declaration choice, anywhere, in any form."
+      - "Do not add worked examples beyond the eight in Part B. Do not add a 'further cases' or 'see also' section."
+      - "Do not weaken or skip any existing activation-neutrality check to make verification pass. Lowering atLeast, removing detailIncludes, altering navigations/consoleErrors/failedRequests, or touching assertServedActivation is a STOP, not a fix."
     receipt: null
 
   - id: T006
@@ -303,8 +392,8 @@ tasks:
     reasoning_hint: high
     objective: "Run the cold-agent replication test: hand a zero-context agent only the policy document and the held-out unseen idiom case, and score its call."
     inputs:
-      - "The policy document written in T005"
-      - "The held-out case named in the T004 receipt"
+      - "The policy document written in T005 (docs/emitter-idiom-policy.md)"
+      - "Held-out case: H3 - Angular's whole-component member-declaration form choice (named in the T004 receipt; expected answer recorded nowhere)"
     constraints:
       - "The agent must receive the policy document and the case only - no conversation history, no board access, no goal.md, no other frameless docs."
       - "Do not hint the expected answer in the prompt."
@@ -330,7 +419,9 @@ tasks:
     constraints:
       - "One PM package covering all three boards - do not split into three tasks."
       - "Prep only: goal.md, state.yaml, notes/ per framework. No adapter implementation, no framework demo scaffolding, no dependency installs."
-      - "Each board must cite the ratified policy as a non-negotiable constraint and carry that framework's IR gaps from T003 as intake facts."
+      - "Each board must cite docs/emitter-idiom-policy.md as a non-negotiable constraint and carry that framework's IR gaps from T003 as intake facts."
+      - "Each board must record that its framework's sugar rulings are Gate-6 DEFERRED until an official-scaffold lane exists for that framework."
+      - "Each board must inherit the T004 standing gap: pnpm check does not typecheck generated/, and pnpm e2e pins dev mode only (demos/qwik/scenarios.box.ts modes:['dev'])."
       - "Each board needs its own oracle - activation neutrality on an OFFICIAL framework scaffold, not a hand-rolled harness."
       - "Do not start any of the three goals."
     expected_output:
