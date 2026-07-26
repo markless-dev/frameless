@@ -69,7 +69,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-idiom-policy-v1/"
     command: "npx goalbuddy board docs/goals/frameless-idiom-policy-v1"
 
-active_task: T009
+active_task: T007
 
 tasks:
   - id: T001
@@ -574,7 +574,7 @@ tasks:
   - id: T009
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Transcribe the eleven Replace/With pairs and the one Insert from notes/T008-policy-amendment.md Part B into docs/emitter-idiom-policy.md, verbatim, bottom-up. Transcription, not editing - every anchor was verified unique."
     spec: "notes/T008-policy-amendment.md Part B (authoritative verbatim text), Part C (package). Where this card and Part C differ, Part C wins."
@@ -606,12 +606,53 @@ tasks:
       - "Transcribe the Judge's replacement text. Do NOT improve it, reword it, or reflow it."
       - "Apply the replacements BOTTOM-UP so earlier anchors do not shift."
       - "Do not add a history section, a see-also section, or a ninth worked example. The H3-as-example-9 recommendation is a separate PM decision, not part of this package."
-    receipt: null
+    receipt:
+      result: done
+      summary: "Transcribed the T008 amendment verbatim, bottom-up: 11 Replace/With pairs plus the Gate 4 absent-emitter Insert. Gate 1 re-partitioned by cause, Gate 4 scored falsifiable-but-not-verifiable, DEFERRED availability stated at the outcomes line, combination and re-opening rules updated, worked examples 2-7 corrected. ALL 11 verify checks matched the Judge's predicted values on the FIRST attempt, no fix attempts."
+      changed_files:
+        - docs/emitter-idiom-policy.md
+      diff_stat: "1 file, +113 / -36"
+      anchor_audit: "Machine-checked by parsing Part B's fenced blocks against `git show HEAD:docs/emitter-idiom-policy.md`. All 11 Replace blocks occurred EXACTLY ONCE in the pre-edit file; all 12 With/Insert blocks occur exactly once after. No fuzzy matching anywhere. Replace #9 reads present-after=1 because its With text is a strict superset of it - expected, not a miss."
+      commands:
+        - cmd: "grep -c 'G1 PASS'"
+          status: pass
+          note: "2 as predicted (was 4). Lines 225 and 345 - worked examples 1 (Qwik) and 8 (React) only. PM RE-RAN: 2."
+        - cmd: "grep -c 'G4 PASS'"
+          status: pass
+          note: "2 as predicted (was 6). Examples 1 and 8 only. PM RE-RAN: 2."
+        - cmd: "grep -c 'DEFERRED - framework absent'"
+          status: pass
+          note: "7 as predicted (was 0). PM RE-RAN: 7."
+        - cmd: "grep -c 'DEFERRED - emitter absent'"
+          status: pass
+          note: "5 as predicted (was 0). The two line-wrapped occurrences in examples 2 and 4 were transcribed with the Judge's line breaks intact and deliberately NOT reflowed to make the number look like 7. PM RE-RAN: 5."
+        - cmd: "grep -c 'G4 FAIL'"
+          status: pass
+          note: "1, unchanged. Worked example 6's pre-repair failure survives - the only illustration of Gate 4's repair step. PM RE-RAN: 1."
+        - cmd: "grep -c 'G6 DEFERRED'"
+          status: pass
+          note: "6 as predicted (was 4). PM RE-RAN: 6."
+        - cmd: "diff ruling headings HEAD vs now"
+          status: pass
+          note: "No output - the eight verdicts did not move. PM RE-RAN: identical."
+        - cmd: "diff gate headings HEAD vs now"
+          status: pass
+          note: "No output. PM RE-RAN: identical."
+        - cmd: "node byte-identity examples 1 and 8"
+          status: pass
+          note: "{example1Untouched:true, example8Untouched:true}, no throw. The SHIPPED Qwik $-prop ruling is byte-identical, so running code stays ruled. PM RE-RAN: both true."
+        - cmd: "git diff --stat / git status --short"
+          status: pass
+          note: "Exactly one file changed. Only the two pre-existing untracked docs/goals/frameless-testing-*/ dirs alongside, untouched."
+      blast_radius: "git diff -U0 hunk map confirms edits land only at line 38, 42-46, 62-66, an insert after 122, then worked examples 2, 3, 4, 5, 6 (two spots), 7, and the re-opening bullets at 295-297. Nothing lands inside Gates 2, 3, 5 or 6, inside worked example 1 or 8, or inside example 6's pre-repair G4 FAIL paragraph."
+      pm_independent_verification: "PM re-ran all six grep counts, both heading diffs, and the node byte-identity check. Every one matched. The Judge's 11 predicted values were computed by simulation BEFORE the edit existed, so matching them is a real check, not a restatement."
+      deviations: []
+      spawned_tasks: []
 
   - id: T007
     type: pm
     assignee: PM
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: "Prep the Vue, Angular, and Svelte expansion goal boards against the ratified policy."
     inputs:

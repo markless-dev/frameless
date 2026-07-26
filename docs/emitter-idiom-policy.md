@@ -35,15 +35,25 @@ forms. Every framework has a baseline; not every framework has a naive one.
 Run all six gates. **Do not short-circuit.** Record an outcome for every gate even after one
 fails; the record is what makes a ruling re-openable.
 
-Outcomes per gate: `PASS`, `FAIL`, `UNKNOWN`, or (Gate 6 only) `DEFERRED`.
+Outcomes per gate: `PASS`, `FAIL`, `UNKNOWN`, or `DEFERRED`.
+
+`DEFERRED` is not available at every gate. Gate 6 may always record it. Gates 1 and 4 may record it
+**only** for the two specific causes named in those gates — the target framework being absent from
+this repo's lockfile, and the target emitter not existing. No other gate may record `DEFERRED`, and
+no gate may record it for any other reason. "We did not get to it" is `UNKNOWN`, which is a no.
 
 Then:
 
-- Any `FAIL` → **no-sugar**. Emit the baseline form.
-- Any `UNKNOWN` → treat as `FAIL` → **no-sugar**. Unknown is not a tie. It is a no.
-- Gate 6 `DEFERRED` with every other gate `PASS` → **no-sugar for now**, recorded as *deferred,
-  not denied*. Re-run the procedure when the gate-6 condition is met.
+- Any `FAIL` → **no-sugar**, recorded as *denied*. Emit the baseline form.
+- Any `UNKNOWN` → treat as `FAIL` → **no-sugar**, *denied*. Unknown is not a tie. It is a no.
+- Otherwise, any `DEFERRED` → **no-sugar for now**, recorded as *deferred, not denied*. Emit the
+  baseline form and re-run the procedure when every deferring condition is met.
 - All six `PASS` → **sugar**.
+
+`FAIL` outranks `DEFERRED`. One `FAIL` anywhere makes the ruling *denied*, however many gates
+deferred alongside it: every deferring condition can later be met and the ruling still not change.
+Say in the record which one it is. *Denied* and *deferred* emit the same output — the baseline —
+and differ only in what has to happen before the question is worth asking again.
 
 ---
 
@@ -59,10 +69,32 @@ A statement in the framework's docs, a doc-comment in its source, or a blog post
 evidence**. It is a hypothesis to test. Framework documentation routinely describes a mechanism
 that is not the mechanism actually at work.
 
-`FAIL` if: either form errors or warns; **or** the only evidence for the equivalence is
-documentary; **or** the measurement was taken against a different build than the one this repo
-ships. A package resolving to a different version, or a differently-packaged copy of the same
-tool, is a different build.
+`FAIL` if: either form errors or warns; **or** the measurement was taken against a different build
+than the one this repo ships; **or** the only evidence for the equivalence is documentary *and* a
+build of the target framework is in this repo's lockfile — that is, the measurement was possible
+and was not made. A package resolving to a different version, or a differently-packaged copy of the
+same tool, is a different build.
+
+**Absent framework.** If no build of the target framework is in this repo's lockfile, this gate is
+not askable: record `DEFERRED — framework absent`, naming the framework. Vue, Angular and Svelte
+are all absent today.
+
+`DEFERRED` here is **not** a pass and never becomes one on paper. Gate 1 can never be `PASS` for a
+framework absent from the lockfile, and documentary evidence never passes this gate at any
+framework, ever. The consequence, stated plainly: **no sugar for an absent framework can ship, full
+stop, until that framework has a lane in this repo at a pinned lockfile version.** The only thing
+`DEFERRED` buys over `FAIL` is an honest record — "not measured" is a different claim from
+"measured and it differed" — and that difference matters only to whoever re-opens the question
+later.
+
+`DEFERRED` is available at this gate for that one cause and no other. A framework that is in the
+lockfile and was simply not measured is `UNKNOWN`, which is a no.
+
+**Coupling with Gate 6.** For an absent framework this gate and Gate 6 have the same cause and the
+same cure: no lane exists, and standing one up on the framework's official scaffold at a pinned
+version resolves both at once. They must therefore agree. If you find yourself recording `PASS`
+here and `DEFERRED` at Gate 6, you measured against something this repo does not ship, and this
+gate is `FAIL`.
 
 ### Gate 2 — Locality
 
@@ -119,6 +151,33 @@ the edge is where the build breaks.
 facts, and re-run the procedure from Gate 1 on the narrowed rule. If the narrowing requires
 inspecting contents, Gate 3 kills it and the answer is no-sugar. This repair step is what
 separates a sugar that is merely stated too broadly from one that is unavailable.
+
+**Absent emitter.** This gate asks you to name a function that may not exist yet. When there is no
+emitter for the target framework, the gate is *falsifiable but not verifiable*, and is scored
+accordingly:
+
+- You must still state the domain in the terms that do exist — the IR construct and the **declared
+  IR fields** that would trigger the sugar. A domain stated only in framework folklore is `FAIL`,
+  absent emitter or not. The phrasing requirement above does not relax; a hypothetical emitter is
+  not a licence to describe a hypothetical domain.
+- If you can exhibit one construct inside the stated domain where the sugar does not apply — from
+  the IR schema, from the compiler, or from the target framework's own rules — that is a real
+  `FAIL`. It is decidable without an emitter, and the repair step applies to it normally. Worked
+  example 6 below is this case: its Gate 4 failure was found in `SyncPolicyBranch.actions` in the
+  IR schema with no Svelte emitter in existence, and the repair narrowed the domain using a
+  declared IR field.
+- If you cannot exhibit one, you have **not** earned `PASS`. The absence of a counterexample
+  against a domain whose deciding function does not exist is not a totality proof — it is the
+  folklore domain arriving by the back door. Record `DEFERRED — emitter absent`, naming the
+  framework, and re-run when the emitter exists and the domain can be stated against a real
+  function.
+
+`UNKNOWN` is the wrong label here and so is `PASS`. `UNKNOWN` converts to *denied*, which asserts
+that something was found against the sugar when nothing was; `PASS` claims a totality nobody
+checked. `DEFERRED` says what is true: not yet.
+
+As at Gate 1, `DEFERRED` is available for that one cause and no other. An emitter that exists and
+whose domain was simply not enumerated is `UNKNOWN`, which is a no.
 
 ### Gate 5 — Behavioral neutrality
 
@@ -204,37 +263,45 @@ optimizer lane, so this is accepted, and recorded here so it is not rediscovered
 
 ### 2. Vue — `v-bind` / `v-on` / `v-slot` shorthands (`:id`, `@click`, `#header`) → **deferred**
 
-G1 PASS (documented shorthands, identical compiled output — to be re-measured when a Vue lane
-exists), G2 PASS, G3 PASS (triggered by the binding's structural kind, not its contents),
-G4 PASS (every directive use), G5 PASS. **G6 DEFERRED** — there is no Vue emitter and no Vue lane
-in `pnpm e2e`. Ruling: baseline until a Vue lane on an official Vue scaffold exists; re-run then.
-This is a deferral, not a rejection.
+**G1 DEFERRED — framework absent**: no Vue in this repo's lockfile, so the claim that the
+shorthands compile identically is documentary, which is a hypothesis and not evidence. G2 PASS,
+G3 PASS (triggered by the binding's structural kind, not its contents). **G4 DEFERRED — emitter
+absent**: with no Vue emitter, "every directive use" names no function and its totality cannot be
+shown; no counterexample is known either. G5 PASS. **G6 DEFERRED** — there is no Vue emitter and no
+Vue lane in `pnpm e2e`. No gate `FAIL`s. Ruling: baseline until a Vue lane on an official Vue
+scaffold exists; re-run then. This is a deferral, not a rejection.
 
 ### 3. Vue — declaring a callback prop as a `defineEmits` event → **no-sugar**
 
-G2 PASS, G3 PASS, G4 PASS. **G5 FAIL**: declaring a native event name in `emits` means the
-listener responds only to component-emitted events and no longer to native ones, and declared
-events are removed from fallthrough `$attrs`. A frameless component with a callback prop named
-`onClick` would stop receiving native clicks. That is a behavior change with no diagnostic. G6
-would defer anyway; G5 decides it.
+**G1 DEFERRED — framework absent**, G2 PASS, G3 PASS, **G4 DEFERRED — emitter absent**.
+**G5 FAIL**: declaring a native event name in `emits` means the listener responds only to
+component-emitted events and no longer to native ones, and declared events are removed from
+fallthrough `$attrs`. A frameless component with a callback prop named `onClick` would stop
+receiving native clicks. That is a behavior change with no diagnostic. **G6 DEFERRED.** The three
+deferrals do not decide this; G5 does, and `FAIL` outranks `DEFERRED`, so the ruling is **denied,
+not deferred** — a Vue lane would not change it.
 
 ### 4. Angular — two-way binding `[(prop)]` on an emitted child → **no-sugar**
 
 Baseline: `[prop]="x"` plus `(propChange)="x = $event"`, with the handler as a class method.
 Note this baseline is itself a sanctioned Angular form — there is no naive form to fall back to.
 
-**G2 FAIL**: `[(prop)]` is legal only if the child module declares the prop as two-way capable.
-Frameless emits one module per `EnrichedIR`; the parent cannot decide the child's declaration
-form. Independently **G5 FAIL**: the implicit change-output name is derived by appending `Change`
-to the input name, so a component with sibling props `count` and `countChange` — both legal
-frameless props — collides, whereas the baseline uses the author's two names as written.
+**G1 DEFERRED — framework absent** (no Angular in this repo's lockfile). **G2 FAIL**: `[(prop)]` is
+legal only if the child module declares the prop as two-way capable. Frameless emits one module per
+`EnrichedIR`; the parent cannot decide the child's declaration form. **G4 DEFERRED — emitter
+absent.** Independently **G5 FAIL**: the implicit change-output name is derived by appending
+`Change` to the input name, so a component with sibling props `count` and `countChange` — both
+legal frameless props — collides, whereas the baseline uses the author's two names as written.
 **G6 DEFERRED** (no Angular lane, and the sugar is version-gated with no target-version input).
-Three independent reasons; the ruling is stable.
+Two independent `FAIL`s, which outrank the three deferrals: **denied, not deferred**. The ruling is
+stable.
 
 ### 5. Angular — `@if` / `@for` control-flow blocks → **deferred**
 
-G1 PASS, G2 PASS, G3 PASS (structural template facts), G4 PASS, G5 PASS, **G6 DEFERRED** (no
-Angular lane). Ruling: baseline until an Angular lane exists.
+**G1 DEFERRED — framework absent**: no Angular in this repo's lockfile, so the only available
+evidence is documentary, which this gate does not accept. G2 PASS, G3 PASS (structural template
+facts). **G4 DEFERRED — emitter absent.** G5 PASS. **G6 DEFERRED** (no Angular lane). No gate
+`FAIL`s. Ruling: baseline until an Angular lane exists. This is a deferral, not a rejection.
 
 Read this example together with the forced-lowering note above: most of what looks like Angular
 "idiom sugar" is not sugar at all. Angular template expressions forbid `const`, arrow functions,
@@ -253,18 +320,25 @@ total over its stated domain.
 
 Apply the **repair step**: narrow the domain to events whose declared `SyncPolicyBranch.actions`
 do not include `stopPropagation`, and use `on()` for the rest. The narrowing reads a *declared*
-IR field, so Gate 3 still passes. Re-run: G1–G5 PASS, **G6 DEFERRED** (no Svelte lane).
+IR field, so Gate 3 still passes. Re-run: **G1 DEFERRED — framework absent** (no Svelte in this
+repo's lockfile), G2 PASS, G3 PASS, **G4 DEFERRED — emitter absent** (the narrowed domain has no
+known counterexample, but with no Svelte emitter its totality cannot be shown), G5 PASS,
+**G6 DEFERRED** (no Svelte lane). No gate `FAIL`s: deferred, not denied.
 
 This is the example to reach for when a sugar looks nearly right. The repair step distinguishes a
 rule stated too broadly (repairable) from a rule that needs to inspect contents (not repairable).
+It is also the example that shows Gate 4 doing real work without an emitter: the original `FAIL`
+was found in the IR schema, not in any Svelte emitter. An absent emitter defers Gate 4; it never
+excuses it.
 
 ### 7. Svelte 5 — `$props()` destructuring with fallback values → **no-sugar**
 
-G2 PASS, G3 PASS, G4 PASS. **G5 FAIL**: destructured reactive values are not reactive, and
-fallback values are not turned into reactive state proxies — so an object or array default is not
-equivalent to defaulting at each read site. This matches an existing frameless ruling in the
-Solid dossier, which already banned props destructuring for the same reason in a different
-framework.
+**G1 DEFERRED — framework absent**, G2 PASS, G3 PASS, **G4 DEFERRED — emitter absent**.
+**G5 FAIL**: destructured reactive values are not reactive, and fallback values are not turned into
+reactive state proxies — so an object or array default is not equivalent to defaulting at each read
+site. This matches an existing frameless ruling in the Solid dossier, which already banned props
+destructuring for the same reason in a different framework. **G6 DEFERRED** (no Svelte lane).
+`FAIL` outranks the deferrals: **denied, not deferred**.
 
 ### 8. React — `onInput` → `onChange` on leaf controls, and `class` → `className` → **sugar** (existing, retro-validated)
 
@@ -292,6 +366,9 @@ emitter.
 
 - A `FAIL` ruling is re-openable when the fact that caused the `FAIL` changes — a framework
   release, an IR capability, a new standing check.
-- A `DEFERRED` ruling is re-run when its gate-6 condition is met, without further authority.
-- Re-running means running all six gates again and rewriting the entry. It does not mean
-  amending the old outcome.
+- A `DEFERRED` ruling is re-run when **every** condition that deferred it is met, without further
+  authority. Deferrals stack: a ruling that deferred at Gates 1, 4 and 6 is re-run once the
+  framework is in the lockfile, the emitter exists, and a lane asserts the behavior — which in
+  practice is one event, not three.
+- Re-running means running all six gates again and rewriting the entry. It does not mean amending
+  the old outcome.
