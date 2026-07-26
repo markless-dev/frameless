@@ -50,7 +50,10 @@ jobs:
   browser:
     name: browser lanes
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # Tightened from 20. The T004 calibration run proved this lane's failure mode
+    # is an indefinite hang, not an error, so a generous budget just burns runner
+    # time and reads as "slow" rather than "broken".
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
@@ -60,18 +63,11 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --dir packages/frameworks/react exec playwright install --with-deps chromium
-      # EXPECTED RED on the first run of this workflow.
-      #
-      # docs/goals/frameless-testing-ci-v1/notes/T002-cold-baseline.md records the
-      # defect: the browser configs declare a single chromium instance while vitest
-      # parallelises test files across it, so the connection drops and ZERO tests
-      # execute. Reproduced four times locally; --no-file-parallelism makes all 89
-      # tests pass in ~5s per project.
-      #
-      # This job is deliberately NOT skipped, excluded, or marked continue-on-error.
-      # Its first red run is the calibration evidence that this workflow catches a
-      # real pre-existing bug that nobody planted. Task T010 repairs the defect and
-      # this job goes green. Do not "fix" this by weakening the job.
+      # This lane was RED by design on the first two runs - that was T004's
+      # calibration, proving this workflow catches a real unplanted defect.
+      # T010 fixed the cause: vp test bundles vitest@0.1.20 while @vitest/browser
+      # is 4.1.5, and the mismatched pair breaks the browser RPC. The scripts now
+      # run the real vitest from each package. See notes/T010-browser-lane.md.
       - run: pnpm test:browser
 
   e2e:

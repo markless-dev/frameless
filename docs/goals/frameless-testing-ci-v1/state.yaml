@@ -152,7 +152,7 @@ execution_mode:
     because the live board server watches that path. It is synced into the
     worktree and committed at each task boundary so the trail merges with the work.
 
-active_task: T002
+active_task: T010
 
 tasks:
   - id: T001
@@ -210,7 +210,7 @@ tasks:
   - id: T002
     type: scout
     assignee: Scout
-    status: active
+    status: done
     reasoning_hint: medium
     executed_as: "Scout-shaped, read-only, PM fallback (see execution_mode)"
     objective: "Establish the cold-checkout verification baseline before any workflow is written."
@@ -230,13 +230,139 @@ tasks:
       - "Whether the Qwik Vite 7.3.1 pin collides with the root Vite 8.0.16"
       - "What tsc over emitted .jsx would require (config, types, strictness)"
       - "Anything that would make a Linux runner behave differently from macOS"
+    receipt:
+      result: done
+      note: notes/T002-cold-baseline.md
+      summary: >-
+        Baseline established in the fresh worktree. check (1.6s), lint (1.5s),
+        test (2.3s, 35 files / 519 tests) and e2e (27.1s, 9/9 three-way cells
+        equal) all PASS. pnpm test:browser FAILS. Total green-path wall clock is
+        ~40s, so the T007 matrix is far cheaper than intake assumed - cost is not
+        the constraint.
+      findings:
+        - id: "browser-lane-broken"
+          severity: high
+          detail: >-
+            pnpm test:browser does not pass as written. Reproduced 4x: it dies
+            after 95-246s with "Browser connection was closed while running
+            tests" / "[birpc] rpc is closed" and reports "Tests  no tests" - zero
+            tests execute. Isolated to DEFAULT FILE PARALLELISM: one file alone
+            passes (4 tests, 1.78s); all 5 React files with --no-file-parallelism
+            pass (45 tests, 4.98s); all 4 Solid files serial pass (44 tests,
+            4.80s). Chromium launches fine standalone (145.0.7632.6) and no
+            competing processes were running, so this is not provisioning. Cause:
+            the browser configs declare a single chromium instance while vitest
+            parallelises test files across it. A warm Vite dep-optimizer cache
+            does NOT fix it. Consequence beyond CI: the README's "How We Test"
+            guarantees rest on a command an outside contributor cannot currently
+            run green. Fix is one setting (fileParallelism:false or the flag in
+            the script); serial cost is ~5s per project so there is no speed
+            argument for parallelism.
+        - id: "qwik-blocker-is-vitest-not-vite"
+          severity: high
+          detail: >-
+            CORRECTS THE INTAKE BLIND SPOT. @qwik.dev/core@2.0.0-beta.38 peer-requires
+            vite ">=6 <9" and vitest ">=2 <4". Root resolves vite@8.0.16 - INSIDE
+            Qwik's supported range, so the recorded "Qwik needs Vite 7.3.1"
+            collision is not the blocker (only demos/qwik pins vite 7.3.1
+            locally). The workspace runs vitest@4.1.5, which is OUTSIDE Qwik's
+            declared peer range. That is why packages/frameworks/qwik has no
+            browser project. T006 must be re-planned around a vitest major
+            incompatibility, not a vite one.
+        - id: "install-is-the-only-non-transferring-number"
+          severity: medium
+          detail: >-
+            pnpm install --frozen-lockfile measured 2.3s ONLY because the local
+            pnpm store is warm. A GitHub runner starts empty. This is the one
+            figure in the baseline that will not transfer and the only one
+            needing a cache strategy (actions/setup-node cache: pnpm).
+        - id: "cross-engine-cheaper-than-assumed"
+          severity: low
+          detail: >-
+            ~/Library/Caches/ms-playwright already holds firefox-1509 and
+            webkit-2248 beside four chromium builds. T007's lowest-priority axis
+            is worth attempting rather than pre-emptively cutting.
+        - id: "jsdom-warning"
+          severity: low
+          detail: >-
+            Solid browser run prints "MISSING DEPENDENCY Cannot find dependency
+            'jsdom'" then passes all 44 tests. Non-fatal but will read as failure
+            in CI logs.
+        - id: "test-count-reconciliation"
+          severity: info
+          detail: >-
+            The audit's 303 is written it()/test() call sites; vitest executes
+            519 because suites loop over scenario and mutant tables. Both correct;
+            future receipts should quote the executed number.
+      commands:
+        - cmd: "pnpm install --frozen-lockfile"
+          status: pass
+          detail: "2.3s, warm store"
+        - cmd: "pnpm check"
+          status: pass
+          detail: "1.6s"
+        - cmd: "pnpm lint"
+          status: pass
+          detail: "1.5s, 0 warnings 0 errors, 236 files"
+        - cmd: "pnpm test"
+          status: pass
+          detail: "2.3s, 35 files, 519 tests, 1 skipped"
+        - cmd: "pnpm test:browser"
+          status: fail
+          detail: "dies after 95-186s, zero tests executed - see browser-lane-broken"
+        - cmd: "vitest run --project react-browser --no-file-parallelism"
+          status: pass
+          detail: "5 files, 45 tests, 4.98s"
+        - cmd: "vitest run --project solid-browser --no-file-parallelism"
+          status: pass
+          detail: "4 files, 44 tests, 4.80s"
+        - cmd: "pnpm e2e"
+          status: pass
+          detail: "27.1s, 9/9 three-way cells equal, all receipts written"
+      spawned_tasks:
+        - T003
+
+  - id: T010
+    type: worker
+    assignee: Worker
+    status: active
+    executed_as: "Worker-shaped, PM fallback (see execution_mode)"
+    reasoning_hint: medium
+    sequence_note: >-
+      Numbered T010 because it was created after the board was seeded, but it runs
+      EARLY - immediately after T003 and before T004. It repairs the defect T002
+      found, and every later browser-dependent lane (T005 calibration, T006 Qwik,
+      T007 matrix, T008 e2e work) depends on it.
+    objective: "Repair the browser lane so pnpm test:browser passes as written (blocks every later browser-dependent lane)."
+    allowed_files:
+      - "packages/frameworks/react/vitest.config.ts"
+      - "packages/frameworks/solid/vitest.config.ts"
+      - "demos/*/test/*/vitest.config.ts"
+      - "package.json"
+      # PM AMENDMENT during execution: the Solid lane exits 1 despite 44/44 tests
+      # passing, because vite-plugin-solid probes for jsdom and the dependency is
+      # absent. Fixing it needs the Solid package manifest. Squarely within this
+      # task's objective ("passes as written"), so allowed rather than deferred -
+      # recorded here instead of quietly overstepping the original scope.
+      - "packages/frameworks/solid/package.json"
+      - "pnpm-lock.yaml"
+    verify:
+      - "pnpm test:browser passes from a clean node_modules/.vite"
+      - "the fix is a config/script change only - no test assertion is weakened or skipped"
+      - "CI browser job goes GREEN, closing the red-to-green calibration pair opened by T004"
+      - "the browser job timeout is tightened - the calibration run burned its full 20min budget hanging, which is the wrong failure mode to keep"
+    stop_if:
+      - "Serial execution does not actually fix the demo-kit browser projects the way it fixed react/solid."
+      - "Making it pass requires changing a test assertion rather than a runner setting."
+      - "Verification fails twice."
     receipt: null
 
   - id: T003
     type: judge
     assignee: Judge
-    status: queued
+    status: done
     reasoning_hint: high
+    executed_as: "Judge-shaped, read-only, PM fallback (see execution_mode)"
     objective: "Validate the owner's plan against Scout evidence and pin the slice order and matrix axes."
     inputs:
       - "T002 receipt"
@@ -252,13 +378,95 @@ tasks:
       - "Ruling on the CI-first ordering and shared-workflow-file contention"
       - "Ruling on how a generative-corpus miscompile finding gets escalated rather than fixed inline"
       - "Any plan item that Scout evidence says is infeasible as written"
-    receipt: null
+    receipt:
+      result: done
+      note: notes/T003-plan-validation.md
+      decision: approved_with_amendments
+      full_outcome_complete: false
+      rationale: >-
+        The owner's plan survives with one item materially re-scoped and one new
+        item inserted ahead of it. The risk ranking is preserved; the only
+        reordering is by dependency, never by preference. Six rulings issued.
+      rulings:
+        - id: "ci-lands-first-and-is-expected-red"
+          detail: >-
+            T004 runs BEFORE T010. Its first run is expected to fail the browser
+            job on the real defect T002 found. Rejected the tempting
+            fix-then-automate order because it discards the best calibration
+            artifact available: a red-to-green pair from a genuine pre-existing
+            bug is stronger evidence that CI works than any planted mutant, and
+            for CI itself a synthetic failure would be theatre. T004's verify is
+            amended to require check/lint/test/e2e green and the browser job red
+            FOR THE T002 REASON SPECIFICALLY - failing for any other reason is a
+            stop condition, since that would mean a second unknown defect.
+        - id: "qwik-browser-project-cancelled-not-deferred"
+          detail: >-
+            T006 no longer adds a Qwik browser test project. Decisive argument is
+            interpretability, not caution: on vitest 4 (outside Qwik's declared
+            "vitest >=2 <4" peer range) a red lane could not be attributed to our
+            emitter versus the unsupported runner, and an unattributable test is
+            this goal's recorded misfire in concrete form. Re-scoped to
+            eslint-plugin-qwik adoption, gate policy parity, registering the
+            existing node project in vite.config.ts test.projects, and
+            documenting the gap. Unblock condition recorded: a @qwik.dev/core
+            release whose peerDependencies.vitest admits 4.x. Behavioral Qwik
+            coverage is NOT lost - pnpm e2e already proves resumption green
+            across S1/S2/S3.
+        - id: "collision-risk-drops-to-low"
+          detail: >-
+            Side effect of the Qwik re-scope: T006 now touches qwik/src/gate/,
+            qwik/package.json and vite.config.ts, while the concurrent
+            frameless-idiom-policy-v1 goal edits qwik/src/emitter/index.ts,
+            qwik/test/emitter.test.ts and qwik/generated/S*.jsx. Nearly disjoint.
+            worktree.collision_warning drops from high to low with no scheduling
+            concession, so T006 runs in its planned position.
+        - id: "matrix-cells-enumerated"
+          detail: >-
+            T002 measured the green path at ~40s, so the intake assumption that
+            matrix width needs rationing does not hold - cost is no longer the
+            constraint, per-cell interpretability is. Rejected the full cartesian
+            product (108 cells) as mostly information-free and hard to attribute.
+            Adopted Svelte's shape - broad on one OS, thin elsewhere: ubuntu x
+            Node 20/22/24 full suite; macos + windows on Node 20; framework
+            version axis (React 19.2.3 + latest 19.x, Solid 1.8.22 + latest 1.x)
+            on ubuntu x Node 22; Qwik gets a SINGLE pinned cell and no axis,
+            since a matrix across a pre-release measures upstream churn;
+            dev + production modes; firefox + webkit on ubuntu x Node 22 only;
+            a dedicated StrictMode lane.
+        - id: "workflow-contention-accepted"
+          detail: >-
+            Six tasks touch .github/workflows/. Accepted with no structural
+            mitigation: one_active_task and max_write_workers:1 make concurrent
+            edits impossible, so splitting into six workflow files would
+            over-engineer against a hazard that cannot occur and would fragment
+            the CI story a newcomer must read. Carried instruction: each Worker
+            ADDS a job rather than restructuring existing ones; a Worker
+            rewriting T004's jobs has exceeded its slice.
+        - id: "escalation-protocol-for-miscompiles"
+          detail: >-
+            T009 and possibly T008 will surface real compiler bugs. Protocol:
+            record in notes/findings-<id>.md with the shrunk reproducing .tsrx
+            and observed-vs-expected trace; add a QUEUED board task and do not
+            activate it; mark the generated case a known-failing expectation
+            pointing at the note - never delete it, never weaken the invariant;
+            continue the current slice. Governing rule: an invariant that fails
+            is evidence, not a bug in the invariant.
+        - id: "jsdom-warning-in-scope-for-T010"
+          detail: >-
+            Solid's browser run prints MISSING DEPENDENCY 'jsdom' before passing.
+            Lands in configs T010 already opens, and a bare MISSING DEPENDENCY
+            line will be misread as failure by exactly the outside contributor CI
+            exists to serve. Fix or annotate; do not leave bare.
+      infeasible_items: []
+      spawned_tasks:
+        - T004
 
   - id: T004
     type: worker
     assignee: Worker
-    status: queued
+    status: done
     reasoning_hint: medium
+    executed_as: "Worker-shaped, PM fallback (see execution_mode)"
     objective: "Land the CI foundation and widen tsconfig: audit items 1 and 2's config half."
     allowed_files:
       - ".github/workflows/**"
@@ -269,12 +477,98 @@ tasks:
       - "pnpm lint"
       - "pnpm test"
       - "git push origin goal/frameless-testing-ci-v1 && gh run watch"
+      - "PER T003 RULING 1: the first run must show check/lint/test/e2e jobs GREEN and the browser job RED for the T002 file-parallelism reason specifically. This red is the deliverable, not a failure."
     stop_if:
       - "Need files outside allowed_files."
-      - "CI is red for a reason that is a pre-existing product defect rather than a workflow defect - record it and escalate."
+      - "The browser job fails for any reason OTHER than the T002 file-parallelism defect - that means a second unknown defect; stop and investigate."
+      - "Tempted to skip, exclude, or continue-on-error the browser job to manufacture green - the charter forbids weakening checks and it would destroy T010's calibration evidence."
       - "Widening tsconfig surfaces type errors in test files that require product changes to fix."
-      - "Verification fails twice."
-    receipt: null
+      - "Verification fails twice for a workflow-syntax reason."
+    receipt:
+      result: done
+      summary: >-
+        CI exists. .github/workflows/ci.yml lands four jobs (check+lint, node
+        tests, browser lanes, e2e) on ubuntu with pnpm caching and per-job
+        Playwright provisioning. Run 2 ends exactly as T003 Ruling 1 designed:
+        check+lint GREEN, node tests GREEN, e2e GREEN, browser RED. The tsconfig
+        half of this task was attempted, found structurally larger than assumed,
+        reverted cleanly, and split into T011.
+      calibration:
+        claim: "This workflow catches real defects, not planted ones."
+        evidence: >-
+          Run 1 (30216328175) failed 3 of 4 jobs and surfaced a defect NOBODY
+          KNEW ABOUT - see findings-001. Run 2 (30216393897) browser job hung to
+          its 20-minute timeout with zero test output, leaving orphaned
+          chrome-headless-shell processes: the T002 file-parallelism defect,
+          reproduced in CI. Red-to-green pair opens here and closes in T010.
+      findings:
+        - id: "findings-001-engines-node-floor"
+          severity: medium
+          note: notes/findings-001-engines-node-floor.md
+          detail: >-
+            NEW DEFECT, previously unknown. package.json declares engines.node
+            ">=20" but the toolchain cannot load vite.config.ts on the Node 20
+            GitHub ships (v20.20.2): "TypeScript config files require Node.js
+            ^20.19.0 || >=22.12.0". Broke pnpm lint outright and failed 2 tests
+            (react/solid format-emitted, which shell out to npx vp fmt). Local
+            dev is Node 24.15.0, which is why it was never seen. NOT FIXED HERE
+            - the error text is self-contradictory (v20.20.2 satisfies ^20.19.0
+            yet fails), so the true floor is unknown and inventing one would put
+            a second unverified promise in package.json. Ownership assigned to
+            T007, whose Node axis will measure it.
+        - id: "browser-defect-is-worse-in-ci"
+          severity: medium
+          detail: >-
+            Locally the parallelism defect errors out after 95-246s. In CI it
+            HANGS INDEFINITELY - 20 minutes to job timeout, zero test output,
+            orphaned chrome processes. A hang is a worse failure mode than an
+            error: it burns budget and reads as "slow" rather than "broken".
+            T010 must tighten the browser job timeout as well as fix the cause.
+        - id: "tsconfig-widening-is-structural"
+          severity: medium
+          detail: >-
+            Attempted and REVERTED. Including packages/*/test in the root
+            tsconfig transitively pulls in .tsx reference files, and a single
+            root tsconfig cannot serve both React and Solid JSX - Solid's
+            reference.solid.tsx gets React's JSX types, producing TS2786
+            "'Show'/'For' cannot be used as a JSX component" plus a cascade of
+            event-type mismatches. Correct fix is per-package tsconfigs with the
+            right jsx/jsxImportSource. Reverted to a clean tree (pnpm check green)
+            rather than half-landing it. Split into T011.
+      commands:
+        - cmd: "pnpm lint"
+          status: pass
+        - cmd: "pnpm check (after reverting tsconfig experiment)"
+          status: pass
+        - cmd: "git push origin goal/frameless-testing-ci-v1"
+          status: pass
+      ci_runs:
+        # Recorded as evidence, not as verification commands: run 1's red is the
+        # defect-detection proof and run 2's browser red is the designed outcome
+        # of T003 Ruling 1. Neither is a failed verification of this task.
+        - run: 30216328175
+          outcome: "3/4 jobs red"
+          meaning: >-
+            Two workflow defects (playwright not resolvable from root; Node 20)
+            plus findings-001, a real repo defect nobody knew about. Diagnosed
+            and fixed or escalated - not worked around.
+        - run: 30216393897
+          outcome: "check+lint green, node tests green, e2e green, browser cancelled at timeout"
+          meaning: >-
+            The designed outcome per T003 Ruling 1. The browser red is the T002
+            defect reproduced in CI and is this task's deliverable.
+      milestone: >-
+        pnpm e2e - the differential + three-way behavioral proof - has now run
+        GREEN on a Linux runner. Every prior verification of it happened on the
+        author's macOS machine only.
+      changed_files:
+        - ".github/workflows/ci.yml"
+      run_urls:
+        - "https://github.com/markless-dev/frameless/actions/runs/30216328175"
+        - "https://github.com/markless-dev/frameless/actions/runs/30216393897"
+      spawned_tasks:
+        - T010
+        - T011
 
   - id: T005
     type: worker
@@ -301,7 +595,7 @@ tasks:
     assignee: Worker
     status: queued
     reasoning_hint: medium
-    objective: "Bring the Qwik lane to React/Solid parity: browser project, test.projects registration, eslint-plugin-qwik, gate expansion (audit item 4)."
+    objective: "Qwik gate parity per T003 Ruling 2: eslint-plugin-qwik, gate policy expansion, node-project registration, and document the browser-project gap. NO browser project - upstream blocked."
     allowed_files:
       - "packages/frameworks/qwik/**"
       - "vite.config.ts"
@@ -309,10 +603,21 @@ tasks:
       - ".github/workflows/**"
     verify:
       - "pnpm test"
-      - "pnpm test:browser"
       - "each new Qwik gate policy rejects a violating input"
+      - "the Qwik node project appears in vite.config.ts test.projects and actually runs"
+      - "the no-browser-project gap is documented in-repo with the unblock condition"
+    prechecked_by_pm: >-
+      Registry facts verified during T004's CI wait, both CONFIRMING T003 Ruling 2:
+      (1) eslint-plugin-qwik publishes a beta tag at 2.0.0-beta.38, exactly matching
+      @qwik.dev/core, and peers only on eslint "^8.57.0 || ^9.0.0 || ^10.0.0" -
+      compatible with this repo's eslint ^9.39.2. The first stop_if below is
+      therefore de-risked; use the beta tag, not latest (1.20.0, which is Qwik 1).
+      (2) @qwik.dev/core@latest IS 2.0.0-beta.38 - there is no newer release, and it
+      still declares vitest ">=2 <4". So the browser-project cancellation is not
+      merely deferred pending an upgrade; no upgrade currently exists.
     stop_if:
-      - "The Qwik Vite 7.3.1 pin collides irreconcilably with root Vite 8.0.16 - record the collision and escalate rather than upgrading Qwik or downgrading the root."
+      - "eslint-plugin-qwik does not support Qwik 2 - record the finding and complete the remaining parts rather than blocking the whole task."
+      - "Tempted to add a Qwik browser project anyway - T003 Ruling 2 cancelled it; a lane whose failures cannot be attributed is not a test."
       - "Need files outside allowed_files."
       - "Verification fails twice."
     receipt: null
@@ -322,7 +627,13 @@ tasks:
     assignee: Worker
     status: queued
     reasoning_hint: medium
-    objective: "Build the matrix: framework versions, Node, OS, dev/prod, StrictMode lane (audit items 3 and 7)."
+    objective: "Build the matrix per T003 Ruling 3: framework versions, Node, OS, dev/prod, StrictMode lane (audit items 3 and 7)."
+    inputs:
+      - "T003 Ruling 3 enumerated cells"
+      - "notes/findings-001-engines-node-floor.md"
+    expected_output:
+      - "Every enumerated cell from T003 Ruling 3, actually executing"
+      - "RESOLVES FINDING 001: set package.json engines.node to the lowest Node version the matrix proves green - measured, not guessed"
     allowed_files:
       - ".github/workflows/**"
       - "packages/frameworks/*/*.config.ts"
@@ -380,6 +691,34 @@ tasks:
     stop_if:
       - "The generator finds a real miscompile - record it, escalate, do NOT fix it inside this task."
       - "Generation cannot cover a node kind without emitter changes - record the uncovered kind."
+      - "Verification fails twice."
+    receipt: null
+
+  - id: T011
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    sequence_note: >-
+      Split out of T004 during execution. T004 attempted the tsconfig widening,
+      found it structurally larger than assumed, reverted cleanly, and recorded
+      the finding rather than half-doing it. Runs after T010.
+    objective: "Make pnpm check actually cover test files, via per-package tsconfigs (the other half of audit item 2)."
+    inputs:
+      - "T004 receipt finding: tsconfig-widening-is-structural"
+    allowed_files:
+      - "tsconfig.json"
+      - "packages/*/tsconfig.json"
+      - "packages/frameworks/*/tsconfig.json"
+      - "package.json"
+      - ".github/workflows/**"
+    verify:
+      - "pnpm check type-checks packages/*/test and packages/frameworks/*/test"
+      - "React test trees resolve React JSX types; Solid test trees resolve solid-js JSX types"
+      - "calibration: a deliberate type error in a test file makes pnpm check fail"
+    stop_if:
+      - "Correct per-package JSX config still leaves type errors that need PRODUCT changes rather than config changes - record them and escalate; do not edit product code from this task."
+      - "Need files outside allowed_files."
       - "Verification fails twice."
     receipt: null
 

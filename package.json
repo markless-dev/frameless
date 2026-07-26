@@ -19,9 +19,9 @@
 		"prepare": "git config core.hooksPath .githooks",
 		"rules": "npx -y @intellectronica/ruler apply",
 		"test": "vp test --project node",
-		"test:browser": "vp test --project react-browser --project solid-browser",
-		"test:react": "vp test --project react-browser",
-		"test:solid": "vp test --project solid-browser",
+		"test:browser": "pnpm test:react && pnpm test:solid",
+		"test:react": "pnpm --dir packages/frameworks/react exec vitest run --config vitest.config.ts --project react-browser",
+		"test:solid": "pnpm --dir packages/frameworks/solid exec vitest run --config vitest.config.ts --project solid-browser",
 		"test:poc": "for package in poc/*; do if [ -f \"$package/package.json\" ]; then pnpm --dir \"$package\" install --ignore-workspace --frozen-lockfile && pnpm --dir \"$package\" --ignore-workspace test || exit $?; fi; done"
 	},
 	"devDependencies": {
