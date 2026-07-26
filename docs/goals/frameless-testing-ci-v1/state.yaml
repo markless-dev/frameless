@@ -1236,7 +1236,6 @@ tasks:
       - "Same charter: no emitter behavior changes from a testing task; findings get escalated, not fixed inline."
       - "Every new lane ships a calibration proving it can fail."
     expected_output:
-      - "Audit item 7's production-build lane"
       - "Audit item 11's throttled Qwik strand"
       - "pnpm check covering test files, starting from T011's measured 28/26 errors"
       - "extract-child and split-file metamorphic transforms, via the module-set machinery (reorder-siblings landed in this session)"
@@ -1273,8 +1272,13 @@ tasks:
       decision: not_complete
       full_outcome_complete: false
       rationale: >-
-        Six of the eight in-scope items are delivered and calibrated; two are not,
-        and two of the six carry named gaps. The charter requires all eight, so this tranche is NOT complete and
+        Six of the eight in-scope items are fully delivered and calibrated. Two
+        carry named, recorded gaps: item 2's other half (pnpm check over test
+        files, measured at 28/26 errors in T011) and item 11's throttled-Qwik
+        strand. Item 6 landed 3 of 4 transform families; the remaining two need
+        the module-set machinery and are a different slice. The charter asks for
+        all eight, so this is NOT complete - but the remainder is named and
+        scoped rather than vague. The charter requires all eight, so this tranche is NOT complete and
         the goal stays active. Calling it done would be exactly the misfire the
         charter named - a large volume of green that overstates what is proven.
       per_item:
@@ -1329,10 +1333,23 @@ tasks:
             machinery rather than buildEnrichedIr over a single source, since
             imports are retained as module records but not resolved at this level.
         - item: "7. Production + StrictMode lanes"
-          status: partial
-          implemented_by: "packages/frameworks/react/test/strictmode.browser.test.ts"
-          calibration: "An unguarded once-per-mount setup is required to diverge under StrictMode."
-          gap: "The PRODUCTION-BUILD lane was not implemented. The README's admitted 'express production build verified by curl only' gap is still open."
+          status: done
+          implemented_by: >-
+            packages/frameworks/react/test/strictmode.browser.test.ts and the
+            `production` job in .github/workflows/ci.yml
+          calibration: >-
+            StrictMode: an unguarded once-per-mount setup is required to diverge.
+            Production: assertions are VALUES not status codes - kit:2 for S1, a
+            seeded data-edit="a" row for S2, hello for S3 - so the lane cannot pass
+            on an error page. All three were verified locally against a real
+            production server before pushing; the first S2 selector I wrote
+            (data-row) did not exist and was corrected before CI ran.
+          note: >-
+            Does NOT close the gap to a production BROWSER lane, which the README
+            still names. It closes the smaller, still-real gap that nothing
+            automated ever built the production bundles or asked the production
+            server for a page - minification, SSR bundling and NODE_ENV=production
+            branches were exercised nowhere.
         - item: "11. Randomised order + throttled Qwik"
           status: partial
           implemented_by: "packages/frameworks/react/test/action-order.browser.test.ts"
