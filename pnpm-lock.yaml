@@ -133,11 +133,14 @@ importers:
     dependencies:
       '@qwik.dev/core':
         specifier: 2.0.0-beta.38
-        version: 2.0.0-beta.38(vite@7.3.1(@types/node@24.12.2)(lightningcss@1.32.0)(yaml@2.9.0))(vitest@4.1.5(@types/node@24.12.2)(@vitest/browser-playwright@4.1.5)(vite@8.0.16(@types/node@24.12.2)(esbuild@0.27.7)(yaml@2.9.0)))
+        version: 2.0.0-beta.38(vite@7.3.1(@types/node@24.12.2)(lightningcss@1.32.0)(yaml@2.9.0))(vitest@4.1.5)
       '@qwik.dev/router':
         specifier: 2.0.0-beta.38
-        version: 2.0.0-beta.38(@qwik.dev/core@2.0.0-beta.38(vite@7.3.1(@types/node@24.12.2)(lightningcss@1.32.0)(yaml@2.9.0))(vitest@4.1.5(@types/node@24.12.2)(@vitest/browser-playwright@4.1.5)(vite@8.0.16(@types/node@24.12.2)(esbuild@0.27.7)(yaml@2.9.0))))(rollup@4.62.2)(typescript@5.9.3)(vite@7.3.1(@types/node@24.12.2)(lightningcss@1.32.0)(yaml@2.9.0))
+        version: 2.0.0-beta.38(@qwik.dev/core@2.0.0-beta.38(vite@7.3.1(@types/node@24.12.2)(lightningcss@1.32.0)(yaml@2.9.0))(vitest@4.1.5))(rollup@4.62.2)(typescript@5.9.3)(vite@7.3.1(@types/node@24.12.2)(lightningcss@1.32.0)(yaml@2.9.0))
     devDependencies:
+      playwright:
+        specifier: 1.58.2
+        version: 1.58.2
       vite:
         specifier: 7.3.1
         version: 7.3.1(@types/node@24.12.2)(lightningcss@1.32.0)(yaml@2.9.0)
@@ -5311,7 +5314,7 @@ snapshots:
 
   '@polka/url@1.0.0-next.29': {}
 
-  '@qwik.dev/core@2.0.0-beta.38(vite@7.3.1(@types/node@24.12.2)(lightningcss@1.32.0)(yaml@2.9.0))(vitest@4.1.5(@types/node@24.12.2)(@vitest/browser-playwright@4.1.5)(vite@8.0.16(@types/node@24.12.2)(esbuild@0.27.7)(yaml@2.9.0)))':
+  '@qwik.dev/core@2.0.0-beta.38(vite@7.3.1(@types/node@24.12.2)(lightningcss@1.32.0)(yaml@2.9.0))(vitest@4.1.5)':
     dependencies:
       '@qwik.dev/optimizer': 2.1.0-beta.5
       csstype: 3.2.3
@@ -5335,12 +5338,12 @@ snapshots:
 
   '@qwik.dev/optimizer@2.1.0-beta.5': {}
 
-  '@qwik.dev/router@2.0.0-beta.38(@qwik.dev/core@2.0.0-beta.38(vite@7.3.1(@types/node@24.12.2)(lightningcss@1.32.0)(yaml@2.9.0))(vitest@4.1.5(@types/node@24.12.2)(@vitest/browser-playwright@4.1.5)(vite@8.0.16(@types/node@24.12.2)(esbuild@0.27.7)(yaml@2.9.0))))(rollup@4.62.2)(typescript@5.9.3)(vite@7.3.1(@types/node@24.12.2)(lightningcss@1.32.0)(yaml@2.9.0))':
+  '@qwik.dev/router@2.0.0-beta.38(@qwik.dev/core@2.0.0-beta.38(vite@7.3.1(@types/node@24.12.2)(lightningcss@1.32.0)(yaml@2.9.0))(vitest@4.1.5))(rollup@4.62.2)(typescript@5.9.3)(vite@7.3.1(@types/node@24.12.2)(lightningcss@1.32.0)(yaml@2.9.0))':
     dependencies:
       '@azure/functions': 3.5.1
       '@mdx-js/mdx': 3.1.1
       '@netlify/edge-functions': 3.0.8
-      '@qwik.dev/core': 2.0.0-beta.38(vite@7.3.1(@types/node@24.12.2)(lightningcss@1.32.0)(yaml@2.9.0))(vitest@4.1.5(@types/node@24.12.2)(@vitest/browser-playwright@4.1.5)(vite@8.0.16(@types/node@24.12.2)(esbuild@0.27.7)(yaml@2.9.0)))
+      '@qwik.dev/core': 2.0.0-beta.38(vite@7.3.1(@types/node@24.12.2)(lightningcss@1.32.0)(yaml@2.9.0))(vitest@4.1.5)
       '@types/mdx': 2.0.14
       estree-util-value-to-estree: 3.5.0
       github-slugger: 2.0.0
