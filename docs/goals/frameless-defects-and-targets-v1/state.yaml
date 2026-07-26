@@ -105,7 +105,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T015
+active_task: T002
 
 tasks:
   - id: T001
@@ -186,7 +186,7 @@ tasks:
   - id: T015
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Rule on how to make cancellation observable at runtime, given that S3's preventDefault() is inert in all three frameworks, and spec the T002 Worker package."
     inputs:
@@ -209,28 +209,115 @@ tasks:
       - "Ruling on restoring the lost lint detection"
       - "Exact T002 Worker objective, allowed_files, verify, stop_if"
       - "Whether docs/DEFECTS.md defect 1 needs its severity or evidence restated"
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      decision: approved
+      full_outcome_complete: false
+      note: notes/T015-cancellation-observability.md
+      rationale: "S3 never tested cancellation behaviorally: the only preventDefault sits on a type=button, and the wrong-cancellation mutant is detected solely through event.defaultPrevented - a flag recording that the call happened. That channel is structurally blind to defect 1. Reading the eslint rule source promotes finding 1 from hypothesis to verified fact: it matches $() ancestry and never checks async. Ruling: add one type=submit button to S3, clicked last, asserted through the Document-request instrument the contract already runs. Non-destructive to calibration, preserves S3's existing oracle, and can fail for Qwik."
+      s3_cancellation_assessment:
+        verdict: "S3 never tested cancellation behaviorally. Verified."
+        fixture: "packages/compiler/test/fixtures/s3-event-form.tsrx:33-41 - the only preventDefault() in the corpus is on <button type=\"button\">, which has no activation behavior inside a form. Reproduced verbatim by all three emitters."
+        mutant_is_weaker_than_documented: "packages/analyzer/src/mutants.ts:9 declares wrong-cancellation on channel callback, realised as missing-prevent-default (react/test/reference.tsx:198, solid/test/reference.solid.tsx:216) - the mutant merely OMITS the call. The analyzer's only cancellation observation is `defaultPrevented: event?.defaultPrevented ?? null` (packages/analyzer/src/run.ts:41), compared at compare.ts:71. That is a flag recording that preventDefault() was CALLED, not that a default action was averted."
+        load_bearing_consequence: "Qwik's late async handler still CALLS preventDefault(), so it would still record defaultPrevented: true. The existing cancellation channel is STRUCTURALLY BLIND to defect 1. docs/DEFECTS.md attributes the miss to the absent Qwik browser lane; that attribution is wrong - even with the lane, wrong-cancellation would have passed. (Inferred from the DOM event model; untestable here as no Qwik browser project exists.)"
+      finding_1_now_verified:
+        was: "hypothesis - the raw-handler shape probably stops the lint rule matching"
+        now: "verified fact, by reading eslint-plugin-qwik@2.0.0-beta.38 dist/index.js"
+        rule_behavior: "no-async-prevent-default walks ancestors for a CallExpression whose callee is the Identifier '$'. It NEVER inspects `async` at all, despite its name and message. onClick$={async (e) => {e.preventDefault()}} has no $() ancestor, so it cannot fire."
+        refutes: "The alternative reading that the raw-handler change accidentally FIXED defect 1. The rule's silence is a parser miss, not a semantic change."
+        upstream_gap: "The rule's intent - preventDefault inside a QRL - is right; its implementation detects QRL-ness only via the explicit $() wrapper and misses the JSX-prop form the optimizer also turns into a QRL. Worth filing."
+      observability_ruling:
+        chosen: "Add one <button type=\"submit\" data-action=\"cancel-submit\"> to S3, clicked only by the three-way e2e contract, as the last step."
+        why:
+          - "Real default action - a form submit with no action attribute is a GET to the current URL, a genuine resourceType 'Document' request."
+          - "The instrument already exists and is already load-bearing: three-way-contract.ts:326-333 already throws unless exactly one Document request served the page; :354-368 already asserts navigations per framework."
+          - "Two independent failure signals for Qwik: the extra Document request, and the reload resetting data-writes from 2 to 0 - which the existing measured observation already reads."
+          - "It cannot fail for React or Solid: waitForInteractive (:187-204) blocks on the activation marker before any click. Qwik deliberately does not wait - that asymmetry is the thesis and is what makes it fail."
+          - "Non-destructive: the analyzer's S3 action list (scenarios.ts:56-60) does not click it, so calibration, emitted-smoke, action-order and strictmode never trigger a submit."
+          - "S3's existing oracle is fully preserved - clicking last means every current assertion still runs and passes first. Nothing is traded; a channel is added."
+          - "data-action=\"cancel-submit\" is not \"submit\", so the form's bubble guard does not fire and expectedCallbacks is unchanged."
+        rejected:
+          type_submit_swap: "Cheapest delta, but it makes the wrong-cancellation mutant DESTRUCTIVE - react/src/adapter.ts:56-62 dispatches real cancelable MouseEvents and relies on native activation, so missing-prevent-default would genuinely submit and navigate the vitest page away. The calibration lane would crash instead of reporting a divergence."
+          new_s4_scenario: "Correct but the largest bill: new fixture, IR golden, three generated files, three demo copies, three routes, analyzer scenario, two references, a resumeSymbols entry, a README row, a new e2e row - then inherited three more times by Svelte/Vue/Angular. Marginal safety over the ruling is small."
+          checkbox_channel: "The existing checkbox's toggle is what the check action depends on. A new checkbox is observable only via the :checked property, which page.content() cannot serialize, so it could not feed the cross-lane measured-observation diff."
+        blast_radius: "The fixture and its IR golden; enriched-ir.test.ts:32-39 (one ['button','data-action'] row); three generated/S3.jsx; two handwritten references, which emitted-smoke.browser.test.ts:27 compares node-for-node; both size.test.ts files, which hard-code S3 at physicalLoc 69/51 and structuralNodes 307/226; three demo EventForm.jsx copies (auto-derived by copy-emitted); the contract. Possibly the two emitted-typecheck.test.ts expected-error lists."
+      lint_restoration_ruling:
+        decision: "Restore it in T003 as a frameless-owned gate policy. Do NOT revert the emission shape to $(handler) to satisfy a rule that does not check what its name says - that would invert frameless-idiom-policy-v1 and let an upstream heuristic dictate emitted output."
+        sharp_edge: "T003 must flip gate.test.ts:73-82 from one expected violation to []. But [] is ALREADY what unfixed main produces. Flipping alone ships a green gate that would pass identically if the emitter were never touched - exactly the green-vacuum failure mode this board worries about."
+        requirement: "In the same change, add a frameless-owned Qwik gate policy rejecting preventDefault() inside any emitted event-handler body regardless of $() wrapping, mutation-tested in the pattern of gate.test.ts:93-110, and only THEN release the expectation. Not a separate package - splitting risks the green vacuum landing first. This is also the natural home for T011/T012's fail-closed conditional-cancellation limit."
+        still_load_bearing: "For defect 1, no - the runtime assertion is strictly stronger. In general, yes."
+      defects_md_corrections_recommended:
+        - "Keep the #1 rank; restate the basis - the suites detect the ABSENCE OF THE CALL via event.defaultPrevented; no default action is exercised anywhere in the corpus (lines 55-61)."
+        - "Correct the 'why nothing caught it' attribution (63-68): the channel is structurally blind, so the absent Qwik lane would not have caught it either."
+        - "Correct the code snippet (38-43): on merged main generated/S3.jsx:37-38 has no $() wrapper, and the rule matches $() ancestry while never checking async, so it can no longer serve as evidence."
+        - "Downgrade 'diagnosed by rule' to 'undiagnosed' - with the rule silent and the runtime divergence undemonstrated, defect 1 currently has ZERO demonstrated evidence."
+        - "State plainly that the repo has never emitted or exercised a real cancellation in any target."
+        - "Rename to lowercase or update every reference - docs/DEFECTS.md is uppercase on disk and Linux CI will not resolve docs/defects.md."
+      severity_opinion: "Still #1, and the inertness of S3 makes it MORE worrying, not less. The mechanism is deterministic - a QRL costs at minimum a microtask and the default action runs immediately after dispatch; preventDefault() on a submit button is the single most common cancellation in web apps; and Svelte, Vue and Angular are about to inherit an IR whose preventDefault() lowering has never been behaviorally validated in ANY target."
+      missing_evidence:
+        - "Whether @qwik.dev/router leaves a plain <form> submit uninterrupted. Inferred from demos/qwik/src/routes/s3/index.tsx using neither <Form> nor an action; T002 must confirm empirically."
+        - "Whether the compiler accepts a handler body consisting only of event.preventDefault(). Not exercised by any existing fixture."
+        - "Whether a Qwik calibration lane would confirm that a late preventDefault still records defaultPrevented: true. Grounded in the DOM event model but untestable - no Qwik browser project exists (blocked upstream by @qwik.dev/core's vitest '>=2 <4' peer range)."
   - id: T002
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
-    objective: "Extend the three-way contract to assert the default action is actually prevented in all three frameworks, and demonstrate it FAILING for Qwik."
-    allowed_files: []
-    verify: []
+    spec: "notes/T015-cancellation-observability.md (Judge ruling, authoritative)"
+    objective: >-
+      Give S3 a genuinely cancellable default action and assert it in the three-way contract, then
+      WITNESS the Qwik failure. Add one <button type="submit" data-action="cancel-submit"> whose
+      onClick calls only event.preventDefault(), regenerate every derived artifact, extend assertS3
+      to click it LAST and assert the default action was prevented, and capture Qwik's failure
+      verbatim.
+    scope_note: >-
+      LARGER than this card originally said. T015 established that a cancellation assertion without
+      a cancellable action is meaningless - it would PASS for Qwik, which is this task's own stop_if.
+      The fixture change and the assertion cannot be split.
+    steps:
+      - "1. packages/compiler/test/fixtures/s3-event-form.tsrx - add exactly one control after the existing type=button submit button, inside the same <form>: <button type=\"submit\" data-action=\"cancel-submit\" onClick={(event) => { event.preventDefault(); }}>cancel-submit</button>. Change nothing else."
+      - "2. Regenerate: UPDATE_GOLDENS=1 pnpm test for the IR golden, then regenerate in react, solid and qwik, then copy-emitted in all three official demos."
+      - "3. Mirror the new button into the two handwritten references so emitted-smoke.browser.test.ts stays node-for-node equal. The reference calls preventDefault UNCONDITIONALLY with NO mutation branch - do not extend the S3Mutation union, do not touch missing-prevent-default."
+      - "4. Update only the mechanically-forced expectations: one ['button','data-action'] row in enriched-ir.test.ts, and re-measure both size.test.ts S3 entries."
+      - "5. Extend assertS3 with a FINAL step after the existing submit assertions: click [data-action=\"cancel-submit\"], then assert exactly one resourceType 'Document' request still served the page, [data-scenario=\"s3\"] still exists, and data-writes still reads '2'. Push one new measured observation string, identical across lanes."
+      - "6. Do NOT add the control to packages/analyzer/src/scenarios.ts actions. Keeping calibration from ever clicking it is what makes this additive rather than destructive."
+    allowed_files:
+      - packages/compiler/test/fixtures/s3-event-form.tsrx
+      - packages/compiler/test/goldens/s3-event-form.json
+      - packages/compiler/test/enriched-ir.test.ts
+      - packages/frameworks/react/generated/S3.jsx
+      - packages/frameworks/solid/generated/S3.jsx
+      - packages/frameworks/qwik/generated/S3.jsx
+      - packages/frameworks/react/test/reference.tsx
+      - packages/frameworks/solid/test/reference.solid.tsx
+      - packages/frameworks/react/test/size.test.ts
+      - packages/frameworks/solid/test/size.test.ts
+      - packages/frameworks/react/test/emitted-typecheck.test.ts
+      - packages/frameworks/solid/test/emitted-typecheck.test.ts
+      - demos/react-official/src/emitted/EventForm.jsx
+      - demos/solid-official/src/emitted/EventForm.jsx
+      - demos/qwik/src/emitted/EventForm.jsx
+      - demos/react-official/three-way-contract.ts
+    verify:
+      - "pnpm check"
+      - "pnpm test"
+      - "pnpm test:browser"
+      - "pnpm e2e"
     stop_if:
-      - "Need files outside allowed_files."
-      - "The extended contract PASSES for Qwik. That contradicts defect 1's diagnosis - stop and report rather than adjusting the assertion until it fails."
-      - "Verification fails twice."
+      - "Need files outside allowed_files. packages/analyzer/src/scenarios.ts and packages/frameworks/qwik/test/gate.test.ts are explicitly OUT of scope - adding the control to the S3 action list would make the wrong-cancellation mutant navigate the vitest page away, and the gate expectation belongs to T003."
+      - "pnpm test shows any failure other than the single pre-existing qwik gate.test.ts 'discovers and accepts the clean S1/S2/S3 emitted corpus' expectation. That one must still fail with violations: [] and must not be edited."
+      - "pnpm test:browser is not fully green (55/55 and 44/44). The point of an additive control is that calibration, emitted-smoke, action-order and strictmode are untouched. Red there means the change was not additive."
+      - "The compiler rejects a handler whose body is only event.preventDefault(). Report it as a finding; do not invent a state write or an onTrace call to work around it without saying so, because adding a callback also moves enriched-ir.test.ts:450 and the expected-callback set."
+      - "pnpm e2e PASSES for Qwik. That contradicts defect 1's diagnosis - stop and report rather than strengthening the assertion until it fails."
+      - "pnpm e2e fails for React or Solid. Their handlers are synchronous and waitForInteractive blocks on the activation marker before clicking, so the assertion is wrong, not the frameworks."
+      - "Qwik's failure cannot be attributed to the missed preventDefault - for example @qwik.dev/router intercepting the plain <form> submit, or the only signal being an aborted QRL request. Record what actually happened rather than asserting the intended cause."
+      - "You are about to fix defect 1. Emitting preventdefault:click is T003."
+      - "Verification fails twice for the same reason."
     constraints:
-      - "SCOPE CORRECTED BY T001. Do not start until T015 has ruled. The S3 fixture's preventDefault() sits on a <button type=\"button\"> (packages/compiler/test/fixtures/s3-event-form.tsrx:33-37), which has NO default action in any framework - so the call is inert everywhere and a cancellation assertion on S3 as it stands cannot fail for Qwik. This card's original premise, that extending the contract is sufficient, is false."
-      - "This task's deliverable is a WITNESSED FAILURE, not a fix. Do not fix defect 1 here."
-      - "The contract currently asserts text content and write counts only; it cannot see cancellation at all. Assert the default action itself, not a proxy for it."
-      - "React and Solid must PASS the new assertion - their handlers are synchronous, so preventDefault() is correct there. If they fail, the assertion is wrong, not the frameworks."
-    expected_output:
-      - "Extended contract, with React and Solid green"
-      - "Qwik's failure captured verbatim - this is the runtime divergence defect 1 says has not yet been demonstrated"
+      - "The deliverable is a WITNESSED FAILURE, not a fix. React and Solid must be fully green."
+      - "Capture Qwik's failure verbatim from demos/qwik/.witness/receipts/<runId>/receipt.json plus the pnpm e2e console output, and record WHICH signal fired: extra Document request, writes reset to 0, navigations, or qsymbol loss."
+      - "VERIFY, do not assume, two residual risks T015 could not settle: that @qwik.dev/router leaves a plain <form> submit uninterrupted, and that the compiler accepts a preventDefault-only handler body."
     receipt: null
 
   - id: T003
@@ -248,7 +335,11 @@ tasks:
       - "Verification fails twice."
     constraints:
       - "Unconditional case ONLY. S3 qualifies: s3-event-form.tsrx:37 calls preventDefault() as the first statement with no guard."
-      - "Release the known-failing expectation in packages/frameworks/qwik/test/gate.test.ts in the same change, so the held defect and its fix move together."
+      - "GREEN-VACUUM WARNING from T015: flipping the qwik gate.test.ts expectation to [] is NOT sufficient, because [] is ALREADY what unfixed main produces - the eslint rule matches $() ancestry and never checks async, so it cannot fire on the raw-handler shape. A flip alone ships a gate that would pass identically if the emitter were never touched."
+      - "Therefore, IN THE SAME CHANGE: add a frameless-owned Qwik gate policy rejecting preventDefault() inside any emitted event-handler body regardless of $() wrapping, mutation-tested in the pattern of gate.test.ts:93-110, and only THEN release the known-failing expectation. Do not split these - splitting risks the green vacuum landing first."
+      - "Do NOT revert the emission shape to $(handler) to satisfy the upstream rule. That would invert frameless-idiom-policy-v1 and let an upstream heuristic dictate emitted output."
+      - "RIDER - file the upstream gap against eslint-plugin-qwik: no-async-prevent-default matches $() ancestry only, misses bare onClick$={async ...} JSX props, and never checks `async` at all. Verified against eslint-plugin-qwik@2.0.0-beta.38 dist/index.js."
+      - "RIDER - apply the six docs/DEFECTS.md corrections listed in notes/T015-cancellation-observability.md section 5, including the lowercase rename (Linux CI will not resolve docs/defects.md)."
       - "docs/emitter-idiom-policy.md governs the emission-site form choice. Run the six gates and record the outcomes."
     receipt: null
 
@@ -284,6 +375,7 @@ tasks:
       - "Do not implement."
       - "Reject if defect 1's fix landed without T002's witnessed Qwik failure on record."
       - "Reject if the contract extension asserts a proxy for cancellation rather than the default action itself."
+      - "pnpm e2e is RED for Qwik between T002 and T003 BY DESIGN - T002's deliverable is that failure. Reject Phase A if e2e is still red when this audit runs: that means T003 did not close it."
       - "full_outcome_complete stays false - this is a phase boundary, not the goal."
     expected_output:
       - "Phase A complete | not complete"
