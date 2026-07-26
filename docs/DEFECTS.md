@@ -1,4 +1,10 @@
-# Defects found by frameless-testing-ci-v1 — handoff for a fix goal
+# Open defects in Frameless
+
+Six open defects, ranked. Found by `frameless-testing-ci-v1`; this is the input
+for a fix goal.
+
+Full per-defect notes live in `docs/goals/frameless-testing-ci-v1/notes/`
+(`findings-002` through `findings-007`). This file is the ranked summary.
 
 Everything here was found by lanes that did not exist before that goal. None of
 it was fixed there: the charter forbade changing emitter behavior from a testing
@@ -8,7 +14,6 @@ task, because doing so would change what the rest of the matrix was measuring.
 testing work uncovered. The suite that found them is complete and green.
 
 All line references are on branch `goal/frameless-testing-ci-v1` (unmerged).
-Each defect has a full note in this directory; this file is the ranked summary.
 
 ---
 
