@@ -152,7 +152,7 @@ execution_mode:
     because the live board server watches that path. It is synced into the
     worktree and committed at each task boundary so the trail merges with the work.
 
-active_task: T012
+active_task: T013
 
 tasks:
   - id: T001
@@ -1151,8 +1151,8 @@ tasks:
   - id: T012
     type: worker
     assignee: Worker
-    status: active
-    note: "Next task, not started - the session reached its context limit here. Left ACTIVE so the board resumes exactly here."
+    status: done
+    executed_as: "Worker-shaped, PM fallback (see execution_mode)"
     reasoning_hint: medium
     sequence_note: >-
       Split out of T008 during execution. Audit item 11 - the concrete form of
@@ -1173,7 +1173,78 @@ tasks:
       - "Randomising order reveals a real divergence - that is a finding, escalate rather than fixing the emitter."
       - "Need files outside allowed_files."
       - "Verification fails twice."
+    receipt:
+      result: done
+      summary: >-
+        Randomised action ordering landed for S3 - emitted output must agree with
+        the handwritten reference under four different action orders, not just the
+        scripted one. React browser lane 50 -> 55 tests, all green.
+      design: >-
+        The invariant deliberately does NOT require knowing which actions commute:
+        "for ANY order, emitted and reference must still agree". The end state may
+        differ from the scripted run; what must hold is that both implementations
+        get there identically across DOM, callbacks, identity and focus.
+      calibration:
+        claim: "The lane is sensitive to order rather than blind to it."
+        evidence: >-
+          The scripted order and a permutation are asserted to produce DIFFERENT
+          traces, after first asserting the two orders genuinely differ. A first
+          version compared two seeds and failed - S3 has only three actions, so
+          different seeds can land on the same permutation and the calibration
+          would have passed for the wrong reason.
+      scope_limit:
+        - id: "S2 excluded, with cause"
+          detail: >-
+            S2's actions are NOT order-independent - they add an item then edit,
+            toggle, reorder and remove it BY ID. An arbitrary permutation asks the
+            adapter to target an element that does not exist yet, which THROWS
+            rather than diverging, so a permuted S2 exercises the harness's error
+            handling and not the emitter. All four S2 seeds failed that way and so
+            did the calibration, which is what made the cause legible. Doing S2
+            properly needs either a commutativity model for actions or an outcome
+            comparison that treats "target not found" as a result both
+            implementations must share. Recorded rather than bodged.
+      not_done:
+        - id: "network-throttled Qwik resumption"
+          detail: >-
+            The third strand of audit item 11 remains open. Qwik fetches a handler
+            QRL at click time, so throttled resumption is a genuinely untested
+            path - and the one place where the owner's "jitter" instinct maps onto
+            real timing variance rather than ordering. Not started.
+      commands:
+        - cmd: "pnpm test:react"
+          status: pass
+          detail: "7 files, 55 tests"
+        - cmd: "pnpm check"
+          status: pass
+        - cmd: "pnpm lint"
+          status: pass
+      changed_files:
+        - "packages/frameworks/react/test/action-order.browser.test.ts"
+
+  - id: T013
+    type: pm
+    assignee: PM
+    status: active
+    reasoning_hint: medium
+    objective: "Carry the remaining in-scope work: throttled Qwik resumption, the production-build lane, T011's tsconfig slice, the two remaining metamorphic transforms."
+    inputs:
+      - "T999 per-item table"
+      - "notes/T011-tsconfig-measurement.md"
+      - "notes/findings-002 through findings-006"
+    constraints:
+      - "Same charter: no emitter behavior changes from a testing task; findings get escalated, not fixed inline."
+      - "Every new lane ships a calibration proving it can fail."
+    expected_output:
+      - "Audit item 7's production-build lane"
+      - "Audit item 11's throttled Qwik strand"
+      - "pnpm check covering test files, starting from T011's measured 28/26 errors"
+      - "reorder-siblings, extract-child and split-file metamorphic transforms"
     receipt: null
+    note: >-
+      NOT STARTED. This session reached its context limit after T012. The card
+      exists so the board stays valid and resumable, and so the remaining scope is
+      named rather than implied by absence.
 
   - id: T999
     type: judge
@@ -1257,8 +1328,12 @@ tasks:
           calibration: "An unguarded once-per-mount setup is required to diverge under StrictMode."
           gap: "The PRODUCTION-BUILD lane was not implemented. The README's admitted 'express production build verified by curl only' gap is still open."
         - item: "11. Randomised order + throttled Qwik"
-          status: NOT_DONE
-          blocker: "Split into T012. One third of it (StrictMode) shipped under item 7; the other two remain."
+          status: partial
+          implemented_by: "packages/frameworks/react/test/action-order.browser.test.ts"
+          calibration: "The scripted order and a verified-different permutation must produce different traces."
+          gap: >-
+            S3 only - S2's actions are not order-independent and need a
+            commutativity model. Network-throttled Qwik resumption not started.
       also_outstanding:
         - "T011 - per-package tsconfigs so pnpm check covers test files. Split out of T004 when the root-tsconfig approach proved structural."
         - "Findings 002, 003, 004, 005 are all open. 003 is a real Qwik emitter defect."
@@ -1273,7 +1348,7 @@ tasks:
         continue-on-error with pointers to their findings; their steps still fail
         and their logs still show it. That was chosen over deleting the cells,
         which would have made the matrix a liar.
-      next_task: T012
+      next_task: "A follow-up tranche: throttled Qwik resumption, the production-build lane, T011s tsconfig slice, the two remaining metamorphic transforms, and findings 002-006."
       branch_state:
         branch: "goal/frameless-testing-ci-v1"
         pushed: true
