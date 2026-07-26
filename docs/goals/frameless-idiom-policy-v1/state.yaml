@@ -69,7 +69,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-idiom-policy-v1/"
     command: "npx goalbuddy board docs/goals/frameless-idiom-policy-v1"
 
-active_task: T008
+active_task: T009
 
 tasks:
   - id: T001
@@ -519,7 +519,7 @@ tasks:
   - id: T008
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Rule on the two policy defects the T006 cold-agent test exposed: inconsistent Gate 1 scoring when the target framework is absent from the lockfile, and undefined Gate 4 scoring for an emitter that does not exist yet."
     inputs:
@@ -539,24 +539,73 @@ tasks:
       - "Confirmation that H3 still rules no-sugar under the amended gates"
       - "Exact T009 Worker objective, allowed_files, verify, stop_if"
       - "Whether any other worked example changes outcome under the amendment"
-    receipt: null
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      note: notes/T008-policy-amendment.md
+      summary: "Ruled BOTH defects, and found a deeper one underneath. The worked examples are wrong, not Gate 1 - its documentary-evidence clause already FAILs absent frameworks. But FAIL alone made Gate 6's DEFERRED branch UNREACHABLE for every framework it was written for: dead text. So Gate 1 is re-partitioned by cause (absent -> DEFERRED, never PASS) and Gate 4 is scored falsifiable-but-not-verifiable without an emitter. Machine-verified: 11/11 anchors unique and verbatim, ZERO rulings flip, examples 1 and 8 byte-identical, Qwik ruling untouched."
+      defect_1:
+        ruling: "The worked examples are the defect, not the gate. THREE of eight are wrong: example 2 records G1 PASS while admitting in the same sentence that the evidence is 'documented shorthands... to be re-measured when a Vue lane exists' - documentary-only evidence recorded as a pass, in the gate whose entire purpose is that documentary evidence is not evidence. Example 5 records a bare G1 PASS with no justification. Example 4 omits Gate 1 entirely, against the procedure's own instruction."
+        deeper_finding: "Correcting them all to G1 FAIL would make the policy self-consistent and SELF-DEFEATING. Gate 6's DEFERRED describes exactly one situation - a framework this repo does not carry. That framework also has no measurable build, so Gate 1 FAILs, and any FAIL -> no-sugar, denied. Gate 6's DEFERRED outcome was unreachable for every framework it was written for."
+        amendment: "Gate 1's FAIL conditions re-partitioned BY CAUSE, not weakened: framework IN the lockfile with documentary-only evidence -> FAIL (measurement was possible and not made); framework ABSENT -> DEFERRED - framework absent. Gate 1 can never be PASS for an absent framework, and documentary evidence never passes it anywhere, ever."
+        plain_consequence: "Stated plainly as the card required: NO sugar for an absent framework can ship, full stop, until that framework has a lane at a pinned lockfile version. DEFERRED changes zero emitted bytes; it changes the record and the re-opening rule."
+      defect_2:
+        ruling: "Right outcome, wrong name. UNKNOWN -> no-sugar produces the correct emission and the wrong label: 'denied' asserts something was found against the sugar, and nothing was. The correct force is 'not yet'."
+        asymmetry: "With no emitter, Gate 4 is FALSIFIABLE BUT NOT VERIFIABLE. Worked example 6 proves the falsifiable half - its G4 FAIL was found in SyncPolicyBranch.actions in the IR schema with no Svelte emitter in existence. That is decidable, and an absent emitter does not excuse it. The verifiable half is unavailable: 'applies to every instance' is a claim about a function nobody has written, and recording PASS there is the folklore-domain failure the gate's own phrasing requirement bans, arriving by the back door."
+        amendment: "Counterexample found -> FAIL (repairable); no counterexample and no emitter -> DEFERRED - emitter absent; never PASS."
+      gate_1_vs_gate_6: "They genuinely duplicate for an absent framework - same cause (no lane), same cure (an official-scaffold lane at a pinned version). One fact observed twice, not independent evidence. Kept deliberately as a FEATURE, on one condition: both gates must report the same label. As a cross-check it has teeth - G1 PASS next to G6 DEFERRED means you measured against a build this repo does not ship, which is a Gate 1 FAIL under its third clause. Worked example 2 is that exact contradiction sitting in the ratified document, uncaught until a stranger ran the procedure. It becomes a DEFECT the moment the labels disagree, because the combination rule takes the harsher one and the deferral silently disappears. Hence a coupling clause: for an absent framework they must agree, and disagreement is diagnosed rather than averaged."
+      regression_check:
+        lockfile_verified: "Vue absent (0 matches), Angular absent (0), Svelte absent (only @sveltejs/acorn-typescript@1.0.11, an acorn plugin). Qwik, React, Solid present."
+        h3: "UNCHANGED - still no-sugar, still denied-not-deferred. G5 FAIL (reactivity depth, throw behavior) is untouched and FAIL outranks DEFERRED, so G5 alone carries it."
+        h3_disclosure: "Stated openly rather than buried: the amendment DOES move H3's G1 cell from FAIL to DEFERRED. That is not retro-invalidation - the T006 scoring band was 'no-sugar on substantially G1 and/or G5 grounds', the agent named G5 as the strongest and least ambiguous failure, and BOTH the agent and the PM independently flagged that exact cell as uncertain before the amendment existed. The amendment resolves an ambiguity both derivations surfaced; it overturns nothing either relied on."
+        qwik_shipped_ruling: "UNCHANGED, not unruled. Both amended clauses are conditioned on absence. Qwik is present (@qwik.dev/core@2.0.0-beta.38), G1 was measured on the bundled qwikVite, and G4's domain names emitEvent - a function that exists and shipped."
+        worked_examples: "ZERO of eight flip. 1 Qwik sugar (no cells changed), 2 Vue shorthands deferred, 3 Vue defineEmits no-sugar, 4 Angular [(prop)] no-sugar, 5 Angular @if/@for deferred, 6 Svelte onclick deferred-after-repair (pre-repair G4 FAIL STANDS), 7 Svelte $props() no-sugar, 8 React onChange sugar (no cells changed). Every correction lands on a cell that was unearned or unrecorded, with the outcome already carried by a gate the amendment does not touch."
+        simulation: "Judge simulated the full amendment outside the repo: all 11 replace-anchors match verbatim exactly once, the eight ruling headings and all six gate headings byte-identical after, examples 1 and 8 byte-identical after."
+        non_mechanical_judgement: "Worked example 6's pre-repair G4 FAIL preserved deliberately - a lazier Defect-2 rule would defer Gate 4 unconditionally and evaporate it, taking the repair step's only illustration with it."
+      dissent:
+        - "Worked example 4 still records no G3 outcome, violating the policy's own 'record an outcome for every gate' instruction. T003 evidence suggests a G3 FAIL is plausible (two-way binding must infer a canonical-assignment handler), but the Judge deliberately did not invent a substantive ruling outside its remit. FLAGGED FOR PM, not queued."
+        - "H3 deserves to be worked example 9 - contamination is moot and it is the only case the policy was tested on by a stranger. Not authorized in T009 to keep that package tight; recommended as a separate small package. PM DECISION PENDING - deliberately not auto-queued, since it changes the ratified record's content."
+        - "Judge cannot fully evidence H3's G4 cell: it scored DEFERRED - emitter absent, but the PM's pre-registered caveat about @Input() setters the IR does not express is arguably an exhibitable counterexample, making it FAIL. Either reading gives the same ruling."
+        - "The ratification's real weakness beyond these two defects: four of eight worked examples were never scored against a gate they could actually run. Examples 2-5 and 7 reason about frameworks this repo does not have. Legitimate for a policy that must generalize, but it means five-eighths of 'the record' is a rehearsal, not a record. The amendment makes that VISIBLE by labelling it, which is an improvement, not a fix."
+        - "T005's pnpm test:browser hang is still unresolved and is cited by worked example 8's G6. Did not affect this ruling - example 8 also cites pnpm e2e, which is green - but a Gate 6 that names a command nobody can run is a Gate 6 that will quietly stop pinning things."
+      spawned_tasks: []
 
   - id: T009
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
-    objective: "Apply the T008 ruling to docs/emitter-idiom-policy.md."
-    allowed_files: []
-    verify: []
+    objective: "Transcribe the eleven Replace/With pairs and the one Insert from notes/T008-policy-amendment.md Part B into docs/emitter-idiom-policy.md, verbatim, bottom-up. Transcription, not editing - every anchor was verified unique."
+    spec: "notes/T008-policy-amendment.md Part B (authoritative verbatim text), Part C (package). Where this card and Part C differ, Part C wins."
+    allowed_files:
+      - docs/emitter-idiom-policy.md
+    verify:
+      - "git diff --stat docs/emitter-idiom-policy.md   # exactly one file"
+      - "git status --short   # M docs/emitter-idiom-policy.md and nothing else; the two untracked docs/goals/frameless-testing-*/ dirs are pre-existing and from outside this goal"
+      - "grep -c 'G1 PASS' docs/emitter-idiom-policy.md   # EXACTLY 2 (was 4); grep -n must show both inside worked examples 1 (Qwik) and 8 (React) only"
+      - "grep -c 'G4 PASS' docs/emitter-idiom-policy.md   # EXACTLY 2 (was 6); again examples 1 and 8 only"
+      - "grep -c 'DEFERRED - framework absent' docs/emitter-idiom-policy.md   # EXACTLY 7 (was 0): one in the Gate 1 body, one each in examples 2,3,4,5,6,7. NOTE the em-dash in the real string."
+      - "grep -c 'DEFERRED - emitter absent' docs/emitter-idiom-policy.md   # EXACTLY 5 (was 0). Seven logical occurrences, two line-wrapped across a break (examples 2 and 4) so they do not match a single-line grep. 5 IS CORRECT - do NOT reflow those lines to make it 7."
+      - "grep -c 'G4 FAIL' docs/emitter-idiom-policy.md   # EXACTLY 1, unchanged - worked example 6's pre-repair failure. If this reads 0 the amendment was over-applied: STOP."
+      - "grep -c 'G6 DEFERRED' docs/emitter-idiom-policy.md   # EXACTLY 6 (was 4; examples 3 and 7 gain an explicit Gate 6 cell)"
+      - "diff <(git show HEAD:docs/emitter-idiom-policy.md | grep '^### [0-9]') <(grep '^### [0-9]' docs/emitter-idiom-policy.md)   # must print NOTHING - the eight verdicts must not move"
+      - "diff <(git show HEAD:docs/emitter-idiom-policy.md | grep '^### Gate') <(grep '^### Gate' docs/emitter-idiom-policy.md)   # must print NOTHING"
+      - "node byte-identity check on worked examples 1 and 8 (exact command in Part C.3 step 11) - must print {example1Untouched:true, example8Untouched:true} and not throw"
+    verify_rationale: "Heavy suites are deliberately EXCLUDED. No test, config or lint rule in this repo references docs/emitter-idiom-policy.md; running pnpm test/check/e2e against a markdown-only change would be ceremony, not proof. The real risk is mis-transcription and unauthorized ruling drift, and these checks pin exactly that. Every expected number was computed by the Judge simulating the amendment against the current file."
     stop_if:
-      - "Need files outside allowed_files."
-      - "The amendment would change the H3 ruling, or the outcome of any existing worked example the Judge did not explicitly authorize changing."
-      - "You find yourself rewriting a gate the Judge did not amend."
-      - "Verification fails twice."
+      - "Any file outside allowed_files needs to change."
+      - "A Replace block from Part B does not appear verbatim in the policy document, or appears more than once. Each was verified unique; a mismatch means the file moved under the ruling. STOP - do not fuzzy-match it into place."
+      - "Check 7 reports G4 FAIL at 0 - worked example 6's pre-repair failure was destroyed."
+      - "Check 9, 10 or 11 reports a difference. A ruling heading, a gate heading, or worked example 1 or 8 has moved. Worked example 1 is the SHIPPED Qwik $-prop ruling; changing it would unrule running code."
+      - "Any verify count differs from the stated expected value and the cause is not obvious and mechanical."
+      - "You find yourself rewriting a gate the Judge did not amend. Gates 2, 3, 5 and 6 have NO text changes in this amendment."
+      - "You conclude the amendment would change the outcome of H3 or of any worked example. It does not - zero rulings flip. If you believe otherwise, STOP and report."
+      - "Any verification fails twice."
     constraints:
-      - "allowed_files and verify come from the T008 ruling; do not start until they are set."
-      - "Transcribe the Judge's replacement text. Do not improve it."
+      - "Transcribe the Judge's replacement text. Do NOT improve it, reword it, or reflow it."
+      - "Apply the replacements BOTTOM-UP so earlier anchors do not shift."
+      - "Do not add a history section, a see-also section, or a ninth worked example. The H3-as-example-9 recommendation is a separate PM decision, not part of this package."
     receipt: null
 
   - id: T007
