@@ -3,7 +3,12 @@
 **Status:** open, recorded not fixed
 **Found by:** T007's OS matrix, the first time anything in this repo ran on Windows
 **Severity:** medium — blocks Windows contributors entirely
-**Two independent defects, neither introduced by this goal.**
+**Blast radius: 35 tests failed across 8 test files** (501 passed) on
+`windows-latest` / Node 24, run 30219953486. Two root causes, neither introduced
+by this goal.
+
+An earlier draft of this note said "two defects" and left the impression of two
+failing tests. That understated it — two *causes*, 35 *failures*.
 
 ## Defect A — `format-emitted.test.ts` spawns `npx` unportably
 
