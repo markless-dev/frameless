@@ -17,10 +17,26 @@ single root config cannot type-check both framework test trees because Solid's
 
 ## What it costs
 
-| Package | `error TS` count |
-| --- | ---: |
-| react | 28 |
-| solid | 26 |
+| Attempt | react | solid |
+| --- | ---: | ---: |
+| naive config | 28 | 26 |
+| **+ `allowJs`, + ambient `tsrx-core.d.ts` in `include`** | **14** | **14** |
+
+The second attempt resolved both *config* categories. Everything that remains is
+a genuine type defect in test or reference code:
+
+```
+composition-calibration.browser.test.ts(173,5)  'string | number' not assignable to 'string'
+composition-reference.tsx(107,10)               overload signature incompatible with implementation
+composition-reference.tsx(118,3)                '(() => number) | (() => string)' not assignable to '() => number'
+composition-reference.tsx(235,11)               'HTMLInputElement | null' not assignable to '... | undefined'
+composition-reference.tsx(342,2)                component signature not assignable to '() => ReactNode'
+```
+
+Fourteen per package, identical in both. These are exactly what widening `check`
+exists to surface - and exactly what this card's `stop_if` reserves for a
+follow-up: "type errors that need PRODUCT changes rather than config changes -
+record them and escalate; do not edit product code from this task."
 
 Three categories, in rough order of volume:
 
@@ -50,7 +66,9 @@ The configs were written, measured, and **reverted to a clean tree**.
 
 ## Next step
 
-One task that, in order: pulls the `@tsrx/core` declaration into scope, enables
-`allowJs` consistently with T005, fixes the `string | number` error, then wires
-`tsc -p` for both packages into the `check` script and watches CI go red if a
-type error is reintroduced.
+The config half is now a solved, known recipe - reproduce the second attempt
+above. The remaining work is fixing 14 real type errors per package in test and
+reference code, then wiring `tsc -p` for both into the `check` script and
+watching CI go red when a type error is reintroduced.
+
+That is a bounded slice with a known cost, which is the point of this note.

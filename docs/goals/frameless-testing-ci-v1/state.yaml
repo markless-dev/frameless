@@ -1298,8 +1298,10 @@ tasks:
             fail. Found findings-002 on first run.
           gap: >-
             The other half - making pnpm check cover TEST files - is not landed.
-            T011 measured it at 28/26 type errors including one genuine defect in
-            test code. See notes/T011-tsconfig-measurement.md.
+            T011 measured it TWICE: 28/26 naively, then 14/14 once allowJs and the
+            ambient tsrx-core declaration were added. The config half is a solved
+            recipe; the remaining 14 per package are all GENUINE type defects in
+            test and reference code. See notes/T011-tsconfig-measurement.md.
         - item: "3. Matrix"
           status: done
           implemented_by: ".github/workflows/ci.yml (12 jobs)"
