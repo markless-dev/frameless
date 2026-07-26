@@ -1,0 +1,292 @@
+# GoalBuddy v2 state.yaml
+# Board truth lives here. goal.md is the editable charter; notes/ holds long receipts only.
+
+version: 2
+
+goal:
+  title: "Frameless framework-idiom policy (Qwik $-prop as the instance)"
+  slug: "frameless-idiom-policy-v1"
+  kind: open_ended
+  tranche: "Merge to latest main, gather idiom evidence, ratify the emitter idiom-sugar policy via the Qwik $-prop case, implement the ratified direction with demos green, prove transferability with a zero-context agent, then prep the Vue/Angular/Svelte expansion boards."
+  status: active
+  oracle:
+    signal: "BOTH halves: (1) pnpm e2e / activation-neutrality green across demos/react-official, demos/solid-official, demos/qwik after the ratified Qwik $-prop decision; (2) a zero-context agent given only the written idiom policy makes the correct sugar/no-sugar call on an unseen framework idiom case."
+    cadence: "after each Worker package and at final audit"
+    final_proof: "Receipts showing: the ratified policy document path; the Qwik decision implemented in the ratified direction; a green verification receipt naming the e2e/activation commands and their output; a cold-agent transcript with the unseen case, the policy-only prompt, and the agent's verdict scored correct; and three prepped expansion boards at docs/goals/ for Vue, Angular, and Svelte."
+  intake:
+    original_request: "In Qwik you don't need to inject a $ if the prop already has $ on it (implicit$FirstArg) - unsure if the extra emitter handling is worth it since it works as-is. Also wondering whether to start goals for Vue, Angular, and Svelte."
+    interpreted_outcome: "Settle how much framework-idiom sugar the frameless emitters own, decide the Qwik $-prop case as the instance, prove the rule is transferable to an agent with no context, and prep the three expansion boards against it."
+    input_shape: vague
+    audience: "frameless maintainers and future adapter authors (human and agent)"
+    authority: approved
+    proof_type: test
+    completion_proof: "Both oracle halves satisfied and the Vue/Angular/Svelte boards prepped against the ratified policy."
+    likely_misfire: "Ship $-prop inference in the Qwik emitter, or a tidy-sounding policy document, and call the goal done without proving the rule transfers - leaving Vue, Angular and Svelte to re-litigate the same question three times, inconsistently."
+    blind_spots_considered:
+      - "The Qwik $ question is really an emitter-owned-sugar policy question that Vue (v-model/emits), Angular (signals/outputs) and Svelte 5 (runes) will each re-raise."
+      - "'Reject the sugar, stay literal, document why' is a legitimate and possibly correct outcome; the board must not presume implementation."
+      - "Idiom sugar buys ergonomics but bakes framework-version-specific knowledge into frameless and can make emitted output harder to debug against framework docs."
+      - "A policy that reads well to its author may be unusable without the conversation that produced it - hence the cold-agent oracle half."
+    existing_plan_facts:
+      - "Qwik exposes implicit$FirstArg; for $-suffixed props/APIs the optimizer/runtime accepts a raw function and wraps it, so both onInput$={$((e, el) => ...)} and onInput$={(e, el) => ...} are valid, the latter idiomatic."
+      - "Current frameless emitter output (explicit inner $()) works today. This is polish, not a defect; there is no regression pressure."
+      - "Owner is genuinely undecided on whether the extra emitter handling is worth its cost."
+      - "land/stack-and-three-way-demo must be merged into main and pushed before new work; owner is sole committer, no review gate."
+      - "Untracked test-results/ exists in the working tree and must be resolved (ignored or removed) rather than merged."
+      - "Vue/Angular/Svelte are prepped as boards only in this goal; no adapter implementation for them here."
+
+rules:
+  pm_owns_state: true
+  one_active_task: true
+  max_write_workers: 1
+  no_implementation_without_worker_or_pm_task: true
+  no_completion_without_judge_or_pm_audit: true
+  planning_is_not_completion: true
+  queued_required_worker_blocks_completion: true
+  continuous_until_full_outcome: true
+  missing_input_or_credentials_do_not_stop_goal: true
+  preserve_and_validate_existing_plan: true
+  intake_misfire_must_be_audited: true
+  goal_pressure_requires_oracle: true
+  no_completion_on_weak_proof: true
+  slice_policy:
+    max_consecutive_tiny_tasks: 2
+    prefer_vertical_slices: true
+    judge_picks_largest_safe_slice: true
+    worker_completes_whole_slice: true
+
+agents:
+  scout: installed
+  worker: installed
+  judge: installed
+
+visual_board:
+  selected: local
+  local:
+    status: live
+    url: "http://goalbuddy.localhost:41737/frameless-idiom-policy-v1/"
+    command: "npx goalbuddy board docs/goals/frameless-idiom-policy-v1"
+
+active_task: T002
+
+tasks:
+  - id: T001
+    type: pm
+    assignee: PM
+    status: done
+    reasoning_hint: medium
+    objective: "Bring the repo to latest: merge land/stack-and-three-way-demo into main, push main, and resolve the untracked test-results/ directory."
+    inputs:
+      - "git status / git log on land/stack-and-three-way-demo and main"
+      - "origin state for both branches"
+      - ".gitignore"
+    constraints:
+      - "Owner explicitly authorized merging this branch into main and pushing; owner is the sole committer."
+      - "Inspect before acting: confirm local main matches origin/main and the branch is a clean fast-forward or clean merge before merging."
+      - "Do not rewrite published history. No force-push."
+      - "Resolve test-results/ by adding it to .gitignore (preferred) or removing it - do not commit its contents."
+      - "Report exactly what was merged and pushed, including commit shas."
+    expected_output:
+      - "main updated and pushed, with the merge/ff commit sha"
+      - "test-results/ resolution recorded"
+      - "Working tree state after the operation"
+    stop_if:
+      - "Local main and origin/main have diverged unexpectedly."
+      - "The merge produces conflicts."
+      - "The branch contains commits the owner has not seen in this repo's log."
+    receipt:
+      result: done
+      summary: "main fast-forwarded to the branch tip and pushed; branch pushed to match; test-results/ gitignored; goal work now on goal/frameless-idiom-policy-v1 off the updated main."
+      commands:
+        - cmd: "git log --oneline land/stack-and-three-way-demo..main"
+          status: pass
+          note: "Empty - main was fully contained in the branch, so the merge was a clean fast-forward, not a divergence."
+        - cmd: "git merge --ff-only land/stack-and-three-way-demo"
+          status: pass
+          note: "895d187 -> eb15408; no merge commit, no conflicts."
+        - cmd: "git push origin main"
+          status: pass
+          note: "895d187..eb15408 - includes the 5 storage-ergonomics commits that were sitting unpushed on local main."
+        - cmd: "git push origin land/stack-and-three-way-demo"
+          status: pass
+          note: "5c7482c..eb15408 - branch and main now at the same sha on origin."
+      changed_files:
+        - .gitignore
+      details:
+        main_before: "869ea33 (local, 5 ahead of origin/main at 895d187)"
+        main_after: "eb15408 (pushed)"
+        merged_commit_count: 21
+        test_results_resolution: "Added test-results/ to .gitignore. Contents were Playwright run output only (.last-run.json) - nothing committed."
+        work_branch: "goal/frameless-idiom-policy-v1, created off the updated main."
+      open_item:
+        description: "docs/goals/frameless-testing-strategy-v1/ is untracked and half-prepped: it has goal.md and notes/ but NO state.yaml, so it is not a valid board and the checker would reject it. Created 2026-07-26, unrelated to this goal."
+        action: "Left untracked deliberately. Not this goal's to complete or commit. Owner decision: finish the prep, delete it, or commit as-is."
+      spawned_tasks: []
+
+  - id: T002
+    type: scout
+    assignee: Scout
+    status: active
+    reasoning_hint: medium
+    objective: "Map the Qwik $-prop mechanics and the frameless Qwik emitter surface that would have to change."
+    inputs:
+      - "Qwik source/types for implicit$FirstArg and QRL prop handling in node_modules"
+      - "The frameless Qwik emitter and its event/handler prop code paths"
+      - "demos/qwik and any fixture using onInput$ / handler props"
+    constraints:
+      - "Read-only. Do not edit implementation files."
+      - "Ground findings in actual Qwik source, types, or observed emitted output - not on a plausible reading of the docs."
+      - "Answer concretely: which prop shapes does implicit$FirstArg cover, which does it NOT, and what happens to an explicit inner $() when the prop is already $-suffixed (redundant-but-harmless, or double-wrapped)."
+      - "Identify the exact emitter file(s) and functions that would need to change, and estimate the blast radius."
+    expected_output:
+      - "How implicit$FirstArg actually resolves $-suffixed props, with file/line evidence"
+      - "Whether the current explicit-$() output is redundant, harmful, or load-bearing"
+      - "Exact emitter files/functions that would change, with blast radius"
+      - "Verification commands that would prove a change safe (e2e / activation neutrality)"
+    receipt: null
+
+  - id: T003
+    type: scout
+    assignee: Scout
+    status: queued
+    reasoning_hint: medium
+    objective: "Survey the equivalent idiom-sugar tension in Vue, Angular, and Svelte 5 so the policy has more than one framework to generalize over."
+    inputs:
+      - "Vue 3: v-model, defineEmits/emits, prop-vs-event conventions"
+      - "Angular: signals, input()/output(), template binding syntax"
+      - "Svelte 5: runes ($state, $derived, $props), event attribute conventions"
+      - "The frameless IR and existing react/solid/qwik emitters, for what the IR can and cannot express"
+    constraints:
+      - "Read-only. One package covering all three frameworks - do not split into three tasks."
+      - "For each framework, name at least one concrete case where an emitter could add sugar and one where sugar would be wrong or lossy."
+      - "Flag any case where the frameless IR cannot currently express what the idiom needs - that is an expansion-board input, not a policy input."
+      - "Prefer official framework docs/source over blog-post idiom claims."
+    expected_output:
+      - "Per framework: 1+ candidate sugar case and 1+ counter-case, with citations"
+      - "Which cases are structurally the same as the Qwik $-prop case and which are different in kind"
+      - "IR gaps that belong to the expansion boards rather than this policy"
+      - "A shortlist of candidate 'unseen cases' usable for the cold-agent replication test"
+    receipt: null
+
+  - id: T004
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Ratify the emitter idiom-sugar policy and decide the Qwik $-prop case in one direction, with an exact bounded Worker objective."
+    inputs:
+      - "T002 receipt"
+      - "T003 receipt"
+      - "goal.md constraints"
+    constraints:
+      - "Do not implement."
+      - "Both directions are acceptable: implement $-prop inference, OR keep the literal explicit-$() form with a documented rationale. Choose on evidence, not on which is more work."
+      - "The policy must be a decision procedure someone with no context can run, not a description of this one case."
+      - "The policy must produce a defensible answer for at least one Vue, one Angular, and one Svelte case from T003."
+      - "Reserve one T003 candidate case as the held-out cold-agent test case and name it here without recording the expected answer in any file the cold agent could read."
+      - "Pick the largest safe useful slice with clear allowed_files, verify commands, and stop conditions."
+    expected_output:
+      - "Decision: sugar | no-sugar, with rationale grounded in T002 evidence"
+      - "The policy's decision procedure, in a form a Worker can write down verbatim"
+      - "Exact Worker objective for T005"
+      - "allowed_files"
+      - "verify"
+      - "stop_if"
+      - "Held-out cold-agent test case (named, expected answer withheld from repo files)"
+    receipt: null
+
+  - id: T005
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Implement the ratified Qwik $-prop decision and write the idiom policy document, keeping all demos green."
+    allowed_files: []
+    verify: []
+    stop_if:
+      - "Need files outside allowed_files."
+      - "The ratified direction is ambiguous or the Judge decision does not name a decision procedure."
+      - "Activation neutrality breaks in any demo."
+      - "Verification fails twice."
+    constraints:
+      - "allowed_files and verify are filled in by the T004 Judge decision; do not start until they are set."
+      - "If the ratified direction is no-sugar, the deliverable is the policy document plus the recorded rationale - not a no-op commit."
+      - "Do not weaken or skip any existing activation-neutrality check to make verification pass."
+    receipt: null
+
+  - id: T006
+    type: pm
+    assignee: PM
+    status: queued
+    reasoning_hint: high
+    objective: "Run the cold-agent replication test: hand a zero-context agent only the policy document and the held-out unseen idiom case, and score its call."
+    inputs:
+      - "The policy document written in T005"
+      - "The held-out case named in the T004 receipt"
+    constraints:
+      - "The agent must receive the policy document and the case only - no conversation history, no board access, no goal.md, no other frameless docs."
+      - "Do not hint the expected answer in the prompt."
+      - "Record the exact prompt, the agent's verdict, and its reasoning verbatim in notes/T006-cold-agent.md."
+      - "A wrong or hedged verdict is a real failure: it means the policy is not transferable. Spawn a policy-revision Worker task and re-run rather than rationalizing the result."
+      - "Re-running after a revision requires a fresh agent and, if the case is now contaminated, a fresh held-out case."
+    expected_output:
+      - "notes/T006-cold-agent.md with prompt, verdict, and reasoning"
+      - "pass | fail, with the scoring rationale"
+      - "Policy revision task if failed"
+    receipt: null
+
+  - id: T007
+    type: pm
+    assignee: PM
+    status: queued
+    reasoning_hint: medium
+    objective: "Prep the Vue, Angular, and Svelte expansion goal boards against the ratified policy."
+    inputs:
+      - "The ratified policy document"
+      - "T003 receipt (IR gaps and per-framework idiom cases)"
+      - "Existing frameless goal boards as shape reference"
+    constraints:
+      - "One PM package covering all three boards - do not split into three tasks."
+      - "Prep only: goal.md, state.yaml, notes/ per framework. No adapter implementation, no framework demo scaffolding, no dependency installs."
+      - "Each board must cite the ratified policy as a non-negotiable constraint and carry that framework's IR gaps from T003 as intake facts."
+      - "Each board needs its own oracle - activation neutrality on an OFFICIAL framework scaffold, not a hand-rolled harness."
+      - "Do not start any of the three goals."
+    expected_output:
+      - "docs/goals/frameless-vue-v1/ prepped"
+      - "docs/goals/frameless-angular-v1/ prepped"
+      - "docs/goals/frameless-svelte-v1/ prepped"
+      - "The three /goal run commands, unexecuted"
+    receipt: null
+
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Audit whether BOTH oracle halves are satisfied and the full original owner outcome is complete."
+    inputs:
+      - "All done task receipts"
+      - "Last verification"
+      - "Current dirty diff"
+      - "notes/T006-cold-agent.md"
+    constraints:
+      - "Do not implement."
+      - "Reject completion if only one oracle half is satisfied. Green demos alone prove a code change; a policy document alone proves prose."
+      - "Reject completion if the cold-agent test passed only after the case or prompt was softened."
+      - "Reject completion if required Worker work is still queued or active."
+      - "Reject completion if the three expansion boards are not prepped."
+      - "Explicitly audit the likely misfire: did this goal produce a transferable rule, or just a Qwik tweak wearing a policy's clothes?"
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "Oracle half (1) evidence and half (2) evidence, separately"
+      - "missing evidence"
+      - "next task if not complete"
+    receipt: null
+
+checks:
+  dirty_fingerprint: unknown
+  last_verification:
+    result: unknown
+    task: null
+    commands: []

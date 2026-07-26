@@ -17,3 +17,6 @@ demos/ui-kit/receipts/
 
 # GoalBuddy board viewers (generated tooling, not product)
 .goalbuddy-board/
+
+# Playwright run output
+test-results/
