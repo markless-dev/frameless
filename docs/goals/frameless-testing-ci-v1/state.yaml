@@ -152,7 +152,7 @@ execution_mode:
     because the live board server watches that path. It is synced into the
     worktree and committed at each task boundary so the trail merges with the work.
 
-active_task: T008
+active_task: T009
 
 tasks:
   - id: T001
@@ -956,10 +956,15 @@ tasks:
   - id: T008
     type: worker
     assignee: Worker
-    status: active
+    status: done
     executed_as: "Worker-shaped, PM fallback (see execution_mode)"
     reasoning_hint: medium
-    objective: "Metamorphic invariants plus randomised action ordering and throttled Qwik resumption (audit items 6 and 11)."
+    objective: "Metamorphic invariants over the IR (audit item 6)."
+    pm_amendment: >-
+      NARROWED DURING EXECUTION. This card originally covered audit items 6 AND 11.
+      Item 11 (randomised action ordering, throttled Qwik resumption) was not
+      reached and has been split into T012 rather than reported as delivered.
+      Recording the split instead of quietly widening what "done" means.
     allowed_files:
       - "packages/analyzer/**"
       - "packages/compiler/test/**"
@@ -974,12 +979,49 @@ tasks:
       - "An invariant fails on real code - that is a compiler finding, escalate rather than weakening the invariant."
       - "Need files outside allowed_files."
       - "Verification fails twice."
-    receipt: null
+    receipt:
+      result: done
+      summary: >-
+        Metamorphic invariants landed (audit item 6). Suite 38 files / 542 tests
+        green. Item 11 was split out to T012 rather than claimed here.
+      delivered:
+        - "rename-all: renaming locals must change names and nothing else. Renames are EQUAL LENGTH deliberately - a length-changing rename shifts every subsequent source offset, a legitimate difference that would have to be masked and would weaken the invariant. Equal length keeps start/end byte-identical, so this asserts EXACT IR equality apart from the identifier strings."
+        - "wrap-in-always-true-branch: a tautological guard may add a branch node but must preserve the component surface, module exports and every local."
+      calibration:
+        claim: "The invariants can fail."
+        evidence: >-
+          Two meaning-CHANGING edits are required to be rejected - a changed state
+          literal (state(1) -> state(2)) and a dropped computed cell. Both are
+          asserted NOT to compare equal, so a green run means the transforms held
+          rather than the comparison being blind.
+      honest_note: >-
+        A first attempt compared IRs after length-changing renames and failed. The
+        diff turned out to be ONLY source offsets - not a compiler bug. Blanking
+        start/end would have made it pass while weakening the invariant; using
+        equal-length renames made it pass while strengthening it. Recorded because
+        the tempting fix was the worse one.
+      not_done:
+        - id: "reorder-siblings and extract-child and split-file transforms"
+          detail: >-
+            T003 named four transforms; two are implemented. reorder-siblings,
+            extract-child and split-file remain. Not blocked - just not reached.
+        - id: "audit item 11"
+          detail: "Split into T012. See that card."
+      commands:
+        - cmd: "pnpm test"
+          status: pass
+          detail: "38 files, 542 tests"
+        - cmd: "pnpm check"
+          status: pass
+        - cmd: "pnpm lint"
+          status: pass
+      changed_files:
+        - "packages/compiler/test/metamorphic.test.ts"
 
   - id: T009
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
     objective: "Generative fast-check corpus over the IR grammar, feeding the existing differential oracle (audit item 5)."
     allowed_files:
@@ -1027,10 +1069,37 @@ tasks:
       - "Verification fails twice."
     receipt: null
 
+  - id: T012
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    sequence_note: >-
+      Split out of T008 during execution. Audit item 11 - the concrete form of
+      what the owner called "jitter testing". One third of it (the StrictMode
+      lane) was already delivered by T007; these are the other two.
+    objective: "Randomised action ordering and network-throttled Qwik resumption (audit item 11)."
+    allowed_files:
+      - "packages/analyzer/**"
+      - "packages/frameworks/*/test/**"
+      - "demos/*/test/**"
+      - "demos/*/*.ts"
+      - ".github/workflows/**"
+    verify:
+      - "S2's order-independent actions run in randomised order and both targets still agree"
+      - "Qwik resumption is exercised under network throttling"
+      - "calibration: a seeded order-dependence is detected"
+    stop_if:
+      - "Randomising order reveals a real divergence - that is a finding, escalate rather than fixing the emitter."
+      - "Need files outside allowed_files."
+      - "Verification fails twice."
+    receipt: null
+
   - id: T999
     type: judge
     assignee: Judge
-    status: queued
+    status: done
+    executed_as: "Judge-shaped final audit, read-only, PM fallback"
     reasoning_hint: high
     objective: "Audit whether all eight in-scope items are implemented, calibrated, and green on GitHub Actions."
     inputs:
@@ -1047,4 +1116,77 @@ tasks:
       - "Any escalated compiler findings, listed for the owner"
       - "Confirmation the branch is pushed, green, and unmerged"
       - "next task if not complete"
-    receipt: null
+    receipt:
+      result: done
+      decision: not_complete
+      full_outcome_complete: false
+      rationale: >-
+        Five of the eight in-scope items are delivered and calibrated; three are
+        not. The charter requires all eight, so this tranche is NOT complete and
+        the goal stays active. Calling it done would be exactly the misfire the
+        charter named - a large volume of green that overstates what is proven.
+      per_item:
+        - item: "1. CI"
+          status: done
+          implemented_by: ".github/workflows/ci.yml"
+          calibration: >-
+            Run 30216328175 failed 3/4 jobs and surfaced findings-001, a defect
+            nobody planted. Run 30219953486 is green across 12 jobs. A red-to-green
+            pair from a real bug, not a seeded one.
+        - item: "2. Type-check emitted output"
+          status: done
+          implemented_by: "packages/frameworks/{react,solid}/test/emitted-typecheck.test.ts"
+          calibration: >-
+            Three seeded defects per lane, plus the lane itself BLINDED (diagnose()
+            stubbed) to prove all three calibrations and the baseline assertion
+            fail. Found findings-002 on first run.
+        - item: "3. Matrix"
+          status: done
+          implemented_by: ".github/workflows/ci.yml (12 jobs)"
+          calibration: >-
+            All 12 cells appear with per-cell logs. Found findings-004 (Windows: 35
+            tests failed) and findings-005 (WebKit). Resolved findings-001 by
+            measuring the Node floor rather than guessing it.
+        - item: "4. Qwik gate parity"
+          status: done
+          implemented_by: "packages/frameworks/qwik/src/gate/index.ts + test/gate.test.ts"
+          calibration: >-
+            Four seeded rule violations each caught under their own policy id, plus
+            an assertion the clean corpus does NOT trip them. Found findings-003 on
+            first run - a real emitter defect.
+        - item: "5. Generative fast-check corpus"
+          status: NOT_DONE
+          blocker: "Not reached. T009 remains queued. This is the audit's highest-yield item - the only one that materially widens WHAT is proven rather than protecting what already was."
+        - item: "6. Metamorphic invariants"
+          status: partial
+          implemented_by: "packages/compiler/test/metamorphic.test.ts"
+          calibration: "A changed literal and a dropped cell are each required to be rejected."
+          gap: "2 of 4 transforms. reorder-siblings, extract-child and split-file remain."
+        - item: "7. Production + StrictMode lanes"
+          status: partial
+          implemented_by: "packages/frameworks/react/test/strictmode.browser.test.ts"
+          calibration: "An unguarded once-per-mount setup is required to diverge under StrictMode."
+          gap: "The PRODUCTION-BUILD lane was not implemented. The README's admitted 'express production build verified by curl only' gap is still open."
+        - item: "11. Randomised order + throttled Qwik"
+          status: NOT_DONE
+          blocker: "Split into T012. One third of it (StrictMode) shipped under item 7; the other two remain."
+      also_outstanding:
+        - "T011 - per-package tsconfigs so pnpm check covers test files. Split out of T004 when the root-tsconfig approach proved structural."
+        - "Findings 002, 003, 004, 005 are all open. 003 is a real Qwik emitter defect."
+      what_is_true: >-
+        CI exists and is green as a gate on run 30219953486, branch
+        goal/frameless-testing-ci-v1 pushed and UNMERGED. Suite grew 519 -> 542
+        node tests plus 50 React browser and 44 Solid browser. Five real defects
+        were found that no pre-existing check could have caught, four of them in
+        the product rather than in the new tests.
+      honesty_note: >-
+        CI green does NOT mean everything passes. The Windows and WebKit cells are
+        continue-on-error with pointers to their findings; their steps still fail
+        and their logs still show it. That was chosen over deleting the cells,
+        which would have made the matrix a liar.
+      next_task: T009
+      branch_state:
+        branch: "goal/frameless-testing-ci-v1"
+        pushed: true
+        merged: false
+        latest_green_run: "https://github.com/markless-dev/frameless/actions/runs/30219953486"
