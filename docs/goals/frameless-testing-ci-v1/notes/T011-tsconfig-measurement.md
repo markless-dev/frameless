@@ -21,6 +21,7 @@ single root config cannot type-check both framework test trees because Solid's
 | --- | ---: | ---: |
 | naive config | 28 | 26 |
 | **+ `allowJs`, + ambient `tsrx-core.d.ts` in `include`** | **14** | **14** |
+| **+ widened component registries, + typed the strictmode map** | **9** | **10** |
 
 The second attempt resolved both *config* categories. Everything that remains is
 a genuine type defect in test or reference code:
@@ -72,6 +73,17 @@ reference code, then wiring `tsc -p` for both into the `check` script and
 watching CI go red when a type error is reintroduced.
 
 That is a bounded slice with a known cost, which is the point of this note.
+
+## Landed so far
+
+- `reactCompositionReferences` retyped `Record<string, () => ReactNode>` ->
+  `Record<string, ComponentType<any>>`. Those pages take optional variant props
+  used by the mutant builders, so the old type understated them.
+- `solidCompositionReferences` likewise -> `(props?: any) => JSX.Element`.
+- `strictmode.browser.test.ts`'s emitted map typed explicitly, because inferring
+  it produces a union of three differently-shaped prop signatures. That error was
+  introduced by this goal, so it was fixed here rather than left for the
+  follow-up.
 
 ## The complete error inventory
 
@@ -128,6 +140,11 @@ distinct effort:
 3. **Genuinely loose spots** — `Cannot assign to 'persistence' because it is
    read-only`, `HTMLInputElement | null` vs `| undefined`, `string | number`
    passed where `string` is required. These are small and local.
+
+**Pattern 1 is now fixed and committed** (see below), taking react 14 -> 9 and
+solid 14 -> 10. The full suite stayed green at 551 tests through the change,
+including every calibration lane - which is the empirical form of the argument
+below.
 
 None require changing runtime behavior, and the calibration suites would fail
 loudly if an edit did - `mutants.ts` plus the calibration lanes assert that clean

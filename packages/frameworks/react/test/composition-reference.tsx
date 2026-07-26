@@ -1,4 +1,5 @@
 import {
+	type ComponentType,
 	createContext,
 	type ReactNode,
 	useCallback,
@@ -338,7 +339,11 @@ function CleanupPage({ variant = 'reference' }: { variant?: CleanupVariant }) {
 	);
 }
 
-export const reactCompositionReferences: Record<string, () => ReactNode> = {
+// These pages take OPTIONAL props (variant selectors used by the mutant
+// builders), so `() => ReactNode` was too narrow to describe them. ComponentType
+// is what createReactAdapter already accepts, so this widens the declaration to
+// the truth rather than loosening a real constraint.
+export const reactCompositionReferences: Record<string, ComponentType<any>> = {
 	'C1-slot-rendering': SlotPage,
 	'C2-shared-propagation': SharedPage,
 	'C3-ref-driven-focus': FocusPage,

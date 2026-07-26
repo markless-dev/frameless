@@ -28,7 +28,9 @@ import { reactReferences } from './reference.tsx';
 // in StrictMode, the handwritten reference runs unwrapped. Wrapping both would
 // let a shared double-invocation bug cancel out and still report "equal".
 
-const emitted = {
+// Typed explicitly: inferring this map gives a UNION of three differently-shaped
+// prop signatures, which is not assignable to a single ComponentType parameter.
+const emitted: Record<string, React.ComponentType<any>> = {
 	'S1-render-once-locals': RenderOnce,
 	'S2-keyed-todo': KeyedTodo,
 	'S3-event-form': EventForm,
@@ -45,13 +47,13 @@ function strict<P extends object>(Component: React.ComponentType<P>): React.Comp
 describe('emitted React output under StrictMode double-invocation', () => {
 	for (const scenario of calibrationScenarios) {
 		test(scenario.id, async () => {
-			const componentId = scenario.id.split('/')[0]! as keyof typeof emitted;
+			const componentId = scenario.id.split('/')[0]!;
 			const reference = await runScenario(
 				createReactAdapter(reactReferences[componentId]),
 				scenario,
 			);
 			const strictEmitted = await runScenario(
-				createReactAdapter(strict(emitted[componentId])),
+				createReactAdapter(strict(emitted[componentId]!)),
 				scenario,
 			);
 			expect(compareRuns(reference, strictEmitted)).toEqual({
@@ -72,7 +74,7 @@ describe('emitted React output under StrictMode double-invocation', () => {
 			// invocation reports setup twice where the contract demands once.
 			(onTrace as (name: string, payload: unknown) => void)('setup', { runs: 1 });
 			return React.createElement(
-				emitted['S1-render-once-locals'] as React.ComponentType<any>,
+				emitted['S1-render-once-locals']!,
 				{ onTrace, ...rest },
 			);
 		};
