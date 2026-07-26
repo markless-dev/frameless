@@ -107,7 +107,11 @@ const SharedContext = createContext<SharedStore | null>(null);
 function useCompositionShared(cell: 'count'): number;
 function useCompositionShared(cell: 'history'): string;
 function useCompositionShared(cell: 'store'): SharedStore;
-function useCompositionShared(cell: 'count' | 'history' | 'store') {
+// The implementation signature needs an explicit return type: TypeScript cannot
+// reconcile an INFERRED union return against the three overloads above.
+function useCompositionShared(
+	cell: 'count' | 'history' | 'store',
+): number | string | SharedStore {
 	const store = useContext(SharedContext);
 	if (!store) throw new Error('Composition shared store is missing its provider');
 	const snapshot = useSyncExternalStore(
@@ -116,8 +120,19 @@ function useCompositionShared(cell: 'count' | 'history' | 'store') {
 			: cell === 'history'
 				? store.subscribeHistory
 				: subscribeToNothing,
-		cell === 'count' ? store.getCount : cell === 'history' ? store.getHistory : getNothing,
-		cell === 'count' ? store.getCount : cell === 'history' ? store.getHistory : getNothing,
+		// The ternary yields a UNION of getters, which useSyncExternalStore's
+		// single-signature parameter will not accept. The runtime value is
+		// unchanged; only the declared type is unified.
+		(cell === 'count'
+			? store.getCount
+			: cell === 'history'
+				? store.getHistory
+				: getNothing) as () => never,
+		(cell === 'count'
+			? store.getCount
+			: cell === 'history'
+				? store.getHistory
+				: getNothing) as () => never,
 	);
 	if (cell === 'count') {
 		return snapshot;

@@ -22,7 +22,8 @@ single root config cannot type-check both framework test trees because Solid's
 | naive config | 28 | 26 |
 | **+ `allowJs`, + ambient `tsrx-core.d.ts` in `include`** | **14** | **14** |
 | **+ widened component registries, + typed the strictmode map** | **9** | **10** |
-| **+ three local fixes (see below)** | **6** | 10 |
+| **+ three local fixes** | **6** | 10 |
+| **+ overload return type, getter-union cast, gate narrowing** | **1** | 10 |
 
 The second attempt resolved both *config* categories. Everything that remains is
 a genuine type defect in test or reference code:
@@ -100,13 +101,30 @@ That is a bounded slice with a known cost, which is the point of this note.
 
 Suite green at 551 tests after each round.
 
-### What is left (react 6, solid 10)
+### Round four — react 6 -> 1
 
-Two in `composition-reference.tsx` (an overload signature incompatible with its
-implementation, and a `(() => number) | (() => string)` union) and four in
-`gate.test.ts` (policy-id union narrowing across `test.each` tables). These need
-reading the surrounding declarations rather than a local edit, which is why they
-were not attempted blind.
+- `composition-reference.tsx` — the overloaded `useCompositionShared` needed an
+  explicit return type on its implementation signature; TypeScript cannot
+  reconcile an *inferred* union return against three overloads (TS2394).
+- Same file — the `useSyncExternalStore` getter ternary yields a union of
+  functions, which a single-signature parameter rejects. Cast at the call site;
+  the runtime value is untouched.
+- `gate.test.ts` — `requiresArtifact` exists on only some members of the policy
+  union, so it needs an `in` guard before access (same predicate at runtime); and
+  `covered` was inferred as a Set of just the literal ids present in the mutation
+  tables, which then rejected both the `add()` and the `has()` against the full
+  policy list. Declared `Set<string>`.
+
+### What is left (react 1, solid 10)
+
+**React: one error.** `gate.test.ts(690,3)` — the `test.each` table's callback
+signature against a large tuple union. This is the one place where a careless
+narrowing could weaken the policy assertions the gate depends on, so it was left
+rather than guessed at.
+
+**Solid: ten**, not yet worked. They mirror the React set closely (the same
+composition-reference and gate.test shapes), so the four rounds above should
+transfer almost directly.
 
 ## The complete error inventory
 

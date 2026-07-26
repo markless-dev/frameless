@@ -132,7 +132,11 @@ describe('React dossier gate', async () => {
 			true,
 		);
 		expect(
-			REACT_GATE_POLICIES.filter((policy) => policy.requiresArtifact).map(
+			// requiresArtifact is present on only some members of the policy union,
+			// so it needs an `in` guard before access. Same predicate at runtime.
+			REACT_GATE_POLICIES.filter(
+				(policy) => 'requiresArtifact' in policy && policy.requiresArtifact,
+			).map(
 				(policy) => policy.id,
 			),
 		).toEqual(['persistence-render-lowering', 'R-SH4', 'R-CH2']);
@@ -696,7 +700,10 @@ describe('React dossier gate', async () => {
 	);
 
 	test('has a mutation that exercises every published policy', () => {
-		const covered = new Set(
+		// Set<string>: inferring this narrows to the literal ids present in the
+		// mutation tables, which then rejects both the add() below and the
+		// has() check against the full policy list.
+		const covered = new Set<string>(
 			[...mutationCases, ...compositionMutationCases].map((entry) => entry[2]),
 		);
 		covered.add('persistence-render-lowering');
