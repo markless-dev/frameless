@@ -27,6 +27,7 @@
 	"devDependencies": {
 		"@frameless/analyzer": "workspace:*",
 		"@types/node": "24.12.2",
+		"fast-check": "^4.9.0",
 		"typescript": "5.9.3",
 		"vite": "8.0.16",
 		"vite-plus": "0.1.20",
