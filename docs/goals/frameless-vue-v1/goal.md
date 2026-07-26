@@ -59,6 +59,12 @@ Land a Vue lane: scaffold, emitter, gate, goldens, demo, e2e row. Then, and only
 
 Stop when a final audit proves the oracle above, mapping receipts to the equality assertion in `pnpm e2e`. Do not stop at "the emitter produces plausible Vue".
 
+## Run order across the three adapter boards
+
+The three *lanes* are independent — this board can scaffold, emit and prove activation neutrality without waiting on Angular or Svelte. S1/S2/S3 do not use version-gated constructs, so IR-4 does not block the lane.
+
+But **this board's sugar ruling (T005) depends on IR-4**, which `frameless-svelte-v1` owns. Vue needs a target-version input for `defineModel`, which requires Vue 3.4+. If Svelte has not ruled on IR-4 by the time T005 runs, T005 must **defer on IR-4 grounds and say so** rather than inventing a local answer — a local answer is exactly the "re-litigate the same question three times, inconsistently" cost the idiom-policy goal existed to prevent.
+
 ## Canonical board
 
 `docs/goals/frameless-vue-v1/state.yaml` — machine truth. If this charter disagrees, `state.yaml` wins.

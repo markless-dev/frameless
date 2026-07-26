@@ -67,6 +67,14 @@ Land a Svelte lane: scaffold, emitter, gate, goldens, demo, e2e row. Then rule o
 
 Stop when a final audit proves the oracle. Do not stop at "the emitter produces plausible Svelte".
 
+## Run order across the three adapter boards
+
+**This board should run first of the three, or at least reach its IR-4 ruling first.**
+
+The three *lanes* are independent — nothing stops Vue or Angular from scaffolding, emitting and proving activation neutrality in any order. S1/S2/S3 do not depend on version-gated constructs, so IR-4 does not block a lane.
+
+What IR-4 does block is each board's **sugar rulings**. Vue needs it for `defineModel` (3.4+) and Angular for signal `input()`/`output()` (≥17.1/17.2), and this board owns the decision. Run Vue or Angular's sugar ruling first and it will either defer on IR-4 grounds or invent a local answer that this board then contradicts — which is precisely the "re-litigate the same question three times, inconsistently" cost the idiom-policy goal existed to prevent.
+
 ## Canonical board
 
 `docs/goals/frameless-svelte-v1/state.yaml` — machine truth. If this charter disagrees, `state.yaml` wins.

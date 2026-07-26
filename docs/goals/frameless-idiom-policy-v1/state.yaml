@@ -8,7 +8,7 @@ goal:
   slug: "frameless-idiom-policy-v1"
   kind: open_ended
   tranche: "Merge to latest main, gather idiom evidence, ratify the emitter idiom-sugar policy via the Qwik $-prop case, implement the ratified direction with demos green, prove transferability with a zero-context agent, then prep the Vue/Angular/Svelte expansion boards."
-  status: active
+  status: done
   oracle:
     signal: "BOTH halves: (1) pnpm e2e / activation-neutrality green across demos/react-official, demos/solid-official, demos/qwik after the ratified Qwik $-prop decision; (2) a zero-context agent given only the written idiom policy makes the correct sugar/no-sugar call on an unseen framework idiom case."
     cadence: "after each Worker package and at final audit"
@@ -69,7 +69,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-idiom-policy-v1/"
     command: "npx goalbuddy board docs/goals/frameless-idiom-policy-v1"
 
-active_task: T999
+active_task: null
 
 tasks:
   - id: T001
@@ -696,7 +696,7 @@ tasks:
   - id: T999
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Audit whether BOTH oracle halves are satisfied and the full original owner outcome is complete."
     inputs:
@@ -718,11 +718,93 @@ tasks:
       - "Oracle half (1) evidence and half (2) evidence, separately"
       - "missing evidence"
       - "next task if not complete"
-    receipt: null
+    receipt:
+      result: done
+      decision: complete
+      full_outcome_complete: true
+      summary: "BOTH oracle halves verified by the Judge's OWN runs, not by reading receipts. Half 1: pnpm e2e re-run green - 3 demos x 3 scenarios all observations equal, react/solid hydrate, qwik resume, 1 document request each, zero console errors, zero failed requests. Half 2: cold-agent protocol verified from FILESYSTEM TIMESTAMPS - pre-registration mtime 14:13:23, the agent's isolated policy copy 14:13:27, correct order, and the copy diffs EMPTY against the shipped doc so the case was not softened. The transferable-rule claim rests on the two defects a stranger found and which then survived an independent Judge ruling and 11 machine-verified anchor replacements - not on the verdict match."
+      oracle_half_1_evidence:
+        judge_own_runs: "pnpm e2e green; pnpm test 520/520; pnpm check exit 0; qwik package 11/11 including the byte-exact golden freshness check; manifest guards re-run giving {emittedSymbols:18, eventHandler:12, dollarNamed:0, capturing:6}."
+        structural_proof: "git diff --stat main..HEAD over scripts/, demos/react-official/three-way-contract.ts, demos/qwik/scenarios.box.ts and packages/frameworks/qwik/test/gate.test.ts is EMPTY. The activation harness was never touched, so no assertion COULD have been weakened to buy the pass. resumeSymbols still reads atLeast 1/3/1 with detailIncludes, consoleErrors 0, failedRequests 0."
+        emitter_change_size: "2 lines at packages/frameworks/qwik/src/emitter/index.ts:596-597."
+      oracle_half_2_evidence:
+        protocol_verified_physically:
+          - "Pre-registration genuinely preceded dispatch: scratchpad/T006-preregistration.md mtime 14:13:23, the agent's policy copy 14:13:27. Four seconds, right order, outside the repo."
+          - "The case was NOT softened: diff of the agent's copy against `git show a93d312:docs/emitter-idiom-policy.md` is EMPTY. It read the shipped policy verbatim."
+          - "Zero-context by construction: the isolated directory contains exactly one file."
+          - "The answer was unreachable: Judge's own scan of the a93d312 policy for input()/output()/@Input/@Output/EventEmitter/decorator/signal-based/model(/banana returns ZERO hits."
+          - "No re-run, no case swap, no prompt revision anywhere in board, notes or scratchpad. First result is the recorded result."
+        unverifiable: "Prompt neutrality. The verbatim prompt is not in the repo - see missing_evidence and dissent."
+      misfire_audit:
+        verdict: "A transferable rule, NOT a Qwik tweak in policy clothes."
+        reasoning:
+          - "The procedure produces DIFFERENT answers: across 8 cases, 2 sugar / 3 denied / 3 deferred. A rule that only ratifies its own instance case is a preference; this one rejects three outright."
+          - "It reproduces rulings it was not designed around: worked example 8 retro-derives React's pre-existing onInput->onChange and class->className decisions, and the Solid dossier's OPPOSITE ruling on the same constructs survives as expected divergence."
+          - "Non-Qwik evidence RESHAPED the rule: the 'baseline is not the literal form' definition and the forced-lowering carve-out exist only because Angular has no naive form and broke a Qwik-shaped phrasing."
+          - "STRONGEST: a stranger changed the artifact. The cold agent found two defects invisible to everyone who knew what the policy meant; they survived an independent Judge ruling (T008) and drove 11 machine-verified anchor replacements. That chain cannot be fabricated."
+          - "The 'three times inconsistently' cost is pre-empted in artifacts, not promises: each expansion board derives its lane-first task order FROM Gate 1/Gate 6's consequence, and the Angular board carries the already-ruled question with the warning that G1 will clear and G5 will not."
+      falsified_premises_audit:
+        t002_correction: "Propagated to all three levels, and reached the SHIPPED document: docs/emitter-idiom-policy.md:227-230 states the documentary claim is false and uses it as the case Gate 1 exists for. The correction became load-bearing content, not a footnote. goal.md:32 carries a visible strikethrough with the owner's original wording preserved verbatim above it."
+        t004_overturn: "Recorded as OVERTURNED BY T004 in the live facts channel with the specific numbers and the resolution mechanism."
+        stale_check: "Judge grepped for both falsified claims. The only surviving instances are inside T002's OWN historical receipt - correct practice, receipts are immutable records, and T002 self-flagged it PROVISIONAL which is what let T004 catch it. NOTHING in docs/emitter-idiom-policy.md asserts a falsified claim."
+        nit: "T002's receipt carries no inline 'superseded by T004' pointer, so a reader landing on it in isolation sees the false claim with only the PROVISIONAL caveat as warning. Non-blocking."
+      verification_integrity:
+        unrun_browser_lane: "Recorded honestly, not dressed up - T005 used a dedicated unrun_verify_step block with outcome 'DID NOT COMPLETE - no verdict' and kept it OUT of commands. Judge reproduced the hang independently and found a STRONGER argument than T005's stash test: the branch touches no react-browser, solid-browser, root-config or package.json file, so it is structurally IMPOSSIBLE for this branch to have caused it."
+        new_root_cause_lead: "The hang log shows 'Loaded vitest@0.1.20 and @vitest/browser@4.1.5. Running mixed versions is not supported' - a concrete lead no receipt had recorded. Routed to docs/goals/frameless-testing-ci-v1/."
+        assertions_weakened: "NONE. Harness diff empty; gate.test.ts untouched; the byte-exact freshness check and fail-closed persistence test untouched. The only test edit retargeted three regexes to the new shape rather than deleting them, so they still pin a specific output."
+        t009_zero_flip_spotchecked: "Holds against the FILE, not the receipt. All six grep counts matched (2,2,7,5,1,6). All eight verdict headings and all six gate headings byte-identical. Examples 1 and 8 byte-identical; 2-7 changed. The G4 FAIL at line 314 - example 6's pre-repair failure, the only illustration of the repair step - survives exactly as T008 said it deliberately should."
+        h3_not_silently_changed: "T008 disclosed openly that the amendment moves H3's G1 cell FAIL->DEFERRED; the ruling is unchanged because G5 carries it alone, and the pre-registered band was 'G1 and/or G5' with G5 named strongest."
+      expansion_boards_audit: "PASS. All three exist and parse; 6 tasks each with ALL receipts null (genuinely not started); each cites docs/emitter-idiom-policy.md in both goal.md and state.yaml; distinct IR-gap sets (Vue 1-7, Angular 1/2/3/4/6, Svelte 1/3/4/5/6/7); each records Gate-6 deferral and inherits all three standing gaps. Genuinely differentiated: only 11 of 42 content lines shared between the Vue and Angular charters, and each board's T005 is framework-specific. NO adapter implementation: packages/frameworks/ contains only qwik, react, solid; no vue/angular/svelte file anywhere in packages/ or demos/."
+      owner_questions_answered:
+        q1_is_the_dollar_handling_worth_it: "YES, implemented and verified. emitEvent returns the raw handler. Measured justification is classification correctness and capture elimination - 12 handlers moved from ctxKind function/ctxName '$'/capturing to ctxKind eventHandler named by their own event prop, 9 of 15 stopped capturing - on the SHIPPED bundled optimizer. Notably honest: no latency benefit was measured and none is claimed. The owner's conclusion was right; the owner's stated mechanism was not, and the correction is recorded."
+        q2_should_vue_angular_svelte_start: "YES, and they are prepped - three validated, differentiated, unstarted boards with three unexecuted run commands. Better than a yes/no, the boards answer HOW: lane-first, because the policy's own Gate 1/Gate 6 make no absent-framework sugar shippable until a lane exists at a pinned version."
+      pm_corrections_after_audit:
+        - "DISCLOSED AND FIXED: commit 48e4c83 (T007) also committed docs/goals/frameless-testing-ci-v1/ and docs/goals/frameless-testing-strategy-v1/ - ~2,500 lines across 10 files - as a side effect of `git add docs/goals`. That REVERSED a decision T001 explicitly reserved for the owner, and was disclosed by neither the T007 receipt nor its commit message. The PM untracked both in a separate visible commit rather than amending, so the mistake stays in the record next to its correction. Files untouched on disk; only the index changed. The audit is correct that the goal spent considerable rigour on not absorbing falsified premises and then quietly absorbed someone else's board."
+        - "ADDED: a 'Run order across the three adapter boards' section to all three expansion charters. The audit found the IR-4 dependency recorded but NOT SEQUENCED - Svelte owns the IR-4 ruling and Vue and Angular inherit it, with nothing telling the owner that. Each charter now states that the LANES are independent (S1/S2/S3 use no version-gated constructs) but that its own sugar ruling depends on IR-4, and that if Svelte has not ruled by then it must defer on IR-4 grounds rather than invent a local answer."
+      open_items:
+        blocking: []
+        non_blocking:
+          - "pnpm test:browser hang - reproduced by the Judge; provably cannot originate from this branch. The Qwik ruling's Gate 6 names pnpm e2e, which is green. A prepped board already exists for it. T008's warning stands: a Gate 6 naming a command nobody can run will quietly stop pinning things."
+          - "H3 as worked example 9 - recommended, and the audit named a cost nobody had stated: promoting it names Angular's input()/output() in the policy AND permanently burns H3 as a future held-out case. OWNER DECISION, deliberately not taken by the PM."
+          - "Worked example 4 has no G3 cell - verified real, same class of defect the cold agent caught. No outcome depends on it (G2 and G5 both FAIL independently). Left unfixed because the honest fix requires a substantive G3 ruling that T008 correctly declined to invent."
+          - "Five of eight worked examples reason about absent frameworks - arguably correct by design now that every such cell is labelled DEFERRED rather than laundered as PASS. Bounds what the record PROVES; not an error in the record."
+          - "No code reference to the policy: grep -rn 'emitter-idiom-policy' packages/ returns nothing. The Qwik comment reads 'T004 ruling 1' matching the existing react convention, so the clause is satisfied literally but points at a board note rather than the standing document."
+      missing_evidence:
+        - "The verbatim cold-agent prompt and transcript are NOT in the repo, though the T006 card required them. Prompt neutrality is the single protocol property the Judge could not verify independently; accepted on corroboration."
+        - "N=1 transferability: one agent, one case, one framework, one dispatch. The oracle as written asks exactly this, so it is satisfied, but it is thin for a claim about a general rule."
+        - "No production-mode standing coverage for demos/qwik; production was proven once, per-task, by T005 verify step 9."
+        - "Whether the raw form survives an optimizer-bypassed runtime-only JSX setup. Accepted narrowing, recorded in the policy at :260-262."
+      dissent:
+        - "The oracle's half 2 was written TOO WEAK and the goal then over-delivered against it. N=1 is clearable by luck. It should have demanded two cases in opposite directions - one where the correct answer is SUGAR - because every cold-agent case so far resolves to no-sugar, and a policy biased toward 'no' would pass H3 for the wrong reason."
+        - "The Judge is unconvinced by the worked examples as 'the record'. The document says 'These are the record; they are not illustrations.' For five of eight that sentence is not true, and the amendment made the labels honest without making the sentence true. Preferred: separate a Rulings section (Qwik, React - measured) from a Rehearsals section (Vue, Angular, Svelte - deferred)."
+        - "Where the framing was RIGHT: making the Qwik question a policy question was correct, and the evidence bears it out - the procedure had to be reshaped twice by frameworks the repo does not ship (Angular's missing literal form, then the absent-framework Gate 1/Gate 4 partition). A Qwik-only investigation would have produced a rule that silently failed on the first Vue question."
+      spawned_tasks: []
 
 checks:
-  dirty_fingerprint: unknown
+  dirty_fingerprint: clean
   last_verification:
-    result: unknown
-    task: null
-    commands: []
+    result: pass
+    task: T999
+    note: "Re-run independently by the T999 Judge, not copied from receipts."
+    commands:
+      - cmd: "pnpm e2e"
+        status: pass
+        note: "3 demos x 3 scenarios, all observations equal. react/solid hydrate, qwik resume, 1 document request each, zero console errors, zero failed requests."
+      - cmd: "pnpm test"
+        status: pass
+        note: "35 files, 520 tests"
+      - cmd: "pnpm check"
+        status: pass
+        note: "tsc --noEmit exit 0"
+      - cmd: "pnpm --dir packages/frameworks/qwik test"
+        status: pass
+        note: "11/11 including the byte-exact golden freshness check"
+      - cmd: "q-manifest.json guards"
+        status: pass
+        note: "{emittedSymbols:18, eventHandler:12, dollarNamed:0, capturing:6}"
+      - cmd: "all 11 T009 transcription checks"
+        status: pass
+        note: "every predicted value matched; examples 1 and 8 byte-identical; zero rulings flipped"
+      - cmd: "git diff --stat main..HEAD over the activation harness"
+        status: pass
+        note: "EMPTY - harness provably untouched, so no assertion could have been weakened"
