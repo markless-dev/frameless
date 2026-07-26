@@ -18,31 +18,61 @@ env:
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
 
 jobs:
+  # ---------------------------------------------------------------------------
+  # MATRIX (audit item 3), cells enumerated by T003 Ruling 3.
+  #
+  # Shape follows Svelte's: broad on one OS, thin elsewhere. The full cartesian
+  # product (3 OS x 3 Node x 2 modes x 3 engines x 2 framework versions = 108)
+  # was rejected - most cells carry no information and a single red becomes hard
+  # to attribute. Cost is not the constraint here: T002 measured the green path
+  # at ~40s.
+  #
+  # Node 20 is deliberately ABSENT. CI run 30216328175 measured it broken - the
+  # toolchain cannot load vite.config.ts on the Node 20 GitHub ships. See
+  # docs/goals/frameless-testing-ci-v1/notes/findings-001-engines-node-floor.md.
+  # engines.node is set from what this matrix proves green, not from guesswork.
+  # ---------------------------------------------------------------------------
   static:
-    name: check + lint
+    name: check + lint (node ${{ matrix.node }})
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [22, 24]
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v5
         with:
-          node-version: 24
+          node-version: ${{ matrix.node }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
       - run: pnpm lint
 
   test:
-    name: node tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+    name: node tests (${{ matrix.os }}, node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Primary: full Node breadth on one OS.
+          - { os: ubuntu-latest, node: 22 }
+          - { os: ubuntu-latest, node: 24 }
+          # OS breadth: nothing here had ever run off macOS before this goal, and
+          # nothing had ever run on Windows at all. Path, line-ending and shell
+          # assumptions surface here or nowhere.
+          - { os: macos-latest, node: 24 }
+          - { os: windows-latest, node: 24 }
     steps:
       - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v5
         with:
-          node-version: 24
+          node-version: ${{ matrix.node }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm test
@@ -93,3 +123,64 @@ jobs:
             demos/*/receipts/**
             demos/*/.witness/receipts/**
           if-no-files-found: warn
+
+  # Cross-engine (T003 Ruling 3's lowest-priority axis, kept because T002 found
+  # firefox and webkit already provisioned). Focus, form behaviour and event
+  # ordering differ across engines, and those are three of the five channels
+  # analyzer/compare.ts diffs - so a chromium-only browser lane is narrower than
+  # the oracle it feeds.
+  browser-engines:
+    name: browser lanes (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [firefox, webkit]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --dir packages/frameworks/react exec playwright install --with-deps ${{ matrix.browser }}
+      - run: pnpm test:browser
+        env:
+          FRAMELESS_BROWSER: ${{ matrix.browser }}
+
+  # THE DISTINCTIVE AXIS. Frameless is downstream of three frameworks at once,
+  # which no framework project has to worry about: Svelte does not test against
+  # "other versions of Svelte". Every framework version here was pinned to
+  # exactly one release, so a user on any other patch was running an untested
+  # configuration.
+  #
+  # Qwik deliberately gets NO axis: it is on 2.0.0-beta.38 and @qwik.dev/core@latest
+  # IS that version, so a matrix across it would measure upstream churn rather
+  # than our compatibility. Revisit at Qwik 2 stable.
+  framework-versions:
+    name: ${{ matrix.framework }} @ ${{ matrix.spec }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { framework: react, dir: packages/frameworks/react, spec: 'react@^19 react-dom@^19', script: 'test:react' }
+          - { framework: solid, dir: packages/frameworks/solid, spec: 'solid-js@^1', script: 'test:solid' }
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --dir packages/frameworks/react exec playwright install --with-deps chromium
+      # Float off the pin to the newest release in range. This job is allowed to
+      # mutate the lockfile - it is measuring, not shipping.
+      - run: pnpm --dir ${{ matrix.dir }} add ${{ matrix.spec }} --no-frozen-lockfile
+      - name: report resolved versions
+        run: pnpm --dir ${{ matrix.dir }} list --depth 0
+      - run: pnpm ${{ matrix.script }}
