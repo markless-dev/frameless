@@ -69,7 +69,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-idiom-policy-v1/"
     command: "npx goalbuddy board docs/goals/frameless-idiom-policy-v1"
 
-active_task: T005
+active_task: T006
 
 tasks:
   - id: T001
@@ -334,7 +334,7 @@ tasks:
   - id: T005
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Emit the raw handler for $-suffixed Qwik JSX event props, regenerate the goldens and update the three asserts that pin the old shape, transcribe the ratified policy into docs/emitter-idiom-policy.md, record the ruling as a comment at the decision site, and confirm on a real demos/qwik build that the shipped optimizer now classifies frameless handlers as eventHandler."
     spec: "notes/T004-policy-decision.md Part C (authoritative). Part B is the verbatim policy text to transcribe."
@@ -383,12 +383,92 @@ tasks:
       - "CONTAMINATION GUARD: one T003 case is held out for the T006 cold-agent test. docs/emitter-idiom-policy.md must not name it, resolve it, or use it as a worked example. Concretely it must not mention Angular input(), output(), @Input(), @Output(), EventEmitter, or the decorator-vs-signal member declaration choice, anywhere, in any form."
       - "Do not add worked examples beyond the eight in Part B. Do not add a 'further cases' or 'see also' section."
       - "Do not weaken or skip any existing activation-neutrality check to make verification pass. Lowering atLeast, removing detailIncludes, altering navigations/consoleErrors/failedRequests, or touching assertServedActivation is a STOP, not a fix."
-    receipt: null
+    receipt:
+      result: done
+      note: notes/T005-shipped-optimizer-confirmation.md
+      summary: "Ruled-sugar change landed: emitEvent returns the raw handler and no longer adds the '$' import, with a T004 ruling comment at the decision site. Goldens and demo emitted files regenerated only. The three asserts pinning `$(` were narrowed; the byte-exact freshness check and fail-closed persistence test untouched. Part B transcribed verbatim into docs/emitter-idiom-policy.md with the contamination guard verified term by term. Step 9 on the SHIPPED optimizer flips eventHandler 0 -> 12 and dollarNamed 12 -> 0, resolving T002's PROVISIONAL caveat. pnpm e2e green across all three demos with NO contract edit."
+      changed_files:
+        - packages/frameworks/qwik/src/emitter/index.ts
+        - packages/frameworks/qwik/generated/S1.jsx
+        - packages/frameworks/qwik/generated/S2.jsx
+        - packages/frameworks/qwik/generated/S3.jsx
+        - packages/frameworks/qwik/test/emitter.test.ts
+        - demos/qwik/src/emitted/RenderOnce.jsx
+        - demos/qwik/src/emitted/KeyedTodo.jsx
+        - demos/qwik/src/emitted/EventForm.jsx
+        - docs/emitter-idiom-policy.md
+        - docs/goals/frameless-idiom-policy-v1/notes/T005-shipped-optimizer-confirmation.md
+      oracle_half_1:
+        status: satisfied
+        shipped_optimizer_before: "{emittedSymbols:18, eventHandler:0, eventNames:[], dollarNamed:12, capturing:15}"
+        shipped_optimizer_after: "{emittedSymbols:18, eventHandler:12, eventNames:[onChange$, onClick$, onInput$], dollarNamed:0, capturing:6}"
+        reading: "All 12 handlers moved from ctxKind 'function'/ctxName '$' to ctxKind 'eventHandler' named by their own event prop; 9 of 15 capturing symbols stopped capturing; symbol count unchanged at 18, so the same handlers were reclassified rather than dropped or duplicated."
+        e2e: "pnpm e2e PASS - react/solid/qwik official-demo witnesses all pass; three-way matrix 3 demos x 3 scenarios, all observations equal; qwik rows read 'resume' with 1 document request, no console errors, no failed requests."
+        contract_untouched: "three-way-contract.ts NOT edited. The structural segment prefix did not move; resumeSymbols includes/atLeast identical before and after. assertServedActivation, navigations, consoleErrors, failedRequests untouched."
+      commands:
+        - cmd: "pnpm --dir packages/frameworks/qwik regenerate"
+          status: pass
+          note: "re-run was idempotent (byte-identical)"
+        - cmd: "git diff --stat packages/frameworks/qwik/generated/"
+          status: pass
+          note: "exactly S1.jsx, S2.jsx, S3.jsx and nothing else"
+        - cmd: "pnpm --dir packages/frameworks/qwik test"
+          status: pass
+          note: "2 files, 11 tests - incl. byte-exact golden freshness at :26 and the fail-closed persistence test. PM RE-RAN: 11/11 green."
+        - cmd: "pnpm test"
+          status: pass
+          note: "35 files, 520 tests"
+        - cmd: "pnpm check"
+          status: pass
+          note: "tsc --noEmit clean. PM RE-RAN: exit 0."
+        - cmd: "pnpm --dir packages/frameworks/react test:browser"
+          status: pass
+          note: "5 files, 45 tests. SUBSTITUTE for verify step 6 - see unrun_verify_step."
+        - cmd: "pnpm --dir packages/frameworks/solid test:browser"
+          status: pass
+          note: "4 files, 44 tests. Exit 1 came from an unrelated pre-existing 'MISSING DEPENDENCY jsdom' notice, not a test failure. SUBSTITUTE for verify step 6 - see unrun_verify_step."
+        - cmd: "pnpm --dir demos/qwik copy-emitted"
+          status: pass
+        - cmd: "pnpm --dir demos/qwik build"
+          status: pass
+        - cmd: "shipped-optimizer confirmation (q-manifest.json guards)"
+          status: pass
+          note: "eventHandler 12 > 0 and dollarNamed 0 === 0; neither guard threw. PM RE-RAN independently against dist/: same figures."
+        - cmd: "pnpm e2e"
+          status: pass
+        - cmd: "git status --short"
+          status: pass
+          note: "no files changed outside allowed_files"
+      pm_independent_verification:
+        - "git diff on the emitter: exactly the one call site, imports.add('$') removed, ruling comment present. No other hunk."
+        - "git diff on emitter.test.ts: exactly the three regex asserts at :41,:54,:55. Freshness check at :26 untouched."
+        - "git diff on generated/S1.jsx: the $ import dropped and the $() wrapper removed. Nothing else."
+        - "Contamination scan re-run by PM: grep -niE for input()/output()/@Input/@Output/EventEmitter/decorator/signal-based/further cases/see also over docs/emitter-idiom-policy.md returned ZERO hits."
+        - "Manifest guards re-run by PM against demos/qwik/dist/q-manifest.json: {emittedSymbols:18, eventHandler:12, dollarNamed:0, capturing:6}."
+      unrun_verify_step:
+        step: 6
+        cmd: "pnpm test:browser"
+        outcome: "DID NOT COMPLETE - no verdict. Recorded here rather than in commands, because a hung command has no pass or fail to report."
+        substituted_by:
+          - "pnpm --dir packages/frameworks/react test:browser (45/45 pass)"
+          - "pnpm --dir packages/frameworks/solid test:browser (44/44 pass)"
+        pre_existing: "PROVEN - the identical hang reproduces with all of this task's edits stashed."
+        impact_on_this_goal: "None for the ratified ruling. Gate 6's standing check for the Qwik ruling is `pnpm e2e` (docs/emitter-idiom-policy.md:183), which ran green. `pnpm test:browser` appears only in worked example 8's React retro-validation (:273-274), which is a retrospective illustration, not this goal's proof."
+        routing: "Standing tooling gap, out of scope for an idiom-policy goal. Surfaced to the owner rather than silently absorbed. Related untracked boards exist (docs/goals/frameless-testing-ci-v1/, docs/goals/frameless-testing-strategy-v1/) that may already cover it."
+      deviations:
+        - "STEP 6: `pnpm test:browser` hangs indefinitely at root (vp test browser orchestration) - chrome-headless-shell launches, 0% CPU, main thread parked in uv__io_poll, no vitest API server; >11 min, and again after clearing node_modules/.vite. PROVEN PRE-EXISTING by reproducing the identical hang with all task edits stashed. Substituted the same two suites via their own package scripts: react-browser 45/45 pass, solid-browser 44/44 pass (exit 1 from an unrelated pre-existing 'MISSING DEPENDENCY jsdom' notice). Playwright itself proven healthy via a scripted chromium.launch + goto. No activation-neutrality check was weakened, lowered or skipped."
+        - "Sandbox was disabled for a few diagnostic commands (lsof, sample, one browser-lane retry) while investigating the hang. The hang reproduces with and without the sandbox; no repo file was written under that mode."
+        - "An untracked docs/goals/frameless-testing-ci-v1/ directory appeared in the working tree from outside this task. Not created or touched by T005."
+      policy_doc:
+        path: docs/emitter-idiom-policy.md
+        transcription: "Verified byte-identical to T004 Part B lines 108-405 modulo heading depth (shifted one level to match repo h1/h2 style). No gate text altered."
+        contamination_guard: "HELD. Case-insensitive scan absent for: input(), output(), @Input, @Output, EventEmitter, decorator, signal-based, bare 'signal', model(, banana, 'further cases', 'see also'. Worked example 4 still says 'two-way capable' without naming the API. Exactly 8 worked examples, no extra sections."
+      spawned_tasks: []
 
   - id: T006
     type: pm
     assignee: PM
-    status: queued
+    status: active
     reasoning_hint: high
     objective: "Run the cold-agent replication test: hand a zero-context agent only the policy document and the held-out unseen idiom case, and score its call."
     inputs:

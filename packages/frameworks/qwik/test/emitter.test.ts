@@ -38,7 +38,7 @@ describe('Qwik v2 structural emitter', () => {
 		expect(source).toContain('count.value += 1');
 		expect(source).toContain("await props.onTrace$('setup', { runs: 1 })");
 		expect(source).toContain("await props.onTrace$('change', { count: count.value })");
-		expect(source).toMatch(/onClick\$=\{\$\(async \(\) =>/);
+		expect(source).toMatch(/onClick\$=\{async \(\) =>/);
 		expect(source).not.toMatch(/useVisibleTask\$|onQVisible\$|q-e:qvisible/);
 	});
 
@@ -51,8 +51,8 @@ describe('Qwik v2 structural emitter', () => {
 		expect(source).toContain('value={draft.value}');
 		expect(source).toContain('value={todo.title}');
 		expect(source).toContain('checked={todo.done}');
-		expect(source).toMatch(/onInput\$=\{\$\(async \(event, element\) =>/);
-		expect(source).toMatch(/onChange\$=\{\$\(async \(event, element\) =>/);
+		expect(source).toMatch(/onInput\$=\{async \(event, element\) =>/);
+		expect(source).toMatch(/onChange\$=\{async \(event, element\) =>/);
 		expect(source).toContain('draft.value = element.value');
 		expect(source).toContain('const checked = element.checked');
 		expect(source).toContain(

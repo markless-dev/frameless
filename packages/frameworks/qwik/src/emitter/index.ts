@@ -593,8 +593,8 @@ function emitEvent(event: EnrichedEventRecord, context: EmitContext): Expression
 	if (event.handlers.length !== 1)
 		throw new Error(`Qwik emitter does not support multiple handlers for ${event.id}`);
 	const handler = normalizeHandler(event, event.handlers[0]!, context);
-	context.imports.add('$');
-	return call(identifier('$'), [handler]);
+	// T004 ruling 1: $-suffixed JSX event props take the raw handler; the optimizer wraps it.
+	return handler;
 }
 
 function templateNode(node: TemplateNode, context: EmitContext): RenderedNode {
