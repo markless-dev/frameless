@@ -1236,7 +1236,7 @@ tasks:
       - "Same charter: no emitter behavior changes from a testing task; findings get escalated, not fixed inline."
       - "Every new lane ships a calibration proving it can fail."
     expected_output:
-      - "Diagnose findings-007: re-run demos/qwik/throttled-resume.mjs against a PRODUCTION qwik build; if it passes, wire it into CI"
+      - "findings-007 is diagnosed; next is to reproduce it on an untouched pnpm-create-qwik app to separate an upstream Qwik issue from a Frameless one, then decide whether to file upstream"
       - "pnpm check covering test files, starting from T011's measured 28/26 errors"
       - "extract-child and split-file metamorphic transforms, via the module-set machinery (reorder-siblings landed in this session)"
     receipt: null
@@ -1361,7 +1361,9 @@ tasks:
             a commutativity model. The throttled-Qwik strand is INSTRUMENTED but
             not wired into CI: demos/qwik/throttled-resume.mjs works (the
             unthrottled control passes all four checks) and produced findings-007,
-            an undiagnosed failure under throttling. Wiring it would make CI red on
+            now DIAGNOSED: under throttling ZERO requests are issued after the
+            click and the value never changes, on a PRODUCTION build as well as
+            dev. The click is lost, not slow. Wiring it would make CI red on
             an open question rather than a decided one.
       also_outstanding:
         - "T011 - per-package tsconfigs so pnpm check covers test files. Split out of T004 when the root-tsconfig approach proved structural."

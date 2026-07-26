@@ -1,6 +1,6 @@
 # Finding 007 — Qwik resumption does not complete under a throttled connection
 
-**Status:** open, two readings not yet separated
+**Status:** open, DIAGNOSED — the click is lost, not slow
 **Found by:** T013's throttled-resumption lane, audit item 11's third strand
 **Severity:** unknown, potentially high — this is Qwik's central claim
 
@@ -18,13 +18,40 @@ The unthrottled run is what makes this interesting: it proves the selectors,
 the expectations and the whole instrument are correct. The only variable that
 changed is the connection.
 
-## Two readings, and I could not separate them
+## Diagnosis (both next steps from the original note were run)
 
-1. **A harness artifact.** This runs the demo in **dev mode**, where Vite serves
-   large unminified modules. 400 kbit/s may simply be too slow to fetch a
-   dev-mode QRL segment within 30 seconds, in which case the throttle is
-   unrealistic rather than the code being wrong. A production build would settle
-   this.
+**Step 1 — production build.** Rebuilt (`pnpm --dir demos/qwik build`) and served
+via `vite preview`. Container still `paused`, SSR value still `kit:2`, and the
+throttled click **still times out**. Production QRL segments are small, and 30s
+at 400 kbit/s is roughly a 1.5 MB budget, so bundle size does not explain it.
+This substantially weakens reading 1 below.
+
+**Step 2 — network log at click time.** With request logging enabled:
+
+```
+value after 20s: kit:2
+requests issued AFTER click:   (none)
+```
+
+**Zero network requests are issued after the click.** The handler QRL is never
+even requested. So the click is **lost, not delayed** — which is a materially
+different and more serious thing than "resumption is slow on a bad connection".
+
+The most likely mechanism: the click lands before Qwik's bootstrap listener is
+installed over the throttled link, and is dropped rather than queued. Queuing
+pre-resume interaction is precisely what a resumable framework claims to do, so
+this is worth someone's attention.
+
+**Caveat, stated plainly:** the script clicks as soon as `domcontentloaded`
+fires, which is aggressive. But it is not unfair — "interactive immediately,
+before any hydration" is the claim resumability is sold on, and a real user on a
+slow connection can absolutely tap a visible button before a background script
+finishes downloading.
+
+## The original two readings, for the record
+
+1. **A harness artifact.** ~~Dev-mode bundles are large.~~ **Ruled out by step 1:
+   the production build fails identically.**
 2. **A real defect.** Qwik's entire proposition is that a handler is fetched at
    click time. If a slow connection loses the click rather than merely delaying
    it, that is a serious behavioral gap — and it is exactly the risk the audit
@@ -47,11 +74,16 @@ The script is committed and **works** — the unthrottled run proves it. It is
 deliberately **not wired into CI**, because doing so would make CI red on an
 undiagnosed question rather than a decided one.
 
-## Next step, in order
+## Next step
 
-1. Re-run against a **production** Qwik build (`pnpm --dir demos/qwik build` then
-   preview). If it passes, this is reading 1: the dev bundle was the problem, and
-   the lane should target production and then be wired into CI.
-2. If it still fails, capture the network log at click time — was the QRL request
-   even issued? That distinguishes "slow" from "lost" and turns this into a
-   proper bug report.
+Both diagnostic steps are done. What remains is a decision that is not a testing
+task's to make:
+
+1. Confirm against an untouched `pnpm create qwik` app that this is Qwik's
+   behavior rather than something about the emitted components. That separates
+   "upstream Qwik issue" from "Frameless emitter issue" — and given the emitted
+   output carries no bootstrap logic of its own, upstream looks more likely.
+2. If it reproduces upstream, it is worth an issue against Qwik, not a change
+   here.
+3. Only wire this lane into CI once the expected behavior is settled. Until then
+   it would make CI red on an open question.
