@@ -691,7 +691,16 @@ describe('React dossier gate', async () => {
 
 	test.each(compositionMutationCases)(
 		'rejects the %s composition bypass mutation',
-		async (_name, source, policy, options) => {
+		// Parameters annotated explicitly. `as const` on the table makes each row a
+		// distinct tuple type, so inferring these gives unions that vitest's
+		// ExtractEachCallbackArgs cannot reconcile into one signature. The values
+		// are assignable to these broader types, so nothing is loosened at runtime.
+		async (
+			_name: string,
+			source: string,
+			policy: string,
+			options?: { readonly artifact?: EnrichedIR },
+		) => {
 			const result = await checkSources([
 				{ file: 'generated-composition/Mutant.jsx', source, artifact: options?.artifact },
 			]);

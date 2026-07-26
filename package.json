@@ -10,7 +10,7 @@
 	},
 	"scripts": {
 		"build": "vp pack",
-		"check": "tsc --noEmit",
+		"check": "tsc --noEmit && tsc -p packages/frameworks/react --noEmit && tsc -p packages/frameworks/solid --noEmit",
 		"demo": "node scripts/demo.mjs",
 		"e2e": "node scripts/e2e.mjs",
 		"e2e:ssr": "pnpm --dir demos/ssr exec witness run",
