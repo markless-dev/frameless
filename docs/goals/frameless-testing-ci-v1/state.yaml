@@ -1227,7 +1227,7 @@ tasks:
     assignee: PM
     status: active
     reasoning_hint: medium
-    objective: "Carry the remaining in-scope work: throttled Qwik resumption, the production-build lane, T011's tsconfig slice, the two remaining metamorphic transforms."
+    objective: "Carry the remaining in-scope work: throttled Qwik resumption, the production-build lane, T011's tsconfig slice, and the module-set metamorphic transforms."
     inputs:
       - "T999 per-item table"
       - "notes/T011-tsconfig-measurement.md"
@@ -1239,12 +1239,13 @@ tasks:
       - "Audit item 7's production-build lane"
       - "Audit item 11's throttled Qwik strand"
       - "pnpm check covering test files, starting from T011's measured 28/26 errors"
-      - "reorder-siblings, extract-child and split-file metamorphic transforms"
+      - "extract-child and split-file metamorphic transforms, via the module-set machinery (reorder-siblings landed in this session)"
     receipt: null
     note: >-
-      NOT STARTED. This session reached its context limit after T012. The card
-      exists so the board stays valid and resumable, and so the remaining scope is
-      named rather than implied by absence.
+      PARTIALLY ADVANCED then stopped at the session's context limit. The
+      reorder-siblings transform was completed here (metamorphic.test.ts, 9 tests).
+      The rest is untouched and named above, so the remaining scope is explicit
+      rather than implied by absence.
 
   - id: T999
     type: judge
@@ -1321,7 +1322,12 @@ tasks:
           status: partial
           implemented_by: "packages/compiler/test/metamorphic.test.ts"
           calibration: "A changed literal and a dropped cell are each required to be rejected."
-          gap: "2 of 4 transforms. reorder-siblings, extract-child and split-file remain."
+          gap: >-
+            3 of 4 transform families landed (rename-all, wrap-in-always-true-branch,
+            reorder-siblings). extract-child and split-file remain and are a
+            DIFFERENT slice, not more of this one: both need the module-set
+            machinery rather than buildEnrichedIr over a single source, since
+            imports are retained as module records but not resolved at this level.
         - item: "7. Production + StrictMode lanes"
           status: partial
           implemented_by: "packages/frameworks/react/test/strictmode.browser.test.ts"
