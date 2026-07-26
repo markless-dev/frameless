@@ -152,7 +152,7 @@ execution_mode:
     because the live board server watches that path. It is synced into the
     worktree and committed at each task boundary so the trail merges with the work.
 
-active_task: T010
+active_task: T005
 
 tasks:
   - id: T001
@@ -325,7 +325,7 @@ tasks:
   - id: T010
     type: worker
     assignee: Worker
-    status: active
+    status: done
     executed_as: "Worker-shaped, PM fallback (see execution_mode)"
     reasoning_hint: medium
     sequence_note: >-
@@ -346,6 +346,11 @@ tasks:
       # recorded here instead of quietly overstepping the original scope.
       - "packages/frameworks/solid/package.json"
       - "pnpm-lock.yaml"
+      # PM AMENDMENT 2: the browser job's timeout and its explanatory comment live
+      # in the workflow, and both had to change once the real cause was known -
+      # the lane hangs rather than errors, and the committed comment named the
+      # wrong cause. Recorded rather than silently written outside scope.
+      - ".github/workflows/**"
     verify:
       - "pnpm test:browser passes from a clean node_modules/.vite"
       - "the fix is a config/script change only - no test assertion is weakened or skipped"
@@ -355,7 +360,77 @@ tasks:
       - "Serial execution does not actually fix the demo-kit browser projects the way it fixed react/solid."
       - "Making it pass requires changing a test assertion rather than a runner setting."
       - "Verification fails twice."
-    receipt: null
+    receipt:
+      result: done
+      note: notes/T010-browser-lane.md
+      summary: >-
+        pnpm test:browser passes as written - 89 tests (45 React + 44 Solid),
+        exit 0, from a cold Vite cache, under 9s. CI run 30218678278 is FULLY
+        GREEN on all four jobs, closing the red-to-green calibration pair T004
+        opened. No assertion was weakened, skipped, or excluded.
+      corrections:
+        - id: "T002-file-parallelism-diagnosis-was-wrong"
+          detail: >-
+            T002 blamed default file parallelism from a comparison that changed
+            TWO variables at once - it added --no-file-parallelism AND switched
+            from `vp test` at the root to the real vitest binary in the package
+            dir. The decisive experiment run here (real vitest, package dir,
+            parallelism left ON) passes 45/45 in 5.31s, so parallelism was never
+            the cause. REAL CAUSE: vite-plus@0.1.20 bundles its own vitest runner
+            while @vitest/browser resolves to 4.1.5 - "Running mixed versions is
+            not supported" - and the mismatched pair breaks the browser RPC,
+            which is why the symptom was a dropped connection with zero tests run
+            rather than an assertion failure. The fileParallelism edits made under
+            the wrong diagnosis were REVERTED rather than left in six config
+            files encoding a false explanation.
+        - id: "jsdom-was-not-a-stale-artifact"
+          detail: >-
+            Mid-task I recorded the jsdom probe as a stale node_modules artifact,
+            because a local `pnpm install --force` made it vanish. CI run
+            30218566637 did a clean --frozen-lockfile install and it came right
+            back: React 45/45 exit 0, Solid 44/44 but EXIT 1. The --force
+            reinstall had masked a real condition. Real cause: vite-plugin-solid
+            injects environment:'jsdom' when it detects vitest; the browser lanes
+            never use that environment but vitest still tries to resolve it and
+            exits nonzero when it cannot, with every test green. Fixed by stating
+            environment:'node' explicitly, which wins over the plugin injection.
+            Two attempts to satisfy the probe with an actual jsdom dependency were
+            reverted - both forked vitest's peer identity and broke pnpm check
+            with "Types have separate declarations of a private property
+            _clearScreenPending".
+      lesson: >-
+        Both wrong diagnoses in this task came from a local environment differing
+        from a clean one in a way that hid the real condition, and CI corrected
+        both. That is audit item 1's thesis demonstrated twice inside the task
+        that implements it.
+      commands:
+        - cmd: "pnpm test:browser (cold vite cache)"
+          status: pass
+          detail: "89 tests, exit 0"
+        - cmd: "pnpm check"
+          status: pass
+        - cmd: "pnpm test"
+          status: pass
+          detail: "35 files, 519 tests"
+        - cmd: "gh run watch 30218678278"
+          status: pass
+          detail: "ALL FOUR JOBS GREEN - check+lint, node tests, browser lanes, e2e"
+      changed_files:
+        - "package.json"
+        - "packages/frameworks/solid/vitest.config.ts"
+        - ".github/workflows/ci.yml"
+      changed_files_detail:
+        package.json: "browser scripts route through the real vitest"
+        packages/frameworks/solid/vitest.config.ts: "environment pinned to node"
+        .github/workflows/ci.yml: "browser timeout 20m -> 10m; comment updated to the real cause"
+      still_open: >-
+        The demo browser projects (demos/{ui-kit,composition-kit}/test/*/vitest.config.ts)
+        are declared in root vite.config.ts test.projects but NO script targets
+        them - pnpm test filters to --project node and test:browser names only the
+        two framework projects. Exercised indirectly by pnpm e2e, never as unit
+        browser lanes. Handed to T007, which owns matrix breadth.
+      run_urls:
+        - "https://github.com/markless-dev/frameless/actions/runs/30218678278"
 
   - id: T003
     type: judge
@@ -573,7 +648,8 @@ tasks:
   - id: T005
     type: worker
     assignee: Worker
-    status: queued
+    status: active
+    executed_as: "Worker-shaped, PM fallback (see execution_mode)"
     reasoning_hint: medium
     objective: "Type-check emitted output as an independent oracle, calibrated to prove it rejects a bad emit (audit item 2)."
     allowed_files:
