@@ -118,6 +118,72 @@ describe('metamorphic invariants: meaning-preserving edits must not change the I
 		}
 	});
 
+	describe('reorder-siblings: swapping independent siblings permutes the template and nothing else', () => {
+		// Two sibling elements with no data dependence on each other must produce
+		// the same IR with their subtrees swapped - same kinds, same count, same
+		// cells. If reordering changed anything else, template lowering would be
+		// position-sensitive in a way authors could not predict.
+		const source = `import { state } from '@markless/core';
+
+export function Pair() @{
+	let count = state(0);
+
+	<div data-pair="">
+		<p data-first="">first</p>
+		<span data-second="">second</span>
+	</div>
+}
+`;
+		const swapped = `import { state } from '@markless/core';
+
+export function Pair() @{
+	let count = state(0);
+
+	<div data-pair="">
+		<span data-second="">second</span>
+		<p data-first="">first</p>
+	</div>
+}
+`;
+
+		test('the multiset of template node kinds is preserved', async () => {
+			const before = await ir('pair.tsrx', source);
+			const after = await ir('pair.tsrx', swapped);
+			const kinds = (value: typeof before) => {
+				const found: string[] = [];
+				const walk = (node: unknown): void => {
+					if (Array.isArray(node)) return node.forEach(walk);
+					if (node && typeof node === 'object') {
+						const record = node as Record<string, unknown>;
+						if (typeof record.kind === 'string') found.push(record.kind);
+						Object.values(record).forEach(walk);
+					}
+				};
+				walk(value.components.map((component) => component.template));
+				return found.sort();
+			};
+			expect(kinds(after)).toEqual(kinds(before));
+		});
+
+		test('the cells and component surface are untouched', async () => {
+			const before = await ir('pair.tsrx', source);
+			const after = await ir('pair.tsrx', swapped);
+			expect(JSON.stringify(after.components.map((c) => c.locals))).toEqual(
+				JSON.stringify(before.components.map((c) => c.locals)),
+			);
+			expect(after.module.exports).toEqual(before.module.exports);
+		});
+
+		test('CALIBRATION: the comparison still sees the reorder', async () => {
+			// The invariants above are order-INSENSITIVE by construction, so they
+			// must be paired with proof that the reorder actually happened -
+			// otherwise they would pass on two identical inputs.
+			const before = JSON.stringify(await ir('pair.tsrx', source));
+			const after = JSON.stringify(await ir('pair.tsrx', swapped));
+			expect(after).not.toBe(before);
+		});
+	});
+
 	// CALIBRATION. An invariant that cannot fail proves nothing. These feed the
 	// same comparison a transform that is NOT meaning-preserving and require it
 	// to be rejected - so a green run above means the transforms held, not that
