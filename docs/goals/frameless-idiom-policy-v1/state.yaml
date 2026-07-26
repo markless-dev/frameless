@@ -69,7 +69,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-idiom-policy-v1/"
     command: "npx goalbuddy board docs/goals/frameless-idiom-policy-v1"
 
-active_task: T006
+active_task: T008
 
 tasks:
   - id: T001
@@ -468,7 +468,7 @@ tasks:
   - id: T006
     type: pm
     assignee: PM
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Run the cold-agent replication test: hand a zero-context agent only the policy document and the held-out unseen idiom case, and score its call."
     inputs:
@@ -484,6 +484,79 @@ tasks:
       - "notes/T006-cold-agent.md with prompt, verdict, and reasoning"
       - "pass | fail, with the scoring rationale"
       - "Policy revision task if failed"
+    receipt:
+      result: done
+      note: notes/T006-cold-agent.md
+      preregistration: notes/T006-preregistration.md
+      score: pass
+      summary: "PASS on the strongest available grounds. The cold agent's verdict matched the PM's pre-registered derivation exactly - same baseline identification, same six gate outcomes, same decisive gates, same no-sugar ruling, and independently the same observation that this is DENIED rather than deferred because G1 and G5 are hard FAILs and not merely a DEFERRED. It also flagged the same G1 FAIL-vs-UNKNOWN labelling subtlety the PM did, unprompted."
+      oracle_half_2:
+        status: satisfied
+        held_out_case: "H3 - Angular decorator vs signal-based member declaration"
+        cold_agent_ruling: "no-sugar"
+        decisive_gates_named_by_agent: "G5 as the strongest and least ambiguous failure (reactivity depth + throw behavior, both matching the gate's enumerated conditions); G1 independently (no Angular build in the lockfile, so evidence is necessarily documentary); G6 DEFERRED and moot."
+        pm_preregistered_ruling: "no-sugar, decided by G1 and G5, G6 deferred - written to a scratchpad file OUTSIDE the repo before dispatch"
+        agreement: "exact, gate by gate"
+      protocol_integrity:
+        - "PM derived and pre-registered the answer, with scoring bands including a PARTIAL band, BEFORE the agent was dispatched. Written outside the repo so the agent could not reach it."
+        - "Agent received only a copy of docs/emitter-idiom-policy.md in an isolated scratch directory, with explicit instructions not to read any other file, not to open the repository, not to run git, and not to search the web. Its transcript shows exactly one tool call: reading that file."
+        - "No expected answer existed in any repo file: T004 recorded none, and T005's contamination guard kept the policy document from naming input(), output(), @Input(), @Output(), EventEmitter, or the decorator-vs-signal choice. Verified by term-by-term scan before dispatch."
+        - "The prompt supplied Angular facts neutrally, including facts pointing both ways, and signalled no preferred answer."
+        - "The test was not softened at any point. There was no re-run, no case swap, and no prompt revision - the first dispatch is the recorded result."
+      defects_found:
+        note: "A test that only confirms is not a test. Both defects are genuine and were invisible to anyone who already knew what the policy meant."
+        defect_1:
+          summary: "The policy's own worked examples score Gate 1 inconsistently. Worked example 5 (Angular @if/@for) records G1 PASS and worked example 4 skips Gate 1 entirely, yet Angular has the same lockfile-absence problem as the held-out case, where G1 was scored FAIL."
+          why_it_matters: "Vue, Angular and Svelte are ALL absent from the lockfile today. Every sugar question the T007 expansion boards raise hits this gap immediately."
+        defect_2:
+          summary: "Gate 4 is undefined for an emitter that does not exist yet. It requires the domain stated 'in terms of the emitter's own code', with no guidance on whether an absent emitter scores against a hypothetical domain or UNKNOWN - and UNKNOWN converts to no-sugar, a much stronger consequence than intended."
+          why_it_matters: "Did not change this ruling (G5 fails regardless), but would be decisive for any case resting on Gate 4 for a not-yet-built emitter, which describes most of the expansion work."
+        handling: "Queued as T008 (Judge ruling) then T009 (Worker applies). The gates are ratified; amending them is a Judge decision, not a note-writer's. T007 is sequenced AFTER the repair so the expansion boards cite a self-consistent policy."
+      spawned_tasks:
+        - T008
+        - T009
+
+  - id: T008
+    type: judge
+    assignee: Judge
+    status: active
+    reasoning_hint: high
+    objective: "Rule on the two policy defects the T006 cold-agent test exposed: inconsistent Gate 1 scoring when the target framework is absent from the lockfile, and undefined Gate 4 scoring for an emitter that does not exist yet."
+    inputs:
+      - "notes/T006-cold-agent.md (both defects, with the agent's own wording)"
+      - "notes/T004-policy-decision.md (the ratified gates and worked examples)"
+      - "docs/emitter-idiom-policy.md (as shipped)"
+    constraints:
+      - "Do not implement. Rule, and specify the exact edit for T009."
+      - "The ruling must make the policy SELF-CONSISTENT: either worked example 5's G1 PASS is wrong, or Gate 1's FAIL conditions are incomplete. Decide which, do not paper over it."
+      - "Whatever Gate 1 rule you land on must give a defensible answer for a framework wholly absent from the lockfile - which is the situation for Vue, Angular AND Svelte today."
+      - "Do NOT weaken Gate 1 into passability-by-documentation. The gate's whole point is that docs are a hypothesis. If the honest consequence is that no absent-framework sugar can pass Gate 1 until a lane exists, say so plainly - that is a real answer, and it is what Gate 6's DEFERRED outcome is for."
+      - "Re-check the H3 ruling under your amended gates. If the amendment would flip it, the amendment is wrong - the cold-agent test is already banked and must not be retro-invalidated."
+      - "Contamination is no longer a concern: H3 has been tested and the result recorded. You may name Angular APIs freely."
+    expected_output:
+      - "Ruling on defect 1, with the exact replacement text"
+      - "Ruling on defect 2, with the exact replacement text"
+      - "Confirmation that H3 still rules no-sugar under the amended gates"
+      - "Exact T009 Worker objective, allowed_files, verify, stop_if"
+      - "Whether any other worked example changes outcome under the amendment"
+    receipt: null
+
+  - id: T009
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Apply the T008 ruling to docs/emitter-idiom-policy.md."
+    allowed_files: []
+    verify: []
+    stop_if:
+      - "Need files outside allowed_files."
+      - "The amendment would change the H3 ruling, or the outcome of any existing worked example the Judge did not explicitly authorize changing."
+      - "You find yourself rewriting a gate the Judge did not amend."
+      - "Verification fails twice."
+    constraints:
+      - "allowed_files and verify come from the T008 ruling; do not start until they are set."
+      - "Transcribe the Judge's replacement text. Do not improve it."
     receipt: null
 
   - id: T007
@@ -528,6 +601,7 @@ tasks:
       - "Reject completion if the cold-agent test passed only after the case or prompt was softened."
       - "Reject completion if required Worker work is still queued or active."
       - "Reject completion if the three expansion boards are not prepped."
+      - "Reject completion if the T006 defects were recorded but never repaired, or if the repair silently changed the H3 ruling."
       - "Explicitly audit the likely misfire: did this goal produce a transferable rule, or just a Qwik tweak wearing a policy's clothes?"
     expected_output:
       - "complete | not_complete"
