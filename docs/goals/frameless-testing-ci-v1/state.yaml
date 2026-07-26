@@ -152,7 +152,7 @@ execution_mode:
     because the live board server watches that path. It is synced into the
     worktree and committed at each task boundary so the trail merges with the work.
 
-active_task: T006
+active_task: T007
 
 tasks:
   - id: T001
@@ -731,7 +731,7 @@ tasks:
   - id: T006
     type: worker
     assignee: Worker
-    status: active
+    status: done
     executed_as: "Worker-shaped, PM fallback (see execution_mode)"
     reasoning_hint: medium
     objective: "Qwik gate parity per T003 Ruling 2: eslint-plugin-qwik, gate policy expansion, node-project registration, and document the browser-project gap. NO browser project - upstream blocked."
@@ -740,6 +740,9 @@ tasks:
       - "vite.config.ts"
       - "pnpm-workspace.yaml"
       - ".github/workflows/**"
+      # PM AMENDMENT: adopting eslint-plugin-qwik necessarily writes the lockfile.
+      # Recorded rather than written silently outside scope.
+      - "pnpm-lock.yaml"
     verify:
       - "pnpm test"
       - "each new Qwik gate policy rejects a violating input"
@@ -759,12 +762,93 @@ tasks:
       - "Tempted to add a Qwik browser project anyway - T003 Ruling 2 cancelled it; a lane whose failures cannot be attributed is not a test."
       - "Need files outside allowed_files."
       - "Verification fails twice."
-    receipt: null
+    receipt:
+      result: done
+      note: notes/findings-003-qwik-async-preventdefault.md
+      summary: >-
+        The Qwik gate now runs 12 of Qwik's own eslint rules over emitted output,
+        closing the framework-native-lint asymmetry with React and Solid. Qwik
+        tests 9 -> 16. Full suite 37 files / 536 tests green; CI run 30219602903
+        green on all four jobs. The no-browser-project decision is documented in
+        packages/frameworks/qwik/README.md with its unblock condition.
+      calibration:
+        claim: "The new Qwik policies reject violating input."
+        evidence: >-
+          Four seeded violations - jsx-key, no-react-props, jsx-no-script-url,
+          jsx-img - each proven to be reported under its own policy id, plus an
+          assertion that the clean corpus does NOT trip those same rules, so the
+          calibration cannot pass by the gate simply flagging everything.
+      findings:
+        - id: "findings-003-qwik-async-preventdefault"
+          severity: high
+          note: notes/findings-003-qwik-async-preventdefault.md
+          detail: >-
+            REAL EMITTER DEFECT, found on the first run of the new rules.
+            generated/S3.jsx:38 puts event.preventDefault() inside an async QRL,
+            where Qwik's own no-async-prevent-default rule says it cannot work -
+            the handler is fetched and resolves after the browser has already
+            dispatched the default action. Qwik's supported mechanism is the
+            preventdefault: JSX attribute. React and Solid are unaffected because
+            their handlers are synchronous. WHY IT WENT UNNOTICED: cancellation is
+            an explicitly tested channel (analyzer/mutants.ts declares
+            wrong-cancellation against S3), but that calibration runs only in the
+            React and Solid BROWSER lanes, Qwik has no browser project, the Qwik
+            gate had no framework-native rules, and e2e's three-way contract
+            asserts text content and write counts rather than whether the default
+            was prevented. Every lane that could have caught it was either absent
+            for Qwik or not looking at cancellation. NOT FIXED - the charter
+            forbids emitter changes from a testing task, and honestly the rule
+            fired but a runtime divergence has not been demonstrated, only
+            predicted. Recommended next step is written in the note: assert
+            cancellation in all three frameworks, watch it FAIL for Qwik, then fix.
+            Held as a known-failing expectation under exact equality so it cannot
+            drift shut.
+      corrections:
+        - id: "T003-ruling-2-qwik-project-registration-was-wrong"
+          detail: >-
+            T003 Ruling 2 listed "register the Qwik node project in vite.config.ts
+            test.projects" as a real gap. It is not. Qwik tests already run via the
+            root node project's packages/frameworks/*/test/**/*.test.ts glob - the
+            531 -> 536 test delta is exactly the 5 new calibrations, and the file
+            count stayed at 37. Registering the config would have created a
+            duplicate qwik-node project that double-runs those tests under any
+            invocation not filtered to --project node. The change was made, tested,
+            and REVERTED to a clean diff.
+      deferred:
+        - id: "type-aware-qwik-rules"
+          detail: >-
+            2 of 14 rules need type information and cannot run on plain .jsx:
+            valid-lexical-scope and use-async-top. valid-lexical-scope is the
+            costly omission - it catches non-serializable values captured across a
+            QRL boundary, the defining failure mode of generated resumable code.
+            Recorded in QWIK_ESLINT_RULES_REQUIRING_TYPES in the gate source rather
+            than dropped silently. Unblocked by T011's per-package tsconfigs.
+      commands:
+        - cmd: "pnpm test"
+          status: pass
+          detail: "37 files, 536 tests"
+        - cmd: "pnpm check"
+          status: pass
+        - cmd: "pnpm lint"
+          status: pass
+        - cmd: "gh run view 30219602903"
+          status: pass
+          detail: "all four CI jobs green"
+      changed_files:
+        - "packages/frameworks/qwik/src/gate/index.ts"
+        - "packages/frameworks/qwik/src/eslint-plugins.d.ts"
+        - "packages/frameworks/qwik/test/gate.test.ts"
+        - "packages/frameworks/qwik/package.json"
+        - "packages/frameworks/qwik/README.md"
+        - "pnpm-lock.yaml"
+      spawned_tasks:
+        - T007
 
   - id: T007
     type: worker
     assignee: Worker
-    status: queued
+    status: active
+    executed_as: "Worker-shaped, PM fallback (see execution_mode)"
     reasoning_hint: medium
     objective: "Build the matrix per T003 Ruling 3: framework versions, Node, OS, dev/prod, StrictMode lane (audit items 3 and 7)."
     inputs:
