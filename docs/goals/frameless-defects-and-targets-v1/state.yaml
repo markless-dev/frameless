@@ -1,0 +1,510 @@
+# GoalBuddy v2 state.yaml
+# Board truth lives here. goal.md is the editable charter; notes/ holds long receipts only.
+
+version: 2
+
+goal:
+  title: "Frameless defects and new targets"
+  slug: "frameless-defects-and-targets-v1"
+  kind: existing_plan
+  tranche: >-
+    Five phases, each ending in its own Judge audit: integration (merge the
+    testing branch), Phase A emitted-output correctness (defects 1-2), Phase B
+    diagnose the undiagnosed (defects 4, 6, 3-B), Phase C portability and
+    consumption (defects 3, 5), then Phase D/E the shared IR foundation and the
+    three adapters via their existing boards.
+  status: active
+  oracle:
+    signal: >-
+      TWO halves, both required. (1) DEFECTS: all six defects in docs/defects.md
+      closed or explicitly ruled non-issues with receipts; the three-way contract
+      asserts the default action is prevented in ALL THREE frameworks and Qwik
+      passes it; every continue-on-error flag left by the testing goal
+      (qwik-throttled throttled step, Windows cell, WebKit cell) is removed or
+      carries a receipt justifying why it stays. (2) TARGETS: pnpm e2e includes
+      Svelte, Vue and Angular rows on official scaffolds at pinned lockfile
+      versions, with S1/S2/S3 observations ASSERTED equal to the existing three.
+    cadence: "at every phase audit, and at final audit"
+    final_proof: >-
+      A final audit receipt that certifies the phase audits rather than
+      re-deriving everything, and enumerates: per defect, the fix or ruling and
+      the test that failed for the right reason before it; the current state of
+      each continue-on-error flag; and a green pnpm e2e naming all six framework
+      rows. A receipt listing green checks without a witnessed prior failure per
+      fix does not close this goal.
+  intake:
+    original_request: >-
+      Setup a goal ready to start the work for vue, angular and svelte once the
+      testing goal is done and merged, based on the board we discussed - and on
+      top of that, look at docs/defects.md.
+    interpreted_outcome: >-
+      Close the six open defects, then add Vue, Angular and Svelte as targets, in
+      that order because the defect work strengthens the harness and settles the
+      IR decisions the adapters inherit.
+    input_shape: existing_plan
+    audience: "frameless maintainers, Windows contributors, and consumers of emitted Solid/Qwik output"
+    authority: approved
+    proof_type: test
+    completion_proof: "Both oracle halves, certified by a final audit over the phase audits."
+    likely_misfire: >-
+      Treating the defects list as a checklist and fixing symptoms. Three of six
+      are explicitly NOT diagnosed. The fastest way to fail this goal is to raise
+      the WebKit timeout, make the rename comparison order-insensitive, and call
+      two defects closed - converting two possible real findings into silence.
+    blind_spots_considered:
+      - "SECOND MISFIRE: starting the adapters first. Defect 1's fix extends the three-way contract to assert cancellation; add three frameworks before that and you retrofit cancellation assertions into three adapters instead of inheriting one stronger bar."
+      - "Defect 1 has two halves and they are separate changes. The preventdefault:click emission is bounded; the IR's representation of CONDITIONAL cancellation (sync$ lowering, a gate policy proving a sync$ body reads no reactive state, a fail-closed v-limit) is a design decision that must not be rushed into the same change."
+      - "Defect 2 may be entirely upstream. The board must be able to close it as 'filed against Qwik' without that counting as a failure - emitted components carry no bootstrap logic of their own."
+      - "OWNER OVERRODE the prep recommendation of two separate goals, preferring a single board. The unbounded-tranche risk is real and is mitigated structurally: every phase ends in its own Judge audit and full_outcome_complete stays false until the last one. If the board starts sprawling, the PM should propose splitting rather than pushing on."
+    existing_plan_facts:
+      - "SOURCE: docs/defects.md, a ranked six-defect summary produced by frameless-testing-ci-v1. Full per-defect notes live in docs/goals/frameless-testing-ci-v1/notes/findings-002 through findings-007."
+      - "ALL line references in docs/defects.md are on branch goal/frameless-testing-ci-v1, UNMERGED. A botched merge silently invalidates the input document. This is why T001 exists."
+      - "Defect 1 (highest): Qwik emits preventDefault() inside an async QRL at packages/frameworks/qwik/generated/S3.jsx:38. Diagnosed BY RULE (Qwik's no-async-prevent-default); runtime divergence NOT yet demonstrated. Fix per the owner, who is on the Qwik core team: unconditional cancellation -> the preventdefault:click attribute; conditional -> sync$(), which CANNOT close over reactive state. S3 is the unconditional case (s3-event-form.tsrx:37, first statement, no guard)."
+      - "Defect 1 ordering is prescribed: (1) extend the three-way contract to assert the default action is prevented in all three frameworks, (2) WATCH IT FAIL for Qwik, (3) emit preventdefault:click and watch it pass. Step 2 is not optional - the rule fired but no runtime failure has been demonstrated."
+      - "Defect 2: Qwik drops clicks under 300ms/400kbit throttling on a PRODUCTION build - zero network requests issued after the click, so the handler QRL is never even requested. The click is LOST, not delayed. Dev-bundle size ruled out. First action is to reproduce on an untouched pnpm create qwik app to separate upstream from frameless; upstream looks more likely."
+      - "Defect 3: 35 tests failed across 8 files on windows-latest/Node 24 (501 passed); macOS clean on the same run. Cause A CONFIRMED: format-emitted.test.ts uses execFileSync('npx', ...) and Windows npx is npx.cmd, unresolvable without shell:true; affects both the React and Solid copies. Cause B SUSPECTED ONLY: solid/test/gate.test.ts:610 expected [] to include 'S-SH7', most likely CRLF line endings. Labelled a guess in the source doc; confirm before fixing."
+      - "Defect 4: react-browser (webkit) adapter-input.browser.test.ts - 'Observable DOM did not quiesce within 500ms'. Firefox and Chromium pass everything; only WebKit, only this test. TWO READINGS not yet separated: the 500ms boundedQuiescence bound was chosen against Chromium and never tested elsewhere, OR WebKit genuinely handles React controlled inputs differently. DO NOT RAISE THE TIMEOUT FIRST - it makes the symptom vanish under either reading."
+      - "Defect 5: emitted S2.jsx and S3.jsx use attr:value, which solid-js's InputHTMLAttributes does not declare. Three type errors. NOT a runtime bug - e2e passes all nine cells and the Solid browser lane passes 44/44. Already mitigated by solid-attr-namespace.d.ts declaring attr:${string}. Open question: is attr: necessary (a compiler-behavior question) or is this solid-js's typing gap (upstream)? Informative wrinkle: the HANDWRITTEN Solid references use attr:value too, so the emitter reproduces a house idiom rather than inventing one - which makes the upstream reading more plausible."
+      - "Defect 6: metamorphic.test.ts's whole-IR rename invariant holds on all three checked-in fixtures but fails generatively once a program has several locals. Counterexample fast-check seed 20260726: three state locals, one text node, rename epsilon9 -> zpsilon9. HYPOTHESIS ONLY: the rename moves that name from first to last alphabetically and something orders locals by name. NOT VERIFIED. The alternative - declaration order genuinely unstable under renaming - is more serious."
+      - "Three defects are currently HELD so a fix cannot land silently: defect 1 as an exact-equality known-failing expectation in qwik/test/gate.test.ts; defect 2 as the qwik-throttled job (unthrottled control NOT continue-on-error, throttled step is); defects 3 and 4 as continue-on-error matrix cells."
+      - "CARRIED-OVER CONSTRAINT from the source doc: every fix should be preceded by a test that fails for the right reason. That discipline is what found all six."
+      - "findings-001 (engines.node '>=20' was false) is FIXED and closed - set to >=22 from what the matrix proved green."
+      - "ADAPTERS: three per-framework boards already exist and are NOT re-specified here. This goal hands off to docs/goals/frameless-svelte-v1, -vue-v1 and -angular-v1. All three currently read status: active / active_task: T001 with nothing running them, which misleads a future /goal; fixing that is part of this board."
+      - "Svelte runs first because it owns the IR-4 ruling (target-framework-version input) that Vue's defineModel (3.4+) and Angular's signal input()/output() (>=17.1/17.2) both inherit. The lanes are independent; the sugar rulings are not."
+      - "docs/emitter-idiom-policy.md governs every emission-site form choice in both phases."
+
+rules:
+  pm_owns_state: true
+  one_active_task: true
+  max_write_workers: 1
+  no_implementation_without_worker_or_pm_task: true
+  no_completion_without_judge_or_pm_audit: true
+  planning_is_not_completion: true
+  queued_required_worker_blocks_completion: true
+  continuous_until_full_outcome: true
+  missing_input_or_credentials_do_not_stop_goal: true
+  preserve_and_validate_existing_plan: true
+  intake_misfire_must_be_audited: true
+  goal_pressure_requires_oracle: true
+  no_completion_on_weak_proof: true
+  slice_policy:
+    max_consecutive_tiny_tasks: 2
+    prefer_vertical_slices: true
+    judge_picks_largest_safe_slice: true
+    worker_completes_whole_slice: true
+
+agents:
+  scout: installed
+  worker: installed
+  judge: installed
+
+visual_board:
+  selected: local
+  local:
+    status: live
+    url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
+    command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
+
+active_task: T015
+
+tasks:
+  - id: T001
+    type: pm
+    assignee: PM
+    status: blocked
+    reasoning_hint: medium
+    objective: "Merge goal/frameless-testing-ci-v1 into main, prove main is green, and continue only if both are clean."
+    inputs:
+      - "goal/frameless-testing-ci-v1 (39 ahead of main; main 13 ahead of it - genuinely diverged)"
+      - "docs/goals/frameless-testing-ci-v1/state.yaml T999 receipt (decision: complete, full_outcome_complete: true)"
+    constraints:
+      - "The owner explicitly authorised merging and continuing."
+      - "Inspect before acting. The branches have diverged; expect conflicts in packages/frameworks/qwik/ (its T006 did Qwik gate parity, main carries the raw-handler emitter change) and in CI config."
+      - "Do not rewrite published history. No force-push."
+      - "EVERY line reference in docs/defects.md points at this branch. If the merge mangles a referenced file the input document is silently invalidated - spot-check the referenced locations after merging."
+      - "The two testing-goal board directories are deliberately untracked. Do not sweep them into a commit; use explicit paths, never `git add docs/goals`."
+    expected_output:
+      - "Merge commit sha, or a blocked receipt naming the conflict"
+      - "Full suite on merged main: pnpm check, pnpm test, pnpm test:browser, pnpm e2e"
+      - "Spot-check that docs/defects.md's referenced locations still exist"
+    stop_if:
+      - "The merge conflicts and resolution is not obvious and mechanical."
+      - "main is red after the merge on any lane that was green before."
+      - "A file referenced by docs/defects.md no longer exists or moved without explanation."
+    receipt:
+      result: blocked
+      harness: claude-code
+      blocked_reason: "The merge itself succeeded cleanly, but T001's second half - 'prove main is green' - failed. pnpm test is 551/552 with one deliberate tripwire firing: the known-failing expectation guarding defect 1. Per this card's stop_if ('main is red after the merge on any lane that was green before'), T001 does not get a done receipt. The failure is a genuine finding, not a merge error, and Phase A is where it gets resolved."
+      summary: "Merged goal/frameless-testing-ci-v1 into main as 42f9e35. Clean merge - zero files touched by both sides, no conflicts. Two blockers were cleared first: an untracked docs/DEFECTS.md and untracked copies of the two testing board directories, all verified byte-identical to the branch versions before removal. Installing the merged lockfile fixed two import-level failures (fast-check, eslint-plugin-qwik). What remains is one failing assertion that is the point of the whole exercise: defect 1's detection has disappeared, and main's own emitter change is the likely cause. A second finding then emerged while speccing T002: S3's preventDefault() sits on a type=button and is inert in all three frameworks, so the scenario never tested cancellation behaviorally. That changes T002's scope beyond what the PM should decide alone, so T015 (Judge) was inserted."
+      merge:
+        commit: 42f9e35
+        conflicts: "none - git merge-tree predicted none, and the set of files touched by both sides was empty"
+        divergence_at_merge: "main 13 ahead, branch 41 ahead"
+        blockers_cleared:
+          - "docs/DEFECTS.md was untracked in the working tree and tracked on the branch; verified byte-identical, then removed so the merge could land the tracked copy."
+          - "docs/goals/frameless-testing-ci-v1 and -strategy-v1 were untracked here and tracked on the branch (correctly - they are that goal's own artifacts). frameless-testing-strategy-v1 was identical; frameless-testing-ci-v1 differed only by a gitignored .goalbuddy-board/ viewer directory. Removed exactly the branch-tracked paths, left the live viewer in place."
+          - "pnpm install --frozen-lockfile - the merge brought fast-check and eslint-plugin-qwik, which were not in local node_modules. Before installing, generative.test.ts and qwik gate.test.ts failed at import level."
+      commands:
+        - cmd: "git merge --no-edit goal/frameless-testing-ci-v1"
+          status: pass
+          note: "42f9e35, clean"
+        - cmd: "pnpm check"
+          status: pass
+          note: "now runs three passes - root, plus the new per-package react and solid tsconfigs from the merged work"
+        - cmd: "pnpm test"
+          status: fail
+          note: "551 passed, 1 failed. Sole failure: qwik gate.test.ts 'discovers and accepts the clean S1/S2/S3 emitted corpus'. See finding below."
+        - cmd: "pnpm test:browser"
+          status: pass
+          note: "55/55 and 44/44 - T010's browser-lane repair works on merged main. This command hung at root before the merge."
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "Three-way: 3 demos x 3 scenarios, all observations equal; react/solid hydrate, qwik resume"
+      finding:
+        headline: "Defect 1's DETECTION disappeared, and main's own emitter change is the likely cause. The tripwire caught it, exactly as it was designed to."
+        assertion: "qwik/test/gate.test.ts expects violations to equal [{file: generated/S3.jsx, line: 38, policy: eslint:qwik/no-async-prevent-default}]. Actual: [] - empty."
+        why: "main carries the frameless-idiom-policy-v1 change that emits raw handlers instead of $(handler). generated/S3.jsx:37 now reads onClick$={async (event) => { event.preventDefault(); ... }} rather than onClick$={$(async (event) => ...)}. Qwik's no-async-prevent-default rule appears to match only the $(async ...) shape."
+        critical_reading: "The handler is STILL async and still becomes a QRL - the async keyword is right there in the emitted output. So the runtime defect is almost certainly unchanged and only its detection was lost. This is the strong hypothesis, NOT a verified fact; T002 is the task that settles it."
+        consequence_for_T002: "The lint rule can no longer serve as evidence for defect 1. A runtime assertion in the three-way contract is now the ONLY available detector, which raises T002 from 'prescribed first step' to 'the sole remaining way to know'."
+        alternative_reading_considered: "That the raw-handler change accidentally FIXED defect 1. Rejected as implausible without evidence - removing the $() wrapper does not make an async handler synchronous - but T002 will distinguish them empirically rather than by argument."
+      defects_md_spotcheck:
+        result: "all referenced locations intact"
+        note: "docs/DEFECTS.md is UPPERCASE on disk; the charter and board refer to docs/defects.md. macOS is case-insensitive so both resolve, but Linux CI would not. Recorded for correction."
+        verified:
+          - packages/frameworks/qwik/generated/S3.jsx
+          - packages/frameworks/qwik/test/gate.test.ts
+          - demos/qwik/throttled-resume.mjs
+          - packages/frameworks/solid/test/solid-attr-namespace.d.ts
+          - packages/analyzer/src/mutants.ts
+          - "docs/goals/frameless-testing-ci-v1/notes/findings-001 through findings-007"
+      finding_2:
+        headline: "S3's preventDefault() is inert in ALL THREE frameworks, not just Qwik - the scenario does not behaviorally test cancellation at all."
+        evidence: "packages/compiler/test/fixtures/s3-event-form.tsrx:33-37 declares <button type=\"button\"> whose onClick calls event.preventDefault() as its first statement. A type=button inside a form has NO default action, so there is nothing to prevent - in React, in Solid, or in Qwik. All three emitters faithfully reproduce type=\"button\" (react/generated/S3.jsx:39, solid/generated/S3.jsx:36, qwik/generated/S3.jsx:35)."
+        consequence: "T002 as written could not have produced its required witnessed failure. A cancellation assertion on S3 as it stands would pass for Qwik - which is T002's own stop_if - because there is no default action to lose. The card's premise that extending the contract is sufficient is false."
+        challenges_the_input_document: "docs/DEFECTS.md argues defect 1's severity partly on the grounds that the project 'already decided this channel matters - and then shipped a Qwik emitter that appears to get it wrong in the one scenario built to test it'. S3 contains a preventDefault call but does not exercise cancellation behaviorally. The defect may well be real for a real app that cancels a real default action; the evidence base is not what the document assumes. Flagged for the Judge, not resolved by the PM."
+        action: "T002 amended so it cannot run on the stale premise; T015 inserted as a Judge task to rule on how cancellation becomes observable and to spec T002. T015 is now active."
+  - id: T015
+    type: judge
+    assignee: Judge
+    status: active
+    reasoning_hint: high
+    objective: "Rule on how to make cancellation observable at runtime, given that S3's preventDefault() is inert in all three frameworks, and spec the T002 Worker package."
+    inputs:
+      - "T001 receipt, findings 1 and 2"
+      - "packages/compiler/test/fixtures/s3-event-form.tsrx"
+      - "demos/react-official/three-way-contract.ts (assertS3 at :269, resumeSymbols at :123)"
+      - "docs/DEFECTS.md defect 1"
+      - "packages/analyzer/src/mutants.ts (the wrong-cancellation mutant class)"
+    constraints:
+      - "Do not implement."
+      - "TWO facts from T001 reframe defect 1 and must both be addressed. (a) The lint detection has disappeared on merged main - the raw-handler emission means Qwik's no-async-prevent-default rule no longer matches, so the gate tripwire fires empty. (b) S3's preventDefault() is on a type=\"button\", which has no default action, so it is a no-op in React and Solid too - the scenario does not behaviorally test cancellation at all."
+      - "Fact (b) undercuts a claim in docs/DEFECTS.md: that the project 'shipped a Qwik emitter that appears to get it wrong in the one scenario built to test it'. Assess honestly whether S3 ever tested cancellation behaviorally, and say so plainly if it did not. The defect may still be real for a real app; the evidence base is not what the document assumes."
+      - "Rule on how to obtain a genuinely cancellable default action: change the fixture (type=\"submit\" so the form submits and navigates), add a new scenario, or assert on a different channel. Each option has a different blast radius - a fixture change moves goldens for all three emitters, the analyzer corpus, and e2e observations."
+      - "Weigh whether changing S3 damages what S3 currently proves. It is an existing passing scenario in a three-way equality matrix; do not trade a working oracle for a new one without saying what is lost."
+      - "The witnessed-failure discipline is non-negotiable: whatever you choose must be able to FAIL for Qwik before any fix, or defect 1 cannot be demonstrated at all."
+      - "Also rule whether the vanished lint detection should be restored - a gate that silently stops detecting is worse than one that never detected."
+    expected_output:
+      - "Ruling on how cancellation becomes observable, with the blast radius stated"
+      - "An honest assessment of whether S3 ever tested cancellation behaviorally"
+      - "Ruling on restoring the lost lint detection"
+      - "Exact T002 Worker objective, allowed_files, verify, stop_if"
+      - "Whether docs/DEFECTS.md defect 1 needs its severity or evidence restated"
+    receipt: null
+
+  - id: T002
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Extend the three-way contract to assert the default action is actually prevented in all three frameworks, and demonstrate it FAILING for Qwik."
+    allowed_files: []
+    verify: []
+    stop_if:
+      - "Need files outside allowed_files."
+      - "The extended contract PASSES for Qwik. That contradicts defect 1's diagnosis - stop and report rather than adjusting the assertion until it fails."
+      - "Verification fails twice."
+    constraints:
+      - "SCOPE CORRECTED BY T001. Do not start until T015 has ruled. The S3 fixture's preventDefault() sits on a <button type=\"button\"> (packages/compiler/test/fixtures/s3-event-form.tsrx:33-37), which has NO default action in any framework - so the call is inert everywhere and a cancellation assertion on S3 as it stands cannot fail for Qwik. This card's original premise, that extending the contract is sufficient, is false."
+      - "This task's deliverable is a WITNESSED FAILURE, not a fix. Do not fix defect 1 here."
+      - "The contract currently asserts text content and write counts only; it cannot see cancellation at all. Assert the default action itself, not a proxy for it."
+      - "React and Solid must PASS the new assertion - their handlers are synchronous, so preventDefault() is correct there. If they fail, the assertion is wrong, not the frameworks."
+    expected_output:
+      - "Extended contract, with React and Solid green"
+      - "Qwik's failure captured verbatim - this is the runtime divergence defect 1 says has not yet been demonstrated"
+    receipt: null
+
+  - id: T003
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Emit preventdefault:click for the unconditional cancellation case, turning T002's witnessed Qwik failure green."
+    allowed_files: []
+    verify: []
+    stop_if:
+      - "Need files outside allowed_files."
+      - "The change would require deciding how the IR represents CONDITIONAL cancellation. That is T011/T012, deliberately deferred - stop here."
+      - "Any other framework's cancellation assertion regresses."
+      - "Verification fails twice."
+    constraints:
+      - "Unconditional case ONLY. S3 qualifies: s3-event-form.tsrx:37 calls preventDefault() as the first statement with no guard."
+      - "Release the known-failing expectation in packages/frameworks/qwik/test/gate.test.ts in the same change, so the held defect and its fix move together."
+      - "docs/emitter-idiom-policy.md governs the emission-site form choice. Run the six gates and record the outcomes."
+    receipt: null
+
+  - id: T004
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Determine whether defect 2 (clicks dropped under throttling) is upstream Qwik or frameless, by reproducing on an untouched pnpm create qwik app."
+    allowed_files: []
+    verify: []
+    stop_if:
+      - "Need files outside allowed_files."
+      - "The untouched app cannot be scaffolded, or the throttling harness cannot be pointed at it."
+    constraints:
+      - "The deliverable is a DECISION with evidence, not a fix. Emitted components carry no bootstrap logic of their own, so upstream is the more likely reading - but prove it."
+      - "Reproduce against a PRODUCTION build, matching the original finding. Dev-bundle size is already ruled out."
+      - "Reproduces upstream -> write the issue report for the owner to file against Qwik. That CLOSES this defect for this goal and is not a failure."
+      - "Does NOT reproduce upstream -> it is ours, and this becomes a real bug needing its own Worker package."
+      - "Keep the qwik-throttled unthrottled control non-continue-on-error. It is the instrument's own health check."
+    receipt: null
+
+  - id: T005
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Phase A audit: is emitted-output correctness actually fixed, and was each fix preceded by a witnessed failure?"
+    inputs:
+      - "T002, T003, T004 receipts"
+      - "docs/defects.md defects 1 and 2"
+    constraints:
+      - "Do not implement."
+      - "Reject if defect 1's fix landed without T002's witnessed Qwik failure on record."
+      - "Reject if the contract extension asserts a proxy for cancellation rather than the default action itself."
+      - "full_outcome_complete stays false - this is a phase boundary, not the goal."
+    expected_output:
+      - "Phase A complete | not complete"
+      - "Defect 1 and 2 disposition, each with its evidence"
+      - "Whether the deferred conditional-cancellation design is still correctly scoped"
+    receipt: null
+
+  - id: T006
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    objective: "Run all three bounded diagnosis experiments - WebKit quiescence (defect 4), generative rename (defect 6), Windows cause B (defect 3-B) - and produce a decision for each."
+    allowed_files: []
+    verify: []
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to raise the 500ms quiescence bound, or make the rename comparison order-insensitive, BEFORE the instrumented result says so. Both are named in docs/defects.md as the tempting wrong move."
+      - "An experiment is inconclusive twice - report it as inconclusive rather than guessing."
+    constraints:
+      - "One package, three experiments - they share a shape (instrument, observe, decide) and none of them is a fix."
+      - "DEFECT 4: instrument the failing case to record how long WebKit ACTUALLY takes and what the DOM looks like when the bound expires. Settles around 700ms with identical final state -> reading 1, raise the bound deliberately and document why. Never settles, or settles differently -> reading 2, and it belongs in the divergence machinery."
+      - "DEFECT 6: dump both IRs for the fast-check seed 20260726 counterexample and diff FIELD BY FIELD. Only a name-keyed collection's order differs -> legitimate, and the comparison needs an order-insensitive view. Declaration order or cell wiring differs -> real compiler finding, escalate."
+      - "DEFECT 3-B: confirm or refute the CRLF hypothesis for solid/test/gate.test.ts:610. It is labelled a guess in the source doc. Do not fix it here - T008 owns the Windows fixes."
+      - "Each experiment's output is a decision with evidence. Fixes belong to later tasks."
+    expected_output:
+      - "Defect 4: measured settle time, DOM state at expiry, and which reading it supports"
+      - "Defect 6: field-by-field IR diff and which reading it supports"
+      - "Defect 3-B: CRLF confirmed or refuted, with the evidence"
+    receipt: null
+
+  - id: T007
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Phase B audit: rule on all three diagnoses and spec the resulting fixes or closures."
+    inputs:
+      - "T006 receipt"
+      - "docs/defects.md defects 3-B, 4 and 6"
+    constraints:
+      - "Do not implement."
+      - "For each: rule real-finding, harness-assumption, or non-issue - and say what closes it."
+      - "A ruling of 'raise the bound' or 'compare order-insensitively' is ACCEPTABLE here, but only if T006's instrumented evidence supports it. Reject it if the experiment did not actually run."
+      - "Where a defect turns out to be a real compiler finding, spec it as its own Worker package rather than folding it into the portability work."
+      - "full_outcome_complete stays false."
+    expected_output:
+      - "Ruling per defect, with the evidence it rests on"
+      - "Exact Worker objective, allowed_files, verify and stop_if for T008 and for any escalated finding"
+      - "Which continue-on-error flags can now be removed"
+    receipt: null
+
+  - id: T008
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Make the suite pass on Windows and settle defect 5's attr:value design question."
+    allowed_files: []
+    verify: []
+    stop_if:
+      - "Need files outside allowed_files."
+      - "The Windows cell still fails after both causes are addressed - report rather than removing the continue-on-error flag."
+      - "Settling defect 5 would change emitted Solid output in a way that alters runtime behavior. That needs its own package with browser proof."
+      - "Verification fails twice."
+    constraints:
+      - "Cause A is confirmed: execFileSync('npx', ...) needs a Windows-safe invocation, in BOTH the React and Solid copies of format-emitted.test.ts."
+      - "Cause B is whatever T007 ruled. Do not fix the guess if the experiment refuted it."
+      - "Remove the Windows cell's continue-on-error only once both causes are actually closed."
+      - "DEFECT 5 is a decision first: is attr: necessary to force attribute semantics on a controlled input, or is this solid-js's typing gap? The handwritten Solid references use attr:value too, which favours the upstream reading. Upstream -> keep solid-attr-namespace.d.ts as documentation and write the upstream report. Ours -> changing the emitter needs browser proof that S2/S3's asserted behavior survives."
+    receipt: null
+
+  - id: T009
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Phase C audit and the defects-half audit: are all six defects closed or ruled, with every continue-on-error flag accounted for?"
+    inputs:
+      - "T005, T007 and T008 receipts"
+      - "docs/defects.md in full"
+    constraints:
+      - "Do not implement."
+      - "Enumerate all six defects and state the disposition and evidence for each."
+      - "Every continue-on-error flag must be removed or carry a receipt justifying why it stays. A flag that quietly persists is a defect that quietly persists."
+      - "Reject if any fix landed without a prior witnessed failure."
+      - "full_outcome_complete stays false - oracle half 2 is untouched at this point."
+    expected_output:
+      - "Per-defect disposition table with evidence"
+      - "continue-on-error flag status, each one"
+      - "Oracle half 1: satisfied | not satisfied"
+    receipt: null
+
+  - id: T010
+    type: pm
+    assignee: PM
+    status: queued
+    reasoning_hint: medium
+    objective: "Repair the three adapter boards' misleading status and re-validate their inherited standing gaps against the now-merged testing work."
+    inputs:
+      - "docs/goals/frameless-svelte-v1, -vue-v1 and -angular-v1 state.yaml"
+      - "The merged testing work from T001"
+    constraints:
+      - "All three read status: active / active_task: T001 with nothing running them. A future /goal reading one would pick up T001 and start unbidden."
+      - "Their charters record three standing gaps the testing goal has since FIXED: pnpm test:browser hanging at root, pnpm check not typechecking generated/, and e2e pinning dev mode only. Verify what is actually still true post-merge and correct each charter."
+      - "Board hygiene only. No adapter implementation."
+    expected_output:
+      - "Three boards with honest status and corrected standing-gap sections"
+      - "A list of which inherited gaps are now stale"
+    receipt: null
+
+  - id: T011
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Rule on how the IR represents conditional cancellation - the half of defect 1 deliberately deferred from T003."
+    inputs:
+      - "T003 and T005 receipts"
+      - "docs/defects.md defect 1, the 'separate design decision' section"
+      - "docs/emitter-idiom-policy.md"
+    constraints:
+      - "Do not implement."
+      - "The IR currently treats preventDefault() as just another statement in the handler body - correct for React and Solid, wrong for Qwik."
+      - "Rule on: sync$() lowering; a gate policy that PROVES a sync$ body references no reactive state; and a fail-closed path for what Qwik genuinely cannot express, namely a conditional cancel depending on signal state. That last is a new v-limit in the family of unknown-template-node.test.ts."
+      - "HARD CONSTRAINT: sync$() cannot close over reactive state - no signals, no stores. It runs before the container resumes and may read only what is synchronously on the event."
+      - "This decision is inherited by every future adapter. Rule it as a general IR question, not a Qwik patch."
+    expected_output:
+      - "IR representation ruling"
+      - "Gate policy specification"
+      - "The fail-closed v-limit definition"
+      - "Exact Worker objective, allowed_files, verify and stop_if"
+    receipt: null
+
+  - id: T012
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Implement the T011 ruling: conditional-cancellation IR representation, sync$ lowering, the gate policy and the fail-closed v-limit."
+    allowed_files: []
+    verify: []
+    stop_if:
+      - "Need files outside allowed_files."
+      - "The gate policy cannot actually prove a sync$ body is free of reactive state. A policy that cannot prove its claim must fail closed, not warn."
+      - "Unconditional cancellation from T003 regresses."
+      - "Verification fails twice."
+    constraints:
+      - "allowed_files and verify come from the T011 ruling."
+      - "Mutation-test the new gate policy the way the existing gates are - a policy nobody proved can fail is not a gate."
+    receipt: null
+
+  - id: T013
+    type: pm
+    assignee: PM
+    status: queued
+    reasoning_hint: high
+    objective: "Run the Svelte adapter to completion via docs/goals/frameless-svelte-v1, including its IR-4 ruling."
+    inputs:
+      - "docs/goals/frameless-svelte-v1 (its own board, repaired by T010)"
+      - "The merged testing matrix and the strengthened three-way contract"
+    constraints:
+      - "That board is authoritative for Svelte's task graph. Do not re-specify it here; execute it and roll its outcome up to this board."
+      - "IR-4 (target-framework-version input) must be designed as a GENERAL facility - Vue and Angular inherit it."
+      - "The three-way contract now asserts cancellation. Svelte must satisfy that bar like the others, not be exempted from it."
+      - "Official scaffold only."
+    expected_output:
+      - "Svelte row green in pnpm e2e with asserted S1/S2/S3 equality"
+      - "IR-4 ruling, applicable to Vue and Angular"
+      - "Rollup receipt pointing at the Svelte board's own audit"
+    receipt: null
+
+  - id: T014
+    type: pm
+    assignee: PM
+    status: queued
+    reasoning_hint: high
+    objective: "Run the Vue and Angular adapters via their existing boards, inheriting Svelte's IR-4 ruling."
+    inputs:
+      - "docs/goals/frameless-vue-v1 and docs/goals/frameless-angular-v1"
+      - "The IR-4 ruling from T013"
+    constraints:
+      - "Those boards are authoritative for their task graphs."
+      - "Angular's defining constraint is FORCED LOWERING: template expressions forbid const, arrow functions, destructuring and ++, so handler bodies must be hoisted to named class members. That is a transformation, not a formatting choice, and docs/emitter-idiom-policy.md declares it outside the policy's scope."
+      - "Angular's decorator-vs-signal question is ALREADY RULED no-sugar, denied-not-deferred. G1 clears once a lane exists; G5 does not. Be suspicious of a re-derivation that flips it."
+      - "If this task starts sprawling, propose splitting Vue and Angular into their own /goal runs rather than pushing on. The prep flagged the single-umbrella tranche as the main risk on this board."
+    expected_output:
+      - "Vue and Angular rows green in pnpm e2e with asserted S1/S2/S3 equality"
+      - "Rollup receipts pointing at each board's own audit"
+    receipt: null
+
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Final audit: certify both oracle halves over the phase audits, and rule the full owner outcome complete or not."
+    inputs:
+      - "The phase audit receipts T005, T007 and T009"
+      - "T013 and T014 rollup receipts"
+      - "Last pnpm e2e output"
+      - "Current dirty diff"
+    constraints:
+      - "Do not implement."
+      - "CERTIFY the phase audits rather than re-deriving them - but spot-check at least one claim from each, because a phase audit nobody checked is a phase audit that could be wrong."
+      - "Reject completion if either oracle half is unsatisfied. Six green defects with no new frameworks is half the goal; three new frameworks over unfixed defects is the other half."
+      - "Reject completion if any fix landed without a witnessed prior failure."
+      - "Reject completion if any continue-on-error flag persists without a receipt justifying it."
+      - "Reject completion if the three-way contract does not assert cancellation for every framework once they exist."
+      - "Audit the likely misfire explicitly: were the undiagnosed defects actually diagnosed, or silenced?"
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "Oracle half 1 and half 2 evidence, separately"
+      - "missing evidence"
+      - "next task if not complete"
+    receipt: null
+
+checks:
+  dirty_fingerprint: unknown
+  last_verification:
+    result: unknown
+    task: null
+    commands: []
