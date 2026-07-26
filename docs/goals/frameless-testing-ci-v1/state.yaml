@@ -152,7 +152,7 @@ execution_mode:
     because the live board server watches that path. It is synced into the
     worktree and committed at each task boundary so the trail merges with the work.
 
-active_task: T005
+active_task: T006
 
 tasks:
   - id: T001
@@ -648,7 +648,7 @@ tasks:
   - id: T005
     type: worker
     assignee: Worker
-    status: active
+    status: done
     executed_as: "Worker-shaped, PM fallback (see execution_mode)"
     reasoning_hint: medium
     objective: "Type-check emitted output as an independent oracle, calibrated to prove it rejects a bad emit (audit item 2)."
@@ -664,12 +664,75 @@ tasks:
       - "Making the lane pass would require regenerating a committed golden."
       - "Need to change emitter behavior to make output type-check - that is a finding, escalate it."
       - "Verification fails twice."
-    receipt: null
+    receipt:
+      result: done
+      summary: >-
+        Emitted output is now type-checked by the real TypeScript compiler in both
+        framework packages, running under pnpm test and therefore in CI. Full suite
+        37 files / 531 tests green; CI run 30218967976 green on all four jobs.
+      design: >-
+        Both lanes assert EXACT EQUALITY against an ACCEPTED list in which every
+        surviving diagnostic carries a written reason. Exact equality means a new
+        diagnostic fails the lane AND a vanishing one fails it too, so the baseline
+        cannot drift silently in either direction. Strictness is deliberately OFF:
+        a first pass with strict:true produced 23 diagnostics that were almost all
+        artifacts of inferring types for untyped JS (useRef(null) narrowing to
+        never, event.target being EventTarget). A lane that reports 23 false
+        positives is as useless as one that cannot fail, so it is tuned to the
+        class that is meaningful for generated code - undefined identifiers,
+        missing or misspelled imports, nonexistent framework APIs, invalid JSX.
+      calibration:
+        claim: "This lane can fail, and its calibrations are not self-satisfying."
+        evidence: >-
+          Three seeded defects per lane - a dropped hook/primitive import, a call
+          to an API the framework does not have, an invalid JSX attribute value -
+          each caught. Then the lane itself was BLINDED (diagnose() stubbed to
+          return no diagnostics) and all three calibration cases plus the baseline
+          assertion failed, proving the calibrations depend on the mechanism rather
+          than passing incidentally.
+      findings:
+        - id: "findings-002-solid-attr-namespace"
+          severity: medium
+          note: notes/findings-002-solid-attr-namespace.md
+          detail: >-
+            NOT an inference artifact. Emitted Solid uses attr:value, which
+            solid-js's own InputHTMLAttributes rejects - three diagnostics across
+            S2 and S3, with no React equivalent. Not a runtime bug: pnpm e2e passes
+            all nine three-way cells and the Solid browser lane passes 44/44,
+            exercising these exact files. But it means Solid output does NOT drop
+            cleanly into a TypeScript project, which is precisely the claim audit
+            item 2 existed to test, and no pre-existing check could have caught it
+            - the gate enforces rules we wrote, the browser lanes check behavior,
+            and pnpm check never looked at emitted output. Recorded not fixed:
+            choosing between an emitter change and an upstream typing gap is a
+            behavior decision this goal's charter forbids from a testing task. Held
+            in ACCEPTED labelled OPEN FINDING 002 under exact equality, so it
+            cannot silently disappear.
+      commands:
+        - cmd: "pnpm test"
+          status: pass
+          detail: "37 files, 531 tests, 1 skipped"
+        - cmd: "pnpm check"
+          status: pass
+        - cmd: "pnpm lint"
+          status: pass
+        - cmd: "gh run view 30218967976"
+          status: pass
+          detail: "all four CI jobs green"
+      changed_files:
+        - "packages/frameworks/react/test/emitted-typecheck.test.ts"
+        - "packages/frameworks/solid/test/emitted-typecheck.test.ts"
+      note_on_ci_wiring: >-
+        No workflow change was needed - these are node-lane tests picked up by the
+        existing root test project, so CI already runs them.
+      spawned_tasks:
+        - T006
 
   - id: T006
     type: worker
     assignee: Worker
-    status: queued
+    status: active
+    executed_as: "Worker-shaped, PM fallback (see execution_mode)"
     reasoning_hint: medium
     objective: "Qwik gate parity per T003 Ruling 2: eslint-plugin-qwik, gate policy expansion, node-project registration, and document the browser-project gap. NO browser project - upstream blocked."
     allowed_files:
