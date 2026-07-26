@@ -1,0 +1,209 @@
+# GoalBuddy v2 state.yaml
+# Board truth lives here. goal.md is the editable charter; notes/ holds long receipts only.
+#
+# PREPPED, NOT STARTED. Created by frameless-idiom-policy-v1 task T007 on 2026-07-26.
+
+version: 2
+
+goal:
+  title: "Frameless Svelte adapter v1"
+  slug: "frameless-svelte-v1"
+  kind: specific
+  tranche: "Land a Svelte 5 lane end to end - official scaffold, emitter, gate, goldens, demo, e2e row asserting S1/S2/S3 equality - then rule on IR-4, the target-framework-version input the whole policy's version corollary depends on."
+  status: active
+  oracle:
+    signal: "pnpm e2e includes a Svelte row driving an official Svelte scaffold at the pinned lockfile version, and its S1/S2/S3 observations are ASSERTED equal to demos/react-official, demos/solid-official and demos/qwik under the same matrix."
+    cadence: "after each Worker package and at final audit"
+    final_proof: "A green pnpm e2e receipt naming the Svelte row, plus an explicit IR-4 ruling: either the target-version input is implemented and at least one version-gated sugar question resolves through it, or IR-4 is deferred with the reason recorded AND the consequence for the Vue and Angular boards stated."
+  intake:
+    original_request: "Owner asked, during frameless-idiom-policy-v1: 'I'm also wondering if we should start the goals for Vue, Angular, and Svelte.' This board is the Svelte answer, prepped after the idiom policy was ratified."
+    interpreted_outcome: "Svelte 5 becomes a frameless target with proven activation neutrality on official tooling, and the version-pinning problem it surfaces gets a decision rather than a workaround."
+    input_shape: specific
+    audience: "frameless maintainers and future adapter authors"
+    authority: requested
+    proof_type: test
+    completion_proof: "Svelte row green in pnpm e2e with asserted S1/S2/S3 equality, plus an explicit IR-4 ruling."
+    likely_misfire: "Implementing bind: because it looks like the idiomatic Svelte spelling, without noticing it is different-in-kind on two axes - and a wrong bind: surfaces as a DEV-ONLY console warning, so it can pass tests and be wrong in production."
+    blind_spots_considered:
+      - "Svelte is where the version pin stops being a detail. onclick (Svelte 5) vs on:click (Svelte 4) is the SAME lexical substitution flipping category across a major; reassignable $derived needs 5.25+; and Svelte 5 REMOVED event modifiers, which interacts directly with IR-5. The policy found that same-in-kind is a property of a sugar PLUS a pinned version, and this is where that bites hardest."
+      - "IR-4 (no target-framework-version input) is arguably this board's most consequential decision, and the other two adapter boards inherit whatever it decides. The policy's version corollary explicitly names adding that input as an adapter-board concern - this is that board."
+      - "A wrong bind: call fails as a dev-only ownership_invalid_mutation console warning, not a build error. Absence of a red test is not evidence of correctness here."
+    existing_plan_facts:
+      - "docs/emitter-idiom-policy.md governs every emission-site form choice. Run the six gates; record outcomes."
+      - "Official scaffold only (npx sv create or current official equivalent), as it ships. No hand-rolled harness - see docs/goals/frameless-qwik-v1/."
+      - "IR gaps biting Svelte: IR-1 no bindable prop kind (blocks $bindable/bind:), IR-3 default slot only (blocks snippets), IR-4 no framework-version input (blocks reassignable $derived 5.25+ and the onclick/on:click split itself), IR-5 modifier vocabulary is exactly preventDefault|stopPropagation while Svelte 5 REMOVED modifiers, IR-6 no class/style binding vocabulary (blocks class: directives), IR-7 purity never asserted while $derived expects a pure expression."
+      - "ALREADY SURVEYED: bind: is DIFFERENT-IN-KIND from the Qwik $ case on two independent axes - it requires an LVALUE (the IR's path-based and handler-local-alias writes are not lvalues), and bindability is declared by the CHILD while frameless emits one module at a time from one EnrichedIR. Do not treat it as a formatting choice."
+      - "GATE 6 DEFERRED: every Svelte sugar ruling is deferred-not-denied until this board lands a lane at a pinned lockfile version."
+      - "If this board closes IR-4 it must do so as a GENERAL facility, not a Svelte-shaped hack - Vue needs it for defineModel (3.4+) and Angular for signal input()/output() (>=17.1/17.2)."
+      - "poc/09-storage/svelte exists from earlier work and took cheap lexical sugar with classic lifecycle shapes. Prior in-repo assumption, not validated decision."
+      - "STANDING GAP inherited: pnpm check does not typecheck generated/. Svelte's own svelte-check may cover part of this - confirm rather than assume."
+      - "STANDING GAP inherited: pnpm e2e pins dev mode only; pnpm test:browser hangs at the repo root (pre-existing, per-package scripts work)."
+
+rules:
+  pm_owns_state: true
+  one_active_task: true
+  max_write_workers: 1
+  no_implementation_without_worker_or_pm_task: true
+  no_completion_without_judge_or_pm_audit: true
+  planning_is_not_completion: true
+  queued_required_worker_blocks_completion: true
+  continuous_until_full_outcome: true
+  missing_input_or_credentials_do_not_stop_goal: true
+  preserve_and_validate_existing_plan: true
+  intake_misfire_must_be_audited: true
+  goal_pressure_requires_oracle: true
+  no_completion_on_weak_proof: true
+  slice_policy:
+    max_consecutive_tiny_tasks: 2
+    prefer_vertical_slices: true
+    judge_picks_largest_safe_slice: true
+    worker_completes_whole_slice: true
+
+agents:
+  scout: installed
+  worker: installed
+  judge: installed
+
+visual_board:
+  selected: unknown
+  local:
+    status: not_requested
+    url: null
+    command: "npx goalbuddy board docs/goals/frameless-svelte-v1"
+
+active_task: T001
+
+tasks:
+  - id: T001
+    type: scout
+    assignee: Scout
+    status: active
+    reasoning_hint: medium
+    objective: "Map the official Svelte scaffold, its activation model, and the exact version boundaries that make IR-4 load-bearing."
+    inputs:
+      - "The current official Svelte scaffold (npx sv create) - contents and pinned versions"
+      - "Svelte 5 docs and source: runes, event attributes, the removal of modifiers, $bindable, snippets"
+      - "scripts/e2e.mjs - the activation matrix and its vocabulary"
+      - "demos/react-official and demos/solid-official - the shape a fourth official demo must match"
+      - "packages/compiler/src/schema.ts - IR-1, IR-3, IR-4, IR-5, IR-6, IR-7 as they stand"
+      - "poc/09-storage/svelte - prior in-repo assumptions"
+    constraints:
+      - "Read-only. Do NOT scaffold anything yet."
+      - "Enumerate the VERSION BOUNDARIES precisely: which construct needs which minimum Svelte version, and what the scaffold actually pins. This is the evidence IR-4 will be ruled on."
+      - "Report how Svelte 5's removal of event modifiers interacts with IR-5's preventDefault|stopPropagation - specifically what the emitter must generate instead."
+      - "Report whether svelte-check covers what pnpm check does not."
+    expected_output:
+      - "Official scaffold contents and pinned versions"
+      - "Svelte's activation model and whether the e2e vocabulary covers it"
+      - "Version boundary table: construct -> minimum version -> what the scaffold pins"
+      - "How IR-5's two modifiers must be emitted with modifiers removed in Svelte 5"
+      - "Whether svelte-check covers emitted output"
+      - "Which IR gaps block S1/S2/S3 versus only sugar"
+    receipt: null
+
+  - id: T002
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Ratify the Svelte adapter contract and rule on whether IR-4 is closed by this board or deferred."
+    inputs:
+      - "T001 receipt"
+      - "docs/emitter-idiom-policy.md - especially Gate 6's version corollary"
+    constraints:
+      - "Do not implement."
+      - "Rule on IR-4 EXPLICITLY. If closed, the design must be a general facility usable by the Vue and Angular boards - not a Svelte-shaped hack. If deferred, state the consequence for those boards."
+      - "Rule on how IR-5's two modifiers are emitted given Svelte 5 removed modifiers."
+      - "Separate what S1/S2/S3 activation neutrality requires from what Svelte idiom sugar would be nicer with."
+      - "Do NOT rule bind: into scope. It is different-in-kind on two axes and its failure mode is a dev-only console warning; if it is wanted, it needs its own package with its own proof."
+    expected_output:
+      - "IR-4 ruling: closed here (with design) or deferred (with consequence)"
+      - "IR-5 emission ruling"
+      - "S1/S2/S3 scope for the first Worker package"
+      - "Exact Worker objective, allowed_files, verify, stop_if"
+    receipt: null
+
+  - id: T003
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Implement the Svelte emitter and gate for the ratified S1/S2/S3 scope, with checked-in goldens."
+    allowed_files: []
+    verify: []
+    stop_if:
+      - "Need files outside allowed_files."
+      - "A required S1/S2/S3 construct needs a Svelte version above what the scaffold pins."
+      - "You find yourself emitting bind: - it is explicitly out of scope."
+      - "Verification fails twice."
+    constraints:
+      - "allowed_files and verify come from the T002 ruling."
+      - "Match the existing emitter/gate/golden structure in packages/frameworks/."
+    receipt: null
+
+  - id: T004
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Stand up demos/svelte-official from the official scaffold and add the Svelte row to the e2e activation matrix, asserting S1/S2/S3 equality."
+    allowed_files: []
+    verify: []
+    stop_if:
+      - "The official scaffold needs modification beyond wiring in emitted components."
+      - "Equality cannot be asserted without weakening an existing assertion."
+      - "Verification fails twice."
+    constraints:
+      - "Official scaffold as it ships."
+      - "Do not weaken any existing activation-neutrality check."
+      - "A dev-only console warning is a FAILURE here, not noise - Svelte reports ownership violations that way."
+    receipt: null
+
+  - id: T005
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "With a Svelte lane at a pinned version, re-run the idiom policy on at least one version-gated Svelte sugar question and record whether the version corollary now resolves."
+    inputs:
+      - "docs/emitter-idiom-policy.md worked example 6 (Svelte onclick, currently deferred after repair)"
+      - "The landed Svelte lane and the IR-4 ruling"
+    constraints:
+      - "Do not implement. Rule."
+      - "This is the direct test of the policy's version corollary. If IR-4 was closed, a version-gated sugar should now resolve; if it was deferred, say plainly that it still cannot and why."
+      - "Record the ruling in the policy's own format so it can be folded back into docs/emitter-idiom-policy.md."
+    expected_output:
+      - "Six gate outcomes for at least one version-gated Svelte sugar question"
+      - "Whether the version corollary resolved, with evidence"
+      - "Whether docs/emitter-idiom-policy.md needs updating"
+    receipt: null
+
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Audit whether the Svelte lane satisfies the oracle and the full owner outcome."
+    inputs:
+      - "All done task receipts"
+      - "Last pnpm e2e output"
+      - "Current dirty diff"
+    constraints:
+      - "Do not implement."
+      - "Reject completion if the Svelte row exists but does not ASSERT equality with the other demos."
+      - "Reject completion if any existing activation-neutrality check was weakened."
+      - "Reject completion if IR-4 received no explicit ruling either way."
+      - "Reject completion if dev-only console warnings were observed and dismissed."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "missing evidence"
+      - "next task if not complete"
+    receipt: null
+
+checks:
+  dirty_fingerprint: unknown
+  last_verification:
+    result: unknown
+    task: null
+    commands: []

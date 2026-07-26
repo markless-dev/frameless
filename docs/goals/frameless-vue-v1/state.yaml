@@ -1,0 +1,199 @@
+# GoalBuddy v2 state.yaml
+# Board truth lives here. goal.md is the editable charter; notes/ holds long receipts only.
+#
+# PREPPED, NOT STARTED. Created by frameless-idiom-policy-v1 task T007 on 2026-07-26.
+
+version: 2
+
+goal:
+  title: "Frameless Vue adapter v1"
+  slug: "frameless-vue-v1"
+  kind: specific
+  tranche: "Land a Vue lane end to end - official scaffold, emitter, gate, goldens, demo, e2e row asserting S1/S2/S3 equality with the existing three - then run the ratified idiom policy on Vue's flagship sugar now that Gate 1 and Gate 6 can resolve."
+  status: active
+  oracle:
+    signal: "pnpm e2e includes a Vue row driving an official Vue scaffold at the pinned lockfile version, and its S1/S2/S3 observations are ASSERTED equal to demos/react-official, demos/solid-official and demos/qwik under the same matrix."
+    cadence: "after each Worker package and at final audit"
+    final_proof: "A green pnpm e2e receipt naming the Vue row, plus at least one Vue idiom question run through all six policy gates reaching a non-DEFERRED Gate 1 and Gate 6 - proving the lane actually discharged the deferral."
+  intake:
+    original_request: "Owner asked, during frameless-idiom-policy-v1: 'I'm also wondering if we should start the goals for Vue, Angular, and Svelte.' This board is the Vue answer, prepped after the idiom policy was ratified so it inherits a decided rule instead of re-litigating one."
+    interpreted_outcome: "Vue becomes a fourth frameless target with proven activation neutrality on official tooling."
+    input_shape: specific
+    audience: "frameless maintainers and future adapter authors"
+    authority: requested
+    proof_type: test
+    completion_proof: "Vue row green in pnpm e2e with asserted S1/S2/S3 equality."
+    likely_misfire: "Building a Vue emitter that produces plausible-looking Vue source and calling it done, without an official-scaffold lane proving the emitted components actually activate equivalently. The repo has already paid for this once - see the Qwik hand-rolled-harness episode."
+    blind_spots_considered:
+      - "SFC vs Vue JSX is an unforced decision that changes tooling, goldens, gate and demo consumption. React/Solid/Qwik all emit JSX; Vue is the first target where that is not obvious."
+      - "Vue's flagship sugar (v-model / defineModel) is blocked by IR-1 AND IR-4, not by taste. The adapter work and the sugar question are separable and must not be conflated."
+      - "poc/09-storage/vue exists from earlier work and assumed cheap lexical sugar with classic lifecycle shapes. That is a prior in-repo assumption, not a validated decision."
+    existing_plan_facts:
+      - "docs/emitter-idiom-policy.md governs every emission-site form choice. Run the six gates; record outcomes. Do NOT amend the policy from inside this board."
+      - "Official scaffold only (npm create vue@latest or current official equivalent), used as it ships. No hand-rolled SSR harness."
+      - "IR gaps biting Vue: IR-1 no bindable prop kind (blocks defineModel), IR-2 no emit concept (blocks defineEmits), IR-3 default slot only (blocks named v-slot), IR-4 no framework-version input (defineModel needs 3.4+), IR-5 two-item modifier vocabulary vs Vue's ten v-on modifiers, IR-6 no class/style binding vocabulary, IR-7 purity never asserted."
+      - "GATE 6 DEFERRED: every Vue sugar ruling is deferred-not-denied until this board lands a Vue lane at a pinned lockfile version. That is the policy's own rule, and it is the first-order reason this board exists."
+      - "STANDING GAP inherited: pnpm check does not typecheck generated/ (root tsconfig covers only packages/*/src/** and packages/frameworks/*/src/**), and pnpm e2e pins dev mode only (scenarios.box.ts modes:['dev'])."
+      - "STANDING GAP inherited: pnpm test:browser hangs at the repo root, pre-existing and unrelated to any emitter; per-package test:browser scripts work."
+
+rules:
+  pm_owns_state: true
+  one_active_task: true
+  max_write_workers: 1
+  no_implementation_without_worker_or_pm_task: true
+  no_completion_without_judge_or_pm_audit: true
+  planning_is_not_completion: true
+  queued_required_worker_blocks_completion: true
+  continuous_until_full_outcome: true
+  missing_input_or_credentials_do_not_stop_goal: true
+  preserve_and_validate_existing_plan: true
+  intake_misfire_must_be_audited: true
+  goal_pressure_requires_oracle: true
+  no_completion_on_weak_proof: true
+  slice_policy:
+    max_consecutive_tiny_tasks: 2
+    prefer_vertical_slices: true
+    judge_picks_largest_safe_slice: true
+    worker_completes_whole_slice: true
+
+agents:
+  scout: installed
+  worker: installed
+  judge: installed
+
+visual_board:
+  selected: unknown
+  local:
+    status: not_requested
+    url: null
+    command: "npx goalbuddy board docs/goals/frameless-vue-v1"
+
+active_task: T001
+
+tasks:
+  - id: T001
+    type: scout
+    assignee: Scout
+    status: active
+    reasoning_hint: medium
+    objective: "Map the official Vue scaffold, its activation model, and what a Vue row in scripts/e2e.mjs would require."
+    inputs:
+      - "The current official Vue scaffold (npm create vue@latest) - what it ships with, and at what versions"
+      - "scripts/e2e.mjs - the activation matrix and its hydrate/resume vocabulary"
+      - "demos/react-official and demos/solid-official - the shape a fourth official demo must match"
+      - "poc/09-storage/vue - prior in-repo assumptions"
+      - "packages/compiler/src/schema.ts - IR-1 through IR-7 as they actually stand"
+    constraints:
+      - "Read-only."
+      - "Do NOT scaffold anything yet; report what scaffolding would produce."
+      - "Answer the SFC-vs-JSX question with evidence about tooling consequences, but do NOT rule on it - that is Judge work."
+    expected_output:
+      - "Official scaffold contents and pinned versions"
+      - "Vue's activation model and whether the e2e vocabulary covers it"
+      - "What a Vue row in the e2e matrix concretely requires"
+      - "SFC vs JSX: consequences of each for goldens, gate, tooling and demo consumption"
+      - "Which of IR-1..IR-7 actually block S1/S2/S3, versus which only block sugar"
+    receipt: null
+
+  - id: T002
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Ratify the Vue adapter contract: emitted format, S1/S2/S3 scope, and which IR gaps must be closed versus deferred."
+    inputs:
+      - "T001 receipt"
+      - "docs/emitter-idiom-policy.md"
+    constraints:
+      - "Do not implement."
+      - "Rule on SFC vs Vue JSX explicitly, with the reasoning recorded - this decision is expensive to reverse."
+      - "Separate what S1/S2/S3 activation neutrality REQUIRES from what Vue idiom sugar would merely be nicer with. Only the former blocks this board."
+      - "Any IR change proposed here must be justified as required for activation neutrality, not for ergonomics."
+    expected_output:
+      - "Emitted-format ruling with rationale"
+      - "S1/S2/S3 scope for the first Worker package"
+      - "IR gaps: must-close vs deferred, each justified"
+      - "Exact Worker objective, allowed_files, verify, stop_if"
+    receipt: null
+
+  - id: T003
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Implement the Vue emitter and its gate for the ratified S1/S2/S3 scope, with checked-in goldens."
+    allowed_files: []
+    verify: []
+    stop_if:
+      - "Need files outside allowed_files."
+      - "The ratified emitted format turns out not to express a required S1/S2/S3 construct."
+      - "Verification fails twice."
+    constraints:
+      - "allowed_files and verify come from the T002 ruling."
+      - "Match the existing emitter/gate/golden structure in packages/frameworks/ rather than inventing a new one."
+    receipt: null
+
+  - id: T004
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Stand up demos/vue-official from the official scaffold and add the Vue row to the e2e activation matrix, asserting S1/S2/S3 equality with the existing three."
+    allowed_files: []
+    verify: []
+    stop_if:
+      - "The official scaffold needs modification beyond wiring in emitted components."
+      - "Equality cannot be asserted and the only way to make the row pass is to weaken an existing assertion."
+      - "Verification fails twice."
+    constraints:
+      - "Official scaffold as it ships. No hand-rolled SSR build."
+      - "Do not weaken any existing activation-neutrality check."
+    receipt: null
+
+  - id: T005
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Now that a Vue lane exists at a pinned version, re-run the idiom policy on at least one Vue sugar question and record whether Gate 1 and Gate 6 actually clear."
+    inputs:
+      - "docs/emitter-idiom-policy.md worked examples 2 and 3 (Vue shorthands, defineEmits) - both currently DEFERRED"
+      - "The landed Vue lane"
+    constraints:
+      - "Do not implement. Rule."
+      - "This is the test of whether the lane discharged the deferral or merely claimed to. If Gate 1 still cannot be measured, say so."
+      - "Record the ruling in the policy's own format so it can be folded back into docs/emitter-idiom-policy.md by a later package."
+    expected_output:
+      - "Six gate outcomes for at least one Vue sugar question"
+      - "Whether Gate 1 and Gate 6 cleared, with evidence"
+      - "Ruling, and whether docs/emitter-idiom-policy.md needs updating"
+    receipt: null
+
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Audit whether the Vue lane satisfies the oracle and the full owner outcome."
+    inputs:
+      - "All done task receipts"
+      - "Last pnpm e2e output"
+      - "Current dirty diff"
+    constraints:
+      - "Do not implement."
+      - "Reject completion if the Vue row exists but does not ASSERT equality with the other three."
+      - "Reject completion if any existing activation-neutrality check was weakened to make Vue pass."
+      - "Reject completion if the emitter produces Vue source that was never actually activated in a browser."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "missing evidence"
+      - "next task if not complete"
+    receipt: null
+
+checks:
+  dirty_fingerprint: unknown
+  last_verification:
+    result: unknown
+    task: null
+    commands: []

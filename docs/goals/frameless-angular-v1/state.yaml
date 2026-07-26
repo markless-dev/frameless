@@ -1,0 +1,207 @@
+# GoalBuddy v2 state.yaml
+# Board truth lives here. goal.md is the editable charter; notes/ holds long receipts only.
+#
+# PREPPED, NOT STARTED. Created by frameless-idiom-policy-v1 task T007 on 2026-07-26.
+
+version: 2
+
+goal:
+  title: "Frameless Angular adapter v1"
+  slug: "frameless-angular-v1"
+  kind: specific
+  tranche: "Land an Angular lane end to end - official scaffold, emitter with handler-to-class-method lowering, gate, goldens, demo, e2e row asserting S1/S2/S3 equality - then re-run the held-out decorator-vs-signal question against a real build."
+  status: active
+  oracle:
+    signal: "pnpm e2e includes an Angular row driving an official Angular scaffold at the pinned lockfile version, and its S1/S2/S3 observations are ASSERTED equal to demos/react-official, demos/solid-official and demos/qwik under the same matrix."
+    cadence: "after each Worker package and at final audit"
+    final_proof: "A green pnpm e2e receipt naming the Angular row, plus the decorator-vs-signal question re-run with Gate 1 and Gate 5 recorded against a real build rather than a description."
+  intake:
+    original_request: "Owner asked, during frameless-idiom-policy-v1: 'I'm also wondering if we should start the goals for Vue, Angular, and Svelte.' This board is the Angular answer, prepped after the idiom policy was ratified."
+    interpreted_outcome: "Angular becomes a frameless target with proven activation neutrality on official tooling, including the handler lowering Angular's template grammar forces."
+    input_shape: specific
+    audience: "frameless maintainers and future adapter authors"
+    authority: requested
+    proof_type: test
+    completion_proof: "Angular row green in pnpm e2e with asserted S1/S2/S3 equality."
+    likely_misfire: "Treating Angular as 'Vue with different syntax' and discovering mid-implementation that handler bodies cannot be inlined at all. That is a restructuring problem, not a formatting one, and it should shape the emitter's architecture from the first line rather than being retrofitted."
+    blind_spots_considered:
+      - "FORCED LOWERING is the defining constraint. Angular template expressions forbid const, arrow functions, destructuring and ++, so a handler body cannot be inlined - it must be hoisted to a named class member and referenced. For react/solid/qwik the emitter chooses a handler SHAPE; for Angular it must TRANSFORM. docs/emitter-idiom-policy.md declares this outside policy scope, so do NOT run the six gates on it."
+      - "Angular is the framework that forced the policy's baseline definition to stop meaning 'the literal form', because Angular has no literal form. If a case is found where the baseline definition still does not resolve, that is a POLICY DEFECT to report upward, not a licence to improvise."
+      - "The decorator-vs-signal question is already ruled and was ruled DENIED, not deferred. G1 will clear when a lane lands; G5 will not, because G5 was never about absence. Be suspicious of a re-derivation that flips it."
+    existing_plan_facts:
+      - "docs/emitter-idiom-policy.md governs every emission-site form choice. Forced lowering is explicitly NOT a policy question - do not run the gates on it."
+      - "Official scaffold only (ng new as it ships). No hand-rolled build harness - see docs/goals/frameless-qwik-v1/ for what that cost."
+      - "IR gaps biting Angular: IR-1 no bindable prop kind (blocks model()/[(banana)]), IR-2 no emit concept (blocks output()), IR-3 default slot only (blocks ng-content select=), IR-4 no framework-version input (signal input()/output() need >=17.1/17.2), IR-6 no class/style binding vocabulary (blocks [class.x], ngClass)."
+      - "ALREADY RULED, do not re-litigate: decorator @Input()/@Output() vs signal input()/output() member declaration = NO-SUGAR, decided independently twice during frameless-idiom-policy-v1 T006 (PM pre-registration + zero-context cold agent). Decisive gates G1 (nothing measurable, Angular absent) and G5 (reactivity depth + throw behavior differ). Full record: docs/goals/frameless-idiom-policy-v1/notes/T006-cold-agent.md."
+      - "GATE 6 DEFERRED: every OTHER Angular sugar ruling is deferred-not-denied until this board lands a lane at a pinned lockfile version."
+      - "UNRESOLVED SOURCE CONFLICT inherited: Angular's API docs say model() is stable since v19.0; the v20 announcement says v20. Resolve against the actual lockfile version once one exists."
+      - "STANDING GAP inherited: pnpm check does not typecheck generated/. Angular's own build DOES typecheck templates, which may partly cover this - confirm rather than assume."
+      - "STANDING GAP inherited: pnpm e2e pins dev mode only; pnpm test:browser hangs at the repo root (pre-existing, per-package scripts work)."
+
+rules:
+  pm_owns_state: true
+  one_active_task: true
+  max_write_workers: 1
+  no_implementation_without_worker_or_pm_task: true
+  no_completion_without_judge_or_pm_audit: true
+  planning_is_not_completion: true
+  queued_required_worker_blocks_completion: true
+  continuous_until_full_outcome: true
+  missing_input_or_credentials_do_not_stop_goal: true
+  preserve_and_validate_existing_plan: true
+  intake_misfire_must_be_audited: true
+  goal_pressure_requires_oracle: true
+  no_completion_on_weak_proof: true
+  slice_policy:
+    max_consecutive_tiny_tasks: 2
+    prefer_vertical_slices: true
+    judge_picks_largest_safe_slice: true
+    worker_completes_whole_slice: true
+
+agents:
+  scout: installed
+  worker: installed
+  judge: installed
+
+visual_board:
+  selected: unknown
+  local:
+    status: not_requested
+    url: null
+    command: "npx goalbuddy board docs/goals/frameless-angular-v1"
+
+active_task: T001
+
+tasks:
+  - id: T001
+    type: scout
+    assignee: Scout
+    status: active
+    reasoning_hint: medium
+    objective: "Map the official Angular scaffold, its activation model, and exactly what handler lowering requires of the emitter."
+    inputs:
+      - "The current official Angular scaffold (ng new) - contents and pinned versions"
+      - "Angular's template expression grammar - what is and is not permitted"
+      - "scripts/e2e.mjs - the activation matrix and its vocabulary"
+      - "demos/react-official and demos/solid-official - the shape a fourth official demo must match"
+      - "packages/compiler/src/schema.ts - IR-1, IR-2, IR-3, IR-4, IR-6 as they stand"
+      - "The S1/S2/S3 fixtures - every handler body that will need lowering"
+    constraints:
+      - "Read-only. Do NOT scaffold anything yet."
+      - "Enumerate CONCRETELY, per S1/S2/S3 handler, what lowering each would require: hoisted member name, parameters, captured state. This is the board's central risk and it should be quantified before anyone rules on architecture."
+      - "Report whether Angular's own template typechecking covers what pnpm check does not."
+    expected_output:
+      - "Official scaffold contents and pinned versions"
+      - "Angular's activation model and whether the e2e vocabulary covers it"
+      - "Per-handler lowering requirements across S1/S2/S3, concretely"
+      - "Whether Angular's build typechecks emitted templates"
+      - "Which of the IR gaps block S1/S2/S3 versus only sugar"
+      - "Resolution of the model() stability conflict against the scaffold's actual version"
+    receipt: null
+
+  - id: T002
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Ratify the Angular adapter contract, above all the handler-lowering architecture."
+    inputs:
+      - "T001 receipt"
+      - "docs/emitter-idiom-policy.md"
+    constraints:
+      - "Do not implement."
+      - "Rule on handler lowering FIRST - member naming scheme, collision handling, parameter passing, and how lowered members stay stable across regeneration. Golden byte-stability depends on the naming scheme being deterministic."
+      - "Do NOT run the six policy gates on forced lowering; the policy declares it out of scope."
+      - "Separate what S1/S2/S3 activation neutrality requires from what Angular idiom sugar would be nicer with."
+    expected_output:
+      - "Handler-lowering ruling: naming, collisions, parameters, determinism"
+      - "S1/S2/S3 scope for the first Worker package"
+      - "IR gaps: must-close vs deferred"
+      - "Exact Worker objective, allowed_files, verify, stop_if"
+    receipt: null
+
+  - id: T003
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Implement the Angular emitter and gate for the ratified S1/S2/S3 scope, including handler lowering, with checked-in goldens."
+    allowed_files: []
+    verify: []
+    stop_if:
+      - "Need files outside allowed_files."
+      - "A handler cannot be lowered under the ratified naming scheme without a collision the scheme does not resolve."
+      - "Goldens are not byte-stable across two regenerations."
+      - "Verification fails twice."
+    constraints:
+      - "allowed_files and verify come from the T002 ruling."
+      - "Match the existing emitter/gate/golden structure in packages/frameworks/."
+    receipt: null
+
+  - id: T004
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Stand up demos/angular-official from the official scaffold and add the Angular row to the e2e activation matrix, asserting S1/S2/S3 equality."
+    allowed_files: []
+    verify: []
+    stop_if:
+      - "The official scaffold needs modification beyond wiring in emitted components."
+      - "Equality cannot be asserted without weakening an existing assertion."
+      - "Verification fails twice."
+    constraints:
+      - "Official scaffold as it ships."
+      - "Do not weaken any existing activation-neutrality check."
+    receipt: null
+
+  - id: T005
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Re-run the held-out decorator-vs-signal question against the now-present Angular build, and record whether the ruling holds."
+    inputs:
+      - "docs/goals/frameless-idiom-policy-v1/notes/T006-cold-agent.md - the original two independent derivations"
+      - "docs/emitter-idiom-policy.md"
+      - "The landed Angular lane"
+    constraints:
+      - "Do not implement. Rule."
+      - "G1 should now clear - it was DEFERRED only because Angular was absent. G5 should NOT clear, because it was never about absence: reactivity depth and throw behavior differ regardless of whether a lane exists."
+      - "If the re-derivation flips to sugar, treat that as a signal to check your own reasoning FIRST. Two independent derivations said no-sugar. Flipping is permitted but requires explicit evidence about what changed, not a fresh opinion."
+      - "Record the ruling in the policy's own format so it can be folded back into docs/emitter-idiom-policy.md."
+    expected_output:
+      - "Six gate outcomes against a real build"
+      - "Whether the no-sugar ruling holds, with evidence"
+      - "Whether docs/emitter-idiom-policy.md needs updating - including whether this case should now become a worked example"
+    receipt: null
+
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Audit whether the Angular lane satisfies the oracle and the full owner outcome."
+    inputs:
+      - "All done task receipts"
+      - "Last pnpm e2e output"
+      - "Current dirty diff"
+    constraints:
+      - "Do not implement."
+      - "Reject completion if the Angular row exists but does not ASSERT equality with the other demos."
+      - "Reject completion if any existing activation-neutrality check was weakened."
+      - "Reject completion if lowered handler members are not byte-stable across regeneration."
+      - "Reject completion if the emitter produces Angular source that was never actually activated in a browser."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "missing evidence"
+      - "next task if not complete"
+    receipt: null
+
+checks:
+  dirty_fingerprint: unknown
+  last_verification:
+    result: unknown
+    task: null
+    commands: []

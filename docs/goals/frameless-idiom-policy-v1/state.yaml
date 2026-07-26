@@ -69,7 +69,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-idiom-policy-v1/"
     command: "npx goalbuddy board docs/goals/frameless-idiom-policy-v1"
 
-active_task: T007
+active_task: T999
 
 tasks:
   - id: T001
@@ -652,7 +652,7 @@ tasks:
   - id: T007
     type: pm
     assignee: PM
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Prep the Vue, Angular, and Svelte expansion goal boards against the ratified policy."
     inputs:
@@ -672,12 +672,31 @@ tasks:
       - "docs/goals/frameless-angular-v1/ prepped"
       - "docs/goals/frameless-svelte-v1/ prepped"
       - "The three /goal run commands, unexecuted"
-    receipt: null
+    receipt:
+      result: done
+      summary: "Three expansion boards prepped and checker-clean, each citing docs/emitter-idiom-policy.md as a non-negotiable constraint, carrying its own IR gaps from T003 as intake facts, and recording that its sugar rulings are Gate-6 DEFERRED until it lands a lane at a pinned lockfile version. None started. Each is deliberately differentiated - they are not one board copied three times."
+      boards_created:
+        - "docs/goals/frameless-vue-v1/ - goal.md, state.yaml, notes/"
+        - "docs/goals/frameless-angular-v1/ - goal.md, state.yaml, notes/"
+        - "docs/goals/frameless-svelte-v1/ - goal.md, state.yaml, notes/"
+      checker: "All three validate ok:true with zero errors."
+      shared_spine: "Each board's first job is CREATING THE LANE, because the ratified policy says no sugar for an absent framework ships until that framework has a lane at a pinned lockfile version. Gate 1 defers and Gate 6 defers for the same reason. That makes lane-first the policy's own consequence rather than a scheduling preference, and it is stated as such in each charter."
+      differentiation:
+        vue: "The unforced decision is SFC vs Vue JSX - the first target where JSX is not the obvious answer, and it changes tooling, goldens, gate and demo consumption. Carries IR-1,2,3,4,5,6,7."
+        angular: "FORCED LOWERING is the defining constraint: template expressions forbid const, arrow functions, destructuring and ++, so handler bodies cannot be inlined and must be hoisted to named class members. For the other targets the emitter picks a handler SHAPE; for Angular it must TRANSFORM. The policy declares forced lowering out of its own scope, so the board is told NOT to run the gates on it. Also carries the already-ruled decorator-vs-signal question with an explicit warning that it was denied-not-deferred: G1 will clear when a lane lands, G5 will not. Carries IR-1,2,3,4,6."
+        svelte: "The VERSION PIN is the whole problem: onclick vs on:click is the same lexical substitution flipping category across a major, reassignable $derived needs 5.25+, and Svelte 5 removed event modifiers (interacting with IR-5). IR-4 - the target-version input the policy's version corollary depends on - is ruled here or explicitly deferred, and the other two boards inherit that decision. bind: is held OUT of scope with its reason: different-in-kind on two axes, and its failure mode is a dev-only console warning that can pass tests and be wrong in production. Carries IR-1,3,4,5,6,7."
+      inherited_standing_gaps: "All three record: pnpm check does not typecheck generated/; pnpm e2e pins dev mode only; pnpm test:browser hangs at the repo root. Vue and Angular and Svelte boards each note the framework-specific mitigation to CONFIRM rather than assume (Angular's template typechecking, Svelte's svelte-check)."
+      prep_only_confirmed: "No adapter implementation, no framework demo scaffolding, no dependency installs, no /goal started. Each charter ends with its run command, unexecuted."
+      run_commands_unexecuted:
+        - "/goal Follow docs/goals/frameless-vue-v1/goal.md."
+        - "/goal Follow docs/goals/frameless-angular-v1/goal.md."
+        - "/goal Follow docs/goals/frameless-svelte-v1/goal.md."
+      spawned_tasks: []
 
   - id: T999
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     objective: "Audit whether BOTH oracle halves are satisfied and the full original owner outcome is complete."
     inputs:
