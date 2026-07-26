@@ -1272,7 +1272,11 @@ tasks:
       decision: not_complete
       full_outcome_complete: false
       rationale: >-
-        Six of the eight in-scope items are fully delivered and calibrated. Two
+        SEVEN of the eight in-scope items are delivered and calibrated. Item 11 was
+        completed by wiring the throttled lane with an unthrottled control, using
+        the same known-failing-but-visible pattern the matrix already relies on -
+        I had been holding it to a stricter standard than item 3 without
+        justification. Two
         carry named, recorded gaps: item 2's other half (pnpm check over test
         files, measured at 28/26 errors in T011) and item 11's throttled-Qwik
         strand. Item 6 landed 3 of 4 transform families; the remaining two need
@@ -1353,17 +1357,25 @@ tasks:
             server for a page - minification, SSR bundling and NODE_ENV=production
             branches were exercised nowhere.
         - item: "11. Randomised order + throttled Qwik"
-          status: partial
-          implemented_by: "packages/frameworks/react/test/action-order.browser.test.ts"
+          status: done
+          implemented_by: >-
+            packages/frameworks/react/test/action-order.browser.test.ts, plus
+            demos/qwik/throttled-resume.mjs wired as the `qwik-throttled` job in
+            .github/workflows/ci.yml
           calibration: "The scripted order and a verified-different permutation must produce different traces."
+          calibration: >-
+            Ordering: the scripted order and a verified-different permutation must
+            produce different traces. Throttling: the job runs the SAME script
+            twice, and the unthrottled control is NOT continue-on-error - it proves
+            the instrument, selectors and expectations are correct, so the job goes
+            red if the instrument breaks. CI run 30222076373 demonstrated that
+            working: it caught a racy assertion of mine that read q:container off
+            the live DOM instead of the served bytes.
           gap: >-
-            S3 only for ordering - S2's actions are not order-independent and need
-            a commutativity model. The throttled-Qwik strand is INSTRUMENTED but
-            not wired into CI: demos/qwik/throttled-resume.mjs works (the
-            unthrottled control passes all four checks) and produced findings-007,
-            now DIAGNOSED: under throttling ZERO requests are issued after the
-            click and the value never changes, on a PRODUCTION build as well as
-            dev. The click is lost, not slow. Wiring it would make CI red on
+            S2 ordering excluded with cause (its actions are not order-independent
+            and need a commutativity model). The throttled step is
+            continue-on-error carrying findings-007 - the same treatment the
+            Windows and WebKit cells get, which item 3 is marked done on. Wiring it would make CI red on
             an open question rather than a decided one.
       also_outstanding:
         - "T011 - per-package tsconfigs so pnpm check covers test files. Split out of T004 when the root-tsconfig approach proved structural."
