@@ -238,3 +238,44 @@ jobs:
           curl -sf localhost:5173/s2 | grep -q 'data-edit="a"'
           curl -sf localhost:5173/s3 | grep -q 'hello'
           echo "production SSR output verified for ${{ matrix.demo }}"
+
+  # Throttled Qwik resumption (audit item 11, third strand).
+  #
+  # Runs the SAME script twice: once unthrottled as a control, once throttled.
+  # The control is the calibration - it proves the instrument, selectors and
+  # expectations are correct, so a throttled failure is about the connection and
+  # nothing else.
+  #
+  # The throttled step is continue-on-error, the same treatment the Windows and
+  # WebKit cells get: it keeps running and its log stays visible rather than the
+  # lane being deleted or the finding going quiet. It currently FAILS - under
+  # 300ms/400kbit a click issues zero network requests and the value never
+  # changes, on production builds too. See notes/findings-007-qwik-throttled-resume.md.
+  #
+  # The control step is NOT continue-on-error. If the instrument itself breaks,
+  # this job must go red.
+  qwik-throttled:
+    name: qwik resumption under throttling
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --dir packages/frameworks/react exec playwright install --with-deps chromium
+      - run: pnpm --dir demos/qwik build
+      - name: serve the production build
+        run: pnpm --dir demos/qwik exec vite preview --port 5175 --strictPort &
+      - name: wait for the server
+        run: for _ in $(seq 1 30); do curl -sf localhost:5175/ >/dev/null && break; sleep 1; done
+      - name: control - unthrottled resumption must pass
+        env:
+          QWIK_THROTTLE: '0'
+        run: node demos/qwik/throttled-resume.mjs
+      - name: throttled resumption (known-failing, findings-007)
+        continue-on-error: true
+        run: node demos/qwik/throttled-resume.mjs

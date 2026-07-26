@@ -18,14 +18,19 @@ const page = await context.newPage();
 
 // Throttle via CDP: ~400kbit/s down with 300ms latency. Slow enough that a
 // click-time QRL fetch is unambiguously on the critical path.
+// QWIK_THROTTLE=0 runs the identical script with the throttle disabled. That is
+// the control: it proves the instrument, selectors and expectations are correct,
+// so a throttled failure is about the connection and nothing else.
+const throttled = process.env.QWIK_THROTTLE !== '0';
 const client = await context.newCDPSession(page);
 await client.send('Network.enable');
 await client.send('Network.emulateNetworkConditions', {
 	offline: false,
-	latency: 300,
-	downloadThroughput: (400 * 1024) / 8,
-	uploadThroughput: (400 * 1024) / 8,
+	latency: throttled ? 300 : 0,
+	downloadThroughput: throttled ? (400 * 1024) / 8 : -1,
+	uploadThroughput: throttled ? (400 * 1024) / 8 : -1,
 });
+console.log(`mode: ${throttled ? 'THROTTLED (300ms / 400kbit)' : 'control (unthrottled)'}`);
 
 let failed = false;
 const check = (label, ok) => {
@@ -49,7 +54,7 @@ await page.waitForFunction(
 	undefined,
 	{ timeout: 30_000 },
 );
-check(`value reaches kit:4 after a throttled resume (got ${await value()})`, (await value())?.trim() === 'kit:4');
+check(`value reaches kit:4 after resume (got ${await value()})`, (await value())?.trim() === 'kit:4');
 
 // A second click must also work - proving the first fetch left the container in
 // a usable state rather than a half-resumed one.
@@ -59,7 +64,7 @@ await page.waitForFunction(
 	undefined,
 	{ timeout: 30_000 },
 );
-check(`value reaches kit:6 on a second throttled click (got ${await value()})`, (await value())?.trim() === 'kit:6');
+check(`value reaches kit:6 on a second click (got ${await value()})`, (await value())?.trim() === 'kit:6');
 
 await browser.close();
 if (failed) process.exit(1);
