@@ -68,8 +68,26 @@ root did not help — the framework packages carry their own `vitest`
 devDependency, which still resolved without it.
 
 Both attempts were reverted. A `pnpm install --frozen-lockfile --force` then made
-the warning disappear on its own and `test:solid` exit 0. **The probe was a stale
-`node_modules` artifact.** No `jsdom` dependency is needed and none was added.
+the warning disappear locally and `test:solid` exit 0, which led me to record it
+as a stale `node_modules` artifact.
+
+**That was wrong, and CI caught it.** Run 30218566637 did a clean
+`pnpm install --frozen-lockfile` and the probe came straight back: React 45/45
+exit 0, Solid 44/44 but **exit 1** on `MISSING DEPENDENCY Cannot find dependency
+'jsdom'`. The local `--force` reinstall had masked a real condition rather than
+resolving one.
+
+Real cause: `vite-plugin-solid` injects `environment: 'jsdom'` when it detects
+vitest. These lanes run in a real browser so that environment is never used, but
+vitest still tries to resolve `jsdom` and exits nonzero when it cannot — with
+every test green. The fix is to state `environment: 'node'` explicitly in
+`packages/frameworks/solid/vitest.config.ts`, which takes precedence over the
+plugin's injection. No `jsdom` dependency is needed and none was added.
+
+This is the second diagnosis in this task that a local run got wrong and CI
+corrected — the first being T002's file-parallelism theory. Both were cases of a
+local environment differing from a clean one in a way that hid the real
+condition. It is a fairly direct vindication of audit item 1.
 
 Worth keeping as a lesson for the version-matrix work in T007: in this workspace,
 adding a dependency to one package can silently fork a peer-resolved toolchain
