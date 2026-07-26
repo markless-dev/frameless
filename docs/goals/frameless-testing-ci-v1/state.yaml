@@ -152,7 +152,7 @@ execution_mode:
     because the live board server watches that path. It is synced into the
     worktree and committed at each task boundary so the trail merges with the work.
 
-active_task: T011
+active_task: T012
 
 tasks:
   - id: T001
@@ -1103,7 +1103,7 @@ tasks:
   - id: T011
     type: worker
     assignee: Worker
-    status: active
+    status: blocked
     reasoning_hint: medium
     sequence_note: >-
       Split out of T004 during execution. T004 attempted the tsconfig widening,
@@ -1126,12 +1126,33 @@ tasks:
       - "Correct per-package JSX config still leaves type errors that need PRODUCT changes rather than config changes - record them and escalate; do not edit product code from this task."
       - "Need files outside allowed_files."
       - "Verification fails twice."
-    receipt: null
+    receipt:
+      result: blocked
+      note: notes/T011-tsconfig-measurement.md
+      summary: >-
+        MEASURED, NOT LANDED. Per-package tsconfigs were written, measured, and
+        reverted to a clean tree. React 28 / Solid 26 type errors. Stopped on the
+        card's own stop_if: the errors are not all config-level, so this is a
+        coherent slice of work rather than a configuration tweak.
+      blocker: >-
+        Three categories. (1) @tsrx/core has no declarations in scope - fixable.
+        (2) Emitted .jsx imports are implicitly any, which must be reconciled with
+        T005's deliberately tuned emitted-output config rather than drifting from
+        it. (3) At least one GENUINE type error in test code -
+        composition-calibration.browser.test.ts(173,5), 'string | number' not
+        assignable to 'string', identical in both packages. Category 3 requires
+        editing test code, which is exactly what the card's stop_if reserves for a
+        follow-up rather than an inline fix.
+      why_not_half_landed: >-
+        Adding tsconfigs that are not wired into pnpm check because they are red
+        would leave two unused files implying a guarantee that does not hold. The
+        measurement is the deliverable; the note records the next step in order.
 
   - id: T012
     type: worker
     assignee: Worker
-    status: queued
+    status: active
+    note: "Next task, not started - the session reached its context limit here. Left ACTIVE so the board resumes exactly here."
     reasoning_hint: medium
     sequence_note: >-
       Split out of T008 during execution. Audit item 11 - the concrete form of
@@ -1193,12 +1214,16 @@ tasks:
             nobody planted. Run 30219953486 is green across 12 jobs. A red-to-green
             pair from a real bug, not a seeded one.
         - item: "2. Type-check emitted output"
-          status: done
+          status: partial
           implemented_by: "packages/frameworks/{react,solid}/test/emitted-typecheck.test.ts"
           calibration: >-
             Three seeded defects per lane, plus the lane itself BLINDED (diagnose()
             stubbed) to prove all three calibrations and the baseline assertion
             fail. Found findings-002 on first run.
+          gap: >-
+            The other half - making pnpm check cover TEST files - is not landed.
+            T011 measured it at 28/26 type errors including one genuine defect in
+            test code. See notes/T011-tsconfig-measurement.md.
         - item: "3. Matrix"
           status: done
           implemented_by: ".github/workflows/ci.yml (12 jobs)"
@@ -1248,7 +1273,7 @@ tasks:
         continue-on-error with pointers to their findings; their steps still fail
         and their logs still show it. That was chosen over deleting the cells,
         which would have made the matrix a liar.
-      next_task: T011
+      next_task: T012
       branch_state:
         branch: "goal/frameless-testing-ci-v1"
         pushed: true
