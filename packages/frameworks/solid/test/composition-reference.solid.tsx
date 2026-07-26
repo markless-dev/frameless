@@ -159,7 +159,10 @@ function SharedAudit() {
 		onCleanup(unsubscribe);
 	};
 	return (
-		<output data-shared-audit ref={attachAudit}>
+		// Solid types `ref` as (el: HTMLElement) => void while attachAudit is
+		// written against the HTMLOutputElement this element yields; the callback
+		// is correct and the cast reconciles the contravariance.
+		<output data-shared-audit ref={attachAudit as (el: HTMLElement) => void}>
 			pending
 		</output>
 	);

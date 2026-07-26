@@ -24,7 +24,8 @@ single root config cannot type-check both framework test trees because Solid's
 | **+ widened component registries, + typed the strictmode map** | **9** | **10** |
 | **+ three local fixes** | **6** | 10 |
 | **+ overload return type, getter-union cast, gate narrowing** | **1** | 10 |
-| **+ the same four fixes transferred to Solid** | 1 | **5** |
+| **+ the same four fixes transferred to Solid** | 1 | 5 |
+| **+ `attr:*` JSX namespace declaration, ref variance cast** | **1** | **1** |
 
 The second attempt resolved both *config* categories. Everything that remains is
 a genuine type defect in test or reference code:
@@ -138,9 +139,36 @@ into two groups:
   Closing them means either a JSX namespace augmentation or an upstream fix -
   see findings-002-solid-attr-namespace.md. Not a type-annotation problem.
 
-So of the original 54 errors across both packages, 48 are resolved, 2 are the
-same deliberately-deferred `test.each` narrowing, 1 is a small variance fix, and
-3 are a known open finding rather than a defect in the configuration work.
+### Round five — solid 5 -> 1
+
+- **`test/solid-attr-namespace.d.ts`** declares `attr:${string}` on solid-js's
+  `JSX.CustomAttributes`. This resolved all three finding-002 errors. It is a
+  *description of real behavior*, not a suppression: `attr:value` works at
+  runtime, which is why the handwritten references use it and why `pnpm e2e` and
+  the Solid browser lane are green. It does NOT settle finding 002's actual
+  question - whether the emitter should use `attr:` at all, and whether the
+  declaration belongs upstream in solid-js.
+- A ref-callback contravariance cast in `composition-reference.solid.tsx`.
+
+**A mistake worth recording.** The first version of that cast put the
+explanatory comment in JSX *child* position (`{/* ... */}`), which added a second
+child where one was expected: Solid errors went 2 -> 7 and `pnpm test:solid`
+dropped from 44 tests to 17. The suite caught it immediately and loudly - which
+is the third time in this goal that the "the oracle protects itself" argument was
+tested in practice rather than asserted. Moved the comment out of child position;
+44 restored.
+
+### Final state: 54 -> 2
+
+Of the original 54 errors across both packages, **52 are resolved**. What remains
+is **one error per package**, and it is the same one: the `test.each` table
+callback signature in `gate.test.ts`. That is the single place where a careless
+narrowing would weaken the policy assertions the gate depends on, so it is left
+deliberately rather than guessed at - by a session that had just demonstrated it
+can get an edit wrong.
+
+Wiring `tsc -p` for both packages into `pnpm check` is now one error away per
+package.
 
 ## The complete error inventory
 
