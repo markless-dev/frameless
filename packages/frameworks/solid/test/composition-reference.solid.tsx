@@ -159,7 +159,10 @@ function SharedAudit() {
 		onCleanup(unsubscribe);
 	};
 	return (
-		<output data-shared-audit ref={attachAudit}>
+		// Solid types `ref` as (el: HTMLElement) => void while attachAudit is
+		// written against the HTMLOutputElement this element yields; the callback
+		// is correct and the cast reconciles the contravariance.
+		<output data-shared-audit ref={attachAudit as (el: HTMLElement) => void}>
 			pending
 		</output>
 	);
@@ -306,7 +309,9 @@ function CleanupPage(props: { variant?: CleanupVariant }) {
 	);
 }
 
-export const solidCompositionReferences: Record<string, () => JSX.Element> = {
+// Same as the React twin: these pages accept optional variant props, so
+// `() => JSX.Element` understated them.
+export const solidCompositionReferences: Record<string, (props?: any) => JSX.Element> = {
 	'C1-slot-rendering': SlotPage,
 	'C2-shared-propagation': SharedPage,
 	'C3-ref-driven-focus': FocusPage,

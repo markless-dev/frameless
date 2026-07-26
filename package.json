@@ -10,7 +10,7 @@
 	},
 	"scripts": {
 		"build": "vp pack",
-		"check": "tsc --noEmit",
+		"check": "tsc --noEmit && tsc -p packages/frameworks/react --noEmit && tsc -p packages/frameworks/solid --noEmit",
 		"demo": "node scripts/demo.mjs",
 		"e2e": "node scripts/e2e.mjs",
 		"e2e:ssr": "pnpm --dir demos/ssr exec witness run",
@@ -19,14 +19,15 @@
 		"prepare": "git config core.hooksPath .githooks",
 		"rules": "npx -y @intellectronica/ruler apply",
 		"test": "vp test --project node",
-		"test:browser": "vp test --project react-browser --project solid-browser",
-		"test:react": "vp test --project react-browser",
-		"test:solid": "vp test --project solid-browser",
+		"test:browser": "pnpm test:react && pnpm test:solid",
+		"test:react": "pnpm --dir packages/frameworks/react exec vitest run --config vitest.config.ts --project react-browser",
+		"test:solid": "pnpm --dir packages/frameworks/solid exec vitest run --config vitest.config.ts --project solid-browser",
 		"test:poc": "for package in poc/*; do if [ -f \"$package/package.json\" ]; then pnpm --dir \"$package\" install --ignore-workspace --frozen-lockfile && pnpm --dir \"$package\" --ignore-workspace test || exit $?; fi; done"
 	},
 	"devDependencies": {
 		"@frameless/analyzer": "workspace:*",
 		"@types/node": "24.12.2",
+		"fast-check": "^4.9.0",
 		"typescript": "5.9.3",
 		"vite": "8.0.16",
 		"vite-plus": "0.1.20",
@@ -46,7 +47,7 @@
 		}
 	},
 	"engines": {
-		"node": ">=20"
+		"node": ">=22"
 	},
 	"packageManager": "pnpm@10.33.2"
 }

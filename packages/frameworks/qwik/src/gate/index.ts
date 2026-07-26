@@ -1,9 +1,18 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
+import eslintJs from '@eslint/js';
+import { ESLint } from 'eslint';
+import qwikPlugin from 'eslint-plugin-qwik';
+import globals from 'globals';
 import type { EnrichedIR } from '@frameless/compiler';
 import { dirname, normalize, relative, resolve } from 'pathe';
 
-export type DossierRef = 'T002-qwik-architecture D8';
+export type DossierRef =
+	| 'T002-qwik-architecture D8'
+	// Qwik output previously received only generic checks while React and Solid
+	// were gated by their frameworks' own eslint plugins. T003 Ruling 2 of
+	// frameless-testing-ci-v1 closed that asymmetry.
+	| 'frameless-testing-ci-v1 T003 ruling 2';
 export type GatePolicy = {
 	readonly id: string;
 	readonly dossierRef: DossierRef;
@@ -35,10 +44,92 @@ function persistenceArtifactPolicy() {
 	return policy as typeof policy & { readonly requiresArtifact: true };
 }
 
+/**
+ * Qwik's own lint rules, applied to emitted output. These are a THIRD-PARTY
+ * arbiter: unlike the custom policies above, they encode what the Qwik team
+ * considers correct rather than what we decided. `valid-lexical-scope` is the
+ * one that matters most for a resumable emitter - it catches non-serializable
+ * values captured across a QRL boundary, which is the defining failure mode of
+ * generated Qwik code and which nothing else in this repo checks.
+ */
+export const QWIK_ESLINT_RULES = {
+	'qwik/use-method-usage': 'error',
+	'qwik/no-react-props': 'error',
+	'qwik/jsx-key': 'error',
+	'qwik/jsx-no-script-url': 'error',
+	'qwik/no-use-visible-task': 'error',
+	'qwik/scope-use-task': 'error',
+	'qwik/no-async-prevent-default': 'error',
+	'qwik/prefer-classlist': 'error',
+	'qwik/serializer-signal-usage': 'error',
+	'qwik/unused-server': 'error',
+	'qwik/jsx-img': 'error',
+	'qwik/jsx-a': 'error',
+} as const;
+
+/**
+ * Qwik rules that require TYPE INFORMATION and therefore cannot run against
+ * plain emitted `.jsx`: they need @typescript-eslint/parser with a project.
+ *
+ * `valid-lexical-scope` is the costly omission - it is the rule that catches
+ * non-serializable values captured across a QRL boundary, the defining failure
+ * mode of generated resumable code. It is recorded here rather than silently
+ * dropped so the gap is visible.
+ *
+ * Unblocked by T011 (per-package tsconfigs covering emitted output): once
+ * emitted code is type-checkable, typed linting becomes available and these
+ * two should move into QWIK_ESLINT_RULES above.
+ */
+export const QWIK_ESLINT_RULES_REQUIRING_TYPES = [
+	'qwik/valid-lexical-scope',
+	'qwik/use-async-top',
+] as const;
+
+const ESLINT_POLICIES = Object.keys(QWIK_ESLINT_RULES).map((rule) => ({
+	id: `eslint:${rule}`,
+	dossierRef: 'frameless-testing-ci-v1 T003 ruling 2' as const,
+}));
+
 export const QWIK_GATE_POLICIES = [
 	{ id: 'no-visible-task', dossierRef: 'T002-qwik-architecture D8' },
 	persistenceArtifactPolicy(),
+	...ESLINT_POLICIES,
 ] as const satisfies readonly GatePolicy[];
+
+let cachedEslint: ESLint | undefined;
+function makeEslint(): ESLint {
+	cachedEslint ??= new ESLint({
+		overrideConfigFile: true,
+		allowInlineConfig: false,
+		overrideConfig: [
+			eslintJs.configs.recommended,
+			{
+				files: ['**/*.jsx'],
+				plugins: { qwik: qwikPlugin as never },
+				languageOptions: {
+					ecmaVersion: 'latest',
+					sourceType: 'module',
+					parserOptions: { ecmaFeatures: { jsx: true } },
+					globals: globals.browser,
+				},
+				rules: QWIK_ESLINT_RULES as never,
+			},
+		],
+	});
+	return cachedEslint;
+}
+
+async function eslintViolations(file: string, source: string): Promise<GateViolation[]> {
+	const [result] = await makeEslint().lintText(source, { filePath: resolve(PACKAGE_ROOT, file) });
+	return (result?.messages ?? []).map((message) =>
+		violation(
+			file,
+			`eslint:${message.ruleId ?? 'parse'}`,
+			message.message,
+			message.line ?? null,
+		),
+	);
+}
 
 const POLICIES = new Map<string, GatePolicy>(
 	QWIK_GATE_POLICIES.map((policy) => [policy.id, policy]),
@@ -128,6 +219,7 @@ export async function checkSources(
 	const unevaluatedPolicies = new Set<string>();
 	for (const { file, source, artifact } of entries) {
 		violations.push(...visibleTaskViolations(file, source));
+		violations.push(...(await eslintViolations(file, source)));
 		if (artifact) {
 			const artifactViolations = persistenceViolations(file, artifact);
 			if (artifactViolations) violations.push(...artifactViolations);

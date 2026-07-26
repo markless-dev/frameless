@@ -21,12 +21,29 @@ async function golden(name: string): Promise<EnrichedIR> {
 
 describe('Qwik v2 dossier gate', () => {
 	test('publishes independent source and artifact-required policies', () => {
-		expect(QWIK_GATE_POLICIES).toEqual([
+		expect(QWIK_GATE_POLICIES.slice(0, 2)).toEqual([
 			{ id: 'no-visible-task', dossierRef: 'T002-qwik-architecture D8' },
 			{
 				id: 'persistence-render-lowering',
 				dossierRef: 'T002-qwik-architecture D8',
 			},
+		]);
+		// Qwik's own lint rules, added by T006 to close the gate asymmetry with
+		// React and Solid. These are a third-party arbiter: they encode what the
+		// Qwik team considers correct, not what we decided.
+		expect(QWIK_GATE_POLICIES.slice(2).map((policy) => policy.id)).toEqual([
+			'eslint:qwik/use-method-usage',
+			'eslint:qwik/no-react-props',
+			'eslint:qwik/jsx-key',
+			'eslint:qwik/jsx-no-script-url',
+			'eslint:qwik/no-use-visible-task',
+			'eslint:qwik/scope-use-task',
+			'eslint:qwik/no-async-prevent-default',
+			'eslint:qwik/prefer-classlist',
+			'eslint:qwik/serializer-signal-usage',
+			'eslint:qwik/unused-server',
+			'eslint:qwik/jsx-img',
+			'eslint:qwik/jsx-a',
 		]);
 		expect(
 			QWIK_GATE_POLICIES.filter((policy) => policy.requiresArtifact).map(
@@ -42,7 +59,27 @@ describe('Qwik v2 dossier gate', () => {
 			'generated/S3.jsx',
 		]);
 		const result = await checkGeneratedFiles();
-		expect(result.violations, JSON.stringify(result.violations, null, 2)).toEqual([]);
+		// KNOWN-FAILING EXPECTATION, per T003 Ruling 5. Qwik's own
+		// no-async-prevent-default rule flags generated/S3.jsx:38 - the emitter
+		// puts event.preventDefault() inside an async QRL, where Qwik says it
+		// cannot work. That is a real emitter defect and is NOT suppressed here:
+		// this goal's charter forbids changing emitter behavior from a testing
+		// task. See docs/goals/frameless-testing-ci-v1/notes/
+		// findings-003-qwik-async-preventdefault.md.
+		//
+		// This is exact equality, so if the emitter is fixed and the violation
+		// disappears, this test fails and forces the finding to be closed
+		// deliberately rather than drifting shut.
+		expect(result.violations, JSON.stringify(result.violations, null, 2)).toEqual([
+			{
+				file: 'generated/S3.jsx',
+				policy: 'eslint:qwik/no-async-prevent-default',
+				dossierRef: 'frameless-testing-ci-v1 T003 ruling 2',
+				message:
+					'This is an asynchronous function and does not support preventDefault. \nUse preventDefault attributes instead',
+				line: 38,
+			},
+		]);
 		expect(result.unevaluated).toEqual([
 			{ policy: 'persistence-render-lowering', reason: 'requires-artifact' },
 		]);
@@ -92,5 +129,46 @@ describe('Qwik v2 dossier gate', () => {
 			}),
 		]);
 		expect(() => emit(artifact)).toThrow('does not support persistence-bearing IR');
+	});
+});
+
+// CALIBRATION for the eslint policies added by T006. A gate rule nobody has
+// watched reject something is not evidence it works. Each case feeds the gate
+// source that violates one Qwik rule and proves the violation is reported under
+// that rule's policy id.
+describe('MUTATION: Qwik lint policies reject violating emitted source', () => {
+	const cases = [
+		{
+			rule: 'qwik/jsx-key',
+			source: `export const C = () => <ul>{[1, 2].map((n) => <li>{n}</li>)}</ul>;`,
+		},
+		{
+			rule: 'qwik/no-react-props',
+			source: `export const C = () => <div className="x" />;`,
+		},
+		{
+			rule: 'qwik/jsx-no-script-url',
+			source: `export const C = () => <a href="javascript:void(0)">x</a>;`,
+		},
+		{
+			rule: 'qwik/jsx-img',
+			source: `export const C = () => <img src="/a.png" />;`,
+		},
+	];
+
+	for (const { rule, source } of cases) {
+		test(`${rule} is caught`, async () => {
+			const result = await checkSources([{ file: 'generated/Mutant.jsx', source }]);
+			const policies = result.violations.map((violation) => violation.policy);
+			expect(policies, JSON.stringify(result.violations, null, 2)).toContain(
+				`eslint:${rule}`,
+			);
+		});
+	}
+
+	test('the clean corpus does not trip these same rules', async () => {
+		const result = await checkGeneratedFiles();
+		const tripped = new Set(result.violations.map((violation) => violation.policy));
+		for (const { rule } of cases) expect(tripped).not.toContain(`eslint:${rule}`);
 	});
 });

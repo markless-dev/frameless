@@ -1,4 +1,5 @@
 import {
+	type ComponentType,
 	createContext,
 	type ReactNode,
 	useCallback,
@@ -106,7 +107,11 @@ const SharedContext = createContext<SharedStore | null>(null);
 function useCompositionShared(cell: 'count'): number;
 function useCompositionShared(cell: 'history'): string;
 function useCompositionShared(cell: 'store'): SharedStore;
-function useCompositionShared(cell: 'count' | 'history' | 'store') {
+// The implementation signature needs an explicit return type: TypeScript cannot
+// reconcile an INFERRED union return against the three overloads above.
+function useCompositionShared(
+	cell: 'count' | 'history' | 'store',
+): number | string | SharedStore {
 	const store = useContext(SharedContext);
 	if (!store) throw new Error('Composition shared store is missing its provider');
 	const snapshot = useSyncExternalStore(
@@ -115,8 +120,19 @@ function useCompositionShared(cell: 'count' | 'history' | 'store') {
 			: cell === 'history'
 				? store.subscribeHistory
 				: subscribeToNothing,
-		cell === 'count' ? store.getCount : cell === 'history' ? store.getHistory : getNothing,
-		cell === 'count' ? store.getCount : cell === 'history' ? store.getHistory : getNothing,
+		// The ternary yields a UNION of getters, which useSyncExternalStore's
+		// single-signature parameter will not accept. The runtime value is
+		// unchanged; only the declared type is unified.
+		(cell === 'count'
+			? store.getCount
+			: cell === 'history'
+				? store.getHistory
+				: getNothing) as () => never,
+		(cell === 'count'
+			? store.getCount
+			: cell === 'history'
+				? store.getHistory
+				: getNothing) as () => never,
 	);
 	if (cell === 'count') {
 		return snapshot;
@@ -232,7 +248,9 @@ function FocusField({
 		<input
 			data-focus-target=""
 			ref={(node) => {
-				input(node);
+				// React hands back null on detach; this setter models "cleared" as
+				// undefined - see the cleanup below, which passes undefined.
+				input(node ?? undefined);
 				return () => {
 					if (!omitClear) input(undefined);
 				};
@@ -338,7 +356,11 @@ function CleanupPage({ variant = 'reference' }: { variant?: CleanupVariant }) {
 	);
 }
 
-export const reactCompositionReferences: Record<string, () => ReactNode> = {
+// These pages take OPTIONAL props (variant selectors used by the mutant
+// builders), so `() => ReactNode` was too narrow to describe them. ComponentType
+// is what createReactAdapter already accepts, so this widens the declaration to
+// the truth rather than loosening a real constraint.
+export const reactCompositionReferences: Record<string, ComponentType<any>> = {
 	'C1-slot-rendering': SlotPage,
 	'C2-shared-propagation': SharedPage,
 	'C3-ref-driven-focus': FocusPage,

@@ -1,0 +1,281 @@
+name: CI
+
+on:
+  push:
+    branches: [main, 'goal/**']
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # Browsers are installed explicitly per job that needs them, so the postinstall
+  # download is pure waste everywhere else.
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # MATRIX (audit item 3), cells enumerated by T003 Ruling 3.
+  #
+  # Shape follows Svelte's: broad on one OS, thin elsewhere. The full cartesian
+  # product (3 OS x 3 Node x 2 modes x 3 engines x 2 framework versions = 108)
+  # was rejected - most cells carry no information and a single red becomes hard
+  # to attribute. Cost is not the constraint here: T002 measured the green path
+  # at ~40s.
+  #
+  # Node 20 is deliberately ABSENT. CI run 30216328175 measured it broken - the
+  # toolchain cannot load vite.config.ts on the Node 20 GitHub ships. See
+  # docs/goals/frameless-testing-ci-v1/notes/findings-001-engines-node-floor.md.
+  # engines.node is set from what this matrix proves green, not from guesswork.
+  # ---------------------------------------------------------------------------
+  static:
+    name: check + lint (node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [22, 24]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - run: pnpm lint
+
+  test:
+    name: node tests (${{ matrix.os }}, node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Primary: full Node breadth on one OS.
+          - { os: ubuntu-latest, node: 22 }
+          - { os: ubuntu-latest, node: 24 }
+          # OS breadth: nothing here had ever run off macOS before this goal, and
+          # nothing had ever run on Windows at all. Path, line-ending and shell
+          # assumptions surface here or nowhere.
+          - { os: macos-latest, node: 24 }
+          # KNOWN-FAILING, tracked - see notes/findings-004-windows-portability.md.
+          # continue-on-error keeps the cell RUNNING and its log visible rather
+          # than deleting it. Two real defects, neither caused by this goal:
+          # format-emitted.test.ts spawns `npx` via execFileSync (ENOENT on
+          # Windows), and solid/test/gate.test.ts:610 fails a hash assertion,
+          # almost certainly CRLF. Remove continue-on-error when both are fixed.
+          - { os: windows-latest, node: 24, experimental: true }
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+        continue-on-error: ${{ matrix.experimental == true }}
+
+  browser:
+    name: browser lanes
+    runs-on: ubuntu-latest
+    # Tightened from 20. The T004 calibration run proved this lane's failure mode
+    # is an indefinite hang, not an error, so a generous budget just burns runner
+    # time and reads as "slow" rather than "broken".
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --dir packages/frameworks/react exec playwright install --with-deps chromium
+      # This lane was RED by design on the first two runs - that was T004's
+      # calibration, proving this workflow catches a real unplanted defect.
+      # T010 fixed the cause: vp test bundles vitest@0.1.20 while @vitest/browser
+      # is 4.1.5, and the mismatched pair breaks the browser RPC. The scripts now
+      # run the real vitest from each package. See notes/T010-browser-lane.md.
+      - run: pnpm test:browser
+
+  e2e:
+    name: e2e (differential + three-way)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --dir packages/frameworks/react exec playwright install --with-deps chromium
+      - run: pnpm e2e
+      - name: upload receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-receipts
+          path: |
+            demos/*/receipts/**
+            demos/*/.witness/receipts/**
+          if-no-files-found: warn
+
+  # Cross-engine (T003 Ruling 3's lowest-priority axis, kept because T002 found
+  # firefox and webkit already provisioned). Focus, form behaviour and event
+  # ordering differ across engines, and those are three of the five channels
+  # analyzer/compare.ts diffs - so a chromium-only browser lane is narrower than
+  # the oracle it feeds.
+  browser-engines:
+    name: browser lanes (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [firefox, webkit]
+        include:
+          # KNOWN-FAILING, tracked - see notes/findings-005-webkit-quiescence.md.
+          # WebKit exceeds the analyzer's 500ms quiescence bound on React
+          # controlled inputs. Kept running so the finding stays visible.
+          - { browser: webkit, experimental: true }
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --dir packages/frameworks/react exec playwright install --with-deps ${{ matrix.browser }}
+      - run: pnpm test:browser
+        continue-on-error: ${{ matrix.experimental == true }}
+        env:
+          FRAMELESS_BROWSER: ${{ matrix.browser }}
+
+  # THE DISTINCTIVE AXIS. Frameless is downstream of three frameworks at once,
+  # which no framework project has to worry about: Svelte does not test against
+  # "other versions of Svelte". Every framework version here was pinned to
+  # exactly one release, so a user on any other patch was running an untested
+  # configuration.
+  #
+  # Qwik deliberately gets NO axis: it is on 2.0.0-beta.38 and @qwik.dev/core@latest
+  # IS that version, so a matrix across it would measure upstream churn rather
+  # than our compatibility. Revisit at Qwik 2 stable.
+  framework-versions:
+    name: ${{ matrix.framework }} @ ${{ matrix.spec }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { framework: react, dir: packages/frameworks/react, spec: 'react@^19 react-dom@^19', script: 'test:react' }
+          - { framework: solid, dir: packages/frameworks/solid, spec: 'solid-js@^1', script: 'test:solid' }
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --dir packages/frameworks/react exec playwright install --with-deps chromium
+      # Float off the pin to the newest release in range. This job is allowed to
+      # mutate the lockfile - it is measuring, not shipping.
+      - run: pnpm --dir ${{ matrix.dir }} add ${{ matrix.spec }}
+      - name: report resolved versions
+        run: pnpm --dir ${{ matrix.dir }} list --depth 0
+      - run: pnpm ${{ matrix.script }}
+
+  # PRODUCTION BUILD (audit item 7's second half). The README concedes the
+  # express production build is "verified by curl only, not by a browser lane".
+  # Until now it was not verified by CI AT ALL - dev-mode is what pnpm demo and
+  # pnpm e2e exercise, and that is the path every other lane covers.
+  #
+  # This does not close the gap to a browser lane. It closes the smaller and
+  # still-real gap that nothing automated ever built the production bundles or
+  # asked the production server for a page. Minification, SSR bundling and
+  # NODE_ENV=production branches are all exercised here and nowhere else.
+  production:
+    name: production build (${{ matrix.demo }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        demo: [react-official, solid-official]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --dir demos/${{ matrix.demo }} build
+      - name: serve and assert the server-rendered values
+        working-directory: demos/${{ matrix.demo }}
+        env:
+          NODE_ENV: production
+        run: |
+          node server &
+          for _ in $(seq 1 30); do curl -sf localhost:5173/ >/dev/null && break; sleep 1; done
+          # S1 renders `kit:2` server-side before any client code runs. Asserting
+          # the VALUE rather than a 200 keeps this from passing on an error page.
+          curl -sf localhost:5173/  | grep -q 'kit:2'
+          # A seeded row rendered server-side, not just a 200.
+          curl -sf localhost:5173/s2 | grep -q 'data-edit="a"'
+          curl -sf localhost:5173/s3 | grep -q 'hello'
+          echo "production SSR output verified for ${{ matrix.demo }}"
+
+  # Throttled Qwik resumption (audit item 11, third strand).
+  #
+  # Runs the SAME script twice: once unthrottled as a control, once throttled.
+  # The control is the calibration - it proves the instrument, selectors and
+  # expectations are correct, so a throttled failure is about the connection and
+  # nothing else.
+  #
+  # The throttled step is continue-on-error, the same treatment the Windows and
+  # WebKit cells get: it keeps running and its log stays visible rather than the
+  # lane being deleted or the finding going quiet. It currently FAILS - under
+  # 300ms/400kbit a click issues zero network requests and the value never
+  # changes, on production builds too. See notes/findings-007-qwik-throttled-resume.md.
+  #
+  # The control step is NOT continue-on-error. If the instrument itself breaks,
+  # this job must go red.
+  qwik-throttled:
+    name: qwik resumption under throttling
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --dir packages/frameworks/react exec playwright install --with-deps chromium
+      - run: pnpm --dir demos/qwik build
+      - name: serve the production build
+        run: pnpm --dir demos/qwik exec vite preview --port 5175 --strictPort &
+      - name: wait for the server
+        run: for _ in $(seq 1 30); do curl -sf localhost:5175/ >/dev/null && break; sleep 1; done
+      - name: control - unthrottled resumption must pass
+        env:
+          QWIK_THROTTLE: '0'
+        run: node demos/qwik/throttled-resume.mjs
+      - name: throttled resumption (known-failing, findings-007)
+        continue-on-error: true
+        run: node demos/qwik/throttled-resume.mjs

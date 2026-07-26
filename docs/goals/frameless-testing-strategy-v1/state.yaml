@@ -1,0 +1,316 @@
+# GoalBuddy v2 state.yaml
+# Board truth lives here. goal.md is the editable charter; notes/ holds long receipts only.
+
+version: 2
+
+goal:
+  title: "Testing-strategy audit for the Frameless cross-framework compiler"
+  slug: "frameless-testing-strategy-v1"
+  kind: audit
+  tranche: >-
+    One read-only tranche: inventory the current test surface, survey what
+    comparable compilers do, and deliver a ranked, costed recommendation.
+    Implementation of any recommendation is a separate owner-approved goal.
+  status: done
+  oracle:
+    signal: >-
+      A source-backed answer, verifiable by re-reading the three notes against
+      this working tree: every current-state claim resolves to a real path,
+      count, or config line in the repo; every recommendation cites either a
+      comparable project's practice read live from its repository or a specific
+      mechanism in this codebase that it would protect.
+    cadence: "at each note completion and at final audit"
+    final_proof: >-
+      Four conditions, all met and checkable: (1) notes/T001-current-test-surface.md
+      exists and its counts reproduce - 303 test cases / 54 test files / 16
+      browser files, absence of .github/, tsconfig.json excluding packages/*/test,
+      qwik at 9 cases with no browser vitest project; (2)
+      notes/T002-ecosystem-survey.md exists and names practices read live from
+      sveltejs/svelte, vuejs/core, and BuilderIO/mitosis via the GitHub API;
+      (3) notes/T003-ranked-recommendations.md exists with 15 tiered items, each
+      carrying what-it-catches plus cost, plus an explicit not-recommended list;
+      (4) git status shows no modification to any file outside
+      docs/goals/frameless-testing-strategy-v1/, proving the audit stayed
+      read-only as instructed.
+  intake:
+    original_request: >-
+      Audit the codebase (no code changes) and grep-mcp the general ecosystem to
+      audit what kinds of testing we should also have - matrix testing, jitter
+      testing, other types I don't know about - so we know the code is
+      incredibly robust before anyone uses it to compile to other frameworks.
+    interpreted_outcome: >-
+      A ranked, evidence-backed statement of which kinds of testing this
+      compiler has, which it lacks, and which of the gaps most reduce the risk
+      of silently emitting wrong code.
+    input_shape: audit
+    audience: "Frameless maintainer, deciding what to build before public use"
+    authority: requested
+    proof_type: source_backed_answer
+    completion_proof: >-
+      Three evidence-backed notes plus a clean read-only git status, per
+      goal.oracle.final_proof.
+    likely_misfire: >-
+      Producing a generic 'add more tests' listicle disconnected from what can
+      actually break in this compiler. Frameless already has an unusually strong
+      oracle (differential behavioral comparison, mutant-calibrated). The
+      valuable output is what that oracle cannot see, not a survey of testing.
+    blind_spots_considered:
+      - "Coverage of the oracle vs. coverage of the compiler - proving the
+         analyzer detects 8 mutant classes is not the same as the corpus
+         covering the IR grammar."
+      - "Input-space coverage: 3 scenarios and 8 composition fixtures is a fixed
+         corpus checked against an open grammar."
+      - "Everything off the happy path: production builds, non-Chromium engines,
+         multiple framework versions, error messages, sourcemaps, a11y."
+      - "The owner named 'jitter testing', which is not standard terminology -
+         answering it honestly rather than adopting or dropping it silently."
+    existing_plan_facts: []
+
+rules:
+  pm_owns_state: true
+  one_active_task: true
+  max_write_workers: 1
+  no_implementation_without_worker_or_pm_task: true
+  no_completion_without_judge_or_pm_audit: true
+  planning_is_not_completion: true
+  queued_required_worker_blocks_completion: true
+  continuous_until_full_outcome: true
+  missing_input_or_credentials_do_not_stop_goal: true
+  preserve_and_validate_existing_plan: true
+  intake_misfire_must_be_audited: true
+  goal_pressure_requires_oracle: true
+  no_completion_on_weak_proof: true
+  slice_policy:
+    max_consecutive_tiny_tasks: 2
+    prefer_vertical_slices: true
+    judge_picks_largest_safe_slice: true
+    worker_completes_whole_slice: true
+
+agents:
+  scout: bundled_not_installed
+  worker: bundled_not_installed
+  judge: bundled_not_installed
+  # Subagent dispatch is disabled by session policy, so all tasks ran in
+  # documented PM-fallback mode. Task types are recorded as `pm` because the PM
+  # genuinely performed them; each card records the shape it was executed under.
+
+visual_board:
+  selected: none
+  local:
+    status: not_requested
+    url: null
+    command: "npx goalbuddy board docs/goals/frameless-testing-strategy-v1"
+  # Not started: this is a single-tranche read-only audit, and the owner's /goal
+  # directive was to begin work immediately rather than pause for board setup.
+
+environment_notes:
+  grep_mcp: >-
+    UNAVAILABLE. Both global and project `mcpServers` are empty in
+    ~/.claude.json, so the grep MCP server the owner expected to be used does
+    not exist in this environment. Substituted `gh api` / `gh search code`
+    against the real repositories plus web research. Disclosed at the top of
+    notes/T002-ecosystem-survey.md.
+  concurrent_goal_observed: >-
+    docs/goals/frameless-idiom-policy-v1/ was created and modified by a separate
+    concurrent session during this run (dir mtime 13:04-13:10, commit b2a59e8).
+    Not touched by this goal. Recorded so its dirty state.yaml is not
+    misattributed to this audit.
+
+active_task: null
+
+tasks:
+  - id: T001
+    type: pm
+    assignee: PM
+    status: done
+    reasoning_hint: medium
+    executed_as: "Scout-shaped, read-only, PM fallback"
+    objective: "Inventory the current test surface by kind of testing, with measured evidence."
+    inputs:
+      - packages
+      - demos
+      - scripts
+      - vite.config.ts
+      - tsconfig.json
+      - .githooks
+      - README.md
+    constraints:
+      - "Read-only. No product file edits."
+      - "Every claim must cite a path, count, or config line measured this run."
+      - "Classify by kind of testing, not by file."
+    expected_output:
+      - "Per-area test and source counts"
+      - "Testing kinds present, named"
+      - "Testing kinds absent, named, each with a citation"
+    receipt:
+      result: done
+      note: notes/T001-current-test-surface.md
+      summary: >-
+        303 test cases across 54 files (16 browser) over ~20,300 source LOC.
+        Eight testing kinds present, led by differential behavioral comparison
+        (analyzer/compare.ts, five channels) and mutant-calibrated oracle
+        sensitivity (analyzer/mutants.ts, eight classes, asserted to diverge in
+        the expected channel). Eleven kinds absent (A-K), headlined by: no CI at
+        all (no .github/ directory; pre-commit runs lint only), no matrix on any
+        axis, no generative testing (zero fast-check/fuzz hits), no coverage
+        measurement, emitted output never type-checked (all .jsx; tsconfig also
+        excludes packages/*/test), and a Qwik lane with 9 test cases, a 163-LOC
+        gate, no eslint-plugin-qwik, and no browser vitest project - against
+        React's 64 cases / 547-LOC gate and Solid's 79 cases / 713-LOC gate.
+      evidence:
+        - packages/analyzer/src/compare.ts
+        - packages/analyzer/src/mutants.ts
+        - packages/analyzer/src/scenarios.ts
+        - packages/compiler/src/schema.ts
+        - packages/frameworks/react/test/calibration.browser.test.ts
+        - packages/frameworks/react/src/gate/index.ts
+        - packages/frameworks/qwik/package.json
+        - packages/frameworks/qwik/vitest.node.config.ts
+        - vite.config.ts
+        - tsconfig.json
+        - .githooks/pre-commit
+        - scripts/e2e.mjs
+      spawned_tasks:
+        - T002
+
+  - id: T002
+    type: pm
+    assignee: PM
+    status: done
+    reasoning_hint: medium
+    executed_as: "Scout-shaped, read-only, PM fallback"
+    objective: "Survey how comparable compilers test, and ground the two techniques the owner named."
+    inputs:
+      - "sveltejs/svelte test tree and CI workflows"
+      - "vuejs/core CI workflows"
+      - "BuilderIO/mitosis core tests"
+      - "compiler-testing literature"
+    constraints:
+      - "Read repository structure live rather than from recall."
+      - "Disclose that grep MCP was unavailable and what replaced it."
+      - "Answer 'jitter testing' honestly if it is not a standard technique."
+    expected_output:
+      - "Concrete practices from real repositories, read live"
+      - "Grounding for 'matrix testing' and 'jitter testing'"
+      - "Techniques the owner did not name"
+    receipt:
+      result: done
+      note: notes/T002-ecosystem-survey.md
+      summary: >-
+        Read Svelte's 22-lane test tree and CI matrix (OS x Node 20/22/24, a
+        SVELTE_NO_ASYNC feature-flag lane, a TSGo alternative-typechecker lane),
+        Vue's size-data/size-report and pkg-pr-new continuous-release jobs, the
+        ecosystem-ci trigger both projects run, and Mitosis's per-target snapshot
+        model. Matrix testing confirmed standard and wholly absent here. 'Jitter
+        testing' reported honestly as NOT standard compiler or frontend
+        terminology - it is an SRE/chaos term for timing variance - and
+        re-grounded as three implementable practices: a StrictMode/concurrency
+        lane, randomised action ordering, and network-throttled Qwik resumption.
+        Surfaced techniques the owner did not name: metamorphic/EMI testing,
+        generative program corpora (Csmith's missing half), downstream ecosystem
+        CI, per-PR preview packages, sourcemap suites, compiler-error suites, and
+        production-build lanes. Recorded why Stryker-on-source is the wrong tool
+        here given the existing oracle-level mutation testing.
+      evidence:
+        - "gh api repos/sveltejs/svelte/contents/packages/svelte/tests"
+        - "gh api repos/sveltejs/svelte/contents/.github/workflows/ci.yml"
+        - "gh api repos/vuejs/core/contents/.github/workflows"
+        - "gh api repos/BuilderIO/mitosis/contents/packages/core/src/__tests__"
+        - "arXiv:2306.06884 - A Survey of Modern Compiler Fuzzing"
+      spawned_tasks:
+        - T003
+
+  - id: T003
+    type: pm
+    assignee: PM
+    status: done
+    reasoning_hint: high
+    executed_as: "Judge-shaped, read-only, PM fallback"
+    objective: "Rank the gaps by reduction in silent-miscompile risk, with cost and cut-lines."
+    inputs:
+      - "T001 receipt and note"
+      - "T002 receipt and note"
+    constraints:
+      - "Rank by risk reduction, not effort, so the list is cuttable from the bottom."
+      - "Each item must state what it catches that nothing currently in the repo catches."
+      - "Do not recommend anything that would move Frameless toward the Mitosis
+         snapshot model the README argues against."
+      - "Name what should NOT be done, with reasons."
+    expected_output:
+      - "Ranked list in tiers"
+      - "Per item: what it catches, shape, cost"
+      - "Explicit not-recommended list"
+      - "A three-item cut-line"
+    receipt:
+      result: done
+      note: notes/T003-ranked-recommendations.md
+      decision: >-
+        15 recommendations in three tiers plus an explicit not-recommended list.
+        Tier 1 (CI; type-check emitted output; framework-version matrix; Qwik
+        parity) makes the existing oracle enforceable and closes the target
+        asymmetry. Tier 2 (generative .tsrx corpus; metamorphic invariants;
+        production and StrictMode lanes) is where the correctness yield is.
+        Tier 3 holds nine further items in order. Cut-line if only three get
+        done: CI, type-check emitted output, generative corpus.
+      rationale: >-
+        Governing judgment: the oracle is already excellent and the corpus is
+        tiny, so most listed gaps are restatements of one fact. Tier 1 protects
+        what is already proven; item 5 is the only entry that materially widens
+        what is proven, which is why it outranks everything in Tier 3 despite
+        being the most expensive. Declined Stryker-on-source (redundant with the
+        existing oracle-level mutation testing), more per-target snapshots
+        (regression toward the Mitosis model), and a CI coverage threshold (on a
+        fixed corpus it measures the corpus, not the tests).
+      blocked_tasks: []
+
+  - id: T999
+    type: pm
+    assignee: PM
+    status: done
+    reasoning_hint: high
+    executed_as: "Judge-shaped final audit, read-only, PM fallback"
+    objective: "Audit whether the full original owner outcome is complete."
+    inputs:
+      - "T001, T002, T003 receipts and notes"
+      - "goal.oracle.final_proof"
+      - "git status"
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "missing evidence"
+      - "next task if not complete"
+    receipt:
+      result: done
+      decision: complete
+      full_outcome_complete: true
+      rationale: >-
+        All four final_proof conditions verified. (1) T001 exists with counts
+        measured this run. (2) T002 exists, sourced from live GitHub API reads of
+        sveltejs/svelte, vuejs/core, and BuilderIO/mitosis plus the
+        compiler-fuzzing survey. (3) T003 exists with 15 tiered items, each
+        carrying what-it-catches and cost, plus a not-recommended list and a
+        three-item cut-line. (4) git status shows the only addition is
+        docs/goals/frameless-testing-strategy-v1/ - no product file touched, so
+        the read-only constraint held. Both techniques the owner named are
+        answered directly: matrix testing is confirmed real, absent, and ranked
+        third; jitter testing is reported as non-standard terminology and
+        re-grounded as three implementable practices rather than silently
+        adopted or silently dropped. Techniques the owner did not know to ask
+        for are surfaced in T002 and ranked in T003. The likely misfire recorded
+        at intake - a generic listicle - was avoided: every recommendation ties
+        to a named mechanism in this repo or a named practice in a real project.
+      commands:
+        - cmd: "git status --porcelain"
+          status: pass
+          detail: "Only docs/goals/frameless-testing-strategy-v1/ added by this goal."
+      caveats:
+        - "grep MCP was unavailable (mcpServers empty). Substituted gh api /
+           gh search code and web research; disclosed in goal.md constraints and
+           at the top of T002. The repo-structure findings were read live from
+           the GitHub API, so they are narrower in sample but not stale. Worth
+           re-running for breadth if a grep MCP server is installed."
+        - "This audit recommends work; it does not schedule it. Implementing any
+           Tier 1 or Tier 2 item is a separate goal requiring owner approval."
+        - "docs/goals/frameless-idiom-policy-v1/state.yaml is dirty from a
+           separate concurrent session, not from this goal."
+      next_task: null

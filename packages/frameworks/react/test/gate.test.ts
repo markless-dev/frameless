@@ -132,7 +132,11 @@ describe('React dossier gate', async () => {
 			true,
 		);
 		expect(
-			REACT_GATE_POLICIES.filter((policy) => policy.requiresArtifact).map(
+			// requiresArtifact is present on only some members of the policy union,
+			// so it needs an `in` guard before access. Same predicate at runtime.
+			REACT_GATE_POLICIES.filter(
+				(policy) => 'requiresArtifact' in policy && policy.requiresArtifact,
+			).map(
 				(policy) => policy.id,
 			),
 		).toEqual(['persistence-render-lowering', 'R-SH4', 'R-CH2']);
@@ -687,7 +691,16 @@ describe('React dossier gate', async () => {
 
 	test.each(compositionMutationCases)(
 		'rejects the %s composition bypass mutation',
-		async (_name, source, policy, options) => {
+		// Parameters annotated explicitly. `as const` on the table makes each row a
+		// distinct tuple type, so inferring these gives unions that vitest's
+		// ExtractEachCallbackArgs cannot reconcile into one signature. The values
+		// are assignable to these broader types, so nothing is loosened at runtime.
+		async (
+			_name: string,
+			source: string,
+			policy: string,
+			options?: { readonly artifact?: EnrichedIR },
+		) => {
 			const result = await checkSources([
 				{ file: 'generated-composition/Mutant.jsx', source, artifact: options?.artifact },
 			]);
@@ -696,7 +709,10 @@ describe('React dossier gate', async () => {
 	);
 
 	test('has a mutation that exercises every published policy', () => {
-		const covered = new Set(
+		// Set<string>: inferring this narrows to the literal ids present in the
+		// mutation tables, which then rejects both the add() below and the
+		// has() check against the full policy list.
+		const covered = new Set<string>(
 			[...mutationCases, ...compositionMutationCases].map((entry) => entry[2]),
 		);
 		covered.add('persistence-render-lowering');

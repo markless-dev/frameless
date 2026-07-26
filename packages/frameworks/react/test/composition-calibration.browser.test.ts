@@ -170,7 +170,7 @@ describe('React composition oracle calibration', () => {
 			const scenario = scenarioById[rejection.scenario];
 			const trace = await runComposition(
 				makeReactCompositionMutant(rejection.mutant),
-				rejection.scenario,
+				String(rejection.scenario),
 			);
 			const results = evaluateExpectations(trace, scenario.expectations ?? []);
 			expect(
