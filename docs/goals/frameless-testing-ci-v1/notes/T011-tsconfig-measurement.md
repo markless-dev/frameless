@@ -170,6 +170,32 @@ can get an edit wrong.
 Wiring `tsc -p` for both packages into `pnpm check` is now one error away per
 package.
 
+### The last error was attempted and the attempt FAILED
+
+Recorded because a failed attempt narrows the search.
+
+Tried: annotating both mutation tables as
+
+```ts
+const compositionMutationCases: ReadonlyArray<
+	readonly [string, string, string, ({ readonly artifact?: EnrichedIR } | undefined)?]
+> = [ ... ] as const;
+```
+
+Result: **worse.** React 1 -> 2, Solid 1 -> 10. The naive 4-tuple shape does not
+describe every entry in those tables - they are not uniform, and Solid's diverges
+further from this shape than React's. Reverted; both back to 1.
+
+Node test count held at 551 throughout, confirming the tables' *runtime* contents
+were never affected - only their declared type.
+
+**What the next attempt needs:** read `mutationCases` (from line ~165) and
+`compositionMutationCases` (from line ~483) in full - roughly 250 lines each -
+and derive the actual element shape, including which entries carry the optional
+fourth element and what it contains. This is the one place in this work that
+cannot be done by pattern-matching from the error text, which is why two
+successive sessions have stopped here rather than guessed.
+
 ## The complete error inventory
 
 Captured so the next attempt does not have to rediscover it. Reproduce by
