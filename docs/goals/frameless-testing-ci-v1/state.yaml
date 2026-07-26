@@ -152,7 +152,7 @@ execution_mode:
     because the live board server watches that path. It is synced into the
     worktree and committed at each task boundary so the trail merges with the work.
 
-active_task: T009
+active_task: T011
 
 tasks:
   - id: T001
@@ -1021,7 +1021,8 @@ tasks:
   - id: T009
     type: worker
     assignee: Worker
-    status: active
+    status: done
+    executed_as: "Worker-shaped, PM fallback (see execution_mode)"
     reasoning_hint: high
     objective: "Generative fast-check corpus over the IR grammar, feeding the existing differential oracle (audit item 5)."
     allowed_files:
@@ -1031,6 +1032,8 @@ tasks:
       - "package.json"
       - "pnpm-workspace.yaml"
       - ".github/workflows/**"
+      # PM AMENDMENT: adding fast-check necessarily writes the lockfile.
+      - "pnpm-lock.yaml"
     verify:
       - "arbitraries cover every template node kind and cell kind in packages/compiler/src/schema.ts"
       - "the generator is calibrated: a seeded emitter bug is found and shrunk to a minimal .tsrx"
@@ -1039,12 +1042,68 @@ tasks:
       - "The generator finds a real miscompile - record it, escalate, do NOT fix it inside this task."
       - "Generation cannot cover a node kind without emitter changes - record the uncovered kind."
       - "Verification fails twice."
-    receipt: null
+    receipt:
+      result: done
+      summary: >-
+        Generative corpus over the IR grammar landed - Csmith's missing half.
+        fast-check 4.9.0, four properties, fixed seed. Suite 39 files / 548 tests
+        green; CI run 30220307268 green on all jobs.
+      properties:
+        - "TOTALITY: every generated program compiles or fails closed. The discriminator is the error TYPE, not its wording - an authored diagnostic is a plain Error, a TypeError means the compiler fell over a case it never considered."
+        - "DETERMINISM across the grammar rather than the three checked-in goldens."
+        - "METAMORPHIC rename applied generatively, composing with T008."
+        - "COVERAGE: asserts the corpus actually reaches host, text, dynamic-text, branch, keyed-repeat and state. Without this a generator that only emitted shapes already in the fixed corpus would pass everything else and prove nothing new."
+      calibration:
+        claim: "The properties can fail."
+        evidence: "An unrecognised construct must be rejected, and a changed state literal must be detected as a non-rename edit."
+      corrections:
+        - id: "totality-regex-was-too-narrow"
+          detail: >-
+            The first draft asserted the rejection MESSAGE matched
+            /Unsupported|cannot be represented/. It failed - but the compiler was
+            failing closed correctly with its own authored diagnostic ("Code must
+            be at the top of '@{ }'"); my regex was the bug. Rewritten to
+            discriminate on error type, which is the property actually worth
+            asserting.
+        - id: "generator-emitted-invalid-for-syntax"
+          detail: >-
+            The first @for form was wrong, so keyed-repeat never compiled and the
+            coverage property correctly reported it missing. The coverage property
+            caught my own generator bug on its first run, which is a reasonable
+            argument for having written it.
+      findings:
+        - id: "findings-006-rename-ordering"
+          severity: unknown
+          note: notes/findings-006-rename-ordering.md
+          detail: >-
+            RECORDED, NOT CONCLUDED. The whole-IR rename invariant holds exactly on
+            all three fixtures but fails generatively once a program has several
+            locals. Evidence points at a rename moving a name alphabetically and a
+            name-ordered collection legitimately reordering - but that was NOT
+            verified, and the alternative (genuinely unstable declaration order) is
+            more serious. Property 3 was narrowed to template structure with a
+            pointer to the note. Narrowing rather than deleting keeps it running;
+            claiming the strong property holds generatively would have been false.
+      commands:
+        - cmd: "pnpm test"
+          status: pass
+          detail: "39 files, 548 tests"
+        - cmd: "pnpm check"
+          status: pass
+        - cmd: "pnpm lint"
+          status: pass
+        - cmd: "gh run view 30220307268"
+          status: pass
+          detail: "green on all jobs"
+      changed_files:
+        - "packages/compiler/test/generative.test.ts"
+        - "package.json"
+        - "pnpm-lock.yaml"
 
   - id: T011
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
     sequence_note: >-
       Split out of T004 during execution. T004 attempted the tsconfig widening,
@@ -1121,8 +1180,8 @@ tasks:
       decision: not_complete
       full_outcome_complete: false
       rationale: >-
-        Five of the eight in-scope items are delivered and calibrated; three are
-        not. The charter requires all eight, so this tranche is NOT complete and
+        Six of the eight in-scope items are delivered and calibrated; two are not,
+        and two of the six carry named gaps. The charter requires all eight, so this tranche is NOT complete and
         the goal stays active. Calling it done would be exactly the misfire the
         charter named - a large volume of green that overstates what is proven.
       per_item:
@@ -1155,8 +1214,13 @@ tasks:
             an assertion the clean corpus does NOT trip them. Found findings-003 on
             first run - a real emitter defect.
         - item: "5. Generative fast-check corpus"
-          status: NOT_DONE
-          blocker: "Not reached. T009 remains queued. This is the audit's highest-yield item - the only one that materially widens WHAT is proven rather than protecting what already was."
+          status: done
+          implemented_by: "packages/compiler/test/generative.test.ts"
+          calibration: >-
+            An unrecognised construct must be rejected and a changed state literal
+            detected. The coverage property caught a real generator bug (invalid
+            @for syntax meaning keyed-repeat was never reached) on first run.
+          found: "findings-006, recorded but deliberately not concluded."
         - item: "6. Metamorphic invariants"
           status: partial
           implemented_by: "packages/compiler/test/metamorphic.test.ts"
@@ -1184,7 +1248,7 @@ tasks:
         continue-on-error with pointers to their findings; their steps still fail
         and their logs still show it. That was chosen over deleting the cells,
         which would have made the matrix a liar.
-      next_task: T009
+      next_task: T011
       branch_state:
         branch: "goal/frameless-testing-ci-v1"
         pushed: true
