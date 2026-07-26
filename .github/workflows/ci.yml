@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches: [main, 'goal/**']
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # Browsers are installed explicitly per job that needs them, so the postinstall
+  # download is pure waste everywhere else.
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+
+jobs:
+  static:
+    name: check + lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - run: pnpm lint
+
+  test:
+    name: node tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+
+  browser:
+    name: browser lanes
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      # EXPECTED RED on the first run of this workflow.
+      #
+      # docs/goals/frameless-testing-ci-v1/notes/T002-cold-baseline.md records the
+      # defect: the browser configs declare a single chromium instance while vitest
+      # parallelises test files across it, so the connection drops and ZERO tests
+      # execute. Reproduced four times locally; --no-file-parallelism makes all 89
+      # tests pass in ~5s per project.
+      #
+      # This job is deliberately NOT skipped, excluded, or marked continue-on-error.
+      # Its first red run is the calibration evidence that this workflow catches a
+      # real pre-existing bug that nobody planted. Task T010 repairs the defect and
+      # this job goes green. Do not "fix" this by weakening the job.
+      - run: pnpm test:browser
+
+  e2e:
+    name: e2e (differential + three-way)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm e2e
+      - name: upload receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-receipts
+          path: |
+            demos/*/receipts/**
+            demos/*/.witness/receipts/**
+          if-no-files-found: warn
