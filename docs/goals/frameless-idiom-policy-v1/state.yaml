@@ -68,7 +68,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-idiom-policy-v1/"
     command: "npx goalbuddy board docs/goals/frameless-idiom-policy-v1"
 
-active_task: T003
+active_task: T004
 
 tasks:
   - id: T001
@@ -189,7 +189,7 @@ tasks:
   - id: T003
     type: scout
     assignee: Scout
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Survey the equivalent idiom-sugar tension in Vue, Angular, and Svelte 5 so the policy has more than one framework to generalize over."
     dispatch:
@@ -212,12 +212,48 @@ tasks:
       - "Which cases are structurally the same as the Qwik $-prop case and which are different in kind"
       - "IR gaps that belong to the expansion boards rather than this policy"
       - "A shortlist of candidate 'unseen cases' usable for the cold-agent replication test"
-    receipt: null
+    receipt:
+      result: done
+      note: notes/T003-cross-framework-idioms.md
+      summary: "All three frameworks' flagship sugar (Vue v-model, Angular model()+banana, Svelte bind:+$bindable) is the SAME feature - two-way binding - and all three are different-in-kind from the Qwik $-prop case on the same two axes: they are cross-component contracts, and they require inferring that a handler is merely the canonical assignment. Only lexical substitutions (Vue :/@/#, Svelte onclick, Svelte {value}, Angular @if/@for) are same-in-kind. Two findings reshape the policy: same-in-kind is a property of a sugar PLUS a pinned framework version, not of a sugar alone; and Angular has no naive-literal form at all, so a policy phrased 'prefer literal' has no referent there."
+      axes: "T003 extracted five axes from the Qwik fingerprint - locality, inference, totality, semantic delta, version binding - and sorted every candidate against them."
+      same_in_kind:
+        - "Vue :prop / @event / #slot shorthands"
+        - "Svelte 5 onclick (vs Svelte 4 on:click)"
+        - "Svelte {value} attribute shorthand"
+        - "Angular @if / @for control flow blocks"
+      different_in_kind:
+        - "Vue v-model - cross-component contract + requires inferring canonical-assignment handlers"
+        - "Angular model() + [(banana)] - same two failures"
+        - "Svelte bind: + $bindable - needs an lvalue (IR path-based / handler-local-alias writes are not), and bindability is declared by the CHILD, which frameless emits from a separate EnrichedIR"
+      strongest_counter_cases:
+        vue: "s2-keyed-todo.tsrx has an adjacent input whose handler does four things - v-model cannot express it. Worse: generated-persistence/P1.jsx proves a LATER compiler pass silently adds a statement to a handler, which would flip a previously-matching handler out of v-model eligibility after the fact."
+        angular: "Angular template expressions forbid const, arrow functions, destructuring and ++ (angular.dev/guide/templates/expression-syntax), so handlers must become class methods regardless. The naive literal emission does not exist."
+        svelte: "bind: requires an lvalue and a child-declared $bindable, crossing the module boundary frameless emits from separately."
+      held_out_candidates:
+        - "H1 Vue same-name :id"
+        - "H2 Svelte $derived"
+        - "H3 Angular input()/output() vs decorators - flagged as the trap: reads identical to the Qwik case, structurally is not"
+        - "H4 Vue v-model on the favourable handler"
+        - "H5 Svelte bind: to an emitted child"
+      held_out_note: "Expected answers deliberately NOT recorded by T003, and must not be recorded in any repo file the cold agent could read."
+      ir_gaps_for_expansion_boards:
+        count: 7
+        highlights:
+          - "No bindable prop kind"
+          - "No emits concept"
+          - "Default-slot-only"
+          - "No target-version input - which the version-binding axis makes load-bearing, not cosmetic"
+        handling: "Carried to T007 as expansion-board intake facts. NOT inputs to the idiom policy."
+      prior_art: "poc/09-storage vue and svelte both took cheap lexical sugar and kept classic lifecycle shapes - consistent in-repo precedent."
+      unresolved: "Source conflict on Angular model() stability: api/core/model says 'stable since v19.0', the v20 announcement says v20."
+      assignee_substitution_honesty: "This receipt is from a general-purpose agent operating under read-only Scout rules, not from the goal-scout agent. Its only file write was the note above; git status confirms no other changes."
+      spawned_tasks: []
 
   - id: T004
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     objective: "Ratify the emitter idiom-sugar policy and decide the Qwik $-prop case in one direction, with an exact bounded Worker objective."
     inputs:
