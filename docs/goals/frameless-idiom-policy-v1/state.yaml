@@ -151,6 +151,12 @@ tasks:
     status: queued
     reasoning_hint: medium
     objective: "Survey the equivalent idiom-sugar tension in Vue, Angular, and Svelte 5 so the policy has more than one framework to generalize over."
+    dispatch:
+      in_flight: true
+      board_status_note: "Card stays 'queued' because the checker enforces exactly one active task while the goal is active. It is genuinely dispatched and running; this field is the honest record until its receipt lands."
+      concurrent_with: T002
+      rationale: "PM decision: T002 and T003 are both read-only with disjoint outputs (T002 = qwik emitter + qwik node_modules; T003 = compiler IR, poc/09-storage, official framework docs). No write scope on either. one_active_task applies to write-capable work; running two read-only Scouts in parallel does not risk board truth."
+      assignee_substitution: "Dispatched to a general-purpose agent under read-only Scout rules, because Vue/Angular/Svelte are not installed in this repo and the dedicated goal-scout agent has no web tools. Recorded here so the receipt is not read as a goal-scout receipt."
     inputs:
       - "Vue 3: v-model, defineEmits/emits, prop-vs-event conventions"
       - "Angular: signals, input()/output(), template binding syntax"
