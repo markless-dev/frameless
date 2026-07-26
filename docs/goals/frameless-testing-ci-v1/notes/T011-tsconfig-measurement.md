@@ -72,3 +72,64 @@ reference code, then wiring `tsc -p` for both into the `check` script and
 watching CI go red when a type error is reintroduced.
 
 That is a bounded slice with a known cost, which is the point of this note.
+
+## The complete error inventory
+
+Captured so the next attempt does not have to rediscover it. Reproduce by
+recreating the second-attempt configs described above.
+
+### `packages/frameworks/react` (14)
+
+- `test/composition-calibration.browser.test.ts(173,5)` — Argument of type 'string | number' is not assignable to parameter of type 'string'.
+- `test/composition-reference.tsx(107,10)` — This overload signature is not compatible with its implementation signature.
+- `test/composition-reference.tsx(118,3)` — Argument of type '(() => number) | (() => string)' is not assignable to parameter of type '() => number'.
+- `test/composition-reference.tsx(235,11)` — Argument of type 'HTMLInputElement | null' is not assignable to parameter of type 'HTMLInputElement | undefin
+- `test/composition-reference.tsx(342,2)` — Type '({ variant, }: { variant?: "reference" | "omit" | "duplicate" | "wrapper" | undefined; }) => Element' i
+- `test/composition-reference.tsx(343,2)` — Type '({ variant }: { variant?: StoreVariant | "desync" | undefined; }) => Element' is not assignable to type
+- `test/composition-reference.tsx(344,2)` — Type '({ omitFocus, omitClear, }: { omitFocus?: boolean | undefined; omitClear?: boolean | undefined; }) => E
+- `test/composition-reference.tsx(345,2)` — Type '({ variant }: { variant?: CleanupVariant | undefined; }) => Element' is not assignable to type '() => R
+- `test/emitter.test.ts(898,26)` — Cannot assign to 'persistence' because it is a read-only property.
+- `test/gate.test.ts(135,50)` — Property 'requiresArtifact' does not exist on type '({ readonly id: "persistence-render-lowering"; readonly d
+- `test/gate.test.ts(690,3)` — Argument of type '(_name: "incomplete store hook record" | "inline context object" | "per-read snapshot rebui
+- `test/gate.test.ts(702,15)` — Argument of type '"persistence-render-lowering"' is not assignable to parameter of type '"eslint-directive" |
+- `test/gate.test.ts(704,79)` — Argument of type '"eslint-directive" | "R-SH5" | "R-SH1" | "R-SH3" | "R-RF1" | "R-RF3" | "component-shape" |
+- `test/strictmode.browser.test.ts(54,31)` — Argument of type '(({ initial, onTrace }: { initial: any; onTrace: any; }) => Element) | (({ label, multiplie
+
+### `packages/frameworks/solid` (14)
+
+- `test/composition-calibration.browser.test.ts(173,5)` — Argument of type 'string | number' is not assignable to parameter of type 'string'.
+- `test/composition-reference.solid.tsx(162,29)` — Type '(node: HTMLOutputElement) => void' is not assignable to type 'HTMLElement | ((el: HTMLElement) => void)
+- `test/composition-reference.solid.tsx(310,2)` — Type '(props: { variant?: "reference" | "omit" | "duplicate" | "wrapper" | undefined; }) => Element' is not a
+- `test/composition-reference.solid.tsx(311,2)` — Type '(props: { variant?: StoreVariant | "desync" | undefined; }) => Element' is not assignable to type '() =
+- `test/composition-reference.solid.tsx(312,2)` — Type '(props: { omitFocus?: boolean | undefined; omitClear?: boolean | undefined; }) => Element' is not assig
+- `test/composition-reference.solid.tsx(313,2)` — Type '(props: { variant?: CleanupVariant | undefined; }) => Element' is not assignable to type '() => Element
+- `test/emitter.test.ts(868,26)` — Cannot assign to 'persistence' because it is a read-only property.
+- `test/gate.test.ts(138,50)` — Property 'requiresArtifact' does not exist on type '({ readonly id: "persistence-render-lowering"; readonly d
+- `test/gate.test.ts(609,3)` — Argument of type '(_name: "synthesized children prop" | "wrapped single projection" | "duplicated direct proj
+- `test/gate.test.ts(618,15)` — Argument of type '"persistence-render-lowering"' is not assignable to parameter of type '"eslint-directive" |
+- `test/gate.test.ts(620,79)` — Argument of type '"eslint-directive" | "component-shape" | "S-CH4" | "S-CH3" | "S-CH2" | "S-CH1" | "S-SH1" |
+- `test/reference.solid.tsx(75,6)` — Type '{ "data-edit": string; value: string; "attr:value": string; onInput: (event: InputEvent & { currentTarg
+- `test/reference.solid.tsx(116,6)` — Type '{ "data-action": string; value: string; "attr:value": string; onInput: (event: InputEvent & { currentTa
+- `test/reference.solid.tsx(191,6)` — Type '{ "data-action": string; value: string; "attr:value": string; onInput: (event: InputEvent & { currentTa
+
+### The shape of the work
+
+Most of these fall into three repeating patterns, so the count overstates the
+distinct effort:
+
+1. **Component registries typed too narrowly** — a map declared as
+   `() => Element` (or `() => ReactNode`) holding components that legitimately
+   take optional props. Eight of the errors across both packages are this one
+   pattern. Widening the registry type fixes them together.
+2. **Union-of-signatures passed to a single-signature parameter** — e.g. the
+   emitted-component maps in `strictmode.browser.test.ts` and the `test.each`
+   tables in `gate.test.ts`. These need the map's value type stated once rather
+   than inferred as a union.
+3. **Genuinely loose spots** — `Cannot assign to 'persistence' because it is
+   read-only`, `HTMLInputElement | null` vs `| undefined`, `string | number`
+   passed where `string` is required. These are small and local.
+
+None require changing runtime behavior, and the calibration suites would fail
+loudly if an edit did - `mutants.ts` plus the calibration lanes assert that clean
+references match and seeded mutants diverge. So this work is safer than it first
+appears: the oracle protects itself.
