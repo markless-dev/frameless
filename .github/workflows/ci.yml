@@ -197,3 +197,44 @@ jobs:
       - name: report resolved versions
         run: pnpm --dir ${{ matrix.dir }} list --depth 0
       - run: pnpm ${{ matrix.script }}
+
+  # PRODUCTION BUILD (audit item 7's second half). The README concedes the
+  # express production build is "verified by curl only, not by a browser lane".
+  # Until now it was not verified by CI AT ALL - dev-mode is what pnpm demo and
+  # pnpm e2e exercise, and that is the path every other lane covers.
+  #
+  # This does not close the gap to a browser lane. It closes the smaller and
+  # still-real gap that nothing automated ever built the production bundles or
+  # asked the production server for a page. Minification, SSR bundling and
+  # NODE_ENV=production branches are all exercised here and nowhere else.
+  production:
+    name: production build (${{ matrix.demo }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        demo: [react-official, solid-official]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --dir demos/${{ matrix.demo }} build
+      - name: serve and assert the server-rendered values
+        working-directory: demos/${{ matrix.demo }}
+        env:
+          NODE_ENV: production
+        run: |
+          node server &
+          for _ in $(seq 1 30); do curl -sf localhost:5173/ >/dev/null && break; sleep 1; done
+          # S1 renders `kit:2` server-side before any client code runs. Asserting
+          # the VALUE rather than a 200 keeps this from passing on an error page.
+          curl -sf localhost:5173/  | grep -q 'kit:2'
+          # A seeded row rendered server-side, not just a 200.
+          curl -sf localhost:5173/s2 | grep -q 'data-edit="a"'
+          curl -sf localhost:5173/s3 | grep -q 'hello'
+          echo "production SSR output verified for ${{ matrix.demo }}"
