@@ -202,17 +202,30 @@ these are recorded rather than argued away.
   **`events[].handlers`** (`build.ts:326`, `expression.start`). Span-keyed, not
   name-keyed. Order-sensitive by design.
 
-### Multiset of whole entries, never sort-then-compare
+### Multiset of whole entries
 
 Implemented as a **counting map keyed on canonical JSON of each whole entry** —
 literally a multiset, not a sorted array comparison, so the distinction T007 drew
 is structural rather than a matter of interpretation. Everything outside the cited
 collections stays positional and is compared exactly.
 
-The reason this matters is provable rather than stylistic: a `stateWrites` entry
-carries its own `sourceSpan`, so swapping two authored writes changes the multiset
-even though it does not change the set of names written. Sorting both sides and
-comparing would discard precisely that evidence.
+A `stateWrites` entry carries its own `sourceSpan`, so swapping two authored writes
+changes the multiset even though it does not change the set of names written. That
+is the property that makes the view safe, and it is asserted by a calibration
+rather than argued.
+
+**One correction to my own first draft, because I checked it.** I initially wrote
+that the tempting broad fix — recursively sort every array on both sides — "would
+report these two programs equal". **That is false, and I measured it.** The broad
+fix also catches the authored write reorder *and* a genuine template sibling swap,
+because this IR is span-rich enough that positional information is largely
+redundant. The comments and `docs/DEFECTS.md` were corrected before shipping.
+
+The real case against the broad fix is different and holds: it discards order
+across the **whole artifact** in order to fix seven collections, which leaves every
+future order-bearing array silently unchecked and reintroduces exactly the class of
+silent assumption this phase ruled on. The shipped view is minimal and cited —
+order-insensitivity applies precisely where a `build.ts` line justifies it.
 
 ### Calibration — the instrument still fails
 
@@ -403,7 +416,37 @@ three test-suite defects, one upstream* rather than "one open question".
 
 ---
 
-## 5. What this package did not settle
+## 5. Parallel-safety event, reported rather than absorbed
+
+Other work committed to `main` **during** this package. At dispatch, `HEAD` was
+`ef59d55`; at the end it is `72a09de`, via:
+
+- `1d4ff9a docs(goals): T010 — adapter boards repaired` (svelte/vue/angular boards
+  and `state.yaml`)
+- `72a09de docs(policy): worked example 9, sharpened forced-lowering trigger`
+  (`docs/emitter-idiom-policy.md`, `state.yaml`)
+
+Assessed for damage, and there is none: neither commit touched any of the eight
+source/config files in this package, nor `docs/DEFECTS.md`, nor
+`.github/workflows/ci.yml`.
+
+**But `72a09de` swept in `notes/T008-portability-and-attr.md` — a file inside this
+package's `allowed_files` — while I was still writing it.** The committed blob is
+byte-identical to my working copy, so nothing was lost or overwritten. The two
+consequences worth flagging:
+
+1. This note is **already committed**, despite this package's instruction not to
+   commit. That was not my action.
+2. It therefore no longer appears in `git status --short`, which is why the final
+   status shows eight modified files plus `.gitattributes` and not nine.
+
+Recorded because a concurrent `git add -A` reaching into another Worker's
+`allowed_files` is a coordination hazard even when it is harmless, and the next
+package that runs alongside T017 or T018 should not have to rediscover it.
+
+---
+
+## 6. What this package did not settle
 
 - **Whether the ~29 unaccounted Windows failures share the CRLF root.** The
   fourth-cause hypothesis fits the file count (4 named files + three emitter test

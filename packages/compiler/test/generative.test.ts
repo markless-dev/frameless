@@ -135,6 +135,87 @@ ${body}	</div>
 
 const compile = (source: string) => buildEnrichedIr({ filename: 'generated.tsrx', source });
 
+// ORDER-INSENSITIVE VIEW OVER THE CANONICALLY NAME-SORTED COLLECTIONS.
+//
+// Kept byte-identical to the copy in `metamorphic.test.ts`, which carries the full
+// citation table: each collection below names the exact `build.ts` line whose
+// comparator keys on a name-derived field, and each has been witnessed permuting.
+// The two copies are duplicated rather than shared because a common helper would
+// need a new module, and importing one test file from another registers its suites
+// twice. If you change one, change both.
+//
+//   records.bindings                        build.ts:428
+//   records.aliases                         build.ts:429
+//   records.stateReads                      build.ts:431 -> 2725 (compareReads, 2732)
+//   records.stateWrites                     build.ts:342 -> sortWrites, 2740-2752
+//   every `reads` array, any depth          build.ts:1370 -> dedupeReads, 2866-2874
+//   every `writes` array, any depth         build.ts:2671/:389 -> sortWrites, 2740-2752
+//   components[].locals[].semanticRecordIds build.ts:629
+//
+// Excluded and still order-sensitive: records.events (build.ts:430 - an event id is
+// an allocation index or hostNodeId:eventName, which no local rename can move),
+// module.exports (build.ts:464, keyed on the observable exportedName),
+// records.sharedWrites (build.ts:2079, span-keyed) and events[].handlers
+// (build.ts:326, span-keyed).
+
+/** Blank the renamed identifiers so two IRs compare for structure, not naming. */
+function structural(value: unknown, renamed: ReadonlySet<string>): unknown {
+	if (Array.isArray(value)) return value.map((item) => structural(item, renamed));
+	if (value && typeof value === 'object') {
+		return Object.fromEntries(
+			Object.entries(value).map(([key, item]) => [key, structural(item, renamed)]),
+		);
+	}
+	if (typeof value === 'string') {
+		let next = value;
+		for (const name of renamed) next = next.replace(new RegExp(`\\b${name}\\b`, 'g'), '_id_');
+		return next;
+	}
+	return value;
+}
+
+/** Deterministic serialisation with key order removed, so entries compare as values. */
+function canonicalJson(value: unknown): string {
+	if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`;
+	if (value && typeof value === 'object') {
+		return `{${Object.entries(value as Record<string, unknown>)
+			.sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
+			.map(([key, item]) => `${JSON.stringify(key)}:${canonicalJson(item)}`)
+			.join(',')}}`;
+	}
+	return JSON.stringify(value) ?? 'null';
+}
+
+const NAME_SORTED_RECORDS = new Set(['bindings', 'aliases', 'stateReads', 'stateWrites']);
+
+function isNameSorted(path: readonly string[]): boolean {
+	const key = path.at(-1);
+	if (key === 'reads' || key === 'writes' || key === 'semanticRecordIds') return true;
+	return path.length === 2 && path[0] === 'records' && NAME_SORTED_RECORDS.has(key);
+}
+
+function orderInsensitive(value: unknown, path: readonly string[] = []): unknown {
+	if (Array.isArray(value)) {
+		const entries = value.map((item) => orderInsensitive(item, [...path, '*']));
+		if (!isNameSorted(path)) return entries;
+		const multiset: Record<string, number> = {};
+		for (const entry of entries) {
+			const key = canonicalJson(entry);
+			multiset[key] = (multiset[key] ?? 0) + 1;
+		}
+		return { '@@multiset': multiset };
+	}
+	if (value && typeof value === 'object') {
+		return Object.fromEntries(
+			Object.entries(value).map(([key, item]) => [key, orderInsensitive(item, [...path, key])]),
+		);
+	}
+	return value;
+}
+
+const renameView = (value: unknown, renamed: ReadonlySet<string>) =>
+	canonicalJson(orderInsensitive(structural(value, renamed)));
+
 /** Collect every template node kind the IR actually contains. */
 function kinds(value: unknown, into: Set<string> = new Set()): Set<string> {
 	if (Array.isArray(value)) {
@@ -191,24 +272,34 @@ describe('generative corpus over the IR grammar', () => {
 		);
 	});
 
-	// PROPERTY 3 - METAMORPHIC, applied generatively. T008 proved rename-all on
-	// three fixtures; this applies the same invariant across the grammar, which
-	// is where the two techniques compose and the yield multiplies.
-	// NOTE: this compares the template STRUCTURE, not the whole IR. An exact
-	// whole-IR comparison is asserted on the fixtures in metamorphic.test.ts and
-	// holds there. Generatively it fails on programs with several locals, and the
-	// evidence points at declaration ORDER changing when a rename moves a name
-	// alphabetically - see notes/findings-006-rename-ordering.md. That is either a
-	// legitimate name-sorted representation or a real instability; the two were
-	// not separated, so this lane asserts what is established rather than
-	// pretending the stronger property holds.
-	test('is stable under equal-length local renames (template structure)', async () => {
+	// PROPERTY 3 - METAMORPHIC, applied generatively. metamorphic.test.ts proves
+	// rename-all on the fixtures; this applies the same invariant across the
+	// grammar, which is where the two techniques compose and the yield multiplies.
+	//
+	// THIS PROPERTY WAS NARROWED, AND IS NOW RESTORED. It used to compare only the
+	// multiset of template node KINDS, because the whole-IR comparison failed here
+	// on programs with several locals and nobody had separated "legitimate
+	// name-sorted representation" from "declaration order is genuinely unstable".
+	// That was defect 6 (findings-006). It is now settled: T006 diffed the
+	// counterexample field by field and found every difference to be a permutation
+	// of name-sorted collections; T007 ruled it an instrument fault and required
+	// each collection to be cited and witnessed before the view is applied to it.
+	// So the lane goes back to comparing the WHOLE IR - a far stronger property
+	// than template kinds - under the order-insensitive view above.
+	//
+	// A narrowed expectation must never be released alone. The witness counter is
+	// that release's evidence: it proves this lane still reaches the programs that
+	// made the positional comparison fail, so a green run means the property holds
+	// rather than that the corpus stopped exercising it.
+	test('is stable under equal-length local renames (whole IR)', async () => {
+		let renamesExercised = 0;
+		let positionalWitnesses = 0;
 		await fc.assert(
 			fc.asyncProperty(programArb, async (program) => {
 				const source = render(program);
 				const original = await compile(source).catch(() => null);
 				if (original === null) return;
-				// 'alpha0' -> 'omega0' etc: same length, so source offsets are
+				// 'alpha0' -> 'zlpha0' etc: same length, so source offsets are
 				// unchanged and the comparison stays exact.
 				const from = program.locals[0]!.name;
 				const to = `z${from.slice(1)}`;
@@ -217,12 +308,26 @@ describe('generative corpus over the IR grammar', () => {
 				const after = await compile(renamed);
 				// Whole-word, not just quoted JSON keys: the identifier also appears
 				// inside expression source text carried on the IR.
-				const shape = (value: typeof after) =>
-					JSON.stringify([...kinds(value.components.map((c) => c.template))].sort());
-				expect(shape(after)).toBe(shape(original));
+				const words = new Set([from, to]);
+				renamesExercised++;
+				if (
+					canonicalJson(structural(after, words)) !==
+					canonicalJson(structural(original, words))
+				) {
+					positionalWitnesses++;
+				}
+				expect(renameView(after, words)).toBe(renameView(original, words));
 			}),
 			{ numRuns: 80, seed: 20260726 },
 		);
+		expect(renamesExercised).toBeGreaterThan(0);
+		// Anti-vacuity. If this ever reads 0, the corpus has stopped generating the
+		// multi-local programs defect 6 lives in, and the property above is passing
+		// for the same reason the single-fixture invariant used to: it cannot fail.
+		expect(
+			positionalWitnesses,
+			'the corpus no longer reaches a rename that permutes a name-sorted collection',
+		).toBeGreaterThan(0);
 	});
 
 	// COVERAGE. A generator whose arbitraries only ever emit the shapes already
@@ -259,9 +364,36 @@ describe('generative corpus over the IR grammar', () => {
 			});
 			const changed = base.replace('state(0)', 'state(7)');
 			expect(changed).not.toBe(base);
-			const before = JSON.stringify(await compile(base));
-			const after = JSON.stringify(await compile(changed));
-			expect(after).not.toBe(before);
+			// Through renameView, the comparison property 3 actually makes. The old
+			// form calibrated raw JSON.stringify, which no property used.
+			const words = new Set(['alpha0', 'zlpha0']);
+			expect(renameView(await compile(changed), words)).not.toBe(
+				renameView(await compile(base), words),
+			);
+		});
+
+		test('the order-insensitive view still detects an authored write reorder', async () => {
+			// The specific thing the view could have silenced. Two writes to two
+			// differently-named state locals, swapped: the multiset of whole
+			// stateWrites entries changes because each entry carries its own
+			// sourceSpan, even though the set of names written does not.
+			const program = (body: string) => `import { state } from '@markless/core';
+
+export function Generated() @{
+	let alpha0 = state(0);
+	let delta0 = state(0);
+
+	<div data-generated="">
+		<span>{alpha0}</span>
+		<span>{delta0}</span>
+		<button onClick={() => { ${body} }}>x</button>
+	</div>
+}
+`;
+			const words = new Set(['alpha0', 'zlpha0']);
+			expect(renameView(await compile(program('delta0++; alpha0++;')), words)).not.toBe(
+				renameView(await compile(program('alpha0++; delta0++;')), words),
+			);
 		});
 	});
 });

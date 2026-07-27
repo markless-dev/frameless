@@ -374,6 +374,42 @@ describe('Solid dossier gate', async () => {
 		],
 	] as const;
 
+	/**
+	 * Mutation constructor that refuses to silently produce a non-mutant.
+	 *
+	 * `String.prototype.replace` promises to return a string, NOT to have matched.
+	 * When the search literal misses, it returns the input unchanged with no error,
+	 * and the row below then asserts a gate policy against source the gate has every
+	 * right to accept. That is a green vacuum, not a passing test - it was defect 3's
+	 * cause B on Windows (defects-and-targets T006/T007), where the CRLF checkout made
+	 * the S-SH7 search literal unmatchable and the assertion measured nothing.
+	 *
+	 * The pattern is the one already used at
+	 * `packages/compiler/test/metamorphic.test.ts:79` - `not.toBe(original)`. Applied
+	 * here to the one row whose search literal spans a line break; the corpus-wide
+	 * conversion of all three gate suites is its own package (T018), because every
+	 * mutation it turns up as already-vacuous needs individual adjudication.
+	 */
+	function mutate(source: string, search: string | RegExp, replacement: string): string {
+		const mutated = source.replace(search, replacement);
+		if (mutated === source) {
+			throw new Error(
+				`gate mutation did not match ${String(search)} - the source is unchanged, ` +
+					'so this row would assert a policy against a non-mutant',
+			);
+		}
+		return mutated;
+	}
+
+	// The only search pattern in this file that spans a line break, and therefore the
+	// only one a CRLF checkout could silently defeat. `\r?\n` matches either checkout
+	// style and `$1` puts the file's own separator back, so the mutant stays
+	// byte-faithful to whatever was read from disk.
+	const SHARED_METHOD_ORDER =
+		/setHistory\(`\$\{history\(\)\}:\$\{count\(\)\}`\);(\r?\n\t*)setCount\(count\(\) \+ 1\);/;
+	const SHARED_METHOD_ORDER_SWAPPED =
+		'setCount(count() + 1);$1setHistory(`${history()}:${count()}`);';
+
 	const slot = compositionSources.get('C1-slot')!;
 	const shared = compositionSources.get('C2-shared')!;
 	const refs = compositionSources.get('C3-ref')!;
@@ -470,10 +506,9 @@ describe('Solid dossier gate', async () => {
 		],
 		[
 			'shared method order drift',
-			shared.replace(
-				'setHistory(`${history()}:${count()}`);\n\t\tsetCount(count() + 1);',
-				'setCount(count() + 1);\n\t\tsetHistory(`${history()}:${count()}`);',
-			),
+			// `mutate` is what makes the row honest on every platform: a miss now
+			// throws instead of asserting S-SH7 against unmutated source.
+			mutate(shared, SHARED_METHOD_ORDER, SHARED_METHOD_ORDER_SWAPPED),
 			'S-SH7',
 			compositionArtifacts.get('C2-shared'),
 		],
@@ -622,6 +657,26 @@ describe('Solid dossier gate', async () => {
 			expect(await policies(source, artifact)).toContain(policy);
 		},
 	);
+
+	// CALIBRATION for the mutation constructor itself, not for the gate. Defect 3's
+	// cause B was a harness that could not report its own failure: on a CRLF checkout
+	// the S-SH7 search literal missed, `replace` returned the fixture unchanged, and
+	// the row asserted a policy against a non-mutant while staying green. Both halves
+	// of the repair are witnessed here - a miss is now loud, and the pattern survives
+	// the line endings that broke it. Reproduce the original failure by reverting
+	// `SHARED_METHOD_ORDER` to the `\n\t\t` literal: the second expectation goes red.
+	test('CALIBRATION: a mutation that fails to match is loud, and S-SH7 survives CRLF', () => {
+		expect(() => mutate(shared, 'text that is not in the C2-shared fixture', 'x')).toThrow(
+			/did not match/,
+		);
+		const crlf = shared.replace(/\r?\n/g, '\r\n');
+		expect(crlf).not.toBe(shared);
+		expect(mutate(crlf, SHARED_METHOD_ORDER, SHARED_METHOD_ORDER_SWAPPED)).not.toBe(crlf);
+		// The mutant keeps the checkout's own separator rather than smuggling in LF.
+		expect(mutate(crlf, SHARED_METHOD_ORDER, SHARED_METHOD_ORDER_SWAPPED)).toContain(
+			'setCount(count() + 1);\r\n\t\tsetHistory(',
+		);
+	});
 
 	test('has a syntactically valid mutation for every published policy', () => {
 		const covered = new Set<string>(

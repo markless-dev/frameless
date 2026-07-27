@@ -1,0 +1,22 @@
+# LF is already a house invariant everywhere in this repo except at the one place
+# that decides it. Three of the four known Windows failure causes (defects-and-targets
+# T006/T007: the S-SH7 mutation literal, the goldens' baked AST byte offsets, and the
+# emitter freshness byte comparisons) share this single root: nothing pinned the
+# checkout's line endings, so a Windows contributor got CRLF while the code assumed LF.
+#
+# What already assumes LF, none of which is negotiable:
+#   - packages/frameworks/*/src/format-emitted.ts hard-codes `endOfLine: 'lf'`, so every
+#     emitted artifact is LF regardless of platform.
+#   - packages/compiler/test/goldens/*.json bake AST byte offsets taken from LF sources.
+#     Those offsets are CORRECT; the checkout was wrong, not the golden.
+#   - react/solid emitter tests assert readFile(generated/*.jsx) === emit(ir) byte-for-byte.
+#
+# The invariant is also ASSERTED, not merely declared here: see the CR scan in
+# packages/compiler/test/package-inventory.test.ts. A silent precondition converts
+# every one of its own violations into a false finding about something else.
+* text=auto eol=lf
+
+# Content-detected as binary by `text=auto` anyway; declared so intent is not implicit.
+*.png binary
+*.tgz binary
+*.svg text eol=lf

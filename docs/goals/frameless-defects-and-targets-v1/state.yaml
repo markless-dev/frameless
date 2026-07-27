@@ -105,7 +105,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T008
+active_task: T017
 
 tasks:
   - id: T001
@@ -910,7 +910,7 @@ tasks:
   - id: T008
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     spec: "notes/T007-phase-b-audit.md - AUTHORITATIVE. Larger than this card originally said: four Windows causes, defect 6, defect 5, and a full docs/DEFECTS.md framing rewrite."
     objective: >-
@@ -959,12 +959,83 @@ tasks:
       - "THE WINDOWS FLAG DOES NOT COME OFF. Named causes explain roughly 6 of the 35 reported failures across 4 of the 8 reported files. Correct the comment; leave the value. Removal is gated on an OBSERVED green cell and belongs to T009."
       - "DEFECT 5 IS A MEASUREMENT AND A DECISION. Identical behaviour with plain `value` -> attr: is unnecessary and the finding is at most cosmetic. Divergent behaviour -> attr: is required, this is purely solid-js's typing gap, solid-attr-namespace.d.ts is correct documentation, and the deliverable is an upstream report in the note. Either way the emitter is untouched."
       - "docs/DEFECTS.md gets a FULL framing rewrite plus entries 2, 3, 4, 5 and 6, per notes/T007-phase-b-audit.md section 5.1. Defect 2 is rewritten as NOT A DEFECT recording why the original finding was an instrument artifact - do NOT record qwikLoader:'inline' as a workaround; there is nothing to work around."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      note: notes/T008-portability-and-attr.md
+      summary: "Windows closed on all four causes: cause A fixed in both format-emitted copies (npx.cmd + shell on win32 - EINVAL, not just ENOENT); causes B/third/fourth closed by .gitattributes '* text=auto eol=lf'; S-SH7 made CRLF-proof AND given a throwing mutation constructor; a CR-scan test now ASSERTS the LF invariant rather than relying on it. Defect 6: order-insensitive multiset view over seven CITED and WITNESSED collections, three permuting fixture cases added, generative property 3 released from template-kinds to whole-IR with an anti-vacuity witness counter. Defect 5: measured DIVERGENT - attr: is required, the emitter is correct, this is purely solid-js's typing gap. DEFECTS.md fully reframed."
+      changed_files:
+        - .gitattributes
+        - .github/workflows/ci.yml
+        - docs/DEFECTS.md
+        - docs/goals/frameless-defects-and-targets-v1/notes/T008-portability-and-attr.md
+        - packages/compiler/test/generative.test.ts
+        - packages/compiler/test/metamorphic.test.ts
+        - packages/compiler/test/package-inventory.test.ts
+        - packages/frameworks/react/test/format-emitted.test.ts
+        - packages/frameworks/solid/test/format-emitted.test.ts
+        - packages/frameworks/solid/test/gate.test.ts
+      commands:
+        - cmd: "pnpm check"
+          status: pass
+        - cmd: "pnpm test"
+          status: pass
+          note: "569 passed (569), 39 files, up from the 561 baseline. PM RE-RAN: 569/569."
+        - cmd: "pnpm test:browser"
+          status: pass
+          note: "react 55/55, solid 44/44"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "[e2e] PASS, 3 demos x 3 scenarios all equal"
+        - cmd: "git add --renormalize . (pre-edit tree)"
+          status: pass
+          note: "THE GATE PASSED CLEANLY - staged ZERO content, index reset afterwards. Independently, all 721 tracked files scanned for a CR byte: none. Nothing was already CRLF."
+        - cmd: "git status --short"
+          status: pass
+          note: "PM VERIFIED: all paths inside allowed_files."
+        - cmd: "git diff .github/workflows/ci.yml | grep continue-on-error"
+          status: pass
+          note: "PM VERIFIED: only comment lines deleted. No continue-on-error VALUE changed, as T007 ruled."
+        - cmd: "scratchpad: Solid browser lane driven against plain-value S1/S2/S3"
+          status: pass
+          note: "the defect 5 measurement"
+        - cmd: "scratchpad: 4-seed x 500-run generative sweep of the order-insensitive view"
+          status: pass
+        - cmd: "scratchpad: calibration liveness probe incl. the 'sort everything' counterfactual"
+          status: pass
+      defect_3_windows:
+        cause_a: "Fixed in both format-emitted.test.ts copies - npx.cmd plus shell on win32. Note the real failure is EINVAL, not merely ENOENT."
+        causes_b_third_fourth: "One root, one fix: .gitattributes with '* text=auto eol=lf'. The file carries its own reasoning inline - what already assumes LF and why the goldens were correct while the checkout was wrong."
+        cause_b_also_needed_a_platform_independent_fix: "The S-SH7 row now uses a throwing mutation constructor, so a mutation that fails to match is loud on any platform rather than silently asserting against a non-mutant."
+        invariant_now_asserted: "A CR scan in package-inventory.test.ts, itself proved able to see a CR. A silent precondition converts every one of its own violations into a false finding about something else."
+        fourth_cause_still_unconfirmed: "An inference read off byte-comparison assertions, with no Windows log, runner or checkout. Only the CI cell can settle it - which is why the flag stays."
+      defect_6:
+        scope_grew_beyond_the_spec_and_had_to: "T007 named records.bindings/aliases/events plus stateWrites and module.exports. A full PATH-LEVEL diff of a permuting program showed the whole-IR comparison also fails on NESTED arrays - bindings[].reads, bindings[].computed.reads, components[].locals[].reads, events[].handlers[].reads and .writes - all name-sorted via dedupeReads and sortWrites. Fixing only the top-level collections would have left the invariant red."
+        seven_collections_each_cited_and_witnessed: "records.bindings (build.ts:428), records.aliases (:429), records.stateReads (:431 -> :2725), records.stateWrites (:342 -> :2740-2752), every reads array at any depth (:1370 -> dedupeReads :2866-2874), every writes array at any depth (:2671/:389 -> sortWrites), components[].locals[].semanticRecordIds (:629). PM VERIFIED the citation table in metamorphic.test.ts."
+        exclusions_with_reasons: "records.events EXCLUDED despite :430 being an id sort - an event id is `event:<allocation index>` or `event:<hostNodeId>:<eventName>`, unreachable by a local rename, and a probe confirmed the order is unchanged. module.exports (:464) excluded, no witness producible. build.ts:326 and :2079 left order-sensitive as span-keyed."
+        calibration_preserved: "Three permuting fixture cases added - the old invariant ran on one fixture with a single state binding and was structurally incapable of exhibiting the defect. An authored-write-reorder guard added to both compiler test files."
+      defect_5:
+        verdict: "SETTLED BY MEASUREMENT: attr: is REQUIRED. The emitted output is correct and this is purely solid-js's typing gap."
+        method: "Scratchpad copies of emitted S1/S2/S3 with every attr:value line removed - plain value only - driven through the repo's own Solid browser lane in real chromium, using the analyzer's own runScenario/compareRuns. No repo file changed for the experiment."
+        result: "Divergent in every scenario that has an input."
+        consequence: "The emitter is untouched, solid-attr-namespace.d.ts is correct documentation rather than a workaround, and the deliverable is an upstream report - drafted in section 3 of the note, awaiting the owner."
+      self_correction_worth_recording: "The Worker's first draft claimed the forbidden broad fix - recursively sort every array - 'would report these two programs equal'. It MEASURED that and found it FALSE: the broad fix also catches the authored write reorder and a template sibling swap, because this IR is span-rich. The real case against it is that it discards order across the whole artifact to fix seven collections. Wording corrected in metamorphic.test.ts, generative.test.ts and DEFECTS.md, and the correction recorded rather than quietly applied."
+      pm_error_disclosed:
+        what: "PARALLEL-SAFETY EVENT caused by the PM, not the Worker. Commit 72a09de (T016) used `git add docs/goals/frameless-defects-and-targets-v1`, which swept in notes/T008-portability-and-attr.md while this Worker was still writing it - a file inside T008's allowed_files, committed by someone else's commit and against the Worker's do-not-commit instruction."
+        damage: "None. The committed blob was byte-identical and the Worker continued cleanly."
+        pattern: "THIRD instance this session of an over-broad `git add <directory>` capturing files the PM did not intend - after twice sweeping in another agent's board and correcting it both times. The earlier corrections addressed the instances; they did not change the practice."
+        fix: "Explicit file paths only when staging, never a directory, for the remainder of this goal."
+      deviations:
+        - "Defect 6 view covers more collections than T007 listed - each is cited and witnessed, and without them the whole-IR comparison stays red."
+        - "Released generative.test.ts property 3 from template-kinds to a whole-IR comparison. The spec named only metamorphic.test.ts, but defect 6's holding measure lives in the generative lane and the finding is not closed while it stands. Shipped with a witness counter so the narrowing was not released alone."
+        - "Added calibrations beyond those requested: the mutation constructor is proved loud and CRLF-proof, the CR scan is proved able to see a CR."
+        - "The view helper is DUPLICATED across metamorphic.test.ts and generative.test.ts. A shared module is outside allowed_files, and importing one test file from another registers its suites twice. Both copies carry the citation table and a change-one-change-both note."
+        - "Only the S-SH7 row was converted to the throwing mutation constructor. Corpus-wide conversion is T018, deliberately not absorbed here because each already-vacuous mutation it reveals needs individual adjudication."
+      verification_attempts: 1
   - id: T017
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
     spec: "notes/T007-phase-b-audit.md section 6.2"
     objective: >-
@@ -972,8 +1043,20 @@ tasks:
       Bound on the quantity actually consumed - ticks, or a delivery-contracted primitive - keeping
       wall clock only as a runaway guard, in ALL THREE adapters, and ship a calibration proving the
       loop still throws on a genuinely non-quiescing DOM.
-    allowed_files: []
-    verify: []
+    allowed_files:
+      - packages/frameworks/react/src/adapter.ts
+      - packages/frameworks/solid/src/adapter.ts
+      - packages/frameworks/qwik/src/adapter.ts
+      - packages/frameworks/react/test/calibration.browser.test.ts
+      - packages/frameworks/solid/test/calibration.browser.test.ts
+      - docs/goals/frameless-defects-and-targets-v1/notes/T017-quiescence.md
+    verify:
+      - "pnpm check"
+      - "pnpm test"
+      - "pnpm test:browser"
+      - "pnpm e2e"
+      - "git status --short"
+      - "git diff --exit-code -- packages/frameworks/*/generated demos/*/src/emitted   # no emitted output may move"
     stop_if:
       - "Need files outside allowed_files."
       - "You are about to raise the 500ms bound. T007 REJECTED that: nothing settles at any number, so there is no settle time to raise it to."
@@ -1213,7 +1296,7 @@ tasks:
   - id: T011
     type: judge
     assignee: Judge
-    status: queued
+    status: done
     dispatch:
       concurrent_with: T008
       rationale: >-
@@ -1239,21 +1322,101 @@ tasks:
       - "Gate policy specification"
       - "The fail-closed v-limit definition"
       - "Exact Worker objective, allowed_files, verify and stop_if"
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      decision: approved
+      full_outcome_complete: false
+      note: notes/T011-conditional-cancellation.md
+      rationale: "The IR already represents conditional cancellation completely; NO schema change. Three premises were wrong and the Judge measured each. (1) Conditional cancellation does NOT reach a fail-closed throw - emitEvent returns a bare lazy QRL, silently re-emitting defect 1; only the gate catches it. (2) stopPropagation is an unfixed hole of the same class that NOTHING catches. (3) Solid refuses conditional policies whose validator masks two real bugs. The gate must PROVE closure-freedom, not detect signals."
+      premise_in_the_pm_brief_falsified:
+        what_the_pm_said: "That hoistsPreventDefault() returning false for conditional cases means they 'reach the fail-closed throw instead'."
+        measured_truth: "FALSE. qwik emit() on an event-equals IR returned onClick$={(event) => { if (event.key === 'Enter') { event.preventDefault(); } }} with NO throw. emitter/index.ts:701 returns normalized.handler when hoistsPreventDefault() is false; the throw at :587-590 only fires when hoisted===true. Conditional cancellation is therefore SILENTLY RE-EMITTING DEFECT 1 today, caught only by the gate."
+        provenance: "The PM propagated this from T005's deferred_scope_still_correct wording. T005's own sentence was about the declared-but-unlocatable case and is defensible; the propagation into T011's brief was not."
+      new_defect_found_stopPropagation:
+        severity: "A genuine unfixed defect of defect 1's class that NOTHING catches today."
+        measured: "Via checkSources: unconditional AND conditional stopPropagation in a bare lazy QRL each produce ZERO violations. PM VERIFIED: gate/index.ts matches only callee.property.name === 'preventDefault'; stopPropagation appears nowhere in the file."
+        consequence: "The gate's own name, frameless/no-handler-prevent-default, becomes a lie the moment stopPropagation is in scope. Renamed to frameless/no-handler-sync-action."
+        recording: "T008 owns docs/DEFECTS.md end to end, so this entry lands after T008 rather than inside T012."
+      solid_bugs_masked_by_its_own_validator:
+        bug_1: "normalizeHandler (solid/src/emitter/index.ts:2264-2271) unshifts an unconditional event.preventDefault() whenever actions.length is non-zero, IGNORING when. For a conditional policy the authored call is nested in an IfStatement so the strip-filter misses it - the result is a cancellation that fires ALWAYS plus the authored conditional call. PM VERIFIED by reading the source."
+        bug_2: "It also unshifts preventDefault when the declared action is ['stopPropagation']."
+        why_hidden: "The validator currently refuses every shape that would expose them. Widening the validator WITHOUT fixing normalizeHandler would ship an always-firing cancel - which is why that is a stop_if on T012."
+      ir_representation:
+        verdict: "NO SCHEMA CHANGE. SyncPolicy (schema.ts:24-39) plus EnrichedEventRecord.syncPolicy (:318-325) is already the general representation."
+        vocabulary_closed_by_measurement: "buildEnrichedIr on authored .tsrx produced event-equals, graph-truthy, not, and, and constant-truthy. event.target.tagName is REFUSED UPSTREAM with MARKLESS_SYNC_POLICY_UNEXTRACTABLE - so the brief's 'event.target attributes' case does not exist. eventFieldName requires object===eventParam and a static property, so only a flat event field vs a literal can ever arrive."
+        branches_form_clarified: "Arises IFF the event prop carries >=2 handler functions each contributing a policy. It is NOT a way to express two conditions on one handler."
+        design_pivot: "A sync$ body SYNTHESIZED from a graph-truthy-free condition tree is pure over the event parameter and JSON literals BY CONSTRUCTION. Closure freedom becomes a property of the generator rather than a conclusion of an analysis."
+        general_rule_for_all_adapters: "The IR declares WHEN and WHAT; the adapter decides WHERE. An adapter partitions the declared condition tree into its synchronous pre-activation channel and the rest; if the partition is not total for a declared action it REFUSES to emit. An adapter must never narrow the IR to what it supports."
+        rejected: "A syncBody/cancelExpression AST field on the IR - puts a target-shaped artifact in a target-neutral contract and inverts frameless-idiom-policy-v1. Splitting SyncPolicy into static/dynamic variants - exports Qwik's weakness to Svelte, Vue and Angular, none of which have it."
+      gate_policy:
+        rule_1: "frameless/no-handler-sync-action - widened to both action names, and HARDENED per T005: walking outward, the FIRST ancestor that is either a sync$() call or a JSX event attribute decides, and sync$ is allowed only in DIRECT position - the value of the event JSXExpressionContainer, or a direct element of the array that is that value."
+        rule_2: "frameless/sync-qrl-must-be-closed - NEW. It does not try to decide 'is this a signal', an undecidable name-based heuristic. It PROVES the strictly stronger DECIDABLE property that the sync$ argument references no binding other than its own parameters, via ESLint scope analysis, as an ALLOWLIST so an unforeseen construct fails closed."
+        backed_by_qwiks_own_invariant: "core.mjs:15905 - 'Synchronous QRLs functions can't close over any variables, including exports' - and in dev Qwik enforces it by round-tripping through new Function at :15911-15920, turning a captured reference into a ReferenceError at dispatch."
+        mutants_measured_silent_today: "Unconditional stopPropagation in a bare lazy QRL; conditional stopPropagation; sync$ nested inside $(); sync$ nested inside a bare lazy handler; a sync$ body reading locked.value. All five currently produce ZERO frameless violations."
+      v_limit:
+        location: "The Qwik emitter's validateEnrichedIr, NOT packages/compiler - the limit is Qwik's and the shared contract must not learn about it. Qwik currently validates syncPolicy NOT AT ALL; that is the gap."
+        refusals: "V1 graph-truthy in any branch's condition tree. V2 the branches form. V3 a statically-false constant-truthy guard. V4 a declared action whose authored call cannot be located - widening the existing throw to BOTH actions and to guarded positions. V5 a synthesized sync$ body that would reference anything but the event parameter."
+        v3_reasoning: "Refuse rather than silently delete. Stripping the authored call is equivalent only if the constant fold is right, and silently disables a real cancellation if it is wrong."
+        v5_is_the_emitter_asserting_its_own_precondition: "T007 rule 2. It can never fire today; its test constructs an unknown condition type and proves the refusal rather than mutating a reachable input."
+        explicitly_refused_alternative: "Mirroring graph state into a data- attribute for sync$ to read. It synthesizes a reactive DOM binding not present in the IR, depends on flush-before-event guarantees the IR does not make, and converts a clean refusal into a subtle timing bug - the exact trade defect 1 was. Reopen only with a two-sided behavioural proof on official tooling plus an IR-level declaration of the mirror. Not a Worker decision."
+      lowering_per_framework:
+        qwik: "Synthesize the guard from the condition tree: constant-truthy true -> no guard, byte-identical to T003's shipped shape; event-equals -> event.<field> === <literal>; not/and/or -> !/&&/||. The lazy element keeps the authored guard minus the located action calls - the condition is evaluated twice, which is sound precisely because it is pure."
+        react: "NOTHING TO DO, but UNPINNED. Measured: React emits the authored guard unchanged for event-equals, graph-truthy and branches alike, and its validator already accepts the full grammar. No test asserts this, so T012 adds one."
+        solid: "Widen the validator to React's grammar AND fix the two bugs above. Strip-and-renormalize ONLY for single-branch constant-truthy-true; otherwise leave the authored body untouched exactly as React does; give the branches form a named refusal."
+        absent_adapters: "Svelte and Vue handlers are synchronous and resident - the React/Solid case. Angular's forced lowering is orthogonal and still synchronous. Only Qwik is expected to need the split; all inherit the refusal obligation."
+      missing_evidence:
+        - "The Qwik optimizer's treatment of a sync$ body containing an IF STATEMENT is UNMEASURED. S3 proves only that a single-call body survives. This is why step 1 of T012 is a measurement, not an implementation."
+        - "No behavioural proof exists that a conditional cancel fires for the declared key and does NOT fire for another. Emitted text plus a gate is exactly the evidence base defect 1 defeated. Queued as T020."
+      parallel_execution: "Ran read-only, concurrently with T008 (11 paths) and T016 (one path). Based its ruling on committed source where a file was mid-edit."
   - id: T012
     type: worker
     assignee: Worker
     status: queued
     reasoning_hint: medium
-    objective: "Implement the T011 ruling: conditional-cancellation IR representation, sync$ lowering, the gate policy and the fail-closed v-limit."
-    allowed_files: []
-    verify: []
+    objective: >-
+      Implement the T011 ruling. IN ORDER: (1) MEASURE FIRST in T003's G1 discipline - build
+      demos/qwik at the lockfile version with a conditional keydown handler and confirm the event
+      prop serializes and the GUARDED sync$ body appears verbatim in the container's qFuncs_ table.
+      A sync$ body containing an if statement is a NEW shape for the optimizer; S3 proves only that
+      a single-call body survives. (2) Qwik lowering: replace hoistsPreventDefault() with
+      syncActionPlan(), SYNTHESIZE the sync$ body from the condition tree rather than lifting
+      authored source, cover BOTH preventDefault and stopPropagation. (3) v-limits V1-V5.
+      (4) Gate: rename to frameless/no-handler-sync-action, widen to both actions, harden the
+      ancestor walk to DIRECT-position sync$, and add frameless/sync-qrl-must-be-closed.
+      (5) Solid: widen the validator AND fix the two bugs it masks. (6) Pin React's already-correct
+      behaviour. (7) Pin the markless condition vocabulary. (8) Add the idiom-policy worked example.
+    spec: "notes/T011-conditional-cancellation.md - AUTHORITATIVE"
+    allowed_files:
+      - packages/frameworks/qwik/src/emitter/index.ts
+      - packages/frameworks/qwik/src/gate/index.ts
+      - packages/frameworks/qwik/test/emitter.test.ts
+      - packages/frameworks/qwik/test/gate.test.ts
+      - packages/frameworks/qwik/test/v-limits.test.ts
+      - packages/frameworks/solid/src/emitter/index.ts
+      - packages/frameworks/solid/test/emitter.test.ts
+      - packages/frameworks/react/test/emitter.test.ts
+      - packages/compiler/test/v0-limits.test.ts
+      - docs/emitter-idiom-policy.md
+      - docs/goals/frameless-defects-and-targets-v1/notes/T012-conditional-cancellation.md
+    verify:
+      - "pnpm check"
+      - "pnpm test"
+      - "pnpm test:browser"
+      - "pnpm lint"
+      - "pnpm e2e"
+      - "git diff --exit-code -- packages/frameworks/*/generated demos/*/src/emitted   # the unconditional path from T003 must not move"
     stop_if:
       - "Need files outside allowed_files."
-      - "The gate policy cannot actually prove a sync$ body is free of reactive state. A policy that cannot prove its claim must fail closed, not warn."
-      - "Unconditional cancellation from T003 regresses."
-      - "Verification fails twice."
+      - "The step-1 optimizer measurement shows a GUARDED sync$ body is not extracted, not serialized into qFuncs, or is dropped from the event prop. The lowering design is then WRONG - stop and report rather than shipping emitted text that looks right. That is exactly how T003 caught the raw-array-element trap."
+      - "You are about to widen the Solid validator WITHOUT fixing normalizeHandler's unconditional unshift at solid/src/emitter/index.ts:2264-2271. That turns a conditional cancel into one that ALWAYS fires, plus the authored conditional call. The validator is currently the only thing hiding this."
+      - "You are about to make frameless/sync-qrl-must-be-closed detect signals by name or by a .value heuristic. It must PROVE closure over the function's own parameters via scope analysis, as an ALLOWLIST. A policy that cannot prove its claim must fail closed, not warn."
+      - "You are about to carve an exception into the gate to let a statically-false guard through. Refuse in the emitter instead; never weaken a gate to accommodate a degenerate input."
+      - "You are about to add a .tsrx corpus fixture, a compiler golden, or a new generated/*.jsx. Goldens ripple through every framework suite plus metamorphic and generative. Use test-local emitted strings; the corpus change belongs to T020."
+      - "The generated corpora are not byte-identical after your change. The unconditional path from T003 must not move."
+      - "Any mutant in the ruling's list passes the gate, or any v-limit refusal test does not throw."
+      - "You are about to implement the data-attribute state mirror for graph-truthy guards. T011 refused it explicitly - it synthesizes a reactive DOM binding not present in the IR and converts a clean refusal into a subtle timing bug, which is the exact trade defect 1 was."
+      - "Verification fails twice for the same reason."
     constraints:
       - "allowed_files and verify come from the T011 ruling."
       - "Mutation-test the new gate policy the way the existing gates are - a policy nobody proved can fail is not a gate."
@@ -1296,6 +1459,29 @@ tasks:
     expected_output:
       - "Vue and Angular rows green in pnpm e2e with asserted S1/S2/S3 equality"
       - "Rollup receipts pointing at each board's own audit"
+    receipt: null
+
+  - id: T020
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    spec: "notes/T011-conditional-cancellation.md, missing_evidence"
+    objective: >-
+      The behavioural three-way proof for conditional cancellation: a two-sided scenario that
+      cancels for the declared key and does NOT cancel for another, across the analyzer scenarios,
+      the three-way contract and all three demos.
+    allowed_files: []
+    verify: []
+    stop_if:
+      - "Need files outside allowed_files."
+      - "The scenario passes before the T012 lowering lands. It must be two-sided - a scenario that cannot distinguish cancel from no-cancel proves nothing."
+      - "Verification fails twice."
+    constraints:
+      - "allowed_files and verify are filled by the PM from T012's outcome; do not start until they are set."
+      - "WHY THIS EXISTS: T011 states plainly that without it, T012 ships on emitted text plus a gate - which is exactly the evidence base defect 1 defeated. The gate proves the shape; only this proves the behaviour."
+      - "TWO-SIDED is the whole point: cancels for the declared key, does NOT cancel for another. A one-sided assertion would pass against an always-cancel bug, which is precisely the Solid bug T011 found hiding behind a validator."
+      - "Sequenced after T008, T017 and T018 - it adds a corpus fixture, and goldens ripple through every framework suite plus metamorphic and generative."
     receipt: null
 
   - id: T999

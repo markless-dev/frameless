@@ -66,12 +66,35 @@ jobs:
           # nothing had ever run on Windows at all. Path, line-ending and shell
           # assumptions surface here or nowhere.
           - { os: macos-latest, node: 24 }
-          # KNOWN-FAILING, tracked - see notes/findings-004-windows-portability.md.
-          # continue-on-error keeps the cell RUNNING and its log visible rather
-          # than deleting it. Two real defects, neither caused by this goal:
-          # format-emitted.test.ts spawns `npx` via execFileSync (ENOENT on
-          # Windows), and solid/test/gate.test.ts:610 fails a hash assertion,
-          # almost certainly CRLF. Remove continue-on-error when both are fixed.
+          # KNOWN-FAILING, tracked - findings-004-windows-portability.md, diagnosed
+          # by docs/goals/frameless-defects-and-targets-v1/notes/T006-diagnoses.md
+          # and ruled by notes/T007-phase-b-audit.md §2 and §4.
+          #
+          # THE EARLIER COMMENT HERE WAS FALSE and is corrected rather than quietly
+          # replaced. It read "solid/test/gate.test.ts:610 fails a hash assertion,
+          # almost certainly CRLF". T006 refuted every clause: there is no hash
+          # assertion, the Solid gate is CRLF-ROBUST (it detects a genuine reorder
+          # under CRLF and clean-passes clean CRLF, because both sides go through
+          # formatEmitted with endOfLine:'lf'), and the actual fault was the S-SH7
+          # row's own mutation search literal silently failing to match on CRLF -
+          # asserting a policy against a non-mutant. A flag whose stated reason is
+          # known-false is indistinguishable from an unexamined flag at audit.
+          #
+          # Four causes are now named, and T008 closed all four:
+          #   A       execFileSync('npx') cannot resolve npx.cmd without a shell
+          #   B       the S-SH7 mutation literal no-ops on CRLF (now regex + asserted)
+          #   third   goldens bake AST byte offsets taken from LF sources
+          #   fourth  emitter freshness tests compare bytes against an LF-only emitter
+          # B, third and fourth share ONE root - the repo had no .gitattributes - and
+          # are closed by `* text=auto eol=lf` plus a CR-scan test that makes the
+          # invariant assert itself instead of being assumed.
+          #
+          # THE FLAG STILL DOES NOT COME OFF, and the reason is arithmetic, not
+          # caution: findings-004 reports 35 failures across 8 files, and the four
+          # named causes account for roughly 6 across 4. The fourth cause is itself a
+          # hypothesis read off the assertions, never observed in a Windows log.
+          # REMOVAL GATE: an OBSERVED green windows-latest / node 24 cell on a real
+          # run - not "the named causes were fixed". Owned by T009.
           - { os: windows-latest, node: 24, experimental: true }
     steps:
       - uses: actions/checkout@v5
@@ -145,9 +168,35 @@ jobs:
       matrix:
         browser: [firefox, webkit]
         include:
-          # KNOWN-FAILING, tracked - see notes/findings-005-webkit-quiescence.md.
-          # WebKit exceeds the analyzer's 500ms quiescence bound on React
-          # controlled inputs. Kept running so the finding stays visible.
+          # KNOWN-FAILING, tracked - findings-005-webkit-quiescence.md, diagnosed by
+          # docs/goals/frameless-defects-and-targets-v1/notes/T006-diagnoses.md and
+          # ruled by notes/T007-phase-b-audit.md §1 and §3.
+          #
+          # Repointed at that audit, because "WebKit is slower to settle" was never
+          # measured and is not what the evidence says. Three facts:
+          #
+          #   1. THE LOOP MEASURES THE WRONG QUANTITY. boundedQuiescence bounds WALL
+          #      CLOCK over a loop whose progress is gated entirely on
+          #      requestAnimationFrame, and needs three rAF deliveries to conclude.
+          #      rAF promises ordering - "before the next repaint" - and no rate. A
+          #      headless browser that never composites owes no repaint and therefore
+          #      no callback on any schedule, so 500ms silently encodes a >4fps floor
+          #      that no specification provides.
+          #   2. THE FAILURE REPRODUCES ON CHROMIUM at slow frame cadence against the
+          #      unmodified adapter (passes at 240ms/frame, fails at 260ms/frame). It
+          #      is a property of the assumption, not of WebKit. Across chromium,
+          #      firefox and webkit the DOM is at its final value on the FIRST
+          #      snapshot: nothing settles, so there is no settle time to raise the
+          #      bound to. "Raise the timeout" is REJECTED, not merely deferred.
+          #   3. THE FLAG IS THE ADJUDICATING INSTRUMENT. That the CI incident had
+          #      this cause is formally unexcluded - macOS WebKit passes with 11x
+          #      headroom and this cell is ubuntu headless WebKitGTK. The T017 repair
+          #      is self-falsifying here: a genuine engine divergence would still fail
+          #      a tick-bounded loop. Removing the flag first discards the only
+          #      instrument that can settle it.
+          #
+          # REMOVAL GATE: an observed green webkit cell AFTER the T017 quiescence
+          # repair lands. Owned by T009.
           - { browser: webkit, experimental: true }
     steps:
       - uses: actions/checkout@v5

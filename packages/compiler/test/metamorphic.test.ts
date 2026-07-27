@@ -47,6 +47,107 @@ function structural(value: unknown, renamed: ReadonlySet<string>): unknown {
 	return value;
 }
 
+// ORDER-INSENSITIVE VIEW OVER THE CANONICALLY NAME-SORTED COLLECTIONS.
+//
+// DEFECT 6 (frameless-defects-and-targets, T006 diagnosis / T007 ruling). The
+// rename invariant asserted "a rename changes identifier strings and nothing else"
+// through the proxy of ARRAY POSITION - and the IR declares several of its arrays
+// canonically sorted BY NAME. A state binding's id is `state:<name>`, so an
+// alphabetical rename MUST permute them. The invariant contradicted a declared
+// property of the artifact it measured; that is an instrument fault, not a
+// compiler bug.
+//
+// The view is applied by CITATION, not by taste. Every collection below names the
+// exact `packages/compiler/src/build.ts` line whose comparator keys on a
+// name-derived field, and every one has been WITNESSED permuting under an
+// equal-length rename (the `can permute` cases further down are that witness,
+// checked in so it cannot rot):
+//
+//   records.bindings                  build.ts:428  compareText(left.id, right.id), id = `state:<name>` / `computed:<name>`
+//   records.aliases                   build.ts:429  compareText(left.id, right.id), id = `alias:<Component>:<aliasName>` (build.ts:2440)
+//   records.stateReads                build.ts:431 -> collectCanonicalReads -> build.ts:2725 `.sort(compareReads)` (2732: componentId, graphNodeId, path)
+//   records.stateWrites               build.ts:342 -> sortWrites -> build.ts:2740-2752 (componentId, graphNodeId, path, ...)
+//   every `reads` array, any depth    build.ts:1370 -> dedupeReads build.ts:2866-2874 (graphNodeId, path, via); also toStateReads 2684-2688
+//   every `writes` array, any depth   build.ts:2671 and :389 -> sortWrites build.ts:2740-2752
+//   components[].locals[].semanticRecordIds   build.ts:629, a bare `.sort()` over `state:<name>` / `alias:<...>` ids
+//
+// DELIBERATELY EXCLUDED - these stay order-SENSITIVE, because no rename can move
+// them and a view applied to a collection nobody has seen misbehave is the same
+// unexamined assumption defect 6 was:
+//
+//   records.events        build.ts:430 sorts by id, but an event id is
+//                         `event:<allocation index>` or `event:<hostNodeId>:<eventName>`.
+//                         A local rename cannot touch either; probed, order unchanged.
+//                         Its nested reads/writes DO permute and are covered above.
+//   module.exports        build.ts:464 keys on `exportedName`, part of the observable
+//                         contract, which a meaning-preserving rename never touches.
+//   records.sharedWrites  build.ts:2079 is SPAN-keyed (targetSpan.start).
+//   events[].handlers     build.ts:326 is SPAN-keyed (expression.start).
+//
+// The comparison is a MULTISET OF WHOLE ENTRIES. Whole entries carry their own
+// `sourceSpan`, so a genuine authored reorder still changes the multiset and is
+// still caught - which the `authored write reorder` calibration below proves
+// rather than asserts.
+//
+// Honest scope of that claim, since it is easy to overstate. The tempting broad
+// fix - recursively sort EVERY array on both sides - was probed here too, and it
+// also catches the authored write reorder and a template sibling swap, because
+// this IR is span-rich enough that positional information is largely redundant.
+// So the case against it is not "it silences these calibrations". It is that it
+// discards order for the whole artifact in order to fix seven collections, which
+// makes every future order-bearing array silently unchecked. This view is minimal
+// and cited: order-insensitivity applies exactly where a build.ts line justifies
+// it, and everywhere else the comparison is still exact.
+
+/** Deterministic serialisation with key order removed, so entries compare as values. */
+function canonicalJson(value: unknown): string {
+	if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`;
+	if (value && typeof value === 'object') {
+		return `{${Object.entries(value as Record<string, unknown>)
+			.sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
+			.map(([key, item]) => `${JSON.stringify(key)}:${canonicalJson(item)}`)
+			.join(',')}}`;
+	}
+	return JSON.stringify(value) ?? 'null';
+}
+
+const NAME_SORTED_RECORDS = new Set(['bindings', 'aliases', 'stateReads', 'stateWrites']);
+
+/** True only for the cited collections in the table above. */
+function isNameSorted(path: readonly string[]): boolean {
+	const key = path.at(-1);
+	if (key === 'reads' || key === 'writes' || key === 'semanticRecordIds') return true;
+	return path.length === 2 && path[0] === 'records' && NAME_SORTED_RECORDS.has(key);
+}
+
+/**
+ * Replace each cited collection with a multiset of its whole entries. Everything
+ * else - node kinds, nesting, cell wiring, span-keyed arrays, declaration order -
+ * stays positional and is still compared exactly.
+ */
+function orderInsensitive(value: unknown, path: readonly string[] = []): unknown {
+	if (Array.isArray(value)) {
+		const entries = value.map((item) => orderInsensitive(item, [...path, '*']));
+		if (!isNameSorted(path)) return entries;
+		const multiset: Record<string, number> = {};
+		for (const entry of entries) {
+			const key = canonicalJson(entry);
+			multiset[key] = (multiset[key] ?? 0) + 1;
+		}
+		return { '@@multiset': multiset };
+	}
+	if (value && typeof value === 'object') {
+		return Object.fromEntries(
+			Object.entries(value).map(([key, item]) => [key, orderInsensitive(item, [...path, key])]),
+		);
+	}
+	return value;
+}
+
+/** The comparison the rename invariant actually asserts. */
+const renameView = (value: unknown, renamed: ReadonlySet<string>) =>
+	orderInsensitive(structural(value, renamed));
+
 const scenarios = [
 	's1-render-once.tsrx',
 	's2-keyed-todo.tsrx',
@@ -79,9 +180,104 @@ describe('metamorphic invariants: meaning-preserving edits must not change the I
 				expect(renamedSource).not.toBe(original);
 
 				const words = new Set(pairs.flatMap(([from, to]) => [from, to]));
-				const before = structural(await ir(fixture, original), words);
-				const after = structural(await ir(fixture, renamedSource), words);
+				const before = renameView(await ir(fixture, original), words);
+				const after = renameView(await ir(fixture, renamedSource), words);
 				expect(after).toEqual(before);
+			});
+		}
+
+		// THE THIRD VACUOUS GREEN (T007 §5.1), and the reason the fixture loop
+		// above cannot stand alone. It runs on exactly ONE fixture - `renames`
+		// gives s2 and s3 empty lists, which hit `continue` - and s1's IR has a
+		// single state binding, so `computed:derived < prop:props < state:count`
+		// holds before and after every rename it performs. The invariant passed
+		// there because it was structurally INCAPABLE of failing, not because the
+		// property held; it was never evidence either way about defect 6.
+		//
+		// These cases restore the calibration. Each is an equal-length rename that
+		// provably flips an alphabetical ordering, and each asserts BOTH halves:
+		// the order-insensitive view holds, AND the positional comparison the
+		// invariant used to make would have failed. The second assertion is what
+		// stops these decaying into another vacuous green - if a future change
+		// makes a case stop permuting, it fails here instead of quietly proving
+		// nothing.
+		const permuting = [
+			{
+				name: 'records.bindings, stateReads, stateWrites and the nested reads/writes',
+				from: 'beta',
+				to: 'zeta',
+				source: (local: string) => `import { computed, state } from '@markless/core';
+
+export function Probe({ first, second }) @{
+	let ${local} = state(0);
+	let delta = state(0);
+	const total = computed(() => ${local} + delta);
+
+	<div>
+		<span>{${local}}</span>
+		<span>{delta}</span>
+		<em>{total}</em>
+		<i>{first}{second}</i>
+		<button onClick={() => { ${local}++; delta++; }}>go</button>
+	</div>
+}
+`,
+			},
+			{
+				name: 'records.aliases',
+				from: 'beta',
+				to: 'zeta',
+				source: (local: string) => `import { state } from '@markless/core';
+
+export function Probe({ first: ${local}, second: delta }) @{
+	let count = state(0);
+
+	<div>
+		<span>{${local}}</span>
+		<span>{delta}</span>
+		<em>{count}</em>
+	</div>
+}
+`,
+			},
+			{
+				name: 'components[].locals[].semanticRecordIds',
+				from: 'beta',
+				to: 'zeta',
+				source: (local: string) => `import { state } from '@markless/core';
+
+export function Probe({ pack }) @{
+	const [${local}, delta] = pack;
+	let count = state(0);
+
+	<div>
+		<span>{${local}}</span>
+		<span>{delta}</span>
+		<em>{count}</em>
+	</div>
+}
+`,
+			},
+		] as const;
+
+		for (const permutingCase of permuting) {
+			test(`can permute: ${permutingCase.name}`, async () => {
+				const { from, to } = permutingCase;
+				// Equal length keeps every source offset identical, so the only
+				// thing that can differ is what the rename legitimately changes.
+				expect(to).toHaveLength(from.length);
+				const words = new Set<string>([from, to]);
+				const beforeIr = await ir('probe.tsrx', permutingCase.source(from));
+				const afterIr = await ir('probe.tsrx', permutingCase.source(to));
+
+				// WITNESS. This case really does reach the shape defect 6 was filed
+				// for: the positional comparison reports a difference here.
+				expect(canonicalJson(structural(afterIr, words))).not.toBe(
+					canonicalJson(structural(beforeIr, words)),
+				);
+
+				// THE INVARIANT, over the cited name-sorted collections only.
+				expect(renameView(afterIr, words)).toEqual(renameView(beforeIr, words));
 			});
 		}
 	});
@@ -194,8 +390,39 @@ export function Pair() @{
 			const mutated = original.replace('state(1)', 'state(2)');
 			expect(mutated).not.toBe(original);
 			const words = new Set(['count', 'tally', 'prefix', 'banner', 'derived', 'display']);
-			const before = structural(await ir('s1-render-once.tsrx', original), words);
-			const after = structural(await ir('s1-render-once.tsrx', mutated), words);
+			// Runs through renameView, not through structural() alone: the point of
+			// a calibration is to exercise the comparison the invariant ACTUALLY
+			// makes. Calibrating a comparison nobody uses is how an instrument gets
+			// silenced without anyone noticing.
+			const before = renameView(await ir('s1-render-once.tsrx', original), words);
+			const after = renameView(await ir('s1-render-once.tsrx', mutated), words);
+			expect(after).not.toEqual(before);
+		});
+
+		test('a genuine authored reorder of two writes is still caught', async () => {
+			// THE GUARD ON THE ORDER-INSENSITIVE VIEW (T007 §1). This is the change
+			// the view could plausibly have silenced: the rename invariant now
+			// ignores the position of `records.stateWrites`, so something has to
+			// prove it still notices when an author genuinely swaps two writes.
+			// It does, because the view compares a MULTISET OF WHOLE ENTRIES and a
+			// whole stateWrites entry carries its own `sourceSpan` - the names
+			// written are unchanged, the spans they sit at are not.
+			const program = (body: string) => `import { state } from '@markless/core';
+
+export function Probe() @{
+	let beta = state(0);
+	let delta = state(0);
+
+	<div>
+		<span>{beta}</span>
+		<span>{delta}</span>
+		<button onClick={() => { ${body} }}>go</button>
+	</div>
+}
+`;
+			const words = new Set(['beta', 'zeta']);
+			const before = renameView(await ir('probe.tsrx', program('beta++; delta++;')), words);
+			const after = renameView(await ir('probe.tsrx', program('delta++; beta++;')), words);
 			expect(after).not.toEqual(before);
 		});
 
