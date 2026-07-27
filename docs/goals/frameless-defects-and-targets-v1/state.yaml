@@ -16,7 +16,7 @@ goal:
   status: active
   oracle:
     signal: >-
-      TWO halves, both required. (1) DEFECTS: all six defects in docs/defects.md
+      TWO halves, both required. (1) DEFECTS: all six defects in docs/DEFECTS.md
       closed or explicitly ruled non-issues with receipts; the three-way contract
       asserts the default action is prevented in ALL THREE frameworks and Qwik
       passes it; every continue-on-error flag left by the testing goal
@@ -36,7 +36,7 @@ goal:
     original_request: >-
       Setup a goal ready to start the work for vue, angular and svelte once the
       testing goal is done and merged, based on the board we discussed - and on
-      top of that, look at docs/defects.md.
+      top of that, look at docs/DEFECTS.md.
     interpreted_outcome: >-
       Close the six open defects, then add Vue, Angular and Svelte as targets, in
       that order because the defect work strengthens the harness and settles the
@@ -57,8 +57,8 @@ goal:
       - "Defect 2 may be entirely upstream. The board must be able to close it as 'filed against Qwik' without that counting as a failure - emitted components carry no bootstrap logic of their own."
       - "OWNER OVERRODE the prep recommendation of two separate goals, preferring a single board. The unbounded-tranche risk is real and is mitigated structurally: every phase ends in its own Judge audit and full_outcome_complete stays false until the last one. If the board starts sprawling, the PM should propose splitting rather than pushing on."
     existing_plan_facts:
-      - "SOURCE: docs/defects.md, a ranked six-defect summary produced by frameless-testing-ci-v1. Full per-defect notes live in docs/goals/frameless-testing-ci-v1/notes/findings-002 through findings-007."
-      - "ALL line references in docs/defects.md are on branch goal/frameless-testing-ci-v1, UNMERGED. A botched merge silently invalidates the input document. This is why T001 exists."
+      - "SOURCE: docs/DEFECTS.md, a ranked six-defect summary produced by frameless-testing-ci-v1. Full per-defect notes live in docs/goals/frameless-testing-ci-v1/notes/findings-002 through findings-007."
+      - "ALL line references in docs/DEFECTS.md are on branch goal/frameless-testing-ci-v1, UNMERGED. A botched merge silently invalidates the input document. This is why T001 exists."
       - "Defect 1 (highest): Qwik emits preventDefault() inside an async QRL at packages/frameworks/qwik/generated/S3.jsx:38. Diagnosed BY RULE (Qwik's no-async-prevent-default); runtime divergence NOT yet demonstrated. Fix per the owner, who is on the Qwik core team: unconditional cancellation -> the preventdefault:click attribute; conditional -> sync$(), which CANNOT close over reactive state. S3 is the unconditional case (s3-event-form.tsrx:37, first statement, no guard)."
       - "Defect 1 ordering is prescribed: (1) extend the three-way contract to assert the default action is prevented in all three frameworks, (2) WATCH IT FAIL for Qwik, (3) emit preventdefault:click and watch it pass. Step 2 is not optional - the rule fired but no runtime failure has been demonstrated."
       - "Defect 2: Qwik drops clicks under 300ms/400kbit throttling on a PRODUCTION build - zero network requests issued after the click, so the handler QRL is never even requested. The click is LOST, not delayed. Dev-bundle size ruled out. First action is to reproduce on an untouched pnpm create qwik app to separate upstream from frameless; upstream looks more likely."
@@ -105,7 +105,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T002
+active_task: T003
 
 tasks:
   - id: T001
@@ -121,16 +121,16 @@ tasks:
       - "The owner explicitly authorised merging and continuing."
       - "Inspect before acting. The branches have diverged; expect conflicts in packages/frameworks/qwik/ (its T006 did Qwik gate parity, main carries the raw-handler emitter change) and in CI config."
       - "Do not rewrite published history. No force-push."
-      - "EVERY line reference in docs/defects.md points at this branch. If the merge mangles a referenced file the input document is silently invalidated - spot-check the referenced locations after merging."
+      - "EVERY line reference in docs/DEFECTS.md points at this branch. If the merge mangles a referenced file the input document is silently invalidated - spot-check the referenced locations after merging."
       - "The two testing-goal board directories are deliberately untracked. Do not sweep them into a commit; use explicit paths, never `git add docs/goals`."
     expected_output:
       - "Merge commit sha, or a blocked receipt naming the conflict"
       - "Full suite on merged main: pnpm check, pnpm test, pnpm test:browser, pnpm e2e"
-      - "Spot-check that docs/defects.md's referenced locations still exist"
+      - "Spot-check that docs/DEFECTS.md's referenced locations still exist"
     stop_if:
       - "The merge conflicts and resolution is not obvious and mechanical."
       - "main is red after the merge on any lane that was green before."
-      - "A file referenced by docs/defects.md no longer exists or moved without explanation."
+      - "A file referenced by docs/DEFECTS.md no longer exists or moved without explanation."
     receipt:
       result: blocked
       harness: claude-code
@@ -169,7 +169,7 @@ tasks:
         alternative_reading_considered: "That the raw-handler change accidentally FIXED defect 1. Rejected as implausible without evidence - removing the $() wrapper does not make an async handler synchronous - but T002 will distinguish them empirically rather than by argument."
       defects_md_spotcheck:
         result: "all referenced locations intact"
-        note: "docs/DEFECTS.md is UPPERCASE on disk; the charter and board refer to docs/defects.md. macOS is case-insensitive so both resolve, but Linux CI would not. Recorded for correction."
+        note: "docs/DEFECTS.md is UPPERCASE on disk; the charter and board refer to docs/DEFECTS.md. macOS is case-insensitive so both resolve, but Linux CI would not. Recorded for correction."
         verified:
           - packages/frameworks/qwik/generated/S3.jsx
           - packages/frameworks/qwik/test/gate.test.ts
@@ -253,7 +253,7 @@ tasks:
         - "Correct the code snippet (38-43): on merged main generated/S3.jsx:37-38 has no $() wrapper, and the rule matches $() ancestry while never checking async, so it can no longer serve as evidence."
         - "Downgrade 'diagnosed by rule' to 'undiagnosed' - with the rule silent and the runtime divergence undemonstrated, defect 1 currently has ZERO demonstrated evidence."
         - "State plainly that the repo has never emitted or exercised a real cancellation in any target."
-        - "Rename to lowercase or update every reference - docs/DEFECTS.md is uppercase on disk and Linux CI will not resolve docs/defects.md."
+        - "Rename to lowercase or update every reference - docs/DEFECTS.md is uppercase on disk and Linux CI will not resolve docs/DEFECTS.md."
       severity_opinion: "Still #1, and the inertness of S3 makes it MORE worrying, not less. The mechanism is deterministic - a QRL costs at minimum a microtask and the default action runs immediately after dispatch; preventDefault() on a submit button is the single most common cancellation in web apps; and Svelte, Vue and Angular are about to inherit an IR whose preventDefault() lowering has never been behaviorally validated in ANY target."
       missing_evidence:
         - "Whether @qwik.dev/router leaves a plain <form> submit uninterrupted. Inferred from demos/qwik/src/routes/s3/index.tsx using neither <Form> nor an action; T002 must confirm empirically."
@@ -262,7 +262,7 @@ tasks:
   - id: T002
     type: worker
     assignee: Worker
-    status: active
+    status: blocked
     reasoning_hint: medium
     spec: "notes/T015-cancellation-observability.md (Judge ruling, authoritative)"
     objective: >-
@@ -318,29 +318,121 @@ tasks:
       - "The deliverable is a WITNESSED FAILURE, not a fix. React and Solid must be fully green."
       - "Capture Qwik's failure verbatim from demos/qwik/.witness/receipts/<runId>/receipt.json plus the pnpm e2e console output, and record WHICH signal fired: extra Document request, writes reset to 0, navigations, or qsymbol loss."
       - "VERIFY, do not assume, two residual risks T015 could not settle: that @qwik.dev/router leaves a plain <form> submit uninterrupted, and that the compiler accepts a preventDefault-only handler body."
-    receipt: null
-
+    receipt:
+      result: blocked
+      harness: claude-code
+      blocked_reason: "pnpm e2e is red for the Qwik lane. That failure is this task's assigned artifact, not an incident - but a failing verify command means the task is not done, so it is recorded as blocked with the failure visible. T003 owns the fix."
+      summary: "S3 now has a genuinely cancellable default action and the three-way contract asserts it. Added one <button type=\"submit\" data-action=\"cancel-submit\"> with a preventDefault-only onClick; regenerated the IR golden, all three emitters and all three demo copies; mirrored it into both handwritten references with no mutation branch; updated the forced expectations; extended assertS3 to click it LAST and assert one Document request, a live [data-scenario=\"s3\"], and data-writes still 2. React and Solid stay fully green with identical observations. Qwik now fails BEHAVIORALLY: the form's GET reaches the network because the cancel handler's QRL segment is still being fetched when the browser runs the default action."
+      changed_files:
+        - packages/compiler/test/fixtures/s3-event-form.tsrx
+        - packages/compiler/test/goldens/s3-event-form.json
+        - packages/compiler/test/enriched-ir.test.ts
+        - packages/frameworks/react/generated/S3.jsx
+        - packages/frameworks/solid/generated/S3.jsx
+        - packages/frameworks/qwik/generated/S3.jsx
+        - packages/frameworks/react/test/reference.tsx
+        - packages/frameworks/solid/test/reference.solid.tsx
+        - packages/frameworks/react/test/size.test.ts
+        - packages/frameworks/solid/test/size.test.ts
+        - demos/react-official/src/emitted/EventForm.jsx
+        - demos/solid-official/src/emitted/EventForm.jsx
+        - demos/qwik/src/emitted/EventForm.jsx
+        - demos/react-official/three-way-contract.ts
+      commands:
+        - cmd: "pnpm check"
+          status: pass
+        - cmd: "pnpm test"
+          status: fail
+          note: "1 failed | 551 passed (552). Sole failure is the pre-existing qwik gate.test.ts expectation, byte-identical to the pre-change baseline and not edited. PM RE-RAN: same 551/552."
+        - cmd: "pnpm test:browser"
+          status: pass
+          note: "react 55/55 (7 files), solid 44/44 (4 files) - the change was genuinely additive, calibration untouched"
+        - cmd: "pnpm e2e"
+          status: fail
+          note: "ui-kit, composition-kit, SSR, persistence, react three-way and solid three-way all PASS. The qwik three-way lane fails. THIS IS THE DELIVERABLE."
+      witnessed_failure:
+        receipt: demos/qwik/.witness/receipts/2026-07-27T00-00-59.379Z/receipt.json
+        receipt_summary_verbatim: "{\"status\":\"failed\",\"total\":1,\"passed\":0,\"failed\":1,\"contested\":0,\"invalidBoxFiles\":0}"
+        message_verbatim: "clicking [data-action=\"cancel-submit\"] left 2 Document requests on this page; exactly one means the form submit never reached the network. The handler's entire body is event.preventDefault(), so a second Document request means the default action ran before the handler did."
+        document_requests: "[{\"url\":\"http://127.0.0.1:5173/s3/\",\"status\":200},{\"url\":\"http://127.0.0.1:5173/s3/?\",\"status\":200}]"
+        failed_requests: "[]"
+        page_errors: "[]"
+        react_and_solid_observations_identical: "[\"server-rendered text = hello with writes = 0\", \"after submit writes = 2\", \"after cancel-submit 1 document request served this page and writes = 2\", \"1 document request served this page\", \"no console errors and no failed requests\"]"
+      signal_fired: "Extra Document request - 2 instead of 1: GET /s3/? resourceType Document status 200, the form's own default GET with an empty query because no input carries a name. Two further signals are latent but the run aborts before reaching them: navigations 3 vs 1, and qsymbol loss (trackedEvents.qsymbol wiped by the reload), both observed in an earlier run; data-writes reset to 0 is the third."
+      attribution:
+        verdict: "The missed preventDefault. Not the router, not an aborted QRL."
+        cdp_timeline: "Offsets from the initial Document request on the s3 page: the QRL segment carrying the cancel-submit handler (EventForm.jsx_EventForm_component_form_button_q_e_click_1_nhy9YLzXhWU.js) starts at +111.4ms and ends at +112.7ms. The form's Document GET for /s3/? starts at +118.2ms. The click was dispatched roughly 58ms BEFORE the handler's code existed in the page, so preventDefault could not have run during dispatch."
+        not_the_router: "@qwik.dev/router@2.0.0-beta.38 lib/index.qwik.mjs registers only popstate, scroll, click and visibilitychange/beforeunload. Its click listener acts solely on event.target.closest('a[href]') and returns early on defaultPrevented. Its only submit interception lives inside its own Form/GetForm component, which renders preventdefault:submit on a form it creates itself. demos/qwik/src/routes/s3/index.tsx uses neither Form nor routeAction$. A router SPA form navigation would be nav('?'+params), a pushState - not a Document fetch."
+        not_an_aborted_qrl: "failedRequests is [], pageErrors is [], and all four QRL segments returned 200."
+        compiler_is_innocent: "The golden records event:4 with syncPolicy { actions: ['preventDefault'], when: constant-truthy }. React and Solid, given the same IR, pass. The gap is purely the Qwik emitter's lowering."
+      pm_refinement_defect_1_is_misnamed:
+        observation: "The emitted Qwik handler for the new control is `onClick$={(event) => { event.preventDefault(); }}` - SYNCHRONOUS. No async keyword, no await, nothing to await. It fails anyway."
+        consequence: "Defect 1's framing - and the upstream rule's name, no-async-prevent-default - is imprecise. The failure is not caused by the handler being async. It is caused by QRL LAZINESS: the segment is not resident when the event fires, and fetching it costs a network round trip. A perfectly synchronous handler body fails identically."
+        why_it_matters: "The frameless-owned gate policy T003 must add cannot key on `async`. It must reject preventDefault() inside ANY emitted event-handler body - regardless of $() wrapping AND regardless of async. Keying on async would reproduce the upstream rule's blind spot in our own gate."
+        status: "Observed directly in the emitted output and corroborated by the CDP timeline. This is a PM observation on top of the Worker receipt."
+      residual_risks_checked:
+        - "@qwik.dev/router leaves a plain <form> submit uninterrupted: VERIFIED by reading the shipped bundle, not inferred. No document-level submit listener exists in lib/index.qwik.mjs. Confirmed empirically - the submit reached the network as a real 200 Document GET."
+        - "The compiler accepts a preventDefault-only handler body: YES. buildEnrichedIr produces event:4 with an ArrowFunctionExpression handler, reads [] and writes [], syncPolicy { actions: ['preventDefault'] }. No state write or onTrace call was invented."
+        - "THIRD RISK FOUND AND FIXED, not assumed: the post-click assertion is inherently racy. page.click returns on dispatch and the Qwik Document request lands ~32-35ms later. In the first lane run (receipt 2026-07-26T23-55-55.391Z) assertS3 PASSED for Qwik - it read documents == 1 off the doomed document - and the box only failed later on navigations and qsymbol. Left as written, the new channel would have been a FALSE GREEN."
+      deviations:
+        - "enriched-ir.test.ts needed a second change beyond the one EXPECTED_HOSTS row. Its anti-vacuity assertion required every handler to have reads.length + writes.length > 0; a preventDefault-only handler has neither. Relaxed narrowly to allow a handler recording no graph access PROVIDED the event carries a non-empty syncPolicy. PM REVIEWED THE DIFF: the intent is preserved - a handler that records nothing at all still fails - and cancellation is a genuine observable effect. Accepted."
+        - "Dropped an explanatory JSX comment from both references. physicalLoc counts non-blank lines and a JSX comment adds AST nodes, skewing the reference-vs-emitted size comparison (+15 reference vs +9 emitted). Without it both deltas are exactly +9 physicalLoc and +24 structuralNodes per side, keeping the measured claim honest."
+        - "Added settleAfterCancellableClick (2000ms deadline, exits on the first extra Document request) to three-way-contract.ts. Without it the assertion is a false green, as the first run proved. No witness primitive waits for a SUSTAINED condition - every expect.page.* waits until something becomes true, and 'no navigation happened' never becomes true - so the wait has to live in the contract. Green lanes pay 2s once per run; failing lanes exit immediately."
+        - "Left resumeSymbols.s3.atLeast at 1. Two S3 buttons are now clicked so 2 would also hold, but raising it would give Qwik a second, weaker way to fail and blur the attribution."
+      pm_verification:
+        - "git status: exactly 14 files, all inside allowed_files. packages/analyzer/src/scenarios.ts and packages/frameworks/qwik/test/gate.test.ts untouched, as required."
+        - "Reviewed the enriched-ir.test.ts relaxation diff personally - narrow and intent-preserving."
+        - "Reviewed the three-way-contract.ts diff - the settle helper exits early on a second Document request, so only genuinely-cancelling lanes pay the deadline."
+        - "Re-ran pnpm test: 551/552, sole failure the pre-existing gate expectation."
+        - "Confirmed the witness receipt on disk reports summary.status failed, 0 passed, 1 failed."
+      verification_attempts: 2
   - id: T003
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
-    objective: "Emit preventdefault:click for the unconditional cancellation case, turning T002's witnessed Qwik failure green."
-    allowed_files: []
-    verify: []
+    spec: "notes/T015-cancellation-observability.md sections 4 and 5, plus the pm_refinement_defect_1_is_misnamed block on T002's receipt"
+    objective: >-
+      Close defect 1: emit Qwik's preventdefault:click for unconditional cancellation so T002's
+      witnessed failure turns green, AND add a frameless-owned gate policy that catches
+      preventDefault() in any emitted handler body regardless of $() wrapping or async, so the
+      released expectation is not a green vacuum.
+    allowed_files:
+      - packages/frameworks/qwik/src/emitter/index.ts
+      - packages/frameworks/qwik/src/gate/index.ts
+      - packages/frameworks/qwik/generated/S1.jsx
+      - packages/frameworks/qwik/generated/S2.jsx
+      - packages/frameworks/qwik/generated/S3.jsx
+      - packages/frameworks/qwik/test/gate.test.ts
+      - packages/frameworks/qwik/test/emitter.test.ts
+      - demos/qwik/src/emitted/RenderOnce.jsx
+      - demos/qwik/src/emitted/KeyedTodo.jsx
+      - demos/qwik/src/emitted/EventForm.jsx
+      - docs/DEFECTS.md
+      - docs/goals/frameless-defects-and-targets-v1/notes/T003-upstream-eslint-qwik.md
+    verify:
+      - "pnpm check"
+      - "pnpm test"
+      - "pnpm test:browser"
+      - "pnpm e2e"
     stop_if:
       - "Need files outside allowed_files."
-      - "The change would require deciding how the IR represents CONDITIONAL cancellation. That is T011/T012, deliberately deferred - stop here."
-      - "Any other framework's cancellation assertion regresses."
-      - "Verification fails twice."
+      - "You are about to key the new gate policy on `async`. Do NOT - see the constraint below; that would reproduce upstream's blind spot in our own gate."
+      - "You are about to revert the emission shape to $(handler) to satisfy the upstream rule. That inverts frameless-idiom-policy-v1."
+      - "The change would require deciding how the IR represents CONDITIONAL cancellation. That is T011/T012 - stop here."
+      - "pnpm e2e is still red for Qwik after the change - report rather than weakening the assertion T002 just built."
+      - "React or Solid regress in any lane."
+      - "Verification fails twice for the same reason."
     constraints:
-      - "Unconditional case ONLY. S3 qualifies: s3-event-form.tsrx:37 calls preventDefault() as the first statement with no guard."
-      - "GREEN-VACUUM WARNING from T015: flipping the qwik gate.test.ts expectation to [] is NOT sufficient, because [] is ALREADY what unfixed main produces - the eslint rule matches $() ancestry and never checks async, so it cannot fire on the raw-handler shape. A flip alone ships a gate that would pass identically if the emitter were never touched."
-      - "Therefore, IN THE SAME CHANGE: add a frameless-owned Qwik gate policy rejecting preventDefault() inside any emitted event-handler body regardless of $() wrapping, mutation-tested in the pattern of gate.test.ts:93-110, and only THEN release the known-failing expectation. Do not split these - splitting risks the green vacuum landing first."
-      - "Do NOT revert the emission shape to $(handler) to satisfy the upstream rule. That would invert frameless-idiom-policy-v1 and let an upstream heuristic dictate emitted output."
-      - "RIDER - file the upstream gap against eslint-plugin-qwik: no-async-prevent-default matches $() ancestry only, misses bare onClick$={async ...} JSX props, and never checks `async` at all. Verified against eslint-plugin-qwik@2.0.0-beta.38 dist/index.js."
-      - "RIDER - apply the six docs/DEFECTS.md corrections listed in notes/T015-cancellation-observability.md section 5, including the lowercase rename (Linux CI will not resolve docs/defects.md)."
+      - "UNCONDITIONAL case only. Both S3 preventDefault sites qualify: the original type=button handler and the new cancel-submit handler, each calling preventDefault as the first/only statement with no guard."
+      - "GREEN-VACUUM WARNING from T015: flipping the qwik gate.test.ts expectation to [] is NOT sufficient, because [] is ALREADY what unfixed main produces - the upstream rule matches $() ancestry and never checks async, so it cannot fire on the raw-handler shape. A flip alone ships a gate that would pass identically if the emitter were never touched."
+      - "Therefore, IN THE SAME CHANGE: add a frameless-owned Qwik gate policy rejecting preventDefault() inside any emitted event-handler body, mutation-tested in the pattern of gate.test.ts:93-110, and only THEN release the known-failing expectation. Do not split these."
+      - "THE POLICY MUST NOT KEY ON `async`. T002 proved defect 1 is misnamed: the emitted cancel-submit handler is `onClick$={(event) => {...}}`, fully SYNCHRONOUS, and it fails anyway. The cause is QRL LAZINESS - the segment is not resident when the event fires - not the handler being async. Key on 'preventDefault inside an emitted handler that becomes a QRL', regardless of $() and regardless of async."
+      - "Do NOT revert the emission shape to $(handler)."
       - "docs/emitter-idiom-policy.md governs the emission-site form choice. Run the six gates and record the outcomes."
+      - "RIDER - file the upstream gap against eslint-plugin-qwik in notes/T003-upstream-eslint-qwik.md for the owner to submit: no-async-prevent-default matches $() ancestry only, misses bare onClick$={...} JSX props, and never checks `async` at all despite its name. Verified against eslint-plugin-qwik@2.0.0-beta.38 dist/index.js. Include that a synchronous handler fails identically, so the rule's name is also wrong."
+      - "RIDER - apply the six docs/DEFECTS.md corrections in notes/T015-cancellation-observability.md section 5, PLUS a seventh from T002: defect 1 is misnamed, since a synchronous QRL handler fails identically. The lowercase rename is NOT needed - the PM corrected the board and charter references to docs/DEFECTS.md instead."
+      - "Expected end state: pnpm e2e FULLY green including Qwik, pnpm test 552/552 with the gate expectation released and replaced by the new policy's own tests."
     receipt: null
 
   - id: T004
@@ -370,7 +462,7 @@ tasks:
     objective: "Phase A audit: is emitted-output correctness actually fixed, and was each fix preceded by a witnessed failure?"
     inputs:
       - "T002, T003, T004 receipts"
-      - "docs/defects.md defects 1 and 2"
+      - "docs/DEFECTS.md defects 1 and 2"
     constraints:
       - "Do not implement."
       - "Reject if defect 1's fix landed without T002's witnessed Qwik failure on record."
@@ -393,7 +485,7 @@ tasks:
     verify: []
     stop_if:
       - "Need files outside allowed_files."
-      - "You are about to raise the 500ms quiescence bound, or make the rename comparison order-insensitive, BEFORE the instrumented result says so. Both are named in docs/defects.md as the tempting wrong move."
+      - "You are about to raise the 500ms quiescence bound, or make the rename comparison order-insensitive, BEFORE the instrumented result says so. Both are named in docs/DEFECTS.md as the tempting wrong move."
       - "An experiment is inconclusive twice - report it as inconclusive rather than guessing."
     constraints:
       - "One package, three experiments - they share a shape (instrument, observe, decide) and none of them is a fix."
@@ -415,7 +507,7 @@ tasks:
     objective: "Phase B audit: rule on all three diagnoses and spec the resulting fixes or closures."
     inputs:
       - "T006 receipt"
-      - "docs/defects.md defects 3-B, 4 and 6"
+      - "docs/DEFECTS.md defects 3-B, 4 and 6"
     constraints:
       - "Do not implement."
       - "For each: rule real-finding, harness-assumption, or non-issue - and say what closes it."
@@ -456,7 +548,7 @@ tasks:
     objective: "Phase C audit and the defects-half audit: are all six defects closed or ruled, with every continue-on-error flag accounted for?"
     inputs:
       - "T005, T007 and T008 receipts"
-      - "docs/defects.md in full"
+      - "docs/DEFECTS.md in full"
     constraints:
       - "Do not implement."
       - "Enumerate all six defects and state the disposition and evidence for each."
@@ -495,7 +587,7 @@ tasks:
     objective: "Rule on how the IR represents conditional cancellation - the half of defect 1 deliberately deferred from T003."
     inputs:
       - "T003 and T005 receipts"
-      - "docs/defects.md defect 1, the 'separate design decision' section"
+      - "docs/DEFECTS.md defect 1, the 'separate design decision' section"
       - "docs/emitter-idiom-policy.md"
     constraints:
       - "Do not implement."

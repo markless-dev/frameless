@@ -47,6 +47,15 @@ export function EventForm({ initial, onTrace }) {
 			>
 				submit
 			</button>
+			<button
+				type="submit"
+				data-action="cancel-submit"
+				onClick={(event) => {
+					event.preventDefault();
+				}}
+			>
+				cancel-submit
+			</button>
 			<output data-writes="true">{writes}</output>
 			<span data-callback-marker="present" />
 		</form>

@@ -47,6 +47,15 @@ export const EventForm = component$((props) => {
 			>
 				submit
 			</button>
+			<button
+				type="submit"
+				data-action="cancel-submit"
+				onClick$={(event) => {
+					event.preventDefault();
+				}}
+			>
+				cancel-submit
+			</button>
 			<output data-writes="true">{writes.value}</output>
 			<span data-callback-marker="present" />
 		</form>

@@ -258,13 +258,39 @@
             {
               "children": [
                 {
+                  "id": "text:1",
+                  "kind": "text",
+                  "value": "cancel-submit"
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [
+                "event:4"
+              ],
+              "id": "h4",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "type",
+                  "value": "submit"
+                },
+                {
+                  "name": "data-action",
+                  "value": "cancel-submit"
+                }
+              ],
+              "tag": "button"
+            },
+            {
+              "children": [
+                {
                   "expression": {
-                    "end": 1011,
+                    "end": 1154,
                     "name": "writes",
-                    "start": 1005,
+                    "start": 1148,
                     "type": "Identifier"
                   },
-                  "id": "text:1",
+                  "id": "text:2",
                   "kind": "dynamic-text",
                   "reads": [
                     {
@@ -277,7 +303,7 @@
               ],
               "dynamicBindings": [],
               "eventIds": [],
-              "id": "h4",
+              "id": "h5",
               "kind": "host",
               "staticAttributes": [
                 {
@@ -291,7 +317,7 @@
               "children": [],
               "dynamicBindings": [],
               "eventIds": [],
-              "id": "h5",
+              "id": "h6",
               "kind": "host",
               "staticAttributes": [
                 {
@@ -1479,6 +1505,82 @@
         ],
         "hostNodeId": "h3",
         "id": "event:3",
+        "syncPolicy": {
+          "actions": [
+            "preventDefault"
+          ],
+          "when": {
+            "type": "constant-truthy",
+            "value": true
+          }
+        }
+      },
+      {
+        "componentId": "component:0:EventForm",
+        "eventName": "click",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "end": 1085,
+                    "expression": {
+                      "arguments": [],
+                      "callee": {
+                        "computed": false,
+                        "end": 1082,
+                        "object": {
+                          "end": 1067,
+                          "name": "event",
+                          "start": 1062,
+                          "type": "Identifier"
+                        },
+                        "optional": false,
+                        "property": {
+                          "end": 1082,
+                          "name": "preventDefault",
+                          "start": 1068,
+                          "type": "Identifier"
+                        },
+                        "start": 1062,
+                        "type": "MemberExpression"
+                      },
+                      "end": 1084,
+                      "optional": false,
+                      "start": 1062,
+                      "type": "CallExpression"
+                    },
+                    "start": 1062,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 1090,
+                "start": 1056,
+                "type": "BlockStatement"
+              },
+              "end": 1090,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 1051,
+                  "name": "event",
+                  "start": 1046,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 1045,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [],
+            "writes": []
+          }
+        ],
+        "hostNodeId": "h4",
+        "id": "event:4",
         "syncPolicy": {
           "actions": [
             "preventDefault"

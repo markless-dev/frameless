@@ -265,7 +265,62 @@ export async function assertS2(page: PageHandle, expect: ExpectApi): Promise<str
   return observed
 }
 
-/** S3 — event form: a handler that writes twice and settles on one value. */
+/** How long a not-yet-cancelled default action is given to show itself. */
+const CANCELLATION_SETTLE_MS = 2_000
+
+/**
+ * The Document requests this page has issued, read after the browser has had a
+ * bounded chance to act on a click that carried a default action.
+ *
+ * `page.click` returns once the click is dispatched, not once anything the click
+ * *started* has finished, so reading the network log straight afterwards races a
+ * navigation that has been kicked off but not yet committed. Measured in the
+ * Qwik lane, the submit's Document request lands ~35ms after the click returns —
+ * comfortably late enough for an immediate read to see a clean page and report a
+ * pass. Every `expect.page.*` primitive waits *until* a condition becomes true,
+ * and "no navigation happened" never becomes true, so the wait has to be here.
+ *
+ * It exits as soon as a second Document request appears, so the deadline is only
+ * ever paid by a lane that genuinely cancelled.
+ */
+async function settleAfterCancellableClick(page: PageHandle) {
+  const deadline = Date.now() + CANCELLATION_SETTLE_MS
+  let documents = await documentRequests(page)
+  while (documents.length === 1 && Date.now() < deadline) {
+    await new Promise((resolve) => setTimeout(resolve, 25))
+    documents = await documentRequests(page)
+  }
+  return documents
+}
+
+async function documentRequests(page: PageHandle) {
+  const requests = await page.networkRequests()
+  return requests.filter((request) => request.resourceType === 'Document')
+}
+
+/**
+ * S3 — event form: a handler that writes twice and settles on one value, then a
+ * handler that cancels a real default action.
+ *
+ * The cancellation step is deliberately last. Everything above it is S3's
+ * original oracle and still runs, and still passes, for all three frameworks
+ * before anything is submitted — the channel below is added, not traded.
+ *
+ * Why it is here at all: until now the only `preventDefault()` in the corpus sat
+ * on a `<button type="button">`, which has no activation behavior, so no target
+ * had ever been asked to avert a default action. The analyzer's cancellation
+ * check reads `event.defaultPrevented`, which records only that the call *was
+ * made* — a late handler that calls it after the browser already navigated still
+ * sets the flag. `[data-action="cancel-submit"]` is a `<button type="submit">`
+ * inside the form, so its default action is a real GET navigation to the current
+ * URL, and the only thing standing between the click and a reload is the
+ * handler running *during* dispatch.
+ *
+ * The analyzer's S3 action list never clicks it (`packages/analyzer/src/scenarios.ts`).
+ * That is load-bearing: the `missing-prevent-default` mutant deliberately drops
+ * the call, and a calibration lane that submitted for real would navigate the
+ * vitest page away instead of reporting a divergence.
+ */
 export async function assertS3(page: PageHandle, expect: ExpectApi): Promise<string[]> {
   const observed: string[] = []
   await expect.page.exists(page, '[data-scenario="s3"] [data-callback-marker="present"]')
@@ -281,6 +336,27 @@ export async function assertS3(page: PageHandle, expect: ExpectApi): Promise<str
   await expect.page.text(page, '[data-writes="true"]', '2')
   observed.push(
     `after submit writes = ${measureText(await page.content(), 'data-writes="true"')}`,
+  )
+
+  // Cancellation, observed behaviorally rather than through a flag.
+  await page.click('[data-action="cancel-submit"]')
+  const documents = await settleAfterCancellableClick(page)
+  if (documents.length !== 1) {
+    throw new Error(
+      `clicking [data-action="cancel-submit"] left ${documents.length} Document requests on ` +
+        'this page; exactly one means the form submit never reached the network. The ' +
+        "handler's entire body is event.preventDefault(), so a second Document request " +
+        'means the default action ran before the handler did.',
+    )
+  }
+  // The page survived the click: still the same document, still the state the
+  // submit handler left behind. A reload would rebuild the form from the server
+  // and reset writes to 0, so reading 2 back is the second, independent signal.
+  await expect.page.exists(page, '[data-scenario="s3"]')
+  await expect.page.text(page, '[data-writes="true"]', '2')
+  observed.push(
+    `after cancel-submit ${documents.length} document request served this page and ` +
+      `writes = ${measureText(await page.content(), 'data-writes="true"')}`,
   )
   return observed
 }

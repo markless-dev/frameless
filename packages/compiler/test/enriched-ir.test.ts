@@ -34,6 +34,7 @@ const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>>
 		['input', 'data-action'],
 		['input', 'data-action'],
 		['button', 'data-action'],
+		['button', 'data-action'],
 		['output', 'data-writes'],
 		['span', 'data-callback-marker'],
 	],
@@ -465,9 +466,15 @@ describe('fixture-family sufficiency', () => {
 			for (const event of ir.records.events) {
 				expect(event.handlers).toHaveLength(1);
 				expect(event.handlers[0]!.expression.type).toBe('ArrowFunctionExpression');
+				// A handler must do something the IR records. Usually that is a graph read
+				// or write; S3's cancel-submit handler does neither — its whole body is
+				// `event.preventDefault()`, so its only recorded effect is the syncPolicy.
+				// Cancellation is an observable effect, so it satisfies the same intent.
+				const handler = event.handlers[0]!;
 				expect(
-					event.handlers[0]!.reads.length + event.handlers[0]!.writes.length,
-				).toBeGreaterThan(0);
+					handler.reads.length + handler.writes.length > 0 ||
+						(event.syncPolicy?.actions.length ?? 0) > 0,
+				).toBe(true);
 			}
 		}
 	});
