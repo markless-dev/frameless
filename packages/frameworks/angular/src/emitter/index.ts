@@ -602,6 +602,43 @@ const MEMBER_TYPE = ': any';
 
 type ClassMember = { readonly text: string };
 
+/**
+ * `@Input() <localName>: any;` IS A RULING, NOT A DEFAULT, and this is the decision
+ * site the idiom policy's "Recording a ruling" item 2 requires a comment at.
+ *
+ * Declaring the prop as a signal `input()` instead is NO-SUGAR - **denied, not
+ * deferred** - per `frameless-angular-v1` T005, folded into
+ * `docs/emitter-idiom-policy.md` as worked example 11 by T008. Six outcomes:
+ * G1 PASS, G2 PASS, G3 PASS, G4 PASS (narrowed), G5 FAIL, G6 FAIL. No gate is
+ * DEFERRED: the lane landed, so both deferring conditions are discharged.
+ *
+ * GATE 5 DECIDES IT, on two limbs MEASURED at `@angular/core` 22.0.8 by AOT-building
+ * the shipped `generated/S1.ts` VERBATIM beside a twin whose only change is this
+ * declaration form:
+ *
+ * 1. REACTIVITY DEPTH. `computed(() => instance.derived)` returns `kit:2` under
+ *    `@Input()` and stays `kit:2` even after `ApplicationRef.tick()`, at which point
+ *    the component's own DOM reads `kit:10`; under `input()` the same computed
+ *    returns `kit:10`. The emitted class's derived member is not a reactive producer
+ *    under the baseline and IS one under the candidate.
+ * 2. THE EXPORTED MEMBER TYPE. It changes `any` -> `InputSignal<any>`, so a consumer
+ *    write `instance.<prop> = v` renders under the baseline and throws
+ *    `TypeError: ... is not a function` under the candidate. That is both "throw or
+ *    error behavior" and "the module's exports" from Gate 5's list, and it follows
+ *    from the candidate by construction.
+ *
+ * NOT THE REASON, and it must not be reinstated: "required inputs throw NG0950".
+ * MEASURED FALSE for this emitter - plain `input()` read unset returns `undefined`
+ * exactly as `@Input()` does, and `input.required()` is UNREACHABLE, because
+ * `PropDestructuringEntry` has no `required` field and this function throws on the
+ * only adjacent field, `defaultValue`.
+ *
+ * Gate 6 also FAILs, and it is the honest negative result: `pnpm e2e` would NOT go
+ * red if this line silently became `input()`, because both arms were measured to
+ * render identically. The six-row green proves ACTIVATION NEUTRALITY; it does not
+ * pin this form choice. The only thing that does is the frameless-owned
+ * `no-signal-members` policy in `../gate/index.ts`.
+ */
 function propMembers(component: EnrichedComponent): ClassMember[] {
 	return component.props.entries.map((entry) => {
 		if (entry.defaultValue !== undefined)

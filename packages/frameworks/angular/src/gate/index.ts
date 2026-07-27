@@ -28,9 +28,10 @@ export type DossierRef =
 	// IR-4 deferred, version corollary NOT amended: the emitted form set is an
 	// explicit allowlist and the lane's version floor is the max over it.
 	| 'frameless-angular-v1 T002 also ruled (IR-4 baseline form inventory)'
-	// The decorator-vs-signal question is HELD OUT for T005. Shipping a signal
-	// would hand it a fact to ratify instead of a question to rule.
-	| 'frameless-idiom-policy-v1 T006 (decorator-vs-signal, held out for T005)'
+	// SETTLED, no longer held out. T005 re-ran all six gates against this landed
+	// lane: decorator-vs-signal is DENIED at G5, and G6 FAILs, so nothing but this
+	// policy pins the form. Worked example 11 in docs/emitter-idiom-policy.md.
+	| 'frameless-angular-v1 T005 (decorator-vs-signal, DENIED at G5 and G6)'
 	// OnPush is the Angular 22 DEFAULT, so emitting changeDetection at all is an
 	// explicit opt-out the applied arbiter reports.
 	| 'frameless-angular-v1 T003a ruling 2 (OnPush is the Angular 22 default)'
@@ -301,7 +302,7 @@ export const ANGULAR_GATE_POLICIES = [
 	{ id: 'whitespace-stable-text', dossierRef: 'frameless-angular-v1 T003 measurement M1' },
 	{
 		id: 'no-signal-members',
-		dossierRef: 'frameless-idiom-policy-v1 T006 (decorator-vs-signal, held out for T005)',
+		dossierRef: 'frameless-angular-v1 T005 (decorator-vs-signal, DENIED at G5 and G6)',
 	},
 	{ id: 'no-two-way-binding', dossierRef: 'frameless-angular-v1 T002 also ruled (IR-1/IR-2)' },
 	{
@@ -985,19 +986,35 @@ function whitespaceViolations(file: string, parsed: Parsed): GateViolation[] {
 }
 
 /**
- * THE ROW THAT PROTECTS T005'S QUESTION, and the arbiter cannot do it.
+ * THE ROW THAT IS NOW THE ONLY THING PINNING A SETTLED RULING. It no longer holds a
+ * question open; it enforces an answer, and the arbiter cannot do it.
  *
  * `docs/goals/frameless-idiom-policy-v1/notes/T006-cold-agent.md` ruled decorator
  * `@Input()`/`@Output()` versus signal `input()`/`output()` NO-SUGAR, decided
- * independently TWICE, and `frameless-angular-v1` T005 is the task that re-runs
- * its six gates now that a lane exists. Shipping `seed = input()` here would hand
- * T005 a fact to ratify instead of a question to rule.
+ * independently TWICE with no Angular in the repo. `frameless-angular-v1` T005 then
+ * re-ran all six gates against this landed lane at `@angular/core` 22.0.8 and the
+ * ruling HELD: G1 PASS, G2 PASS, G3 PASS, G4 PASS (narrowed), G5 FAIL, G6 FAIL -
+ * DENIED, not deferred, and Gate 5 decides. Worked example 11 in
+ * `docs/emitter-idiom-policy.md`; the decision site is `propMembers()` in
+ * `../emitter/index.ts`.
+ *
+ * GATE 5's TWO MEASURED LIMBS, so a future reader does not have to fetch them:
+ * a `computed()` over `instance.derived` stays `kit:2` under `@Input()` while the
+ * DOM reads `kit:10`, and returns `kit:10` under `input()`; and the exported member
+ * type changes `any` -> `InputSignal<any>`, turning a consumer write into a
+ * `TypeError`. NOT the reason, and refuted by measurement: "required inputs throw
+ * NG0950" - plain `input()` read unset returns `undefined` exactly as `@Input()`
+ * does, and `input.required()` is unreachable for this emitter.
+ *
+ * GATE 6 FAILED, which is why this policy exists rather than a behavioural check:
+ * `pnpm e2e` would NOT go red on this sugar, because both arms render identically.
+ * The six-row green proves activation neutrality; it does not pin the form choice.
  *
  * MEASURED, and this is why the policy is frameless-owned rather than delegated:
  * `@angular-eslint/prefer-signals` holds the OPPOSITE view - but upstream did NOT
  * put it in `recommended`, it lives in `all`. So a signal member draws ZERO
  * messages from the applied set (measured on a planted `seed = input()` mutant).
- * Nothing but this policy stands between the emitter and a pre-empted ruling.
+ * Nothing but this policy stands between the emitter and a ruling nothing enforces.
  */
 const SIGNAL_APIS = new Set([
 	'computed',
@@ -1030,7 +1047,7 @@ function signalViolations(file: string, parsed: Parsed): GateViolation[] {
 			violation(
 				file,
 				'no-signal-members',
-				`Emitted Angular source calls ${String(node.callee.name)}(); the decorator-vs-signal member declaration was ruled NO-SUGAR twice independently (frameless-idiom-policy-v1 T006) and frameless-angular-v1 T005 re-runs the six gates against this landed lane. @angular-eslint/prefer-signals holds the opposite view but upstream keeps it in \`all\`, not \`recommended\`, so the applied arbiter is silent here by measurement - this policy is the only thing standing between the emitter and a pre-empted ruling`,
+				`Emitted Angular source calls ${String(node.callee.name)}(); the decorator-vs-signal member declaration was ruled NO-SUGAR twice independently (frameless-idiom-policy-v1 T006) and frameless-angular-v1 T005 re-ran all six gates against this landed lane at @angular/core 22.0.8 and upheld it - DENIED, not deferred, decided at Gate 5 (a computed() over instance.derived diverges from the rendered DOM under @Input() but not under input(), and the exported member type changes any -> InputSignal<any>, turning a consumer write into a TypeError). Gate 6 also FAILED: pnpm e2e would NOT go red on this sugar, because both arms render identically. @angular-eslint/prefer-signals holds the opposite view but upstream keeps it in \`all\`, not \`recommended\`, so the applied arbiter is silent here by measurement - this policy is the only thing standing between the emitter and a ruling nothing enforces. See worked example 11 in docs/emitter-idiom-policy.md`,
 				lineOfTs(node),
 			),
 		);

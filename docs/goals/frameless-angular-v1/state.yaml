@@ -158,7 +158,7 @@ visual_board:
     url: null
     command: "npx goalbuddy board docs/goals/frameless-angular-v1"
 
-active_task: T008
+active_task: T009
 
 tasks:
   - id: T001
@@ -1178,7 +1178,7 @@ tasks:
   - id: T008
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     spec: "T005 receipt and docs/goals/frameless-angular-v1/notes/T005-decorator-vs-signal.md - AUTHORITATIVE."
     serialization_hold: >-
@@ -1221,12 +1221,52 @@ tasks:
       - "You are about to re-run, rewrite or re-score worked example 4 or worked example 5. NOT THIS PACKAGE - T009 owns them and T005 explicitly declined to rule."
       - "You overwrite the Vue fold's edit to the Gate 1 absent-framework sentence instead of extending it to name both frameworks. READ WHAT LANDED FIRST."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T008-policy-fold.md
+      summary: "Folded the T005 decorator-vs-signal ruling into the policy and the Angular lane, changing NO emitted output. Added worked examples 11 and 11b with all six gate outcomes and no DEFERRED anywhere; recorded G5 as the decider on both measured limbs, marked the NG0950 reason as refuted, and stated G6's negative result plainly. Extended the Vue fold's Gate 1 discharge list with Angular's line WITHOUT touching Vue's. Added a decision-site comment at propMembers() naming the ruling, G5 and both limbs. Replaced the gate's provisional 'held out for T005' wording in the DossierRef union, the policy entry and the violation message; the policy and SIGNAL_APIS are upheld unchanged."
+      the_shared_document_was_handled_correctly: "THIS WAS THE FIRST OF TWO CONTENDED FOLDS AND THE SERIALIZATION HELD. Gate 1's paragraph had already been rebuilt by the Vue T006 fold into a one-line-per-framework discharge list with Vue's line in place. This task ADDED Angular's line after Vue's and left the list shape and Vue's text untouched - the lost-update both Judges independently predicted did not occur. Worked examples 11 and 11b went in after example 10 and before 'The baseline form inventory', a placement the queued Vue fold can extend for worked example 3 without touching either."
+      IT_REFUSED_TO_FABRICATE_A_PASS: "THE BEST JUDGEMENT CALL ON THIS CARD, and it went against the easier path. The T005 note scored only Gate 4 for entry 11b, but the policy's 'Recording a ruling' item 1 demands an outcome for all six. The Worker recorded the unmeasured gates as UNKNOWN (G1 and G5) rather than PASS, citing the policy's own statement that a fabricated PASS is 'the more damaging of the two errors'. Gate 4 remains the decider. An entry with three UNKNOWNs is a weaker-looking record and a more honest one, and this project has spent four tasks this session discovering what an unmeasured cell recorded as measured costs later."
+      pm_independent_verification: "PM VERIFIED THE COMMENT-ONLY CLAIM MECHANICALLY rather than accepting it, because 'comment-only' on an emitter is exactly the claim whose failure would move emitted output silently. git diff on packages/frameworks/angular/src/emitter/index.ts: 37 ADDED LINES, ZERO NON-COMMENT ADDED LINES, ZERO REMOVED LINES. Goldens byte-identical (git diff --exit-code clean). pnpm test 870 passed / 50 files, exactly the dispatch count - consistent with an assertion added INSIDE an existing test rather than a new case. PM also read the policy document and confirms both folds coexist: Gate 1's discharge list carries one line per framework with Vue's and Angular's both present."
+      changed_files:
+        - docs/emitter-idiom-policy.md
+        - packages/frameworks/angular/src/emitter/index.ts
+        - packages/frameworks/angular/src/gate/index.ts
+        - packages/frameworks/angular/test/gate.test.ts
+        - docs/goals/frameless-angular-v1/notes/T008-policy-fold.md
+      commands:
+        - cmd: "pnpm check"
+          status: pass
+        - cmd: "pnpm test"
+          status: pass
+          note: "50 files / 870 tests; PM re-ran and confirms 870"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 327 files"
+        - cmd: "node packages/frameworks/angular/scripts/regenerate.ts && git diff --exit-code -- packages/frameworks/angular/generated"
+          status: pass
+          note: "run TWICE, PASS-1 and PASS-2; PM re-verified goldens byte-identical"
+        - cmd: "git diff --exit-code -- packages/compiler packages/frameworks/react packages/frameworks/solid packages/frameworks/qwik packages/frameworks/svelte packages/frameworks/vue demos scripts pnpm-lock.yaml pnpm-workspace.yaml"
+          status: pass
+        - cmd: "git status --short"
+          status: pass
+          note: "five allowed_files plus the umbrella board state.yaml, which the PM had modified before dispatch"
+        - cmd: "git diff -- packages/frameworks/angular/src/emitter/index.ts | count non-comment added lines"
+          status: pass
+          note: "PM-ADDED CHECK: 37 added, 0 non-comment, 0 removed - the comment-only claim is mechanically verified, not asserted"
+      deviations:
+        - "Added ONE assertion to gate.test.ts pinning the new no-signal-members dossierRef as a literal; not in the card's four parts. PM ACCEPTS, and the reasoning is the strongest kind available here: Gate 6 FAILED, meaning no behavioural check can pin this form, so the gate's recorded TEXT is the sole enforcement point. A silent revert to the provisional 'held out for T005' wording would un-record the ruling with nothing going red. No existing assertion was changed."
+        - "Scored 11b's five gates the T005 note left unscored, recording UNKNOWN rather than PASS at the unmeasured ones - see above."
+        - "Angular's new Gate 1 discharge line NAMES worked examples 4 and 5 as stale-by-that-line and points at T009. Neither entry was read for scoring, modified, re-run or re-labelled. This is the smallest edit that stops the paragraph contradicting itself, which is the correction the card asked for."
+        - "Replaced Gate 1's trailing sentence 'Angular's line is the Angular board's to add; it is deliberately not written here', which the act of adding Angular's line makes false. The one-line-per-framework rule around it is preserved verbatim."
+      remaining_blockers: []
+      stopped_because: null
   - id: T009
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     objective: "Re-run worked examples 4 and 5 of docs/emitter-idiom-policy.md against the landed Angular lane. Example 5 is the live one."
     why_this_exists: >-

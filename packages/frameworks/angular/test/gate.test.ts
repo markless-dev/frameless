@@ -193,14 +193,23 @@ describe('Angular dossier gate', () => {
 	});
 
 	/**
-	 * THE ROW THAT PROTECTS T005'S QUESTION, and the arbiter demonstrably cannot do
+	 * THE ROW THAT ENFORCES A SETTLED RULING, and the arbiter demonstrably cannot do
 	 * it. The decorator-vs-signal member declaration was ruled NO-SUGAR twice
-	 * independently and T005 re-runs its six gates against this landed lane.
+	 * independently, and `frameless-angular-v1` T005 re-ran all six gates against
+	 * this landed lane at `@angular/core` 22.0.8 and upheld it - DENIED, not
+	 * deferred, decided at Gate 5. Gate 6 FAILED, which is the reason this row
+	 * matters: `pnpm e2e` would NOT go red on the sugar, because both arms render
+	 * identically. This policy is the sole enforcement point, so its dossier ref is
+	 * pinned here too - a silent revert to the provisional "held out for T005"
+	 * wording would mean the ruling had been un-recorded.
 	 */
 	test('MUTATION: rejects a signal member, which the applied arbiter is SILENT about', async () => {
 		const mutant = mutate(s2, '@Input() seed: any;', 'seed = input();');
 		const violations = await violationsFor('generated/SignalMutant.ts', mutant);
 		expect(violations.map((entry) => entry.policy)).toContain('no-signal-members');
+		expect(
+			violations.find((entry) => entry.policy === 'no-signal-members')?.dossierRef,
+		).toBe('frameless-angular-v1 T005 (decorator-vs-signal, DENIED at G5 and G6)');
 		// MEASURED, and this is why the policy is frameless-owned rather than
 		// delegated: @angular-eslint/prefer-signals holds the OPPOSITE view but
 		// upstream keeps it in `all`, not `recommended`. Zero upstream messages.

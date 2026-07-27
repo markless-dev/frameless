@@ -318,9 +318,23 @@ describe('Vue dossier gate', () => {
 			"const props = defineProps(['initial', 'onTrace']);",
 			"const props = defineProps(['initial', 'onTrace']);\n\tconst emit = defineEmits(['go']);",
 		);
-		expect(await policiesFor('generated/EmitsMutant.vue', emits)).toContain(
-			'no-two-way-binding',
-		);
+		const emitsViolations = await violationsFor('generated/EmitsMutant.vue', emits);
+		expect(emitsViolations.map((entry) => entry.policy)).toContain('no-two-way-binding');
+		// THE MESSAGE IS PINNED, not just the policy id. T007 re-ran worked example 3
+		// against vue@3.5.40 and MEASURED the rationale this message used to carry to
+		// be false: it described the delta between an UNDECLARED prop and a declared
+		// emit, and frameless declares the prop. The rule survived; its explanation
+		// did not. So the three grounds that DO hold are asserted here, because a
+		// violation message is read at the exact moment someone is deciding whether
+		// to trust the rule - a silently reverted explanation is the failure mode.
+		const emitsMessage = emitsViolations.find(
+			(entry) => entry.policy === 'no-two-way-binding',
+		)?.message;
+		expect(emitsMessage).toContain('silent no-op');
+		expect(emitsMessage).toContain('returns undefined');
+		expect(emitsMessage).toContain('onTraceOnce');
+		// The refuted claim must not creep back in any spelling of "native events".
+		expect(emitsMessage).not.toMatch(/receiving native|no longer to native/);
 	});
 
 	test('MUTATION: rejects lang="ts", which is how a typed defineProps would arrive', async () => {

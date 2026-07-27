@@ -118,14 +118,22 @@ One line per framework, so a lane that lands can discharge itself without rewrit
   examples 6 and 7 are both rewritten on exactly that ground.
 - **Vue**, since `frameless-vue-v1` T004 put `vue@3.5.40` in the lockfile at two importers. Worked
   example 2 was re-run on that ground by T005, split into 2a and 2b, and folded back by T006.
+- **Angular**, since `frameless-angular-v1` T004 put `@angular/core@22.0.8` in the lockfile and
+  landed `demos/angular-official` on the official Angular CLI SSR scaffold. Worked example 11 was
+  re-run on that ground by T005 and folded back by T008. Worked examples 4 and 5 still read
+  `DEFERRED — framework absent` and are therefore stale by this line alone; their re-run is owed and
+  is queued as `frameless-angular-v1` T009, which is why they are left standing here rather than
+  silently re-labelled.
 
 Any entry still reading `DEFERRED — framework absent` for a framework named above is stale by that
 fact alone, and must be **re-run** rather than re-read: a stale label is not a verdict, and the
 re-run may change the verdict in either direction. The list above is **owed a line by each lane that
 lands**, added by that lane's own board — the sentence this replaced named two frameworks at once
 and went half-false the moment one of them landed, which is why it is one line per framework now.
-Angular's line is the Angular board's to add; it is deliberately not written here, because the
-lockfile fact and the entries it discharges belong to whoever measured them.
+Angular's line above was added by `frameless-angular-v1` T008 on that board's own measurement, which
+is the moment the retired sentence — "Vue and Angular are absent today" — went from half-false to
+**fully** false. That is the whole argument for one line per framework: a shared sentence goes stale
+in pieces, and a piece nobody owns is a piece nobody corrects.
 
 `DEFERRED` here is **not** a pass and never becomes one on paper. Gate 1 can never be `PASS` for a
 framework absent from the lockfile, and documentary evidence never passes this gate at any
@@ -452,13 +460,86 @@ curdled. The difference is not optimism — it is that the shorthand's whole cla
 
 ### 3. Vue — declaring a callback prop as a `defineEmits` event → **no-sugar**
 
-**G1 DEFERRED — framework absent**, G2 PASS, G3 PASS, **G4 DEFERRED — emitter absent**.
-**G5 FAIL**: declaring a native event name in `emits` means the listener responds only to
-component-emitted events and no longer to native ones, and declared events are removed from
-fallthrough `$attrs`. A frameless component with a callback prop named `onClick` would stop
-receiving native clicks. That is a behavior change with no diagnostic. **G6 DEFERRED.** The three
-deferrals do not decide this; G5 does, and `FAIL` outranks `DEFERRED`, so the ruling is **denied,
-not deferred** — a Vue lane would not change it.
+**Re-run, not re-read.** This entry previously read `DEFERRED` at Gates 1, 4 and 6 on the ground
+that Vue was absent from the lockfile and no Vue emitter existed. All three conditions are gone —
+`vue@3.5.40` is in the lockfile at two importers, `packages/frameworks/vue` exists, and `pnpm e2e`
+drives `demos/vue-official` (`scripts/e2e.mjs:38`) in a six-row run. `frameless-vue-v1` T007 re-ran
+the entry. **The ruling is unchanged and its basis is not:** the denial rested on a single `G5 FAIL`
+whose stated mechanism has been *measured false*, and it now rests on three independent `FAIL`s.
+
+Baseline (what the emitter ships): the callback is a declared prop —
+`defineProps([… , 'onTrace'])`, invoked as `props.onTrace(…)`. Candidate:
+`defineEmits(['trace'])` with `emit('trace', …)`.
+
+Domain, in emitter terms: every `PropDestructuringEntry` in `component.props.entries` printed as a
+string literal into the `defineProps([...])` array by `propsDeclaration()`
+(`packages/frameworks/vue/src/emitter/index.ts:400`).
+
+- **G1 PASS.** Measured, not read, against `vue@3.5.40` / `@vue/compiler-sfc@3.5.40` — the same
+  version at both, resolved from the package that ships the emitter. The shipped `S1.vue` and its
+  mechanical `defineEmits` twin both produce an **exact empty** diagnostic set — parse errors,
+  template `errors` *and* `tips` — across `ssr × isProd`. A planted syntax error reports in all four
+  modes, so the probe can fail. `DEFERRED — framework absent` is no longer available.
+  **Stated so the `PASS` is not over-read:** `emit('trace')` against `defineEmits(['other'])` — an
+  emit of an undeclared event — is *also* exact-empty clean in all four modes. This gate measures
+  diagnostics, and the compiler is blind to the class Gate 5 decides on.
+- **G2 PASS.** `defineEmits` is a compiler macro inside the emitted module, and the parent's
+  spelling is unchanged — measured: a parent passing `onTrace` reaches the handler under **both**
+  forms. Nothing is asked of any other module. Same scoping as the import clause above.
+- **G3 PASS, conditionally, and the condition is what kills the sugar at Gate 4.** It holds only
+  under the *name-shape* reading of the trigger, where `sourceName` is a declared IR field and a
+  prefix test is not expression-content inspection — the posture of worked examples 1 and 8. The
+  only other available trigger, "the component body calls this prop", is a flat `FAIL` here.
+- **G4 FAIL.** The emitter exists, so `DEFERRED — emitter absent` is discharged. Over the stated
+  domain the shipped corpus holds six distinct props — `label`, `multiplier`, `visible`, `seed`,
+  `initial`, `onTrace` — and the sugar applies to **one of six**. The counterexample is exhibited
+  from shipped output, not hypothesised. The repair step is run and every narrowing is unavailable:
+  "props whose value is a callback" is not decidable — `PropDestructuringEntry`
+  (`packages/compiler/src/schema.ts:205`) carries no type field, which is IR-8; "props whose
+  `sourceName` matches `/^on[A-Z]/`" is decidable but **unsound**, since nothing in the IR says such
+  a prop holds a function; "props the body calls" is killed by Gate 3. Contrast entry 2b, which took
+  `UNKNOWN` on an *empty* domain with nothing to exhibit. Empty domain gives `UNKNOWN`; a populated
+  domain with a counterexample gives `FAIL`.
+- **G5 FAIL — and the mechanism previously recorded here is withdrawn as measured false.** This
+  entry used to read that "a frameless component with a callback prop named `onClick` would stop
+  receiving native clicks" because declared events leave fallthrough `$attrs`. That is the delta
+  between an **undeclared** prop and a declared emit. *Frameless declares the prop*, and a declared
+  prop leaves `$attrs` exactly as a declared emit does. Measured three-sided at 3.5.40 with a real
+  DOM, child root `<button>`, parent passing `onClick`, native bubbling click: `props: ['onClick']`
+  → `$attrs` empty, handler **not** called; `emits: ['click']` → `$attrs` empty, handler **not**
+  called; **calibration arm** declaring neither → `$attrs` is `['onClick']` and the handler **is**
+  called. The probe can see a fallthrough listener and reports the two candidate forms identical.
+  The gate still `FAIL`s, on three differences that were measured rather than read:
+  1. **Throw behaviour**, which this gate names explicitly. With no handler supplied,
+     `props.onTrace('setup', …)` throws `TypeError: props.onTrace is not a function` and takes down
+     `setup`; `emit('trace', …)` is a silent no-op. Live for the corpus — all three goldens call
+     `onTrace` unconditionally, S1 during the `<script setup>` body itself.
+  2. **Return value.** `props.onTrace(…)` returns the handler's value; `emit(…)` returns
+     `undefined`.
+  3. **Handler-name resolution surface.** The forms resolve different sets of parent spellings: a
+     parent passing `on-trace` is reached by the baseline and **not** by `emit()`; a parent passing
+     `onTraceOnce` is reached by `emit()` and **not** by the baseline. The candidate silently
+     acquires the `.once` convention and silently loses the hyphenated spelling. Neither is a
+     diagnostic.
+- **G6 FAIL.** A Vue lane exists, so `DEFERRED` is discharged — it is available for that one cause
+  only. No standing check would fail if this sugar silently regressed, because there is no emitted
+  artifact to regress: `packages/frameworks/vue/src/gate/index.ts:1024` **actively refuses** any
+  emitted `defineEmits(` call. That check pins the *denial*, not the sugar. Same clause as entries
+  2b and 7.
+
+Three `FAIL`s: **denied, not deferred.** Say which one decides it: **Gate 5 does**, and Gate 4 and
+Gate 6 each deny it independently. **Re-open only if IR-2 gains an emit concept *and* IR-8 gains a
+prop type field** — the first to give the sugar a declared trigger, the second to make its domain
+sound. Note that a Vue lane, which is what the old deferrals were waiting for, did **not** change
+the ruling; it changed the *evidence*, and it converted the entry's one documentary `FAIL` into
+three measured ones.
+
+**The standing lesson this entry adds, and it is the reason the re-run was worth its cost.** The
+deferrals were never load-bearing — `FAIL` outranked them, and the entry said so. What was
+load-bearing, and unexamined, was the sentence explaining the `FAIL`. A gate outcome that outranks
+its neighbours is exactly the one nobody re-checks, and this one had never been through Gate 1
+because Gate 1 was deferred when it was written. **Stale labels travel with an unmeasured
+rationale**; clearing the labels is the occasion to measure the rationale, not a substitute for it.
 
 ### 4. Angular — two-way binding `[(prop)]` on an emitted child → **no-sugar**
 
@@ -812,6 +893,188 @@ cannot, and **refuses to emit if that partition is not total for a declared acti
 must never narrow the IR to what it happens to support. Only Qwik is expected to need the split —
 React, Solid, Svelte and Vue have synchronous resident handlers, and Angular's forced lowering is
 orthogonal — but all of them inherit the refusal obligation.
+
+### 11. Angular — declaring a component prop as a signal `input()` rather than `@Input()` → **no-sugar**
+
+**Re-run in full, not amended.** `frameless-idiom-policy-v1` T006 derived this twice independently
+(PM pre-registration plus a zero-context cold agent) with **no Angular anywhere in this repo**, and
+it was deliberately kept out of this document at the time so the cold-agent test could not be leaked
+to. Every condition that deferred it is now met — `@angular/core@22.0.8` is in the lockfile,
+`packages/frameworks/angular` exists, and `pnpm e2e` drives `demos/angular-official` on the official
+Angular CLI SSR scaffold — so the procedure was re-run against a real build by `frameless-angular-v1`
+T005 and folded in here by its T008. **The ruling is unchanged. Its Gate 1 outcome inverted, its
+Gate 6 outcome inverted the other way, and one of its two Gate 5 reasons was measured false.**
+
+Baseline: `@Input() <localName>: any;`, the form `propMembers()` ships in
+`packages/frameworks/angular/src/emitter/index.ts`. It is the baseline on both limbs of the
+definition, and both were **measured** rather than assumed: it is valid Angular 2 → 22 and carries
+no `@deprecated` tag at 22.0.8, and it imposes no obligation on any other party — it AOT-compiles
+clean even with `experimentalDecorators: false`, because `ngtsc` handles Angular decorators itself.
+
+Candidate sugar: `<localName> = input<any>();`.
+
+Domain, in emitter terms: every `PropDestructuringEntry` in `component.props.entries` reaching
+`propMembers()` that survives its three named refusals — a `defaultValue`, a multi-segment `path`,
+and an `alias`/renamed `sourceName`.
+
+- **G1 PASS.** Was `DEFERRED — framework absent`; **discharged**, and the policy's own coupling rule
+  required it to move together with Gate 6. Measured, not read, against `@angular/core@22.0.8`: the
+  shipped `generated/S1.ts` was AOT-built verbatim beside a twin whose only change is the declaration
+  form. Both arms report **zero diagnostics and zero warnings** from `ng build` under
+  `strictTemplates`, and both render **byte-identical DOM** through the same `ComponentRef.setInput`
+  path `withComponentInputBinding()` uses. Both forms are accepted by the exact build this repo
+  ships. Note that a behavioural difference does **not** fail this gate — Gate 1 asks whether both
+  forms are sanctioned and whether the correspondence was measured; the differences it surfaces are
+  Gate 5's to adjudicate, and Gate 5 adjudicates them below.
+- **G2 PASS.** `input` is an import the emitted module adds to its **own** import list, which the
+  Gate 2 scoping paragraph settles. Nothing is asked of a parent, a child, another module or the
+  build graph.
+- **G3 PASS.** The trigger is the declared IR field `component.props.entries`; handler contents are
+  never inspected, so the rider does not engage. **Recorded as a consequence, not a failure:** the
+  shipped `this.`-qualification transform builds ONE undifferentiated `members` set from
+  `props.entries` unioned with `locals[].names`, and the candidate would force that set to **split** —
+  a prop read must become `this.x()` while a local read must stay `this.x`. Both halves are declared
+  IR facts, so this stays inside Gate 3; but a total transform becoming a discriminator is where
+  drift lives, and this would make it one.
+- **G4 PASS on a narrowed rule, and the narrowing is worth reading.** `DEFERRED — emitter absent` is
+  discharged: `propMembers()` exists and is the deciding function. A counterexample is exhibitable
+  **from the IR schema**, which is exactly what this gate's absent-emitter clause says counts:
+  `PropDestructuringEntry` carries a `graphNodeId` (`packages/compiler/src/schema.ts:205-212`),
+  `GraphBindingKind` includes `'prop'` (`:20`), and `StateWriteRecord` is keyed on a `graphNodeId`
+  and admits `operation: 'assign'` (`:266-274`) — so a prop a handler assigns to is representable,
+  and the sugar cannot express it, because an `InputSignal` is read-only. That is not a paper
+  objection: it is the measured `TypeError` in the Gate 5 entry below. The Gate 4 repair applies and
+  is legitimate — narrow the domain to entries that are never a `StateWriteRecord` target, which is a
+  declared IR fact — and on the narrowed rule the sugar is total. **The repair does not save the
+  sugar.** Re-running from Gate 1 on the narrowed rule, as the repair step requires, lands on the
+  same Gate 5.
+- **G5 FAIL. This is the ruling, and its reasons have changed.**
+
+  *Limb 1 — reactivity depth. CONFIRMED, and promoted from reasoning to measurement.*
+  `computed(() => ref.instance.derived)` over the shipped S1 component: under the **baseline** it
+  returns `kit:2` before `setInput('multiplier', 10)`, still `kit:2` after it, and still `kit:2`
+  after `ApplicationRef.tick()` — at which point the component's own DOM reads `kit:10`. The read
+  registers no producer, so a consumer's derivation never invalidates and silently diverges from the
+  rendered component. Under the **candidate** the same `computed` returns `kit:10` **immediately,
+  before any tick**, because `get derived()` reads `this.multiplier()` inside the consumer. The
+  emitted class's derived member is not a reactive producer under the baseline and **is** one under
+  the candidate. That is the first item in this gate's own failure list. The direction is irrelevant:
+  a reasonable person can call the candidate's behaviour better, and Gate 5 is a **neutrality** gate,
+  not a quality gate.
+
+  *Limb 2 — throw behaviour. THE ORIGINALLY-STATED REASON IS REFUTED AND MUST NOT BE CARRIED
+  FORWARD.* The 2026-07-26 derivations rested this limb on the required-input throw. Measured at
+  22.0.8: `input.required()` read before it is set throws
+  `NG0950: Input "x" is required but no value is available yet`, while `@Input()` yields
+  `undefined` — **but plain `input()` also yields `undefined`, identical to the baseline.** And
+  `input.required()` is **unreachable for this emitter**: `PropDestructuringEntry` has no `required`
+  field, and `propMembers()` throws on the only adjacent field, `defaultValue`. Emitting
+  `.required()` would be the emitter inventing a construct the IR does not declare — precisely the
+  ground `frameless-angular-v1` T002 ruling 2 used to refuse `@Output()`. So the throw the original
+  reason named cannot arise from the form this emitter would actually emit.
+
+  *Limb 2′ — a DIFFERENT throw survives, and it is measured.* A consumer holding the component
+  instance and writing `ref.instance.<prop> = v` renders under the baseline (`MUTATED:10`) and
+  **throws `TypeError: … is not a function`** at the next check under the candidate, because the
+  exported member's type changes from `any` to `InputSignal<any>`. `typeof instance.label` is
+  `"string"` versus `"function"`; `String(instance.label)` is `kit` versus `[Input Signal: kit]`.
+  That is *both* "throw or error behavior" *and* "the module's exports" from this gate's list, and
+  unlike limb 2 it is unavoidable — it follows from the candidate by construction, not from an
+  optional spelling.
+
+  *NOT a failure, recorded so nothing is over-claimed:* `ngOnChanges` is **identical** across both
+  forms — one first-change call, one subsequent change, and no call at all on a repeated identical
+  `setInput`. The `lifecycle` limb is measured **clean**. Neither original derivation claimed
+  otherwise; this closes it by measurement rather than leaving it open.
+- **G6 FAIL.** Was `DEFERRED — no lane`; **discharged** by `demos/angular-official` on the official
+  Angular CLI 22.0.8 SSR scaffold, so `DEFERRED` is no longer available at this gate. It does not
+  ripen into `PASS`. The sugar's only justification is idiom — an artifact property nothing checks —
+  which is this gate's `FAIL` clause verbatim. State the negative result plainly, because it is the
+  useful part: `pnpm e2e` asserts the Angular row's S1/S2/S3 observations byte-identical to five
+  other lanes, and **it would not go red on this sugar**, because the two arms were measured to
+  render identically. A behavioural lane cannot pin a non-behavioural benefit. Nor can any check be
+  built while the gate policy `no-signal-members`
+  (`packages/frameworks/angular/src/gate/index.ts`) refuses the path — the same clause as worked
+  example 6's `on()` arm and worked example 7's Gate 6. Independently, the **version corollary**'s
+  second conjunct is unmet: the sugar is version-gated at 17.1 and the lockfile pins 22.0.8, but
+  `EnrichedIR` has no target-version input, and this lane discharges the corollary the *second* way —
+  by emitting only baseline-version-safe forms — which adopting this sugar would abandon.
+
+`FAIL` at Gate 5 and Gate 6 → **denied, not deferred**. Say which one decides it: **Gate 5**.
+Gate 6's `FAIL` is retirable in principle — someone could build a check, or an IR version input
+could land. Gate 5's is not: the candidate changes the exported member's type and its reactive
+character by construction, and no amount of lane, emitter or IR work retires that.
+
+**IR-4 is NOT this ruling's blocker, and saying so is the point.** Per `frameless-svelte-v1` T999, a
+version-gated sugar that `FAIL`s Gate 2 or Gate 5 is **denied**, not deferred. This one `FAIL`s
+Gate 5. The version corollary is a second, subordinate reason for the Gate 6 `FAIL`, not the ruling.
+
+**The right answer stood on one wrong reason, which is worked example 7's situation exactly.** The
+originally-decisive "throw behaviour differs" limb rested on `NG0950`, and that reason was
+load-bearing enough that a reader could have retired the whole ruling by retiring it. Two
+independent derivations reached no-sugar; a third measurement now reaches it on corrected grounds.
+A wrong reason attached to a right answer is worth correcting on its own.
+
+**Carried forward, because it must not vanish:** `@angular-eslint/prefer-signals` exists and prefers
+the candidate — but upstream did **not** put it in `recommended`; it lives in `all`, and the derived
+`recommended` set was measured in-repo returning **zero** messages on a planted `seed = input()`.
+"The Angular team decided signals" overstates it: they decided it is an opinion you may opt into. A
+lint preference addresses neither Gate 5 limb, and this ruling does not overrule it — the two are
+answering different questions.
+
+**What was NOT measured, so a green is not over-read:** the SSR served payload. Both arms were shown
+to render identical DOM client-side; whether Angular's `ngh` hydration annotations differ between
+the forms is **unmeasured**. It cannot change the ruling — the ruling is already `FAIL` — but
+"renders identically" is not a served-payload claim. The behavioural probes also ran in `jsdom`
+against a real AOT bundle rather than in Chromium, deliberately, to avoid contaminating a concurrent
+browser measurement; if any result here is challenged, the correct response is to **re-run it in
+Chromium**, not to defend `jsdom`.
+
+### 11b. The `@Output()` → `output()` half: **not ruled, because its domain is empty**
+
+The held-out question was posed as `@Input()`/`@Output()` versus `input()`/`output()`. The
+`@Output()` half **cannot be scored on this emitter**: `frameless-angular-v1` T002 ruling 2 refused
+`@Output()`/`EventEmitter` outright on arity grounds — `emit()` takes one value and the corpus calls
+`onTrace` with two and three positional arguments — and the shipped emitter contains **zero**
+occurrences of `Output` or `EventEmitter` in `src/emitter/` or in any golden. `onTrace`, the only
+callback prop in the corpus, is an `@Input()`.
+
+**Entry 11's measurements do not transfer, and that is the rule rather than a caution:** a
+measurement is valid for the construct it was taken on. The T005 twin changed the *input*
+declaration form and nothing else, so it says nothing about `output()`.
+
+- **G1 UNKNOWN — which is a no.** `@angular/core@22.0.8` is in the lockfile, so
+  `DEFERRED — framework absent` is discharged and unavailable. But no `@Output()`/`output()` pair was
+  ever built, because there is no instance to build one from, so the correspondence was not measured
+  and `PASS` is not earned. (The `FAIL` clause for "the measurement was possible and was not made" is
+  arguably reachable here too; it does not matter, because both labels are a no and Gate 4 decides.)
+- **G2 PASS.** `output` would be an import the emitted module adds to its **own** import list, which
+  the Gate 2 scoping paragraph settles for exactly this construct by name.
+- **G3 PASS.** Nothing about the choice inspects handler contents; the rider does not engage.
+- **G4 UNKNOWN — which is a no, and it is the decider.** The domain of "every `@Output()` the emitter
+  emits" is **empty**, and the tempting move — "the sugar applies to all zero of them, therefore
+  total, therefore `PASS`" — is exactly the vacuous totality worked example 7 refused and called *the
+  folklore domain arriving by the back door*. The emitter **exists**, so `DEFERRED — emitter absent`
+  is not available either.
+- **G5 UNKNOWN — which is a no.** Not `PASS`: no neutrality check was run, because there is no
+  baseline instance to run one against, and a fabricated `PASS` to satisfy the six-gate count is the
+  more damaging of the two errors this document names. Not `FAIL` either — nothing was found against
+  `output()`.
+- **G6 FAIL.** No check can exist for a path the emitter refuses to emit — the same clause worked
+  example 2b, worked example 6's `on()` arm and worked example 7 record.
+
+`UNKNOWN` at Gates 1, 4 and 5 and `FAIL` at Gate 6: **no-sugar**. Say which one decides it:
+**Gate 4**, and it is a weaker ground than the input half's, which is why this is recorded separately
+rather than folded into entry 11. The honest reading — and this document's own warning that
+`UNKNOWN` "asserts that something was found against the sugar when nothing was" is apt here — is
+that the question is not askable on this corpus. Entry 11b says that rather than borrowing entry
+11's Gate 5 to look decisive.
+
+**Re-open** when the IR grows an emit concept (IR-2) and the emitter emits an `@Output()`, at which
+point all six gates are re-run on a real instance and entry 11's `FAIL` does not transfer either.
+
+`packages/frameworks/angular/src/gate/index.ts`'s `SIGNAL_APIS` set covers `output` and `model`
+alongside `input`, so the shipped gate pins both halves. That is correct and stays.
 
 ## The baseline form inventory
 

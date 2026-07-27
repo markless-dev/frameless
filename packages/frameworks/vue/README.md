@@ -21,20 +21,34 @@ rather than a surprise.
 
 ## The emitted shape
 
-SFC with `<script setup>`, **no `lang="ts"`**, and **longhand `v-bind:` /
-`v-on:`** directives. All three are `frameless-vue-v1` T002 rulings, not
-preferences:
+SFC with `<script setup>`, **no `lang="ts"`**, and the **valued `:` / `@`
+shorthands** (`:key="todo.id"`, `@click="…"`). These are rulings, not
+preferences — and they are rulings from *different* tasks, because the directive
+spelling has already been re-decided once on this board:
 
-- **No `lang="ts"`, no `defineProps<{…}>()`.** The IR carries no prop type
-  field, so every emitted type would be inferred from what the corpus happens to
-  do with a prop — a content-based trigger, which the emitter idiom policy's
-  Gate 3 forbids outright, and unsound for any prop the corpus does not
-  exercise, which Gate 4 forbids. Named **IR-8** and deferred.
-- **Longhand directives, and no `.prevent` / `.stop` / `.self`.**
-  `docs/emitter-idiom-policy.md` worked example 2 rules the shorthands
-  **DEFERRED**, and this board's T005 is the task that re-runs its six gates.
-  Emitting `@click` would hand T005 a shipped fact to ratify instead of a
-  question to rule.
+- **No `lang="ts"`, no `defineProps<{…}>()`.** `frameless-vue-v1` T002 ruling 3.
+  The IR carries no prop type field, so every emitted type would be inferred
+  from what the corpus happens to do with a prop — a content-based trigger,
+  which the emitter idiom policy's Gate 3 forbids outright, and unsound for any
+  prop the corpus does not exercise, which Gate 4 forbids. Named **IR-8** and
+  deferred.
+- **Valued `:` / `@` shorthands, and no `.prevent` / `.stop` / `.self`.** Ruled
+  by **T005** and adopted by **T006**. This **supersedes T002 ruling 2**, which
+  had the emitter shipping longhand `v-bind:` / `v-on:` for as long as
+  `docs/emitter-idiom-policy.md` worked example 2 read `DEFERRED`. T005 re-ran
+  that entry's six gates against `vue@3.5.40` and split it: **2a** — shorthands
+  *with a value* — is `PASS` on all six and therefore **sugar**; **2b** —
+  `v-slot` / `#header` — is **DENIED**. T006 flipped all three emission sites.
+  Modifiers are untouched by that split and are still not emitted; the gate's
+  `no-directive-modifier` policy refuses them. A **value-less** shorthand is
+  refused as well — `:key` with no expression is Vue 3.4's same-name form, and
+  `directive-carries-value` rejects it in *both* spellings, a hazard T005
+  measured to be symmetric rather than created by the adoption.
+- **No named slots.** Worked example 2b is **DENIED**, so `#header` / `v-slot`
+  is *not* available here: IR-3 carries no named-slot vocabulary, and the
+  adopted set is the valued `:` / `@` pair and nothing else. The gate's
+  `require-directive-shorthand` policy rejects any other shorthand — `#` and
+  `.prop` both — citing 2b by name.
 - **`defineProps` array form, `props.x` in the script.** Reactive props
   destructure only stopped being experimental in Vue 3.5; before that
   `const { multiplier } = defineProps(…)` reads the prop once, and S1's
@@ -86,9 +100,14 @@ to be an exact empty set) and **`eslint-plugin-vue`**'s `flat/essential` tier.
 `flat/strongly-recommended` and `flat/recommended` are **excluded**, recorded in
 `VUE_ESLINT_TIERS_EXCLUDED` with the exact rule ids each one reports on the
 shipped corpus and a standing test that re-measures them. They are substantially
-a formatter — and two of their rules are worse than noise here:
-`vue/singleline-html-element-content-newline` demands the layout measured above
-to produce `" increment "`, and `vue/v-on-style` demands the shorthand T005 owns.
+a formatter — and the two content-newline rules are worse than noise here:
+`vue/singleline-html-element-content-newline` and its multiline twin demand the
+layout measured above to produce `" increment "`, which would break the text
+observation the e2e lane asserts equal across six frameworks. Those two carry
+the exclusion **on their own**. `vue/v-on-style` and `vue/v-bind-style` used to
+fire against the shipped longhand; since T006 adopted the shorthands they are
+silent, which is a measurement recorded in `VUE_ESLINT_TIERS_EXCLUDED` and
+**not** a reason to adopt the tier — the exclusion never rested on them.
 
 Two rules inside the applied tier are omitted, each with a reason in code:
 `vue/comment-directive` (measured: it lets emitted markup switch the arbiter off)

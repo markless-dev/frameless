@@ -156,7 +156,7 @@ visual_board:
     url: null
     command: "npx goalbuddy board docs/goals/frameless-vue-v1"
 
-active_task: T008
+active_task: T999
 
 tasks:
   - id: T001
@@ -1015,7 +1015,7 @@ tasks:
   - id: T008
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     superseded_scope: >-
       ORIGINALLY a README-only card, flagged by its own text as too small to dispatch alone. T007's
@@ -1069,40 +1069,58 @@ tasks:
     constraints:
       - "The README must cite T005 (the ruling) and T006 (the adoption), not T002 ruling 2, which T005 supersedes on this point. Record the v-slot half too: 2b is DENIED, so the README must not imply named slots are available."
       - "The replacement gate message must state the three MEASURED grounds - throw behaviour on a missing handler, return value, and handler-name resolution - not merely delete the false one. A rule whose message says only 'this is denied' teaches nothing."
-    receipt: null
-
-    why_this_exists: >-
-      REPORTED BY T006 AGAINST ITSELF, from outside its own allowed_files. README.md lines 24-25 say
-      the emitter ships "longhand v-bind: / v-on:" and attribute that to T002 ruling 2. After T006
-      flipped all three emission sites to the valued shorthands, BOTH HALVES ARE WRONG: the
-      description is false, and the attribution points at a ruling T005 has since superseded. A
-      shipped README describing the opposite of what the emitter emits is the cheapest possible
-      defect to fix and one of the more expensive to leave, because it is exactly what a future
-      reader would cite as prior art.
-    bundling_note: >-
-      DELIBERATELY SMALL, and the PM is aware the slice policy caps consecutive tiny tasks at two.
-      This is a one-sentence correction and a good candidate to BUNDLE into whichever Vue package
-      runs next rather than dispatching alone. It is recorded as its own card so it cannot be
-      forgotten, not because it deserves its own dispatch.
-    allowed_files:
-      - packages/frameworks/vue/README.md
-    verify:
-      - "pnpm lint"
-      - "grep -n 'longhand' packages/frameworks/vue/README.md   # must not describe shipped output as longhand"
-      - "git diff --exit-code -- packages/frameworks/vue/src packages/frameworks/vue/generated   # documentation only"
-    stop_if:
-      - "Need files outside allowed_files."
-      - "You are about to change emitted output, the emitter or the gate to match the README. THE README IS THE THING THAT IS WRONG. T005 ruled the shorthand in and T006 landed it under full verification."
-      - "The README turns out to be right and the emitter wrong. That would mean T006's goldens and the six-row e2e are both lying, which is a FINDING and a stop, not an edit."
-    constraints:
-      - "Cite T005 (the ruling) and T006 (the adoption), not T002 ruling 2, which T005 supersedes on this point."
-      - "Record the v-slot half too: 2b is DENIED, so the README must not imply named slots are available."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      summary: "Folded T007's fenced replacement block into worked example 3 VERBATIM by splice between the '### 3.' and '### 4.' headings, so labels now read G1 PASS / G2 PASS / G3 PASS(conditional) / G4 FAIL / G5 FAIL / G6 FAIL, DENIED deciding at G5. Gate 1's discharge list, examples 2a/2b/11/11b and every Angular entry are untouched - the policy diff is ONE hunk. Replaced the refuted violation message with the three MEASURED grounds plus an explicit withdrawal of the $attrs rationale; rule severity unchanged. Pinned that message in gate.test.ts, CALIBRATED RED against the old string. README now cites T005/T006 and records 2b DENIED."
+      the_second_of_two_contended_folds_landed_without_a_lost_update: "Both Judges independently predicted that two boards rewriting one paragraph would be a lost update rather than a merge conflict, and the PM serialized on that basis. IT HELD IN BOTH DIRECTIONS: the Angular fold extended the Vue fold's Gate 1 discharge list without overwriting Vue's line, and this fold left the Angular entries and the discharge list alone entirely. The prediction was worth acting on."
+      the_refuted_sentence_is_out_of_the_shipped_message: "packages/frameworks/vue/src/gate/index.ts now states the three grounds T007 measured against vue@3.5.40 - TypeError vs silent no-op on a missing handler, handler value vs undefined, and on-trace vs onTraceOnce name resolution - AND EXPLICITLY WITHDRAWS the fallthrough-$attrs rationale as measured false, rather than quietly deleting it. A user who read the old message and believed it gets told it was wrong. PM verified: grep -c for the old sentence returns 0."
+      the_calibration_was_run_the_hard_way: "The Worker temporarily RESTORED the old string in src/gate/index.ts to confirm the new assertion actually fails against it, then restored from backup. That is the difference between a test that pins a message and a test that merely mentions one - and it is the discipline this board has been enforcing all session."
+      changed_files:
+        - docs/emitter-idiom-policy.md
+        - packages/frameworks/vue/src/gate/index.ts
+        - packages/frameworks/vue/test/gate.test.ts
+        - packages/frameworks/vue/README.md
+        - docs/goals/frameless-vue-v1/notes/T007-define-emits-rerun.md
+      commands:
+        - cmd: "pnpm check"
+          status: pass
+          note: "PM re-ran"
+        - cmd: "pnpm test"
+          status: pass
+          note: "870 tests / 50 files, unchanged count; PM re-ran"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 327 files; PM re-ran"
+        - cmd: "grep -n 'stops the listener receiving native' packages/frameworks/vue/src/gate/index.ts"
+          status: pass
+          note: "no output; PM re-verified count is 0"
+        - cmd: "grep -rn 'DEFERRED — framework absent' docs/emitter-idiom-policy.md"
+          status: pass
+          note: "no stale LABEL under worked example 3 - see deviations"
+        - cmd: "grep -n 'longhand' packages/frameworks/vue/README.md"
+          status: pass
+          note: "no line describes shipped output as longhand - see deviations"
+        - cmd: "git diff --exit-code -- packages/frameworks/vue/generated packages/frameworks/vue/src/emitter demos"
+          status: pass
+          note: "PM re-verified CLEAN - no emitted output moved"
+        - cmd: "vitest gate.test.ts -t 'rejects v-model and defineEmits' with the OLD message restored"
+          status: pass
+          note: "went RED as required, then GREEN after correction - two-sided calibration actually executed"
+      deviations:
+        - "grep gate 2 still returns docs/emitter-idiom-policy.md:482, INSIDE worked example 3. It is the authoritative block's own discharge SENTENCE - 'DEFERRED — framework absent is no longer available' - not a label, and identical in shape to example 2a's line 369. No stale label survives. Lines 549/561 are examples 4 and 5, Angular-owned and out of scope, owed to frameless-angular-v1 T009."
+        - "grep gate 3 returns README lines 37 and 108. Both name longhand as the RETIRED form ('had the emitter shipping longhand ... for as long as worked example 2 read DEFERRED', 'used to fire against the shipped longhand'). Neither describes shipped output as longhand."
+        - "CORRECTED A SECOND FALSE README SENTENCE inside allowed_files but beyond the card's literal text: the arbiter section claimed 'vue/v-on-style demands the shorthand T005 owns' as a LIVE reason for excluding flat/strongly-recommended. That rule is now satisfied and silent - VUE_ESLINT_TIERS_EXCLUDED's firesOnCorpus lists dropped from eight ids to six at T006. Rewritten so the two content-newline rules carry the exclusion on their own. PM ACCEPTS: it is the SAME falsified claim as the longhand line, and leaving it would have re-created the defect one section down."
+        - "Added a 'STATUS: APPLIED' paragraph to the T007 note, which still read 'Not applied — serialised behind the queued Angular fold'. The fenced block itself is BYTE-UNTOUCHED, so it remains the authoritative record of what landed."
+        - "Widened the existing 'MUTATION: rejects v-model and defineEmits' test rather than adding a new one, since it already built the defineEmits mutant; it now asserts the MESSAGE, not only the policy id."
+      WORKER_CAUGHT_A_PM_DEFECT_AND_IT_WAS_THE_SESSIONS_OWN_LESSON_REPEATING: "THE WORKER REPORTED, FROM OUTSIDE ITS ALLOWED_FILES, THAT THIS VERY CARD HAD A DUPLICATED TAIL. When the PM widened T008 from the README-only card to the combined fold, the edit replaced the card's HEAD and left the retired card's keys - why_this_exists, allowed_files, verify, stop_if, constraints, receipt - sitting after the new receipt: null. Under YAML last-key-wins a strict parser therefore read the NARROW allowed_files (README only) and the WEAK three-command verify. PM CONFIRMED: yaml@2.9.0 threw DUPLICATE_KEY at line 1087 of this board. THIS IS THE EXACT DEFECT CLASS THE PM DIAGNOSED AND REPAIRED ON TWO OTHER BOARDS EARLIER IN THIS SAME SESSION, reintroduced by the PM's own edit - and check-goal-state.mjs passed it clean every time, because it is a line regex parser and cannot see duplicate keys. The regex checker's blind spot was identified hours ago and the PM kept relying on it anyway. Orphaned tail removed; all four boards now strict-parse, and T008 reads 5 allowed_files and 7 verify commands as intended. THE WORKER WORKED TO THE DISPATCH TEXT AND THE WIDER BLOCK, which was the stated intent, so no work was mis-scoped - the board was lying, not the output. PM ADDS A STANDING RULE: strict-parse every board after any hand edit to a card, not just after the ones that look risky."
+      remaining_blockers: []
+      stopped_because: null
   - id: T999
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     objective: "Audit whether the Vue lane satisfies the oracle and the full owner outcome."
     inputs:

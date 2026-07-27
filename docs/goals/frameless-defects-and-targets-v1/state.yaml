@@ -14,7 +14,7 @@ goal:
     consumption (defects 3, 5), then Phase D/E the shared IR foundation and the
     three adapters via their existing boards, and finally PHASE F CORPUS BREADTH - added
     2026-07-27 on owner instruction - which grows the corpus from three scenarios to TWELVE,
-    chosen by DIVERGENCE AXIS rather than feature count, each landed across all five targets,
+    chosen by DIVERGENCE AXIS rather than feature count, each landed across all SIX targets,
     and each carrying a cross-lane mutation budget that must go red.
   status: active
   autonomy_grant:
@@ -45,7 +45,7 @@ goal:
       Svelte, Vue and Angular rows on official scaffolds at pinned lockfile
       versions, with S1/S2/S3 observations ASSERTED equal to the existing three.
       (3) CORPUS BREADTH: the corpus covers TWELVE scenarios rather than three, each chosen to
-      exercise a DIVERGENCE AXIS the original S1/S2/S3 do not, each landed in ALL FIVE lanes, and
+      exercise a DIVERGENCE AXIS the original S1/S2/S3 do not, each landed in ALL SIX lanes, and
       each carrying at least one mutation PER EMITTER PROVEN to go red in the e2e matrix. The
       stopping rule is that A MUTATION CANNOT SURVIVE - not that a file count reached a number.
       Scenario count is a proxy, and four of six original defects on THIS VERY GOAL were instrument
@@ -131,7 +131,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T014
+active_task: T025
 
 tasks:
   - id: T001
@@ -1823,7 +1823,7 @@ tasks:
   - id: T014
     type: pm
     assignee: PM
-    status: active
+    status: queued
     activated: >-
       2026-07-27 by the PM, replacing a premature T999. The Vue half of this task is DONE - Vue
       T004 landed the fifth e2e row and Vue T005 (the idiom re-run) is the only Vue task left. The
@@ -2280,10 +2280,26 @@ tasks:
   - id: T024
     type: judge
     assignee: Judge
-    status: queued
+    status: done
     reasoning_hint: high
     objective: "Ratify the corpus-breadth contract: which scenarios land, in what order, and the cross-lane mutation budget that decides when the corpus is ENOUGH rather than merely bigger."
     depends_on: ["T013", "T014"]
+    pm_discharged_the_T014_dependency_in_substance: >-
+      2026-07-27, ON OWNER INSTRUCTION to continue and to prioritise more scenarios. T013 is DONE.
+      T014 is still open, but the SUBSTANTIVE reason T024 was sequenced behind it is already
+      satisfied: the dependency existed so that a new scenario would pay out across every lane at
+      once rather than being retrofitted later. ALL SIX LANES NOW EXIST AND ARE GREEN - react,
+      solid, qwik, svelte, vue and angular, with 18 byte-identical observation strings, verified by
+      the PM at commit a90a2ea. T014's remaining work is the two adapter boards' documentation and
+      gate-MESSAGE folds, which touch no corpus, no fixture, no golden and no emitter output. There
+      is nothing left in T014 that could change what this ruling should say.
+      RECORDED RATHER THAN SILENTLY OVERRIDDEN, because a depends_on edge that gets stepped over
+      without explanation is how a board stops meaning anything.
+    lane_count_corrected: >-
+      This card and the Phase F worker cards were written when there were FIVE targets. There are
+      SIX. Every "all five lanes" has been corrected to SIX, including the stop_if that rejects a
+      partial matrix. A scenario landing in five of six is now the broken-matrix case the cards
+      were always trying to describe.
     why_this_exists: >-
       THE CORPUS IS THREE SCENARIOS. 10 fixtures, 3 IR goldens - S1, S2, S3 - and every emitter,
       gate, golden and e2e row is that same corpus in different costumes. frameless-testing-audit
@@ -2335,22 +2351,138 @@ tasks:
       - "The cross-lane mutation budget, concretely: what mutation, which lane, what must go red"
       - "Worker slicing with exact objective, allowed_files, verify and stop_if per package"
       - "The stopping rule - what evidence closes Phase F"
-    receipt: null
-
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      harness: claude-code
+      note: notes/T024-corpus-breadth.md
+      rationale: "Ratified EIGHT scenarios for Phase F, not twelve, and OVERTURNED composition as the first landing - on measurement, not argument. (a) COST: the qwik, svelte, vue and angular emitters all hard-throw on component-reference, elementHandleBindings, behaviors and multi-component modules, and svelte and vue emit one SFC per module so emit() would have to become a file map - emitter architecture, not corpus work. (b) VALUE, FALSIFIED: ComponentPropExpression and PropDestructuringEntry carry no type, so composition passes untyped props and all four instruments measured GREEN. Composition, refs and effects move to a capability phase behind IR-8. Ratified order S4 nested lists, S5 branch teardown, S6 whitespace, S7 form controls folded with boolean attributes, S8 async handlers, with a 48-cell cross-lane mutation budget."
+      summary: "Phase F ratified at EIGHT scenarios with a 48-cell mutation budget - one byte-verified mutant per scenario per lane, each with a NAMED RED SITE - and the harness itself calibrated two-sided on the pre-existing s1-s3 in batch 1. The card's top-ranked proposal was cut. Landing order: S4 nested lists first (the one axis with a RULE and ZERO INSTANCES), then S5 branch teardown, S6 whitespace, S7 form controls folded with boolean/dynamic attributes, S8 async handlers alone."
+      THE_RULING_APPLIED_THE_STOPPING_RULE_TO_ITSELF: "THIS IS THE RESULT WORTH READING TWICE. The T024 card ranked parent-child composition as 'THE SINGLE HIGHEST-VALUE ADDITION' and the PM's own dispatch reinforced it with four independent IR-8 measurements from this session. THE JUDGE CUT IT ANYWAY, because it could not be shown to KILL anything. The card's own caveat says confidence arrives when a mutation cannot survive, not when a file count hits a number - and composition over today's IR would have handed vue-tsc, svelte-check and Angular strictTemplates a POPULATION WITH NO SIGNAL, since neither ComponentPropExpression nor PropDestructuringEntry carries a type and all four lanes measure GREEN on wrong-typed props. Adding it would have grown the corpus by the most expensive scenario available while proving nothing. A ruling that overturns its own brief's headline, on measurement, is the mechanism working."
+      pm_independently_verified_both_load_bearing_claims: "The PM re-checked the two measurements the overturn rests on, because they contradict the card the PM wrote. (1) THE GUARD IS REAL AND IDENTICAL IN ALL FOUR: svelte/src/emitter/index.ts:723, vue:1053, qwik:1372, angular:1132 all throw '<Framework> emitter does not support composition or shared/handle constructs', and svelte:724, vue:1054 and angular:1133 additionally throw when ir.module.exports.length !== 1. (2) IR-8 IS REAL: schema.ts:150 ComponentPropExpression carries name, kind, value, graphNodeId and path - and NO type; and the shipped packages/frameworks/angular/generated/S2.ts emits '@Input() seed: any;' and '@Input() onTrace: any;'. Both claims hold exactly as reported."
+      why_S4_leads_instead: "Angular's T002 ruling 3d specifies 'every enclosing @for variable, OUTERMOST FIRST' and THE CORPUS CONTAINS NO NESTED LOOP AT ALL - shipped Angular output only ever emits one-element call sites. A rule with no instances is FOLKLORE. The sharpest mutant in the entire batch is the Angular forVariables ORDER SWAP: if it stays green, ruling 3d is unenforced, and T024 correctly named that as the batch's headline finding rather than a footnote."
+      the_harness_is_ratified_as_a_deliverable_not_a_convenience: "scripts/corpus-mutation.mjs applies one byte-verified text mutation to a lane's generated output, runs that lane's witness box, REQUIRES a failure, records whether the red came from the lane's own in-box assertion or the cross-lane observation diff, restores from git, and verifies the restoration. Batch 1 must calibrate it on the EXISTING s1/s2/s3 before adding anything - and T024 made that a stop condition, because if the existing corpus cannot be killed then the 18 observation strings were never measuring the corpus, and that finding would outrank all of Phase F."
+      board_updates_applied_by_pm:
+        - "T025 rewritten with the full worker_package: 48 allowed_files spanning the compiler fixture/golden, all six regenerate scripts and generated outputs, all six demos, scripts/e2e.mjs, the harness and the root package.json. Empty allowed_files and verify are gone - this board has recorded that exact PM defect twice and it is not repeated here."
+        - "T026 (S5 branch teardown) and T027 (S6 whitespace) written in full, each with its divergence axis stated and evidence named. T027 carries an extra stop condition: a cross-lane whitespace divergence is the EXPECTED finding and must be recorded verbatim, never normalised away."
+        - "T028's stopping rule updated from 'twelve' to the ratified eight-scenario / 48-mutant / two-sided-calibration rule, and told to CHECK the cut rather than inherit it."
+        - "T030 (S7) and T031 (S8) created. Their allowed_files are deliberately left for the PM to fill from the LANDED shape of the earlier batches rather than predicted now - the first three will teach what the real file set is."
+        - "T032 created as a Judge task scoping the emitter capability phase - IR-8 typed props FIRST, then refs, effects and composition - explicitly OUT of Phase F's stopping rule so it cannot block T028."
+      parallel_safety:
+        safe: false
+        reason: "T025's allowed_files reach every lane's regenerate.ts and generated/ directory, so it is not provably disjoint from any Worker operating inside packages/frameworks/**. T026 and T027 each edit demos/react-official/three-way-contract.ts and scripts/e2e.mjs, so the three batches must also run serially with respect to each other."
+        pm_action: "Recorded as a dispatch_precondition on T025: the PM dispatches it only against a clean tree with no live Worker in packages/frameworks/**."
+      missing_evidence: []
+      spawned_tasks:
+        - T030
+        - T031
+        - T032
   - id: T025
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
-    objective: "Land the first ratified corpus batch across all five targets, with its mutation budget proven red."
-    depends_on: ["T024"]
-    allowed_files: []
-    verify: []
+    spec: "T024 receipt and docs/goals/frameless-defects-and-targets-v1/notes/T024-corpus-breadth.md - AUTHORITATIVE."
+    dispatch_precondition: >-
+      DO NOT DISPATCH while any Worker is live inside packages/frameworks/**. T024 proved this card
+      NOT provably disjoint from the adapter folds - its allowed_files reach every lane's
+      regenerate.ts and generated/ directory. The PM dispatches it only against a clean tree.
+    objective: >-
+      Land the CORPUS MUTATION HARNESS and scenario S4 (nested lists) across all SIX targets, with
+      S4's six-lane mutation budget proven RED and the harness itself calibrated TWO-SIDED on the
+      existing s1/s2/s3. S4 is a keyed list of groups, each group containing a keyed list of rows,
+      with at least one event handler bound inside the inner loop reading BOTH the outer and inner
+      loop variables, and one branch inside the inner row. Inner rows carry data-oracle-cell-key so
+      the existing measureRowKeys regex over data-oracle-row-key is not disturbed.
+    why_S4_is_first: >-
+      IT IS THE ONE AXIS WITH A RULE AND ZERO INSTANCES. Angular's T002 ruling 3d specifies "every
+      enclosing @for variable, OUTERMOST FIRST" - and the corpus contains no nested loop at all, so
+      shipped Angular output only ever emits one-element call sites like onH7Input(todo, $event).
+      A rule with no instances is FOLKLORE. The sharpest mutant in the whole batch is the Angular
+      forVariables ORDER SWAP: if it stays green, ruling 3d is unenforced and that is this batch's
+      headline finding, not a footnote.
+    the_harness_is_the_deliverable_as_much_as_the_scenario: >-
+      scripts/corpus-mutation.mjs, exposed as a root mutate:corpus script, applies ONE byte-verified
+      text mutation to packages/frameworks/<lane>/generated/<S>.<ext>, runs that lane's witness box,
+      REQUIRES a failure, records whether the red came from the lane's own in-box assertion or from
+      the cross-lane observation diff, then restores from git and VERIFIES the restoration. The
+      mutation point is upstream of each demo's copy-emitted, which is why it targets generated/.
+      CALIBRATING IT ON s1/s2/s3 FIRST IS NOT OPTIONAL: if the existing corpus cannot be killed, the
+      18 observation strings were never measuring the corpus, and that finding outranks the batch.
+    allowed_files:
+      - packages/compiler/test/fixtures/s4-nested-list.tsrx
+      - packages/compiler/test/goldens/s4-nested-list.json
+      - packages/compiler/test/enriched-ir.test.ts
+      - packages/frameworks/react/scripts/regenerate.ts
+      - packages/frameworks/react/generated/S4.jsx
+      - packages/frameworks/solid/scripts/regenerate.ts
+      - packages/frameworks/solid/generated/S4.jsx
+      - packages/frameworks/qwik/scripts/regenerate.ts
+      - packages/frameworks/qwik/generated/S4.jsx
+      - packages/frameworks/svelte/scripts/regenerate.ts
+      - packages/frameworks/svelte/generated/S4.svelte
+      - packages/frameworks/vue/scripts/regenerate.ts
+      - packages/frameworks/vue/generated/S4.vue
+      - packages/frameworks/angular/scripts/regenerate.ts
+      - packages/frameworks/angular/generated/S4.ts
+      - demos/react-official/package.json
+      - demos/react-official/src/App.jsx
+      - demos/react-official/src/emitted/NestedBoard.jsx
+      - demos/react-official/scenarios.box.ts
+      - demos/react-official/three-way-contract.ts
+      - demos/solid-official/package.json
+      - demos/solid-official/src/App.jsx
+      - demos/solid-official/src/emitted/NestedBoard.jsx
+      - demos/solid-official/scenarios.box.ts
+      - demos/qwik/package.json
+      - demos/qwik/src/emitted/NestedBoard.jsx
+      - demos/qwik/src/routes/s4/index.tsx
+      - demos/qwik/scenarios.box.ts
+      - demos/svelte-official/package.json
+      - demos/svelte-official/src/lib/emitted/NestedBoard.svelte
+      - demos/svelte-official/src/lib/scenario-props.ts
+      - demos/svelte-official/src/routes/s4/+page.svelte
+      - demos/svelte-official/scenarios.box.ts
+      - demos/vue-official/package.json
+      - demos/vue-official/src/emitted/NestedBoard.vue
+      - demos/vue-official/src/App.vue
+      - demos/vue-official/src/scenario-props.ts
+      - demos/vue-official/scenarios.box.ts
+      - demos/angular-official/package.json
+      - demos/angular-official/src/emitted/NestedBoard.ts
+      - demos/angular-official/src/app/app.routes.ts
+      - demos/angular-official/src/app/scenario-props.ts
+      - demos/angular-official/scenarios.box.ts
+      - scripts/e2e.mjs
+      - scripts/corpus-mutation.mjs
+      - package.json
+      - docs/goals/frameless-defects-and-targets-v1/notes/T025-corpus-s4-nested.md
+    verify:
+      - "pnpm --dir packages/compiler exec vitest run   # goldens regenerated with UPDATE_GOLDENS=1, then re-run WITHOUT it"
+      - "pnpm --dir packages/frameworks/react/ regenerate"
+      - "pnpm --dir packages/frameworks/solid/ regenerate"
+      - "pnpm --dir packages/frameworks/qwik/ regenerate"
+      - "pnpm --dir packages/frameworks/svelte/ regenerate"
+      - "pnpm --dir packages/frameworks/vue/ regenerate"
+      - "pnpm --dir packages/frameworks/angular/ regenerate"
+      - "pnpm check"
+      - "pnpm lint"
+      - "pnpm test"
+      - "pnpm test:browser"
+      - "pnpm e2e   # must report 6 demos x 4 scenarios, all observations equal"
+      - "pnpm mutate:corpus --scenario s1 --scenario s2 --scenario s3   # TWO-SIDED CALIBRATION ON THE EXISTING CORPUS; every lane must go red"
+      - "pnpm mutate:corpus --scenario s4   # all SIX lanes must go red"
+      - "git diff --exit-code -- packages/frameworks/react/generated packages/frameworks/solid/generated packages/frameworks/qwik/generated packages/frameworks/svelte/generated packages/frameworks/vue/generated packages/frameworks/angular/generated   # after regeneration, byte-stable"
+      - "git status --short"
     stop_if:
-      - "allowed_files, verify and the batch contents come from the T024 ruling; do not improvise the set."
-      - "A scenario lands in fewer than five lanes. A partial matrix is a broken oracle, not partial progress."
-      - "A ratified mutation cannot be made to go RED. A corpus addition that no mutation can kill has not increased confidence and must be reported as such."
-      - "You are about to weaken an existing activation-neutrality assertion to make a new scenario pass."
+      - "The harness's calibration on s1/s2/s3 does NOT go red. That means the 18 observation strings were never measuring the corpus - report and STOP before adding anything."
+      - "S4 lands in fewer than SIX lanes. A partial matrix is a broken oracle, not partial progress."
+      - "Any lane's emitter THROWS on the S4 IR. Report the throw verbatim and STOP - this scenario was ratified as CAPABILITY-FREE, and a throw falsifies that ruling."
+      - "A ratified mutant cannot be made to go RED in some lane. Record the lane, the axis and the mutant VERBATIM as an open FINDING and stop; do NOT patch it over."
+      - "Any mutant is byte-identical to its input. mutate() must THROW - a no-op mutant that passes is the T018 vacuity, and this project has shipped that exact fault before."
+      - "You are about to weaken an existing activation-neutrality assertion, relax expectedNavigations, or change measureRowKeys' regex to make the scenario pass."
+      - "Need files outside allowed_files."
       - "Verification fails twice for the same reason."
     receipt: null
 
@@ -2359,12 +2491,86 @@ tasks:
     assignee: Worker
     status: queued
     reasoning_hint: high
-    objective: "Land the second ratified corpus batch across all five targets, with its mutation budget proven red."
+    spec: "T024 ruling - AUTHORITATIVE."
     depends_on: ["T025"]
-    allowed_files: []
-    verify: []
+    objective: "Land S5 CONDITIONAL BRANCH TEARDOWN across all SIX targets, with its mutation budget proven RED."
+    divergence_axis: >-
+      Block-based (Svelte, Vue) vs reconciliation (React, Solid) vs resumed (Qwik) vs Angular's @if
+      diverge HARDEST on branch teardown. Today s1 and s2 each carry a branch, but s1's is selected
+      by a STATIC prop and s2's else arm is EMPTY - so no lane has ever been observed tearing a
+      POPULATED branch down and rebuilding it. T020 already found a guarded control that stayed
+      CORRECT while its guard had stopped being consulted, which is exactly the failure this axis
+      is blind to today.
+    allowed_files:
+      - packages/compiler/test/fixtures/s5-branch-teardown.tsrx
+      - packages/compiler/test/goldens/s5-branch-teardown.json
+      - packages/compiler/test/enriched-ir.test.ts
+      - packages/frameworks/react/scripts/regenerate.ts
+      - packages/frameworks/react/generated/S5.jsx
+      - packages/frameworks/solid/scripts/regenerate.ts
+      - packages/frameworks/solid/generated/S5.jsx
+      - packages/frameworks/qwik/scripts/regenerate.ts
+      - packages/frameworks/qwik/generated/S5.jsx
+      - packages/frameworks/svelte/scripts/regenerate.ts
+      - packages/frameworks/svelte/generated/S5.svelte
+      - packages/frameworks/vue/scripts/regenerate.ts
+      - packages/frameworks/vue/generated/S5.vue
+      - packages/frameworks/angular/scripts/regenerate.ts
+      - packages/frameworks/angular/generated/S5.ts
+      - demos/react-official/package.json
+      - demos/react-official/src/App.jsx
+      - demos/react-official/src/emitted/BranchBoard.jsx
+      - demos/react-official/scenarios.box.ts
+      - demos/react-official/three-way-contract.ts
+      - demos/solid-official/package.json
+      - demos/solid-official/src/App.jsx
+      - demos/solid-official/src/emitted/BranchBoard.jsx
+      - demos/solid-official/scenarios.box.ts
+      - demos/qwik/package.json
+      - demos/qwik/src/emitted/BranchBoard.jsx
+      - demos/qwik/src/routes/s5/index.tsx
+      - demos/qwik/scenarios.box.ts
+      - demos/svelte-official/package.json
+      - demos/svelte-official/src/lib/emitted/BranchBoard.svelte
+      - demos/svelte-official/src/lib/scenario-props.ts
+      - demos/svelte-official/src/routes/s5/+page.svelte
+      - demos/svelte-official/scenarios.box.ts
+      - demos/vue-official/package.json
+      - demos/vue-official/src/emitted/BranchBoard.vue
+      - demos/vue-official/src/App.vue
+      - demos/vue-official/src/scenario-props.ts
+      - demos/vue-official/scenarios.box.ts
+      - demos/angular-official/package.json
+      - demos/angular-official/src/emitted/BranchBoard.ts
+      - demos/angular-official/src/app/app.routes.ts
+      - demos/angular-official/src/app/scenario-props.ts
+      - demos/angular-official/scenarios.box.ts
+      - scripts/e2e.mjs
+      - docs/goals/frameless-defects-and-targets-v1/notes/T026-corpus-s5-branch-teardown.md
+    verify:
+      - "pnpm --dir packages/compiler exec vitest run   # goldens regenerated with UPDATE_GOLDENS=1, then re-run WITHOUT it"
+      - "pnpm --dir packages/frameworks/react/ regenerate"
+      - "pnpm --dir packages/frameworks/solid/ regenerate"
+      - "pnpm --dir packages/frameworks/qwik/ regenerate"
+      - "pnpm --dir packages/frameworks/svelte/ regenerate"
+      - "pnpm --dir packages/frameworks/vue/ regenerate"
+      - "pnpm --dir packages/frameworks/angular/ regenerate"
+      - "pnpm check"
+      - "pnpm lint"
+      - "pnpm test"
+      - "pnpm test:browser"
+      - "pnpm e2e   # must report 6 demos x 5 scenarios, all observations equal"
+      - "pnpm mutate:corpus --scenario s5   # all SIX lanes must go red"
+      - "git diff --exit-code -- packages/frameworks/react/generated packages/frameworks/solid/generated packages/frameworks/qwik/generated packages/frameworks/svelte/generated packages/frameworks/vue/generated packages/frameworks/angular/generated"
+      - "git status --short"
     stop_if:
-      - "Same as T025; contents come from the T024 ruling."
+      - "S5 lands in fewer than SIX lanes. A partial matrix is a broken oracle, not partial progress."
+      - "Any lane's emitter THROWS on the S5 IR. Report the throw verbatim and STOP - this scenario was ratified as CAPABILITY-FREE, and a throw falsifies that ruling."
+      - "A ratified mutant cannot be made to go RED in some lane. Record the lane, the axis and the mutant VERBATIM as an open FINDING and stop; do NOT patch it over."
+      - "Any mutant is byte-identical to its input. mutate() must THROW - a no-op mutant that passes is the T018 vacuity."
+      - "You are about to weaken an existing activation-neutrality assertion to make the scenario pass."
+      - "Need files outside allowed_files."
+      - "Verification fails twice for the same reason."
     receipt: null
 
   - id: T027
@@ -2372,12 +2578,86 @@ tasks:
     assignee: Worker
     status: queued
     reasoning_hint: high
-    objective: "Land the third ratified corpus batch across all five targets, with its mutation budget proven red."
+    spec: "T024 ruling - AUTHORITATIVE."
     depends_on: ["T026"]
-    allowed_files: []
-    verify: []
+    objective: "Land S6 WHITESPACE-SENSITIVE TEXT across all SIX targets, with its mutation budget proven RED."
+    divergence_axis: >-
+      MEASURED LIVE ON THIS GOAL, not hypothesised. Vue's SFC compiler defaults to whitespace
+      condense; Angular's parseTemplate preserves a leading space AND a trailing newline on the
+      SAME shape - the Angular lane REFUTED the Vue lane's measurement an hour after it landed.
+      Svelte's rule is a third one. This is the axis where a cross-lane divergence is most likely
+      to be REAL rather than a test artefact.
+    allowed_files:
+      - packages/compiler/test/fixtures/s6-whitespace-text.tsrx
+      - packages/compiler/test/goldens/s6-whitespace-text.json
+      - packages/compiler/test/enriched-ir.test.ts
+      - packages/frameworks/react/scripts/regenerate.ts
+      - packages/frameworks/react/generated/S6.jsx
+      - packages/frameworks/solid/scripts/regenerate.ts
+      - packages/frameworks/solid/generated/S6.jsx
+      - packages/frameworks/qwik/scripts/regenerate.ts
+      - packages/frameworks/qwik/generated/S6.jsx
+      - packages/frameworks/svelte/scripts/regenerate.ts
+      - packages/frameworks/svelte/generated/S6.svelte
+      - packages/frameworks/vue/scripts/regenerate.ts
+      - packages/frameworks/vue/generated/S6.vue
+      - packages/frameworks/angular/scripts/regenerate.ts
+      - packages/frameworks/angular/generated/S6.ts
+      - demos/react-official/package.json
+      - demos/react-official/src/App.jsx
+      - demos/react-official/src/emitted/WhitespaceBoard.jsx
+      - demos/react-official/scenarios.box.ts
+      - demos/react-official/three-way-contract.ts
+      - demos/solid-official/package.json
+      - demos/solid-official/src/App.jsx
+      - demos/solid-official/src/emitted/WhitespaceBoard.jsx
+      - demos/solid-official/scenarios.box.ts
+      - demos/qwik/package.json
+      - demos/qwik/src/emitted/WhitespaceBoard.jsx
+      - demos/qwik/src/routes/s6/index.tsx
+      - demos/qwik/scenarios.box.ts
+      - demos/svelte-official/package.json
+      - demos/svelte-official/src/lib/emitted/WhitespaceBoard.svelte
+      - demos/svelte-official/src/lib/scenario-props.ts
+      - demos/svelte-official/src/routes/s6/+page.svelte
+      - demos/svelte-official/scenarios.box.ts
+      - demos/vue-official/package.json
+      - demos/vue-official/src/emitted/WhitespaceBoard.vue
+      - demos/vue-official/src/App.vue
+      - demos/vue-official/src/scenario-props.ts
+      - demos/vue-official/scenarios.box.ts
+      - demos/angular-official/package.json
+      - demos/angular-official/src/emitted/WhitespaceBoard.ts
+      - demos/angular-official/src/app/app.routes.ts
+      - demos/angular-official/src/app/scenario-props.ts
+      - demos/angular-official/scenarios.box.ts
+      - scripts/e2e.mjs
+      - docs/goals/frameless-defects-and-targets-v1/notes/T027-corpus-s6-whitespace.md
+    verify:
+      - "pnpm --dir packages/compiler exec vitest run   # goldens regenerated with UPDATE_GOLDENS=1, then re-run WITHOUT it"
+      - "pnpm --dir packages/frameworks/react/ regenerate"
+      - "pnpm --dir packages/frameworks/solid/ regenerate"
+      - "pnpm --dir packages/frameworks/qwik/ regenerate"
+      - "pnpm --dir packages/frameworks/svelte/ regenerate"
+      - "pnpm --dir packages/frameworks/vue/ regenerate"
+      - "pnpm --dir packages/frameworks/angular/ regenerate"
+      - "pnpm check"
+      - "pnpm lint"
+      - "pnpm test"
+      - "pnpm test:browser"
+      - "pnpm e2e   # must report 6 demos x 6 scenarios, all observations equal"
+      - "pnpm mutate:corpus --scenario s6   # all SIX lanes must go red"
+      - "git diff --exit-code -- packages/frameworks/react/generated packages/frameworks/solid/generated packages/frameworks/qwik/generated packages/frameworks/svelte/generated packages/frameworks/vue/generated packages/frameworks/angular/generated"
+      - "git status --short"
     stop_if:
-      - "Same as T025; contents come from the T024 ruling."
+      - "A CROSS-LANE WHITESPACE DIVERGENCE IS THE EXPECTED FINDING. Record it verbatim with BOTH lanes measured strings and STOP. Do NOT normalise any emitter to make the matrix agree - that would convert the single most likely real finding in Phase F into silence, which is the exact move the umbrella charter forbids."
+      - "S6 lands in fewer than SIX lanes. A partial matrix is a broken oracle, not partial progress."
+      - "Any lane's emitter THROWS on the S6 IR. Report the throw verbatim and STOP - this scenario was ratified as CAPABILITY-FREE, and a throw falsifies that ruling."
+      - "A ratified mutant cannot be made to go RED in some lane. Record the lane, the axis and the mutant VERBATIM as an open FINDING and stop; do NOT patch it over."
+      - "Any mutant is byte-identical to its input. mutate() must THROW - a no-op mutant that passes is the T018 vacuity."
+      - "You are about to weaken an existing activation-neutrality assertion to make the scenario pass."
+      - "Need files outside allowed_files."
+      - "Verification fails twice for the same reason."
     receipt: null
 
   - id: T028
@@ -2385,15 +2665,104 @@ tasks:
     assignee: Judge
     status: queued
     reasoning_hint: high
-    objective: "Audit Phase F against its own stopping rule: is the corpus ENOUGH, measured by mutations that cannot survive rather than by scenario count?"
-    depends_on: ["T027"]
+    objective: "Audit Phase F against its RATIFIED stopping rule: is the corpus ENOUGH, measured by mutants that cannot survive rather than by scenario count?"
+    depends_on: ["T031"]
+    the_stopping_rule_as_ratified_by_T024_superseding_twelve: >-
+      EIGHT scenarios, not twelve. s1-s3 (existing) plus S4 nested lists, S5 branch teardown,
+      S6 whitespace, S7 form controls folded with boolean/dynamic attributes, S8 async handlers.
+      Phase F closes when ALL of: eight scenarios exist; each lands in ALL SIX lanes; 48 observation
+      strings are byte-identical cross-lane; 48 recorded mutants each have a NAMED RED SITE; the
+      mutation harness is calibrated TWO-SIDED on the pre-existing s1-s3; and no two scenarios
+      duplicate a divergence axis.
     constraints:
       - "Do not implement."
-      - "Reject if the corpus grew but the mutation budget was not proven red per lane - that is volume, not coverage."
-      - "Reject if any scenario landed in fewer than five lanes."
-      - "State plainly whether twelve turned out to be the right number, and if not, what the evidence says the number is."
+      - "REJECT IF THE CORPUS GREW BUT THE MUTATION BUDGET WAS NOT PROVEN RED PER LANE. That is volume, not coverage, and it is the specific failure this phase was designed against."
+      - "Reject if any scenario landed in fewer than SIX lanes."
+      - "Reject if the harness's own calibration on s1-s3 was skipped or waived. An unkillable existing corpus would mean the 18 original observation strings never measured the corpus, and that finding outranks everything else in the phase."
+      - "State plainly whether EIGHT turned out to be the right number, and if not, what the evidence says the number is. T024 cut twelve to eight on measurement; check that cut rather than inheriting it."
+      - "A mutant that could not be made to go red is a FINDING to report, not a reason to reject the batch that reported it honestly. Distinguish 'the corpus is weak here' from 'the Worker hid it'."
+    expected_output:
+      - "complete | not_complete for Phase F"
+      - "Per scenario: axis, six-lane status, and its mutants' red sites"
+      - "Whether eight was the right number, with evidence"
+      - "What remains, if anything"
     receipt: null
 
+  - id: T030
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    spec: "T024 ruling - AUTHORITATIVE."
+    depends_on: ["T027"]
+    objective: "Land S7 FULL FORM CONTROLS folded together with BOOLEAN AND DYNAMIC ATTRIBUTES across all SIX targets, with the mutation budget proven RED."
+    divergence_axis: >-
+      TWO axes deliberately folded into one scenario because they share a host. Form controls:
+      radio, select, textarea, multi-checkbox - in one night this repo hit React's defaultValue
+      attribute rewrite, Svelte's remove_input_defaults and Solid's attr:, THREE frameworks behaving
+      three ways on the ONE control currently tested. Boolean/dynamic attributes: the
+      present-vs-absent-vs-"false" divergence, adjacent to the exact bug class the Option D chain
+      spent two audits on. R1 on the Angular board - whether a property binding reaches the served
+      attribute - is this axis, and it was measured on ONE control.
+    constraints:
+      - "allowed_files follow the T025/T026/T027 shape with s7-form-controls / S7 / FormBoard substituted, plus whatever additional demo route files the six scaffolds require."
+      - "The PM fills allowed_files and verify from the landed T027 card's actual shape rather than predicting them, because the first three batches will have taught what the real file set is."
+    receipt: null
+
+  - id: T031
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    spec: "T024 ruling - AUTHORITATIVE."
+    depends_on: ["T030"]
+    objective: "Land S8 ASYNC EVENT HANDLERS across all SIX targets, alone, with the mutation budget proven RED."
+    divergence_axis: >-
+      DEFECT 1 ON THIS VERY GOAL WAS EXACTLY THIS - a Qwik QRL emitting preventDefault() inside an
+      async boundary, repaired with the sync$ array form. It is currently proven at ONE site. This
+      scenario is landed ALONE rather than folded, because it is the axis most likely to produce a
+      legitimate terminal finding.
+    constraints:
+      - "THE QWIK sync$ THROW IS A LEGITIMATE TERMINAL FINDING. packages/frameworks/qwik/src/emitter/index.ts around :498 and :642 will throw for cases Qwik genuinely cannot express. If it throws, report it VERBATIM and stop - that is a v-limit being enforced, not a defect to work around."
+      - "allowed_files and verify are filled by the PM from the landed T030 card's actual shape."
+    receipt: null
+
+  - id: T032
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Scope the EMITTER CAPABILITY PHASE that T024 carved out of Phase F: IR-8 typed props first, then refs, effects and composition across the four blocked emitters."
+    why_this_exists_and_why_it_is_NOT_phase_F: >-
+      T024 RATIFIED PHASE F AT EIGHT SCENARIOS BY OVERTURNING THE CARD'S OWN TOP-RANKED PROPOSAL,
+      and it did so on two measurements rather than an argument.
+      (1) COST: the Qwik, Svelte, Vue and Angular emitters ALL HARD-THROW on component-reference,
+      elementHandleBindings, behaviors and multi-component modules - PM verified the identical guard
+      in all four. Worse, Svelte and Vue emit exactly ONE SFC per module and emit() returns a
+      STRING, so composition there requires emit() to become a FILE MAP. That is emitter
+      architecture, not corpus work.
+      (2) VALUE, FALSIFIED: the claimed payoff was that composition would finally give vue-tsc,
+      svelte-check and Angular strictTemplates a population to judge. But ComponentPropExpression
+      and PropDestructuringEntry CARRY NO TYPE - PM verified schema.ts:150 has kind but no type, and
+      shipped Angular output reads '@Input() seed: any'. All four lanes measured GREEN on wrong-typed
+      props. So composition over TODAY'S IR would hand those instruments a population and NO SIGNAL -
+      precisely the proxy the T024 card's own caveat forbids.
+      THIS IS THE RULING WORKING AS INTENDED: the highest-ranked scenario was cut because it could
+      not be shown to kill anything, which is the stopping rule applied to itself.
+    inputs:
+      - "docs/goals/frameless-defects-and-targets-v1/notes/T024-corpus-breadth.md"
+      - "packages/compiler/src/schema.ts - ComponentPropExpression :150, PropDestructuringEntry :205"
+      - "The identical composition guard in the svelte, vue, qwik and angular emitters"
+    constraints:
+      - "Do not implement. Scope and sequence."
+      - "IR-8 (typed prop entries) COMES FIRST and is the gate on the rest. Composition before IR-8 buys a population with no signal - that is the measured finding, not a preference."
+      - "Rule explicitly on whether emit() becoming a file map is acceptable for Svelte and Vue, since it changes a published emitter signature."
+      - "This phase is OUT of Phase F's stopping rule. Do not let it block T028."
+    expected_output:
+      - "Ordered capability sequence with the IR change each step needs"
+      - "Whether emit() -> file map is ruled acceptable, with reasoning"
+      - "Worker slicing, or an explicit statement that this belongs in its own goal"
+    receipt: null
 
   - id: T029
     type: worker

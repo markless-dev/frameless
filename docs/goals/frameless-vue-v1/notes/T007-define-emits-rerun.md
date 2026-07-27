@@ -181,8 +181,15 @@ is the accident this task was created to avoid.
 ## Exact replacement text
 
 Delivered in the T007 receipt and reproduced here for the folding package. It replaces the whole of
-worked example 3 in `docs/emitter-idiom-policy.md` (currently lines 453-461). **Not applied** —
-`docs/emitter-idiom-policy.md` is serialised behind the queued Angular fold.
+worked example 3 in `docs/emitter-idiom-policy.md`.
+
+**STATUS: APPLIED.** `frameless-vue-v1` T008 folded this block in verbatim, once the serialisation
+hold behind `frameless-angular-v1` T008 was discharged. The block below is therefore a *record* of
+what landed, not a pending instruction; the policy file is now the live copy. T008 also carried the
+consequence this note flagged outside the policy file: the refuted mechanism no longer ships in the
+gate violation message at `packages/frameworks/vue/src/gate/index.ts`, which now cites the three
+measured grounds instead, pinned by a message assertion in `test/gate.test.ts` that was calibrated
+RED against the old string before the correction was restored.
 
 ---
 

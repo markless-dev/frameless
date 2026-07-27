@@ -1026,7 +1026,7 @@ function scriptViolations(file: string, parsed: Parsed): GateViolation[] {
 				violation(
 					file,
 					'no-two-way-binding',
-					`Emitted Vue source calls ${name}(); IR-1 gives no bindable prop kind and IR-2 gives no emit concept, and worked example 3 rules the defineEmits form DENIED at Gate 5 because a declared native event name stops the listener receiving native events`,
+					`Emitted Vue source calls ${name}(); IR-1 gives no bindable prop kind and IR-2 gives no emit concept, and worked example 3 rules the defineEmits form DENIED at Gate 5 on three grounds T007 MEASURED against vue@3.5.40: with no handler supplied by the parent, the declared-prop baseline throws TypeError while emit() is a silent no-op; props.onTrace(...) returns the handler's value while emit(...) returns undefined; and the two forms resolve different parent spellings, with on-trace reaching the baseline only and onTraceOnce reaching emit() only. The fallthrough-$attrs rationale this message used to carry is WITHDRAWN as measured false - frameless DECLARES the callback prop, and a declared prop is held back from $attrs exactly as a declared emit is`,
 					line,
 				),
 			);
