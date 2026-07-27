@@ -482,7 +482,7 @@ tasks:
   - id: T003
     type: worker
     assignee: Worker
-    status: queued
+    status: done
     serialization_hold: "SERIALIZED BEHIND VUE T003 by PM decision on 2026-07-27, per T003a parallel_safety. Both T003 cards claim root package.json and both need a tsc -p line in the check script; that is a concurrent read-modify-write on one file, which append-only discipline does not fix. The PM CANNOT pre-add the Angular line either, because packages/frameworks/angular/tsconfig.json does not exist yet and tsc -p would fail. Re-dispatch the moment Vue T003 lands, using the T003a worker_package verbatim. All three of T003 blockers are now discharged: yuku-codegen installed, the applied set ruled DERIVED from meta.docs.recommended, and ruling 3e restated implementably."
     blocked_reason: "Stopped BEFORE any edit on two stop_if conditions, which was correct. Blocker A (missing yuku-codegen) is discharged by the PM. Blockers B, C and D need rulings that trade against standing decisions, queued as T003a. No repository change was made."
     reasoning_hint: high
@@ -543,7 +543,62 @@ tasks:
     constraints:
       - "IR-7 guard REQUIRED: fail-closed conservative syntactic check on the emitter's own output plus a planted-violation row proving red. S1's derived is trivial and WILL pass, which is the definition of a green vacuum. Do NOT attempt a purity proof."
       - "T003 owes the WRITTEN RECORD of the untyped-prop limitation so a green is not over-read. Silence is not an option."
-    receipt: null
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 2
+      summary: >-
+        Landed packages/frameworks/angular whole: emitter lowering ALL 15 event records to class
+        methods under T003a's total scope-aware this.-qualification, a gate with parseTemplate
+        (exact-empty error set) PLUS the 17-rule DERIVED @angular-eslint set (12+4 from
+        meta.docs.recommended, ONE recorded addition, ZERO omissions), three byte-stable goldens,
+        and IR-7/IR-4 guards. NODE-ONLY. Both arbiters calibrated RED on planted violations; the
+        four rules that blocked the first attempt dissolve untouched; the corpus draws ZERO upstream
+        messages. 85 angular tests, 850 total across 49 files.
+      F1_REFUTES_THE_VUE_LANE_AND_IT_IS_THE_FINDING_THAT_MATTERED_MOST: >-
+        A lone interpolation child on its own line is NOT whitespace-safe in Angular.
+        parseTemplate('<output>\n\t{{ a }}\n</output>') yields BoundText " {{ a }}\n" - leading
+        space and trailing newline both preserved. PM VERIFIED INDEPENDENTLY. The Vue lane measured
+        the SAME SHAPE SAFE at 3.5.40 and therefore recorded its identical inline rule as "merely
+        conservative", in code, TWICE. INHERITING THAT FRAMING WOULD HAVE SHIPPED S3's data-writes
+        OBSERVABLE RENDERING " 0\n". This is the session's recurring lesson landing a fourth time:
+        a measurement is valid for the framework it was taken on, and nowhere else.
+      F2_arbiter_independently_agrees_with_ruling_2: >-
+        A planted @Output() onTrace = new EventEmitter() draws @angular-eslint/no-output-on-prefix.
+        Ruling 2 refused the output form on ARITY grounds from the corpus; upstream refuses it on
+        NAMING guidance. Two independent routes to the same answer - which is what an independent
+        arbiter is for.
+      F3_the_applied_set_is_MEASURABLY_SILENT_where_it_matters: >-
+        ASSERTED, not assumed: the derived set reports 0 messages on `seed = input()` and 0 on
+        [(ngModel)] (banana-in-box reports only ([x]) MISORDERING, not the construct). That is
+        precisely why no-signal-members and no-two-way-binding had to be FRAMELESS-OWNED policies.
+        no-signal-members is THE ONLY THING standing between the emitter and a pre-empted T005.
+      F5_T002_DISSENT_2_CONFIRMED: >-
+        @for's `track` is a COMPILER ERROR when absent, so the "compiles clean and is WRONG" class
+        that earned the Svelte and Vue arbiters their keep DOES NOT EXIST HERE. T002's dissent 2
+        predicted exactly this. The arbiter's keep is earned by EIGHT planted-violation rows across
+        both plugins, not by a finding - and the dissent said in advance that a clean result must
+        not be read as the arbiter being pointless, nor a finding manufactured to justify it.
+      R1_UNMEASURED_FLAGGED_FOR_T004: >-
+        The IR declares value/checked as PROPERTY bindings, so the emitter spells [value]/[checked].
+        WHETHER ANGULAR'S SSR WRITES THOSE INTO THE SERVED value="..." ATTRIBUTE the other four
+        lanes emit CANNOT BE DECIDED FROM A GOLDEN. This matters directly: S3's text observation now
+        reads the SERVED PAYLOAD under Option D. DO NOT "fix" it to [attr.value] without a browser
+        measurement - that is the exact inference error the Option D chain made four times.
+      deviations:
+        - "Qualification name set includes ORDINARY COMPONENT LOCALS, not only T003a's enumerated 'state, props, derived'. S1's `prefix` is an ordinary local this emitter promotes to a class member and the derived getter reads it; omitting it would leave it bound to nothing. Still exactly the required KIND of set - a declared IR fact (props.entries UNION locals[].names) known before any body is read."
+        - "Method parameters are `: any`, not ruling 3d's literal `event: Event`. A real Event type makes event.currentTarget.value a type error at T004, and the IR carries no type (IR-8, out of scope per ruling 5). Read 3d's spelling as a signature sketch, not a typing ruling."
+        - "Where the IR handler declares NO parameter (S1 only) the invented name is `_event`, so lint reports 0 warnings on generated output. NOT a content trigger: params.length===0 is the DECLARED signature - the same field ruling 3e already reads - and it selects a NAME, never an emission SHAPE. Call site is $event either way; asserted two-sided."
+        - "No .gitignore although permitted: Vue's and Solid's exist to hide vitest BROWSER artifacts and this package is node-only."
+        - "New files were git add-ed (not committed) before the byte-stability check, because git diff --exit-code over UNTRACKED paths passes VACUOUSLY."
+      commands:
+        - {cmd: "pnpm check", status: pass, note: "six tsc passes, angular appended, Vue's entry untouched"}
+        - {cmd: "pnpm test", status: pass, note: "49 files, 850 tests; 85 angular"}
+        - {cmd: "pnpm lint", status: pass, note: "0 warnings, 0 errors, 299 files"}
+        - {cmd: "regenerate && git diff --exit-code -- generated", status: pass, note: "run TWICE, byte-stable both times"}
+        - {cmd: "pnpm e2e", status: pass, note: "four rows, all observations equal - the Angular ROW is T004's"}
+        - {cmd: "git diff --exit-code -- other frameworks, compiler, demos, scripts, pnpm-workspace.yaml", status: pass}
+        - {cmd: "git status --short", status: pass, note: "every path inside allowed_files; pnpm-lock.yaml absent"}
 
   - id: T003a
     type: judge
