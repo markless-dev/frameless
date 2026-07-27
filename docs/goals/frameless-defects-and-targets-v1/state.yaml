@@ -14,6 +14,23 @@ goal:
     consumption (defects 3, 5), then Phase D/E the shared IR foundation and the
     three adapters via their existing boards.
   status: active
+  autonomy_grant:
+    granted: "2026-07-27, by the owner, verbatim: do not make anything dependent on me to continue until goal end."
+    scope: >-
+      Continuous execution of both boards to completion without check-ins. Judge rulings that were
+      previously framed as owner decisions - T021's duplicate-row coverage call, the qwik-throttled
+      rescope, the Svelte demo-shape conflict - are to be RULED on evidence by a Judge and
+      recorded, not deferred upward.
+    what_this_grant_does_NOT_cover: >-
+      Outward-facing publication under the owner's name. Specifically: do NOT file the two drafted
+      upstream reports against eslint-plugin-qwik / @qwik.dev/core / solid-js. The owner is on the
+      Qwik core team and those filings carry their identity. 'Drafted and complete, pending owner'
+      is a valid terminal state and T999 has been amended so it cannot reject completion on that
+      basis. Also not covered: force-pushing, rewriting published history, or deleting anything the
+      owner has not seen.
+    if_a_genuine_blocker_appears: >-
+      Mark that exact task blocked with a receipt naming what is missing, spawn the smallest safe
+      task that can proceed around it, and keep going. Do not set goal.status blocked and stop.
   oracle:
     signal: >-
       TWO halves, both required. (1) DEFECTS: all six defects in docs/DEFECTS.md
@@ -1654,6 +1671,7 @@ tasks:
       - "packages/frameworks/react/test/gate.test.ts - the three rows, each marked in place with a comment naming its twin"
     constraints:
       - "Do not implement; rule and spec."
+      - "AUTONOMY: the owner granted continuous execution to goal end on 2026-07-27 and is unavailable. This is a Judge ruling, not an owner decision - rule it on the evidence and record the reasoning. Do not defer it upward."
       - "THE SERIOUS ONE: 'direct listener iteration notify-per-write shared tear' is byte-identical to 'notify-per-write shared tear', while its two siblings ARE distinct shapes. So R-SH3 is guarded against two bypasses where the names claim three - one fewer shape covered than the corpus advertises. Rule whether to rewrite it to the distinct shape its name promises, or drop it."
       - "The other two - 'computed-member setter' duplicated verbatim, and 'react import allowlist' identical to 'unused import' - are not vacuous; each mutates and exercises its policy. Rule whether they are harmless redundancy or the same copied-and-half-edited mechanism."
       - "T018 left them in place because deletion is a COVERAGE decision and its card forbade dropping mutations. That was the right call; the coverage decision is yours."
@@ -1681,7 +1699,8 @@ tasks:
       - "Audit the likely misfire explicitly: were the undiagnosed defects actually diagnosed, or silenced?"
       - "Re-check the qwik-throttled flag's receipt if upstream has responded by then. T005 let it stay on the strength of T004's upstream proof; that justification expires if Qwik fixes or rejects it."
       - "The DROPPED-CLICK upstream filing is RETRACTED and must not have been sent. Confirm it was not."
-      - "Confirm the remaining upstream issue was actually FILED or is explicitly still pending. notes/T004-upstream-qwik-dropped-click.md and notes/T003-upstream-eslint-qwik.md are filing MATERIAL, not filings. The charter permits 'file or recommend', so pending is acceptable - but it must be stated, not assumed."
+      - "UPSTREAM FILINGS ARE A VALID TERMINAL STATE AS 'DRAFTED, PENDING OWNER'. The owner granted autonomy to goal end on 2026-07-27 and is asleep; filing an issue against another project's tracker is outward-facing publication under their name and is NOT something the PM may do unattended. Two reports exist as drafted material: notes/T003-upstream-eslint-qwik.md (the eslint rule gap, plus the dropped-array-element optimizer finding) and T008's section 3 (the solid-js attr: typing gap, settled by measurement). Confirm both are DRAFTED AND COMPLETE. Do NOT reject completion because they have not been sent, and do NOT send them."
+      - "Historic wording check only, no longer a gate: notes/T004-upstream-qwik-dropped-click.md and notes/T003-upstream-eslint-qwik.md are filing MATERIAL, not filings. The charter permits 'file or recommend', so pending is acceptable - but it must be stated, not assumed."
     expected_output:
       - "complete | not_complete"
       - "full_outcome_complete: true | false"

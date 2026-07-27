@@ -11,6 +11,15 @@ goal:
   kind: specific
   tranche: "Land a Svelte 5 lane end to end - official scaffold, emitter, gate, goldens, demo, e2e row asserting S1/S2/S3 equality - then rule on IR-4, the target-framework-version input the whole policy's version corollary depends on."
   status: active
+  autonomy_grant:
+    granted: "2026-07-27, by the owner: continuous execution to goal end, no check-ins."
+    scope: >-
+      Rulings previously framed as needing the owner - notably whether demos/svelte-official is a
+      SvelteKit app or a bare vite+plugin-svelte setup - are Judge calls, to be ruled on evidence
+      and recorded. Do not defer upward.
+    not_covered: >-
+      Outward-facing publication under the owner's name, force-pushing, or rewriting published
+      history.
   prepped_not_started: >-
     NOTHING IS RUNNING THIS BOARD. status reads active and active_task reads T001 only because the
     GoalBuddy checker requires exactly one active task while a goal is active; there is no
