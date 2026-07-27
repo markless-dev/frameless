@@ -105,7 +105,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T004
+active_task: T005
 
 tasks:
   - id: T001
@@ -530,7 +530,7 @@ tasks:
   - id: T004
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Determine whether defect 2 (clicks dropped under throttling) is upstream Qwik or frameless, by reproducing on an untouched pnpm create qwik app."
     allowed_files:
@@ -556,12 +556,68 @@ tasks:
       - "Reproduces upstream -> write the issue report for the owner to file against Qwik. That CLOSES this defect for this goal and is not a failure."
       - "Does NOT reproduce upstream -> it is ours, and this becomes a real bug needing its own Worker package."
       - "Keep the qwik-throttled unthrottled control non-continue-on-error. It is the instrument's own health check."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verdict: upstream
+      note: notes/T004-upstream-qwik-dropped-click.md
+      summary: "Defect 2 is UPSTREAM QWIK, and the mechanism is isolated rather than inferred. It reproduces on an untouched pnpm create qwik@2.0.0-beta.38 app carrying a hand-written counter, with zero frameless involvement, at versions identical to the workspace on core, router and vite. The Qwik Loader bundle is BYTE-IDENTICAL in both apps (sha256 8175c89b...a643d2) from two independent builds - the code that loses the click is @qwik.dev/core's own, bit for bit."
+      changed_files:
+        - docs/goals/frameless-defects-and-targets-v1/notes/T004-upstream-qwik-dropped-click.md
+      commands:
+        - cmd: "QWIK_URL=http://localhost:4180/ QWIK_THROTTLE=0 node demos/qwik/throttled-resume.mjs"
+          status: pass
+          note: "CONTROL on the existing demo, run first AND last. All 4 checks pass both times. The instrument is healthy, so the throttled results are interpretable."
+        - cmd: "pnpm create qwik@2.0.0-beta.38 empty upstream-qwik && pnpm install"
+          status: pass
+          note: "in the scratchpad, outside the repo"
+        - cmd: "pnpm build.client && pnpm build.preview (scaffold)"
+          status: pass
+        - cmd: "QWIK_URL=http://localhost:4181/ QWIK_THROTTLE=0 node demos/qwik/throttled-resume.mjs"
+          status: pass
+          note: "scaffold control"
+        - cmd: "QWIK_URL=http://localhost:4181/ node demos/qwik/throttled-resume.mjs"
+          status: pass
+          note: "REPRODUCES UPSTREAM - the harness reports 'page.waitForFunction: Timeout 30000ms exceeded' verbatim, exactly as against demos/qwik. Recorded as pass because reproducing was this task's objective."
+        - cmd: "QWIK_URL=http://localhost:4182/ node demos/qwik/throttled-resume.mjs (scaffold, qwikLoader inline)"
+          status: pass
+          note: "MECHANISM CONFIRMATION - all 4 checks pass under the same throttle"
+        - cmd: "cmp demos/qwik/dist/build/q-fkfGnddn.js upstream-qwik/dist/build/q-fkfGnddn.js"
+          status: pass
+          note: byte-identical
+        - cmd: "git status --short"
+          status: pass
+          note: "exactly one untracked file, inside allowed_files"
+      proved_dropped_not_delayed: "After the click everything arrives and the container reaches 'resumed', yet the value never moves. Clicking a SECOND time on the resumed container yields kit:4, not kit:6 - the counter advanced once, so the first interaction was lost rather than queued. True in BOTH apps. No failed requests, no page errors, no console output."
+      mechanism:
+        cause: "A DEFAULT, not a bug in anyone's application code. The served HTML installs no listeners - a synchronous inline script only records event names into window._qwikEv. addEventListener happens only inside <script async type=\"module\" src=\"/build/q-fkfGnddn.js\">, which has no replay path for events that fired earlier."
+        existing_knob: "@qwik.dev/core's RenderOptions already exposes qwikLoader: 'module' | 'inline' | 'never', defaulting to 'module'."
+        causal_confirmation: "Setting 'inline' in the scaffold's entry.ssr.tsx - nothing else changed - makes the same production build under the same 300ms/400kbit throttle pass all four checks, with the click landing while the container is still 'paused'."
+        measured_drop_windows: "scaffold unthrottled 8ms; demo unthrottled 10ms; scaffold throttled 406ms; demo throttled 449ms; scaffold throttled with qwikLoader inline 28ms. The demo's extra ~43ms is document size, not emitted code."
+      versions:
+        scaffold: "@qwik.dev/core 2.0.0-beta.38, @qwik.dev/router 2.0.0-beta.38, vite 7.3.1"
+        workspace: "identical on all three"
+        caveat: "none - exact match"
+        trap_avoided: "Scaffolded with create-qwik@2.0.0-beta.38 deliberately. create-qwik@latest is 1.20.0, which is the Qwik 1 line under @builder.io/qwik and would have made the comparison meaningless."
+      correction_to_source_document: "findings-007 says 'zero network requests are issued after the click'. That is right about the HANDLER QRL but responses DO continue to arrive, issued beforehand by the preloader. Worth stating precisely in the upstream filing, since a Qwik maintainer reading the log would otherwise see requests and dismiss the report."
+      pm_decisions_deferred_to_T005:
+        - "Should demos/qwik adopt qwikLoader: 'inline'? It would make the throttled lane pass, but the demo would stop reflecting a DEFAULT scaffold - which cuts directly against frameless-qwik-v1's whole point, that activation neutrality is proven on official tooling as it ships. The Worker deliberately did not take this."
+        - "What happens to the qwik-throttled job's continue-on-error? The goal oracle allows a flag to remain if it carries a receipt explaining why. An upstream defect we cannot fix locally is a plausible such reason."
+      differences_assessed_immaterial:
+        - "Route content: scaffold uses a hand-written counter, demo uses frameless-emitted RenderOnce. Immaterial - the drop happens before any component code runs, and the loader bundle is byte-identical."
+        - "Demo handler is async and calls props.onTrace$; scaffold handler is a plain sync assignment. Immaterial - no handler QRL is ever requested."
+        - "Scaffold vite.config.ts adds vite-tsconfig-paths and preview cache headers. Did not change the outcome."
+        - "Demo document is slightly larger, giving a ~43ms longer drop window."
+      deviations:
+        - "Went beyond the card by testing qwikLoader: 'inline' on the scaffold. This converts the mechanism from 'likely' to proven and gives the upstream issue a concrete ask. Evidence-gathering in the scratchpad, not a fix; no repo file changed."
+        - "Wrote one note rather than two - a single self-contained document covers both the decision and the filing material. The second allowed path was not needed."
+        - "Used an instrumented COPY of the harness in the scratchpad for request logging and the second-click probe, leaving demos/qwik/throttled-resume.mjs untouched. All headline results were also confirmed with the repo harness verbatim."
+        - "Served on ports 4180-4182 rather than the harness default; 4173 was occupied. Driven via QWIK_URL, which the harness already supports."
+      verification_attempts: 1
   - id: T005
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     objective: "Phase A audit: is emitted-output correctness actually fixed, and was each fix preceded by a witnessed failure?"
     inputs:
@@ -574,6 +630,7 @@ tasks:
       - "pnpm e2e is RED for Qwik between T002 and T003 BY DESIGN - T002's deliverable is that failure. Reject Phase A if e2e is still red when this audit runs: that means T003 did not close it."
       - "RATIFY OR OVERTURN T003's Gate 5 resolution. The Worker recorded a literal G5 FAIL - the two forms are NOT behaviourally equivalent, which is the whole point of the change - and resolved it as FORCED LOWERING under docs/emitter-idiom-policy.md's own preamble, on the grounds that the baseline form cannot express the IR's declared SyncPolicy in Qwik at all. That is plausible and was flagged honestly rather than reframed away, but it is a Judge call. If forced lowering is the right frame, say whether the policy's preamble needs sharpening so the next adapter is not left to improvise the same argument."
       - "Rule on the RECORDING GAP: docs/emitter-idiom-policy.md requires every ruling to get a worked-example entry plus a decision-site comment. The comment is in place; the worked example is not, because that file was outside T003's allowed_files. Spec the follow-up package or fold it into a later task."
+      - "TWO PM CALLS DEFERRED FROM T004, both yours. (a) Should demos/qwik adopt qwikLoader: 'inline'? It makes the throttled lane pass, but the demo would stop reflecting a DEFAULT scaffold - which cuts directly against frameless-qwik-v1's premise that activation neutrality is proven on official tooling AS IT SHIPS. Weigh a green lane against a representative demo and rule. (b) What happens to the qwik-throttled job's continue-on-error? The oracle allows a flag to remain if it carries a receipt; an upstream defect we cannot fix locally is a plausible such reason, but say so explicitly rather than letting it persist by default."
       - "Assess T003's G2 judgement call: it passed Gate 2 by reading 'an added import list entry' as scoped to entries demanded of ANOTHER module, since the added sync$/$ imports are the emitted module's own. It flagged this as re-openable."
       - "full_outcome_complete stays false - this is a phase boundary, not the goal."
     expected_output:
