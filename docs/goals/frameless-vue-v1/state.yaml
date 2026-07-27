@@ -46,12 +46,12 @@ goal:
     (2) Every instrument asserts its own preconditions. (3) Two-sided calibration for harnesses, not
     only gates - a settle loop that cannot throw is not a settle loop.
   oracle:
-    signal: "pnpm e2e includes a Vue row driving an official Vue scaffold at the pinned lockfile version, and its S1/S2/S3 observations are ASSERTED equal to demos/react-official, demos/solid-official and demos/qwik under the same matrix."
+    signal: "pnpm e2e includes a Vue row driving an official Vue scaffold at the pinned lockfile version, and its S1/S2/S3 observations are ASSERTED equal to demos/react-official, demos/solid-official, demos/qwik AND demos/svelte-official under the same matrix."
     cadence: "after each Worker package and at final audit"
     final_proof: "A green pnpm e2e receipt naming the Vue row, plus at least one Vue idiom question run through all six policy gates reaching a non-DEFERRED Gate 1 and Gate 6 - proving the lane actually discharged the deferral."
   intake:
     original_request: "Owner asked, during frameless-idiom-policy-v1: 'I'm also wondering if we should start the goals for Vue, Angular, and Svelte.' This board is the Vue answer, prepped after the idiom policy was ratified so it inherits a decided rule instead of re-litigating one."
-    interpreted_outcome: "Vue becomes a fourth frameless target with proven activation neutrality on official tooling."
+    interpreted_outcome: "Vue becomes a FIFTH frameless target with proven activation neutrality on official tooling."
     input_shape: specific
     audience: "frameless maintainers and future adapter authors"
     authority: requested
@@ -102,19 +102,19 @@ visual_board:
     url: null
     command: "npx goalbuddy board docs/goals/frameless-vue-v1"
 
-active_task: T001
+active_task: T002
 
 tasks:
   - id: T001
     type: scout
     assignee: Scout
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Map the official Vue scaffold, its activation model, and what a Vue row in scripts/e2e.mjs would require."
     inputs:
       - "The current official Vue scaffold (npm create vue@latest) - what it ships with, and at what versions"
       - "scripts/e2e.mjs - the activation matrix and its hydrate/resume vocabulary"
-      - "demos/react-official and demos/solid-official - the shape a fourth official demo must match"
+      - "demos/svelte-official - the shape a new official demo must match. CORRECTED 2026-07-27: this input originally named react-official and solid-official, but those run a hand-written server.js while svelte-official runs no server of its own, and is both fresher and structurally closer to whatever a Vue lane becomes."
       - "poc/09-storage/vue - prior in-repo assumptions"
       - "packages/compiler/src/schema.ts - IR-1 through IR-7 as they actually stand"
     constraints:
@@ -127,12 +127,116 @@ tasks:
       - "What a Vue row in the e2e matrix concretely requires"
       - "SFC vs JSX: consequences of each for goldens, gate, tooling and demo consumption"
       - "Which of IR-1..IR-7 actually block S1/S2/S3, versus which only block sugar"
-    receipt: null
+    receipt:
+      result: done
+      harness: claude-code
+      summary: >-
+        HEADLINE, and it is a charter conflict rather than a detail: `npm create vue@latest`
+        (create-vue@3.23.0) scaffolds a CLIENT-ONLY SPA. Scripts are exactly dev=vite,
+        build=vite build, preview=vite preview; template/entry/default/src/main.js is
+        `createApp(App).mount('#app')`; grepping the whole bundle for ssr|nuxt yields ONE hit and
+        it is the `**/dist-ssr/**` eslint ignore glob. There is no entry-server, no createSSRApp,
+        no server.js anywhere in the scaffold. SvelteKit and Qwik server-render by default; Vue
+        does not. Every S1/S2/S3 observation opens with "server-rendered ..." and
+        assertServedActivation demands a client-entry literal in a markup payload, so a stock
+        create-vue app CANNOT satisfy the oracle. Which scaffold supplies SSR is a T002 ruling and
+        it is UPSTREAM of SFC-vs-JSX.
+      vite_aligns: >-
+        Vue is the Svelte case, not the Qwik case. Scaffold declares vite ^8.1.5 against the root
+        catalog's ^8.0.16 (pnpm-workspace.yaml:16) - same major range, one vite instance.
+        @vitejs/plugin-vue@6.0.8 peers vite ^5||^6||^7||^8. NO PIN NEEDED.
+      scaffold_versions: "create-vue@3.23.0, vue@3.5.40, @vitejs/plugin-vue@6.0.8, vite ^8.1.5, vue-tsc@3.3.8, @vue/tsconfig ^0.9.1, engines node ^22.18.0||>=24.12.0. The lint variant uses @vue/eslint-config-typescript, NOT eslint-plugin-vue by name."
+      e2e_needs_a_row_not_a_widening: >-
+        scripts/e2e.mjs:32-36 officialDemos rows are {framework, activation, directory} and
+        activation is already 'hydrate'|'resume'. Vue hydrates, so e2e.mjs needs a FIFTH ROW plus
+        participation in the threeWay equality at :442-457 - no vocabulary widening, unlike Svelte.
+        What does move: three-way-contract.ts:42-46's hydrate arm is the literal union
+        'react'|'solid'|'svelte', and adding 'vue' forces both total tables - servedClientEntry
+        (:77-81) and expectedNavigations (:104-109, react 0 solid 0 qwik 1 svelte 1). Omission is a
+        compile error, which the doc comments at :62-76 and :101-103 say is the point.
+      both_table_values_must_be_MEASURED: >-
+        servedClientEntry must be read from the payload, never guessed - react and solid share
+        '/src/entry-client.jsx' only by scaffold coincidence while SvelteKit owns
+        '@sveltejs/kit/src/runtime/client/entry.js'. expectedNavigations is 0 if no router
+        (create-vue's router is optional) and likely 1 under Nuxt. Both depend on the scaffold ruling.
+      activation_marker: >-
+        onMounted imported from 'vue', called in the ROOT App component - the exact structural
+        analogue of Svelte's onMount in +layout.svelte. Vue flushes mounted hooks child-first like
+        Svelte, so the root component's onMounted is last in the tree, preserving the ordering
+        property Svelte's dissent demanded evidence for. Setting the marker after mount() returns in
+        the entry module is the shape Svelte's T002 explicitly ruled out.
+      ir_gaps: >-
+        NONE of IR-1..IR-7 blocks S1/S2/S3 for Vue - matching the Svelte result. IR-1/2/3/6 are
+        sugar-only (defineModel, defineEmits, named v-slot, :class). IR-5's two actions cover the
+        corpus: S3 needs only preventDefault, expressible as a plain in-body event.preventDefault();
+        Vue's @submit.prevent is sugar over it. IR-7 is soundness, addressable as Svelte did it - a
+        conservative reject-list over computed(...) rather than $derived(...).
+      the_dev_sink_matters_MORE_for_vue: >-
+        RULE-4 FINDING, and the sharpest thing in this receipt after the SSR gap. Vue does NOT fail
+        on hydration mismatch - it emits 'Hydration text mismatch' / 'Hydration node mismatch'
+        through console.warn and then PATCHES THE DOM TO MATCH THE CLIENT. So without a warn sink a
+        Vue lane CAN PASS GREEN WHILE HYDRATION IS GENUINELY MISMATCHING. There is no
+        hooks.client.ts analogue; the nearest shape is a sink module imported at the top of the
+        client entry before mount, optionally plus app.config.warnHandler. Self-calibration copies
+        demos/svelte-official/src/hooks.client.ts - plant one warn and one error, require each
+        captured EXACTLY ONCE (catches both non-install and double-install), drain, then write
+        data-frameless-dev-sink=calibrated.
+      vue_tsc_hole_is_emitter_controlled: >-
+        Svelte's calibration table is unknown prop RED, missing prop RED, WRONG-TYPED prop GREEN,
+        because emitted output carries no prop types. vue-tsc checks route call sites identically,
+        so the hole TRANSFERS - but for Vue it is emitter-controlled. defineProps(['label']) types
+        every prop `any`; defineProps<{...}>() carries real types and would CLOSE the hole Svelte
+        could not close. That is an emitter-format consequence with a real instrument payoff.
+      sfc_vs_jsx_evidence_not_ruled: >-
+        copy-emitted is extension-agnostic (one-line copyFileSync in all four demos) - zero cost
+        either way. SFC repeats Svelte's T003 divergence 1 (nothing in this workspace parses .vue,
+        so format-emitted becomes an assertion over deterministic text rather than an oxfmt rewrite)
+        and divergence 2 (.vue is a DEFAULT export, so the IR's named ComponentExport cannot be
+        honoured by spelling), and adds a new one (plain tsc cannot read .vue, so vue-tsc becomes a
+        distinct pass inside pnpm check). JSX reuses oxfmt, keeps named exports, and is checkable by
+        the existing `tsc -p` pattern. THE NON-OBVIOUS INPUT - eslint-plugin-vue is a TEMPLATE
+        linter driven by vue-eslint-parser and does NOT lint Vue JSX, so the JSX branch has the
+        WEAKER arbiter, inverting the usual JSX-is-better-tooled intuition.
+      whitespace_must_be_remeasured: >-
+        Vue's SFC compiler defaults to whitespace:'condense', a DIFFERENT rule from Svelte's, so
+        T003's measurement 3 and its newline-inside-the-closing-tag idiom do NOT carry over and must
+        be re-measured against the react/solid text observations.
+      what_does_not_transfer_from_svelte:
+        - "Svelte's S3 value-attribute problem does NOT recur. It came from svelte's hydration-only remove_input_defaults; Vue's hydration does not strip the value attribute. Vue inherits the Option D served-payload read as a free benefit rather than a necessity."
+        - "Svelte's DELEGATION question does not arise. Svelte 5 delegates click to the root and simulates propagation, which forced T003's four-cell behavioural measurement of preventDefault. Vue attaches real listeners at the element, so both the Qwik async-QRL failure mode and the Svelte delegation uncertainty are structurally absent - but instrument rule 1 still requires the triangulation to be RUN, not assumed."
+        - "The two-negative-arm calibration on the served read lives INSIDE the shared contract (three-way-contract.ts:275-330). A Vue lane inherits it by calling the same function - no per-lane reimplementation."
+      contradictions_found:
+        - "PM PREMISE WAS WRONG. The PM's brief said all four existing gates import a third-party plugin at src/gate/index.ts:5. FALSE for Svelte: packages/frameworks/svelte/src/gate/index.ts:3 is `import { parse } from 'svelte/compiler'` and the file contains no eslint plugin. Only react, solid and qwik fit that shape. Svelte deliberately used the framework's OWN COMPILER as its arbiter - which for Vue maps to @vue/compiler-sfc parse/compile, shipped inside vue, and is the closer precedent. PM has issued this correction to the Angular scout."
+        - "ORDINAL: goal.md:7 and state.yaml:37 call Vue 'a fourth frameless target'. Svelte already landed as the fourth (scripts/e2e.mjs:36). VUE IS THE FIFTH. Cosmetic, but any 'four lanes' assertion text will be off by one."
+        - "STALE NOTE: docs/goals/frameless-svelte-v1/notes/T003-svelte-emitter.md:124 says eslint-plugin-svelte is not in the lockfile. It now is (pnpm-lock.yaml:2839, :6898). Do not cite that line as current."
+        - "STALE INPUT LIST: state.yaml:100 names react-official and solid-official as the shape to match. Those run a hand-written server.js; demos/svelte-official runs no server of its own and is both fresher and structurally closer to whatever a Vue lane becomes."
+        - "poc/09-storage/vue contains ONLY build.mjs and main.js - no package.json, no .vue file, no vue dependency. goal.md:46's characterisation of it is not evidenced by the directory as it stands."
+      pre_install_set_pm_owns: >-
+        ZERO Vue packages in the lockfile - `grep -c vue pnpm-lock.yaml` returns 0. Workers must not
+        move the lockfile, so the PM installs. Runtime: vue@3.5.40, @vitejs/plugin-vue@6.0.8,
+        vue-tsc@3.3.8, @vue/tsconfig ^0.9.1. Arbiter, ONLY IF the SFC branch is ruled:
+        eslint-plugin-vue@10.10.0 plus its REQUIRED separate peer vue-eslint-parser ^10.3.0 (other
+        peers already satisfied - eslint 9.39.5, @typescript-eslint/parser 8.65.0). PM HELD THIS
+        INSTALL until T002 rules, because both the scaffold choice and the SFC/JSX choice change the
+        set, and installing the wrong one moves the lockfile for nothing.
+      devtools_contaminant_flagged: >-
+        vite-plugin-vue-devtools ^8.1.5 is in the scaffold's DEFAULT devDependencies. It injects an
+        overlay and its own module graph into the dev page, so it will appear in served payloads and
+        can add console output - a candidate served-payload contaminant AND dev-sink false positive
+        for whoever measures the client-entry literal.
+      commands:
+        - "npm view create-vue version; npm pack create-vue@latest; tar xzf into scratchpad"
+        - "cat template/base/package.json, template/entry/default/src/main.js, template/tsconfig/base/package.json, template/linting/core/ts/eslint.config.js.ejs"
+        - "grep -o 'ssr|nuxt' bundle.js -> 1 hit, the dist-ssr eslint ignore glob"
+        - "grep -c vue pnpm-lock.yaml -> 0"
+        - "sed -n 1,12p packages/frameworks/{react,solid,qwik,svelte}/src/gate/index.ts"
+        - "grep -n 'HydrateFramework|servedClientEntry|expectedNavigations|served|runScenario' demos/react-official/three-way-contract.ts"
+      note_needed: false
 
   - id: T002
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     objective: "Ratify the Vue adapter contract: emitted format, S1/S2/S3 scope, and which IR gaps must be closed versus deferred."
     inputs:

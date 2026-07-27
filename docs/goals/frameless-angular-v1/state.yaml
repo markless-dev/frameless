@@ -46,7 +46,7 @@ goal:
     (2) Every instrument asserts its own preconditions. (3) Two-sided calibration for harnesses, not
     only gates - a settle loop that cannot throw is not a settle loop.
   oracle:
-    signal: "pnpm e2e includes an Angular row driving an official Angular scaffold at the pinned lockfile version, and its S1/S2/S3 observations are ASSERTED equal to demos/react-official, demos/solid-official and demos/qwik under the same matrix."
+    signal: "pnpm e2e includes an Angular row driving an official Angular scaffold at the pinned lockfile version, and its S1/S2/S3 observations are ASSERTED equal to demos/react-official, demos/solid-official, demos/qwik AND demos/svelte-official under the same matrix."
     cadence: "after each Worker package and at final audit"
     final_proof: "A green pnpm e2e receipt naming the Angular row, plus the decorator-vs-signal question re-run with Gate 1 and Gate 5 recorded against a real build rather than a description."
   intake:
@@ -104,20 +104,20 @@ visual_board:
     url: null
     command: "npx goalbuddy board docs/goals/frameless-angular-v1"
 
-active_task: T001
+active_task: T002
 
 tasks:
   - id: T001
     type: scout
     assignee: Scout
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Map the official Angular scaffold, its activation model, and exactly what handler lowering requires of the emitter."
     inputs:
       - "The current official Angular scaffold (ng new) - contents and pinned versions"
       - "Angular's template expression grammar - what is and is not permitted"
       - "scripts/e2e.mjs - the activation matrix and its vocabulary"
-      - "demos/react-official and demos/solid-official - the shape a fourth official demo must match"
+      - "demos/svelte-official - the shape a new official demo must match. CORRECTED 2026-07-27: this input originally named react-official and solid-official, but those run a hand-written server.js while svelte-official runs no server of its own, and is the fresher precedent."
       - "packages/compiler/src/schema.ts - IR-1, IR-2, IR-3, IR-4, IR-6 as they stand"
       - "The S1/S2/S3 fixtures - every handler body that will need lowering"
     constraints:
@@ -131,12 +131,116 @@ tasks:
       - "Whether Angular's build typechecks emitted templates"
       - "Which of the IR gaps block S1/S2/S3 versus only sugar"
       - "Resolution of the model() stability conflict against the scaffold's actual version"
-    receipt: null
+    receipt:
+      result: done
+      harness: claude-code
+      summary: >-
+        Angular is 22.0.8 (@angular/core, cli, build, ssr); @angular-eslint is 22.1.0; NOTHING
+        Angular is in pnpm-lock.yaml. Mapped scaffold, build story, activation, contract threading
+        and per-handler lowering. The build story is the top risk and it is WORSE than the PM framed
+        it.
+      the_build_story_is_the_top_risk: >-
+        @angular/build@22.0.8 lists `vite: 7.3.6` as an EXACT DEPENDENCY, not a peerDependency
+        (also rollup 4.60.2, esbuild 0.28.1). demos/svelte-official declares vite ^8.0.16 ITSELF and
+        lets the plugin peer onto it. So the root catalog pin (pnpm-workspace.yaml:16, vite ^8.0.16)
+        DOES NOT REACH THE ANGULAR LANE AT ALL - Angular vendors its own private vite. That is not a
+        conflict, it is worse: it is UNCONTROLLED BY THE CATALOG. The Qwik precedent (pin vite to
+        satisfy a peer) is INAPPLICABLE because there is no peer to satisfy. There is no
+        vite.config.ts; angular.json plus ng serve/ng build own the build, so pipeline.dev() must
+        drive the CLI, not vite.
+      typescript_conflict: >-
+        @angular/build peers `typescript >=6.0 <6.1` against the catalog's ^5.9.3
+        (pnpm-workspace.yaml:15). Precedent exists - demos/svelte-official already declares
+        typescript ^6.0.3 off-catalog - but whether the Angular package joins the root tsc --noEmit
+        pass or takes its own tsconfig pass like react/solid/svelte is a T002 decision.
+        vitest ^4.0.8 peer is compatible with the catalog's ^4.1.5.
+      per_handler_lowering_quantified: >-
+        14 handlers across S1/S2/S3 (1 + 7 + 6), bodies read from packages/compiler/test/goldens and
+        cross-read against packages/frameworks/svelte/generated. 13 OF 14 REQUIRE LOWERING to class
+        methods; only S2 h2 (assignment only) and S3 h4 (event.preventDefault() alone) are inlinable
+        under Angular's expression grammar. THE REAL RISK IS NOT ++ OR const: three S2 row handlers
+        (edit, toggle, remove) CLOSE OVER THE @for LOOP VARIABLE `todo` and must take it as a method
+        PARAMETER, so the naming scheme must be deterministic over (loopVar, $event) ARITY, not just
+        over host id. Second: Angular exposes the event only as $event, so the emitter must RENAME
+        the IR's `event` identifier at the template call site while the method keeps its own
+        parameter name - a source transformation, not a formatting choice. {#each todos as todo
+        (todo.id)} maps cleanly to @for (todo of todos; track todo.id); @for's mandatory track is
+        satisfied by the IR key.
+      activation: >-
+        Angular hydrates via provideClientHydration(), so the binary hydrate/resume vocabulary
+        NOMINALLY covers it - no widening like Svelte's. Two flags: (a) withIncrementalHydration()
+        would make Angular partly resumable and fit NEITHER arm, so the lane should not enable it or
+        the vocabulary widens; (b) Angular 22 scaffolds are ZONELESS, so the post-activation signal
+        (afterNextRender() in the root component vs ApplicationRef.isStable via PendingTasks) MUST BE
+        MEASURED, not reasoned about. Svelte's "root layout mounts last because Svelte flushes
+        child-first" argument has NO ANGULAR ANALOGUE - Angular's render hooks run in phase order
+        across the whole tree.
+      contract_threading: >-
+        three-way-contract.ts:42-44 widen Activation; :77-81 servedClientEntry total
+        Readonly<Record<HydrateFramework,string>> needs a MEASURED literal from a real ng serve
+        payload (the CLI emits its own main.js-style module; guessing is the failure mode the
+        comment at :70-75 was written against); :104-109 expectedNavigations total Record asserted
+        EXACTLY - Angular needs provideRouter for /s2 and /s3 so the number must be measured;
+        runScenario requires served: EnvironmentResponse (:822) and S3's text reads served.text;
+        assertServedActivation (:396-419) forbids q:container and data-frameless-activated in the
+        served bytes; waitForInteractive (:434) asserts html[data-frameless-activated="angular"];
+        scripts/e2e.mjs:32-36 row plus :102 activation equality assert.
+      calibration_equivalents: >-
+        calibrateServedClientEntry (:135-162, two-sided - positive predicate plus payload-mutation
+        negative) is framework-agnostic and TRANSFERS DIRECTLY. The dev-warning sink does NOT:
+        there is no hooks.client.ts counterpart, and the earliest client code is src/main.ts before
+        bootstrapApplication. It is still REQUIRED - Angular reports NG0912/NG0913 hydration-node
+        mismatches as console.warn, which witness 0.7.0 cannot see. Angular additionally has
+        ErrorHandler DI and provideBrowserGlobalErrorListeners(), with no Svelte analogue.
+      ir_gaps: >-
+        NONE of IR-1, IR-3, IR-4, IR-6 blocks the lane - the same result Svelte found. IR-2 IS
+        CONDITIONAL AND IS A T002 DECISION: onTrace is a CALLBACK PROP
+        (ComponentPropExpression.kind 'callback', schema.ts:149-156), not a custom event, so it can
+        arrive as a function-valued @Input() and the lane is unblocked. If T002 instead rules
+        @Output() onTrace = new EventEmitter(), IR-2 BECOMES BLOCKING, because EnrichedEventRecord
+        binds to a hostNodeId (schema.ts:318-325) and carries no emit concept, and the demo routes
+        pass plain functions.
+      typecheck: >-
+        strictTemplates covers STRICTLY MORE than svelte-check did - it types $event at every
+        lowered call site and validates @for track expressions, neither of which the shared pnpm
+        check reaches. BUT IT DOES NOT CLOSE THE HOLE. Svelte T004 measured unknown prop RED,
+        missing prop RED, WRONG-TYPED prop GREEN because emitted output carries no prop types.
+        Angular inherits this identically - an untyped @Input() initial; is `any`, so a wrong-typed
+        route binding stays green under strictTemplates. Angular closes it ONLY if the emitter emits
+        types. Same cause, same fix as the Vue scout independently reached.
+      model_conflict_moot: "Both candidate answers for model() stability (v19.0, v20) are below the scaffold's 22.0.8. model() is unambiguously stable at the pinned version."
+      contradictions_found:
+        - "PM PREMISE WAS WRONG, and the Vue scout reached this independently. The brief said all four gates import a third-party plugin at src/gate/index.ts:5. FALSE for Svelte: packages/frameworks/svelte/src/gate/index.ts:3 is `import { parse } from 'svelte/compiler'` with no ESLint at all. TWO DISTINCT GATE PRECEDENTS EXIST and Angular is closer to the Svelte one."
+        - "PM UNDERSTATED THE VITE RISK. The brief framed the catalog pin as something Angular 'may not' interact with comparably. Stronger than framed: @angular/build lists vite as an EXACT dependency, so there is NO INTERACTION AT ALL - the catalog cannot pin the Angular toolchain even in principle."
+        - "The board names IR-1, IR-2, IR-3, IR-4 and IR-6 but never IR-5 or IR-7, while the brief asked about IR-1..IR-7. The numbering needs reconciling before T002 rules on must-close vs deferred."
+      arbiter_routes_both_available: >-
+        ESLint route: @angular-eslint/eslint-plugin@22.1.0, @angular-eslint/eslint-plugin-template@22.1.0,
+        @angular-eslint/template-parser@22.1.0 (required to lint templates as a separate language), or
+        the meta package angular-eslint@22.1.0. Compiler route: @angular/compiler / @angular/compiler-cli,
+        already pulled in by the framework. CRITICAL DIVERGENCE - Svelte's single-file compile() API has
+        NO ANGULAR EQUIVALENT. Angular's programmatic path is NgtscProgram, needing a tsconfig and a full
+        program. THAT IS THE LARGEST EMITTER-TEST-HARNESS DIVERGENCE ON THE BOARD.
+      what_does_not_transfer_from_svelte:
+        - "No vite.config.ts, no shared vite, catalog does not reach the lane."
+        - "AOT compilation means no direct-import path for browser tests - NgtscProgram, not a one-file compile()."
+        - "copy-emitted must land .ts INSIDE tsconfig.app.json's include, not as free-floating files."
+        - "checkJs: false is a non-issue - the scaffold is TS-only."
+        - "No hooks.client.ts equivalent; earliest client code is src/main.ts."
+        - "@sveltejs/adapter-auto maps to @angular/ssr plus outputMode."
+        - "The child-first-mount marker-ordering argument has no analogue."
+      pre_install_set_pm_owns: "Zero Angular packages in pnpm-lock.yaml. PM must install before dispatching any worker. Exact set depends on T002's arbiter and scaffold rulings."
+      commands:
+        - "npm view @angular/{core,cli,build,ssr} version -> 22.0.8; @angular-eslint/* -> 22.1.0"
+        - "npm view @angular/build@22.0.8 dependencies --json -> vite 7.3.6 EXACT dependency; peerDependencies -> typescript >=6.0 <6.1, vitest ^4.0.8"
+        - "grep angular pnpm-lock.yaml -> zero hits"
+        - "node -e enumerate handler bodies from three IR goldens -> 14 handlers"
+        - "sed -n 1,12p packages/frameworks/{react,solid,qwik,svelte}/src/gate/index.ts"
+      note_needed: false
 
   - id: T002
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     objective: "Ratify the Angular adapter contract, above all the handler-lowering architecture."
     inputs:

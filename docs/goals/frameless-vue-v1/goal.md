@@ -4,7 +4,7 @@
 
 ## Objective
 
-Add Vue as a frameless target: an emitter that turns `EnrichedIR` into Vue source, proven activation-neutral against React, Solid and Qwik on an **official Vue scaffold** at a pinned lockfile version, with S1/S2/S3 behaving identically to the existing three.
+Add Vue as a frameless target: an emitter that turns `EnrichedIR` into Vue source, proven activation-neutral against React, Solid, Qwik and Svelte on an **official Vue scaffold** at a pinned lockfile version, with S1/S2/S3 behaving identically to the existing four. (Vue is the FIFTH target, not the fourth - Svelte landed as the fourth lane on 2026-07-27.)
 
 ## Why this board exists
 

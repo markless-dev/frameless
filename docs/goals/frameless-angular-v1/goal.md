@@ -4,7 +4,7 @@
 
 ## Objective
 
-Add Angular as a frameless target: an emitter that turns `EnrichedIR` into Angular source, proven activation-neutral against React, Solid and Qwik on an **official Angular scaffold** at a pinned lockfile version, with S1/S2/S3 behaving identically to the existing three.
+Add Angular as a frameless target: an emitter that turns `EnrichedIR` into Angular source, proven activation-neutral against React, Solid, Qwik and Svelte on an **official Angular scaffold** at a pinned lockfile version, with S1/S2/S3 behaving identically to the existing four. (Angular is the FIFTH/SIXTH target, not the fourth - Svelte landed as the fourth lane on 2026-07-27.)
 
 ## Why this board is the hardest of the three
 
