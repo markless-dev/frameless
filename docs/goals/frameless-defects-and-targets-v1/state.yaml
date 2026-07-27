@@ -105,7 +105,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T017
+active_task: T018
 
 tasks:
   - id: T001
@@ -1035,7 +1035,7 @@ tasks:
   - id: T017
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     spec: "notes/T007-phase-b-audit.md section 6.2"
     objective: >-
@@ -1066,12 +1066,76 @@ tasks:
       - "allowed_files and verify come from T007 section 6.2; the PM fills them before activation."
       - "Three byte-equivalent copies exist: react/src/adapter.ts:65-78, solid:52-65, qwik:55-68. Repair all three or none."
       - "Do NOT remove the WebKit continue-on-error. T007 ruled the flag is the adjudicating instrument - the repair is self-falsifying on the real cell, because a genuine engine divergence would still fail a tick-bounded loop. Removing it first discards the only evidence that can settle it."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      note: notes/T017-quiescence.md
+      worktree: "collected from .claude/worktrees/agent-aa22d8d7cd6d7c4a1; the 521-line diff applied CLEAN to main at dfa9350"
+      summary: "Replaced the wall-clock bound over a frame-gated wait with a TICK bound in all three adapters, byte-identically, keeping wall clock only as a runaway guard. Wrote the calibration FIRST and ran it against the UNMODIFIED adapters to witness the failure. Found something stronger than the diagnosis: with frames off entirely the old loop did not throw at 500ms, it HUNG - because the wall-clock check at the top of the while could never be reached while parked on the rAF await."
+      changed_files:
+        - packages/frameworks/react/src/adapter.ts
+        - packages/frameworks/solid/src/adapter.ts
+        - packages/frameworks/qwik/src/adapter.ts
+        - packages/frameworks/react/test/calibration.browser.test.ts
+        - packages/frameworks/solid/test/calibration.browser.test.ts
+        - docs/goals/frameless-defects-and-targets-v1/notes/T017-quiescence.md
+      commands:
+        - cmd: "pnpm install --frozen-lockfile (worktree)"
+          status: pass
+          note: "1.9s from warm store"
+        - cmd: "react calibration vs UNMODIFIED adapter"
+          status: pass
+          note: "WITNESSED FAILURE, the deliverable: 4 failed | 13 passed. At 300ms cadence the verbatim CI error 'Observable DOM did not quiesce within 500ms' at adapter.ts:77; no-frames and runaway cases HUNG to 'Test timed out in 15000ms'."
+        - cmd: "solid calibration vs UNMODIFIED adapter"
+          status: pass
+          note: "WITNESSED FAILURE, identical signatures"
+        - cmd: "pnpm check"
+          status: pass
+          note: "attempt 1 flagged the solid mounted() helper not awaiting Adapter.mount's Handle|Promise<Handle>; fixed. PM RE-RAN on main: clean across all three tsc passes."
+        - cmd: "pnpm test"
+          status: pass
+          note: "PM RE-RAN on main: 569/569, 39 files - unchanged, no node test touched"
+        - cmd: "pnpm test:browser"
+          status: pass
+          note: "PM RE-RAN on main: react 60/60, solid 49/49"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "PM RE-RAN on main: exit 0, [e2e] PASS"
+        - cmd: "git diff --exit-code -- generated + emitted"
+          status: pass
+          note: "PM VERIFIED: no emitted output moved"
+        - cmd: "sha256 of the settle block in all three adapters"
+          status: pass
+          note: "PM VERIFIED: f2420e4ab9fc2bd8 in react, solid AND qwik - byte-identical, not merely equivalent"
+      what_it_now_bounds:
+        quantity: "SETTLE TICKS (SETTLE_TICK_BUDGET = 30) - the quantity the loop actually consumes."
+        why_contractual: "One tick is a RACE: a frame if the compositor delivers one, and a MACROTASK TURN regardless. The HTML event loop contracts to run a queued task; the animation-frame callback is explicitly SKIPPABLE, so rAF promises ordering ('before the next repaint') and never a rate. rAF is therefore RACED, never awaited - it wins where delivered and is ignored where it is not, so the loop can no longer park on a promise the engine owes on no schedule."
+        not_the_rejected_move: "30 x 16ms is ~480ms, deliberately the same work the old 500ms bought on a 60fps engine. The NUMBER did not grow; the UNIT changed from one no specification guarantees to one that is delivery-contracted. Settle semantics unchanged (SETTLE_STABLE_TICKS = 2, still three equal snapshots)."
+      runaway_guard: "Wall clock survives as SETTLE_RUNAWAY_MS = 2000, checked once per tick - and now ACTUALLY REACHABLE, because every tick is guaranteed to complete. It catches the one case a tick bound cannot: a page whose timers are themselves clamped. Strictly secondary; on any healthy engine the tick budget fires first (30 x 50ms = 1500ms < 2000ms even with zero frames). Recorded honestly: a genuinely wedged main thread runs no JS at all, so no in-page guard can fire there and the runner's own timeout remains the backstop."
+      calibration:
+        shape: "Two-sided, FIVE tests per lane. PASSES on a DOM that settles - plain, at 300ms/frame, and with frames stubbed off entirely. THROWS on a DOM that never settles: a component mutating its own <output> from a self-rescheduling macrotask forever - the component's OWN behaviour, not external DOM surgery on a framework-owned tree."
+        observed_throws: "Captured by temporarily flipping the assertion to a non-matching pattern, reading vitest's Received, then reverting: 'Observable DOM did not quiesce within 30 settle ticks' and 'Observable DOM settle hit the 2000ms runaway guard after 2 tick(s)'."
+        red_side_is_not_an_artifact: "The churner is proven a genuinely non-quiescing DOM rather than merely unobserved, because the OLD loop threw on it too ('...within 500ms')."
+      finding_stronger_than_the_diagnosis: "The old loop's failure mode on a non-compositing engine was NOT a 500ms throw - it was a HANG. Parked on `await new Promise(r => requestAnimationFrame(...))`, the `while (performance.now() < deadline)` check could never be reached, so with frames stubbed off entirely both lanes died at 'Test timed out in 15000ms' rather than reporting anything. That is stronger than T006's 240/260ms-per-frame tolerance measurement, was not previously on record, and is now pinned by a test."
+      three_adapters:
+        verified: "sha256 over the text from '// SETTLE LOOP' to EOF is f2420e4ab9fc2bd8, 2554 bytes, in react, solid AND qwik. PM independently re-derived all three."
+        how: "solid and qwik gained the `flush` parameter react already had and pass () => Promise.resolve() - the microtask their loops previously inlined. That is the only call-site change in either, and it is behaviourally inert."
+        coverage_gap_recorded_not_assumed_away: "createQwikAdapter has ZERO consumers in the repo - no browser project, no node test, no demo - so qwik's repair rests ENTIRELY on byte-identity with the two calibrated copies. That gap predates this task and was outside allowed_files to close."
+      webkit_prediction_stated_before_the_cell_runs:
+        expectation: "ubuntu-latest WebKitGTK browser-engines (webkit) goes GREEN, on the reading that the CI failure was frame starvation on a port that does not composite headlessly - exactly the limit case the no-frames test now proves used to hang and now resolves."
+        if_it_stays_red: "That is the USEFUL outcome, not a refutation: a tick-bounded loop that still cannot reach three equal snapshots is evidence of the genuine engine divergence T006 could not formally exclude."
+        the_error_text_discriminates: "'within 30 settle ticks' means the DOM genuinely kept changing on WebKitGTK - reading 2 confirmed. 'runaway guard' means its timers are clamped. A failure anywhere other than the settle loop means the divergence is in the assertions."
+        flag_untouched: "ci.yml was never opened. Its comment block already points at this repair and states the removal gate."
+      deviations:
+        - "Browser lane COUNTS rose from 55/44 to 60/49. The card's '55/55 and 44/44' is unachievable while adding a calibration to a browser lane, and its stop_if says REGRESS, which this is not: all 55 and all 44 pre-existing tests still pass and the deltas are exactly the 5+5 new calibration tests."
+        - "Added a FIFTH test per lane beyond the two sides T007 asked for, witnessing the RUNAWAY GUARD itself. An unwitnessed guard is the same unexamined-assumption shape this board polices, so shipping one without a witness seemed self-defeating."
+        - "Gave solid and qwik the flush parameter react already had, so the three settle blocks are byte-identical rather than merely equivalent. Drift is now a one-line diff to detect."
+        - "Captured the exact throw strings by temporarily flipping two assertions and reverting, rather than asserting message text in the note that had not been observed. Verified reverted."
+      verification_attempts: 2
   - id: T018
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
     spec: "notes/T007-phase-b-audit.md section 6.3"
     objective: >-
