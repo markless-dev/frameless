@@ -776,6 +776,7 @@ tasks:
     type: worker
     assignee: Worker
     status: queued
+    serialization_hold: "SERIALIZED BEHIND VUE T004 by PM decision on 2026-07-27. Both T004 cards must edit demos/react-official/three-way-contract.ts (the Activation union plus BOTH total Readonly<Record<...>> tables) and scripts/e2e.mjs (a new officialDemos row). That is a concurrent read-modify-write on two shared files, and the tables are TOTAL - a half-applied edit is a compile error rather than a silent conflict, but it is still a lost update. Vue T004 dispatched first; Angular T004 re-dispatches on its receipt. Angular carries an extra unmeasured risk into T004, recorded as R1 on the T003 receipt: the IR declares value/checked as PROPERTY bindings so the emitter spells [value]/[checked], and whether Angular SSR writes those into the served value=\"...\" attribute cannot be decided from a golden - it must be measured in a browser, NOT repaired to [attr.value] on inference."
     reasoning_hint: medium
     objective: "Stand up demos/angular-official from the official scaffold and add the Angular row to the e2e activation matrix, asserting S1/S2/S3 equality."
     allowed_files: []
