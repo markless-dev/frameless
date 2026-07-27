@@ -66,7 +66,21 @@ const productConfig = defineConfig({
 			'demos/composition-kit/test/solid/vitest.config.ts',
 		],
 	},
-	lint: { ignorePatterns: ['dist/**', 'node_modules/**', 'poc/**', 'website/**'] },
+	lint: {
+		ignorePatterns: [
+			'dist/**',
+			'node_modules/**',
+			'poc/**',
+			'website/**',
+			// SvelteKit's generated output, and the scaffold's own empty `$lib`
+			// placeholder. Both ship with `npx sv create` untouched, and the
+			// charter requires the official scaffold AS IT SHIPS - so the lint
+			// scope yields here rather than the scaffold. Anything frameless
+			// adds under demos/svelte-official IS linted.
+			'demos/svelte-official/.svelte-kit/**',
+			'demos/svelte-official/src/lib/**',
+		],
+	},
 	fmt: {
 		useTabs: true,
 		tabWidth: 4,
