@@ -122,7 +122,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T009
+active_task: T022
 
 tasks:
   - id: T001
@@ -1272,7 +1272,7 @@ tasks:
   - id: T009
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Phase C audit and the defects-half audit: are all six defects closed or ruled, with every continue-on-error flag accounted for?"
     inputs:
@@ -1291,8 +1291,72 @@ tasks:
       - "Per-defect disposition table with evidence"
       - "continue-on-error flag status, each one"
       - "Oracle half 1: satisfied | not satisfied"
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      decision: not_complete
+      full_outcome_complete: false
+      oracle_half_1: not_satisfied
+      rationale: "All six findings are closed or ruled with receipts, and every behaviour-changing fix had a witnessed prior failure verified in the record - sole disclosed exception, defect 3 cause A, because no Windows runner existed. Phase C's work is SOUND and is not rejected. Oracle half 1 fails on exactly ONE bullet: qwik-throttled still flags an unrescoped lane whose justification evaporated when defect 2 was overturned. Both OTHER removal gates are met literally but NOT substantively."
+      commands:
+        - cmd: "pnpm check"
+          status: pass
+        - cmd: "pnpm test"
+          status: pass
+          note: "572/572, 39 files"
+        - cmd: "pnpm test:browser"
+          status: pass
+          note: "react 60/60, solid 49/49"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "[e2e] PASS; the s3 cancel-submit observation is identical across react/solid/qwik"
+        - cmd: "gh api .../actions/jobs/89884498821/logs"
+          status: pass
+          note: "FALSIFIES THE BRIEF - the throttled step reads conclusion=success while its log ends '##[error]Process completed with exit code 1'"
+        - cmd: "windows cell traced across four post-T008 runs via logs"
+          status: pass
+          note: "e04b823 RED, dfa9350 green, 0cf937b RED, 39c8a6d green"
+        - cmd: "webkit cell traced across 30 CI runs"
+          status: pass
+          note: "five consecutive greens BEFORE T017; all eight reds cluster in two contention windows"
+        - cmd: "shasum settle block x3 adapters"
+          status: pass
+          note: "f2420e4ab9fc2bd8, 2554 bytes each"
+        - cmd: "gh search issues --author @me"
+          status: pass
+          note: "no upstream filing sent, as required"
+      the_premise_it_was_told_to_check_and_falsified:
+        what_the_pm_said: "Verify the CI cells at STEP level, because a continue-on-error JOB reports success."
+        measured_truth: "Step level is ALSO unreliable. GitHub reports conclusion: success for a FAILED continue-on-error STEP, not just a job. The qwik-throttled step is the control that proves it - findings-007 says it fails, and it does: the step object reads success while the log ends '##[error]Process completed with exit code 1'."
+        consequence: "Only the raw log is load-bearing. Every ruling below is from gh api .../actions/jobs/<id>/logs."
+        pm_error: "The PM reported to the owner that BOTH removal gates were met, on step-level evidence, having explicitly congratulated itself on not trusting job level. That report was wrong. Correcting it is the point of this audit."
+      both_gates_met_literally_and_wrong_substantively:
+        windows: "FOUR post-T008 runs: e04b823 RED, dfa9350 green, 0cf937b RED, 39c8a6d green. Two green, two red, discriminated PURELY by whether two tests beat vitest's 5000ms default (measured 4143-7149ms across the four). Nothing in those files changed across the runs - last touched at e04b823. The cell is a COIN FLIP, and 39c8a6d's green had ~6% headroom."
+        windows_what_IS_settled: "The CRLF root is CONFIRMED on the real cell: 8 failed files / 36 errors pre-fix -> 2 files post-.gitattributes. T007's fourth-cause hypothesis is now OBSERVED and the ~29 unaccounted failures are accounted for. Cause A is the one NOT closed - npx.cmd + shell works functionally but is timing-marginal."
+        webkit: "The cell was ALREADY GREEN for five consecutive runs BEFORE T017 landed (cd34186, ef59d55, 72a09de, e04b823, dfa9350), with no adapter change. All eight observed reds cluster in two windows of rapid concurrent runs, consistent with CPU contention starving frames - which CORROBORATES T017's mechanism but means a green in a quiet window is NON-DISCRIMINATING. T017's distinguishing signatures have never been read, because no post-repair red exists."
+      per_defect_disposition:
+        1: "Product defect, FIXED. Witnessed prior failure: YES - T002 blocked on its own artifact (2 Document requests) before T003."
+        2: "Not a defect. Confirmed: throttled-resume.mjs:52 waitUntil domcontentloaded, clicks at :58, while waitForInteractive blocks react/solid on the activation marker."
+        3: "Test-suite defect. CRLF root fixed AND empirically confirmed on the real cell. Cause A NOT closed. Witnessed failure for the CRLF root YES; for cause A NO - no Windows runner existed, and T008 disclosed that rather than concealing it."
+        4: "Instrument fault, repaired. Witnessed: YES - T017 wrote the calibration first and reproduced the verbatim 'within 500ms' error against unmodified adapters."
+        5: "Upstream solid-js. Measured divergent, 33/13 DOM divergences."
+        6: "Instrument fault, repaired. Witnessed: YES - the permuting cases assert both that the new view holds AND that the old positional comparison fails."
+      witnessed_failure_audit: "PASSES, with one disclosed exception - defect 3 cause A, honestly labelled in T008's receipt rather than concealed."
+      flag_rulings:
+        windows: "STAYS. Re-stated gate: fix the timeout on a measured basis, THEN N consecutive green cells."
+        webkit: "STAYS. Re-stated gate: a green observed under the CONTENTION conditions that produced the reds."
+        qwik_throttled: "CANNOT STAY AS IS, and no card owned the rescope - which is exactly why oracle half 1 is not satisfied. It still fails, and defect 2 is not a defect, so it now flags a step testing 'is this page interactive with no JS', which answers no everywhere. Queued as T022."
+      same_shape_scan: "domcontentloaded / waitUntil / networkidle appears EXACTLY ONCE in the repo - throttled-resume.mjs:52. One caveat recorded: the three-way contract deliberately does NOT wait for Qwik resumption before the cancel click, but that is INSIDE Qwik's envelope, because sync$ QRLs are serialized inline and contracted to run during dispatch. That is the discriminator between a fair test and an unfair one."
+      pattern_ruling_rule_4:
+        verdict: "T007's three rules are NECESSARY BUT NOT SUFFICIENT."
+        evidence: "T018 found a fifth CRLF-fragile search T007's own scan structurally could not see - T007 grepped .replace() STRING literals; R-SH1 is a REGEX literal. The shape was right; the enumerating instrument was narrower than the shape. This audit found TWO MORE instances: step-level conclusion (an unreliable proxy replaced by a second proxy of the same kind, unasserted), and 'an observed green cell' (a single sample as proxy for 'fixed', with nothing asserting the sample was representative)."
+        rule_4: "An instrument that establishes a SET or issues a VERDICT must be calibrated against a KNOWN MEMBER. Before trusting a scan's 'these are all N instances', plant an instance it should find. Before trusting a status field, read it on a case whose true value you already know. Before treating a green cell as a verdict, establish the cell's variance."
+        not_redundant_with_rule_2: "Rule 2 would have had T007's scan assert THAT IT RAN, not that it COVERED THE SHAPE IT NAMED. T018 found the fifth search via a different pass - its CRLF probe over all 37 disk-read searches - which is Rule 4 in action without being named."
+        placement: "Belongs on all three adapter charters beside rules 1-3."
+      missing_evidence:
+        - "Whether the repaired tick-bounded loop survives a CONTENDED WebKitGTK run. All eight pre-repair reds occurred under rapid concurrent runs; all three post-repair greens occurred in a quiet window."
+        - "Whether the Windows cell goes stably green once the format-emitted timeout is raised. Cause A's fix is functionally correct but has never been observed with margin."
+        - "Whether the rescoped throttled lane passes under real 300ms/400kbit once it clicks post-resume. A residual failure there would be the first GENUINE slow-link finding on this board."
   - id: T016
     type: worker
     assignee: Worker
@@ -1678,6 +1742,45 @@ tasks:
       - "Consider whether a no-duplicate-mutant invariant test should exist. It would fail today on exactly these three, so it lands with the adjudication or not at all."
     receipt: null
 
+  - id: T022
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    spec: "T009 receipt, worker_package. This is the ONE package standing between the board and oracle half 1."
+    objective: >-
+      Make all three continue-on-error CI cells honest. (1) Rescope demos/qwik/throttled-resume.mjs
+      to click AFTER the container reports resumed instead of at domcontentloaded, then remove that
+      step's continue-on-error. (2) Give both format-emitted.test.ts copies a Windows-adequate
+      timeout so the windows-latest cell stops being a coin flip on a 5s budget. (3) Correct the
+      DEFECTS.md flag section and the ci.yml removal-gate comments for Windows and WebKit, which
+      are met LITERALLY but not SUBSTANTIVELY.
+    allowed_files:
+      - demos/qwik/throttled-resume.mjs
+      - .github/workflows/ci.yml
+      - packages/frameworks/react/test/format-emitted.test.ts
+      - packages/frameworks/solid/test/format-emitted.test.ts
+      - docs/DEFECTS.md
+      - docs/goals/frameless-defects-and-targets-v1/notes/T022-ci-flags.md
+    verify:
+      - "pnpm check"
+      - "pnpm test"
+      - "pnpm test:browser"
+      - "pnpm e2e"
+      - "demos/qwik build + preview, then the throttled harness unthrottled (control) and throttled"
+      - "git diff .github/workflows/ci.yml | grep continue-on-error   # ONLY the throttled step's value may change"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to remove the Windows or WebKit continue-on-error VALUE. BOTH STAY. Windows is 2 green / 2 red over four post-fix runs, discriminated PURELY by a 5000ms timeout (measured 4143-7149ms). WebKit was already green for FIVE consecutive runs BEFORE T017 landed, with no adapter change, so its green is non-discriminating. Only COMMENTS change for those two."
+      - "The rescoped throttled lane still fails under 300ms/400kbit after clicking post-resume. That is a GENUINE finding about resumption on a slow link - report it verbatim and LEAVE the flag on. Do NOT restore the DCL click to make it pass."
+      - "You are about to make the throttled lane wait on any browser lifecycle event, a fixed sleep, or networkidle. It must block on Qwik's OWN resumption signal - the same discipline waitForInteractive applies to react and solid."
+      - "You are about to raise the format-emitted timeout WITHOUT also recording the measured Windows durations that justify the number. A bound chosen without a measurement is the exact fault defect 4 was."
+      - "You are about to set qwikLoader:'inline' anywhere in demos/qwik. Defect 2 is not a defect; there is nothing to work around."
+      - "You are about to file either drafted upstream report. They must NOT be sent - see the board's autonomy_grant."
+      - "pnpm test drops below 572, test:browser below 60/60 and 49/49, or e2e goes red."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
   - id: T999
     type: judge
     assignee: Judge
@@ -1697,6 +1800,7 @@ tasks:
       - "Reject completion if any continue-on-error flag persists without a receipt justifying it."
       - "Reject completion if the three-way contract does not assert cancellation for every framework once they exist."
       - "Audit the likely misfire explicitly: were the undiagnosed defects actually diagnosed, or silenced?"
+      - "CI CONCLUSIONS ARE UNRELIABLE FOR continue-on-error STEPS, not just jobs. T009 proved it with the qwik-throttled control: the step object reads conclusion=success while its log ends '##[error]Process completed with exit code 1'. Read LOGS via gh api .../actions/jobs/<id>/logs. This falsified the T009 card's own instruction and the PM's report."
       - "Re-check the qwik-throttled flag's receipt if upstream has responded by then. T005 let it stay on the strength of T004's upstream proof; that justification expires if Qwik fixes or rejects it."
       - "The DROPPED-CLICK upstream filing is RETRACTED and must not have been sent. Confirm it was not."
       - "UPSTREAM FILINGS ARE A VALID TERMINAL STATE AS 'DRAFTED, PENDING OWNER'. The owner granted autonomy to goal end on 2026-07-27 and is asleep; filing an issue against another project's tracker is outward-facing publication under their name and is NOT something the PM may do unattended. Two reports exist as drafted material: notes/T003-upstream-eslint-qwik.md (the eslint rule gap, plus the dropped-array-element optimizer finding) and T008's section 3 (the solid-js attr: typing gap, settled by measurement). Confirm both are DRAFTED AND COMPLETE. Do NOT reject completion because they have not been sent, and do NOT send them."

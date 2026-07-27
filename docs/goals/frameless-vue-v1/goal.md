@@ -93,6 +93,16 @@ Three rules follow. They are not advice.
    and proved nothing about its harnesses. A settle loop that cannot throw is not a settle loop.
    Every red must survive the fairness question *in writing* before it is interpreted.
 
+4. **An instrument that establishes a SET or issues a VERDICT must be calibrated against a known
+   member.** Before trusting a scan's "these are all N instances", plant an instance it should find.
+   Before trusting a status field, read it on a case whose true value you already know. Before
+   treating a green cell as a verdict, establish the cell's variance. This is **not** redundant with
+   rule 2: rule 2 would have had a scan assert *that it ran*, not that it **covered the shape it
+   named**. Added by `frameless-defects-and-targets-v1` T009 after three instances — a
+   string-literal scan that could not see a regex literal, a CI status field that reports `success`
+   for a failed `continue-on-error` step, and a single green cell standing in for "fixed" on a cell
+   that is a coin flip.
+
 ## Current tranche
 
 Land a Vue lane: scaffold, emitter, gate, goldens, demo, e2e row. Then, and only then, run the policy on Vue's flagship sugar.

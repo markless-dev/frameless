@@ -62,7 +62,7 @@ goal:
       - "GATE 6 DEFERRED: every Svelte sugar ruling is deferred-not-denied until this board lands a lane at a pinned lockfile version."
       - "If this board closes IR-4 it must do so as a GENERAL facility, not a Svelte-shaped hack - Vue needs it for defineModel (3.4+) and Angular for signal input()/output() (>=17.1/17.2)."
       - "poc/09-storage/svelte exists from earlier work and took cheap lexical sugar with classic lifecycle shapes. Prior in-repo assumption, not validated decision."
-      - "CORRECTED 2026-07-27 (T010 revalidation, missed on the first pass and caught by the Svelte T001 Scout): pnpm check DOES now typecheck emitted output - three tsc passes plus a per-package emitted-typecheck lane. NOT a gap. Svelte adds a real complication of its own though: tsc cannot parse .svelte AT ALL, so an emitted-typecheck twin would have nothing to read and svelte-check is not optional here."
+      - "CORRECTED 2026-07-27 (T010 revalidation): pnpm check DOES now typecheck emitted output. NOT a gap. Svelte complication: tsc cannot parse .svelte AT ALL, so no emitted-typecheck twin is possible. NARROWED BY T002 RULING 6 - svelte-check is NOT required at T003 and IS required at T004 as the scaffold's own unmodified check script. Reason: T003's corpus is three self-contained single-file components with no cross-module props, so the class svelte-check adds beyond compile() has a population of ZERO there, and buying an instrument for a population of zero is how this repo acquired instruments whose preconditions were never asserted. T003 uses svelte/compiler compile() warnings asserted as an EXACT EMPTY SET with a mutation calibration. RE-OPEN TRIGGER: svelte-check becomes required the moment the lane emits a module consuming another emitted module, or a route passes props to an emitted component."
       - "CORRECTED 2026-07-27: pnpm test:browser does NOT hang - it runs clean, react 55/55 and solid 44/44. STILL TRUE: pnpm e2e pins dev mode only (scenarios.box.ts modes [dev])."
 
 rules:
@@ -97,7 +97,7 @@ visual_board:
     url: null
     command: "npx goalbuddy board docs/goals/frameless-svelte-v1"
 
-active_task: T002
+active_task: T003
 
 tasks:
   - id: T001
@@ -128,7 +128,19 @@ tasks:
     receipt:
       result: done
       harness: claude-code
-      note: notes/T001-scaffold-and-versions.md
+      evidence:
+      - "github.com/sveltejs/cli packages/sv/src/create/templates/minimal/package.template.json - the pinned versions"
+      - "packages/sv/src/create/shared/+typescript/package.json - svelte-check ^4.6.0 and the check script"
+      - "scripts/e2e.mjs:26-33 officialDemos, :97 the activation equality throw"
+      - "demos/react-official/three-way-contract.ts - the closed Activation union, assertServedActivation, ACTIVATION_MARKER"
+      - "demos/{react,solid}-official/package.json - the hand-wired vite+express shape"
+      - "packages/compiler/src/schema.ts:35-39, :318-325, :493-515 - IR-5, syncPolicy, and the absent version field"
+      - "packages/frameworks/qwik/src/emitter/index.ts:487 hoistsPreventDefault - the WHEN/WHAT vs WHERE precedent"
+      - "packages/frameworks/solid/test/emitted-typecheck.test.ts - the exact-equality ACCEPTED-diagnostics pattern"
+      - "sveltejs/svelte CHANGELOG - 5.16.0 clsx class, 5.20.0 $props.id(), 5.25.0 writable deriveds, 5.29.0 attachments"
+      - "poc/09-storage/svelte/App.svelte - the prior in-repo assumption"
+      - "pnpm-workspace.yaml:16 - vite ^8.0.16, matching the scaffold pin"
+  note_correction: "The T001 receipt originally cited notes/T001-scaffold-and-versions.md, which was never written. Caught by T002. The inline receipt below IS the record; the citation is withdrawn rather than back-filled, because writing the note now would be reconstructing evidence after the fact. A receipt citing evidence that is not there is the board-level form of instrument rule 2."
       summary: "Mapped the sv@0.16.6 minimal scaffold: SvelteKit 2.63 / svelte ^5.56.1 / vite ^8.0.16 - the SAME vite as the root catalog, so Svelte does not repeat Qwik's vite-pinning problem. Svelte hydrates, so e2e needs no third activation term. Every construct S1/S2/S3 needs is Svelte 5.0 baseline, so IR-4 blocks no lane. IR-5 needs no schema change - modifiers were removed, so the actions emit as ordinary in-body statements; the live question is DELEGATION, not modifiers."
       scaffold:
         command: "npx sv create, sv@0.16.6, minimal + TypeScript"
@@ -168,7 +180,7 @@ tasks:
   - id: T002
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Ratify the Svelte adapter contract and rule on whether IR-4 is closed by this board or deferred."
     inputs:
@@ -185,24 +197,131 @@ tasks:
       - "IR-5 emission ruling"
       - "S1/S2/S3 scope for the first Worker package"
       - "Exact Worker objective, allowed_files, verify, stop_if"
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      decision: approved
+      full_outcome_complete: false
+      rationale: "The demo-shape tension is SMALLER than T001 stated: demos/qwik is already a stock official scaffold with no server.js, no express and no frameless-demo-ssr plugin, so SvelteKit follows a landed precedent rather than breaking a three-demo uniformity. Union widening approved as a REQUIRED per-demo field, not a relaxation. IR-4 deferred: Svelte produces no forcing case, and a general facility designed against zero forcing cases is folklore. IR-5 needs measurement, not documents - and the corpus contains ZERO stopPropagation, which relocates the real risk."
+      ruling_1_demo_shape:
+        verdict: "demos/svelte-official IS a SvelteKit app from the official scaffold."
+        the_tension_was_weaker_than_reported: "'Match the shape of the existing three demos' is not in the charter, and it is ALREADY FALSE. demos/qwik has no server.js, no ssr-handler.js, no express and no vite plugin overlay - its scenarios.box.ts says verbatim 'No config overlay and no middleware: qwikRouter() already renders on the server in dev. This is the stock pnpm create qwik pipeline.' Only 2 of 3 demos hand-wire SSR, and the third - landed by the goal that exists to FORBID hand-rolled harnesses - is structurally identical to what SvelteKit needs."
+        what_must_actually_match: "Not the server wiring. The CONTRACT PROTOCOL: scenarios.box.ts importing three-way-contract.ts, assertServedActivation + runScenario over scenarioIds, the JSON three-way-results receipt note, a copy-emitted script, and an officialDemos row in scripts/e2e.mjs."
+        cost_of_the_losing_constraint: "Three, stated so they are not discovered later. (a) Emitted components are wired through SvelteKit's route conventions, so a convention change breaks this lane in a way react/solid are immune to. (b) No shared createSsrHandler between pnpm dev and the box, so react-official's 'no second harness exists to drift' property is unobtainable - SvelteKit's own dev server is the single path instead, equivalent by a different argument. (c) modes:['dev'] means the vite build + adapter path is never exercised, identical to the still-true standing gap for qwik."
+      ruling_2_activation_union:
+        verdict: "Widening APPROVED, does not weaken activation neutrality - conditionally."
+        analysis: "assertServedActivation's hydrate arm makes THREE claims. The two negatives - forbidInServedPayload(['q:container', ACTIVATION_MARKER]) - are framework-agnostic and ARE the neutrality claims; they do not change. The positive, contains '/src/entry-client.jsx', is NOT a neutrality claim; it is a LANE-IDENTITY claim, shared by react and solid only because both scaffolds happen to name their entry identically. Parameterising it per demo preserves the identical claim at each demo's own literal. Relaxing it to 'any module script' would weaken it and is REJECTED."
+        conditions:
+          - "The literal must be a REQUIRED field on the hydrate arm (e.g. readonly servedClientEntry: string) so the type forbids a lane omitting it. An optional field is a silent opt-out and is rejected."
+          - "The Svelte literal must be MEASURED from what SvelteKit dev actually serves, not guessed, and must be a framework-owned module string."
+          - "Instrument rule 3: the chosen literal must be SHOWN able to go red - a recorded run pointed at a string the payload does not contain, or a negative control. A served-payload literal never observed failing is not a check."
+          - "The activation marker must be set in Svelte's OWN post-mount signal - onMount in the root +layout.svelte - NOT hooks.client.ts init, which runs before hydration completes. Imperative, never a template attribute binding, or SSR would emit it and forbidInServedPayload would correctly fail."
+        mechanical_test_for_T999: "For react, solid and qwik, the SET of assertions run and the exact strings asserted must be byte-unchanged after the Svelte lane lands. Moving react's literal from a helper constant into its own activation object is not a weakening; changing, softening or making it optional is."
+        forward_note_for_T004: "runScenario computes navigations = resume ? 1 : 0. If SvelteKit's client router records a history entry on initial load (qwik's does), the permitted repair is the SAME KIND of widening - a per-demo declared expected count, still asserted exactly. Relaxing to 'any number' is not permitted. Decide by measurement."
+      ruling_3_ir4:
+        verdict: "IR-4 DEFERRED. The version corollary is NOT amended - both conjuncts stand. 'The lockfile pins >= N' alone does NOT satisfy it."
+        why_deferred: "Svelte produces no forcing case; at ^5.56.1 every construct is above its floor. Designing a general facility against ZERO forcing cases is the Gate 4 error transposed up to the IR schema. And generality is undecidable today - neither the Vue nor Angular board has run, so the SHAPE is unknown: a version string per target, a lockfile-resolved map, or (probably right, unprovable today) a CAPABILITY set, since emit sites want 'supports reassignable-derived', not scattered semver comparisons."
+        why_the_lockfile_pin_alone_is_insufficient: "Frameless is a PUBLISHED compiler - vite.config.ts packs @frameless/react and @frameless/solid, and packages/cli builds for consumers. The lockfile pin is THIS repo's test-lane version, not the consumer's framework version. An emitter assuming its own dev repo's pin will emit 5.25+ syntax into a consumer app on 5.10. That is the instrument-fault pattern verbatim - measuring through a proxy whose stability the product never promised - moved from tests into SHIPPED OUTPUT. The two conjuncts answer different questions: 'can a regression be caught here?' and 'is the emitted output valid there?'. Collapsing them from the comfortable case is the trap T001 named."
+        the_second_conjunct_is_satisfiable_two_ways: "(a) an explicit target-version or capability input on EnrichedIR, or (b) an emitter that emits ONLY baseline-version-safe forms, in which case there is no version-gated sugar and the corollary never engages. Svelte is (b) today. Recording (b) explicitly is what lets T003 proceed without IR-4 and lets T005 resolve honestly rather than by shrug."
+        binding_on_vue_and_angular: "Neither may invent a local answer. Both inherit: IR-4 deferred, emit baseline-safe forms, record 'DEFERRED - no target-version input' at Gate 6 for any version-gated sugar."
+        reopen_trigger: "Falsifiable, not 'someday': the first construct where (i) the baseline-safe form is materially worse AND an official scaffold pins below the sugar's floor, or (ii) frameless ships to a consumer whose framework version differs from this repo's lockfile."
+      ruling_4_ir5:
+        schema: "NO change. Svelte 5 removed modifiers and its event attributes receive the native DOM Event, so the actions emit as ordinary in-body statements exactly as React and Solid already emit them."
+        measurement_is_mandatory: "Gate 1 records FAIL when the only evidence is documentary AND a build of the target framework is in the lockfile - and T003 is the package that puts Svelte there. T001 was right to call its own reasoning documentary."
+        the_risk_is_not_where_T001_put_it: "VERIFIED against the goldens: s1/s2/s3 contain ZERO occurrences of stopPropagation (preventDefault 4x, syncPolicy 2x, all in s3). Worked example 6's G4 counterexample has NO INSTANCE in T003's corpus. The risk that actually bites is different: (i) preventDefault() inside a DELEGATED click handler on a <button type=submit> must still avert the real GET navigation assertS3 checks by Document-request count; and (ii) S3's emitted output puts an onClick on the FORM ITSELF reading event.target.dataset.action === 'submit', so the lane depends on a click BUBBLING from button to form. Under Svelte 5 both are delegated to the root and propagation is simulated. That pair is the measurement."
+        form: "Emit the attribute form for every event pending measurement, and do NOT build the on() path - with zero stopPropagation in the corpus that branch would be untested dead code, which in an emitter is worse than absent code. Instead FAIL CLOSED: throw on any actions containing stopPropagation, with a gate row proving the throw fires. If measurement shows the attribute form unsound for preventDefault, switch the WHOLE component to on() - never a mix."
+        consequence_for_T005: "This leaves worked example 6 honestly deferred with something real to decide. T003+T004 meet all three deferring conditions, so T005 re-runs all six gates against a real emitter and a real domain. Had T003 pre-adopted the sugar, T005 would be ratifying a fait accompli."
+      ruling_5_scope_and_gaps: "S1/S2/S3 only. IR-1 out of scope hard. IR-3 defer (no projection in the corpus). IR-4 deferred. IR-5 no schema change. IR-6 defer (no instance). IR-7 IS THE SLEEPER: do not attempt a purity proof - ship a fail-closed CONSERVATIVE syntactic guard on the emitter's own output, plus a mutation row proving it goes red. This converts 'silently wrong later' into 'loudly wrong at emit time' for the decidable subset and documents the undecidable remainder."
+      ruling_6_svelte_check:
+        verdict: "NOT required at T003. svelte/compiler compile() warnings ARE required, asserted as an EXACT EMPTY SET with a mutation calibration. svelte-check IS required at T004, but only as the scaffold's own unmodified check script."
+        why: "T003's corpus is three self-contained single-file components with no cross-module props. The class svelte-check adds beyond compile() - unknown component props, wrong handler signatures, invalid {@render} targets - has a population of ZERO there, and buying an instrument for a population of zero is how this repo acquired instruments whose preconditions were never asserted. compile() also runs in-process against the exact version the package resolves, satisfying Gate 1; svelte-check via svelte-kit sync would couple the check to the DEMO's SvelteKit install, which Gate 1 explicitly calls a different build."
+        conflict_disclosed: "This NARROWS a state.yaml fact, and state.yaml is declared to win. Overruled deliberately and recorded, not silently superseded. RE-OPEN TRIGGER: svelte-check becomes required the moment the lane emits a module consuming another emitted module, or a route passes props to an emitted component."
+      finding_7_dev_warnings_unenforceable:
+        severity: high
+        evidence: "@async/witness 0.7.0 exposes consoleErrors ONLY (index.d.mts:501). PageHandle (:163-190) has NO console-message accessor at all. runScenario asserts consoleErrors: 0."
+        consequence: "T004's constraint 'a dev-only console warning is a FAILURE here' CANNOT BE ENFORCED by the demo lane as instrumented, and T999's 'reject if dev-only warnings were observed and dismissed' would pass VACUOUSLY, because nothing observes them. Svelte reports state_unsafe_mutation and ownership_invalid_mutation as console.warn."
+        ruling: "Enforce where the instrument reaches: T003's vitest browser lane has direct console access and must fail on ANY Svelte dev warning, not only errors. T004 must then either land a console.warn capture sink - the ONLY permitted scaffold addition beyond wiring emitted components - or record IN WRITING that the demo lane cannot observe warnings and that T003's lane is the sole enforcement point. Silence is not an option."
+      pm_actions_taken: "T003 UNBLOCKED: the PM created packages/frameworks/svelte/package.json and ran pnpm install, so svelte resolves to 5.56.8 on the recorded ^5.56.1 line and the sandbox needs no network. The svelte-check fact and the phantom T001 note citation were both corrected in state.yaml rather than left alongside a contradiction."
+      dissent:
+        - "The Judge believes the attribute form will prove SOUND for preventDefault at 5.56 - a delegated listener is in the bundle and runs during dispatch, unlike a lazily fetched QRL - and more likely WRONG for stopPropagation, since a delegated child handler cannot stop an ancestor running from the root under simulated propagation. Cannot evidence either without T003's measurement, and Gate 1 forbids acting on it. Written down so a contradiction is visible rather than quietly absorbed."
+        - "The Judge believes Vue's defineModel is DENIED rather than deferred - Gate 2 fails on child-declared bindability, and FAIL outranks DEFERRED - which would mean IR-4 was never its blocker. A prediction for the Vue board to test, not a finding."
+        - "The Judge suspects IR-4 may NEVER acquire a forcing case under an official-scaffold-only policy, since official scaffolds pin recent versions by construction, and that the eventual correct design is a declared CAPABILITY FLOOR rather than a target version. Deferring rather than designing on that suspicion is the point."
+        - "Not verified that root +layout.svelte onMount fires strictly after hydration completes for the whole tree at this version. Best available candidate and strictly better than hooks.client.ts, but documentary. If S1/S2/S3 flake at T004, look here first rather than raising a timeout."
   - id: T003
     type: worker
     assignee: Worker
-    status: queued
-    reasoning_hint: medium
-    objective: "Implement the Svelte emitter and gate for the ratified S1/S2/S3 scope, with checked-in goldens."
-    allowed_files: []
-    verify: []
+    status: active
+    reasoning_hint: high
+    spec: "T002 receipt on this board - AUTHORITATIVE. Seven rulings."
+    objective: >-
+      Land packages/frameworks/svelte as a whole vertical slice for S1/S2/S3: an emitter turning the
+      three existing compiler goldens into Svelte 5 runes single-file components, a gate with a
+      mutation corpus, checked-in .svelte goldens with a byte-equality freshness test, a
+      svelte/compiler compile() warnings oracle asserted as an EXACT EMPTY SET with a mutation
+      calibration, and a browser lane that drives the emitted output, fails on any Svelte dev
+      console WARNING as well as errors, and MEASURES the two delegation questions before the
+      event-emission form is chosen.
+    the_two_measurements:
+      - "Does preventDefault() inside a DELEGATED click handler on a <button type=\"submit\"> still avert the real GET navigation that assertS3 checks by Document-request count?"
+      - "Does a delegated handler on the <form> still observe the click BUBBLED from the button, with event.target naming the button? S3's emitted output puts an onClick on the form itself reading event.target.dataset.action === 'submit', so the corpus depends on cross-element bubbling."
+    allowed_files:
+      - packages/frameworks/svelte/package.json
+      - packages/frameworks/svelte/tsconfig.json
+      - packages/frameworks/svelte/vitest.config.ts
+      - packages/frameworks/svelte/vitest.node.config.ts
+      - packages/frameworks/svelte/README.md
+      - packages/frameworks/svelte/src/index.ts
+      - packages/frameworks/svelte/src/emitter/index.ts
+      - packages/frameworks/svelte/src/emitter/estree.ts
+      - packages/frameworks/svelte/src/format-emitted.ts
+      - packages/frameworks/svelte/src/gate/index.ts
+      - packages/frameworks/svelte/scripts/regenerate.ts
+      - packages/frameworks/svelte/generated/S1.svelte
+      - packages/frameworks/svelte/generated/S2.svelte
+      - packages/frameworks/svelte/generated/S3.svelte
+      - packages/frameworks/svelte/test/emitter.test.ts
+      - packages/frameworks/svelte/test/gate.test.ts
+      - packages/frameworks/svelte/test/compile-emitted.test.ts
+      - packages/frameworks/svelte/test/emitted-smoke.browser.test.ts
+      - packages/frameworks/svelte/test/setup.ts
+      - packages/frameworks/svelte/.gitignore
+      - vite.config.ts
+      - package.json
+      - docs/goals/frameless-svelte-v1/notes/T003-svelte-emitter.md
+    pm_preinstall_done: >-
+      UNBLOCKED 2026-07-27. The PM created packages/frameworks/svelte/package.json and ran pnpm
+      install. svelte resolves to 5.56.8, on the ^5.56.1 line T001 recorded. @sveltejs/vite-plugin-svelte,
+      vite and vitest are on catalog entries. The Worker may edit only the scripts block;
+      pnpm-lock.yaml MUST NOT move.
+    verify:
+      - "pnpm check"
+      - "pnpm test"
+      - "pnpm --dir packages/frameworks/svelte exec vitest run --config vitest.config.ts --project svelte-browser"
+      - "pnpm test:browser"
+      - "pnpm e2e"
+      - "node packages/frameworks/svelte/scripts/regenerate.ts && git diff --exit-code -- packages/frameworks/svelte/generated   # goldens are fresh"
+      - "git diff --exit-code -- packages/frameworks/react packages/frameworks/solid packages/frameworks/qwik packages/compiler demos scripts   # nothing outside the new package moved"
+      - "git status --short   # every path inside allowed_files; pnpm-lock.yaml MUST NOT appear"
     stop_if:
       - "Need files outside allowed_files."
-      - "A required S1/S2/S3 construct needs a Svelte version above what the scaffold pins."
-      - "You find yourself emitting bind: - it is explicitly out of scope."
-      - "Verification fails twice."
+      - "pnpm-lock.yaml moves, or any dependency needs installing. The sandbox has no network. Stop and report the exact package and version; the PM installs before re-dispatch."
+      - "The svelte version packages/frameworks/svelte resolves is not the ^5.56.1 line. Gate 1 would then have two answers. Stop and report. (PM measured 5.56.8.)"
+      - "You are about to emit bind: or $bindable. Out of scope on two independent axes, and its failure mode is a DEV-ONLY console warning that passes tests."
+      - "You are about to build an on()-from-svelte/events code path. VERIFIED: the s1/s2/s3 goldens contain ZERO stopPropagation, so that path would be untested dead code - which in an emitter is worse than absent code. Emit the attribute form and make stopPropagation THROW at emit time instead, with a gate row proving the throw fires."
+      - "You are about to emit a MIX of delegated onclick= attributes and on() listeners inside one component. S3 depends on a click bubbling from [data-action=\"submit\"] to the form's own handler; mixing mechanisms changes ordering. All or nothing."
+      - "You are about to choose the event-emission form on DOCUMENTARY evidence. Gate 1 records FAIL for documentary-only evidence once the framework is in the lockfile, and this package puts it there. Measure both delegation questions in a browser first."
+      - "A gate policy, the compile() empty-warnings assertion, or the console-warning check cannot be made to go RED. A check that cannot fail is not a check."
+      - "Any mutation in the gate corpus is built with a bare .replace(). Copy the throwing mutate/mutateAll constructor from packages/frameworks/qwik/test/gate.test.ts - its own doc comment instructs a new adapter to do exactly this. Audited corpus-wide by defects-and-targets T018."
+      - "You are about to add a formatter dependency (prettier, prettier-plugin-svelte) or run oxfmt over a .svelte file. Ruled: emit deterministic text directly and record the divergence from the other three adapters in the note."
+      - "You are about to create packages/frameworks/svelte/src/adapter.ts. Out of scope: nothing consumes it, and a fourth byte-equivalent copy of the quiescence loop T017 just repaired in three places is drift with no consumer."
+      - "You are about to touch packages/compiler/src/** or its goldens. IR-4, IR-5 and IR-7 are all ruled: no schema change in this package."
+      - "A construct S1/S2/S3 needs is above the pinned Svelte version. T001 says none are; if you find one, that REFUTES T001 and is a finding, not a workaround."
+      - "Verification fails twice for the same reason."
     constraints:
-      - "allowed_files and verify come from the T002 ruling."
-      - "Match the existing emitter/gate/golden structure in packages/frameworks/."
+      - "IR-7, THE SLEEPER - do not let it pass silently. S1's derived is trivial so it WILL pass, which is the definition of a green vacuum. Do NOT attempt a purity proof (compiler-wide, no forcing case). DO ship a fail-closed CONSERVATIVE guard: a gate policy rejecting an emitted $derived(...) whose expression contains an assignment, an update expression, or a call in the emitter's known-mutating set - a syntactic check on the emitter's OWN output, with a comment naming IR-7 and stating plainly what the check cannot see. Plus one mutation row proving it goes red."
+      - "DEV WARNINGS: T002 finding 7 established that the witness API cannot observe console warnings at all - PageHandle has no console accessor and PageOutcomeExpectation exposes consoleErrors only. So the demo lane CANNOT enforce the dev-warning constraint and T999's version of it would pass vacuously. Your vitest browser lane HAS direct console access and is therefore the sole enforcement point: fail on ANY Svelte dev warning, not only errors."
+      - "IR-4 is DEFERRED and the version corollary is NOT amended. Emit only baseline-version-safe forms; every S1/S2/S3 construct is Svelte 5.0 baseline."
+      - "No schema change, no bind:, no demo, no e2e row. T004 owns the demo and the contract widening."
     receipt: null
 
   - id: T004
