@@ -37,6 +37,10 @@ const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>>
 		['button', 'data-action'],
 		['output', 'data-writes'],
 		['span', 'data-callback-marker'],
+		['details', 'data-cancel'],
+		['summary', 'data-action'],
+		['details', 'data-cancel'],
+		['summary', 'data-action'],
 	],
 };
 

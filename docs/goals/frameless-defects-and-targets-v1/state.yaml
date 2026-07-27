@@ -122,7 +122,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T020
+active_task: T999
 
 tasks:
   - id: T001
@@ -1811,7 +1811,7 @@ tasks:
   - id: T020
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     spec: "notes/T011-conditional-cancellation.md, missing_evidence"
     objective: >-
@@ -1837,6 +1837,18 @@ tasks:
       - demos/qwik/src/emitted/EventForm.jsx
       - demos/svelte-official/src/lib/emitted/EventForm.svelte
       - docs/goals/frameless-defects-and-targets-v1/notes/T020-conditional-behavioural.md
+      - packages/frameworks/qwik/test/gate.test.ts
+      - packages/frameworks/solid/test/emitter.test.ts
+    scope_widened_by_pm: >-
+      2026-07-27. T020 blocked correctly on 'need files outside allowed_files' after completing every
+      in-scope edit and running all four verify commands plus both negative-proof arms. The two files
+      carry hard-coded preventDefault counts that the S3 corpus change mechanically moves from 2 to 4.
+      Both failures are CORRECT assertions reporting a real change, not defects. Widened rather than
+      hand-edited by the PM, because these are product tests and the Worker holds the diagnosis.
+      NOTE the qwik edit is NOT a blind count bump: after the corpus change that green-vacuum guard
+      strips FOUR policies - two unconditional and two conditional - so its coverage WIDENS from the
+      unconditional path to both, making it the unit-level twin of negative-proof arm A. Say so in
+      the test's comment rather than just changing the number.
     verify:
       - "pnpm check"
       - "pnpm test"
@@ -1861,8 +1873,76 @@ tasks:
       - "WHY THIS EXISTS: T011 states plainly that without it, T012 ships on emitted text plus a gate - which is exactly the evidence base defect 1 defeated. The gate proves the shape; only this proves the behaviour."
       - "TWO-SIDED is the whole point: cancels for the declared key, does NOT cancel for another. A one-sided assertion would pass against an always-cancel bug, which is precisely the Solid bug T011 found hiding behind a validator."
       - "Sequenced after T008, T017 and T018 - it adds a corpus fixture, and goldens ripple through every framework suite plus metamorphic and generative."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      note: notes/T020-conditional-behavioural.md
+      worktree: "collected from .claude/worktrees/agent-a71c13246892842c6; the 1011-line diff applied CLEAN over T008 and T023"
+      summary: "The behavioural conditional-cancellation proof. Two <details> appended to S3 whose <summary> handlers differ in ONE INTEGER LITERAL and nothing else, so neither an always-cancel nor a never-cancel bug can hide behind a structural asymmetry. Guarded on event.detail via event-equals - not graph-truthy, so T012's V1 refusal cannot fire and all four lanes express it. BOTH negative arms were actually run. Four visibly different emitted forms, one identical observation."
+      changed_files:
+        - packages/compiler/test/fixtures/s3-event-form.tsrx
+        - packages/compiler/test/goldens/s3-event-form.json
+        - packages/compiler/test/enriched-ir.test.ts
+        - packages/frameworks/react/generated/S3.jsx
+        - packages/frameworks/solid/generated/S3.jsx
+        - packages/frameworks/qwik/generated/S3.jsx
+        - packages/frameworks/svelte/generated/S3.svelte
+        - packages/frameworks/react/test/reference.tsx
+        - packages/frameworks/solid/test/reference.solid.tsx
+        - packages/frameworks/react/test/size.test.ts
+        - packages/frameworks/solid/test/size.test.ts
+        - packages/frameworks/qwik/test/gate.test.ts
+        - packages/frameworks/solid/test/emitter.test.ts
+        - demos/react-official/three-way-contract.ts
+        - demos/react-official/src/emitted/EventForm.jsx
+        - demos/solid-official/src/emitted/EventForm.jsx
+        - demos/qwik/src/emitted/EventForm.jsx
+        - demos/svelte-official/src/lib/emitted/EventForm.svelte
+        - docs/goals/frameless-defects-and-targets-v1/notes/T020-conditional-behavioural.md
+      commands:
+        - cmd: "pnpm check"
+          status: pass
+          note: "PM RE-RAN over T008+T023: four tsc passes"
+        - cmd: "pnpm test"
+          status: pass
+          note: "PM RE-RAN: 676/676, 43 files - T008's +8 inventory rows plus T020's modified assertions, no interaction"
+        - cmd: "pnpm test:browser"
+          status: pass
+          note: "PM RE-RAN: react 60/60, solid 49/49, svelte 13/13 - byte-identical to the pre-change baseline, so the corpus change was genuinely ADDITIVE"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "PM RE-RAN: exit 0, 'Three-way: 4 demos x 3 scenarios, all observations equal'. PM read the s3 qwik and s3 svelte rows side by side - the new conditional observation is identical."
+        - cmd: "regenerate all four emitters + shasum -c"
+          status: pass
+          note: "12/12 OK - regeneration idempotent, goldens fresh"
+      the_interaction_risk_that_did_not_bite: "T008 landed a fail-closed BASELINE FORM INVENTORY on the Svelte gate while T020 added <details>/<summary> to Svelte's emitted S3. PM checked this explicitly: both are RegularElement nodes, which the inventory allows, so the two land together clean."
+      two_sided:
+        design: "Two <details> whose <summary> onClick handlers differ in ONE INTEGER LITERAL. Neither an always-cancel nor a never-cancel bug can hide behind a structural asymmetry between the controls."
+        guard_channel: "event-equals on the flat event field `detail`. IR: event:5 {value:1}, event:6 {value:2}."
+        cancelling_arm: "guard detail === 1, satisfied by a single click. OBSERVED in all four lanes: no open attribute - measureAttribute returns null. The summary's activation behaviour was averted DURING DISPATCH."
+        non_cancelling_arm: "guard detail === 2, NOT satisfied by a single click. OBSERVED in all four lanes: open=\"\" - the default action ran."
+        ordering_is_load_bearing: "The positive arm is awaited FIRST. Absence of an attribute never becomes true and cannot be waited for, so the positive arm doubles as the settle for the negative one - and is cheaper than settleAfterCancellableClick, which every lane pays 2s for."
+      negative_proof_both_arms_run:
+        arm_A_never_cancel: "Deleted syncPolicy from the two CONDITIONAL events only, leaving the unconditional ones alone so the failure could only be attributed to the conditional lowering. Reconstructed defect 1's exact shape - the authored guard riding a lazily fetched QRL - and the Qwik box failed verbatim: 'clicking [data-action=\"cancel-open\"] left its <details> open, so the guarded handler did not cancel during dispatch'."
+        arm_B_always_cancel_IS_THE_LOAD_BEARING_ONE: "Arm A only proves the scenario catches a NEVER-cancel emitter, which every existing cancellation check already catches. Arm B reproduced T012's REAL Solid Bug 1 - an unconditional preventDefault() unshifted above both conditional handlers, the guard still in source but no longer deciding anything. UNDER THAT MUTANT THE GUARDED CONTROL STILL STAYED CLOSED: cancellation 'worked', and every assertion about the declared-key side passed. A check that only asked 'did the conditional cancel fire when its guard was satisfied?' would have been GREEN AGAINST A HANDLER THAT HAD STOPPED CONSULTING ITS GUARD ENTIRELY."
+        now_partly_standing: "The unit-level half of arm A is no longer a one-off: qwik/test/gate.test.ts now pins the reconstructed CONDITIONAL pre-fix shape by regex and requires the gate to draw a violation on it. The behavioural half remains what only pnpm e2e can show."
+      per_lane_forms:
+        react: "authored guard verbatim, untouched by the emitter"
+        solid: "byte-identical to React - first corpus evidence of T012's widened validator leaving a conditional body untouched, now pinned by two new regexes"
+        qwik: "onClick$={[ sync$((event) => { if (event.detail === 1) { event.preventDefault(); } }) ]} - guard SYNTHESIZED from the IR condition tree, no lazy remainder so the prop is a one-element array"
+        svelte: "in-body lowercase prop inside the whitespace-significant sibling chain"
+        thesis: "Four visibly different emitted forms, ONE identical observation. First corpus scenario to test that on a conditional."
+      a_finding_about_the_calibration_lane:
+        what: "packages/analyzer/src/scenarios.ts left UNTOUCHED though allowed_files permitted it - recorded as a FINDING, not a scoping preference."
+        why: "The guards read event.detail, which a real browser sets to 1 for a user click and a constructed MouseEvent leaves at 0 - and react/src/adapter.ts dispatches constructed MouseEvents. Under calibration BOTH guards would evaluate false, so the scenario would assert NOTHING while presenting as a passing two-sided cancellation check - a false green in the lane least equipped to report that it had gone blind."
+        same_class_as: "T015's finding that the analyzer's defaultPrevented channel was structurally blind to defect 1."
+        generalised_in_the_note: "Any assertion depending on a property only TRUSTED USER ACTIVATION supplies cannot be calibrated by the analyzer."
+      deviations:
+        - "Handler placed on <summary> rather than <details>. MEASURED at 5.56.8: <summary onclick> raises no a11y warning in either generate mode, while <details onclick> raises two - and the Svelte emitter's assertCompilesClean throws on any unsuppressed warning while A11Y_EVENT_HOST_TAGS contains only 'form', so the <details> form would have forced an emitter change, which T020 forbids."
+        - "Both unit tests gained assertions BEYOND the count the PM authorised. qwik pins the four stripped policy kinds as [constant-truthy, constant-truthy, event-equals, event-equals] and the reconstructed conditional shape; solid pins both conditional bodies as authored. At four sites a bare count is too weak to carry either claim, and a corpus change that quietly dropped the conditional members would otherwise leave both tests passing at a smaller count with NO SIGNAL that coverage had narrowed."
+        - "The qwik strippedKinds assertion needed a repair: the existing filter DELETES syncPolicy before returning the event, so reading when.type off `stripped` afterwards threw. The kind is now captured in the same pass. That failure was worth having - it is exactly the shape of mistake the added assertion exists to catch."
+        - "Added measureConditionalCancellation to three-way-contract.ts rather than inlining into assertS3, and did not reuse settleAfterCancellableClick."
+      verification_attempts: 2
   - id: T021
     type: judge
     assignee: Judge
@@ -2113,7 +2193,7 @@ tasks:
   - id: T999
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     objective: "Final audit: certify both oracle halves over the phase audits, and rule the full owner outcome complete or not."
     inputs:

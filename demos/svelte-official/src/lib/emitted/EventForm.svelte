@@ -48,4 +48,24 @@
 	>cancel-submit</button
 	><output data-writes="true">{writes}</output
 	><span data-callback-marker="present"></span
+	><details data-cancel="guarded"
+		><summary
+			data-action="cancel-open"
+			onclick={(event) => {
+				if (event.detail === 1) {
+					event.preventDefault();
+				}
+			}}
+		>cancel-open</summary
+	></details
+	><details data-cancel="unguarded"
+		><summary
+			data-action="allow-open"
+			onclick={(event) => {
+				if (event.detail === 2) {
+					event.preventDefault();
+				}
+			}}
+		>allow-open</summary
+	></details
 ></form>

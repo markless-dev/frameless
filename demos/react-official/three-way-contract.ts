@@ -541,6 +541,100 @@ async function documentRequests(page: PageHandle) {
 }
 
 /**
+ * The two-sided conditional-cancellation probe, and why it is shaped this way.
+ *
+ * `[data-action="cancel-submit"]` below proves *unconditional* cancellation. It
+ * cannot distinguish a correct handler from one that cancels **always**, and an
+ * always-cancel handler is not hypothetical: it is the exact Solid bug found
+ * behind that emitter's own validator, where `normalizeHandler` unshifted an
+ * unconditional `preventDefault()` and a conditional policy fired regardless of
+ * its guard. A one-sided assertion would have called that correct.
+ *
+ * So S3 carries two `<details>`, whose `<summary>` handlers differ in **one
+ * integer literal** and nothing else:
+ *
+ * | control | authored guard | a single click |
+ * |---|---|---|
+ * | `[data-action="cancel-open"]` | `event.detail === 1` | satisfied — cancels |
+ * | `[data-action="allow-open"]`  | `event.detail === 2` | not satisfied — does not cancel |
+ *
+ * Both arms are required, and each fails a different bug: an always-cancel
+ * emitter leaves `unguarded` closed, a never-cancel emitter opens `guarded`.
+ * Because the only difference between the two handlers is that literal, neither
+ * bug can hide behind a structural asymmetry between the controls.
+ *
+ * The four lanes reach this identically-observed outcome through visibly
+ * different emitted forms — React and Solid keep the authored guard verbatim,
+ * Qwik synthesises a `sync$()` guard from the IR's condition tree, Svelte emits
+ * it in-body. Divergence in form with identity in behaviour is the thesis, and
+ * this is the first scenario that tests it on a *conditional*.
+ *
+ * ## Why `<details>` rather than a form submit or a checkbox
+ *
+ * The default action has to be *real*, observable through the serialized DOM,
+ * and non-destructive — the negative arm deliberately lets its default action
+ * run, so it must not navigate the page away mid-scenario the way a second
+ * `type="submit"` would. A `<summary>` click's default action toggles the
+ * `open` **content attribute** on its `<details>`, which `page.content()`
+ * serializes; a checkbox's `checked` is a property no sanctioned witness API
+ * can read, and routing it through component state would put four frameworks'
+ * synthetic `change` semantics between the guard and the observation. Nothing
+ * here binds state, so no framework re-renders these nodes and no lane can
+ * "repair" a toggle after the fact.
+ *
+ * ## Why the assertions are ordered the way they are
+ *
+ * A summary's activation behaviour runs synchronously at the end of dispatch,
+ * so a *failure* to cancel shows up immediately, while an absence of the `open`
+ * attribute never "becomes true" and so cannot be waited for. The unguarded arm
+ * is therefore clicked second and awaited first: `expect.page.attribute` blocks
+ * until `unguarded` really opened, and only then is `guarded` read. The guarded
+ * click is by then strictly older than a toggle that has already been observed
+ * to land, which is what makes reading `null` evidence rather than a race.
+ *
+ * That ordering also covers the lane this exists for. Strip `syncPolicy` from
+ * S3's IR and Qwik re-emits the pre-fix shape — the guard riding a lazily
+ * fetched QRL — and the toggle happens at dispatch, ~100ms before the segment
+ * arrives, so `guarded` is already open by the time this reads it.
+ */
+async function measureConditionalCancellation(
+  page: PageHandle,
+  expect: ExpectApi,
+): Promise<string> {
+  await page.click('[data-action="cancel-open"]')
+  await page.click('[data-action="allow-open"]')
+
+  // Positive arm first: it is the one that becomes true, so awaiting it is also
+  // the settle the negative arm below needs.
+  await expect.page.attribute(page, '[data-cancel="unguarded"]', 'open', '')
+
+  const html = await page.content()
+  const guarded = measureAttribute(html, 'data-cancel="guarded"', 'open')
+  const unguarded = measureAttribute(html, 'data-cancel="unguarded"', 'open')
+  if (guarded !== null) {
+    throw new Error(
+      'clicking [data-action="cancel-open"] left its <details> open, so the guarded ' +
+        "handler did not cancel the summary's default action during dispatch. Its whole " +
+        'body is `if (event.detail === 1) event.preventDefault()` and a single click ' +
+        'carries detail 1, so the guard was satisfied and the cancellation still did not ' +
+        'reach the browser in time.',
+    )
+  }
+  if (unguarded !== '') {
+    throw new Error(
+      'clicking [data-action="allow-open"] left its <details> closed, so a handler guarded ' +
+        'on `event.detail === 2` cancelled a click carrying detail 1. That is cancellation ' +
+        'firing unconditionally — the guard was discarded somewhere between the IR and the ' +
+        'emitted output.',
+    )
+  }
+  return (
+    `after conditional clicks guarded details reads open=${JSON.stringify(guarded)} ` +
+    `and unguarded details reads open=${JSON.stringify(unguarded)}`
+  )
+}
+
+/**
  * S3 — event form: a handler that writes twice and settles on one value, then a
  * handler that cancels a real default action.
  *
@@ -616,6 +710,21 @@ async function documentRequests(page: PageHandle) {
  * That is load-bearing: the `missing-prevent-default` mutant deliberately drops
  * the call, and a calibration lane that submitted for real would navigate the
  * vitest page away instead of reporting a divergence.
+ *
+ * ## Conditional cancellation
+ *
+ * That step still only proves the *unconditional* case, and would pass against
+ * a handler that cancels always. `measureConditionalCancellation` runs after it
+ * and is two-sided; see its own doc comment for the design and for why neither
+ * arm alone is a check. It is the last step in S3 for the same reason the
+ * unconditional one is: everything above it has already run and passed.
+ *
+ * Its controls are outside the analyzer's S3 action list too, and additionally
+ * outside its reach: the guards read `event.detail`, which a real browser sets
+ * to 1 for a user click and a constructed `MouseEvent` leaves at 0. This
+ * distinction only exists in a real browser driving real activation behaviour,
+ * which is exactly why the behavioural lane and not the calibration lane owns
+ * it.
  */
 export async function assertS3(
   page: PageHandle,
@@ -666,6 +775,10 @@ export async function assertS3(
     `after cancel-submit ${documents.length} document request served this page and ` +
       `writes = ${measureText(await page.content(), 'data-writes="true"')}`,
   )
+
+  // Conditional cancellation, two-sided. Last, for the same reason the
+  // unconditional step is: everything above has already run and passed.
+  observed.push(await measureConditionalCancellation(page, expect))
   return observed
 }
 

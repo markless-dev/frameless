@@ -375,10 +375,26 @@ export function Locked({ onTrace }) @{
 			// S3's cancel-submit and submit handlers. Byte-identity with the checked-in
 			// generated corpus is asserted elsewhere; this pins the SHAPE, so a future
 			// refactor cannot quietly move the call back where it was authored.
+			//
+			// FOUR, not two, since T020 gave S3 a two-sided conditional case. The count
+			// alone would be a weak assertion at this size, so the two kinds are pinned
+			// separately below: strip-and-renormalize applies ONLY to the unconditional
+			// path, and the conditional bodies must come through exactly as authored —
+			// which is the behaviour T012 restored by fixing the three bugs the old
+			// over-narrow validator was hiding.
 			const source = await formatEmitted(emit(await golden('s3-event-form.json')));
-			expect(source.match(/event\.preventDefault\(\)/g)).toHaveLength(2);
+			expect(source.match(/event\.preventDefault\(\)/g)).toHaveLength(4);
 			expect(source).toMatch(
 				/onClick=\{\(event\) => \{\s*event\.preventDefault\(\);\s*setWrites\(1\);/,
+			);
+			// Guarded, and guarded exactly once. Bug 1 — normalizeHandler unshifting an
+			// unconditional preventDefault() while leaving the authored guarded call in
+			// place — would show up right here as a second call above the `if`.
+			expect(source).toMatch(
+				/onClick=\{\(event\) => \{\s*if \(event\.detail === 1\) \{\s*event\.preventDefault\(\);\s*\}\s*\}\}/,
+			);
+			expect(source).toMatch(
+				/onClick=\{\(event\) => \{\s*if \(event\.detail === 2\) \{\s*event\.preventDefault\(\);\s*\}\s*\}\}/,
 			);
 		});
 

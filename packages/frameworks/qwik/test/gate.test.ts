@@ -241,28 +241,70 @@ describe('Qwik v2 dossier gate', () => {
 	// The second half of this test is the point: the upstream rule stays SILENT
 	// on that shape. Releasing the expectation to [] without this policy would
 	// have shipped a gate that passes identically on broken output.
+	//
+	// THE COUNT HERE WENT 2 -> 4, AND THAT IS A WIDENING, NOT A CHASED RED.
+	// T020 added a two-sided CONDITIONAL cancellation case to the S3 corpus, so
+	// S3's four cancellation sites are now two unconditional (`submit`,
+	// `cancel-submit`; `constant-truthy`) and two conditional (`cancel-open`,
+	// `allow-open`; `event-equals` on `event.detail`). Stripping every declared
+	// SyncPolicy therefore reconstructs BOTH pre-fix shapes at once:
+	//
+	//   unconditional -> onClick$={(event) => { event.preventDefault(); }}
+	//   conditional   -> onClick$={(event) => { if (event.detail === 1) { … } }}
+	//
+	// Before T020 this guard only ever covered the unconditional path. It now
+	// also covers the path T011 measured as SILENTLY re-emitting defect 1:
+	// `hoistsPreventDefault()` returned false, `emitEvent` handed back a bare
+	// lazily fetched QRL carrying the authored guard, and nothing threw.
+	//
+	// It is the unit-level twin of T020's negative proof, which stripped the two
+	// conditional policies from this same golden and watched the `pnpm e2e` Qwik
+	// lane fail behaviourally with `[data-action="cancel-open"]` leaving its
+	// <details> open. This test proves the GATE rejects that shape; that run
+	// proved a BROWSER does. Neither substitutes for the other, which is the
+	// whole reason T020 exists — see notes/T020-conditional-behavioural.md.
 	test('MUTATION: the pre-fix emitter shape is rejected, and upstream stays silent', async () => {
 		const artifact = structuredClone(await golden('s3-event-form.json')) as EnrichedIR;
+		// The `when` kind has to be read in the SAME pass, because the strip deletes
+		// the policy it is being read from.
+		const strippedKinds: string[] = [];
 		const stripped = artifact.records.events.filter((event) => {
-			const policy = (event as { syncPolicy?: unknown }).syncPolicy;
+			const policy = (event as { syncPolicy?: { when: { type: string } } }).syncPolicy;
+			if (policy) strippedKinds.push(policy.when.type);
 			delete (event as { syncPolicy?: unknown }).syncPolicy;
 			return Boolean(policy);
 		});
-		expect(stripped).toHaveLength(2);
+		expect(stripped).toHaveLength(4);
+		// Both kinds are present. A corpus change that quietly dropped the
+		// conditional members would otherwise leave this test passing at a
+		// smaller count with no signal that its coverage had narrowed.
+		expect(strippedKinds).toEqual([
+			'constant-truthy',
+			'constant-truthy',
+			'event-equals',
+			'event-equals',
+		]);
 
 		const source = await formatEmitted(emit(artifact));
 		expect(source).not.toContain('sync$');
-		expect(source.match(/event\.preventDefault\(\)/g)).toHaveLength(2);
-		// One of the two is SYNCHRONOUS. Defect 1 is misnamed: the emitted
-		// cancel-submit handler has no `async` keyword and failed anyway, because
-		// the QRL segment was not resident when the event fired.
+		expect(source.match(/event\.preventDefault\(\)/g)).toHaveLength(4);
+		// One of the unconditional two is SYNCHRONOUS. Defect 1 is misnamed: the
+		// emitted cancel-submit handler has no `async` keyword and failed anyway,
+		// because the QRL segment was not resident when the event fired.
 		expect(source).toMatch(
 			/onClick\$=\{\(event\) => \{\s*event\.preventDefault\(\);\s*\}\}/,
+		);
+		// The conditional two are the shape T011 measured reaching no refusal at
+		// all: the authored guard, intact, riding a lazily fetched QRL.
+		expect(source).toMatch(
+			/onClick\$=\{\(event\) => \{\s*if \(event\.detail === 1\) \{\s*event\.preventDefault\(\);\s*\}\s*\}\}/,
 		);
 
 		const result = await checkSources([{ file: 'generated/PreFixMutant.jsx', source }]);
 		const policies = result.violations.map((entry) => entry.policy);
 		expect(policies, JSON.stringify(result.violations, null, 2)).toEqual([
+			'frameless/no-handler-sync-action',
+			'frameless/no-handler-sync-action',
 			'frameless/no-handler-sync-action',
 			'frameless/no-handler-sync-action',
 		]);

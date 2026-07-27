@@ -55,6 +55,30 @@ export function EventForm(props) {
 			</button>
 			<output data-writes="true">{writes()}</output>
 			<span data-callback-marker="present" />
+			<details data-cancel="guarded">
+				<summary
+					data-action="cancel-open"
+					onClick={(event) => {
+						if (event.detail === 1) {
+							event.preventDefault();
+						}
+					}}
+				>
+					cancel-open
+				</summary>
+			</details>
+			<details data-cancel="unguarded">
+				<summary
+					data-action="allow-open"
+					onClick={(event) => {
+						if (event.detail === 2) {
+							event.preventDefault();
+						}
+					}}
+				>
+					allow-open
+				</summary>
+			</details>
 		</form>
 	);
 }

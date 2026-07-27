@@ -326,6 +326,80 @@
                 }
               ],
               "tag": "span"
+            },
+            {
+              "children": [
+                {
+                  "children": [
+                    {
+                      "id": "text:3",
+                      "kind": "text",
+                      "value": "cancel-open"
+                    }
+                  ],
+                  "dynamicBindings": [],
+                  "eventIds": [
+                    "event:5"
+                  ],
+                  "id": "h8",
+                  "kind": "host",
+                  "staticAttributes": [
+                    {
+                      "name": "data-action",
+                      "value": "cancel-open"
+                    }
+                  ],
+                  "tag": "summary"
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [],
+              "id": "h7",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-cancel",
+                  "value": "guarded"
+                }
+              ],
+              "tag": "details"
+            },
+            {
+              "children": [
+                {
+                  "children": [
+                    {
+                      "id": "text:4",
+                      "kind": "text",
+                      "value": "allow-open"
+                    }
+                  ],
+                  "dynamicBindings": [],
+                  "eventIds": [
+                    "event:6"
+                  ],
+                  "id": "h10",
+                  "kind": "host",
+                  "staticAttributes": [
+                    {
+                      "name": "data-action",
+                      "value": "allow-open"
+                    }
+                  ],
+                  "tag": "summary"
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [],
+              "id": "h9",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-cancel",
+                  "value": "unguarded"
+                }
+              ],
+              "tag": "details"
             }
           ],
           "dynamicBindings": [],
@@ -1588,6 +1662,250 @@
           "when": {
             "type": "constant-truthy",
             "value": true
+          }
+        }
+      },
+      {
+        "componentId": "component:0:EventForm",
+        "eventName": "click",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "alternate": null,
+                    "consequent": {
+                      "body": [
+                        {
+                          "end": 1369,
+                          "expression": {
+                            "arguments": [],
+                            "callee": {
+                              "computed": false,
+                              "end": 1366,
+                              "object": {
+                                "end": 1351,
+                                "name": "event",
+                                "start": 1346,
+                                "type": "Identifier"
+                              },
+                              "optional": false,
+                              "property": {
+                                "end": 1366,
+                                "name": "preventDefault",
+                                "start": 1352,
+                                "type": "Identifier"
+                              },
+                              "start": 1346,
+                              "type": "MemberExpression"
+                            },
+                            "end": 1368,
+                            "optional": false,
+                            "start": 1346,
+                            "type": "CallExpression"
+                          },
+                          "start": 1346,
+                          "type": "ExpressionStatement"
+                        }
+                      ],
+                      "end": 1376,
+                      "start": 1338,
+                      "type": "BlockStatement"
+                    },
+                    "end": 1376,
+                    "start": 1314,
+                    "test": {
+                      "end": 1336,
+                      "left": {
+                        "computed": false,
+                        "end": 1330,
+                        "object": {
+                          "end": 1323,
+                          "name": "event",
+                          "start": 1318,
+                          "type": "Identifier"
+                        },
+                        "optional": false,
+                        "property": {
+                          "end": 1330,
+                          "name": "detail",
+                          "start": 1324,
+                          "type": "Identifier"
+                        },
+                        "start": 1318,
+                        "type": "MemberExpression"
+                      },
+                      "operator": "===",
+                      "right": {
+                        "end": 1336,
+                        "raw": "1",
+                        "start": 1335,
+                        "type": "Literal",
+                        "value": 1
+                      },
+                      "start": 1318,
+                      "type": "BinaryExpression"
+                    },
+                    "type": "IfStatement"
+                  }
+                ],
+                "end": 1382,
+                "start": 1307,
+                "type": "BlockStatement"
+              },
+              "end": 1382,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 1302,
+                  "name": "event",
+                  "start": 1297,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 1296,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [],
+            "writes": []
+          }
+        ],
+        "hostNodeId": "h8",
+        "id": "event:5",
+        "syncPolicy": {
+          "actions": [
+            "preventDefault"
+          ],
+          "when": {
+            "field": "detail",
+            "type": "event-equals",
+            "value": 1
+          }
+        }
+      },
+      {
+        "componentId": "component:0:EventForm",
+        "eventName": "click",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "alternate": null,
+                    "consequent": {
+                      "body": [
+                        {
+                          "end": 1586,
+                          "expression": {
+                            "arguments": [],
+                            "callee": {
+                              "computed": false,
+                              "end": 1583,
+                              "object": {
+                                "end": 1568,
+                                "name": "event",
+                                "start": 1563,
+                                "type": "Identifier"
+                              },
+                              "optional": false,
+                              "property": {
+                                "end": 1583,
+                                "name": "preventDefault",
+                                "start": 1569,
+                                "type": "Identifier"
+                              },
+                              "start": 1563,
+                              "type": "MemberExpression"
+                            },
+                            "end": 1585,
+                            "optional": false,
+                            "start": 1563,
+                            "type": "CallExpression"
+                          },
+                          "start": 1563,
+                          "type": "ExpressionStatement"
+                        }
+                      ],
+                      "end": 1593,
+                      "start": 1555,
+                      "type": "BlockStatement"
+                    },
+                    "end": 1593,
+                    "start": 1531,
+                    "test": {
+                      "end": 1553,
+                      "left": {
+                        "computed": false,
+                        "end": 1547,
+                        "object": {
+                          "end": 1540,
+                          "name": "event",
+                          "start": 1535,
+                          "type": "Identifier"
+                        },
+                        "optional": false,
+                        "property": {
+                          "end": 1547,
+                          "name": "detail",
+                          "start": 1541,
+                          "type": "Identifier"
+                        },
+                        "start": 1535,
+                        "type": "MemberExpression"
+                      },
+                      "operator": "===",
+                      "right": {
+                        "end": 1553,
+                        "raw": "2",
+                        "start": 1552,
+                        "type": "Literal",
+                        "value": 2
+                      },
+                      "start": 1535,
+                      "type": "BinaryExpression"
+                    },
+                    "type": "IfStatement"
+                  }
+                ],
+                "end": 1599,
+                "start": 1524,
+                "type": "BlockStatement"
+              },
+              "end": 1599,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 1519,
+                  "name": "event",
+                  "start": 1514,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 1513,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [],
+            "writes": []
+          }
+        ],
+        "hostNodeId": "h10",
+        "id": "event:6",
+        "syncPolicy": {
+          "actions": [
+            "preventDefault"
+          ],
+          "when": {
+            "field": "detail",
+            "type": "event-equals",
+            "value": 2
           }
         }
       }
