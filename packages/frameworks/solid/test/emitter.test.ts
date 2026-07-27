@@ -211,6 +211,97 @@ describe('Solid structural emitter', () => {
 	});
 
 	/**
+	 * NESTED REPEAT SOURCED FROM THE ENCLOSING REPEAT ITEM - T033.
+	 *
+	 * `keyByState` used to assume every repeat resolved to ONE state node with an
+	 * empty path, and `validateTemplate` required the collection to carry a
+	 * `via: 'direct'` read. A nested repeat over `group.rows` legitimately carries
+	 * a single `via: 'repeat-item'` read into `state:groups/rows`, so this lane
+	 * threw `TemplateKeyedRepeat repeat:1 has unconsumed key semantics` - watched
+	 * failing with exactly that message before the repair, when it was the ONLY
+	 * one of six emitters to notice the IR was wrong.
+	 *
+	 * The validation is NOT weakened: an unresolved collection (zero reads, or
+	 * more than one) still throws, and the compiler now refuses to build one.
+	 */
+	describe('nested keyed repeat', () => {
+		async function s4Ir(): Promise<EnrichedIR> {
+			return buildEnrichedIr({
+				filename: 'src/fixtures/s4-nested-list.tsrx',
+				source: await readFile(resolve(goldenRoot, '../fixtures/s4-nested-list.tsrx'), 'utf8'),
+			});
+		}
+
+		test('validates and emits a nested For whose collection is the outer row', async () => {
+			const ir = await s4Ir();
+			expect(() => validateEnrichedIr(ir)).not.toThrow();
+			const source = await formatEmitted(emit(ir));
+			const outer = source.indexOf('<For each={groups}>');
+			const inner = source.indexOf('<For each={group.rows}>');
+			expect(outer).toBeGreaterThan(-1);
+			expect(inner).toBeGreaterThan(outer);
+			expect(source).toContain('{(group) =>');
+			expect(source).toContain('{(row) =>');
+			// The handler inside the inner row closes over BOTH loop variables.
+			expect(source).toMatch(/setSelection\(`\$\{group\.id\}>\$\{row\.id\}`\)/);
+			expect(source).toContain('<li data-oracle-cell-key={row.id}>');
+			// The inner rows live inside the SAME store as the groups, so the outer
+			// repeat's `key: 'id'` is the one reconcile uses and is not duplicated.
+			expect(source.match(/reconcile\(/g)).toHaveLength(2);
+		});
+
+		async function s4WithInnerRepeat(
+			mutate: (repeat: any) => void,
+		): Promise<ReturnType<typeof clone<EnrichedIR>>> {
+			const broken = clone(await s4Ir());
+			const repeats: any[] = [];
+			const walkNodes = (nodes: any[]): void => {
+				for (const node of nodes) {
+					if (node.kind === 'keyed-repeat') {
+						repeats.push(node);
+						walkNodes(node.row);
+					}
+					if (node.children) walkNodes(node.children);
+				}
+			};
+			walkNodes(broken.components[0]!.template as any[]);
+			expect(repeats).toHaveLength(2);
+			mutate(repeats[1]);
+			return broken;
+		}
+
+		// THE GUARD THAT CAUGHT THE DEFECT MUST STILL FIRE. This is the exact
+		// sentence the original broken IR raised; the repair makes the IR right,
+		// it does not make the emitter tolerant.
+		test('still throws unconsumed key semantics when the inner key reads nothing', async () => {
+			const broken = await s4WithInnerRepeat((repeat) => {
+				repeat.key.reads = [];
+			});
+			expect(() => validateEnrichedIr(broken)).toThrow(
+				'TemplateKeyedRepeat repeat:1 has unconsumed key semantics',
+			);
+		});
+
+		test('still refuses a repeat whose collection resolves to no graph read', async () => {
+			const broken = await s4WithInnerRepeat((repeat) => {
+				repeat.collection.reads = [];
+			});
+			expect(() => validateEnrichedIr(broken)).toThrow(
+				'TemplateKeyedRepeat repeat:1 has keyed-repeat collection AST read absent from records: state:groups/rows',
+			);
+		});
+
+		// A collection that resolves to MORE than one location - `rowsByGroup[group.id]`
+		// - is refused too, but not here: the compiler now throws while building it
+		// (see enriched-ir.test.ts), and a hand-forged one is stopped one gate earlier
+		// by `reconcileReadSemantics`, which pins a member-chain collection to exactly
+		// the reads its AST produces. Measured: forging a second read raises
+		// `TemplateKeyedRepeat repeat:1 has keyed-repeat collection read record absent
+		// from AST: state:marked/`. The multi-read arm of the location check is
+		// therefore unreachable defence, not an untested branch of a reachable one.
+	});
+
+	/**
 	 * CONDITIONAL CANCELLATION - T011 §3.3 of frameless-defects-and-targets-v1.
 	 *
 	 * Solid's handlers are synchronous and resident, so there is nothing to

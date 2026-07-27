@@ -187,6 +187,15 @@ function readKey(graphNodeId: string, path: readonly string[]): string {
 	return `${graphNodeId}\u0000${path.join('\u0000')}`;
 }
 
+/**
+ * The graph location a repeat item ranges over. A top-level repeat resolves to a
+ * state node with an EMPTY path; a nested repeat sourced from its enclosing row
+ * (`@for (const row of group.rows)`) resolves to the SAME state node under a
+ * path - `state:groups` + `['rows']`. Carrying only the graphNodeId, as this
+ * emitter used to, made the second case inexpressible. T033.
+ */
+type RepeatItemSource = { readonly graphNodeId: string; readonly path: readonly string[] };
+
 function reconcileReadSemantics(
 	ast: t.Expression,
 	reads: readonly { readonly graphNodeId: string; readonly path: readonly string[] }[],
@@ -194,7 +203,7 @@ function reconcileReadSemantics(
 	bindings: readonly EnrichedGraphBinding[],
 	props: EnrichedComponent['props'],
 	locals: EnrichedComponent['locals'],
-	repeatItems: ReadonlyMap<string, string> = new Map(),
+	repeatItems: ReadonlyMap<string, RepeatItemSource> = new Map(),
 ): void {
 	const bindingsByName = new Map(bindings.map((binding) => [binding.name, binding]));
 	const propsByLocal = new Map(props.entries.map((entry) => [entry.localName, entry]));
@@ -230,10 +239,13 @@ function reconcileReadSemantics(
 				});
 			const binding = bindingsByName.get(path.name);
 			if (binding) candidates.push({ graphNodeId: binding.id, path: suffix });
-			const repeatGraphNodeId = repeatItems.get(path.name);
-			if (repeatGraphNodeId)
-				candidates.push({ graphNodeId: repeatGraphNodeId, path: suffix });
-			if (!prop && !binding && !repeatGraphNodeId) {
+			const repeatItem = repeatItems.get(path.name);
+			if (repeatItem)
+				candidates.push({
+					graphNodeId: repeatItem.graphNodeId,
+					path: [...repeatItem.path, ...suffix],
+				});
+			if (!prop && !binding && !repeatItem) {
 				const local = localsByName.get(path.name);
 				for (const read of local?.reads ?? [])
 					candidates.push({
@@ -620,7 +632,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		site: RecordLike,
 		construct: string,
 		readConstruct: string,
-		repeatItems?: ReadonlyMap<string, string>,
+		repeatItems?: ReadonlyMap<string, RepeatItemSource>,
 	): void => {
 		exactKeys(site, ['expression', 'reads'], construct);
 		if (!site.expression || typeof site.expression.type !== 'string')
@@ -857,12 +869,21 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 	);
 
 	const hostIds = new Set<string>();
+	// Keyed by graphNodeId: this answers "which field identifies a row of this
+	// array state", which the handler identity-mutation guard and the array-state
+	// coverage check both ask. Nested repeats live UNDER a path of the same state
+	// node, so they are keyed separately in `keyByCollection` below.
 	const keyByState = new Map<string, string>();
-	const repeatItemsByEventId = new Map<string, ReadonlyMap<string, string>>();
+	// Keyed by the full collection LOCATION (graphNodeId + path). `state:groups`
+	// and `state:groups/rows` are different collections and may legitimately be
+	// keyed by different fields; conflating them was the single-state-node
+	// assumption T033 lifted.
+	const keyByCollection = new Map<string, string>();
+	const repeatItemsByEventId = new Map<string, ReadonlyMap<string, RepeatItemSource>>();
 	const validateTemplate = (
 		node: TemplateNode,
 		location: string,
-		repeatItems: ReadonlyMap<string, string> = new Map(),
+		repeatItems: ReadonlyMap<string, RepeatItemSource> = new Map(),
 	): void => {
 		if (!node || typeof node !== 'object')
 			throw new Error(
@@ -1049,29 +1070,49 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 			`TemplateKeyedRepeat ${node.id} has keyed-repeat collection`,
 			repeatItems,
 		);
-		const collectionRead = node.collection.reads.find((read) => read.via === 'direct');
+		// A collection must denote EXACTLY ONE graph location. `direct` is the
+		// top-level case; a lone `repeat-item` read is a nested repeat whose
+		// collection is a member of its enclosing row (`group.rows`). Anything
+		// else - no read at all, or several - is unresolved and fails closed.
+		const [onlyRead, ...extraReads] = node.collection.reads;
+		const collectionRead =
+			onlyRead &&
+			extraReads.length === 0 &&
+			(onlyRead.via === 'direct' || onlyRead.via === 'repeat-item')
+				? onlyRead
+				: undefined;
 		const path = itemMemberPath(node.key.expression, node.item);
 		const keyRead = node.key.reads.find((read) => read.via === 'repeat-item');
 		if (
 			!path ||
 			path.length !== 1 ||
 			!keyRead ||
-			keyRead.path.join('/') !== path.join('/') ||
-			!collectionRead
+			!collectionRead ||
+			keyRead.graphNodeId !== collectionRead.graphNodeId ||
+			keyRead.path.join('/') !== [...collectionRead.path, ...path].join('/')
 		)
 			throw new Error(`TemplateKeyedRepeat ${node.id} has unconsumed key semantics`);
 		const rowRepeatItems = new Map(repeatItems);
-		rowRepeatItems.set(node.item, collectionRead.graphNodeId);
+		rowRepeatItems.set(node.item, {
+			graphNodeId: collectionRead.graphNodeId,
+			path: collectionRead.path,
+		});
 		validateSite(
 			node.key as RecordLike,
 			`TemplateKeyedRepeat ${node.id} key`,
 			`TemplateKeyedRepeat ${node.id} has keyed-repeat key`,
 			rowRepeatItems,
 		);
-		const prior = keyByState.get(collectionRead.graphNodeId);
+		const collectionKey = readKey(collectionRead.graphNodeId, collectionRead.path);
+		const prior = keyByCollection.get(collectionKey);
 		if (prior && prior !== path[0])
 			throw new Error(`TemplateKeyedRepeat ${node.id} conflicts with key ${prior}`);
-		keyByState.set(collectionRead.graphNodeId, path[0]!);
+		keyByCollection.set(collectionKey, path[0]!);
+		// A repeat over the state node ITSELF states that node's row identity and
+		// always wins; a nested repeat only fills a gap, so an outer repeat's key
+		// is never overwritten by the collection nested inside it.
+		if (collectionRead.path.length === 0 || !keyByState.has(collectionRead.graphNodeId))
+			keyByState.set(collectionRead.graphNodeId, path[0]!);
 		node.row.forEach((child, index) =>
 			validateTemplate(child, `${location}.row[${index}]`, rowRepeatItems),
 		);

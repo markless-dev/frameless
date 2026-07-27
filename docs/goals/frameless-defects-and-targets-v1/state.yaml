@@ -131,7 +131,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T033
+active_task: T034
 
 tasks:
   - id: T001
@@ -2557,7 +2557,7 @@ tasks:
   - id: T033
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     spec: "T025 receipt and docs/goals/frameless-defects-and-targets-v1/notes/T025-corpus-s4-nested.md - AUTHORITATIVE."
     objective: >-
@@ -2613,6 +2613,169 @@ tasks:
       - "You are about to weaken Solid's keyed-repeat validation to accept an unresolved collection. It caught this defect when five other emitters did not."
       - "You cannot make the new test fail for the RIGHT reason before fixing it. A fix landing without a witnessed failure is not done, per the charter."
       - "Verification fails twice for the same reason."
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T033-nested-repeat.md
+      summary: "Re-derived T025's measurement independently (16 sites / 7 zero-read / the Solid throw), landed three compiler tests and three Solid tests RED FIRST, then repaired build.ts and the Solid emitter. build.ts now registers every repeat item: the graph field when set, otherwise the collection expression's single derived read, otherwise a NAMED THROW. The vendored compiler was NOT touched. Solid's repeatItems carries a path prefix, the collection selector requires exactly one direct-or-repeat-item read, and the key/collection agreement gained a graphNodeId check. All goldens in all six lanes byte-identical; e2e green; the mutation oracle still 18/18 RED."
+      PROOF_BEFORE_FIX_WAS_ACTUALLY_DONE: "Both repairs were preceded by a witnessed failure, and the failures are recorded verbatim rather than described. Compiler: 'AssertionError: expected [ repeat:1 key, ...(6) ] to deeply equal []' - the seven zero-read sites RE-DERIVED independently of T025 rather than inherited: repeat:1 key, host h8 data-oracle-cell-key, h9 data-select, h10 data-cell-on, h11 data-cell-off, h12 data-cell-open, h13 data-open-cell, out of 16 sites. Solid: 'expected [Function] to not throw an error but Error: TemplateKeyedRepeat repeat:1 has unconsumed key semantics was thrown'. A third pre-fix witness is the most telling: rowsByGroup[group.id] DID NOT THROW - it built an IR quietly with zero reads."
+      IT_CORRECTED_T025s_BOUNDARY_BY_MEASUREMENT: "T025 bounded the gap as 'a repeat item being the source of a nested repeat's collection'. THE GAP SPLITS IN TWO, and only measurement showed it. CONTAINMENT (group.rows, with the outer over state OR over a prop) is now EXPRESSIBLE. THE COMPUTED-INDEX CASE (rowsByGroup[group.id]) is still inexpressible - but it is now a STATED REFUSAL instead of a silent empty array. That is the fourth time this session a successor re-checked a predecessor's claim and refined it, and it is the reason the repair is safe: the half that could not be fixed now announces itself."
+      the_error_message_names_the_consequence_not_just_the_cause: "PM READ THE SHIPPED THROW. It reads: 'Keyed repeat <id> collection cannot be resolved to a single graph location: Layer A left collectionGraphNodeId unset and <reason>. The repeat item \"<name>\" cannot be registered, so every read off it would lower to reads: [].' It states WHAT WOULD HAVE HAPPENED SILENTLY. That is the difference between failing closed and failing closed LOUDLY, which was the card's central requirement - because silence is exactly what let this defect survive five independent emitters."
+      solid_was_strengthened_not_weakened: "The card forbade weakening the validation that caught the defect. It was tightened instead: repeatItems now carries {graphNodeId, path} rather than a bare id; the collection selector moved from find(via === 'direct') to EXACTLY ONE direct-or-repeat-item read; and the key check gained a graphNodeId equality plus comparison against [...collection.path, ...key]. Only ONE thing loosened, correctly: the conflict check moved off keyByState onto a new keyByCollection keyed by graphNodeId PLUS path, because state:groups and state:groups/rows are genuinely different collections."
+      pm_independent_verification: "PM re-ran and confirms: pnpm test 876 passed / 50 files (870 at dispatch, +6 new). pnpm check exit 0. git diff --exit-code across ALL SIX generated/ directories - byte-identical. PM also read repeatCollectionSource at build.ts:1048-1069 and confirms the three-branch shape: graph field when set (byte-for-byte the old path, which is why nothing moved), single derived read otherwise, named throw otherwise."
+      changed_files:
+        - packages/compiler/src/build.ts
+        - packages/compiler/test/enriched-ir.test.ts
+        - packages/frameworks/solid/src/emitter/index.ts
+        - packages/frameworks/solid/test/emitter.test.ts
+        - docs/goals/frameless-defects-and-targets-v1/notes/T033-nested-repeat.md
+      commands:
+        - cmd: "vitest packages/compiler/test/enriched-ir.test.ts -t 'nested repeats'   # PRE-FIX WITNESS"
+          status: pass
+          note: "failed-as-designed BEFORE the fix: 3 failures including 'expected [ repeat:1 key, ...(6) ] to deeply equal []'. Recorded as the witnessed failure the charter requires; green after the repair"
+        - cmd: "vitest packages/frameworks/solid/test/emitter.test.ts -t 'nested keyed repeat'   # PRE-FIX WITNESS"
+          status: pass
+          note: "failed-as-designed BEFORE the fix with the verbatim 'unconsumed key semantics' throw; green after"
+        - cmd: "pnpm test"
+          status: pass
+          note: "876 tests / 50 files, +6; PM re-ran and confirms 876"
+        - cmd: "pnpm check"
+          status: pass
+          note: "PM re-ran"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 328 files"
+        - cmd: "pnpm --dir packages/frameworks/solid/ regenerate && git diff --exit-code -- packages/frameworks/solid/generated"
+          status: pass
+          note: "Solid goldens unmoved"
+        - cmd: "regenerate ALL SIX lanes, then git diff --exit-code over all six generated/"
+          status: pass
+          note: "the Worker ran every lane's regenerate rather than inferring from unchanged compiler goldens - so 'no other lane moved' is a MEASUREMENT. PM re-verified byte-identity"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "6 demos x 3 scenarios, all observations equal"
+        - cmd: "pnpm mutate:corpus --dry-run --scenario s1 --scenario s2 --scenario s3"
+          status: pass
+          note: "18 mutants anchor uniquely, every one changes bytes"
+        - cmd: "pnpm mutate:corpus --scenario s1 --scenario s2 --scenario s3"
+          status: pass
+          note: "18 mutants, EVERY ONE RED, every one restored - THE ORACLE WAS NOT BLUNTED by the compiler change, which was the card's sharpest stop condition"
+        - cmd: "git status --short"
+          status: pass
+          note: "4 modified plus 1 new note; no probe scripts left behind"
+      deviations:
+        - "Dropped one planned Solid negative test ('collection resolves to more than one location') AFTER MEASURING IT UNREACHABLE BY CONSTRUCTION: build.ts now refuses to build such an IR, and reconcileReadSemantics rejects a hand-forged one first with 'keyed-repeat collection read record absent from AST'. Replaced with two REACHABLE negatives - zeroed key reads reproducing the original 'unconsumed key semantics' sentence, and zeroed collection reads hitting the reconciliation refusal - plus a comment recording the measurement. Dropping an unreachable negative and saying why beats shipping one that cannot fire."
+        - "Additionally rejects a resolved read whose path contains a '*' computed-index segment, throwing rather than registering an item under an ambiguous path. Not requested - it is the same fail-closed-loudly principle applied to the one remaining silent shape, and it is what converts the computed-index half of the gap from silence into a stated refusal."
+        - "Ran regenerate for all six lanes rather than only Solid, so 'no other lane moved' is a measurement rather than an inference."
+      remaining_blockers:
+        - "S4 IS STILL NOT REGISTERED IN FIXTURES. Its IR is now clean, so the card's condition is met, but registration needs packages/compiler/test/goldens/s4-nested-list.json plus six new files under each lane's generated/ - all outside this card's allowed_files, and new emitter goldens fall under its 'any existing golden moves' stop_if. Correctly refused rather than smuggled in. Scoped as T034."
+        - "Angular ruling 3d is now MEASURABLE for the first time - a nested repeat compiles and the other five lanes emit from a correct IR - but measuring it was out of this card's scope. It is T034's headline."
+      spawned_tasks:
+        - T034
+      stopped_because: null
+  - id: T034
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    spec: "T024 ruling, T025 receipt and T033 receipt - AUTHORITATIVE."
+    objective: >-
+      REGISTER S4 (nested lists) across all SIX targets now that T033 made a nested repeat
+      expressible: golden, FIXTURES entry, six generated outputs, six demo routes, e2e wiring, and
+      six mutation-budget rows proven RED. This is T025's deliverable 2, unblocked.
+    THE_HEADLINE_MEASUREMENT_THIS_CARD_FINALLY_ENABLES: >-
+      ANGULAR RULING 3d HAS NEVER HAD AN INSTANCE. It specifies 'every enclosing @for variable,
+      OUTERMOST FIRST', and until T033 the corpus could not express a nested loop at all - shipped
+      Angular output only ever emitted one-element call sites. T025 saw Angular produce the repo's
+      first nested call site, onH9Click(group, row, $event), but over a BROKEN IR, so it proved
+      nothing. Now it can be measured for real. THE RATIFIED MUTANT IS THE forVariables ORDER SWAP:
+      emit onH9Click(row, group, $event) and require RED. IF IT STAYS GREEN, RULING 3d IS FOLKLORE
+      AND THAT IS THIS CARD'S HEADLINE FINDING, not a footnote - report it verbatim and stop.
+    inputs:
+      - "packages/compiler/test/fixtures/s4-nested-list.tsrx - committed by T025, IR now clean per T033"
+      - "scripts/corpus-mutation.mjs - the harness; add S4 rows to MUTANTS"
+      - "docs/goals/frameless-defects-and-targets-v1/notes/T033-nested-repeat.md"
+    allowed_files:
+      - packages/compiler/test/fixtures/s4-nested-list.tsrx
+      - packages/compiler/test/goldens/s4-nested-list.json
+      - packages/compiler/test/enriched-ir.test.ts
+      - packages/frameworks/react/scripts/regenerate.ts
+      - packages/frameworks/react/generated/S4.jsx
+      - packages/frameworks/solid/scripts/regenerate.ts
+      - packages/frameworks/solid/generated/S4.jsx
+      - packages/frameworks/qwik/scripts/regenerate.ts
+      - packages/frameworks/qwik/generated/S4.jsx
+      - packages/frameworks/svelte/scripts/regenerate.ts
+      - packages/frameworks/svelte/generated/S4.svelte
+      - packages/frameworks/vue/scripts/regenerate.ts
+      - packages/frameworks/vue/generated/S4.vue
+      - packages/frameworks/angular/scripts/regenerate.ts
+      - packages/frameworks/angular/generated/S4.ts
+      - demos/react-official/package.json
+      - demos/react-official/src/App.jsx
+      - demos/react-official/src/emitted/NestedBoard.jsx
+      - demos/react-official/scenarios.box.ts
+      - demos/react-official/three-way-contract.ts
+      - demos/solid-official/package.json
+      - demos/solid-official/src/App.jsx
+      - demos/solid-official/src/emitted/NestedBoard.jsx
+      - demos/solid-official/scenarios.box.ts
+      - demos/qwik/package.json
+      - demos/qwik/src/emitted/NestedBoard.jsx
+      - demos/qwik/src/routes/s4/index.tsx
+      - demos/qwik/scenarios.box.ts
+      - demos/svelte-official/package.json
+      - demos/svelte-official/src/lib/emitted/NestedBoard.svelte
+      - demos/svelte-official/src/lib/scenario-props.ts
+      - demos/svelte-official/src/routes/s4/+page.svelte
+      - demos/svelte-official/scenarios.box.ts
+      - demos/vue-official/package.json
+      - demos/vue-official/src/emitted/NestedBoard.vue
+      - demos/vue-official/src/App.vue
+      - demos/vue-official/src/scenario-props.ts
+      - demos/vue-official/scenarios.box.ts
+      - demos/angular-official/package.json
+      - demos/angular-official/src/emitted/NestedBoard.ts
+      - demos/angular-official/src/app/app.routes.ts
+      - demos/angular-official/src/app/scenario-props.ts
+      - demos/angular-official/scenarios.box.ts
+      - scripts/e2e.mjs
+      - scripts/corpus-mutation.mjs
+      - docs/goals/frameless-defects-and-targets-v1/notes/T034-s4-registration.md
+    verify:
+      - "UPDATE_GOLDENS=1 pnpm test, then pnpm test WITHOUT it   # the s4 golden is created then proven stable"
+      - "pnpm --dir packages/frameworks/react/ regenerate"
+      - "pnpm --dir packages/frameworks/solid/ regenerate"
+      - "pnpm --dir packages/frameworks/qwik/ regenerate"
+      - "pnpm --dir packages/frameworks/svelte/ regenerate"
+      - "pnpm --dir packages/frameworks/vue/ regenerate"
+      - "pnpm --dir packages/frameworks/angular/ regenerate"
+      - "pnpm check"
+      - "pnpm lint"
+      - "pnpm test"
+      - "pnpm test:browser"
+      - "pnpm e2e   # must report 6 demos x 4 scenarios, all observations equal"
+      - "pnpm mutate:corpus --dry-run --scenario s4   # all six S4 mutants anchor uniquely and change bytes"
+      - "pnpm mutate:corpus --scenario s4   # all SIX lanes must go RED"
+      - "pnpm mutate:corpus --scenario s1 --scenario s2 --scenario s3   # 18/18 STILL RED; adding S4 must not blunt the existing oracle"
+      - "git diff --exit-code -- packages/frameworks/react/generated packages/frameworks/solid/generated packages/frameworks/qwik/generated packages/frameworks/svelte/generated packages/frameworks/vue/generated packages/frameworks/angular/generated   # byte-stable after regeneration"
+      - "git status --short"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "The S4 IR still carries ANY zero-read site. T033 made it clean; if it is not, that is a REGRESSION in the repair and a stop, not something to register around. T025 measured 7 of 16 sites empty - the number must now be 0."
+      - "S4 lands in fewer than SIX lanes."
+      - "Any lane emitter THROWS on the S4 IR."
+      - "THE ANGULAR forVariables ORDER-SWAP MUTANT STAYS GREEN. Report it verbatim and STOP - ruling 3d would be unenforced, which is a finding about a standing ruling and outranks landing the scenario."
+      - "Any S4 mutant cannot be made RED in some lane. Record lane, axis and mutant verbatim as an open FINDING; do NOT patch it over."
+      - "Any mutant is byte-identical to its input - mutate() must THROW."
+      - "The existing 18/18 degrades."
+      - "Any EXISTING golden moves. Only the six new S4 outputs are new."
+      - "You are about to weaken an activation-neutrality assertion, relax expectedNavigations, or change measureRowKeys to make S4 pass. Inner rows carry data-oracle-cell-key precisely so measureRowKeys is untouched."
+      - "Verification fails twice for the same reason."
+    constraints:
+      - "Extend three-way-contract.ts with s4, assertS4, a resumeSymbols entry and a measureCellKeys reader, and extend scripts/e2e.mjs threeWayScenarios. The 18 observation strings become 24 - all must be byte-identical cross-lane."
+      - "Add one S4 mutant PER LANE to the harness MUTANTS table, each with a named red site. Angular s4 is the forVariables order swap; choose the other five to exercise the nesting itself, not incidental markup."
     receipt: null
 
   - id: T026

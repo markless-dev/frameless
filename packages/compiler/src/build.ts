@@ -985,12 +985,7 @@ export function buildTemplateNode(
 		context.sharedSites.push({ node: node.right, environment, construct: 'repeat' });
 		const collection = expressionSite(node.right, environment);
 		const repeatItems = new Map(environment.repeatItems);
-		if (repeat.collectionGraphNodeId) {
-			repeatItems.set(repeat.itemName, {
-				graphNodeId: repeat.collectionGraphNodeId,
-				path: repeat.collectionPath,
-			});
-		}
+		repeatItems.set(repeat.itemName, repeatCollectionSource(repeat, collection));
 		const rowEnvironment = { ...environment, repeatItems };
 		context.sharedSites.push({
 			node: node.key,
@@ -1027,6 +1022,51 @@ export function buildTemplateNode(
 	throw new Error(
 		`Unsupported template construct ${node.type} cannot be represented in frameless-enriched-ir/2.`,
 	);
+}
+
+/**
+ * The graph location a repeat's item ranges over.
+ *
+ * `@markless/compiler` 0.1.1 sets `collectionGraphNodeId` only when the
+ * collection resolves against a component-level graph binding. It leaves the
+ * field UNSET when the collection is a member of the ENCLOSING repeat item -
+ * `@for (const row of group.rows; key row.id)` - which is exactly the
+ * containment relation "each group holds its own rows".
+ *
+ * This used to be guarded with a bare `if (repeat.collectionGraphNodeId)`, so
+ * the inner item was never registered and EVERY read off it lowered to
+ * `reads: []`. That silence survived five of six emitters, because they walk
+ * `node.item` down the template and never consult the reads; only Solid, which
+ * validates key semantics, threw. See T033.
+ *
+ * The information needed is present locally: the enclosing item is already
+ * registered, so the collection expression's own derived reads name the
+ * location. Recover it from there - and FAIL CLOSED LOUDLY when the collection
+ * does not denote exactly one resolvable location, rather than falling back
+ * into the silence this repair exists to remove.
+ */
+function repeatCollectionSource(
+	repeat: SemanticGraphArtifact['keyedRepeats'][number],
+	collection: ExpressionSite,
+): { graphNodeId: string; path: readonly string[] } {
+	if (repeat.collectionGraphNodeId) {
+		return { graphNodeId: repeat.collectionGraphNodeId, path: repeat.collectionPath };
+	}
+	const [read, ...rest] = collection.reads;
+	const reason =
+		!read || rest.length > 0
+			? `the collection expression derives ${collection.reads.length} graph read(s) [${collection.reads
+					.map((entry) => `${entry.graphNodeId}/${entry.path.join('/')}`)
+					.join(', ')}], and exactly one is required`
+			: `the only derived read ${read.graphNodeId}/${read.path.join('/')} carries an unresolved computed index`;
+	if (!read || rest.length > 0 || read.path.includes('*')) {
+		throw new Error(
+			`Keyed repeat ${repeat.id} collection cannot be resolved to a single graph location: ` +
+				`Layer A left collectionGraphNodeId unset and ${reason}. The repeat item ` +
+				`"${repeat.itemName}" cannot be registered, so every read off it would lower to reads: [].`,
+		);
+	}
+	return { graphNodeId: read.graphNodeId, path: read.path };
 }
 
 function buildComponentReference(

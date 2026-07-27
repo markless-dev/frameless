@@ -508,6 +508,101 @@ describe('fixture-family sufficiency', () => {
 	});
 });
 
+describe('nested repeats sourced from the enclosing repeat item', () => {
+	/**
+	 * T033. `@markless/compiler` 0.1.1 leaves `collectionGraphNodeId` unset when a
+	 * nested repeat's collection is a member of the ENCLOSING repeat item
+	 * (`group.rows`). `build.ts` used to guard on that field and skip registering
+	 * the inner loop variable, so every read off `row` silently lowered to
+	 * `reads: []` — and FIVE of six emitters printed correct-LOOKING output over
+	 * that IR because they walk the template rather than the reads.
+	 *
+	 * This test is the instrument. Before the repair it reported seven zero-read
+	 * sites: `repeat:1 key` plus every dynamic binding inside the nested row.
+	 */
+	function dynamicSites(ir: EnrichedIR): Array<{
+		readonly label: string;
+		readonly reads: readonly { graphNodeId: string }[];
+	}> {
+		const sites: Array<{ label: string; reads: readonly { graphNodeId: string }[] }> = [];
+		for (const node of allTemplateNodes(ir)) {
+			if (node.kind === 'dynamic-text') sites.push({ label: `${node.id} text`, ...node });
+			if (node.kind === 'host')
+				for (const binding of node.dynamicBindings)
+					sites.push({ label: `host ${node.id} ${binding.name}`, reads: binding.reads });
+			if (node.kind === 'branch') sites.push({ label: `${node.id} branch`, ...node });
+			if (node.kind === 'keyed-repeat') {
+				sites.push({ label: `${node.id} collection`, reads: node.collection.reads });
+				sites.push({ label: `${node.id} key`, reads: node.key.reads });
+			}
+		}
+		return sites;
+	}
+
+	test('S4: no dynamic site inside the nested row lowers to reads: []', async () => {
+		const ir = await compileOnlyFixtureIr('s4-nested-list.tsrx');
+		const sites = dynamicSites(ir);
+		expect(sites.length).toBe(16);
+		expect(sites.filter((site) => site.reads.length === 0).map((site) => site.label)).toEqual(
+			[],
+		);
+		const graphIds = new Set(ir.records.bindings.map((binding) => binding.id));
+		for (const site of sites)
+			for (const read of site.reads) expect(graphIds.has(read.graphNodeId)).toBe(true);
+	});
+
+	test('S4: the inner repeat resolves against the outer item, key included', async () => {
+		const ir = await compileOnlyFixtureIr('s4-nested-list.tsrx');
+		const repeats = allTemplateNodes(ir).filter((node) => node.kind === 'keyed-repeat');
+		expect(repeats.map((node) => (node.kind === 'keyed-repeat' ? node.item : ''))).toEqual([
+			'group',
+			'row',
+		]);
+		const inner = repeats[1]!;
+		if (inner.kind !== 'keyed-repeat') throw new Error('missing S4 inner repeat');
+		expect(inner.collection.reads).toEqual([
+			{ graphNodeId: 'state:groups', path: ['rows'], via: 'repeat-item' },
+		]);
+		expect(inner.key.reads).toEqual([
+			{ graphNodeId: 'state:groups', path: ['rows', 'id'], via: 'repeat-item' },
+		]);
+		// The handler inside the inner row reads BOTH loop variables.
+		const select = ir.records.events.find((event) => event.hostNodeId === 'h9')!;
+		expect(
+			select.handlers[0]!.reads.map(
+				(read) => `${read.graphNodeId}/${read.path.join('/')}/${read.via}`,
+			),
+		).toEqual([
+			'prop:props/onTrace/alias',
+			'state:groups/id/repeat-item',
+			'state:groups/rows/id/repeat-item',
+		]);
+	});
+
+	test('an unresolvable nested collection fails closed LOUDLY, never into reads: []', async () => {
+		const source = `import { state } from '@markless/core';
+
+export function Indexed({ seed }) @{
+	let groups = state(seed);
+	let rowsByGroup = state({});
+
+	<ul data-indexed="true">
+		@for (const group of groups; key group.id) {
+			<li data-group={group.id}>
+				@for (const row of rowsByGroup[group.id]; key row.id) {
+					<span data-row={row.id}>x</span>
+				}
+			</li>
+		}
+	</ul>
+}
+`;
+		await expect(buildEnrichedIr({ filename: 'indexed.tsrx', source })).rejects.toThrow(
+			/Keyed repeat repeat:1 collection cannot be resolved to a single graph location/,
+		);
+	});
+});
+
 describe('closure and honesty', () => {
 	for (const file of FIXTURES) {
 		test(`${file}: every graphNodeId resolves and every analyzer host shape is present`, async () => {
