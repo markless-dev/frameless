@@ -97,7 +97,7 @@ visual_board:
     url: null
     command: "npx goalbuddy board docs/goals/frameless-svelte-v1"
 
-active_task: T005
+active_task: T008
 
 tasks:
   - id: T001
@@ -521,7 +521,7 @@ tasks:
   - id: T005
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: "With a Svelte lane at a pinned version, re-run the idiom policy on at least one version-gated Svelte sugar question and record whether the version corollary now resolves."
     inputs:
@@ -535,8 +535,47 @@ tasks:
       - "Six gate outcomes for at least one version-gated Svelte sugar question"
       - "Whether the version corollary resolved, with evidence"
       - "Whether docs/emitter-idiom-policy.md needs updating"
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      decision: approved
+      full_outcome_complete: false
+      note: notes/T005-svelte-sugar.md
+      rationale: "Re-ran all six gates on worked example 6 against the real emitter at svelte 5.56.8. IT DOES NOT RIPEN INTO PASS - it becomes DENIED. G1 FAIL (the on() arm is documentary while the framework is in the lockfile and measurement is demonstrably possible - the Judge compiled both on() vehicles clean) and G5 FAIL (the repair prescribes a MIXED-MECHANISM component, a routing difference the compiler cannot see, directly contradicting T002 ruling 4's 'never a mix'). The grounds only became visible once the emitter existed, which is the OPPOSITE of a deferral quietly ripening."
+      the_headline: "The repair recorded in worked example 6 was WRONG WHEN IT WAS RATIFIED, not merely unverified. Its per-event-record narrowing MANDATES a mixed-mechanism component - S3 carries four events - while T002 independently reached 'never a mix' without anyone noticing the contradiction. Nobody caught it because there was no emitter."
+      measurements_pm_verified:
+        on_click_in_runes: "CONFIRMED by the PM at 5.56.8: warns event_directive_deprecated. So the zero-warning sanctioned set has exactly one no-obligation member, and onname= is the BASELINE."
+        mixing: "CONFIRMED by the PM: on:click + onclick in one component is a HARD ERROR, mixed_event_handler_syntaxes."
+        use_plus_on: "Judge measured use: + on() and {@attach} + on() both compile with an empty warning set - so the on() arm was NEVER blocked by IR-4, only by never having been measured."
+        destructured_props: "Judge measured `let { label } = $props()` lowering to a live $$props.label read inside template_effect - which REFUTES worked example 7's G5 first limb."
+      pm_correction_to_this_receipt:
+        what_the_judge_reported: "That an unknown <!-- svelte-ignore code --> WARNS unknown_code, making the emitter's suppression codes a version-floor surface."
+        what_the_pm_measured: "FALSE at 5.56.8. An unknown code produces an EMPTY warning array. On an element carrying real a11y warnings it silently FAILS TO SUPPRESS them - both warnings still fire - but no unknown_code diagnostic is emitted. Verified three ways: unknown code with nothing to suppress, unknown code on an element with real warnings, and the correct codes on that same element."
+        the_conclusion_survives_and_is_sharper: "The Judge's argument was that svelte-ignore codes are an unasserted precondition over a growing set. That STANDS, and the failure mode is WORSE than reported: it is SILENT rather than announced. A consumer on a minor where one of those codes was renamed gets the a11y noise with no diagnostic pointing at the cause. The baseline form inventory is therefore MORE justified, not less."
+        why_this_is_recorded_here: "The Judge's own dissent warned that this board withdrew a receipt once for citing evidence that was not there. The instruction to T008 is explicit: do NOT write 'unknown_code warns' into the policy."
+      six_gates_worked_example_6:
+        G1: "FAIL. The attribute arm is measured exhaustively (T003 triangulation, Q1/Q2 standing checks with a planted-member calibration, exact-empty warning set x4 modes). The on() arm's ENTIRE justification is Svelte's docs - documentary, with the framework in the lockfile and measurement now demonstrably possible. That is Gate 1's named FAIL clause verbatim. DEFERRED is NOT available: the absent-framework cause is discharged."
+        G2: "PASS. Both arms self-scoped; the Gate 2 import-scoping paragraph names `on` from svelte/events and decides it PASS."
+        G3: "PASS. Trigger is the declared SyncPolicyBranch.actions. syncPolicyGuard() reads handler bodies only to REFUSE a mismatch, never to decide - the same posture as worked example 10."
+        G4: "UNKNOWN (= no) for the rule AS WRITTEN; PASS for the rule AS SHIPPED. The shipped emitter does not implement example 6's repair: syncPolicyGuard() (svelte/src/emitter/index.ts:382-411) THROWS on a declared stopPropagation. Totality is discharged by NAMED REFUSAL - the correction worked example 10 carries - with an independent gate row no-stop-propagation reading emitted output."
+        G5: "FAIL. The repair narrows PER EVENT RECORD, so a mixed-mechanism component is the NORMAL case, not an edge - S3 carries four. Delegated-vs-attached is an event-ROUTING difference and mixed_event_handler_syntaxes does NOT fire for on(), so the compiler cannot see it."
+        G6: "PASS (attribute arm) / FAIL (on() arm). assertS3 asserts exactly one Document request after the cancel click on the official SvelteKit scaffold at 5.56.8. No check can exist for a path the emitter refuses to emit."
+        ruling: "FAIL at G1 and G5 -> DENIED, not deferred. The entry must be REWRITTEN, not amended - the policy forbids amending an old outcome."
+      on_the_two_lazy_answers:
+        domain_has_no_instance: "NOT USED. The shipped rule's totality rests on a throw that fires for any excluded input REGARDLESS of the corpus, plus a gate row that re-checks emitted output. Corpus emptiness is relevant to exactly one thing: it is why T002 forbade BUILDING the on() arm, which is what makes the repaired rule's second arm unverifiable rather than merely unbuilt."
+        the_test_was_unfair: "NOT INVOKED. The lint ruling runs the OTHER way - an instrument is ruled MISSING, not a test unfair."
+      ir_4: "Conclusion HOLDS, reason has DEGRADED. The emitter's surface is 5.0 baseline throughout and assertPlainAttributeName fences the whole colon-namespaced surface. But T003 added two svelte-ignore codes AFTER T002 ruled, so 'emits only baseline-safe forms' - the thing satisfying the corollary's second conjunct the other way - is now an UNASSERTED PRECONDITION over a GROWING set. That is instrument rule 2 at the emitter. Not a forcing case: it argues for a declared FLOOR, which is what T002's own dissent predicted. IR-4 stays deferred and is STRENGTHENED."
+      what_else_gate_6_now_clears:
+        the_corollary_engaged_and_refused: "First time it has been live. {@attach} (5.29), $props.id() (5.20), reassignable $derived (5.25) and <svelte:boundary> (5.3) all satisfy conjunct 1 at 5.56.8 and fail conjunct 2 ALONE. Before the lane this was moot. THE VERSION COROLLARY RESOLVED, AND IT RESOLVED TO NO."
+        never_touched_by_a_lane: "bind:/$bindable (G2 FAIL by construction), snippets/IR-3, class:/IR-6."
+        newly_denied: "The {value} attribute shorthand - compiles clean, but its only justification is source readability, which nothing checks. Gate 6 FAIL clause. Recorded as an OPEN QUESTION rather than a ruling, because the Judge ran only part of its gates."
+      lint_arbiter: "REAL GAP, carry it. react, solid and qwik gates each import a third-party plugin at src/gate/index.ts:5; the Svelte gate imports only parse and frameless-owned policies. NOT a Gate 1 gap - compile() IS the framework's own toolchain at the pin - but a gap in ARBITER INDEPENDENCE and in the forced-lowering evidence base. The missing class is 'compiles clean and is WRONG', which is not hypothetical: it is defect 1, named by eslint-plugin-qwik's no-async-prevent-default. PM PRE-INSTALLED eslint-plugin-svelte@3.22.0 and queued it as T009."
+      binding_on_vue_and_angular: "A lane discharges ONLY the Gate 1 absent-framework deferral and the Gate 6 no-lane deferral. It does NOT touch G2, G3, G4 or G5, and it does NOT satisfy the version corollary's second conjunct."
+      dissent:
+        - "The Judge holds that worked example 6's repair was WRONG WHEN RATIFIED, not merely unverified. If a reviewer thinks G5 FAIL is too strong, the honest fallback is NOT PASS - it is that the repaired rule was never coherent enough to gate."
+        - "Uneasy that ruling the shipped emitter's refusal a G4 PASS is comfortable. The check applied: the throw fires for constructed inputs independent of the corpus, AND a second independent gate policy re-reads emitted output. If either were absent it would have recorded UNKNOWN."
+        - "The svelte-ignore finding is LOW SEVERITY and deliberately not inflated - reported because the CLAIM it undermines is load-bearing for the IR-4 deferral, not because the symptom is serious. (PM note: the Judge's specific mechanism was wrong; see pm_correction_to_this_receipt.)"
+        - "Not verified whether any Svelte 5 minor actually lacks either a11y code. If none does, the inventory gate guards a population of zero TODAY - which this board has called out as a way to acquire instruments. Ordered anyway because its population is FUTURE EMITTED FORMS, non-empty by construction: T003 already grew the set once."
   - id: T006
     type: judge
     assignee: Judge
@@ -693,6 +732,78 @@ tasks:
         - "measureServedAttribute takes the whole EnvironmentResponse rather than served.text, so every message it raises can NAME the payload it read - the half of the repair that outlives this specific attribute."
         - "Rewrote the file-header measurement paragraph and the Measurement section comment as well as the two the card named. Both asserted the live DOM as the only measurement site, which IS the misnaming the ruling is about."
       verification_attempts: 1
+  - id: T008
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    spec: "T005 receipt - AUTHORITATIVE."
+    objective: >-
+      Fold the T005 ruling into docs/emitter-idiom-policy.md and convert its load-bearing
+      preconditions into standing checks: REWRITE worked example 6 as DENIED, CORRECT worked
+      example 7's measured-false G5 limb, add the missing decision-site comment, and land a
+      fail-closed BASELINE FORM INVENTORY gate policy.
+    allowed_files:
+      - docs/emitter-idiom-policy.md
+      - packages/frameworks/svelte/src/emitter/index.ts
+      - packages/frameworks/svelte/src/gate/index.ts
+      - packages/frameworks/svelte/test/gate.test.ts
+      - packages/frameworks/svelte/README.md
+      - docs/goals/frameless-svelte-v1/notes/T005-svelte-sugar.md
+    verify:
+      - "pnpm check"
+      - "pnpm test"
+      - "pnpm test:browser"
+      - "pnpm e2e"
+      - "node packages/frameworks/svelte/scripts/regenerate.ts && git diff --exit-code -- packages/frameworks/svelte/generated   # emitted output MUST NOT move"
+      - "git diff --exit-code -- packages/compiler packages/frameworks/react packages/frameworks/solid packages/frameworks/qwik demos scripts pnpm-lock.yaml"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to build an on(), use: or {@attach} code path in the emitter. DENIED at G1 and G5, not deferred."
+      - "Emitted output under packages/frameworks/svelte/generated moves. This package rewrites a ruling and adds a check; it does not change what is emitted."
+      - "You are about to write a version floor into the inventory that you did not verify. Record it as 'unverified' WITH THE REASON. A guessed floor is exactly the failure the inventory exists to stop."
+      - "You are about to weaken assertCompilesClean's exact-empty warning set, or its two-sided suppression check, to make the inventory pass."
+      - "The inventory policy cannot be made to go RED against a real emitted source."
+      - "You are about to build a mutant with a bare .replace(). Use the throwing mutate/mutateAll already in this corpus."
+      - "You AMEND worked example 6 in place rather than REWRITING it. The policy's re-opening section forbids amending an old outcome."
+      - "You add a worked-example entry for the {value} attribute shorthand. The Judge ran only part of its gates; it is an open question, not a ruling."
+      - "Verification fails twice for the same reason."
+    constraints:
+      - "WORKED EXAMPLE 6 -> DENIED. Baseline = the onname event attribute, because on: WARNS event_directive_deprecated in a runes component and mixing is a HARD error mixed_event_handler_syntaxes - both PM-VERIFIED at 5.56.8. Candidate = on() from svelte/events. Six outcomes: G1 FAIL, G2 PASS, G3 PASS, G4 PASS-by-refusal naming syncPolicyGuard() as the deciding function, G5 FAIL, G6 PASS attribute arm / FAIL on() arm. State plainly that the shipped emitter REFUSES stopPropagation rather than routing it, and that use:+on() compiles clean at 5.0 baseline so IR-4 was never that arm's blocker - only lack of measurement."
+      - "WORKED EXAMPLE 7 - its G5 FIRST LIMB is MEASURED FALSE: `let { label } = $props()` lowers to a live $$props.label read inside template_effect, so destructured props ARE reactive. The denial SURVIVES on the fallback limb only. Correct it; keep the ruling DENIED. This matters because the shipped emitter destructures $props() unconditionally."
+      - "PM CORRECTION TO THE T005 RECEIPT, verified three ways: the Judge reported that an unknown svelte-ignore code WARNS unknown_code. IT DOES NOT at 5.56.8 - it produces an EMPTY warning array, and on an element with real a11y warnings it silently fails to suppress them. The conclusion the Judge drew SURVIVES AND IS SHARPER: the failure is SILENT rather than announced, so a consumer on a minor where a code was renamed gets the a11y noise with no diagnostic. Do NOT write 'unknown_code warns' into the policy. Record the measured behaviour."
+      - "BASELINE FORM INVENTORY: an explicit allowlist of every form the emitter may emit - rune names, imported svelte APIs, template block kinds, event-attribute shape, svelte-ignore codes - each entry carrying its recorded version floor AND an honest floor-evidence status of 'verified' or 'unverified'. The policy goes RED when emitted output contains a form not on the list. This asserts the precondition of T002 ruling 3 that nothing currently asserts. Ship at least one mutation row proving it goes red."
+      - "Add the decision-site comment the policy's 'Recording a ruling' item 2 requires, at syncPolicyGuard(). It is currently missing for this lane."
+    receipt: null
+
+  - id: T009
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "Wire eslint-plugin-svelte into the Svelte gate as a third-party arbiter, matching react, solid and qwik."
+    allowed_files:
+      - packages/frameworks/svelte/src/gate/index.ts
+      - packages/frameworks/svelte/test/gate.test.ts
+      - packages/frameworks/svelte/package.json
+      - docs/goals/frameless-svelte-v1/notes/T009-lint-arbiter.md
+    verify:
+      - "pnpm check"
+      - "pnpm test"
+      - "pnpm lint"
+      - "git diff --exit-code -- packages/frameworks/svelte/generated   # emitted output must not move"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Emitted output moves. If a real eslint-plugin-svelte rule fires on the shipped corpus, that is a FINDING - report it verbatim and stop rather than changing the emitter to satisfy it."
+      - "You cannot show at least one imported rule going RED on a planted violation. An arbiter that has never fired is not an arbiter."
+      - "Verification fails twice."
+    constraints:
+      - "PM PRE-INSTALLED eslint-plugin-svelte@3.22.0 into packages/frameworks/svelte. pnpm-lock.yaml has already moved for it; do not move it further."
+      - "T005 RULED THIS A REAL GAP: react, solid and qwik gates each import a third-party plugin at src/gate/index.ts:5; the Svelte gate imports only parse and frameless-owned policies. It is NOT a Gate 1 gap - compile() IS the framework's own toolchain at the pin - it is a gap in ARBITER INDEPENDENCE and in the forced-lowering evidence base."
+      - "The missing class is 'compiles clean and is WRONG', which is not hypothetical: it is defect 1, which eslint-plugin-qwik's no-async-prevent-default named and compile() could never have caught."
+      - "Follow the qwik gate's precedent for how a third-party plugin's violations are surfaced and prefixed - eslint: is reserved for third-party arbiters, frameless/ for our own."
+    receipt: null
+
   - id: T999
     type: judge
     assignee: Judge
@@ -706,6 +817,7 @@ tasks:
     constraints:
       - "Do not implement."
       - "Reject completion if the Svelte row exists but does not ASSERT equality with the other demos."
+      - "T005 GROUNDS: reject if the BASELINE FORM INVENTORY is absent or cannot be shown to go red; reject if the lint-arbiter gap is closed SILENTLY or dropped rather than carried; confirm the rewritten worked example 6 records ALL SIX outcomes and that the emitter carries the decision-site comment the policy requires."
       - "THE BYTE-EQUALITY TEST IS SUPERSEDED. T002's 'the SET of assertions and the exact strings asserted must be byte-unchanged for react, solid and qwik' was a PROXY masquerading as a measurement - written before the T006 conflict was known, and it would FAIL A CORRECT REPAIR. Use the three-part widening test instead. A change to three-way-contract.ts is a WIDENING iff ALL THREE hold, and is a WEAKENING if any fails: (1) UNIFORM - it applies identically to every lane; no lane receives a value, tolerance or exemption the others do not. (2) NON-DECREASING IN STRENGTH - the new assertion is satisfied by a strictly SMALLER set of behaviours than the old, evidenced by a two-sided negative control it rejects, PLUS an explicit written statement of anything the old check could catch that the new one cannot. (3) STILL INSIDE THE EQUALITY SET AND STILL EXACT - the observed string is identical across all four lanes and is still COMPARED by scripts/e2e.mjs, not merely recorded."
       - "BOUNDARY TO POLICE: per-lane declared values are permitted ONLY for preconditions (servedClientEntry, expectedNavigations, which sit OUTSIDE the observed array). A per-lane declared value INSIDE the observed array is forbidden outright - that is the option-C dodge, and the boundary is not 'is it declared per lane' but 'is it inside the cross-lane equality set'."
       - "Reject if the served-payload value read landed without a two-sided negative control."
