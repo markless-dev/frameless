@@ -156,7 +156,7 @@ visual_board:
     url: null
     command: "npx goalbuddy board docs/goals/frameless-vue-v1"
 
-active_task: T003
+active_task: T004
 
 tasks:
   - id: T001
@@ -413,7 +413,7 @@ tasks:
   - id: T003
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     reasoning_hint_raised_by_T002: "Raised medium -> high. The Svelte equivalent was high, this package carries FOUR required measurements plus a baseline form inventory, and the shorthand trap is one a competent Vue author will walk into on reflex."
     objective: >-
@@ -502,12 +502,74 @@ tasks:
     constraints:
       - "Match the existing emitter/gate/golden structure in packages/frameworks/ rather than inventing a new one."
       - "IR-7 guard: fail-closed CONSERVATIVE syntactic check rejecting an emitted computed(...) whose expression contains an assignment, an update expression, or a call in the emitter's known-mutating set - with a comment naming IR-7, a plain statement of what the check CANNOT see, and one mutation row proving it goes red. Do NOT attempt a purity proof."
-    receipt: null
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      summary: >-
+        Landed packages/frameworks/vue as a whole vertical slice: SFC emitter with <script setup>,
+        no lang="ts", longhand v-bind:/v-on:; a gate over BOTH arbiters (@vue/compiler-sfc
+        parse/compileScript/compileTemplate with errors AND tips required empty across ssr x prod,
+        plus eslint-plugin-vue); baseline form inventory with mutation and anti-vacuity rows;
+        checked-in .vue goldens with byte-equality freshness; and a browser lane with a
+        no-allowlist console sink and three-way calibration. M1-M4 all MEASURED with negative
+        controls. 98 tests added. All eight verify commands passed on the FIRST attempt.
+      m1_whitespace_hypothesis_HELD_and_was_INCOMPLETE_BOTH_WAYS: >-
+        The T002 Judge was right that an element-to-element newline is REMOVED while an
+        interpolation-to-text newline CONDENSES to a space - S2's "1/2" really does become "1 /2".
+        But two arms the hypothesis did not name are load-bearing: THE NEWLINE IS THE TRIGGER (a
+        bare space between elements is KEPT), and whitespace sharing a text node WITH CONTENT is
+        condensed, so a <button> with its text on its own line renders " increment ". THAT THIRD
+        HAZARD IS WHAT ACTUALLY DECIDES THE EMITTER'S LAYOUT RULE. All arms rendered through
+        vue/server-renderer at 3.5.40. This is why the Judge recorded it as a hypothesis to measure
+        rather than a fact to act on.
+      m2_FAILED_FIRST_RUN_and_the_cause_is_a_real_vue_mechanism: >-
+        PM VERIFIED IN THE RESOLVED BUILD. createInvoker in @vue/runtime-dom 3.5.40:
+        `if (!e._vts) { e._vts = Date.now(); } else if (e._vts <= invoker.attached) { return; }`
+        with `invoker.attached = getNow()`. THE FIRST VUE HANDLER AN EVENT REACHES STAMPS IT, and
+        every ANCESTOR handler is skipped unless that stamp is strictly newer than its own attach
+        time. A click in the same millisecond as mount() runs the button's handler and SILENTLY
+        DROPS THE FORM'S - which is what happened, while a plain addEventListener on the same form
+        saw the click fine. UNDER INSTRUMENT RULE 1 THAT MADE THE TEST UNFAIR, NOT THE EMITTER
+        WRONG. The harness advances the clock and a DETERMINISTIC calibration row (setting _vts
+        explicitly on both sides) pins the mechanism rather than leaving an unexplained sleep.
+        T004 MUST KNOW THIS EXISTS.
+      finding_1_eslint_plugin_vue_upper_tiers_are_a_FORMATTER: >-
+        THE SVELTE PRECEDENT DOES NOT TRANSFER. flat/strongly-recommended and flat/recommended
+        report exactly 8 rules on the corpus, TWO OF WHICH ARE ACTIVELY HARMFUL:
+        vue/singleline-html-element-content-newline demands the exact layout M1 measured to render
+        " increment ", and vue/v-on-style demands the SHORTHAND T005 OWNS. This lane applies
+        flat/essential and records the exclusion with the measured rule ids PLUS A STANDING TEST
+        THAT RE-MEASURES THEM, so the exclusion cannot silently rot.
+      finding_2_T002_hydration_dissent_DISCHARGED: >-
+        T002 recorded that it had NOT verified whether Vue's hydration-mismatch message reaches
+        window.console, and said "if the T004 lane is ever green on a planted mismatch, look here
+        first". MEASURED on a real emitted component: a matching container hydrates silently; a
+        mismatched one produces console.warn "[Vue warn]: Hydration text content mismatch ..." PLUS
+        console.error "Hydration completed but contains mismatches." - then Vue PATCHES THE DOM to
+        match the client. Both are ordinary console calls, and warnHandler would swallow the first.
+        It is set nowhere in this package.
+      deviations:
+        - "Applied eslint-plugin-vue flat/essential rather than the whole recommended tier the Svelte gate uses - measured reason above, recorded in VUE_ESLINT_TIERS_EXCLUDED with a standing re-measurement test."
+        - "Omitted vue/comment-directive (MEASURED: emitted markup could otherwise switch the arbiter off - the same suppression vector Svelte T009 found) and vue/multi-word-component-names (reads the FILE NAME, which is the repo's S1/S2/S3 corpus convention)."
+        - "Added advanceAttachClock() to the browser harness after M2 failed, justified by a deterministic calibration row rather than a bare sleep."
+        - "M1's two-arm compiler measurement lives in the NODE lane (vue/server-renderer available) and the live-DOM half in the BROWSER lane, because Vue merges adjacent interpolations into one text node and vite resolves vue to the runtime-only build, so a browser-side naive-layout arm is not constructible."
+        - "Emitter REFUSES <template v-if> wrappers and multi-root templates. Reason recorded: a Fragment is server-rendered with anchor comments the e2e lane reads out of the payload, and the corpus has no instance to test the wrapper against."
+      commands:
+        - {cmd: "pnpm check", status: pass, note: "adds tsc -p packages/frameworks/vue"}
+        - {cmd: "pnpm test", status: pass, note: "46 files / 765 tests, incl. 3 vue node files / 80 tests"}
+        - {cmd: "vitest --project vue-browser", status: pass, note: "18/18"}
+        - {cmd: "pnpm test:browser", status: pass, note: "react 60, solid 49, svelte 13, vue 18"}
+        - {cmd: "pnpm e2e", status: pass, note: "four lanes, all observations equal - the Vue ROW is T004's"}
+        - {cmd: "regenerate && git diff --exit-code -- generated", status: pass, note: "vacuous while untracked; ALSO byte-diffed against a pre-run snapshot -> identical"}
+        - {cmd: "git diff --exit-code -- other frameworks, compiler, demos, scripts", status: pass}
+        - {cmd: "git status --short", status: pass, note: "only allowed_files; pnpm-lock.yaml absent"}
+        - {cmd: "pnpm lint", status: pass, note: "0 warnings 0 errors (courtesy, not in verify)"}
 
   - id: T004
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: "Stand up demos/vue-official from the official scaffold and add the Vue row to the e2e activation matrix, asserting S1/S2/S3 equality with the existing three."
     allowed_files: []

@@ -1,0 +1,5 @@
+# Vitest browser-mode artifacts. Written only on a FAILING run, and they are
+# binary screenshots of a transient DOM - not evidence anyone can act on later,
+# and the solid lane has already had them turn up as untracked repo noise.
+.vitest-attachments/
+test/__screenshots__/

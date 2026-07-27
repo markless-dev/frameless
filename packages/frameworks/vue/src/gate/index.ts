@@ -1,0 +1,1090 @@
+import { readdir, readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import { babelParse, compileScript, parse } from '@vue/compiler-sfc';
+import { ESLint } from 'eslint';
+import vuePlugin from 'eslint-plugin-vue';
+import type { EnrichedIR } from '@frameless/compiler';
+import { dirname, normalize, relative, resolve } from 'pathe';
+
+export type DossierRef =
+	// SFC with <script setup>, no lang="ts", LONGHAND v-bind:/v-on:, and BOTH
+	// arbiters - @vue/compiler-sfc and eslint-plugin-vue.
+	| 'frameless-vue-v1 T002 ruling 2'
+	// IR-8: the IR carries no prop type field, so a type would have to be invented
+	// from expression contents. Gate 3 and Gate 4 both forbid that.
+	| 'frameless-vue-v1 T002 ruling 3 (IR-8)'
+	// IR-1/IR-2: no bindable prop kind and no emit concept. defineModel/defineEmits
+	// are out of scope on two independent axes.
+	| 'frameless-vue-v1 T002 ruling 5 (IR-1/IR-2)'
+	// IR-5: two declared actions, emitted as ordinary in-body statements.
+	// stopPropagation fails closed rather than growing an untested path.
+	| 'frameless-vue-v1 T002 ruling 5 (IR-5)'
+	// IR-7: purity is never asserted while computed() expects a pure expression.
+	// Conservative syntactic guard, not a purity proof.
+	| 'frameless-vue-v1 T002 ruling 5 (IR-7)'
+	// IR-4 deferred, version corollary NOT amended: emit only baseline-safe forms.
+	// The inventory is what asserts the second conjunct instead of assuming it.
+	| 'frameless-vue-v1 T002 ruling 5 (IR-4 baseline form inventory)'
+	// The whitespace layout the template printer depends on, MEASURED at 3.5.40.
+	| 'frameless-vue-v1 T003 measurement M1'
+	// Qwik's artifact-required policy, transposed: fail closed on persistence.
+	| 'T002-qwik-architecture D8'
+	// The THIRD-PARTY arbiter. Every policy above encodes what WE decided; these
+	// encode what the Vue team decided.
+	| 'frameless-vue-v1 T003 lint arbiter';
+
+export type GatePolicy = {
+	readonly id: string;
+	readonly dossierRef: DossierRef;
+	readonly requiresArtifact?: true;
+};
+export type GateViolation = {
+	readonly file: string;
+	readonly policy: string;
+	readonly dossierRef: DossierRef;
+	readonly message: string;
+	readonly line: number | null;
+};
+export type GateResult = {
+	readonly files: readonly string[];
+	readonly policies: readonly GatePolicy[];
+	readonly violations: readonly GateViolation[];
+	readonly unevaluated: ReadonlyArray<{
+		readonly policy: string;
+		readonly reason: 'requires-artifact';
+	}>;
+};
+
+type Node = Record<string, any>;
+
+function persistenceArtifactPolicy() {
+	const policy = {
+		id: 'persistence-render-lowering',
+		dossierRef: 'T002-qwik-architecture D8',
+	} as const;
+	Object.defineProperty(policy, 'requiresArtifact', { enumerable: false, value: true });
+	return policy as typeof policy & { readonly requiresArtifact: true };
+}
+
+// ---------------------------------------------------------------------------
+// the third-party arbiter
+// ---------------------------------------------------------------------------
+
+export type OmittedEslintRule = {
+	readonly rule: string;
+	readonly reason: string;
+};
+
+export type ExcludedEslintTier = {
+	readonly tier: string;
+	readonly reason: string;
+	/**
+	 * The rule ids that tier ACTUALLY reports on the shipped corpus, measured at
+	 * eslint-plugin-vue 10.10.0. `test/gate.test.ts` re-measures it, so a
+	 * correctness rule arriving in an excluded tier turns this red instead of
+	 * disappearing.
+	 */
+	readonly firesOnCorpus: readonly string[];
+};
+
+/**
+ * THE TIER DECISION, and it is the sharpest difference between this gate and the
+ * Svelte one.
+ *
+ * eslint-plugin-svelte's `recommended` is an arbiter. eslint-plugin-vue's upper
+ * tiers are substantially a FORMATTER: `strongly-recommended` is the plugin's own
+ * "Priority B: strongly recommended for improving readability" set. This lane
+ * applies `flat/essential` - "Priority A: Essential (Error Prevention)", 85 rules
+ * - and excludes the two tiers above it.
+ *
+ * That exclusion is recorded here rather than made silently, because a tier
+ * dropped without a reason is indistinguishable from a tier nobody looked at. It
+ * is also MEASURED rather than argued: the `firesOnCorpus` lists below are the
+ * exact rule ids each tier reports on the shipped S1/S2/S3, and two of them would
+ * not merely be noisy - they would break the observable this board exists to
+ * protect, and one of them would pre-empt a ruling that is not this task's to
+ * make.
+ */
+export const VUE_ESLINT_TIERS_EXCLUDED: readonly ExcludedEslintTier[] = [
+	{
+		tier: 'flat/strongly-recommended',
+		reason:
+			'THE PLUGIN\'S OWN "Priority B: strongly recommended for improving readability" tier, and on this corpus every rule it adds is either a formatting rule or a rule that contradicts a ruling this task does not own. vue/singleline-html-element-content-newline and vue/multiline-html-element-content-newline demand a line break between a tag and its text content, which MEASURED at 3.5.40 under whitespace:\'condense\' turns <button>increment</button> into <button> increment </button> - they would BREAK the text observation the e2e lane asserts equal across five frameworks. vue/v-on-style and vue/v-bind-style demand the @ and : shorthands, which docs/emitter-idiom-policy.md worked example 2 rules DEFERRED and frameless-vue-v1 T005 re-runs; adopting them here would hand T005 a fait accompli to ratify. vue/require-prop-types demands the prop types the IR does not carry (IR-8, deferred by T002 ruling 3). vue/html-indent demands spaces where this repository indents with tabs. vue/html-self-closing demands <input/> where the emitter emits the standard void-element <input>.',
+		firesOnCorpus: [
+			'vue/html-indent',
+			'vue/html-self-closing',
+			'vue/max-attributes-per-line',
+			'vue/multiline-html-element-content-newline',
+			'vue/require-prop-types',
+			'vue/singleline-html-element-content-newline',
+			'vue/v-bind-style',
+			'vue/v-on-style',
+		],
+	},
+	{
+		tier: 'flat/recommended',
+		reason:
+			'The "Priority C: recommended, minimising arbitrary choices and cognitive overhead" tier, and it is a SUPERSET of flat/strongly-recommended - so excluding it follows from the row above rather than from anything it adds on its own. Measured on the shipped corpus it reports exactly the same eight rule ids: the eight rules it adds (vue/attributes-order, vue/block-order, vue/no-lone-template, vue/no-multiple-slot-args, vue/no-required-prop-with-default, vue/no-v-html, vue/order-in-components, vue/this-in-template) are all silent on emitted output today. Recorded so that a later rule arriving in this tier and firing is a red test here rather than an unexamined exclusion.',
+		firesOnCorpus: [
+			'vue/html-indent',
+			'vue/html-self-closing',
+			'vue/max-attributes-per-line',
+			'vue/multiline-html-element-content-newline',
+			'vue/require-prop-types',
+			'vue/singleline-html-element-content-newline',
+			'vue/v-bind-style',
+			'vue/v-on-style',
+		],
+	},
+];
+
+/**
+ * EXPLICIT OMISSIONS inside the APPLIED tier. Qwik records the same thing as
+ * `QWIK_ESLINT_RULES_REQUIRING_TYPES` and Svelte as `SVELTE_ESLINT_RULES_OMITTED`,
+ * for the same reason: a rule dropped silently is indistinguishable from a rule
+ * that never fired, and the second one is what an arbiter is supposed to make
+ * impossible.
+ */
+export const VUE_ESLINT_RULES_OMITTED: readonly OmittedEslintRule[] = [
+	{
+		rule: 'vue/comment-directive',
+		reason:
+			"DISABLED DELIBERATELY, AND IT IS A STRENGTHENING, NOT A WEAKENING. This rule is the plugin's implementation of `<!-- eslint-disable -->` inside markup, and ESLint's own allowInlineConfig: false does NOT reach it. MEASURED at eslint-plugin-vue 10.10.0 on the unkeyed-v-for mutant: with this rule ON and one `<!-- eslint-disable vue/require-v-for-key -->` in the template the arbiter reported NOTHING; with it OFF the same mutant reported vue/require-v-for-key. Emitted TEXT silencing the arbiter that is judging it is the one thing a gate over generated output must not permit. Off, no message can be suppressed, so the applied set can only ever report MORE. The Svelte lane omits svelte/comment-directive for the identical reason and on an identical measurement.",
+	},
+	{
+		rule: 'vue/multi-word-component-names',
+		reason:
+			'READS THE FILE NAME, and the file names here are the repository\'s scenario ids. A .vue single-file component declares no name, so this rule falls back to the basename - S1, S2, S3 - which is the corpus convention shared byte-for-byte with the react, solid, qwik and svelte lanes and is not a Vue naming decision at all. The names the IR actually declares (RenderOnce, KeyedTodo, EventForm) ARE multi-word, and the emitter carries each one in the generated header. Satisfying the rule instead would mean emitting defineOptions({ name }), a Vue 3.3 macro - a version-gated form this lane may not adopt while IR-4 is deferred.',
+	},
+];
+
+const OMITTED_ESLINT_RULES = new Set(VUE_ESLINT_RULES_OMITTED.map((entry) => entry.rule));
+
+/**
+ * The applied tier's rule ids, READ OFF the config itself rather than
+ * transcribed. Transcribing would freeze the set at the version that was read: a
+ * rule added to `essential` in a later eslint-plugin-vue would then be silently
+ * absent, which is the same failure the omission list exists to prevent, one
+ * level up.
+ */
+const APPLIED_TIER = 'flat/essential';
+
+type FlatConfigEntry = { readonly rules?: Readonly<Record<string, unknown>> };
+
+function tierEntries(tier: string): readonly FlatConfigEntry[] {
+	const configs = (vuePlugin as unknown as { configs: Record<string, unknown> }).configs;
+	const entries = configs[tier];
+	if (!Array.isArray(entries))
+		throw new Error(`eslint-plugin-vue no longer publishes the config ${tier}`);
+	return entries as readonly FlatConfigEntry[];
+}
+
+function tierRuleSeverities(tier: string): Map<string, unknown> {
+	const severities = new Map<string, unknown>();
+	for (const entry of tierEntries(tier))
+		for (const [rule, severity] of Object.entries(entry.rules ?? {}))
+			severities.set(rule, severity);
+	return severities;
+}
+
+/** Every applied-tier rule this gate actually runs, sorted. */
+export const VUE_ESLINT_RULES_APPLIED: readonly string[] = [...tierRuleSeverities(APPLIED_TIER)]
+	.filter(([rule, severity]) => severity !== 'off' && !OMITTED_ESLINT_RULES.has(rule))
+	.map(([rule]) => rule)
+	.sort();
+
+let cachedEslint: ESLint | undefined;
+function makeEslint(): ESLint {
+	cachedEslint ??= new ESLint({
+		cwd: PACKAGE_ROOT,
+		overrideConfigFile: true,
+		// Emitted output must not be able to configure the gate that reads it.
+		allowInlineConfig: false,
+		overrideConfig: [
+			...(tierEntries(APPLIED_TIER) as never[]),
+			{
+				files: ['**/*.vue'],
+				rules: Object.fromEntries(
+					VUE_ESLINT_RULES_OMITTED.map((entry) => [entry.rule, 'off']),
+				),
+			} as never,
+		],
+	});
+	return cachedEslint;
+}
+
+/**
+ * `eslint:` marks a THIRD-PARTY arbiter, following the qwik and svelte gates. The
+ * frameless-owned policies in this file keep their BARE ids: they are not eslint
+ * rules at all - they are hand-written walkers over Vue's own SFC parse tree - so
+ * a `frameless/` prefix would imply a plugin that does not exist. The distinction
+ * the prefix carries is "who decided this", and here it is carried by presence
+ * versus absence of `eslint:`.
+ */
+function eslintPolicyId(ruleId: string | null | undefined): string {
+	return `eslint:${ruleId ?? 'parse'}`;
+}
+
+async function eslintViolations(file: string, source: string): Promise<GateViolation[]> {
+	const [result] = await makeEslint().lintText(source, {
+		filePath: resolve(PACKAGE_ROOT, file),
+		warnIgnored: false,
+	});
+	return (result?.messages ?? []).map((message) =>
+		violation(file, eslintPolicyId(message.ruleId), message.message, message.line ?? null),
+	);
+}
+
+const ESLINT_POLICIES = VUE_ESLINT_RULES_APPLIED.map((rule) => ({
+	id: `eslint:${rule}`,
+	dossierRef: 'frameless-vue-v1 T003 lint arbiter' as const,
+}));
+
+export const VUE_GATE_POLICIES = [
+	{ id: 'generated-header', dossierRef: 'frameless-vue-v1 T002 ruling 2' },
+	{ id: 'no-directive-shorthand', dossierRef: 'frameless-vue-v1 T002 ruling 2' },
+	{ id: 'no-directive-modifier', dossierRef: 'frameless-vue-v1 T002 ruling 5 (IR-5)' },
+	{ id: 'no-two-way-binding', dossierRef: 'frameless-vue-v1 T002 ruling 5 (IR-1/IR-2)' },
+	{ id: 'no-typed-props', dossierRef: 'frameless-vue-v1 T002 ruling 3 (IR-8)' },
+	{ id: 'no-stop-propagation', dossierRef: 'frameless-vue-v1 T002 ruling 5 (IR-5)' },
+	{ id: 'computed-expression-purity', dossierRef: 'frameless-vue-v1 T002 ruling 5 (IR-7)' },
+	{ id: 'condense-stable-text', dossierRef: 'frameless-vue-v1 T003 measurement M1' },
+	{
+		id: 'baseline-form-inventory',
+		dossierRef: 'frameless-vue-v1 T002 ruling 5 (IR-4 baseline form inventory)',
+	},
+	persistenceArtifactPolicy(),
+	...ESLINT_POLICIES,
+] as const satisfies readonly GatePolicy[];
+
+const POLICIES = new Map<string, GatePolicy>(VUE_GATE_POLICIES.map((policy) => [policy.id, policy]));
+const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
+const GENERATED_HEADER = '<!-- @generated by @frameless/vue';
+
+function violation(
+	file: string,
+	policy: string,
+	message: string,
+	line: number | null = null,
+): GateViolation {
+	return {
+		file,
+		policy,
+		dossierRef:
+			POLICIES.get(policy)?.dossierRef ??
+			// `eslint:parse` is the only unpublished eslint policy: it is what a
+			// message with no ruleId becomes, which is a parser failure rather than a
+			// rule verdict. It still belongs to the arbiter.
+			(policy.startsWith('eslint:')
+				? 'frameless-vue-v1 T003 lint arbiter'
+				: 'frameless-vue-v1 T002 ruling 2'),
+		message,
+		line,
+	};
+}
+
+/** Depth-first walk that never follows a `parent` or `loc` back-reference. */
+function walk(value: unknown, visit: (record: Node) => void): void {
+	if (!value || typeof value !== 'object') return;
+	if (Array.isArray(value)) {
+		value.forEach((entry) => walk(entry, visit));
+		return;
+	}
+	const record = value as Node;
+	visit(record);
+	for (const [key, child] of Object.entries(record)) {
+		if (key === 'parent' || key === 'loc' || key === 'codegenNode') continue;
+		walk(child, visit);
+	}
+}
+
+// ---------------------------------------------------------------------------
+// the two ASTs this gate reads
+// ---------------------------------------------------------------------------
+
+/**
+ * Vue's template AST tags node kinds with NUMBERS. Only the kinds a PARSED (not
+ * yet transformed) template can carry are named; anything else becomes
+ * `NODE_<n>`, which the inventory then rejects, so a new node kind fails closed
+ * rather than being silently accepted as "some number".
+ */
+const TEMPLATE_NODE_NAMES: Readonly<Record<number, string>> = {
+	0: 'ROOT',
+	1: 'ELEMENT',
+	2: 'TEXT',
+	3: 'COMMENT',
+	4: 'SIMPLE_EXPRESSION',
+	5: 'INTERPOLATION',
+	6: 'ATTRIBUTE',
+	7: 'DIRECTIVE',
+	8: 'COMPOUND_EXPRESSION',
+};
+
+function templateNodeName(type: unknown): string {
+	return typeof type === 'number'
+		? (TEMPLATE_NODE_NAMES[type] ?? `NODE_${type}`)
+		: `NODE_${String(type)}`;
+}
+
+const TEMPLATE_NODE_TYPE = { ELEMENT: 1, TEXT: 2, DIRECTIVE: 7 } as const;
+
+type Parsed = {
+	readonly descriptor: Node;
+	readonly template: Node | null;
+	/** Every directive node in the emitted template, in source order. */
+	readonly directives: Node[];
+	/** The `<script setup>` body as a Babel statement array. */
+	readonly script: Node[];
+	/** Line of the first `<script setup>` content character, for line reporting. */
+	readonly scriptLineBase: number;
+};
+
+function lineOfScript(parsed: Parsed, node: Node): number | null {
+	const line = node.loc?.start?.line;
+	return typeof line === 'number' ? parsed.scriptLineBase + line - 1 : null;
+}
+
+function lineOfTemplate(node: Node): number | null {
+	const line = node.loc?.start?.line;
+	return typeof line === 'number' ? line : null;
+}
+
+/**
+ * Parse a directive's expression as JavaScript.
+ *
+ * Wrapped in parentheses so that a value in EXPRESSION position - which is what
+ * every directive value except `v-for` is - parses as one, rather than as a
+ * statement that happens to look like a block. `v-for` is skipped by the only
+ * caller, because `todo in todos` is not a JavaScript expression at all.
+ */
+function directiveExpressionAst(content: string): Node | null {
+	try {
+		return babelParse(`(\n${content}\n)`, { sourceType: 'module' }) as unknown as Node;
+	} catch {
+		// A directive value the emitter produced that Babel cannot read is already a
+		// compile-time error upstream (`compileDiagnostics`) and an `eslint:parse`
+		// violation here. Returning null keeps this walker from turning a parse
+		// failure into a policy verdict it has no basis for.
+		return null;
+	}
+}
+
+// ---------------------------------------------------------------------------
+// IR-7
+// ---------------------------------------------------------------------------
+
+/**
+ * Methods whose whole purpose is to mutate their receiver. Deliberately NOT a
+ * list of "calls" - `todos.value.filter(...)` inside a `computed` is correct and
+ * must stay accepted, which is what stops this policy from degenerating into
+ * "reject any call".
+ */
+const KNOWN_MUTATING_METHODS = new Set([
+	'add',
+	'append',
+	'appendChild',
+	'assign',
+	'clear',
+	'copyWithin',
+	'defineProperty',
+	'delete',
+	'fill',
+	'insertBefore',
+	'pop',
+	'push',
+	'remove',
+	'removeAttribute',
+	'replaceChildren',
+	'reverse',
+	'set',
+	'setAttribute',
+	'shift',
+	'sort',
+	'splice',
+	'unshift',
+	'write',
+]);
+
+/**
+ * IR-7 - THE CONSERVATIVE GUARD, NOT A PURITY PROOF.
+ *
+ * `ExpressionSite.expression` is an arbitrary AST node and the IR never asserts
+ * that it is pure, while Vue's `computed()` requires a pure getter. Vue reports a
+ * violation, if at all, as a DEV-ONLY warning - so absence of a red test is not
+ * evidence of correctness here. S1's `computed` is trivial and will always pass,
+ * which is exactly why the green it produces is a vacuum.
+ *
+ * A real purity proof is a compiler-wide change with no forcing case, so this is
+ * the decidable subset instead: a syntactic reject-list applied to the EMITTER'S
+ * OWN OUTPUT, which converts "silently wrong later" into "loudly wrong at gate
+ * time" for the shapes it can see.
+ *
+ * WHAT IT CANNOT SEE, stated plainly rather than implied:
+ *   - mutation performed inside a function the getter CALLS. `computed(() => f())`
+ *     is accepted no matter what `f` assigns; the walk never leaves the getter.
+ *   - a mutating method this list does not name, including any method on a
+ *     user-defined object, and any mutation through a computed member access.
+ *   - a getter with a side effect, which is syntactically indistinguishable from
+ *     a property read.
+ *   - anything reached through `eval`, `Function`, or a dynamic property name.
+ * It is therefore SOUND ONLY as a reject-list: a violation is real, a pass is
+ * not a proof.
+ */
+function impureNodes(argument: Node): Array<{ node: Node; reason: string }> {
+	const found: Array<{ node: Node; reason: string }> = [];
+	walk(argument, (node) => {
+		if (node.type === 'AssignmentExpression')
+			found.push({ node, reason: `assignment (${String(node.operator ?? '=')})` });
+		else if (node.type === 'UpdateExpression')
+			found.push({ node, reason: `update expression (${String(node.operator ?? '')})` });
+		else if (node.type === 'UnaryExpression' && node.operator === 'delete')
+			found.push({ node, reason: 'delete expression' });
+		else if (
+			(node.type === 'CallExpression' || node.type === 'NewExpression') &&
+			node.callee?.type === 'MemberExpression' &&
+			!node.callee.computed &&
+			node.callee.property?.type === 'Identifier' &&
+			KNOWN_MUTATING_METHODS.has(node.callee.property.name)
+		)
+			found.push({
+				node,
+				reason: `call to the known-mutating method .${node.callee.property.name}()`,
+			});
+	});
+	return found;
+}
+
+function computedArguments(script: readonly Node[]): Node[] {
+	const args: Node[] = [];
+	walk(script, (node) => {
+		if (
+			node.type === 'CallExpression' &&
+			node.callee?.type === 'Identifier' &&
+			node.callee.name === 'computed' &&
+			node.arguments?.length
+		)
+			args.push(node.arguments[0] as Node);
+	});
+	return args;
+}
+
+// ---------------------------------------------------------------------------
+// the baseline form inventory
+// ---------------------------------------------------------------------------
+
+/**
+ * THE PRECONDITION THIS ASSERTS.
+ *
+ * `frameless-vue-v1` T002 ruling 5 DEFERRED IR-4 and did NOT amend the emitter
+ * idiom policy's version corollary. That corollary has two conjuncts, and the
+ * second - "the emitter can know the version it is targeting" - is satisfiable
+ * two ways: an explicit target-version input, or an emitter that emits ONLY
+ * baseline-version-safe forms. This lane is the second way, and the policy's own
+ * baseline-form-inventory section names it: "The Svelte lane is the second way.
+ * So are Vue and Angular, by inheritance."
+ *
+ * That is a CLAIM ABOUT EMITTED OUTPUT, and it was already false-by-drift once in
+ * the Svelte lane, which grew its emitted form set after the ruling with no
+ * record and no check. This inventory is the assertion: an explicit allowlist of
+ * every form the emitter may put in its output, each with the version floor
+ * claimed for it and an honest statement of whether that floor was verified.
+ * Emitted output carrying a form that is not on the list is a violation, so
+ * growing the emitter's surface is a deliberate edit here rather than a silent
+ * widening.
+ *
+ * FLOOR HONESTY IS THE POINT. A floor is a CLAIM about the earliest version at
+ * which the form is available and means what the emitter needs; it is a lower
+ * bound and need not be tight. `status: 'unverified'` carries the reason it could
+ * not be checked, and a guessed floor recorded as verified is precisely the
+ * failure this exists to stop. A `verified` entry must cite a file inside the
+ * RESOLVED vue package and verbatim text in it; `test/gate.test.ts` re-reads every
+ * citation, and calibrates that checker in both directions.
+ *
+ * WHAT IT CANNOT SEE, stated plainly: it reads emitted TEXT, so it cannot know
+ * what a form MEANS at a version this repo does not have installed. It catches a
+ * new form arriving unannounced. It does not catch a form whose semantics changed
+ * under a fixed spelling - `const { x } = defineProps(...)` parses at every Vue 3
+ * version and is only reactive from 3.5, which is why the floor column exists and
+ * why it is not decoration.
+ */
+export type BaselineFormKind =
+	| 'sfc-block'
+	| 'template-node'
+	| 'directive'
+	| 'directive-modifier'
+	| 'macro'
+	| 'import';
+
+export type FloorEvidence =
+	| {
+			readonly status: 'verified';
+			/** Path INSIDE the resolved vue package. Re-read by the gate test. */
+			readonly file: string;
+			/** Verbatim text that must be present at that path. */
+			readonly needle: string;
+	  }
+	| { readonly status: 'unverified'; readonly reason: string };
+
+export type BaselineForm = {
+	readonly kind: BaselineFormKind;
+	readonly form: string;
+	/** The earliest Vue version this inventory CLAIMS the form is safe at. */
+	readonly floor: string;
+	readonly evidence: FloorEvidence;
+};
+
+/**
+ * EVERY FLOOR BELOW READS `unverified`, and the reason is a MEASURED property of
+ * the resolved package rather than laziness: `vue@3.5.40` as installed ships NO
+ * CHANGELOG and, unlike svelte, not a single `@since` tag - `grep -c '@since'`
+ * over its shipped `.d.ts` files returns 0, and its type entry point is a
+ * seven-line re-export of `@vue/runtime-dom`. There is therefore no artifact in
+ * this repo that dates any of these forms. Presence at the pin is not a floor; it
+ * is equally consistent with "3.0" and with "nobody wrote one down".
+ */
+const SCRIPT_SETUP_FLOOR_REASON =
+	'3.2 is the release in which <script setup> and its compiler macros stopped being experimental, which is documentary evidence from the Vue release history - not from any artifact this repo has. The resolved vue@3.5.40 ships no CHANGELOG and no @since tag anywhere in its type declarations, so the floor could not be checked against something on disk.';
+
+const DIRECTIVE_FLOOR_REASON =
+	'The directive predates Vue 3 entirely and its longhand spelling is unchanged by it, so 3.0 is a safe lower bound rather than a tight one. Nothing in the resolved package dates it.';
+
+const TEMPLATE_NODE_FLOOR_REASON =
+	'A parse-tree node kind of the Vue 3 template compiler, present for the whole Vue 3 line, so 3.0 is a safe lower bound rather than a tight one. The number-to-name mapping is this gate\'s own; the resolved package dates neither the kind nor the numbering.';
+
+const RUNTIME_IMPORT_FLOOR_REASON =
+	'ref() and computed() are Vue 3 reactivity primitives present since the 3.0 composition API, which is documentary. The resolved package carries no @since tag and no CHANGELOG, so the floor could not be checked against an artifact this repo has.';
+
+export const BASELINE_FORM_INVENTORY: readonly BaselineForm[] = [
+	{
+		kind: 'sfc-block',
+		form: 'template',
+		floor: '3.0',
+		evidence: { status: 'unverified', reason: DIRECTIVE_FLOOR_REASON },
+	},
+	{
+		kind: 'sfc-block',
+		form: 'script[setup]',
+		floor: '3.2',
+		evidence: { status: 'unverified', reason: SCRIPT_SETUP_FLOOR_REASON },
+	},
+	{
+		kind: 'macro',
+		form: 'defineProps',
+		floor: '3.2',
+		evidence: { status: 'unverified', reason: SCRIPT_SETUP_FLOOR_REASON },
+	},
+	{
+		kind: 'import',
+		form: 'vue#ref',
+		floor: '3.0',
+		evidence: { status: 'unverified', reason: RUNTIME_IMPORT_FLOOR_REASON },
+	},
+	{
+		kind: 'import',
+		form: 'vue#computed',
+		floor: '3.0',
+		evidence: { status: 'unverified', reason: RUNTIME_IMPORT_FLOOR_REASON },
+	},
+	...(['v-if', 'v-else', 'v-for', 'v-bind', 'v-on'] as const).map(
+		(form): BaselineForm => ({
+			kind: 'directive',
+			form,
+			floor: '3.0',
+			evidence: { status: 'unverified', reason: DIRECTIVE_FLOOR_REASON },
+		}),
+	),
+	...(
+		[
+			'ROOT',
+			'ELEMENT',
+			'TEXT',
+			'INTERPOLATION',
+			'SIMPLE_EXPRESSION',
+			'ATTRIBUTE',
+			'DIRECTIVE',
+		] as const
+	).map(
+		(form): BaselineForm => ({
+			kind: 'template-node',
+			form,
+			floor: '3.0',
+			evidence: { status: 'unverified', reason: TEMPLATE_NODE_FLOOR_REASON },
+		}),
+	),
+];
+
+const INVENTORY = new Set(BASELINE_FORM_INVENTORY.map((entry) => `${entry.kind}:${entry.form}`));
+
+export type ObservedForm = {
+	readonly kind: BaselineFormKind;
+	readonly form: string;
+	readonly line: number | null;
+};
+
+/**
+ * The DIRECTIVE form as SPELLED, not as resolved.
+ *
+ * `v-bind:key` and `:key` are the same directive to Vue's parser - `name` is
+ * `bind` for both - and they are NOT the same form to this inventory, because
+ * choosing between them is the emission-site decision `docs/emitter-idiom-policy.md`
+ * worked example 2 defers. Reading `rawName` is what keeps the two apart, so the
+ * shorthand arrives here as the un-inventoried form `:` rather than as an
+ * accepted `v-bind`.
+ */
+function directiveForm(directive: Node): string {
+	const raw = String(directive.rawName ?? `v-${String(directive.name)}`);
+	if (raw.startsWith('v-')) return raw.split(/[:.]/)[0]!;
+	return raw.slice(0, 1);
+}
+
+function observeForms(parsed: Parsed): ObservedForm[] {
+	const found: ObservedForm[] = [];
+	const descriptor = parsed.descriptor;
+	if (descriptor.template)
+		found.push({
+			kind: 'sfc-block',
+			form: 'template',
+			line: lineOfTemplate(descriptor.template as Node),
+		});
+	if (descriptor.script)
+		found.push({
+			kind: 'sfc-block',
+			form: `script${descriptor.script.lang ? `[lang=${String(descriptor.script.lang)}]` : ''}`,
+			line: lineOfTemplate(descriptor.script as Node),
+		});
+	if (descriptor.scriptSetup)
+		found.push({
+			kind: 'sfc-block',
+			form: `script[setup${descriptor.scriptSetup.lang ? `,lang=${String(descriptor.scriptSetup.lang)}` : ''}]`,
+			line: lineOfTemplate(descriptor.scriptSetup as Node),
+		});
+	for (const style of (descriptor.styles ?? []) as Node[])
+		found.push({ kind: 'sfc-block', form: 'style', line: lineOfTemplate(style) });
+	for (const block of (descriptor.customBlocks ?? []) as Node[])
+		found.push({
+			kind: 'sfc-block',
+			form: `custom[${String(block.type)}]`,
+			line: lineOfTemplate(block),
+		});
+
+	if (parsed.template)
+		walk(parsed.template, (node) => {
+			if (typeof node.type !== 'number') return;
+			found.push({
+				kind: 'template-node',
+				form: templateNodeName(node.type),
+				line: lineOfTemplate(node),
+			});
+			if (node.type !== TEMPLATE_NODE_TYPE.DIRECTIVE) return;
+			const line = lineOfTemplate(node);
+			found.push({ kind: 'directive', form: directiveForm(node), line });
+			for (const modifier of (node.modifiers ?? []) as Array<Node | string>)
+				found.push({
+					kind: 'directive-modifier',
+					form: String((modifier as Node)?.content ?? modifier),
+					line,
+				});
+		});
+
+	walk(parsed.script, (node) => {
+		if (node.type === 'ImportDeclaration') {
+			const from = String((node.source as Node | undefined)?.value ?? '?');
+			const specifiers = (node.specifiers ?? []) as Node[];
+			const line = lineOfScript(parsed, node);
+			if (specifiers.length === 0) found.push({ kind: 'import', form: `${from}#*`, line });
+			for (const specifier of specifiers)
+				found.push({
+					kind: 'import',
+					form: `${from}#${
+						specifier.type === 'ImportSpecifier'
+							? String(specifier.imported?.name ?? '?')
+							: specifier.type === 'ImportDefaultSpecifier'
+								? 'default'
+								: '*'
+					}`,
+					line,
+				});
+		}
+		if (
+			node.type === 'CallExpression' &&
+			node.callee?.type === 'Identifier' &&
+			/^(?:define[A-Z]|withDefaults$)/.test(String(node.callee.name))
+		)
+			found.push({
+				kind: 'macro',
+				form: String(node.callee.name),
+				line: lineOfScript(parsed, node),
+			});
+	});
+	return found;
+}
+
+/**
+ * Every form the emitted source actually contains, deduped and sorted. Exported
+ * because a fail-closed allowlist that observes NOTHING passes vacuously, and
+ * `test/gate.test.ts` pins the observed set of the shipped corpus against a
+ * literal - so a walk that stopped descending is a red test rather than a
+ * silently green gate.
+ */
+export function collectEmittedForms(source: string): ReadonlyArray<{
+	readonly kind: BaselineFormKind;
+	readonly form: string;
+}> {
+	const parsed = parseEmitted('generated/inline.vue', source);
+	if (!parsed) throw new Error('collectEmittedForms received a source Vue could not parse');
+	const seen = new Set<string>();
+	const forms: Array<{ kind: BaselineFormKind; form: string }> = [];
+	for (const observation of observeForms(parsed)) {
+		const key = `${observation.kind}:${observation.form}`;
+		if (seen.has(key)) continue;
+		seen.add(key);
+		forms.push({ kind: observation.kind, form: observation.form });
+	}
+	return forms.sort((left, right) =>
+		`${left.kind}:${left.form}`.localeCompare(`${right.kind}:${right.form}`),
+	);
+}
+
+function inventoryViolations(file: string, parsed: Parsed): GateViolation[] {
+	const violations: GateViolation[] = [];
+	const reported = new Set<string>();
+	for (const observation of observeForms(parsed)) {
+		const key = `${observation.kind}:${observation.form}`;
+		if (INVENTORY.has(key) || reported.has(key)) continue;
+		reported.add(key);
+		violations.push(
+			violation(
+				file,
+				'baseline-form-inventory',
+				`Emitted Vue source uses the ${observation.kind} form ${JSON.stringify(observation.form)}, which is not in the baseline form inventory. IR-4 is DEFERRED, so this emitter's only discharge of the version corollary's second conjunct is that it emits nothing but baseline-version-safe forms; a new form has to be added to BASELINE_FORM_INVENTORY with a recorded version floor and an honest floor-evidence status`,
+				observation.line,
+			),
+		);
+	}
+	return violations;
+}
+
+// ---------------------------------------------------------------------------
+// policies
+// ---------------------------------------------------------------------------
+
+function parseEmitted(file: string, source: string): Parsed | null {
+	const { descriptor, errors } = parse(source, { filename: file });
+	if (errors.length) return null;
+	let script: Node[] = [];
+	let scriptLineBase = 1;
+	if (descriptor.scriptSetup) {
+		scriptLineBase = descriptor.scriptSetup.loc.start.line;
+		try {
+			script = (compileScript(descriptor, { id: file, inlineTemplate: false })
+				.scriptSetupAst ?? []) as unknown as Node[];
+		} catch {
+			script = [];
+		}
+	}
+	const template = (descriptor.template?.ast ?? null) as Node | null;
+	const directives: Node[] = [];
+	if (template)
+		walk(template, (node) => {
+			if (node.type === TEMPLATE_NODE_TYPE.DIRECTIVE) directives.push(node);
+		});
+	return {
+		descriptor: descriptor as unknown as Node,
+		template,
+		directives,
+		script,
+		scriptLineBase,
+	};
+}
+
+/**
+ * THE MEASURED WHITESPACE POLICY (T003 measurement M1), stated as a property of
+ * the RESULT rather than of the layout that produced it.
+ *
+ * Vue's SFC template compiler defaults to `whitespace: 'condense'`, and
+ * `descriptor.template.ast` is already condensed - MEASURED at 3.5.40, which is
+ * what makes this readable straight off Vue's own tree instead of reimplementing
+ * the rule. Condense removes a whitespace-only text node only when it is a first
+ * or last child or sits between two elements with a newline in it; in every other
+ * position it survives as a single space, and whitespace sharing a text node with
+ * content is condensed rather than removed.
+ *
+ * All three of those failures land in the same observable, so one check catches
+ * them all: AFTER CONDENSE, NO EMITTED TEXT NODE MAY CARRY LEADING OR TRAILING
+ * WHITESPACE.
+ *
+ *   `<button>\n\tincrement\n</button>`  -> TEXT " increment "  rejected
+ *   `<p>{{ a }}\n/{{ b }}</p>`          -> TEXT " /"           rejected, and this
+ *                                          is S2's `1/2` becoming `1 /2`
+ *   `<p>a</p> <span>b</span>`           -> TEXT " "            rejected
+ *   the shipped layout                  -> the node is gone    accepted
+ *
+ * WHAT IT REFUSES THAT IS NOT AN EMITTER BUG: a declared IR text node that itself
+ * begins or ends with whitespace. Condense's treatment of such a node depends on
+ * its neighbours, so the emitter cannot place it safely and this fails closed
+ * rather than emitting something whose rendering depends on where it landed.
+ *
+ * IT WALKS `children` ONLY, and that is not a shortcut. An `AttributeNode.value`
+ * is ALSO a type-2 TEXT node in Vue's AST, so a generic walk reports every
+ * `data-s1-root=""` in the corpus - measured on the first run of this policy.
+ * Attribute values are not condensed and are not the observable.
+ */
+function condenseViolations(file: string, parsed: Parsed): GateViolation[] {
+	const violations: GateViolation[] = [];
+	const visit = (node: Node): void => {
+		for (const child of (node.children ?? []) as Node[]) {
+			if (child.type === TEMPLATE_NODE_TYPE.TEXT) {
+				const content = String(child.content ?? '');
+				if (content !== content.trim() || content.length === 0)
+					violations.push(
+						violation(
+							file,
+							'condense-stable-text',
+							`Emitted Vue template has the condensed text node ${JSON.stringify(content)}, which carries leading or trailing whitespace. Vue's whitespace:'condense' default removes a whitespace-only node only between two elements across a newline and condenses it to a single space everywhere else, so this text would render differently from the react, solid, qwik and svelte lanes`,
+							lineOfTemplate(child),
+						),
+					);
+			}
+			visit(child);
+		}
+	};
+	if (parsed.template) visit(parsed.template);
+	return violations;
+}
+
+function directiveViolations(file: string, parsed: Parsed): GateViolation[] {
+	const violations: GateViolation[] = [];
+	for (const directive of parsed.directives) {
+		const raw = String(directive.rawName ?? `v-${String(directive.name)}`);
+		const line = lineOfTemplate(directive);
+		if (!raw.startsWith('v-'))
+			violations.push(
+				violation(
+					file,
+					'no-directive-shorthand',
+					`Emitted Vue source uses the directive shorthand ${JSON.stringify(raw)}; docs/emitter-idiom-policy.md worked example 2 rules the v-bind/v-on/v-slot shorthands DEFERRED and frameless-vue-v1 T005 is the task that re-runs its six gates, so emitting one here would hand that ruling a fait accompli`,
+					line,
+				),
+			);
+		const modifiers = ((directive.modifiers ?? []) as Array<Node | string>).map((modifier) =>
+			String((modifier as Node)?.content ?? modifier),
+		);
+		if (modifiers.length)
+			violations.push(
+				violation(
+					file,
+					'no-directive-modifier',
+					`Emitted Vue source uses the directive modifier(s) ${modifiers.join(', ')} on ${raw}; IR-5 declares two actions and they are emitted as ordinary in-body statements, and the modifier surface is worked example 2's question for T005 rather than this emitter's`,
+					line,
+				),
+			);
+		if (directive.name === 'model')
+			violations.push(
+				violation(
+					file,
+					'no-two-way-binding',
+					'Emitted Vue source uses v-model; two-way binding needs a bindable prop kind the IR does not have (IR-1) and an emit concept it does not have (IR-2), and worked example 3 is already ruled DENIED at Gate 5',
+					line,
+				),
+			);
+	}
+	return violations;
+}
+
+const TYPE_ONLY_MACROS = new Set(['withDefaults']);
+
+function scriptViolations(file: string, parsed: Parsed): GateViolation[] {
+	const violations: GateViolation[] = [];
+	const scriptSetup = parsed.descriptor.scriptSetup as Node | undefined;
+	if (scriptSetup?.lang)
+		violations.push(
+			violation(
+				file,
+				'no-typed-props',
+				`Emitted Vue source declares <script setup lang="${String(scriptSetup.lang)}">; the IR carries no prop type field (PropDestructuringEntry), so every emitted type would be inferred from what the corpus happens to do with a prop - which Gate 3 forbids as a content-based trigger and Gate 4 forbids as unsound outside the exercised subset. Named IR-8 and deferred`,
+				lineOfTemplate(scriptSetup),
+			),
+		);
+	walk(parsed.script, (node) => {
+		if (node.type !== 'CallExpression' || node.callee?.type !== 'Identifier') return;
+		const name = String(node.callee.name);
+		const line = lineOfScript(parsed, node);
+		if (name === 'defineModel' || name === 'defineEmits')
+			violations.push(
+				violation(
+					file,
+					'no-two-way-binding',
+					`Emitted Vue source calls ${name}(); IR-1 gives no bindable prop kind and IR-2 gives no emit concept, and worked example 3 rules the defineEmits form DENIED at Gate 5 because a declared native event name stops the listener receiving native events`,
+					line,
+				),
+			);
+		if (TYPE_ONLY_MACROS.has(name) || node.typeParameters || node.typeArguments)
+			violations.push(
+				violation(
+					file,
+					'no-typed-props',
+					`Emitted Vue source calls ${name}() in its type-argument form; the IR carries no prop type field, so the type would have to be invented from expression contents (IR-8, deferred)`,
+					line,
+				),
+			);
+	});
+	return violations;
+}
+
+function stopPropagationViolations(file: string, parsed: Parsed): GateViolation[] {
+	const violations: GateViolation[] = [];
+	const scan = (root: unknown, line: number | null): void => {
+		walk(root, (node) => {
+			if (
+				node.type === 'CallExpression' &&
+				node.callee?.type === 'MemberExpression' &&
+				!node.callee.computed &&
+				node.callee.property?.type === 'Identifier' &&
+				node.callee.property.name === 'stopPropagation'
+			)
+				violations.push(
+					violation(
+						file,
+						'no-stop-propagation',
+						'Emitted Vue source calls stopPropagation(); the corpus has zero instances across all twelve goldens, so the emitter fails closed on the declared action rather than growing an emitter path nothing can test',
+						line,
+					),
+				);
+		});
+	};
+	scan(parsed.script, null);
+	for (const directive of parsed.directives) {
+		if (directive.name === 'for') continue;
+		const exp = directive.exp as Node | undefined;
+		if (!exp || typeof exp.content !== 'string') continue;
+		const ast = directiveExpressionAst(exp.content);
+		if (ast) scan(ast, lineOfTemplate(directive));
+	}
+	return violations;
+}
+
+async function sourceViolations(file: string, source: string): Promise<GateViolation[]> {
+	const violations: GateViolation[] = [];
+	if (!source.startsWith(GENERATED_HEADER))
+		violations.push(
+			violation(
+				file,
+				'generated-header',
+				`Emitted Vue source must open with ${JSON.stringify(GENERATED_HEADER)}`,
+				1,
+			),
+		);
+	const parsed = parseEmitted(file, source);
+	if (!parsed) {
+		const { errors } = parse(source, { filename: file });
+		return [
+			...violations,
+			violation(
+				file,
+				'generated-header',
+				`@vue/compiler-sfc could not parse emitted source: ${errors.map(String).join('; ')}`,
+			),
+		];
+	}
+	violations.push(...inventoryViolations(file, parsed));
+	violations.push(...condenseViolations(file, parsed));
+	violations.push(...directiveViolations(file, parsed));
+	violations.push(...scriptViolations(file, parsed));
+	violations.push(...stopPropagationViolations(file, parsed));
+	for (const argument of computedArguments(parsed.script))
+		for (const { node, reason } of impureNodes(argument))
+			violations.push(
+				violation(
+					file,
+					'computed-expression-purity',
+					`Emitted computed() getter contains a ${reason}; IR-7 never asserts purity, and Vue reports the violation - if at all - as a dev-only warning`,
+					lineOfScript(parsed, node),
+				),
+			);
+	return violations;
+}
+
+function persistenceViolations(file: string, artifact: EnrichedIR): GateViolation[] | undefined {
+	const persistence = (artifact.records as { readonly persistence?: unknown }).persistence;
+	if (!Array.isArray(persistence)) return undefined;
+	if (persistence.length === 0) return [];
+	return [
+		violation(
+			file,
+			'persistence-render-lowering',
+			'Vue emission fails closed on persistence-bearing IR; render-time persistence has no Vue lowering yet',
+		),
+	];
+}
+
+// ---------------------------------------------------------------------------
+// entry points
+// ---------------------------------------------------------------------------
+
+async function collectVueFiles(root: string, directory: string): Promise<string[]> {
+	const absolute = resolve(root, directory);
+	const entries = await readdir(absolute, { withFileTypes: true }).catch(
+		(error: NodeJS.ErrnoException) => {
+			if (error.code === 'ENOENT') return [];
+			throw error;
+		},
+	);
+	const files: string[] = [];
+	for (const entry of entries) {
+		const child = resolve(absolute, entry.name);
+		if (entry.isDirectory()) files.push(...(await collectVueFiles(root, relative(root, child))));
+		else if (entry.isFile() && entry.name.endsWith('.vue'))
+			files.push(normalize(relative(root, child)));
+	}
+	return files;
+}
+
+export async function discoverGeneratedFiles(
+	options: { readonly cwd?: string; readonly directory?: string } = {},
+): Promise<string[]> {
+	const cwd = resolve(options.cwd ?? PACKAGE_ROOT);
+	return (await collectVueFiles(cwd, options.directory ?? 'generated')).sort();
+}
+
+/** ASYNC because `ESLint.lintText` is, matching the Svelte gate's signature. */
+export async function checkSources(
+	entries: ReadonlyArray<{
+		readonly file: string;
+		readonly source: string;
+		readonly artifact?: EnrichedIR;
+	}>,
+): Promise<GateResult> {
+	const violations: GateViolation[] = [];
+	const unevaluatedPolicies = new Set<string>();
+	for (const { file, source, artifact } of entries) {
+		violations.push(...(await sourceViolations(file, source)));
+		violations.push(...(await eslintViolations(file, source)));
+		const artifactViolations = artifact ? persistenceViolations(file, artifact) : undefined;
+		if (artifactViolations) violations.push(...artifactViolations);
+		else unevaluatedPolicies.add('persistence-render-lowering');
+	}
+	const result = {
+		files: entries.map((entry) => entry.file),
+		policies: VUE_GATE_POLICIES,
+		violations,
+	} as unknown as GateResult;
+	Object.defineProperty(result, 'unevaluated', {
+		enumerable: false,
+		value: [...unevaluatedPolicies].map((policy) => ({
+			policy,
+			reason: 'requires-artifact',
+		})),
+	});
+	return result;
+}
+
+export async function checkGeneratedFiles(
+	options: { readonly cwd?: string; readonly directory?: string } = {},
+): Promise<GateResult> {
+	const cwd = resolve(options.cwd ?? PACKAGE_ROOT);
+	const files = await discoverGeneratedFiles({ cwd, directory: options.directory });
+	const entries = await Promise.all(
+		files.map(async (file) => ({ file, source: await readFile(resolve(cwd, file), 'utf8') })),
+	);
+	return checkSources(entries);
+}
