@@ -24,9 +24,9 @@ const compositionDemo = resolve(workspace, 'demos/composition-kit');
 const persistenceDemo = resolve(workspace, 'demos/persistence');
 const ssrDemo = resolve(workspace, 'demos/ssr');
 const uiComponents = ['PricingCard', 'TaskList', 'NewsletterForm'];
-// The official framework scaffolds. One shared IR, four emitters, two
-// activation models — React, Solid and Svelte hydrate, Qwik resumes. Each runs
-// the same contract in demos/react-official/three-way-contract.ts, and the
+// The official framework scaffolds. One shared IR, five emitters, two
+// activation models — React, Solid, Svelte and Vue hydrate, Qwik resumes. Each
+// runs the same contract in demos/react-official/three-way-contract.ts, and the
 // `three-way` box tag and `three-way-results` note kind are the wire protocol
 // between that contract and this file; they keep their names.
 const officialDemos = [
@@ -34,6 +34,7 @@ const officialDemos = [
 	{ framework: 'solid', activation: 'hydrate', directory: resolve(workspace, 'demos/solid-official') },
 	{ framework: 'qwik', activation: 'resume', directory: resolve(workspace, 'demos/qwik') },
 	{ framework: 'svelte', activation: 'hydrate', directory: resolve(workspace, 'demos/svelte-official') },
+	{ framework: 'vue', activation: 'hydrate', directory: resolve(workspace, 'demos/vue-official') },
 ];
 const threeWayScenarios = ['s1', 's2', 's3'];
 // @async/witness is a dev tool of the workspace, already installed for the ssr
@@ -420,9 +421,9 @@ console.log(
 if (persistenceVerdict === 'FAIL') process.exit(1);
 
 // The three-way lanes. Each official demo is served by its own scaffold — the
-// react/solid vite SSR servers, the qwik router and the SvelteKit dev server —
-// and driven through the same scenario contract, so "identical behavior" is
-// compared, not asserted.
+// react/solid/vue vite SSR servers, the qwik router and the SvelteKit dev
+// server — and driven through the same scenario contract, so "identical
+// behavior" is compared, not asserted.
 const threeWay = {};
 for (const demo of officialDemos) {
 	runExecutable(

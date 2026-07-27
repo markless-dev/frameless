@@ -1,0 +1,29 @@
+{
+  "name": "@frameless/demo-vue-official",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "copy-emitted": "node -e \"require('fs').mkdirSync('src/emitted',{recursive:true});[['S1','RenderOnce'],['S2','KeyedTodo'],['S3','EventForm']].forEach(([s,n])=>require('fs').copyFileSync('../../packages/frameworks/vue/generated/'+s+'.vue','src/emitted/'+n+'.vue'))\"",
+    "dev": "pnpm copy-emitted && node server",
+    "build": "pnpm copy-emitted && vue-tsc -b && npm run build:client && npm run build:server",
+    "build:client": "vite build --outDir dist/client",
+    "build:server": "vite build --ssr src/entry-server.ts --outDir dist/server",
+    "preview": "cross-env NODE_ENV=production node server"
+  },
+  "dependencies": {
+    "compression": "^1.8.1",
+    "express": "^5.2.1",
+    "sirv": "^3.0.2",
+    "vue": "^3.5.32"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@vitejs/plugin-vue": "^6.0.5",
+    "@vue/tsconfig": "^0.9.1",
+    "cross-env": "^10.1.0",
+    "typescript": "~6.0.2",
+    "vite": "catalog:",
+    "vue-tsc": "^3.2.6"
+  }
+}

@@ -1,30 +1,31 @@
 /**
  * The cross-framework behavior contract.
  *
- * One shared IR compiles to React, Solid, Qwik and Svelte. What follows is the
- * *observable* outcome the emitted output must produce for each scenario, and
- * all four official demo lanes run this exact sequence. Running one shared
- * contract is what makes the claim a comparison rather than four unrelated
- * tests: if React, Solid, Qwik and Svelte all pass these steps, they behaved
- * the same. The `three-way` tag and the `three-way-results` note kind are the
- * wire protocol `scripts/e2e.mjs` reads and are deliberately left unrenamed.
+ * One shared IR compiles to React, Solid, Qwik, Svelte and Vue. What follows is
+ * the *observable* outcome the emitted output must produce for each scenario,
+ * and all five official demo lanes run this exact sequence. Running one shared
+ * contract is what makes the claim a comparison rather than five unrelated
+ * tests: if React, Solid, Qwik, Svelte and Vue all pass these steps, they
+ * behaved the same. The `three-way` tag and the `three-way-results` note kind
+ * are the wire protocol `scripts/e2e.mjs` reads and are deliberately left
+ * unrenamed.
  *
  * Every string a lane records is *measured* — read back out of the artifact it
  * names, either the live DOM through `page.content()` or the served payload
  * through `EnvironmentResponse.text` — never a literal pushed alongside an
- * assertion. That matters because `scripts/e2e.mjs` diffs the four lanes'
+ * assertion. That matters because `scripts/e2e.mjs` diffs the five lanes'
  * recorded observations against each other: with literals the diff is
  * tautological and can only catch a lane skipping a scenario, while with
- * measured values it compares data the four frameworks actually produced.
+ * measured values it compares data the five frameworks actually produced.
  *
  * An observation must be read at the site its own name claims. `server-rendered
  * text` read out of the post-activation DOM was the fault this file was
  * repaired for; see `assertS3` and `measureServedAttribute`.
  *
  * It lives under demos/react-official only because it has to live inside one of
- * the demo packages. demos/solid-official, demos/qwik and demos/svelte-official
- * import it by relative path, exactly the way demos/ssr imports
- * demos/ui-kit/scenarios.ts.
+ * the demo packages. demos/solid-official, demos/qwik, demos/svelte-official and
+ * demos/vue-official import it by relative path, exactly the way demos/ssr
+ * imports demos/ui-kit/scenarios.ts.
  */
 import type { EnvironmentResponse, ExpectApi, PageHandle } from '@async/witness'
 
@@ -33,14 +34,14 @@ export type ScenarioId = 's1' | 's2' | 's3'
 export const scenarioIds: readonly ScenarioId[] = ['s1', 's2', 's3']
 
 /**
- * How each framework becomes interactive. React, Solid and Svelte hydrate, so
- * the lane waits for the hydration marker their client entry sets before it
+ * How each framework becomes interactive. React, Solid, Svelte and Vue hydrate,
+ * so the lane waits for the hydration marker their client entry sets before it
  * clicks; Qwik resumes, so there is nothing to wait for — qwikloader buffers
  * the event and pulls the handler on demand. That asymmetry is the thesis, not
- * a defect, and it is the only thing the four lanes do differently.
+ * a defect, and it is the only thing the five lanes do differently.
  */
 export type Activation =
-  | { readonly kind: 'hydrate'; readonly framework: 'react' | 'solid' | 'svelte' }
+  | { readonly kind: 'hydrate'; readonly framework: 'react' | 'solid' | 'svelte' | 'vue' }
   | { readonly kind: 'resume'; readonly framework: 'qwik' }
 
 export type HydrateFramework = Extract<Activation, { kind: 'hydrate' }>['framework']
@@ -73,11 +74,20 @@ const ACTIVATION_MARKER = 'data-frameless-activated'
  * `.../@sveltejs/kit/src/runtime/client/entry.js` before calling `kit.start`.
  * `demos/svelte-official/scenarios.box.ts` calls `calibrateServedClientEntry`
  * on every run to prove the check can still go red.
+ *
+ * The Vue literal was measured the same way and is deliberately NOT inherited
+ * from react/solid: `create-vite-extra@5.0.2`'s `template-ssr-vue-ts` is a
+ * TypeScript template, so its `index.html` names `/src/entry-client.ts`, and it
+ * survives `vite.transformIndexHtml` verbatim in dev — read out of the payloads
+ * `demos/vue-official` actually served for `/`, `/s2` and `/s3`, once each.
+ * `demos/vue-official/scenarios.box.ts` calls `calibrateServedClientEntry` on
+ * every scenario for the same reason the Svelte lane does.
  */
 const servedClientEntry: Readonly<Record<HydrateFramework, string>> = {
   react: '/src/entry-client.jsx',
   solid: '/src/entry-client.jsx',
   svelte: '@sveltejs/kit/src/runtime/client/entry.js',
+  vue: '/src/entry-client.ts',
 }
 
 /**
@@ -91,6 +101,14 @@ const servedClientEntry: Readonly<Record<HydrateFramework, string>> = {
  * identical URL the page was opened at (`http://127.0.0.1:5173/` → the same),
  * alongside exactly one Document request, which is `kit.start` adopting the
  * initial history entry.
+ *
+ * Vue records 0, *measured* — not inherited from react and solid on the grounds
+ * that they run the same template family. `create-vite-extra`'s
+ * `template-ssr-vue-ts` ships no router (that is one of the reasons T002 ruled
+ * against Nuxt, which would have brought vue-router and pushed this to 1), and
+ * `demos/vue-official` adds none: `src/App.vue` branches on a `url` prop that
+ * `render(url)` and `window.location.pathname` supply. The number below was read
+ * off the run, not derived from that.
  *
  * Declared per lane and asserted exactly, never relaxed to "any number". That
  * matters most for the lane that needed the widening: a Svelte reload would
@@ -106,6 +124,7 @@ const expectedNavigations: Readonly<Record<Activation['framework'], number>> = {
   solid: 0,
   qwik: 1,
   svelte: 1,
+  vue: 0,
 }
 
 /**
@@ -248,7 +267,7 @@ export function measureRowKeys(html: string): string[] {
  *    server never rendered the element, which is a different failure from
  *    activation having removed it, and the message says so.
  * 2. The attribute reads exactly `equals`. Cross-lane equality alone cannot
- *    pin this — four lanes that all served the wrong string would still agree —
+ *    pin this — five lanes that all served the wrong string would still agree —
  *    so the exact assertion has to be here, at the same site, for every lane.
  * 3. **Instrument rule 3, two-sided**, and run on every call rather than once
  *    from a box, so no lane can hold the check and skip its calibration. Both
@@ -383,7 +402,7 @@ function forbidInServedPayload(served: EnvironmentResponse, fragments: string[])
  *
  * - Qwik must send a paused container and at least one `q-e:click` QRL
  *   attribute — markup that already names its handlers, with nothing to run.
- * - React, Solid and Svelte must send their own client entry module (nothing
+ * - React, Solid, Svelte and Vue must send their own client entry module (nothing
  *   reacts until it runs) and must send **neither** `q:container` **nor** the
  *   activation marker: their output is inert until hydration commits. The two
  *   negatives are the neutrality claims and are identical for every lane; only
@@ -563,10 +582,11 @@ async function documentRequests(page: PageHandle) {
  * Because the only difference between the two handlers is that literal, neither
  * bug can hide behind a structural asymmetry between the controls.
  *
- * The four lanes reach this identically-observed outcome through visibly
+ * The five lanes reach this identically-observed outcome through visibly
  * different emitted forms — React and Solid keep the authored guard verbatim,
- * Qwik synthesises a `sync$()` guard from the IR's condition tree, Svelte emits
- * it in-body. Divergence in form with identity in behaviour is the thesis, and
+ * Qwik synthesises a `sync$()` guard from the IR's condition tree, Svelte and
+ * Vue emit it in-body. Divergence in form with identity in behaviour is the
+ * thesis, and
  * this is the first scenario that tests it on a *conditional*.
  *
  * ## Why `<details>` rather than a form submit or a checkbox
@@ -577,7 +597,7 @@ async function documentRequests(page: PageHandle) {
  * `type="submit"` would. A `<summary>` click's default action toggles the
  * `open` **content attribute** on its `<details>`, which `page.content()`
  * serializes; a checkbox's `checked` is a property no sanctioned witness API
- * can read, and routing it through component state would put four frameworks'
+ * can read, and routing it through component state would put five frameworks'
  * synthetic `change` semantics between the guard and the observation. Nothing
  * here binds state, so no framework re-renders these nodes and no lane can
  * "repair" a toggle after the fact.
@@ -667,7 +687,7 @@ async function measureConditionalCancellation(
  * one the string must be in the server's own bytes. That is this repo's whole
  * thesis — inert markup plus activation — measured at the site the thesis is
  * about, which `assertServedActivation` already fetches. It is uniform: same
- * site, same predicate, same exact string, all four lanes, no per-lane
+ * site, same predicate, same exact string, all five lanes, no per-lane
  * declaration inside the compared observations.
  *
  * ## What is no longer observed, and when to re-open
@@ -729,7 +749,7 @@ async function measureConditionalCancellation(
  * ## Cancellation
  *
  * The cancellation step is deliberately last. Everything above it is S3's
- * original oracle and still runs, and still passes, for all four frameworks
+ * original oracle and still runs, and still passes, for all five frameworks
  * before anything is submitted — the channel below is added, not traded.
  *
  * Why it is here at all: until now the only `preventDefault()` in the corpus sat
@@ -840,15 +860,25 @@ const assertions: Record<
  * `ownership_invalid_mutation` and `state_unsafe_mutation` as warnings.
  * `demos/svelte-official` therefore installs its own in-page sink and reflects
  * the count onto an attribute this contract can read; see
- * `demos/svelte-official/src/hooks.client.ts` and the T004 note. React, Solid
- * and Qwik have no equivalent sink and are unchanged.
+ * `demos/svelte-official/src/hooks.client.ts` and the T004 note.
+ *
+ * It matters more still for Vue, and for a different reason. Vue does not fail
+ * on a hydration mismatch: it raises `[Vue warn]: Hydration … mismatch` on
+ * `console.warn`, `Hydration completed but contains mismatches.` on
+ * `console.error`, and then **patches the DOM to match the client** — so the
+ * `console.error` half would trip `consoleErrors: 0` below, but the half that
+ * names the element and both values would not, and the page would look correct
+ * either way. `demos/vue-official/src/dev-sink.ts` installs the same sink, and
+ * `demos/vue-official/scenarios.box.ts` additionally calibrates it against a
+ * DELIBERATELY corrupted server payload before it trusts a count of zero.
+ * React, Solid and Qwik have no equivalent sink and are unchanged.
  *
  * Two checks are parameterised by activation because the frameworks genuinely
  * differ, and leaving either silent is what let the resume claim rest on a
  * substring:
  *
- * - `navigations`: React and Solid record 0, Qwik and Svelte record 1. Each
- *   page — in all four frameworks — issues exactly **one**
+ * - `navigations`: React, Solid and Vue record 0, Qwik and Svelte record 1. Each
+ *   page — in all five frameworks — issues exactly **one**
  *   `resourceType: 'Document'` request, asserted below, so the routed lanes'
  *   extra navigation is a client router taking over a same-URL history entry
  *   and **not** a reload. Declared per lane in `expectedNavigations` and

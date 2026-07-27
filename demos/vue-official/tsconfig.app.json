@@ -1,0 +1,61 @@
+{
+  "extends": "@vue/tsconfig/tsconfig.dom.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "types": ["vite/client"],
+
+    // DELTA from create-vite-extra@5.0.2 template-ssr-vue-ts/tsconfig.app.json,
+    // and the only compiler option this demo changes. `@vue/tsconfig` sets
+    // neither, so the scaffold default is `allowJs: false`.
+    //
+    // The three components in src/emitted are frameless-emitted and their
+    // `<script setup>` carries NO `lang="ts"` — ruled by frameless-vue-v1 T002
+    // ruling 2, because the IR has no prop type field (T002 named that IR-8 and
+    // deferred it, so every emitted type would have to be invented from
+    // expression contents, which Gate 3 forbids). To vue-tsc those SFCs are
+    // therefore JS modules, and without `allowJs` it cannot read them at all:
+    // importing one is TS7016 "implicitly has an 'any' type", three times, which
+    // is a fact about the compiler's reach and not about the emitted output.
+    //
+    // `checkJs` stays off, and unlike demos/svelte-official's identical pair this
+    // was MEASURED at both settings rather than inherited. Turning it ON buys
+    // exactly ZERO additional coverage and costs exactly the noise class
+    // packages/frameworks/solid/test/emitted-typecheck.test.ts predicts in its
+    // own header — six errors on src/emitted/EventForm.vue alone, all of the form
+    // "'event.target' is possibly 'null'" and "Property 'dataset' does not exist
+    // on type 'EventTarget'", which are properties of type-checking untyped JS
+    // and not emitter defects. Emitted output IS checked, by its own package's
+    // lane: packages/frameworks/vue/test/compile-emitted.test.ts runs
+    // @vue/compiler-sfc parse + compileScript + compileTemplate and requires
+    // errors AND tips to be an exact empty set across ssr x dev/prod.
+    //
+    // WHAT vue-tsc ACTUALLY COVERS HERE, measured four ways and NOT what T002
+    // ruling 2 anticipated. Its re-open trigger was "T004, where App.vue passes
+    // props to emitted components". That trigger fired, and the instrument turns
+    // out not to reach it:
+    //
+    //   unknown prop on an emitted component      GREEN  (at BOTH checkJs settings)
+    //   wrong-typed prop on an emitted component  GREEN  (at BOTH checkJs settings)
+    //   undefined identifier in App.vue           RED
+    //   wrong-typed use of a typed local          RED
+    //
+    // The first two are GREEN because `defineProps(['label', …])` — the array
+    // form T002 ruling 3 requires, since the IR carries no prop type field
+    // (IR-8) — types every prop `any`, and because Vue lets an undeclared prop
+    // fall through to attrs rather than erroring. So the prop hole is NOT closed
+    // by vue-tsc and is NOT a setting: it is IR-8. What vue-tsc does buy is the
+    // bottom two rows over App.vue and every .ts file here, which stay fully
+    // strict. Recorded rather than quietly enjoyed, because writing "the prop
+    // contract is checked" without running these four cases is this board's own
+    // recurring proxy-for-measurement fault. Full table in the T004 note.
+    "allowJs": true,
+    "checkJs": false,
+
+    /* Linting */
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"]
+}

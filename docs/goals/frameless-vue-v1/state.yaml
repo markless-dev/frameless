@@ -156,7 +156,7 @@ visual_board:
     url: null
     command: "npx goalbuddy board docs/goals/frameless-vue-v1"
 
-active_task: T004
+active_task: T005
 
 tasks:
   - id: T001
@@ -569,7 +569,7 @@ tasks:
   - id: T004
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Stand up demos/vue-official from the official scaffold and add the Vue row to the e2e activation matrix, asserting S1/S2/S3 equality with the existing three."
     allowed_files: []
@@ -581,12 +581,79 @@ tasks:
     constraints:
       - "Official scaffold as it ships. No hand-rolled SSR build."
       - "Do not weaken any existing activation-neutrality check."
-    receipt: null
+    pm_error_on_this_card: >-
+      THE PM SHIPPED THIS CARD WITH allowed_files: [] AND verify: []. T002 supplied the full
+      envelope and the PM wrote it into T003's card and not this one. The Worker DERIVED the
+      envelope from the dispatch text plus the verify guards - which pin exactly what must not
+      change - rather than stopping, and every file it touched is inside that derived envelope. PM
+      reviewed the changed_files list and confirms it. Recording this as a PM defect rather than a
+      Worker deviation: a card whose allowed_files is empty cannot enforce anything, and the only
+      reason this was safe is that the guards were specific enough to substitute.
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 2
+      summary: >-
+        Stood up demos/vue-official from create-vite-extra@5.0.2 template-ssr-vue-ts (sha256
+        5dcadd5a...) and added the FIFTH e2e row. pnpm e2e GREEN WITH FIVE ROWS, all observations
+        equal. PM verified: scripts/e2e.mjs officialDemos carries vue at activation hydrate, the
+        contract's hydrate arm is 'react'|'solid'|'svelte'|'vue', and both tables remain total
+        Readonly<Record<...>>. Provenance recorded as a mechanical PER-FILE diff against the packed
+        tarball - 5 byte-identical, 7 dropped (all template demo content), 7 added (instrument plus
+        emitted output), 9 modified with each delta justified. The server.js -> ssr-handler.js
+        extraction is the incumbent delta react-official already made, RE-VERIFIED AT HEAD rather
+        than inherited from T002.
+      three_required_measurements_all_taken: >-
+        servedClientEntry = /src/entry-client.ts, READ OUT OF THE SERVED PAYLOAD with 1 occurrence
+        per scenario and calibrateServedClientEntry on every scenario - NOT .jsx, because this is
+        the TypeScript variant of the shared template. expectedNavigations = 0, asserted exactly
+        then CALIBRATED: flipping it to 1 turns the lane red with "navigations: expected 1, observed
+        0". And the sink was proven to catch a REAL PLANTED MISMATCH - the box plants kit:2 ->
+        kit:999 in the actual S1 payload before any scenario and requires a warn-level [Vue warn]
+        hydration message, with FOUR negative arms all red including app.config.warnHandler = () =>
+        {}, which is T002's named trap.
+      refutes_T002_ruling_2_reopen_trigger: >-
+        vue-tsc DOES NOT REACH THE PROP CONTRACT. T002 narrowed vue-tsc out of T003 on the ground
+        that the re-open trigger would fire at T004, where App.vue passes props to emitted
+        components. MEASURED AT BOTH checkJs SETTINGS: unknown prop GREEN, wrong-typed prop GREEN,
+        undefined identifier RED, wrong-typed typed-local RED. VUE IS WEAKER THAN SVELTE'S TABLE ON
+        TWO ROWS, because defineProps([...]) types every prop `any` (IR-8) AND Vue falls undeclared
+        props through to $attrs. Not closable by a setting; the Worker did not invent types.
+        checkJs: true buys ZERO coverage and costs exactly the noise class the Solid lane predicts.
+        THIS STRENGTHENS IR-8: three lanes have now independently failed to close the same hole.
+      refines_the_M2_premise: >-
+        Bubbling is real and now measured end-to-end (data-trace-submit,data-trace-bubble both
+        fire), but it is NOT LOAD-BEARING for any e2e observation - the form handler's only effect
+        is onTrace('bubble', ...) and all five demos pass noTrace = () => {}. The dispatch called it
+        directly load-bearing; that was overstated. The _vts mechanism is still real and still
+        recorded.
+      caught_its_own_invalid_negative_arm: >-
+        INSTRUMENT RULE 2, self-applied. Moving `import './dev-sink'` below app.mount() left the
+        lane GREEN - because ESM HOISTS STATIC IMPORTS, so the mutation was semantically a NO-OP.
+        The valid arm (await import(...) after mount) IS red. src/entry-client.ts now says so,
+        because "FIRST, before mount()" naturally reads as if PLACEMENT enforced the ordering when
+        it does not. A mutation that does not mutate is the exact fault T018 audited the corpus for.
+      deviations:
+        - "pnpm-lock.yaml moved (+122, ADDITIVE ONLY, no existing resolution changed). A new workspace importer moves it unconditionally, so this was not avoidable by scope reduction. Genuinely new: vue-tsc@3.3.8 plus closure and @vue/tsconfig@0.9.1, both from the template's OWN devDependencies. vue still resolves to 3.5.40 - THE SAME BUILD packages/frameworks/vue measured against, so M4's version identity survives."
+        - "tsconfig.app.json gained allowJs: true / checkJs: false - a scaffold delta beyond 'wiring in emitted components and the sink'. REQUIRED: vue-tsc cannot read a <script setup> without lang=\"ts\" at all (TS7016 x3). Same pair and same reason as demos/svelte-official, but MEASURED at both settings here rather than inherited."
+        - "src/dev-sink.ts stops re-emitting to the real console ONLY on a page carrying a frameless-calibration meta. Without it the deliberate mismatch's console.error marks the box a CONTESTED PASS - which three-way-contract.ts already ruled out in those words for calibrateServedClientEntry. Scenario pages untouched; consoleErrors: 0 unchanged."
+        - "Three template pins changed: vite ^8.0.3 -> catalog: (8.0.16, matching react/solid-official), @types/node ^25.5.2 -> catalog: (avoids a second copy), @types/express dropped (nothing typechecks server.js)."
+        - "Kept public/favicon.svg rather than dropping public/ as react-official did - index.html still links it, so keeping it is the SMALLER delta."
+        - "scenarios.box.ts is not typechecked, consistent with all four incumbent lanes; covering it needs @async/witness as a dep the demo deliberately lacks. Flagged in the note, not fixed."
+      commands:
+        - {cmd: "npm pack create-vite-extra@5.0.2", status: pass, note: "sha256 5dcadd5aab5bc2c8667f2dd2d50a60a89d98652aafed1f0c4f006fe2e534b0d1"}
+        - {cmd: "pnpm check", status: pass}
+        - {cmd: "pnpm test", status: pass, note: "49 files / 850 tests"}
+        - {cmd: "pnpm test:browser", status: pass, note: "react 60, solid 49, svelte 13, vue 18"}
+        - {cmd: "pnpm lint", status: pass, note: "0 warnings 0 errors on 312 files"}
+        - {cmd: "vue-tsc -b --force", status: pass, note: "the template's OWN build gate"}
+        - {cmd: "pnpm e2e", status: pass, note: "FIVE demos x 3 scenarios, all observations equal"}
+        - {cmd: "git diff --exit-code -- packages/frameworks packages/compiler demos/{react,solid,svelte}-official/src demos/qwik/src", status: pass, note: "CLEAN - no existing lane moved"}
 
   - id: T005
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     objective: "Now that a Vue lane exists at a pinned version, re-run the idiom policy on at least one Vue sugar question and record whether Gate 1 and Gate 6 actually clear."
     inputs:
