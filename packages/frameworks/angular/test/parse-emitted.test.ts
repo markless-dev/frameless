@@ -1,12 +1,61 @@
-import { readFile } from 'node:fs/promises';
+import { readdirSync } from 'node:fs';
+import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
+import { tmpdir } from 'node:os';
 import { parseTemplate } from '@angular/compiler';
 import { resolve } from 'pathe';
 import { beforeAll, describe, expect, test } from 'vitest';
 import { templateDiagnostics } from '../src/emitter/index.ts';
 
 const packageRoot = resolve(import.meta.dirname, '..');
+const compilerGoldenRoot = resolve(packageRoot, '../../compiler/test/goldens');
+const generatedRoot = resolve(packageRoot, 'generated');
 const require = createRequire(import.meta.url);
+
+/** Numeric, so S10 sorts after S9 rather than between S1 and S2. */
+function byScenarioNumber(left: string, right: string): number {
+	return Number(/(\d+)/.exec(left)![1]) - Number(/(\d+)/.exec(right)![1]);
+}
+
+/**
+ * THE SCENARIO INVENTORY IS DERIVED, NOT RE-LITERALLED - and this file is the
+ * one where that mattered most.
+ *
+ * Until S4 landed, ARBITER 1 below ran over a hand-written `['S1','S2','S3']`
+ * while its own test name promised `every emitted template`. It did not go red
+ * when the corpus grew; it went on reporting SUCCESS over a corpus it had
+ * silently stopped covering, which is strictly worse than the dozen literals
+ * that announced themselves. And it is this arbiter - `frameless-angular-v1`
+ * T002 ruling 4 designated it PRIMARY - that exists to judge exactly the kind of
+ * template S4 was the repo's first instance of: a nested `@for` inside a `@for`
+ * produced by FORCED LOWERING.
+ *
+ * The derivation source is the compiler's ratified golden corpus, `s<n>-*.json`,
+ * which is INDEPENDENT of `generated/`: one is the IR this repo agreed to
+ * compile, the other is what the emitter actually wrote. Comparing them is a
+ * real cross-check rather than a restatement, and it is two-sidedly fail-closed
+ * - `preconditions` below watches both directions go red.
+ */
+function scenarioCorpus(goldenRoot = compilerGoldenRoot): string[] {
+	const files = readdirSync(goldenRoot)
+		.map((entry) => /^s(\d+)-[\w-]+\.json$/.exec(entry)?.[1])
+		.filter((digits): digits is string => digits !== undefined)
+		.map((digits) => `S${digits}.ts`)
+		.sort(byScenarioNumber);
+	// Fail LOUD rather than returning []. An empty derivation would make the
+	// inventory assertion agree with an empty `generated/` directory, which is the
+	// one way a derived list could be greener than the literal it replaced.
+	if (files.length === 0)
+		throw new Error(`no s<n>-*.json scenario goldens found in ${goldenRoot}`);
+	return files;
+}
+
+/** What the emitter actually wrote - the other side of the cross-check. */
+function emittedScenarios(root = generatedRoot): string[] {
+	return readdirSync(root)
+		.filter((entry) => /^S\d+\.ts$/.test(entry))
+		.sort(byScenarioNumber);
+}
 
 /**
  * Pull the inline template back out of an emitted module the same way the gate
@@ -46,20 +95,89 @@ function renderedText(template: string): string[] {
 	return found;
 }
 
+/**
+ * EVERY emitted scenario source, keyed by its file name, loaded from the derived
+ * inventory. The named bindings below are kept because the per-scenario rows
+ * cite constructs only one scenario ships; this map is what the WHOLE-CORPUS
+ * rows iterate, so a new scenario joins them without an edit here.
+ */
+const emittedSources = new Map<string, string>();
 let s1 = '';
 let s2 = '';
 let s3 = '';
 beforeAll(async () => {
-	[s1, s2, s3] = await Promise.all(
-		['S1', 'S2', 'S3'].map((name) =>
-			readFile(resolve(packageRoot, `generated/${name}.ts`), 'utf8'),
-		),
-	);
+	for (const file of scenarioCorpus())
+		emittedSources.set(file, await readFile(resolve(generatedRoot, file), 'utf8'));
+	s1 = emittedSources.get('S1.ts')!;
+	s2 = emittedSources.get('S2.ts')!;
+	s3 = emittedSources.get('S3.ts')!;
+});
+
+describe('preconditions', () => {
+	test('the derived inventory is the corpus, and the emitter wrote exactly it', () => {
+		const corpus = scenarioCorpus();
+		// THE FLOOR. Every scenario ratified so far must still be in the derivation.
+		// A lower bound, so S5 and later widen it with no edit here, while a golden
+		// that silently disappeared is red.
+		expect(corpus).toEqual(expect.arrayContaining(['S1.ts', 'S2.ts', 'S3.ts', 'S4.ts']));
+		expect(emittedScenarios()).toEqual(corpus);
+		// And the sources the arbiter below actually reads are those same files -
+		// a map built from a stale list would satisfy the row above and still feed
+		// the arbiter three of four.
+		expect([...emittedSources.keys()].sort(byScenarioNumber)).toEqual(corpus);
+		for (const [file, source] of emittedSources)
+			expect(source.length, file).toBeGreaterThan(0);
+	});
+
+	/**
+	 * CALIBRATION for the DERIVED inventory. A derived list nobody has watched go
+	 * red is not an instrument - and the literal it replaced would at least have
+	 * gone red on a missing file. Both directions are driven through the SAME
+	 * `scenarioCorpus()` and `emittedScenarios()` the row above calls, against
+	 * throwaway roots, so this measures the real comparison and not a lookalike.
+	 */
+	test('CALIBRATION: the derived inventory goes red on a missing and on an extra file', async () => {
+		const corpus = scenarioCorpus();
+		const root = await realpath(await mkdtemp(resolve(tmpdir(), 'frameless-ng-inventory-')));
+		try {
+			const goldens = resolve(root, 'goldens');
+			const generated = resolve(root, 'generated');
+			await mkdir(goldens);
+			await mkdir(generated);
+			for (const entry of readdirSync(compilerGoldenRoot))
+				await writeFile(resolve(goldens, entry), '{}');
+			expect(scenarioCorpus(goldens)).toEqual(corpus);
+
+			// MISSING: one emitted file short of the derived corpus.
+			for (const file of corpus.slice(0, -1)) await writeFile(resolve(generated, file), '//\n');
+			expect(emittedScenarios(generated)).not.toEqual(corpus);
+			await writeFile(resolve(generated, corpus.at(-1)!), '//\n');
+			expect(emittedScenarios(generated)).toEqual(corpus);
+			// EXTRA: a stray emitted scenario no golden declares.
+			await writeFile(resolve(generated, 'S99.ts'), '//\n');
+			expect(emittedScenarios(generated)).not.toEqual(corpus);
+
+			// And the same two directions on the DERIVATION side, so a golden that
+			// vanished or appeared cannot pass unnoticed either.
+			await rm(resolve(goldens, 's1-render-once.json'));
+			expect(scenarioCorpus(goldens)).not.toEqual(corpus);
+			await writeFile(resolve(goldens, 's1-render-once.json'), '{}');
+			await writeFile(resolve(goldens, 's99-planted.json'), '{}');
+			expect(scenarioCorpus(goldens)).not.toEqual(corpus);
+			// The degenerate case the throw exists for: an empty derivation must NOT
+			// quietly agree with an empty directory.
+			await rm(goldens, { recursive: true, force: true });
+			await mkdir(goldens);
+			expect(() => scenarioCorpus(goldens)).toThrow(/no s<n>-\*\.json scenario goldens/);
+		} finally {
+			await rm(root, { recursive: true, force: true });
+		}
+	});
 });
 
 /**
  * ARBITER 1 - `@angular/compiler`'s own `parseTemplate`, run as an EXACT EMPTY
- * error set over all three emitted templates.
+ * error set over EVERY emitted template in the derived corpus.
  *
  * `frameless-angular-v1` T002 ruling 4 makes it PRIMARY because it interrogates
  * this board's central risk directly: did FORCED LOWERING produce a template
@@ -70,12 +188,15 @@ beforeAll(async () => {
  */
 describe('arbiter 1: @angular/compiler parseTemplate', () => {
 	test('GREEN SIDE: every emitted template parses with an exactly empty error set', () => {
-		for (const [name, source] of [
-			['S1', s1],
-			['S2', s2],
-			['S3', s3],
-		] as const)
-			expect(templateDiagnostics(inlineTemplate(source), `${name}.html`), name).toEqual([]);
+		// ANTI-VACUITY, first: a map that failed to load would satisfy the loop
+		// below by iterating nothing, which is precisely the shape of failure this
+		// row spent three scenarios in.
+		expect([...emittedSources.keys()].sort(byScenarioNumber)).toEqual(scenarioCorpus());
+		for (const [file, source] of emittedSources) {
+			const template = inlineTemplate(source);
+			expect(template.length, `${file} has an empty inline template`).toBeGreaterThan(0);
+			expect(templateDiagnostics(template, `${file}.html`), file).toEqual([]);
+		}
 	});
 
 	/**
@@ -169,13 +290,10 @@ describe('MEASURED: Angular whitespace at 22.0.8 (M1)', () => {
 	});
 
 	test('the SHIPPED corpus renders no text with an untrimmed edge', () => {
-		for (const [name, source] of [
-			['S1', s1],
-			['S2', s2],
-			['S3', s3],
-		] as const)
+		expect([...emittedSources.keys()].sort(byScenarioNumber)).toEqual(scenarioCorpus());
+		for (const [file, source] of emittedSources)
 			for (const text of renderedText(inlineTemplate(source)))
-				expect(text, `${name} rendered ${JSON.stringify(text)}`).toBe(text.trim());
+				expect(text, `${file} rendered ${JSON.stringify(text)}`).toBe(text.trim());
 		// ANTI-VACUITY: the walk finds real text. A walk that stopped descending
 		// would pass the loop above by observing nothing.
 		expect(renderedText(inlineTemplate(s1))).toEqual(['hidden', 'increment']);

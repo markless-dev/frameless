@@ -10,11 +10,33 @@ type Trace = Array<[string, Record<string, unknown>]>;
  * fourth emitted component cannot appear without this lane noticing. A static
  * import list would silently keep passing while covering two thirds of the
  * corpus.
+ *
+ * `eager: true` is load-bearing beyond convenience: every match is compiled by
+ * the real Svelte plugin at module-import time, so a component that does not
+ * compile fails this FILE rather than an assertion inside it.
  */
 const modules = import.meta.glob('../generated/*.svelte', { eager: true }) as Record<
 	string,
 	{ readonly default: MountableComponent }
 >;
+
+/**
+ * THE EXPECTED INVENTORY IS DERIVED, NOT RE-LITERALLED - and in a BROWSER lane,
+ * where `node:fs` does not exist, so the derivation is a second `import.meta.glob`
+ * rather than a `readdirSync`.
+ *
+ * The source is the compiler's ratified golden corpus, and it is INDEPENDENT of
+ * `../generated`: one is the IR this repo agreed to compile, the other is what
+ * the emitter actually wrote. `eager: false` is deliberate - only the KEYS are
+ * needed, and Vite resolves those at build time without ever fetching a golden.
+ */
+const goldenModules = import.meta.glob('../../../compiler/test/goldens/s*.json');
+
+const EXPECTED_MODULES = Object.keys(goldenModules)
+	.map((path) => /\/s(\d+)-[\w-]+\.json$/.exec(path)?.[1])
+	.filter((digits): digits is string => digits !== undefined)
+	.map((digits) => `../generated/S${digits}.svelte`)
+	.sort();
 
 function component(name: string): MountableComponent {
 	const found = modules[`../generated/${name}.svelte`];
@@ -66,12 +88,20 @@ describe('preconditions', () => {
 	// Instrument rule 2. A lane that silently covered a stale or partial corpus,
 	// or that compiled the components with dev diagnostics stripped, would report
 	// green while enforcing nothing.
-	test('discovers exactly the three emitted scenario components', () => {
-		expect(Object.keys(modules).sort()).toEqual([
-			'../generated/S1.svelte',
-			'../generated/S2.svelte',
-			'../generated/S3.svelte',
-		]);
+	test('discovers exactly the emitted scenario corpus the compiler goldens declare', () => {
+		// THE FLOOR, asserted first: if the golden glob resolved to nothing this
+		// would compare [] to [] and pass while covering the whole corpus with
+		// nothing. Every scenario ratified so far must be in the derivation, and a
+		// later scenario widens it with no edit here.
+		expect(EXPECTED_MODULES).toEqual(
+			expect.arrayContaining([
+				'../generated/S1.svelte',
+				'../generated/S2.svelte',
+				'../generated/S3.svelte',
+				'../generated/S4.svelte',
+			]),
+		);
+		expect(Object.keys(modules).sort()).toEqual(EXPECTED_MODULES);
 	});
 
 	test('runs the emitted components in DEV mode, where Svelte diagnostics exist at all', () => {

@@ -1,4 +1,6 @@
-import { readFile } from 'node:fs/promises';
+import { readdirSync } from 'node:fs';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import type { EnrichedIR } from '@frameless/compiler';
 import { resolve } from 'pathe';
 import { describe, expect, test } from 'vitest';
@@ -29,11 +31,50 @@ function mutate(source: string, search: string | RegExp, replacement: string): s
 	);
 }
 
-const FIXTURES = [
-	['S1.vue', 's1-render-once.json'],
-	['S2.vue', 's2-keyed-todo.json'],
-	['S3.vue', 's3-event-form.json'],
-] as const;
+const generatedRoot = resolve(packageRoot, 'generated');
+
+/** Numeric, so S10 sorts after S9 rather than between S1 and S2. */
+function byScenarioNumber(left: string, right: string): number {
+	return Number(/(\d+)/.exec(left)![1]) - Number(/(\d+)/.exec(right)![1]);
+}
+
+/**
+ * THE FIXTURE TABLE IS DERIVED, NOT RE-LITERALLED.
+ *
+ * This table stopped at `s3-event-form.json`, which meant that when S4 landed NO
+ * standing test asserted its emitted bytes equal `formatEmitted(emit(golden))`.
+ * That freshness was proved ONCE, by regenerating and diffing by hand; nothing
+ * re-proved it per run, so the emitted S4 could have drifted from the emitter
+ * that claims to produce it and every lane would still have been green. Four
+ * more scenarios are queued, and a table hand-edited per scenario is that same
+ * hole four more times.
+ *
+ * The derivation source is the compiler's ratified golden corpus - `s<n>-*.json`
+ * - which is INDEPENDENT of `generated/`: one is the IR this repo agreed to
+ * compile, the other is what the emitter actually wrote. The two preconditions
+ * below compare them and watch both directions go red.
+ */
+function scenarioFixtures(goldenDir = compilerGoldenRoot): Array<readonly [string, string]> {
+	const table = readdirSync(goldenDir)
+		.filter((entry) => /^s\d+-[\w-]+\.json$/.test(entry))
+		.sort(byScenarioNumber)
+		.map((entry) => [`S${/^s(\d+)-/.exec(entry)![1]}.vue`, entry] as const);
+	// Fail LOUD rather than returning []. An empty table would emit zero freshness
+	// tests and the file would still report green, which is the one way a derived
+	// list could be greener than the literal it replaced.
+	if (table.length === 0)
+		throw new Error(`no s<n>-*.json scenario goldens found in ${goldenDir}`);
+	return table;
+}
+
+/** What the emitter actually wrote - the other side of the cross-check. */
+function emittedScenarios(directory = generatedRoot): string[] {
+	return readdirSync(directory)
+		.filter((entry) => /^S\d+\.vue$/.test(entry))
+		.sort(byScenarioNumber);
+}
+
+const FIXTURES = scenarioFixtures();
 
 async function emitted(file: string): Promise<string> {
 	return readFile(resolve(packageRoot, 'generated', file), 'utf8');
@@ -54,6 +95,60 @@ function templateOf(source: string): string {
 }
 
 describe('Vue 3 emitter', () => {
+	test('the derived fixture table is the corpus, and the emitter wrote exactly it', () => {
+		// THE FLOOR. Every scenario ratified so far must still be in the derivation.
+		// A lower bound, so S5 and later widen it with no edit here, while a golden
+		// that silently disappeared is red.
+		expect(FIXTURES.map(([file]) => file)).toEqual(
+			expect.arrayContaining(['S1.vue', 'S2.vue', 'S3.vue', 'S4.vue']),
+		);
+		// Two independent readings compared: the goldens this repo agreed to
+		// compile, and the files the emitter actually wrote.
+		expect(emittedScenarios()).toEqual(FIXTURES.map(([file]) => file));
+	});
+
+	/**
+	 * CALIBRATION for the DERIVED table. A derived list nobody has watched go red
+	 * is not an instrument - and the literal it replaced at least went red when a
+	 * golden it named disappeared. Both directions run through the SAME
+	 * `scenarioFixtures()` and `emittedScenarios()` the row above calls, against
+	 * throwaway roots.
+	 */
+	test('CALIBRATION: the derived table goes red on a missing and on an extra file', async () => {
+		const files = FIXTURES.map(([file]) => file);
+		const temporary = await mkdtemp(resolve(tmpdir(), 'frameless-vue-fixtures-'));
+		try {
+			const goldens = resolve(temporary, 'goldens');
+			const generated = resolve(temporary, 'generated');
+			await mkdir(goldens);
+			await mkdir(generated);
+			for (const entry of readdirSync(compilerGoldenRoot))
+				await writeFile(resolve(goldens, entry), '{}');
+			expect(scenarioFixtures(goldens)).toEqual(FIXTURES);
+			// MISSING, on the emitted side: one file short of the derived table.
+			for (const file of files.slice(0, -1)) await writeFile(resolve(generated, file), '//\n');
+			expect(emittedScenarios(generated)).not.toEqual(files);
+			await writeFile(resolve(generated, files.at(-1)!), '//\n');
+			expect(emittedScenarios(generated)).toEqual(files);
+			// EXTRA, on the emitted side: a stray scenario no golden declares.
+			await writeFile(resolve(generated, 'S99.vue'), '//\n');
+			expect(emittedScenarios(generated)).not.toEqual(files);
+			// And both directions on the DERIVATION side, so a golden that vanished
+			// or appeared cannot pass unnoticed either.
+			await rm(resolve(goldens, FIXTURES[0]![1]));
+			expect(scenarioFixtures(goldens)).not.toEqual(FIXTURES);
+			await writeFile(resolve(goldens, 's99-planted.json'), '{}');
+			expect(scenarioFixtures(goldens).map(([file]) => file)).toContain('S99.vue');
+			// The degenerate case the throw exists for: an empty derivation must NOT
+			// quietly agree with an empty directory.
+			await rm(goldens, { recursive: true, force: true });
+			await mkdir(goldens);
+			expect(() => scenarioFixtures(goldens)).toThrow(/no s<n>-\*\.json scenario goldens/);
+		} finally {
+			await rm(temporary, { recursive: true, force: true });
+		}
+	});
+
 	test('CALIBRATION: the mutation constructor is loud on a non-mutant', async () => {
 		const source = await emitted('S1.vue');
 		expect(() => mutate(source, 'text that is not in the emitted S1', 'x')).toThrow(

@@ -1,3 +1,4 @@
+import { readdirSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { compileTemplate, parse, version as compilerVersion } from '@vue/compiler-sfc';
@@ -9,7 +10,35 @@ import { COMPILE_MODES, compileDiagnostics } from '../src/emitter/index.ts';
 import { discoverGeneratedFiles } from '../src/gate/index.ts';
 
 const packageRoot = resolve(import.meta.dirname, '..');
+const compilerGoldenRoot = resolve(packageRoot, '../../compiler/test/goldens');
 const require = createRequire(import.meta.url);
+
+/**
+ * THE SCENARIO INVENTORY IS DERIVED, NOT RE-LITERALLED - and here it is derived
+ * SYNCHRONOUSLY, because `test.each` needs its rows at collection time while
+ * `discoverGeneratedFiles()` is async and only resolves in `beforeAll`.
+ *
+ * That timing is exactly why this lane could be half-blind without looking it:
+ * until S4 landed, the `test.each` list was a second hand-maintained literal
+ * alongside the inventory assertion, so a new emitted component would have been
+ * DISCOVERED and then never compiled. Both now come from the compiler's ratified
+ * golden corpus, and the assertion below re-checks the async discovery against
+ * the same derivation, so the two sources have to agree.
+ */
+function scenarioCorpus(extension: string, directory = 'generated'): string[] {
+	const files = readdirSync(compilerGoldenRoot)
+		.map((entry) => /^s(\d+)-[\w-]+\.json$/.exec(entry)?.[1])
+		.filter((digits): digits is string => digits !== undefined)
+		.map((digits) => `${directory}/S${digits}.${extension}`)
+		.sort();
+	// Fail LOUD rather than returning []. An empty derivation would silently
+	// produce zero `test.each` rows, which vitest reports as a passing file.
+	if (files.length === 0)
+		throw new Error(`no s<n>-*.json scenario goldens found in ${compilerGoldenRoot}`);
+	return files;
+}
+
+const EMITTED_SCENARIOS = scenarioCorpus('vue');
 
 function mutate(source: string, search: string | RegExp, replacement: string): string {
 	const mutated = source.replace(search, replacement);
@@ -60,15 +89,27 @@ describe('emitted Vue compiles clean at the resolved version', () => {
 		expect(runtimeVersion, `resolved vue ${runtimeVersion}`).toMatch(/^3\.5\./);
 	});
 
-	test('covers exactly the three scenario components', () => {
-		expect(files).toEqual(['generated/S1.vue', 'generated/S2.vue', 'generated/S3.vue']);
+	test('covers exactly the emitted scenario corpus, and every row below is one of them', () => {
+		// The async discovery and the sync `test.each` derivation are separate
+		// readings of two different directories. Asserting they agree is what stops
+		// this lane compiling a stale list while reporting green.
+		expect(files).toEqual(EMITTED_SCENARIOS);
+		// THE FLOOR, so a derivation that quietly lost a scenario cannot pass.
+		expect(EMITTED_SCENARIOS).toEqual(
+			expect.arrayContaining([
+				'generated/S1.vue',
+				'generated/S2.vue',
+				'generated/S3.vue',
+				'generated/S4.vue',
+			]),
+		);
 		// Four modes, and the list is pinned so a silently narrowed matrix is a red
 		// test: `ssr` selects @vue/compiler-ssr instead of @vue/compiler-dom, which
 		// is a different code generator, not a flag.
 		expect(COMPILE_MODES).toHaveLength(4);
 	});
 
-	test.each(['generated/S1.vue', 'generated/S2.vue', 'generated/S3.vue'])(
+	test.each(EMITTED_SCENARIOS)(
 		'%s compiles with an EXACT EMPTY diagnostic set in every mode',
 		(file) => {
 			const source = sources.get(file)!;

@@ -48,6 +48,43 @@ function emittedFiles(): string[] {
 	});
 }
 
+/**
+ * THE EXPECTED INVENTORY IS DERIVED, NOT A HAND-EDITED COUNT.
+ *
+ * This precondition used to read `expect(files.length).toBe(11)`, and the day S4
+ * landed it failed with `expected 12 to be 11`. Bumping that number would have
+ * been the cheapest possible edit and would have measured nothing: a COUNT
+ * cannot tell "the fourth scenario was emitted" from "a fifth composition module
+ * appeared and a scenario went missing". The assertion is now on the SET, and
+ * both halves of it come from sources INDEPENDENT of the directories being
+ * listed:
+ *
+ *   - the scenarios, from the compiler's ratified goldens (`s<n>-*.json`);
+ *   - the composition modules, from the fixtures they are emitted from
+ *     (`test/composition-fixtures/*.tsrx`).
+ *
+ * So a missing emitted file, a stray extra one, and a renamed one are each red,
+ * and S5..S8 widen it with no edit here.
+ */
+const COMPILER_GOLDEN_ROOT = resolve(PACKAGE_ROOT, '../../compiler/test/goldens');
+
+function expectedEmittedFiles(): string[] {
+	const scenarios = readdirSync(COMPILER_GOLDEN_ROOT)
+		.map((entry) => /^s(\d+)-[\w-]+\.json$/.exec(entry)?.[1])
+		.filter((digits): digits is string => digits !== undefined)
+		.map((digits) => resolve(PACKAGE_ROOT, `generated/S${digits}.jsx`));
+	const composition = readdirSync(resolve(PACKAGE_ROOT, 'test/composition-fixtures'))
+		.filter((entry) => entry.endsWith('.tsrx'))
+		.map((entry) =>
+			resolve(PACKAGE_ROOT, `generated-composition/${entry.slice(0, -'.tsrx'.length)}.jsx`),
+		);
+	// Fail LOUD rather than returning []. Two empty directories comparing equal is
+	// the one way a derived inventory could be greener than the count it replaced.
+	if (scenarios.length === 0 || composition.length === 0)
+		throw new Error('emitted-inventory derivation found no scenario goldens or no fixtures');
+	return [...scenarios, ...composition].sort();
+}
+
 /** Type-check `files`, optionally substituting the contents of one of them. */
 function diagnose(files: string[], overrides: Record<string, string> = {}): ts.Diagnostic[] {
 	const host = ts.createCompilerHost(compilerOptions, true);
@@ -70,8 +107,26 @@ const format = (diagnostics: ts.Diagnostic[]) =>
 describe('React emitted output type-checks', () => {
 	const files = emittedFiles();
 
-	test('every committed emitted component is discovered', () => {
-		expect(files.length).toBe(11);
+	test('every committed emitted component is discovered, and tsc is given all of them', () => {
+		const expected = expectedEmittedFiles();
+		// THE FLOOR, so a derivation that quietly lost a scenario cannot pass.
+		expect(expected).toEqual(
+			expect.arrayContaining(
+				['S1', 'S2', 'S3', 'S4'].map((name) => resolve(PACKAGE_ROOT, `generated/${name}.jsx`)),
+			),
+		);
+		expect([...files].sort()).toEqual(expected);
+		// AND the program tsc actually built covers them. `files` is what is handed
+		// to `diagnose()`; this is what proves the compiler took the whole set rather
+		// than resolving a subset.
+		const program = ts.createProgram(files, compilerOptions);
+		expect(
+			program
+				.getSourceFiles()
+				.map((source) => source.fileName)
+				.filter((name) => name.startsWith(`${PACKAGE_ROOT}/generated`))
+				.sort(),
+		).toEqual(expected);
 	});
 
 	// TypeScript cannot express some correct-at-runtime JS without annotations.
