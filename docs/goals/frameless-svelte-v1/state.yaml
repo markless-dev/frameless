@@ -97,7 +97,7 @@ visual_board:
     url: null
     command: "npx goalbuddy board docs/goals/frameless-svelte-v1"
 
-active_task: T009
+active_task: T999
 
 tasks:
   - id: T001
@@ -853,7 +853,7 @@ tasks:
   - id: T009
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Wire eslint-plugin-svelte into the Svelte gate as a third-party arbiter, matching react, solid and qwik."
     attempt_1_blocked_and_cleared: >-
@@ -904,12 +904,80 @@ tasks:
       - "T005 RULED THIS A REAL GAP: react, solid and qwik gates each import a third-party plugin at src/gate/index.ts:5; the Svelte gate imports only parse and frameless-owned policies. It is NOT a Gate 1 gap - compile() IS the framework's own toolchain at the pin - it is a gap in ARBITER INDEPENDENCE and in the forced-lowering evidence base."
       - "The missing class is 'compiles clean and is WRONG', which is not hypothetical: it is defect 1, which eslint-plugin-qwik's no-async-prevent-default named and compile() could never have caught."
       - "Follow the qwik gate's precedent for how a third-party plugin's violations are surfaced and prefixed - eslint: is reserved for third-party arbiters, frameless/ for our own."
-    receipt: null
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      summary: >-
+        Wired eslint-plugin-svelte in as a third-party arbiter, closing the arbiter-independence gap
+        T005 named. configs.recommended used WHOLE (it carries files, parser and processor); 34 of
+        its 37 enabled rules applied, 3 omitted EXPLICITLY with reasons. checkSources is now async;
+        only test/gate.test.ts had to move, because node-runtime.ts already awaited and was already
+        typed Promise<GateResult>. All four verify commands passed on the FIRST attempt. PM
+        independently re-ran pnpm lint (0 warnings, 0 errors) and the svelte package suite (65
+        passed, 3 files) and read the shipped constants and tests.
+      the_finding_that_changed_the_design: >-
+        svelte/comment-directive - the plugin's own MARKUP implementation of <!-- eslint-disable -->
+        - is NOT reached by ESLint's allowInlineConfig:false. MEASURED on the unkeyed-{#each} mutant
+        at 3.22.0: rule ON with one <!-- eslint-disable svelte/require-each-key --> in the markup,
+        arbiter reported []; rule OFF, same mutant reported the violation. So EMITTED TEXT COULD
+        HAVE SILENCED THE ARBITER JUDGING IT. Omitted as a deliberate strengthening - the applied
+        set can only report MORE, and no rule depends on it - and pinned by a two-vehicle
+        suppression test named "emitted text cannot silence the arbiter that is judging it"
+        (test/gate.test.ts:760).
+      corpus_clean_no_finding_against_the_emitter: >-
+        S1/S2/S3 draw 0 messages from all 34 applied rules and generated/ is byte-unchanged. The
+        pre-measurement from the blocked attempt held.
+      require_each_key_is_why_the_arbiter_exists: >-
+        The unkeyed-{#each} mutant draws EXACTLY ONE violation across the whole gate - the upstream
+        one. compile() is silent, every frameless policy is silent, and the IR carries todo.id
+        throughout. That is precisely T005's missing "compiles clean and is WRONG" class, and it is
+        the Svelte twin of defect 1. Named as such at test/gate.test.ts:586.
+      independent_confirmation_of_T003: >-
+        svelte/no-unused-svelte-ignore is SILENT on S3's two shipped codes while reporting a third
+        PLANTED one on S1. That rule re-runs svelte's own compiler and computes its own unused-ignore
+        set, so this is INDEPENDENT THIRD-PARTY CONFIRMATION of T003's two-sided suppression claim -
+        upstream agreeing, by a mechanism this repo did not write, that both codes really fire and
+        really are suppressed.
+      the_four_silent_rules_resolved: >-
+        Resolved as MALFORMED PLANTS, not type-gated - none imports ts-utils or calls
+        getTypeScriptTools, and all four fire on well-formed plants that now ship as tests. This is
+        instrument rule 4 applied to the blocked attempt's own measurement: it recorded them as
+        "silent, cause undetermined" rather than claiming coverage, and the implementing pass
+        determined the cause instead of inheriting the ambiguity. no-dom-manipulating additionally
+        only triggers on bind:this={id}, a form no-bindable rejects one policy earlier.
+      omissions_are_explicit_not_silent:
+        - "svelte/comment-directive - suppression vector, see above. Strictly strengthening."
+        - "svelte/no-unused-props - REQUIRES-TYPES, mirroring QWIK_ESLINT_RULES_REQUIRING_TYPES."
+        - "svelte/require-event-dispatcher-types - inapplicable at the pin; its own meta declares conditions svelteVersions ['3/4'] and it returns early without <script lang=\"ts\">."
+      applied_set_is_derived_not_transcribed: >-
+        SVELTE_ESLINT_RULES_APPLIED is READ OFF configs.recommended
+        (src/gate/index.ts:151, from recommendedRuleSeverities()) rather than hand-listed, so an
+        upstream rule ADDITION arrives automatically and a REMOVAL turns a test red. That is
+        instrument rule 4 designed into the constant rather than asserted about it.
+      prefix_ruling: >-
+        eslint:<ruleId> for third-party rules; the 8 frameless-owned policies stay BARE. Reason
+        given: they are hand-written walkers, not eslint rules, so a frameless/ prefix would imply a
+        plugin that does not exist. Qwik precedent permits either.
+      no_note_written_deliberately: >-
+        Did NOT write notes/T009-lint-arbiter.md although allowed. Every required record - the
+        omission list with reasons, the silent-rule resolution, the comment-directive measurement -
+        lives in EXPORTED, TEST-PINNED CODE instead, where it cannot go stale. Per T001's own
+        withdrawn-citation lesson, no receipt claim cites a note that does not exist.
+      changed_files:
+        - packages/frameworks/svelte/src/gate/index.ts
+        - packages/frameworks/svelte/test/gate.test.ts
+      commands:
+        - {cmd: "pnpm check", status: pass}
+        - {cmd: "pnpm test", status: pass}
+        - {cmd: "pnpm lint", status: pass, note: "PM re-ran: 0 warnings, 0 errors, 270 files"}
+        - {cmd: "git diff --exit-code -- packages/frameworks/svelte/generated", status: pass, note: "emitted output byte-unchanged"}
+        - {cmd: "pnpm --dir packages/frameworks/svelte test", status: pass, note: "PM re-ran: 65 passed, 3 files"}
 
   - id: T999
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     objective: "Audit whether the Svelte lane satisfies the oracle and the full owner outcome."
     inputs:

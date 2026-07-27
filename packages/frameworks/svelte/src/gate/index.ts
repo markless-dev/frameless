@@ -1,5 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
+import { ESLint } from 'eslint';
+import sveltePlugin from 'eslint-plugin-svelte';
 import { parse } from 'svelte/compiler';
 import type { EnrichedIR } from '@frameless/compiler';
 import { dirname, normalize, relative, resolve } from 'pathe';
@@ -25,6 +27,10 @@ export type DossierRef =
 	| 'frameless-svelte-v1 T002 ruling 6'
 	// Qwik's artifact-required policy, transposed: fail closed on persistence.
 	| 'T002-qwik-architecture D8'
+	// The THIRD-PARTY arbiter. T005 ruled the missing eslint-plugin-svelte import a
+	// real gap in ARBITER INDEPENDENCE: every policy above encodes what WE decided,
+	// while these encode what the Svelte team decided.
+	| 'frameless-svelte-v1 T005 lint arbiter'
 	// The whitespace layout the template printer depends on, MEASURED at 5.56.8.
 	| 'frameless-svelte-v1 T003 measurement 3';
 
@@ -59,6 +65,141 @@ function persistenceArtifactPolicy() {
 	return policy as typeof policy & { readonly requiresArtifact: true };
 }
 
+// ---------------------------------------------------------------------------
+// the third-party arbiter (T005)
+// ---------------------------------------------------------------------------
+
+/**
+ * THE GAP THIS CLOSES, in T005's words: the react, solid and qwik gates each
+ * import their framework's own eslint plugin, and this one imported `parse` and
+ * frameless-owned policies only. It is NOT a Gate 1 gap - `compile()` IS the
+ * framework's own toolchain at the pin - it is a gap in ARBITER INDEPENDENCE.
+ * Every other policy in this file encodes what THIS REPO decided; the rules
+ * below encode what the Svelte team decided, and nothing here can quietly agree
+ * with the emitter because nothing here was written next to it.
+ *
+ * The missing class is "compiles clean and is WRONG". It is not hypothetical:
+ * defect 1 was named by eslint-plugin-qwik's `no-async-prevent-default` and
+ * `compile()` could never have caught it. The Svelte instance of that class is
+ * `svelte/require-each-key`: an unkeyed `{#each}` compiles with zero warnings,
+ * reconciles by index, and is WRONG - and neither `compile()` nor any policy
+ * above sees it, while the IR is carrying the key the whole time.
+ *
+ * WIRING. `configs.recommended` is a 4-entry flat-config array and is used
+ * whole, because its `svelte:base:setup-for-svelte` entry already carries the
+ * `files` globs, the `svelte-eslint-parser` instance and the processor. Picking
+ * rules out of it by hand would mean re-deriving that wiring, and
+ * `svelte-eslint-parser` is not directly resolvable from this package.
+ */
+export type OmittedEslintRule = {
+	readonly rule: string;
+	readonly reason: string;
+};
+
+/**
+ * EXPLICIT OMISSIONS. Qwik records the same thing as
+ * `QWIK_ESLINT_RULES_REQUIRING_TYPES`, for the same reason: a rule dropped
+ * silently is indistinguishable from a rule that never fired, and the second one
+ * is what an arbiter is supposed to make impossible.
+ *
+ * These three are turned OFF explicitly rather than left on-and-silent, because
+ * an applied rule that CANNOT fire is a green vacuum sitting inside the applied
+ * set. Everything not named here stays exactly as `recommended` set it.
+ */
+export const SVELTE_ESLINT_RULES_OMITTED: readonly OmittedEslintRule[] = [
+	{
+		rule: 'svelte/no-unused-props',
+		reason:
+			"REQUIRES TYPE INFORMATION - the qwik gate's *_REQUIRING_TYPES class exactly. lib/rules/no-unused-props.js calls getTypeScriptTools(context) and returns an empty visitor when there is no TypeScript program, so on plain emitted .svelte it is silent BY CONSTRUCTION rather than by verdict. Unblocked by the same thing that unblocks qwik's two: a tsconfig covering emitted output, at which point it moves back into the applied set.",
+	},
+	{
+		rule: 'svelte/require-event-dispatcher-types',
+		reason:
+			"INAPPLICABLE AT THE PIN, on two independent axes. Its own meta declares conditions: [{ svelteVersions: ['3/4'] }], and svelte 5.56.8 is the pin; and lib/rules/require-event-dispatcher-types.js returns early unless a <script lang=\"ts\"> block is present, which this emitter never produces. It also needs a createEventDispatcher call, which is the Svelte 3/4 mechanism this emitter does not use.",
+	},
+	{
+		rule: 'svelte/comment-directive',
+		reason:
+			"DISABLED DELIBERATELY, AND IT IS A STRENGTHENING, NOT A WEAKENING. This rule is the plugin's implementation of `<!-- eslint-disable -->` inside markup, and ESLint's own allowInlineConfig: false does NOT reach it. MEASURED at eslint-plugin-svelte 3.22.0 on the unkeyed-{#each} mutant: with this rule ON and one `<!-- eslint-disable svelte/require-each-key -->` in the markup the arbiter reported NOTHING; with it OFF the same mutant reported svelte/require-each-key. Emitted TEXT silencing the arbiter that is judging it is the one thing a gate over generated output must not permit. Off, no message can be suppressed, so the applied set can only ever report MORE. Nothing depends on it: svelte/no-unused-svelte-ignore computes its own unused set by re-running svelte's compiler.",
+	},
+];
+
+const OMITTED_ESLINT_RULES = new Set(SVELTE_ESLINT_RULES_OMITTED.map((entry) => entry.rule));
+
+/**
+ * The rule ids `configs.recommended` actually leaves ENABLED, read off the config
+ * itself rather than transcribed. Transcribing would freeze the set at the
+ * version that was read: a rule added to `recommended` in a later
+ * eslint-plugin-svelte would then be silently absent, which is the same failure
+ * the omission list above exists to prevent, one level up.
+ *
+ * Later entries win, exactly as flat config resolves them - `recommended` turns
+ * core `no-inner-declarations` and `no-self-assign` OFF in its base entry and
+ * replaces the first with `svelte/no-inner-declarations`.
+ */
+function recommendedRuleSeverities(): Map<string, unknown> {
+	const severities = new Map<string, unknown>();
+	for (const entry of sveltePlugin.configs.recommended as ReadonlyArray<{
+		readonly rules?: Readonly<Record<string, unknown>>;
+	}>)
+		for (const [rule, severity] of Object.entries(entry.rules ?? {}))
+			severities.set(rule, severity);
+	return severities;
+}
+
+/** Every `recommended` rule this gate actually runs, sorted. */
+export const SVELTE_ESLINT_RULES_APPLIED: readonly string[] = [...recommendedRuleSeverities()]
+	.filter(([rule, severity]) => severity !== 'off' && !OMITTED_ESLINT_RULES.has(rule))
+	.map(([rule]) => rule)
+	.sort();
+
+let cachedEslint: ESLint | undefined;
+function makeEslint(): ESLint {
+	cachedEslint ??= new ESLint({
+		cwd: PACKAGE_ROOT,
+		overrideConfigFile: true,
+		// Emitted output must not be able to configure the gate that reads it.
+		allowInlineConfig: false,
+		overrideConfig: [
+			...(sveltePlugin.configs.recommended as never[]),
+			{
+				files: ['**/*.svelte'],
+				rules: Object.fromEntries(
+					SVELTE_ESLINT_RULES_OMITTED.map((entry) => [entry.rule, 'off']),
+				),
+			} as never,
+		],
+	});
+	return cachedEslint;
+}
+
+/**
+ * `eslint:` marks a THIRD-PARTY arbiter, following the qwik gate. The eight
+ * frameless-owned policies in this file keep their BARE ids: unlike qwik's, they
+ * are not eslint rules at all - they are hand-written walkers over svelte's own
+ * parse tree - so a `frameless/` prefix would imply a plugin that does not exist.
+ * The distinction the prefix carries is "who decided this", and here it is
+ * carried by presence versus absence of `eslint:`.
+ */
+function eslintPolicyId(ruleId: string | null | undefined): string {
+	return `eslint:${ruleId ?? 'parse'}`;
+}
+
+async function eslintViolations(file: string, source: string): Promise<GateViolation[]> {
+	const [result] = await makeEslint().lintText(source, {
+		filePath: resolve(PACKAGE_ROOT, file),
+		warnIgnored: false,
+	});
+	return (result?.messages ?? []).map((message) =>
+		violation(file, eslintPolicyId(message.ruleId), message.message, message.line ?? null),
+	);
+}
+
+const ESLINT_POLICIES = SVELTE_ESLINT_RULES_APPLIED.map((rule) => ({
+	id: `eslint:${rule}`,
+	dossierRef: 'frameless-svelte-v1 T005 lint arbiter' as const,
+}));
+
 export const SVELTE_GATE_POLICIES = [
 	{ id: 'generated-header', dossierRef: 'frameless-svelte-v1 T002 ruling 6' },
 	{ id: 'no-legacy-event-directive', dossierRef: 'frameless-svelte-v1 T002 ruling 3' },
@@ -75,6 +216,7 @@ export const SVELTE_GATE_POLICIES = [
 		dossierRef: 'frameless-svelte-v1 T005 baseline form inventory',
 	},
 	persistenceArtifactPolicy(),
+	...ESLINT_POLICIES,
 ] as const satisfies readonly GatePolicy[];
 
 const POLICIES = new Map<string, GatePolicy>(
@@ -94,7 +236,14 @@ function violation(
 	return {
 		file,
 		policy,
-		dossierRef: POLICIES.get(policy)?.dossierRef ?? 'frameless-svelte-v1 T002 ruling 6',
+		dossierRef:
+			POLICIES.get(policy)?.dossierRef ??
+			// `eslint:parse` is the only unpublished eslint policy: it is what a
+			// message with no ruleId becomes, which is a parser failure rather than a
+			// rule verdict. It still belongs to the arbiter.
+			(policy.startsWith('eslint:')
+				? 'frameless-svelte-v1 T005 lint arbiter'
+				: 'frameless-svelte-v1 T002 ruling 6'),
 		message,
 		line,
 	};
@@ -792,17 +941,24 @@ export async function discoverGeneratedFiles(
 	return (await collectSvelteFiles(cwd, options.directory ?? 'generated')).sort();
 }
 
-export function checkSources(
+/**
+ * ASYNC because `ESLint.lintText` is. The change is confined to this package and
+ * its test: `packages/cli/src/node-runtime.ts` already declares `checkSources`
+ * as returning `Promise<GateResult>` and already awaits it, and `src/index.ts`
+ * only re-exports.
+ */
+export async function checkSources(
 	entries: ReadonlyArray<{
 		readonly file: string;
 		readonly source: string;
 		readonly artifact?: EnrichedIR;
 	}>,
-): GateResult {
+): Promise<GateResult> {
 	const violations: GateViolation[] = [];
 	const unevaluatedPolicies = new Set<string>();
 	for (const { file, source, artifact } of entries) {
 		violations.push(...sourceViolations(file, source));
+		violations.push(...(await eslintViolations(file, source)));
 		const artifactViolations = artifact ? persistenceViolations(file, artifact) : undefined;
 		if (artifactViolations) violations.push(...artifactViolations);
 		else unevaluatedPolicies.add('persistence-render-lowering');
