@@ -26,8 +26,14 @@ goal:
     Binding text, verbatim: "A lane discharges ONLY the Gate 1 absent-framework deferral and the
     Gate 6 no-lane deferral. It does NOT touch G2, G3, G4 or G5, and it does NOT satisfy the
     version corollary's second conjunct." So landing this lane clears Gate 1 and Gate 6 for this
-    framework's sugar and NOTHING else. Every version-gated sugar ruling on this board must DEFER
-    on IR-4 grounds and say so. Recorded by the PM on 2026-07-27.
+    framework's sugar and NOTHING else. CORRECTED 2026-07-27 by frameless-svelte-v1 T999, which
+    caught the PM's original closing sentence contradicting the verbatim quote two lines above it:
+    IR-4 may NOT be invoked as a blocker before G2-G5 have been scored against a real emitter. A
+    version-gated sugar that FAILs G2 or G5 is DENIED, not deferred - T005 ruled worked example 6
+    exactly that way, and its own dissent predicts Vue's defineModel is DENIED at G2, meaning IR-4
+    was never its blocker. The withdrawn sentence read "Every version-gated sugar ruling on this
+    board must DEFER on IR-4 grounds and say so", which would have manufactured a DEFERRED where a
+    DENIED is correct.
   s3_contract_changed_option_d: >-
     demos/react-official/three-way-contract.ts now reads S3's `text` observation from the SERVED
     PAYLOAD (served.text), not the post-activation live DOM, and `served: EnvironmentResponse` is a
@@ -39,12 +45,16 @@ goal:
     demos/svelte-official is a landed 4th e2e lane and docs/goals/frameless-svelte-v1 is the closest
     prior board. Read both before planning. pnpm e2e is green with four rows, all observations equal.
   instrument_rules: >-
-    THREE STANDING CONSTRAINTS added by T010, full text in goal.md. This board adds four new
+    FOUR STANDING CONSTRAINTS added by T010, full text in goal.md. This board adds four new
     instruments and four of six findings on the defects goal were instrument faults. (1) Two-variable
     triangulation before any finding is filed - and a finding that reproduces on a stock official
     scaffold with none of our code is evidence the TEST is unfair, not that the framework is broken.
     (2) Every instrument asserts its own preconditions. (3) Two-sided calibration for harnesses, not
-    only gates - a settle loop that cannot throw is not a settle loop.
+    only gates - a settle loop that cannot throw is not a settle loop. (4) An instrument that
+    establishes a SET or issues a VERDICT must be calibrated against a KNOWN MEMBER - plant an
+    instance a scan should find, read a status field on a case whose true value you already know,
+    establish a green cell's variance before treating it as a verdict. NOT redundant with rule 2:
+    rule 2 would have a scan assert THAT IT RAN, not that it COVERED THE SHAPE IT NAMED.
   oracle:
     signal: "pnpm e2e includes an Angular row driving an official Angular scaffold at the pinned lockfile version, and its S1/S2/S3 observations are ASSERTED equal to demos/react-official, demos/solid-official, demos/qwik AND demos/svelte-official under the same matrix."
     cadence: "after each Worker package and at final audit"
@@ -104,7 +114,7 @@ visual_board:
     url: null
     command: "npx goalbuddy board docs/goals/frameless-angular-v1"
 
-active_task: T002
+active_task: T003
 
 tasks:
   - id: T001
@@ -240,7 +250,7 @@ tasks:
   - id: T002
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Ratify the Angular adapter contract, above all the handler-lowering architecture."
     inputs:
@@ -256,24 +266,237 @@ tasks:
       - "S1/S2/S3 scope for the first Worker package"
       - "IR gaps: must-close vs deferred"
       - "Exact Worker objective, allowed_files, verify, stop_if"
-    receipt: null
+    receipt:
+      result: done
+      decision: approved
+      harness: claude-code
+      full_outcome_complete: false
+      rationale: >-
+        Board PROCEEDS, re-sequenced at one boundary, not narrowed. Two of T001's load-bearing
+        findings did NOT survive checking, and the PM independently verified both overturns.
+      overturn_1_parseTemplate_PM_VERIFIED: >-
+        @angular/compiler@22.0.8 DOES export a single-file template oracle. compiler.d.ts:5197
+        declares parseTemplate(template, templateUrl, options?): ParsedTemplate and it IS in the
+        runtime value-export list at :6758, with errors: ParseError[] | null. No tsconfig, no
+        program. T001's "largest emitter-test-harness divergence on the board" is OVERTURNED - that
+        claim was true for TYPE checking (NgtscProgram) and false for GRAMMAR checking, which is
+        this board's actual central risk. PM RAN IT: typeof parseTemplate === 'function', a clean
+        template returns errors null, and a planted violation returns 1 error - so the two-sided
+        calibration the gate needs is already demonstrated.
+      overturn_2_corpus_count_PM_VERIFIED: >-
+        The corpus carries FIFTEEN event records, not 14. ir.records.events is 1 / 7 / 7; T001
+        recorded S3 as 6. PM re-counted from the goldens directly.
+      finding_3_policy_defect_reported_upward: >-
+        goal.md:13 AND docs/emitter-idiom-policy.md:28-31 both assert Angular template expressions
+        forbid ARROW FUNCTIONS, citing angular.dev. At 22.0.8 that is no longer safe to assert -
+        compiler.d.ts:1964 declares `class ArrowFunction extends AST`, the template-expression base
+        class, alongside TemplateLiteral, SpreadElement, RegularExpressionLiteral and
+        TypeofExpression. This does NOT reopen forced lowering: const/let and if remain absent from
+        the action grammar and there is NO UpdateExpression node at all, so S1's count++ stays
+        unexpressible. But the STATED REASON in two governing documents is partly stale. Recorded as
+        a T005 finding per the charter's own instruction, not a T003 work item.
+      ruling_1_build_governance: >-
+        The Angular lane is governed by angular.json plus the CLI and is EXEMPT from the vite
+        catalog BY CONSTRUCTION - there is no shared surface to pin, so the catalog is not violated,
+        it is INAPPLICABLE. ACCEPTABLE, DOES NOT BLOCK: the oracle is activation neutrality on
+        official tooling, and a vendored vite is what official Angular tooling IS. Blocking on it
+        would be blocking on the scaffold being official. The precedent is demos/qwik (a stock
+        scaffold owning its own pipeline, landed by the goal that exists to forbid hand-rolled
+        harnesses), NOT the Qwik vite pin.
+        WHAT THE REPO GIVES UP, stated plainly: (a) a vite CVE/bugfix bump in the catalog never
+        reaches the Angular lane - only an @angular/build release does; (b) the lane's vite version
+        is invisible at pnpm-workspace.yaml, so a reader of the catalog will believe the repo is on
+        vite 8 everywhere; (c) an @angular/build patch can move vite under the lane with no file in
+        this repo changing.
+        MITIGATION REQUIRED AND CHEAP: T004 ships an ASSERTED TOOLCHAIN FACT - read the RESOLVED
+        @angular/build's vendored vite version and assert it against a recorded literal. That is the
+        baseline-form-inventory discipline applied to the toolchain: the divergence becomes a
+        declared entry a test re-reads, so it goes RED on drift instead of drifting silently.
+        EXPLICITLY REFUSED: a pnpm.overrides entry forcing the Angular lane onto catalog vite - that
+        is a hand-rolled build harness by another name, replacing the version Angular tested against
+        with one it did not.
+      ruling_1b_typescript_two_populations: >-
+        The brief CONFLATED two populations. (a) demos/angular-official declares typescript ~6.0.x
+        OFF-CATALOG following demos/svelte-official verbatim and does NOT join the root tsc --noEmit;
+        ng build is its typecheck. Settled by precedent. (b) packages/frameworks/angular is OUR
+        TypeScript: it takes its own project pass and MUST NOT require TS>=6, guaranteed by a HARD
+        IMPORT CONSTRAINT - it may import @angular/compiler and the @angular-eslint leaves, and must
+        NOT import @angular/core, @angular/build or @angular/compiler-cli.
+        PM MEASUREMENT, the one the Judge required before dispatch: catalog TypeScript 5.9.3 parses
+        @angular/compiler 22.0.8 and @angular-eslint 22.1.0 declaration files CLEANLY - pnpm check
+        exit 0 with the packages installed. So NO tsconfig exclude and NO package-level typescript
+        pin are needed. The Judge pre-ruled both outcomes so no Worker would improvise; this is the
+        good one.
+      ruling_2_onTrace_is_an_Input_PM_VERIFIED: >-
+        @Output()/EventEmitter REFUSED. IR-2 DOES NOT BLOCK THE LANE. Three independent reasons,
+        decided by the CORPUS rather than by idiom. (1) The IR says callback -
+        ComponentPropExpression.kind 'callback' - while EnrichedEventRecord, the IR's actual event
+        concept, binds to a hostNodeId that onTrace does not have; emitting a prop as an output is
+        the emitter inventing a construct the IR does not declare. (2) THE CALL SIGNATURE DECIDES
+        IT: emit() takes ONE value, and the corpus calls onTrace with TWO and THREE positional
+        arguments with the DOM event third. PM VERIFIED against the goldens: onTrace('setup', {runs:
+        1}) and onTrace('change', { count }) are two-arg; onTrace('add', {id,title}, event) and nine
+        others are three-arg. An output forces an emitter-invented wrapper object no other lane has.
+        (3) Arity is VARIABLE within one corpus, so there is no non-arbitrary payload shape.
+        ON IDIOM VS CHEAPNESS, honestly: @Output() is idiomatic Angular for a component's OWN event;
+        onTrace is a caller-supplied observer threaded identically through four lanes, so "a
+        callback passed in is an input" is the framing that applies. The correct answer and the
+        cheap answer coincide here, which is worth saying because they often do not.
+      ruling_3a_lower_every_handler_unconditionally: >-
+        T001 says 13 of 14 need lowering with 2 inlinable. The Judge counts 15 records and up to SIX
+        inlinable by the letter of Angular 22's action grammar. THAT DISAGREEMENT IS THE RULING -
+        two careful readers of one corpus got 2 and 6, so "is this body inlinable?" is a judgement
+        call about a grammar boundary, and a judgement call inside an emitter is DRIFT. It is also
+        CONTENT-TRIGGERED: Gate 4 fails a content-recognized subset, and Gate 3's rider would demand
+        a fail-closed enumeration of every IR channel that injects statements - EnrichedEventRecord.handlers
+        AND ir.persistence, which injects __framelessWrite(...) into handler bodies DURING lowering.
+        An inlining rule reading the IR record would not see that injection and would inline a
+        handler that later grows a statement. Uniform lowering DELETES the question.
+      ruling_3b_names_and_collisions: >-
+        on<HostNodeId><EventName>, each segment upper-camelled from DECLARED IR fields verbatim
+        (h7 + input -> onH7Input). Keyed on (hostNodeId, eventName) - never contents, never a
+        counter. Deliberately NOT the IR id (event:N): an index shifts every downstream name when a
+        handler is inserted upstream, so a one-line source edit would rewrite the whole class.
+        COLLISIONS: unique across all three goldens, but the schema permits a duplicate, so the
+        emitter THROWS a named error rather than appending a suffix - a counter makes names depend
+        on record order and silently reintroduces the instability the scheme exists to prevent. A
+        planted-duplicate row must prove the throw fires; the corpus has ZERO natural instances, so
+        an uncalibrated green is vacuous.
+      ruling_3d_parameters_always_pass_never_infer: >-
+        Signature is on<Host><Event>(<enclosing @for variables, outermost first>, event: Event).
+        $event is passed to EVERY lowered method INCLUDING S1's increment which never reads it -
+        deciding otherwise requires inspecting the body, the same content trigger 3a refuses. Every
+        enclosing @for variable is passed always; that is a STRUCTURAL template fact, which is what
+        makes it admissible where a content fact would not be. Unused params do not fail pnpm check:
+        root tsconfig sets strict but NOT noUnusedParameters.
+      ruling_3e_the_event_rename_is_DISSOLVED_not_answered: >-
+        The brief called it a source transformation. IT IS NOT ONE, if the split is made in the
+        right place: the CLASS METHOD KEEPS THE IR'S OWN PARAMETER NAME `event` and its body is a
+        VERBATIM TRANSPLANT with nothing rewritten inside it, while the TEMPLATE CALL SITE passes
+        Angular's $event - (input)="onH7Input(todo, $event)". $event is not a rename of the author's
+        identifier; it is Angular's ONLY spelling for "the event at this binding site", appearing
+        only in the template, where the author's identifier never existed. The emitter chooses WHAT
+        TO PASS, not what was written.
+        CONSEQUENCES: Gate 3 is NOT engaged - no contents inspected. Gate 5 is NOT engaged either -
+        Angular sanctions exactly ONE way to reference the event at a binding, so the sanctioned set
+        is a singleton with no candidate and no baseline. The Judge DECLINES to fabricate gate
+        outcomes for a non-question.
+        The body-verbatim property is also what makes IR-5 FREE: S3's four syncPolicy bodies carry
+        event.preventDefault() which transplants unchanged into a resident SYNCHRONOUS method, so
+        the Qwik QRL-laziness failure has NO ANALOGUE.
+      ruling_4_arbiter_route_BOTH_in_T003: >-
+        Corrects the record TWICE - the PM's premise was wrong, and T001's correction is NOW ALSO
+        STALE: the Svelte gate today imports BOTH eslint-plugin-svelte AND svelte/compiler parse
+        (T009 landed). The shipped precedent is not two rival routes, it is BOTH ROUTES IN ONE GATE,
+        compiler-first.
+        (1) parseTemplate - REQUIRED, PRIMARY, asserted as an EXACT EMPTY error set over all three
+        templates with a mutation calibration proving red. It interrogates this board's central risk
+        directly: did forced lowering produce a template Angular's own parser accepts?
+        (2) @angular-eslint - REQUIRED, SECONDARY, SAME PACKAGE. Restores arbiter independence and
+        supplies the one class neither other instrument covers: "compiles clean and is WRONG".
+        PUT IN T003 RATHER THAN A T009-STYLE FOLLOW-UP DELIBERATELY, and against the Svelte board's
+        own sequencing, because Svelte deferred it and PAID TWICE - a blocked attempt on a missing
+        eslint runner, and a checkSources async refactor landing after the gate was written. Both
+        costs are now known and both are cheaper while the file is being written.
+        (3) NgtscProgram - REFUSED at T003, DEFERRED to T004's real ng build.
+        DIVISION OF LABOUR: parseTemplate answers "is this grammatical?", angular-eslint answers
+        "grammatical and still wrong?", T004's ng build answers "does it typecheck and AOT-compile?"
+      ruling_5_prop_types_FOLLOWING_precedent_not_setting_it: >-
+        strictTemplates genuinely covers more than svelte-check - it types $event at every lowered
+        call site and validates @for track, and both matter enormously here because 15 LOWERED CALL
+        SITES ARE THE RISK SURFACE. But it does NOT close the hole: an untyped @Input() is `any`,
+        and `any` defeats strictTemplates exactly as it defeats svelte-check. OUT OF SCOPE for T003 -
+        cross-target, and it needs an IR input that does not exist.
+        NOT A NEW DISCOVERY: packages/frameworks/react/test/emitted-typecheck.test.ts:14-16 ALREADY
+        records it as "deliberate scope, not laxity", citing frameless-testing-ci-v1 T005. So the
+        precedent is OLDER than the Svelte board. THREE INDEPENDENT RE-DERIVATIONS (Vue scout,
+        Angular scout, Vue judge as IR-8) ARE EVIDENCE THE DOCUMENTATION IS NOT REACHING THE BOARDS.
+        Route to a shared board; do not re-derive a fourth time. T003 owes the written record of the
+        limitation so a green is not over-read.
+      also_ruled:
+        - "withIncrementalHydration() IS OFF and the Activation union is NOT widened. A third kind is not a widening of the SAME claim (what Svelte T002 approved for servedClientEntry); it is a NEW claim with no counterpart in the other four lanes, so cross-lane equality would become untestable. If the scaffold enables it by default that is a FINDING AND A STOP, not a workaround."
+        - "Post-activation signal is a MEASUREMENT OBLIGATION on T004 with two-sided calibration. No Worker may reason it out. The marker must be set IMPERATIVELY in Angular's own signal, never as a template attribute binding - SSR would emit it and forbidInServedPayload would correctly fail. If both candidates prove unreliable the permitted repair is a STRONGER SIGNAL; raising a timeout is FORBIDDEN."
+        - "Dev-warning sink installs at the TOP of src/main.ts before bootstrapApplication and is REQUIRED, owed by T004 and NOT pushable down to T003 - NG0912/NG0913 are HYDRATION diagnostics and hydration only happens in the demo. witness 0.7.0 exposes consoleErrors only, so any T999 check phrased over them passes VACUOUSLY. provideBrowserGlobalErrorListeners() and ErrorHandler DI are NOT substitutes: they catch errors, these are warnings."
+        - "IR numbering reconciled. NONE of the seven blocks the lane - the same result Svelte reached, now with IR-2 RESOLVED rather than left conditional. IR-1 out of scope hard; IR-2 deferred per ruling 2; IR-3/IR-6 deferred, no instance; IR-4 deferred and NOT reopened; IR-5 no schema change and LIVE here (4 of S3's 7 records carry syncPolicy); IR-7 GUARD REQUIRED IN T003 - S1's derived is trivial and WILL pass, which is the definition of a green vacuum."
+      sequencing_one_boundary_moved: >-
+        packages/frameworks/angular is a NODE-ONLY package: no vitest browser lane, no playwright,
+        no root test:browser change. Svelte's T003 browser lane worked because vite-plugin-svelte
+        compiles .svelte in-process; Angular has no cheap equivalent, and @angular/build's vitest
+        integration would drag the vendored vite 7.3.6 into a workspace package alongside vite 8.
+        Keeping the Angular BUILD entirely out of packages/frameworks/angular is what GUARANTEES the
+        two vites never meet in one package - ruling 1 discharged STRUCTURALLY rather than by policy.
+        CONSEQUENCE TO RECORD, NOT HIDE: T003 ships goldens no Angular TYPE checker has seen, so
+        T004 carries real risk of finding emitter defects outside its own allowed_files - the pattern
+        that blocked Svelte T004. If T004 blocks on an emitter defect, the correct response is a
+        T004a emitter-repair package, NOT widening T004's allowed_files.
+      dissent:
+        - "UNCOMFORTABLE that T003 completes with NO Angular TYPE check having run on emitted output. parseTemplate covers GRAMMAR ONLY. This is strictly weaker than the Svelte lane, whose compile() covered both grammar and a real compile. The alternative - an in-package NgtscProgram - was refused as a second harness and the Judge still believes that is right, but it is a genuine coverage gap between T003 and T004 rather than a solved problem. Merging T003 and T004 would close it; that was considered and REJECTED as too large for the hardest board, and the rejection could reasonably go the other way. PM NOTE: PM accepted the split, on the ground that the Svelte T004 block was survivable and produced the Option D ruling."
+        - "PREDICTS angular-eslint's template rules will find the shipped corpus CLEAN, exactly as eslint-plugin-svelte found Svelte's, because Angular's @for makes track SYNTACTICALLY MANDATORY and thereby closes the require-each-key hole at the compiler. If so the arbiter's value is PROSPECTIVE, and its keep is earned by the planted-violation calibration rather than by a finding. Stated so a clean result is not read as the arbiter being pointless, and equally so nobody manufactures a finding to justify it."
+        - "UNEASY that ruling 3f found a stale premise in the idiom policy's own preamble by reading a d.ts for ten minutes, and suspects the v17-era grammar description has propagated further than the two cited sites. A systematic re-read of Angular claims across docs/ is probably owed and is not on any board."
+        - "T001 MISCOUNTED the corpus (14 vs 15) and UNDERSTATED inlinability (2 vs 6) while being right about every structural risk it named. Both errors are in the direction of making the board look MORE constrained than it is, which is the safe direction, and neither changes a ruling. Recorded because T001 is this board's evidence base and a reader should know its arithmetic was not exact."
 
   - id: T003
     type: worker
     assignee: Worker
-    status: queued
-    reasoning_hint: medium
-    objective: "Implement the Angular emitter and gate for the ratified S1/S2/S3 scope, including handler lowering, with checked-in goldens."
-    allowed_files: []
-    verify: []
+    status: active
+    reasoning_hint: high
+    objective: >-
+      Land packages/frameworks/angular as ONE whole vertical slice for S1/S2/S3: an emitter turning
+      the three compiler goldens into Angular 22 standalone single-file components with
+      UNCONDITIONAL handler lowering to class methods; a gate carrying TWO arbiters (@angular/compiler
+      parseTemplate asserted as an exact-empty error set, plus @angular-eslint template/TS rules
+      prefixed 'eslint:'), each with mutation calibration proving it goes RED; three checked-in
+      generated/*.ts goldens with a byte-equality freshness test; and an IR-7 fail-closed purity
+      guard. NODE-ONLY package: no browser lane, no demo, no e2e row, no @angular/core, no
+      @angular/build.
+    allowed_files:
+      - "packages/frameworks/angular/package.json"
+      - "packages/frameworks/angular/tsconfig.json"
+      - "packages/frameworks/angular/vitest.node.config.ts"
+      - "packages/frameworks/angular/README.md"
+      - "packages/frameworks/angular/.gitignore"
+      - "packages/frameworks/angular/src/index.ts"
+      - "packages/frameworks/angular/src/emitter/index.ts"
+      - "packages/frameworks/angular/src/emitter/estree.ts"
+      - "packages/frameworks/angular/src/format-emitted.ts"
+      - "packages/frameworks/angular/src/gate/index.ts"
+      - "packages/frameworks/angular/scripts/regenerate.ts"
+      - "packages/frameworks/angular/generated/S1.ts"
+      - "packages/frameworks/angular/generated/S2.ts"
+      - "packages/frameworks/angular/generated/S3.ts"
+      - "packages/frameworks/angular/test/emitter.test.ts"
+      - "packages/frameworks/angular/test/gate.test.ts"
+      - "packages/frameworks/angular/test/parse-emitted.test.ts"
+      - "package.json"
+      - "docs/goals/frameless-angular-v1/notes/T003-angular-emitter.md"
+    verify:
+      - "pnpm check   # must include the new tsc -p packages/frameworks/angular --noEmit pass"
+      - "pnpm test"
+      - "pnpm lint"
+      - "node packages/frameworks/angular/scripts/regenerate.ts && git diff --exit-code -- packages/frameworks/angular/generated   # run TWICE; goldens byte-stable"
+      - "pnpm e2e   # four existing rows must stay green; no angular row yet"
+      - "git diff --exit-code -- packages/frameworks/react packages/frameworks/solid packages/frameworks/qwik packages/frameworks/svelte packages/compiler demos scripts pnpm-workspace.yaml"
+      - "git status --short   # every path inside allowed_files; pnpm-lock.yaml MUST NOT appear"
     stop_if:
       - "Need files outside allowed_files."
-      - "A handler cannot be lowered under the ratified naming scheme without a collision the scheme does not resolve."
-      - "Goldens are not byte-stable across two regenerations."
-      - "Verification fails twice."
+      - "pnpm-lock.yaml moves, or any dependency needs installing. Stop and report the exact package and version; the PM installs before re-dispatch."
+      - "You are about to INLINE any handler into a template binding. RULED: lower all 15 event records unconditionally. Inlinability is a content-triggered judgement (T001 counted 2 inlinable, the Judge counted 6 on the same corpus) and a content trigger in an emitter is drift."
+      - "You are about to name a lowered method from the IR's id (event:N), from a counter, or from anything read out of a handler body. RULED: on<HostNodeId><EventName>, upper-camelled from hostNodeId and eventName only (h7+input -> onH7Input)."
+      - "Two records collide on (hostNodeId, eventName) and you are about to append a disambiguating suffix. RULED: THROW with a named error. A counter reintroduces order-dependence. Ship a planted-duplicate row proving the throw fires."
+      - "You are about to inspect a handler body to decide whether to pass $event or a @for variable. RULED: always pass both - every enclosing @for variable outermost-first, then $event, whether or not the body reads them."
+      - "You are about to rewrite the `event` identifier INSIDE a transplanted handler body. RULED: the method keeps the IR's own parameter name and the body is a verbatim transplant; only the template call site spells $event."
+      - "You are about to emit onTrace as @Output()/EventEmitter. RULED @Input(). EventEmitter.emit takes one value; the corpus calls onTrace with 2 AND 3 positional arguments and passes the DOM event third."
+      - "You are about to add @angular/core, @angular/build, @angular/cli, @angular/ssr, @angular/compiler-cli, or the angular-eslint META package. All forbidden here - they drag the typescript>=6 peer and/or the vendored vite 7.3.6 into the workspace. They belong to demos/angular-official at T004."
+      - "You are about to build an NgtscProgram, synthesize a tsconfig, or stand up a browser lane for Angular. DEFERRED to T004's real ng build on the official scaffold, which is strictly better evidence."
+      - "You are about to add generated/ to any tsconfig include. Emitted output imports @angular/core and is typechecked at T004 by ng build, deliberately. Record that divergence in the note; do not close it here."
+      - "parseTemplate reports a non-empty error set on any emitted template, or you cannot make the empty-set assertion go RED on a planted violation. A check that cannot fail is not a check."
+      - "You cannot show at least one @angular-eslint rule going RED on a planted violation, or a real rule fires on the shipped corpus. The latter is a FINDING - report it verbatim and stop rather than changing the emitter to satisfy it."
+      - "You are about to touch packages/compiler/src/** or its goldens. IR-1..IR-7 are all ruled: no schema change in this package."
+      - "You are about to create packages/frameworks/angular/src/adapter.ts. Out of scope - nothing consumes it."
+      - "Verification fails twice for the same reason."
     constraints:
-      - "allowed_files and verify come from the T002 ruling."
-      - "Match the existing emitter/gate/golden structure in packages/frameworks/."
+      - "IR-7 guard REQUIRED: fail-closed conservative syntactic check on the emitter's own output plus a planted-violation row proving red. S1's derived is trivial and WILL pass, which is the definition of a green vacuum. Do NOT attempt a purity proof."
+      - "T003 owes the WRITTEN RECORD of the untyped-prop limitation so a green is not over-read. Silence is not an option."
     receipt: null
 
   - id: T004

@@ -1,0 +1,36 @@
+{
+  "name": "@frameless/angular",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "default": "./dist/index.js"
+      }
+    }
+  },
+  "scripts": {
+    "regenerate": "node scripts/regenerate.ts",
+    "test": "vitest run --config vitest.node.config.ts"
+  },
+  "dependencies": {
+    "@angular-eslint/eslint-plugin": "^22.1.0",
+    "@angular-eslint/eslint-plugin-template": "^22.1.0",
+    "@angular-eslint/template-parser": "^22.1.0",
+    "@angular/compiler": "^22.0.8",
+    "@frameless/analyzer": "workspace:*",
+    "@frameless/compiler": "workspace:*",
+    "@typescript-eslint/parser": "^8.65.0",
+    "@typescript-eslint/types": "^8.65.0",
+    "@typescript-eslint/utils": "^8.65.0",
+    "eslint": "^9.39.2",
+    "pathe": "catalog:"
+  },
+  "devDependencies": {
+    "vitest": "catalog:default"
+  }
+}

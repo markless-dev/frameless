@@ -26,8 +26,14 @@ goal:
     Binding text, verbatim: "A lane discharges ONLY the Gate 1 absent-framework deferral and the
     Gate 6 no-lane deferral. It does NOT touch G2, G3, G4 or G5, and it does NOT satisfy the
     version corollary's second conjunct." So landing this lane clears Gate 1 and Gate 6 for this
-    framework's sugar and NOTHING else. Every version-gated sugar ruling on this board must DEFER
-    on IR-4 grounds and say so. Recorded by the PM on 2026-07-27.
+    framework's sugar and NOTHING else. CORRECTED 2026-07-27 by frameless-svelte-v1 T999, which
+    caught the PM's original closing sentence contradicting the verbatim quote two lines above it:
+    IR-4 may NOT be invoked as a blocker before G2-G5 have been scored against a real emitter. A
+    version-gated sugar that FAILs G2 or G5 is DENIED, not deferred - T005 ruled worked example 6
+    exactly that way, and its own dissent predicts Vue's defineModel is DENIED at G2, meaning IR-4
+    was never its blocker. The withdrawn sentence read "Every version-gated sugar ruling on this
+    board must DEFER on IR-4 grounds and say so", which would have manufactured a DEFERRED where a
+    DENIED is correct.
   s3_contract_changed_option_d: >-
     demos/react-official/three-way-contract.ts now reads S3's `text` observation from the SERVED
     PAYLOAD (served.text), not the post-activation live DOM, and `served: EnvironmentResponse` is a
@@ -39,12 +45,16 @@ goal:
     demos/svelte-official is a landed 4th e2e lane and docs/goals/frameless-svelte-v1 is the closest
     prior board. Read both before planning. pnpm e2e is green with four rows, all observations equal.
   instrument_rules: >-
-    THREE STANDING CONSTRAINTS added by T010, full text in goal.md. This board adds four new
+    FOUR STANDING CONSTRAINTS added by T010, full text in goal.md. This board adds four new
     instruments and four of six findings on the defects goal were instrument faults. (1) Two-variable
     triangulation before any finding is filed - and a finding that reproduces on a stock official
     scaffold with none of our code is evidence the TEST is unfair, not that the framework is broken.
     (2) Every instrument asserts its own preconditions. (3) Two-sided calibration for harnesses, not
-    only gates - a settle loop that cannot throw is not a settle loop.
+    only gates - a settle loop that cannot throw is not a settle loop. (4) An instrument that
+    establishes a SET or issues a VERDICT must be calibrated against a KNOWN MEMBER - plant an
+    instance a scan should find, read a status field on a case whose true value you already know,
+    establish a green cell's variance before treating it as a verdict. NOT redundant with rule 2:
+    rule 2 would have a scan assert THAT IT RAN, not that it COVERED THE SHAPE IT NAMED.
   oracle:
     signal: "pnpm e2e includes a Vue row driving an official Vue scaffold at the pinned lockfile version, and its S1/S2/S3 observations are ASSERTED equal to demos/react-official, demos/solid-official, demos/qwik AND demos/svelte-official under the same matrix."
     cadence: "after each Worker package and at final audit"
@@ -102,7 +112,7 @@ visual_board:
     url: null
     command: "npx goalbuddy board docs/goals/frameless-vue-v1"
 
-active_task: T002
+active_task: T003
 
 tasks:
   - id: T001
@@ -236,7 +246,7 @@ tasks:
   - id: T002
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Ratify the Vue adapter contract: emitted format, S1/S2/S3 scope, and which IR gaps must be closed versus deferred."
     inputs:
@@ -252,23 +262,202 @@ tasks:
       - "S1/S2/S3 scope for the first Worker package"
       - "IR gaps: must-close vs deferred, each justified"
       - "Exact Worker objective, allowed_files, verify, stop_if"
-    receipt: null
+    receipt:
+      result: done
+      decision: approved
+      harness: claude-code
+      full_outcome_complete: false
+      headline: >-
+        T001's headline is right but its THREE scaffold options collapse into TWO. T002 packed
+        create-vite-extra@5.0.2 and diffed template-ssr-react/server.js against
+        demos/react-official/server.js: THEY ARE THE SAME FILE, differing only by the inline handler
+        being lifted into createSsrHandler; index.html differs in <title> alone; the dependency
+        block (compression ^1.8.1, express ^5.2.1, sirv ^3.0.2, cross-env ^10.1.0) is BYTE-IDENTICAL.
+        So option (c) was MISDESCRIBED in the brief - nobody hand-rolled react-official's server, and
+        two of four existing lanes already run this template family. That collapses (b) and (c) and
+        makes (b) the INCUMBENT precedent rather than the risky novelty. It also means
+        servedClientEntry being '/src/entry-client.jsx' for both react and solid is NOT the "scaffold
+        coincidence" three-way-contract.ts:56-59 supposes - it is one template.
+      ruling_1_scaffold: >-
+        create-vite-extra template-ssr-vue-ts. goal.md:16's scaffold sentence is AMENDED IN THE OPEN,
+        not ignored: the clause being read is the SECOND sentence (no hand-rolled SSR harness - the
+        rule), while the first names a particular that T001 proved cannot satisfy the oracle. Nuxt
+        was MEASURED, not dismissed: @nuxt/vite-builder@4.5.1 depends on vite ^8.1.5, the same major
+        as the catalog, so the Qwik version-collision argument FAILS and is not why Nuxt loses. Nuxt
+        loses on ~60 direct dependencies including rolldown, @nuxt/nitro-server, unimport auto-imports
+        (which would auto-register emitted components and could MASK an emitter bug), @nuxt/devtools
+        (served-payload contaminant), @nuxt/telemetry (network at build time, in a sandbox with none)
+        and vue-router (pushing expectedNavigations to 1 for no gain).
+      ruling_1_side_effect: "vite-plugin-vue-devtools DISSOLVES as a question. It is in create-vue's default devDependencies, NOT this template's. Eliminated by construction, not managed."
+      ruling_2_format_and_arbiter: >-
+        SFC with <script setup>, no lang="ts", and LONGHAND v-bind:/v-on:. Both arbiters:
+        @vue/compiler-sfc AND eslint-plugin-vue via vue-eslint-parser. THE BRIEF'S BALANCE WAS
+        INVERTED - T001's true input is not "JSX has a weaker arbiter" but that JSX HAS NONE AT ALL,
+        since @vue/compiler-sfc does not apply to it either. The JSX branch would be the only lane in
+        this repo with zero framework-owned arbiter, on the board whose entire purpose is to
+        discharge a Gate 1 deferral that exists BECAUSE documentary evidence is not evidence.
+        Longhand is the POLICY's ruling, not the Judge's: worked example 2 already designates the
+        shorthands candidate sugar, and goal.md:15 forbids amending the policy from inside this board.
+        It is also what leaves T005 a live question capable of reaching a non-DEFERRED Gate 1 and
+        Gate 6 - this board's stated final_proof. A worker reaching for @click on reflex would hand
+        T005 a fait accompli.
+      ruling_2_vue_tsc_narrowed: >-
+        vue-tsc is NOT required at T003, on frameless-svelte-v1 T002 ruling 6's reasoning verbatim:
+        T003's corpus is three self-contained components with no cross-module props, so the class
+        vue-tsc adds has A POPULATION OF ZERO, and buying an instrument for a population of zero is
+        exactly how this repo acquired instruments whose preconditions were never asserted. Re-open
+        trigger fires at T004, where App.vue passes props to emitted components - and the template's
+        own build script is already `vue-tsc -b`, so it arrives FROM THE SCAFFOLD as svelte-check did.
+      ruling_3_prop_types_NO_and_it_is_IR_8: >-
+        REFUTES THE BRIEF'S FRAMING, and the PM verified the evidence directly.
+        PropDestructuringEntry (schema.ts:205-212) carries sourceName, localName, path, alias,
+        graphNodeId and defaultValue? - THERE IS NO TYPE FIELD, and none on EnrichedComponent.props
+        (schema.ts:249-252) either. So defineProps<{...}>() cannot be emitted from DECLARED FACTS.
+        Every type would be inferred from what expressions DO with the prop - a content-based
+        trigger, which GATE 3 FORBIDS OUTRIGHT - and unsound for any prop the corpus does not
+        exercise, which GATE 4 FORBIDS. The middle road does not exist either: defineProps<{ label:
+        unknown }>() closes nothing the array form does not, because `unknown` accepts every wrong
+        type. IT IS NOT EMITTER-CONTROLLED FOR VUE; IT IS IR-CONTROLLED FOR BOTH, and Vue is simply
+        the first lane where the missing input became visible. NAMED IR-8 - no prop type input - and
+        DEFERRED. The Angular scout reaching the same conclusion for strictTemplates is
+        CORROBORATION THAT THE HOLE IS REAL, not a second vote for closing it here.
+      ruling_3_precedent_stated_for_other_boards: >-
+        "The wrong-typed-prop hole is an IR gap, and NO LANE MAY CLOSE IT BY INVENTING TYPES.
+        Re-open when a board can show a FORCING CASE" - the same bar frameless-svelte-v1 T002 ruling
+        3 set for IR-4, and for the same reason: a general facility designed against zero forcing
+        cases is folklore. This also stays inside T002's constraint that any proposed IR change be
+        justified by activation neutrality: IR-8 is NOT required for it, which is precisely why it is
+        named and deferred rather than proposed. PM relayed this to the Angular judge mid-flight.
+      ruling_4_dev_sink_required_and_it_has_a_trap: >-
+        REQUIRED - a Vue lane can pass green while hydration is genuinely mismatching. Installs as
+        the FIRST IMPORT in src/entry-client.ts, BEFORE app.mount(), at module scope so warnings
+        raised DURING hydration are captured. Copy demos/svelte-official/src/hooks.client.ts: plant
+        one warn and one error, require each captured EXACTLY ONCE (non-install fails the capture,
+        double-install fails the count), drain, write data-frameless-dev-sink=calibrated, and have
+        the box assert 'calibrated' BEFORE it trusts a count of zero.
+        THE TRAP, a T004 stop condition: app.config.warnHandler INTERCEPTS Vue's own warn() channel
+        and SUPPRESSES the console output. If hydration mismatches route through it, setting a
+        warnHandler without re-emitting turns the sink into A GREEN VACUUM.
+      ruling_5_ir_gaps: >-
+        T001's "none of IR-1..IR-7 blocks S1/S2/S3" HOLDS against the corpus. IR-1/IR-2 out of scope
+        hard. IR-3/IR-6 deferred, no instance. IR-4 deferred, inherited, untouched - and Vue takes
+        ROUTE (b) of the version corollary's second conjunct (emit only baseline-safe forms), which
+        is a CLAIM ABOUT EMITTED OUTPUT and is why the baseline form inventory is MANDATORY rather
+        than optional; the policy's own baseline-form-inventory section says verbatim "The Svelte
+        lane is the second way. So are Vue and Angular, by inheritance." IR-5 needs no schema change:
+        preventDefault emits as an ordinary in-body statement, and stopPropagation FAILS CLOSED with
+        a throw - PM VERIFIED zero occurrences across all twelve existing goldens, so an emitter code
+        path for it would be UNTESTED DEAD CODE, worse than absent code. IR-7 is the sleeper again:
+        conservative syntactic guard over emitted computed(...), NEVER a purity proof.
+      overturned_T001_contradiction_1: >-
+        T001 reported the Svelte gate imports only `parse` with no eslint plugin, and the PM
+        propagated that to the Angular scout as a correction. AT HEAD IT IS FALSE:
+        packages/frameworks/svelte/src/gate/index.ts:3 is `import { ESLint } from 'eslint'` and :4 is
+        `import sveltePlugin from 'eslint-plugin-svelte'`. BOTH WERE TRUE AT DIFFERENT TIMES - T009
+        landed the plugin AFTER the scouts read the file. The precedent is BOTH ARBITERS, FOUR FOR
+        FOUR. PM verified at HEAD and relayed the retraction to the Angular judge mid-flight.
+      dissent:
+        - "create-vite-extra's OFFICIAL STANDING is the weakest link in the scaffold ruling. It is reachable from npm create vite@latest -> Others and sits in the Vite org's orbit, but it is not `npm create vue@latest` and a later auditor could reasonably challenge it. The answer: two landed lanes already run it, and the alternative forces either a client-only app that cannot satisfy the oracle or a genuinely hand-rolled server. Recorded so the challenge is visible rather than quietly absorbed."
+        - "NOT VERIFIED: that Vue 3.5.40's hydration-mismatch message reaches window.console rather than an internal warn() that warnHandler could swallow. T001's claim is DOCUMENTARY and Gate 1 rejects documentary evidence once the framework is in the lockfile. If the T004 lane is ever green on a planted mismatch, LOOK HERE FIRST."
+        - "PREDICTS defineModel is DENIED at Gate 2, not deferred - the child must declare bindability and frameless emits one module per IR. FAIL outranks DEFERRED, which would mean IR-4 was never its blocker. Inherited from frameless-svelte-v1 T002's dissent; a prediction for T005 to TEST, not a finding."
+        - "M1's condense hypothesis is the Judge's and is UNMEASURED. Belief: a whitespace-only newline between two ELEMENTS is removed, while one between an INTERPOLATION and text condenses to a single space - which would make S2's '1/2' render as '1 /2'. Stated as a two-sided hypothesis rather than a fact DELIBERATELY, because acting on it would be the exact Gate 1 violation this board exists to discharge."
+      missing_evidence_for_T004:
+        - "Vue's hydration-mismatch warning reaching window.console - must PLANT a real mismatch and observe it before any green is read as 'hydration matched'."
+        - "The literal /src/entry-client.ts as servedClientEntry - must be READ OUT OF THE PAYLOAD, never guessed, and put through calibrateServedClientEntry on every run."
+        - "expectedNavigations = 0 for Vue - follows from the template shipping no router, but must be MEASURED as SvelteKit's 1 was."
 
   - id: T003
     type: worker
     assignee: Worker
-    status: queued
-    reasoning_hint: medium
-    objective: "Implement the Vue emitter and its gate for the ratified S1/S2/S3 scope, with checked-in goldens."
-    allowed_files: []
-    verify: []
+    status: active
+    reasoning_hint: high
+    reasoning_hint_raised_by_T002: "Raised medium -> high. The Svelte equivalent was high, this package carries FOUR required measurements plus a baseline form inventory, and the shorthand trap is one a competent Vue author will walk into on reflex."
+    objective: >-
+      Land packages/frameworks/vue as a whole vertical slice for S1/S2/S3: an emitter turning the
+      three existing compiler goldens into Vue 3 single-file components using <script setup> with NO
+      lang="ts" and LONGHAND v-bind:/v-on: directives; a gate importing BOTH @vue/compiler-sfc parse
+      AND eslint-plugin-vue (via vue-eslint-parser) plus frameless-owned policies, with a mutation
+      corpus built from qwik's THROWING mutate/mutateAll; a BASELINE FORM INVENTORY discharging the
+      IR-4 version corollary's second conjunct the way packages/frameworks/svelte/src/gate/index.ts
+      does, with mutation rows and an anti-vacuity row; checked-in .vue goldens with a byte-equality
+      freshness test; a compile-emitted oracle running @vue/compiler-sfc parse + compileScript +
+      compileTemplate asserting errors AND tips are an EXACT EMPTY SET across ssr:true/false x
+      dev/prod, with a mutation calibration proving it goes red; and a vitest browser lane that
+      mounts the emitted corpus, fails on ANY Vue dev console warning with NO allowlist and a
+      three-way sink calibration, and MEASURES M1-M4 rather than assuming them.
+      No demo, no e2e row, no scaffold - T004 owns those.
+    four_required_measurements: >-
+      Each two-sided with a negative control (instrument rules 1-4).
+      M1 WHITESPACE: Vue's SFC compiler defaults to whitespace:'condense', a DIFFERENT rule from
+      Svelte's, so frameless-svelte-v1 T003 measurement 3 and its newline-inside-the-closing-tag
+      idiom DO NOT CARRY OVER. Measure both arms - a whitespace-only newline between two ELEMENTS
+      (hypothesis: removed) and one between an INTERPOLATION and adjacent text (hypothesis:
+      condensed to a single space, NOT removed). THE OBSERVABLE AT RISK is S2's '1/2' silently
+      becoming '1 /2' against the react/solid/svelte text observations.
+      M2 BUBBLING: S3's emitted output puts v-on:click on the <form> itself reading
+      event.target.dataset.action === 'submit', so the corpus DEPENDS on a click BUBBLING from
+      [data-action="submit"] to the form. Vue attaches real listeners at the element so this is
+      predicted native, but instrument rule 1 requires it RUN. Assert the full ORDERED TRACE.
+      M3 PREVENTDEFAULT: a plain in-body event.preventDefault() inside v-on:click on <button
+      type="submit"> must avert the real GET navigation assertS3 checks by Document-request count.
+      Two-variable triangulation - vary the PRODUCT variable (call present/absent) and confirm the
+      signal tracks it; the negative control proves the instrument can SEE a navigation.
+      M4 VERSION IDENTITY: assert AT TEST TIME that `vue` and `@vue/compiler-sfc` resolve to the SAME
+      version. If they diverge, the compile() oracle measures a different build than the browser lane
+      runs, which Gate 1 names as a FAIL.
+    allowed_files:
+      - "packages/frameworks/vue/package.json"
+      - "packages/frameworks/vue/tsconfig.json"
+      - "packages/frameworks/vue/vitest.config.ts"
+      - "packages/frameworks/vue/vitest.node.config.ts"
+      - "packages/frameworks/vue/README.md"
+      - "packages/frameworks/vue/src/index.ts"
+      - "packages/frameworks/vue/src/emitter/index.ts"
+      - "packages/frameworks/vue/src/emitter/estree.ts"
+      - "packages/frameworks/vue/src/format-emitted.ts"
+      - "packages/frameworks/vue/src/gate/index.ts"
+      - "packages/frameworks/vue/scripts/regenerate.ts"
+      - "packages/frameworks/vue/generated/S1.vue"
+      - "packages/frameworks/vue/generated/S2.vue"
+      - "packages/frameworks/vue/generated/S3.vue"
+      - "packages/frameworks/vue/test/emitter.test.ts"
+      - "packages/frameworks/vue/test/gate.test.ts"
+      - "packages/frameworks/vue/test/compile-emitted.test.ts"
+      - "packages/frameworks/vue/test/emitted-smoke.browser.test.ts"
+      - "packages/frameworks/vue/test/setup.ts"
+      - "packages/frameworks/vue/.gitignore"
+      - "vite.config.ts"
+      - "package.json"
+      - "docs/goals/frameless-vue-v1/notes/T003-vue-emitter.md"
+    verify:
+      - "pnpm check"
+      - "pnpm test"
+      - "pnpm --dir packages/frameworks/vue exec vitest run --config vitest.config.ts --project vue-browser"
+      - "pnpm test:browser"
+      - "pnpm e2e"
+      - "node packages/frameworks/vue/scripts/regenerate.ts && git diff --exit-code -- packages/frameworks/vue/generated"
+      - "git diff --exit-code -- packages/frameworks/react packages/frameworks/solid packages/frameworks/qwik packages/frameworks/svelte packages/compiler demos scripts"
+      - "git status --short   # every path inside allowed_files; pnpm-lock.yaml MUST NOT appear"
     stop_if:
       - "Need files outside allowed_files."
-      - "The ratified emitted format turns out not to express a required S1/S2/S3 construct."
-      - "Verification fails twice."
+      - "pnpm-lock.yaml moves, or any dependency needs installing. Stop and report the exact package and version; the PM installs before re-dispatch."
+      - "`vue` and `@vue/compiler-sfc` do not resolve to the SAME version. Gate 1 would then have two answers and the compile() oracle would measure a build the browser lane does not run."
+      - "You are about to emit a v-bind / v-on / v-slot SHORTHAND (`:id`, `@click`, `#header`) or any v-on MODIFIER (`.prevent`, `.stop`, `.self`). docs/emitter-idiom-policy.md worked example 2 rules the shorthands DEFERRED and this board's T005 re-runs its six gates. Pre-adopting makes T005 ratify a fait accompli - the exact failure frameless-svelte-v1 T002 named. Emit longhand and a plain in-body event.preventDefault()."
+      - "You are about to emit defineModel, defineEmits, or v-model. IR-1 and IR-2, out of scope on two independent axes; worked example 3 is already ruled DENIED at Gate 5."
+      - "You are about to emit typed props - defineProps<{...}>(), lang=\"ts\", or any type annotation. The IR carries NO prop type field (PropDestructuringEntry, schema.ts:205-212), so every type would be INVENTED from expression contents, which Gate 3 forbids, and unsound for any prop the corpus does not exercise, which Gate 4 forbids. Ruled IR-8 and deferred."
+      - "You are about to build an emitter code path for stopPropagation. VERIFIED zero occurrences across all twelve existing goldens, so that path would be UNTESTED DEAD CODE - worse than absent code in an emitter. Throw at emit time with a gate row proving the throw fires."
+      - "You are about to choose the event-emission form, or the whitespace layout, on DOCUMENTARY evidence. Gate 1 records FAIL for documentary-only evidence once the framework is in the lockfile, and this package puts it there. Measure M1, M2 and M3 in a real browser first."
+      - "A gate policy, the compile-emitted empty-diagnostics assertion, the baseline-form-inventory, or the console-warning check cannot be made to go RED. A check that cannot fail is not a check."
+      - "Any mutation in the gate corpus is built with a bare .replace(). Copy the THROWING mutate/mutateAll constructor from packages/frameworks/qwik/test/gate.test.ts - its own doc comment instructs a new adapter to do exactly this. Audited corpus-wide by defects-and-targets T018."
+      - "You are about to add a formatter dependency (prettier, prettier-plugin-vue) or run oxfmt over a .vue file. Nothing in this workspace parses .vue: emit deterministic text directly and make format-emitted an ASSERTION over that text, mirroring packages/frameworks/svelte/src/format-emitted.ts."
+      - "You are about to set app.config.warnHandler anywhere in this package. It intercepts Vue's own warn() channel and SUPPRESSES console output, so a downstream sink would read zero while hydration mismatched. The sink itself is T004's, not yours."
+      - "You are about to touch packages/compiler/src/** or its goldens. IR-4, IR-5 and IR-7 are ruled and IR-8 is deferred: no schema change in this package."
+      - "You are about to create packages/frameworks/vue/src/adapter.ts. Nothing consumes it, and a fifth byte-equivalent copy of the quiescence loop is drift with no consumer."
+      - "A construct S1/S2/S3 needs turns out not to be expressible in a Vue SFC template. T001 says none is; if you find one, that REFUTES T001 and is a FINDING to report, not a workaround to invent."
+      - "Verification fails twice for the same reason."
     constraints:
-      - "allowed_files and verify come from the T002 ruling."
       - "Match the existing emitter/gate/golden structure in packages/frameworks/ rather than inventing a new one."
+      - "IR-7 guard: fail-closed CONSERVATIVE syntactic check rejecting an emitted computed(...) whose expression contains an assignment, an update expression, or a call in the emitter's known-mutating set - with a comment naming IR-7, a plain statement of what the check CANNOT see, and one mutation row proving it goes red. Do NOT attempt a purity proof."
     receipt: null
 
   - id: T004

@@ -31,12 +31,18 @@ goal:
     per-package emitted-typecheck lane), and pnpm test:browser runs clean (react 55/55, solid
     44/44). Still true: pnpm e2e pins dev mode only, scenarios.box.ts modes ['dev'].
   instrument_rules: >-
-    THREE STANDING CONSTRAINTS added by T010, full text in goal.md. This board adds four new
+    FOUR STANDING CONSTRAINTS added by T010, full text in goal.md. This board adds four new
     instruments and four of six findings on the defects goal were instrument faults. (1) Two-variable
     triangulation before any finding is filed - and a finding that reproduces on a stock official
     scaffold with none of our code is evidence the TEST is unfair, not that the framework is broken.
     (2) Every instrument asserts its own preconditions. (3) Two-sided calibration for harnesses, not
-    only gates - a settle loop that cannot throw is not a settle loop.
+    only gates - a settle loop that cannot throw is not a settle loop. (4) An instrument that
+    establishes a SET or issues a VERDICT must be calibrated against a KNOWN MEMBER - plant an
+    instance a scan should find, read a status field on a case whose true value you already know,
+    establish a green cell's variance before treating it as a verdict. NOT redundant with rule 2:
+    rule 2 would have a scan assert THAT IT RAN, not that it COVERED THE SHAPE IT NAMED. Added to
+    state.yaml on 2026-07-27 by T999, which found all three boards listed THREE while their goal.md
+    carried FOUR - and state.yaml is declared to win. Rule 4 caught the most on this board.
   oracle:
     signal: "pnpm e2e includes a Svelte row driving an official Svelte scaffold at the pinned lockfile version, and its S1/S2/S3 observations are ASSERTED equal to demos/react-official, demos/solid-official and demos/qwik under the same matrix."
     cadence: "after each Worker package and at final audit"
