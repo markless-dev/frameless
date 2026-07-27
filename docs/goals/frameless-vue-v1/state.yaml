@@ -156,7 +156,7 @@ visual_board:
     url: null
     command: "npx goalbuddy board docs/goals/frameless-vue-v1"
 
-active_task: T005
+active_task: T008
 
 tasks:
   - id: T001
@@ -285,6 +285,22 @@ tasks:
         - "grep -c vue pnpm-lock.yaml -> 0"
         - "sed -n 1,12p packages/frameworks/{react,solid,qwik,svelte}/src/gate/index.ts"
         - "grep -n 'HydrateFramework|servedClientEntry|expectedNavigations|served|runScenario' demos/react-official/three-way-contract.ts"
+      evidence_provenance: >-
+        PM-RECONSTRUCTED 2026-07-27. This Scout receipt shipped with neither `evidence` nor `note`,
+        which the checker flags on a done Scout receipt - the one structural thing a Scout owes is
+        the trail behind its findings. The receipt itself is unusually rich and cites its sources
+        inline with line numbers; this list just lifts those citations into the field the schema
+        expects. Nothing here is new evidence.
+      evidence:
+        - packages/frameworks/svelte/src/gate/index.ts
+        - packages/frameworks/react/src/gate/index.ts
+        - packages/frameworks/solid/src/gate/index.ts
+        - packages/frameworks/qwik/src/gate/index.ts
+        - demos/react-official/three-way-contract.ts
+        - scripts/e2e.mjs
+        - pnpm-lock.yaml
+        - docs/goals/frameless-svelte-v1/notes/T003-svelte-emitter.md
+        - poc/09-storage/vue
       note_needed: false
 
   - id: T002
@@ -506,6 +522,35 @@ tasks:
       result: done
       harness: claude-code
       verification_attempts: 1
+      changed_files_provenance: >-
+        PM-RECONSTRUCTED 2026-07-27 from commit 5ca20c7, not reported by the Worker. The receipt
+        shipped without a changed_files list, which the board checker flags as an error on a done
+        Worker receipt - correctly, because scope compliance cannot be verified against a list that
+        does not exist. Reconstructed from the commit's own file list and cross-checked against this
+        card's allowed_files; every path below is inside it. The note file landed in the later
+        commit d9dd70b alongside T004's, but it is T003's note and is listed here.
+      changed_files:
+        - package.json
+        - packages/frameworks/vue/.gitignore
+        - packages/frameworks/vue/README.md
+        - packages/frameworks/vue/generated/S1.vue
+        - packages/frameworks/vue/generated/S2.vue
+        - packages/frameworks/vue/generated/S3.vue
+        - packages/frameworks/vue/scripts/regenerate.ts
+        - packages/frameworks/vue/src/emitter/estree.ts
+        - packages/frameworks/vue/src/emitter/index.ts
+        - packages/frameworks/vue/src/format-emitted.ts
+        - packages/frameworks/vue/src/gate/index.ts
+        - packages/frameworks/vue/src/index.ts
+        - packages/frameworks/vue/test/compile-emitted.test.ts
+        - packages/frameworks/vue/test/emitted-smoke.browser.test.ts
+        - packages/frameworks/vue/test/emitter.test.ts
+        - packages/frameworks/vue/test/gate.test.ts
+        - packages/frameworks/vue/test/setup.ts
+        - packages/frameworks/vue/tsconfig.json
+        - packages/frameworks/vue/vitest.config.ts
+        - packages/frameworks/vue/vitest.node.config.ts
+        - docs/goals/frameless-vue-v1/notes/T003-vue-emitter.md
       summary: >-
         Landed packages/frameworks/vue as a whole vertical slice: SFC emitter with <script setup>,
         no lang="ts", longhand v-bind:/v-on:; a gate over BOTH arbiters (@vue/compiler-sfc
@@ -556,15 +601,32 @@ tasks:
         - "M1's two-arm compiler measurement lives in the NODE lane (vue/server-renderer available) and the live-DOM half in the BROWSER lane, because Vue merges adjacent interpolations into one text node and vite resolves vue to the runtime-only build, so a browser-side naive-layout arm is not constructible."
         - "Emitter REFUSES <template v-if> wrappers and multi-root templates. Reason recorded: a Fragment is server-rendered with anchor comments the e2e lane reads out of the payload, and the corpus has no instance to test the wrapper against."
       commands:
-        - {cmd: "pnpm check", status: pass, note: "adds tsc -p packages/frameworks/vue"}
-        - {cmd: "pnpm test", status: pass, note: "46 files / 765 tests, incl. 3 vue node files / 80 tests"}
-        - {cmd: "vitest --project vue-browser", status: pass, note: "18/18"}
-        - {cmd: "pnpm test:browser", status: pass, note: "react 60, solid 49, svelte 13, vue 18"}
-        - {cmd: "pnpm e2e", status: pass, note: "four lanes, all observations equal - the Vue ROW is T004's"}
-        - {cmd: "regenerate && git diff --exit-code -- generated", status: pass, note: "vacuous while untracked; ALSO byte-diffed against a pre-run snapshot -> identical"}
-        - {cmd: "git diff --exit-code -- other frameworks, compiler, demos, scripts", status: pass}
-        - {cmd: "git status --short", status: pass, note: "only allowed_files; pnpm-lock.yaml absent"}
-        - {cmd: "pnpm lint", status: pass, note: "0 warnings 0 errors (courtesy, not in verify)"}
+        - cmd: "pnpm check"
+          status: pass
+          note: "adds tsc -p packages/frameworks/vue"
+        - cmd: "pnpm test"
+          status: pass
+          note: "46 files / 765 tests, incl. 3 vue node files / 80 tests"
+        - cmd: "vitest --project vue-browser"
+          status: pass
+          note: "18/18"
+        - cmd: "pnpm test:browser"
+          status: pass
+          note: "react 60, solid 49, svelte 13, vue 18"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "four lanes, all observations equal - the Vue ROW is T004's"
+        - cmd: "regenerate && git diff --exit-code -- generated"
+          status: pass
+          note: "vacuous while untracked; ALSO byte-diffed against a pre-run snapshot -> identical"
+        - cmd: "git diff --exit-code -- other frameworks, compiler, demos, scripts"
+          status: pass
+        - cmd: "git status --short"
+          status: pass
+          note: "only allowed_files; pnpm-lock.yaml absent"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings 0 errors (courtesy, not in verify)"
 
   - id: T004
     type: worker
@@ -572,8 +634,29 @@ tasks:
     status: done
     reasoning_hint: medium
     objective: "Stand up demos/vue-official from the official scaffold and add the Vue row to the e2e activation matrix, asserting S1/S2/S3 equality with the existing three."
-    allowed_files: []
-    verify: []
+    allowed_files_provenance: >-
+      PM-RECONSTRUCTED 2026-07-27, retroactive and marked as such. This card shipped with
+      allowed_files: [] and verify: [] - the PM defect recorded in pm_error_on_this_card below - so
+      until now NOTHING about this task's scope was checkable, and the board checker flagged every
+      reconstructed changed_file as out of scope because the permitted set was empty. The envelope
+      below is the one the Worker derived from the dispatch prose and the verify guards, which the
+      PM reviewed and confirmed against the actual changed_files at the time. Recording it does not
+      retroactively authorise anything: it makes an already-reviewed scope MACHINE-CHECKABLE instead
+      of resting on a prose confirmation nobody can re-run.
+    allowed_files:
+      - "demos/vue-official/**"
+      - demos/react-official/three-way-contract.ts
+      - scripts/e2e.mjs
+      - pnpm-lock.yaml
+      - docs/goals/frameless-vue-v1/notes/T004-vue-demo.md
+    verify:
+      - "pnpm check"
+      - "pnpm test"
+      - "pnpm test:browser"
+      - "pnpm lint"
+      - "vue-tsc -b --force   # the template's OWN build gate"
+      - "pnpm e2e   # FIVE demos x 3 scenarios, all observations ASSERTED equal"
+      - "git diff --exit-code -- packages/frameworks packages/compiler demos/react-official/src demos/solid-official/src demos/svelte-official/src demos/qwik/src"
     stop_if:
       - "The official scaffold needs modification beyond wiring in emitted components."
       - "Equality cannot be asserted and the only way to make the row pass is to weaken an existing assertion."
@@ -593,6 +676,38 @@ tasks:
       result: done
       harness: claude-code
       verification_attempts: 2
+      changed_files_provenance: >-
+        PM-RECONSTRUCTED 2026-07-27 from commit d9dd70b, not reported by the Worker. Cross-checked
+        against the retroactively recorded allowed_files above; every path is inside it. The commit
+        also carried docs/goals/frameless-vue-v1/notes/T003-vue-emitter.md and this board's
+        state.yaml - the note belongs to T003 and is listed on that receipt, and state.yaml is
+        PM-owned board truth rather than Worker output, so neither is listed here.
+      changed_files:
+        - demos/react-official/three-way-contract.ts
+        - demos/vue-official/.gitignore
+        - demos/vue-official/index.html
+        - demos/vue-official/package.json
+        - demos/vue-official/public/favicon.svg
+        - demos/vue-official/scenarios.box.ts
+        - demos/vue-official/server.js
+        - demos/vue-official/ssr-handler.js
+        - demos/vue-official/src/App.vue
+        - demos/vue-official/src/dev-sink.ts
+        - demos/vue-official/src/emitted/EventForm.vue
+        - demos/vue-official/src/emitted/KeyedTodo.vue
+        - demos/vue-official/src/emitted/RenderOnce.vue
+        - demos/vue-official/src/entry-client.ts
+        - demos/vue-official/src/entry-server.ts
+        - demos/vue-official/src/main.ts
+        - demos/vue-official/src/scenario-props.ts
+        - demos/vue-official/src/style.css
+        - demos/vue-official/tsconfig.app.json
+        - demos/vue-official/tsconfig.json
+        - demos/vue-official/tsconfig.node.json
+        - demos/vue-official/vite.config.ts
+        - scripts/e2e.mjs
+        - pnpm-lock.yaml
+        - docs/goals/frameless-vue-v1/notes/T004-vue-demo.md
       summary: >-
         Stood up demos/vue-official from create-vite-extra@5.0.2 template-ssr-vue-ts (sha256
         5dcadd5a...) and added the FIFTH e2e row. pnpm e2e GREEN WITH FIVE ROWS, all observations
@@ -641,19 +756,34 @@ tasks:
         - "Kept public/favicon.svg rather than dropping public/ as react-official did - index.html still links it, so keeping it is the SMALLER delta."
         - "scenarios.box.ts is not typechecked, consistent with all four incumbent lanes; covering it needs @async/witness as a dep the demo deliberately lacks. Flagged in the note, not fixed."
       commands:
-        - {cmd: "npm pack create-vite-extra@5.0.2", status: pass, note: "sha256 5dcadd5aab5bc2c8667f2dd2d50a60a89d98652aafed1f0c4f006fe2e534b0d1"}
-        - {cmd: "pnpm check", status: pass}
-        - {cmd: "pnpm test", status: pass, note: "49 files / 850 tests"}
-        - {cmd: "pnpm test:browser", status: pass, note: "react 60, solid 49, svelte 13, vue 18"}
-        - {cmd: "pnpm lint", status: pass, note: "0 warnings 0 errors on 312 files"}
-        - {cmd: "vue-tsc -b --force", status: pass, note: "the template's OWN build gate"}
-        - {cmd: "pnpm e2e", status: pass, note: "FIVE demos x 3 scenarios, all observations equal"}
-        - {cmd: "git diff --exit-code -- packages/frameworks packages/compiler demos/{react,solid,svelte}-official/src demos/qwik/src", status: pass, note: "CLEAN - no existing lane moved"}
+        - cmd: "npm pack create-vite-extra@5.0.2"
+          status: pass
+          note: "sha256 5dcadd5aab5bc2c8667f2dd2d50a60a89d98652aafed1f0c4f006fe2e534b0d1"
+        - cmd: "pnpm check"
+          status: pass
+        - cmd: "pnpm test"
+          status: pass
+          note: "49 files / 850 tests"
+        - cmd: "pnpm test:browser"
+          status: pass
+          note: "react 60, solid 49, svelte 13, vue 18"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings 0 errors on 312 files"
+        - cmd: "vue-tsc -b --force"
+          status: pass
+          note: "the template's OWN build gate"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "FIVE demos x 3 scenarios, all observations equal"
+        - cmd: "git diff --exit-code -- packages/frameworks packages/compiler demos/{react,solid,svelte}-official/src demos/qwik/src"
+          status: pass
+          note: "CLEAN - no existing lane moved"
 
   - id: T005
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Now that a Vue lane exists at a pinned version, re-run the idiom policy on at least one Vue sugar question and record whether Gate 1 and Gate 6 actually clear."
     inputs:
@@ -667,6 +797,306 @@ tasks:
       - "Six gate outcomes for at least one Vue sugar question"
       - "Whether Gate 1 and Gate 6 cleared, with evidence"
       - "Ruling, and whether docs/emitter-idiom-policy.md needs updating"
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      harness: claude-code
+      note: notes/T005-vue-shorthand-ruling.md
+      rationale: "Re-ran all six gates on worked example 2 against vue@3.5.40 as resolved in the lockfile. G1 PASS (empty errors AND tips for both forms across four compile modes; template codegen and production compileScript byte-identical; SSR HTML byte-identical; two calibrated negative controls; eslint-plugin-vue measured two-sided). G2/G3/G5 PASS. G4 PASS structurally via compiler-core's ondirname plus a 28-member domain sample. G6 PASS: pnpm e2e drives demos/vue-official on the exact copied goldens. Ruling: v-bind/v-on shorthands WITH A VALUE are sugar and adopted; the v-slot limb SPLITS OFF and is DENIED."
+      summary: "GATE 1 AND GATE 6 BOTH CLEARED - neither remains DEFERRED, so the Vue lane genuinely discharged the deferral rather than merely claiming to. Worked example 2 splits: 2a (: and @ with a value) is sugar, all six gates PASS; 2b (#header / v-slot) is DENIED on G4 UNKNOWN plus G6 FAIL. docs/emitter-idiom-policy.md needs three edits, and the Vue emitter's decision-site comment currently rules the OPPOSITE way and must be rewritten."
+      the_entry_did_not_survive_as_one_entry: "Worked example 2 bundled v-bind, v-on and v-slot. Two of them were only ever travelling on the third's deferral, and when the deferral lifted they parted company. #header has NO DECIDING FUNCTION AT ALL - packages/frameworks/vue/src/emitter/index.ts contains no v-slot path and packages/compiler/src/schema.ts:173 is default-slot-only - so its totality is VACUOUS, which is the exact move worked example 7 explicitly refused. Splitting the entry is the ruling, not a bookkeeping convenience."
+      strongest_evidence_is_a_source_line_not_a_sample: "@vue/compiler-core@3.5.40 dist/compiler-core.cjs.js:2435 normalises ':' -> bind, '@' -> on and '#' -> slot inside ondirname, at PARSE TIME, before any argument or modifier is read; the raw spelling survives only as rawName. That is why Gate 4 is a STRUCTURAL claim. The 28-member domain sample is its CALIBRATION, not its basis - a distinction this board has had to make before."
+      judge_held_a_hypothesis_and_measured_it_FALSE: "The Judge predicted the flip would introduce a version hazard via the value-less same-name shorthand (3.4-gated). MEASURED AT 3.5.40: <span v-bind:count> compiles exactly like <span :count>, and value-less v-on errors in BOTH spellings. The hazard is SYMMETRIC and already latent in the longhand we ship today - which converts it from a blocker into a cheap standing assertion in the follow-on Worker package. Recorded because a predicted blocker that dissolves under measurement is worth as much as one that survives."
+      evidence:
+        - "pnpm-lock.yaml:367-369 and :725-727 - vue@3.5.40(typescript@6.0.3) at BOTH importers; Gate 1's 'DEFERRED - framework absent' is discharged"
+        - "@vue/compiler-core@3.5.40 dist/compiler-core.cjs.js:2435 - ondirname normalises the spelling at parse time"
+        - "packages/frameworks/vue/generated/{S1,S2,S3}.vue vs mechanical shorthand twins: empty errors AND tips both forms x 4 modes; template codegen byte-identical x4; production inlineTemplate compileScript byte-identical x4; SSR HTML byte-identical at 155/561/521 bytes"
+        - "Negative controls, calibrated: v-on:input -> .stop DIFFERS in client modes and is IDENTICAL in SSR modes (the SSR arm is blind to event routing - itself worth knowing); v-bind: -> v-bind:data-planted- DIFFERS in rendered HTML"
+        - "Domain sample over the emitter's own ATTRIBUTE_NAME and event-name regexes: 19 binding names + 9 event names x 4 modes, zero divergence; a planted divergent member reports true"
+        - "eslint-plugin-vue@10.10.0 two-sided: flat/essential clean on BOTH forms; flat/strongly-recommended reports vue/v-on-style (S1,S2,S3) and vue/v-bind-style (S2,S3) on the LONGHAND and NEITHER on the shorthand"
+        - "packages/frameworks/vue/src/gate/index.ts checkSources at HEAD: 0 violations longhand, 30 shorthand (25 no-directive-shorthand + 5 baseline-form-inventory) - the form is already pinned in text and must be INVERTED, not deleted"
+        - "demos/vue-official/package.json:7 copy-emitted copies the three goldens on every dev and build, and the checked-in demo files are byte-identical to the goldens - so the e2e lane drives the exact emitted text (this is the G6 basis)"
+        - "packages/compiler/src/schema.ts:173 - the IR's only slot kind is default-slot-projection (IR-3)"
+      missing_evidence:
+        - "NO BEHAVIOURAL CHECK CAN DISTINGUISH SHORTHAND FROM LONGHAND, because they are behaviourally identical. A silent revert to longhand would be caught by the gate's TEXT policy alone. Recorded so the G6 PASS is not over-read as a behavioural pin on the spelling."
+        - "Worked example 3 (defineEmits) still carries 'G1 DEFERRED - framework absent', a label no longer available. Its DENIED ruling is unchanged because G5 FAIL outranks, but the entry needs a cheap re-run - queued as T007 rather than folded in silently."
+        - "The ':' and '@' version floors remain unverified in the same sense every existing Vue and Svelte inventory floor is: the resolved package dates neither the shorthand nor the longhand."
+      pm_relay_to_the_angular_board: "The Judge asked that this be relayed and the PM has done so on the Angular board: Gate 1's 'Vue and Angular are absent today' sentence is now FULLY false, not half - the Angular lane landed while this ruling was being taken, and demos/angular-official is green in a six-row e2e. Worked example 2's DEFERRED phrasing must not be inherited as a template by the Angular idiom re-run."
+      pm_adaptation_of_the_worker_package: "The Judge's worker_package is ADOPTED but NOT dispatched verbatim, because the tree moved underneath it while it ran. Three corrections, all recorded on the T006 card: (1) its verify says 'pnpm e2e # FIVE demos x 3 scenarios' - there are now SIX, and the byte-identity requirement covers all 18 observation strings across six lanes; (2) its freeze list predates demos/angular-official, which must be added; (3) it uses git diff --exit-code over scripts/ and demos/react-official, both of which are legitimately DIRTY from the Angular lane, so an --exit-code check there would fail on landed work rather than on a regression. Replaced with asserted content hashes captured by the PM at dispatch. A verify command that cannot pass on a correct tree is not a verify command."
+  - id: T006
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: high
+    spec: "T005 receipt and docs/goals/frameless-vue-v1/notes/T005-vue-shorthand-ruling.md - AUTHORITATIVE."
+    objective: >-
+      Adopt the T005 ruling as ONE whole vertical slice: fold worked examples 2a and 2b into
+      docs/emitter-idiom-policy.md replacing worked example 2, discharge Vue from Gate 1's
+      absent-framework paragraph, flip the three Vue emission sites to the VALUED shorthands (: and
+      @) with the decision-site comment rewritten to name the ruling, INVERT the gate's
+      no-directive-shorthand policy to REQUIRE the shorthand, add ':' and '@' to
+      BASELINE_FORM_INVENTORY at floor 3.0 with evidence status unverified, add a standing assertion
+      that every emitted directive carries a value, update both VUE_ESLINT_TIERS_EXCLUDED
+      firesOnCorpus lists and their reason text now that vue/v-on-style and vue/v-bind-style stop
+      firing, regenerate the three goldens, refresh the demo's copied emitted files, and prove the
+      SIX-lane e2e observations are unchanged.
+    pm_corrections_to_the_judges_package: >-
+      The T005 Judge specified this package well, but the tree moved underneath it while it ran -
+      the Angular lane landed a sixth e2e row mid-ruling. THREE CORRECTIONS, made by the PM rather
+      than left for the Worker to trip over:
+      (1) The Judge's verify says "pnpm e2e # FIVE demos x 3 scenarios". THERE ARE NOW SIX. The
+      byte-identity requirement covers all 18 observation strings across all six lanes.
+      (2) The Judge's freeze list predates demos/angular-official. Added.
+      (3) The Judge used `git diff --exit-code` over `scripts` and `demos/react-official`, both of
+      which are legitimately DIRTY from the Angular lane. That check would fail on landed work
+      rather than on a regression, and A VERIFY COMMAND THAT CANNOT PASS ON A CORRECT TREE IS NOT A
+      VERIFY COMMAND. Replaced with asserted content hashes captured by the PM at dispatch time.
+    asserted_tree_facts_captured_by_pm_at_dispatch: >-
+      The working tree is UNCOMMITTED and carries the Angular lane. These three paths are dirty for
+      a legitimate reason and MUST NOT MOVE FURTHER under this task. sha256 (first 16 hex):
+      scripts/e2e.mjs = 2359730dc029cfe8; demos/react-official/three-way-contract.ts = a1026a445bc71ee2;
+      and the demos/angular-official file tree (excluding node_modules, .witness, dist, .angular)
+      hashes to 688664b98a853d8a. Re-compute and compare rather than running git diff --exit-code
+      on them.
+    allowed_files:
+      - docs/emitter-idiom-policy.md
+      - packages/frameworks/vue/src/emitter/index.ts
+      - packages/frameworks/vue/src/gate/index.ts
+      - packages/frameworks/vue/generated/S1.vue
+      - packages/frameworks/vue/generated/S2.vue
+      - packages/frameworks/vue/generated/S3.vue
+      - packages/frameworks/vue/test/gate.test.ts
+      - packages/frameworks/vue/test/emitter.test.ts
+      - packages/frameworks/vue/test/compile-emitted.test.ts
+      - demos/vue-official/src/emitted/RenderOnce.vue
+      - demos/vue-official/src/emitted/KeyedTodo.vue
+      - demos/vue-official/src/emitted/EventForm.vue
+      - docs/goals/frameless-vue-v1/notes/T006-shorthand-adoption.md
+    verify:
+      - "pnpm check"
+      - "pnpm test"
+      - "pnpm lint"
+      - "pnpm test:browser   # react 60, solid 49, svelte 13, vue 18 at dispatch"
+      - "node packages/frameworks/vue/scripts/regenerate.ts && git diff --exit-code -- packages/frameworks/vue/generated   # run TWICE; goldens byte-stable"
+      - "pnpm --dir demos/vue-official copy-emitted && git diff --exit-code -- demos/vue-official/src/emitted   # demo copies match the goldens"
+      - "pnpm e2e   # SIX demos x 3 scenarios; all 18 observation strings byte-identical to the pre-change run"
+      - "git diff --exit-code -- packages/frameworks/react packages/frameworks/solid packages/frameworks/qwik packages/frameworks/svelte packages/compiler demos/react-official/src demos/solid-official/src demos/svelte-official/src demos/qwik/src   # these are CLEAN at dispatch and must stay clean"
+      - "shasum -a 256 scripts/e2e.mjs demos/react-official/three-way-contract.ts   # must match asserted_tree_facts_captured_by_pm_at_dispatch"
+      - "git status --short   # every path inside allowed_files, plus the pre-existing Angular dirt; pnpm-lock.yaml MUST NOT appear"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "ANY of the 18 e2e observation strings moves. Vue's whitespace:'condense' rule makes text layout the silent hazard on this lane (T003 M1), and the shorthand is 6 chars shorter per v-bind and 4 per v-on, so renderHost's width()/fits decision WILL move. Start-tag layout is not rendered text, and the change can only REMOVE the 'cannot inline' throw, never add it - so a moved observation means something ELSE broke. Stop and report it."
+      - "You are about to emit a value-less shorthand (:x or @x with no expression). MEASURED at 3.5.40: value-less v-bind:count and :count BOTH compile as the 3.4-gated same-name shorthand, and value-less v-on errors in both spellings. The hazard is SYMMETRIC and PRE-EXISTING; your job is to ASSERT it cannot happen, not to introduce or 'fix' it."
+      - "You are about to emit the .prop shorthand (.foo=\"x\") or any v-on modifier (.prevent/.stop/.self). The ruling covers : and @ WITH A VALUE only. compiler-core's ondirname pre-seeds a 'prop' modifier for '.', which is a different form that was never gated."
+      - "You are about to emit #header or any v-slot form. RULED DENIED by T005 entry 2b: G4 UNKNOWN (no deciding function; IR-3 is default-slot-only) and G6 FAIL (no check can exist for a path the emitter refuses to emit). Re-open only when IR-3 gains named-slot vocabulary."
+      - "You are about to adopt eslint-plugin-vue flat/strongly-recommended because vue/v-on-style and vue/v-bind-style now pass. The exclusion STANDS on six other measured rules, two of which (singleline/multiline-html-element-content-newline) would break the cross-lane text observation."
+      - "You are about to record a VERIFIED floor for ':' or '@'. compiler-core:2435 proves the NORMALISATION, not the version it arrived in. The existing v-bind/v-on entries read 'unverified' and these must match. Never record a floor you did not verify."
+      - "The inverted no-directive-shorthand policy, the inventory rows, or the value-bearing assertion cannot be made to go RED. A gate that only fires in one direction is half a gate; today's polarity (0 violations longhand, 30 shorthand) must simply REVERSE, with a mutation row each way and the anti-vacuity row preserved."
+      - "scripts/e2e.mjs, demos/react-official/three-way-contract.ts or the demos/angular-official tree moves. Those carry the landed Angular lane and are not yours."
+      - "pnpm-lock.yaml moves, or any dependency needs installing."
+      - "You are about to amend worked example 3 (defineEmits) or the Angular worked examples. Only worked example 2 and Gate 1's absent-framework paragraph are in scope; worked example 3's stale labels are queued as T007 and its DENIED ruling is unchanged."
+      - "Verification fails twice for the same reason."
+    constraints:
+      - "docs/emitter-idiom-policy.md is a SHARED file. The Angular idiom re-run may also want it; the PM is serialising, so this task has it exclusively for now. Do not restructure the document - replace worked example 2 and amend the Gate 1 paragraph, nothing more."
+      - "The Judge measured that NO BEHAVIOURAL CHECK CAN DISTINGUISH the two spellings - they are behaviourally identical. The gate's TEXT policy is therefore the ONLY thing pinning the form. That is why inverting it (rather than deleting it) is load-bearing, and why its two-sided calibration is not optional."
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T006-shorthand-adoption.md
+      summary: "Adopted the T005 ruling as one vertical slice. Folded worked examples 2a (sugar, six PASS) and 2b (v-slot, DENIED at G6, G4 UNKNOWN) into the policy replacing worked example 2; rebuilt Gate 1's absent-framework paragraph as a one-line-per-framework discharge list and added Vue's line, LEAVING ANGULAR'S FOR THE QUEUED FOLD as instructed. Flipped all three emission sites to the valued shorthands and rewrote the decision-site comment, which had ruled the opposite way. Inverted the spelling policy, added directive-carries-value, moved the inventory to ':'/'@' at floor 3.0 unverified, cut both tier firesOnCorpus lists to six ids. Gate polarity reversed EXACTLY: 0 violations on shipped output, 30 on the longhand twin (25+5), mirroring the pre-change split."
+      GATE_DEFECT_FOUND_AND_FIXED_the_policy_could_be_fooled: "THE MOST VALUABLE THING THIS TASK PRODUCED, and it is a defect in the instrument rather than in the output. The spelling policy initially keyed on directive.name, which SILENTLY ACCEPTED .checked=\"checked\" AS IF IT WERE :checked=\"checked\" - because '.' and ':' BOTH normalise to name === 'bind' inside compiler-core's ondirname, and only rawName separates them. The .prop shorthand is a form T005 explicitly ruled OUT of scope, so the gate would have waved through precisely the construct the ruling excluded. Fixed to read rawName and given its own mutation row. Note the shape: the same ondirname normalisation that made Gate 4 a STRUCTURAL claim is what made the naive check blind - the ruling's strongest evidence and the instrument's weak point were the same source line."
+      second_instrument_defect_the_assertions_matched_a_comment: "The emitter-side text assertions used a shorthand-shaped regex over the WHOLE FILE, which matches the provenance header '@generated by @frameless/vue' and reported a directive that was not there. A passing assertion reading a comment is a green vacuum. Now scoped to the <template> block, WITH A CALIBRATION ON THE SLICER ITSELF - the instrument that narrows the search is itself an instrument and asserts its own preconditions."
+      the_rulings_predicted_hazard_did_NOT_occur_and_the_reason_matters: "T005 and the card both warned that the shorthand is 6 chars shorter per v-bind and 4 per v-on, so renderHost's width()/fits decision WOULD move and the e2e text observations were the thing at risk. MEASURED: no layout movement at all. fits rejects on the '\\n' inside handler values BEFORE width is ever consulted, so the golden diff is a PURE RESPELLING. The predicted hazard was real in principle and inert in this corpus, and the reason it was inert is worth recording rather than just the fact."
+      changed_files:
+        - docs/emitter-idiom-policy.md
+        - packages/frameworks/vue/src/emitter/index.ts
+        - packages/frameworks/vue/src/gate/index.ts
+        - packages/frameworks/vue/generated/S1.vue
+        - packages/frameworks/vue/generated/S2.vue
+        - packages/frameworks/vue/generated/S3.vue
+        - packages/frameworks/vue/test/gate.test.ts
+        - packages/frameworks/vue/test/emitter.test.ts
+        - demos/vue-official/src/emitted/RenderOnce.vue
+        - demos/vue-official/src/emitted/KeyedTodo.vue
+        - demos/vue-official/src/emitted/EventForm.vue
+        - docs/goals/frameless-vue-v1/notes/T006-shorthand-adoption.md
+      commands:
+        - cmd: "pnpm check"
+          status: pass
+          note: "PM re-ran: exit 0"
+        - cmd: "pnpm test"
+          status: pass
+          note: "50 files / 861 tests, up from 857; PM re-ran"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 327 files; PM re-ran"
+        - cmd: "pnpm test:browser"
+          status: pass
+          note: "react 60, solid 49, svelte 13, vue 18"
+        - cmd: "node packages/frameworks/vue/scripts/regenerate.ts && git diff --exit-code -- packages/frameworks/vue/generated"
+          status: pass
+          note: "run TWICE; goldens byte-stable"
+        - cmd: "pnpm --dir demos/vue-official copy-emitted && git diff --exit-code -- demos/vue-official/src/emitted"
+          status: pass
+          note: "cmp confirms demo copies byte-identical to goldens"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "SIX demos x 3 scenarios, all 18 observation strings byte-identical to the pre-change capture (sha256 909ff0a74031a9d7 both runs). PM RE-RAN and read the vue rows against the react rows for all three scenarios - identical"
+        - cmd: "git diff --exit-code -- packages/frameworks/react packages/frameworks/solid packages/frameworks/qwik packages/frameworks/svelte packages/compiler demos/react-official/src demos/solid-official/src demos/svelte-official/src demos/qwik/src"
+          status: pass
+          note: clean
+        - cmd: "shasum -a 256 scripts/e2e.mjs demos/react-official/three-way-contract.ts pnpm-lock.yaml"
+          status: pass
+          note: "PM re-verified all three asserted freeze hashes: 2359730dc029cfe8, a1026a445bc71ee2, f52229150e6b4b5a - all unmoved from dispatch"
+        - cmd: "find demos/angular-official -type f | xargs shasum | shasum"
+          status: pass
+          note: "688664b98a853d8a matches dispatch; the Angular lane did not move"
+        - cmd: "git status --short"
+          status: pass
+          note: "PM verified every staged path is inside allowed_files"
+      deviations:
+        - "Policy id renamed no-directive-shorthand -> require-directive-shorthand. The card said INVERT, not freeze the id, and an id reading 'no directive shorthand' while REQUIRING the shorthand would print that phrase in every violation it emits. Matches the gate's existing honest-naming convention (generated-header, condense-stable-text). PM ACCEPTS - flagged explicitly because grepping the old id now finds nothing."
+        - "v-bind and v-on were REMOVED from BASELINE_FORM_INVENTORY rather than merely joined by ':' and '@'; the card said 'add'. PM ACCEPTS THE REASONING: the inventory's contract is 'every form the emitter MAY emit', so leaving the longhand listed would be a silent widening in the other direction AND would cost the longhand twin its second independent detector, dropping the reversed split from 25+5 to 25+0. Reversible in one line if a later ruling disagrees."
+        - "Emitter-side text assertions scoped to the <template> block with a calibration on the slicer - see the second instrument defect above."
+        - "packages/frameworks/vue/test/compile-emitted.test.ts was in allowed_files but needed no edit; its mutation targets are unaffected by a spelling flip."
+      remaining_blockers: []
+      spawned_tasks:
+        - T008
+      pm_note_on_staging: "The Worker used git add, so these changes are STAGED but NOT committed - staging is what makes the two index-relative `git diff --exit-code` verify commands meaningful. No commit was made. The PM still holds the commit decision and has no instruction to commit."
+      stopped_because: null
+  - id: T007
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: medium
+    objective: "Cheap re-run of worked example 3 (defineEmits) at Gate 1 and Gate 4 now that the Vue lane exists; the DENIED ruling is expected to stand, only its labels are stale."
+    why_this_exists: >-
+      T005 found that worked example 3 still carries "G1 DEFERRED - framework absent", a label that
+      is no longer available now that vue@3.5.40 is in the lockfile and a lane drives it. The Judge
+      deliberately did NOT fold this into its own ruling or into T006's adoption, because the entry's
+      DENIED verdict rests on G5 FAIL, which outranks and is untouched by the lane's arrival.
+      Re-labelling an entry inside a task scoped to a different entry is how a ruling gets changed
+      by accident.
+    constraints:
+      - "Do not implement. Rule."
+      - "The expected outcome is that DENIED STANDS on G5 and only the G1/G4 labels move. If the re-run flips the verdict, check your own reasoning first and bring explicit evidence about what changed."
+      - "Sequenced AFTER T006, which owns docs/emitter-idiom-policy.md. Do not edit that file."
+    expected_output:
+      - "Six gate outcomes for worked example 3 with current labels"
+      - "Whether DENIED stands, with the deciding gate named"
+      - "The exact replacement text, for a later package to fold in"
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      harness: claude-code
+      note: notes/T007-define-emits-rerun.md
+      rationale: "Re-ran all six gates on worked example 3 against vue@3.5.40. G1 PASS (exact-empty diagnostics both forms x 4 modes, calibrated). G4 FAIL, NOT UNKNOWN: propsDeclaration() is a real deciding function with live instances and the sugar applies to 1 of 6 shipped props; every repair narrowing dies at IR-8 or Gate 3. G6 FAIL - Gate 1's coupling clause forces the move once G1 is PASS. G5 FAIL STANDS BUT ITS WRITTEN MECHANISM IS MEASURED FALSE: frameless DECLARES the callback prop, and a declared prop leaves $attrs exactly as a declared emit does. Three-sided DOM measurement with a calibration arm that fires. DENIED strengthened from one FAIL to three."
+      summary: "DENIED STANDS, deciding gate G5 - the predicted outcome. Labels: G1 DEFERRED->PASS, G4 DEFERRED->FAIL, G6 DEFERRED->FAIL; G2/G3/G5 unchanged in verdict. The substantive finding is that the entry's G5 rationale describes the delta between an UNDECLARED prop and a declared emit, while frameless emits a DECLARED prop - measured identical on $attrs and native-click delivery. G5 re-based on three measured differences: throw behaviour on a missing handler, return value, and handler-name resolution. Exact replacement text produced; the policy file was NOT edited."
+      THE_VERDICT_SURVIVED_ITS_OWN_STATED_REASON: "The entry read that declaring a native event name in emits removes it from fallthrough $attrs, so 'a frameless component with a callback prop named onClick would stop receiving native clicks'. THAT IS THE DELTA BETWEEN AN UNDECLARED PROP AND A DECLARED EMIT. Frameless DECLARES the prop - propsDeclaration() prints onTrace into defineProps([...]) in all three goldens - and a declared prop behaves exactly as a declared emit does here. MEASURED THREE-SIDED against vue@3.5.40 in a real DOM: props:['onClick'] gives $attrs [] and no native click; emits:['click'] gives $attrs [] and no native click; and the CALIBRATION arm declaring NEITHER gives $attrs ['onClick'] and DOES deliver the click. The calibration firing is what makes the two negatives a real result rather than a dead probe. This is the third time on this goal that a correct ruling was found resting on an incorrect reason - the Angular T005 NG0950 limb and the T007 toolchain mechanism being the others."
+      G4_is_FAIL_not_UNKNOWN_and_that_distinction_is_the_point: "Entry 2b took UNKNOWN on an EMPTY domain - no emitter path exists, so its totality was vacuous. HERE THE DOMAIN IS POPULATED AND SHIPPED: six props, sugar applies to one. Every repair narrowing dies - 'is a callback' needs the type field IR-8 does not have, the /^on[A-Z]/ narrowing is unsound for the same reason, and 'props the body calls' is killed by Gate 3. A populated domain with no sound narrowing is FAIL; an empty domain is UNKNOWN. Conflating them is how a vacuous entry gets read as a considered one."
+      the_judge_exceeded_its_brief_by_one_gate_and_flagged_it: "The card scoped this to G1 and G4. G6 moved as well, and the Judge surfaced that rather than absorbing it: Gate 1's own coupling paragraph makes recording PASS at G1 while leaving DEFERRED at G6 self-contradictory - it would make Gate 1 FAIL by its own text. The move is in the direction of the existing verdict, which is why it is a strengthening rather than a scope violation."
+      consequence_outside_the_policy_file: "packages/frameworks/vue/src/gate/index.ts:1029 SHIPS THE REFUTED SENTENCE IN A LIVE, USER-VISIBLE VIOLATION MESSAGE: 'worked example 3 rules the defineEmits form DENIED at Gate 5 because a declared native event name stops the listener receiving native events.' The RULE is correct and stays; only its EXPLANATION is now known to be false. So the fold is code plus docs, not docs alone."
+      evidence:
+        - "pnpm-lock.yaml:367-369 and :725-727 - vue@3.5.40 at both importers; vue and @vue/compiler-sfc BOTH resolve 3.5.40 from packages/frameworks/vue"
+        - "G1 probe: shipped generated/S1.vue and its mechanical defineEmits twin - parse errors 0, template errors 0, tips 0, no throw, across ssr x isProd; a planted syntax error reports 1+1 in all four modes (calibrated)"
+        - "G1 DISCLOSED BLIND SPOT: emit('trace') against defineEmits(['other']) is exact-empty clean in all four modes - the compiler CANNOT SEE the class G5 decides on"
+        - "G5 three-sided DOM measurement (jsdom 28.1.0, vue@3.5.40) with a firing calibration arm - table in the note"
+        - "G5 measured grounds: missing handler -> baseline TypeError 'props.onTrace is not a function' vs candidate silent no-op; return value 42 vs undefined; parent 'on-trace' reached by baseline only, 'onTraceOnce' reached by emit() only"
+        - "packages/frameworks/vue/src/emitter/index.ts:400 propsDeclaration(), called at :482 - the Gate 4 deciding function; six shipped props, sugar applies to one"
+        - "packages/compiler/src/schema.ts:205 PropDestructuringEntry - no type field (IR-8), which is what makes every Gate 4 repair narrowing unsound"
+        - "packages/frameworks/vue/src/gate/index.ts:1024-1029 - the standing refusal, whose message text repeats the refuted mechanism"
+        - "scripts/e2e.mjs:38 - the Vue row; six rows total, discharging Gate 6's one DEFERRED cause"
+      missing_evidence:
+        - "The native-click arm was measured in jsdom, not Chromium. In envelope - this is runtime-core's props/attrs partition, not layout - and the G5 FAIL stands on the throw-behaviour arm alone, but a browser re-take is cheap if an auditor wants it."
+      pm_reconciled_the_lockfile_flag_FALSE_ALARM: "The Judge flagged that pnpm-lock.yaml 'shows as modified in the working tree while T006's receipt asserts it frozen at f52229150e6b4b5a', and asked the PM to reconcile before any completion audit reads that freeze as holding. PM CHECKED: THE FREEZE HOLDS EXACTLY. shasum -a 256 pnpm-lock.yaml is f52229150e6b4b5a right now, byte-for-byte what T006 asserted at dispatch. The file IS modified relative to HEAD - it carries the Angular lane's +3918/-160 - but it has not MOVED since the freeze was taken, which is what the assertion claims. The Judge conflated 'modified vs HEAD' with 'moved since dispatch'. A reasonable misread, correctly escalated rather than assumed, and it is the THIRD verification confusion this session traceable to the same root cause: a large legitimate uncommitted changeset sitting under every git-based check."
+  - id: T008
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: medium
+    superseded_scope: >-
+      ORIGINALLY a README-only card, flagged by its own text as too small to dispatch alone. T007's
+      re-run then produced a fold of its own AND found a refuted sentence shipping in a live gate
+      violation message, and its receipt explicitly asked that the README be bundled rather than
+      dispatched separately. The slice policy caps consecutive tiny tasks at two. WIDENED TO THE
+      COMBINED FOLD - the README correction is now one part of it, not its own dispatch.
+    serialization_hold: >-
+      SERIALIZED BEHIND frameless-angular-v1 T008. Both edit docs/emitter-idiom-policy.md. The
+      Angular fold owns worked examples 11/11b and Gate 1's Angular discharge line; this one owns
+      worked example 3. DO NOT START until the Angular fold has landed, then READ Gate 1's discharge
+      list as it then stands rather than as described here.
+    spec: "T007 receipt and docs/goals/frameless-vue-v1/notes/T007-define-emits-rerun.md - the fenced replacement block is AUTHORITATIVE and folds in VERBATIM."
+    objective: >-
+      Fold the T007 re-run of worked example 3 into docs/emitter-idiom-policy.md verbatim from the
+      note's fenced replacement block; CORRECT THE SHIPPED GATE VIOLATION MESSAGE at
+      packages/frameworks/vue/src/gate/index.ts:1029, which repeats the REFUTED mechanism and must
+      instead cite the measured throw / return-value / name-resolution grounds; and correct
+      packages/frameworks/vue/README.md, which still describes the emitter as shipping "longhand
+      v-bind: / v-on:" attributed to T002 ruling 2 - false on both halves since T006.
+    why_this_is_code_and_not_only_docs: >-
+      packages/frameworks/vue/src/gate/index.ts:1029 ships this sentence to users in a live violation
+      message: "worked example 3 rules the defineEmits form DENIED at Gate 5 because a declared
+      native event name stops the listener receiving native events." T007 MEASURED THAT FALSE. The
+      RULE is correct and stays; its EXPLANATION is wrong and is being read by anyone who trips the
+      gate. A refuted justification shipping in a user-facing string is worse than one sitting in a
+      document, because it arrives exactly when someone is deciding whether to trust the rule.
+    allowed_files:
+      - docs/emitter-idiom-policy.md
+      - packages/frameworks/vue/src/gate/index.ts
+      - packages/frameworks/vue/test/gate.test.ts
+      - packages/frameworks/vue/README.md
+      - docs/goals/frameless-vue-v1/notes/T007-define-emits-rerun.md
+    verify:
+      - "pnpm check"
+      - "pnpm test"
+      - "pnpm lint"
+      - "grep -n 'stops the listener receiving native' packages/frameworks/vue/src/gate/index.ts   # must return NOTHING"
+      - "grep -rn 'DEFERRED — framework absent' docs/emitter-idiom-policy.md   # must not appear under worked example 3"
+      - "grep -n 'longhand' packages/frameworks/vue/README.md   # must not describe shipped output as longhand"
+      - "git diff --exit-code -- packages/frameworks/vue/generated packages/frameworks/vue/src/emitter demos   # documentation and gate-message only; NO emitted output moves"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "The Angular T008 fold has not yet landed its edit to docs/emitter-idiom-policy.md. The PM is serialising writes to that file - stop and let the PM sequence you."
+      - "You are about to change worked example 2a, 2b, Gate 1's discharge list, or any Angular entry. ONLY worked example 3 is in scope."
+      - "You are about to change the emitter, the goldens, or demos/vue-official to match the new text. NOTHING about emitted output changes - defineEmits stays DENIED and the emitter already refuses it."
+      - "You are about to soften the gate rule at index.ts:1029 from a violation to a warning. THE RULE IS CORRECT; only its EXPLANATION was refuted."
+      - "A gate-message assertion in gate.test.ts cannot be made to go RED after the message text changes."
+      - "You are about to record G4 as UNKNOWN for worked example 3. It is FAIL - the domain is POPULATED (six shipped props, sugar applies to one) and every repair narrowing dies at IR-8 or Gate 3. UNKNOWN is for the empty domain of entry 2b."
+      - "Verification fails twice for the same reason."
+    constraints:
+      - "The README must cite T005 (the ruling) and T006 (the adoption), not T002 ruling 2, which T005 supersedes on this point. Record the v-slot half too: 2b is DENIED, so the README must not imply named slots are available."
+      - "The replacement gate message must state the three MEASURED grounds - throw behaviour on a missing handler, return value, and handler-name resolution - not merely delete the false one. A rule whose message says only 'this is denied' teaches nothing."
+    receipt: null
+
+    why_this_exists: >-
+      REPORTED BY T006 AGAINST ITSELF, from outside its own allowed_files. README.md lines 24-25 say
+      the emitter ships "longhand v-bind: / v-on:" and attribute that to T002 ruling 2. After T006
+      flipped all three emission sites to the valued shorthands, BOTH HALVES ARE WRONG: the
+      description is false, and the attribution points at a ruling T005 has since superseded. A
+      shipped README describing the opposite of what the emitter emits is the cheapest possible
+      defect to fix and one of the more expensive to leave, because it is exactly what a future
+      reader would cite as prior art.
+    bundling_note: >-
+      DELIBERATELY SMALL, and the PM is aware the slice policy caps consecutive tiny tasks at two.
+      This is a one-sentence correction and a good candidate to BUNDLE into whichever Vue package
+      runs next rather than dispatching alone. It is recorded as its own card so it cannot be
+      forgotten, not because it deserves its own dispatch.
+    allowed_files:
+      - packages/frameworks/vue/README.md
+    verify:
+      - "pnpm lint"
+      - "grep -n 'longhand' packages/frameworks/vue/README.md   # must not describe shipped output as longhand"
+      - "git diff --exit-code -- packages/frameworks/vue/src packages/frameworks/vue/generated   # documentation only"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to change emitted output, the emitter or the gate to match the README. THE README IS THE THING THAT IS WRONG. T005 ruled the shorthand in and T006 landed it under full verification."
+      - "The README turns out to be right and the emitter wrong. That would mean T006's goldens and the six-row e2e are both lying, which is a FINDING and a stop, not an edit."
+    constraints:
+      - "Cite T005 (the ruling) and T006 (the adoption), not T002 ruling 2, which T005 supersedes on this point."
+      - "Record the v-slot half too: 2b is DENIED, so the README must not imply named slots are available."
     receipt: null
 
   - id: T999

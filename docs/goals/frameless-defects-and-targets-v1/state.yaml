@@ -131,7 +131,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T999
+active_task: T014
 
 tasks:
   - id: T001
@@ -1762,7 +1762,7 @@ tasks:
   - id: T013
     type: pm
     assignee: PM
-    status: queued
+    status: done
     dispatch:
       started: "Svelte board T001 (Scout, read-only) dispatched 2026-07-27, concurrent with T017 and T018."
       rationale: >-
@@ -1796,12 +1796,74 @@ tasks:
       - "Svelte row green in pnpm e2e with asserted S1/S2/S3 equality"
       - "IR-4 ruling, applicable to Vue and Angular"
       - "Rollup receipt pointing at the Svelte board's own audit"
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      summary: "Svelte adapter ran to completion on its own board, which closed 2026-07-27 with a T999 RE-AUDIT returning complete and full_outcome_complete: true. The Svelte row is green in a six-row pnpm e2e with S1/S2/S3 observations ASSERTED equal - equality enforced in code at scripts/e2e.mjs:461-490, not merely observed in a log. IR-4 received an explicit ruling: DEFERRED, with reason and consequence recorded."
+      rollup_points_at: "docs/goals/frameless-svelte-v1/state.yaml - goal.status done, T999 receipt. Long-form audit at docs/goals/frameless-svelte-v1/notes/T999-reaudit.md."
+      ir_4_outcome_stated_precisely_because_it_is_a_deferral_not_a_delivery: "THE CHARTER ASKED FOR A RULING AND GOT ONE, BUT NOT A FACILITY - and this rollup will not let that read as a delivery. Verdict: IR-4 DEFERRED. The policy's version corollary is NOT amended; both conjuncts stand, and 'the lockfile pins >= N' alone does NOT satisfy it. The second conjunct is satisfiable two ways: (a) an explicit target-version or capability input on EnrichedIR, or (b) an emitter that emits ONLY baseline-version-safe forms, so no version-gated sugar exists and the corollary never engages. SVELTE IS (b) TODAY. The reason for deferring is the substantive part: at svelte ^5.56.1 every version-gated construct under discussion is already above its floor, so the Svelte lane produces NO FORCING CASE, and a general facility designed against zero forcing cases is folklore. The board said plainly that Svelte was handed the EASY end of the question."
+      consequence_for_vue_and_angular_carried_forward: "Stated by the Svelte board and propagated to both sibling boards at the time: Vue's defineModel (3.4+) and Angular's signal input()/output() (>=17.1/17.2) may NOT have the same slack Svelte had. Neither inherits a facility, because none was built; each inherits the RULING - that route (b) is legitimate and must be recorded explicitly rather than assumed. If either lane finds a forcing case, IR-4 reopens as a general design task and this rollup is the pointer back to why it was left open."
+      what_the_re_audit_actually_checked: "This rollup rests on an audit that re-derived rather than inherited. It confirmed the oracle in code rather than from a green log; it re-derived the T011 correction from shipped sources (react-dom 19.2.3 writes element.defaultValue unconditionally; solid-js 1.8.22 early-returns in both setAttribute and setProperty); and it independently verified both PM board repairs, confirming HEAD throws two duplicate-key errors where the working tree parses clean. It also CORRECTED THE PM's own repair note for an overstatement, which is recorded on the Svelte T004 card rather than silently applied."
+      carried_forward_openly:
+        - "IR-8: emitted output carries no prop types, so svelte-check cannot catch a wrong-TYPED prop passed from a route. FOUR lanes have now independently failed to close this same hole - Svelte, Vue (vue-tsc measured at both checkJs settings), Angular (six TS7006 diagnostics from a real ng build), and Solid. It is not a Svelte problem and does not belong to any single adapter board."
+        - "modes: ['dev'] - the SvelteKit vite build plus adapter path is still never exercised. Repo-wide and named in the charter."
+        - "No baseline-form-inventory floor is 'verified' - the verified arm is calibrated, not exercised, and cannot be without network access."
+        - "After Option D, NO lane observes S3's `text` in the live DOM. Recorded with a re-open trigger naming the lost class, which the re-audit confirmed is present and per-lane."
+      commands:
+        - cmd: "node check-goal-state.mjs docs/goals/frameless-svelte-v1"
+          status: pass
+          note: "0 errors, 0 warnings; goal.status done, active_task null, every task carries a receipt"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "PM-run: SIX rows including svelte, all 18 observation strings byte-identical"
+        - cmd: "git diff --exit-code -- packages/frameworks/svelte demos/svelte-official/src"
+          status: pass
+          note: "Svelte lane byte-unchanged under the Angular landing - part of what the six-row equality proves"
+      spawned_tasks: []
   - id: T014
     type: pm
     assignee: PM
-    status: queued
+    status: active
+    activated: >-
+      2026-07-27 by the PM, replacing a premature T999. The Vue half of this task is DONE - Vue
+      T004 landed the fifth e2e row and Vue T005 (the idiom re-run) is the only Vue task left. The
+      Angular half has NOT started: Angular T004 is the single largest remaining gap in oracle half
+      2. Angular T004's serialization hold is DISCHARGED - it was serialized behind Vue T004 on a
+      read-modify-write of demos/react-official/three-way-contract.ts and scripts/e2e.mjs, and Vue
+      T004 has landed both.
+    board_health_performed_under_this_task: >-
+      2026-07-27, PM stewardship on GoalBuddy CONTROL FILES ONLY - no product file touched. All four
+      boards now pass check-goal-state.mjs with ZERO errors for the first time; before this they
+      carried 6, 7, 22 and 1 respectively. What was actually wrong, in descending order of severity:
+      (1) TWO BOARDS WERE INVALID YAML. frameless-svelte-v1 T004 carried DUPLICATE stop_if and
+      constraints keys, and this board's T020 carried duplicate constraints. A strict parser throws
+      DUPLICATE_KEY on both; nothing had ever strict-parsed these files because the checker is a
+      line regex parser. The effect was not cosmetic - under last-key-wins, a generic three-line
+      stub silently overrode EIGHT T002-derived stop conditions on Svelte T004 (including the ones
+      forbidding a guessed served-payload literal and forbidding relaxation to "any module script"),
+      and on T020 a stale stub overrode five real constraints with text telling a reader not to
+      start a task that was already done. Both repaired by MERGING, nothing dropped.
+      (2) A DONE RECEIPT CONTAINING A FAILURE. Svelte T004 read status done while its own receipt
+      read result blocked with pnpm e2e at status fail. An earlier same-day PM flip had done that.
+      Reverted to blocked: the contract is explicit that a done Worker receipt lists only passing
+      commands, and T004's blocker was correctly discharged by T006's ruling and T007's
+      implementation, where the green is actually proven. The lane loses nothing and stops lying.
+      (3) 43 RECEIPT COMMAND LISTS WERE UNVERIFIABLE. Written as YAML flow maps, which the checker's
+      `status:`-at-10-spaces regex cannot see, so every one of them asserted "all passed" in a form
+      no tool could check. Converted to block style by a script that fail-closes on any semantic
+      drift in a full before/after parse. It refused to write twice - both times correctly, on the
+      duplicate keys in (1). That is how the duplicate keys were found at all.
+      (4) MISSING SCOPE AND EVIDENCE. Reconstructed changed_files for five done Worker receipts and
+      evidence lists for two Scout receipts, every entry marked PM-RECONSTRUCTED with its source
+      commit. Vue T004 - the card the handoff names as shipping with allowed_files: [] - had its
+      PM-confirmed derived envelope recorded retroactively, so its scope is machine-checkable rather
+      than resting on a prose confirmation nobody can re-run. Angular T003a was renamed to T006
+      (T003a is not a valid id and left that board reporting zero active tasks); its 24 prose
+      references were deliberately NOT rewritten, because frameless-qwik-v1 uses the same label for
+      an unrelated task and a mechanical rewrite would have corrupted a different board's history.
+      ALSO CREATED T029 from the finding the handoff recorded as "filed upward, not on any board":
+      the shipped Qwik gate drops two rules from configs.recommended with no reason. PM re-measured
+      it independently rather than inheriting the claim.
     reasoning_hint: high
     objective: "Run the Vue and Angular adapters via their existing boards, inheriting Svelte's IR-4 ruling."
     inputs:
@@ -1877,11 +1939,19 @@ tasks:
       - "TWO-SIDED IS THE WHOLE POINT: the handler must cancel for the DECLARED key and NOT cancel for another. A one-sided assertion would pass against an always-cancel bug - which is precisely the Solid bug T012 found hiding behind a validator, where a conditional cancel fired unconditionally."
       - "Add the case to the EXISTING S3 fixture rather than creating S4, if it can be done without moving S3's existing observed strings. S3 already has a form and a cancellable submit path from T002. A new scenario costs a fixture, a golden, four generated files, four demo copies, four routes and a matrix row."
       - "All four lanes must express it. React and Solid keep the authored guard verbatim; Qwik synthesizes a sync$ guard from the condition tree; Svelte emits the guard in-body. That divergence in FORM with identity in BEHAVIOUR is the whole thesis, and this is the first scenario that tests it on a conditional."
-    constraints:
-      - "allowed_files and verify are filled by the PM from T012's outcome; do not start until they are set."
-      - "WHY THIS EXISTS: T011 states plainly that without it, T012 ships on emitted text plus a gate - which is exactly the evidence base defect 1 defeated. The gate proves the shape; only this proves the behaviour."
-      - "TWO-SIDED is the whole point: cancels for the declared key, does NOT cancel for another. A one-sided assertion would pass against an always-cancel bug, which is precisely the Solid bug T011 found hiding behind a validator."
       - "Sequenced after T008, T017 and T018 - it adds a corpus fixture, and goldens ripple through every framework suite plus metamorphic and generative."
+    duplicate_key_repair: >-
+      2026-07-27 by the PM. T020 CARRIED TWO `constraints` KEYS - invalid YAML that a strict parser
+      throws DUPLICATE_KEY on. Found by strict-parsing all four boards after the same defect turned
+      up on Svelte T004; check-goal-state.mjs never caught either, because it is a line regex parser
+      and nothing strict had ever read these files.
+      HERE THE STALE STUB WON. Under last-key-wins the four-line stub overrode the five detailed
+      constraints above, and its first line - "allowed_files and verify are filled by the PM from
+      T012's outcome; do not start until they are set" - was not merely redundant but WRONG for a
+      task that has since completed. The surviving text told a reader not to start a task that was
+      already done.
+      REPAIRED BY MERGING: the stub's only non-duplicated entry, the T008/T017/T018 sequencing note,
+      was folded into the constraints list above and the duplicate key removed. No constraint lost.
     receipt:
       result: done
       harness: claude-code
@@ -2325,10 +2395,74 @@ tasks:
     receipt: null
 
 
+  - id: T029
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    objective: >-
+      Close the silent omission in the shipped Qwik gate: qwik/loader-location and
+      qwik/no-await-navigate-in-use-task are dropped from eslint-plugin-qwik's configs.recommended
+      with NO recorded reason. Either apply them or record an explicit reason per rule, proof first.
+    why_this_exists: >-
+      FOUND BY THE ANGULAR T003a JUDGE while ruling on arbiter independence, and filed upward with
+      "not this board's to fix" - after which it sat on NO board at all, which is how a real finding
+      becomes chat. Creating this card under the Operator Escalation rule so it cannot evaporate.
+      IT IS THE EXACT FAILURE MODE THE OMISSION-LIST DISCIPLINE EXISTS TO PREVENT, LIVE IN A SHIPPED
+      GATE. The Angular ruling put it plainly: an omission list that exists to make a corpus green is
+      the arbiter being shaped to fit the thing it judges. The Angular gate was held to a derived
+      set with ZERO unexplained omissions and ONE recorded addition; the Qwik gate predates that
+      discipline and does not meet it.
+    pm_verified_at_dispatch: >-
+      PM MEASURED THIS INDEPENDENTLY 2026-07-27 rather than inheriting the claim, via
+      createRequire from packages/frameworks/qwik: eslint-plugin-qwik configs.recommended carries
+      16 rules. QWIK_ESLINT_RULES applies 12 and QWIK_ESLINT_RULES_REQUIRING_TYPES records 2 with a
+      stated reason (they need type information). 16 - 14 = exactly the two named above, with no
+      comment anywhere accounting for them. The count and the two identities both reproduce.
+    inputs:
+      - "packages/frameworks/qwik/src/gate/index.ts - QWIK_ESLINT_RULES at :64 and QWIK_ESLINT_RULES_REQUIRING_TYPES below it"
+      - "docs/goals/frameless-angular-v1 T003a receipt, finding_routed_upward_a_defect_in_SHIPPED_code"
+      - "packages/frameworks/angular/src/gate/index.ts - the derived-set precedent this should be measured against"
+    constraints:
+      - "PROOF BEFORE FIX, the charter's own non-negotiable. First MEASURE what each of the two rules does on the shipped Qwik corpus. A rule that fires is a FINDING about emitted output; a rule that is silent still belongs in the applied set unless there is a stated reason it cannot run."
+      - "THE ADDITIONS-ONLY DIRECTION IS WHAT KEEPS INDEPENDENCE INTACT, per the Angular ruling: a delta that only ADDS rules cannot be used to make a corpus green. Prefer applying both over recording reasons for both."
+      - "If a rule genuinely cannot run - needs type information, needs a router, needs a real Qwik City app - that is a legitimate reason, but it must be RECORDED at the omission site with its measured evidence, exactly as the two type-requiring rules already are."
+      - "Do NOT change emitted Qwik output to satisfy a newly applied rule. If a rule fires on the shipped corpus, that is a FINDING to report and a stop - the same bar Angular T003 was held to."
+      - "Do not file anything upstream. The owner is on the Qwik core team and outward-facing filings under their name are outside the autonomy grant."
+    allowed_files:
+      - packages/frameworks/qwik/src/gate/index.ts
+      - packages/frameworks/qwik/test/gate.test.ts
+      - docs/goals/frameless-defects-and-targets-v1/notes/T029-qwik-omission-list.md
+    verify:
+      - "pnpm check"
+      - "pnpm test"
+      - "pnpm lint"
+      - "git diff --exit-code -- packages/frameworks/qwik/generated   # emitted output must NOT move to satisfy a rule"
+      - "git status --short"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "A newly applied rule fires on the shipped Qwik corpus. That is a FINDING - report it with the violation verbatim and stop; do not change emitted output to silence it."
+      - "You cannot show a newly applied rule going RED on a planted violation. A rule that cannot fail is not an arbiter, and adding it would be theatre."
+      - "You are about to drop a THIRD rule, or widen the omission list for convenience."
+      - "Verification fails twice for the same reason."
+    expected_output:
+      - "Per rule: applied, or omitted with a measured and recorded reason"
+      - "A planted-violation calibration per newly applied rule, proving red"
+      - "An inventory assertion that makes any FUTURE silent divergence from configs.recommended visible, modelled on the Angular derived-set precedent"
+    receipt: null
+
   - id: T999
     type: judge
     assignee: Judge
-    status: active
+    status: queued
+    deactivated_by_pm: >-
+      2026-07-27. T999 was left ACTIVE at the end of the previous session, which is wrong and would
+      have burned a final audit on a provably incomplete goal. Oracle half 2 requires SIX e2e rows;
+      HEAD has FIVE (react, solid, qwik, svelte, vue) because the Angular lane has no demo and no
+      row - Angular T003 shipped NODE-ONLY by design and explicitly assigned the row to Angular
+      T004. Oracle half 3 (corpus breadth) has not started: T024-T028 are all queued. A final audit
+      cannot return anything but not_complete, and the contract forbids completion while required
+      Worker tasks are queued. Returned to queued; T014 activated to drive the Angular lane in.
     reasoning_hint: high
     objective: "Final audit: certify both oracle halves over the phase audits, and rule the full owner outcome complete or not."
     inputs:
@@ -2358,8 +2492,47 @@ tasks:
     receipt: null
 
 checks:
-  dirty_fingerprint: unknown
+  dirty_fingerprint: >-
+    2026-07-27, uncommitted on branch main over HEAD d9dd70b. The Angular lane: demos/angular-official
+    (31 files, untracked), packages/frameworks/angular/test/toolchain.test.ts (untracked),
+    docs/goals/frameless-angular-v1/notes/T004-angular-demo.md (untracked), and modifications to
+    demos/react-official/three-way-contract.ts, scripts/e2e.mjs and pnpm-lock.yaml. Plus PM board
+    repairs across all four state.yaml files. NOTHING COMMITTED THIS SESSION - the PM has no standing
+    instruction to commit, and says so rather than assuming the previous sessions' practice carries.
   last_verification:
-    result: unknown
-    task: null
-    commands: []
+    result: green
+    task: T004 on docs/goals/frameless-angular-v1 (the sixth e2e lane)
+    run_by: "PM, independently, re-running the FULL goal oracle rather than only the commands on T004's card"
+    when: "2026-07-27, against the exact tree described in dirty_fingerprint"
+    commands:
+      - cmd: "pnpm check"
+        status: pass
+        note: "six tsc passes - react, solid, svelte, vue, angular plus the root project"
+      - cmd: "pnpm lint"
+        status: pass
+        note: "0 warnings, 0 errors, 327 files"
+      - cmd: "pnpm test"
+        status: pass
+        note: "857 passed / 50 files, up from 850 / 49 at HEAD"
+      - cmd: "pnpm test:browser"
+        status: pass
+        note: "react 60, solid 49, svelte 13, vue 18 - identical to HEAD. NOT on T004's card; the PM added it because the lockfile leak moved root vite's esbuild for every lane and these are the suites that would show it"
+      - cmd: "pnpm e2e"
+        status: pass
+        note: "SIX rows. 'Three-way: 6 demos x 3 scenarios, all observations equal'. PM read all 18 observation strings - byte-identical across react, solid, qwik, svelte, vue, angular"
+      - cmd: "git diff --exit-code -- packages/compiler packages/frameworks/{react,solid,qwik,svelte,vue} demos/{react,solid,svelte,vue}-official/src demos/qwik/src"
+        status: pass
+        note: "CLEAN - no existing lane moved to accommodate Angular"
+  oracle_half_2_status: >-
+    SATISFIED AS OF THIS VERIFICATION, pending the phase audits. The charter's half 2 requires
+    "pnpm e2e includes Svelte, Vue and Angular rows driving official scaffolds at pinned lockfile
+    versions, with S1/S2/S3 observations ASSERTED equal to the existing three". All three now exist
+    on official scaffolds (sv create, create-vite-extra@5.0.2, @angular/cli@22.0.8), and equality is
+    ASSERTED by scripts/e2e.mjs rather than merely observed. The PM verified the assertion is real
+    and not weakened: the three-way-contract.ts diff is purely additive - the hydrate union gains
+    'angular', each total Readonly<Record<...>> gains one entry, and NOT ONE existing literal moved.
+  what_is_still_open: >-
+    Oracle half 1 (defects) and half 3 (corpus breadth) are NOT closed by this. Half 3 has not
+    started at all - T024 through T028 are queued. T029 was added today for the shipped-Qwik-gate
+    omission. Three Judges are mid-flight: Angular T005, Vue T005 and Svelte T999. T999 on THIS
+    board stays queued until all of that resolves.

@@ -158,7 +158,7 @@ visual_board:
     url: null
     command: "npx goalbuddy board docs/goals/frameless-angular-v1"
 
-active_task: T003a
+active_task: T008
 
 tasks:
   - id: T001
@@ -289,6 +289,21 @@ tasks:
         - "grep angular pnpm-lock.yaml -> zero hits"
         - "node -e enumerate handler bodies from three IR goldens -> 14 handlers"
         - "sed -n 1,12p packages/frameworks/{react,solid,qwik,svelte}/src/gate/index.ts"
+      evidence_provenance: >-
+        PM-RECONSTRUCTED 2026-07-27. This Scout receipt shipped with neither `evidence` nor `note`,
+        which the checker flags on a done Scout receipt - the trail behind the findings is the one
+        structural thing a Scout owes. The receipt cites its sources inline; this list lifts those
+        citations into the field the schema expects. No new evidence, and note the handler count
+        here (14) was later refuted by T002 and again by T003a/T006, which both measured 15.
+      evidence:
+        - packages/frameworks/svelte/src/gate/index.ts
+        - packages/frameworks/react/src/gate/index.ts
+        - packages/frameworks/solid/src/gate/index.ts
+        - packages/frameworks/qwik/src/gate/index.ts
+        - packages/compiler/test/fixtures
+        - pnpm-lock.yaml
+        - pnpm-workspace.yaml
+        - demos/svelte-official
       note_needed: false
 
   - id: T002
@@ -339,10 +354,27 @@ tasks:
         the action grammar and there is NO UpdateExpression node at all, so S1's count++ stays
         unexpressible. But the STATED REASON in two governing documents is partly stale. Recorded as
         a T005 finding per the charter's own instruction, not a T003 work item.
+      ruling_1_RESTATED_BY_T007_ON_MEASUREMENT: >-
+        RESTATED 2026-07-27, NOT APPENDED TO. THE DECISION BELOW STANDS; ONE OF ITS SENTENCES IS
+        FALSE. The original read "there is no shared surface to pin, so the catalog is not violated,
+        it is INAPPLICABLE". THERE IS A SHARED SURFACE: the workspace optional-peer graph. T007
+        measured that adding the Angular lane moved SIX optional peers and changed the peer identity
+        of TWENTY-FIVE packages - the whole SvelteKit stack, @qwik.dev/core and router,
+        @markless/core and router, and @async/witness, which is the e2e instrument itself.
+        THE CORRECTED FRAME, and the reason this is a restatement rather than a fourth bullet: the
+        Angular lane stands in TWO relationships to the catalog, in OPPOSITE directions. It is
+        EXEMPT FROM the catalog (what ruling 1 examined, and got right), and it is a PROVIDER INTO
+        the peer graph the catalog governs (what ruling 1 did not examine at all). Bolting a fourth
+        cost onto a three-cost list whose entries all have the opposite polarity would preserve the
+        frame error while appearing to fix it.
+        AND THE MECHANISM IS NOT THE ONE ANYONE ASSUMED. It is not vendored exactness: four of the
+        six moved peers arrived on ORDINARY CARET RANGES, and two of those are the ng-new scaffold's
+        own devDependencies (jsdom ^28.0.0, prettier ^3.8.1), while chokidar came in on
+        @angular/compiler-cli's ^5.0.0. THE MECHANISM IS WORKSPACE MEMBERSHIP - so this is not an
+        Angular property, and THE NEXT LANE ADDED TO THIS WORKSPACE WILL DO IT TOO.
       ruling_1_build_governance: >-
         The Angular lane is governed by angular.json plus the CLI and is EXEMPT from the vite
-        catalog BY CONSTRUCTION - there is no shared surface to pin, so the catalog is not violated,
-        it is INAPPLICABLE. ACCEPTABLE, DOES NOT BLOCK: the oracle is activation neutrality on
+        catalog BY CONSTRUCTION. ACCEPTABLE, DOES NOT BLOCK: the oracle is activation neutrality on
         official tooling, and a vendored vite is what official Angular tooling IS. Blocking on it
         would be blocking on the scaffold being official. The precedent is demos/qwik (a stock
         scaffold owning its own pipeline, landed by the goal that exists to forbid hand-rolled
@@ -547,6 +579,30 @@ tasks:
       result: done
       harness: claude-code
       verification_attempts: 2
+      changed_files_provenance: >-
+        PM-RECONSTRUCTED 2026-07-27 from commit db52516, not reported by the Worker. Cross-checked
+        against this card's allowed_files; every path is inside it. The commit also touched this
+        board's own state.yaml, which is PM-owned board truth rather than Worker output and is
+        therefore not listed. Note the receipt's own deviation record: no .gitignore was created
+        although permitted, because this package is node-only.
+      changed_files:
+        - package.json
+        - packages/frameworks/angular/README.md
+        - packages/frameworks/angular/generated/S1.ts
+        - packages/frameworks/angular/generated/S2.ts
+        - packages/frameworks/angular/generated/S3.ts
+        - packages/frameworks/angular/scripts/regenerate.ts
+        - packages/frameworks/angular/src/emitter/estree.ts
+        - packages/frameworks/angular/src/emitter/index.ts
+        - packages/frameworks/angular/src/format-emitted.ts
+        - packages/frameworks/angular/src/gate/index.ts
+        - packages/frameworks/angular/src/index.ts
+        - packages/frameworks/angular/test/emitter.test.ts
+        - packages/frameworks/angular/test/gate.test.ts
+        - packages/frameworks/angular/test/parse-emitted.test.ts
+        - packages/frameworks/angular/tsconfig.json
+        - packages/frameworks/angular/vitest.node.config.ts
+        - docs/goals/frameless-angular-v1/notes/T003-angular-emitter.md
       summary: >-
         Landed packages/frameworks/angular whole: emitter lowering ALL 15 event records to class
         methods under T003a's total scope-aware this.-qualification, a gate with parseTemplate
@@ -592,15 +648,39 @@ tasks:
         - "No .gitignore although permitted: Vue's and Solid's exist to hide vitest BROWSER artifacts and this package is node-only."
         - "New files were git add-ed (not committed) before the byte-stability check, because git diff --exit-code over UNTRACKED paths passes VACUOUSLY."
       commands:
-        - {cmd: "pnpm check", status: pass, note: "six tsc passes, angular appended, Vue's entry untouched"}
-        - {cmd: "pnpm test", status: pass, note: "49 files, 850 tests; 85 angular"}
-        - {cmd: "pnpm lint", status: pass, note: "0 warnings, 0 errors, 299 files"}
-        - {cmd: "regenerate && git diff --exit-code -- generated", status: pass, note: "run TWICE, byte-stable both times"}
-        - {cmd: "pnpm e2e", status: pass, note: "four rows, all observations equal - the Angular ROW is T004's"}
-        - {cmd: "git diff --exit-code -- other frameworks, compiler, demos, scripts, pnpm-workspace.yaml", status: pass}
-        - {cmd: "git status --short", status: pass, note: "every path inside allowed_files; pnpm-lock.yaml absent"}
+        - cmd: "pnpm check"
+          status: pass
+          note: "six tsc passes, angular appended, Vue's entry untouched"
+        - cmd: "pnpm test"
+          status: pass
+          note: "49 files, 850 tests; 85 angular"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 299 files"
+        - cmd: "regenerate && git diff --exit-code -- generated"
+          status: pass
+          note: "run TWICE, byte-stable both times"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "four rows, all observations equal - the Angular ROW is T004's"
+        - cmd: "git diff --exit-code -- other frameworks, compiler, demos, scripts, pnpm-workspace.yaml"
+          status: pass
+        - cmd: "git status --short"
+          status: pass
+          note: "every path inside allowed_files; pnpm-lock.yaml absent"
 
-  - id: T003a
+  - id: T006
+    also_known_as: T003a
+    id_repair: >-
+      2026-07-27 by the PM. This task shipped as `T003a`, which is not a valid GoalBuddy task id -
+      the schema requires T###, and the board checker errored on it. It also left this board with
+      `active_task: T003a` pointing at a done task, so the checker simultaneously reported ZERO
+      active tasks on an active goal: the board could not say what it was doing.
+      RENAMED TO T006 (the next free id here), with the original label preserved above because
+      TWENTY-FOUR prose references to "T003a" exist across five files - this board, the umbrella
+      board, and three notes. Those are deliberately NOT rewritten: docs/goals/frameless-qwik-v1
+      uses the label "T003a" for an UNRELATED task of its own, so a mechanical rewrite would have
+      corrupted a different board's history to fix a formatting error on this one.
     type: judge
     assignee: Judge
     status: done
@@ -775,25 +855,204 @@ tasks:
   - id: T004
     type: worker
     assignee: Worker
-    status: queued
+    status: done
     serialization_hold: "SERIALIZED BEHIND VUE T004 by PM decision on 2026-07-27. Both T004 cards must edit demos/react-official/three-way-contract.ts (the Activation union plus BOTH total Readonly<Record<...>> tables) and scripts/e2e.mjs (a new officialDemos row). That is a concurrent read-modify-write on two shared files, and the tables are TOTAL - a half-applied edit is a compile error rather than a silent conflict, but it is still a lost update. Vue T004 dispatched first; Angular T004 re-dispatches on its receipt. Angular carries an extra unmeasured risk into T004, recorded as R1 on the T003 receipt: the IR declares value/checked as PROPERTY bindings so the emitter spells [value]/[checked], and whether Angular SSR writes those into the served value=\"...\" attribute cannot be decided from a golden - it must be measured in a browser, NOT repaired to [attr.value] on inference."
-    reasoning_hint: medium
-    objective: "Stand up demos/angular-official from the official scaffold and add the Angular row to the e2e activation matrix, asserting S1/S2/S3 equality."
-    allowed_files: []
-    verify: []
+    serialization_hold_discharged: >-
+      2026-07-27 by the PM. The hold was against Vue T004's concurrent read-modify-write of
+      demos/react-official/three-way-contract.ts and scripts/e2e.mjs. Vue T004 is DONE and both
+      files carry its edits at HEAD d9dd70b. Nothing else is running; the working tree is clean.
+    pm_envelope_note: >-
+      THIS CARD SHIPPED WITH allowed_files: [] AND verify: [] and is being repaired before dispatch,
+      not during it. That exact defect was recorded against Vue T004, where the Worker had to derive
+      its own envelope from the dispatch prose. A card with an empty allowed_files enforces nothing.
+      The envelope below is the PM's, derived from the Vue T004 receipt's actual changed_files plus
+      the four measurement obligations T002/T003 assigned to this task.
+    reasoning_hint: high
+    objective: >-
+      Stand up demos/angular-official from the OFFICIAL Angular CLI scaffold with SSR, wire the
+      three emitted components in, and add the SIXTH row to the e2e activation matrix with S1/S2/S3
+      observations ASSERTED equal to the existing five. Carries four measurement obligations that
+      cannot be discharged from a golden - see measurement_obligations.
+    allowed_files:
+      - "demos/angular-official/**"
+      - "demos/react-official/three-way-contract.ts"
+      - "scripts/e2e.mjs"
+      - "packages/frameworks/angular/test/toolchain.test.ts"
+      - "pnpm-lock.yaml"
+      - "docs/goals/frameless-angular-v1/notes/T004-angular-demo.md"
+    measurement_obligations:
+      R1_property_vs_attribute_binding: >-
+        CARRIED FROM THE T003 RECEIPT, LOAD-BEARING. The IR declares value/checked as PROPERTY
+        bindings so the emitter spells [value]/[checked]. Whether Angular's SSR writes those into
+        the served value="..." ATTRIBUTE the other five lanes emit CANNOT BE DECIDED FROM A GOLDEN,
+        and S3's `text` observation reads the SERVED PAYLOAD. MEASURE IT IN A BROWSER. Do NOT
+        "fix" it to [attr.value] on inference - that is the exact error the Option D chain made
+        four times. If the measurement says the served payload diverges, that is a FINDING to
+        report with the measurement attached, not a defect to patch quietly.
+      M2_served_client_entry_literal: >-
+        servedClientEntry is a TOTAL Readonly<Record<HydrateFramework, string>> and adding 'angular'
+        to the union without a literal is a type error - which is the point. The literal must be
+        READ OUT OF THE PAYLOAD demos/angular-official actually serves for /, /s2 and /s3, exactly
+        as the Svelte and Vue literals were, and NOT inherited from any other lane. Angular's built
+        output names hashed chunks; if no stable exact substring exists, say so and bring the
+        evidence - do NOT relax the claim to "any module script", which the contract's own comment
+        rules out in those words. Call calibrateServedClientEntry on EVERY scenario.
+      M3_expected_navigations: >-
+        expectedNavigations is the other total Record. MEASURE Angular's count, assert it EXACTLY,
+        and CALIBRATE TWO-SIDED: flipping the declared number must turn the lane red. Never relax
+        to "any number".
+      M4_post_activation_signal: >-
+        The post-activation signal (afterNextRender vs ApplicationRef.isStable under zoneless) is a
+        MEASUREMENT with TWO-SIDED CALIBRATION. RAISING A TIMEOUT IS FORBIDDEN - defect 4 on the
+        umbrella board is an entire phase about why that move converts a finding into silence.
+      M5_asserted_toolchain_fact: >-
+        REQUIRED BY T002's ruling 1, which accepted that @angular/build vendors vite as an EXACT
+        dependency the root catalog cannot reach even in principle. Read the RESOLVED vendored vite
+        version and assert it against a recorded literal so it goes RED on drift. PM verified on
+        npm at dispatch: @angular/build@latest dependencies.vite === "7.3.6". The assertion must run
+        under `pnpm test` without editing vite.config.ts - the node project's include globs already
+        cover packages/frameworks/*/test/**, which is why that one file is in allowed_files.
+    verify:
+      - "pnpm check   # six tsc passes, all must stay green"
+      - "pnpm test   # 850 tests / 49 files at HEAD, plus the new toolchain assertion"
+      - "pnpm lint"
+      - "pnpm --dir demos/angular-official build   # the scaffold's OWN gate; this is where emitted Angular output finally gets typechecked, deliberately deferred here by T003"
+      - "pnpm e2e   # SIX rows - react, solid, qwik, svelte, vue, angular - all observations equal"
+      - "git diff --exit-code -- packages/compiler packages/frameworks/react packages/frameworks/solid packages/frameworks/qwik packages/frameworks/svelte packages/frameworks/vue demos/react-official/src demos/solid-official/src demos/svelte-official/src demos/vue-official/src demos/qwik/src   # no existing lane moved"
+      - "git status --short   # every path inside allowed_files"
     stop_if:
-      - "The official scaffold needs modification beyond wiring in emitted components."
-      - "Equality cannot be asserted without weakening an existing assertion."
-      - "Verification fails twice."
+      - "Need files outside allowed_files."
+      - "The official scaffold needs modification beyond wiring in emitted components, the dev-warning sink, and the witness box. Record every scaffold delta with its reason, as Vue T004 did per-file against the packed tarball."
+      - "Equality cannot be asserted and the only way to make the row pass is to weaken an existing assertion. Report it; do not weaken."
+      - "You are about to relax servedClientEntry or expectedNavigations from an exact claim to a pattern or a range, for any lane."
+      - "You are about to raise a timeout or a quiescence bound to make anything pass. FORBIDDEN on this board."
+      - "You are about to change [value]/[checked] to [attr.value]/[attr.checked] without a browser measurement saying so."
+      - "You are about to enable withIncrementalHydration(). RULED OFF - it changes the activation shape the other five lanes are asserted equal to."
+      - "You are about to edit packages/frameworks/angular/src/** or its goldens. The emitter is T003's, landed and byte-stable; if the demo reveals an emitter defect that is a FINDING and a stop, not an edit."
+      - "A dependency cannot be installed. Report the exact package and version."
+      - "Verification fails twice for the same reason."
     constraints:
-      - "Official scaffold as it ships."
+      - "OFFICIAL SCAFFOLD ONLY, as it ships. docs/goals/frameless-qwik-v1 records what a hand-rolled SSR build cost this repo - the whole 'blocked on beta.38' saga was a self-inflicted broken harness."
       - "Do not weaken any existing activation-neutrality check."
-    receipt: null
-
+      - "The dev-warning sink installs at the TOP of src/main.ts, BEFORE bootstrapApplication. NG0912/NG0913 are console.warn, which @async/witness 0.7.0 cannot see on its own."
+      - "EVERY INSTRUMENT ASSERTS ITS OWN PRECONDITIONS, and a mutation that does not mutate is not a mutation. Vue T004 caught its own invalid negative arm this way: moving a static import below mount() is a NO-OP because ESM hoists. Prove each negative arm actually goes red."
+      - "MEASURE, NEVER INHERIT. A measurement is valid for the framework it was taken on and nowhere else. This has been proven four times on this goal, most recently when the Angular lane REFUTED the Vue lane's whitespace result."
+      - "Follow the Vue T004 receipt's provenance discipline: a mechanical per-file diff against the pristine scaffold, every added/dropped/modified file justified."
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      summary: "Stood up demos/angular-official from the official Angular CLI 22.0.8 SSR scaffold and landed the SIXTH e2e row with asserted equality. All five measurement obligations discharged: R1 MEASURED WITH NO DIVERGENCE ([value] reaches the served value=\"hello\" attribute, so nothing was changed to [attr.value]); M2 literal read from the served payload once per scenario; M3 = 0 with the flip to 1 measured RED; M4 chose ApplicationRef.isStable over afterNextRender from simultaneous instrumentation and made the ordering an asserted attribute; M5 asserts the vendored vite 7.3.6 with calibration. No timeout raised, no assertion weakened, emitter untouched."
+      pm_independent_verification: "THE PM RE-RAN THE FULL GOAL ORACLE, not only the commands on this card, because this is the phase boundary where oracle half 2 closes. pnpm check exit 0 (six tsc passes). pnpm lint 0 warnings 0 errors on 327 files. pnpm test 857 passed / 50 files. pnpm e2e PASS - 'Three-way: 6 demos x 3 scenarios, all observations equal' - and the PM read all 18 observation strings: byte-identical across react, solid, qwik, svelte, vue and angular. git status confirms every changed path is inside allowed_files with zero stray writes, and the freeze diff over packages/compiler, all five existing framework packages and all five existing demo src trees is CLEAN."
+      pm_ran_a_suite_this_card_omitted: "pnpm test:browser was MISSING from this card's verify list - a PM defect in the envelope, since the Vue T004 precedent ran it. It matters specifically here: the lockfile deviation below moved root vite's esbuild for the WHOLE workspace, and the browser lanes are what that could regress. PM ran it: react 60, solid 49, svelte 13, vue 18 - identical to the counts recorded at HEAD. No regression. Recorded rather than quietly fixed, because a card-scoped verify list is exactly how a regression in an unlisted suite survives."
+      changed_files:
+        - demos/angular-official/.editorconfig
+        - demos/angular-official/.gitignore
+        - demos/angular-official/.prettierrc
+        - demos/angular-official/.vscode/extensions.json
+        - demos/angular-official/.vscode/launch.json
+        - demos/angular-official/.vscode/tasks.json
+        - demos/angular-official/README.md
+        - demos/angular-official/angular.json
+        - demos/angular-official/package.json
+        - demos/angular-official/public/favicon.ico
+        - demos/angular-official/scenarios.box.ts
+        - demos/angular-official/src/app/app.config.server.ts
+        - demos/angular-official/src/app/app.config.ts
+        - demos/angular-official/src/app/app.css
+        - demos/angular-official/src/app/app.html
+        - demos/angular-official/src/app/app.routes.server.ts
+        - demos/angular-official/src/app/app.routes.ts
+        - demos/angular-official/src/app/app.ts
+        - demos/angular-official/src/app/scenario-props.ts
+        - demos/angular-official/src/dev-sink.ts
+        - demos/angular-official/src/emitted/EventForm.ts
+        - demos/angular-official/src/emitted/KeyedTodo.ts
+        - demos/angular-official/src/emitted/RenderOnce.ts
+        - demos/angular-official/src/index.html
+        - demos/angular-official/src/main.server.ts
+        - demos/angular-official/src/main.ts
+        - demos/angular-official/src/server.ts
+        - demos/angular-official/src/styles.css
+        - demos/angular-official/tsconfig.app.json
+        - demos/angular-official/tsconfig.json
+        - demos/angular-official/tsconfig.spec.json
+        - demos/react-official/three-way-contract.ts
+        - scripts/e2e.mjs
+        - packages/frameworks/angular/test/toolchain.test.ts
+        - pnpm-lock.yaml
+        - docs/goals/frameless-angular-v1/notes/T004-angular-demo.md
+      changed_files_note: "The Worker reported demos/angular-official as a single prose glob entry; the PM expanded it to the 31 real paths from git status, matching the per-file discipline the Svelte and Vue receipts use. 17 of the 31 are byte-identical to the ng new --ssr scaffold, 8 modified, 1 dropped, 6 added."
+      note: notes/T004-angular-demo.md
+      commands:
+        - cmd: "npx -y @angular/cli@22.0.8 new angular-official --ssr --style=css --skip-install --skip-git --ai-config none --package-manager pnpm --defaults"
+          status: pass
+          note: "OFFICIAL scaffold, generated outside the workspace and hashed before anything was touched"
+        - cmd: "pnpm check"
+          status: pass
+          note: "six tsc passes; PM re-ran, exit 0"
+        - cmd: "pnpm test"
+          status: pass
+          note: "50 files / 857 tests, +1 file and +7 tests from toolchain.test.ts; PM re-ran"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 327 files; PM re-ran"
+        - cmd: "pnpm test:browser"
+          status: pass
+          note: "NOT on the card - PM added and ran it. react 60, solid 49, svelte 13, vue 18, all identical to HEAD"
+        - cmd: "pnpm --dir demos/angular-official build"
+          status: pass
+          note: "production ng build: AOT plus optimizer over emitted output, 3 routes prerendered. This is where emitted Angular finally gets typechecked, deferred here by T003"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "SIX rows; PM re-ran and read all 18 observation strings side by side - byte-identical across every lane"
+        - cmd: "git diff --exit-code -- packages/compiler packages/frameworks/{react,solid,qwik,svelte,vue} demos/{react,solid,svelte,vue}-official/src demos/qwik/src"
+          status: pass
+          note: "CLEAN - no existing lane moved; PM re-ran"
+        - cmd: "git status --short"
+          status: pass
+          note: "every path inside allowed_files, zero stray writes; PM verified"
+      R1_RESOLVED_NO_DIVERGENCE: "The load-bearing unknown carried from T003 is CLOSED, and closed the right way - by browser measurement rather than inference. Angular SSR DOES write [value]=\"text\" into the served value=\"hello\" attribute, so the served payload matches the other five lanes and S3's text observation reads identically. Nothing was 'repaired' to [attr.value]. This is the first time in this chain that the tempting inference was NOT made, and the measurement says the inference would have been WRONG."
+      contract_changes_verified_additive_by_pm: "PM read the three-way-contract.ts diff line by line, ignoring comments: the hydrate arm's framework union gains 'angular', servedClientEntry gains one entry, expectedNavigations gains one entry. NOT ONE EXISTING LITERAL MOVED, and neither total Record was relaxed to a pattern, a range or an optional field. The 'do not weaken' constraint is mechanically verified, not asserted."
+      deviations:
+        - "tsconfig.app.json gains noImplicitAny: false and nothing else. MEASURED FIRST: with the scaffold untouched, ng build reports EXACTLY six diagnostics, all TS7006, all in src/emitted/KeyedTodo.ts, all lambda parameters in transplanted handler bodies. Zero template, zero AOT, zero in the demo's own files. Classified as the known IR-8 gap rather than an emitter defect, following packages/frameworks/react/test/emitted-typecheck.test.ts:14-16, which typechecks emitted output with strict:false and calls it 'deliberate scope, not laxity'. strictNullChecks and Angular's strictTemplates both STAY ON."
+        - "The Angular server runs in a CHILD PROCESS behind a proxy rather than as in-process middleware like the Vue lane. FORCED BY MEASUREMENT, not preference: @angular/platform-server's first SSR render replaces globalThis.Event and globalThis.CustomEvent while leaving WebSocket alone, so witness's undici CDP socket dies with 'must be an instance of Event. Received an instance of Event'. The child starts exactly as the scaffold's own serve:ssr:angular-official starts it."
+        - "scripts/e2e.mjs gains an optional per-row `prepare` script name, defaulting to copy-emitted. Angular needs ng build before its box because its scaffold has no vite.config.ts. ONLY the angular row sets it; the other five rows are behaviourally unchanged, which the six-row green confirms."
+        - "NG_ALLOWED_HOSTS is set on the child's environment rather than editing angular.json's security.allowedHosts. The scaffold ships [], which makes the built server answer 400 to every host (measured for localhost, 127.0.0.1 and an arbitrary host). Using Angular's documented env var keeps angular.json BYTE-IDENTICAL to the scaffold."
+        - "src/app/app.config.ts adds withComponentInputBinding() - the only provider added - so the three emitted components take their props as route data instead of needing three wrapper components. withIncrementalHydration() is NOT enabled, as ruled."
+        - "src/app/app.spec.ts dropped (it asserts the welcome page text, which was replaced); package.json name/scripts changed and @types/node moved to catalog:; .gitignore gains .witness/. All other scaffold dependency pins are the scaffold's own."
+        - "pnpm-lock.yaml moved +3918/-160 with ZERO pre-existing resolutions lost (mechanically verified). NOT purely additive - see the finding below."
+      FINDING_THE_LEAK_RUNS_THE_OTHER_WAY: "T002 ruling 1 established that the root catalog CANNOT REACH the Angular lane. THE CONVERSE TURNS OUT TO BE FALSE, and that was never named in ruling 1's cost list: adding the Angular lane moved optional peers for the rest of the workspace. PM INDEPENDENTLY CONFIRMED IN THE LOCKFILE DIFF and measured the blast radius rather than reasoning about it: pnpm test:browser is byte-identical to HEAD on all four browser lanes, and the six-row e2e is green. So the leak is REAL, currently BENIGN, and unmitigated. ROUTED TO A JUDGE as T007. SEE THE CORRECTION BELOW BEFORE CITING ANY NUMBER OR MECHANISM FROM THIS PARAGRAPH."
+      CORRECTED_BY_T007_the_mechanism_AND_the_scope_were_both_wrong: >-
+        2026-07-27. The paragraph above was written by the Worker and the PM endorsed it, quoted it
+        into the T007 brief, and repeated it to the owner. T007 MEASURED IT AND REFUTED TWO CLAIMS.
+        MECHANISM, WRONG: the paragraph blames @angular/build's EXACT esbuild and sass. Measured,
+        FOUR of the SIX moved peers arrived on ORDINARY CARET RANGES - jsdom ^28.0.0 and prettier
+        ^3.8.1 are demos/angular-official's OWN ng-new scaffold devDependencies, and chokidar came
+        in on @angular/compiler-cli's ^5.0.0. Exactness is not the cause. WORKSPACE MEMBERSHIP IS,
+        which means this is NOT an Angular property and the next lane will do it too. The tidy
+        symmetry - "the same exactness that makes it immune is what lets it override" - was elegant
+        and false, and elegance is exactly what made it persuasive.
+        SCOPE, UNDERSTATED BY ROUGHLY THE FACTOR RULING 1 WAS: not "react, solid, vue and every
+        vitest browser lane" but TWENTY-FIVE PACKAGES changing peer identity, including the entire
+        SvelteKit stack, @qwik.dev/core and @qwik.dev/router, @markless/core and @markless/router,
+        and @async/witness@0.7.0 - THE E2E INSTRUMENT ITSELF. And the largest single item went
+        unnamed by everyone: chokidar crossed a MAJOR boundary, 4.0.3 -> 5.0.0.
+        THE RECURRENCE IS THE REAL LESSON. T002 under-scoped this phenomenon; T004 then under-scoped
+        the SAME phenomenon by a similar factor; the PM then propagated T004's framing into the very
+        brief that was supposed to check it. Three passes, all reading a diff by eye. That is the
+        Option D inference chain recurring one layer up, in dependency review - and it is why T007
+        ruled for an INSTRUMENT rather than a stronger warning. THE DETECTION METHOD FAILED, NOT THE
+        REVIEWERS.
+        BENIGN, BUT SCOPED: the green covers four browser lanes and six e2e rows. Nothing in those
+        suites exercises a file watcher or a storage backend, which is precisely what moved a MAJOR
+        version. markless's watch and storage paths are UNMEASURED.
+      remaining_blockers: []
+      stopped_because: null
   - id: T005
     type: judge
     assignee: Judge
-    status: queued
+    status: done
     reasoning_hint: high
     objective: "Re-run the held-out decorator-vs-signal question against the now-present Angular build, and record whether the ruling holds."
     inputs:
@@ -809,8 +1068,289 @@ tasks:
       - "Six gate outcomes against a real build"
       - "Whether the no-sugar ruling holds, with evidence"
       - "Whether docs/emitter-idiom-policy.md needs updating - including whether this case should now become a worked example"
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      harness: claude-code
+      note: notes/T005-decorator-vs-signal.md
+      rationale: "NO-SUGAR HOLDS: DENIED, not deferred, and Gate 5 decides. Measured at @angular/core 22.0.8 by AOT-building the shipped S1 golden VERBATIM beside a signal-input twin. G1 PASS (both forms zero diagnostics, byte-identical DOM) - the deferral is discharged. G5 FAIL on two limbs: a computed() over instance.derived stays kit:2 under @Input() while the DOM reads kit:10, and returns kit:10 under input(); and the exported member type changes any -> InputSignal<any>, turning a consumer write into a TypeError. G6 FAIL - e2e would NOT go red on this sugar."
+      summary: "Six gates re-run against the landed lane: G1 PASS, G2 PASS, G3 PASS, G4 PASS (narrowed), G5 FAIL, G6 FAIL. The ruling is upheld AND strengthened, with one of its two stated reasons measured FALSE and replaced. The @Output()->output() half is recorded separately as G4 UNKNOWN because its domain is empty."
+      gate_1_discharged_exactly_as_predicted: "G1 was DEFERRED only because Angular was absent. The lane landed at T004 and G1 now PASSES on measurement rather than on assertion - both forms produce zero diagnostics and byte-identical DOM under a real AOT build. G5 did NOT clear, exactly as this card predicted in advance, because it was never about absence."
+      THE_BOARD_WAS_RIGHT_FOR_A_PARTLY_WRONG_REASON: "This is the finding that matters most, and it is the worked-example-7 situation repeating. The originally-decisive 'throw behaviour differs' limb rested on REQUIRED INPUTS throwing NG0950. MEASURED FALSE for this emitter: plain input() unset returns undefined exactly as @Input() does, and input.required() is UNREACHABLE because PropDestructuringEntry has no required field and propMembers() throws on defaultValue. A DIFFERENT throw survives and is measured - the consumer write against InputSignal. The right answer stood on one wrong reason, and that reason was load-bearing enough that a reader could have retired the whole ruling by retiring it. Two independent derivations reached no-sugar; a third measurement now reaches it on corrected grounds."
+      G6_IS_THE_HONEST_NEGATIVE_RESULT: "pnpm e2e would NOT go red if the emitter silently switched to signal inputs, because both arms render identically. The six-row green proves ACTIVATION NEUTRALITY; it does NOT pin this form choice. The only thing pinning it is the frameless-owned no-signal-members gate policy - which is precisely why that policy is upheld unchanged and why deleting it would remove the sole enforcement point."
+      worked_example_5_is_a_LIVE_CONTRADICTION_between_policy_and_shipped_code: "Flagged, deliberately NOT ruled - it is outside this task. docs/emitter-idiom-policy.md records @if/@for as a CANDIDATE deferred until an Angular lane exists. All three Angular goldens EMIT @if AND @for TODAY. At the pinned 22.0.8, NgIf and NgForOf carry @deprecated 20.0, which suggests the re-run will INVERT that entry's baseline/candidate assignment rather than indict the emitter. Queued as T009 rather than folded in, because re-scoring an entry from inside a task scoped to a different entry is how a ruling changes by accident."
+      evidence:
+        - "docs/goals/frameless-angular-v1/notes/T005-decorator-vs-signal.md - six gate outcomes, measurement tables, dissent"
+        - "packages/frameworks/angular/generated/S1.ts - the shipped golden, AOT-built verbatim beside a signal-input twin"
+        - "packages/frameworks/angular/src/emitter/index.ts:619 propMembers - the deciding function under Gate 4"
+        - "packages/frameworks/angular/src/emitter/index.ts:1117-1118 - single undifferentiated member set"
+        - "packages/frameworks/angular/src/gate/index.ts:303 - the no-signal-members policy, UPHELD"
+        - "packages/compiler/src/schema.ts:20,205-212,266-274 - GraphBindingKind 'prop', PropDestructuringEntry, StateWriteRecord"
+        - "@angular/router _router-chunk.mjs:1940 - withComponentInputBinding uses setInput"
+        - "@angular/common _common_module-chunk.d.ts:639,840 - NgForOf and NgIf @deprecated 20.0"
+        - "@angular/core 22.0.8 declarations: ZERO @deprecated tags on the Input/Output decorators"
+      missing_evidence:
+        - "SSR served-payload comparison between the two forms was NOT measured. Client DOM was measured identical; hydration annotations were not compared. This cannot change the ruling (already FAIL) but must not be read as a served-payload claim."
+        - "The reactivity-depth and write-throw probes ran in jsdom against a real AOT bundle rather than Chromium - deliberately, to avoid contaminating the concurrent browser measurement of two other judges. If challenged, RE-RUN IN CHROMIUM rather than defend jsdom."
+        - "Whether *ngIf / *ngFor produce an actual build DIAGNOSTIC at 22.0.8 is UNMEASURED. Only the @deprecated JSDoc tag was read, and a tag is not a diagnostic."
+      parallel_safety:
+        safe: false
+        reason: "The Vue T005 ruling prescribes edits to docs/emitter-idiom-policy.md including the SAME Gate 1 absent-framework sentence this ruling must correct. Two boards rewriting one paragraph is a lost update, not a merge conflict."
+        remedy: "Serialize the two policy folds. The Vue fold flips its emitter and lands FIRST; the Angular fold is docs-plus-comment only, changes no emitted output, and lands SECOND - and whichever lands second must edit the sentence to name BOTH Vue and Angular rather than overwriting the other."
+        pm_action: "ACCEPTED AND ALREADY IN FORCE. The PM had independently serialized these two folds before this receipt arrived, on the same reasoning. Vue T006 is active with docs/emitter-idiom-policy.md in its allowed_files; Angular T008 is queued behind it and its card carries the both-frameworks requirement explicitly."
+      worker_package_recorded_as: "T008 on this board"
+  - id: T007
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    objective: >-
+      Rule on the dependency leak T004 discovered running the OPPOSITE direction to T002 ruling 1:
+      the Angular lane reaches the root catalog, even though the catalog cannot reach the Angular
+      lane. Decide whether it is acceptable as-is, needs an asserted fact, or needs a mitigation.
+    why_this_exists: >-
+      T002 ruling 1 accepted that @angular/build vendors vite as an EXACT dependency, so the root
+      catalog cannot pin the Angular toolchain even in principle, and it enumerated the costs of
+      that. THE COST LIST HAS A FOURTH ENTRY IT DID NOT NAME. vite@8.0.16 declares esbuild and sass
+      as OPTIONAL PEERS; @angular/build's exact esbuild@0.28.1 and sass@1.99.0 now satisfy them
+      WORKSPACE-WIDE. Adding the Angular lane therefore moved root vite's esbuild 0.27.7 -> 0.28.1
+      and added sass@1.99.0 for react, solid, vue and every vitest browser lane. The isolation
+      ruling 1 relied on is one-directional, and the direction that leaks is the one nobody checked.
+    pm_verified_at_dispatch: >-
+      PM CONFIRMED IN THE LOCKFILE DIFF INDEPENDENTLY, not inherited from the Worker: the root
+      vite@8.0.16 importer line moves from (esbuild@0.27.7)(yaml@2.9.0) to
+      (esbuild@0.28.1)(sass@1.99.0)(yaml@2.9.0), and the same substitution propagates into
+      vite-plus, vitest, @vitest/browser-playwright and vite-plugin-solid. PM then MEASURED the
+      blast radius rather than reasoning about it: pnpm test:browser is byte-identical to HEAD on
+      all four lanes (react 60, solid 49, svelte 13, vue 18) and the six-row pnpm e2e is green. So
+      the leak is REAL, currently BENIGN, and UNMITIGATED.
+    inputs:
+      - "docs/goals/frameless-angular-v1 T002 ruling 1 and its cost list"
+      - "docs/goals/frameless-angular-v1 T004 receipt, FINDING_THE_LEAK_RUNS_THE_OTHER_WAY"
+      - "packages/frameworks/angular/test/toolchain.test.ts - the asserted-toolchain-fact precedent ruling 1 already required"
+      - "The pnpm-lock.yaml diff on the current dirty tree"
+    constraints:
+      - "Do not implement. Rule."
+      - "THE QUESTION IS NOT WHETHER IT BROKE ANYTHING - it demonstrably did not, and that is already measured. The question is whether a silent cross-lane toolchain move is ACCEPTABLE UNASSERTED, given that this board's own ruling 1 invented the asserted-toolchain-fact mitigation for precisely this class of drift."
+      - "Weigh the asymmetry explicitly: an exact vendored pin is what makes the Angular lane immune to the catalog, and the SAME exactness is what lets it override optional peers elsewhere. Say whether ruling 1's reasoning survives with a fourth cost recorded, or whether it is materially wrong."
+      - "pnpm.overrides was considered and refused by T004 as outside allowed_files. If you rule it correct, say so and spec the Worker package; if you rule it wrong, say why, because it is the obvious repair and a future reader will reach for it."
+      - "An assertion that pins esbuild to a literal will go RED on every legitimate upstream bump. If you require one, say what it asserts and what SHOULD make it fail, or it becomes maintenance noise that gets deleted."
+      - "Do NOT run pnpm e2e or pnpm test:browser. The PM ran both against this exact tree and the results are in the T004 receipt; re-running them concurrently with other judges risks contaminated measurement."
+    expected_output:
+      - "Ruling: acceptable as-is | assert it | mitigate it, with reasoning"
+      - "Whether T002 ruling 1 stands with a fourth cost recorded, or is materially wrong"
+      - "If a Worker package is needed: exact objective, allowed_files, verify, stop_if"
+      - "What future change should make this go red, and where that tripwire lives"
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      harness: claude-code
+      note: notes/T007-toolchain-leak.md
+      rationale: "ASSERT IT. Not acceptable as-is: detection was a human reading a 3918-line diff, and that human UNDER-SCOPED IT THREEFOLD. pnpm.overrides REFUSED - every move is inside the declaring package's own accepted range, T002's stated reason does not transfer, and a hand-maintained override table becomes the silent thing. T002 ruling 1's DECISION stands; its 'no shared surface to pin' sentence is FALSE and its cost list is framed wrongly rather than short by one. Mechanism REFUTED: 4 of 6 peers arrived on carets and 2 are scaffold devDeps - workspace membership, not exactness. The instrument must assert the SET; toolchain.test.ts was green throughout."
+      summary: "Measured the leak independently from the lockfile: 25 packages changed peer identity across all five existing lanes plus @async/witness and @markless/*, driven by six moved optional peers (esbuild 0.27.7->0.28.1, chokidar 4.0.3->5.0.0 MAJOR, plus sass/jsdom/prettier/lru-cache newly resolved). All six are inside their consumers' declared ranges. Ruled ASSERT IT via a workspace peer-resolution inventory, following package-inventory.test.ts's own written placement precedent."
+      THE_STATED_MECHANISM_IS_REFUTED_AND_THE_PM_IS_THE_SOURCE: "The brief this Judge was given - written by the PM, propagating the T004 receipt - claimed the symmetry that 'an exact vendored pin is what makes Angular immune to the catalog, and the same exactness is what lets it override optional peers elsewhere'. ELEGANT AND WRONG. MEASURED: four of the six moved peers arrived on ORDINARY CARET RANGES, and two of those are demos/angular-official's OWN ng-new scaffold devDependencies (jsdom ^28.0.0, prettier ^3.8.1); chokidar arrived via @angular/compiler-cli's ^5.0.0 caret. EXACTNESS IS NOT THE CAUSE - WORKSPACE MEMBERSHIP IS. The consequence is the part that matters: this is NOT an Angular property, so the next lane added to this workspace will do it too."
+      the_scope_was_understated_by_roughly_the_same_factor_ruling_1_was: "The PM wrote 'react, solid, vue and every vitest browser lane'. MEASURED: 25 packages changed peer identity, including the ENTIRE SvelteKit stack, @qwik.dev/core and @qwik.dev/router, @markless/core and @markless/router, and @async/witness@0.7.0 - WHICH IS THE E2E INSTRUMENT ITSELF. And the largest single item went unnamed by everyone: chokidar crossed a MAJOR boundary, 4.0.3 -> 5.0.0, for unstorage, nitro and both markless packages."
+      THE_DECISIVE_DESIGN_POINT: "toolchain.test.ts WAS GREEN THROUGHOUT THIS ENTIRE EVENT, and so would any test built the same way. It asserts version literals for names it ALREADY KNOWS. The failure mode here was an UNLISTED NAME APPEARING - sass, jsdom, prettier and lru-cache all went from unresolved to resolved. AN INVENTORY MUST ASSERT THE SET, NOT THE MEMBERS. That single sentence is why this ruling is 'assert it' rather than 'acceptable as-is', and it generalises well beyond this incident."
+      why_pnpm_overrides_is_refused_recorded_so_nobody_re_derives_it: "Three independent grounds. (1) Every move is INSIDE the declaring package's own accepted range - vite@8.0.16 declares esbuild '^0.27.0 || ^0.28.0' and sass '^1.70.0'; unstorage@2.0.0-alpha.7 declares chokidar '^4 || ^5' and lru-cache '^11.2.6'. Nothing is violating anything. (2) A hand-maintained override table becomes the silent thing - it would freeze resolutions with no signal when upstream moves. (3) T002's OWN STATED REASON FOR REFUSING OVERRIDES DOES NOT EVEN APPLY HERE: Angular's vendored vite@7.3.6 carries esbuild as a HARD DEPENDENCY, not a peer, so no peer-slot override could reach it."
+      the_recurrence_is_the_board_lesson: "T002 under-scoped this phenomenon, and then T004 under-scoped the SAME phenomenon by a similar factor, and then the PM propagated T004's framing into this task's brief. All three read a diff by eye. THAT IS THE OPTION-D INFERENCE CHAIN RECURRING ONE LAYER UP, IN DEPENDENCY REVIEW. The detection METHOD failed, not the reviewers - which is precisely why the ruling is an instrument rather than a stronger warning."
+      evidence:
+        - "pnpm-lock.yaml snapshots-section diff vs HEAD: 25 packages changed peer-suffix identity, including @sveltejs/kit, @qwik.dev/core, @qwik.dev/router, @async/witness@0.7.0, @markless/core, @markless/router, nitro, unstorage, vitest, vite-plus, @vitest/browser-playwright, vite-plugin-solid, @vitejs/plugin-react, @vitejs/plugin-vue"
+        - "workspace peer-atom inventory 40 -> 46: REPLACED esbuild 0.27.7->0.28.1 and chokidar 4.0.3->5.0.0 (MAJOR); ADDED sass@1.99.0, prettier@3.9.6, lru-cache@11.5.2, jsdom@28.1.0"
+        - "demos/angular-official/package.json devDependencies declare jsdom ^28.0.0 and prettier ^3.8.1 DIRECTLY - ng-new scaffold defaults, NOT @angular/build exact pins"
+        - "@angular/compiler-cli@22.0.8 dependencies.chokidar === '^5.0.0' - a caret range, not an exact pin"
+        - "vite@8.0.16 peerDependencies: esbuild '^0.27.0 || ^0.28.0', sass '^1.70.0', both optional - 0.28.1 and 1.99.0 are INSIDE the declared ranges"
+        - "unstorage@2.0.0-alpha.7 peerDependencies: chokidar '^4 || ^5', lru-cache '^11.2.6', both optional - 5.0.0 and 11.5.2 are inside"
+        - "vitest@4.1.5 and @voidzero-dev/vite-plus-test@0.1.20 declare jsdom '*'; @qwik.dev/core@2.0.0-beta.38 declares prettier '*'"
+        - "require.resolve('vite/package.json') from repo root -> node_modules/.pnpm/vite@8.0.16_@types+node@24.12.2_esbuild@0.28.1_sass@1.99.0_yaml@2.9.0/ - the substitution is live"
+        - "Angular's own vendored vite@7.3.6 carries esbuild as a DEPENDENCY, not a peer - so no peer-slot override could reach it"
+        - "packages/compiler/test/package-inventory.test.ts:65-69 - this repo's own written precedent for placing a workspace-level invariant in that file"
+        - "packages/frameworks/angular/test/toolchain.test.ts:35-41 - the overreaching structural-discharge claim"
+      missing_evidence:
+        - "The 'currently benign' verdict is established for FOUR BROWSER LANES AND SIX E2E ROWS ONLY. Nothing in the measured suites exercises a file watcher or a storage backend - which is exactly what moved a MAJOR version (chokidar 4->5 under unstorage, nitro, @markless/core, @markless/router). Behaviour on markless's watch/storage paths is UNMEASURED. Not blocking, since chokidar 5 is inside unstorage's declared range and this repo exercises none of those paths, but the green must be recorded WITH THAT SCOPE rather than unqualified."
+        - "This ruling INHERITED the PM's blast-radius measurement rather than re-running it, per the T007 command restriction and because a Vue Worker was live on the tree. That inheritance is the first place to look if any part of this ruling is later found wrong."
+      parallel_safety:
+        safe: true
+        reason: "The specified worker package's allowed_files are provably disjoint from the live Vue Worker's scope (packages/frameworks/vue/**) and from queued T008 (docs/emitter-idiom-policy.md, packages/frameworks/angular/src/**). It touches no shared file - no root package.json, no pnpm-lock.yaml, no three-way-contract.ts, no scripts/e2e.mjs."
+        pm_decision: "PROVEN DISJOINT BUT NOT RUN IN PARALLEL. The execution contract permits parallel Workers only when state.yaml proves disjoint write scopes AND the user explicitly asked for parallel agent work. The first condition is met; the second is not - the owner asked for continuous execution, not concurrent writers. Queued as T010 and dispatched serially after Vue T006 lands. The disjointness proof is recorded so a future PM with that permission can act on it."
+      worker_package_recorded_as: "T010 on this board"
+  - id: T008
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: medium
+    spec: "T005 receipt and docs/goals/frameless-angular-v1/notes/T005-decorator-vs-signal.md - AUTHORITATIVE."
+    serialization_hold: >-
+      SERIALIZED BEHIND frameless-vue-v1 T006. Both folds rewrite docs/emitter-idiom-policy.md, and
+      both must edit the SAME Gate 1 absent-framework sentence. That is a lost update, not a merge
+      conflict - the second writer silently discards the first unless it reads what landed. BOTH
+      JUDGES REACHED THIS INDEPENDENTLY and both prescribed the same order: the Vue fold flips an
+      emitter and lands first; this one is docs-plus-comment only, changes no emitted output, and is
+      the cheaper one to run second. THIS TASK MUST EDIT THAT SENTENCE TO NAME BOTH VUE AND ANGULAR,
+      reading whatever the Vue fold left rather than overwriting it.
+    objective: >-
+      Fold the T005 ruling into the policy and the emitter, changing NO emitted output. (1) Add
+      worked examples 11 and 11b to docs/emitter-idiom-policy.md from the note's "The ruling, in the
+      policy's own format" section, with all six gate outcomes recorded. (2) Correct Gate 1's
+      absent-framework paragraph - "Vue and Angular are absent today" is now FULLY false - giving
+      Angular the same discharge sentence Svelte carries, naming frameless-angular-v1 T004 and
+      @angular/core 22.0.8. (3) Satisfy the policy's "Recording a ruling" item 2 with a decision-site
+      comment at propMembers() naming the ruling, the deciding gate (G5) and the two measured limbs.
+      (4) Replace the provisional "held out for T005" wording in the no-signal-members policy comment
+      and its dossierRef with the settled ruling.
+    allowed_files:
+      - docs/emitter-idiom-policy.md
+      - packages/frameworks/angular/src/emitter/index.ts
+      - packages/frameworks/angular/src/gate/index.ts
+      - packages/frameworks/angular/test/gate.test.ts
+      - docs/goals/frameless-angular-v1/notes/T008-policy-fold.md
+    verify:
+      - "pnpm check"
+      - "pnpm test"
+      - "pnpm lint"
+      - "node packages/frameworks/angular/scripts/regenerate.ts && git diff --exit-code -- packages/frameworks/angular/generated   # run TWICE; the emitter edit is COMMENT-ONLY, goldens MUST NOT move"
+      - "git diff --exit-code -- packages/compiler packages/frameworks/react packages/frameworks/solid packages/frameworks/qwik packages/frameworks/svelte   # untouched lanes stay clean"
+      - "git status --short   # every path inside allowed_files, plus pre-existing dirt from the Angular lane and the Vue fold"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "ANY byte of packages/frameworks/angular/generated moves. The src/emitter/index.ts edit is COMMENT-ONLY."
+      - "You are about to change @Input() to input(), or relax, narrow or delete the no-signal-members gate policy or its SIGNAL_APIS entries for input/output/model. RULED no-sugar, DENIED at Gate 5 and Gate 6. The gate is UPHELD; only its provisional 'held out for T005' wording changes."
+      - "You are about to record DEFERRED at any gate in worked example 11. Every deferring condition is discharged: G1 PASS, G2 PASS, G3 PASS, G4 PASS (narrowed), G5 FAIL, G6 FAIL."
+      - "You are about to carry forward 'required inputs throw NG0950' as the Gate 5 throw reason. MEASURED FALSE for this emitter: plain input() unset returns undefined exactly as @Input() does, and input.required() is unreachable. The surviving throw is the CONSUMER WRITE against InputSignal."
+      - "You are about to re-run, rewrite or re-score worked example 4 or worked example 5. NOT THIS PACKAGE - T009 owns them and T005 explicitly declined to rule."
+      - "You overwrite the Vue fold's edit to the Gate 1 absent-framework sentence instead of extending it to name both frameworks. READ WHAT LANDED FIRST."
+      - "Verification fails twice for the same reason."
     receipt: null
 
+  - id: T009
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Re-run worked examples 4 and 5 of docs/emitter-idiom-policy.md against the landed Angular lane. Example 5 is the live one."
+    why_this_exists: >-
+      T005 FOUND A LIVE CONTRADICTION BETWEEN THE POLICY AND SHIPPED CODE and correctly refused to
+      rule on it from inside a task scoped to a different entry. The policy records @if/@for as a
+      CANDIDATE, deferred until an Angular lane exists. ALL THREE ANGULAR GOLDENS EMIT @if AND @for
+      TODAY. So the policy describes as a deferred future option a form the emitter already ships.
+    the_direction_this_probably_resolves: >-
+      At the pinned 22.0.8, NgIf and NgForOf carry @deprecated 20.0 while the Input/Output decorators
+      carry NO deprecation tag at all. That asymmetry suggests the re-run INVERTS worked example 5's
+      baseline/candidate assignment - @if/@for is the baseline and *ngIf/*ngFor is the legacy form -
+      rather than indicting the emitter. Do not treat that as the answer; it is the hypothesis.
+    constraints:
+      - "Do not implement. Rule."
+      - "T005 MEASURED ONLY THE @deprecated JSDoc TAG. A TAG IS NOT A DIAGNOSTIC. If the ruling turns on whether *ngIf/*ngFor still build clean at 22.0.8, MEASURE IT against a real build rather than reading the tag."
+      - "Sequenced AFTER T008, which owns docs/emitter-idiom-policy.md. Do not edit that file."
+      - "If the emitter turns out to be wrong rather than the policy, that is a FINDING with consequences for three shipped goldens - say so plainly and spec the Worker package; do not soften it because the lane is green."
+    expected_output:
+      - "Six gate outcomes for worked examples 4 and 5 against the landed lane"
+      - "Whether example 5's baseline/candidate assignment inverts, with measured evidence"
+      - "Exact replacement text for a later fold"
+    receipt: null
+
+  - id: T010
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: high
+    spec: "T007 receipt and docs/goals/frameless-angular-v1/notes/T007-toolchain-leak.md - AUTHORITATIVE."
+    serialization_note: >-
+      T007 PROVED THIS PACKAGE DISJOINT from the live Vue T006 Worker and from queued T008, file by
+      file - it touches no root package.json, no pnpm-lock.yaml, no three-way-contract.ts and no
+      scripts/e2e.mjs. THE PM IS STILL RUNNING IT SERIALLY. The execution contract permits parallel
+      Workers only when disjoint write scopes are proven AND the user explicitly asked for parallel
+      agent work; the first condition is met and the second is not. The disjointness proof is
+      recorded here so a future PM holding that permission can act on it without re-deriving it.
+    objective: >-
+      Add a WORKSPACE PEER-RESOLUTION INVENTORY as a third describe block in
+      packages/compiler/test/package-inventory.test.ts, following the shape and the stated placement
+      rationale of the existing describe('workspace byte invariants') block. TWO ARMS. Arm A
+      (COMPLETENESS - the arm that catches the event that actually happened): parse pnpm-lock.yaml's
+      snapshots: section, extract the set of distinct name@version peer atoms appearing in snapshot
+      keys, and assert it equals a recorded sorted list, currently 46 entries. Arm B (IDENTITY -
+      localises the cause): for the declared shared consumers vite@8.0.16, vite@7.3.1, vitest@4.1.5,
+      vite-plus@0.1.20, @vitest/browser-playwright@4.1.5, @qwik.dev/core (both variants),
+      @markless/core, unstorage@2.0.0-alpha.7 and @async/witness@0.7.0, assert the full peer-suffix
+      key equals a recorded literal. Separately, make a COMMENT-ONLY correction to
+      packages/frameworks/angular/test/toolchain.test.ts where its structural-discharge claim
+      overreaches, adding a pointer to the new inventory.
+    why_an_inventory_and_not_a_stronger_warning: >-
+      THE DECISIVE POINT, and the reason this task exists in this shape: toolchain.test.ts WAS GREEN
+      THROUGHOUT THE ENTIRE EVENT, and so would any test built the same way. It asserts version
+      literals for names it ALREADY KNOWS. The failure mode was an UNLISTED NAME APPEARING - sass,
+      jsdom, prettier and lru-cache all went from unresolved to resolved. AN INVENTORY MUST ASSERT
+      THE SET, NOT THE MEMBERS. Three human passes missed this by reading a diff; the fix is an
+      instrument, not more care.
+    allowed_files:
+      - packages/compiler/test/package-inventory.test.ts
+      - packages/frameworks/angular/test/toolchain.test.ts
+      - docs/goals/frameless-angular-v1/notes/T007a-peer-inventory.md
+    verify:
+      - "pnpm test   # the new assertions run in the node project via the packages/*/test/**/*.test.ts glob; NO config change needed"
+      - "pnpm check"
+      - "pnpm lint"
+      - "git diff --exit-code -- pnpm-lock.yaml   # an instrument that READS the lockfile must never rewrite it"
+      - "git diff --exit-code -- packages/frameworks/vue packages/frameworks/angular/src packages/frameworks/angular/generated packages/compiler/src demos scripts   # touch nothing another task owns"
+      - "git status --short   # every new path inside allowed_files, plus the pre-existing Angular-lane dirt"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "pnpm-lock.yaml moves for ANY reason, or any dependency needs installing. This instrument READS the lockfile; it must not cause an install."
+      - "You are about to add a pnpm.overrides entry for esbuild, sass, jsdom, prettier, chokidar or lru-cache. RULED REFUSED on three grounds: every move is inside the declaring package's own accepted range (vite@8.0.16 declares esbuild '^0.27.0 || ^0.28.0' and sass '^1.70.0'; unstorage declares chokidar '^4 || ^5'); a hand-maintained override table becomes the silent thing; and T002's stated reason does not even apply, because Angular's vite@7.3.6 carries esbuild as a HARD dependency so no peer-slot override reaches it."
+      - "You are about to assert only version literals without asserting the SET of peer atom NAMES. The event this instrument exists to catch was FOUR NEW NAMES APPEARING, not a recorded version being wrong."
+      - "You cannot make Arm A go RED on a planted EXTRA atom AND on a planted MISSING atom, or you cannot show the parser returns a NON-EMPTY set on the real lockfile. A check that cannot fail is not a check, and an inventory that silently parses to [] compares nothing and passes forever."
+      - "You are about to relax any recorded key or atom to a regex, a prefix, a 'contains', or a length check. The claim is EXACT SET EQUALITY."
+      - "Your parser reads jsdom@28.1.0(@noble/hashes@2.2.0) as @noble/hashes rather than as jsdom. NESTED ATOMS ARE REAL and a naive innermost-parens match gets this exactly backwards. That bug was live in T007's own throwaway probe, which is why it is written down here."
+      - "You are about to change any ASSERTION in packages/frameworks/angular/test/toolchain.test.ts. The edit there is COMMENT-ONLY; all six of its tests remain true and are kept."
+      - "You are about to move, duplicate or generalise the LF/CRLF invariant block already in package-inventory.test.ts. Add alongside it; do not refactor it."
+      - "You are about to run pnpm e2e or pnpm test:browser. Another Worker may be mid-flight on this tree; the PM runs those serially."
+      - "Verification fails twice for the same reason."
+    constraints:
+      - "WRITE THE MAINTENANCE CONTRACT INTO THE FILE, in these terms: this is a NOTIFICATION, not a verdict. A red means the lockfile moved. The fix is to update the recorded list IN THE SAME COMMIT that moved pnpm-lock.yaml, naming the causing workspace member in the message. Without that sentence the first person to see it red will delete it."
+      - "Two-sided calibration is required per instrument rule 3, and the anti-vacuity arm is not optional here - it is the one that catches the specific way this instrument would rot."
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T007a-peer-inventory.md
+      summary: "Added describe('workspace peer-resolution inventory') to package-inventory.test.ts ALONGSIDE the untouched LF/CRLF block. Arm A asserts exact set equality over peer atoms parsed from pnpm-lock.yaml snapshots keys with a DEPTH-COUNTING reader; Arm B asserts the ten shared-consumer peer-suffix keys as literals; plus a precondition non-empty arm and five calibration arms (planted extra, planted missing, moved key, the nested-atom regression, four throw paths). toolchain.test.ts got a comment-only scope correction pointing at the new block, with no assertion changed. pnpm-lock.yaml byte-identical throughout; nothing installed."
+      THE_RULINGS_OWN_HEADLINE_NUMBER_WAS_THE_BUG_IT_WARNED_ABOUT: "THIS IS THE FOURTH INSTANCE OF THE SAME UNDER-SCOPING, AND IT HAPPENED INSIDE THE RULING THAT NAMED THE PATTERN. T007 section 5.3 warns that a naive innermost-parens match misses jsdom, and states the bug was live in its own throwaway probe. THE '46 ATOMS' FIGURE IS THAT PROBE'S OUTPUT. Measured across the same two lockfiles T007 compared: naive innermost-parens reads 32 -> 45 and never sees jsdom@28.1.0; a depth-counting reader reads 44 -> 66 and does. 46 is approximately the buggy 45 plus the one opaque @angular/build peer hash. So the Angular lane's true peer-atom delta is +24 NAMES AND -2, not the +6 that T007, T004 and the PM all reported. Recording 46 would have shipped an inventory that was wrong about its own subject."
+      pm_independently_confirmed_the_refutation: "THE PM DID NOT TAKE THIS ON THE WORKER'S WORD - it refutes a ruling the PM recorded hours earlier. PM wrote an independent depth-counting reader from scratch and ran it against the working-tree lockfile: 67 distinct atoms, with jsdom@28.1.0 present. The same PM script's naive innermost-parens arm found 47 and did NOT find jsdom. THE NUMBERS RECONCILE EXACTLY: the Worker's 66 excludes the opaque @angular/build peer hash, which it deliberately asserts separately by name; 66 + 1 = the PM's 67. Two independently written parsers agreeing to the atom is what makes this a measurement rather than a second opinion."
+      why_this_matters_beyond_the_number: "The instrument now pins the exact bug as a literal expectation, so a future 'simplification' back to the one-line regex fails BY NAME rather than by silently shrinking the set: the calibration asserts that the naive read returns only ['@noble/hashes@2.2.0'] while the shipped reader returns ['@noble/hashes@2.2.0', 'jsdom@28.1.0']. That is the difference between a test that encodes a lesson and a comment that describes one."
+      changed_files:
+        - packages/compiler/test/package-inventory.test.ts
+        - packages/frameworks/angular/test/toolchain.test.ts
+        - docs/goals/frameless-angular-v1/notes/T007a-peer-inventory.md
+      commands:
+        - cmd: "pnpm test"
+          status: pass
+          note: "50 files / 870 tests, up from 861 (+9 new arms); PM re-ran and confirms 870"
+        - cmd: "pnpm check"
+          status: pass
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 327 files"
+        - cmd: "pnpm exec vitest run --project node packages/compiler/test/package-inventory.test.ts"
+          status: pass
+          note: "13 tests; PM re-ran - 9 new arms named and running alongside the 4 pre-existing"
+        - cmd: "test \"$(shasum -a 256 pnpm-lock.yaml)\" = f52229150e6b4b5a..."
+          status: pass
+          note: "lockfile byte-identical to task start; substitute for a verify gate that was ALREADY RED"
+        - cmd: "test \"$(git diff -- packages/frameworks/vue packages/frameworks/angular/src packages/frameworks/angular/generated packages/compiler/src demos scripts | shasum -a 256)\" = 4e41fa175aac3737..."
+          status: pass
+          note: "protected-path diff byte-identical to task start; substitute for a verify gate that was ALREADY RED"
+        - cmd: "git status --short"
+          status: pass
+          note: "only the three allowed_files added to the pre-existing Angular and Vue dirt"
+      deviations:
+        - "RECORDED 66 PEER ATOMS, NOT THE CARD'S 46. The 46 is not reproducible under any nesting-correct read - it is the output of the innermost-parens probe this card's own stop_if forbids reproducing. See the refutation above; PM independently confirmed."
+        - "Added a third Arm A assertion not in the card: the set of packages whose peer suffix pnpm collapsed into an OPAQUE HASH equals ['@angular/build']. A peer set the reader CANNOT SEE is a hole in a completeness claim, so the hole is now itself asserted. Recorded BY NAME ONLY, so it neither overlaps toolchain.test.ts nor goes red on Angular-internal churn."
+        - "TWO VERIFY COMMANDS WERE ALREADY RED AT TASK START, before any edit: `git diff --exit-code -- pnpm-lock.yaml` (the lockfile carries the unstaged +3918-line Angular-lane change) and the protected-path git diff (unstaged three-way-contract.ts and scripts/e2e.mjs from the Angular e2e row). NEITHER IS T010'S. Substituted sha256 byte-identity checks against baselines captured before editing; both prove zero movement. Only the passing substitutes are listed. PM ACCEPTS AND OWNS THE CAUSE - see below."
+        - "Arm A necessarily records Angular-internal atoms (@angular/core@22.0.8, rxjs, ajv, listr2), which sits against T007 section 6's 'must NOT go red on anything confined to the Angular lane'. Exact set equality cannot exclude them without becoming a judgement about which names matter - which is the exact failure the instrument exists to remove. Resolved in favour of the set, and written into both the file and the notes."
+      PM_OWNS_THE_PRE_RED_VERIFY_COMMANDS: "This is a consequence of a PM decision, not a Worker or card defect. The tree has carried the entire uncommitted Angular lane for this whole session because the PM has no instruction to commit. That is now materially degrading verification: `git diff --exit-code` gates are the standard freeze mechanism on these boards, and they are unusable against a tree with large legitimate uncommitted work. The Worker's sha256-baseline substitute is the correct workaround and it worked, but every subsequent task pays this cost and the workaround is strictly weaker than the gate it replaces. RAISED TO THE OWNER."
+      remaining_blockers: []
+      stopped_because: null
   - id: T999
     type: judge
     assignee: Judge

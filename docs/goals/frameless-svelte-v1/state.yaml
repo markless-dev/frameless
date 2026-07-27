@@ -10,7 +10,18 @@ goal:
   slug: "frameless-svelte-v1"
   kind: specific
   tranche: "Land a Svelte 5 lane end to end - official scaffold, emitter, gate, goldens, demo, e2e row asserting S1/S2/S3 equality - then rule on IR-4, the target-framework-version input the whole policy's version corollary depends on."
-  status: active
+  status: done
+  closed: >-
+    2026-07-27 by the T999 RE-AUDIT, which returned complete with full_outcome_complete: true. This
+    is the SECOND audit of this board: T011 landed after the first one and the board had not been
+    re-certified since, so the earlier certification did not cover the tree as it now stands.
+    The re-audit did not take the board's own word for anything material. It re-derived the T011
+    correction from shipped sources (react-dom 19.2.3 writes element.defaultValue unconditionally;
+    solid-js 1.8.22 early-returns in both setAttribute and setProperty), it verified the oracle IN
+    CODE at scripts/e2e.mjs:461-490 rather than from a green log, and it independently checked both
+    PM board repairs - confirming HEAD throws two duplicate-key errors where the working tree parses
+    clean. It also CORRECTED THE PM: the duplicate-key repair note overstated what the merged stub
+    contained. That correction is recorded on the T004 card rather than quietly applied.
   autonomy_grant:
     granted: "2026-07-27, by the owner: continuous execution to goal end, no check-ins."
     scope: >-
@@ -103,7 +114,7 @@ visual_board:
     url: null
     command: "npx goalbuddy board docs/goals/frameless-svelte-v1"
 
-active_task: T999
+active_task: null
 
 tasks:
   - id: T001
@@ -413,15 +424,22 @@ tasks:
   - id: T004
     type: worker
     assignee: Worker
-    status: done
+    status: blocked
     status_correction: >-
-      Flipped blocked -> done by the PM on 2026-07-27. T004's lane work all landed;
-      it blocked ONLY on the single S3 value-attribute observation, which it correctly
-      refused to repair from inside its own allowed_files. T006 ruled that conflict
-      (OPTION D - read the attribute from the SERVED PAYLOAD, not the post-activation
-      live DOM) and T007 implemented it. pnpm e2e is now green with all FOUR rows and
-      byte-identical S3 observations, which IS this task's objective. The card was left
-      reading blocked after its blocker was discharged - board truth lagging landed work.
+      REVERTED TO blocked BY THE PM ON 2026-07-27, undoing an earlier same-day flip to done.
+      THE EARLIER FLIP WAS THE WRONG REPAIR AND THE CHECKER CAUGHT IT: it produced a task reading
+      `done` whose own receipt reads `result: blocked` and whose commands include `pnpm e2e` at
+      status `fail`. The execution contract is explicit that a done Worker receipt must list only
+      passing commands, and that when a task's verify fails for a cause outside its allowed_files
+      the task is NOT done - it is blocked, with the failing command left visible, and a new task
+      scoped to the out-of-scope file verifies the oracle there.
+      THAT IS EXACTLY WHAT HAPPENED, CORRECTLY: T004 refused to repair the S3 value-attribute
+      conflict from inside its own allowed_files, T006 ruled it (OPTION D - read the attribute from
+      the SERVED PAYLOAD rather than the post-activation live DOM), and T007 implemented it with
+      `pnpm e2e` GREEN across all four rows and byte-identical S3 observations. The lane's success
+      is carried by T007's done receipt, where it is actually proven. Flipping T004 green added
+      nothing and hid a truthful failure - the precise shape this board spent three tasks refusing
+      to accept from an instrument.
     reasoning_hint: medium
     objective: >-
       Stand up demos/svelte-official from the official SvelteKit scaffold and add the Svelte row to
@@ -456,14 +474,29 @@ tasks:
       - "DEV WARNINGS, CARRIED FROM T003: the witness API cannot observe console warnings AT ALL - PageHandle has no console accessor and PageOutcomeExpectation exposes consoleErrors only. Either land a console.warn capture sink in the scaffold - the ONLY permitted scaffold addition beyond wiring emitted components - or RECORD IN WRITING that the demo lane cannot observe warnings and that T003's browser lane is the sole enforcement point. Silence is not an option; T999's constraint would otherwise pass vacuously."
       - "T002 named three costs of the SvelteKit choice, to be carried not rediscovered: emitted components are wired through SvelteKit's route conventions so a convention change breaks this lane where react/solid are immune; there is no shared createSsrHandler between pnpm dev and the box, so react-official's 'no second harness exists to drift' property is unobtainable and SvelteKit's own dev server is the single path instead; and modes:['dev'] means the vite build + adapter path is never exercised."
       - "T002 dissent worth checking early: it is NOT verified that root +layout.svelte onMount fires strictly after hydration completes for the whole tree at this version. It is the best candidate and strictly better than hooks.client.ts, but it is documentary. If S1/S2/S3 flake, look HERE first rather than raising a timeout."
-    stop_if:
-      - "The official scaffold needs modification beyond wiring in emitted components."
-      - "Equality cannot be asserted without weakening an existing assertion."
-      - "Verification fails twice."
-    constraints:
-      - "Official scaffold as it ships."
-      - "Do not weaken any existing activation-neutrality check."
       - "A dev-only console warning is a FAILURE here, not noise - Svelte reports ownership violations that way."
+    duplicate_key_repair: >-
+      2026-07-27 by the PM. THIS CARD CARRIED TWO `stop_if` KEYS AND TWO `constraints` KEYS. That is
+      invalid YAML - a real parser throws DUPLICATE_KEY on it, and one did, which is how this was
+      found. The board had gone unparsed by anything strict because check-goal-state.mjs is a line
+      regex parser, so the defect sat undetected while the card LOOKED rich.
+      THE PRACTICAL EFFECT WAS THAT THE VALUABLE BLOCK WAS DEAD TEXT: under last-key-wins the
+      generic three-line stub ("The official scaffold needs modification...", "Verification fails
+      twice.") silently overrode the eight T002-derived stop conditions above - including the ones
+      forbidding a guessed served-payload literal, forbidding relaxation to "any module script",
+      and requiring the activation marker to sit in onMount rather than hooks.client.ts init. The
+      Worker honoured them anyway, on the dispatch prose. It should not have had to.
+      REPAIRED BY MERGING: the dev-warning constraint was folded into the constraints list above and
+      the duplicate keys removed.
+      CORRECTED BY T999 ON RE-AUDIT, 2026-07-27: the sentence originally read "the stub's ONLY
+      non-duplicated entry - the dev-warning constraint". THAT OVERSTATED IT. The stub also carried
+      a stop_if line, "The official scaffold needs modification beyond wiring in emitted components",
+      which was likewise not transcribed verbatim. T999 ruled no rule was lost in SUBSTANCE - it is
+      covered by the surviving "OFFICIAL SCAFFOLD, AS IT SHIPS" constraint together with the
+      "ONLY permitted scaffold addition beyond wiring emitted components" clause - and did not treat
+      it as a rejection ground. Recorded rather than silently amended, because a PM note claiming a
+      merge dropped nothing is exactly the kind of claim that should be checked and, when loose,
+      corrected in place. The audit checking the repair is the system working.
     receipt:
       result: blocked
       harness: claude-code
@@ -986,11 +1019,19 @@ tasks:
         - packages/frameworks/svelte/src/gate/index.ts
         - packages/frameworks/svelte/test/gate.test.ts
       commands:
-        - {cmd: "pnpm check", status: pass}
-        - {cmd: "pnpm test", status: pass}
-        - {cmd: "pnpm lint", status: pass, note: "PM re-ran: 0 warnings, 0 errors, 270 files"}
-        - {cmd: "git diff --exit-code -- packages/frameworks/svelte/generated", status: pass, note: "emitted output byte-unchanged"}
-        - {cmd: "pnpm --dir packages/frameworks/svelte test", status: pass, note: "PM re-ran: 65 passed, 3 files"}
+        - cmd: "pnpm check"
+          status: pass
+        - cmd: "pnpm test"
+          status: pass
+        - cmd: "pnpm lint"
+          status: pass
+          note: "PM re-ran: 0 warnings, 0 errors, 270 files"
+        - cmd: "git diff --exit-code -- packages/frameworks/svelte/generated"
+          status: pass
+          note: "emitted output byte-unchanged"
+        - cmd: "pnpm --dir packages/frameworks/svelte test"
+          status: pass
+          note: "PM re-ran: 65 passed, 3 files"
 
   - id: T010
     type: worker
@@ -998,10 +1039,30 @@ tasks:
     status: done
     reasoning_hint: medium
     objective: "Correct Option D's stated reason where this repo's own emitted output refutes it, and repair the two inherited-precedent drifts on the live Vue and Angular boards. Documentation only."
+    allowed_files_provenance: >-
+      PM-RECONSTRUCTED 2026-07-27 from commit bea5e53. This card shipped with no allowed_files at
+      all, so its scope was unbounded and uncheckable. The set below is exactly what the commit
+      touched, and it matches the objective: the contract file plus the Option D note carry the
+      corrected reason, and the Vue and Angular state.yaml files are the "two inherited-precedent
+      drifts on the live boards" this task was created to repair - they are this task's own work,
+      not stray writes.
+    allowed_files:
+      - demos/react-official/three-way-contract.ts
+      - docs/goals/frameless-svelte-v1/notes/T006-value-attribute-ruling.md
+      - docs/goals/frameless-svelte-v1/state.yaml
+      - docs/goals/frameless-vue-v1/state.yaml
+      - docs/goals/frameless-angular-v1/state.yaml
     receipt:
       result: done
       harness: claude-code
       verification_attempts: 1
+      changed_files_provenance: "PM-RECONSTRUCTED 2026-07-27 from commit bea5e53; every path is inside the reconstructed allowed_files above."
+      changed_files:
+        - demos/react-official/three-way-contract.ts
+        - docs/goals/frameless-svelte-v1/notes/T006-value-attribute-ruling.md
+        - docs/goals/frameless-svelte-v1/state.yaml
+        - docs/goals/frameless-vue-v1/state.yaml
+        - docs/goals/frameless-angular-v1/state.yaml
       summary: >-
         Confirmed attr:value={text()} at packages/frameworks/solid/generated/S3.jsx:20 BEFORE
         writing anything - the stop condition did not fire - then corrected Option D's stated reason
@@ -1041,13 +1102,25 @@ tasks:
         verified it mechanically by filtering the diff for non-comment changed lines; the PM RE-RAN
         that filter independently and got ZERO. No executable line moved.
       commands:
-        - {cmd: "pnpm check", status: pass}
-        - {cmd: "pnpm test", status: pass, note: "685/685, 43 files"}
-        - {cmd: "pnpm test:browser", status: pass}
-        - {cmd: "pnpm e2e", status: pass, note: "4 demos x 3 scenarios, all observations equal"}
-        - {cmd: "pnpm lint", status: pass, note: "0 warnings, 0 errors, 270 files"}
-        - {cmd: "git diff -U0 -- three-way-contract.ts | filter non-comment", status: pass, note: "PM re-ran: ZERO non-comment changed lines"}
-        - {cmd: "grep -rn 'never witnessed client state in ANY lane'", status: pass, note: "PM re-ran repo-wide: ZERO matches survive"}
+        - cmd: "pnpm check"
+          status: pass
+        - cmd: "pnpm test"
+          status: pass
+          note: "685/685, 43 files"
+        - cmd: "pnpm test:browser"
+          status: pass
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "4 demos x 3 scenarios, all observations equal"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 270 files"
+        - cmd: "git diff -U0 -- three-way-contract.ts | filter non-comment"
+          status: pass
+          note: "PM re-ran: ZERO non-comment changed lines"
+        - cmd: "grep -rn 'never witnessed client state in ANY lane'"
+          status: pass
+          note: "PM re-ran repo-wide: ZERO matches survive"
 
   - id: T011
     type: worker
@@ -1063,6 +1136,18 @@ tasks:
       result: done
       harness: claude-code
       verification_attempts: 1
+      changed_files_provenance: >-
+        PM-RECONSTRUCTED 2026-07-27 from commit 0f7aef0. That commit ALSO touched
+        docs/goals/frameless-vue-v1/state.yaml and docs/goals/frameless-angular-v1/state.yaml,
+        which are OUTSIDE this task's allowed_files - but that is not a Worker scope violation and
+        is deliberately not recorded as one. Those two hunks are PM propagation of the same
+        correction to the sibling boards, which the commit message states outright ("recorded on
+        all three boards rather than quietly fixed"). Only the three paths this task was actually
+        scoped to are listed.
+      changed_files:
+        - demos/react-official/three-way-contract.ts
+        - docs/goals/frameless-svelte-v1/notes/T006-value-attribute-ruling.md
+        - docs/goals/frameless-svelte-v1/state.yaml
       summary: >-
         Measured all four cells in Chromium before writing anything. The react cell REPRODUCED
         exactly as the re-audit stated, so the stop condition did not fire. The qwik cell, never
@@ -1121,18 +1206,27 @@ tasks:
         "incidental byproduct of one framework's attr: idiom", which named the wrong mechanism once
         the lane changed.
       commands:
-        - {cmd: "node -e '<transpile removeComments compare vs HEAD>'", status: pass, note: "comment-only: OK - zero executable lines moved in three-way-contract.ts"}
-        - {cmd: "pnpm check", status: pass}
-        - {cmd: "pnpm test", status: pass}
-        - {cmd: "pnpm test:browser", status: pass}
-        - {cmd: "pnpm e2e", status: pass}
-        - {cmd: "pnpm lint", status: pass, note: "1 warning, from UNTRACKED packages/frameworks/vue/src - the Vue board's live work, not this package's"}
-        - {cmd: "git diff --exit-code -- packages/ scripts/ demos/*/src pnpm-lock.yaml", status: pass}
+        - cmd: "node -e '<transpile removeComments compare vs HEAD>'"
+          status: pass
+          note: "comment-only: OK - zero executable lines moved in three-way-contract.ts"
+        - cmd: "pnpm check"
+          status: pass
+        - cmd: "pnpm test"
+          status: pass
+        - cmd: "pnpm test:browser"
+          status: pass
+        - cmd: "pnpm e2e"
+          status: pass
+        - cmd: "pnpm lint"
+          status: pass
+          note: "1 warning, from UNTRACKED packages/frameworks/vue/src - the Vue board's live work, not this package's"
+        - cmd: "git diff --exit-code -- packages/ scripts/ demos/*/src pnpm-lock.yaml"
+          status: pass
 
   - id: T999
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Audit whether the Svelte lane satisfies the oracle and the full owner outcome."
     inputs:
@@ -1155,11 +1249,67 @@ tasks:
       - "full_outcome_complete: true | false"
       - "missing evidence"
       - "next task if not complete"
-    receipt: null
-
+    receipt:
+      result: done
+      decision: complete
+      full_outcome_complete: true
+      harness: claude-code
+      rationale: "Oracle proven IN CODE, not prose: scripts/e2e.mjs:461-490 stringify-compares each lane's whole observed array and exits 1 on divergence, with svelte among six officialDemos rows. Option D passes the restated three-part widening test - one branchless assertS3 path, a per-lane loss table plus a trigger naming the lost class, two negative arms per call, and the string still inside the compared set. Per-lane values live only in servedClientEntry/expectedNavigations, both OUTSIDE observed. The T011 correction was RE-DERIVED from shipped sources rather than inherited: react-dom 19.2.3 writes element.defaultValue unconditionally beside an isHydrating-guarded property write; solid-js 1.8.22 early-returns in BOTH setAttribute and setProperty. Both PM board repairs verified independently - HEAD throws two duplicate-key errors, the working tree parses clean at 9 stop_if / 5 constraints."
+      summary: "Svelte lane satisfies the oracle and the full owner outcome. Six-row pnpm e2e with asserted S1/S2/S3 equality on the official SvelteKit scaffold at the pinned lockfile version; Option D is a uniform trade passing the restated widening test with a per-lane loss table, a two-sided control on every call, and a re-open trigger naming the lost class; the per-lane/observed boundary is intact; IR-4 explicitly deferred with the consequence stated and propagated to the Vue and Angular boards, its load-bearing precondition converted into a red-provable baseline form inventory; dev warnings enforced at two non-vacuous points and none observed; T005's inventory, lint-arbiter and worked-example-6 grounds all discharged."
+      note: notes/T999-reaudit.md
+      worker_package: null
+      evidence:
+        - "scripts/e2e.mjs:33-50, :88-126, :461-490 - six rows, asserted equality, and a receipt that cannot read as pass when empty"
+        - "demos/react-official/three-way-contract.ts:322-384 measureServedAttribute (two negative arms plus two vacuity guards, every call, every lane); :722-772 per-lane loss table and re-open trigger; :103-157 total Records; :465 neutrality negatives unchanged; :814-868 assertS3; :938-1007 runScenario pushes nothing per-lane into observed"
+        - "react-dom 19.2.3 cjs development build - `isHydrating || value === element.value || (element.value = value); element.defaultValue = value;`"
+        - "solid-js 1.8.22 web/dist/web.js:148,152 - both open `if (isHydrating(node)) return;`"
+        - "yaml@2.9.0 uniqueKeys parse: HEAD state.yaml => 2 duplicate-key errors (lines 459, 463); working tree => 0 errors, 0 warnings"
+        - "packages/frameworks/svelte/src/gate/index.ts:3-4 (ESLint plus eslint-plugin-svelte), :489-554 (15-entry inventory, all floors 'unverified' with reasons); test/gate.test.ts:354-500 six red rows"
+        - "packages/frameworks/svelte/src/emitter/index.ts:379 DECISION SITE comment above syncPolicyGuard()"
+        - "docs/emitter-idiom-policy.md:368-442 - worked example 6 rewritten DENIED, all six outcomes recorded, decider named"
+        - "demos/svelte-official/src/hooks.client.ts plus scenarios.box.ts:33-60 - self-calibrating sink; 'calibrated' is asserted before a zero count is believed, and the string lands in evidence, not observed"
+      missing_evidence:
+        - "T011's Chromium probes were not re-run (PM command restriction, to avoid contaminating three concurrent judges). The react/solid cells are corroborated by shipped-source reads rather than by a repeated browser measurement."
+        - "No baseline-form-inventory floor is 'verified' - the verified arm is calibrated, not exercised, and cannot be without network access."
+        - "svelte-check does not catch a wrong-TYPED prop passed from a route; emitted output carries no prop types. This is the IR-8 gap, now reached independently by four lanes."
+        - "modes: ['dev'] - the vite build plus adapter path is still never exercised. Repo-wide and named in the charter."
+      pm_response_to_required_board_updates: "All four actioned. (1) The checks: block is filled with the six-command PM verification and its task attribution - the Judge was right that a board certifying complete with an empty verification block is the shape it exists to catch. (2) This receipt records the verdict and goal.status follows it. (3) The duplicate_key_repair note is CORRECTED IN PLACE: it claimed the dev-warning constraint was the stub's 'only' non-duplicated entry, which overstated it - the stub also carried a stop_if line about scaffold modification. T999 ruled it substantively covered by the surviving OFFICIAL SCAFFOLD constraint plus the sink-is-the-only-permitted-addition clause, so no rule was lost, but the PM's wording was loose and is now accurate. (4) T004 stays blocked; its objective is discharged by T007's green receipt."
+      pm_note_on_the_correction: "The PM wrote the claim this audit corrected. That is the intended direction of travel - the Judge checking the PM's own repair is not a defect in the process, it is the process."
 checks:
-  dirty_fingerprint: unknown
+  dirty_fingerprint: >-
+    2026-07-27, uncommitted on branch main over HEAD d9dd70b. NO SVELTE FILE IS DIRTY: the tree
+    carries the Angular lane (demos/angular-official, packages/frameworks/angular/test/toolchain.test.ts,
+    demos/react-official/three-way-contract.ts, scripts/e2e.mjs, pnpm-lock.yaml) plus PM board
+    repairs to the four state.yaml files. The PM verified git diff --exit-code over
+    demos/svelte-official/src and packages/frameworks/svelte is CLEAN - the Svelte lane did not move
+    to accommodate Angular, which is itself part of what the six-row equality proves.
   last_verification:
-    result: unknown
-    task: null
-    commands: []
+    result: green
+    task: "Angular T004 (the sixth e2e lane); the Svelte row is verified as part of the same matrix"
+    run_by: "PM, independently re-running the full goal oracle rather than only one card's commands"
+    when: "2026-07-27, against the tree described in dirty_fingerprint"
+    filled_because: >-
+      T999's re-audit flagged this block as reading unknown with an empty command list while the
+      board was being asked to certify complete. Its words: a board that certifies complete with no
+      recorded verification is exactly the shape this board has been catching. The evidence existed
+      on the T007/T008/T010/T011 receipts and on the Angular board; what was missing was this
+      block pointing at it.
+    commands:
+      - cmd: "pnpm check"
+        status: pass
+        note: "six tsc passes"
+      - cmd: "pnpm lint"
+        status: pass
+        note: "0 warnings, 0 errors, 327 files"
+      - cmd: "pnpm test"
+        status: pass
+        note: "857 passed / 50 files"
+      - cmd: "pnpm test:browser"
+        status: pass
+        note: "react 60, solid 49, svelte 13, vue 18"
+      - cmd: "pnpm e2e"
+        status: pass
+        note: "SIX rows including svelte; all 18 observation strings byte-identical, PM read them side by side"
+      - cmd: "git diff --exit-code -- packages/frameworks/svelte demos/svelte-official/src"
+        status: pass
+        note: "Svelte lane byte-unchanged under the Angular landing"
