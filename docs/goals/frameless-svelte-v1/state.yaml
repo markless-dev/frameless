@@ -140,7 +140,7 @@ tasks:
       - "sveltejs/svelte CHANGELOG - 5.16.0 clsx class, 5.20.0 $props.id(), 5.25.0 writable deriveds, 5.29.0 attachments"
       - "poc/09-storage/svelte/App.svelte - the prior in-repo assumption"
       - "pnpm-workspace.yaml:16 - vite ^8.0.16, matching the scaffold pin"
-  note_correction: "The T001 receipt originally cited notes/T001-scaffold-and-versions.md, which was never written. Caught by T002. The inline receipt below IS the record; the citation is withdrawn rather than back-filled, because writing the note now would be reconstructing evidence after the fact. A receipt citing evidence that is not there is the board-level form of instrument rule 2."
+      note_correction: "The T001 receipt originally cited notes/T001-scaffold-and-versions.md, which was never written. Caught by T002. The inline receipt below IS the record; the citation is withdrawn rather than back-filled, because writing the note now would be reconstructing evidence after the fact. A receipt citing evidence that is not there is the board-level form of instrument rule 2."
       summary: "Mapped the sv@0.16.6 minimal scaffold: SvelteKit 2.63 / svelte ^5.56.1 / vite ^8.0.16 - the SAME vite as the root catalog, so Svelte does not repeat Qwik's vite-pinning problem. Svelte hydrates, so e2e needs no third activation term. Every construct S1/S2/S3 needs is Svelte 5.0 baseline, so IR-4 blocks no lane. IR-5 needs no schema change - modifiers were removed, so the actions emit as ordinary in-body statements; the live question is DELEGATION, not modifiers."
       scaffold:
         command: "npx sv create, sv@0.16.6, minimal + TypeScript"
@@ -407,7 +407,15 @@ tasks:
   - id: T004
     type: worker
     assignee: Worker
-    status: blocked
+    status: done
+    status_correction: >-
+      Flipped blocked -> done by the PM on 2026-07-27. T004's lane work all landed;
+      it blocked ONLY on the single S3 value-attribute observation, which it correctly
+      refused to repair from inside its own allowed_files. T006 ruled that conflict
+      (OPTION D - read the attribute from the SERVED PAYLOAD, not the post-activation
+      live DOM) and T007 implemented it. pnpm e2e is now green with all FOUR rows and
+      byte-identical S3 observations, which IS this task's objective. The card was left
+      reading blocked after its blocker was discharged - board truth lagging landed work.
     reasoning_hint: medium
     objective: >-
       Stand up demos/svelte-official from the official SvelteKit scaffold and add the Svelte row to

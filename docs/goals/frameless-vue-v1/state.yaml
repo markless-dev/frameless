@@ -11,16 +11,33 @@ goal:
   kind: specific
   tranche: "Land a Vue lane end to end - official scaffold, emitter, gate, goldens, demo, e2e row asserting S1/S2/S3 equality with the existing three - then run the ratified idiom policy on Vue's flagship sugar now that Gate 1 and Gate 6 can resolve."
   status: active
-  prepped_not_started: >-
-    NOTHING IS RUNNING THIS BOARD. status reads active and active_task reads T001 only because the
-    GoalBuddy checker requires exactly one active task while a goal is active; there is no
-    alternative encoding for "prepped". Every task receipt is null, which is the reliable signal.
-    Revalidated by frameless-defects-and-targets-v1 T010 on 2026-07-27.
+  started: >-
+    STARTED 2026-07-27. T001 Scout dispatched by the PM after frameless-svelte-v1 landed its
+    lane (pnpm e2e green, four rows) and ruled IR-4. This board is no longer prepped-only;
+    the previous "NOTHING IS RUNNING THIS BOARD" banner is withdrawn as of that dispatch.
   inherited_gaps_revalidated: >-
     Two of the three standing gaps inherited from frameless-idiom-policy-v1 are now FIXED and the
     charter has been corrected: pnpm check DOES typecheck emitted output (three tsc passes plus a
     per-package emitted-typecheck lane), and pnpm test:browser runs clean (react 55/55, solid
     44/44). Still true: pnpm e2e pins dev mode only, scenarios.box.ts modes ['dev'].
+  ir_4_ruled_by_svelte: >-
+    INHERITED RULING, do NOT re-litigate. frameless-svelte-v1 T005 ruled IR-4 DEFERRED and
+    STRENGTHENED after re-running all six gates against a real emitter at a pinned version.
+    Binding text, verbatim: "A lane discharges ONLY the Gate 1 absent-framework deferral and the
+    Gate 6 no-lane deferral. It does NOT touch G2, G3, G4 or G5, and it does NOT satisfy the
+    version corollary's second conjunct." So landing this lane clears Gate 1 and Gate 6 for this
+    framework's sugar and NOTHING else. Every version-gated sugar ruling on this board must DEFER
+    on IR-4 grounds and say so. Recorded by the PM on 2026-07-27.
+  s3_contract_changed_option_d: >-
+    demos/react-official/three-way-contract.ts now reads S3's `text` observation from the SERVED
+    PAYLOAD (served.text), not the post-activation live DOM, and `served: EnvironmentResponse` is a
+    REQUIRED parameter threaded through runScenario at all four existing call sites. A new lane must
+    thread it too. Ruled as OPTION D by frameless-svelte-v1 T006, implemented by its T007, after
+    svelte 5.56.8's remove_input_defaults() was found to delete the value ATTRIBUTE on hydration by
+    design. servedClientEntry and expectedNavigations are total Readonly<Record<...>> tables.
+  svelte_is_the_freshest_precedent: >-
+    demos/svelte-official is a landed 4th e2e lane and docs/goals/frameless-svelte-v1 is the closest
+    prior board. Read both before planning. pnpm e2e is green with four rows, all observations equal.
   instrument_rules: >-
     THREE STANDING CONSTRAINTS added by T010, full text in goal.md. This board adds four new
     instruments and four of six findings on the defects goal were instrument faults. (1) Two-variable
