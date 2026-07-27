@@ -105,7 +105,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T006
+active_task: T007
 
 tasks:
   - id: T001
@@ -726,7 +726,7 @@ tasks:
   - id: T006
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Run all three bounded diagnosis experiments - WebKit quiescence (defect 4), generative rename (defect 6), Windows cause B (defect 3-B) - and produce a decision for each."
     allowed_files:
@@ -754,12 +754,64 @@ tasks:
       - "Defect 4: measured settle time, DOM state at expiry, and which reading it supports"
       - "Defect 6: field-by-field IR diff and which reading it supports"
       - "Defect 3-B: CRLF confirmed or refuted, with the evidence"
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      note: notes/T006-diagnoses.md
+      summary: "Three diagnoses, three decisions, no fixes. ALL THREE turn out to be instrument problems rather than product defects - the same pattern the owner's T004 overturn exposed. Defect 4: the DOM never changes in any engine; the loop is 100% rAF-gated, WebKit/macOS settles in 44ms, and the verbatim CI error reproduces ON CHROMIUM by slowing frames alone. Defect 6: all 8 differing leaves are a permutation of records.bindings, caused by a deliberate canonicalisation the invariant contradicts. Defect 3-B: CRLF confirmed as trigger, but the stated cause is refuted - the gate is CRLF-robust; the test's own mutation literal silently no-ops."
+      changed_files:
+        - docs/goals/frameless-defects-and-targets-v1/notes/T006-diagnoses.md
+      commands:
+        - cmd: "git status --short"
+          status: pass
+          note: "exactly one path - the note. Defect-4 browser runs created .vitest-attachments/ and __screenshots__/ entries, removed with a path-scoped git clean before the final check."
+        - cmd: "pnpm test"
+          status: pass
+          note: "561/561, 39 files - unchanged, proving no repo mutation. PM RE-RAN."
+        - cmd: "defect 3-B CRLF probe (scratchpad, 5 in-memory conditions)"
+          status: pass
+        - cmd: "defect 6 counterexample + 3 controls, field-by-field diff (scratchpad)"
+          status: pass
+        - cmd: "defect 6 200-run generalisation sweep at seed 20260726 (scratchpad)"
+          status: pass
+        - cmd: "instrumented boundedQuiescence across chromium/firefox/webkit, 9 measurements (scratchpad config)"
+          status: pass
+        - cmd: "T006_RAF_STALL={200,240,260,300} on the repo's UNMODIFIED adapter (scratchpad config)"
+          status: pass
+          note: "reproduces the verbatim CI error on CHROMIUM and pins the true tolerance"
+      defect_4:
+        reading: "1 - but stronger than the card anticipated: the bound measures the wrong quantity"
+        measurement: "The DOM is at its final value on the FIRST snapshot in all three engines, so nothing settles at all and there is no settle time to raise the bound to. WebKit on macOS completes in 44ms, 11x headroom."
+        cause: "boundedQuiescence bounds wall-clock time over a loop whose progress is gated entirely on three requestAnimationFrame callbacks. rAF's contract is 'before the next repaint'; a headless browser that never composites owes no repaint and therefore no callback on any schedule. 500ms silently encodes a >4fps floor - two rAF intervals must complete within it - that no specification provides."
+        decisive_tell: "The failure reproduces on CHROMIUM once frames are slow (passes at 240ms/frame, fails at 260ms/frame) on the repo's UNMODIFIED adapter. It is a property of the assumption, not of WebKit. Same signature as the T004 overturn."
+        reading_2_unsupported: "Identical DOM across engines, and CI failed 1 of 55 where sustained starvation fails 42 of 55."
+        not_reproduced: "macOS WebKit passes; the CI cell is ubuntu-latest headless WebKitGTK, unavailable here. The rAF-cadence experiment is a substitute, recorded as such rather than claimed as reproduction."
+      defect_6:
+        reading: "1 - legitimate; the comparison needs an order-insensitive view"
+        measurement: "8 differing leaves, ALL a permutation of records.bindings. 200-run sweep: zero non-permutation diffs, zero declaration-order changes, zero cell-wiring changes."
+        cause: "packages/compiler/src/build.ts:427-430 deliberately canonicalises by sorting bindings/aliases/events by a name-derived id. A state binding's id is `state:<name>`, so an alphabetical rename MUST permute them. Present since 93420a3."
+        hypothesis_status: "The unverified alphabetical-reordering hypothesis is CONFIRMED, and the mechanism is now named rather than guessed."
+        guardrail_added_unprompted: "Any order-insensitive view must cover ONLY the four collections build.ts:427-430 sorts - never records.stateWrites (authored write order, policed as S-SH7) or components[].locals. The obvious 'sort everything' fix would silence the very instability the invariant exists to catch."
+      defect_3b:
+        verdict: "CRLF confirmed as the TRIGGER; the stated CAUSE is refuted"
+        cause_refuted: "findings-004 guessed hashing or line-splitting over emitted source. The Solid gate is CRLF-robust: row C detects a genuine CRLF reorder, row D clean-passes CRLF."
+        actual_cause: "packages/frameworks/solid/test/gate.test.ts, the S-SH7 row around line 472. Its mutation SEARCH literal embeds \\n\\t\\t. On a CRLF checkout String.replace returns the input unchanged, with no error, and the harness then asserts a mutation against a non-mutant. It is the only .replace() search literal in that file containing a newline, which is exactly why one assertion failed on Windows."
+        green_vacuum: "A mutation fixture that can silently fail to mutate is the same failure mode this board already polices. The fix should be paired with an assertion that the source actually changed, per metamorphic.test.ts:78."
+      bonus_finding_third_windows_cause: "NOT in findings-004 and T008 would otherwise be surprised: all three packages/compiler/test/goldens/*.json bake AST BYTE OFFSETS, so a CRLF checkout breaks enriched-ir.test.ts's three golden-dump tests - and CRLF-ising the golden does not fix it."
+      fairness_check:
+        defect_4: "UNFAIR. The instrument is not testing WebKit inside its contract. 500ms bounds wall-clock over an rAF-gated loop; a headless browser that never composites owes no callback on any schedule. Decisive tell and the T004 signature: the failure reproduces on Chromium once frames are slow."
+        defect_6: "UNFAIR, and provably rather than arguably. The collections are a canonical form explicitly sorted by a name-derived id. The invariant demands positional stability of a collection whose position IS defined by the identifier just renamed - it contradicts a declared property of the artifact. Unlike defect 4 the unfairness is bounded and was measured across 200 programs."
+        defect_3b: "MIXED. The PRODUCT - the Solid gate - was operated well inside its contract and answered correctly on both LF and CRLF. The INSTRUMENT was not. Unlike defect 4 this exonerates nothing: a mutation fixture that can silently fail to mutate is itself a defect in the test suite."
+      deviations:
+        - "Defect 4: the card's decision rule assumed a settle time to raise the bound to. The measurement showed the DOM is already final on the first snapshot in every engine, so nothing settles. Reported as reading 1 with the correction recorded rather than forcing the number into the rule."
+        - "Defect 4: could not reproduce the CI failure - macOS WebKit passes with 11x headroom and the CI cell is ubuntu headless WebKitGTK. Substituted a controlled rAF-cadence experiment on the unmodified adapter. Recorded as missing evidence, not as reproduction."
+        - "Defect 6: went beyond the single seed to a 200-run sweep plus three controls. The counterexample has no reads, events or writes, so alone it could not show whether anything besides bindings moves - the ruling would have been an extrapolation from the thinnest possible case."
+        - "Defect 3-B: recorded one adjacent unrequested finding, the third Windows cause above."
+      verification_attempts: 1
   - id: T007
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     objective: "Phase B audit: rule on all three diagnoses and spec the resulting fixes or closures."
     inputs:
@@ -770,6 +822,10 @@ tasks:
       - "For each: rule real-finding, harness-assumption, or non-issue - and say what closes it."
       - "A ruling of 'raise the bound' or 'compare order-insensitively' is ACCEPTABLE here, but only if T006's instrumented evidence supports it. Reject it if the experiment did not actually run."
       - "Where a defect turns out to be a real compiler finding, spec it as its own Worker package rather than folding it into the portability work."
+      - "THE PATTERN NOW DEMANDS A RULING. Counting the owner's T004 overturn, FOUR of the six defects have turned out to be instrument problems rather than product defects: 2 (harness clicks before any framework installs listeners), 4 (a wall-clock bound over an rAF-gated loop), 6 (an invariant contradicting a declared canonicalisation), and 3-B (a mutation literal that silently no-ops on CRLF). Only defect 1 was a real product defect. Rule on whether docs/DEFECTS.md's framing - 'defects the testing work uncovered' - survives, and say what it should say instead."
+      - "Do NOT treat 'instrument problem' as 'no work required'. Defect 3-B's silently-no-op mutation is a green vacuum in the test suite, the exact failure mode this board already polices elsewhere. Defect 6's fix must be narrowly scoped: an order-insensitive view over ONLY the four collections build.ts:427-430 sorts, never records.stateWrites (authored write order, policed as S-SH7) or components[].locals. A sort-everything fix would silence the instability the invariant exists to catch."
+      - "Defect 4 has NO reproduction on the failing platform - macOS WebKit passes with 11x headroom and the CI cell is ubuntu headless WebKitGTK. The rAF-cadence experiment on Chromium is a substitute. Decide whether that is sufficient to act on, or whether the bound should be changed only alongside something that can observe the real cell."
+      - "Rule on the THIRD Windows cause T006 found unprompted and findings-004 never had: the compiler goldens bake AST BYTE OFFSETS, so a CRLF checkout breaks enriched-ir.test.ts's golden-dump tests and CRLF-ising the golden does not fix it. Fold it into T008's scope or spec it separately."
       - "full_outcome_complete stays false."
     expected_output:
       - "Ruling per defect, with the evidence it rests on"
