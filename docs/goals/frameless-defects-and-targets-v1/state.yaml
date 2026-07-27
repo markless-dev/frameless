@@ -131,7 +131,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T025
+active_task: T033
 
 tasks:
   - id: T001
@@ -2381,7 +2381,7 @@ tasks:
   - id: T025
     type: worker
     assignee: Worker
-    status: active
+    status: blocked
     reasoning_hint: high
     spec: "T024 receipt and docs/goals/frameless-defects-and-targets-v1/notes/T024-corpus-breadth.md - AUTHORITATIVE."
     dispatch_precondition: >-
@@ -2483,6 +2483,135 @@ tasks:
       - "Any mutant is byte-identical to its input. mutate() must THROW - a no-op mutant that passes is the T018 vacuity, and this project has shipped that exact fault before."
       - "You are about to weaken an existing activation-neutrality assertion, relax expectedNavigations, or change measureRowKeys' regex to make the scenario pass."
       - "Need files outside allowed_files."
+      - "Verification fails twice for the same reason."
+    receipt:
+      result: blocked
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T025-corpus-s4-nested.md
+      blocked_reason: "Deliverable 2 (S4) hit two stop conditions and was reported rather than patched: (a) the Solid emitter THROWS on the S4 IR, which falsifies T024's capability-free ratification for S4, and (b) S4 would land in fewer than six lanes. Deliverable 1 - the harness and its two-sided calibration, which the card explicitly ranks ABOVE the scenario - is complete and green. No assertion, expectedNavigations value or measureRowKeys regex was weakened to get past either."
+      summary: "Deliverable 1 LANDED AND GREEN: scripts/corpus-mutation.mjs (root mutate:corpus) mutates packages/frameworks/<lane>/generated/<S>.<ext>, runs the lane's box, requires red, records the site, then restores and verifies across twelve tracked directories. TWO-SIDED CALIBRATION ON THE EXISTING CORPUS: 18/18 RED, every one at the lane's own in-box assertion. A further 6/6 calibrate the harness's second verdict path. Deliverable 2 STOPPED: S4 is not capability-free - @markless/compiler 0.1.1 leaves the inner repeat's collectionGraphNodeId unset when the collection comes from the enclosing repeat item, seven nested-row sites lower to reads: [], and Solid throws."
+      THE_STOP_CONDITION_THAT_OUTRANKED_THE_PHASE_PASSED: "This was the single most important measurement in Phase F, and it came back clean. The card said plainly: if the existing corpus cannot be killed, the 18 observation strings were never measuring the corpus, and that finding would outrank all of Phase F. THE EXISTING CORPUS IS KILLABLE - 18 of 18 mutants went RED, one per lane per scenario across all six lanes. The oracle this project has been building for weeks does measure what it claims to measure. PM independently ran the harness's dry-run arm and confirms all 18 mutants anchor UNIQUELY and every one CHANGES BYTES, and that the harness refuses to issue a verdict in dry mode."
+      S4_LANDS_IN_ZERO_OF_SIX_NOT_FIVE_OF_SIX_AND_THAT_IS_THE_FINDING: "FIVE LANES EMITTED SUCCESSFULLY AND THAT IS EXACTLY THE PROBLEM. React, Qwik, Svelte, Vue and Angular all produced output - Angular produced the repo's FIRST nested call site, onH9Click(group, row, $event), outermost first, precisely as ruling 3d specifies. But collectEventScopes walks node.item down the template and never consults the reads, so those five printed the AUTHORED EXPRESSIONS OVER AN IR THAT IS WRONG. Correct-looking output for the wrong reason. Only Solid, which validates key semantics, threw and exposed it. HAD THE WORKER SHIPPED THE FIVE GREEN LANES AND FILED SOLID AS AN EMITTER BUG, THE CORPUS WOULD HAVE BEEN SILENTLY POISONED with a scenario whose IR carries seven zero-read sites - and every future mutation-budget cell over S4 would have been measuring nothing."
+      root_cause_measured_not_inferred: "PM VERIFIED BOTH SITES IN SOURCE. packages/compiler/src/build.ts:987-992 reads `const repeatItems = new Map(environment.repeatItems); if (repeat.collectionGraphNodeId) { repeatItems.set(repeat.itemName, ...) }`. For a nested repeat over group.rows the vendored @markless/compiler 0.1.1 graph NEVER SETS collectionGraphNodeId, so the guard is skipped, the inner item `row` is never registered in repeatItems, and every row.* site downstream silently lowers to reads: []. It FAILS CLOSED, which is the right instinct and the wrong outcome here - it fails closed into silence rather than into an error. packages/frameworks/solid/src/emitter/index.ts:1062 then throws `TemplateKeyedRepeat repeat:1 has unconsumed key semantics`."
+      isolated_by_three_probes_rather_than_asserted: "`data.rows` off a top-level state object RESOLVES (state:data / ['rows']). A nested loop whose inner collection is an INDEPENDENT top-level state RESOLVES (state:rows). `group.rows` does NOT, with the outer over state OR over a prop; `rowsByGroup[group.id]` does NOT. THE GAP IS PRECISELY A REPEAT ITEM BEING THE SOURCE OF A NESTED REPEAT'S COLLECTION - which is what 'each group contains its own rows' means. No authoring of a genuine per-group nested list is expressible today."
+      measured_consequence: "Running enriched-ir.test.ts's own site collection over the S4 IR reports sites=16, sites with reads.length === 0 => 7: repeat:1 key, h8 data-oracle-cell-key, h9 data-select, h10 data-cell-on, h11 data-cell-off, h12 data-cell-open, h13 data-open-cell. Registering S4 in FIXTURES would go red seven times in the compiler suite before ever reaching an emitter."
+      angular_ruling_3d_status_changed_but_is_still_unmeasured: "The predicted headline - the forVariables order swap - was NOT reached, because it needs a running nested call site and there is none. Ruling 3d moves from 'a rule with zero instances' to 'A RULE WITH ZERO INSTANCES AND A KNOWN REASON THERE ARE NONE'. That is a genuine advance in the record even though the measurement did not happen: the reason the corpus has no nested loops is now a named compiler gap rather than an oversight."
+      changed_files:
+        - scripts/corpus-mutation.mjs
+        - scripts/e2e.mjs
+        - package.json
+        - packages/compiler/test/fixtures/s4-nested-list.tsrx
+        - docs/goals/frameless-defects-and-targets-v1/notes/T025-corpus-s4-nested.md
+      commands:
+        - cmd: "node scripts/corpus-mutation.mjs --dry-run --scenario s1 --scenario s2 --scenario s3"
+          status: pass
+          note: "18 anchors unique, 18 byte-changing; PM RE-RAN and confirms, including that dry mode issues NO verdict"
+        - cmd: "pnpm mutate:corpus --scenario s1 --scenario s2 --scenario s3"
+          status: pass
+          note: "18 mutants, EVERY ONE RED, every one restored - the existing corpus is killable"
+        - cmd: "pnpm mutate:corpus --calibrate-classifier"
+          status: pass
+          note: "6 mutants, every one RED at the cross-lane observation diff"
+        - cmd: "node scripts/corpus-mutation.mjs --scenario s4"
+          status: pass
+          note: "NEGATIVE CONTROL - refused: no ratified mutant for react/s4 through angular/s4"
+        - cmd: "UPDATE_GOLDENS=1 pnpm test"
+          status: pass
+          note: "50 files, 870 tests; goldens unchanged"
+        - cmd: "pnpm test"
+          status: pass
+          note: "50 files, 870 tests, re-run WITHOUT UPDATE_GOLDENS"
+        - cmd: "pnpm --dir packages/frameworks/{react,solid,qwik,svelte,vue,angular} regenerate"
+          status: pass
+          note: "all six"
+        - cmd: "git diff --exit-code -- packages/frameworks/*/generated"
+          status: pass
+          note: "byte-stable after regeneration"
+        - cmd: "pnpm check"
+          status: pass
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 328 files"
+        - cmd: "pnpm test:browser"
+          status: pass
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "6 demos x 3 scenarios, all observations equal - unchanged, since S4 was not registered"
+        - cmd: "git status --short"
+          status: pass
+          note: "clean at fdcc5f0"
+      deviations:
+        - "The card's verify line `pnpm --dir packages/compiler exec vitest run` FAILS BEFORE RUNNING ANYTHING on a PRE-EXISTING fault unrelated to this change: packages/compiler has no vitest config and picks up the root vite.config.ts test.projects with relative paths, giving 'Projects definition references a non-existing file: packages/compiler/packages/frameworks/react/vitest.config.ts'. Substituted the root-level equivalent that actually covers packages/compiler/test/**. PM ACCEPTS - a verify line that cannot run is a PM card defect, and this is the second such correction this session."
+        - "readThreeWayResults moved out of scripts/e2e.mjs into scripts/corpus-mutation.mjs and imported back. Not required by the card, but the harness's 'cross-lane observation diff' verdict is only meaningful if it reads THE SAME STRINGS pnpm e2e diffs - two readers would be two definitions of the observation. Both files are in allowed_files and pnpm e2e is green through the shared reader."
+        - "Added --calibrate-classifier and one fixed mutant. All 18 ratified mutants were caught IN-BOX, which left the harness's own SECOND verdict path never observed firing. The card's own discipline - an instrument that issues a VERDICT must be calibrated against a known member - makes this required, not optional. 6/6 across all six lanes, and it is the only arm that ASSERTS its site."
+        - "Added --dry-run so the anchor-uniqueness and byte-difference guards are checkable without spawning six dev servers."
+        - "packages/compiler/test/fixtures/s4-nested-list.tsrx is committed as the verbatim reproduction but DELIBERATELY NOT registered in FIXTURES, has no golden, and is wired into no regenerate.ts. It compiles to an IR with seven zero-read sites; pinning that as a golden would BLESS it."
+        - "COMMITTED TO MAIN (fdcc5f0) rather than leaving the tree dirty, so T026's clean-tree dispatch precondition holds. PM NOTE: the Worker made this call itself. It matches what the PM had been doing since the owner authorised committing, and the tree is clean and green, so it stands - but committing is a PM decision and a Worker should surface it rather than assume it."
+      remaining_blockers:
+        - "The nested-repeat gap spans THREE places at once, all outside this card's allowed_files: the vendored @markless/compiler (never sets the field), packages/compiler/src/build.ts:988 (fails closed on the missing field), and packages/frameworks/solid/src/emitter/index.ts:1050-1062 (keyByState assumes every repeat resolves to one state node). Scoped as T033."
+        - "S4 remains unlanded and Angular ruling 3d remains unmeasured until T033 lands."
+      spawned_tasks:
+        - T033
+      stopped_because: "Two stop conditions fired on deliverable 2 and the Worker reported rather than patched. Deliverable 1, which the card ranks above the scenario, completed green."
+  - id: T033
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    spec: "T025 receipt and docs/goals/frameless-defects-and-targets-v1/notes/T025-corpus-s4-nested.md - AUTHORITATIVE."
+    objective: >-
+      Make a NESTED REPEAT whose collection comes from the enclosing repeat item expressible: resolve
+      the inner repeat's collection against the outer repeat item in packages/compiler/src/build.ts,
+      and lift the Solid emitter's single-state-node assumption so the keyed-repeat validation
+      accepts it. PROOF BEFORE FIX, per the charter: land a test that fails for the RIGHT reason -
+      seven zero-read sites, and the Solid throw - BEFORE either repair.
+    why_this_exists: >-
+      FOUND BY T025 ON THE FIRST SCENARIO PHASE F ATTEMPTED, which is the corpus-breadth investment
+      paying out immediately. @markless/compiler 0.1.1 leaves collectionGraphNodeId UNSET when a
+      nested repeat's collection comes from the enclosing repeat item. build.ts:988 guards on that
+      field and FAILS CLOSED INTO SILENCE - the inner item is never registered, and every read off
+      it lowers to reads: []. Solid's emitter is the ONLY one that throws; the other five printed
+      correct-LOOKING output over a wrong IR.
+    the_danger_this_closes: >-
+      FIVE OF SIX LANES EMITTED SUCCESSFULLY FROM A BROKEN IR. Had T025 shipped those five and filed
+      Solid as an emitter bug, the corpus would have gained a scenario with SEVEN ZERO-READ SITES,
+      and every future mutation-budget cell over S4 would have been measuring nothing while
+      reporting green. The failure is silent, it survives five independent emitters, and only a
+      validating emitter caught it. That is precisely the class the mutation budget exists to expose.
+    inputs:
+      - "packages/compiler/src/build.ts:987-992 - the failing-closed guard"
+      - "packages/frameworks/solid/src/emitter/index.ts:1050-1062 - keyByState's single-state-node assumption"
+      - "packages/compiler/test/fixtures/s4-nested-list.tsrx - the committed, deliberately UNREGISTERED reproduction"
+      - "T025's three isolating probes, which bound the gap precisely"
+    constraints:
+      - "PROOF BEFORE FIX. The charter's own non-negotiable, and T025 handed you the reproduction. Register the failure FIRST and watch it fail for the RIGHT reason - seven zero-read sites in the compiler suite, and the Solid throw - before repairing anything."
+      - "PREFER REPAIRING build.ts OVER THE VENDORED COMPILER. The information is present: `group` is already a registered repeat item and `group.rows` is a path off it, so the inner collection is derivable locally without the vendored graph setting the field. Only if that is impossible should the vendored package be touched, and then it is a STOP and a PM decision."
+      - "FAIL CLOSED, LOUDLY. The current guard fails closed into SILENCE, which is what made this survive five emitters. If a nested collection still cannot be resolved after the repair, THROW a named error rather than lowering to reads: []."
+      - "The Solid emitter's validation is CORRECT and caught a real defect - do not weaken it to accept the broken IR. Lift the assumption only so far as a legitimately-resolved nested repeat passes."
+      - "Do NOT register S4 in FIXTURES as part of this card unless its IR is clean; T025 deliberately left it unregistered so a broken IR could not be blessed as a golden."
+    allowed_files:
+      - packages/compiler/src/build.ts
+      - packages/compiler/test/enriched-ir.test.ts
+      - packages/frameworks/solid/src/emitter/index.ts
+      - packages/frameworks/solid/test/emitter.test.ts
+      - docs/goals/frameless-defects-and-targets-v1/notes/T033-nested-repeat.md
+    verify:
+      - "pnpm test   # 870 tests / 50 files at dispatch; the new failing test must go RED before the fix and GREEN after"
+      - "pnpm check"
+      - "pnpm lint"
+      - "pnpm --dir packages/frameworks/solid/ regenerate && git diff --exit-code -- packages/frameworks/solid/generated   # existing Solid goldens MUST NOT move"
+      - "git diff --exit-code -- packages/frameworks/react/generated packages/frameworks/qwik/generated packages/frameworks/svelte/generated packages/frameworks/vue/generated packages/frameworks/angular/generated   # no other lane moves"
+      - "pnpm e2e   # 6 demos x 3 scenarios, still all observations equal"
+      - "pnpm mutate:corpus --scenario s1 --scenario s2 --scenario s3   # 18/18 still RED; the repair must not blunt the oracle"
+      - "git status --short"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "The repair cannot be made in build.ts and requires the vendored @markless/compiler to change. STOP - that is a PM decision about a vendored dependency, not a Worker call."
+      - "Any existing golden moves in any lane. This repair must be invisible to the current corpus; if it is not, report exactly what moved and why before proceeding."
+      - "The 18/18 mutation result degrades. A compiler change that blunts the oracle is worse than the gap it closes."
+      - "You are about to weaken Solid's keyed-repeat validation to accept an unresolved collection. It caught this defect when five other emitters did not."
+      - "You cannot make the new test fail for the RIGHT reason before fixing it. A fix landing without a witnessed failure is not done, per the charter."
       - "Verification fails twice for the same reason."
     receipt: null
 
