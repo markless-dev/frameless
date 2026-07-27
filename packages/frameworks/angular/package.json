@@ -31,6 +31,7 @@
     "pathe": "catalog:"
   },
   "devDependencies": {
-    "vitest": "catalog:default"
+    "vitest": "catalog:default",
+    "yuku-codegen": "0.7.0"
   }
 }

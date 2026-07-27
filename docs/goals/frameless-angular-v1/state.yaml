@@ -130,7 +130,7 @@ visual_board:
     url: null
     command: "npx goalbuddy board docs/goals/frameless-angular-v1"
 
-active_task: T003
+active_task: T003a
 
 tasks:
   - id: T001
@@ -454,7 +454,8 @@ tasks:
   - id: T003
     type: worker
     assignee: Worker
-    status: active
+    status: blocked
+    blocked_reason: "Stopped BEFORE any edit on two stop_if conditions, which was correct. Blocker A (missing yuku-codegen) is discharged by the PM. Blockers B, C and D need rulings that trade against standing decisions, queued as T003a. No repository change was made."
     reasoning_hint: high
     objective: >-
       Land packages/frameworks/angular as ONE whole vertical slice for S1/S2/S3: an emitter turning
@@ -514,6 +515,78 @@ tasks:
       - "IR-7 guard REQUIRED: fail-closed conservative syntactic check on the emitter's own output plus a planted-violation row proving red. S1's derived is trivial and WILL pass, which is the definition of a green vacuum. Do NOT attempt a purity proof."
       - "T003 owes the WRITTEN RECORD of the untyped-prop limitation so a green is not over-read. Silence is not an option."
     receipt: null
+
+  - id: T003a
+    type: judge
+    assignee: Judge
+    status: active
+    reasoning_hint: high
+    objective: "Rule the three questions T003 raised by blocking: the arbiter applied-set problem, the four rules firing on the shipped corpus, and ruling 3e's unimplementable verbatim-transplant text."
+    why_this_task_exists: >-
+      T003 stopped BEFORE ANY EDIT on two stop_if conditions and, in doing so, REFUTED A PREMISE IN
+      T002's OWN RULING 4. The dependency half is already discharged by the PM. The rest needs a
+      Judge because every option trades against a standing ruling.
+    blocker_a_discharged_by_pm: >-
+      yuku-codegen@0.7.0 was missing from packages/frameworks/angular. The goldens carry PURE ESTREE
+      WITH NO SOURCE TEXT, so an emitter needs an expression printer, and all four existing lanes use
+      the same one (svelte/src/emitter/estree.ts:1 imports generate from yuku-codegen). PM installed
+      it as a devDependency at the exact 0.7.0 pin the other four carry; it was already in the
+      lockfile, so the change is an importer edge only (+3 lines). generate() verified resolving.
+    blocker_b_ruling_4_premise_refuted_PM_VERIFIED: >-
+      T002 ruled "both arbiters, compiler-first", modelled on Svelte's gate consuming
+      eslint-plugin-svelte's configs.recommended - A THIRD-PARTY-AUTHORED APPLIED SET, which is what
+      made Svelte's arbiter genuinely independent: WE did not choose which rules judge us.
+      ANGULAR HAS NO SUCH SET under the permitted dependency list. PM verified at HEAD:
+      @angular-eslint/eslint-plugin exports ONLY `rules` (50) and
+      @angular-eslint/eslint-plugin-template exports ONLY `processors` and `rules` (41) - NO CONFIGS
+      ON EITHER. The recommended presets live only in the angular-eslint META package, which T002's
+      own stop_if forbids. So the gate must either apply all 91 (which fails, see blocker C) or
+      HAND-PICK, which is the emitter's own authors choosing which rules may judge the emitter -
+      precisely the independence ruling 4 exists to protect.
+    blocker_c_four_rules_fire_on_the_shipped_corpus: >-
+      Measured end-to-end via ESLint.lintText on a realistic emitted S2 shape. Each collides with a
+      standing ruling, so none was the Worker's to resolve, and the card made this a FINDING TO
+      REPORT rather than to accommodate.
+      (1) component-class-suffix - class names come from the IR (RenderOnce, KeyedTodo, EventForm)
+      and match module.exports[].exportedName; renaming breaks the export contract the other four
+      lanes honour. (2) prefer-signals - demands the EXACT OPPOSITE of the decorator-vs-signal
+      NO-SUGAR ruling, decided independently TWICE. (3) template/button-has-type - S2's add/reorder/
+      clear buttons carry no type in the IR, and adding one would diverge the Angular lane's served
+      DOM from the four lanes T999 asserts equal. (4) template/i18n - inapplicable to the corpus.
+      THE TRAP NAMED FOR THE JUDGE: it is easy to omit all four and declare victory, but an omission
+      list that exists to make the corpus green is THE ARBITER BEING SHAPED TO FIT THE THING IT
+      JUDGES. prefer-signals deserves particular care - a third-party arbiter contradicting a
+      twice-made frameless ruling is exactly the "what the Angular team decided vs what we decided"
+      tension the arbiter was imported to surface.
+    blocker_d_ruling_3e_not_literally_implementable: >-
+      3e says the method body is "a VERBATIM TRANSPLANT with nothing rewritten inside it". Component
+      state, props and onTrace are CLASS MEMBERS, so `count = count + 1` in a class body binds to
+      NOTHING. S2's add handler must become const item = {...} (body-local, no this.), this.next++,
+      this.todos = this.todos.concat(item), this.onTrace('add', ..., event). The Worker argues the
+      rewrite is SCOPE-AWARE and keys only on DECLARED IR BINDING NAMES, so it is structural rather
+      than content-triggered - the same grounds ruling 3d used for @for variables - but the ruling's
+      TEXT forbids any rewrite inside the body. It declined to proceed on its own reading, which was
+      correct.
+    both_arbiters_calibrate_correctly: >-
+      parseTemplate returns errors === null on a clean template and ONE error ("@for loop must have
+      a track expression") on a track-deleted mutant - which CONFIRMS T002's dissent 2 prediction
+      that @for closes the require-each-key hole at the compiler. Template rules reach inline
+      templates via extract-inline-html and go RED on a planted violation (template/eqeqeq). Exactly
+      3 TS rules require type info and THROW rather than sitting silent (no-developer-preview,
+      no-experimental, no-uncalled-signals), and their meta.docs.requiresTypeChecking is UNSET so
+      they cannot be filtered generically. 47/50 TS and 41/41 template rules are usable.
+    ts_version_split_to_rule_on: "@typescript-eslint/utils resolves its typescript peer to 6.0.3 (pulled in by the Svelte demo) while pnpm check runs the catalog's 5.9.3, so the lint arbiter and the typechecker run DIFFERENT TypeScript. Worker flagged it harmless; Judge to confirm or require an assertion."
+    t001_count_refuted_again: "records.events is 1 / 7 / 7 = 15 with ZERO natural (hostNodeId, eventName) collisions, and exactly 4 of S3's 7 carry syncPolicy - matching T002, refuting T001 a second time in the safe direction."
+    constraints:
+      - "Do not implement. Rule."
+      - "Address the INDEPENDENCE property directly rather than picking on convenience."
+      - "For each of the four firing rules say whether it is (i) genuinely inapplicable, (ii) a real signal being overridden with a recorded reason, or (iii) evidence a PRIOR ruling is wrong."
+      - "Restate 3e so it is implementable, and say explicitly whether this.-qualification is content-triggered under Gate 3."
+    expected_output:
+      - "Rulings on all three questions plus the TS-version note"
+      - "Revised objective, allowed_files, verify and stop_if for the T003 re-dispatch"
+    receipt: null
+
 
   - id: T004
     type: worker
