@@ -105,7 +105,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T018
+active_task: T009
 
 tasks:
   - id: T001
@@ -1135,7 +1135,7 @@ tasks:
   - id: T018
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     spec: "notes/T007-phase-b-audit.md section 6.3"
     objective: >-
@@ -1145,7 +1145,7 @@ tasks:
       - packages/frameworks/react/test/gate.test.ts
       - packages/frameworks/solid/test/gate.test.ts
       - packages/frameworks/qwik/test/gate.test.ts
-      - docs/goals/frameless-defects-and-targets-v1/notes/T018-mutation-audit.md
+      - docs/goals/frameless-defects-and-targets-v1/notes/T018-mutation-no-op-audit.md
     verify:
       - "pnpm check"
       - "pnpm test"
@@ -1165,8 +1165,70 @@ tasks:
       - "MUST LAND BEFORE T013. The three adapter boards will copy whatever mutation-table idiom they find in react/test/gate.test.ts, so the idiom has to be correct before it is replicated four more times."
       - "EVERY vacuous mutation you find is a finding, not a chore. Record what it was silently failing to test before you fix it - a mutation that never mutated means the policy it guards has been unproven for as long as the row existed."
       - "The discriminating shape is disk-read source + an escaped-\\n search literal. Three literals in react/test/gate.test.ts are safe ONLY because ECMAScript normalises CRLF to LF inside template literals - that safety is incidental, not designed, and should not be relied on."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      note: notes/T018-mutation-no-op-audit.md
+      worktree: "collected from .claude/worktrees/agent-ac9fe5fe56af790b6; the 1390-line diff applied CLEAN to main at 0cf937b"
+      headline: "ZERO mutations were already vacuous. All 126 rows changed their source on the first run after conversion. The corpora were SOUND - but by circumstance (an LF checkout, this commit), not by design. The audit's value is the four latent exposures, three of which nothing in the suite could have reported."
+      changed_files:
+        - packages/frameworks/react/test/gate.test.ts
+        - packages/frameworks/solid/test/gate.test.ts
+        - packages/frameworks/qwik/test/gate.test.ts
+        - docs/goals/frameless-defects-and-targets-v1/notes/T018-mutation-no-op-audit.md
+      commands:
+        - cmd: "pnpm check"
+          status: pass
+          note: "PM RE-RAN on main: three tsc passes clean"
+        - cmd: "pnpm test"
+          status: pass
+          note: "PM RE-RAN on main: 572/572, 39 files. Worktree baseline was 568+1 skipped; +3 = the new calibration tests."
+        - cmd: "pnpm lint"
+          status: pass
+          note: "PM RE-RAN: 0 warnings, 0 errors"
+        - cmd: "scratchpad: CRLF probe of all 37 disk-read searches"
+          status: pass
+          note: "exactly 1 fragile - react R-SH1"
+        - cmd: "scratchpad: duplicate-mutant scan across all tables"
+          status: pass
+          note: "3 duplicates, all react"
+        - cmd: "scratchpad: string-literal multiset diff HEAD vs now"
+          status: pass
+          note: "proves the codemod moved code WITHOUT editing any literal it carried; the single lost literal is the deliberate R-SH1 replacement"
+        - cmd: "vp fmt --check (read-only) + formatting scratchpad copies"
+          status: pass
+          note: "HEAD versions already deviate; edited versions deviate in the same places and no others. pnpm fmt was NOT run."
+      finding_1_the_important_one:
+        what: "A FIFTH CRLF-fragile search, and T007's scan STRUCTURALLY COULD NOT SEE IT."
+        detail: "React's R-SH1 row searches disk-read generated-composition/C2-shared.jsx with a REGEX containing two literal `,\\n`. Probed against a CRLF-ised copy: no match."
+        why_t007_missed_it: "T007's repo-wide scan found four newline-bearing searches because it grepped for STRING LITERALS. This is a REGEX literal. The shape T007 named was right; the instrument used to enumerate it was NARROWER THAN THE SHAPE."
+        significance: "This is the board's own pattern turned on the board's own audit - an instrument whose silent assumption produced an incomplete finding about something else. Exactly the failure class T007 ruled on, found inside T007's own enumeration."
+        exposure: "Introduced 5db76a4 (2026-07-21). The R-SH1 policy was unguarded on a CRLF checkout for its whole life."
+        fix: "\\r?\\n plus separator-preserving $1$2 - T008's S-SH7 repair - plus a CRLF calibration that goes red if the tolerance is reverted. PM VERIFIED the tolerant regex at react/test/gate.test.ts:552."
+        coverage: "All 37 disk-read searches across the three corpora were probed. This was the only one."
+      finding_2: "React NEVER ASSERTED its base fixture was clean. Every React row asserts toContain(policy) on a mutant, which is evidence only if unmutated `valid` violates nothing. Solid has asserted this all along; React's copy of the pattern dropped it. Measured: valid IS clean, so nothing was mis-measured - the gap was in the assertion, not the fixture. Now asserted."
+      finding_3_deliberately_not_fixed: "THREE duplicated React rows, byte-identical mutants under different names. The serious one: 'direct listener iteration notify-per-write shared tear' is identical to 'notify-per-write shared tear' while its two siblings ARE distinct shapes - so R-SH3 is guarded against two bypasses where the names claim three. Not deleted: deletion is a coverage decision and the card forbade dropping mutations. Each marked in place with a comment naming its twin, because a copier would otherwise replicate them. Queued as T021."
+      finding_4: "The CONSTRUCTORS THEMSELVES were uncalibrated in React and Qwik. The failure a mutation constructor guards is silent by construction, so nothing else would report a broken one. All three now calibrated on both a miss AND the matched-but-rewritten-to-itself case."
+      idiom_for_the_adapters:
+        shape: "assertMutated(source, mutated, search) throwing when mutated === source; mutate() wraps replace, mutateAll() wraps replaceAll. Module scope, identical block in all three files, directly above the fixtures."
+        key_property: "The assertion is on the OUTPUT, not on whether the search matched - a search that matched but rewrote text to itself produces a non-mutant and is rejected identically."
+        rules_for_copiers: "1) every mutant goes through it, including fixture text mutated before compiling and one-off mutations inside individual tests; 2) \\r?\\n in any search spanning a line break over DISK-READ source - searches over an in-file template literal do not need it, because ECMAScript normalises CRLF there and that safety belongs to the language, not the search; 3) calibrate both the constructor and the base fixture."
+        why_it_matters_now: "T007 sequenced this BEFORE the Svelte board deliberately: each of the three new adapters will add a gate corpus by copying whatever idiom it finds. Getting it right now means it is right four more times."
+      inventory:
+        totals: "126 table rows, 159 constructor call sites, 37 disk-read searches probed, 2 CRLF-sensitive searches now explicitly tolerant and calibrated."
+        react: "47 mutationCases (42 over the in-file template, 5 by concatenation with no search channel), 19 compositionMutationCases, 2 artifact builders mutating disk-read .tsrx before compiling."
+        solid: "38 mutationCases, 22 compositionMutationCases, 5 ad-hoc in-test mutations. S-SH7 already repaired by T008."
+        qwik: "2 useVisibleTask calls over disk-read generated/S1.jsx - the MOST EXPOSED corpus of the three, since its mutants are built from emitted files the emitter is free to reshape. Plus 2 IR-level mutations with no miss channel and 10 hand-written mutant sources."
+      newly_failing: []
+      deviations:
+        - "Scope beyond the card's literal text, all inside allowed_files: converted the disk-read .tsrx mutations feeding React's artifact builders and the ad-hoc in-test mutations, not just the tables. A mutation that can miss without complaint is the target regardless of which construct it sits in."
+        - "REPAIRED the React R-SH1 regex for CRLF rather than only making its miss loud. Without it, the very Windows checkout this board is closing would turn a silent vacuum into a red build - the half-fix T008 declined for S-SH7."
+        - "Added three calibration tests and extended Solid's existing one with mutateAll and a matched-but-unchanged case. This is why the count rose."
+        - "Marked the three duplicate rows with comments instead of deleting - deletion is a coverage decision and the card forbids dropping mutations."
+        - "The mechanical rewrite was done with a scratchpad CODEMOD, then verified by a string-literal multiset diff proving no carried literal was edited."
+        - "The worker read a stale board: it started before the PM filled T018's allowed_files and verify, and used the PM dispatch values instead - cross-checked against T007 note section 6.3, which lists the same three files. No divergence resulted."
+      verification_attempts: 1
+      summary: "Converted every mutation in the three gate corpora to a throwing constructor: 126 table rows, 159 call sites, plus the disk-read fixture mutations feeding React's artifact builders and the ad-hoc mutations inside individual tests. ZERO were already vacuous - the corpora were sound by circumstance, not by design. Four latent exposures found and closed: a fifth CRLF-fragile search T007's literal-only scan STRUCTURALLY could not see (React R-SH1, exposed since 2026-07-21), React's missing base-fixture cleanliness assertion, three duplicated React rows marked but deliberately not deleted, and two uncalibrated constructors. Test count 569 -> 572; nothing went red."
   - id: T019
     type: worker
     assignee: Worker
@@ -1193,7 +1255,7 @@ tasks:
   - id: T009
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     objective: "Phase C audit and the defects-half audit: are all six defects closed or ruled, with every continue-on-error flag accounted for?"
     inputs:
@@ -1579,6 +1641,23 @@ tasks:
       - "WHY THIS EXISTS: T011 states plainly that without it, T012 ships on emitted text plus a gate - which is exactly the evidence base defect 1 defeated. The gate proves the shape; only this proves the behaviour."
       - "TWO-SIDED is the whole point: cancels for the declared key, does NOT cancel for another. A one-sided assertion would pass against an always-cancel bug, which is precisely the Solid bug T011 found hiding behind a validator."
       - "Sequenced after T008, T017 and T018 - it adds a corpus fixture, and goldens ripple through every framework suite plus metamorphic and generative."
+    receipt: null
+
+  - id: T021
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: medium
+    objective: "Adjudicate the three duplicated React mutation rows T018 found and deliberately did not delete."
+    inputs:
+      - "notes/T018-mutation-no-op-audit.md finding F3"
+      - "packages/frameworks/react/test/gate.test.ts - the three rows, each marked in place with a comment naming its twin"
+    constraints:
+      - "Do not implement; rule and spec."
+      - "THE SERIOUS ONE: 'direct listener iteration notify-per-write shared tear' is byte-identical to 'notify-per-write shared tear', while its two siblings ARE distinct shapes. So R-SH3 is guarded against two bypasses where the names claim three - one fewer shape covered than the corpus advertises. Rule whether to rewrite it to the distinct shape its name promises, or drop it."
+      - "The other two - 'computed-member setter' duplicated verbatim, and 'react import allowlist' identical to 'unused import' - are not vacuous; each mutates and exercises its policy. Rule whether they are harmless redundancy or the same copied-and-half-edited mechanism."
+      - "T018 left them in place because deletion is a COVERAGE decision and its card forbade dropping mutations. That was the right call; the coverage decision is yours."
+      - "Consider whether a no-duplicate-mutant invariant test should exist. It would fail today on exactly these three, so it lands with the adjudication or not at all."
     receipt: null
 
   - id: T999

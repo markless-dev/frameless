@@ -27,6 +27,42 @@ afterEach(async () => {
 	);
 });
 
+/**
+ * MUTATION CONSTRUCTOR - every mutant in this file is built with these. Copy this
+ * block into a new adapter's gate corpus; do NOT copy a bare `.replace()`.
+ *
+ * `String.prototype.replace` promises to return a string, NOT to have matched.
+ * When the search misses it returns the input unchanged, with no error, and the
+ * row then asserts a gate policy against source the gate has every right to
+ * accept. The row stays green while measuring nothing - a green vacuum. That is
+ * exactly what defect 3's cause B was (defects-and-targets T006/T007): on a CRLF
+ * checkout one search literal in the Solid corpus became unmatchable, and the row
+ * had been asserting against a non-mutant for as long as it had existed.
+ *
+ * The assertion is on the OUTPUT, not on the search. `mutated !== source` is the
+ * precondition the row actually depends on: a search that matched but changed
+ * nothing yields a non-mutant just the same, and is rejected just the same.
+ *
+ * Same pattern as `packages/compiler/test/metamorphic.test.ts:79`. Audited and
+ * applied corpus-wide by T018; see
+ * `docs/goals/frameless-defects-and-targets-v1/notes/T018-mutation-no-op-audit.md`.
+ */
+function assertMutated(source: string, mutated: string, search: string | RegExp): string {
+	if (mutated !== source) return mutated;
+	throw new Error(
+		`gate mutation did not change the source: ${String(search)} left it byte-identical, ` +
+			'so this row would assert a policy against a non-mutant',
+	);
+}
+
+function mutate(source: string, search: string | RegExp, replacement: string): string {
+	return assertMutated(source, source.replace(search, replacement), search);
+}
+
+function mutateAll(source: string, search: string, replacement: string): string {
+	return assertMutated(source, source.replaceAll(search, replacement), search);
+}
+
 const valid = `import { useState } from 'react';
 export function Mutant({ items = [] }) {
   const [value, setValue] = useState(0);
@@ -165,42 +201,42 @@ describe('React dossier gate', async () => {
 	const mutationCases = [
 		[
 			'unused import',
-			valid.replace('useState }', 'useMemo, useState }'),
+			mutate(valid, 'useState }', 'useMemo, useState }'),
 			'react-import-allowlist',
 		],
 		[
 			'React recommended rule',
-			valid.replace('<section>', '<section class="bad">'),
+			mutate(valid, '<section>', '<section class="bad">'),
 			'eslint:react/no-unknown-property',
 		],
 		[
 			'bare static attribute',
-			valid.replace('<section>', '<section data-probe>'),
+			mutate(valid, '<section>', '<section data-probe>'),
 			'explicit-static-attribute-value',
 		],
 		[
 			'Hooks recommended rule',
-			valid
-				.replace('import { useState }', 'import { useEffect, useState }')
-				.replace(
-					'const [value',
-					'useEffect(() => { console.log(items); }, []);\n  const [value',
-				),
+			mutate(
+				mutate(valid, 'import { useState }', 'import { useEffect, useState }'),
+				'const [value',
+				'useEffect(() => { console.log(items); }, []);\n  const [value',
+			),
 			'eslint:react-hooks/exhaustive-deps',
 		],
 		[
 			'index key AST',
-			valid.replace('key={item.id}', 'key={index}').replace('(item) =>', '(item, index) =>'),
+			mutate(mutate(valid, 'key={item.id}', 'key={index}'), '(item) =>', '(item, index) =>'),
 			'index-key',
 		],
 		[
 			'index key plugin',
-			valid.replace('key={item.id}', 'key={index}').replace('(item) =>', '(item, index) =>'),
+			mutate(mutate(valid, 'key={item.id}', 'key={index}'), '(item) =>', '(item, index) =>'),
 			'eslint:react/no-array-index-key',
 		],
 		[
 			'render aliased setter',
-			valid.replace(
+			mutate(
+				valid,
 				'return <section>',
 				'const update = setValue;\n  update(1);\n  return <section>',
 			),
@@ -208,7 +244,8 @@ describe('React dossier gate', async () => {
 		],
 		[
 			'render member-wrapped setter',
-			valid.replace(
+			mutate(
+				valid,
 				'return <section>',
 				'const updates = { run: setValue };\n  updates.run(1);\n  return <section>',
 			),
@@ -216,7 +253,8 @@ describe('React dossier gate', async () => {
 		],
 		[
 			'computed-member setter',
-			valid.replace(
+			mutate(
+				valid,
 				'return <section>',
 				"const key = 'run'; ({ [key]: setValue })[key](1);\n  return <section>",
 			),
@@ -224,15 +262,23 @@ describe('React dossier gate', async () => {
 		],
 		[
 			'dynamic computed-member setter',
-			valid.replace(
+			mutate(
+				valid,
 				'return <section>',
 				'const key = items[0]; ({ [key]: setValue })[key](1);\n  return <section>',
 			),
 			'render-phase-setter',
 		],
+		// DUPLICATE, found by T018's audit and left in place rather than dropped
+		// unadjudicated: byte-identical to the 'computed-member setter' row above,
+		// name and policy included. It mutates, so it is not vacuous - it just adds
+		// no shape the table did not already cover. Do not copy this pattern into a
+		// new corpus; a row whose twin already exists is a copy that was never
+		// finished. See notes/T018-mutation-no-op-audit.md.
 		[
 			'computed-member setter',
-			valid.replace(
+			mutate(
+				valid,
 				'return <section>',
 				"const key = 'run'; ({ [key]: setValue })[key](1);\n  return <section>",
 			),
@@ -240,7 +286,8 @@ describe('React dossier gate', async () => {
 		],
 		[
 			'dynamic computed-member setter',
-			valid.replace(
+			mutate(
+				valid,
 				'return <section>',
 				'const key = items[0]; ({ run: setValue })[key](1);\n  return <section>',
 			),
@@ -248,7 +295,8 @@ describe('React dossier gate', async () => {
 		],
 		[
 			'aliased setter',
-			valid.replace(
+			mutate(
+				valid,
 				'const nextValue = value + 1;\n    setValue(nextValue);',
 				'const update = setValue;\n    update(value + 1);\n    update(value + 2);',
 			),
@@ -256,7 +304,8 @@ describe('React dossier gate', async () => {
 		],
 		[
 			'member-wrapped setter',
-			valid.replace(
+			mutate(
+				valid,
 				'const nextValue = value + 1;\n    setValue(nextValue);',
 				'const updates = { run: setValue };\n    updates.run(value + 1);\n    updates.run(value + 2);',
 			),
@@ -264,7 +313,8 @@ describe('React dossier gate', async () => {
 		],
 		[
 			'helper-wrapped render setter',
-			valid.replace(
+			mutate(
+				valid,
 				'return <section>',
 				'const update = () => setValue(1);\n  update();\n  return <section>',
 			),
@@ -275,22 +325,23 @@ describe('React dossier gate', async () => {
 		['inline rule config', `/* eslint no-unused-vars: "off" */\n${valid}`, 'eslint-directive'],
 		[
 			'undisclosed require',
-			valid.replace('const [value', "const fs = require('node:fs'); fs;\n  const [value"),
+			mutate(valid, 'const [value', "const fs = require('node:fs'); fs;\n  const [value"),
 			'undisclosed-import',
 		],
 		[
 			'undisclosed dynamic import',
-			valid.replace('const [value', "import('elsewhere');\n  const [value"),
+			mutate(valid, 'const [value', "import('elsewhere');\n  const [value"),
 			'undisclosed-import',
 		],
 		[
 			'dead expression',
-			valid.replace('return <section>', 'value;\n  return <section>'),
+			mutate(valid, 'return <section>', 'value;\n  return <section>'),
 			'eslint:no-unused-expressions',
 		],
 		[
 			'unreachable statement',
-			valid.replace(
+			mutate(
+				valid,
 				'return <section>',
 				'if (items.length) return null;\n  return null;\n  value;\n  return <section>',
 			),
@@ -298,38 +349,58 @@ describe('React dossier gate', async () => {
 		],
 		[
 			'hook after guard',
-			valid.replace('const [value', 'if (!items.length) return null;\n  const [value'),
+			mutate(valid, 'const [value', 'if (!items.length) return null;\n  const [value'),
 			'hook-after-guard',
 		],
 		[
 			'aliased useEffect',
-			valid
-				.replace('import { useState }', 'import { useEffect as useSideEffect, useState }')
-				.replace('const [value', 'useSideEffect(() => {});\n  const [value'),
+			mutate(
+				mutate(
+					valid,
+					'import { useState }',
+					'import { useEffect as useSideEffect, useState }',
+				),
+				'const [value',
+				'useSideEffect(() => {});\n  const [value',
+			),
 			'render-phase-effect',
 		],
 		[
 			'aliased useLayoutEffect',
-			valid
-				.replace('import { useState }', 'import { useLayoutEffect as layout, useState }')
-				.replace('const [value', 'layout(() => {});\n  const [value'),
+			mutate(
+				mutate(
+					valid,
+					'import { useState }',
+					'import { useLayoutEffect as layout, useState }',
+				),
+				'const [value',
+				'layout(() => {});\n  const [value',
+			),
 			'render-phase-effect',
 		],
 		[
 			'aliased useInsertionEffect',
-			valid
-				.replace('import { useState }', 'import { useInsertionEffect as insert, useState }')
-				.replace('const [value', 'insert(() => {});\n  const [value'),
+			mutate(
+				mutate(
+					valid,
+					'import { useState }',
+					'import { useInsertionEffect as insert, useState }',
+				),
+				'const [value',
+				'insert(() => {});\n  const [value',
+			),
 			'render-phase-effect',
 		],
+		// DUPLICATE (T018): byte-identical mutant and policy to the 'unused import'
+		// row at the top of this table, under a second name.
 		[
 			'react import allowlist',
-			valid.replace('useState }', 'useMemo, useState }'),
+			mutate(valid, 'useState }', 'useMemo, useState }'),
 			'react-import-allowlist',
 		],
 		[
 			'forwardRef import',
-			valid.replace('useState }', 'forwardRef, useState }'),
+			mutate(valid, 'useState }', 'forwardRef, useState }'),
 			'no-forwardRef',
 		],
 		[
@@ -339,27 +410,28 @@ describe('React dossier gate', async () => {
 		],
 		[
 			'string ref',
-			valid.replace('<section>', '<section><div ref="legacy" />'),
+			mutate(valid, '<section>', '<section><div ref="legacy" />'),
 			'no-forwardRef',
 		],
 		[
 			'controlled input',
-			valid.replace('<section>', '<section><input value={value} />'),
+			mutate(valid, '<section>', '<section><input value={value} />'),
 			'controlled-input',
 		],
 		[
 			'onInput',
-			valid.replace('<section>', '<section><input value={value} onInput={() => {}} />'),
+			mutate(valid, '<section>', '<section><input value={value} onInput={() => {}} />'),
 			'on-input',
 		],
 		[
 			'let in handler',
-			valid.replace('const nextValue = value + 1;', 'let nextValue = value + 1;'),
+			mutate(valid, 'const nextValue = value + 1;', 'let nextValue = value + 1;'),
 			'const-only-handlers',
 		],
 		[
 			'two setter calls',
-			valid.replace(
+			mutate(
+				valid,
 				'setValue(nextValue);',
 				'setValue(nextValue);\n    setValue(nextValue + 1);',
 			),
@@ -367,82 +439,82 @@ describe('React dossier gate', async () => {
 		],
 		[
 			'helper-mediated two setter calls',
-			valid
-				.replace(
+			mutate(
+				mutate(
+					valid,
 					'const [value, setValue] = useState(0);',
 					'const [value, setValue] = useState(0);\n  const updateTwice = () => { setValue(value + 1); setValue(value + 2); };',
-				)
-				.replace(
-					'const nextValue = value + 1;\n    setValue(nextValue);',
-					'updateTwice();',
 				),
+				'const nextValue = value + 1;\n    setValue(nextValue);',
+				'updateTwice();',
+			),
 			'one-call-per-setter',
 		],
 		[
 			'nonliteral direct state initial',
-			valid.replace('useState(0)', 'useState(items.length)'),
+			mutate(valid, 'useState(0)', 'useState(items.length)'),
 			'use-state-initializer',
 		],
 		[
 			'lazy-wrapped literal initial',
-			valid.replace('useState(0)', 'useState(() => 0)'),
+			mutate(valid, 'useState(0)', 'useState(() => 0)'),
 			'use-state-initializer',
 		],
 		[
 			'leaked render',
-			valid.replace('{items.map', '{items.length && items.map'),
+			mutate(valid, '{items.map', '{items.length && items.map'),
 			'eslint:react/jsx-no-leaked-render',
 		],
-		['missing map key', valid.replace(' key={item.id}', ''), 'key-required'],
+		['missing map key', mutate(valid, ' key={item.id}', ''), 'key-required'],
 		[
 			'wrong component shape',
-			valid.replace('function Mutant({ items = [] })', 'const Mutant = ({ items = [] }) =>'),
+			mutate(valid, 'function Mutant({ items = [] })', 'const Mutant = ({ items = [] }) =>'),
 			'component-shape',
 		],
 		[
 			'visible ref',
-			valid
-				.replace('useState }', 'useRef, useState }')
-				.replace(
+			mutate(
+				mutate(
+					mutate(valid, 'useState }', 'useRef, useState }'),
 					'const [value, setValue] = useState(0);',
 					'const visible = useRef(0);\n  const [value, setValue] = useState(0);',
-				)
-				.replace('<section>', '<section>{visible.current}'),
+				),
+				'<section>',
+				'<section>{visible.current}',
+			),
 			'ref-visibility',
 		],
 		[
 			'render-read setup ref',
-			valid
-				.replace('useState }', 'useRef, useState }')
-				.replace(
-					'const [value, setValue] = useState(0);',
-					'const setupDone = useRef(null);\n  if (setupDone.current === null) setupDone.current = true;\n  const leaked = setupDone.current;\n  leaked;\n  const [value, setValue] = useState(0);',
-				),
+			mutate(
+				mutate(valid, 'useState }', 'useRef, useState }'),
+				'const [value, setValue] = useState(0);',
+				'const setupDone = useRef(null);\n  if (setupDone.current === null) setupDone.current = true;\n  const leaked = setupDone.current;\n  leaked;\n  const [value, setValue] = useState(0);',
+			),
 			'ref-visibility',
 		],
 		[
 			'boolean setup guard',
-			valid
-				.replace('useState }', 'useRef, useState }')
-				.replace(
-					'const [value, setValue] = useState(0);',
-					'const setupDone = useRef(null);\n  if (!setupDone.current) setupDone.current = true;\n  const [value, setValue] = useState(0);',
-				),
+			mutate(
+				mutate(valid, 'useState }', 'useRef, useState }'),
+				'const [value, setValue] = useState(0);',
+				'const setupDone = useRef(null);\n  if (!setupDone.current) setupDone.current = true;\n  const [value, setValue] = useState(0);',
+			),
 			'ref-guard-shape',
 		],
 		[
 			'null guard that never flips',
-			valid
-				.replace('useState }', 'useRef, useState }')
-				.replace(
-					'const [value, setValue] = useState(0);',
-					'const setupDone = useRef(null);\n  if (setupDone.current === null) { console.log("setup"); }\n  const [value, setValue] = useState(0);',
-				),
+			mutate(
+				mutate(valid, 'useState }', 'useRef, useState }'),
+				'const [value, setValue] = useState(0);',
+				'const setupDone = useRef(null);\n  if (setupDone.current === null) { console.log("setup"); }\n  const [value, setValue] = useState(0);',
+			),
 			'ref-guard-shape',
 		],
 		[
 			'leaf currentTarget',
-			valid.replace(
+			mutate(
+				valid,
 				'<section>',
 				'<section><input value={value} onChange={(event) => { const nextValue = event.currentTarget.value; setValue(nextValue); }} />',
 			),
@@ -450,7 +522,8 @@ describe('React dossier gate', async () => {
 		],
 		[
 			'wrong-object preventDefault',
-			valid.replace(
+			mutate(
+				valid,
 				'const nextValue = value + 1;',
 				'const other = { preventDefault() {} };\n    other.preventDefault();\n    const nextValue = value + 1;',
 			),
@@ -462,20 +535,39 @@ describe('React dossier gate', async () => {
 	const store = compositionSources.get('C2-shared')!;
 	const slot = compositionSources.get('C1-slot')!;
 	const refsSource = compositionSources.get('C3-ref')!;
+
+	// The only search in this file that spans a line break over DISK-READ source,
+	// and therefore the only one a CRLF checkout could defeat. T018 found it by
+	// probing every disk-read search against a CRLF-ised copy; T007's repo-wide scan
+	// had missed it because that scan looked for string literals and this is a regex.
+	// `\r?\n` matches either checkout style and `$2` puts the file's own separator
+	// back, so the mutant stays byte-faithful to whatever was read from disk - the
+	// same repair T008 applied to Solid's S-SH7 row.
+	//
+	// Searches over `valid` need none of this: `valid` is an in-file template
+	// literal, and ECMAScript normalises CRLF to LF inside template literals, so a
+	// `\n` in a search over it matches on any checkout. That safety is a property of
+	// the language, not of the search - it does not transfer to disk-read source.
+	const STORE_HOOK_RECORD =
+		/(useSyncExternalStore\([\s\S]*?,[\s\S]*?),(\r?\n)\s*cell === 'count'[\s\S]*?getCompositionSharedNothing,\r?\n\s*\);/;
+	const STORE_HOOK_RECORD_TRUNCATED = '$1$2\t);';
 	const pageArtifact = await buildEnrichedIr({
 		filename: 'test/composition-fixtures/C2-page-mutation.tsrx',
-		source: (
+		// Disk-read fixture source, mutated before it is compiled: the same silent-no-op
+		// exposure as the emitted-source rows, so it takes the same constructor.
+		source: mutate(
 			await readFile(
 				resolve(PACKAGE_ROOT, 'test/composition-fixtures/C2-shared.tsrx'),
 				'utf8',
-			)
-		).replace('scope: "container"', 'scope: "page"'),
+			),
+			'scope: "container"',
+			'scope: "page"',
+		),
 	});
 	const projectionArtifact = await buildEnrichedIr({
 		filename: 'test/composition-fixtures/C1-projection-mutation.tsrx',
-		source: (
-			await readFile(resolve(PACKAGE_ROOT, 'test/composition-fixtures/C1-slot.tsrx'), 'utf8')
-		).replace(
+		source: mutate(
+			await readFile(resolve(PACKAGE_ROOT, 'test/composition-fixtures/C1-slot.tsrx'), 'utf8'),
 			'<strong data-projected-node>Projected composition</strong>',
 			'<strong data-projected-node>Projected composition</strong><em>absent</em>',
 		),
@@ -483,21 +575,19 @@ describe('React dossier gate', async () => {
 	const compositionMutationCases = [
 		[
 			'incomplete store hook record',
-			store.replace(
-				/(useSyncExternalStore\([\s\S]*?,[\s\S]*?),\n\s*cell === 'count'[\s\S]*?getCompositionSharedNothing,\n\s*\);/,
-				'$1\n\t);',
-			),
+			mutate(store, STORE_HOOK_RECORD, STORE_HOOK_RECORD_TRUNCATED),
 			'R-SH1',
 		],
-		['inline context object', store.replace('value={store}', 'value={{ store }}'), 'R-SH2'],
+		['inline context object', mutate(store, 'value={store}', 'value={{ store }}'), 'R-SH2'],
 		[
 			'per-read snapshot rebuild',
-			store.replace('return countSnapshot;', 'return { value: countSnapshot };'),
+			mutate(store, 'return countSnapshot;', 'return { value: countSnapshot };'),
 			'R-SH3',
 		],
 		[
 			'notify-per-write shared tear',
-			store.replace(
+			mutate(
+				store,
 				"changed.add('count');",
 				"for (const listener of countListeners) listener();\n\t\tchanged.add('count');",
 			),
@@ -505,30 +595,40 @@ describe('React dossier gate', async () => {
 		],
 		[
 			'helper-hidden notify-per-write shared tear',
-			store
-				.replace(
+			mutate(
+				mutate(
+					store,
 					'const writeCount = (nextCount, changed) => {',
 					'const notify = (listeners) => { for (const listener of listeners) listener(); };\n\tconst writeCount = (nextCount, changed) => {',
-				)
-				.replace("changed.add('count');", "notify(countListeners);\n\t\tchanged.add('count');"),
+				),
+				"changed.add('count');",
+				"notify(countListeners);\n\t\tchanged.add('count');",
+			),
 			'R-SH3',
 		],
 		[
 			'member-helper-hidden notify-per-write shared tear',
-			store
-				.replace(
+			mutate(
+				mutate(
+					store,
 					'const writeCount = (nextCount, changed) => {',
 					'const notifier = { run(listeners) { for (const listener of listeners) listener(); } };\n\tconst writeCount = (nextCount, changed) => {',
-				)
-				.replace(
-					"changed.add('count');",
-					"notifier.run(countListeners);\n\t\tchanged.add('count');",
 				),
+				"changed.add('count');",
+				"notifier.run(countListeners);\n\t\tchanged.add('count');",
+			),
 			'R-SH3',
 		],
+		// DUPLICATE (T018), and the most misleading of the three: byte-identical to
+		// the 'notify-per-write shared tear' row above, while its name promises a
+		// distinct bypass shape. Its two siblings above ARE distinct (helper-hidden,
+		// member-helper-hidden); this one is a copy that was renamed and never
+		// rewritten, so R-SH3 has one fewer shape covered than the table's names
+		// claim. Left in place for adjudication rather than dropped.
 		[
 			'direct listener iteration notify-per-write shared tear',
-			store.replace(
+			mutate(
+				store,
 				"changed.add('count');",
 				"for (const listener of countListeners) listener();\n\t\tchanged.add('count');",
 			),
@@ -536,7 +636,8 @@ describe('React dossier gate', async () => {
 		],
 		[
 			'per-render store identity',
-			store.replace(
+			mutate(
+				store,
 				'const [store] = useState(createCompositionSharedStore);',
 				'const store = createCompositionSharedStore();',
 			),
@@ -544,7 +645,8 @@ describe('React dossier gate', async () => {
 		],
 		[
 			'aliased per-render store identity',
-			store.replace(
+			mutate(
+				store,
 				'const [store] = useState(createCompositionSharedStore);',
 				'const indirectCreate = createCompositionSharedStore;\n\tconst store = indirectCreate();',
 			),
@@ -552,7 +654,8 @@ describe('React dossier gate', async () => {
 		],
 		[
 			'wrapper-function store identity',
-			store.replace(
+			mutate(
+				store,
 				'const [store] = useState(createCompositionSharedStore);',
 				'const indirectCreate = () => createCompositionSharedStore();\n\tconst [store] = useState(indirectCreate);',
 			),
@@ -566,14 +669,15 @@ describe('React dossier gate', async () => {
 		],
 		[
 			'shared hook naming leak',
-			store.replaceAll('useCompositionShared', 'readCompositionShared'),
+			mutateAll(store, 'useCompositionShared', 'readCompositionShared'),
 			'R-SH5',
 		],
-		['render-prop child synthesis', slot.replace('{children}', '{children()}'), 'R-CH1'],
+		['render-prop child synthesis', mutate(slot, '{children}', '{children()}'), 'R-CH1'],
 		['dropped authored projection', slot, 'R-CH2', { artifact: projectionArtifact }],
 		[
 			'unrecorded useRef binding',
-			refsSource.replace(
+			mutate(
+				refsSource,
 				'const input = useRef(null);',
 				'const input = useRef(null);\n\tconst unusedHandle = useRef(null);',
 			),
@@ -581,12 +685,13 @@ describe('React dossier gate', async () => {
 		],
 		[
 			'unresolved ref projection',
-			refsSource.replace('ref={input}', 'ref={input.current}'),
+			mutate(refsSource, 'ref={input}', 'ref={input.current}'),
 			'R-RF2',
 		],
 		[
 			'unguarded imperative access',
-			refsSource.replace(
+			mutate(
+				refsSource,
 				/if \(input\.current !== null\) \{\s*input\.current\.focus\(\);\s*\}/,
 				'input.current.focus();',
 			),
@@ -594,7 +699,8 @@ describe('React dossier gate', async () => {
 		],
 		[
 			'useImperativeHandle bypass',
-			refsSource.replace(
+			mutate(
+				refsSource,
 				'{ useCallback, useRef }',
 				'{ useCallback, useImperativeHandle, useRef }',
 			),
@@ -602,7 +708,7 @@ describe('React dossier gate', async () => {
 		],
 		[
 			'compiler directive',
-			slot.replace('export function SlotPage', "'use memo';\nexport function SlotPage"),
+			mutate(slot, 'export function SlotPage', "'use memo';\nexport function SlotPage"),
 			'R-CP1',
 		],
 	] as const satisfies readonly MutationCase[];
@@ -615,7 +721,8 @@ describe('React dossier gate', async () => {
 		const result = await checkSources([
 			{
 				file: 'generated/relative-import-parent.jsx',
-				source: recordedRelativeImport.replace(
+				source: mutate(
+					recordedRelativeImport,
 					'./relative-import-child.jsx',
 					'./unrecorded-child.jsx',
 				),
@@ -708,6 +815,46 @@ describe('React dossier gate', async () => {
 		},
 	);
 
+	// CALIBRATION for the mutation constructors themselves, not for the gate. A
+	// helper nobody has watched fail is not evidence that it can fail - and the
+	// failure it guards against is silent by construction, so nothing else in this
+	// file would report it. Both the in-file fixture and a disk-read emitted source
+	// are exercised, because only the second can drift without this file changing.
+	// The other half of the mutation table's calibration, and it was missing: every
+	// row asserts `toContain(policy)` on a MUTANT, which proves nothing unless the
+	// unmutated fixture is clean. Solid asserts this (`policies(valid)` -> []); this
+	// corpus never did, so a fixture that had drifted into violating a policy would
+	// have made every row for that policy pass without mutating anything meaningful.
+	// The checked-in generated corpus is already covered this way above; `valid` is
+	// the in-file fixture and needs its own.
+	test('CALIBRATION: the unmutated fixture violates nothing', async () => {
+		expect(await policies(valid)).toEqual([]);
+	});
+
+	test('CALIBRATION: a mutation that leaves the source unchanged is loud', () => {
+		expect(() => mutate(valid, 'text that is not in the Mutant fixture', 'x')).toThrow(
+			/did not change the source/,
+		);
+		// The R-SH1 row is the one search here that spans a line break over disk-read
+		// source. Prove it survives the line endings that broke Solid's S-SH7 row:
+		// reverting `STORE_HOOK_RECORD` to plain `\n` turns this red.
+		const crlf = store.replace(/\r?\n/g, '\r\n');
+		expect(crlf).not.toBe(store);
+		expect(mutate(crlf, STORE_HOOK_RECORD, STORE_HOOK_RECORD_TRUNCATED)).not.toBe(crlf);
+		// And the mutant keeps the checkout's own separator rather than smuggling in LF.
+		expect(mutate(crlf, STORE_HOOK_RECORD, STORE_HOOK_RECORD_TRUNCATED)).toContain('\r\n\t);');
+		expect(() => mutateAll(store, 'text that is not in the C2-shared output', 'x')).toThrow(
+			/did not change the source/,
+		);
+		// A search that matches but rewrites the text to itself is a non-mutant too:
+		// the check is on the output, not on the search. The `toContain` is what stops
+		// this case from passing for the wrong reason.
+		expect(store).toContain('useSyncExternalStore');
+		expect(() => mutate(store, 'useSyncExternalStore', 'useSyncExternalStore')).toThrow(
+			/did not change the source/,
+		);
+	});
+
 	test('has a mutation that exercises every published policy', () => {
 		// Set<string>: inferring this narrows to the literal ids present in the
 		// mutation tables, which then rejects both the add() below and the
@@ -798,7 +945,8 @@ describe('React dossier gate', async () => {
 		await mkdir(resolve(root, 'generated'));
 		await writeFile(
 			resolve(root, 'generated/TwoSetter.jsx'),
-			valid.replace(
+			mutate(
+				valid,
 				'setValue(nextValue);',
 				'setValue(nextValue);\n    setValue(nextValue + 1);',
 			),

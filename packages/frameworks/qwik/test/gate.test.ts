@@ -20,6 +20,39 @@ async function golden(name: string): Promise<EnrichedIR> {
 	) as EnrichedIR;
 }
 
+/**
+ * MUTATION CONSTRUCTOR - every mutant in this file is built with this. Copy this
+ * block into a new adapter's gate corpus; do NOT copy a bare `.replace()`.
+ *
+ * `String.prototype.replace` promises to return a string, NOT to have matched.
+ * When the search misses it returns the input unchanged, with no error, and the
+ * test then asserts a gate policy against source the gate has every right to
+ * accept. It stays green while measuring nothing - a green vacuum. That is
+ * exactly what defect 3's cause B was (defects-and-targets T006/T007): on a CRLF
+ * checkout one search literal in the Solid corpus became unmatchable, and the row
+ * had been asserting against a non-mutant for as long as it had existed. This
+ * corpus is the most exposed of the three, because its mutants are built from
+ * emitted files read off disk, which the emitter is free to reshape.
+ *
+ * The assertion is on the OUTPUT, not on the search. `mutated !== source` is the
+ * precondition the test actually depends on: a search that matched but changed
+ * nothing yields a non-mutant just the same, and is rejected just the same.
+ *
+ * The React and Solid corpora carry an identical block plus a `mutateAll` twin
+ * for `replaceAll`; add it here if a mutation ever needs one. Same pattern as
+ * `packages/compiler/test/metamorphic.test.ts:79`. Audited and applied
+ * corpus-wide by T018; see
+ * `docs/goals/frameless-defects-and-targets-v1/notes/T018-mutation-no-op-audit.md`.
+ */
+function mutate(source: string, search: string | RegExp, replacement: string): string {
+	const mutated = source.replace(search, replacement);
+	if (mutated !== source) return mutated;
+	throw new Error(
+		`gate mutation did not change the source: ${String(search)} left it byte-identical, ` +
+			'so this test would assert a policy against a non-mutant',
+	);
+}
+
 describe('Qwik v2 dossier gate', () => {
 	test('publishes independent source and artifact-required policies', () => {
 		expect(QWIK_GATE_POLICIES.slice(0, 3)).toEqual([
@@ -91,12 +124,11 @@ describe('Qwik v2 dossier gate', () => {
 
 	test('MUTATION: rejects an injected useVisibleTask$ in emitted source', async () => {
 		const source = await readFile(resolve(packageRoot, 'generated/S1.jsx'), 'utf8');
-		const mutant = source
-			.replace('useTask$ }', 'useTask$, useVisibleTask$ }')
-			.replace(
-				'export const RenderOnce',
-				'useVisibleTask$(() => {});\n\nexport const RenderOnce',
-			);
+		const mutant = mutate(
+			mutate(source, 'useTask$ }', 'useTask$, useVisibleTask$ }'),
+			'export const RenderOnce',
+			'useVisibleTask$(() => {});\n\nexport const RenderOnce',
+		);
 		const result = await checkSources([
 			{ file: 'generated/VisibleTaskMutant.jsx', source: mutant },
 		]);
@@ -110,6 +142,23 @@ describe('Qwik v2 dossier gate', () => {
 					line: 2,
 				}),
 			]),
+		);
+	});
+
+	// CALIBRATION for the mutation constructor itself, not for the gate. A helper
+	// nobody has watched fail is not evidence that it can fail - and the failure it
+	// guards against is silent by construction, so nothing else would report it.
+	test('CALIBRATION: a mutation that leaves the source unchanged is loud', async () => {
+		const source = await readFile(resolve(packageRoot, 'generated/S1.jsx'), 'utf8');
+		expect(() => mutate(source, 'text that is not in the emitted S1', 'x')).toThrow(
+			/did not change the source/,
+		);
+		// A search that matches but rewrites the text to itself is a non-mutant too:
+		// the check is on the output, not on the search. The `toContain` is what stops
+		// this case from passing for the wrong reason.
+		expect(source).toContain('export const RenderOnce');
+		expect(() => mutate(source, 'export const RenderOnce', 'export const RenderOnce')).toThrow(
+			/did not change the source/,
 		);
 	});
 
