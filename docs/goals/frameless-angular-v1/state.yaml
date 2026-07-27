@@ -52,8 +52,8 @@ goal:
       - "ALREADY RULED, do not re-litigate: decorator @Input()/@Output() vs signal input()/output() member declaration = NO-SUGAR, decided independently twice during frameless-idiom-policy-v1 T006 (PM pre-registration + zero-context cold agent). Decisive gates G1 (nothing measurable, Angular absent) and G5 (reactivity depth + throw behavior differ). Full record: docs/goals/frameless-idiom-policy-v1/notes/T006-cold-agent.md."
       - "GATE 6 DEFERRED: every OTHER Angular sugar ruling is deferred-not-denied until this board lands a lane at a pinned lockfile version."
       - "UNRESOLVED SOURCE CONFLICT inherited: Angular's API docs say model() is stable since v19.0; the v20 announcement says v20. Resolve against the actual lockfile version once one exists."
-      - "STANDING GAP inherited: pnpm check does not typecheck generated/. Angular's own build DOES typecheck templates, which may partly cover this - confirm rather than assume."
-      - "STANDING GAP inherited: pnpm e2e pins dev mode only; pnpm test:browser hangs at the repo root (pre-existing, per-package scripts work)."
+      - "CORRECTED 2026-07-27 (T010 revalidation): pnpm check DOES now typecheck emitted output - three tsc passes plus a per-package emitted-typecheck lane. NOT a gap. Angular's own build additionally typechecks templates; confirm what that adds rather than assume."
+      - "CORRECTED 2026-07-27: pnpm test:browser does NOT hang - it runs clean, react 55/55 and solid 44/44. STILL TRUE: pnpm e2e pins dev mode only."
 
 rules:
   pm_owns_state: true

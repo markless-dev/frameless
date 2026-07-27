@@ -53,8 +53,8 @@ goal:
       - "GATE 6 DEFERRED: every Svelte sugar ruling is deferred-not-denied until this board lands a lane at a pinned lockfile version."
       - "If this board closes IR-4 it must do so as a GENERAL facility, not a Svelte-shaped hack - Vue needs it for defineModel (3.4+) and Angular for signal input()/output() (>=17.1/17.2)."
       - "poc/09-storage/svelte exists from earlier work and took cheap lexical sugar with classic lifecycle shapes. Prior in-repo assumption, not validated decision."
-      - "STANDING GAP inherited: pnpm check does not typecheck generated/. Svelte's own svelte-check may cover part of this - confirm rather than assume."
-      - "STANDING GAP inherited: pnpm e2e pins dev mode only; pnpm test:browser hangs at the repo root (pre-existing, per-package scripts work)."
+      - "CORRECTED 2026-07-27 (T010 revalidation, missed on the first pass and caught by the Svelte T001 Scout): pnpm check DOES now typecheck emitted output - three tsc passes plus a per-package emitted-typecheck lane. NOT a gap. Svelte adds a real complication of its own though: tsc cannot parse .svelte AT ALL, so an emitted-typecheck twin would have nothing to read and svelte-check is not optional here."
+      - "CORRECTED 2026-07-27: pnpm test:browser does NOT hang - it runs clean, react 55/55 and solid 44/44. STILL TRUE: pnpm e2e pins dev mode only (scenarios.box.ts modes [dev])."
 
 rules:
   pm_owns_state: true
@@ -88,13 +88,13 @@ visual_board:
     url: null
     command: "npx goalbuddy board docs/goals/frameless-svelte-v1"
 
-active_task: T001
+active_task: T002
 
 tasks:
   - id: T001
     type: scout
     assignee: Scout
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Map the official Svelte scaffold, its activation model, and the exact version boundaries that make IR-4 load-bearing."
     inputs:
@@ -116,12 +116,50 @@ tasks:
       - "How IR-5's two modifiers must be emitted with modifiers removed in Svelte 5"
       - "Whether svelte-check covers emitted output"
       - "Which IR gaps block S1/S2/S3 versus only sugar"
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      note: notes/T001-scaffold-and-versions.md
+      summary: "Mapped the sv@0.16.6 minimal scaffold: SvelteKit 2.63 / svelte ^5.56.1 / vite ^8.0.16 - the SAME vite as the root catalog, so Svelte does not repeat Qwik's vite-pinning problem. Svelte hydrates, so e2e needs no third activation term. Every construct S1/S2/S3 needs is Svelte 5.0 baseline, so IR-4 blocks no lane. IR-5 needs no schema change - modifiers were removed, so the actions emit as ordinary in-body statements; the live question is DELEGATION, not modifiers."
+      scaffold:
+        command: "npx sv create, sv@0.16.6, minimal + TypeScript"
+        pins: "@sveltejs/kit ^2.63.0, svelte ^5.56.1, @sveltejs/vite-plugin-svelte ^7.1.2, vite ^8.0.16, svelte-check ^4.6.0, @sveltejs/adapter-auto ^7.0.1"
+        vite_alignment: "^8.0.16 is byte-identical to the root catalog (pnpm-workspace.yaml:16). The cheapest good news on the board - no Qwik-style vite-7.3.1 pinning problem."
+        notable: "The minimal template has NO svelte.config.js; the adapter is configured inline in vite.config.js. Its own +layout.svelte is ALREADY runes plus snippets - `let { children } = $props()` and `{@render children()}` - so snippets are the scaffold's default-children mechanism, not optional sugar."
+      activation:
+        model: "SvelteKit SSRs then hydrates. activation: 'hydrate' already exists; NO third e2e term needed. The Activation union in three-way-contract.ts is closed on framework names and needs 'svelte' added to the hydrate arm - a widening, not a weakening."
+        friction_1: "The hydrate branch asserts the served HTML contains the literal '/src/entry-client.jsx'. SvelteKit owns its client entry and instead emits an inline __sveltekit_* bootstrap importing a kit-generated module. Making the literal per-demo keeps the assertion specific; relaxing it to 'any module script' would weaken it. JUDGE CALL."
+        friction_2: "There is no demo-owned entry-client to set data-frameless-activated. The nearest scaffold-preserving sites are a root +layout.svelte $effect/onMount or src/hooks.client.ts. Both are scaffold-shaped; neither is a hand-rolled harness."
+      structural_tension_requiring_a_ruling: "react-official and solid-official each HAND-WIRE server.js + ssr-handler.js + express, with a frameless-demo-ssr vite plugin injected by scenarios.box.ts. SvelteKit's own plugin already does SSR, so demos/svelte-official would have NO server.js and NO ssr-handler.js, and its routes become src/routes/+page.svelte etc. 'Official scaffold only' and 'match the shape of the existing three demos' are in DIRECT TENSION here and one must yield. The charter's own constraint points at SvelteKit."
+      version_boundary_table:
+        at_or_below_5.0_baseline: "runes $state/$derived/$effect/$props, onclick={} event attributes, on() from svelte/events, $bindable(), snippets {#snippet}/{@render}"
+        above_baseline_but_satisfied_at_5.56: "<svelte:boundary> 5.3, class attribute as object/array via clsx 5.16.0, $props.id() 5.20.0, writable/reassignable $derived 5.25.0, attachments {@attach} 5.29.0"
+        unavailable: "Event modifiers (on:click|preventDefault) - 3.x/4.x ONLY, removed in 5.0. The on:click DIRECTIVE survives but is deprecated in 5 and slated for removal in 6."
+        ir_4_consequence: "At ^5.56.1 EVERY version-gated Svelte construct under discussion is already above its floor, so the Svelte lane produces NO FORCING CASE for IR-4. The policy's version corollary needs both 'lockfile pins >= N' AND 'the emitter can know the version'; Svelte satisfies the first and not the second. Whether the first alone suffices is exactly the T002 question - and Svelte hands the Judge the EASY end of it, which is worth saying plainly because Vue's defineModel (3.4+) and Angular's signal input()/output() (>=17.1/17.2) may not have the same slack."
+      ir_5:
+        no_schema_change: "Svelte 5 removed modifiers, so there is no |preventDefault spelling to target. Svelte 5 event attributes receive the native DOM Event, so the emitter generates exactly what React and Solid already generate: onclick={(event) => { event.preventDefault(); ...rest }}. No lowering, no vocabulary extension, for S1/S2/S3."
+        the_real_question_is_delegation: "Svelte 5 delegates a fixed event set (click, input, change, keydown...) to the root, so a stopPropagation inside a delegated handler may not stop what an author expects; Svelte's docs direct to on() from svelte/events. That is PRECISELY the repair already recorded in idiom-policy worked example 6 - narrow the attribute-form domain to events whose declared actions exclude stopPropagation, and route the rest through on()."
+        what_not_to_assume: "The Qwik failure was QRL LAZINESS - the handler arrived ~58ms after dispatch - NOT delegation. A Svelte delegated listener is in the bundle and runs synchronously during dispatch, so preventDefault from it should still avert the default action. That reasoning is DOCUMENTARY. Per instrument rule 1 it must be MEASURED on the S3 cancel-submit before any claim is filed either way."
+      blocking_vs_sugar:
+        blocks_s1_s2_s3: "None of IR-1, IR-3, IR-4 or IR-6."
+        needs_a_ruling_but_blocks_nothing_structurally: "IR-5, to get S3 right."
+        the_sleeper: "IR-7 is the only gap with real S1/S2/S3 exposure. Purity is never asserted - ExpressionSite.expression is an arbitrary AST node - while $derived expects a pure re-runnable expression, and Svelte reports violations as state_unsafe_mutation / effect_update_depth_exceeded, SOME OF THEM DEV-ONLY. S1's derived is trivial so it will pass, WHICH IS EXACTLY WHY this is the gap most likely to be silently wrong later."
+        sugar_only: "IR-1 ($bindable/bind:, explicitly out of scope), IR-3 (snippets beyond the default slot - TemplateDefaultSlotProjection maps cleanly onto {@render children?.()}, so IR-3 only bites if the lane extends to the composition kit), IR-4, IR-6."
+      svelte_check: "YES, materially beyond the shared lane, and the shared lane CANNOT substitute: tsc cannot parse .svelte at all, so a packages/frameworks/svelte emitted-typecheck twin would have nothing to read. svelte-check adds invalid rune usage, state_referenced_locally, non-reactive derived misuse, invalid {@render} targets, unknown component props, wrong handler signatures. Cost: needs svelte-kit sync plus a project tsconfig, and emits warnings the Solid lane's exact-equality ACCEPTED pattern would have to absorb. Cheaper independent oracle worth weighing: svelte/compiler's compile() returns a warnings array with no project scaffolding at all."
+      contradictions_found:
+        confirmed_and_fixed_by_pm: "state.yaml still carried the two STALE standing gaps verbatim while goal.md had been corrected - and state.yaml is declared to WIN. This was a PM miss in T010: correction fields were added without amending the original existing_plan_facts entries. Corrected in all THREE adapter boards, not just Svelte."
+        confirmed_needs_ruling: "'Official scaffold only' versus 'match the existing demo shape' cannot both hold for SvelteKit."
+        NOT_confirmed: "The Scout reported worked example 9 duplicated line-for-line in docs/emitter-idiom-policy.md. PM CHECKED: it is not - a single occurrence of the heading and of the 'Sanctioned set, stated first' paragraph. Instrument rule 1 applies to Scouts too; recorded so the claim does not propagate."
+      ambiguity_requiring_judge:
+        - "IR-4: does 'the lockfile pins >= N' satisfy the version corollary on its own, or must the emitter be handed the version? Svelte cannot force the answer and gives the easy end; rule knowing Vue and Angular inherit it."
+        - "IR-5 emission: in-body statements for both actions, versus worked example 6's repair routing stopPropagation-carrying events through on(). Needs MEASUREMENT of Svelte 5 delegation first."
+        - "Whether widening the Activation union and making the served-payload literal per-demo counts as weakening an activation-neutrality check. T999 is instructed to reject on exactly this, so rule up front rather than defending after."
+        - "Whether demos/svelte-official is a SvelteKit app (official, structurally unlike the other three) or a bare vite + plugin-svelte SSR setup mirroring react-official (structurally matching, but hand-rolled - the exact thing frameless-qwik-v1 exists to forbid)."
+      disclosed: "Used 18 commands against a 12-command budget. The task named eight separate inputs plus upstream version verification."
   - id: T002
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     objective: "Ratify the Svelte adapter contract and rule on whether IR-4 is closed by this board or deferred."
     inputs:

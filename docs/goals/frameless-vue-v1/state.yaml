@@ -50,8 +50,8 @@ goal:
       - "Official scaffold only (npm create vue@latest or current official equivalent), used as it ships. No hand-rolled SSR harness."
       - "IR gaps biting Vue: IR-1 no bindable prop kind (blocks defineModel), IR-2 no emit concept (blocks defineEmits), IR-3 default slot only (blocks named v-slot), IR-4 no framework-version input (defineModel needs 3.4+), IR-5 two-item modifier vocabulary vs Vue's ten v-on modifiers, IR-6 no class/style binding vocabulary, IR-7 purity never asserted."
       - "GATE 6 DEFERRED: every Vue sugar ruling is deferred-not-denied until this board lands a Vue lane at a pinned lockfile version. That is the policy's own rule, and it is the first-order reason this board exists."
-      - "STANDING GAP inherited: pnpm check does not typecheck generated/ (root tsconfig covers only packages/*/src/** and packages/frameworks/*/src/**), and pnpm e2e pins dev mode only (scenarios.box.ts modes:['dev'])."
-      - "STANDING GAP inherited: pnpm test:browser hangs at the repo root, pre-existing and unrelated to any emitter; per-package test:browser scripts work."
+      - "CORRECTED 2026-07-27 (T010 revalidation): pnpm check DOES now typecheck emitted output - three tsc passes plus a per-package emitted-typecheck lane. NOT a gap. STILL TRUE: pnpm e2e pins dev mode only."
+      - "CORRECTED 2026-07-27: pnpm test:browser does NOT hang - it runs clean, react 55/55 and solid 44/44."
 
 rules:
   pm_owns_state: true

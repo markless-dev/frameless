@@ -1077,8 +1077,21 @@ tasks:
     objective: >-
       Audit every mutation table across the three gate corpora for the silently-no-op shape, and
       make each mutation assert that it actually changed the source.
-    allowed_files: []
-    verify: []
+    allowed_files:
+      - packages/frameworks/react/test/gate.test.ts
+      - packages/frameworks/solid/test/gate.test.ts
+      - packages/frameworks/qwik/test/gate.test.ts
+      - docs/goals/frameless-defects-and-targets-v1/notes/T018-mutation-audit.md
+    verify:
+      - "pnpm check"
+      - "pnpm test"
+      - "pnpm lint"
+      - "git status --short"
+    prior_art: >-
+      T008 already converted the ONE row it owned - the S-SH7 row in solid/test/gate.test.ts - to a
+      throwing mutation constructor, and deliberately did not absorb the corpus-wide conversion
+      because each already-vacuous mutation it reveals needs individual adjudication. Follow that
+      constructor's shape; do not invent a second idiom.
     stop_if:
       - "Need files outside allowed_files."
       - "A mutation cannot be made to assert it changed the source without restructuring the table. Report it rather than skipping it."
@@ -1086,6 +1099,7 @@ tasks:
     constraints:
       - "allowed_files and verify come from T007 section 6.3; the PM fills them before activation."
       - "MUST LAND BEFORE T013. The three adapter boards will copy whatever mutation-table idiom they find in react/test/gate.test.ts, so the idiom has to be correct before it is replicated four more times."
+      - "EVERY vacuous mutation you find is a finding, not a chore. Record what it was silently failing to test before you fix it - a mutation that never mutated means the policy it guards has been unproven for as long as the row existed."
       - "The discriminating shape is disk-read source + an escaped-\\n search literal. Three literals in react/test/gate.test.ts are safe ONLY because ECMAScript normalises CRLF to LF inside template literals - that safety is incidental, not designed, and should not be relied on."
     receipt: null
 
@@ -1426,6 +1440,25 @@ tasks:
     type: pm
     assignee: PM
     status: queued
+    dispatch:
+      started: "Svelte board T001 (Scout, read-only) dispatched 2026-07-27, concurrent with T017 and T018."
+      rationale: >-
+        OWNER PUSH: the defect work had grown from six defects to twenty-one tasks and the pivot was
+        overdue. Dependency re-check found only TWO of the six remaining pre-adapter tasks actually
+        block an adapter - T017 (the settle loop lives in all three adapters and each new one copies
+        it) and T018 (adapters copy whatever mutation idiom they find). T012, T019, T020 and T009
+        are Qwik-specific defect closure: T011 measured that Svelte and Vue handlers are synchronous
+        and resident, Angular's forced lowering is orthogonal and still synchronous, so ONLY QWIK
+        needs the sync$ split - and it needs no IR schema change.
+      charters_reason_already_discharged: >-
+        The charter sequenced defects first because defect 1's contract extension is the bar every
+        adapter must meet. T002 and T003 landed it; the three-way contract asserts cancellation now.
+        That reason no longer holds the adapters back.
+      isolation: >-
+        T017 and T018 run in separate git WORKTREES rather than sharing the main tree. Their file
+        scopes are disjoint from each other, but both run pnpm test:browser, so a shared tree would
+        have let one's in-flight edits poison the other's verification. The Svelte Scout is
+        read-only and runs in the main tree safely.
     reasoning_hint: high
     objective: "Run the Svelte adapter to completion via docs/goals/frameless-svelte-v1, including its IR-4 ruling."
     inputs:
