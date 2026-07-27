@@ -122,7 +122,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T023
+active_task: T020
 
 tasks:
   - id: T001
@@ -1811,19 +1811,51 @@ tasks:
   - id: T020
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
     spec: "notes/T011-conditional-cancellation.md, missing_evidence"
     objective: >-
       The behavioural three-way proof for conditional cancellation: a two-sided scenario that
       cancels for the declared key and does NOT cancel for another, across the analyzer scenarios,
       the three-way contract and all three demos.
-    allowed_files: []
-    verify: []
+    allowed_files:
+      - packages/compiler/test/fixtures/s3-event-form.tsrx
+      - packages/compiler/test/goldens/s3-event-form.json
+      - packages/compiler/test/enriched-ir.test.ts
+      - packages/frameworks/react/generated/S3.jsx
+      - packages/frameworks/solid/generated/S3.jsx
+      - packages/frameworks/qwik/generated/S3.jsx
+      - packages/frameworks/svelte/generated/S3.svelte
+      - packages/frameworks/react/test/reference.tsx
+      - packages/frameworks/solid/test/reference.solid.tsx
+      - packages/frameworks/react/test/size.test.ts
+      - packages/frameworks/solid/test/size.test.ts
+      - packages/analyzer/src/scenarios.ts
+      - demos/react-official/three-way-contract.ts
+      - demos/react-official/src/emitted/EventForm.jsx
+      - demos/solid-official/src/emitted/EventForm.jsx
+      - demos/qwik/src/emitted/EventForm.jsx
+      - demos/svelte-official/src/lib/emitted/EventForm.svelte
+      - docs/goals/frameless-defects-and-targets-v1/notes/T020-conditional-behavioural.md
+    verify:
+      - "pnpm check"
+      - "pnpm test"
+      - "pnpm test:browser"
+      - "pnpm e2e   # all FOUR rows, S1/S2/S3 observations ASSERTED equal"
+      - "regenerate all four emitters, then git diff --exit-code -- packages/frameworks/*/generated   # goldens fresh"
+      - "git status --short   # every path inside allowed_files"
     stop_if:
       - "Need files outside allowed_files."
-      - "The scenario passes before the T012 lowering lands. It must be two-sided - a scenario that cannot distinguish cancel from no-cancel proves nothing."
-      - "Verification fails twice."
+      - "The scenario passes BEFORE the T012 lowering is in place. It must be TWO-SIDED - a scenario that cannot distinguish cancel from no-cancel proves nothing. Demonstrate the negative side by temporarily stripping syncPolicy from the IR, exactly as T012's green-vacuum guard does, and watch it fail."
+      - "You are about to change what any emitter EMITS. T012 shipped the lowering; this task adds a corpus case and a behavioural assertion, nothing more. If the corpus case reveals an emitter defect, that is a FINDING - report it and stop."
+      - "The Qwik lane cannot express the conditional case. T012 refuses graph-truthy guards under V1; use an EVENT-FIELD guard (event-equals), which all four lanes can express."
+      - "Adding the case moves an observed string for S1 or S2, or breaks byte-identical equality across the four lanes for the S3 observations that already pass."
+      - "Verification fails twice for the same reason."
+    constraints:
+      - "WHY THIS EXISTS, in T011's words: without it T012 ships on EMITTED TEXT PLUS A GATE - which is exactly the evidence base defect 1 defeated. T012's own two-sided check was a one-off probe on a scratch route that has since been deleted. This converts it into a standing check."
+      - "TWO-SIDED IS THE WHOLE POINT: the handler must cancel for the DECLARED key and NOT cancel for another. A one-sided assertion would pass against an always-cancel bug - which is precisely the Solid bug T012 found hiding behind a validator, where a conditional cancel fired unconditionally."
+      - "Add the case to the EXISTING S3 fixture rather than creating S4, if it can be done without moving S3's existing observed strings. S3 already has a form and a cancellable submit path from T002. A new scenario costs a fixture, a golden, four generated files, four demo copies, four routes and a matrix row."
+      - "All four lanes must express it. React and Solid keep the authored guard verbatim; Qwik synthesizes a sync$ guard from the condition tree; Svelte emits the guard in-body. That divergence in FORM with identity in BEHAVIOUR is the whole thesis, and this is the first scenario that tests it on a conditional."
     constraints:
       - "allowed_files and verify are filled by the PM from T012's outcome; do not start until they are set."
       - "WHY THIS EXISTS: T011 states plainly that without it, T012 ships on emitted text plus a gate - which is exactly the evidence base defect 1 defeated. The gate proves the shape; only this proves the behaviour."
@@ -1986,7 +2018,7 @@ tasks:
   - id: T023
     type: worker
     assignee: Worker
-    status: active
+    status: blocked
     reasoning_hint: medium
     spec: "T021 receipt - AUTHORITATIVE."
     objective: >-
@@ -2022,8 +2054,62 @@ tasks:
       - "Keyed on BOTH the mutant string AND the row name. The name matters because test.each(mutationCases)('rejects the %s bypass mutation') at gate.test.ts:716 makes it the vitest TITLE, so colliding names make a red unattributable to a row."
       - "Applies to React AND Solid - both have tables consumed by the same %s test.each. Solid has zero duplicate names today, so it should stay green."
       - "ALSO add a FIFTH rule to notes/T018-mutation-no-op-audit.md section 5 'rules for copiers': a mutation TABLE carries the no-duplicate name/mutant invariant from the day it has two rows. That note is the DURABLE CARRIER for Vue and Angular, since neither Svelte nor Qwik has a table today."
-    receipt: null
-
+    receipt:
+      result: blocked
+      harness: claude-code
+      blocked_reason: "The no-duplicate invariant fires on TWO React rows outside the three assigned rewrites, which is this card's explicit stop_if. Every route to a green invariant is an act the card forbids - rename, delete, a fourth unruled rewrite, or a suppression list. Needs a Judge ruling. The three rewrites and the copier rule ARE landed and fully green."
+      summary: "Rewrote all three duplicate React mutation rows to branch-grounded shapes, each PROBED against checkSources and observed to produce its expected policy. Added rule 5 to T018's 'rules for copiers' and recorded T021's over-read correction in that note. The invariant is written and four-sided calibrated but NOT landed."
+      changed_files:
+        - packages/frameworks/react/test/gate.test.ts
+        - docs/goals/frameless-defects-and-targets-v1/notes/T018-mutation-no-op-audit.md
+        - docs/goals/frameless-defects-and-targets-v1/notes/T021-duplicate-mutants.md
+      commands:
+        - cmd: "pnpm check"
+          status: pass
+          note: "four tsc passes"
+        - cmd: "pnpm test"
+          status: pass
+          note: "BEFORE 668, AFTER 668 - unchanged BY DESIGN: three rows rewritten in place, none added or removed, invariant withheld. PM RE-RAN: 668/668."
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors"
+        - cmd: "git status --short"
+          status: pass
+          note: "PM VERIFIED: 3 paths, all in allowed_files. custom-policies.ts untouched; solid/test/gate.test.ts byte-identical to HEAD."
+        - cmd: "vp fmt --stdin-filepath (compare only)"
+          status: pass
+          note: "the edited file deviates from vp fmt in exactly the same 2 places as HEAD and no others. pnpm fmt NOT run."
+        - cmd: "scratchpad probes: forEach, rewrites, invariant"
+          status: pass
+          note: "direct checkSources probes plus the four-sided calibration"
+      the_deciding_check_passed:
+        matched: true
+        verbatim: "Store writes must use Object.is and defer listener notification until method completion"
+        why_it_matters: "Exactly custom-policies.ts:1208, and BYTE-IDENTICAL to what the existing for-of twin produces. T021 was read-only and INFERRED the routing; this converts that inference into evidence."
+        it_is_the_only_route: "writeCount's arrow contains no ForOfStatement, calls no tainted identifier, and resolveCallable cannot resolve countListeners.forEach because the object's declarator initialiser is `new Set()`, not an ObjectExpression."
+        negative_control: "countListeners.forEach((listener) => { void listener; }) produces [] - proving the RECURSION INTO THE CALLBACK is what fires, not the mere presence of .forEach on a listener set. Baseline unmutated store also []."
+        consequence: "The R-SH3 notify family now maps 1:1 onto the detector's four arms: for-of, forEach, helper-forwarding, member-method helper."
+      three_rewrites_all_landed_and_probed:
+        1: "'forEach-hidden notify-per-write shared tear' - was byte-identical to its twin. Targets invokesListenerSet's .forEach arm including the recursion at :1147. Observed R-SH3."
+        2: "'identifier-object computed-member setter' - was a byte-identical second copy incl. name and policy. VERIFIED FIRST OF ITS KIND: the twin resolves from an inline ObjectExpression so never takes :199-204, and 'render member-wrapped setter' takes :199-204 but with a static property name so never folds a key. Observed render-phase-setter."
+        3: "'default React import' - was byte-identical in mutant AND policy to 'unused import'. Targets the !imported arm at :284-294; an ImportDefaultSpecifier has no `imported` name at all. Observed react-import-allowlist."
+      the_stop_if_that_fired:
+        collision_1_needs_a_ruling: "React mutationCases reports the NAME collision 'dynamic computed-member setter' x2 - gate.test.ts:264 `({ [key]: setValue })[key](1)` and :287 `({ run: setValue })[key](1)`, both `const key = items[0]`, same policy, textually distinct. T021 NAMED this pair in its fourth_instance block and recorded in missing_evidence that both probably fall to the same null-name fallback loop at :212-216 - textually distinct, BRANCH-IDENTICAL - but ruled only on the other three rows."
+        why_the_worker_could_not_proceed: "Every route is forbidden by the card: rename (forbidden, and wrong on the merits - if the pair is branch-identical, renaming hides a redundant row behind a distinct name, which is the exact mechanism T021 diagnosed), delete (rejected), a fourth rewrite (no ruled target branch), or a suppression list (rejected)."
+        collision_2_is_a_spec_refinement_not_a_defect: "Under a BARE-mutant key the invariant also fires on 'index key AST -> index-key' vs 'index key plugin -> eslint:react/no-array-index-key' - the SAME mutant asserted against two DIFFERENT policies. That pair is DELIBERATE and LEGITIMATE: one bypass shape, two independent detectors. Dropping either loses a detector assertion."
+        the_proposed_fix: "Key the mutant dimension on (mutant, policy) as ONE COMPOSITE, not the mutant alone. It still catches all three T018 duplicates, since a copied row copies its policy too - and it RECONCILES WITH T018's OWN ARITHMETIC: 47 rows, 44 distinct, exactly three. A bare-mutant key would have reported four. Recorded rather than applied unilaterally, since it refines T021's 'keyed on both name and mutant'."
+      invariant_ready_but_withheld:
+        keys: "two independent: row NAME, and (mutant, policy) as one composite"
+        exemption_list: "none, and none proposed"
+        calibration: "FOUR-sided against a synthetic table, all four observed: clean -> no fires; name collision -> fires on names; mutant collision at same policy -> fires on mutants; same mutant at DIFFERENT policies -> deliberate NON-fire, documenting the key shape by test rather than by comment."
+        real_table_results: "solid mutationCases GREEN, solid compositionMutationCases GREEN, react compositionMutationCases GREEN after the forEach rewrite. react mutationCases: two fires, above."
+        source: "recorded verbatim in notes/T021-duplicate-mutants.md section 3, ready to paste"
+      copier_rule_landed: "Rule 5 in T018's note: a mutation TABLE carries the no-duplicate invariant FROM THE DAY IT HAS TWO ROWS - not from the day someone notices. Two independent keys, with the reasoning for each: NAME because test.each %s makes it the vitest title, so colliding names make a red unattributable AND mutant-keyed scans are structurally blind to it; MUTANT-AND-ITS-POLICY as one key, because two rows asserting different policies against one mutant are two detectors on one shape, not a duplicate. No exemption list. States explicitly that neither Svelte nor Qwik has a table today, so the rule reaches them, Vue and Angular through the NOTE rather than through a copied test."
+      deviations:
+        - "Wrote notes/T021-duplicate-mutants.md (in allowed_files, not mandated). It carries the verified evidence and the ready-to-land invariant source plus its four-sided calibration, so the follow-up does not re-derive any of it."
+        - "Added a T021-correction block under Finding 3 of T018's note rather than only appending rule 5. Finding 3's table now names rows that NO LONGER EXIST and its key sentence was ruled an over-read that ORIGINATED in that note; leaving it unmarked directly above the new rule would have left the durable carrier asserting something T021 overturned. Original text preserved as the audit trail."
+        - "Ran a temporary in-tree probe test in both gate files to enumerate collisions, then reverted it; solid/test/gate.test.ts is byte-identical to HEAD - PM VERIFIED."
+      verification_attempts: 1
   - id: T999
     type: judge
     assignee: Judge
