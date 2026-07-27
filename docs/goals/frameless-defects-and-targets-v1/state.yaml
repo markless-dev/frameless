@@ -122,7 +122,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T022
+active_task: T012
 
 tasks:
   - id: T001
@@ -1593,7 +1593,7 @@ tasks:
   - id: T012
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: >-
       Implement the T011 ruling. IN ORDER: (1) MEASURE FIRST in T003's G1 discipline - build
@@ -1745,7 +1745,7 @@ tasks:
   - id: T022
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     spec: "T009 receipt, worker_package. This is the ONE package standing between the board and oracle half 1."
     objective: >-
@@ -1779,8 +1779,74 @@ tasks:
       - "You are about to file either drafted upstream report. They must NOT be sent - see the board's autonomy_grant."
       - "pnpm test drops below 572, test:browser below 60/60 and 49/49, or e2e goes red."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      note: notes/T022-ci-flags.md
+      worktree: "collected from .claude/worktrees/agent-adce525fad4f1c204; the 597-line diff applied CLEAN"
+      summary: "Rescoped demos/qwik/throttled-resume.mjs to block on q:container='resumed' - Qwik's OWN signal - and removed that step's continue-on-error. THE LANE PASSES THROTTLED, so no slow-link finding was hidden behind the flag. Gave both format-emitted vp fmt tests a 30s timeout justified against eight Windows durations re-read from the CI logs. Corrected the ci.yml Windows and WebKit removal-gate comments and four DEFECTS.md sections. Both matrix flag VALUES untouched. Calibrated both new instruments two-sided."
+      changed_files:
+        - demos/qwik/throttled-resume.mjs
+        - .github/workflows/ci.yml
+        - packages/frameworks/react/test/format-emitted.test.ts
+        - packages/frameworks/solid/test/format-emitted.test.ts
+        - docs/DEFECTS.md
+        - docs/goals/frameless-defects-and-targets-v1/notes/T022-ci-flags.md
+      commands:
+        - cmd: "pnpm check"
+          status: pass
+          note: "worktree, three tsc passes"
+        - cmd: "pnpm test"
+          status: pass
+          note: "572/572 after pnpm build; the initial 1 skip is packages/cli's packaged-bin test, which self-skips when dist/node.js is absent in a fresh worktree"
+        - cmd: "pnpm test:browser"
+          status: pass
+          note: "react 60/60, solid 49/49"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "[e2e] PASS, three-way 3x3 all equal"
+        - cmd: "QWIK_THROTTLE=0 node demos/qwik/throttled-resume.mjs"
+          status: pass
+          note: "CONTROL, RUN FIRST. PM RE-RAN on main: 6/6 checks, exit 0, resumed in 22ms"
+        - cmd: "node demos/qwik/throttled-resume.mjs"
+          status: pass
+          note: "THROTTLED 300ms/400kbit. PM RE-RAN on main: 6/6 checks, exit 0, resumed in 1590ms"
+        - cmd: "git diff ci.yml | grep continue-on-error"
+          status: pass
+          note: "PM VERIFIED: exactly one VALUE line removed - the throttled step. Both matrix flags intact at :137 and :258 as `${{ matrix.experimental == true }}`, with windows-latest and webkit still marked experimental: true."
+        - cmd: "gate calibration (scratch)"
+          status: pass
+          note: "scripts blocked -> q:container stays paused, the wait throws, exit 1"
+        - cmd: "timeout calibration (temporarily 1ms, reverted)"
+          status: pass
+          note: "witnessed 'Test timed out in 1ms' - proves the options object is honored"
+      rescope:
+        signal: "q:container='resumed' on documentElement, set by @qwik.dev/core after container state is deserialized - the same attribute three-way-contract.ts:421 already asserts. Not a lifecycle event, not a sleep, not networkidle."
+        deadlock_risk_settled_empirically: "The gate would deadlock if Qwik only initialized its container in response to an event. Probed with a poller that never clicked: it does not. The container reaches resumed at +291ms unthrottled and +2197ms throttled with NO interaction at all."
+        throttled_result: "PASSES. Resume 1588-1617ms across five throttled runs, control 20-22ms. Server-rendered value survives resume; both post-resume clicks land. THE STOP_IF BRANCH WAS NOT TAKEN - there is no genuine slow-link finding behind this flag."
+        calibrated_two_sided: "With the container's scripts aborted, q:container stays paused, the wait throws, exit 1. Run BEFORE the flag came off."
+      timeout:
+        value: "SPAWN_TIMEOUT_MS = 30_000, per-test on the vp fmt test in both copies. The sibling parse-error test (1ms, in-process) deliberately keeps the default."
+        measurements: "Eight samples from four consecutive windows-latest/node 24 runs in which neither file changed: e04b823 RED 6747/7143, dfa9350 green 4139/4339, 0cf937b RED 5150/5214, 39c8a6d green 4504/4706. macOS on this tree: 602/605ms. Best green cleared 5000 by 5.9%; the narrower red missed by 3.0%. Windows costs 6.9-11.9x macOS; Windows-only spread 1.73x."
+        justification: "4.2x the worst observed sample, above worst-observed x observed-spread (7143 x 1.73 = 12.3s) with headroom for a cold or contended runner, ~50x the macOS sample, still a real guard and far inside the 15-minute job budget."
+        why_this_is_not_the_move_defect_4_rejected: "It bounds a SUBPROCESS SPAWN, which genuinely IS a wall-clock quantity - unlike defect 4's frame-gated loop, where wall clock was the wrong unit entirely."
+        extra_finding: "6747 and 7143ms were REPORTED as durations, so the old deadline never truncated the work: execFileSync blocks the thread and the verdict lands after it returns. 5000 was not a runaway guard; it was an unstated claim about Windows spawn cost, wrong by up to 43%."
+      flags:
+        qwik_throttled: "OFF. Its only justification was defect 2, which the owner overturned. The lane now blocks on Qwik's own resumption signal and passes throttled, so the step is normal and required - a red there is now a real finding."
+        windows: "STAYS, value untouched, only its comment corrected. New gate: timeout raised on a measured basis (done), THEN THREE consecutive greens with the two vp fmt durations read out of each log. N=3 chosen from the observed flip rate - one green had p~0.5, three in a row p~0.125."
+        webkit: "STAYS, value untouched, only its comment corrected. New gate: a green observed under the CONTENTION conditions that produced the reds, since all eight reds cluster in two rapid-concurrent-run windows and all three post-repair greens are quiet-window greens."
+      verified_rather_than_inherited:
+        windows_durations: "T009 cited 4143-7149ms; the logs actually say 4139-7143ms. Immaterial to every conclusion, but the numbers now live in the source comments so the corrected values are what ship."
+        webkit_scope_claim: "Read from the log of the last red directly: it failed 'action-order > S3-event-form (order seed 1)' and 'composition-emitted-smoke > C2-shared-propagation'. adapter-input was NEITHER. Same error, arbitrary victims - which is what a shared instrument fault looks like, and why DEFECTS.md's 'only WebKit, only this test' was too narrow."
+      pm_verification_note: "The PM's own first check of the flag surgery used a literal `grep -c 'continue-on-error: true'` and got 0, appearing to contradict the receipt. The receipt was right and the PM's instrument was wrong: the matrix flags use the EXPRESSION form `${{ matrix.experimental == true }}`. That is Rule 4 again, committed by the PM within an hour of adding it - an enumerating instrument narrower than the shape it was enumerating."
+      deviations:
+        - "Added two assertions beyond the bare rescope: kit:2 is now asserted against the SERVED BYTES (it was read off the live DOM, where a fast connection could resume first), and the DOM is re-checked after the gate fires. The first removes a silent precondition of exactly the shape the standing rules name."
+        - "Corrected T009's cited Windows range after reading the four job logs first-hand."
+        - "Fixed DEFECTS.md finding 4's stale status line claiming T017 had not landed. Not enumerated in the card, but it sat in an entry already being corrected and would have contradicted the entry's own new text."
+        - "Chose N=3 for the Windows gate from the observed flip rate, and recorded that reasoning plus the requirement that durations be read out of each log."
+        - "Updated the DEFECTS.md flags summary from three flags to two with a per-flag gate table; leaving it would have left the document asserting a count contradicted by ci.yml."
+        - "Calibrated the timeout by temporarily setting it to 1ms and restoring. Not asked for, but test(name, options, fn) support is version-dependent and a silently-ignored options object would have shipped a fix that does nothing - the exact failure mode this board polices."
+      verification_attempts: 1
   - id: T999
     type: judge
     assignee: Judge

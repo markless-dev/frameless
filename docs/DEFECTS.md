@@ -289,13 +289,23 @@ configuration, which is the entire asset `frameless-qwik-v1` bought.
 — by never asking whether the instrument was fair before interpreting its output.
 That is the process failure, and it is the reason for the standing rules above.
 
-**Currently held as:** the `qwik-throttled` job's throttled step, still
-`continue-on-error: true`. The flag is owner-ruled and is **not** re-litigated
-here. Its removal is gated on that lane being rescoped to click *after* the
-container reports `resumed` — owned by T016. Once it is, the step should need no
-flag, and a residual failure there would be a genuine finding rather than grounds
-to restore it. The unthrottled control remains **not** flagged: it is the
-instrument's own health check.
+**Was held as:** the `qwik-throttled` job's throttled step,
+`continue-on-error: true`. **That flag is now OFF** (T022). It was owner-ruled,
+and its removal was gated on the lane being rescoped to click *after* the
+container reports `resumed` rather than at `domcontentloaded` — which is what
+`demos/qwik/throttled-resume.mjs` now does, blocking on
+`q:container="resumed"`, Qwik's own report about itself and the same attribute
+the three-way contract asserts. The rescoped lane **passes under real
+300ms/400kbit**: on the production build, resumption arrives in **1588–1592 ms**
+across four runs (21 ms unthrottled), the server-rendered value survives it, and
+both post-resume clicks land. So the residual-failure clause never had to be
+exercised — there is no genuine slow-link finding hiding behind this flag.
+
+The rescoped gate was calibrated **two-sided** before the flag came off, because
+a gate that cannot fail is worth nothing: with the container's scripts blocked,
+`q:container` stays `paused`, the wait throws and the script exits 1. The
+unthrottled control remains **not** flagged either: it is the instrument's own
+health check.
 
 ---
 
@@ -337,12 +347,17 @@ bake **AST byte offsets** taken from LF sources, so a CRLF checkout breaks
 fix it, and they were deliberately left untouched: their offsets are correct for
 the bytes they were built from. The checkout was wrong, not the golden.
 
-**Fourth cause — a hypothesis, labelled as one.**
+**Fourth cause — was a hypothesis, now OBSERVED.**
 `react/test/emitter.test.ts:133-134,141,150` and `solid/test/emitter.test.ts:153,162`
 assert `readFile(generated/*.jsx) === emit(ir)` byte-for-byte while
 `formatEmitted` hard-codes `endOfLine: 'lf'`, so every freshness assertion should
-fail on a CRLF checkout. This was read off the assertions, **never observed in a
-Windows log**, and it is recorded as an inference rather than a finding.
+fail on a CRLF checkout. When this entry was written that was read off the
+assertions and **never observed in a Windows log**, and it was labelled an
+inference. T009 then read the real cell: **8 failed files / 36 errors before the
+`.gitattributes` fix, 2 files after**. The inference is promoted to a finding,
+and the arithmetic that used to justify the flag — "the named causes account for
+roughly 6 of 35 failures across 4 of 8 files" — **no longer holds**: the ~29
+previously unaccounted failures are accounted for by the one CRLF root.
 
 **One root closes B, third and fourth.** The repo had **no `.gitattributes`** —
 LF was a house invariant everywhere except at the one place that decides it.
@@ -357,21 +372,50 @@ heuristic so it skips exactly what `text=auto` skips. Witnessed: staging a CRLF
 file makes it fail by name. On a CRLF checkout it fails first and loudest, which
 makes every downstream CRLF failure attributable instead of mysterious.
 
-**Currently held as:** the Windows matrix cell, still `continue-on-error`, with
-its justifying comment corrected — the old comment stated a reason T006 had
-refuted, and a flag whose stated reason is known-false is indistinguishable from
-an unexamined flag at audit. **The flag does not come off on the strength of these
-fixes**, and the reason is arithmetic: the four named causes account for roughly
-**6 of the 35** failures across **4 of the 8** files, and the fourth is a
-hypothesis. Removal gate: an **observed** green `windows-latest` / node 24 cell on
-a real run.
+**Cause A is the one that is not closed.** Every other cause has been observed
+fixed on the real cell. `npx.cmd` plus `shell: true` is functionally correct —
+the tests pass on Windows now — but it is **timing-marginal**, because routing
+through `cmd.exe` adds a shell process to a spawn chain that then resolves and
+spawns `vp` again.
+
+**Currently held as:** the Windows matrix cell, still `continue-on-error`. Its
+justifying comment has now been corrected **twice**, and both corrections are
+recorded rather than quietly applied. The first: the original comment stated a
+reason T006 had refuted, and a flag whose stated reason is known-false is
+indistinguishable from an unexamined flag at audit. The second (T022): the
+arithmetic above is superseded, and the gate the comment stated — "an **observed**
+green cell" — is **insufficient**, because **the cell is a coin flip**. Four
+post-fix runs went RED, green, RED, green, discriminated **purely** by whether
+both `vp fmt` tests beat vitest's 5000 ms default, with nothing in those files
+changing between them:
+
+| run       | cell  | react   | solid   |
+| --------- | ----- | ------- | ------- |
+| `e04b823` | RED   | 6747 ms | 7143 ms |
+| `dfa9350` | green | 4139 ms | 4339 ms |
+| `0cf937b` | RED   | 5150 ms | 5214 ms |
+| `39c8a6d` | green | 4504 ms | 4706 ms |
+
+The best green cleared the bound by **5.9%**; the narrower red missed it by
+**3.0%**. At a 2-in-4 flip rate a single green is a sample, not a verdict.
+
+**Removal gate, in two parts and in this order:** (1) the timeout raised **on a
+measured basis** — done, both copies now carry 30 s, justified in-file against
+the eight samples above; then (2) **three consecutive** green `windows-latest` /
+node 24 cells with the two `vp fmt` durations **read out of each log** and
+sitting far below the new bound. Three, because under the observed pre-fix
+distribution one green had p≈0.5 and three in a row p≈0.125. Reading the
+durations is what separates "fixed" from "got lucky thrice" — the last green
+looked perfectly healthy and had 6% of headroom.
 
 ---
 
 ## 4. WebKit exceeds the analyzer's quiescence bound — `findings-005` — **test-suite defect**
 
-**Status:** DIAGNOSED as a harness assumption. The repair is specced as **T017**
-and has not landed yet.
+**Status:** DIAGNOSED as a harness assumption, and **repaired by T017** — the
+settle loop is now bounded on ticks in all three adapters, shipped with a
+two-sided calibration. The flag stays; see the removal gate at the foot of this
+entry, which is not the one this document used to state.
 **Severity: medium.** It is not an engine divergence, but it is load-bearing: the
 same loop exists in all three adapters and three more frameworks are about to copy
 them.
@@ -381,6 +425,27 @@ react-browser (webkit)  test/adapter-input.browser.test.ts
   × dispatches analyzer input actions through React controlled inputs
 Error: Observable DOM did not quiesce within 500ms
 ```
+
+**"Only WebKit, only this test" was too narrow, and the narrowness mattered.**
+That framing came from the first observation and this entry carried it by showing
+one failing test. The **last** observed red — run `30229046866`, sha `3ff85ad`,
+read from the job log — failed **two different tests in two different files**,
+and `adapter-input` was not either of them:
+
+```
+FAIL  react-browser (webkit)  test/action-order.browser.test.ts
+  × S3-event-form (order seed 1)                       797ms
+FAIL  react-browser (webkit)  test/composition-emitted-smoke.browser.test.ts
+  × C2-shared-propagation                              697ms
+Error: Observable DOM did not quiesce within 500ms   (x2)
+2 failed | 5 passed (7)
+```
+
+Same error, same loop, arbitrary victims. That is what a **shared instrument
+fault** looks like, and it corroborates the diagnosis below more strongly than a
+single repeatable test would have: whichever test happens to be running when
+frames are starved is the one that dies. It also means "does `adapter-input`
+pass?" was never the right question to ask of this cell.
 
 **The bound measures the wrong quantity, and this is readable in the source
 rather than inferred from the failure.** `boundedQuiescence` bounds **wall clock**
@@ -422,11 +487,30 @@ failing cell is ubuntu headless WebKitGTK, unavailable locally, and the Chromium
 cadence experiment is a substitute rather than a reproduction.
 
 **Currently held as:** the WebKit matrix cell, `continue-on-error`, with its
-comment repointed at the Phase B audit. The flag is now the **adjudicating
+comment repointed at the Phase B audit. The flag is the **adjudicating
 instrument**, not an annotation: the T017 repair is self-falsifying there, because
-a genuine engine divergence would still fail a tick-bounded loop. Removal gate: an
-observed green webkit cell **after** T017 lands. The Firefox cell is a normal
-required cell — it passes.
+a genuine engine divergence would still fail a tick-bounded loop.
+
+**The removal gate this document used to state is NON-DISCRIMINATING**, and is
+corrected rather than quietly replaced. It read: "an observed green webkit cell
+**after** T017 lands". T009 traced the cell across 30 CI runs and found it was
+**already green for five consecutive runs before T017 landed** (`cd34186`,
+`ef59d55`, `72a09de`, `e04b823`, `dfa9350`) with no adapter change at all. A gate
+the *unrepaired* adapter passes five times running cannot certify the repair — it
+is the same single-sample-as-verdict mistake finding 3's gate made, in a cell
+whose greens are even easier to come by.
+
+What those 30 runs *do* show is a mechanism: all eight observed reds cluster in
+two windows of rapid concurrent runs, consistent with CPU contention starving
+frames. That corroborates the reading above — and it also means a green obtained
+in a quiet window is measuring the quiet window. All three post-repair greens are
+from quiet windows, so T017's distinguishing signatures (`within 30 settle ticks`
+versus `runaway guard`) have **never actually been read**.
+
+**Removal gate:** a green webkit cell observed under the **contention conditions
+that produced the reds** — concurrent runs saturating the runner, not an idle one
+— so the repaired loop is exercised on the frame cadence the failures came from.
+The Firefox cell is a normal required cell — it passes.
 
 ---
 
@@ -596,17 +680,29 @@ matrix proved green rather than from the error message's claim.
 | #   | disposition                     | code state                                   | what is left                                              |
 | --- | ------------------------------- | -------------------------------------------- | --------------------------------------------------------- |
 | 1   | product defect                  | **fixed** (T002 witness, T003 fix)            | conditional cancellation, deliberately deferred to T011/T012 |
-| 2   | **not a defect**                | nothing to change                             | rescope the throttled lane to click after `resumed` (T016)   |
-| 3   | test-suite defect               | **all four causes fixed** (T008)              | an observed green Windows cell before the flag comes off     |
-| 4   | test-suite defect               | diagnosed, **not yet repaired**               | T017: bound the loop on ticks, with a failing calibration    |
+| 2   | **not a defect**                | nothing to change                             | **nothing** — lane rescoped and its flag removed (T022)      |
+| 3   | test-suite defect               | **all four causes fixed** (T008), timeout raised on measurement (T022) | 3 consecutive green Windows cells, durations read |
+| 4   | test-suite defect               | **instrument repaired** (T017)                | one green WebKit cell observed under contention              |
 | 5   | upstream                        | **nothing to change locally**                 | the owner files the solid-js typing report                   |
 | 6   | test-suite defect               | **instrument repaired** (T008)                | none                                                         |
 
-Three `continue-on-error` flags remain, and **each carries a removal gate that is
-an observation, not an argument**: Windows (an observed green cell), WebKit (an
-observed green cell *after* T017), and `qwik-throttled` (a rescoped lane, owner-ruled).
-A flag that quietly persists is a defect that quietly persists — so none of them
-comes off because a cause was fixed, only because a cell went green.
+**Two** `continue-on-error` flags remain, down from three, and each carries a
+removal gate that is an observation, not an argument — **and each gate has now
+been restated, because the first version of both was met literally while the
+thing it stood for was not true** (T009):
+
+| flag              | state    | gate as first written                | why that was not enough                                            | gate now                                                                 |
+| ----------------- | -------- | ------------------------------------ | ------------------------------------------------------------------ | ------------------------------------------------------------------------ |
+| Windows           | **on**   | an observed green cell               | the cell is a coin flip: 2 green / 2 red on a 5000 ms bound          | timeout raised on measurement (done), **then** 3 consecutive greens with the durations read |
+| WebKit            | **on**   | a green cell *after* T017            | already green for 5 consecutive runs *before* T017, no adapter change | a green observed under the **contention** that produced the reds          |
+| `qwik-throttled`  | **off**  | a rescoped lane, owner-ruled         | met — the lane now blocks on `q:container="resumed"` and passes throttled | n/a                                                                       |
+
+A flag that quietly persists is a defect that quietly persists — but the sharper
+lesson is the middle column. **A removal gate is itself an instrument, and an
+uncalibrated one lies in exactly the way the six findings did**: both of these
+gates named an observation, both observations were duly made, and neither
+established what it was standing in for. Before treating a green cell as a
+verdict, establish the cell's variance.
 
 ## The constraint that survived all of this
 
