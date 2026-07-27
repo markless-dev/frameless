@@ -10,6 +10,7 @@ import {
 	evaluateExpectations,
 	validateReceipt,
 } from '@frameless/analyzer';
+import { readThreeWayResults } from './corpus-mutation.mjs';
 import { compositionKitScenarios } from '../demos/composition-kit/scenarios.ts';
 import {
 	buildPersistenceEntry,
@@ -80,50 +81,11 @@ function runExecutable(label, command, args, cwd = workspace) {
 	if (result.status !== 0) process.exit(result.status ?? 1);
 }
 
-/**
- * Reads the three-way results a demo's witness box recorded. Throws unless the
- * box actually ran, passed, and wrote its per-scenario observations — an empty
- * or missing receipt must never read as a pass.
- */
-async function readThreeWayResults(demo) {
-	const receiptsDirectory = resolve(demo.directory, '.witness/receipts');
-	const runId = (await readFile(resolve(receiptsDirectory, 'latest'), 'utf8')).trim();
-	if (!runId || runId.includes('/') || runId.includes('\\')) {
-		throw new Error(`Invalid ${demo.framework} witness latest pointer: ${JSON.stringify(runId)}`);
-	}
-	const receiptPath = resolve(receiptsDirectory, runId, 'receipt.json');
-	const receipt = JSON.parse(await readFile(receiptPath, 'utf8'));
-	const box = (receipt.boxes ?? []).find(({ tags }) => (tags ?? []).includes('three-way'));
-	if (!box) throw new Error(`No three-way box in ${receiptPath}.`);
-	if (box.status !== 'passed') {
-		throw new Error(`Three-way box for ${demo.framework} did not pass: ${box.status}.`);
-	}
-	const note = (box.notes ?? [])
-		.map((text) => {
-			try {
-				return JSON.parse(text);
-			} catch {
-				return null;
-			}
-		})
-		.find((parsed) => parsed?.kind === 'three-way-results');
-	if (!note) throw new Error(`No three-way-results note in ${receiptPath}.`);
-	const observed = {};
-	for (const result of note.results) {
-		if (result.activation !== demo.activation) {
-			throw new Error(
-				`${demo.framework} reported activation ${result.activation}, expected ${demo.activation}.`,
-			);
-		}
-		observed[result.scenario] = result.observed;
-	}
-	for (const scenario of threeWayScenarios) {
-		if (!observed[scenario]) {
-			throw new Error(`${demo.framework} recorded no observations for ${scenario}.`);
-		}
-	}
-	return { observed, receiptPath: `${receiptPath.slice(workspace.length + 1)}` };
-}
+// `readThreeWayResults` lives in scripts/corpus-mutation.mjs and is imported
+// above. The corpus mutation harness classifies a mutant as caught by the
+// "cross-lane observation diff" by comparing the very strings this file
+// compares, so the two must not have two readers: a second definition would let
+// the harness calibrate a set of observations `pnpm e2e` never looks at.
 
 async function resetDemoArtifacts(demo) {
 	await rm(resolve(demo, 'traces'), { recursive: true, force: true });
@@ -455,7 +417,7 @@ for (const demo of officialDemos) {
 		[witnessCli, 'run'],
 		demo.directory,
 	);
-	threeWay[demo.framework] = await readThreeWayResults(demo);
+	threeWay[demo.framework] = await readThreeWayResults(demo, threeWayScenarios);
 }
 
 const [reference, ...others] = officialDemos;

@@ -16,6 +16,7 @@
 		"e2e:ssr": "pnpm --dir demos/ssr exec witness run",
 		"fmt": "vp fmt",
 		"lint": "vp lint",
+		"mutate:corpus": "node scripts/corpus-mutation.mjs",
 		"prepare": "git config core.hooksPath .githooks",
 		"rules": "npx -y @intellectronica/ruler apply",
 		"test": "vp test --project node",
