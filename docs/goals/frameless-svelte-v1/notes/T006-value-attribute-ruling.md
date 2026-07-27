@@ -206,11 +206,17 @@ svelte  "server-rendered text = hello with writes = 0" sha256=f9cab7779ec00ed2
 
 ### Pre-existing heterogeneity, found on the way
 
-The `value` attribute had been measuring **three different things** across the
-incumbents: frozen SSR markup for React, a signal-tracking attribute for Solid
-(DEFECTS.md finding 5 measured exactly that), and deliberate removal for Svelte.
-Nobody noticed because all three agree at `hello` and the read happened before
-any interaction. This predates the Svelte lane entirely.
+The `value` attribute had been measuring **four different things** across the
+incumbents — one per lane, no two alike. Nobody noticed because all four agree at
+`hello` and the read happened before any interaction. This predates the Svelte
+lane entirely. The four behaviours are in the measured table below.
+
+**Corrected 2026-07-27 by T011.** This paragraph used to say "frozen SSR markup
+for React". That is where the false `react` cell entered the record — *before*
+T010, which then carried it forward. React is the one lane that **does** rewrite
+the attribute at hydration. The rule this keeps re-teaching: a lane's behaviour
+at hydration is not readable off an emitted golden, and prose that was never
+measured does not become measured by being copied into a table.
 
 ## Carried forward — the loss, and when to re-open
 
@@ -219,34 +225,102 @@ attribute on the marked element *survived activation unchanged*. Under the new
 read a lane could delete, alter or never install that attribute after hydration
 and the observation would not move. For Svelte that is by design.
 
-**Corrected 2026-07-27 by T999.** An earlier revision of this section claimed the
-lost coverage "maps to no product claim, because the attribute survives the SSR
-parse independently of framework state in every lane, so it never witnessed
-client state in **any** lane." That sentence is **refuted by this repo's own
-emitted output**, and it contradicted the heterogeneity finding ten lines above
-it, which already said the attribute was "a signal-tracking attribute for Solid".
-The measured truth, per lane:
+**Corrected twice. Read the history, because the history is the finding.**
 
-| lane | what the old live-DOM read observed after activation |
-| --- | --- |
-| react | frozen SSR markup; the attribute is never rewritten |
-| qwik | frozen SSR markup; the attribute is never rewritten |
-| svelte | deliberately removed by `remove_input_defaults` |
-| **solid** | **`attr:value={text()}` — a signal-tracked content attribute** |
+*First correction, 2026-07-27 by T999.* An earlier revision claimed the lost
+coverage "maps to no product claim, because the attribute survives the SSR parse
+independently of framework state in every lane, so it never witnessed client
+state in **any** lane." Refuted, and self-contradicting.
 
-`packages/frameworks/solid/generated/S3.jsx:20` emits **both** `value={text()}`
-and `attr:value={text()}`. The second is exactly what `docs/DEFECTS.md` finding 5
-measured: `attr:` means "write the content attribute", and it is signal-tracked.
-So in the **Solid lane the old read did witness post-hydration state** — a
-mis-seeded `text` at hydration would have rewritten the attribute and the old
-assertion would have gone red.
+*Second correction, 2026-07-27 by T011, and it is the one that matters.* T010's
+replacement table was labelled `measured_truth_per_lane`. Only one of its four
+cells had been measured, and the only thing measured was an **emitted golden** —
+which cannot decide what a framework does to the DOM at hydration. The `react`
+and `qwik` cells were carried over as prose from T006 and never measured at all;
+the `solid` cell was *inferred* from `attr:value={text()}` in the golden. Two of
+the four were wrong.
+
+**All four cells below were measured in Chromium**, against the four official
+demos on their own dev servers, with **two independent instruments** that agree:
+
+- **Instrument 1 — client mis-seed.** The server renders `initial="hello"`; the
+  client's own module is rewritten *in flight* (Playwright route interception, no
+  repo file touched) to seed `"bye12"`. This is literally "S3's `text` seeded
+  wrong at hydration". Not applicable to qwik, which does not re-execute the
+  component at resume — see instrument 3.
+- **Instrument 2 — served-markup divergence.** The reverse: the served markup's
+  `value="hello"` is rewritten to a sentinel while client/transported state stays
+  `"hello"`. Applies uniformly to all four lanes.
+- **Instrument 3 — transported-state divergence (qwik only).** The `qwik/state`
+  script is patched to `"bye12"` while the markup keeps `value="hello"` — the
+  qwik analogue of a mis-seed, since qwik's state arrives serialized rather than
+  re-computed.
+
+Every run carried a **control input outside the framework's root** with the same
+markup, which stayed frozen throughout — so a null result means "the lane did not
+write", not "the probe could not see a write".
+
+| lane | the `value` **attribute** in the live DOM after activation | would the old read have caught a mis-seed? |
+| --- | --- | --- |
+| **react** | **REWRITTEN from client state** | **YES — this is the only lane that goes red** |
+| solid | not written at hydration; tracked only *afterwards* | no |
+| svelte | removed by `remove_input_defaults` | no (it cannot even run) |
+| qwik | never written, at resume or on re-render | no |
+
+**react** (react-dom 19.2.3). Instrument 1: served `value="hello"`, client seeded
+`bye` → attribute **`bye`**, control frozen at `hello`. Instrument 2: served
+sentinel, state `hello` → attribute **`hello`**. Cause, in the shipped source at
+`demos/react-official/node_modules/react-dom/cjs/react-dom-client.development.js`:
+
+```js
+1720:  isHydrating || value === element.value || (element.value = value);  // SKIPPED while hydrating
+1721:  element.defaultValue = value;                                       // UNCONDITIONAL
+```
+
+`.defaultValue` on an `<input>` *is* the `value` content attribute, so line 1721
+rewrites the attribute on every hydration. The hydration call site is `:5287`,
+which passes `isHydrating = true`.
+
+**solid** (solid-js 1.8.22) — **this is the cell T010 got backwards.** Instrument
+1: client seeded `bye12` → attribute **and** property both stay `hello`.
+Instrument 2: state `hello`, markup sentinel → both stay at the sentinel. Cause,
+in `demos/solid-official/node_modules/solid-js/web/dist/web.js`:
+
+```js
+148:  function setProperty(node, name, value)  { if (isHydrating(node)) return; ... }
+152:  function setAttribute(node, name, value) { if (isHydrating(node)) return; ... }
+```
+
+Solid **suppresses the hydration-time write outright**, for the property and the
+attribute alike. `attr:value={text()}` is still signal-tracked — the two-sided
+control proves it: a real post-activation edit through the emitted `onInput`
+moved the attribute to `typed99` in both instruments. So `docs/DEFECTS.md`
+finding 5 **stands**; what is refuted is the *inference* from it. "Signal-tracked"
+and "written at hydration" are different facts, and only the first was ever
+measured. In Solid a mis-seeded `text` is invisible in the attribute *and* the
+property until the next update.
+
+**svelte** (svelte 5). Instrument 1: attribute **absent**, property `bye12` — the
+client seed reaches the property, `remove_input_defaults` having deleted the
+attribute. Instrument 2 agrees.
+
+**qwik** (@qwik.dev/core 2.0.0-beta.38) — **measured, no longer inherited.**
+Instrument 2: the attribute holds the sentinel at load, after `q:container`
+reaches `resumed`, and after a post-activation edit that moved the *property* to
+`typed99` while the attribute did not move at all. Instrument 3: with the
+transported state patched to `bye12`, the container resumed, the handlers ran
+(`data-writes` reached `2`) and a re-render was forced through a different signal
+in the same component — attribute and property both stayed `hello`. Qwik binds
+the property and never the content attribute. The inherited prose happened to be
+right; it is now right *and* measured.
 
 **Option D is therefore a uniform *trade*, not a superset.** It gains the
 counterfactual-A class in all four lanes and loses one class in one lane. The
-lost class, stated exactly: ***"S3's `text` seeded wrong at hydration, Solid lane
-only."*** Nothing else moves; react and qwik serve frozen markup and svelte
-deletes the attribute, so for those three the old read genuinely observed nothing
-about client state.
+lost class, stated exactly: ***"S3's `text` seeded wrong at hydration, REACT lane
+only."*** Not Solid — Solid cannot see it either. For solid, svelte and qwik the
+old live-DOM read observed nothing about client state at activation, so for those
+three the gap was **revealed** by the site correction; for react alone it was
+**caused** by it.
 
 The ruling **stands** on grounds untouched by this correction. The name/site
 mismatch (`server-rendered text` reported from `await page.content()`) is
@@ -266,9 +340,13 @@ S3's `text` in the live DOM at all.** Emitted S3 surfaces `text` only through
 `value={text}` — an input *property* after activation — and no sanctioned witness
 API can read a DOM property (see the rejection of B). S3's live coverage of
 `text` narrows to the submit handler's `onTrace` payload, which the analyzer lane
-checks. For react, qwik and svelte this gap was **revealed** by the site
-correction, not caused by it. For **Solid** the correction did **cause** it: that
-lane had live coverage of `text` through `attr:value` and no longer has it.
+checks. For solid, qwik and svelte this gap was **revealed** by the site
+correction, not caused by it — measurement shows none of the three ever wrote
+client state into that attribute at activation. For **React** the correction did
+**cause** it: that lane had live coverage of a mis-seeded `text`, through
+react-dom's unconditional `element.defaultValue = value` at hydration, and no
+longer has it. (Corrected 2026-07-27 by T011; this sentence previously named
+Solid, on the strength of an emitted golden rather than a measurement.)
 
 **Re-open trigger.** Re-open when **any** of:
 

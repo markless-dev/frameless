@@ -638,15 +638,17 @@ tasks:
         - "WITHDRAWN 2026-07-27 by T999. This bullet read: 'What is lost maps to NO product claim. The attribute survives SSR parse independently of framework state in every lane, so it never witnessed client state in ANY lane.' It is REFUTED by this repo's own emitted output - packages/frameworks/solid/generated/S3.jsx:20 emits attr:value={text()}, a SIGNAL-TRACKED content attribute, which is exactly what DEFECTS.md finding 5 measured. In the SOLID lane the old live-DOM read DID witness post-hydration state. Replaced by t999_correction_the_stated_reason_was_refuted below. The RULING ITSELF STANDS; only this stated reason was wrong."
       t999_correction_the_stated_reason_was_refuted:
         what_was_wrong: "The T006 receipt, notes/T006-value-attribute-ruling.md and assertS3's doc comment all asserted the attribute 'never witnessed client state in ANY lane'. False, and self-contradicting: pre_existing_heterogeneity_found on this SAME receipt already says 'a signal-tracking attribute for Solid'. The note said both things ten lines apart."
-        the_refuting_evidence: "packages/frameworks/solid/generated/S3.jsx:20 emits attr:value={text()} BESIDE value={text()}. attr: is Solid's documented namespace meaning 'write the content attribute', and it is signal-tracked - DEFECTS.md finding 5 measured exactly this. A mis-seeded `text` at hydration would have rewritten the attribute and turned the OLD assertion red."
-        measured_truth_per_lane: "react = frozen SSR markup, never rewritten. qwik = frozen SSR markup, never rewritten. svelte = deliberately removed by remove_input_defaults. SOLID = signal-tracked via attr:value, DID witness post-hydration state."
+        the_refuting_evidence: "packages/frameworks/solid/generated/S3.jsx:20 emits attr:value={text()} BESIDE value={text()}. attr: is Solid's documented namespace meaning 'write the content attribute', and it is signal-tracked - DEFECTS.md finding 5 measured exactly this. SUPERSEDED IN PART 2026-07-27 by T011: all of that is true and none of it decides HYDRATION. Solid's runtime SUPPRESSES the hydration-time write (solid-js 1.8.22, web/dist/web.js:148 setProperty and :152 setAttribute both `if (isHydrating(node)) return`), so a mis-seeded `text` would NOT have turned the old assertion red in the Solid lane. attr:value tracks only AFTER activation. See measured_truth_per_lane."
+        measured_truth_per_lane: "SUPERSEDED 2026-07-27 by T011 - see measured_truth_per_lane_T011. This entry was labelled `measured` but only ONE thing was measured, an EMITTED GOLDEN, which cannot decide what a framework does to the DOM at hydration. It read: 'react = frozen SSR markup, never rewritten. qwik = frozen SSR markup, never rewritten. svelte = deliberately removed by remove_input_defaults. SOLID = signal-tracked via attr:value, DID witness post-hydration state.' TWO of the four cells were wrong: react DOES rewrite, and solid does NOT."
+        measured_truth_per_lane_T011: "MEASURED IN CHROMIUM, all four lanes, against the official demos on their own dev servers, with TWO INDEPENDENT INSTRUMENTS that agree, each carrying a control input outside the framework root that stayed frozen. Instrument 1 (client mis-seed): server renders initial='hello', the client's own module is rewritten IN FLIGHT via Playwright route interception to seed 'bye12' - no repo file touched. Instrument 2 (served-markup divergence): the served value='hello' is rewritten to a sentinel while client/transported state stays 'hello'. Instrument 3 (qwik only, because qwik does not re-execute the component at resume): the qwik/state script is patched to 'bye12' while the markup keeps value='hello'. RESULT, the value CONTENT ATTRIBUTE in the live DOM after activation - REACT = REWRITTEN FROM CLIENT STATE (instrument 1: attribute becomes 'bye', control frozen at 'hello'; instrument 2: attribute becomes 'hello'). SOLID = NOT WRITTEN at hydration; attribute AND property both keep the served value under instrument 1 and both keep the sentinel under instrument 2. SVELTE = REMOVED by remove_input_defaults; the client seed reaches the PROPERTY only. QWIK = NEVER WRITTEN, at resume or on re-render; instrument 3 resumed the container, ran the handlers (data-writes reached 2) and forced a re-render through another signal, and neither attribute nor property moved."
+        the_causes_in_the_shipped_sources: "REACT (react-dom 19.2.3, demos/react-official/node_modules/react-dom/cjs/react-dom-client.development.js): :1720 `isHydrating || value === element.value || (element.value = value)` SKIPS the property write while hydrating, but :1721 `element.defaultValue = value` is UNCONDITIONAL - and .defaultValue on an input IS the value content attribute. Hydration call site :5287 passes isHydrating = true. SOLID (solid-js 1.8.22, web/dist/web.js): :148 setProperty and :152 setAttribute both open `if (isHydrating(node)) return`, so the hydration-time write is suppressed for property and attribute alike. TWO-SIDED CONTROL for solid: a real post-activation edit through the emitted onInput DID move the attribute to 'typed99' under both instruments - so DEFECTS.md finding 5 STANDS and the read instrument works; what is refuted is the INFERENCE from 'signal-tracked' to 'written at hydration'. Those are different facts and only the first was ever measured."
         what_D_actually_is: "A UNIFORM TRADE, not a superset. Gains the counterfactual-A class (markup the server never sent) in all four lanes; loses one class in one lane."
-        the_lost_class_stated_exactly: "S3's `text` seeded wrong at hydration, SOLID LANE ONLY."
+        the_lost_class_stated_exactly: "S3's `text` seeded wrong at hydration, REACT LANE ONLY. CORRECTED 2026-07-27 by T011 - this read 'SOLID LANE ONLY' and before that it did not exist at all. React is the ONLY lane whose live-DOM value attribute could ever have gone red on a mis-seed. For solid, svelte and qwik the gap was REVEALED by the site correction; for react alone it was CAUSED by it. The size of the loss is unchanged - one class, one lane - so Option D is unaffected; the LANE NAME was wrong twice."
         why_the_ruling_still_stands: "Two grounds untouched by this correction. (1) The name/site mismatch - three-way-contract.ts reported `server-rendered text` while reading await page.content(), the POST-ACTIVATION DOM - is provable from the contract source alone, without reference to Svelte, and predates the Svelte lane. (2) The lost class was never a DECLARED claim; it was the incidental byproduct of one framework's attr: idiom, picked up by an assertion whose own name promised the served payload. Losing unclaimed coverage, uniformly, with the loss written down, is a legitimate site correction. Losing it SILENTLY would not be. DO NOT re-litigate Option D and DO NOT restore the live-DOM value assertion."
         reopen_trigger_already_names_it: "The recorded trigger 'a state-seeding hydration bug is suspected in any lane' IS the lost class. No new trigger needed; this correction records what that bullet protects."
         criterion_2_was_self_inconsistent: "T999's own three-part widening test cannot be satisfied as written. Criterion 2 demanded BOTH a strictly SMALLER set of accepted behaviours AND an explicit written statement of what the old check caught that the new cannot. Those clauses are contradictory: anything in the second statement is a behaviour the new check ACCEPTS and the old REJECTED, which makes the set not smaller. Any honest repair fails criterion 2; only a repair that hid its losses could pass. Same shape this board keeps catching - a proxy masquerading as a measurement. RESTATED criterion 2: a UNIFORM TRADE, with the lost class enumerated PER LANE and a re-open trigger naming it. Applied at the board's superseded_instructions entry."
         corrected_in: "This receipt, notes/T006-value-attribute-ruling.md, T007's carried_forward_recorded.loss_a, assertS3's doc comment in demos/react-official/three-way-contract.ts (COMMENT ONLY - zero executable lines moved), and the s3_contract_changed_option_d precedent on the live Vue and Angular boards."
-      pre_existing_heterogeneity_found: "The value attribute has been measuring THREE DIFFERENT THINGS across the incumbents - frozen SSR markup for React, a signal-tracking attribute for Solid (DEFECTS.md finding 5 measured exactly that), and deliberate removal for Svelte. Nobody noticed because all three agree at 'hello' and the read happens before any interaction. This predates the Svelte lane entirely."
+      pre_existing_heterogeneity_found: "The value attribute has been measuring FOUR DIFFERENT THINGS across the incumbents - one per lane, no two alike: react REWRITES it from client state at hydration, solid leaves it alone at hydration and tracks it only afterwards, svelte DELETES it, qwik NEVER writes it. Nobody noticed because all four agree at 'hello' and the read happens before any interaction. This predates the Svelte lane entirely. CORRECTED 2026-07-27 by T011: this entry read 'THREE DIFFERENT THINGS ... frozen SSR markup for React ...'. THIS IS WHERE THE FALSE REACT CELL ENTERED THE RECORD - before T010, which then carried it forward into a table labelled `measured`. See t999_correction_the_stated_reason_was_refuted.measured_truth_per_lane_T011."
       does_finding_5_bind:
         answer: "It binds AGAINST repair A, not toward it. A is NOT its structural twin; it differs in kind on three axes."
         public_meaning: "Solid's attr: is a general documented namespace whose entire meaning is 'write the content attribute'. Svelte's defaultValue is a named form-semantics feature meaning 'the form-reset value'. A would use a semantic feature for its side effect on an unrelated internal code path."
@@ -747,7 +749,7 @@ tasks:
         non_decreasing_demonstrated_on_real_bytes: "Counterfactual A - a lane that sent NO value and produced the input client-side from scratch: the OLD live-DOM read PASSES (hello), the NEW served read FAILS. Counterfactual B - the real Svelte lane: OLD fails (null), NEW passes. Row A is the widening: the old read could be satisfied by markup the server never sent."
         still_exact: "sha256 over the S3 first observation in each of the four witness receipts: react/solid/qwik/svelte all f9cab7779ec00ed2. Still inside the observed array and still compared by scripts/e2e.mjs."
       carried_forward_recorded:
-        loss_a: "The old check could catch that the value attribute SURVIVED activation unchanged; the new one cannot. CORRECTED 2026-07-27 by T999: the second half of this entry read 'Maps to NO product claim - the attribute survives the SSR parse independently of framework state in every lane, so it never witnessed client state in any lane', which is REFUTED by packages/frameworks/solid/generated/S3.jsx:20 (attr:value={text()}, a signal-tracked content attribute - DEFECTS.md finding 5). For react and qwik (frozen SSR markup) and svelte (attribute removed) the claim held; for SOLID it did not. The lost class is exactly 'S3 text seeded wrong at hydration, SOLID LANE ONLY', and reopen_trigger below already names it. See T006.t999_correction_the_stated_reason_was_refuted."
+        loss_a: "The old check could catch that the value attribute SURVIVED activation unchanged; the new one cannot. CORRECTED TWICE. (1) 2026-07-27 by T999: the second half of this entry read 'Maps to NO product claim - the attribute survives the SSR parse independently of framework state in every lane, so it never witnessed client state in any lane'. Refuted. (2) 2026-07-27 by T011, AND THIS IS THE STANDING TEXT: T999's replacement named the wrong lane. It said the claim held for react and qwik (frozen) and svelte (removed) but not for SOLID, and stated the lost class as 'SOLID LANE ONLY'. MEASURED IN CHROMIUM, both directions, all four lanes: it is REACT that rewrites the value attribute at hydration (react-dom 19.2.3 writes element.defaultValue unconditionally, and .defaultValue IS the content attribute), and SOLID that does not (solid-js suppresses the hydration-time write outright - setAttribute and setProperty both early-return while isHydrating). The lost class is exactly 'S3 text seeded wrong at hydration, REACT LANE ONLY', and reopen_trigger below already names it. See T006.t999_correction_the_stated_reason_was_refuted.measured_truth_per_lane_T011 for the instruments and controls."
         loss_b: "After this change NO lane observes S3's `text` in the live DOM. Emitted S3 surfaces text only through value={text}, an input PROPERTY after activation, and no sanctioned witness API can read a DOM property. Live coverage narrows to the submit handler's onTrace payload. REVEALED by the ruling, not caused by it."
         reopen_trigger: "Any of: @async/witness exposes a property or evaluate accessor on PageHandle; the corpus grows a scenario rendering state as TEXT rather than only as an input value; a state-seeding hydration bug is suspected in any lane."
         recorded_in: "assertS3's doc comment AND notes/T006-value-attribute-ruling.md. The latent `checked` twin is recorded in both."
@@ -1004,11 +1006,19 @@ tasks:
         Confirmed attr:value={text()} at packages/frameworks/solid/generated/S3.jsx:20 BEFORE
         writing anything - the stop condition did not fire - then corrected Option D's stated reason
         IN PLACE at every site carrying it. The claim that the value attribute "never witnessed
-        client state in ANY lane" is replaced by a PER-LANE truth table: react and qwik serve frozen
-        markup, svelte REMOVES the attribute, solid signal-TRACKS it. Option D is now recorded as a
-        uniform TRADE, not a superset; the lost class is stated exactly as "S3 text seeded wrong at
-        hydration, Solid lane only"; and the existing re-open trigger is identified as already
-        naming it. Ruling UPHELD, not re-litigated.
+        client state in ANY lane" is replaced by a PER-LANE truth table. Option D is now recorded as
+        a uniform TRADE, not a superset; the lost class is stated exactly, as one class in one lane;
+        and the existing re-open trigger is identified as already naming it. Ruling UPHELD, not
+        re-litigated.
+      table_superseded_by_T011: >-
+        THE TABLE THIS RECEIPT WROTE WAS ITSELF WRONG IN TWO CELLS, and its restatement is
+        deliberately not repeated above. It was labelled measured_truth_per_lane, but the only thing
+        measured was an EMITTED GOLDEN, which cannot decide whether a framework rewrites an
+        attribute at hydration; the react and qwik cells were carried over as prose from T006 and
+        never measured at all. T011 measured all four in Chromium: REACT rewrites the attribute at
+        hydration and SOLID does not, the exact opposite of what this receipt recorded. The lost
+        class is "S3 text seeded wrong at hydration, REACT LANE ONLY". See T006's
+        measured_truth_per_lane_T011 and the_causes_in_the_shipped_sources.
       found_a_fourth_copy_T999_did_not_name: >-
         T999 named three sites. A FOURTH live copy of the refuted sentence sat in T007's
         carried_forward_recorded.loss_a. Leaving it would have defeated the package's purpose, so it
@@ -1038,6 +1048,86 @@ tasks:
         - {cmd: "pnpm lint", status: pass, note: "0 warnings, 0 errors, 270 files"}
         - {cmd: "git diff -U0 -- three-way-contract.ts | filter non-comment", status: pass, note: "PM re-ran: ZERO non-comment changed lines"}
         - {cmd: "grep -rn 'never witnessed client state in ANY lane'", status: pass, note: "PM re-ran repo-wide: ZERO matches survive"}
+
+  - id: T011
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Measure all four lanes' value-attribute behaviour at activation - inherit no cell - and correct every site carrying the understated lost class. Documentation and comments only."
+    allowed_files:
+      - docs/goals/frameless-svelte-v1/state.yaml
+      - docs/goals/frameless-svelte-v1/notes/T006-value-attribute-ruling.md
+      - demos/react-official/three-way-contract.ts
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      summary: >-
+        Measured all four cells in Chromium before writing anything. The react cell REPRODUCED
+        exactly as the re-audit stated, so the stop condition did not fire. The qwik cell, never
+        measured before, was measured and the inherited prose turned out to be correct. THE SOLID
+        CELL DID NOT SURVIVE MEASUREMENT: Solid does NOT rewrite the value attribute at hydration.
+        The lost class is therefore "S3 text seeded wrong at hydration, REACT LANE ONLY" - one
+        class in one lane, as before, but the lane name was wrong in both previous statements.
+        Corrected at all six sites named by the re-audit plus one it did not name.
+      the_third_wrong_cell: >-
+        THE PACKAGE FOUND ONE MORE FALSE CELL THAN IT WAS SENT TO FIX. T010's table called solid
+        "signal-tracked via attr:value, DID witness post-hydration state", and the re-audit carried
+        that forward as established. Measured, it is false at hydration. solid-js 1.8.22's
+        web/dist/web.js opens setProperty (:148) and setAttribute (:152) with
+        `if (isHydrating(node)) return` - the hydration-time write is suppressed for the property
+        and the attribute alike. Under a client mis-seed the Solid attribute AND property both keep
+        the SERVED value; under a served-markup divergence both keep the SENTINEL. DEFECTS.md
+        finding 5 still STANDS and was not touched: a real post-activation edit through the emitted
+        onInput did move the attribute to 'typed99' under both instruments, which is also the
+        two-sided control proving the read works. What is refuted is the INFERENCE from
+        "signal-tracked" to "written at hydration". Same failure shape as the react cell: a
+        property read off an emitted golden and then reported as a measurement.
+      instruments: >-
+        Three, all out-of-repo Playwright probes in the scratchpad driving the four official demos
+        on their own dev servers; no repo file was touched to measure. (1) CLIENT MIS-SEED - the
+        server renders initial='hello' and the client's own module is rewritten IN FLIGHT to seed
+        'bye12', with a marker line proving the rewritten module actually executed. This is
+        literally the lost class. Applies to react, solid, svelte. (2) SERVED-MARKUP DIVERGENCE -
+        the reverse: served value='hello' becomes a sentinel while state stays 'hello'. Applies
+        uniformly to all four. (3) TRANSPORTED-STATE DIVERGENCE, qwik only, because qwik does not
+        re-execute the component at resume: the qwik/state script is patched to 'bye12' while the
+        markup keeps value='hello'. Every run carried a control input outside the framework root
+        that stayed frozen, so a null result reads as "the lane did not write", not "the probe
+        could not see". Instruments 1 and 2 AGREE on every lane they both reach.
+      react_reproduced_before_anything_was_written: >-
+        Served bytes '<input data-action="text" value="hello"/>'; pre-activation DOM read behind a
+        held client entry = 'hello'; post-hydration attribute = 'bye'; control input outside the
+        React root = 'hello'. Cause verified in the shipped source: react-dom-client.development.js
+        :1720 skips the property write while hydrating, :1721 writes element.defaultValue
+        unconditionally, and .defaultValue on an input IS the value content attribute; the
+        hydration call site :5287 passes isHydrating = true.
+      qwik_measured_not_asserted: >-
+        Instrument 2: the attribute held the sentinel at load, after q:container reached 'resumed',
+        and after a post-activation edit that moved the PROPERTY to 'typed99' while the attribute
+        did not move at all. Instrument 3: container resumed, handlers ran (data-writes reached 2),
+        a re-render was forced through a different signal in the same component, and neither
+        attribute nor property moved off 'hello'. Qwik binds the property and never the content
+        attribute. Frozen - now on evidence rather than on plausibility.
+      option_d_untouched: >-
+        NOT re-litigated and NOT weakened. The correction moves the lost class from one lane to
+        another lane; it does not change its SIZE, so the uniform-trade framing and both surviving
+        grounds are unaffected. The live-DOM value assertion was NOT restored.
+      seventh_site_found: >-
+        The re-audit named six sites. A SEVENTH carried the same inverted attribution: the notes'
+        "the larger gap the ruling revealed" paragraph said the gap was revealed for react, qwik
+        and svelte and CAUSED for Solid. Corrected in place. Also corrected the contract comment's
+        "incidental byproduct of one framework's attr: idiom", which named the wrong mechanism once
+        the lane changed.
+      commands:
+        - {cmd: "node -e '<transpile removeComments compare vs HEAD>'", status: pass, note: "comment-only: OK - zero executable lines moved in three-way-contract.ts"}
+        - {cmd: "pnpm check", status: pass}
+        - {cmd: "pnpm test", status: pass}
+        - {cmd: "pnpm test:browser", status: pass}
+        - {cmd: "pnpm e2e", status: pass}
+        - {cmd: "pnpm lint", status: pass, note: "1 warning, from UNTRACKED packages/frameworks/vue/src - the Vue board's live work, not this package's"}
+        - {cmd: "git diff --exit-code -- packages/ scripts/ demos/*/src pnpm-lock.yaml", status: pass}
 
   - id: T999
     type: judge

@@ -48,7 +48,22 @@ goal:
     content attribute (DEFECTS.md finding 5), so the old live-DOM read DID witness post-hydration
     state in the Solid lane. Option D is a uniform TRADE, not a superset: it gains the
     "markup the server never sent" class in all four lanes and loses the class "S3 text seeded
-    wrong at hydration, in the SOLID AND REACT lanes".
+    wrong at hydration, REACT LANE ONLY".
+    CORRECTED A THIRD TIME on 2026-07-27 by frameless-svelte-v1 T011, which MEASURED all four lanes
+    instead of inheriting any. solid-js 1.8.22 does NOT rewrite the attribute at hydration:
+    web/dist/web.js:148 setProperty and :152 setAttribute BOTH open with `if (isHydrating(node))
+    return;`, so under a client mis-seed the Solid attribute AND property keep the served value. PM
+    verified both lines. Qwik was MEASURED for the first time (frozen under two independent
+    instruments, one of which resumed the container and drove data-writes to 2), so the inherited
+    prose happened to be right. DEFECTS finding 5 still stands - a real POST-activation edit through
+    the emitted onInput does move the attribute - which is what makes attr: necessary and is also
+    the two-sided control proving the read works.
+    THE CHAIN IS THE LESSON, and it is why this is recorded rather than just fixed. T006 said "no
+    lane". T010 said "SOLID ONLY". The T999 re-audit measured React and said "SOLID AND REACT". T011
+    measured all four and the answer is "REACT ONLY". THE SAME INFERENCE ERROR RECURRED THREE TIMES:
+    reading attr:value={text()} off an EMITTED GOLDEN and concluding something about HYDRATION-TIME
+    behaviour. A golden cannot tell you what a framework does at hydration; only a browser can.
+    Each pass corrected the previous one's wording while repeating its method.
     CORRECTED 2026-07-27 by the T999 re-audit: the earlier text said "SOLID LANE ONLY" and that was
     MEASURABLY FALSE. react-dom 19.2.3 also rewrites the value CONTENT ATTRIBUTE at hydration -
     initInput skips the property write while hydrating (react-dom-client.development.js:1720) but

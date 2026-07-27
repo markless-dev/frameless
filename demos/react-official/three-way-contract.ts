@@ -681,31 +681,40 @@ async function measureConditionalCancellation(
  *
  * Corrected 2026-07-27. This paragraph used to end "the old read never witnessed
  * client state either, since the attribute survives the SSR parse independently
- * of framework state in every lane". That is refuted by our own emitted output.
- * Per lane, what the old live-DOM read actually saw after activation:
+ * of framework state in every lane". That is refuted. Its replacement — a table
+ * naming react and qwik "frozen" and solid "signal-tracked" — was refuted too,
+ * in two cells: it was labelled *measured*, but the only thing measured was an
+ * emitted golden, which cannot decide what a framework does to the DOM at
+ * hydration. Corrected again the same day, and this time every cell was measured
+ * in Chromium against the four official demos, with two independent instruments
+ * per lane and a control input outside each framework's root:
  *
- *   react   frozen SSR markup, never rewritten
- *   qwik    frozen SSR markup, never rewritten
+ *   react   REWRITES it from client state at hydration  <- the only lane
+ *   solid   not written at hydration; tracked only afterwards
  *   svelte  removed by `remove_input_defaults`, by design
- *   solid   `attr:value={text()}` — a SIGNAL-TRACKED content attribute
+ *   qwik    never written, at resume or on re-render
  *
- * `packages/frameworks/solid/generated/S3.jsx:20` emits `attr:value={text()}`
- * beside `value={text()}`; `attr:` is Solid's documented "write the content
- * attribute" namespace and it tracks. That is what DEFECTS.md finding 5
- * measured. So in the Solid lane the old read DID witness post-hydration state:
- * a mis-seeded `text` would have rewritten the attribute and gone red.
+ * React is the outlier and it is not an accident of the emitter: react-dom
+ * 19.2.3 skips the *property* write while hydrating and then runs
+ * `element.defaultValue = value` unconditionally, and `.defaultValue` on an
+ * input *is* the `value` content attribute. Solid is the reverse — `attr:` is
+ * genuinely signal-tracked (DEFECTS.md finding 5 stands; a post-activation edit
+ * does move the attribute), but `solid-js/web`'s `setAttribute` and
+ * `setProperty` both open with `if (isHydrating(node)) return`, so the
+ * hydration-time write never happens. "Signal-tracked" and "written at
+ * hydration" are different facts, and only the first was ever measured.
  *
  * The move is therefore a uniform TRADE, not a superset. It gains, in all four
  * lanes, the class "markup the server never sent"; it loses, in one lane, the
- * class "S3's `text` seeded wrong at hydration, Solid only". For react, qwik and
- * svelte the gap below was *revealed* by the site correction; for solid it was
+ * class "S3's `text` seeded wrong at hydration, React only". For solid, qwik and
+ * svelte the gap below was *revealed* by the site correction; for react it was
  * *caused* by it.
  *
  * The trade is legitimate and is not to be re-litigated here: the name/site
  * mismatch it fixes (`server-rendered text` reported from `await page.content()`)
  * is provable from this file alone and predates the Svelte lane, and the lost
  * class was never a declared claim — it was the incidental byproduct of one
- * framework's `attr:` idiom. The full ruling is in
+ * framework's internal hydration path. The full ruling is in
  * `docs/goals/frameless-svelte-v1/notes/T006-value-attribute-ruling.md`.
  *
  * Re-open when any of: `@async/witness` exposes a property or `evaluate`
