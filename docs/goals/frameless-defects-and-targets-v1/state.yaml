@@ -122,7 +122,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T019
+active_task: T021
 
 tasks:
   - id: T001
@@ -1249,7 +1249,7 @@ tasks:
   - id: T019
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: low
     objective: "Close the two documentation inconsistencies T016 surfaced from outside its allowed_files."
     allowed_files:
@@ -1267,8 +1267,41 @@ tasks:
       - "INCONSISTENCY 1: the decision-site comment at packages/frameworks/qwik/src/emitter/index.ts:455-459 says 'all six gates PASS'. T005 corrected that - G5 is NOT a PASS - so the emitter and worked example 9 now disagree on one word. Repoint it to forced lowering with G5 not applicable, citing worked example 9."
       - "INCONSISTENCY 2: the 'Recording a ruling' section still requires 'all six gate outcomes'. Example 9 does record an outcome for each of the six, but G5's is 'the procedure does not apply' rather than one of the four labels. Amend the section to admit that outcome explicitly, so the next forced-lowering ruling is not pushed into mislabelling G5 as PASS to satisfy the letter of the requirement."
       - "T016 flagged both and correctly declined to fix them: the emitter was outside its scope, and widening scope on a governance document unasked is worse than flagging. Prose and comments only."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      summary: "Amended item 1 of '## Recording a ruling' so that 'neither PASS nor FAIL - the procedure does not apply' is an EXPLICITLY ADMISSIBLE recorded outcome under forced lowering, closing the conflict with worked examples 9 and 10 at Gate 5. Scope had shrunk to this one edit: the PM verified T012 already closed the card's other item, so packages/frameworks/qwik/src/emitter/index.ts was left entirely alone. Single hunk, no ruling or gate heading touched."
+      changed_files:
+        - docs/emitter-idiom-policy.md
+      commands:
+        - cmd: "git diff --stat -- docs/emitter-idiom-policy.md"
+          status: pass
+          note: "1 file, +24/-1, a SINGLE hunk at line 588"
+        - cmd: "pnpm check"
+          status: pass
+          note: "four tsc passes"
+        - cmd: "pnpm test"
+          status: pass
+          note: "668/668, 43 files"
+        - cmd: "sha of everything preceding the amended section"
+          status: pass
+          note: "PM INDEPENDENTLY VERIFIED: 057c8ea96e450ef3d11c4a026df0e64e9f938d1f identical HEAD vs working tree - the entire Vocabulary, forced-lowering preamble, procedure, all six gate sections and ALL worked examples are byte-unchanged"
+      the_amendment: "Upgrades 'with all six gate outcomes' to 'with an outcome recorded for ALL SIX gates. A gate is never left out of an entry, whatever the ruling; an entry that omits one is incomplete.' Then: under FORCED LOWERING, and only there, a gate's recorded outcome MAY be 'neither PASS nor FAIL - the procedure does not apply' in place of one of the four labels, on the grounds worked examples 9 and 10 already set out - Gate 5 compares against a baseline drawn from the sanctioned set, so where the pre-fix output was never a member there is nothing admissible to compare against, and the letter of the gate would manufacture a spurious FAIL EVERY TIME A DEFECT IS FIXED. Explicitly: 'Do not label such a gate PASS to satisfy the count - a fabricated PASS claims a neutrality check that was never run and is the more damaging of the two errors.'"
+      why_not_a_second_escape_hatch:
+        grants_no_new_entitlement: "It only makes RECORDABLE an outcome the preamble and worked examples 9/10 already authorise."
+        lock_1: "Available ONLY to an entry that has already discharged the preamble's forced-lowering burden, and it restates that burden's enumerated evidence list in kind - framework diagnostic, shipped lint rule, dedicated construct provided BECAUSE that shape does not work, or a witnessed runtime failure - with 'named in the entry' required. It inherits membership-not-preference rather than restating a softer version."
+        lock_2: "Explicitly denies the two routes a preference-motivated Worker would take - 'not a fifth outcome label available to a sugar question' and 'not reachable by preferring a different form' - and closes with the preamble's own consequence: absent the showing, a Gate 5 FAIL is a real FAIL."
+        lock_3: "Adds no new trigger, no new gate, no relaxation of any gate's FAIL condition. The six gate sections are byte-unchanged, so a candidate sugar's path through them is exactly what it was."
+        it_tightens_the_omission_risk: "Worked example 4's uncorrected G3 omission is now a PLAINER violation than before, not an easier one - the amendment adds 'a gate is never left out, whatever the ruling' plus a closing requirement to name the gate and the reason."
+      card_was_stale_and_the_worker_caught_it: "The PM's card said 'the NINE worked-example rulings'. The document carries TEN - T012 added example 10 for the Qwik conditional SyncPolicy. The Worker verified all ten unchanged rather than nine, so the requirement holds a fortiori. PM CONFIRMED: grep -c '^### [0-9]' returns 10."
+      scope_reduction_recorded: "The card listed two inconsistencies. Item 1 - the decision-site comment claiming 'all six gates PASS' - was ALREADY CLOSED by T012, which rewrote that comment when it landed the conditional lowering. The PM verified this before dispatch and told the Worker to leave the emitter alone. Only item 2 was live."
+      remaining_blockers:
+        - "Worked example 4 (Angular two-way binding) STILL omits G3 entirely - a real, pre-existing defect in the record, first flagged by T005 and still open. Out of scope here; the amendment makes it a plainer violation but does not repair the entry, which would require rewriting a ruling."
+        - "T005's finding still holds: nothing in the repo references this document, so pnpm check and pnpm test cannot regress on a change to it. Sanity only."
+      deviations:
+        - "Cited worked examples 9 AND 10 at Gate 5, not 9 alone, because example 10 records the same outcome on the same grounds and omitting it would have made the new text read as a one-off carve-out for a single entry."
+        - "Did not create the optional notes file - the reasoning fits in the receipt and a second file would have widened the diff for no gain."
+      verification_attempts: 1
   - id: T009
     type: judge
     assignee: Judge
@@ -1800,7 +1833,7 @@ tasks:
   - id: T021
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: "Adjudicate the three duplicated React mutation rows T018 found and deliberately did not delete."
     inputs:

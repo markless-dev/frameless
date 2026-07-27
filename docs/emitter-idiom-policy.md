@@ -585,7 +585,30 @@ orthogonal — but all of them inherit the refusal obligation.
 
 Every ruling gets both:
 
-1. A worked-example entry in this document, with all six gate outcomes.
+1. A worked-example entry in this document, with an outcome recorded for **all six** gates. A gate
+   is never left out of an entry, whatever the ruling; an entry that omits one is incomplete.
+
+   Under **forced lowering**, and only there, a gate's recorded outcome may be *"neither `PASS` nor
+   `FAIL` — the procedure does not apply"* in place of one of the four labels. This is a legitimate
+   outcome, not a gap: it is what worked examples 9 and 10 record at Gate 5, on the grounds set out
+   there. Gate 5 compares a candidate against a baseline drawn from the sanctioned set, so where the
+   pre-fix output was never a member of that set there is nothing admissible to compare against, and
+   the letter of the gate would manufacture a spurious `FAIL` every time a defect is fixed. Where
+   that is the situation, record it that way. **Do not label such a gate `PASS` to satisfy the
+   count** — a fabricated `PASS` claims a neutrality check that was never run and is the more
+   damaging of the two errors.
+
+   Read the availability of that outcome as narrowly as those entries do. It is not a fifth outcome
+   label available to a sugar question, and it is not reachable by preferring a different form. It is
+   open only to an entry that has already discharged the forced-lowering burden stated in the
+   preamble: the sanctioned set named **before** any gate runs, and the current output shown to sit
+   **outside** it on the framework's own evidence — a framework diagnostic, a lint rule it ships
+   against that shape, a dedicated construct it provides *because* that shape does not work, or a
+   witnessed runtime failure — with that evidence named in the entry. Absent that showing you are not
+   in forced lowering, the four labels are the only outcomes available, and a `FAIL` at Gate 5 is a
+   real `FAIL`.
+
+   Whichever it is, say which gate it applies to and why, in the entry itself.
 2. A comment at the decision site in the emitter naming the ruling, matching the existing
    convention at `packages/frameworks/react/src/emitter/index.ts:1405-1406`.
 
