@@ -531,6 +531,20 @@ tasks:
     type: worker
     assignee: Worker
     status: done
+    overturned_by_owner: >-
+      OWNER OVERTURNED 2026-07-27. The "upstream Qwik" verdict is WRONG and must not be acted on.
+      throttled-resume.mjs clicks at domcontentloaded - before any framework has installed
+      listeners. Every framework loses a click in that window; React and Solid lose it for longer,
+      needing framework plus component code rather than a 1KB loader. The repo's own three-way
+      harness does NOT hold them to this standard: waitForInteractive blocks on the activation
+      marker before clicking React and Solid, then Qwik is clicked at DCL with no wait. The
+      asymmetry is the harness's, not Qwik's.
+      "Reproduces on an untouched scaffold" was read as proof of an upstream defect. It is the
+      opposite: it is proof the test is unfair, since it would reproduce on anything.
+      DEFECT 2 IS NOT A DEFECT. It is an instrument measuring "is the page interactive with no JS",
+      whose answer is no, everywhere. The upstream filing is RETRACTED and must not be sent.
+      Three parties missed this - the Worker, the Judge at T005, and the PM - by never asking
+      whether the instrument was fair before interpreting its output.
     reasoning_hint: medium
     objective: "Determine whether defect 2 (clicks dropped under throttling) is upstream Qwik or frameless, by reproducing on an untouched pnpm create qwik app."
     allowed_files:
@@ -618,6 +632,14 @@ tasks:
     type: judge
     assignee: Judge
     status: done
+    partially_overturned_by_owner: >-
+      OWNER OVERTURNED 2026-07-27, defect-2 portions only. T005's "upstream is a legitimate
+      closure" ruling and PM call (b) both rest on T004's verdict, which is retracted - see T004.
+      The independent verification T005 did (loader hash re-derived, no-replay path read from the
+      shipped bundle) is accurate as far as it goes; the error was upstream of it, in never
+      questioning whether clicking at DCL is a fair test. Everything T005 ruled about DEFECT 1,
+      Gate 5, Gate 2 and the recording gaps STANDS - those were verified independently and are
+      unaffected.
     reasoning_hint: high
     objective: "Phase A audit: is emitted-output correctness actually fixed, and was each fix preceded by a witnessed failure?"
     inputs:
@@ -787,6 +809,8 @@ tasks:
     constraints:
       - "Do not implement."
       - "Enumerate all six defects and state the disposition and evidence for each."
+      - "DEFECT 2 is closed as NOT A DEFECT (owner overturn, see the T004 card). Do NOT re-open it as 'upstream'. Audit instead that the qwik-throttled lane was rescoped to click after resume, and that no upstream filing was sent."
+      - "Audit the process failure this exposed: an instrument was built outside the framework's design envelope, and three parties interpreted its output as a product defect without first asking whether the test was fair. Check whether any other lane in this repo has the same shape."
       - "Every continue-on-error flag must be removed or carry a receipt justifying why it stays. A flag that quietly persists is a defect that quietly persists."
       - "Reject if any fix landed without a prior witnessed failure."
       - "full_outcome_complete stays false - oracle half 2 is untouched at this point."
@@ -828,7 +852,9 @@ tasks:
       - "GATE 2 CLAUSE: scope 'an added import list entry' to 'an added import list entry IN ANOTHER MODULE'. T005 upheld T003's reading and closed it as no longer re-openable."
       - "WORKED EXAMPLE 9 must record two facts so the form choice is not reopened: the array carries the rest of the handler body, which preventdefault:click cannot, so the split is needed regardless at the type=button site; and preventdefault:click is element-level while SyncPolicy is per-event-record."
       - "DEFECTS.md DEFECT 2 is untouched by T004 and is now stale - it still reads 'Status: diagnosed', still instructs 'Do this first: reproduce on an untouched pnpm create qwik app' (done), and still repeats the 'zero network requests' claim T004 corrected. Bring it into line and record qwikLoader: 'inline' as the known workaround FOR CONSUMERS - which is different from us adopting it."
-      - "CI COMMENT: the throttled step is titled 'known-failing, findings-007' and points at the pre-diagnosis note containing the corrected claim. Repoint at notes/T004-upstream-qwik-dropped-click.md and state the three facts that legitimise the flag - upstream, proven on an official scaffold, workaround deliberately not adopted."
+      - "SUPERSEDED BY THE OWNER OVERTURN - do NOT repoint the CI comment at the T004 note. That note is retracted. The qwik-throttled lane's continue-on-error was justified by a verdict that no longer holds."
+      - "CI: the qwik-throttled throttled step must be RESCOPED, not re-annotated. Clicking at domcontentloaded tests 'is the page interactive with no JS', which is out of every framework's design envelope and answers no everywhere. Change the click to fire AFTER the container reports resumed, which tests something real - that resumption completes and works on a slow connection - and then the step needs no continue-on-error at all. If it cannot be made to pass once rescoped, that is a genuine finding; report it rather than restoring the flag."
+      - "docs/DEFECTS.md DEFECT 2 must be rewritten as NOT A DEFECT, recording why the original finding was an instrument artifact - not merely downgraded. Do not record qwikLoader: 'inline' as a workaround; there is nothing to work around."
     receipt: null
 
   - id: T010
@@ -950,7 +976,8 @@ tasks:
       - "Reject completion if the three-way contract does not assert cancellation for every framework once they exist."
       - "Audit the likely misfire explicitly: were the undiagnosed defects actually diagnosed, or silenced?"
       - "Re-check the qwik-throttled flag's receipt if upstream has responded by then. T005 let it stay on the strength of T004's upstream proof; that justification expires if Qwik fixes or rejects it."
-      - "Confirm the upstream issues were actually FILED or are explicitly still pending. notes/T004-upstream-qwik-dropped-click.md and notes/T003-upstream-eslint-qwik.md are filing MATERIAL, not filings. The charter permits 'file or recommend', so pending is acceptable - but it must be stated, not assumed."
+      - "The DROPPED-CLICK upstream filing is RETRACTED and must not have been sent. Confirm it was not."
+      - "Confirm the remaining upstream issue was actually FILED or is explicitly still pending. notes/T004-upstream-qwik-dropped-click.md and notes/T003-upstream-eslint-qwik.md are filing MATERIAL, not filings. The charter permits 'file or recommend', so pending is acceptable - but it must be stated, not assumed."
     expected_output:
       - "complete | not_complete"
       - "full_outcome_complete: true | false"

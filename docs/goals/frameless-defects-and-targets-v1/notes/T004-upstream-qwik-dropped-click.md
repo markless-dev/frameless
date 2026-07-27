@@ -1,3 +1,18 @@
+> **RETRACTED 2026-07-27 by the repo owner. Do not file this.**
+>
+> The conclusion is wrong. `throttled-resume.mjs` clicks at `domcontentloaded`, before any
+> framework has installed listeners. Every framework loses a click in that window — React and
+> Solid for longer, needing framework plus component code rather than a 1KB loader. This repo's
+> own three-way harness does not hold them to that standard: `waitForInteractive` blocks on the
+> activation marker before clicking React and Solid, while Qwik is clicked at DCL with no wait.
+> The asymmetry is the harness's.
+>
+> "Reproduces on an untouched scaffold" was read as proof of an upstream defect. It is the
+> opposite — proof the test is unfair, because it would reproduce on anything.
+>
+> Kept, unedited below, as the record of how three parties reached a wrong conclusion by never
+> asking whether the instrument was fair.
+
 # T004 — Defect 2 is upstream Qwik. Report for filing against `@qwik.dev/core`
 
 **Verdict: UPSTREAM.** Defect 2 reproduces exactly on an untouched
