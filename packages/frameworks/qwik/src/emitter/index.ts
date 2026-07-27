@@ -31,7 +31,14 @@ type EmitContext = {
 	readonly statesByName: ReadonlyMap<string, StateBinding>;
 	readonly onceSignals: ReadonlySet<string>;
 };
-type QwikApi = '$' | 'component$' | 'useComputed$' | 'useSignal' | 'useStore' | 'useTask$';
+type QwikApi =
+	| '$'
+	| 'component$'
+	| 'sync$'
+	| 'useComputed$'
+	| 'useSignal'
+	| 'useStore'
+	| 'useTask$';
 type RenderedNode = Node;
 
 function exactKeys(construct: string, value: object, allowed: readonly string[]): void {
@@ -445,6 +452,60 @@ function eventAttributeName(name: string): string {
 	return `on${name[0]!.toUpperCase()}${name.slice(1)}$`;
 }
 
+/**
+ * DECISION SITE - docs/emitter-idiom-policy.md, ruling "Qwik - unconditional
+ * `preventDefault()` is split into a leading `sync$()` QRL and the handler is
+ * emitted as a QRL array" (goal frameless-defects-and-targets-v1, T015 ruling 4
+ * / T003, all six gates PASS).
+ *
+ * An ordinary Qwik event handler is a lazily fetched QRL: by the time its
+ * segment arrives the browser has already performed the default action. T002
+ * witnessed this behaviourally - clicking a `type="submit"` button whose handler
+ * body is nothing but `event.preventDefault()` still issued the form's GET, the
+ * segment arriving ~58ms after dispatch. That handler is fully SYNCHRONOUS: the
+ * cause is QRL laziness, not `async`, which is why neither this lowering nor the
+ * gate policy guarding it looks at `async`.
+ *
+ * A `sync$()` QRL is different: it is serialized inline into the HTML
+ * (`qrlToString` gives it an empty chunk and an index into the container's
+ * `qFuncs` table) and the loader resolves it without a network round trip, so it
+ * runs during dispatch. Cancellation therefore goes in a leading `sync$()` and
+ * the rest of the body stays in the ordinary QRL behind it.
+ *
+ * HARD CONSTRAINT: a `sync$()` body cannot close over anything - no signals, no
+ * stores, no module scope. Only the unconditional case is lowered here, and its
+ * emitted body is exactly `<param>.preventDefault()`, which captures nothing.
+ *
+ * The trigger is the IR's declared `SyncPolicy`, never the handler's contents
+ * (emitter-idiom-policy Gate 3). Only an unconditional branch qualifies: a
+ * single branch, guarded by `constant-truthy` with a truthy value, whose actions
+ * include `preventDefault`. Everything else - a `branches` list, a
+ * `graph-truthy` or `event-equals` guard - is CONDITIONAL cancellation, whose
+ * `sync$()` body would need to read state and which is deliberately out of scope
+ * here (T011/T012 own that design).
+ */
+function hoistsPreventDefault(event: EnrichedEventRecord): boolean {
+	const policy = event.syncPolicy;
+	if (!policy || 'branches' in policy) return false;
+	if (!policy.actions.includes('preventDefault')) return false;
+	return policy.when.type === 'constant-truthy' && Boolean(policy.when.value);
+}
+
+function isPreventDefaultStatement(statement: Statement, eventParameter: string): boolean {
+	if (statement.type !== 'ExpressionStatement') return false;
+	const candidate = statement.expression;
+	return (
+		candidate?.type === 'CallExpression' &&
+		candidate.arguments?.length === 0 &&
+		candidate.callee?.type === 'MemberExpression' &&
+		!candidate.callee.computed &&
+		candidate.callee.object?.type === 'Identifier' &&
+		candidate.callee.object.name === eventParameter &&
+		candidate.callee.property?.type === 'Identifier' &&
+		candidate.callee.property.name === 'preventDefault'
+	);
+}
+
 function containsCurrentTarget(value: unknown, eventName: string): boolean {
 	let found = false;
 	walk(value, (record) => {
@@ -461,15 +522,24 @@ function containsCurrentTarget(value: unknown, eventName: string): boolean {
 	return found;
 }
 
+type NormalizedHandler = {
+	/** The lazy QRL body, with any hoisted cancellation already removed. */
+	readonly handler: Expression;
+	/** True once the hoisted cancellation was the whole body. */
+	readonly empty: boolean;
+	/** The authored event parameter name, reused by the sync$() QRL. */
+	readonly eventParameter: string;
+};
+
 function normalizeHandler(
 	event: EnrichedEventRecord,
 	handler: EnrichedEventRecord['handlers'][number],
 	context: EmitContext,
-): Expression {
+): NormalizedHandler {
 	const converted = expression(handler.expression);
 	if (converted.type !== 'ArrowFunctionExpression')
 		throw new Error(`Event handler ${event.id} is not an arrow function`);
-	const body =
+	const authoredBody =
 		converted.body.type === 'BlockStatement'
 			? converted.body.body
 			: [expressionStatement(converted.body)];
@@ -499,6 +569,25 @@ function normalizeHandler(
 			eventElement = { event: firstParameter.name, element: elementName };
 		}
 	}
+	// The leading sync$() QRL emitted alongside this handler is what actually
+	// cancels the default action, so the authored call is removed from the lazy
+	// QRL body rather than left to run too late. Fail closed: if the IR declares
+	// an unconditional preventDefault this emitter cannot locate, the split would
+	// silently drop a declared action - refuse to emit instead.
+	const hoisted = hoistsPreventDefault(event);
+	const body = hoisted
+		? authoredBody.filter(
+				(statement: Statement) =>
+					!(
+						firstParameter?.type === 'Identifier' &&
+						isPreventDefaultStatement(statement, firstParameter.name)
+					),
+			)
+		: authoredBody;
+	if (hoisted && body.length === authoredBody.length)
+		throw new Error(
+			`Qwik event ${event.id} declares an unconditional preventDefault its handler body does not spell as a top-level ${firstParameter?.type === 'Identifier' ? firstParameter.name : 'event'}.preventDefault() call`,
+		);
 	const lowerStatement = (
 		statement: Statement,
 	): { readonly sawCallback: boolean; readonly statement: Statement } => {
@@ -583,18 +672,64 @@ function normalizeHandler(
 		};
 	};
 	const lowered = lowerBlock(body);
-	return arrow(params, block(lowered.statements), {
-		async: lowered.sawCallback || converted.async,
-		expression: false,
-	});
+	// Removing the authored preventDefault() can leave a parameter with no
+	// remaining reference; an unused parameter is an eslint `no-unused-vars`
+	// violation in the gate. Only trailing parameters are dropped, and only when
+	// a statement was actually removed, so every other handler is byte-identical.
+	while (
+		hoisted &&
+		params.length &&
+		!containsIdentifier(lowered.statements, params[params.length - 1]!.name)
+	)
+		params.pop();
+	return {
+		handler: arrow(params, block(lowered.statements), {
+			async: lowered.sawCallback || converted.async,
+			expression: false,
+		}),
+		empty: lowered.statements.length === 0,
+		eventParameter: firstParameter?.type === 'Identifier' ? firstParameter.name : 'event',
+	};
 }
 
 function emitEvent(event: EnrichedEventRecord, context: EmitContext): Expression {
 	if (event.handlers.length !== 1)
 		throw new Error(`Qwik emitter does not support multiple handlers for ${event.id}`);
-	const handler = normalizeHandler(event, event.handlers[0]!, context);
-	// T004 ruling 1: $-suffixed JSX event props take the raw handler; the optimizer wraps it.
-	return handler;
+	const normalized = normalizeHandler(event, event.handlers[0]!, context);
+	// No declared cancellation - T004 ruling 1 applies unchanged: $-suffixed JSX
+	// event props take the raw handler; the optimizer wraps it.
+	if (!hoistsPreventDefault(event)) return normalized.handler;
+	// Unconditional cancellation, per the decision site above: a leading sync$()
+	// QRL that runs during dispatch, then the lazy remainder. Qwik accepts an
+	// array of QRLs for one event prop and runs them in order.
+	context.imports.add('sync$');
+	const cancel = call(identifier('sync$'), [
+		arrow(
+			[identifier(normalized.eventParameter)],
+			block([
+				expressionStatement(
+					call(member(identifier(normalized.eventParameter), 'preventDefault'), []),
+				),
+			]),
+			{ async: false, expression: false },
+		),
+	]);
+	// A one-element array rather than a bare sync$() when nothing is left: one
+	// shape for the whole lowering, so the array is what "an event with declared
+	// cancellation" always looks like in emitted output.
+	if (normalized.empty) return { type: 'ArrayExpression', elements: [cancel] };
+	// The remainder MUST be wrapped in $() here. Ruling 1's raw-handler form
+	// applies to the handler expression given directly to the prop; MEASURED
+	// against @qwik.dev/core 2.0.0-beta.38, the optimizer does not extract array
+	// ELEMENTS. A raw arrow inside the array stays an inline closure, never
+	// becomes a QRL, and is silently dropped from `q-e:click` during
+	// serialization - the emitted button loses its handler entirely. With $() the
+	// element becomes a real segment and serializes as `#0|<chunk>#_run#<ref>`.
+	context.imports.add('$');
+	return {
+		type: 'ArrayExpression',
+		elements: [cancel, call(identifier('$'), [normalized.handler])],
+	};
 }
 
 function templateNode(node: TemplateNode, context: EmitContext): RenderedNode {
@@ -928,6 +1063,7 @@ export function emit(ir: EnrichedIR): string {
 	const orderedApis = [
 		'$',
 		'component$',
+		'sync$',
 		'useComputed$',
 		'useSignal',
 		'useStore',

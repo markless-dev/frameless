@@ -12,7 +12,11 @@ export type DossierRef =
 	// Qwik output previously received only generic checks while React and Solid
 	// were gated by their frameworks' own eslint plugins. T003 Ruling 2 of
 	// frameless-testing-ci-v1 closed that asymmetry.
-	| 'frameless-testing-ci-v1 T003 ruling 2';
+	| 'frameless-testing-ci-v1 T003 ruling 2'
+	// Cancellation must ride a synchronously resolvable QRL, not a lazily fetched
+	// one. T015 ruling 4 of frameless-defects-and-targets-v1, implemented by that
+	// goal's T003.
+	| 'frameless-defects-and-targets-v1 T015 ruling 4';
 export type GatePolicy = {
 	readonly id: string;
 	readonly dossierRef: DossierRef;
@@ -85,6 +89,91 @@ export const QWIK_ESLINT_RULES_REQUIRING_TYPES = [
 	'qwik/use-async-top',
 ] as const;
 
+/** A JSX event prop. The `$` suffix is deliberately not required - see below. */
+const EVENT_PROP = /^on[A-Z]/;
+
+function jsxAttributeName(name: Record<string, any> | undefined): string {
+	if (!name) return '';
+	if (name.type === 'JSXNamespacedName')
+		return `${name.namespace?.name ?? ''}:${name.name?.name ?? ''}`;
+	return typeof name.name === 'string' ? name.name : '';
+}
+
+/**
+ * FRAMELESS-OWNED. Rejects `preventDefault()` inside an emitted event handler
+ * unless the call sits in a `sync$()` QRL.
+ *
+ * WHAT IT KEYS ON: which KIND of QRL the call lands in. A `sync$()` QRL is
+ * serialized inline into the HTML and the loader resolves it without a network
+ * round trip, so it runs during dispatch and `preventDefault()` works. Every
+ * other QRL under an event prop is fetched lazily, so by the time it runs the
+ * browser has already performed the default action.
+ *
+ * WHAT IT DELIBERATELY DOES NOT KEY ON:
+ *
+ * 1. NOT `$()`. Qwik's own `no-async-prevent-default` walks ancestors for a
+ *    `CallExpression` whose callee is the identifier `$`, so
+ *    `onClick$={(e) => e.preventDefault()}` never trips it. Frameless emits raw
+ *    handlers (frameless-idiom-policy-v1) and the optimizer turns them into
+ *    QRLs regardless. See docs/goals/frameless-defects-and-targets-v1/notes/
+ *    T003-upstream-eslint-qwik.md.
+ * 2. NOT `async`. T002 witnessed a fully SYNCHRONOUS emitted handler -
+ *    `onClick$={(event) => { event.preventDefault(); }}` - fail behaviourally,
+ *    because the QRL segment carrying it was still being fetched when the
+ *    browser ran the default action. `async` is not the cause and is not the
+ *    test; keying on it would reproduce upstream's blind spot here.
+ *
+ * Both properties are pinned by mutation tests in test/gate.test.ts.
+ */
+const framelessQwikPlugin = {
+	rules: {
+		'no-handler-prevent-default': {
+			meta: {
+				type: 'problem',
+				schema: [],
+				messages: {
+					noHandlerPreventDefault:
+						'Emitted Qwik event handler {{attribute}} calls preventDefault() outside a sync$() QRL. A lazily fetched QRL runs after the browser has already performed the default action - regardless of whether the handler is async or wrapped in $(). Split the cancellation into a leading sync$() QRL, which is serialized inline and runs during dispatch.',
+				},
+			},
+			create(context: Record<string, any>) {
+				return {
+					"CallExpression[callee.type='MemberExpression'][callee.property.name='preventDefault']"(
+						node: Record<string, any>,
+					) {
+						const ancestors: Array<Record<string, any>> =
+							context.sourceCode.getAncestors(node);
+						for (let index = ancestors.length - 1; index >= 0; index -= 1) {
+							const ancestor = ancestors[index]!;
+							// A sync$() QRL between the call and the event prop is the
+							// supported, synchronous channel. Stop: this call is fine.
+							if (
+								ancestor.type === 'CallExpression' &&
+								ancestor.callee?.type === 'Identifier' &&
+								ancestor.callee.name === 'sync$'
+							)
+								return;
+							if (ancestor.type !== 'JSXAttribute') continue;
+							const attribute = jsxAttributeName(ancestor.name);
+							if (!EVENT_PROP.test(attribute)) return;
+							context.report({
+								node,
+								messageId: 'noHandlerPreventDefault',
+								data: { attribute },
+							});
+							return;
+						}
+					},
+				};
+			},
+		},
+	},
+};
+
+export const FRAMELESS_ESLINT_RULES = {
+	'frameless/no-handler-prevent-default': 'error',
+} as const;
+
 const ESLINT_POLICIES = Object.keys(QWIK_ESLINT_RULES).map((rule) => ({
 	id: `eslint:${rule}`,
 	dossierRef: 'frameless-testing-ci-v1 T003 ruling 2' as const,
@@ -93,6 +182,10 @@ const ESLINT_POLICIES = Object.keys(QWIK_ESLINT_RULES).map((rule) => ({
 export const QWIK_GATE_POLICIES = [
 	{ id: 'no-visible-task', dossierRef: 'T002-qwik-architecture D8' },
 	persistenceArtifactPolicy(),
+	{
+		id: 'frameless/no-handler-prevent-default',
+		dossierRef: 'frameless-defects-and-targets-v1 T015 ruling 4',
+	},
 	...ESLINT_POLICIES,
 ] as const satisfies readonly GatePolicy[];
 
@@ -105,29 +198,36 @@ function makeEslint(): ESLint {
 			eslintJs.configs.recommended,
 			{
 				files: ['**/*.jsx'],
-				plugins: { qwik: qwikPlugin as never },
+				plugins: {
+					qwik: qwikPlugin as never,
+					frameless: framelessQwikPlugin as never,
+				},
 				languageOptions: {
 					ecmaVersion: 'latest',
 					sourceType: 'module',
 					parserOptions: { ecmaFeatures: { jsx: true } },
 					globals: globals.browser,
 				},
-				rules: QWIK_ESLINT_RULES as never,
+				rules: { ...QWIK_ESLINT_RULES, ...FRAMELESS_ESLINT_RULES } as never,
 			},
 		],
 	});
 	return cachedEslint;
 }
 
+/**
+ * `eslint:` marks a THIRD-PARTY arbiter. Frameless-owned rules run through the
+ * same parser but keep their own id so the distinction survives in the report.
+ */
+function eslintPolicyId(ruleId: string | null | undefined): string {
+	if (ruleId?.startsWith('frameless/')) return ruleId;
+	return `eslint:${ruleId ?? 'parse'}`;
+}
+
 async function eslintViolations(file: string, source: string): Promise<GateViolation[]> {
 	const [result] = await makeEslint().lintText(source, { filePath: resolve(PACKAGE_ROOT, file) });
 	return (result?.messages ?? []).map((message) =>
-		violation(
-			file,
-			`eslint:${message.ruleId ?? 'parse'}`,
-			message.message,
-			message.line ?? null,
-		),
+		violation(file, eslintPolicyId(message.ruleId), message.message, message.line ?? null),
 	);
 }
 

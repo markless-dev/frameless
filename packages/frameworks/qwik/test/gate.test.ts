@@ -3,6 +3,7 @@ import type { EnrichedIR } from '@frameless/compiler';
 import { resolve } from 'pathe';
 import { describe, expect, test } from 'vitest';
 import { emit } from '../src/emitter/index.ts';
+import { formatEmitted } from '../src/format-emitted.ts';
 import {
 	checkGeneratedFiles,
 	checkSources,
@@ -21,17 +22,21 @@ async function golden(name: string): Promise<EnrichedIR> {
 
 describe('Qwik v2 dossier gate', () => {
 	test('publishes independent source and artifact-required policies', () => {
-		expect(QWIK_GATE_POLICIES.slice(0, 2)).toEqual([
+		expect(QWIK_GATE_POLICIES.slice(0, 3)).toEqual([
 			{ id: 'no-visible-task', dossierRef: 'T002-qwik-architecture D8' },
 			{
 				id: 'persistence-render-lowering',
 				dossierRef: 'T002-qwik-architecture D8',
 			},
+			{
+				id: 'frameless/no-handler-prevent-default',
+				dossierRef: 'frameless-defects-and-targets-v1 T015 ruling 4',
+			},
 		]);
 		// Qwik's own lint rules, added by T006 to close the gate asymmetry with
 		// React and Solid. These are a third-party arbiter: they encode what the
 		// Qwik team considers correct, not what we decided.
-		expect(QWIK_GATE_POLICIES.slice(2).map((policy) => policy.id)).toEqual([
+		expect(QWIK_GATE_POLICIES.slice(3).map((policy) => policy.id)).toEqual([
 			'eslint:qwik/use-method-usage',
 			'eslint:qwik/no-react-props',
 			'eslint:qwik/jsx-key',
@@ -59,27 +64,21 @@ describe('Qwik v2 dossier gate', () => {
 			'generated/S3.jsx',
 		]);
 		const result = await checkGeneratedFiles();
-		// KNOWN-FAILING EXPECTATION, per T003 Ruling 5. Qwik's own
-		// no-async-prevent-default rule flags generated/S3.jsx:38 - the emitter
-		// puts event.preventDefault() inside an async QRL, where Qwik says it
-		// cannot work. That is a real emitter defect and is NOT suppressed here:
-		// this goal's charter forbids changing emitter behavior from a testing
-		// task. See docs/goals/frameless-testing-ci-v1/notes/
-		// findings-003-qwik-async-preventdefault.md.
+		// The known-failing expectation held here for defect 1 is RELEASED. The
+		// emitter now lowers unconditional cancellation into a leading sync$()
+		// QRL, so no lazily fetched handler body calls preventDefault() any more.
 		//
-		// This is exact equality, so if the emitter is fixed and the violation
-		// disappears, this test fails and forces the finding to be closed
-		// deliberately rather than drifting shut.
-		expect(result.violations, JSON.stringify(result.violations, null, 2)).toEqual([
-			{
-				file: 'generated/S3.jsx',
-				policy: 'eslint:qwik/no-async-prevent-default',
-				dossierRef: 'frameless-testing-ci-v1 T003 ruling 2',
-				message:
-					'This is an asynchronous function and does not support preventDefault. \nUse preventDefault attributes instead',
-				line: 38,
-			},
-		]);
+		// [] IS NOT SELF-EVIDENT EVIDENCE. Unfixed main also produced [], because
+		// Qwik's no-async-prevent-default matches $() ancestry and frameless emits
+		// raw handlers. What makes this [] meaningful is
+		// `frameless/no-handler-prevent-default`, which does fire on the pre-fix
+		// shape - proved by "MUTATION: the pre-fix emitter shape is rejected"
+		// below, which reconstructs that shape from the IR and watches the gate
+		// reject it while the upstream rule stays silent.
+		expect(result.violations, JSON.stringify(result.violations, null, 2)).toEqual([]);
+		expect(
+			await readFile(resolve(packageRoot, 'generated/S3.jsx'), 'utf8'),
+		).toContain('sync$((event) => {');
 		expect(result.unevaluated).toEqual([
 			{ policy: 'persistence-render-lowering', reason: 'requires-artifact' },
 		]);
@@ -129,6 +128,120 @@ describe('Qwik v2 dossier gate', () => {
 			}),
 		]);
 		expect(() => emit(artifact)).toThrow('does not support persistence-bearing IR');
+	});
+
+	// GREEN-VACUUM GUARD for the released expectation above.
+	//
+	// The emitter's trigger is the IR's declared SyncPolicy. Strip it and the
+	// emitter falls back to exactly what merged main produced before this change:
+	// the authored `event.preventDefault()` left inside a lazily fetched QRL, with
+	// no sync$() split. That is the reverted emitter, reconstructed from its own
+	// input rather than described.
+	//
+	// The second half of this test is the point: the upstream rule stays SILENT
+	// on that shape. Releasing the expectation to [] without this policy would
+	// have shipped a gate that passes identically on broken output.
+	test('MUTATION: the pre-fix emitter shape is rejected, and upstream stays silent', async () => {
+		const artifact = structuredClone(await golden('s3-event-form.json')) as EnrichedIR;
+		const stripped = artifact.records.events.filter((event) => {
+			const policy = (event as { syncPolicy?: unknown }).syncPolicy;
+			delete (event as { syncPolicy?: unknown }).syncPolicy;
+			return Boolean(policy);
+		});
+		expect(stripped).toHaveLength(2);
+
+		const source = await formatEmitted(emit(artifact));
+		expect(source).not.toContain('sync$');
+		expect(source.match(/event\.preventDefault\(\)/g)).toHaveLength(2);
+		// One of the two is SYNCHRONOUS. Defect 1 is misnamed: the emitted
+		// cancel-submit handler has no `async` keyword and failed anyway, because
+		// the QRL segment was not resident when the event fired.
+		expect(source).toMatch(
+			/onClick\$=\{\(event\) => \{\s*event\.preventDefault\(\);\s*\}\}/,
+		);
+
+		const result = await checkSources([{ file: 'generated/PreFixMutant.jsx', source }]);
+		const policies = result.violations.map((entry) => entry.policy);
+		expect(policies, JSON.stringify(result.violations, null, 2)).toEqual([
+			'frameless/no-handler-prevent-default',
+			'frameless/no-handler-prevent-default',
+		]);
+		expect(policies).not.toContain('eslint:qwik/no-async-prevent-default');
+		expect(result.violations[0]).toMatchObject({
+			file: 'generated/PreFixMutant.jsx',
+			dossierRef: 'frameless-defects-and-targets-v1 T015 ruling 4',
+		});
+	});
+});
+
+// CALIBRATION for frameless/no-handler-prevent-default. Each case is a shape the
+// emitter could regress into; the last two tests are the anti-vacuity cases,
+// proving the policy is neither a substring search nor keyed on `async` or `$()`.
+describe('MUTATION: frameless/no-handler-prevent-default', () => {
+	const caught = [
+		{
+			shape: 'a SYNCHRONOUS raw handler - the shape T002 witnessed failing',
+			source: `export const C = () => <button type="submit" onClick$={(event) => { event.preventDefault(); }}>x</button>;`,
+		},
+		{
+			shape: 'an async raw handler - the shape upstream cannot see',
+			source: `export const C = () => <button type="submit" onClick$={async (event) => { event.preventDefault(); }}>x</button>;`,
+		},
+		{
+			shape: 'an explicitly $()-wrapped handler - the shape upstream can see',
+			source: `import { $ } from '@qwik.dev/core';\nexport const C = () => <button type="submit" onClick$={$((event) => { event.preventDefault(); })}>x</button>;`,
+		},
+		{
+			shape: 'a call nested below a conditional inside the handler',
+			source: `export const C = () => <form onSubmit$={(event) => { if (event.target) { event.preventDefault(); } }} />;`,
+		},
+		{
+			shape: 'a call in the LAZY element of a sync$()-led QRL array',
+			source: `import { $, sync$ } from '@qwik.dev/core';\nexport const C = () => <button onClick$={[sync$(() => {}), $(async (event) => { event.preventDefault(); })]}>x</button>;`,
+		},
+	];
+
+	for (const { shape, source } of caught)
+		test(`rejects ${shape}`, async () => {
+			const result = await checkSources([{ file: 'generated/Mutant.jsx', source }]);
+			expect(
+				result.violations.map((entry) => entry.policy),
+				JSON.stringify(result.violations, null, 2),
+			).toContain('frameless/no-handler-prevent-default');
+		});
+
+	test('the `async` keyword is not what the policy keys on', async () => {
+		const [sync, async] = await Promise.all(
+			[caught[0]!.source, caught[1]!.source].map(async (source) =>
+				(
+					await checkSources([{ file: 'generated/Mutant.jsx', source }])
+				).violations.filter(
+					(entry) => entry.policy === 'frameless/no-handler-prevent-default',
+				),
+			),
+		);
+		expect(sync).toHaveLength(1);
+		expect(async).toHaveLength(1);
+	});
+
+	test('ANTI-VACUITY: the sync$() lowering and non-handler preventDefault are accepted', async () => {
+		const result = await checkSources([
+			{
+				file: 'generated/Clean.jsx',
+				source: [
+					`import { $, sync$ } from '@qwik.dev/core';`,
+					// The lowering this policy exists to permit: cancellation in the
+					// leading sync$() QRL, the rest behind it.
+					`export const C = () => <button type="submit" onClick$={[sync$((event) => { event.preventDefault(); }), $(async () => {})]}>x</button>;`,
+					// Not a JSX event prop: the policy reads ancestry, not text.
+					`export function guard(event) { event.preventDefault(); }`,
+				].join('\n'),
+			},
+		]);
+		expect(
+			result.violations.map((entry) => entry.policy),
+			JSON.stringify(result.violations, null, 2),
+		).not.toContain('frameless/no-handler-prevent-default');
 	});
 });
 

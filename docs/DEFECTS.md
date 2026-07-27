@@ -1,7 +1,8 @@
 # Open defects in Frameless
 
-Six open defects, ranked. Found by `frameless-testing-ci-v1`; this is the input
-for a fix goal.
+Six defects, ranked. Found by `frameless-testing-ci-v1`; this is the input for a
+fix goal. **Defect 1 is now closed** — see its entry, which also corrects several
+claims this document originally made about it. The other five are open.
 
 Full per-defect notes live in `docs/goals/frameless-testing-ci-v1/notes/`
 (`findings-002` through `findings-007`). This file is the ranked summary.
@@ -23,30 +24,82 @@ By **how wrong the shipped output is**, not by effort. A defect that makes
 emitted code behave incorrectly outranks one that makes it awkward to consume,
 which outranks one that only affects contributors.
 
-Two of the six are **diagnosed** (cause established). Three are **observed but
-not diagnosed** — for those, the first task is to separate competing
-explanations, not to write a fix. One is **partially mitigated**.
+As first written: two of the six were called **diagnosed** (cause established),
+three **observed but not diagnosed**, one **partially mitigated**.
+
+That count did not survive contact. Defect 1 was one of the two "diagnosed" ones
+and its diagnosis turned out to rest on a lint rule that does not test what its
+name says and that had stopped firing — so the honest count at the start of
+`frameless-defects-and-targets-v1` was **one diagnosed, four undiagnosed, one
+partially mitigated**. Defect 1 has since been demonstrated behaviourally and
+**closed**; its entry below records the correction rather than hiding it.
 
 ---
 
-## 1. Qwik emits `preventDefault()` inside an async QRL — `findings-003`
+## 1. Qwik emits `preventDefault()` inside a lazily fetched QRL — `findings-003`
 
-**Status:** diagnosed by rule, runtime divergence NOT yet demonstrated
-**Severity: highest.** This is the only defect that plausibly makes emitted
-output behave incorrectly for an end user.
+> **CORRECTED, then CLOSED, by `frameless-defects-and-targets-v1`.** Everything
+> from here to the end of this section has been rewritten. Four of this entry's
+> original claims were false, and the correction is recorded rather than quietly
+> applied, because the false claims are what made the defect look already-proven.
+> The corrections come from that goal's T015 ruling
+> (`docs/goals/frameless-defects-and-targets-v1/notes/T015-cancellation-observability.md`)
+> and from T002, which produced the first behavioural evidence this defect ever
+> had. T003 fixed it.
 
-`packages/frameworks/qwik/generated/S3.jsx:38`:
+**Status:** CLOSED. Was "diagnosed by rule" — which was wrong twice over: the
+rule had stopped firing, and the rule does not test what its name says. Between
+T002 and T003 the honest status was **undiagnosed with zero demonstrated
+evidence**; T002 then demonstrated it behaviourally and T003 fixed it.
+**Severity: was highest, and correctly so.** It is the only defect that made
+emitted output behave incorrectly for an end user, and that has now been
+observed, not argued.
+
+**The name of this defect is wrong.** It is not about `async`. T002's witnessed
+failure was a fully **synchronous** handler:
 
 ```jsx
-onClick$={$(async (event) => {
-    event.preventDefault();
+onClick$={(event) => { event.preventDefault(); }}
 ```
 
-Qwik's own `no-async-prevent-default` rule flags this. In a resumable app the
-handler is a QRL that must be fetched and executed asynchronously; by the time it
-runs, the browser has already dispatched the default action, so the call is a
-no-op. Qwik's supported mechanism is the `preventdefault:click` JSX attribute,
-applied synchronously at the DOM level.
+No `async`, no `await`, and it failed identically. The cause is **QRL laziness**:
+the handler's segment is not resident when the event fires, so fetching it costs
+a network round trip while the browser performs the default action immediately
+after dispatch. CDP timing from the failing run — the segment arrived at +111ms,
+the form's own `Document` GET went out at +118ms, and the click had been
+dispatched roughly 58ms before the handler's code existed in the page. `async` is
+correlated with the bug and is not what produces it. Qwik's upstream rule carries
+the same misnomer; see `notes/T003-upstream-eslint-qwik.md`.
+
+**The code snippet this entry used to show never existed on merged main.** It
+read `onClick$={$(async (event) => {` — with a `$()` wrapper. On merged main,
+`generated/S3.jsx:37-38` had no wrapper, because `frameless-idiom-policy-v1`
+emits raw handlers and lets the optimizer wrap them.
+
+**The lint rule could not serve as evidence.** Read in full,
+`eslint-plugin-qwik@2.0.0-beta.38`'s `no-async-prevent-default` walks ancestors
+for a `CallExpression` whose callee is the identifier `$`, and **never inspects
+`async` at all**. With no `$()` in the emitted output the rule cannot fire. Its
+silence on merged main was a parser miss, not a fix — the gate tripwire held here
+went green while the defect was untouched.
+
+**The fix is not `preventdefault:click`.** That was this entry's original claim
+and it was corrected by the repo owner, who is on the Qwik core team. Qwik event
+props accept an **array of QRLs, run in order**, and the first element may be a
+`sync$()` QRL, which is serialized inline into the HTML and therefore executes
+synchronously during dispatch, before resumption. That is why `preventDefault()`
+works there. So the lowering splits the handler:
+
+```jsx
+onClick$={[
+    sync$((event) => { event.preventDefault(); }),
+    $(async (event) => { /* the rest of the body */ }),
+]}
+```
+
+**Hard constraint:** a `sync$()` body cannot close over reactive state — no
+signals, no stores — because it runs before the container resumes. It may read
+only what is synchronously on the event.
 
 React and Solid are unaffected — their handlers are synchronous, so
 `preventDefault()` is correct there. This is a case where "each framework gets
@@ -54,66 +107,78 @@ its own best practice" is a correctness requirement, not a nicety.
 
 **Why it matters more than a lint warning.** Cancellation is an explicitly tested
 channel here: `packages/analyzer/src/mutants.ts` declares a `wrong-cancellation`
-mutant class against scenario S3, and the React and Solid calibration suites
-prove the analyzer *detects* a broken `preventDefault`. S3's stated purpose
-includes "bubbling, cancellation". The project already decided this channel
-matters — and then shipped a Qwik emitter that appears to get it wrong in the one
-scenario built to test it.
+mutant class against scenario S3, and S3's stated purpose includes "bubbling,
+cancellation".
 
-**Why nothing caught it.** The `wrong-cancellation` calibration runs only in the
-browser calibration lanes, which exist for React and Solid but not Qwik (blocked
-upstream: `@qwik.dev/core` peer-requires `vitest ">=2 <4"`, workspace is on
-4.1.5). The Qwik gate had no framework-native rules at all before this work. And
-`pnpm e2e`'s three-way contract asserts text content and write counts — not
-whether the default action was actually prevented.
+**But the repo had never emitted or exercised a real cancellation in any
+target.** Stated plainly, because this entry originally implied the opposite. The
+only `preventDefault()` in the whole corpus sat on a `<button type="button">`,
+which has no activation behavior inside a form, so there was no default action to
+prevent — in React, in Solid, or in Qwik. The claim that the project "shipped a
+Qwik emitter that appears to get it wrong in the one scenario built to test it"
+was not supportable: that scenario did not test cancellation behaviourally.
 
-**The fix is known** — guidance from the repo owner, who is on the Qwik core
-team. Qwik has two mechanisms:
+**Why nothing caught it — the original attribution was wrong.** This entry blamed
+the absent Qwik browser calibration lane. That lane would not have caught it
+either. The analyzer's only cancellation observation is
+`defaultPrevented: event?.defaultPrevented ?? null` (`packages/analyzer/src/run.ts:41`,
+compared at `compare.ts:71`), and the `wrong-cancellation` mutant is realised as
+`missing-prevent-default` — it simply omits the call. That channel records **that
+`preventDefault()` was called**, not that a default action was averted. Qwik's
+late handler still _calls_ `preventDefault()`, so it would still have recorded
+`defaultPrevented: true`. **The existing cancellation channel was structurally
+blind to this defect.** What was actually missing was any default action to
+cancel, and any instrument watching for one.
 
-- **Unconditional cancellation** → the `preventdefault:click` attribute on the
-  element. **This is S3's case**: `s3-event-form.tsrx:37` calls
-  `event.preventDefault()` as the first statement with no guard.
-- **Conditional cancellation** → `sync$()`, which runs synchronously so
-  `preventDefault()` works. Canonical case: a keydown that cancels only for
-  certain keys. **Hard constraint: `sync$()` cannot close over reactive state** —
-  no signals, no stores, because it runs before the container resumes. It may
-  only read what is synchronously on the event, such as `e.target` attributes.
+**What closed it.** T002 added one `<button type="submit" data-action="cancel-submit">`
+to S3, clicked last by the three-way contract, and asserted through the Document-request
+instrument the contract already runs. It failed for Qwik and only Qwik: **2**
+`Document` requests instead of 1, the form's GET reaching the network. T003 then
+emitted the `sync$()` split and the same assertion passes at **1** Document
+request, with React and Solid unchanged and their observation strings identical.
+The gate expectation was released and replaced by a frameless-owned policy,
+`frameless/no-handler-prevent-default`, which keys on which kind of QRL the call
+lands in — rejecting a lazily fetched one, allowing `sync$()` — and looks at
+neither `$()` nor `async`.
 
-**Do this first, in order:**
+**What is closed, and what is not.** Only **unconditional** cancellation. Both
+S3 sites qualify — each calls `event.preventDefault()` as the first or only
+statement with no guard — and the emitter's trigger is the IR's own declared
+`SyncPolicy`: a single branch, `when: constant-truthy`, actions containing
+`preventDefault`. Anything else fails the trigger and is emitted unchanged.
 
-1. Extend the three-way contract to assert the default action is prevented in all
-   three frameworks. It currently cannot see this — it checks text and write
-   counts only.
-2. Watch it **fail for Qwik**. Confirm the divergence rather than assuming it —
-   the rule fired, but no runtime failure has been demonstrated.
-3. Emit `preventdefault:click` for the unconditional case; watch it pass.
+**Still open, as a separate design decision:** the IR treats `preventDefault()`
+as just another statement in the handler body, which is fine for React and Solid
+(synchronous handlers) and wrong for Qwik. Representing **conditional**
+cancellation pulls in a `sync$()` body that would need to read state, a gate
+policy proving such a body references no reactive state, and a fail-closed path
+for the case Qwik genuinely cannot express — a conditional cancel that depends on
+signal state. That last one is a new v-limit in the same family as
+`unknown-template-node.test.ts`. Owned by T011/T012 of
+`frameless-defects-and-targets-v1`, deliberately not folded into the fix above.
 
-**Then, as a separate design decision — do not rush it into the same change:**
-the IR currently treats `preventDefault()` as just another statement in the
-handler body, which is fine for React and Solid (synchronous handlers) and wrong
-for Qwik. Deciding how it represents *conditional* cancellation pulls in
-`sync$()` lowering, a gate policy proving a `sync$` body references no reactive
-state, and a fail-closed path for the case Qwik genuinely cannot express — a
-conditional cancel that depends on signal state. That last one is a new v-limit
-in the same family as `unknown-template-node.test.ts`.
-
-**Currently held as:** a known-failing expectation in
-`packages/frameworks/qwik/test/gate.test.ts` under exact equality, so it cannot
-silently disappear.
+**Was held as:** a known-failing expectation in
+`packages/frameworks/qwik/test/gate.test.ts` under exact equality. That
+expectation is now **released**, and it was not released alone: `[]` was already
+what unfixed main produced, so a flip on its own would have shipped a gate that
+passed identically on broken output. It was replaced in the same change by
+`frameless/no-handler-prevent-default`, whose own mutation test reconstructs the
+pre-fix emitter output from the IR and watches the gate reject it while the
+upstream rule stays silent.
 
 ---
 
 ## 2. Qwik drops clicks under a slow connection — `findings-007`
 
-**Status:** diagnosed — the click is *lost*, not delayed
+**Status:** diagnosed — the click is _lost_, not delayed
 **Severity: high, but likely upstream.**
 
 `demos/qwik/throttled-resume.mjs`, run against a **production** build:
 
-| Condition | Result |
-| --- | --- |
-| Unthrottled | all 4 checks pass (`paused` container, `kit:2`, `kit:4`, `kit:6`) |
-| 300ms latency / 400 kbit/s | times out; value never leaves `kit:2` |
+| Condition                  | Result                                                            |
+| -------------------------- | ----------------------------------------------------------------- |
+| Unthrottled                | all 4 checks pass (`paused` container, `kit:2`, `kit:4`, `kit:6`) |
+| 300ms latency / 400 kbit/s | times out; value never leaves `kit:2`                             |
 
 With request logging on: **zero network requests are issued after the click.**
 The handler QRL is never even requested.
@@ -138,7 +203,7 @@ components carry no bootstrap logic of their own, upstream looks more likely. If
 it reproduces there, this is an issue to file against Qwik, not a change here.
 
 **Currently held as:** the `qwik-throttled` CI job, whose unthrottled control is
-*not* `continue-on-error` (so the job goes red if the instrument breaks) and
+_not_ `continue-on-error` (so the job goes red if the instrument breaks) and
 whose throttled step is (so the finding stays visible without blocking).
 
 ---
@@ -217,8 +282,8 @@ Emitted `S2.jsx` and `S3.jsx` use `attr:value`, which solid-js's shipped
 browser lane passes 44/44, exercising these exact files.
 
 **What was already done:** `packages/frameworks/solid/test/solid-attr-namespace.d.ts`
-declares `attr:${string}` on `JSX.CustomAttributes`. That is a *description of
-real behavior* — Solid does support `attr:*` — and it unblocked type-checking.
+declares `attr:${string}` on `JSX.CustomAttributes`. That is a _description of
+real behavior_ — Solid does support `attr:*` — and it unblocked type-checking.
 
 **What it does NOT settle**, and why this is still on the list:
 
@@ -261,7 +326,7 @@ comparison needs an order-insensitive view. Declaration order or cell wiring
 differs → real compiler finding, escalate.
 
 **Currently held as:** property 3 in `generative.test.ts` narrowed to compare
-template *structure*, with a pointer to the note. The fixture-level invariant in
+template _structure_, with a pointer to the note. The fixture-level invariant in
 `metamorphic.test.ts` still asserts exact whole-IR equality and still passes.
 
 ---
@@ -279,9 +344,10 @@ matrix proved green rather than from the error message's claim.
 The six above are not one tranche. They split cleanly:
 
 **Tranche A — emitted-output correctness (do first).** Defects 1 and 2. Both
-concern Qwik, both need a *proof before a fix*, and defect 1 needs a real
+concern Qwik, both need a _proof before a fix_, and defect 1 needs a real
 extension to the three-way contract. This is the tranche that changes what users
-receive.
+receive. _Defect 1 is done: the contract extension landed in T002 and produced
+the witnessed failure, and T003 fixed it. Defect 2 remains._
 
 **Tranche B — diagnose the undiagnosed.** Defects 4 and 6, plus confirming
 defect 3's cause B. Each is a bounded experiment whose output is a decision, not
@@ -294,5 +360,10 @@ contribute to the project.
 
 **One constraint worth carrying over.** Every fix should be preceded by a test
 that fails for the right reason. That discipline is what found all six of these,
-and three of them are currently held as known-failing expectations precisely so a
-fix cannot land silently.
+and three of them were held as known-failing expectations precisely so a fix
+could not land silently. Defect 1's is now released — and its release is the
+sharpest illustration of why the constraint matters. The held expectation had
+gone green on its own, without the defect being touched, so _releasing it alone
+would have been the fix landing silently_, in the exact way the tripwire existed
+to prevent. A held expectation is only evidence for as long as something proves
+it can still fail.

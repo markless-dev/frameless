@@ -79,6 +79,31 @@ describe('Qwik v2 structural emitter', () => {
 		expect(source).not.toMatch(/\bbind:|useVisibleTask\$|onQVisible\$|q-e:qvisible/);
 	});
 
+	test('splits unconditional cancellation into a leading sync$() QRL', async () => {
+		const source = await formatEmitted(emit(await golden('s3-event-form.json')));
+		expect(source).toContain(
+			"import { $, component$, sync$, useSignal } from '@qwik.dev/core'",
+		);
+		// Both S3 sites: the type=button submit handler, whose remainder stays in
+		// a lazily fetched QRL behind the cancellation, and the cancel-submit
+		// handler whose entire body WAS the cancellation.
+		expect(
+			source.match(/sync\$\(\(event\) => \{\s*event\.preventDefault\(\);\s*\}\)/g),
+		).toHaveLength(2);
+		// The lazily fetched remainder no longer cancels anything: the authored
+		// `event.preventDefault(); writes.value = 1;` adjacency is gone.
+		expect(source).not.toMatch(/preventDefault\(\);\s*writes\.value/);
+		expect(source).toMatch(/sync\$[\s\S]*?\}\),\s*\$\(async \(event\) => \{\s*writes\.value = 1;/);
+		// The remainder MUST be $()-wrapped: measured against @qwik.dev/core
+		// 2.0.0-beta.38, the optimizer does not extract array ELEMENTS, so a raw
+		// arrow here never becomes a QRL and is dropped from `q-e:click`.
+		expect(source).toContain('$(async (event) => {');
+		// The cancel-submit handler had nothing else in it, so no lazy element.
+		expect(source).toMatch(
+			/data-action="cancel-submit"\s*onClick\$=\{\[\s*sync\$\(\(event\) => \{\s*event\.preventDefault\(\);\s*\}\),\s*\]\}/,
+		);
+	});
+
 	test('fails closed before emitting persistence-bearing IR', async () => {
 		const ir = structuredClone(await golden('s1-render-once.json')) as any;
 		ir.records.persistence.push({ graphNodeId: 'state:count' });

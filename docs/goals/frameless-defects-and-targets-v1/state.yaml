@@ -105,7 +105,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T003
+active_task: T004
 
 tasks:
   - id: T001
@@ -389,14 +389,24 @@ tasks:
   - id: T003
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     spec: "notes/T015-cancellation-observability.md sections 4 and 5, plus the pm_refinement_defect_1_is_misnamed block on T002's receipt"
     objective: >-
-      Close defect 1: emit Qwik's preventdefault:click for unconditional cancellation so T002's
-      witnessed failure turns green, AND add a frameless-owned gate policy that catches
-      preventDefault() in any emitted handler body regardless of $() wrapping or async, so the
-      released expectation is not a green vacuum.
+      Close defect 1: emit the array + sync$() form so T002's witnessed failure turns green, AND
+      add a frameless-owned gate policy that rejects preventDefault() inside an async QRL while
+      allowing it inside a sync$() QRL, so the released expectation is not a green vacuum.
+    owner_correction: >-
+      CORRECTED MID-FLIGHT by the repo owner, who is on the Qwik core team. The earlier instruction
+      to emit preventdefault:click was WRONG. Qwik event props accept an ARRAY of QRLs, run in
+      order: onClick$={[handleClickSync$, handleClick$]}. The first element is a SYNC QRL made with
+      sync$() - serialized inline into the HTML, so it executes synchronously during dispatch,
+      before resumption, which is exactly why preventDefault() works there. The second is a normal
+      async QRL carrying the rest of the body. The correct lowering is therefore to SPLIT the
+      handler, not to swap in a JSX attribute.
+    lowering_for_s3:
+      - "cancel-submit: body is only event.preventDefault(), so it becomes a single sync$() QRL."
+      - "The original type=button submit handler: body is event.preventDefault(); writes = 1; writes = 2; onTrace(...). This is the real case - sync$((event) => event.preventDefault()) first, then $(async () => { writes... }). The sync part cancels; the async part does the state writes."
     allowed_files:
       - packages/frameworks/qwik/src/emitter/index.ts
       - packages/frameworks/qwik/src/gate/index.ts
@@ -425,24 +435,118 @@ tasks:
       - "Verification fails twice for the same reason."
     constraints:
       - "UNCONDITIONAL case only. Both S3 preventDefault sites qualify: the original type=button handler and the new cancel-submit handler, each calling preventDefault as the first/only statement with no guard."
+      - "HARD CONSTRAINT on sync$(): its body CANNOT close over reactive state - no signals, no stores, nothing from component scope. It runs before the container resumes and may only read what is synchronously on the event, such as event.target attributes. If the sync part would need a signal, STOP - that is conditional cancellation and belongs to T011/T012."
       - "GREEN-VACUUM WARNING from T015: flipping the qwik gate.test.ts expectation to [] is NOT sufficient, because [] is ALREADY what unfixed main produces - the upstream rule matches $() ancestry and never checks async, so it cannot fire on the raw-handler shape. A flip alone ships a gate that would pass identically if the emitter were never touched."
       - "Therefore, IN THE SAME CHANGE: add a frameless-owned Qwik gate policy rejecting preventDefault() inside any emitted event-handler body, mutation-tested in the pattern of gate.test.ts:93-110, and only THEN release the known-failing expectation. Do not split these."
-      - "THE POLICY MUST NOT KEY ON `async`. T002 proved defect 1 is misnamed: the emitted cancel-submit handler is `onClick$={(event) => {...}}`, fully SYNCHRONOUS, and it fails anyway. The cause is QRL LAZINESS - the segment is not resident when the event fires - not the handler being async. Key on 'preventDefault inside an emitted handler that becomes a QRL', regardless of $() and regardless of async."
+      - "THE POLICY MUST NOT KEY ON `async`. T002 proved defect 1 is misnamed: the emitted cancel-submit handler was `onClick$={(event) => {...}}`, fully SYNCHRONOUS, and it failed anyway. The cause is QRL LAZINESS - the segment is not resident when the event fires - not the handler being async."
+      - "Key instead on WHICH KIND OF QRL the call lands in: reject preventDefault() inside an async/regular QRL body, ALLOW it inside a sync$() QRL body. The owner correction makes this sharper, not looser - sync$() is precisely the construct that makes the call legitimate, so the policy has a principled line to draw rather than a keyword to match."
       - "Do NOT revert the emission shape to $(handler)."
-      - "docs/emitter-idiom-policy.md governs the emission-site form choice. Run the six gates and record the outcomes."
+      - "docs/emitter-idiom-policy.md governs the emission-site form choice - now the array + sync$() form. Run the six gates and record the outcomes. Note Gate 1 is genuinely satisfiable here, unlike for the absent frameworks: Qwik is in the lockfile, so both forms can be measured against the shipped build."
       - "RIDER - file the upstream gap against eslint-plugin-qwik in notes/T003-upstream-eslint-qwik.md for the owner to submit: no-async-prevent-default matches $() ancestry only, misses bare onClick$={...} JSX props, and never checks `async` at all despite its name. Verified against eslint-plugin-qwik@2.0.0-beta.38 dist/index.js. Include that a synchronous handler fails identically, so the rule's name is also wrong."
       - "RIDER - apply the six docs/DEFECTS.md corrections in notes/T015-cancellation-observability.md section 5, PLUS a seventh from T002: defect 1 is misnamed, since a synchronous QRL handler fails identically. The lowercase rename is NOT needed - the PM corrected the board and charter references to docs/DEFECTS.md instead."
       - "Expected end state: pnpm e2e FULLY green including Qwik, pnpm test 552/552 with the gate expectation released and replaced by the new policy's own tests."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      summary: "Defect 1 closed. Migrated mid-flight to the owner-corrected lowering: unconditional cancellation, triggered by the IR's declared SyncPolicy, is now split - the authored call is removed from the lazy QRL body and emitted as a leading sync$() QRL, with the remainder as a $()-wrapped element of a QRL array. Both S3 sites lowered. Added the frameless-owned gate policy frameless/no-handler-prevent-default, which keys on WHICH KIND of QRL the call lands in - rejecting a lazily fetched one, allowing sync$() - and inspects neither $() nor async. Released the known-failing expectation only behind that policy. pnpm e2e is fully green with all three lanes emitting the identical cancellation observation."
+      changed_files:
+        - packages/frameworks/qwik/src/emitter/index.ts
+        - packages/frameworks/qwik/src/gate/index.ts
+        - packages/frameworks/qwik/generated/S3.jsx
+        - packages/frameworks/qwik/test/emitter.test.ts
+        - packages/frameworks/qwik/test/gate.test.ts
+        - demos/qwik/src/emitted/EventForm.jsx
+        - docs/DEFECTS.md
+        - docs/goals/frameless-defects-and-targets-v1/notes/T003-upstream-eslint-qwik.md
+      commands:
+        - cmd: "pnpm check"
+          status: pass
+          note: "PM RE-RAN: three tsc passes, clean"
+        - cmd: "pnpm test"
+          status: pass
+          note: "561 passed (39 files). PM RE-RAN: 561/561. Was 552 with 1 failing; +9 = 8 new gate tests for the policy (incl. the pre-fix mutant and 5 catch shapes) plus 1 emitter test."
+        - cmd: "pnpm test:browser"
+          status: pass
+          note: "react 55/55, solid 44/44"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "PM RE-RAN: exit 0, [e2e] PASS. Three-way 3x3 all observations equal."
+        - cmd: "pnpm lint"
+          status: pass
+          note: "PM RE-RAN: 0 warnings, 0 errors"
+      the_lowering:
+        trigger: "The declared IR field EnrichedEventRecord.syncPolicy (single branch, constant-truthy, actions include preventDefault). Never handler contents."
+        shape_split_handler: "onClick$={[ sync$((event) => { event.preventDefault(); }), $(async (event) => { writes.value = 1; writes.value = 2; await props.onTrace$(...); }) ]}"
+        shape_pure_cancel: "onClick$={[ sync$((event) => { event.preventDefault(); }) ]} - a one-element array, so one shape covers the whole lowering."
+        untouched: "The form's own onClick, which declares no cancellation, remains a raw async handler. The change is scoped to declared syncPolicy."
+        pm_verified: "Read packages/frameworks/qwik/generated/S3.jsx directly. Both sites match the owner's prescribed pattern exactly."
+      e2e_after:
+        before_T003: "2 Document requests on the S3 page after clicking [data-action=\"cancel-submit\"] - the form's default GET reached the network."
+        after_T003: "1 Document request. navigations 1, failedRequests [], pageErrors []."
+        cross_lane_identical: "s3 react hydrate / s3 solid hydrate / s3 qwik resume all emit: 'after cancel-submit 1 document request served this page and writes = 2'. PM confirmed verbatim in the e2e output."
+      gate_policy:
+        id: frameless/no-handler-prevent-default
+        rule: "A CallExpression whose callee is a MemberExpression named preventDefault. Walk ancestors outward: hit a CallExpression with callee Identifier sync$ first -> ALLOWED and stop; hit a JSXAttribute matching /^on[A-Z]/ -> REPORT. Keys on which kind of QRL the call lands in. Inspects neither $() nor async."
+        position: "Third in QWIK_GATE_POLICIES, grouped with the frameless-owned policies and ahead of the eslint: ones. The eslint: prefix stays reserved for third-party arbiters."
+        mutants:
+          - "SYNCHRONOUS raw handler onClick$={(event) => { event.preventDefault(); }} - caught. The exact shape T002 witnessed failing."
+          - "async raw handler - caught. The shape upstream cannot see."
+          - "$()-wrapped handler - caught."
+          - "preventDefault nested below an if inside the handler - caught."
+          - "preventDefault in the LAZY element of a sync$()-led array - caught. The most realistic regression: cancellation placed in the wrong element."
+          - "'the async keyword is not what the policy keys on' - asserts the sync and async mutants each produce exactly one violation, so the count cannot drift toward keying on async."
+          - "ANTI-VACUITY: the shipped sync$() lowering is accepted, AND a bare non-handler function calling preventDefault is accepted - proving the policy reads ancestry, not text."
+        pm_verified: "Confirmed the mutation describe block and all seven test shapes exist in packages/frameworks/qwik/test/gate.test.ts (lines 144-251)."
+      green_vacuum_check:
+        claim: "The released [] expectation would fail if the emitter change were reverted."
+        in_suite_permanent: "gate.test.ts:144 'MUTATION: the pre-fix emitter shape is rejected, and upstream stays silent' deletes syncPolicy from the S3 golden's two events - the emitter's only trigger - and emits. It asserts the output contains no sync$ and exactly two event.preventDefault() calls, then asserts the gate reports EXACTLY two frameless/no-handler-prevent-default violations AND that eslint:qwik/no-async-prevent-default is NOT among them. That second assertion is the vacuum proof: upstream is silent on the pre-fix shape, so [] on its own was worthless."
+        verified_by_actually_reverting: "Ran twice, on interim and on final code: git checkout HEAD -- the emitter, regenerate, run the gate suite. Both times 'discovers and accepts the clean S1/S2/S3 emitted corpus' FAILED with 'expected [ ...(2) ] to deeply equal []', two violations on generated/S3.jsx lines 38 and 54. Emitter and generated file then restored byte-for-byte and the suite re-run green."
+        corroboration: "With syncPolicy stripped, formatEmitted(emit(ir)) was diffed against `git show HEAD:packages/frameworks/qwik/generated/S3.jsx` and is byte-identical - the IR-level mutant reproduces the pre-fix output faithfully."
+      idiom_policy_gates:
+        emission_site: "The handler expression returned by emitEvent() for a host-element event prop whose EnrichedEventRecord declares unconditional preventDefault."
+        G1: "PASS - measured, not read, against @qwik.dev/core 2.0.0-beta.38, the build demos/qwik ships. Both forms build clean. In a clean production build the candidate yields q-e:click=\"#0|q-wOvRpCvR.js#_run#7\" with sync$ rewritten by the optimizer to _qrlSync(fn, \"event=>{event.preventDefault();}\") and the body present in the container's qFuncs_* table. A THIRD form was measured and REJECTED: a raw arrow as the second array element is not extracted by the optimizer, stays an inline closure, gets no manifest symbol, and is silently dropped from q-e:click with no diagnostic. That measurement is why the remainder is $()-wrapped."
+        G2: "PASS, recorded as a judgement call. One call site, one emitted module. The two added imports (sync$, $) are the module's own imports of its framework package, which the emitter already manages for useSignal/useStore/useComputed$. Gate 2 lists 'an added import list entry' among its failures; the Worker read that clause as scoped to entries demanded of ANOTHER module, consistent with worked example 1 passing G2 with $ in the baseline's import list. Re-openable."
+        G3: "PASS - the trigger is the declared IR field syncPolicy, never handler contents. Recorded honestly: the LOWERING does read the body, to locate and delete the matching top-level <param>.preventDefault() statement. That is not the trigger, so the Gate 3 rider does not engage, and the emitter throws if the declared action cannot be located, so the declared fact and the body can never silently disagree."
+        G4: "PASS - domain in emitter terms: every EnrichedEventRecord reaching emitEvent() for which hoistsPreventDefault() returns true. That predicate IS the deciding function, so the domain is total by construction. Where the split cannot be performed, the emitter throws rather than emitting a half-lowered handler."
+        G5: "FAIL as literally stated, and FLAGGED FOR THE JUDGE rather than reframed away. A user of the running component CAN detect the difference: the default action is now actually prevented. The two forms are not behaviourally equivalent - which is precisely why the change exists. Under the procedure a FAIL means no-sugar, which here would mean shipping known-broken output. The Worker resolved it via the policy's own preamble - this is FORCED LOWERING, not sugar, since the baseline form cannot express the IR's declared SyncPolicy in Qwik at all - and the preamble says the procedure does not apply to forced lowering."
+        G6: "PASS - pnpm e2e drives demos/qwik on its official Qwik Router scaffold at the lockfile version and asserts exactly one Document request after the cancel click. That check FAILED for Qwik before this change and passes now. The source shape is additionally pinned by the new gate policy and by emitter.test.ts."
+        ruling: "Forced lowering, adopted. Five gates PASS; G5 is discordant by construction."
+      open_items_for_T005:
+        - "GATE 5 DISCORDANCE: the Worker recorded a literal G5 FAIL and resolved it as forced lowering under the policy preamble. That resolution is plausible and honestly flagged, but it is a Judge call, not a Worker call. T005 must ratify or overturn it."
+        - "RECORDING GAP: docs/emitter-idiom-policy.md requires every ruling to get a worked-example entry plus a comment at the decision site. The comment is in place; the worked-example entry is NOT written, because that file was outside T003's allowed_files. Needs a follow-up package."
+      upstream_reports_written:
+        location: docs/goals/frameless-defects-and-targets-v1/notes/T003-upstream-eslint-qwik.md
+        report_1: "eslint-plugin-qwik no-async-prevent-default matches $() ancestry only, misses bare onClick$={...} JSX props, and never checks async at all despite its name. A synchronous handler fails identically, so the rule's NAME is also wrong."
+        report_2: "SECOND report, found while measuring and not asked for: a raw arrow as a non-first element of a QRL array is not extracted by the optimizer, receives no manifest symbol, and is silently dropped from q-e:click with NO diagnostic. Against @qwik.dev/core rather than the eslint plugin. Handed to the owner rather than discarded."
+      deviations:
+        - "MISTAKE, disclosed by the Worker in full: it ran `pnpm fmt` as a tidy-up, which reformatted 226 files repo-wide (the committed tree is not in vp fmt canonical form) and errored on a YAML file. It reverted everything outside allowed_files, rebuilt its own four source/test files from HEAD and re-applied its edits by hand. PM VERIFIED: git status shows exactly 8 modified files plus 1 new note, all within scope."
+        - "COLLATERAL, repaired and PM-VERIFIED: that revert also destroyed the PM's uncommitted owner_correction edit to state.yaml. The Worker restored it by hand. PM independently diffed state.yaml against commit ca84b89: the change set is EXACTLY the PM's own owner_correction, lowering_for_s3, sync$ constraint and gate-policy wording edits, with nothing added by the Worker. Board integrity confirmed."
+        - "The lazy remainder is emitted as $(async (event) => {...}) inside the array rather than a raw arrow. This is a MEASURED correctness requirement, not a form preference - without $() the element never becomes a QRL and is silently dropped. The card's stop_if against reverting to $(handler) governs the handler given DIRECTLY to the prop, which is unchanged and still raw wherever no cancellation is declared."
+        - "Added a fail-closed throw: if the IR declares an unconditional preventDefault the emitter cannot locate as a top-level <param>.preventDefault() statement, emission throws rather than dropping a declared action. Not asked for; it is what makes the Gate 4 totality claim enforceable."
+        - "Added trailing-unused-parameter trimming, gated on a statement having actually been removed, so the emptied cancel-submit handler does not carry an unused `event` param and trip our own no-unused-vars."
+        - "pnpm test is 561, not the card's stated 552 - 552 plus the 9 tests the new policy and emitter behaviour brought with them. The card also required the released expectation be replaced by the policy's own tests including mutants, which necessarily raises the count."
+        - "docs/DEFECTS.md corrections went beyond the defect-1 entry: the opening line, the 'How these are ranked' count, the Tranche A paragraph and the closing constraint all referenced defect 1 as open and contradicted the corrected entry. Corrected for internal consistency. The lowercase rename was skipped as instructed."
+      verification_attempts: 1
   - id: T004
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: "Determine whether defect 2 (clicks dropped under throttling) is upstream Qwik or frameless, by reproducing on an untouched pnpm create qwik app."
-    allowed_files: []
-    verify: []
+    allowed_files:
+      - "docs/goals/frameless-defects-and-targets-v1/notes/T004-throttled-click-upstream.md"
+      - "docs/goals/frameless-defects-and-targets-v1/notes/T004-upstream-qwik-dropped-click.md"
+      - "demos/qwik/throttled-resume.mjs"
+    scope_note: >-
+      Deliberately narrow. The deliverable is a DECISION with evidence, not a fix. Scaffold the
+      untouched app OUTSIDE the repo - use the scratchpad, not a workspace directory - so no
+      package.json, lockfile or workspace glob changes. demos/qwik/throttled-resume.mjs is listed
+      only in case the harness must be parameterised to point at an external app; if it does not
+      need to change, leave it alone.
+    verify:
+      - "node demos/qwik/throttled-resume.mjs against the existing demo, unthrottled - the instrument's own control must still pass"
+      - "the same harness against the untouched scaffold, throttled at 300ms / 400 kbit/s, production build"
+      - "git status --short - no workspace files changed beyond allowed_files"
     stop_if:
       - "Need files outside allowed_files."
       - "The untouched app cannot be scaffolded, or the throttling harness cannot be pointed at it."
@@ -468,6 +572,9 @@ tasks:
       - "Reject if defect 1's fix landed without T002's witnessed Qwik failure on record."
       - "Reject if the contract extension asserts a proxy for cancellation rather than the default action itself."
       - "pnpm e2e is RED for Qwik between T002 and T003 BY DESIGN - T002's deliverable is that failure. Reject Phase A if e2e is still red when this audit runs: that means T003 did not close it."
+      - "RATIFY OR OVERTURN T003's Gate 5 resolution. The Worker recorded a literal G5 FAIL - the two forms are NOT behaviourally equivalent, which is the whole point of the change - and resolved it as FORCED LOWERING under docs/emitter-idiom-policy.md's own preamble, on the grounds that the baseline form cannot express the IR's declared SyncPolicy in Qwik at all. That is plausible and was flagged honestly rather than reframed away, but it is a Judge call. If forced lowering is the right frame, say whether the policy's preamble needs sharpening so the next adapter is not left to improvise the same argument."
+      - "Rule on the RECORDING GAP: docs/emitter-idiom-policy.md requires every ruling to get a worked-example entry plus a decision-site comment. The comment is in place; the worked example is not, because that file was outside T003's allowed_files. Spec the follow-up package or fold it into a later task."
+      - "Assess T003's G2 judgement call: it passed Gate 2 by reading 'an added import list entry' as scoped to entries demanded of ANOTHER module, since the added sync$/$ imports are the emitted module's own. It flagged this as re-openable."
       - "full_outcome_complete stays false - this is a phase boundary, not the goal."
     expected_output:
       - "Phase A complete | not complete"
