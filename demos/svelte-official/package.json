@@ -4,8 +4,9 @@
 	"version": "0.0.1",
 	"type": "module",
 	"scripts": {
-		"dev": "vite dev",
-		"build": "vite build",
+		"copy-emitted": "node -e \"require('fs').mkdirSync('src/lib/emitted',{recursive:true});[['S1','RenderOnce'],['S2','KeyedTodo'],['S3','EventForm']].forEach(([s,n])=>require('fs').copyFileSync('../../packages/frameworks/svelte/generated/'+s+'.svelte','src/lib/emitted/'+n+'.svelte'))\"",
+		"dev": "pnpm copy-emitted && vite dev",
+		"build": "pnpm copy-emitted && vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",

@@ -1,11 +1,13 @@
 /**
- * The three-way behavior contract.
+ * The cross-framework behavior contract.
  *
- * One shared IR compiles to React, Solid and Qwik. What follows is the
+ * One shared IR compiles to React, Solid, Qwik and Svelte. What follows is the
  * *observable* outcome the emitted output must produce for each scenario, and
- * all three official demo lanes run this exact sequence. Running one shared
- * contract is what makes the claim a comparison rather than three unrelated
- * tests: if React, Solid and Qwik all pass these steps, they behaved the same.
+ * all four official demo lanes run this exact sequence. Running one shared
+ * contract is what makes the claim a comparison rather than four unrelated
+ * tests: if React, Solid, Qwik and Svelte all pass these steps, they behaved
+ * the same. The `three-way` tag and the `three-way-results` note kind are the
+ * wire protocol `scripts/e2e.mjs` reads and are deliberately left unrenamed.
  *
  * Every string a lane records is *measured* — read back out of the live DOM
  * through `page.content()` — never a literal pushed alongside an assertion.
@@ -15,8 +17,9 @@
  * compares data the three frameworks actually produced.
  *
  * It lives under demos/react-official only because it has to live inside one of
- * the three demo packages. demos/solid-official and demos/qwik import it by
- * relative path, exactly the way demos/ssr imports demos/ui-kit/scenarios.ts.
+ * the demo packages. demos/solid-official, demos/qwik and demos/svelte-official
+ * import it by relative path, exactly the way demos/ssr imports
+ * demos/ui-kit/scenarios.ts.
  */
 import type { EnvironmentResponse, ExpectApi, PageHandle } from '@async/witness'
 
@@ -25,18 +28,133 @@ export type ScenarioId = 's1' | 's2' | 's3'
 export const scenarioIds: readonly ScenarioId[] = ['s1', 's2', 's3']
 
 /**
- * How each framework becomes interactive. React and Solid hydrate, so the lane
- * waits for the hydration marker their client entry sets before it clicks;
- * Qwik resumes, so there is nothing to wait for — qwikloader buffers the event
- * and pulls the handler on demand. That asymmetry is the thesis, not a defect,
- * and it is the only thing the three lanes do differently.
+ * How each framework becomes interactive. React, Solid and Svelte hydrate, so
+ * the lane waits for the hydration marker their client entry sets before it
+ * clicks; Qwik resumes, so there is nothing to wait for — qwikloader buffers
+ * the event and pulls the handler on demand. That asymmetry is the thesis, not
+ * a defect, and it is the only thing the four lanes do differently.
  */
 export type Activation =
-  | { readonly kind: 'hydrate'; readonly framework: 'react' | 'solid' }
+  | { readonly kind: 'hydrate'; readonly framework: 'react' | 'solid' | 'svelte' }
   | { readonly kind: 'resume'; readonly framework: 'qwik' }
 
-/** The attribute React's and Solid's client entries set once activation ran. */
+export type HydrateFramework = Extract<Activation, { kind: 'hydrate' }>['framework']
+
+/** The attribute a hydrating demo's client sets once activation ran. */
 const ACTIVATION_MARKER = 'data-frameless-activated'
+
+/**
+ * The client-entry module string each hydrating lane's server must have sent.
+ *
+ * This is **not** an activation-neutrality claim — the two negatives in
+ * `assertServedActivation` are. It is a *lane-identity* claim: proof that the
+ * payload the browser received is inert markup plus a module that has not run
+ * yet. React and Solid share the literal only because their scaffolds happen to
+ * name their entry identically; SvelteKit owns its client entry and cannot
+ * produce `/src/entry-client.jsx` at all, so the literal is per lane.
+ *
+ * Parameterised, not relaxed. The assertion is still an exact substring of the
+ * served payload, so each lane makes the identical claim at its own literal;
+ * softening it to "any module script" would have been a weakening and is not
+ * what happened here. React's and Solid's asserted strings are byte-unchanged.
+ *
+ * A **total** `Record` is what makes this required rather than optional: adding
+ * a framework to `HydrateFramework` without adding its literal is a type error,
+ * so no lane can silently opt out. There is no default and no `??` fallback.
+ *
+ * The Svelte literal was *measured*, not guessed — read out of what
+ * `vite dev` actually served for `/` at @sveltejs/kit 2.70.1 (the resolution of
+ * the scaffold's `^2.63.0`), where SvelteKit's inline bootstrap imports
+ * `.../@sveltejs/kit/src/runtime/client/entry.js` before calling `kit.start`.
+ * `demos/svelte-official/scenarios.box.ts` calls `calibrateServedClientEntry`
+ * on every run to prove the check can still go red.
+ */
+const servedClientEntry: Readonly<Record<HydrateFramework, string>> = {
+  react: '/src/entry-client.jsx',
+  solid: '/src/entry-client.jsx',
+  svelte: '@sveltejs/kit/src/runtime/client/entry.js',
+}
+
+/**
+ * Main-frame navigations each lane must record *after* the initial load.
+ *
+ * Every lane issues exactly one `resourceType: 'Document'` request — asserted
+ * separately in `runScenario` — so a non-zero count here is a client router
+ * writing a same-URL history entry as it takes over, never a reload. React and
+ * Solid ship no router and record 0. Qwik's router records 1. SvelteKit's
+ * records 1 for the same reason, *measured*: its single navigation is to the
+ * identical URL the page was opened at (`http://127.0.0.1:5173/` → the same),
+ * alongside exactly one Document request, which is `kit.start` adopting the
+ * initial history entry.
+ *
+ * Declared per lane and asserted exactly, never relaxed to "any number". That
+ * matters most for the lane that needed the widening: a Svelte reload would
+ * also show up as a navigation, and only an exact expected count distinguishes
+ * "the router adopted the page" from "the page reloaded under us". React's,
+ * Solid's and Qwik's numbers are byte-unchanged from `resume ? 1 : 0`.
+ *
+ * Total `Record`, for the same reason as `servedClientEntry`: a new framework
+ * must declare a number or the code does not compile.
+ */
+const expectedNavigations: Readonly<Record<Activation['framework'], number>> = {
+  react: 0,
+  solid: 0,
+  qwik: 1,
+  svelte: 1,
+}
+
+/**
+ * The predicate behind the served-client-entry claim.
+ *
+ * `expect.response.matches(served, { contains })` is `response.text.includes(contains)`
+ * (@async/witness 0.7.0). Naming it here lets the negative control below drive
+ * the *same* predicate without routing a deliberate failure through `expect`,
+ * which would record a permanent `assertion failed` statement against the run
+ * and flag the box contested even though the box caught it.
+ */
+function payloadCarriesClientEntry(text: string, entry: string): boolean {
+  return text.includes(entry)
+}
+
+/**
+ * Instrument rule 3, two-sided: a served-payload literal never observed failing
+ * is not a check.
+ *
+ * The positive arm runs the same predicate the assertion runs. The negative arm
+ * mutates the *evidence* rather than the literal — it deletes every occurrence
+ * of the entry from the payload the server really sent and requires the
+ * predicate to reject it. That is the failure this check exists to catch: if
+ * SvelteKit stops serving that module, or serves a bundled chunk instead, the
+ * lane goes red rather than passing on a string nobody watches.
+ */
+export function calibrateServedClientEntry(options: {
+  readonly served: EnvironmentResponse
+  readonly framework: HydrateFramework
+}): Record<string, unknown> {
+  const entry = servedClientEntry[options.framework]
+  const text = options.served.text
+  if (!payloadCarriesClientEntry(text, entry)) {
+    throw new Error(
+      `The payload served for ${options.served.path} does not contain ${entry}, so the ` +
+        `${options.framework} lane cannot be identified by its client entry.`,
+    )
+  }
+  const withoutEntry = text.split(entry).join('')
+  if (withoutEntry.length === text.length) {
+    throw new Error(`Negative control did not mutate the payload for ${entry}.`)
+  }
+  if (payloadCarriesClientEntry(withoutEntry, entry)) {
+    throw new Error(
+      `The served-client-entry check for ${options.framework} cannot go red: a payload with ` +
+        `every occurrence of ${entry} removed still satisfies it.`,
+    )
+  }
+  return {
+    servedClientEntry: entry,
+    servedClientEntryOccurrences: text.split(entry).length - 1,
+    negativeControl: `payload with ${entry} deleted is rejected`,
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Measurement
@@ -146,9 +264,12 @@ function forbidInServedPayload(served: EnvironmentResponse, fragments: string[])
  *
  * - Qwik must send a paused container and at least one `q-e:click` QRL
  *   attribute — markup that already names its handlers, with nothing to run.
- * - React and Solid must send a client entry module (nothing reacts until it
- *   runs) and must send **neither** `q:container` **nor** the activation
- *   marker: their output is inert until hydration commits.
+ * - React, Solid and Svelte must send their own client entry module (nothing
+ *   reacts until it runs) and must send **neither** `q:container` **nor** the
+ *   activation marker: their output is inert until hydration commits. The two
+ *   negatives are the neutrality claims and are identical for every lane; only
+ *   the entry literal is per lane, and only because the scaffolds name it
+ *   differently. See `servedClientEntry`.
  *
  * NOTE for anyone documenting this: in @qwik.dev/core 2.0.0-beta.38 the
  * serialized handler attribute is `q-e:click`, not the `on:click` of Qwik 1.
@@ -171,7 +292,9 @@ export async function assertServedActivation(options: {
     }
   }
 
-  await expect.response.matches(served, { contains: '/src/entry-client.jsx' })
+  await expect.response.matches(served, {
+    contains: servedClientEntry[activation.framework],
+  })
   forbidInServedPayload(served, ['q:container', ACTIVATION_MARKER])
   return { servedContainer: null, servedClickQrls: 0 }
 }
@@ -370,17 +493,27 @@ const assertions: Record<
  * Runs one scenario end to end: wait for the framework to be able to react,
  * run the shared assertions, then require a clean page (no console errors, no
  * failed requests). A hydration mismatch or a resume failure surfaces as a
- * console error, so the clean-page check is what proves "no warnings".
+ * console error, so the clean-page check is what catches those.
+ *
+ * What it does **not** catch: `console.warn`. @async/witness 0.7.0 exposes
+ * `consoleErrors` only, and `PageHandle` has no console accessor at all, so no
+ * witness lane can observe a warning. That matters for Svelte, which reports
+ * `ownership_invalid_mutation` and `state_unsafe_mutation` as warnings.
+ * `demos/svelte-official` therefore installs its own in-page sink and reflects
+ * the count onto an attribute this contract can read; see
+ * `demos/svelte-official/src/hooks.client.ts` and the T004 note. React, Solid
+ * and Qwik have no equivalent sink and are unchanged.
  *
  * Two checks are parameterised by activation because the frameworks genuinely
  * differ, and leaving either silent is what let the resume claim rest on a
  * substring:
  *
- * - `navigations`: React and Solid record 0, Qwik records 1. Each page — in all
- *   three frameworks — issues exactly **one** `resourceType: 'Document'`
- *   request, asserted below, so Qwik's extra navigation is the Qwik router
- *   pushing a same-URL history entry and **not** a reload. Benign, but now
- *   asserted per framework instead of left unexplained.
+ * - `navigations`: React and Solid record 0, Qwik and Svelte record 1. Each
+ *   page — in all four frameworks — issues exactly **one**
+ *   `resourceType: 'Document'` request, asserted below, so the routed lanes'
+ *   extra navigation is a client router taking over a same-URL history entry
+ *   and **not** a reload. Declared per lane in `expectedNavigations` and
+ *   asserted exactly, never relaxed.
  * - `events.qsymbol`: Qwik only. The handler QRLs the clicks pulled, by name.
  */
 export async function runScenario(options: {
@@ -411,7 +544,7 @@ export async function runScenario(options: {
 
   const evidence: Record<string, unknown> = {
     documentRequests: documents.length,
-    navigations: activation.kind === 'resume' ? 1 : 0,
+    navigations: expectedNavigations[activation.framework],
   }
 
   if (activation.kind === 'resume') {
@@ -428,7 +561,7 @@ export async function runScenario(options: {
   }
 
   await expect.page.outcome(page, {
-    navigations: activation.kind === 'resume' ? 1 : 0,
+    navigations: expectedNavigations[activation.framework],
     consoleErrors: 0,
     failedRequests: 0,
     ...(activation.kind === 'resume'

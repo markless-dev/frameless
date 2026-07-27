@@ -21,3 +21,6 @@ Thumbs.db
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Witness receipts (demos/react-official, solid-official and qwik do the same)
+.witness/

@@ -3,7 +3,24 @@
 	"compilerOptions": {
 		"rewriteRelativeImportExtensions": true,
 		"allowJs": true,
-		"checkJs": true,
+		// Scaffold default is `true`. Turned off for exactly one reason: the three
+		// components in src/lib/emitted are frameless-emitted, deliberately
+		// untyped JS, and `checkJs` + `strict` over untyped JS produces the class
+		// of noise this repo has already ruled is not evidence of anything --
+		// implicit-any callback parameters and `event.target.dataset` -- see the
+		// ACCEPTED list and its header comment in
+		// packages/frameworks/solid/test/emitted-typecheck.test.ts, which runs the
+		// same oracle over the same corpus with `strict: false` on purpose.
+		// Emitted output is type-checked THERE, by its own package's lane, not
+		// twice here under a setting that lane already rejected.
+		//
+		// What this does NOT give up, and what T002 ruling 6 bought svelte-check
+		// for: every route and hook here is `lang="ts"` and stays fully strict,
+		// and the route-to-emitted-component prop contract is still checked --
+		// prop errors are reported at the consuming .svelte route, not inside the
+		// JS component. Calibrated two-sided in the T004 note: a bogus prop and a
+		// wrong-typed prop each turn this check red.
+		"checkJs": false,
 		"esModuleInterop": true,
 		"forceConsistentCasingInFileNames": true,
 		"resolveJsonModule": true,

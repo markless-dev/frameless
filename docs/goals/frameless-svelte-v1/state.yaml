@@ -97,7 +97,7 @@ visual_board:
     url: null
     command: "npx goalbuddy board docs/goals/frameless-svelte-v1"
 
-active_task: T004
+active_task: T006
 
 tasks:
   - id: T001
@@ -407,7 +407,7 @@ tasks:
   - id: T004
     type: worker
     assignee: Worker
-    status: active
+    status: blocked
     reasoning_hint: medium
     objective: >-
       Stand up demos/svelte-official from the official SvelteKit scaffold and add the Svelte row to
@@ -450,8 +450,74 @@ tasks:
       - "Official scaffold as it ships."
       - "Do not weaken any existing activation-neutrality check."
       - "A dev-only console warning is a FAILURE here, not noise - Svelte reports ownership violations that way."
-    receipt: null
-
+    receipt:
+      result: blocked
+      harness: claude-code
+      note: notes/T004-svelte-demo.md
+      blocked_reason: "A source/product conflict requiring files outside allowed_files. Cross-lane S3 equality cannot be asserted without EITHER an emitter change under packages/frameworks/svelte (outside allowed_files, and frozen by this task's own git-diff verify step) OR a change to react/solid/qwik's asserted strings (an explicit stop_if). Ruling queued as T006."
+      summary: "Stood up demos/svelte-official as a stock SvelteKit app on the qwik precedent - three routes wiring emitted components, copy-emitted, an onMount activation marker, an e2e officialDemos row, and the Activation widening as required per-lane tables. S1 and S2 pass FULLY EQUAL. S3 passes except one observation, root-caused to intentional Svelte framework behaviour."
+      changed_files:
+        - demos/react-official/three-way-contract.ts
+        - demos/svelte-official/scenarios.box.ts
+        - demos/svelte-official/package.json
+        - demos/svelte-official/tsconfig.json
+        - demos/svelte-official/.gitignore
+        - demos/svelte-official/src/hooks.client.ts
+        - demos/svelte-official/src/lib/scenario-props.ts
+        - demos/svelte-official/src/lib/emitted/RenderOnce.svelte
+        - demos/svelte-official/src/lib/emitted/KeyedTodo.svelte
+        - demos/svelte-official/src/lib/emitted/EventForm.svelte
+        - "demos/svelte-official/src/routes/+layout.svelte"
+        - "demos/svelte-official/src/routes/+page.svelte"
+        - "demos/svelte-official/src/routes/s2/+page.svelte"
+        - "demos/svelte-official/src/routes/s3/+page.svelte"
+        - scripts/e2e.mjs
+        - docs/goals/frameless-svelte-v1/notes/T004-svelte-demo.md
+      commands:
+        - cmd: "pnpm check"
+          status: pass
+          note: "four tsc passes"
+        - cmd: "pnpm test"
+          status: pass
+          note: "620/620, 42 files"
+        - cmd: "pnpm test:browser"
+          status: pass
+          note: "react 60/60, solid 49/49, svelte 13/13"
+        - cmd: "pnpm e2e"
+          status: fail
+          note: "FAILS at the svelte row ONLY, on one observation. react, solid and qwik boxes all pass unchanged."
+        - cmd: "pnpm --dir demos/svelte-official check"
+          status: pass
+          note: "svelte-check, 0 errors, 281 files"
+        - cmd: "git diff --exit-code -- packages/frameworks demos/{react,solid}-official/src demos/qwik/src"
+          status: pass
+          note: "clean - no emitter or existing-demo source moved"
+        - cmd: "git diff --exit-code -- pnpm-lock.yaml"
+          status: pass
+      the_blocker_root_caused:
+        symptom: "assertS3 reads the value ATTRIBUTE of [data-action=\"text\"] out of the live DOM. It is absent for Svelte."
+        cause: "svelte 5.56.8 src/internal/client/dom/elements/attributes.js remove_input_defaults() deletes the value/checked ATTRIBUTES on hydration BY DESIGN, preserving the PROPERTY. PM VERIFIED the source verbatim, including that it is guarded by `if (!hydrating) return` and deferred to an idle callback for performance."
+        not_a_bug_in_our_work: "SSR emits value=\"hello\" correctly; the client removes it. Not a hydration mismatch, not a demo-wiring fault."
+        why_T003_never_saw_it: "The `if (!hydrating) return` guard. T003's lane mounts directly; THIS DEMO IS THE FIRST INSTRUMENT IN THE REPO THAT HYDRATES SVELTE."
+      two_proven_repairs_neither_in_scope:
+        A_emitter: "Emit defaultValue={text} alongside value={text}; set_attributes then skips the removal. PROVEN: probed on the copied component, the ENTIRE LANE PASSES with the contract completely unmodified, S3 reporting 'server-rendered text = hello with writes = 0' byte-identical to react/solid/qwik. Owner: packages/frameworks/svelte/src/emitter/**, outside allowed_files AND frozen by this task's own verify step. Also needs a six-gate ruling and a version floor against the deferred IR-4."
+        B_contract: "Read the value PROPERTY rather than the attribute. Changes react/solid/qwik's asserted strings - an explicit stop_if, and what T999 tests mechanically."
+        the_structural_twin: "Repair A is the structural twin of Solid's attr:value, docs/DEFECTS.md finding 5, which was settled by measurement as upstream-and-required."
+      judge_question_raised_not_decided: "Instrument rule 1 cuts BOTH ways here. A finding that reproduces on a stock official scaffold with NONE OF OUR CODE is evidence the TEST is unfair rather than the framework wrong. This DOES reproduce on stock SvelteKit, the attribute is not user-visible, and all four frameworks display 'hello'. So repair B may be the correct WIDENING rather than a weakening - which inverts a stop_if, and is why only a Judge may say it. Queued as T006."
+      served_literal:
+        measured: "@sveltejs/kit/src/runtime/client/entry.js - measured from what SvelteKit dev actually serves, not guessed."
+        red_proof: "A two-sided negative control that deletes the literal from the real payload and requires rejection."
+      activation_marker: "Imperative, in onMount in the root +layout.svelte - Svelte's own post-mount signal, as T002 condition 4 required. Not hooks.client.ts init, not a template attribute binding."
+      navigations: "MEASURED as 1 - same URL, one Document request; kit.start ADOPTING the initial entry rather than reloading. Declared exactly per-demo, not relaxed to 'any number'."
+      dev_warnings: "SINK LANDED in demos/svelte-official/src/hooks.client.ts, self-calibrating, reporting 'sink calibrated with 0 dev console diagnostics'. This closes the debt T003 carried forward: the witness API cannot observe warnings, so without this the demo lane could not enforce the constraint and T999's version would have passed vacuously."
+      byte_unchanged: "git diff --exit-code over demos/{react,solid}-official/src and demos/qwik/src is clean. The widening is total Readonly<Record<...>> tables rather than fields on the hydrate arm - see deviations."
+      deviations:
+        - "servedClientEntry and expectedNavigations are total Readonly<Record<...>> rather than REQUIRED FIELDS on the hydrate arm. A field would require editing demos/{react,solid}-official/scenarios.box.ts, both outside allowed_files. The total Record satisfies T002 condition 1's stated PURPOSE exactly - omission is a compile error, no optionality, no fallback - and the better spelling is named in the note for a task that has those files in scope."
+        - "Set checkJs: false in demos/svelte-official/tsconfig.json. svelte-check reported 8 errors, all inside src/lib/emitted and all in the class packages/frameworks/solid/test/emitted-typecheck.test.ts already runs with strict:false on purpose. Routes and hooks stay lang=ts and fully strict, and it is calibrated two-sided to prove unknown and missing route props still go red."
+        - "Added src/lib/scenario-props.ts to hold shared prop values rather than repeating them across three routes."
+        - "demos/svelte-official build also runs copy-emitted, matching react-official and qwik."
+      carried_forward: "svelte-check does NOT catch wrong-TYPED props passed from a route, because emitted output carries no prop types. Closable only by an emitter that emits types."
+      verification_attempts: 2
   - id: T005
     type: judge
     assignee: Judge
@@ -469,6 +535,33 @@ tasks:
       - "Six gate outcomes for at least one version-gated Svelte sugar question"
       - "Whether the version corollary resolved, with evidence"
       - "Whether docs/emitter-idiom-policy.md needs updating"
+    receipt: null
+
+  - id: T006
+    type: judge
+    assignee: Judge
+    status: active
+    reasoning_hint: high
+    objective: "Rule where the S3 value-attribute conflict is repaired: the Svelte emitter, or the three-way contract - and whether the contract's assertion is fair to Svelte at all."
+    inputs:
+      - "T004 receipt on this board - the root cause, both proven repairs, and the fairness question"
+      - "notes/T004-svelte-demo.md"
+      - "demos/react-official/three-way-contract.ts assertS3"
+      - "svelte 5.56.8 src/internal/client/dom/elements/attributes.js remove_input_defaults"
+      - "docs/DEFECTS.md finding 5 - the structural twin, Solid's attr:value"
+    constraints:
+      - "Do not implement. Rule, and spec the Worker package."
+      - "THE FACT, verified by the PM: svelte 5.56.8's remove_input_defaults() deletes the value/checked ATTRIBUTES on hydration BY DESIGN, guarded by `if (!hydrating) return` and deferred to an idle callback for performance. SSR emits value=\"hello\" correctly; the client removes it and preserves the PROPERTY. This is why T003's direct-mount browser lane never saw it - this demo is the first instrument in the repo that HYDRATES Svelte."
+      - "REPAIR A, emitter: emit defaultValue={text} alongside value={text}; set_attributes then skips the removal. PROVEN by T004 on the copied component - the entire lane passes with the contract UNMODIFIED, S3 reporting byte-identical observations to the other three. Cost: it needs a six-gate ruling of its own, including a version floor against the deferred IR-4, and it is the structural twin of Solid's attr:value (finding 5), which was settled as upstream-and-required."
+      - "REPAIR B, contract: read the value PROPERTY rather than the attribute. Cost: it changes the strings react/solid/qwik assert, which T004's card lists as an explicit stop_if and which T999 tests mechanically for byte-equality."
+      - "THE QUESTION THAT DECIDES IT, raised by T004 and not decided: instrument rule 1 says a finding that reproduces on a stock official scaffold with NONE OF OUR CODE is evidence the TEST is unfair rather than the framework wrong. This DOES reproduce on stock SvelteKit, the attribute is not user-visible, and all four frameworks display 'hello'. So repair B may be the correct WIDENING rather than a weakening - but that inverts a stop_if, which is why only a Judge may say so."
+      - "If you rule B, say precisely what makes it a widening and not the weakening T999 is instructed to reject, and how T999 should tell them apart. The mechanical byte-equality test was written before this conflict was known; if it is now the wrong test, say so explicitly rather than leaving T999 to fail a correct repair."
+      - "Consider a third option before settling: assert BOTH the attribute and the property per lane, declared per demo the way servedClientEntry and expectedNavigations already are. That preserves every existing assertion byte-for-byte while letting Svelte declare what it actually serves."
+    expected_output:
+      - "Ruling: A, B, or a third option, with the cost stated"
+      - "If B or the third option: what distinguishes it from a weakening, and the corrected instruction for T999"
+      - "Whether Solid's attr:value precedent (finding 5) binds here"
+      - "Exact Worker objective, allowed_files, verify, stop_if"
     receipt: null
 
   - id: T999
