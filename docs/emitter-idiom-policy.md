@@ -30,6 +30,34 @@ all — it must become a class method. That is **forced lowering**, not sugar, a
 does not apply to it. In Angular the baseline is simply the more permissive of the sanctioned
 forms. Every framework has a baseline; not every framework has a naive one.
 
+Angular's case is forced by **expressibility** — the naive form cannot be written down. That is
+not the only trigger. Forced lowering also covers the case where the naive form is syntactically
+legal in the target and produces observably incorrect behaviour for the construct the IR declares.
+A form the framework accepts as *parseable* is not thereby a sanctioned form for that construct.
+Before running the gates, state the sanctioned set — the forms the framework's own docs or
+toolchain accept as *correct for that construct* — and choose the baseline from inside it. If the
+current emitted output is not in that set, this is a defect fix and the procedure does not apply.
+Never run Gate 5 against known-broken output: it will always `FAIL`, and the `FAIL` is
+meaningless.
+
+**This second trigger is gated on membership, not on preference.** It is available only where the
+current form can be shown to be **outside** the sanctioned set, and the showing is the burden of
+whoever invokes it: a framework diagnostic, a lint rule the framework ships against that shape, a
+dedicated construct the framework provides *because* that shape does not work, or a witnessed
+runtime failure. Name the evidence in the record. A form that is inside the sanctioned set and is
+merely disliked, slower, less idiomatic or less pleasant to read is a **candidate sugar**, and it
+goes through all six gates like everything else. If you cannot say what the framework itself
+holds against the current output, you are not in forced lowering, and a `FAIL` at Gate 5 is a real
+`FAIL`. Reframing a genuine Gate 5 `FAIL` as forced lowering in order to push a change through is
+the failure mode this paragraph exists to stop.
+
+Two entries below are this species rather than sugar questions: worked example 9, where Qwik
+accepts `preventDefault()` inside a lazily fetched QRL and the call never runs in time; and the
+original `stopPropagation` finding in worked example 6, where Svelte accepts the attribute form
+and its delegated listeners defeat it. Note the difference between them — example 6 was repairable
+by narrowing the domain, so it stayed a sugar question and kept running the gates, while example 9
+was not.
+
 ## The procedure
 
 Run all six gates. **Do not short-circuit.** Record an outcome for every gate even after one
@@ -101,12 +129,23 @@ gate is `FAIL`.
 *Is the sugar fully decided inside the single module being emitted?*
 
 `FAIL` if it requires anything of another module, of the emitted component's parent or child, or
-of the build graph — an added import list entry, a plugin, a new dependency, or a declaration the
-other end must make.
+of the build graph — an added import list entry **in another module**, a plugin, a new dependency,
+or a declaration the other end must make.
 
 Frameless emits one module per `EnrichedIR`. Any sugar whose legality depends on how a
 *different* module was emitted fails this gate by construction. This is the gate that every
 framework's two-way-binding sugar fails.
+
+**Scope of the import clause.** It is scoped to *another* module deliberately, and that scoping is
+settled, not a judgement call. An import the emitted module adds to **its own** import list is not
+a Gate 2 failure: the emitter already manages its own framework imports — `useSignal`, `useStore`,
+`useComputed$`, `$`, `sync$` — and worked example 1 already passes this gate with `$` in the
+baseline's own import list, so the self-scoped reading would retroactively invalidate a shipped
+ruling. Every other item in the failure list above is an obligation on a *third party*; read
+self-scoped, the import clause would be the only one out of family. Vue's `defineModel`, Angular's
+`input()`/`output()` and Svelte's `on` from `svelte/events` — which worked example 6 already
+commits to — are all decided by this scoping, and are decided the same way: an import of the
+target framework's own runtime into the module being emitted asks nothing of anyone else.
 
 ### Gate 3 — Declared trigger
 
@@ -350,6 +389,95 @@ behavior; a wrong event name or attribute name fails immediately.
 
 Note the deliberate divergence recorded in the Solid dossier: Solid keeps `onInput` and bans
 `className`. Per-target divergence is expected. The procedure is shared; its answers are not.
+
+### 9. Qwik — unconditional `preventDefault()` → a leading `sync$()` QRL in a QRL array → **forced lowering** (adopted)
+
+**Sanctioned set, stated first.** Per the second forced-lowering trigger above, the set is named
+before any gate runs. For "cancel an event's default action", `@qwik.dev/core@2.0.0-beta.38` ships
+exactly two sanctioned forms: the element-level `preventdefault:<event>` attribute
+(`core-internal.d.ts:2445` declares
+``[K in keyof HTMLElementEventMap as `preventdefault:${K}`]?: boolean``, and `core.mjs` carries
+`isPreventDefault()`, `PREVENT_DEFAULT = 'preventdefault:'` and
+`addUseOnModifier(…, 'preventdefault')`); and a leading `sync$()` QRL inside the array a Qwik
+event prop accepts, whose elements run in order.
+
+**The pre-fix output was in neither set.** It left `event.preventDefault()` inside the ordinary,
+lazily fetched QRL. That shape is parseable and builds clean, and it does not work: Qwik ships a
+lint rule against it (`eslint-plugin-qwik`'s `no-async-prevent-default`) and ships two dedicated
+constructs precisely because it does not work. The runtime failure was witnessed, not argued —
+clicking a `<button type="submit">` whose handler body is nothing but `event.preventDefault()`
+still issued the form's GET, the handler's segment arriving roughly 58ms *after* dispatch by CDP
+timings. That handler was fully **synchronous**, so the cause is QRL laziness and not `async`;
+neither this lowering nor the gate policy guarding it inspects `async`. Wrong output is not a
+baseline. This is therefore a defect fix under forced lowering, and the baseline was re-chosen
+from inside the sanctioned set.
+
+Adopted form:
+
+```jsx
+onClick$={[
+  sync$((event) => { event.preventDefault(); }),
+  $(async (event) => { /* the rest of the authored body */ }),
+]}
+```
+
+Domain, in emitter terms: the handler expression returned by `emitEvent()`
+(`packages/frameworks/qwik/src/emitter/index.ts`) for a host-element event prop whose
+`EnrichedEventRecord` declares unconditional `preventDefault`.
+
+- **G1 PASS** — measured, not read, against `@qwik.dev/core@2.0.0-beta.38`, the build `demos/qwik`
+  ships. Two things were measured rather than assumed: that `sync$()` is serialized inline into
+  the HTML and resolves without a network round trip, so it runs during dispatch; and that the
+  optimizer does **not** extract array *elements*, so the remainder must be `$()`-wrapped or it
+  stays an inline closure, never becomes a QRL, and is silently dropped from `q-e:click` during
+  serialization.
+- **G2 PASS** — one call site, one emitted module. The added `sync$` and `$` imports are the
+  emitted module's **own** import list entries, which is not a Gate 2 failure under the scoping
+  recorded at that gate. Nothing is asked of any other module, of a parent or child, or of the
+  build graph.
+- **G3 PASS** — the trigger is the declared IR field `EnrichedEventRecord.syncPolicy`, never
+  handler contents. The Gate 3 rider does not engage.
+- **G4 PASS** — the domain is every record for which `hoistsPreventDefault()` returns true, and
+  that predicate **is** the deciding function: a single branch, `constant-truthy` with a truthy
+  value, whose actions include `preventDefault`. It is total over that domain by construction.
+  Everything else — a `branches` list, a `graph-truthy` or `event-equals` guard — is *conditional*
+  cancellation, whose `sync$()` body would have to read reactive state, and is deliberately
+  outside the stated domain rather than an unhandled subset of it.
+- **G5 — neither `PASS` nor `FAIL`. The procedure does not apply.** Recorded that way
+  deliberately, and it is the outcome this entry exists to pin down. The two forms are plainly
+  **not** behaviourally equivalent — the default action is now actually prevented, which is the
+  entire point of the change — so under the letter of Gate 5 this `FAIL`s. But the pre-fix shape
+  was never a *sanctioned* form for this construct, and Gate 5 compares a candidate against a
+  baseline drawn from the sanctioned set. Comparing against wrong output is a category error that
+  would produce a spurious `FAIL` every single time a defect is fixed. Restricted to the real
+  sanctioned set, the pre-fix shape was never a member; forced lowering applies and the gate is
+  not askable.
+
+  Read the scope of that narrowly. "The procedure does not apply" is not a fifth outcome label
+  available to a sugar question, and it is not reachable by preferring a different form. It is
+  reachable here only because the sanctioned set was stated up front and the current output was
+  shown to sit outside it, on the framework's own evidence — its lint rule, its two dedicated
+  constructs, and a witnessed runtime failure.
+- **G6 PASS** — `pnpm e2e` drives `demos/qwik` on its official Qwik Router scaffold at the
+  lockfile version and asserts, after clicking `[data-action="cancel-submit"]`, that exactly one
+  `resourceType` `Document` request served the page, that `[data-scenario="s3"]` still exists, and
+  that `data-writes` still reads `2` — a reload would reset it to `0`. That check **failed before
+  this change** (two Document requests) and passes after, and all three framework lanes now emit
+  the identical observation. The standing check is `demos/react-official/three-way-contract.ts`,
+  `assertS3`.
+
+**Form choice between the two sanctioned forms was never gated, and is recorded here so it is not
+reopened.** It was settled by the repo owner, who is on the Qwik core team. Two facts decide it:
+
+1. The array carries the **rest of the handler body**, which `preventdefault:click` cannot. At the
+   `type="button"` site the authored handler also performs two state writes and an `onTrace$`
+   call, so the split into a `sync$()` element plus a `$()` element is needed there regardless of
+   which cancellation mechanism is chosen. Using the array everywhere means one shape covers the
+   whole lowering — hence the one-element array when cancellation was the entire body.
+2. `preventdefault:click` is **element-level**, whereas `SyncPolicy` is **per-event-record**. The
+   attribute cancels an event name on an element; the IR declares cancellation against a specific
+   event record. Lowering a per-record declaration onto an element-level attribute would lose that
+   correspondence wherever the two do not coincide.
 
 ## Recording a ruling
 

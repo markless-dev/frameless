@@ -1006,6 +1006,29 @@ tasks:
       - "The discriminating shape is disk-read source + an escaped-\\n search literal. Three literals in react/test/gate.test.ts are safe ONLY because ECMAScript normalises CRLF to LF inside template literals - that safety is incidental, not designed, and should not be relied on."
     receipt: null
 
+  - id: T019
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: low
+    objective: "Close the two documentation inconsistencies T016 surfaced from outside its allowed_files."
+    allowed_files:
+      - packages/frameworks/qwik/src/emitter/index.ts
+      - docs/emitter-idiom-policy.md
+    verify:
+      - "pnpm check"
+      - "pnpm test"
+      - "git diff --stat   # comment and prose only - no behaviour change, no emitted-output change"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Your edit to the emitter changes anything other than the DECISION SITE comment block. No logic, no emitted output."
+      - "pnpm test drops below its current count or any suite goes red."
+    constraints:
+      - "INCONSISTENCY 1: the decision-site comment at packages/frameworks/qwik/src/emitter/index.ts:455-459 says 'all six gates PASS'. T005 corrected that - G5 is NOT a PASS - so the emitter and worked example 9 now disagree on one word. Repoint it to forced lowering with G5 not applicable, citing worked example 9."
+      - "INCONSISTENCY 2: the 'Recording a ruling' section still requires 'all six gate outcomes'. Example 9 does record an outcome for each of the six, but G5's is 'the procedure does not apply' rather than one of the four labels. Amend the section to admit that outcome explicitly, so the next forced-lowering ruling is not pushed into mislabelling G5 as PASS to satisfy the letter of the requirement."
+      - "T016 flagged both and correctly declined to fix them: the emitter was outside its scope, and widening scope on a governance document unasked is worse than flagging. Prose and comments only."
+    receipt: null
+
   - id: T009
     type: judge
     assignee: Judge
@@ -1033,7 +1056,7 @@ tasks:
   - id: T016
     type: worker
     assignee: Worker
-    status: queued
+    status: done
     reasoning_hint: medium
     spec: "T005 receipt, worker_package. Placed here on the Judge's recommendation: the sharpened preamble is an input to the three adapters."
     objective: >-
@@ -1078,8 +1101,58 @@ tasks:
       - "SCOPE REDUCED BY T007: docs/DEFECTS.md and .github/workflows/ci.yml are REMOVED from this package. T008 now owns DEFECTS.md end to end, including defect 2's not-a-defect rewrite. This package is the idiom-policy document only."
       - "The qwik-throttled rescope moves with the CI file to a later package; it is NOT this one's work. Recorded here so it is not lost: the step must be RESCOPED, not re-annotated. Clicking at domcontentloaded tests 'is the page interactive with no JS', which is out of every framework's design envelope and answers no everywhere. Change the click to fire AFTER the container reports resumed, which tests something real - that resumption completes and works on a slow connection - and then the step needs no continue-on-error at all. If it cannot be made to pass once rescoped, that is a genuine finding; report it rather than restoring the flag."
       - "docs/DEFECTS.md DEFECT 2 must be rewritten as NOT A DEFECT, recording why the original finding was an instrument artifact - not merely downgraded. Do not record qwikLoader: 'inline' as a workaround; there is nothing to work around."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      summary: "Three edits to docs/emitter-idiom-policy.md, one file, nothing else. Worked example 9 records the six gate outcomes for the sync$()-led QRL array lowering, with G5 recorded as NEITHER PASS NOR FAIL and the label's scope confined so it cannot become a general escape. Forced-lowering preamble sharpened with the T005 text plus a membership-not-preference gate carrying an enumerated evidence burden. Gate 2's import clause scoped to another module with the three grounds recorded. Ran concurrently with T008 and T011."
+      changed_files:
+        - docs/emitter-idiom-policy.md
+      commands:
+        - cmd: "pnpm check"
+          status: pass
+          note: "exit 0, three tsc passes"
+        - cmd: "pnpm test"
+          status: pass
+          note: "39 files, 569/569. Above T003's 561 because T008 is concurrently adding tests; nothing red."
+        - cmd: "git diff --stat -- docs/emitter-idiom-policy.md"
+          status: pass
+          note: "1 file, +130/-2"
+        - cmd: "git diff -U0 | grep '^-'"
+          status: pass
+          note: "PM VERIFIED: the only two deleted lines in the entire diff are the Gate 2 clause pair. No worked-example line touched."
+        - cmd: "diff ruling headings HEAD vs now"
+          status: pass
+          note: "PM VERIFIED: pure addition of heading 9; examples 1-8 byte-identical and in order."
+      worked_example_9:
+        sanctioned_set_stated_first: "Two forms at @qwik.dev/core 2.0.0-beta.38: the element-level preventdefault:<event> attribute, and a leading sync$() QRL in the array a Qwik event prop accepts. The pre-fix shape - preventDefault() left inside the lazily fetched QRL - is in NEITHER."
+        G1: "PASS, measured. Two facts recorded: sync$() serializes inline and resolves without a round trip; and the optimizer does NOT extract array elements, so the remainder must be $()-wrapped or it is silently dropped from q-e:click."
+        G2: "PASS - the added sync$/$ imports are the module's OWN entries, explicitly not a failure under the scoping recorded at that gate."
+        G3: "PASS - trigger is the declared syncPolicy field, never handler contents."
+        G4: "PASS - domain is every record for which hoistsPreventDefault() returns true; that predicate IS the deciding function, so conditional cancellation is outside the domain by construction rather than an unhandled subset."
+        G5: "NEITHER PASS NOR FAIL - the procedure does not apply. PM VERIFIED the document contains zero 'G5 PASS' inside example 9. The entry states plainly that the forms are NOT equivalent and would FAIL under the letter of the gate, then explains that Gate 5 compares against a baseline drawn from the sanctioned set and the pre-fix shape was never a member."
+        G6: "PASS - pnpm e2e asserts exactly one Document request after the cancel click on the official scaffold; failed before, passes now, all three lanes identical."
+        two_facts_closing_the_form_choice:
+          - "The array carries the rest of the handler body, which preventdefault:click cannot - at the type=button site the authored handler also does two state writes and an onTrace$ call, so the split is needed there regardless of mechanism. Using the array everywhere makes one shape cover the whole lowering, hence the one-element array."
+          - "preventdefault:click is element-level while SyncPolicy is per-event-record; lowering a per-record declaration onto an element-level attribute loses that correspondence wherever the two do not coincide."
+        also_recorded: "The failing handler was fully SYNCHRONOUS, so the cause is QRL laziness and not async - which is why neither the lowering nor the gate policy inspects async."
+      preamble:
+        escape_hatch_guard: "Gated on MEMBERSHIP, NOT PREFERENCE. Availability requires showing the current form is outside the sanctioned set, and the showing is the invoker's burden with an enumerated evidence class: a framework diagnostic, a lint rule the framework ships against that shape, a dedicated construct the framework provides because that shape does not work, or a witnessed runtime failure - named in the record. The negative case is explicit: a form inside the sanctioned set that is merely disliked, slower or less idiomatic is a CANDIDATE SUGAR and runs all six gates."
+        closing_line: "'If you cannot say what the framework itself holds against the current output, you are not in forced lowering, and a FAIL at Gate 5 is a real FAIL' - followed by naming the reframing of a genuine G5 FAIL as forced lowering as the failure mode the paragraph exists to stop."
+        reinforced_at_the_gate: "Example 9's G5 entry independently repeats the confinement, so a reader landing on the worked example without reading the preamble still gets the gate."
+      gate_2:
+        clause: "'an added import list entry' -> 'an added import list entry IN ANOTHER MODULE' in the FAIL list."
+        grounds_recorded: "A 'Scope of the import clause' paragraph states the scoping is settled rather than a judgement call: the emitter already manages its own framework imports; worked example 1 already passes G2 with $ in the baseline's import list, so the literal reading would retroactively invalidate a shipped ruling; and every other item in the failure list is an obligation on a third party. Names Vue's defineModel, Angular's input()/output() and Svelte's `on` from svelte/events as decided the same way."
+      rulings_unchanged: "PM INDEPENDENTLY VERIFIED. git diff -U0 yields exactly two deleted content lines in the whole file, both from the Gate 2 sentence. The ruling-heading diff against HEAD is a pure single-line addition. Worked examples 1 and 8 - the two shipped rulings over running code - have no diff hunks at all."
+      inconsistencies_surfaced_and_correctly_declined:
+        note: "T016 flagged two problems it could not fix from inside its scope and did not widen scope to reach them. Both queued as T019."
+        one: "The decision-site comment at qwik/src/emitter/index.ts:455-459 still says 'all six gates PASS'. T005 corrected that; the emitter and worked example 9 now disagree on one word. PM CONFIRMED by reading the file."
+        two: "'Recording a ruling' still requires 'all six gate outcomes'. Example 9 records an outcome for each, but G5's is 'the procedure does not apply' rather than one of the four labels - which could push the next forced-lowering ruling into mislabelling G5 as PASS to satisfy the letter."
+      deviations:
+        - "Added one framing sentence before the verbatim preamble block so the addition reads as a second trigger rather than a restatement of Angular's. Does not alter the T005 wording that follows."
+        - "Added the escape-hatch guard and cross-reference paragraphs, which T005 did not dictate word for word. Both serve the stop_if directly: the guard is what keeps the trigger gated on membership; the cross-reference is what stops the three adapters re-improvising the argument."
+        - "Added a 'Scope of the import clause' paragraph beyond the minimal three-word edit. The bare change would have left the reasoning uncaptured, and T005 closed this as no-longer-re-openable - the grounds have to be on the page for that to hold."
+      parallel_execution: "Ran concurrently with T008 (11 paths) and T011 (read-only). Write scope was a single file in neither of their scopes; the concurrent test count of 569 reflects T008's in-flight additions, not this package's."
+      verification_attempts: 1
   - id: T010
     type: pm
     assignee: PM
