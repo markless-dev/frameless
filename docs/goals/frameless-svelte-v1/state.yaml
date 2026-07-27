@@ -97,7 +97,7 @@ visual_board:
     url: null
     command: "npx goalbuddy board docs/goals/frameless-svelte-v1"
 
-active_task: T007
+active_task: T005
 
 tasks:
   - id: T001
@@ -521,7 +521,7 @@ tasks:
   - id: T005
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     objective: "With a Svelte lane at a pinned version, re-run the idiom policy on at least one version-gated Svelte sugar question and record whether the version corollary now resolves."
     inputs:
@@ -602,7 +602,7 @@ tasks:
   - id: T007
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     spec: "T006 receipt - AUTHORITATIVE. Option D."
     objective: >-
@@ -642,8 +642,57 @@ tasks:
       - "You are about to reflect a DOM property onto a data-attribute from inside any demo app. That is asking the subject under test to report on itself."
       - "You are about to leave the carried-forward loss unrecorded. After this change NOTHING observes S3's `text` in the live DOM in ANY lane. T999 will reject on it."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      note: notes/T006-value-attribute-ruling.md
+      summary: "Implemented Option D. Moved S3's `text` read from the post-activation live DOM to the SERVED PAYLOAD, deleted the live-DOM value assertion, kept `writes` live, threaded a REQUIRED `served` through runScenario at all four call sites, and gave the new read a three-check two-negative-arm calibration that runs on every call in every lane. pnpm e2e is GREEN with all FOUR rows and byte-identical S3 observations."
+      changed_files:
+        - demos/react-official/three-way-contract.ts
+        - demos/react-official/scenarios.box.ts
+        - demos/solid-official/scenarios.box.ts
+        - demos/qwik/scenarios.box.ts
+        - demos/svelte-official/scenarios.box.ts
+        - docs/goals/frameless-svelte-v1/notes/T006-value-attribute-ruling.md
+      commands:
+        - cmd: "pnpm check"
+          status: pass
+          note: "four tsc passes"
+        - cmd: "pnpm test"
+          status: pass
+          note: "668/668, 43 files"
+        - cmd: "pnpm test:browser"
+          status: pass
+          note: "react 60/60, solid 49/49, svelte 13/13"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "PM RE-RAN: exit 0, '[e2e] three-way matrix (one IR -> 4 emitters)', 'Three-way: 4 demos x 3 scenarios, all observations equal'. PM read the s3 react and s3 svelte rows side by side - identical."
+        - cmd: "git diff --exit-code -- packages/frameworks packages/compiler demos/*/src pnpm-lock.yaml"
+          status: pass
+          note: "no emitter, IR, demo-app source or lockfile movement"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors"
+      the_stop_if_did_not_fire: "Confirmed BEFORE editing that the Svelte served payload really carries it: curl of SvelteKit dev /s3 returns <input data-action=\"text\" value=\"hello\"/>. T004's verification stands."
+      served_read:
+        site: "measureServedAttribute({ served, marker, name, equals }) reading EnvironmentResponse.text - the SAME response assertServedActivation already asserts. runScenario gained a REQUIRED served field; s1/s2 declare two parameters. measureText(initial, 'data-writes=\"true\"') STAYS on the live DOM, because writes IS live state."
+        calibration: "THREE checks on EVERY call in EVERY lane, so no lane can hold the check and skip its calibration. (1) marker present, with a message distinguishing 'server never rendered it' from 'activation removed it'; (2) attribute reads exactly hello - required because cross-lane equality alone cannot pin the string; (3) TWO negative arms mutating the EVIDENCE, not the literal."
+        recorded_reds: "Probed against the real SvelteKit-dev payload: payload-wide deletion -> 'carries value=null on data-action=\"text\", not \"hello\"'; attribute moved off the marked element with the string left elsewhere -> rejected; marker absent -> named-site message; value=\"bye\" -> rejected; locate() on markerless HTML -> site-agnostic message."
+      widening_evidence:
+        uniform: "Same site, same predicate, same exact string, all four lanes. Nothing added to the observed array; no per-lane declaration inside the equality set."
+        non_decreasing_demonstrated_on_real_bytes: "Counterfactual A - a lane that sent NO value and produced the input client-side from scratch: the OLD live-DOM read PASSES (hello), the NEW served read FAILS. Counterfactual B - the real Svelte lane: OLD fails (null), NEW passes. Row A is the widening: the old read could be satisfied by markup the server never sent."
+        still_exact: "sha256 over the S3 first observation in each of the four witness receipts: react/solid/qwik/svelte all f9cab7779ec00ed2. Still inside the observed array and still compared by scripts/e2e.mjs."
+      carried_forward_recorded:
+        loss_a: "The old check could catch that the value attribute SURVIVED activation unchanged; the new one cannot. Maps to NO product claim - the attribute survives the SSR parse independently of framework state in every lane, so it never witnessed client state in any lane."
+        loss_b: "After this change NO lane observes S3's `text` in the live DOM. Emitted S3 surfaces text only through value={text}, an input PROPERTY after activation, and no sanctioned witness API can read a DOM property. Live coverage narrows to the submit handler's onTrace payload. REVEALED by the ruling, not caused by it."
+        reopen_trigger: "Any of: @async/witness exposes a property or evaluate accessor on PageHandle; the corpus grows a scenario rendering state as TEXT rather than only as an input value; a state-seeding hydration bug is suspected in any lane."
+        recorded_in: "assertS3's doc comment AND notes/T006-value-attribute-ruling.md. The latent `checked` twin is recorded in both."
+      deviations:
+        - "Added a SECOND, scoped negative arm beyond the one the card specified. The payload-wide arm is near-tautological given the exactness check - both use the same verbatim substring - exactly as in calibrateServedClientEntry. The scoped arm, deleting the attribute from the MARKED ELEMENT'S start tag only while leaving every other occurrence, is not tautological and catches the unscoped-contains failure class. Both ship."
+        - "Did NOT add an expect.response.matches companion. It would put the claim in the witness receipt but could never fail independently of the exactness check, and a check that cannot go red is not a check. Followed forbidInServedPayload's hand-rolled precedent."
+        - "measureServedAttribute takes the whole EnvironmentResponse rather than served.text, so every message it raises can NAME the payload it read - the half of the repair that outlives this specific attribute."
+        - "Rewrote the file-header measurement paragraph and the Measurement section comment as well as the two the card named. Both asserted the live DOM as the only measurement site, which IS the misnaming the ruling is about."
+      verification_attempts: 1
   - id: T999
     type: judge
     assignee: Judge

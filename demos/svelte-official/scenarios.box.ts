@@ -91,7 +91,11 @@ export default box(
 			})
 
 			const page = await browser.visit(paths[scenario])
-			const result = await runScenario({ scenario, page, expect, activation })
+			// `served` is the same payload asserted above: S3 reads its
+			// `server-rendered text` observation out of the server's own bytes.
+			// SvelteKit's SSR emits `value="hello"`; hydration then deletes the
+			// attribute by design, which is exactly why the read is here.
+			const result = await runScenario({ scenario, page, expect, activation, served })
 			// Svelte only: the console-warning channel the witness API cannot see.
 			const devDiagnostics = await assertNoDevDiagnostics(page)
 			results.push({

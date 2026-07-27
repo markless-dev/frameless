@@ -9,12 +9,17 @@
  * the same. The `three-way` tag and the `three-way-results` note kind are the
  * wire protocol `scripts/e2e.mjs` reads and are deliberately left unrenamed.
  *
- * Every string a lane records is *measured* — read back out of the live DOM
- * through `page.content()` — never a literal pushed alongside an assertion.
- * That matters because `scripts/e2e.mjs` diffs the three lanes' recorded
- * observations against each other: with literals the diff is tautological and
- * can only catch a lane skipping a scenario, while with measured values it
- * compares data the three frameworks actually produced.
+ * Every string a lane records is *measured* — read back out of the artifact it
+ * names, either the live DOM through `page.content()` or the served payload
+ * through `EnvironmentResponse.text` — never a literal pushed alongside an
+ * assertion. That matters because `scripts/e2e.mjs` diffs the four lanes'
+ * recorded observations against each other: with literals the diff is
+ * tautological and can only catch a lane skipping a scenario, while with
+ * measured values it compares data the four frameworks actually produced.
+ *
+ * An observation must be read at the site its own name claims. `server-rendered
+ * text` read out of the post-activation DOM was the fault this file was
+ * repaired for; see `assertS3` and `measureServedAttribute`.
  *
  * It lives under demos/react-official only because it has to live inside one of
  * the demo packages. demos/solid-official, demos/qwik and demos/svelte-official
@@ -164,12 +169,23 @@ export function calibrateServedClientEntry(options: {
 // which compares the browser's own trimmed textContent. Reading through the
 // serialized DOM means a framework that produced the right text via visibly
 // different markup still shows up in the cross-lane diff.
+//
+// These readers take a *string*, so they are site-agnostic on purpose: the same
+// three run over the live DOM and over `EnvironmentResponse.text`, the bytes the
+// server sent before any JavaScript ran. Which site a reading came from is part
+// of what the reading means, and it is the caller — never the reader — that
+// knows. So no message down here may name a site, and every caller must name
+// the one it handed over. See `measureServedAttribute`.
 // ---------------------------------------------------------------------------
 
 function locate(html: string, marker: string): { tag: string; open: number; afterOpen: number } {
   const at = html.indexOf(marker)
   if (at === -1) {
-    throw new Error(`Cannot measure: the live DOM carries no ${marker}.`)
+    throw new Error(
+      `Cannot measure: the HTML passed to this reader carries no ${marker}. ` +
+        'The reader is site-agnostic — it runs over both the live DOM and the served ' +
+        'payload — so the caller names which one it handed over.',
+    )
   }
   const open = html.lastIndexOf('<', at)
   const name = /^<([a-zA-Z][a-zA-Z0-9-]*)/.exec(html.slice(open, open + 64))
@@ -214,6 +230,109 @@ export function measureAttribute(html: string, marker: string, name: string): st
 /** Every keyed row identity in the live DOM, in document order. */
 export function measureRowKeys(html: string): string[] {
   return [...html.matchAll(/data-oracle-row-key="([^"]*)"/g)].map((match) => match[1])
+}
+
+/**
+ * One attribute, read out of the bytes the **server** sent, asserted exactly,
+ * and calibrated two-sided on every single call.
+ *
+ * This exists because `measureAttribute` cannot say where its string came from
+ * and an observation named `server-rendered` has to come from the server. It
+ * takes the whole `EnvironmentResponse` rather than `served.text` so that every
+ * message it raises can name the payload it read, which is the half of the
+ * repair that outlives the specific attribute.
+ *
+ * Three checks, in order, and each one is load-bearing:
+ *
+ * 1. The marker is in the payload at all. A missing marker here means the
+ *    server never rendered the element, which is a different failure from
+ *    activation having removed it, and the message says so.
+ * 2. The attribute reads exactly `equals`. Cross-lane equality alone cannot
+ *    pin this — four lanes that all served the wrong string would still agree —
+ *    so the exact assertion has to be here, at the same site, for every lane.
+ * 3. **Instrument rule 3, two-sided**, and run on every call rather than once
+ *    from a box, so no lane can hold the check and skip its calibration. Both
+ *    negative arms mutate the *evidence* — the payload the server really sent —
+ *    never the literal:
+ *
+ *    - **Payload-wide.** Every `name="equals"` deleted; the same read must stop
+ *      returning `equals`. This is `calibrateServedClientEntry`'s arm, and it
+ *      carries the same two vacuity guards, because a control that always
+ *      passes by construction proves nothing.
+ *    - **Scoped.** `name="equals"` deleted from the marked element's start tag
+ *      *only*, with every other occurrence in the payload left intact; the read
+ *      must still reject. This one is not tautological: it is what separates
+ *      "the marked element carries the attribute" from "the string appears
+ *      somewhere in the bytes", and it is exactly the discrimination an
+ *      unscoped `contains` check would silently lose.
+ *
+ * It deliberately does not route through `expect.response.matches`. That would
+ * add a receipt statement that can never fail independently of check 2 — and a
+ * check that cannot go red is not a check. `forbidInServedPayload` is hand-
+ * rolled on the served payload for the same reason.
+ */
+export function measureServedAttribute(options: {
+  readonly served: EnvironmentResponse
+  readonly marker: string
+  readonly name: string
+  readonly equals: string
+}): string {
+  const { served, marker, name, equals } = options
+  const text = served.text
+  if (!text.includes(marker)) {
+    throw new Error(
+      `Cannot measure ${name}: the payload served for ${served.path} carries no ${marker}. ` +
+        'This reads the bytes the server sent, before any JavaScript ran, so a missing ' +
+        'marker means the server never rendered the element — not that activation removed it.',
+    )
+  }
+  const found = measureAttribute(text, marker, name)
+  if (found !== equals) {
+    throw new Error(
+      `The payload served for ${served.path} carries ${name}=${JSON.stringify(found)} on ` +
+        `${marker}, not ${JSON.stringify(equals)}. This is the server's own output: the ` +
+        'string has to be in the bytes the server sent, not merely in the DOM afterwards.',
+    )
+  }
+  const occurrence = `${name}="${equals}"`
+  const withoutAttribute = text.split(occurrence).join('')
+  if (withoutAttribute.length === text.length) {
+    throw new Error(
+      `Negative control did not mutate the payload served for ${served.path}: it carries no ` +
+        `literal ${occurrence} to delete. The control assumes the read and the deletion agree ` +
+        'on what the attribute looks like; if `measureAttribute` stops requiring that verbatim ' +
+        'substring, this fires rather than letting the control go vacuous unnoticed.',
+    )
+  }
+  if (measureAttribute(withoutAttribute, marker, name) === equals) {
+    throw new Error(
+      `The served-${name} check for ${marker} cannot go red: a payload with every ` +
+        `${occurrence} deleted still reads ${equals}. A payload read never observed failing ` +
+        'is not a check.',
+    )
+  }
+  // Scoped arm: strip the attribute from the marked element's own start tag and
+  // leave the rest of the payload alone. A read that is really about this
+  // element rejects; one satisfied by the string appearing anywhere does not.
+  const { open, afterOpen } = locate(text, marker)
+  const scopedNegative =
+    text.slice(0, open) +
+    text.slice(open, afterOpen + 1).split(occurrence).join('') +
+    text.slice(afterOpen + 1)
+  if (scopedNegative.length === text.length) {
+    throw new Error(
+      `Negative control did not mutate the start tag carrying ${marker} in the payload served ` +
+        `for ${served.path}: ${occurrence} is not inside it, so the scoped control proves nothing.`,
+    )
+  }
+  if (measureAttribute(scopedNegative, marker, name) === equals) {
+    throw new Error(
+      `The served-${name} check for ${marker} is not scoped to that element: deleting ` +
+        `${occurrence} from its start tag still reads ${equals}, so the check would pass on a ` +
+        'payload that carries the string somewhere else entirely.',
+    )
+  }
+  return found
 }
 
 // ---------------------------------------------------------------------------
@@ -425,8 +544,62 @@ async function documentRequests(page: PageHandle) {
  * S3 — event form: a handler that writes twice and settles on one value, then a
  * handler that cancels a real default action.
  *
+ * ## What is measured, and where
+ *
+ * Two independent things, at two different sites, and the sites are the point:
+ *
+ * - `text` is read out of the **served payload** — the bytes the server sent
+ *   for this path, before any JavaScript ran. The observation is called
+ *   `server-rendered text`, so the server is where it has to be read.
+ * - `writes` is read out of the **live DOM**. It is live state: it starts at 0,
+ *   the submit handler drives it to 2, and surviving the cancelled submit at 2
+ *   is the second, independent signal that no reload happened. Reading it
+ *   anywhere else would be the same mistake in the other direction.
+ *
+ * ## Why the `text` site moved
+ *
+ * It used to be read from `page.content()` — the *post-activation* DOM — while
+ * being reported as `server-rendered`. The name and the measurement site
+ * disagreed, and that was true of this file before a fourth lane existed; it
+ * only surfaced when Svelte became the first framework in the repo whose
+ * hydration deletes the `value` attribute by design (`remove_input_defaults`,
+ * guarded by `if (!hydrating) return`, which is why the direct-mount browser
+ * lanes never saw it).
+ *
+ * Reading the served payload is **strictly stronger**, not merely different: a
+ * lane that client-side-rendered the input from scratch, sending nothing, would
+ * still show `value="hello"` in the live DOM and pass the old read. Under this
+ * one the string must be in the server's own bytes. That is this repo's whole
+ * thesis — inert markup plus activation — measured at the site the thesis is
+ * about, which `assertServedActivation` already fetches. It is uniform: same
+ * site, same predicate, same exact string, all four lanes, no per-lane
+ * declaration inside the compared observations.
+ *
+ * ## What is no longer observed, and when to re-open
+ *
+ * After the move, **no lane observes S3's `text` in the live DOM at all**.
+ * Emitted S3 surfaces `text` only through `value={text}`, an input *property*
+ * after activation, and no sanctioned witness API can read a DOM property:
+ * `PageHandle` exposes no `evaluate` and `expect.page.*` has no property
+ * accessor. S3's live coverage of `text` therefore narrows to the submit
+ * handler's `onTrace` payload, which the analyzer lane checks. This gap was
+ * *revealed* by the site correction, not caused by it — the old read never
+ * witnessed client state either, since the attribute survives the SSR parse
+ * independently of framework state in every lane.
+ *
+ * Re-open when any of: `@async/witness` exposes a property or `evaluate`
+ * accessor on `PageHandle`; the corpus grows a scenario rendering state as
+ * *text* rather than only as an input value; or a state-seeding hydration bug
+ * is suspected in any lane.
+ *
+ * (Latent twin, recorded so it is not rediscovered as a new finding: Svelte's
+ * `remove_input_defaults` strips `checked` identically. S3's checkbox carries
+ * `checked={checked}` and is not asserted, so there is no impact today.)
+ *
+ * ## Cancellation
+ *
  * The cancellation step is deliberately last. Everything above it is S3's
- * original oracle and still runs, and still passes, for all three frameworks
+ * original oracle and still runs, and still passes, for all four frameworks
  * before anything is submitted — the channel below is added, not traded.
  *
  * Why it is here at all: until now the only `preventDefault()` in the corpus sat
@@ -444,14 +617,26 @@ async function documentRequests(page: PageHandle) {
  * the call, and a calibration lane that submitted for real would navigate the
  * vitest page away instead of reporting a divergence.
  */
-export async function assertS3(page: PageHandle, expect: ExpectApi): Promise<string[]> {
+export async function assertS3(
+  page: PageHandle,
+  expect: ExpectApi,
+  served: EnvironmentResponse,
+): Promise<string[]> {
   const observed: string[] = []
   await expect.page.exists(page, '[data-scenario="s3"] [data-callback-marker="present"]')
-  await expect.page.attribute(page, '[data-action="text"]', 'value', 'hello')
   await expect.page.text(page, '[data-writes="true"]', '0')
+  // The server's own bytes, asserted exactly and calibrated two-sided on this
+  // call. The live DOM below is a different site and answers a different
+  // question — see this function's doc comment.
+  const servedText = measureServedAttribute({
+    served,
+    marker: 'data-action="text"',
+    name: 'value',
+    equals: 'hello',
+  })
   const initial = await page.content()
   observed.push(
-    `server-rendered text = ${measureAttribute(initial, 'data-action="text"', 'value')} ` +
+    `server-rendered text = ${servedText} ` +
       `with writes = ${measureText(initial, 'data-writes="true"')}`,
   )
 
@@ -484,9 +669,14 @@ export async function assertS3(page: PageHandle, expect: ExpectApi): Promise<str
   return observed
 }
 
+/**
+ * Every scenario is handed both sites — the live page and the payload the
+ * server sent for it — and reads each observation from the one it names. S1 and
+ * S2 observe only live state and declare two parameters; S3 observes both.
+ */
 const assertions: Record<
   ScenarioId,
-  (page: PageHandle, expect: ExpectApi) => Promise<string[]>
+  (page: PageHandle, expect: ExpectApi, served: EnvironmentResponse) => Promise<string[]>
 > = { s1: assertS1, s2: assertS2, s3: assertS3 }
 
 /**
@@ -515,12 +705,21 @@ const assertions: Record<
  *   and **not** a reload. Declared per lane in `expectedNavigations` and
  *   asserted exactly, never relaxed.
  * - `events.qsymbol`: Qwik only. The handler QRLs the clicks pulled, by name.
+ *
+ * `served` is **required**, for the reason `servedClientEntry` is a total
+ * `Record`: an optional field is a silent opt-out, and a scenario that reads
+ * the served payload cannot be handed `undefined` and fall back to the live DOM
+ * without recreating the exact fault this contract was repaired for. It is the
+ * same `EnvironmentResponse` each box already fetched for
+ * `assertServedActivation`, so no lane pays for a second request, and every
+ * call site already has it in scope.
  */
 export async function runScenario(options: {
   readonly scenario: ScenarioId
   readonly page: PageHandle
   readonly expect: ExpectApi
   readonly activation: Activation
+  readonly served: EnvironmentResponse
 }): Promise<{
   scenario: ScenarioId
   framework: string
@@ -528,9 +727,9 @@ export async function runScenario(options: {
   observed: string[]
   evidence: Record<string, unknown>
 }> {
-  const { scenario, page, expect, activation } = options
+  const { scenario, page, expect, activation, served } = options
   await waitForInteractive(page, expect, activation)
-  const observed = await assertions[scenario](page, expect)
+  const observed = await assertions[scenario](page, expect, served)
 
   const requests = await page.networkRequests()
   const documents = requests.filter((request) => request.resourceType === 'Document')

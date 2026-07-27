@@ -34,7 +34,9 @@ export default box(
 			// the handler QRLs the clicks pulled on demand, and the container
 			// transitions paused -> resumed.
 			const page = await browser.visit(paths[scenario])
-			const result = await runScenario({ scenario, page, expect, activation })
+			// `served` is the same payload asserted above: S3 reads its
+			// `server-rendered text` observation out of the server's own bytes.
+			const result = await runScenario({ scenario, page, expect, activation, served })
 			results.push({ ...result, evidence: { ...servedEvidence, ...result.evidence } })
 		}
 

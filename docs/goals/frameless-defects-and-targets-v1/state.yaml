@@ -122,7 +122,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T021
+active_task: T023
 
 tasks:
   - id: T001
@@ -1834,7 +1834,7 @@ tasks:
   - id: T021
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: medium
     objective: "Adjudicate the three duplicated React mutation rows T018 found and deliberately did not delete."
     inputs:
@@ -1847,8 +1847,37 @@ tasks:
       - "The other two - 'computed-member setter' duplicated verbatim, and 'react import allowlist' identical to 'unused import' - are not vacuous; each mutates and exercises its policy. Rule whether they are harmless redundancy or the same copied-and-half-edited mechanism."
       - "T018 left them in place because deletion is a COVERAGE decision and its card forbade dropping mutations. That was the right call; the coverage decision is yours."
       - "Consider whether a no-duplicate-mutant invariant test should exist. It would fail today on exactly these three, so it lands with the adjudication or not at all."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      decision: approved
+      full_outcome_complete: false
+      rationale: "T018's F3 was OVER-READ: 'direct listener iteration' is exactly what its twin already does, so rewriting to 'direct' would have made a THIRD near-duplicate - the outcome the T021 card explicitly warned against. The real find is next door: invokesListenerSet's .forEach branch is exercised by nothing in either corpus. Plus a class T018's mutant-only scan could not see - duplicate row NAMES make two pairs of test.each verdicts unattributable. Rewrite all three to branch-grounded shapes and land a calibrated name+mutant invariant with an EMPTY exemption list."
+      the_over_read_and_where_it_originated:
+        what_t018_said: "'the distinct shape that row's name promises was never written' and 'R-SH3 is guarded against two bypasses where the names claim three'."
+        what_is_actually_true: "PM VERIFIED alongside the Judge: the twin at gate.test.ts:588-595 injects `for (const listener of countListeners) listener();`. That IS direct listener iteration. Four rows cover THREE distinct shapes, and no name promised anything unwritten."
+        the_harm_it_would_have_caused: "A Judge accepting it at face value would have dispatched a Worker to write 'direct listener iteration' - producing exactly the third near-duplicate the card warned about. The card inherited the error from the note; the NOTE is where it originated, and that is now recorded on T018's own receipt."
+      the_real_find:
+        unexercised_detector_branch: "invokesListenerSet's .forEach(cb) branch, packages/frameworks/react/src/gate/custom-policies.ts:1133-1152, including its recursion into the callback. PM VERIFIED: grep forEach returns ZERO across both react and solid gate.test.ts, while the branch exists at :1135. Solid's gate has no equivalent branch, so this is React-only."
+        why_it_matters: "This is new DETECTION CAPABILITY, not tidying. It is what moves the package from 'record it, leave it' to worth doing."
+      fourth_instance_of_the_recurring_pattern:
+        what: "T018's duplicate scan compared MUTANTS. Names collide too: 'computed-member setter' x2 and 'dynamic computed-member setter' x2 - the latter pair having DISTINCT mutants."
+        consequence: "test.each(mutationCases)('rejects the %s bypass mutation') at :716 makes the row name the vitest title, so those are two pairs of identically-titled tests and a red cannot be attributed to a row. Solid has zero duplicate names."
+        the_pattern: "Instrument narrower than the shape it enumerates - after T007's string-literal scan blind to a regex literal, and the PM's literal grep for continue-on-error blind to the expression form. Rule 4's family."
+      the_mechanism_is_witnessed_not_inferred: "gate.test.ts:272-295 is a copied PAIR whose first row was never edited (byte-identical to :255) while its sibling WAS - `({ run: setValue })[key](1)` vs `({ [key]: setValue })[key](1)`. Half-edited, literally."
+      rulings:
+        item_1: "REWRITE to the forEach shape, NOT to 'direct listener iteration'. The R-SH3 notify family then maps 1:1 onto the detector's four branches - for-of, forEach, helper-forwarding, member-method helper - which is the mapping a copier should inherit instead of a name list."
+        item_2: "SAME copied-and-half-edited mechanism, not harmless redundancy. Renaming alone would hide a byte-identical row under a fresh name, so REWRITE both to shapes that reach real branches: identifier-object resolution combined with a constantString-folded computed access, and the !imported default-React-import branch that only 'forwardRef member' reaches incidentally and never asserts."
+        item_3: "YES to the invariant, keyed on BOTH name and mutant, with an EMPTY exemption list. The card's objection - a test suppressed for three known cases is its own vacuity risk - is exactly why rewriting beats leaving: after the rewrite there is nothing to suppress. Calibrated three-sided against a synthetic table, since on the real tables it will only ever be green."
+        svelte_and_qwik: "NO, and a premise needs correcting. Svelte's corpus copied T018's mutate/mutateAll idiom but NOT the table shape - it is 14 hand-written tests with no mutationCases array and no test.each. Qwik likewise. So 'the three adapter boards inherit React's mutation-table idiom' is only HALF TRUE. The durable carrier is a fifth rule in T018's 'rules for copiers': a mutation TABLE carries the invariant from the day it has two rows. That is what reaches Vue and Angular."
+      is_it_worth_doing: "The count gap alone - 47 advertised, 44 distinct, 6% - would NOT have justified a package, and the Judge says it would have ruled 'record it, leave it'. Two things move it: the unexercised forEach branch (new detection capability) and the unattributable duplicate test titles (a verdict-attribution defect of exactly the family Rule 4 exists for). The count correction is the least valuable third."
+      missing_evidence:
+        - "The Judge is read-only and did NOT run the forEach mutant. That the gate catches it via invokesListenerSet rather than the object-method notification rule at custom-policies.ts:982-1028 is INFERRED from writeCount being an arrow in a VariableDeclarator. The stop_if on the exact violation message is what converts that inference into evidence."
+        - "Whether the second 'dynamic computed-member setter' reaches a different traversal from the first. Both appear to fall to the null-name fallback loop, making them behaviourally equivalent though textually distinct. Recorded so a future audit does not mistake textual distinctness for branch distinctness."
+      dissent:
+        - "The strongest case against this package is that three rows in 126 is noise and this board's live failure mode is fixing everything it notices. The Judge accepts that case for the count correction alone and rejects it once the forEach branch and the unattributable titles are in frame, because both change what the suite can DETECT rather than what it reports."
+        - "T018's F3 framing would have caused harm if accepted. Recorded that the note, not the card, is where the error originated."
+        - "'Leave the two lesser rows' was a defensible alternative and the Judge nearly took it. What tipped it: leaving them forces the invariant to carry a suppression list, which is its own vacuity risk. Deletion would also give an empty list at lower cost; rewrite was chosen only because each rewrite buys a real, named, source-grounded branch rather than just an honest count."
   - id: T022
     type: worker
     assignee: Worker
@@ -1954,6 +1983,47 @@ tasks:
         - "Updated the DEFECTS.md flags summary from three flags to two with a per-flag gate table; leaving it would have left the document asserting a count contradicted by ci.yml."
         - "Calibrated the timeout by temporarily setting it to 1ms and restoring. Not asked for, but test(name, options, fn) support is version-dependent and a silently-ignored options object would have shipped a fix that does nothing - the exact failure mode this board polices."
       verification_attempts: 1
+  - id: T023
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: medium
+    spec: "T021 receipt - AUTHORITATIVE."
+    objective: >-
+      Rewrite React's three duplicate mutation rows into three distinct, BRANCH-GROUNDED shapes, and
+      add a calibrated no-duplicate-row invariant keyed on BOTH name and mutant to the React and
+      Solid mutation tables, with NO exemption list.
+    the_three_rewrites:
+      - "R-SH3 duplicate -> 'forEach-hidden notify-per-write shared tear'. Mutant: countListeners.forEach((listener) => listener()); before changed.add('count'). NOT 'direct listener iteration' - the twin ALREADY IS that. This targets the .forEach(cb) branch of invokesListenerSet (custom-policies.ts:1133-1152), which the PM verified is exercised by nothing: ZERO forEach hits across both corpora while the branch exists at :1135."
+      - "computed-member setter duplicate -> 'identifier-object computed-member setter'. Mutant: const updates = { run: setValue }; const key = 'run'; updates[key](1). First row to combine identifier-object resolution (custom-policies.ts:199-204) with a constantString-folded computed access (:154-171)."
+      - "react import allowlist duplicate -> 'default React import'. Mutant: import React, { useState }. Asserts the !imported branch (:284-294) that only 'forwardRef member' reaches incidentally and never asserts."
+    allowed_files:
+      - packages/frameworks/react/test/gate.test.ts
+      - packages/frameworks/solid/test/gate.test.ts
+      - docs/goals/frameless-defects-and-targets-v1/notes/T021-duplicate-mutants.md
+      - docs/goals/frameless-defects-and-targets-v1/notes/T018-mutation-no-op-audit.md
+    verify:
+      - "pnpm check"
+      - "pnpm test"
+      - "pnpm lint"
+      - "git status --short"
+    stop_if:
+      - "Need files outside allowed_files. packages/frameworks/react/src/gate/custom-policies.ts is explicitly OUT. If a rewritten mutant is NOT caught by the gate, that is a FINDING ABOUT THE DETECTOR - report it verbatim and stop; it is not a licence to edit the gate."
+      - "The forEach mutant is caught, but the violation MESSAGE is not 'Store writes must use Object.is and defer listener notification until method completion' (custom-policies.ts:1208). A different message means a DIFFERENT R-SH3 rule caught it and the row does NOT exercise the forEach branch - the entire justification for this rewrite. Record the actual message and stop."
+      - "Any rewritten row does not produce its expected policy. Report; do not weaken the assertion, do not revert to the duplicate mutant, do not pick a different shape."
+      - "The invariant fires on Solid, or on any React row you did not rewrite. That is a duplicate T018's scan missed - record it and STOP rather than adjudicating it yourself."
+      - "You are about to give the invariant an exemption list, allowlist or skip. Do NOT - that is the vacuity risk the ruling rejected. If it needs one, the adjudication is incomplete: stop and report."
+      - "You are about to add the invariant to the Svelte or Qwik gate corpus. Those have NO mutation TABLE - hand-written tests only. Out of scope."
+      - "You are about to RENAME a row without changing its mutant, or DELETE a row. Neither is the ruling: renaming hides a byte-identical row under a fresh name, and deletion was rejected because the rewrites buy real coverage."
+      - "pnpm test count drops below its current value, or any previously-green test goes red. Record before and after counts."
+      - "Verification fails twice for the same reason."
+    constraints:
+      - "CALIBRATE THE INVARIANT THREE-SIDED against a SYNTHETIC table - a mutant collision, a name collision, and a clean table. On the real tables it will only ever be green, so per Rule 4 it must be proved against a known member."
+      - "Keyed on BOTH the mutant string AND the row name. The name matters because test.each(mutationCases)('rejects the %s bypass mutation') at gate.test.ts:716 makes it the vitest TITLE, so colliding names make a red unattributable to a row."
+      - "Applies to React AND Solid - both have tables consumed by the same %s test.each. Solid has zero duplicate names today, so it should stay green."
+      - "ALSO add a FIFTH rule to notes/T018-mutation-no-op-audit.md section 5 'rules for copiers': a mutation TABLE carries the no-duplicate name/mutant invariant from the day it has two rows. That note is the DURABLE CARRIER for Vue and Angular, since neither Svelte nor Qwik has a table today."
+    receipt: null
+
   - id: T999
     type: judge
     assignee: Judge
