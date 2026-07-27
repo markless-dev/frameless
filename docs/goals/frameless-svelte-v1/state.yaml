@@ -97,7 +97,7 @@ visual_board:
     url: null
     command: "npx goalbuddy board docs/goals/frameless-svelte-v1"
 
-active_task: T006
+active_task: T007
 
 tasks:
   - id: T001
@@ -540,7 +540,7 @@ tasks:
   - id: T006
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Rule where the S3 value-attribute conflict is repaired: the Svelte emitter, or the three-way contract - and whether the contract's assertion is fair to Svelte at all."
     inputs:
@@ -562,6 +562,86 @@ tasks:
       - "If B or the third option: what distinguishes it from a weakening, and the corrected instruction for T999"
       - "Whether Solid's attr:value precedent (finding 5) binds here"
       - "Exact Worker objective, allowed_files, verify, stop_if"
+    receipt:
+      result: done
+      harness: claude-code
+      decision: approved
+      full_outcome_complete: false
+      rationale: "Ruled OPTION D, not A, B or C. Read the value attribute out of the SERVED PAYLOAD rather than the post-activation live DOM. A is forbidden by this board's OWN T002 ruling 3 and reintroduces the bug Svelte's code exists to fix. B is not merely costly, it is IMPOSSIBLE through the sanctioned API. C puts a per-lane exemption inside the cross-lane equality set. D is uniform, exact, and strictly stronger."
+      ruling: "OPTION D. Move measureAttribute from page.content() to served.text and delete the live-DOM value assertion. Uniform across all four lanes, no per-lane declaration, observed strings byte-identical."
+      two_corrections_to_the_pm_brief:
+        repair_b_is_not_proven_it_is_impossible: "The brief said 'two proven repairs'. Only A was ever probed. PageHandle (@async/witness 0.7.0 index.d.mts:163-189) exposes route, url, reload, content, networkRequests, emulateNetwork, click, trackEvents - NO evaluate. evaluate exists only on the internal WitnessBrowserPage (:104-108), never handed to a box. PageExpectApi (:523-540) has no property accessor, and page.content() is documented as serialized HTML, so properties are invisible to it BY CONSTRUCTION. No box can read a DOM property."
+        the_instrument_fault_is_real_but_t004_named_the_wrong_reason: "T004 argued 'not user-visible, reproduces on a stock scaffold, therefore unfair'. That is WEAK standing alone: 'not user-visible' would excuse many real defects, and 'reproduces on a stock scaffold' is satisfied by any framework behaviour including genuinely bad ones. Instrument rule 1 is a rule about EVIDENCE, not a licence. The argument that carries is narrower and independently checkable: three-way-contract.ts:454 reports `server-rendered text` while :452 reads `await page.content()` - the POST-ACTIVATION DOM. The name and the site disagree, provable from the contract source alone WITHOUT any reference to Svelte, and true before Svelte existed."
+      why_A_rejected_three_independent_grounds:
+        1_violates_this_boards_own_ruling: "T002 ruling 3 deferred IR-4 and bound the emitter to emit ONLY baseline-version-safe forms. defaultValue attribute support is a Svelte 5.x feature, NOT 5.0 baseline - and the exact floor is UNVERIFIED, which is itself the point: A would ship a version-gated form with no way to know the consumer's version."
+        2_it_reintroduces_the_bug_svelte_fixed: "RegularElement.js:615-640 routes defaultValue to the safe set_default_value helper ONLY beside a STATIC TEXT value attribute. S3's value={text} is an EXPRESSION, so defaultValue={text} falls through to a bare property assignment. Svelte's own comment at :624 says why that is wrong: updating the default value while the input is pristine also updates the current value. A would make every emitted Svelte form reset to CURRENT state rather than the original default - in exactly the area remove_input_defaults exists to get right."
+        3_it_is_invisible_to_the_server: "server/visitors/shared/element.js:78-79 omits defaultValue/defaultChecked from SSR output entirely. A changes nothing the server sends; it is a purely client-side attribute-restoration hack performed for the benefit of one test read."
+      why_C_is_a_dodge: "servedClientEntry and expectedNavigations are per-lane PRECONDITIONS - they sit OUTSIDE the observed array that scripts/e2e.mjs compares across lanes. A per-lane declared value expectation would sit INSIDE the equality claim. Categorically different, and precisely the mechanism by which any future lane declares its way out of a real failure. The boundary to police is not 'is it declared per lane' but 'is it inside the cross-lane equality set'."
+      what_makes_D_a_widening:
+        - "STRICTLY STRONGER: under the current read, a lane that client-side-rendered the input from scratch would still show value='hello' in the live DOM and PASS. Under D the string must be in the server's actual bytes. This repo's thesis is inert-markup-plus-activation, and the served payload is the thesis's own measurement site - assertServedActivation already fetches it."
+        - "UNIFORM: same site, same predicate, same exact string for all four lanes. No exemptions."
+        - "The observed string stays byte-identical: 'server-rendered text = hello with writes = 0'."
+        - "What is lost maps to NO product claim. The attribute survives SSR parse independently of framework state in every lane, so it never witnessed client state in ANY lane."
+      pre_existing_heterogeneity_found: "The value attribute has been measuring THREE DIFFERENT THINGS across the incumbents - frozen SSR markup for React, a signal-tracking attribute for Solid (DEFECTS.md finding 5 measured exactly that), and deliberate removal for Svelte. Nobody noticed because all three agree at 'hello' and the read happens before any interaction. This predates the Svelte lane entirely."
+      does_finding_5_bind:
+        answer: "It binds AGAINST repair A, not toward it. A is NOT its structural twin; it differs in kind on three axes."
+        public_meaning: "Solid's attr: is a general documented namespace whose entire meaning is 'write the content attribute'. Svelte's defaultValue is a named form-semantics feature meaning 'the form-reset value'. A would use a semantic feature for its side effect on an unrelated internal code path."
+        idiom_vs_invention: "Finding 5's DECISIVE evidence was that the handwritten Solid references use attr:value too - the emitter was reproducing a house idiom, not inventing one. No handwritten Svelte reference emits defaultValue={text}, and no Svelte author writes it. A would have the emitter INVENT an idiom, the exact thing finding 5 certified it was not doing."
+        the_holding_is_inverted: "Finding 5's holding was 'the emitter is right, do not change emitted output'. A is the opposite move. Citing finding 5 for A inverts it."
+      t999_correction_required: "T002's byte-equality instruction is a PROXY masquerading as a measurement - the recurring shape this board keeps catching - and it would FAIL A CORRECT REPAIR, which is its own instrument fault. Replaced with a three-part widening test (uniform / non-decreasing in strength with a two-sided control and a written statement of what is lost / still inside the equality set and still exact), plus the precondition-versus-observed boundary and two new rejection grounds. Applied to the board."
+      carried_forward_loss: "After D, NOTHING in S3 observes the `text` state in the LIVE DOM in any lane. Emitted S3 surfaces text only through value={text}, and no sanctioned witness API can read an input's live value. S3's live coverage of text narrows to the submit handler's onTrace payload. REVEALED by the ruling, not caused by it. Re-open trigger recorded on T999."
+      latent_twin_recorded: "Svelte's remove_input_defaults strips `checked` identically. S3's checkbox carries checked={checked} and is not asserted today, so there is no impact - noted so it is not rediscovered as a new finding."
+      missing_evidence:
+        - "The exact Svelte minor that introduced defaultValue attribute support is UNVERIFIED - the installed package ships no CHANGELOG and the Judge did not go to the network. Load-bearing for ground 1 against A, but grounds 2 and 3 are independent, so the rejection stands regardless."
+        - "T004's 'the served Svelte payload contains value=hello' rests on its curl plus the Judge's reading of the server visitor. T007's negative control converts this into a standing check."
+      dissent:
+        - "The Judge believes the STRONGEST repair is one it did NOT order, because it needs out-of-scope emitter work: give S3 a text-rendered projection of `text` so expect.page.text can observe it live in all four lanes. That would CLOSE the gap D leaves rather than merely recording it. It is a corpus change touching the compiler goldens and all four emitters, so ordering it here would be the opposite of a bounded slice. Flagged for a future package, not smuggled into this one."
+        - "The Judge is UNEASY that this board has now ruled 'instrument' five times out of seven, and guarded against it by REFUSING T004's offered reasoning and grounding the ruling on a name/site mismatch provable from the contract source alone. If a reviewer thinks that distinction is too fine, the honest fallback is NOT repair A - it is accepting that S3's text channel cannot be observed live under the current witness API, and saying so."
+        - "Repair A WORKS, and the temptation to take a proven green over a ruled-correct red is real. A is rejected precisely because a green obtained by shipping a form-reset bug into every consumer's Svelte output is the instrument fault pattern MOVED INTO THE PRODUCT."
+        - "Not verified: whether SvelteKit's SSR of an input with an EXPRESSION value emits the attribute under every render path (streamed, error boundary, deferred). If the Svelte row ever flakes on this observation, look here before touching the contract again."
+  - id: T007
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    spec: "T006 receipt - AUTHORITATIVE. Option D."
+    objective: >-
+      Repair S3's `text` observation at its correct measurement site and unblock the Svelte e2e row,
+      so pnpm e2e is green with all four lanes asserting S1/S2/S3 equality. Move the read from the
+      post-activation live DOM to the SERVED PAYLOAD the observation is already named for.
+    steps:
+      - "1. Add a REQUIRED `served: EnvironmentResponse` field to runScenario's options and thread it into the assertions map. `served` is already in scope at all four call sites. It must be REQUIRED - omission is a compile error, the same discipline T002 condition 1 demanded of servedClientEntry."
+      - "2. In assertS3, DELETE the live-DOM assertion expect.page.attribute(page, '[data-action=\"text\"]', 'value', 'hello') and move measureAttribute(..., 'value') from `initial` (page.content()) to `served.text`. measureAttribute is already site-agnostic. LEAVE measureText(initial, 'data-writes=\"true\"') on the live DOM - writes IS live state, correctly observed there."
+      - "3. Add a two-sided negative control for the new served read, modelled on calibrateServedClientEntry: the positive arm runs the same predicate the assertion runs; the negative arm DELETES value=\"hello\" from the real payload and requires rejection."
+      - "4. Fix locate()'s error message, which says 'the live DOM carries no ...' and will now sometimes be reading a served payload. The whole ruling is about instruments that misname their measurement site."
+      - "5. Replace assertS3's doc comment to record the ruling: what is measured, where, why the site moved, and the carried-forward loss."
+      - "6. Write notes/T006-value-attribute-ruling.md recording the ruling, the rejection of A/B/C with evidence, the T999 correction, and the carried-forward gap with its re-open trigger."
+    allowed_files:
+      - demos/react-official/three-way-contract.ts
+      - demos/react-official/scenarios.box.ts
+      - demos/solid-official/scenarios.box.ts
+      - demos/qwik/scenarios.box.ts
+      - demos/svelte-official/scenarios.box.ts
+      - docs/goals/frameless-svelte-v1/notes/T006-value-attribute-ruling.md
+    verify:
+      - "pnpm check"
+      - "pnpm test"
+      - "pnpm test:browser"
+      - "pnpm e2e   # GREEN with all FOUR rows, svelte included, S1/S2/S3 observations ASSERTED equal"
+      - "git diff --exit-code -- packages/frameworks packages/compiler   # no emitter or IR change; repair A is REJECTED"
+      - "git diff --exit-code -- demos/*/src   # no demo APP source moves, only the contract and the four box files"
+      - "git diff --exit-code -- pnpm-lock.yaml"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to change emitted output or touch packages/frameworks/** or packages/compiler/**. Repair A is REJECTED on three independent grounds - re-litigating it is not a Worker call."
+      - "You are about to add a per-lane declared expectation to the `observed` array. That is option C and it is REJECTED: per-lane declaration is permitted ONLY for preconditions, NEVER inside the cross-lane equality set."
+      - "You are about to make `served` optional, or give it a default or a ?? fallback. An optional field is a silent opt-out."
+      - "The four lanes' observed strings are not byte-identical. Target: 'server-rendered text = hello with writes = 0'."
+      - "You cannot show the new served-payload read able to go RED. A payload read never observed failing is not a check."
+      - "The Svelte served payload does NOT contain value=\"hello\". That would REFUTE T004's curl verification and the server-visitor source. It is a FINDING, not a workaround - stop and report."
+      - "You are about to reflect a DOM property onto a data-attribute from inside any demo app. That is asking the subject under test to report on itself."
+      - "You are about to leave the carried-forward loss unrecorded. After this change NOTHING observes S3's `text` in the live DOM in ANY lane. T999 will reject on it."
+      - "Verification fails twice for the same reason."
     receipt: null
 
   - id: T999
@@ -577,6 +657,10 @@ tasks:
     constraints:
       - "Do not implement."
       - "Reject completion if the Svelte row exists but does not ASSERT equality with the other demos."
+      - "THE BYTE-EQUALITY TEST IS SUPERSEDED. T002's 'the SET of assertions and the exact strings asserted must be byte-unchanged for react, solid and qwik' was a PROXY masquerading as a measurement - written before the T006 conflict was known, and it would FAIL A CORRECT REPAIR. Use the three-part widening test instead. A change to three-way-contract.ts is a WIDENING iff ALL THREE hold, and is a WEAKENING if any fails: (1) UNIFORM - it applies identically to every lane; no lane receives a value, tolerance or exemption the others do not. (2) NON-DECREASING IN STRENGTH - the new assertion is satisfied by a strictly SMALLER set of behaviours than the old, evidenced by a two-sided negative control it rejects, PLUS an explicit written statement of anything the old check could catch that the new one cannot. (3) STILL INSIDE THE EQUALITY SET AND STILL EXACT - the observed string is identical across all four lanes and is still COMPARED by scripts/e2e.mjs, not merely recorded."
+      - "BOUNDARY TO POLICE: per-lane declared values are permitted ONLY for preconditions (servedClientEntry, expectedNavigations, which sit OUTSIDE the observed array). A per-lane declared value INSIDE the observed array is forbidden outright - that is the option-C dodge, and the boundary is not 'is it declared per lane' but 'is it inside the cross-lane equality set'."
+      - "Reject if the served-payload value read landed without a two-sided negative control."
+      - "Reject if the carried-forward loss is not recorded IN WRITING with a re-open trigger: after T007, NO lane observes S3's `text` in the live DOM. Re-open when any of - @async/witness exposes a property or evaluate accessor on PageHandle; the corpus grows a scenario rendering state as TEXT rather than only as an input value; or a state-seeding hydration bug is suspected in any lane."
       - "Reject completion if any existing activation-neutrality check was weakened."
       - "Reject completion if IR-4 received no explicit ruling either way."
       - "Reject completion if dev-only console warnings were observed and dismissed."
