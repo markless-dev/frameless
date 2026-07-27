@@ -97,7 +97,7 @@ visual_board:
     url: null
     command: "npx goalbuddy board docs/goals/frameless-svelte-v1"
 
-active_task: T008
+active_task: T009
 
 tasks:
   - id: T001
@@ -540,7 +540,7 @@ tasks:
       harness: claude-code
       decision: approved
       full_outcome_complete: false
-      note: notes/T005-svelte-sugar.md
+      note_citation_withdrawn: "The T005 receipt cited notes/T005-svelte-sugar.md, which was NEVER WRITTEN - the same class as T001's withdrawn citation. T008 created a file at that path but its first line states it is NOT the Judge's note and reconstructs nothing; it holds only T008's own measurements. Citation withdrawn rather than back-filled. This receipt is the ruling of record."
       rationale: "Re-ran all six gates on worked example 6 against the real emitter at svelte 5.56.8. IT DOES NOT RIPEN INTO PASS - it becomes DENIED. G1 FAIL (the on() arm is documentary while the framework is in the lockfile and measurement is demonstrably possible - the Judge compiled both on() vehicles clean) and G5 FAIL (the repair prescribes a MIXED-MECHANISM component, a routing difference the compiler cannot see, directly contradicting T002 ruling 4's 'never a mix'). The grounds only became visible once the emitter existed, which is the OPPOSITE of a deferral quietly ripening."
       the_headline: "The repair recorded in worked example 6 was WRONG WHEN IT WAS RATIFIED, not merely unverified. Its per-event-record narrowing MANDATES a mixed-mechanism component - S3 carries four events - while T002 independently reached 'never a mix' without anyone noticing the contradiction. Nobody caught it because there was no emitter."
       measurements_pm_verified:
@@ -550,7 +550,8 @@ tasks:
         destructured_props: "Judge measured `let { label } = $props()` lowering to a live $$props.label read inside template_effect - which REFUTES worked example 7's G5 first limb."
       pm_correction_to_this_receipt:
         what_the_judge_reported: "That an unknown <!-- svelte-ignore code --> WARNS unknown_code, making the emitter's suppression codes a version-floor surface."
-        what_the_pm_measured: "FALSE at 5.56.8. An unknown code produces an EMPTY warning array. On an element carrying real a11y warnings it silently FAILS TO SUPPRESS them - both warnings still fire - but no unknown_code diagnostic is emitted. Verified three ways: unknown code with nothing to suppress, unknown code on an element with real warnings, and the correct codes on that same element."
+        pm_correction_was_itself_the_wrong_arm: "T008 reproduced BOTH reports and found the variable neither named: `if (runes)` at svelte/src/compiler/utils/extract_svelte_ignore.js:38. In a RUNES component an unrecognised code DOES warn unknown_code, and a Svelte 4 dash-case spelling warns legacy_code; in a RUNES-FREE component there is no diagnostic at all. In both, the annotation suppresses nothing. PM RE-VERIFIED both arms and the deciding line. THE PM'S TEST USED A RUNES-FREE COMPONENT, WHICH IS NOT WHAT THE EMITTER PRODUCES - the emitter emits runes components - so the JUDGE'S ORIGINAL CLAIM WAS THE RELEVANT ARM and the PM's contradiction was measured on the wrong shape. The line below is preserved as written; read it as true only for runes-free."
+        what_the_pm_measured_ON_A_RUNES_FREE_COMPONENT: "FALSE at 5.56.8. An unknown code produces an EMPTY warning array. On an element carrying real a11y warnings it silently FAILS TO SUPPRESS them - both warnings still fire - but no unknown_code diagnostic is emitted. Verified three ways: unknown code with nothing to suppress, unknown code on an element with real warnings, and the correct codes on that same element."
         the_conclusion_survives_and_is_sharper: "The Judge's argument was that svelte-ignore codes are an unasserted precondition over a growing set. That STANDS, and the failure mode is WORSE than reported: it is SILENT rather than announced. A consumer on a minor where one of those codes was renamed gets the a11y noise with no diagnostic pointing at the cause. The baseline form inventory is therefore MORE justified, not less."
         why_this_is_recorded_here: "The Judge's own dissent warned that this board withdrew a receipt once for citing evidence that was not there. The instruction to T008 is explicit: do NOT write 'unknown_code warns' into the policy."
       six_gates_worked_example_6:
@@ -735,7 +736,7 @@ tasks:
   - id: T008
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     spec: "T005 receipt - AUTHORITATIVE."
     objective: >-
@@ -774,12 +775,77 @@ tasks:
       - "PM CORRECTION TO THE T005 RECEIPT, verified three ways: the Judge reported that an unknown svelte-ignore code WARNS unknown_code. IT DOES NOT at 5.56.8 - it produces an EMPTY warning array, and on an element with real a11y warnings it silently fails to suppress them. The conclusion the Judge drew SURVIVES AND IS SHARPER: the failure is SILENT rather than announced, so a consumer on a minor where a code was renamed gets the a11y noise with no diagnostic. Do NOT write 'unknown_code warns' into the policy. Record the measured behaviour."
       - "BASELINE FORM INVENTORY: an explicit allowlist of every form the emitter may emit - rune names, imported svelte APIs, template block kinds, event-attribute shape, svelte-ignore codes - each entry carrying its recorded version floor AND an honest floor-evidence status of 'verified' or 'unverified'. The policy goes RED when emitted output contains a form not on the list. This asserts the precondition of T002 ruling 3 that nothing currently asserts. Ship at least one mutation row proving it goes red."
       - "Add the decision-site comment the policy's 'Recording a ruling' item 2 requires, at syncPolicyGuard(). It is currently missing for this lane."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      note: "notes/T005-svelte-sugar.md (T008's own measurements; NOT the Judge's note, which was never written)"
+      summary: "Folded the T005 ruling into docs/emitter-idiom-policy.md: worked example 6 REWRITTEN as DENIED with all six outcomes, worked example 7 fully re-scored with its measured-false G5 limb corrected, four superseded cross-references repaired, two decision-site comments added, and a fail-closed BASELINE FORM INVENTORY gate policy landed with 15 entries and six red proofs. Emitted output did not move. 668 -> 676 tests."
+      changed_files:
+        - docs/emitter-idiom-policy.md
+        - packages/frameworks/svelte/src/gate/index.ts
+        - packages/frameworks/svelte/src/emitter/index.ts
+        - packages/frameworks/svelte/test/gate.test.ts
+        - packages/frameworks/svelte/README.md
+        - docs/goals/frameless-svelte-v1/notes/T005-svelte-sugar.md
+      commands:
+        - cmd: "pnpm check"
+          status: pass
+          note: "four tsc passes"
+        - cmd: "pnpm test"
+          status: pass
+          note: "PM RE-RAN: 676/676, 43 files - up from 668, the +8 being inventory rows"
+        - cmd: "pnpm test:browser"
+          status: pass
+          note: "react 60/60, solid 49/49, svelte 13/13"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "'Three-way: 4 demos x 3 scenarios, all observations equal'"
+        - cmd: "regenerate && git diff --exit-code -- packages/frameworks/svelte/generated"
+          status: pass
+          note: "EMITTED OUTPUT DID NOT MOVE - this package rewrites a ruling and adds a check"
+        - cmd: "git diff --exit-code -- packages/compiler packages/frameworks/{react,solid,qwik} demos scripts pnpm-lock.yaml"
+          status: pass
+        - cmd: "pnpm lint"
+          status: pass
+          note: "not in the verify list; run anyway, 0 warnings 0 errors"
+      it_corrected_the_pms_correction:
+        what_happened: "The PM told T008 that the Judge's 'unknown svelte-ignore code warns unknown_code' was FALSE. T008 reproduced BOTH reports and found the variable neither had named."
+        the_variable: "`if (runes)` at svelte/src/compiler/utils/extract_svelte_ignore.js:38. In a RUNES component an unrecognised code DOES warn unknown_code, and a Svelte 4 dash-case spelling warns legacy_code. In a RUNES-FREE component there is no diagnostic at all. In both, the annotation suppresses nothing. Invariant across client/server and dev/prod."
+        who_was_right: "The JUDGE, on the arm that matters. THE PM'S TEST USED A RUNES-FREE COMPONENT, WHICH IS NOT WHAT THE EMITTER PRODUCES. PM re-verified both arms and the deciding line after the fact."
+        what_was_written: "Neither single claim. The measured SPLIT, the deciding line, and the sharpened conclusion: loud at emit time in THIS repo because assertCompilesClean fails on any warning, silent at a CONSUMER's version, and in a runes-free module not even the rename is reported."
+        shipped_consequence: "The inventory now also REFUSES an emitted svelte-ignore in a module containing no rune, because that annotation is validated by nobody."
+      worked_example_6:
+        rewritten_not_amended: true
+        baseline: "the onname={...} event attribute - measured that on:click warns event_directive_deprecated in a runes component and that on:click + onclick is the hard error mixed_event_handler_syntaxes, so the zero-warning no-obligation sanctioned set has exactly ONE member"
+        outcomes: "G1 FAIL, G2 PASS, G3 PASS, G4 PASS-by-named-refusal (deciding function syncPolicyGuard(); recorded UNKNOWN for the rule as previously written), G5 FAIL, G6 PASS attribute arm / FAIL on() arm"
+        the_decider: "G5. Per-event-record narrowing makes a mixed-mechanism component the NORMAL case - S3 carries four events - and delegated-vs-attached is an event-ROUTING difference. MEASURED that mixed_event_handler_syntaxes does NOT fire for on() + onname, so the compiler cannot see it."
+        ir_4_was_never_the_blocker: "MEASURED use:+on() and {@attach}+on() both compiling with an EMPTY warning set at 5.0 baseline. The missing measurement was the blocker."
+        substance: "The repair was WRONG WHEN RATIFIED, not merely unverified: its narrowing mandates a mix while T002 independently ruled 'never a mix', and nobody caught the contradiction because there was no emitter."
+      worked_example_7:
+        ruling: "DENIED, unchanged"
+        corrected_limb: "G5 first limb MEASURED FALSE: `let { label } = $props()` lowers to $.template_effect(() => $.set_text(text, $$props.label)) - a LIVE read, so destructured props ARE reactive. The Solid-dossier agreement had been borrowed without measuring it in this target."
+        surviving_limb: "The fallback: `let { config = { open: false } } = $props()` lowers to $.prop(...) with NO proxy() anywhere; prop() resolves the fallback through derived, never the state proxy."
+        why_it_matters: "The shipped emitter destructures $props() UNCONDITIONALLY - which this entry does not deny - and throws on a declared prop default, which is exactly the surviving limb."
+      inventory:
+        entries: 15
+        all_floors_honest: "ALL 15 carry floor-evidence 'unverified' WITH A SPECIFIC REASON. The resolved package dates exactly the post-5.0 members (@since 5.20.0 on $props.id, @since 5.36 on settled) and carries NO tag on $state/$derived/$props/untrack, and ships no CHANGELOG. AN ABSENT TAG IS NOT A FLOOR. No floor was guessed."
+        verified_arm_kept_alive: "A 'verified' entry must cite a file plus verbatim text INSIDE the resolved svelte package; the test RE-READS every citation, and a two-sided calibration plants a real needle (@since 5.20.0), a false one, and a missing file - which throws rather than returning false."
+        red_proofs: "Six mutation rows via the throwing mutate/mutateAll: $state -> $state.raw; an added import of on from svelte/events (worked example 6, in code); {@html}, {@attach}, {#key}; onclick -> onClick; an unsanctioned svelte-ignore code (firing alongside sanctioned-svelte-ignore, two independent lines); and a runes-stripped S3 whose svelte-ignore is then validated by nobody."
+        anti_vacuity: "collectEmittedForms() is exported and the observed form set of S1/S2/S3 is pinned against a literal - an allowlist whose walk observes NOTHING would otherwise accept everything, and every red row would be measuring the mutant instead of the policy."
+      deviations:
+        - "Rewrote worked example 7 IN FULL with all six outcomes re-scored, not just the G5 limb: its G1/G4/G6 read 'framework absent'/'emitter absent'/'no Svelte lane', all now false, which would have left three untrue statements beside a corrected one."
+        - "Corrected FOUR cross-references elsewhere in the policy that asserted the superseded example-6 outcome: the forced-lowering preamble, Gate 1's 'Vue, Angular and Svelte are all absent today', Gate 2's 'which worked example 6 already commits to', and Gate 4's absent-emitter bullet."
+        - "Added a SECOND decision-site comment at propsDeclaration() for worked example 7. The card mandated only syncPolicyGuard(), but the policy requires one per ruling and two rulings were rewritten."
+        - "The inventory carries one check that is a PRECONDITION rather than an allowlist entry - svelte-ignore requires runes mode - because the measurement showed the codes are only validated there."
+        - "Created notes/T005-svelte-sugar.md, which the T005 receipt cites but which was never written. It OPENS BY STATING it is not that note and reconstructs nothing."
+      carried_forward:
+        - "No floor in the inventory is 'verified', and none can be without network access or a package that dates its own 5.0 surface. The verified arm is CALIBRATED, not exercised."
+        - "T009's lint-arbiter gap is untouched and still open, as intended."
+      verification_attempts: 1
   - id: T009
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: "Wire eslint-plugin-svelte into the Svelte gate as a third-party arbiter, matching react, solid and qwik."
     allowed_files:

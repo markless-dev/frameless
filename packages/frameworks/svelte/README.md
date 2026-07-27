@@ -48,6 +48,31 @@ prop defaults · nested prop paths · persistence-bearing IR · composition and
 shared/handle constructs · any Svelte warning it does not have a sanctioned
 suppression for.
 
+## The baseline form inventory
+
+IR-4 is deferred and the idiom policy's version corollary is **not** amended, so
+this emitter discharges the corollary's second conjunct the other way: it emits
+only baseline-version-safe forms. That is a claim about output, and
+`BASELINE_FORM_INVENTORY` in `src/gate/index.ts` is where it is asserted rather
+than assumed — an explicit allowlist of every rune name, imported `svelte` API,
+template node kind, event-attribute shape and `svelte-ignore` code the emitter
+may produce, each with the version floor claimed for it and an honest
+`verified`/`unverified` status for that floor. Emitted output carrying a form
+that is not on the list is a red gate, so `{@attach}` (5.29), `$state.raw`
+(5.19), `on` from `svelte/events` or a camelCased `onClick` cannot arrive
+unnoticed.
+
+Every floor reads `unverified` today, with the reason attached. The resolved
+package dates exactly the members that arrived after 5.0 — `@since 5.20.0` on
+`$props.id` — and says nothing about `$state`, `$derived`, `$props` or
+`untrack`; an absent tag is not a floor.
+
+One entry is a precondition rather than a form: an emitted `svelte-ignore`
+annotation in a module containing **no rune** is a violation. Measured at
+5.56.8, Svelte only validates suppression codes in runes mode
+(`src/compiler/utils/extract_svelte_ignore.js:38`) — in a runes-free module an
+unrecognised code produces no diagnostic at all and suppresses nothing.
+
 ## Verification
 
 `emit()` verifies its own output before returning it: the source must compile

@@ -178,6 +178,22 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 // script block
 // ---------------------------------------------------------------------------
 
+/**
+ * DECISION SITE - docs/emitter-idiom-policy.md, worked example 7, "`$props()`
+ * destructuring WITH FALLBACK VALUES", ruled **DENIED**; the entry was corrected
+ * and rewritten by frameless-svelte-v1 T008 after its first G5 limb was measured
+ * FALSE.
+ *
+ * Read the two halves apart, because they were previously conflated. Plain
+ * destructuring - what this function does, unconditionally - is NOT what the
+ * ruling denies: MEASURED at 5.56.8, `let { label } = $props()` lowers to a live
+ * `$$props.label` read inside a `template_effect`, so a destructured prop IS
+ * reactive. What is denied is the FALLBACK, which is why a declared prop default
+ * throws below instead of becoming `let { x = default } = $props()`: a fallback
+ * is not turned into a reactive state proxy (`$.prop($$props, 'x', 23, () =>
+ * ...)`, with no `proxy()` anywhere in the emitted module), so an object or
+ * array default is not equivalent to defaulting at each read site.
+ */
 function propsDeclaration(component: EnrichedComponent): Statement | null {
 	if (component.props.entries.length === 0) return null;
 	const properties = component.props.entries.map((entry) => {
@@ -360,6 +376,29 @@ function eventAttributeName(eventName: string): string {
 }
 
 /**
+ * DECISION SITE - docs/emitter-idiom-policy.md, worked example 6, "Svelte 5 -
+ * routing a declared `stopPropagation` through `on()` from `svelte/events`",
+ * ruled **DENIED** (goal frameless-svelte-v1, T005 ruling; folded into the policy
+ * by T008). The entry was REWRITTEN rather than amended, as the policy's
+ * re-opening section requires.
+ *
+ * The ruling in one line: the baseline `onname={...}` event attribute is what
+ * this function keeps, `on()` is refused, and a declared `stopPropagation` is
+ * refused OUTRIGHT rather than routed anywhere. G1 FAIL (the `on()` arm's whole
+ * justification is Svelte's docs, with Svelte in the lockfile and measurement
+ * demonstrably possible), G5 FAIL (the repair narrowed PER EVENT RECORD, which
+ * makes a mixed-mechanism component the normal case - S3 carries four events -
+ * and delegated-versus-attached is an event-ROUTING difference the compiler
+ * cannot see, because `mixed_event_handler_syntaxes` fires for `on:` + `onname`
+ * and NOT for `on()`). G2/G3 PASS, G4 PASS by the named refusal below, G6 PASS
+ * for the attribute arm and FAIL for the `on()` arm - no standing check can
+ * exist for a path the emitter refuses to emit.
+ *
+ * The baseline is the attribute form because the alternatives are not free:
+ * MEASURED at 5.56.8, `on:click` in a runes component warns
+ * `event_directive_deprecated`, and mixing the two spellings is the hard error
+ * `mixed_event_handler_syntaxes`.
+ *
  * IR-5 under Svelte 5.
  *
  * Svelte 5 REMOVED event modifiers, and its event attributes receive the native
@@ -370,7 +409,9 @@ function eventAttributeName(eventName: string): string {
  * `stopPropagation` FAILS CLOSED. The s1/s2/s3 corpus contains zero instances,
  * so the alternative - routing the whole component through `on()` from
  * `svelte/events` - would be untested dead code, and in an emitter that is worse
- * than absent code. It throws here instead, and the gate carries a matching row.
+ * than absent code. It throws here instead, and the gate carries a matching row -
+ * `no-stop-propagation` over emitted output, plus `baseline-form-inventory`,
+ * which rejects an `on` imported from `svelte/events` by any route at all.
  *
  * `preventDefault` is emitted in the delegated attribute form. MEASURED at
  * 5.56.8 in a real browser, not inferred: clicking a `<button type="submit">`

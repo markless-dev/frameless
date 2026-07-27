@@ -18,6 +18,9 @@ export type DossierRef =
 	| 'frameless-svelte-v1 T002 ruling 5 (IR-7)'
 	// IR-4 deferred, version corollary NOT amended: emit only baseline-safe forms.
 	| 'frameless-svelte-v1 T002 ruling 3'
+	// The BASELINE FORM INVENTORY - the explicit allowlist that asserts T002
+	// ruling 3's second conjunct instead of assuming it.
+	| 'frameless-svelte-v1 T005 baseline form inventory'
 	// Warning-free emission with a fixed, sanctioned suppression list.
 	| 'frameless-svelte-v1 T002 ruling 6'
 	// Qwik's artifact-required policy, transposed: fail closed on persistence.
@@ -66,6 +69,10 @@ export const SVELTE_GATE_POLICIES = [
 	{
 		id: 'no-inter-sibling-whitespace',
 		dossierRef: 'frameless-svelte-v1 T003 measurement 3',
+	},
+	{
+		id: 'baseline-form-inventory',
+		dossierRef: 'frameless-svelte-v1 T005 baseline form inventory',
 	},
 	persistenceArtifactPolicy(),
 ] as const satisfies readonly GatePolicy[];
@@ -220,6 +227,383 @@ function derivedArguments(instance: Node | null | undefined): Node[] {
 }
 
 // ---------------------------------------------------------------------------
+// the baseline form inventory
+// ---------------------------------------------------------------------------
+
+/**
+ * THE PRECONDITION THIS ASSERTS.
+ *
+ * T002 ruling 3 DEFERRED IR-4 and did NOT amend the policy's version corollary.
+ * That corollary has two conjuncts, and the second one - "the emitter can know
+ * the version it is targeting" - is satisfiable two ways: an explicit
+ * target-version input, or an emitter that emits ONLY baseline-version-safe
+ * forms. This lane is the second way.
+ *
+ * Nothing asserted it. T003 then added two `svelte-ignore` codes AFTER T002
+ * ruled, so "emits only baseline-safe forms" was already an unasserted
+ * precondition over a GROWING set - instrument rule 2 at the emitter. This
+ * inventory is the assertion: an explicit allowlist of every form the emitter
+ * may put in its output, each with the version floor claimed for it and an
+ * honest statement of whether that floor was verified. Emitted output carrying
+ * a form that is not on the list is a violation, so growing the emitter's
+ * surface is a deliberate edit here rather than a silent widening.
+ *
+ * FLOOR HONESTY IS THE POINT. A floor is a CLAIM about the earliest version at
+ * which the form is available and means what the emitter needs; it is a lower
+ * bound and need not be tight. `status: 'unverified'` carries the reason it
+ * could not be checked, and a guessed floor recorded as verified is precisely
+ * the failure this exists to stop. A `verified` entry must cite a file inside
+ * the RESOLVED svelte package and verbatim text in it; `test/gate.test.ts`
+ * re-reads every citation, and calibrates that checker in both directions.
+ *
+ * WHAT IT CANNOT SEE, stated plainly: it reads emitted TEXT, so it cannot know
+ * what a form MEANS at a version this repo does not have installed. It catches
+ * a new form arriving unannounced. It does not catch a form whose semantics
+ * changed under a fixed spelling - `onclick={...}` parses in Svelte 4 too and
+ * means something else entirely there, which is why the floor column exists and
+ * why it is not decoration.
+ */
+export type BaselineFormKind =
+	| 'rune'
+	| 'import'
+	| 'template-node'
+	| 'event-attribute'
+	| 'svelte-ignore-code';
+
+export type FloorEvidence =
+	| {
+			readonly status: 'verified';
+			/** Path INSIDE the resolved svelte package. Re-read by the gate test. */
+			readonly file: string;
+			/** Verbatim text that must be present at that path. */
+			readonly needle: string;
+	  }
+	| { readonly status: 'unverified'; readonly reason: string };
+
+export type BaselineForm = {
+	readonly kind: BaselineFormKind;
+	readonly form: string;
+	/** The earliest Svelte version this inventory CLAIMS the form is safe at. */
+	readonly floor: string;
+	readonly evidence: FloorEvidence;
+};
+
+/**
+ * MEASURED at 5.56.8, and the measurement is the reason every floor below reads
+ * `unverified` rather than being asserted from the shipped types: the resolved
+ * package documents a floor for exactly the members that arrived after 5.0
+ * (`@since 5.20.0` on `$props.id`, `@since 5.36` on `settled`), and carries NO
+ * tag on `$state`, `$derived`, `$props` or `untrack`. An ABSENT tag is not a
+ * floor - it is equally consistent with "5.0" and with "nobody wrote one down" -
+ * and the package ships no CHANGELOG. Recording 5.0 from T001's version-boundary
+ * table is a claim; calling it verified would be the guess this file exists to
+ * refuse.
+ */
+const RUNE_FLOOR_REASON =
+	'5.0 is T001\'s version-boundary table, which is documentary. The resolved package declares this rune with no @since tag and ships no CHANGELOG, so the floor could not be checked against an artifact this repo has.';
+
+const TEMPLATE_FLOOR_REASON =
+	'The construct predates Svelte 5 and is unchanged by it, so 5.0 is a safe lower bound rather than a tight one. Nothing in the resolved package dates it.';
+
+/**
+ * The `svelte-ignore` entries are DERIVED from the emitter's own sanctioned list
+ * so the two cannot drift apart.
+ *
+ * MEASURED at 5.56.8, three components x two generate modes x dev/prod, because
+ * this board has twice recorded a different answer for it. What an emitted
+ * module gets for an unrecognised code depends on whether the component is in
+ * RUNES mode, and nothing in the emitter asserts that it is:
+ *
+ *   - runes component: `unknown_code` warns (and a Svelte 4 dash-case spelling
+ *     warns `legacy_code`), and the real warnings still fire - the annotation
+ *     does not suppress them.
+ *   - runes-free component: NO diagnostic at all, and the real warnings still
+ *     fire. Silent.
+ *
+ * The deciding line is `if (runes)` in the resolved package's
+ * `src/compiler/utils/extract_svelte_ignore.js:38`: in runes mode an
+ * unrecognised code is reported, in legacy mode it is pushed onto the ignore
+ * list unreported, where it suppresses nothing.
+ *
+ * Both arms fail LOUDLY at emit time in THIS repo, because `assertCompilesClean`
+ * fails on any warning at all and the unsuppressed a11y codes are warnings. The
+ * exposure is at a CONSUMER's version, where nothing runs `assertCompilesClean`:
+ * a consumer on a minor where one of these codes was renamed gets the a11y noise
+ * with no diagnostic pointing at the cause, and in a runes-free emitted module
+ * not even the rename is reported. That is why these codes are inventory
+ * entries with floors, and why `svelteIgnoreNeedsRunesMode` below refuses an
+ * annotation the compiler would not validate.
+ */
+const SVELTE_IGNORE_FLOOR_REASON =
+	'MEASURED present at 5.56.8 (svelte/src/compiler/warnings.js `codes`, plus emit()\'s two-sided suppression check, which proves the code both fires and is suppressed). PRESENCE at the pin is not a FLOOR: nothing in the resolved package says when the code was introduced or whether it was renamed on the way.';
+
+export const BASELINE_FORM_INVENTORY: readonly BaselineForm[] = [
+	{
+		kind: 'rune',
+		form: '$state',
+		floor: '5.0',
+		evidence: { status: 'unverified', reason: RUNE_FLOOR_REASON },
+	},
+	{
+		kind: 'rune',
+		form: '$derived',
+		floor: '5.0',
+		evidence: { status: 'unverified', reason: RUNE_FLOOR_REASON },
+	},
+	{
+		kind: 'rune',
+		form: '$props',
+		floor: '5.0',
+		evidence: { status: 'unverified', reason: RUNE_FLOOR_REASON },
+	},
+	{
+		kind: 'import',
+		form: 'svelte#untrack',
+		floor: '5.0',
+		evidence: {
+			status: 'unverified',
+			reason: "5.0 is T001's version-boundary table, which is documentary. The resolved package declares untrack at types/index.d.ts:604 with no @since tag - immediately below a settled() that DOES carry @since 5.36 - and ships no CHANGELOG, so the floor could not be checked against an artifact this repo has.",
+		},
+	},
+	...(
+		[
+			'Fragment',
+			'RegularElement',
+			'Text',
+			'ExpressionTag',
+			'Attribute',
+			'Comment',
+			'IfBlock',
+			'EachBlock',
+		] as const
+	).map(
+		(form): BaselineForm => ({
+			kind: 'template-node',
+			form,
+			floor: '5.0',
+			evidence: { status: 'unverified', reason: TEMPLATE_FLOOR_REASON },
+		}),
+	),
+	{
+		kind: 'event-attribute',
+		form: 'on<name>',
+		floor: '5.0',
+		evidence: {
+			status: 'unverified',
+			reason: 'MEASURED at 5.56.8 that this is the form a runes component must use: the Svelte 4 `on:name` directive warns event_directive_deprecated in a runes component, and mixing the two spellings is the hard error mixed_event_handler_syntaxes. That measurement dates neither form - the same lexical shape parses in Svelte 4 and means a string attribute there, which is exactly why the floor matters and exactly why it is not verified.',
+		},
+	},
+	...SANCTIONED_SVELTE_IGNORE_CODES.map(
+		(form): BaselineForm => ({
+			kind: 'svelte-ignore-code',
+			form,
+			floor: '5.0',
+			evidence: { status: 'unverified', reason: SVELTE_IGNORE_FLOOR_REASON },
+		}),
+	),
+];
+
+const INVENTORY = new Set(
+	BASELINE_FORM_INVENTORY.map((entry) => `${entry.kind}:${entry.form}`),
+);
+
+/** The shape of an event attribute an emitted runes component may carry. */
+const EVENT_ATTRIBUTE_SHAPE = /^on[a-z]+$/;
+
+/**
+ * Fields of a Svelte template node that hold OTHER TEMPLATE NODES. Deliberately
+ * an explicit list rather than "every key": `expression`, `test`, `key` and an
+ * attribute's spread argument hold ESTree, which is a different vocabulary and
+ * is checked by the rune and import observers instead.
+ *
+ * Fail-closed follows from the list being about EDGES, not node types: a node
+ * kind this file has never seen still arrives as a child of a field named here,
+ * and is observed - and then rejected, because it is not in the inventory.
+ */
+const TEMPLATE_CHILD_FIELDS = [
+	'nodes',
+	'fragment',
+	'consequent',
+	'alternate',
+	'body',
+	'pending',
+	'then',
+	'catch',
+	'fallback',
+	'attributes',
+	'value',
+] as const;
+
+export type ObservedForm = {
+	readonly kind: BaselineFormKind;
+	readonly form: string;
+	readonly line: number | null;
+};
+
+function observeTemplate(source: string, fragment: unknown, found: ObservedForm[]): void {
+	const seen = new Set<unknown>();
+	const visit = (value: unknown): void => {
+		if (Array.isArray(value)) {
+			value.forEach(visit);
+			return;
+		}
+		if (!value || typeof value !== 'object') return;
+		const node = value as Node;
+		if (typeof node.type !== 'string' || seen.has(node)) return;
+		seen.add(node);
+		const line = lineOf(source, node.start);
+		found.push({ kind: 'template-node', form: node.type, line });
+		if (node.type === 'Attribute' && /^on/i.test(String(node.name ?? '')))
+			found.push({
+				kind: 'event-attribute',
+				form: EVENT_ATTRIBUTE_SHAPE.test(String(node.name)) ? 'on<name>' : String(node.name),
+				line,
+			});
+		if (node.type === 'Comment') {
+			const data = String(node.data ?? '').trim();
+			if (data.startsWith('svelte-ignore'))
+				for (const code of data
+					.slice('svelte-ignore'.length)
+					.split(/[\s,]+/)
+					.filter(Boolean))
+					found.push({ kind: 'svelte-ignore-code', form: code, line });
+		}
+		for (const field of TEMPLATE_CHILD_FIELDS) visit(node[field]);
+	};
+	visit(fragment);
+}
+
+/**
+ * Runes are observed BY SPELLING, not by asking the compiler, because the
+ * question is what the emitted TEXT contains. `$state.raw` is observed as
+ * `$state.raw` and not as `$state`, so a member arriving on a rune this
+ * inventory already allows is still a new form.
+ *
+ * `$$props` and `$$restProps` are compiler-internal and start with two dollars,
+ * which the pattern excludes deliberately - they are never emitted, and they are
+ * not forms this emitter chooses.
+ */
+const RUNE_IDENTIFIER = /^\$[A-Za-z]/;
+
+function observeScript(source: string, scope: unknown, found: ObservedForm[]): void {
+	walk(scope, (node) => {
+		const line = lineOf(source, node.start as number | undefined);
+		if (
+			node.type === 'MemberExpression' &&
+			!node.computed &&
+			node.object?.type === 'Identifier' &&
+			RUNE_IDENTIFIER.test(String(node.object.name)) &&
+			node.property?.type === 'Identifier'
+		) {
+			found.push({
+				kind: 'rune',
+				form: `${String(node.object.name)}.${String(node.property.name)}`,
+				line,
+			});
+			return;
+		}
+		if (node.type === 'Identifier' && RUNE_IDENTIFIER.test(String(node.name)))
+			found.push({ kind: 'rune', form: String(node.name), line });
+		if (node.type === 'ImportDeclaration') {
+			const from = String((node.source as Node | undefined)?.value ?? '?');
+			const specifiers = (node.specifiers ?? []) as Node[];
+			if (specifiers.length === 0) found.push({ kind: 'import', form: `${from}#*`, line });
+			for (const specifier of specifiers)
+				found.push({
+					kind: 'import',
+					form: `${from}#${
+						specifier.type === 'ImportSpecifier'
+							? String(specifier.imported?.name ?? '?')
+							: specifier.type === 'ImportDefaultSpecifier'
+								? 'default'
+								: '*'
+					}`,
+					line,
+				});
+		}
+	});
+}
+
+/**
+ * A `$state.raw` observation also emits a bare `$state` observation from the
+ * member expression's own object identifier, which is on the inventory. Both are
+ * kept: the set difference is what decides, and the bare one is a true statement
+ * about the text.
+ */
+function observeForms(source: string, root: Node): ObservedForm[] {
+	const found: ObservedForm[] = [];
+	observeTemplate(source, root.fragment, found);
+	for (const scope of [root.fragment, root.instance, root.module])
+		observeScript(source, scope, found);
+	return found;
+}
+
+/**
+ * Every form the emitted source actually contains, deduped and sorted. Exported
+ * because a fail-closed allowlist that observes NOTHING passes vacuously, and
+ * `test/gate.test.ts` pins the observed set of the shipped corpus against a
+ * literal - so a walk that stopped descending is a red test rather than a
+ * silently green gate.
+ */
+export function collectEmittedForms(source: string): ReadonlyArray<{
+	readonly kind: BaselineFormKind;
+	readonly form: string;
+}> {
+	const root = parse(source, { modern: true }) as unknown as Node;
+	const seen = new Set<string>();
+	const forms: Array<{ kind: BaselineFormKind; form: string }> = [];
+	for (const observation of observeForms(source, root)) {
+		const key = `${observation.kind}:${observation.form}`;
+		if (seen.has(key)) continue;
+		seen.add(key);
+		forms.push({ kind: observation.kind, form: observation.form });
+	}
+	return forms.sort((left, right) =>
+		`${left.kind}:${left.form}`.localeCompare(`${right.kind}:${right.form}`),
+	);
+}
+
+function inventoryViolations(file: string, source: string, root: Node): GateViolation[] {
+	const observations = observeForms(source, root);
+	const violations: GateViolation[] = [];
+	const reported = new Set<string>();
+	for (const observation of observations) {
+		const key = `${observation.kind}:${observation.form}`;
+		if (INVENTORY.has(key) || reported.has(key)) continue;
+		reported.add(key);
+		violations.push(
+			violation(
+				file,
+				'baseline-form-inventory',
+				`Emitted Svelte source uses the ${observation.kind} form ${JSON.stringify(observation.form)}, which is not in the baseline form inventory. IR-4 is DEFERRED, so this emitter's only discharge of the version corollary's second conjunct is that it emits nothing but baseline-version-safe forms; a new form has to be added to BASELINE_FORM_INVENTORY with a recorded version floor and an honest floor-evidence status`,
+				observation.line,
+			),
+		);
+	}
+	// The `svelte-ignore` codes above are only VALIDATED by the compiler in a
+	// runes component - measured at 5.56.8, deciding line
+	// `svelte/src/compiler/utils/extract_svelte_ignore.js:38`. In a runes-free
+	// module an unrecognised code is silently accepted and suppresses nothing, so
+	// an emitted annotation there is unguarded by anything upstream.
+	const ignores = observations.filter((entry) => entry.kind === 'svelte-ignore-code');
+	const hasRune = observations.some(
+		(entry) => entry.kind === 'rune' && INVENTORY.has(`rune:${entry.form}`),
+	);
+	if (ignores.length && !hasRune)
+		violations.push(
+			violation(
+				file,
+				'baseline-form-inventory',
+				`Emitted Svelte source carries a svelte-ignore annotation (${ignores
+					.map((entry) => entry.form)
+					.join(', ')}) but contains no rune, so Svelte compiles it in legacy mode and does NOT validate the codes - MEASURED at 5.56.8: an unrecognised code there produces no diagnostic at all and suppresses nothing`,
+				ignores[0]!.line,
+			),
+		);
+	return violations;
+}
+
+// ---------------------------------------------------------------------------
 // policies
 // ---------------------------------------------------------------------------
 
@@ -266,6 +650,7 @@ function sourceViolations(file: string, source: string): GateViolation[] {
 		];
 	}
 	const instance = root.instance as Node | null;
+	violations.push(...inventoryViolations(file, source, root));
 	walk(root.fragment, (node) => {
 		if (node.type === 'OnDirective')
 			violations.push(

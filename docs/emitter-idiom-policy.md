@@ -51,12 +51,16 @@ holds against the current output, you are not in forced lowering, and a `FAIL` a
 `FAIL`. Reframing a genuine Gate 5 `FAIL` as forced lowering in order to push a change through is
 the failure mode this paragraph exists to stop.
 
-Two entries below are this species rather than sugar questions: worked example 9, where Qwik
-accepts `preventDefault()` inside a lazily fetched QRL and the call never runs in time; and the
-original `stopPropagation` finding in worked example 6, where Svelte accepts the attribute form
-and its delegated listeners defeat it. Note the difference between them — example 6 was repairable
-by narrowing the domain, so it stayed a sugar question and kept running the gates, while example 9
-was not.
+Worked example 9 is this species rather than a sugar question: Qwik accepts `preventDefault()`
+inside a lazily fetched QRL and the call never runs in time.
+
+Worked example 6 was once listed here alongside it, on the reading that Svelte's delegated
+listeners defeat a declared `stopPropagation` in the attribute form and that the finding was
+therefore repairable by narrowing the domain. **That reading did not survive the emitter.** The
+narrowing was re-run against a real Svelte lane at a pinned version and ruled *denied*, and the
+shipped emitter does not lower the construct at all — it **refuses** it. Refusal is not a lowering,
+so example 6 is an ordinary sugar question that failed, and it is kept in this preamble only to
+record that it was moved out of the forced-lowering family rather than quietly dropped.
 
 ## The procedure
 
@@ -104,8 +108,11 @@ and was not made. A package resolving to a different version, or a differently-p
 same tool, is a different build.
 
 **Absent framework.** If no build of the target framework is in this repo's lockfile, this gate is
-not askable: record `DEFERRED — framework absent`, naming the framework. Vue, Angular and Svelte
-are all absent today.
+not askable: record `DEFERRED — framework absent`, naming the framework. Vue and Angular are absent
+today. **Svelte is not, and has not been since `frameless-svelte-v1` T003 put `svelte@5.56.8` in the
+lockfile**: a Svelte deferral recorded at this gate before that date is discharged, and re-running
+the entry may not record `DEFERRED — framework absent` again. Worked examples 6 and 7 are both
+rewritten on exactly that ground.
 
 `DEFERRED` here is **not** a pass and never becomes one on paper. Gate 1 can never be `PASS` for a
 framework absent from the lockfile, and documentary evidence never passes this gate at any
@@ -143,9 +150,12 @@ a Gate 2 failure: the emitter already manages its own framework imports — `use
 baseline's own import list, so the self-scoped reading would retroactively invalidate a shipped
 ruling. Every other item in the failure list above is an obligation on a *third party*; read
 self-scoped, the import clause would be the only one out of family. Vue's `defineModel`, Angular's
-`input()`/`output()` and Svelte's `on` from `svelte/events` — which worked example 6 already
-commits to — are all decided by this scoping, and are decided the same way: an import of the
-target framework's own runtime into the module being emitted asks nothing of anyone else.
+`input()`/`output()` and Svelte's `on` from `svelte/events` are all decided by this scoping, and are
+decided the same way: an import of the target framework's own runtime into the module being emitted
+asks nothing of anyone else.
+
+Worked example 6 is the entry to read on how little that buys. It records `PASS` here for `on()`, on
+exactly this reasoning, **and is denied anyway** — at Gates 1 and 5. A gate is a veto, not a vote.
 
 ### Gate 3 — Declared trigger
 
@@ -202,9 +212,16 @@ accordingly:
 - If you can exhibit one construct inside the stated domain where the sugar does not apply — from
   the IR schema, from the compiler, or from the target framework's own rules — that is a real
   `FAIL`. It is decidable without an emitter, and the repair step applies to it normally. Worked
-  example 6 below is this case: its Gate 4 failure was found in `SyncPolicyBranch.actions` in the
-  IR schema with no Svelte emitter in existence, and the repair narrowed the domain using a
-  declared IR field.
+  example 6 is the case to read: its original Gate 4 failure was found in `SyncPolicyBranch.actions`
+  in the IR schema with no Svelte emitter in existence, which is this gate doing real work against
+  an absent emitter.
+
+  Read the rest of that entry too, because it is also the warning. The repair the `FAIL` motivated —
+  narrow the domain per event record, route the remainder through `on()` — was ratified with no
+  emitter to check it against, and it was **wrong on the day it was ratified**: narrowing per event
+  record mandates a mixed-mechanism component, which Gate 5 forbids. A repair passes Gate 4 by being
+  total; it does not thereby pass the other five, and re-running from Gate 1 on the narrowed rule
+  means *all* of them.
 - If you cannot exhibit one, you have **not** earned `PASS`. The absence of a counterexample
   against a domain whose deciding function does not exist is not a totality proof — it is the
   folklore domain arriving by the back door. Record `DEFERRED — emitter absent`, naming the
@@ -348,36 +365,128 @@ destructuring and `++`, so frameless handler bodies must become class methods re
 ruling here. The procedure applies to genuine choices between sanctioned forms, not to lowerings
 the target language forces.
 
-### 6. Svelte 5 — `onclick={…}` event attributes → **deferred, after repair**
+### 6. Svelte 5 — routing a declared `stopPropagation` through `on()` from `svelte/events` → **no-sugar**
 
-As first stated — "emit every event as an `onname` attribute" — **G4 FAIL**: the frameless IR can
-declare a `stopPropagation` action on an event
-(`SyncPolicyBranch.actions`, `packages/compiler/src/schema.ts:35-39`), and Svelte's docs say not
-to use `stopPropagation` with delegated listeners — a set that includes `click`, `input`,
-`change` and `keydown` — directing you to `on` from `svelte/events` instead. The rule is not
-total over its stated domain.
+**Rewritten, not amended.** This entry previously read "deferred, after repair". Every condition
+that deferred it has since been met — `svelte@5.56.8` is in the lockfile, `packages/frameworks/svelte`
+exists, and `pnpm e2e` drives `demos/svelte-official` on the official SvelteKit scaffold — so the
+procedure was re-run in full by `frameless-svelte-v1` T005 and the entry rewritten by its T008, as
+the re-opening section requires. **It did not ripen into `PASS`. It became `FAIL`.**
 
-Apply the **repair step**: narrow the domain to events whose declared `SyncPolicyBranch.actions`
-do not include `stopPropagation`, and use `on()` for the rest. The narrowing reads a *declared*
-IR field, so Gate 3 still passes. Re-run: **G1 DEFERRED — framework absent** (no Svelte in this
-repo's lockfile), G2 PASS, G3 PASS, **G4 DEFERRED — emitter absent** (the narrowed domain has no
-known counterexample, but with no Svelte emitter its totality cannot be shown), G5 PASS,
-**G6 DEFERRED** (no Svelte lane). No gate `FAIL`s: deferred, not denied.
+Baseline: the `onname={…}` event attribute, for every event. It is the baseline rather than a
+candidate because the alternatives are not free — MEASURED at 5.56.8: `on:click` in a runes
+component warns `event_directive_deprecated`, and mixing `on:click` with `onclick` in one component
+is the hard error `mixed_event_handler_syntaxes`. The zero-warning, no-obligation sanctioned set has
+exactly one member.
 
-This is the example to reach for when a sugar looks nearly right. The repair step distinguishes a
-rule stated too broadly (repairable) from a rule that needs to inspect contents (not repairable).
-It is also the example that shows Gate 4 doing real work without an emitter: the original `FAIL`
-was found in the IR schema, not in any Svelte emitter. An absent emitter defers Gate 4; it never
-excuses it.
+Candidate: `on()` from `svelte/events`, for the events whose declared `SyncPolicyBranch.actions`
+include `stopPropagation` — the narrowing this entry used to record as a successful Gate 4 repair.
+
+Domain, in emitter terms: every `EnrichedEventRecord` reaching `syncPolicyGuard()`
+(`packages/frameworks/svelte/src/emitter/index.ts`), which is the deciding function.
+
+- **G1 FAIL.** The attribute arm is measured exhaustively: T003's two-variable triangulation in real
+  Chromium at 5.56.8 (`onclick=` with `preventDefault` 1→1 Document requests, without it 1→2;
+  `on()` with 1→1, without 1→2 — the signal tracks the *product* variable and is insensitive to the
+  emission form, and the negative control proves the instrument can see a navigation), re-measured
+  against the real emitted `generated/S3.svelte` and now standing as two browser checks with a
+  planted-member calibration. The **`on()` arm is not measured at all**. Its entire justification —
+  that `on()` escapes delegation and therefore stops propagation where the attribute form cannot —
+  is Svelte's documentation, while Svelte is in this repo's lockfile and the measurement is
+  demonstrably possible: `use:` + `on()` and `{@attach}` + `on()` both compile with an **empty**
+  warning set at 5.56.8, at Svelte 5.0 baseline. That is Gate 1's named `FAIL` clause verbatim —
+  documentary evidence with a build in the lockfile — and `DEFERRED` is not available, because the
+  absent-framework cause is discharged. **IR-4 was never this arm's blocker; the lack of a
+  measurement was.**
+- **G2 PASS.** Both arms are self-scoped. `on` from `svelte/events` is an import the emitted module
+  adds to its *own* import list, which the Gate 2 scoping paragraph settles as a `PASS`. Nothing is
+  asked of a parent, a child, another module or the build graph.
+- **G3 PASS.** The trigger is the declared IR field `SyncPolicyBranch.actions`, never handler
+  contents. `syncPolicyGuard()` reads the handler body only to *refuse* a policy the body does not
+  spell — the same posture as worked example 10 — so the Gate 3 rider does not engage.
+- **G4 PASS — by refusal, and for the rule AS SHIPPED rather than the rule as previously written.**
+  The shipped emitter does not implement this entry's old repair. `syncPolicyGuard()` **throws** on
+  a declared `stopPropagation` in any branch, naming the construct and the reason; everything else
+  emits the attribute form. Totality is therefore discharged the way worked example 10 discharges
+  it, by named refusal rather than by silence, and an independent gate policy `no-stop-propagation`
+  re-reads emitted output, with `baseline-form-inventory` rejecting an `on` imported from
+  `svelte/events` by any route at all. Scored against the rule as *written* — narrow per event
+  record, route the rest — this gate is `UNKNOWN`: the emitter exists, so `DEFERRED` is gone, and
+  nobody enumerated that rule's domain against a deciding function. `UNKNOWN` is a no.
+- **G5 FAIL, and this is the ruling.** The repair narrows **per event record**, so a
+  mixed-mechanism component is the *normal* case rather than an edge — `S3` carries four events, and
+  a policy on one of them would put that component on both mechanisms at once. Delegated-versus-
+  attached is an event-**routing** difference, the first item in Gate 5's own failure list, and the
+  compiler cannot see it: MEASURED at 5.56.8, `mixed_event_handler_syntaxes` fires for `on:` +
+  `onname` and does **not** fire for `on()` + `onname`, which compiles clean. T002 ruling 4 had
+  independently reached "if the attribute form ever proves unsound, switch the WHOLE component to
+  `on()` — never a mix" for the same reason.
+- **G6 PASS (attribute arm) / FAIL (`on()` arm).** For the attribute arm a standing check exists and
+  asserts observable behaviour: `pnpm e2e` drives `demos/svelte-official` on its official SvelteKit
+  scaffold at the lockfile version and `assertS3` requires exactly one `Document` request after the
+  click on `[data-action="cancel-submit"]`, byte-identical to the react, solid and qwik lanes. For
+  the `on()` arm nothing can exist, because the emitter refuses to emit that path — the sugar's only
+  justification is an artifact property nothing checks, which is Gate 6's `FAIL` clause.
+
+`FAIL` at Gate 1 and Gate 5 → **denied, not deferred**. Say which one decides it: Gate 5 does. A
+future measurement can retire the Gate 1 `FAIL`; nothing retires Gate 5's without abandoning the
+per-record narrowing, and abandoning it is abandoning the repair.
+
+**The substance of this rewrite, and the reason it is worth reading twice.** The repair was not
+merely unverified when it was ratified — it was **wrong**. Its per-event-record narrowing *mandates*
+a mixed-mechanism component, while `frameless-svelte-v1` T002 independently ruled "never a mix",
+and the two sat in the record together without anyone noticing the contradiction. Nobody noticed
+because there was no emitter: a rule that names no deciding function cannot be read against a real
+component, and Gate 4's `DEFERRED — emitter absent` correctly said as much about *that* gate while
+saying nothing about the other five. A deferral is not a partial credit that ripens; it is a
+statement that a question was not asked.
 
 ### 7. Svelte 5 — `$props()` destructuring with fallback values → **no-sugar**
 
-**G1 DEFERRED — framework absent**, G2 PASS, G3 PASS, **G4 DEFERRED — emitter absent**.
-**G5 FAIL**: destructured reactive values are not reactive, and fallback values are not turned into
-reactive state proxies — so an object or array default is not equivalent to defaulting at each read
-site. This matches an existing frameless ruling in the Solid dossier, which already banned props
-destructuring for the same reason in a different framework. **G6 DEFERRED** (no Svelte lane).
-`FAIL` outranks the deferrals: **denied, not deferred**.
+**Rewritten. The ruling is unchanged and its first stated reason was measured FALSE.** As first
+written this entry gave two reasons at Gate 5: that destructured reactive values are not reactive,
+and that fallback values are not turned into reactive state proxies. The first is refuted at 5.56.8.
+A wrong reason attached to a right answer is worth correcting on its own, and this one is
+load-bearing: the shipped Svelte emitter destructures `$props()` **unconditionally**, so a reader
+taking the first reason at face value would read the emitter as violating this very entry.
+
+Baseline: declare the prop without a fallback and default where the value is read. Candidate:
+`let { x = fallback } = $props()`. Domain, in emitter terms: every entry in
+`component.props.entries` handled by `propsDeclaration()` in
+`packages/frameworks/svelte/src/emitter/index.ts`.
+
+- **G1 PASS.** Both forms compile clean — an empty warning set at 5.56.8, the build this repo
+  ships — and the candidate's lowering was read out of that same build's emitted client module
+  rather than out of the docs. `DEFERRED — framework absent` is no longer available.
+- **G2 PASS.** Entirely inside the emitted module.
+- **G3 PASS.** The trigger is the declared IR field `ComponentPropEntry.defaultValue`, never the
+  shape of an expression.
+- **G4 UNKNOWN — which is a no.** The deciding function `propsDeclaration()` now exists, so
+  `DEFERRED — emitter absent` is discharged, and its domain was never enumerated against the
+  candidate rule. The tempting answer — "the emitter refuses every prop default, so the domain is
+  empty and totality is vacuous" — is refused: T005 refused the same move for worked example 6, and
+  a vacuous totality is the folklore domain arriving by the back door.
+- **G5 FAIL, on the second limb only.**
+  - *First limb, REFUTED by measurement at 5.56.8:* `let { label } = $props()` lowers to
+    `$.template_effect(() => $.set_text(text, $$props.label))` — a **live** `$$props.label` read
+    inside the effect. Destructured props are reactive. The Solid dossier's ban on props
+    destructuring, cited here as agreement, rests on Solid's own getter semantics and does not
+    transfer; per-target divergence is expected, and borrowing another target's reason without
+    measuring it in this one is what produced the error.
+  - *Second limb, which carries the ruling:* a **fallback** is not turned into a reactive state
+    proxy. `let { config = { open: false } } = $props()` lowers to
+    `$.prop($$props, 'config', 23, () => ({ open: false }))`, with no `proxy()` call anywhere in the
+    emitted module; `prop()` resolves the fallback through `derived`
+    (`svelte/src/internal/client/reactivity/props.js:276-300`), never through the state proxy. So an
+    object or array default is not equivalent to defaulting at each read site, and mutating a
+    defaulted object is untracked — reported, if at all, as a dev-only ownership warning.
+- **G6 FAIL.** No standing check in any lane asserts prop-default behaviour, because the corpus has
+  no prop defaults and the emitter refuses to emit one. Same clause as worked example 6's `on()`
+  arm: no check can exist for a path the emitter refuses to emit.
+
+`FAIL` at Gate 5, `FAIL` at Gate 6, `UNKNOWN` at Gate 4: **denied**. The emitter enforces exactly
+this split — it destructures unconditionally, which the entry does **not** deny, and throws on a
+declared prop default, which is the limb that survives.
 
 ### 8. React — `onInput` → `onChange` on leaf controls, and `class` → `className` → **sugar** (existing, retro-validated)
 
@@ -580,6 +689,71 @@ cannot, and **refuses to emit if that partition is not total for a declared acti
 must never narrow the IR to what it happens to support. Only Qwik is expected to need the split —
 React, Solid, Svelte and Vue have synchronous resident handlers, and Angular's forced lowering is
 orthogonal — but all of them inherit the refusal obligation.
+
+## The baseline form inventory
+
+The version corollary at Gate 6 has two conjuncts: the lockfile pins ≥ *N*, **and** the emitter can
+know the version it is targeting. `frameless-svelte-v1` T002 ruling 3 deferred IR-4 without amending
+that corollary, and recorded that the second conjunct is satisfiable two ways — an explicit
+target-version or capability input, or **an emitter that emits only baseline-version-safe forms**,
+in which case there is no version-gated sugar and the corollary never engages. The Svelte lane is
+the second way. So are Vue and Angular, by inheritance.
+
+That second way is a **claim about emitted output**, and until `frameless-svelte-v1` T008 nothing
+asserted it. It was already false-by-drift once: T003 added two `svelte-ignore` codes *after* T002
+ruled, growing the set of forms the emitter may emit with no record and no check. An emitter that
+discharges the corollary this way therefore ships a **baseline form inventory**:
+
+- An explicit allowlist of every form the emitter may put in its output — rune names, imported
+  framework APIs, template node kinds, the shape of an event attribute, warning-suppression codes.
+- Each entry carries the **version floor** claimed for it and an **evidence status** of `verified`
+  or `unverified`. A floor is a lower bound and need not be tight; `unverified` carries the reason
+  it could not be checked. **Never record a floor you did not verify.** A `verified` entry cites a
+  file and verbatim text inside the *resolved* framework package, and a test re-reads the citation.
+- The gate goes **red** when emitted output contains a form that is not on the list, so growing the
+  emitter's surface is a deliberate edit to the inventory rather than a silent widening.
+- It ships with mutation rows proving it goes red, and — because an allowlist whose walk observes
+  nothing accepts everything — an **anti-vacuity row pinning the observed form set** of the shipped
+  corpus.
+
+The reference implementation is `packages/frameworks/svelte/src/gate/index.ts`
+(`BASELINE_FORM_INVENTORY`, policy `baseline-form-inventory`), calibrated in
+`packages/frameworks/svelte/test/gate.test.ts`. Today every Svelte floor reads `unverified`, and the
+reason is itself instructive: the resolved package documents a floor for exactly the members that
+arrived after 5.0 — `@since 5.20.0` on `$props.id`, `@since 5.36` on `settled` — and carries no tag
+at all on `$state`, `$derived`, `$props` or `untrack`. **An absent tag is not a floor.** It is
+equally consistent with "5.0" and with "nobody wrote one down", and the package ships no changelog.
+
+**What the inventory cannot see, stated so a green is not over-read:** it reads emitted text, so it
+catches a *new form arriving unannounced* and not a form whose meaning changed under a fixed
+spelling. `onclick={…}` parses in Svelte 4 too and means something else entirely there. That is what
+the floor column is for, and why it is not decoration.
+
+### The measurement that made this worth building
+
+`frameless-svelte-v1` T005 argued that the emitter's `svelte-ignore` codes are an unasserted
+precondition over a growing set, and reported that an unrecognised code *warns* `unknown_code`. A
+later re-measurement reported the opposite — that it is silent. **Both are right, and neither named
+the variable.** Measured at 5.56.8 across three component shapes, both generate modes and both dev
+settings:
+
+- In a **runes** component an unrecognised code warns `unknown_code`, and a Svelte 4 dash-case
+  spelling warns `legacy_code`.
+- In a **runes-free** component there is **no diagnostic at all**.
+- In both cases the annotation suppresses nothing, so the real warnings still fire.
+
+The deciding line is `if (runes)` in the resolved package's
+`src/compiler/utils/extract_svelte_ignore.js:38`: in runes mode an unrecognised code is reported, in
+legacy mode it is pushed onto the ignore list unreported, where it matches nothing.
+
+The conclusion T005 drew survives and is sharper than either report. In *this* repo both arms fail
+loudly at emit time, because the emitter's own two-sided check fails on any warning and the
+unsuppressed warnings are warnings. The exposure is at a **consumer's** version, where nothing runs
+that check: on a minor where one of those codes was renamed, a consumer gets the accessibility noise
+with no diagnostic pointing at the cause — and in a runes-free emitted module, not even the rename
+is reported. Hence two things in the inventory: the codes are entries with floors, and an emitted
+`svelte-ignore` in a module containing no rune is itself a violation, because it is an annotation
+nothing upstream will ever validate.
 
 ## Recording a ruling
 

@@ -1,18 +1,22 @@
 import { readFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import type { EnrichedIR } from '@frameless/compiler';
-import { resolve } from 'pathe';
+import { dirname, resolve } from 'pathe';
 import { beforeAll, describe, expect, test } from 'vitest';
 import { emit } from '../src/emitter/index.ts';
 import type { GatePolicy } from '../src/gate/index.ts';
 import {
+	BASELINE_FORM_INVENTORY,
 	checkGeneratedFiles,
 	checkSources,
+	collectEmittedForms,
 	discoverGeneratedFiles,
 	SVELTE_GATE_POLICIES,
 } from '../src/gate/index.ts';
 
 const packageRoot = resolve(import.meta.dirname, '..');
 const compilerGoldenRoot = resolve(packageRoot, '../../compiler/test/goldens');
+const sveltePackageRoot = dirname(createRequire(import.meta.url).resolve('svelte/package.json'));
 
 async function golden(name: string): Promise<EnrichedIR> {
 	return JSON.parse(await readFile(resolve(compilerGoldenRoot, name), 'utf8')) as EnrichedIR;
@@ -70,6 +74,20 @@ function policiesFor(file: string, source: string): string[] {
 	return checkSources([{ file, source }]).violations.map((entry) => entry.policy);
 }
 
+/**
+ * A floor recorded as `verified` has to cite an artifact that can be re-read, in
+ * the RESOLVED svelte package rather than in a document. A missing file throws
+ * rather than returning false: "the citation is gone" and "the citation is
+ * wrong" are different failures and must not collapse into one another.
+ */
+async function citationHolds(citation: {
+	readonly file: string;
+	readonly needle: string;
+}): Promise<boolean> {
+	const text = await readFile(resolve(sveltePackageRoot, citation.file), 'utf8');
+	return text.includes(citation.needle);
+}
+
 describe('Svelte dossier gate', () => {
 	test('publishes independent source and artifact-required policies', () => {
 		expect(SVELTE_GATE_POLICIES.map((policy) => policy.id)).toEqual([
@@ -80,6 +98,7 @@ describe('Svelte dossier gate', () => {
 			'derived-expression-purity',
 			'sanctioned-svelte-ignore',
 			'no-inter-sibling-whitespace',
+			'baseline-form-inventory',
 			'persistence-render-lowering',
 		]);
 		expect(
@@ -175,6 +194,10 @@ describe('Svelte dossier gate', () => {
 		expect(violations.map((entry) => entry.policy)).toContain('sanctioned-svelte-ignore');
 		expect(violations.find((entry) => entry.policy === 'sanctioned-svelte-ignore')?.message)
 			.toContain('state_unsafe_mutation');
+		// TWO INDEPENDENT LINES on the same mutant. The sanctioned list is the
+		// emitter's own; the inventory reaches it as a FORM with a version floor.
+		// Neither is derived from the other's verdict.
+		expect(violations.map((entry) => entry.policy)).toContain('baseline-form-inventory');
 	});
 
 	test('MUTATION: rejects whitespace between two siblings', () => {
@@ -288,5 +311,207 @@ describe('MUTATION: derived-expression-purity (IR-7)', () => {
 		expect(policiesFor('generated/Blind.svelte', source)).not.toContain(
 			'derived-expression-purity',
 		);
+	});
+});
+
+/**
+ * THE BASELINE FORM INVENTORY (frameless-svelte-v1 T005).
+ *
+ * T002 ruling 3 deferred IR-4 and left the version corollary intact, and this
+ * emitter discharges the corollary's second conjunct the OTHER way: by emitting
+ * only baseline-version-safe forms. Nothing asserted that until now, and T003
+ * had already grown the set once - so the population this guards is FUTURE
+ * emitted forms, which is non-empty by construction.
+ *
+ * The order of the rows below is deliberate: the anti-vacuity row comes first,
+ * because an allowlist whose walk observes nothing accepts everything and every
+ * red row after it would be measuring the mutant rather than the policy.
+ */
+describe('MUTATION: baseline-form-inventory (T005)', () => {
+	test('ANTI-VACUITY: the observed form set of the shipped corpus is pinned exactly', () => {
+		// If the walk stopped descending, or a whole observer silently returned
+		// nothing, the inventory would still be green on every mutant below - it
+		// would just have stopped looking. This is the row that catches that, and
+		// it is also the freshness pin: a fourth form appearing in emitted output
+		// is a red test here before it is anything else.
+		const common = [
+			{ kind: 'event-attribute', form: 'on<name>' },
+			{ kind: 'import', form: 'svelte#untrack' },
+		];
+		expect(collectEmittedForms(s1)).toEqual([
+			...common,
+			{ kind: 'rune', form: '$derived' },
+			{ kind: 'rune', form: '$props' },
+			{ kind: 'rune', form: '$state' },
+			...['Attribute', 'Comment', 'ExpressionTag', 'Fragment', 'IfBlock', 'RegularElement', 'Text'].map(
+				(form) => ({ kind: 'template-node', form }),
+			),
+		]);
+		expect(collectEmittedForms(s2)).toEqual([
+			...common,
+			{ kind: 'rune', form: '$derived' },
+			{ kind: 'rune', form: '$props' },
+			{ kind: 'rune', form: '$state' },
+			...[
+				'Attribute',
+				'Comment',
+				'EachBlock',
+				'ExpressionTag',
+				'Fragment',
+				'IfBlock',
+				'RegularElement',
+				'Text',
+			].map((form) => ({ kind: 'template-node', form })),
+		]);
+		expect(collectEmittedForms(s3)).toEqual([
+			...common,
+			{ kind: 'rune', form: '$props' },
+			{ kind: 'rune', form: '$state' },
+			{ kind: 'svelte-ignore-code', form: 'a11y_click_events_have_key_events' },
+			{ kind: 'svelte-ignore-code', form: 'a11y_no_noninteractive_element_interactions' },
+			...['Attribute', 'Comment', 'ExpressionTag', 'Fragment', 'RegularElement', 'Text'].map(
+				(form) => ({ kind: 'template-node', form }),
+			),
+		]);
+		// And every observed form is on the inventory, which is the same claim the
+		// clean-corpus row makes from the other side.
+		const listed = new Set(
+			BASELINE_FORM_INVENTORY.map((entry) => `${entry.kind}:${entry.form}`),
+		);
+		for (const source of [s1, s2, s3])
+			for (const observed of collectEmittedForms(source))
+				expect(listed).toContain(`${observed.kind}:${observed.form}`);
+	});
+
+	test('rejects a rune MEMBER form that the bare rune does not license', () => {
+		// `$state.raw` arrived at 5.19 and `$derived.by`, `$props.id` and
+		// `$effect.pre` all have their own floors. Allowing `$state` must not
+		// silently allow everything hanging off it.
+		const mutant = mutate(s1, 'let count = $state(1);', 'let count = $state.raw(1);');
+		const violations = checkSources([
+			{ file: 'generated/RuneMemberMutant.svelte', source: mutant },
+		]).violations;
+		expect(violations.map((entry) => entry.policy)).toContain('baseline-form-inventory');
+		expect(
+			violations.find((entry) => entry.policy === 'baseline-form-inventory')?.message,
+		).toContain('$state.raw');
+	});
+
+	test('rejects an import of on() from svelte/events - worked example 6, in code', () => {
+		// The denied arm of the rewritten worked example 6. The emitter refuses a
+		// declared stopPropagation at emit time; this is the independent check that
+		// the on() vehicle cannot arrive by any other route either.
+		const mutant = mutate(
+			s1,
+			"import { untrack } from 'svelte';",
+			"import { untrack } from 'svelte';\n\timport { on } from 'svelte/events';",
+		);
+		const violations = checkSources([
+			{ file: 'generated/ForeignImportMutant.svelte', source: mutant },
+		]).violations;
+		expect(violations.map((entry) => entry.policy)).toContain('baseline-form-inventory');
+		expect(
+			violations.find((entry) => entry.policy === 'baseline-form-inventory')?.message,
+		).toContain('svelte/events#on');
+	});
+
+	test('rejects template forms above the 5.0 baseline: {@html}, {@attach}, {#key}', () => {
+		// {@attach} is 5.29 and is one of the four constructs T005 recorded as
+		// satisfying the corollary's FIRST conjunct at 5.56.8 and failing the second
+		// one alone. This is where that ruling is enforced rather than described.
+		const html = mutate(s1, '{derived}', '{@html derived}');
+		expect(policiesFor('generated/HtmlTagMutant.svelte', html)).toContain(
+			'baseline-form-inventory',
+		);
+		const attach = mutate(s1, 'data-s1-root=""', 'data-s1-root="" {@attach (node) => {}}');
+		const attachViolations = checkSources([
+			{ file: 'generated/AttachMutant.svelte', source: attach },
+		]).violations;
+		expect(attachViolations.map((entry) => entry.policy)).toContain('baseline-form-inventory');
+		expect(
+			attachViolations.find((entry) => entry.policy === 'baseline-form-inventory')?.message,
+		).toContain('AttachTag');
+		const key = mutate(
+			mutate(s2, '{#if todos.length === 0}', '{#key todos.length}{#if todos.length === 0}'),
+			'{/if}',
+			'{/if}{/key}',
+		);
+		expect(policiesFor('generated/KeyBlockMutant.svelte', key)).toContain(
+			'baseline-form-inventory',
+		);
+	});
+
+	test('rejects a camelCased event attribute, which Svelte accepts and ignores', () => {
+		// `onClick={...}` parses, compiles, and is simply a dead attribute - the
+		// exact "compiles clean and is WRONG" class. The shape is inventoried, not
+		// the event names, so this stays total over an open set of event names.
+		const mutant = mutate(s3, 'onclick={', 'onClick={');
+		const violations = checkSources([
+			{ file: 'generated/CamelEventMutant.svelte', source: mutant },
+		]).violations;
+		expect(violations.map((entry) => entry.policy)).toContain('baseline-form-inventory');
+		expect(
+			violations.find((entry) => entry.policy === 'baseline-form-inventory')?.message,
+		).toContain('onClick');
+	});
+
+	test('rejects a svelte-ignore annotation in a component with no rune', () => {
+		// MEASURED at 5.56.8, deciding line
+		// svelte/src/compiler/utils/extract_svelte_ignore.js:38 `if (runes)`:
+		//   runes component     -> an unrecognised code WARNS unknown_code
+		//   runes-free component -> NO diagnostic at all, and it suppresses nothing
+		// Both arms still fail to suppress. So an emitted annotation in a runes-free
+		// module is validated by nobody, and this refuses to emit into that hole.
+		const runesFree = mutateAll(
+			mutate(s3, 'let { initial, onTrace } = $props();', 'export let initial, onTrace;'),
+			'$state(',
+			'(',
+		);
+		const violations = checkSources([
+			{ file: 'generated/RunesFreeMutant.svelte', source: runesFree },
+		]).violations;
+		expect(violations.map((entry) => entry.policy)).toContain('baseline-form-inventory');
+		expect(
+			violations.find((entry) => entry.policy === 'baseline-form-inventory')?.message,
+		).toContain('legacy mode');
+	});
+
+	test('every recorded floor is a claim with an evidence status attached to it', async () => {
+		expect(BASELINE_FORM_INVENTORY.length).toBeGreaterThan(0);
+		for (const entry of BASELINE_FORM_INVENTORY) {
+			expect(entry.floor, `${entry.kind}:${entry.form}`).toMatch(/^\d+\.\d+/);
+			if (entry.evidence.status === 'unverified') {
+				// The REASON is the deliverable. "unverified" with no reason is a
+				// guess wearing an honest label.
+				expect(entry.evidence.reason.length, `${entry.kind}:${entry.form}`).toBeGreaterThan(
+					40,
+				);
+				continue;
+			}
+			await expect(
+				citationHolds(entry.evidence),
+				`${entry.kind}:${entry.form} cites ${entry.evidence.file}`,
+			).resolves.toBe(true);
+		}
+	});
+
+	test('CALIBRATION: a verified floor citation is re-read, and can fail', async () => {
+		// EVERY entry is `unverified` today, so the loop above never enters its
+		// verified branch and would be vacuous on its own. This plants both arms.
+		// The real one is `$props.id()`, which the resolved package's own shipped
+		// types date at 5.20.0 - the shape a verified floor has to have.
+		await expect(
+			citationHolds({ file: 'types/index.d.ts', needle: '@since 5.20.0' }),
+		).resolves.toBe(true);
+		await expect(
+			citationHolds({ file: 'types/index.d.ts', needle: '@since 0.1.0-not-a-real-tag' }),
+		).resolves.toBe(false);
+		await expect(
+			citationHolds({ file: 'types/there-is-no-such-file.d.ts', needle: 'x' }),
+		).rejects.toThrow();
+		expect(
+			BASELINE_FORM_INVENTORY.every((entry) => entry.evidence.status === 'unverified'),
+			'if this fails a floor was verified - good; delete this line and keep the loop above',
+		).toBe(true);
 	});
 });
