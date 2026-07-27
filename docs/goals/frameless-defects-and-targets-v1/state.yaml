@@ -105,7 +105,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T007
+active_task: T008
 
 tasks:
   - id: T001
@@ -811,7 +811,7 @@ tasks:
   - id: T007
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Phase B audit: rule on all three diagnoses and spec the resulting fixes or closures."
     inputs:
@@ -823,7 +823,8 @@ tasks:
       - "A ruling of 'raise the bound' or 'compare order-insensitively' is ACCEPTABLE here, but only if T006's instrumented evidence supports it. Reject it if the experiment did not actually run."
       - "Where a defect turns out to be a real compiler finding, spec it as its own Worker package rather than folding it into the portability work."
       - "THE PATTERN NOW DEMANDS A RULING. Counting the owner's T004 overturn, FOUR of the six defects have turned out to be instrument problems rather than product defects: 2 (harness clicks before any framework installs listeners), 4 (a wall-clock bound over an rAF-gated loop), 6 (an invariant contradicting a declared canonicalisation), and 3-B (a mutation literal that silently no-ops on CRLF). Only defect 1 was a real product defect. Rule on whether docs/DEFECTS.md's framing - 'defects the testing work uncovered' - survives, and say what it should say instead."
-      - "Do NOT treat 'instrument problem' as 'no work required'. Defect 3-B's silently-no-op mutation is a green vacuum in the test suite, the exact failure mode this board already polices elsewhere. Defect 6's fix must be narrowly scoped: an order-insensitive view over ONLY the four collections build.ts:427-430 sorts, never records.stateWrites (authored write order, policed as S-SH7) or components[].locals. A sort-everything fix would silence the instability the invariant exists to catch."
+      - "Do NOT treat 'instrument problem' as 'no work required'. Defect 3-B's silently-no-op mutation is a green vacuum in the test suite, the exact failure mode this board already polices elsewhere."
+      - "GUARDRAIL CORRECTED BY T007 - the version the PM copied here from T006 was FALSE. T006 said records.stateWrites is 'writes unsorted, authored write order'. It is not: build.ts:342 is `const writes = sortWrites(...)` and sortWrites (2740-2752) keys on componentId then graphNodeId, both name-derived. A Worker obeying the original guardrail verbatim would have reproduced the same false finding from a second collection. T006's list was also incomplete - it omits module.exports (build.ts:464, sorted by exportedName) and a per-component id array (629). The corrected rule is on T008."
       - "Defect 4 has NO reproduction on the failing platform - macOS WebKit passes with 11x headroom and the CI cell is ubuntu headless WebKitGTK. The rAF-cadence experiment on Chromium is a substitute. Decide whether that is sufficient to act on, or whether the bound should be changed only alongside something that can observe the real cell."
       - "Rule on the THIRD Windows cause T006 found unprompted and findings-004 never had: the compiler goldens bake AST BYTE OFFSETS, so a CRLF checkout breaks enriched-ir.test.ts's golden-dump tests and CRLF-ising the golden does not fix it. Fold it into T008's scope or spec it separately."
       - "full_outcome_complete stays false."
@@ -831,26 +832,178 @@ tasks:
       - "Ruling per defect, with the evidence it rests on"
       - "Exact Worker objective, allowed_files, verify and stop_if for T008 and for any escalated finding"
       - "Which continue-on-error flags can now be removed"
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      decision: approved
+      full_outcome_complete: false
+      phase: "B complete - defects 4, 6, 3-B diagnosed and ruled"
+      note: notes/T007-phase-b-audit.md
+      rationale: "All three T006 diagnoses stand on evidence the Judge re-derived rather than accepted. Defects 4 and 6 are instrument defects; 3-B is a real test-suite defect and a green vacuum. 'Raise the bound' REJECTED - nothing settles at any number. 'Compare order-insensitively' APPROVED, but T006's guardrail is FALSE: stateWrites IS name-sorted at build.ts:342. Found a fourth Windows cause and a third vacuous green. No continue-on-error flag comes off."
+      commands:
+        - cmd: "pnpm check"
+          status: pass
+        - cmd: "pnpm test"
+          status: pass
+          note: "561/561, 39 files"
+        - cmd: "pnpm test:browser"
+          status: pass
+          note: "react 55/55, solid 44/44"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "3 demos x 3 scenarios, all observations equal"
+        - cmd: "repo-wide scan for .replace() search literals containing a newline"
+          status: pass
+          note: "FOUR, not one: react/test/gate.test.ts:251,259,375 and solid/test/gate.test.ts:473"
+        - cmd: "empirical CRLF template-literal normalisation probe (scratchpad)"
+          status: pass
+          note: "verified rather than recalled: ECMAScript normalises CRLF to LF inside template literals, which is why the three React rows are safe"
+        - cmd: "read build.ts sort sites 326, 342, 428-431, 464, 629, 2079, 2725, 2740"
+          status: pass
+          note: "stateWrites and module.exports are name-keyed; T006's guardrail is wrong"
+        - cmd: "inspect goldens/s1-render-once.json bindings"
+          status: pass
+          note: "one state binding - the fixture-level rename invariant CANNOT exhibit defect 6"
+      defect_4:
+        verdict: "HARNESS ASSUMPTION - instrument defect, real work required"
+        raise_the_bound: "REJECTED. The instrumented evidence explicitly does not support it: nothing settles, so there is no settle time to raise the bound to. T006 declined it; ratified."
+        load_bearing_claim_is_structural: "stable>=2 needs three rAF deliveries; rAF promises ordering-before-repaint and no rate; so 500ms silently encodes a >4fps floor. Readable in react/src/adapter.ts:65-78. T006's nine-run measurement supplied the part that could have refuted it and did not - distinctDomDuringLoop=1 everywhere, first snapshot == final DOM, byte-identical innerHTML across engines."
+        what_closes_it: "Bound on the quantity CONSUMED - ticks, or a delivery-contracted primitive - with wall clock kept only as a runaway guard, in all three adapters, shipped with a calibration proving the loop still throws on a genuinely non-quiescing DOM. Specced as T017."
+        reading_2_unsupported: "Identical DOM across engines; blast radius 1 of 55 versus 42 of 55 under sustained starvation; two sibling tests pass on the identical mechanism."
+      defect_6:
+        verdict: "HARNESS ASSUMPTION - order-insensitive view APPROVED, guardrail CORRECTED"
+        t006_guardrail_is_false: "T006 said records.stateWrites is 'writes unsorted, authored write order'. build.ts:342 is `const writes = sortWrites(...)`, and sortWrites (2740-2752) keys on componentId then graphNodeId - both name-derived. A Worker obeying that guardrail verbatim would reproduce the same false finding from a second collection. T006's list also omits module.exports (build.ts:464, by exportedName) and a per-component id array (629). THE PM HAD COPIED THIS GUARDRAIL ONTO THE BOARD VERBATIM; it is now corrected in place."
+        corrected_rule: "Apply the view only to a collection whose exact build.ts sort line the Worker can CITE as name-keyed, recording the line number. Compare as a MULTISET of whole entries after structural() blanking - never sorted-then-compared, because offsets travel inside the entry so a real reorder is still caught. Span-keyed sorts (326, 2079) stay order-sensitive. stateWrites requires a WITNESSED permutation before inclusion."
+        s_sh7_not_threatened: "S-SH7 is a Solid gate policy over emitted source, not a compiler-IR test. T006 conflated them. The real guard is that metamorphic.test.ts:192-213 calibration must still fail."
+      defect_3b:
+        verdict: "REAL FINDING in the test suite - a green vacuum, not a non-issue"
+        verified: "solid/test/gate.test.ts:470-478 - the search literal embeds \\n\\t\\t, and `shared` is read from disk at :42-45. Rows C and D exonerate the gate because both sides pass through formatEmitted with endOfLine:'lf'."
+        t006_claim_refined: "'Exactly one CRLF-fragile row' survives, but for a reason T006 did not state. FOUR such literals exist repo-wide; the three in react/test/gate.test.ts operate on an IN-FILE template literal, and ECMAScript normalises CRLF to LF inside template literals - verified empirically, not from memory. The real discriminator is disk-read source PLUS an escaped-\\n search literal, which is the shape the three adapter boards will reproduce."
+        what_closes_it: "Two things, not one: make the row CRLF-proof, AND assert the mutation actually changed the source."
+      fourth_windows_cause_found_in_this_audit:
+        evidence: "react/test/emitter.test.ts:133-134,141,150 and solid/test/emitter.test.ts:153,162 assert readFile(generated/*.jsx) === emit(ir) byte-for-byte while formatEmitted hard-codes endOfLine:'lf'. Every freshness assertion fails on a CRLF checkout."
+        honest_status: "A HYPOTHESIS from reading assertions, not an observation from a Windows log."
+        accounting: "findings-004 reports 35 failures across 8 files. Causes A + B + third account for roughly 6 across 4. About 29 across 4 files remain unexplained."
+        root_fix: "The repo has NO .gitattributes. `* text=auto eol=lf` plus a renormalise closes B, third and fourth at once. LF is already a house invariant everywhere except where it is decided."
+      pattern_ruling:
+        defects_md_framing: "DOES NOT SURVIVE. 'Nothing in this list is unfinished testing work' is false - three of six ARE test-suite defects (3, 4, 6). 'The suite that found them is complete and green' is false twice: the adjudicated tally is one product defect, one non-defect, three test-suite defects, one open question - and some of the green is vacuous."
+        third_vacuous_green: "metamorphic.test.ts's rename invariant - the one DEFECTS.md says 'holds exactly on all three checked-in fixtures' - runs on ONE fixture (:60-68 defines renames only for s1; s2/s3 are [] and hit `continue`), and that fixture's golden has one state binding, so it cannot exhibit defect 6. It passed because it was structurally incapable of failing."
+        common_shape: "Every one measured the product through a PROXY whose stability the product never promised, and asserted nothing about the proxy. Defect 2: 'interactive' proxied by domcontentloaded - no framework promises listeners at DCL. Defect 4: 'settled' proxied by wall clock - rAF promises ordering, never rate. Defect 6: 'unchanged but for names' proxied by array position - the IR declares those arrays sorted BY NAME. Defect 3-B: 'mutated' proxied by replace() having been called - replace promises to return a string, not to have matched."
+        the_root: "Not that assumptions were made; instruments cannot avoid them. That each assumption was SILENT - nothing asserted the precondition it depended on, so when the precondition broke, the instrument reported a PRODUCT defect instead of an INSTRUMENT fault. A silent precondition converts every one of its own violations into a false finding about something else."
+        three_rules:
+          - "RULE 1 - two-variable triangulation before any finding is filed: vary one instrument parameter and one product parameter, confirm the signal tracks the PRODUCT. All four would have been caught in minutes. This is what T004 and T006 each eventually did; it must be a gate, not a virtue."
+          - "RULE 2 - every instrument asserts its own preconditions: a mutation harness asserts the source changed; a readiness wait blocks on the framework's OWN signal, never a browser lifecycle event that predates it; a positional comparison cites that the collection is order-significant; a repo-wide byte invariant is asserted by a test."
+          - "RULE 3 - two-sided calibration for HARNESSES, not only gates. This repo proved its gates can go red and proved nothing about its harnesses."
+        load_bearing_for_the_adapters: "Svelte, Vue and Angular each add four new instruments. Rules 1-3 are now standing constraints on all three charters via T010, and T018 must land before T013 because the adapters will copy whatever mutation-table idiom they find."
+      continue_on_error_ruling:
+        summary: "NO flag comes off in this phase. All three stay, each with a removal gate that is an OBSERVATION, not an argument."
+        windows: "STAYS. Gate: an observed green windows-latest/node 24 cell on a real run - not 'both causes fixed', since named causes explain ~6 of 35 failures. ci.yml:69-74 currently states a known-FALSE reason ('fails a hash assertion, almost certainly CRLF'); T006 refuted it - no hash assertion, gate is CRLF-robust, the fault is a silently no-op mutation literal. Correct the comment in T008."
+        webkit: "STAYS. Gate: an observed green webkit cell AFTER the T017 repair. The flag is the ADJUDICATING INSTRUMENT - the repair is self-falsifying on the real cell, because a genuine engine divergence would still fail a tick-bounded loop. Removing it first discards the only evidence that can settle it."
+        qwik_throttled: "NOT re-litigated - owner-ruled; rescoping moved with the CI file out of T016."
+      parallel_safety: "NOT SAFE to run T008, T017 and T018 in parallel. T008 and T018 both touch solid/test/gate.test.ts; T008 and T017 both touch ci.yml; T008 and T016 both listed docs/DEFECTS.md until this audit removed it from T016. Sequential order required: T008 -> T017 -> T018 -> T009 -> T016."
+      missing_evidence:
+        - "Whether the ~29 unaccounted Windows failures share the CRLF root. The fourth-cause hypothesis fits the file count but is an inference from reading assertions, not a Windows log. Only the CI cell can settle it - which is why the flag stays."
+        - "Whether the CI WebKit incident had the frame-cadence cause. Formally unexcluded. The T017 repair is self-falsifying on the real cell, which is the sequencing that resolves it."
+        - "Whether records.stateWrites actually permutes under a realistic rename. sortWrites keys on graphNodeId so it should; T006's sweep did not report it at top level, possibly because its programs rarely write to two differently-named nodes. T008 must witness it or exclude it."
+        - "Whether module.exports (build.ts:464) is reachable by the rename invariant. Renames target locals, so probably not - but 'probably not reachable' is exactly the shape of assumption this audit ruled on. T008 cites or excludes."
+        - "T006's Chromium rAF-cadence experiment and 200-run sweep ran in a prior session's scratchpad and are not re-runnable. The mechanism for both was independently re-derived from source here, so neither ruling turns on them."
   - id: T008
     type: worker
     assignee: Worker
+    status: active
+    reasoning_hint: high
+    spec: "notes/T007-phase-b-audit.md - AUTHORITATIVE. Larger than this card originally said: four Windows causes, defect 6, defect 5, and a full docs/DEFECTS.md framing rewrite."
+    objective: >-
+      Close defect 3 on all FOUR of its causes, repair defect 6's rename comparison with a
+      proven-scope order-insensitive view, settle defect 5's attr:value question as a measurement
+      and a decision, and rewrite docs/DEFECTS.md so it states the adjudicated provenance of all
+      six findings. Test, config and documentation only - no emitter, no adapter, no src/, no
+      generated output.
+    allowed_files:
+      - .gitattributes
+      - packages/frameworks/react/test/format-emitted.test.ts
+      - packages/frameworks/solid/test/format-emitted.test.ts
+      - packages/frameworks/solid/test/gate.test.ts
+      - packages/compiler/test/metamorphic.test.ts
+      - packages/compiler/test/generative.test.ts
+      - packages/compiler/test/package-inventory.test.ts
+      - packages/frameworks/solid/test/solid-attr-namespace.d.ts
+      - docs/DEFECTS.md
+      - .github/workflows/ci.yml
+      - docs/goals/frameless-defects-and-targets-v1/notes/T008-portability-and-attr.md
+    verify:
+      - "pnpm check"
+      - "pnpm test"
+      - "pnpm test:browser"
+      - "pnpm e2e"
+      - "git status --short   # every path inside allowed_files; a .gitattributes renormalise must NOT rewrite tracked file contents on this LF checkout"
+    stop_if:
+      - "Need files outside allowed_files. packages/frameworks/*/src/**, packages/frameworks/*/generated/**, packages/compiler/src/**, packages/compiler/test/goldens/** and packages/frameworks/react|qwik/test/gate.test.ts are explicitly OUT of scope."
+      - "You are about to edit a golden. The goldens are CORRECT - their byte offsets match the LF bytes they were built from. .gitattributes is the fix; CRLF-ising a golden provably does not work (T006)."
+      - "`git add --renormalize .` changes the CONTENT of any tracked file. It should be a no-op on this LF tree. If it is not, STOP - something is already CRLF and that is a finding, not a cleanup."
+      - "You are about to apply the order-insensitive view to a collection whose name-keyed build.ts sort line you cannot CITE. T006's list of four is both wrong and incomplete: records.stateWrites IS name-sorted (build.ts:342 -> sortWrites, 2740-2752, keyed on graphNodeId); module.exports is sorted by exportedName (build.ts:464); build.ts:326 and :2079 are SPAN-keyed and must stay order-sensitive. Cite the line or exclude the collection."
+      - "You are about to include records.stateWrites WITHOUT first witnessing it permute. Construct a program with two written state nodes whose alphabetical order flips under an equal-length rename and watch the invariant fail there. If you cannot produce that failure, exclude stateWrites and record why."
+      - "You are about to compare a collection by sorting both sides then comparing. Use a MULTISET of whole entries, JSON-canonicalised after structural() blanking. Sorting both sides discards the sourceSpan evidence that lets a genuine authored reorder still be caught."
+      - "metamorphic.test.ts's existing calibration (:192-213, 'changing a literal is caught', 'dropping a cell is caught') stops failing. A comparison that cannot detect a real change is the exact silencing this board exists to prevent."
+      - "You are about to remove or weaken a continue-on-error VALUE. T007 ruled all three STAY. This package changes only the Windows cell's justifying comment (ci.yml:69-74, whose stated reason is known-false) and the WebKit cell's comment. The qwik-throttled step belongs to T016."
+      - "Settling defect 5 would change emitted Solid output. Run the measurement in the SCRATCHPAD, T006-style - emit S2/S3 with plain `value` and drive the Solid browser lane against it - and report the decision. Changing the emitter needs its own package with browser proof."
+      - "pnpm test is below 561 all-passing, or test:browser is not 55/55 and 44/44, or e2e is not fully green. None of this touches runtime behaviour; red anywhere means it was not the change you thought it was."
+      - "Verification fails twice for the same reason."
+    constraints:
+      - "CAUSE A, confirmed: execFileSync('npx', ...) needs a Windows-safe invocation in BOTH format-emitted.test.ts copies. Unrelated to line endings; fix it on its own terms."
+      - "CAUSES B, THIRD and FOURTH share one root: the repo has NO .gitattributes, while its emitters hard-code endOfLine:'lf', its goldens bake LF byte offsets, and its emitter freshness tests compare bytes. Add `* text=auto eol=lf`."
+      - "FOURTH CAUSE, found by T007 and not in findings-004: react/test/emitter.test.ts:133-134,141,150 and solid/test/emitter.test.ts:153,162 assert readFile(generated/*.jsx) === emit(ir) byte-for-byte while formatEmitted hard-codes endOfLine:'lf'. Every freshness assertion fails on a CRLF checkout. This is T007's HYPOTHESIS from reading assertions, not an observation - say so if you cannot confirm it."
+      - "CAUSE B ALSO needs the green-vacuum fix independent of line endings: the S-SH7 row at solid/test/gate.test.ts:470-478 must ASSERT THE MUTATION ACTUALLY CHANGED THE SOURCE, per metamorphic.test.ts:79. A mutation fixture that can silently produce a non-mutant is a defect on any platform."
+      - "ASSERT THE INVARIANT, do not merely rely on it: add one test in packages/compiler/test/package-inventory.test.ts (it already reads from the workspace root) that FAILS if any tracked text file contains a CR. The LF assumption has been silent, which is exactly the pattern this phase ruled on."
+      - "THIRD VACUOUS GREEN, found by T007: metamorphic.test.ts's rename invariant runs on ONE fixture (:60-68 defines renames only for s1; s2/s3 are [] and hit `continue`), and that fixture's golden has ONE state binding, so it was structurally incapable of exhibiting defect 6. Add a fixture case that CAN permute, or the order-insensitive fix is calibrated against nothing."
+      - "THE WINDOWS FLAG DOES NOT COME OFF. Named causes explain roughly 6 of the 35 reported failures across 4 of the 8 reported files. Correct the comment; leave the value. Removal is gated on an OBSERVED green cell and belongs to T009."
+      - "DEFECT 5 IS A MEASUREMENT AND A DECISION. Identical behaviour with plain `value` -> attr: is unnecessary and the finding is at most cosmetic. Divergent behaviour -> attr: is required, this is purely solid-js's typing gap, solid-attr-namespace.d.ts is correct documentation, and the deliverable is an upstream report in the note. Either way the emitter is untouched."
+      - "docs/DEFECTS.md gets a FULL framing rewrite plus entries 2, 3, 4, 5 and 6, per notes/T007-phase-b-audit.md section 5.1. Defect 2 is rewritten as NOT A DEFECT recording why the original finding was an instrument artifact - do NOT record qwikLoader:'inline' as a workaround; there is nothing to work around."
+    receipt: null
+
+  - id: T017
+    type: worker
+    assignee: Worker
     status: queued
-    reasoning_hint: medium
-    objective: "Make the suite pass on Windows and settle defect 5's attr:value design question."
+    reasoning_hint: high
+    spec: "notes/T007-phase-b-audit.md section 6.2"
+    objective: >-
+      Repair the quiescence instrument (defect 4): stop bounding a frame-gated loop on wall clock.
+      Bound on the quantity actually consumed - ticks, or a delivery-contracted primitive - keeping
+      wall clock only as a runaway guard, in ALL THREE adapters, and ship a calibration proving the
+      loop still throws on a genuinely non-quiescing DOM.
     allowed_files: []
     verify: []
     stop_if:
       - "Need files outside allowed_files."
-      - "The Windows cell still fails after both causes are addressed - report rather than removing the continue-on-error flag."
-      - "Settling defect 5 would change emitted Solid output in a way that alters runtime behavior. That needs its own package with browser proof."
+      - "You are about to raise the 500ms bound. T007 REJECTED that: nothing settles at any number, so there is no settle time to raise it to."
+      - "The repaired loop cannot be made to throw on a genuinely non-quiescing DOM. A settle loop that cannot fail is not a settle loop."
       - "Verification fails twice."
     constraints:
-      - "Cause A is confirmed: execFileSync('npx', ...) needs a Windows-safe invocation, in BOTH the React and Solid copies of format-emitted.test.ts."
-      - "Cause B is whatever T007 ruled. Do not fix the guess if the experiment refuted it."
-      - "Remove the Windows cell's continue-on-error only once both causes are actually closed."
-      - "DEFECT 5 is a decision first: is attr: necessary to force attribute semantics on a controlled input, or is this solid-js's typing gap? The handwritten Solid references use attr:value too, which favours the upstream reading. Upstream -> keep solid-attr-namespace.d.ts as documentation and write the upstream report. Ours -> changing the emitter needs browser proof that S2/S3's asserted behavior survives."
+      - "allowed_files and verify come from T007 section 6.2; the PM fills them before activation."
+      - "Three byte-equivalent copies exist: react/src/adapter.ts:65-78, solid:52-65, qwik:55-68. Repair all three or none."
+      - "Do NOT remove the WebKit continue-on-error. T007 ruled the flag is the adjudicating instrument - the repair is self-falsifying on the real cell, because a genuine engine divergence would still fail a tick-bounded loop. Removing it first discards the only evidence that can settle it."
+    receipt: null
+
+  - id: T018
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    spec: "notes/T007-phase-b-audit.md section 6.3"
+    objective: >-
+      Audit every mutation table across the three gate corpora for the silently-no-op shape, and
+      make each mutation assert that it actually changed the source.
+    allowed_files: []
+    verify: []
+    stop_if:
+      - "Need files outside allowed_files."
+      - "A mutation cannot be made to assert it changed the source without restructuring the table. Report it rather than skipping it."
+      - "Verification fails twice."
+    constraints:
+      - "allowed_files and verify come from T007 section 6.3; the PM fills them before activation."
+      - "MUST LAND BEFORE T013. The three adapter boards will copy whatever mutation-table idiom they find in react/test/gate.test.ts, so the idiom has to be correct before it is replicated four more times."
+      - "The discriminating shape is disk-read source + an escaped-\\n search literal. Three literals in react/test/gate.test.ts are safe ONLY because ECMAScript normalises CRLF to LF inside template literals - that safety is incidental, not designed, and should not be relied on."
     receipt: null
 
   - id: T009
@@ -868,6 +1021,7 @@ tasks:
       - "DEFECT 2 is closed as NOT A DEFECT (owner overturn, see the T004 card). Do NOT re-open it as 'upstream'. Audit instead that the qwik-throttled lane was rescoped to click after resume, and that no upstream filing was sent."
       - "Audit the process failure this exposed: an instrument was built outside the framework's design envelope, and three parties interpreted its output as a product defect without first asking whether the test was fair. Check whether any other lane in this repo has the same shape."
       - "Every continue-on-error flag must be removed or carry a receipt justifying why it stays. A flag that quietly persists is a defect that quietly persists."
+      - "T007 RULED ALL THREE FLAGS STAY, each with a removal gate that is an OBSERVATION, not an argument. Audit against observed CI cells, not against 'the causes were fixed'. WINDOWS: gate is an observed green windows-latest/node 24 cell on a real run - the named causes explain only ~6 of 35 failures across 4 of 8 files. WEBKIT: gate is an observed green webkit cell AFTER the T017 quiescence repair lands; the flag is the adjudicating instrument, since a genuine engine divergence would still fail a tick-bounded loop. QWIK-THROTTLED: owner-ruled, rescoped separately - do not re-litigate."
       - "Reject if any fix landed without a prior witnessed failure."
       - "full_outcome_complete stays false - oracle half 2 is untouched at this point."
     expected_output:
@@ -889,8 +1043,7 @@ tasks:
       line with T004's upstream ruling, and repoint the qwik-throttled continue-on-error comment.
     allowed_files:
       - docs/emitter-idiom-policy.md
-      - docs/DEFECTS.md
-      - .github/workflows/ci.yml
+    sequencing: "MUST run AFTER T008. T007: two packages editing docs/DEFECTS.md across a framing rewrite is how a correction gets silently reverted."
     verify:
       - "pnpm check"
       - "pnpm test"
@@ -908,8 +1061,8 @@ tasks:
       - "GATE 2 CLAUSE: scope 'an added import list entry' to 'an added import list entry IN ANOTHER MODULE'. T005 upheld T003's reading and closed it as no longer re-openable."
       - "WORKED EXAMPLE 9 must record two facts so the form choice is not reopened: the array carries the rest of the handler body, which preventdefault:click cannot, so the split is needed regardless at the type=button site; and preventdefault:click is element-level while SyncPolicy is per-event-record."
       - "DEFECTS.md DEFECT 2 is untouched by T004 and is now stale - it still reads 'Status: diagnosed', still instructs 'Do this first: reproduce on an untouched pnpm create qwik app' (done), and still repeats the 'zero network requests' claim T004 corrected. Bring it into line and record qwikLoader: 'inline' as the known workaround FOR CONSUMERS - which is different from us adopting it."
-      - "SUPERSEDED BY THE OWNER OVERTURN - do NOT repoint the CI comment at the T004 note. That note is retracted. The qwik-throttled lane's continue-on-error was justified by a verdict that no longer holds."
-      - "CI: the qwik-throttled throttled step must be RESCOPED, not re-annotated. Clicking at domcontentloaded tests 'is the page interactive with no JS', which is out of every framework's design envelope and answers no everywhere. Change the click to fire AFTER the container reports resumed, which tests something real - that resumption completes and works on a slow connection - and then the step needs no continue-on-error at all. If it cannot be made to pass once rescoped, that is a genuine finding; report it rather than restoring the flag."
+      - "SCOPE REDUCED BY T007: docs/DEFECTS.md and .github/workflows/ci.yml are REMOVED from this package. T008 now owns DEFECTS.md end to end, including defect 2's not-a-defect rewrite. This package is the idiom-policy document only."
+      - "The qwik-throttled rescope moves with the CI file to a later package; it is NOT this one's work. Recorded here so it is not lost: the step must be RESCOPED, not re-annotated. Clicking at domcontentloaded tests 'is the page interactive with no JS', which is out of every framework's design envelope and answers no everywhere. Change the click to fire AFTER the container reports resumed, which tests something real - that resumption completes and works on a slow connection - and then the step needs no continue-on-error at all. If it cannot be made to pass once rescoped, that is a genuine finding; report it rather than restoring the flag."
       - "docs/DEFECTS.md DEFECT 2 must be rewritten as NOT A DEFECT, recording why the original finding was an instrument artifact - not merely downgraded. Do not record qwikLoader: 'inline' as a workaround; there is nothing to work around."
     receipt: null
 
@@ -926,6 +1079,8 @@ tasks:
       - "All three read status: active / active_task: T001 with nothing running them. A future /goal reading one would pick up T001 and start unbidden."
       - "Their charters record three standing gaps the testing goal has since FIXED: pnpm test:browser hanging at root, pnpm check not typechecking generated/, and e2e pinning dev mode only. Verify what is actually still true post-merge and correct each charter."
       - "Board hygiene only. No adapter implementation."
+      - "ADD T007's THREE INSTRUMENT RULES as standing constraints to all three charters while you are already in them. Each adapter adds a gate corpus, a calibration lane, a reference pair and an e2e row - four new instruments apiece, and four of six findings on this board were instrument faults. RULE 1, two-variable triangulation before any finding is filed: vary one instrument parameter and one product parameter and confirm the signal tracks the PRODUCT. RULE 2, every instrument asserts its own preconditions - a mutation harness asserts the source changed; a readiness wait blocks on the framework's OWN signal, never a browser lifecycle event that predates it; a positional comparison cites that the collection is order-significant. RULE 3, two-sided calibration for HARNESSES, not only gates - this repo proved its gates can go red and proved nothing about its harnesses."
+      - "THE ROOT, in T007's words, worth quoting into each charter: every one of these instruments measured the product through a proxy whose stability the product never promised, and asserted nothing about the proxy. The fault was not that assumptions were made - instruments cannot avoid them - but that each assumption was SILENT, so when it broke the instrument reported a PRODUCT defect instead of an INSTRUMENT fault."
     expected_output:
       - "Three boards with honest status and corrected standing-gap sections"
       - "A list of which inherited gaps are now stale"
