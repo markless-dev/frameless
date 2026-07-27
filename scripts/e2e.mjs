@@ -49,7 +49,9 @@ const officialDemos = [
 		prepare: 'build:e2e',
 	},
 ];
-const threeWayScenarios = ['s1', 's2', 's3'];
+// s4 joined the matrix once a nested repeat sourced from the enclosing repeat
+// item became compilable at all; before that the corpus could not express one.
+const threeWayScenarios = ['s1', 's2', 's3', 's4'];
 // @async/witness is a dev tool of the workspace, already installed for the ssr
 // and persistence demos. The runner aliases '@async/witness' for the box files
 // it loads, so the official demos run boxes without depending on it themselves.

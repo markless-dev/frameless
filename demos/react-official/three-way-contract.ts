@@ -30,9 +30,9 @@
  */
 import type { EnvironmentResponse, ExpectApi, PageHandle } from '@async/witness'
 
-export type ScenarioId = 's1' | 's2' | 's3'
+export type ScenarioId = 's1' | 's2' | 's3' | 's4'
 
-export const scenarioIds: readonly ScenarioId[] = ['s1', 's2', 's3']
+export const scenarioIds: readonly ScenarioId[] = ['s1', 's2', 's3', 's4']
 
 /**
  * How each framework becomes interactive. React, Solid, Svelte, Vue and Angular
@@ -281,6 +281,51 @@ export function measureRowKeys(html: string): string[] {
 }
 
 /**
+ * Every value of one key attribute in the string handed over, in document order.
+ *
+ * Deliberately NOT a refactor of `measureRowKeys` above. S4's inner rows carry
+ * `data-oracle-cell-key` precisely so that S2's flat `data-oracle-row-key` read
+ * keeps measuring exactly what it measured before a nested list existed; folding
+ * the two into one reader would have made S2's observation depend on a function
+ * S4 also drives. The duplication is the point.
+ */
+function measureKeyAttribute(html: string, attribute: string): string[] {
+  return [...html.matchAll(new RegExp(`${attribute}="([^"]*)"`, 'g'))].map((match) => match[1])
+}
+
+/** Every OUTER group identity in the live DOM, in document order. */
+export function measureGroupKeys(html: string): string[] {
+  return measureKeyAttribute(html, 'data-oracle-group-key')
+}
+
+/**
+ * The INNER row identities inside one named group's list, in document order.
+ *
+ * Scoped to that group's own `<ul data-rows="…">`, and the scoping is the whole
+ * reason this reader exists. A flat read over `data-oracle-cell-key` cannot tell
+ * "each group holds its own rows" — the containment relation a nested repeat
+ * *is* — from "every group renders the same shared row list", and the second of
+ * those is exactly the shape the shipped toolchain could already express before
+ * a per-group nested list became compilable. Reading the keys per group is what
+ * makes S4 measure the nesting rather than merely the presence of two loops.
+ *
+ * The first `</ul>` after the start tag is that group's own closing tag: the row
+ * list contains `<li>` elements and nothing else, and every framework's
+ * bookkeeping between them is comments, which carry no tags.
+ */
+export function measureCellKeys(html: string, group: string): string[] {
+  const { afterOpen } = locate(html, `data-rows="${group}"`)
+  const close = html.indexOf('</ul>', afterOpen)
+  if (close === -1) {
+    throw new Error(
+      `Cannot measure: the row list for group ${group} has no closing </ul> in the HTML passed ` +
+        'to this reader.',
+    )
+  }
+  return measureKeyAttribute(html.slice(afterOpen + 1, close), 'data-oracle-cell-key')
+}
+
+/**
  * One attribute, read out of the bytes the **server** sent, asserted exactly,
  * and calibrated two-sided on every single call.
  *
@@ -412,6 +457,23 @@ export const resumeSymbols: Record<
   s1: { includes: '_component_div_section_button_q_e_click_', atLeast: 1 },
   s2: { includes: '_button_q_e_click_', atLeast: 3 },
   s3: { includes: '_component_form_button_q_e_click_', atLeast: 1 },
+  // S4 clicks three buttons: one `select` inside the nested row, then `flip` and
+  // `reorder` on the board. `_button_q_e_click_` is the segment prefix all three
+  // share — the same structural read s2 makes, for the same reason.
+  //
+  // MEASURED off this lane's own `handlerSegments` evidence rather than
+  // predicted from the emitted output, and the reading is worth quoting because
+  // it is the first of its kind in this repo:
+  //
+  //   NestedBoard.jsx_NestedBoard_component_section_ul_li_ul_li_button_q_e_click_…
+  //   NestedBoard.jsx_NestedBoard_component_section_button_q_e_click_…
+  //   NestedBoard.jsx_NestedBoard_component_section_button_q_e_click_1_…
+  //
+  // `section_ul_li_ul_li_button` is a handler pulled on demand from inside TWO
+  // nested keyed lists. Every previous segment in the corpus bottoms out at one
+  // list at most (s2's is `section_ul_li_button`), because until a nested repeat
+  // became compilable there was no deeper site to resume into.
+  s4: { includes: '_button_q_e_click_', atLeast: 3 },
 }
 
 function forbidInServedPayload(served: EnvironmentResponse, fragments: string[]): void {
@@ -868,14 +930,191 @@ export async function assertS3(
 }
 
 /**
+ * The nested list as the live DOM currently serializes it.
+ *
+ * `shape` is the observation that carries the nesting: it names, per group and
+ * in document order, which inner rows that group holds. `measureCellKeys` reads
+ * each list inside that group's own `<ul data-rows="…">`, so two groups
+ * rendering the same shared row list — which is what an inner collection that
+ * has stopped being sourced from the enclosing loop variable looks like —
+ * produces a different string here even though the flat set of cell keys and
+ * the `cells` count would both be unchanged.
+ */
+async function measureNesting(page: PageHandle): Promise<{
+  groups: string
+  shape: string
+  selection: string
+  cells: string
+  on: string
+}> {
+  const html = await page.content()
+  const groups = measureGroupKeys(html)
+  return {
+    groups: groups.join(','),
+    shape: groups.map((group) => `${group}=[${measureCellKeys(html, group).join(',')}]`).join(' '),
+    selection: measureText(html, 'data-selection="true"'),
+    cells: measureText(html, 'data-count="cells"'),
+    on: measureKeyAttribute(html, 'data-cell-on').join(','),
+  }
+}
+
+/**
+ * S4 — nested lists: a keyed list of groups, each holding its OWN keyed list of
+ * rows, with a handler inside the inner loop that reads both loop variables.
+ *
+ * ## Why this scenario exists at all
+ *
+ * Until `packages/compiler/src/build.ts` learned to register an inner loop
+ * variable whose collection is a member of the ENCLOSING loop variable, the
+ * corpus could not express a nested list: `@markless/compiler` 0.1.1 leaves
+ * `collectionGraphNodeId` unset for `group.rows`, the item was never bound, and
+ * every read off `row` lowered to `reads: []` while five of six emitters printed
+ * correct-LOOKING output over it, because they walk the template rather than the
+ * reads. So every observation below has to be about the CONTAINMENT relation and
+ * not about "two loops rendered". See `measureCellKeys`.
+ *
+ * ## The three transitions, and what each one isolates
+ *
+ * | step | what moves | what must not |
+ * |---|---|---|
+ * | `select` on an inner row | `selection`, `marked` | either list's order |
+ * | `flip` | every group's INNER row order | the outer group order |
+ * | `reorder` | the OUTER group order | any group's inner rows |
+ *
+ * `flip` and `reorder` are a pair on purpose: an emitter that had collapsed the
+ * two levels into one — rendering a single shared row list under every group —
+ * satisfies `reorder` perfectly and fails `flip`, and an emitter that had lost
+ * the outer key does the reverse.
+ *
+ * ## `selection` is where the two loop variables are read together
+ *
+ * The authored handler assigns a template literal interpolating group.id and
+ * then row.id, so the emitted call site has to carry BOTH loop variables.
+ * Angular is the only lane that reifies that as an argument list —
+ * `onH9Click(group, row, $event)` — and its ruling that enclosing `@for`
+ * variables are passed OUTERMOST FIRST had no instance in this repo until this
+ * scenario existed. Asserting the exact string `g1>r2` rather than merely "some
+ * selection happened" is what gives that ruling a red site: swap the two
+ * arguments and this reads `r2>g1`.
+ *
+ * The `on` reading is the second, independent half of the same fact. `marked` is
+ * assigned `row.id` alone, so a call site with its arguments swapped marks a
+ * GROUP id, no inner row matches, and no `data-cell-on` element exists at all.
+ *
+ * Nothing here reads `data-oracle-row-key`: S2 owns that attribute and this
+ * scenario deliberately keys its inner rows with `data-oracle-cell-key` so that
+ * S2's flat read is untouched by a nested list appearing in the corpus.
+ */
+export async function assertS4(page: PageHandle, expect: ExpectApi): Promise<string[]> {
+  const observed: string[] = []
+  await expect.page.exists(page, '[data-scenario="s4"]')
+  await expect.page.text(page, '[data-count="cells"]', '3/2')
+  await expect.page.text(page, '[data-selection="true"]', 'none')
+
+  const initial = await measureNesting(page)
+  requireNesting(initial, {
+    groups: 'g1,g2',
+    shape: 'g1=[r1,r2] g2=[r3]',
+    step: 'as served',
+  })
+  observed.push(
+    `server-rendered groups ${initial.groups} hold ${initial.shape} ` +
+      `with cells = ${initial.cells} and selection = ${initial.selection}`,
+  )
+
+  // The inner row's handler, which reads BOTH loop variables.
+  await page.click('[data-select="r2"]')
+  await expect.page.text(page, '[data-selection="true"]', 'g1>r2')
+  await expect.page.exists(page, '[data-cell-on="r2"]')
+  const selected = await measureNesting(page)
+  if (selected.on !== 'r2') {
+    throw new Error(
+      `after clicking [data-select="r2"] the cells reading data-cell-on are ` +
+        `${JSON.stringify(selected.on)}, not "r2". \`marked\` is assigned the INNER loop ` +
+        "variable's id alone, so anything else means the handler was handed something other " +
+        'than the row it is attached to.',
+    )
+  }
+  requireNesting(selected, {
+    groups: 'g1,g2',
+    shape: 'g1=[r1,r2] g2=[r3]',
+    step: 'after selecting r2',
+  })
+  observed.push(`after selecting r2 selection = ${selected.selection} with the on cell ${selected.on}`)
+
+  // INNER order moves, OUTER order does not.
+  await page.click('[data-action="flip"]')
+  await expect.page.attribute(page, '[data-rows="g1"] > li:first-child', 'data-oracle-cell-key', 'r2')
+  const flipped = await measureNesting(page)
+  requireNesting(flipped, {
+    groups: 'g1,g2',
+    shape: 'g1=[r2,r1] g2=[r3]',
+    step: 'after flip',
+  })
+  observed.push(
+    `after flip groups ${flipped.groups} hold ${flipped.shape} and selection is still ` +
+      `${flipped.selection}`,
+  )
+
+  // OUTER order moves, every group keeps the inner rows it was holding.
+  await page.click('[data-action="reorder"]')
+  await expect.page.attribute(
+    page,
+    '[data-groups="true"] > li:first-child',
+    'data-oracle-group-key',
+    'g2',
+  )
+  const reordered = await measureNesting(page)
+  requireNesting(reordered, {
+    groups: 'g2,g1',
+    shape: 'g2=[r3] g1=[r2,r1]',
+    step: 'after reorder',
+  })
+  observed.push(
+    `after reorder groups ${reordered.groups} hold ${reordered.shape} and cells = ${reordered.cells}`,
+  )
+  return observed
+}
+
+/**
+ * The nesting assertion, hand-rolled for the same reason
+ * `measureConditionalCancellation` is: the sentence a failure raises has to name
+ * which of the two levels moved, and `expect.page.*` has no accessor that can
+ * compare a per-group row list at all.
+ *
+ * Both halves are required and neither implies the other. `groups` alone passes
+ * for an emitter that renders one shared row list under every group; `shape`
+ * alone passes for an emitter that lost the outer key while keeping containment.
+ */
+function requireNesting(
+  actual: { groups: string; shape: string },
+  expected: { groups: string; shape: string; step: string },
+): void {
+  if (actual.groups !== expected.groups) {
+    throw new Error(
+      `${expected.step} the OUTER group order reads ${JSON.stringify(actual.groups)}, not ` +
+        `${JSON.stringify(expected.groups)}.`,
+    )
+  }
+  if (actual.shape !== expected.shape) {
+    throw new Error(
+      `${expected.step} the nested lists read ${JSON.stringify(actual.shape)}, not ` +
+        `${JSON.stringify(expected.shape)}. Each group must hold its OWN rows: this string is ` +
+        "read per group, inside that group's own <ul data-rows>, so a shared row list rendered " +
+        'under every group changes it while the flat set of cell keys does not.',
+    )
+  }
+}
+
+/**
  * Every scenario is handed both sites — the live page and the payload the
- * server sent for it — and reads each observation from the one it names. S1 and
- * S2 observe only live state and declare two parameters; S3 observes both.
+ * server sent for it — and reads each observation from the one it names. S1, S2
+ * and S4 observe only live state and declare two parameters; S3 observes both.
  */
 const assertions: Record<
   ScenarioId,
   (page: PageHandle, expect: ExpectApi, served: EnvironmentResponse) => Promise<string[]>
-> = { s1: assertS1, s2: assertS2, s3: assertS3 }
+> = { s1: assertS1, s2: assertS2, s3: assertS3, s4: assertS4 }
 
 /**
  * Runs one scenario end to end: wait for the framework to be able to react,

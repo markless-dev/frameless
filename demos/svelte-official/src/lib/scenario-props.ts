@@ -14,3 +14,14 @@ export const s2Seed = [
 	{ id: 'a', title: 'one', done: false },
 	{ id: 'b', title: 'two', done: true }
 ];
+
+/**
+ * S4's nested seed. Group ids and row ids come from DISJOINT alphabets on
+ * purpose: the emitted Angular call site passes both enclosing loop variables
+ * positionally, so a swapped argument list has to produce a visibly different
+ * selection string rather than one that could be read either way.
+ */
+export const s4Seed = [
+	{ id: 'g1', rows: [{ id: 'r1' }, { id: 'r2' }] },
+	{ id: 'g2', rows: [{ id: 'r3' }] }
+];

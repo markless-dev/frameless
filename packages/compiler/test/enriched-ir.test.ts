@@ -5,7 +5,12 @@ import { buildEnrichedIr, collectGraphReads } from '../src/build';
 import { dumpEnrichedIr } from '../src/dump';
 import type { EnrichedIR, SerializableAstNode, TemplateHost, TemplateNode } from '../src/schema';
 
-const FIXTURES = ['s1-render-once.tsrx', 's2-keyed-todo.tsrx', 's3-event-form.tsrx'] as const;
+const FIXTURES = [
+	's1-render-once.tsrx',
+	's2-keyed-todo.tsrx',
+	's3-event-form.tsrx',
+	's4-nested-list.tsrx',
+] as const;
 
 const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>> = {
 	's1-render-once.tsrx': [
@@ -41,6 +46,27 @@ const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>>
 		['summary', 'data-action'],
 		['details', 'data-cancel'],
 		['summary', 'data-action'],
+	],
+	// S4's inner rows carry `data-oracle-cell-key`, NOT `data-oracle-row-key`.
+	// The three-way contract's `measureRowKeys` matches the latter globally, so a
+	// nested list keyed with the same attribute would silently join the outer
+	// list's observation string. The two attributes are what keep S4's outer keys
+	// and inner keys separately measurable. See T034.
+	's4-nested-list.tsrx': [
+		['section', 'data-scenario'],
+		['output', 'data-selection'],
+		['p', 'data-count'],
+		['button', 'data-action'],
+		['button', 'data-action'],
+		['ul', 'data-groups'],
+		['li', 'data-oracle-group-key'],
+		['ul', 'data-rows'],
+		['li', 'data-oracle-cell-key'],
+		['button', 'data-select'],
+		['span', 'data-cell-on'],
+		['span', 'data-cell-off'],
+		['details', 'data-cell-open'],
+		['summary', 'data-open-cell'],
 	],
 };
 
@@ -453,6 +479,7 @@ describe('fixture-family sufficiency', () => {
 			's1-render-once.tsrx': ['setup', 'change'],
 			's2-keyed-todo.tsrx': ['add', 'edit', 'toggle', 'reorder', 'remove', 'clear'],
 			's3-event-form.tsrx': ['text', 'checked', 'submit', 'bubble'],
+			's4-nested-list.tsrx': ['flip', 'reorder', 'select'],
 		};
 		for (const file of FIXTURES) {
 			const ir = await fixtureIr(file);

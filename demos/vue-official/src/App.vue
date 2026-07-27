@@ -2,8 +2,9 @@
 import { computed, onMounted } from 'vue'
 import EventForm from './emitted/EventForm.vue'
 import KeyedTodo from './emitted/KeyedTodo.vue'
+import NestedBoard from './emitted/NestedBoard.vue'
 import RenderOnce from './emitted/RenderOnce.vue'
-import { noTrace, s2Seed, scenarioFor } from './scenario-props'
+import { noTrace, s2Seed, s4Seed, scenarioFor } from './scenario-props'
 
 // DELTA from create-vite-extra@5.0.2 template-ssr-vue-ts/src/App.vue, which
 // renders a single fixed `<HelloWorld />`. One shared IR, five emitters: these
@@ -52,5 +53,6 @@ onMounted(() => {
     v-bind:onTrace="noTrace"
   />
   <KeyedTodo v-else-if="scenario === 's2'" v-bind:seed="s2Seed" v-bind:onTrace="noTrace" />
-  <EventForm v-else initial="hello" v-bind:onTrace="noTrace" />
+  <EventForm v-else-if="scenario === 's3'" initial="hello" v-bind:onTrace="noTrace" />
+  <NestedBoard v-else v-bind:seed="s4Seed" v-bind:onTrace="noTrace" />
 </template>

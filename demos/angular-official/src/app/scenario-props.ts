@@ -24,3 +24,16 @@ export const s2Seed = [
   { id: 'a', title: 'one', done: false },
   { id: 'b', title: 'two', done: true },
 ];
+
+/**
+ * S4's nested seed. Group ids and row ids come from DISJOINT alphabets on
+ * purpose, and this lane is the reason: the emitted Angular template is the only
+ * one that reifies the enclosing loop variables as a positional argument list —
+ * `onH9Click(group, row, $event)` — so a swapped list has to produce a visibly
+ * different selection string rather than one that could be read either way.
+ * That is the red site for ruling 3d's "outermost first".
+ */
+export const s4Seed = [
+  { id: 'g1', rows: [{ id: 'r1' }, { id: 'r2' }] },
+  { id: 'g2', rows: [{ id: 'r3' }] },
+];

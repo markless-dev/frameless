@@ -234,6 +234,56 @@ const s3CancellationDropped = (find, replacement) => ({
 	apply: (source) => replaceOnce(source, find, replacement),
 });
 
+/**
+ * S4's axis for the five lanes that render the nesting structurally.
+ *
+ * The inner collection stops being sourced from the ENCLOSING loop variable and
+ * becomes a fixed reference to the first group's rows — a cross-product grid, in
+ * which every group renders the same shared row list. That is precisely the
+ * shape `@markless/compiler` 0.1.1 could already resolve while a genuine
+ * per-group nested list lowered every `row.*` site to `reads: []`, so it is the
+ * mutant that attacks S4's own claim rather than any incidental markup.
+ *
+ * It is deliberately NOT a truncation. Truncating the inner list would also be
+ * caught by a flat count of cell keys, and a flat count is exactly what
+ * `measureCellKeys` was written to be stronger than: this mutant leaves the
+ * `cells` derived value at 3/2 in the initial state and changes only WHICH group
+ * holds which rows.
+ */
+const s4NestingCollapsed = (find, replacement) => ({
+	axis: "the nested collection is sourced from the ENCLOSING repeat item",
+	text: `${find}  ->  ${replacement}`,
+	expect:
+		'every group renders the first group\'s rows, so the per-group shape reads ' +
+		'g1=[r1,r2] g2=[r1,r2] instead of g1=[r1,r2] g2=[r3]',
+	apply: (source) => replaceOnce(source, find, replacement),
+});
+
+/**
+ * S4's axis for ANGULAR, and the one mutant on this table that tests a standing
+ * ruling rather than an emitted construct.
+ *
+ * Angular is the only lane that reifies the enclosing `@for` variables as a
+ * positional argument list, and ruling 3d specifies that they are passed
+ * "every enclosing @for variable, OUTERMOST FIRST". Until a nested repeat became
+ * compilable that ruling had ZERO instances in this repo: shipped Angular output
+ * only ever emitted one-element call sites like `onH7Input(todo, $event)`, where
+ * an ordering rule has nothing to order.
+ *
+ * Swapping the two arguments is therefore the only mutant that can decide
+ * whether 3d is enforced or folklore. It is not a claim about correctness: it is
+ * the instrument. If it survives, the ruling has no red site anywhere in the
+ * corpus and that is a finding about the ruling, not about this lane.
+ */
+const s4ForVariableOrderSwapped = (find, replacement) => ({
+	axis: "Angular ruling 3d — enclosing @for variables passed OUTERMOST FIRST",
+	text: `${find}  ->  ${replacement}`,
+	expect:
+		'the handler receives the row where it expects the group, so selection reads r2>g1 ' +
+		'instead of g1>r2 and `marked` is set to a GROUP id, leaving no data-cell-on element',
+	apply: (source) => replaceOnce(source, find, replacement),
+});
+
 const MUTANTS = {
 	react: {
 		s1: s1DerivedFrozen('${count * multiplier}', '${1 * multiplier}'),
@@ -242,6 +292,7 @@ const MUTANTS = {
 			'data-action="cancel-submit"\n\t\t\t\tonClick={(event) => {\n\t\t\t\t\tevent.preventDefault();\n\t\t\t\t}}',
 			'data-action="cancel-submit"\n\t\t\t\tonClick={(event) => {\n\t\t\t\t\tvoid event;\n\t\t\t\t}}',
 		),
+		s4: s4NestingCollapsed('{group.rows.map((row) => (', '{groups[0].rows.map((row) => ('),
 	},
 	solid: {
 		s1: s1DerivedFrozen('${count() * props.multiplier}', '${1 * props.multiplier}'),
@@ -250,6 +301,7 @@ const MUTANTS = {
 			'data-action="cancel-submit"\n\t\t\t\tonClick={(event) => {\n\t\t\t\t\tevent.preventDefault();\n\t\t\t\t}}',
 			'data-action="cancel-submit"\n\t\t\t\tonClick={(event) => {\n\t\t\t\t\tvoid event;\n\t\t\t\t}}',
 		),
+		s4: s4NestingCollapsed('<For each={group.rows}>', '<For each={groups[0].rows}>'),
 	},
 	qwik: {
 		s1: s1DerivedFrozen('${count.value * props.multiplier}', '${1 * props.multiplier}'),
@@ -258,6 +310,7 @@ const MUTANTS = {
 			'data-action="cancel-submit"\n\t\t\t\tonClick$={[\n\t\t\t\t\tsync$((event) => {\n\t\t\t\t\t\tevent.preventDefault();\n\t\t\t\t\t}),\n\t\t\t\t]}',
 			'data-action="cancel-submit"\n\t\t\t\tonClick$={[\n\t\t\t\t\tsync$((event) => {\n\t\t\t\t\t\tvoid event;\n\t\t\t\t\t}),\n\t\t\t\t]}',
 		),
+		s4: s4NestingCollapsed('{group.rows.map((row) => (', '{groups[0].rows.map((row) => ('),
 	},
 	svelte: {
 		s1: s1DerivedFrozen('${count * multiplier}', '${1 * multiplier}'),
@@ -269,6 +322,10 @@ const MUTANTS = {
 			'data-action="cancel-submit"\n\t\tonclick={(event) => {\n\t\t\tevent.preventDefault();\n\t\t}}',
 			'data-action="cancel-submit"\n\t\tonclick={(event) => {\n\t\t\tvoid event;\n\t\t}}',
 		),
+		s4: s4NestingCollapsed(
+			'{#each group.rows as row (row.id)}',
+			'{#each groups[0].rows as row (row.id)}',
+		),
 	},
 	vue: {
 		s1: s1DerivedFrozen('${count.value * props.multiplier}', '${1 * props.multiplier}'),
@@ -277,6 +334,7 @@ const MUTANTS = {
 			'data-action="cancel-submit"\n\t\t\t@click="(event) => {\n\t\t\t\tevent.preventDefault();\n\t\t\t}"',
 			'data-action="cancel-submit"\n\t\t\t@click="(event) => {\n\t\t\t\tvoid event;\n\t\t\t}"',
 		),
+		s4: s4NestingCollapsed('v-for="row in group.rows"', 'v-for="row in groups[0].rows"'),
 	},
 	angular: {
 		s1: s1DerivedFrozen('${this.count * this.multiplier}', '${1 * this.multiplier}'),
@@ -287,6 +345,10 @@ const MUTANTS = {
 		s3: s3CancellationDropped(
 			'\tonH4Click(event: any): void {\n\t\tevent.preventDefault();\n\t}',
 			'\tonH4Click(event: any): void {\n\t\tvoid event;\n\t}',
+		),
+		s4: s4ForVariableOrderSwapped(
+			'onH9Click(group, row, $event)',
+			'onH9Click(row, group, $event)',
 		),
 	},
 };

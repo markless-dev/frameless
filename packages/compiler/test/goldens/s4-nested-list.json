@@ -1,0 +1,2931 @@
+{
+  "components": [
+    {
+      "evaluation": {
+        "computedBindings": "reactive",
+        "ordinaryLocals": "once-per-instance"
+      },
+      "guards": [],
+      "id": "component:0:NestedBoard",
+      "locals": [
+        {
+          "declarationKind": "let",
+          "initializer": {
+            "arguments": [
+              {
+                "arguments": [
+                  {
+                    "async": false,
+                    "body": {
+                      "end": 180,
+                      "properties": [
+                        {
+                          "argument": {
+                            "end": 152,
+                            "name": "group",
+                            "start": 147,
+                            "type": "Identifier"
+                          },
+                          "end": 152,
+                          "start": 144,
+                          "type": "SpreadElement"
+                        },
+                        {
+                          "computed": false,
+                          "end": 178,
+                          "key": {
+                            "end": 158,
+                            "name": "rows",
+                            "start": 154,
+                            "type": "Identifier"
+                          },
+                          "kind": "init",
+                          "method": false,
+                          "shorthand": false,
+                          "start": 154,
+                          "type": "Property",
+                          "value": {
+                            "arguments": [],
+                            "callee": {
+                              "computed": false,
+                              "end": 176,
+                              "object": {
+                                "computed": false,
+                                "end": 170,
+                                "object": {
+                                  "end": 165,
+                                  "name": "group",
+                                  "start": 160,
+                                  "type": "Identifier"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 170,
+                                  "name": "rows",
+                                  "start": 166,
+                                  "type": "Identifier"
+                                },
+                                "start": 160,
+                                "type": "MemberExpression"
+                              },
+                              "optional": false,
+                              "property": {
+                                "end": 176,
+                                "name": "slice",
+                                "start": 171,
+                                "type": "Identifier"
+                              },
+                              "start": 160,
+                              "type": "MemberExpression"
+                            },
+                            "end": 178,
+                            "optional": false,
+                            "start": 160,
+                            "type": "CallExpression"
+                          }
+                        }
+                      ],
+                      "start": 142,
+                      "type": "ObjectExpression"
+                    },
+                    "end": 181,
+                    "expression": true,
+                    "generator": false,
+                    "id": null,
+                    "params": [
+                      {
+                        "end": 136,
+                        "name": "group",
+                        "start": 131,
+                        "type": "Identifier"
+                      }
+                    ],
+                    "start": 130,
+                    "type": "ArrowFunctionExpression"
+                  }
+                ],
+                "callee": {
+                  "computed": false,
+                  "end": 129,
+                  "object": {
+                    "end": 125,
+                    "name": "seed",
+                    "start": 121,
+                    "type": "Identifier"
+                  },
+                  "optional": false,
+                  "property": {
+                    "end": 129,
+                    "name": "map",
+                    "start": 126,
+                    "type": "Identifier"
+                  },
+                  "start": 121,
+                  "type": "MemberExpression"
+                },
+                "end": 182,
+                "optional": false,
+                "start": 121,
+                "type": "CallExpression"
+              }
+            ],
+            "callee": {
+              "end": 120,
+              "name": "state",
+              "start": 115,
+              "type": "Identifier"
+            },
+            "end": 183,
+            "optional": false,
+            "start": 115,
+            "type": "CallExpression"
+          },
+          "names": [
+            "groups"
+          ],
+          "order": 0,
+          "pattern": {
+            "end": 112,
+            "name": "groups",
+            "start": 106,
+            "type": "Identifier"
+          },
+          "reads": [
+            {
+              "graphNodeId": "prop:props",
+              "path": [
+                "seed"
+              ],
+              "via": "alias"
+            }
+          ],
+          "semanticRecordIds": [
+            "state:groups"
+          ]
+        },
+        {
+          "declarationKind": "let",
+          "initializer": {
+            "arguments": [
+              {
+                "end": 214,
+                "raw": "'none'",
+                "start": 208,
+                "type": "Literal",
+                "value": "none"
+              }
+            ],
+            "callee": {
+              "end": 207,
+              "name": "state",
+              "start": 202,
+              "type": "Identifier"
+            },
+            "end": 215,
+            "optional": false,
+            "start": 202,
+            "type": "CallExpression"
+          },
+          "names": [
+            "selection"
+          ],
+          "order": 1,
+          "pattern": {
+            "end": 199,
+            "name": "selection",
+            "start": 190,
+            "type": "Identifier"
+          },
+          "reads": [],
+          "semanticRecordIds": [
+            "state:selection"
+          ]
+        },
+        {
+          "declarationKind": "let",
+          "initializer": {
+            "arguments": [
+              {
+                "end": 243,
+                "raw": "'none'",
+                "start": 237,
+                "type": "Literal",
+                "value": "none"
+              }
+            ],
+            "callee": {
+              "end": 236,
+              "name": "state",
+              "start": 231,
+              "type": "Identifier"
+            },
+            "end": 244,
+            "optional": false,
+            "start": 231,
+            "type": "CallExpression"
+          },
+          "names": [
+            "marked"
+          ],
+          "order": 2,
+          "pattern": {
+            "end": 228,
+            "name": "marked",
+            "start": 222,
+            "type": "Identifier"
+          },
+          "reads": [],
+          "semanticRecordIds": [
+            "state:marked"
+          ]
+        },
+        {
+          "declarationKind": "const",
+          "initializer": {
+            "arguments": [
+              {
+                "async": false,
+                "body": {
+                  "computed": false,
+                  "end": 320,
+                  "object": {
+                    "arguments": [
+                      {
+                        "async": false,
+                        "body": {
+                          "computed": false,
+                          "end": 312,
+                          "object": {
+                            "end": 307,
+                            "name": "group",
+                            "start": 302,
+                            "type": "Identifier"
+                          },
+                          "optional": false,
+                          "property": {
+                            "end": 312,
+                            "name": "rows",
+                            "start": 308,
+                            "type": "Identifier"
+                          },
+                          "start": 302,
+                          "type": "MemberExpression"
+                        },
+                        "end": 312,
+                        "expression": true,
+                        "generator": false,
+                        "id": null,
+                        "params": [
+                          {
+                            "end": 297,
+                            "name": "group",
+                            "start": 292,
+                            "type": "Identifier"
+                          }
+                        ],
+                        "start": 291,
+                        "type": "ArrowFunctionExpression"
+                      }
+                    ],
+                    "callee": {
+                      "computed": false,
+                      "end": 290,
+                      "object": {
+                        "end": 282,
+                        "name": "groups",
+                        "start": 276,
+                        "type": "Identifier"
+                      },
+                      "optional": false,
+                      "property": {
+                        "end": 290,
+                        "name": "flatMap",
+                        "start": 283,
+                        "type": "Identifier"
+                      },
+                      "start": 276,
+                      "type": "MemberExpression"
+                    },
+                    "end": 313,
+                    "optional": false,
+                    "start": 276,
+                    "type": "CallExpression"
+                  },
+                  "optional": false,
+                  "property": {
+                    "end": 320,
+                    "name": "length",
+                    "start": 314,
+                    "type": "Identifier"
+                  },
+                  "start": 276,
+                  "type": "MemberExpression"
+                },
+                "end": 320,
+                "expression": true,
+                "generator": false,
+                "id": null,
+                "params": [],
+                "start": 270,
+                "type": "ArrowFunctionExpression"
+              }
+            ],
+            "callee": {
+              "end": 269,
+              "name": "computed",
+              "start": 261,
+              "type": "Identifier"
+            },
+            "end": 321,
+            "optional": false,
+            "start": 261,
+            "type": "CallExpression"
+          },
+          "names": [
+            "cells"
+          ],
+          "order": 3,
+          "pattern": {
+            "end": 258,
+            "name": "cells",
+            "start": 253,
+            "type": "Identifier"
+          },
+          "reads": [
+            {
+              "graphNodeId": "state:groups",
+              "path": [],
+              "via": "direct"
+            }
+          ],
+          "semanticRecordIds": [
+            "computed:cells"
+          ]
+        }
+      ],
+      "name": "NestedBoard",
+      "props": {
+        "entries": [
+          {
+            "alias": false,
+            "graphNodeId": "prop:props",
+            "localName": "seed",
+            "path": [
+              "seed"
+            ],
+            "sourceName": "seed"
+          },
+          {
+            "alias": false,
+            "graphNodeId": "prop:props",
+            "localName": "onTrace",
+            "path": [
+              "onTrace"
+            ],
+            "sourceName": "onTrace"
+          }
+        ],
+        "graphNodeId": "prop:props"
+      },
+      "template": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "expression": {
+                    "end": 396,
+                    "name": "selection",
+                    "start": 387,
+                    "type": "Identifier"
+                  },
+                  "id": "text:0",
+                  "kind": "dynamic-text",
+                  "reads": [
+                    {
+                      "graphNodeId": "state:selection",
+                      "path": [],
+                      "via": "direct"
+                    }
+                  ]
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [],
+              "id": "h1",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-selection",
+                  "value": "true"
+                }
+              ],
+              "tag": "output"
+            },
+            {
+              "children": [
+                {
+                  "expression": {
+                    "end": 437,
+                    "name": "cells",
+                    "start": 432,
+                    "type": "Identifier"
+                  },
+                  "id": "text:1",
+                  "kind": "dynamic-text",
+                  "reads": [
+                    {
+                      "graphNodeId": "computed:cells",
+                      "path": [],
+                      "via": "direct"
+                    }
+                  ]
+                },
+                {
+                  "id": "text:2",
+                  "kind": "text",
+                  "value": "/"
+                },
+                {
+                  "expression": {
+                    "computed": false,
+                    "end": 453,
+                    "object": {
+                      "end": 446,
+                      "name": "groups",
+                      "start": 440,
+                      "type": "Identifier"
+                    },
+                    "optional": false,
+                    "property": {
+                      "end": 453,
+                      "name": "length",
+                      "start": 447,
+                      "type": "Identifier"
+                    },
+                    "start": 440,
+                    "type": "MemberExpression"
+                  },
+                  "id": "text:3",
+                  "kind": "dynamic-text",
+                  "reads": [
+                    {
+                      "graphNodeId": "state:groups",
+                      "path": [
+                        "length"
+                      ],
+                      "via": "direct"
+                    }
+                  ]
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [],
+              "id": "h2",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-count",
+                  "value": "cells"
+                }
+              ],
+              "tag": "p"
+            },
+            {
+              "children": [
+                {
+                  "id": "text:4",
+                  "kind": "text",
+                  "value": "flip"
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [
+                "event:0"
+              ],
+              "id": "h3",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-action",
+                  "value": "flip"
+                }
+              ],
+              "tag": "button"
+            },
+            {
+              "children": [
+                {
+                  "id": "text:5",
+                  "kind": "text",
+                  "value": "reorder"
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [
+                "event:1"
+              ],
+              "id": "h4",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-action",
+                  "value": "reorder"
+                }
+              ],
+              "tag": "button"
+            },
+            {
+              "children": [
+                {
+                  "collection": {
+                    "expression": {
+                      "end": 1024,
+                      "name": "groups",
+                      "start": 1018,
+                      "type": "Identifier"
+                    },
+                    "reads": [
+                      {
+                        "graphNodeId": "state:groups",
+                        "path": [],
+                        "via": "direct"
+                      }
+                    ]
+                  },
+                  "empty": [],
+                  "id": "repeat:0",
+                  "item": "group",
+                  "key": {
+                    "expression": {
+                      "computed": false,
+                      "end": 1038,
+                      "object": {
+                        "end": 1035,
+                        "name": "group",
+                        "start": 1030,
+                        "type": "Identifier"
+                      },
+                      "optional": false,
+                      "property": {
+                        "end": 1038,
+                        "name": "id",
+                        "start": 1036,
+                        "type": "Identifier"
+                      },
+                      "start": 1030,
+                      "type": "MemberExpression"
+                    },
+                    "reads": [
+                      {
+                        "graphNodeId": "state:groups",
+                        "path": [
+                          "id"
+                        ],
+                        "via": "repeat-item"
+                      }
+                    ]
+                  },
+                  "kind": "keyed-repeat",
+                  "row": [
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "collection": {
+                                "expression": {
+                                  "computed": false,
+                                  "end": 1150,
+                                  "object": {
+                                    "end": 1145,
+                                    "name": "group",
+                                    "start": 1140,
+                                    "type": "Identifier"
+                                  },
+                                  "optional": false,
+                                  "property": {
+                                    "end": 1150,
+                                    "name": "rows",
+                                    "start": 1146,
+                                    "type": "Identifier"
+                                  },
+                                  "start": 1140,
+                                  "type": "MemberExpression"
+                                },
+                                "reads": [
+                                  {
+                                    "graphNodeId": "state:groups",
+                                    "path": [
+                                      "rows"
+                                    ],
+                                    "via": "repeat-item"
+                                  }
+                                ]
+                              },
+                              "empty": [],
+                              "id": "repeat:1",
+                              "item": "row",
+                              "key": {
+                                "expression": {
+                                  "computed": false,
+                                  "end": 1162,
+                                  "object": {
+                                    "end": 1159,
+                                    "name": "row",
+                                    "start": 1156,
+                                    "type": "Identifier"
+                                  },
+                                  "optional": false,
+                                  "property": {
+                                    "end": 1162,
+                                    "name": "id",
+                                    "start": 1160,
+                                    "type": "Identifier"
+                                  },
+                                  "start": 1156,
+                                  "type": "MemberExpression"
+                                },
+                                "reads": [
+                                  {
+                                    "graphNodeId": "state:groups",
+                                    "path": [
+                                      "rows",
+                                      "id"
+                                    ],
+                                    "via": "repeat-item"
+                                  }
+                                ]
+                              },
+                              "kind": "keyed-repeat",
+                              "row": [
+                                {
+                                  "children": [
+                                    {
+                                      "children": [
+                                        {
+                                          "id": "text:6",
+                                          "kind": "text",
+                                          "value": "select"
+                                        }
+                                      ],
+                                      "dynamicBindings": [
+                                        {
+                                          "expression": {
+                                            "computed": false,
+                                            "end": 1252,
+                                            "object": {
+                                              "end": 1249,
+                                              "name": "row",
+                                              "start": 1246,
+                                              "type": "Identifier"
+                                            },
+                                            "optional": false,
+                                            "property": {
+                                              "end": 1252,
+                                              "name": "id",
+                                              "start": 1250,
+                                              "type": "Identifier"
+                                            },
+                                            "start": 1246,
+                                            "type": "MemberExpression"
+                                          },
+                                          "kind": "attribute",
+                                          "name": "data-select",
+                                          "reads": [
+                                            {
+                                              "graphNodeId": "state:groups",
+                                              "path": [
+                                                "rows",
+                                                "id"
+                                              ],
+                                              "via": "repeat-item"
+                                            }
+                                          ]
+                                        }
+                                      ],
+                                      "eventIds": [
+                                        "event:2"
+                                      ],
+                                      "id": "h9",
+                                      "kind": "host",
+                                      "staticAttributes": [],
+                                      "tag": "button"
+                                    },
+                                    {
+                                      "arms": [
+                                        {
+                                          "children": [
+                                            {
+                                              "children": [
+                                                {
+                                                  "id": "text:7",
+                                                  "kind": "text",
+                                                  "value": "on"
+                                                }
+                                              ],
+                                              "dynamicBindings": [
+                                                {
+                                                  "expression": {
+                                                    "computed": false,
+                                                    "end": 1535,
+                                                    "object": {
+                                                      "end": 1532,
+                                                      "name": "row",
+                                                      "start": 1529,
+                                                      "type": "Identifier"
+                                                    },
+                                                    "optional": false,
+                                                    "property": {
+                                                      "end": 1535,
+                                                      "name": "id",
+                                                      "start": 1533,
+                                                      "type": "Identifier"
+                                                    },
+                                                    "start": 1529,
+                                                    "type": "MemberExpression"
+                                                  },
+                                                  "kind": "attribute",
+                                                  "name": "data-cell-on",
+                                                  "reads": [
+                                                    {
+                                                      "graphNodeId": "state:groups",
+                                                      "path": [
+                                                        "rows",
+                                                        "id"
+                                                      ],
+                                                      "via": "repeat-item"
+                                                    }
+                                                  ]
+                                                }
+                                              ],
+                                              "eventIds": [],
+                                              "id": "h10",
+                                              "kind": "host",
+                                              "staticAttributes": [],
+                                              "tag": "span"
+                                            }
+                                          ],
+                                          "kind": "then"
+                                        },
+                                        {
+                                          "children": [
+                                            {
+                                              "children": [
+                                                {
+                                                  "id": "text:8",
+                                                  "kind": "text",
+                                                  "value": "off"
+                                                }
+                                              ],
+                                              "dynamicBindings": [
+                                                {
+                                                  "expression": {
+                                                    "computed": false,
+                                                    "end": 1601,
+                                                    "object": {
+                                                      "end": 1598,
+                                                      "name": "row",
+                                                      "start": 1595,
+                                                      "type": "Identifier"
+                                                    },
+                                                    "optional": false,
+                                                    "property": {
+                                                      "end": 1601,
+                                                      "name": "id",
+                                                      "start": 1599,
+                                                      "type": "Identifier"
+                                                    },
+                                                    "start": 1595,
+                                                    "type": "MemberExpression"
+                                                  },
+                                                  "kind": "attribute",
+                                                  "name": "data-cell-off",
+                                                  "reads": [
+                                                    {
+                                                      "graphNodeId": "state:groups",
+                                                      "path": [
+                                                        "rows",
+                                                        "id"
+                                                      ],
+                                                      "via": "repeat-item"
+                                                    }
+                                                  ]
+                                                }
+                                              ],
+                                              "eventIds": [],
+                                              "id": "h11",
+                                              "kind": "host",
+                                              "staticAttributes": [],
+                                              "tag": "span"
+                                            }
+                                          ],
+                                          "kind": "else"
+                                        }
+                                      ],
+                                      "expression": {
+                                        "end": 1496,
+                                        "left": {
+                                          "end": 1485,
+                                          "name": "marked",
+                                          "start": 1479,
+                                          "type": "Identifier"
+                                        },
+                                        "operator": "===",
+                                        "right": {
+                                          "computed": false,
+                                          "end": 1496,
+                                          "object": {
+                                            "end": 1493,
+                                            "name": "row",
+                                            "start": 1490,
+                                            "type": "Identifier"
+                                          },
+                                          "optional": false,
+                                          "property": {
+                                            "end": 1496,
+                                            "name": "id",
+                                            "start": 1494,
+                                            "type": "Identifier"
+                                          },
+                                          "start": 1490,
+                                          "type": "MemberExpression"
+                                        },
+                                        "start": 1479,
+                                        "type": "BinaryExpression"
+                                      },
+                                      "id": "branch-site:0",
+                                      "kind": "branch",
+                                      "reads": [
+                                        {
+                                          "graphNodeId": "state:groups",
+                                          "path": [
+                                            "rows",
+                                            "id"
+                                          ],
+                                          "via": "repeat-item"
+                                        },
+                                        {
+                                          "graphNodeId": "state:marked",
+                                          "path": [],
+                                          "via": "direct"
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "children": [
+                                        {
+                                          "children": [
+                                            {
+                                              "id": "text:9",
+                                              "kind": "text",
+                                              "value": "open"
+                                            }
+                                          ],
+                                          "dynamicBindings": [
+                                            {
+                                              "expression": {
+                                                "computed": false,
+                                                "end": 1706,
+                                                "object": {
+                                                  "end": 1703,
+                                                  "name": "row",
+                                                  "start": 1700,
+                                                  "type": "Identifier"
+                                                },
+                                                "optional": false,
+                                                "property": {
+                                                  "end": 1706,
+                                                  "name": "id",
+                                                  "start": 1704,
+                                                  "type": "Identifier"
+                                                },
+                                                "start": 1700,
+                                                "type": "MemberExpression"
+                                              },
+                                              "kind": "attribute",
+                                              "name": "data-open-cell",
+                                              "reads": [
+                                                {
+                                                  "graphNodeId": "state:groups",
+                                                  "path": [
+                                                    "rows",
+                                                    "id"
+                                                  ],
+                                                  "via": "repeat-item"
+                                                }
+                                              ]
+                                            }
+                                          ],
+                                          "eventIds": [],
+                                          "id": "h13",
+                                          "kind": "host",
+                                          "staticAttributes": [],
+                                          "tag": "summary"
+                                        }
+                                      ],
+                                      "dynamicBindings": [
+                                        {
+                                          "expression": {
+                                            "computed": false,
+                                            "end": 1663,
+                                            "object": {
+                                              "end": 1660,
+                                              "name": "row",
+                                              "start": 1657,
+                                              "type": "Identifier"
+                                            },
+                                            "optional": false,
+                                            "property": {
+                                              "end": 1663,
+                                              "name": "id",
+                                              "start": 1661,
+                                              "type": "Identifier"
+                                            },
+                                            "start": 1657,
+                                            "type": "MemberExpression"
+                                          },
+                                          "kind": "attribute",
+                                          "name": "data-cell-open",
+                                          "reads": [
+                                            {
+                                              "graphNodeId": "state:groups",
+                                              "path": [
+                                                "rows",
+                                                "id"
+                                              ],
+                                              "via": "repeat-item"
+                                            }
+                                          ]
+                                        }
+                                      ],
+                                      "eventIds": [],
+                                      "id": "h12",
+                                      "kind": "host",
+                                      "staticAttributes": [],
+                                      "tag": "details"
+                                    }
+                                  ],
+                                  "dynamicBindings": [
+                                    {
+                                      "expression": {
+                                        "computed": false,
+                                        "end": 1205,
+                                        "object": {
+                                          "end": 1202,
+                                          "name": "row",
+                                          "start": 1199,
+                                          "type": "Identifier"
+                                        },
+                                        "optional": false,
+                                        "property": {
+                                          "end": 1205,
+                                          "name": "id",
+                                          "start": 1203,
+                                          "type": "Identifier"
+                                        },
+                                        "start": 1199,
+                                        "type": "MemberExpression"
+                                      },
+                                      "kind": "attribute",
+                                      "name": "data-oracle-cell-key",
+                                      "reads": [
+                                        {
+                                          "graphNodeId": "state:groups",
+                                          "path": [
+                                            "rows",
+                                            "id"
+                                          ],
+                                          "via": "repeat-item"
+                                        }
+                                      ]
+                                    }
+                                  ],
+                                  "eventIds": [],
+                                  "id": "h8",
+                                  "kind": "host",
+                                  "staticAttributes": [],
+                                  "tag": "li"
+                                }
+                              ]
+                            }
+                          ],
+                          "dynamicBindings": [
+                            {
+                              "expression": {
+                                "computed": false,
+                                "end": 1112,
+                                "object": {
+                                  "end": 1109,
+                                  "name": "group",
+                                  "start": 1104,
+                                  "type": "Identifier"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 1112,
+                                  "name": "id",
+                                  "start": 1110,
+                                  "type": "Identifier"
+                                },
+                                "start": 1104,
+                                "type": "MemberExpression"
+                              },
+                              "kind": "attribute",
+                              "name": "data-rows",
+                              "reads": [
+                                {
+                                  "graphNodeId": "state:groups",
+                                  "path": [
+                                    "id"
+                                  ],
+                                  "via": "repeat-item"
+                                }
+                              ]
+                            }
+                          ],
+                          "eventIds": [],
+                          "id": "h7",
+                          "kind": "host",
+                          "staticAttributes": [],
+                          "tag": "ul"
+                        }
+                      ],
+                      "dynamicBindings": [
+                        {
+                          "expression": {
+                            "computed": false,
+                            "end": 1081,
+                            "object": {
+                              "end": 1078,
+                              "name": "group",
+                              "start": 1073,
+                              "type": "Identifier"
+                            },
+                            "optional": false,
+                            "property": {
+                              "end": 1081,
+                              "name": "id",
+                              "start": 1079,
+                              "type": "Identifier"
+                            },
+                            "start": 1073,
+                            "type": "MemberExpression"
+                          },
+                          "kind": "attribute",
+                          "name": "data-oracle-group-key",
+                          "reads": [
+                            {
+                              "graphNodeId": "state:groups",
+                              "path": [
+                                "id"
+                              ],
+                              "via": "repeat-item"
+                            }
+                          ]
+                        }
+                      ],
+                      "eventIds": [],
+                      "id": "h6",
+                      "kind": "host",
+                      "staticAttributes": [],
+                      "tag": "li"
+                    }
+                  ]
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [],
+              "id": "h5",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-groups",
+                  "value": "true"
+                }
+              ],
+              "tag": "ul"
+            }
+          ],
+          "dynamicBindings": [],
+          "eventIds": [],
+          "id": "h0",
+          "kind": "host",
+          "staticAttributes": [
+            {
+              "name": "data-scenario",
+              "value": "s4"
+            }
+          ],
+          "tag": "section"
+        }
+      ]
+    }
+  ],
+  "filename": "src/fixtures/s4-nested-list.tsrx",
+  "imports": [],
+  "module": {
+    "exports": [
+      {
+        "componentName": "NestedBoard",
+        "exportedName": "NestedBoard",
+        "kind": "named"
+      }
+    ]
+  },
+  "records": {
+    "aliases": [
+      {
+        "componentId": "component:0:NestedBoard",
+        "declarationKind": "const",
+        "graphNodeId": "prop:props",
+        "id": "alias:NestedBoard:onTrace",
+        "name": "onTrace",
+        "path": [
+          "onTrace"
+        ],
+        "sourceSpan": {
+          "end": 94,
+          "filename": "src/fixtures/s4-nested-list.tsrx",
+          "start": 87
+        },
+        "target": "props.onTrace"
+      },
+      {
+        "componentId": "component:0:NestedBoard",
+        "declarationKind": "const",
+        "graphNodeId": "prop:props",
+        "id": "alias:NestedBoard:seed",
+        "name": "seed",
+        "path": [
+          "seed"
+        ],
+        "sourceSpan": {
+          "end": 85,
+          "filename": "src/fixtures/s4-nested-list.tsrx",
+          "start": 81
+        },
+        "target": "props.seed"
+      }
+    ],
+    "behaviors": [],
+    "bindings": [
+      {
+        "async": false,
+        "asyncCapable": false,
+        "componentId": "component:0:NestedBoard",
+        "computed": {
+          "expression": {
+            "async": false,
+            "body": {
+              "computed": false,
+              "end": 320,
+              "object": {
+                "arguments": [
+                  {
+                    "async": false,
+                    "body": {
+                      "computed": false,
+                      "end": 312,
+                      "object": {
+                        "end": 307,
+                        "name": "group",
+                        "start": 302,
+                        "type": "Identifier"
+                      },
+                      "optional": false,
+                      "property": {
+                        "end": 312,
+                        "name": "rows",
+                        "start": 308,
+                        "type": "Identifier"
+                      },
+                      "start": 302,
+                      "type": "MemberExpression"
+                    },
+                    "end": 312,
+                    "expression": true,
+                    "generator": false,
+                    "id": null,
+                    "params": [
+                      {
+                        "end": 297,
+                        "name": "group",
+                        "start": 292,
+                        "type": "Identifier"
+                      }
+                    ],
+                    "start": 291,
+                    "type": "ArrowFunctionExpression"
+                  }
+                ],
+                "callee": {
+                  "computed": false,
+                  "end": 290,
+                  "object": {
+                    "end": 282,
+                    "name": "groups",
+                    "start": 276,
+                    "type": "Identifier"
+                  },
+                  "optional": false,
+                  "property": {
+                    "end": 290,
+                    "name": "flatMap",
+                    "start": 283,
+                    "type": "Identifier"
+                  },
+                  "start": 276,
+                  "type": "MemberExpression"
+                },
+                "end": 313,
+                "optional": false,
+                "start": 276,
+                "type": "CallExpression"
+              },
+              "optional": false,
+              "property": {
+                "end": 320,
+                "name": "length",
+                "start": 314,
+                "type": "Identifier"
+              },
+              "start": 276,
+              "type": "MemberExpression"
+            },
+            "end": 320,
+            "expression": true,
+            "generator": false,
+            "id": null,
+            "params": [],
+            "start": 270,
+            "type": "ArrowFunctionExpression"
+          },
+          "reads": [
+            {
+              "graphNodeId": "state:groups",
+              "path": [],
+              "via": "direct"
+            }
+          ]
+        },
+        "declarationKind": "const",
+        "id": "computed:cells",
+        "kind": "computed",
+        "name": "cells",
+        "reads": [
+          {
+            "componentId": "component:0:NestedBoard",
+            "graphNodeId": "state:groups",
+            "path": []
+          }
+        ],
+        "writable": false,
+        "writes": []
+      },
+      {
+        "componentId": "component:0:NestedBoard",
+        "declarationKind": "const",
+        "id": "prop:props",
+        "kind": "prop",
+        "name": "props",
+        "reads": [],
+        "valueKind": "object",
+        "writable": false,
+        "writes": []
+      },
+      {
+        "componentId": "component:0:NestedBoard",
+        "declarationKind": "let",
+        "id": "state:groups",
+        "initializer": {
+          "arguments": [
+            {
+              "async": false,
+              "body": {
+                "end": 180,
+                "properties": [
+                  {
+                    "argument": {
+                      "end": 152,
+                      "name": "group",
+                      "start": 147,
+                      "type": "Identifier"
+                    },
+                    "end": 152,
+                    "start": 144,
+                    "type": "SpreadElement"
+                  },
+                  {
+                    "computed": false,
+                    "end": 178,
+                    "key": {
+                      "end": 158,
+                      "name": "rows",
+                      "start": 154,
+                      "type": "Identifier"
+                    },
+                    "kind": "init",
+                    "method": false,
+                    "shorthand": false,
+                    "start": 154,
+                    "type": "Property",
+                    "value": {
+                      "arguments": [],
+                      "callee": {
+                        "computed": false,
+                        "end": 176,
+                        "object": {
+                          "computed": false,
+                          "end": 170,
+                          "object": {
+                            "end": 165,
+                            "name": "group",
+                            "start": 160,
+                            "type": "Identifier"
+                          },
+                          "optional": false,
+                          "property": {
+                            "end": 170,
+                            "name": "rows",
+                            "start": 166,
+                            "type": "Identifier"
+                          },
+                          "start": 160,
+                          "type": "MemberExpression"
+                        },
+                        "optional": false,
+                        "property": {
+                          "end": 176,
+                          "name": "slice",
+                          "start": 171,
+                          "type": "Identifier"
+                        },
+                        "start": 160,
+                        "type": "MemberExpression"
+                      },
+                      "end": 178,
+                      "optional": false,
+                      "start": 160,
+                      "type": "CallExpression"
+                    }
+                  }
+                ],
+                "start": 142,
+                "type": "ObjectExpression"
+              },
+              "end": 181,
+              "expression": true,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 136,
+                  "name": "group",
+                  "start": 131,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 130,
+              "type": "ArrowFunctionExpression"
+            }
+          ],
+          "callee": {
+            "computed": false,
+            "end": 129,
+            "object": {
+              "end": 125,
+              "name": "seed",
+              "start": 121,
+              "type": "Identifier"
+            },
+            "optional": false,
+            "property": {
+              "end": 129,
+              "name": "map",
+              "start": 126,
+              "type": "Identifier"
+            },
+            "start": 121,
+            "type": "MemberExpression"
+          },
+          "end": 182,
+          "optional": false,
+          "start": 121,
+          "type": "CallExpression"
+        },
+        "kind": "state",
+        "name": "groups",
+        "reads": [
+          {
+            "componentId": "component:0:NestedBoard",
+            "graphNodeId": "prop:props",
+            "path": [
+              "seed"
+            ]
+          }
+        ],
+        "valueKind": "unknown",
+        "writable": true,
+        "writes": [
+          {
+            "assignmentOperator": "=",
+            "componentId": "component:0:NestedBoard",
+            "graphNodeId": "state:groups",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 636,
+              "filename": "src/fixtures/s4-nested-list.tsrx",
+              "start": 630
+            },
+            "value": {
+              "end": 646,
+              "name": "flipped",
+              "start": 639,
+              "type": "Identifier"
+            },
+            "via": "direct"
+          },
+          {
+            "assignmentOperator": "=",
+            "componentId": "component:0:NestedBoard",
+            "graphNodeId": "state:groups",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 858,
+              "filename": "src/fixtures/s4-nested-list.tsrx",
+              "start": 852
+            },
+            "value": {
+              "end": 866,
+              "name": "order",
+              "start": 861,
+              "type": "Identifier"
+            },
+            "via": "direct"
+          }
+        ]
+      },
+      {
+        "componentId": "component:0:NestedBoard",
+        "declarationKind": "let",
+        "id": "state:marked",
+        "initialValue": "none",
+        "initializer": {
+          "end": 243,
+          "raw": "'none'",
+          "start": 237,
+          "type": "Literal",
+          "value": "none"
+        },
+        "kind": "state",
+        "name": "marked",
+        "reads": [],
+        "valueKind": "scalar",
+        "writable": true,
+        "writes": [
+          {
+            "assignmentOperator": "=",
+            "componentId": "component:0:NestedBoard",
+            "graphNodeId": "state:marked",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 1348,
+              "filename": "src/fixtures/s4-nested-list.tsrx",
+              "start": 1342
+            },
+            "value": {
+              "computed": false,
+              "end": 1357,
+              "object": {
+                "end": 1354,
+                "name": "row",
+                "start": 1351,
+                "type": "Identifier"
+              },
+              "optional": false,
+              "property": {
+                "end": 1357,
+                "name": "id",
+                "start": 1355,
+                "type": "Identifier"
+              },
+              "start": 1351,
+              "type": "MemberExpression"
+            },
+            "via": "direct"
+          }
+        ]
+      },
+      {
+        "componentId": "component:0:NestedBoard",
+        "declarationKind": "let",
+        "id": "state:selection",
+        "initialValue": "none",
+        "initializer": {
+          "end": 214,
+          "raw": "'none'",
+          "start": 208,
+          "type": "Literal",
+          "value": "none"
+        },
+        "kind": "state",
+        "name": "selection",
+        "reads": [],
+        "valueKind": "scalar",
+        "writable": true,
+        "writes": [
+          {
+            "assignmentOperator": "=",
+            "componentId": "component:0:NestedBoard",
+            "graphNodeId": "state:selection",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 1304,
+              "filename": "src/fixtures/s4-nested-list.tsrx",
+              "start": 1295
+            },
+            "value": {
+              "end": 1330,
+              "expressions": [
+                {
+                  "computed": false,
+                  "end": 1318,
+                  "object": {
+                    "end": 1315,
+                    "name": "group",
+                    "start": 1310,
+                    "type": "Identifier"
+                  },
+                  "optional": false,
+                  "property": {
+                    "end": 1318,
+                    "name": "id",
+                    "start": 1316,
+                    "type": "Identifier"
+                  },
+                  "start": 1310,
+                  "type": "MemberExpression"
+                },
+                {
+                  "computed": false,
+                  "end": 1328,
+                  "object": {
+                    "end": 1325,
+                    "name": "row",
+                    "start": 1322,
+                    "type": "Identifier"
+                  },
+                  "optional": false,
+                  "property": {
+                    "end": 1328,
+                    "name": "id",
+                    "start": 1326,
+                    "type": "Identifier"
+                  },
+                  "start": 1322,
+                  "type": "MemberExpression"
+                }
+              ],
+              "quasis": [
+                {
+                  "end": 1308,
+                  "start": 1308,
+                  "tail": false,
+                  "type": "TemplateElement",
+                  "value": {
+                    "cooked": "",
+                    "raw": ""
+                  }
+                },
+                {
+                  "end": 1320,
+                  "start": 1319,
+                  "tail": false,
+                  "type": "TemplateElement",
+                  "value": {
+                    "cooked": ">",
+                    "raw": ">"
+                  }
+                },
+                {
+                  "end": 1329,
+                  "start": 1329,
+                  "tail": true,
+                  "type": "TemplateElement",
+                  "value": {
+                    "cooked": "",
+                    "raw": ""
+                  }
+                }
+              ],
+              "start": 1307,
+              "type": "TemplateLiteral"
+            },
+            "via": "direct"
+          }
+        ]
+      }
+    ],
+    "elementHandleBindings": [],
+    "events": [
+      {
+        "componentId": "component:0:NestedBoard",
+        "eventName": "click",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "declarations": [
+                      {
+                        "end": 624,
+                        "id": {
+                          "end": 533,
+                          "name": "flipped",
+                          "start": 526,
+                          "type": "Identifier"
+                        },
+                        "init": {
+                          "arguments": [
+                            {
+                              "async": false,
+                              "body": {
+                                "end": 622,
+                                "properties": [
+                                  {
+                                    "argument": {
+                                      "end": 574,
+                                      "name": "group",
+                                      "start": 569,
+                                      "type": "Identifier"
+                                    },
+                                    "end": 574,
+                                    "start": 566,
+                                    "type": "SpreadElement"
+                                  },
+                                  {
+                                    "computed": false,
+                                    "end": 615,
+                                    "key": {
+                                      "end": 585,
+                                      "name": "rows",
+                                      "start": 581,
+                                      "type": "Identifier"
+                                    },
+                                    "kind": "init",
+                                    "method": false,
+                                    "shorthand": false,
+                                    "start": 581,
+                                    "type": "Property",
+                                    "value": {
+                                      "arguments": [],
+                                      "callee": {
+                                        "computed": false,
+                                        "end": 613,
+                                        "object": {
+                                          "arguments": [],
+                                          "callee": {
+                                            "computed": false,
+                                            "end": 603,
+                                            "object": {
+                                              "computed": false,
+                                              "end": 597,
+                                              "object": {
+                                                "end": 592,
+                                                "name": "group",
+                                                "start": 587,
+                                                "type": "Identifier"
+                                              },
+                                              "optional": false,
+                                              "property": {
+                                                "end": 597,
+                                                "name": "rows",
+                                                "start": 593,
+                                                "type": "Identifier"
+                                              },
+                                              "start": 587,
+                                              "type": "MemberExpression"
+                                            },
+                                            "optional": false,
+                                            "property": {
+                                              "end": 603,
+                                              "name": "slice",
+                                              "start": 598,
+                                              "type": "Identifier"
+                                            },
+                                            "start": 587,
+                                            "type": "MemberExpression"
+                                          },
+                                          "end": 605,
+                                          "optional": false,
+                                          "start": 587,
+                                          "type": "CallExpression"
+                                        },
+                                        "optional": false,
+                                        "property": {
+                                          "end": 613,
+                                          "name": "reverse",
+                                          "start": 606,
+                                          "type": "Identifier"
+                                        },
+                                        "start": 587,
+                                        "type": "MemberExpression"
+                                      },
+                                      "end": 615,
+                                      "optional": false,
+                                      "start": 587,
+                                      "type": "CallExpression"
+                                    }
+                                  }
+                                ],
+                                "start": 559,
+                                "type": "ObjectExpression"
+                              },
+                              "end": 623,
+                              "expression": true,
+                              "generator": false,
+                              "id": null,
+                              "params": [
+                                {
+                                  "end": 553,
+                                  "name": "group",
+                                  "start": 548,
+                                  "type": "Identifier"
+                                }
+                              ],
+                              "start": 547,
+                              "type": "ArrowFunctionExpression"
+                            }
+                          ],
+                          "callee": {
+                            "computed": false,
+                            "end": 546,
+                            "object": {
+                              "end": 542,
+                              "name": "groups",
+                              "start": 536,
+                              "type": "Identifier"
+                            },
+                            "optional": false,
+                            "property": {
+                              "end": 546,
+                              "name": "map",
+                              "start": 543,
+                              "type": "Identifier"
+                            },
+                            "start": 536,
+                            "type": "MemberExpression"
+                          },
+                          "end": 624,
+                          "optional": false,
+                          "start": 536,
+                          "type": "CallExpression"
+                        },
+                        "start": 526,
+                        "type": "VariableDeclarator"
+                      }
+                    ],
+                    "end": 625,
+                    "kind": "const",
+                    "start": 520,
+                    "type": "VariableDeclaration"
+                  },
+                  {
+                    "end": 647,
+                    "expression": {
+                      "end": 646,
+                      "left": {
+                        "end": 636,
+                        "name": "groups",
+                        "start": 630,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "end": 646,
+                        "name": "flipped",
+                        "start": 639,
+                        "type": "Identifier"
+                      },
+                      "start": 630,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 630,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 720,
+                    "expression": {
+                      "arguments": [
+                        {
+                          "end": 666,
+                          "raw": "'flip'",
+                          "start": 660,
+                          "type": "Literal",
+                          "value": "flip"
+                        },
+                        {
+                          "end": 711,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 709,
+                              "key": {
+                                "end": 675,
+                                "name": "order",
+                                "start": 670,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 670,
+                              "type": "Property",
+                              "value": {
+                                "arguments": [
+                                  {
+                                    "async": false,
+                                    "body": {
+                                      "computed": false,
+                                      "end": 708,
+                                      "object": {
+                                        "end": 705,
+                                        "name": "group",
+                                        "start": 700,
+                                        "type": "Identifier"
+                                      },
+                                      "optional": false,
+                                      "property": {
+                                        "end": 708,
+                                        "name": "id",
+                                        "start": 706,
+                                        "type": "Identifier"
+                                      },
+                                      "start": 700,
+                                      "type": "MemberExpression"
+                                    },
+                                    "end": 708,
+                                    "expression": true,
+                                    "generator": false,
+                                    "id": null,
+                                    "params": [
+                                      {
+                                        "end": 695,
+                                        "name": "group",
+                                        "start": 690,
+                                        "type": "Identifier"
+                                      }
+                                    ],
+                                    "start": 689,
+                                    "type": "ArrowFunctionExpression"
+                                  }
+                                ],
+                                "callee": {
+                                  "computed": false,
+                                  "end": 688,
+                                  "object": {
+                                    "end": 684,
+                                    "name": "flipped",
+                                    "start": 677,
+                                    "type": "Identifier"
+                                  },
+                                  "optional": false,
+                                  "property": {
+                                    "end": 688,
+                                    "name": "map",
+                                    "start": 685,
+                                    "type": "Identifier"
+                                  },
+                                  "start": 677,
+                                  "type": "MemberExpression"
+                                },
+                                "end": 709,
+                                "optional": false,
+                                "start": 677,
+                                "type": "CallExpression"
+                              }
+                            }
+                          ],
+                          "start": 668,
+                          "type": "ObjectExpression"
+                        },
+                        {
+                          "end": 718,
+                          "name": "event",
+                          "start": 713,
+                          "type": "Identifier"
+                        }
+                      ],
+                      "callee": {
+                        "end": 659,
+                        "name": "onTrace",
+                        "start": 652,
+                        "type": "Identifier"
+                      },
+                      "end": 719,
+                      "optional": false,
+                      "start": 652,
+                      "type": "CallExpression"
+                    },
+                    "start": 652,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 725,
+                "start": 514,
+                "type": "BlockStatement"
+              },
+              "end": 725,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 509,
+                  "name": "event",
+                  "start": 504,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 503,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              },
+              {
+                "graphNodeId": "state:groups",
+                "path": [],
+                "via": "direct"
+              }
+            ],
+            "writes": [
+              {
+                "assignmentOperator": "=",
+                "componentId": "component:0:NestedBoard",
+                "graphNodeId": "state:groups",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 636,
+                  "filename": "src/fixtures/s4-nested-list.tsrx",
+                  "start": 630
+                },
+                "value": {
+                  "end": 646,
+                  "name": "flipped",
+                  "start": 639,
+                  "type": "Identifier"
+                },
+                "via": "direct"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h3",
+        "id": "event:0"
+      },
+      {
+        "componentId": "component:0:NestedBoard",
+        "eventName": "click",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "declarations": [
+                      {
+                        "end": 846,
+                        "id": {
+                          "end": 819,
+                          "name": "order",
+                          "start": 814,
+                          "type": "Identifier"
+                        },
+                        "init": {
+                          "arguments": [],
+                          "callee": {
+                            "computed": false,
+                            "end": 844,
+                            "object": {
+                              "arguments": [],
+                              "callee": {
+                                "computed": false,
+                                "end": 834,
+                                "object": {
+                                  "end": 828,
+                                  "name": "groups",
+                                  "start": 822,
+                                  "type": "Identifier"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 834,
+                                  "name": "slice",
+                                  "start": 829,
+                                  "type": "Identifier"
+                                },
+                                "start": 822,
+                                "type": "MemberExpression"
+                              },
+                              "end": 836,
+                              "optional": false,
+                              "start": 822,
+                              "type": "CallExpression"
+                            },
+                            "optional": false,
+                            "property": {
+                              "end": 844,
+                              "name": "reverse",
+                              "start": 837,
+                              "type": "Identifier"
+                            },
+                            "start": 822,
+                            "type": "MemberExpression"
+                          },
+                          "end": 846,
+                          "optional": false,
+                          "start": 822,
+                          "type": "CallExpression"
+                        },
+                        "start": 814,
+                        "type": "VariableDeclarator"
+                      }
+                    ],
+                    "end": 847,
+                    "kind": "const",
+                    "start": 808,
+                    "type": "VariableDeclaration"
+                  },
+                  {
+                    "end": 867,
+                    "expression": {
+                      "end": 866,
+                      "left": {
+                        "end": 858,
+                        "name": "groups",
+                        "start": 852,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "end": 866,
+                        "name": "order",
+                        "start": 861,
+                        "type": "Identifier"
+                      },
+                      "start": 852,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 852,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 941,
+                    "expression": {
+                      "arguments": [
+                        {
+                          "end": 889,
+                          "raw": "'reorder'",
+                          "start": 880,
+                          "type": "Literal",
+                          "value": "reorder"
+                        },
+                        {
+                          "end": 932,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 930,
+                              "key": {
+                                "end": 898,
+                                "name": "order",
+                                "start": 893,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 893,
+                              "type": "Property",
+                              "value": {
+                                "arguments": [
+                                  {
+                                    "async": false,
+                                    "body": {
+                                      "computed": false,
+                                      "end": 929,
+                                      "object": {
+                                        "end": 926,
+                                        "name": "group",
+                                        "start": 921,
+                                        "type": "Identifier"
+                                      },
+                                      "optional": false,
+                                      "property": {
+                                        "end": 929,
+                                        "name": "id",
+                                        "start": 927,
+                                        "type": "Identifier"
+                                      },
+                                      "start": 921,
+                                      "type": "MemberExpression"
+                                    },
+                                    "end": 929,
+                                    "expression": true,
+                                    "generator": false,
+                                    "id": null,
+                                    "params": [
+                                      {
+                                        "end": 916,
+                                        "name": "group",
+                                        "start": 911,
+                                        "type": "Identifier"
+                                      }
+                                    ],
+                                    "start": 910,
+                                    "type": "ArrowFunctionExpression"
+                                  }
+                                ],
+                                "callee": {
+                                  "computed": false,
+                                  "end": 909,
+                                  "object": {
+                                    "end": 905,
+                                    "name": "order",
+                                    "start": 900,
+                                    "type": "Identifier"
+                                  },
+                                  "optional": false,
+                                  "property": {
+                                    "end": 909,
+                                    "name": "map",
+                                    "start": 906,
+                                    "type": "Identifier"
+                                  },
+                                  "start": 900,
+                                  "type": "MemberExpression"
+                                },
+                                "end": 930,
+                                "optional": false,
+                                "start": 900,
+                                "type": "CallExpression"
+                              }
+                            }
+                          ],
+                          "start": 891,
+                          "type": "ObjectExpression"
+                        },
+                        {
+                          "end": 939,
+                          "name": "event",
+                          "start": 934,
+                          "type": "Identifier"
+                        }
+                      ],
+                      "callee": {
+                        "end": 879,
+                        "name": "onTrace",
+                        "start": 872,
+                        "type": "Identifier"
+                      },
+                      "end": 940,
+                      "optional": false,
+                      "start": 872,
+                      "type": "CallExpression"
+                    },
+                    "start": 872,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 946,
+                "start": 802,
+                "type": "BlockStatement"
+              },
+              "end": 946,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 797,
+                  "name": "event",
+                  "start": 792,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 791,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              },
+              {
+                "graphNodeId": "state:groups",
+                "path": [],
+                "via": "direct"
+              }
+            ],
+            "writes": [
+              {
+                "assignmentOperator": "=",
+                "componentId": "component:0:NestedBoard",
+                "graphNodeId": "state:groups",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 858,
+                  "filename": "src/fixtures/s4-nested-list.tsrx",
+                  "start": 852
+                },
+                "value": {
+                  "end": 866,
+                  "name": "order",
+                  "start": 861,
+                  "type": "Identifier"
+                },
+                "via": "direct"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h4",
+        "id": "event:1"
+      },
+      {
+        "componentId": "component:0:NestedBoard",
+        "eventName": "click",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "end": 1331,
+                    "expression": {
+                      "end": 1330,
+                      "left": {
+                        "end": 1304,
+                        "name": "selection",
+                        "start": 1295,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "end": 1330,
+                        "expressions": [
+                          {
+                            "computed": false,
+                            "end": 1318,
+                            "object": {
+                              "end": 1315,
+                              "name": "group",
+                              "start": 1310,
+                              "type": "Identifier"
+                            },
+                            "optional": false,
+                            "property": {
+                              "end": 1318,
+                              "name": "id",
+                              "start": 1316,
+                              "type": "Identifier"
+                            },
+                            "start": 1310,
+                            "type": "MemberExpression"
+                          },
+                          {
+                            "computed": false,
+                            "end": 1328,
+                            "object": {
+                              "end": 1325,
+                              "name": "row",
+                              "start": 1322,
+                              "type": "Identifier"
+                            },
+                            "optional": false,
+                            "property": {
+                              "end": 1328,
+                              "name": "id",
+                              "start": 1326,
+                              "type": "Identifier"
+                            },
+                            "start": 1322,
+                            "type": "MemberExpression"
+                          }
+                        ],
+                        "quasis": [
+                          {
+                            "end": 1308,
+                            "start": 1308,
+                            "tail": false,
+                            "type": "TemplateElement",
+                            "value": {
+                              "cooked": "",
+                              "raw": ""
+                            }
+                          },
+                          {
+                            "end": 1320,
+                            "start": 1319,
+                            "tail": false,
+                            "type": "TemplateElement",
+                            "value": {
+                              "cooked": ">",
+                              "raw": ">"
+                            }
+                          },
+                          {
+                            "end": 1329,
+                            "start": 1329,
+                            "tail": true,
+                            "type": "TemplateElement",
+                            "value": {
+                              "cooked": "",
+                              "raw": ""
+                            }
+                          }
+                        ],
+                        "start": 1307,
+                        "type": "TemplateLiteral"
+                      },
+                      "start": 1295,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 1295,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 1358,
+                    "expression": {
+                      "end": 1357,
+                      "left": {
+                        "end": 1348,
+                        "name": "marked",
+                        "start": 1342,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "computed": false,
+                        "end": 1357,
+                        "object": {
+                          "end": 1354,
+                          "name": "row",
+                          "start": 1351,
+                          "type": "Identifier"
+                        },
+                        "optional": false,
+                        "property": {
+                          "end": 1357,
+                          "name": "id",
+                          "start": 1355,
+                          "type": "Identifier"
+                        },
+                        "start": 1351,
+                        "type": "MemberExpression"
+                      },
+                      "start": 1342,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 1342,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 1428,
+                    "expression": {
+                      "arguments": [
+                        {
+                          "end": 1385,
+                          "raw": "'select'",
+                          "start": 1377,
+                          "type": "Literal",
+                          "value": "select"
+                        },
+                        {
+                          "end": 1419,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 1404,
+                              "key": {
+                                "end": 1394,
+                                "name": "group",
+                                "start": 1389,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 1389,
+                              "type": "Property",
+                              "value": {
+                                "computed": false,
+                                "end": 1404,
+                                "object": {
+                                  "end": 1401,
+                                  "name": "group",
+                                  "start": 1396,
+                                  "type": "Identifier"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 1404,
+                                  "name": "id",
+                                  "start": 1402,
+                                  "type": "Identifier"
+                                },
+                                "start": 1396,
+                                "type": "MemberExpression"
+                              }
+                            },
+                            {
+                              "computed": false,
+                              "end": 1417,
+                              "key": {
+                                "end": 1409,
+                                "name": "row",
+                                "start": 1406,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 1406,
+                              "type": "Property",
+                              "value": {
+                                "computed": false,
+                                "end": 1417,
+                                "object": {
+                                  "end": 1414,
+                                  "name": "row",
+                                  "start": 1411,
+                                  "type": "Identifier"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 1417,
+                                  "name": "id",
+                                  "start": 1415,
+                                  "type": "Identifier"
+                                },
+                                "start": 1411,
+                                "type": "MemberExpression"
+                              }
+                            }
+                          ],
+                          "start": 1387,
+                          "type": "ObjectExpression"
+                        },
+                        {
+                          "end": 1426,
+                          "name": "event",
+                          "start": 1421,
+                          "type": "Identifier"
+                        }
+                      ],
+                      "callee": {
+                        "end": 1376,
+                        "name": "onTrace",
+                        "start": 1369,
+                        "type": "Identifier"
+                      },
+                      "end": 1427,
+                      "optional": false,
+                      "start": 1369,
+                      "type": "CallExpression"
+                    },
+                    "start": 1369,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 1439,
+                "start": 1283,
+                "type": "BlockStatement"
+              },
+              "end": 1439,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 1278,
+                  "name": "event",
+                  "start": 1273,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 1272,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              },
+              {
+                "graphNodeId": "state:groups",
+                "path": [
+                  "id"
+                ],
+                "via": "repeat-item"
+              },
+              {
+                "graphNodeId": "state:groups",
+                "path": [
+                  "rows",
+                  "id"
+                ],
+                "via": "repeat-item"
+              }
+            ],
+            "writes": [
+              {
+                "assignmentOperator": "=",
+                "componentId": "component:0:NestedBoard",
+                "graphNodeId": "state:marked",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 1348,
+                  "filename": "src/fixtures/s4-nested-list.tsrx",
+                  "start": 1342
+                },
+                "value": {
+                  "computed": false,
+                  "end": 1357,
+                  "object": {
+                    "end": 1354,
+                    "name": "row",
+                    "start": 1351,
+                    "type": "Identifier"
+                  },
+                  "optional": false,
+                  "property": {
+                    "end": 1357,
+                    "name": "id",
+                    "start": 1355,
+                    "type": "Identifier"
+                  },
+                  "start": 1351,
+                  "type": "MemberExpression"
+                },
+                "via": "direct"
+              },
+              {
+                "assignmentOperator": "=",
+                "componentId": "component:0:NestedBoard",
+                "graphNodeId": "state:selection",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 1304,
+                  "filename": "src/fixtures/s4-nested-list.tsrx",
+                  "start": 1295
+                },
+                "value": {
+                  "end": 1330,
+                  "expressions": [
+                    {
+                      "computed": false,
+                      "end": 1318,
+                      "object": {
+                        "end": 1315,
+                        "name": "group",
+                        "start": 1310,
+                        "type": "Identifier"
+                      },
+                      "optional": false,
+                      "property": {
+                        "end": 1318,
+                        "name": "id",
+                        "start": 1316,
+                        "type": "Identifier"
+                      },
+                      "start": 1310,
+                      "type": "MemberExpression"
+                    },
+                    {
+                      "computed": false,
+                      "end": 1328,
+                      "object": {
+                        "end": 1325,
+                        "name": "row",
+                        "start": 1322,
+                        "type": "Identifier"
+                      },
+                      "optional": false,
+                      "property": {
+                        "end": 1328,
+                        "name": "id",
+                        "start": 1326,
+                        "type": "Identifier"
+                      },
+                      "start": 1322,
+                      "type": "MemberExpression"
+                    }
+                  ],
+                  "quasis": [
+                    {
+                      "end": 1308,
+                      "start": 1308,
+                      "tail": false,
+                      "type": "TemplateElement",
+                      "value": {
+                        "cooked": "",
+                        "raw": ""
+                      }
+                    },
+                    {
+                      "end": 1320,
+                      "start": 1319,
+                      "tail": false,
+                      "type": "TemplateElement",
+                      "value": {
+                        "cooked": ">",
+                        "raw": ">"
+                      }
+                    },
+                    {
+                      "end": 1329,
+                      "start": 1329,
+                      "tail": true,
+                      "type": "TemplateElement",
+                      "value": {
+                        "cooked": "",
+                        "raw": ""
+                      }
+                    }
+                  ],
+                  "start": 1307,
+                  "type": "TemplateLiteral"
+                },
+                "via": "direct"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h9",
+        "id": "event:2"
+      }
+    ],
+    "handleCalls": [],
+    "handleForwards": [],
+    "persistence": [],
+    "sharedCalls": [],
+    "sharedDefinitions": [],
+    "sharedInstances": [],
+    "sharedReads": [],
+    "sharedWrites": [],
+    "stateReads": [
+      {
+        "componentId": "component:0:NestedBoard",
+        "graphNodeId": "computed:cells",
+        "path": []
+      },
+      {
+        "componentId": "component:0:NestedBoard",
+        "graphNodeId": "prop:props",
+        "path": [
+          "onTrace"
+        ]
+      },
+      {
+        "componentId": "component:0:NestedBoard",
+        "graphNodeId": "prop:props",
+        "path": [
+          "seed"
+        ]
+      },
+      {
+        "componentId": "component:0:NestedBoard",
+        "graphNodeId": "state:groups",
+        "path": []
+      },
+      {
+        "componentId": "component:0:NestedBoard",
+        "graphNodeId": "state:groups",
+        "path": [
+          "id"
+        ]
+      },
+      {
+        "componentId": "component:0:NestedBoard",
+        "graphNodeId": "state:groups",
+        "path": [
+          "length"
+        ]
+      },
+      {
+        "componentId": "component:0:NestedBoard",
+        "graphNodeId": "state:groups",
+        "path": [
+          "rows"
+        ]
+      },
+      {
+        "componentId": "component:0:NestedBoard",
+        "graphNodeId": "state:groups",
+        "path": [
+          "rows",
+          "id"
+        ]
+      },
+      {
+        "componentId": "component:0:NestedBoard",
+        "graphNodeId": "state:marked",
+        "path": []
+      },
+      {
+        "componentId": "component:0:NestedBoard",
+        "graphNodeId": "state:selection",
+        "path": []
+      }
+    ],
+    "stateWrites": [
+      {
+        "assignmentOperator": "=",
+        "componentId": "component:0:NestedBoard",
+        "graphNodeId": "state:groups",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 636,
+          "filename": "src/fixtures/s4-nested-list.tsrx",
+          "start": 630
+        },
+        "value": {
+          "end": 646,
+          "name": "flipped",
+          "start": 639,
+          "type": "Identifier"
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "componentId": "component:0:NestedBoard",
+        "graphNodeId": "state:groups",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 858,
+          "filename": "src/fixtures/s4-nested-list.tsrx",
+          "start": 852
+        },
+        "value": {
+          "end": 866,
+          "name": "order",
+          "start": 861,
+          "type": "Identifier"
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "componentId": "component:0:NestedBoard",
+        "graphNodeId": "state:marked",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 1348,
+          "filename": "src/fixtures/s4-nested-list.tsrx",
+          "start": 1342
+        },
+        "value": {
+          "computed": false,
+          "end": 1357,
+          "object": {
+            "end": 1354,
+            "name": "row",
+            "start": 1351,
+            "type": "Identifier"
+          },
+          "optional": false,
+          "property": {
+            "end": 1357,
+            "name": "id",
+            "start": 1355,
+            "type": "Identifier"
+          },
+          "start": 1351,
+          "type": "MemberExpression"
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "componentId": "component:0:NestedBoard",
+        "graphNodeId": "state:selection",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 1304,
+          "filename": "src/fixtures/s4-nested-list.tsrx",
+          "start": 1295
+        },
+        "value": {
+          "end": 1330,
+          "expressions": [
+            {
+              "computed": false,
+              "end": 1318,
+              "object": {
+                "end": 1315,
+                "name": "group",
+                "start": 1310,
+                "type": "Identifier"
+              },
+              "optional": false,
+              "property": {
+                "end": 1318,
+                "name": "id",
+                "start": 1316,
+                "type": "Identifier"
+              },
+              "start": 1310,
+              "type": "MemberExpression"
+            },
+            {
+              "computed": false,
+              "end": 1328,
+              "object": {
+                "end": 1325,
+                "name": "row",
+                "start": 1322,
+                "type": "Identifier"
+              },
+              "optional": false,
+              "property": {
+                "end": 1328,
+                "name": "id",
+                "start": 1326,
+                "type": "Identifier"
+              },
+              "start": 1322,
+              "type": "MemberExpression"
+            }
+          ],
+          "quasis": [
+            {
+              "end": 1308,
+              "start": 1308,
+              "tail": false,
+              "type": "TemplateElement",
+              "value": {
+                "cooked": "",
+                "raw": ""
+              }
+            },
+            {
+              "end": 1320,
+              "start": 1319,
+              "tail": false,
+              "type": "TemplateElement",
+              "value": {
+                "cooked": ">",
+                "raw": ">"
+              }
+            },
+            {
+              "end": 1329,
+              "start": 1329,
+              "tail": true,
+              "type": "TemplateElement",
+              "value": {
+                "cooked": "",
+                "raw": ""
+              }
+            }
+          ],
+          "start": 1307,
+          "type": "TemplateLiteral"
+        },
+        "via": "direct"
+      }
+    ]
+  },
+  "version": "frameless-enriched-ir/2"
+}

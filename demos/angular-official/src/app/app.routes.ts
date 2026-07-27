@@ -2,13 +2,14 @@ import { Routes } from '@angular/router';
 
 import { EventForm } from '../emitted/EventForm';
 import { KeyedTodo } from '../emitted/KeyedTodo';
+import { NestedBoard } from '../emitted/NestedBoard';
 import { RenderOnce } from '../emitted/RenderOnce';
-import { noTrace, s2Seed } from './scenario-props';
+import { noTrace, s2Seed, s4Seed } from './scenario-props';
 
 /**
  * DELTA from the `ng new --ssr` scaffold's `app.routes.ts`, which ships
  * `export const routes: Routes = []` and nothing else. One shared IR, six
- * emitters: the three components below are frameless-emitted and copied in by
+ * emitters: the four components below are frameless-emitted and copied in by
  * `pnpm copy-emitted`.
  *
  * The props travel as static route `data`, bound to the components' `@Input()`s
@@ -36,5 +37,10 @@ export const routes: Routes = [
     path: 's3',
     component: EventForm,
     data: { initial: 'hello', onTrace: noTrace },
+  },
+  {
+    path: 's4',
+    component: NestedBoard,
+    data: { seed: s4Seed, onTrace: noTrace },
   },
 ];
