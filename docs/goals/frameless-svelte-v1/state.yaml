@@ -632,10 +632,20 @@ tasks:
         3_it_is_invisible_to_the_server: "server/visitors/shared/element.js:78-79 omits defaultValue/defaultChecked from SSR output entirely. A changes nothing the server sends; it is a purely client-side attribute-restoration hack performed for the benefit of one test read."
       why_C_is_a_dodge: "servedClientEntry and expectedNavigations are per-lane PRECONDITIONS - they sit OUTSIDE the observed array that scripts/e2e.mjs compares across lanes. A per-lane declared value expectation would sit INSIDE the equality claim. Categorically different, and precisely the mechanism by which any future lane declares its way out of a real failure. The boundary to police is not 'is it declared per lane' but 'is it inside the cross-lane equality set'."
       what_makes_D_a_widening:
-        - "STRICTLY STRONGER: under the current read, a lane that client-side-rendered the input from scratch would still show value='hello' in the live DOM and PASS. Under D the string must be in the server's actual bytes. This repo's thesis is inert-markup-plus-activation, and the served payload is the thesis's own measurement site - assertServedActivation already fetches it."
+        - "STRONGER ON THE SERVED-BYTES CLASS: under the old read, a lane that client-side-rendered the input from scratch would still show value='hello' in the live DOM and PASS. Under D the string must be in the server's actual bytes. This repo's thesis is inert-markup-plus-activation, and the served payload is the thesis's own measurement site - assertServedActivation already fetches it. NOTE: the word 'STRICTLY' stood here and is WITHDRAWN - see t999_correction_the_stated_reason_was_refuted. D is a uniform TRADE, not a superset."
         - "UNIFORM: same site, same predicate, same exact string for all four lanes. No exemptions."
         - "The observed string stays byte-identical: 'server-rendered text = hello with writes = 0'."
-        - "What is lost maps to NO product claim. The attribute survives SSR parse independently of framework state in every lane, so it never witnessed client state in ANY lane."
+        - "WITHDRAWN 2026-07-27 by T999. This bullet read: 'What is lost maps to NO product claim. The attribute survives SSR parse independently of framework state in every lane, so it never witnessed client state in ANY lane.' It is REFUTED by this repo's own emitted output - packages/frameworks/solid/generated/S3.jsx:20 emits attr:value={text()}, a SIGNAL-TRACKED content attribute, which is exactly what DEFECTS.md finding 5 measured. In the SOLID lane the old live-DOM read DID witness post-hydration state. Replaced by t999_correction_the_stated_reason_was_refuted below. The RULING ITSELF STANDS; only this stated reason was wrong."
+      t999_correction_the_stated_reason_was_refuted:
+        what_was_wrong: "The T006 receipt, notes/T006-value-attribute-ruling.md and assertS3's doc comment all asserted the attribute 'never witnessed client state in ANY lane'. False, and self-contradicting: pre_existing_heterogeneity_found on this SAME receipt already says 'a signal-tracking attribute for Solid'. The note said both things ten lines apart."
+        the_refuting_evidence: "packages/frameworks/solid/generated/S3.jsx:20 emits attr:value={text()} BESIDE value={text()}. attr: is Solid's documented namespace meaning 'write the content attribute', and it is signal-tracked - DEFECTS.md finding 5 measured exactly this. A mis-seeded `text` at hydration would have rewritten the attribute and turned the OLD assertion red."
+        measured_truth_per_lane: "react = frozen SSR markup, never rewritten. qwik = frozen SSR markup, never rewritten. svelte = deliberately removed by remove_input_defaults. SOLID = signal-tracked via attr:value, DID witness post-hydration state."
+        what_D_actually_is: "A UNIFORM TRADE, not a superset. Gains the counterfactual-A class (markup the server never sent) in all four lanes; loses one class in one lane."
+        the_lost_class_stated_exactly: "S3's `text` seeded wrong at hydration, SOLID LANE ONLY."
+        why_the_ruling_still_stands: "Two grounds untouched by this correction. (1) The name/site mismatch - three-way-contract.ts reported `server-rendered text` while reading await page.content(), the POST-ACTIVATION DOM - is provable from the contract source alone, without reference to Svelte, and predates the Svelte lane. (2) The lost class was never a DECLARED claim; it was the incidental byproduct of one framework's attr: idiom, picked up by an assertion whose own name promised the served payload. Losing unclaimed coverage, uniformly, with the loss written down, is a legitimate site correction. Losing it SILENTLY would not be. DO NOT re-litigate Option D and DO NOT restore the live-DOM value assertion."
+        reopen_trigger_already_names_it: "The recorded trigger 'a state-seeding hydration bug is suspected in any lane' IS the lost class. No new trigger needed; this correction records what that bullet protects."
+        criterion_2_was_self_inconsistent: "T999's own three-part widening test cannot be satisfied as written. Criterion 2 demanded BOTH a strictly SMALLER set of accepted behaviours AND an explicit written statement of what the old check caught that the new cannot. Those clauses are contradictory: anything in the second statement is a behaviour the new check ACCEPTS and the old REJECTED, which makes the set not smaller. Any honest repair fails criterion 2; only a repair that hid its losses could pass. Same shape this board keeps catching - a proxy masquerading as a measurement. RESTATED criterion 2: a UNIFORM TRADE, with the lost class enumerated PER LANE and a re-open trigger naming it. Applied at the board's superseded_instructions entry."
+        corrected_in: "This receipt, notes/T006-value-attribute-ruling.md, T007's carried_forward_recorded.loss_a, assertS3's doc comment in demos/react-official/three-way-contract.ts (COMMENT ONLY - zero executable lines moved), and the s3_contract_changed_option_d precedent on the live Vue and Angular boards."
       pre_existing_heterogeneity_found: "The value attribute has been measuring THREE DIFFERENT THINGS across the incumbents - frozen SSR markup for React, a signal-tracking attribute for Solid (DEFECTS.md finding 5 measured exactly that), and deliberate removal for Svelte. Nobody noticed because all three agree at 'hello' and the read happens before any interaction. This predates the Svelte lane entirely."
       does_finding_5_bind:
         answer: "It binds AGAINST repair A, not toward it. A is NOT its structural twin; it differs in kind on three axes."
@@ -737,7 +747,7 @@ tasks:
         non_decreasing_demonstrated_on_real_bytes: "Counterfactual A - a lane that sent NO value and produced the input client-side from scratch: the OLD live-DOM read PASSES (hello), the NEW served read FAILS. Counterfactual B - the real Svelte lane: OLD fails (null), NEW passes. Row A is the widening: the old read could be satisfied by markup the server never sent."
         still_exact: "sha256 over the S3 first observation in each of the four witness receipts: react/solid/qwik/svelte all f9cab7779ec00ed2. Still inside the observed array and still compared by scripts/e2e.mjs."
       carried_forward_recorded:
-        loss_a: "The old check could catch that the value attribute SURVIVED activation unchanged; the new one cannot. Maps to NO product claim - the attribute survives the SSR parse independently of framework state in every lane, so it never witnessed client state in any lane."
+        loss_a: "The old check could catch that the value attribute SURVIVED activation unchanged; the new one cannot. CORRECTED 2026-07-27 by T999: the second half of this entry read 'Maps to NO product claim - the attribute survives the SSR parse independently of framework state in every lane, so it never witnessed client state in any lane', which is REFUTED by packages/frameworks/solid/generated/S3.jsx:20 (attr:value={text()}, a signal-tracked content attribute - DEFECTS.md finding 5). For react and qwik (frozen SSR markup) and svelte (attribute removed) the claim held; for SOLID it did not. The lost class is exactly 'S3 text seeded wrong at hydration, SOLID LANE ONLY', and reopen_trigger below already names it. See T006.t999_correction_the_stated_reason_was_refuted."
         loss_b: "After this change NO lane observes S3's `text` in the live DOM. Emitted S3 surfaces text only through value={text}, an input PROPERTY after activation, and no sanctioned witness API can read a DOM property. Live coverage narrows to the submit handler's onTrace payload. REVEALED by the ruling, not caused by it."
         reopen_trigger: "Any of: @async/witness exposes a property or evaluate accessor on PageHandle; the corpus grows a scenario rendering state as TEXT rather than only as an input value; a state-seeding hydration bug is suspected in any lane."
         recorded_in: "assertS3's doc comment AND notes/T006-value-attribute-ruling.md. The latent `checked` twin is recorded in both."
@@ -980,6 +990,55 @@ tasks:
         - {cmd: "git diff --exit-code -- packages/frameworks/svelte/generated", status: pass, note: "emitted output byte-unchanged"}
         - {cmd: "pnpm --dir packages/frameworks/svelte test", status: pass, note: "PM re-ran: 65 passed, 3 files"}
 
+  - id: T010
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    objective: "Correct Option D's stated reason where this repo's own emitted output refutes it, and repair the two inherited-precedent drifts on the live Vue and Angular boards. Documentation only."
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      summary: >-
+        Confirmed attr:value={text()} at packages/frameworks/solid/generated/S3.jsx:20 BEFORE
+        writing anything - the stop condition did not fire - then corrected Option D's stated reason
+        IN PLACE at every site carrying it. The claim that the value attribute "never witnessed
+        client state in ANY lane" is replaced by a PER-LANE truth table: react and qwik serve frozen
+        markup, svelte REMOVES the attribute, solid signal-TRACKS it. Option D is now recorded as a
+        uniform TRADE, not a superset; the lost class is stated exactly as "S3 text seeded wrong at
+        hydration, Solid lane only"; and the existing re-open trigger is identified as already
+        naming it. Ruling UPHELD, not re-litigated.
+      found_a_fourth_copy_T999_did_not_name: >-
+        T999 named three sites. A FOURTH live copy of the refuted sentence sat in T007's
+        carried_forward_recorded.loss_a. Leaving it would have defeated the package's purpose, so it
+        was corrected in place. PM CONFIRMED: a repo-wide grep for the refuted sentence now returns
+        ZERO matches.
+      also_withdrew_the_superset_framing: >-
+        Withdrew "STRICTLY STRONGER" from what_makes_D_a_widening bullet 1 and "strictly stronger"
+        from the three-way-contract.ts header comment, on the ground that "Option D is a uniform
+        trade, not a superset" CANNOT STAND BESIDE two surviving superset claims. Also updated the
+        notes' own section heading "(2) Non-decreasing in strength" so the notes do not assert the
+        criterion T999 just withdrew. This is the board's own standard applied without being asked:
+        a wrong reason beside a right answer gets corrected in place, not quietly dropped.
+      criterion_2_restated: >-
+        Recorded that T006's three-part widening test is SELF-INCONSISTENT - criterion 2 cannot
+        demand a "strictly SMALLER set of behaviours" AND a written statement of what the old check
+        caught that the new cannot. Restated as: uniform trade with the lost class enumerated PER
+        LANE and a re-open trigger naming it.
+      contract_file_comment_only_PM_VERIFIED: >-
+        Every changed line in demos/react-official/three-way-contract.ts begins with ` *`. The worker
+        verified it mechanically by filtering the diff for non-comment changed lines; the PM RE-RAN
+        that filter independently and got ZERO. No executable line moved.
+      commands:
+        - {cmd: "pnpm check", status: pass}
+        - {cmd: "pnpm test", status: pass, note: "685/685, 43 files"}
+        - {cmd: "pnpm test:browser", status: pass}
+        - {cmd: "pnpm e2e", status: pass, note: "4 demos x 3 scenarios, all observations equal"}
+        - {cmd: "pnpm lint", status: pass, note: "0 warnings, 0 errors, 270 files"}
+        - {cmd: "git diff -U0 -- three-way-contract.ts | filter non-comment", status: pass, note: "PM re-ran: ZERO non-comment changed lines"}
+        - {cmd: "grep -rn 'never witnessed client state in ANY lane'", status: pass, note: "PM re-ran repo-wide: ZERO matches survive"}
+
   - id: T999
     type: judge
     assignee: Judge
@@ -994,7 +1053,7 @@ tasks:
       - "Do not implement."
       - "Reject completion if the Svelte row exists but does not ASSERT equality with the other demos."
       - "T005 GROUNDS: reject if the BASELINE FORM INVENTORY is absent or cannot be shown to go red; reject if the lint-arbiter gap is closed SILENTLY or dropped rather than carried; confirm the rewritten worked example 6 records ALL SIX outcomes and that the emitter carries the decision-site comment the policy requires."
-      - "THE BYTE-EQUALITY TEST IS SUPERSEDED. T002's 'the SET of assertions and the exact strings asserted must be byte-unchanged for react, solid and qwik' was a PROXY masquerading as a measurement - written before the T006 conflict was known, and it would FAIL A CORRECT REPAIR. Use the three-part widening test instead. A change to three-way-contract.ts is a WIDENING iff ALL THREE hold, and is a WEAKENING if any fails: (1) UNIFORM - it applies identically to every lane; no lane receives a value, tolerance or exemption the others do not. (2) NON-DECREASING IN STRENGTH - the new assertion is satisfied by a strictly SMALLER set of behaviours than the old, evidenced by a two-sided negative control it rejects, PLUS an explicit written statement of anything the old check could catch that the new one cannot. (3) STILL INSIDE THE EQUALITY SET AND STILL EXACT - the observed string is identical across all four lanes and is still COMPARED by scripts/e2e.mjs, not merely recorded."
+      - "THE BYTE-EQUALITY TEST IS SUPERSEDED. T002's 'the SET of assertions and the exact strings asserted must be byte-unchanged for react, solid and qwik' was a PROXY masquerading as a measurement - written before the T006 conflict was known, and it would FAIL A CORRECT REPAIR. Use the three-part widening test instead. A change to three-way-contract.ts is a WIDENING iff ALL THREE hold, and is a WEAKENING if any fails: (1) UNIFORM - it applies identically to every lane; no lane receives a value, tolerance or exemption the others do not. (2) RESTATED 2026-07-27 - A UNIFORM TRADE, WITH THE LOST CLASS ENUMERATED PER LANE AND A RE-OPEN TRIGGER NAMING IT: the new assertion is evidenced by a two-sided negative control it rejects, AND every class of defect the old check could catch that the new one cannot is written down PER LANE, AND a recorded re-open trigger names that class. This REPLACES the original criterion 2, which was SELF-INCONSISTENT: it demanded a strictly SMALLER set of accepted behaviours AND a written statement of what the old check caught that the new cannot - but anything in that statement is a behaviour the new check ACCEPTS and the old REJECTED, so the set is not smaller. As written, only a repair that CONCEALED its losses could pass; every honest one failed. Caught by T999 when Option D's own loss statement was found to be false in the Solid lane (S3.jsx:20 attr:value={text()}). A trade is legitimate; an UNDISCLOSED or NON-UNIFORM trade is not. (3) STILL INSIDE THE EQUALITY SET AND STILL EXACT - the observed string is identical across all four lanes and is still COMPARED by scripts/e2e.mjs, not merely recorded."
       - "BOUNDARY TO POLICE: per-lane declared values are permitted ONLY for preconditions (servedClientEntry, expectedNavigations, which sit OUTSIDE the observed array). A per-lane declared value INSIDE the observed array is forbidden outright - that is the option-C dodge, and the boundary is not 'is it declared per lane' but 'is it inside the cross-lane equality set'."
       - "Reject if the served-payload value read landed without a two-sided negative control."
       - "Reject if the carried-forward loss is not recorded IN WRITING with a re-open trigger: after T007, NO lane observes S3's `text` in the live DOM. Re-open when any of - @async/witness exposes a property or evaluate accessor on PageHandle; the corpus grows a scenario rendering state as TEXT rather than only as an input value; or a state-seeding hydration bug is suspected in any lane."

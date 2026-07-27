@@ -41,6 +41,22 @@ goal:
     thread it too. Ruled as OPTION D by frameless-svelte-v1 T006, implemented by its T007, after
     svelte 5.56.8's remove_input_defaults() was found to delete the value ATTRIBUTE on hydration by
     design. servedClientEntry and expectedNavigations are total Readonly<Record<...>> tables.
+    QUALIFIED 2026-07-27 by frameless-svelte-v1 T999. Option D is UPHELD, but do NOT inherit it as
+    "a site correction is free because nothing was lost". Its stated reason - that the value
+    attribute "never witnessed client state in ANY lane" - is REFUTED by our own emitted output:
+    packages/frameworks/solid/generated/S3.jsx:20 emits attr:value={text()}, a SIGNAL-TRACKED
+    content attribute (DEFECTS.md finding 5), so the old live-DOM read DID witness post-hydration
+    state in the Solid lane. Option D is a uniform TRADE, not a superset: it gains the
+    "markup the server never sent" class in all four lanes and loses the class "S3 text seeded
+    wrong at hydration, SOLID LANE ONLY". THE PRECEDENT TO INHERIT, verbatim: "An observation must
+    be read where its name claims; a site correction is legitimate even when it trades coverage,
+    provided the trade is uniform, the loss is enumerated PER LANE, and a re-open trigger names the
+    lost class." So if this board moves a measurement site, it owes a per-lane loss table and a
+    re-open trigger - an undisclosed or non-uniform trade is NOT covered by this precedent. Related:
+    the three-part widening test's criterion 2 was restated for the same reason; it demanded a
+    strictly SMALLER accepted-behaviour set AND a written statement of what the old check caught
+    that the new cannot, which cannot both hold. Full trail in
+    docs/goals/frameless-svelte-v1/notes/T006-value-attribute-ruling.md.
   svelte_is_the_freshest_precedent: >-
     demos/svelte-official is a landed 4th e2e lane and docs/goals/frameless-svelte-v1 is the closest
     prior board. Read both before planning. pnpm e2e is green with four rows, all observations equal.

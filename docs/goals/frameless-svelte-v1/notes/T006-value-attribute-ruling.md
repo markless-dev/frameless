@@ -172,8 +172,13 @@ Against T999's three-part test:
 lane receives a value, tolerance or exemption the others do not, and nothing was
 added to the `observed` array.
 
-**(2) Non-decreasing in strength**, with a two-sided control and the honest
-statement of what is lost. Demonstrated on the real served bytes:
+**(2) A uniform trade, with the lost class enumerated per lane and a re-open
+trigger naming it.** (Criterion 2 as originally written demanded a strictly
+*smaller* set of accepted behaviours **and** a written statement of what the old
+check caught that the new cannot — two clauses that cannot both hold, since the
+second describes behaviours the new check accepts and the old rejected. T999
+restated it; see "Carried forward" below and the restated criterion on the board.)
+Demonstrated on the real served bytes:
 
 | counterfactual | old read (live DOM) | new read (served bytes) |
 | --- | --- | --- |
@@ -212,18 +217,58 @@ any interaction. This predates the Svelte lane entirely.
 **What the old check could catch that the new one cannot:** that the `value`
 attribute on the marked element *survived activation unchanged*. Under the new
 read a lane could delete, alter or never install that attribute after hydration
-and the observation would not move. For Svelte that is by design; in general it
-maps to no product claim, because the attribute survives the SSR parse
-independently of framework state in every lane, so it never witnessed client
-state in **any** lane.
+and the observation would not move. For Svelte that is by design.
+
+**Corrected 2026-07-27 by T999.** An earlier revision of this section claimed the
+lost coverage "maps to no product claim, because the attribute survives the SSR
+parse independently of framework state in every lane, so it never witnessed
+client state in **any** lane." That sentence is **refuted by this repo's own
+emitted output**, and it contradicted the heterogeneity finding ten lines above
+it, which already said the attribute was "a signal-tracking attribute for Solid".
+The measured truth, per lane:
+
+| lane | what the old live-DOM read observed after activation |
+| --- | --- |
+| react | frozen SSR markup; the attribute is never rewritten |
+| qwik | frozen SSR markup; the attribute is never rewritten |
+| svelte | deliberately removed by `remove_input_defaults` |
+| **solid** | **`attr:value={text()}` — a signal-tracked content attribute** |
+
+`packages/frameworks/solid/generated/S3.jsx:20` emits **both** `value={text()}`
+and `attr:value={text()}`. The second is exactly what `docs/DEFECTS.md` finding 5
+measured: `attr:` means "write the content attribute", and it is signal-tracked.
+So in the **Solid lane the old read did witness post-hydration state** — a
+mis-seeded `text` at hydration would have rewritten the attribute and the old
+assertion would have gone red.
+
+**Option D is therefore a uniform *trade*, not a superset.** It gains the
+counterfactual-A class in all four lanes and loses one class in one lane. The
+lost class, stated exactly: ***"S3's `text` seeded wrong at hydration, Solid lane
+only."*** Nothing else moves; react and qwik serve frozen markup and svelte
+deletes the attribute, so for those three the old read genuinely observed nothing
+about client state.
+
+The ruling **stands** on grounds untouched by this correction. The name/site
+mismatch (`server-rendered text` reported from `await page.content()`) is
+provable from the contract source alone, without reference to Svelte, and
+predates the Svelte lane. And the lost class was never a *declared* claim: it was
+the incidental byproduct of one framework's `attr:` idiom, observed through an
+assertion whose stated name promised the served payload instead. Losing coverage
+you never claimed, uniformly, with the loss written down, is a legitimate site
+correction. Losing it *silently* would not be.
+
+**The re-open trigger already names it.** "A state-seeding hydration bug is
+suspected in any lane" — third bullet below — is precisely the lost class. No new
+trigger is required; this correction records what that bullet is protecting.
 
 **The larger gap the ruling revealed:** after this change, **no lane observes
 S3's `text` in the live DOM at all.** Emitted S3 surfaces `text` only through
 `value={text}` — an input *property* after activation — and no sanctioned witness
 API can read a DOM property (see the rejection of B). S3's live coverage of
 `text` narrows to the submit handler's `onTrace` payload, which the analyzer lane
-checks. This gap was **revealed** by the site correction, not caused by it: the
-old read never witnessed client state either.
+checks. For react, qwik and svelte this gap was **revealed** by the site
+correction, not caused by it. For **Solid** the correction did **cause** it: that
+lane had live coverage of `text` through `attr:value` and no longer has it.
 
 **Re-open trigger.** Re-open when **any** of:
 

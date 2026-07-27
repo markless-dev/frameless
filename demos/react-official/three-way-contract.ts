@@ -660,7 +660,8 @@ async function measureConditionalCancellation(
  * guarded by `if (!hydrating) return`, which is why the direct-mount browser
  * lanes never saw it).
  *
- * Reading the served payload is **strictly stronger**, not merely different: a
+ * Reading the served payload is **stronger on the class this repo is about**
+ * (see the correction below — it is a uniform trade, not a superset): a
  * lane that client-side-rendered the input from scratch, sending nothing, would
  * still show `value="hello"` in the live DOM and pass the old read. Under this
  * one the string must be in the server's own bytes. That is this repo's whole
@@ -676,15 +677,41 @@ async function measureConditionalCancellation(
  * after activation, and no sanctioned witness API can read a DOM property:
  * `PageHandle` exposes no `evaluate` and `expect.page.*` has no property
  * accessor. S3's live coverage of `text` therefore narrows to the submit
- * handler's `onTrace` payload, which the analyzer lane checks. This gap was
- * *revealed* by the site correction, not caused by it — the old read never
- * witnessed client state either, since the attribute survives the SSR parse
- * independently of framework state in every lane.
+ * handler's `onTrace` payload, which the analyzer lane checks.
+ *
+ * Corrected 2026-07-27. This paragraph used to end "the old read never witnessed
+ * client state either, since the attribute survives the SSR parse independently
+ * of framework state in every lane". That is refuted by our own emitted output.
+ * Per lane, what the old live-DOM read actually saw after activation:
+ *
+ *   react   frozen SSR markup, never rewritten
+ *   qwik    frozen SSR markup, never rewritten
+ *   svelte  removed by `remove_input_defaults`, by design
+ *   solid   `attr:value={text()}` — a SIGNAL-TRACKED content attribute
+ *
+ * `packages/frameworks/solid/generated/S3.jsx:20` emits `attr:value={text()}`
+ * beside `value={text()}`; `attr:` is Solid's documented "write the content
+ * attribute" namespace and it tracks. That is what DEFECTS.md finding 5
+ * measured. So in the Solid lane the old read DID witness post-hydration state:
+ * a mis-seeded `text` would have rewritten the attribute and gone red.
+ *
+ * The move is therefore a uniform TRADE, not a superset. It gains, in all four
+ * lanes, the class "markup the server never sent"; it loses, in one lane, the
+ * class "S3's `text` seeded wrong at hydration, Solid only". For react, qwik and
+ * svelte the gap below was *revealed* by the site correction; for solid it was
+ * *caused* by it.
+ *
+ * The trade is legitimate and is not to be re-litigated here: the name/site
+ * mismatch it fixes (`server-rendered text` reported from `await page.content()`)
+ * is provable from this file alone and predates the Svelte lane, and the lost
+ * class was never a declared claim — it was the incidental byproduct of one
+ * framework's `attr:` idiom. The full ruling is in
+ * `docs/goals/frameless-svelte-v1/notes/T006-value-attribute-ruling.md`.
  *
  * Re-open when any of: `@async/witness` exposes a property or `evaluate`
  * accessor on `PageHandle`; the corpus grows a scenario rendering state as
  * *text* rather than only as an input value; or a state-seeding hydration bug
- * is suspected in any lane.
+ * is suspected in any lane — that last trigger IS the lost class named above.
  *
  * (Latent twin, recorded so it is not rediscovered as a new finding: Svelte's
  * `remove_input_defaults` strips `checked` identically. S3's checkbox carries
