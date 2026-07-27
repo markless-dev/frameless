@@ -13,12 +13,12 @@
 		<p data-count="complete">{{ complete }}/{{ todos.length }}</p>
 		<input
 			data-action="new"
-			v-bind:value="draft"
-			v-on:input="(event) => draft = event.currentTarget.value"
+			:value="draft"
+			@input="(event) => draft = event.currentTarget.value"
 		>
 		<button
 			data-action="add"
-			v-on:click="(event) => {
+			@click="(event) => {
 				const item = { id: `c${next}`, title: draft, done: false };
 				next++;
 				todos = todos.concat(item);
@@ -28,11 +28,11 @@
 		>add</button>
 		<p v-if="todos.length === 0" data-empty="true">empty</p>
 		<ul>
-			<li v-for="todo in todos" v-bind:key="todo.id" v-bind:data-oracle-row-key="todo.id">
+			<li v-for="todo in todos" :key="todo.id" :data-oracle-row-key="todo.id">
 				<input
-					v-bind:data-edit="todo.id"
-					v-bind:value="todo.title"
-					v-on:input="(event) => {
+					:data-edit="todo.id"
+					:value="todo.title"
+					@input="(event) => {
 						const title = event.currentTarget.value;
 						const alias = todos.find((item) => item.id === todo.id);
 						alias.title = title;
@@ -42,9 +42,9 @@
 				>
 				<input
 					type="checkbox"
-					v-bind:data-toggle="todo.id"
-					v-bind:checked="todo.done"
-					v-on:change="(event) => {
+					:data-toggle="todo.id"
+					:checked="todo.done"
+					@change="(event) => {
 						const checked = event.currentTarget.checked;
 						const copy = todos.slice();
 						const alias = copy.find((item) => item.id === todo.id);
@@ -54,8 +54,8 @@
 					}"
 				>
 				<button
-					v-bind:data-remove="todo.id"
-					v-on:click="(event) => {
+					:data-remove="todo.id"
+					@click="(event) => {
 						todos = todos.filter((item) => item.id !== todo.id);
 						onTrace('remove', { id: todo.id }, event);
 					}"
@@ -64,7 +64,7 @@
 		</ul>
 		<button
 			data-action="reorder"
-			v-on:click="(event) => {
+			@click="(event) => {
 				const order = todos.slice().reverse();
 				todos = order;
 				onTrace('reorder', { order: order.map((todo) => todo.id) }, event);
@@ -72,7 +72,7 @@
 		>reorder</button>
 		<button
 			data-action="clear"
-			v-on:click="(event) => {
+			@click="(event) => {
 				const count = todos.length;
 				todos = [];
 				onTrace('clear', { count }, event);

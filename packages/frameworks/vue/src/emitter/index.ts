@@ -625,19 +625,48 @@ function staticAttribute(attribute: StaticAttribute): string {
 }
 
 /**
- * DECISION SITE - LONGHAND `v-on:`, never `@`, and never a modifier.
+ * DECISION SITE - the VALUED SHORTHANDS `@` and `:`, never a modifier, never
+ * `v-slot`.
  *
- * `docs/emitter-idiom-policy.md` worked example 2 rules the `v-bind`/`v-on`/
- * `v-slot` shorthands **DEFERRED**, and `frameless-vue-v1` T005 is the task that
- * re-runs its six gates now that this lane puts Vue in the lockfile. Emitting
- * `@click` here would hand T005 a shipped fact to ratify instead of a question
- * to rule, which is precisely the failure `frameless-svelte-v1` T002 named. The
- * ruling has to arrive from the policy, not from the emitter's reflexes.
+ * `docs/emitter-idiom-policy.md` worked example 2a rules `v-bind`/`v-on`
+ * shorthands WITH A VALUE **sugar** - all six gates PASS - and this emitter
+ * adopts them. The ruling is `frameless-vue-v1` T005, folded into the policy and
+ * implemented here by T006. It is recorded at the decision site rather than only
+ * in the document because, in the policy's own words, a ruling that exists only
+ * in a document will be re-litigated by the next person to open the emitter.
  *
- * The same applies to `.prevent`/`.stop`/`.self`. IR-5's two declared actions are
- * emitted as ORDINARY IN-BODY STATEMENTS - what React, Solid and Svelte already
- * emit, and what the authored handler already spells - and the modifier surface
- * is left entirely to T005.
+ * WHAT THE RULING TURNS ON, so a reader does not have to take it on trust:
+ * `@vue/compiler-core@3.5.40` `dist/compiler-core.cjs.js:2435` normalises `':'`
+ * to `bind` and `'@'` to `on` inside `ondirname`, at PARSE TIME, before any
+ * argument or modifier is read; the raw spelling survives only as `rawName`.
+ * Equivalence is therefore total over every argument by construction, and it was
+ * confirmed by measurement: identical template codegen and identical production
+ * `compileScript` output in all four `ssr x isProd` modes, and byte-identical
+ * SSR HTML for all three scenario components.
+ *
+ * ALWAYS WITH A VALUE, and that conjunct is load-bearing rather than decorative.
+ * MEASURED at 3.5.40: a VALUE-LESS `:count` and a value-less `v-bind:count` both
+ * compile as Vue 3.4's same-name shorthand - a version-gated form the baseline
+ * inventory would accept, because the inventory reads the directive form and not
+ * whether it carries a value - and a value-less `v-on` is a hard syntax error in
+ * both spellings. The hazard is SYMMETRIC and pre-existing; the flip neither
+ * creates nor enlarges it. All three emission sites below interpolate `="..."`
+ * unconditionally so none of them can produce one, and the gate's
+ * `directive-carries-value` policy asserts that over emitted output rather than
+ * leaving it as a property of how this file happens to be written.
+ *
+ * WHAT IS STILL REFUSED, and why each refusal is separate from the adoption:
+ *   - `.prevent`/`.stop`/`.self` and every other v-on modifier. IR-5's two
+ *     declared actions are emitted as ORDINARY IN-BODY STATEMENTS - what React,
+ *     Solid and Svelte already emit, and what the authored handler already
+ *     spells. 2a covers `:` and `@` with a value and nothing else.
+ *   - the `.foo="x"` PROP shorthand. `ondirname` pre-seeds a `prop` modifier for
+ *     `'.'`, so it is a FOURTH shorthand carrying extra semantics, which worked
+ *     example 2 never named and no ruling covers.
+ *   - `#header` and every `v-slot` form. Worked example 2b is DENIED: G4 UNKNOWN
+ *     (no deciding function - the IR's only slot kind is default-slot-projection,
+ *     IR-3) and G6 FAIL (no check can exist for a path the emitter refuses to
+ *     emit). Re-open only when IR-3 gains named-slot vocabulary.
  *
  * IR-5 under Vue 3.5.40.
  *
@@ -684,10 +713,17 @@ function syncPolicyGuard(event: EnrichedEventRecord, handlerBody: Statement[]): 
 		);
 }
 
+/**
+ * EMISSION SITE 1 of 3 for the adopted shorthand - the sole `v-on` spelling,
+ * reached only through `eventAttribute()`, which appends `="..."` unconditionally.
+ * `/^[a-z]+$/` is the whole `v-on` argument domain worked example 2a states its
+ * totality against; 9 members of it were compiled in both spellings across four
+ * modes with zero divergence.
+ */
 function eventDirectiveName(eventName: string): string {
 	if (!/^[a-z]+$/.test(eventName))
 		throw new Error(`Vue emitter rejects the event name ${JSON.stringify(eventName)}`);
-	return `v-on:${eventName}`;
+	return `@${eventName}`;
 }
 
 /** `indent` is the ELEMENT's indent; attribute lines sit one level deeper. */
@@ -718,13 +754,18 @@ function attributesOf(node: Extract<TemplateNode, { kind: 'host' }>, indent: str
 	const attributes = node.staticAttributes.map(staticAttribute);
 	for (const binding of node.dynamicBindings) {
 		assertPlainAttributeName(binding.name);
-		// `v-bind:` covers both `attribute` and `property` kinds: Vue's runtime
-		// decides attribute-versus-property itself from the tag and the name, the
-		// same way Svelte does, so `kind` needs no separate spelling. The `.prop`
-		// and `.attr` modifiers exist but are modifiers, which this lane does not
-		// emit - see the decision site on `syncPolicyGuard`.
+		// EMISSION SITE 2 of 3 for the adopted shorthand. `:` covers both
+		// `attribute` and `property` kinds: Vue's runtime decides
+		// attribute-versus-property itself from the tag and the name, the same way
+		// Svelte does, so `kind` needs no separate spelling. The `.prop` and `.attr`
+		// modifiers exist but are modifiers, and `.foo="x"` is a fourth shorthand no
+		// ruling covers - see the decision site on `syncPolicyGuard`.
+		//
+		// `assertPlainAttributeName` above is what keeps this site total: it rejects
+		// every attribute name beginning `:`, `@`, `#` or `v-`, so a directive can
+		// never arrive through the static-attribute path and be respelled here.
 		attributes.push(
-			`v-bind:${binding.name}="${escapeDirectiveValue(
+			`:${binding.name}="${escapeDirectiveValue(
 				indentContinuation(printExpression(expression(binding.expression)), `${indent}\t`),
 			)}"`,
 		);
@@ -862,15 +903,18 @@ function renderKeyedRepeat(
 		throw new Error(`Vue keyed repeat ${node.id} has no lowering for an empty fallback`);
 	if (node.row.length !== 1 || node.row[0]!.kind !== 'host')
 		throw new Error(
-			`Vue emitter requires a keyed repeat row to be exactly one host element (${node.id}): v-for and v-bind:key need an element to sit on`,
+			`Vue emitter requires a keyed repeat row to be exactly one host element (${node.id}): v-for and :key need an element to sit on`,
 		);
 	const collection = escapeDirectiveValue(
 		printExpression(expression(node.collection.expression)),
 	);
 	const key = escapeDirectiveValue(printExpression(expression(node.key.expression)));
+	// EMISSION SITE 3 of 3 for the adopted shorthand - the literal key attribute.
+	// `v-for` keeps its longhand: it has no shorthand at all, and `todo in todos`
+	// is not a JavaScript expression, so it is a different construct entirely.
 	return renderHost(node.row[0]!, indent, inline, [
 		`v-for="${escapeDirectiveValue(node.item)} in ${collection}"`,
-		`v-bind:key="${key}"`,
+		`:key="${key}"`,
 	]);
 }
 

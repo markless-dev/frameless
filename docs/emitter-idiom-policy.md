@@ -108,11 +108,24 @@ and was not made. A package resolving to a different version, or a differently-p
 same tool, is a different build.
 
 **Absent framework.** If no build of the target framework is in this repo's lockfile, this gate is
-not askable: record `DEFERRED — framework absent`, naming the framework. Vue and Angular are absent
-today. **Svelte is not, and has not been since `frameless-svelte-v1` T003 put `svelte@5.56.8` in the
-lockfile**: a Svelte deferral recorded at this gate before that date is discharged, and re-running
-the entry may not record `DEFERRED — framework absent` again. Worked examples 6 and 7 are both
-rewritten on exactly that ground.
+not askable: record `DEFERRED — framework absent`, naming the framework.
+
+The following frameworks are **not absent**, and a deferral recorded at this gate before the stated
+date is **discharged** — re-running the entry may not record `DEFERRED — framework absent` again.
+One line per framework, so a lane that lands can discharge itself without rewriting anyone else's:
+
+- **Svelte**, since `frameless-svelte-v1` T003 put `svelte@5.56.8` in the lockfile. Worked
+  examples 6 and 7 are both rewritten on exactly that ground.
+- **Vue**, since `frameless-vue-v1` T004 put `vue@3.5.40` in the lockfile at two importers. Worked
+  example 2 was re-run on that ground by T005, split into 2a and 2b, and folded back by T006.
+
+Any entry still reading `DEFERRED — framework absent` for a framework named above is stale by that
+fact alone, and must be **re-run** rather than re-read: a stale label is not a verdict, and the
+re-run may change the verdict in either direction. The list above is **owed a line by each lane that
+lands**, added by that lane's own board — the sentence this replaced named two frameworks at once
+and went half-false the moment one of them landed, which is why it is one line per framework now.
+Angular's line is the Angular board's to add; it is deliberately not written here, because the
+lockfile fact and the entries it discharges belong to whoever measured them.
 
 `DEFERRED` here is **not** a pass and never becomes one on paper. Gate 1 can never be `PASS` for a
 framework absent from the lockfile, and documentary evidence never passes this gate at any
@@ -317,15 +330,125 @@ No latency benefit was measured, and none is claimed.
 is not expected to work in a runtime-only JSX setup with the optimizer bypassed. Gate 6 pins the
 optimizer lane, so this is accepted, and recorded here so it is not rediscovered as a surprise.
 
-### 2. Vue — `v-bind` / `v-on` / `v-slot` shorthands (`:id`, `@click`, `#header`) → **deferred**
+### 2a. Vue — `v-bind` and `v-on` shorthands **with a value** (`:id="x"`, `@click="h"`) → **sugar**
 
-**G1 DEFERRED — framework absent**: no Vue in this repo's lockfile, so the claim that the
-shorthands compile identically is documentary, which is a hypothesis and not evidence. G2 PASS,
-G3 PASS (triggered by the binding's structural kind, not its contents). **G4 DEFERRED — emitter
-absent**: with no Vue emitter, "every directive use" names no function and its totality cannot be
-shown; no counterexample is known either. G5 PASS. **G6 DEFERRED** — there is no Vue emitter and no
-Vue lane in `pnpm e2e`. No gate `FAIL`s. Ruling: baseline until a Vue lane on an official Vue
-scaffold exists; re-run then. This is a deferral, not a rejection.
+**Rewritten, not amended.** This entry previously read `DEFERRED` at Gates 1, 4 and 6 on the ground
+that Vue was absent from the lockfile and no Vue emitter existed. Every one of those conditions has
+been met — `vue@3.5.40` is in the lockfile at two importers, `packages/frameworks/vue` exists, and
+`pnpm e2e` drives `demos/vue-official` on the `create-vite-extra@5.0.2 template-ssr-vue-ts`
+scaffold — so the procedure was re-run in full by `frameless-vue-v1` T005 and the entry rewritten by
+its T006, as the re-opening section requires. **It ripened into `PASS`.** The `v-slot` limb did not
+travel with it and is now entry 2b.
+
+Baseline: `v-bind:id="x"`, `v-on:click="h"`. Candidate: `:id="x"`, `@click="h"`, always with a
+value.
+
+Domain, in emitter terms — **three** deciding sites, and there are no others in
+`packages/frameworks/vue/src/emitter/index.ts`:
+
+1. every string returned by `eventDirectiveName()` (the sole `v-on` spelling, reached only through
+   `eventAttribute()`);
+2. every dynamic binding printed by `attributesOf()`;
+3. the literal key attribute printed by `renderKeyedRepeat()`.
+
+- **G1 PASS.** Measured, not read, against `vue@3.5.40` / `@vue/compiler-sfc@3.5.40`, the build this
+  repo ships and the same build the browser lane runs (asserted at test time, four ways, by the
+  lane's own M4 test). Both forms produce an **exact empty** diagnostic set — `errors` *and* `tips` —
+  across `ssr × isProd`; template codegen and production `compileScript` output are byte-identical in
+  all four modes; and rendered SSR HTML is byte-identical for all three scenario components with real
+  props. The second arbiter was measured two-sided: `flat/essential` is clean on both forms, while
+  the plugin's own `strongly-recommended` tier flags `vue/v-on-style` and `vue/v-bind-style` on the
+  **baseline** and neither on the candidate. `DEFERRED — framework absent` is no longer available.
+- **G2 PASS.** A spelling inside the emitted template. No import, no plugin, no dependency, no
+  declaration by a parent or child, no build-graph edit. Nothing is asked of any other module.
+- **G3 PASS.** The trigger is the emission site itself — the directive kind the emitter is already
+  printing — never the contents of a handler body or an expression. The Gate 3 rider does not engage,
+  because no content is inspected at all: the sugar applies at three sites unconditionally.
+- **G4 PASS, and structurally rather than by sample.** `@vue/compiler-core@3.5.40`
+  `dist/compiler-core.cjs.js:2435` normalises `:` to `bind` and `@` to `on` inside `ondirname`, at
+  parse time, before any argument or modifier is read; the raw spelling survives only as `rawName`.
+  Equivalence is therefore total over every argument and modifier by construction. The sample
+  confirms it two-sidedly: 19 binding names spanning the emitter's own `ATTRIBUTE_NAME` language and
+  9 event names spanning its own event-name language, each in four modes, zero divergence, with a
+  planted divergent member proving the probe can report one. What lies outside the domain is refused
+  by name rather than emitted silently: `assertPlainAttributeName` already rejects every attribute
+  name beginning `:`, `@`, `#` or `v-`, so no directive can arrive through the static-attribute path,
+  and modifiers are refused at the decision site.
+- **G5 PASS.** Byte-identical generated code in all four modes on both compile paths means there is
+  no consumer-detectable difference to have: not event routing, not initial or default values, not
+  reactivity depth, not throw behaviour, not lifecycle, not the module's exports. The rendered SSR
+  HTML agrees. **Stated so the green is not over-read:** the SSR-HTML arm is *blind* to event
+  routing — the `.stop` control is identical in both SSR modes and differs only in the client
+  modes — so this gate rests on the client codegen identity, and the HTML arm is corroboration, not
+  the proof.
+- **G6 PASS.** `pnpm e2e` drives `demos/vue-official` on its official scaffold at the lockfile
+  version and asserts S1/S2/S3 observations byte-equal to the react, solid, qwik, svelte and angular
+  lanes. `demos/vue-official/package.json` `copy-emitted` copies
+  `packages/frameworks/vue/generated/{S1,S2,S3}.vue` into `src/emitted/` on every `dev` and every
+  `build`, and the three checked-in demo files are byte-identical to the goldens — so the lane drives
+  **the exact emitted text**, not a hand-maintained facsimile. A shorthand that failed to bind would
+  take out the S1 increment, S2 add/toggle/remove and S3 submit observations immediately. The emitted
+  spelling is independently pinned in text by the gate's `require-directive-shorthand` and
+  `baseline-form-inventory` policies, which this ruling required to be **inverted** rather than
+  deleted.
+
+  **What G6 does *not* cover, stated so it is not mistaken for covered:** no behavioural check can
+  distinguish the shorthand from the longhand, because they are behaviourally identical — which is
+  what G1 and G5 measured. A silent revert to longhand would be caught by the gate's text policy
+  alone, and would have zero user-visible consequence. Gate 6 is satisfied here in the sense worked
+  example 8 satisfies it: the *mechanism* the sugar depends on is asserted behaviourally on the lane,
+  and a wrong directive name fails immediately.
+
+All six `PASS` — **sugar**. Adopt `:` and `@`, always with a value.
+
+**The value conjunct is load-bearing, and the reason is a measurement that refuted the Judge's own
+hypothesis.** T005 predicted the flip would *introduce* a version hazard, on the theory that a
+value-less `:x` is Vue 3.4's same-name shorthand while a value-less `v-bind:x` would be an error.
+Measured at 3.5.40: `<span v-bind:count>` and `<span :count>` **both** compile as the 3.4-gated
+same-name shorthand, and `v-on` without an expression is a `SyntaxError` in **both** spellings. The
+hazard is *symmetric and pre-existing*; the flip neither creates nor enlarges it. What it does do is
+expose a latent hole worth closing — the version inventory records these forms at floor `3.0` and
+reads the directive *form*, not whether it carries a value — so the adopting package added a
+standing `directive-carries-value` assertion over emitted output. Recorded here because a Judge
+inventing an asymmetry and then legislating against it is a proxy-for-measurement fault, not a
+finding.
+
+### 2b. Vue — `v-slot` shorthand (`#header`) → **no-sugar**
+
+Split out of worked example 2 by `frameless-vue-v1` T005. It was carried along by the old entry's
+three deferrals; measured separately, it does not share their fate. **A bundled entry is a ruling
+waiting to be wrong about one of its members.**
+
+Baseline: `v-slot:header`. Candidate: `#header`.
+
+- **G1 PASS.** Measured at 3.5.40 alongside 2a, and it is the one gate this limb clears:
+  `<Child><template v-slot:header>…</template></Child>` and the `#header` twin produce byte-identical
+  codegen in all four modes with empty `errors` and `tips`. Planted member `#header` vs `#footer`:
+  divergent, so the comparator can report one. Same `ondirname` normalisation, `#` to `slot`.
+- **G2 PASS.** A spelling inside the emitted template.
+- **G3 PASS.** Structural, not content-based.
+- **G4 UNKNOWN — which is a no.** The Vue emitter **exists**, so `DEFERRED — emitter absent` is
+  discharged and unavailable. There is no deciding function to state a domain against: the emitter
+  has no `v-slot` emission path anywhere, and the IR's slot vocabulary is a single
+  `default-slot-projection` kind (`packages/compiler/src/schema.ts:173`) — IR-3, default slot only.
+  The tempting move is "the domain is empty, so totality is vacuous, so `PASS`". It is refused on
+  this document's own precedent: worked example 7 refused exactly that move, and a vacuous totality
+  is the folklore domain arriving by the back door.
+- **G5 PASS.** No behavioural difference; same normalisation as 2a.
+- **G6 FAIL.** No check can exist for a path the emitter refuses to emit — the same clause worked
+  example 6's `on()` arm and worked example 7 record. The sugar's only justification is an artifact
+  property nothing checks, because there is no artifact.
+
+`FAIL` at Gate 6, `UNKNOWN` at Gate 4: **denied, not deferred.** Say which one decides it: Gate 6
+does, and Gate 4 would deny it independently. **Re-open when IR-3 gains named-slot vocabulary *and*
+the Vue emitter emits a `v-slot`**, at which point all six gates are re-run and 2a's `PASS` does not
+transfer — a measurement is valid for the construct it was taken on.
+
+**The standing lesson this pair adds.** A landed lane discharges exactly two deferrals and it really
+does discharge them: this is the first entry on any board where `DEFERRED` at Gate 1 and Gate 6
+*ripened* into `PASS` rather than curdling into `FAIL`. Worked example 6 curdled; worked example 7
+curdled. The difference is not optimism — it is that the shorthand's whole claim was an
+*equivalence*, and an equivalence is the one kind of claim a lane can settle outright.
 
 ### 3. Vue — declaring a callback prop as a `defineEmits` event → **no-sugar**
 

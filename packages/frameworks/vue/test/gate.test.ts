@@ -117,7 +117,8 @@ describe('Vue dossier gate', () => {
 			VUE_GATE_POLICIES.map((policy) => policy.id).filter((id) => !id.startsWith('eslint:')),
 		).toEqual([
 			'generated-header',
-			'no-directive-shorthand',
+			'require-directive-shorthand',
+			'directive-carries-value',
 			'no-directive-modifier',
 			'no-two-way-binding',
 			'no-typed-props',
@@ -180,36 +181,123 @@ describe('Vue dossier gate', () => {
 	});
 
 	/**
-	 * THE ROW THAT PROTECTS T005'S QUESTION.
+	 * THE ROW THAT HOLDS T005'S RULING IN PLACE, and it is the ONLY instrument in
+	 * this repo that can.
 	 *
-	 * `docs/emitter-idiom-policy.md` worked example 2 rules the shorthands
-	 * DEFERRED. If this emitter shipped `@click`, T005 would be ratifying a fact
-	 * rather than running six gates - and BOTH shorthands compile perfectly
-	 * cleanly, so nothing upstream would object. This policy is the only thing
-	 * standing between the two.
+	 * `docs/emitter-idiom-policy.md` worked example 2a rules the valued shorthands
+	 * **sugar** and T006 adopted them. T005 also MEASURED that the two spellings are
+	 * behaviourally identical - empty diagnostics both ways, byte-identical template
+	 * codegen and production `compileScript` output in all four `ssr x isProd`
+	 * modes, byte-identical SSR HTML - so a silent revert to `v-on:click` would draw
+	 * no complaint from `@vue/compiler-sfc`, from the applied eslint tier, or from
+	 * the six-lane e2e. Reverting the polarity of this policy rather than deleting
+	 * it is what keeps the ruling enforced instead of merely recorded.
 	 */
-	test('MUTATION: rejects the v-on and v-bind shorthands, which compile clean', async () => {
-		const on = mutate(s1, 'v-on:click="', '@click="');
-		expect(await policiesFor('generated/OnShorthandMutant.vue', on)).toContain(
-			'no-directive-shorthand',
+	test('MUTATION: rejects the v-on and v-bind LONGHAND, which compiles clean', async () => {
+		const on = mutate(s1, '@click="', 'v-on:click="');
+		expect(await policiesFor('generated/OnLonghandMutant.vue', on)).toContain(
+			'require-directive-shorthand',
 		);
-		const bind = mutate(s2, 'v-bind:key="todo.id"', ':key="todo.id"');
-		expect(await policiesFor('generated/BindShorthandMutant.vue', bind)).toContain(
-			'no-directive-shorthand',
+		const bind = mutate(s2, ':key="todo.id"', 'v-bind:key="todo.id"');
+		expect(await policiesFor('generated/BindLonghandMutant.vue', bind)).toContain(
+			'require-directive-shorthand',
 		);
 		// Neither draws a single diagnostic from Vue's own compiler, which is the
 		// whole reason a frameless-owned policy has to exist for it.
 		expect(compileDiagnostics(on, 'S1.vue')).toEqual([]);
 		expect(compileDiagnostics(bind, 'S2.vue')).toEqual([]);
 		// TWO INDEPENDENT LINES on each mutant: the inventory reaches the same
-		// spelling as an un-inventoried FORM, from a different authority.
-		expect(await policiesFor('generated/OnShorthandMutant.vue', on)).toContain(
+		// spelling as an un-inventoried FORM, from a different authority. This is the
+		// half that would have been lost if `v-bind`/`v-on` had been left on the
+		// inventory alongside `:`/`@`.
+		expect(await policiesFor('generated/OnLonghandMutant.vue', on)).toContain(
+			'baseline-form-inventory',
+		);
+		expect(await policiesFor('generated/BindLonghandMutant.vue', bind)).toContain(
 			'baseline-form-inventory',
 		);
 	});
 
+	/**
+	 * THE OTHER DIRECTION. A gate that only fires one way is half a gate: a policy
+	 * that rejects the longhand while accepting ANY shorthand would let through the
+	 * two forms worked example 2a explicitly does not cover - `#header`, which 2b
+	 * ruled DENIED, and `.foo="x"`, which pre-seeds a `prop` modifier inside
+	 * `ondirname` and was never named by any entry.
+	 */
+	test('MUTATION: rejects a shorthand OUTSIDE the adopted pair - # and .', async () => {
+		const slot = mutate(
+			s2,
+			'<li v-for="todo in todos"',
+			'<li v-for="todo in todos" #row="row"',
+		);
+		const slotViolations = await violationsFor('generated/SlotShorthandMutant.vue', slot);
+		expect(slotViolations.map((entry) => entry.policy)).toContain(
+			'require-directive-shorthand',
+		);
+		expect(
+			slotViolations.find((entry) => entry.policy === 'require-directive-shorthand')?.message,
+		).toContain('worked example 2b');
+		const prop = mutate(s3, ':checked="checked"', '.checked="checked"');
+		const propViolations = await violationsFor('generated/PropShorthandMutant.vue', prop);
+		expect(propViolations.map((entry) => entry.policy)).toContain(
+			'require-directive-shorthand',
+		);
+		// Vue's own compiler is silent on the `.prop` shorthand, so nothing upstream
+		// separates it from the adopted `:`.
+		expect(compileDiagnostics(prop, 'S3.vue')).toEqual([]);
+	});
+
+	/**
+	 * THE CONJUNCT NEITHER SPELLING POLICY CAN SEE, because both read the directive
+	 * FORM and not whether it carries a value.
+	 *
+	 * MEASURED at 3.5.40 by T005 (M-G, a hypothesis that Judge held and refuted):
+	 * a value-less `:count` and a value-less `v-bind:count` BOTH compile as Vue
+	 * 3.4's same-name shorthand, and a value-less `v-on` errors in both spellings.
+	 * The hazard is SYMMETRIC and pre-existing - the adoption neither created nor
+	 * enlarged it - so this policy asserts the emitter cannot produce one rather
+	 * than repairing anything.
+	 */
+	test('MUTATION: rejects a VALUE-LESS shorthand, the 3.4-gated same-name form', async () => {
+		const mutant = mutate(s2, ':key="todo.id"', ':key');
+		const violations = await violationsFor('generated/ValuelessBindMutant.vue', mutant);
+		expect(violations.map((entry) => entry.policy)).toContain('directive-carries-value');
+		expect(
+			violations.find((entry) => entry.policy === 'directive-carries-value')?.message,
+		).toContain('same-name shorthand');
+		// THE POINT OF THE ROW: every OTHER policy is happy. The form is `:`, which
+		// is inventoried; the spelling is the adopted shorthand; and Vue's own
+		// compiler emits an exact empty diagnostic set, because 3.4 made this legal.
+		expect(compileDiagnostics(mutant, 'S2.vue')).toEqual([]);
+		expect(violations.map((entry) => entry.policy)).not.toContain('baseline-form-inventory');
+		expect(violations.map((entry) => entry.policy)).not.toContain(
+			'require-directive-shorthand',
+		);
+		// The longhand twin of the same hazard, recorded so the symmetry T005
+		// measured is asserted rather than described.
+		const longhand = mutate(s2, ':key="todo.id"', 'v-bind:key');
+		expect(await policiesFor('generated/ValuelessLonghandMutant.vue', longhand)).toContain(
+			'directive-carries-value',
+		);
+	});
+
+	test('ANTI-VACUITY: directive-carries-value accepts the value-less v-else it must', async () => {
+		// If this policy were "every directive needs an expression" the clean corpus
+		// would already be red - S1 ships `v-else`, which takes no value at all - and
+		// the rows above would be measuring the mutant rather than the policy. The
+		// allowlist is fail-closed: `v-else` is its only member, so a value-less
+		// directive it does not name is still a violation.
+		expect(s1).toContain('<section v-else data-scenario="s1">');
+		expect(await policiesFor('generated/S1.vue', s1)).not.toContain('directive-carries-value');
+		const once = mutate(s1, '<section v-else', '<section v-else v-once');
+		expect(await policiesFor('generated/OnceMutant.vue', once)).toContain(
+			'directive-carries-value',
+		);
+	});
+
 	test('MUTATION: rejects a v-on modifier, and upstream agrees on an unknown one', async () => {
-		const mutant = mutate(s3, 'v-on:click="(event) => {\n\t\t\tif', 'v-on:click.badmod="(event) => {\n\t\t\tif');
+		const mutant = mutate(s3, '@click="(event) => {\n\t\t\tif', '@click.badmod="(event) => {\n\t\t\tif');
 		const violations = await violationsFor('generated/ModifierMutant.vue', mutant);
 		expect(violations.map((entry) => entry.policy)).toContain('no-directive-modifier');
 		// THE "COMPILES CLEAN AND IS WRONG" CLASS, measured: `@vue/compiler-sfc`
@@ -221,7 +309,7 @@ describe('Vue dossier gate', () => {
 	});
 
 	test('MUTATION: rejects v-model and defineEmits, which IR-1 and IR-2 do not support', async () => {
-		const model = mutate(s3, 'v-bind:value="text"', 'v-model="text"');
+		const model = mutate(s3, ':value="text"', 'v-model="text"');
 		expect(await policiesFor('generated/ModelMutant.vue', model)).toContain(
 			'no-two-way-binding',
 		);
@@ -455,9 +543,9 @@ describe('MUTATION: baseline-form-inventory (IR-4)', () => {
 			'TEXT',
 		].map((form) => ({ kind: 'template-node', form }));
 		expect(collectEmittedForms(s1)).toEqual([
+			{ kind: 'directive', form: '@' },
 			{ kind: 'directive', form: 'v-else' },
 			{ kind: 'directive', form: 'v-if' },
-			{ kind: 'directive', form: 'v-on' },
 			{ kind: 'import', form: 'vue#computed' },
 			{ kind: 'import', form: 'vue#ref' },
 			{ kind: 'macro', form: 'defineProps' },
@@ -465,10 +553,10 @@ describe('MUTATION: baseline-form-inventory (IR-4)', () => {
 			...nodes,
 		]);
 		expect(collectEmittedForms(s2)).toEqual([
-			{ kind: 'directive', form: 'v-bind' },
+			{ kind: 'directive', form: ':' },
+			{ kind: 'directive', form: '@' },
 			{ kind: 'directive', form: 'v-for' },
 			{ kind: 'directive', form: 'v-if' },
-			{ kind: 'directive', form: 'v-on' },
 			{ kind: 'import', form: 'vue#computed' },
 			{ kind: 'import', form: 'vue#ref' },
 			{ kind: 'macro', form: 'defineProps' },
@@ -476,8 +564,8 @@ describe('MUTATION: baseline-form-inventory (IR-4)', () => {
 			...nodes,
 		]);
 		expect(collectEmittedForms(s3)).toEqual([
-			{ kind: 'directive', form: 'v-bind' },
-			{ kind: 'directive', form: 'v-on' },
+			{ kind: 'directive', form: ':' },
+			{ kind: 'directive', form: '@' },
 			{ kind: 'import', form: 'vue#ref' },
 			{ kind: 'macro', form: 'defineProps' },
 			...blocks,
@@ -538,15 +626,28 @@ describe('MUTATION: baseline-form-inventory (IR-4)', () => {
 		).toContain('style');
 	});
 
-	test('rejects a shorthand as a distinct FORM, not as the directive it resolves to', async () => {
+	test('rejects a spelling as a distinct FORM, not as the directive it resolves to', async () => {
 		// `:key` and `v-bind:key` are the SAME directive to Vue's parser - `name` is
-		// `bind` for both. They are not the same form here, because choosing between
-		// them is exactly the emission-site decision worked example 2 defers.
-		const mutant = mutate(s2, 'v-bind:key="todo.id"', ':key="todo.id"');
-		const violations = await violationsFor('generated/ShorthandFormMutant.vue', mutant);
+		// `bind` for both, normalised inside `ondirname` at parse time. They are not
+		// the same form here, because choosing between them is exactly the
+		// emission-site decision worked example 2a rules, and `rawName` is what keeps
+		// them apart. Since T006 adopted the shorthand it is the LONGHAND that is
+		// off-inventory.
+		const reverted = mutate(s2, ':key="todo.id"', 'v-bind:key="todo.id"');
 		expect(
-			violations.find((entry) => entry.policy === 'baseline-form-inventory')?.message,
-		).toContain('":"');
+			(await violationsFor('generated/LonghandFormMutant.vue', reverted)).find(
+				(entry) => entry.policy === 'baseline-form-inventory',
+			)?.message,
+		).toContain('"v-bind"');
+		// And the `.prop` shorthand, which resolves to `bind` just as `:` does, is a
+		// third form again - so the inventory is keyed on the spelling and not on
+		// what the spelling means.
+		const prop = mutate(s3, ':checked="checked"', '.checked="checked"');
+		expect(
+			(await violationsFor('generated/PropFormMutant.vue', prop)).find(
+				(entry) => entry.policy === 'baseline-form-inventory',
+			)?.message,
+		).toContain('"."');
 	});
 
 	test('every recorded floor is a claim with an evidence status attached to it', async () => {
@@ -649,7 +750,7 @@ describe('third-party arbiter: eslint-plugin-vue', () => {
 	 * `svelte/require-each-key` and of defect 1's `no-async-prevent-default`.
 	 */
 	test('RED: vue/require-v-for-key catches an unkeyed v-for that compiles clean', async () => {
-		const mutant = mutate(s2, ' v-bind:key="todo.id"', '');
+		const mutant = mutate(s2, ' :key="todo.id"', '');
 		expect(compileDiagnostics(mutant, 'S2.vue')).toEqual([]);
 		expect(await eslintMessagesFor('generated/VForKeyMutant.vue', mutant)).toEqual([
 			{
@@ -678,7 +779,7 @@ describe('third-party arbiter: eslint-plugin-vue', () => {
 		// separate markup implementation of the same thing, which allowInlineConfig
 		// does NOT reach - is in the omission list. A gate over GENERATED output
 		// whose verdict the generator can turn off is not a gate.
-		const mutant = mutate(s2, ' v-bind:key="todo.id"', '');
+		const mutant = mutate(s2, ' :key="todo.id"', '');
 		for (const suppression of [
 			'<!-- eslint-disable vue/require-v-for-key -->',
 			'<!-- eslint-disable -->',
@@ -757,10 +858,43 @@ describe('third-party arbiter: eslint-plugin-vue', () => {
 			expect(tier.reason.length, tier.tier).toBeGreaterThan(200);
 		}
 		// The two that decide the exclusion, named so the reason cannot quietly
-		// become "we did not like the noise": one would break the observable, the
-		// other would pre-empt a ruling this task does not own.
+		// become "we did not like the noise". BOTH would break the observable: under
+		// whitespace:'condense' they turn <button>increment</button> into
+		// <button> increment </button>, which is the text the e2e lane asserts equal
+		// across six frameworks.
 		const strongly = VUE_ESLINT_TIERS_EXCLUDED[0]!;
 		expect(strongly.firesOnCorpus).toContain('vue/singleline-html-element-content-newline');
-		expect(strongly.firesOnCorpus).toContain('vue/v-on-style');
+		expect(strongly.firesOnCorpus).toContain('vue/multiline-html-element-content-newline');
+		// AND THE TWO THAT NO LONGER FIRE, asserted as an absence rather than left to
+		// be inferred from a list. vue/v-on-style and vue/v-bind-style demand the @
+		// and : shorthands and reported against the shipped LONGHAND until worked
+		// example 2a ruled them sugar and T006 adopted them. The exclusion stands on
+		// the six rules above; these two passing is not a reason to adopt the tier,
+		// and this row is what stops that inference from being made silently.
+		for (const tier of VUE_ESLINT_TIERS_EXCLUDED) {
+			expect(tier.firesOnCorpus, tier.tier).not.toContain('vue/v-on-style');
+			expect(tier.firesOnCorpus, tier.tier).not.toContain('vue/v-bind-style');
+		}
+		// CALIBRATION for that absence: both rules are still SHIPPED by the tier and
+		// are still capable of firing - they are satisfied, not missing. A reverted
+		// spelling brings them straight back, which is what makes the absence a
+		// measurement rather than an upstream removal nobody noticed.
+		const reverted = mutate(s2, ':key="todo.id"', 'v-bind:key="todo.id"');
+		const stronglyEslint = new ESLint({
+			cwd: packageRoot,
+			overrideConfigFile: true,
+			allowInlineConfig: false,
+			overrideConfig: [
+				...((vuePlugin as unknown as { configs: Record<string, unknown[]> }).configs[
+					'flat/strongly-recommended'
+				] as never[]),
+			],
+		});
+		const [result] = await stronglyEslint.lintText(reverted, {
+			filePath: resolve(packageRoot, 'generated/S2.vue'),
+		});
+		expect((result?.messages ?? []).map((message) => message.ruleId)).toContain(
+			'vue/v-bind-style',
+		);
 	});
 });

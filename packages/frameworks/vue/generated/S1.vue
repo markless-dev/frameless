@@ -15,7 +15,7 @@
 			<output data-value="derived">{{ derived }}</output>
 			<button
 				data-action="increment"
-				v-on:click="() => {
+				@click="() => {
 					count++;
 					onTrace('change', { count });
 				}"

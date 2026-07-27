@@ -10,7 +10,7 @@
 <template>
 	<form
 		data-scenario="s3"
-		v-on:click="(event) => {
+		@click="(event) => {
 			if (event.target.dataset.action === 'submit') {
 				onTrace('bubble', { source: 'form' }, event);
 			}
@@ -18,8 +18,8 @@
 	>
 		<input
 			data-action="text"
-			v-bind:value="text"
-			v-on:input="(event) => {
+			:value="text"
+			@input="(event) => {
 				text = event.currentTarget.value;
 				onTrace('text', { value: event.currentTarget.value }, event);
 			}"
@@ -27,8 +27,8 @@
 		<input
 			type="checkbox"
 			data-action="checked"
-			v-bind:checked="checked"
-			v-on:change="(event) => {
+			:checked="checked"
+			@change="(event) => {
 				checked = event.currentTarget.checked;
 				onTrace('checked', { checked: event.currentTarget.checked }, event);
 			}"
@@ -36,7 +36,7 @@
 		<button
 			type="button"
 			data-action="submit"
-			v-on:click="(event) => {
+			@click="(event) => {
 				event.preventDefault();
 				writes = 1;
 				writes = 2;
@@ -46,7 +46,7 @@
 		<button
 			type="submit"
 			data-action="cancel-submit"
-			v-on:click="(event) => {
+			@click="(event) => {
 				event.preventDefault();
 			}"
 		>cancel-submit</button>
@@ -55,7 +55,7 @@
 		<details data-cancel="guarded">
 			<summary
 				data-action="cancel-open"
-				v-on:click="(event) => {
+				@click="(event) => {
 					if (event.detail === 1) {
 						event.preventDefault();
 					}
@@ -65,7 +65,7 @@
 		<details data-cancel="unguarded">
 			<summary
 				data-action="allow-open"
-				v-on:click="(event) => {
+				@click="(event) => {
 					if (event.detail === 2) {
 						event.preventDefault();
 					}

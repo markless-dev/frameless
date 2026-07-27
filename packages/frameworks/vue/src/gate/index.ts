@@ -7,9 +7,14 @@ import type { EnrichedIR } from '@frameless/compiler';
 import { dirname, normalize, relative, resolve } from 'pathe';
 
 export type DossierRef =
-	// SFC with <script setup>, no lang="ts", LONGHAND v-bind:/v-on:, and BOTH
-	// arbiters - @vue/compiler-sfc and eslint-plugin-vue.
+	// SFC with <script setup>, no lang="ts", and BOTH arbiters - @vue/compiler-sfc
+	// and eslint-plugin-vue. The directive SPELLING was this ruling's until T005
+	// re-ran worked example 2; it now belongs to the entry below.
 	| 'frameless-vue-v1 T002 ruling 2'
+	// docs/emitter-idiom-policy.md worked example 2a: v-bind/v-on shorthands WITH A
+	// VALUE are sugar, all six gates PASS. 2b (v-slot / #header) is DENIED and has
+	// no emitter path. Adopted by frameless-vue-v1 T006.
+	| 'frameless-vue-v1 T005 shorthand ruling (worked example 2a)'
 	// IR-8: the IR carries no prop type field, so a type would have to be invented
 	// from expression contents. Gate 3 and Gate 4 both forbid that.
 	| 'frameless-vue-v1 T002 ruling 3 (IR-8)'
@@ -102,14 +107,24 @@ export type ExcludedEslintTier = {
  * is also MEASURED rather than argued: the `firesOnCorpus` lists below are the
  * exact rule ids each tier reports on the shipped S1/S2/S3, and two of them would
  * not merely be noisy - they would break the observable this board exists to
- * protect, and one of them would pre-empt a ruling that is not this task's to
- * make.
+ * protect.
+ *
+ * THE LISTS SHRANK FROM EIGHT IDS TO SIX, and the reason belongs here rather than
+ * only in the rows. `vue/v-on-style` and `vue/v-bind-style` demand the `@` and `:`
+ * shorthands and fired against the shipped longhand for as long as this gate has
+ * existed. `frameless-vue-v1` T005 put that datum through all six gates of
+ * `docs/emitter-idiom-policy.md` - a rule in a READABILITY tier, against output
+ * that compiles with an exact empty diagnostic set, is candidate sugar and not a
+ * forced-lowering trigger - ruled the valued shorthands SUGAR, and T006 adopted
+ * them. Both rules are now satisfied. THAT IS NOT A REASON TO ADOPT THE TIER: the
+ * exclusion never rested on them, and the two content-newline rules, which would
+ * break the cross-lane text observation outright, still decide it on their own.
  */
 export const VUE_ESLINT_TIERS_EXCLUDED: readonly ExcludedEslintTier[] = [
 	{
 		tier: 'flat/strongly-recommended',
 		reason:
-			'THE PLUGIN\'S OWN "Priority B: strongly recommended for improving readability" tier, and on this corpus every rule it adds is either a formatting rule or a rule that contradicts a ruling this task does not own. vue/singleline-html-element-content-newline and vue/multiline-html-element-content-newline demand a line break between a tag and its text content, which MEASURED at 3.5.40 under whitespace:\'condense\' turns <button>increment</button> into <button> increment </button> - they would BREAK the text observation the e2e lane asserts equal across five frameworks. vue/v-on-style and vue/v-bind-style demand the @ and : shorthands, which docs/emitter-idiom-policy.md worked example 2 rules DEFERRED and frameless-vue-v1 T005 re-runs; adopting them here would hand T005 a fait accompli to ratify. vue/require-prop-types demands the prop types the IR does not carry (IR-8, deferred by T002 ruling 3). vue/html-indent demands spaces where this repository indents with tabs. vue/html-self-closing demands <input/> where the emitter emits the standard void-element <input>.',
+			'THE PLUGIN\'S OWN "Priority B: strongly recommended for improving readability" tier, and on this corpus every rule it still reports is a formatting rule. vue/singleline-html-element-content-newline and vue/multiline-html-element-content-newline demand a line break between a tag and its text content, which MEASURED at 3.5.40 under whitespace:\'condense\' turns <button>increment</button> into <button> increment </button> - they would BREAK the text observation the e2e lane asserts equal across six frameworks, and they are what carries this exclusion. vue/require-prop-types demands the prop types the IR does not carry (IR-8, deferred by T002 ruling 3). vue/html-indent demands spaces where this repository indents with tabs. vue/html-self-closing demands <input/> where the emitter emits the standard void-element <input>. vue/max-attributes-per-line is pure layout. WHAT IS NO LONGER IN THIS LIST, recorded because its absence is a measurement and not an omission: vue/v-on-style and vue/v-bind-style demand the @ and : shorthands and fired against the SHIPPED LONGHAND until frameless-vue-v1 T005 ruled the valued shorthands SUGAR on all six gates and T006 adopted them; the emitter now satisfies both, so they are silent. That is NOT a reason to adopt the tier - the exclusion never rested on them, and the two content-newline rules alone still decide it.',
 		firesOnCorpus: [
 			'vue/html-indent',
 			'vue/html-self-closing',
@@ -117,14 +132,12 @@ export const VUE_ESLINT_TIERS_EXCLUDED: readonly ExcludedEslintTier[] = [
 			'vue/multiline-html-element-content-newline',
 			'vue/require-prop-types',
 			'vue/singleline-html-element-content-newline',
-			'vue/v-bind-style',
-			'vue/v-on-style',
 		],
 	},
 	{
 		tier: 'flat/recommended',
 		reason:
-			'The "Priority C: recommended, minimising arbitrary choices and cognitive overhead" tier, and it is a SUPERSET of flat/strongly-recommended - so excluding it follows from the row above rather than from anything it adds on its own. Measured on the shipped corpus it reports exactly the same eight rule ids: the eight rules it adds (vue/attributes-order, vue/block-order, vue/no-lone-template, vue/no-multiple-slot-args, vue/no-required-prop-with-default, vue/no-v-html, vue/order-in-components, vue/this-in-template) are all silent on emitted output today. Recorded so that a later rule arriving in this tier and firing is a red test here rather than an unexamined exclusion.',
+			'The "Priority C: recommended, minimising arbitrary choices and cognitive overhead" tier, and it is a SUPERSET of flat/strongly-recommended - so excluding it follows from the row above rather than from anything it adds on its own. Measured on the shipped corpus it reports exactly the same six rule ids: the eight rules it adds (vue/attributes-order, vue/block-order, vue/no-lone-template, vue/no-multiple-slot-args, vue/no-required-prop-with-default, vue/no-v-html, vue/order-in-components, vue/this-in-template) are all silent on emitted output today. The list dropped from eight ids to six for the same reason the row above did - vue/v-on-style and vue/v-bind-style stopped firing once T006 adopted the shorthands - and this row inherits that verdict rather than restating it. Recorded so that a later rule arriving in this tier and firing is a red test here rather than an unexamined exclusion.',
 		firesOnCorpus: [
 			'vue/html-indent',
 			'vue/html-self-closing',
@@ -132,8 +145,6 @@ export const VUE_ESLINT_TIERS_EXCLUDED: readonly ExcludedEslintTier[] = [
 			'vue/multiline-html-element-content-newline',
 			'vue/require-prop-types',
 			'vue/singleline-html-element-content-newline',
-			'vue/v-bind-style',
-			'vue/v-on-style',
 		],
 	},
 ];
@@ -242,7 +253,14 @@ const ESLINT_POLICIES = VUE_ESLINT_RULES_APPLIED.map((rule) => ({
 
 export const VUE_GATE_POLICIES = [
 	{ id: 'generated-header', dossierRef: 'frameless-vue-v1 T002 ruling 2' },
-	{ id: 'no-directive-shorthand', dossierRef: 'frameless-vue-v1 T002 ruling 2' },
+	{
+		id: 'require-directive-shorthand',
+		dossierRef: 'frameless-vue-v1 T005 shorthand ruling (worked example 2a)',
+	},
+	{
+		id: 'directive-carries-value',
+		dossierRef: 'frameless-vue-v1 T005 shorthand ruling (worked example 2a)',
+	},
 	{ id: 'no-directive-modifier', dossierRef: 'frameless-vue-v1 T002 ruling 5 (IR-5)' },
 	{ id: 'no-two-way-binding', dossierRef: 'frameless-vue-v1 T002 ruling 5 (IR-1/IR-2)' },
 	{ id: 'no-typed-props', dossierRef: 'frameless-vue-v1 T002 ruling 3 (IR-8)' },
@@ -548,6 +566,9 @@ const SCRIPT_SETUP_FLOOR_REASON =
 const DIRECTIVE_FLOOR_REASON =
 	'The directive predates Vue 3 entirely and its longhand spelling is unchanged by it, so 3.0 is a safe lower bound rather than a tight one. Nothing in the resolved package dates it.';
 
+const SHORTHAND_FLOOR_REASON =
+	'The ":" and "@" shorthands predate Vue 3 entirely, so 3.0 is a safe lower bound rather than a tight one - the same footing the v-bind/v-on longhand rows sat on before worked example 2a replaced them. compiler-core@3.5.40 dist/compiler-core.cjs.js:2435 normalises ":" to bind and "@" to on inside ondirname at parse time, which proves the EQUIVALENCE and dates nothing: it is the code as shipped at the pin, not a record of the version the spelling arrived in. Nothing in the resolved package dates either spelling, so this floor is recorded unverified exactly as the longhand ones were, and upgrading it would be recording a floor nobody verified.';
+
 const TEMPLATE_NODE_FLOOR_REASON =
 	'A parse-tree node kind of the Vue 3 template compiler, present for the whole Vue 3 line, so 3.0 is a safe lower bound rather than a tight one. The number-to-name mapping is this gate\'s own; the resolved package dates neither the kind nor the numbering.';
 
@@ -585,12 +606,26 @@ export const BASELINE_FORM_INVENTORY: readonly BaselineForm[] = [
 		floor: '3.0',
 		evidence: { status: 'unverified', reason: RUNTIME_IMPORT_FLOOR_REASON },
 	},
-	...(['v-if', 'v-else', 'v-for', 'v-bind', 'v-on'] as const).map(
+	...(['v-if', 'v-else', 'v-for'] as const).map(
 		(form): BaselineForm => ({
 			kind: 'directive',
 			form,
 			floor: '3.0',
 			evidence: { status: 'unverified', reason: DIRECTIVE_FLOOR_REASON },
+		}),
+	),
+	// `:` and `@` REPLACE the `v-bind` and `v-on` rows this list used to carry.
+	// The inventory is an allowlist of every form the emitter MAY put in its
+	// output, so leaving the longhands on it after worked example 2a's adoption
+	// would permit a form no emission site can produce - a silent widening in the
+	// other direction, and one that would cost a longhand regression its second
+	// independent detector.
+	...(['@', ':'] as const).map(
+		(form): BaselineForm => ({
+			kind: 'directive',
+			form,
+			floor: '3.0',
+			evidence: { status: 'unverified', reason: SHORTHAND_FLOOR_REASON },
 		}),
 	),
 	...(
@@ -625,11 +660,13 @@ export type ObservedForm = {
  * The DIRECTIVE form as SPELLED, not as resolved.
  *
  * `v-bind:key` and `:key` are the same directive to Vue's parser - `name` is
- * `bind` for both - and they are NOT the same form to this inventory, because
- * choosing between them is the emission-site decision `docs/emitter-idiom-policy.md`
- * worked example 2 defers. Reading `rawName` is what keeps the two apart, so the
- * shorthand arrives here as the un-inventoried form `:` rather than as an
- * accepted `v-bind`.
+ * `bind` for both, normalised inside `ondirname` at parse time - and they are NOT
+ * the same form to this inventory, because choosing between them is the
+ * emission-site decision `docs/emitter-idiom-policy.md` worked example 2a rules.
+ * Reading `rawName` is what keeps the two apart. Since T006 adopted the shorthand
+ * the polarity is reversed: `:` and `@` are the inventoried forms and a reverted
+ * `v-bind:key` arrives here as the un-inventoried form `v-bind`, independently of
+ * `require-directive-shorthand` reaching the same verdict from the other side.
  */
 function directiveForm(directive: Node): string {
 	const raw = String(directive.rawName ?? `v-${String(directive.name)}`);
@@ -852,20 +889,95 @@ function condenseViolations(file: string, parsed: Parsed): GateViolation[] {
 	return violations;
 }
 
+/**
+ * THE TWO SPELLINGS WORKED EXAMPLE 2a ADOPTED, keyed by the directive `name`
+ * Vue's parser normalises to.
+ *
+ * Read off `@vue/compiler-core@3.5.40` `dist/compiler-core.cjs.js:2435`, inside
+ * `ondirname`, verbatim:
+ *
+ *   const name = raw === "." || raw === ":" ? "bind" : raw === "@" ? "on"
+ *     : raw === "#" ? "slot" : raw.slice(2);
+ *
+ * `.` is deliberately NOT here even though it also normalises to `bind`: it
+ * pre-seeds a `prop` modifier, so it is a fourth form carrying extra semantics,
+ * and `#`/`slot` is worked example 2b, ruled DENIED.
+ */
+const SHORTHAND_FOR: Readonly<Record<string, string | undefined>> = { bind: ':', on: '@' };
+
+/**
+ * The directives that are legitimately value-less, as a FAIL-CLOSED allowlist.
+ *
+ * `v-else` is the only member the emitter produces, and it takes no expression at
+ * all. Everything else is required to carry one, so a value-less directive this
+ * list does not name is a violation rather than a silent pass - including a
+ * value-less `:x`, which is Vue 3.4's same-name shorthand and is exactly the
+ * construct `directive-carries-value` exists to keep out.
+ */
+const DIRECTIVES_WITHOUT_A_VALUE = new Set(['else']);
+
+/**
+ * THE POLICIES THAT PIN THE EMITTED DIRECTIVE SPELLING, and the reason there are
+ * three of them rather than one.
+ *
+ * `frameless-vue-v1` T005 MEASURED that no behavioural check can distinguish the
+ * shorthand from the longhand, because they are behaviourally identical - empty
+ * diagnostics, byte-identical codegen in all four modes, byte-identical SSR HTML.
+ * A silent revert to `v-on:click` would have zero user-visible consequence and
+ * draw no complaint from `@vue/compiler-sfc`, from `eslint-plugin-vue`'s applied
+ * tier, or from the six-lane e2e. These text policies are therefore the ONLY
+ * thing holding the adopted form, which is why worked example 2a required the
+ * shorthand policy to be INVERTED rather than deleted.
+ *
+ * `require-directive-shorthand` pins the spelling in BOTH directions - a longhand
+ * is a violation and so is a shorthand outside the adopted pair - and
+ * `baseline-form-inventory` reaches the same two spellings independently, as
+ * FORMS, from a different authority. `directive-carries-value` covers the
+ * conjunct neither of them can see, because both read the form and not whether it
+ * carries a value.
+ */
 function directiveViolations(file: string, parsed: Parsed): GateViolation[] {
 	const violations: GateViolation[] = [];
 	for (const directive of parsed.directives) {
 		const raw = String(directive.rawName ?? `v-${String(directive.name)}`);
 		const line = lineOfTemplate(directive);
-		if (!raw.startsWith('v-'))
+		// THE SPELLING IS READ OFF `rawName`, NOT off `name`, and that is the whole
+		// mechanism. `:` and `.` BOTH normalise to `name === 'bind'` inside
+		// `ondirname`, so a policy keyed on `name` would accept `.foo="x"` as if it
+		// were the adopted `:foo="x"`. `rawName` is the only field that survives the
+		// normalisation.
+		const shorthand = SHORTHAND_FOR[String(directive.name)];
+		if (raw.startsWith('v-')) {
+			if (shorthand)
+				violations.push(
+					violation(
+						file,
+						'require-directive-shorthand',
+						`Emitted Vue source uses the directive longhand ${JSON.stringify(raw)}; docs/emitter-idiom-policy.md worked example 2a rules the VALUED v-bind and v-on shorthands SUGAR on all six gates and frameless-vue-v1 T006 adopted them at all three emission sites, so the emitted spelling is ${JSON.stringify(shorthand)}. Nothing upstream can see this: the two spellings are BEHAVIOURALLY IDENTICAL - measured byte-identical template codegen and production compileScript output in all four ssr x isProd modes, and byte-identical SSR HTML - so this text policy is the only thing pinning the form`,
+						line,
+					),
+				);
+		} else if (raw.slice(0, 1) !== shorthand)
 			violations.push(
 				violation(
 					file,
-					'no-directive-shorthand',
-					`Emitted Vue source uses the directive shorthand ${JSON.stringify(raw)}; docs/emitter-idiom-policy.md worked example 2 rules the v-bind/v-on/v-slot shorthands DEFERRED and frameless-vue-v1 T005 is the task that re-runs its six gates, so emitting one here would hand that ruling a fait accompli`,
+					'require-directive-shorthand',
+					`Emitted Vue source uses the directive shorthand ${JSON.stringify(raw)}, which is not one of the two forms worked example 2a adopted. The v-slot shorthand "#" is worked example 2b, ruled DENIED - G4 UNKNOWN, because there is no deciding function and the IR's only slot kind is default-slot-projection (IR-3), and G6 FAIL, because no check can exist for a path the emitter refuses to emit. The prop shorthand "." resolves to the SAME directive name as ":" and is told apart only by rawName: ondirname pre-seeds a prop modifier for it, which makes it a fourth form carrying extra semantics that no ruling covers`,
 					line,
 				),
 			);
+		if (!DIRECTIVES_WITHOUT_A_VALUE.has(String(directive.name))) {
+			const exp = directive.exp as Node | undefined;
+			if (!exp || String(exp.content ?? '').trim().length === 0)
+				violations.push(
+					violation(
+						file,
+						'directive-carries-value',
+						`Emitted Vue source uses ${JSON.stringify(raw)} WITHOUT A VALUE. Worked example 2a adopts the shorthands WITH A VALUE only, and the value-less spelling is a separate, version-gated construct no other policy here can see: MEASURED at 3.5.40, a value-less ":count" and a value-less "v-bind:count" BOTH compile as Vue 3.4's same-name shorthand, which baseline-form-inventory accepts at its recorded floor of 3.0 because it reads the directive FORM and not whether it carries a value; a value-less v-on is a hard syntax error in both spellings. The hazard is symmetric and pre-existing, and this policy asserts that it cannot arrive rather than repairing it`,
+						line,
+					),
+				);
+		}
 		const modifiers = ((directive.modifiers ?? []) as Array<Node | string>).map((modifier) =>
 			String((modifier as Node)?.content ?? modifier),
 		);
@@ -874,7 +986,7 @@ function directiveViolations(file: string, parsed: Parsed): GateViolation[] {
 				violation(
 					file,
 					'no-directive-modifier',
-					`Emitted Vue source uses the directive modifier(s) ${modifiers.join(', ')} on ${raw}; IR-5 declares two actions and they are emitted as ordinary in-body statements, and the modifier surface is worked example 2's question for T005 rather than this emitter's`,
+					`Emitted Vue source uses the directive modifier(s) ${modifiers.join(', ')} on ${raw}; IR-5 declares two actions and they are emitted as ordinary in-body statements, and worked example 2a covers the ":" and "@" shorthands WITH A VALUE only - the modifier surface is explicitly outside it`,
 					line,
 				),
 			);
