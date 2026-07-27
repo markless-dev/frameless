@@ -133,6 +133,23 @@ two. The distinct shape that row's name promises was never written.
   in a table build the same mutant. It would fail today on these three, which is
   why it belongs to whoever adjudicates them rather than to this package.
 
+> **T021 correction, recorded 2026-07-27.** The sentence above — "the distinct
+> shape that row's name promises was never written" — is an **over-read, and this
+> note is where it originated.** The twin at `gate.test.ts:588-595` injects
+> `for (const listener of countListeners) listener();`, which *is* direct listener
+> iteration. Four rows covered three distinct shapes; no name promised anything
+> unwritten, and writing "the direct shape" would have produced a *third*
+> near-duplicate. The genuinely uncovered notify shape was `.forEach(cb)` —
+> `custom-policies.ts:1133-1152`, exercised by nothing in either corpus. T023
+> rewrote all three rows accordingly, so the table above names rows that no longer
+> exist; it is kept as the audit trail, not as a description of the current file.
+>
+> This note's own scan also had a blind spot of exactly the kind Rule 4 names: it
+> compared **mutants** and so could not see that row **names** collide too
+> (`dynamic computed-member setter` twice, with distinct mutants). A colliding name
+> is a colliding vitest title, and a red under a duplicated title cannot be
+> attributed to a row. Hence rule 5 below.
+
 ### Finding 4 — the constructors themselves were uncalibrated in two of three corpora
 
 T007's Rule 3 is two-sided calibration for harnesses. T008 shipped one for
@@ -167,7 +184,7 @@ function mutateAll(source: string, search: string, replacement: string): string 
 }
 ```
 
-Four properties a new adapter corpus must preserve:
+Five properties a new adapter corpus must preserve:
 
 1. **Assert the output, not the search.** `mutated !== source` is the property
    the row depends on. A search that matched but rewrote the text to itself is a
@@ -184,6 +201,36 @@ Four properties a new adapter corpus must preserve:
 4. **Calibrate the constructor and the base fixture.** A helper nobody has
    watched fail is not evidence that it can fail, and a mutant assertion is
    evidence only against a fixture proven clean.
+5. **A mutation *table* carries the no-duplicate name/mutant invariant from the
+   day it has two rows.** Not from the day someone notices; the React table went
+   ~7 months and 47 rows before an audit found three half-finished copies, and the
+   scan that found them was itself blind to a fourth class. Two independent keys,
+   because each catches what the other cannot:
+   - **Name.** `test.each(table)('rejects the %s bypass mutation')` makes the row
+     name the vitest title, so two rows sharing a name produce two identically
+     titled verdicts and a red cannot be attributed to a row. Mutant-keyed scans
+     are structurally blind to this.
+   - **Mutant *and its asserted policy*, as one key.** Two rows building the same
+     mutant against **different** policies are not a duplicate — they are two
+     independent detectors on one bypass shape, and dropping either loses a
+     detector assertion. React's `index key AST` / `index key plugin` pair is
+     exactly that and is deliberate. Key on the mutant alone and the invariant
+     fires on a legitimate row, which forces the suppression list that would
+     hollow it out. Key on the pair and it still catches every half-finished copy,
+     since a copied row copies its policy too.
+
+   No exemption list, no allowlist, no skip: a table carrying one has an
+   unadjudicated duplicate, and the adjudication is the work. Calibrate it
+   three-sided against a **synthetic** table — clean, name collision, mutant
+   collision — because on a healthy real table it will only ever be green, and an
+   invariant nobody has watched fire is not evidence that it can fire (Rule 4,
+   same reason as property 4 above). A fourth side is worth adding: same mutant,
+   different policy, asserted **not** to fire, so the key's shape is documented by
+   a test rather than by a comment.
+
+   Neither Svelte nor Qwik has a mutation table today — both are hand-written
+   tests with no `test.each` — so this rule reaches them, and Vue and Angular,
+   through this note rather than through a copied test.
 
 The Qwik corpus carries `mutate` only; it has no `replaceAll` mutation. Its
 comment says to add the twin rather than leaving a copier to improvise one.

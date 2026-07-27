@@ -269,18 +269,21 @@ describe('React dossier gate', async () => {
 			),
 			'render-phase-setter',
 		],
-		// DUPLICATE, found by T018's audit and left in place rather than dropped
-		// unadjudicated: byte-identical to the 'computed-member setter' row above,
-		// name and policy included. It mutates, so it is not vacuous - it just adds
-		// no shape the table did not already cover. Do not copy this pattern into a
-		// new corpus; a row whose twin already exists is a copy that was never
-		// finished. See notes/T018-mutation-no-op-audit.md.
+		// Was a byte-identical copy of the 'computed-member setter' row above, name
+		// and policy included (T018 F3, adjudicated by T021). Rewritten rather than
+		// deleted, because the rewrite buys a branch no other row reaches: this is
+		// the first row to combine identifier-object resolution
+		// (custom-policies.ts:199-204) with a `constantString`-folded computed
+		// access (:154-171). Its twin above resolves its object from an inline
+		// ObjectExpression, so it never takes the identifier path; 'render
+		// member-wrapped setter' takes the identifier path but with a static
+		// property name, so it never folds a key.
 		[
-			'computed-member setter',
+			'identifier-object computed-member setter',
 			mutate(
 				valid,
 				'return <section>',
-				"const key = 'run'; ({ [key]: setValue })[key](1);\n  return <section>",
+				"const updates = { run: setValue };\n  const key = 'run';\n  updates[key](1);\n  return <section>",
 			),
 			'render-phase-setter',
 		],
@@ -391,11 +394,17 @@ describe('React dossier gate', async () => {
 			),
 			'render-phase-effect',
 		],
-		// DUPLICATE (T018): byte-identical mutant and policy to the 'unused import'
-		// row at the top of this table, under a second name.
+		// Was a byte-identical mutant and policy to the 'unused import' row at the top
+		// of this table, under a second name (T018, adjudicated by T021). Rewritten
+		// to the `!imported` branch of the react import allowlist
+		// (custom-policies.ts:284-294): a default import produces an
+		// ImportDefaultSpecifier, which has no `imported` name at all, so it takes a
+		// different arm from every named-specifier row. 'forwardRef member' is the
+		// only other row that reaches it, incidentally and while asserting
+		// no-forwardRef instead.
 		[
-			'react import allowlist',
-			mutate(valid, 'useState }', 'useMemo, useState }'),
+			'default React import',
+			mutate(valid, 'import { useState }', 'import React, { useState }'),
 			'react-import-allowlist',
 		],
 		[
@@ -619,18 +628,24 @@ describe('React dossier gate', async () => {
 			),
 			'R-SH3',
 		],
-		// DUPLICATE (T018), and the most misleading of the three: byte-identical to
-		// the 'notify-per-write shared tear' row above, while its name promises a
-		// distinct bypass shape. Its two siblings above ARE distinct (helper-hidden,
-		// member-helper-hidden); this one is a copy that was renamed and never
-		// rewritten, so R-SH3 has one fewer shape covered than the table's names
-		// claim. Left in place for adjudication rather than dropped.
+		// Was a byte-identical copy of the 'notify-per-write shared tear' row above,
+		// under a name promising a shape that row ALREADY has - it iterates the
+		// listener set directly. T018 read the name as a promise of something
+		// unwritten; T021 corrected that, because writing 'direct listener
+		// iteration' would have produced a third near-duplicate.
+		//
+		// Rewritten instead to the one notify shape nothing in either corpus
+		// reached: the `.forEach(cb)` branch of invokesListenerSet
+		// (custom-policies.ts:1133-1152), including its recursion into the callback.
+		// With this row the R-SH3 notify family maps 1:1 onto the detector's four
+		// branches - for-of, forEach, helper-forwarding, member-method helper -
+		// which is the mapping a new corpus should inherit rather than a name list.
 		[
-			'direct listener iteration notify-per-write shared tear',
+			'forEach-hidden notify-per-write shared tear',
 			mutate(
 				store,
 				"changed.add('count');",
-				"for (const listener of countListeners) listener();\n\t\tchanged.add('count');",
+				"countListeners.forEach((listener) => listener());\n\t\tchanged.add('count');",
 			),
 			'R-SH3',
 		],
