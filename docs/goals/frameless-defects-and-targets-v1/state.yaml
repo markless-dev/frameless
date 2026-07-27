@@ -131,7 +131,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T034
+active_task: T036
 
 tasks:
   - id: T001
@@ -2677,7 +2677,7 @@ tasks:
   - id: T034
     type: worker
     assignee: Worker
-    status: active
+    status: blocked
     reasoning_hint: high
     spec: "T024 ruling, T025 receipt and T033 receipt - AUTHORITATIVE."
     objective: >-
@@ -2776,6 +2776,299 @@ tasks:
     constraints:
       - "Extend three-way-contract.ts with s4, assertS4, a resumeSymbols entry and a measureCellKeys reader, and extend scripts/e2e.mjs threeWayScenarios. The 18 observation strings become 24 - all must be byte-identical cross-lane."
       - "Add one S4 mutant PER LANE to the harness MUTANTS table, each with a named red site. Angular s4 is the forVariables order swap; choose the other five to exercise the nesting itself, not incidental markup."
+    receipt:
+      result: blocked
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T034-s4-registration.md
+      blocked_reason: "stop_if 'Need files outside allowed_files' fired. Two mandated verify commands - pnpm test and pnpm test:browser - fail on ELEVEN out-of-scope per-lane corpus inventories that hardcode the emitted corpus as exactly S1/S2/S3 and now discover S4. None was edited. EVERY OTHER VERIFY COMMAND PASSES, INCLUDING THE CARD'S HEADLINE."
+      summary: "S4 registered in all SIX lanes: golden created then proven stable, FIXTURES entry, six generated outputs, six /s4 demo routes, assertS4 plus measureGroupKeys/measureCellKeys and a measured resumeSymbols entry, e2e wiring, and six mutation-budget rows all RED. pnpm e2e reports 6 demos x 4 scenarios with 24 byte-identical observation records. 18/18 existing mutants still RED."
+      THE_HEADLINE_ANGULAR_RULING_3d_IS_ENFORCED_NOT_FOLKLORE: "THE MEASUREMENT THIS ENTIRE THREAD WAS BUILDING TOWARD IS IN, AND IT CAME BACK POSITIVE. Ruling 3d specifies 'every enclosing @for variable, OUTERMOST FIRST' and has had ZERO instances since it was written - the corpus could not express a nested loop at all until T033. The ratified forVariables ORDER-SWAP mutant went RED, verbatim: axis 'Angular ruling 3d - enclosing @for variables passed OUTERMOST FIRST'; mutant 'onH9Click(group, row, $event) -> onH9Click(row, group, $event)'; evidence \"expected '[data-selection=\\\"true\\\"]' to have text 'g1>r2', but it was 'r2>g1'\". A rule that had no instances now has an instance AND a proof that violating it is detected. It was NOT folklore."
+      zero_read_sites_re_derived_independently: "The card required re-deriving rather than trusting T033, and the Worker did: 0 of 16 sites carry zero reads, down from T025's measured 7 of 16. The five remaining empty reads arrays anywhere in the IR are three literal-initialised state() declarations plus the props root - NO DYNAMIC DOM SITE AMONG THEM. T033's repair is confirmed by a third independent traversal."
+      THE_BLOCKER_IS_A_REAL_COVERAGE_GAP_NOT_BOOKKEEPING: "THE WORKER'S SHARPEST OBSERVATION, and it changes what the follow-up must do. The inventory assertion is the FIRST STATEMENT in each of the eleven tests, so the run ABORTS BEFORE checkGeneratedFiles(), the framework compiler, or the type-checker ever sees S4. AS OF THIS TREE THE SIX EMITTED S4 FILES HAVE NOT BEEN THROUGH ANY LANE'S DOSSIER GATE, COMPILER OR TYPE-CHECKER. The behavioural e2e lane is a DIFFERENT INSTRUMENT ANSWERING A DIFFERENT QUESTION: it proved the six lanes agree at runtime, not that the emitted source is clean by each framework's own toolchain. A less careful Worker would have reported 'eleven count assertions need bumping'. Scoped as T035, whose deliverable is the SIX VERDICTS, not the widening."
+      changed_files:
+        - packages/compiler/test/enriched-ir.test.ts
+        - packages/compiler/test/goldens/s4-nested-list.json
+        - packages/frameworks/react/scripts/regenerate.ts
+        - packages/frameworks/react/generated/S4.jsx
+        - packages/frameworks/solid/scripts/regenerate.ts
+        - packages/frameworks/solid/generated/S4.jsx
+        - packages/frameworks/qwik/scripts/regenerate.ts
+        - packages/frameworks/qwik/generated/S4.jsx
+        - packages/frameworks/svelte/scripts/regenerate.ts
+        - packages/frameworks/svelte/generated/S4.svelte
+        - packages/frameworks/vue/scripts/regenerate.ts
+        - packages/frameworks/vue/generated/S4.vue
+        - packages/frameworks/angular/scripts/regenerate.ts
+        - packages/frameworks/angular/generated/S4.ts
+        - demos/react-official/package.json
+        - demos/react-official/src/App.jsx
+        - demos/react-official/src/emitted/NestedBoard.jsx
+        - demos/react-official/scenarios.box.ts
+        - demos/react-official/three-way-contract.ts
+        - demos/solid-official/package.json
+        - demos/solid-official/src/App.jsx
+        - demos/solid-official/src/emitted/NestedBoard.jsx
+        - demos/solid-official/scenarios.box.ts
+        - demos/qwik/package.json
+        - demos/qwik/src/emitted/NestedBoard.jsx
+        - demos/qwik/src/routes/s4/index.tsx
+        - demos/qwik/scenarios.box.ts
+        - demos/svelte-official/package.json
+        - demos/svelte-official/src/lib/emitted/NestedBoard.svelte
+        - demos/svelte-official/src/lib/scenario-props.ts
+        - "demos/svelte-official/src/routes/s4/+page.svelte"
+        - demos/svelte-official/scenarios.box.ts
+        - demos/vue-official/package.json
+        - demos/vue-official/src/emitted/NestedBoard.vue
+        - demos/vue-official/src/App.vue
+        - demos/vue-official/src/scenario-props.ts
+        - demos/vue-official/scenarios.box.ts
+        - demos/angular-official/package.json
+        - demos/angular-official/src/emitted/NestedBoard.ts
+        - demos/angular-official/src/app/app.routes.ts
+        - demos/angular-official/src/app/scenario-props.ts
+        - demos/angular-official/scenarios.box.ts
+        - scripts/e2e.mjs
+        - scripts/corpus-mutation.mjs
+        - docs/goals/frameless-defects-and-targets-v1/notes/T034-s4-registration.md
+      commands:
+        - cmd: "UPDATE_GOLDENS=1 pnpm test"
+          status: pass
+          note: "50 files, 879 tests; s4 golden created"
+        - cmd: "pnpm test (immediately after, WITHOUT the flag)"
+          status: pass
+          note: "golden byte-stable; NO existing golden moved"
+        - cmd: "pnpm --dir packages/frameworks/{react,solid,qwik,svelte,vue,angular}/ regenerate"
+          status: pass
+          note: "all six; NO emitter threw on the S4 IR, which is what T024 ratified and T025 could not confirm"
+        - cmd: "pnpm check"
+          status: pass
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 341 files"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "'Three-way: 6 demos x 4 scenarios, all observations equal' - 24 byte-identical observation records, up from 18"
+        - cmd: "pnpm mutate:corpus --dry-run --scenario s4"
+          status: pass
+          note: "6 mutants anchor uniquely, every one changes bytes"
+        - cmd: "pnpm mutate:corpus --scenario s4"
+          status: pass
+          note: "6 mutants, EVERY ONE RED, every one restored - including the Angular ruling 3d order swap"
+        - cmd: "pnpm mutate:corpus --scenario s1 --scenario s2 --scenario s3"
+          status: pass
+          note: "18/18 still RED - adding S4 did not blunt the existing oracle"
+        - cmd: "git diff --exit-code -- packages/frameworks/*/generated"
+          status: pass
+          note: "byte-stable after a second regeneration"
+        - cmd: "git status --short"
+          status: pass
+          note: "PM verified: 45 paths, the only new file under test/goldens/ is s4-nested-list.json"
+        - cmd: "pnpm test"
+          status: fail
+          note: "10 failures, ALL ONE CLASS: per-lane inventories asserting exactly three files. PM RE-RAN AND CONFIRMS - test names read 'the clean S1/S2/S3 emitted corpus' and 'covers exactly the three scenario components'. 869 passed / 879"
+        - cmd: "pnpm test:browser"
+          status: fail
+          note: "1 failure, same class - svelte emitted-smoke.browser.test.ts. The 11th out-of-scope file"
+      deviations:
+        - "measureGroupKeys added alongside the required measureCellKeys. A per-group cell read is meaningless without the group order it is indexed by, and both halves are needed to separate 'the outer list reordered' from 'the inner lists reordered'."
+        - "measureCellKeys takes a group id and scopes to that group's own <ul data-rows> rather than being a flat global read like measureRowKeys. A FLAT READ CANNOT DISTINGUISH per-group containment from a shared row list under every group - which is exactly the pre-T033 cross-product shape - so the flat form would have left the five structural mutants without a red site."
+        - "measureRowKeys was deliberately NOT refactored to share the new helper. Folding them would make S2's observation depend on code S4 drives."
+        - "A TEMPORARY COMMIT was created solely because pnpm mutate:corpus refuses to start against a dirty mutation surface, and registering S4 necessarily adds 12 files to that surface. The three harness invocations and the generated-diff check ran against it; it was then unwound with git reset --mixed HEAD~1. PM VERIFIED: HEAD is back at 8e5f8f3, the temporary commit survives only in reflog where it is labelled as temporary, and all 45 paths of work are intact in the tree. Acceptable and correctly unwound - but rewriting history is a PM decision and a Worker should ask."
+        - "Vue's App.vue s3 arm changed from v-else to v-else-if=\"scenario === 's3'\" so S4 could take the final v-else. s1/s2/s3 behaviour unchanged, confirmed by e2e."
+        - "Two screenshot artefact directories written by the failing svelte browser test were deleted rather than left in the tree."
+      remaining_blockers:
+        - "ELEVEN files outside allowed_files, all one class: react/test/gate.test.ts, react/test/emitted-typecheck.test.ts, solid/test/gate.test.ts, solid/test/emitted-typecheck.test.ts, qwik/test/gate.test.ts, svelte/test/gate.test.ts, svelte/test/compile-emitted.test.ts, svelte/test/emitted-smoke.browser.test.ts, vue/test/gate.test.ts, vue/test/compile-emitted.test.ts, angular/test/gate.test.ts. Scoped as T035."
+        - "THE SIX EMITTED S4 FILES ARE STILL UNGATED - no lane's dossier gate, framework compiler or type-checker has seen them, because the inventory assertion aborts each run first. T035 must REPORT the six verdicts, not assume them."
+      spawned_tasks:
+        - T035
+      stopped_because: "Need files outside allowed_files - eleven per-lane corpus inventories. The Worker refused to edit them and reported the coverage consequence rather than only the count mismatch."
+  - id: T035
+    type: worker
+    assignee: Worker
+    status: blocked
+    reasoning_hint: high
+    spec: "T034 receipt and docs/goals/frameless-defects-and-targets-v1/notes/T034-s4-registration.md - AUTHORITATIVE."
+    objective: >-
+      Widen the ELEVEN per-lane corpus inventories that hardcode the emitted corpus as exactly
+      S1/S2/S3, so they discover S4 - AND REPORT WHAT EACH LANE'S GATE, FRAMEWORK COMPILER AND
+      TYPE-CHECKER ACTUALLY SAY ABOUT THE SIX EMITTED S4 FILES. The second half is the point.
+    THIS_IS_NOT_BOOKKEEPING_AND_T034_SAID_SO_PLAINLY: >-
+      The inventory assertion is the FIRST STATEMENT in each of those tests, so the run ABORTS
+      BEFORE checkGeneratedFiles(), the framework compiler, or the type-checker ever sees S4. AS OF
+      THIS TREE THE SIX EMITTED S4 FILES HAVE NOT BEEN THROUGH ANY LANE'S DOSSIER GATE, COMPILER OR
+      TYPE-CHECKER. The behavioural e2e lane is a DIFFERENT INSTRUMENT ANSWERING A DIFFERENT
+      QUESTION - it proved the six lanes agree at runtime, not that the emitted source is clean by
+      each framework's own toolchain. Widening the literal is the mechanical part; REPORTING THE
+      SIX VERDICTS is the deliverable. Do not assume they say nothing.
+    inputs:
+      - "The 11 failing tests, all one class: an inventory literal listing S1/S2/S3"
+      - "packages/frameworks/*/generated/S4.* - the six emitted outputs, currently ungated"
+    constraints:
+      - "PREFER MAKING THE INVENTORY DERIVED RATHER THAN RE-LITERALLING IT. A list that must be hand-edited for every future scenario is the same defect one scenario later, and Phase F has four more scenarios queued. If a lane's inventory cannot be derived, say why."
+      - "IF ANY GATE, COMPILER OR TYPE-CHECKER REJECTS AN S4 FILE, THAT IS A FINDING AND A STOP - report the violation verbatim. Do NOT change the emitter, the golden or the S4 fixture to make a gate pass. The emitted output was ratified by T034's six-lane behavioural equality; a gate disagreeing with it is exactly the kind of disagreement this project exists to surface."
+      - "The two emitted-typecheck tests currently fail with 'expected 12 to be 11' - a COUNT. Widening the count without widening what is type-checked would be the green vacuum this board has rejected twice."
+      - "Do not weaken any gate policy, lint tier or type-check strictness to accommodate S4."
+    allowed_files:
+      - packages/frameworks/react/test/gate.test.ts
+      - packages/frameworks/react/test/emitted-typecheck.test.ts
+      - packages/frameworks/solid/test/gate.test.ts
+      - packages/frameworks/solid/test/emitted-typecheck.test.ts
+      - packages/frameworks/qwik/test/gate.test.ts
+      - packages/frameworks/svelte/test/gate.test.ts
+      - packages/frameworks/svelte/test/compile-emitted.test.ts
+      - packages/frameworks/svelte/test/emitted-smoke.browser.test.ts
+      - packages/frameworks/vue/test/gate.test.ts
+      - packages/frameworks/vue/test/compile-emitted.test.ts
+      - packages/frameworks/angular/test/gate.test.ts
+      - docs/goals/frameless-defects-and-targets-v1/notes/T035-corpus-inventories.md
+    verify:
+      - "pnpm test   # 879 tests / 50 files, 10 currently FAILING; all must pass, and S4 must be REACHED by every lane's gate"
+      - "pnpm test:browser   # the svelte emitted-smoke failure is the 11th"
+      - "pnpm check"
+      - "pnpm lint"
+      - "pnpm e2e   # 6 demos x 4 scenarios, all observations equal - unchanged"
+      - "pnpm mutate:corpus --scenario s4   # 6/6 still RED"
+      - "pnpm mutate:corpus --scenario s1 --scenario s2 --scenario s3   # 18/18 still RED"
+      - "git diff --exit-code -- packages/frameworks/react/generated packages/frameworks/solid/generated packages/frameworks/qwik/generated packages/frameworks/svelte/generated packages/frameworks/vue/generated packages/frameworks/angular/generated packages/compiler   # NO emitted output, golden or compiler source may move"
+      - "git status --short"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "ANY lane's gate, framework compiler or type-checker REJECTS an emitted S4 file. Report the violation VERBATIM and STOP - that is a finding about the emitter or the gate, and it is not a Worker call which."
+      - "You are about to edit packages/frameworks/*/generated/**, packages/compiler/**, or the S4 fixture or golden to make a gate pass."
+      - "You are about to weaken a gate policy, drop a lint rule, or relax type-check strictness so S4 passes."
+      - "You widen a count without widening what is actually checked."
+      - "The e2e result or either mutation result degrades."
+      - "Verification fails twice for the same reason."
+    receipt:
+      result: blocked
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T035-corpus-inventories.md
+      blocked_reason: "stop_if 'Need files outside allowed_files'. pnpm test:browser is a required verify command and cannot pass without editing packages/frameworks/vue/test/emitted-smoke.browser.test.ts, which is not in allowed_files. All ELEVEN assigned files are complete and green; pnpm test, check, lint and e2e all pass."
+      summary: "All eleven inventories are now DERIVED from packages/compiler/test/goldens/s<n>-*.json - an INDEPENDENT source from the generated/ directory they assert - so S5 through S8 need no edit. Six new calibration tests watch each derived list go RED on a missing and on an extra file. The two 'expected 12 to be 11' counts became SET assertions over two independent sources plus a read-back of tsc's own program."
+      THE_SIX_VERDICTS_THE_DELIVERABLE: "EVERY LANE'S GATE, FRAMEWORK COMPILER, TYPE-CHECKER AND THIRD-PARTY ARBITER ACCEPTS S4, and every one of these was UNREACHABLE before this card. REACT: gate checkGeneratedFiles() over 4 files plus eslint react/* and react-hooks/* - violations: []; tsc over the full set produces exactly the 5 pre-existing ACCEPTED diagnostics and generated/S4.jsx contributed ZERO. SOLID: violations: [], result.files equals the derived corpus. QWIK: violations: [] with eslint-plugin-qwik and the frameless no-handler-sync-action policy; unevaluated unchanged at exactly [{persistence-render-lowering, requires-artifact}]. SVELTE: violations: []; generated/S4.svelte compiles with an EXACT EMPTY warning set in ALL FOUR modes (client/server x dev/prod); zero messages from all 34 applied rules. VUE: violations: []; EXACT EMPTY diagnostic set in all four COMPILE_MODES including the tips channel carrying validateHtmlNesting; zero messages including vue/require-v-for-key on TWO NESTED v-for's. ANGULAR: violations: []; zero messages from all 17 applied rules; whitespace-stable-text anti-vacuity clean."
+      THREE_THINGS_THE_CARD_DID_NOT_KNOW_AND_ONE_WAS_THE_PMs_ERROR: "(1) THERE ARE THIRTEEN FILES, NOT ELEVEN. pnpm test:browser is `react && solid && svelte && vue`; the Svelte failure ABORTED THE CHAIN, so T034 never saw the Vue twin at emitted-smoke.browser.test.ts:105. A && CHAIN IS NOT AN INVENTORY - the shell hid a failure from the instrument counting failures. (2) THE SHARPER FINDING: packages/frameworks/angular/test/parse-emitted.test.ts PASSES while covering three of four, under the name 'GREEN SIDE: every emitted template parses with an exactly empty error set'. (3) THE PM'S CARD PREMISE WAS FALSE: it told the Worker that --dry-run spawns no servers and needs no clean surface. PM VERIFIED THE CORRECTION IN SOURCE: assertCleanSurface() runs at scripts/corpus-mutation.mjs:719, BEFORE the isDryRun branch at :720. NO ARM of the harness can run on an uncommitted tree, so the fallback the card offered did not exist."
+      why_the_thirteenth_file_outranks_the_twelfth: "The twelfth file BLOCKS a verify command and announces itself. The thirteenth PASSES. It sits on the arbiter Angular's T002 ruling 4 designated PRIMARY, and S4 is the first nested-repeat template this repo has emitted - exactly what that arbiter exists for. A GREEN LITERAL PROMISING WHOLE-CORPUS COVERAGE IS STRICTLY WORSE THAN A RED ONE: the red ones announced themselves and were fixed in a single card, while this one would have gone on reporting success over a corpus it had silently stopped covering. T035 probed it out-of-band with that file's own extractor - S4's 1077-byte template yields 0 diagnostics - but a probe is not a standing test."
+      changed_files:
+        - packages/frameworks/react/test/gate.test.ts
+        - packages/frameworks/react/test/emitted-typecheck.test.ts
+        - packages/frameworks/solid/test/gate.test.ts
+        - packages/frameworks/solid/test/emitted-typecheck.test.ts
+        - packages/frameworks/qwik/test/gate.test.ts
+        - packages/frameworks/svelte/test/gate.test.ts
+        - packages/frameworks/svelte/test/compile-emitted.test.ts
+        - packages/frameworks/svelte/test/emitted-smoke.browser.test.ts
+        - packages/frameworks/vue/test/gate.test.ts
+        - packages/frameworks/vue/test/compile-emitted.test.ts
+        - packages/frameworks/angular/test/gate.test.ts
+        - docs/goals/frameless-defects-and-targets-v1/notes/T035-corpus-inventories.md
+      commands:
+        - cmd: "pnpm test"
+          status: pass
+          note: "50 files, 887 tests (was 879 with 10 failing); +8 are six inventory calibrations and two widened typecheck preconditions. PM re-ran and confirms 887. Every lane's gate now REACHES S4"
+        - cmd: "pnpm check"
+          status: pass
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 341 files, 93 rules"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "6 demos x 4 scenarios, all observations equal - unchanged"
+        - cmd: "git status --porcelain -- packages/frameworks/*/generated packages/compiler"
+          status: pass
+          note: "only T034's own untracked entries; no tracked emitted file modified, no golden moved, no compiler source moved"
+        - cmd: "git status --short"
+          status: pass
+          note: "T035's surface is exactly the 11 test files plus the note"
+        - cmd: "pnpm test:browser"
+          status: fail
+          note: "react 60/60, solid 49/49, svelte 13/13 ALL PASS. vue 17/18 fails at emitted-smoke.browser.test.ts:105 - a TWELFTH file of the same class, outside allowed_files"
+        - cmd: "pnpm mutate:corpus --scenario s4 (and its --dry-run arm)"
+          status: blocked
+          note: "assertCleanSurface() refuses; the surface carries T034's untracked files. NOT a failure - the harness is refusing to report a verdict over a set it did not cover, which is correct behaviour"
+        - cmd: "pnpm mutate:corpus --scenario s1 --scenario s2 --scenario s3 (and its --dry-run arm)"
+          status: blocked
+          note: "same refusal. T035's diff is DISJOINT from MUTATION_SURFACE at corpus-mutation.mjs:88, so T034's 6/6 and 18/18 still stand; PM re-runs after committing"
+      deviations:
+        - "Widened FIVE whole-corpus rows beyond the strict inventory line - the three third-party ESLint GREEN SIDE tests, Vue's excluded-tier measurement and Angular's whitespace anti-vacuity - because each is NAMED for 'the shipped corpus' while enumerating three of four. Widening a count without widening what is checked is a listed stop_if."
+        - "Added expect(result.files).toEqual(corpus) to all six gates. discoverGeneratedFiles and checkGeneratedFiles are SEPARATE entry points; without it, a gate that discovered four and checked three is indistinguishable from one that checked four."
+        - "Renamed five tests off the now-false 'S1/S2/S3' and 'three scenario components' phrasing. A test name is an assertion about scope."
+        - "Ran an out-of-band probe of @angular/compiler parseTemplate over S4 using parse-emitted.test.ts's own extractor, because that file is outside allowed_files and the verdict is this card's deliverable. Measurement only; no file touched."
+        - "Removed an untracked failure screenshot the vue browser run wrote to a gitignored directory."
+      remaining_blockers:
+        - "FILE #12, THE BLOCKER: packages/frameworks/vue/test/emitted-smoke.browser.test.ts:105. Its verdict on S4 is already PARTLY IN AND CLEAN - the glob is eager:true, so @vitejs/plugin-vue compiled generated/S4.vue in real Chromium at import time and 17 of 18 tests passed."
+        - "FILE #13: packages/frameworks/angular/test/parse-emitted.test.ts - passes while covering three of four, on the PRIMARY arbiter."
+        - "S4 has NO size budget in any lane; react/solid size.test.ts record S1/S2/S3 only."
+        - "The six emitter.test.ts fixtures tables stop at s3-*.json, so no STANDING test asserts S4's emitted bytes equal formatEmitted(emit(golden)). T034 proved it once by regenerating and diffing; nothing re-proves it per run."
+        - "All the above scoped as T036."
+      spawned_tasks:
+        - T036
+      stopped_because: "Need files outside allowed_files. T034's count of eleven was an undercount because the && chain in pnpm test:browser reports only the first failing lane."
+  - id: T036
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    spec: "T035 receipt and docs/goals/frameless-defects-and-targets-v1/notes/T035-corpus-inventories.md - AUTHORITATIVE."
+    objective: >-
+      Finish the corpus-inventory widening T035 could not reach: the TWELFTH file that blocks
+      pnpm test:browser, the THIRTEENTH that passes while lying, the two size budgets, and the six
+      emitter fixture tables. Every one is the same class - a literal enumerating the corpus as
+      three scenarios - and every one must end up DERIVED, as T035 made its eleven.
+    the_thirteenth_file_is_the_one_that_matters: >-
+      packages/frameworks/angular/test/parse-emitted.test.ts PASSES WHILE COVERING THREE OF FOUR,
+      and its test is named 'GREEN SIDE: every emitted template parses with an exactly empty error
+      set'. It means S1/S2/S3. IT SITS ON THE ARBITER ANGULAR'S T002 RULING 4 DESIGNATED PRIMARY,
+      and S4 is the first nested-repeat template this repo has ever emitted - precisely what that
+      arbiter exists to judge. A GREEN LITERAL PROMISING WHOLE-CORPUS COVERAGE IS STRICTLY WORSE
+      THAN A RED ONE: the red ones announced themselves and got fixed in one card, while this one
+      would have gone on reporting success over a corpus it had stopped covering. T035 probed it
+      out-of-band and S4 parses clean (1077-byte template, 0 diagnostics) - but a probe is not a
+      standing test and nothing in CI re-checks it.
+    why_T035_undercounted_and_it_is_not_its_fault: >-
+      pnpm test:browser is `react && solid && svelte && vue`. The Svelte failure ABORTED THE CHAIN,
+      so T034 never saw the Vue twin and reported eleven files where there were thirteen. THE
+      SHELL-CHAIN HID A FAILURE FROM THE INSTRUMENT COUNTING FAILURES. Worth recording as its own
+      small lesson: a && chain is not an inventory.
+    inputs:
+      - "packages/frameworks/svelte/test/emitted-smoke.browser.test.ts - T035's landed repair; the Vue twin follows it"
+      - "T035's derivation pattern: read the corpus from packages/compiler/test/goldens/s<n>-*.json, an INDEPENDENT source from the generated/ directory being asserted"
+    constraints:
+      - "DERIVE, DO NOT RE-LITERAL. Phase F has four more scenarios queued (S5-S8); a list hand-edited per scenario is the same defect four more times. T035 derived its eleven from the compiler goldens - follow that, and prove each derived list goes RED on a missing AND on an extra file, as T035's six calibrations do."
+      - "IF ANY INSTRUMENT REJECTS AN S4 FILE, THAT IS A FINDING AND A STOP. Report it verbatim; do not change the emitter, golden or fixture to make it pass. T035 measured all six gates ACCEPT S4 with zero violations, so a rejection here would be new information and must be treated as such."
+      - "The two size.test.ts files record physicalLoc/structuralNodes for S1/S2/S3 only. S4 needs a budget, not an exemption - and a nested list is legitimately larger, so record what it MEASURES rather than what looks tidy."
+      - "The six emitter.test.ts fixtures tables stop at s3-*.json, so NO standing test asserts S4's emitted bytes equal formatEmitted(emit(golden)). T034 proved it once by regenerating and diffing; nothing re-proves it per run. Close that."
+      - "Do not weaken any gate policy, lint tier, size budget or type-check strictness."
+    allowed_files:
+      - packages/frameworks/vue/test/emitted-smoke.browser.test.ts
+      - packages/frameworks/angular/test/parse-emitted.test.ts
+      - packages/frameworks/react/test/size.test.ts
+      - packages/frameworks/solid/test/size.test.ts
+      - packages/frameworks/react/test/emitter.test.ts
+      - packages/frameworks/solid/test/emitter.test.ts
+      - packages/frameworks/qwik/test/emitter.test.ts
+      - packages/frameworks/svelte/test/emitter.test.ts
+      - packages/frameworks/vue/test/emitter.test.ts
+      - packages/frameworks/angular/test/emitter.test.ts
+      - docs/goals/frameless-defects-and-targets-v1/notes/T036-inventory-completion.md
+    verify:
+      - "pnpm test   # 887 tests / 50 files at dispatch; all must pass"
+      - "pnpm test:browser   # MUST GO FULLY GREEN - react 60, solid 49, svelte 13, vue 18. This is the command T035 could not clear."
+      - "pnpm check"
+      - "pnpm lint"
+      - "pnpm e2e   # 6 demos x 4 scenarios, all observations equal - unchanged"
+      - "git diff --exit-code -- packages/frameworks/react/generated packages/frameworks/solid/generated packages/frameworks/qwik/generated packages/frameworks/svelte/generated packages/frameworks/vue/generated packages/frameworks/angular/generated packages/compiler   # NO emitted output, golden or compiler source may move"
+      - "git status --short"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "ANY instrument REJECTS an emitted S4 file - a parse diagnostic, a gate violation, a size-budget breach or a byte mismatch. Report VERBATIM and STOP."
+      - "You are about to edit generated output, a golden, the S4 fixture or packages/compiler to make something pass."
+      - "You re-literal an inventory instead of deriving it, or a derived list cannot be shown to go RED on both a missing and an extra file."
+      - "You are about to run pnpm mutate:corpus. It refuses on a dirty surface and --dry-run does NOT bypass that check - assertCleanSurface() runs BEFORE the dry-run branch at scripts/corpus-mutation.mjs:719. The PM runs it after committing."
+      - "You are about to commit or rewrite history. The PM handles commits."
+      - "Verification fails twice for the same reason."
     receipt: null
 
   - id: T026
