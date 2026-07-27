@@ -131,7 +131,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T036
+active_task: T026
 
 tasks:
   - id: T001
@@ -3009,7 +3009,7 @@ tasks:
   - id: T036
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     spec: "T035 receipt and docs/goals/frameless-defects-and-targets-v1/notes/T035-corpus-inventories.md - AUTHORITATIVE."
     objective: >-
@@ -3069,12 +3069,59 @@ tasks:
       - "You are about to run pnpm mutate:corpus. It refuses on a dirty surface and --dry-run does NOT bypass that check - assertCleanSurface() runs BEFORE the dry-run branch at scripts/corpus-mutation.mjs:719. The PM runs it after committing."
       - "You are about to commit or rewrite history. The PM handles commits."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T036-inventory-completion.md
+      summary: "All four groups derived from packages/compiler/test/goldens/s<n>-*.json, each with an S1..S4 floor and a THROW on an empty derivation. File #12 (the vue browser twin) repaired, so pnpm test:browser is fully green. File #13 - the PRIMARY Angular parseTemplate arbiter - now reads the derived corpus and was PROVEN able to fail. S4 budgets recorded as measured (react 77/425, solid 78/438 - the corpus structural heavyweight). Six emitter fixture tables derived, so S4 byte-freshness is now STANDING in all six lanes and every FIXTURES-driven policy loop widened to four."
+      THE_ARBITER_THAT_WAS_REPORTING_SUCCESS_OVER_A_CORPUS_IT_HAD_STOPPED_COVERING_CAN_NOW_FAIL: "This is the load-bearing result, and it is the whole lesson of the card in one measurement. packages/frameworks/angular/test/parse-emitted.test.ts passed while covering three files of four, under the name 'GREEN SIDE: every emitted template parses with an exactly empty error set'. It sits on the arbiter Angular's T002 ruling 4 designated PRIMARY. Now derived, and DEMONSTRATED RED by dropping '; track row.id' from the inner @for of the emitted S4: 'AssertionError: S4.ts: expected [ Array(1) ] to deeply equal []  + [ \"@for loop must have a track expression\" ]'. Restored byte-identically afterwards, verified with shasum -c. A test that could not fail is not a test; this one now can, on the exact construct S4 introduced."
+      pm_independent_verification: "PM re-ran everything on the delivered tree: pnpm test 915 passed / 50 files (887 at dispatch, +28). pnpm test:browser FULLY GREEN - react 60, solid 49, svelte 13, vue 18, where vue was 17/18 at dispatch. pnpm check exit 0. pnpm lint 0 warnings 0 errors on 341 files. All three committed as a2abfea, 1bb0552 and ff2e524."
+      changed_files:
+        - packages/frameworks/vue/test/emitted-smoke.browser.test.ts
+        - packages/frameworks/angular/test/parse-emitted.test.ts
+        - packages/frameworks/react/test/size.test.ts
+        - packages/frameworks/solid/test/size.test.ts
+        - packages/frameworks/react/test/emitter.test.ts
+        - packages/frameworks/solid/test/emitter.test.ts
+        - packages/frameworks/qwik/test/emitter.test.ts
+        - packages/frameworks/svelte/test/emitter.test.ts
+        - packages/frameworks/vue/test/emitter.test.ts
+        - packages/frameworks/angular/test/emitter.test.ts
+        - docs/goals/frameless-defects-and-targets-v1/notes/T036-inventory-completion.md
+      commands:
+        - cmd: "pnpm test"
+          status: pass
+          note: "50 files, 915 tests, up from 887; PM re-ran and confirms 915"
+        - cmd: "pnpm test:browser"
+          status: pass
+          note: "react 60, solid 49, svelte 13, vue 18 - FULLY GREEN. This is the command T035 could not clear. PM re-ran and confirms"
+        - cmd: "pnpm check"
+          status: pass
+          note: "PM re-ran"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 341 files, 93 rules; PM re-ran"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "6 demos x 4 scenarios, all observations equal - unchanged"
+        - cmd: "git diff --stat over generated/, compiler/src, goldens and fixtures"
+          status: pass
+          note: "EMPTY - no emitted output, golden, fixture or compiler source moved"
+        - cmd: "git status --short"
+          status: pass
+          note: "dispatch state plus exactly the 11 files"
+      deviations:
+        - "The card's verify line `git diff --exit-code -- .../generated packages/compiler` exits 1 on this tree, but THE DIFF IS T034'S, not T036's - HEAD 8e5f8f3 predates T034's uncommitted work. Answered with a scoped `git diff --stat` over generated/, compiler/src, goldens and fixtures, which is empty. THE SAME CORRECTION T035 RECORDED, and the second time this session a git-based freeze gate misread an uncommitted predecessor as a violation. PM ACCEPTS and notes this is now fixed at the root: the tree is committed."
+        - "scripts/measure-size.ts is outside allowed_files and exports only the PAIRED measureAll(), and there is no handwritten S4 reference to pair with. The emitted-only measurement is re-derived inside each size.test.ts and TIED to the shared one by a row asserting the two methods agree on every scenario the script covers - so the duplicate cannot drift silently. A duplicate with a tie is better than a widened API on a file this card does not own."
+        - "TWO derived lists cannot host a standing calibration: the vue browser glob (no node:fs in a browser lane - the Svelte twin has the same limit) and the angular source map (a missing file makes beforeAll throw ENOENT, which is fail-closed but not expressible as a passing row). Both were DRIVEN RED BY HAND and the output recorded verbatim in the note. Naming the two that cannot be automated is better than a calibration count that quietly means twelve of fourteen."
+        - "Two generated files were TEMPORARILY mutated or moved to make instruments FAIL - never to make anything pass - and restored byte-identically, verified with shasum -a 256 -c."
+      remaining_blockers: []
+      stopped_because: null
   - id: T026
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
     spec: "T024 ruling - AUTHORITATIVE."
     depends_on: ["T025"]
