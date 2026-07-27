@@ -1,0 +1,40 @@
+{
+  "name": "@frameless/demo-angular-official",
+  "version": "0.0.0",
+  "scripts": {
+    "ng": "ng",
+    "copy-emitted": "node -e \"require('fs').mkdirSync('src/emitted',{recursive:true});[['S1','RenderOnce'],['S2','KeyedTodo'],['S3','EventForm']].forEach(([s,n])=>require('fs').copyFileSync('../../packages/frameworks/angular/generated/'+s+'.ts','src/emitted/'+n+'.ts'))\"",
+    "start": "pnpm copy-emitted && ng serve",
+    "build": "pnpm copy-emitted && ng build",
+    "build:e2e": "pnpm copy-emitted && ng build --configuration development",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test",
+    "serve:ssr:angular-official": "node dist/angular-official/server/server.mjs"
+  },
+  "private": true,
+  "packageManager": "pnpm@10.33.2",
+  "dependencies": {
+    "@angular/common": "^22.0.0",
+    "@angular/compiler": "^22.0.0",
+    "@angular/core": "^22.0.0",
+    "@angular/forms": "^22.0.0",
+    "@angular/platform-browser": "^22.0.0",
+    "@angular/platform-server": "^22.0.0",
+    "@angular/router": "^22.0.0",
+    "@angular/ssr": "^22.0.8",
+    "express": "^5.1.0",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@angular/build": "^22.0.8",
+    "@angular/cli": "^22.0.8",
+    "@angular/compiler-cli": "^22.0.0",
+    "@types/express": "^5.0.1",
+    "@types/node": "catalog:",
+    "jsdom": "^28.0.0",
+    "prettier": "^3.8.1",
+    "typescript": "~6.0.2",
+    "vitest": "^4.0.8"
+  }
+}

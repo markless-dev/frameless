@@ -24,8 +24,9 @@ const compositionDemo = resolve(workspace, 'demos/composition-kit');
 const persistenceDemo = resolve(workspace, 'demos/persistence');
 const ssrDemo = resolve(workspace, 'demos/ssr');
 const uiComponents = ['PricingCard', 'TaskList', 'NewsletterForm'];
-// The official framework scaffolds. One shared IR, five emitters, two
-// activation models — React, Solid, Svelte and Vue hydrate, Qwik resumes. Each
+// The official framework scaffolds. One shared IR, six emitters, two
+// activation models — React, Solid, Svelte, Vue and Angular hydrate, Qwik
+// resumes. Each
 // runs the same contract in demos/react-official/three-way-contract.ts, and the
 // `three-way` box tag and `three-way-results` note kind are the wire protocol
 // between that contract and this file; they keep their names.
@@ -35,6 +36,17 @@ const officialDemos = [
 	{ framework: 'qwik', activation: 'resume', directory: resolve(workspace, 'demos/qwik') },
 	{ framework: 'svelte', activation: 'hydrate', directory: resolve(workspace, 'demos/svelte-official') },
 	{ framework: 'vue', activation: 'hydrate', directory: resolve(workspace, 'demos/vue-official') },
+	// Angular is the one lane whose scaffold owns its build outright: there is no
+	// vite.config.ts, `@angular/build` vendors its own Vite, and `ng build` is the
+	// only way to produce runnable output. So this row declares a `prepare`
+	// script, run immediately before its witness box, and the box serves that
+	// build through Angular's own `reqHandler`.
+	{
+		framework: 'angular',
+		activation: 'hydrate',
+		directory: resolve(workspace, 'demos/angular-official'),
+		prepare: 'build:e2e',
+	},
 ];
 const threeWayScenarios = ['s1', 's2', 's3'];
 // @async/witness is a dev tool of the workspace, already installed for the ssr
@@ -421,15 +433,21 @@ console.log(
 if (persistenceVerdict === 'FAIL') process.exit(1);
 
 // The three-way lanes. Each official demo is served by its own scaffold — the
-// react/solid/vue vite SSR servers, the qwik router and the SvelteKit dev
-// server — and driven through the same scenario contract, so "identical
-// behavior" is compared, not asserted.
+// react/solid/vue vite SSR servers, the qwik router, the SvelteKit dev server
+// and the Angular CLI's own built request handler — and driven through the same
+// scenario contract, so "identical behavior" is compared, not asserted.
+//
+// Five of the six only need their emitted components refreshed; Angular
+// additionally needs `ng build`, because its scaffold has no vite.config.ts and
+// nothing runs until the CLI has produced `dist/`. `prepare` names the script
+// that does both, and the angular box asserts the output it serves is newer than
+// the source it was built from.
 const threeWay = {};
 for (const demo of officialDemos) {
 	runExecutable(
 		`refresh ${demo.framework} emitted output`,
 		'pnpm',
-		['--dir', demo.directory, 'copy-emitted'],
+		['--dir', demo.directory, demo.prepare ?? 'copy-emitted'],
 	);
 	runExecutable(
 		`run ${demo.framework} official-demo witness`,

@@ -1,0 +1,53 @@
+/* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
+/* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
+/*
+ * DELTA from the `ng new --ssr` scaffold: `noImplicitAny: false`, and nothing
+ * else. `types` and `include`/`exclude` are the scaffold's own.
+ *
+ * WHY, and why it is scoped this narrowly. Angular 22 scaffolds no longer spell
+ * `"strict": true` — TypeScript 6.0.3 defaults it on, which is what turns on
+ * `noImplicitAny`. Frameless-emitted output carries no types at all: the IR has
+ * no type channel (IR-8), so a transplanted handler body's lambda parameters
+ * arrive unannotated. MEASURED here, on the first real `ng build` this emitter's
+ * output has ever seen: with the scaffold untouched the build reports EXACTLY
+ * SIX diagnostics, all TS7006, all in `src/emitted/KeyedTodo.ts`, all of them
+ * `(todo) =>` / `(item) =>` lambda parameters. Zero template diagnostics, zero
+ * AOT diagnostics, zero diagnostics in this demo's own hand-written files. The
+ * relaxation is therefore consumed entirely by emitted output; it buys the
+ * emitted components nothing they were not already granted everywhere else.
+ *
+ * This is the repo's OWN standing ruling, not a new licence invented here.
+ * `packages/frameworks/react/test/emitted-typecheck.test.ts:14-16` type-checks
+ * emitted output with `strict: false` and records the reason verbatim as
+ * "deliberate scope, not laxity", citing
+ * `docs/goals/frameless-testing-ci-v1/notes/T005-emitted-typecheck.md`. The
+ * solid, svelte and vue emitted-typecheck lanes do the same.
+ *
+ * WHAT IS NOT RELAXED, because this is the task where emitted Angular output
+ * finally meets a real type checker and a weakened gate would waste that:
+ * `strictNullChecks` and the rest of the `strict` family stay ON, and so does
+ * Angular's `strictTemplates` — which keys off TypeScript's `strict`, not off
+ * `noImplicitAny` — so every one of the 15 lowered `(click)="onH7Click(todo,
+ * $event)"` call sites is still type-checked against its method signature, and
+ * every `@for` `track` expression is still validated. That is the coverage
+ * T001 and T002 said Angular adds over the other lanes, and it is intact.
+ *
+ * The narrower alternatives were considered and do not exist: TypeScript has no
+ * per-directory `compilerOptions`, and editing the copied output under
+ * `src/emitted/` would mean editing the artifact under test.
+ */
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noImplicitAny": false,
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "src/**/*.spec.ts"
+  ]
+}
