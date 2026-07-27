@@ -155,32 +155,75 @@ baseline; `emitter.test.ts` pins the absence of `$props.id()`, `{@attach}`,
 `<svelte:boundary>` and `$derived.by` — the four with a floor above it — and the
 gate rejects the Svelte 4 `on:click` directive spelling.
 
-## THE GAP — the browser lane could not be built
+## The browser lane — dev warnings are now enforced, not merely measured
 
-`packages/frameworks/svelte/vitest.config.ts` and
-`test/emitted-smoke.browser.test.ts` are **not** in this diff. Vitest browser
-mode needs a provider package, and neither `@vitest/browser-playwright` nor
-`playwright` resolves from this package:
+Initially blocked: `@vitest/browser-playwright` and `playwright` did not resolve
+from this package and adding them moved `pnpm-lock.yaml`, a `stop_if`. The PM
+installed both offline from the store and cleared it, and the lane now exists:
+`vitest.config.ts`, `test/setup.ts`, `test/emitted-smoke.browser.test.ts`,
+**13 tests**, wired into the root `pnpm test:browser` chain behind React (60)
+and Solid (49).
 
-```
-@vitest/browser            -> MISSING
-@vitest/browser-playwright -> MISSING
-playwright                 -> MISSING
-```
+**T002 finding 7 is now discharged where it can be.** `test/setup.ts` patches
+`console.warn` and `console.error` inside the browser and an `afterEach` fails
+the test on **any** captured diagnostic — no allowlist, warnings included, not
+only errors. All 42 of Svelte 5.56.8's client dev diagnostics go through
+`console.warn` (`svelte/src/internal/client/warnings.js`), which is what makes a
+console sink the right instrument rather than a hopeful one.
 
-Adding them as devDependencies moves `pnpm-lock.yaml`, which T003 lists as a
-`stop_if`. Writing the config anyway would also turn `pnpm check` red, because
-the root `tsconfig.json` includes `packages/frameworks/*/vitest.config.ts` and
-the import would not resolve.
+Calibrated in three independent steps, because "no warnings were observed" is
+worth nothing unless the observer observes, the assertion throws, and Svelte's
+own diagnostics travel the watched path:
 
-Both versions are already in the pnpm store (`node_modules/.pnpm/playwright@1.58.2`,
-`…/@vitest+browser-playwright@4.1.5`), so `pnpm install --offline` needs no
-network.
+1. **The sink captures.** A planted `console.warn` and `console.error` are
+   recorded, exactly once each and in order.
+2. **The guard throws.** The calibration calls `assertNoConsoleDiagnostics()` —
+   the *same function* the `afterEach` hook calls, not a lookalike — and asserts
+   it throws.
+3. **A real Svelte dev warning reaches it.** `unmount()` is called twice on the
+   real emitted `S1`, provoking a genuine `lifecycle_double_unmount` through the
+   public API with no fixture file. The assertion is on the **DEV-only message
+   shape** (`[svelte] lifecycle_double_unmount`): Svelte's production branch logs
+   only the bare `https://svelte.dev/e/...` URL, so this doubles as the proof
+   that these components were compiled with dev diagnostics enabled and that a
+   green run of this lane means anything at all.
 
-**Consequence for T002 finding 7.** The vitest browser lane was designated the
-*sole* enforcement point for Svelte dev warnings, because the witness API cannot
-observe console warnings at all. That lane does not exist yet. The dev-warning
-evidence recorded here — zero console messages of any level, driving all three
-emitted components — is a **measurement, not a standing check**. Until the lane
-lands, nothing in CI enforces it, and T999's constraint would still pass
-vacuously. This is the single largest gap in T003.
+The two delegation measurements are now **standing checks** rather than a
+one-off probe. Q1 uses a capturing `submit` listener as the in-browser stand-in
+for `assertS3`'s Document-request count: if the emitted `preventDefault()` ever
+fails, the form's `submit` event fires, the listener records it *and* cancels it,
+so the lane observes the failure instead of navigating away and destroying its
+own test context. That observer is calibrated against a planted member — a bare
+`<button type="submit">` appended to the emitted form, which nothing cancels —
+so Q1's `toHaveLength(0)` cannot pass by being wired to an event that never
+fires. Q2 asserts the full trace `['submit', …]` then `['bubble', {source:
+'form'}]`, pinning both the cross-element bubbling the corpus depends on and the
+button-before-form ordering that makes mixing `onclick=` with `on()` forbidden.
+
+### An instrument fault, caught by its own calibration
+
+The first version of `setup.ts` kept the sink in module scope. Vitest evaluates
+a `setupFiles` module in a **different module instance** from the one a test file
+gets when it imports the same path, so there were two independent arrays and two
+chained `console` patches: every diagnostic was recorded twice, and a test that
+drained the sink drained the copy the `afterEach` guard was not reading.
+
+Three calibrations failed immediately and named the cause. This is the board's
+recurring pattern exactly — an instrument resting on a silent assumption
+("importing my own setup file gives me my own state") that nothing asserted. The
+sink now lives on `globalThis` behind a patch-once flag, and the assumption is
+asserted: the first calibration checks the captured array has **exactly** two
+entries, which is what a double-installed patch would break, and its final drain
+is what proves the guard reads the same sink the test drains.
+
+Worth stating plainly: had the calibrations not been there, this lane would have
+passed while double-counting diagnostics and while the drain and the guard
+disagreed — a lane that looked like enforcement and was not.
+
+### What the demo lane at T004 still owes
+
+This lane covers emitted components mounted directly in a browser. It does **not**
+cover the SvelteKit demo, where the witness API still cannot see console warnings
+at all. T004 must either land a `console.warn` capture sink in the scaffold or
+record in writing that the demo lane cannot observe warnings and that this lane
+is the sole enforcement point. Silence is not an option.

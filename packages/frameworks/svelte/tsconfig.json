@@ -1,10 +1,11 @@
 {
 	"extends": "../../../tsconfig.json",
-	"compilerOptions": { "types": ["node", "vitest/globals"] },
+	"compilerOptions": { "types": ["node", "vite/client", "vitest/globals"] },
 	"include": [
 		"src/**/*.ts",
 		"test/**/*.ts",
 		"scripts/**/*.ts",
+		"vitest.config.ts",
 		"../../compiler/src/tsrx-core.d.ts"
 	]
 }

@@ -97,7 +97,7 @@ visual_board:
     url: null
     command: "npx goalbuddy board docs/goals/frameless-svelte-v1"
 
-active_task: T003
+active_task: T004
 
 tasks:
   - id: T001
@@ -250,7 +250,7 @@ tasks:
   - id: T003
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     spec: "T002 receipt on this board - AUTHORITATIVE. Seven rulings."
     objective: >-
@@ -322,16 +322,126 @@ tasks:
       - "DEV WARNINGS: T002 finding 7 established that the witness API cannot observe console warnings at all - PageHandle has no console accessor and PageOutcomeExpectation exposes consoleErrors only. So the demo lane CANNOT enforce the dev-warning constraint and T999's version of it would pass vacuously. Your vitest browser lane HAS direct console access and is therefore the sole enforcement point: fail on ANY Svelte dev warning, not only errors."
       - "IR-4 is DEFERRED and the version corollary is NOT amended. Emit only baseline-version-safe forms; every S1/S2/S3 construct is Svelte 5.0 baseline."
       - "No schema change, no bind:, no demo, no e2e row. T004 owns the demo and the contract widening."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      note: notes/T003-svelte-emitter.md
+      summary: "Landed packages/frameworks/svelte as a whole vertical slice: emitter (IR -> Svelte 5 runes SFC), gate with 8 policies and a mutation corpus, three checked-in .svelte goldens with byte-equality freshness, a compile() warnings oracle asserted as an exact empty set across client/server x dev/prod, and a browser lane that fails on ANY Svelte dev console warning with no allowlist. Both delegation questions were MEASURED in a real browser at 5.56.8, re-measured against the real emitted artifact, and are now STANDING CHECKS with their own planted-member calibration."
+      changed_files:
+        - package.json
+        - packages/frameworks/svelte/package.json
+        - packages/frameworks/svelte/tsconfig.json
+        - packages/frameworks/svelte/vitest.config.ts
+        - packages/frameworks/svelte/vitest.node.config.ts
+        - packages/frameworks/svelte/README.md
+        - packages/frameworks/svelte/src/index.ts
+        - packages/frameworks/svelte/src/emitter/index.ts
+        - packages/frameworks/svelte/src/emitter/estree.ts
+        - packages/frameworks/svelte/src/format-emitted.ts
+        - packages/frameworks/svelte/src/gate/index.ts
+        - packages/frameworks/svelte/scripts/regenerate.ts
+        - packages/frameworks/svelte/generated/S1.svelte
+        - packages/frameworks/svelte/generated/S2.svelte
+        - packages/frameworks/svelte/generated/S3.svelte
+        - packages/frameworks/svelte/test/emitter.test.ts
+        - packages/frameworks/svelte/test/gate.test.ts
+        - packages/frameworks/svelte/test/compile-emitted.test.ts
+        - packages/frameworks/svelte/test/setup.ts
+        - packages/frameworks/svelte/test/emitted-smoke.browser.test.ts
+        - docs/goals/frameless-svelte-v1/notes/T003-svelte-emitter.md
+      commands:
+        - cmd: "pnpm check"
+          status: pass
+          note: "PM RE-RAN: four tsc passes including the new svelte project"
+        - cmd: "pnpm test"
+          status: pass
+          note: "PM RE-RAN: 620/620, 42 files - up from 572"
+        - cmd: "pnpm test:browser"
+          status: pass
+          note: "PM RE-RAN the full chain: react 60/60, solid 49/49, svelte 13/13"
+        - cmd: "svelte-browser project alone"
+          status: pass
+          note: "PM RE-RAN: 13/13"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "three-way 3x3 all observations equal"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 261 files"
+        - cmd: "regenerate && git diff --exit-code -- generated"
+          status: pass
+          note: "goldens fresh and byte-stable"
+        - cmd: "git diff --exit-code -- react solid qwik compiler demos scripts pnpm-lock.yaml"
+          status: pass
+          note: "nothing outside the new package moved"
+      the_measurement:
+        method: "Two-variable triangulation in real Chromium at svelte 5.56.8, then RE-RUN against the actual emitted generated/S3.svelte."
+        table: "onclick= with preventDefault: 1->1 documents, no navigation. onclick= without: 1->2, navigated. on() with: 1->1. on() without: 1->2. The signal tracks the PRODUCT variable and is completely insensitive to the emission form; the negative control proves the instrument can see a navigation."
+        q1_now_standing: "A capturing submit listener records AND cancels any submission that escapes, so a failure is observed rather than fatal - a real navigation inside vitest browser mode would destroy the test context. Calibrated against a PLANTED MEMBER: a bare <button type=submit> appended to the emitted form, which nothing cancels, produces exactly one. So toHaveLength(0) cannot pass by watching an event that never fires."
+        q2_now_standing: "Full trace asserted - ['submit', {...}] then ['bubble', {source:'form'}] - pinning both the cross-element bubbling the corpus depends on and the button-before-form ordering that makes mixing onclick= with on() forbidden."
+        judge_dissent: "CONFIRMED for preventDefault and now regression-guarded. The Qwik QRL-laziness failure does not transfer: a delegated listener is in the bundle and runs during dispatch. The stopPropagation half remains deliberately untested - zero corpus instances, emitter throws."
+      instrument_fault_found_by_its_own_calibrations:
+        what: "Vitest evaluates a setupFiles module in a DIFFERENT MODULE INSTANCE from the one a test file gets importing the same path. The sink was in module scope, so there were two independent arrays and two chained console patches."
+        symptom: "Every diagnostic recorded twice, and a test that drained the sink drained the copy the afterEach guard was not reading."
+        how_it_was_caught: "Three calibrations failed instantly and named it. Without them this lane would have passed while double-counting and while drain and guard disagreed - enforcement-shaped, but not enforcement."
+        fix: "The sink lives on globalThis behind a patch-once flag, AND the assumption is now asserted: the first calibration requires EXACTLY two captured entries, which double-patching breaks, and its final drain proves the guard reads the same sink."
+        pattern: "This board's recurring shape again - a silent assumption ('importing my own setup file gives me my own state') that nothing asserted. Caught only because the calibration discipline was already mandatory."
+      dev_warning_enforcement:
+        status: "NOW ENFORCED for emitted components mounted directly."
+        mechanism: "test/setup.ts patches console.warn and console.error inside the browser; an afterEach fails on ANY captured diagnostic - warnings included, NO allowlist. Verified against source that all 42 of Svelte 5.56.8's client dev diagnostics route through console.warn, rather than assumed."
+        three_way_calibration: "(1) the sink captures a planted warn and error exactly once each - the length assertion is what catches a double-installed patch; (2) assertNoConsoleDiagnostics, the SAME function afterEach calls rather than a lookalike, is shown to throw and to drain as it throws so failures cannot cascade; (3) a REAL lifecycle_double_unmount is provoked through the public API on the real emitted S1 and asserted on its DEV-ONLY message shape - which doubles as proof the corpus was compiled with dev diagnostics enabled at all. Without that third one, a green could mean 'no warnings' OR 'warnings compiled out', and those are not the same thing."
+        new_finding: "state_referenced_locally is a COMPILE-time warning that plugin-svelte logs to the terminal, not window.console, so it is unreachable by a browser console sink. It is already enforced by the compile() oracle as an exact empty set. This lane enforces the RUNTIME half, where ownership_invalid_mutation and state_unsafe_mutation live."
+        still_owed_by_T004: "The SvelteKit demo lane, where the witness API cannot observe warnings at all. T004 must land a console.warn sink in the scaffold or record IN WRITING that this lane is the sole enforcement point."
+      corpus_discovery: "The browser lane discovers the corpus via import.meta.glob rather than three static imports, and ASSERTS the discovered set - so a fourth emitted component cannot appear unnoticed. Also asserts import.meta.env.DEV."
+      deviations:
+        - "Added vite/client to the svelte tsconfig types and listed vitest.config.ts in its include, so import.meta.glob and import.meta.env typecheck."
+        - "Used import.meta.glob rather than static .svelte imports: tsc cannot resolve a .svelte module specifier and no ambient .d.ts was in allowed_files. The glob is the better instrument anyway."
+        - "Q1 observes the form's submit event rather than counting Document requests - a real navigation inside vitest browser mode would destroy the test context. The Document-request form of the same measurement is recorded in the note from the Playwright probe."
+        - "Calibrated with lifecycle_double_unmount rather than the PM's suggested state_referenced_locally, because the latter is compile-time and never reaches the browser console. Stated explicitly."
+        - "svelte({ configFile: false }) so a svelte.config.js from elsewhere cannot silently change what the emitted corpus compiles to."
+        - "The emitter emits <!-- svelte-ignore --> for exactly two a11y codes at <form> elements carrying an event, because a faithful emitter cannot remove an authoring-level a11y observation while T002 ruling 6 requires an exact EMPTY warning set. Gate-enforced and proven exactly right in both directions by emit()'s own two-sided check."
+      carried_forward:
+        - "T004: the demo lane cannot observe console warnings - land a sink or record the limitation in writing."
+        - "T005, informational: eslint-plugin-svelte is not in the lockfile, so this lane has no third-party lint arbiter equivalent to react's, solid's and qwik's. svelte/compiler's compile() is the arbiter instead."
+      verification_attempts: 2
   - id: T004
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
-    objective: "Stand up demos/svelte-official from the official scaffold and add the Svelte row to the e2e activation matrix, asserting S1/S2/S3 equality."
-    allowed_files: []
-    verify: []
+    objective: >-
+      Stand up demos/svelte-official from the official SvelteKit scaffold and add the Svelte row to
+      the e2e activation matrix, asserting S1/S2/S3 equality with the existing three.
+    spec: "T002 rulings 1 and 2 - AUTHORITATIVE."
+    allowed_files:
+      - "demos/svelte-official/** (the official scaffold, plus wiring for emitted components)"
+      - demos/react-official/three-way-contract.ts
+      - scripts/e2e.mjs
+      - package.json
+      - pnpm-workspace.yaml
+      - docs/goals/frameless-svelte-v1/notes/T004-svelte-demo.md
+    verify:
+      - "pnpm check"
+      - "pnpm test"
+      - "pnpm test:browser"
+      - "pnpm e2e   # must now include a svelte row with S1/S2/S3 observations ASSERTED equal"
+      - "git diff --exit-code -- packages/frameworks demos/react-official/src demos/solid-official/src demos/qwik/src   # no emitter or existing-demo source may move"
+      - "git status --short"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to hand-roll SSR - a server.js, an ssr-handler.js, an express app, or a frameless-demo-ssr vite plugin. SvelteKit does SSR itself. T002 ruling 1: demos/qwik is ALREADY a stock official scaffold with none of those, so this follows a landed precedent. docs/goals/frameless-qwik-v1 exists because a hand-rolled harness produced a fake framework blocker that cost real time."
+      - "You are about to RELAX the served-payload assertion to 'any module script'. T002 ruling 2 REJECTS that as a weakening. Parameterise the literal PER DEMO instead, as a REQUIRED field on the hydrate arm - an optional field is a silent opt-out and is also rejected."
+      - "The Svelte served-payload literal was GUESSED rather than measured from what SvelteKit dev actually serves."
+      - "You cannot show the chosen literal able to go RED. A served-payload literal never observed failing is not a check - point it at a string the payload does not contain, or ship a negative control."
+      - "You are about to set the activation marker in src/hooks.client.ts init, or as a template attribute binding. It must be IMPERATIVE and in Svelte's OWN post-mount signal - onMount in the root +layout.svelte. hooks.client.ts init runs BEFORE hydration completes, and a template binding would be SSR-emitted, which forbidInServedPayload would correctly fail."
+      - "The set of assertions run for react, solid or qwik, or the exact strings they assert, is not byte-unchanged after your edit. Moving react's literal from a helper constant into its own activation object is not a weakening; changing, softening or making it optional is. T999 tests this mechanically."
+      - "SvelteKit records a history navigation on initial load and you are about to relax runScenario's navigations expectation to 'any number'. Qwik records 1 and declares it. The permitted repair is the SAME KIND of widening - a per-demo DECLARED expected count, still asserted exactly. Decide by measurement."
+      - "Verification fails twice for the same reason."
+    constraints:
+      - "OFFICIAL SCAFFOLD, AS IT SHIPS. Routes become src/routes/+page.svelte, /s2/+page.svelte, /s3/+page.svelte. What must match the other demos is NOT the server wiring but the CONTRACT PROTOCOL: scenarios.box.ts importing three-way-contract.ts, assertServedActivation + runScenario over scenarioIds, the JSON three-way-results receipt note, a copy-emitted script, and an officialDemos row."
+      - "DEV WARNINGS, CARRIED FROM T003: the witness API cannot observe console warnings AT ALL - PageHandle has no console accessor and PageOutcomeExpectation exposes consoleErrors only. Either land a console.warn capture sink in the scaffold - the ONLY permitted scaffold addition beyond wiring emitted components - or RECORD IN WRITING that the demo lane cannot observe warnings and that T003's browser lane is the sole enforcement point. Silence is not an option; T999's constraint would otherwise pass vacuously."
+      - "T002 named three costs of the SvelteKit choice, to be carried not rediscovered: emitted components are wired through SvelteKit's route conventions so a convention change breaks this lane where react/solid are immune; there is no shared createSsrHandler between pnpm dev and the box, so react-official's 'no second harness exists to drift' property is unobtainable and SvelteKit's own dev server is the single path instead; and modes:['dev'] means the vite build + adapter path is never exercised."
+      - "T002 dissent worth checking early: it is NOT verified that root +layout.svelte onMount fires strictly after hydration completes for the whole tree at this version. It is the best candidate and strictly better than hooks.client.ts, but it is documentary. If S1/S2/S3 flake, look HERE first rather than raising a timeout."
     stop_if:
       - "The official scaffold needs modification beyond wiring in emitted components."
       - "Equality cannot be asserted without weakening an existing assertion."

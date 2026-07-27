@@ -61,12 +61,19 @@ gate corpus, and the `compile()` warnings oracle. Every policy carries a mutatio
 row proving it can reject, and every harness carries a calibration proving it can
 throw.
 
-## Known gap
+`pnpm --dir packages/frameworks/svelte test:browser` runs the browser lane in
+real Chromium, and it is also the third link in the root `pnpm test:browser`
+chain. It drives the emitted components, holds the two delegation measurements as
+standing checks, and — most importantly — **fails on any Svelte dev console
+warning, not only errors**.
 
-There is **no browser lane yet**. Vitest browser mode needs
-`@vitest/browser-playwright` and `playwright`, neither of which resolves from
-this package, and adding them moves `pnpm-lock.yaml`. That lane is the sole
-enforcement point for Svelte's dev-only console warnings — the witness API used
-by `pnpm e2e` cannot observe console warnings at all — so until it lands, the
-dev-warning evidence in the T003 note is a measurement rather than a standing
-check.
+That last part is the reason this lane exists. The witness API behind `pnpm e2e`
+cannot observe console warnings at all: `PageHandle` has no console accessor and
+`PageOutcomeExpectation` exposes `consoleErrors` only. So the demo lane cannot
+enforce the dev-warning constraint, and this is the only place that can. All 42
+of Svelte's client dev diagnostics go through `console.warn`, there is no
+allowlist, and the sink is calibrated three ways: it captures a planted
+diagnostic, the guard is shown to throw, and a **real** Svelte
+`lifecycle_double_unmount` is provoked from the real emitted component — asserted
+on its dev-only message shape, which is what proves the corpus was compiled with
+dev diagnostics enabled in the first place.
