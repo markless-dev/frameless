@@ -1,6 +1,6 @@
 # Frameless Vue adapter v1
 
-**Status: prepped, not started.** Created by `frameless-idiom-policy-v1` task T007 on 2026-07-26.
+**Status: prepped, not started.** Its `state.yaml` reads `status: active` only because the GoalBuddy checker requires an active task while a goal is active; nothing is running it. Do not read that as work in progress. Created by `frameless-idiom-policy-v1` task T007 on 2026-07-26.
 
 ## Objective
 
@@ -45,11 +45,53 @@ From `frameless-idiom-policy-v1` T003's survey. These are evidence to validate, 
 - **Which activation model does the official scaffold use** for the S1/S2/S3 scenarios, and does the e2e harness's hydrate/resume vocabulary already cover it?
 - `poc/09-storage/vue` exists from earlier work and took cheap lexical sugar with classic lifecycle shapes. Prior in-repo assumption — evidence, not precedent.
 
-### Standing gaps inherited from the policy goal
+### Standing gaps — REVALIDATED by `frameless-defects-and-targets-v1` T010
 
-- `pnpm check` (`tsc --noEmit`) does **not** typecheck `generated/` — the root tsconfig includes only `packages/*/src/**` and `packages/frameworks/*/src/**`. Emitted Vue output will be unchecked by default.
-- `pnpm e2e` pins **dev mode only** (`demos/qwik/scenarios.box.ts` is `modes: ['dev']`). Production-mode coverage exists only where a task adds it explicitly.
-- `pnpm test:browser` hangs at the repo root (pre-existing, unrelated to any emitter; the per-package `test:browser` scripts work). Anything this board wants to pin via that command needs the hang resolved first.
+Three gaps were inherited from `frameless-idiom-policy-v1`. After the testing branch merged, **two
+of them are fixed and one still holds.** Corrected here so this board does not plan around problems
+that no longer exist.
+
+- ~~`pnpm check` does not typecheck `generated/`.~~ **FIXED.** `check` now runs three passes —
+  `tsc --noEmit` plus per-package `tsc -p packages/frameworks/react` and `…/solid` — and each
+  framework package ships an `emitted-typecheck.test.ts` lane that runs under `pnpm test`. A new
+  adapter should add the equivalent tsconfig and lane rather than treating emitted output as
+  unchecked.
+- ~~`pnpm test:browser` hangs at the repo root.~~ **FIXED.** It runs clean: react 55/55, solid
+  44/44, from a cold Vite cache.
+- `pnpm e2e` **pins dev mode only** — `scenarios.box.ts` is `modes: ['dev']` in both
+  `demos/qwik` and `demos/react-official`. **STILL TRUE.** Production coverage exists only where a
+  task adds it explicitly, as the Qwik cancellation work had to.
+
+Vue's own `vue-tsc` may cover more than the shared lane does; confirm rather than assume.
+
+### Instrument rules — standing constraints, added by `frameless-defects-and-targets-v1` T010
+
+This board adds **four new instruments**: a gate corpus, a calibration lane, a reference pair and an
+e2e row. That matters because on the defects goal, **four of six findings turned out to be
+instrument faults, not product defects** — a harness clicking before any framework installs
+listeners, a wall-clock bound over a frame-gated loop, an invariant contradicting a declared
+canonicalisation, and a mutation whose search literal silently failed to match.
+
+The root, in the Phase B audit's words: every one of them measured the product through a **proxy
+whose stability the product never promised, and asserted nothing about the proxy.** The fault was
+not that assumptions were made — instruments cannot avoid them — but that each assumption was
+**silent**, so when it broke, the instrument reported a *product* defect instead of an *instrument*
+fault.
+
+Three rules follow. They are not advice.
+
+1. **Two-variable triangulation before any finding is filed.** Vary one instrument parameter and one
+   product parameter, and confirm the signal tracks the **product**. All four of those false
+   findings would have been caught in minutes. Corollary, learned the hard way: a finding that
+   reproduces on a stock official scaffold with none of our code is evidence the **test** is unfair,
+   not that the framework is broken.
+2. **Every instrument asserts its own preconditions.** A mutation harness asserts the source
+   actually changed. A readiness wait blocks on the framework's **own** signal, never a browser
+   lifecycle event that predates it. A positional comparison cites that the collection is
+   order-significant. A repo-wide byte invariant is asserted by a test.
+3. **Two-sided calibration for harnesses, not only gates.** This repo proved its gates can go red
+   and proved nothing about its harnesses. A settle loop that cannot throw is not a settle loop.
+   Every red must survive the fairness question *in writing* before it is interpreted.
 
 ## Current tranche
 

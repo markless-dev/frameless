@@ -1043,7 +1043,21 @@ tasks:
       line with T004's upstream ruling, and repoint the qwik-throttled continue-on-error comment.
     allowed_files:
       - docs/emitter-idiom-policy.md
-    sequencing: "MUST run AFTER T008. T007: two packages editing docs/DEFECTS.md across a framing rewrite is how a correction gets silently reverted."
+    sequencing: >-
+      T007 required this to run AFTER T008 because both listed docs/DEFECTS.md. That overlap was
+      removed in the same audit - T008 now owns that document end to end and this package is
+      docs/emitter-idiom-policy.md ONLY. The ordering constraint therefore no longer applies, and
+      write scopes are provably disjoint from T008's eleven paths.
+    dispatch:
+      concurrent_with: T008
+      rationale: >-
+        Owner explicitly asked for parallel agent work. Disjoint write scope verified against
+        T008's allowed_files. Verify interference is nil: T005 established that no test, lint or
+        config in the repo references docs/emitter-idiom-policy.md, so this package's checks are
+        greps over its own file rather than suite runs that could see T008's in-flight edits.
+      board_status_note: >-
+        Card stays queued because the checker enforces exactly one active task. It is genuinely
+        dispatched; this field is the honest record until its receipt lands.
     verify:
       - "pnpm check"
       - "pnpm test"
@@ -1069,7 +1083,13 @@ tasks:
   - id: T010
     type: pm
     assignee: PM
-    status: queued
+    status: done
+    dispatch:
+      concurrent_with: T008
+      rationale: >-
+        PM control-file work over docs/goals/frameless-{svelte,vue,angular}-v1/ only. None of those
+        paths appear in T008's allowed_files. Executed by the PM directly rather than dispatched.
+      board_status_note: "Queued for the one-active-task invariant; genuinely in progress."
     reasoning_hint: medium
     objective: "Repair the three adapter boards' misleading status and re-validate their inherited standing gaps against the now-merged testing work."
     inputs:
@@ -1084,12 +1104,50 @@ tasks:
     expected_output:
       - "Three boards with honest status and corrected standing-gap sections"
       - "A list of which inherited gaps are now stale"
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      summary: "Repaired all three adapter boards and revalidated their inherited standing gaps against the merged testing work. Two of the three gaps were STALE and are now corrected rather than inherited as fact. Added T007's three instrument rules as standing constraints to all three charters and mirrored the corrections into each state.yaml. Executed by the PM concurrently with T008, T011 and T016 - control files only, disjoint from every one of them."
+      changed_files:
+        - docs/goals/frameless-svelte-v1/goal.md
+        - docs/goals/frameless-svelte-v1/state.yaml
+        - docs/goals/frameless-vue-v1/goal.md
+        - docs/goals/frameless-vue-v1/state.yaml
+        - docs/goals/frameless-angular-v1/goal.md
+        - docs/goals/frameless-angular-v1/state.yaml
+      misleading_status_addressed:
+        problem: "All three read status: active / active_task: T001 with nothing running them. A future /goal reading one would pick up T001 and start unbidden."
+        why_not_simply_changed: "The GoalBuddy checker requires exactly one active task while a goal is active, and there is no alternative encoding for 'prepped'. Setting status: done would be a lie of the opposite kind."
+        resolution: "Stated plainly at the top of each charter and in a prepped_not_started field on each board, naming the reliable signal: every task receipt is null."
+      inherited_gaps_revalidated:
+        generated_typecheck: "STALE - now FIXED. pnpm check runs three passes (tsc --noEmit plus per-package tsc -p for react and solid), and each framework package ships an emitted-typecheck.test.ts lane running under pnpm test. Charters now tell a new adapter to add the equivalent tsconfig and lane rather than treating emitted output as unchecked."
+        test_browser_hang: "STALE - now FIXED. Runs clean, react 55/55 and solid 44/44 from a cold Vite cache. Verified repeatedly across this goal."
+        e2e_dev_mode_only: "STILL TRUE. scenarios.box.ts is modes: ['dev'] in both demos/qwik and demos/react-official. Production coverage exists only where a task adds it explicitly, as the Qwik cancellation work had to."
+        why_it_matters: "Two of three inherited 'facts' were wrong. A prepped board that misinforms its future runner is worse than no board - each of these would have had an adapter planning around a problem that no longer exists."
+      instrument_rules_added:
+        rationale_recorded_in_each_charter: "Each board adds four new instruments - a gate corpus, a calibration lane, a reference pair and an e2e row - and four of six findings on the defects goal were instrument faults."
+        the_root_quoted: "Every one measured the product through a proxy whose stability the product never promised, and asserted nothing about the proxy. The fault was not that assumptions were made - instruments cannot avoid them - but that each was SILENT, so when it broke the instrument reported a PRODUCT defect instead of an INSTRUMENT fault."
+        rules:
+          - "Two-variable triangulation before any finding is filed - vary one instrument parameter and one product parameter and confirm the signal tracks the PRODUCT. Corollary learned the hard way: a finding that reproduces on a stock official scaffold with none of our code is evidence the TEST is unfair, not that the framework is broken."
+          - "Every instrument asserts its own preconditions - a mutation harness asserts the source changed; a readiness wait blocks on the framework's OWN signal, never a browser lifecycle event that predates it; a positional comparison cites that the collection is order-significant."
+          - "Two-sided calibration for HARNESSES, not only gates. This repo proved its gates can go red and proved nothing about its harnesses. A settle loop that cannot throw is not a settle loop."
+      parallel_execution: "Ran concurrently with T008 (test files, .gitattributes, DEFECTS.md, ci.yml), T011 (Judge, read-only) and T016 (docs/emitter-idiom-policy.md). Write scopes verified disjoint against T008's eleven allowed_files before dispatch; none of the six files touched here appears in any other task's scope."
+      commands:
+        - cmd: "check-goal-state.mjs on all three adapter boards"
+          status: pass
+          note: "ok:true, zero errors on each"
+      not_done_deliberately: "No adapter implementation. Board hygiene only, as the card requires."
   - id: T011
     type: judge
     assignee: Judge
     status: queued
+    dispatch:
+      concurrent_with: T008
+      rationale: >-
+        Judge tasks are read-only, so there is no write scope to collide. Its inputs - the T003 and
+        T005 receipts and docs/emitter-idiom-policy.md - are all already on disk and are not in
+        T008's allowed_files, so T008 cannot move them underneath it.
+      board_status_note: "Queued for the one-active-task invariant; genuinely dispatched."
     reasoning_hint: high
     objective: "Rule on how the IR represents conditional cancellation - the half of defect 1 deliberately deferred from T003."
     inputs:

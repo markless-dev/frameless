@@ -11,6 +11,23 @@ goal:
   kind: specific
   tranche: "Land a Svelte 5 lane end to end - official scaffold, emitter, gate, goldens, demo, e2e row asserting S1/S2/S3 equality - then rule on IR-4, the target-framework-version input the whole policy's version corollary depends on."
   status: active
+  prepped_not_started: >-
+    NOTHING IS RUNNING THIS BOARD. status reads active and active_task reads T001 only because the
+    GoalBuddy checker requires exactly one active task while a goal is active; there is no
+    alternative encoding for "prepped". Every task receipt is null, which is the reliable signal.
+    Revalidated by frameless-defects-and-targets-v1 T010 on 2026-07-27.
+  inherited_gaps_revalidated: >-
+    Two of the three standing gaps inherited from frameless-idiom-policy-v1 are now FIXED and the
+    charter has been corrected: pnpm check DOES typecheck emitted output (three tsc passes plus a
+    per-package emitted-typecheck lane), and pnpm test:browser runs clean (react 55/55, solid
+    44/44). Still true: pnpm e2e pins dev mode only, scenarios.box.ts modes ['dev'].
+  instrument_rules: >-
+    THREE STANDING CONSTRAINTS added by T010, full text in goal.md. This board adds four new
+    instruments and four of six findings on the defects goal were instrument faults. (1) Two-variable
+    triangulation before any finding is filed - and a finding that reproduces on a stock official
+    scaffold with none of our code is evidence the TEST is unfair, not that the framework is broken.
+    (2) Every instrument asserts its own preconditions. (3) Two-sided calibration for harnesses, not
+    only gates - a settle loop that cannot throw is not a settle loop.
   oracle:
     signal: "pnpm e2e includes a Svelte row driving an official Svelte scaffold at the pinned lockfile version, and its S1/S2/S3 observations are ASSERTED equal to demos/react-official, demos/solid-official and demos/qwik under the same matrix."
     cadence: "after each Worker package and at final audit"
