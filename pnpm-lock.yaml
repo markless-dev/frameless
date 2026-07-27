@@ -517,6 +517,12 @@ importers:
       '@frameless/compiler':
         specifier: workspace:*
         version: link:../../compiler
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.5
+      eslint-plugin-svelte:
+        specifier: ^3.16.0
+        version: 3.22.0(eslint@9.39.5)(svelte@5.56.8(@typescript-eslint/types@8.65.0))
       pathe:
         specifier: 'catalog:'
         version: 2.0.3
@@ -530,9 +536,6 @@ importers:
       '@vitest/browser-playwright':
         specifier: 4.1.5
         version: 4.1.5(playwright@1.58.2)(vite@8.0.16(@types/node@24.12.2)(esbuild@0.27.7)(yaml@2.9.0))(vitest@4.1.5)
-      eslint-plugin-svelte:
-        specifier: ^3.16.0
-        version: 3.22.0(eslint@9.39.5)(svelte@5.56.8(@typescript-eslint/types@8.65.0))
       playwright:
         specifier: 1.58.2
         version: 1.58.2

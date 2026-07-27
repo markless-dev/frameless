@@ -856,6 +856,34 @@ tasks:
     status: active
     reasoning_hint: medium
     objective: "Wire eslint-plugin-svelte into the Svelte gate as a third-party arbiter, matching react, solid and qwik."
+    attempt_1_blocked_and_cleared: >-
+      Attempt 1 (2026-07-27) blocked BEFORE any edit and made zero repository changes, which is the
+      correct behaviour: @frameless/svelte could not resolve `eslint`. The PM had pre-installed
+      eslint-plugin-svelte but the plugin is not a runner - ESLint is - and react/solid/qwik each
+      carry `eslint` in DEPENDENCIES, which is why their gates can import it at src/gate/index.ts:5.
+      PM CLEARED IT: added eslint ^9.39.2 to dependencies and PROMOTED eslint-plugin-svelte from
+      devDependencies to dependencies, on the ground that a gate importing a plugin at runtime must
+      declare it as a real dependency. pnpm install --offline moved pnpm-lock.yaml by 6 insertions /
+      3 deletions with ZERO new package entries - everything was already in the store, since the
+      plugin was already peer-resolved against eslint@9.39.5.
+      Confirmed NOT needed: @eslint/js, globals. Confirmed MUST NOT be added: svelte-eslint-parser,
+      which is not directly resolvable; the parser comes from plugin.configs.recommended, whose
+      setup-for-svelte entry already sets languageOptions.parser for **/*.svelte.
+    attempt_1_measurements_carried_forward: >-
+      The blocked attempt pre-measured the whole integration from the scratchpad against an eslint
+      loaded by absolute store path, so the re-dispatch is unambiguous. CORPUS IS CLEAN - S1 0, S2 0,
+      S3 0 messages under the full 41-rule recommended set - so there is NO finding against the
+      emitter and none is to be manufactured. Four rules go red on planted violations:
+      require-each-key, no-at-html-tags, no-unused-svelte-ignore, no-useless-mustaches.
+      require-each-key is the one that earns the arbiter its keep and is the closest analogue to
+      defect 1 - an unkeyed {#each} COMPILES CLEAN and reconciles wrong, and neither compile() nor
+      any frameless policy sees it while the IR carries the key. svelte/valid-compile is NOT in
+      recommended, so the arbiter does not duplicate T003's compile() oracle. And
+      no-unused-svelte-ignore being silent on S3's two shipped codes is INDEPENDENT third-party
+      confirmation of T003's two-sided suppression claim.
+      Known design consequence: checkSources (src/gate/index.ts:795) must become async because
+      ESLint.lintText is async; every affected call site is inside allowed_files and
+      packages/cli/src/node-runtime.ts:124 already awaits.
     allowed_files:
       - packages/frameworks/svelte/src/gate/index.ts
       - packages/frameworks/svelte/test/gate.test.ts
