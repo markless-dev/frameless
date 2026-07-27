@@ -105,7 +105,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T005
+active_task: T006
 
 tasks:
   - id: T001
@@ -617,7 +617,7 @@ tasks:
   - id: T005
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Phase A audit: is emitted-output correctness actually fixed, and was each fix preceded by a witnessed failure?"
     inputs:
@@ -637,16 +637,87 @@ tasks:
       - "Phase A complete | not complete"
       - "Defect 1 and 2 disposition, each with its evidence"
       - "Whether the deferred conditional-cancellation design is still correctly scoped"
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      decision: approved
+      full_outcome_complete: false
+      phase: "A complete - defects 1 and 2"
+      rationale: "Phase A is complete. Defect 1's fix is genuine and was preceded by a witnessed failure IN A PRIOR COMMIT; the contract asserts the default action itself, not defaultPrevented. The Judge ran six of its own gate mutants, three of them shapes T003 never wrote - all caught. Defect 2's upstream closure is supported: the Judge re-derived the loader hash and read the no-replay path out of the shipped bundle itself. Gate 5 forced-lowering RATIFIED but its stated ground is FALSE; the ruling survives on baseline selection instead. Gate 2 upheld."
+      commands:
+        - cmd: "pnpm check"
+          status: pass
+          note: "Judge's own run, exit 0, three tsc passes"
+        - cmd: "pnpm test"
+          status: pass
+          note: "561 passed / 39 files - matches T003's receipt exactly"
+        - cmd: "pnpm test:browser"
+          status: pass
+          note: "react 55/55, solid 44/44"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "[e2e] PASS; all three s3 rows emit the identical 'after cancel-submit 1 document request served this page and writes = 2'"
+        - cmd: "npx vitest run packages/frameworks/qwik/test/gate.test.ts"
+          status: pass
+          note: 17/17
+      defect_1_disposition:
+        verdict: "FIXED, honestly"
+        witness_precedes_fix: "ca84b89 (witness) precedes c9cf99c (fix), and the witnessed_failure block entered state.yaml IN THE WITNESS COMMIT ITSELF - so the failure was on record before a fix existed, not reconstructed afterwards. Confirmed by git log -S'witnessed_failure'."
+        asserts_the_real_thing: "three-way-contract.ts:342-356 counts resourceType 'Document' requests after clicking a real <button type=\"submit\"> and NEVER touches event.defaultPrevented. It carries a second independent signal - writes still 2, which a reload would reset."
+        judge_authored_mutants: "The Judge did not trust T003's mutant list. It ran six of its own against the shipped gate via checkSources, THREE of them shapes T003 never wrote: a nested callback inside the lazy element, onSubmit$, optional-chaining event?.preventDefault(), and try/finally in an async handler. All caught; the shipped lowering stays allowed."
+      defect_2_disposition:
+        verdict: "UPSTREAM is a legitimate closure"
+        independently_verified: "The Judge re-derived the loader hash itself (8175c89b...a643d2, matching T004) and read the no-replay path out of the shipped bundle rather than taking it on trust: the loader reads the pre-existing window._qwikEv, spreads the recorded event NAMES into registration, then overwrites the recorder. Nothing replays the events. That independently confirms T004's mechanism and explains DROPPED rather than QUEUED."
+        zero_frameless_implicated: "A hand-written component in an untouched official scaffold at identical core/router/vite versions reproduces it."
+      gate_5_ruling:
+        verdict: "RATIFIED, on a corrected ground"
+        t003_ground_is_false: "T003 argued 'the baseline form cannot express the IR's declared SyncPolicy in Qwik at all'. FALSE at the shipped version: core-internal.d.ts:2445 declares [K in keyof HTMLElementEventMap as `preventdefault:${K}`]?: boolean, and core.mjs carries isPreventDefault(), PREVENT_DEFAULT = 'preventdefault:' and addUseOnModifier(..., 'preventdefault'). Two sanctioned forms can express it. The Judge found this only by checking."
+        the_real_error_is_baseline_selection: "T003 ran Gate 5 against the PRE-FIX output - preventDefault() left inside the lazy QRL. That is not a sanctioned form for this construct: the policy defines sanctioned as what the framework accepts as CORRECT, and Qwik ships a lint rule against this shape plus two dedicated constructs precisely because it does not work. It is wrong output. Comparing a candidate against wrong output is a CATEGORY ERROR that yields a spurious G5 FAIL every time a defect is fixed."
+        why_the_ruling_survives: "Restricted to the real sanctioned set - {preventdefault:click, sync$() array} - the pre-fix shape was never a member, so this is a defect fix and the procedure does not apply. Forced lowering, ratified."
+        form_choice_between_the_two_sanctioned_forms: "Never gated. Settled by the owner's correction, which the Judge does not overturn. Two facts recorded so it is not reopened: the array carries the rest of the handler body, which preventdefault:click cannot, so the split is needed regardless at the type=button site; and preventdefault:click is element-level while SyncPolicy is per-event-record."
+        preamble_must_be_sharpened: "The preamble currently defines forced lowering purely by EXPRESSIBILITY (Angular templates forbid arrow functions). That does not cover a form that is perfectly legal and merely wrong. Without the addition, each adapter re-improvises T003's argument and one will improvise it wrong - most likely by reframing a genuine G5 FAIL as forced lowering to push a change through. Naming the test is what stops forced lowering becoming an escape hatch. Svelte's stopPropagation-with-delegation (worked example 6) is the same species."
+      gate_2_assessment:
+        verdict: "T003's judgement call UPHELD; closed as no longer re-openable"
+        three_grounds: "The gate's own question is about the SINGLE MODULE being emitted; every other item in its failure list is an obligation on a third party, so the import clause read self-scoped would be the only one out of family. Worked example 1 already passes G2 with $ in the baseline's import list, so the literal reading would retroactively invalidate a shipped ruling. And the emitter already manages its own framework imports for useSignal/useStore/useComputed$."
+        fix_the_wording: "It should not have required a judgement call. Scope the clause to 'an added import list entry IN ANOTHER MODULE'. The same ambiguity would otherwise bite Vue's defineModel, Angular's input()/output(), and Svelte's `on` from svelte/events - which worked example 6 already commits to and which fails G2 under the literal reading."
+      recording_gaps:
+        count: 3
+        specced_as: "T016, queued before the adapter work on the Judge's recommendation"
+        already_satisfied: "The decision-site comment requirement is met at packages/frameworks/qwik/src/emitter/index.ts:470-486. Only the worked example is outstanding."
+        third_gap_nobody_flagged: "docs/DEFECTS.md defect 2 is UNTOUCHED by T004 and now stale: still reads 'Status: diagnosed', still instructs 'Do this first: reproduce on an untouched pnpm create qwik app' (work that is done), and still repeats the 'zero network requests' claim T004 explicitly corrected. It was outside T004's allowed_files."
+      pm_call_a_qwikloader_inline:
+        ruling: "NO. demos/qwik does not adopt qwikLoader: 'inline'."
+        reasoning: "The entire asset of frameless-qwik-v1 is that activation neutrality was proven on official tooling AS IT SHIPS. This is a non-default render option; setting it converts the demo from 'what a newcomer gets' into 'what a newcomer gets after we tuned it', specifically to hide a defect we just proved real. That is the charter's likely_misfire arriving through a config knob instead of a raised timeout. It would also buy a green lane that measures nothing - the lane exists to detect this regression class. A red-but-annotated lane costs one line of CI noise; a demo that quietly diverges from the default scaffold costs the one claim frameless makes that is hard to make."
+        riders: "Record 'inline' in DEFECTS.md as the known workaround FOR CONSUMERS - genuinely useful, and different from us adopting it. If a green lane is ever wanted, add a SECOND demo rather than changing this one."
+      pm_call_b_continue_on_error:
+        ruling: "STAYS, with a receipt."
+        reasoning: "T004 proved the defect is in @qwik.dev/core's own loader, reproducing on an untouched official scaffold with zero frameless code. It cannot be fixed locally without the demo change just declined. That is precisely the case the oracle carves out."
+        explicitly_reaffirmed: "The unthrottled control stays NOT flagged, so a later task does not tidy it away."
+        required_change: ".github/workflows/ci.yml:279-281 is titled 'known-failing, findings-007' and points at the PRE-DIAGNOSIS note containing the claim T004 corrected. Repoint at notes/T004-upstream-qwik-dropped-click.md and state the three facts that legitimise the flag - upstream, proven on an official scaffold, workaround deliberately not adopted. Otherwise it is indistinguishable from an unexamined flag at the final audit."
+      deferred_scope_still_correct: "hoistsPreventDefault() returns false for a branches list and for graph-truthy/event-equals guards, so only the single-branch constant-truthy case is lowered; the decision-site comment names T011/T012 as owners; and the fail-closed throw at index.ts:587-590 means a declared-but-unlocatable action cannot be silently dropped. Conditional-cancellation scope intact."
+      missing_evidence:
+        - "The scaffold-side half of the byte-identical loader claim rests on T004's cmp; its scratchpad copy is from another session and is gone. The demo-side hash was re-derived and matches, and the mechanism was confirmed independently, so the verdict does not turn on it."
+        - "The qwikLoader:'inline' causal confirmation is T004's and is not reproducible here. Corroborated by the loader being the only listener-installation path."
+        - "NO UPSTREAM ISSUE HAS ACTUALLY BEEN FILED. Both notes are filing MATERIAL. The charter permits 'file or recommend', so this is satisfied - but the owner should be told it is waiting on them."
+        - "GATE POLICY NARROWING, not a blocker: preventDefault() inside a sync$() nested within a lazy $() element is ALLOWED by frameless/no-handler-prevent-default but is broken at runtime. The ancestor walk asks 'is there a sync$ between call and prop', not 'is that sync$ a DIRECT element of the event prop'. The emitter cannot produce this shape today. Carried to T011/T012 as a hardening item."
+        - "CAVEAT on the witness record: demos/qwik/.witness/ is gitignored, so the durable record of T002's failure is state.yaml plus the ca84b89 commit message, which carries the CDP timing."
   - id: T006
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
     objective: "Run all three bounded diagnosis experiments - WebKit quiescence (defect 4), generative rename (defect 6), Windows cause B (defect 3-B) - and produce a decision for each."
-    allowed_files: []
-    verify: []
+    allowed_files:
+      - docs/goals/frameless-defects-and-targets-v1/notes/T006-diagnoses.md
+    instrumentation_rule: >-
+      The repo is READ-ONLY for this task apart from the note. Every experiment runs on a scratchpad
+      copy or a throwaway inline script, exactly as T004 did - it instrumented a COPY of
+      throttled-resume.mjs and left the original untouched. If an experiment seems to require
+      editing a repo file, that is a signal the experiment is scoped wrong, not permission to edit.
+    verify:
+      - "git status --short   # ONLY the note file. Any other modified path means instrumentation leaked into the repo."
+      - "pnpm test   # must still read 561/561 - proves no accidental repo mutation"
+    scratchpad: "/private/tmp/claude-501/-Users-jacksm5pro-dev-open-source-frameless/2b78a698-3bad-4e2e-a0e0-6404787da9e7/scratchpad"
     stop_if:
       - "Need files outside allowed_files."
       - "You are about to raise the 500ms quiescence bound, or make the rename comparison order-insensitive, BEFORE the instrumented result says so. Both are named in docs/DEFECTS.md as the tempting wrong move."
