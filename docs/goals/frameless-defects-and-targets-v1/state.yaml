@@ -725,6 +725,41 @@ tasks:
       - "Oracle half 1: satisfied | not satisfied"
     receipt: null
 
+  - id: T016
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    spec: "T005 receipt, worker_package. Placed here on the Judge's recommendation: the sharpened preamble is an input to the three adapters."
+    objective: >-
+      Close Phase A's recording gaps: add worked example 9 for the Qwik sync$()-led QRL array
+      lowering, sharpen the forced-lowering preamble with a second trigger and a sanctioned-set
+      step, scope the Gate 2 import clause to other modules, bring docs/DEFECTS.md defect 2 into
+      line with T004's upstream ruling, and repoint the qwik-throttled continue-on-error comment.
+    allowed_files:
+      - docs/emitter-idiom-policy.md
+      - docs/DEFECTS.md
+      - .github/workflows/ci.yml
+    verify:
+      - "pnpm check"
+      - "pnpm test"
+      - "git diff --stat -- .github/workflows/ci.yml   # comment lines only; continue-on-error VALUES unchanged"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to change any continue-on-error VALUE. This package changes only the justifying comment. The throttled step stays true; the unthrottled control stays unflagged."
+      - "You are about to set qwikLoader: 'inline' anywhere in demos/qwik. T005 ruled against it."
+      - "You are about to restate Gate 5 for worked example 9 as a PASS. It is neither PASS nor FAIL - the procedure does not apply. Record it that way."
+      - "The preamble edit would make forced lowering available whenever a Worker prefers a different form. It must stay gated on the current form being OUTSIDE the sanctioned set for the construct."
+      - "Any emitter, gate, test, generated or demo file appears in git status."
+    constraints:
+      - "Documentation and one CI comment only. No behaviour changes anywhere."
+      - "PREAMBLE ADDITION, from T005 verbatim: forced lowering also covers the case where the naive form is syntactically legal in the target and produces observably incorrect behaviour for the construct the IR declares. A form the framework accepts as PARSEABLE is not thereby a sanctioned form for that construct. Before running the gates, state the sanctioned set - the forms the framework's own docs or toolchain accept as CORRECT for that construct - and choose the baseline from inside it. If the current emitted output is not in that set, this is a defect fix and the procedure does not apply. Never run Gate 5 against known-broken output: it will always FAIL, and the FAIL is meaningless."
+      - "GATE 2 CLAUSE: scope 'an added import list entry' to 'an added import list entry IN ANOTHER MODULE'. T005 upheld T003's reading and closed it as no longer re-openable."
+      - "WORKED EXAMPLE 9 must record two facts so the form choice is not reopened: the array carries the rest of the handler body, which preventdefault:click cannot, so the split is needed regardless at the type=button site; and preventdefault:click is element-level while SyncPolicy is per-event-record."
+      - "DEFECTS.md DEFECT 2 is untouched by T004 and is now stale - it still reads 'Status: diagnosed', still instructs 'Do this first: reproduce on an untouched pnpm create qwik app' (done), and still repeats the 'zero network requests' claim T004 corrected. Bring it into line and record qwikLoader: 'inline' as the known workaround FOR CONSUMERS - which is different from us adopting it."
+      - "CI COMMENT: the throttled step is titled 'known-failing, findings-007' and points at the pre-diagnosis note containing the corrected claim. Repoint at notes/T004-upstream-qwik-dropped-click.md and state the three facts that legitimise the flag - upstream, proven on an official scaffold, workaround deliberately not adopted."
+    receipt: null
+
   - id: T010
     type: pm
     assignee: PM
@@ -759,6 +794,7 @@ tasks:
       - "Rule on: sync$() lowering; a gate policy that PROVES a sync$ body references no reactive state; and a fail-closed path for what Qwik genuinely cannot express, namely a conditional cancel depending on signal state. That last is a new v-limit in the family of unknown-template-node.test.ts."
       - "HARD CONSTRAINT: sync$() cannot close over reactive state - no signals, no stores. It runs before the container resumes and may read only what is synchronously on the event."
       - "This decision is inherited by every future adapter. Rule it as a general IR question, not a Qwik patch."
+      - "HARDENING ITEM carried from T005: frameless/no-handler-prevent-default currently ALLOWS preventDefault() inside a sync$() nested within a lazy $() element, which is broken at runtime. The ancestor walk asks 'is there a sync$ between call and prop', not 'is that sync$ a DIRECT element of the event prop'. The emitter cannot produce that shape today, so it is not a live defect - but conditional-cancellation lowering is exactly the work that could start producing it."
     expected_output:
       - "IR representation ruling"
       - "Gate policy specification"
@@ -842,6 +878,8 @@ tasks:
       - "Reject completion if any continue-on-error flag persists without a receipt justifying it."
       - "Reject completion if the three-way contract does not assert cancellation for every framework once they exist."
       - "Audit the likely misfire explicitly: were the undiagnosed defects actually diagnosed, or silenced?"
+      - "Re-check the qwik-throttled flag's receipt if upstream has responded by then. T005 let it stay on the strength of T004's upstream proof; that justification expires if Qwik fixes or rejects it."
+      - "Confirm the upstream issues were actually FILED or are explicitly still pending. notes/T004-upstream-qwik-dropped-click.md and notes/T003-upstream-eslint-qwik.md are filing MATERIAL, not filings. The charter permits 'file or recommend', so pending is acceptable - but it must be stated, not assumed."
     expected_output:
       - "complete | not_complete"
       - "full_outcome_complete: true | false"
