@@ -12,7 +12,10 @@ goal:
     testing branch), Phase A emitted-output correctness (defects 1-2), Phase B
     diagnose the undiagnosed (defects 4, 6, 3-B), Phase C portability and
     consumption (defects 3, 5), then Phase D/E the shared IR foundation and the
-    three adapters via their existing boards.
+    three adapters via their existing boards, and finally PHASE F CORPUS BREADTH - added
+    2026-07-27 on owner instruction - which grows the corpus from three scenarios to TWELVE,
+    chosen by DIVERGENCE AXIS rather than feature count, each landed across all five targets,
+    and each carrying a cross-lane mutation budget that must go red.
   status: active
   autonomy_grant:
     granted: "2026-07-27, by the owner, verbatim: do not make anything dependent on me to continue until goal end."
@@ -33,7 +36,7 @@ goal:
       task that can proceed around it, and keep going. Do not set goal.status blocked and stop.
   oracle:
     signal: >-
-      TWO halves, both required. (1) DEFECTS: all six defects in docs/DEFECTS.md
+      THREE halves, all required - the third added 2026-07-27 on owner instruction. (1) DEFECTS: all six defects in docs/DEFECTS.md
       closed or explicitly ruled non-issues with receipts; the three-way contract
       asserts the default action is prevented in ALL THREE frameworks and Qwik
       passes it; every continue-on-error flag left by the testing goal
@@ -41,6 +44,12 @@ goal:
       carries a receipt justifying why it stays. (2) TARGETS: pnpm e2e includes
       Svelte, Vue and Angular rows on official scaffolds at pinned lockfile
       versions, with S1/S2/S3 observations ASSERTED equal to the existing three.
+      (3) CORPUS BREADTH: the corpus covers TWELVE scenarios rather than three, each chosen to
+      exercise a DIVERGENCE AXIS the original S1/S2/S3 do not, each landed in ALL FIVE lanes, and
+      each carrying at least one mutation PER EMITTER PROVEN to go red in the e2e matrix. The
+      stopping rule is that A MUTATION CANNOT SURVIVE - not that a file count reached a number.
+      Scenario count is a proxy, and four of six original defects on THIS VERY GOAL were instrument
+      faults, so this half is measured by what the corpus can KILL, not by what it contains.
     cadence: "at every phase audit, and at final audit"
     final_proof: >-
       A final audit receipt that certifies the phase audits rather than
@@ -2190,6 +2199,132 @@ tasks:
         - "Added a T021-correction block under Finding 3 of T018's note rather than only appending rule 5. Finding 3's table now names rows that NO LONGER EXIST and its key sentence was ruled an over-read that ORIGINATED in that note; leaving it unmarked directly above the new rule would have left the durable carrier asserting something T021 overturned. Original text preserved as the audit trail."
         - "Ran a temporary in-tree probe test in both gate files to enumerate collisions, then reverted it; solid/test/gate.test.ts is byte-identical to HEAD - PM VERIFIED."
       verification_attempts: 1
+  # ---------------------------------------------------------------------------
+  # PHASE F - CORPUS BREADTH. Added 2026-07-27 on owner instruction, after the
+  # owner asked what number of scenarios would justify real cross-framework
+  # confidence. Runs AFTER T013 and T014: a scenario now costs five emitters,
+  # five goldens, five demo routes and e2e wiring, and two of those five targets
+  # do not exist yet.
+  # ---------------------------------------------------------------------------
+
+  - id: T024
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Ratify the corpus-breadth contract: which scenarios land, in what order, and the cross-lane mutation budget that decides when the corpus is ENOUGH rather than merely bigger."
+    depends_on: ["T013", "T014"]
+    why_this_exists: >-
+      THE CORPUS IS THREE SCENARIOS. 10 fixtures, 3 IR goldens - S1, S2, S3 - and every emitter,
+      gate, golden and e2e row is that same corpus in different costumes. frameless-testing-audit
+      called it "great oracle, tiny corpus" and T018 called the corpora "sound by circumstance, not
+      design". The oracle is now strong enough that new scenarios pay out across FIVE targets at
+      once, which is what makes breadth the highest-value remaining investment.
+    the_selection_principle_binding_on_this_task: >-
+      PICK BY DIVERGENCE AXIS, NOT BY FEATURE COUNT. Activation neutrality can only break where
+      frameworks actually disagree, so a scenario that re-exercises a covered axis buys nothing.
+      Today's three cover: S1 derived state + single handler + text interpolation; S2 keyed list +
+      loop-variable closures + list mutation; S3 forms + preventDefault/syncPolicy + delegation and
+      bubbling + multiple handlers per host. Every divergence this project has actually been bitten
+      by falls OUTSIDE those or on their edges.
+    the_nine_proposed_ranked_by_evidence:
+      - "1. PARENT -> CHILD COMPOSITION (an emitted component consuming another emitted component). THE SINGLE HIGHEST-VALUE ADDITION. Every golden today is STANDALONE, which is exactly why the wrong-typed-prop hole (IR-8) is invisible and why vue-tsc and Angular strictTemplates were BOTH ruled to have 'a population of zero'. This one scenario converts three deferred instruments into live ones."
+      - "2. CONDITIONAL RENDERING WITH BRANCH TEARDOWN. Block-based (Svelte/Vue) vs reconciliation (React/Solid) vs resumed (Qwik) diverge hardest here. T020 already found a guarded control that stayed CORRECT while its guard had stopped being consulted."
+      - "3. FULL FORM CONTROLS - radio, select, textarea, multi-checkbox. In one night this repo hit React's defaultValue attribute rewrite, Svelte's remove_input_defaults and Solid's attr:. Three frameworks, three different behaviours, on the ONE control currently tested."
+      - "4. ASYNC EVENT HANDLERS. Defect 1 was exactly this - Qwik QRL laziness, repaired with the sync$ array form. Currently proven at ONE site."
+      - "5. NESTED LISTS (a loop variable inside a loop variable). Angular T002 ruling 3d explicitly specifies 'every enclosing @for variable, outermost first' and the corpus has ZERO instances. A rule with no instances is folklore."
+      - "6. EFFECTS WITH CLEANUP (mount/unmount ordering). Teardown ordering is where frameworks differ most and where nothing is asserted today."
+      - "7. BOOLEAN AND DYNAMIC ATTRIBUTES (disabled, hidden, aria-*). Notorious present-vs-absent-vs-\"false\" divergence, adjacent to the exact bug class Option D spent two audits on."
+      - "8. WHITESPACE-SENSITIVE TEXT. Vue's SFC compiler defaults to whitespace:'condense', a DIFFERENT rule from Svelte's. LIVE RISK: the Vue T002 judge flagged S2's '1/2' possibly rendering as '1 /2'."
+      - "9. REFS / DIRECT DOM ACCESS. An untouched escape hatch that every framework spells differently."
+    target_number: >-
+      TWELVE total for the current IR surface (the three that exist plus these nine). Roughly SIXTEEN
+      at full IR maturity, once IR-1 two-way binding, IR-2 custom events, IR-3 slots and IR-6
+      class/style bindings are closed - each adds one axis. NOT THIRTY: a scenario now costs five
+      emitters, five goldens, five demo routes and e2e wiring, so past ~15 the repo pays 5x per unit
+      for axes already covered.
+    the_caveat_that_outranks_the_number: >-
+      SCENARIO COUNT IS A PROXY, AND THIS PROJECT HAS BEEN BURNED BY PROXIES REPEATEDLY - four of six
+      original defects were instrument faults, and the T999 re-audit found the same fault recurring
+      one layer up IN THE DOCUMENTATION. A corpus of 12 that nothing mutates proves LESS than a
+      corpus of 6 with two-sided calibration. So this task must also ratify a CROSS-LANE MUTATION
+      BUDGET: for each scenario, at least one mutation PER EMITTER that must go RED in the e2e
+      matrix. The model is T009's require-each-key result - an unkeyed {#each} compiles clean,
+      reconciles wrong, and drew EXACTLY ONE violation across the whole gate. That single measurement
+      said more about coverage than a hundred passing assertions. CONFIDENCE ARRIVES WHEN A MUTATION
+      CANNOT SURVIVE, NOT WHEN A FILE COUNT HITS A NUMBER.
+    constraints:
+      - "Do not implement. Rule."
+      - "Rule the ORDER, not just the set. Scenario 1 (composition) is claimed to be highest-value; confirm or overturn with reasoning."
+      - "Reject any scenario that cannot be shown to exercise an axis the existing three do not. Adding volume is not the goal."
+      - "Slice into Worker packages sized so one package lands one coherent vertical - emitter change plus goldens plus demo routes plus e2e wiring across ALL FIVE targets. A scenario landed in three lanes and not five is a broken matrix, not progress."
+      - "Any scenario requiring an IR change must be separated out and justified, not folded in silently."
+    expected_output:
+      - "Ratified scenario set with per-scenario divergence axis and the evidence it is uncovered"
+      - "Landing order with reasoning"
+      - "The cross-lane mutation budget, concretely: what mutation, which lane, what must go red"
+      - "Worker slicing with exact objective, allowed_files, verify and stop_if per package"
+      - "The stopping rule - what evidence closes Phase F"
+    receipt: null
+
+  - id: T025
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    objective: "Land the first ratified corpus batch across all five targets, with its mutation budget proven red."
+    depends_on: ["T024"]
+    allowed_files: []
+    verify: []
+    stop_if:
+      - "allowed_files, verify and the batch contents come from the T024 ruling; do not improvise the set."
+      - "A scenario lands in fewer than five lanes. A partial matrix is a broken oracle, not partial progress."
+      - "A ratified mutation cannot be made to go RED. A corpus addition that no mutation can kill has not increased confidence and must be reported as such."
+      - "You are about to weaken an existing activation-neutrality assertion to make a new scenario pass."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
+  - id: T026
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    objective: "Land the second ratified corpus batch across all five targets, with its mutation budget proven red."
+    depends_on: ["T025"]
+    allowed_files: []
+    verify: []
+    stop_if:
+      - "Same as T025; contents come from the T024 ruling."
+    receipt: null
+
+  - id: T027
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    objective: "Land the third ratified corpus batch across all five targets, with its mutation budget proven red."
+    depends_on: ["T026"]
+    allowed_files: []
+    verify: []
+    stop_if:
+      - "Same as T025; contents come from the T024 ruling."
+    receipt: null
+
+  - id: T028
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Audit Phase F against its own stopping rule: is the corpus ENOUGH, measured by mutations that cannot survive rather than by scenario count?"
+    depends_on: ["T027"]
+    constraints:
+      - "Do not implement."
+      - "Reject if the corpus grew but the mutation budget was not proven red per lane - that is volume, not coverage."
+      - "Reject if any scenario landed in fewer than five lanes."
+      - "State plainly whether twelve turned out to be the right number, and if not, what the evidence says the number is."
+    receipt: null
+
+
   - id: T999
     type: judge
     assignee: Judge
