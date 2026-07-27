@@ -443,6 +443,11 @@ Domain, in emitter terms: the handler expression returned by `emitEvent()`
   Everything else — a `branches` list, a `graph-truthy` or `event-equals` guard — is *conditional*
   cancellation, whose `sync$()` body would have to read reactive state, and is deliberately
   outside the stated domain rather than an unhandled subset of it.
+
+  > **Superseded in part by worked example 10.** The stated domain was widened from "unconditional
+  > `preventDefault`" to "any lowerable declared `SyncPolicy`", and the deciding function is now
+  > `syncActionPlan()`. The G4 reasoning is unchanged in kind: what falls outside the domain is now
+  > *refused by name* rather than silently emitted, which is the part of this entry that was wrong.
 - **G5 — neither `PASS` nor `FAIL`. The procedure does not apply.** Recorded that way
   deliberately, and it is the outcome this entry exists to pin down. The two forms are plainly
   **not** behaviourally equivalent — the default action is now actually prevented, which is the
@@ -478,6 +483,103 @@ reopened.** It was settled by the repo owner, who is on the Qwik core team. Two 
    attribute cancels an event name on an element; the IR declares cancellation against a specific
    event record. Lowering a per-record declaration onto an element-level attribute would lose that
    correspondence wherever the two do not coincide.
+
+### 10. Qwik — a **conditional** `SyncPolicy` → a **synthesized** guard inside the leading `sync$()` QRL → **forced lowering** (adopted)
+
+Extends worked example 9 from the unconditional case to the whole lowerable condition grammar.
+Ruled by `docs/goals/frameless-defects-and-targets-v1/notes/T011-conditional-cancellation.md`;
+implemented by that goal's T012.
+
+**Why this is a separate entry rather than a footnote to 9.** Example 9 recorded conditional
+cancellation as "outside the stated domain". It was — but what happened to it was not neutral:
+`hoistsPreventDefault()` returned `false`, `emitEvent()` returned a **bare lazily fetched QRL**
+carrying the authored `event.preventDefault()`, and the emitter silently re-emitted defect 1. Only
+the gate caught it. Outside-the-domain must mean *refused*, not *emitted anyway*; that is the
+correction this entry carries.
+
+Adopted form, for `if (event.key === 'Enter') { event.preventDefault(); submit(); }`:
+
+```jsx
+onKeydown$={[
+  sync$((event) => { if (event.key === 'Enter') { event.preventDefault(); } }),
+  $(async (event) => { if (event.key === 'Enter') { await props.submit(); } })
+]}
+```
+
+Domain, in emitter terms: every `EnrichedEventRecord` whose `syncPolicy` is a single branch,
+declares at least one action, and whose guard contains no `graph-truthy` node and is not a falsy
+`constant-truthy`. The deciding function is `syncActionPlan()`.
+
+**The load-bearing design choice is that the guard is SYNTHESIZED, never lifted.** The `sync$()`
+body is generated from the declared condition tree, not copied from the authored source. A tree
+that has passed `assertLowerableCondition` can only produce reads of the event parameter and JSON
+literals, so **closure freedom is a property of the generator rather than a conclusion of an
+analysis** — which matters because Qwik's hard constraint (`core.mjs:15905`, enforced in dev by
+round-tripping the function through `new Function`) is that a synchronous QRL closes over nothing.
+The condition is consequently evaluated twice, once in the `sync$()` and once in the lazy
+remainder; that is sound precisely because it is pure over event fields.
+
+- **G1 PASS** — measured, not read, and measured *again* after the emitter existed, because the
+  first probe was hand-written and used `onKeyDown$` where the emitter actually emits `onKeydown$`.
+  A `sync$()` body containing an `if` statement is a **new shape** for the optimizer, and worked
+  example 9's G1 only ever proved a single-call body survives. Against `@qwik.dev/core@2.0.0-beta.38`
+  on the official `pnpm create qwik` pipeline, production build: `sync$(fn)` is rewritten to
+  `_qrlSync(fn, "<source>")`, the prop serializes as `q-e:keydown="#0|<chunk>#_run#1"`, and index 0
+  of the container's `qFuncs_*` table is the guard **verbatim** —
+  `event=>{if(event.key==="Enter"){event.preventDefault();}}`. A two-action `not`/`and` guard
+  serialized the same way. Two-sided behavioural check on the same build: `Enter` into a form whose
+  guard is `key === 'Enter'` did not navigate; the same key into a form guarded by
+  `key === 'Escape'` did.
+- **G2 PASS** — unchanged from 9. One call site, one emitted module, no demand on any other module.
+- **G3 PASS** — the trigger remains the declared `EnrichedEventRecord.syncPolicy`. Handler contents
+  are read only to *locate and remove* the calls the policy declares, never to decide whether to
+  lower.
+- **G4 PASS, and this is where the entry earns its place.** Totality is now discharged by
+  **refusal** rather than by silence. Outside the domain, `syncActionPlan()` throws a named,
+  greppable error: a `graph-truthy` guard (V1), the `branches` form (V2), a statically false guard
+  (V3), a declared action the body does not spell (V4), and an unrecognised condition type (V5).
+  A sixth refusal, not in the ruling, was added on measurement: an action call **stranded outside**
+  the declared policy — `if (k) { preventDefault() } else { stopPropagation() }` compiles cleanly
+  and Markless extracts only the consequent's action, so the else-branch call would otherwise ride
+  the lazy QRL.
+
+  V3 is worth stating explicitly: a statically false guard is **refused, not folded away**.
+  Deleting the authored call would be equivalent only if the constant fold is right and would
+  silently disable a real cancellation if it is wrong. The alternative on the table was to carve an
+  exception into the gate, and **a gate is never weakened to accommodate a degenerate input.**
+- **G5 — neither `PASS` nor `FAIL`, on exactly the grounds recorded in worked example 9**, and with
+  the same narrow scope. The pre-fix shape here is the bare lazy QRL, which was never in the
+  sanctioned set. The label is not available to a sugar question and is not reachable by preferring
+  a different form.
+- **G6 PASS** — three standing checks, each able to fail. The v-limits
+  (`packages/frameworks/qwik/test/v-limits.test.ts`) each ship a case that watches the refusal
+  fire. The gate ships `frameless/sync-qrl-must-be-closed`, which **proves** closure by scope
+  analysis as an allowlist rather than sniffing for signals by name, plus a hardened
+  `frameless/no-handler-sync-action`; both are calibrated by mutants, five of which were measured
+  producing **zero** violations before this change. And the green-vacuum guard in
+  `test/gate.test.ts` reconstructs the pre-fix output from the same IR by deleting its `syncPolicy`,
+  then watches our rule reject it while upstream's stays silent.
+
+  **What G6 does NOT yet cover, stated so it is not mistaken for covered:** there is no *behavioural*
+  three-way scenario asserting that a conditional cancel fires for the declared key and does not
+  fire for another. The G1 two-sided check above is a one-off probe on a scratch route, not a
+  standing lane. That is queued as its own package; emitted text plus a gate is the evidence base
+  defect 1 defeated.
+
+**Explicitly considered and refused: mirroring graph state into a `data-` attribute** so a
+`sync$()` could read `element.dataset.locked` and thereby express a `graph-truthy` guard. It would
+make the emitter synthesize a reactive DOM binding that is not in the IR, it depends on
+flush-before-event guarantees the IR does not make, and it converts a clean refusal into a subtle
+timing bug — **the exact trade defect 1 was.** Reopen only with a two-sided behavioural proof on
+official tooling plus an IR-level declaration of the mirror.
+
+**Inherited by every other adapter, as a general rule and not a Qwik patch:** *the IR declares
+**when** and **what**; the adapter decides **where**.* An adapter partitions the declared condition
+tree into the part it can evaluate in its synchronous pre-activation channel and the part it
+cannot, and **refuses to emit if that partition is not total for a declared action**. An adapter
+must never narrow the IR to what it happens to support. Only Qwik is expected to need the split —
+React, Solid, Svelte and Vue have synchronous resident handlers, and Angular's forced lowering is
+orthogonal — but all of them inherit the refusal obligation.
 
 ## Recording a ruling
 

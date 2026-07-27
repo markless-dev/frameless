@@ -6,7 +6,9 @@ import {
 	type EnrichedEventRecord,
 	type EnrichedGraphBinding,
 	type EnrichedIR,
+	type JsonValue,
 	type SerializableAstNode,
+	type SyncPolicyCondition,
 	type TemplateNode,
 } from '@frameless/compiler';
 
@@ -143,6 +145,11 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		if (!ir.components.some((component) => component.name === exported.componentName))
 			throw new Error(`ComponentExport has unknown component: ${exported.componentName}`);
 	}
+	// V1-V3 and the unknown-condition arm of V5. The limit is QWIK'S, so it lives
+	// here and not in @frameless/compiler: React and Solid lower `graph-truthy`
+	// with no difficulty, and encoding Qwik's weakness in the shared contract
+	// would export it to every other adapter (T011 §2, §5).
+	for (const event of ir.records.events) syncActionPlan(event);
 }
 
 function identifier(name: string): Node {
@@ -452,11 +459,54 @@ function eventAttributeName(name: string): string {
 	return `on${name[0]!.toUpperCase()}${name.slice(1)}$`;
 }
 
+type SyncAction = 'preventDefault' | 'stopPropagation';
+type SyncActionPlan = {
+	/** `null` when the declared branch is unconditional: no guard is synthesized. */
+	readonly guard: SyncPolicyCondition | null;
+	readonly actions: readonly SyncAction[];
+};
+
+const SYNTHESIZABLE_IDENTIFIER = /^[A-Za-z_$][A-Za-z0-9_$]*$/;
+
 /**
- * DECISION SITE - docs/emitter-idiom-policy.md, ruling "Qwik - unconditional
- * `preventDefault()` is split into a leading `sync$()` QRL and the handler is
- * emitted as a QRL array" (goal frameless-defects-and-targets-v1, T015 ruling 4
- * / T003, all six gates PASS).
+ * V1/V5 - the recursive half of the Qwik-only refusal set.
+ *
+ * `graph-truthy` is the one condition Qwik genuinely cannot express: the guard
+ * would have to read reactive state, and a `sync$()` QRL may close over nothing
+ * (see `syncActionPlan`). An unrecognised condition `type` is refused under V5
+ * for the same reason a body that referenced a binding would be - the emitter
+ * cannot prove closure over a construct it does not know, so it fails closed.
+ */
+function assertLowerableCondition(condition: SyncPolicyCondition, eventId: string): void {
+	switch (condition.type) {
+		case 'and':
+		case 'or':
+			condition.conditions.forEach((entry) => assertLowerableCondition(entry, eventId));
+			return;
+		case 'not':
+			assertLowerableCondition(condition.condition, eventId);
+			return;
+		case 'graph-truthy':
+			throw new Error(
+				`Qwik event ${eventId} declares a conditional sync action whose guard reads graph state ${condition.graphNodeId}; Qwik sync$() QRLs cannot close over reactive state`,
+			);
+		case 'constant-truthy':
+		case 'event-equals':
+			return;
+		default:
+			throw new Error(
+				`Qwik event ${eventId} synthesized sync$ body is not closed: unsupported guard condition ${JSON.stringify(
+					(condition as { readonly type?: unknown }).type ?? null,
+				)}`,
+			);
+	}
+}
+
+/**
+ * DECISION SITE - docs/emitter-idiom-policy.md, ruling "Qwik - a declared
+ * `SyncPolicy` is split into a leading `sync$()` QRL and the handler is emitted
+ * as a QRL array" (goal frameless-defects-and-targets-v1, T015 ruling 4 / T003
+ * for the unconditional case, T011 §3.1 for the conditional one).
  *
  * An ordinary Qwik event handler is a lazily fetched QRL: by the time its
  * segment arrives the browser has already performed the default action. T002
@@ -473,37 +523,230 @@ function eventAttributeName(name: string): string {
  * the rest of the body stays in the ordinary QRL behind it.
  *
  * HARD CONSTRAINT: a `sync$()` body cannot close over anything - no signals, no
- * stores, no module scope. Only the unconditional case is lowered here, and its
- * emitted body is exactly `<param>.preventDefault()`, which captures nothing.
+ * stores, no module scope (@qwik.dev/core core.mjs:15905, enforced in dev by
+ * round-tripping the function through `new Function`). This emitter satisfies
+ * that BY CONSTRUCTION rather than by analysis: the guard is SYNTHESIZED from
+ * the declared condition tree (`conditionExpression`), which after
+ * `assertLowerableCondition` can only produce event-field reads and JSON
+ * literals. `assertClosedSyncBody` then re-proves the result, so a future
+ * condition type cannot slip a binding in unnoticed.
  *
  * The trigger is the IR's declared `SyncPolicy`, never the handler's contents
- * (emitter-idiom-policy Gate 3). Only an unconditional branch qualifies: a
- * single branch, guarded by `constant-truthy` with a truthy value, whose actions
- * include `preventDefault`. Everything else - a `branches` list, a
- * `graph-truthy` or `event-equals` guard - is CONDITIONAL cancellation, whose
- * `sync$()` body would need to read state and which is deliberately out of scope
- * here (T011/T012 own that design).
+ * (emitter-idiom-policy Gate 3). What this function refuses, per T011 §5:
+ *
+ * - V1 a guard containing `graph-truthy` (`assertLowerableCondition`);
+ * - V2 the `branches` form - one QRL array per event prop, so a policy naming
+ *   several handler functions has nowhere to go;
+ * - V3 a statically false `constant-truthy` guard. Deleting the authored call
+ *   would be equivalent only if the constant fold is right and would silently
+ *   disable a real cancellation if it is wrong, so this refuses instead. Never
+ *   weaken the gate to accommodate a degenerate input.
+ *
+ * V4 (a declared action the handler body does not spell) lives in
+ * `normalizeHandler`, which is where the body is in hand.
  */
-function hoistsPreventDefault(event: EnrichedEventRecord): boolean {
+function syncActionPlan(event: EnrichedEventRecord): SyncActionPlan | null {
 	const policy = event.syncPolicy;
-	if (!policy || 'branches' in policy) return false;
-	if (!policy.actions.includes('preventDefault')) return false;
-	return policy.when.type === 'constant-truthy' && Boolean(policy.when.value);
+	if (!policy) return null;
+	if ('branches' in policy)
+		throw new Error(
+			`Qwik event ${event.id} declares a multi-handler sync policy; Qwik emits one QRL array per event prop`,
+		);
+	// A branch declaring no action declares nothing for Qwik to hoist; the
+	// handler is emitted exactly as it would be with no policy at all.
+	if (!policy.actions.length) return null;
+	if (policy.when.type === 'constant-truthy' && !policy.when.value)
+		throw new Error(
+			`Qwik event ${event.id} declares a sync action guarded by a statically false condition`,
+		);
+	assertLowerableCondition(policy.when, event.id);
+	return {
+		guard: policy.when.type === 'constant-truthy' ? null : policy.when,
+		actions: policy.actions as readonly SyncAction[],
+	};
 }
 
-function isPreventDefaultStatement(statement: Statement, eventParameter: string): boolean {
-	if (statement.type !== 'ExpressionStatement') return false;
+function jsonExpression(value: JsonValue): Expression {
+	if (value === null || typeof value !== 'object') return literal(value);
+	if (Array.isArray(value))
+		return { type: 'ArrayExpression', elements: value.map(jsonExpression) };
+	return {
+		type: 'ObjectExpression',
+		properties: Object.entries(value).map(([key, entry]) => ({
+			type: 'Property',
+			kind: 'init',
+			method: false,
+			shorthand: false,
+			computed: false,
+			key: literal(key),
+			value: jsonExpression(entry),
+		})),
+	};
+}
+
+/**
+ * Synthesize the `sync$()` guard from the declared condition tree. NEVER lifted
+ * from authored source: a tree that survived `assertLowerableCondition` can only
+ * yield reads of the event parameter and JSON literals, which is what makes
+ * closure freedom a property of this generator rather than a conclusion of an
+ * analysis (T011 §1.2).
+ *
+ * `event-equals` emits `===` even where the author wrote `==`: the IR, not the
+ * source text, is the contract, and Markless's own evaluator compares strictly.
+ */
+function conditionExpression(
+	condition: SyncPolicyCondition,
+	eventParameter: string,
+	eventId: string,
+): Expression {
+	switch (condition.type) {
+		case 'and':
+		case 'or': {
+			const operator = condition.type === 'and' ? '&&' : '||';
+			if (!condition.conditions.length) return literal(condition.type === 'and');
+			return condition.conditions
+				.map((entry) => conditionExpression(entry, eventParameter, eventId))
+				.reduce((left, right) => ({
+					type: 'LogicalExpression',
+					operator,
+					left,
+					right,
+				}));
+		}
+		case 'not':
+			return {
+				type: 'UnaryExpression',
+				operator: '!',
+				prefix: true,
+				argument: conditionExpression(condition.condition, eventParameter, eventId),
+			};
+		case 'constant-truthy':
+			return literal(Boolean(condition.value));
+		case 'event-equals':
+			return {
+				type: 'BinaryExpression',
+				operator: '===',
+				left: SYNTHESIZABLE_IDENTIFIER.test(condition.field)
+					? member(identifier(eventParameter), condition.field)
+					: {
+							type: 'MemberExpression',
+							object: identifier(eventParameter),
+							property: literal(condition.field),
+							computed: true,
+							optional: false,
+						},
+				right: jsonExpression(condition.value),
+			};
+		default:
+			throw new Error(
+				`Qwik event ${eventId} synthesized sync$ body is not closed: unsupported guard condition ${JSON.stringify(
+					(condition as { readonly type?: unknown }).type ?? null,
+				)}`,
+			);
+	}
+}
+
+/**
+ * V5 - the emitter asserting its own precondition (T007 rule 2). §1.2 of the
+ * T011 ruling proves this cannot fire for any condition Markless can currently
+ * produce; it exists for the day the IR grows a condition type that can, which
+ * is the failure mode `unknown-template-node.test.ts` exists for.
+ */
+function assertClosedSyncBody(node: Node, eventParameter: string, eventId: string): void {
+	const visit = (value: unknown): void => {
+		if (!value || typeof value !== 'object') return;
+		if (Array.isArray(value)) {
+			value.forEach(visit);
+			return;
+		}
+		const record = value as Node;
+		if (record.type === 'Identifier') {
+			if (record.name !== eventParameter)
+				throw new Error(
+					`Qwik event ${eventId} synthesized sync$ body is not closed: it references ${record.name}`,
+				);
+			return;
+		}
+		if (record.type === 'MemberExpression') {
+			visit(record.object);
+			if (record.computed) visit(record.property);
+			return;
+		}
+		if (record.type === 'Property') {
+			if (record.computed) visit(record.key);
+			visit(record.value);
+			return;
+		}
+		for (const child of Object.values(record)) visit(child);
+	};
+	visit(node);
+}
+
+function syncActionStatement(
+	statement: Statement,
+	eventParameter: string,
+	actions: readonly SyncAction[],
+): SyncAction | null {
+	if (statement.type !== 'ExpressionStatement') return null;
 	const candidate = statement.expression;
-	return (
-		candidate?.type === 'CallExpression' &&
-		candidate.arguments?.length === 0 &&
-		candidate.callee?.type === 'MemberExpression' &&
-		!candidate.callee.computed &&
-		candidate.callee.object?.type === 'Identifier' &&
-		candidate.callee.object.name === eventParameter &&
-		candidate.callee.property?.type === 'Identifier' &&
-		candidate.callee.property.name === 'preventDefault'
-	);
+	if (candidate?.type !== 'CallExpression' || candidate.arguments?.length !== 0) return null;
+	const callee = candidate.callee;
+	if (
+		callee?.type !== 'MemberExpression' ||
+		callee.computed ||
+		callee.object?.type !== 'Identifier' ||
+		callee.object.name !== eventParameter ||
+		callee.property?.type !== 'Identifier'
+	)
+		return null;
+	const name = callee.property.name as SyncAction;
+	return actions.includes(name) ? name : null;
+}
+
+/**
+ * Remove the authored action calls the leading `sync$()` QRL now performs. The
+ * synthesized guard re-evaluates the condition, so the lazy remainder keeps the
+ * authored `if` minus those calls - sound precisely because the condition is
+ * pure over event fields. Collapse rules from T003 carry over: an `if` whose
+ * consequent empties out is dropped entirely, and an empty body becomes a
+ * one-element QRL array.
+ */
+function stripSyncActions(
+	statements: readonly Statement[],
+	eventParameter: string,
+	actions: readonly SyncAction[],
+	removed: Set<SyncAction>,
+): Statement[] {
+	const stripBranch = (statement: Statement): Statement | null => {
+		if (statement.type === 'BlockStatement') {
+			const body = stripSyncActions(statement.body, eventParameter, actions, removed);
+			return body.length ? { ...statement, body } : null;
+		}
+		const [only] = stripSyncActions([statement], eventParameter, actions, removed);
+		return only ?? null;
+	};
+	const result: Statement[] = [];
+	for (const statement of statements) {
+		const action = syncActionStatement(statement, eventParameter, actions);
+		if (action) {
+			removed.add(action);
+			continue;
+		}
+		if (statement.type === 'BlockStatement') {
+			const body = stripSyncActions(statement.body, eventParameter, actions, removed);
+			if (body.length) result.push({ ...statement, body });
+			continue;
+		}
+		if (statement.type === 'IfStatement') {
+			const consequent = stripBranch(statement.consequent);
+			const alternate = statement.alternate ? stripBranch(statement.alternate) : null;
+			if (!consequent && !alternate) continue;
+			result.push({ ...statement, consequent: consequent ?? block([]), alternate });
+			continue;
+		}
+		result.push(statement);
+	}
+	return result;
 }
 
 function containsCurrentTarget(value: unknown, eventName: string): boolean {
@@ -535,6 +778,7 @@ function normalizeHandler(
 	event: EnrichedEventRecord,
 	handler: EnrichedEventRecord['handlers'][number],
 	context: EmitContext,
+	plan: SyncActionPlan | null,
 ): NormalizedHandler {
 	const converted = expression(handler.expression);
 	if (converted.type !== 'ArrowFunctionExpression')
@@ -570,24 +814,66 @@ function normalizeHandler(
 		}
 	}
 	// The leading sync$() QRL emitted alongside this handler is what actually
-	// cancels the default action, so the authored call is removed from the lazy
-	// QRL body rather than left to run too late. Fail closed: if the IR declares
-	// an unconditional preventDefault this emitter cannot locate, the split would
-	// silently drop a declared action - refuse to emit instead.
-	const hoisted = hoistsPreventDefault(event);
-	const body = hoisted
-		? authoredBody.filter(
-				(statement: Statement) =>
-					!(
-						firstParameter?.type === 'Identifier' &&
-						isPreventDefaultStatement(statement, firstParameter.name)
-					),
-			)
-		: authoredBody;
-	if (hoisted && body.length === authoredBody.length)
+	// performs the declared actions, so the authored calls are removed from the
+	// lazy QRL body rather than left to run too late.
+	//
+	// V4, fail closed and now widened to BOTH actions and to guarded positions:
+	// if the IR declares an action this emitter cannot locate, the split would
+	// silently drop it - refuse to emit instead.
+	if (plan && firstParameter?.type !== 'Identifier')
 		throw new Error(
-			`Qwik event ${event.id} declares an unconditional preventDefault its handler body does not spell as a top-level ${firstParameter?.type === 'Identifier' ? firstParameter.name : 'event'}.preventDefault() call`,
+			`Qwik event ${event.id} declares a sync action but its handler has no identifier event parameter`,
 		);
+	const removed = new Set<SyncAction>();
+	const body =
+		plan && firstParameter?.type === 'Identifier'
+			? stripSyncActions(authoredBody, firstParameter.name, plan.actions, removed)
+			: authoredBody;
+	for (const action of plan?.actions ?? [])
+		if (!removed.has(action))
+			throw new Error(
+				`Qwik event ${event.id} declares the sync action ${action} its handler body does not spell as a ${firstParameter?.type === 'Identifier' ? firstParameter.name : 'event'}.${action}() call`,
+			);
+	// The converse of V4, and NOT in the T011 ruling - it is here because T012
+	// measured the hole while pinning the condition vocabulary.
+	//
+	// MEASURED: `if (k) { event.preventDefault(); } else { event.stopPropagation(); }`
+	// compiles cleanly, and Markless extracts ONLY the consequent's action into
+	// the SyncPolicy. The else-branch call is therefore an ordinary statement to
+	// this emitter, and before this check it was emitted into the lazily fetched
+	// remainder - where a stopPropagation runs after bubbling has finished. That
+	// is defect 1's exact failure mode, arriving through a door V4 does not
+	// watch. The gate catches the emitted shape; this refuses to produce it.
+	//
+	// SCOPED TO `plan` DELIBERATELY. With no declared policy at all, this emitter
+	// still emits the authored call into the lazy QRL, and the GATE is what
+	// rejects that. Two reasons, not one: an action with no policy is
+	// unreachable from authored source (Markless refuses a guard it cannot
+	// extract with MARKLESS_SYNC_POLICY_UNEXTRACTABLE rather than dropping the
+	// policy), and the green-vacuum guards in test/gate.test.ts RECONSTRUCT
+	// unfixed main's output by deleting syncPolicy from a real IR. Refusing that
+	// input would destroy the only mechanism this package has for proving its
+	// released expectations are not vacuous.
+	if (plan && firstParameter?.type === 'Identifier')
+		for (const action of ['preventDefault', 'stopPropagation'] as const) {
+			let stranded = false;
+			walk(body, (record) => {
+				if (
+					record.type === 'CallExpression' &&
+					record.callee?.type === 'MemberExpression' &&
+					!record.callee.computed &&
+					record.callee.object?.type === 'Identifier' &&
+					record.callee.object.name === firstParameter.name &&
+					record.callee.property?.type === 'Identifier' &&
+					record.callee.property.name === action
+				)
+					stranded = true;
+			});
+			if (stranded)
+				throw new Error(
+					`Qwik event ${event.id} calls ${firstParameter.name}.${action}() at a position its SyncPolicy does not declare; a lazily fetched QRL runs after the browser has already acted`,
+				);
+		}
 	const lowerStatement = (
 		statement: Statement,
 	): { readonly sawCallback: boolean; readonly statement: Statement } => {
@@ -672,12 +958,12 @@ function normalizeHandler(
 		};
 	};
 	const lowered = lowerBlock(body);
-	// Removing the authored preventDefault() can leave a parameter with no
-	// remaining reference; an unused parameter is an eslint `no-unused-vars`
-	// violation in the gate. Only trailing parameters are dropped, and only when
-	// a statement was actually removed, so every other handler is byte-identical.
+	// Removing the authored action calls can leave a parameter with no remaining
+	// reference; an unused parameter is an eslint `no-unused-vars` violation in
+	// the gate. Only trailing parameters are dropped, and only when a statement
+	// was actually removed, so every other handler is byte-identical.
 	while (
-		hoisted &&
+		plan &&
 		params.length &&
 		!containsIdentifier(lowered.statements, params[params.length - 1]!.name)
 	)
@@ -695,24 +981,50 @@ function normalizeHandler(
 function emitEvent(event: EnrichedEventRecord, context: EmitContext): Expression {
 	if (event.handlers.length !== 1)
 		throw new Error(`Qwik emitter does not support multiple handlers for ${event.id}`);
-	const normalized = normalizeHandler(event, event.handlers[0]!, context);
-	// No declared cancellation - T004 ruling 1 applies unchanged: $-suffixed JSX
+	const plan = syncActionPlan(event);
+	const normalized = normalizeHandler(event, event.handlers[0]!, context, plan);
+	// No declared sync action - T004 ruling 1 applies unchanged: $-suffixed JSX
 	// event props take the raw handler; the optimizer wraps it.
-	if (!hoistsPreventDefault(event)) return normalized.handler;
-	// Unconditional cancellation, per the decision site above: a leading sync$()
-	// QRL that runs during dispatch, then the lazy remainder. Qwik accepts an
-	// array of QRLs for one event prop and runs them in order.
+	if (!plan) return normalized.handler;
+	// Declared sync actions, per the decision site above: a leading sync$() QRL
+	// that runs during dispatch, then the lazy remainder. Qwik accepts an array
+	// of QRLs for one event prop and runs them in order.
+	//
+	// MEASURED against @qwik.dev/core 2.0.0-beta.38 by T012 step 1, on the
+	// official `pnpm create qwik` pipeline: a GUARDED body survives the
+	// optimizer intact. `sync$(fn)` becomes `_qrlSync(fn, "<source>")`, the prop
+	// serializes as `q-e:keydown="#0|<chunk>#_run#1"`, and index 0 of the
+	// container's qFuncs table is the guard verbatim -
+	// `event=>{if(event.key==="Enter"){event.preventDefault();}}`. Two-sided
+	// behavioural check on the same build: Enter into a form guarded by
+	// `key === 'Enter'` did not navigate; the same key into one guarded by
+	// `key === 'Escape'` did.
 	context.imports.add('sync$');
+	const actionCalls = plan.actions.map((action) =>
+		expressionStatement(call(member(identifier(normalized.eventParameter), action), [])),
+	);
+	const syncBody = block(
+		plan.guard
+			? [
+					{
+						type: 'IfStatement',
+						test: conditionExpression(
+							plan.guard,
+							normalized.eventParameter,
+							event.id,
+						),
+						consequent: block(actionCalls),
+						alternate: null,
+					},
+				]
+			: actionCalls,
+	);
+	assertClosedSyncBody(syncBody, normalized.eventParameter, event.id);
 	const cancel = call(identifier('sync$'), [
-		arrow(
-			[identifier(normalized.eventParameter)],
-			block([
-				expressionStatement(
-					call(member(identifier(normalized.eventParameter), 'preventDefault'), []),
-				),
-			]),
-			{ async: false, expression: false },
-		),
+		arrow([identifier(normalized.eventParameter)], syncBody, {
+			async: false,
+			expression: false,
+		}),
 	]);
 	// A one-element array rather than a bare sync$() when nothing is left: one
 	// shape for the whole lowering, so the array is what "an event with declared

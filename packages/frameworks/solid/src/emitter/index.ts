@@ -345,6 +345,83 @@ function reconcileHandlerWrites(
 	}
 }
 
+/**
+ * Accept the FULL declared condition grammar, exactly as React does.
+ *
+ * Until T012 this validator threw `SyncPolicy <id> has unsupported sync shape`
+ * for every policy that was not `{when: constant-truthy true, actions:
+ * ['preventDefault']}`. That made the three-way contract unauthorable for the
+ * conditional case: `if (event.key === 'Enter') event.preventDefault()` compiled
+ * on React and hard-failed on Solid.
+ *
+ * There is nothing for Solid to refuse here. Its handlers are synchronous and
+ * resident, so the declared actions are already performed in the authored body
+ * at the authored moment; the policy is a CROSS-CHECK, not a lowering
+ * instruction. That is the same position React is in - and it is why widening
+ * this was only ever half the work, the other half being `normalizeHandler`.
+ */
+function validateSyncPolicy(
+	eventId: string,
+	policy: RecordLike,
+	bindingIds: ReadonlySet<string>,
+): void {
+	const validateCondition = (condition: RecordLike): void => {
+		const type = condition?.type;
+		if (type === 'and' || type === 'or') {
+			exactKeys(condition, ['type', 'conditions'], `SyncPolicyCondition ${eventId}`);
+			if (!Array.isArray(condition.conditions) || condition.conditions.length === 0)
+				throw new Error(`SyncPolicy ${eventId} has unsupported sync shape`);
+			condition.conditions.forEach(validateCondition);
+		} else if (type === 'not') {
+			exactKeys(condition, ['type', 'condition'], `SyncPolicyCondition ${eventId}`);
+			if (!condition.condition || typeof condition.condition !== 'object')
+				throw new Error(`SyncPolicy ${eventId} has unsupported sync shape`);
+			validateCondition(condition.condition);
+		} else if (type === 'graph-truthy') {
+			exactKeys(
+				condition,
+				['type', 'graphNodeId', 'path'],
+				`SyncPolicyCondition ${eventId}`,
+			);
+			if (typeof condition.graphNodeId !== 'string' || !bindingIds.has(condition.graphNodeId))
+				throw new Error(
+					`SyncPolicyCondition ${eventId} has dangling graph record id: ${String(condition.graphNodeId)}`,
+				);
+			if (
+				!Array.isArray(condition.path) ||
+				condition.path.some((part: unknown) => typeof part !== 'string')
+			)
+				throw new Error(`SyncPolicyCondition ${eventId} has malformed path`);
+		} else if (type === 'constant-truthy')
+			exactKeys(condition, ['type', 'value'], `SyncPolicyCondition ${eventId}`);
+		else if (type === 'event-equals')
+			exactKeys(condition, ['type', 'field', 'value'], `SyncPolicyCondition ${eventId}`);
+		else throw new Error(`SyncPolicy ${eventId} has unsupported sync shape`);
+	};
+	exactKeys(
+		policy,
+		'branches' in policy ? ['branches'] : ['when', 'actions'],
+		`SyncPolicy ${eventId}`,
+	);
+	const branches = 'branches' in policy ? policy.branches : [policy];
+	if (!Array.isArray(branches) || branches.length === 0)
+		throw new Error(`SyncPolicy ${eventId} has unsupported sync shape`);
+	for (const branch of branches as RecordLike[]) {
+		exactKeys(branch, ['when', 'actions'], `SyncPolicyBranch ${eventId}`);
+		if (
+			!Array.isArray(branch.actions) ||
+			branch.actions.some(
+				(action: unknown) =>
+					!['preventDefault', 'stopPropagation'].includes(String(action)),
+			) ||
+			!branch.when ||
+			typeof branch.when !== 'object'
+		)
+			throw new Error(`SyncPolicy ${eventId} has unsupported sync shape`);
+		validateCondition(branch.when);
+	}
+}
+
 /** Fail closed before any target AST is constructed. */
 export function validateEnrichedIr(ir: EnrichedIR): void {
 	if (hasComposition(ir)) {
@@ -1060,17 +1137,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 			);
 			reconcileHandlerWrites(fn, handler, event.id, ir.records.bindings);
 		}
-		if (event.syncPolicy) {
-			const policy = event.syncPolicy as RecordLike;
-			exactKeys(policy, ['when', 'actions'], `SyncPolicy ${event.id}`);
-			if (
-				policy.when?.type !== 'constant-truthy' ||
-				policy.when.value !== true ||
-				!Array.isArray(policy.actions) ||
-				policy.actions.some((action: string) => action !== 'preventDefault')
-			)
-				throw new Error(`SyncPolicy ${event.id} has unsupported sync shape`);
-		}
+		if (event.syncPolicy) validateSyncPolicy(event.id, event.syncPolicy, bindingIds);
 	}
 	for (const event of ir.records.events)
 		if (!hostIds.has(event.hostNodeId))
@@ -2225,10 +2292,58 @@ function lowerStoreMemberWrites(
 	);
 }
 
-function syncActions(event: EnrichedEventRecord): readonly string[] {
-	if (!event.syncPolicy) return [];
-	const policy = event.syncPolicy as { actions: readonly string[] };
-	return policy.actions;
+type SolidSyncPlan = {
+	readonly actions: readonly string[];
+	/**
+	 * The SHIPPED path only: strip the authored `preventDefault()` and re-emit it
+	 * as the first statement. See `normalizeHandler` for why this is the only
+	 * policy shape that gets rewritten at all.
+	 */
+	readonly renormalize: boolean;
+};
+
+/**
+ * Solid's handlers are SYNCHRONOUS AND RESIDENT, so a declared `SyncPolicy`
+ * needs no lowering: the authored calls already run at the authored moment,
+ * under the authored guard. The policy is a CROSS-CHECK here, exactly as it is
+ * in React.
+ *
+ * The `branches` form gets a NAMED refusal. Before T012 it reached
+ * `policy.actions.length` on a record that has no `actions` and produced a raw
+ * `TypeError: Cannot read properties of undefined (reading 'length')` - measured,
+ * not inferred. A multi-handler policy means the event prop carries several
+ * handler functions each contributing a branch, which this reconciliation does
+ * not model; refusing by name is the fail-closed answer.
+ */
+function syncPlan(event: EnrichedEventRecord): SolidSyncPlan | null {
+	const policy = event.syncPolicy as RecordLike | undefined;
+	if (!policy) return null;
+	if ('branches' in policy)
+		throw new Error(
+			`SyncPolicy ${event.id} declares a multi-handler sync policy; the Solid emitter reconciles one branch per event prop`,
+		);
+	const actions = (policy.actions ?? []) as readonly string[];
+	const unconditional =
+		policy.when?.type === 'constant-truthy' && Boolean(policy.when.value);
+	return {
+		actions,
+		renormalize: unconditional && actions.length === 1 && actions[0] === 'preventDefault',
+	};
+}
+
+function containsSyncActionCall(node: unknown, action: string): boolean {
+	let found = false;
+	walk(node, (record) => {
+		if (
+			record.type === 'CallExpression' &&
+			record.callee?.type === 'MemberExpression' &&
+			!record.callee.computed &&
+			record.callee.property?.type === 'Identifier' &&
+			record.callee.property.name === action
+		)
+			found = true;
+	});
+	return found;
 }
 
 function normalizeHandler(
@@ -2243,23 +2358,46 @@ function normalizeHandler(
 	if (!t.isBlockStatement(fn.body)) fn.body = t.blockStatement([t.expressionStatement(fn.body)]);
 	lowerStoreMemberWrites(fn, handler, context);
 	const parameter = fn.params[0];
-	const actions = syncActions(event);
+	const plan = syncPlan(event);
+	const actions = plan?.actions ?? [];
 	if (actions.length && !t.isIdentifier(parameter))
 		throw new Error(`Sync policy ${event.id} requires an identifier event parameter`);
+	// Cross-check, in React's shape: a declared action absent from the handler AST
+	// means the IR and the body disagree, and Solid has no channel to make up the
+	// difference. Run BEFORE any rewriting, against what the author wrote.
+	for (const action of actions)
+		if (!containsSyncActionCall(fn, action))
+			throw new Error(`Sync policy ${action} is absent from ${event.id}'s handler AST`);
 	if (t.isIdentifier(parameter)) {
-		let authored = false;
-		fn.body.body = fn.body.body.filter((statement: t.Statement) => {
-			if (!isPreventDefault(statement, parameter.name)) return true;
-			authored = true;
-			return false;
-		});
+		const authored = fn.body.body.some((statement: t.Statement) =>
+			isPreventDefault(statement, parameter.name),
+		);
 		if (authored && !actions.includes('preventDefault'))
 			throw new Error(`Undeclared preventDefault synchronization in ${event.id}`);
+		// THE ONLY REWRITE. Strip-and-renormalize applies to the shipped path
+		// alone - a single unconditional branch declaring exactly preventDefault -
+		// so that path stays byte-identical while every other policy leaves the
+		// authored body untouched, exactly as React does.
+		//
+		// Doing this for ANY non-empty `actions` was the most dangerous line in
+		// this emitter, and the over-narrow validator was the only thing hiding it.
+		// MEASURED with the validator widened and this line unfixed:
+		//
+		//   - a CONDITIONAL policy emitted `event.preventDefault();` at the top of
+		//     the handler AND kept the authored call inside the `if`, because the
+		//     strip-filter only ever looked at top-level statements. A cancellation
+		//     the author guarded fired unconditionally.
+		//   - a policy declaring ONLY `stopPropagation` emitted a
+		//     `event.preventDefault()` that appears nowhere in the program.
+		if (plan?.renormalize && authored)
+			fn.body.body = fn.body.body.filter(
+				(statement: t.Statement) => !isPreventDefault(statement, parameter.name),
+			);
 	}
 	const rewritten = rewriteExpressionAst(fn, context);
 	if (!t.isArrowFunctionExpression(rewritten) || !t.isBlockStatement(rewritten.body))
 		throw new Error(`Event handler ${event.id} was not preserved as an arrow`);
-	if (actions.length) {
+	if (plan?.renormalize) {
 		const eventParameter = rewritten.params[0];
 		if (!t.isIdentifier(eventParameter))
 			throw new Error(`Sync policy ${event.id} lost its event parameter`);

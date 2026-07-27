@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import type { EnrichedIR } from '@frameless/compiler';
+import { buildEnrichedIr, type EnrichedIR } from '@frameless/compiler';
 import { resolve } from 'pathe';
 import { describe, expect, test } from 'vitest';
 import { emit } from '../src/emitter/index.ts';
@@ -53,23 +53,74 @@ function mutate(source: string, search: string | RegExp, replacement: string): s
 	);
 }
 
+/** The `replaceAll` twin, per the block above. Same assertion, on the output. */
+function mutateAll(source: string, search: string | RegExp, replacement: string): string {
+	const mutated = source.replaceAll(search, replacement);
+	if (mutated !== source) return mutated;
+	throw new Error(
+		`gate mutation did not change the source: ${String(search)} left it byte-identical, ` +
+			'so this test would assert a policy against a non-mutant',
+	);
+}
+
+/**
+ * A conditional-cancellation IR, built from authored `.tsrx` in memory.
+ *
+ * NOT a corpus fixture and NOT a golden: T011 §7 forbids both here, because
+ * goldens ripple through every framework suite plus metamorphic and generative.
+ * Building the IR from source inside the test keeps the shape under test honest
+ * - it is what Markless actually produces for a guarded cancellation, not a
+ * hand-assembled record that could drift from the extractor.
+ */
+async function conditionalIr(): Promise<EnrichedIR> {
+	return buildEnrichedIr({
+		filename: 'guarded.tsrx',
+		source: `import { state } from '@markless/core';
+
+export function Guarded({ onTrace }) @{
+	let seen = state(0);
+
+	<form>
+		<input
+			data-action="text"
+			onKeyDown={(event) => {
+				if (event.key === 'Enter') {
+					event.preventDefault();
+					seen = 1;
+					onTrace('enter');
+				}
+			}}
+		/>
+		<output>{seen}</output>
+	</form>
+}
+`,
+	});
+}
+
 describe('Qwik v2 dossier gate', () => {
 	test('publishes independent source and artifact-required policies', () => {
-		expect(QWIK_GATE_POLICIES.slice(0, 3)).toEqual([
+		expect(QWIK_GATE_POLICIES.slice(0, 4)).toEqual([
 			{ id: 'no-visible-task', dossierRef: 'T002-qwik-architecture D8' },
 			{
 				id: 'persistence-render-lowering',
 				dossierRef: 'T002-qwik-architecture D8',
 			},
+			// Renamed from frameless/no-handler-prevent-default by T011 §4.1: the
+			// old name became a lie once stopPropagation entered scope.
 			{
-				id: 'frameless/no-handler-prevent-default',
+				id: 'frameless/no-handler-sync-action',
 				dossierRef: 'frameless-defects-and-targets-v1 T015 ruling 4',
+			},
+			{
+				id: 'frameless/sync-qrl-must-be-closed',
+				dossierRef: 'frameless-defects-and-targets-v1 T011 ruling 4',
 			},
 		]);
 		// Qwik's own lint rules, added by T006 to close the gate asymmetry with
 		// React and Solid. These are a third-party arbiter: they encode what the
 		// Qwik team considers correct, not what we decided.
-		expect(QWIK_GATE_POLICIES.slice(3).map((policy) => policy.id)).toEqual([
+		expect(QWIK_GATE_POLICIES.slice(4).map((policy) => policy.id)).toEqual([
 			'eslint:qwik/use-method-usage',
 			'eslint:qwik/no-react-props',
 			'eslint:qwik/jsx-key',
@@ -104,7 +155,7 @@ describe('Qwik v2 dossier gate', () => {
 		// [] IS NOT SELF-EVIDENT EVIDENCE. Unfixed main also produced [], because
 		// Qwik's no-async-prevent-default matches $() ancestry and frameless emits
 		// raw handlers. What makes this [] meaningful is
-		// `frameless/no-handler-prevent-default`, which does fire on the pre-fix
+		// `frameless/no-handler-sync-action`, which does fire on the pre-fix
 		// shape - proved by "MUTATION: the pre-fix emitter shape is rejected"
 		// below, which reconstructs that shape from the IR and watches the gate
 		// reject it while the upstream rule stays silent.
@@ -212,8 +263,8 @@ describe('Qwik v2 dossier gate', () => {
 		const result = await checkSources([{ file: 'generated/PreFixMutant.jsx', source }]);
 		const policies = result.violations.map((entry) => entry.policy);
 		expect(policies, JSON.stringify(result.violations, null, 2)).toEqual([
-			'frameless/no-handler-prevent-default',
-			'frameless/no-handler-prevent-default',
+			'frameless/no-handler-sync-action',
+			'frameless/no-handler-sync-action',
 		]);
 		expect(policies).not.toContain('eslint:qwik/no-async-prevent-default');
 		expect(result.violations[0]).toMatchObject({
@@ -221,12 +272,62 @@ describe('Qwik v2 dossier gate', () => {
 			dossierRef: 'frameless-defects-and-targets-v1 T015 ruling 4',
 		});
 	});
+
+	// GREEN-VACUUM GUARD for the CONDITIONAL lowering, same pattern as the test
+	// above and for the same reason: this expectation is being released now, so
+	// something has to show it is not a vacuum.
+	//
+	// T011 measured that conditional cancellation never reached a fail-closed
+	// throw. `hoistsPreventDefault()` returned false and `emitEvent` handed back a
+	// BARE lazily fetched QRL carrying the authored `preventDefault()` - defect 1,
+	// silently re-emitted. Deleting the syncPolicy reconstructs exactly that
+	// output from the same IR, and the gate must reject it.
+	test('MUTATION: a conditional policy lowers to sync$, and the pre-fix shape is rejected', async () => {
+		const artifact = await conditionalIr();
+		const fixed = await formatEmitted(emit(artifact));
+		// The guard is SYNTHESIZED from the condition tree, never lifted: this is
+		// the string measured verbatim in the qFuncs_* table of a production
+		// demos/qwik build at @qwik.dev/core 2.0.0-beta.38 (T012 step 1).
+		expect(fixed).toMatch(
+			/sync\$\(\(event\) => \{\s*if \(event\.key === 'Enter'\) \{\s*event\.preventDefault\(\);\s*\}\s*\}\)/,
+		);
+		expect(
+			(await checkSources([{ file: 'generated/ConditionalClean.jsx', source: fixed }]))
+				.violations,
+		).toEqual([]);
+
+		const stripped = structuredClone(artifact) as EnrichedIR;
+		const removed = stripped.records.events.filter((event) => {
+			const policy = (event as { syncPolicy?: unknown }).syncPolicy;
+			delete (event as { syncPolicy?: unknown }).syncPolicy;
+			return Boolean(policy);
+		});
+		expect(removed).toHaveLength(1);
+
+		const preFix = await formatEmitted(emit(stripped));
+		expect(preFix).not.toContain('sync$');
+		expect(preFix).toMatch(/if \(event\.key === 'Enter'\) \{\s*event\.preventDefault\(\);/);
+		const result = await checkSources([
+			{ file: 'generated/ConditionalPreFixMutant.jsx', source: preFix },
+		]);
+		const policies = result.violations.map((entry) => entry.policy);
+		expect(policies, JSON.stringify(result.violations, null, 2)).toEqual([
+			'frameless/no-handler-sync-action',
+		]);
+		// The vacuum proof, as above: nothing upstream sees this shape either.
+		expect(policies).not.toContain('eslint:qwik/no-async-prevent-default');
+	});
 });
 
-// CALIBRATION for frameless/no-handler-prevent-default. Each case is a shape the
+// CALIBRATION for frameless/no-handler-sync-action. Each case is a shape the
 // emitter could regress into; the last two tests are the anti-vacuity cases,
 // proving the policy is neither a substring search nor keyed on `async` or `$()`.
-describe('MUTATION: frameless/no-handler-prevent-default', () => {
+//
+// Shapes B through E were MEASURED SILENT before T012 - the rule matched only the
+// property name `preventDefault`, and its ancestor walk asked merely "is there a
+// sync$ between the call and the prop". A rule nobody watched reject these is not
+// evidence it can.
+describe('MUTATION: frameless/no-handler-sync-action', () => {
 	const caught = [
 		{
 			shape: 'a SYNCHRONOUS raw handler - the shape T002 witnessed failing',
@@ -241,8 +342,31 @@ describe('MUTATION: frameless/no-handler-prevent-default', () => {
 			source: `import { $ } from '@qwik.dev/core';\nexport const C = () => <button type="submit" onClick$={$((event) => { event.preventDefault(); })}>x</button>;`,
 		},
 		{
-			shape: 'a call nested below a conditional inside the handler',
-			source: `export const C = () => <form onSubmit$={(event) => { if (event.target) { event.preventDefault(); } }} />;`,
+			// A - caught before T012, and it must STAY caught.
+			shape: 'A: a CONDITIONAL preventDefault in a bare lazy QRL',
+			source: `export const C = () => <form onSubmit$={(event) => { if (event.key === 'Enter') { event.preventDefault(); } }} />;`,
+		},
+		{
+			// B - SILENT before T012. The rule matched only `preventDefault`.
+			shape: 'B: an UNCONDITIONAL stopPropagation in a bare lazy QRL',
+			source: `export const C = () => <button onClick$={(event) => { event.stopPropagation(); }}>x</button>;`,
+		},
+		{
+			// C - SILENT before T012, same cause.
+			shape: 'C: a CONDITIONAL stopPropagation in a bare lazy QRL',
+			source: `export const C = () => <button onClick$={(event) => { if (event.key === 'Enter') { event.stopPropagation(); } }}>x</button>;`,
+		},
+		{
+			// D - SILENT before T012. T005's carried hardening item: the sync$ is
+			// CONSTRUCTED inside a lazily fetched QRL, long after dispatch.
+			shape: 'D: a sync$() nested inside the lazy $() element',
+			source: `import { $, sync$ } from '@qwik.dev/core';\nexport const C = () => <button onClick$={[$(async (event) => { sync$((e) => { e.preventDefault(); }); await go(); })]}>x</button>;`,
+		},
+		{
+			// E - SILENT before T012, and upstream is silent on it too: there is no
+			// $() ancestry for qwik/no-async-prevent-default to match.
+			shape: 'E: a sync$() nested inside a bare lazy handler',
+			source: `import { sync$ } from '@qwik.dev/core';\nexport const C = () => <button onClick$={(event) => { sync$((e) => { e.preventDefault(); }); }}>x</button>;`,
 		},
 		{
 			shape: 'a call in the LAZY element of a sync$()-led QRL array',
@@ -256,7 +380,7 @@ describe('MUTATION: frameless/no-handler-prevent-default', () => {
 			expect(
 				result.violations.map((entry) => entry.policy),
 				JSON.stringify(result.violations, null, 2),
-			).toContain('frameless/no-handler-prevent-default');
+			).toContain('frameless/no-handler-sync-action');
 		});
 
 	test('the `async` keyword is not what the policy keys on', async () => {
@@ -265,7 +389,7 @@ describe('MUTATION: frameless/no-handler-prevent-default', () => {
 				(
 					await checkSources([{ file: 'generated/Mutant.jsx', source }])
 				).violations.filter(
-					(entry) => entry.policy === 'frameless/no-handler-prevent-default',
+					(entry) => entry.policy === 'frameless/no-handler-sync-action',
 				),
 			),
 		);
@@ -273,24 +397,164 @@ describe('MUTATION: frameless/no-handler-prevent-default', () => {
 		expect(async).toHaveLength(1);
 	});
 
-	test('ANTI-VACUITY: the sync$() lowering and non-handler preventDefault are accepted', async () => {
+	// E is the one shape NOTHING saw before T012 - not us, not upstream. D at
+	// least tripped qwik/no-async-prevent-default by accident of its $(async)
+	// ancestry, which is not a property we rely on.
+	test('E is invisible to upstream, so only our rule can be what caught it', async () => {
+		const result = await checkSources([
+			{ file: 'generated/Mutant.jsx', source: caught[7]!.source },
+		]);
+		const policies = result.violations.map((entry) => entry.policy);
+		expect(policies, JSON.stringify(result.violations, null, 2)).toContain(
+			'frameless/no-handler-sync-action',
+		);
+		expect(policies).not.toContain('eslint:qwik/no-async-prevent-default');
+	});
+
+	test('ANTI-VACUITY: both sync$() lowerings and a non-handler call are accepted', async () => {
 		const result = await checkSources([
 			{
 				file: 'generated/Clean.jsx',
 				source: [
 					`import { $, sync$ } from '@qwik.dev/core';`,
-					// The lowering this policy exists to permit: cancellation in the
-					// leading sync$() QRL, the rest behind it.
+					// The shipped unconditional lowering this policy exists to permit.
 					`export const C = () => <button type="submit" onClick$={[sync$((event) => { event.preventDefault(); }), $(async () => {})]}>x</button>;`,
+					// The NEW conditional lowering, with both actions in one guard.
+					`export const D = () => <input onKeydown$={[sync$((event) => { if (event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); } })]} />;`,
+					// A sync$() as the DIRECT value of the prop, not an array element.
+					`export const E = () => <input onKeydown$={sync$((event) => { event.preventDefault(); })} />;`,
 					// Not a JSX event prop: the policy reads ancestry, not text.
-					`export function guard(event) { event.preventDefault(); }`,
+					`export function guard(event) { event.preventDefault(); event.stopPropagation(); }`,
 				].join('\n'),
 			},
 		]);
 		expect(
 			result.violations.map((entry) => entry.policy),
 			JSON.stringify(result.violations, null, 2),
-		).not.toContain('frameless/no-handler-prevent-default');
+		).not.toContain('frameless/no-handler-sync-action');
+	});
+});
+
+// CALIBRATION for frameless/sync-qrl-must-be-closed.
+//
+// This rule PROVES closure freedom by scope analysis; it does not sniff for
+// signals. Every case below is a DIFFERENT KIND of captured binding, and the
+// point of the set is that the rule never had to recognise any of them - it only
+// had to fail to resolve them inside the function. Case 9 was measured drawing
+// ZERO frameless violations before T012.
+describe('MUTATION: frameless/sync-qrl-must-be-closed', () => {
+	const preamble = `import { $, component$, sync$, useSignal, useStore } from '@qwik.dev/core';\n`;
+	const caught = [
+		{
+			shape: '9: the body reads a signal',
+			captured: 'locked',
+			source: `${preamble}export const C = component$(() => {
+	const locked = useSignal(false);
+	return <button onClick$={[sync$((event) => { if (locked.value) { event.preventDefault(); } })]}>x</button>;
+});`,
+		},
+		{
+			shape: '10: the body reads a store member',
+			captured: 'form',
+			source: `${preamble}export const C = component$(() => {
+	const form = useStore({ locked: false });
+	return <button onClick$={[sync$((event) => { if (form.locked) { event.preventDefault(); } })]}>x</button>;
+});`,
+		},
+		{
+			shape: '11: the body calls a module-scope function',
+			captured: 'isLocked',
+			source: `${preamble}function isLocked() { return true; }
+export const C = () => <button onClick$={[sync$((event) => { if (isLocked()) { event.preventDefault(); } })]}>x</button>;`,
+		},
+		{
+			shape: '12: the body reads a component-scope const',
+			captured: 'limit',
+			source: `${preamble}export const C = component$(() => {
+	const limit = 3;
+	return <button onClick$={[sync$((event) => { if (event.detail === limit) { event.preventDefault(); } })]}>x</button>;
+});`,
+		},
+		{
+			// Refused under the strict allowlist. `window` is a perfectly real
+			// binding at runtime - but the rule accepts ONLY what resolves inside
+			// the function, so an unforeseen construct fails closed.
+			shape: '13: the body references a global',
+			captured: 'window',
+			source: `${preamble}export const C = () => <button onClick$={[sync$((event) => { if (window.innerWidth > 0) { event.preventDefault(); } })]}>x</button>;`,
+		},
+	];
+
+	for (const { shape, captured, source } of caught)
+		test(`rejects ${shape}`, async () => {
+			const result = await checkSources([{ file: 'generated/Mutant.jsx', source }]);
+			const reported = result.violations.filter(
+				(entry) => entry.policy === 'frameless/sync-qrl-must-be-closed',
+			);
+			expect(reported, JSON.stringify(result.violations, null, 2)).not.toHaveLength(0);
+			expect(reported.map((entry) => entry.message).join('\n')).toContain(
+				`\`${captured}\``,
+			);
+			expect(reported[0]).toMatchObject({
+				dossierRef: 'frameless-defects-and-targets-v1 T011 ruling 4',
+			});
+		});
+
+	test('an argument that is not a function literal cannot be proved, so it is refused', async () => {
+		const result = await checkSources([
+			{
+				file: 'generated/Mutant.jsx',
+				source: `import { sync$ } from '@qwik.dev/core';\nconst body = (event) => { event.preventDefault(); };\nexport const C = () => <button onClick$={[sync$(body)]}>x</button>;`,
+			},
+		]);
+		expect(
+			result.violations
+				.filter((entry) => entry.policy === 'frameless/sync-qrl-must-be-closed')
+				.map((entry) => entry.message)
+				.join('\n'),
+			JSON.stringify(result.violations, null, 2),
+		).toContain('must receive a function literal');
+	});
+
+	test('ANTI-VACUITY: the shipped and conditional bodies, and a second parameter, are accepted', async () => {
+		const result = await checkSources([
+			{
+				file: 'generated/Clean.jsx',
+				source: [
+					`import { $, sync$ } from '@qwik.dev/core';`,
+					`export const C = () => <button onClick$={[sync$((event) => { event.preventDefault(); }), $(async () => {})]}>x</button>;`,
+					`export const D = () => <input onKeydown$={[sync$((event) => { if (event.key === 'Enter') { event.preventDefault(); event.stopPropagation(); } })]} />;`,
+					// A sync$ QRL receives the element as its second argument; using it
+					// is not a capture, and a body that declares its own locals is fine.
+					`export const E = () => <input onInput$={[sync$((event, element) => { const wanted = element.dataset.action; if (event.data === wanted) { event.preventDefault(); } })]} />;`,
+				].join('\n'),
+			},
+		]);
+		expect(
+			result.violations.map((entry) => entry.policy),
+			JSON.stringify(result.violations, null, 2),
+		).not.toContain('frameless/sync-qrl-must-be-closed');
+	});
+
+	test('the clean emitted corpus is closed', async () => {
+		const result = await checkGeneratedFiles();
+		expect(result.violations.map((entry) => entry.policy)).not.toContain(
+			'frameless/sync-qrl-must-be-closed',
+		);
+		// Anti-vacuity for the line above: mutating a real emitted sync$ body to
+		// read a signal makes it RED, so the clean [] is a measurement.
+		const mutant = mutateAll(
+			await readFile(resolve(packageRoot, 'generated/S3.jsx'), 'utf8'),
+			'sync$((event) => {',
+			'sync$((event) => {\n\t\t\t\t\t\tif (!writes.value) return;',
+		);
+		const mutated = await checkSources([
+			{ file: 'generated/ClosureMutant.jsx', source: mutant },
+		]);
+		expect(
+			mutated.violations.map((entry) => entry.policy),
+			JSON.stringify(mutated.violations, null, 2),
+		).toContain('frameless/sync-qrl-must-be-closed');
 	});
 });
 

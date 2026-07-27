@@ -122,7 +122,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T012
+active_task: T019
 
 tasks:
   - id: T001
@@ -1249,7 +1249,7 @@ tasks:
   - id: T019
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: low
     objective: "Close the two documentation inconsistencies T016 surfaced from outside its allowed_files."
     allowed_files:
@@ -1593,7 +1593,7 @@ tasks:
   - id: T012
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: >-
       Implement the T011 ruling. IN ORDER: (1) MEASURE FIRST in T003's G1 discipline - build
@@ -1641,8 +1641,81 @@ tasks:
     constraints:
       - "allowed_files and verify come from the T011 ruling."
       - "Mutation-test the new gate policy the way the existing gates are - a policy nobody proved can fail is not a gate."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      note: notes/T012-conditional-cancellation.md
+      worktree: "collected from .claude/worktrees/agent-a3dc18ad4700b5e12; the 2051-line diff applied CLEAN"
+      summary: "Implemented the T011 ruling in order. Step 1 MEASURED a guarded sync$ body surviving the 2.0.0-beta.38 optimizer verbatim in the qFuncs table, re-measured against the emitter's exact output after finding an onKeydown$ discrepancy in its own probe, and added a two-sided behavioural check. Qwik now SYNTHESIZES the guard from the condition tree with SIX named refusals; the gate rule was renamed, widened to stopPropagation and hardened to direct-position sync$; a new rule PROVES closure freedom by scope analysis. Solid's three masked bugs were each REPRODUCED before being fixed. React's behaviour is pinned. 620 -> 668 tests, generated corpora byte-identical."
+      changed_files:
+        - packages/frameworks/qwik/src/emitter/index.ts
+        - packages/frameworks/qwik/src/gate/index.ts
+        - packages/frameworks/qwik/test/gate.test.ts
+        - packages/frameworks/qwik/test/v-limits.test.ts
+        - packages/frameworks/solid/src/emitter/index.ts
+        - packages/frameworks/solid/test/emitter.test.ts
+        - packages/frameworks/react/test/emitter.test.ts
+        - packages/compiler/test/v0-limits.test.ts
+        - docs/emitter-idiom-policy.md
+        - docs/goals/frameless-defects-and-targets-v1/notes/T012-conditional-cancellation.md
+      commands:
+        - cmd: "pnpm --dir demos/qwik build + preview + curl + playwright"
+          status: pass
+          note: "STEP 1, the deciding measurement"
+        - cmd: "pnpm check"
+          status: pass
+          note: "PM RE-RAN on main: four tsc passes"
+        - cmd: "pnpm test"
+          status: pass
+          note: "PM RE-RAN on main: 668/668, 43 files. Stashed baseline was 620."
+        - cmd: "pnpm test:browser"
+          status: pass
+          note: "react 60/60, solid 49/49, svelte 13/13"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "PM RE-RAN: 0 warnings, 0 errors"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "3 demos x 3 scenarios, all observations equal"
+        - cmd: "git diff --exit-code -- generated + emitted"
+          status: pass
+          note: "PM VERIFIED byte-identical - the unconditional path from T003 did not move"
+      step_1_measurement:
+        verdict: "PASS - a guarded sync$ body IS extracted, serialized and kept in the event prop. The lowering design is sound."
+        measured_twice: "The first probe was hand-written from T011's example and used onKeyDown$; the emitter actually emits onKeydown$ (eventAttributeName upper-cases only the first letter). The whole measurement was re-run against the emitter's byte-exact output. Both passed - but the discrepancy is exactly why measuring the emitter's real output rather than a hand-written approximation matters."
+        optimizer_rewrite: "sync$(fn) becomes _qrlSync(fn, \"<source>\") - a(e=>{e.key===\"Enter\"&&e.preventDefault()},'event=>{if(event.key===\"Enter\"){event.preventDefault();}}')"
+        qfuncs_verbatim: "event=>{if(event.key===\"Enter\"){event.preventDefault();}} / event=>{if(event.key===\"Escape\"){event.preventDefault();}} / event=>{if(!(event.key===\"Escape\")&&event.detail===1){event.preventDefault();event.stopPropagation();}}"
+        event_props: "q-e:keydown=\"#0|q-wOvRpCvR.js#_run#1\" (sync$ at qFuncs 0 then the lazy element), q-e:keydown=\"#1\" (sync$-only one-element array), q-e:click=\"#2\""
+        two_sided_behaviour: "Production build via Playwright: Enter into a form guarded by key==='Enter' did NOT navigate; the same key into a form guarded by key==='Escape' DID navigate. Probe route deleted; nothing in demos/ is in the diff."
+      sixth_refusal_not_in_the_ruling:
+        found: "`if (k) { preventDefault() } else { stopPropagation() }` compiles cleanly and Markless extracts ONLY THE CONSEQUENT'S ACTION, so the else-branch call rode the lazy QRL."
+        why_it_matters: "That is defect 1's exact failure mode arriving through a door V4 does not watch - a declared action is located and placed correctly while an UNDECLARED one is silently left behind in the lazy segment."
+        scoping_was_deliberate: "Refusal is scoped to plan !== null, because the green-vacuum guards reconstruct unfixed-main output by DELETING syncPolicy from a real IR. Refusing that input would have destroyed the package's only anti-vacuity mechanism."
+        pm_verified: "Read the stranded-action check at qwik/src/emitter/index.ts:842-870."
+      gate_policies:
+        renamed_and_widened: "frameless/no-handler-sync-action - both action names, and the ancestor walk hardened so the FIRST sync$ call or JSX event attribute decides, with sync$ allowed only in DIRECT position. NINE mutants, of which four (unconditional stopPropagation, conditional stopPropagation, sync$ inside $(), sync$ inside a bare lazy handler) were MEASURED SILENT before this change. A separate test proves one of them is invisible to upstream, so only our rule can be what caught it."
+        new_closure_rule: "frameless/sync-qrl-must-be-closed PROVES via ESLint scope analysis that the sync$ argument references no binding but its own parameters - an ALLOWLIST, so unresolved names and globals fail closed. It does NOT sniff for signals by name or .value. Red proofs: signal, store member, module-scope function, component-scope const, global window, non-function-literal argument, plus a mutation of the REAL emitted S3 sync$ body that makes the clean corpus go red."
+        green_vacuum_guard: "A second IR-level guard for the conditional path: build a conditional IR from source, assert it lowers with zero violations, then DELETE syncPolicy and assert the reconstructed pre-fix output draws exactly one violation while upstream stays silent."
+      v_limits: "Six refusals in the Qwik emitter's validateEnrichedIr and normalizeHandler - NOT packages/compiler, so the shared contract does not learn Qwik's limit. New v-limits.test.ts with 13 tests. V1 graph-truthy proved by a real authored `if (locked)` compile plus a nested case; V2 branches; V3 statically-false; V4 unlocatable declared action, widened to both actions and guarded positions; V5 unknown condition type, a self-assertion so it gets a REACHABILITY test per T007 rule 2; plus the sixth. One test proves every refusal names the event id and all messages are distinct."
+      solid_bugs_all_three_confirmed_by_reproduction:
+        method: "The validator was widened FIRST and all three reproduced BEFORE being fixed - measurements, not inherited claims."
+        bug_1: "CONFIRMED. A conditional policy emitted an unshifted unconditional event.preventDefault() at the TOP of the handler PLUS the authored guarded call inside the if. The strip-filter only inspected top-level statements and the unshift ignored `when`. A conditional cancel fired ALWAYS."
+        bug_2: "CONFIRMED. A ['stopPropagation'] policy emitted an event.preventDefault() that appears NOWHERE in the authored program."
+        bug_3: "CONFIRMED. The branches form threw a raw TypeError instead of a named refusal."
+        also: "A test proves a graph-truthy guard - the case Qwik refuses under V1 - is preserved VERBATIM on Solid, which is why Qwik's limit stayed out of the shared IR."
+      react: "No source change - measured correct and now PINNED by four tests. Previously an untested assumption the other two lanes lean on."
+      flagged_for_the_pm:
+        - "THE BEHAVIOURAL LANE IS STILL OWED. The two-sided check was a one-off probe on a scratch route, not a standing check. T011 sequenced it separately as T020, and it is the only thing that closes this the way defect 1 was closed."
+        - "docs/DEFECTS.md still names the gate rule frameless/no-handler-prevent-default and does not record the stopPropagation hole. Outside allowed_files; flagged so the rename is not lost."
+        - "The branches form is UNREACHABLE from authored source today - authoring two handler functions on one prop fails earlier in handler reconciliation. This refines T011's reading: Qwik's V2 and Solid's branches refusal are self-assertions in V5's family, pinned in v0-limits.test.ts rather than pretending they had reachable mutants."
+        - "An else-branch action is not extracted by Markless. Recorded in v0-limits.test.ts as a known upstream gap and refused by the Qwik emitter. May deserve an upstream conversation - a PM/owner call."
+      deviations:
+        - "Added the sixth refusal, above."
+        - "Gave Solid React's declared-action cross-check. Without it a widened validator would accept a policy and then ignore it, leaving it decorative on one lane of a three-way contract."
+        - "A policy declaring zero actions is treated as no policy rather than validated - it declares nothing to place, so refusing it would be a refusal with no failure behind it."
+        - "frameless/sync-qrl-must-be-closed applies to EVERY sync$ call, not only those under an event prop as T011 scoped it. Qwik's invariant is unconditional; the wider scope is simpler and fails closed."
+        - "Added a mutateAll twin to the Qwik gate corpus, matching React and Solid, since one new mutation needed replaceAll."
+      verification_attempts: 1
   - id: T013
     type: pm
     assignee: PM

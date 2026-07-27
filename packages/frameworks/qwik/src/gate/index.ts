@@ -16,7 +16,12 @@ export type DossierRef =
 	// Cancellation must ride a synchronously resolvable QRL, not a lazily fetched
 	// one. T015 ruling 4 of frameless-defects-and-targets-v1, implemented by that
 	// goal's T003.
-	| 'frameless-defects-and-targets-v1 T015 ruling 4';
+	| 'frameless-defects-and-targets-v1 T015 ruling 4'
+	// A sync$() QRL may close over NOTHING. T011 §4.2 of
+	// frameless-defects-and-targets-v1 ruled this must be PROVED by scope
+	// analysis rather than sniffed for by name, and §4.1 hardened the sibling
+	// rule to direct-position sync$ and to both declared action names.
+	| 'frameless-defects-and-targets-v1 T011 ruling 4';
 export type GatePolicy = {
 	readonly id: string;
 	readonly dossierRef: DossierRef;
@@ -99,15 +104,59 @@ function jsxAttributeName(name: Record<string, any> | undefined): string {
 	return typeof name.name === 'string' ? name.name : '';
 }
 
+function isSyncQrlCall(node: Record<string, any> | undefined): boolean {
+	return Boolean(
+		node &&
+			node.type === 'CallExpression' &&
+			node.callee?.type === 'Identifier' &&
+			node.callee.name === 'sync$',
+	);
+}
+
 /**
- * FRAMELESS-OWNED. Rejects `preventDefault()` inside an emitted event handler
- * unless the call sits in a `sync$()` QRL.
+ * Is the `sync$()` call at `ancestors[index]` in DIRECT position under a JSX
+ * event prop - either the value of the prop's expression container, or a direct
+ * element of the array that is that value?
+ *
+ * This is the T005 hardening item, ruled on in T011 §4.1. The previous walk
+ * asked only "is there a sync$ between the call and the prop", which ALLOWED a
+ * `sync$()` created INSIDE a lazily fetched QRL. Such a sync$ is constructed
+ * long after dispatch, so its `preventDefault()` is exactly as ineffective as
+ * the shape this rule exists to reject. Both shapes were measured silent before
+ * this change.
+ */
+function syncQrlIsDirect(ancestors: Array<Record<string, any>>, index: number): boolean {
+	const parent = ancestors[index - 1];
+	const grandparent = ancestors[index - 2];
+	const greatGrandparent = ancestors[index - 3];
+	const isEventProp = (node: Record<string, any> | undefined): boolean =>
+		Boolean(node && node.type === 'JSXAttribute' && EVENT_PROP.test(jsxAttributeName(node.name)));
+	if (parent?.type === 'JSXExpressionContainer') return isEventProp(grandparent);
+	if (parent?.type === 'ArrayExpression' && grandparent?.type === 'JSXExpressionContainer')
+		return isEventProp(greatGrandparent);
+	return false;
+}
+
+/**
+ * FRAMELESS-OWNED, two rules.
+ *
+ * `no-handler-sync-action` rejects a declared sync action - `preventDefault()`
+ * or `stopPropagation()` - inside an emitted event handler unless the call sits
+ * in a DIRECT-position `sync$()` QRL.
+ *
+ * It was named `no-handler-prevent-default` until T011 §4.1. That name became a
+ * lie the moment `stopPropagation` entered scope: `SyncPolicy.actions` has
+ * always admitted it, an authored top-level `event.stopPropagation()` has always
+ * reached the emitter, and the resulting lazily fetched QRL runs long after
+ * propagation has completed. Measured before this change: both the conditional
+ * and the unconditional `stopPropagation` shapes drew ZERO violations from any
+ * rule, ours or upstream's.
  *
  * WHAT IT KEYS ON: which KIND of QRL the call lands in. A `sync$()` QRL is
  * serialized inline into the HTML and the loader resolves it without a network
- * round trip, so it runs during dispatch and `preventDefault()` works. Every
- * other QRL under an event prop is fetched lazily, so by the time it runs the
- * browser has already performed the default action.
+ * round trip, so it runs during dispatch. Every other QRL under an event prop is
+ * fetched lazily, so by the time it runs the browser has already performed the
+ * default action or finished bubbling.
  *
  * WHAT IT DELIBERATELY DOES NOT KEY ON:
  *
@@ -123,46 +172,143 @@ function jsxAttributeName(name: Record<string, any> | undefined): string {
  *    browser ran the default action. `async` is not the cause and is not the
  *    test; keying on it would reproduce upstream's blind spot here.
  *
- * Both properties are pinned by mutation tests in test/gate.test.ts.
+ * `sync-qrl-must-be-closed` PROVES, rather than sniffs for, the constraint that
+ * makes the lowering above legal. See its own comment below.
+ *
+ * Every property named here is pinned by mutation tests in test/gate.test.ts.
  */
 const framelessQwikPlugin = {
 	rules: {
-		'no-handler-prevent-default': {
+		'no-handler-sync-action': {
 			meta: {
 				type: 'problem',
 				schema: [],
 				messages: {
-					noHandlerPreventDefault:
-						'Emitted Qwik event handler {{attribute}} calls preventDefault() outside a sync$() QRL. A lazily fetched QRL runs after the browser has already performed the default action - regardless of whether the handler is async or wrapped in $(). Split the cancellation into a leading sync$() QRL, which is serialized inline and runs during dispatch.',
+					noHandlerSyncAction:
+						'Emitted Qwik event handler {{attribute}} calls {{action}}() outside a sync$() QRL. A lazily fetched QRL runs after the browser has already performed the default action and finished bubbling - regardless of whether the handler is async or wrapped in $(). Split the action into a leading sync$() QRL, which is serialized inline and runs during dispatch.',
+					indirectSyncQrl:
+						'Emitted Qwik source calls {{action}}() inside a sync$() QRL that is not a direct value or array element of a JSX event prop. A sync$() constructed inside a lazily fetched QRL is created long after dispatch, so the action is exactly as ineffective as calling it in the lazy QRL directly.',
 				},
 			},
 			create(context: Record<string, any>) {
 				return {
-					"CallExpression[callee.type='MemberExpression'][callee.property.name='preventDefault']"(
+					"CallExpression[callee.type='MemberExpression'][callee.property.name='preventDefault'], CallExpression[callee.type='MemberExpression'][callee.property.name='stopPropagation']"(
 						node: Record<string, any>,
 					) {
+						const action = node.callee?.property?.name;
 						const ancestors: Array<Record<string, any>> =
 							context.sourceCode.getAncestors(node);
+						// Walking OUTWARD, the FIRST ancestor that is either a sync$()
+						// call or a JSX event attribute decides. Nothing beyond it is
+						// consulted, so a sync$() nested in a lazy QRL cannot launder a
+						// call that the event prop above it would have rejected.
 						for (let index = ancestors.length - 1; index >= 0; index -= 1) {
 							const ancestor = ancestors[index]!;
-							// A sync$() QRL between the call and the event prop is the
-							// supported, synchronous channel. Stop: this call is fine.
-							if (
-								ancestor.type === 'CallExpression' &&
-								ancestor.callee?.type === 'Identifier' &&
-								ancestor.callee.name === 'sync$'
-							)
+							if (isSyncQrlCall(ancestor)) {
+								if (syncQrlIsDirect(ancestors, index)) return;
+								context.report({
+									node,
+									messageId: 'indirectSyncQrl',
+									data: { action },
+								});
 								return;
+							}
 							if (ancestor.type !== 'JSXAttribute') continue;
 							const attribute = jsxAttributeName(ancestor.name);
 							if (!EVENT_PROP.test(attribute)) return;
 							context.report({
 								node,
-								messageId: 'noHandlerPreventDefault',
-								data: { attribute },
+								messageId: 'noHandlerSyncAction',
+								data: { attribute, action },
 							});
 							return;
 						}
+					},
+				};
+			},
+		},
+		/**
+		 * FRAMELESS-OWNED. Proves that the function handed to `sync$()` references
+		 * NO binding other than its own parameters.
+		 *
+		 * This is Qwik's own invariant, not ours: @qwik.dev/core core.mjs:15905 -
+		 * "Synchronous QRLs functions can't close over any variables, including
+		 * exports" - and in dev Qwik enforces it by round-tripping the function
+		 * through `new Function('return ' + fn.toString())()`, which turns a
+		 * captured reference into a ReferenceError at dispatch.
+		 *
+		 * WHY IT DOES NOT LOOK FOR SIGNALS. "Is this a signal" is undecidable and
+		 * any `.value`- or name-based test would be a heuristic wearing a proof's
+		 * clothes: it would miss a store member, a renamed signal, or a captured
+		 * helper, and it would be wrong the first time an emitter changed its
+		 * naming. Closure freedom is strictly stronger AND decidable, and it
+		 * implies "no reactive state" rather than trying to detect it.
+		 *
+		 * IT IS AN ALLOWLIST. A reference is accepted only when scope analysis
+		 * resolves it to a variable declared inside the function itself. Anything
+		 * else - outer scope, module scope, a browser global, or a name that
+		 * resolves to nothing at all - is reported, so an unforeseen construct
+		 * fails CLOSED instead of slipping through a denylist that never heard of
+		 * it. A `sync$()` argument that is not a function literal cannot be
+		 * analysed at all, and is reported for that reason.
+		 */
+		'sync-qrl-must-be-closed': {
+			meta: {
+				type: 'problem',
+				schema: [],
+				messages: {
+					notAFunctionLiteral:
+						'sync$() must receive a function literal so scope analysis can prove it closes over nothing; frameless cannot prove that of {{received}}.',
+					closesOverBinding:
+						'Emitted sync$() QRL references `{{name}}`, which is declared outside the function. A synchronous QRL is serialized inline and re-created with `new Function`, so any binding but its own parameters is a ReferenceError at dispatch (@qwik.dev/core core.mjs:15905). Synthesize the body from the declared SyncPolicy instead of lifting authored source.',
+					unresolvedReference:
+						'Emitted sync$() QRL references `{{name}}`, which resolves to no binding inside the function - a global or an undeclared name. A synchronous QRL may reference nothing but its own parameters.',
+				},
+			},
+			create(context: Record<string, any>) {
+				return {
+					"CallExpression[callee.type='Identifier'][callee.name='sync$']"(
+						node: Record<string, any>,
+					) {
+						const fn = node.arguments?.[0];
+						if (
+							!fn ||
+							(fn.type !== 'ArrowFunctionExpression' && fn.type !== 'FunctionExpression')
+						) {
+							context.report({
+								node,
+								messageId: 'notAFunctionLiteral',
+								data: { received: fn?.type ?? 'no argument' },
+							});
+							return;
+						}
+						const functionScope = context.sourceCode.getScope(fn);
+						const declaredInside = (scope: Record<string, any> | null): boolean => {
+							for (let current = scope; current; current = current.upper)
+								if (current === functionScope) return true;
+							return false;
+						};
+						const visit = (scope: Record<string, any>): void => {
+							for (const reference of scope.references) {
+								const name = reference.identifier?.name;
+								if (!reference.resolved) {
+									context.report({
+										node: reference.identifier,
+										messageId: 'unresolvedReference',
+										data: { name },
+									});
+									continue;
+								}
+								if (!declaredInside(reference.resolved.scope))
+									context.report({
+										node: reference.identifier,
+										messageId: 'closesOverBinding',
+										data: { name: reference.resolved.name },
+									});
+							}
+							scope.childScopes.forEach(visit);
+						};
+						visit(functionScope);
 					},
 				};
 			},
@@ -171,7 +317,8 @@ const framelessQwikPlugin = {
 };
 
 export const FRAMELESS_ESLINT_RULES = {
-	'frameless/no-handler-prevent-default': 'error',
+	'frameless/no-handler-sync-action': 'error',
+	'frameless/sync-qrl-must-be-closed': 'error',
 } as const;
 
 const ESLINT_POLICIES = Object.keys(QWIK_ESLINT_RULES).map((rule) => ({
@@ -183,8 +330,12 @@ export const QWIK_GATE_POLICIES = [
 	{ id: 'no-visible-task', dossierRef: 'T002-qwik-architecture D8' },
 	persistenceArtifactPolicy(),
 	{
-		id: 'frameless/no-handler-prevent-default',
+		id: 'frameless/no-handler-sync-action',
 		dossierRef: 'frameless-defects-and-targets-v1 T015 ruling 4',
+	},
+	{
+		id: 'frameless/sync-qrl-must-be-closed',
+		dossierRef: 'frameless-defects-and-targets-v1 T011 ruling 4',
 	},
 	...ESLINT_POLICIES,
 ] as const satisfies readonly GatePolicy[];

@@ -208,6 +208,137 @@ describe('React structural emitter', () => {
 		expect(regenerate).toContain('../../compiler/test/goldens');
 	});
 
+	/**
+	 * CONDITIONAL CANCELLATION - PINNING behaviour that was already correct.
+	 *
+	 * T011 §3.2 measured that React needs no change here: its handlers are
+	 * synchronous and resident, so the authored guard is emitted verbatim and the
+	 * declared `SyncPolicy` is used only as a cross-check
+	 * (`emitter/index.ts:2140-2152`). But NO TEST ASSERTED IT, which made "React
+	 * needs no change" an assumption rather than a fact - and the Qwik lowering
+	 * and the Solid repair both lean on React being the reference behaviour.
+	 *
+	 * Anything below going red means the three-way contract has lost its baseline,
+	 * not that React has a new feature.
+	 */
+	describe('conditional cancellation is preserved verbatim', () => {
+		const guarded = (guard: string, extra = '') => `import { state } from '@markless/core';
+
+export function Guarded({ onTrace }) @{
+	let seen = state(0);${extra}
+
+	<form>
+		<button
+			type="submit"
+			data-action="go"
+			onClick={(event) => {
+				if (${guard}) {
+					event.preventDefault();
+					seen = 1;
+					onTrace('go');
+				}
+			}}
+		/>
+		<output>{seen}</output>
+	</form>
+}
+`;
+
+		test('an event-field guard survives with the cancellation inside it', async () => {
+			const ir = await buildEnrichedIr({
+				filename: 'guarded.tsrx',
+				source: guarded(`event.key === 'Enter'`),
+			});
+			expect(ir.records.events[0]!.syncPolicy).toEqual({
+				when: { type: 'event-equals', field: 'key', value: 'Enter' },
+				actions: ['preventDefault'],
+			});
+			const source = await formatEmitted(emit(ir));
+			expect(source).toMatch(
+				/if \(event\.key === 'Enter'\) \{\s*event\.preventDefault\(\);/,
+			);
+			// Exactly one, and it is the authored one: React must never hoist a
+			// second, unconditional call the way Solid's normalizeHandler did.
+			expect(source.match(/event\.preventDefault\(\)/g)).toHaveLength(1);
+		});
+
+		test('a graph-state guard survives - the case Qwik refuses under V1', async () => {
+			const ir = await buildEnrichedIr({
+				filename: 'locked.tsrx',
+				source: `import { state } from '@markless/core';
+
+export function Locked({ onTrace }) @{
+	let locked = state(true);
+
+	<form>
+		<button
+			type="submit"
+			onClick={(event) => {
+				if (locked) {
+					event.preventDefault();
+					onTrace('blocked');
+				}
+			}}
+		/>
+		<output>{locked}</output>
+	</form>
+}
+`,
+			});
+			expect(ir.records.events[0]!.syncPolicy).toEqual({
+				when: { type: 'graph-truthy', graphNodeId: 'state:locked', path: [] },
+				actions: ['preventDefault'],
+			});
+			const source = await formatEmitted(emit(ir));
+			expect(source).toMatch(/if \(locked\) \{\s*event\.preventDefault\(\);/);
+			expect(source.match(/event\.preventDefault\(\)/g)).toHaveLength(1);
+		});
+
+		test('an unconditional stopPropagation survives without a conjured preventDefault', async () => {
+			const ir = await buildEnrichedIr({
+				filename: 'stopper.tsrx',
+				source: `import { state } from '@markless/core';
+
+export function Stopper({ onTrace }) @{
+	let seen = state(0);
+
+	<form>
+		<button
+			type="button"
+			onClick={(event) => {
+				event.stopPropagation();
+				seen = 1;
+				onTrace('stop');
+			}}
+		/>
+		<output>{seen}</output>
+	</form>
+}
+`,
+			});
+			expect(ir.records.events[0]!.syncPolicy).toEqual({
+				when: { type: 'constant-truthy', value: true },
+				actions: ['stopPropagation'],
+			});
+			const source = await formatEmitted(emit(ir));
+			expect(source).toContain('event.stopPropagation();');
+			expect(source).not.toContain('preventDefault');
+		});
+
+		test('the declared-action cross-check refuses a policy the body does not spell', async () => {
+			const ir = clone(
+				await buildEnrichedIr({
+					filename: 'guarded.tsrx',
+					source: guarded(`event.key === 'Enter'`),
+				}),
+			) as any;
+			ir.records.events[0].syncPolicy.actions = ['preventDefault', 'stopPropagation'];
+			expect(() => emit(ir)).toThrow(
+				"Sync policy stopPropagation is absent from event:0's handler AST",
+			);
+		});
+	});
+
 	describe('metamorphic regeneration from the checked-in golden', () => {
 		test.each(['a"b', "a'b", 'a\nb', 'a{b}', '雪☃', '&quot;&amp;'])(
 			'static JSX attributes round-trip with value fidelity: %j',

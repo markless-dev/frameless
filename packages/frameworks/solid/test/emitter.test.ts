@@ -210,6 +210,199 @@ describe('Solid structural emitter', () => {
 		expect(callback).toBeGreaterThan(second);
 	});
 
+	/**
+	 * CONDITIONAL CANCELLATION - T011 §3.3 of frameless-defects-and-targets-v1.
+	 *
+	 * Solid's handlers are synchronous and resident, so there is nothing to
+	 * lower: the correct behaviour is to PRESERVE THE AUTHORED BODY, exactly as
+	 * React does. Until T012 the validator threw for every policy that was not
+	 * `{constant-truthy true, ['preventDefault']}`, which made the conditional
+	 * three-way contract unauthorable on this lane - and hid two real bugs.
+	 *
+	 * Each test below was watched FAILING against the widened validator with
+	 * `normalizeHandler` unfixed. The output is quoted in the comments so the
+	 * claim is a measurement rather than a description.
+	 */
+	describe('conditional cancellation', () => {
+		const guardedSource = `import { state } from '@markless/core';
+
+export function Guarded({ onTrace }) @{
+	let seen = state(0);
+
+	<form>
+		<button
+			type="submit"
+			data-action="go"
+			onClick={(event) => {
+				if (event.key === 'Enter') {
+					event.preventDefault();
+					seen = 1;
+					onTrace('go');
+				}
+			}}
+		/>
+		<output>{seen}</output>
+	</form>
+}
+`;
+
+		test('accepts the full condition grammar the compiler can produce', async () => {
+			const ir = await buildEnrichedIr({
+				filename: 'guarded.tsrx',
+				source: guardedSource,
+			});
+			expect(ir.records.events[0]!.syncPolicy).toEqual({
+				when: { type: 'event-equals', field: 'key', value: 'Enter' },
+				actions: ['preventDefault'],
+			});
+			expect(() => validateEnrichedIr(ir)).not.toThrow();
+		});
+
+		test('BUG 1 FIXED: a conditional cancel is not turned into an unconditional one', async () => {
+			const ir = await buildEnrichedIr({
+				filename: 'guarded.tsrx',
+				source: guardedSource,
+			});
+			const source = await formatEmitted(emit(ir));
+			// Before the fix this emitted `event.preventDefault();` at the TOP of the
+			// handler AND kept the authored call inside the `if`, because the
+			// strip-filter only inspected top-level statements. Exactly one call, and
+			// it is the authored one, inside the guard.
+			expect(source.match(/event\.preventDefault\(\)/g)).toHaveLength(1);
+			expect(source).toMatch(
+				/if \(event\.key === 'Enter'\) \{\s*event\.preventDefault\(\);/,
+			);
+			expect(source).not.toMatch(
+				/\(event\) => \{\s*event\.preventDefault\(\);\s*if \(event\.key/,
+			);
+		});
+
+		test('BUG 2 FIXED: a stopPropagation-only policy does not conjure a preventDefault', async () => {
+			const ir = await buildEnrichedIr({
+				filename: 'stopper.tsrx',
+				source: `import { state } from '@markless/core';
+
+export function Stopper({ onTrace }) @{
+	let seen = state(0);
+
+	<form>
+		<button
+			type="button"
+			data-action="stop"
+			onClick={(event) => {
+				event.stopPropagation();
+				seen = 1;
+				onTrace('stop');
+			}}
+		/>
+		<output>{seen}</output>
+	</form>
+}
+`,
+			});
+			expect(ir.records.events[0]!.syncPolicy).toEqual({
+				when: { type: 'constant-truthy', value: true },
+				actions: ['stopPropagation'],
+			});
+			const source = await formatEmitted(emit(ir));
+			expect(source).toContain('event.stopPropagation();');
+			// Before the fix this emitted a `event.preventDefault()` that appears
+			// nowhere in the authored program: the unshift ignored WHICH action was
+			// declared, not just WHEN.
+			expect(source).not.toContain('preventDefault');
+		});
+
+		test('BUG 3 FIXED: the branches form gets a named refusal, not a TypeError', async () => {
+			const ir = clone(
+				await buildEnrichedIr({ filename: 'guarded.tsrx', source: guardedSource }),
+			) as any;
+			ir.records.events[0].syncPolicy = {
+				branches: [
+					{
+						when: { type: 'constant-truthy', value: true },
+						actions: ['preventDefault'],
+					},
+					{
+						when: { type: 'event-equals', field: 'key', value: 'Enter' },
+						actions: ['stopPropagation'],
+					},
+				],
+			};
+			// Measured before the fix: `TypeError: Cannot read properties of
+			// undefined (reading 'length')`, from casting the policy to {actions}.
+			expect(() => emit(ir)).toThrow(
+				'SyncPolicy event:0 declares a multi-handler sync policy; the Solid emitter reconciles one branch per event prop',
+			);
+			expect(() => emit(ir)).not.toThrow(TypeError);
+		});
+
+		test('a graph-state guard is preserved verbatim - Solid has no reason to refuse it', async () => {
+			// The case Qwik refuses under V1. Solid reads the signal in a resident
+			// synchronous handler, so it simply works; encoding Qwik's limit in the
+			// shared IR would have broken this lane for nothing.
+			const ir = await buildEnrichedIr({
+				filename: 'locked.tsrx',
+				source: `import { state } from '@markless/core';
+
+export function Locked({ onTrace }) @{
+	let locked = state(true);
+
+	<form>
+		<button
+			type="submit"
+			onClick={(event) => {
+				if (locked) {
+					event.preventDefault();
+					onTrace('blocked');
+				}
+			}}
+		/>
+		<output>{locked}</output>
+	</form>
+}
+`,
+			});
+			expect(ir.records.events[0]!.syncPolicy).toEqual({
+				when: { type: 'graph-truthy', graphNodeId: 'state:locked', path: [] },
+				actions: ['preventDefault'],
+			});
+			const source = await formatEmitted(emit(ir));
+			expect(source).toMatch(/if \(locked\(\)\) \{\s*event\.preventDefault\(\);/);
+			expect(source.match(/event\.preventDefault\(\)/g)).toHaveLength(1);
+		});
+
+		test('the shipped unconditional path still strips and renormalizes', async () => {
+			// S3's cancel-submit and submit handlers. Byte-identity with the checked-in
+			// generated corpus is asserted elsewhere; this pins the SHAPE, so a future
+			// refactor cannot quietly move the call back where it was authored.
+			const source = await formatEmitted(emit(await golden('s3-event-form.json')));
+			expect(source.match(/event\.preventDefault\(\)/g)).toHaveLength(2);
+			expect(source).toMatch(
+				/onClick=\{\(event\) => \{\s*event\.preventDefault\(\);\s*setWrites\(1\);/,
+			);
+		});
+
+		test('a declared action absent from the handler AST is refused', async () => {
+			const ir = clone(
+				await buildEnrichedIr({ filename: 'guarded.tsrx', source: guardedSource }),
+			) as any;
+			ir.records.events[0].syncPolicy.actions = ['preventDefault', 'stopPropagation'];
+			expect(() => emit(ir)).toThrow(
+				"Sync policy stopPropagation is absent from event:0's handler AST",
+			);
+		});
+
+		test('an unknown condition type is still refused', async () => {
+			const ir = clone(
+				await buildEnrichedIr({ filename: 'guarded.tsrx', source: guardedSource }),
+			) as any;
+			ir.records.events[0].syncPolicy.when = { type: 'FutureSyncCondition' };
+			expect(() => validateEnrichedIr(ir)).toThrow(
+				'SyncPolicy event:0 has unsupported sync shape',
+			);
+		});
+	});
+
 	describe('frameless-enriched-ir/2 composition emission', () => {
 		const build = (filename: string, source: string) => buildEnrichedIr({ filename, source });
 
