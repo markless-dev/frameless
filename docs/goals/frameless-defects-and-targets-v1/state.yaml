@@ -4247,7 +4247,7 @@ tasks:
   - id: T045
     type: worker
     assignee: Worker
-    status: queued
+    status: done
     reasoning_hint: high
     spec: "T043 receipt and notes/T043-async-axis.md - AUTHORITATIVE."
     serialization_hold: "Behind frameless-vue-v1 T012. Its verify runs pnpm test, which includes the Vue gate test T012 is mid-edit on - dispatching earlier would report failures that are not its own."
@@ -4295,8 +4295,50 @@ tasks:
       - "You are about to create an S8 fixture or golden. S8 is blocked on T046 and T047; a golden alone enlists it into every lane's derived gates at once."
       - "You are about to weaken Angular's globals v-limit. T043 AFFIRMED it as correct and S8 is authored around it."
       - "You are about to edit docs/emitter-idiom-policy.md or packages/frameworks/vue/**. Record gate outcomes in your note instead."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T045-angular-async.md
+      summary: "RE-DERIVED ALL THREE T043 CLAIMS at 48ee449 before acting - async count 0, tsconfig excludes generated/**, only react and solid have a typecheck oracle. BUILT THE MISSING ORACLE FIRST as a vitest ts.createProgram file in React's shape, asserting 'no diagnostic other than TS2307 for @angular/*'. Then witnessed all three RED calibrations, THEN carried arrow.async onto the class method as `async name(...): Promise<void>`. Filed DEFECTS.md entry 9 recording both failure modes separately. No dependency added, no tsconfig change, no golden moved, pnpm-lock.yaml untouched."
+      THE_INSTRUMENT_WAS_BUILT_BEFORE_THE_FIX_AND_THAT_WAS_THE_POINT: "T043 ruled that a fail-closed throw would have left the real hole open, because ANGULAR WAS THE ONLY LANE EMITTING TYPESCRIPT AND TYPECHECKING NONE OF IT. PM VERIFIED THE REPAIR: packages/frameworks/angular/test/emitted-typecheck.test.ts now exists alongside react's and solid's, and the string 'async' occurs 8 times in the emitter where it occurred ZERO before. 989 tests, up from 976. The gap is closed by an instrument, not by a refusal."
+      the_two_failure_modes_got_two_instruments_because_one_cannot_cover_both: "RED CAL 1: the new oracle failed on a planted promise-valued-prop async authoring with the VERBATIM TS1308, before the emitter moved. RED CAL 2: THE ORACLE IS PROVABLY BLIND to async-without-await, because that emits VALID TypeScript - so the keyword is asserted DIRECTLY in emitter.test.ts, which went red on BOTH modes with the synchronous control green. RED CAL 3: all seven generated/S*.ts clean apart from the expected TS2307. A single instrument would have looked sufficient and silently covered one mode of two."
+      IT_CAUGHT_ITS_OWN_CONTAMINATED_PROBE_AND_NEARLY_FILED_IT_AS_A_DEFECT: "THE MOST INSTRUCTIVE THING IN THIS RECEIPT. Its first synchronous control asserted not.toMatch(/\\basync\\b/) - and went RED. The cause was its OWN FIXTURE: the probe component was named AsyncProbe, so the emitted selector 'frameless-async-probe' matched the pattern. IT NEARLY RECORDED THAT AS A THIRD DEFECT RED. Renamed to HandlerProbe and filed as a contaminated-probe caveat instead. Distinguishing an instrument fault from a finding is the single discipline this session has exercised most, and this is the cleanest instance of it: the red was real, the conclusion would have been false."
+      the_emitter_change_respects_ruling_3a: "`handlerIsAsync(record)` reads `arrow.async` - A DECLARED-SIGNATURE FLAG, sitting beside the existing eventParameterName which already reads arrow.params. So ruling 3a's ban on CONTENT TRIGGERS is not engaged: this is the same KIND of fact the emitter already reads before any body is inspected. The Worker checked that rather than assuming it."
+      changed_files:
+        - packages/frameworks/angular/src/emitter/index.ts
+        - packages/frameworks/angular/test/emitted-typecheck.test.ts
+        - packages/frameworks/angular/test/emitter.test.ts
+        - docs/DEFECTS.md
+        - docs/goals/frameless-defects-and-targets-v1/notes/T045-angular-async.md
+      commands:
+        - cmd: "grep -c async packages/frameworks/angular/src/emitter/index.ts"
+          status: pass
+          note: "0 before, RE-DERIVED rather than inherited; PM confirms 8 after"
+        - cmd: "pnpm --dir packages/frameworks/angular exec vitest run --config vitest.node.config.ts"
+          status: pass
+          note: "5 files, 114 tests"
+        - cmd: "pnpm test"
+          status: pass
+          note: "51 files, 989 tests (976 + 9 oracle + 4 keyword); PM re-ran and confirms 989 / 51"
+        - cmd: "pnpm check"
+          status: pass
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 381 files"
+        - cmd: "regenerate && git diff --exit-code -- packages/frameworks/angular/generated"
+          status: pass
+          note: "no byte moved; PM re-verified. The shipped corpus has no async handler, so a correct repair is INVISIBLE to it - which is why the planted calibrations are the whole proof"
+        - cmd: "git diff --exit-code -- packages/compiler, the other five lanes, demos, scripts, docs/emitter-idiom-policy.md"
+          status: pass
+          note: untouched
+      deviations:
+        - "Renamed the planted probe component AsyncProbe -> HandlerProbe in both test files, after its own name contaminated a control - see above."
+        - "Also corrected docs/DEFECTS.md entry 8's STALE FORWARD REFERENCE, which said Angular's async defect 'is not filed here because it awaits the T043 ruling' and that T031 'did not probe Svelte, Vue or Angular' on nested writes. T043 measured all three; BOTH SENTENCES WERE FALSE AT HEAD. Inside allowed_files but beyond the literal 'file entry 9' instruction - and leaving entry 8 pointing at a ruling that had already landed would have been the same stale-forward-reference class this board keeps finding."
+        - "packages/frameworks/angular/package.json was in allowed_files but needed NO edit: typescript resolves from the workspace root exactly as React's oracle resolves it, so no dependency line was added and pnpm-lock.yaml did not move. Worth stating, because adding one would have breached the no-Angular-runtime-dependency stop_if by a side door."
+      remaining_blockers: []
+      stopped_because: null
+      pm_board_slip_recorded: "THE BOARD UNDER-REPORTED CONCURRENCY AND THE APPLIER CAUGHT IT. The PM dispatched this Worker while the board's active_task was still T041, the boolean-attribute Judge - so for the whole of this card the board said a Judge was active while a Worker was writing to packages/frameworks/angular. No damage: T041 is read-only and its file scope is disjoint. But the one-active-task pointer exists precisely so the board can be asked 'what is running', and for this card it would have answered wrongly. Recorded rather than quietly re-pointed. THE RULE THE PM IS ADOPTING: activate the card BEFORE dispatching its agent, not when recording its receipt."
   - id: T046
     type: worker
     assignee: Worker
