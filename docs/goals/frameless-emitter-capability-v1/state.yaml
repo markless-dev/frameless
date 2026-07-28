@@ -11,6 +11,23 @@ goal:
     measured in any lane. Then IR-8 supply (the only schema change), IR-8 consumption, refs,
     effects, composition.
   status: blocked
+  blocked_on_OWNER_not_PM: >-
+    2026-07-28, ruled by the T999 final audit. EVERY remaining task depends on adding
+    @typescript-eslint/parser, which rewrites pnpm-lock.yaml - one of three files carrying the
+    owner's uncommitted `website` work. The PM declined to run that install rather than touch
+    in-flight work it was never authorised to modify. NOT A PM STALL: T017 measured that the
+    composition route ALSO needs adapters for svelte/vue/angular, a CLI target inventory, and an
+    @angular/core install that resolves nowhere but demos/angular-official. THE OWNER LANDS OR
+    SETS ASIDE THE WEBSITE WORK AND T014 BECOMES DISPATCHABLE. T013 warned the install WILL move
+    package-inventory.test.ts - the same test currently failing - so do not read that movement as
+    unrelated.
+  STANDING_REGRESSION_THIS_PHASE_SHIPPED_TO_MAIN: >-
+    pnpm check is RED at 73 on origin/main and WAS EXIT 0 BEFORE THIS PHASE - PM confirmed by
+    checking out d6b37b6, where generated/ holds .jsx files that checkJs:false left unchecked.
+    T011's rename enrolled emitted output into the strict program via test imports; T012 measured
+    `exclude` ineffective and moved the obligation to Step 2; STEP 2 DELIVERED 1 OF 6 LANES. A
+    SHIPPED REGRESSION, not deferred debt. The successor goal owns driving it to zero, RULING the
+    33 narrowing and assignment errors rather than suppressing them.
   blocked_until_DISCHARGED: >-
     SATISFIED 2026-07-28. The hold read: "frameless-defects-and-targets-v1 T028 closes Phase F.
     Step 1 touches packages/compiler schema and build, seven goldens, module-set.ts and all six
