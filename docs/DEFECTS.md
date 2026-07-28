@@ -1155,6 +1155,130 @@ owner's own package, so that is a note, not a report.
 
 ---
 
+## 11. Solid refused **every** async event handler, through an undocumented bare throw — **CLOSED — frameless's own emitted output**
+
+> **The fifth defect in frameless's own shipped output, and the only one of the
+> five that was never a decision at all.** Entry 8 survived on a missing input,
+> entry 9 on a missing instrument, entry 10 on a three-name allowlist. This one
+> survived because a **shape assertion copied from sixty lines earlier** was read
+> by three later readings as a deliberate v-limit — including by this board's own
+> T031, which built an impossibility proof on it. Measured by T031, re-derived and
+> ruled an accident by T043, repaired by T046. Like entries 7–10 it was raised by
+> `frameless-defects-and-targets-v1`, so it does **not** extend that goal's
+> oracle, which is defined over findings 1–6.
+>
+> **Numbering note.** T043 §7 reserved entry 10 for this and entry 11 for React.
+> Entry 10 was taken first by the boolean-attribute repair (T041/T049), so this is
+> **11** and the React `await` defect will be **12**. The reservation is stale;
+> the ledger is not.
+
+**Status:** CLOSED. `packages/frameworks/solid/src/emitter/index.ts` now reads
+`if (!t.isArrowFunctionExpression(fn))`. **No v-limit replaces it**, because there
+was nothing to limit: Solid supports async listeners natively, and the lane's
+lowering pipeline was already async-safe before the clause was written.
+
+**THE WITNESSED RED, verbatim.** On the re-specified S8 authoring — an `await` on
+a promise-*valued* prop, which clears Angular's globals v-limit and Qwik's
+callback-statement rule, both of which are **correct** and untouched here:
+
+```
+EventHandlerRecord event:0 requires a synchronous arrow
+```
+
+Thrown from `validateEnrichedIr(ir)` and again from `emit(ir)`, identically with
+and without a leading `event.preventDefault()`. The IR *built* fine both times;
+only Solid refused it.
+
+**Four independent lines say ACCIDENT, and all four were re-derived at the
+repair**, not inherited from the ruling:
+
+1. **Provenance.** `git blame` puts the line in `1309b00`, whose own message is
+   *"t006: solid emitter + dossier gate (codex killed at ceiling; PM completing)"*
+   — original-landing code from a session that ran out of budget and was finished
+   by hand.
+2. **No reachable justification.** The string `requires a synchronous arrow`
+   occurred **exactly once** in tracked code, at the throw, with no comment, no
+   dossier reference, **no test** and no documentation. Every v-limit in this repo
+   that survived scrutiny — Angular's globals rule, Qwik's callback rule, entry
+   7's whitespace limit — carries a comment stating its cost.
+3. **It is a copy.** Sixty lines earlier, `:828` reads
+   `!t.isArrowFunctionExpression(fn) || fn.async || fn.params.length !== 0` for a
+   **computed binding**, where async genuinely is unsupported (Solid refuses async
+   state constructs outright at `:786`). The handler check is that predicate with
+   the arity clause dropped — which is itself the tell, since a handler
+   legitimately takes an `event` parameter and a computed does not. A shape
+   assertion that travelled, not a decision that was taken.
+4. **The pipeline behind it was already async-safe.** `reanalyzeExpression`
+   (`:161`) prints `const __framelessExpression = <the arrow itself>` and
+   re-analyzes; it wraps **nothing**, so an async arrow re-parses as valid module
+   source. `normalizeHandler` mutates the arrow in place, so `fn.async` survives
+   to output untouched. Contrast React, whose re-parse primitive fabricates a
+   *synchronous* wrapper — that is a real bug and it is entry 12's.
+
+**THE IRONY WORTH KEEPING.** Solid is the lane that lowers **nested** writes
+correctly — it is entry 8's reference implementation, the thing React is being
+asked to port. So Solid was right about the half React gets wrong, and refused the
+half React allows. The nested-write lowering was **not touched** by this repair.
+
+**The proof this repair had to produce, and did.** T043 argued the path was sound
+from the re-parse primitive and from in-place mutation, and said plainly that it
+**could not prove the end-to-end path without editing the validator**. That proof
+is this entry's, and it is behavioural, not structural. The emitted handler:
+
+```jsx
+onClick={async (event) => {
+	event.preventDefault();
+	setPhase('pending');
+	await props.ready;
+	setTicks(ticks() + 1);
+	setPhase('done');
+	props.onTrace('run', { phase: 'done' }, event);
+}}
+```
+
+The `async` survives, the prop read lowers to `props.ready`, and — the load-bearing
+part — the post-await write is `setTicks(ticks() + 1)`, which reads the **live
+signal at resume**, not a value captured before the boundary.
+
+`packages/frameworks/solid/test/emitter.test.ts` lifts that arrow back out of the
+emitted JSX **by AST**, rebuilds it over real `createSignal`s from solid-js, and
+**dispatches it three times: twice while the first call is still suspended at the
+`await`, then once sequentially.** Three increments, `ticks() === 3`, `phase ===
+'done'`, and `preventDefault()` observed three times. A single dispatch would have
+passed under either lowering and asserted nothing.
+
+**The calibration, because a green test is evidence only if something proves it
+can go red.** The same harness is run against a hand-written **stale** variant —
+React's `toConstSsa` shape, `const nextTicks = ticks() + 1` hoisted **above** the
+await — and it reports `2`, not `3`. The instrument distinguishes a live read from
+a captured one, and it is registered saying so. A second calibration guards the
+substrate: this suite runs under `environment: 'node'`, where a bare `solid-js`
+import resolves to the **SSR** build whose signals are inert; the test loads the
+client build by path and **proves** it did, via a `createMemo` that returns 10 on
+the client build and 2 on the server build. Loading the wrong one would have left
+the whole proof green and blind.
+
+**No fixture and no golden were registered.** The scenario inventories are derived
+from `goldens/s<n>-*.json`, so a golden alone enlists a scenario into every lane's
+gates at once. This is a **probe source**, per entry 7's precedent. Consequently
+**no emitted byte moved**: `regenerate.ts` reproduces `generated/` exactly, which
+is also the falsifier for the claim that widening the gate cannot regress the
+shipped corpus.
+
+**Not upstream.** Solid supports async event handlers natively; the refusal was
+entirely ours.
+
+**What this does NOT close.** The re-specified S8 is not yet in the corpus, so no
+**served payload** has ever observed an async handler in Solid — the proof is at
+the emitter and in a node harness over the real client runtime, not in a browser.
+That is a corpus card's job, and it is the same gap entry 10 carries. It also does
+not touch entry 12: React's `await` failure is a different mechanism in a
+different lane, and T043's prediction that the two lanes **diverge on a second
+dispatch across an await** is now half-measured — Solid's half is above, and it is
+the half that comes back **clean**.
+
+---
+
 ## Closed, for the record
 
 **`findings-001` — `engines.node: ">=20"` was false.** The toolchain cannot load
@@ -1177,6 +1301,7 @@ matrix proved green rather than from the error message's claim.
 | 8   | **product defect — OPEN**       | **contained**, not removed: fail-closed refusal in the React emitter (T044) | the lift trigger — React lowers a nested state write the way Solid already does |
 | 9   | **product defect — CLOSED**     | **removed**, not contained: the construct is lowered, and the missing typecheck oracle over emitted Angular now exists (T045) | none — but note the oracle is structurally blind to mode B, which the emitted-keyword assertion covers instead |
 | 10  | **product defect — OPEN**       | **lowered** at the IR: boolean content attributes reach Angular as `[disabled]`, not `[attr.disabled]` (T049) | a served payload — the repair is proven at the compiler and the emitter and in **no** e2e observation, because no scenario binds a boolean attribute |
+| 11  | **product defect — CLOSED**     | **removed**, not contained: the accidental `\|\| fn.async` is gone from the Solid validator and the across-await lowering is proven by running it (T046) | none for the defect — but no **served** payload observes an async handler yet, which is a corpus card, not a repair |
 
 **Entries 7, 8 and 10 are the OPEN defects in frameless's own emitted output**,
 and they are the three on this table a later reader could mistake for closed
@@ -1190,6 +1315,15 @@ served payload has ever observed the six lanes agreeing, and entry 9 earned
 CLOSED on exactly the evidence entry 10 does not yet have. In all three cases a
 registered test reports the day the status should change, and in all three cases
 it reports in **either** direction.
+
+**Entry 11 is CLOSED to entry 9's standard, not entry 10's**, and the difference
+is worth stating because both lack a served payload. Entry 9 and entry 11 each
+ship a **calibrated** instrument that was watched red on the exact construct
+before the emitter moved and that fails if the repair is undone; entry 10's
+repair is proven at the compiler and the emitter and observed **nowhere** —
+there is no test that would notice if a served Angular payload regressed. A
+missing e2e witness for a construct the corpus does not yet contain is a corpus
+gap. A repair whose only evidence is upstream of the artefact is an open defect.
 
 **Entry 8 outranks entry 7 by this document's own ranking rule** — how wrong the
 shipped output is. Entry 7 changes how a space renders; entry 8 emitted invalid

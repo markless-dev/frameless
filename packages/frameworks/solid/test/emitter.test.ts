@@ -1,6 +1,8 @@
 import { readdirSync } from 'node:fs';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
+import { pathToFileURL } from 'node:url';
 import { runInNewContext } from 'node:vm';
 import {
 	buildEnrichedIr,
@@ -11,6 +13,7 @@ import {
 import { resolve } from 'pathe';
 import { parse } from 'yuku-parser';
 import { analyze } from 'yuku-analyzer';
+import { generate } from 'yuku-codegen';
 import { describe, expect, test } from 'vitest';
 import {
 	compositionFixtures,
@@ -66,6 +69,40 @@ function emittedScenarios(directory = generatedRoot): string[] {
 }
 
 const fixtures = scenarioFixtures();
+
+/**
+ * THE CLIENT RUNTIME, DELIBERATELY - not whatever `solid-js` resolves to here.
+ *
+ * This suite runs under `environment: 'node'`, where solid-js's exports map
+ * sends a bare `solid-js` import to `dist/server.js` - the SSR build, whose
+ * signals are plain getter/setter pairs with no ownership, no equality check
+ * and no batching. Event handlers never run there. The across-await proof below
+ * is about what the emitted handler does on the CLIENT, so it loads the client
+ * build by path. The specifier is computed so `tsc` does not try to resolve a
+ * subpath that ships no declarations; the shape is asserted at load.
+ */
+const solidClient = (await import(
+	pathToFileURL(createRequire(import.meta.url).resolve('solid-js/dist/solid.js')).href
+)) as typeof import('solid-js');
+const { createMemo, createRoot, createSignal } = solidClient;
+/**
+ * And PROVE it is the client build rather than asserting it. A `createMemo` that
+ * recomputes after a `set` is the discriminator: measured, the bare `solid-js`
+ * specifier returns 2 here and the client build returns 10. If this ever loaded
+ * the server build the across-await proof would be running on inert signals and
+ * would still be green, so the guard is the instrument's own calibration.
+ */
+if (
+	createRoot((dispose) => {
+		const [value, setValue] = createSignal(1);
+		const doubled = createMemo(() => value() * 2);
+		setValue(5);
+		const observed = doubled();
+		dispose();
+		return observed;
+	}) !== 10
+)
+	throw new Error('solid-js client build did not load; the async proof would be running blind');
 
 async function golden(name: string): Promise<EnrichedIR> {
 	return JSON.parse(await readFile(resolve(goldenRoot, name), 'utf8')) as EnrichedIR;
@@ -409,6 +446,210 @@ describe('Solid structural emitter', () => {
 	 * `normalizeHandler` unfixed. The output is quoted in the comments so the
 	 * claim is a measurement rather than a description.
 	 */
+	/**
+	 * ASYNC EVENT HANDLERS - T046 of frameless-defects-and-targets-v1.
+	 *
+	 * Until this card, `validateEnrichedIr` refused every async handler at
+	 * `src/emitter/index.ts:1174` with `|| fn.async`. THE WITNESSED RED, verbatim,
+	 * on the source below before the clause was dropped:
+	 *
+	 *     EventHandlerRecord event:0 requires a synchronous arrow
+	 *
+	 * Thrown from both `validateEnrichedIr(ir)` and `emit(ir)`, with and without
+	 * the leading `preventDefault()`. That clause was an ACCIDENT - see
+	 * docs/DEFECTS.md entry 11 - and it had NO test, which is half of why it
+	 * survived. These tests are that missing instrument.
+	 *
+	 * NO FIXTURE AND NO GOLDEN ARE REGISTERED. The scenario inventories are
+	 * derived from `goldens/s<n>-*.json`, so a golden alone would enlist this
+	 * probe into every lane's gates. It is a probe source, per the T039 pattern.
+	 */
+	describe('async event handlers', () => {
+		const asyncProbeSource = (opening: string): string => `import { state } from '@markless/core';
+
+export function AsyncProbe({ ready, onTrace }) @{
+	let ticks = state(0);
+	let phase = state('idle');
+
+	<form>
+		<button
+			type="button"
+			data-action="run"
+			onClick={async (event) => {${opening}
+				phase = 'pending';
+				await ready;
+				ticks = ticks + 1;
+				phase = 'done';
+				onTrace('run', { phase: 'done' }, event);
+			}}
+		/>
+		<output data-role="ticks">{ticks}</output>
+		<output data-role="phase">{phase}</output>
+	</form>
+}
+`;
+		/** The re-specified S8 authoring: `await` on a promise-VALUED prop. */
+		const plain = asyncProbeSource('');
+		/** Same, opening with Defect 1's shape inside an async body. */
+		const cancelling = asyncProbeSource('\n\t\t\t\tevent.preventDefault();');
+
+		async function emitProbe(source: string): Promise<string> {
+			const ir = await buildEnrichedIr({ filename: 'async-probe.tsrx', source });
+			expect(() => validateEnrichedIr(ir)).not.toThrow();
+			return formatEmitted(emit(ir));
+		}
+
+		/** Lift the emitted `onClick` arrow back out of the emitted JSX, by AST. */
+		function emittedHandler(emitted: string): string {
+			const module = analyze(emitted, {
+				lang: 'jsx',
+				sourceType: 'module',
+				preserveParens: false,
+			});
+			expect(module.diagnostics).toEqual([]);
+			let handler: any = null;
+			const walk = (node: any): void => {
+				if (!node || typeof node !== 'object') return;
+				if (Array.isArray(node)) {
+					node.forEach(walk);
+					return;
+				}
+				if (node.type === 'JSXAttribute' && node.name?.name === 'onClick')
+					handler = node.value?.expression ?? node.value;
+				for (const key of Object.keys(node))
+					if (key !== 'loc' && key !== 'range') walk(node[key]);
+			};
+			walk(module.ast);
+			expect(handler, 'no onClick attribute in the emitted source').not.toBeNull();
+			expect(handler.async, 'the emitted arrow lost its `async` modifier').toBe(true);
+			return generate(handler).code;
+		}
+
+		/**
+		 * Run a handler in a scope that mirrors the emitted component body
+		 * EXACTLY - the same two `createSignal` destructurings, the same `props`.
+		 * Dispatches TWICE while the first call is still suspended at the
+		 * `await`, which is the case that separates a live signal read from a
+		 * value captured before the boundary, then a third time sequentially.
+		 */
+		async function dispatchAcrossAwait(handlerSource: string): Promise<{
+			readonly ticks: number;
+			readonly phase: string;
+			readonly duringSuspension: { readonly ticks: number; readonly phase: string };
+			readonly prevented: number;
+			readonly trace: readonly string[];
+		}> {
+			const build = new Function(
+				'createSignal',
+				'props',
+				`const [ticks, setTicks] = createSignal(0);
+				const [phase, setPhase] = createSignal('idle');
+				return { ticks, phase, handler: (${handlerSource}) };`,
+			) as (
+				signal: typeof createSignal,
+				props: unknown,
+			) => { ticks: () => number; phase: () => string; handler: (event: unknown) => unknown };
+			const trace: string[] = [];
+			let prevented = 0;
+			let release!: () => void;
+			const ready = new Promise<void>((resolve) => {
+				release = resolve;
+			});
+			const props = {
+				ready,
+				onTrace: (name: string, payload: unknown) =>
+					trace.push(`${name}:${JSON.stringify(payload)}`),
+			};
+			return createRoot(async (dispose) => {
+				const { ticks, phase, handler } = build(createSignal, props);
+				const event = { preventDefault: () => (prevented += 1) };
+				const first = handler(event);
+				const duringSuspension = { ticks: ticks(), phase: phase() };
+				const second = handler(event);
+				release();
+				await first;
+				await second;
+				await handler(event);
+				const result = { ticks: ticks(), phase: phase(), duringSuspension, prevented, trace };
+				dispose();
+				return result;
+			});
+		}
+
+		test('accepts an async handler and keeps `async` and `await` in the output', async () => {
+			const emitted = await emitProbe(plain);
+			expect(emitted).toContain('onClick={async (event) => {');
+			expect(emitted).toContain('await props.ready;');
+			// Reads across the boundary stay LIVE calls, and writes stay setters.
+			expect(emitted).toContain("setPhase('pending');");
+			expect(emitted).toContain('setTicks(ticks() + 1);');
+			expect(emitted).toContain("setPhase('done');");
+			// Nothing is hoisted above the await into a captured const.
+			expect(emitted).not.toMatch(/const \w+ = ticks\(\)[\s\S]*await/);
+		});
+
+		test('reads and writes lower correctly ACROSS the await, measured by running it', async () => {
+			const outcome = await dispatchAcrossAwait(emittedHandler(await emitProbe(plain)));
+			// Pre-await write landed synchronously; post-await write had not yet.
+			expect(outcome.duringSuspension).toEqual({ ticks: 0, phase: 'pending' });
+			// Two overlapping dispatches plus one sequential = three increments. A
+			// read captured before the boundary would give 2 (see the calibration).
+			expect(outcome.ticks).toBe(3);
+			expect(outcome.phase).toBe('done');
+			expect(outcome.trace).toEqual([
+				'run:{"phase":"done"}',
+				'run:{"phase":"done"}',
+				'run:{"phase":"done"}',
+			]);
+		});
+
+		test('CALIBRATION: the same harness goes RED on a read captured before the await', async () => {
+			// The React `toConstSsa` shape, hand-written: the increment reads the
+			// binding BEFORE the boundary and writes it after. An instrument that
+			// cannot fail is not an instrument, so this proves the test above can.
+			const stale = `async (event) => {
+				setPhase('pending');
+				const nextTicks = ticks() + 1;
+				await props.ready;
+				setTicks(nextTicks);
+				setPhase('done');
+				props.onTrace('run', { phase: 'done' }, event);
+			}`;
+			const outcome = await dispatchAcrossAwait(stale);
+			expect(outcome.ticks).not.toBe(3);
+			expect(outcome.ticks).toBe(2);
+		});
+
+		test('preserves the authored preventDefault at the top of an async body', async () => {
+			const emitted = await emitProbe(cancelling);
+			expect(emitted).toMatch(
+				/onClick=\{async \(event\) => \{\s*event\.preventDefault\(\);/,
+			);
+			expect(emitted.match(/event\.preventDefault\(\)/g)).toHaveLength(1);
+			const outcome = await dispatchAcrossAwait(emittedHandler(emitted));
+			expect(outcome.prevented).toBe(3);
+			expect(outcome.ticks).toBe(3);
+		});
+
+		test('the narrowed check still refuses a handler that is not an arrow', async () => {
+			const ir = clone(
+				await buildEnrichedIr({ filename: 'async-probe.tsrx', source: plain }),
+			) as any;
+			// Same params, same body, same records - ONLY the callee shape differs,
+			// so nothing earlier in the validator can claim the failure first.
+			const handler = ir.records.events[0].handlers[0];
+			handler.expression = {
+				...handler.expression,
+				type: 'FunctionExpression',
+				id: null,
+				generator: false,
+			};
+			expect(() => validateEnrichedIr(ir)).toThrow(
+				'EventHandlerRecord event:0 requires an arrow function',
+			);
+		});
+	});
+
 	describe('conditional cancellation', () => {
 		const guardedSource = `import { state } from '@markless/core';
 

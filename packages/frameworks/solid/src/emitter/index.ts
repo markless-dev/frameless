@@ -1171,8 +1171,25 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 				repeatItemsByEventId.get(event.id),
 			);
 			const fn = expression(handler.expression);
-			if (!t.isArrowFunctionExpression(fn) || fn.async)
-				throw new Error(`EventHandlerRecord ${event.id} requires a synchronous arrow`);
+			/**
+			 * ASYNC HANDLERS ARE ACCEPTED. This check used to read
+			 * `|| fn.async` and threw `requires a synchronous arrow`. That
+			 * clause was an ACCIDENT, not a v-limit - see docs/DEFECTS.md
+			 * entry 11 and notes/T046-solid-async.md. It arrived with the
+			 * emitter's original landing commit (1309b00, "codex killed at
+			 * ceiling; PM completing"), never had a test or a comment, and is
+			 * the computed-binding predicate at :828 with the arity clause
+			 * dropped. Solid's pipeline was already async-safe:
+			 * `reanalyzeExpression` wraps NOTHING, so an async arrow re-parses
+			 * as valid module source, and `normalizeHandler` mutates the arrow
+			 * in place so `fn.async` survives to output untouched.
+			 *
+			 * The arity clause is deliberately NOT reinstated here: an event
+			 * handler legitimately takes an `event` parameter, which is why
+			 * :828 (a zero-argument computed) and this site differ.
+			 */
+			if (!t.isArrowFunctionExpression(fn))
+				throw new Error(`EventHandlerRecord ${event.id} requires an arrow function`);
 			handler.writes.forEach((write) =>
 				validateWrite(write as RecordLike, `EventHandlerRecord ${event.id}`),
 			);

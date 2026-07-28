@@ -131,7 +131,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T046
+active_task: T047
 
 tasks:
   - id: T001
@@ -4342,7 +4342,7 @@ tasks:
   - id: T046
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     depends_on: ["T045"]
     spec: "T043 receipt - AUTHORITATIVE."
@@ -4378,12 +4378,70 @@ tasks:
       - "Reads or writes do NOT lower correctly across the await. That would mean the flag check was load-bearing after all - report it VERBATIM and STOP; it inverts the ruling."
       - "Any byte moves in packages/frameworks/solid/generated."
       - "You are about to touch the nested-write lowering. Solid gets that right and it is the reference implementation for React's lift trigger."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T046-solid-async.md
+      summary: "Narrowed the Solid emitter's check to !isArrowFunctionExpression(fn). Witnessed the RED first, verbatim, from BOTH validateEnrichedIr and emit. Re-derived all four accident evidence lines independently; all four hold. THE ACROSS-AWAIT PROOF SUCCEEDED. Nested-write lowering untouched, no fixture or golden registered, no emitted byte moved."
+      THE_ACROSS_AWAIT_PROOF_IS_THE_DELIVERABLE_AND_IT_PASSED: "T043 ARGUED Solid's async path was sound from its re-parse primitive; it could not PROVE it without editing the validator. This card produced the proof. The emitted handler keeps `async`, lowers the awaited prop to `props.ready`, and lowers post-await writes to `setTicks(ticks() + 1)` - A LIVE SIGNAL READ AT RESUME, nothing hoisted above the boundary. Measured BEHAVIOURALLY: the arrow was lifted back out of the emitted JSX BY AST and dispatched THREE TIMES against the real solid-js CLIENT runtime - twice while the first call was still suspended at the await, then once sequentially. Result ticks()===3, phase()==='done', preventDefault observed 3 times. The stop_if did not fire; the accident ruling is not inverted."
+      it_calibrated_the_proof_two_ways: "The same harness reports 2 against a hand-written STALE shape (React's toConstSsa pattern, read hoisted above the await) - so the harness can distinguish correct lowering from the failure mode it is checking for. And a createMemo guard PROVES THE CLIENT BUILD LOADED: 10 on the client build, 2 on the bare solid-js specifier, which under environment:'node' resolves to the INERT SSR BUILD whose signals do not react. Without that guard the whole behavioural proof would have been a green vacuum on a runtime that cannot fail."
+      PM_CORRECTION_TO_THE_WORKERS_OWN_FINDING: "The Worker reported that 'no documentation' is true of the code but FALSE of the board, citing three commits - 1309b00 plus f2d8aaf and 439ac30 - as having 'written the line up as a designed v-limit'. PM CHECKED ALL THREE RATHER THAN ACCEPTING IT. The finding is HALF RIGHT AND SHARPER FOR BEING NARROWED: 1309b00 is the landing commit; f2d8aaf DOES carry T031's framing of the throw as a genuine blocker; but 439ac30 is the commit that CORRECTED it, titled 'S8's impossibility proof refuted' and stating in terms that the refusal is an accident on four independent lines. So the defect is ONE board document, not three. THE UNDERLYING POINT SURVIVES INTACT AND IS WORTH KEEPING: documenting something as what it is not is WORSE THAN LEAVING IT UNDOCUMENTED, and that is precisely how an accidental one-line check became an impossibility proof that the PM then endorsed to the owner."
+      all_four_accident_lines_re_derived: "PM re-verified the blame and the commit set. git blame lands :1174-1175 in 1309b00 whose message reads 'codex killed at ceiling; PM completing'. The string had ONE tracked code hit. The clause is the computed-binding predicate from :828 with the arity clause dropped. And .async appears at only :786, :828 and :1174 in the whole emitter."
+      changed_files:
+        - packages/frameworks/solid/src/emitter/index.ts
+        - packages/frameworks/solid/test/emitter.test.ts
+        - docs/DEFECTS.md
+        - docs/goals/frameless-defects-and-targets-v1/notes/T046-solid-async.md
+      commands:
+        - cmd: "git status --porcelain && git rev-parse HEAD origin/main"
+          status: pass
+          note: "clean, f4d2e01 both - verified by the Worker itself"
+        - cmd: "git blame -L 1170,1180 && git log -1 --format=%s 1309b00"
+          status: pass
+          note: "'t006: solid emitter + dossier gate (codex killed at ceiling; PM completing)'; PM re-verified"
+        - cmd: "node <scratch probe> BEFORE the fix"
+          status: pass
+          note: "RED verbatim: 'EventHandlerRecord event:0 requires a synchronous arrow', from validate AND emit, identically with and without a leading preventDefault"
+        - cmd: "node <scratch probe> AFTER the fix"
+          status: pass
+          note: "async kept, await props.ready, setTicks(ticks() + 1)"
+        - cmd: "node <behavioural probe>, 3 dispatches, 2 overlapping at the await"
+          status: pass
+          note: "ticks=3 phase=done prevented=3 - ACROSS-AWAIT PROOF PASSED against the real client runtime"
+        - cmd: "pnpm --dir packages/frameworks/solid exec vitest run --config vitest.node.config.ts"
+          status: pass
+          note: "188 passed, was 183"
+        - cmd: "pnpm test"
+          status: pass
+          note: "999 passed / 51 files; PM re-ran and confirms 999"
+        - cmd: "pnpm check"
+          status: pass
+          note: "all six tsconfigs"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 381 files"
+        - cmd: "regenerate && git diff --exit-code -- packages/frameworks/solid/generated"
+          status: pass
+          note: "NO emitted byte moved; PM re-verified"
+        - cmd: "RED re-witness of the STANDING tests: restore '|| fn.async'"
+          status: pass
+          note: "4 failed / 184 passed with the verbatim old message; predicate restored, 188/188, generated byte-identical"
+      deviations:
+        - "Changed the throw MESSAGE as well as the predicate - 'requires a synchronous arrow' -> 'requires an arrow function'. The old string would have been ACTIVELY FALSE after the narrowing, and it is the exact string board documents misread as a designed v-limit."
+        - "Filed as DEFECTS.md entry 11, not 10 - entry 10 was taken by the boolean-attribute repair. React's await defect becomes entry 12."
+        - "ADDED A FIFTH TEST THE CARD DID NOT ASK FOR: the narrowed check still refuses a NON-ARROW handler. The clause had no test at all - that was evidence line 2 - so leaving the SURVIVING half uninstrumented would have reproduced the original hole in miniature."
+        - "The test loads solid-js by RESOLVED PATH rather than the bare specifier, because under environment:'node' the exports map returns the SSR build whose signals are inert - proven by a createMemo returning 10 on the client build and 2 on the bare specifier."
+        - "Added a paragraph to the DEFECTS.md standings distinguishing entry 11's CLOSED standard from entry 10's OPEN one, since both lack a served payload and a reader would otherwise see an inconsistency."
+      remaining_blockers:
+        - "NO SERVED PAYLOAD: no browser has run a frameless-emitted async Solid handler. The proof is at the emitter and in a node harness over the real client runtime. That is the re-specified S8 corpus card's job, and the same gap entry 10 carries."
+        - "T043's React/Solid divergence prediction is HALF measured - Solid's half is clean; T047 owns React's."
+        - "The Qwik documentary obligation is untouched; packages/frameworks/qwik was outside allowed_files."
+      stopped_because: null
   - id: T047
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
     depends_on: ["T046"]
     spec: "T043 receipt - AUTHORITATIVE."
