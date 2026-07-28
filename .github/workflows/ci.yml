@@ -123,7 +123,30 @@ jobs:
           #      first discriminates at 1:1, the third at better than 8:1. Reading
           #      the durations is what distinguishes "fixed" from "got lucky
           #      thrice"; the last green looked fine and had 6% of headroom.
-          # Owned by T999.
+          #
+          # GATE RE-MEASURED AT THE FINAL AUDIT (T999, 2026-07-28): NOT MET - AND THE
+          # CELL MOVED THE WRONG WAY. Five consecutive green windows-latest / node 24
+          # cells were read out of the LOGS, which on the count alone clears part 2's
+          # N=3. Part 2 does not ask for three greens; it asks for three greens whose
+          # two `vp fmt` durations sit FAR BELOW the bound, and the durations refute
+          # it (react ms, solid ms):
+          #
+          #   HEAD      5201   5319          dc6f0f8   25028  24869
+          #
+          # 25028ms is 83% of the 30s bound and a 5x EXCURSION over its 4.0-6.4s
+          # neighbours in the same five-run window. So the cell's VARIANCE IS WIDER
+          # than the pre-fix coin-flip data showed, not narrower: the gate got FURTHER
+          # AWAY while the cell was going green five times in a row. That is precisely
+          # the "fixed" versus "got lucky" discrimination part 2 was written to make,
+          # and it is why the gate reads durations instead of conclusions. Had it read
+          # conclusions, this flag would have come off on a cell that spent one run at
+          # 83% of its bound.
+          # THE FLAG STAYS.
+          #
+          # Owned by docs/goals/frameless-emitter-capability-v1, the successor board.
+          # It read "Owned by T999" until T057 re-pointed it on 2026-07-28: T999 is a
+          # CLOSED final audit, and a closed audit cannot own an open gate. An owner
+          # that has already returned is the same failure as no owner at all.
           - { os: windows-latest, node: 24, experimental: true }
     steps:
       - uses: actions/checkout@v5
@@ -243,7 +266,23 @@ jobs:
           # conditions that produced the reds - concurrent runs saturating the
           # runner, not an idle one - so that the repaired loop is exercised on the
           # frame cadence the failures came from. Until then this flag remains the
-          # adjudicating instrument for reading 3. Owned by T999.
+          # adjudicating instrument for reading 3.
+          #
+          # GATE RE-MEASURED AT THE FINAL AUDIT (T999, 2026-07-28): NOT MET, AND FOR
+          # THE PLAINEST REASON AVAILABLE - THE OBSERVATION HAS NEVER BEEN MADE. Every
+          # green webkit cell on record, including the one at HEAD, is a QUIET-WINDOW
+          # run. NO CONTENDED RUN HAS EVER BEEN OBSERVED, so T017's distinguishing
+          # signatures still have not been read, and the gate is no closer than it was
+          # when it was written. Note what this is NOT: it is not a red cell, and it
+          # is not a failure to fix anything. It is a MISSING MEASUREMENT, and the
+          # honest response to a missing measurement is to keep the instrument that
+          # would take it.
+          # THE FLAG STAYS.
+          #
+          # Owned by docs/goals/frameless-emitter-capability-v1, the successor board.
+          # It read "Owned by T999" until T057 re-pointed it on 2026-07-28, for the
+          # same reason as the windows cell: a closed final audit cannot own an open
+          # gate.
           - { browser: webkit, experimental: true }
     steps:
       - uses: actions/checkout@v5

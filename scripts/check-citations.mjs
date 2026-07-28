@@ -478,16 +478,67 @@ const FENCE = /^\s*(`{3,}|~{3,})/;
  */
 
 /**
- * RULING 10 - EVERY TRACKED SOURCE FILE IS SWEPT. Ruled by T056, the card that
- * CONVERGED this class instead of widening it a fourth time.
+ * RULING 10 - EVERY TRACKED LEXABLE SOURCE FILE IS SWEPT. Ruled by T056, the card
+ * that CONVERGED this class OVER LEXABLE SOURCE instead of widening it a fourth time.
  *
  * WHY A SWEEP AND NOT A LONGER LIST. T053, T054 and T055 each widened the guard by
  * name and each ended with a recorded remainder, which is a pattern that terminates
  * only if someone eventually stops naming files. T056 cleared the last of the
  * measured remainder - ten files, forty-seven violations - so the honest end state
- * is not "seventeen files are watched" but "nothing carries an unruled citation".
- * The first is a snapshot that rots the moment a file is added. The second is a
- * property, and a property is what a check can hold.
+ * is not "seventeen files are watched" but "NO LEXABLE SOURCE FILE CARRIES AN UNRULED
+ * CITATION". The first is a snapshot that rots the moment a file is added. The second
+ * is a property, and a property is what a check can hold.
+ *
+ * THAT QUALIFIER IS LOAD-BEARING, AND IT WAS PUT BACK BY REFUTATION RATHER THAN BY
+ * EDIT. T056's receipt dropped it and claimed the class CONVERGED outright - that
+ * "nothing carries an unruled citation" was the property this file holds. IT IS NOT
+ * THAT PROPERTY. The final audit (T999) refuted the claim by running this file's OWN
+ * `scanText` over `docs/goals/frameless-defects-and-targets-v1/notes/` and finding
+ * 216 VIOLATIONS ACROSS 30 OF ITS 38 MARKDOWN FILES, including first-party ordinals
+ * into live code. T057 re-measured it independently at HEAD, per file, and got the
+ * same 216 across the same 30. Two structural reasons, both visible in this file:
+ *
+ *   - THE SWEEP IS JS/TS ONLY. `SWEPT_SOURCE_EXTENSIONS` below is
+ *     /\.(?:ts|tsx|js|jsx|mjs|cjs)$/, so Markdown reaches the detector ONLY through
+ *     the hand-named `WATCHED` list - four documents, chosen one card at a time.
+ *   - THE MARKDOWN COMPLETENESS CHECK DOES NOT RECURSE. `listDocsTopLevel` calls
+ *     `readdirSync` on `docs/` and filters `isFile()`, so it sees the three top-level
+ *     documents and NOTHING beneath them. A new unruled document under `docs/goals/`
+ *     raises no integrity problem at all; it is covered only by RULING 2's `docs/goals`
+ *     DIRECTORY entry, which excuses the archive as dated task records - a reason, but
+ *     not a reading. Nothing measures whether that reason still fits what is in there.
+ *
+ * THE UNSWEPT CONTAINERS, MEASURED RATHER THAN LISTED FROM MEMORY. T056's receipt
+ * disclosed `.vue`/`.svelte` only, which is true and is the SMALLEST of them. T057
+ * scanned every tracked file of each extension below with this file's own `scanText`
+ * over RAW TEXT. Raw text is an UPPER BOUND, not a violation count: none of these has
+ * a comment lexer here, so code, data and prose are all read alike.
+ *
+ *   .vue/.svelte   43 files, ZERO - the disclosure below, re-measured, still true
+ *   .tsrx          62 files, ZERO
+ *   .html          13 files, ZERO
+ *   .yaml/.yml     11 non-board files carry ONE, and it is in
+ *                  `.github/workflows/ci.yml` where it is QUOTED SPECIMEN TEXT: a
+ *                  correction block reciting the false comment it replaced. The other
+ *                  20 tracked `.yaml` files are GoalBuddy `state.yaml` boards carrying
+ *                  561 between them - which RULING 3 has already ruled are dated
+ *                  records that KEEP their ordinals.
+ *   .json          5 files carry 62 - two witness-receipt fixtures (recorded tool
+ *                  output), a tsconfig, a package.json and a `poc/` results file.
+ *   .md            93 of 200 tracked files carry 1214, of which 1198 are under
+ *                  `docs/goals/`.
+ *
+ * SO THE LARGEST UNSWEPT SURFACE IS THE ADJUDICATION ARCHIVE - the same place T056
+ * found the born-wrong citation it was cleaning up after.
+ *
+ * WIDENING IS A SUCCESSOR'S CARD, AND THOSE READINGS ARE THE ARGUMENT FOR WHY IT IS
+ * NOT A ONE-LINE PATCH. T057 was scoped to correct the CLAIM, not the SCOPE, because
+ * adding an extension here without a ruling behind it turns a large surface red with
+ * nobody assigned to clear it. The `.yaml` and `.json` readings show the shape of the
+ * work: raw text cannot tell a live citation from RULING 3's dated receipt, from
+ * recorded tool output, or from specimen text quoted in order to correct it. Each
+ * container needs its own ruling and its own lexer first - which is exactly the
+ * argument RULING 8 made when it separated comments from code.
  *
  * IT IS A TIGHTENING, LIKE EVERY WIDENING BEFORE IT. `.tsrx` (T054), source
  * comments and continued lists (T055) could each only find MORE; so can this. It

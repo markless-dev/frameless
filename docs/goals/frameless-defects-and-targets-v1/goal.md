@@ -23,7 +23,9 @@ Close the six open defects in `docs/DEFECTS.md`, then add Vue, Angular and Svelt
 
 ## Goal oracle
 
-Two halves. Both required. Neither alone closes this goal.
+**Three halves. All required. None alone closes this goal.**
+
+> **Half 3 was missing from this charter for a full day, and that is recorded rather than quietly fixed.** It was added to `state.yaml` on 2026-07-27 on owner instruction and never copied here, so this section described *two thirds* of its own oracle while `state.yaml` opened "THREE halves, all required". The final audit (T999) was dispatched on the two-half framing, checked it against `state.yaml` instead of accepting it, and refused it — had it taken the brief at face value it would have certified two thirds of the oracle and called the goal complete. Added here by T057 on 2026-07-28. `state.yaml` stays authoritative (see *Canonical board*); this section is a readable copy, which is precisely why a copy that silently lags is worse than no copy at all.
 
 **Half 1 — defects.** All six defects in `docs/DEFECTS.md` are closed or explicitly ruled non-issues with receipts, and:
 
@@ -32,6 +34,10 @@ Two halves. Both required. Neither alone closes this goal.
 - the three defects currently held as known-failing expectations no longer are, and their fixes were each preceded by a test that failed for the right reason.
 
 **Half 2 — targets.** `pnpm e2e` includes Svelte, Vue and Angular rows driving official scaffolds at pinned lockfile versions, with S1/S2/S3 observations **asserted** equal to the existing three.
+
+**Half 3 — corpus breadth.** *(Added 2026-07-27 on owner instruction, after the owner asked what number of scenarios would justify real cross-framework confidence.)* The corpus covers **eight** scenarios rather than three, each chosen to exercise a **divergence axis** the original S1/S2/S3 do not, each landed in **all six** lanes, and each carrying at least one mutation **per emitter** proven to go red in the e2e matrix. The stopping rule is that **a mutation cannot survive** — not that a file count reached a number. Scenario count is a proxy, and four of the six original defects on this very goal were instrument faults, so this half is measured by what the corpus can *kill*, not by what it contains.
+
+**Eight, not the twelve first written — and the number moved by measurement three times over.** T024 cut twelve to eight after measuring four emitters *hard-throwing* on `component-reference`, so the missing four were inexpressible rather than unwritten; T028 then ruled eight wrong in **both** directions and set nine; T050 landed S9. The corpus is S1–S7 plus S9, and S8's absence is a deferral on a falsifiable trigger that is still true at HEAD: `docs/DEFECTS.md` entry 12.2 is open, and `pnpm e2e` has no exception path, so landing S8 today would encode a known open defect as *expected behaviour* in this repository's strongest instrument. When 12.2 closes, S8 lands and the count is nine. Full provenance lives in `goal.oracle.signal` clause 3 in `state.yaml`.
 
 ## Non-negotiable constraints
 
@@ -74,17 +80,18 @@ Svelte runs first because it owns IR-4 (target-framework-version input), which V
 
 ## Current tranche
 
-Continuous execution through five phases, each ending in a Judge audit:
+Continuous execution through six phases, each ending in a Judge audit:
 
 1. **Integration** — merge the testing branch, prove `main` green.
 2. **Phase A** — emitted-output correctness (defects 1, 2).
 3. **Phase B** — diagnose the undiagnosed (defects 4, 6, 3-B).
 4. **Phase C** — portability and consumption (defect 3 fixes, defect 5).
 5. **Phase D/E** — shared IR foundation (conditional-cancellation representation, IR-4), then the three adapters via their own boards.
+6. **Phase F — corpus breadth.** Added 2026-07-27 on owner instruction and recorded here by T057 on 2026-07-28; it runs *after* the adapters, because by then a scenario costs six emitters, six goldens, six demo routes and e2e wiring.
 
 ## Stop rule
 
-Stop only when the final audit proves **both** oracle halves and records `full_outcome_complete: true`.
+Stop only when the final audit proves **all three** oracle halves and records `full_outcome_complete: true`.
 
 Do not stop after a phase audit. Do not stop because a defect turns out to be upstream — record the decision, file or recommend the upstream issue, and continue.
 

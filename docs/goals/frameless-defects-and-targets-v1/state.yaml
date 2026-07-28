@@ -13,10 +13,14 @@ goal:
     diagnose the undiagnosed (defects 4, 6, 3-B), Phase C portability and
     consumption (defects 3, 5), then Phase D/E the shared IR foundation and the
     three adapters via their existing boards, and finally PHASE F CORPUS BREADTH - added
-    2026-07-27 on owner instruction - which grows the corpus from three scenarios to TWELVE,
+    2026-07-27 on owner instruction - which grows the corpus from three scenarios to EIGHT,
     chosen by DIVERGENCE AXIS rather than feature count, each landed across all SIX targets,
-    and each carrying a cross-lane mutation budget that must go red.
-  status: active
+    and each carrying a cross-lane mutation budget that must go red. THIS FIELD ALSO READ
+    TWELVE and is corrected here for the same reason and with the same provenance as
+    goal.oracle.signal clause 3 - see that clause for T024's cut, T028's ruling and T050's
+    landing. T999 named only the oracle clause; correcting one copy of a ratified-away number
+    and leaving the other is how the stale one comes back. Corrected by T057, 2026-07-28.
+  status: done
   autonomy_grant:
     granted: "2026-07-27, by the owner, verbatim: do not make anything dependent on me to continue until goal end."
     scope: >-
@@ -44,12 +48,30 @@ goal:
       carries a receipt justifying why it stays. (2) TARGETS: pnpm e2e includes
       Svelte, Vue and Angular rows on official scaffolds at pinned lockfile
       versions, with S1/S2/S3 observations ASSERTED equal to the existing three.
-      (3) CORPUS BREADTH: the corpus covers TWELVE scenarios rather than three, each chosen to
+      (3) CORPUS BREADTH: the corpus covers EIGHT scenarios rather than three, each chosen to
       exercise a DIVERGENCE AXIS the original S1/S2/S3 do not, each landed in ALL SIX lanes, and
       each carrying at least one mutation PER EMITTER PROVEN to go red in the e2e matrix. The
       stopping rule is that A MUTATION CANNOT SURVIVE - not that a file count reached a number.
       Scenario count is a proxy, and four of six original defects on THIS VERY GOAL were instrument
       faults, so this half is measured by what the corpus can KILL, not by what it contains.
+      THE NUMBER READ TWELVE WHEN THIS CLAUSE WAS WRITTEN ON 2026-07-27, AND THE CHANGE IS RECORDED
+      HERE RATHER THAN SILENTLY APPLIED - a number moved without a stated reason is the exact fault
+      this board exists to catch and has caught repeatedly. THE RATIFIED RULE IS EIGHT SCENARIOS /
+      48 MUTANTS / TWO-SIDED CALIBRATION, and it was reached BY MEASUREMENT THREE TIMES OVER, never
+      by convenience. T024 cut TWELVE to EIGHT after measuring FOUR EMITTERS HARD-THROWING on
+      component-reference - the missing four were INEXPRESSIBLE, not merely unwritten. T028 then
+      ruled EIGHT WRONG IN BOTH DIRECTIONS and set NINE. T050 landed S9. The 48 is a cell count,
+      not a target: T999 PARSED scripts/corpus-mutation.mjs directly rather than trusting the
+      figure and counted exactly 48. THE CORPUS IS S1-S7 PLUS S9, AND S8'S ABSENCE IS A DEFERRAL ON
+      A FALSIFIABLE TRIGGER THAT IS STILL TRUE AT HEAD - docs/DEFECTS.md ENTRY 12.2 IS OPEN (React
+      reads a stale render closure after an await AND drops the pre-await write), and e2e has no
+      exception path, so landing S8 today would encode a KNOWN OPEN DEFECT as EXPECTED BEHAVIOUR in
+      this repository's strongest instrument. When 12.2 closes, S8 lands and the count is nine; the
+      trigger is the thing to re-read, not the number. T999's final audit found the literal word
+      TWELVE still standing in this clause and ruled it A STALE SENTENCE, NOT UNDONE WORK - recorded
+      as a required board update rather than used to hold the goal open. Corrected by T057 on
+      2026-07-28 per T999's required_board_updates; the superseded value is written out in this
+      note so that nobody has to diff the board to see what changed or why.
     cadence: "at every phase audit, and at final audit"
     final_proof: >-
       A final audit receipt that certifies the phase audits rather than
@@ -71,7 +93,7 @@ goal:
     audience: "frameless maintainers, Windows contributors, and consumers of emitted Solid/Qwik output"
     authority: approved
     proof_type: test
-    completion_proof: "Both oracle halves, certified by a final audit over the phase audits."
+    completion_proof: "ALL THREE oracle halves, certified by a final audit over the phase audits. Read BOTH until T057 corrected it on 2026-07-28: this field predates the 2026-07-27 owner addition of half 3 (corpus breadth) and was never updated, the same stale-copy fault as goal.md's 'Two halves'. It is the exact framing T999's dispatch inherited, and T999 refused it by checking goal.oracle.signal rather than the summary."
     likely_misfire: >-
       Treating the defects list as a checklist and fixing symptoms. Three of six
       are explicitly NOT diagnosed. The fastest way to fail this goal is to raise
@@ -131,7 +153,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T057
+active_task: null
 
 tasks:
   - id: T001
@@ -2282,6 +2304,46 @@ tasks:
         - "Added a T021-correction block under Finding 3 of T018's note rather than only appending rule 5. Finding 3's table now names rows that NO LONGER EXIST and its key sentence was ruled an over-read that ORIGINATED in that note; leaving it unmarked directly above the new rule would have left the durable carrier asserting something T021 overturned. Original text preserved as the audit trail."
         - "Ran a temporary in-tree probe test in both gate files to enumerate collisions, then reverted it; solid/test/gate.test.ts is byte-identical to HEAD - PM VERIFIED."
       verification_attempts: 1
+    dropped_referral:
+      recorded_by: "T057, 2026-07-28, per T999's required_board_updates."
+      disposition: "CONSCIOUSLY ABANDONED ON THIS BOARD. Not ruled, and deliberately not ruled by a Worker."
+      what_was_referred: >-
+        This receipt ends "Needs a Judge ruling". NO TASK EVER RULED IT. T024 through T056 ran -
+        more than twenty tasks, four phase audits and a final audit - and not one of them opened
+        the referral. T999 found it and listed it under missing_evidence. That silence is the
+        finding worth recording: the referral did not fail, it was never looked at, and a
+        blocked card with an unanswered question in its receipt is indistinguishable at audit
+        from a card nobody read.
+      why_abandoning_is_defensible: >-
+        NOTHING IS RED AND NOTHING IS PENDING. The three branch-grounded rewrites and the rule-5
+        copier rule ARE landed, probed and green - each rewritten row was observed producing its
+        expected policy, and the deciding forEach check matched verbatim. What is unlanded is an
+        ADDITIONAL invariant over the mutation tables, not a fix to anything broken: no duplicate
+        row survives in React, and Solid never had one. The goal oracle does not reach it either -
+        half 1 is defined over the six DEFECTS.md findings, half 2 over the e2e rows, half 3 over
+        what the corpus can kill. So this is coverage the board WANTED, not coverage it PROMISED.
+      why_a_worker_may_not_rule_it: >-
+        The open question is a branch-level adjudication - whether the surviving
+        'dynamic computed-member setter' pair is BRANCH-IDENTICAL, which T021 recorded as
+        probable but never verified, and whether the (mutant, policy) composite key T023 proposed
+        supersedes T021's "keyed on both name and mutant". Both are Judge acts. T057 is a
+        documentation card and records the disposition rather than inventing the ruling; stating
+        a ruling here would be the same class of unprovenanced change this card exists to correct.
+      what_survives_and_where: >-
+        The work is NOT lost and does not need re-deriving. notes/T021-duplicate-mutants.md
+        section 3 carries the invariant source verbatim with its four-sided calibration, and the
+        two-key shape - row NAME, plus (mutant, policy) as ONE composite - is written into rule 5
+        of notes/T018-mutation-no-op-audit.md, which is the DURABLE CARRIER that reaches Vue,
+        Angular, Svelte and Qwik through the note rather than through a copied test. A successor
+        that wants the invariant lands it from those two documents.
+      handed_to: >-
+        docs/goals/frameless-emitter-capability-v1, the successor board this goal already hands
+        its open DEFECTS.md lift triggers to. Recorded as a hand-off, not scheduled - a Judge on
+        that board decides whether to take it.
+      status_left_alone: >-
+        T023 stays blocked. Changing a task status is the PM's act, not the Worker's, and the
+        record above is what T999 asked for: the referral may be abandoned, but it may not stay
+        silently dropped.
   # ---------------------------------------------------------------------------
   # PHASE F - CORPUS BREADTH. Added 2026-07-27 on owner instruction, after the
   # owner asked what number of scenarios would justify real cross-framework
@@ -6165,7 +6227,7 @@ tasks:
   - id: T057
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     spec: "T999 final audit receipt, required_board_updates - AUTHORITATIVE. The audit ruled COMPLETE; these are corrections it named, not blockers it raised."
     objective: >-
@@ -6224,8 +6286,57 @@ tasks:
       - "Any predicate, assertion, emitted byte or golden moves."
       - "A measurement you are recording does not reproduce - report the real one."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      changed_files:
+        - scripts/check-citations.mjs
+        - docs/goals/frameless-defects-and-targets-v1/state.yaml
+        - docs/goals/frameless-defects-and-targets-v1/goal.md
+        - .github/workflows/ci.yml
+      commands:
+        - cmd: "pnpm test"
+          status: pass
+          note: "1083 passed / 52 files - exactly the expected count; no predicate moved"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 396 files"
+        - cmd: "pnpm check:citations"
+          status: pass
+          note: "clean over 4 watched documents, 17 watched source files, 457 swept"
+        - cmd: "comment-only diff filter over check-citations.mjs AND ci.yml"
+          status: pass
+          note: "0 non-comment lines added or removed in either"
+        - cmd: "git diff --exit-code -- packages/ demos/ scripts/e2e.mjs"
+          status: pass
+          note: "no emitted byte, golden, assertion or e2e driver moved"
+        - cmd: check-goal-state.mjs
+          status: pass
+          note: "ok:true, 58 tasks, 0 errors, 0 warnings"
+        - cmd: "re-measurement: the guard's own scanText over this goal's notes/"
+          status: pass
+          note: "216 violations across 30 of 38 files - REPRODUCES THE AUDIT EXACTLY, per file"
+        - cmd: "re-measurement: raw-text scan of every named container"
+          status: pass
+          note: ".tsrx 62/0, .html 13/0, .vue+.svelte 43/0, .yaml 11 non-board files carrying 1, .json 5 files carrying 62, .md 93 of 200 carrying 1214 (1198 under docs/goals)"
+        - cmd: "python3 yaml.safe_load over ci.yml"
+          status: pass
+          note: "both experimental matrices byte-intact"
+        - cmd: "git status --short"
+          status: pass
+          note: "exactly 4 modified files, all in allowed_files; nothing committed"
+      summary: "Applied five of T999's six required updates. Rewrote ruling 10's header to claim convergence OVER LEXABLE SOURCE, recording the independently reproduced 216/30, both structural causes, and every unswept container WITH A MEASURED FIGURE rather than a list. Did not widen the sweep. Corrected clause 3 from TWELVE to the ratified rule with provenance, preserving the superseded value in text. Added oracle half 3 to goal.md. Recorded both flag gates NOT met. Recorded T023 as consciously abandoned."
+      IT_RECORDED_TWO_NUANCES_THE_AUDIT_ELIDED_RATHER_THAN_REPEATING_THEM: "(a) THE 216 ARE NOT STRICTLY UNRULED. NOT_YET_WATCHED carries a directory: 'docs/goals' entry excusing the archive as dated task records - so they are covered by A REASON THAT NOTHING EVER RE-READS, which is a different and more interesting defect than 'invisible'. (b) THE LONE .yaml HIT IS QUOTED SPECIMEN TEXT in ci.yml: the existing correction block reciting the false comment it replaced. Together with ruling 3's 561 dated board-receipt ordinals, THAT IS THE CONCRETE ARGUMENT FOR WHY WIDENING IS A SUCCESSOR'S CARD - raw text cannot tell a live citation from a dated receipt, recorded tool output, or text quoted in order to correct it. Repeating the audit's phrasing uncorrected would have reproduced the very fault this card exists to fix."
+      IT_FOUND_A_DANGLING_POINTER_IN_THE_AUDIT_THAT_CERTIFIED_THE_FIX: "notes/T999-final-audit.md DOES NOT EXIST AND NEVER HAS - git log --all over that path is empty - though the T999 receipt's note: field names it. PM CONFIRMED. The Worker did NOT block, correctly: the card's spec field makes the T999 RECEIPT authoritative and it is complete, so nothing is lost. But a pointer to a nonexistent file, inside the receipt that certified five tasks of citation-rot repair, is the lesson stating itself. PM corrected the pointer on the board rather than deleting it."
+      it_corrected_the_TWINS_of_every_stale_fact_not_just_the_named_copy: "T999 named clause 3's TWELVE and goal.md's missing half 3. The Worker also found goal.tranche ALSO read TWELVE, goal.intake.completion_proof ALSO read 'Both oracle halves', and goal.md's tranche said 'five phases'. CORRECTING ONE COPY OF A RATIFIED-AWAY NUMBER AND LEAVING ITS TWIN IS HOW THE STALE ONE RETURNS - which is precisely how the Vue counts came back twice on this board. All carry the same provenance note."
+      deviations:
+        - "notes/T999-final-audit.md does not exist; worked from the T999 receipt, which the card's spec field makes authoritative."
+        - "Corrected two additional stale copies T999 named only once (goal.tranche, goal.intake.completion_proof), plus goal.md's 'five phases' - see above."
+        - "CHOSE THE 'CONSCIOUSLY ABANDONED' BRANCH FOR T023 RATHER THAN STATING A RULING. The open question - is the surviving name-collision pair branch-identical, and does the (mutant, policy) composite key supersede T021's spec - is a BRANCH-LEVEL ADJUDICATION, a Judge act and not a Worker's. The record states the disposition, why abandoning is defensible (nothing red, nothing promised by the oracle), what survives and where, and hands it to frameless-emitter-capability-v1. Left status: blocked - changing it is the PM's."
+        - "DID NOT apply required update 6 (set goal.status complete, clear active_task). It was not in the dispatch and COMPLETION READINESS IS NOT A WORKER DECISION."
+      remaining_blockers: []
+      stopped_because: null
   - id: T999
     type: judge
     assignee: Judge
@@ -6269,7 +6380,13 @@ tasks:
       decision: complete
       full_outcome_complete: true
       harness: claude-code
-      note: notes/T999-final-audit.md
+      note_CORRECTED_BY_PM: >-
+        THE RECEIPT NAMED notes/T999-final-audit.md AND THAT FILE WAS NEVER WRITTEN. T057 found it;
+        PM confirmed with git log --all over that path, which is empty. The audit's full reasoning
+        is in THIS receipt, which the T057 card's spec field already made authoritative, so nothing
+        is lost - but a pointer to a nonexistent file is EXACTLY the citation-rot class this goal
+        spent five tasks closing, appearing in the receipt that certified the closing. Recorded
+        rather than quietly deleted, because that is the whole lesson.
       rationale: "ALL THREE ORACLE HALVES SATISFIED - the PM's brief named only two. Six defects closed or ruled with receipts; both undiagnosed defects genuinely DIAGNOSED, with each tempting wrong move explicitly rejected on instrumented evidence. Six e2e rows on official scaffolds, equality ASSERTED with no exception path. Corpus at the ratified 8 scenarios / 48 mutants / 48 red. CI 15/15 green at HEAD, verified BY READING LOGS rather than conclusions. Both surviving continue-on-error flags carry receipts, and the Judge RE-MEASURED both removal gates: neither is met, so both correctly stay."
       summary: "Certified the four phase audits with a spot-check each, all four held. Found one material overstatement (T056's convergence claim) and one stale charter sentence (oracle half 3 still reads TWELVE), neither an oracle failure. Ruled complete."
       IT_FOUND_THE_ERROR_IN_THE_PMs_BRIEF_AS_INSTRUCTED: "The dispatch framed the oracle as TWO halves. state.yaml defines THREE, the third - CORPUS BREADTH - added 2026-07-27 on OWNER INSTRUCTION, and goal.md makes state.yaml authoritative. The stale T999 card's own what_is_still_open block names half 3; the PM's brief dropped it. THE JUDGE RULED ON ALL THREE ANYWAY. PM CONFIRMED at state.yaml: the signal opens 'THREE halves, all required'. Had the Judge accepted the brief, it would have certified two thirds of the oracle and called the goal complete."
