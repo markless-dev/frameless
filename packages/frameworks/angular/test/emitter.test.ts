@@ -1,7 +1,7 @@
 import { readdirSync } from 'node:fs';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import type { EnrichedIR } from '@frameless/compiler';
+import { buildEnrichedIr, type EnrichedIR } from '@frameless/compiler';
 import { resolve } from 'pathe';
 import { describe, expect, test } from 'vitest';
 import { componentSelector, emit, validateEnrichedIr } from '../src/emitter/index.ts';
@@ -675,4 +675,116 @@ describe('formatEmitted asserts what no formatter is available to enforce', () =
 			expect(mutant, `${shape} produced a non-mutant`).not.toBe(source);
 			expect(() => formatEmitted(mutant)).toThrow(message);
 		});
+});
+
+/**
+ * THE SECOND INSTRUMENT, and the reason there has to be one.
+ *
+ * `frameless-defects-and-targets-v1` T043 §1.2 separated TWO failure modes behind
+ * the dropped `async`, and only ONE of them is catchable by any oracle:
+ *
+ *   - `async` WITH `await` emits `await` inside a non-async method. That is
+ *     INVALID TypeScript - TS1308 - and `emitted-typecheck.test.ts` catches it.
+ *     That file records the verbatim RED.
+ *   - `async` WITHOUT `await` drops the keyword and emits PERFECTLY VALID
+ *     TypeScript. The method returns `void` instead of `Promise<void>`, every
+ *     caller that awaited it silently awaits a non-promise, and NO TYPECHECK
+ *     ORACLE ANYWHERE - not this repo's, not a perfect one - can see it, because
+ *     nothing about it is a type error.
+ *
+ * SO ONE INSTRUMENT IS INSUFFICIENT BY CONSTRUCTION, and the second cannot be
+ * another derived check over the same output: it has to assert THE EMITTED
+ * KEYWORD DIRECTLY. That is what this block does. `emitted-typecheck.test.ts`
+ * carries the complementary proof - a test that pins the oracle's BLINDNESS here,
+ * green both before and after the repair, so the gap is a standing statement
+ * rather than a thing a reader has to infer.
+ *
+ * DEFECTS.md entry 9.
+ */
+describe('an authored async handler keeps its async on the lowered class method', () => {
+	/**
+	 * The awaited value is a PROMISE-VALUED PROP, per T043 §6. Not a free global
+	 * (`await Promise.resolve()`) because Angular's globals v-limit refuses
+	 * `Promise` and THAT REFUSAL IS CORRECT and is not weakened here; not a
+	 * callback-prop call (`await settle()`) because Qwik's callback-statement rule
+	 * refuses that and is also correct. Authoring AROUND a designed v-limit is what
+	 * T030 did for S7 with `aria-disabled`.
+	 *
+	 * Nothing here is registered - no golden, no fixture, no `generated/` byte. The
+	 * shipped corpus contains no async handler at all, which is exactly why a
+	 * correct repair is INVISIBLE to it and why this planted probe is the proof.
+	 */
+	async function emitHandler(handlerSource: string): Promise<string> {
+		const ir = await buildEnrichedIr({
+			filename: 'async-probe.tsrx',
+			source: `import { state } from '@markless/core';
+
+export function HandlerProbe({ ready, onTrace }) @{
+	let phase = state('idle');
+	let ticks = state(0);
+
+	<div data-probe-root="">
+		<button data-action="run" onClick={${handlerSource}}></button>
+		<output data-value="phase">{phase}</output>
+		<output data-value="ticks">{ticks}</output>
+	</div>
+}
+`,
+		});
+		return formatEmitted(emit(ir));
+	}
+
+	test('async WITH await: the keyword is carried and the return type widens', async () => {
+		const source = await emitHandler(`async (event) => {
+				phase = 'pending';
+				await ready;
+				ticks = ticks + 1;
+				phase = 'done';
+			}`);
+		expect(source).toMatch(/\basync onH\d+Click\(event: any\): Promise<void> \{/);
+		// The lowering still ran: reads and writes are qualified ACROSS the await,
+		// so this cannot pass by emitting an async method with a stale body.
+		expect(source).toMatch(/await this\.ready;/);
+		expect(source).toMatch(/this\.ticks = this\.ticks \+ 1;/);
+		expect(source).toMatch(/this\.phase = 'done';/);
+	});
+
+	/**
+	 * THE CASE NO ORACLE CAN CATCH. Before the repair this emitted
+	 * `onH2Click(event: any): void` - valid TypeScript, silently no longer a
+	 * promise. This assertion is the ONLY thing in the repo that sees it.
+	 */
+	test('async WITHOUT await: the keyword is carried even though the output would typecheck either way', async () => {
+		const source = await emitHandler(`async (event) => {
+				phase = 'pending';
+				ticks = ticks + 1;
+				onTrace('run', { phase: 'done' });
+			}`);
+		expect(source).toMatch(/\basync onH\d+Click\(event: any\): Promise<void> \{/);
+		expect(source).not.toMatch(/onH\d+Click\(event: any\): void \{/);
+	});
+
+	/**
+	 * THE CONTROL, so "async is carried" is not vacuously true of every handler.
+	 * Without this row an emitter that stamped `async` on EVERYTHING would pass
+	 * both tests above.
+	 */
+	test('a synchronous handler stays synchronous', async () => {
+		const source = await emitHandler(`(event) => {
+				phase = 'pending';
+				ticks = ticks + 1;
+			}`);
+		expect(source).toMatch(/\bonH\d+Click\(event: any\): void \{/);
+		expect(source).not.toMatch(/\basync\b/);
+	});
+
+	/**
+	 * AND THE WHOLE SHIPPED CORPUS IS SYNCHRONOUS, asserted rather than assumed.
+	 * This is what licenses the `git diff --exit-code -- generated` check that the
+	 * repair had to pass: no emitted byte may move, because there is no async
+	 * handler in the corpus for the repair to change.
+	 */
+	test('no emitted scenario contains an async member, so the repair moves no committed byte', async () => {
+		for (const file of emittedScenarios()) expect(await emitted(file)).not.toMatch(/\basync\b/);
+	});
 });

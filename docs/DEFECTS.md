@@ -895,10 +895,102 @@ then be deleted deliberately.
 **What this entry does not know.** Whether the other five lanes have the same hole
 in a form nobody has authored. T031 measured **Solid and Qwik lowering nested
 writes correctly** and did not probe Svelte, Vue or Angular on this axis
-specifically. Angular carries a **separate, unrelated** silent defect from the
-same T031 sweep — an authored `async` handler becomes a synchronous method — which
-is not filed here because it awaits the T043 ruling. **None of this is upstream.**
+specifically. **T043 has since measured all three**, and all three lower nested
+writes correctly — as do Solid and Qwik, so React is alone at one lane of six
+rather than one of two, which strengthens this entry's case that a later ruling
+can port a proven approach. Angular carried a **separate, unrelated** silent
+defect from the same T031 sweep — an authored `async` handler became a synchronous
+method — now ruled by T043 and filed as **entry 9**. **None of this is upstream.**
 React supports every construct involved; the defect is entirely in our emitter.
+
+---
+
+## 9. Angular silently dropped `async` from an authored event handler — **CLOSED — frameless's own emitted output**
+
+> **The third defect in frameless's own shipped output, and the only one of the
+> three whose root cause was a MISSING INSTRUMENT rather than a missing input.**
+> Entry 8 survived because the corpus never contained a nested write — a weak
+> input through a working oracle. This one survived because **Angular was the only
+> lane in this repo that emits TypeScript and typechecks none of it**. Measured by
+> T031, re-derived and ruled by T043, repaired by T045. Like entries 7 and 8 it was
+> raised by `frameless-defects-and-targets-v1`, so it does **not** extend that
+> goal's oracle, which is defined over findings 1–6.
+
+**Status:** CLOSED. The construct is now **lowered**, not refused: an authored
+`async` arrow emits an `async` class method returning `Promise<void>`. Angular
+supports async event handlers natively, so refusing one would have made this the
+only lane unable to express a mainstream construct its own framework supports.
+
+**THERE WERE TWO FAILURE MODES BEHIND ONE BUG, AND ONLY ONE OF THEM WAS EVER
+CATCHABLE.** Conflating them is what made this look smaller than it was.
+
+**Mode A — `async` WITH `await`: invalid TypeScript, unchecked.** The `async` was
+dropped and the `await` was kept, so the emitted method contained an `await` it
+had no right to. Under this repo's own `typescript@5.9.3`:
+
+```
+generated/async-with-await.ts: TS1308 'await' expressions are only allowed within
+                               async functions and at the top levels of modules.
+```
+
+A typecheck oracle catches this the instant it exists — **and this lane did not
+have one.** That is the whole reason it shipped.
+
+**Mode B — `async` WITHOUT `await`: valid TypeScript, uncatchable.** The keyword
+was dropped and nothing else was wrong. The method returned `void` instead of
+`Promise<void>`, every caller that awaited it silently awaited a non-promise, and
+the output type-checks **perfectly**. No oracle anywhere — not this repo's, not a
+hypothetical perfect one — can see mode B, because nothing about it is a type
+error. It is a pure semantic downgrade wearing valid syntax.
+
+**So one instrument was insufficient by construction**, and the repair ships two.
+`packages/frameworks/angular/test/emitted-typecheck.test.ts` catches mode A and
+carries a standing test pinning its own **blindness** to mode B — green both
+before and after the fix, so the gap is stated rather than left for a reader to
+infer. `packages/frameworks/angular/test/emitter.test.ts` asserts the **emitted
+keyword directly**, which is the only thing in the repo that can see mode B.
+
+**The mechanism, in one line.** The string `async` occurred **zero** times in
+`packages/frameworks/angular/src/emitter/index.ts`. Handler methods are built from
+a hand-written string template, and `qualify()` transplants the arrow's **body**
+into it — so the arrow's modifier had nowhere to go.
+
+**Why nothing caught it — and this is the part that outlives the `async` fix.**
+Every other lane that emits code runs a compiler over its emitted output: React
+and Solid run real `tsc`, Svelte and Vue run their own framework compilers. Angular
+had `parse-emitted.test.ts`, which checks the **template** grammar via
+`parseTemplate` and never looks at the class body, and
+`packages/frameworks/angular/tsconfig.json` does not `include` `generated/**`, so
+`pnpm check` never saw the emitted component either. **The dropped `async` was one
+instance of a hole through which any type-invalid Angular emission shipped
+silently.** THE INSTRUMENT WAS THE REPAIR; the `async` fix is one thing it catches.
+
+**Why the oracle is a vitest file and not a `tsconfig` include.**
+`packages/frameworks/angular` is deliberately free of `@angular/core` — that
+absence is the structural guarantee that Vite 7 and Vite 8 never meet in one
+package (`test/toolchain.test.ts`, `frameless-angular-v1` T002 ruling 1). Routing
+`generated/**` into `pnpm check` would make the lane permanently red on an import
+that cannot resolve here by construction, and adding the dependency would trade a
+real toolchain guarantee for a convenience. The oracle instead asserts **"no
+diagnostic other than `TS2307` for `@angular/*`"** — one expected unresolved
+module, per file, matched by **code and module name**, so a mis-emitted relative
+import is still red even though it is also a `TS2307`.
+
+**The calibration.** The oracle fires on **nothing** in the shipped corpus — all
+seven `generated/S*.ts` are clean apart from that one expected diagnostic — so it
+ships with the planted `async` authoring **watched red before the emitter moved**,
+with the `TS1308` above as its failure text, and with a **synchronous control**
+watched green so that "async is carried" is not vacuously true of every handler.
+Three further planted mutations (an undeclared member read, a second unresolved
+import, an illegal construct in the class body) prove the lane can fail at all.
+
+**No emitted byte moved.** The shipped corpus contains no async handler, so a
+correct repair is **invisible** to it — which is exactly why the planted
+calibration is the whole proof, and why the emitter tests now assert that the
+corpus really is async-free rather than assuming it.
+
+**Not upstream.** Angular supports async event handlers natively; the defect was
+entirely in our emitter.
 
 ---
 
@@ -922,6 +1014,7 @@ matrix proved green rather than from the error message's claim.
 | 6   | test-suite defect               | **instrument repaired** (T008)                | none                                                         |
 | 7   | **product defect — OPEN**       | **contained**, not removed: fail-closed v-limit at the compiler (T039) | the lift trigger — all six lanes measured byte-identical on an interior run at pinned versions |
 | 8   | **product defect — OPEN**       | **contained**, not removed: fail-closed refusal in the React emitter (T044) | the lift trigger — React lowers a nested state write the way Solid already does |
+| 9   | **product defect — CLOSED**     | **removed**, not contained: the construct is lowered, and the missing typecheck oracle over emitted Angular now exists (T045) | none — but note the oracle is structurally blind to mode B, which the emitted-keyword assertion covers instead |
 
 **Entries 7 and 8 are the OPEN defects in frameless's own emitted output**, and
 they are the two on this table a later reader could mistake for closed because

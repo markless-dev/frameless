@@ -38,6 +38,13 @@ type LoweredHandler = {
 	readonly name: string;
 	readonly forVariables: readonly string[];
 	readonly eventParameter: string;
+	/**
+	 * Whether the AUTHORED arrow carried `async`. Like `eventParameter`, this is a
+	 * DECLARED SIGNATURE fact - a flag on the arrow node, alongside its parameter
+	 * list - and never a fact about the body, so reading it is admissible where
+	 * inspecting statements would be a content trigger (ruling 3a).
+	 */
+	readonly isAsync: boolean;
 };
 
 type EmitContext = {
@@ -532,6 +539,26 @@ function eventParameterName(record: EnrichedEventRecord): string {
 }
 
 /**
+ * DID THE AUTHOR WRITE `async`? Read from the arrow's own modifier flag, the same
+ * DECLARED SIGNATURE this file already reads `params` from, so it is admissible
+ * where inspecting the body would not be.
+ *
+ * Angular supports async event handlers natively, so this lane LOWERS the
+ * construct rather than refusing it (`frameless-defects-and-targets-v1` T043 §5,
+ * ruling R1). A fail-closed throw was considered and RULED AGAINST: it would have
+ * left this lane the only one unable to express a mainstream construct its own
+ * framework supports, and - the deciding reason - it would not have closed the
+ * hole it was reached for, which was that NOTHING TYPECHECKED EMITTED ANGULAR.
+ * See `test/emitted-typecheck.test.ts`, the instrument that was the real repair.
+ */
+function handlerIsAsync(record: EnrichedEventRecord): boolean {
+	const arrow = expression(record.handlers[0]?.expression);
+	if (arrow.type !== 'ArrowFunctionExpression')
+		throw new Error(`Event handler ${record.id} is not an arrow function`);
+	return arrow.async === true;
+}
+
+/**
  * The `@for` item names enclosing every event id, computed from the TEMPLATE
  * before any handler body is read.
  *
@@ -765,8 +792,15 @@ function classMembers(
 			.map((parameter) => `${parameter}${MEMBER_TYPE}`)
 			.join(', ');
 		const body = printStatements(loweredHandlerBody(handler, context.members));
+		// DEFECTS.md entry 9. `qualify()` transplants the arrow's BODY into this
+		// template, so before this line the arrow's `async` modifier had nowhere to
+		// go and was dropped - the string `async` occurred ZERO times in this file.
+		// The modifier and the return type move TOGETHER because an `async` method
+		// annotated `: void` is itself a type error.
+		const modifier = handler.isAsync ? 'async ' : '';
+		const returnType = handler.isAsync ? ': Promise<void>' : ': void';
 		members.push({
-			text: `${handler.name}(${parameters}): void {\n${indentBlock(body, '\t')}\n}`,
+			text: `${modifier}${handler.name}(${parameters})${returnType} {\n${indentBlock(body, '\t')}\n}`,
 		});
 	}
 	return { members, implementsOnInit };
@@ -1265,6 +1299,7 @@ export function emit(ir: EnrichedIR): string {
 			name,
 			forVariables,
 			eventParameter: eventParameterName(event),
+			isAsync: handlerIsAsync(event),
 		});
 	}
 
