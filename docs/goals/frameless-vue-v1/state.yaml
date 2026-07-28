@@ -169,7 +169,7 @@ visual_board:
     url: null
     command: "npx goalbuddy board docs/goals/frameless-vue-v1"
 
-active_task: T012
+active_task: T013
 
 tasks:
   - id: T001
@@ -1393,7 +1393,7 @@ tasks:
   - id: T012
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     spec: "T011 re-audit and docs/goals/frameless-vue-v1/notes/T011-vue-reaudit.md - AUTHORITATIVE."
     serialization_hold: >-
@@ -1439,6 +1439,89 @@ tasks:
       - "Derive 12a's domain by walking the emitted .vue templates for a value/checked bind plus a same-host on directive; derive 12b's from props.entries across packages/compiler/test/goldens. Assert the numbers SPELLED IN THE SHIPPED MESSAGES equal the derived counts, with the derivation THROWING on an empty result. Same pattern as commit 1bb0552, same file."
       - "Also correct the +13 citation drift, measured: propsDeclaration 400->413, eventAttribute 730->743, attributesOf 753->766, renderHost 815->828, renderNode 921->934 with its throw 934->947; the policy cites stale values at six sites."
       - "RECORD that T010 reported 'two stop_if conflicts' when there were THREE - section 9.4 requirement 2's /defineEmits/ negative was equally unsatisfiable and was dropped WITHOUT RECORD."
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 2
+      note: notes/T012-derived-domain-figures.md
+      summary: "Re-enumerated BOTH domains over the settled seven-scenario corpus and replaced the literals with derivations: 12a walked off the emitted templates with @vue/compiler-sfc deciding applicability on the handler AST, 12b off props.entries in the compiler goldens, both THROWING on empty, with a spelled() table that throws out of range. The shipped messages still STATE their numbers and are now asserted to spell the derived values. A permanent planted-eighth-scenario calibration drives the real messages RED."
+      BOTH_LITERALS_WERE_FALSE_AT_HEAD_WITH_A_GREEN_SUITE: "THE DEFECT WAS EXHIBITED, NOT ARGUED - which is the strongest possible vindication of T011's withholding. 12a moved FIVE -> EIGHT and 12b moved FIFTEEN -> SEVENTEEN, both silently, because S7 landed after T010 wrote the numbers. S7's three :checked plus @change hosts (S7.vue:41, :51, :65) are the new 12a instances, and its defineProps(['seed','onTrace']) adds two entries with no new name - so the two SECONDARY figures (applicable ONE, distinct names SIX) correctly did NOT move. A user-facing gate message had been stating false counts and every instrument passed."
+      IT_CAUGHT_ITS_OWN_FIRST_PROBE_BEING_WRONG: "The scratch pass classified handlers by testing a TRUNCATED 90-CHARACTER SNIPPET for 'onTrace' and reported S2.vue:32 as a bare assignment. IT CALLS onTrace 130 CHARACTERS IN. The shipped derivation decides on the PARSED AST of the full on.exp.content instead. A truncated-string heuristic that happens to be right on five of six cases is precisely how a derived figure ends up as wrong as the literal it replaced."
+      the_calibration_could_not_pass_against_the_failure_it_named: "Its first toThrow pattern used the full expected sentence - but vitest ELIDES THE MIDDLE OF BOTH OPERANDS in an assertion message, so the sentence never appears in the error text and the calibration could not match the very failure it asserts. Narrowed to the derived word plus its noun, with the reason recorded beside the code. An instrument that cannot observe its own target is the session's recurring fault in miniature."
+      IT_REFUSED_TO_DERIVE_A_FIGURE_THAT_COULD_ONLY_RETURN_ZERO: "12b's 'applies to ZERO' was deliberately left as a STATED GROUND rather than derived. Its ground is that per-prop write-back has NO CHANNEL in the IR, so a derivation could only ever return zero BY CONSTRUCTION rather than by corpus - exactly the instrument-that-cannot-fail this card exists to remove. 12a's 'applies to ONE' IS corpus-dependent and IS derived. Knowing which figures are worth deriving is the whole skill here."
+      changed_files:
+        - packages/frameworks/vue/test/gate.test.ts
+        - packages/frameworks/vue/src/gate/index.ts
+        - docs/emitter-idiom-policy.md
+        - docs/goals/frameless-vue-v1/notes/T012-derived-domain-figures.md
+      commands:
+        - cmd: "git status --porcelain; git log --oneline -5"
+          status: pass
+          note: "tree clean at 2667b1f - VERIFIED BY THE WORKER rather than trusted, for the third card running"
+        - cmd: "pnpm --dir packages/frameworks/vue exec vitest run --config vitest.node.config.ts"
+          status: pass
+          note: "99 passed (98 + 1 new calibration)"
+        - cmd: "pnpm test"
+          status: pass
+          note: "50 files, 976 passed (975 at dispatch, +1); PM re-ran and confirms 976"
+        - cmd: "pnpm check"
+          status: pass
+          note: "six tsc passes"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 380 files"
+        - cmd: "RED CALIBRATION: toThrow wrappers removed, planted 8th scenario"
+          status: pass
+          note: "BOTH assertions RED, verbatim text in the note, wrappers restored, 99 passed"
+        - cmd: "git diff --exit-code -- packages/frameworks/vue/generated"
+          status: pass
+          note: "CLEAN; PM re-verified no emitted byte moved"
+        - cmd: "git diff --exit-code -- packages/compiler, the other five lanes, demos, scripts"
+          status: pass
+        - cmd: "grep -n on emitter declarations"
+          status: pass
+          note: "the +13 drift RE-VERIFIED AT HEAD rather than inherited from T011's table"
+      deviations:
+        - "scenarioCorpus refactored onto a shared scenarioGoldens(goldenRoot) so the calibration can point the derivations at a TEMP corpus. Behaviour and the throw-on-empty preserved; one corpus enumeration in the file rather than two."
+        - "The calibration's toThrow patterns are the derived word plus its noun, not the full sentence - see above."
+        - "12b's 'applies to ZERO' left as a stated ground, NOT derived - see above."
+        - "Added one assertion beyond the counts: every non-applicable handler really does call onTrace(, which is the REASON the shipped message states and is a corpus fact that goes stale the same way."
+        - "Also re-counted 'zero of the six compiler goldens' to seven (component-reference still 0 of 7) while fixing the renderNode citation in the same sentence."
+      remaining_blockers:
+        - "STALE COUNT ONE FILE OUTSIDE allowed_files: packages/frameworks/vue/src/emitter/index.ts:404-405 still reads 'fifteen printed PropDestructuringEntry values across the SIX goldens, six distinct names'. PM VERIFIED - both figures now false. Same defect class, same fold, in the very comment block whose insertion caused the +13 drift. Carded as T013."
+        - "RECORDED PER THE CARD: T010's receipt reports 'two stop_if conflicts'; THERE WERE THREE. Section 9.4 requirement 2's not.toMatch(/defineEmits/) is equally unsatisfiable against 9.3(b)'s own prescribed message, which names the token in order to DISCLAIM it, and was dropped without record. Dropping it was RIGHT; doing so SILENTLY is how a fold quietly narrows a ruling."
+        - "STANDING: bare line ordinals in policy citations are drift-by-construction - second time these six have moved under a comment edit. Severity stays low only because every citation also names its symbol."
+      spawned_tasks:
+        - T013
+      stopped_because: null
+  - id: T013
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: low
+    spec: "T012 receipt - AUTHORITATIVE."
+    objective: "Correct the stale corpus count in propsDeclaration's doc comment, the last surviving instance of the defect T012 removed."
+    why_this_exists: >-
+      packages/frameworks/vue/src/emitter/index.ts:404-405 still reads "fifteen printed
+      PropDestructuringEntry values across the SIX goldens, six distinct names". PM VERIFIED. BOTH
+      FIGURES ARE NOW FALSE - T012 re-enumerated seventeen across SEVEN goldens. It is the same
+      defect class in the same fold, in the very comment block whose insertion caused the +13
+      citation drift, and it was outside T012's allowed_files by one file.
+    constraints:
+      - "State the count as of the seven-scenario corpus AND say it is corpus-derived, so the next scenario does not silently falsify it again. The durable fix is in gate.test.ts, which now derives both figures and throws on empty - this comment should POINT AT that derivation rather than restate a number."
+      - "Documentation only. No behaviour, no assertion, no golden may move."
+    allowed_files:
+      - packages/frameworks/vue/src/emitter/index.ts
+      - docs/goals/frameless-vue-v1/notes/T013-stale-count.md
+    verify:
+      - "pnpm test"
+      - "pnpm lint"
+      - "node packages/frameworks/vue/scripts/regenerate.ts && git diff --exit-code -- packages/frameworks/vue/generated   # comment-only; no emitted byte moves"
+      - "git diff -- packages/frameworks/vue/src/emitter/index.ts | grep '^+' | grep -v '^+++' | grep -vE '^\\+\\s*(//|\\*|/\\*)' | grep -vE '^\\+\\s*$'   # MUST be EMPTY"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Any non-comment line changes, or any emitted byte moves."
+      - "You are about to restate a bare number without pointing at the derivation. That reintroduces exactly what T012 removed."
     receipt: null
 
   - id: T999

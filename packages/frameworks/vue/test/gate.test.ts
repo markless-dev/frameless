@@ -1,11 +1,12 @@
-import { readdirSync } from 'node:fs';
-import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
+import { readdirSync, readFileSync } from 'node:fs';
+import { copyFile, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
+import { babelParse, parse } from '@vue/compiler-sfc';
 import { ESLint } from 'eslint';
 import vuePlugin from 'eslint-plugin-vue';
 import type { EnrichedIR } from '@frameless/compiler';
-import { dirname, resolve } from 'pathe';
+import { basename, dirname, resolve } from 'pathe';
 import { beforeAll, describe, expect, test } from 'vitest';
 import { compileDiagnostics, emit } from '../src/emitter/index.ts';
 import type { GatePolicy } from '../src/gate/index.ts';
@@ -49,18 +50,268 @@ async function golden(name: string): Promise<EnrichedIR> {
  * `generated/` goes red too. `CALIBRATION: the derived inventory...` below
  * watches both directions happen.
  */
-function scenarioCorpus(extension: string, directory = 'generated'): string[] {
-	const files = readdirSync(compilerGoldenRoot)
-		.map((entry) => /^s(\d+)-[\w-]+\.json$/.exec(entry)?.[1])
-		.filter((digits): digits is string => digits !== undefined)
-		.map((digits) => `${directory}/S${digits}.${extension}`)
-		.sort();
+function scenarioGoldens(goldenRoot: string): Array<{ digits: string; file: string }> {
+	const found = readdirSync(goldenRoot)
+		.map((entry) => ({ entry, digits: /^s(\d+)-[\w-]+\.json$/.exec(entry)?.[1] }))
+		.filter((match): match is { entry: string; digits: string } => match.digits !== undefined)
+		.map((match) => ({ digits: match.digits, file: match.entry }))
+		.sort((left, right) => Number(left.digits) - Number(right.digits));
 	// Fail LOUD rather than returning []. An empty derivation would make the
 	// inventory assertion agree with an empty `generated/` directory, which is the
 	// one way a derived list could be greener than the literal it replaced.
-	if (files.length === 0)
-		throw new Error(`no s<n>-*.json scenario goldens found in ${compilerGoldenRoot}`);
-	return files;
+	if (found.length === 0) throw new Error(`no s<n>-*.json scenario goldens found in ${goldenRoot}`);
+	return found;
+}
+
+function scenarioCorpus(extension: string, directory = 'generated'): string[] {
+	return scenarioGoldens(compilerGoldenRoot)
+		.map(({ digits }) => `${directory}/S${digits}.${extension}`)
+		.sort();
+}
+
+/**
+ * THE COUNTS THE `no-two-way-binding` MESSAGES SPELL OUT ARE DERIVED TOO - the
+ * same doctrine as `scenarioCorpus` above, restated here because the doctrine
+ * did not hold the first time it was applied to these two numbers.
+ *
+ * `frameless-vue-v1` T010 re-enumerated both domains over the then-current
+ * corpus, which was the right thing to do, and then folded the results in as
+ * STRING LITERALS: `toContain('FIVE shipped instances and the sugar applies to
+ * ONE')` and `toContain('FIFTEEN printed entries')`. Those are string
+ * containment against a CONSTANT message. They are green whatever the corpus
+ * does, so the shipped violation message - read at the exact moment someone
+ * decides whether to trust the rule - was free to state a false MEASURED count.
+ *
+ * S7 (full form controls) landed one commit later and did exactly that. S7 is
+ * 12a's domain definition verbatim, and it moved BOTH figures - five to EIGHT
+ * shipped instances, fifteen to SEVENTEEN printed entries - while both
+ * assertions stayed green. Commit `1bb0552` had removed thirteen literals of
+ * this class repo-wide six commits earlier.
+ *
+ * So both numbers are now DERIVED from the corpus and the shipped message is
+ * asserted to SPELL THE DERIVED VALUE. Two properties are deliberate:
+ * - the message still STATES its counts. Softening it to "several instances"
+ *   would delete the claim instead of checking it, and the claim is the reason
+ *   a reader can audit the ruling at all.
+ * - the derivations THROW on an empty domain. A derivation that cannot fail is
+ *   the defect it replaces, which is why the `CALIBRATION` row below drives the
+ *   real shipped message against a planted eighth scenario and asserts it goes
+ *   RED.
+ */
+const SPELLED_NUMBERS = [
+	'ZERO',
+	'ONE',
+	'TWO',
+	'THREE',
+	'FOUR',
+	'FIVE',
+	'SIX',
+	'SEVEN',
+	'EIGHT',
+	'NINE',
+	'TEN',
+	'ELEVEN',
+	'TWELVE',
+	'THIRTEEN',
+	'FOURTEEN',
+	'FIFTEEN',
+	'SIXTEEN',
+	'SEVENTEEN',
+	'EIGHTEEN',
+	'NINETEEN',
+	'TWENTY',
+] as const;
+
+/**
+ * The shipped messages spell their counts as words, so the derivation has to
+ * spell too. Out of range THROWS rather than falling back to digits: a silent
+ * `String(count)` would make the assertion unsatisfiable against a message that
+ * spells, which reads as "the gate message is wrong" when the truth is "this
+ * table is short". Extend the table; do not soften the message.
+ */
+function spelled(count: number): string {
+	const word = SPELLED_NUMBERS[count];
+	if (word === undefined)
+		throw new Error(
+			`no spelled form for ${count}: SPELLED_NUMBERS stops at ${SPELLED_NUMBERS.length - 1}. ` +
+				'The shipped no-two-way-binding messages spell their counts, so extend this table ' +
+				'rather than softening the message.',
+		);
+	return word;
+}
+
+type CorpusRoots = {
+	/** Directory holding `s<n>-*.json` compiler goldens. */
+	readonly goldenRoot: string;
+	/** Directory holding the emitted `S<n>.vue` files. */
+	readonly generatedRoot: string;
+};
+
+const SHIPPED_CORPUS: CorpusRoots = {
+	goldenRoot: compilerGoldenRoot,
+	generatedRoot: resolve(packageRoot, 'generated'),
+};
+
+/** Vue's own AST nodes, read the way `src/gate/index.ts` reads them. */
+type VueNode = Record<string, any>;
+
+function walkTemplate(node: VueNode | null | undefined, visit: (node: VueNode) => void): void {
+	if (!node) return;
+	visit(node);
+	for (const child of (node.children ?? []) as VueNode[]) walkTemplate(child, visit);
+}
+
+/**
+ * "The sugar applies to ONE" is a claim about HANDLER SHAPE, so it is decided on
+ * the handler's AST and not by a substring. `v-model` generates
+ * `$event => ((x) = $event)` and nothing else; a handler is inside the sugar's
+ * reach only when it is exactly an arrow whose whole body is an assignment of
+ * its own event parameter's `currentTarget.value` / `.checked`. Anything that
+ * destructures, re-slices, or calls `props.onTrace(...)` does strictly more, and
+ * `onTrace` is the e2e oracle's observation channel.
+ */
+function isVModelShapedHandler(expression: string): boolean {
+	const program = babelParse(`(${expression})`, { sourceType: 'module' }).program as VueNode;
+	const arrow = (program.body as VueNode[])[0]?.expression as VueNode | undefined;
+	if (arrow?.type !== 'ArrowFunctionExpression') return false;
+	const params = arrow.params as VueNode[];
+	if (params.length !== 1 || params[0]?.type !== 'Identifier') return false;
+	const body = arrow.body as VueNode;
+	if (body.type !== 'AssignmentExpression' || body.operator !== '=') return false;
+	const right = body.right as VueNode;
+	return (
+		right.type === 'MemberExpression' &&
+		right.object?.type === 'MemberExpression' &&
+		right.object.object?.type === 'Identifier' &&
+		right.object.object.name === params[0].name &&
+		right.object.property?.name === 'currentTarget' &&
+		(right.property?.name === 'value' || right.property?.name === 'checked')
+	);
+}
+
+type TwoWayHost = {
+	readonly file: string;
+	readonly line: number;
+	readonly binding: string;
+	readonly handler: string;
+};
+
+/**
+ * WORKED EXAMPLE 12a'S DOMAIN, derived from the emitted templates rather than
+ * restated: every host the emitter prints that carries a `value` / `checked`
+ * bind directive together with a same-host `on` directive. That is the policy
+ * entry's own definition, walked with Vue's own parser.
+ */
+function deriveTwoWayHostDomain(roots: CorpusRoots = SHIPPED_CORPUS): {
+	readonly instances: readonly TwoWayHost[];
+	readonly applicable: readonly TwoWayHost[];
+} {
+	const instances: TwoWayHost[] = [];
+	const applicable: TwoWayHost[] = [];
+	for (const { digits } of scenarioGoldens(roots.goldenRoot)) {
+		const file = `S${digits}.vue`;
+		const { descriptor, errors } = parse(readFileSync(resolve(roots.generatedRoot, file), 'utf8'), {
+			filename: file,
+		});
+		if (errors.length > 0)
+			throw new Error(
+				`@vue/compiler-sfc reported ${errors.length} parse error(s) in ${file}; worked ` +
+					'example 12a’s domain cannot be derived from a template that does not parse',
+			);
+		walkTemplate((descriptor.template?.ast ?? null) as VueNode | null, (node) => {
+			if (node.type !== 1) return;
+			const props = (node.props ?? []) as VueNode[];
+			const bind = props.find(
+				(prop) =>
+					prop.type === 7 &&
+					prop.name === 'bind' &&
+					(prop.arg?.content === 'value' || prop.arg?.content === 'checked'),
+			);
+			const on = props.find((prop) => prop.type === 7 && prop.name === 'on');
+			if (!bind || !on) return;
+			const host: TwoWayHost = {
+				file,
+				line: Number(node.loc?.start?.line ?? 0),
+				binding: String(bind.arg.content),
+				handler: String(on.exp?.content ?? ''),
+			};
+			instances.push(host);
+			if (isVModelShapedHandler(host.handler)) applicable.push(host);
+		});
+	}
+	// Fail LOUD rather than returning []. An empty domain would agree with every
+	// spelled count at once and is exactly the shape the literal it replaced had.
+	if (instances.length === 0)
+		throw new Error(
+			`worked example 12a’s domain derived EMPTY over ${roots.generatedRoot}: no emitted ` +
+				'host carries a value/checked bind plus a same-host event directive',
+		);
+	return { instances, applicable };
+}
+
+/**
+ * WORKED EXAMPLE 12b'S DOMAIN: every `PropDestructuringEntry` in
+ * `component.props.entries` that `propsDeclaration()` prints as a string literal
+ * into `defineProps([...])`. Read off the COMPILER goldens, which is the same
+ * cross-check `scenarioCorpus` makes - the IR this repo agreed to compile, not
+ * the file the emitter happened to write.
+ */
+function derivePrintedPropEntries(roots: CorpusRoots = SHIPPED_CORPUS): {
+	readonly entries: number;
+	readonly distinctNames: number;
+} {
+	let entries = 0;
+	const names = new Set<string>();
+	for (const { file } of scenarioGoldens(roots.goldenRoot)) {
+		const ir = JSON.parse(readFileSync(resolve(roots.goldenRoot, file), 'utf8')) as {
+			components: ReadonlyArray<{ props: { entries: ReadonlyArray<{ path: string[] }> } }>;
+		};
+		for (const component of ir.components)
+			for (const entry of component.props.entries) {
+				entries += 1;
+				// `propsDeclaration()` prints `entry.path[0]` and throws on a longer
+				// path, so the printed identity is the first segment.
+				names.add(entry.path[0]!);
+			}
+	}
+	if (entries === 0)
+		throw new Error(
+			`worked example 12b’s domain derived EMPTY over ${roots.goldenRoot}: no golden ` +
+				'component declares a prop entry',
+		);
+	return { entries, distinctNames: names.size };
+}
+
+/**
+ * The 12a figures the SHIPPED template message states, checked against the
+ * derivation. Ordered headline-first so a corpus change reports as "the instance
+ * count moved" rather than as "the scenario count moved", which is the fact a
+ * reader of the failure needs.
+ */
+function expectTemplateDomainFigures(message: string, roots: CorpusRoots = SHIPPED_CORPUS): void {
+	const { instances, applicable } = deriveTwoWayHostDomain(roots);
+	expect(message).toContain(
+		`${spelled(instances.length)} shipped instances and the sugar applies to ` +
+			`${spelled(applicable.length)}`,
+	);
+	expect(message).toContain(
+		`the other ${spelled(instances.length - applicable.length).toLowerCase()} handlers`,
+	);
+	// The message says WHY the others are outside the sugar's reach. That reason
+	// is a corpus fact too, and it goes stale the same way the count does.
+	const outside = instances.filter((host) => !applicable.includes(host));
+	expect(outside.filter((host) => host.handler.includes('onTrace('))).toHaveLength(outside.length);
+	expect(message).toContain(`${spelled(scenarioGoldens(roots.goldenRoot).length).toLowerCase()}-scenario corpus`);
+}
+
+/** The 12b figures the SHIPPED `defineModel` message states. */
+function expectPrintedPropFigures(message: string, roots: CorpusRoots = SHIPPED_CORPUS): void {
+	const { entries, distinctNames } = derivePrintedPropEntries(roots);
+	expect(message).toContain(
+		`${spelled(entries)} printed entries spanning ${spelled(distinctNames).toLowerCase()} ` +
+			'distinct prop names',
+	);
+	expect(message).toContain(`${spelled(scenarioGoldens(roots.goldenRoot).length).toLowerCase()}-scenario corpus`);
 }
 
 /**
@@ -425,9 +676,13 @@ describe('Vue dossier gate', () => {
 		expect(message).toContain('NEED_HYDRATION');
 		expect(message).toContain('el.composing');
 		expect(message).toContain('ssrLooseContain');
-		// G4's re-enumerated domain. T009 counted over four goldens; T010 re-counted
-		// over six - S5 and S6 emit no value/checked binding, so the figure held.
-		expect(message).toContain('FIVE shipped instances and the sugar applies to ONE');
+		// G4's re-enumerated domain, DERIVED. T009 counted over four goldens, T010
+		// re-counted over six and then wrote the result back as a string literal,
+		// and S7 - three more `:checked` + `@change` hosts - falsified it while that
+		// literal stayed green. The figures the message spells are now read out of
+		// the emitted templates; see `expectTemplateDomainFigures` and the
+		// CALIBRATION row that drives this same message RED.
+		expectTemplateDomainFigures(message);
 		// THE BORROWED REASON, in the exact spelling it shipped in, must not return.
 		expect(message).not.toMatch(/worked example 3 is already ruled DENIED at Gate 5/);
 		// Nor may Gate 2 come back as the denier: the T002 dissent's Gate 2 mechanism
@@ -459,7 +714,9 @@ describe('Vue dossier gate', () => {
 		// the message has to say which gap it is or it is back to inherited prose.
 		expect(message).toContain('prop:props');
 		expect(message).toContain('writable=false');
-		expect(message).toContain('FIFTEEN printed entries');
+		// The printed-entry count is DERIVED from the goldens, not literalled. S7
+		// moved it fifteen -> seventeen while the literal this replaced stayed green.
+		expectPrintedPropFigures(message);
 		// DENIED, not DEFERRED, and IR-4 is not why.
 		expect(message).toContain('FAIL outranks DEFERRED');
 	});
@@ -487,6 +744,122 @@ describe('Vue dossier gate', () => {
 		expect(emitsMessage).toContain('onTraceOnce');
 		// The refuted claim must not creep back in any spelling of "native events".
 		expect(emitsMessage).not.toMatch(/receiving native|no longer to native/);
+	});
+
+	/**
+	 * CALIBRATION for the two DERIVED domain figures, and it is the whole reason
+	 * the derivation is worth having.
+	 *
+	 * The literals it replaces were green against a corpus that had already
+	 * falsified them, so "derived" is not self-evidently better - a derivation
+	 * nobody has watched go red is the same instrument wearing a better name.
+	 * This row plants an EIGHTH scenario into a throwaway corpus, drives the REAL
+	 * shipped gate messages (not a lookalike) through the SAME assertion helpers
+	 * the two rows above call, and asserts they fail.
+	 *
+	 * The planted scenario is deliberately inside BOTH domains at once: a host
+	 * with a `:value` bind and a same-host `@input` (12a) whose IR declares one
+	 * more prop entry under a name no golden uses (12b).
+	 */
+	test('CALIBRATION: the derived domain figures go RED against a planted eighth scenario', async () => {
+		const shippedHosts = deriveTwoWayHostDomain();
+		const shippedProps = derivePrintedPropEntries();
+		const root = await realpath(await mkdtemp(resolve(tmpdir(), 'frameless-vue-domain-')));
+		try {
+			const goldenRoot = resolve(root, 'goldens');
+			const generatedRoot = resolve(root, 'generated');
+			await mkdir(goldenRoot);
+			await mkdir(generatedRoot);
+			for (const { file } of scenarioGoldens(compilerGoldenRoot))
+				await copyFile(resolve(compilerGoldenRoot, file), resolve(goldenRoot, file));
+			for (const file of scenarioCorpus('vue'))
+				await copyFile(resolve(packageRoot, file), resolve(generatedRoot, basename(file)));
+			const planted: CorpusRoots = { goldenRoot, generatedRoot };
+			// PRECONDITION: the copy is a faithful one. Without this the row could
+			// "go red" because the temp corpus was empty rather than because it grew.
+			expect(deriveTwoWayHostDomain(planted).instances).toEqual(shippedHosts.instances);
+			expect(derivePrintedPropEntries(planted)).toEqual(shippedProps);
+
+			await writeFile(
+				resolve(goldenRoot, 's8-planted-calibration.json'),
+				JSON.stringify({
+					components: [{ props: { entries: [{ path: ['plantedCalibrationProp'] }] } }],
+				}),
+			);
+			await writeFile(
+				resolve(generatedRoot, 'S8.vue'),
+				'<template>\n' +
+					'\t<input\n' +
+					'\t\t:value="planted"\n' +
+					'\t\t@input="(event) => {\n' +
+					'\t\t\tplanted = event.currentTarget.value;\n' +
+					"\t\t\tonTrace('planted', { planted }, event);\n" +
+					'\t\t}"\n' +
+					'\t>\n' +
+					'</template>\n',
+			);
+
+			// The derivation MOVED - both domains, in the direction planted.
+			expect(deriveTwoWayHostDomain(planted).instances).toHaveLength(
+				shippedHosts.instances.length + 1,
+			);
+			expect(deriveTwoWayHostDomain(planted).applicable).toHaveLength(
+				shippedHosts.applicable.length,
+			);
+			expect(derivePrintedPropEntries(planted)).toEqual({
+				entries: shippedProps.entries + 1,
+				distinctNames: shippedProps.distinctNames + 1,
+			});
+
+			// AND THE SHIPPED MESSAGES NOW FAIL. This is the assertion the literals
+			// could not make: the message text is unchanged, the corpus moved, and
+			// the check goes red.
+			const templateMessage = await twoWayMessage(
+				'generated/ModelMutant.vue',
+				mutate(s3, ':value="text"', 'v-model="text"'),
+			);
+			// The regexes below are the DERIVED word plus its noun, and no longer:
+			// vitest elides the middle of both operands in an assertion message, so a
+			// longer pattern would fail to match the very failure it is asserting.
+			expect(() => {
+				expectTemplateDomainFigures(templateMessage, planted);
+			}).toThrow(new RegExp(`${spelled(shippedHosts.instances.length + 1)} shipped instances`));
+			const modelMessage = await twoWayMessage(
+				'generated/DefineModelMutant.vue',
+				mutate(
+					s3,
+					"const props = defineProps(['initial', 'onTrace']);",
+					"const props = defineProps(['initial', 'onTrace']);\n\tconst initial = defineModel('initial');",
+				),
+			);
+			expect(() => {
+				expectPrintedPropFigures(modelMessage, planted);
+			}).toThrow(new RegExp(`${spelled(shippedProps.entries + 1)} printed entries`));
+
+			// AND THE DERIVATION ITSELF FAILS LOUD ON AN EMPTY DOMAIN, rather than
+			// agreeing with every spelled count at once.
+			const barren = resolve(root, 'barren');
+			await mkdir(resolve(barren, 'generated'), { recursive: true });
+			await copyFile(
+				resolve(compilerGoldenRoot, scenarioGoldens(compilerGoldenRoot)[0]!.file),
+				resolve(barren, basename(scenarioGoldens(compilerGoldenRoot)[0]!.file)),
+			);
+			await writeFile(
+				resolve(barren, 'generated/S1.vue'),
+				'<template>\n\t<p>no binding here</p>\n</template>\n',
+			);
+			expect(() =>
+				deriveTwoWayHostDomain({
+					goldenRoot: barren,
+					generatedRoot: resolve(barren, 'generated'),
+				}),
+			).toThrow(/domain derived EMPTY/);
+			expect(() => scenarioGoldens(resolve(root, 'generated'))).toThrow(
+				/no s<n>-\*\.json scenario goldens found/,
+			);
+		} finally {
+			await rm(root, { recursive: true, force: true });
+		}
 	});
 
 	/**
