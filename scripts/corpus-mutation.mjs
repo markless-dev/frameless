@@ -356,6 +356,47 @@ const s6TextEdgeWidened = (find, replacement) => ({
 	apply: (source) => replaceOnce(source, find, replacement),
 });
 
+/**
+ * S7's axis, in all six lanes: a DYNAMIC ATTRIBUTE really is dynamic, and the
+ * three states it can be in are three different states.
+ *
+ * T024 ratified the axis in these words - "one mutant flips a boolean attribute
+ * from absent to `="false"`" - and this is that edit exactly. `data-lock` is
+ * bound to a state that is `null` until the lock click and `'on'` afterwards, so
+ * a correct lane serves NO `data-lock` attribute at all and grows one later.
+ * The mutant replaces the binding with a STATIC `data-lock="false"`, which is
+ * the third state: present, and carrying the string that a lane which stringified
+ * a false boolean would have written.
+ *
+ * WHY THIS AND NOT A VALUE CHANGE. The whole point of this axis is that absent,
+ * `""` and `"false"` are three outcomes and not one. A mutant that changed `'on'`
+ * to `'off'` would be caught by any reader that compares strings, and would say
+ * nothing about whether the attribute is present. This one is only caught by a
+ * reader that keeps `null` and `"false"` apart, which is why `measureForm`
+ * `JSON.stringify`s every attribute reading rather than returning a bare string.
+ *
+ * It is red at BOTH ends, and deliberately: red on the very first reading, where
+ * the attribute must be absent, and red again after the lock click, where it must
+ * read `"on"`. A mutant that only broke one end could be satisfied by a lane that
+ * had frozen the attribute at its correct initial value.
+ *
+ * Spelled in each lane's own attribute idiom, not inherited between lanes:
+ * `{lock}` in react and svelte, `{lock()}` in solid, `{lock.value}` in qwik,
+ * `:data-lock` in vue and `[attr.data-lock]` in angular. The REPLACEMENT is the
+ * same six characters in every lane, because a static HTML attribute is the one
+ * thing these six templating languages spell identically - which is itself the
+ * reason this mutant is legible as one edit across the matrix.
+ */
+const s7DynamicAttributeFrozen = (find, replacement) => ({
+	axis: 'a dynamic attribute is dynamic — absent, "false" and a value are three states',
+	text: `${find}  ->  ${replacement}`,
+	expect:
+		'the served page carries data-lock="false" where the attribute must be ABSENT, so the ' +
+		'scenario goes red on its FIRST reading, and it is still "false" after the lock click ' +
+		'where it must read "on"',
+	apply: (source) => replaceOnce(source, find, replacement),
+});
+
 const MUTANTS = {
 	react: {
 		s1: s1DerivedFrozen('${count * multiplier}', '${1 * multiplier}'),
@@ -370,6 +411,7 @@ const MUTANTS = {
 			'{seed.map((entry) => (',
 		),
 		s6: s6TextEdgeWidened('start{done}', 'start {done}'),
+		s7: s7DynamicAttributeFrozen('data-lock={lock}', 'data-lock="false"'),
 	},
 	solid: {
 		s1: s1DerivedFrozen('${count() * props.multiplier}', '${1 * props.multiplier}'),
@@ -381,6 +423,7 @@ const MUTANTS = {
 		s4: s4NestingCollapsed('<For each={group.rows}>', '<For each={groups[0].rows}>'),
 		s5: s5RebuiltFromStaleCollection('<For each={entries}>', '<For each={props.seed}>'),
 		s6: s6TextEdgeWidened('start{done()}', 'start {done()}'),
+		s7: s7DynamicAttributeFrozen('data-lock={lock()}', 'data-lock="false"'),
 	},
 	qwik: {
 		s1: s1DerivedFrozen('${count.value * props.multiplier}', '${1 * props.multiplier}'),
@@ -395,6 +438,7 @@ const MUTANTS = {
 			'{props.seed.map((entry) => (',
 		),
 		s6: s6TextEdgeWidened('start{done.value}', 'start {done.value}'),
+		s7: s7DynamicAttributeFrozen('data-lock={lock.value}', 'data-lock="false"'),
 	},
 	svelte: {
 		s1: s1DerivedFrozen('${count * multiplier}', '${1 * multiplier}'),
@@ -418,6 +462,7 @@ const MUTANTS = {
 			'start{done}{unit}end',
 			'start {done}{unit}end',
 		),
+		s7: s7DynamicAttributeFrozen('data-lock={lock}', 'data-lock="false"'),
 	},
 	vue: {
 		s1: s1DerivedFrozen('${count.value * props.multiplier}', '${1 * props.multiplier}'),
@@ -432,6 +477,7 @@ const MUTANTS = {
 			'start{{ done }}{{ unit }}end',
 			'start {{ done }}{{ unit }}end',
 		),
+		s7: s7DynamicAttributeFrozen(':data-lock="lock"', 'data-lock="false"'),
 	},
 	angular: {
 		s1: s1DerivedFrozen('${this.count * this.multiplier}', '${1 * this.multiplier}'),
@@ -455,6 +501,7 @@ const MUTANTS = {
 			'start{{ done }}{{ unit }}end',
 			'start {{ done }}{{ unit }}end',
 		),
+		s7: s7DynamicAttributeFrozen('[attr.data-lock]="lock"', 'data-lock="false"'),
 	},
 };
 
