@@ -43,6 +43,20 @@ export const WATCHED = [
 			'The corpus-breadth ruling still drives queued Phase F work, so its emitter and ' +
 			'schema citations are live. The T053 card names it in scope.',
 	},
+	{
+		path: 'docs/DEFECTS.md',
+		reason:
+			'T054 RULED IT LIVE, BY MEASUREMENT, AGAINST THE OPPOSITE HYPOTHESIS. The card asked ' +
+			'whether the ledger is a DATED RECORD - citing code as it stood when a defect was ' +
+			'filed, like the receipts in ruling 3 - and it is not. It is the ledger a reader ' +
+			'reaches for when chasing a citation, entries are filed OPEN against code that is ' +
+			'still wrong, and it is edited whenever an entry moves. The decisive evidence is that ' +
+			'it had ALREADY ROTTED IN BOTH DIRECTIONS: its determinism table cited a sort site ' +
+			'and QUOTED THE LINE IT EXPECTED THERE - `const writes = sortWrites(...)` - which is ' +
+			'not what that line says, while in the same document the analyzer cancellation ' +
+			'citation still matched its quoted code verbatim. A dated record cannot be wrong ' +
+			'about its own date; this one was wrong about HEAD, which is the class it belongs to.',
+	},
 ];
 
 /**
@@ -53,17 +67,16 @@ export const WATCHED = [
  */
 export const NOT_YET_WATCHED = [
 	{
-		path: 'docs/DEFECTS.md',
-		reason:
-			'Carries first-party bare ordinals (compiler build.ts, the react emitter, lane ' +
-			"gate tests). Outside T053's allowed_files; needs its own card.",
-	},
-	{
 		path: 'docs/report.md',
 		reason:
-			"Carries bare ordinals into markless' compiler and web packages, which are a " +
-			"different repository's paths that happen to look first-party. Classifying them " +
-			"needs a ruling T053 was not given; outside its allowed_files either way.",
+			"T054 RULED ON ITS MARKLESS PATHS AND FOUND A SECOND, LARGER REASON IT IS NOT READY. " +
+			'The markless citations that blocked T053 are now ruled in RULING 5, so they are no ' +
+			'longer what holds this file back. What does: its findings rest on `.tsrx` evidence ' +
+			'sites under `poc/`, and those ARE files in this repository. Watching this file today ' +
+			'would report a green covering the citations nobody has ruled on. `poc/` is a THIRD ' +
+			'class - archived experiment records whose fixtures are the evidence a recorded result ' +
+			'was produced from - and it is neither ruling 3 nor ruling 5. It needs a card, and ' +
+			'THIS entry is the record that it does, not an exemption.',
 	},
 	{
 		directory: 'docs/goals',
@@ -167,6 +180,78 @@ export const THIRD_PARTY_TARGETS = [
 	},
 ];
 
+/**
+ * RULING 5 - ANOTHER REPOSITORY'S PATHS. Ruled by T054 on docs/report.md, whose
+ * markless findings cite markless' OWN repository-relative paths.
+ *
+ * THE CARD PREDICTED THESE RESOLVE HERE AND LOOK FIRST-PARTY. MEASURED: THEY DO
+ * NOT. `packages/web/` and `packages/compiler/src/passes/` exist in markless and
+ * in NEITHER case in this repository, so today the guard already refuses them -
+ * as `unclassified-path`, which is the right verdict for the wrong reason. It
+ * says "qualify it to a real repository path", and there is no such path to
+ * qualify it to. This list gives the correct reason instead.
+ *
+ * WHY A SEPARATE LIST AND NOT `THIRD_PARTY_TARGETS`. Ruling 4 covers PUBLISHED
+ * BUILD ARTIFACTS, where the argument is that no reader-facing symbol exists.
+ * markless has ordinary source with ordinary symbols; the argument here is
+ * different and weaker - we cannot see that repository from this one, so we can
+ * neither name its symbols nor notice when they move. The ordinal is what the
+ * finding was filed against, and it is all this repository can honestly carry.
+ *
+ * IT DOES NOT LOOSEN THE RESOLVER, AND THAT IS ENFORCED TWICE. The match is on
+ * the WHOLE path, never a suffix - an abbreviated foreign citation still fails as
+ * unclassified until someone qualifies it. And `classify` consults this list only
+ * AFTER `resolvesInRepo`, so if a path here ever comes to exist in this repository
+ * the local file wins and the citation is a violation. `integrityProblems` fails
+ * on that collision as well, so the shadowing cannot pass silently.
+ */
+export const FOREIGN_REPOSITORY_TARGETS = [
+	{
+		path: 'packages/web/src/render.ts',
+		repository: '@markless/web',
+		reason:
+			"markless' own `packages/web`, cited by finding 3 for a `renderCsr()` call site. " +
+			'Repo-relative in shape, another project in fact; this repository has no ' +
+			'`packages/web` and cannot follow the symbol if it moves.',
+	},
+	{
+		path: 'packages/compiler/src/passes/public-render/template.ts',
+		repository: '@markless/compiler',
+		reason:
+			"markless' public-render pass, cited by finding 5 for the empty-static-HTML return. " +
+			'This repository\'s `packages/compiler/src` is flat and has no `passes/` directory, ' +
+			'so the collision is in the prefix only.',
+	},
+	{
+		path: 'packages/compiler/src/passes/public-render/shared.ts',
+		repository: '@markless/compiler',
+		reason:
+			"markless' public-render shared pass, cited by finding 6 for aliased prop " +
+			'destructuring. Same repository and same reason as template.ts above.',
+	},
+];
+
+/**
+ * RULING 6 - VERBATIM QUOTED OUTPUT KEEPS ITS ORDINALS. Ruled by T054 on
+ * docs/DEFECTS.md entry 12.1, which prints a stack trace under the heading "THE
+ * WITNESSED RED, verbatim".
+ *
+ * A stack trace is not a citation an author composed. It is EVIDENCE, quoted, and
+ * its ordinals are part of what was observed - rewriting them to today's line
+ * numbers would forge the transcript, and naming symbols instead would mean the
+ * document no longer shows what the tool printed. Entry 12.1's four frames are
+ * all stale against HEAD right now, and that is the correct state for a record of
+ * a run.
+ *
+ * THIS IS A CONTEXT EXCLUSION, NOT A PATH ONE - which is exactly why it is narrow
+ * enough to be safe. It suspends the check only inside fenced blocks, where the
+ * content is code or tool output by construction. Measured before it was added:
+ * ZERO citations of any kind sit inside a fence in either previously watched file,
+ * so it unwatches nothing that T053 cleared, and the prose of every watched
+ * document - which is where citations actually live - is untouched by it.
+ */
+const FENCE = /^\s*(`{3,}|~{3,})/;
+
 const SOURCE_EXTENSIONS = [
 	'ts',
 	'tsx',
@@ -182,6 +267,11 @@ const SOURCE_EXTENSIONS = [
 	'md',
 	'yaml',
 	'yml',
+	// This repository's own authoring extension. Its absence was a BLIND SPOT, not
+	// a ruling: measured on docs/report.md, which carries `.tsrx` citations into
+	// real `poc/` files that the detector could not see at all. Adding it can only
+	// find MORE citations, and it finds none in either previously watched file.
+	'tsrx',
 ];
 
 const PATH = String.raw`(?<![\w@./-])((?:[A-Za-z0-9_@.-]+\/)*[A-Za-z0-9_@.-]+\.(?:${SOURCE_EXTENSIONS.join('|')}))`;
@@ -210,6 +300,10 @@ const thirdPartyRuling = (citedPath) =>
 		(rule) => citedPath === rule.suffix || citedPath.endsWith(`/${rule.suffix}`),
 	) ?? null;
 
+/** Whole-path match only - see ruling 5 on why a suffix match would be a hole. */
+const foreignRepositoryRuling = (citedPath) =>
+	FOREIGN_REPOSITORY_TARGETS.find((rule) => citedPath === rule.path) ?? null;
+
 /**
  * FIRST-PARTY means "resolves to a file in this repository". Not "starts with
  * packages/", which would miss `generated/S2.jsx` and `S2.vue` - two shapes this
@@ -222,8 +316,30 @@ const resolvesInRepo = (citedPath) =>
 export const findCitations = (text) => {
 	const citations = [];
 	let antecedent = null;
+	let fence = null;
 	for (const [index, line] of text.split('\n').entries()) {
 		const lineNumber = index + 1;
+		// RULING 6. A fenced block is quoted code or tool output, so nothing inside it
+		// is read as a citation - and the block ENDS the paragraph, exactly as a blank
+		// line does. That second half matters: without it a bare ordinal in the prose
+		// AFTER a fence could inherit a path from before it, which would let the
+		// exclusion change a verdict outside the block it governs.
+		const fenceMarker = FENCE.exec(line)?.[1];
+		if (fence === null) {
+			if (fenceMarker !== undefined) {
+				fence = fenceMarker;
+				antecedent = null;
+				continue;
+			}
+		} else {
+			if (
+				fenceMarker !== undefined &&
+				fenceMarker[0] === fence[0] &&
+				fenceMarker.length >= fence.length
+			)
+				fence = null;
+			continue;
+		}
 		// A blank line ends the paragraph a bare ordinal reads back into.
 		if (line.trim() === '') antecedent = null;
 		const mentions = [...line.matchAll(PATH_MENTION)].map((match) => ({
@@ -285,12 +401,17 @@ export const classify = (citation) => {
 			kind: 'third-party',
 			reason: 'An absolute or node_modules path: outside this repository, so ruling 4 applies.',
 		};
+	// DELIBERATELY BEFORE RULING 5: a path that exists HERE is first-party no matter
+	// what any list says, so ruling 5 can never unwatch a real repository file.
 	if (resolvesInRepo(citation.path))
 		return {
 			verdict: 'violation',
 			kind: 'first-party-ordinal',
 			reason: `${citation.path} is a file in this repository. Name the symbol, not the line.`,
 		};
+	const foreign = foreignRepositoryRuling(citation.path);
+	if (foreign)
+		return { verdict: 'allowed', kind: 'foreign-repository', reason: foreign.reason };
 	return {
 		verdict: 'violation',
 		kind: 'unclassified-path',
@@ -311,6 +432,26 @@ const listDocsTopLevel = () =>
 	readdirSync(resolve(root, 'docs'), { withFileTypes: true })
 		.filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
 		.map((entry) => `docs/${entry.name}`);
+
+/**
+ * RULING 5 CANNOT SHADOW A REAL FILE. If one of those paths ever comes to exist
+ * here, the exclusion has silently stopped meaning "another repository's file"
+ * and must be re-ruled. `classify` already prefers the local file, so the citation
+ * would be reported anyway; this makes the collision LOUD rather than merely
+ * harmless, because a stale entry in the list is a hole waiting to be reopened.
+ *
+ * Takes its list as an argument so the suite can hand it a colliding entry and
+ * watch this fire. A collision check that has never been seen to fire is exactly
+ * the decoration this file's header warns about.
+ */
+export const foreignShadowProblems = (entries = FOREIGN_REPOSITORY_TARGETS) =>
+	entries
+		.filter((entry) => existsSync(resolve(root, entry.path)))
+		.map(
+			(entry) =>
+				`FOREIGN_REPOSITORY_TARGETS names ${entry.path} as ${entry.repository}, but that ` +
+				'path now exists in THIS repository. Re-rule it: the citation is first-party now.',
+		);
 
 /**
  * INTEGRITY. A guard whose scope can be emptied without anyone noticing is
@@ -334,6 +475,7 @@ export const integrityProblems = () => {
 		if (entry.directory && !existsSync(resolve(root, entry.directory)))
 			problems.push(`NOT_YET_WATCHED names directory ${entry.directory}, which does not exist.`);
 	}
+	problems.push(...foreignShadowProblems());
 	// Every living top-level doc must be classified. A new one with bare ordinals
 	// cannot slip in unruled, which is how this class survived four sweeps.
 	const classified = new Set([...WATCHED.map((entry) => entry.path), ...notWatched]);

@@ -145,9 +145,9 @@ correlated with the bug and is not what produces it. Qwik's upstream rule carrie
 the same misnomer; see `notes/T003-upstream-eslint-qwik.md`.
 
 **The code snippet this entry used to show never existed on merged main.** It
-read `onClick$={$(async (event) => {` — with a `$()` wrapper. On merged main,
-`generated/S3.jsx:37-38` had no wrapper, because `frameless-idiom-policy-v1`
-emits raw handlers and lets the optimizer wrap them.
+read `onClick$={$(async (event) => {` — with a `$()` wrapper. On merged main, the
+Qwik lane's emitted `S3` `onClick$` handler had no wrapper, because
+`frameless-idiom-policy-v1` emits raw handlers and lets the optimizer wrap them.
 
 **The lint rule could not serve as evidence.** Read in full,
 `eslint-plugin-qwik@2.0.0-beta.38`'s `no-async-prevent-default` walks ancestors
@@ -194,8 +194,11 @@ was not supportable: that scenario did not test cancellation behaviourally.
 **Why nothing caught it — the original attribution was wrong.** This entry blamed
 the absent Qwik browser calibration lane. That lane would not have caught it
 either. The analyzer's only cancellation observation is
-`defaultPrevented: event?.defaultPrevented ?? null` (`packages/analyzer/src/run.ts:41`,
-compared at `compare.ts:71`), and the `wrong-cancellation` mutant is realised as
+`defaultPrevented: event?.defaultPrevented ?? null`, recorded on each
+`CallbackRecord` by the `onTrace` prop in `packages/analyzer/src/run.ts` and
+compared only as one field of that whole record, by the `callback` divergence in
+`packages/analyzer/src/compare.ts` — the name `defaultPrevented` appears nowhere
+in `compare.ts`. The `wrong-cancellation` mutant is realised as
 `missing-prevent-default` — it simply omits the call. That channel records **that
 `preventDefault()` was called**, not that a default action was averted. Qwik's
 late handler still _calls_ `preventDefault()`, so it would still have recorded
@@ -328,8 +331,10 @@ even when named in full. **Fixed** on its own terms — `npx.cmd` plus
 `shell: true`, on win32 only, in both copies.
 
 **Cause B — CRLF confirmed as the trigger; the originally documented cause is
-refuted.** This entry used to say `solid/test/gate.test.ts:610` "fails a hash
-assertion, almost certainly CRLF", and labelled it a guess. T006 checked it: there
+refuted.** This entry used to say `packages/frameworks/solid/test/gate.test.ts`
+"fails a hash assertion, almost certainly CRLF", and labelled it a guess. It also
+cited a line, which T054 dropped: pointing at a specific line was never load-
+bearing for a claim that the assertion does not exist. T006 checked it: there
 is **no hash assertion**, and the Solid gate is CRLF-**robust** — it detects a
 genuine reorder under CRLF and clean-passes clean CRLF, because both sides go
 through `formatEmitted`, which hard-codes `endOfLine: 'lf'`. The real fault was
@@ -348,7 +353,10 @@ fix it, and they were deliberately left untouched: their offsets are correct for
 the bytes they were built from. The checkout was wrong, not the golden.
 
 **Fourth cause — was a hypothesis, now OBSERVED.**
-`react/test/emitter.test.ts:133-134,141,150` and `solid/test/emitter.test.ts:153,162`
+The `is fresh from the compiler EnrichedIR golden` and
+`generated-composition/… is fresh from its composition fixture` cases in
+`packages/frameworks/react/test/emitter.test.ts` and
+`packages/frameworks/solid/test/emitter.test.ts`
 assert `readFile(generated/*.jsx) === emit(ir)` byte-for-byte while
 `formatEmitted` hard-codes `endOfLine: 'lf'`, so every freshness assertion should
 fail on a CRLF checkout. When this entry was written that was read off the
@@ -454,8 +462,10 @@ over a loop whose progress is gated entirely on `requestAnimationFrame`, and its
 ordering — "before the next repaint" — and carries **no rate guarantee**. A
 headless browser that never composites owes no repaint and therefore no callback
 on any schedule. So `500` silently encodes a sustained ~4 fps floor that no
-specification provides. The copies are byte-equivalent at
-`react/src/adapter.ts:65-78`, `solid/src/adapter.ts:52-65`, `qwik/src/adapter.ts:55-68`.
+specification provides. The copies are byte-equivalent: the `SETTLE LOOP` comment
+block above `settleTick` in `packages/frameworks/react/src/adapter.ts`,
+`packages/frameworks/solid/src/adapter.ts` and
+`packages/frameworks/qwik/src/adapter.ts`.
 
 **Measured, and the measurement could have gone the other way.** Instrumented
 across chromium, firefox and webkit: `distinctDomDuringLoop: 1` in all nine runs,
@@ -589,8 +599,9 @@ position**. Applied generatively, the whole-IR comparison failed as soon as a
 program had several locals.
 
 **The invariant contradicted a declared property of the artifact it measured.**
-`build.ts:428-430` sorts `bindings`, `aliases` and `events` by
-`compareText(x.id, ...)`, and a state binding's id is `state:<name>`. An
+The `records` literal that `buildEnrichedIr` returns, in
+`packages/compiler/src/build.ts`, sorts `bindings`, `aliases` and `events` by
+`compareText(left.id, right.id)`, and a state binding's id is `state:<name>`. An
 alphabetical rename **must** permute them. That is the IR's declared canonical
 form, present since `93420a3`. Demanding positional stability of an array whose
 position is *defined by* the identifier just renamed is not a property the
@@ -601,22 +612,31 @@ zero cell-wiring changes. Three controls closed the mechanism: a rename that doe
 *not* move alphabetically produces zero diffs.
 
 **The repair is by CITATION, not by taste.** An order-insensitive view is applied
-to a collection only where the exact `build.ts` sort line keying on a name-derived
-field can be cited, **and** the permutation has been witnessed:
+to a collection only where the exact `packages/compiler/src/build.ts` sort site
+keying on a name-derived field can be cited, **and** the permutation has been
+witnessed. Every site below is named by its **symbol**, not its line. This table
+was written with line numbers, and by the time T054 measured it they had rotted
+far enough to be self-refuting: the paragraph under it named a line of
+`packages/compiler/src/build.ts` and quoted `const writes = sortWrites(…)` as
+what stands there, when that line holds the `buildEnrichedIr` signature. The
+quotation was right and the ordinal was wrong, in a single sentence, with nothing
+in the prose to tell a reader which half to trust — which is the whole argument
+for citing symbols.
 
-| collection                                | cited sort line                                            | key                                        |
-| ----------------------------------------- | ---------------------------------------------------------- | ------------------------------------------ |
-| `records.bindings`                        | `build.ts:428`                                              | `id` = `state:<name>` / `computed:<name>`   |
-| `records.aliases`                         | `build.ts:429` (ids built at `2440`)                        | `id` = `alias:<Component>:<aliasName>`      |
-| `records.stateReads`                      | `build.ts:431` → `2725` `.sort(compareReads)` (`2732`)      | componentId, graphNodeId, path              |
-| `records.stateWrites`                     | `build.ts:342` → `sortWrites` `2740-2752`                   | componentId, **graphNodeId**, path, …       |
-| every `reads` array, any depth            | `build.ts:1370` → `dedupeReads` `2866-2874`                 | graphNodeId, path, via                      |
-| every `writes` array, any depth           | `build.ts:2671` and `:389` → `sortWrites` `2740-2752`       | as above                                    |
-| `components[].locals[].semanticRecordIds` | `build.ts:629`                                              | bare `.sort()` over `state:` / `alias:` ids |
+| collection                                | cited sort site                                                     | key                                        |
+| ----------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------ |
+| `records.bindings`                        | `records` in `buildEnrichedIr` — `.sort(compareText(left.id, …))`    | `id` = `state:<name>` / `computed:<name>`   |
+| `records.aliases`                         | `records` in `buildEnrichedIr`, same comparator (ids built by `resolveAliases` as `` `alias:${owner.name}:${alias.name}` ``) | `id` = `alias:<Component>:<aliasName>`      |
+| `records.stateReads`                      | `collectCanonicalReads` → `.sort(compareReads)`                      | componentId, graphNodeId, path              |
+| `records.stateWrites`                     | `const writes = sortWrites(…)` in `buildEnrichedIr` → `sortWrites`   | componentId, **graphNodeId**, path, …       |
+| every `reads` array, any depth            | `deriveReads` → `dedupeReads`                                        | graphNodeId, path, via                      |
+| every `writes` array, any depth           | `deriveHandlerEffects` → `sortWrites`, and the same call in `buildEnrichedIr` | as above                          |
+| `components[].locals[].semanticRecordIds` | the `semanticRecordIds` build in `enrichComponent`                   | bare `.sort()` over `state:` / `alias:` ids |
 
 **`records.stateWrites` is included on a witnessed permutation, and an earlier
 guardrail forbidding it was FALSE.** T006 recorded it as "`writes` unsorted,
-authored write order". It is not: `build.ts:342` is `const writes = sortWrites(…)`.
+authored write order". It is not: `buildEnrichedIr` builds it as
+`const writes = sortWrites(…)`.
 Obeying that guardrail literally would have reproduced the same false finding from
 a second collection. It is included here only because a program with two written
 state nodes whose alphabetical order flips under an equal-length rename was
@@ -624,14 +644,18 @@ constructed and **watched** to permute it.
 
 **Deliberately excluded — these stay order-sensitive:**
 
-- `records.events` (`build.ts:430`). It sorts by id, but an event id is
+- `records.events` (the third `.sort` in `buildEnrichedIr`'s `records`). It sorts
+  by id, but an event id is
   `event:<allocation index>` or `event:<hostNodeId>:<eventName>`; no local rename
   can move either. Probed, order unchanged. Its **nested** reads/writes do permute
   and are covered by the rule above.
-- `module.exports` (`build.ts:464`). Keyed on `exportedName`, part of the
+- `module.exports` (sorted on `exportedName` in the `module` literal
+  `buildEnrichedIr` returns). Keyed on `exportedName`, part of the
   observable contract, which a meaning-preserving rename never touches.
-- `records.sharedWrites` (`build.ts:2079`) and `events[].handlers`
-  (`build.ts:326`). Both **span-keyed**, not name-keyed.
+- `records.sharedWrites` (`buildSharedWrites`, ordered on `targetSpan.start`) and
+  `events[].handlers` (the `enrichedHandlers` sort in `buildEnrichedIr`, ordered
+  on `expression.start` then `expression.end`). Both **span-keyed**, not
+  name-keyed.
 
 **The comparison is a multiset of WHOLE ENTRIES**, JSON-canonicalised after
 identifier blanking. A whole entry carries its own `sourceSpan`, so a genuine
@@ -1255,15 +1279,18 @@ repair**, not inherited from the ruling:
    dossier reference, **no test** and no documentation. Every v-limit in this repo
    that survived scrutiny — Angular's globals rule, Qwik's callback rule, entry
    7's whitespace limit — carries a comment stating its cost.
-3. **It is a copy.** Sixty lines earlier, `:828` reads
-   `!t.isArrowFunctionExpression(fn) || fn.async || fn.params.length !== 0` for a
-   **computed binding**, where async genuinely is unsupported (Solid refuses async
-   state constructs outright at `:786`). The handler check is that predicate with
+3. **It is a copy.** Earlier in the same `validateEnrichedIr`, the **computed
+   binding** check reads
+   `!t.isArrowFunctionExpression(fn) || fn.async || fn.params.length !== 0`, and
+   there async genuinely is unsupported — the same function refuses async state
+   constructs outright, throwing
+   `Unsupported async state construct in <kind> binding <id>`. The handler check
+   is that predicate with
    the arity clause dropped — which is itself the tell, since a handler
    legitimately takes an `event` parameter and a computed does not. A shape
    assertion that travelled, not a decision that was taken.
 4. **The pipeline behind it was already async-safe.** `reanalyzeExpression`
-   (`:161`) prints `const __framelessExpression = <the arrow itself>` and
+   prints `const __framelessExpression = <the arrow itself>` and
    re-analyzes; it wraps **nothing**, so an async arrow re-parses as valid module
    source. `normalizeHandler` mutates the arrow in place, so `fn.async` survives
    to output untouched. Contrast React, whose re-parse primitive fabricates a

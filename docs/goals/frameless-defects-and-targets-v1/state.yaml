@@ -131,7 +131,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T054
+active_task: T055
 
 tasks:
   - id: T001
@@ -5814,7 +5814,7 @@ tasks:
   - id: T054
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     spec: "T053 receipt, remaining_blockers - AUTHORITATIVE. The guard exists; this decides its scope."
     objective: >-
@@ -5860,6 +5860,118 @@ tasks:
       - "You are about to loosen the path resolver rather than add a named exclusion."
       - "A citation needs a symbol that does not exist - report it, do not invent one."
       - "Any emitted byte, golden or existing assertion moves."
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 2
+      changed_files:
+        - scripts/check-citations.mjs
+        - packages/compiler/test/citations.test.ts
+        - docs/DEFECTS.md
+      commands:
+        - cmd: "pnpm test"
+          status: pass
+          note: "52 files, 1055 tests = 1044 at dispatch + exactly 11 new calibration tests; no existing test moved"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 396 files"
+        - cmd: "pnpm check"
+          status: pass
+          note: "six tsc passes"
+        - cmd: "pnpm check:citations"
+          status: pass
+          note: "clean over 3 watched files (was 2)"
+        - cmd: "git diff --exit-code -- packages/frameworks demos/ packages/compiler/src packages/compiler/test/goldens"
+          status: pass
+          note: "no emitted byte, golden, source or gate predicate moved"
+        - cmd: "git status --short"
+          status: pass
+          note: "exactly three files, all in allowed_files; nothing committed"
+      summary: "Ruled both documents BY MEASUREMENT, against the card's own hypotheses - both of which were wrong. DEFECTS.md PROMOTED TO WATCHED after refuting the dated-record reading; all 26 non-transcript sites cleared by naming symbols read out of the code. report.md STAYS NOT_YET_WATCHED, but its markless paths are now RULED and its residual blocker is a different, newly measured one. Added ruling 6 for verbatim quoted transcripts and .tsrx as a citable extension."
+      BOTH_PREMISES_OF_THE_CARD_WERE_WRONG_AND_MEASUREMENT_SETTLED_BOTH: "(1) report.md's markless paths DO NOT RESOLVE HERE - packages/web/ is absent and packages/compiler/src is flat with no passes/ - so the guard was already refusing them as unclassified-path, THE RIGHT VERDICT FOR THE WRONG REASON. The needed exclusion is real; the stated mechanism was not. (2) DEFECTS.md IS NOT THE DATED-RECORD CLASS. Its determinism paragraph named a build.ts line and quoted `const writes = sortWrites(...)` as what stands there - that line is the buildEnrichedIr signature. IN THE SAME DOCUMENT packages/analyzer/src/run.ts:41 still matched its quoted code verbatim. A dated record cannot be wrong about its own date; that one was wrong about HEAD. T048's finding reproduced in the project's most-read ledger."
+      RULING_6_WAS_MEASURED_BEFORE_IT_WAS_WRITTEN: "DEFECTS.md reported 30 violations, of which EXACTLY 4 were the entry-12.1 stack trace inside a fence. Zero citations of any kind sit inside a fence in either previously watched file, SO THE NEW RULING UNWATCHES NOTHING T053 CLEARED - established by measurement, not asserted. Entry 12.1 prints that trace under 'THE WITNESSED RED, verbatim' and all four frames are stale against HEAD, which is CORRECT for a record of a run: rewriting them would forge the transcript."
+      every_new_exclusion_was_proven_still_RED_inside_the_document_it_excludes: "Ruling 6: appended packages/compiler/src/build.ts:342 to DEFECTS.md PROSE with the transcript intact - exit 1 naming file, line, column and reason; restored, exit 0. Ruling 5: same planted ordinal against report.md's real bytes, added violation reported and the pre-existing count unchanged. Ruling 5 CANNOT SHADOW A LIVE SITE - classify consults it only AFTER resolvesInRepo, and foreignShadowProblems was EXTRACTED AS AN EXPORTED SEAM so a colliding entry could be handed to it and watched to fire, because a collision check never seen to fire is the decoration this file's own header warns about. Ruling 5 CANNOT GROW BY ABBREVIATION: whole-path match only. And a fence cannot tunnel inheritance - a bare ordinal after a fence reports unresolvable rather than inheriting."
+      THE_GUARD_CAUGHT_THE_WORKERS_OWN_TEXT: "Its first repair of the rotted table caption REINTRODUCED A LIVE ORDINAL by quoting the citation in order to explain it. The guard flagged that on the second verify and the caption was rephrased to name the file without the citation shape. THAT IS THE SECOND VERIFICATION ATTEMPT, and it is the guard working on the person building it."
+      drift_measured_in_the_newly_watched_ledger:
+        - "The whole 'repair is by CITATION, not by taste' table had rotted: stateReads is collectCanonicalReads; reads is deriveReads -> dedupeReads; writes is deriveHandlerEffects -> sortWrites; sharedWrites is buildSharedWrites; events[].handlers is the enrichedHandlers span sort."
+        - "compare.ts:71 was cited as where defaultPrevented is compared. THE NAME APPEARS NOWHERE IN compare.ts - it rides along inside the whole CallbackRecord the `callback` divergence compares."
+        - "react/test/emitter.test.ts:133-134 was cited as a freshness assertion; it is a generic tree walker."
+        - "Entry 11's 'Sixty lines earlier' was ~350 lines; both sites are in the same validateEnrichedIr."
+        - "STILL EXACTLY RIGHT AT HEAD: packages/analyzer/src/run.ts:41 and all three adapters' SETTLE LOOP blocks at 65/52/55. Kept as symbols anyway."
+      deviations:
+        - "PROMOTED ONE DOCUMENT, NOT TWO, AND RULED THE OTHER RATHER THAN SKIPPING IT. report.md's markless blocker is fully resolved, but promoting it would have reported a GREEN COVERING poc/ .tsrx citations nobody has ruled on. poc/ is a THIRD class - archived experiment records - and inventing that ruling was not commissioned. The NOT_YET_WATCHED entry names that specific blocker and a test pins it so it cannot evaporate silently."
+        - "ADDED .tsrx TO SOURCE_EXTENSIONS, unasked. It is a TIGHTENING, not a resolver loosening - it can only find MORE citations. Measured zero impact on both previously watched files, and it is what EXPOSED report.md's real blocker."
+        - "ADDED A SECOND NEW RULING (6, fenced blocks) beyond the one the card anticipated - see above."
+        - "EXTRACTED foreignShadowProblems as an exported seam so the collision check could be watched to fire."
+        - "First repair reintroduced a live ordinal and the guard caught it - see above."
+      remaining_blockers:
+        - "docs/report.md needs a poc/ ruling before it can be watched. Its findings cite poc/08-equivalence-results fixtures by ordinal; three resolve as first-party and ALL WERE STILL ACCURATE AT HEAD when measured - so this is a CLASS DECISION (are archived experiment records dated like state.yaml receipts, or live?), not a sweep. Pinned by a test."
+        - "SOURCE COMMENTS ARE ENTIRELY UNWATCHED and carry the same rot: packages/frameworks/solid/src/emitter/index.ts cites a bare :828 TWICE in one doc comment. The guard watches only .md. PM CONFIRMED both citations at HEAD."
+        - "DETECTOR GAP, NOT CLOSED: comma-continued ordinal lists are only half-seen - in react/test/emitter.test.ts:133-134,141,150 the guard found :133-134 and never 141 or 150. Those sites are gone, but the shape would go undetected again. Widening risks matching ordinary prose numbers, so it needs a decision rather than a patch."
+      stopped_because: null
+  - id: T055
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: medium
+    spec: "T054 receipt, remaining_blockers - AUTHORITATIVE. All three were measured, none inherited."
+    objective: >-
+      Close the three holes T054 measured in the citation guard: source comments are entirely
+      unwatched, comma-continued ordinal lists are half-detected, and poc/ has no ruling.
+    hole_1_source_comments_are_UNWATCHED_and_already_carry_the_rot: >-
+      The guard watches .md only. packages/frameworks/solid/src/emitter/index.ts's
+      "ASYNC HANDLERS ARE ACCEPTED" doc comment cites a bare :828 TWICE. PM CONFIRMED both at HEAD -
+      and confirmed the citations are CURRENTLY ACCURATE, which is exactly the danger: they are
+      correct today, unwatched, and will rot silently like the five T048 measured and the whole
+      DEFECTS.md table T054 found. THIS IS THE LARGEST REMAINING SURFACE - every emitter, gate and
+      test file in six lanes. Expect the initial run to be red on real content, as it was for both
+      previous scopes; that is the calibration, not a problem.
+    hole_2_the_detector_gap_needs_a_DECISION_not_a_patch: >-
+      Comma-continued lists are half-seen: in `react/test/emitter.test.ts:133-134,141,150` the guard
+      found :133-134 and NEVER 141 or 150. T054 removed those sites but the SHAPE would go
+      undetected again. T054 explicitly declined to widen it because widening risks matching
+      ordinary prose numbers - a guard that cries wolf on "in 2026, 141 tests passed" gets disabled,
+      which is worse than the gap. EITHER close it with a rule that cannot match prose numerals, OR
+      record why the gap stands, with the failing shape written down. Both are acceptable; an
+      unargued patch is not.
+    hole_3_poc_is_a_THIRD_class_and_T054_declined_to_invent_it: >-
+      docs/report.md cannot be watched until poc/ is ruled. Its findings cite poc/08-equivalence-results
+      fixtures by ordinal; three resolve as first-party AND ALL WERE STILL ACCURATE AT HEAD when
+      measured. So this is a CLASS DECISION - are archived experiment records dated like state.yaml
+      board receipts, or live like the ledger? - and T054 was right to refuse to invent it while
+      unasked. DECIDE IT, record the reason at the ruling, and promote report.md only if the answer
+      makes it promotable.
+    constraints:
+      - "PROVE RED FIRST on any newly watched scope, and prove any new exclusion STILL RED inside the document or file it excludes. T054's own first repair reintroduced a live ordinal and the guard caught it - that is the bar."
+      - "Do NOT loosen the path resolver. Every previous scope widening on this guard was a TIGHTENING that could only find more; keep that property."
+      - "Watching source comments means CITATIONS IN COMMENTS, not code. A string literal or an import path is not a citation - if you cannot separate them cleanly, say so and scope to doc comments only."
+      - "No emitted byte, golden, gate predicate or existing assertion may move. Comment-only in any emitter you touch, proven by the diff filter T040 and T048 used."
+    allowed_files:
+      - scripts/check-citations.mjs
+      - packages/compiler/test/citations.test.ts
+      - docs/report.md
+      - packages/frameworks/solid/src/emitter/index.ts
+      - packages/frameworks/react/src/emitter/index.ts
+      - packages/frameworks/qwik/src/emitter/index.ts
+      - packages/frameworks/svelte/src/emitter/index.ts
+      - packages/frameworks/vue/src/emitter/index.ts
+      - packages/frameworks/angular/src/emitter/index.ts
+      - packages/compiler/src/build.ts
+    verify:
+      - "pnpm test"
+      - "pnpm lint"
+      - "pnpm check"
+      - "pnpm check:citations"
+      - "regenerate ALL SIX lanes, then git diff --exit-code -- packages/frameworks/*/generated packages/compiler/test/goldens"
+      - "comment-only diff filter over every emitter touched - MUST be empty"
+      - "git status --short"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You cannot show the guard RED on a planted citation in a newly watched file type."
+      - "You are about to loosen the resolver, or to widen the ordinal detector in a way that can match ordinary prose numerals."
+      - "A citation needs a symbol that does not exist - report it, do not invent one."
+      - "Any emitted byte, golden, gate predicate or existing assertion moves."
+      - "The source-comment scope turns out to be far larger than one card can clear. Report the measured count and clear what you can - a PARTIAL scope with a recorded remainder beats a scope quietly narrowed."
     receipt: null
 
   - id: T999
