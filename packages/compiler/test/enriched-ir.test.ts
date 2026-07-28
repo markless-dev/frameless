@@ -1,4 +1,6 @@
 import { readFileSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { basename } from 'pathe';
 import { describe, expect, test } from 'vitest';
 import { buildEnrichedIr, collectGraphReads } from '../src/build';
@@ -145,6 +147,48 @@ async function fixtureIr(file: (typeof FIXTURES)[number]): Promise<EnrichedIR> {
 async function compileOnlyFixtureIr(file: string): Promise<EnrichedIR> {
 	const source = readFileSync(new URL(`./fixtures/${file}`, import.meta.url), 'utf8');
 	return buildEnrichedIr({ filename: `src/fixtures/${file}`, source });
+}
+
+/**
+ * One `.tsrx` module carrying `text` as the sole child of a host element, so a
+ * probe measures template text and nothing else. Shared by the S6 suite and by
+ * the interior-whitespace v-limit suite, which are two halves of one finding.
+ */
+function whitespaceProbeSource(text: string): string {
+	return `import { state } from '@markless/core';
+
+export function Probe({ seed }) @{
+	let a = state(seed);
+
+	<p data-probe={a}>${text}</p>
+}
+`;
+}
+
+async function probeTexts(text: string): Promise<string[]> {
+	const ir = await buildEnrichedIr({
+		filename: 'probe.tsrx',
+		source: whitespaceProbeSource(text),
+	});
+	return allTemplateNodes(ir)
+		.filter((node) => node.kind === 'text')
+		.map((node) => (node.kind === 'text' ? node.value : ''));
+}
+
+/**
+ * The RED half of the v-limit's two-sided calibration. Returns the refusal
+ * message, and fails loudly if the construct compiled - a guard that cannot be
+ * shown to fire is theatre, so "it did not throw" must never read as a pass.
+ */
+async function probeRefusal(text: string): Promise<string> {
+	try {
+		await buildEnrichedIr({ filename: 'probe.tsrx', source: whitespaceProbeSource(text) });
+	} catch (error) {
+		return error instanceof Error ? error.message : String(error);
+	}
+	throw new Error(
+		`Expected the interior-whitespace v-limit to refuse ${JSON.stringify(text)}, but it compiled.`,
+	);
 }
 
 function walkTemplate(nodes: readonly TemplateNode[]): TemplateNode[] {
@@ -813,45 +857,33 @@ describe('text nodes whose exact characters are the observable', () => {
 	});
 
 	/**
-	 * THE INPUT SIDE OF THE WHITESPACE FINDING, and the half of it that turned out
-	 * to be narrower than expected. MEASURED at `@markless/compiler` 0.1.1, not
-	 * assumed:
+	 * THE INPUT SIDE OF THE WHITESPACE FINDING. MEASURED at `@markless/compiler`
+	 * 0.1.1, not assumed:
 	 *
-	 *   `two  spaces`  -> `two  spaces`   a run of SPACES survives verbatim
-	 *   `a   b`        -> `a   b`         at any length
 	 *   `tab\there`    -> `tab here`      a TAB becomes exactly one space
-	 *   `tab\t\there`  -> `tab  here`     one space PER tab, not condensed
 	 *   `x\ny`         -> `x y`           a NEWLINE becomes exactly one space
+	 *   `tab\t\there`  -> `tab  here`     one space PER tab, NOT condensed
 	 *
 	 * So an emitter can never be handed a tab or a newline inside template text
 	 * from a `.tsrx` source, and the lanes' divergent treatment of those two
-	 * characters is unreachable from this toolchain. A run of SPACES is fully
-	 * reachable, and that is the one the T027 note reports as an open finding: the
-	 * emitters hand it through unchanged and four of the six lanes' own template
-	 * compilers then disagree about it.
+	 * characters is unreachable from this toolchain.
+	 *
+	 * AMENDED BY T039. This test used to assert that `two  spaces` and `a   b`
+	 * survive into the IR verbatim - which they still do, mechanically, inside
+	 * `normalizeJsxText`. They no longer survive into an IR anyone can obtain: the
+	 * interior-whitespace v-limit refuses them one line later. The third row above
+	 * is the reason the limit had to sit at the compiler rather than in a gate -
+	 * the tab mapping is a 1:1 character map, so `normalizeJsxText` MANUFACTURES a
+	 * space run out of a tab run. That half of the measurement is asserted in the
+	 * v-limit's own suite below, read out of the refusal message, which is now the
+	 * only place the produced value is observable.
 	 */
-	test('S6: the IR preserves space runs verbatim and maps tabs and newlines to one space each', async () => {
+	test('S6: the IR maps tabs and newlines to one space each', async () => {
 		const ir = await compileOnlyFixtureIr('s6-whitespace-text.tsrx');
 		expect(staticTexts(ir)).toContain('one two three');
-		const probe = async (text: string): Promise<string[]> =>
-			staticTexts(
-				await buildEnrichedIr({
-					filename: 'probe.tsrx',
-					source: `import { state } from '@markless/core';
-
-export function Probe({ seed }) @{
-	let a = state(seed);
-
-	<p data-probe={a}>${text}</p>
-}
-`,
-				}),
-			);
-		expect(await probe('two  spaces')).toEqual(['two  spaces']);
-		expect(await probe('a   b')).toEqual(['a   b']);
-		expect(await probe('tab\there')).toEqual(['tab here']);
-		expect(await probe('tab\t\there')).toEqual(['tab  here']);
-		expect(await probe('x\ny')).toEqual(['x y']);
+		expect(await probeTexts('tab\there')).toEqual(['tab here']);
+		expect(await probeTexts('x\ny')).toEqual(['x y']);
+		expect(await probeTexts('one two three')).toEqual(['one two three']);
 	});
 
 	/**
@@ -882,6 +914,364 @@ export function Probe({ seed }) @{
 		expect(runs).toContain('{}{}{}');
 	});
 });
+
+/**
+ * T039, implementing the T038 ruling. `docs/DEFECTS.md` entry 7.
+ *
+ * The compiler refuses a static text node whose value contains two adjacent
+ * whitespace characters, or any whitespace character that is not U+0020. This
+ * suite is the instrument that makes that refusal real, and it has to do two
+ * separate jobs, because the rule fires on NOTHING that exists:
+ *
+ *   1. CALIBRATION. Planted violations must go RED, and the legal neighbours of
+ *      each one must stay GREEN. A guard measured at zero violations across the
+ *      whole live corpus is unfalsifiable until it is shown failing on purpose.
+ *   2. THE LIFT TRIGGER. The cross-lane matrix records what each lane's own
+ *      compiler does to a space run and to a single U+00A0. If ANY single lane
+ *      moves in EITHER direction, that test goes red and the ruling is re-opened
+ *      on evidence rather than on memory - including the good direction, because
+ *      a lane that STARTS preserving is what would let the v-limit be lifted.
+ */
+describe('the interior-whitespace v-limit', () => {
+	const SPACE = String.fromCharCode(0x20);
+	const NBSP = String.fromCharCode(0x00a0);
+	const THIN = String.fromCharCode(0x2009);
+	const IDEOGRAPHIC = String.fromCharCode(0x3000);
+	const ZWSP = String.fromCharCode(0x200b);
+
+	/**
+	 * RED, half one: a run of ordinary spaces. This is the 3-3 row - react, qwik
+	 * and svelte serve it verbatim; solid, vue and angular each condense it.
+	 */
+	test('a planted run of U+0020 is REFUSED, at any length', async () => {
+		expect(await probeRefusal('two' + SPACE + SPACE + 'spaces')).toContain(
+			JSON.stringify('two  spaces'),
+		);
+		expect(await probeRefusal('a' + SPACE.repeat(3) + 'b')).toContain(JSON.stringify('a   b'));
+	});
+
+	/**
+	 * RED, half two, and the half that disqualifies normalisation. On a whitespace
+	 * character that is not U+0020 the matrix is 5-1, not 3-3: solid alone rewrites
+	 * the character's IDENTITY. Refusing a SINGLE such character - no run at all -
+	 * is therefore not over-reach, it is the tighter of the two halves.
+	 */
+	test('a single non-U+0020 whitespace character is REFUSED, with no run at all', async () => {
+		for (const character of [NBSP, THIN, IDEOGRAPHIC]) {
+			const message = await probeRefusal('one' + character + 'two');
+			expect(message).toContain(
+				`U+${character.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')}`,
+			);
+		}
+	});
+
+	/**
+	 * The compiler is the right layer because it is one of the two things PRODUCING
+	 * the construct. `normalizeJsxText` maps `\t` to one space PER TAB - a 1:1
+	 * character map, not a condense - so a tab run becomes a space run that the
+	 * author never typed. The produced value is no longer observable in any IR, so
+	 * it is read back out of the refusal message; this is the surviving half of the
+	 * measurement the S6 suite above used to make directly.
+	 */
+	test('a TAB RUN is manufactured by normalizeJsxText and then caught by the v-limit', async () => {
+		expect(await probeRefusal('tab\t\there')).toContain(JSON.stringify('tab  here'));
+		expect(await probeRefusal('one\t\t\ttwo')).toContain(JSON.stringify('one   two'));
+	});
+
+	/**
+	 * GREEN, and the reason the refusal is a reduction in SPELLING rather than in
+	 * capability. Whitespace carried as a VALUE is preserved by all six lanes, and
+	 * `demos/react-official/three-way-contract.ts` already asserts it equal across
+	 * six as `[ wide  load ]`. S6's own fixture is spelled `<p data-wrap>[{note}]</p>`
+	 * for exactly this reason.
+	 */
+	test('the portable spelling - whitespace carried as an interpolated VALUE - still compiles', async () => {
+		expect(await probeTexts('[{a}]')).toEqual(['[', ']']);
+		expect(await probeTexts('one two three')).toEqual(['one two three']);
+		expect(await probeTexts('single spaces are fine')).toEqual(['single spaces are fine']);
+	});
+
+	/**
+	 * TEXT-NODE EDGES ARE OUT OF SCOPE, asserted rather than left to a comment,
+	 * because the edge form of this same predicate is the tempting widening and it
+	 * would break four live demo texts (`" open"` in the two `TaskList.tsrx`,
+	 * `" seats"` in the two `PricingCard.tsrx`). Those shapes are guarded downstream
+	 * in the two lanes that cannot express them; they are not the compiler's to
+	 * refuse, and this test is what stops a later reader "completing" the rule.
+	 */
+	test('a whitespace EDGE is deliberately NOT refused', async () => {
+		expect(await probeTexts('{a} open')).toEqual([' open']);
+		expect(await probeTexts('{a} seats')).toEqual([' seats']);
+	});
+
+	/**
+	 * ZWSP is not whitespace under `\s`, and every lane passes it through. It is in
+	 * the suite as the negative control for the `[^\S ]` half: that half must select
+	 * whitespace, not "unusual character".
+	 */
+	test('U+200B is not whitespace and is NOT refused', async () => {
+		expect(await probeTexts('one' + ZWSP + 'two')).toEqual(['one' + ZWSP + 'two']);
+	});
+
+	/**
+	 * The message is load-bearing - it is the permanent record of the finding at the
+	 * point of use, and the ONLY thing an author who trips this will read. Two of
+	 * its claims are asserted because getting either wrong makes the refusal worse
+	 * than useless: it must point at the interpolated spelling, and it must NOT
+	 * point at a non-breaking space, which is the advice a reader would otherwise
+	 * reach for and which is WRONG in solid - the one lane it would be meant for.
+	 */
+	test('the refusal names the value, the split, and the portable spelling - and never suggests NBSP', async () => {
+		const message = await probeRefusal('two' + SPACE + SPACE + 'spaces');
+		expect(message).toContain(JSON.stringify('two  spaces'));
+		expect(message).toContain('probe.tsrx');
+		expect(message).toContain('THREE OF SIX LANES REWRITE IT');
+		expect(message).toContain('INTERPOLATED VALUE');
+		expect(message).toContain('[ wide  load ]');
+		expect(message).not.toMatch(/&nbsp;|&#160;|&#xa0;/i);
+		expect(message).not.toMatch(/[^\S ]| /);
+	});
+
+	/**
+	 * THE GUARD'S MEASURED ZERO, locked in. Every shipped compiler fixture satisfies
+	 * the predicate today; the wider scan over every live `.tsrx` in `demos/`,
+	 * `packages/` and `poc/` found 0 interior violations in 108 static text nodes,
+	 * re-derived by T039. This asserts the half of that scan this package owns, so
+	 * that a fixture edit which trips the limit is reported HERE as a fixture
+	 * problem rather than as six mysterious downstream failures.
+	 */
+	test('every shipped fixture is already free of interior whitespace', async () => {
+		for (const file of FIXTURES) {
+			const ir = await fixtureIr(file);
+			const offenders = allTemplateNodes(ir)
+				.filter((node) => node.kind === 'text')
+				.map((node) => (node.kind === 'text' ? node.value : ''))
+				.filter((value) => /\s\s/.test(value) || /[^\S ]/.test(value));
+			expect({ file, offenders }).toEqual({ file, offenders: [] });
+		}
+	});
+});
+
+/**
+ * THE LIFT TRIGGER, and the only test in this repo that runs all six lanes' own
+ * template compilers side by side.
+ *
+ * WHAT IS ASSERTED AND WHAT IS MERELY RECORDED, stated deliberately. The
+ * BEHAVIOUR is asserted strictly: if any single lane's answer moves in either
+ * direction this goes red. The VERSIONS are recorded and attached to the failure
+ * output rather than asserted, because three of the six lanes are pinned with a
+ * caret (`svelte ^5.56.1`, `@vue/compiler-sfc ^3.5.40`, `@angular/compiler
+ * ^22.0.8`) and asserting exact versions would produce a red on every unrelated
+ * patch bump - a red that is expected is a red nobody reads. The ruling's trigger
+ * is "a version bump that MOVES a lane", which is exactly the behaviour assertion.
+ *
+ * MEASURED BY T039 on 2026-07-27, at: react-dom 19.2.3, @qwik.dev/optimizer
+ * 2.1.0-beta.5 (loaded by @qwik.dev/core 2.0.0-beta.38), svelte 5.56.8,
+ * babel-preset-solid 1.9.12, @vue/compiler-sfc 3.5.40, @angular/compiler 22.0.8.
+ *
+ * THE QWIK CELL WAS THE HOLE THIS TEST EXISTS TO CLOSE. T038 could not measure
+ * Qwik on non-ASCII whitespace: `@qwik.dev/core`'s `./optimizer` subpath exports
+ * only `qwikVite` and `qwikRollup`, no callable transform. The callable one is
+ * `createOptimizer()` in `@qwik.dev/optimizer`, which core loads internally and
+ * which resolves from core's OWN node_modules - reached below without hard-coding
+ * a store path. MEASURED: Qwik PRESERVES the space run AND the U+00A0, putting it
+ * on the preserving side of the 5-1 split and confirming that solid is alone.
+ */
+describe('the six-lane whitespace matrix', () => {
+	const REPO_ROOT = new URL('../../../', import.meta.url);
+	const laneRequire = (lane: string) =>
+		createRequire(fileURLToPath(new URL(`packages/frameworks/${lane}/package.json`, REPO_ROOT)));
+	const laneImport = async (lane: string, specifier: string): Promise<Record<string, unknown>> => {
+		const resolved = pathToFileURL(laneRequire(lane).resolve(specifier)).href;
+		return (await import(/* @vite-ignore */ resolved)) as Record<string, unknown>;
+	};
+	// Several of these resolve to CJS under the `require` condition, so the callable
+	// surface arrives on `default` rather than as a named export.
+	const interop = <T>(module: Record<string, unknown>, key: string): T => {
+		const direct = module[key];
+		if (direct !== undefined) return direct as T;
+		const fallback = (module.default as Record<string, unknown> | undefined)?.[key];
+		if (fallback === undefined) throw new Error(`No export ${key} on the resolved module.`);
+		return fallback as T;
+	};
+	const laneVersion = (lane: string, name: string): string =>
+		(laneRequire(lane)(`${name}/package.json`) as { version: string }).version;
+
+	const SPACE_RUN = 'one' + String.fromCharCode(0x20, 0x20) + 'two';
+	const NBSP_ONE = 'one' + String.fromCharCode(0x00a0) + 'two';
+
+	// Every lane below emits the probe text between the two anchors `one` and
+	// `two`, so one extractor reads all of them. Deliberately non-greedy: it takes
+	// the FIRST such span, which is the template text and not a later re-emission.
+	const between = (haystack: string): string => haystack.match(/one[\s\S]*?two/)?.[0] ?? '(absent)';
+
+	async function measureLanes(text: string): Promise<Record<string, string>> {
+		const react = await laneImport('react', 'react');
+		const reactServer = await laneImport('react', 'react-dom/server.node');
+		const createElement = interop<(tag: string, props: null, child: string) => unknown>(
+			react,
+			'createElement',
+		);
+		const renderToStaticMarkup = interop<(element: unknown) => string>(
+			reactServer,
+			'renderToStaticMarkup',
+		);
+
+		const svelte = await laneImport('svelte', 'svelte/compiler');
+		const compileSvelte = interop<
+			(source: string, options: { generate: string }) => { js: { code: string } }
+		>(svelte, 'compile');
+
+		const babel = await laneImport('solid', '@babel/core');
+		const transformSync = interop<(source: string, options: unknown) => { code: string }>(
+			babel,
+			'transformSync',
+		);
+		const solidPreset = laneRequire('solid').resolve('babel-preset-solid');
+
+		const vue = await laneImport('vue', '@vue/compiler-sfc');
+		const parseSfc = interop<
+			(source: string, options: { filename: string }) => { descriptor: { template: SfcTemplate } }
+		>(vue, 'parse');
+
+		const angular = await laneImport('angular', '@angular/compiler');
+		const parseTemplate = interop<
+			(template: string, url: string) => { nodes: readonly AngularNode[] }
+		>(angular, 'parseTemplate');
+
+		// `@qwik.dev/core`'s ./optimizer subpath exposes only bundler plugins. The
+		// callable transform lives in `@qwik.dev/optimizer`, which core loads itself
+		// and which is linked into core's own node_modules - so it is resolved THROUGH
+		// core rather than as a bare specifier or a hard-coded store path.
+		const coreRequire = createRequire(laneRequire('qwik').resolve('@qwik.dev/core/package.json'));
+		const optimizerManifest = coreRequire('@qwik.dev/optimizer/package.json') as {
+			exports: { '.': { import: string } };
+		};
+		const optimizerEntry = new URL(
+			optimizerManifest.exports['.'].import,
+			pathToFileURL(coreRequire.resolve('@qwik.dev/optimizer/package.json')),
+		).href;
+		const { createOptimizer } = (await import(/* @vite-ignore */ optimizerEntry)) as {
+			createOptimizer: () => Promise<QwikOptimizer>;
+		};
+		const optimizer = await createOptimizer();
+		const qwikModules = await optimizer.transformModules({
+			srcDir: '/src',
+			input: [{ path: 'probe.tsx', code: `export const C = () => <p>${text}</p>;\n` }],
+			sourceMaps: false,
+			minify: 'none',
+			transpileTs: true,
+			transpileJsx: true,
+			mode: 'lib',
+		});
+
+		const vueText = parseSfc(`<template><p>${text}</p></template>`, {
+			filename: 'probe.vue',
+		}).descriptor.template.ast.children.find((child) => child.tag === 'p')?.children[0]?.content;
+
+		const angularText = parseTemplate(`<p>${text}</p>`, 'probe.html')
+			.nodes.find((node) => node.name === 'p')
+			?.children.find((child) => typeof child.value === 'string')?.value;
+
+		return {
+			react: renderToStaticMarkup(createElement('p', null, text))
+				.replace(/^<p>/, '')
+				.replace(/<\/p>$/, ''),
+			qwik: between(qwikModules.modules.map((module) => module.code).join('\n')),
+			svelte: between(compileSvelte(`<p>${text}</p>`, { generate: 'server' }).js.code),
+			solid: between(
+				transformSync(`const C = () => <p>${text}</p>;`, {
+					presets: [[solidPreset, { generate: 'ssr', hydratable: false }]],
+					filename: 'probe.jsx',
+					babelrc: false,
+					configFile: false,
+				}).code,
+			),
+			vue: vueText ?? '(absent)',
+			angular: angularText ?? '(absent)',
+		};
+	}
+
+	const codePoints = (value: string): string =>
+		[...value]
+			.map((character) => character.codePointAt(0)!.toString(16).padStart(4, '0'))
+			.join(' ');
+
+	const versions = (): Record<string, string> => ({
+		react: laneVersion('react', 'react-dom'),
+		qwik: laneVersion('qwik', '@qwik.dev/core'),
+		svelte: laneVersion('svelte', 'svelte'),
+		solid: laneVersion('solid', 'babel-preset-solid'),
+		vue: laneVersion('vue', '@vue/compiler-sfc'),
+		angular: laneVersion('angular', '@angular/compiler'),
+	});
+
+	/**
+	 * A RUN OF U+0020 SPLITS THE SIX 3-3. This is the row the whole finding started
+	 * from, and the row that makes the construct non-neutral.
+	 */
+	test('a run of U+0020: react, qwik and svelte PRESERVE; solid, vue and angular CONDENSE', async () => {
+		const measured = await measureLanes(SPACE_RUN);
+		expect(mapValues(measured, codePoints), `measured at ${JSON.stringify(versions())}`).toEqual({
+			react: '006f 006e 0065 0020 0020 0074 0077 006f',
+			qwik: '006f 006e 0065 0020 0020 0074 0077 006f',
+			svelte: '006f 006e 0065 0020 0020 0074 0077 006f',
+			solid: '006f 006e 0065 0020 0074 0077 006f',
+			vue: '006f 006e 0065 0020 0074 0077 006f',
+			angular: '006f 006e 0065 0020 0074 0077 006f',
+		});
+	});
+
+	/**
+	 * A SINGLE U+00A0 SPLITS THE SIX 5-1, AND SOLID IS ALONE. This is the row T027
+	 * did not have and the row that disqualifies normalisation: the two lanes that
+	 * DO condense space runs, vue and angular, both preserve U+00A0 byte-for-byte.
+	 * Making all six agree would therefore mean normalising FIVE lanes down to
+	 * solid's floor and deleting non-breaking-space semantics product-wide.
+	 *
+	 * The qwik cell here is the one T038 recorded as unmeasured. It is PRESERVE.
+	 */
+	test('a single U+00A0: only solid rewrites it, and it rewrites it to U+0020', async () => {
+		const measured = await measureLanes(NBSP_ONE);
+		expect(mapValues(measured, codePoints), `measured at ${JSON.stringify(versions())}`).toEqual({
+			react: '006f 006e 0065 00a0 0074 0077 006f',
+			qwik: '006f 006e 0065 00a0 0074 0077 006f',
+			svelte: '006f 006e 0065 00a0 0074 0077 006f',
+			solid: '006f 006e 0065 0020 0074 0077 006f',
+			vue: '006f 006e 0065 00a0 0074 0077 006f',
+			angular: '006f 006e 0065 00a0 0074 0077 006f',
+		});
+	});
+});
+
+interface SfcTemplate {
+	readonly ast: { readonly children: ReadonlyArray<{ tag?: string; children: Array<{ content?: string }> }> };
+}
+
+interface AngularNode {
+	readonly name?: string;
+	readonly value?: unknown;
+	readonly children?: readonly AngularNode[];
+}
+
+interface QwikOptimizer {
+	transformModules(options: {
+		srcDir: string;
+		input: ReadonlyArray<{ path: string; code: string }>;
+		sourceMaps: boolean;
+		minify: string;
+		transpileTs: boolean;
+		transpileJsx: boolean;
+		mode: string;
+	}): Promise<{ modules: ReadonlyArray<{ code: string }> }>;
+}
+
+function mapValues(
+	record: Record<string, string>,
+	transform: (value: string) => string,
+): Record<string, string> {
+	return Object.fromEntries(Object.entries(record).map(([key, value]) => [key, transform(value)]));
+}
 
 describe('closure and honesty', () => {
 	for (const file of FIXTURES) {

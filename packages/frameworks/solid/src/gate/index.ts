@@ -54,6 +54,58 @@ function persistenceArtifactPolicy() {
 	return policy as typeof policy & { readonly requiresArtifact: true };
 }
 
+/**
+ * WHY THERE IS NO WHITESPACE POLICY IN THIS LIST. A RECORDED MEASUREMENT, NOT AN
+ * OVERSIGHT. T038 ruling §4; T039 re-derived every number below at this tree.
+ *
+ * Its Vue and Angular siblings each carry a written whitespace policy, and this
+ * file carried nothing - `grep -c -i whitespace` was 0 here and in
+ * `custom-policies.ts`. The reader's natural inference from that silence is that
+ * Solid is safe by analogy to React. THAT INFERENCE IS BACKWARDS. Solid is the
+ * MOST aggressive of the six lanes, not the safest:
+ *
+ *   `one` U+0020 U+0020 `two`  ->  `one` U+0020 `two`   the run is condensed
+ *   `one` U+00A0 `two`         ->  `one` U+0020 `two`   THE CHARACTER IS REWRITTEN
+ *   `one` U+2009 `two`         ->  `one` U+0020 `two`   thin space, same
+ *   `one` U+3000 `two`         ->  `one` U+0020 `two`   ideographic space, same
+ *   `one` U+2007 `two`         ->  `one` U+0020 `two`   figure space, same
+ *   `one` U+200B `two`         ->  U+200B SURVIVES      not `\s`; see below
+ *
+ * Measured through `babel-preset-solid` 1.9.12 at `generate: 'ssr'`, inputs built
+ * with `String.fromCharCode` so nothing depends on what a shell did to a literal.
+ *
+ * READ THE LAST ROW CAREFULLY IF YOU RE-RUN THE PROBE. Solid emits U+200B into
+ * the generated template literal as a six-character BACKSLASH-u ESCAPE rather
+ * than as a raw character, so a byte comparison of the GENERATED SOURCE reports
+ * a difference. It is a spelling of the same character, not a
+ * rewrite: the literal evaluates back to U+200B. The four rows above are real
+ * character substitutions in the same generated source, which is the difference
+ * that matters. U+200B is not matched by `\s`, and the compiler rule does not
+ * refuse it.
+ *
+ * The first row is the 3-3 split that vue and angular also sit on. The second is
+ * a 5-1 split with SOLID ALONE: react, qwik, svelte, vue and angular all preserve
+ * U+00A0 byte-for-byte, and solid substitutes a different character with different
+ * semantics - the author's non-breaking guarantee is silently deleted. Vue and
+ * Angular, the two lanes that DO condense runs, both preserve it.
+ *
+ * NO PREDICATE IS ADDED HERE, AND THAT IS THE RULING RATHER THAN A SHORTCUT.
+ * The construct is refused UPSTREAM, at `packages/compiler/src/build.ts` in
+ * `assertPortableInteriorWhitespace`, which rejects any static IR text node
+ * containing two adjacent whitespace characters or any whitespace character that
+ * is not U+0020. Stating the rule once at the single layer that sees the input to
+ * all six lanes is what stops six gates re-deriving it six ways - and the two
+ * gates that DID state it read already-condensed ASTs, so a widened predicate
+ * there would not even fire. Adding one here would be a fourth restatement of a
+ * rule the compiler now enforces for every lane including this one.
+ *
+ * The existing edge-whitespace policies elsewhere are correct and unaffected:
+ * they guard a text node whose OWN EDGES are whitespace, which Solid does
+ * preserve, and which the compiler deliberately does not refuse.
+ *
+ * Ledger: `docs/DEFECTS.md` entry 7 (OPEN), with the lift trigger and the
+ * registered six-lane matrix test that re-opens the ruling if any lane moves.
+ */
 export const SOLID_GATE_POLICIES = [
 	{ id: 'eslint-directive', dossierRef: 'T003 ruling 10' },
 	// Always evaluated (requiresArtifact is false): only a recorded relative-import

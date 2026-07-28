@@ -667,6 +667,125 @@ for as long as something proves it can still fail.
 
 ---
 
+## 7. Interior whitespace in static template text is not neutral across the six activations — **OPEN — frameless's own emitted output**
+
+> **The only OPEN defect in this ledger that is in frameless's own shipped
+> output.** Entries 3, 4 and 6 are test-suite defects, 5 is upstream, 2 is not a
+> defect, and 1 is closed. Raised by `frameless-defects-and-targets-v1` (T027
+> measured it, T038 ruled on it, T039 landed the repair), so it does **not**
+> extend that goal's oracle, which is defined over the six findings above.
+
+**Status:** OPEN, with a **fail-closed v-limit shipped**. The construct is now
+refused at the compiler rather than emitted into six lanes and hoped for. The
+defect stays open because the underlying non-neutrality is still real — the
+refusal contains it, it does not remove it.
+
+**The defect is ours, and it is not that any framework is broken.** We compiled
+one IR into six activations without ever asserting that a static text node
+survives all six. Each lane's behaviour below is its own framework's documented
+default. Nothing here should be filed upstream.
+
+**The measurement.** Each lane probed through its own pinned compiler, inputs
+built with `String.fromCharCode` so nothing depends on what a shell did to a
+literal. Re-derived by T039 at `6190058`:
+
+| construct                   | react | qwik | svelte | solid          | vue        | angular    |
+| --------------------------- | ----- | ---- | ------ | -------------- | ---------- | ---------- |
+| `one` U+0020 U+0020 `two`   | keep  | keep | keep   | **condense**   | **condense** | **condense** |
+| `one` U+00A0 `two`          | keep  | keep | keep   | **→ U+0020**   | keep       | keep       |
+
+Versions: react-dom 19.2.3, `@qwik.dev/optimizer` 2.1.0-beta.5 (the callable
+transform `@qwik.dev/core` 2.0.0-beta.38 loads internally), svelte 5.56.8,
+`babel-preset-solid` 1.9.12, `@vue/compiler-sfc` 3.5.40, `@angular/compiler`
+22.0.8.
+
+**The second row is the load-bearing one, and it is what T027 did not have.** A
+run of spaces splits the six 3–3. A single non-breaking space — one character, no
+run at all — splits them **5–1, with Solid alone**, because Solid does not merely
+condense runs: it rewrites the **identity** of every Unicode whitespace character
+to U+0020. U+00A0 is non-breaking and U+0020 is not, so the author's line-break
+guarantee is silently deleted in exactly one lane. Vue and Angular, the two lanes
+that *do* condense space runs, both preserve U+00A0 byte-for-byte.
+
+**Why the repair is a refusal and not a normalisation.** "Make the matrix agree"
+sounds like the obvious fix and is the destructive one. The only uniform rule
+that produces six-way agreement is Solid's `/\s+/g → ' '`, so agreement means
+normalising **five** lanes down to the floor of the one, and deleting
+non-breaking-space semantics product-wide. The seductive form is a single line in
+`normalizeJsxText`, and that is the worst version of all: once the compiler
+erases the author's characters, no lane can ever again be measured against the
+source, and a reported divergence becomes a permanently undetectable one. That is
+the finding-into-silence move this ledger exists to name.
+
+**The repair as shipped.** `assertPortableInteriorWhitespace` in
+`packages/compiler/src/build.ts`, called immediately after `normalizeJsxText`, so
+the throw carries the source file and the offending value. It rejects a static
+text node containing two adjacent whitespace characters or any whitespace
+character that is not U+0020. The message names the value and its code points,
+states the three-of-six split, and points at the **portable spelling: whitespace
+carried as an interpolated value**, which all six lanes preserve and which
+`demos/react-official/three-way-contract.ts` already asserts equal across six as
+`[ wide  load ]`. It deliberately does **not** suggest `&nbsp;` or U+00A0 —
+Solid rewrites those to U+0020, so that advice would be wrong in the one lane it
+is meant to protect.
+
+**The compiler is the right layer for the opposite of the obvious reason.**
+`normalizeJsxText` maps `\t` to one space **per tab** — a 1:1 character map, not
+a condense — so `one\t\ttwo` becomes `one  two`. The compiler was **manufacturing**
+the divergent construct, not setting precedent against it. Two authoring paths,
+one rule, stated once at the only layer that sees the input to all six lanes.
+
+**Text-node EDGES are deliberately out of scope**, by measurement rather than by
+taste: the edge form of the same predicate fires on four live demo texts
+(`" open"` in the two `TaskList.tsrx`, `" seats"` in the two `PricingCard.tsrx`),
+and the two lanes that cannot express a whitespace edge already guard it
+downstream. Attribute values keep interior runs in all three condensing lanes, so
+the refusal correctly scopes to text nodes.
+
+**No gate gained a predicate, and that is a ruling rather than a shortcut.** The
+Vue gate reads `descriptor.template.ast` and the Angular gate reads
+`parseTemplate` under `preserveWhitespaces: false` — **both already condensed**.
+`one  two three` reaches both predicates as `one two three`, so widening either
+one would not fire; it would need a second parse with preserve options, per lane,
+and two of the six lanes have no template parser to hang it on. The Solid gate,
+which had no whitespace policy at all, gains the **recorded measurement** its Vue
+and Angular siblings carry — an unexplained silence converted into an explained
+one, with no predicate.
+
+**The instrument, and why this one needed calibrating more than most.** The rule
+fires on **0 of 108** static text nodes across every live `.tsrx` in `demos/`,
+`packages/` and `poc/` — re-derived by T039, not inherited. It is a pure guard
+that cannot be used to make anything green, which is exactly the shape this
+ledger's own closing section says is worthless without a two-sided proof. So it
+ships with planted violations that are **shown** red, and with the legal
+neighbours of each shown green. Four mutants were killed on the way in: disabling
+the guard, dropping either half of the predicate independently, and the forbidden
+`\s+ → ' '` condense relocated into `normalizeJsxText`.
+
+**THE LIFT TRIGGER.** The v-limit may be **removed** when, at pinned versions,
+all six lanes are measured to render an interior whitespace run **byte-identically**
+— in practice when `babel-plugin-jsx-dom-expressions`, `@vue/compiler-sfc` and
+`@angular/compiler` all stop condensing, or the three preserving lanes are shown
+to have changed. What will notice is the registered cross-lane matrix test in
+`packages/compiler/test/enriched-ir.test.ts`, which runs all six lanes' own
+compilers and asserts both rows of the table above. **It re-opens this ruling if
+any single lane moves in either direction** — a lane that *starts* preserving is
+as much a change to the basis as one that starts condensing, and it is the
+direction that would let the limit be lifted. The behaviour is asserted; the
+versions are recorded and printed on failure rather than asserted, because three
+of the six are pinned with a caret and a red on every unrelated patch bump is a
+red nobody reads.
+
+**What this entry does not know.** Qwik's row was measured through
+`createOptimizer().transformModules`, which is the transform the lane's build
+actually runs, and independently end-to-end in a browser by T027 for the space-run
+case. The `@qwik.dev/core` `./optimizer` subpath exports only `qwikVite` and
+`qwikRollup`; the callable transform lives in `@qwik.dev/optimizer`, resolved
+through core's own `node_modules`. T038 recorded the Qwik non-ASCII cell as
+**unmeasured**; T039 filled it, and it is **preserve**.
+
+---
+
 ## Closed, for the record
 
 **`findings-001` — `engines.node: ">=20"` was false.** The toolchain cannot load
@@ -685,6 +804,13 @@ matrix proved green rather than from the error message's claim.
 | 4   | test-suite defect               | **instrument repaired** (T017)                | one green WebKit cell observed under contention              |
 | 5   | upstream                        | **nothing to change locally**                 | the owner files the solid-js typing report                   |
 | 6   | test-suite defect               | **instrument repaired** (T008)                | none                                                         |
+| 7   | **product defect — OPEN**       | **contained**, not removed: fail-closed v-limit at the compiler (T039) | the lift trigger — all six lanes measured byte-identical on an interior run at pinned versions |
+
+**Entry 7 is the only OPEN defect in frameless's own emitted output**, and it is
+the only one on this table that a later reader could mistake for closed because
+its repair is green. It is not closed: the v-limit *contains* a non-neutrality
+that is still there. The registered six-lane matrix test is what will report the
+day that stops being true, in either direction.
 
 **Two** `continue-on-error` flags remain, down from three, and each carries a
 removal gate that is an observation, not an argument — **and each gate has now

@@ -868,6 +868,7 @@ export function buildTemplateNode(
 
 	if (node.type === 'JSXText') {
 		const value = normalizeJsxText(String(node.value ?? ''));
+		if (value) assertPortableInteriorWhitespace(value, environment.filename);
 		return value ? [{ kind: 'text', id: `text:${context.textCursor++}`, value }] : [];
 	}
 
@@ -2885,6 +2886,72 @@ export function serializeAst(node: AnyNode): SerializableAstNode {
 		return undefined;
 	};
 	return clone(node) as SerializableAstNode;
+}
+
+/**
+ * INTERIOR WHITESPACE IN STATIC TEMPLATE TEXT IS REFUSED. Fail-closed v-limit,
+ * ruled by T038 on `docs/goals/frameless-defects-and-targets-v1/`, recorded as
+ * `docs/DEFECTS.md` entry 7. The measurement, re-derived at this tree by T039
+ * against each lane's OWN pinned compiler:
+ *
+ * | construct                 | react | qwik | svelte | solid    | vue      | angular  |
+ * | ------------------------- | ----- | ---- | ------ | -------- | -------- | -------- |
+ * | `one` U+0020 U+0020 `two` | keep  | keep | keep   | CONDENSE | CONDENSE | CONDENSE |
+ * | `one` U+00A0 `two`        | keep  | keep | keep   | ->U+0020 | keep     | keep     |
+ *
+ * (Spelled in code points rather than as literal characters on purpose: an
+ * invisible U+00A0 sitting in a source comment is the exact hazard below.)
+ *
+ * So a run of spaces splits the matrix 3-3, and any whitespace character that is
+ * NOT U+0020 splits it 5-1 with Solid alone: `babel-preset-solid` rewrites the
+ * IDENTITY of every Unicode whitespace character to U+0020, deleting - for one
+ * lane out of six - the line-break guarantee the author wrote U+00A0 to get.
+ *
+ * That 5-1 row is why this is a REFUSAL and not a normalisation. The only
+ * uniform rule that makes all six agree is Solid's `/\s+/g -> ' '`, and adopting
+ * it would mean destroying non-breaking-space semantics in the five lanes that
+ * honour them so the matrix looks tidy. Worse, condensing HERE would erase the
+ * author's characters before any lane could ever be measured against them again,
+ * turning a reported divergence into a permanently undetectable one.
+ *
+ * TEXT-NODE EDGES ARE DELIBERATELY OUT OF SCOPE. The edge form of this predicate
+ * fires on four live demo texts (`" open"`, `" seats"`), and the two lanes that
+ * cannot express a whitespace edge already guard it downstream - the Angular
+ * emitter's `escapeText` throws and the Vue gate rejects the shape after
+ * condense. Only the INTERIOR is refused here.
+ *
+ * Note the second authoring path, which this rule closes and which
+ * `normalizeJsxText` below MANUFACTURES: `\t` maps to one space PER TAB, a 1:1
+ * character map rather than a condense, so `one\t\ttwo` becomes `one  two` and
+ * lands on this predicate. The tab mapping is deliberately left alone; it is now
+ * covered rather than special-cased.
+ *
+ * The cross-lane matrix is registered as a test in
+ * `packages/compiler/test/enriched-ir.test.ts`. If ANY single lane moves in
+ * EITHER direction at a version bump, that test goes red and this v-limit is
+ * re-opened on evidence rather than on memory.
+ */
+function assertPortableInteriorWhitespace(value: string, filename: string): void {
+	if (!/\s\s/.test(value) && !/[^\S ]/.test(value)) return;
+	const codePoints = [...value]
+		.map((character) => `U+${character.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')}`)
+		.join(' ');
+	throw new Error(
+		`Static template text ${JSON.stringify(value)} in ${filename} carries interior whitespace ` +
+			`that is not a single U+0020, and is not portable across the six activations. ` +
+			`Code points: ${codePoints}. ` +
+			`THREE OF SIX LANES REWRITE IT: solid (babel-preset-solid), vue (@vue/compiler-sfc) and ` +
+			`angular (@angular/compiler) condense a whitespace run to one space, and solid alone also ` +
+			`rewrites every non-U+0020 whitespace character to U+0020 - while react, qwik and svelte ` +
+			`serve the author's characters verbatim. ` +
+			`THE PORTABLE SPELLING IS TO CARRY THE WHITESPACE AS AN INTERPOLATED VALUE rather than as ` +
+			`template text: put the string in a state, computed, prop or expression and write ` +
+			'`<p>[{note}]</p>`. All six lanes preserve interpolated text verbatim, and ' +
+			`demos/react-official/three-way-contract.ts already asserts exactly that equal across all ` +
+			`six as '[ wide  load ]'. ` +
+			`Do NOT reach for a character entity: solid rewrites U+00A0 to U+0020 too, so that spelling ` +
+			`is wrong in the one lane it is meant to protect.`,
+	);
 }
 
 function normalizeJsxText(value: string): string {
