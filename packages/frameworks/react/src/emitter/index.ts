@@ -1689,6 +1689,120 @@ function replaceLeafCurrentTarget(fn: t.ArrowFunctionExpression): void {
 	});
 }
 
+/** Node types that open a new function scope inside a handler body. */
+const NESTED_FUNCTION_TYPES: ReadonlySet<string> = new Set([
+	'ArrowFunctionExpression',
+	'FunctionExpression',
+	'FunctionDeclaration',
+	'ObjectMethod',
+	'ClassMethod',
+]);
+
+/**
+ * `settle().then`, `defer`, `rows.forEach` - enough to point at ONE callback when
+ * a handler has several. Best-effort by design: it returns '' rather than
+ * guessing at a shape it does not recognise, and the caller falls back.
+ */
+function describeCallee(node: any): string {
+	if (!node) return '';
+	if (node.type === 'Identifier') return node.name;
+	if (node.type === 'ThisExpression') return 'this';
+	if (node.type === 'CallExpression') {
+		const callee = describeCallee(node.callee);
+		return callee ? `${callee}()` : '';
+	}
+	if (node.type === 'MemberExpression') {
+		const object = describeCallee(node.object);
+		if (!object) return '';
+		if (node.computed) return `${object}[...]`;
+		return t.isIdentifier(node.property) ? `${object}.${node.property.name}` : '';
+	}
+	return '';
+}
+
+/** Name the nested function a refused write sits in, so the author can find it. */
+function describeNestedFunction(module: ReturnType<typeof analyze>, fn: any): string {
+	const parent: any = module.parentOf(fn);
+	if (parent?.type === 'CallExpression' && parent.arguments?.includes(fn)) {
+		const callee = describeCallee(parent.callee);
+		if (callee) return `the function passed to ${callee}(...)`;
+	}
+	if (parent?.type === 'Property' && parent.value === fn && t.isIdentifier(parent.key))
+		return `the function assigned to "${parent.key.name}"`;
+	if (parent?.type === 'VariableDeclarator' && t.isIdentifier(parent.id))
+		return `the function assigned to "${parent.id.name}"`;
+	if (fn.type === 'FunctionDeclaration' && t.isIdentifier(fn.id))
+		return `the nested function "${fn.id.name}"`;
+	return 'a nested function';
+}
+
+/**
+ * FAIL CLOSED on a state write this emitter cannot lower.
+ *
+ * `emitMutableHandler` walks `fn.body.body` - the TOP-LEVEL statements of the
+ * handler body - so a write inside any nested function (a `.then` continuation, a
+ * callback prop, a side-effecting array method) was never a candidate for
+ * lowering. It was copied through verbatim into the emitted output, where it
+ * became an assignment to the `const` that `useState` destructured. `toConstSsa`
+ * then made it worse for a state that ALSO has a top-level write: the nested
+ * write TARGET was rewritten as if it were a version READ, so the emitter
+ * manufactured an assignment to a name it had just frozen with `const`.
+ *
+ * Both are invalid TypeScript - `TS2588` - and both are dead at runtime, because
+ * React re-renders off the setter and nothing called it. Neither was refused by
+ * anything, and no instrument in this repo saw them: the corpus has never
+ * contained a nested write.
+ *
+ * THIS REFUSES; IT DOES NOT LOWER. Lowering nested writes correctly is a design
+ * change - the Solid emitter already does it and a later ruling can port that
+ * approach. Until then a loud refusal is strictly better than a silent
+ * miscompile, so the message names the write, the function it sits in, and the
+ * output it prevented. See docs/DEFECTS.md entry 8 and T044.
+ */
+function assertLowerableWrites(
+	module: ReturnType<typeof analyze>,
+	analyzed: t.ArrowFunctionExpression,
+	writable: ReadonlyMap<string, StateBinding>,
+	event: EnrichedEventRecord,
+): void {
+	if (writable.size === 0) return;
+	for (const reference of module.unresolvedReferences) {
+		if (!writable.has(reference.name)) continue;
+		// A write target may be the root of a member chain: `rows[0].label = x`.
+		let node: any = reference.node;
+		let parent: any = module.parentOf(node);
+		while (parent?.type === 'MemberExpression' && parent.object === node) {
+			node = parent;
+			parent = module.parentOf(node);
+		}
+		const isWriteTarget =
+			(parent?.type === 'AssignmentExpression' && parent.left === node) ||
+			(parent?.type === 'UpdateExpression' && parent.argument === node);
+		if (!isWriteTarget) continue;
+		// The innermost function scope between the write and the handler itself.
+		// None means the write is a top-level statement, which lowers correctly.
+		let nested: any = null;
+		let ancestor: any = parent;
+		while (ancestor && ancestor !== analyzed) {
+			if (!nested && NESTED_FUNCTION_TYPES.has(ancestor.type)) nested = ancestor;
+			ancestor = module.parentOf(ancestor);
+		}
+		if (!nested) continue;
+		const name = reference.name;
+		throw new Error(
+			`React emitter cannot lower the state write to "${name}" in ${event.id}: it is inside ` +
+				`${describeNestedFunction(module, nested)}, and write-lowering rewrites ONLY the ` +
+				`top level of a handler body. Emitting it would copy "${name} = ..." through ` +
+				`verbatim, as an assignment to the const that useState destructured - which tsc ` +
+				`rejects (TS2588 "Cannot assign to '${name}' because it is a constant") and which ` +
+				`would not re-render even if it ran. Move the write to the top level of the ` +
+				`handler body. Nested writes DO lower correctly in the Solid emitter; porting that ` +
+				`is a design change this refusal deliberately does not make. See docs/DEFECTS.md ` +
+				`entry 8.`,
+		);
+	}
+}
+
 function emitMutableHandler(
 	handler: EventHandlerRecord,
 	event: EnrichedEventRecord,
@@ -1710,7 +1824,10 @@ function emitMutableHandler(
 	const nextByState = new Map(
 		[...writable.values()].map((state) => [state.name, nextFor(context, state)]),
 	);
-	reanalyzeFunction(fn, (module) => {
+	reanalyzeFunction(fn, (module, analyzed) => {
+		// BEFORE any renaming, while the references still carry the AUTHORED state
+		// names an author would recognise in the diagnostic.
+		assertLowerableWrites(module, analyzed, writable, event);
 		for (const reference of module.unresolvedReferences) {
 			const replacement = nextByState.get(reference.name);
 			if (!replacement) continue;

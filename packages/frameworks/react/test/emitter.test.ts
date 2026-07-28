@@ -9,6 +9,7 @@ import {
 	type FramelessPersistenceRecord,
 } from '@frameless/compiler';
 import { resolve } from 'pathe';
+import ts from 'typescript';
 import { analyze } from 'yuku-analyzer';
 import { parse } from 'yuku-parser';
 import { describe, expect, test } from 'vitest';
@@ -431,6 +432,186 @@ export function Stopper({ onTrace }) @{
 			expect(() => emit(ir)).toThrow(
 				"Sync policy stopPropagation is absent from event:0's handler AST",
 			);
+		});
+	});
+
+	/**
+	 * T044. A state write inside ANY nested function - a `.then` continuation, a
+	 * callback prop, a side-effecting array method - was emitted VERBATIM, as an
+	 * assignment to the `const` that `useState` destructured. Write-lowering walks
+	 * only the TOP-LEVEL statements of the handler body, so nothing rewrote it and
+	 * nothing refused it either. The corpus has never contained a nested write, and
+	 * that is the ONLY reason this was invisible: every emitted-output instrument in
+	 * this repo, `emitted-typecheck.test.ts` included, only ever sees `generated/`.
+	 *
+	 * NOTHING HERE IS ABOUT ASYNC. `.then` is one spelling; the plain callback prop
+	 * below reproduces it with no promise anywhere.
+	 *
+	 * The oracle is tsc, not us. `tscDiagnostics` runs the real TypeScript compiler
+	 * over the emitted string exactly as the emitted-typecheck lane runs it over
+	 * `generated/`, so the assertion below cannot pass by agreeing with an emitter
+	 * rule we wrote ourselves.
+	 */
+	describe('a state write it cannot lower is refused, not miscompiled', () => {
+		const nested = (body: string) => `import { state } from '@markless/core';
+
+export function Deferred({ settle, defer, onTrace }) @{
+	let ticks = state(0);
+	let phase = state('idle');
+
+	<div data-deferred-root="">
+		<button
+			type="button"
+			data-action="run"
+			onClick={(event) => {
+${body}
+				onTrace('run', event);
+			}}
+		/>
+		<output data-cell="ticks">{ticks}</output>
+		<output data-cell="phase">{phase}</output>
+	</div>
+}
+`;
+
+		const THEN_CONTINUATION = nested(`				phase = 'pending';
+				settle().then(() => {
+					ticks = ticks + 1;
+					phase = 'done';
+				});`);
+
+		/** No promise, no `.then`, no async: the defect is about NESTING. */
+		const CALLBACK_PROP = nested(`				defer(() => {
+					ticks = ticks + 1;
+				});`);
+
+		/** The negative control: the same write, at the top level, must still lower. */
+		const TOP_LEVEL = nested(`				ticks = ticks + 1;
+				phase = 'done';`);
+
+		const tscOptions: ts.CompilerOptions = {
+			allowJs: true,
+			checkJs: true,
+			noEmit: true,
+			strict: false,
+			target: ts.ScriptTarget.ES2022,
+			module: ts.ModuleKind.ESNext,
+			moduleResolution: ts.ModuleResolutionKind.Bundler,
+			jsx: ts.JsxEmit.ReactJSX,
+			lib: ['lib.es2022.d.ts', 'lib.dom.d.ts', 'lib.dom.iterable.d.ts'],
+			skipLibCheck: true,
+			types: [],
+		};
+
+		/** Type-check an emitted string in place of a file inside `generated/`. */
+		function tscDiagnostics(name: string, emitted: string): string[] {
+			const file = resolve(generatedRoot, name);
+			const host = ts.createCompilerHost(tscOptions, true);
+			const read = host.readFile.bind(host);
+			host.readFile = (candidate) => (candidate === file ? emitted : read(candidate));
+			const exists = host.fileExists.bind(host);
+			host.fileExists = (candidate) => candidate === file || exists(candidate);
+			const program = ts.createProgram([file], tscOptions, host);
+			return [...program.getSemanticDiagnostics(), ...program.getSyntacticDiagnostics()].map(
+				(diagnostic) => {
+					const at = diagnostic.file
+						? ts.getLineAndCharacterOfPosition(diagnostic.file, diagnostic.start ?? 0)
+						: { line: -1, character: -1 };
+					const text = ts.flattenDiagnosticMessageText(diagnostic.messageText, ' ');
+					return `${name}(${at.line + 1},${at.character + 1}): error TS${diagnostic.code}: ${text}`;
+				},
+			);
+		}
+
+		/** Emit, or capture the refusal. Never both. */
+		async function emitOrRefuse(
+			filename: string,
+			source: string,
+		): Promise<{ emitted: string; refusal: null } | { emitted: null; refusal: string }> {
+			const ir = await buildEnrichedIr({ filename, source });
+			try {
+				return { emitted: await formatEmitted(emit(ir)), refusal: null };
+			} catch (error) {
+				return { emitted: null, refusal: (error as Error).message };
+			}
+		}
+
+		/**
+		 * THE WITNESS. Before the repair this failed with tsc's own words, which is
+		 * the whole point of proof-before-fix:
+		 *
+		 *   nested-then.jsx(16,7): error TS2588: Cannot assign to 'ticks' because it
+		 *   is a constant.
+		 *   nested-then.jsx(17,7): error TS2588: Cannot assign to 'nextPhase' because
+		 *   it is a constant.
+		 *
+		 * The invariant asserted is the honest one, and it is what survives the
+		 * repair: the emitter may REFUSE a construct, and it may EMIT a construct,
+		 * but it may never emit a construct tsc rejects. A refusal satisfies it; a
+		 * silent miscompile does not.
+		 */
+		test.each([
+			['nested-then', THEN_CONTINUATION],
+			['nested-callback', CALLBACK_PROP],
+			['top-level-control', TOP_LEVEL],
+		])('%s: the emitter either refuses it or emits output tsc accepts', async (name, source) => {
+			const result = await emitOrRefuse(`${name}.tsrx`, source);
+			if (result.emitted === null) {
+				// Refused. The control must NEVER take this branch.
+				expect(name).not.toBe('top-level-control');
+				return;
+			}
+			expect(tscDiagnostics(`${name}.jsx`, result.emitted)).toEqual([]);
+		});
+
+		test('the refusal names the write, the enclosing function, and the consequence', async () => {
+			const result = await emitOrRefuse('nested-then.tsrx', THEN_CONTINUATION);
+			expect(result.refusal).not.toBeNull();
+			const message = result.refusal!;
+			// The WRITE.
+			expect(message).toContain('ticks');
+			// The ENCLOSING FUNCTION - a bare "somewhere nested" teaches nothing when
+			// a handler has several callbacks.
+			expect(message).toContain('settle().then');
+			// WHAT WOULD OTHERWISE HAVE HAPPENED. The failure mode was silent, so the
+			// message has to carry the miscompile it prevented, by its tsc code.
+			expect(message).toContain('TS2588');
+			expect(message).toContain('useState');
+			// The way out, and where the defect is recorded.
+			expect(message).toMatch(/top level/);
+			expect(message).toContain('docs/DEFECTS.md');
+		});
+
+		test('the plain callback prop is refused too - the defect is nesting, not promises', async () => {
+			const result = await emitOrRefuse('nested-callback.tsrx', CALLBACK_PROP);
+			expect(result.refusal).toContain('ticks');
+			expect(result.refusal).toContain('defer');
+			expect(result.emitted).toBeNull();
+		});
+
+		/**
+		 * CALIBRATION, the other direction. An instrument that fires on everything is
+		 * as useless as one that fires on nothing: this guard must be invisible to
+		 * every handler the corpus actually contains. `preconditions` above proves the
+		 * derived fixture table is the whole ratified corpus, so re-emitting all of it
+		 * here is a real sweep rather than a spot check.
+		 */
+		test('the guard fires on NOTHING in the shipped corpus', async () => {
+			for (const [, goldenName] of fixtures) {
+				const ir = await golden(goldenName);
+				expect(() => emit(ir)).not.toThrow();
+			}
+			for (const fixture of compositionFixtures) {
+				await expect(emitCompositionFixture(fixture)).resolves.toBeTypeOf('string');
+			}
+		});
+
+		/** And the control still lowers to the setter, unchanged by the guard. */
+		test('a top-level write still lowers to the useState setter', async () => {
+			const result = await emitOrRefuse('top-level-control.tsrx', TOP_LEVEL);
+			expect(result.refusal).toBeNull();
+			expect(result.emitted).toContain('setTicks(');
+			expect(result.emitted).not.toMatch(/^\s*ticks = /m);
 		});
 	});
 

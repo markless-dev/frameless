@@ -669,8 +669,9 @@ for as long as something proves it can still fail.
 
 ## 7. Interior whitespace in static template text is not neutral across the six activations — **OPEN — frameless's own emitted output**
 
-> **The only OPEN defect in this ledger that is in frameless's own shipped
-> output.** Entries 3, 4 and 6 are test-suite defects, 5 is upstream, 2 is not a
+> **One of two OPEN defects in this ledger that are in frameless's own shipped
+> output** — this one and entry 8, which was filed later and is the worse of the
+> two. Entries 3, 4 and 6 are test-suite defects, 5 is upstream, 2 is not a
 > defect, and 1 is closed. Raised by `frameless-defects-and-targets-v1` (T027
 > measured it, T038 ruled on it, T039 landed the repair), so it does **not**
 > extend that goal's oracle, which is defined over the six findings above.
@@ -786,6 +787,121 @@ through core's own `node_modules`. T038 recorded the Qwik non-ASCII cell as
 
 ---
 
+## 8. React emitted a nested state write as an assignment to a `const` — **OPEN — frameless's own emitted output**
+
+> **The second OPEN defect in frameless's own shipped output, and the more
+> serious of the two.** Entry 7 changes how a space renders. This one emitted
+> **invalid TypeScript that silently does nothing at runtime**, in React, on
+> `main`, today. Measured by T031 while probing S8, repaired to a **refusal** by
+> T044. Like entry 7 it was raised by `frameless-defects-and-targets-v1`, so it
+> does **not** extend that goal's oracle, which is defined over findings 1–6.
+
+**Status:** OPEN, with a **fail-closed refusal shipped**. The construct is now
+named and rejected at the React emitter. The defect stays open because the
+underlying inability to lower a nested write is still real — Solid lowers it
+correctly, React refuses it. The refusal contains the miscompile; it does not
+remove the gap.
+
+**IT HAS NOTHING TO DO WITH ASYNC.** T031 found it while probing async event
+handlers, and that is an accident of where it was standing. It reproduces with a
+plain callback prop, no promise anywhere. **The trigger is NESTING**: any state
+write inside any function inside a handler — a `.then` continuation, a callback
+prop, a side-effecting `forEach`.
+
+**The mechanism, in one line.** `emitMutableHandler` in
+`packages/frameworks/react/src/emitter/index.ts` iterates `fn.body.body` — the
+**top-level statements** of the handler body. A write anywhere else was never a
+candidate for lowering, so it was copied through verbatim, into a scope where the
+name it assigns to is the `const` that `useState` destructured.
+
+**The second half is worse than the first.** For a state that *also* has a
+top-level write, `toConstSsa` → `replaceVersionReads` rewrote the nested write
+**target** as if it were a version **read**, renaming it to the SSA version and
+then freezing that version with `const`. The emitter did not merely fail to lower
+an assignment; it **manufactured** an assignment to a name it had just made
+immutable.
+
+**The measurement.** Re-derived by T044 at `f2d8aaf` with this repo's own
+`typescript@5.9.3`, over emitted output, from two independent authorings:
+
+```
+nested-then.jsx(16,7): error TS2588: Cannot assign to 'ticks' because it is a constant.
+nested-then.jsx(17,7): error TS2588: Cannot assign to 'nextPhase' because it is a constant.
+nested-callback.jsx(14,7): error TS2588: Cannot assign to 'ticks' because it is a constant.
+```
+
+`nested-then` is `settle().then(() => { ticks = ticks + 1; phase = 'done' })`;
+`nested-callback` is `defer(() => { ticks = ticks + 1 })`, which contains no
+promise. The `nextPhase` row is the manufactured assignment above. The same
+authoring with the writes moved to the **top level** type-checks clean and lowers
+to `setTicks(...)`, which is the negative control that makes the two rows mean
+something.
+
+**Runtime, not just types.** Under a bundler the assignment either throws in
+strict mode or writes a dead local; either way the setter is never called, so
+**React never re-renders**. The emitted component looked plausible and did
+nothing.
+
+**Why nothing caught it.** Every emitted-output instrument in this repo —
+`emitted-typecheck.test.ts` included, which is the one that runs real `tsc` — only
+ever sees `packages/frameworks/react/generated/`. **The corpus has never contained
+a nested write.** That is the entire reason this survived to `main`: not a weak
+instrument, an absent input. It is exactly the class the corpus-breadth phase
+exists to surface, and it was surfaced by a scenario that could not land.
+
+**Why the repair is a refusal and not a lowering.** Lowering nested writes
+correctly is a design change with a real blast radius — the write must become a
+setter call whose value is computed from a snapshot the closure captured, and the
+SSA versioning has to follow it across a scope boundary. **Solid already does this
+correctly** (`setTicks(ticks() + 1)` inside the same nested arrow), so a later
+ruling can port a proven approach rather than invent one under time pressure.
+Until then, a loud refusal is strictly better than a silent miscompile, and it is
+reversible in a way that a hasty lowering would not be.
+
+**The repair as shipped.** `assertLowerableWrites` in
+`packages/frameworks/react/src/emitter/index.ts`, called from
+`emitMutableHandler` **before** any renaming, so the diagnostic carries the
+**authored** state name rather than an SSA version an author has never seen. It
+walks the handler's unresolved references, keeps the ones that are write targets
+(including the root of a member chain, so `rows[0].label = x` is covered), and
+throws if any of them sits inside a nested function scope. The message names **the
+write, the enclosing function** (`the function passed to settle().then(...)`) and
+**what would otherwise have happened**, quoting the `TS2588` verbatim — because
+the failure mode was silent, and a bare throw teaches nothing.
+
+**The instrument, and its calibration.** This guard fires on **nothing** in the
+shipped corpus — proven by re-emitting every ratified scenario golden and every
+composition fixture through it in
+`packages/frameworks/react/test/emitter.test.ts`, not by inspection — and on
+**0 of the 61 tracked `.tsrx` files** in `packages/`, `demos/` and `poc/`, swept
+once by hand for the wider reading. A guard that
+fires on nothing is not an instrument, so it ships with the two planted
+violations above **watched red before the repair**, with their `tsc` output as the
+failure text, and with the top-level control watched **green** in the same table.
+The standing assertion is the honest invariant that survives the fix: *the emitter
+may refuse a construct, and it may emit a construct, but it may never emit a
+construct `tsc` rejects.*
+
+**THE LIFT TRIGGER.** The refusal may be **removed** when the React emitter lowers
+nested writes correctly, as the Solid emitter already does — that is, when a
+nested `ticks = ticks + 1` emits a `setTicks` call over a captured snapshot and
+the SSA versioning follows it across the scope boundary. What will notice is the
+`nested-then` / `nested-callback` table in
+`packages/frameworks/react/test/emitter.test.ts`: its invariant is *refuse or
+typecheck*, so a correct lowering turns those rows green **through the other
+branch** with no edit here, and the two message tests are the only thing that must
+then be deleted deliberately.
+
+**What this entry does not know.** Whether the other five lanes have the same hole
+in a form nobody has authored. T031 measured **Solid and Qwik lowering nested
+writes correctly** and did not probe Svelte, Vue or Angular on this axis
+specifically. Angular carries a **separate, unrelated** silent defect from the
+same T031 sweep — an authored `async` handler becomes a synchronous method — which
+is not filed here because it awaits the T043 ruling. **None of this is upstream.**
+React supports every construct involved; the defect is entirely in our emitter.
+
+---
+
 ## Closed, for the record
 
 **`findings-001` — `engines.node: ">=20"` was false.** The toolchain cannot load
@@ -805,12 +921,21 @@ matrix proved green rather than from the error message's claim.
 | 5   | upstream                        | **nothing to change locally**                 | the owner files the solid-js typing report                   |
 | 6   | test-suite defect               | **instrument repaired** (T008)                | none                                                         |
 | 7   | **product defect — OPEN**       | **contained**, not removed: fail-closed v-limit at the compiler (T039) | the lift trigger — all six lanes measured byte-identical on an interior run at pinned versions |
+| 8   | **product defect — OPEN**       | **contained**, not removed: fail-closed refusal in the React emitter (T044) | the lift trigger — React lowers a nested state write the way Solid already does |
 
-**Entry 7 is the only OPEN defect in frameless's own emitted output**, and it is
-the only one on this table that a later reader could mistake for closed because
-its repair is green. It is not closed: the v-limit *contains* a non-neutrality
-that is still there. The registered six-lane matrix test is what will report the
-day that stops being true, in either direction.
+**Entries 7 and 8 are the OPEN defects in frameless's own emitted output**, and
+they are the two on this table a later reader could mistake for closed because
+their repairs are green. Neither is closed: each *contains* something that is
+still there — a non-neutrality in 7, an unlowerable construct in 8. In both cases
+a registered test is what will report the day that stops being true, and in both
+cases it reports in **either** direction.
+
+**Entry 8 outranks entry 7 by this document's own ranking rule** — how wrong the
+shipped output is. Entry 7 changes how a space renders; entry 8 emitted invalid
+TypeScript that silently never re-rendered. It is filed second only because it was
+found second, and it is worth naming why: it was not found by a better instrument
+but by an **absent input** finally being supplied. Ranking preserves discovery
+order everywhere else in this ledger, so it does here too.
 
 **Two** `continue-on-error` flags remain, down from three, and each carries a
 removal gate that is an observation, not an argument — **and each gate has now

@@ -131,7 +131,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T044
+active_task: T043
 
 tasks:
   - id: T001
@@ -4070,7 +4070,7 @@ tasks:
   - id: T044
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     spec: "T031 receipt FINDING 2 and notes/T031-corpus-s8-async.md - AUTHORITATIVE."
     objective: >-
@@ -4114,12 +4114,58 @@ tasks:
       - "You are about to touch replaceFreeNames or the await re-parse path."
       - "The throw fires on any EXISTING corpus handler. It must fire ONLY on the planted nested write - if it fires on the shipped corpus, that is a FINDING about the shipped corpus and a stop."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T044-react-nested-write.md
+      summary: "RE-DERIVED THE TS2588 INDEPENDENTLY before writing any test, from two authorings - a .then continuation and a plain callback prop with NO promise anywhere - confirming the trigger is NESTING. Landed the failing tests FIRST and watched them go red on tsc's own output. Then added assertLowerableWrites to the React emitter: it walks the handler's unresolved references, keeps write targets including member-chain roots, and THROWS when one sits in a nested function scope. No lowering was implemented; replaceFreeNames was not touched."
+      THE_WITNESSED_PRE_FIX_FAILURE_VERBATIM: "FAIL React structural emitter > a state write it cannot lower is refused, not miscompiled > nested-then: AssertionError: expected [ ...(2) ] to deeply equal [] -- + [ \"nested-then.jsx(16,7): error TS2588: Cannot assign to 'ticks' because it is a constant.\", \"nested-then.jsx(17,7): error TS2588: Cannot assign to 'nextPhase' because it is a constant.\" ]. Plus FAIL nested-callback with the same TS2588 on 'ticks', FAIL on the message-quality assertion (expected null not to be null), and FAIL 'the plain callback prop is refused too - the defect is nesting, not promises'. THE CONTROL AND THE CORPUS SWEEP WERE GREEN FROM THE START, which is what makes the four reds mean what they say."
+      the_refusal_names_the_consequence_not_just_the_cause: "The shipped message states the write, the enclosing function, the TS2588 it prevents, AND that it would not re-render even if it ran - then adds 'Nested writes DO lower correctly in the Solid emitter; porting that is a design change this refusal deliberately does not make.' A silent failure mode needs a message that explains what WOULD have happened; a bare throw teaches nothing. This is the third fail-closed-loudly guard this session (T033, T039, T044) and the pattern is now house style."
+      THE_TEST_IS_DESIGNED_TO_SURVIVE_ITS_OWN_FIX: "The standing assertion is 'REFUSE OR TYPECHECK', not 'throws'. Two consequences the Worker reasoned out rather than stumbled into: a bare toThrow would have failed pre-fix FOR THE WRONG REASON (no throw at all, rather than on the TS2588), which would have made the witnessed failure meaningless; and when someone later ports Solid's lowering, these rows GO GREEN THROUGH THE OTHER BRANCH WITH NO EDIT, leaving only the two message tests to delete deliberately. A test that has to be rewritten the day the defect is fixed is a test that will be deleted carelessly."
+      it_widened_its_own_calibration_sweep: "The card asked whether the guard fires on the shipped corpus. The Worker checked ALL 61 TRACKED .tsrx FILES across packages/, demos/ and poc/ instead - 53 emit clean, 8 throw for pre-existing unrelated reasons, and THE GUARD FIRED ON ZERO. Its reasoning: 'the fire-on-existing-corpus stop_if is only as strong as the set it was checked against.' PM VERIFIED the outcome: 975 tests pass, react goldens byte-unmoved."
+      changed_files:
+        - packages/frameworks/react/src/emitter/index.ts
+        - packages/frameworks/react/test/emitter.test.ts
+        - docs/DEFECTS.md
+        - docs/goals/frameless-defects-and-targets-v1/notes/T044-react-nested-write.md
+      commands:
+        - cmd: "git status --short && git log --oneline -1 && ps aux | grep -E '(pnpm|vitest)'"
+          status: pass
+          note: "tree clean at f2d8aaf; NO test runner live - the Worker verified concurrency itself rather than trusting the dispatch, and re-checked at the end"
+        - cmd: "vp test react/test/emitter.test.ts -t refuse   # BEFORE the fix"
+          status: pass
+          note: "failed-as-designed: 4 failed / 5 passed, the two load-bearing failures being the TS2588 on emitted output. Green after the repair"
+        - cmd: "pnpm test"
+          status: pass
+          note: "975 passed / 50 files, up from 968 (+7). PM re-ran and confirms 975. No existing test moved"
+        - cmd: "pnpm check"
+          status: pass
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 380 files"
+        - cmd: "regenerate && git diff --exit-code -- packages/frameworks/react/generated"
+          status: pass
+          note: "run TWICE, empty both times; PM re-verified"
+        - cmd: "git diff --exit-code -- the other five lanes, packages/compiler, demos, scripts"
+          status: pass
+          note: clean
+        - cmd: "sweep: all 61 tracked .tsrx through buildEnrichedIr + emit"
+          status: pass
+          note: "GUARD FIRED ON 0. 53 clean, 8 pre-existing unrelated throws"
+        - cmd: "git status --short"
+          status: pass
+          note: "exactly four files; HEAD still f2d8aaf; NOT committed"
+      deviations:
+        - "Corrected TWO statements in docs/DEFECTS.md that entry 8 made FALSE rather than merely incomplete: entry 7's 'the only OPEN defect in this ledger that is in frameless's own shipped output', and the same claim in the standings table. Both inside allowed_files; neither changes a ruling. Landing entry 8 while leaving entry 7 claiming to be the only one would have been a self-refuting ledger."
+        - "Added a wider calibration sweep than the card's text - all 61 tracked .tsrx rather than only the corpus - because a fire-on-existing-corpus stop_if is only as strong as the set it was checked against."
+        - "The standing test asserts 'refuse OR typecheck' rather than 'throws' - see above; this is a deliberate design choice with two stated reasons, not a softening."
+      remaining_blockers: []
+      stopped_because: null
   - id: T043
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     spec: "T031 receipt and notes/T031-corpus-s8-async.md - AUTHORITATIVE."
     depends_on: ["T044"]
