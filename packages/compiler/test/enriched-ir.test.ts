@@ -10,6 +10,7 @@ const FIXTURES = [
 	's2-keyed-todo.tsrx',
 	's3-event-form.tsrx',
 	's4-nested-list.tsrx',
+	's5-branch-teardown.tsrx',
 ] as const;
 
 const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>> = {
@@ -67,6 +68,42 @@ const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>>
 		['span', 'data-cell-off'],
 		['details', 'data-cell-open'],
 		['summary', 'data-open-cell'],
+	],
+	// S5's rows carry `data-oracle-branch-key`, a THIRD key attribute, for the
+	// same reason S4 introduced `data-oracle-cell-key`: S2's `measureRowKeys`
+	// matches `data-oracle-row-key` globally and S4's `measureCellKeys` matches
+	// `data-oracle-cell-key`, so a scenario reusing either would silently join
+	// that scenario's observation string.
+	//
+	// The two `div data-arm` hosts are the branch arms, and there are TWO of them
+	// on purpose: this is the first scenario in the corpus whose branch has a
+	// POPULATED arm on both sides. Each arm re-projects the same `ticks` and
+	// `seen` state, which is what makes "the state survived the teardown"
+	// observable at all.
+	//
+	// Each arm projects it through its OWN marker (`data-live-ticks` /
+	// `data-idle-ticks`) rather than a shared one, and that is a measured
+	// constraint rather than a naming preference: the Solid dossier gate's
+	// `show-two-arm` policy (T003 ruling 5) rejects any element subtree that
+	// appears verbatim in both arms of a `<Show>`, telling the author to hoist
+	// shared content out of the branch. Hoisting is exactly what this scenario
+	// must NOT do — the projections have to live inside the subtree that gets
+	// destroyed — so the arms differ instead.
+	's5-branch-teardown.tsrx': [
+		['section', 'data-scenario'],
+		['p', 'data-count'],
+		['button', 'data-action'],
+		['div', 'data-arm'],
+		['output', 'data-live-ticks'],
+		['p', 'data-live-seen'],
+		['button', 'data-action'],
+		['ul', 'data-branch-rows'],
+		['li', 'data-oracle-branch-key'],
+		['button', 'data-pick'],
+		['div', 'data-arm'],
+		['output', 'data-idle-ticks'],
+		['p', 'data-idle-seen'],
+		['button', 'data-action'],
 	],
 };
 
@@ -480,6 +517,7 @@ describe('fixture-family sufficiency', () => {
 			's2-keyed-todo.tsrx': ['add', 'edit', 'toggle', 'reorder', 'remove', 'clear'],
 			's3-event-form.tsrx': ['text', 'checked', 'submit', 'bubble'],
 			's4-nested-list.tsrx': ['flip', 'reorder', 'select'],
+			's5-branch-teardown.tsrx': ['toggle', 'tick', 'pick', 'drop'],
 		};
 		for (const file of FIXTURES) {
 			const ir = await fixtureIr(file);
@@ -627,6 +665,69 @@ export function Indexed({ seed }) @{
 		await expect(buildEnrichedIr({ filename: 'indexed.tsrx', source })).rejects.toThrow(
 			/Keyed repeat repeat:1 collection cannot be resolved to a single graph location/,
 		);
+	});
+});
+
+describe('a branch that tears a POPULATED arm down at runtime', () => {
+	/**
+	 * T026. Deliberately its own walker rather than a reuse of the nested-repeat
+	 * describe's `dynamicSites`: S5's claim is about branch ARMS, and a shared
+	 * helper would make S5's measurement depend on a function S4 also drives. The
+	 * same reason `measureCellKeys` is not a refactor of `measureRowKeys`.
+	 */
+	function armSites(ir: EnrichedIR): Array<{ label: string; reads: readonly unknown[] }> {
+		const sites: Array<{ label: string; reads: readonly unknown[] }> = [];
+		for (const node of allTemplateNodes(ir)) {
+			if (node.kind === 'dynamic-text') sites.push({ label: `${node.id} text`, reads: node.reads });
+			if (node.kind === 'host')
+				for (const binding of node.dynamicBindings)
+					sites.push({ label: `host ${node.id} ${binding.name}`, reads: binding.reads });
+			if (node.kind === 'branch') sites.push({ label: `${node.id} branch`, reads: node.reads });
+			if (node.kind === 'keyed-repeat') {
+				sites.push({ label: `${node.id} collection`, reads: node.collection.reads });
+				sites.push({ label: `${node.id} key`, reads: node.key.reads });
+			}
+		}
+		return sites;
+	}
+
+	test('S5: no dynamic site in either arm lowers to reads: []', async () => {
+		const ir = await compileOnlyFixtureIr('s5-branch-teardown.tsrx');
+		const sites = armSites(ir);
+		expect(sites.length).toBe(10);
+		expect(sites.filter((site) => site.reads.length === 0).map((site) => site.label)).toEqual([]);
+	});
+
+	test('S5: the branch is guarded by STATE and both arms are populated', async () => {
+		const ir = await compileOnlyFixtureIr('s5-branch-teardown.tsrx');
+		const branches = allTemplateNodes(ir).filter((node) => node.kind === 'branch');
+		expect(branches).toHaveLength(1);
+		const branch = branches[0]!;
+		if (branch.kind !== 'branch') throw new Error('missing S5 branch');
+		// The whole point of the scenario. s1's branch is selected by a STATIC
+		// prop and s2's `@else` arm is EMPTY, so before S5 no branch in the corpus
+		// could tear a populated subtree down at runtime.
+		expect(branch.reads.map((read) => read.graphNodeId)).toEqual(['state:phase']);
+		expect(branch.arms).toHaveLength(2);
+		for (const arm of branch.arms) expect(arm.children.length).toBeGreaterThan(0);
+	});
+
+	test('S5: a handler and a keyed list live INSIDE the arm that gets torn down', async () => {
+		const ir = await compileOnlyFixtureIr('s5-branch-teardown.tsrx');
+		const branch = allTemplateNodes(ir).find((node) => node.kind === 'branch');
+		if (branch?.kind !== 'branch') throw new Error('missing S5 branch');
+		const inArm = (index: number): TemplateNode[] => walkTemplate(branch.arms[index]!.children);
+		const repeats = inArm(0).filter((node) => node.kind === 'keyed-repeat');
+		expect(repeats).toHaveLength(1);
+		const hostIdsInLiveArm = new Set(inArm(0).map((node) => node.id));
+		const hostIdsInIdleArm = new Set(inArm(1).map((node) => node.id));
+		const handlersIn = (ids: Set<string>) =>
+			ir.records.events.filter((event) => ids.has(event.hostNodeId)).length;
+		// Two in the live arm (`tick` on the arm itself, `pick` inside the keyed
+		// list) and one in the idle arm (`drop`). Every one of them is destroyed
+		// and rebuilt by the flip.
+		expect(handlersIn(hostIdsInLiveArm)).toBe(2);
+		expect(handlersIn(hostIdsInIdleArm)).toBe(1);
 	});
 });
 

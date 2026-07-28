@@ -13,6 +13,7 @@ const fixtures = [
 	['S2.jsx', 's2-keyed-todo.json'],
 	['S3.jsx', 's3-event-form.json'],
 	['S4.jsx', 's4-nested-list.json'],
+	['S5.jsx', 's5-branch-teardown.json'],
 ] as const;
 for (const [output, golden] of fixtures) {
 	const ir = JSON.parse(

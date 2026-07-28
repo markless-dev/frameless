@@ -127,6 +127,11 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// physical lines than S3 - which is what a repeat nested inside a repeat costs
 	// and exactly why it was recorded as measured.
 	S4: { physicalLoc: 77, structuralNodes: 425 },
+	// S5 likewise has no handwritten reference, so this is a budget. It records what
+	// a populated two-arm branch costs: both arms carry their own subtree, and
+	// the Solid gate forbids sharing one between them, so the cost is paid twice by
+	// construction rather than by choice.
+	S5: { physicalLoc: 73, structuralNodes: 343 },
 };
 
 describe('honest emitted structure comparison', () => {

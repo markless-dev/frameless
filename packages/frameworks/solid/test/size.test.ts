@@ -126,6 +126,11 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// heavyweight - what a repeat nested inside a repeat costs, recorded as
 	// measured.
 	S4: { physicalLoc: 78, structuralNodes: 438 },
+	// S5 likewise has no handwritten reference, so this is a budget. It records what
+	// a populated two-arm branch costs. Solid pays MORE structural nodes than react
+	// for FEWER physical lines here, which is the <Show> wrapper plus two distinct
+	// arm subtrees the show-two-arm ruling requires be kept distinct.
+	S5: { physicalLoc: 72, structuralNodes: 357 },
 };
 
 describe('honest emitted structure comparison', () => {

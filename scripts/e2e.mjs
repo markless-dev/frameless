@@ -51,7 +51,11 @@ const officialDemos = [
 ];
 // s4 joined the matrix once a nested repeat sourced from the enclosing repeat
 // item became compilable at all; before that the corpus could not express one.
-const threeWayScenarios = ['s1', 's2', 's3', 's4'];
+// s5 joined it because no branch in the corpus had ever torn a POPULATED subtree
+// down: s1's is selected by a static prop and s2's `@else` arm is empty, so the
+// axis on which block-based, reconciling and RESUMED renderers differ most had
+// no instance at all.
+const threeWayScenarios = ['s1', 's2', 's3', 's4', 's5'];
 // @async/witness is a dev tool of the workspace, already installed for the ssr
 // and persistence demos. The runner aliases '@async/witness' for the box files
 // it loads, so the official demos run boxes without depending on it themselves.

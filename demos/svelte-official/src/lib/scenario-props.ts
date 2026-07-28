@@ -25,3 +25,12 @@ export const s4Seed = [
 	{ id: 'g1', rows: [{ id: 'r1' }, { id: 'r2' }] },
 	{ id: 'g2', rows: [{ id: 'r3' }] }
 ];
+
+/**
+ * S5's branch seed. Three rows, because the scenario drops the first one while
+ * the subtree that renders them is torn down and then requires the rebuilt arm
+ * to hold exactly the remaining two — a count that is neither the original nor
+ * zero, so a rebuild from a stale snapshot and a rebuild from nothing are
+ * distinguishable from each other and from a correct one.
+ */
+export const s5Seed = [{ id: 'k1' }, { id: 'k2' }, { id: 'k3' }];

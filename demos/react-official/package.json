@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "copy-emitted": "node -e \"require('fs').mkdirSync('src/emitted',{recursive:true});[['S1','RenderOnce'],['S2','KeyedTodo'],['S3','EventForm'],['S4','NestedBoard']].forEach(([s,n])=>require('fs').copyFileSync('../../packages/frameworks/react/generated/'+s+'.jsx','src/emitted/'+n+'.jsx'))\"",
+    "copy-emitted": "node -e \"require('fs').mkdirSync('src/emitted',{recursive:true});[['S1','RenderOnce'],['S2','KeyedTodo'],['S3','EventForm'],['S4','NestedBoard'],['S5','BranchBoard']].forEach(([s,n])=>require('fs').copyFileSync('../../packages/frameworks/react/generated/'+s+'.jsx','src/emitted/'+n+'.jsx'))\"",
     "dev": "pnpm copy-emitted && node server",
     "build": "pnpm copy-emitted && vite build --outDir dist/client && vite build --ssr src/entry-server.jsx --outDir dist/server"
   },

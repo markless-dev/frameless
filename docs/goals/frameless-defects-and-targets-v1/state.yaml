@@ -131,7 +131,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T026
+active_task: T027
 
 tasks:
   - id: T001
@@ -3118,10 +3118,64 @@ tasks:
         - "Two generated files were TEMPORARILY mutated or moved to make instruments FAIL - never to make anything pass - and restored byte-identically, verified with shasum -a 256 -c."
       remaining_blockers: []
       stopped_because: null
+  - id: T037
+    type: pm
+    assignee: PM
+    status: done
+    reasoning_hint: low
+    objective: "Record S5's size budget in the react and solid budget tables, unblocking T026's pnpm test."
+    why_this_is_a_PM_task_and_not_a_Worker: >-
+      TWO LITERAL ROWS WITH VALUES THAT ARE ALREADY MEASURED. T026 measured them and reported them
+      in its receipt (react S5 physicalLoc 73 / structuralNodes 343; solid S5 physicalLoc 72 /
+      structuralNodes 357) but could not write them - both files are outside its allowed_files and
+      it correctly stopped rather than reach. Spawning a subagent to paste two measured rows is
+      disproportionate. THIS CARD EXPLICITLY ALLOWS THE PM TO EDIT THE TWO PRODUCT FILES NAMED
+      BELOW, which the execution contract permits only when a PM task says so in writing.
+      THE VALUES ARE NOT PASTED ON TRUST: the budget test is exact in both directions, so a wrong
+      number fails immediately and in the right direction. pnpm test IS the verification.
+    not_a_derivation_defect: >-
+      Worth stating so it is not misread as one. T035/T036 made every corpus INVENTORY derived, and
+      that worked perfectly here - S5 was picked up with ZERO edits everywhere derivation applies.
+      A SIZE BUDGET IS A RECORDED MEASUREMENT AND CANNOT BE DERIVED; every new scenario needs one,
+      and the budget test's own comment said so in advance. T027, T030 and T031 have had both files
+      added to their allowed_files so this does not recur.
+    allowed_files:
+      - packages/frameworks/react/test/size.test.ts
+      - packages/frameworks/solid/test/size.test.ts
+    verify:
+      - "pnpm test   # must go from 925/929 to fully green"
+      - "pnpm lint"
+      - "git diff --exit-code -- packages/frameworks/react/generated packages/frameworks/solid/generated   # no emitted output moves"
+    constraints:
+      - "Record what S5 MEASURES, not a rounded or tidied number. S4's row carries a comment explaining why it is the structural heavyweight; S5's should likewise say what a populated two-arm branch costs."
+      - "If either measured value disagrees with T026's reported figure, TRUST THE TEST and record the discrepancy - a budget that disagrees with its own measurement is the finding, not the number."
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      summary: "Recorded S5's size budget in both budget tables, unblocking T026's pnpm test. react S5 { physicalLoc: 73, structuralNodes: 343 }, solid S5 { physicalLoc: 72, structuralNodes: 357 } - each with a comment stating what a populated two-arm branch costs and why the Solid figure is higher for fewer lines."
+      the_values_were_confirmed_not_trusted: "T026 measured these and reported them from outside its allowed_files. The budget test is EXACT IN BOTH DIRECTIONS, so a wrong number fails immediately and in the right direction - which makes pnpm test the verification rather than the PM's care. Both matched on the first run: 929 passed / 50 files, up from 925 passed / 4 failed. Had either disagreed, the card required recording the discrepancy as the finding rather than adjusting the number."
+      why_the_PM_did_this_directly: "Two literal rows with already-measured values. Spawning a subagent would have been disproportionate, and the execution contract permits a PM task to touch product files when the card says so in writing - which T037 does, naming exactly two paths."
+      not_a_derivation_defect: "Stated so it is not misread as one. T035/T036 made every corpus INVENTORY derived and that worked perfectly - S5 was picked up with ZERO edits everywhere derivation applies. A size budget is a RECORDED MEASUREMENT and cannot be derived. T027, T030 and T031 now carry both files in allowed_files so this does not recur."
+      changed_files:
+        - packages/frameworks/react/test/size.test.ts
+        - packages/frameworks/solid/test/size.test.ts
+      commands:
+        - cmd: "pnpm test"
+          status: pass
+          note: "929 passed / 50 files, up from 925 passed with 4 failing"
+        - cmd: "pnpm lint"
+          status: pass
+        - cmd: "git diff --exit-code -- packages/frameworks/react/generated packages/frameworks/solid/generated"
+          status: pass
+          note: "no emitted output moved"
+      deviations: []
+      remaining_blockers: []
+      stopped_because: null
   - id: T026
     type: worker
     assignee: Worker
-    status: active
+    status: blocked
     reasoning_hint: high
     spec: "T024 ruling - AUTHORITATIVE."
     depends_on: ["T025"]
@@ -3203,13 +3257,124 @@ tasks:
       - "You are about to weaken an existing activation-neutrality assertion to make the scenario pass."
       - "Need files outside allowed_files."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: blocked
+      harness: claude-code
+      verification_attempts: 2
+      note: notes/T026-corpus-s5-branch-teardown.md
+      blocked_reason: "pnpm test could not go green without editing packages/frameworks/{react,solid}/test/size.test.ts, both outside allowed_files. Neither was touched. The two mutate:corpus commands are separately blocked on the dirty-surface precondition, which was expected and NOT worked around - no temporary commit was created this time."
+      summary: "S5 conditional branch teardown landed in ALL SIX lanes: a branch guarded by state, POPULATED ON BOTH ARMS, holding a keyed list and two handlers that are destroyed and rebuilt. pnpm e2e reports 6 demos x 5 scenarios, all observations equal - 30 byte-identical records. Zero-read sites re-derived independently with a walker that enumerates no node kinds at all: 0 of 14. No emitter threw; capability guards measured clean. Six mutants registered, one per lane idiom, each byte-verified."
+      A_STANDING_SOLID_RULING_REFUSED_THE_OBVIOUS_FIXTURE_AND_THAT_IS_THE_FINDING: "The first S5 emission put the same two elements in BOTH arms, so one reader would work either side of the flip - the obvious design. packages/frameworks/solid/src/gate/custom-policies.ts:624-634 rejected it: 'Show contains duplicated-arm element content; hoist shared content outside the branch' (policy show-two-arm, T003 ruling 5). THE RULING IS RIGHT AND HAD NEVER MET A TWO-POPULATED-ARM BRANCH BEFORE. Its prescribed remedy - hoist out of the branch - IS THE ONE REPAIR THIS SCENARIO CANNOT MAKE, because the projections must live inside the subtree being destroyed. The arms were made to differ instead (data-live-ticks / data-idle-ticks). S6-S8 INHERIT THIS: in the Solid lane the two arms of a branch may not share an element subtree. A rule meeting its first real instance and holding, while its remedy turns out inapplicable, is exactly what corpus breadth is for."
+      the_mutants_target_the_axis_not_the_markup: "One axis, one idiom per lane: the list stops reading `entries` state and reads the `seed` prop, so the arm is REBUILT AS IT STOOD AT TEARDOWN. Silent for five of seven observations and red only at the rebuild - which is the point, since a mutant that reddens everything is not testing teardown. All six red at the in-box assertion: \"expected '[data-branch-rows=\\\"true\\\"] > li:first-child' attribute 'data-oracle-branch-key' to be 'k2', but it was 'k1'\"."
+      it_refused_to_call_a_hand_run_a_harness_verdict: "The six red sites were established by a hand run of the harness's own steps MINUS every git operation, with sha256-verified restoration. The Worker explicitly declined to report that as a harness verdict and left both mutate:corpus commands as blocked. That distinction is the whole difference between evidence and a claim, and this board has spent four tasks learning to insist on it."
+      changed_files:
+        - packages/compiler/test/fixtures/s5-branch-teardown.tsrx
+        - packages/compiler/test/goldens/s5-branch-teardown.json
+        - packages/compiler/test/enriched-ir.test.ts
+        - packages/frameworks/react/scripts/regenerate.ts
+        - packages/frameworks/react/generated/S5.jsx
+        - packages/frameworks/solid/scripts/regenerate.ts
+        - packages/frameworks/solid/generated/S5.jsx
+        - packages/frameworks/qwik/scripts/regenerate.ts
+        - packages/frameworks/qwik/generated/S5.jsx
+        - packages/frameworks/svelte/scripts/regenerate.ts
+        - packages/frameworks/svelte/generated/S5.svelte
+        - packages/frameworks/vue/scripts/regenerate.ts
+        - packages/frameworks/vue/generated/S5.vue
+        - packages/frameworks/angular/scripts/regenerate.ts
+        - packages/frameworks/angular/generated/S5.ts
+        - demos/react-official/package.json
+        - demos/react-official/src/App.jsx
+        - demos/react-official/src/emitted/BranchBoard.jsx
+        - demos/react-official/scenarios.box.ts
+        - demos/react-official/three-way-contract.ts
+        - demos/solid-official/package.json
+        - demos/solid-official/src/App.jsx
+        - demos/solid-official/src/emitted/BranchBoard.jsx
+        - demos/solid-official/scenarios.box.ts
+        - demos/qwik/package.json
+        - demos/qwik/src/emitted/BranchBoard.jsx
+        - demos/qwik/src/routes/s5/index.tsx
+        - demos/qwik/scenarios.box.ts
+        - demos/svelte-official/package.json
+        - demos/svelte-official/src/lib/emitted/BranchBoard.svelte
+        - demos/svelte-official/src/lib/scenario-props.ts
+        - "demos/svelte-official/src/routes/s5/+page.svelte"
+        - demos/svelte-official/scenarios.box.ts
+        - demos/vue-official/package.json
+        - demos/vue-official/src/emitted/BranchBoard.vue
+        - demos/vue-official/src/App.vue
+        - demos/vue-official/src/scenario-props.ts
+        - demos/vue-official/scenarios.box.ts
+        - demos/angular-official/package.json
+        - demos/angular-official/src/emitted/BranchBoard.ts
+        - demos/angular-official/src/app/app.routes.ts
+        - demos/angular-official/src/app/scenario-props.ts
+        - demos/angular-official/scenarios.box.ts
+        - scripts/e2e.mjs
+        - scripts/corpus-mutation.mjs
+        - docs/goals/frameless-defects-and-targets-v1/notes/T026-corpus-s5-branch-teardown.md
+      commands:
+        - cmd: "UPDATE_GOLDENS=1 pnpm test, then pnpm test without it"
+          status: pass
+          note: "s5 golden created and byte-stable; S1-S4 goldens unmoved"
+        - cmd: "pnpm --dir packages/frameworks/{react,solid,qwik,svelte,vue,angular}/ regenerate"
+          status: pass
+          note: "no emitter threw on the S5 IR; all six sha256-stable across a second regeneration"
+        - cmd: "pnpm check"
+          status: pass
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 354 files"
+        - cmd: "pnpm test:browser"
+          status: pass
+          note: "react 60, solid 49, svelte 13, vue 18 - identical to dispatch"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "6 demos x 5 scenarios, all observations equal; the six s5 rows sort -u to ONE line"
+        - cmd: "git diff --exit-code -- packages/frameworks/*/generated"
+          status: pass
+          note: "also verified by sha256, because the six S5 files are UNTRACKED and a tracked-content diff is vacuous for them - a good catch"
+        - cmd: "git status --short"
+          status: pass
+          note: "no commit made"
+        - cmd: "pnpm test"
+          status: fail
+          note: "925 passed / 4 failed, ALL FOUR in the two size.test.ts budget files outside allowed_files. Discharged by T037"
+        - cmd: "pnpm mutate:corpus --scenario s5"
+          status: blocked
+          note: "assertCleanSurface() refuses; registering S5 necessarily dirties the surface. NOT worked around"
+        - cmd: "pnpm mutate:corpus --scenario s1..s4"
+          status: blocked
+          note: "same precondition; the 24/24 regression check is explicitly NOT claimed here"
+      deviations:
+        - "EDITED scripts/corpus-mutation.mjs, which is NOT in this card's allowed_files. The dispatch text explicitly directed it and the verify list required `pnpm mutate:corpus --scenario s5`, which is impossible without a SCENARIO_FILES entry and six MUTANTS rows living in that file. PM ACCEPTS AND OWNS THE DEFECT: T024 section 7 dropped the file on the grounds 'the harness already exists', which is true of the harness and FALSE OF THE MUTANTS INSIDE IT. Corrected on T027, and T030/T031 inherit the fix."
+        - "The two branch arms project the same state through DIFFERENT markers rather than one shared marker - forced by the Solid show-two-arm policy, see the finding above."
+        - "Byte-stability of the six generated/S5.* proven by sha256 across a second regeneration rather than by git diff --exit-code, which is VACUOUS for untracked files. The git command was still run and is clean, covering S1-S4."
+      remaining_blockers:
+        - "OPEN FINDING FOR S6-S8: the Solid dossier gate (show-two-arm, T003 ruling 5) rejects any element subtree appearing verbatim in both arms of a <Show>, and its prescribed remedy - hoist out of the branch - is unavailable to any scenario whose claim is ABOUT the branch's contents."
+        - "The two mutate:corpus runs are owed by the PM after committing."
+      pm_error_recorded: "THE DISPATCH TOLD THIS WORKER 'Nothing else is running.' THAT WAS FALSE - the Vue T999 and T009 Judges were writing docs/goals/frameless-vue-v1 concurrently. The Worker noticed, checked disjointness itself, and reported it rather than assuming. No verdict is affected (the paths are disjoint from its files and from MUTATION_SURFACE), but its warning is the useful part: pnpm mutate:corpus runs `git checkout --` over its surface, so a live Worker inside packages/frameworks/** during a harness run could have work reverted underneath it. The PM will confirm quiescence before every future harness run rather than asserting it."
+      spawned_tasks:
+        - T037
+      stopped_because: "Need files outside allowed_files - the two size budget tables."
   - id: T027
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
+    pm_card_defect_corrected_from_T026: >-
+      T026 SHIPPED WITH scripts/corpus-mutation.mjs MISSING FROM ITS allowed_files while its
+      dispatch text directed "add one S5 mutant per lane to MUTANTS in scripts/corpus-mutation.mjs"
+      and its verify required `pnpm mutate:corpus --scenario s5` - which is impossible without a
+      SCENARIO_FILES entry and six MUTANTS rows living in that exact file. T024 section 7 dropped it
+      on the grounds that "the harness already exists", WHICH IS TRUE OF THE HARNESS AND FALSE OF
+      THE MUTANTS INSIDE IT. The Worker edited it and declared the deviation, which was the right
+      call. ADDED HERE, and to T030 and T031.
+      ALSO ADDED: the two size.test.ts budget files. T026 was blocked by them and they are NOT an
+      inventory-derivation defect - T035/T036's derivation picked S5 up with ZERO edits everywhere
+      it applies. A size budget is a RECORDED MEASUREMENT and cannot be derived; every new scenario
+      needs one, and the test's own comment says so in advance.
     spec: "T024 ruling - AUTHORITATIVE."
     depends_on: ["T026"]
     objective: "Land S6 WHITESPACE-SENSITIVE TEXT across all SIX targets, with its mutation budget proven RED."
@@ -3264,6 +3429,9 @@ tasks:
       - demos/angular-official/src/app/scenario-props.ts
       - demos/angular-official/scenarios.box.ts
       - scripts/e2e.mjs
+      - scripts/corpus-mutation.mjs
+      - packages/frameworks/react/test/size.test.ts
+      - packages/frameworks/solid/test/size.test.ts
       - docs/goals/frameless-defects-and-targets-v1/notes/T027-corpus-s6-whitespace.md
     verify:
       - "pnpm --dir packages/compiler exec vitest run   # goldens regenerated with UPDATE_GOLDENS=1, then re-run WITHOUT it"

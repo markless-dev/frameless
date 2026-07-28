@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "copy-emitted": "node -e \"require('fs').mkdirSync('src/emitted',{recursive:true});[['S1','RenderOnce'],['S2','KeyedTodo'],['S3','EventForm'],['S4','NestedBoard']].forEach(([s,n])=>require('fs').copyFileSync('../../packages/frameworks/angular/generated/'+s+'.ts','src/emitted/'+n+'.ts'))\"",
+    "copy-emitted": "node -e \"require('fs').mkdirSync('src/emitted',{recursive:true});[['S1','RenderOnce'],['S2','KeyedTodo'],['S3','EventForm'],['S4','NestedBoard'],['S5','BranchBoard']].forEach(([s,n])=>require('fs').copyFileSync('../../packages/frameworks/angular/generated/'+s+'.ts','src/emitted/'+n+'.ts'))\"",
     "start": "pnpm copy-emitted && ng serve",
     "build": "pnpm copy-emitted && ng build",
     "build:e2e": "pnpm copy-emitted && ng build --configuration development",

@@ -30,9 +30,9 @@
  */
 import type { EnvironmentResponse, ExpectApi, PageHandle } from '@async/witness'
 
-export type ScenarioId = 's1' | 's2' | 's3' | 's4'
+export type ScenarioId = 's1' | 's2' | 's3' | 's4' | 's5'
 
-export const scenarioIds: readonly ScenarioId[] = ['s1', 's2', 's3', 's4']
+export const scenarioIds: readonly ScenarioId[] = ['s1', 's2', 's3', 's4', 's5']
 
 /**
  * How each framework becomes interactive. React, Solid, Svelte, Vue and Angular
@@ -299,6 +299,25 @@ export function measureGroupKeys(html: string): string[] {
 }
 
 /**
+ * Every row identity inside S5's branch arm, in document order.
+ *
+ * A THIRD key attribute, for the same reason S4 introduced the second one.
+ * `measureRowKeys` matches `data-oracle-row-key` globally and `measureCellKeys`
+ * matches `data-oracle-cell-key`; a scenario reusing either would silently join
+ * that scenario's observation string, and S2's and S4's reads have to keep
+ * measuring exactly what they measured before S5 existed.
+ *
+ * Unscoped on purpose, unlike `measureCellKeys`. S5's claim is not containment
+ * but PRESENCE: the list lives inside the branch, so after the flip it is gone
+ * from the document entirely and this reads `[]`. A scoped read would have to
+ * locate a container that is not there and would throw where a measurement of
+ * zero rows is the observation.
+ */
+export function measureBranchKeys(html: string): string[] {
+  return measureKeyAttribute(html, 'data-oracle-branch-key')
+}
+
+/**
  * The INNER row identities inside one named group's list, in document order.
  *
  * Scoped to that group's own `<ul data-rows="…">`, and the scoping is the whole
@@ -474,6 +493,29 @@ export const resumeSymbols: Record<
   // list at most (s2's is `section_ul_li_button`), because until a nested repeat
   // became compilable there was no deeper site to resume into.
   s4: { includes: '_button_q_e_click_', atLeast: 3 },
+  // S5 issues six clicks across four DISTINCT handlers: `tick` and `pick`
+  // inside the live arm, `toggle` on the board, `drop` inside the idle arm, and
+  // then `tick` again once the live arm has been torn down and rebuilt.
+  //
+  // MEASURED off this lane's own `handlerSegments` evidence — four segments, in
+  // click order, verbatim:
+  //
+  //   BranchBoard.jsx_BranchBoard_component_section_div_button_q_e_click_pnwm0Iro4cY.js
+  //   BranchBoard.jsx_BranchBoard_component_section_div_ul_li_button_q_e_click_DmbcW4Vyi08.js
+  //   BranchBoard.jsx_BranchBoard_component_section_button_q_e_click_FhhLDdsOJNA.js
+  //   BranchBoard.jsx_BranchBoard_component_section_div_button_q_e_click_1_X4FkrWt0H4w.js
+  //
+  // The first two are handlers resumed from INSIDE a branch arm, and the fourth
+  // — the idle arm's `drop` — is pulled out of a subtree the server never
+  // rendered at all, since the idle arm did not exist until the client built
+  // it. Every other segment in the corpus is resumed out of markup the server
+  // sent; that one is the first that is not.
+  //
+  // SIX clicks, FOUR segments: the second `tick`, on the REBUILT arm, fetched
+  // nothing. The rebuilt subtree's handler resolved from a QRL already imported
+  // for the subtree that was destroyed, which is worth recording because it is
+  // the answer to "did the rebuild rebind" being yes without a second fetch.
+  s5: { includes: '_button_q_e_click_', atLeast: 4 },
 }
 
 function forbidInServedPayload(served: EnvironmentResponse, fragments: string[]): void {
@@ -1107,14 +1149,278 @@ function requireNesting(
 }
 
 /**
+ * The branch as the live DOM currently serializes it.
+ *
+ * `arm` is the observation that carries the teardown. Exactly one arm may exist
+ * at a time, so it is read as the JOINED list of every `data-arm` value in
+ * document order rather than as a single lookup: an emitter that rendered both
+ * arms — the failure mode where a guard has stopped being consulted — reads
+ * `live,idle` here instead of throwing somewhere less legible.
+ *
+ * `ticks` and `seen` are the same two pieces of component state read through
+ * whichever arm is mounted — `data-live-ticks` while the live arm exists and
+ * `data-idle-ticks` after it has been destroyed. The marker is derived from the
+ * arm rather than shared between the arms, and that is a measured constraint
+ * rather than a naming preference: `packages/frameworks/solid/src/gate` rejects
+ * an element subtree appearing verbatim in both arms of a `<Show>`
+ * (`show-two-arm`, T003 ruling 5) and tells the author to hoist it out of the
+ * branch. Hoisting is precisely what this scenario must not do, since the point
+ * is that the projections live inside the subtree that gets torn down.
+ *
+ * If the two arms are ever mounted at once, the derived marker is not a name any
+ * element carries — so both values read `(no single arm)` and `requireBranch`
+ * fails on `arm` first, with the sentence that names the actual fault, instead
+ * of on a reader that could not find its element.
+ *
+ * `rows` is unscoped and reads `[]` once the branch is torn down. That is a
+ * measurement, not an absence: the keyed list lives inside the live arm, so its
+ * disappearance is half of what teardown means.
+ */
+async function measureBranch(page: PageHandle): Promise<{
+  arm: string
+  rows: string
+  size: string
+  ticks: string
+  seen: string
+}> {
+  const html = await page.content()
+  const arms = measureKeyAttribute(html, 'data-arm')
+  const throughArm = (name: string): string =>
+    arms.length === 1 ? measureText(html, `data-${arms[0]}-${name}="true"`) : '(no single arm)'
+  return {
+    arm: arms.join(','),
+    rows: `[${measureBranchKeys(html).join(',')}]`,
+    size: measureText(html, 'data-count="size"'),
+    ticks: throughArm('ticks'),
+    seen: throughArm('seen'),
+  }
+}
+
+/**
+ * The branch assertion, hand-rolled for the same reason `requireNesting` is:
+ * the sentence a failure raises has to name which half of teardown broke, and
+ * `expect.page.*` has no accessor that can compare "which arm is mounted" at
+ * all.
+ */
+function requireBranch(
+  actual: { arm: string; rows: string; ticks: string; seen: string },
+  expected: { arm: string; rows: string; ticks: string; seen: string; step: string },
+): void {
+  if (actual.arm !== expected.arm) {
+    throw new Error(
+      `${expected.step} the mounted arm reads ${JSON.stringify(actual.arm)}, not ` +
+        `${JSON.stringify(expected.arm)}. Exactly one arm may exist at a time — a reading of ` +
+        '"live,idle" means both arms are in the document, which is what a branch whose guard ' +
+        'has stopped being consulted looks like.',
+    )
+  }
+  if (actual.rows !== expected.rows) {
+    throw new Error(
+      `${expected.step} the branch rows read ${actual.rows}, not ${expected.rows}. The keyed ` +
+        'list lives INSIDE the live arm, so it must be absent entirely while the idle arm is ' +
+        'mounted and must be rebuilt from current state — not from the state it held when it ' +
+        'was torn down — when the live arm comes back.',
+    )
+  }
+  if (actual.ticks !== expected.ticks || actual.seen !== expected.seen) {
+    throw new Error(
+      `${expected.step} the arm projects ticks=${JSON.stringify(actual.ticks)} ` +
+        `seen=${JSON.stringify(actual.seen)}, not ticks=${JSON.stringify(expected.ticks)} ` +
+        `seen=${JSON.stringify(expected.seen)}. Both values are component state whose ONLY DOM ` +
+        'projection is inside a branch arm, so this is the claim that destroying the subtree ' +
+        'did not destroy the state behind it.',
+    )
+  }
+}
+
+/**
+ * S5 — conditional branch teardown: a branch toggled at runtime, with a
+ * populated arm on BOTH sides, that destroys and rebuilds a subtree holding a
+ * keyed list and two event handlers.
+ *
+ * ## Why this scenario exists at all
+ *
+ * The corpus had branches before S5 and none of them ever tore anything down.
+ * `s1`'s branch is selected by a STATIC prop (`visible={true}`, the same in
+ * every lane's props) and cannot flip; `s2`'s `@else` arm is literally empty
+ * and its `@if` arm is a static `<p>`. So no lane in this repo had ever been
+ * observed destroying a populated subtree and rebuilding it — which is the axis
+ * on which block-based renderers (Svelte, Vue, Angular's `@if`), reconciling
+ * renderers (React, Solid) and a RESUMED one (Qwik) differ most.
+ *
+ * It is also the axis that fails silently. T020 found a guarded control that
+ * stayed CORRECT while its guard had stopped being consulted; nothing in the
+ * corpus could have caught the same class here, because nothing flipped.
+ *
+ * ## The five transitions, and what each one isolates
+ *
+ * | step | what must move | what must not |
+ * |---|---|---|
+ * | `tick` (inside the live arm) | `ticks` | the arm, the rows |
+ * | `pick` (inside the list inside the arm) | `seen` | the arm, the rows |
+ * | `toggle` | the mounted arm, the rows to `[]` | `ticks`, `seen` |
+ * | `drop` (inside the IDLE arm) | `size` | the mounted arm, `ticks`, `seen` |
+ * | `toggle` back | the mounted arm, the rows to the POST-drop list | `ticks`, `seen` |
+ *
+ * `drop` and the second `toggle` are a pair on purpose, and they are the pair
+ * that makes this a teardown test rather than a visibility test. `drop` mutates
+ * the collection whose only rendering lives in the arm that is currently GONE.
+ * An emitter that rebuilt the arm from anything other than current state — a
+ * cached subtree, the original prop, a snapshot taken at teardown — satisfies
+ * every step above it and fails here, and it fails with the rows reading
+ * `[k1,k2,k3]` where `[k2,k3]` is required.
+ *
+ * ## Why the last step is a second `tick`
+ *
+ * A rebuilt subtree that renders correctly but whose handlers were never
+ * rebound is indistinguishable from a correct one until something is clicked
+ * inside it. This matters most for the resumed lane: Qwik has to pull a QRL for
+ * a button in a subtree the SERVER NEVER RENDERED, since the live arm was
+ * destroyed and rebuilt on the client. Nothing else in the corpus asks that.
+ *
+ * ## Why no `<details>`
+ *
+ * Uncontrolled DOM state inside the torn-down arm would have given a "correctly
+ * does NOT survive" reading, and it was deliberately left out: whether a
+ * particular framework preserves a detached element is an implementation
+ * detail, not a shared contract, and this scenario is compared byte-for-byte
+ * across six lanes. The "does not survive" half is carried instead by `rows`
+ * going to `[]` and coming back POST-drop, both of which are the same fact in
+ * every renderer.
+ *
+ * Nothing here reads `data-oracle-row-key` or `data-oracle-cell-key`: S2 and S4
+ * own those, and S5 keys its rows with `data-oracle-branch-key` so their reads
+ * are untouched by a branch scenario joining the corpus.
+ */
+export async function assertS5(page: PageHandle, expect: ExpectApi): Promise<string[]> {
+  const observed: string[] = []
+  await expect.page.exists(page, '[data-scenario="s5"]')
+  await expect.page.exists(page, '[data-arm="live"]')
+  await expect.page.text(page, '[data-count="size"]', '3')
+  await expect.page.text(page, '[data-live-ticks="true"]', '0')
+
+  const initial = await measureBranch(page)
+  requireBranch(initial, {
+    arm: 'live',
+    rows: '[k1,k2,k3]',
+    ticks: '0',
+    seen: 'none',
+    step: 'as served',
+  })
+  observed.push(
+    `server-rendered arm ${initial.arm} holds rows ${initial.rows} with size = ${initial.size}, ` +
+      `ticks = ${initial.ticks} and seen = ${initial.seen}`,
+  )
+
+  // A handler INSIDE the arm that is about to be torn down.
+  await page.click('[data-action="tick"]')
+  await expect.page.text(page, '[data-live-ticks="true"]', '1')
+  const ticked = await measureBranch(page)
+  requireBranch(ticked, {
+    arm: 'live',
+    rows: '[k1,k2,k3]',
+    ticks: '1',
+    seen: 'none',
+    step: 'after one tick',
+  })
+  observed.push(`after one tick inside the live arm ticks = ${ticked.ticks} and seen = ${ticked.seen}`)
+
+  // A handler inside the keyed list inside the arm.
+  await page.click('[data-pick="k2"]')
+  await expect.page.text(page, '[data-live-seen="true"]', 'k2')
+  const picked = await measureBranch(page)
+  requireBranch(picked, {
+    arm: 'live',
+    rows: '[k1,k2,k3]',
+    ticks: '1',
+    seen: 'k2',
+    step: 'after picking k2',
+  })
+  observed.push(`after picking k2 seen = ${picked.seen} and the rows are still ${picked.rows}`)
+
+  // TEARDOWN. The live arm and everything in it is destroyed; the state behind
+  // it must survive and the idle arm must project it.
+  await page.click('[data-action="toggle"]')
+  await expect.page.exists(page, '[data-arm="idle"]')
+  const flipped = await measureBranch(page)
+  requireBranch(flipped, {
+    arm: 'idle',
+    rows: '[]',
+    ticks: '1',
+    seen: 'k2',
+    step: 'after the flip',
+  })
+  observed.push(
+    `after the flip arm ${flipped.arm} holds rows ${flipped.rows} with ticks = ${flipped.ticks} ` +
+      `and seen = ${flipped.seen}`,
+  )
+
+  // The collection changes while the subtree that renders it does not exist.
+  await page.click('[data-action="drop"]')
+  await expect.page.text(page, '[data-count="size"]', '2')
+  const dropped = await measureBranch(page)
+  requireBranch(dropped, {
+    arm: 'idle',
+    rows: '[]',
+    ticks: '1',
+    seen: 'k2',
+    step: 'after dropping while the live arm is torn down',
+  })
+  observed.push(
+    `after dropping while the live arm is torn down size = ${dropped.size} and arm ` +
+      `${dropped.arm} still holds rows ${dropped.rows}`,
+  )
+
+  // REBUILD, from CURRENT state rather than from the state the arm held when it
+  // was destroyed.
+  await page.click('[data-action="toggle"]')
+  await expect.page.exists(page, '[data-arm="live"]')
+  await expect.page.attribute(
+    page,
+    '[data-branch-rows="true"] > li:first-child',
+    'data-oracle-branch-key',
+    'k2',
+  )
+  const rebuilt = await measureBranch(page)
+  requireBranch(rebuilt, {
+    arm: 'live',
+    rows: '[k2,k3]',
+    ticks: '1',
+    seen: 'k2',
+    step: 'after the flip back',
+  })
+  observed.push(
+    `after the flip back arm ${rebuilt.arm} holds rows ${rebuilt.rows} with size = ` +
+      `${rebuilt.size}, ticks = ${rebuilt.ticks} and seen = ${rebuilt.seen}`,
+  )
+
+  // The rebuilt subtree's handlers are live. For the resumed lane this is a QRL
+  // pulled from markup the server never sent.
+  await page.click('[data-action="tick"]')
+  await expect.page.text(page, '[data-live-ticks="true"]', '2')
+  const reticked = await measureBranch(page)
+  requireBranch(reticked, {
+    arm: 'live',
+    rows: '[k2,k3]',
+    ticks: '2',
+    seen: 'k2',
+    step: 'after one more tick in the rebuilt arm',
+  })
+  observed.push(
+    `after one more tick in the rebuilt arm ticks = ${reticked.ticks} and rows are ${reticked.rows}`,
+  )
+  return observed
+}
+
+/**
  * Every scenario is handed both sites — the live page and the payload the
- * server sent for it — and reads each observation from the one it names. S1, S2
- * and S4 observe only live state and declare two parameters; S3 observes both.
+ * server sent for it — and reads each observation from the one it names. S1, S2,
+ * S4 and S5 observe only live state and declare two parameters; S3 observes both.
  */
 const assertions: Record<
   ScenarioId,
   (page: PageHandle, expect: ExpectApi, served: EnvironmentResponse) => Promise<string[]>
-> = { s1: assertS1, s2: assertS2, s3: assertS3, s4: assertS4 }
+> = { s1: assertS1, s2: assertS2, s3: assertS3, s4: assertS4, s5: assertS5 }
 
 /**
  * Runs one scenario end to end: wait for the framework to be able to react,

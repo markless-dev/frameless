@@ -7,11 +7,11 @@ import {
 
 // The Qwik router normalizes nested routes to a trailing slash; visiting the
 // canonical form keeps the lane free of a redirect navigation.
-const paths = { s1: '/', s2: '/s2/', s3: '/s3/', s4: '/s4/' } as const
+const paths = { s1: '/', s2: '/s2/', s3: '/s3/', s4: '/s4/', s5: '/s5/' } as const
 
 export default box(
 	{
-		name: 'qwik — S1/S2/S3/S4 from emitted output',
+		name: 'qwik — S1/S2/S3/S4/S5 from emitted output',
 		modes: ['dev'],
 		tags: ['three-way'],
 	},

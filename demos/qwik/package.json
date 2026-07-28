@@ -10,7 +10,7 @@
     "build.preview": "vite build --ssr src/entry.preview.tsx",
     "build": "pnpm copy-emitted && pnpm build.client && pnpm build.preview",
     "preview": "pnpm build && vite preview",
-    "copy-emitted": "node -e \"require('fs').mkdirSync('src/emitted',{recursive:true});[['S1','RenderOnce'],['S2','KeyedTodo'],['S3','EventForm'],['S4','NestedBoard']].forEach(([s,n])=>require('fs').copyFileSync('../../packages/frameworks/qwik/generated/'+s+'.jsx','src/emitted/'+n+'.jsx'))\""
+    "copy-emitted": "node -e \"require('fs').mkdirSync('src/emitted',{recursive:true});[['S1','RenderOnce'],['S2','KeyedTodo'],['S3','EventForm'],['S4','NestedBoard'],['S5','BranchBoard']].forEach(([s,n])=>require('fs').copyFileSync('../../packages/frameworks/qwik/generated/'+s+'.jsx','src/emitted/'+n+'.jsx'))\""
   },
   "dependencies": {
     "@qwik.dev/core": "2.0.0-beta.38",

@@ -154,7 +154,7 @@ const LANES = [
 	},
 ];
 
-const SCENARIO_FILES = { s1: 'S1', s2: 'S2', s3: 'S3', s4: 'S4' };
+const SCENARIO_FILES = { s1: 'S1', s2: 'S2', s3: 'S3', s4: 'S4', s5: 'S5' };
 
 // ---------------------------------------------------------------------------
 // Byte-verified text surgery
@@ -284,6 +284,37 @@ const s4ForVariableOrderSwapped = (find, replacement) => ({
 	apply: (source) => replaceOnce(source, find, replacement),
 });
 
+/**
+ * S5's axis, in all six lanes: the branch arm is REBUILT FROM CURRENT STATE.
+ *
+ * The keyed list inside the live arm stops being sourced from the `entries`
+ * state and becomes a fixed reference to the `seed` PROP the component was
+ * handed — the collection as it stood when the arm was first built, and
+ * therefore also as it stood when the arm was torn down.
+ *
+ * This is chosen over the blunter alternative of freezing the branch condition
+ * (`@if (true)`, `v-if="true"`, `<Show when={true}>`), which would go red on the
+ * very first flip and would only prove the guard is consulted. This one is
+ * SILENT for every step until the last two: `entries` starts as `seed.slice()`,
+ * so the served page, the tick, the pick, the teardown and the drop all read
+ * exactly as they do on a correct lane. It goes red only when the arm comes
+ * BACK, because the collection changed while the subtree that renders it did not
+ * exist — which is the one thing a scenario about teardown is for. A survivor
+ * here would mean the rebuild step is decorative.
+ *
+ * Spelled in each lane's own repeat idiom, not inherited between lanes: a
+ * `.map()` call site in react and qwik, `<For each>` in solid, `{#each}` in
+ * svelte, `v-for` in vue and `@for` in angular.
+ */
+const s5RebuiltFromStaleCollection = (find, replacement) => ({
+	axis: 'the torn-down arm is REBUILT from current state, not from the state it held',
+	text: `${find}  ->  ${replacement}`,
+	expect:
+		'`drop` lands while the live arm does not exist, so the rebuilt arm renders the ' +
+		'pre-drop rows [k1,k2,k3] instead of [k2,k3] — every earlier step still passes',
+	apply: (source) => replaceOnce(source, find, replacement),
+});
+
 const MUTANTS = {
 	react: {
 		s1: s1DerivedFrozen('${count * multiplier}', '${1 * multiplier}'),
@@ -293,6 +324,10 @@ const MUTANTS = {
 			'data-action="cancel-submit"\n\t\t\t\tonClick={(event) => {\n\t\t\t\t\tvoid event;\n\t\t\t\t}}',
 		),
 		s4: s4NestingCollapsed('{group.rows.map((row) => (', '{groups[0].rows.map((row) => ('),
+		s5: s5RebuiltFromStaleCollection(
+			'{entries.map((entry) => (',
+			'{seed.map((entry) => (',
+		),
 	},
 	solid: {
 		s1: s1DerivedFrozen('${count() * props.multiplier}', '${1 * props.multiplier}'),
@@ -302,6 +337,7 @@ const MUTANTS = {
 			'data-action="cancel-submit"\n\t\t\t\tonClick={(event) => {\n\t\t\t\t\tvoid event;\n\t\t\t\t}}',
 		),
 		s4: s4NestingCollapsed('<For each={group.rows}>', '<For each={groups[0].rows}>'),
+		s5: s5RebuiltFromStaleCollection('<For each={entries}>', '<For each={props.seed}>'),
 	},
 	qwik: {
 		s1: s1DerivedFrozen('${count.value * props.multiplier}', '${1 * props.multiplier}'),
@@ -311,6 +347,10 @@ const MUTANTS = {
 			'data-action="cancel-submit"\n\t\t\t\tonClick$={[\n\t\t\t\t\tsync$((event) => {\n\t\t\t\t\t\tvoid event;\n\t\t\t\t\t}),\n\t\t\t\t]}',
 		),
 		s4: s4NestingCollapsed('{group.rows.map((row) => (', '{groups[0].rows.map((row) => ('),
+		s5: s5RebuiltFromStaleCollection(
+			'{entries.map((entry) => (',
+			'{props.seed.map((entry) => (',
+		),
 	},
 	svelte: {
 		s1: s1DerivedFrozen('${count * multiplier}', '${1 * multiplier}'),
@@ -326,6 +366,10 @@ const MUTANTS = {
 			'{#each group.rows as row (row.id)}',
 			'{#each groups[0].rows as row (row.id)}',
 		),
+		s5: s5RebuiltFromStaleCollection(
+			'{#each entries as entry (entry.id)}',
+			'{#each seed as entry (entry.id)}',
+		),
 	},
 	vue: {
 		s1: s1DerivedFrozen('${count.value * props.multiplier}', '${1 * props.multiplier}'),
@@ -335,6 +379,7 @@ const MUTANTS = {
 			'data-action="cancel-submit"\n\t\t\t@click="(event) => {\n\t\t\t\tvoid event;\n\t\t\t}"',
 		),
 		s4: s4NestingCollapsed('v-for="row in group.rows"', 'v-for="row in groups[0].rows"'),
+		s5: s5RebuiltFromStaleCollection('v-for="entry in entries"', 'v-for="entry in seed"'),
 	},
 	angular: {
 		s1: s1DerivedFrozen('${this.count * this.multiplier}', '${1 * this.multiplier}'),
@@ -349,6 +394,10 @@ const MUTANTS = {
 		s4: s4ForVariableOrderSwapped(
 			'onH9Click(group, row, $event)',
 			'onH9Click(row, group, $event)',
+		),
+		s5: s5RebuiltFromStaleCollection(
+			'@for (entry of entries; track entry.id)',
+			'@for (entry of seed; track entry.id)',
 		),
 	},
 };

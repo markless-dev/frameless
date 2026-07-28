@@ -1,0 +1,1987 @@
+{
+  "components": [
+    {
+      "evaluation": {
+        "computedBindings": "reactive",
+        "ordinaryLocals": "once-per-instance"
+      },
+      "guards": [],
+      "id": "component:0:BranchBoard",
+      "locals": [
+        {
+          "declarationKind": "let",
+          "initializer": {
+            "arguments": [
+              {
+                "end": 126,
+                "raw": "'live'",
+                "start": 120,
+                "type": "Literal",
+                "value": "live"
+              }
+            ],
+            "callee": {
+              "end": 119,
+              "name": "state",
+              "start": 114,
+              "type": "Identifier"
+            },
+            "end": 127,
+            "optional": false,
+            "start": 114,
+            "type": "CallExpression"
+          },
+          "names": [
+            "phase"
+          ],
+          "order": 0,
+          "pattern": {
+            "end": 111,
+            "name": "phase",
+            "start": 106,
+            "type": "Identifier"
+          },
+          "reads": [],
+          "semanticRecordIds": [
+            "state:phase"
+          ]
+        },
+        {
+          "declarationKind": "let",
+          "initializer": {
+            "arguments": [
+              {
+                "arguments": [],
+                "callee": {
+                  "computed": false,
+                  "end": 160,
+                  "object": {
+                    "end": 154,
+                    "name": "seed",
+                    "start": 150,
+                    "type": "Identifier"
+                  },
+                  "optional": false,
+                  "property": {
+                    "end": 160,
+                    "name": "slice",
+                    "start": 155,
+                    "type": "Identifier"
+                  },
+                  "start": 150,
+                  "type": "MemberExpression"
+                },
+                "end": 162,
+                "optional": false,
+                "start": 150,
+                "type": "CallExpression"
+              }
+            ],
+            "callee": {
+              "end": 149,
+              "name": "state",
+              "start": 144,
+              "type": "Identifier"
+            },
+            "end": 163,
+            "optional": false,
+            "start": 144,
+            "type": "CallExpression"
+          },
+          "names": [
+            "entries"
+          ],
+          "order": 1,
+          "pattern": {
+            "end": 141,
+            "name": "entries",
+            "start": 134,
+            "type": "Identifier"
+          },
+          "reads": [
+            {
+              "graphNodeId": "prop:props",
+              "path": [
+                "seed"
+              ],
+              "via": "alias"
+            }
+          ],
+          "semanticRecordIds": [
+            "state:entries"
+          ]
+        },
+        {
+          "declarationKind": "let",
+          "initializer": {
+            "arguments": [
+              {
+                "end": 185,
+                "raw": "0",
+                "start": 184,
+                "type": "Literal",
+                "value": 0
+              }
+            ],
+            "callee": {
+              "end": 183,
+              "name": "state",
+              "start": 178,
+              "type": "Identifier"
+            },
+            "end": 186,
+            "optional": false,
+            "start": 178,
+            "type": "CallExpression"
+          },
+          "names": [
+            "ticks"
+          ],
+          "order": 2,
+          "pattern": {
+            "end": 175,
+            "name": "ticks",
+            "start": 170,
+            "type": "Identifier"
+          },
+          "reads": [],
+          "semanticRecordIds": [
+            "state:ticks"
+          ]
+        },
+        {
+          "declarationKind": "let",
+          "initializer": {
+            "arguments": [
+              {
+                "end": 212,
+                "raw": "'none'",
+                "start": 206,
+                "type": "Literal",
+                "value": "none"
+              }
+            ],
+            "callee": {
+              "end": 205,
+              "name": "state",
+              "start": 200,
+              "type": "Identifier"
+            },
+            "end": 213,
+            "optional": false,
+            "start": 200,
+            "type": "CallExpression"
+          },
+          "names": [
+            "seen"
+          ],
+          "order": 3,
+          "pattern": {
+            "end": 197,
+            "name": "seen",
+            "start": 193,
+            "type": "Identifier"
+          },
+          "reads": [],
+          "semanticRecordIds": [
+            "state:seen"
+          ]
+        },
+        {
+          "declarationKind": "const",
+          "initializer": {
+            "arguments": [
+              {
+                "async": false,
+                "body": {
+                  "computed": false,
+                  "end": 258,
+                  "object": {
+                    "end": 251,
+                    "name": "entries",
+                    "start": 244,
+                    "type": "Identifier"
+                  },
+                  "optional": false,
+                  "property": {
+                    "end": 258,
+                    "name": "length",
+                    "start": 252,
+                    "type": "Identifier"
+                  },
+                  "start": 244,
+                  "type": "MemberExpression"
+                },
+                "end": 258,
+                "expression": true,
+                "generator": false,
+                "id": null,
+                "params": [],
+                "start": 238,
+                "type": "ArrowFunctionExpression"
+              }
+            ],
+            "callee": {
+              "end": 237,
+              "name": "computed",
+              "start": 229,
+              "type": "Identifier"
+            },
+            "end": 259,
+            "optional": false,
+            "start": 229,
+            "type": "CallExpression"
+          },
+          "names": [
+            "size"
+          ],
+          "order": 4,
+          "pattern": {
+            "end": 226,
+            "name": "size",
+            "start": 222,
+            "type": "Identifier"
+          },
+          "reads": [
+            {
+              "graphNodeId": "state:entries",
+              "path": [
+                "length"
+              ],
+              "via": "direct"
+            }
+          ],
+          "semanticRecordIds": [
+            "computed:size"
+          ]
+        }
+      ],
+      "name": "BranchBoard",
+      "props": {
+        "entries": [
+          {
+            "alias": false,
+            "graphNodeId": "prop:props",
+            "localName": "seed",
+            "path": [
+              "seed"
+            ],
+            "sourceName": "seed"
+          },
+          {
+            "alias": false,
+            "graphNodeId": "prop:props",
+            "localName": "onTrace",
+            "path": [
+              "onTrace"
+            ],
+            "sourceName": "onTrace"
+          }
+        ],
+        "graphNodeId": "prop:props"
+      },
+      "template": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "expression": {
+                    "end": 320,
+                    "name": "size",
+                    "start": 316,
+                    "type": "Identifier"
+                  },
+                  "id": "text:0",
+                  "kind": "dynamic-text",
+                  "reads": [
+                    {
+                      "graphNodeId": "computed:size",
+                      "path": [],
+                      "via": "direct"
+                    }
+                  ]
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [],
+              "id": "h1",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-count",
+                  "value": "size"
+                }
+              ],
+              "tag": "p"
+            },
+            {
+              "children": [
+                {
+                  "id": "text:1",
+                  "kind": "text",
+                  "value": "toggle"
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [
+                "event:0"
+              ],
+              "id": "h2",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-action",
+                  "value": "toggle"
+                }
+              ],
+              "tag": "button"
+            },
+            {
+              "arms": [
+                {
+                  "children": [
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "expression": {
+                                "end": 621,
+                                "name": "ticks",
+                                "start": 616,
+                                "type": "Identifier"
+                              },
+                              "id": "text:2",
+                              "kind": "dynamic-text",
+                              "reads": [
+                                {
+                                  "graphNodeId": "state:ticks",
+                                  "path": [],
+                                  "via": "direct"
+                                }
+                              ]
+                            }
+                          ],
+                          "dynamicBindings": [],
+                          "eventIds": [],
+                          "id": "h4",
+                          "kind": "host",
+                          "staticAttributes": [
+                            {
+                              "name": "data-live-ticks",
+                              "value": "true"
+                            }
+                          ],
+                          "tag": "output"
+                        },
+                        {
+                          "children": [
+                            {
+                              "expression": {
+                                "end": 666,
+                                "name": "seen",
+                                "start": 662,
+                                "type": "Identifier"
+                              },
+                              "id": "text:3",
+                              "kind": "dynamic-text",
+                              "reads": [
+                                {
+                                  "graphNodeId": "state:seen",
+                                  "path": [],
+                                  "via": "direct"
+                                }
+                              ]
+                            }
+                          ],
+                          "dynamicBindings": [],
+                          "eventIds": [],
+                          "id": "h5",
+                          "kind": "host",
+                          "staticAttributes": [
+                            {
+                              "name": "data-live-seen",
+                              "value": "true"
+                            }
+                          ],
+                          "tag": "p"
+                        },
+                        {
+                          "children": [
+                            {
+                              "id": "text:4",
+                              "kind": "text",
+                              "value": "tick"
+                            }
+                          ],
+                          "dynamicBindings": [],
+                          "eventIds": [
+                            "event:1"
+                          ],
+                          "id": "h6",
+                          "kind": "host",
+                          "staticAttributes": [
+                            {
+                              "name": "data-action",
+                              "value": "tick"
+                            }
+                          ],
+                          "tag": "button"
+                        },
+                        {
+                          "children": [
+                            {
+                              "collection": {
+                                "expression": {
+                                  "end": 884,
+                                  "name": "entries",
+                                  "start": 877,
+                                  "type": "Identifier"
+                                },
+                                "reads": [
+                                  {
+                                    "graphNodeId": "state:entries",
+                                    "path": [],
+                                    "via": "direct"
+                                  }
+                                ]
+                              },
+                              "empty": [],
+                              "id": "repeat:0",
+                              "item": "entry",
+                              "key": {
+                                "expression": {
+                                  "computed": false,
+                                  "end": 898,
+                                  "object": {
+                                    "end": 895,
+                                    "name": "entry",
+                                    "start": 890,
+                                    "type": "Identifier"
+                                  },
+                                  "optional": false,
+                                  "property": {
+                                    "end": 898,
+                                    "name": "id",
+                                    "start": 896,
+                                    "type": "Identifier"
+                                  },
+                                  "start": 890,
+                                  "type": "MemberExpression"
+                                },
+                                "reads": [
+                                  {
+                                    "graphNodeId": "state:entries",
+                                    "path": [
+                                      "id"
+                                    ],
+                                    "via": "repeat-item"
+                                  }
+                                ]
+                              },
+                              "kind": "keyed-repeat",
+                              "row": [
+                                {
+                                  "children": [
+                                    {
+                                      "children": [
+                                        {
+                                          "id": "text:5",
+                                          "kind": "text",
+                                          "value": "pick"
+                                        }
+                                      ],
+                                      "dynamicBindings": [
+                                        {
+                                          "expression": {
+                                            "computed": false,
+                                            "end": 989,
+                                            "object": {
+                                              "end": 986,
+                                              "name": "entry",
+                                              "start": 981,
+                                              "type": "Identifier"
+                                            },
+                                            "optional": false,
+                                            "property": {
+                                              "end": 989,
+                                              "name": "id",
+                                              "start": 987,
+                                              "type": "Identifier"
+                                            },
+                                            "start": 981,
+                                            "type": "MemberExpression"
+                                          },
+                                          "kind": "attribute",
+                                          "name": "data-pick",
+                                          "reads": [
+                                            {
+                                              "graphNodeId": "state:entries",
+                                              "path": [
+                                                "id"
+                                              ],
+                                              "via": "repeat-item"
+                                            }
+                                          ]
+                                        }
+                                      ],
+                                      "eventIds": [
+                                        "event:2"
+                                      ],
+                                      "id": "h9",
+                                      "kind": "host",
+                                      "staticAttributes": [],
+                                      "tag": "button"
+                                    }
+                                  ],
+                                  "dynamicBindings": [
+                                    {
+                                      "expression": {
+                                        "computed": false,
+                                        "end": 944,
+                                        "object": {
+                                          "end": 941,
+                                          "name": "entry",
+                                          "start": 936,
+                                          "type": "Identifier"
+                                        },
+                                        "optional": false,
+                                        "property": {
+                                          "end": 944,
+                                          "name": "id",
+                                          "start": 942,
+                                          "type": "Identifier"
+                                        },
+                                        "start": 936,
+                                        "type": "MemberExpression"
+                                      },
+                                      "kind": "attribute",
+                                      "name": "data-oracle-branch-key",
+                                      "reads": [
+                                        {
+                                          "graphNodeId": "state:entries",
+                                          "path": [
+                                            "id"
+                                          ],
+                                          "via": "repeat-item"
+                                        }
+                                      ]
+                                    }
+                                  ],
+                                  "eventIds": [],
+                                  "id": "h8",
+                                  "kind": "host",
+                                  "staticAttributes": [],
+                                  "tag": "li"
+                                }
+                              ]
+                            }
+                          ],
+                          "dynamicBindings": [],
+                          "eventIds": [],
+                          "id": "h7",
+                          "kind": "host",
+                          "staticAttributes": [
+                            {
+                              "name": "data-branch-rows",
+                              "value": "true"
+                            }
+                          ],
+                          "tag": "ul"
+                        }
+                      ],
+                      "dynamicBindings": [],
+                      "eventIds": [],
+                      "id": "h3",
+                      "kind": "host",
+                      "staticAttributes": [
+                        {
+                          "name": "data-arm",
+                          "value": "live"
+                        }
+                      ],
+                      "tag": "div"
+                    }
+                  ],
+                  "kind": "then"
+                },
+                {
+                  "children": [
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "expression": {
+                                "end": 1248,
+                                "name": "ticks",
+                                "start": 1243,
+                                "type": "Identifier"
+                              },
+                              "id": "text:6",
+                              "kind": "dynamic-text",
+                              "reads": [
+                                {
+                                  "graphNodeId": "state:ticks",
+                                  "path": [],
+                                  "via": "direct"
+                                }
+                              ]
+                            }
+                          ],
+                          "dynamicBindings": [],
+                          "eventIds": [],
+                          "id": "h11",
+                          "kind": "host",
+                          "staticAttributes": [
+                            {
+                              "name": "data-idle-ticks",
+                              "value": "true"
+                            }
+                          ],
+                          "tag": "output"
+                        },
+                        {
+                          "children": [
+                            {
+                              "expression": {
+                                "end": 1293,
+                                "name": "seen",
+                                "start": 1289,
+                                "type": "Identifier"
+                              },
+                              "id": "text:7",
+                              "kind": "dynamic-text",
+                              "reads": [
+                                {
+                                  "graphNodeId": "state:seen",
+                                  "path": [],
+                                  "via": "direct"
+                                }
+                              ]
+                            }
+                          ],
+                          "dynamicBindings": [],
+                          "eventIds": [],
+                          "id": "h12",
+                          "kind": "host",
+                          "staticAttributes": [
+                            {
+                              "name": "data-idle-seen",
+                              "value": "true"
+                            }
+                          ],
+                          "tag": "p"
+                        },
+                        {
+                          "children": [
+                            {
+                              "id": "text:8",
+                              "kind": "text",
+                              "value": "drop"
+                            }
+                          ],
+                          "dynamicBindings": [],
+                          "eventIds": [
+                            "event:3"
+                          ],
+                          "id": "h13",
+                          "kind": "host",
+                          "staticAttributes": [
+                            {
+                              "name": "data-action",
+                              "value": "drop"
+                            }
+                          ],
+                          "tag": "button"
+                        }
+                      ],
+                      "dynamicBindings": [],
+                      "eventIds": [],
+                      "id": "h10",
+                      "kind": "host",
+                      "staticAttributes": [
+                        {
+                          "name": "data-arm",
+                          "value": "idle"
+                        }
+                      ],
+                      "tag": "div"
+                    }
+                  ],
+                  "kind": "else"
+                }
+              ],
+              "expression": {
+                "end": 551,
+                "left": {
+                  "end": 540,
+                  "name": "phase",
+                  "start": 535,
+                  "type": "Identifier"
+                },
+                "operator": "===",
+                "right": {
+                  "end": 551,
+                  "raw": "'live'",
+                  "start": 545,
+                  "type": "Literal",
+                  "value": "live"
+                },
+                "start": 535,
+                "type": "BinaryExpression"
+              },
+              "id": "branch-site:0",
+              "kind": "branch",
+              "reads": [
+                {
+                  "graphNodeId": "state:phase",
+                  "path": [],
+                  "via": "direct"
+                }
+              ]
+            }
+          ],
+          "dynamicBindings": [],
+          "eventIds": [],
+          "id": "h0",
+          "kind": "host",
+          "staticAttributes": [
+            {
+              "name": "data-scenario",
+              "value": "s5"
+            }
+          ],
+          "tag": "section"
+        }
+      ]
+    }
+  ],
+  "filename": "src/fixtures/s5-branch-teardown.tsrx",
+  "imports": [],
+  "module": {
+    "exports": [
+      {
+        "componentName": "BranchBoard",
+        "exportedName": "BranchBoard",
+        "kind": "named"
+      }
+    ]
+  },
+  "records": {
+    "aliases": [
+      {
+        "componentId": "component:0:BranchBoard",
+        "declarationKind": "const",
+        "graphNodeId": "prop:props",
+        "id": "alias:BranchBoard:onTrace",
+        "name": "onTrace",
+        "path": [
+          "onTrace"
+        ],
+        "sourceSpan": {
+          "end": 94,
+          "filename": "src/fixtures/s5-branch-teardown.tsrx",
+          "start": 87
+        },
+        "target": "props.onTrace"
+      },
+      {
+        "componentId": "component:0:BranchBoard",
+        "declarationKind": "const",
+        "graphNodeId": "prop:props",
+        "id": "alias:BranchBoard:seed",
+        "name": "seed",
+        "path": [
+          "seed"
+        ],
+        "sourceSpan": {
+          "end": 85,
+          "filename": "src/fixtures/s5-branch-teardown.tsrx",
+          "start": 81
+        },
+        "target": "props.seed"
+      }
+    ],
+    "behaviors": [],
+    "bindings": [
+      {
+        "async": false,
+        "asyncCapable": false,
+        "componentId": "component:0:BranchBoard",
+        "computed": {
+          "expression": {
+            "async": false,
+            "body": {
+              "computed": false,
+              "end": 258,
+              "object": {
+                "end": 251,
+                "name": "entries",
+                "start": 244,
+                "type": "Identifier"
+              },
+              "optional": false,
+              "property": {
+                "end": 258,
+                "name": "length",
+                "start": 252,
+                "type": "Identifier"
+              },
+              "start": 244,
+              "type": "MemberExpression"
+            },
+            "end": 258,
+            "expression": true,
+            "generator": false,
+            "id": null,
+            "params": [],
+            "start": 238,
+            "type": "ArrowFunctionExpression"
+          },
+          "reads": [
+            {
+              "graphNodeId": "state:entries",
+              "path": [
+                "length"
+              ],
+              "via": "direct"
+            }
+          ]
+        },
+        "declarationKind": "const",
+        "id": "computed:size",
+        "kind": "computed",
+        "name": "size",
+        "reads": [
+          {
+            "componentId": "component:0:BranchBoard",
+            "graphNodeId": "state:entries",
+            "path": [
+              "length"
+            ]
+          }
+        ],
+        "writable": false,
+        "writes": []
+      },
+      {
+        "componentId": "component:0:BranchBoard",
+        "declarationKind": "const",
+        "id": "prop:props",
+        "kind": "prop",
+        "name": "props",
+        "reads": [],
+        "valueKind": "object",
+        "writable": false,
+        "writes": []
+      },
+      {
+        "componentId": "component:0:BranchBoard",
+        "declarationKind": "let",
+        "id": "state:entries",
+        "initializer": {
+          "arguments": [],
+          "callee": {
+            "computed": false,
+            "end": 160,
+            "object": {
+              "end": 154,
+              "name": "seed",
+              "start": 150,
+              "type": "Identifier"
+            },
+            "optional": false,
+            "property": {
+              "end": 160,
+              "name": "slice",
+              "start": 155,
+              "type": "Identifier"
+            },
+            "start": 150,
+            "type": "MemberExpression"
+          },
+          "end": 162,
+          "optional": false,
+          "start": 150,
+          "type": "CallExpression"
+        },
+        "kind": "state",
+        "name": "entries",
+        "reads": [
+          {
+            "componentId": "component:0:BranchBoard",
+            "graphNodeId": "prop:props",
+            "path": [
+              "seed"
+            ]
+          }
+        ],
+        "valueKind": "unknown",
+        "writable": true,
+        "writes": [
+          {
+            "assignmentOperator": "=",
+            "componentId": "component:0:BranchBoard",
+            "graphNodeId": "state:entries",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 1417,
+              "filename": "src/fixtures/s5-branch-teardown.tsrx",
+              "start": 1410
+            },
+            "value": {
+              "end": 1429,
+              "name": "remaining",
+              "start": 1420,
+              "type": "Identifier"
+            },
+            "via": "direct"
+          }
+        ]
+      },
+      {
+        "componentId": "component:0:BranchBoard",
+        "declarationKind": "let",
+        "id": "state:phase",
+        "initialValue": "live",
+        "initializer": {
+          "end": 126,
+          "raw": "'live'",
+          "start": 120,
+          "type": "Literal",
+          "value": "live"
+        },
+        "kind": "state",
+        "name": "phase",
+        "reads": [],
+        "valueKind": "scalar",
+        "writable": true,
+        "writes": [
+          {
+            "assignmentOperator": "=",
+            "componentId": "component:0:BranchBoard",
+            "graphNodeId": "state:phase",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 447,
+              "filename": "src/fixtures/s5-branch-teardown.tsrx",
+              "start": 442
+            },
+            "value": {
+              "end": 454,
+              "name": "next",
+              "start": 450,
+              "type": "Identifier"
+            },
+            "via": "direct"
+          }
+        ]
+      },
+      {
+        "componentId": "component:0:BranchBoard",
+        "declarationKind": "let",
+        "id": "state:seen",
+        "initialValue": "none",
+        "initializer": {
+          "end": 212,
+          "raw": "'none'",
+          "start": 206,
+          "type": "Literal",
+          "value": "none"
+        },
+        "kind": "state",
+        "name": "seen",
+        "reads": [],
+        "valueKind": "scalar",
+        "writable": true,
+        "writes": [
+          {
+            "assignmentOperator": "=",
+            "componentId": "component:0:BranchBoard",
+            "graphNodeId": "state:seen",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 1034,
+              "filename": "src/fixtures/s5-branch-teardown.tsrx",
+              "start": 1030
+            },
+            "value": {
+              "computed": false,
+              "end": 1045,
+              "object": {
+                "end": 1042,
+                "name": "entry",
+                "start": 1037,
+                "type": "Identifier"
+              },
+              "optional": false,
+              "property": {
+                "end": 1045,
+                "name": "id",
+                "start": 1043,
+                "type": "Identifier"
+              },
+              "start": 1037,
+              "type": "MemberExpression"
+            },
+            "via": "direct"
+          }
+        ]
+      },
+      {
+        "componentId": "component:0:BranchBoard",
+        "declarationKind": "let",
+        "id": "state:ticks",
+        "initialValue": 0,
+        "initializer": {
+          "end": 185,
+          "raw": "0",
+          "start": 184,
+          "type": "Literal",
+          "value": 0
+        },
+        "kind": "state",
+        "name": "ticks",
+        "reads": [],
+        "valueKind": "scalar",
+        "writable": true,
+        "writes": [
+          {
+            "componentId": "component:0:BranchBoard",
+            "graphNodeId": "state:ticks",
+            "operation": "update",
+            "path": [],
+            "prefix": false,
+            "sourceSpan": {
+              "end": 746,
+              "filename": "src/fixtures/s5-branch-teardown.tsrx",
+              "start": 741
+            },
+            "updateOperator": "++",
+            "via": "direct"
+          }
+        ]
+      }
+    ],
+    "elementHandleBindings": [],
+    "events": [
+      {
+        "componentId": "component:0:BranchBoard",
+        "eventName": "click",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "declarations": [
+                      {
+                        "end": 436,
+                        "id": {
+                          "end": 399,
+                          "name": "next",
+                          "start": 395,
+                          "type": "Identifier"
+                        },
+                        "init": {
+                          "alternate": {
+                            "end": 436,
+                            "raw": "'live'",
+                            "start": 430,
+                            "type": "Literal",
+                            "value": "live"
+                          },
+                          "consequent": {
+                            "end": 427,
+                            "raw": "'idle'",
+                            "start": 421,
+                            "type": "Literal",
+                            "value": "idle"
+                          },
+                          "end": 436,
+                          "start": 402,
+                          "test": {
+                            "end": 418,
+                            "left": {
+                              "end": 407,
+                              "name": "phase",
+                              "start": 402,
+                              "type": "Identifier"
+                            },
+                            "operator": "===",
+                            "right": {
+                              "end": 418,
+                              "raw": "'live'",
+                              "start": 412,
+                              "type": "Literal",
+                              "value": "live"
+                            },
+                            "start": 402,
+                            "type": "BinaryExpression"
+                          },
+                          "type": "ConditionalExpression"
+                        },
+                        "start": 395,
+                        "type": "VariableDeclarator"
+                      }
+                    ],
+                    "end": 437,
+                    "kind": "const",
+                    "start": 389,
+                    "type": "VariableDeclaration"
+                  },
+                  {
+                    "end": 455,
+                    "expression": {
+                      "end": 454,
+                      "left": {
+                        "end": 447,
+                        "name": "phase",
+                        "start": 442,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "end": 454,
+                        "name": "next",
+                        "start": 450,
+                        "type": "Identifier"
+                      },
+                      "start": 442,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 442,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 502,
+                    "expression": {
+                      "arguments": [
+                        {
+                          "end": 476,
+                          "raw": "'toggle'",
+                          "start": 468,
+                          "type": "Literal",
+                          "value": "toggle"
+                        },
+                        {
+                          "end": 493,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 491,
+                              "key": {
+                                "end": 485,
+                                "name": "phase",
+                                "start": 480,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 480,
+                              "type": "Property",
+                              "value": {
+                                "end": 491,
+                                "name": "next",
+                                "start": 487,
+                                "type": "Identifier"
+                              }
+                            }
+                          ],
+                          "start": 478,
+                          "type": "ObjectExpression"
+                        },
+                        {
+                          "end": 500,
+                          "name": "event",
+                          "start": 495,
+                          "type": "Identifier"
+                        }
+                      ],
+                      "callee": {
+                        "end": 467,
+                        "name": "onTrace",
+                        "start": 460,
+                        "type": "Identifier"
+                      },
+                      "end": 501,
+                      "optional": false,
+                      "start": 460,
+                      "type": "CallExpression"
+                    },
+                    "start": 460,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 507,
+                "start": 383,
+                "type": "BlockStatement"
+              },
+              "end": 507,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 378,
+                  "name": "event",
+                  "start": 373,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 372,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              },
+              {
+                "graphNodeId": "state:phase",
+                "path": [],
+                "via": "direct"
+              }
+            ],
+            "writes": [
+              {
+                "assignmentOperator": "=",
+                "componentId": "component:0:BranchBoard",
+                "graphNodeId": "state:phase",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 447,
+                  "filename": "src/fixtures/s5-branch-teardown.tsrx",
+                  "start": 442
+                },
+                "value": {
+                  "end": 454,
+                  "name": "next",
+                  "start": 450,
+                  "type": "Identifier"
+                },
+                "via": "direct"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h2",
+        "id": "event:0"
+      },
+      {
+        "componentId": "component:0:BranchBoard",
+        "eventName": "click",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "end": 749,
+                    "expression": {
+                      "argument": {
+                        "end": 746,
+                        "name": "ticks",
+                        "start": 741,
+                        "type": "Identifier"
+                      },
+                      "end": 748,
+                      "operator": "++",
+                      "prefix": false,
+                      "start": 741,
+                      "type": "UpdateExpression"
+                    },
+                    "start": 741,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 790,
+                    "expression": {
+                      "arguments": [
+                        {
+                          "end": 770,
+                          "raw": "'tick'",
+                          "start": 764,
+                          "type": "Literal",
+                          "value": "tick"
+                        },
+                        {
+                          "end": 781,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 779,
+                              "key": {
+                                "end": 779,
+                                "name": "ticks",
+                                "start": 774,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": true,
+                              "start": 774,
+                              "type": "Property",
+                              "value": {
+                                "end": 779,
+                                "name": "ticks",
+                                "start": 774,
+                                "type": "Identifier"
+                              }
+                            }
+                          ],
+                          "start": 772,
+                          "type": "ObjectExpression"
+                        },
+                        {
+                          "end": 788,
+                          "name": "event",
+                          "start": 783,
+                          "type": "Identifier"
+                        }
+                      ],
+                      "callee": {
+                        "end": 763,
+                        "name": "onTrace",
+                        "start": 756,
+                        "type": "Identifier"
+                      },
+                      "end": 789,
+                      "optional": false,
+                      "start": 756,
+                      "type": "CallExpression"
+                    },
+                    "start": 756,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 797,
+                "start": 733,
+                "type": "BlockStatement"
+              },
+              "end": 797,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 728,
+                  "name": "event",
+                  "start": 723,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 722,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              },
+              {
+                "graphNodeId": "state:ticks",
+                "path": [],
+                "via": "direct"
+              }
+            ],
+            "writes": [
+              {
+                "componentId": "component:0:BranchBoard",
+                "graphNodeId": "state:ticks",
+                "operation": "update",
+                "path": [],
+                "prefix": false,
+                "sourceSpan": {
+                  "end": 746,
+                  "filename": "src/fixtures/s5-branch-teardown.tsrx",
+                  "start": 741
+                },
+                "updateOperator": "++",
+                "via": "direct"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h6",
+        "id": "event:1"
+      },
+      {
+        "componentId": "component:0:BranchBoard",
+        "eventName": "click",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "end": 1046,
+                    "expression": {
+                      "end": 1045,
+                      "left": {
+                        "end": 1034,
+                        "name": "seen",
+                        "start": 1030,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "computed": false,
+                        "end": 1045,
+                        "object": {
+                          "end": 1042,
+                          "name": "entry",
+                          "start": 1037,
+                          "type": "Identifier"
+                        },
+                        "optional": false,
+                        "property": {
+                          "end": 1045,
+                          "name": "id",
+                          "start": 1043,
+                          "type": "Identifier"
+                        },
+                        "start": 1037,
+                        "type": "MemberExpression"
+                      },
+                      "start": 1030,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 1030,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 1097,
+                    "expression": {
+                      "arguments": [
+                        {
+                          "end": 1070,
+                          "raw": "'pick'",
+                          "start": 1064,
+                          "type": "Literal",
+                          "value": "pick"
+                        },
+                        {
+                          "end": 1088,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 1086,
+                              "key": {
+                                "end": 1076,
+                                "name": "id",
+                                "start": 1074,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 1074,
+                              "type": "Property",
+                              "value": {
+                                "computed": false,
+                                "end": 1086,
+                                "object": {
+                                  "end": 1083,
+                                  "name": "entry",
+                                  "start": 1078,
+                                  "type": "Identifier"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 1086,
+                                  "name": "id",
+                                  "start": 1084,
+                                  "type": "Identifier"
+                                },
+                                "start": 1078,
+                                "type": "MemberExpression"
+                              }
+                            }
+                          ],
+                          "start": 1072,
+                          "type": "ObjectExpression"
+                        },
+                        {
+                          "end": 1095,
+                          "name": "event",
+                          "start": 1090,
+                          "type": "Identifier"
+                        }
+                      ],
+                      "callee": {
+                        "end": 1063,
+                        "name": "onTrace",
+                        "start": 1056,
+                        "type": "Identifier"
+                      },
+                      "end": 1096,
+                      "optional": false,
+                      "start": 1056,
+                      "type": "CallExpression"
+                    },
+                    "start": 1056,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 1107,
+                "start": 1019,
+                "type": "BlockStatement"
+              },
+              "end": 1107,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 1014,
+                  "name": "event",
+                  "start": 1009,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 1008,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              },
+              {
+                "graphNodeId": "state:entries",
+                "path": [
+                  "id"
+                ],
+                "via": "repeat-item"
+              }
+            ],
+            "writes": [
+              {
+                "assignmentOperator": "=",
+                "componentId": "component:0:BranchBoard",
+                "graphNodeId": "state:seen",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 1034,
+                  "filename": "src/fixtures/s5-branch-teardown.tsrx",
+                  "start": 1030
+                },
+                "value": {
+                  "computed": false,
+                  "end": 1045,
+                  "object": {
+                    "end": 1042,
+                    "name": "entry",
+                    "start": 1037,
+                    "type": "Identifier"
+                  },
+                  "optional": false,
+                  "property": {
+                    "end": 1045,
+                    "name": "id",
+                    "start": 1043,
+                    "type": "Identifier"
+                  },
+                  "start": 1037,
+                  "type": "MemberExpression"
+                },
+                "via": "direct"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h9",
+        "id": "event:2"
+      },
+      {
+        "componentId": "component:0:BranchBoard",
+        "eventName": "click",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "declarations": [
+                      {
+                        "end": 1402,
+                        "id": {
+                          "end": 1383,
+                          "name": "remaining",
+                          "start": 1374,
+                          "type": "Identifier"
+                        },
+                        "init": {
+                          "arguments": [
+                            {
+                              "end": 1401,
+                              "raw": "1",
+                              "start": 1400,
+                              "type": "Literal",
+                              "value": 1
+                            }
+                          ],
+                          "callee": {
+                            "computed": false,
+                            "end": 1399,
+                            "object": {
+                              "end": 1393,
+                              "name": "entries",
+                              "start": 1386,
+                              "type": "Identifier"
+                            },
+                            "optional": false,
+                            "property": {
+                              "end": 1399,
+                              "name": "slice",
+                              "start": 1394,
+                              "type": "Identifier"
+                            },
+                            "start": 1386,
+                            "type": "MemberExpression"
+                          },
+                          "end": 1402,
+                          "optional": false,
+                          "start": 1386,
+                          "type": "CallExpression"
+                        },
+                        "start": 1374,
+                        "type": "VariableDeclarator"
+                      }
+                    ],
+                    "end": 1403,
+                    "kind": "const",
+                    "start": 1368,
+                    "type": "VariableDeclaration"
+                  },
+                  {
+                    "end": 1430,
+                    "expression": {
+                      "end": 1429,
+                      "left": {
+                        "end": 1417,
+                        "name": "entries",
+                        "start": 1410,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "end": 1429,
+                        "name": "remaining",
+                        "start": 1420,
+                        "type": "Identifier"
+                      },
+                      "start": 1410,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 1410,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 1488,
+                    "expression": {
+                      "arguments": [
+                        {
+                          "end": 1451,
+                          "raw": "'drop'",
+                          "start": 1445,
+                          "type": "Literal",
+                          "value": "drop"
+                        },
+                        {
+                          "end": 1479,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 1477,
+                              "key": {
+                                "end": 1459,
+                                "name": "size",
+                                "start": 1455,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 1455,
+                              "type": "Property",
+                              "value": {
+                                "computed": false,
+                                "end": 1477,
+                                "object": {
+                                  "end": 1470,
+                                  "name": "remaining",
+                                  "start": 1461,
+                                  "type": "Identifier"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 1477,
+                                  "name": "length",
+                                  "start": 1471,
+                                  "type": "Identifier"
+                                },
+                                "start": 1461,
+                                "type": "MemberExpression"
+                              }
+                            }
+                          ],
+                          "start": 1453,
+                          "type": "ObjectExpression"
+                        },
+                        {
+                          "end": 1486,
+                          "name": "event",
+                          "start": 1481,
+                          "type": "Identifier"
+                        }
+                      ],
+                      "callee": {
+                        "end": 1444,
+                        "name": "onTrace",
+                        "start": 1437,
+                        "type": "Identifier"
+                      },
+                      "end": 1487,
+                      "optional": false,
+                      "start": 1437,
+                      "type": "CallExpression"
+                    },
+                    "start": 1437,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 1495,
+                "start": 1360,
+                "type": "BlockStatement"
+              },
+              "end": 1495,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 1355,
+                  "name": "event",
+                  "start": 1350,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 1349,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              },
+              {
+                "graphNodeId": "state:entries",
+                "path": [],
+                "via": "direct"
+              }
+            ],
+            "writes": [
+              {
+                "assignmentOperator": "=",
+                "componentId": "component:0:BranchBoard",
+                "graphNodeId": "state:entries",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 1417,
+                  "filename": "src/fixtures/s5-branch-teardown.tsrx",
+                  "start": 1410
+                },
+                "value": {
+                  "end": 1429,
+                  "name": "remaining",
+                  "start": 1420,
+                  "type": "Identifier"
+                },
+                "via": "direct"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h13",
+        "id": "event:3"
+      }
+    ],
+    "handleCalls": [],
+    "handleForwards": [],
+    "persistence": [],
+    "sharedCalls": [],
+    "sharedDefinitions": [],
+    "sharedInstances": [],
+    "sharedReads": [],
+    "sharedWrites": [],
+    "stateReads": [
+      {
+        "componentId": "component:0:BranchBoard",
+        "graphNodeId": "computed:size",
+        "path": []
+      },
+      {
+        "componentId": "component:0:BranchBoard",
+        "graphNodeId": "prop:props",
+        "path": [
+          "onTrace"
+        ]
+      },
+      {
+        "componentId": "component:0:BranchBoard",
+        "graphNodeId": "prop:props",
+        "path": [
+          "seed"
+        ]
+      },
+      {
+        "componentId": "component:0:BranchBoard",
+        "graphNodeId": "state:entries",
+        "path": []
+      },
+      {
+        "componentId": "component:0:BranchBoard",
+        "graphNodeId": "state:entries",
+        "path": [
+          "id"
+        ]
+      },
+      {
+        "componentId": "component:0:BranchBoard",
+        "graphNodeId": "state:entries",
+        "path": [
+          "length"
+        ]
+      },
+      {
+        "componentId": "component:0:BranchBoard",
+        "graphNodeId": "state:phase",
+        "path": []
+      },
+      {
+        "componentId": "component:0:BranchBoard",
+        "graphNodeId": "state:seen",
+        "path": []
+      },
+      {
+        "componentId": "component:0:BranchBoard",
+        "graphNodeId": "state:ticks",
+        "path": []
+      }
+    ],
+    "stateWrites": [
+      {
+        "assignmentOperator": "=",
+        "componentId": "component:0:BranchBoard",
+        "graphNodeId": "state:entries",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 1417,
+          "filename": "src/fixtures/s5-branch-teardown.tsrx",
+          "start": 1410
+        },
+        "value": {
+          "end": 1429,
+          "name": "remaining",
+          "start": 1420,
+          "type": "Identifier"
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "componentId": "component:0:BranchBoard",
+        "graphNodeId": "state:phase",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 447,
+          "filename": "src/fixtures/s5-branch-teardown.tsrx",
+          "start": 442
+        },
+        "value": {
+          "end": 454,
+          "name": "next",
+          "start": 450,
+          "type": "Identifier"
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "componentId": "component:0:BranchBoard",
+        "graphNodeId": "state:seen",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 1034,
+          "filename": "src/fixtures/s5-branch-teardown.tsrx",
+          "start": 1030
+        },
+        "value": {
+          "computed": false,
+          "end": 1045,
+          "object": {
+            "end": 1042,
+            "name": "entry",
+            "start": 1037,
+            "type": "Identifier"
+          },
+          "optional": false,
+          "property": {
+            "end": 1045,
+            "name": "id",
+            "start": 1043,
+            "type": "Identifier"
+          },
+          "start": 1037,
+          "type": "MemberExpression"
+        },
+        "via": "direct"
+      },
+      {
+        "componentId": "component:0:BranchBoard",
+        "graphNodeId": "state:ticks",
+        "operation": "update",
+        "path": [],
+        "prefix": false,
+        "sourceSpan": {
+          "end": 746,
+          "filename": "src/fixtures/s5-branch-teardown.tsrx",
+          "start": 741
+        },
+        "updateOperator": "++",
+        "via": "direct"
+      }
+    ]
+  },
+  "version": "frameless-enriched-ir/2"
+}

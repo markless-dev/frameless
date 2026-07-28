@@ -34,6 +34,18 @@ goal:
     was never its blocker. The withdrawn sentence read "Every version-gated sugar ruling on this
     board must DEFER on IR-4 grounds and say so", which would have manufactured a DEFERRED where a
     DENIED is correct.
+    DISCHARGED AND PART-REFUTED BY T009, 2026-07-27, WHICH IS WHY THE PREDICTION WAS WORTH KEEPING.
+    The block above predicted "defineModel is DENIED at G2, meaning IR-4 was never its blocker".
+    THE CONSEQUENT HOLDS AND THE ANTECEDENT DOES NOT. Measured: DENIED is confirmed, and IR-4 was
+    indeed never the blocker - but the deciding gate is G5, with G3, G4 and G6 denying independently
+    and G2 PASSING. The dissent's Gate 2 mechanism ("the child must declare bindability") was
+    imported from worked example 4, which is ANGULAR. @vue/runtime-core useModel reads the parent's
+    vnode props at RUNTIME and falls back to a purely local value when the parent did not use
+    v-model, so defineModel asks nothing of any other module and Gate 2 cannot deny it.
+    SO THE CONCLUSION WAS RIGHT FOR THE WRONG REASON - the fourth time on this goal, and the reason
+    it matters is that the wrong reason was load-bearing: anyone retiring the Gate 2 argument would
+    have retired a correct ruling with it. Re-stated here on the measured grounds so that cannot
+    happen. This prediction is now DISCHARGED and must not be re-inherited as open.
   s3_contract_changed_option_d: >-
     demos/react-official/three-way-contract.ts now reads S3's `text` observation from the SERVED
     PAYLOAD (served.text), not the post-activation live DOM, and `served: EnvironmentResponse` is a
@@ -114,7 +126,8 @@ goal:
     likely_misfire: "Building a Vue emitter that produces plausible-looking Vue source and calling it done, without an official-scaffold lane proving the emitted components actually activate equivalently. The repo has already paid for this once - see the Qwik hand-rolled-harness episode."
     blind_spots_considered:
       - "SFC vs Vue JSX is an unforced decision that changes tooling, goldens, gate and demo consumption. React/Solid/Qwik all emit JSX; Vue is the first target where that is not obvious."
-      - "Vue's flagship sugar (v-model / defineModel) is blocked by IR-1 AND IR-4, not by taste. The adapter work and the sugar question are separable and must not be conflated."
+      - "Vue's flagship sugar (v-model / defineModel) is blocked by IR-1 AND IR-4, not by taste. The adapter work and the sugar question are separable and must not be conflated. [HALF REFUTED BY T009 ON MEASUREMENT, 2026-07-27 - see the correction below. Left in place rather than edited, because this is the text the board reasoned from for its whole life and silently fixing it would hide that.]"
+      - "CORRECTION TO THE ABOVE, T009: IR-1 IS LOAD-BEARING; IR-4 WAS NEVER A BLOCKER FOR EITHER LIMB. T009 scored G2-G5 before IR-4 was permitted to appear, exactly as this board's own inherited rule requires, and both limbs FAIL four gates at the shipped version - FAIL outranks DEFERRED. v-model on a host element is not version-gated at all. AND IR-1's REAL CONTENT WAS MEASURED rather than cited: every prop entry in every golden shares ONE graph node (prop:props), writable=false, writes=0, so per-prop write-back has no channel. That child-side gap is what actually decides defineModel, and IR-1 as written names only the parent-side ComponentPropExpression.kind - so the board was right that IR-1 blocks it, and wrong about which half of IR-1."
       - "poc/09-storage/vue exists from earlier work and assumed cheap lexical sugar with classic lifecycle shapes. That is a prior in-repo assumption, not a validated decision."
     existing_plan_facts:
       - "docs/emitter-idiom-policy.md governs every emission-site form choice. Run the six gates; record outcomes. Do NOT amend the policy from inside this board."
@@ -156,7 +169,7 @@ visual_board:
     url: null
     command: "npx goalbuddy board docs/goals/frameless-vue-v1"
 
-active_task: T999
+active_task: T010
 
 tasks:
   - id: T001
@@ -1117,10 +1130,183 @@ tasks:
       WORKER_CAUGHT_A_PM_DEFECT_AND_IT_WAS_THE_SESSIONS_OWN_LESSON_REPEATING: "THE WORKER REPORTED, FROM OUTSIDE ITS ALLOWED_FILES, THAT THIS VERY CARD HAD A DUPLICATED TAIL. When the PM widened T008 from the README-only card to the combined fold, the edit replaced the card's HEAD and left the retired card's keys - why_this_exists, allowed_files, verify, stop_if, constraints, receipt - sitting after the new receipt: null. Under YAML last-key-wins a strict parser therefore read the NARROW allowed_files (README only) and the WEAK three-command verify. PM CONFIRMED: yaml@2.9.0 threw DUPLICATE_KEY at line 1087 of this board. THIS IS THE EXACT DEFECT CLASS THE PM DIAGNOSED AND REPAIRED ON TWO OTHER BOARDS EARLIER IN THIS SAME SESSION, reintroduced by the PM's own edit - and check-goal-state.mjs passed it clean every time, because it is a line regex parser and cannot see duplicate keys. The regex checker's blind spot was identified hours ago and the PM kept relying on it anyway. Orphaned tail removed; all four boards now strict-parse, and T008 reads 5 allowed_files and 7 verify commands as intended. THE WORKER WORKED TO THE DISPATCH TEXT AND THE WIDER BLOCK, which was the stated intent, so no work was mis-scoped - the board was lying, not the output. PM ADDS A STANDING RULE: strict-parse every board after any hand edit to a card, not just after the ones that look risky."
       remaining_blockers: []
       stopped_because: null
+  - id: T009
+    type: judge
+    assignee: Judge
+    status: done
+    reasoning_hint: high
+    spec: "T999 audit and docs/goals/frameless-vue-v1/notes/T999-vue-audit.md - AUTHORITATIVE."
+    objective: >-
+      Rule Vue defineModel / v-model through ALL SIX GATES against vue@3.5.40 as resolved, scoring
+      G2-G5 BEFORE IR-4 is permitted to appear, and state explicitly whether IR-4 was ever the
+      blocker or whether IR-1 plus G2 decide it.
+    why_this_exists: >-
+      THE BOARD'S TRANCHE HAS TWO CLAUSES AND ONLY ONE IS DONE. state.yaml:12 says "then run the
+      ratified idiom policy on Vue's FLAGSHIP SUGAR now that Gate 1 and Gate 6 can resolve", and
+      state.yaml:117 defines flagship sugar unambiguously as v-model / defineModel. T005 ran the
+      policy on worked example 2 (the shorthands) and T007 on worked example 3 (defineEmits). BOTH
+      ARE VALUABLE AND NEITHER IS THE FLAGSHIP. docs/emitter-idiom-policy.md carries entries 1
+      through 11b and has NO defineModel entry; it appears only as a passing illustration under
+      Gate 2.
+    the_undischarged_prediction: >-
+      T002's dissent recorded a specific, assigned prediction: "PREDICTS defineModel is DENIED at
+      Gate 2, not deferred ... a prediction for T005 to TEST, not a finding." T005 TESTED A
+      DIFFERENT ENTRY. The prediction was neither discharged nor withdrawn, and a prediction left
+      hanging is how a board convinces itself a question was answered.
+    the_shipped_consequence_that_makes_this_more_than_bookkeeping: >-
+      packages/frameworks/vue/src/gate/index.ts:998 fires the no-two-way-binding message for
+      v-model and justifies it with "worked example 3 is already ruled DENIED at Gate 5" - AND
+      WORKED EXAMPLE 3 RULES defineEmits, A DIFFERENT MACRO. PM VERIFIED BOTH LINES. That is a
+      correct rule resting on a BORROWED REASON, in a user-facing string, read by someone at the
+      exact moment they are deciding whether to trust it. It is precisely the defect T008 was
+      dispatched to repair for the OTHER limb of the same rule.
+    the_binding_procedural_constraint: >-
+      state.yaml:23-36's inherited text says IR-4 MAY NOT BE INVOKED AS A BLOCKER BEFORE G2-G5 HAVE
+      BEEN SCORED AGAINST A REAL EMITTER. For defineModel they never have been. The board currently
+      carries "blocked by IR-1 and IR-4" as INHERITED PROSE about the exact question its own ruling
+      says must be measured. Score first; reach for IR-4 only after.
+    inputs:
+      - "docs/emitter-idiom-policy.md - Gate 2, and worked examples 2a/2b/3 for the recording format"
+      - "packages/frameworks/vue/src/emitter/index.ts propsDeclaration"
+      - "packages/compiler/src/schema.ts:149-156 - IR-1"
+      - "packages/frameworks/vue/src/gate/index.ts no-two-way-binding, both limbs"
+    constraints:
+      - "Do not implement. Rule."
+      - "SCORE G2-G5 BEFORE IR-4 APPEARS ANYWHERE IN YOUR REASONING. If IR-4 turns out never to have been the blocker, say so plainly - that is the T002 dissent's prediction and it deserves a verdict either way."
+      - "DISTINGUISH FAIL FROM UNKNOWN on the T007 rule: a POPULATED domain with no sound narrowing is FAIL; an EMPTY domain is UNKNOWN. Entry 2b took UNKNOWN on an empty domain and that was correct; entry 3 took FAIL on a populated one and that was also correct. Say which this is and why."
+      - "If the verdict is DENIED, it must cite ITS OWN grounds. The whole point of this card is that the shipped message currently borrows another entry's."
+      - "Do not edit docs/emitter-idiom-policy.md or the gate. Produce the exact replacement text for a follow-on Worker."
+    expected_output:
+      - "Six gate outcomes for defineModel/v-model, in the policy's own format"
+      - "Whether IR-4 was ever the blocker, ruled explicitly"
+      - "FAIL vs UNKNOWN at each gate, with the domain stated"
+      - "Exact replacement text for the worked example AND for the split no-two-way-binding message"
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      harness: claude-code
+      note: notes/T009-define-model.md
+      rationale: "Ran all six gates on Vue's flagship sugar against vue@3.5.40 as resolved, scoring G2-G5 BEFORE IR-4 was allowed to appear. THE QUESTION DOES NOT SURVIVE AS ONE QUESTION: v-model on a HOST element (12a, five shipped instances) and defineModel() (12b, six shipped props) have different domains, different repairs and different counterexamples. Both DENIED, deciding gate G5 in each case, with G3/G4/G6 denying independently. G1 and G2 PASS for both. IR-4 WAS NEVER THE BLOCKER for either limb - four gates FAIL at the shipped version, FAIL outranks DEFERRED, and 12a is not version-gated at all."
+      summary: "Both limbs DENIED on their own grounds, with exact replacement text produced for worked examples 12a and 12b and for the SPLIT no-two-way-binding messages. The tranche's second clause is now discharged. Four measured findings the board did not have, and an instrument gap on the very limb whose reason was borrowed."
+      THE_T002_DISSENT_IS_DISCHARGED_RIGHT_VERDICT_WRONG_GATE: "The dissent predicted 'defineModel is DENIED at Gate 2, meaning IR-4 was never its blocker', and assigned it to T005 to TEST. T005 tested a different entry, so it sat undischarged for the board's whole life. NOW RULED: DENIED is CONFIRMED. 'IR-4 was never its blocker' is CONFIRMED. 'AT GATE 2' IS REFUTED - the dissent imported worked example 4's ANGULAR mechanism ('the child must declare bindability'). runtime-core.cjs.js:4378-4384 shows useModel reads the parent's vnode props at RUNTIME and falls back to a purely local value when the parent did not use v-model, so defineModel asks NOTHING of any other module and G2 PASSES. THE CONSEQUENT HELD AND THE ANTECEDENT DID NOT. This is the FOURTH time on this goal a correct verdict was found resting on an incorrect reason, and the SECOND time that wrong reason was shipping in a user-facing string."
+      finding_1_the_candidate_drops_a_hydration_patch_flag: "MEASURED IN CODEGEN. Baseline emits 'value: $setup.text' with patchFlag 40 (PROPS | NEED_HYDRATION) and dynamicProps [\"value\"]. The v-model candidate emits NO value prop at all - withDirectives([[vModelText, $setup.text]]) with patchFlag 512 (NEED_PATCH). THE NEED_HYDRATION BIT (32) IS GONE, and the value moves off the vnode-prop path onto vModelText. runtime-dom.cjs.js:1510-1527 then installs its own listeners and drops an input the baseline delivers via 'if (e.target.composing) return'. This is the exact mechanism class this board has corrected itself about three times - a value that appears equivalent while travelling a different path at hydration."
+      finding_2_defineModel_silently_overwrites_a_legal_prop: "MEASURED, ZERO DIAGNOSTICS. defineModel('initial') alongside defineProps(['initialModifiers','onTrace']) compiles clean to mergeModels(['initialModifiers','onTrace'], { initial:{}, initialModifiers:{} }), and runtime-core.cjs.js:3665-3669 mergeModels falls to extend({}, normalizePropsOrEmits(a), normalizePropsOrEmits(b)) - SO THE SYNTHESIZED OBJECT OVERWRITES THE AUTHOR'S DECLARATION. It is the Vue instance of the Angular count/countChange collision worked example 4 records, and nothing in the toolchain says a word."
+      finding_3_IR_1s_real_content_measured_and_it_is_not_IR_8: "Across all four base goldens: prop:props is ONE graph binding, writable=false, writes=0, and every PropDestructuringEntry shares graphNodeId 'prop:props'. SO PER-PROP WRITE-BACK HAS NO CHANNEL AT ALL. That is the child-side gap that actually decides 12b, and it is DISTINCT from IR-8, which is a missing TYPE field on the same entry. IR-1 as currently written names only the parent-side ComponentPropExpression.kind."
+      finding_4_it_held_a_hypothesis_and_measured_it_FALSE: "The Judge predicted from S3 alone that the Gate 4 repair narrowing would have an EMPTY domain, which would have let it dismiss the narrowing as vacuous. MEASURING S2 REFUTED THAT: event:0 has writes=[state:draft:assign], reads=[], no syncPolicy - it satisfies the declared-fields narrowing exactly. So the narrowing had to be beaten ON ITS MERITS (Gate 3's unchecked right-hand side, now REACHABLE rather than hypothetical) instead of waved away. A judge that refutes its own convenient hypothesis is doing the job."
+      AN_INSTRUMENT_GAP_ON_EXACTLY_THE_WRONG_LIMB: "packages/frameworks/vue/test/gate.test.ts:391 pins the defineEmits message FOUR ways, asserts only the POLICY ID for v-model, and contains NO defineModel mutation row anywhere in the file. THE LIMB WHOSE REASON WAS BORROWED IS ALSO THE LIMB WITH NO CALIBRATION. Those two facts are not a coincidence: an unpinned message is one nobody has to justify."
+      the_third_construct_was_kept_out_rather_than_smuggled_in: "v-model on an emitted CHILD COMPONENT has an EMPTY domain - emitter/index.ts:921 renderNode throws at :935 on component-reference and no golden contains one. That is entry 2b's shape: UNKNOWN at G4, recorded as a STATED NON-RULING. Ruling three constructs as one is precisely the fault worked example 2 was split to repair, and this ruling declined to repeat it."
+      evidence:
+        - "vue@3.5.40, @vue/compiler-sfc, @vue/runtime-core, @vue/runtime-dom all resolved from packages/frameworks/vue; sources read at 41aaed0"
+        - "G1 probe, calibrated: exact-empty errors AND tips across ssr x isProd for all five accepted cases; a planted syntax error reports in all four modes"
+        - "G5 client codegen: baseline patchFlag 40 (PROPS, NEED_HYDRATION) dynamicProps [\"value\"] vs candidate withDirectives([[vModelText, ...]]) patchFlag 512 (NEED_PATCH)"
+        - "runtime-dom.cjs.js:1510-1527 vModelText.created with its own listeners and the composing guard; :1529-1531 mounted writes el.value unconditionally; :1532-1550 beforeUpdate's activeElement guard"
+        - "G5 SSR, checkbox arm DIFFERS (ssrLooseContain branch) while the TEXT arm is byte-identical in both SSR modes - stated so the green is not over-read"
+        - "runtime-core.cjs.js:4378-4384 useModel setter reading hasVModel off i.vnode.props at RUNTIME with a local fallback - the G2 PASS and the refutation of the dissent's mechanism"
+        - "runtime-core.cjs.js:3665-3669 mergeModels extend() overwrite semantics"
+        - "IR-1 measured across four goldens: prop:props one binding, writable=false, writes=0"
+        - "12a domain enumerated from goldens: five instances (S2 h2/event:0, S2 h7/event:2, S2 h8/event:3, S3 h1/event:1, S3 h2/event:2); sugar applies to ONE"
+        - "packages/frameworks/vue/src/emitter/index.ts:921 renderNode throwing at :935 on component-reference"
+        - "packages/frameworks/vue/src/gate/index.ts:997-999 and :1024-1031 - the two limbs sharing one reason"
+        - "packages/frameworks/vue/test/gate.test.ts:391 - v-model asserts only the policy id; no defineModel row exists"
+      missing_evidence:
+        - "12a's G5 differences were measured from compiler output and runtime source, not from a browser. The ruling direction is conservative - every measured difference argues for DENIED - and the patch-flag and composition-guard findings are properties of emitted code plus documented runtime hooks, so no re-take is OWED. Recorded as an optional cheap confirmation, on the same footing T999 gave T007's jsdom arm."
+        - "The domain counts (12a 'five shipped instances', 12b 'six shipped props') are over the FOUR base goldens at 41aaed0. S5 IS LANDING. If its golden carries a value/checked binding plus a same-host event, 12a's 'one of five' changes and must be re-enumerated before the fold. This is a stop_if on the follow-on Worker, not an open question."
+        - "CARRIED FORWARD, NOT INTRODUCED HERE: IR-8, and pnpm e2e still pinning modes ['dev'] on every lane."
+      parallel_safety:
+        safe: false
+        reason: "The fold's allowed_files include packages/frameworks/vue/src/gate/index.ts and test/gate.test.ts, and the tree already carries an untracked packages/frameworks/vue/generated/S5.vue. It is also contended with frameless-angular-v1 T009 over docs/emitter-idiom-policy.md, and worked example 4 is CITED by both new entries."
+        pm_action: "Recorded as T010 with a double serialization hold: behind the S5 worker, and behind the Angular worked-examples-4-and-5 re-run."
+      worker_package_recorded_as: "T010 on this board"
+      spawned_tasks:
+        - T010
+  - id: T010
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    spec: "T009 receipt and docs/goals/frameless-vue-v1/notes/T009-define-model.md sections 9.1, 9.3, 9.4, 9.5 - AUTHORITATIVE, fold VERBATIM."
+    serialization_hold: >-
+      DOUBLE HOLD. (1) Behind the S5 corpus worker - LANDED, so this half is discharged; but the
+      domain counts in 12a ("one of five") and 12b ("six shipped props") were enumerated over FOUR
+      goldens, and S5 now exists. RE-ENUMERATE BOTH BEFORE FOLDING. A count folded into the policy
+      that was true of a different corpus is exactly the stale-label fault worked example 3 records.
+      (2) Against frameless-angular-v1 T009 (worked examples 4 and 5 re-run), because
+      docs/emitter-idiom-policy.md is shared AND worked example 4 is CITED by both new entries.
+    objective: >-
+      Fold the T009 ruling as one vertical slice: insert worked examples 12a and 12b after 11b;
+      SPLIT the gate's no-two-way-binding checks so each limb cites its OWN grounds; split and
+      extend the gate tests; and name 12b at propsDeclaration's decision site.
+    why_this_is_code_and_not_only_docs: >-
+      packages/frameworks/vue/src/gate/index.ts:998 fires the v-model message justified by "worked
+      example 3 is already ruled DENIED at Gate 5" - AND WORKED EXAMPLE 3 RULES defineEmits, A
+      DIFFERENT MACRO. A correct rule resting on a borrowed reason, in a user-facing string. T008
+      repaired exactly this for the defineEmits limb; this repairs the other one.
+    the_instrument_gap_this_must_close: >-
+      test/gate.test.ts:391 pins the defineEmits message FOUR ways, asserts only the POLICY ID for
+      v-model, and contains NO defineModel mutation row anywhere in the file. THE LIMB WHOSE REASON
+      WAS BORROWED IS ALSO THE LIMB WITH NO CALIBRATION - not a coincidence, since an unpinned
+      message is one nobody has to justify.
+    allowed_files:
+      - docs/emitter-idiom-policy.md
+      - packages/frameworks/vue/src/gate/index.ts
+      - packages/frameworks/vue/test/gate.test.ts
+      - packages/frameworks/vue/src/emitter/index.ts
+      - docs/goals/frameless-vue-v1/notes/T010-two-way-binding-fold.md
+    verify:
+      - "pnpm check"
+      - "pnpm test"
+      - "pnpm lint"
+      - "node packages/frameworks/vue/scripts/regenerate.ts && git diff --exit-code -- packages/frameworks/vue/generated   # goldens MUST NOT move; this fold changes no emitted byte"
+      - "pnpm test:browser"
+      - "pnpm e2e   # every observation string byte-identical to the pre-change capture"
+      - "git diff --exit-code -- packages/frameworks/react packages/frameworks/solid packages/frameworks/qwik packages/frameworks/svelte packages/frameworks/angular packages/compiler demos"
+      - "git status --short   # every path inside allowed_files; pnpm-lock.yaml MUST NOT appear"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You have not RE-ENUMERATED 12a's and 12b's domain counts against the FIVE-scenario corpus. The note's figures are over four goldens."
+      - "Any emitted golden moves. This fold is docs, gate messages and tests only."
+      - "You are about to leave the defineModel and defineEmits limbs sharing one branch or one message. TWO MACROS, TWO BRANCHES, TWO MESSAGES - that is the entire point of the card."
+      - "You are about to edit the defineEmits message. It is T008's, it was measured, and it folds through VERBATIM. Only the negative guard in its TEST is new."
+      - "Any new or changed assertion in gate.test.ts cannot be made to go RED against the CURRENT strings before your edit lands. An assertion that passes both before and after is a green vacuum."
+      - "You are about to record 12a or 12b as DEFERRED, or cite IR-4 as a blocker for either. T009 scored G2-G5 first; both limbs FAIL four gates at the shipped version, FAIL outranks DEFERRED, and v-model on a host element is not version-gated at all."
+      - "You are about to write that Gate 2 denies either limb. G2 PASSES for both, and the T002 dissent's Gate 2 mechanism is REFUTED - it imported worked example 4's ANGULAR reasoning. Reintroducing it restores the exact defect this card removes."
+      - "You are about to fold 'v-model on an emitted child component' into 12a as a RULED entry. Its domain is EMPTY - renderNode throws on component-reference and no golden has one - so it is 2b's shape: UNKNOWN at G4, recorded as a stated non-ruling only."
+      - "You are about to restructure docs/emitter-idiom-policy.md or renumber existing entries. Insert 12a and 12b after 11b; touch nothing else."
+      - "frameless-angular-v1 T009 is in flight. Worked example 4 is cited by both new entries and must not move underneath this fold."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
+  - id: T011
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    depends_on: ["T010"]
+    objective: "Re-audit the Vue lane after the two-way-binding fold, and rule the full owner outcome complete or not."
+    why_this_exists: >-
+      T999 ruled not_complete on ONE unmet tranche clause - the flagship-sugar ruling - and
+      everything else about the lane was found finished and proven. T009 delivered that ruling and
+      T010 folds it. This re-audit exists to certify that the clause is now discharged, NOT to
+      re-derive the whole lane: T999's oracle verification was mechanical and its four spot-checks
+      all held.
+    constraints:
+      - "Do not implement. Rule."
+      - "CERTIFY T999 rather than repeating it, but spot-check at least one of its claims - a phase audit nobody checked is a phase audit that could be wrong, and this board has proven that three times."
+      - "Reject if the defineModel limb still cites another entry's grounds anywhere - policy, gate message or test."
+      - "Reject if the new gate assertions cannot be shown to have gone RED against the pre-fold strings."
+      - "THE ORACLE MUST BE RE-RUN ON THE THEN-CURRENT TREE. T999's numbers are over a four-scenario corpus; the corpus is now five and growing. The observation count changes, and the Vue row must be read against the react row per scenario again."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "Whether the flagship-sugar clause is discharged, with evidence"
+      - "Missing evidence"
+    receipt: null
+
   - id: T999
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Audit whether the Vue lane satisfies the oracle and the full owner outcome."
     inputs:
@@ -1137,8 +1323,42 @@ tasks:
       - "full_outcome_complete: true | false"
       - "missing evidence"
       - "next task if not complete"
-    receipt: null
-
+    receipt:
+      result: done
+      decision: not_complete
+      full_outcome_complete: false
+      harness: claude-code
+      note: notes/T999-vue-audit.md
+      rationale: "Oracle PASSES and it was verified MECHANICALLY, not by inheritance: e2e.mjs:39 carries the vue row, :426-440 ASSERTS cross-lane observation equality with process.exit(1), and readThreeWayResults refuses vacuity (box passed, activation matches the declaration, every scenario observed). The contract diff since 5ca20c7 is purely additive - no neutrality check weakened, both total Records still total. Goldens are byte-identical to the demo copies and are really activated in Chromium under a planted-hydration-mismatch calibration. NOT COMPLETE on one tranche clause: the flagship sugar (v-model/defineModel) has no six-gate ruling, T002's dissent prediction assigned to T005 is undischarged, and the shipped no-two-way-binding message justifies its defineModel limb by citing worked example 3, which rules defineEmits."
+      summary: "The Vue lane satisfies its oracle and every stated constraint. Completion is withheld for the unmet flagship-sugar ruling (defineModel/v-model) and its consequence in a live gate message. This is one bounded ruling plus its fold, not open-ended work."
+      THE_TRANCHE_HAS_TWO_CLAUSES_AND_ONLY_ONE_IS_DONE: "PM VERIFIED BOTH LINES IN SOURCE. state.yaml:12 reads '...then run the ratified idiom policy on Vue's FLAGSHIP SUGAR now that Gate 1 and Gate 6 can resolve', and state.yaml:117 defines flagship sugar unambiguously as 'v-model / defineModel'. T005 ran the policy on worked example 2 (the shorthands) and T007 on worked example 3 (defineEmits). BOTH ARE VALUABLE AND NEITHER IS THE FLAGSHIP. docs/emitter-idiom-policy.md carries entries 1 through 11b with NO defineModel entry - it appears only as a passing illustration under Gate 2. This is the kind of gap a board closes by accident: two real rulings landed, both cited the tranche, and neither was the one the tranche named."
+      THE_SHIPPED_CONSEQUENCE_PM_VERIFIED_IT: "packages/frameworks/vue/src/gate/index.ts:998 fires the no-two-way-binding message for V-MODEL and justifies it with 'worked example 3 is already ruled DENIED at Gate 5'. WORKED EXAMPLE 3 RULES defineEmits - A DIFFERENT MACRO. A correct rule resting on a BORROWED REASON, in a user-facing string, read at the exact moment someone decides whether to trust it. It is the same defect T008 was dispatched to repair for the OTHER limb of the same rule, still live in the first limb."
+      the_undischarged_prediction: "T002's dissent recorded a specific, ASSIGNED prediction: 'PREDICTS defineModel is DENIED at Gate 2, not deferred ... a prediction for T005 to TEST, not a finding.' T005 tested a different entry. The prediction was neither discharged nor withdrawn. A prediction left hanging is how a board convinces itself a question was answered."
+      the_procedural_point_that_makes_this_more_than_a_missing_document: "state.yaml:23-36's binding inherited text says IR-4 MAY NOT BE INVOKED AS A BLOCKER BEFORE G2-G5 HAVE BEEN SCORED AGAINST A REAL EMITTER. For defineModel they never have been. The board is carrying 'blocked by IR-1 and IR-4' as INHERITED PROSE about the exact question its own rule says must be measured."
+      spot_checks_one_per_task_all_held: "The audit re-derived rather than certified. T005: re-measured @vue/compiler-core's ondirname and re-ran the codegen equivalence against a mechanical longhand twin - byte-identical across all four ssr x isProd modes, 0 errors and 0 tips both ways, with a planted control that DOES differ. T006: confirmed BASELINE_FORM_INVENTORY's contract is satisfied (the four goldens carry zero longhand, zero '#', zero '.prop') and that the longhand twin still draws BOTH detectors; also confirmed the gate-fooling defect was real - '.checked=\"checked\"' compiles with 0 errors and 0 tips, so the frameless rawName policy is the only thing separating it from ':'. T007: verified the G5 throw arm's premise directly off the emitted text. T008: confirmed the refuted sentence is gone and the replacement is pinned by a test calibrated red against the old string."
+      it_adjudicated_an_open_question_rather_than_deferring_it: "T007 left 'the native-click arm was jsdom, not Chromium' as missing evidence. THE AUDIT RULED IT SUFFICIENT, with reasoning: the G5 FAIL rests on the throw arm alone, whose premise is visible in the shipped output (generated/S1.vue declares onTrace via defineProps and calls props.onTrace(...) unguarded), so the TypeError-vs-silent-no-op delta is a property of the emitted text plus Vue's props/attrs partition - not of layout or event dispatch. Recorded as an optional cheap re-take, NOT as owed evidence. Closing an open question with a reason is worth more than carrying it forward politely."
+      evidence:
+        - "scripts/e2e.mjs:39 vue row; :426-440 asserted equality with process.exit(1); threeWayScenarios = s1..s4"
+        - "scripts/corpus-mutation.mjs readThreeWayResults - throws on a non-passed box, an activation mismatch, or any scenario with no observations"
+        - "git diff 5ca20c7..41aaed0 -- three-way-contract.ts scripts/e2e.mjs - additive only; both tables still total Readonly<Record<...>>"
+        - "sha256 pairs: generated/{S1,S2,S3,S4}.vue == demos/vue-official/src/emitted/{RenderOnce,KeyedTodo,EventForm,NestedBoard}.vue, 4 of 4 identical"
+        - "demos/vue-official/scenarios.box.ts calibrateDevSink - plants kit:2 -> kit:999 in the REAL S1 payload, requires a warn-level [Vue warn] Hydration capture, then asserts the DOM patched back to kit:2"
+        - "@vue/compiler-core@3.5.40 ondirname - '.'|':' -> bind, '@' -> on, '#' -> slot; modifiers pre-seeded with 'prop' for '.'; rawName is the ONLY discriminator"
+        - "Judge probe: S3 golden vs mechanical longhand twin - byte-identical template codegen 4/4 modes, planted control differs; '.prop' mutant compiles with 0 errors 0 tips"
+        - "packages/frameworks/vue/test/gate.test.ts - the longhand twin asserts BOTH require-directive-shorthand and baseline-form-inventory"
+        - "packages/frameworks/vue/generated/S1.vue - defineProps([...,'onTrace']) plus unguarded props.onTrace('setup', ...): the declared-prop premise T007's G5 throw arm rests on"
+        - "PM VERIFIED: state.yaml:12 (tranche clause 2) and :117 (flagship sugar = v-model/defineModel); gate/index.ts:998 citing worked example 3 on the v-model limb"
+      missing_evidence:
+        - "No six-gate ruling of record for Vue defineModel/v-model - the tranche's second clause and state.yaml:117's named flagship sugar."
+        - "T002's dissent prediction ('defineModel is DENIED at G2, meaning IR-4 was never its blocker'), explicitly assigned to T005 to TEST, is undischarged and unwithdrawn."
+        - "The shipped no-two-way-binding message justifies its defineModel limb by citing worked example 3, which rules defineEmits."
+        - "OPTIONAL, NOT OWED: T007's native-click arm was jsdom-only. RULED SUFFICIENT - a Chromium re-take is cheap but not required."
+        - "CARRIED FORWARD, NOT INTRODUCED HERE: vue-tsc does not reach the prop contract (IR-8), and pnpm e2e still pins modes ['dev'] on every lane."
+      pm_owes_re_verification_before_closure: "The audit's oracle run is on 41aaed0, but S5 is landing across six lanes right now. AT CLOSURE the PM must re-run pnpm e2e, pnpm test:browser and pnpm mutate:corpus on the then-current clean tree - a five-scenario corpus changes the observation count, and the Vue row must be read against the react row per scenario again. Recorded as a PM obligation, not a Worker's."
+      pm_note_on_the_read_only_reading: "The Judge DECLINED to write its own note file, treating any write as a breach of the read-only contract, even though its dispatch explicitly permitted that one path and three preceding Judges wrote theirs under identical wording. The PM transcribed the reasoning into notes/T999-vue-audit.md. The stricter reading is defensible and cost only a transcription - but the next Judge dispatch will say 'you MUST write your note to this path' rather than 'you MAY', which removes the ambiguity."
+      worker_package: null
+      spawned_tasks:
+        - T009
 checks:
   dirty_fingerprint: unknown
   last_verification:
