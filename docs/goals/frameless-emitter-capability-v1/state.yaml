@@ -90,7 +90,7 @@ visual_board:
     predecessor goal that closed complete this session. Recorded as an explicit choice, not an
     omission - the command above turns it on at any time.
 
-active_task: T009
+active_task: T011
 
 tasks:
   - id: T001
@@ -408,7 +408,7 @@ tasks:
   - id: T009
     type: worker
     assignee: Worker
-    status: active
+    status: blocked
     reasoning_hint: high
     spec: "T002 receipt, finding F7 - AUTHORITATIVE. Runs AFTER T003 and BEFORE T004."
     objective: >-
@@ -503,8 +503,79 @@ tasks:
       - "pnpm e2e moves. A migration that changes behaviour is not this step."
       - "The real .jsx reference count differs materially from 93 - report the actual number."
       - "A demo app breaks in a way that needs a scaffold change - report it; the charter requires official scaffolds AS THEY SHIP."
-    receipt: null
-
+    receipt:
+      result: blocked
+      harness: claude-code
+      verification_attempts: 2
+      note: notes/T009-extension-migration.md
+      blocked_reason: "The .jsx -> .tsx half needs 18 LOAD-BEARING files outside allowed_files - a stop_if, not a deviation. The vue/svelte lang=\"ts\" half was completed and fully verified first because it is PROVABLY INDEPENDENT and entirely inside scope."
+      summary: "STEP 1.5 HAS TWO INDEPENDENT HALVES. The vue/svelte lang=\"ts\" flip LANDED IN FULL with no type printed, proved behaviour-neutral by normalised diff (ZERO residual) and by pnpm e2e. The Worker also made the ruling T010 left unmade: script[setup,lang=ts] enters BASELINE_FORM_INVENTORY at floor 3.2, marked unverified, measured against the resolved vue@3.5.40 which ships no CHANGELOG and zero @since. The .jsx -> .tsx half is BLOCKED."
+      changed_files:
+        - packages/frameworks/vue/src/emitter/index.ts
+        - packages/frameworks/vue/src/gate/index.ts
+        - packages/frameworks/vue/test/emitter.test.ts
+        - packages/frameworks/vue/test/gate.test.ts
+        - packages/frameworks/vue/test/compile-emitted.test.ts
+        - "packages/frameworks/vue/generated (8 files)"
+        - packages/frameworks/svelte/src/emitter/index.ts
+        - "packages/frameworks/svelte/generated (8 files)"
+        - "demos/vue-official/src/emitted (8 files)"
+        - "demos/svelte-official/src/lib/emitted (8 files)"
+        - docs/goals/frameless-emitter-capability-v1/notes/T009-extension-migration.md
+      commands:
+        - cmd: "pnpm test (baseline, pre-edit)"
+          status: pass
+          note: "1102/1 INDEPENDENTLY CONFIRMED before any edit"
+        - cmd: "pnpm test (final)"
+          status: pass
+          note: "1102/1 - count UNCHANGED, same file, same test, same foreign cause; zero pre-existing tests changed status"
+        - cmd: "pnpm check"
+          status: pass
+          note: "exit 0 across all six framework projects"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0/0 over 396 files"
+        - cmd: "pnpm check:citations"
+          status: pass
+          note: "clean, re-run after the note landed"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "6 demos x 8 scenarios all equal; SSR 12/12 both lanes; persistence no-flash + write-through both lanes. THE decisive behaviour-neutrality check, and IT DID NOT MOVE."
+        - cmd: "non-vacuity probe then regenerate all six lanes + both composition scripts"
+          status: pass
+          note: "junk appended to vue/S1.vue and svelte/S1.svelte, regenerated, BOTH RESTORED - only then was the diff trusted"
+        - cmd: "per-lane normalised diff vs HEAD"
+          status: pass
+          note: "32 emitted files, raw diff exactly +32/-32 (one line each); normalising the script open tag on BOTH sides leaves ZERO residual"
+        - cmd: "citation-coupling probe"
+          status: pass
+          note: "renamed react generated/S1.jsx -> .tsx; check:citations exit 0. A real fear, MEASURED AND REFUTED. Tree restored."
+        - cmd: "git status --short"
+          status: pass
+          note: "38 owned + 1 note; exactly the 3 FOREIGN entries untouched; nothing committed"
+      THE_STOP_IS_THE_RIGHT_KIND: "It did not widen its own scope to finish, and it did not stop with nothing measured. The two halves are PROVABLY INDEPENDENT - vue/svelte carry no .jsx reference, the JSX lanes carry no script-lang attribute - so it delivered the half that fits, fully verified, and left the other with a precise 18-file table. The intermediate state is legal and self-consistent because T002 measured lang-WITHOUT-type as clean in both compilers."
+      THE_GATE_TRIO_IS_THE_DANGEROUS_PART_AND_PM_CONFIRMED_IT: "react/solid/qwik gate discovery filters on entry.name.endsWith('.jsx') - PM VERIFIED at react:137, solid:635, qwik:528. RENAMING OUTPUT TO .tsx DOES NOT FAIL LOUDLY: it makes all three gates FIND ZERO FILES AND PASS VACUOUSLY. Doing the rename under the allowlist as written would have INTRODUCED the silent-hole class this project keeps catching. That is why the stop is correct rather than cautious."
+      brief_errors_found:
+        - "THE 93 IS NOT THE ACTIONABLE NUMBER. Re-derived: 169 tracked files reference .jsx (PM confirmed 169). Excluding probes/, poc/ and historical goal notes leaves ~96 files / 476 lines - 59 INSIDE allowed_files, 37 outside, 18 of those LOAD-BEARING. The brief framed 93 as a SIZE; the blocking property is THE 18."
+        - "'THE SOLE GATE-SIDE BLOCKER' WAS HALF THE PICTURE. Vue refused the flip and needed a ruling. SVELTE ACCEPTED IT IN TOTAL SILENCE: its BASELINE_FORM_INVENTORY has no script-block kind, so checkSources never observes script attributes, and no svelte test pins the script open tag. VUE IS THE SOLE BLOCKER ONLY BECAUSE SVELTE IS BLIND, NOT BECAUSE SVELTE IS CLEAN."
+        - "TWO STALE PREMISES NOW SHIP IN THE SVELTE GATE (outside allowed_files): require-event-dispatcher-types is omitted partly because the rule needs a <script lang=\"ts\"> block 'which this emitter never produces' - NOW FALSE, though the verdict survives on two other axes it already names; and no-unused-props describes this lane's output as 'plain emitted .svelte', which no longer holds. SAME DEAD-LIMB SHAPE T010 FOUND TWICE IN THE VUE GATE."
+        - "A FEAR THE BRIEF DID NOT RAISE, MEASURED AND REFUTED: the citation guard does NOT couple to generated paths, so ~50 historical goal notes citing generated/*.jsx need no rewriting. The rename forces no ruling about editing the historical record."
+      deliberate_red_proofs:
+        - "REVERTED both emitters' attribute, regenerated, re-ran: VUE 14 TESTS RED (inventory anti-vacuity pin, re-aimed script-block mutation row, emitter shape row, compile-oracle calibration, whole baseline-form-inventory family). SVELTE: ZERO - which is itself the finding that svelte is blind."
+        - "svelte eslint arbiter proved NOT silenced by lang=\"ts\": an unkeyed {#each} mutant drew svelte/require-each-key identically before and after. A dark arbiter would have been a regression, not neutrality."
+        - "vue gate driven on the real lang=\"ts\" mutant BEFORE the fix: exactly one violation, baseline-form-inventory, no-typed-props silent - T010's handover reproduced precisely."
+      deviations:
+        - "PARTIAL DELIVERY BY DESIGN - see THE_STOP_IS_THE_RIGHT_KIND."
+        - "REPLACED the bare script[setup] inventory row rather than adding alongside it: the file's own reasoning forbids an allowlist permitting a form nothing emits. The 14-test deliberate red confirms the replacement is what gives a revert its detectors."
+        - "FLIPPED the direction of T010's lang mutation row rather than deleting it - lang=\"ts\" is now shipped so it cannot be the mutant; its ABSENCE is. Both of T010's claims survive; only the direction moved."
+        - "STRENGTHENED the vue emitter shape row beyond a rename: it now asserts exactly one lang=, no defineProps< and no withDefaults(. A row checking only the attribute would go GREEN on a step that had quietly started printing types."
+        - "Ran pnpm check:citations though the card's verify omits it."
+      remaining_blockers:
+        - "18 LOAD-BEARING FILES OUTSIDE allowed_files: react/solid/qwik src/gate/index.ts (x3); react/solid regenerate-composition.ts and measure-size.ts (x4); solid/vitest.config.ts; cli test/{program,node-runtime,receipts}.test.ts (x3); demos/ssr {react,solid} app.tsx + emitted.d.ts (x4), calibration-handler-noop-seat.box.ts, witness-receipt.json; demos/ui-kit capture.browser.test.tsx (x2) and solid vitest.config.ts. Plus ~19 documentary files that would go stale."
+        - "demos/ssr and demos/ui-kit are consumed by pnpm e2e AND consume the CLI's emitted filename, so packages/cli/src/program.ts CANNOT be touched in isolation - doing so breaks the step's own decisive check."
+        - "packages/frameworks/{react,solid,qwik}/src/format-emitted.ts passes the virtual filename 'generated.jsx' to oxfmt. Left alone here to keep bytes identical, but STEP 2 NEEDS IT: a .jsx parser is wrong once a type is printed."
+        - "IR-8's type is admitted and shape-checked by all six lanes, PRINTED BY NONE. The vue Gate 5 measurement still says the type-argument form is not the shape vue may print."
+      stopped_because: "Need 18 load-bearing files outside allowed_files for the .jsx -> .tsx half."
   - id: T010
     type: worker
     assignee: Worker
@@ -614,6 +685,93 @@ tasks:
         - "PARSE-VISIBILITY HOLE, unrepaired and out of scope: vue gate parseEmitted() swallows compileScript failures with `catch { script = [] }`, so an unreadable script yields an EMPTY AST and EVERY script-walking limb goes silent. The withdrawn lang limb never covered this - it fired when lang was PRESENT, precisely when the parser was most capable. Only the eslint arbiter notices today."
         - "IR-8's type is admitted and shape-checked by all six lanes but PRINTED BY NONE. T004 owns that - and the vue Gate 5 measurement says the type-argument form is NOT the shape it may print."
       stopped_because: null
+  - id: T011
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    spec: "T009 receipt, remaining_blockers - AUTHORITATIVE. This is Step 1.5's SECOND HALF."
+    objective: >-
+      The .jsx -> .tsx half of Step 1.5, with the 18 load-bearing files T009 measured now IN scope.
+      Still NO TYPE MAY BE PRINTED.
+    THE_GATE_TRIO_MUST_MOVE_IN_THIS_SLICE_OR_THE_GATES_GO_DARK: >-
+      react/solid/qwik gate discovery filters on entry.name.endsWith('.jsx') - PM VERIFIED at
+      react:137, solid:635, qwik:528. RENAMING OUTPUT TO .tsx DOES NOT FAIL LOUDLY. It makes all
+      three gates FIND ZERO FILES AND PASS VACUOUSLY, which is the silent-hole class this project
+      keeps catching. The three gates, their eslint `files: ['**/*.jsx']` overrides and their
+      ./X.jsx specifier derivation move WITH the rename, and you must PROVE each gate still finds
+      its files afterwards - a gate that passes over nothing is worse than a gate that fails.
+    also_in_scope_because_e2e_depends_on_them: >-
+      demos/ssr and demos/ui-kit are consumed BY pnpm e2e and consume the CLI's emitted filename,
+      so packages/cli/src/program.ts CANNOT be changed in isolation - doing so breaks this step's
+      own decisive check.
+    two_stale_gate_premises_T009_found_while_blocked: >-
+      SVELTE GATE, outside T009's scope and now inside yours: require-event-dispatcher-types is
+      omitted partly because the rule needs a <script lang="ts"> block "which this emitter never
+      produces" - FALSE since T009, though the verdict survives on two other axes the entry already
+      names. And no-unused-props describes this lane's output as "plain emitted .svelte", which no
+      longer holds. SAME DEAD-LIMB SHAPE T010 FOUND TWICE IN THE VUE GATE: correct the REASON,
+      re-derive whether the verdict survives, do not simply delete.
+    and_svelte_is_BLIND_not_clean: >-
+      T009 measured that svelte accepted the lang="ts" flip in TOTAL SILENCE - its
+      BASELINE_FORM_INVENTORY has no script-block kind, so checkSources never observes script
+      attributes, and no svelte test pins the script open tag. Reverting the vue attribute turned
+      14 vue tests red; reverting svelte's turned ZERO. That asymmetry is a real instrument gap.
+    constraints:
+      - "NO TYPE MAY BE PRINTED. That is still what makes this verifiable."
+      - "RE-DERIVE THE FILE SET YOURSELF. T009 measured 169 tracked files referencing .jsx (PM confirmed 169), ~96 actionable, 18 load-bearing - and a rename changes the set as it runs."
+      - "Angular is out of scope; its lane is already .ts."
+      - "format-emitted.ts passes the virtual filename 'generated.jsx' to oxfmt. Changing it moves bytes, so decide deliberately and say which you chose and why - STEP 2 NEEDS IT CHANGED, but this step must stay byte-neutral apart from the extension."
+      - "Regenerate BEFORE diffing; a generated*/ diff passes vacuously if nothing regenerates."
+    verify:
+      - "pnpm test   # baseline at dispatch; the pre-existing package-inventory failure must stay at exactly 1"
+      - "pnpm check"
+      - "pnpm lint"
+      - "pnpm check:citations"
+      - "pnpm e2e   # THE decisive behaviour-neutrality check"
+      - "PER GATE, PROVE NON-VACUITY: after the rename each of react/solid/qwik gate discovery must still find its emitted files. Show the count before and after."
+      - "per lane: emitted output differs from HEAD ONLY in extension - normalise and diff to zero residual"
+      - "git status --short"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to print a type."
+      - "pnpm e2e moves."
+      - "A GATE FINDS ZERO FILES after the rename. That is the vacuous-pass hazard, and it is a STOP, not a warning."
+      - "A demo app needs a scaffold change - report it; the charter requires official scaffolds AS THEY SHIP."
+      - "Verification fails twice for the same reason."
+    allowed_files:
+      - packages/cli/src/program.ts
+      - packages/cli/test
+      - packages/frameworks/react/src
+      - packages/frameworks/solid/src
+      - packages/frameworks/qwik/src
+      - packages/frameworks/svelte/src/gate/index.ts
+      - packages/frameworks/react/test
+      - packages/frameworks/solid/test
+      - packages/frameworks/qwik/test
+      - packages/frameworks/svelte/test
+      - packages/frameworks/react/scripts
+      - packages/frameworks/solid/scripts
+      - packages/frameworks/qwik/scripts
+      - packages/frameworks/react/generated
+      - packages/frameworks/solid/generated
+      - packages/frameworks/qwik/generated
+      - packages/frameworks/react/generated-composition
+      - packages/frameworks/solid/generated-composition
+      - packages/frameworks/react/generated-persistence
+      - packages/frameworks/solid/generated-persistence
+      - packages/frameworks/solid/vitest.config.ts
+      - demos/react-official
+      - demos/solid-official
+      - demos/qwik
+      - demos/ssr
+      - demos/ui-kit
+      - demos/composition-kit
+      - demos/persistence
+      - scripts/e2e.mjs
+      - docs/goals/frameless-emitter-capability-v1/notes/T011-jsx-to-tsx.md
+    receipt: null
+
   - id: T004
     type: worker
     assignee: Worker

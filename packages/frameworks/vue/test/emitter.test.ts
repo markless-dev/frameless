@@ -173,11 +173,27 @@ describe('Vue 3 emitter', () => {
 			expect(mutate(fresh, 'do not edit.', 'do not edit!')).not.toBe(checkedIn);
 		});
 
-	test('emits an SFC with <script setup>, no lang, and a default-exported component', async () => {
+	/**
+	 * STEP 1.5 FLIPPED THE `lang` ARM OF THIS ROW AND KEPT ITS SHAPE. It used to
+	 * read `<script setup>` plus `not.toContain('lang=')`; the attribute is now
+	 * REQUIRED and the thing that must stay absent is A PRINTED TYPE, which is what
+	 * the annotation arms below assert. Both halves of the pairing are load-bearing:
+	 * `lang="ts"` WITHOUT a type is the whole claim of a behaviour-neutral migration,
+	 * so a row that only checked the attribute would go green on a step that had
+	 * quietly started printing types.
+	 */
+	test('emits an SFC with <script setup lang="ts">, NO printed type, and a default-exported component', async () => {
 		for (const [file] of FIXTURES) {
 			const source = await emitted(file);
-			expect(source).toContain('<script setup>\n');
-			expect(source).not.toContain('lang=');
+			expect(source).toContain('<script setup lang="ts">\n');
+			// The ONLY `lang=` in the file is the one above - a second would mean a
+			// normal <script> block appeared alongside the setup block.
+			expect(source.match(/lang=/g)).toHaveLength(1);
+			// NO TYPE IS PRINTED. defineProps keeps its ARRAY form (no type argument),
+			// and no annotation reaches the script. This is what makes Step 1.5's
+			// behaviour-neutrality claim checkable rather than asserted.
+			expect(source).not.toContain('defineProps<');
+			expect(source).not.toContain('withDefaults(');
 			expect(source).toContain('<template>\n');
 			// A .vue module is one component exported as the module DEFAULT, so the
 			// IR's named ComponentExport cannot be honoured by spelling. The name is

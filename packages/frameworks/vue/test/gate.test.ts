@@ -948,12 +948,32 @@ describe('Vue dossier gate', () => {
 	 * pinned as SILENT on a file that contains no type. That negative is what
 	 * makes the row a measurement rather than a restatement - it goes red the day
 	 * anyone reinstates a lang-shaped trigger under this id.
+	 *
+	 * T009 (STEP 1.5) THEN FLIPPED WHICH SPELLING IS THE MUTANT, and left T010's
+	 * finding standing underneath it. `lang="ts"` is now what the emitter SHIPS, so
+	 * it can no longer be the mutant; `script[setup,lang=ts]` REPLACED the bare
+	 * `script[setup]` row in the inventory, on the same "an allowlist must not
+	 * permit a form nothing emits" reasoning worked example 2a used for the
+	 * directive longhands. That replacement is precisely what gives a REVERT of the
+	 * emitter its second independent detector, and this row is that detector: strip
+	 * the attribute and `baseline-form-inventory` refuses the bare form.
+	 *
+	 * BOTH OF T010'S CLAIMS SURVIVE THE FLIP UNCHANGED - the policy with
+	 * jurisdiction over the script-block form is the inventory, and `no-typed-props`
+	 * stays SILENT on a file that contains no type. Only the direction moved.
 	 */
-	test('MUTATION: lang="ts" is refused by baseline-form-inventory, NOT by no-typed-props', async () => {
-		const mutant = mutate(s3, '<script setup>', '<script setup lang="ts">');
-		const policies = await policiesFor('generated/LangMutant.vue', mutant);
+	test('MUTATION: the script-block form is policed by baseline-form-inventory, NOT by no-typed-props', async () => {
+		// The SHIPPED spelling carries the attribute, so the mutant is its ABSENCE.
+		const mutant = mutate(s3, '<script setup lang="ts">', '<script setup>');
+		const policies = await policiesFor('generated/NoLangMutant.vue', mutant);
 		expect(policies).toContain('baseline-form-inventory');
 		expect(policies).not.toContain('no-typed-props');
+		// And the refusal names the form it actually saw, so a future reader is not
+		// left inferring which of the two spellings was rejected.
+		const violations = await violationsFor('generated/NoLangMutant.vue', mutant);
+		expect(
+			violations.find((entry) => entry.policy === 'baseline-form-inventory')?.message,
+		).toContain('script[setup]');
 	});
 
 	/**
@@ -969,8 +989,13 @@ describe('Vue dossier gate', () => {
 	 * assertion is blind to it.
 	 */
 	test('MUTATION: rejects defineProps<{...}>() on its MEASURED Gate 5 grounds, not on IR-8', async () => {
+		// `lang="ts"` USED TO BE APPLIED HERE AS A SECOND MUTATION. Since Step 1.5 it
+		// is what the emitter ships, so `s3` already carries it and only the type
+		// argument is the mutant - which sharpens the row rather than weakening it:
+		// the refusal is now measured against output that differs from the shipped
+		// corpus in the TYPE ALONE.
 		const mutant = mutate(
-			mutate(s3, '<script setup>', '<script setup lang="ts">'),
+			s3,
 			"const props = defineProps(['initial', 'onTrace']);",
 			'const props = defineProps<{ initial: number; onTrace: (phase: string) => void }>();',
 		);
@@ -1190,7 +1215,10 @@ describe('MUTATION: baseline-form-inventory (IR-4)', () => {
 		// is also the freshness pin: a new form appearing in emitted output is a red
 		// test here before it is anything else.
 		const blocks = [
-			{ kind: 'sfc-block', form: 'script[setup]' },
+			// Step 1.5: the shipped script block carries `lang="ts"` and prints no
+			// type. If this row ever reads `script[setup]` again, the emitter lost the
+			// attribute - which is the freshness pin working, not a stale expectation.
+			{ kind: 'sfc-block', form: 'script[setup,lang=ts]' },
 			{ kind: 'sfc-block', form: 'template' },
 		];
 		const nodes = [

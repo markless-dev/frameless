@@ -579,6 +579,24 @@ export type BaselineForm = {
 const SCRIPT_SETUP_FLOOR_REASON =
 	'3.2 is the release in which <script setup> and its compiler macros stopped being experimental, which is documentary evidence from the Vue release history - not from any artifact this repo has. The resolved vue@3.5.40 ships no CHANGELOG and no @since tag anywhere in its type declarations, so the floor could not be checked against something on disk.';
 
+/**
+ * THE RULING T010 DELIBERATELY LEFT UNMADE, made here (T009, Step 1.5).
+ *
+ * `script[setup,lang=ts]` REPLACES the bare `script[setup]` row rather than
+ * joining it, on the SAME reasoning worked example 2a used when `:` and `@`
+ * replaced the `v-bind`/`v-on` longhands a few rows below: this inventory is an
+ * allowlist of every form the emitter MAY produce, and after Step 1.5 there is no
+ * emission site left that can produce a bare `<script setup>`. Keeping both would
+ * permit a form nothing emits - a silent widening - and would cost a regression to
+ * the un-attributed spelling its second independent detector.
+ *
+ * THE FLOOR IS 3.2 BECAUSE `<script setup>` IS THE BINDING CONJUNCT, NOT `lang`.
+ * A `lang` attribute on an SFC script block predates Vue 3 entirely, so it cannot
+ * raise the floor above the row it replaces.
+ */
+const SCRIPT_SETUP_TS_FLOOR_REASON =
+	'Same 3.2 as the bare <script setup> row it replaces, and for the same documentary reason: <script setup> is the binding conjunct, since a lang attribute on an SFC script block predates Vue 3 entirely and cannot raise the floor. RE-MEASURED at this task rather than inherited, against the vue this repo actually resolves (vue@3.5.40, @vue/compiler-sfc@3.5.40): the package ships no CHANGELOG, and @since appears zero times across its shipped type declarations, so NOTHING ON DISK DATES THIS FORM. What the pin does establish is that the form COMPILES there - compileScript accepts <script setup lang="ts"> over untyped source with an empty diagnostic set in all four COMPILE_MODES - and that is presence at the pin, not a floor, exactly as the shorthand row says of its own compiler-core citation. Recorded unverified for that reason.';
+
 const DIRECTIVE_FLOOR_REASON =
 	'The directive predates Vue 3 entirely and its longhand spelling is unchanged by it, so 3.0 is a safe lower bound rather than a tight one. Nothing in the resolved package dates it.';
 
@@ -600,9 +618,9 @@ export const BASELINE_FORM_INVENTORY: readonly BaselineForm[] = [
 	},
 	{
 		kind: 'sfc-block',
-		form: 'script[setup]',
+		form: 'script[setup,lang=ts]',
 		floor: '3.2',
-		evidence: { status: 'unverified', reason: SCRIPT_SETUP_FLOOR_REASON },
+		evidence: { status: 'unverified', reason: SCRIPT_SETUP_TS_FLOOR_REASON },
 	},
 	{
 		kind: 'macro',

@@ -159,7 +159,9 @@ describe('CALIBRATION: the compile() oracle goes red', () => {
 
 	test('on an SFC with no <script setup> and on one with no <template>', () => {
 		const source = sources.get('generated/S3.vue')!;
-		expect(compileDiagnostics(mutate(source, '<script setup>', '<script>'), 'S3.vue')).toEqual([
+		expect(
+			compileDiagnostics(mutate(source, '<script setup lang="ts">', '<script>'), 'S3.vue'),
+		).toEqual([
 			'emitted Vue SFC S3.vue has no <script setup> block',
 		]);
 		expect(
