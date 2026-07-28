@@ -131,7 +131,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T030
+active_task: T031
 
 tasks:
   - id: T001
@@ -3814,7 +3814,7 @@ tasks:
   - id: T030
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     spec: "T024 ruling - AUTHORITATIVE."
     depends_on: ["T027"]
@@ -3910,6 +3910,108 @@ tasks:
       - "R1 on the Angular board - whether a property binding reaches the served attribute - IS this axis, and it was measured on ONE control. S7 is where it gets a population."
       - "Record S7's size budget in both size.test.ts files. A budget is a RECORDED MEASUREMENT and cannot be derived; every scenario needs one."
       - "The corpus INVENTORIES are derived and should pick S7 up with ZERO edits. If any needs a hand edit, that is a defect in the derivation and a FINDING."
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T030-corpus-s7-form-controls.md
+      summary: "S7 (select, textarea, radio group, keyed checkboxes, plus boolean/dynamic attributes) landed in all SIX lanes; pnpm e2e reports 6 demos x 7 scenarios, all observations equal. 968 tests. Zero zero-read sites (0 of 21), re-derived. Six mutants, six red sites, one sentence. Two standing Solid rulings met their first select and textarea; both were right and NEITHER was relaxed - the fixture moved instead."
+      R1_FINALLY_GOT_ITS_POPULATION_AND_IT_SPLITS_FOUR_WAYS: "R1 was measured on ONE control at T004. With a real population it is far worse than a 3-3 split. `checked` splits the six lanes FOUR WAYS: react and angular SERVE it and FREEZE it; solid and qwik NEVER SERVE it, add it at activation, and freeze it; svelte SERVES it and DELETES it at hydration via remove_input_defaults; and vue never serves it, adds it at activation, and IS THE ONLY LANE OF SIX THAT KEEPS IT IN SYNC. `value` on select and textarea splits four ways too."
+      THE_STRUCTURAL_RESULT_IS_THE_ONE_TO_CARRY: "Every kind:'attribute' reading is IDENTICAL IN ALL SIX LANES at every step. No kind:'property' reading is identical in EVEN TWO ADJACENT LANES. That is a clean statement about where activation neutrality actually lives, and it took a populated scenario to see - the three-scenario corpus had one control and could not have produced it."
+      OPEN_FINDING_A_DYNAMIC_BOOLEAN_ATTRIBUTE_HAS_NO_PORTABLE_SPELLING: "Angular's [attr.x] writes renderStringify(value), so a dynamic `disabled` serves disabled=\"false\" where five lanes serve NOTHING - AND disabled=\"false\" DISABLES THE CONTROL. Three candidate spellings were enumerated and EACH IS REFUTED BY A NAMED LANE. The fixture ships aria-disabled instead, which is portable in all six AND still pins the \"false\" state the ratification named, so the axis is ASSERTED RATHER THAN DROPPED. Routed to T041 for a ruling; it is a policy question for the emitters, not a Worker call."
+      it_moved_the_fixture_rather_than_the_gates_twice: "Solid's attr:value rule met its first <select> and <textarea> and solid-js declares attr:* on NEITHER interface; Solid's controlled-input ruling met its first <select>. Both fired correctly. The Worker dropped the two value bindings and changed onChange to onInput IN THE FIXTURE - it did not relax either gate, and it did not silence a diagnostic to make the ACCEPTED list absorb two new TS2322s. That is the third and fourth time a standing Solid ruling has met its first real instance in this phase and been vindicated."
+      changed_files:
+        - packages/compiler/test/fixtures/s7-form-controls.tsrx
+        - packages/compiler/test/goldens/s7-form-controls.json
+        - packages/compiler/test/enriched-ir.test.ts
+        - packages/frameworks/react/scripts/regenerate.ts
+        - packages/frameworks/react/generated/S7.jsx
+        - packages/frameworks/solid/scripts/regenerate.ts
+        - packages/frameworks/solid/generated/S7.jsx
+        - packages/frameworks/qwik/scripts/regenerate.ts
+        - packages/frameworks/qwik/generated/S7.jsx
+        - packages/frameworks/svelte/scripts/regenerate.ts
+        - packages/frameworks/svelte/generated/S7.svelte
+        - packages/frameworks/vue/scripts/regenerate.ts
+        - packages/frameworks/vue/generated/S7.vue
+        - packages/frameworks/angular/scripts/regenerate.ts
+        - packages/frameworks/angular/generated/S7.ts
+        - packages/frameworks/react/test/size.test.ts
+        - packages/frameworks/solid/test/size.test.ts
+        - demos/react-official/three-way-contract.ts
+        - demos/react-official/src/emitted/FormBoard.jsx
+        - demos/solid-official/src/emitted/FormBoard.jsx
+        - demos/qwik/src/emitted/FormBoard.jsx
+        - demos/svelte-official/src/lib/emitted/FormBoard.svelte
+        - demos/vue-official/src/emitted/FormBoard.vue
+        - demos/angular-official/src/emitted/FormBoard.ts
+        - scripts/e2e.mjs
+        - scripts/corpus-mutation.mjs
+        - docs/goals/frameless-defects-and-targets-v1/notes/T030-corpus-s7-form-controls.md
+        - demos/react-official/package.json
+        - demos/react-official/src/App.jsx
+        - demos/react-official/scenarios.box.ts
+        - demos/solid-official/package.json
+        - demos/solid-official/src/App.jsx
+        - demos/solid-official/scenarios.box.ts
+        - demos/qwik/package.json
+        - demos/qwik/src/routes/s7/index.tsx
+        - demos/qwik/scenarios.box.ts
+        - demos/svelte-official/package.json
+        - demos/svelte-official/src/lib/scenario-props.ts
+        - "demos/svelte-official/src/routes/s7/+page.svelte"
+        - demos/svelte-official/scenarios.box.ts
+        - demos/vue-official/package.json
+        - demos/vue-official/src/App.vue
+        - demos/vue-official/src/scenario-props.ts
+        - demos/vue-official/scenarios.box.ts
+        - demos/angular-official/package.json
+        - demos/angular-official/src/app/app.routes.ts
+        - demos/angular-official/src/app/scenario-props.ts
+        - demos/angular-official/scenarios.box.ts
+      commands:
+        - cmd: "UPDATE_GOLDENS=1 pnpm test, then pnpm test without it"
+          status: pass
+          note: "50 files, 968 passed, up from 944; PM re-ran and confirms 968"
+        - cmd: "pnpm --dir packages/frameworks/{six}/ regenerate"
+          status: pass
+          note: "all six, no throw"
+        - cmd: "pnpm check"
+          status: pass
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 380 files"
+        - cmd: "pnpm test:browser"
+          status: pass
+          note: "react 60, solid 49, svelte 13, vue 18"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "6 demos x 7 scenarios, all observations equal"
+        - cmd: "shasum the six generated/S7.* across a SECOND and THIRD regenerate"
+          status: pass
+          note: "identical both times - and note it ran THREE regenerations where the card asked for two"
+        - cmd: "git diff --exit-code -- packages/frameworks/*/generated"
+          status: pass
+          note: "clean, S1-S7"
+        - cmd: "hand run of the harness's steps across 6 lanes, no git op"
+          status: pass
+          note: "6/6 RED, 6/6 restored byte-identical - explicitly NOT reported as a harness verdict"
+        - cmd: "pnpm mutate:corpus --scenario s1..s7"
+          status: pass
+          note: "PM RAN IT AFTER COMMITTING AS SOLE WRITER: 42 mutants, EVERY ONE RED, every one restored"
+      deviations:
+        - "Dropped value={size} and value={notes} from the shipped fixture. Solid emits an unconditional attr:value pair for kind:'property' name 'value', which has no declared type on SelectHTMLAttributes or TextareaHTMLAttributes; accepting the two TS2322s would have needed a file outside allowed_files. Measured and recorded; the ACCEPTED list is byte-unchanged and NO diagnostic was silenced."
+        - "Dropped disabled={locked} and shipped aria-disabled instead - measured divergent in Angular alone. The substitute is portable in all six AND pins the \"false\" state, so the axis is still asserted."
+        - "Changed the select's handler from onChange to onInput to satisfy Solid's controlled-input ruling, which met its first <select> here. Fixed IN THE FIXTURE, never by relaxing the gate."
+        - "resumeSymbols.s7 asserts _form_button_q_e_click_ rather than the _button_q_e_click_ the other scenarios share: S7's board is a <form>, so the measured structural prefix genuinely differs and the shared one would have been the WEAKER read."
+        - "S7's registered mutant is the boolean-attribute half of the ratified axis. The second spelling (property-to-attribute value projection) is NOT uniformly expressible - react, svelte and vue have no attribute/property distinction in their emitted spelling."
+      PM_BREACH_RECORDED_IN_FULL: "THE WORKER CAUGHT A PM DEFECT AND IT IS THE MOST SERIOUS ONE THIS SESSION. Commits 2bf42b5, dd9a875 and 97f6062 wrote 27 FILES INSIDE THIS CARD'S allowed_files and COMMITTED THIS PACKAGE TO MAIN, against the card's own 'do not commit' - including TWO INTERMEDIATE STATES IN WHICH pnpm test WAS RED. Cause: the PM ran `git add -A` for board-update commits while this Worker was live, sweeping its in-flight files in. PM CONFIRMED: 2bf42b5 touched 19 files and 97f6062 touched 38, far beyond the documentation changes those commits described. NOTHING WAS LOST - the Worker verified the final blobs byte-identical by sha256 and cmp - but two commits on main carry red tests, and the dispatch's claim that 'two read-only Judges are running' was false twice over. THIRD RECURRENCE OF THIS HAZARD AND THE FIRST TO CAUSE ACTUAL DAMAGE rather than a stale statement. STANDING FIX ADOPTED: PM commits use NAMED PATHS, never `git add -A`, while any Worker is live - and PM board commits happen BEFORE dispatch, not during."
+      the_harness_warning_is_sharper_than_the_breach: "The Worker pointed out that pnpm mutate:corpus is no longer merely BLOCKED on a dirty surface but DANGEROUS: its restore() is `git checkout --` over MUTATION_SURFACE, so a concurrent `git add -A` during a run would COMMIT A MUTANT TO MAIN. The PM acted on it - the 42-cell run above was executed only after committing, as sole writer with nothing else in flight."
+      remaining_blockers: []
+      spawned_tasks:
+        - T041
+        - T042
+      stopped_because: null
   - id: T040
     type: worker
     assignee: Worker
@@ -3965,10 +4067,72 @@ tasks:
       - "Verification fails twice for the same reason."
     receipt: null
 
-  - id: T031
+  - id: T041
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    spec: "T030 receipt and notes/T030-corpus-s7-form-controls.md sections 4.2 and 4.4 - AUTHORITATIVE."
+    objective: >-
+      Rule on the dynamic HTML boolean attribute, which S7 measured to have NO PORTABLE SPELLING
+      across the six lanes. Decide the repair - v-limit, per-lane lowering, or accept-and-document -
+      and spec it.
+    the_finding: >-
+      Angular's [attr.x] writes renderStringify(value), so a dynamic `disabled` serves
+      disabled="false" WHERE FIVE LANES SERVE NOTHING - and disabled="false" DISABLES THE CONTROL.
+      This is not a formatting difference; it is a behavioural inversion. T030 enumerated THREE
+      candidate spellings and EACH IS REFUTED BY A NAMED LANE. The shipped fixture uses
+      aria-disabled instead, which is portable in all six and still pins the "false" state, so the
+      axis is asserted rather than dropped - but the underlying construct remains unspellable.
+    inputs:
+      - "notes/T030-corpus-s7-form-controls.md sections 4.2 and 4.4 - the three refuted candidates"
+      - "packages/compiler/src/build.ts assertPortableInteriorWhitespace - the T039 v-limit precedent, fail-closed with a lift trigger and a cross-lane matrix"
+      - "docs/DEFECTS.md entry 7 - the format for an OPEN portability defect"
+    constraints:
+      - "Do not implement. Rule."
+      - "THE T039 PRECEDENT IS THE OBVIOUS MODEL AND MAY STILL BE WRONG HERE. That v-limit refused a construct authors rarely need and had a portable substitute already asserted across six lanes. A dynamic boolean attribute is a MAINSTREAM construct - disabled, hidden, readonly, required. Refusing it is far more expensive than refusing an interior double space. Weigh that explicitly rather than reaching for the precedent."
+      - "Consider PER-LANE LOWERING as a real option: the emitters already diverge in FORM while agreeing in BEHAVIOUR, which is the project's whole thesis. If Angular can lower a dynamic boolean to a conditional attribute presence, the construct becomes portable without a refusal."
+      - "Say whether this belongs in docs/DEFECTS.md as entry 8 and whether it extends half 1's oracle - T038 ruled the whitespace finding did NOT extend it."
+      - "aria-disabled is the fixture's substitute, not necessarily the product's answer. Do not ratify it as guidance without saying what it costs a real author."
+    expected_output:
+      - "Ruling: v-limit | per-lane lowering | accept-and-document, with the cost of each"
+      - "Whether the three refuted candidates are exhaustive, re-derived"
+      - "Whether this is DEFECTS.md entry 8, and whether it extends half 1's oracle"
+      - "Worker package if one follows, or an explicit statement that it belongs in the capability goal"
+    receipt: null
+
+  - id: T042
     type: worker
     assignee: Worker
     status: queued
+    reasoning_hint: low
+    objective: "Correct two records S7 measured out of date. Documentation only."
+    why_this_exists: >-
+      Both were reported by T030 from outside its allowed_files, and both are statements that are
+      now FALSE rather than merely incomplete.
+      (1) The T006 Svelte ruling says remove_input_defaults on `checked` has "no impact today". S7
+      SHIPS THREE checked bindings and the deletion is now measured END TO END - the latent twin is
+      no longer latent.
+      (2) T008 section 3's upstream draft against solid-js scopes the attr:* typing gap to
+      InputHTMLAttributes. S7 measured it firing for <select> AND <textarea>, and solid-js declares
+      attr:* on NEITHER - so the draft must widen to every interface accepting CustomAttributes.
+    allowed_files:
+      - docs/goals/frameless-svelte-v1/notes/T006-value-attribute-ruling.md
+      - docs/goals/frameless-defects-and-targets-v1/notes/T008-solid-attr-namespace.md
+      - docs/goals/frameless-defects-and-targets-v1/notes/T042-record-corrections.md
+    verify:
+      - "pnpm lint"
+      - "git diff --exit-code -- packages/ demos/ scripts/   # documentation only; NO code may move"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to change a RULING. Both corrections are to statements of FACT about current behaviour, not to verdicts - T006's Option D ruling and T008's upstream reading both STAND."
+      - "You are about to SEND the upstream report. It stays DRAFTED AND UNSENT - the owner's autonomy grant excludes outward-facing filings under their name."
+    receipt: null
+
+  - id: T031
+    type: worker
+    assignee: Worker
+    status: active
     reasoning_hint: high
     spec: "T024 ruling - AUTHORITATIVE."
     depends_on: ["T030"]
@@ -3978,9 +4142,89 @@ tasks:
       async boundary, repaired with the sync$ array form. It is currently proven at ONE site. This
       scenario is landed ALONE rather than folded, because it is the axis most likely to produce a
       legitimate terminal finding.
+    allowed_files:
+      - packages/compiler/test/fixtures/s8-async-handlers.tsrx
+      - packages/compiler/test/goldens/s8-async-handlers.json
+      - packages/compiler/test/enriched-ir.test.ts
+      - packages/frameworks/react/scripts/regenerate.ts
+      - packages/frameworks/react/generated/S8.jsx
+      - packages/frameworks/solid/scripts/regenerate.ts
+      - packages/frameworks/solid/generated/S8.jsx
+      - packages/frameworks/qwik/scripts/regenerate.ts
+      - packages/frameworks/qwik/generated/S8.jsx
+      - packages/frameworks/svelte/scripts/regenerate.ts
+      - packages/frameworks/svelte/generated/S8.svelte
+      - packages/frameworks/vue/scripts/regenerate.ts
+      - packages/frameworks/vue/generated/S8.vue
+      - packages/frameworks/angular/scripts/regenerate.ts
+      - packages/frameworks/angular/generated/S8.ts
+      - packages/frameworks/react/test/size.test.ts
+      - packages/frameworks/solid/test/size.test.ts
+      - demos/react-official/package.json
+      - demos/react-official/src/App.jsx
+      - demos/react-official/src/emitted/AsyncBoard.jsx
+      - demos/react-official/scenarios.box.ts
+      - demos/react-official/three-way-contract.ts
+      - demos/solid-official/package.json
+      - demos/solid-official/src/App.jsx
+      - demos/solid-official/src/emitted/AsyncBoard.jsx
+      - demos/solid-official/scenarios.box.ts
+      - demos/qwik/package.json
+      - demos/qwik/src/emitted/AsyncBoard.jsx
+      - demos/qwik/src/routes/s8/index.tsx
+      - demos/qwik/scenarios.box.ts
+      - demos/svelte-official/package.json
+      - demos/svelte-official/src/lib/emitted/AsyncBoard.svelte
+      - demos/svelte-official/src/lib/scenario-props.ts
+      - demos/svelte-official/src/routes/s8/+page.svelte
+      - demos/svelte-official/scenarios.box.ts
+      - demos/vue-official/package.json
+      - demos/vue-official/src/emitted/AsyncBoard.vue
+      - demos/vue-official/src/App.vue
+      - demos/vue-official/src/scenario-props.ts
+      - demos/vue-official/scenarios.box.ts
+      - demos/angular-official/package.json
+      - demos/angular-official/src/emitted/AsyncBoard.ts
+      - demos/angular-official/src/app/app.routes.ts
+      - demos/angular-official/src/app/scenario-props.ts
+      - demos/angular-official/scenarios.box.ts
+      - scripts/e2e.mjs
+      - scripts/corpus-mutation.mjs
+      - docs/goals/frameless-defects-and-targets-v1/notes/T031-corpus-s8-async.md
+    verify:
+      - "UPDATE_GOLDENS=1 pnpm test, then pnpm test WITHOUT it"
+      - "pnpm --dir packages/frameworks/react/ regenerate"
+      - "pnpm --dir packages/frameworks/solid/ regenerate"
+      - "pnpm --dir packages/frameworks/qwik/ regenerate"
+      - "pnpm --dir packages/frameworks/svelte/ regenerate"
+      - "pnpm --dir packages/frameworks/vue/ regenerate"
+      - "pnpm --dir packages/frameworks/angular/ regenerate"
+      - "pnpm check"
+      - "pnpm lint"
+      - "pnpm test   # 968 at dispatch"
+      - "pnpm test:browser   # react 60, solid 49, svelte 13, vue 18"
+      - "pnpm e2e   # 6 demos x 8 scenarios, all observations equal"
+      - "shasum the six new generated/S8.* across a SECOND regenerate   # git diff --exit-code is VACUOUS for untracked files"
+      - "git diff --exit-code -- packages/frameworks/*/generated   # covers S1-S7"
+      - "git status --short"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "S8 lands in fewer than SIX lanes."
+      - "THE QWIK sync$ THROW IS A LEGITIMATE TERMINAL FINDING. packages/frameworks/qwik/src/emitter/index.ts will throw for cases Qwik genuinely cannot express. If it throws, report it VERBATIM and STOP - that is a v-limit being ENFORCED, not a defect to work around."
+      - "The S8 IR carries ANY zero-read site. S4 through S7 are all zero."
+      - "A ratified mutant cannot be made RED in some lane - record lane, axis and mutant VERBATIM as an open FINDING."
+      - "Any mutant is byte-identical to its input - mutate() must THROW."
+      - "Any EXISTING golden moves, or the 42/42 degrades."
+      - "THE WHITESPACE V-LIMIT fires on your fixture. That is a CORRECT refusal - author without interior runs, or carry whitespace as an interpolated value. Do NOT weaken the guard."
+      - "THE SOLID show-two-arm POLICY rejects an element subtree appearing verbatim in both arms of a Show. If S8 uses a branch, its arms must differ structurally. Inherited from S5, measured."
+      - "You are about to weaken an activation-neutrality assertion or relax expectedNavigations."
+      - "You are about to run pnpm mutate:corpus. It restores with `git checkout --` over MUTATION_SURFACE and is DANGEROUS on a shared tree. Report both harness commands as blocked; the PM runs them after committing, as sole writer."
+      - "You are about to commit or rewrite history. The PM handles commits."
+      - "Verification fails twice for the same reason."
     constraints:
-      - "THE QWIK sync$ THROW IS A LEGITIMATE TERMINAL FINDING. packages/frameworks/qwik/src/emitter/index.ts around :498 and :642 will throw for cases Qwik genuinely cannot express. If it throws, report it VERBATIM and stop - that is a v-limit being enforced, not a defect to work around."
-      - "allowed_files and verify are filled by the PM from the landed T030 card's actual shape."
+      - "DEFECT 1 ON THIS VERY GOAL WAS EXACTLY THIS - a Qwik QRL emitting preventDefault() inside an async boundary, repaired with the sync$ array form. It is currently proven at ONE SITE. This scenario is landed ALONE rather than folded, because it is the axis most likely to produce a legitimate terminal finding."
+      - "Record S8's size budget in both size.test.ts files. A budget is a RECORDED MEASUREMENT and cannot be derived."
+      - "The corpus INVENTORIES are derived and should pick S8 up with ZERO edits. If any needs a hand edit, that is a defect in the derivation and a FINDING."
     receipt: null
 
   - id: T032
