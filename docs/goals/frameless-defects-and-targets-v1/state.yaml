@@ -131,7 +131,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T041
+active_task: T049
 
 tasks:
   - id: T001
@@ -4422,7 +4422,7 @@ tasks:
   - id: T041
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     spec: "T030 receipt and notes/T030-corpus-s7-form-controls.md sections 4.2 and 4.4 - AUTHORITATIVE."
     objective: >-
@@ -4451,8 +4451,38 @@ tasks:
       - "Whether the three refuted candidates are exhaustive, re-derived"
       - "Whether this is DEFECTS.md entry 8, and whether it extends half 1's oracle"
       - "Worker package if one follows, or an explicit statement that it belongs in the capability goal"
-    receipt: null
-
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      harness: claude-code
+      note: notes/T041-boolean-attribute.md
+      rationale: "PER-LANE LOWERING, NOT A V-LIMIT. Measured: `disabled` lowers to kind:'attribute' while `checked` lowers to 'property', because @markless/compiler's isDomPropertyBindingName is a HARDCODED THREE-NAME ALLOWLIST. The three refuted candidates all vary the bound VALUE; NONE varies the binding KIND, which is where the fix lives. Angular's property path (mapPropName already maps readonly -> readOnly) plus domino reflects booleans in a table BYTE-IDENTICAL to react-dom 19.2.3 across nine values. Blast radius is ZERO. Ledger precedent agrees: entry 9 CLOSED by lowering; entries 7 and 8 contained by refusal and still OPEN."
+      summary: "Ruled per-lane lowering at the IR. Re-derived Angular's renderStringify path from source, the inversion from bundled domino, and all three refutations BY RUNNING react-dom rather than recalling it. Located the root cause in a vendored three-name allowlist. Proved zero golden churn by scanning every golden and every emitter's use of binding.kind. Filed as entry 10, not extending half 1's oracle. Ratified aria-disabled for S7 and REFUSED it as guidance on accessibility grounds."
+      THE_CONSTRUCT_IS_MIS_LOWERED_NOT_UNSPELLABLE_AND_THAT_OVERTURNS_THE_CARD: "The card - written by the PM from T030 - framed this as a construct with NO PORTABLE SPELLING, and asked which of three repairs to pick. THE FRAMING IS WRONG. All three refuted candidates vary WHAT VALUE THE AUTHOR BINDS; not one varies WHAT KIND OF BINDING THE IR EMITS. PM VERIFIED THE ROOT CAUSE IN SOURCE: isDomPropertyBindingName returns true for exactly `value`, `checked`, `selected` - a three-name allowlist - while @tsrx/core 0.1.32 ships a 29-name DOM_BOOLEAN_ATTRIBUTES list IN THE SAME TREE. A COVERAGE GAP IN A THREE-NAME LIST, NOT A PORTABILITY LIMIT OF SIX FRAMEWORKS. And it explains the thing S7 left unexplained: why `checked` did not invert and `disabled` did."
+      it_re_derived_the_refutations_by_running_them: "Angular's mechanism confirmed from setElementAttribute + renderStringify at the pinned 22.0.8 - `value == null` is LOOSE, so `false` falls through to String(false). The inversion probed against Angular's OWN BUNDLED DOMINO: setAttribute('disabled','false') yields .disabled === true. Corroborated by react-dom 19.2.3, which WARNS on exactly that string. All three refutations stand, with one refinement: candidates 1 and 3 diverge only in BYTES, not behaviour - only candidate 2 and the bare boolean actually invert."
+      why_not_the_T039_precedent_and_the_ledger_already_ran_the_experiment: "T039 was right BECAUSE whitespace divergence lives in each framework's own template compiler - nothing to fix, only something to refuse. HERE A LOWERING PROVABLY RECONCILES ALL SIX: domino reflects .disabled across nine values in a table identical to React's, and Angular's mapPropName already maps readonly -> readOnly. AND THE LEDGER IS THE EVIDENCE: entry 9 was CLOSED by lowering; entries 7 and 8 were contained by refusal and remain OPEN. The card warned against reaching for T039 by reflex, and the Judge went further - it found the precedent pointing the other way."
+      IT_REFUSED_aria_disabled_AS_GUIDANCE_ON_ACCESSIBILITY_GROUNDS: "Ratified for S7, where it correctly pins the 'false' state - and REFUSED as advice to authors, in the strongest terms available: aria-disabled leaves the control FOCUSABLE, CLICKABLE AND SUBMITTING while announcing 'disabled' to assistive technology. WORSE THAN THE BUG IT SUBSTITUTES FOR, AND IT LANDS HARDEST ON THE USERS THE ATTRIBUTE EXISTS FOR. The card asked what it costs a real author; that is the answer, and it is not a small one."
+      the_blast_radius_is_zero_and_falsifiable_in_one_command: "Scanned every golden: the ONLY boolean content attribute bound anywhere is `checked`, already kind:'property'. Only Angular and Solid read binding.kind at all, and Solid's branch is `name === 'value'`. So the lowering should move NO golden byte - and T049's verify makes that claim falsifiable in a single git diff --exit-code, with a stop_if that RE-OPENS THE RULING if it moves."
+      PM_CORRECTION_THE_BOARD_CARRIED_A_FALSE_FACT: "The Judge noticed that HEAD was AHEAD OF origin/main while the PM had told two Workers the tree was 'clean at 81be833, PUSHED to origin/main'. PM VERIFIED: 2 commits ahead. The PM pushed at 8b9d9e2, then kept committing and CARRIED THE PHRASE FORWARD WITHOUT RE-CHECKING. Same class as the T041 dispatch fabrication earlier this session - a fact that was true when first said, restated later as if still current. Now genuinely pushed at 9f5599e, verified 0/0."
+      evidence:
+        - "packages/compiler/src/build.ts:844 - kind: target?.kind === 'property' ? 'property' : 'attribute' - frameless's own IR translation site"
+        - "@markless/compiler 0.1.1 isDomPropertyBindingName - three-name allowlist; PM RE-VERIFIED the function body verbatim"
+        - "@tsrx/core 0.1.32 DOM_BOOLEAN_ATTRIBUTES - 29 names including disabled, hidden, readonly, required"
+        - "@angular/core 22.0.8 setElementAttribute (value == null removes, else renderStringify) and renderStringify (String(false) === 'false')"
+        - "@angular/core 22.0.8 mapPropName maps readonly -> readOnly; setDomProperty -> renderer.setProperty"
+        - "@angular/core 22.0.8 isPropertyValid - propName in element; 'disabled' in <p> is FALSE in domino"
+        - "bundled-domino probe: .disabled = false|null|undefined|''|0 -> attribute absent; true|'false'|'disabled'|1 -> disabled=''; setAttribute('disabled','false') -> .disabled === true"
+        - "react-dom 19.2.3 renderToStaticMarkup probe: table IDENTICAL to domino's on every value, and it WARNS on the string 'false'"
+        - "compiler probe: disabled/readonly/required/hidden -> kind 'attribute'; checked -> kind 'property'"
+        - "golden scan: only boolean content attribute bound anywhere is checked, already property"
+        - "only angular emitter:900 and solid emitter:2158 read binding.kind; Solid's branch is name === 'value'"
+      missing_evidence:
+        - "The five non-Angular rows of T030 section 4.2 were ACCEPTED from T030's end-to-end browser measurement rather than re-derived; React was independently reconfirmed here. T030's instrument is the stronger one for that claim, and the Judge said so rather than claiming coverage it did not have."
+        - "NO SERVED PAYLOAD anywhere asserts the lowered behaviour, because no scenario binds a boolean attribute. That is why entry 10 is filed OPEN and why its close trigger is a CORPUS card, not T049."
+      worker_package_recorded_as: T049
+      spawned_tasks:
+        - T049
   - id: T048
     type: worker
     assignee: Worker
@@ -4496,6 +4526,58 @@ tasks:
       - "You are about to touch the Angular _debug_node-chunk.mjs citation or a board receipt's historical ordinal. Both are RULED correct as written."
       - "Any code, assertion or golden moves."
       - "You find a citation whose symbol name is AMBIGUOUS or absent - report it rather than inventing one."
+    receipt: null
+
+  - id: T049
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    spec: "T041 receipt and notes/T041-boolean-attribute.md - AUTHORITATIVE."
+    objective: >-
+      Lower HTML boolean CONTENT attributes to kind:'property' in the IR, so Angular emits
+      [disabled] rather than [attr.disabled] and stops serving disabled="false" where five lanes
+      serve nothing. Prove it with PROBE SOURCES and a registered cross-lane matrix, NOT by
+      registering a fixture or golden. File docs/DEFECTS.md entry 10 as OPEN.
+    the_construct_is_MIS_LOWERED_not_unspellable: >-
+      T030 enumerated three candidate spellings and each was refuted - but ALL THREE VARY WHAT VALUE
+      THE AUTHOR BINDS, and NONE varies WHAT KIND OF BINDING THE IR EMITS. That is where the answer
+      is. PM VERIFIED THE ROOT CAUSE: @markless/compiler's isDomPropertyBindingName is a HARDCODED
+      THREE-NAME ALLOWLIST - value, checked, selected - while @tsrx/core 0.1.32, a sibling dep in
+      the same tree, ships a 29-name DOM_BOOLEAN_ATTRIBUTES list. IT IS A COVERAGE GAP IN A
+      THREE-NAME LIST, NOT A PORTABILITY LIMIT OF SIX FRAMEWORKS. This is also exactly why `checked`
+      did not invert in S7 and `disabled` did.
+    why_not_the_T039_v_limit_precedent: >-
+      T039 was right BECAUSE whitespace divergence lives in each framework's own template compiler -
+      there was nothing to fix, only something to refuse. HERE A LOWERING PROVABLY RECONCILES ALL
+      SIX. And the ledger has already run the experiment: entry 9 was CLOSED by lowering, while
+      entries 7 and 8 were contained by refusal and remain OPEN.
+    constraints:
+      - "THE LOWERING LIVES IN packages/compiler/src/build.ts, NOT the Angular emitter. angular/src/emitter/index.ts:886-891 carries a standing ruling that the emitter makes NO judgement between the IR's kind and the emitted form."
+      - "WRITE THE NAME SET EXPLICITLY in build.ts with the measured six-lane matrix beside it. Do NOT import from @tsrx/core/src/utils/dom.js or @markless/compiler - both are INTERNAL paths, not public exports."
+      - "Do NOT add value, checked or selected. They already arrive as kind:'property' from the vendored classifier."
+      - "Name the costs in the note: Angular gains a dev-mode validity check ('disabled' in <p> is false in domino, so a new Angular-only hard failure, and isPropertyValid can pass server-side and fail in the browser); hidden='until-found' becomes inexpressible; the set becomes a MAINTAINED list."
+    allowed_files:
+      - packages/compiler/src/build.ts
+      - packages/compiler/test/enriched-ir.test.ts
+      - packages/frameworks/angular/test/emitter.test.ts
+      - docs/DEFECTS.md
+      - docs/goals/frameless-defects-and-targets-v1/notes/T041-boolean-attribute-lowering.md
+    verify:
+      - "pnpm test"
+      - "pnpm check"
+      - "pnpm lint"
+      - "regenerate ALL SIX lanes"
+      - "git diff --exit-code -- packages/compiler/test/goldens packages/frameworks/react/generated packages/frameworks/solid/generated packages/frameworks/qwik/generated packages/frameworks/svelte/generated packages/frameworks/vue/generated packages/frameworks/angular/generated   # THE ZERO-BLAST-RADIUS CLAIM, FALSIFIABLE IN ONE COMMAND"
+    stop_if:
+      - "ANY existing golden changes, or any file under packages/frameworks/*/generated changes. THAT REFUTES the zero-blast-radius measurement and the ruling must be RE-OPENED before proceeding."
+      - "You are about to register a fixture, golden, demo route or observation string. The inventories are DERIVED - one fixture enlists every lane's gates at once. Use a probe source in enriched-ir.test.ts; whitespaceProbeSource is the model (T039 precedent)."
+      - "You are about to put the boolean-name check in the Angular emitter."
+      - "You are about to import the name set from an internal path."
+      - "You are about to change the shipped S7 fixture's aria-disabled to a real disabled. Ratified correct for S7; moving it changes six demos, the observation string and the mutation budget."
+      - "You are about to write entry 10 as CLOSED. IT IS OPEN: the repair is proven at the compiler and emitter but in NO SERVED PAYLOAD."
+      - "You are about to run pnpm e2e, pnpm test:browser or pnpm mutate:corpus."
+      - "You are about to file anything upstream against Angular, @markless/compiler or @tsrx/core. The autonomy grant excludes outward-facing filings."
     receipt: null
 
   - id: T042
