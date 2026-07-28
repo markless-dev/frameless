@@ -154,7 +154,16 @@ const LANES = [
 	},
 ];
 
-const SCENARIO_FILES = { s1: 'S1', s2: 'S2', s3: 'S3', s4: 'S4', s5: 'S5', s6: 'S6', s7: 'S7' };
+const SCENARIO_FILES = {
+	s1: 'S1',
+	s2: 'S2',
+	s3: 'S3',
+	s4: 'S4',
+	s5: 'S5',
+	s6: 'S6',
+	s7: 'S7',
+	s9: 'S9',
+};
 
 // ---------------------------------------------------------------------------
 // Byte-verified text surgery
@@ -397,6 +406,52 @@ const s7DynamicAttributeFrozen = (find, replacement) => ({
 	apply: (source) => replaceOnce(source, find, replacement),
 });
 
+/**
+ * S9's axis, in all six lanes: a real HTML BOOLEAN CONTENT ATTRIBUTE, lowered to
+ * `kind: 'property'`, is ABSENT until state says otherwise.
+ *
+ * `disabled` on the gate button is bound to a state cell that is `false` until
+ * the lock click, so a correct lane serves NO `disabled` at all and grows
+ * `disabled=""` afterwards. The mutant replaces the binding with a STATIC
+ * `disabled="false"` — which is not a neutral edit but the exact byte sequence
+ * the defect produced: Angular's `[attr.disabled]` path ran `renderStringify(false)`
+ * and served `disabled="false"`, and BOTH react-dom and the domino build Angular
+ * serializes from read that string as TRUE. So the mutant ships a control that is
+ * really disabled where every lane must ship an enabled one.
+ *
+ * WHY THIS AND NOT A VALUE CHANGE, and why it is not S7's mutant twice. S7's
+ * `data-lock` is an `attribute`-kind binding and its mutant attacks whether a
+ * dynamic attribute is dynamic. This one attacks the LOWERING: the whole claim
+ * of the repair is that a boolean name reaches each lane's property path rather
+ * than its attribute path, and `disabled="false"` is precisely what the
+ * attribute path produced before T049. A mutant that changed the bound state
+ * would have been caught by any reader that compares strings and would have said
+ * nothing about the kind.
+ *
+ * It is red at THREE of the scenario's four readings, and deliberately: red as
+ * served, where the attribute must be absent; green after the lock click, where
+ * `""` is expected and a stringified `"false"` is a different string; and red
+ * again after the unlock click, where it must have gone absent. A mutant red
+ * only at one end could be satisfied by a lane that had frozen the attribute at
+ * a correct-looking value.
+ *
+ * Spelled in each lane's own binding idiom, not inherited between lanes:
+ * `{locked}` in react and svelte, `{locked()}` in solid, `{locked.value}` in
+ * qwik, `:disabled` in vue and `[disabled]` — the PROPERTY form T041 specified,
+ * not `[attr.disabled]` — in angular. The REPLACEMENT is the same sixteen
+ * characters in every lane, because a static HTML attribute is the one thing
+ * these six templating languages spell identically.
+ */
+const s9BooleanAttributeFrozen = (find, replacement) => ({
+	axis: 'a boolean content attribute is ABSENT until state says otherwise',
+	text: `${find}  ->  ${replacement}`,
+	expect:
+		'the served page carries disabled="false" on the gate where the attribute must be ABSENT ' +
+		'ENTIRELY, so the scenario goes red on its FIRST reading — and red again after the unlock ' +
+		'click, where a lane that reconciled it would have removed it',
+	apply: (source) => replaceOnce(source, find, replacement),
+});
+
 const MUTANTS = {
 	react: {
 		s1: s1DerivedFrozen('${count * multiplier}', '${1 * multiplier}'),
@@ -412,6 +467,7 @@ const MUTANTS = {
 		),
 		s6: s6TextEdgeWidened('start{done}', 'start {done}'),
 		s7: s7DynamicAttributeFrozen('data-lock={lock}', 'data-lock="false"'),
+		s9: s9BooleanAttributeFrozen('disabled={locked}', 'disabled="false"'),
 	},
 	solid: {
 		s1: s1DerivedFrozen('${count() * props.multiplier}', '${1 * props.multiplier}'),
@@ -424,6 +480,7 @@ const MUTANTS = {
 		s5: s5RebuiltFromStaleCollection('<For each={entries}>', '<For each={props.seed}>'),
 		s6: s6TextEdgeWidened('start{done()}', 'start {done()}'),
 		s7: s7DynamicAttributeFrozen('data-lock={lock()}', 'data-lock="false"'),
+		s9: s9BooleanAttributeFrozen('disabled={locked()}', 'disabled="false"'),
 	},
 	qwik: {
 		s1: s1DerivedFrozen('${count.value * props.multiplier}', '${1 * props.multiplier}'),
@@ -439,6 +496,7 @@ const MUTANTS = {
 		),
 		s6: s6TextEdgeWidened('start{done.value}', 'start {done.value}'),
 		s7: s7DynamicAttributeFrozen('data-lock={lock.value}', 'data-lock="false"'),
+		s9: s9BooleanAttributeFrozen('disabled={locked.value}', 'disabled="false"'),
 	},
 	svelte: {
 		s1: s1DerivedFrozen('${count * multiplier}', '${1 * multiplier}'),
@@ -463,6 +521,7 @@ const MUTANTS = {
 			'start {done}{unit}end',
 		),
 		s7: s7DynamicAttributeFrozen('data-lock={lock}', 'data-lock="false"'),
+		s9: s9BooleanAttributeFrozen('disabled={locked}', 'disabled="false"'),
 	},
 	vue: {
 		s1: s1DerivedFrozen('${count.value * props.multiplier}', '${1 * props.multiplier}'),
@@ -478,6 +537,7 @@ const MUTANTS = {
 			'start {{ done }}{{ unit }}end',
 		),
 		s7: s7DynamicAttributeFrozen(':data-lock="lock"', 'data-lock="false"'),
+		s9: s9BooleanAttributeFrozen(':disabled="locked"', 'disabled="false"'),
 	},
 	angular: {
 		s1: s1DerivedFrozen('${this.count * this.multiplier}', '${1 * this.multiplier}'),
@@ -502,6 +562,7 @@ const MUTANTS = {
 			'start {{ done }}{{ unit }}end',
 		),
 		s7: s7DynamicAttributeFrozen('[attr.data-lock]="lock"', 'data-lock="false"'),
+		s9: s9BooleanAttributeFrozen('[disabled]="locked"', 'disabled="false"'),
 	},
 };
 

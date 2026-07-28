@@ -67,3 +67,18 @@ export const s7Seed = [
 	{ id: 't1', on: false },
 	{ id: 't2', on: true }
 ];
+
+/**
+ * S9's boolean-attribute seed. TWO rows, and BOTH start `off: false`, which is a
+ * MEASURED constraint rather than a tidiness preference: S9's whole claim is that
+ * a boolean content attribute is ABSENT until state says otherwise, so a row
+ * seeded `true` would serve `disabled=""` before any click and could not
+ * distinguish "the lowering works" from "the attribute is always there". Two
+ * rows rather than one because the scenario seals only `f2` — exactly one button
+ * grows the attribute, which is what separates "the boolean reached its own row"
+ * from "every button in the repeat reflects the same value".
+ */
+export const s9Seed = [
+	{ id: 'f1', off: false },
+	{ id: 'f2', off: false }
+];

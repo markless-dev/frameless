@@ -62,7 +62,14 @@ const officialDemos = [
 // and `1\n/2` in another. Nothing in the corpus measured the characters BETWEEN
 // values until s6, and `measureText` — which every other scenario reads through
 // — collapses whitespace before comparing, so it could not have.
-const threeWayScenarios = ['s1', 's2', 's3', 's4', 's5', 's6', 's7'];
+// s9 joined it because the repo shipped a COMPILER CAPABILITY WITH ZERO CORPUS
+// INSTANCES. T041 ruled the dynamic HTML boolean attribute mis-lowered rather
+// than unspellable and T049 shipped the lowering, but the repair was proven at
+// the compiler and at the emitter and in no served payload, so `docs/DEFECTS.md`
+// entry 10 stayed open naming a corpus card as its own close trigger. s7 had to
+// SUBSTITUTE `aria-disabled` for the construct; s9 binds the real `disabled`, so
+// a correct lane serves nothing at all and grows `disabled=""` after the click.
+const threeWayScenarios = ['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's9'];
 // @async/witness is a dev tool of the workspace, already installed for the ssr
 // and persistence demos. The runner aliases '@async/witness' for the box files
 // it loads, so the official demos run boxes without depending on it themselves.

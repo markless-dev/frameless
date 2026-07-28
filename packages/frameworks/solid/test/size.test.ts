@@ -142,6 +142,14 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// than react's `.map()` arrow, while every computed here becomes its own
 	// arrow-function accessor rather than a bare `const`.
 	S7: { physicalLoc: 112, structuralNodes: 578 },
+	// S9 likewise has no handwritten reference, so this is a budget. MEASURED off
+	// the emitted output. It lands on the SAME `structuralNodes` as react's S9
+	// (369) while printing three FEWER physical lines — the only scenario in the
+	// corpus where the two lanes' node counts coincide exactly. `<For>` costs
+	// fewer printed lines than react's `.map()` arrow, and S9's two `computed`
+	// derivations are small enough that solid's per-computed accessor arrows do
+	// not overtake the difference the way they do in S7.
+	S9: { physicalLoc: 69, structuralNodes: 369 },
 };
 
 describe('honest emitted structure comparison', () => {

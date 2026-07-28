@@ -994,7 +994,7 @@ entirely in our emitter.
 
 ---
 
-## 10. A dynamic HTML boolean attribute served `disabled="false"` in Angular, which DISABLES the control — **OPEN — frameless's own emitted output**
+## 10. A dynamic HTML boolean attribute served `disabled="false"` in Angular, which DISABLES the control — **CLOSED — frameless's own emitted output**
 
 > **The fourth defect in frameless's own shipped output, and the only one of the
 > four whose root cause was a THREE-NAME LIST.** Entry 8 survived on a missing
@@ -1005,12 +1005,40 @@ entirely in our emitter.
 > `frameless-defects-and-targets-v1`, so it does **not** extend that goal's
 > oracle, which is defined over findings 1–6.
 
-**Status:** OPEN, with the **lowering shipped**. The construct is now lowered
-rather than refused — an authored `disabled={expr}` reaches the IR as
-`kind: 'property'` and Angular emits `[disabled]` — but the entry stays OPEN
-because the repair is proven **at the compiler and at the emitter and in no
-served payload**. No scenario in the corpus binds a boolean content attribute,
-so nothing yet observes the six lanes agreeing at runtime.
+**Status:** **CLOSED**, by removal and then by a **served payload**. The
+construct is lowered rather than refused — an authored `disabled={expr}` reaches
+the IR as `kind: 'property'` and Angular emits `[disabled]` — and as of S9 the
+corpus **observes the six lanes agreeing at runtime**, which is the one thing
+this entry stayed open for.
+
+**What closed it, measured rather than asserted.** `packages/compiler/test/fixtures/s9-boolean-attributes.tsrx`
+binds a real dynamic `disabled` at two structurally different sites — a
+component-level state cell on the gate button, and a member of the LOOP VARIABLE
+on a button inside a keyed repeat — and `pnpm e2e` reports **6 demos × 8
+scenarios, all observations equal**. The six `s9` observation strings are
+byte-identical. Read off that run:
+
+| reading | react | solid | qwik | svelte | vue | angular |
+| --- | --- | --- | --- | --- | --- | --- |
+| served payload, gate | absent | absent | absent | absent | absent | absent |
+| served payload, field `f2` | absent | absent | absent | absent | absent | absent |
+| live, as served | `null` | `null` | `null` | `null` | `null` | `null` |
+| live, after lock | `""` | `""` | `""` | `""` | `""` | `""` |
+| live, after unlock | `null` | `null` | `null` | `null` | `null` | `null` |
+| live, after sealing `f2` (in the repeat) | `""` | `""` | `""` | `""` | `""` | `""` |
+| live, `f1` (never sealed) | `null` | `null` | `null` | `null` | `null` | `null` |
+
+**No lane serves the attribute at all in the initial state** — asserted at the
+element in the server's own bytes by `forbidServedAttribute`, which calibrates
+itself two-sided on every call because a check on an ABSENCE passes by default
+on any payload including an empty one. **Removal is asserted as well as
+addition**: a lane that wrote the attribute once and never reconciled it passes
+every reading up to the unlock click and fails there.
+
+The mutation budget now has something to mutate, which it did not before: one
+mutant per lane replaces the binding with a static `disabled="false"` — the exact
+byte sequence the defect produced — anchored on a string that occurs **exactly
+once** in each lane's emitted output, verified non-vacuous in all six.
 
 **The defect, in three lines.** `disabled={false}` served `disabled="false"` in
 Angular where the other five lanes served nothing. `disabled="false"` **disables
@@ -1135,11 +1163,37 @@ replaces, and it lands hardest on the users the attribute exists for. It is righ
 only when you deliberately want a focusable-but-inert control **and** you
 suppress the behaviour in the handler yourself.
 
-**Close trigger.** A corpus scenario binds a real dynamic `disabled`, and the
-six-lane observation string asserts the transition *absent* → `disabled=""` equal
-in all six lanes, with a mutation on that binding proven red per emitter. That is
-a corpus card, and it is the natural place for S7 to finally carry the construct
-it had to substitute away.
+**Close trigger — MET.** It read: "a corpus scenario binds a real dynamic
+`disabled`, and the six-lane observation string asserts the transition *absent* →
+`disabled=""` equal in all six lanes, with a mutation on that binding proven red
+per emitter." S9 is that scenario. The first two conjuncts are **measured** and
+recorded in the table above. The third — the per-emitter mutation proven red — is
+**registered but not yet witnessed**: the six mutants exist in
+`scripts/corpus-mutation.mjs` with verified single-occurrence anchors, and
+`pnpm mutate:corpus` restores with `git checkout --` over `MUTATION_SURFACE`, so
+it is run by the sole writer after commit rather than by the card that wrote the
+mutants. **If any of the six survives, this entry re-opens on that lane.**
+
+**A NAME THIS SCENARIO MEASURED OUT OF THE PORTABLE SET, recorded because it was
+found rather than predicted.** S9 originally bound `hidden` as a second name in
+the class, on a different tag, to show the class behaving as a class. It was
+measured **RED IN THE QWIK LANE**: after the lock click five lanes serve
+`hidden=""` and qwik serves `hidden="true"`. The cause is in Qwik's own table —
+`@qwik.dev/core`'s `isBooleanAttr` lists 21 names **including `disabled` and
+excluding `hidden`** — so it minimizes one and stringifies the other. The element
+is still hidden either way, so this is a **serialization** divergence and not a
+behavioural one: it is the class T041 §2.3 named, where a spelling diverges in
+bytes while every lane does the right thing. It is **not** an upstream matter and
+must not be filed as one — Qwik's table is Qwik's own, and it is this repo's
+oracle that asserts bytes. The fixture now binds `required` instead, which is
+present in qwik's, vue's and svelte's boolean tables and canonical lowercase in
+React, and which measured green in all six.
+
+So the admitted set of fourteen now has **four names measured non-portable
+through some lane** — `readonly`, `autofocus` and `autoplay` through React, and
+`hidden` through Qwik — none of which the compiler's admission rule can see,
+because that rule asks what the DOM accepts and not what each lane's serializer
+does. That is the standing gap, and it is carded rather than left here.
 
 **Lift / re-open trigger.** The registered matrices report in **either**
 direction. If a future edit narrows or widens the set they go red; if Angular
@@ -1470,27 +1524,32 @@ matrix proved green rather than from the error message's claim.
 | 7   | **product defect — OPEN**       | **contained**, not removed: fail-closed v-limit at the compiler (T039) | the lift trigger — all six lanes measured byte-identical on an interior run at pinned versions |
 | 8   | **product defect — OPEN**       | **contained**, not removed: fail-closed refusal in the React emitter (T044) | the lift trigger — React lowers a nested state write the way Solid already does |
 | 9   | **product defect — CLOSED**     | **removed**, not contained: the construct is lowered, and the missing typecheck oracle over emitted Angular now exists (T045) | none — but note the oracle is structurally blind to mode B, which the emitted-keyword assertion covers instead |
-| 10  | **product defect — OPEN**       | **lowered** at the IR: boolean content attributes reach Angular as `[disabled]`, not `[attr.disabled]` (T049) | a served payload — the repair is proven at the compiler and the emitter and in **no** e2e observation, because no scenario binds a boolean attribute |
+| 10  | **product defect — CLOSED**     | **removed**, not contained: boolean content attributes reach Angular as `[disabled]`, not `[attr.disabled]` (T049), and S9 gives the lowering a **served payload** — six lanes byte-identical on *absent* → `disabled=""` → *absent*, at a state cell and inside a keyed repeat (T050) | none for the defect — the six registered mutants are witnessed by `pnpm mutate:corpus`, and a survivor re-opens it on that lane |
 | 11  | **product defect — CLOSED**     | **removed**, not contained: the accidental `\|\| fn.async` is gone from the Solid validator and the across-await lowering is proven by running it (T046) | none for the defect — but no **served** payload observes an async handler yet, which is a corpus card, not a repair |
 | 12  | **product defect — OPEN**       | **half removed**: the `await` survives re-analysis (T047), but the emitted handler reads a **stale render closure** after the boundary and **drops the pre-await write** — both measured against real `react-dom`, both pinned by registered tests | the lift trigger — React lowers post-await reads live and stops collapsing writes that a render can be observed between |
 
-**Entries 7, 8, 10 and 12 are the OPEN defects in frameless's own emitted output**,
-and they are the three on this table a later reader could mistake for closed
-because their repairs are green. None is closed, but **10 is open for a different
-reason from 7 and 8**, and the distinction is the one this table exists to keep.
-Entries 7 and 8 *contain* something that is still there — a non-neutrality in 7,
-an unlowerable construct in 8 — so their repairs are refusals. Entry 10's repair
-**removes** the defect the way entry 9's did; what it lacks is not a lowering but
-a **witness**. Nothing in the shipped corpus binds a boolean attribute, so no
-served payload has ever observed the six lanes agreeing, and entry 9 earned
-CLOSED on exactly the evidence entry 10 does not yet have. In all of these cases a
-registered test reports the day the status should change, and in all of them it
-reports in **either** direction.
+**Entries 7, 8 and 12 are the OPEN defects in frameless's own emitted output**,
+and they are the ones on this table a later reader could mistake for closed
+because their repairs are green. Entries 7 and 8 *contain* something that is still
+there — a non-neutrality in 7, an unlowerable construct in 8 — so their repairs
+are refusals, and a refusal is not a removal. In all of these cases a registered
+test reports the day the status should change, and in all of them it reports in
+**either** direction.
+
+**Entry 10 moved to CLOSED on 2026-07-28, and the distinction it used to
+illustrate is worth keeping.** Its repair always *removed* the defect the way
+entry 9's did; what it lacked was not a lowering but a **witness**, because
+nothing in the shipped corpus bound a boolean attribute and entry 9 had earned
+CLOSED on exactly the evidence entry 10 did not have. S9 supplied it: six lanes,
+byte-identical, *absent* → `disabled=""` → *absent*, asserted in the server's own
+bytes as well as the live DOM. "Repaired but unwitnessed" was a real and distinct
+status for eight days, and it is recorded here rather than erased, because the
+next repair proven at the compiler and the emitter alone will be in it too.
 
 **Entry 12 is open for a THIRD reason, and it is the one a reader is most likely
 to mistake for closed.** Entries 7 and 8 are *contained* — the construct is
-refused, loudly, so nothing wrong ships. Entry 10 is *repaired but unwitnessed*.
-Entry 12 is neither: the emitter now **accepts** the construct and **emits output
+refused, loudly, so nothing wrong ships. Entry 10 was *repaired but unwitnessed*,
+and is now witnessed and closed. Entry 12 is neither: the emitter now **accepts** the construct and **emits output
 that is behaviourally wrong**, with no refusal in front of it, and that state is
 deliberate rather than accidental. Refusing async handlers again would have thrown
 away a measurement nobody had ever taken, and the alternative — a lowering that

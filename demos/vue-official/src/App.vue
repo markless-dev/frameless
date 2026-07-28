@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
+import AttrBoard from './emitted/AttrBoard.vue'
 import BranchBoard from './emitted/BranchBoard.vue'
 import EventForm from './emitted/EventForm.vue'
 import FormBoard from './emitted/FormBoard.vue'
@@ -7,7 +8,17 @@ import KeyedTodo from './emitted/KeyedTodo.vue'
 import NestedBoard from './emitted/NestedBoard.vue'
 import RenderOnce from './emitted/RenderOnce.vue'
 import WhitespaceBoard from './emitted/WhitespaceBoard.vue'
-import { noTrace, s2Seed, s4Seed, s5Seed, s6Label, s6Seed, s7Seed, scenarioFor } from './scenario-props'
+import {
+  noTrace,
+  s2Seed,
+  s4Seed,
+  s5Seed,
+  s6Label,
+  s6Seed,
+  s7Seed,
+  s9Seed,
+  scenarioFor,
+} from './scenario-props'
 
 // DELTA from create-vite-extra@5.0.2 template-ssr-vue-ts/src/App.vue, which
 // renders a single fixed `<HelloWorld />`. One shared IR, five emitters: these
@@ -65,5 +76,6 @@ onMounted(() => {
     v-bind:label="s6Label"
     v-bind:onTrace="noTrace"
   />
-  <FormBoard v-else v-bind:seed="s7Seed" v-bind:onTrace="noTrace" />
+  <FormBoard v-else-if="scenario === 's7'" v-bind:seed="s7Seed" v-bind:onTrace="noTrace" />
+  <AttrBoard v-else v-bind:seed="s9Seed" v-bind:onTrace="noTrace" />
 </template>

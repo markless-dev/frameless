@@ -30,9 +30,9 @@
  */
 import type { EnvironmentResponse, ExpectApi, PageHandle } from '@async/witness'
 
-export type ScenarioId = 's1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7'
+export type ScenarioId = 's1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7' | 's9'
 
-export const scenarioIds: readonly ScenarioId[] = ['s1', 's2', 's3', 's4', 's5', 's6', 's7']
+export const scenarioIds: readonly ScenarioId[] = ['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's9']
 
 /**
  * How each framework becomes interactive. React, Solid, Svelte, Vue and Angular
@@ -599,6 +599,12 @@ export const resumeSymbols: Record<
   // prefix genuinely differs and asserting the shared one would have been a
   // weaker read than this lane can support.
   s7: { includes: '_form_button_q_e_click_', atLeast: 2 },
+  // S9 issues THREE clicks across three distinct handlers: one `seal` inside the
+  // keyed repeat, then `lock` and `unlock` on the board.
+  // `_button_q_e_click_` is the segment prefix all three share — the same
+  // structural read s2, s4, s5 and s6 make, and NOT s7's `_form_button_…`: S9's
+  // board is a `<section>`, so the narrower prefix would not match.
+  s9: { includes: '_button_q_e_click_', atLeast: 3 },
 }
 
 function forbidInServedPayload(served: EnvironmentResponse, fragments: string[]): void {
@@ -2019,10 +2025,404 @@ export async function assertS7(
 }
 
 /**
+ * Every row identity in S9's field list, in document order.
+ *
+ * A SIXTH key attribute, for the reason the second through fifth exist:
+ * `measureRowKeys`, `measureCellKeys`, `measureBranchKeys`, `measureTextKeys`
+ * and `measureFormKeys` each match their own attribute globally, so a scenario
+ * reusing one would silently join that scenario's observation string, and S2's,
+ * S4's, S5's, S6's and S7's reads have to keep measuring exactly what they
+ * measured before S9 existed.
+ */
+export function measureAttrKeys(html: string): string[] {
+  return measureKeyAttribute(html, 'data-oracle-attr-key')
+}
+
+/**
+ * Whether one element's START TAG carries an attribute AT ALL, by any spelling.
+ *
+ * Deliberately NOT `measureAttribute`, and the difference is the whole point.
+ * `measureAttribute` matches `name="value"` and therefore cannot see a bare,
+ * valueless `disabled` — which is exactly how an HTML boolean attribute is
+ * spelled in a served payload by any lane whose SSR serializer writes the
+ * minimized form. Reading absence with a reader that is blind to one of the
+ * present spellings would report "absent" for a lane that served it, which is
+ * the single result this scenario exists to be able to report.
+ *
+ * So this matches the NAME at an attribute boundary and nothing else, and it
+ * therefore catches `disabled`, `disabled=""` and `disabled="false"` alike.
+ */
+function startTagCarriesAttribute(startTag: string, name: string): boolean {
+  return new RegExp(`\\s${name}(?=[\\s=>/])`).test(startTag)
+}
+
+/**
+ * Requires that the bytes the SERVER sent carry no such attribute on the marked
+ * element, and calibrates that requirement two-sided on every single call.
+ *
+ * This is the half of S9 that `measureAttribute` cannot express. S9's claim is
+ * that a boolean content attribute lowered to `kind: 'property'` is ABSENT until
+ * state says otherwise, and an absence has to be read where the claim is made:
+ * in the server's own output, before any JavaScript ran. A live-DOM read after
+ * activation would confuse "the lane never served it" with "the lane served it
+ * and then removed it", and those are different facts about the lowering.
+ *
+ * The negative arm mutates the EVIDENCE, never the predicate: it injects
+ * `name=""` into the marked element's own start tag — the payload the server
+ * really sent, otherwise untouched — and requires the read to reject it. A check
+ * on an absence is the easiest kind to leave vacuous, because it passes by
+ * default on any payload at all, including an empty one; this is what stops that.
+ *
+ * The failure message quotes the offending start tag VERBATIM, because if any
+ * lane ever trips it the string itself is the finding: it would mean the shipped
+ * boolean-attribute lowering does not reach that lane's serializer, and the
+ * exact bytes are what a reader needs to tell `disabled=""` from
+ * `disabled="false"` — a present-but-empty attribute and a stringified `false`
+ * are two different defects with two different causes.
+ */
+export function forbidServedAttribute(options: {
+  readonly served: EnvironmentResponse
+  readonly marker: string
+  readonly name: string
+}): number {
+  const { served, marker, name } = options
+  const text = served.text
+  if (!text.includes(marker)) {
+    throw new Error(
+      `Cannot check for ${name}: the payload served for ${served.path} carries no ${marker}. ` +
+        'This reads the bytes the server sent, before any JavaScript ran, so a missing marker ' +
+        'means the server never rendered the element — not that the attribute is absent.',
+    )
+  }
+  const { open, afterOpen } = locate(text, marker)
+  const startTag = text.slice(open, afterOpen + 1)
+  if (startTagCarriesAttribute(startTag, name)) {
+    throw new Error(
+      `The payload served for ${served.path} carries ${name} on ${marker}, where a boolean ` +
+        'content attribute bound to a FALSE state must be absent entirely. The start tag the ' +
+        `server sent is, verbatim: ${JSON.stringify(startTag)}`,
+    )
+  }
+  // Two-sided: the same predicate, run against the same payload with the
+  // attribute injected into that one start tag, must reject.
+  const injected = `${startTag.slice(0, -1)} ${name}="">`
+  if (!startTagCarriesAttribute(injected, name)) {
+    throw new Error(
+      `The absent-${name} check for ${marker} cannot go red: a start tag with ${name}="" ` +
+        'injected into it still reads as absent. A check on an absence passes by default on ' +
+        'any payload at all, so one never observed rejecting is not a check.',
+    )
+  }
+  return startTag.split(name).length - 1
+}
+
+/**
+ * S9's boolean attributes as the live DOM currently serializes them.
+ *
+ * Every boolean reading here is `null` (absent) or `""` (present and empty), and
+ * that two-valued outcome is the observation. `page.content()` serializes the
+ * live DOM, so a lane that set the DOM PROPERTY and a lane that set the content
+ * attribute both read `""` here — which is correct and is the point: the claim
+ * is about the state the six lanes end up in, not about which API each one used
+ * to get there. Whether the SERVER sent it is a different question, read at a
+ * different site by `forbidServedAttribute`.
+ */
+async function measureBooleans(page: PageHandle): Promise<{
+  gate: string
+  note: string
+  stage: string
+  sealed: string
+  steps: string
+  fields: string
+  f1: string
+  f2: string
+}> {
+  const html = await page.content()
+  const attribute = (marker: string, name: string): string =>
+    JSON.stringify(measureAttribute(html, marker, name))
+  return {
+    gate: attribute('data-gate="true"', 'disabled'),
+    note: attribute('data-note="true"', 'required'),
+    stage: attribute('data-gate="true"', 'data-stage'),
+    sealed: measureText(html, 'data-sealed="true"'),
+    steps: measureText(html, 'data-steps="true"'),
+    fields: measureAttrKeys(html).join(','),
+    f1: attribute('data-field="f1"', 'disabled'),
+    f2: attribute('data-field="f2"', 'disabled'),
+  }
+}
+
+/**
+ * The boolean-attribute assertion, hand-rolled for the same reason
+ * `requireNesting`, `requireBranch`, `requireWhitespace` and `requireForm` are:
+ * the sentence a failure raises has to name WHICH reading moved and what a move
+ * there means, and `expect.page.*` has no accessor that can compare an absent
+ * attribute against a present one at all.
+ *
+ * Every value is quoted with `JSON.stringify`, because `null` (absent) and `""`
+ * (present and empty) are the two halves of the axis this scenario exists to
+ * measure and `expected  but got ` is not a diagnostic. A third value showing up
+ * here — `"false"` or `"disabled"` or `"true"` — is a lane whose serializer
+ * stringified the bound value instead of minimizing it, and the quoting is what
+ * makes that legible rather than invisible.
+ */
+function requireBooleans(
+  actual: Record<string, string>,
+  expected: Record<string, string> & { step: string },
+): void {
+  const why: Record<string, string> = {
+    gate:
+      'THE AXIS. A real HTML boolean content attribute, bound to state, lowered to ' +
+      "`kind: 'property'` by the repair T049 shipped. Absent means the lane served or kept " +
+      'nothing at all; `""` means the lane minimized a true value. Any other string means the ' +
+      'lowering did not reach that lane and the value was stringified instead.',
+    note:
+      'the SECOND name in the boolean class, on a different element and a different tag, ' +
+      'driven by the same state. One name agreeing could be a coincidence of that name; two ' +
+      'names on two tags is the class behaving as a class. `required` rather than `hidden`, ' +
+      'MEASURED: qwik serves `hidden="true"` where the other five serve `""`, because ' +
+      "@qwik.dev/core's own `isBooleanAttr` table lists `disabled` and omits `hidden`.",
+    stage:
+      'an `attribute`-kind binding on the SAME element as `gate`, and the contrast that makes ' +
+      'this scenario about the KIND rather than about the element. It carries a string in both ' +
+      'states while `gate` is absent in one — Angular emits `[disabled]` beside ' +
+      '`[attr.data-stage]` in one start tag, and these two readings are what pin that.',
+    sealed:
+      'the joined ids of every SEALED row in the keyed repeat, as TEXT. It is the portable ' +
+      'evidence that the seal click reached the row it was attached to, independent of the ' +
+      'boolean attribute that click also drives.',
+    steps:
+      'the number of board-level clicks the handlers have committed. It is what makes the ' +
+      'post-unlock reading waitable: an attribute going ABSENT never "becomes true" and so ' +
+      'cannot be awaited, while this counter does.',
+    fields: 'the keyed rows themselves. They never change, so a move here is a repeat rebuilding itself.',
+    f1:
+      'the boolean attribute on the row that is NEVER sealed. It must stay absent for the ' +
+      'whole scenario; a `""` here is one row\'s state reaching every row.',
+    f2:
+      'the boolean attribute on the row that IS sealed — the same axis as `gate`, but INSIDE a ' +
+      'keyed repeat, where the bound value is a member of the loop variable rather than a ' +
+      'component-level state cell.',
+  }
+  for (const [key, want] of Object.entries(expected)) {
+    if (key === 'step') continue
+    if (actual[key] === want) continue
+    throw new Error(
+      `${expected.step} the ${key} reading is ${JSON.stringify(actual[key])}, not ` +
+        `${JSON.stringify(want)}. That reading is ${why[key]}`,
+    )
+  }
+}
+
+/**
+ * S9 — the dynamic HTML boolean content attribute, in all six lanes.
+ *
+ * ## Why this scenario exists at all
+ *
+ * T024 folded "boolean and dynamic attributes" into S7, and S7 could not carry
+ * the construct: a dynamic `disabled` had no portable spelling then, so the
+ * fixture substituted `aria-disabled` and asserted a PROXY for the axis. T041
+ * then ruled the construct MIS-LOWERED rather than unspellable — `disabled` was
+ * reaching the IR as `kind: 'attribute'`, so Angular emitted `[attr.disabled]`,
+ * whose runtime writes `renderStringify(false)` and serves `disabled="false"`,
+ * which in Angular's own server DOM DISABLES the control the other five lanes
+ * leave enabled. T049 shipped the lowering.
+ *
+ * That left `docs/DEFECTS.md` entry 10 open for exactly one reason, in its own
+ * words: the repair was proven at the compiler and at the emitter and IN NO
+ * SERVED PAYLOAD. No scenario bound a boolean content attribute, so nothing
+ * observed the six lanes agreeing at runtime — a shipped compiler capability
+ * with zero corpus instances, which is the same "a rule with no instances is
+ * folklore" condition this board used to justify landing S4. **This scenario is
+ * that entry's own named close trigger.**
+ *
+ * ## The axis, and why it is not S7's
+ *
+ * S7's axis is that a dynamic attribute is dynamic: absent, `"false"` and a
+ * value are three states, measured on `data-*` and `aria-*` bindings the six
+ * lanes already agreed on. S7 proves the READER keeps `null` and `"false"`
+ * apart. S9 proves the LOWERING makes six lanes agree at runtime on a genuine
+ * boolean content attribute — a binding whose IR kind is `property`, not
+ * `attribute`. Different kind, different site, no duplication.
+ *
+ * ## What is asserted, and where
+ *
+ * | reading | as served | after lock | after unlock |
+ * |---|---|---|---|
+ * | `gate`, `note` | ABSENT | `""` | ABSENT |
+ * | `stage` | `"open"` | `"locked"` | `"open"` |
+ *
+ * The absence is read TWICE and at two different sites, because they are two
+ * different claims. `forbidServedAttribute` reads the server's own bytes and
+ * says the lane never sent it; `measureBooleans` reads the live DOM and says the
+ * lane does not hold it after activation. A lane that served `disabled=""` and
+ * then removed it during hydration would pass the second and fail the first, and
+ * that lane's lowering would be broken.
+ *
+ * ## Why `disabled` and `required`, and not the other twelve
+ *
+ * `build.ts` admits fourteen names and FOUR are excluded here, each on a
+ * measurement rather than on taste.
+ *
+ * `readonly`, `autofocus` and `autoplay` are not portable through the REACT
+ * lane: react-dom 19.2.3 serves nothing for all three in BOTH states and raises
+ * `Invalid DOM property`, because React's canonical props are `readOnly`,
+ * `autoFocus` and `autoPlay` and no emitter in this repo carries a casing map.
+ * That would additionally trip `runScenario`'s `consoleErrors: 0`.
+ *
+ * `hidden` is not portable through the QWIK lane, and this scenario is what
+ * measured it: with `hidden` bound here, five lanes served `hidden=""` after the
+ * lock click and qwik served `hidden="true"`. `@qwik.dev/core`'s own
+ * `isBooleanAttr` table lists 21 names, INCLUDING `disabled` and EXCLUDING
+ * `hidden`, so it minimizes the first and stringifies the second. The element is
+ * still hidden either way, so this is a SERIALIZATION divergence and not a
+ * behavioural one — the class T041 §2.3 named — and it is NOT an upstream matter:
+ * Qwik's table is Qwik's own and this repo's oracle is the thing that asserts
+ * bytes. It is recorded as a finding rather than worked around silently.
+ *
+ * `disabled` and `required` are what remain, and both were measured: react-dom
+ * and the domino build Angular serializes from agree on every value, and
+ * `required` is in qwik's, vue's and svelte's boolean tables as well.
+ *
+ * ## Why the boolean inside the repeat
+ *
+ * `gate` binds a component-level state cell. `f1`/`f2` bind a member of the LOOP
+ * VARIABLE, which is a different path through the emitters, and sealing exactly
+ * one of two identically-seeded rows is what separates "the boolean reached its
+ * own row" from "every button in the repeat reflects the same value". Both rows
+ * start `false`, so nothing is served initially anywhere.
+ *
+ * Nothing here reads `data-oracle-row-key`, `-cell-key`, `-branch-key`,
+ * `-text-key` or `-form-key`: S2, S4, S5, S6 and S7 own those, and S9 keys its
+ * rows with `data-oracle-attr-key`.
+ */
+export async function assertS9(
+  page: PageHandle,
+  expect: ExpectApi,
+  served: EnvironmentResponse,
+): Promise<string[]> {
+  const observed: string[] = []
+  await expect.page.exists(page, '[data-scenario="s9"]')
+  await expect.page.text(page, '[data-gate="true"]', 'gate')
+  await expect.page.text(page, '[data-sealed="true"]', 'none')
+
+  // The server's own bytes. Three boolean bindings that are all FALSE in the
+  // initial state, so the payload must carry none of them — asserted at the
+  // element, not merely somewhere in the response, and calibrated on each call.
+  const servedGate = forbidServedAttribute({
+    served,
+    marker: 'data-gate="true"',
+    name: 'disabled',
+  })
+  const servedNote = forbidServedAttribute({
+    served,
+    marker: 'data-note="true"',
+    name: 'required',
+  })
+  const servedField = forbidServedAttribute({
+    served,
+    marker: 'data-field="f2"',
+    name: 'disabled',
+  })
+
+  const initial = await measureBooleans(page)
+  requireBooleans(initial, {
+    gate: 'null',
+    note: 'null',
+    stage: '"open"',
+    sealed: 'none',
+    steps: '0',
+    fields: 'f1,f2',
+    f1: 'null',
+    f2: 'null',
+    step: 'as served',
+  })
+  observed.push(
+    `server-rendered gate carries disabled ${servedGate} times, note carries required ` +
+      `${servedNote} times and field f2 carries disabled ${servedField} times, with the live ` +
+      `gate ${initial.gate}, note ${initial.note}, stage ${initial.stage}, fields ` +
+      `${initial.fields} and sealed ${initial.sealed}`,
+  )
+
+  // ABSENT -> PRESENT. This is the transition entry 10 named, and it is awaited
+  // on the attribute itself because a boolean attribute appearing DOES become
+  // true.
+  await page.click('[data-action="lock"]')
+  await expect.page.attribute(page, '[data-gate="true"]', 'disabled', '')
+  const locked = await measureBooleans(page)
+  requireBooleans(locked, {
+    gate: '""',
+    note: '""',
+    stage: '"locked"',
+    sealed: 'none',
+    steps: '1',
+    fields: 'f1,f2',
+    f1: 'null',
+    f2: 'null',
+    step: 'after locking',
+  })
+  observed.push(
+    `after locking gate = ${locked.gate}, note = ${locked.note} and stage = ${locked.stage} ` +
+      `with the fields still ${locked.f1} and ${locked.f2}`,
+  )
+
+  // PRESENT -> ABSENT. Removal is the other half of the axis and it is NOT
+  // implied by the half above: a lane that wrote the attribute once and never
+  // reconciled it would pass every reading up to here.
+  //
+  // Awaited through `steps` rather than through the attribute, deliberately.
+  // `expect.page.attribute` blocks until a condition becomes true, and "the
+  // attribute is gone" never becomes true, so it cannot be waited for. `steps`
+  // is written by the SAME handler in the same render, so reading 2 back means
+  // the unlock commit has landed and the absence below is evidence rather than
+  // a race — the ordering `assertS3` establishes for its cancellation arms.
+  await page.click('[data-action="unlock"]')
+  await expect.page.text(page, '[data-steps="true"]', '2')
+  const unlocked = await measureBooleans(page)
+  requireBooleans(unlocked, {
+    gate: 'null',
+    note: 'null',
+    stage: '"open"',
+    sealed: 'none',
+    steps: '2',
+    fields: 'f1,f2',
+    f1: 'null',
+    f2: 'null',
+    step: 'after unlocking',
+  })
+  observed.push(
+    `after unlocking gate = ${unlocked.gate}, note = ${unlocked.note} and stage = ` +
+      `${unlocked.stage} with steps = ${unlocked.steps}`,
+  )
+
+  // The same axis INSIDE the keyed repeat, on exactly one of two identically
+  // seeded rows.
+  await page.click('[data-seal="f2"]')
+  await expect.page.attribute(page, '[data-field="f2"]', 'disabled', '')
+  const sealed = await measureBooleans(page)
+  requireBooleans(sealed, {
+    gate: 'null',
+    note: 'null',
+    stage: '"open"',
+    sealed: 'f2',
+    steps: '2',
+    fields: 'f1,f2',
+    f1: 'null',
+    f2: '""',
+    step: 'after sealing f2',
+  })
+  observed.push(
+    `after sealing f2 the fields read f1 = ${sealed.f1} and f2 = ${sealed.f2} with sealed = ` +
+      `${sealed.sealed} and the gate still ${sealed.gate}`,
+  )
+  return observed
+}
+
+/**
  * Every scenario is handed both sites — the live page and the payload the
  * server sent for it — and reads each observation from the one it names. S1, S2,
- * S4, S5 and S6 observe only live state and declare two parameters; S3 observes
- * both.
+ * S4, S5 and S6 observe only live state and declare two parameters; S3, S7 and
+ * S9 observe both.
  */
 const assertions: Record<
   ScenarioId,
@@ -2035,6 +2435,7 @@ const assertions: Record<
   s5: assertS5,
   s6: assertS6,
   s7: assertS7,
+  s9: assertS9,
 }
 
 /**

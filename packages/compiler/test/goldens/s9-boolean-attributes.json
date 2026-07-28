@@ -1,0 +1,2550 @@
+{
+  "components": [
+    {
+      "evaluation": {
+        "computedBindings": "reactive",
+        "ordinaryLocals": "once-per-instance"
+      },
+      "guards": [],
+      "id": "component:0:AttrBoard",
+      "locals": [
+        {
+          "declarationKind": "let",
+          "initializer": {
+            "arguments": [
+              {
+                "end": 124,
+                "raw": "false",
+                "start": 119,
+                "type": "Literal",
+                "value": false
+              }
+            ],
+            "callee": {
+              "end": 118,
+              "name": "state",
+              "start": 113,
+              "type": "Identifier"
+            },
+            "end": 125,
+            "optional": false,
+            "start": 113,
+            "type": "CallExpression"
+          },
+          "names": [
+            "locked"
+          ],
+          "order": 0,
+          "pattern": {
+            "end": 110,
+            "name": "locked",
+            "start": 104,
+            "type": "Identifier"
+          },
+          "reads": [],
+          "semanticRecordIds": [
+            "state:locked"
+          ]
+        },
+        {
+          "declarationKind": "let",
+          "initializer": {
+            "arguments": [
+              {
+                "end": 147,
+                "raw": "0",
+                "start": 146,
+                "type": "Literal",
+                "value": 0
+              }
+            ],
+            "callee": {
+              "end": 145,
+              "name": "state",
+              "start": 140,
+              "type": "Identifier"
+            },
+            "end": 148,
+            "optional": false,
+            "start": 140,
+            "type": "CallExpression"
+          },
+          "names": [
+            "steps"
+          ],
+          "order": 1,
+          "pattern": {
+            "end": 137,
+            "name": "steps",
+            "start": 132,
+            "type": "Identifier"
+          },
+          "reads": [],
+          "semanticRecordIds": [
+            "state:steps"
+          ]
+        },
+        {
+          "declarationKind": "let",
+          "initializer": {
+            "arguments": [
+              {
+                "arguments": [
+                  {
+                    "async": false,
+                    "body": {
+                      "end": 197,
+                      "properties": [
+                        {
+                          "argument": {
+                            "end": 195,
+                            "name": "row",
+                            "start": 192,
+                            "type": "Identifier"
+                          },
+                          "end": 195,
+                          "start": 189,
+                          "type": "SpreadElement"
+                        }
+                      ],
+                      "start": 187,
+                      "type": "ObjectExpression"
+                    },
+                    "end": 198,
+                    "expression": true,
+                    "generator": false,
+                    "id": null,
+                    "params": [
+                      {
+                        "end": 181,
+                        "name": "row",
+                        "start": 178,
+                        "type": "Identifier"
+                      }
+                    ],
+                    "start": 177,
+                    "type": "ArrowFunctionExpression"
+                  }
+                ],
+                "callee": {
+                  "computed": false,
+                  "end": 176,
+                  "object": {
+                    "end": 172,
+                    "name": "seed",
+                    "start": 168,
+                    "type": "Identifier"
+                  },
+                  "optional": false,
+                  "property": {
+                    "end": 176,
+                    "name": "map",
+                    "start": 173,
+                    "type": "Identifier"
+                  },
+                  "start": 168,
+                  "type": "MemberExpression"
+                },
+                "end": 199,
+                "optional": false,
+                "start": 168,
+                "type": "CallExpression"
+              }
+            ],
+            "callee": {
+              "end": 167,
+              "name": "state",
+              "start": 162,
+              "type": "Identifier"
+            },
+            "end": 200,
+            "optional": false,
+            "start": 162,
+            "type": "CallExpression"
+          },
+          "names": [
+            "rows"
+          ],
+          "order": 2,
+          "pattern": {
+            "end": 159,
+            "name": "rows",
+            "start": 155,
+            "type": "Identifier"
+          },
+          "reads": [
+            {
+              "graphNodeId": "prop:props",
+              "path": [
+                "seed"
+              ],
+              "via": "alias"
+            }
+          ],
+          "semanticRecordIds": [
+            "state:rows"
+          ]
+        },
+        {
+          "declarationKind": "const",
+          "initializer": {
+            "arguments": [
+              {
+                "async": false,
+                "body": {
+                  "alternate": {
+                    "end": 259,
+                    "raw": "'open'",
+                    "start": 253,
+                    "type": "Literal",
+                    "value": "open"
+                  },
+                  "consequent": {
+                    "end": 250,
+                    "raw": "'locked'",
+                    "start": 242,
+                    "type": "Literal",
+                    "value": "locked"
+                  },
+                  "end": 259,
+                  "start": 233,
+                  "test": {
+                    "end": 239,
+                    "name": "locked",
+                    "start": 233,
+                    "type": "Identifier"
+                  },
+                  "type": "ConditionalExpression"
+                },
+                "end": 260,
+                "expression": true,
+                "generator": false,
+                "id": null,
+                "params": [],
+                "start": 226,
+                "type": "ArrowFunctionExpression"
+              }
+            ],
+            "callee": {
+              "end": 225,
+              "name": "computed",
+              "start": 217,
+              "type": "Identifier"
+            },
+            "end": 261,
+            "optional": false,
+            "start": 217,
+            "type": "CallExpression"
+          },
+          "names": [
+            "stage"
+          ],
+          "order": 3,
+          "pattern": {
+            "end": 214,
+            "name": "stage",
+            "start": 209,
+            "type": "Identifier"
+          },
+          "reads": [
+            {
+              "graphNodeId": "state:locked",
+              "path": [],
+              "via": "direct"
+            }
+          ],
+          "semanticRecordIds": [
+            "computed:stage"
+          ]
+        },
+        {
+          "declarationKind": "const",
+          "initializer": {
+            "arguments": [
+              {
+                "async": false,
+                "body": {
+                  "end": 385,
+                  "left": {
+                    "arguments": [
+                      {
+                        "end": 374,
+                        "raw": "'+'",
+                        "start": 371,
+                        "type": "Literal",
+                        "value": "+"
+                      }
+                    ],
+                    "callee": {
+                      "computed": false,
+                      "end": 370,
+                      "object": {
+                        "arguments": [
+                          {
+                            "async": false,
+                            "body": {
+                              "computed": false,
+                              "end": 359,
+                              "object": {
+                                "end": 356,
+                                "name": "row",
+                                "start": 353,
+                                "type": "Identifier"
+                              },
+                              "optional": false,
+                              "property": {
+                                "end": 359,
+                                "name": "id",
+                                "start": 357,
+                                "type": "Identifier"
+                              },
+                              "start": 353,
+                              "type": "MemberExpression"
+                            },
+                            "end": 359,
+                            "expression": true,
+                            "generator": false,
+                            "id": null,
+                            "params": [
+                              {
+                                "end": 348,
+                                "name": "row",
+                                "start": 345,
+                                "type": "Identifier"
+                              }
+                            ],
+                            "start": 344,
+                            "type": "ArrowFunctionExpression"
+                          }
+                        ],
+                        "callee": {
+                          "computed": false,
+                          "end": 343,
+                          "object": {
+                            "arguments": [
+                              {
+                                "async": false,
+                                "body": {
+                                  "computed": false,
+                                  "end": 333,
+                                  "object": {
+                                    "end": 329,
+                                    "name": "row",
+                                    "start": 326,
+                                    "type": "Identifier"
+                                  },
+                                  "optional": false,
+                                  "property": {
+                                    "end": 333,
+                                    "name": "off",
+                                    "start": 330,
+                                    "type": "Identifier"
+                                  },
+                                  "start": 326,
+                                  "type": "MemberExpression"
+                                },
+                                "end": 333,
+                                "expression": true,
+                                "generator": false,
+                                "id": null,
+                                "params": [
+                                  {
+                                    "end": 321,
+                                    "name": "row",
+                                    "start": 318,
+                                    "type": "Identifier"
+                                  }
+                                ],
+                                "start": 317,
+                                "type": "ArrowFunctionExpression"
+                              }
+                            ],
+                            "callee": {
+                              "computed": false,
+                              "end": 316,
+                              "object": {
+                                "end": 304,
+                                "name": "rows",
+                                "start": 300,
+                                "type": "Identifier"
+                              },
+                              "optional": false,
+                              "property": {
+                                "end": 316,
+                                "name": "filter",
+                                "start": 310,
+                                "type": "Identifier"
+                              },
+                              "start": 300,
+                              "type": "MemberExpression"
+                            },
+                            "end": 334,
+                            "optional": false,
+                            "start": 300,
+                            "type": "CallExpression"
+                          },
+                          "optional": false,
+                          "property": {
+                            "end": 343,
+                            "name": "map",
+                            "start": 340,
+                            "type": "Identifier"
+                          },
+                          "start": 300,
+                          "type": "MemberExpression"
+                        },
+                        "end": 360,
+                        "optional": false,
+                        "start": 300,
+                        "type": "CallExpression"
+                      },
+                      "optional": false,
+                      "property": {
+                        "end": 370,
+                        "name": "join",
+                        "start": 366,
+                        "type": "Identifier"
+                      },
+                      "start": 300,
+                      "type": "MemberExpression"
+                    },
+                    "end": 375,
+                    "optional": false,
+                    "start": 300,
+                    "type": "CallExpression"
+                  },
+                  "operator": "||",
+                  "right": {
+                    "end": 385,
+                    "raw": "'none'",
+                    "start": 379,
+                    "type": "Literal",
+                    "value": "none"
+                  },
+                  "start": 300,
+                  "type": "LogicalExpression"
+                },
+                "end": 385,
+                "expression": true,
+                "generator": false,
+                "id": null,
+                "params": [],
+                "start": 291,
+                "type": "ArrowFunctionExpression"
+              }
+            ],
+            "callee": {
+              "end": 287,
+              "name": "computed",
+              "start": 279,
+              "type": "Identifier"
+            },
+            "end": 389,
+            "optional": false,
+            "start": 279,
+            "type": "CallExpression"
+          },
+          "names": [
+            "sealed"
+          ],
+          "order": 4,
+          "pattern": {
+            "end": 276,
+            "name": "sealed",
+            "start": 270,
+            "type": "Identifier"
+          },
+          "reads": [
+            {
+              "graphNodeId": "state:rows",
+              "path": [],
+              "via": "direct"
+            }
+          ],
+          "semanticRecordIds": [
+            "computed:sealed"
+          ]
+        }
+      ],
+      "name": "AttrBoard",
+      "props": {
+        "entries": [
+          {
+            "alias": false,
+            "graphNodeId": "prop:props",
+            "localName": "seed",
+            "path": [
+              "seed"
+            ],
+            "sourceName": "seed"
+          },
+          {
+            "alias": false,
+            "graphNodeId": "prop:props",
+            "localName": "onTrace",
+            "path": [
+              "onTrace"
+            ],
+            "sourceName": "onTrace"
+          }
+        ],
+        "graphNodeId": "prop:props"
+      },
+      "template": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "id": "text:0",
+                  "kind": "text",
+                  "value": "gate"
+                }
+              ],
+              "dynamicBindings": [
+                {
+                  "expression": {
+                    "end": 479,
+                    "name": "locked",
+                    "start": 473,
+                    "type": "Identifier"
+                  },
+                  "kind": "property",
+                  "name": "disabled",
+                  "reads": [
+                    {
+                      "graphNodeId": "state:locked",
+                      "path": [],
+                      "via": "direct"
+                    }
+                  ]
+                },
+                {
+                  "expression": {
+                    "end": 498,
+                    "name": "stage",
+                    "start": 493,
+                    "type": "Identifier"
+                  },
+                  "kind": "attribute",
+                  "name": "data-stage",
+                  "reads": [
+                    {
+                      "graphNodeId": "computed:stage",
+                      "path": [],
+                      "via": "direct"
+                    }
+                  ]
+                }
+              ],
+              "eventIds": [],
+              "id": "h1",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "type",
+                  "value": "button"
+                },
+                {
+                  "name": "data-gate",
+                  "value": "true"
+                }
+              ],
+              "tag": "button"
+            },
+            {
+              "children": [],
+              "dynamicBindings": [
+                {
+                  "expression": {
+                    "end": 568,
+                    "name": "locked",
+                    "start": 562,
+                    "type": "Identifier"
+                  },
+                  "kind": "property",
+                  "name": "required",
+                  "reads": [
+                    {
+                      "graphNodeId": "state:locked",
+                      "path": [],
+                      "via": "direct"
+                    }
+                  ]
+                }
+              ],
+              "eventIds": [],
+              "id": "h2",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "type",
+                  "value": "text"
+                },
+                {
+                  "name": "data-note",
+                  "value": "true"
+                }
+              ],
+              "tag": "input"
+            },
+            {
+              "children": [
+                {
+                  "expression": {
+                    "end": 604,
+                    "name": "sealed",
+                    "start": 598,
+                    "type": "Identifier"
+                  },
+                  "id": "text:1",
+                  "kind": "dynamic-text",
+                  "reads": [
+                    {
+                      "graphNodeId": "computed:sealed",
+                      "path": [],
+                      "via": "direct"
+                    }
+                  ]
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [],
+              "id": "h3",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-sealed",
+                  "value": "true"
+                }
+              ],
+              "tag": "p"
+            },
+            {
+              "children": [
+                {
+                  "expression": {
+                    "end": 639,
+                    "name": "steps",
+                    "start": 634,
+                    "type": "Identifier"
+                  },
+                  "id": "text:2",
+                  "kind": "dynamic-text",
+                  "reads": [
+                    {
+                      "graphNodeId": "state:steps",
+                      "path": [],
+                      "via": "direct"
+                    }
+                  ]
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [],
+              "id": "h4",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-steps",
+                  "value": "true"
+                }
+              ],
+              "tag": "p"
+            },
+            {
+              "children": [
+                {
+                  "collection": {
+                    "expression": {
+                      "end": 697,
+                      "name": "rows",
+                      "start": 693,
+                      "type": "Identifier"
+                    },
+                    "reads": [
+                      {
+                        "graphNodeId": "state:rows",
+                        "path": [],
+                        "via": "direct"
+                      }
+                    ]
+                  },
+                  "empty": [],
+                  "id": "repeat:0",
+                  "item": "row",
+                  "key": {
+                    "expression": {
+                      "computed": false,
+                      "end": 709,
+                      "object": {
+                        "end": 706,
+                        "name": "row",
+                        "start": 703,
+                        "type": "Identifier"
+                      },
+                      "optional": false,
+                      "property": {
+                        "end": 709,
+                        "name": "id",
+                        "start": 707,
+                        "type": "Identifier"
+                      },
+                      "start": 703,
+                      "type": "MemberExpression"
+                    },
+                    "reads": [
+                      {
+                        "graphNodeId": "state:rows",
+                        "path": [
+                          "id"
+                        ],
+                        "via": "repeat-item"
+                      }
+                    ]
+                  },
+                  "kind": "keyed-repeat",
+                  "row": [
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "id": "text:3",
+                              "kind": "text",
+                              "value": "field"
+                            }
+                          ],
+                          "dynamicBindings": [
+                            {
+                              "expression": {
+                                "computed": false,
+                                "end": 797,
+                                "object": {
+                                  "end": 794,
+                                  "name": "row",
+                                  "start": 791,
+                                  "type": "Identifier"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 797,
+                                  "name": "id",
+                                  "start": 795,
+                                  "type": "Identifier"
+                                },
+                                "start": 791,
+                                "type": "MemberExpression"
+                              },
+                              "kind": "attribute",
+                              "name": "data-field",
+                              "reads": [
+                                {
+                                  "graphNodeId": "state:rows",
+                                  "path": [
+                                    "id"
+                                  ],
+                                  "via": "repeat-item"
+                                }
+                              ]
+                            },
+                            {
+                              "expression": {
+                                "computed": false,
+                                "end": 816,
+                                "object": {
+                                  "end": 812,
+                                  "name": "row",
+                                  "start": 809,
+                                  "type": "Identifier"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 816,
+                                  "name": "off",
+                                  "start": 813,
+                                  "type": "Identifier"
+                                },
+                                "start": 809,
+                                "type": "MemberExpression"
+                              },
+                              "kind": "property",
+                              "name": "disabled",
+                              "reads": [
+                                {
+                                  "graphNodeId": "state:rows",
+                                  "path": [
+                                    "off"
+                                  ],
+                                  "via": "repeat-item"
+                                }
+                              ]
+                            }
+                          ],
+                          "eventIds": [],
+                          "id": "h7",
+                          "kind": "host",
+                          "staticAttributes": [
+                            {
+                              "name": "type",
+                              "value": "button"
+                            }
+                          ],
+                          "tag": "button"
+                        },
+                        {
+                          "children": [
+                            {
+                              "id": "text:4",
+                              "kind": "text",
+                              "value": "seal"
+                            }
+                          ],
+                          "dynamicBindings": [
+                            {
+                              "expression": {
+                                "computed": false,
+                                "end": 889,
+                                "object": {
+                                  "end": 886,
+                                  "name": "row",
+                                  "start": 883,
+                                  "type": "Identifier"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 889,
+                                  "name": "id",
+                                  "start": 887,
+                                  "type": "Identifier"
+                                },
+                                "start": 883,
+                                "type": "MemberExpression"
+                              },
+                              "kind": "attribute",
+                              "name": "data-seal",
+                              "reads": [
+                                {
+                                  "graphNodeId": "state:rows",
+                                  "path": [
+                                    "id"
+                                  ],
+                                  "via": "repeat-item"
+                                }
+                              ]
+                            }
+                          ],
+                          "eventIds": [
+                            "event:0"
+                          ],
+                          "id": "h8",
+                          "kind": "host",
+                          "staticAttributes": [
+                            {
+                              "name": "type",
+                              "value": "button"
+                            }
+                          ],
+                          "tag": "button"
+                        }
+                      ],
+                      "dynamicBindings": [
+                        {
+                          "expression": {
+                            "computed": false,
+                            "end": 749,
+                            "object": {
+                              "end": 746,
+                              "name": "row",
+                              "start": 743,
+                              "type": "Identifier"
+                            },
+                            "optional": false,
+                            "property": {
+                              "end": 749,
+                              "name": "id",
+                              "start": 747,
+                              "type": "Identifier"
+                            },
+                            "start": 743,
+                            "type": "MemberExpression"
+                          },
+                          "kind": "attribute",
+                          "name": "data-oracle-attr-key",
+                          "reads": [
+                            {
+                              "graphNodeId": "state:rows",
+                              "path": [
+                                "id"
+                              ],
+                              "via": "repeat-item"
+                            }
+                          ]
+                        }
+                      ],
+                      "eventIds": [],
+                      "id": "h6",
+                      "kind": "host",
+                      "staticAttributes": [],
+                      "tag": "li"
+                    }
+                  ]
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [],
+              "id": "h5",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-fields",
+                  "value": "true"
+                }
+              ],
+              "tag": "ul"
+            },
+            {
+              "children": [
+                {
+                  "id": "text:5",
+                  "kind": "text",
+                  "value": "lock"
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [
+                "event:1"
+              ],
+              "id": "h9",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "type",
+                  "value": "button"
+                },
+                {
+                  "name": "data-action",
+                  "value": "lock"
+                }
+              ],
+              "tag": "button"
+            },
+            {
+              "children": [
+                {
+                  "id": "text:6",
+                  "kind": "text",
+                  "value": "unlock"
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [
+                "event:2"
+              ],
+              "id": "h10",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "type",
+                  "value": "button"
+                },
+                {
+                  "name": "data-action",
+                  "value": "unlock"
+                }
+              ],
+              "tag": "button"
+            }
+          ],
+          "dynamicBindings": [],
+          "eventIds": [],
+          "id": "h0",
+          "kind": "host",
+          "staticAttributes": [
+            {
+              "name": "data-scenario",
+              "value": "s9"
+            }
+          ],
+          "tag": "section"
+        }
+      ]
+    }
+  ],
+  "filename": "src/fixtures/s9-boolean-attributes.tsrx",
+  "imports": [],
+  "module": {
+    "exports": [
+      {
+        "componentName": "AttrBoard",
+        "exportedName": "AttrBoard",
+        "kind": "named"
+      }
+    ]
+  },
+  "records": {
+    "aliases": [
+      {
+        "componentId": "component:0:AttrBoard",
+        "declarationKind": "const",
+        "graphNodeId": "prop:props",
+        "id": "alias:AttrBoard:onTrace",
+        "name": "onTrace",
+        "path": [
+          "onTrace"
+        ],
+        "sourceSpan": {
+          "end": 92,
+          "filename": "src/fixtures/s9-boolean-attributes.tsrx",
+          "start": 85
+        },
+        "target": "props.onTrace"
+      },
+      {
+        "componentId": "component:0:AttrBoard",
+        "declarationKind": "const",
+        "graphNodeId": "prop:props",
+        "id": "alias:AttrBoard:seed",
+        "name": "seed",
+        "path": [
+          "seed"
+        ],
+        "sourceSpan": {
+          "end": 83,
+          "filename": "src/fixtures/s9-boolean-attributes.tsrx",
+          "start": 79
+        },
+        "target": "props.seed"
+      }
+    ],
+    "behaviors": [],
+    "bindings": [
+      {
+        "async": false,
+        "asyncCapable": false,
+        "componentId": "component:0:AttrBoard",
+        "computed": {
+          "expression": {
+            "async": false,
+            "body": {
+              "end": 385,
+              "left": {
+                "arguments": [
+                  {
+                    "end": 374,
+                    "raw": "'+'",
+                    "start": 371,
+                    "type": "Literal",
+                    "value": "+"
+                  }
+                ],
+                "callee": {
+                  "computed": false,
+                  "end": 370,
+                  "object": {
+                    "arguments": [
+                      {
+                        "async": false,
+                        "body": {
+                          "computed": false,
+                          "end": 359,
+                          "object": {
+                            "end": 356,
+                            "name": "row",
+                            "start": 353,
+                            "type": "Identifier"
+                          },
+                          "optional": false,
+                          "property": {
+                            "end": 359,
+                            "name": "id",
+                            "start": 357,
+                            "type": "Identifier"
+                          },
+                          "start": 353,
+                          "type": "MemberExpression"
+                        },
+                        "end": 359,
+                        "expression": true,
+                        "generator": false,
+                        "id": null,
+                        "params": [
+                          {
+                            "end": 348,
+                            "name": "row",
+                            "start": 345,
+                            "type": "Identifier"
+                          }
+                        ],
+                        "start": 344,
+                        "type": "ArrowFunctionExpression"
+                      }
+                    ],
+                    "callee": {
+                      "computed": false,
+                      "end": 343,
+                      "object": {
+                        "arguments": [
+                          {
+                            "async": false,
+                            "body": {
+                              "computed": false,
+                              "end": 333,
+                              "object": {
+                                "end": 329,
+                                "name": "row",
+                                "start": 326,
+                                "type": "Identifier"
+                              },
+                              "optional": false,
+                              "property": {
+                                "end": 333,
+                                "name": "off",
+                                "start": 330,
+                                "type": "Identifier"
+                              },
+                              "start": 326,
+                              "type": "MemberExpression"
+                            },
+                            "end": 333,
+                            "expression": true,
+                            "generator": false,
+                            "id": null,
+                            "params": [
+                              {
+                                "end": 321,
+                                "name": "row",
+                                "start": 318,
+                                "type": "Identifier"
+                              }
+                            ],
+                            "start": 317,
+                            "type": "ArrowFunctionExpression"
+                          }
+                        ],
+                        "callee": {
+                          "computed": false,
+                          "end": 316,
+                          "object": {
+                            "end": 304,
+                            "name": "rows",
+                            "start": 300,
+                            "type": "Identifier"
+                          },
+                          "optional": false,
+                          "property": {
+                            "end": 316,
+                            "name": "filter",
+                            "start": 310,
+                            "type": "Identifier"
+                          },
+                          "start": 300,
+                          "type": "MemberExpression"
+                        },
+                        "end": 334,
+                        "optional": false,
+                        "start": 300,
+                        "type": "CallExpression"
+                      },
+                      "optional": false,
+                      "property": {
+                        "end": 343,
+                        "name": "map",
+                        "start": 340,
+                        "type": "Identifier"
+                      },
+                      "start": 300,
+                      "type": "MemberExpression"
+                    },
+                    "end": 360,
+                    "optional": false,
+                    "start": 300,
+                    "type": "CallExpression"
+                  },
+                  "optional": false,
+                  "property": {
+                    "end": 370,
+                    "name": "join",
+                    "start": 366,
+                    "type": "Identifier"
+                  },
+                  "start": 300,
+                  "type": "MemberExpression"
+                },
+                "end": 375,
+                "optional": false,
+                "start": 300,
+                "type": "CallExpression"
+              },
+              "operator": "||",
+              "right": {
+                "end": 385,
+                "raw": "'none'",
+                "start": 379,
+                "type": "Literal",
+                "value": "none"
+              },
+              "start": 300,
+              "type": "LogicalExpression"
+            },
+            "end": 385,
+            "expression": true,
+            "generator": false,
+            "id": null,
+            "params": [],
+            "start": 291,
+            "type": "ArrowFunctionExpression"
+          },
+          "reads": [
+            {
+              "graphNodeId": "state:rows",
+              "path": [],
+              "via": "direct"
+            }
+          ]
+        },
+        "declarationKind": "const",
+        "id": "computed:sealed",
+        "kind": "computed",
+        "name": "sealed",
+        "reads": [
+          {
+            "componentId": "component:0:AttrBoard",
+            "graphNodeId": "state:rows",
+            "path": []
+          }
+        ],
+        "writable": false,
+        "writes": []
+      },
+      {
+        "async": false,
+        "asyncCapable": false,
+        "componentId": "component:0:AttrBoard",
+        "computed": {
+          "expression": {
+            "async": false,
+            "body": {
+              "alternate": {
+                "end": 259,
+                "raw": "'open'",
+                "start": 253,
+                "type": "Literal",
+                "value": "open"
+              },
+              "consequent": {
+                "end": 250,
+                "raw": "'locked'",
+                "start": 242,
+                "type": "Literal",
+                "value": "locked"
+              },
+              "end": 259,
+              "start": 233,
+              "test": {
+                "end": 239,
+                "name": "locked",
+                "start": 233,
+                "type": "Identifier"
+              },
+              "type": "ConditionalExpression"
+            },
+            "end": 260,
+            "expression": true,
+            "generator": false,
+            "id": null,
+            "params": [],
+            "start": 226,
+            "type": "ArrowFunctionExpression"
+          },
+          "reads": [
+            {
+              "graphNodeId": "state:locked",
+              "path": [],
+              "via": "direct"
+            }
+          ]
+        },
+        "declarationKind": "const",
+        "id": "computed:stage",
+        "kind": "computed",
+        "name": "stage",
+        "reads": [
+          {
+            "componentId": "component:0:AttrBoard",
+            "graphNodeId": "state:locked",
+            "path": []
+          }
+        ],
+        "writable": false,
+        "writes": []
+      },
+      {
+        "componentId": "component:0:AttrBoard",
+        "declarationKind": "const",
+        "id": "prop:props",
+        "kind": "prop",
+        "name": "props",
+        "reads": [],
+        "valueKind": "object",
+        "writable": false,
+        "writes": []
+      },
+      {
+        "componentId": "component:0:AttrBoard",
+        "declarationKind": "let",
+        "id": "state:locked",
+        "initialValue": false,
+        "initializer": {
+          "end": 124,
+          "raw": "false",
+          "start": 119,
+          "type": "Literal",
+          "value": false
+        },
+        "kind": "state",
+        "name": "locked",
+        "reads": [],
+        "valueKind": "scalar",
+        "writable": true,
+        "writes": [
+          {
+            "assignmentOperator": "=",
+            "componentId": "component:0:AttrBoard",
+            "graphNodeId": "state:locked",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 1245,
+              "filename": "src/fixtures/s9-boolean-attributes.tsrx",
+              "start": 1239
+            },
+            "value": {
+              "end": 1252,
+              "raw": "true",
+              "start": 1248,
+              "type": "Literal",
+              "value": true
+            },
+            "via": "direct"
+          },
+          {
+            "assignmentOperator": "=",
+            "componentId": "component:0:AttrBoard",
+            "graphNodeId": "state:locked",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 1432,
+              "filename": "src/fixtures/s9-boolean-attributes.tsrx",
+              "start": 1426
+            },
+            "value": {
+              "end": 1440,
+              "raw": "false",
+              "start": 1435,
+              "type": "Literal",
+              "value": false
+            },
+            "via": "direct"
+          }
+        ]
+      },
+      {
+        "componentId": "component:0:AttrBoard",
+        "declarationKind": "let",
+        "id": "state:rows",
+        "initializer": {
+          "arguments": [
+            {
+              "async": false,
+              "body": {
+                "end": 197,
+                "properties": [
+                  {
+                    "argument": {
+                      "end": 195,
+                      "name": "row",
+                      "start": 192,
+                      "type": "Identifier"
+                    },
+                    "end": 195,
+                    "start": 189,
+                    "type": "SpreadElement"
+                  }
+                ],
+                "start": 187,
+                "type": "ObjectExpression"
+              },
+              "end": 198,
+              "expression": true,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 181,
+                  "name": "row",
+                  "start": 178,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 177,
+              "type": "ArrowFunctionExpression"
+            }
+          ],
+          "callee": {
+            "computed": false,
+            "end": 176,
+            "object": {
+              "end": 172,
+              "name": "seed",
+              "start": 168,
+              "type": "Identifier"
+            },
+            "optional": false,
+            "property": {
+              "end": 176,
+              "name": "map",
+              "start": 173,
+              "type": "Identifier"
+            },
+            "start": 168,
+            "type": "MemberExpression"
+          },
+          "end": 199,
+          "optional": false,
+          "start": 168,
+          "type": "CallExpression"
+        },
+        "kind": "state",
+        "name": "rows",
+        "reads": [
+          {
+            "componentId": "component:0:AttrBoard",
+            "graphNodeId": "prop:props",
+            "path": [
+              "seed"
+            ]
+          }
+        ],
+        "valueKind": "unknown",
+        "writable": true,
+        "writes": [
+          {
+            "assignmentOperator": "=",
+            "componentId": "component:0:AttrBoard",
+            "graphNodeId": "state:rows",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 1053,
+              "filename": "src/fixtures/s9-boolean-attributes.tsrx",
+              "start": 1049
+            },
+            "value": {
+              "end": 1060,
+              "name": "next",
+              "start": 1056,
+              "type": "Identifier"
+            },
+            "via": "direct"
+          }
+        ]
+      },
+      {
+        "componentId": "component:0:AttrBoard",
+        "declarationKind": "let",
+        "id": "state:steps",
+        "initialValue": 0,
+        "initializer": {
+          "end": 147,
+          "raw": "0",
+          "start": 146,
+          "type": "Literal",
+          "value": 0
+        },
+        "kind": "state",
+        "name": "steps",
+        "reads": [],
+        "valueKind": "scalar",
+        "writable": true,
+        "writes": [
+          {
+            "assignmentOperator": "=",
+            "componentId": "component:0:AttrBoard",
+            "graphNodeId": "state:steps",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 1263,
+              "filename": "src/fixtures/s9-boolean-attributes.tsrx",
+              "start": 1258
+            },
+            "value": {
+              "end": 1275,
+              "left": {
+                "end": 1271,
+                "name": "steps",
+                "start": 1266,
+                "type": "Identifier"
+              },
+              "operator": "+",
+              "right": {
+                "end": 1275,
+                "raw": "1",
+                "start": 1274,
+                "type": "Literal",
+                "value": 1
+              },
+              "start": 1266,
+              "type": "BinaryExpression"
+            },
+            "via": "direct"
+          },
+          {
+            "assignmentOperator": "=",
+            "componentId": "component:0:AttrBoard",
+            "graphNodeId": "state:steps",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 1451,
+              "filename": "src/fixtures/s9-boolean-attributes.tsrx",
+              "start": 1446
+            },
+            "value": {
+              "end": 1463,
+              "left": {
+                "end": 1459,
+                "name": "steps",
+                "start": 1454,
+                "type": "Identifier"
+              },
+              "operator": "+",
+              "right": {
+                "end": 1463,
+                "raw": "1",
+                "start": 1462,
+                "type": "Literal",
+                "value": 1
+              },
+              "start": 1454,
+              "type": "BinaryExpression"
+            },
+            "via": "direct"
+          }
+        ]
+      }
+    ],
+    "elementHandleBindings": [],
+    "events": [
+      {
+        "componentId": "component:0:AttrBoard",
+        "eventName": "click",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "declarations": [
+                      {
+                        "end": 1040,
+                        "id": {
+                          "end": 936,
+                          "name": "next",
+                          "start": 932,
+                          "type": "Identifier"
+                        },
+                        "init": {
+                          "arguments": [
+                            {
+                              "async": false,
+                              "body": {
+                                "alternate": {
+                                  "end": 1030,
+                                  "name": "entry",
+                                  "start": 1025,
+                                  "type": "Identifier"
+                                },
+                                "consequent": {
+                                  "end": 1022,
+                                  "properties": [
+                                    {
+                                      "computed": false,
+                                      "end": 1003,
+                                      "key": {
+                                        "end": 993,
+                                        "name": "id",
+                                        "start": 991,
+                                        "type": "Identifier"
+                                      },
+                                      "kind": "init",
+                                      "method": false,
+                                      "shorthand": false,
+                                      "start": 991,
+                                      "type": "Property",
+                                      "value": {
+                                        "computed": false,
+                                        "end": 1003,
+                                        "object": {
+                                          "end": 1000,
+                                          "name": "entry",
+                                          "start": 995,
+                                          "type": "Identifier"
+                                        },
+                                        "optional": false,
+                                        "property": {
+                                          "end": 1003,
+                                          "name": "id",
+                                          "start": 1001,
+                                          "type": "Identifier"
+                                        },
+                                        "start": 995,
+                                        "type": "MemberExpression"
+                                      }
+                                    },
+                                    {
+                                      "computed": false,
+                                      "end": 1020,
+                                      "key": {
+                                        "end": 1008,
+                                        "name": "off",
+                                        "start": 1005,
+                                        "type": "Identifier"
+                                      },
+                                      "kind": "init",
+                                      "method": false,
+                                      "shorthand": false,
+                                      "start": 1005,
+                                      "type": "Property",
+                                      "value": {
+                                        "argument": {
+                                          "computed": false,
+                                          "end": 1020,
+                                          "object": {
+                                            "end": 1016,
+                                            "name": "entry",
+                                            "start": 1011,
+                                            "type": "Identifier"
+                                          },
+                                          "optional": false,
+                                          "property": {
+                                            "end": 1020,
+                                            "name": "off",
+                                            "start": 1017,
+                                            "type": "Identifier"
+                                          },
+                                          "start": 1011,
+                                          "type": "MemberExpression"
+                                        },
+                                        "end": 1020,
+                                        "operator": "!",
+                                        "prefix": true,
+                                        "start": 1010,
+                                        "type": "UnaryExpression"
+                                      }
+                                    }
+                                  ],
+                                  "start": 989,
+                                  "type": "ObjectExpression"
+                                },
+                                "end": 1030,
+                                "start": 967,
+                                "test": {
+                                  "end": 986,
+                                  "left": {
+                                    "computed": false,
+                                    "end": 975,
+                                    "object": {
+                                      "end": 972,
+                                      "name": "entry",
+                                      "start": 967,
+                                      "type": "Identifier"
+                                    },
+                                    "optional": false,
+                                    "property": {
+                                      "end": 975,
+                                      "name": "id",
+                                      "start": 973,
+                                      "type": "Identifier"
+                                    },
+                                    "start": 967,
+                                    "type": "MemberExpression"
+                                  },
+                                  "operator": "===",
+                                  "right": {
+                                    "computed": false,
+                                    "end": 986,
+                                    "object": {
+                                      "end": 983,
+                                      "name": "row",
+                                      "start": 980,
+                                      "type": "Identifier"
+                                    },
+                                    "optional": false,
+                                    "property": {
+                                      "end": 986,
+                                      "name": "id",
+                                      "start": 984,
+                                      "type": "Identifier"
+                                    },
+                                    "start": 980,
+                                    "type": "MemberExpression"
+                                  },
+                                  "start": 967,
+                                  "type": "BinaryExpression"
+                                },
+                                "type": "ConditionalExpression"
+                              },
+                              "end": 1030,
+                              "expression": true,
+                              "generator": false,
+                              "id": null,
+                              "params": [
+                                {
+                                  "end": 954,
+                                  "name": "entry",
+                                  "start": 949,
+                                  "type": "Identifier"
+                                }
+                              ],
+                              "start": 948,
+                              "type": "ArrowFunctionExpression"
+                            }
+                          ],
+                          "callee": {
+                            "computed": false,
+                            "end": 947,
+                            "object": {
+                              "end": 943,
+                              "name": "rows",
+                              "start": 939,
+                              "type": "Identifier"
+                            },
+                            "optional": false,
+                            "property": {
+                              "end": 947,
+                              "name": "map",
+                              "start": 944,
+                              "type": "Identifier"
+                            },
+                            "start": 939,
+                            "type": "MemberExpression"
+                          },
+                          "end": 1040,
+                          "optional": false,
+                          "start": 939,
+                          "type": "CallExpression"
+                        },
+                        "start": 932,
+                        "type": "VariableDeclarator"
+                      }
+                    ],
+                    "end": 1041,
+                    "kind": "const",
+                    "start": 926,
+                    "type": "VariableDeclaration"
+                  },
+                  {
+                    "end": 1061,
+                    "expression": {
+                      "end": 1060,
+                      "left": {
+                        "end": 1053,
+                        "name": "rows",
+                        "start": 1049,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "end": 1060,
+                        "name": "next",
+                        "start": 1056,
+                        "type": "Identifier"
+                      },
+                      "start": 1049,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 1049,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 1108,
+                    "expression": {
+                      "arguments": [
+                        {
+                          "end": 1083,
+                          "raw": "'seal'",
+                          "start": 1077,
+                          "type": "Literal",
+                          "value": "seal"
+                        },
+                        {
+                          "end": 1099,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 1097,
+                              "key": {
+                                "end": 1089,
+                                "name": "id",
+                                "start": 1087,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 1087,
+                              "type": "Property",
+                              "value": {
+                                "computed": false,
+                                "end": 1097,
+                                "object": {
+                                  "end": 1094,
+                                  "name": "row",
+                                  "start": 1091,
+                                  "type": "Identifier"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 1097,
+                                  "name": "id",
+                                  "start": 1095,
+                                  "type": "Identifier"
+                                },
+                                "start": 1091,
+                                "type": "MemberExpression"
+                              }
+                            }
+                          ],
+                          "start": 1085,
+                          "type": "ObjectExpression"
+                        },
+                        {
+                          "end": 1106,
+                          "name": "event",
+                          "start": 1101,
+                          "type": "Identifier"
+                        }
+                      ],
+                      "callee": {
+                        "end": 1076,
+                        "name": "onTrace",
+                        "start": 1069,
+                        "type": "Identifier"
+                      },
+                      "end": 1107,
+                      "optional": false,
+                      "start": 1069,
+                      "type": "CallExpression"
+                    },
+                    "start": 1069,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 1116,
+                "start": 917,
+                "type": "BlockStatement"
+              },
+              "end": 1116,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 912,
+                  "name": "event",
+                  "start": 907,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 906,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              },
+              {
+                "graphNodeId": "state:rows",
+                "path": [],
+                "via": "direct"
+              },
+              {
+                "graphNodeId": "state:rows",
+                "path": [
+                  "id"
+                ],
+                "via": "repeat-item"
+              }
+            ],
+            "writes": [
+              {
+                "assignmentOperator": "=",
+                "componentId": "component:0:AttrBoard",
+                "graphNodeId": "state:rows",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 1053,
+                  "filename": "src/fixtures/s9-boolean-attributes.tsrx",
+                  "start": 1049
+                },
+                "value": {
+                  "end": 1060,
+                  "name": "next",
+                  "start": 1056,
+                  "type": "Identifier"
+                },
+                "via": "direct"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h8",
+        "id": "event:0"
+      },
+      {
+        "componentId": "component:0:AttrBoard",
+        "eventName": "click",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "end": 1253,
+                    "expression": {
+                      "end": 1252,
+                      "left": {
+                        "end": 1245,
+                        "name": "locked",
+                        "start": 1239,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "end": 1252,
+                        "raw": "true",
+                        "start": 1248,
+                        "type": "Literal",
+                        "value": true
+                      },
+                      "start": 1239,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 1239,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 1276,
+                    "expression": {
+                      "end": 1275,
+                      "left": {
+                        "end": 1263,
+                        "name": "steps",
+                        "start": 1258,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "end": 1275,
+                        "left": {
+                          "end": 1271,
+                          "name": "steps",
+                          "start": 1266,
+                          "type": "Identifier"
+                        },
+                        "operator": "+",
+                        "right": {
+                          "end": 1275,
+                          "raw": "1",
+                          "start": 1274,
+                          "type": "Literal",
+                          "value": 1
+                        },
+                        "start": 1266,
+                        "type": "BinaryExpression"
+                      },
+                      "start": 1258,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 1258,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 1322,
+                    "expression": {
+                      "arguments": [
+                        {
+                          "end": 1295,
+                          "raw": "'lock'",
+                          "start": 1289,
+                          "type": "Literal",
+                          "value": "lock"
+                        },
+                        {
+                          "end": 1313,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 1311,
+                              "key": {
+                                "end": 1305,
+                                "name": "locked",
+                                "start": 1299,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 1299,
+                              "type": "Property",
+                              "value": {
+                                "end": 1311,
+                                "raw": "true",
+                                "start": 1307,
+                                "type": "Literal",
+                                "value": true
+                              }
+                            }
+                          ],
+                          "start": 1297,
+                          "type": "ObjectExpression"
+                        },
+                        {
+                          "end": 1320,
+                          "name": "event",
+                          "start": 1315,
+                          "type": "Identifier"
+                        }
+                      ],
+                      "callee": {
+                        "end": 1288,
+                        "name": "onTrace",
+                        "start": 1281,
+                        "type": "Identifier"
+                      },
+                      "end": 1321,
+                      "optional": false,
+                      "start": 1281,
+                      "type": "CallExpression"
+                    },
+                    "start": 1281,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 1327,
+                "start": 1233,
+                "type": "BlockStatement"
+              },
+              "end": 1327,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 1228,
+                  "name": "event",
+                  "start": 1223,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 1222,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              },
+              {
+                "graphNodeId": "state:steps",
+                "path": [],
+                "via": "direct"
+              }
+            ],
+            "writes": [
+              {
+                "assignmentOperator": "=",
+                "componentId": "component:0:AttrBoard",
+                "graphNodeId": "state:locked",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 1245,
+                  "filename": "src/fixtures/s9-boolean-attributes.tsrx",
+                  "start": 1239
+                },
+                "value": {
+                  "end": 1252,
+                  "raw": "true",
+                  "start": 1248,
+                  "type": "Literal",
+                  "value": true
+                },
+                "via": "direct"
+              },
+              {
+                "assignmentOperator": "=",
+                "componentId": "component:0:AttrBoard",
+                "graphNodeId": "state:steps",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 1263,
+                  "filename": "src/fixtures/s9-boolean-attributes.tsrx",
+                  "start": 1258
+                },
+                "value": {
+                  "end": 1275,
+                  "left": {
+                    "end": 1271,
+                    "name": "steps",
+                    "start": 1266,
+                    "type": "Identifier"
+                  },
+                  "operator": "+",
+                  "right": {
+                    "end": 1275,
+                    "raw": "1",
+                    "start": 1274,
+                    "type": "Literal",
+                    "value": 1
+                  },
+                  "start": 1266,
+                  "type": "BinaryExpression"
+                },
+                "via": "direct"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h9",
+        "id": "event:1"
+      },
+      {
+        "componentId": "component:0:AttrBoard",
+        "eventName": "click",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "end": 1441,
+                    "expression": {
+                      "end": 1440,
+                      "left": {
+                        "end": 1432,
+                        "name": "locked",
+                        "start": 1426,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "end": 1440,
+                        "raw": "false",
+                        "start": 1435,
+                        "type": "Literal",
+                        "value": false
+                      },
+                      "start": 1426,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 1426,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 1464,
+                    "expression": {
+                      "end": 1463,
+                      "left": {
+                        "end": 1451,
+                        "name": "steps",
+                        "start": 1446,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "end": 1463,
+                        "left": {
+                          "end": 1459,
+                          "name": "steps",
+                          "start": 1454,
+                          "type": "Identifier"
+                        },
+                        "operator": "+",
+                        "right": {
+                          "end": 1463,
+                          "raw": "1",
+                          "start": 1462,
+                          "type": "Literal",
+                          "value": 1
+                        },
+                        "start": 1454,
+                        "type": "BinaryExpression"
+                      },
+                      "start": 1446,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 1446,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 1513,
+                    "expression": {
+                      "arguments": [
+                        {
+                          "end": 1485,
+                          "raw": "'unlock'",
+                          "start": 1477,
+                          "type": "Literal",
+                          "value": "unlock"
+                        },
+                        {
+                          "end": 1504,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 1502,
+                              "key": {
+                                "end": 1495,
+                                "name": "locked",
+                                "start": 1489,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 1489,
+                              "type": "Property",
+                              "value": {
+                                "end": 1502,
+                                "raw": "false",
+                                "start": 1497,
+                                "type": "Literal",
+                                "value": false
+                              }
+                            }
+                          ],
+                          "start": 1487,
+                          "type": "ObjectExpression"
+                        },
+                        {
+                          "end": 1511,
+                          "name": "event",
+                          "start": 1506,
+                          "type": "Identifier"
+                        }
+                      ],
+                      "callee": {
+                        "end": 1476,
+                        "name": "onTrace",
+                        "start": 1469,
+                        "type": "Identifier"
+                      },
+                      "end": 1512,
+                      "optional": false,
+                      "start": 1469,
+                      "type": "CallExpression"
+                    },
+                    "start": 1469,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 1518,
+                "start": 1420,
+                "type": "BlockStatement"
+              },
+              "end": 1518,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 1415,
+                  "name": "event",
+                  "start": 1410,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 1409,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              },
+              {
+                "graphNodeId": "state:steps",
+                "path": [],
+                "via": "direct"
+              }
+            ],
+            "writes": [
+              {
+                "assignmentOperator": "=",
+                "componentId": "component:0:AttrBoard",
+                "graphNodeId": "state:locked",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 1432,
+                  "filename": "src/fixtures/s9-boolean-attributes.tsrx",
+                  "start": 1426
+                },
+                "value": {
+                  "end": 1440,
+                  "raw": "false",
+                  "start": 1435,
+                  "type": "Literal",
+                  "value": false
+                },
+                "via": "direct"
+              },
+              {
+                "assignmentOperator": "=",
+                "componentId": "component:0:AttrBoard",
+                "graphNodeId": "state:steps",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 1451,
+                  "filename": "src/fixtures/s9-boolean-attributes.tsrx",
+                  "start": 1446
+                },
+                "value": {
+                  "end": 1463,
+                  "left": {
+                    "end": 1459,
+                    "name": "steps",
+                    "start": 1454,
+                    "type": "Identifier"
+                  },
+                  "operator": "+",
+                  "right": {
+                    "end": 1463,
+                    "raw": "1",
+                    "start": 1462,
+                    "type": "Literal",
+                    "value": 1
+                  },
+                  "start": 1454,
+                  "type": "BinaryExpression"
+                },
+                "via": "direct"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h10",
+        "id": "event:2"
+      }
+    ],
+    "handleCalls": [],
+    "handleForwards": [],
+    "persistence": [],
+    "sharedCalls": [],
+    "sharedDefinitions": [],
+    "sharedInstances": [],
+    "sharedReads": [],
+    "sharedWrites": [],
+    "stateReads": [
+      {
+        "componentId": "component:0:AttrBoard",
+        "graphNodeId": "computed:sealed",
+        "path": []
+      },
+      {
+        "componentId": "component:0:AttrBoard",
+        "graphNodeId": "computed:stage",
+        "path": []
+      },
+      {
+        "componentId": "component:0:AttrBoard",
+        "graphNodeId": "prop:props",
+        "path": [
+          "onTrace"
+        ]
+      },
+      {
+        "componentId": "component:0:AttrBoard",
+        "graphNodeId": "prop:props",
+        "path": [
+          "seed"
+        ]
+      },
+      {
+        "componentId": "component:0:AttrBoard",
+        "graphNodeId": "state:locked",
+        "path": []
+      },
+      {
+        "componentId": "component:0:AttrBoard",
+        "graphNodeId": "state:rows",
+        "path": []
+      },
+      {
+        "componentId": "component:0:AttrBoard",
+        "graphNodeId": "state:rows",
+        "path": [
+          "id"
+        ]
+      },
+      {
+        "componentId": "component:0:AttrBoard",
+        "graphNodeId": "state:rows",
+        "path": [
+          "off"
+        ]
+      },
+      {
+        "componentId": "component:0:AttrBoard",
+        "graphNodeId": "state:steps",
+        "path": []
+      }
+    ],
+    "stateWrites": [
+      {
+        "assignmentOperator": "=",
+        "componentId": "component:0:AttrBoard",
+        "graphNodeId": "state:locked",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 1245,
+          "filename": "src/fixtures/s9-boolean-attributes.tsrx",
+          "start": 1239
+        },
+        "value": {
+          "end": 1252,
+          "raw": "true",
+          "start": 1248,
+          "type": "Literal",
+          "value": true
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "componentId": "component:0:AttrBoard",
+        "graphNodeId": "state:locked",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 1432,
+          "filename": "src/fixtures/s9-boolean-attributes.tsrx",
+          "start": 1426
+        },
+        "value": {
+          "end": 1440,
+          "raw": "false",
+          "start": 1435,
+          "type": "Literal",
+          "value": false
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "componentId": "component:0:AttrBoard",
+        "graphNodeId": "state:rows",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 1053,
+          "filename": "src/fixtures/s9-boolean-attributes.tsrx",
+          "start": 1049
+        },
+        "value": {
+          "end": 1060,
+          "name": "next",
+          "start": 1056,
+          "type": "Identifier"
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "componentId": "component:0:AttrBoard",
+        "graphNodeId": "state:steps",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 1263,
+          "filename": "src/fixtures/s9-boolean-attributes.tsrx",
+          "start": 1258
+        },
+        "value": {
+          "end": 1275,
+          "left": {
+            "end": 1271,
+            "name": "steps",
+            "start": 1266,
+            "type": "Identifier"
+          },
+          "operator": "+",
+          "right": {
+            "end": 1275,
+            "raw": "1",
+            "start": 1274,
+            "type": "Literal",
+            "value": 1
+          },
+          "start": 1266,
+          "type": "BinaryExpression"
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "componentId": "component:0:AttrBoard",
+        "graphNodeId": "state:steps",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 1451,
+          "filename": "src/fixtures/s9-boolean-attributes.tsrx",
+          "start": 1446
+        },
+        "value": {
+          "end": 1463,
+          "left": {
+            "end": 1459,
+            "name": "steps",
+            "start": 1454,
+            "type": "Identifier"
+          },
+          "operator": "+",
+          "right": {
+            "end": 1463,
+            "raw": "1",
+            "start": 1462,
+            "type": "Literal",
+            "value": 1
+          },
+          "start": 1454,
+          "type": "BinaryExpression"
+        },
+        "via": "direct"
+      }
+    ]
+  },
+  "version": "frameless-enriched-ir/2"
+}

@@ -11,7 +11,7 @@
  * `onTrace` is the emitted components' trace callback. The official demos are
  * activation lanes, not analyzer lanes, so every lane passes a no-op.
  */
-export type ScenarioId = 's1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7'
+export type ScenarioId = 's1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7' | 's9'
 
 export const noTrace = () => {}
 
@@ -74,6 +74,21 @@ export const s7Seed = [
 ]
 
 /**
+ * S9's boolean-attribute seed. TWO rows, and BOTH start `off: false`, which is a
+ * MEASURED constraint rather than a tidiness preference: S9's whole claim is that
+ * a boolean content attribute is ABSENT until state says otherwise, so a row
+ * seeded `true` would serve `disabled=""` before any click and could not
+ * distinguish "the lowering works" from "the attribute is always there". Two
+ * rows rather than one because the scenario seals only `f2` — exactly one button
+ * grows the attribute, which is what separates "the boolean reached its own row"
+ * from "every button in the repeat reflects the same value".
+ */
+export const s9Seed = [
+  { id: 'f1', off: false },
+  { id: 'f2', off: false },
+]
+
+/**
  * Maps a request URL onto a scenario id. Character-for-character the same
  * function `demos/react-official/src/App.jsx` and `demos/solid-official/src/App.jsx`
  * carry, so all three `template-ssr-*` lanes route identically.
@@ -94,5 +109,6 @@ export function scenarioFor(url: string | undefined): ScenarioId {
   if (path === 's5') return 's5'
   if (path === 's6') return 's6'
   if (path === 's7') return 's7'
+  if (path === 's9') return 's9'
   return 's1'
 }

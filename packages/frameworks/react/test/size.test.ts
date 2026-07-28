@@ -145,6 +145,16 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// most of S7's cost is per-attribute rather than per-element, and the
 	// formatter gives every attribute its own line once a tag carries three.
 	S7: { physicalLoc: 118, structuralNodes: 573 },
+	// S9 likewise has no handwritten reference, so this is a budget. MEASURED off
+	// the emitted output, not predicted from S7's. It carries SEVEN dynamic
+	// bindings across five hosts plus two dynamic texts and still costs FEWER
+	// physical lines than S6, which is the reading that matters for the axis it
+	// exists to prove: a boolean content attribute lowered to `kind: 'property'`
+	// costs the React emitter exactly what any other prop costs — `disabled={locked}`
+	// is the same shape as the `data-stage={stage}` printed beside it in the same
+	// start tag — so the repair T049 shipped is FREE in this lane, and the number
+	// is what says so rather than a comment claiming it.
+	S9: { physicalLoc: 72, structuralNodes: 369 },
 };
 
 describe('honest emitted structure comparison', () => {

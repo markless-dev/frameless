@@ -15,6 +15,7 @@ const FIXTURES = [
 	's5-branch-teardown.tsrx',
 	's6-whitespace-text.tsrx',
 	's7-form-controls.tsrx',
+	's9-boolean-attributes.tsrx',
 ] as const;
 
 const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>> = {
@@ -182,6 +183,74 @@ const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>>
 		['button', 'data-action'],
 		['button', 'data-action'],
 		['button', 'data-guard'],
+	],
+	// S9's rows carry `data-oracle-attr-key`, a SIXTH key attribute, for the reason
+	// the second through fifth exist: every key reader in `three-way-contract.ts`
+	// matches its own attribute globally, so a scenario reusing one would silently
+	// join that scenario's observation string.
+	//
+	// WHY THIS FIXTURE EXISTS, and why it is not a second S7.
+	//
+	// T041 ruled the dynamic HTML boolean attribute MIS-LOWERED rather than
+	// unspellable and T049 shipped the lowering, but the repair was proven at the
+	// compiler and at the emitter and IN NO SERVED PAYLOAD - so the repo shipped a
+	// compiler capability with ZERO corpus instances, which is the "a rule with no
+	// instances is folklore" condition this board applied to Angular's ruling 3d.
+	// `docs/DEFECTS.md` entry 10 names a corpus card as its own close trigger, and
+	// this is that card.
+	//
+	// S7 SUBSTITUTED `aria-disabled` because a dynamic `disabled` had no portable
+	// spelling THEN. This fixture binds the real thing: `disabled` on the gate
+	// button and on a button INSIDE the keyed repeat, plus `required` on an
+	// `<input>` - all three lower to `kind: 'property'`, so a correct lane serves
+	// NO attribute at all until the lock click and grows `disabled=""` afterwards.
+	// `data-stage` rides the SAME element as the gate's `disabled` and stays
+	// `kind: 'attribute'`, which is what makes one host show the two kinds behaving
+	// differently: Angular emits `[disabled]="locked"` beside
+	// `[attr.data-stage]="stage"` in one start tag.
+	//
+	// Every boolean here starts FALSE, and that is a MEASURED constraint rather
+	// than a tidiness preference. The whole claim is that the attribute is ABSENT
+	// until state says otherwise; a fixture that served one initially could not
+	// distinguish "the lowering works" from "the attribute is always there".
+	//
+	// FOUR of the fourteen names `build.ts` admits are deliberately NOT bound here,
+	// each excluded on a MEASUREMENT rather than on taste:
+	//
+	//   readonly, autofocus, autoplay  react-dom 19.2.3 serves nothing in BOTH
+	//                                  states and raises `Invalid DOM property`,
+	//                                  because React's canonical props are
+	//                                  readOnly/autoFocus/autoPlay and no emitter
+	//                                  here carries a casing map. It would also
+	//                                  trip `runScenario`'s `consoleErrors: 0`.
+	//   hidden                         MEASURED RED IN THE QWIK LANE BY THIS CARD:
+	//                                  five lanes serve `hidden=""` after the lock
+	//                                  click and qwik serves `hidden="true"`.
+	//                                  @qwik.dev/core's own `isBooleanAttr` table
+	//                                  lists 21 names INCLUDING `disabled` and
+	//                                  EXCLUDING `hidden`, so it minimizes one and
+	//                                  stringifies the other. The element is still
+	//                                  hidden, so this is a SERIALIZATION
+	//                                  divergence and not a behavioural one - the
+	//                                  T041 §2.3 class - and it is NOT an upstream
+	//                                  matter, because this repo's oracle asserts
+	//                                  bytes and Qwik's table is its own.
+	//
+	// `disabled` and `required` are in the portable set, and both were measured:
+	// react-dom and the domino build Angular serializes from agree on every value,
+	// and `required` is present in qwik's, vue's and svelte's boolean tables too.
+	's9-boolean-attributes.tsrx': [
+		['section', 'data-scenario'],
+		['button', 'data-gate'],
+		['input', 'data-note'],
+		['p', 'data-sealed'],
+		['p', 'data-steps'],
+		['ul', 'data-fields'],
+		['li', 'data-oracle-attr-key'],
+		['button', 'data-field'],
+		['button', 'data-seal'],
+		['button', 'data-action'],
+		['button', 'data-action'],
 	],
 };
 
@@ -640,6 +709,7 @@ describe('fixture-family sufficiency', () => {
 			's5-branch-teardown.tsrx': ['toggle', 'tick', 'pick', 'drop'],
 			's6-whitespace-text.tsrx': ['widen', 'tick', 'pad'],
 			's7-form-controls.tsrx': ['size', 'notes', 'pick', 'tag', 'resize', 'lock'],
+			's9-boolean-attributes.tsrx': ['seal', 'lock', 'unlock'],
 		};
 		for (const file of FIXTURES) {
 			const ir = await fixtureIr(file);

@@ -1,3 +1,4 @@
+import { AttrBoard } from './emitted/AttrBoard.jsx'
 import { BranchBoard } from './emitted/BranchBoard.jsx'
 import { EventForm } from './emitted/EventForm.jsx'
 import { FormBoard } from './emitted/FormBoard.jsx'
@@ -53,13 +54,26 @@ const s7Seed = [
   { id: 't2', on: true },
 ]
 
+// S9's boolean-attribute seed. TWO rows, and BOTH start `off: false`, which is a
+// measured constraint rather than a tidiness preference: S9's whole claim is
+// that a boolean content attribute is ABSENT until state says otherwise, so a
+// row seeded `true` would serve `disabled=""` before any click and could not
+// distinguish "the lowering works" from "the attribute is always there". Two
+// rows rather than one because the scenario seals only `f2` — exactly one button
+// grows the attribute, which is what separates "the boolean reached its own row"
+// from "every button in the repeat reflects the same value".
+const s9Seed = [
+  { id: 'f1', off: false },
+  { id: 'f2', off: false },
+]
+
 /**
  * Maps a request URL onto a scenario id. The stock create-vite SSR scaffold
  * already threads `req.originalUrl` into `render(url)`, so branching on it here
  * mirrors the Qwik demo's `/`, `/s2`, `/s3` routes without adding a router.
  *
  * @param {string} url
- * @returns {'s1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7'}
+ * @returns {'s1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7' | 's9'}
  */
 export function scenarioFor(url) {
   const path = String(url ?? '')
@@ -71,6 +85,7 @@ export function scenarioFor(url) {
   if (path === 's5') return 's5'
   if (path === 's6') return 's6'
   if (path === 's7') return 's7'
+  if (path === 's9') return 's9'
   return 's1'
 }
 
@@ -91,6 +106,8 @@ export default function App({ url }) {
       return <WhitespaceBoard seed={s6Seed} label={s6Label} onTrace={noTrace} />
     case 's7':
       return <FormBoard seed={s7Seed} onTrace={noTrace} />
+    case 's9':
+      return <AttrBoard seed={s9Seed} onTrace={noTrace} />
     default:
       return <RenderOnce label="kit" multiplier={2} visible={true} onTrace={noTrace} />
   }
