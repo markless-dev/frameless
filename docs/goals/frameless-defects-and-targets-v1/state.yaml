@@ -131,7 +131,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T031
+active_task: T044
 
 tasks:
   - id: T001
@@ -4067,6 +4067,95 @@ tasks:
       - "Verification fails twice for the same reason."
     receipt: null
 
+  - id: T044
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    spec: "T031 receipt FINDING 2 and notes/T031-corpus-s8-async.md - AUTHORITATIVE."
+    objective: >-
+      Make the React emitter FAIL CLOSED, LOUDLY on a state write it cannot lower, instead of
+      emitting a raw assignment to a const. Proof before fix: land a test that fails for the RIGHT
+      reason - the TS2588 on emitted output - BEFORE the repair.
+    why_this_is_urgent_and_is_NOT_about_async: >-
+      THIS IS A LIVE CORRECTNESS HOLE IN SHIPPED REACT OUTPUT AND IT HAS NOTHING TO DO WITH ASYNC.
+      packages/frameworks/react/src/emitter/index.ts:1775 is `for (const statement of fn.body.body)`
+      - write-lowering walks ONLY TOP-LEVEL STATEMENTS. So a state write inside ANY nested function
+      is emitted as a raw assignment to the const that useState destructured, and toConstSsa
+      additionally renames the nested WRITE TARGET as if it were a version read before freezing it
+      with const. Verbatim from tsc 5.9.3 on emitted output:
+      "react-then.jsx(20,7): error TS2588: Cannot assign to 'ticks' because it is a constant."
+      T031 REPRODUCED IT WITH A PLAIN CALLBACK PROP AS WELL AS WITH .then, SO IT IS ABOUT NESTING,
+      NOT PROMISES. The corpus has simply never contained a nested write - that is the ONLY reason
+      this is undetected, and it is precisely the class the corpus-breadth phase exists to surface.
+    constraints:
+      - "PROOF BEFORE FIX, the charter's non-negotiable. Register the failing case FIRST and watch it fail for the RIGHT reason - the TS2588 on emitted output - before repairing anything."
+      - "THE MINIMUM FIX IS A THROW, NOT A LOWERING. Do NOT attempt to make nested writes lower correctly in this card - that is a design change and Solid already does it, so a later ruling can port the approach. Emitting a NAMED ERROR is the whole deliverable, and it converts a silent miscompile into a loud refusal."
+      - "FAIL CLOSED, LOUDLY - the T033 and T039 precedent. The error must name the write, the enclosing function, and WHAT WOULD OTHERWISE HAVE HAPPENED, because the failure mode is silent and a bare throw teaches nothing."
+      - "Do NOT touch packages/frameworks/react/src/emitter/index.ts:161 (replaceFreeNames / the await re-parse). T031 ruled explicitly that repairing that LOUD symptom before this SILENT one would make the silent one harder to find."
+      - "No existing golden may move. The current corpus contains no nested write, so a correct repair is invisible to it - which is exactly why the planted case is mandatory."
+    allowed_files:
+      - packages/frameworks/react/src/emitter/index.ts
+      - packages/frameworks/react/test/emitter.test.ts
+      - docs/DEFECTS.md
+      - docs/goals/frameless-defects-and-targets-v1/notes/T044-react-nested-write.md
+    verify:
+      - "pnpm test   # 968 at dispatch; the new test must go RED before the fix and GREEN after"
+      - "pnpm check"
+      - "pnpm lint"
+      - "node packages/frameworks/react/scripts/regenerate.ts && git diff --exit-code -- packages/frameworks/react/generated   # run TWICE; no golden may move"
+      - "git diff --exit-code -- packages/frameworks/solid packages/frameworks/qwik packages/frameworks/svelte packages/frameworks/vue packages/frameworks/angular packages/compiler demos scripts"
+      - "git status --short"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You cannot make the new test fail for the RIGHT reason before fixing it. A fix landing without a witnessed failure is not done."
+      - "Any existing golden moves in any lane."
+      - "You are about to IMPLEMENT nested-write lowering rather than throwing. Out of scope by ruling."
+      - "You are about to touch replaceFreeNames or the await re-parse path."
+      - "The throw fires on any EXISTING corpus handler. It must fire ONLY on the planted nested write - if it fires on the shipped corpus, that is a FINDING about the shipped corpus and a stop."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
+  - id: T043
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    spec: "T031 receipt and notes/T031-corpus-s8-async.md - AUTHORITATIVE."
+    depends_on: ["T044"]
+    objective: >-
+      Rule on the async-handler axis across all six emitters: what each lane must do, in what order,
+      and whether S8 can ever land as ratified - or whether Phase F's eighth scenario should be
+      re-specified.
+    the_structural_result_to_rule_on: >-
+      An async boundary is either (a) async/await or (b) a continuation function. SOLID REFUSES
+      EVERY ASYNC ARROW and REACT MISCOMPILES EVERY WRITE INSIDE A NESTED FUNCTION, so between them
+      they exclude the whole space. That is a proof, not a survey - and it means S8 as ratified is
+      unlandable until at least two emitters change.
+    the_five_findings: >-
+      (1) ANGULAR HAS NO CONCEPT OF ASYNC - PM verified the string does not occur once in its
+      emitter; an authored async handler silently becomes synchronous and every instrument passes.
+      (2) REACT's top-level-only write lowering - silent, live today, unrelated to async, owned by
+      T044. (3) React's replaceFreeNames await re-parse - loud. (4) SOLID's undocumented bare throw
+      at :1174, with no dossier ref, no test and no docs, in a lane whose framework supports async
+      listeners natively - the hardest blocker. (5) QWIK forbids awaiting a callback prop, i.e.
+      forbids authoring the exact await its own emitter generates.
+      QWIK IS THE ONLY LANE THAT GETS THIS RIGHT, including the sync$ split generalised on its first
+      try from Defect 1's single synchronous site.
+    constraints:
+      - "Do not implement. Rule."
+      - "NONE OF THIS IS UPSTREAM. React, Solid and Angular all support async event handlers natively; every failure is in OUR emitters. So none of it is covered by the owner's autonomy-grant exclusion on outward-facing filings."
+      - "Rule on FINDING 1 with particular care: Angular does not REFUSE, it silently changes meaning, and it is the only lane where an instrument-clean output is semantically wrong. Weigh whether a fail-closed throw is enough or whether async must be lowered."
+      - "Rule on FINDING 4: Solid's refusal is a bare undocumented throw in a lane whose framework supports the construct. Is it a considered v-limit that was never written down, or an accident? The answer changes the repair."
+      - "Say explicitly whether S8 should be RE-SPECIFIED to an axis today's emitters can express, or whether it stays as ratified and Phase F closes at seven with a documented refusal. T028 needs that answer and must not have to infer it."
+      - "These are DEFECTS in frameless's own emitted output. Rule on which belong in docs/DEFECTS.md and whether any extends half 1's oracle - T038 ruled the whitespace finding did NOT."
+    expected_output:
+      - "Per lane: the ruling, the repair, and its order"
+      - "Whether S8 is re-specified or Phase F closes at seven"
+      - "Which findings become DEFECTS.md entries, and whether half 1's oracle extends"
+      - "Worker packages, or an explicit hand-off to the capability goal"
+    receipt: null
+
   - id: T041
     type: judge
     assignee: Judge
@@ -4132,7 +4221,7 @@ tasks:
   - id: T031
     type: worker
     assignee: Worker
-    status: active
+    status: blocked
     reasoning_hint: high
     spec: "T024 ruling - AUTHORITATIVE."
     depends_on: ["T030"]
@@ -4225,8 +4314,57 @@ tasks:
       - "DEFECT 1 ON THIS VERY GOAL WAS EXACTLY THIS - a Qwik QRL emitting preventDefault() inside an async boundary, repaired with the sync$ array form. It is currently proven at ONE SITE. This scenario is landed ALONE rather than folded, because it is the axis most likely to produce a legitimate terminal finding."
       - "Record S8's size budget in both size.test.ts files. A budget is a RECORDED MEASUREMENT and cannot be derived."
       - "The corpus INVENTORIES are derived and should pick S8 up with ZERO edits. If any needs a hand edit, that is a defect in the derivation and a FINDING."
-    receipt: null
-
+    receipt:
+      result: blocked
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T031-corpus-s8-async.md
+      blocked_reason: "stop_if 'S8 lands in fewer than SIX lanes' fired, and it is UNAVOIDABLE rather than an authoring failure. FOUR AUTHORINGS WERE EMITTED THROUGH ALL SIX REAL EMITTERS. The proof is structural, not a survey: an async boundary is either (a) async/await or (b) a continuation function; Solid REFUSES every async arrow, React MISCOMPILES every write inside a nested function, and there is no third way to defer a state write in JavaScript. So Solid and React between them exclude the whole space."
+      summary: "S8 cannot land in six lanes on today's emitters, by ANY authoring. Qwik alone is correct - including the sync$ split, generalised on its first try from the single synchronous site Defect 1 proved it at. Nothing was written to the corpus; the tree is byte-identical to dispatch at 4566540 with 968 tests intact."
+      IT_REFUSED_TO_LAND_A_PARTIAL_AND_THE_REASONING_IS_EXACTLY_RIGHT: "A four-lane S8 was rejected because T035/T036 made the corpus inventories DERIVED from goldens/s<n>-*.json. Dropping s8-async-handlers.json into that directory ALONE enlists S8 into every gate, emitter, parse-emitted, type-check and size-budget test in all six lanes - so a partial landing would leave pnpm test RED for the next agent on this tree. The derivation that made S5, S6 and S7 free is exactly what makes a partial S8 poisonous, and the Worker understood that rather than discovering it."
+      FINDING_1_ANGULAR_HAS_NO_CONCEPT_OF_ASYNC_AT_ALL: "SILENT, and the most dangerous of the six. PM VERIFIED: the string 'async' occurs ZERO times in packages/frameworks/angular/src/emitter/index.ts. qualify() transplants the arrow body into a class method and DROPS THE MODIFIER. With an await present the output is invalid TypeScript - TS1308, caught only downstream. WITHOUT an await it COMPILES CLEAN AND IS SEMANTICALLY WRONG: an authored async handler becomes a synchronous method whose return value is no longer a promise, and pnpm check, pnpm lint and the emitted-typecheck gate ALL PASS ON IT. Angular does not refuse; it quietly changes the meaning."
+      FINDING_2_A_LIVE_CORRECTNESS_HOLE_THAT_HAS_NOTHING_TO_DO_WITH_ASYNC: "SILENT, live today, and the highest-priority item here. PM VERIFIED packages/frameworks/react/src/emitter/index.ts:1775 is `for (const statement of fn.body.body)` - write-lowering walks ONLY TOP-LEVEL STATEMENTS. So any state write inside ANY nested function is emitted as a raw assignment to the const that useState destructured, and toConstSsa additionally renames the nested WRITE TARGET as if it were a version read and then freezes it with const. Verbatim from tsc 5.9.3: 'react-then.jsx(20,7): error TS2588: Cannot assign to ticks because it is a constant.' REPRODUCED WITH A PLAIN CALLBACK PROP AS WELL AS WITH .then - SO IT IS ABOUT NESTING, NOT PROMISES. The corpus has never contained a nested write, which is the only reason this is undetected. Minimum fix is to THROW on a write the emitter cannot lower."
+      FINDING_3_react_replaceFreeNames: "LOUD. index.ts:161 wraps a statement in a SYNCHRONOUS arrow before re-parsing, so any await re-parses in non-async context and yuku-analyzer rejects it as a reserved identifier. Should NOT be fixed before FINDING 2 is ruled on - repairing the loud symptom while the silent hole stands would make the silent one harder to find."
+      FINDING_4_solids_refusal_is_undocumented: "LOUD, and it is the single hardest blocker on this axis. solid/src/emitter/index.ts:1174 throws 'requires a synchronous arrow' from inside validateEnrichedIr with NO dossier reference, NO test and NO documentation - the string appeared exactly once in the repo, at the throw site. SOLID ITSELF SUPPORTS ASYNC LISTENERS. Not weakened by this card. Note the irony the Worker spotted: Solid is the lane that lowers NESTED writes CORRECTLY, so it is right about the half React gets wrong and refuses the half React allows."
+      FINDING_5_qwik_forbids_the_await_it_generates: "LOUD, and looks correct as designed. qwik:936 forbids `await onTrace(...)` and `onTrace(...).then(...)` - i.e. it forbids authoring the exact await the emitter itself generates. Worth a ruling, not a repair."
+      qwik_is_the_only_lane_that_gets_this_right: "It split the authored async handler whose body opens with event.preventDefault() into a leading sync$((event) => { event.preventDefault(); }) and a trailing $(async (event) => {...}) - Defect 1's repair, GENERALISED ON ITS FIRST TRY from the one synchronous site it was proven at. And handler identity SURVIVES the await boundary: the continuation reads and writes the same useSignal/useStore objects captured before it, so a post-await read sees a pre-await write."
+      none_of_this_is_upstream: "React, Solid and Angular ALL support async event handlers natively. Every failure above is in OUR emitters. Nothing here should be reported upstream - which also means none of it is covered by the owner's autonomy-grant exclusion."
+      changed_files:
+        - docs/goals/frameless-defects-and-targets-v1/notes/T031-corpus-s8-async.md
+      commands:
+        - cmd: "git status --porcelain"
+          status: pass
+          note: "EMPTY at first and last command; HEAD 4566540 both times - the Worker verified the tree rather than trusting the dispatch, after the previous Worker was right to check"
+        - cmd: "pnpm test"
+          status: pass
+          note: "968 passed / 50 files, unchanged from dispatch"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 380 files"
+        - cmd: "emit(buildEnrichedIr(...)) + formatEmitted over 4 authorings x 6 lanes"
+          status: pass
+          note: "the exact regenerate call, run from scratchpad probes so nothing was enlisted into the derived inventories"
+        - cmd: "generic key-path zero-read walker over the A1 IR"
+          status: pass
+          note: "enumerates no node kinds - the compiler is exonerated; the IR is clean and the failures are all downstream in the emitters"
+        - cmd: "tsc --noEmit over the angular A2 output"
+          status: pass
+          note: "TS1308 - 'await' expressions are only allowed within async functions. Evidence for FINDING 1"
+        - cmd: "tsc --noEmit --allowJs --checkJs over the react A4 output"
+          status: pass
+          note: "TS2588 x2 - Cannot assign to 'ticks'/'nextPhase' because it is a constant. Evidence for FINDING 2"
+      deviations:
+        - "Did NOT run UPDATE_GOLDENS=1 pnpm test. No new golden is being created, so it would have been a no-op rewrite over the seven existing goldens on a shared tree. Ran plain pnpm test, which proves the 968 intact."
+        - "Did NOT run the six regenerate scripts, pnpm check, pnpm test:browser, pnpm e2e, the shasum re-regenerate, or the generated/ freeze diff. ALL ARE DOWNSTREAM OF AN S8 THAT WAS NEVER WRITTEN, and with the tree byte-identical to dispatch their results are exactly those T030 already recorded. Ran pnpm test, pnpm lint and git status as the meaningful subset. PM ACCEPTS: running a suite that cannot have changed is theatre, and saying so is better than a green nobody should read."
+        - "Emitter behaviour was measured by calling emit()/formatEmitted() directly on a built IR from scratchpad probes rather than by registering a fixture - precisely to avoid enlisting S8 into the derived inventories and leaving four lanes red."
+      remaining_blockers:
+        - "S8 cannot land until the async-handler axis is ruled on and repaired. Routed to T043 (Judge, the axis) and T044 (Worker, FINDING 2's fail-closed repair)."
+        - "PHASE F'S STOPPING RULE SAYS EIGHT SCENARIOS. Seven landed and the eighth is blocked by emitter defects, not by corpus work. T028 must rule explicitly whether seven scenarios plus a documented, measured refusal closes Phase F - it must not be allowed to pass unmentioned."
+        - "Both mutate:corpus invocations remain blocked per stop_if, and there is additionally no S8 mutant for them to run."
+      spawned_tasks:
+        - T043
+        - T044
+      stopped_because: "S8 lands in fewer than six lanes, unavoidably. The Worker proved it structurally rather than surveying, and left the tree byte-identical rather than landing a partial that would have gone red for the next agent."
   - id: T032
     type: judge
     assignee: Judge
