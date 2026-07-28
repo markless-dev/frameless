@@ -131,7 +131,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T999
+active_task: T057
 
 tasks:
   - id: T001
@@ -6162,10 +6162,74 @@ tasks:
         - "SPECIMEN TEXT REMAINS THE ONLY EXEMPT CLASS and is still unruled as a general question. It is now THE ONLY THING OUTSIDE THE GUARD, which is what makes the class closed."
         - "The two citation tables are still DUPLICATED between generative.test.ts and metamorphic.test.ts by a deliberate earlier decision. Both are now watched, so drift between them is detectable only where it produces a violation - identical prose drift is not."
       stopped_because: null
+  - id: T057
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: medium
+    spec: "T999 final audit receipt, required_board_updates - AUTHORITATIVE. The audit ruled COMPLETE; these are corrections it named, not blockers it raised."
+    objective: >-
+      Apply the six required board updates from the final audit. Two of them correct claims that are
+      currently FALSE IN SHIPPED TEXT; do those first.
+    correction_1_the_convergence_claim_is_OVERSTATED_and_it_is_in_shipped_code: >-
+      scripts/check-citations.mjs ruling 10's header says "nothing carries an unruled citation" is
+      "a property, and a property is what a check can hold". IT IS NOT THAT PROPERTY. The sweep
+      covers only /\.(ts|tsx|js|jsx|mjs|cjs)$/, and markdown coverage is a HAND-NAMED LIST whose
+      completeness check listDocsTopLevel reads docs/ TOP LEVEL ONLY without recursing. The Judge
+      ran the guard's OWN scanText over docs/goals/frameless-defects-and-targets-v1/notes/ and got
+      216 VIOLATIONS ACROSS 30 FILES, including first-party ordinals. A new unruled doc under
+      docs/goals/ raises no integrity error either.
+      Rewrite the header to say CONVERGED OVER LEXABLE SOURCE, record the 216/30 measurement, and
+      list .tsrx, .yaml, .json and .html as unswept containers ALONGSIDE the .vue/.svelte hole the
+      receipt already disclosed. DO NOT widen the sweep - that is a successor goal's card, and
+      widening it here would make a large red guard nobody is scoped to clear.
+    correction_2_the_charter_states_a_number_that_was_ratified_away: >-
+      goal.oracle.signal clause 3 still reads TWELVE scenarios. The ratified rule is EIGHT
+      scenarios / 48 mutants / two-sided calibration, reached by measurement three times over: T024
+      cut 12 to 8 on four emitters hard-throwing on component-reference, T028 ruled eight WRONG IN
+      BOTH DIRECTIONS and set nine, T050 landed S9. RECORD THE CORRECTION WITH ITS PROVENANCE - do
+      not silently change the number, which is the exact fault this board has caught repeatedly.
+      Name DEFECTS.md entry 12.2 as S8's deferral trigger. Also ADD ORACLE HALF 3 to goal.md, which
+      still describes only two halves and never received the 2026-07-27 owner addition.
+    correction_3_flag_measurements_and_a_dropped_referral: >-
+      Record T999's fresh readings in ci.yml next to each flag: WINDOWS gate NOT met - five
+      consecutive greens, but 25028/24869ms at dc6f0f8 against a 30s bound, a 5x excursion over its
+      4.0-6.4s neighbours, so the cell's variance is WIDER than the pre-fix data showed. WEBKIT gate
+      NOT met - no contended run has ever been observed. Both flags STAY. Re-point "Owned by T999"
+      at the successor goal.
+      And rule T023's dropped referral: it is blocked with "Needs a Judge ruling" and NO TASK EVER
+      RULED IT across 20+ subsequent tasks. Its three rewrites and copier rule are landed and green;
+      only the additional name+mutant invariant is unlanded. Either state the ruling or record it as
+      CONSCIOUSLY ABANDONED with a reason - what it may not stay is silently dropped.
+    constraints:
+      - "Documentation, comments and board text only. No predicate, no assertion, no emitted byte, no golden may move."
+      - "Do NOT widen the citation sweep. Correcting the CLAIM is this card; widening the SCOPE is not."
+      - "Every correction must carry its provenance. A number changed without a recorded reason is the fault this board exists to catch."
+    allowed_files:
+      - scripts/check-citations.mjs
+      - docs/goals/frameless-defects-and-targets-v1/goal.md
+      - docs/goals/frameless-defects-and-targets-v1/state.yaml
+      - .github/workflows/ci.yml
+    verify:
+      - "pnpm test"
+      - "pnpm lint"
+      - "pnpm check:citations"
+      - "comment-only diff filter over scripts/check-citations.mjs - MUST be empty"
+      - "git diff --exit-code -- packages/ demos/ scripts/e2e.mjs"
+      - "node ~/.claude/skills/goal-prep/scripts/check-goal-state.mjs docs/goals/frameless-defects-and-targets-v1/state.yaml"
+      - "git status --short"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to widen the citation sweep rather than correct the claim about it."
+      - "Any predicate, assertion, emitted byte or golden moves."
+      - "A measurement you are recording does not reproduce - report the real one."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
   - id: T999
     type: judge
     assignee: Judge
-    status: active
+    status: done
     deactivated_by_pm: >-
       2026-07-27. T999 was left ACTIVE at the end of the previous session, which is wrong and would
       have burned a final audit on a provably incomplete goal. Oracle half 2 requires SIX e2e rows;
@@ -6200,8 +6264,38 @@ tasks:
       - "Oracle half 1 and half 2 evidence, separately"
       - "missing evidence"
       - "next task if not complete"
-    receipt: null
-
+    receipt:
+      result: done
+      decision: complete
+      full_outcome_complete: true
+      harness: claude-code
+      note: notes/T999-final-audit.md
+      rationale: "ALL THREE ORACLE HALVES SATISFIED - the PM's brief named only two. Six defects closed or ruled with receipts; both undiagnosed defects genuinely DIAGNOSED, with each tempting wrong move explicitly rejected on instrumented evidence. Six e2e rows on official scaffolds, equality ASSERTED with no exception path. Corpus at the ratified 8 scenarios / 48 mutants / 48 red. CI 15/15 green at HEAD, verified BY READING LOGS rather than conclusions. Both surviving continue-on-error flags carry receipts, and the Judge RE-MEASURED both removal gates: neither is met, so both correctly stay."
+      summary: "Certified the four phase audits with a spot-check each, all four held. Found one material overstatement (T056's convergence claim) and one stale charter sentence (oracle half 3 still reads TWELVE), neither an oracle failure. Ruled complete."
+      IT_FOUND_THE_ERROR_IN_THE_PMs_BRIEF_AS_INSTRUCTED: "The dispatch framed the oracle as TWO halves. state.yaml defines THREE, the third - CORPUS BREADTH - added 2026-07-27 on OWNER INSTRUCTION, and goal.md makes state.yaml authoritative. The stale T999 card's own what_is_still_open block names half 3; the PM's brief dropped it. THE JUDGE RULED ON ALL THREE ANYWAY. PM CONFIRMED at state.yaml: the signal opens 'THREE halves, all required'. Had the Judge accepted the brief, it would have certified two thirds of the oracle and called the goal complete."
+      AND_IT_REFUTED_THE_CLAIM_IT_WAS_TOLD_TO_SCRUTINISE_HARDEST: "T056 claimed the citation class was CONVERGED - that 'nothing carries an unruled citation' is a PROPERTY a check can hold. IT IS NOT THAT PROPERTY. check-citations.mjs sweeps only /\\.(ts|tsx|js|jsx|mjs|cjs)$/, and markdown coverage is a HAND-NAMED LIST whose completeness check listDocsTopLevel reads docs/ TOP LEVEL ONLY, WITHOUT RECURSING - PM CONFIRMED, it filters isFile() over one directory. The Judge then ran the guard's OWN scanText over this goal's notes/ and found 216 VIOLATIONS ACROSS 30 FILES invisible to it, including first-party ordinals. A new unruled doc under docs/goals/ raises no integrity error either. THE LARGEST UNSWEPT SURFACE IS THE ADJUDICATION ARCHIVE - the same place T056 found the born-wrong citation. The receipt disclosed only .vue/.svelte, which is true but small."
+      the_likely_misfire_did_not_happen_and_that_is_the_charters_own_test: "The charter named its expected failure mode: raise the WebKit timeout, make the rename comparison order-insensitive, declare two defects closed. NEITHER HAPPENED. The WebKit bound was NOT raised - raising it was rejected IN WRITING because the failure reproduces on Chromium at 260ms/frame and the DOM is at final value on the FIRST snapshot in all three engines, so there is no settle time to raise to. The rename comparison was made order-insensitive across SEVEN CITED COLLECTIONS, each naming its comparator, with FOUR DELIBERATELY LEFT ORDER-SENSITIVE and calibration cases checked in to prove the instrument still fails. The second misfire (adapters first) also did not happen: the contract's cancellation assertion PREDATES all three new lanes, so Vue, Angular and Svelte inherited the stronger bar rather than retrofitting it."
+      flags_re_measured_from_LOGS_and_the_windows_gate_got_FURTHER_AWAY: "Exactly two continue-on-error flags remain, both keyed on matrix.experimental, both carrying falsifiable removal gates. WINDOWS gate is 'N=3 consecutive greens with durations far below the bound'. The Judge read five consecutive windows job logs: 5201/5319ms at HEAD, then 25028/24869ms at dc6f0f8 - A 5X EXCURSION at 83% of the 30s bound, against 4.0-6.4s neighbours. THE CELL'S VARIANCE IS WIDER THAN THE PRE-FIX DATA SHOWED, so the gate moved further away, not closer. That is exactly the 'got lucky three times' discrimination the gate was written to catch. WEBKIT gate requires a green under CONTENTION; every observed green including HEAD is a quiet-window run. Both flags correctly stay."
+      oracle_half_1_defects: "SATISFIED. Defect 1 CLOSED with witness ca84b89 preceding fix c9cf99c. Defect 2 closed as NOT A DEFECT on owner overturn; the rescoped qwik-throttled lane genuinely passes under real 300ms/400kbit (control 65ms, throttled 1621ms, 0 error markers). Defect 3 four causes closed in code, ONE HONESTLY DISCLOSED without a witnessed failure because no Windows runner existed. Defect 4 DIAGNOSED as a harness assumption. Defect 5 settled by measurement, 33/13 DOM divergences. Defect 6 closed by citation, not by blanket sort. CANCELLATION ASSERTED IN ALL SIX LANES, byte-identical s3 rows, two-sided (an always-cancel emitter fails one arm, a never-cancel emitter the other)."
+      oracle_half_2_targets: "SATISFIED. HEAD run 30342363232, log-verified, 0 error markers: 6 demos x 8 scenarios, all observations equal. All six lanes drive official scaffolds. EQUALITY IS ASSERTED AND HAS NO ESCAPE HATCH - strict JSON.stringify comparison to officialDemos[0], exit 1 on divergence, no per-lane exception mechanism, verified at HEAD AFTER S9 landed rather than at T028's older commit. --frozen-lockfile succeeds in all 15 jobs."
+      oracle_half_3_corpus_breadth: "SATISFIED AGAINST THE RATIFIED RULE. Eight scenarios in all six lanes; the Judge PARSED corpus-mutation.mjs directly rather than trusting the figure and counted exactly 48 cells. THE NUMBER WAS RENEGOTIATED ON MEASUREMENT, NOT CONVENIENCE: T024 cut 12 to 8 by measuring four emitters hard-throwing on component-reference; T028 ruled EIGHT WRONG IN BOTH DIRECTIONS and set nine; T050 landed S9. S8's deferral trigger is live and re-verified - DEFECTS.md 12.2 is OPEN, react's async row is measurably wrong, and e2e has no exception path, so landing S8 would encode a KNOWN OPEN DEFECT as expected behaviour in the repo's strongest instrument. NOT satisfied against the literal unamended charter text, which still reads TWELVE - a stale sentence, not undone work, recorded as a required update rather than used to hold the goal open."
+      upstream_filings_confirmed_unsent: "gh search issues --author @me: most recent is 2026-07-20 against Ripple-TS/ripple. NO issue filed 2026-07-27 or 2026-07-28 against QwikDev/qwik, eslint-plugin-qwik or solidjs/solid. THE RETRACTED DROPPED-CLICK FILING WAS NOT SENT. Both surviving drafts are COMPLETE and unsent, correctly, per the autonomy grant's carve-out on outward-facing publication under the owner's name."
+      missing_evidence:
+        - "T056's convergence claim is OVERSTATED - 216 violations across 30 files under docs/goals/**/notes/ are structurally invisible to the guard, and .tsrx, .yaml, .json and .html are undisclosed unswept containers alongside .vue/.svelte."
+        - "Windows cell has never been observed green with margin three times consecutively, and the 25s excursion makes this worse rather than better."
+        - "WebKit cell has never been observed under contention; T017's distinguishing signatures remain unread."
+        - "The 6/6 cross-lane observation-diff calibration was last measured at T025, before measureExactText, measureForm and measureBooleans joined the observation readers. One serial --calibrate-classifier would close it."
+        - "T023 is blocked with 'Needs a Judge ruling' and NO TASK EVER RULED IT. Its three rewrites and copier rule are landed and green; only the additional name+mutant invariant is unlanded. Nothing is red, but the referral was silently dropped across 20+ subsequent tasks."
+        - "DEFECTS.md entries 7, 8, 12, 13 are OPEN BY DESIGN, each with a fail-closed refusal or containment shipped and a lift trigger handing to frameless-emitter-capability-v1. They are OUTPUTS of this goal's instruments, not INPUTS to its oracle, which is defined over findings 1-6."
+        - "S8 not in the corpus, deferred on a falsifiable trigger still true at HEAD."
+        - "Two upstream reports drafted, complete, unsent, pending owner."
+      required_board_updates:
+        - "Amend goal.oracle.signal clause 3: TWELVE -> the ratified eight-scenario / 48-mutant rule, citing T024's cut, T028's ruling and T050's landing, naming DEFECTS.md 12.2 as S8's deferral trigger. RECORD the correction; do not silently change the number."
+        - "Add oracle half 3 to goal.md, which still describes only two halves."
+        - "Amend ruling 10's header in check-citations.mjs to state the REAL scope, record the 216/30 measurement, and list the unswept containers. The class is CONVERGED OVER LEXABLE SOURCE, not converged."
+        - "Record T999's fresh flag measurements in ci.yml and re-point 'Owned by T999' at the successor goal."
+        - "Rule T023's dropped referral or record it as consciously abandoned with a reason."
+        - "Set goal.status complete and clear active_task."
 checks:
   dirty_fingerprint: >-
     2026-07-27, uncommitted on branch main over HEAD d9dd70b. The Angular lane: demos/angular-official
