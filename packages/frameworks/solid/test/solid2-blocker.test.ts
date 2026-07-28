@@ -52,7 +52,7 @@ describe('Solid 2 toolchain blocker contract', () => {
 	});
 
 	test('emitted S2 output links to the Solid 1 store subpath', async () => {
-		const source = await readFile(resolve(root, 'generated/S2.jsx'), 'utf8');
+		const source = await readFile(resolve(root, 'generated/S2.tsx'), 'utf8');
 		expect(importSources(source)).toContain('solid-js/store');
 	});
 
@@ -67,7 +67,7 @@ describe('Solid 2 toolchain blocker contract', () => {
 			{
 				babelrc: false,
 				configFile: false,
-				filename: 'solid2-blocker-probe.jsx',
+				filename: 'solid2-blocker-probe.tsx',
 				presets: [[solidPreset, { generate: 'dom' }]],
 			},
 		);

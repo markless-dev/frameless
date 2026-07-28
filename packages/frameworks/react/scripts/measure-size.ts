@@ -4,9 +4,9 @@ import { parse, walk, type Node } from 'yuku-parser';
 
 const root = resolve(import.meta.dirname, '..');
 const pairs = [
-	{ scenario: 'S1', referenceName: 'ReactS1', emittedName: 'RenderOnce', emitted: 'S1.jsx' },
-	{ scenario: 'S2', referenceName: 'ReactS2', emittedName: 'KeyedTodo', emitted: 'S2.jsx' },
-	{ scenario: 'S3', referenceName: 'ReactS3', emittedName: 'EventForm', emitted: 'S3.jsx' },
+	{ scenario: 'S1', referenceName: 'ReactS1', emittedName: 'RenderOnce', emitted: 'S1.tsx' },
+	{ scenario: 'S2', referenceName: 'ReactS2', emittedName: 'KeyedTodo', emitted: 'S2.tsx' },
+	{ scenario: 'S3', referenceName: 'ReactS3', emittedName: 'EventForm', emitted: 'S3.tsx' },
 ] as const;
 
 function findFunction(program: Node, name: string): Node | null {
@@ -48,7 +48,11 @@ async function measure(file: string, name: string, typescript: boolean) {
 			.slice(component.start, component.end)
 			.split(/\r?\n/)
 			.filter((line) => line.trim()).length,
-		// Reference and emitted bodies use the same parser, keeping their comparison honest.
+		// Reference and emitted bodies use the same parser AND, since the extension
+		// migration, the same `lang` - both files are `.tsx` now. That was measured
+		// before it was changed: parsing all 42 checked-in emitted files under
+		// `lang: 'jsx'` and under `lang: 'tsx'` yields identical programs and
+		// identical diagnostics, 42/42, so no measured size moved.
 		structuralNodes: structuralNodes(component),
 	};
 }
@@ -58,7 +62,7 @@ export async function measureAll() {
 		pairs.map(async ({ scenario, referenceName, emittedName, emitted }) => ({
 			scenario,
 			reference: await measure(resolve(root, 'test/reference.tsx'), referenceName, true),
-			emitted: await measure(resolve(root, 'generated', emitted), emittedName, false),
+			emitted: await measure(resolve(root, 'generated', emitted), emittedName, true),
 		})),
 	);
 }

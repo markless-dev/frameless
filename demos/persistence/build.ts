@@ -1,4 +1,4 @@
-import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import {
 	FRAMELESS_STATE_GLOBAL,
 	type EnrichedIR,
@@ -143,8 +143,21 @@ async function writeTarget(
 		mkdir(sourceRoot, { recursive: true }),
 		mkdir(publicRoot, { recursive: true }),
 	]);
+	// DELETE A PRE-MIGRATION `PersistedApp.jsx` BEFORE WRITING THE `.tsx`, AND
+	// THIS IS NOT TIDYING - IT CLOSES A SILENT SHADOWING HOLE.
+	//
+	// Unlike the CLI-driven demos, which emit into a `dist/` this build owns
+	// outright, this one writes into a `src/` that persists across builds. So a
+	// checkout that ever ran the pre-migration build keeps a stale
+	// `PersistedApp.jsx` sitting next to the fresh `PersistedApp.tsx`, and
+	// `client-entry.tsx` imports `./PersistedApp.jsx`. MEASURED at vite 8.0.16:
+	// `tryCleanFsResolve` tries the LITERAL path first and only falls back to the
+	// JS-to-TS substitution when it misses - so the stale file WINS, and the demo
+	// would build, run and pass against emitted output nobody regenerated.
+	// Deleting it here makes the fresh artifact the only one on disk.
+	await rm(new URL('./PersistedApp.jsx', sourceRoot), { force: true });
 	await Promise.all([
-		writeFile(new URL('./PersistedApp.jsx', sourceRoot), source),
+		writeFile(new URL('./PersistedApp.tsx', sourceRoot), source),
 		writeFile(new URL(`./${SCRIPT_FILENAME}`, publicRoot), prePaintScript),
 		writeFile(
 			new URL('./index.html', appRoot),
@@ -227,8 +240,8 @@ export async function buildPersistenceDemo(): Promise<void> {
 					placement: 'inline-head-before-probe-before-deferred-entry',
 				},
 				emitted: {
-					react: 'react-app/src/PersistedApp.jsx',
-					solid: 'solid-app/src/PersistedApp.jsx',
+					react: 'react-app/src/PersistedApp.tsx',
+					solid: 'solid-app/src/PersistedApp.tsx',
 				},
 			},
 			null,

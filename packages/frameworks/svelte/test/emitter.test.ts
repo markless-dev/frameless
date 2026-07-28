@@ -77,6 +77,38 @@ function emittedScenarios(directory = generatedRoot): string[] {
 const FIXTURES = scenarioFixtures();
 
 describe('Svelte 5 emitter', () => {
+	/**
+	 * THE SCRIPT OPEN TAG, PINNED - AND THIS ROW EXISTS BECAUSE ITS ABSENCE WAS
+	 * MEASURED.
+	 *
+	 * When the vue and svelte emitters were flipped to `lang="ts"`, the flip was
+	 * REVERTED in both lanes and the suite re-run to watch the guards fire.
+	 * Vue turned FOURTEEN tests red. Svelte turned ZERO: its
+	 * `BASELINE_FORM_INVENTORY` has no script-block kind, so `checkSources` never
+	 * observes a script attribute at all, and the four svelte tests that mention
+	 * `<script>` all use it to CONSTRUCT synthetic sources rather than to assert
+	 * on emitted ones. The lane was not clean, it was BLIND - an emitter that
+	 * silently stopped emitting `lang="ts"` would have shipped green.
+	 *
+	 * This closes the cheap half of that gap. It reads the SHIPPED emitted files
+	 * rather than a fresh `emit()` call, so it also catches a checked-in artifact
+	 * that drifted from the emitter, and it is derived from `FIXTURES` so a new
+	 * scenario is covered with no edit here. The expensive half - giving the
+	 * svelte gate a script-block inventory kind, which needs a version-floor
+	 * ruling of the sort vue's `script[setup,lang=ts]` row got - is NOT done here.
+	 */
+	test('every emitted scenario opens its script block with exactly lang="ts"', async () => {
+		const files = FIXTURES.map(([file]) => file);
+		// NON-VACUITY: an empty derivation must not pass by having nothing to check.
+		expect(files.length).toBeGreaterThan(0);
+		for (const file of files) {
+			const source = await readFile(resolve(generatedRoot, file), 'utf8');
+			const openTags = source.match(/<script\b[^>]*>/g) ?? [];
+			expect(openTags, `${file} emitted no script block`).toHaveLength(1);
+			expect(openTags[0], `${file} script open tag`).toBe('<script lang="ts">');
+		}
+	});
+
 	test('the derived fixture table is the corpus, and the emitter wrote exactly it', () => {
 		// THE FLOOR. Every scenario ratified so far must still be in the derivation.
 		// A lower bound, so S5 and later widen it with no edit here, while a golden

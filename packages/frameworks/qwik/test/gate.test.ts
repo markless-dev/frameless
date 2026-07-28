@@ -28,7 +28,7 @@ async function golden(name: string): Promise<EnrichedIR> {
 /**
  * THE SCENARIO INVENTORY IS DERIVED, NOT RE-LITERALLED.
  *
- * This list was `['generated/S1.jsx', 'generated/S2.jsx', 'generated/S3.jsx']`
+ * This list was `['generated/S1.tsx', 'generated/S2.tsx', 'generated/S3.tsx']`
  * until S4 landed, and the hand-edit it then demanded was not free: the
  * inventory is the FIRST statement of the gate test below, so the whole run
  * aborted there and the emitted S4 file never reached `checkGeneratedFiles()`,
@@ -239,7 +239,7 @@ describe('Qwik v2 dossier gate', () => {
 	});
 
 	test('discovers and accepts the clean emitted scenario corpus', async () => {
-		const corpus = scenarioCorpus('jsx');
+		const corpus = scenarioCorpus('tsx');
 		expect(await discoverGeneratedFiles()).toEqual(corpus);
 		const result = await checkGeneratedFiles();
 		// The gate's OWN file list, asserted rather than assumed. `discoverGeneratedFiles`
@@ -260,7 +260,7 @@ describe('Qwik v2 dossier gate', () => {
 		// reject it while the upstream rule stays silent.
 		expect(result.violations, JSON.stringify(result.violations, null, 2)).toEqual([]);
 		expect(
-			await readFile(resolve(packageRoot, 'generated/S3.jsx'), 'utf8'),
+			await readFile(resolve(packageRoot, 'generated/S3.tsx'), 'utf8'),
 		).toContain('sync$((event) => {');
 		expect(result.unevaluated).toEqual([
 			{ policy: 'persistence-render-lowering', reason: 'requires-artifact' },
@@ -280,16 +280,16 @@ describe('Qwik v2 dossier gate', () => {
 	 * root, so this measures the real comparison and not a lookalike.
 	 */
 	test('CALIBRATION: the derived inventory goes red on a missing and on an extra file', async () => {
-		const corpus = scenarioCorpus('jsx');
+		const corpus = scenarioCorpus('tsx');
 		// THE FLOOR. Every scenario ratified so far must still be in the derivation.
 		// A lower bound, so S5 and later widen it with no edit here, while a golden
 		// that silently disappeared is red.
 		expect(corpus).toEqual(
 			expect.arrayContaining([
-				'generated/S1.jsx',
-				'generated/S2.jsx',
-				'generated/S3.jsx',
-				'generated/S4.jsx',
+				'generated/S1.tsx',
+				'generated/S2.tsx',
+				'generated/S3.tsx',
+				'generated/S4.tsx',
 			]),
 		);
 		const root = await realpath(await mkdtemp(resolve(tmpdir(), 'frameless-qwik-inventory-')));
@@ -300,7 +300,7 @@ describe('Qwik v2 dossier gate', () => {
 			expect(await discoverGeneratedFiles({ cwd: root })).not.toEqual(corpus);
 			await writeFile(resolve(root, corpus.at(-1)!), stub);
 			expect(await discoverGeneratedFiles({ cwd: root })).toEqual(corpus);
-			await writeFile(resolve(root, 'generated/S99.jsx'), stub);
+			await writeFile(resolve(root, 'generated/S99.tsx'), stub);
 			expect(await discoverGeneratedFiles({ cwd: root })).not.toEqual(corpus);
 		} finally {
 			await rm(root, { recursive: true, force: true });
@@ -308,14 +308,14 @@ describe('Qwik v2 dossier gate', () => {
 	});
 
 	test('MUTATION: rejects an injected useVisibleTask$ in emitted source', async () => {
-		const source = await readFile(resolve(packageRoot, 'generated/S1.jsx'), 'utf8');
+		const source = await readFile(resolve(packageRoot, 'generated/S1.tsx'), 'utf8');
 		const mutant = mutate(
 			mutate(source, 'useTask$ }', 'useTask$, useVisibleTask$ }'),
 			'export const RenderOnce',
 			'useVisibleTask$(() => {});\n\nexport const RenderOnce',
 		);
 		const result = await checkSources([
-			{ file: 'generated/VisibleTaskMutant.jsx', source: mutant },
+			{ file: 'generated/VisibleTaskMutant.tsx', source: mutant },
 		]);
 		expect(result.violations.map((entry) => entry.policy)).toContain('no-visible-task');
 		expect(
@@ -334,7 +334,7 @@ describe('Qwik v2 dossier gate', () => {
 	// nobody has watched fail is not evidence that it can fail - and the failure it
 	// guards against is silent by construction, so nothing else would report it.
 	test('CALIBRATION: a mutation that leaves the source unchanged is loud', async () => {
-		const source = await readFile(resolve(packageRoot, 'generated/S1.jsx'), 'utf8');
+		const source = await readFile(resolve(packageRoot, 'generated/S1.tsx'), 'utf8');
 		expect(() => mutate(source, 'text that is not in the emitted S1', 'x')).toThrow(
 			/did not change the source/,
 		);
@@ -350,9 +350,9 @@ describe('Qwik v2 dossier gate', () => {
 	test('MUTATION: persistence-bearing IR fails closed in the gate and emitter', async () => {
 		const artifact = structuredClone(await golden('s1-render-once.json')) as EnrichedIR;
 		(artifact.records.persistence as unknown[]).push({ graphNodeId: 'state:count' });
-		const source = await readFile(resolve(packageRoot, 'generated/S1.jsx'), 'utf8');
+		const source = await readFile(resolve(packageRoot, 'generated/S1.tsx'), 'utf8');
 		const result = await checkSources([
-			{ file: 'generated/PersistenceMutant.jsx', source, artifact },
+			{ file: 'generated/PersistenceMutant.tsx', source, artifact },
 		]);
 		expect(result.unevaluated).toEqual([]);
 		expect(result.violations).toEqual([
@@ -434,7 +434,7 @@ describe('Qwik v2 dossier gate', () => {
 			/onClick\$=\{\(event\) => \{\s*if \(event\.detail === 1\) \{\s*event\.preventDefault\(\);\s*\}\s*\}\}/,
 		);
 
-		const result = await checkSources([{ file: 'generated/PreFixMutant.jsx', source }]);
+		const result = await checkSources([{ file: 'generated/PreFixMutant.tsx', source }]);
 		const policies = result.violations.map((entry) => entry.policy);
 		expect(policies, JSON.stringify(result.violations, null, 2)).toEqual([
 			'frameless/no-handler-sync-action',
@@ -444,7 +444,7 @@ describe('Qwik v2 dossier gate', () => {
 		]);
 		expect(policies).not.toContain('eslint:qwik/no-async-prevent-default');
 		expect(result.violations[0]).toMatchObject({
-			file: 'generated/PreFixMutant.jsx',
+			file: 'generated/PreFixMutant.tsx',
 			dossierRef: 'frameless-defects-and-targets-v1 T015 ruling 4',
 		});
 	});
@@ -468,7 +468,7 @@ describe('Qwik v2 dossier gate', () => {
 			/sync\$\(\(event\) => \{\s*if \(event\.key === 'Enter'\) \{\s*event\.preventDefault\(\);\s*\}\s*\}\)/,
 		);
 		expect(
-			(await checkSources([{ file: 'generated/ConditionalClean.jsx', source: fixed }]))
+			(await checkSources([{ file: 'generated/ConditionalClean.tsx', source: fixed }]))
 				.violations,
 		).toEqual([]);
 
@@ -484,7 +484,7 @@ describe('Qwik v2 dossier gate', () => {
 		expect(preFix).not.toContain('sync$');
 		expect(preFix).toMatch(/if \(event\.key === 'Enter'\) \{\s*event\.preventDefault\(\);/);
 		const result = await checkSources([
-			{ file: 'generated/ConditionalPreFixMutant.jsx', source: preFix },
+			{ file: 'generated/ConditionalPreFixMutant.tsx', source: preFix },
 		]);
 		const policies = result.violations.map((entry) => entry.policy);
 		expect(policies, JSON.stringify(result.violations, null, 2)).toEqual([
@@ -552,7 +552,7 @@ describe('MUTATION: frameless/no-handler-sync-action', () => {
 
 	for (const { shape, source } of caught)
 		test(`rejects ${shape}`, async () => {
-			const result = await checkSources([{ file: 'generated/Mutant.jsx', source }]);
+			const result = await checkSources([{ file: 'generated/Mutant.tsx', source }]);
 			expect(
 				result.violations.map((entry) => entry.policy),
 				JSON.stringify(result.violations, null, 2),
@@ -563,7 +563,7 @@ describe('MUTATION: frameless/no-handler-sync-action', () => {
 		const [sync, async] = await Promise.all(
 			[caught[0]!.source, caught[1]!.source].map(async (source) =>
 				(
-					await checkSources([{ file: 'generated/Mutant.jsx', source }])
+					await checkSources([{ file: 'generated/Mutant.tsx', source }])
 				).violations.filter(
 					(entry) => entry.policy === 'frameless/no-handler-sync-action',
 				),
@@ -578,7 +578,7 @@ describe('MUTATION: frameless/no-handler-sync-action', () => {
 	// ancestry, which is not a property we rely on.
 	test('E is invisible to upstream, so only our rule can be what caught it', async () => {
 		const result = await checkSources([
-			{ file: 'generated/Mutant.jsx', source: caught[7]!.source },
+			{ file: 'generated/Mutant.tsx', source: caught[7]!.source },
 		]);
 		const policies = result.violations.map((entry) => entry.policy);
 		expect(policies, JSON.stringify(result.violations, null, 2)).toContain(
@@ -590,7 +590,7 @@ describe('MUTATION: frameless/no-handler-sync-action', () => {
 	test('ANTI-VACUITY: both sync$() lowerings and a non-handler call are accepted', async () => {
 		const result = await checkSources([
 			{
-				file: 'generated/Clean.jsx',
+				file: 'generated/Clean.tsx',
 				source: [
 					`import { $, sync$ } from '@qwik.dev/core';`,
 					// The shipped unconditional lowering this policy exists to permit.
@@ -663,7 +663,7 @@ export const C = () => <button onClick$={[sync$((event) => { if (isLocked()) { e
 
 	for (const { shape, captured, source } of caught)
 		test(`rejects ${shape}`, async () => {
-			const result = await checkSources([{ file: 'generated/Mutant.jsx', source }]);
+			const result = await checkSources([{ file: 'generated/Mutant.tsx', source }]);
 			const reported = result.violations.filter(
 				(entry) => entry.policy === 'frameless/sync-qrl-must-be-closed',
 			);
@@ -679,7 +679,7 @@ export const C = () => <button onClick$={[sync$((event) => { if (isLocked()) { e
 	test('an argument that is not a function literal cannot be proved, so it is refused', async () => {
 		const result = await checkSources([
 			{
-				file: 'generated/Mutant.jsx',
+				file: 'generated/Mutant.tsx',
 				source: `import { sync$ } from '@qwik.dev/core';\nconst body = (event) => { event.preventDefault(); };\nexport const C = () => <button onClick$={[sync$(body)]}>x</button>;`,
 			},
 		]);
@@ -695,7 +695,7 @@ export const C = () => <button onClick$={[sync$((event) => { if (isLocked()) { e
 	test('ANTI-VACUITY: the shipped and conditional bodies, and a second parameter, are accepted', async () => {
 		const result = await checkSources([
 			{
-				file: 'generated/Clean.jsx',
+				file: 'generated/Clean.tsx',
 				source: [
 					`import { $, sync$ } from '@qwik.dev/core';`,
 					`export const C = () => <button onClick$={[sync$((event) => { event.preventDefault(); }), $(async () => {})]}>x</button>;`,
@@ -720,12 +720,12 @@ export const C = () => <button onClick$={[sync$((event) => { if (isLocked()) { e
 		// Anti-vacuity for the line above: mutating a real emitted sync$ body to
 		// read a signal makes it RED, so the clean [] is a measurement.
 		const mutant = mutateAll(
-			await readFile(resolve(packageRoot, 'generated/S3.jsx'), 'utf8'),
+			await readFile(resolve(packageRoot, 'generated/S3.tsx'), 'utf8'),
 			'sync$((event) => {',
 			'sync$((event) => {\n\t\t\t\t\t\tif (!writes.value) return;',
 		);
 		const mutated = await checkSources([
-			{ file: 'generated/ClosureMutant.jsx', source: mutant },
+			{ file: 'generated/ClosureMutant.tsx', source: mutant },
 		]);
 		expect(
 			mutated.violations.map((entry) => entry.policy),
@@ -787,7 +787,7 @@ export const C = component$(() => {
 
 	for (const { rule, source } of cases) {
 		test(`${rule} is caught`, async () => {
-			const result = await checkSources([{ file: 'generated/Mutant.jsx', source }]);
+			const result = await checkSources([{ file: 'generated/Mutant.tsx', source }]);
 			const policies = result.violations.map((violation) => violation.policy);
 			expect(policies, JSON.stringify(result.violations, null, 2)).toContain(
 				`eslint:${rule}`,

@@ -30,7 +30,7 @@ export async function emitCompositionFixture(
 export async function regenerateComposition(): Promise<void> {
 	await mkdir(outputRoot, { recursive: true });
 	for (const fixture of compositionFixtures) {
-		await writeFile(resolve(outputRoot, `${fixture}.jsx`), await emitCompositionFixture(fixture));
+		await writeFile(resolve(outputRoot, `${fixture}.tsx`), await emitCompositionFixture(fixture));
 	}
 }
 

@@ -5,6 +5,11 @@ solid-app/dist/
 .witness/
 fixtures/s2-keyed-todo.json
 react-app/public/frameless-persistence-pre-paint.js
+react-app/src/PersistedApp.tsx
+# A pre-migration leftover. Kept ignored so a stale checkout does not surface it
+# as an untracked file; build.ts DELETES it, which is what actually closes the
+# shadowing hole (a literal `./PersistedApp.jsx` resolves before the `.tsx`).
 react-app/src/PersistedApp.jsx
 solid-app/public/frameless-persistence-pre-paint.js
+solid-app/src/PersistedApp.tsx
 solid-app/src/PersistedApp.jsx

@@ -425,6 +425,12 @@ function recordedRelativeImportSpecifiers(artifact: EnrichedIR | undefined): Set
 			)
 				return [];
 			const basename = imported.source.slice(imported.source.lastIndexOf('/') + 1);
+			// `.jsx`, NOT `.tsx`, and the emitted file it names is `X.tsx`. Same
+			// ruling as the React gate: a `.tsx` specifier is TS5097 unless the
+			// CONSUMER turns on `allowImportingTsExtensions`, while a `.jsx`
+			// specifier resolves to `X.tsx` under TypeScript's JS-to-TS extension
+			// substitution and under Vite's (`knownTsOutputRE` covers `.jsx` at
+			// 7.3.1, 7.3.6 and 8.0.16). Mirrored in src/emitter/index.ts.
 			return [`./${basename.slice(0, -'.tsrx'.length)}.jsx`];
 		}),
 	);
@@ -632,7 +638,7 @@ async function collectJsxFiles(root: string, directory: string): Promise<string[
 		const child = resolve(absolute, entry.name);
 		if (entry.isDirectory())
 			files.push(...(await collectJsxFiles(root, relative(root, child))));
-		else if (entry.isFile() && entry.name.endsWith('.jsx'))
+		else if (entry.isFile() && entry.name.endsWith('.tsx'))
 			files.push(normalize(relative(root, child)));
 	}
 	return files;
@@ -660,7 +666,11 @@ function makeEslint(cwd: string): ESLint {
 			eslintJs.configs.recommended,
 			...(Array.isArray(recommended) ? recommended : [recommended]),
 			{
-				files: ['**/*.jsx'],
+				// MUST track the extension `discoverGeneratedFiles` collects. Flat
+				// config lints only `**/*.{js,mjs,cjs}` unless a config entry names
+				// another extension, so a stale glob here does not fail loudly - it
+				// silently drops the parser options, globals and every rule below.
+				files: ['**/*.tsx'],
 				languageOptions: {
 					ecmaVersion: 'latest',
 					sourceType: 'module',

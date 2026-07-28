@@ -54,7 +54,7 @@ function scenarioFixtures(goldenDir = goldenRoot): Array<readonly [string, strin
 	const table = readdirSync(goldenDir)
 		.filter((entry) => /^s\d+-[\w-]+\.json$/.test(entry))
 		.sort(byScenarioNumber)
-		.map((entry) => [`S${/^s(\d+)-/.exec(entry)![1]}.jsx`, entry] as const);
+		.map((entry) => [`S${/^s(\d+)-/.exec(entry)![1]}.tsx`, entry] as const);
 	// Fail LOUD rather than returning []. An empty table would emit zero freshness
 	// tests and the file would still report green, which is the one way a derived
 	// list could be greener than the literal it replaced.
@@ -66,7 +66,7 @@ function scenarioFixtures(goldenDir = goldenRoot): Array<readonly [string, strin
 /** What the emitter actually wrote - the other side of the cross-check. */
 function emittedScenarios(directory = generatedRoot): string[] {
 	return readdirSync(directory)
-		.filter((entry) => /^S\d+\.jsx$/.test(entry))
+		.filter((entry) => /^S\d+\.tsx$/.test(entry))
 		.sort(byScenarioNumber);
 }
 
@@ -353,7 +353,7 @@ describe('React structural emitter', () => {
 		// A lower bound, so S5 and later widen it with no edit here, while a golden
 		// that silently disappeared is red.
 		expect(fixtures.map(([file]) => file)).toEqual(
-			expect.arrayContaining(['S1.jsx', 'S2.jsx', 'S3.jsx', 'S4.jsx']),
+			expect.arrayContaining(['S1.tsx', 'S2.tsx', 'S3.tsx', 'S4.tsx']),
 		);
 		// Two independent readings compared: the goldens this repo agreed to
 		// compile, and the files the emitter actually wrote.
@@ -384,14 +384,14 @@ describe('React structural emitter', () => {
 			await writeFile(resolve(generated, files.at(-1)!), '//\n');
 			expect(emittedScenarios(generated)).toEqual(files);
 			// EXTRA, on the emitted side: a stray scenario no golden declares.
-			await writeFile(resolve(generated, 'S99.jsx'), '//\n');
+			await writeFile(resolve(generated, 'S99.tsx'), '//\n');
 			expect(emittedScenarios(generated)).not.toEqual(files);
 			// And both directions on the DERIVATION side, so a golden that vanished
 			// or appeared cannot pass unnoticed either.
 			await rm(resolve(goldens, fixtures[0]![1]));
 			expect(scenarioFixtures(goldens)).not.toEqual(fixtures);
 			await writeFile(resolve(goldens, 's99-planted.json'), '{}');
-			expect(scenarioFixtures(goldens).map(([file]) => file)).toContain('S99.jsx');
+			expect(scenarioFixtures(goldens).map(([file]) => file)).toContain('S99.tsx');
 			// The degenerate case the throw exists for: an empty derivation must NOT
 			// quietly agree with an empty directory.
 			await rm(goldens, { recursive: true, force: true });
@@ -403,9 +403,9 @@ describe('React structural emitter', () => {
 	});
 
 	for (const fixture of compositionFixtures) {
-		test(`generated-composition/${fixture}.jsx is fresh from its composition fixture`, async () => {
+		test(`generated-composition/${fixture}.tsx is fresh from its composition fixture`, async () => {
 			expect(
-				await readFile(resolve(root, 'generated-composition', `${fixture}.jsx`), 'utf8'),
+				await readFile(resolve(root, 'generated-composition', `${fixture}.tsx`), 'utf8'),
 			).toBe(await emitCompositionFixture(fixture));
 		});
 	}
@@ -445,7 +445,7 @@ describe('React structural emitter', () => {
 
 	test('applies every dossier-required POC delta without source recovery', async () => {
 		const [s1, s2, s3] = await Promise.all(
-			['S1.jsx', 'S2.jsx', 'S3.jsx'].map((file) =>
+			['S1.tsx', 'S2.tsx', 'S3.tsx'].map((file) =>
 				readFile(resolve(root, 'generated', file), 'utf8'),
 			),
 		);
@@ -721,9 +721,9 @@ ${body}
 		 * THE WITNESS. Before the repair this failed with tsc's own words, which is
 		 * the whole point of proof-before-fix:
 		 *
-		 *   nested-then.jsx(16,7): error TS2588: Cannot assign to 'ticks' because it
+		 *   nested-then.tsx(16,7): error TS2588: Cannot assign to 'ticks' because it
 		 *   is a constant.
-		 *   nested-then.jsx(17,7): error TS2588: Cannot assign to 'nextPhase' because
+		 *   nested-then.tsx(17,7): error TS2588: Cannot assign to 'nextPhase' because
 		 *   it is a constant.
 		 *
 		 * The invariant asserted is the honest one, and it is what survives the
@@ -742,7 +742,7 @@ ${body}
 				expect(name).not.toBe('top-level-control');
 				return;
 			}
-			expect(tscDiagnostics(`${name}.jsx`, result.emitted)).toEqual([]);
+			expect(tscDiagnostics(`${name}.tsx`, result.emitted)).toEqual([]);
 		});
 
 		test('the refusal names the write, the enclosing function, and the consequence', async () => {
@@ -1706,12 +1706,12 @@ export function SyncProbe({ onTrace }) @{
 			);
 			expect(source.match(/^import .* from 'react';$/gm)).toHaveLength(1);
 			if (process.env.UPDATE_GOLDENS === '1')
-				await writeFile(resolve(root, 'generated-persistence/P1.jsx'), formatted);
-			expect(await readFile(resolve(root, 'generated-persistence/P1.jsx'), 'utf8')).toBe(
+				await writeFile(resolve(root, 'generated-persistence/P1.tsx'), formatted);
+			expect(await readFile(resolve(root, 'generated-persistence/P1.tsx'), 'utf8')).toBe(
 				formatted,
 			);
 			const gate = await checkSources([
-				{ file: 'generated-persistence/P1.jsx', source: formatted, artifact: ir },
+				{ file: 'generated-persistence/P1.tsx', source: formatted, artifact: ir },
 			]);
 			expect(gate.violations, JSON.stringify(gate.violations, null, 2)).toEqual([]);
 		});
@@ -1727,7 +1727,7 @@ export function SyncProbe({ onTrace }) @{
 			).toBe('light');
 
 			const persistedGolden = await readFile(
-				resolve(root, 'generated-persistence/P1.jsx'),
+				resolve(root, 'generated-persistence/P1.tsx'),
 				'utf8',
 			);
 			expect(persistedGolden).toContain(`globalThis.${FRAMELESS_STATE_GLOBAL}`);
@@ -2000,9 +2000,11 @@ export function SyncProbe({ onTrace }) @{
 			expect(() => validateEnrichedIr(ir)).not.toThrow();
 			const stripped = clone(ir) as any;
 			for (const entry of stripped.components[0].props.entries) delete entry.type;
-			// The types are ADMITTED, not consumed: printing them waits on the
-			// .jsx -> .tsx migration, since TS8010 forbids a type annotation in the
-			// .jsx file this emitter still writes.
+			// The types are ADMITTED, not consumed. The .jsx -> .tsx migration that
+			// used to block printing them HAS LANDED - TS8010 forbids a type
+			// annotation in a .jsx file, and this emitter now writes .tsx - so what
+			// this row still pins is that admitting the field prints nothing.
+			// `not.toContain('string')` below is what keeps that honest.
 			expect(emit(ir)).toBe(emit(stripped));
 			expect(emit(ir)).not.toContain('string');
 		});

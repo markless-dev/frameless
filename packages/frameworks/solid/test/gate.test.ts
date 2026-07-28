@@ -23,7 +23,7 @@ const packageRoot = resolve(import.meta.dirname, '..');
 /**
  * THE SCENARIO INVENTORY IS DERIVED, NOT RE-LITERALLED.
  *
- * This list was `['generated/S1.jsx', 'generated/S2.jsx', 'generated/S3.jsx']`
+ * This list was `['generated/S1.tsx', 'generated/S2.tsx', 'generated/S3.tsx']`
  * until S4 landed, and the hand-edit it then demanded was not free: the
  * inventory is the FIRST statement of the gate test below, so the whole run
  * aborted there and the emitted S4 file never reached `checkGeneratedFiles()`,
@@ -76,7 +76,7 @@ for (const name of compositionNames) {
 	);
 	compositionSources.set(
 		name,
-		await readFile(resolve(packageRoot, `generated-composition/${name}.jsx`), 'utf8'),
+		await readFile(resolve(packageRoot, `generated-composition/${name}.tsx`), 'utf8'),
 	);
 }
 afterEach(async () =>
@@ -131,7 +131,7 @@ export function Mutant(props) {
 }`;
 
 async function policies(source: string, artifact?: EnrichedIR): Promise<string[]> {
-	const result = await checkSources([{ file: 'generated/Mutant.jsx', source, artifact }]);
+	const result = await checkSources([{ file: 'generated/Mutant.tsx', source, artifact }]);
 	expect(
 		result.violations.every((entry) =>
 			/^(?:T003 ruling \d+|T004 §3\.2 S-[A-Z]+\d+|T002-persistence-architecture Decision 6)$/.test(
@@ -226,7 +226,7 @@ describe('Solid dossier gate', async () => {
 	});
 
 	test('discovers and accepts every checked-in generated component', async () => {
-		const corpus = scenarioCorpus('jsx');
+		const corpus = scenarioCorpus('tsx');
 		expect(await discoverGeneratedFiles()).toEqual(corpus);
 		const result = await checkGeneratedFiles();
 		// The gate's OWN file list, asserted rather than assumed. `discoverGeneratedFiles`
@@ -249,16 +249,16 @@ describe('Solid dossier gate', async () => {
 	 * root, so this measures the real comparison and not a lookalike.
 	 */
 	test('CALIBRATION: the derived inventory goes red on a missing and on an extra file', async () => {
-		const corpus = scenarioCorpus('jsx');
+		const corpus = scenarioCorpus('tsx');
 		// THE FLOOR. Every scenario ratified so far must still be in the derivation.
 		// A lower bound, so S5 and later widen it with no edit here, while a golden
 		// that silently disappeared is red.
 		expect(corpus).toEqual(
 			expect.arrayContaining([
-				'generated/S1.jsx',
-				'generated/S2.jsx',
-				'generated/S3.jsx',
-				'generated/S4.jsx',
+				'generated/S1.tsx',
+				'generated/S2.tsx',
+				'generated/S3.tsx',
+				'generated/S4.tsx',
 			]),
 		);
 		const root = await realpath(await mkdtemp(resolve(tmpdir(), 'frameless-solid-inventory-')));
@@ -269,7 +269,7 @@ describe('Solid dossier gate', async () => {
 		expect(await discoverGeneratedFiles({ cwd: root })).not.toEqual(corpus);
 		await writeFile(resolve(root, corpus.at(-1)!), stub);
 		expect(await discoverGeneratedFiles({ cwd: root })).toEqual(corpus);
-		await writeFile(resolve(root, 'generated/S99.jsx'), stub);
+		await writeFile(resolve(root, 'generated/S99.tsx'), stub);
 		expect(await discoverGeneratedFiles({ cwd: root })).not.toEqual(corpus);
 	});
 
@@ -668,7 +668,7 @@ describe('Solid dossier gate', async () => {
 	test('unrecorded-with-artifact -> violation', async () => {
 		const result = await checkSources([
 			{
-				file: 'generated/relative-import-parent.jsx',
+				file: 'generated/relative-import-parent.tsx',
 				source: mutate(
 					recordedRelativeImport,
 					'./relative-import-child.jsx',
@@ -682,7 +682,7 @@ describe('Solid dossier gate', async () => {
 
 	test('recorded-without-artifact -> violation', async () => {
 		const result = await checkSources([
-			{ file: 'generated/relative-import-parent.jsx', source: recordedRelativeImport },
+			{ file: 'generated/relative-import-parent.tsx', source: recordedRelativeImport },
 		]);
 		expect(result.violations.map((entry) => entry.policy)).toContain('undisclosed-import');
 		expect(result.unevaluated.map((entry) => entry.policy)).not.toContain('undisclosed-import');
@@ -691,7 +691,7 @@ describe('Solid dossier gate', async () => {
 	test('recorded-with-artifact -> clean', async () => {
 		const result = await checkSources([
 			{
-				file: 'generated/relative-import-parent.jsx',
+				file: 'generated/relative-import-parent.tsx',
 				source: recordedRelativeImport,
 				artifact: relativeImportArtifact,
 			},
@@ -705,7 +705,7 @@ describe('Solid dossier gate', async () => {
 		const persistenceArtifact = withRenderPersistence(artifact, 'solid');
 		const validResult = await checkSources([
 			{
-				file: 'generated-composition/C2-shared.jsx',
+				file: 'generated-composition/C2-shared.tsx',
 				source,
 				artifact: persistenceArtifact,
 			},
@@ -729,7 +729,7 @@ describe('Solid dossier gate', async () => {
 		} as unknown as EnrichedIR;
 		const mutantResult = await checkSources([
 			{
-				file: 'generated-composition/C2-shared.jsx',
+				file: 'generated-composition/C2-shared.tsx',
 				source,
 				artifact: mutantArtifact,
 			},
@@ -739,7 +739,7 @@ describe('Solid dossier gate', async () => {
 		);
 
 		const absentResult = await checkSources([
-			{ file: 'generated-composition/C2-shared.jsx', source },
+			{ file: 'generated-composition/C2-shared.tsx', source },
 		]);
 		expect(absentResult.unevaluated.map((entry) => entry.policy)).toContain(
 			'persistence-render-lowering',
@@ -809,10 +809,10 @@ describe('Solid dossier gate', async () => {
 
 	test('discovers and gates every generated composition module with artifact provenance', async () => {
 		const files = await discoverGeneratedFiles({ directory: 'generated-composition' });
-		expect(files).toEqual(compositionNames.map((name) => `generated-composition/${name}.jsx`));
+		expect(files).toEqual(compositionNames.map((name) => `generated-composition/${name}.tsx`));
 		const result = await checkSources(
 			files.map((file) => {
-				const name = file.slice('generated-composition/'.length, -'.jsx'.length);
+				const name = file.slice('generated-composition/'.length, -'.tsx'.length);
 				return {
 					file,
 					source: compositionSources.get(name)!,
@@ -855,11 +855,11 @@ describe('Solid dossier gate', async () => {
 		temporaryRoots.push(root);
 		await mkdir(resolve(root, 'generated'));
 		await writeFile(
-			resolve(root, 'generated/New.jsx'),
+			resolve(root, 'generated/New.tsx'),
 			mutate(valid, 'const label', 'setValue(1);\n  const label'),
 		);
 		const result = await checkGeneratedFiles({ cwd: root });
-		expect(result.files).toEqual(['generated/New.jsx']);
+		expect(result.files).toEqual(['generated/New.tsx']);
 		expect(result.violations.map((entry) => entry.policy)).toContain('render-phase-setter');
 	});
 });

@@ -110,8 +110,18 @@ export const QWIK_ESLINT_RULES = {
 } as const;
 
 /**
- * Qwik rules that require TYPE INFORMATION and therefore cannot run against
- * plain emitted `.jsx`: they need @typescript-eslint/parser with a project.
+ * Qwik rules that require TYPE INFORMATION and therefore cannot run against this
+ * gate's emitted corpus: they need @typescript-eslint/parser with a PROJECT.
+ *
+ * THE REASON WAS RE-DERIVED, NOT INHERITED. It used to read "plain emitted
+ * `.jsx`", and that clause is false as of the extension migration - emitted
+ * output is `.tsx`. The verdict survives unchanged, because the extension was
+ * never the blocker: this gate lints with the DEFAULT parser (espree, see
+ * `makeEslint` below), and a typed rule needs `parserOptions.project` and a
+ * TypeScript program regardless of what the file is called. Renaming the
+ * artifact moved nothing here, which is precisely why the old reason had to be
+ * corrected rather than deleted - it named a condition that has now been met
+ * while the omission still holds.
  *
  * `valid-lexical-scope` is the costly omission - it is the rule that catches
  * non-serializable values captured across a QRL boundary, the defining failure
@@ -428,7 +438,11 @@ function makeEslint(): ESLint {
 		overrideConfig: [
 			eslintJs.configs.recommended,
 			{
-				files: ['**/*.jsx'],
+				// MUST track the extension `discoverGeneratedFiles` collects. Flat
+				// config lints only `**/*.{js,mjs,cjs}` unless a config entry names
+				// another extension, so a stale glob here does not fail loudly - it
+				// silently drops the plugins, parser options and every rule below.
+				files: ['**/*.tsx'],
 				plugins: {
 					qwik: qwikPlugin as never,
 					frameless: framelessQwikPlugin as never,
@@ -525,7 +539,7 @@ async function collectJsxFiles(root: string, directory: string): Promise<string[
 		const child = resolve(absolute, entry.name);
 		if (entry.isDirectory())
 			files.push(...(await collectJsxFiles(root, relative(root, child))));
-		else if (entry.isFile() && entry.name.endsWith('.jsx'))
+		else if (entry.isFile() && entry.name.endsWith('.tsx'))
 			files.push(normalize(relative(root, child)));
 	}
 	return files;

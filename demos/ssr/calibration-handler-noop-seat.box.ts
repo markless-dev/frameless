@@ -21,10 +21,10 @@ export default box(
 	},
 	async ({ pipeline, project, expect, receipt }) => {
 		await project.edit('make emitted pricing-card add-seat handlers no-ops', {
-			'dist/PricingCard/react/PricingCard.jsx': {
+			'dist/PricingCard/react/PricingCard.tsx': {
 				replace: ['const nextSeats = seats + 1;', 'const nextSeats = seats;'],
 			},
-			'dist/PricingCard/solid/PricingCard.jsx': {
+			'dist/PricingCard/solid/PricingCard.tsx': {
 				replace: ['setSeats(seats() + 1);', 'setSeats(seats());'],
 			},
 		});

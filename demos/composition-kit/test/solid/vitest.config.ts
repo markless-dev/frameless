@@ -8,7 +8,7 @@ export default defineConfig({
 	plugins: [
 		requireDemoBuild,
 		solid({
-			include: /demos\/composition-kit\/(?:dist\/solid\/.*\.jsx|test\/solid\/.*\.tsx)$/,
+			include: /demos\/composition-kit\/(?:dist\/solid\/.*\.tsx|test\/solid\/.*\.tsx)$/,
 		}),
 	],
 	resolve: { conditions: ['development', 'browser'], dedupe: ['solid-js'] },

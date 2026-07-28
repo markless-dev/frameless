@@ -73,8 +73,8 @@ test('builds the proven S1 fixture for both targets and records hashes and deleg
 
 	await executeBuildPlan(createBuildPlan(parsed), cwd);
 
-	const reactPath = join(cwd, 'output/react/s1-render-once.jsx');
-	const solidPath = join(cwd, 'output/solid/s1-render-once.jsx');
+	const reactPath = join(cwd, 'output/react/s1-render-once.tsx');
+	const solidPath = join(cwd, 'output/solid/s1-render-once.tsx');
 	const [react, solid, receiptSource] = await Promise.all([
 		readFile(reactPath, 'utf8'),
 		readFile(solidPath, 'utf8'),
@@ -122,7 +122,7 @@ test('rejects a seam-loaded fake that tries to issue a receipt for @frameless/re
 	await writeFile(join(cwd, 'input.tsrx'), source);
 	const plan: BuildPlan = {
 		command: 'build',
-		inputs: [{ sourcePath: 'input.tsrx', emittedFilename: 'input.jsx' }],
+		inputs: [{ sourcePath: 'input.tsrx', emittedFilename: 'input.tsx' }],
 		outDir: 'output',
 		targets: [
 			{
@@ -161,7 +161,7 @@ test('leaves no target output behind when a gate rejects emitted source', async 
 	await writeFile(join(cwd, 'input.tsrx'), source);
 	const plan: BuildPlan = {
 		command: 'build',
-		inputs: [{ sourcePath: 'input.tsrx', emittedFilename: 'input.jsx' }],
+		inputs: [{ sourcePath: 'input.tsrx', emittedFilename: 'input.tsx' }],
 		outDir: 'output',
 		targets: [
 			{
@@ -228,8 +228,8 @@ test('builds and links multiple TSRX modules for both targets with artifact-eval
 	await executeBuildPlan(createBuildPlan(parsed), cwd);
 
 	const [reactPage, solidPage, receiptSource] = await Promise.all([
-		readFile(join(cwd, 'output/react/page.jsx'), 'utf8'),
-		readFile(join(cwd, 'output/solid/page.jsx'), 'utf8'),
+		readFile(join(cwd, 'output/react/page.tsx'), 'utf8'),
+		readFile(join(cwd, 'output/solid/page.tsx'), 'utf8'),
 		readFile(join(cwd, 'output/frameless-build-receipt.json'), 'utf8'),
 	]);
 	const receipt = validateBuildReceipt(JSON.parse(receiptSource));
@@ -283,7 +283,7 @@ test('fails a CLI gate when any artifact-dependent policy remains unevaluated', 
 	await writeFile(join(cwd, 'input.tsrx'), source);
 	const plan: BuildPlan = {
 		command: 'build',
-		inputs: [{ sourcePath: 'input.tsrx', emittedFilename: 'input.jsx' }],
+		inputs: [{ sourcePath: 'input.tsrx', emittedFilename: 'input.tsx' }],
 		outDir: 'output',
 		targets: [
 			{
@@ -322,12 +322,12 @@ test('leaves prior targets and receipts untouched when a later target cannot be 
 	await writeFile(join(cwd, 'input.tsrx'), source);
 	await writeFile(join(cwd, 'second.tsrx'), source);
 	await mkdir(join(cwd, 'output/first'), { recursive: true });
-	await writeFile(join(cwd, 'output/first/prior.jsx'), 'prior output');
+	await writeFile(join(cwd, 'output/first/prior.tsx'), 'prior output');
 	const plan: BuildPlan = {
 		command: 'build',
 		inputs: [
-			{ sourcePath: 'input.tsrx', emittedFilename: 'input.jsx' },
-			{ sourcePath: 'second.tsrx', emittedFilename: 'blocked\0input.jsx' },
+			{ sourcePath: 'input.tsrx', emittedFilename: 'input.tsx' },
+			{ sourcePath: 'second.tsrx', emittedFilename: 'blocked\0input.tsx' },
 		],
 		outDir: 'output',
 		targets: [
@@ -361,10 +361,10 @@ test('leaves prior targets and receipts untouched when a later target cannot be 
 		})),
 	).rejects.toThrow();
 
-	await expect(readFile(join(cwd, 'output/first/prior.jsx'), 'utf8')).resolves.toBe(
+	await expect(readFile(join(cwd, 'output/first/prior.tsx'), 'utf8')).resolves.toBe(
 		'prior output',
 	);
-	await expect(access(join(cwd, 'output/first/input.jsx'))).rejects.toMatchObject({
+	await expect(access(join(cwd, 'output/first/input.tsx'))).rejects.toMatchObject({
 		code: 'ENOENT',
 	});
 	await expect(access(join(cwd, 'output/second'))).rejects.toMatchObject({ code: 'ENOENT' });

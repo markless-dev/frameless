@@ -43,7 +43,7 @@ function goldenFor(scenario: string, goldenRoot = compilerGoldenRoot): string {
 
 /**
  * The emitted component's name, read from the IR the emitter was given rather
- * than from the file being measured. Measuring `generated/S4.jsx` for whatever
+ * than from the file being measured. Measuring `generated/S4.tsx` for whatever
  * function it happens to contain would find the emitter's output by definition;
  * naming it from the golden means a component the emitter renamed is a MISSING
  * FUNCTION here, not a silently re-measured one.
@@ -93,7 +93,7 @@ async function measureEmitted(scenario: string): Promise<{
 	physicalLoc: number;
 	structuralNodes: number;
 }> {
-	const file = resolve(packageRoot, 'generated', `${scenario}.jsx`);
+	const file = resolve(packageRoot, 'generated', `${scenario}.tsx`);
 	const source = await readFile(file, 'utf8');
 	const parsed = parse(source, { sourceType: 'module', lang: 'jsx' });
 	if (parsed.diagnostics.length)

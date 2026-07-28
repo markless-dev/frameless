@@ -513,6 +513,15 @@ export function measureServedAttribute(options: {
  * output changes, but the structural prefix names the element the handler is
  * attached to and is what actually proves *which* handler was pulled.
  *
+ * THEY ARE ALSO FILENAME-FREE, AND THE EXTENSION MIGRATION IS WHAT PROVED THAT
+ * MATTERS. A Qwik segment name is `<source file>_<component>_<element path>_
+ * q_e_<event>_<hash>`, so renaming the emitted modules from `.jsx` to `.tsx`
+ * moved the FILENAME PREFIX of all 31 segments AND, because the hash covers the
+ * name, every hash with it. Not one assertion below moved, because each starts
+ * at `_component_` or `_button_`. The verbatim readings quoted per scenario were
+ * re-measured off this lane's own receipt after the migration; they are
+ * illustration, and the `includes` strings are the contract.
+ *
  * S2's count is 3 because S2 clicks three different buttons. Its `add` button
  * is never clicked and its segment is never fetched — the on-demand claim is
  * exactly that asymmetry.
@@ -532,9 +541,9 @@ export const resumeSymbols: Record<
   // predicted from the emitted output, and the reading is worth quoting because
   // it is the first of its kind in this repo:
   //
-  //   NestedBoard.jsx_NestedBoard_component_section_ul_li_ul_li_button_q_e_click_…
-  //   NestedBoard.jsx_NestedBoard_component_section_button_q_e_click_…
-  //   NestedBoard.jsx_NestedBoard_component_section_button_q_e_click_1_…
+  //   NestedBoard.tsx_NestedBoard_component_section_ul_li_ul_li_button_q_e_click_…
+  //   NestedBoard.tsx_NestedBoard_component_section_button_q_e_click_…
+  //   NestedBoard.tsx_NestedBoard_component_section_button_q_e_click_1_…
   //
   // `section_ul_li_ul_li_button` is a handler pulled on demand from inside TWO
   // nested keyed lists. Every previous segment in the corpus bottoms out at one
@@ -548,10 +557,10 @@ export const resumeSymbols: Record<
   // MEASURED off this lane's own `handlerSegments` evidence — four segments, in
   // click order, verbatim:
   //
-  //   BranchBoard.jsx_BranchBoard_component_section_div_button_q_e_click_pnwm0Iro4cY.js
-  //   BranchBoard.jsx_BranchBoard_component_section_div_ul_li_button_q_e_click_DmbcW4Vyi08.js
-  //   BranchBoard.jsx_BranchBoard_component_section_button_q_e_click_FhhLDdsOJNA.js
-  //   BranchBoard.jsx_BranchBoard_component_section_div_button_q_e_click_1_X4FkrWt0H4w.js
+  //   BranchBoard.tsx_BranchBoard_component_section_div_button_q_e_click_mZF9DZjqH1Q.js
+  //   BranchBoard.tsx_BranchBoard_component_section_div_ul_li_button_q_e_click_mWlQofuX0qM.js
+  //   BranchBoard.tsx_BranchBoard_component_section_button_q_e_click_vNVHPQOFZCQ.js
+  //   BranchBoard.tsx_BranchBoard_component_section_div_button_q_e_click_1_yb9SHLbJZeI.js
   //
   // The first two are handlers resumed from INSIDE a branch arm, and the fourth
   // — the idle arm's `drop` — is pulled out of a subtree the server never
@@ -571,9 +580,9 @@ export const resumeSymbols: Record<
   // MEASURED off this lane's own `handlerSegments` evidence — three segments, in
   // click order, verbatim:
   //
-  //   WhitespaceBoard.jsx_WhitespaceBoard_component_section_button_q_e_click_C410pHxdYjw.js
-  //   WhitespaceBoard.jsx_WhitespaceBoard_component_section_button_q_e_click_1_6HsIOE63DYU.js
-  //   WhitespaceBoard.jsx_WhitespaceBoard_component_section_ul_li_button_q_e_click_imyNaruplkc.js
+  //   WhitespaceBoard.tsx_WhitespaceBoard_component_section_button_q_e_click_NdGtcnLZEIQ.js
+  //   WhitespaceBoard.tsx_WhitespaceBoard_component_section_button_q_e_click_1_604t71n3ytI.js
+  //   WhitespaceBoard.tsx_WhitespaceBoard_component_section_ul_li_button_q_e_click_DX1EVQoQDnc.js
   //
   // THREE clicks, THREE segments, and that one-to-one is itself the reading: no
   // handler here shares a QRL with another, so each click paid for exactly its
@@ -591,8 +600,8 @@ export const resumeSymbols: Record<
   // MEASURED off this lane's own `handlerSegments` evidence — two segments, in
   // click order, verbatim:
   //
-  //   FormBoard.jsx_FormBoard_component_form_button_q_e_click_226Fd9wpp00.js
-  //   FormBoard.jsx_FormBoard_component_form_button_q_e_click_1_HB6KOsk6TiI.js
+  //   FormBoard.tsx_FormBoard_component_form_button_q_e_click_60IKM35Q7bg.js
+  //   FormBoard.tsx_FormBoard_component_form_button_q_e_click_1_0yQQng0yCHw.js
   //
   // `_form_button_q_e_click_` rather than the `_button_q_e_click_` s2, s4, s5
   // and s6 share: S7's board is a `<form>`, not a `<section>`, so the structural

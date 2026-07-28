@@ -658,8 +658,9 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		// This emitter is one of exactly TWO that reject an unknown nested key on
 		// this construct - qwik, svelte, vue and angular accept it silently - so
 		// admitting it here is what lets the field exist at all. Printing it is a
-		// later step and is blocked on the .jsx -> .tsx migration: TS8010 forbids a
-		// type annotation in a .jsx file, which is what this emitter still writes.
+		// later step. The .jsx -> .tsx migration that used to block it HAS LANDED -
+		// TS8010 forbids a type annotation in a .jsx file and this emitter now
+		// writes .tsx - so the remaining work is the printing itself.
 		exactKeys(
 			entry,
 			['sourceName', 'localName', 'path', 'alias', 'graphNodeId', 'defaultValue', 'type'],
@@ -3697,6 +3698,15 @@ function emitComposition(ir: EnrichedIR): string {
 						t.identifier(imported.importedName!),
 					),
 				],
+				// `.jsx`, NOT `.tsx`, even though the module this names is emitted as
+				// `X.tsx`. A specifier ending `.tsx` is TS5097 in any consumer that
+				// has not enabled `allowImportingTsExtensions`, whereas `.jsx`
+				// resolves to `X.tsx` under TypeScript's JS-to-TS extension
+				// substitution and under Vite's - measured: `knownTsOutputRE =
+				// /\.(?:js|mjs|cjs|jsx)$/` at vite 7.3.1, 7.3.6 and 8.0.16. The
+				// emitted extension moved; the emitted SPECIFIER deliberately did
+				// not. The Solid gate's `recordedRelativeImportSpecifiers` mirrors
+				// this exactly.
 				t.stringLiteral(imported.source.replace(/\.tsrx$/, '.jsx')),
 			),
 		);
@@ -3752,7 +3762,7 @@ function emitComposition(ir: EnrichedIR): string {
 	return source;
 }
 
-/** Emit one Solid 1.x-compatible .jsx module from frameless-enriched-ir/2. */
+/** Emit one Solid 1.x-compatible .tsx module from frameless-enriched-ir/2. */
 export function emit(ir: EnrichedIR): string {
 	validateEnrichedIr(ir);
 	if (hasComposition(ir)) return emitComposition(ir);

@@ -52,7 +52,7 @@ function scenarioFixtures(goldenDir = goldenRoot): Array<readonly [string, strin
 	const table = readdirSync(goldenDir)
 		.filter((entry) => /^s\d+-[\w-]+\.json$/.test(entry))
 		.sort(byScenarioNumber)
-		.map((entry) => [`S${/^s(\d+)-/.exec(entry)![1]}.jsx`, entry] as const);
+		.map((entry) => [`S${/^s(\d+)-/.exec(entry)![1]}.tsx`, entry] as const);
 	// Fail LOUD rather than returning []. An empty table would emit zero freshness
 	// tests and the file would still report green, which is the one way a derived
 	// list could be greener than the literal it replaced.
@@ -64,7 +64,7 @@ function scenarioFixtures(goldenDir = goldenRoot): Array<readonly [string, strin
 /** What the emitter actually wrote - the other side of the cross-check. */
 function emittedScenarios(directory = generatedRoot): string[] {
 	return readdirSync(directory)
-		.filter((entry) => /^S\d+\.jsx$/.test(entry))
+		.filter((entry) => /^S\d+\.tsx$/.test(entry))
 		.sort(byScenarioNumber);
 }
 
@@ -230,7 +230,7 @@ describe('Solid structural emitter', () => {
 		// A lower bound, so S5 and later widen it with no edit here, while a golden
 		// that silently disappeared is red.
 		expect(fixtures.map(([file]) => file)).toEqual(
-			expect.arrayContaining(['S1.jsx', 'S2.jsx', 'S3.jsx', 'S4.jsx']),
+			expect.arrayContaining(['S1.tsx', 'S2.tsx', 'S3.tsx', 'S4.tsx']),
 		);
 		// Two independent readings compared: the goldens this repo agreed to
 		// compile, and the files the emitter actually wrote.
@@ -261,14 +261,14 @@ describe('Solid structural emitter', () => {
 			await writeFile(resolve(generated, files.at(-1)!), '//\n');
 			expect(emittedScenarios(generated)).toEqual(files);
 			// EXTRA, on the emitted side: a stray scenario no golden declares.
-			await writeFile(resolve(generated, 'S99.jsx'), '//\n');
+			await writeFile(resolve(generated, 'S99.tsx'), '//\n');
 			expect(emittedScenarios(generated)).not.toEqual(files);
 			// And both directions on the DERIVATION side, so a golden that vanished
 			// or appeared cannot pass unnoticed either.
 			await rm(resolve(goldens, fixtures[0]![1]));
 			expect(scenarioFixtures(goldens)).not.toEqual(fixtures);
 			await writeFile(resolve(goldens, 's99-planted.json'), '{}');
-			expect(scenarioFixtures(goldens).map(([file]) => file)).toContain('S99.jsx');
+			expect(scenarioFixtures(goldens).map(([file]) => file)).toContain('S99.tsx');
 			// The degenerate case the throw exists for: an empty derivation must NOT
 			// quietly agree with an empty directory.
 			await rm(goldens, { recursive: true, force: true });
@@ -280,9 +280,9 @@ describe('Solid structural emitter', () => {
 	});
 
 	for (const fixture of compositionFixtures) {
-		test(`generated-composition/${fixture}.jsx is fresh from its composition fixture`, async () => {
+		test(`generated-composition/${fixture}.tsx is fresh from its composition fixture`, async () => {
 			expect(
-				await readFile(resolve(root, 'generated-composition', `${fixture}.jsx`), 'utf8'),
+				await readFile(resolve(root, 'generated-composition', `${fixture}.tsx`), 'utf8'),
 			).toBe(await emitCompositionFixture(fixture));
 		});
 	}
@@ -314,7 +314,7 @@ describe('Solid structural emitter', () => {
 
 	test('audits every T003 lowering delta in the actual generated files', async () => {
 		const [s1, s2, s3] = await Promise.all(
-			['S1.jsx', 'S2.jsx', 'S3.jsx'].map((file) =>
+			['S1.tsx', 'S2.tsx', 'S3.tsx'].map((file) =>
 				readFile(resolve(root, 'generated', file), 'utf8'),
 			),
 		);
@@ -1334,7 +1334,7 @@ export function Locked({ onTrace }) @{
 			expect(source).toContain('data-oracle-row-key={todo.identity}');
 			expect(source).not.toMatch(/\.id\b/);
 			expect(
-				(await checkSources([{ file: 'generated/CoherentKeyRename.jsx', source }]))
+				(await checkSources([{ file: 'generated/CoherentKeyRename.tsx', source }]))
 					.violations,
 			).toEqual([]);
 		});
@@ -1435,7 +1435,7 @@ export function Locked({ onTrace }) @{
 			);
 			expect(source).not.toContain('const item = todos.find');
 			expect(
-				(await checkSources([{ file: 'generated/StoreShadow.jsx', source }])).violations,
+				(await checkSources([{ file: 'generated/StoreShadow.tsx', source }])).violations,
 			).toEqual([]);
 		});
 	});
@@ -1470,12 +1470,12 @@ export function Locked({ onTrace }) @{
 			);
 			expect(source.match(/^import .* from 'solid-js';$/gm)).toHaveLength(1);
 			if (process.env.UPDATE_GOLDENS === '1')
-				await writeFile(resolve(root, 'generated-persistence/P1.jsx'), formatted);
-			expect(await readFile(resolve(root, 'generated-persistence/P1.jsx'), 'utf8')).toBe(
+				await writeFile(resolve(root, 'generated-persistence/P1.tsx'), formatted);
+			expect(await readFile(resolve(root, 'generated-persistence/P1.tsx'), 'utf8')).toBe(
 				formatted,
 			);
 			const gate = await checkSources([
-				{ file: 'generated-persistence/P1.jsx', source: formatted, artifact: ir },
+				{ file: 'generated-persistence/P1.tsx', source: formatted, artifact: ir },
 			]);
 			expect(gate.violations, JSON.stringify(gate.violations, null, 2)).toEqual([]);
 		});
@@ -1491,7 +1491,7 @@ export function Locked({ onTrace }) @{
 			).toBe('light');
 
 			const persistedGolden = await readFile(
-				resolve(root, 'generated-persistence/P1.jsx'),
+				resolve(root, 'generated-persistence/P1.tsx'),
 				'utf8',
 			);
 			expect(persistedGolden).toContain(`globalThis.${FRAMELESS_STATE_GLOBAL}`);
@@ -1723,9 +1723,11 @@ export function Locked({ onTrace }) @{
 			expect(() => validateEnrichedIr(ir)).not.toThrow();
 			const stripped = clone(ir) as any;
 			for (const entry of stripped.components[0].props.entries) delete entry.type;
-			// The types are ADMITTED, not consumed: printing them waits on the
-			// .jsx -> .tsx migration, since TS8010 forbids a type annotation in the
-			// .jsx file this emitter still writes.
+			// The types are ADMITTED, not consumed. The .jsx -> .tsx migration that
+			// used to block printing them HAS LANDED - TS8010 forbids a type
+			// annotation in a .jsx file, and this emitter now writes .tsx - so what
+			// this row still pins is that admitting the field prints nothing.
+			// `not.toContain('string')` below is what keeps that honest.
 			expect(emit(ir)).toBe(emit(stripped));
 			expect(emit(ir)).not.toContain('string');
 		});

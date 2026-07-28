@@ -90,7 +90,7 @@ visual_board:
     predecessor goal that closed complete this session. Recorded as an explicit choice, not an
     omission - the command above turns it on at any time.
 
-active_task: T011
+active_task: T012
 
 tasks:
   - id: T001
@@ -688,7 +688,7 @@ tasks:
   - id: T011
     type: worker
     assignee: Worker
-    status: active
+    status: blocked
     reasoning_hint: high
     spec: "T009 receipt, remaining_blockers - AUTHORITATIVE. This is Step 1.5's SECOND HALF."
     objective: >-
@@ -770,6 +770,136 @@ tasks:
       - demos/persistence
       - scripts/e2e.mjs
       - docs/goals/frameless-emitter-capability-v1/notes/T011-jsx-to-tsx.md
+    receipt:
+      result: blocked
+      harness: claude-code
+      verification_attempts: 1
+      blocked_reason: "pnpm check - a verify line on this card - cannot pass without files outside allowed_files. Every OTHER verify line is green, INCLUDING the decisive pnpm e2e, and the tree is coherent and reversible. NOTE: the remedy this receipt proposed was measured by the PM and DOES NOT WORK; the obligation moved to T004."
+      summary: "The .jsx -> .tsx migration landed across 66 emitted artifacts with ZERO content residual and pnpm e2e PASS. The gate trio, their eslint globs, the CLI filename, the regenerate/measure scripts, both demo vitest include regexes and all consuming tests moved with it. Three stale premises were re-derived rather than deleted, and svelte's blindness got a detector that was WATCHED GOING RED."
+      changed_files:
+        - "66 renames across react/solid/qwik generated*, demos/{react,solid}-official, demos/qwik"
+        - "packages/frameworks/{react,solid,qwik,svelte}/src/gate/index.ts"
+        - "packages/frameworks/{react,solid}/src/emitter/index.ts"
+        - "packages/frameworks/{react,solid,qwik}/src/format-emitted.ts"
+        - "packages/frameworks/{react,solid,qwik}/scripts/*"
+        - packages/frameworks/solid/vitest.config.ts
+        - "packages/frameworks/{react,solid,qwik,svelte}/test/*"
+        - packages/cli/src/program.ts
+        - "packages/cli/test/*"
+        - "demos/{react-official,solid-official,qwik}/*"
+        - demos/ssr/calibration-handler-noop-seat.box.ts
+        - "demos/{ui-kit,composition-kit}/test/solid/vitest.config.ts"
+        - demos/persistence/build.ts
+        - demos/persistence/.gitignore
+        - docs/goals/frameless-emitter-capability-v1/notes/T011-jsx-to-tsx.md
+      commands:
+        - cmd: "pnpm test"
+          status: pass
+          note: "1103 passed / 1 failed (1104) = dispatch baseline 1102/1 + the new svelte script-open-tag detector. The single failure is the pre-existing foreign package-inventory ARM B."
+        - cmd: "pnpm check"
+          status: blocked
+          note: "73 react errors, ALL inside generated*/, zero in hand-written files. Solid unmeasured behind it - the run stops at the first failing project."
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0/0 over 396 files"
+        - cmd: "pnpm check:citations"
+          status: pass
+          note: "exit 0 over 4 documents, 17 watched and 481 swept"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "DECISIVE CHECK, run TWICE. 6 demos x 8 scenarios all equal, plus SSR and persistence witnesses."
+        - cmd: "per-gate non-vacuity, before/after discovery counts"
+          status: pass
+          note: "react 8/8/1, solid 8/8/1, qwik 8 - IDENTICAL before and after. NO GATE FOUND ZERO FILES."
+        - cmd: "per-lane normalised diff to zero residual"
+          status: pass
+          note: "66 files compared byte-for-byte against their HEAD .jsx twins: residual 0 with NO normalisation needed - keeping emitted import specifiers as .jsx left emitted CONTENT completely unchanged."
+        - cmd: "regeneration non-vacuity"
+          status: pass
+          note: "junk appended to 5 emitted files across three lanes, all three regenerated, all 5 restored - only then was the diff trusted"
+        - cmd: "git status --short"
+          status: pass
+          note: "66 renames + 47 modified + 1 note; the three FOREIGN entries untouched; nothing committed"
+      THE_VACUOUS_GATE_HAZARD_WAS_REAL_AND_IS_NOW_PROVEN_CLOSED: "The same planted mutant fed to checkSources under two filenames. As generated/Probe.tsx: react, solid and qwik ALL report eslint:no-unused-vars. As generated/Probe.jsx: REACT NOTHING, SOLID NOTHING, qwik only eslint:parse. React and Solid would have gone COMPLETELY SILENT had the eslint `files` glob not moved with the rename - flat config lints only **/*.{js,mjs,cjs} unless a config entry names another extension, SO A STALE GLOB DROPS EVERY RULE RATHER THAN FAILING. That is the hazard T009 stopped for, demonstrated rather than asserted."
+      and_the_extension_alone_flips_the_checker: "packages/frameworks/react/generated/S1, IDENTICAL BYTES: named .jsx -> 0 tsc errors attributed to it; named .tsx -> 5. Renamed and restored. That single measurement explains the whole pnpm check situation."
+      SVELTES_BLINDNESS_IS_NOW_HALF_CLOSED_AND_WATCHED: "T009 measured that reverting svelte's lang=\"ts\" turned ZERO svelte tests red. It now turns ONE red - the emitter was reverted, regenerated and re-run to prove it, then restored, 81/81 green. The expensive half remains open: svelte's BASELINE_FORM_INVENTORY still has no script-block kind."
+      deviations:
+        - "CHANGED format-emitted.ts's virtual filename to 'generated.tsx' in all three lanes - JUSTIFIED BY MEASUREMENT: 42/42 byte-identical output either way, so it cannot move an emitted byte, and a .jsx virtual filename is now a false statement about the artifact."
+        - "DID NOT change the parser lang:'jsx' settings that READ emitted output, despite measuring them equally neutral. They remain a TRUE statement (the output contains no TypeScript) and they leave STEP 2 A LOUD TRIPWIRE at the exact sites that must change. Named rather than left silent."
+        - "RULED that the emitted import SPECIFIER stays './X.jsx' while the file becomes X.tsx: a .tsx specifier is TS5097 without allowImportingTsExtensions, while a .jsx specifier resolves to X.tsx under TypeScript's and Vite's JS-to-TS substitution (measured in Vite's own resolver at 7.3.1, 7.3.6 and 8.0.16). This also made the byte-neutrality proof EXACT rather than normalised."
+        - "EXTENDED the ACCEPTED diagnostic lists in both emitted-typecheck.test.ts by 7 (react) and 14 (solid), each entry with its site, RATHER THAN WEAKENING THE COMPILER OPTIONS. The rename made this third-party oracle STRICTER on unchanged bytes, and EXACT EQUALITY means Step 2 will be forced to shorten the list deliberately."
+        - "FIXED an unrequested silent-shadowing hazard in demos/persistence/build.ts: it writes into a persistent src/, so a pre-migration PersistedApp.jsx sits next to the fresh .tsx and WINS Vite resolution. Both stale files were present on this machine."
+        - "CORRECTED a THIRD stale premise the card did not name - qwik's QWIK_ESLINT_RULES_REQUIRING_TYPES carried the same false 'plain emitted .jsx' clause as the two svelte entries."
+        - "LEFT demos/ssr/test/fixtures/witness-receipt.json alone despite T009's table calling it load-bearing. Measured: it is a RECORDING consumed as static test input, and nothing asserts its paths against the filesystem. Rewriting a recording to match a new reality is what this repo forbids."
+      brief_and_prior_receipt_corrections:
+        - "THE PM'S '169 tracked files reference .jsx (I confirmed 169)' DOES NOT REPRODUCE. Measured 213 at HEAD 0f51527 - PM RE-CONFIRMED 213 - and 191 after this slice. 98 actionable / 482 reference lines against T009's 96/476."
+        - "T009 TABLE CORRECTIONS: qwik's gate carries TWO of the three hazards, not three (it has no ./X.jsx specifier derivation at all); the table OMITS packages/frameworks/{react,solid}/test/emitted-typecheck.test.ts, the most load-bearing file in the slice; and it omits the two tsconfigs it called the blocker."
+      remaining_blockers:
+        - "pnpm check RED at 73 (react). THE REMEDY THIS RECEIPT PROPOSED IS REFUTED: the PM applied the proposed `exclude` and measured 73 errors UNCHANGED, because a transitively imported file is in the program regardless of exclude. Reverted. PM measured the classes instead: 40 of 73 are the IMPLICIT-ANY family that printing types deletes, 33 are narrowing/assignment. OBLIGATION MOVED TO T004."
+        - "SVELTE INSTRUMENT GAP, expensive half still open: BASELINE_FORM_INVENTORY has no script-block kind, so checkSources still never observes a script attribute. Needs a version-floor ruling like vue's."
+        - "STALE DOCUMENTATION outside allowed_files, non-load-bearing: README.md, packages/cli/README.md, both framework READMEs, solid/agent/frameless.md, docs/DEFECTS.md, docs/emitter-idiom-policy.md, .gitattributes:12 all still say these lanes emit .jsx."
+      stopped_because: "pnpm check needs files outside allowed_files - and the proposed fix turned out not to work anyway."
+  - id: T012
+    type: pm
+    assignee: PM
+    status: active
+    reasoning_hint: medium
+    spec: "T011 receipt, remaining_blockers - AUTHORITATIVE. The fix is measured; the RULING is what was missing."
+    objective: >-
+      Rule on whether Frameless's strict repo-wide typecheck covers EMITTED artifacts, and apply it.
+    why_this_is_a_PM_task_with_an_explicit_product_file_allowance: >-
+      T011 stopped on `pnpm check` because the fix needs
+      packages/frameworks/{react,solid}/tsconfig.json, outside its allowed_files. It was right to
+      stop: this is not mechanical. It decides whether emitted output is covered by the repo-wide
+      strict program or remains the exclusive job of emitted-typecheck.test.ts. THIS CARD EXPLICITLY
+      ALLOWS THE PM TO EDIT THOSE TWO FILES.
+    THE_PROPOSED_FIX_DOES_NOT_WORK_AND_THE_PM_MEASURED_THAT_BEFORE_RULING: >-
+      T011 reported "verified against a scratch copy: react goes 73 errors -> 0" for adding
+      `exclude` to both tsconfigs. IT DOES NOT REPRODUCE. The PM applied exactly that exclude and
+      re-ran pnpm check: 73 ERRORS, UNCHANGED. The reason is TypeScript semantics - `exclude` only
+      filters what `include` globs would pull in; A FILE REACHED BY AN IMPORT IS IN THE PROGRAM
+      REGARDLESS. Neither tsconfig's `include` names generated*/ at all, so exclude was never the
+      lever. The no-op edit was REVERTED rather than left in as a decorative config entry. This is
+      the same class of error the board keeps finding, and this time the PM made it.
+    WHAT_IS_ACTUALLY_HAPPENING: >-
+      The browser tests import '../generated/S3.jsx'. That .jsx SPECIFIER resolves to S3.tsx through
+      TypeScript's JS-to-TS substitution - the very mechanism T011 deliberately relied on to keep
+      emitted bytes unchanged. So the rename enrolled emitted output into the strict program through
+      the test imports, exactly as T011 diagnosed; only its proposed remedy was wrong.
+    THE_RULING_STEP_2_OWNS_THIS_NOT_A_CONFIG_FLAG: >-
+      PM MEASURED THE ERROR CLASSES: TS7006/TS7031/TS7034/TS7005 = 40 of 73, THE IMPLICIT-ANY
+      FAMILY, which is precisely what printing types deletes. The other 33 (TS2339, TS18046, TS2322,
+      TS2571) are narrowing and assignment classes. So the dominant half is repaired BY STEP 2
+      ITSELF, and the remainder is a measurement Step 2 must take anyway - its own oracle requires
+      emitted output to be type-clean apart from the deliberate wrong-typed error. Suppressing this
+      with a config flag would hide the exact signal Step 2 exists to produce.
+    superseded_reasoning_kept_for_the_record: >-
+      EXCLUDE generated/**, generated-composition/** and generated-persistence/** from both
+      projects. THIS RESTORES EXACTLY THE COVERAGE THAT EXISTED BEFORE THE RENAME, it does not
+      reduce it: those artifacts were .jsx under checkJs:false, so `pnpm check` NEVER checked them.
+      The rename did not expose a gap - it accidentally enrolled emitted output into a program that
+      was never written for it. PM VERIFIED the mechanism: neither tsconfig's `include` names
+      generated*/ at all, so the files arrive TRANSITIVELY because browser tests import them. You
+      therefore cannot fix this by narrowing `include`; `exclude` is the only lever.
+    and_the_instrument_that_DOES_own_them_is_the_stronger_one: >-
+      packages/frameworks/{react,solid}/test/emitted-typecheck.test.ts checks emitted output with
+      CALIBRATED options and an EXACT-EQUALITY accepted-diagnostic list. Exact equality is strictly
+      stronger than a pass/fail typecheck here, because it also fails on unexpected IMPROVEMENT -
+      which is precisely what makes Step 2 forced to shorten the list deliberately rather than
+      silently. Handing emitted output to a plain strict program would replace a two-sided oracle
+      with a one-sided one.
+    re_open_trigger_recorded_so_it_is_not_forgotten: >-
+      AFTER STEP 2 PRINTS TYPES, revisit whether generated*/ can rejoin the strict program. At that
+      point inclusion would be a genuine STRENGTHENING rather than an accident, and refusing it
+      would need its own reason. T004 carries this forward.
+    allowed_files: []
+    verify:
+      - "pnpm check   # MEASURED: exclude leaves it at 73. Reverted. The obligation moves to T004."
+      - "pnpm test    # must not move"
+      - "git diff --exit-code -- packages/frameworks/*/generated packages/frameworks/*/generated-composition packages/frameworks/*/generated-persistence"
+    constraints:
+      - "Add `exclude` ONLY. Do not touch strict, checkJs, or any other compiler option - loosening a global to fix a local enrolment is the wrong repair."
+      - "Record the reason inline in both files, including that emitted-typecheck.test.ts is the owning instrument."
     receipt: null
 
   - id: T004
@@ -778,6 +908,19 @@ tasks:
     status: queued
     reasoning_hint: high
     objective: "STEP 2. Consume IR-8: all six emitters print types on emitted props."
+    YOU_INHERIT_A_RED_pnpm_check_AND_YOU_OWN_DRIVING_IT_GREEN: >-
+      T011's rename enrolled emitted output into the strict program: browser tests import
+      '../generated/S3.jsx', which resolves to S3.tsx by JS-to-TS substitution. pnpm check is RED at
+      73 errors for react (solid unmeasured behind it - the run stops at the first failing project).
+      T012 MEASURED that `exclude` does NOT fix this - a transitively imported file is in the
+      program regardless - and reverted that no-op.
+      PM MEASURED THE CLASSES: 40 of 73 are TS7006/TS7031/TS7034/TS7005, THE IMPLICIT-ANY FAMILY,
+      which is exactly what printing types deletes. The other 33 are TS2339, TS18046, TS2322,
+      TS2571 - narrowing and assignment. SO THIS IS YOUR STEP'S WORK, NOT A CONFIG FLAG: report the
+      count after printing types, and rule on whatever remains rather than suppressing it.
+      IF THE REMAINDER CANNOT BE REPAIRED BY TYPES ALONE, say so with the measured classes and STOP
+      rather than reaching for a compiler option - a flag that hides these would hide the signal
+      this step exists to produce.
     constraints:
       - "The oracle for this step is Step 0's instrument, re-run against EMITTED output rather than hand-written probes. The RED must reproduce per lane."
       - "No emitted byte may change for a component with no typed prop - prove it with git diff --exit-code over the untouched scenarios."

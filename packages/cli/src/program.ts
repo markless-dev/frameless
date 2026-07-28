@@ -159,9 +159,17 @@ function knownTargetNames(inventory: readonly TargetInventoryEntry[]): string {
 	return inventory.map((target) => target.name).join(', ');
 }
 
+// `.tsx` for every JSX-family target. The emitted artifact is TypeScript-shaped
+// output whether or not it currently prints a type, and a `.jsx` file cannot
+// carry one at all (TS8010). Note the deliberate asymmetry with the specifiers
+// the React and Solid emitters write INSIDE that output, which stay `.jsx`:
+// a `.tsx` specifier is TS5097 without `allowImportingTsExtensions`, while a
+// `.jsx` specifier resolves to the `.tsx` file under both TypeScript's and
+// Vite's JS-to-TS extension substitution. Angular already emits `.ts`, and this
+// helper is not on its path.
 function emittedFilenameFor(input: string): string {
 	const basename = input.split(/[\\/]/).at(-1) ?? input;
-	return basename.endsWith('.tsrx') ? `${basename.slice(0, -'.tsrx'.length)}.jsx` : basename;
+	return basename.endsWith('.tsrx') ? `${basename.slice(0, -'.tsrx'.length)}.tsx` : basename;
 }
 
 function targetOutputDirectory(outDir: string, target: string): string {

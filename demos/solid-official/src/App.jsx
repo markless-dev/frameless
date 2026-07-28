@@ -1,4 +1,12 @@
 import { Match, Switch } from 'solid-js'
+// THE `.jsx` SPECIFIERS BELOW POINT AT `.tsx` FILES, DELIBERATELY.
+// `src/emitted/` holds `.tsx` since the extension migration; `copy-emitted`
+// writes it. The specifier stays `.jsx` because that is the portable form: a
+// `.tsx` specifier is a hard TypeScript error (TS5097) without
+// `allowImportingTsExtensions`, while `.jsx` resolves to the `.tsx` file under
+// both TypeScript's and Vite's JS-to-TS extension substitution. It is also what
+// the Frameless emitters write inside emitted output, so this file exercises the
+// same resolution a real consumer does.
 import { AttrBoard } from './emitted/AttrBoard.jsx'
 import { BranchBoard } from './emitted/BranchBoard.jsx'
 import { EventForm } from './emitted/EventForm.jsx'

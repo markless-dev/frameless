@@ -63,7 +63,7 @@ describe('Solid emitted artifact formatting', () => {
 				'vp',
 				'fmt',
 				'--stdin-filepath',
-				'packages/frameworks/solid/generated/S2.jsx',
+				'packages/frameworks/solid/generated/S2.tsx',
 			],
 			{ cwd: workspaceRoot, encoding: 'utf8', input: source, shell: onWindows },
 		);

@@ -4,7 +4,7 @@ import { dirname, resolve } from 'pathe';
 import ts from 'typescript';
 import { describe, expect, test } from 'vitest';
 
-// Solid twin of the React lane. Emitted output is plain .jsx and is otherwise
+// Solid twin of the React lane. Emitted output is untyped .tsx and is otherwise
 // never type-checked. Running the
 // real TypeScript compiler over it is an INDEPENDENT oracle: unlike the gate,
 // which encodes rules we wrote ourselves, tsc is a third party that does not
@@ -15,6 +15,22 @@ import { describe, expect, test } from 'vitest';
 // Props arrive destructured and unannotated by design, so `noImplicitAny` is
 // off. That is deliberate scope, not laxity - see
 // docs/goals/frameless-testing-ci-v1/notes/T005-emitted-typecheck.md.
+//
+// THE .jsx -> .tsx MIGRATION SHARPENED THIS LANE, AND THAT WAS NOT PREDICTED.
+// The emitted BYTES did not move - every checked-in emitted file is
+// byte-identical to its `.jsx` predecessor - but the extension decides which
+// inference TypeScript uses, and the two are not equivalent even with
+// `allowJs`/`checkJs` on and `strict` off: an uninferrable type parameter falls
+// back to `any` in a CHECKED JS file and resolves to `unknown` in a TS file.
+//
+// This lane reported 7 diagnostics over `.jsx` and reports 21 over the same
+// bytes as `.tsx`. All fourteen new ones are that one family, and there are
+// exactly two producers of it in Solid's emitted output: `createContext()` with
+// no default argument (`Context<unknown>`, so every consumer's property read is
+// TS2339) and `produce((draft) => ...)` with no contextual type. They are the
+// untyped-emitted-value class this phase exists to remove; when prop and context
+// types are printed, the EXACT-EQUALITY assertion below turns red and forces
+// this list to be shortened deliberately.
 
 const PACKAGE_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 
@@ -45,7 +61,7 @@ function emittedFiles(): string[] {
 	return ['generated', 'generated-composition'].flatMap((directory) => {
 		const absolute = resolve(PACKAGE_ROOT, directory);
 		return readdirSync(absolute)
-			.filter((entry) => entry.endsWith('.jsx'))
+			.filter((entry) => entry.endsWith('.tsx'))
 			.map((entry) => resolve(absolute, entry));
 	});
 }
@@ -74,11 +90,11 @@ function expectedEmittedFiles(): string[] {
 	const scenarios = readdirSync(COMPILER_GOLDEN_ROOT)
 		.map((entry) => /^s(\d+)-[\w-]+\.json$/.exec(entry)?.[1])
 		.filter((digits): digits is string => digits !== undefined)
-		.map((digits) => resolve(PACKAGE_ROOT, `generated/S${digits}.jsx`));
+		.map((digits) => resolve(PACKAGE_ROOT, `generated/S${digits}.tsx`));
 	const composition = readdirSync(resolve(PACKAGE_ROOT, 'test/composition-fixtures'))
 		.filter((entry) => entry.endsWith('.tsrx'))
 		.map((entry) =>
-			resolve(PACKAGE_ROOT, `generated-composition/${entry.slice(0, -'.tsrx'.length)}.jsx`),
+			resolve(PACKAGE_ROOT, `generated-composition/${entry.slice(0, -'.tsrx'.length)}.tsx`),
 		);
 	// Fail LOUD rather than returning []. Two empty directories comparing equal is
 	// the one way a derived inventory could be greener than the count it replaced.
@@ -114,7 +130,7 @@ describe('Solid emitted output type-checks', () => {
 		// THE FLOOR, so a derivation that quietly lost a scenario cannot pass.
 		expect(expected).toEqual(
 			expect.arrayContaining(
-				['S1', 'S2', 'S3', 'S4'].map((name) => resolve(PACKAGE_ROOT, `generated/${name}.jsx`)),
+				['S1', 'S2', 'S3', 'S4'].map((name) => resolve(PACKAGE_ROOT, `generated/${name}.tsx`)),
 			),
 		);
 		expect([...files].sort()).toEqual(expected);
@@ -138,32 +154,91 @@ describe('Solid emitted output type-checks', () => {
 	// this list must be updated deliberately rather than drifting.
 	const ACCEPTED: ReadonlyArray<readonly [string, string]> = [
 		[
-			"generated-composition/C3-ref.jsx: TS2339 Property 'dataset' does not exist on type 'Element'.",
+			"generated-composition/C3-ref.tsx: TS2339 Property 'dataset' does not exist on type 'Element'.",
 			'ref.current is typed Element; reading .dataset needs an annotation untyped JS cannot carry. Correct at runtime.',
 		],
 		[
-			"generated-composition/C4-attach.jsx: TS2339 Property 'dataset' does not exist on type 'Element'.",
+			"generated-composition/C4-attach.tsx: TS2339 Property 'dataset' does not exist on type 'Element'.",
 			'Same as C3-ref: an attach handler reads .dataset off an Element-typed ref. Correct at runtime.',
 		],
 		[
-			"generated-composition/C4-attach.jsx: TS2339 Property 'dataset' does not exist on type 'Element'.",
+			"generated-composition/C4-attach.tsx: TS2339 Property 'dataset' does not exist on type 'Element'.",
 			'C4-attach reads .dataset at two separate sites, so this diagnostic legitimately appears twice.',
 		],
 		[
-			"generated/S3.jsx: TS2339 Property 'dataset' does not exist on type 'EventTarget & Element'.",
+			"generated/S3.tsx: TS2339 Property 'dataset' does not exist on type 'EventTarget & Element'.",
 			'event.target is EventTarget & Element; reading .dataset needs a cast untyped JS cannot carry. Correct at runtime.',
 		],
 		[
-			`generated/S2.jsx: TS2322 Type '{ "data-action": string; value: string; "attr:value": string; onInput: (event: InputEvent & { currentTarget: HTMLInputElement; target: HTMLInputElement; }) => void; }' is not assignable to type 'InputHTMLAttributes<HTMLInputElement>'.   Property 'attr:value' does not exist on type 'InputHTMLAttributes<HTMLInputElement>'.`,
+			`generated/S2.tsx: TS2322 Type '{ "data-action": string; value: string; "attr:value": string; onInput: (event: InputEvent & { currentTarget: HTMLInputElement; target: HTMLInputElement; }) => void; }' is not assignable to type 'InputHTMLAttributes<HTMLInputElement>'.   Property 'attr:value' does not exist on type 'InputHTMLAttributes<HTMLInputElement>'.`,
 			'OPEN FINDING 002 - not an artifact. See notes/findings-002-solid-attr-namespace.md.',
 		],
 		[
-			`generated/S2.jsx: TS2322 Type '{ "data-edit": any; value: any; "attr:value": any; onInput: (event: InputEvent & { currentTarget: HTMLInputElement; target: HTMLInputElement; }) => void; }' is not assignable to type 'InputHTMLAttributes<HTMLInputElement>'.   Property 'attr:value' does not exist on type 'InputHTMLAttributes<HTMLInputElement>'.`,
+			`generated/S2.tsx: TS2322 Type '{ "data-edit": any; value: any; "attr:value": any; onInput: (event: InputEvent & { currentTarget: HTMLInputElement; target: HTMLInputElement; }) => void; }' is not assignable to type 'InputHTMLAttributes<HTMLInputElement>'.   Property 'attr:value' does not exist on type 'InputHTMLAttributes<HTMLInputElement>'.`,
 			'OPEN FINDING 002 - not an artifact. See notes/findings-002-solid-attr-namespace.md.',
 		],
 		[
-			`generated/S3.jsx: TS2322 Type '{ "data-action": string; value: any; "attr:value": any; onInput: (event: InputEvent & { currentTarget: HTMLInputElement; target: HTMLInputElement; }) => void; }' is not assignable to type 'InputHTMLAttributes<HTMLInputElement>'.   Property 'attr:value' does not exist on type 'InputHTMLAttributes<HTMLInputElement>'.`,
+			`generated/S3.tsx: TS2322 Type '{ "data-action": string; value: any; "attr:value": any; onInput: (event: InputEvent & { currentTarget: HTMLInputElement; target: HTMLInputElement; }) => void; }' is not assignable to type 'InputHTMLAttributes<HTMLInputElement>'.   Property 'attr:value' does not exist on type 'InputHTMLAttributes<HTMLInputElement>'.`,
 			'OPEN FINDING 002 - not an artifact. See notes/findings-002-solid-attr-namespace.md.',
+		],
+		// THE FOURTEEN BELOW ARRIVED WITH THE .jsx -> .tsx MIGRATION, ON UNCHANGED
+		// BYTES - see the header. Two producers, both removable only by printing a
+		// type: an argument-less `createContext()` and an uncontextualised `produce`.
+		[
+			"generated-composition/C2-shared.tsx: TS2339 Property 'advance' does not exist on type 'unknown'.",
+			'C2-shared\'s `advance` button reads it off `useContext(CompositionSharedContext)`. Emitted `createContext()` takes no default, so it is `Context<unknown>` and every consumer read is TS2339.',
+		],
+		[
+			"generated-composition/C2-shared.tsx: TS2339 Property 'append' does not exist on type 'unknown'.",
+			'C2-shared\'s `append` button reads it off the same shared context value. Emitted `createContext()` takes no default, so it is `Context<unknown>` and every consumer read is TS2339.',
+		],
+		[
+			"generated-composition/C2-shared.tsx: TS2339 Property 'audit' does not exist on type 'unknown'.",
+			'C2-shared renders `.audit` off the same shared context value. Emitted `createContext()` takes no default, so it is `Context<unknown>` and every consumer read is TS2339.',
+		],
+		[
+			"generated-composition/C2-shared.tsx: TS2339 Property 'count' does not exist on type 'unknown'.",
+			'C2-shared renders `.count` off the same shared context value. Emitted `createContext()` takes no default, so it is `Context<unknown>` and every consumer read is TS2339.',
+		],
+		[
+			"generated-composition/C2-shared.tsx: TS2339 Property 'history' does not exist on type 'unknown'.",
+			'C2-shared renders `.history` off the same shared context value. Emitted `createContext()` takes no default, so it is `Context<unknown>` and every consumer read is TS2339.',
+		],
+		[
+			"generated-composition/C5-props.tsx: TS2339 Property 'value' does not exist on type 'unknown'.",
+			'C5-props reads `.value` off its provider context. Emitted `createContext()` takes no default, so it is `Context<unknown>` and every consumer read is TS2339.',
+		],
+		[
+			"generated-composition/C6-scalar-context.tsx: TS2339 Property 'value' does not exist on type 'unknown'.",
+			'C6 reads `.value` off the scalar fan-out context at the first of two sites. Emitted `createContext()` takes no default, so it is `Context<unknown>` and every consumer read is TS2339.',
+		],
+		[
+			"generated-composition/C6-scalar-context.tsx: TS2339 Property 'value' does not exist on type 'unknown'.",
+			'C6 reads `.value` off the scalar fan-out context at the second site, so this appears twice. Emitted `createContext()` takes no default, so it is `Context<unknown>` and every consumer read is TS2339.',
+		],
+		[
+			"generated-composition/C7-object-context.tsx: TS2339 Property 'left' does not exist on type 'unknown'.",
+			'C7 reads `.left` off the object context at the first of two sites. Emitted `createContext()` takes no default, so it is `Context<unknown>` and every consumer read is TS2339.',
+		],
+		[
+			"generated-composition/C7-object-context.tsx: TS2339 Property 'left' does not exist on type 'unknown'.",
+			'C7 reads `.left` off the object context at the second site, so this appears twice. Emitted `createContext()` takes no default, so it is `Context<unknown>` and every consumer read is TS2339.',
+		],
+		[
+			"generated-composition/C7-object-context.tsx: TS2339 Property 'right' does not exist on type 'unknown'.",
+			'C7 reads `.right` off the object context at the first of two sites. Emitted `createContext()` takes no default, so it is `Context<unknown>` and every consumer read is TS2339.',
+		],
+		[
+			"generated-composition/C7-object-context.tsx: TS2339 Property 'right' does not exist on type 'unknown'.",
+			'C7 reads `.right` off the object context at the second site, so this appears twice. Emitted `createContext()` takes no default, so it is `Context<unknown>` and every consumer read is TS2339.',
+		],
+		[
+			"generated/S2.tsx: TS2339 Property 'find' does not exist on type 'unknown'.",
+			'S2\'s edit handler calls `.find` on the `produce((storeDraft) => ...)` draft; `produce`\'s type parameter has no contextual type here, so the draft is `unknown` in a TS file and `any` in a checked JS one.',
+		],
+		[
+			"generated/S2.tsx: TS2339 Property 'find' does not exist on type 'unknown'.",
+			'S2\'s toggle handler calls `.find` on a second `produce` draft, for the same reason, so this appears twice.',
 		],
 	];
 
@@ -179,7 +254,7 @@ describe('Solid emitted output type-checks', () => {
 	// below breaks one emitted file the way a real emitter bug would, and proves
 	// this lane rejects it. If these ever stop failing, the lane has gone blind.
 	describe('calibration: rejects emitted output that a real bug would produce', () => {
-		const target = resolve(PACKAGE_ROOT, 'generated/S1.jsx');
+		const target = resolve(PACKAGE_ROOT, 'generated/S1.tsx');
 		const original = readFileSync(target, 'utf8');
 
 		test('a dropped primitive import is caught', () => {

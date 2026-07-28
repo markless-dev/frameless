@@ -62,7 +62,7 @@ describe('React emitted artifact formatting', () => {
 				'vp',
 				'fmt',
 				'--stdin-filepath',
-				'packages/frameworks/react/generated/S2.jsx',
+				'packages/frameworks/react/generated/S2.tsx',
 			],
 			{ cwd: workspaceRoot, encoding: 'utf8', input: source, shell: onWindows },
 		);

@@ -68,7 +68,7 @@ function receipt(persistence?: PersistenceBuildArtifact): BuildReceipt {
 				moduleId: 'fixtures/counter.tsrx',
 				sourcePath: 'fixtures/counter.tsrx',
 				contentSha256: SHA_A,
-				emittedFilename: 'counter.jsx',
+				emittedFilename: 'counter.tsx',
 				ir: { version: 'frameless-enriched-ir/2', digestSha256: SHA_B },
 			},
 		],

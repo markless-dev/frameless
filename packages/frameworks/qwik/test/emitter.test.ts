@@ -36,7 +36,7 @@ function scenarioFixtures(goldenDir = goldenRoot): Array<readonly [string, strin
 	const table = readdirSync(goldenDir)
 		.filter((entry) => /^s\d+-[\w-]+\.json$/.test(entry))
 		.sort(byScenarioNumber)
-		.map((entry) => [`S${/^s(\d+)-/.exec(entry)![1]}.jsx`, entry] as const);
+		.map((entry) => [`S${/^s(\d+)-/.exec(entry)![1]}.tsx`, entry] as const);
 	// Fail LOUD rather than returning []. An empty table would emit zero freshness
 	// tests and the file would still report green, which is the one way a derived
 	// list could be greener than the literal it replaced.
@@ -48,7 +48,7 @@ function scenarioFixtures(goldenDir = goldenRoot): Array<readonly [string, strin
 /** What the emitter actually wrote - the other side of the cross-check. */
 function emittedScenarios(directory = generatedRoot): string[] {
 	return readdirSync(directory)
-		.filter((entry) => /^S\d+\.jsx$/.test(entry))
+		.filter((entry) => /^S\d+\.tsx$/.test(entry))
 		.sort(byScenarioNumber);
 }
 
@@ -66,7 +66,7 @@ describe('Qwik v2 structural emitter', () => {
 		// A lower bound, so S5 and later widen it with no edit here, while a golden
 		// that silently disappeared is red.
 		expect(FIXTURES.map(([file]) => file)).toEqual(
-			expect.arrayContaining(['S1.jsx', 'S2.jsx', 'S3.jsx', 'S4.jsx']),
+			expect.arrayContaining(['S1.tsx', 'S2.tsx', 'S3.tsx', 'S4.tsx']),
 		);
 		// Two independent readings compared: the goldens this repo agreed to
 		// compile, and the files the emitter actually wrote.
@@ -97,14 +97,14 @@ describe('Qwik v2 structural emitter', () => {
 			await writeFile(resolve(generated, files.at(-1)!), '//\n');
 			expect(emittedScenarios(generated)).toEqual(files);
 			// EXTRA, on the emitted side: a stray scenario no golden declares.
-			await writeFile(resolve(generated, 'S99.jsx'), '//\n');
+			await writeFile(resolve(generated, 'S99.tsx'), '//\n');
 			expect(emittedScenarios(generated)).not.toEqual(files);
 			// And both directions on the DERIVATION side, so a golden that vanished
 			// or appeared cannot pass unnoticed either.
 			await rm(resolve(goldens, FIXTURES[0]![1]));
 			expect(scenarioFixtures(goldens)).not.toEqual(FIXTURES);
 			await writeFile(resolve(goldens, 's99-planted.json'), '{}');
-			expect(scenarioFixtures(goldens).map(([file]) => file)).toContain('S99.jsx');
+			expect(scenarioFixtures(goldens).map(([file]) => file)).toContain('S99.tsx');
 			// The degenerate case the throw exists for: an empty derivation must NOT
 			// quietly agree with an empty directory.
 			await rm(goldens, { recursive: true, force: true });

@@ -154,7 +154,7 @@ describe('build plan', () => {
 			command: 'build',
 			inputs: [
 				{
-					emittedFilename: 'button.jsx',
+					emittedFilename: 'button.tsx',
 					sourcePath: 'src/widgets/button.tsrx',
 				},
 			],
@@ -186,7 +186,7 @@ describe('build plan', () => {
 		]);
 		if (parsed.command !== 'build') throw new Error('Expected build arguments.');
 		expect(() => createBuildPlan(parsed)).toThrow(
-			'Multiple inputs map to emitted filename card.jsx',
+			'Multiple inputs map to emitted filename card.tsx',
 		);
 	});
 });

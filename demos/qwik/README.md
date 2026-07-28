@@ -15,7 +15,7 @@ event form). The Qwik router normalises the nested routes to a trailing slash.
 
 | Path                | What it is                                                                                                             |
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `src/emitted/*.jsx` | Copied verbatim from `packages/frameworks/qwik/generated/` by `copy-emitted`. Never edited by hand.                    |
+| `src/emitted/*.tsx` | Copied verbatim from `packages/frameworks/qwik/generated/` by `copy-emitted`. Never edited by hand.                    |
 | `src/routes/**`     | Scaffold route files that do nothing but render the emitted component.                                                 |
 | `vite.config.ts`    | Exactly what `pnpm create qwik` produced: `qwikRouter()` + `qwikVite()`.                                               |
 | `scenarios.box.ts`  | The `@async/witness` lane run by `pnpm e2e`, driving the shared contract in `../react-official/three-way-contract.ts`. |

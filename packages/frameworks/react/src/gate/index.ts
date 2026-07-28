@@ -134,7 +134,7 @@ async function collectJsxFiles(root: string, directory: string): Promise<string[
 		const child = resolve(absolute, entry.name);
 		if (entry.isDirectory())
 			files.push(...(await collectJsxFiles(root, relative(root, child))));
-		else if (entry.isFile() && entry.name.endsWith('.jsx'))
+		else if (entry.isFile() && entry.name.endsWith('.tsx'))
 			files.push(normalize(relative(root, child)));
 	}
 	return files;
@@ -293,6 +293,16 @@ function recordedRelativeImportSpecifiers(artifact: EnrichedIR | undefined): Set
 			)
 				return [];
 			const basename = imported.source.slice(imported.source.lastIndexOf('/') + 1);
+			// `.jsx`, NOT `.tsx`, and the emitted file it names is `X.tsx`. That is
+			// deliberate and it is the TypeScript idiom, not a leftover: a specifier
+			// ending `.tsx` is a hard error (TS5097) unless the CONSUMER enables
+			// `allowImportingTsExtensions`, which also forces `noEmit`. A `.jsx`
+			// specifier resolves to `X.tsx` under every module resolution this repo
+			// or its consumers use - TypeScript substitutes the TS extension for the
+			// JS one, and Vite does the same (`knownTsOutputRE` covers `.jsx`,
+			// measured at vite 7.3.1, 7.3.6 and 8.0.16). Emitting `.jsx` therefore
+			// keeps the output importable by a plain `tsc` consumer with no extra
+			// flag. Mirrored in the emitter at src/emitter/index.ts.
 			return [`./${basename.slice(0, -'.tsrx'.length)}.jsx`];
 		}),
 	);
@@ -441,7 +451,11 @@ function makeEslint(cwd: string): ESLint {
 			(reactPlugin.configs as Record<string, any>).flat['jsx-runtime'],
 			...(Array.isArray(recommendedHooks) ? recommendedHooks : [recommendedHooks]),
 			{
-				files: ['**/*.jsx'],
+				// MUST track the extension `discoverGeneratedFiles` collects. Flat
+				// config lints only `**/*.{js,mjs,cjs}` unless a config entry names
+				// another extension, so a stale glob here does not fail loudly - it
+				// silently drops the parser options, globals and every rule below.
+				files: ['**/*.tsx'],
 				languageOptions: {
 					ecmaVersion: 'latest',
 					sourceType: 'module',

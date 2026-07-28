@@ -24,7 +24,7 @@ import { formatEmitted } from '../src/format-emitted.ts';
 /**
  * THE SCENARIO INVENTORY IS DERIVED, NOT RE-LITERALLED.
  *
- * This list was `['generated/S1.jsx', 'generated/S2.jsx', 'generated/S3.jsx']`
+ * This list was `['generated/S1.tsx', 'generated/S2.tsx', 'generated/S3.tsx']`
  * until S4 landed, and the hand-edit it then demanded was not free: the
  * inventory is the FIRST statement of the gate test below, so the whole run
  * aborted there and the emitted S4 file never reached `checkGeneratedFiles()`,
@@ -129,7 +129,7 @@ for (const name of compositionNames) {
 	compositionArtifacts.set(name, await buildEnrichedIr({ filename, source }));
 	compositionSources.set(
 		name,
-		await readFile(resolve(PACKAGE_ROOT, `generated-composition/${name}.jsx`), 'utf8'),
+		await readFile(resolve(PACKAGE_ROOT, `generated-composition/${name}.tsx`), 'utf8'),
 	);
 }
 
@@ -141,7 +141,7 @@ type MutationCase = readonly [
 ];
 
 async function policies(source: string): Promise<string[]> {
-	const result = await checkSources([{ file: 'generated/Mutant.jsx', source }]);
+	const result = await checkSources([{ file: 'generated/Mutant.tsx', source }]);
 	expect(result.violations.every((entry) => dossierRef.test(entry.dossierRef))).toBe(true);
 	return result.violations.map((entry) => entry.policy);
 }
@@ -216,7 +216,7 @@ describe('React dossier gate', async () => {
 	});
 
 	test('discovers, parses, and accepts every checked-in generated component', async () => {
-		const corpus = scenarioCorpus('jsx');
+		const corpus = scenarioCorpus('tsx');
 		expect(await discoverGeneratedFiles()).toEqual(corpus);
 		const result = await checkGeneratedFiles();
 		// The gate's OWN file list, asserted rather than assumed. `discoverGeneratedFiles`
@@ -245,16 +245,16 @@ describe('React dossier gate', async () => {
 	 * root, so this measures the real comparison and not a lookalike.
 	 */
 	test('CALIBRATION: the derived inventory goes red on a missing and on an extra file', async () => {
-		const corpus = scenarioCorpus('jsx');
+		const corpus = scenarioCorpus('tsx');
 		// THE FLOOR. Every scenario ratified so far must still be in the derivation.
 		// A lower bound, so S5 and later widen it with no edit here, while a golden
 		// that silently disappeared is red.
 		expect(corpus).toEqual(
 			expect.arrayContaining([
-				'generated/S1.jsx',
-				'generated/S2.jsx',
-				'generated/S3.jsx',
-				'generated/S4.jsx',
+				'generated/S1.tsx',
+				'generated/S2.tsx',
+				'generated/S3.tsx',
+				'generated/S4.tsx',
 			]),
 		);
 		const root = await realpath(await mkdtemp(resolve(tmpdir(), 'frameless-react-inventory-')));
@@ -264,7 +264,7 @@ describe('React dossier gate', async () => {
 		expect(await discoverGeneratedFiles({ cwd: root })).not.toEqual(corpus);
 		await writeFile(resolve(root, corpus.at(-1)!), valid);
 		expect(await discoverGeneratedFiles({ cwd: root })).toEqual(corpus);
-		await writeFile(resolve(root, 'generated/S99.jsx'), valid);
+		await writeFile(resolve(root, 'generated/S99.tsx'), valid);
 		expect(await discoverGeneratedFiles({ cwd: root })).not.toEqual(corpus);
 	});
 
@@ -810,7 +810,7 @@ describe('React dossier gate', async () => {
 	test('unrecorded-with-artifact -> violation', async () => {
 		const result = await checkSources([
 			{
-				file: 'generated/relative-import-parent.jsx',
+				file: 'generated/relative-import-parent.tsx',
 				source: mutate(
 					recordedRelativeImport,
 					'./relative-import-child.jsx',
@@ -824,7 +824,7 @@ describe('React dossier gate', async () => {
 
 	test('recorded-without-artifact -> violation', async () => {
 		const result = await checkSources([
-			{ file: 'generated/relative-import-parent.jsx', source: recordedRelativeImport },
+			{ file: 'generated/relative-import-parent.tsx', source: recordedRelativeImport },
 		]);
 		expect(result.violations.map((entry) => entry.policy)).toContain('undisclosed-import');
 		expect(result.unevaluated.map((entry) => entry.policy)).not.toContain('undisclosed-import');
@@ -833,7 +833,7 @@ describe('React dossier gate', async () => {
 	test('recorded-with-artifact -> clean', async () => {
 		const result = await checkSources([
 			{
-				file: 'generated/relative-import-parent.jsx',
+				file: 'generated/relative-import-parent.tsx',
 				source: recordedRelativeImport,
 				artifact: relativeImportArtifact,
 			},
@@ -845,7 +845,7 @@ describe('React dossier gate', async () => {
 		const persistenceArtifact = withRenderPersistence(relativeImportArtifact, 'react');
 		const validResult = await checkSources([
 			{
-				file: 'generated/relative-import-parent.jsx',
+				file: 'generated/relative-import-parent.tsx',
 				source: recordedRelativeImport,
 				artifact: persistenceArtifact,
 			},
@@ -869,7 +869,7 @@ describe('React dossier gate', async () => {
 		} as unknown as EnrichedIR;
 		const mutantResult = await checkSources([
 			{
-				file: 'generated/relative-import-parent.jsx',
+				file: 'generated/relative-import-parent.tsx',
 				source: recordedRelativeImport,
 				artifact: mutantArtifact,
 			},
@@ -879,7 +879,7 @@ describe('React dossier gate', async () => {
 		);
 
 		const absentResult = await checkSources([
-			{ file: 'generated/relative-import-parent.jsx', source: recordedRelativeImport },
+			{ file: 'generated/relative-import-parent.tsx', source: recordedRelativeImport },
 		]);
 		expect(absentResult.unevaluated.map((entry) => entry.policy)).toContain(
 			'persistence-render-lowering',
@@ -899,7 +899,7 @@ describe('React dossier gate', async () => {
 			options?: { readonly artifact?: EnrichedIR },
 		) => {
 			const result = await checkSources([
-				{ file: 'generated-composition/Mutant.jsx', source, artifact: options?.artifact },
+				{ file: 'generated-composition/Mutant.tsx', source, artifact: options?.artifact },
 			]);
 			expect(result.violations.map((entry) => entry.policy)).toContain(policy);
 		},
@@ -960,10 +960,10 @@ describe('React dossier gate', async () => {
 
 	test('discovers and gates every generated composition module with its fixture artifact', async () => {
 		const files = await discoverGeneratedFiles({ directory: 'generated-composition' });
-		expect(files).toEqual(compositionNames.map((name) => `generated-composition/${name}.jsx`));
+		expect(files).toEqual(compositionNames.map((name) => `generated-composition/${name}.tsx`));
 		const result = await checkSources(
 			files.map((file) => {
-				const name = file.slice('generated-composition/'.length, -'.jsx'.length);
+				const name = file.slice('generated-composition/'.length, -'.tsx'.length);
 				return {
 					file,
 					source: compositionSources.get(name)!,
@@ -1000,7 +1000,7 @@ describe('React dossier gate', async () => {
 				const filename = `test/shared-tier-${index}.tsrx`;
 				const artifact = await buildEnrichedIr({ filename, source });
 				return {
-					file: `generated-composition/shared-tier-${index}.jsx`,
+					file: `generated-composition/shared-tier-${index}.tsx`,
 					source: await formatEmitted(emit(artifact)),
 					artifact,
 				};
@@ -1019,9 +1019,9 @@ describe('React dossier gate', async () => {
 		await mkdir(resolve(root, 'generated'));
 		// Base no-unused-expressions does not flag `void` expressions; use a bare
 		// literal expression, which it unambiguously reports.
-		await writeFile(resolve(root, 'generated/New.jsx'), `${valid}\n0;\n`);
+		await writeFile(resolve(root, 'generated/New.tsx'), `${valid}\n0;\n`);
 		const result = await checkGeneratedFiles({ cwd: root });
-		expect(result.files).toEqual(['generated/New.jsx']);
+		expect(result.files).toEqual(['generated/New.tsx']);
 		expect(result.violations.map((entry) => entry.policy)).toContain(
 			'eslint:no-unused-expressions',
 		);
@@ -1034,7 +1034,7 @@ describe('React dossier gate', async () => {
 		temporaryRoots.push(root);
 		await mkdir(resolve(root, 'generated'));
 		await writeFile(
-			resolve(root, 'generated/TwoSetter.jsx'),
+			resolve(root, 'generated/TwoSetter.tsx'),
 			mutate(
 				valid,
 				'setValue(nextValue);',
@@ -1042,7 +1042,7 @@ describe('React dossier gate', async () => {
 			),
 		);
 		const result = await checkGeneratedFiles({ cwd: root });
-		expect(result.files).toEqual(['generated/TwoSetter.jsx']);
+		expect(result.files).toEqual(['generated/TwoSetter.tsx']);
 		expect(result.violations.map((entry) => entry.policy)).toContain('one-call-per-setter');
 	});
 });

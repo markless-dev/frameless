@@ -4,16 +4,35 @@ import { dirname, resolve } from 'pathe';
 import ts from 'typescript';
 import { describe, expect, test } from 'vitest';
 
-// Emitted output is plain .jsx and is otherwise never type-checked. Running the
-// real TypeScript compiler over it is an INDEPENDENT oracle: unlike the gate,
-// which encodes rules we wrote ourselves, tsc is a third party that does not
-// know what Frameless intended. It catches undefined identifiers, missing or
+// Emitted output is untyped .tsx and is otherwise never type-checked. Running
+// the real TypeScript compiler over it is an INDEPENDENT oracle: unlike the
+// gate, which encodes rules we wrote ourselves, tsc is a third party that does
+// not know what Frameless intended. It catches undefined identifiers, missing or
 // wrong imports, misused framework APIs, and invalid JSX that every other lane
 // in this repo would happily wave through.
 //
 // Props arrive destructured and unannotated by design, so `noImplicitAny` is
 // off. That is deliberate scope, not laxity - see
 // docs/goals/frameless-testing-ci-v1/notes/T005-emitted-typecheck.md.
+//
+// THE .jsx -> .tsx MIGRATION SHARPENED THIS LANE, AND THAT WAS NOT PREDICTED.
+// Nothing about the emitted BYTES changed - all 42 checked-in emitted files are
+// byte-identical to their `.jsx` predecessors - but the extension decides which
+// inference TypeScript uses, and the two are not equivalent even with
+// `allowJs`/`checkJs` on and `strict` off:
+//
+//   - in a CHECKED JS file, an empty initialiser (`new Set()`, `[]`) and an
+//     uninferrable type parameter fall back to `any`, so every downstream use is
+//     silently accepted;
+//   - in a TS file the same expressions are `unknown` / `{}`, and every use is
+//     reported.
+//
+// So this lane was reporting 5 diagnostics over `.jsx` and reports 12 over the
+// same bytes as `.tsx`. The seven new ones are ALL of that single family and are
+// listed in ACCEPTED below with their sites. They are the untyped-emitted-value
+// class this phase exists to remove: printing prop types is what deletes them,
+// and when it does, the EXACT-EQUALITY assertion turns this file red and forces
+// the list to be shortened deliberately.
 
 const PACKAGE_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 
@@ -43,7 +62,7 @@ function emittedFiles(): string[] {
 	return ['generated', 'generated-composition'].flatMap((directory) => {
 		const absolute = resolve(PACKAGE_ROOT, directory);
 		return readdirSync(absolute)
-			.filter((entry) => entry.endsWith('.jsx'))
+			.filter((entry) => entry.endsWith('.tsx'))
 			.map((entry) => resolve(absolute, entry));
 	});
 }
@@ -72,11 +91,11 @@ function expectedEmittedFiles(): string[] {
 	const scenarios = readdirSync(COMPILER_GOLDEN_ROOT)
 		.map((entry) => /^s(\d+)-[\w-]+\.json$/.exec(entry)?.[1])
 		.filter((digits): digits is string => digits !== undefined)
-		.map((digits) => resolve(PACKAGE_ROOT, `generated/S${digits}.jsx`));
+		.map((digits) => resolve(PACKAGE_ROOT, `generated/S${digits}.tsx`));
 	const composition = readdirSync(resolve(PACKAGE_ROOT, 'test/composition-fixtures'))
 		.filter((entry) => entry.endsWith('.tsrx'))
 		.map((entry) =>
-			resolve(PACKAGE_ROOT, `generated-composition/${entry.slice(0, -'.tsrx'.length)}.jsx`),
+			resolve(PACKAGE_ROOT, `generated-composition/${entry.slice(0, -'.tsrx'.length)}.tsx`),
 		);
 	// Fail LOUD rather than returning []. Two empty directories comparing equal is
 	// the one way a derived inventory could be greener than the count it replaced.
@@ -112,7 +131,7 @@ describe('React emitted output type-checks', () => {
 		// THE FLOOR, so a derivation that quietly lost a scenario cannot pass.
 		expect(expected).toEqual(
 			expect.arrayContaining(
-				['S1', 'S2', 'S3', 'S4'].map((name) => resolve(PACKAGE_ROOT, `generated/${name}.jsx`)),
+				['S1', 'S2', 'S3', 'S4'].map((name) => resolve(PACKAGE_ROOT, `generated/${name}.tsx`)),
 			),
 		);
 		expect([...files].sort()).toEqual(expected);
@@ -136,24 +155,59 @@ describe('React emitted output type-checks', () => {
 	// this list must be updated deliberately rather than drifting.
 	const ACCEPTED: ReadonlyArray<readonly [string, string]> = [
 		[
-			"generated-composition/C3-ref.jsx: TS2339 Property 'dataset' does not exist on type 'Element'.",
+			"generated-composition/C3-ref.tsx: TS2339 Property 'dataset' does not exist on type 'Element'.",
 			'ref.current is typed Element; .dataset needs an annotation JS cannot carry. Correct at runtime.',
 		],
 		[
-			"generated-composition/C4-attach.jsx: TS2339 Property 'dataset' does not exist on type 'Element'.",
+			"generated-composition/C4-attach.tsx: TS2339 Property 'dataset' does not exist on type 'Element'.",
 			'Same as C3-ref: an attach handler reads .dataset off an Element-typed ref. Correct at runtime.',
 		],
 		[
-			"generated-composition/C8-page-store.jsx: TS2339 Property 'increment' does not exist on type 'number | { getCount: () => number; subscribeCount: (listener: any) => () => void; increment(): void; }'.   Property 'increment' does not exist on type 'number'.",
+			"generated-composition/C8-page-store.tsx: TS2339 Property 'increment' does not exist on type 'number | { getCount: () => number; subscribeCount: (listener: any) => () => void; increment(): void; }'.   Property 'increment' does not exist on type 'number'.",
 			"usePageLedger returns a number for 'count' and the store otherwise - a value-dependent return type needing overloads. The call site passes the literal 'store', so .increment exists at runtime.",
 		],
 		[
-			"generated-composition/C8-page-store.jsx: TS2322 Type 'number | { getCount: () => number; subscribeCount: (listener: any) => () => void; increment(): void; }' is not assignable to type 'ReactNode'.   Type '{ getCount: () => number; subscribeCount: (listener: any) => () => void; increment(): void; }' is not assignable to type 'ReactNode'.",
+			"generated-composition/C8-page-store.tsx: TS2322 Type 'number | { getCount: () => number; subscribeCount: (listener: any) => () => void; increment(): void; }' is not assignable to type 'ReactNode'.   Type '{ getCount: () => number; subscribeCount: (listener: any) => () => void; increment(): void; }' is not assignable to type 'ReactNode'.",
 			'The same value-dependent union as above, this time rendered as a child. The count branch is what actually renders; the store branch is never reached at this site.',
 		],
 		[
-			"generated/S3.jsx: TS2339 Property 'dataset' does not exist on type 'EventTarget'.",
+			"generated/S3.tsx: TS2339 Property 'dataset' does not exist on type 'EventTarget'.",
 			'event.target is EventTarget; reading .dataset needs a cast JS cannot carry. Correct at runtime.',
+		],
+		// THE SEVEN BELOW ARRIVED WITH THE .jsx -> .tsx MIGRATION, ON UNCHANGED
+		// BYTES. Every one is the same shape: an emitted module-store declares its
+		// subscriber set as `new Set()`, which is `Set<any>` under checked-JS
+		// inference and `Set<unknown>` under TS inference, so iterating it and
+		// calling the element is TS2349 only in a TS file. Correct at runtime - the
+		// only values ever added are the callbacks `subscribe` is handed. Removing
+		// them means annotating the emitted store, which is this phase's later work.
+		[
+			"generated-composition/C2-shared.tsx: TS2349 This expression is not callable.   Type '{}' has no call signatures.",
+			"C2-shared's `advance()` dispatch loop calls `listener()` off `countListeners`, declared `new Set()`.",
+		],
+		[
+			"generated-composition/C2-shared.tsx: TS2349 This expression is not callable.   Type '{}' has no call signatures.",
+			"C2-shared's `advance()` dispatch loop calls `listener2()` off `historyListeners`, declared `new Set()`.",
+		],
+		[
+			"generated-composition/C2-shared.tsx: TS2349 This expression is not callable.   Type '{}' has no call signatures.",
+			"C2-shared's `advance()` dispatch loop calls `listener3()` off `auditListeners`, declared `new Set()`.",
+		],
+		[
+			"generated-composition/C2-shared.tsx: TS2349 This expression is not callable.   Type '{}' has no call signatures.",
+			"C2-shared's `append()` dispatch loop calls `listener4()` off `countListeners`, declared `new Set()`.",
+		],
+		[
+			"generated-composition/C2-shared.tsx: TS2349 This expression is not callable.   Type '{}' has no call signatures.",
+			"C2-shared's `append()` dispatch loop calls `listener5()` off `historyListeners`, declared `new Set()`.",
+		],
+		[
+			"generated-composition/C2-shared.tsx: TS2349 This expression is not callable.   Type '{}' has no call signatures.",
+			"C2-shared's `append()` dispatch loop calls `listener6()` off `auditListeners`, declared `new Set()`.",
+		],
+		[
+			"generated-composition/C8-page-store.tsx: TS2349 This expression is not callable.   Type '{}' has no call signatures.",
+			"C8-page-store's `increment()` dispatch loop calls `listener()` off `countListeners`, declared `new Set()`.",
 		],
 	];
 
@@ -169,7 +223,7 @@ describe('React emitted output type-checks', () => {
 	// below breaks one emitted file the way a real emitter bug would, and proves
 	// this lane rejects it. If these ever stop failing, the lane has gone blind.
 	describe('calibration: rejects emitted output that a real bug would produce', () => {
-		const target = resolve(PACKAGE_ROOT, 'generated/S1.jsx');
+		const target = resolve(PACKAGE_ROOT, 'generated/S1.tsx');
 		const original = readFileSync(target, 'utf8');
 
 		test('a dropped hook import is caught', () => {

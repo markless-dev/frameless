@@ -9,14 +9,14 @@ const goldenRoot = resolve(root, '../../compiler/test/goldens');
 
 await mkdir(resolve(root, 'generated'), { recursive: true });
 const fixtures = [
-	['S1.jsx', 's1-render-once.json'],
-	['S2.jsx', 's2-keyed-todo.json'],
-	['S3.jsx', 's3-event-form.json'],
-	['S4.jsx', 's4-nested-list.json'],
-	['S5.jsx', 's5-branch-teardown.json'],
-	['S6.jsx', 's6-whitespace-text.json'],
-	['S7.jsx', 's7-form-controls.json'],
-	['S9.jsx', 's9-boolean-attributes.json'],
+	['S1.tsx', 's1-render-once.json'],
+	['S2.tsx', 's2-keyed-todo.json'],
+	['S3.tsx', 's3-event-form.json'],
+	['S4.tsx', 's4-nested-list.json'],
+	['S5.tsx', 's5-branch-teardown.json'],
+	['S6.tsx', 's6-whitespace-text.json'],
+	['S7.tsx', 's7-form-controls.json'],
+	['S9.tsx', 's9-boolean-attributes.json'],
 ] as const;
 for (const [output, golden] of fixtures) {
 	const ir = JSON.parse(
