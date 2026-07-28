@@ -159,22 +159,44 @@ const OMITTED_AST_KEYS = new Set([
  * our IR. The cost is that this is a MAINTAINED list; the tests below register
  * the admission rule so a future addition has to meet it rather than be waved in.
  *
- * ADMISSION RULE - all four, each MEASURED at the pinned versions, not assumed:
+ * ADMISSION RULE - all five, each MEASURED at the pinned versions, not assumed.
+ * Clauses 1-4 decide the IR KIND. Clause 5 decides PORTABILITY, and it is a
+ * different question with a different answer - see `LANE_PORTABLE_BOOLEAN_
+ * ATTRIBUTES` below, and T051 for why the two were conflated for one card:
  *   1. It is an HTML boolean CONTENT attribute (so it has a serialized form at
  *      all). Rules out `indeterminate`, which is a property with no attribute.
  *   2. It appears in `@tsrx/core`'s `DOM_BOOLEAN_ATTRIBUTES` (cross-check).
- *   3. The lowercase attribute spelling REACHES the browser DOM property, either
- *      because they are identical or because Angular's own `mapPropName` maps it
- *      (`readonly` -> `readOnly` is the sole mapped member). Verified against
- *      `lib.dom.d.ts` (typescript 5.9.3). Rules out `allowfullscreen`,
- *      `formnovalidate`, `ismap`, `novalidate`, `playsinline`,
- *      `disablepictureinpicture` and `disableremoteplayback`, whose properties
- *      are camelCase and which Angular does NOT map.
+ *   3. The lowercase attribute spelling REACHES the browser DOM property.
+ *      Verified against `lib.dom.d.ts` (typescript 5.9.3). Rules out
+ *      `allowfullscreen`, `formnovalidate`, `ismap`, `novalidate`,
+ *      `playsinline`, `disablepictureinpicture` and `disableremoteplayback`,
+ *      whose properties are camelCase.
+ *
+ *      AMENDED BY T051. This clause used to read "either because they are
+ *      identical OR because Angular's own `mapPropName` maps it (`readonly` ->
+ *      `readOnly` is the sole mapped member)". THAT ESCAPE HATCH IS THE HOLE.
+ *      `mapPropName` is an ANGULAR RUNTIME fact, so it can only ever establish
+ *      that ANGULAR reaches the property; it cannot establish anything about the
+ *      other five lanes, and this set is read as if it were lane-neutral.
+ *      `readonly` is the one name it ever admitted, and `readonly` is now
+ *      measured non-portable through TWO lanes. The clause is kept as a KIND
+ *      test - Angular does map it, so Angular's `[readonly]` is right - but it
+ *      no longer implies portability, which is what clause 5 is for.
  *   4. Angular's OWN server DOM (the domino bundled in `@angular/platform-server`
  *      22.0.8) reflects the property back to the content attribute, so SSR and
  *      the browser agree. Rules out `inert`, `muted` and `webkitdirectory`:
  *      real browser properties that domino does not implement, so SSR would omit
  *      an attribute the client then sets.
+ *   5. ADDED BY T051 - EVERY LANE'S OWN SERIALIZER, executed, agrees on the live
+ *      DOM reading in BOTH states. Clauses 1-4 ask what the DOM accepts; NOBODY
+ *      ASKED WHAT EACH LANE DOES WITH IT. Four of the fourteen names below pass
+ *      clauses 1-4, lower to `property` correctly, emit valid-LOOKING output in
+ *      all six lanes, and are then dropped or mis-serialized by a specific lane.
+ *      A name failing only clause 5 STAYS ADMITTED - the lowering is still right,
+ *      and removing it is measurably WORSE (see the removal note below) - but it
+ *      is excluded from `LANE_PORTABLE_BOOLEAN_ATTRIBUTES` and must not be bound
+ *      by a corpus fixture. Enforced, executed and two-sided in
+ *      `test/enriched-ir.test.ts`, not asserted here.
  *
  * RULE 3 AND RULE 4 ARE BOTH REQUIRED, and each catches names the other admits.
  * `nomodule` and `seamless` PASS rule 4 - domino reflects both - and FAIL rule 3:
@@ -242,6 +264,78 @@ const DOM_BOOLEAN_CONTENT_ATTRIBUTES: ReadonlySet<string> = new Set([
  */
 export function isDomBooleanContentAttribute(name: string): boolean {
 	return DOM_BOOLEAN_CONTENT_ATTRIBUTES.has(name);
+}
+
+/**
+ * THE SUBSET OF THE ABOVE THAT ALL SIX LANES ACTUALLY AGREE ON - clause 5.
+ *
+ * TWO QUESTIONS, ONE SET, WHICH IS THE DEFECT T051 REPAIRS. The set above answers
+ * "must Angular bind this as a property rather than an attribute?", a DOM
+ * question, and all fourteen names pass it. It was then READ as if it answered
+ * "may a fixture bind this and expect six equal observations?", a PER-LANE
+ * SERIALIZER question, which nothing in this repo had ever asked. It does not.
+ *
+ * MEASURED BY T051 by EXECUTING each lane's own serializer over all fourteen
+ * names in both states, at react-dom 19.2.3, solid-js 1.8.22 + babel-preset-solid
+ * 1.9.12, vue 3.5.40, svelte 5.56.8, @qwik.dev/core 2.0.0-beta.38 and the domino
+ * bundled in @angular/platform-server 22.0.8. The reading compared is the one
+ * this project's oracle compares - `getAttribute(name)` on the live DOM, `""` or
+ * `null` - because `measureBooleans` in the three-way contract says in as many
+ * words that the claim is "about the state the six lanes end up in, not about
+ * which API each one used to get there". Bare `disabled` and `disabled=""` are
+ * therefore NOT a divergence: five lanes split on that and all six read `""`.
+ *
+ * THE TWO EXCLUSIONS, and both are the SAME LANE:
+ *   `hidden`   - qwik. `@qwik.dev/core`'s own `isBooleanAttr` is a 24-name list
+ *                and `hidden` is the ONLY one of the fourteen missing from it, so
+ *                qwik's client patch takes `directSetAttribute` and writes
+ *                `hidden="true"` where five lanes read `""`. Serialization, not
+ *                behaviour: the element is still hidden.
+ *   `readonly` - qwik AGAIN, and for the opposite reason: `readonly` IS on that
+ *                list, but the test is `isBoolean && key in element`, and the DOM
+ *                property is `readOnly`, so `'readonly' in HTMLInputElement` is
+ *                FALSE. Same `readonly="true"` outcome by a different route.
+ *                `readonly` is the only one of the fourteen whose lowercase
+ *                spelling is not itself a DOM property - exactly the name old
+ *                clause 3's `mapPropName` escape hatch let in.
+ * NEITHER IS AN UPSTREAM MATTER. Qwik's attribute table is Qwik's own and is
+ * internally consistent; it is this repo's oracle that compares lanes.
+ *
+ * `autofocus`, `autoplay` and `readonly` ALSO failed through react - served
+ * nothing in BOTH states plus `console.error: Invalid DOM property` - because
+ * react's canonical props are `autoFocus`/`autoPlay`/`readOnly`. That one is OUR
+ * emitter's defect and is REPAIRED, in react's `jsxName`. See docs/DEFECTS.md 13.
+ *
+ * WHY THE FOUR ARE NOT REMOVED FROM THE SET ABOVE, measured rather than argued.
+ * Only the Angular emitter branches on `kind` (`solid` does too, but guarded by
+ * `name === 'value'`), so removal is an ANGULAR-ONLY change: it cannot alter what
+ * react or qwik serve, and therefore repairs nothing. What it WOULD do is send
+ * Angular back down `[attr.name]`, where domino gives `<div hidden="false">` with
+ * `.hidden === true` - entry 10's own inversion, reintroduced into the one lane
+ * that is currently correct. Removal is strictly worse and was refused on that
+ * measurement.
+ *
+ * Exported for the test that registers clause 5. Like the predicate above, no
+ * emitter may branch on it: it is a portability LEDGER, not a lowering input.
+ */
+const LANE_PORTABLE_BOOLEAN_ATTRIBUTES: ReadonlySet<string> = new Set([
+	'async',
+	'autofocus',
+	'autoplay',
+	'controls',
+	'default',
+	'defer',
+	'disabled',
+	'loop',
+	'multiple',
+	'open',
+	'required',
+	'reversed',
+]);
+
+/** True when every one of the six lanes is MEASURED to agree on this name. */
+export function isLanePortableBooleanAttribute(name: string): boolean {
+	return LANE_PORTABLE_BOOLEAN_ATTRIBUTES.has(name);
 }
 
 /** Build the target-neutral emitter artifact from author source and semantic records. */

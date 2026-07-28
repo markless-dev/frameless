@@ -3,7 +3,12 @@ import { createRequire } from 'node:module';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { basename } from 'pathe';
 import { describe, expect, test } from 'vitest';
-import { buildEnrichedIr, collectGraphReads, isDomBooleanContentAttribute } from '../src/build';
+import {
+	buildEnrichedIr,
+	collectGraphReads,
+	isDomBooleanContentAttribute,
+	isLanePortableBooleanAttribute,
+} from '../src/build';
 import { dumpEnrichedIr } from '../src/dump';
 import type { EnrichedIR, SerializableAstNode, TemplateHost, TemplateNode } from '../src/schema';
 
@@ -1573,6 +1578,348 @@ ${hosts}
 			'"false"': '<button disabled=""></button>',
 		});
 	});
+});
+
+/**
+ * T051, CLAUSE 5. `docs/DEFECTS.md` entry 13.
+ *
+ * THE HOLE THIS CLOSES, stated as the shape rather than as four names. T049's
+ * clauses 1-4 all ask what the BROWSER DOM accepts, verified against
+ * `lib.dom.d.ts` and Angular's server DOM. They caught `nomodule` and `seamless`
+ * by asking whether the DOM would take them. NOBODY EVER ASKED WHETHER EACH LANE
+ * WOULD. Four of the fourteen admitted names pass every one of clauses 1-4, lower
+ * to `kind: 'property'` correctly, emit valid-LOOKING output in all six lanes,
+ * and are then dropped or mis-serialized by one specific lane's serializer.
+ *
+ * THE READING COMPARED IS THE ORACLE'S READING - `getAttribute(name)` on the live
+ * DOM, `""` or `null`. `measureBooleans` in the three-way contract says in as
+ * many words that the claim is "about the state the six lanes end up in, not
+ * about which API each one used to get there". That matters here: react and
+ * svelte serve `disabled=""` while solid and vue serve a BARE `disabled`, and
+ * that 2-2 byte split is NOT a portability failure, because every one of them
+ * reads `""`. Comparing raw bytes instead would report ten false divergences and
+ * bury the four real ones.
+ *
+ * FOUR OF THE SIX LANES ARE EXECUTED HERE, which is four more than before: T049
+ * recorded that "react-dom is the one lane whose serializer is callable from this
+ * package", and that turned out to be inherited rather than measured. solid's
+ * `ssrAttribute`, vue's `@vue/server-renderer` and svelte's `attr()` are all
+ * reachable through the lane packages by the same `laneRequire` route the
+ * whitespace matrix already uses.
+ *
+ * THE TWO THAT ARE NOT, and exactly why:
+ *   qwik    - its standalone SSR renderer refuses to run without a real client
+ *             build manifest, and hand-rolling one is the precise trap this repo
+ *             has already lost a goal to. So qwik is measured at its DECIDING
+ *             FUNCTION instead, read out of its own shipped bundle: core.mjs's
+ *             `isBooleanAttr`, which its client patch consults to choose between
+ *             `element[key] = parseBoolean(...)` and `directSetAttribute(...)`.
+ *             That is the code that produces the divergence, not a model of it.
+ *   angular - the domino it serializes through is bundled inside
+ *             `@angular/platform-server`, a DEMO dependency. What IS reachable is
+ *             better for this question: `DomElementSchemaRegistry`, Angular's own
+ *             public registry of which property names bind on which element, plus
+ *             `getMappedPropName`. Angular's row is additionally covered
+ *             behaviourally by S9 in `pnpm e2e`.
+ */
+describe('clause 5: the six-lane boolean serializer matrix', () => {
+	const REPO_ROOT = new URL('../../../', import.meta.url);
+	const laneRequire = (lane: string) =>
+		createRequire(fileURLToPath(new URL(`packages/frameworks/${lane}/package.json`, REPO_ROOT)));
+	const laneImport = async (lane: string, specifier: string): Promise<Record<string, unknown>> =>
+		(await import(
+			/* @vite-ignore */ pathToFileURL(laneRequire(lane).resolve(specifier)).href
+		)) as Record<string, unknown>;
+	const interop = <T,>(module: Record<string, unknown>, key: string): T => {
+		const direct = module[key];
+		if (direct !== undefined) return direct as T;
+		const fallback = (module.default as Record<string, unknown> | undefined)?.[key];
+		if (fallback === undefined) throw new Error(`No export ${key} on the resolved module.`);
+		return fallback as T;
+	};
+
+	/**
+	 * Each name on the element that DEFINES it. This is NOT the uniform `<span>`
+	 * the lowering matrix above uses, and the difference is load-bearing: the
+	 * lowering rule is keyed on the name alone, but two lanes' SERIALIZERS are
+	 * element-sensitive - qwik gates on `key in element`, and Angular's schema
+	 * rejects `[disabled]` on a `<span>` outright. A uniform host would measure a
+	 * property that is not there and report six lanes agreeing on nothing.
+	 */
+	const HOST: Readonly<Record<string, string>> = {
+		async: 'script',
+		autofocus: 'input',
+		autoplay: 'video',
+		controls: 'video',
+		default: 'track',
+		defer: 'script',
+		disabled: 'button',
+		hidden: 'div',
+		loop: 'video',
+		multiple: 'select',
+		open: 'details',
+		readonly: 'input',
+		required: 'input',
+		reversed: 'ol',
+	};
+	const NAMES = Object.keys(HOST);
+
+	/** `getAttribute(name)` for the bytes a lane produced: `""`, a value, or null. */
+	function liveReading(html: string, name: string): string | null {
+		const startTag = /<[A-Za-z][^>]*>/.exec(html)?.[0] ?? '';
+		const tokens = [...startTag.matchAll(/([A-Za-z_:][-A-Za-z0-9_:.]*)(?:="([^"]*)")?/g)].slice(1);
+		const hit = tokens.find((token) => token[1]!.toLowerCase() === name.toLowerCase());
+		if (!hit) return null;
+		return hit[2] ?? '';
+	}
+
+	const both = (rows: Record<string, string | null>): string =>
+		`${JSON.stringify(rows.true)} / ${JSON.stringify(rows.false)}`;
+
+	async function measureReact(): Promise<Record<string, string>> {
+		const react = await laneImport('react', 'react');
+		const server = await laneImport('react', 'react-dom/server.node');
+		const createElement = interop<(tag: string, props: Record<string, unknown>) => unknown>(
+			react,
+			'createElement',
+		);
+		const render = interop<(element: unknown) => string>(server, 'renderToStaticMarkup');
+		const out: Record<string, string> = {};
+		for (const name of NAMES)
+			out[name] = both({
+				true: liveReading(render(createElement(HOST[name]!, { [name]: true })), name),
+				false: liveReading(render(createElement(HOST[name]!, { [name]: false })), name),
+			});
+		return out;
+	}
+
+	async function measureSolid(): Promise<Record<string, string>> {
+		const babel = await laneImport('solid', '@babel/core');
+		const transformSync = interop<(source: string, options: unknown) => { code: string }>(
+			babel,
+			'transformSync',
+		);
+		const preset = laneRequire('solid').resolve('babel-preset-solid');
+		const web = JSON.stringify(pathToFileURL(laneRequire('solid').resolve('solid-js/web')).href);
+		const render = async (name: string, value: boolean): Promise<string> => {
+			const code = transformSync(`export const R = () => <${HOST[name]!} ${name}={${value}}/>;`, {
+				presets: [[preset, { generate: 'ssr', hydratable: false }]],
+				filename: 'probe.jsx',
+				babelrc: false,
+				configFile: false,
+			}).code.replaceAll('"solid-js/web"', web);
+			const module = (await import(
+				/* @vite-ignore */ `data:text/javascript,${encodeURIComponent(
+					`${code}\nimport { resolveSSRNode as _r } from ${web};\nexport const html = _r(R());\n`,
+				)}`
+			)) as { html: string };
+			return module.html;
+		};
+		const out: Record<string, string> = {};
+		for (const name of NAMES)
+			out[name] = both({
+				true: liveReading(await render(name, true), name),
+				false: liveReading(await render(name, false), name),
+			});
+		return out;
+	}
+
+	async function measureVue(): Promise<Record<string, string>> {
+		const vue = await laneImport('vue', 'vue');
+		const ssr = await laneImport('vue', 'vue/server-renderer');
+		const createSSRApp = interop<(options: unknown) => unknown>(vue, 'createSSRApp');
+		const h = interop<(tag: string, props: Record<string, unknown>) => unknown>(vue, 'h');
+		const render = interop<(app: unknown) => Promise<string>>(ssr, 'renderToString');
+		const out: Record<string, string> = {};
+		for (const name of NAMES)
+			out[name] = both({
+				true: liveReading(
+					await render(createSSRApp({ render: () => h(HOST[name]!, { [name]: true }) })),
+					name,
+				),
+				false: liveReading(
+					await render(createSSRApp({ render: () => h(HOST[name]!, { [name]: false }) })),
+					name,
+				),
+			});
+		return out;
+	}
+
+	async function measureSvelte(): Promise<Record<string, string>> {
+		const compiler = await laneImport('svelte', 'svelte/compiler');
+		const compile = interop<
+			(source: string, options: { generate: string; name: string }) => { js: { code: string } }
+		>(compiler, 'compile');
+		const internal = JSON.stringify(
+			pathToFileURL(laneRequire('svelte').resolve('svelte/internal/server')).href,
+		);
+		// `<script>` is svelte's own instance script and `<input>`/`<track>` are
+		// void, so the host is reached through `<svelte:element>`. Both are svelte
+		// PARSER facts; the emitted call is the same `attr()` either way.
+		const VOID = new Set(['input', 'track']);
+		const render = async (name: string, value: boolean): Promise<string> => {
+			const host = HOST[name]!;
+			const source =
+				host === 'script' || VOID.has(host)
+					? `<svelte:element this={${JSON.stringify(host)}} ${name}={${value}} />`
+					: `<${host} ${name}={${value}}></${host}>`;
+			const code = compile(source, { generate: 'server', name: 'Probe' })
+				.js.code.replaceAll("'svelte/internal/server'", internal)
+				.replaceAll('"svelte/internal/server"', internal);
+			const module = (await import(
+				/* @vite-ignore */ `data:text/javascript,${encodeURIComponent(code)}`
+			)) as { default: (renderer: { push: (chunk: string) => void }) => void };
+			const chunks: string[] = [];
+			module.default({ push: (chunk) => void chunks.push(chunk) });
+			return chunks.join('');
+		};
+		const out: Record<string, string> = {};
+		for (const name of NAMES)
+			out[name] = both({
+				true: liveReading(await render(name, true), name),
+				false: liveReading(await render(name, false), name),
+			});
+		return out;
+	}
+
+	/**
+	 * `@qwik.dev/core`'s own `isBooleanAttr`, read out of the shipped bundle. Its
+	 * client patch runs `element[key] = parseBoolean(value)` when this is true and
+	 * `directSetAttribute(element, key, value)` when it is false - and the latter
+	 * stringifies `true` to `"true"`, which is the whole divergence.
+	 */
+	function qwikDecider(): {
+		readonly names: readonly string[];
+		readonly gatesOnElement: boolean;
+		readonly version: string;
+	} {
+		const core = createRequire(laneRequire('qwik').resolve('@qwik.dev/core/package.json'));
+		const bundle = readFileSync(
+			fileURLToPath(new URL('dist/core.mjs', pathToFileURL(core.resolve('@qwik.dev/core/package.json')))),
+			'utf8',
+		);
+		const start = bundle.indexOf('const isBooleanAttr = (element, key) => {');
+		if (start < 0)
+			throw new Error(
+				'`isBooleanAttr` is no longer at this shape in @qwik.dev/core. The qwik row of this ' +
+					'matrix is derived from it, so it must be re-read rather than assumed unchanged.',
+			);
+		const body = bundle.slice(start, bundle.indexOf('};', start) + 2);
+		return {
+			names: [...body.matchAll(/key == '([a-z]+)'/g)].map((match) => match[1]!),
+			gatesOnElement: /return isBoolean && key in element;/.test(body),
+			version: (core('@qwik.dev/core/package.json') as { version: string }).version,
+		};
+	}
+
+	async function angularRegistry(): Promise<{
+		hasProperty: (tag: string, prop: string) => boolean;
+		mapped: (name: string) => string;
+	}> {
+		const compiler = await laneImport('angular', '@angular/compiler');
+		const Registry = interop<new () => {
+			hasProperty: (tag: string, prop: string, schemas: readonly unknown[]) => boolean;
+			getMappedPropName: (name: string) => string;
+		}>(compiler, 'DomElementSchemaRegistry');
+		const registry = new Registry();
+		return {
+			hasProperty: (tag, prop) => registry.hasProperty(tag, prop, []),
+			mapped: (name) => registry.getMappedPropName(name),
+		};
+	}
+
+	/**
+	 * THE MATRIX. Every cell is `getAttribute` in the TRUE state / the FALSE state.
+	 * The four cells that are not `"" / null` are the finding, and each carries its
+	 * lane and its cause in the assertion's own shape rather than in a comment.
+	 */
+	test('four executed lanes: react drops three names, and the other three agree on all fourteen', async () => {
+		const [react, solid, vue, svelte] = await Promise.all([
+			measureReact(),
+			measureSolid(),
+			measureVue(),
+			measureSvelte(),
+		]);
+		const AGREED = '"" / null';
+		// solid, vue and svelte are unanimous on every one of the fourteen. Asserted
+		// as three whole objects, so a single moved cell in any of them goes red.
+		const unanimous = Object.fromEntries(NAMES.map((name) => [name, AGREED]));
+		expect(solid, 'solid').toEqual(unanimous);
+		expect(vue, 'vue').toEqual(unanimous);
+		expect(svelte, 'svelte').toEqual(unanimous);
+		// react is the outlier, and ONLY on the three names it spells camelCase.
+		// The emitter now maps those, which is why the AS-EMITTED react lane agrees:
+		// this row is the UNMAPPED lowercase spelling, i.e. the defect itself.
+		expect(react).toEqual({
+			...unanimous,
+			autofocus: 'null / null',
+			autoplay: 'null / null',
+			readonly: 'null / null',
+		});
+	});
+
+	test('qwik: `hidden` and `readonly` fail its OWN decider, for opposite reasons', async () => {
+		const qwik = qwikDecider();
+		const angular = await angularRegistry();
+		// Conjunct one: the name list. `hidden` is the only one of the fourteen off it.
+		expect(NAMES.filter((name) => !qwik.names.includes(name)), `at qwik ${qwik.version}`).toEqual([
+			'hidden',
+		]);
+		// Conjunct two, and the one the first reading of this finding missed: the
+		// list is ANDed with `key in element`. `readonly` is ON the list and still
+		// fails, because the DOM property is `readOnly` - the single name of the
+		// fourteen whose lowercase spelling is not itself a property, cross-checked
+		// here against Angular's registry and separately against lib.dom.d.ts,
+		// jsdom 28.1.0 and the domino in @angular/platform-server 22.0.8.
+		expect(qwik.gatesOnElement).toBe(true);
+		expect(NAMES.filter((name) => !angular.hasProperty(HOST[name]!, name))).toEqual(['readonly']);
+		// The two conjuncts together are qwik's answer, and it is these two names.
+		const qwikFails = NAMES.filter(
+			(name) => !(qwik.names.includes(name) && angular.hasProperty(HOST[name]!, name)),
+		);
+		expect(qwikFails).toEqual(['hidden', 'readonly']);
+	});
+
+	test('angular: every admitted name binds as a property, and `readonly` needs the remap to', async () => {
+		const angular = await angularRegistry();
+		for (const name of NAMES)
+			expect(angular.hasProperty(HOST[name]!, angular.mapped(name)), `angular ${name}`).toBe(true);
+		// The remap is Angular's alone. It is what old clause 3 leaned on, and it is
+		// exactly why `readonly` was admitted as if it were lane-neutral when the
+		// fact it rests on is a fact about ONE lane's runtime.
+		expect(NAMES.filter((name) => angular.mapped(name) !== name)).toEqual(['readonly']);
+	});
+
+	/**
+	 * CALIBRATION, and the reason the exclusions are an instrument rather than a
+	 * transcript. `LANE_PORTABLE_BOOLEAN_ATTRIBUTES` is asserted EQUAL to the set
+	 * the measurements above leave standing, so widening it and narrowing it both
+	 * go red - and so does a lane whose behaviour moves under a version bump.
+	 */
+	test('CALIBRATION: the portable set is exactly what the six lanes leave standing', async () => {
+		const qwik = qwikDecider();
+		const angular = await angularRegistry();
+		const react = await measureReact();
+		const surviving = NAMES.filter((name) => {
+			const qwikOk = qwik.names.includes(name) && angular.hasProperty(HOST[name]!, name);
+			// react's cell is read AS EMITTED: the emitter maps the three names it
+			// spells camelCase, so react's failure is repaired and does not exclude.
+			const reactOk = react[name] === '"" / null' || REACT_MAPPED.has(name);
+			return qwikOk && reactOk;
+		});
+		expect(surviving).toEqual(NAMES.filter((name) => isLanePortableBooleanAttribute(name)));
+		expect(NAMES.filter((name) => !surviving.includes(name))).toEqual(['hidden', 'readonly']);
+		// And every portable name is still an ADMITTED name - the portable set is a
+		// SUBSET of the lowered set, never a second, competing source of truth.
+		for (const name of surviving) expect(isDomBooleanContentAttribute(name)).toBe(true);
+	});
+
+	/**
+	 * The three names the react emitter maps. Duplicated from that package rather
+	 * than imported, because `@frameless/react` is not a dependency of this one -
+	 * and pinned two-sided THERE, against react-dom's own rejections.
+	 */
+	const REACT_MAPPED = new Set(['autofocus', 'autoplay', 'readonly']);
 });
 
 interface SfcTemplate {

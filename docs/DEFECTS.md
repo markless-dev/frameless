@@ -1503,6 +1503,139 @@ job.
 
 ---
 
+## 13. Four of the fourteen admitted boolean attribute names are NON-PORTABLE, and the admission rule could not see it — **OPEN — frameless's own emitted output**
+
+> **The fifth defect in frameless's own shipped output, and the first whose root
+> cause is an ADMISSION RULE rather than a lowering.** Entry 10's repair is
+> correct and stays CLOSED: a dynamic boolean attribute really does reach the IR
+> as `kind: 'property'`, and S9 really does observe six lanes agreeing. What was
+> never established is that the *fourteen names* that repair admits are
+> interchangeable. Four of them are not. Found by T050 (one name) and T051 (the
+> rest), which measured all fourteen in all six lanes.
+
+**Status:** **OPEN.** Three of the four are **repaired** (react's `jsxName`); two
+are **contained** — excluded from `LANE_PORTABLE_BOOLEAN_ATTRIBUTES`, which no
+fixture may bind — and **cannot be repaired from this repo's emitters at all**.
+The entry stays open because containment is not removal.
+
+**The defect, in three lines.** `DOM_BOOLEAN_CONTENT_ATTRIBUTES` admits fourteen
+names on a four-clause rule in which **every clause asks what the browser DOM
+accepts**. Whether each of the six lanes' *serializers* accepts them was never
+asked. Four names pass all four clauses, lower correctly, emit valid-**looking**
+output in all six lanes, and are then silently dropped or mis-serialized.
+
+**THE FULL 14 × 6 MATRIX, MEASURED BY EXECUTING EACH LANE.** Every cell is
+`getAttribute(name)` in the **true** state / the **false** state, on the element
+that defines the property. `""` / `null` is agreement.
+
+| name | react | solid | vue | svelte | qwik | angular |
+| --- | --- | --- | --- | --- | --- | --- |
+| `async` | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` |
+| `autofocus` | **`null` / `null`** | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` |
+| `autoplay` | **`null` / `null`** | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` |
+| `controls` | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` |
+| `default` | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` |
+| `defer` | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` |
+| `disabled` | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` |
+| `hidden` | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` | **`"true"` / `null`** | `""` / `null` |
+| `loop` | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` |
+| `multiple` | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` |
+| `open` | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` |
+| `readonly` | **`null` / `null`** | `""` / `null` | `""` / `null` | `""` / `null` | **`"true"` / `null`** | `""` / `null` |
+| `required` | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` |
+| `reversed` | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` | `""` / `null` |
+
+**Four names, FIVE cells — `readonly` fails through two lanes, by two unrelated
+mechanisms.** That is the fact that decides the repair.
+
+**Bare `disabled` and `disabled=""` are NOT a divergence, and reading bytes would
+have said they were.** react and svelte serve `disabled=""`; solid and vue serve
+a bare `disabled`; all four read `""`. `measureBooleans` in the three-way
+contract states the standard in as many words — the claim is "about the state the
+six lanes end up in, not about which API each one used to get there". A
+byte-level matrix would report **ten** false divergences and bury the four real
+ones.
+
+**The mechanisms, read from each lane's own source.**
+
+- **react** (`react-dom` 19.2.3) — `autofocus`, `autoplay` and `readonly` are not
+  react props. React serves **nothing in both states** and raises
+  `console.error: Invalid DOM property \`readonly\`. Did you mean \`readOnly\`?`.
+  It raises it **once per prop name per process, on whichever render comes
+  first, in either state** — which is worth stating precisely, because measuring
+  it in a single process reports the second state as silent and makes the warning
+  look state-dependent. It is not.
+- **qwik** (`@qwik.dev/core` 2.0.0-beta.38) — its client patch consults its own
+  `isBooleanAttr` to choose between `element[key] = parseBoolean(v)` and
+  `directSetAttribute(element, key, v)`, and the latter stringifies `true`.
+  `isBooleanAttr` is `<a 24-name list> && key in element`, and **the two failing
+  names fail different halves of that conjunction**: `hidden` is the only one of
+  the fourteen missing from the list, while `readonly` is *on* the list and fails
+  `key in element`, because the DOM property is `readOnly`. Qwik's SSR path has no
+  boolean table at all and serves all fourteen identically; the divergence is
+  activation-side only.
+
+**NEITHER IS UPSTREAM.** React supports all three under `autoFocus`/`autoPlay`/
+`readOnly`, so the react half is **our emitter's defect**. Qwik's attribute table
+is Qwik's own and is internally consistent — a framework is not defective for
+behaviour inside its own design envelope, and nothing here was filed against it.
+
+**Why the admission rule could not see any of this.** Clause 3 required the
+lowercase spelling to reach the browser DOM property — **"either because they are
+identical, or because Angular's own `mapPropName` maps it"**. That second half is
+the hole. `mapPropName` is an **Angular runtime** fact; it can only ever establish
+that *Angular* reaches the property, and the set is read as if it were
+lane-neutral. `readonly` is the only name that clause ever admitted, and
+`readonly` is now the name that fails through two lanes. Clauses 1–4 caught
+`nomodule` and `seamless` by asking whether the **DOM** would accept them; nobody
+asked whether each **lane** would.
+
+**The repair as shipped, and the two options that were REFUSED on measurement.**
+
+- **Refused — removal from the admitted set.** Only the Angular emitter branches
+  on `kind` (solid does too, but guarded by `name === 'value'`), so removal is an
+  **Angular-only** change: it cannot alter what react or qwik serve and therefore
+  repairs nothing. What it *would* do is send Angular back down `[attr.name]`,
+  where domino gives `<div hidden="false">` **with `.hidden === true`** — entry
+  10's own inversion, reintroduced into the one lane that is currently correct.
+  Strictly worse, and measured rather than argued.
+- **Refused — a casing map as the whole answer.** It repairs react and cannot
+  touch qwik, which has no alternative spelling to map. **The qwik rows are the
+  proof this was never a React special case.**
+- **Shipped.** (a) The casing map in react's `jsxName`, which is where `class` →
+  `className` and `for` → `htmlFor` already lived — so the claim that no emitter
+  in this repo carried a casing map was false. (b) **Clause 3 amended** to drop
+  the `mapPropName` escape hatch as a portability argument, and **clause 5 added**:
+  every lane's own serializer, executed, must agree in both states. (c) A second,
+  explicitly per-lane set, `LANE_PORTABLE_BOOLEAN_ATTRIBUTES` — twelve names —
+  because one set was answering two different questions.
+
+**The instruments, and their calibration.** `packages/compiler/test/enriched-ir.test.ts`
+executes **four** of the six lanes' serializers — react, solid, vue and svelte —
+where the predecessor recorded that "react-dom is the one lane whose serializer is
+callable from this package"; that was inherited, not measured. Qwik is measured at
+its deciding function, extracted from its shipped bundle, and the extraction
+**throws a named diagnostic rather than returning an empty list** if the shape
+moves. Angular is measured at its own `DomElementSchemaRegistry`. The react map is
+asserted **equal to the set react-dom actually rejects**, executed — so a react
+release that renames a prop moves the map or goes red. Watched red in **both**
+directions on both sets, and on the qwik extraction, before being reported green.
+
+**What is NOT proven.** No served payload observes any of this: S9 binds
+`disabled` and `required`, both portable, and registering a fixture for a
+non-portable name is precisely what the portable set forbids. Qwik's row is
+derived from its own source and from T050's real-build e2e measurement of
+`hidden`, not from a standalone qwik render — its SSR renderer refuses to run
+without a real client build manifest, and hand-rolling one is a trap this repo has
+already paid for. **And the react repair is not clean in bytes:** react lowercases
+`autoFocus` on the way out but writes `autoPlay` and `readOnly` to the payload
+**camelCase**, which the live-DOM oracle cannot see and which
+`startTagCarriesAttribute` — a case-sensitive read of served bytes — would. Today
+S9 reads served bytes only in the false state, where every lane is absent. That
+cost is registered as a test, not as a promise.
+
+---
+
 ## Closed, for the record
 
 **`findings-001` — `engines.node: ">=20"` was false.** The toolchain cannot load
@@ -1527,8 +1660,9 @@ matrix proved green rather than from the error message's claim.
 | 10  | **product defect — CLOSED**     | **removed**, not contained: boolean content attributes reach Angular as `[disabled]`, not `[attr.disabled]` (T049), and S9 gives the lowering a **served payload** — six lanes byte-identical on *absent* → `disabled=""` → *absent*, at a state cell and inside a keyed repeat (T050) | none for the defect — the six registered mutants are witnessed by `pnpm mutate:corpus`, and a survivor re-opens it on that lane |
 | 11  | **product defect — CLOSED**     | **removed**, not contained: the accidental `\|\| fn.async` is gone from the Solid validator and the across-await lowering is proven by running it (T046) | none for the defect — but no **served** payload observes an async handler yet, which is a corpus card, not a repair |
 | 12  | **product defect — OPEN**       | **half removed**: the `await` survives re-analysis (T047), but the emitted handler reads a **stale render closure** after the boundary and **drops the pre-await write** — both measured against real `react-dom`, both pinned by registered tests | the lift trigger — React lowers post-await reads live and stops collapsing writes that a render can be observed between |
+| 13  | **product defect — OPEN**       | **half removed**: react's three names are repaired in `jsxName` and pinned against react-dom's own rejections; `hidden` and `readonly` are **contained** — excluded from `LANE_PORTABLE_BOOLEAN_ATTRIBUTES`, unrepairable from any emitter, because both fail inside `@qwik.dev/core`'s own `isBooleanAttr` | the lift trigger — a qwik release whose `isBooleanAttr` admits `hidden` and stops gating `readonly` on `key in element`, at which point the clause-5 matrix goes red and the portable set widens |
 
-**Entries 7, 8 and 12 are the OPEN defects in frameless's own emitted output**,
+**Entries 7, 8, 12 and 13 are the OPEN defects in frameless's own emitted output**,
 and they are the ones on this table a later reader could mistake for closed
 because their repairs are green. Entries 7 and 8 *contain* something that is still
 there — a non-neutrality in 7, an unlowerable construct in 8 — so their repairs

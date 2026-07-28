@@ -10,7 +10,7 @@ goal:
   slug: "frameless-vue-v1"
   kind: specific
   tranche: "Land a Vue lane end to end - official scaffold, emitter, gate, goldens, demo, e2e row asserting S1/S2/S3 equality with the existing three - then run the ratified idiom policy on Vue's flagship sugar now that Gate 1 and Gate 6 can resolve."
-  status: active
+  status: done
   started: >-
     STARTED 2026-07-27. T001 Scout dispatched by the PM after frameless-svelte-v1 landed its
     lane (pnpm e2e green, four rows) and ruled IR-4. This board is no longer prepped-only;
@@ -169,7 +169,7 @@ visual_board:
     url: null
     command: "npx goalbuddy board docs/goals/frameless-vue-v1"
 
-active_task: T999
+active_task: null
 
 tasks:
   - id: T001
@@ -1669,7 +1669,7 @@ tasks:
   - id: T999
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Audit whether the Vue lane satisfies the oracle and the full owner outcome."
     inputs:
@@ -1688,40 +1688,27 @@ tasks:
       - "next task if not complete"
     receipt:
       result: done
-      decision: not_complete
-      full_outcome_complete: false
+      decision: complete
+      full_outcome_complete: true
       harness: claude-code
-      note: notes/T999-vue-audit.md
-      rationale: "Oracle PASSES and it was verified MECHANICALLY, not by inheritance: e2e.mjs:39 carries the vue row, :426-440 ASSERTS cross-lane observation equality with process.exit(1), and readThreeWayResults refuses vacuity (box passed, activation matches the declaration, every scenario observed). The contract diff since 5ca20c7 is purely additive - no neutrality check weakened, both total Records still total. Goldens are byte-identical to the demo copies and are really activated in Chromium under a planted-hydration-mismatch calibration. NOT COMPLETE on one tranche clause: the flagship sugar (v-model/defineModel) has no six-gate ruling, T002's dissent prediction assigned to T005 is undischarged, and the shipped no-two-way-binding message justifies its defineModel limb by citing worked example 3, which rules defineEmits."
-      summary: "The Vue lane satisfies its oracle and every stated constraint. Completion is withheld for the unmet flagship-sugar ruling (defineModel/v-model) and its consequence in a live gate message. This is one bounded ruling plus its fold, not open-ended work."
-      THE_TRANCHE_HAS_TWO_CLAUSES_AND_ONLY_ONE_IS_DONE: "PM VERIFIED BOTH LINES IN SOURCE. state.yaml:12 reads '...then run the ratified idiom policy on Vue's FLAGSHIP SUGAR now that Gate 1 and Gate 6 can resolve', and state.yaml:117 defines flagship sugar unambiguously as 'v-model / defineModel'. T005 ran the policy on worked example 2 (the shorthands) and T007 on worked example 3 (defineEmits). BOTH ARE VALUABLE AND NEITHER IS THE FLAGSHIP. docs/emitter-idiom-policy.md carries entries 1 through 11b with NO defineModel entry - it appears only as a passing illustration under Gate 2. This is the kind of gap a board closes by accident: two real rulings landed, both cited the tranche, and neither was the one the tranche named."
-      THE_SHIPPED_CONSEQUENCE_PM_VERIFIED_IT: "packages/frameworks/vue/src/gate/index.ts:998 fires the no-two-way-binding message for V-MODEL and justifies it with 'worked example 3 is already ruled DENIED at Gate 5'. WORKED EXAMPLE 3 RULES defineEmits - A DIFFERENT MACRO. A correct rule resting on a BORROWED REASON, in a user-facing string, read at the exact moment someone decides whether to trust it. It is the same defect T008 was dispatched to repair for the OTHER limb of the same rule, still live in the first limb."
-      the_undischarged_prediction: "T002's dissent recorded a specific, ASSIGNED prediction: 'PREDICTS defineModel is DENIED at Gate 2, not deferred ... a prediction for T005 to TEST, not a finding.' T005 tested a different entry. The prediction was neither discharged nor withdrawn. A prediction left hanging is how a board convinces itself a question was answered."
-      the_procedural_point_that_makes_this_more_than_a_missing_document: "state.yaml:23-36's binding inherited text says IR-4 MAY NOT BE INVOKED AS A BLOCKER BEFORE G2-G5 HAVE BEEN SCORED AGAINST A REAL EMITTER. For defineModel they never have been. The board is carrying 'blocked by IR-1 and IR-4' as INHERITED PROSE about the exact question its own rule says must be measured."
-      spot_checks_one_per_task_all_held: "The audit re-derived rather than certified. T005: re-measured @vue/compiler-core's ondirname and re-ran the codegen equivalence against a mechanical longhand twin - byte-identical across all four ssr x isProd modes, 0 errors and 0 tips both ways, with a planted control that DOES differ. T006: confirmed BASELINE_FORM_INVENTORY's contract is satisfied (the four goldens carry zero longhand, zero '#', zero '.prop') and that the longhand twin still draws BOTH detectors; also confirmed the gate-fooling defect was real - '.checked=\"checked\"' compiles with 0 errors and 0 tips, so the frameless rawName policy is the only thing separating it from ':'. T007: verified the G5 throw arm's premise directly off the emitted text. T008: confirmed the refuted sentence is gone and the replacement is pinned by a test calibrated red against the old string."
-      it_adjudicated_an_open_question_rather_than_deferring_it: "T007 left 'the native-click arm was jsdom, not Chromium' as missing evidence. THE AUDIT RULED IT SUFFICIENT, with reasoning: the G5 FAIL rests on the throw arm alone, whose premise is visible in the shipped output (generated/S1.vue declares onTrace via defineProps and calls props.onTrace(...) unguarded), so the TypeError-vs-silent-no-op delta is a property of the emitted text plus Vue's props/attrs partition - not of layout or event dispatch. Recorded as an optional cheap re-take, NOT as owed evidence. Closing an open question with a reason is worth more than carrying it forward politely."
-      evidence:
-        - "scripts/e2e.mjs:39 vue row; :426-440 asserted equality with process.exit(1); threeWayScenarios = s1..s4"
-        - "scripts/corpus-mutation.mjs readThreeWayResults - throws on a non-passed box, an activation mismatch, or any scenario with no observations"
-        - "git diff 5ca20c7..41aaed0 -- three-way-contract.ts scripts/e2e.mjs - additive only; both tables still total Readonly<Record<...>>"
-        - "sha256 pairs: generated/{S1,S2,S3,S4}.vue == demos/vue-official/src/emitted/{RenderOnce,KeyedTodo,EventForm,NestedBoard}.vue, 4 of 4 identical"
-        - "demos/vue-official/scenarios.box.ts calibrateDevSink - plants kit:2 -> kit:999 in the REAL S1 payload, requires a warn-level [Vue warn] Hydration capture, then asserts the DOM patched back to kit:2"
-        - "@vue/compiler-core@3.5.40 ondirname - '.'|':' -> bind, '@' -> on, '#' -> slot; modifiers pre-seeded with 'prop' for '.'; rawName is the ONLY discriminator"
-        - "Judge probe: S3 golden vs mechanical longhand twin - byte-identical template codegen 4/4 modes, planted control differs; '.prop' mutant compiles with 0 errors 0 tips"
-        - "packages/frameworks/vue/test/gate.test.ts - the longhand twin asserts BOTH require-directive-shorthand and baseline-form-inventory"
-        - "packages/frameworks/vue/generated/S1.vue - defineProps([...,'onTrace']) plus unguarded props.onTrace('setup', ...): the declared-prop premise T007's G5 throw arm rests on"
-        - "PM VERIFIED: state.yaml:12 (tranche clause 2) and :117 (flagship sugar = v-model/defineModel); gate/index.ts:998 citing worked example 3 on the v-model limb"
+      note: notes/T999-vue-final-audit.md
+      rationale: "Flagship-sugar clause DISCHARGED and the discharge itself was CHECKED rather than accepted. Policy entries 12a and 12b each carry an independent six-gate scoring, both DENIED, both deciding at G5, no limb citing another entry's grounds. The Judge REPRODUCED both deciding measurements at vue@3.5.40 instead of reading T011's: baseline PROPS|NEED_HYDRATION -> v-model alone NEED_PATCH, and the mergeModels collision compiling at 0 parse errors. Oracle passes: vue row present, eight scenarios, equality ASSERTED with process.exit(1), goldens 8/8 byte-identical to the activated demo copies, pnpm test 1015/51."
+      summary: "Vue is a fifth frameless target with proven activation neutrality on official tooling and a ruling of record for its flagship sugar. Board complete. Three stale corpus counts carried to umbrella T048 rather than swept by a fourth prose-only card."
+      changed_files:
+        - docs/goals/frameless-vue-v1/notes/T999-vue-final-audit.md
+      commands:
+        - cmd: "pnpm test"
+          status: pass
+          note: "1015 passed / 51 files, re-run by the Judge itself"
+      IT_DECLINED_TO_BE_THE_FOURTH_PROSE_CARD: "S9 falsified the UNCHECKED TWINS of both instrumented figures: policy :1317-1321 and :1347 still say 'seventeen', and the vue emitter's propsDeclaration comment still says 'SEVENTEEN values ... seven goldens'. All false at HEAD. The Judge could have opened a Vue card and swept them - T013 and T014 were ALREADY two consecutive prose-only cards - and ruled that a fourth hand-sweep LEAVES THE CLASS AS OPEN AS IT FOUND IT. It named the durable pattern instead, from this same file: T014's stopPropagation comment says 'the size of that corpus is not a literal this comment owns' and is STILL TRUE at HEAD (re-measured: 0 stopPropagation, 8 preventDefault, all in s3). Carried to umbrella T048, which already holds six same-class sites."
+      AND_THE_CHECKED_HALF_WENT_RED_LOUDLY: "Nothing here is green-while-false, which is the distinction that lets this close. At 48ee449 the SHIPPED gate messages said 'seven-scenario' and 'SEVENTEEN'; against the eight-scenario derivation those go RED BY CONSTRUCTION, and the whole correction was a four-line diff (T052). The prose that remains false is prose NO INSTRUMENT CLAIMS TO CHECK. That is the entire argument for closing with three known-false sentences in the tree, and the Judge made it explicitly rather than eliding them."
+      a_sharpening_of_T012s_refusal: "T012 refused to derive 12b's 'applies to ZERO' because a derived zero can only be zero by construction - UPHELD. But the GROUND beneath the zero (single prop:props node, writable=false, zero writes) IS corpus-checkable and non-vacuous; the Judge verified it 8/8 including S9. Today it is pinned only as string containment at gate.test.ts:715-716. Pinning the FACT would make 12b's own re-open trigger self-firing."
       missing_evidence:
-        - "No six-gate ruling of record for Vue defineModel/v-model - the tranche's second clause and state.yaml:117's named flagship sugar."
-        - "T002's dissent prediction ('defineModel is DENIED at G2, meaning IR-4 was never its blocker'), explicitly assigned to T005 to TEST, is undischarged and unwithdrawn."
-        - "The shipped no-two-way-binding message justifies its defineModel limb by citing worked example 3, which rules defineEmits."
-        - "OPTIONAL, NOT OWED: T007's native-click arm was jsdom-only. RULED SUFFICIENT - a Chromium re-take is cheap but not required."
-        - "CARRIED FORWARD, NOT INTRODUCED HERE: vue-tsc does not reach the prop contract (IR-8), and pnpm e2e still pins modes ['dev'] on every lane."
-      pm_owes_re_verification_before_closure: "The audit's oracle run is on 41aaed0, but S5 is landing across six lanes right now. AT CLOSURE the PM must re-run pnpm e2e, pnpm test:browser and pnpm mutate:corpus on the then-current clean tree - a five-scenario corpus changes the observation count, and the Vue row must be read against the react row per scenario again. Recorded as a PM obligation, not a Worker's."
-      pm_note_on_the_read_only_reading: "The Judge DECLINED to write its own note file, treating any write as a breach of the read-only contract, even though its dispatch explicitly permitted that one path and three preceding Judges wrote theirs under identical wording. The PM transcribed the reasoning into notes/T999-vue-audit.md. The stricter reading is defensible and cost only a transcription - but the next Judge dispatch will say 'you MUST write your note to this path' rather than 'you MAY', which removes the ambiguity."
-      worker_package: null
-      spawned_tasks:
-        - T009
+        - "pnpm e2e, test:browser and mutate:corpus were the PM's runs at fecd97f, not this Judge's - a 48-cell mutation run was live and the dispatch forbade them."
+        - "Three corpus counts false at HEAD and unchecked: docs/emitter-idiom-policy.md:1317-1321 and :1347; packages/frameworks/vue/src/emitter/index.ts propsDeclaration doc. No verdict moves."
+        - "12b's stated ground is asserted only as string containment; the fact itself is unpinned though verified 8/8 here."
+        - "CARRIED FORWARD, NOT INTRODUCED: IR-8; pnpm e2e pins modes ['dev'] on every lane; T007's native-click arm remains jsdom-only and was ruled sufficient."
+      stopped_because: "Board complete."
 checks:
   dirty_fingerprint: unknown
   last_verification:

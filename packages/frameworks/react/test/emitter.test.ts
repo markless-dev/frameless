@@ -21,7 +21,7 @@ import {
 	compositionFixtures,
 	emitCompositionFixture,
 } from '../scripts/regenerate-composition.ts';
-import { emit, validateEnrichedIr } from '../src/emitter/index.ts';
+import { emit, reactPropSpellings, validateEnrichedIr } from '../src/emitter/index.ts';
 import { formatEmitted } from '../src/format-emitted.ts';
 import { checkSources } from '../src/gate/index.ts';
 
@@ -2023,5 +2023,218 @@ export function SyncProbe({ onTrace }) @{
 			mutate(ir);
 			expect(() => validateEnrichedIr(ir)).toThrow(message);
 		});
+	});
+});
+
+/**
+ * T051. `docs/DEFECTS.md` entry 11, and the react half of a two-lane finding.
+ *
+ * THE DEFECT. `DOM_BOOLEAN_CONTENT_ATTRIBUTES` admits fourteen names on an
+ * admission rule that asked what the BROWSER DOM accepts. Three of them are not
+ * react props under their lowercase spelling, so this emitter produced JSX that
+ * react-dom SILENTLY DROPPED in both states while raising `console.error:
+ * Invalid DOM property`. They passed every clause, lowered to `kind: 'property'`
+ * correctly, and emitted valid-LOOKING JSX. Nobody had asked what each LANE does.
+ *
+ * WHY THE MAP IS NOT A HAND LIST. A hand-written casing map is exactly the shape
+ * that rotted here in the first place - it would be right on the day it is
+ * written and unfalsifiable afterwards. So the registration below EXECUTES
+ * react-dom over every admitted name and asserts the map is EQUAL to the set
+ * react-dom actually rejects. Adding a name to the map that react accepts goes
+ * red; dropping one react rejects goes red; a react release that renames a prop
+ * goes red. That is the two-sidedness the card asked for, and it is why this is
+ * an instrument rather than a comment.
+ */
+describe('react prop spellings for the admitted boolean content attributes', () => {
+	const HOST: Readonly<Record<string, string>> = {
+		async: 'script',
+		autofocus: 'input',
+		autoplay: 'video',
+		controls: 'video',
+		default: 'track',
+		defer: 'script',
+		disabled: 'button',
+		hidden: 'div',
+		loop: 'video',
+		multiple: 'select',
+		open: 'details',
+		readonly: 'input',
+		required: 'input',
+		reversed: 'ol',
+	};
+
+	interface Reading {
+		readonly bytes: string;
+		readonly live: string | null;
+		readonly warned: boolean;
+	}
+
+	/**
+	 * EVERY REACT READING IN THIS SUITE COMES FROM ONE PASS, AND THAT IS FORCED.
+	 *
+	 * react-dom DEDUPLICATES `Invalid DOM property` per prop name per process, so
+	 * the SECOND render of `readonly={...}` is silent no matter what the first one
+	 * did. A suite that re-rendered per assertion would therefore "measure" the
+	 * warning as absent and quietly lose the loudest half of the finding. So the
+	 * whole table is taken once, memoised, and asserted against afterwards.
+	 *
+	 * The FALSE state is rendered BEFORE the true one for each name, deliberately:
+	 * it is the only ordering under which "react does not warn about a falsy
+	 * unknown prop" is observable rather than an artifact of the dedup.
+	 */
+	let table: Promise<Record<string, Record<'true' | 'false', Reading>>> | undefined;
+
+	function readings(): Promise<Record<string, Record<'true' | 'false', Reading>>> {
+		table ??= (async () => {
+			const [{ createElement }, server] = await Promise.all([
+				import('react'),
+				import('react-dom/server.node'),
+			]);
+			const renderToStaticMarkup = (
+				server as unknown as { renderToStaticMarkup: (element: unknown) => string }
+			).renderToStaticMarkup;
+			const measured: Record<string, Record<'true' | 'false', Reading>> = {};
+			const probe = (prop: string, host: string, value: boolean, read: string): Reading => {
+				const captured: string[] = [];
+				const original = console.error;
+				console.error = (...args: unknown[]) => void captured.push(args.map(String).join(' '));
+				let html: string;
+				try {
+					html = renderToStaticMarkup(createElement(host, { [prop]: value }));
+				} finally {
+					console.error = original;
+				}
+				const startTag = /<[A-Za-z][^>]*>/.exec(html)?.[0] ?? '';
+				const tokens = [
+					...startTag.matchAll(/([A-Za-z_:][-A-Za-z0-9_:.]*)(?:="([^"]*)")?/g),
+				].slice(1);
+				const hit = tokens.find((token) => token[1]!.toLowerCase() === read.toLowerCase());
+				return { bytes: startTag, live: hit ? (hit[2] ?? '') : null, warned: captured.length > 0 };
+			};
+			for (const [name, host] of Object.entries(HOST)) {
+				const canonical = reactPropSpellings().get(name) ?? name;
+				measured[name] = {
+					false: probe(name, host, false, name),
+					true: probe(name, host, true, name),
+				};
+				measured[`canonical:${name}`] = {
+					false: probe(canonical, host, false, name),
+					true: probe(canonical, host, true, name),
+				};
+			}
+			return measured;
+		})();
+		return table;
+	}
+
+	test('CALIBRATION: the map is EXACTLY the admitted names react-dom rejects', async () => {
+		const measured = await readings();
+		// Rejected means BOTH arms: react warned AND served nothing in EITHER state.
+		// A name that warned but still served, or served nothing silently, is a
+		// third thing and must not be quietly folded into this map. The warning is
+		// read off the FALSE row because that is the FIRST render of each name and
+		// react dedups every one after it - see the memo above.
+		const rejected = Object.keys(HOST).filter(
+			(name) =>
+				measured[name]!.false.warned &&
+				measured[name]!.true.live === null &&
+				measured[name]!.false.live === null,
+		);
+		const mapped = [...reactPropSpellings().keys()].filter((name) => name in HOST);
+		const sorted = (names: readonly string[]): string[] => [...names].sort();
+		expect(sorted(mapped)).toEqual(sorted(rejected));
+		expect(sorted(rejected)).toEqual(['autofocus', 'autoplay', 'readonly']);
+	});
+
+	test('RED, WITNESSED: the lowercase spellings serve NOTHING in either state', async () => {
+		const measured = await readings();
+		for (const name of ['autofocus', 'autoplay', 'readonly']) {
+			expect(measured[name]!.true.live, `${name}={true} lowercase`).toBeNull();
+			expect(measured[name]!.false.live, `${name}={false} lowercase`).toBeNull();
+		}
+		// WHEN THE WARNING FIRES, MEASURED RATHER THAN ASSUMED - and the first
+		// answer was wrong. It looked like "the true state only", which would have
+		// meant `consoleErrors: 0` could catch this ONLY in a scenario that set the
+		// boolean. It is not: re-measured in fresh processes rendering each state
+		// FIRST, react warns on whichever render comes first and dedups the rest.
+		// So the budget catches it in EITHER state - and the "true only" reading
+		// was itself an artifact of the dedup this suite is memoised to avoid.
+		expect(
+			Object.fromEntries(
+				['autofocus', 'autoplay', 'readonly'].map((name) => [
+					name,
+					{ first: measured[name]!.false.warned, deduped: measured[name]!.true.warned },
+				]),
+			),
+		).toEqual({
+			autofocus: { first: true, deduped: false },
+			autoplay: { first: true, deduped: false },
+			readonly: { first: true, deduped: false },
+		});
+	});
+
+	test('GREEN: the mapped spellings serve the attribute, silently, in both states', async () => {
+		const measured = await readings();
+		for (const name of reactPropSpellings().keys()) {
+			if (!(name in HOST)) continue;
+			const row = measured[`canonical:${name}`]!;
+			expect(row.true.warned || row.false.warned, `${name} warned`).toBe(false);
+			expect(row.true.live, `canonical ${name}={true}`).toBe('');
+			expect(row.false.live, `canonical ${name}={false}`).toBeNull();
+		}
+	});
+
+	/**
+	 * The COST, asserted rather than promised. React lowercases `autoFocus` on the
+	 * way out but writes `autoPlay` and `readOnly` to the payload CAMELCASE. The
+	 * live reading above is unaffected - HTML attribute names are case-insensitive
+	 * to a parser - but `startTagCarriesAttribute` in the three-way contract reads
+	 * served BYTES case-sensitively. Pinning it here means that the day a scenario
+	 * reads served bytes in the TRUE state, this test is the explanation waiting
+	 * for it instead of a fresh investigation.
+	 */
+	test('COST: two of the three canonical spellings reach the payload CAMELCASE', async () => {
+		const measured = await readings();
+		expect(
+			Object.fromEntries(
+				['autofocus', 'autoplay', 'readonly'].map((name) => [
+					name,
+					/[A-Za-z][-A-Za-z0-9]*=""/.exec(measured[`canonical:${name}`]!.true.bytes)![0],
+				]),
+			),
+		).toEqual({
+			autofocus: 'autofocus=""',
+			autoplay: 'autoPlay=""',
+			readonly: 'readOnly=""',
+		});
+	});
+
+	test('the emitted JSX carries the canonical spellings and NOT the lowercase ones', async () => {
+		const source = emit(
+			await buildEnrichedIr({
+				filename: 'probe.tsrx',
+				source: `import { state } from '@markless/core';
+
+export function Probe({ seed }) @{
+	let a = state(seed);
+
+	<div data-probe>
+		<input readonly={a} autofocus={a} />
+		<video autoplay={a}></video>
+		<button disabled={a}></button>
+	</div>
+}
+`,
+			}),
+		);
+		expect(source).toContain('readOnly={a}');
+		expect(source).toContain('autoFocus={a}');
+		expect(source).toContain('autoPlay={a}');
+		// The defect's own byte sequences, named absent rather than merely unmentioned.
+		expect(source).not.toContain('readonly={a}');
+		expect(source).not.toContain('autofocus={a}');
+		expect(source).not.toContain('autoplay={a}');
+		// The control: an admitted name react already spells lowercase must NOT move.
+		expect(source).toContain('disabled={a}');
 	});
 });

@@ -131,7 +131,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T051
+active_task: T029
 
 tasks:
   - id: T001
@@ -4668,20 +4668,53 @@ tasks:
       - "Replace each ordinal with the SYMBOL it already names. Do not renumber, restructure or re-score any worked example."
       - "GREP CANNOT SEE ALL OF THEM. T014 found two - `(:766)` and `(:743)` - that do not match the obvious index\\.ts:[0-9]+ pattern. Search for bare parenthesised ordinals too, or the verify will pass while missing the point."
       - "Documentation only. No behaviour, no assertion, no golden may move."
+    SECOND_CLAUSE_ADDED_BY_frameless_vue_v1_T999_AUTHORITATIVE: >-
+      S9 FALSIFIED THE UNCHECKED TWINS OF TWO INSTRUMENTED FIGURES. The Vue gate's shipped messages
+      were pinned by a derived test, went RED loudly, and were corrected in four lines (T052). Their
+      unchecked prose twins were not, and are FALSE AT HEAD: docs/emitter-idiom-policy.md:1317-1321
+      and :1347 (12b's Gate 4 SCORING sentence) still say "seventeen printed entries" against
+      nineteen, and packages/frameworks/vue/src/emitter/index.ts's propsDeclaration doc comment
+      still says "today SEVENTEEN values ... seven goldens" against nineteen and eight.
+      NO VERDICT MOVES - 12a's "one of eight" is true, 12b's zero holds, G5 decides both.
+    why_the_Vue_Judge_REFUSED_to_sweep_these_itself: >-
+      It could have opened a Vue card and fixed them in minutes. It ruled that a fourth consecutive
+      prose-only hand-sweep - T012, T013 and T014 were already three - LEAVES THE CLASS AS OPEN AS
+      IT FOUND IT. Three tasks have now paid this tax and the fourth would buy nothing durable.
+      THE RATIFIED PATTERN ALREADY EXISTS IN THE SAME FILE: T014's stopPropagation comment says
+      "the size of that corpus is not a literal this comment owns", and the Judge re-measured it
+      STILL TRUE at HEAD (0 stopPropagation, 8 preventDefault, all in s3) while every literal
+      neighbour rotted. So prefer OWN NO SIZE; extend the existing gate.test.ts derivation to these
+      two files only if a count must genuinely be stated.
+    the_distinction_that_let_the_Vue_BOARD_CLOSE_over_these: >-
+      NOTHING HERE IS GREEN-WHILE-FALSE. The instrumented half went red by construction and was
+      repaired; what remains is prose NO INSTRUMENT CLAIMS TO CHECK. That is a different and lesser
+      defect than the one T011 withheld a lane's completion over, and the difference is the whole
+      reason these could be carried rather than blocking.
+    optional_strengthening_recorded_not_required: >-
+      frameless-vue-v1 T012 REFUSED to derive 12b's "applies to ZERO", because a derived zero can
+      only be zero by construction - UPHELD. But the GROUND beneath the zero (single prop:props
+      node, writable=false, zero writes) IS corpus-checkable and non-vacuous; T999 verified it 8/8
+      including S9. Today it is pinned only as string containment at vue/test/gate.test.ts:715-716.
+      PINNING THE FACT WOULD MAKE 12b's OWN RE-OPEN TRIGGER SELF-FIRING. Not required to close.
     allowed_files:
       - docs/emitter-idiom-policy.md
+      - packages/frameworks/vue/src/emitter/index.ts
       - docs/goals/frameless-defects-and-targets-v1/notes/T024-corpus-breadth.md
       - docs/goals/frameless-defects-and-targets-v1/notes/T048-remaining-ordinals.md
     verify:
       - "pnpm test"
       - "pnpm lint"
       - "grep -nE '[a-z]\\.ts:[0-9]+|\\(:[0-9]+\\)' docs/emitter-idiom-policy.md   # only the third-party artifact citation may remain"
-      - "git diff --exit-code -- packages/ demos/ scripts/   # documentation only"
+      - "git diff --exit-code -- demos/ scripts/ packages/compiler/   # only the vue emitter COMMENT may move under packages/"
+      - "git diff --exit-code -- packages/frameworks/*/generated packages/compiler/test/goldens   # no emitted or golden byte"
+      - "grep -rn 'SEVENTEEN|seventeen|seven goldens|seven-scenario' docs/emitter-idiom-policy.md packages/frameworks/vue/src/emitter/index.ts   # must be empty"
     stop_if:
       - "Need files outside allowed_files."
       - "You are about to touch the Angular _debug_node-chunk.mjs citation or a board receipt's historical ordinal. Both are RULED correct as written."
       - "Any code, assertion or golden moves."
       - "You find a citation whose symbol name is AMBIGUOUS or absent - report it rather than inventing one."
+      - "A count you are asked to correct turns out to CHANGE A VERDICT rather than just a number. T999 measured that none of them do; if you find one that does, STOP - that is a re-score, not a prose fix."
+      - "You are about to correct a number by restating it. Prefer REMOVING the claim to owning a size, per the ratified pattern above; if a count must be stated, say so and why."
     receipt: null
 
   - id: T049
@@ -5012,7 +5045,7 @@ tasks:
   - id: T051
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     spec: "T050 receipt FINDING_1 - AUTHORITATIVE."
     objective: >-
@@ -5068,8 +5101,56 @@ tasks:
       - "Any golden or generated byte moves."
       - "You are about to weaken consoleErrors: 0, or to file this upstream against React."
       - "You find a FOURTH non-portable name. Report it verbatim - the admission rule is then wrong in a way removal cannot fix."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      note: notes/T051-react-boolean-casing.md
+      verification_attempts: 2
+      summary: "Measured all 14 admitted names in all 6 lanes by EXECUTING each lane's serializer. Confirmed the 4 non-portable names and found readonly fails through TWO lanes. Refuted both offered repairs on measurement and shipped both halves instead: react's jsxName casing map (two-sided against react-dom's own rejections), the clause-3 amendment, a new clause 5, and LANE_PORTABLE_BOOLEAN_ATTRIBUTES with a four-lane executed matrix. pnpm test 1015 -> 1024; e2e 6x8 all equal; no golden or generated byte moved. DEFECTS.md entry 13 filed OPEN."
+      changed_files:
+        - packages/compiler/src/build.ts
+        - packages/compiler/test/enriched-ir.test.ts
+        - packages/frameworks/react/src/emitter/index.ts
+        - packages/frameworks/react/test/emitter.test.ts
+        - docs/DEFECTS.md
+        - docs/goals/frameless-defects-and-targets-v1/notes/T051-react-boolean-casing.md
+      commands:
+        - cmd: "pnpm test"
+          status: pass
+          note: "1015 before, 1024 after, 51 files"
+        - cmd: "pnpm check"
+          status: pass
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 394 files"
+        - cmd: "regenerate all six lanes"
+          status: pass
+        - cmd: "git diff --exit-code -- packages/compiler/test/goldens packages/frameworks/*/generated"
+          status: pass
+          note: "exit 0, re-run after e2e"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "6 demos x 8 scenarios, all observations equal"
+        - cmd: "calibration: react map narrow/widen, portable set widen/narrow, qwik extraction"
+          status: pass
+          note: "every arm watched red"
+      BOTH_OFFERED_REPAIRS_WERE_REFUTED_ON_MEASUREMENT: "THE CARD OFFERED A CHOICE - per-lane repair OR removal from the admitted set - AND MEASUREMENT REFUTED BOTH. Removal is ANGULAR-ONLY in effect and actively reintroduces entry 10's inversion: domino yields <div hidden=\"false\"> with .hidden === true, the exact false-state-serves-truthy defect S9 exists to catch. A casing map CANNOT TOUCH QWIK, because the failure happens inside @qwik.dev/core's own isBooleanAttr, not in our emitter. So the Worker shipped BOTH HALVES - the map for react, the rule amendment plus a portable set for the rest - having shown each alone covers only part of the finding. A Worker that had picked one of the two offered options would have shipped a repair that leaves half the measured defect standing."
+      THE_QWIK_ROW_JUSTIFIED_ITSELF_AND_THEN_SOME: "The PM put the qwik hidden row at the top of the card arguing a React casing map would not have caught it. MEASUREMENT WENT FURTHER: qwik's decider is <24-name list> AND <key in element>, and READONLY FAILS BOTH LANES - dropped by react, and rejected by qwik's second conjunct because the DOM property is readOnly, not readonly. So it is FOUR NAMES ACROSS FIVE CELLS, not four cells. readonly is the ONLY one of the fourteen whose lowercase spelling is not itself a DOM property - WHICH IS EXACTLY WHAT OLD CLAUSE 3's mapPropName ESCAPE HATCH LET IN. The rule's defect and its worst instance are the same fact."
+      IT_CAUGHT_ITS_OWN_BAD_MEASUREMENT: "React's console.error initially looked STATE-DEPENDENT, which would have made the instrument look weaker than it is. That was React's own PER-NAME DEDUP, not a property of the states. Fresh processes show it fires on whichever render comes first, EITHER state - so runScenario's consoleErrors: 0 is STRONGER than the card assumed, not weaker. The Worker re-ran in clean processes rather than recording the convenient reading, and the react map is now calibrated against the corrected behaviour. consoleErrors: 0 was not weakened."
+      three_inherited_claims_corrected: "(1) qwik's isBooleanAttr is 24 names, not the 21 the PM's dispatch stated. (2) 'No emitter in this repo carries a casing map' is FALSE - React's jsxName already had one, which is why the repair had a natural home. (3) 'react-dom is the one lane callable from this package' is FALSE - four are, at ~264ms, which is why the matrix is EXECUTED rather than replayed for four of six lanes."
+      deviations:
+        - "Ledger entry numbered 13, not the card's 11: DEFECTS.md already runs to entry 12."
+        - "KEPT ALL 14 NAMES ADMITTED instead of removing the four - removal is measurably worse, see the refutation above. Recorded in build.ts, the ledger and the note."
+        - "Shipped the casing map AND the rule amendment rather than choosing one."
+        - "Added an exported LANE_PORTABLE_BOOLEAN_ATTRIBUTES predicate to build.ts because one set was answering two different questions."
+        - "Qwik and Angular measured at their own deciding tables rather than by standalone render: qwik's SSR needs a real client build manifest, angular's domino is a demo dependency unreachable from packages/compiler. Angular additionally measured BEHAVIOURALLY through S9."
+      remaining_blockers:
+        - "hidden and readonly cannot be repaired from any emitter in allowed_files - both fail inside @qwik.dev/core's own isBooleanAttr, and the qwik emitter was not in scope. Contained via the portable set; DEFECTS.md entry 13 filed OPEN."
+        - "No served payload observes the four names; registering a fixture for a non-portable name is what the portable set forbids."
+        - "React's repair writes autoPlay=\"\" and readOnly=\"\" to the payload CAMELCASE - invisible to the live-DOM oracle, visible to startTagCarriesAttribute's case-sensitive byte read. Registered as a COST: test."
+        - "NOT MINE, UNTOUCHED: docs/goals/frameless-vue-v1/state.yaml modified and notes/T999-vue-final-audit.md new - the concurrent Judge closing the Vue board."
+        - "pnpm mutate:corpus not run (forbidden by the card). Nothing committed."
+      stopped_because: null
   - id: T052
     type: pm
     assignee: PM
@@ -5399,7 +5480,7 @@ tasks:
   - id: T029
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
     objective: >-
       Close the silent omission in the shipped Qwik gate: qwik/loader-location and

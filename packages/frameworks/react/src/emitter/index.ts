@@ -1431,10 +1431,66 @@ function emitOnceGuard(
 	);
 }
 
+/**
+ * REACT'S CANONICAL PROP SPELLINGS. `class` and `for` are the two everyone knows.
+ * The other three are T051's repair, and they are the same defect one layer down.
+ *
+ * THE DEFECT. `DOM_BOOLEAN_CONTENT_ATTRIBUTES` in `@frameless/compiler` admits
+ * fourteen names, on an admission rule that asked what the DOM accepts. Three of
+ * them - `autofocus`, `autoplay`, `readonly` - are not react props at all, so
+ * react-dom 19.2.3 SERVED NOTHING IN BOTH STATES and raised
+ * `console.error: Invalid DOM property \`readonly\`. Did you mean \`readOnly\`?`,
+ * where the other five lanes served the attribute. MEASURED, both states, at
+ * react-dom 19.2.3, on the element each name is defined on:
+ *
+ *   readonly={true}  -> <input/>                 + console.error
+ *   readOnly={true}  -> <input readOnly=""/>     silent, getAttribute -> ""
+ *   disabled={true}  -> <button disabled=""/>    the unmoved control
+ *
+ * WHY THIS IS OURS AND NOT REACT'S. React supports all three under these names.
+ * We emitted the wrong spelling. It is not an out-of-envelope test and was not
+ * filed upstream.
+ *
+ * THE CONSOLE ERROR IS THE INSTRUMENT, NOT THE PROBLEM. `runScenario` requires
+ * `consoleErrors: 0`, so any corpus fixture binding one of the three would have
+ * gone red in the react lane - loudly and for the right reason. It stayed hidden
+ * only because no fixture binds them. That budget was NOT weakened.
+ *
+ * react-dom raises it ONCE PER PROP NAME PER PROCESS, on whichever render comes
+ * first, in EITHER state - measured in fresh processes rendering each state
+ * first, because measuring it in one process reports the second state as silent
+ * and makes the warning look state-dependent. It is not.
+ *
+ * COST, NAMED AND MEASURED, because it is not a clean win in bytes. React
+ * serializes `autoFocus` down to lowercase `autofocus=""`, but `autoPlay` and
+ * `readOnly` are written to the payload CAMELCASE - `<video autoPlay="">`. HTML
+ * attribute names are case-insensitive to a parser, so `getAttribute('autoplay')`
+ * reads `""` and this project's live-DOM oracle sees six equal lanes. But
+ * `startTagCarriesAttribute` in the three-way contract matches served BYTES with
+ * a case-sensitive regex, so a future scenario that reads the served payload in
+ * the TRUE state would see react's `autoPlay=""` as absent. Today S9 reads served
+ * bytes only in the FALSE state, where every lane is absent, so nothing observes
+ * this. It is recorded here rather than discovered later.
+ *
+ * Registered two-sided in `test/emitter.test.ts`, where the map is asserted EQUAL
+ * to the set of admitted names react-dom actually rejects - executed, not listed -
+ * so a react version that renames a prop moves this map or goes red.
+ *
+ * @see docs/DEFECTS.md entry 13
+ */
+const REACT_PROP_SPELLINGS: ReadonlyMap<string, string> = new Map([
+	['class', 'className'],
+	['for', 'htmlFor'],
+	['autofocus', 'autoFocus'],
+	['autoplay', 'autoPlay'],
+	['readonly', 'readOnly'],
+]);
+
+/** Exported for the two-sided registration in `test/emitter.test.ts`. */
+export const reactPropSpellings = (): ReadonlyMap<string, string> => REACT_PROP_SPELLINGS;
+
 function jsxName(name: string): string {
-	if (name === 'class') return 'className';
-	if (name === 'for') return 'htmlFor';
-	return name;
+	return REACT_PROP_SPELLINGS.get(name) ?? name;
 }
 
 function eventProp(name: string, tag: string): string {
