@@ -136,6 +136,12 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// S6 has no branch, and `<For>` over a flat list costs less than react's
 	// `.map()` arrow once no `<Show>` wrapper is in the way.
 	S6: { physicalLoc: 67, structuralNodes: 351 },
+	// S7 likewise has no handwritten reference, so this is a budget. Solid records
+	// FEWER physical lines than react and MORE structural nodes, which is the
+	// same crossover S5 showed and the reverse of S6: `<For>` is cheaper to print
+	// than react's `.map()` arrow, while every computed here becomes its own
+	// arrow-function accessor rather than a bare `const`.
+	S7: { physicalLoc: 112, structuralNodes: 578 },
 };
 
 describe('honest emitted structure comparison', () => {

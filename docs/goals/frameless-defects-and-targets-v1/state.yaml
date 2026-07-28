@@ -3986,7 +3986,7 @@ tasks:
   - id: T032
     type: judge
     assignee: Judge
-    status: queued
+    status: done
     reasoning_hint: high
     objective: "Scope the EMITTER CAPABILITY PHASE that T024 carved out of Phase F: IR-8 typed props first, then refs, effects and composition across the four blocked emitters."
     why_this_exists_and_why_it_is_NOT_phase_F: >-
@@ -4018,8 +4018,37 @@ tasks:
       - "Ordered capability sequence with the IR change each step needs"
       - "Whether emit() -> file map is ruled acceptable, with reasoning"
       - "Worker slicing, or an explicit statement that this belongs in its own goal"
-    receipt: null
-
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      harness: claude-code
+      note: notes/T032-capability-phase.md
+      rationale: "Scoped and sequenced, and re-derivation moved TWO load-bearing claims. emit() -> file map is REJECTED: the pressure is a corpus-shape artifact, not composition, and resolveModuleSet already models one component per module. IR-8's SUPPLY already exists - @tsrx/core preserves prop type annotations in the AST build.ts already reads, so no vendored compiler change. But IR-8 has never been measured SUFFICIENT, which becomes Step 0. Placed in its own goal, after T028."
+      summary: "Ordered sequence with a falsification gate first. Step 0 (no IR change) measures whether a type instrument actually goes RED on a wrong-typed prop when the type IS present. Step 1 supplies IR-8 - the ONLY schema change, and all seven exactKeys validators must move in the same slice or every lane hard-throws. Steps 2-5 need no IR change. IR-1b is an extension with a letter, not a new number, and is NOT on this critical path."
+      THE_PHASE_NOW_OPENS_WITH_A_STEP_THAT_CAN_REFUTE_IT: "THE BEST THING IN THIS RULING. IR-8 has been reached independently by FIVE paths and EVERY ONE OF THEM MEASURED AN INSTRUMENT GREEN ON AN UNTYPED PROP - vue-tsc at both checkJs settings, Angular's real AOT build with six TS7006s, svelte-check, Solid, and the Vue defineEmits re-run where the missing type field made every Gate 4 narrowing unsound. NOT ONE MEASURED AN INSTRUMENT RED ON A TYPED PROP. So the inference everyone has been carrying - add the type and the instruments will catch wrong-typed props - IS UNMEASURED. Step 0 tries to refute it, and a green negative arm in ANY lane stops the phase. Five independent arrivals at the same conclusion had made it feel established; five green measurements of the same shape are still zero measurements of the other shape."
+      THE_PM_CARD_WAS_WRONG_AGAIN_AND_THIS_IS_THE_FOURTH_TIME: "The card asserted that emit() becoming a file map 'changes a PUBLISHED emitter signature'. PM VERIFIED THE REFUTATION: all six framework packages are version 0.0.0 with private: true, and packages/cli/src/program.ts TARGET_INVENTORY lists react and solid ONLY, hardcoding .tsrx -> .jsx at :164. Nothing is published and four of the six lanes are not even reachable from the CLI. FOURTH PM-BRIEF PREMISE REFUTED BY MEASUREMENT THIS SESSION - and as with the other three, it did no damage only because the dispatch told the Judge to re-derive rather than trust it."
+      emit_to_file_map_rejected_on_evidence: "The pressure for it is a CORPUS-SHAPE ARTIFACT: the C1-C8 fixtures pack many components per file (2, 4, 2, 2, 5, 3), while demos/composition-kit/src is FIVE ONE-COMPONENT MODULES and resolveModuleSet already models exactly that, with outputPath coming from the build plan rather than from emit(). ONE COMPONENT PER .tsrx MODULE IS THE SVELTE/VUE COMPOSITION CONTRACT, and the one-export guard STAYS - reclassified from an obstacle into the format's honest constraint. What moves instead: C1-C8 re-authored as module sets, the CLI gaining four targets and a per-target extension map, and assertCompilesClean re-derived for sibling-SFC imports WITH A CALIBRATION, because it degrades to FEWER THINGS CHECKED rather than to a failure."
+      corrections_to_the_record: "The brief's line citations were stale at 2bf42b5: the composition throws are vue:1066 and angular:1220, not vue:1053 and angular:1132 - and QWIK HAS NO ONE-EXPORT CLAUSE AT ALL, which the brief implied it did. Also: IR-1's written definition names only the parent-side ComponentPropExpression.kind, and must be amended to name both halves, with the child-side per-prop write-back gap recorded as IR-1b."
+      evidence:
+        - "2bf42b5 svelte/src/emitter/index.ts:706 emit():string, :723 composition throw, :725 one-export throw, :766 assertCompilesClean; vue:1049/:1066/:1068/:1104; qwik:1353/:1372 with NO one-export clause; angular:1203/:1220/:1222"
+        - "PM VERIFIED: all six packages/frameworks/*/package.json are version 0.0.0, private true"
+        - "PM VERIFIED: packages/cli/src/program.ts:6-9 TARGET_INVENTORY = react, solid only; :164 hardcodes .tsrx -> .jsx"
+        - "packages/cli/src/node-runtime.ts:83 resolveModuleSet already wired; outputPath from the build plan, not emit()"
+        - "probe: @tsrx/core parseModule PRESERVES TSTypeAnnotation on the props ObjectPattern - TSTypeLiteral with per-prop TSPropertySignature, and TSTypeReference + sibling TSInterfaceDeclaration, zero parse errors"
+        - "packages/compiler/src/build.ts:693 propsEntries already receives params[0] and serialises AssignmentPattern defaults - the supply path exists"
+        - "composition fixtures are multi-component modules (C1=2, C2=4, C3=2, C5=2, C6=5, C7=3) while demos/composition-kit/src is five one-component modules"
+        - "goldens/s2-keyed-todo.json: single prop:props node, writable false, zero writes, shared graphNodeId by both entries"
+        - "all six emitters carry their own exactKeys validateEnrichedIr; module-set.ts:41 is a seventh copy"
+      missing_evidence:
+        - "WHETHER ANY TYPE INSTRUMENT ACTUALLY GOES RED ON A WRONG-TYPED PROP WHEN THE TYPE IS PRESENT - never measured in any lane. This is Step 0, and it can refute the phase's ordering."
+      parallel_safety:
+        safe: false
+        reason: "The capability phase's first landing touches packages/compiler/src/{schema.ts,build.ts}, seven goldens, module-set.ts and all six emitter validators. T030 is active inside packages/frameworks/** and T031 plus the corpus work are queued on the same tree."
+        pm_action: "Placed in its own goal, docs/goals/frameless-emitter-capability-v1, blocked until T028 closes Phase F. No Worker card was spawned on this board."
+      worker_package: null
+      spawned_tasks:
+        - docs/goals/frameless-emitter-capability-v1
   - id: T029
     type: worker
     assignee: Worker

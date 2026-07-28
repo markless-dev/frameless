@@ -1,0 +1,90 @@
+# GoalBuddy v2 state.yaml
+version: 2
+
+goal:
+  title: "Frameless emitter capability phase"
+  slug: "frameless-emitter-capability-v1"
+  kind: existing_plan
+  tranche: >-
+    Six steps, starting with a FALSIFICATION GATE that can stop the phase: Step 0 measures whether
+    a type instrument actually goes RED on a wrong-typed prop when the type IS present - never
+    measured in any lane. Then IR-8 supply (the only schema change), IR-8 consumption, refs,
+    effects, composition.
+  status: not_started
+  blocked_until: >-
+    frameless-defects-and-targets-v1 T028 closes Phase F. Step 1 touches packages/compiler
+    schema and build, seven goldens, module-set.ts and all six emitter validators - not provably
+    disjoint from the active T030 or the queued T031.
+  oracle:
+    signal: >-
+      Steps 0-5 complete: a per-lane falsification gate proving typed output goes RED on a
+      wrong-typed call site with a correctly-typed twin green; PropDestructuringEntry.type and
+      ComponentPropExpression.type supplied from the existing @tsrx/core annotations with all seven
+      validateEnrichedIr copies moved in the same slice; six emitters printing types; refs;
+      effects; and composition via resolveModuleSet with the one-export guard INTACT.
+    cadence: "at every step boundary"
+    final_proof: >-
+      A final audit that names, per lane, the RED it measured at Step 0 - because every existing
+      IR-8 measurement is an instrument GREEN on an UNTYPED prop, and not one is an instrument RED
+      on a TYPED one.
+  intake:
+    input_shape: existing_plan
+    authority: approved
+    proof_type: test
+    completion_proof: >-
+      Per lane, a recorded RED from a wrong-typed call site against typed emitted output, with its
+      correctly-typed twin green - plus six emitters printing types, refs and effects landed, and
+      composition resolving through resolveModuleSet with the one-export guard intact.
+    likely_misfire: >-
+      TREATING IR-8 AS ESTABLISHED. Five independent paths reached it and every one measured a
+      green on untyped props; the inference that supplying types makes the instruments catch
+      wrong-typed props is UNMEASURED. Step 0 exists to try to refute it, and a green negative arm
+      in any lane stops the phase rather than being explained away.
+    blind_spots_considered:
+      - "emit() -> file map was REJECTED on measurement: the pressure is a corpus-shape artifact (C1-C8 pack many components per file) and resolveModuleSet already models one component per module. The one-export guard STAYS."
+      - "T032's card asserted emit() changes a PUBLISHED signature. FALSE - all six framework packages are version 0.0.0 private true, and the CLI targets react and solid only."
+      - "Step 1 is the only schema change and the dangerous one: seven exactKeys validators must move together or every lane hard-throws."
+
+rules:
+  pm_owns_state: true
+  one_active_task: true
+  max_write_workers: 1
+  no_implementation_without_worker_or_pm_task: true
+  no_completion_without_judge_or_pm_audit: true
+  continuous_until_full_outcome: true
+
+agents:
+  scout: installed
+  worker: installed
+  judge: installed
+
+active_task: null
+
+tasks:
+  - id: T001
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    objective: >-
+      STEP 0, THE FALSIFICATION GATE. Hand-write typed emitted output per lane with a wrong-typed
+      call site, and require vue-tsc, svelte-check, Angular strictTemplates+AOT and tsc to go RED,
+      with a correctly-typed twin GREEN. No IR change.
+    why_this_is_first: >-
+      EVERY EXISTING IR-8 MEASUREMENT IS AN INSTRUMENT GREEN ON AN UNTYPED PROP. Five paths reached
+      IR-8 - vue-tsc at both checkJs settings, Angular's real AOT build with six TS7006s,
+      svelte-check, Solid, and the Vue defineEmits re-run where the missing type made every Gate 4
+      narrowing unsound. NOT ONE measured an instrument RED on a TYPED prop. The whole phase rests
+      on an inference nobody has tested.
+    stop_if:
+      - "A lane's negative arm comes back GREEN with the type present. That REFUTES IR-8 for that lane - report it verbatim and STOP the phase; do not proceed to Step 1 and do not explain it away."
+      - "You are about to change the IR, an emitter or a golden. Step 0 is hand-written probes only."
+      - "A correctly-typed twin goes red. That is an instrument fault, not a finding - fix the probe and say so."
+    receipt: null
+
+checks:
+  dirty_fingerprint: "not started"
+  last_verification:
+    result: unknown
+    task: null
+    commands: []

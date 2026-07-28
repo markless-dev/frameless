@@ -154,7 +154,7 @@ const LANES = [
 	},
 ];
 
-const SCENARIO_FILES = { s1: 'S1', s2: 'S2', s3: 'S3', s4: 'S4', s5: 'S5', s6: 'S6' };
+const SCENARIO_FILES = { s1: 'S1', s2: 'S2', s3: 'S3', s4: 'S4', s5: 'S5', s6: 'S6', s7: 'S7' };
 
 // ---------------------------------------------------------------------------
 // Byte-verified text surgery

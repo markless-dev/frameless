@@ -11,7 +11,7 @@
  * `onTrace` is the emitted components' trace callback. The official demos are
  * activation lanes, not analyzer lanes, so every lane passes a no-op.
  */
-export type ScenarioId = 's1' | 's2' | 's3' | 's4' | 's5' | 's6'
+export type ScenarioId = 's1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7'
 
 export const noTrace = () => {}
 
@@ -62,6 +62,18 @@ export const s6Seed = [
 export const s6Label = ' wide  load '
 
 /**
+ * S7's form seed. TWO rows whose `on` flags DIFFER: `t1` starts unchecked and
+ * `t2` starts checked, so one keyed repeat carries a `checked` binding that is
+ * false and one that is true. One row, or two rows in the same state, could not
+ * distinguish "the checkbox reflects its own row" from "every checkbox reflects
+ * the same value".
+ */
+export const s7Seed = [
+  { id: 't1', on: false },
+  { id: 't2', on: true },
+]
+
+/**
  * Maps a request URL onto a scenario id. Character-for-character the same
  * function `demos/react-official/src/App.jsx` and `demos/solid-official/src/App.jsx`
  * carry, so all three `template-ssr-*` lanes route identically.
@@ -81,5 +93,6 @@ export function scenarioFor(url: string | undefined): ScenarioId {
   if (path === 's4') return 's4'
   if (path === 's5') return 's5'
   if (path === 's6') return 's6'
+  if (path === 's7') return 's7'
   return 's1'
 }

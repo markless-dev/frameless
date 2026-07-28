@@ -55,3 +55,15 @@ export const s6Seed = [
  * emitted result, so the whitespace has to travel as DATA.
  */
 export const s6Label = ' wide  load ';
+
+/**
+ * S7's form seed. TWO rows whose `on` flags DIFFER: `t1` starts unchecked and
+ * `t2` starts checked, so one keyed repeat carries a `checked` binding that is
+ * false and one that is true. One row, or two rows in the same state, could not
+ * distinguish "the checkbox reflects its own row" from "every checkbox reflects
+ * the same value".
+ */
+export const s7Seed = [
+	{ id: 't1', on: false },
+	{ id: 't2', on: true }
+];

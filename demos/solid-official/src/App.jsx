@@ -1,6 +1,7 @@
 import { Match, Switch } from 'solid-js'
 import { BranchBoard } from './emitted/BranchBoard.jsx'
 import { EventForm } from './emitted/EventForm.jsx'
+import { FormBoard } from './emitted/FormBoard.jsx'
 import { KeyedTodo } from './emitted/KeyedTodo.jsx'
 import { NestedBoard } from './emitted/NestedBoard.jsx'
 import { RenderOnce } from './emitted/RenderOnce.jsx'
@@ -43,13 +44,23 @@ const s6Seed = [
 ]
 const s6Label = ' wide  load '
 
+// S7's form seed. TWO rows whose `on` flags DIFFER: `t1` starts unchecked and
+// `t2` starts checked, so one keyed repeat carries a `checked` binding that is
+// false and one that is true. One row, or two rows in the same state, could not
+// distinguish "the checkbox reflects its own row" from "every checkbox reflects
+// the same value".
+const s7Seed = [
+  { id: 't1', on: false },
+  { id: 't2', on: true },
+]
+
 /**
  * Maps a request URL onto a scenario id. The stock create-vite SSR scaffold
  * already threads `req.originalUrl` into `render(url)`, so branching on it here
  * mirrors the Qwik demo's `/`, `/s2`, `/s3` routes without adding a router.
  *
  * @param {string} url
- * @returns {'s1' | 's2' | 's3' | 's4' | 's5' | 's6'}
+ * @returns {'s1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7'}
  */
 export function scenarioFor(url) {
   const path = String(url ?? '')
@@ -60,6 +71,7 @@ export function scenarioFor(url) {
   if (path === 's4') return 's4'
   if (path === 's5') return 's5'
   if (path === 's6') return 's6'
+  if (path === 's7') return 's7'
   return 's1'
 }
 
@@ -84,6 +96,9 @@ export default function App(props) {
       </Match>
       <Match when={scenario() === 's6'}>
         <WhitespaceBoard seed={s6Seed} label={s6Label} onTrace={noTrace} />
+      </Match>
+      <Match when={scenario() === 's7'}>
+        <FormBoard seed={s7Seed} onTrace={noTrace} />
       </Match>
     </Switch>
   )

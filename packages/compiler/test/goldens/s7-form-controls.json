@@ -676,10 +676,10 @@
                 "body": {
                   "alternate": {
                     "end": 585,
-                    "raw": "'true'",
+                    "raw": "'held'",
                     "start": 579,
                     "type": "Literal",
-                    "value": "true"
+                    "value": "held"
                   },
                   "consequent": {
                     "end": 576,
@@ -860,23 +860,6 @@
                       "via": "direct"
                     }
                   ]
-                },
-                {
-                  "expression": {
-                    "end": 684,
-                    "name": "size",
-                    "start": 680,
-                    "type": "Identifier"
-                  },
-                  "kind": "property",
-                  "name": "value",
-                  "reads": [
-                    {
-                      "graphNodeId": "state:size",
-                      "path": [],
-                      "via": "direct"
-                    }
-                  ]
                 }
               ],
               "eventIds": [
@@ -897,30 +880,13 @@
               "dynamicBindings": [
                 {
                   "expression": {
-                    "end": 1004,
+                    "end": 987,
                     "name": "notes",
-                    "start": 999,
+                    "start": 982,
                     "type": "Identifier"
                   },
                   "kind": "attribute",
                   "name": "data-notes",
-                  "reads": [
-                    {
-                      "graphNodeId": "state:notes",
-                      "path": [],
-                      "via": "direct"
-                    }
-                  ]
-                },
-                {
-                  "expression": {
-                    "end": 1021,
-                    "name": "notes",
-                    "start": 1016,
-                    "type": "Identifier"
-                  },
-                  "kind": "property",
-                  "name": "value",
                   "reads": [
                     {
                       "graphNodeId": "state:notes",
@@ -948,9 +914,9 @@
               "dynamicBindings": [
                 {
                   "expression": {
-                    "end": 1246,
+                    "end": 1212,
                     "name": "onFirst",
-                    "start": 1239,
+                    "start": 1205,
                     "type": "Identifier"
                   },
                   "kind": "property",
@@ -990,9 +956,9 @@
               "dynamicBindings": [
                 {
                   "expression": {
-                    "end": 1426,
+                    "end": 1392,
                     "name": "onSecond",
-                    "start": 1418,
+                    "start": 1384,
                     "type": "Identifier"
                   },
                   "kind": "property",
@@ -1031,9 +997,9 @@
               "children": [
                 {
                   "expression": {
-                    "end": 1555,
+                    "end": 1521,
                     "name": "pick",
-                    "start": 1551,
+                    "start": 1517,
                     "type": "Identifier"
                   },
                   "id": "text:3",
@@ -1063,9 +1029,9 @@
               "children": [
                 {
                   "expression": {
-                    "end": 1592,
+                    "end": 1558,
                     "name": "chosen",
-                    "start": 1586,
+                    "start": 1552,
                     "type": "Identifier"
                   },
                   "id": "text:4",
@@ -1096,9 +1062,9 @@
                 {
                   "collection": {
                     "expression": {
-                      "end": 1648,
+                      "end": 1614,
                       "name": "rows",
-                      "start": 1644,
+                      "start": 1610,
                       "type": "Identifier"
                     },
                     "reads": [
@@ -1115,21 +1081,21 @@
                   "key": {
                     "expression": {
                       "computed": false,
-                      "end": 1660,
+                      "end": 1626,
                       "object": {
-                        "end": 1657,
+                        "end": 1623,
                         "name": "row",
-                        "start": 1654,
+                        "start": 1620,
                         "type": "Identifier"
                       },
                       "optional": false,
                       "property": {
-                        "end": 1660,
+                        "end": 1626,
                         "name": "id",
-                        "start": 1658,
+                        "start": 1624,
                         "type": "Identifier"
                       },
-                      "start": 1654,
+                      "start": 1620,
                       "type": "MemberExpression"
                     },
                     "reads": [
@@ -1152,21 +1118,21 @@
                             {
                               "expression": {
                                 "computed": false,
-                                "end": 1759,
+                                "end": 1725,
                                 "object": {
-                                  "end": 1756,
+                                  "end": 1722,
                                   "name": "row",
-                                  "start": 1753,
+                                  "start": 1719,
                                   "type": "Identifier"
                                 },
                                 "optional": false,
                                 "property": {
-                                  "end": 1759,
+                                  "end": 1725,
                                   "name": "id",
-                                  "start": 1757,
+                                  "start": 1723,
                                   "type": "Identifier"
                                 },
-                                "start": 1753,
+                                "start": 1719,
                                 "type": "MemberExpression"
                               },
                               "kind": "attribute",
@@ -1184,21 +1150,21 @@
                             {
                               "expression": {
                                 "computed": false,
-                                "end": 1782,
+                                "end": 1748,
                                 "object": {
-                                  "end": 1779,
+                                  "end": 1745,
                                   "name": "row",
-                                  "start": 1776,
+                                  "start": 1742,
                                   "type": "Identifier"
                                 },
                                 "optional": false,
                                 "property": {
-                                  "end": 1782,
+                                  "end": 1748,
                                   "name": "on",
-                                  "start": 1780,
+                                  "start": 1746,
                                   "type": "Identifier"
                                 },
-                                "start": 1776,
+                                "start": 1742,
                                 "type": "MemberExpression"
                               },
                               "kind": "property",
@@ -1232,21 +1198,21 @@
                         {
                           "expression": {
                             "computed": false,
-                            "end": 1700,
+                            "end": 1666,
                             "object": {
-                              "end": 1697,
+                              "end": 1663,
                               "name": "row",
-                              "start": 1694,
+                              "start": 1660,
                               "type": "Identifier"
                             },
                             "optional": false,
                             "property": {
-                              "end": 1700,
+                              "end": 1666,
                               "name": "id",
-                              "start": 1698,
+                              "start": 1664,
                               "type": "Identifier"
                             },
-                            "start": 1694,
+                            "start": 1660,
                             "type": "MemberExpression"
                           },
                           "kind": "attribute",
@@ -1320,9 +1286,9 @@
               "dynamicBindings": [
                 {
                   "expression": {
-                    "end": 2306,
+                    "end": 2272,
                     "name": "lock",
-                    "start": 2302,
+                    "start": 2268,
                     "type": "Identifier"
                   },
                   "kind": "attribute",
@@ -1364,13 +1330,13 @@
               "dynamicBindings": [
                 {
                   "expression": {
-                    "end": 2521,
+                    "end": 2492,
                     "name": "locked",
-                    "start": 2515,
+                    "start": 2486,
                     "type": "Identifier"
                   },
                   "kind": "attribute",
-                  "name": "disabled",
+                  "name": "aria-disabled",
                   "reads": [
                     {
                       "graphNodeId": "computed:locked",
@@ -1381,13 +1347,13 @@
                 },
                 {
                   "expression": {
-                    "end": 2543,
+                    "end": 2510,
                     "name": "guard",
-                    "start": 2538,
+                    "start": 2505,
                     "type": "Identifier"
                   },
                   "kind": "attribute",
-                  "name": "aria-disabled",
+                  "name": "data-held",
                   "reads": [
                     {
                       "graphNodeId": "computed:guard",
@@ -1684,10 +1650,10 @@
             "body": {
               "alternate": {
                 "end": 585,
-                "raw": "'true'",
+                "raw": "'held'",
                 "start": 579,
                 "type": "Literal",
-                "value": "true"
+                "value": "held"
               },
               "consequent": {
                 "end": 576,
@@ -1953,14 +1919,14 @@
             "operation": "assign",
             "path": [],
             "sourceSpan": {
-              "end": 2387,
+              "end": 2353,
               "filename": "src/fixtures/s7-form-controls.tsrx",
-              "start": 2383
+              "start": 2349
             },
             "value": {
-              "end": 2394,
+              "end": 2360,
               "name": "next",
-              "start": 2390,
+              "start": 2356,
               "type": "Identifier"
             },
             "via": "direct"
@@ -1992,14 +1958,14 @@
             "operation": "assign",
             "path": [],
             "sourceSpan": {
-              "end": 1101,
+              "end": 1067,
               "filename": "src/fixtures/s7-form-controls.tsrx",
-              "start": 1096
+              "start": 1062
             },
             "value": {
-              "end": 1108,
+              "end": 1074,
               "name": "next",
-              "start": 1104,
+              "start": 1070,
               "type": "Identifier"
             },
             "via": "direct"
@@ -2011,14 +1977,14 @@
             "operation": "assign",
             "path": [],
             "sourceSpan": {
-              "end": 2141,
+              "end": 2107,
               "filename": "src/fixtures/s7-form-controls.tsrx",
-              "start": 2136
+              "start": 2102
             },
             "value": {
-              "end": 2151,
+              "end": 2117,
               "raw": "'final'",
-              "start": 2144,
+              "start": 2110,
               "type": "Literal",
               "value": "final"
             },
@@ -2051,14 +2017,14 @@
             "operation": "assign",
             "path": [],
             "sourceSpan": {
-              "end": 1282,
+              "end": 1248,
               "filename": "src/fixtures/s7-form-controls.tsrx",
-              "start": 1278
+              "start": 1244
             },
             "value": {
-              "end": 1289,
+              "end": 1255,
               "raw": "'r1'",
-              "start": 1285,
+              "start": 1251,
               "type": "Literal",
               "value": "r1"
             },
@@ -2071,14 +2037,14 @@
             "operation": "assign",
             "path": [],
             "sourceSpan": {
-              "end": 1462,
+              "end": 1428,
               "filename": "src/fixtures/s7-form-controls.tsrx",
-              "start": 1458
+              "start": 1424
             },
             "value": {
-              "end": 1469,
+              "end": 1435,
               "raw": "'r2'",
-              "start": 1465,
+              "start": 1431,
               "type": "Literal",
               "value": "r2"
             },
@@ -2173,14 +2139,14 @@
             "operation": "assign",
             "path": [],
             "sourceSpan": {
-              "end": 1945,
+              "end": 1911,
               "filename": "src/fixtures/s7-form-controls.tsrx",
-              "start": 1941
+              "start": 1907
             },
             "value": {
-              "end": 1952,
+              "end": 1918,
               "name": "next",
-              "start": 1948,
+              "start": 1914,
               "type": "Identifier"
             },
             "via": "direct"
@@ -2212,14 +2178,14 @@
             "operation": "assign",
             "path": [],
             "sourceSpan": {
-              "end": 764,
+              "end": 747,
               "filename": "src/fixtures/s7-form-controls.tsrx",
-              "start": 760
+              "start": 743
             },
             "value": {
-              "end": 771,
+              "end": 754,
               "name": "next",
-              "start": 767,
+              "start": 750,
               "type": "Identifier"
             },
             "via": "direct"
@@ -2231,14 +2197,14 @@
             "operation": "assign",
             "path": [],
             "sourceSpan": {
-              "end": 2124,
+              "end": 2090,
               "filename": "src/fixtures/s7-form-controls.tsrx",
-              "start": 2120
+              "start": 2086
             },
             "value": {
-              "end": 2130,
+              "end": 2096,
               "raw": "'l'",
-              "start": 2127,
+              "start": 2093,
               "type": "Literal",
               "value": "l"
             },
@@ -2251,7 +2217,7 @@
     "events": [
       {
         "componentId": "component:0:FormBoard",
-        "eventName": "change",
+        "eventName": "input",
         "handlers": [
           {
             "expression": {
@@ -2261,155 +2227,155 @@
                   {
                     "declarations": [
                       {
-                        "end": 754,
+                        "end": 737,
                         "id": {
-                          "end": 726,
+                          "end": 709,
                           "name": "next",
-                          "start": 722,
+                          "start": 705,
                           "type": "Identifier"
                         },
                         "init": {
                           "computed": false,
-                          "end": 754,
+                          "end": 737,
                           "object": {
                             "computed": false,
-                            "end": 748,
+                            "end": 731,
                             "object": {
-                              "end": 734,
+                              "end": 717,
                               "name": "event",
-                              "start": 729,
+                              "start": 712,
                               "type": "Identifier"
                             },
                             "optional": false,
                             "property": {
-                              "end": 748,
+                              "end": 731,
                               "name": "currentTarget",
-                              "start": 735,
+                              "start": 718,
                               "type": "Identifier"
                             },
-                            "start": 729,
+                            "start": 712,
                             "type": "MemberExpression"
                           },
                           "optional": false,
                           "property": {
-                            "end": 754,
+                            "end": 737,
                             "name": "value",
-                            "start": 749,
+                            "start": 732,
                             "type": "Identifier"
                           },
-                          "start": 729,
+                          "start": 712,
                           "type": "MemberExpression"
                         },
-                        "start": 722,
+                        "start": 705,
                         "type": "VariableDeclarator"
                       }
                     ],
-                    "end": 755,
+                    "end": 738,
                     "kind": "const",
-                    "start": 716,
+                    "start": 699,
                     "type": "VariableDeclaration"
                   },
                   {
-                    "end": 772,
+                    "end": 755,
                     "expression": {
-                      "end": 771,
+                      "end": 754,
                       "left": {
-                        "end": 764,
+                        "end": 747,
                         "name": "size",
-                        "start": 760,
+                        "start": 743,
                         "type": "Identifier"
                       },
                       "operator": "=",
                       "right": {
-                        "end": 771,
+                        "end": 754,
                         "name": "next",
-                        "start": 767,
+                        "start": 750,
                         "type": "Identifier"
                       },
-                      "start": 760,
+                      "start": 743,
                       "type": "AssignmentExpression"
                     },
-                    "start": 760,
+                    "start": 743,
                     "type": "ExpressionStatement"
                   },
                   {
-                    "end": 816,
+                    "end": 799,
                     "expression": {
                       "arguments": [
                         {
-                          "end": 791,
+                          "end": 774,
                           "raw": "'size'",
-                          "start": 785,
+                          "start": 768,
                           "type": "Literal",
                           "value": "size"
                         },
                         {
-                          "end": 807,
+                          "end": 790,
                           "properties": [
                             {
                               "computed": false,
-                              "end": 805,
+                              "end": 788,
                               "key": {
-                                "end": 799,
+                                "end": 782,
                                 "name": "size",
-                                "start": 795,
+                                "start": 778,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 795,
+                              "start": 778,
                               "type": "Property",
                               "value": {
-                                "end": 805,
+                                "end": 788,
                                 "name": "next",
-                                "start": 801,
+                                "start": 784,
                                 "type": "Identifier"
                               }
                             }
                           ],
-                          "start": 793,
+                          "start": 776,
                           "type": "ObjectExpression"
                         },
                         {
-                          "end": 814,
+                          "end": 797,
                           "name": "event",
-                          "start": 809,
+                          "start": 792,
                           "type": "Identifier"
                         }
                       ],
                       "callee": {
-                        "end": 784,
+                        "end": 767,
                         "name": "onTrace",
-                        "start": 777,
+                        "start": 760,
                         "type": "Identifier"
                       },
-                      "end": 815,
+                      "end": 798,
                       "optional": false,
-                      "start": 777,
+                      "start": 760,
                       "type": "CallExpression"
                     },
-                    "start": 777,
+                    "start": 760,
                     "type": "ExpressionStatement"
                   }
                 ],
-                "end": 821,
-                "start": 710,
+                "end": 804,
+                "start": 693,
                 "type": "BlockStatement"
               },
-              "end": 821,
+              "end": 804,
               "expression": false,
               "generator": false,
               "id": null,
               "params": [
                 {
-                  "end": 705,
+                  "end": 688,
                   "name": "event",
-                  "start": 700,
+                  "start": 683,
                   "type": "Identifier"
                 }
               ],
-              "start": 699,
+              "start": 682,
               "type": "ArrowFunctionExpression"
             },
             "reads": [
@@ -2429,14 +2395,14 @@
                 "operation": "assign",
                 "path": [],
                 "sourceSpan": {
-                  "end": 764,
+                  "end": 747,
                   "filename": "src/fixtures/s7-form-controls.tsrx",
-                  "start": 760
+                  "start": 743
                 },
                 "value": {
-                  "end": 771,
+                  "end": 754,
                   "name": "next",
-                  "start": 767,
+                  "start": 750,
                   "type": "Identifier"
                 },
                 "via": "direct"
@@ -2459,155 +2425,155 @@
                   {
                     "declarations": [
                       {
-                        "end": 1090,
+                        "end": 1056,
                         "id": {
-                          "end": 1062,
+                          "end": 1028,
                           "name": "next",
-                          "start": 1058,
+                          "start": 1024,
                           "type": "Identifier"
                         },
                         "init": {
                           "computed": false,
-                          "end": 1090,
+                          "end": 1056,
                           "object": {
                             "computed": false,
-                            "end": 1084,
+                            "end": 1050,
                             "object": {
-                              "end": 1070,
+                              "end": 1036,
                               "name": "event",
-                              "start": 1065,
+                              "start": 1031,
                               "type": "Identifier"
                             },
                             "optional": false,
                             "property": {
-                              "end": 1084,
+                              "end": 1050,
                               "name": "currentTarget",
-                              "start": 1071,
+                              "start": 1037,
                               "type": "Identifier"
                             },
-                            "start": 1065,
+                            "start": 1031,
                             "type": "MemberExpression"
                           },
                           "optional": false,
                           "property": {
-                            "end": 1090,
+                            "end": 1056,
                             "name": "value",
-                            "start": 1085,
+                            "start": 1051,
                             "type": "Identifier"
                           },
-                          "start": 1065,
+                          "start": 1031,
                           "type": "MemberExpression"
                         },
-                        "start": 1058,
+                        "start": 1024,
                         "type": "VariableDeclarator"
                       }
                     ],
-                    "end": 1091,
+                    "end": 1057,
                     "kind": "const",
-                    "start": 1052,
+                    "start": 1018,
                     "type": "VariableDeclaration"
                   },
                   {
-                    "end": 1109,
+                    "end": 1075,
                     "expression": {
-                      "end": 1108,
+                      "end": 1074,
                       "left": {
-                        "end": 1101,
+                        "end": 1067,
                         "name": "notes",
-                        "start": 1096,
+                        "start": 1062,
                         "type": "Identifier"
                       },
                       "operator": "=",
                       "right": {
-                        "end": 1108,
+                        "end": 1074,
                         "name": "next",
-                        "start": 1104,
+                        "start": 1070,
                         "type": "Identifier"
                       },
-                      "start": 1096,
+                      "start": 1062,
                       "type": "AssignmentExpression"
                     },
-                    "start": 1096,
+                    "start": 1062,
                     "type": "ExpressionStatement"
                   },
                   {
-                    "end": 1155,
+                    "end": 1121,
                     "expression": {
                       "arguments": [
                         {
-                          "end": 1129,
+                          "end": 1095,
                           "raw": "'notes'",
-                          "start": 1122,
+                          "start": 1088,
                           "type": "Literal",
                           "value": "notes"
                         },
                         {
-                          "end": 1146,
+                          "end": 1112,
                           "properties": [
                             {
                               "computed": false,
-                              "end": 1144,
+                              "end": 1110,
                               "key": {
-                                "end": 1138,
+                                "end": 1104,
                                 "name": "notes",
-                                "start": 1133,
+                                "start": 1099,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 1133,
+                              "start": 1099,
                               "type": "Property",
                               "value": {
-                                "end": 1144,
+                                "end": 1110,
                                 "name": "next",
-                                "start": 1140,
+                                "start": 1106,
                                 "type": "Identifier"
                               }
                             }
                           ],
-                          "start": 1131,
+                          "start": 1097,
                           "type": "ObjectExpression"
                         },
                         {
-                          "end": 1153,
+                          "end": 1119,
                           "name": "event",
-                          "start": 1148,
+                          "start": 1114,
                           "type": "Identifier"
                         }
                       ],
                       "callee": {
-                        "end": 1121,
+                        "end": 1087,
                         "name": "onTrace",
-                        "start": 1114,
+                        "start": 1080,
                         "type": "Identifier"
                       },
-                      "end": 1154,
+                      "end": 1120,
                       "optional": false,
-                      "start": 1114,
+                      "start": 1080,
                       "type": "CallExpression"
                     },
-                    "start": 1114,
+                    "start": 1080,
                     "type": "ExpressionStatement"
                   }
                 ],
-                "end": 1160,
-                "start": 1046,
+                "end": 1126,
+                "start": 1012,
                 "type": "BlockStatement"
               },
-              "end": 1160,
+              "end": 1126,
               "expression": false,
               "generator": false,
               "id": null,
               "params": [
                 {
-                  "end": 1041,
+                  "end": 1007,
                   "name": "event",
-                  "start": 1036,
+                  "start": 1002,
                   "type": "Identifier"
                 }
               ],
-              "start": 1035,
+              "start": 1001,
               "type": "ArrowFunctionExpression"
             },
             "reads": [
@@ -2627,14 +2593,14 @@
                 "operation": "assign",
                 "path": [],
                 "sourceSpan": {
-                  "end": 1101,
+                  "end": 1067,
                   "filename": "src/fixtures/s7-form-controls.tsrx",
-                  "start": 1096
+                  "start": 1062
                 },
                 "value": {
-                  "end": 1108,
+                  "end": 1074,
                   "name": "next",
-                  "start": 1104,
+                  "start": 1070,
                   "type": "Identifier"
                 },
                 "via": "direct"
@@ -2655,108 +2621,108 @@
               "body": {
                 "body": [
                   {
-                    "end": 1290,
+                    "end": 1256,
                     "expression": {
-                      "end": 1289,
+                      "end": 1255,
                       "left": {
-                        "end": 1282,
+                        "end": 1248,
                         "name": "pick",
-                        "start": 1278,
+                        "start": 1244,
                         "type": "Identifier"
                       },
                       "operator": "=",
                       "right": {
-                        "end": 1289,
+                        "end": 1255,
                         "raw": "'r1'",
-                        "start": 1285,
+                        "start": 1251,
                         "type": "Literal",
                         "value": "r1"
                       },
-                      "start": 1278,
+                      "start": 1244,
                       "type": "AssignmentExpression"
                     },
-                    "start": 1278,
+                    "start": 1244,
                     "type": "ExpressionStatement"
                   },
                   {
-                    "end": 1334,
+                    "end": 1300,
                     "expression": {
                       "arguments": [
                         {
-                          "end": 1309,
+                          "end": 1275,
                           "raw": "'pick'",
-                          "start": 1303,
+                          "start": 1269,
                           "type": "Literal",
                           "value": "pick"
                         },
                         {
-                          "end": 1325,
+                          "end": 1291,
                           "properties": [
                             {
                               "computed": false,
-                              "end": 1323,
+                              "end": 1289,
                               "key": {
-                                "end": 1317,
+                                "end": 1283,
                                 "name": "pick",
-                                "start": 1313,
+                                "start": 1279,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 1313,
+                              "start": 1279,
                               "type": "Property",
                               "value": {
-                                "end": 1323,
+                                "end": 1289,
                                 "raw": "'r1'",
-                                "start": 1319,
+                                "start": 1285,
                                 "type": "Literal",
                                 "value": "r1"
                               }
                             }
                           ],
-                          "start": 1311,
+                          "start": 1277,
                           "type": "ObjectExpression"
                         },
                         {
-                          "end": 1332,
+                          "end": 1298,
                           "name": "event",
-                          "start": 1327,
+                          "start": 1293,
                           "type": "Identifier"
                         }
                       ],
                       "callee": {
-                        "end": 1302,
+                        "end": 1268,
                         "name": "onTrace",
-                        "start": 1295,
+                        "start": 1261,
                         "type": "Identifier"
                       },
-                      "end": 1333,
+                      "end": 1299,
                       "optional": false,
-                      "start": 1295,
+                      "start": 1261,
                       "type": "CallExpression"
                     },
-                    "start": 1295,
+                    "start": 1261,
                     "type": "ExpressionStatement"
                   }
                 ],
-                "end": 1339,
-                "start": 1272,
+                "end": 1305,
+                "start": 1238,
                 "type": "BlockStatement"
               },
-              "end": 1339,
+              "end": 1305,
               "expression": false,
               "generator": false,
               "id": null,
               "params": [
                 {
-                  "end": 1267,
+                  "end": 1233,
                   "name": "event",
-                  "start": 1262,
+                  "start": 1228,
                   "type": "Identifier"
                 }
               ],
-              "start": 1261,
+              "start": 1227,
               "type": "ArrowFunctionExpression"
             },
             "reads": [
@@ -2776,14 +2742,14 @@
                 "operation": "assign",
                 "path": [],
                 "sourceSpan": {
-                  "end": 1282,
+                  "end": 1248,
                   "filename": "src/fixtures/s7-form-controls.tsrx",
-                  "start": 1278
+                  "start": 1244
                 },
                 "value": {
-                  "end": 1289,
+                  "end": 1255,
                   "raw": "'r1'",
-                  "start": 1285,
+                  "start": 1251,
                   "type": "Literal",
                   "value": "r1"
                 },
@@ -2805,108 +2771,108 @@
               "body": {
                 "body": [
                   {
-                    "end": 1470,
+                    "end": 1436,
                     "expression": {
-                      "end": 1469,
+                      "end": 1435,
                       "left": {
-                        "end": 1462,
+                        "end": 1428,
                         "name": "pick",
-                        "start": 1458,
+                        "start": 1424,
                         "type": "Identifier"
                       },
                       "operator": "=",
                       "right": {
-                        "end": 1469,
+                        "end": 1435,
                         "raw": "'r2'",
-                        "start": 1465,
+                        "start": 1431,
                         "type": "Literal",
                         "value": "r2"
                       },
-                      "start": 1458,
+                      "start": 1424,
                       "type": "AssignmentExpression"
                     },
-                    "start": 1458,
+                    "start": 1424,
                     "type": "ExpressionStatement"
                   },
                   {
-                    "end": 1514,
+                    "end": 1480,
                     "expression": {
                       "arguments": [
                         {
-                          "end": 1489,
+                          "end": 1455,
                           "raw": "'pick'",
-                          "start": 1483,
+                          "start": 1449,
                           "type": "Literal",
                           "value": "pick"
                         },
                         {
-                          "end": 1505,
+                          "end": 1471,
                           "properties": [
                             {
                               "computed": false,
-                              "end": 1503,
+                              "end": 1469,
                               "key": {
-                                "end": 1497,
+                                "end": 1463,
                                 "name": "pick",
-                                "start": 1493,
+                                "start": 1459,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 1493,
+                              "start": 1459,
                               "type": "Property",
                               "value": {
-                                "end": 1503,
+                                "end": 1469,
                                 "raw": "'r2'",
-                                "start": 1499,
+                                "start": 1465,
                                 "type": "Literal",
                                 "value": "r2"
                               }
                             }
                           ],
-                          "start": 1491,
+                          "start": 1457,
                           "type": "ObjectExpression"
                         },
                         {
-                          "end": 1512,
+                          "end": 1478,
                           "name": "event",
-                          "start": 1507,
+                          "start": 1473,
                           "type": "Identifier"
                         }
                       ],
                       "callee": {
-                        "end": 1482,
+                        "end": 1448,
                         "name": "onTrace",
-                        "start": 1475,
+                        "start": 1441,
                         "type": "Identifier"
                       },
-                      "end": 1513,
+                      "end": 1479,
                       "optional": false,
-                      "start": 1475,
+                      "start": 1441,
                       "type": "CallExpression"
                     },
-                    "start": 1475,
+                    "start": 1441,
                     "type": "ExpressionStatement"
                   }
                 ],
-                "end": 1519,
-                "start": 1452,
+                "end": 1485,
+                "start": 1418,
                 "type": "BlockStatement"
               },
-              "end": 1519,
+              "end": 1485,
               "expression": false,
               "generator": false,
               "id": null,
               "params": [
                 {
-                  "end": 1447,
+                  "end": 1413,
                   "name": "event",
-                  "start": 1442,
+                  "start": 1408,
                   "type": "Identifier"
                 }
               ],
-              "start": 1441,
+              "start": 1407,
               "type": "ArrowFunctionExpression"
             },
             "reads": [
@@ -2926,14 +2892,14 @@
                 "operation": "assign",
                 "path": [],
                 "sourceSpan": {
-                  "end": 1462,
+                  "end": 1428,
                   "filename": "src/fixtures/s7-form-controls.tsrx",
-                  "start": 1458
+                  "start": 1424
                 },
                 "value": {
-                  "end": 1469,
+                  "end": 1435,
                   "raw": "'r2'",
-                  "start": 1465,
+                  "start": 1431,
                   "type": "Literal",
                   "value": "r2"
                 },
@@ -2957,11 +2923,11 @@
                   {
                     "declarations": [
                       {
-                        "end": 1932,
+                        "end": 1898,
                         "id": {
-                          "end": 1830,
+                          "end": 1796,
                           "name": "next",
-                          "start": 1826,
+                          "start": 1792,
                           "type": "Identifier"
                         },
                         "init": {
@@ -2970,304 +2936,304 @@
                               "async": false,
                               "body": {
                                 "alternate": {
-                                  "end": 1922,
+                                  "end": 1888,
                                   "name": "entry",
-                                  "start": 1917,
+                                  "start": 1883,
                                   "type": "Identifier"
                                 },
                                 "consequent": {
-                                  "end": 1914,
+                                  "end": 1880,
                                   "properties": [
                                     {
                                       "computed": false,
-                                      "end": 1897,
+                                      "end": 1863,
                                       "key": {
-                                        "end": 1887,
+                                        "end": 1853,
                                         "name": "id",
-                                        "start": 1885,
+                                        "start": 1851,
                                         "type": "Identifier"
                                       },
                                       "kind": "init",
                                       "method": false,
                                       "shorthand": false,
-                                      "start": 1885,
+                                      "start": 1851,
                                       "type": "Property",
                                       "value": {
                                         "computed": false,
-                                        "end": 1897,
+                                        "end": 1863,
                                         "object": {
-                                          "end": 1894,
+                                          "end": 1860,
                                           "name": "entry",
-                                          "start": 1889,
+                                          "start": 1855,
                                           "type": "Identifier"
                                         },
                                         "optional": false,
                                         "property": {
-                                          "end": 1897,
+                                          "end": 1863,
                                           "name": "id",
-                                          "start": 1895,
+                                          "start": 1861,
                                           "type": "Identifier"
                                         },
-                                        "start": 1889,
+                                        "start": 1855,
                                         "type": "MemberExpression"
                                       }
                                     },
                                     {
                                       "computed": false,
-                                      "end": 1912,
+                                      "end": 1878,
                                       "key": {
-                                        "end": 1901,
+                                        "end": 1867,
                                         "name": "on",
-                                        "start": 1899,
+                                        "start": 1865,
                                         "type": "Identifier"
                                       },
                                       "kind": "init",
                                       "method": false,
                                       "shorthand": false,
-                                      "start": 1899,
+                                      "start": 1865,
                                       "type": "Property",
                                       "value": {
                                         "argument": {
                                           "computed": false,
-                                          "end": 1912,
+                                          "end": 1878,
                                           "object": {
-                                            "end": 1909,
+                                            "end": 1875,
                                             "name": "entry",
-                                            "start": 1904,
+                                            "start": 1870,
                                             "type": "Identifier"
                                           },
                                           "optional": false,
                                           "property": {
-                                            "end": 1912,
+                                            "end": 1878,
                                             "name": "on",
-                                            "start": 1910,
+                                            "start": 1876,
                                             "type": "Identifier"
                                           },
-                                          "start": 1904,
+                                          "start": 1870,
                                           "type": "MemberExpression"
                                         },
-                                        "end": 1912,
+                                        "end": 1878,
                                         "operator": "!",
                                         "prefix": true,
-                                        "start": 1903,
+                                        "start": 1869,
                                         "type": "UnaryExpression"
                                       }
                                     }
                                   ],
-                                  "start": 1883,
+                                  "start": 1849,
                                   "type": "ObjectExpression"
                                 },
-                                "end": 1922,
-                                "start": 1861,
+                                "end": 1888,
+                                "start": 1827,
                                 "test": {
-                                  "end": 1880,
+                                  "end": 1846,
                                   "left": {
                                     "computed": false,
-                                    "end": 1869,
+                                    "end": 1835,
                                     "object": {
-                                      "end": 1866,
+                                      "end": 1832,
                                       "name": "entry",
-                                      "start": 1861,
+                                      "start": 1827,
                                       "type": "Identifier"
                                     },
                                     "optional": false,
                                     "property": {
-                                      "end": 1869,
+                                      "end": 1835,
                                       "name": "id",
-                                      "start": 1867,
+                                      "start": 1833,
                                       "type": "Identifier"
                                     },
-                                    "start": 1861,
+                                    "start": 1827,
                                     "type": "MemberExpression"
                                   },
                                   "operator": "===",
                                   "right": {
                                     "computed": false,
-                                    "end": 1880,
+                                    "end": 1846,
                                     "object": {
-                                      "end": 1877,
+                                      "end": 1843,
                                       "name": "row",
-                                      "start": 1874,
+                                      "start": 1840,
                                       "type": "Identifier"
                                     },
                                     "optional": false,
                                     "property": {
-                                      "end": 1880,
+                                      "end": 1846,
                                       "name": "id",
-                                      "start": 1878,
+                                      "start": 1844,
                                       "type": "Identifier"
                                     },
-                                    "start": 1874,
+                                    "start": 1840,
                                     "type": "MemberExpression"
                                   },
-                                  "start": 1861,
+                                  "start": 1827,
                                   "type": "BinaryExpression"
                                 },
                                 "type": "ConditionalExpression"
                               },
-                              "end": 1922,
+                              "end": 1888,
                               "expression": true,
                               "generator": false,
                               "id": null,
                               "params": [
                                 {
-                                  "end": 1848,
+                                  "end": 1814,
                                   "name": "entry",
-                                  "start": 1843,
+                                  "start": 1809,
                                   "type": "Identifier"
                                 }
                               ],
-                              "start": 1842,
+                              "start": 1808,
                               "type": "ArrowFunctionExpression"
                             }
                           ],
                           "callee": {
                             "computed": false,
-                            "end": 1841,
+                            "end": 1807,
                             "object": {
-                              "end": 1837,
+                              "end": 1803,
                               "name": "rows",
-                              "start": 1833,
+                              "start": 1799,
                               "type": "Identifier"
                             },
                             "optional": false,
                             "property": {
-                              "end": 1841,
+                              "end": 1807,
                               "name": "map",
-                              "start": 1838,
+                              "start": 1804,
                               "type": "Identifier"
                             },
-                            "start": 1833,
+                            "start": 1799,
                             "type": "MemberExpression"
                           },
-                          "end": 1932,
+                          "end": 1898,
                           "optional": false,
-                          "start": 1833,
+                          "start": 1799,
                           "type": "CallExpression"
                         },
-                        "start": 1826,
+                        "start": 1792,
                         "type": "VariableDeclarator"
                       }
                     ],
-                    "end": 1933,
+                    "end": 1899,
                     "kind": "const",
-                    "start": 1820,
+                    "start": 1786,
                     "type": "VariableDeclaration"
                   },
                   {
-                    "end": 1953,
+                    "end": 1919,
                     "expression": {
-                      "end": 1952,
+                      "end": 1918,
                       "left": {
-                        "end": 1945,
+                        "end": 1911,
                         "name": "rows",
-                        "start": 1941,
+                        "start": 1907,
                         "type": "Identifier"
                       },
                       "operator": "=",
                       "right": {
-                        "end": 1952,
+                        "end": 1918,
                         "name": "next",
-                        "start": 1948,
+                        "start": 1914,
                         "type": "Identifier"
                       },
-                      "start": 1941,
+                      "start": 1907,
                       "type": "AssignmentExpression"
                     },
-                    "start": 1941,
+                    "start": 1907,
                     "type": "ExpressionStatement"
                   },
                   {
-                    "end": 1999,
+                    "end": 1965,
                     "expression": {
                       "arguments": [
                         {
-                          "end": 1974,
+                          "end": 1940,
                           "raw": "'tag'",
-                          "start": 1969,
+                          "start": 1935,
                           "type": "Literal",
                           "value": "tag"
                         },
                         {
-                          "end": 1990,
+                          "end": 1956,
                           "properties": [
                             {
                               "computed": false,
-                              "end": 1988,
+                              "end": 1954,
                               "key": {
-                                "end": 1980,
+                                "end": 1946,
                                 "name": "id",
-                                "start": 1978,
+                                "start": 1944,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 1978,
+                              "start": 1944,
                               "type": "Property",
                               "value": {
                                 "computed": false,
-                                "end": 1988,
+                                "end": 1954,
                                 "object": {
-                                  "end": 1985,
+                                  "end": 1951,
                                   "name": "row",
-                                  "start": 1982,
+                                  "start": 1948,
                                   "type": "Identifier"
                                 },
                                 "optional": false,
                                 "property": {
-                                  "end": 1988,
+                                  "end": 1954,
                                   "name": "id",
-                                  "start": 1986,
+                                  "start": 1952,
                                   "type": "Identifier"
                                 },
-                                "start": 1982,
+                                "start": 1948,
                                 "type": "MemberExpression"
                               }
                             }
                           ],
-                          "start": 1976,
+                          "start": 1942,
                           "type": "ObjectExpression"
                         },
                         {
-                          "end": 1997,
+                          "end": 1963,
                           "name": "event",
-                          "start": 1992,
+                          "start": 1958,
                           "type": "Identifier"
                         }
                       ],
                       "callee": {
-                        "end": 1968,
+                        "end": 1934,
                         "name": "onTrace",
-                        "start": 1961,
+                        "start": 1927,
                         "type": "Identifier"
                       },
-                      "end": 1998,
+                      "end": 1964,
                       "optional": false,
-                      "start": 1961,
+                      "start": 1927,
                       "type": "CallExpression"
                     },
-                    "start": 1961,
+                    "start": 1927,
                     "type": "ExpressionStatement"
                   }
                 ],
-                "end": 2007,
-                "start": 1811,
+                "end": 1973,
+                "start": 1777,
                 "type": "BlockStatement"
               },
-              "end": 2007,
+              "end": 1973,
               "expression": false,
               "generator": false,
               "id": null,
               "params": [
                 {
-                  "end": 1806,
+                  "end": 1772,
                   "name": "event",
-                  "start": 1801,
+                  "start": 1767,
                   "type": "Identifier"
                 }
               ],
-              "start": 1800,
+              "start": 1766,
               "type": "ArrowFunctionExpression"
             },
             "reads": [
@@ -3299,14 +3265,14 @@
                 "operation": "assign",
                 "path": [],
                 "sourceSpan": {
-                  "end": 1945,
+                  "end": 1911,
                   "filename": "src/fixtures/s7-form-controls.tsrx",
-                  "start": 1941
+                  "start": 1907
                 },
                 "value": {
-                  "end": 1952,
+                  "end": 1918,
                   "name": "next",
-                  "start": 1948,
+                  "start": 1914,
                   "type": "Identifier"
                 },
                 "via": "direct"
@@ -3327,154 +3293,154 @@
               "body": {
                 "body": [
                   {
-                    "end": 2131,
+                    "end": 2097,
                     "expression": {
-                      "end": 2130,
+                      "end": 2096,
                       "left": {
-                        "end": 2124,
+                        "end": 2090,
                         "name": "size",
-                        "start": 2120,
+                        "start": 2086,
                         "type": "Identifier"
                       },
                       "operator": "=",
                       "right": {
-                        "end": 2130,
+                        "end": 2096,
                         "raw": "'l'",
-                        "start": 2127,
+                        "start": 2093,
                         "type": "Literal",
                         "value": "l"
                       },
-                      "start": 2120,
+                      "start": 2086,
                       "type": "AssignmentExpression"
                     },
-                    "start": 2120,
+                    "start": 2086,
                     "type": "ExpressionStatement"
                   },
                   {
-                    "end": 2152,
+                    "end": 2118,
                     "expression": {
-                      "end": 2151,
+                      "end": 2117,
                       "left": {
-                        "end": 2141,
+                        "end": 2107,
                         "name": "notes",
-                        "start": 2136,
+                        "start": 2102,
                         "type": "Identifier"
                       },
                       "operator": "=",
                       "right": {
-                        "end": 2151,
+                        "end": 2117,
                         "raw": "'final'",
-                        "start": 2144,
+                        "start": 2110,
                         "type": "Literal",
                         "value": "final"
                       },
-                      "start": 2136,
+                      "start": 2102,
                       "type": "AssignmentExpression"
                     },
-                    "start": 2136,
+                    "start": 2102,
                     "type": "ExpressionStatement"
                   },
                   {
-                    "end": 2213,
+                    "end": 2179,
                     "expression": {
                       "arguments": [
                         {
-                          "end": 2173,
+                          "end": 2139,
                           "raw": "'resize'",
-                          "start": 2165,
+                          "start": 2131,
                           "type": "Literal",
                           "value": "resize"
                         },
                         {
-                          "end": 2204,
+                          "end": 2170,
                           "properties": [
                             {
                               "computed": false,
-                              "end": 2186,
+                              "end": 2152,
                               "key": {
-                                "end": 2181,
+                                "end": 2147,
                                 "name": "size",
-                                "start": 2177,
+                                "start": 2143,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 2177,
+                              "start": 2143,
                               "type": "Property",
                               "value": {
-                                "end": 2186,
+                                "end": 2152,
                                 "raw": "'l'",
-                                "start": 2183,
+                                "start": 2149,
                                 "type": "Literal",
                                 "value": "l"
                               }
                             },
                             {
                               "computed": false,
-                              "end": 2202,
+                              "end": 2168,
                               "key": {
-                                "end": 2193,
+                                "end": 2159,
                                 "name": "notes",
-                                "start": 2188,
+                                "start": 2154,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 2188,
+                              "start": 2154,
                               "type": "Property",
                               "value": {
-                                "end": 2202,
+                                "end": 2168,
                                 "raw": "'final'",
-                                "start": 2195,
+                                "start": 2161,
                                 "type": "Literal",
                                 "value": "final"
                               }
                             }
                           ],
-                          "start": 2175,
+                          "start": 2141,
                           "type": "ObjectExpression"
                         },
                         {
-                          "end": 2211,
+                          "end": 2177,
                           "name": "event",
-                          "start": 2206,
+                          "start": 2172,
                           "type": "Identifier"
                         }
                       ],
                       "callee": {
-                        "end": 2164,
+                        "end": 2130,
                         "name": "onTrace",
-                        "start": 2157,
+                        "start": 2123,
                         "type": "Identifier"
                       },
-                      "end": 2212,
+                      "end": 2178,
                       "optional": false,
-                      "start": 2157,
+                      "start": 2123,
                       "type": "CallExpression"
                     },
-                    "start": 2157,
+                    "start": 2123,
                     "type": "ExpressionStatement"
                   }
                 ],
-                "end": 2218,
-                "start": 2114,
+                "end": 2184,
+                "start": 2080,
                 "type": "BlockStatement"
               },
-              "end": 2218,
+              "end": 2184,
               "expression": false,
               "generator": false,
               "id": null,
               "params": [
                 {
-                  "end": 2109,
+                  "end": 2075,
                   "name": "event",
-                  "start": 2104,
+                  "start": 2070,
                   "type": "Identifier"
                 }
               ],
-              "start": 2103,
+              "start": 2069,
               "type": "ArrowFunctionExpression"
             },
             "reads": [
@@ -3494,14 +3460,14 @@
                 "operation": "assign",
                 "path": [],
                 "sourceSpan": {
-                  "end": 2141,
+                  "end": 2107,
                   "filename": "src/fixtures/s7-form-controls.tsrx",
-                  "start": 2136
+                  "start": 2102
                 },
                 "value": {
-                  "end": 2151,
+                  "end": 2117,
                   "raw": "'final'",
-                  "start": 2144,
+                  "start": 2110,
                   "type": "Literal",
                   "value": "final"
                 },
@@ -3514,14 +3480,14 @@
                 "operation": "assign",
                 "path": [],
                 "sourceSpan": {
-                  "end": 2124,
+                  "end": 2090,
                   "filename": "src/fixtures/s7-form-controls.tsrx",
-                  "start": 2120
+                  "start": 2086
                 },
                 "value": {
-                  "end": 2130,
+                  "end": 2096,
                   "raw": "'l'",
-                  "start": 2127,
+                  "start": 2093,
                   "type": "Literal",
                   "value": "l"
                 },
@@ -3545,161 +3511,161 @@
                   {
                     "declarations": [
                       {
-                        "end": 2377,
+                        "end": 2343,
                         "id": {
-                          "end": 2347,
+                          "end": 2313,
                           "name": "next",
-                          "start": 2343,
+                          "start": 2309,
                           "type": "Identifier"
                         },
                         "init": {
                           "alternate": {
-                            "end": 2377,
+                            "end": 2343,
                             "raw": "null",
-                            "start": 2373,
+                            "start": 2339,
                             "type": "Literal",
                             "value": null
                           },
                           "consequent": {
-                            "end": 2370,
+                            "end": 2336,
                             "raw": "'on'",
-                            "start": 2366,
+                            "start": 2332,
                             "type": "Literal",
                             "value": "on"
                           },
-                          "end": 2377,
-                          "start": 2350,
+                          "end": 2343,
+                          "start": 2316,
                           "test": {
-                            "end": 2363,
+                            "end": 2329,
                             "left": {
-                              "end": 2354,
+                              "end": 2320,
                               "name": "lock",
-                              "start": 2350,
+                              "start": 2316,
                               "type": "Identifier"
                             },
                             "operator": "===",
                             "right": {
-                              "end": 2363,
+                              "end": 2329,
                               "raw": "null",
-                              "start": 2359,
+                              "start": 2325,
                               "type": "Literal",
                               "value": null
                             },
-                            "start": 2350,
+                            "start": 2316,
                             "type": "BinaryExpression"
                           },
                           "type": "ConditionalExpression"
                         },
-                        "start": 2343,
+                        "start": 2309,
                         "type": "VariableDeclarator"
                       }
                     ],
-                    "end": 2378,
+                    "end": 2344,
                     "kind": "const",
-                    "start": 2337,
+                    "start": 2303,
                     "type": "VariableDeclaration"
                   },
                   {
-                    "end": 2395,
+                    "end": 2361,
                     "expression": {
-                      "end": 2394,
+                      "end": 2360,
                       "left": {
-                        "end": 2387,
+                        "end": 2353,
                         "name": "lock",
-                        "start": 2383,
+                        "start": 2349,
                         "type": "Identifier"
                       },
                       "operator": "=",
                       "right": {
-                        "end": 2394,
+                        "end": 2360,
                         "name": "next",
-                        "start": 2390,
+                        "start": 2356,
                         "type": "Identifier"
                       },
-                      "start": 2383,
+                      "start": 2349,
                       "type": "AssignmentExpression"
                     },
-                    "start": 2383,
+                    "start": 2349,
                     "type": "ExpressionStatement"
                   },
                   {
-                    "end": 2439,
+                    "end": 2405,
                     "expression": {
                       "arguments": [
                         {
-                          "end": 2414,
+                          "end": 2380,
                           "raw": "'lock'",
-                          "start": 2408,
+                          "start": 2374,
                           "type": "Literal",
                           "value": "lock"
                         },
                         {
-                          "end": 2430,
+                          "end": 2396,
                           "properties": [
                             {
                               "computed": false,
-                              "end": 2428,
+                              "end": 2394,
                               "key": {
-                                "end": 2422,
+                                "end": 2388,
                                 "name": "lock",
-                                "start": 2418,
+                                "start": 2384,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 2418,
+                              "start": 2384,
                               "type": "Property",
                               "value": {
-                                "end": 2428,
+                                "end": 2394,
                                 "name": "next",
-                                "start": 2424,
+                                "start": 2390,
                                 "type": "Identifier"
                               }
                             }
                           ],
-                          "start": 2416,
+                          "start": 2382,
                           "type": "ObjectExpression"
                         },
                         {
-                          "end": 2437,
+                          "end": 2403,
                           "name": "event",
-                          "start": 2432,
+                          "start": 2398,
                           "type": "Identifier"
                         }
                       ],
                       "callee": {
-                        "end": 2407,
+                        "end": 2373,
                         "name": "onTrace",
-                        "start": 2400,
+                        "start": 2366,
                         "type": "Identifier"
                       },
-                      "end": 2438,
+                      "end": 2404,
                       "optional": false,
-                      "start": 2400,
+                      "start": 2366,
                       "type": "CallExpression"
                     },
-                    "start": 2400,
+                    "start": 2366,
                     "type": "ExpressionStatement"
                   }
                 ],
-                "end": 2444,
-                "start": 2331,
+                "end": 2410,
+                "start": 2297,
                 "type": "BlockStatement"
               },
-              "end": 2444,
+              "end": 2410,
               "expression": false,
               "generator": false,
               "id": null,
               "params": [
                 {
-                  "end": 2326,
+                  "end": 2292,
                   "name": "event",
-                  "start": 2321,
+                  "start": 2287,
                   "type": "Identifier"
                 }
               ],
-              "start": 2320,
+              "start": 2286,
               "type": "ArrowFunctionExpression"
             },
             "reads": [
@@ -3724,14 +3690,14 @@
                 "operation": "assign",
                 "path": [],
                 "sourceSpan": {
-                  "end": 2387,
+                  "end": 2353,
                   "filename": "src/fixtures/s7-form-controls.tsrx",
-                  "start": 2383
+                  "start": 2349
                 },
                 "value": {
-                  "end": 2394,
+                  "end": 2360,
                   "name": "next",
-                  "start": 2390,
+                  "start": 2356,
                   "type": "Identifier"
                 },
                 "via": "direct"
@@ -3839,14 +3805,14 @@
         "operation": "assign",
         "path": [],
         "sourceSpan": {
-          "end": 2387,
+          "end": 2353,
           "filename": "src/fixtures/s7-form-controls.tsrx",
-          "start": 2383
+          "start": 2349
         },
         "value": {
-          "end": 2394,
+          "end": 2360,
           "name": "next",
-          "start": 2390,
+          "start": 2356,
           "type": "Identifier"
         },
         "via": "direct"
@@ -3858,14 +3824,14 @@
         "operation": "assign",
         "path": [],
         "sourceSpan": {
-          "end": 1101,
+          "end": 1067,
           "filename": "src/fixtures/s7-form-controls.tsrx",
-          "start": 1096
+          "start": 1062
         },
         "value": {
-          "end": 1108,
+          "end": 1074,
           "name": "next",
-          "start": 1104,
+          "start": 1070,
           "type": "Identifier"
         },
         "via": "direct"
@@ -3877,14 +3843,14 @@
         "operation": "assign",
         "path": [],
         "sourceSpan": {
-          "end": 2141,
+          "end": 2107,
           "filename": "src/fixtures/s7-form-controls.tsrx",
-          "start": 2136
+          "start": 2102
         },
         "value": {
-          "end": 2151,
+          "end": 2117,
           "raw": "'final'",
-          "start": 2144,
+          "start": 2110,
           "type": "Literal",
           "value": "final"
         },
@@ -3897,14 +3863,14 @@
         "operation": "assign",
         "path": [],
         "sourceSpan": {
-          "end": 1282,
+          "end": 1248,
           "filename": "src/fixtures/s7-form-controls.tsrx",
-          "start": 1278
+          "start": 1244
         },
         "value": {
-          "end": 1289,
+          "end": 1255,
           "raw": "'r1'",
-          "start": 1285,
+          "start": 1251,
           "type": "Literal",
           "value": "r1"
         },
@@ -3917,14 +3883,14 @@
         "operation": "assign",
         "path": [],
         "sourceSpan": {
-          "end": 1462,
+          "end": 1428,
           "filename": "src/fixtures/s7-form-controls.tsrx",
-          "start": 1458
+          "start": 1424
         },
         "value": {
-          "end": 1469,
+          "end": 1435,
           "raw": "'r2'",
-          "start": 1465,
+          "start": 1431,
           "type": "Literal",
           "value": "r2"
         },
@@ -3937,14 +3903,14 @@
         "operation": "assign",
         "path": [],
         "sourceSpan": {
-          "end": 1945,
+          "end": 1911,
           "filename": "src/fixtures/s7-form-controls.tsrx",
-          "start": 1941
+          "start": 1907
         },
         "value": {
-          "end": 1952,
+          "end": 1918,
           "name": "next",
-          "start": 1948,
+          "start": 1914,
           "type": "Identifier"
         },
         "via": "direct"
@@ -3956,14 +3922,14 @@
         "operation": "assign",
         "path": [],
         "sourceSpan": {
-          "end": 764,
+          "end": 747,
           "filename": "src/fixtures/s7-form-controls.tsrx",
-          "start": 760
+          "start": 743
         },
         "value": {
-          "end": 771,
+          "end": 754,
           "name": "next",
-          "start": 767,
+          "start": 750,
           "type": "Identifier"
         },
         "via": "direct"
@@ -3975,14 +3941,14 @@
         "operation": "assign",
         "path": [],
         "sourceSpan": {
-          "end": 2124,
+          "end": 2090,
           "filename": "src/fixtures/s7-form-controls.tsrx",
-          "start": 2120
+          "start": 2086
         },
         "value": {
-          "end": 2130,
+          "end": 2096,
           "raw": "'l'",
-          "start": 2127,
+          "start": 2093,
           "type": "Literal",
           "value": "l"
         },

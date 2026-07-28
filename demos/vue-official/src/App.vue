@@ -2,11 +2,12 @@
 import { computed, onMounted } from 'vue'
 import BranchBoard from './emitted/BranchBoard.vue'
 import EventForm from './emitted/EventForm.vue'
+import FormBoard from './emitted/FormBoard.vue'
 import KeyedTodo from './emitted/KeyedTodo.vue'
 import NestedBoard from './emitted/NestedBoard.vue'
 import RenderOnce from './emitted/RenderOnce.vue'
 import WhitespaceBoard from './emitted/WhitespaceBoard.vue'
-import { noTrace, s2Seed, s4Seed, s5Seed, s6Label, s6Seed, scenarioFor } from './scenario-props'
+import { noTrace, s2Seed, s4Seed, s5Seed, s6Label, s6Seed, s7Seed, scenarioFor } from './scenario-props'
 
 // DELTA from create-vite-extra@5.0.2 template-ssr-vue-ts/src/App.vue, which
 // renders a single fixed `<HelloWorld />`. One shared IR, five emitters: these
@@ -58,5 +59,11 @@ onMounted(() => {
   <EventForm v-else-if="scenario === 's3'" initial="hello" v-bind:onTrace="noTrace" />
   <NestedBoard v-else-if="scenario === 's4'" v-bind:seed="s4Seed" v-bind:onTrace="noTrace" />
   <BranchBoard v-else-if="scenario === 's5'" v-bind:seed="s5Seed" v-bind:onTrace="noTrace" />
-  <WhitespaceBoard v-else v-bind:seed="s6Seed" v-bind:label="s6Label" v-bind:onTrace="noTrace" />
+  <WhitespaceBoard
+    v-else-if="scenario === 's6'"
+    v-bind:seed="s6Seed"
+    v-bind:label="s6Label"
+    v-bind:onTrace="noTrace"
+  />
+  <FormBoard v-else v-bind:seed="s7Seed" v-bind:onTrace="noTrace" />
 </template>

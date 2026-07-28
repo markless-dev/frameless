@@ -62,7 +62,7 @@ const officialDemos = [
 // and `1\n/2` in another. Nothing in the corpus measured the characters BETWEEN
 // values until s6, and `measureText` — which every other scenario reads through
 // — collapses whitespace before comparing, so it could not have.
-const threeWayScenarios = ['s1', 's2', 's3', 's4', 's5', 's6'];
+const threeWayScenarios = ['s1', 's2', 's3', 's4', 's5', 's6', 's7'];
 // @async/witness is a dev tool of the workspace, already installed for the ssr
 // and persistence demos. The runner aliases '@async/witness' for the box files
 // it loads, so the official demos run boxes without depending on it themselves.

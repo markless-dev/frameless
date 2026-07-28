@@ -16,13 +16,12 @@ export function FormBoard({ seed, onTrace }) @{
 	const onFirst = computed(() => pick === 'r1');
 	const onSecond = computed(() => pick === 'r2');
 	const locked = computed(() => lock !== null);
-	const guard = computed(() => (lock === null ? null : 'true'));
+	const guard = computed(() => (lock === null ? null : 'held'));
 
 	<form data-scenario="s7">
 		<select
 			data-control="size"
 			data-size={size}
-			value={size}
 			onInput={(event) => {
 				const next = event.currentTarget.value;
 				size = next;
@@ -36,7 +35,6 @@ export function FormBoard({ seed, onTrace }) @{
 		<textarea
 			data-control="notes"
 			data-notes={notes}
-			value={notes}
 			onInput={(event) => {
 				const next = event.currentTarget.value;
 				notes = next;
@@ -102,6 +100,6 @@ export function FormBoard({ seed, onTrace }) @{
 				onTrace('lock', { lock: next }, event);
 			}}
 		>lock</button>
-		<button type="button" data-guard="true" disabled={locked} aria-disabled={guard}>guard</button>
+		<button type="button" data-guard="true" aria-disabled={locked} data-held={guard}>guard</button>
 	</form>
 }

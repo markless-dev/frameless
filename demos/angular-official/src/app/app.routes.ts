@@ -2,11 +2,12 @@ import { Routes } from '@angular/router';
 
 import { BranchBoard } from '../emitted/BranchBoard';
 import { EventForm } from '../emitted/EventForm';
+import { FormBoard } from '../emitted/FormBoard';
 import { KeyedTodo } from '../emitted/KeyedTodo';
 import { NestedBoard } from '../emitted/NestedBoard';
 import { RenderOnce } from '../emitted/RenderOnce';
 import { WhitespaceBoard } from '../emitted/WhitespaceBoard';
-import { noTrace, s2Seed, s4Seed, s5Seed, s6Label, s6Seed } from './scenario-props';
+import { noTrace, s2Seed, s4Seed, s5Seed, s6Label, s6Seed, s7Seed } from './scenario-props';
 
 /**
  * DELTA from the `ng new --ssr` scaffold's `app.routes.ts`, which ships
@@ -54,5 +55,10 @@ export const routes: Routes = [
     path: 's6',
     component: WhitespaceBoard,
     data: { seed: s6Seed, label: s6Label, onTrace: noTrace },
+  },
+  {
+    path: 's7',
+    component: FormBoard,
+    data: { seed: s7Seed, onTrace: noTrace },
   },
 ];

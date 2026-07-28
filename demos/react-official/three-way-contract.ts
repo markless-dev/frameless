@@ -30,9 +30,9 @@
  */
 import type { EnvironmentResponse, ExpectApi, PageHandle } from '@async/witness'
 
-export type ScenarioId = 's1' | 's2' | 's3' | 's4' | 's5' | 's6'
+export type ScenarioId = 's1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7'
 
-export const scenarioIds: readonly ScenarioId[] = ['s1', 's2', 's3', 's4', 's5', 's6']
+export const scenarioIds: readonly ScenarioId[] = ['s1', 's2', 's3', 's4', 's5', 's6', 's7']
 
 /**
  * How each framework becomes interactive. React, Solid, Svelte, Vue and Angular
@@ -580,6 +580,25 @@ export const resumeSymbols: Record<
   // own import. S5's six clicks pulled four segments; this scenario has no
   // rebuilt subtree to resolve a handler out of an already-imported QRL.
   s6: { includes: '_button_q_e_click_', atLeast: 3 },
+  // S7 issues FOUR clicks across four distinct handlers, but only two of them
+  // are `click`: the radio and the checkbox are `change` handlers, and they are
+  // the first `change` handlers in this corpus any lane is ever asked to run
+  // (S3 carries one and the contract never clicks it). `runScenario`'s
+  // `handlerSegments` evidence filters on `_q_e_click_`, so a `change` QRL is
+  // not counted here — that it was pulled at all is proven behaviourally, by
+  // `picked` and `chosen` moving in this lane like they do in the other five.
+  //
+  // MEASURED off this lane's own `handlerSegments` evidence — two segments, in
+  // click order, verbatim:
+  //
+  //   FormBoard.jsx_FormBoard_component_form_button_q_e_click_226Fd9wpp00.js
+  //   FormBoard.jsx_FormBoard_component_form_button_q_e_click_1_HB6KOsk6TiI.js
+  //
+  // `_form_button_q_e_click_` rather than the `_button_q_e_click_` s2, s4, s5
+  // and s6 share: S7's board is a `<form>`, not a `<section>`, so the structural
+  // prefix genuinely differs and asserting the shared one would have been a
+  // weaker read than this lane can support.
+  s7: { includes: '_form_button_q_e_click_', atLeast: 2 },
 }
 
 function forbidInServedPayload(served: EnvironmentResponse, fragments: string[]): void {
@@ -1694,6 +1713,311 @@ export async function assertS6(page: PageHandle, expect: ExpectApi): Promise<str
   return observed
 }
 
+
+/**
+ * Every row identity in S7's control list, in document order.
+ *
+ * A FIFTH key attribute, for the reason the second, third and fourth exist:
+ * `measureRowKeys`, `measureCellKeys`, `measureBranchKeys` and `measureTextKeys`
+ * each match their own attribute globally, so a scenario reusing one would
+ * silently join that scenario's observation string, and S2's, S4's, S5's and
+ * S6's reads have to keep measuring exactly what they measured before S7
+ * existed.
+ */
+export function measureFormKeys(html: string): string[] {
+  return measureKeyAttribute(html, 'data-oracle-form-key')
+}
+
+/**
+ * S7's controls and attributes as the live DOM currently serializes them.
+ *
+ * EVERY reading here is an `attribute`-kind binding or a text projection, and
+ * that is a MEASURED constraint rather than a preference. S7's `checked`
+ * bindings — the two radios and the checkbox inside the keyed repeat — lower to
+ * `kind: 'property'`, and what a property binding does to the serialized
+ * `checked` attribute splits the six lanes FOUR ways. Measured on this tree, at
+ * this scenario, in a real browser (see the T030 note):
+ *
+ *   react, angular  the server writes `checked`, and it never moves again
+ *   solid, qwik     the server does NOT write it; activation adds it, then frozen
+ *   svelte          the server writes it and hydration DELETES it (`remove_input_defaults`)
+ *   vue             the server does not write it; activation adds it AND TRACKS state
+ *
+ * So a `checked` reading cannot be part of a cross-lane observation string. It
+ * is not silently dropped: what each control DID is observed instead, through
+ * `picked` and `chosen`, which are text projections of the state those handlers
+ * write. This is the same trade `assertS3` records for `value`, one axis wider.
+ */
+async function measureForm(page: PageHandle): Promise<{
+  size: string
+  notes: string
+  picked: string
+  chosen: string
+  tags: string
+  lock: string
+  held: string
+  ariaDisabled: string
+}> {
+  const html = await page.content()
+  const attribute = (marker: string, name: string): string =>
+    JSON.stringify(measureAttribute(html, marker, name))
+  return {
+    size: attribute('data-control="size"', 'data-size'),
+    notes: attribute('data-control="notes"', 'data-notes'),
+    picked: measureText(html, 'data-picked="true"'),
+    chosen: measureText(html, 'data-chosen="true"'),
+    tags: measureFormKeys(html).join(','),
+    lock: attribute('data-action="lock"', 'data-lock'),
+    held: attribute('data-guard="true"', 'data-held'),
+    ariaDisabled: attribute('data-guard="true"', 'aria-disabled'),
+  }
+}
+
+/**
+ * The form assertion, hand-rolled for the same reason `requireNesting`,
+ * `requireBranch` and `requireWhitespace` are: the sentence a failure raises has
+ * to name WHICH reading moved and what a move there means, and `expect.page.*`
+ * has no accessor that can compare an absent attribute against a present one at
+ * all — `null` and `"false"` and `""` are three different outcomes and only a
+ * reader that keeps them distinct can say which one it got.
+ *
+ * Every value is quoted with `JSON.stringify` in both the record and the
+ * message, because an attribute reading of `null` (absent) and one of `""`
+ * (present and empty) are the two halves of the divergence this scenario exists
+ * to measure, and `expected  but got ` is not a diagnostic.
+ */
+function requireForm(
+  actual: Record<string, string>,
+  expected: Record<string, string> & { step: string },
+): void {
+  const why: Record<string, string> = {
+    size:
+      'the `<select>`\'s state, projected through an `attribute`-kind binding. It is the one ' +
+      'reading a select can carry across all six lanes: a `value` binding on a select lowers to ' +
+      '`kind: \'property\'` and the six lanes disagree four ways about whether it reaches the ' +
+      'served attribute at all.',
+    notes: 'the `<textarea>`\'s state, projected the same way and for the same reason.',
+    picked:
+      'which radio the group holds, as TEXT. The radios themselves bind `checked`, a property ' +
+      'binding no cross-lane reading can use, so this is where a radio click becomes observable.',
+    chosen:
+      'the joined ids of every CHECKED row in the keyed repeat, as TEXT. A checkbox inside a ' +
+      'repeat is the deepest control in the scenario, and this is the only portable evidence ' +
+      'that the click reached the row it was attached to.',
+    tags: 'the keyed rows themselves. They never change, so a move here is a repeat rebuilding itself.',
+    lock:
+      'a dynamic attribute that is ABSENT in one state and carries a string in the other. ' +
+      'Present-versus-absent is the half of the boolean-attribute axis every lane agrees on.',
+    held: 'the second present-versus-absent reading, on the same element as `ariaDisabled`.',
+    ariaDisabled:
+      'the THIRD state of the boolean-attribute axis: present with the literal "false". A ' +
+      'genuine HTML boolean attribute cannot be spelled portably here — Angular lowers an ' +
+      '`attribute`-kind binding to `[attr.x]`, whose runtime writes `renderStringify(value)` ' +
+      'and so serves `disabled="false"` where the other five serve nothing at all. `aria-*` is ' +
+      'the spelling all six agree on, and this reading is what pins that agreement.',
+  }
+  for (const [key, want] of Object.entries(expected)) {
+    if (key === 'step') continue
+    if (actual[key] === want) continue
+    throw new Error(
+      `${expected.step} the ${key} reading is ${JSON.stringify(actual[key])}, not ` +
+        `${JSON.stringify(want)}. That reading is ${why[key]}`,
+    )
+  }
+}
+
+/**
+ * S7 — full form controls folded with boolean and dynamic attributes: a
+ * `<select>`, a `<textarea>`, a radio group and a keyed group of checkboxes, on
+ * one host that also carries every state a dynamic attribute can be in.
+ *
+ * ## Why this scenario exists at all
+ *
+ * The corpus had exactly TWO control types before S7, both in S3 and both an
+ * `<input>`: one text and one checkbox. No radio, no select, no textarea, no
+ * group of checkboxes, and no `disabled`, `hidden` or `aria-*` anywhere. That
+ * these diverge is not a hypothesis — in one night this repo hit React's
+ * `defaultValue` attribute rewrite, Svelte's `remove_input_defaults` and Solid's
+ * `attr:`, three frameworks behaving three ways on the ONE control that was
+ * tested.
+ *
+ * The Angular board's R1 — whether a property binding reaches the served
+ * attribute — is this axis, and it too was measured on one control. S7 is where
+ * it gets a population: three `checked` bindings across two control types, one
+ * of them inside a keyed repeat.
+ *
+ * ## The two axes, and why they share a host
+ *
+ * FORM CONTROLS are `kind: 'property'` bindings (`checked` here; `value` is
+ * S3's). BOOLEAN AND DYNAMIC ATTRIBUTES are `kind: 'attribute'` bindings. Both
+ * live on the same host machinery and both are decided by the same per-lane
+ * renderer, so folding them is what lets one scenario show that the two kinds
+ * behave completely differently: every `attribute` reading below is identical in
+ * all six lanes, and no `property` reading is identical in any two adjacent
+ * ones.
+ *
+ * ## The three states of a dynamic attribute, all asserted
+ *
+ * | reading | as served | after `lock` |
+ * |---|---|---|
+ * | `lock`, `held` | ABSENT | present, carrying a string |
+ * | `ariaDisabled` | present, carrying `"false"` | present, carrying `"true"` |
+ *
+ * Absent, present-with-`"false"`, present-with-a-value. `ariaDisabled` is bound
+ * to a BOOLEAN and is the only spelling of that binding all six lanes agree on;
+ * the same expression on a genuine HTML boolean attribute does not agree, and
+ * the T030 note records what each lane did with it.
+ *
+ * ## The four transitions, and what each one isolates
+ *
+ * | step | what must move | what must not |
+ * |---|---|---|
+ * | click radio `r2` | `picked` | `chosen`, `size`, `notes` |
+ * | click checkbox `t1` (inside the keyed repeat) | `chosen` | `picked`, `tags` |
+ * | `resize` | `size` and `notes` | `picked`, `chosen` |
+ * | `lock` | `lock`, `held`, `ariaDisabled` | every control reading |
+ *
+ * The first two are a pair on purpose. Both are `change` handlers on controls
+ * whose only binding is `checked`, and they are the first `change` handlers in
+ * the corpus that any lane is ever asked to run — S3 carries one and the
+ * contract never clicks it. For the RESUMED lane that means a QRL pulled for a
+ * `change` event rather than a `click`, which nothing else here asks for.
+ *
+ * `resize` is deliberately a BUTTON and not a real selection change: `PageHandle`
+ * exposes `click` and nothing else, so a `<select>` cannot be driven from a
+ * witness lane at all. What it proves is the half that matters for this axis
+ * anyway — that a select's and a textarea's projections re-render from state.
+ *
+ * Nothing here reads `data-oracle-row-key`, `data-oracle-cell-key`,
+ * `data-oracle-branch-key` or `data-oracle-text-key`: S2, S4, S5 and S6 own
+ * those, and S7 keys its rows with `data-oracle-form-key`.
+ */
+export async function assertS7(
+  page: PageHandle,
+  expect: ExpectApi,
+  served: EnvironmentResponse,
+): Promise<string[]> {
+  const observed: string[] = []
+  await expect.page.exists(page, '[data-scenario="s7"]')
+  await expect.page.text(page, '[data-picked="true"]', 'r1')
+  await expect.page.text(page, '[data-chosen="true"]', 't2')
+
+  // The server's own bytes, asserted exactly and calibrated two-sided on each
+  // call. Both are `attribute`-kind bindings, which is the only kind that
+  // reaches a served attribute identically in all six lanes.
+  const servedSize = measureServedAttribute({
+    served,
+    marker: 'data-control="size"',
+    name: 'data-size',
+    equals: 's',
+  })
+  const servedNotes = measureServedAttribute({
+    served,
+    marker: 'data-control="notes"',
+    name: 'data-notes',
+    equals: 'draft',
+  })
+
+  const initial = await measureForm(page)
+  requireForm(initial, {
+    size: '"s"',
+    notes: '"draft"',
+    picked: 'r1',
+    chosen: 't2',
+    tags: 't1,t2',
+    lock: 'null',
+    held: 'null',
+    ariaDisabled: '"false"',
+    step: 'as served',
+  })
+  observed.push(
+    `server-rendered size = ${servedSize} and notes = ${servedNotes} with picked ` +
+      `${initial.picked}, chosen ${initial.chosen}, tags ${initial.tags}, lock ${initial.lock} ` +
+      `and aria-disabled ${initial.ariaDisabled}`,
+  )
+
+  // A radio in a named group. Its only binding is `checked`, so the click is
+  // observable through the text projection of the state it writes.
+  await page.click('[data-pick="r2"]')
+  await expect.page.text(page, '[data-picked="true"]', 'r2')
+  const picked = await measureForm(page)
+  requireForm(picked, {
+    size: '"s"',
+    notes: '"draft"',
+    picked: 'r2',
+    chosen: 't2',
+    tags: 't1,t2',
+    lock: 'null',
+    held: 'null',
+    ariaDisabled: '"false"',
+    step: 'after picking r2',
+  })
+  observed.push(`after picking r2 picked = ${picked.picked} with chosen still ${picked.chosen}`)
+
+  // A checkbox INSIDE the keyed repeat. `t1` starts unchecked and `t2` starts
+  // checked, so this both adds a row to `chosen` and proves the two checkboxes
+  // are not sharing one value.
+  await page.click('[data-tag="t1"]')
+  await expect.page.text(page, '[data-chosen="true"]', 't1+t2')
+  const tagged = await measureForm(page)
+  requireForm(tagged, {
+    size: '"s"',
+    notes: '"draft"',
+    picked: 'r2',
+    chosen: 't1+t2',
+    tags: 't1,t2',
+    lock: 'null',
+    held: 'null',
+    ariaDisabled: '"false"',
+    step: 'after checking t1',
+  })
+  observed.push(
+    `after checking t1 chosen = ${tagged.chosen} and the tags are still ${tagged.tags}`,
+  )
+
+  // The select's and the textarea's projections re-render from state.
+  await page.click('[data-action="resize"]')
+  await expect.page.attribute(page, '[data-control="size"]', 'data-size', 'l')
+  const resized = await measureForm(page)
+  requireForm(resized, {
+    size: '"l"',
+    notes: '"final"',
+    picked: 'r2',
+    chosen: 't1+t2',
+    tags: 't1,t2',
+    lock: 'null',
+    held: 'null',
+    ariaDisabled: '"false"',
+    step: 'after resizing',
+  })
+  observed.push(
+    `after resizing size = ${resized.size} and notes = ${resized.notes} with chosen still ` +
+      `${resized.chosen}`,
+  )
+
+  // Two attributes go from ABSENT to present, and a third goes from "false" to
+  // "true" without ever being absent.
+  await page.click('[data-action="lock"]')
+  await expect.page.attribute(page, '[data-action="lock"]', 'data-lock', 'on')
+  const locked = await measureForm(page)
+  requireForm(locked, {
+    size: '"l"',
+    notes: '"final"',
+    picked: 'r2',
+    chosen: 't1+t2',
+    tags: 't1,t2',
+    lock: '"on"',
+    held: '"held"',
+    ariaDisabled: '"true"',
+    step: 'after locking',
+  })
+  observed.push(
+    `after locking lock = ${locked.lock}, data-held = ${locked.held} and aria-disabled = ` +
+      `${locked.ariaDisabled}`,
+  )
+  return observed
+}
+
 /**
  * Every scenario is handed both sites — the live page and the payload the
  * server sent for it — and reads each observation from the one it names. S1, S2,
@@ -1703,7 +2027,15 @@ export async function assertS6(page: PageHandle, expect: ExpectApi): Promise<str
 const assertions: Record<
   ScenarioId,
   (page: PageHandle, expect: ExpectApi, served: EnvironmentResponse) => Promise<string[]>
-> = { s1: assertS1, s2: assertS2, s3: assertS3, s4: assertS4, s5: assertS5, s6: assertS6 }
+> = {
+  s1: assertS1,
+  s2: assertS2,
+  s3: assertS3,
+  s4: assertS4,
+  s5: assertS5,
+  s6: assertS6,
+  s7: assertS7,
+}
 
 /**
  * Runs one scenario end to end: wait for the framework to be able to react,

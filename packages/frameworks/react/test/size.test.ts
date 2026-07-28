@@ -137,6 +137,14 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// nothing structural at all - the observable is which characters end up
 	// between the nodes, not how many nodes there are.
 	S6: { physicalLoc: 73, structuralNodes: 353 },
+	// S7 likewise has no handwritten reference, so this is a budget. It is the
+	// corpus's most EXPENSIVE scenario on physical lines and the second most on
+	// structural nodes: four control types, three `checked` bindings, six
+	// `attribute`-kind bindings and four computed derivations on one host. The
+	// two numbers pull apart here - more lines than S2 for fewer nodes - because
+	// most of S7's cost is per-attribute rather than per-element, and the
+	// formatter gives every attribute its own line once a tag carries three.
+	S7: { physicalLoc: 118, structuralNodes: 573 },
 };
 
 describe('honest emitted structure comparison', () => {
