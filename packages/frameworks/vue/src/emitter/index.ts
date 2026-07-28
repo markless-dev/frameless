@@ -402,9 +402,11 @@ function rewriteScript(
  * DENIED at the deciding Gate 5; Gates 3, 4 and 6 deny independently, 1 and 2 PASS.
  * This array IS 12b's domain, and ITS SIZE IS NOT A LITERAL THIS COMMENT OWNS:
  * `derivePrintedPropEntries()` in `test/gate.test.ts` counts it off the goldens,
- * THROWS on empty, and pins the shipped message to it - today SEVENTEEN values, six
- * distinct names, seven goldens, corpus-derived and CHECKED THERE, not restated
- * here. ZERO are in reach BY CONSTRUCTION: one shared `prop:props` node
+ * THROWS on empty, and pins the shipped message to it - corpus-derived and
+ * CHECKED THERE, which is where today's figures are. This clause used to carry
+ * them anyway, one sentence after disclaiming them; they were false two
+ * scenarios later while the derivation stayed green.
+ * ZERO are in reach BY CONSTRUCTION: one shared `prop:props` node
  * (`writable: false`, zero writes) leaves per-prop write-back no IR channel - a
  * missing per-prop IDENTITY (IR-1), not IR-8's TYPE.
  * IR-4 is NOT why this is refused - `v-model` and `defineModel` FAIL four gates
@@ -660,8 +662,8 @@ function staticAttribute(attribute: StaticAttribute): string {
  * THAT SSR ARM IS A DATED MEASUREMENT, NOT A COVERAGE CLAIM, and it is written
  * that way deliberately. It used to read "for all three scenario components",
  * which was true of what T005 measured - three was the entire corpus then - but
- * phrased as coverage it silently became a false claim about a seven-scenario
- * one. RE-MEASURED at `81be833` (2026-07-27, `vue@3.5.40`) over EVERY
+ * phrased as coverage it silently became a false claim about every corpus that
+ * followed. RE-MEASURED at `81be833` (2026-07-27, `vue@3.5.40`) over EVERY
  * `generated/S<n>.vue` shipped at that commit, each rendered through
  * `vue/server-renderer` against a mechanical longhand twin (`:` to `v-bind:`,
  * `@` to `v-on:`, applied inside `<template>` only) with the demo's own

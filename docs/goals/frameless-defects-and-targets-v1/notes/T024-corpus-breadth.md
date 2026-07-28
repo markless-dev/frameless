@@ -38,10 +38,11 @@ Each has exactly one entry in `components`. No `component-reference`, no
 repeat, anywhere.
 
 **Four of six emitters reject composition, refs and behaviours outright.**
-`packages/frameworks/svelte/src/emitter/index.ts:710-724`, and character-for-character
-the same guard at `packages/frameworks/angular/src/emitter/index.ts:1082-1095`,
-`packages/frameworks/vue/src/emitter/index.ts:1041-1055` and
-`packages/frameworks/qwik/src/emitter/index.ts:1360-1372`:
+The guard opens `emit()` in `packages/frameworks/svelte/src/emitter/index.ts`, and
+character-for-character the same guard opens `emit()` in
+`packages/frameworks/angular/src/emitter/index.ts`,
+`packages/frameworks/vue/src/emitter/index.ts` and
+`packages/frameworks/qwik/src/emitter/index.ts`:
 
 ```
 if (

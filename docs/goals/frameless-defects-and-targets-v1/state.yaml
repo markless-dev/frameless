@@ -131,7 +131,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T048
+active_task: T053
 
 tasks:
   - id: T001
@@ -4684,7 +4684,7 @@ tasks:
   - id: T048
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: low
     spec: "frameless-vue-v1 T014 receipt remaining_blockers - AUTHORITATIVE."
     objective: >-
@@ -4702,6 +4702,16 @@ tasks:
       which is the fault this board keeps catching.
       Likewise leave board receipts (state.yaml:1021, :1209, :1491): those carry ordinals as DATED
       HISTORICAL RECORDS of where something was, not as live citations. Correct as written.
+    PM_RATIFICATION_the_card_contradicted_itself_about_8590: >-
+      THE WORKER FOUND THIS CARD ARGUING BOTH SIDES AND RESOLVED IT CORRECTLY. the_sites listed
+      "policy:583 ... bare :8590" as IN SCOPE, while the_one_that_is_NOT_this_defect and stop_if 2
+      both rule the _debug_node-chunk.mjs citation correct AS WRITTEN. The bare (:8590) carries no
+      file of its own - it INHERITS _debug_node-chunk.mjs from the parenthetical immediately before
+      it - so it IS that citation. Removing it would leave outputBinding(publicName + 'Change', ...)
+      with no handle at all inside a third-party build artifact, which is the one place the ruling
+      says an ordinal may be the only stable one. PM RATIFIES THE EXCLUSION: the exclusion governs,
+      the site list was wrong, and the Worker was right to leave it untouched and say so rather
+      than pick whichever limb was easier to satisfy.
     why_it_matters: >-
       Two consecutive Vue tasks paid a prose tax to these - T012 correcting six after a +13 shift,
       T013 holding a replacement to exactly ten lines for ten. The ordinals buy nothing: every
@@ -4746,10 +4756,10 @@ tasks:
     verify:
       - "pnpm test"
       - "pnpm lint"
-      - "grep -nE '[a-z]\\.ts:[0-9]+|\\(:[0-9]+\\)' docs/emitter-idiom-policy.md   # only the third-party artifact citation may remain"
+      - "grep -nE '[a-z]\\.ts:[0-9]+|\\(:[0-9]+\\)' docs/emitter-idiom-policy.md   # CANNOT be empty and its old annotation was wrong: this pattern also matches every packages/compiler/src/*.ts and third-party *.d.ts citation. Inspect the hits against T048's classified residue; no T014-reported site may remain."
       - "git diff --exit-code -- demos/ scripts/ packages/compiler/   # only the vue emitter COMMENT may move under packages/"
       - "git diff --exit-code -- packages/frameworks/*/generated packages/compiler/test/goldens   # no emitted or golden byte"
-      - "grep -rn 'SEVENTEEN|seventeen|seven goldens|seven-scenario' docs/emitter-idiom-policy.md packages/frameworks/vue/src/emitter/index.ts   # must be empty"
+      - "grep -rnE 'SEVENTEEN|seventeen|seven goldens|seven-scenario' docs/emitter-idiom-policy.md packages/frameworks/vue/src/emitter/index.ts   # must be empty. -E IS LOAD-BEARING: written without it, bare | is a LITERAL pipe and the command is vacuously green. PM confirmed 0-vs-1 against a planted control after first mis-testing it with \\| ."
     stop_if:
       - "Need files outside allowed_files."
       - "You are about to touch the Angular _debug_node-chunk.mjs citation or a board receipt's historical ordinal. Both are RULED correct as written."
@@ -4757,8 +4767,50 @@ tasks:
       - "You find a citation whose symbol name is AMBIGUOUS or absent - report it rather than inventing one."
       - "A count you are asked to correct turns out to CHANGE A VERDICT rather than just a number. T999 measured that none of them do; if you find one that does, STOP - that is a re-score, not a prose fix."
       - "You are about to correct a number by restating it. Prefer REMOVING the claim to owning a size, per the ratified pattern above; if a count must be stated, say so and why."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      changed_files:
+        - docs/emitter-idiom-policy.md
+        - packages/frameworks/vue/src/emitter/index.ts
+        - docs/goals/frameless-defects-and-targets-v1/notes/T024-corpus-breadth.md
+      commands:
+        - cmd: "pnpm test"
+          status: pass
+          note: "1027 passed / 51 files - exactly the dispatch figure; no test moved"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 394 files"
+        - cmd: "git diff --exit-code -- demos/ scripts/ packages/compiler/"
+          status: pass
+        - cmd: "git diff --exit-code -- packages/frameworks/*/generated packages/compiler/test/goldens"
+          status: pass
+          note: "clean across all six lanes"
+        - cmd: "comment-only diff filter over the vue emitter"
+          status: pass
+          note: "EMPTY. PM RE-RAN IT INDEPENDENTLY and also got empty"
+        - cmd: "grep -rnE for the stale count words"
+          status: pass
+          note: "empty in the -E form"
+        - cmd: "git status --short"
+          status: pass
+          note: "exactly the three changed files; nothing committed"
+      summary: "Clause 1: all six T014-reported ordinal sites replaced by the symbol each already named, every symbol RECOVERED FROM THE COMMIT THAT AUTHORED THE CITATION rather than invented. Clause 2: re-derived the corpus figures independently - 19 entries, 8 goldens, 6 names - and REMOVED the sizes rather than restating them. No verdict, gate score, worked-example number or emitted byte moved."
+      FIVE_OF_EIGHT_ORDINALS_HAD_ALREADY_ROTTED_MEASURED: "The card argued ordinals are AT RISK. Measurement says worse: react :1246 -> persistenceStatements() had drifted +51 and :1405-1406 -> eventProp()'s ruling comment +92, both since a93d312 - THE COMMIT THAT WROTE THEM. The vue gate :1024 that T014 called 'the live one, most likely to drift next' now points at a variable declaration, the defineEmits check having been split out to :1062. In the T024 note the angular guard had drifted +178 and the vue guard +44 WHILE SVELTE'S AND QWIK'S WERE STILL ACCURATE - one sentence carrying two correct ordinals and two wrong ones with NOTHING TO TELL THEM APART. That is the argument for a mechanical guard, and it is why T053 is a check rather than a fifth sweep."
+      THE_COMMENT_IT_REPAIRED_CONTRADICTED_ITSELF_IN_ADJACENT_SENTENCES: "vue propsDeclaration's doc comment says 'ITS SIZE IS NOT A LITERAL THIS COMMENT OWNS' and then, one sentence later, owned three: 'today SEVENTEEN values, six distinct names, seven goldens'. THE DISCLAIMED HALF STAYED TRUE AND THE STATED HALF WAS FALSE WITHIN TWO SCENARIOS - the own-no-size pattern and its counterexample, in one comment. That contrast is now recorded in the comment itself so the next author sees why the numbers are absent."
+      THE_CARDS_SECOND_CLAUSE_UNDERCOUNTED_BY_THREE: "S9 falsified FIVE prose sizes in these two files, not the three the card named. Beyond 12b's domain, 12b's G4 and the propsDeclaration comment: 12a's non-coverage note said 'zero of the SEVEN compiler goldens' (re-measured 0 of 8 - THE ZERO HOLDS, the scope was false), 12b's G4 said 'across all SEVEN base goldens', and both domain paragraphs were scoped to 'the seven-scenario corpus'. The card's own stale-count grep could not have gone empty otherwise."
+      TWO_DEFECTS_IN_THIS_CARDS_OWN_VERIFY_LIST_PM_CONFIRMED: "(1) Verify grep 6 was written WITHOUT -E, so bare | is a LITERAL PIPE and the command is VACUOUSLY GREEN - it can never match regardless of file contents. The Worker reported it and ran the substantive -E form instead. PM INITIALLY MIS-TESTED THIS with \\| and got the wrong answer, then re-ran the card's exact bare-| form against a planted control: 0 matches vs 1 for -E. THE WORKER WAS RIGHT. Card corrected. (2) Verify grep 3 CANNOT be empty and its annotation was wrong about which file - the pattern also matches every packages/compiler/src/*.ts and third-party *.d.ts citation, not just the artifact one. Also corrected."
+      PM_RATIFIED_ITS_RESOLUTION_OF_A_CARD_SELF_CONTRADICTION: "the_sites listed the bare (:8590) as in scope while the_one_that_is_NOT_this_defect and stop_if 2 ruled that citation correct as written. The Worker resolved TOWARDS THE EXCLUSION and said so instead of picking the easier limb: (:8590) carries no file of its own, inheriting _debug_node-chunk.mjs from the parenthetical before it, so it IS that citation. PM RATIFIES - the exclusion governs and the site list was wrong."
+      deviations:
+        - "WIDENED WITHIN A SENTENCE, TWICE, both inside allowed_files: worked example 11's G4 cites three schema.ts symbols in one sentence and only one was carded - fixing one would have left three parallel citations in two styles; and the T024 note's guard citation names four emitters, of which only vue was carded AND TWO OF THE OTHER THREE WERE MEASURABLY WRONG."
+        - "Repaired three counts the card did not name - see the undercount finding. Each measured first, each in an allowed file, none moves a verdict."
+        - "STATED ONE FIGURE RATHER THAN REMOVING IT, and argued it: 12b's six prop NAMES are kept as an enumeration while the count 'six' is dropped. The names are the domain's CONTENT, not its size, verified at HEAD, and are the one figure that has survived every corpus addition since S4 - which is that paragraph's own argument. Both counts are left to gate.test.ts's derivation."
+        - "Did NOT create notes/T048-remaining-ordinals.md though it was allowed: the Worker's harness rules forbid writing findings .md files. Everything it would have carried - the site table, the drift measurements, the classified residue - is in this receipt, and T053 inherits the classification."
+        - "Rewrapped two policy lines to the file's existing ~100-column wrap after substitution. No content change."
+      remaining_blockers:
+        - "Residue carried to T053 AS A MECHANICAL GUARD, not a fifth sweep: four same-class citations that DO name their symbol (policy:524, :1304, :1405, T024 note:166); three that name NO symbol and need a decision rather than a sweep (policy:197, :198, :467); and 12a's domain exhibit at policy:1281-1282, which lists eight instances by EMITTED-OUTPUT ordinal against files the emitter regenerates."
+      stopped_because: null
   - id: T049
     type: worker
     assignee: Worker
@@ -5650,6 +5702,67 @@ tasks:
           - mutation: "RED PROOF 3: move a real rule from applied into the omission list"
             observed: "RED, as required"
             detail: "red on the omission literal EVEN THOUGH the union stayed total - the third-rule stop_if mechanically enforced"
+  - id: T053
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: medium
+    spec: "T048 receipt, residual_grep_hits_classified and remaining_blockers - AUTHORITATIVE."
+    objective: >-
+      CLOSE THE CITATION-ROT CLASS MECHANICALLY. Do not sweep the residue by hand; add a check that
+      fails when a citation to a FIRST-PARTY path carries a bare line ordinal, then clear whatever
+      it reports.
+    why_this_is_a_GUARD_and_not_a_FIFTH_SWEEP: >-
+      T012, T013, T014 and T048 have now each hand-corrected citations or counts in these files.
+      The Vue T999 audit ruled on exactly this shape: a further hand-sweep LEAVES THE CLASS AS OPEN
+      AS IT FOUND IT. T048 then proved the point with measurement - FIVE of the eight ordinals it
+      touched HAD ALREADY DRIFTED, including two in a single sentence that sat beside two still-
+      correct ones with nothing to tell them apart. A human cannot see that; a check can. THE
+      DELIVERABLE IS THE CHECK. Clearing the remaining sites is what the check makes you do, not
+      the point of the card.
+    the_residue_T048_classified_measure_it_again_do_not_inherit: >-
+      SAME CLASS, SYMBOL IS NAMED, straightforward: docs/emitter-idiom-policy.md:524
+      (PropDestructuringEntry), :1304 (StateWriteRecord), :1405 (ComponentPropExpression) - all
+      packages/compiler/src/schema.ts - and notes/T024-corpus-breadth.md:166 (bare `:642`, qwik
+      emitter).
+      SAME CLASS, SYMBOL ABSENT, NEEDS A DECISION NOT A SWEEP: policy:197 (build.ts:420), :198
+      (schema.ts:476), :467 (schema.ts:173). T048's stop_if made it REPORT these rather than invent
+      a symbol, which was correct. Either name the real symbol after reading the cited code, or
+      state why the citation should keep an ordinal.
+      SAME ROT SHAPE, DIFFERENT TARGET: policy:1281-1282 lists 12a's eight instances by EMITTED
+      OUTPUT ordinal (S2.vue:14 and so on) against files the emitter REGENERATES.
+    the_exclusion_is_RULED_and_the_guard_must_encode_it: >-
+      Third-party build artifacts keep their ordinals - _debug_node-chunk.mjs, _common_module-chunk.d.ts,
+      compiler.d.ts, core-internal.d.ts, runtime-dom.cjs.js - because there the ordinal may be the
+      only stable handle and the symbol is not the reader's entry point. Board receipts in state.yaml
+      keep theirs as DATED HISTORICAL RECORDS. The guard must encode both exclusions explicitly, so
+      the next reader sees a ruling rather than an unexplained allowlist.
+    constraints:
+      - "PROVE THE GUARD RED before clearing anything: plant a first-party bare ordinal, watch it named, restore. A check that cannot fail is not a check - this board has caught that four times."
+      - "The exclusion list must be an ALLOWLIST WITH REASONS, not a regex that happens to miss them."
+      - "Do NOT touch the ruled-correct sites. Do NOT invent a symbol name for the three that lack one - read the code or record the decision."
+      - "Documentation, comments and the new check only. No emitted byte, no golden, no gate predicate, no existing assertion may move."
+    allowed_files:
+      - docs/emitter-idiom-policy.md
+      - docs/goals/frameless-defects-and-targets-v1/notes/T024-corpus-breadth.md
+      - docs/goals/frameless-defects-and-targets-v1/notes/T053-citation-guard.md
+      - scripts/check-citations.mjs
+      - package.json
+      - packages/compiler/test/citations.test.ts
+    verify:
+      - "pnpm test"
+      - "pnpm lint"
+      - "pnpm check"
+      - "git diff --exit-code -- packages/frameworks demos/ packages/compiler/src packages/compiler/test/goldens"
+      - "git status --short"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You cannot show the guard going RED on a planted first-party ordinal."
+      - "The guard would flag a RULED-CORRECT site and you are tempted to re-open that ruling. It is ruled; encode it as an exclusion with its reason."
+      - "A citation needs a symbol that does not exist - report it, do not invent one."
+      - "Any emitted byte, golden or existing assertion moves."
+    receipt: null
+
   - id: T999
     type: judge
     assignee: Judge

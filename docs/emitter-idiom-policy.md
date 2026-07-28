@@ -197,8 +197,8 @@ it must satisfy both of the following, or it is `FAIL`:
    (`packages/compiler/src/build.ts:420`) lands persistence records on the IR
    (`packages/compiler/src/schema.ts:476`), and the React emitter then injects a
    `__framelessWrite(...)` statement into the handler during its own lowering
-   (`packages/frameworks/react/src/emitter/index.ts:1246`). The visible result is
-   `packages/frameworks/react/generated-persistence/P1.jsx`, where a handler that is a bare
+   (`persistenceStatements()` in `packages/frameworks/react/src/emitter/index.ts`). The visible
+   result is `packages/frameworks/react/generated-persistence/P1.jsx`, where a handler that is a bare
    assignment in the base golden acquires a second statement. A trigger that matched on the IR's
    `EventHandlerRecord` would never see it.
 2. It ships with a **fail-closed enumeration** of every IR channel that can contribute statements
@@ -549,9 +549,9 @@ string literal into the `defineProps([...])` array by `propsDeclaration()` in
      diagnostic.
 - **G6 FAIL.** A Vue lane exists, so `DEFERRED` is discharged — it is available for that one cause
   only. No standing check would fail if this sugar silently regressed, because there is no emitted
-  artifact to regress: `packages/frameworks/vue/src/gate/index.ts:1024` **actively refuses** any
-  emitted `defineEmits(` call. That check pins the *denial*, not the sugar. Same clause as entries
-  2b and 7.
+  artifact to regress: `scriptViolations()` in `packages/frameworks/vue/src/gate/index.ts`
+  **actively refuses** any emitted `defineEmits(` call. That check pins the *denial*, not the sugar.
+  Same clause as entries 2b and 7.
 
 Three `FAIL`s: **denied, not deferred.** Say which one decides it: **Gate 5 does**, and Gate 4 and
 Gate 6 each deny it independently. **Re-open only if IR-2 gains an emit concept *and* IR-8 gains a
@@ -1133,9 +1133,9 @@ and an `alias`/renamed `sourceName`.
 - **G4 PASS on a narrowed rule, and the narrowing is worth reading.** `DEFERRED — emitter absent` is
   discharged: `propMembers()` exists and is the deciding function. A counterexample is exhibitable
   **from the IR schema**, which is exactly what this gate's absent-emitter clause says counts:
-  `PropDestructuringEntry` carries a `graphNodeId` (`packages/compiler/src/schema.ts:205-212`),
-  `GraphBindingKind` includes `'prop'` (`:20`), and `StateWriteRecord` is keyed on a `graphNodeId`
-  and admits `operation: 'assign'` (`:266-274`) — so a prop a handler assigns to is representable,
+  `PropDestructuringEntry` carries a `graphNodeId`, `GraphBindingKind` includes `'prop'`, and
+  `StateWriteRecord` is keyed on a `graphNodeId` and admits `operation: 'assign'` — all three in
+  `packages/compiler/src/schema.ts` — so a prop a handler assigns to is representable,
   and the sugar cannot express it, because an `InputSignal` is read-only. That is not a paper
   objection: it is the measured `TypeError` in the Gate 5 entry below. The Gate 4 repair applies and
   is legitimate — narrow the domain to entries that are never a `StateWriteRecord` target, which is a
@@ -1278,7 +1278,7 @@ handler that performs the assignment. Candidate: `v-model="x"`.
 Domain, in emitter terms: every host node `renderHost()` prints that carries a `DynamicBinding`
 named `value` or `checked` from `attributesOf()`, together with an event directive on the same host
 from `eventAttribute()` — all three in `packages/frameworks/vue/src/emitter/index.ts`.
-**Re-enumerated over the seven-scenario corpus by `frameless-vue-v1` T012.** The domain is **populated** with **eight shipped instances**: `S2.vue:14`,
+**Re-enumerated over the shipped corpus by `frameless-vue-v1` T012.** The domain is **populated** with **eight shipped instances**: `S2.vue:14`,
 `S2.vue:32`, `S2.vue:43`, `S3.vue:19`, `S3.vue:27`, `S7.vue:41`, `S7.vue:51`, `S7.vue:65`.
 
 **This figure has now been wrong once, and the reason is worth more than the number.** T009 took it
@@ -1349,8 +1349,8 @@ not IR-8.
 
 **Not covered by this entry, and deliberately not folded into it: `v-model` on an emitted child
 component.** `renderNode` in `emitter/index.ts` falls through to a `throw` on any template node kind
-it has no lowering for, `component-reference` included, and **zero of the seven compiler goldens
-contains one** — re-counted over S1–S7 rather than carried. That domain is **empty**, which gives `UNKNOWN` at
+it has no lowering for, `component-reference` included, and **no compiler golden contains one** —
+re-counted over every golden rather than carried. That domain is **empty**, which gives `UNKNOWN` at
 Gate 4 and `FAIL` at Gate 6 — entry 2b's shape, a different reason for the same answer. Ruling it
 inside 12a would be the vacuous-totality move worked example 7 refused.
 
@@ -1363,16 +1363,18 @@ Baseline (what the emitter ships): the prop is declared in the string-literal ar
 Domain, in emitter terms: every `PropDestructuringEntry` in `component.props.entries` printed as a
 string literal into the `defineProps([...])` array by `propsDeclaration()` in
 `packages/frameworks/vue/src/emitter/index.ts` — **the same domain as worked example 3**.
-**Re-enumerated over the seven-scenario corpus by `frameless-vue-v1` T012**, and it moved again. The
-domain is **populated** with **seventeen printed entries** — S1 four, S2 two, S3 two, S4 two, S5
-two, S6 three, S7 two — spanning **six distinct prop names**: `label`, `multiplier`, `visible`,
-`seed`, `initial`, `onTrace`. `frameless-vue-v1` T009 recorded "six shipped props" over four
-goldens; **the entry count has gone 10 → 15 → 17 and the distinct-name count has not moved once**,
-because no scenario since S4 introduces a prop name S1–S4 did not already carry. Both figures are
-stated because a single number that happens to survive a corpus change looks identical to one nobody
-re-checked — which is exactly what happened to the entry count between T010 and S7, and why both are
-now **derived from `packages/compiler/test/goldens` by `packages/frameworks/vue/test/gate.test.ts`
-and asserted against the shipped gate message** rather than literalled into it.
+**Re-enumerated over the shipped corpus by `frameless-vue-v1` T012**, and it moved again — and has
+moved every time the corpus has grown since. The domain is **populated**, spanning the distinct prop
+names `label`, `multiplier`, `visible`, `seed`, `initial`, `onTrace`. `frameless-vue-v1` T009
+recorded "six shipped props" over four goldens; **the entry count has moved with every scenario
+added since, and the distinct-name count has not moved once**, because no scenario since S4
+introduces a prop name S1–S4 did not already carry. **Neither size is stated here.** A single number
+that happens to survive a corpus change looks identical to one nobody re-checked — which is exactly
+what happened to the entry count between T010 and S7 — so both are **derived from
+`packages/compiler/test/goldens` by `packages/frameworks/vue/test/gate.test.ts` and asserted against
+the shipped gate message**, which is where a reader gets today's figures. The prop *names* are given
+because they are the domain's content rather than its size, and they are the one thing here that has
+survived every corpus addition.
 
 - **G1 PASS.** Measured at `vue@3.5.40`; both forms exact-empty across `ssr × isProd`, calibrated by
   a planted error that reports in all four modes.
@@ -1393,10 +1395,10 @@ and asserted against the shipped gate message** rather than literalled into it.
   flat content inspection. A **totalising** rule — declare every prop as a model — would have a
   declared trigger and pass this gate; it is refuted at Gate 4 by its own counterexamples and at
   Gate 5 outright.
-- **G4 FAIL.** The sugar applies to **zero of the seventeen printed entries, and to zero of the six
-  distinct names**: its precondition is the component writing back to the prop, and no shipped prop
+- **G4 FAIL.** The sugar applies to **zero printed entries, and to zero distinct names**: its
+  precondition is the component writing back to the prop, and no shipped prop
   is written back. **The repair narrowing "props the component writes back to" is not statable at
-  all.** Measured across all seven base goldens: every prop entry shares one graph node, `prop:props`,
+  all.** Measured across every base golden: every prop entry shares one graph node, `prop:props`,
   declared `writable: false` with zero writes. Per-prop write-back has no channel in the IR — not an
   unsound one, none. **This is IR-1, and it is distinct from IR-8:** IR-8 is a missing *type* field
   on `PropDestructuringEntry`; this is a missing *per-prop identity* in the graph.
@@ -1534,7 +1536,8 @@ Every ruling gets both:
 
    Whichever it is, say which gate it applies to and why, in the entry itself.
 2. A comment at the decision site in the emitter naming the ruling, matching the existing
-   convention at `packages/frameworks/react/src/emitter/index.ts:1405-1406`.
+   convention: the `T002 ruling N` comments in `packages/frameworks/react/src/emitter/index.ts`,
+   such as the one in `eventProp()`.
 
 A ruling that exists only in a document will be re-litigated by the next person to open the
 emitter.
