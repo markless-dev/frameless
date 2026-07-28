@@ -474,8 +474,8 @@ Baseline (what the emitter ships): the callback is a declared prop —
 `defineEmits(['trace'])` with `emit('trace', …)`.
 
 Domain, in emitter terms: every `PropDestructuringEntry` in `component.props.entries` printed as a
-string literal into the `defineProps([...])` array by `propsDeclaration()`
-(`packages/frameworks/vue/src/emitter/index.ts:413`).
+string literal into the `defineProps([...])` array by `propsDeclaration()` in
+`packages/frameworks/vue/src/emitter/index.ts`.
 
 - **G1 PASS.** Measured, not read, against `vue@3.5.40` / `@vue/compiler-sfc@3.5.40` — the same
   version at both, resolved from the package that ships the emitter. The shipped `S1.vue` and its
@@ -1226,11 +1226,10 @@ alongside `input`, so the shipped gate pins both halves. That is correct and sta
 Baseline (what the emitter ships): `:value="x"` (or `:checked="x"`) plus a `@input` / `@change`
 handler that performs the assignment. Candidate: `v-model="x"`.
 
-Domain, in emitter terms: every host node `renderHost()`
-(`packages/frameworks/vue/src/emitter/index.ts:828`) prints that carries a `DynamicBinding` named
-`value` or `checked` from `attributesOf()` (`:766`) together with an event directive on the same
-host from `eventAttribute()` (`:743`). **Re-enumerated over the seven-scenario corpus by
-`frameless-vue-v1` T012.** The domain is **populated** with **eight shipped instances**: `S2.vue:14`,
+Domain, in emitter terms: every host node `renderHost()` prints that carries a `DynamicBinding`
+named `value` or `checked` from `attributesOf()`, together with an event directive on the same host
+from `eventAttribute()` — all three in `packages/frameworks/vue/src/emitter/index.ts`.
+**Re-enumerated over the seven-scenario corpus by `frameless-vue-v1` T012.** The domain is **populated** with **eight shipped instances**: `S2.vue:14`,
 `S2.vue:32`, `S2.vue:43`, `S3.vue:19`, `S3.vue:27`, `S7.vue:41`, `S7.vue:51`, `S7.vue:65`.
 
 **This figure has now been wrong once, and the reason is worth more than the number.** T009 took it
@@ -1300,9 +1299,9 @@ identifies. Gates 3, 4 and 6 deny it independently. **Re-open only if the IR gai
 not IR-8.
 
 **Not covered by this entry, and deliberately not folded into it: `v-model` on an emitted child
-component.** `renderNode` (`emitter/index.ts:934`) throws at `:947` on any template node kind it has
-no lowering for, `component-reference` included, and **zero of the seven compiler goldens contains
-one** — re-counted over S1–S7 rather than carried. That domain is **empty**, which gives `UNKNOWN` at
+component.** `renderNode` in `emitter/index.ts` falls through to a `throw` on any template node kind
+it has no lowering for, `component-reference` included, and **zero of the seven compiler goldens
+contains one** — re-counted over S1–S7 rather than carried. That domain is **empty**, which gives `UNKNOWN` at
 Gate 4 and `FAIL` at Gate 6 — entry 2b's shape, a different reason for the same answer. Ruling it
 inside 12a would be the vacuous-totality move worked example 7 refused.
 
@@ -1313,8 +1312,8 @@ Baseline (what the emitter ships): the prop is declared in the string-literal ar
 `const initial = defineModel('initial')`.
 
 Domain, in emitter terms: every `PropDestructuringEntry` in `component.props.entries` printed as a
-string literal into the `defineProps([...])` array by `propsDeclaration()`
-(`packages/frameworks/vue/src/emitter/index.ts:413`) — **the same domain as worked example 3**.
+string literal into the `defineProps([...])` array by `propsDeclaration()` in
+`packages/frameworks/vue/src/emitter/index.ts` — **the same domain as worked example 3**.
 **Re-enumerated over the seven-scenario corpus by `frameless-vue-v1` T012**, and it moved again. The
 domain is **populated** with **seventeen printed entries** — S1 four, S2 two, S3 two, S4 two, S5
 two, S6 three, S7 two — spanning **six distinct prop names**: `label`, `multiplier`, `visible`,

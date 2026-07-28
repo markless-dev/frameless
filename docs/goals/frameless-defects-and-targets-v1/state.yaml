@@ -4453,6 +4453,51 @@ tasks:
       - "Worker package if one follows, or an explicit statement that it belongs in the capability goal"
     receipt: null
 
+  - id: T048
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: low
+    spec: "frameless-vue-v1 T014 receipt remaining_blockers - AUTHORITATIVE."
+    objective: >-
+      Finish removing bare line ordinals from citations, at the sites T014 reported but correctly
+      refused to widen into - AND leave the one that is not the same defect alone.
+    the_sites: >-
+      docs/emitter-idiom-policy.md:200 and :1489 (react emitter); :528 (vue/src/gate/index.ts:1024 -
+      T014 flagged this as THE LIVE ONE, most likely to drift next); :583 and :1088 (bare `:8590`
+      and `:20` with no file); and docs/goals/frameless-defects-and-targets-v1/notes/T024-corpus-breadth.md:43.
+    the_one_that_is_NOT_this_defect: >-
+      T014 DREW A DISTINCTION WORTH KEEPING. The Angular `_debug_node-chunk.mjs:8516` citation points
+      at a THIRD-PARTY BUILD ARTIFACT where the ordinal may be the only stable handle and the symbol
+      is not the reader's entry point. THE RATIONALE FOR REMOVING ORDINALS DOES NOT TRANSFER THERE.
+      Leave it. A worker that swept it up would have been generalising a finding past its evidence,
+      which is the fault this board keeps catching.
+      Likewise leave board receipts (state.yaml:1021, :1209, :1491): those carry ordinals as DATED
+      HISTORICAL RECORDS of where something was, not as live citations. Correct as written.
+    why_it_matters: >-
+      Two consecutive Vue tasks paid a prose tax to these - T012 correcting six after a +13 shift,
+      T013 holding a replacement to exactly ten lines for ten. The ordinals buy nothing: every
+      citation already names its symbol.
+    constraints:
+      - "Replace each ordinal with the SYMBOL it already names. Do not renumber, restructure or re-score any worked example."
+      - "GREP CANNOT SEE ALL OF THEM. T014 found two - `(:766)` and `(:743)` - that do not match the obvious index\\.ts:[0-9]+ pattern. Search for bare parenthesised ordinals too, or the verify will pass while missing the point."
+      - "Documentation only. No behaviour, no assertion, no golden may move."
+    allowed_files:
+      - docs/emitter-idiom-policy.md
+      - docs/goals/frameless-defects-and-targets-v1/notes/T024-corpus-breadth.md
+      - docs/goals/frameless-defects-and-targets-v1/notes/T048-remaining-ordinals.md
+    verify:
+      - "pnpm test"
+      - "pnpm lint"
+      - "grep -nE '[a-z]\\.ts:[0-9]+|\\(:[0-9]+\\)' docs/emitter-idiom-policy.md   # only the third-party artifact citation may remain"
+      - "git diff --exit-code -- packages/ demos/ scripts/   # documentation only"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to touch the Angular _debug_node-chunk.mjs citation or a board receipt's historical ordinal. Both are RULED correct as written."
+      - "Any code, assertion or golden moves."
+      - "You find a citation whose symbol name is AMBIGUOUS or absent - report it rather than inventing one."
+    receipt: null
+
   - id: T042
     type: worker
     assignee: Worker

@@ -169,7 +169,7 @@ visual_board:
     url: null
     command: "npx goalbuddy board docs/goals/frameless-vue-v1"
 
-active_task: T014
+active_task: T999
 
 tasks:
   - id: T001
@@ -1568,7 +1568,7 @@ tasks:
   - id: T014
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     spec: "T013 receipt remaining_blockers - AUTHORITATIVE."
     objective: >-
@@ -1613,12 +1613,63 @@ tasks:
       - "You are about to restate a bare corpus count without a derivation or a dated scope."
       - "Re-measuring (2) shows the SSR claim is false rather than merely stale-scoped. That is a FINDING about a T005 measurement - report it verbatim and stop."
       - "You are about to renumber or re-score a worked example while editing citations."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T014-citation-ordinals.md
+      summary: "Removed all four bare line ordinals citing the Vue emitter from the policy, PLUS TWO THE VERIFY GREP COULD NOT SEE, each replaced by the symbol it already named. Replaced both stale emitter counts: the stopPropagation one now points at scenarioCorpus()'s derivation and OWNS NO SIZE; the SSR one carries its commit, version and scope. Both counts re-derived from source rather than inherited, and both agree. No worked example renumbered or re-scored; no behaviour, assertion, golden or gate message moved."
+      THE_TWELVE_WAS_BORN_FALSE_NOT_STALE: "PM VERIFIED: git ls-tree 5ca20c7 packages/compiler/test/goldens/ returns EXACTLY THREE FILES. The comment claiming 'zero instances across all TWELVE existing goldens' was written when the directory held three. IT HAS NEVER BEEN TRUE - not once, in either direction. That is a different defect from a count that went stale, and the note says which each one is. The ZERO it asserts does hold: stopPropagation appears in 0 of 7 goldens, only preventDefault, 8 times in s3."
+      THE_SSR_CLAIM_WAS_RE_MEASURED_AND_IS_WIDER_THAN_IT_CLAIMED: "The card flagged this one as lower confidence and told the Worker to re-measure before rewording, with a stop_if if it turned out FALSE rather than stale-scoped. IT HOLDS, AND HOLDS MORE BROADLY: each shipped generated/S<n>.vue against a mechanical longhand twin, loaded through @vitejs/plugin-vue and rendered by vue/server-renderer at 3.5.40 with the demo's own props - BYTE-IDENTICAL 7 OF 7, 70 shorthands respelled, with a planted attribute-rename control differing 7 of 7. The sentence said 'three scenario components'; the property is true of all seven."
+      IT_REMOVED_TWO_ORDINALS_THE_VERIFY_COULD_NOT_SEE: "THE SHARPEST THING IN THIS RECEIPT. Entry 12a carried `(:766)` and `(:743)` - Vue emitter citations that do NOT match the verify's index\\.ts:[0-9]+ pattern. LEAVING THEM WOULD HAVE SATISFIED THE CHECK AND MISSED THE CARD'S POINT. The Worker went past its own passing gate to the thing the gate was for. That is the exact inverse of the failure this board keeps finding, where a green instrument is mistaken for a green subject."
+      it_amended_the_pattern_it_was_given: "The T012/T013 convention is 'state the measurement with its DATE and scope'. THAT DOES NOT DISCRIMINATE IN THIS REPO: git log -1 --date=short 5ca20c7 returns 2026-07-27, THE SAME DAY as the repair - so a date could not tell the false claim from its fix. Both replacements pin scope to commit 81be833 instead (plus resolved version for the SSR arm). A convention that cannot separate the defect from its remedy is not a convention, and the Worker noticed rather than complying."
+      the_defect_class_in_miniature: "T005's byte figures (S1 155 / S2 561 / S3 521) are NO LONGER REPRODUCIBLE for S2 and S3 - because those COMPONENTS changed, not the equivalence. Same class, smaller scale, and precisely why the replacement records the PROPERTY and its SCOPE rather than numbers."
+      IT_REFUSED_TO_GENERALISE_ITS_OWN_FINDING: "It reported six same-class sites elsewhere and did NOT widen into them. And it drew a distinction worth keeping: the Angular _debug_node-chunk.mjs:8516 citation points at a THIRD-PARTY BUILD ARTIFACT where the ordinal may be the only stable handle and the symbol is not the reader's entry point - SO THIS CARD'S RATIONALE DOES NOT TRANSFER THERE. It also excluded board receipts, which carry ordinals as dated historical records rather than live citations. Refusing to sweep up a case that merely resembles yours is harder than finding it."
+      changed_files:
+        - packages/frameworks/vue/src/emitter/index.ts
+        - docs/emitter-idiom-policy.md
+        - docs/goals/frameless-vue-v1/notes/T014-citation-ordinals.md
+      commands:
+        - cmd: "git status --porcelain && git rev-parse HEAD origin/main"
+          status: pass
+          note: "clean at 81be833; the Worker also correctly identified a stale remote-tracking ref as NOT a dirty tree"
+        - cmd: "node -e '<count stopPropagation/preventDefault per golden>'"
+          status: pass
+          note: "MEASUREMENT 1 re-derived: stopPropagation 0 across all 7; preventDefault 8, all in s3"
+        - cmd: "git ls-tree --name-only 5ca20c7 packages/compiler/test/goldens/"
+          status: pass
+          note: "exactly THREE - PM re-verified. 'twelve' was born false"
+        - cmd: "node <scratchpad>/ssr-probe/probe.mjs"
+          status: pass
+          note: "MEASUREMENT 2 re-measured: 7/7 byte-identical at vue 3.5.40, 70 shorthands respelled, 7/7 planted controls differ. No stop_if"
+        - cmd: "pnpm test"
+          status: pass
+          note: "989 passed / 51 files - exactly the dispatch figure"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors"
+        - cmd: "regenerate && git diff --exit-code -- packages/frameworks/vue/generated"
+          status: pass
+          note: "no emitted byte moved"
+        - cmd: "git diff | filter non-comment added lines"
+          status: pass
+          note: "EMPTY; PM re-ran independently - 0 non-comment added lines"
+        - cmd: "grep -nE 'index\\.ts:[0-9]+' docs/emitter-idiom-policy.md"
+          status: pass
+          note: "no Vue emitter hit remains; PM confirms the 3 residual hits are the react emitter and vue gate, reported not widened"
+      deviations:
+        - "Also removed `(:766)` and `(:743)` in entry 12a - Vue emitter citations invisible to the verify grep. See above."
+        - "Scope pinned to commit 81be833 rather than to a date, because the false count's own commit is dated the same day as this repair."
+        - "The SSR replacement grew from 4 lines to 20. Line-neutrality was T013's constraint ONLY because the ordinals existed - and they were removed first, in this same card. Correct sequencing rather than a licence."
+      remaining_blockers:
+        - "Six same-class sites reported, not widened into - carded as T048 on the umbrella board, which also records the two exclusions."
+      spawned_tasks:
+        - "T048 on the umbrella board"
+      stopped_because: null
   - id: T999
     type: judge
     assignee: Judge
-    status: done
+    status: active
     reasoning_hint: high
     objective: "Audit whether the Vue lane satisfies the oracle and the full owner outcome."
     inputs:

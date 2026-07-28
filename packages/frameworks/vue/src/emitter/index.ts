@@ -655,7 +655,23 @@ function staticAttribute(attribute: StaticAttribute): string {
  * Equivalence is therefore total over every argument by construction, and it was
  * confirmed by measurement: identical template codegen and identical production
  * `compileScript` output in all four `ssr x isProd` modes, and byte-identical
- * SSR HTML for all three scenario components.
+ * SSR HTML.
+ *
+ * THAT SSR ARM IS A DATED MEASUREMENT, NOT A COVERAGE CLAIM, and it is written
+ * that way deliberately. It used to read "for all three scenario components",
+ * which was true of what T005 measured - three was the entire corpus then - but
+ * phrased as coverage it silently became a false claim about a seven-scenario
+ * one. RE-MEASURED at `81be833` (2026-07-27, `vue@3.5.40`) over EVERY
+ * `generated/S<n>.vue` shipped at that commit, each rendered through
+ * `vue/server-renderer` against a mechanical longhand twin (`:` to `v-bind:`,
+ * `@` to `v-on:`, applied inside `<template>` only) with the demo's own
+ * scenario props: BYTE-IDENTICAL IN EVERY ONE, 70 shorthands respelled, and a
+ * planted attribute rename per file confirming the comparator can report a
+ * difference at all. The plant is an attribute NAME rather than a `.stop`
+ * modifier because T005 already measured the SSR channel to be BLIND to event
+ * routing - the codegen arm above is what carries that half, not this one.
+ * Scope is "the whole emitted corpus at that commit", which a new scenario
+ * EXTENDS rather than falsifies.
  *
  * ALWAYS WITH A VALUE, and that conjunct is load-bearing rather than decorative.
  * MEASURED at 3.5.40: a VALUE-LESS `:count` and a value-less `v-bind:count` both
@@ -683,10 +699,26 @@ function staticAttribute(attribute: StaticAttribute): string {
  *
  * IR-5 under Vue 3.5.40.
  *
- * `stopPropagation` FAILS CLOSED. The corpus contains zero instances across all
- * twelve existing goldens, so an emitter path for it would be untested dead code,
- * which in an emitter is worse than absent code. It throws here, and the gate
- * carries a matching `no-stop-propagation` row over emitted output.
+ * `stopPropagation` FAILS CLOSED. The corpus contains ZERO instances of it, so
+ * an emitter path for it would be untested dead code, which in an emitter is
+ * worse than absent code. It throws here, and the gate carries a matching
+ * `no-stop-propagation` row over emitted output.
+ *
+ * THE SIZE OF THAT CORPUS IS NOT A LITERAL THIS COMMENT OWNS. It is whatever
+ * `packages/compiler/test/goldens/s<n>-*.json` holds - the same derivation
+ * `test/compile-emitted.test.ts`'s `scenarioCorpus()` reads its rows from, which
+ * THROWS on empty rather than passing vacuously. RE-DERIVED at `81be833` by
+ * scanning every golden in that directory: `stopPropagation` in none of them,
+ * and the only IR-5 action present anywhere is `preventDefault`, eight
+ * occurrences and all of them in `s3-event-form`.
+ *
+ * THE COUNT THIS REPLACES WAS NEVER TRUE, which is a different defect from a
+ * stale one and is named so it does not get repaired as one. "zero instances
+ * across all twelve existing goldens" was written at `5ca20c7`, when that
+ * directory held THREE files; it has since been wrong in both directions
+ * without ever once having been right. The substantive zero held throughout,
+ * and that is exactly what made it durable - a true finding is what lends a
+ * false count its credibility.
  *
  * `preventDefault` is emitted in the plain in-body form and MEASURED, not
  * assumed: `test/emitted-smoke.browser.test.ts` M3 varies the PRODUCT parameter
