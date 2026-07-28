@@ -90,7 +90,7 @@ visual_board:
     predecessor goal that closed complete this session. Recorded as an explicit choice, not an
     omission - the command above turns it on at any time.
 
-active_task: T012
+active_task: T004
 
 tasks:
   - id: T001
@@ -842,7 +842,7 @@ tasks:
   - id: T012
     type: pm
     assignee: PM
-    status: active
+    status: done
     reasoning_hint: medium
     spec: "T011 receipt, remaining_blockers - AUTHORITATIVE. The fix is measured; the RULING is what was missing."
     objective: >-
@@ -900,12 +900,29 @@ tasks:
     constraints:
       - "Add `exclude` ONLY. Do not touch strict, checkJs, or any other compiler option - loosening a global to fix a local enrolment is the wrong repair."
       - "Record the reason inline in both files, including that emitted-typecheck.test.ts is the owning instrument."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      summary: "RULED, and the ruling is that this is NOT a config question. T011's proposed `exclude` fix was applied and MEASURED INEFFECTIVE - 73 errors unchanged - then reverted. The obligation moves to T004, which repairs the dominant error class by doing its own job."
+      changed_files: []
+      commands:
+        - cmd: "apply the proposed exclude to both tsconfigs, then pnpm check"
+          status: pass
+          note: "MEASURED 73 errors, UNCHANGED from before the edit. The proposed remedy is refuted."
+        - cmd: "git checkout -- both tsconfigs"
+          status: pass
+          note: "no-op edit reverted rather than left as a decorative config entry"
+        - cmd: "error-class census"
+          status: pass
+          note: "TS7006 24, TS2339 18, TS7031 14, TS18046 7, TS2322 6, TS2571 2, TS7034 1, TS7005 1"
+      THE_PM_MADE_THE_SAME_CLASS_OF_ERROR_THIS_BOARD_KEEPS_CATCHING: "T011 reported its fix 'verified against a scratch copy: react goes 73 errors -> 0'. I applied EXACTLY that and got 73, UNCHANGED. TypeScript's `exclude` only filters what `include` globs would pull in - A FILE REACHED BY AN IMPORT IS IN THE PROGRAM REGARDLESS - and neither tsconfig's include names generated*/ at all, so exclude was never the lever. I had already written a confident inline comment justifying the exclusion before measuring it. The comment was reverted with the edit. VERIFY THE CLAIM, NOT THE PLAUSIBILITY."
+      what_is_actually_happening: "The browser tests import '../generated/S3.jsx'. That .jsx SPECIFIER resolves to S3.tsx through TypeScript's JS-to-TS substitution - the very mechanism T011 relied on to keep emitted bytes unchanged. So the rename enrolled emitted output into the strict program through test imports. T011's diagnosis was right; only its remedy was wrong."
+      the_ruling: "STEP 2 OWNS THIS, NOT A COMPILER FLAG. Of 73 errors, 40 are TS7006/TS7031/TS7034/TS7005 - THE IMPLICIT-ANY FAMILY, exactly what printing types deletes. The remaining 33 (TS2339, TS18046, TS2322, TS2571) are narrowing and assignment classes that T004 must measure anyway, because its own oracle requires emitted output to be type-clean APART FROM the deliberate wrong-typed error. A flag that suppressed these would hide the precise signal Step 2 exists to produce. T004's card now carries the obligation and a stop_if against reaching for a compiler option."
+      cost_recorded_honestly: "This leaves pnpm check RED between Step 1.5 and Step 2. That is a real cost and it is stated rather than smuggled: e2e - the BEHAVIOURAL oracle - is green, lint and citations are green, tests are at baseline+1, and the red is confined to emitted artifacts that were never in this program before the rename. T004 is dispatched immediately, so the window is one task."
   - id: T004
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
     objective: "STEP 2. Consume IR-8: all six emitters print types on emitted props."
     YOU_INHERIT_A_RED_pnpm_check_AND_YOU_OWN_DRIVING_IT_GREEN: >-
@@ -924,6 +941,52 @@ tasks:
     constraints:
       - "The oracle for this step is Step 0's instrument, re-run against EMITTED output rather than hand-written probes. The RED must reproduce per lane."
       - "No emitted byte may change for a component with no typed prop - prove it with git diff --exit-code over the untouched scenarios."
+    allowed_files:
+      - packages/frameworks/react/src/emitter/index.ts
+      - packages/frameworks/solid/src/emitter/index.ts
+      - packages/frameworks/qwik/src/emitter/index.ts
+      - packages/frameworks/svelte/src/emitter/index.ts
+      - packages/frameworks/vue/src/emitter/index.ts
+      - packages/frameworks/angular/src/emitter/index.ts
+      - packages/frameworks/react/generated
+      - packages/frameworks/solid/generated
+      - packages/frameworks/qwik/generated
+      - packages/frameworks/svelte/generated
+      - packages/frameworks/vue/generated
+      - packages/frameworks/angular/generated
+      - packages/frameworks/react/generated-composition
+      - packages/frameworks/solid/generated-composition
+      - packages/frameworks/react/generated-persistence
+      - packages/frameworks/solid/generated-persistence
+      - packages/frameworks/react/test
+      - packages/frameworks/solid/test
+      - packages/frameworks/qwik/test
+      - packages/frameworks/svelte/test
+      - packages/frameworks/vue/test
+      - packages/frameworks/angular/test
+      - packages/frameworks/react/src/format-emitted.ts
+      - packages/frameworks/solid/src/format-emitted.ts
+      - packages/frameworks/qwik/src/format-emitted.ts
+      - packages/compiler/test/fixtures
+      - packages/compiler/test/goldens
+      - packages/compiler/test/enriched-ir.test.ts
+      - demos/react-official/src/emitted
+      - demos/solid-official/src/emitted
+      - demos/qwik/src/emitted
+      - demos/vue-official/src/emitted
+      - demos/svelte-official/src/lib/emitted
+      - demos/angular-official/src/emitted
+      - docs/goals/frameless-emitter-capability-v1/notes/T004-ir8-consumption.md
+    allowed_files_provenance: >-
+      Six emitters plus their emitted output, their test suites, the three format-emitted parser
+      lang settings T011 deliberately left as tripwires, and the corpus fixtures - because printing
+      types is only PROVABLE against annotated sources and T003 annotated exactly one.
+    the_ANNOTATED_CORPUS_is_only_ONE_FIXTURE: >-
+      T003 annotated s1-render-once.tsrx and NOTHING ELSE - 0 of 43 live-corpus .tsrx files carried
+      a prop type before it. Six other scenarios remain unannotated AS THE CONTROL ARM, and that
+      control is load-bearing: it is what proves a printed type came from source rather than being
+      synthesized. If you need more annotated fixtures to prove Step 2, ANNOTATE THEM DELIBERATELY
+      and say which control arm survives.
     verify:
       - "pnpm test"
       - "pnpm e2e"
