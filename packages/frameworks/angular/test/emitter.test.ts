@@ -1,6 +1,7 @@
 import { readdirSync } from 'node:fs';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
+import { BindingType, parseTemplate } from '@angular/compiler';
 import { buildEnrichedIr, type EnrichedIR } from '@frameless/compiler';
 import { resolve } from 'pathe';
 import { describe, expect, test } from 'vitest';
@@ -638,6 +639,83 @@ describe('Angular 22 emitter', () => {
 			expect(() => emit(update)).toThrow(/did not parse with an empty error set/);
 			expect(() => emit(update)).toThrow(/Unexpected end of expression/);
 		});
+	});
+});
+
+/**
+ * T049, implementing the T041 ruling. `docs/DEFECTS.md` entry 10.
+ *
+ * ANGULAR IS THE ONLY LANE THIS REPAIR IS VISIBLE IN, because it is the only
+ * lane that distinguishes a property binding from an attribute binding at all.
+ * Before the lowering, a dynamic `disabled` reached here as `kind: 'attribute'`
+ * and was emitted `[attr.disabled]`; Angular's attribute path stringifies its
+ * value and removes only on nullish, so `false` served `disabled="false"` - and
+ * `disabled="false"` DISABLES the control - where the other five lanes served
+ * nothing at all.
+ *
+ * WHERE THE FIX IS NOT. Not here. `attributesOf` above carries a standing ruling
+ * that `DynamicBinding.kind` is the IR's own answer and the emitter puts no
+ * judgement between it and the emitted form. A boolean-name check in this file
+ * would have reintroduced exactly that judgement and left the IR asserting
+ * `attribute` while one consumer quietly disagreed. So this suite asserts the
+ * CONSEQUENCE of the compiler's lowering, and would go red if someone re-fixed
+ * it locally instead.
+ *
+ * ARBITER. The second assertion does not read our own emitted bytes; it hands
+ * them to `@angular/compiler`'s `parseTemplate` and reads the `BindingType`
+ * Angular itself assigns. That is the tripwire the ruling asks for: if Angular
+ * ever stops distinguishing the two forms - or makes `[attr.x]` boolean-aware -
+ * this reports it instead of memory doing so.
+ */
+describe('the boolean-attribute lowering, seen from the one lane it moves', () => {
+	/**
+	 * `disabled` is the reported defect. `inert` is the control: a REAL browser
+	 * property that the admission rule in `build.ts` refuses, because Angular's
+	 * own server DOM (domino) does not implement it and SSR would drop what the
+	 * client sets. One admitted name and one refused one, so a set that swallowed
+	 * everything would fail here just as loudly as one that swallowed nothing.
+	 */
+	const probeSource = `import { state } from '@markless/core';
+
+export function Probe({ seed }) @{
+	let a = state(seed);
+
+	<div data-probe>
+		<span disabled={a}></span>
+		<span inert={a}></span>
+	</div>
+}
+`;
+
+	async function probeTemplate(): Promise<string> {
+		const ir = await buildEnrichedIr({ filename: 'probe.tsrx', source: probeSource });
+		const source = emit(ir);
+		const template = /template: `\n([\s\S]*?)\n\t`,/.exec(source)?.[1];
+		if (!template) throw new Error(`No template found in the emitted probe:\n${source}`);
+		return template;
+	}
+
+	test('a boolean content attribute emits [disabled], and a refused name still emits [attr.inert]', async () => {
+		const template = await probeTemplate();
+		expect(template).toContain('[disabled]="a"');
+		// The defect's own byte sequence. Explicitly absent, not merely unmentioned.
+		expect(template).not.toContain('[attr.disabled]');
+		expect(template).toContain('[attr.inert]="a"');
+	});
+
+	test("ARBITER: @angular/compiler classifies the emitted forms as Angular's own Property and Attribute", async () => {
+		const parsed = parseTemplate(await probeTemplate(), 'probe.html');
+		expect(parsed.errors ?? []).toEqual([]);
+		const classified: Record<string, string> = {};
+		const visit = (nodes: readonly unknown[]): void => {
+			for (const node of nodes) {
+				const element = node as { inputs?: Array<{ name: string; type: number }>; children?: unknown[] };
+				for (const input of element.inputs ?? []) classified[input.name] = BindingType[input.type]!;
+				if (element.children) visit(element.children);
+			}
+		};
+		visit(parsed.nodes);
+		expect(classified).toEqual({ disabled: 'Property', inert: 'Attribute' });
 	});
 });
 

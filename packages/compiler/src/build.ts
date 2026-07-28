@@ -135,6 +135,115 @@ const OMITTED_AST_KEYS = new Set([
 	'innerComments',
 ]);
 
+/**
+ * HTML BOOLEAN CONTENT ATTRIBUTES THAT LOWER TO `kind: 'property'`.
+ *
+ * WHY THIS EXISTS. `@markless/compiler`'s `bindingTargetForAttribute` classifies
+ * a dynamic binding as `property` only for `value`, `checked` and `selected` - a
+ * hardcoded three-name allowlist. Every other name arrives as `attribute`, so a
+ * dynamic `disabled` reached the Angular emitter as `kind: 'attribute'` and was
+ * emitted `[attr.disabled]`. Angular's attribute path stringifies its value
+ * (`renderStringify(false) === 'false'`, and `value == null` is the ONLY removal
+ * test), so `disabled={false}` served `disabled="false"` - which DISABLES the
+ * control - where the other five lanes served nothing. The construct was never
+ * unspellable; it was MIS-LOWERED. This is that repair, at the layer that
+ * already answers "is this a DOM property" for `value`/`checked`/`selected`.
+ *
+ * `value`, `checked` and `selected` are DELIBERATELY ABSENT: they already arrive
+ * as `property` from the vendored classifier, and re-listing them here would
+ * fork one fact across two owners.
+ *
+ * COPIED, NOT IMPORTED. `@tsrx/core` ships a 29-name `DOM_BOOLEAN_ATTRIBUTES` in
+ * this same tree, but only at `@tsrx/core/src/utils/dom.js` - an internal path,
+ * not a public export. Importing it would let a vendored refactor silently move
+ * our IR. The cost is that this is a MAINTAINED list; the tests below register
+ * the admission rule so a future addition has to meet it rather than be waved in.
+ *
+ * ADMISSION RULE - all four, each MEASURED at the pinned versions, not assumed:
+ *   1. It is an HTML boolean CONTENT attribute (so it has a serialized form at
+ *      all). Rules out `indeterminate`, which is a property with no attribute.
+ *   2. It appears in `@tsrx/core`'s `DOM_BOOLEAN_ATTRIBUTES` (cross-check).
+ *   3. The lowercase attribute spelling REACHES the browser DOM property, either
+ *      because they are identical or because Angular's own `mapPropName` maps it
+ *      (`readonly` -> `readOnly` is the sole mapped member). Verified against
+ *      `lib.dom.d.ts` (typescript 5.9.3). Rules out `allowfullscreen`,
+ *      `formnovalidate`, `ismap`, `novalidate`, `playsinline`,
+ *      `disablepictureinpicture` and `disableremoteplayback`, whose properties
+ *      are camelCase and which Angular does NOT map.
+ *   4. Angular's OWN server DOM (the domino bundled in `@angular/platform-server`
+ *      22.0.8) reflects the property back to the content attribute, so SSR and
+ *      the browser agree. Rules out `inert`, `muted` and `webkitdirectory`:
+ *      real browser properties that domino does not implement, so SSR would omit
+ *      an attribute the client then sets.
+ *
+ * RULE 3 AND RULE 4 ARE BOTH REQUIRED, and each catches names the other admits.
+ * `nomodule` and `seamless` PASS rule 4 - domino reflects both - and FAIL rule 3:
+ * the browser property is `noModule`, and `seamless` was removed from HTML with
+ * no property at all. Those two are exactly the hazard Angular's `isPropertyValid`
+ * carries (`typeof Node === 'undefined'` returns `true`, so a property binding can
+ * pass on the server and throw in the browser), measured rather than hypothesised.
+ *
+ * MEASURED MATRIX - domino 22.0.8, property path, and react-dom 19.2.3's boolean
+ * prop path, which agree on every value:
+ *
+ *   .disabled = true       -> <button disabled="">      disabled={true}      -> <button disabled="">
+ *   .disabled = false      -> <button>                  disabled={false}     -> <button>
+ *   .disabled = null       -> <button>                  disabled={null}      -> <button>
+ *   .disabled = undefined  -> <button>                  disabled={undefined} -> <button>
+ *   .disabled = ''         -> <button>                  disabled={''}        -> <button>
+ *   .disabled = 'false'    -> <button disabled="">      disabled={'false'}   -> <button disabled="">
+ *   .disabled = 0          -> <button>
+ *   .disabled = 1          -> <button disabled="">
+ *
+ * versus the attribute path this replaces, where ONLY `null`/`undefined` remove:
+ *
+ *   [attr.disabled]="false" -> <button disabled="false">, and .disabled === true
+ *
+ * BLAST RADIUS, MEASURED AND ZERO. The only boolean content attribute bound
+ * anywhere in the golden corpus is `checked`, which is ALREADY `property`; every
+ * other dynamic binding is `data-*`, `aria-*` or `value`. Only two emitters read
+ * `binding.kind` at all - Angular (`property` -> `[name]`, else `[attr.name]`)
+ * and Solid, whose branch also requires `name === 'value'`. So this changes no
+ * golden and no generated file in any of the six lanes, and that claim is
+ * falsifiable in one command: regenerate all six and `git diff --exit-code`.
+ *
+ * COSTS, NAMED. (a) Angular gains a dev-mode validity check where it had none:
+ * `'disabled' in <p>` is `false`, so `disabled={x}` on a `<p>` now raises
+ * "Can't bind to 'disabled'" where `[attr.disabled]` accepted it silently. Mostly
+ * a gain - it catches a real author error - but it is a new Angular-only hard
+ * failure, and per rule 3 above it can pass server-side and fail in the browser.
+ * (b) `hidden="until-found"` becomes inexpressible through this path: the property
+ * coerces to boolean, so the string form is lost in all six lanes.
+ *
+ * @see docs/DEFECTS.md entry 10
+ * @see docs/goals/frameless-defects-and-targets-v1/notes/T041-boolean-attribute.md
+ */
+const DOM_BOOLEAN_CONTENT_ATTRIBUTES: ReadonlySet<string> = new Set([
+	'async',
+	'autofocus',
+	'autoplay',
+	'controls',
+	'default',
+	'defer',
+	'disabled',
+	'hidden',
+	'loop',
+	'multiple',
+	'open',
+	'readonly',
+	'required',
+	'reversed',
+]);
+
+/**
+ * Exported for the tests that register the admission rule above. Callers outside
+ * this module must not branch on it: the IR's `kind` is the answer every consumer
+ * reads, and a second reader of the name set would be a second place to update.
+ */
+export function isDomBooleanContentAttribute(name: string): boolean {
+	return DOM_BOOLEAN_CONTENT_ATTRIBUTES.has(name);
+}
+
 /** Build the target-neutral emitter artifact from author source and semantic records. */
 export async function buildEnrichedIr(input: BuildInput): Promise<EnrichedIR> {
 	const filename = normalizeFilename(input.filename);
@@ -840,12 +949,19 @@ export function buildTemplateNode(
 				);
 				const target = semanticRead?.target;
 				context.sharedSites.push({ node: expression, environment, construct: 'attribute' });
+				const bindingName =
+					target && 'name' in target && typeof target.name === 'string' ? target.name : name;
 				dynamicBindings.push({
-					kind: target?.kind === 'property' ? 'property' : 'attribute',
-					name:
-						target && 'name' in target && typeof target.name === 'string'
-							? target.name
-							: name,
+					// The vendored classifier answers `property` for exactly three names;
+					// `DOM_BOOLEAN_CONTENT_ATTRIBUTES` widens that answer to the boolean
+					// content attributes it omits. Both halves answer the same question -
+					// "is this a DOM property?" - HERE, so that no emitter has to
+					// second-guess the kind it is handed.
+					kind:
+						target?.kind === 'property' || isDomBooleanContentAttribute(bindingName)
+							? 'property'
+							: 'attribute',
+					name: bindingName,
 					expression: serializeAst(expression),
 					reads: deriveReads(expression, environment),
 				});

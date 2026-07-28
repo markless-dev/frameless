@@ -131,7 +131,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T049
+active_task: T046
 
 tasks:
   - id: T001
@@ -4342,7 +4342,7 @@ tasks:
   - id: T046
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
     depends_on: ["T045"]
     spec: "T043 receipt - AUTHORITATIVE."
@@ -4531,7 +4531,7 @@ tasks:
   - id: T049
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     spec: "T041 receipt and notes/T041-boolean-attribute.md - AUTHORITATIVE."
     objective: >-
@@ -4578,8 +4578,51 @@ tasks:
       - "You are about to write entry 10 as CLOSED. IT IS OPEN: the repair is proven at the compiler and emitter but in NO SERVED PAYLOAD."
       - "You are about to run pnpm e2e, pnpm test:browser or pnpm mutate:corpus."
       - "You are about to file anything upstream against Angular, @markless/compiler or @tsrx/core. The autonomy grant excludes outward-facing filings."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T041-boolean-attribute-lowering.md
+      summary: "Lowered HTML boolean content attributes to kind:'property' in build.ts, so Angular emits [disabled] rather than [attr.disabled]. RE-DERIVED EVERY INHERITED CLAIM: the three-name allowlist, the 29-name sibling list, the four kind-reading emitter sites, and the golden scan. Proven by probe sources plus two registered matrices, both watched RED IN BOTH DIRECTIONS. DEFECTS.md entry 10 filed OPEN with all three costs named. Zero-blast-radius gate exit 0."
+      IT_REFUSED_THE_RULINGS_OWN_INSTRUCTION_AND_WAS_RIGHT: "THE RULING SAID cross-check against @tsrx/core's 29-name DOM_BOOLEAN_ATTRIBUTES. A LITERAL COPY WOULD HAVE SHIPPED WRONG NAMES. The Worker derived a FOUR-CLAUSE ADMISSION RULE and measured every candidate, admitting 14 and refusing 15. THE SHARP PAIR: `nomodule` and `seamless` REFLECT CORRECTLY IN DOMINO - the very DOM the ruling's own table was read from - BUT NEITHER IS A BROWSER PROPERTY (noModule is camelCase; seamless was removed from HTML). And because isPropertyValid returns TRUE when Node is undefined, admitting them would have PASSED SSR AND THROWN IN THE BROWSER. That is the ruling's OWN NAMED COST, with two names attached, caught before shipping rather than after. Conversely inert, webkitdirectory and muted ARE real browser properties that domino does NOT implement, so SSR would have omitted what the client sets - and muted's content attribute reflects defaultMuted, not muted."
+      the_admission_rule_is_in_the_source_not_the_note: "PM VERIFIED build.ts:156-172. It states COPIED, NOT IMPORTED with the reason (the internal path would let a vendored refactor silently move our IR), names the cost (a MAINTAINED list), and then gives four clauses each MEASURED at the pinned versions - including which names each clause rules out and why. A future addition has to MEET the rule rather than be waved in, and the tests register the rule itself."
+      the_final_set: "14 names: async, autofocus, autoplay, controls, default, defer, disabled, hidden, loop, multiple, open, readonly, required, reversed. PM VERIFIED all 14 present and nomodule/seamless/inert/muted/webkitdirectory all ABSENT. value, checked and selected deliberately excluded - they already arrive as kind:'property' from the vendored classifier."
+      the_red_calibration_ran_in_both_directions: "Removing 'disabled' from the set: \"AssertionError: expected '...' to contain '[disabled]=\\\"a\\\"' + <span [attr.disabled]=\\\"a\\\"></span>\" and \"expected { disabled: 'Attribute' } to deeply equal { disabled: 'Property' }\". Adding 'inert' to it: the inverse. FOUR TESTS RED IN BOTH DIRECTIONS across both files, then restored green. A set-membership instrument that only fires on removal would miss the more likely future error, which is someone adding a name that does not meet the rule."
+      IT_STATED_ITS_OWN_INSTRUMENTS_LIMIT_PLAINLY: "The 'cross-lane matrix' executes only TWO of six serializers - domino via recorded data, react-dom live. A true six-lane serialization matrix needs each lane's runtime, which is the forbidden e2e half, and @angular/platform-server is a demo dependency not resolvable from packages/compiler. The Worker said so in the note rather than letting 'cross-lane matrix' imply six. That is why entry 10 stays OPEN."
+      changed_files:
+        - packages/compiler/src/build.ts
+        - packages/compiler/test/enriched-ir.test.ts
+        - packages/frameworks/angular/test/emitter.test.ts
+        - docs/DEFECTS.md
+        - docs/goals/frameless-defects-and-targets-v1/notes/T041-boolean-attribute-lowering.md
+      commands:
+        - cmd: "git rev-parse HEAD origin/main; git status --porcelain"
+          status: pass
+          note: "70650c7 both, clean - the Worker verified sync itself after the PM twice restated a stale 'pushed'"
+        - cmd: "pnpm test"
+          status: pass
+          note: "51 files, 994 tests; PM re-ran and confirms 994"
+        - cmd: "pnpm check"
+          status: pass
+          note: "root plus five per-package tsconfigs"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 381 files"
+        - cmd: "regenerate all six lanes"
+          status: pass
+        - cmd: "git diff --exit-code -- packages/compiler/test/goldens packages/frameworks/*/generated"
+          status: pass
+          note: "EXIT 0. PM re-verified: the zero-blast-radius claim the whole ruling rests on is CONFIRMED, not inherited"
+        - cmd: "RED CALIBRATION both directions"
+          status: pass
+          note: "removing 'disabled' and adding 'inert' each turn four tests red across both files; restored green"
+      deviations:
+        - "THE SET IS 14 NAMES, NOT 29 - see above. The ruling said cross-check; a literal copy would have shipped names that pass SSR and throw in the browser."
+        - "Added a small exported predicate isDomBooleanContentAttribute so the matrix test can assert the registered table IS the set build.ts admits, in both directions. No other consumer branches on it."
+        - "The matrix executes two of six serializers and the note says so - see above."
+      remaining_blockers:
+        - "Entry 10 remains OPEN by design: the repair is proven at the compiler and the emitter but in NO SERVED PAYLOAD, because no scenario binds a boolean attribute. Its close trigger is a corpus card binding a real dynamic disabled with a six-lane observation, absent -> disabled='', and a per-emitter mutation proven red."
+      stopped_because: null
   - id: T042
     type: worker
     assignee: Worker

@@ -994,6 +994,167 @@ entirely in our emitter.
 
 ---
 
+## 10. A dynamic HTML boolean attribute served `disabled="false"` in Angular, which DISABLES the control — **OPEN — frameless's own emitted output**
+
+> **The fourth defect in frameless's own shipped output, and the only one of the
+> four whose root cause was a THREE-NAME LIST.** Entry 8 survived on a missing
+> input, entry 9 on a missing instrument; this one survived because the question
+> "is this a DOM property?" was answered by a hardcoded allowlist of `value`,
+> `checked` and `selected`, and `disabled` is not on it. Measured by T030 (S7),
+> ruled by T041, repaired by T049. Like entries 7, 8 and 9 it was raised by
+> `frameless-defects-and-targets-v1`, so it does **not** extend that goal's
+> oracle, which is defined over findings 1–6.
+
+**Status:** OPEN, with the **lowering shipped**. The construct is now lowered
+rather than refused — an authored `disabled={expr}` reaches the IR as
+`kind: 'property'` and Angular emits `[disabled]` — but the entry stays OPEN
+because the repair is proven **at the compiler and at the emitter and in no
+served payload**. No scenario in the corpus binds a boolean content attribute,
+so nothing yet observes the six lanes agreeing at runtime.
+
+**The defect, in three lines.** `disabled={false}` served `disabled="false"` in
+Angular where the other five lanes served nothing. `disabled="false"` **disables
+the control** — the attribute is boolean, so its *presence* is the signal and its
+value is ignored. So the one lane that emitted extra bytes also shipped the
+opposite behaviour, silently, on a control the author asked to be **enabled**.
+
+**The mechanism, measured at the pinned versions.** Angular's attribute path
+removes an attribute only on nullish and stringifies everything else —
+`@angular/core` 22.0.8, `_debug_node-chunk.mjs:5557` guards on `value == null`,
+and `renderStringify(false)` is `"false"` (`_pending_tasks-chunk.mjs:483`). That
+is correct and intended: it is what an attribute binding *is*. Angular is not
+broken, and nothing here is upstream.
+
+**THE CONSTRUCT WAS NEVER UNSPELLABLE. IT WAS MIS-LOWERED.** S7 enumerated three
+candidate spellings — `null | true`, `null | ''`, `null | 'disabled'` — and each
+diverged across the six. All three vary **what value the author binds**. None
+varies **what kind of binding the IR emits**, which is the axis the answer was
+on. The IR already had that axis and already used it: `checked` arrived as
+`kind: 'property'` and `disabled` as `kind: 'attribute'`. **That one line is why
+`checked` did not invert in S7 and `disabled` did.**
+
+**The root cause is a coverage gap in a three-name list, not a portability limit
+of six frameworks.** The vendored `@markless/compiler` 0.1.1 decides it with:
+
+```js
+function isDomPropertyBindingName(attributeName) {
+	return attributeName === "value" || attributeName === "checked" || attributeName === "selected";
+}
+```
+
+while `@tsrx/core` 0.1.32 — a sibling dependency **in the same tree** — ships a
+29-name `DOM_BOOLEAN_ATTRIBUTES`. The knowledge was already here; the classifier
+did not consult it.
+
+**The repair as shipped.** `DOM_BOOLEAN_CONTENT_ATTRIBUTES` in
+`packages/compiler/src/build.ts`, widening the existing
+`target?.kind === 'property'` test at the one site that already post-processes
+the vendored classifier's answer. **Not in the Angular emitter**, which carries a
+standing ruling that `DynamicBinding.kind` is the IR's answer and the emitter
+puts no judgement between it and the emitted form. Whether `disabled` is a DOM
+property is a fact about the DOM, not about Angular.
+
+**The name set is a MAINTAINED list, written out rather than imported.**
+`@tsrx/core`'s list lives at `@tsrx/core/src/utils/dom.js` — an internal path,
+not a public export — so importing it would let a vendored refactor silently move
+our IR. Fourteen names ship: `async`, `autofocus`, `autoplay`, `controls`,
+`default`, `defer`, `disabled`, `hidden`, `loop`, `multiple`, `open`, `readonly`,
+`required`, `reversed`. `value`, `checked` and `selected` are deliberately absent
+— they already arrive as `property`, and re-listing them would fork one fact.
+
+**The admission rule, and the two clauses that each caught what the other let
+through.** A name ships only if it is an HTML boolean **content** attribute, is
+in `@tsrx/core`'s list, has its **lowercase attribute spelling reach the browser
+property** (verified against `lib.dom.d.ts`, typescript 5.9.3; Angular's own
+`mapPropName` maps exactly one member, `readonly` → `readOnly`), **and** is
+reflected back to the attribute by Angular's own server DOM (the domino bundled
+in `@angular/platform-server` 22.0.8).
+
+The sharpest pair is `nomodule` and `seamless`. **Domino reflects both**, so a
+measurement taken only against Angular's server DOM would have admitted them —
+and neither is a browser property at all (`noModule` is the real spelling;
+`seamless` was removed from HTML). Angular's `isPropertyValid` returns `true`
+when `Node` is undefined, so those two would have **passed SSR and thrown in the
+browser**. In the other direction `inert`, `muted` and `webkitdirectory` are real
+browser properties that domino does **not** implement, so admitting them would
+have had SSR omit an attribute the client then sets. `indeterminate` is refused
+for a third reason: it is a property with no content attribute at all.
+
+**The value axis, after the repair.** Angular's property path and react-dom
+19.2.3 agree on every value — `true`/`'false'`/`'x'`/`1` present the attribute,
+`false`/`null`/`undefined`/`''`/`0` omit it — including the four values the
+corpus does not reach. The lowering does not approximate the other five lanes; it
+reproduces React's table exactly. React independently agrees the old output was
+wrong, warning on precisely the byte sequence Angular produced: *"Received the
+string `false` for the boolean attribute `disabled`."*
+
+**Blast radius: measured, and zero.** The only boolean content attribute bound
+anywhere in the golden corpus is `checked`, already `property`; every other
+dynamic binding is `data-*`, `aria-*` or `value`. Only two emitters read
+`binding.kind` at all — Angular, and Solid, whose branch also requires
+`name === 'value'`. **That claim is falsifiable in one command** and was run:
+all six lanes regenerated, then `git diff --exit-code` over the seven goldens and
+all six `generated/` directories. Empty. Had it not been, the ruling this repair
+rests on would have been refuted rather than adjusted.
+
+**The costs, named rather than waved past.**
+
+1. **Angular gains a dev-mode validity check where it had none.**
+   `isPropertyValid` accepts a property binding when `propName in element`, and
+   `'disabled' in <p>` is **`false`** — so `disabled={x}` on a `<p>` now raises
+   *"Can't bind to 'disabled'"* where `[attr.disabled]` accepted it silently.
+   Mostly a gain, since it catches a real author error, but it is a **new
+   Angular-only hard failure**, and per the clause above it can pass on the
+   server and fail in the browser. SSR green does not mean the lane is green.
+2. **`hidden="until-found"` becomes inexpressible** through this path: the
+   property coerces to boolean, so the string form is lost in all six lanes.
+   Narrow, but real — it is the one value where `hidden` is not a boolean.
+3. **The set is maintained by hand** and must be copied rather than imported.
+
+**The instruments, and both of their calibrations.** The corpus cannot catch this
+— no fixture binds a boolean attribute, so the mutation budget has nothing to
+mutate — and registering one would enlist every lane's derived inventories at
+once. So the proof is probe sources plus two registered matrices:
+`packages/compiler/test/enriched-ir.test.ts` registers 33 names against the kind
+each lowers to, and `packages/frameworks/angular/test/emitter.test.ts` asserts
+the emitted form and hands it to `@angular/compiler`'s own `parseTemplate` to
+read the `BindingType` **Angular** assigns. **Both matrices were watched red in
+both directions**: removing `disabled` from the set flips the row to `attribute`
+and the emitted form back to `[attr.disabled]`, and adding `inert` to it flips
+that row to `property` — so neither a careless deletion nor a careless addition
+can pass.
+
+**`aria-disabled` is correct in S7 and wrong as advice.** S7 substituted
+`aria-disabled` for the construct this entry repairs, and that substitution is
+**ratified** — it is portable in all six and it kept the axis asserted rather
+than dropped. It is not guidance. `aria-disabled="true"` changes **nothing**
+about a control: it stays focusable, stays in the tab order, and still submits.
+An author who substitutes it for `disabled` ships a control that screen-reader
+users are *told* is off and can still activate — worse than the divergence it
+replaces, and it lands hardest on the users the attribute exists for. It is right
+only when you deliberately want a focusable-but-inert control **and** you
+suppress the behaviour in the handler yourself.
+
+**Close trigger.** A corpus scenario binds a real dynamic `disabled`, and the
+six-lane observation string asserts the transition *absent* → `disabled=""` equal
+in all six lanes, with a mutation on that binding proven red per emitter. That is
+a corpus card, and it is the natural place for S7 to finally carry the construct
+it had to substitute away.
+
+**Lift / re-open trigger.** The registered matrices report in **either**
+direction. If a future edit narrows or widens the set they go red; if Angular
+ever stops classifying `[x]` and `[attr.x]` differently, the arbiter test goes red
+at the version bump instead of memory doing so.
+
+**Two questions belong to `frameless-emitter-capability-v1`, and neither blocks
+this repair:** whether the IR should carry a first-class third kind
+(`boolean-attribute`) rather than overloading `property` — which would give
+`hidden="until-found"` somewhere to live — and `isDomPropertyBindingName`'s
+three-name allowlist as an observation about the vendored dependency. It is the
+owner's own package, so that is a note, not a report.
+
+---
+
 ## Closed, for the record
 
 **`findings-001` — `engines.node: ">=20"` was false.** The toolchain cannot load
@@ -1015,13 +1176,20 @@ matrix proved green rather than from the error message's claim.
 | 7   | **product defect — OPEN**       | **contained**, not removed: fail-closed v-limit at the compiler (T039) | the lift trigger — all six lanes measured byte-identical on an interior run at pinned versions |
 | 8   | **product defect — OPEN**       | **contained**, not removed: fail-closed refusal in the React emitter (T044) | the lift trigger — React lowers a nested state write the way Solid already does |
 | 9   | **product defect — CLOSED**     | **removed**, not contained: the construct is lowered, and the missing typecheck oracle over emitted Angular now exists (T045) | none — but note the oracle is structurally blind to mode B, which the emitted-keyword assertion covers instead |
+| 10  | **product defect — OPEN**       | **lowered** at the IR: boolean content attributes reach Angular as `[disabled]`, not `[attr.disabled]` (T049) | a served payload — the repair is proven at the compiler and the emitter and in **no** e2e observation, because no scenario binds a boolean attribute |
 
-**Entries 7 and 8 are the OPEN defects in frameless's own emitted output**, and
-they are the two on this table a later reader could mistake for closed because
-their repairs are green. Neither is closed: each *contains* something that is
-still there — a non-neutrality in 7, an unlowerable construct in 8. In both cases
-a registered test is what will report the day that stops being true, and in both
-cases it reports in **either** direction.
+**Entries 7, 8 and 10 are the OPEN defects in frameless's own emitted output**,
+and they are the three on this table a later reader could mistake for closed
+because their repairs are green. None is closed, but **10 is open for a different
+reason from 7 and 8**, and the distinction is the one this table exists to keep.
+Entries 7 and 8 *contain* something that is still there — a non-neutrality in 7,
+an unlowerable construct in 8 — so their repairs are refusals. Entry 10's repair
+**removes** the defect the way entry 9's did; what it lacks is not a lowering but
+a **witness**. Nothing in the shipped corpus binds a boolean attribute, so no
+served payload has ever observed the six lanes agreeing, and entry 9 earned
+CLOSED on exactly the evidence entry 10 does not yet have. In all three cases a
+registered test reports the day the status should change, and in all three cases
+it reports in **either** direction.
 
 **Entry 8 outranks entry 7 by this document's own ranking rule** — how wrong the
 shipped output is. Entry 7 changes how a space renders; entry 8 emitted invalid

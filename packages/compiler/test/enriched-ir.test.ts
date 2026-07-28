@@ -3,7 +3,7 @@ import { createRequire } from 'node:module';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { basename } from 'pathe';
 import { describe, expect, test } from 'vitest';
-import { buildEnrichedIr, collectGraphReads } from '../src/build';
+import { buildEnrichedIr, collectGraphReads, isDomBooleanContentAttribute } from '../src/build';
 import { dumpEnrichedIr } from '../src/dump';
 import type { EnrichedIR, SerializableAstNode, TemplateHost, TemplateNode } from '../src/schema';
 
@@ -1287,6 +1287,220 @@ describe('the six-lane whitespace matrix', () => {
 			solid: '006f 006e 0065 0020 0074 0077 006f',
 			vue: '006f 006e 0065 00a0 0074 0077 006f',
 			angular: '006f 006e 0065 00a0 0074 0077 006f',
+		});
+	});
+});
+
+/**
+ * T049, implementing the T041 ruling. `docs/DEFECTS.md` entry 10.
+ *
+ * THE DEFECT. `@markless/compiler` classifies a dynamic binding as a DOM
+ * property for exactly three names - `value`, `checked`, `selected` - so a
+ * dynamic `disabled` arrived as `kind: 'attribute'`, Angular emitted
+ * `[attr.disabled]`, and `disabled={false}` served `disabled="false"`, which
+ * DISABLES the control, where the other five lanes served nothing. `checked`
+ * did not invert in S7 and `disabled` did, and the three-name list is why.
+ *
+ * WHAT THIS SUITE IS FOR. The corpus cannot catch this: no fixture binds a
+ * boolean content attribute, so there is nothing for the mutation budget to
+ * mutate, and registering one would enlist every lane's derived inventories at
+ * once. So the instrument is a probe source plus this registered matrix, on the
+ * T039 precedent.
+ *
+ * IT IS TWO-SIDED ON PURPOSE. Every row asserts a kind, and the excluded rows
+ * carry the reason they are excluded. NARROWING the set goes red (an included
+ * name falls back to `attribute`) and WIDENING it goes red too (an excluded name
+ * becomes `property`) - so neither a careless deletion nor a careless addition
+ * can pass, and the admission rule in `build.ts` has an enforcer rather than a
+ * doc comment.
+ *
+ * THE RULE IS NAME-BASED, NOT TAG-BASED, which is why every row below sits on
+ * the same `<span>`. The IR classifies `disabled` the same way wherever it is
+ * written; whether the author put it on an element that HAS that property is
+ * Angular's dev-mode `isPropertyValid` check to make, downstream, and is one of
+ * the named costs of this repair.
+ */
+describe('the boolean-attribute lowering matrix', () => {
+	/**
+	 * Each row is `[attribute name, expected IR kind, why]`. The `why` is not
+	 * decoration: it is the admission-rule clause the name passed or failed, and
+	 * it is what a future reader needs in order to add a name without re-deriving
+	 * the whole table.
+	 */
+	const MATRIX: ReadonlyArray<readonly [string, 'property' | 'attribute', string]> = [
+		// ADMITTED - boolean content attribute, lowercase spelling reaches the
+		// browser property (or Angular maps it), and domino reflects it.
+		['async', 'property', 'HTMLScriptElement.async'],
+		['autofocus', 'property', 'HTMLOrSVGElement.autofocus'],
+		['autoplay', 'property', 'HTMLMediaElement.autoplay'],
+		['controls', 'property', 'HTMLMediaElement.controls'],
+		['default', 'property', 'HTMLTrackElement.default'],
+		['defer', 'property', 'HTMLScriptElement.defer'],
+		['disabled', 'property', 'the reported defect - HTMLButtonElement.disabled'],
+		['hidden', 'property', 'HTMLElement.hidden; costs `hidden="until-found"`'],
+		['loop', 'property', 'HTMLMediaElement.loop'],
+		['multiple', 'property', 'HTMLInputElement/HTMLSelectElement.multiple'],
+		['open', 'property', 'HTMLDetailsElement.open'],
+		['readonly', 'property', "the sole member Angular's mapPropName maps: readonly -> readOnly"],
+		['required', 'property', 'HTMLInputElement.required'],
+		['reversed', 'property', 'HTMLOListElement.reversed'],
+
+		// ALREADY PROPERTY, from the vendored classifier's three-name allowlist.
+		// Listed so that a change THERE shows up HERE rather than silently, and
+		// deliberately NOT repeated in `build.ts`, which would fork one fact.
+		['value', 'property', '@markless/compiler classifies it; not a boolean attribute at all'],
+		['checked', 'property', '@markless/compiler classifies it - this is why S7 did not invert'],
+		['selected', 'property', '@markless/compiler classifies it'],
+
+		// REFUSED, clause 3 - the browser property is camelCase and the lowercase
+		// attribute spelling does not reach it. Angular's mapPropName maps only
+		// class, for, formaction, innerHtml, readonly and tabindex.
+		['allowfullscreen', 'attribute', 'the property is allowFullscreen'],
+		['formnovalidate', 'attribute', 'the property is formNoValidate'],
+		['ismap', 'attribute', 'the property is isMap'],
+		['novalidate', 'attribute', 'the property is noValidate'],
+		['playsinline', 'attribute', 'the property is playsInline'],
+		['disablepictureinpicture', 'attribute', 'the property is disablePictureInPicture'],
+		['disableremoteplayback', 'attribute', 'the property is disableRemotePlayback'],
+		// The same clause, and the sharpest pair in the table: domino REFLECTS both
+		// of these, so measuring only Angular's server DOM would have admitted them.
+		// Neither is a browser property - `noModule` is the real spelling, and
+		// `seamless` was removed from HTML - and `isPropertyValid` returns true when
+		// `Node` is undefined, so admitting them would have passed SSR and thrown in
+		// the browser. This pair is why clause 3 and clause 4 are both required.
+		['nomodule', 'attribute', 'domino reflects it; the browser property is noModule'],
+		['seamless', 'attribute', 'domino reflects it; removed from HTML, no property at all'],
+
+		// REFUSED, clause 4 - real browser properties that Angular's own server DOM
+		// (domino, bundled in @angular/platform-server 22.0.8) does not implement,
+		// so SSR would omit an attribute the client then sets.
+		['inert', 'attribute', 'HTMLElement.inert exists; domino drops it'],
+		['webkitdirectory', 'attribute', 'HTMLInputElement.webkitdirectory exists; domino drops it'],
+		[
+			'muted',
+			'attribute',
+			'domino drops it, AND the muted content attribute reflects defaultMuted, not muted',
+		],
+
+		// REFUSED, clause 1 - not content attributes, so they have no serialized
+		// form for a boolean lowering to get right.
+		['indeterminate', 'attribute', 'a property with no content attribute'],
+		['itemscope', 'attribute', 'the property is itemScope'],
+
+		// CONTROLS. `aria-disabled` is S7's ratified substitute for the construct
+		// this repair fixes; it must stay an attribute, because ARIA states are
+		// attributes and their `"false"` value is MEANINGFUL rather than removing.
+		['aria-disabled', 'attribute', "S7's ratified substitute - ARIA states are attributes"],
+		['data-guard', 'attribute', 'the corpus shape that must not move'],
+	];
+
+	/**
+	 * One `.tsrx` module binding every matrix name on its own host, so a single
+	 * compile measures the whole table. Uniform `<span>` hosts, because the rule
+	 * under test is keyed on the NAME and nothing else.
+	 */
+	function booleanProbeSource(names: readonly string[]): string {
+		const hosts = names.map((name) => `\t\t<span ${name}={a}></span>`).join('\n');
+		return `import { state } from '@markless/core';
+
+export function Probe({ seed }) @{
+	let a = state(seed);
+
+	<div data-probe>
+${hosts}
+	</div>
+}
+`;
+	}
+
+	async function probeKinds(names: readonly string[]): Promise<Record<string, string>> {
+		const ir = await buildEnrichedIr({
+			filename: 'probe.tsrx',
+			source: booleanProbeSource(names),
+		});
+		const measured: Record<string, string> = {};
+		for (const host of hosts(ir))
+			for (const binding of host.dynamicBindings) measured[binding.name] = binding.kind;
+		return measured;
+	}
+
+	test('every registered name lowers to the kind the admission rule gives it', async () => {
+		const measured = await probeKinds(MATRIX.map(([name]) => name));
+		const expected = Object.fromEntries(MATRIX.map(([name, kind]) => [name, kind]));
+		expect(measured).toEqual(expected);
+	});
+
+	/**
+	 * CALIBRATION, and the reason the table above is an instrument rather than a
+	 * transcript. The two assertions below are the two directions a future edit to
+	 * `DOM_BOOLEAN_CONTENT_ATTRIBUTES` can go, asserted as SETS so that a name
+	 * added to or removed from `build.ts` without a matching row here cannot pass.
+	 */
+	test('CALIBRATION: the matrix is exactly the set build.ts admits, in both directions', async () => {
+		const registered = MATRIX.filter(([, kind]) => kind === 'property').map(([name]) => name);
+		const admitted = registered.filter((name) => isDomBooleanContentAttribute(name));
+		// `value`, `checked` and `selected` reach `property` through the VENDORED
+		// classifier, so they are property rows that build.ts must NOT list. If a
+		// future edit adds them there, this goes red - the fork is the defect.
+		expect(admitted).toEqual(
+			registered.filter((name) => !['value', 'checked', 'selected'].includes(name)),
+		);
+		const refused = MATRIX.filter(([, kind]) => kind === 'attribute').map(([name]) => name);
+		expect(refused.filter((name) => isDomBooleanContentAttribute(name))).toEqual([]);
+	});
+
+	/**
+	 * THE VALUE AXIS, EXECUTED rather than recalled - and the row that shows the
+	 * defect is in the LOWERING and not in the frameworks.
+	 *
+	 * react-dom is the one lane whose serializer is callable from this package
+	 * without a browser, so it is the one lane measured here; the other five are
+	 * measured behaviourally by the e2e half, which is a separate card. What it
+	 * pins is that a property-shaped boolean OMITS on `false` and on nullish, and
+	 * that the string `"false"` - the exact byte sequence Angular's attribute path
+	 * produced from `false` - serves the attribute PRESENT, i.e. inverts.
+	 *
+	 * Angular's own server DOM agrees on every row (measured at
+	 * @angular/platform-server 22.0.8's bundled domino, not asserted here because
+	 * platform-server is a demo dependency and not resolvable from this package):
+	 *   .disabled = true/'false'/'x'/1 -> disabled=""   .disabled = false/null/undefined/''/0 -> absent
+	 *   setAttribute('disabled','false') -> disabled="false", and .disabled === true
+	 */
+	test('react-dom omits a false boolean prop and PRESENTS the string "false"', async () => {
+		const REPO_ROOT = new URL('../../../', import.meta.url);
+		const reactRequire = createRequire(
+			fileURLToPath(new URL('packages/frameworks/react/package.json', REPO_ROOT)),
+		);
+		const server = (await import(
+			/* @vite-ignore */ pathToFileURL(reactRequire.resolve('react-dom/server.node')).href
+		)) as Record<string, unknown>;
+		const react = (await import(
+			/* @vite-ignore */ pathToFileURL(reactRequire.resolve('react')).href
+		)) as Record<string, unknown>;
+		const createElement = ((react.createElement ??
+			(react.default as Record<string, unknown>).createElement) as (
+			tag: string,
+			props: Record<string, unknown>,
+		) => unknown)!;
+		const renderToStaticMarkup = ((server.renderToStaticMarkup ??
+			(server.default as Record<string, unknown>).renderToStaticMarkup) as (
+			element: unknown,
+		) => string)!;
+		const version = (reactRequire('react-dom/package.json') as { version: string }).version;
+
+		const measured = Object.fromEntries(
+			([true, false, null, undefined, '', 'false'] as const).map((value) => [
+				JSON.stringify(value) ?? 'undefined',
+				renderToStaticMarkup(createElement('button', { disabled: value })),
+			]),
+		);
+		expect(measured, `measured at react-dom ${version}`).toEqual({
+			true: '<button disabled=""></button>',
+			false: '<button></button>',
+			null: '<button></button>',
+			undefined: '<button></button>',
+			'""': '<button></button>',
+			'"false"': '<button disabled=""></button>',
 		});
 	});
 });
