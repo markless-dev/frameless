@@ -131,7 +131,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T047
+active_task: T028
 
 tasks:
   - id: T001
@@ -3568,7 +3568,7 @@ tasks:
   - id: T028
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     objective: "Audit Phase F against its RATIFIED stopping rule: is the corpus ENOUGH, measured by mutants that cannot survive rather than by scenario count?"
     depends_on: ["T031"]
@@ -4441,7 +4441,7 @@ tasks:
   - id: T047
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     depends_on: ["T046"]
     spec: "T043 receipt - AUTHORITATIVE."
@@ -4475,8 +4475,69 @@ tasks:
       - "Any byte moves in packages/frameworks/react/generated."
       - "You are about to touch assertLowerableWrites or implement nested-write lowering."
       - "The staleness question resolves as REAL. Record it verbatim in entry 11 and STOP - S8's contract depends on knowing, and hiding it would make the second dispatch meaningless."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T047-react-async.md
+      summary: "Made the replaceFreeNames scratch wrapper async - PM VERIFIED IT IS EXACTLY ONE FUNCTIONAL LINE, `fn.async = true`. Witnessed the RED verbatim first and reproduced T043's wrapper measurement exactly. THE STALENESS QUESTION RESOLVES AS REAL, measured against real react-dom rather than inferred. A SECOND, UNPREDICTED defect rides with it. Filed DEFECTS.md entry 12 OPEN with both halves and stopped there, per the stop_if."
+      POST_AWAIT_STALENESS_IS_REAL_AND_THE_TABLE_IS_THE_RESULT: "Three dispatches with two overlapping at the await, against real react-dom 19.2.3, with T046's Solid row beside it: while both suspended react reads 0|idle where solid reads 0|pending; after the overlap react reads 1|done where solid reads 2|done; after the third click react reads 2|done where solid reads 3|done. TWO CLICKS PRODUCE ONE INCREMENT. T043 PREDICTED this divergence and could not measure it without this repair; T046 measured Solid's half clean; this is the other half, and it diverges exactly as predicted."
+      AND_A_SECOND_DEFECT_NOBODY_PREDICTED: "The authored pre-await write `phase = 'pending'` is ABSENT FROM THE OUTPUT ENTIRELY, because toConstSsa keeps only the FINAL WRITE PER CELL - which is unsound across an await. React renders THREE times where the live shape renders FOUR. The predicted defect was a stale READ; this is a DROPPED WRITE, a different fault found only because someone dispatched twice and counted renders rather than checking the final value."
+      the_stop_if_fired_and_it_stopped: "Recorded verbatim in entry 12 and in the note, then STOPPED: no lowering change attempted, assertLowerableWrites untouched, entry 8 still OPEN with its lift trigger. Both halves of entry 12 are toConstSsa lowering changes - the design change T043 handed to the capability goal. The assigned slice (async repair, calibrated instrument, entry filed OPEN) is complete and the tempting adjacent fix was left alone."
+      T043s_LITERAL_REPAIR_WAS_IMPOSSIBLE: "The ruling specified `t.arrowFunctionExpression([], body, /* async */ true)`. THAT SIGNATURE DOES NOT EXIST HERE: src/emitter/estree.ts:61 takes (params, body) and HARDCODES async:false, and estree.ts is outside allowed_files. Setting `fn.async = true` at the call site is not just the available option but the BETTER one - this is the ONLY arrow that helper builds that is thrown away; every other one is real output whose async must stay false. A Worker that had widened scope to estree.ts would have made a riskier change for a worse reason."
+      the_calibration_problem_was_harder_than_solids_and_it_solved_it: "NO DOM IS A DECLARED DEPENDENCY anywhere in this workspace - jsdom exists only as an undeclared transitive and the sandbox cannot install - while react-dom/server NEVER RE-RENDERS, which is the entire mechanism under test. The test ships a ~100-line minimal DOM used ONLY to let react-dom/client reconcile: React's event system is never used and no hook or scheduler is re-implemented. A MODULE-LEVEL GUARD drives a counter through a captured closure and then a fresh one and requires 0,1,1,2, THROWING AT LOAD otherwise. And Calibration A runs the same harness over a live-reading handler and reproduces SOLID'S EXACT ROW - so the numbers belong to the emitted code, not to the instrument. That is the T046 lesson applied to a harder case."
+      changed_files:
+        - packages/frameworks/react/src/emitter/index.ts
+        - packages/frameworks/react/test/emitter.test.ts
+        - docs/DEFECTS.md
+        - docs/goals/frameless-defects-and-targets-v1/notes/T047-react-async.md
+      commands:
+        - cmd: "git status --porcelain && git rev-parse HEAD origin/main"
+          status: pass
+          note: "clean, f822cf8 both - verified, not accepted"
+        - cmd: "node <scratch red-probe> BEFORE the fix"
+          status: pass
+          note: "RED verbatim: \"yuku-analyzer rejected emitted handler: 'await' is reserved in an async/module context and cannot be used as an identifier\" at reanalyzeFunction:150 <- replaceFreeNames:167 <- replaceVersionReads:1951 <- toConstSsa:2050. NOTE validateEnrichedIr did NOT throw - unlike Solid's, React's refusal was never a validator rule"
+        - cmd: "node <scratch wrapper-probe> vs yuku-analyzer"
+          status: pass
+          note: "async=false: 2 diagnostics, unresolved=[]; async=true: 0 diagnostics, unresolved=[phase,ready] - T043 reproduced exactly"
+        - cmd: "node <staleness probe> AFTER the fix, real react-dom 19.2.3"
+          status: pass
+          note: "0|idle -> 0|idle -> 1|done -> 2|done; live-read calibration on the SAME harness gives solid's 0|pending -> 2|done -> 3|done"
+        - cmd: "pnpm --dir packages/frameworks/react exec vitest run --config vitest.node.config.ts"
+          status: pass
+          note: "185 passed, was 180"
+        - cmd: "RED re-witness: remove fn.async = true"
+          status: pass
+          note: "3 failed / 182 passed with the verbatim message; flag restored, 185/185. The other two are green BY DESIGN - calibration A never touches the emitter and the sync-leak test asserts an absence"
+        - cmd: "pnpm test"
+          status: pass
+          note: "1004 passed / 51 files; PM re-ran and confirms 1004"
+        - cmd: "pnpm check"
+          status: pass
+          note: "all six tsconfigs"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 381 files"
+        - cmd: "regenerate && git diff --exit-code -- packages/frameworks/react/generated"
+          status: pass
+          note: "NO emitted byte moved; PM re-verified, and PM confirms the emitter diff is ONE functional line"
+        - cmd: "git diff --exit-code -- packages/compiler, the other five lanes, demos, scripts"
+          status: pass
+      deviations:
+        - "T043's literal repair was impossible - see above. Set the flag at the call site instead, which is also the better change on its merits."
+        - "Filed as DEFECTS.md entry 12; entries 10 and 11 were taken by the boolean-attribute and Solid repairs."
+        - "Ships a ~100-line minimal DOM, guarded by a load-time commit calibration - see above."
+        - "ADDED TWO TESTS THE CARD DID NOT ASK FOR: a live-read calibration proving the harness can report Solid's numbers, and a check that the async scratch wrapper does not LEAK into a synchronous handler's output."
+        - "Added a paragraph to the DEFECTS.md standings distinguishing entry 12's THIRD kind of OPEN - accepted and behaviourally wrong, with tests that assert the DEFECT'S OWN numbers - from entries 7/8 (contained by refusal) and 10 (repaired but unwitnessed). Those tests must be rewritten when 12.2 is fixed, and the entry says so."
+        - "Updated entry 11's cross-reference, which called the divergence prediction 'half-measured' - true when written, stale the moment entry 12 landed."
+      remaining_blockers:
+        - "ENTRY 12.2 IS OPEN AND MEASURED: React reads a stale render closure after the await AND drops the pre-await write. Both are toConstSsa lowering changes - the design change T043 handed to frameless-emitter-capability-v1."
+        - "S8'S REACT ROW IS 1|done / 2|done. The two-dispatch contract is now a MEASURED REQUIREMENT, not a precaution: S8 must ASSERT the divergence and name entry 12.2, or the scenario asserts nothing about its own axis."
+        - "T043's objective trigger needs a reading this card deliberately does not make: R1/R2/R3 all landed with witnessed RED calibrations (branch one), but branch two also names 'requires a design change rather than the repair specified here' - and the repair landed IN FULL while the axis it unblocks carries a defect the ruling only predicted. ROUTED TO T028."
+        - "NO SERVED PAYLOAD: no browser has run a frameless-emitted async React handler. Same gap entries 10 and 11 carry."
+        - "The Qwik documentary obligation from T043 is still untouched."
+      stopped_because: null
   - id: T041
     type: judge
     assignee: Judge

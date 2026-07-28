@@ -9,8 +9,12 @@ import {
 	type FramelessPersistenceRecord,
 } from '@frameless/compiler';
 import { resolve } from 'pathe';
+// Type-only: erased at runtime, so it does not hoist a `react` load above the
+// minimal-DOM install below.
+import type { ReactElement } from 'react';
 import ts from 'typescript';
 import { analyze } from 'yuku-analyzer';
+import { generate } from 'yuku-codegen';
 import { parse } from 'yuku-parser';
 import { describe, expect, test } from 'vitest';
 import {
@@ -167,6 +171,181 @@ function expectTopLevelSpacing(source: string): void {
 		expect(source.slice(previous.end, current.start)).toBe(bothImports ? '\n' : '\n\n');
 	}
 }
+
+/**
+ * THE REACT RUNTIME, FOR REAL, IN A NODE ENVIRONMENT - T047.
+ *
+ * The across-await measurement below is about what the emitted handler DOES on a
+ * second dispatch, and that is only observable through a renderer that actually
+ * re-renders and re-creates the handler closure. Structural assertions on emitted
+ * text cannot see it, and `react-dom/server` never re-renders.
+ *
+ * This suite runs under `environment: 'node'` and no DOM implementation is a
+ * declared dependency anywhere in the workspace, so the container is a minimal
+ * hand-rolled DOM. It exists ONLY to let `react-dom/client` reconcile and commit;
+ * nothing here re-implements React, and the event system is never used - handlers
+ * are lifted out of the emitted JSX and called directly, exactly as the Solid
+ * lane's proof does.
+ *
+ * `react-dom/client` is imported DYNAMICALLY, after the globals exist, because
+ * static imports are hoisted above every statement in this module.
+ */
+function installMinimalDom(): void {
+	class DomNode {
+		childNodes: any[] = [];
+		parentNode: any = null;
+		attributes: Record<string, string> = {};
+		style: Record<string, string> = {};
+		nodeValue = '';
+		tagName?: string;
+		namespaceURI?: string;
+		constructor(
+			readonly ownerDocument: any,
+			readonly nodeType: number,
+			readonly nodeName: string,
+		) {}
+		get firstChild(): any {
+			return this.childNodes[0] ?? null;
+		}
+		get lastChild(): any {
+			return this.childNodes[this.childNodes.length - 1] ?? null;
+		}
+		get nextSibling(): any {
+			const parent = this.parentNode;
+			return parent ? (parent.childNodes[parent.childNodes.indexOf(this) + 1] ?? null) : null;
+		}
+		appendChild(child: any): any {
+			child.parentNode?.removeChild(child);
+			child.parentNode = this;
+			this.childNodes.push(child);
+			return child;
+		}
+		insertBefore(child: any, reference: any): any {
+			child.parentNode?.removeChild(child);
+			child.parentNode = this;
+			const at = reference ? this.childNodes.indexOf(reference) : this.childNodes.length;
+			this.childNodes.splice(at < 0 ? this.childNodes.length : at, 0, child);
+			return child;
+		}
+		removeChild(child: any): any {
+			const at = this.childNodes.indexOf(child);
+			if (at >= 0) this.childNodes.splice(at, 1);
+			child.parentNode = null;
+			return child;
+		}
+		setAttribute(name: string, value: unknown): void {
+			this.attributes[name] = String(value);
+		}
+		getAttribute(name: string): string | null {
+			return this.attributes[name] ?? null;
+		}
+		removeAttribute(name: string): void {
+			delete this.attributes[name];
+		}
+		hasAttribute(name: string): boolean {
+			return name in this.attributes;
+		}
+		addEventListener(): void {}
+		removeEventListener(): void {}
+		get textContent(): string {
+			return this.nodeType === 3
+				? this.nodeValue
+				: this.childNodes.map((child: any) => child.textContent).join('');
+		}
+		set textContent(value: string) {
+			this.childNodes = [];
+			if (value !== '') this.appendChild(this.ownerDocument.createTextNode(String(value)));
+		}
+		contains(): boolean {
+			return true;
+		}
+	}
+	const document: any = {
+		nodeType: 9,
+		createElement(name: string) {
+			const element: any = new DomNode(document, 1, name.toUpperCase());
+			element.tagName = name.toUpperCase();
+			element.namespaceURI = 'http://www.w3.org/1999/xhtml';
+			return element;
+		},
+		createElementNS: (_namespace: string, name: string) => document.createElement(name),
+		createTextNode(text: string) {
+			const node: any = new DomNode(document, 3, '#text');
+			node.nodeValue = String(text);
+			return node;
+		},
+		createComment(text: string) {
+			const node: any = new DomNode(document, 8, '#comment');
+			node.nodeValue = String(text);
+			return node;
+		},
+		addEventListener() {},
+		removeEventListener() {},
+		getSelection: () => null,
+		activeElement: null,
+	};
+	document.ownerDocument = document;
+	document.documentElement = document.createElement('html');
+	document.body = document.createElement('body');
+	document.documentElement.appendChild(document.body);
+	document.defaultView = globalThis;
+	const scope = globalThis as any;
+	scope.document = document;
+	scope.window = globalThis;
+	scope.navigator ??= { userAgent: 'node' };
+	scope.Node = DomNode;
+	scope.Element = DomNode;
+	scope.HTMLElement = DomNode;
+	scope.Text = DomNode;
+	scope.Comment = DomNode;
+	scope.HTMLIFrameElement = class HTMLIFrameElement {};
+	scope.IS_REACT_ACT_ENVIRONMENT = true;
+}
+installMinimalDom();
+const React = await import('react');
+const ReactDOMClient = await import('react-dom/client');
+const { act, createElement, useState } = React;
+
+/**
+ * AND PROVE THE RUNTIME COMMITS, rather than asserting it.
+ *
+ * If the shim above ever stopped driving real reconciliation - a swallowed
+ * `appendChild`, a `textContent` that never updates - every measurement below
+ * would report the initial state forever and a stale-vs-live proof would be a
+ * GREEN VACUUM on a runtime that cannot fail. The discriminator is the exact
+ * mechanism under test: a captured closure must NOT advance the count a second
+ * time, while a closure taken from the newest render must. Measured 0, 1, 1, 2.
+ */
+const commitCalibration = await (async (): Promise<string> => {
+	let latest: (() => void) | null = null;
+	function Counter(): ReactElement {
+		const [count, setCount] = useState(0);
+		latest = () => setCount(count + 1);
+		return createElement('output', null, String(count));
+	}
+	const container = (globalThis as any).document.createElement('div');
+	const root = ReactDOMClient.createRoot(container);
+	const observed: string[] = [];
+	await act(async () => {
+		root.render(createElement(Counter));
+	});
+	observed.push(container.textContent);
+	const captured = latest!;
+	await act(async () => captured());
+	observed.push(container.textContent);
+	await act(async () => captured());
+	observed.push(container.textContent);
+	await act(async () => latest!());
+	observed.push(container.textContent);
+	await act(async () => {
+		root.unmount();
+	});
+	return observed.join(',');
+})();
+if (commitCalibration !== '0,1,1,2')
+	throw new Error(
+		`react-dom did not commit through the minimal DOM (got ${commitCalibration}); the across-await measurement would be running blind`,
+	);
 
 describe('React structural emitter', () => {
 	test('the derived fixture table is the corpus, and the emitter wrote exactly it', () => {
@@ -612,6 +791,296 @@ ${body}
 			expect(result.refusal).toBeNull();
 			expect(result.emitted).toContain('setTicks(');
 			expect(result.emitted).not.toMatch(/^\s*ticks = /m);
+		});
+	});
+
+	/**
+	 * ASYNC EVENT HANDLERS - T047 of frameless-defects-and-targets-v1.
+	 *
+	 * Until this card the React emitter could not emit ANY handler containing
+	 * `await`. THE WITNESSED RED, verbatim, on the source below before the repair:
+	 *
+	 *   yuku-analyzer rejected emitted handler: 'await' is reserved in an
+	 *   async/module context and cannot be used as an identifier; Expected a
+	 *   semicolon or an implicit semicolon after a statement, but found 'ready'
+	 *       at reanalyzeFunction  (react/src/emitter/index.ts:150)
+	 *       at replaceFreeNames   (react/src/emitter/index.ts:167)
+	 *       at replaceVersionReads(react/src/emitter/index.ts:1951)
+	 *       at toConstSsa         (react/src/emitter/index.ts:2050)
+	 *
+	 * `buildEnrichedIr` and `validateEnrichedIr` BOTH succeeded - unlike the Solid
+	 * lane, React's refusal was not a validator rule but a scratch wrapper in the
+	 * lowering, so it fired at `emit` only. See docs/DEFECTS.md entry 12.
+	 *
+	 * NO FIXTURE AND NO GOLDEN ARE REGISTERED. The scenario inventories are derived
+	 * from `goldens/s<n>-*.json`, so a golden alone would enlist this probe into
+	 * every lane's gates. It is a probe source, per the T039/T046 pattern.
+	 */
+	describe('async event handlers', () => {
+		const asyncProbeSource = (opening: string): string => `import { state } from '@markless/core';
+
+export function AsyncProbe({ ready, onTrace }) @{
+	let ticks = state(0);
+	let phase = state('idle');
+
+	<form>
+		<button
+			type="button"
+			data-action="run"
+			onClick={async (event) => {${opening}
+				phase = 'pending';
+				await ready;
+				ticks = ticks + 1;
+				phase = 'done';
+				onTrace('run', { phase: 'done' }, event);
+			}}
+		/>
+		<output data-role="ticks">{ticks}</output>
+		<output data-role="phase">{phase}</output>
+	</form>
+}
+`;
+		/** The re-specified S8 authoring: `await` on a promise-VALUED prop. */
+		const plain = asyncProbeSource('');
+		/** Same, opening with Defect 1's shape inside an async body. */
+		const cancelling = asyncProbeSource('\n\t\t\t\tevent.preventDefault();');
+
+		async function emitProbe(source: string): Promise<string> {
+			const ir = await buildEnrichedIr({ filename: 'async-probe.tsrx', source });
+			expect(() => validateEnrichedIr(ir)).not.toThrow();
+			return await formatEmitted(emit(ir));
+		}
+
+		/** Lift the emitted `onClick` arrow back out of the emitted JSX, by AST. */
+		function emittedHandler(emitted: string): string {
+			const module = analyze(emitted, {
+				lang: 'jsx',
+				sourceType: 'module',
+				preserveParens: false,
+			});
+			expect(module.diagnostics).toEqual([]);
+			let handler: any = null;
+			const walk = (node: any): void => {
+				if (!node || typeof node !== 'object') return;
+				if (Array.isArray(node)) {
+					node.forEach(walk);
+					return;
+				}
+				if (node.type === 'JSXAttribute' && node.name?.name === 'onClick')
+					handler = node.value?.expression ?? node.value;
+				for (const key of Object.keys(node))
+					if (key !== 'loc' && key !== 'range') walk(node[key]);
+			};
+			walk(module.ast);
+			expect(handler, 'no onClick attribute in the emitted source').not.toBeNull();
+			// The direct detector for a reverted `fn.async = true`: without it nothing
+			// above this line even gets to run, because `emit` throws.
+			expect(handler.async, 'the emitted arrow lost its `async` modifier').toBe(true);
+			return generate(handler).code;
+		}
+
+		type Dispatched = {
+			readonly rendered: readonly string[];
+			readonly duringSuspension: string;
+			readonly afterOverlap: string;
+			readonly afterSequential: string;
+			readonly prevented: number;
+			readonly trace: readonly string[];
+		};
+
+		/**
+		 * Rebuild the emitted component body EXACTLY - the same prop destructuring
+		 * and the same two `useState` calls - and drive it with the real renderer.
+		 * Dispatches TWICE while the first call is still suspended at the `await`,
+		 * which is the case that separates a live read from one captured before the
+		 * boundary, then a third time from the NEWEST render's closure, which is what
+		 * a real user's third click would get after React re-rendered and reattached.
+		 */
+		async function dispatchAcrossAwait(handlerSource: string): Promise<Dispatched> {
+			const build = new Function(
+				'useState',
+				'props',
+				`const { ready, onTrace } = props;
+				const [ticks, setTicks] = useState(0);
+				const [phase, setPhase] = useState('idle');
+				return { ticks, phase, handler: (${handlerSource}) };`,
+			) as (
+				hook: typeof useState,
+				props: unknown,
+			) => { ticks: number; phase: string; handler: (event: unknown) => unknown };
+			const trace: string[] = [];
+			const rendered: string[] = [];
+			let prevented = 0;
+			let release!: () => void;
+			const ready = new Promise<void>((resolve) => {
+				release = resolve;
+			});
+			const props = {
+				ready,
+				onTrace: (name: string, payload: unknown) =>
+					trace.push(`${name}:${JSON.stringify(payload)}`),
+			};
+			let latest: ReturnType<typeof build> | null = null;
+			function Probe(): ReactElement {
+				// The component body IS the emitted one: the same destructuring, the
+				// same hooks, in the same order. The render reads the very cells the
+				// lifted handler writes, so nothing can pass by observing a different
+				// pair of `useState`s from the ones under test.
+				const view = build(useState, props);
+				latest = view;
+				return createElement('output', null, `${String(view.ticks)}|${String(view.phase)}`);
+			}
+			const container = (globalThis as any).document.createElement('div');
+			const root = ReactDOMClient.createRoot(container);
+			const event = { preventDefault: () => (prevented += 1) };
+			await act(async () => {
+				root.render(createElement(Probe));
+			});
+			rendered.push(container.textContent);
+			const captured = latest!.handler;
+			let first: unknown;
+			let second: unknown;
+			await act(async () => {
+				first = captured(event);
+				second = captured(event);
+			});
+			const duringSuspension = container.textContent;
+			rendered.push(duringSuspension);
+			await act(async () => {
+				release();
+				await first;
+				await second;
+			});
+			const afterOverlap = container.textContent;
+			rendered.push(afterOverlap);
+			await act(async () => {
+				await latest!.handler(event);
+			});
+			const afterSequential = container.textContent;
+			rendered.push(afterSequential);
+			await act(async () => {
+				root.unmount();
+			});
+			return { rendered, duringSuspension, afterOverlap, afterSequential, prevented, trace };
+		}
+
+		test('accepts an async handler and keeps `async` and `await` in the output', async () => {
+			const emitted = await emitProbe(plain);
+			expect(emitted).toContain('onClick={async (event) => {');
+			expect(emitted).toContain('await ready;');
+			expect(emitted).toContain('setTicks(nextTicks);');
+			expect(emitted).toContain('setPhase(nextPhase);');
+		});
+
+		/**
+		 * THE MEASUREMENT T043 COULD NOT TAKE, AND IT COMES BACK DIRTY.
+		 *
+		 * T043 predicted from the shape of `toConstSsa` that React reads the RENDER
+		 * CLOSURE where Solid reads the live signal, so the two lanes would diverge
+		 * on a second dispatch across an `await`. Measured here against real
+		 * `react-dom` 19.2.3, with the identical three-dispatch sequence the Solid
+		 * lane uses, the prediction HOLDS - and the divergence is larger than
+		 * predicted, because a second, independent defect rides with it:
+		 *
+		 *            react (emitted)   solid (T046, measured)
+		 *   suspended    0|idle             0|pending
+		 *   overlap 2    1|done             2|done
+		 *   sequential   2|done             3|done
+		 *
+		 * TWO defects, both recorded OPEN in docs/DEFECTS.md entry 12:
+		 *
+		 *   (a) STALE CLOSURE. `const nextTicks = ticks + 1` reads the `useState`
+		 *       binding of the render that created the handler. Two dispatches that
+		 *       overlap at the `await` both compute 0 + 1, so two clicks produce ONE
+		 *       increment.
+		 *   (b) DROPPED PRE-AWAIT WRITE. The authored `phase = 'pending'` never
+		 *       reaches the output at all: `toConstSsa` keeps only the final write per
+		 *       cell, which is sound when nothing can render in between and is NOT
+		 *       sound across an `await`. React renders 3 times where the live shape
+		 *       renders 4, and `pending` is never observable.
+		 *
+		 * THIS TEST PINS THE DEFECT, NOT THE DESIRED BEHAVIOUR. When entry 12 is
+		 * closed it must go red and be rewritten to the calibration's numbers.
+		 */
+		test('MEASURED, OPEN DEFECT: a second dispatch across the await reads a STALE closure', async () => {
+			const outcome = await dispatchAcrossAwait(emittedHandler(await emitProbe(plain)));
+			// (b) the pre-await write was dropped, so `pending` is never rendered.
+			expect(outcome.duringSuspension).toBe('0|idle');
+			expect(outcome.rendered).not.toContain('0|pending');
+			// (a) two overlapping dispatches produced ONE increment. Solid gives 2.
+			expect(outcome.afterOverlap).toBe('1|done');
+			// A third dispatch from the newest closure adds one more. Solid gives 3.
+			expect(outcome.afterSequential).toBe('2|done');
+			// The handler itself ran three times end to end - the loss is in the
+			// lowering, not in a dispatch that never happened.
+			expect(outcome.trace).toEqual([
+				'run:{"phase":"done"}',
+				'run:{"phase":"done"}',
+				'run:{"phase":"done"}',
+			]);
+		});
+
+		/**
+		 * CALIBRATION: the harness CAN report the clean numbers.
+		 *
+		 * The same harness, the same dispatch sequence, over a hand-written handler
+		 * that reads live - React's own idiomatic answer, the functional updater,
+		 * plus the un-collapsed pre-await write. It reports exactly what Solid
+		 * measured: `0|pending` while suspended, 2 after the overlap, 3 after the
+		 * third dispatch. So the numbers above are a property of the EMITTED code and
+		 * not of the instrument, and an instrument that cannot fail is not one.
+		 */
+		test('CALIBRATION: a live-reading handler reports Solid’s numbers on the same harness', async () => {
+			const live = `async (event) => {
+				setPhase('pending');
+				await ready;
+				setTicks((current) => current + 1);
+				setPhase('done');
+				onTrace('run', { phase: 'done' }, event);
+			}`;
+			const outcome = await dispatchAcrossAwait(live);
+			expect(outcome.duringSuspension).toBe('0|pending');
+			expect(outcome.afterOverlap).toBe('2|done');
+			expect(outcome.afterSequential).toBe('3|done');
+		});
+
+		test('preserves the authored preventDefault at the top of an async body', async () => {
+			const emitted = await emitProbe(cancelling);
+			expect(emitted).toMatch(/onClick=\{async \(event\) => \{\s*event\.preventDefault\(\);/);
+			expect(emitted.match(/event\.preventDefault\(\)/g)).toHaveLength(1);
+			const outcome = await dispatchAcrossAwait(emittedHandler(emitted));
+			// It runs on every dispatch, including the two that overlap at the await.
+			expect(outcome.prevented).toBe(3);
+		});
+
+		/**
+		 * The wrapper is a SCRATCH arrow that never reaches output, so the async flag
+		 * must not leak into anything emitted. A synchronous handler still emits a
+		 * synchronous arrow - the `generated/` diff in this card's verify is the
+		 * corpus-wide version of this claim; this is the direct one.
+		 */
+		test('the async scratch wrapper does not leak into a synchronous handler', async () => {
+			const emitted = await emitProbe(`import { state } from '@markless/core';
+
+export function SyncProbe({ onTrace }) @{
+	let ticks = state(0);
+
+	<form>
+		<button
+			type="button"
+			data-action="run"
+			onClick={(event) => {
+				ticks = ticks + 1;
+				onTrace('run', event);
+			}}
+		/>
+		<output data-role="ticks">{ticks}</output>
+	</form>
+}
+`);
+			expect(emitted).toContain('onClick={(event) => {');
+			expect(emitted).not.toContain('async');
+			expect(emitted).toContain('setTicks(nextTicks);');
 		});
 	});
 

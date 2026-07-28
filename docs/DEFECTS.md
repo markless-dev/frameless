@@ -1274,8 +1274,178 @@ the emitter and in a node harness over the real client runtime, not in a browser
 That is a corpus card's job, and it is the same gap entry 10 carries. It also does
 not touch entry 12: React's `await` failure is a different mechanism in a
 different lane, and T043's prediction that the two lanes **diverge on a second
-dispatch across an await** is now half-measured — Solid's half is above, and it is
-the half that comes back **clean**.
+dispatch across an await** was half-measured here — Solid's half is above, and it
+is the half that comes back **clean**. **The other half has since been measured
+and it does not** (entry 12.2): the prediction holds, the divergence is real, and
+the row above is the reference the React lane is measured against.
+
+---
+
+## 12. The React emitter could not emit **any** handler containing `await`, and the repair uncovered two more defects behind it — **OPEN — frameless's own emitted output**
+
+> **The sixth defect in frameless's own shipped output, and the first one whose
+> repair made the *real* defect visible rather than closing it.** Entry 11's
+> sibling in the Solid lane came back clean. This one did not. The syntax half is
+> fixed and proven; **two behavioural halves are open**, and they were found only
+> because the syntax fix made them measurable at all. Raised by
+> `frameless-defects-and-targets-v1` (T031 measured, T043 ruled, T047 repaired and
+> measured), so it does **not** extend that goal's oracle, which is defined over
+> findings 1–6.
+>
+> **Numbering note.** T043 §7 reserved entry 11 for this defect. Entry 10 was
+> taken by the boolean-attribute repair and entry 11 by the Solid one, so this is
+> **12**. The reservation is stale; the ledger is not.
+
+**Status:** OPEN. The `await` now survives, and that is the whole of what is
+closed. What the emitted handler then *does* across the boundary is wrong in two
+independent ways, both measured below.
+
+### 12.1 The syntax half — CLOSED
+
+**THE WITNESSED RED, verbatim**, on the re-specified S8 authoring (an `await` on
+a promise-*valued* prop, authored around Angular's globals v-limit and Qwik's
+callback-statement rule, both of which are **correct** and untouched):
+
+```
+yuku-analyzer rejected emitted handler: 'await' is reserved in an async/module
+context and cannot be used as an identifier; Expected a semicolon or an implicit
+semicolon after a statement, but found 'ready'
+    at reanalyzeFunction   (react/src/emitter/index.ts:150)
+    at replaceFreeNames    (react/src/emitter/index.ts:167)
+    at replaceVersionReads (react/src/emitter/index.ts:1951)
+    at toConstSsa          (react/src/emitter/index.ts:2050)
+```
+
+Identical with and without a leading `event.preventDefault()`. **Unlike entry 11,
+`validateEnrichedIr` did not refuse it** — the IR built and validated fine, and
+only `emit` threw. The refusal was not a rule anyone wrote; it was a **scratch
+arrow**.
+
+`replaceFreeNames` wraps a statement in a throwaway arrow purely to get scope
+analysis out of `reanalyzeFunction`, splices the transformed node back out, and
+discards the wrapper. **The wrapper was synchronous**, so any `await` inside
+re-parsed in non-async context, where `await` is a reserved identifier. Measured
+against the same `yuku-analyzer` the emitter uses:
+
+```
+wrapper async=false: diagnostics=2  unresolved=[]
+wrapper async=true:  diagnostics=0  unresolved=[phase,ready]
+```
+
+**Read the `unresolved=[]` twice.** Had that diagnostic ever been suppressed
+rather than fixed, free-name replacement would have silently done **nothing** —
+so the throw must stay loud, and the repair is the flag, not the message.
+
+The fix is one assignment, `fn.async = true`, at that one call site. It is set at
+the call site rather than in `estree.ts`'s `arrowFunctionExpression` because this
+is the only wrapper that is **thrown away**; every other arrow that helper builds
+is real output whose `async` must stay `false`. It cannot change existing output:
+`reanalyzeFunction` analyzes under `sourceType: 'module'`, where `await` is
+**already** reserved as an identifier, so nothing that parses today parses
+differently under an async wrapper. The falsifier is cheap and was run —
+`regenerate.ts` reproduces `generated/` byte-for-byte.
+
+### 12.2 THE MEASUREMENT T043 COULD NOT TAKE — and it comes back **REAL**
+
+T043 predicted, from the *shape* of `toConstSsa`, that React reads the **render
+closure** where Solid reads the **live signal**, and that the two lanes therefore
+diverge on a **second dispatch across an `await`** — a prediction it could not
+test without making this repair, and which is why the re-specified S8's
+behavioural contract requires **two** dispatches rather than one.
+
+**It is not inferred here. It was run**, against real `react-dom` 19.2.3, on the
+handler lifted back out of the emitted JSX by AST, with the identical
+three-dispatch sequence the Solid lane uses — two dispatches overlapping at the
+`await`, then one sequential from the newest render's closure:
+
+|                       | react (emitted) | solid (entry 11, measured) |
+| --------------------- | --------------- | -------------------------- |
+| while both suspended  | `0\|idle`       | `0\|pending`               |
+| after the overlap     | `1\|done`       | `2\|done`                  |
+| after the third click | `2\|done`       | `3\|done`                  |
+
+The emitted React handler:
+
+```jsx
+onClick={async (event) => {
+	await ready;
+	const nextTicks = ticks + 1;
+	setTicks(nextTicks);
+	const nextPhase = 'done';
+	setPhase(nextPhase);
+	onTrace('run', { phase: 'done' }, event);
+}}
+```
+
+**(a) STALE CLOSURE — the predicted defect, confirmed.** `ticks` is the `useState`
+binding of the render that created the handler. Two dispatches that overlap at the
+`await` both compute `0 + 1`, so **two clicks produce one increment**. The
+authored source is `ticks = ticks + 1`, which every other lane lowers to a read at
+resume. React alone reads a value fixed at handler-creation time.
+
+**(b) DROPPED PRE-AWAIT WRITE — not predicted, and found by the same run.** The
+authored `phase = 'pending'` is **absent from the output entirely**. `toConstSsa`
+keeps only the final write per cell, which is sound when nothing can render in
+between and is **not** sound across an `await`. React renders 3 times where the
+live shape renders 4, and `pending` is never observable. **This one is arguably
+worse than (a)**: (a) loses a count under a double click, while (b) makes a
+pending state that the author wrote unrenderable under **any** interaction.
+
+**The instrument, and both of its calibrations.**
+`packages/frameworks/react/test/emitter.test.ts` rebuilds the emitted component
+body exactly — the same prop destructuring, the same two `useState` calls, in the
+same order — renders it with `react-dom/client`, and dispatches the lifted arrow.
+The suite runs under `environment: 'node'` and no DOM implementation is a declared
+dependency in this workspace, so the container is a minimal hand-rolled DOM used
+**only** to let React reconcile and commit; React's event system is never used and
+nothing re-implements a hook.
+
+- **The harness can report the clean numbers.** The same harness, the same
+  dispatch sequence, over a hand-written live-reading handler — React's own
+  idiomatic answer, `setTicks((current) => current + 1)`, with the pre-await write
+  left in place — reports **exactly Solid's row**: `0|pending`, then 2, then 3. So
+  the numbers above are a property of the emitted code, not of the instrument.
+- **The runtime can fail.** A module-level guard renders a counter and drives it
+  through a **captured** closure and then a **fresh** one, asserting `0,1,1,2`. If
+  the minimal DOM ever stopped carrying real commits, every measurement would
+  report the initial state forever and the whole proof would be a **green vacuum**;
+  the guard throws at load instead. This is the React analogue of entry 11's
+  `createMemo` check, and it exists for the same reason.
+
+**These tests pin the DEFECT, not the desired behaviour.** When 12.2 is repaired
+they must go red and be rewritten to the calibration's numbers. That is
+deliberate: a ledger entry whose test agrees with the bug is the only kind that
+reports the day it stops being true.
+
+### 12.3 What this means for S8, and what it is not
+
+**S8 must assert the divergence rather than hide it.** A single-dispatch
+assertion passes under both lowerings and asserts nothing about the axis it exists
+to test; the two-dispatch contract T043 specified is now not a precaution but a
+measured requirement, and S8's React row is `1|done` / `2|done` until 12.2 is
+repaired. **Hiding it behind a one-click assertion would make the second dispatch
+meaningless.**
+
+**This is not entry 8.** Entry 8 is React's inability to lower a **nested** state
+write, and it stays OPEN with its own lift trigger; `assertLowerableWrites` was
+**not touched** here. Every write in this probe is at the **top level** of the
+handler body — that is precisely why the re-specified S8 uses `async`/`await`
+rather than a continuation — so 12.2 is a *third* React lowering defect, not a
+restatement of that one. The overlap is only that both are answered by porting
+what five other emitters already do.
+
+**Not upstream.** React supports async event handlers natively, and the functional
+updater in the calibration is React's own documented answer to (a). Both halves of
+12.2 are ours.
+
+**No fixture and no golden were registered**, per entry 7's precedent — the
+inventories are derived from `goldens/s<n>-*.json`, so a golden alone enlists a
+scenario into every lane's gates. Consequently **no emitted byte moved**.
+
+**And no served payload.** No browser has run a frameless-emitted async React
+handler; the proof is at the emitter and in a node harness over the real client
+runtime. That is the same gap entries 10 and 11 carry, and it is a corpus card's
+job.
 
 ---
 
@@ -1302,8 +1472,9 @@ matrix proved green rather than from the error message's claim.
 | 9   | **product defect — CLOSED**     | **removed**, not contained: the construct is lowered, and the missing typecheck oracle over emitted Angular now exists (T045) | none — but note the oracle is structurally blind to mode B, which the emitted-keyword assertion covers instead |
 | 10  | **product defect — OPEN**       | **lowered** at the IR: boolean content attributes reach Angular as `[disabled]`, not `[attr.disabled]` (T049) | a served payload — the repair is proven at the compiler and the emitter and in **no** e2e observation, because no scenario binds a boolean attribute |
 | 11  | **product defect — CLOSED**     | **removed**, not contained: the accidental `\|\| fn.async` is gone from the Solid validator and the across-await lowering is proven by running it (T046) | none for the defect — but no **served** payload observes an async handler yet, which is a corpus card, not a repair |
+| 12  | **product defect — OPEN**       | **half removed**: the `await` survives re-analysis (T047), but the emitted handler reads a **stale render closure** after the boundary and **drops the pre-await write** — both measured against real `react-dom`, both pinned by registered tests | the lift trigger — React lowers post-await reads live and stops collapsing writes that a render can be observed between |
 
-**Entries 7, 8 and 10 are the OPEN defects in frameless's own emitted output**,
+**Entries 7, 8, 10 and 12 are the OPEN defects in frameless's own emitted output**,
 and they are the three on this table a later reader could mistake for closed
 because their repairs are green. None is closed, but **10 is open for a different
 reason from 7 and 8**, and the distinction is the one this table exists to keep.
@@ -1312,9 +1483,22 @@ an unlowerable construct in 8 — so their repairs are refusals. Entry 10's repa
 **removes** the defect the way entry 9's did; what it lacks is not a lowering but
 a **witness**. Nothing in the shipped corpus binds a boolean attribute, so no
 served payload has ever observed the six lanes agreeing, and entry 9 earned
-CLOSED on exactly the evidence entry 10 does not yet have. In all three cases a
-registered test reports the day the status should change, and in all three cases
-it reports in **either** direction.
+CLOSED on exactly the evidence entry 10 does not yet have. In all of these cases a
+registered test reports the day the status should change, and in all of them it
+reports in **either** direction.
+
+**Entry 12 is open for a THIRD reason, and it is the one a reader is most likely
+to mistake for closed.** Entries 7 and 8 are *contained* — the construct is
+refused, loudly, so nothing wrong ships. Entry 10 is *repaired but unwitnessed*.
+Entry 12 is neither: the emitter now **accepts** the construct and **emits output
+that is behaviourally wrong**, with no refusal in front of it, and that state is
+deliberate rather than accidental. Refusing async handlers again would have thrown
+away a measurement nobody had ever taken, and the alternative — a lowering that
+reads live and stops collapsing writes across a suspension point — is a design
+change this repair explicitly did not make. So entry 12's registered tests assert
+the **defect's own numbers**, and they are the only tests in this ledger that must
+be **rewritten**, not merely re-run, on the day it is fixed. A test that agrees
+with a bug is a liability unless the entry it belongs to says so; this one says so.
 
 **Entry 11 is CLOSED to entry 9's standard, not entry 10's**, and the difference
 is worth stating because both lack a served payload. Entry 9 and entry 11 each

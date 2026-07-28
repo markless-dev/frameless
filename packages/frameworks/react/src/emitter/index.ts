@@ -158,12 +158,48 @@ function reanalyzeFunction(
 	Object.assign(fn, analyzed);
 }
 
+/**
+ * THE SCRATCH WRAPPER IS ASYNC ON PURPOSE - see docs/DEFECTS.md entry 12, T047.
+ *
+ * This builds a throwaway arrow purely to get scope analysis out of
+ * `reanalyzeFunction`, splices the transformed node back out, and discards the
+ * wrapper - it NEVER reaches output. It used to be synchronous, which meant any
+ * statement containing an `await` re-parsed in non-async context, where `await`
+ * is a reserved identifier. THE WITNESSED RED, verbatim, on an authored async
+ * handler:
+ *
+ *     yuku-analyzer rejected emitted handler: 'await' is reserved in an
+ *     async/module context and cannot be used as an identifier; Expected a
+ *     semicolon or an implicit semicolon after a statement, but found 'ready'
+ *
+ * Thrown from `reanalyzeFunction` <- here <- `replaceVersionReads` <-
+ * `toConstSsa`, so the React emitter could not emit ANY handler containing
+ * `await`. Measured against the same `yuku-analyzer` the emitter uses:
+ *
+ *     wrapper async=false: diagnostics=2  unresolved=[]
+ *     wrapper async=true:  diagnostics=0  unresolved=[phase,ready]
+ *
+ * The `unresolved=[]` on the sync wrapper is the part to read twice: had the
+ * diagnostic ever been suppressed rather than fixed, free-name replacement would
+ * have silently done NOTHING. So the throw above must stay loud.
+ *
+ * It cannot change any existing output: in `sourceType: 'module'` - which is what
+ * `reanalyzeFunction` analyzes under - `await` is ALREADY reserved as an
+ * identifier, so no body that parses today parses differently under an async
+ * wrapper. The falsifier is cheap and it is in this card's verify:
+ * `regenerate.ts` plus `git diff --exit-code -- generated`.
+ *
+ * The flag is set here rather than in `estree.ts`'s `arrowFunctionExpression`
+ * because this is the ONLY wrapper that is thrown away; every other arrow that
+ * helper builds is real output whose `async` must stay false.
+ */
 function replaceFreeNames(node: t.Node, replacements: ReadonlyMap<string, string>): void {
 	const statement = t.isStatement(node);
 	const fn = t.arrowFunctionExpression(
 		[],
 		statement ? t.blockStatement([t.cloneNode(node, true)]) : t.cloneNode(node, true),
 	);
+	fn.async = true;
 	reanalyzeFunction(fn, (module) => {
 		for (const reference of module.unresolvedReferences) {
 			const replacement = replacements.get(reference.name);
