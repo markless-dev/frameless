@@ -4835,6 +4835,36 @@ tasks:
       - scripts/e2e.mjs
       - docs/DEFECTS.md
       - docs/goals/frameless-defects-and-targets-v1/notes/T050-corpus-s9-boolean-attribute.md
+      - packages/frameworks/react/scripts/regenerate.ts
+      - packages/frameworks/solid/scripts/regenerate.ts
+      - packages/frameworks/qwik/scripts/regenerate.ts
+      - packages/frameworks/svelte/scripts/regenerate.ts
+      - packages/frameworks/vue/scripts/regenerate.ts
+      - packages/frameworks/angular/scripts/regenerate.ts
+      - demos/react-official/scenarios.box.ts
+      - demos/solid-official/scenarios.box.ts
+      - demos/qwik/scenarios.box.ts
+      - demos/svelte-official/scenarios.box.ts
+      - demos/vue-official/scenarios.box.ts
+      - demos/angular-official/scenarios.box.ts
+      - packages/compiler/test/enriched-ir.test.ts
+    allowed_files_corrected_2026_07_28: >-
+      WIDENED BY 13 FILES AFTER T050 REFUSED TO START AND PROVED EACH ONE REQUIRED FROM SOURCE.
+      The T028 audit said to derive allowed_files from the landed S7 shape via
+      `git show --name-only 97f6062`, and the PM used that commit plus 5c79782. BOTH WERE WRONG SETS.
+      MEASURED AT HEAD: the S7 landing spans THREE commits - 2bf42b5 (13 S7 files, including all six
+      regenerate.ts fixture tuples and enriched-ir.test.ts), dd9a875 (the six scenarios.box.ts), and
+      97f6062 (the demo half). AND 5c79782 - THE COMMIT ACTUALLY NAMED "feat(corpus): S7 form
+      controls" - CARRIES ZERO S7 FILES.
+      ROOT CAUSE IS THE PM'S `git add -A` BREACH: it scattered S7 across commits whose messages
+      describe something else, which has now misled the T028 AUDIT and this Worker in turn. Third
+      time that breach has cost downstream work.
+      WHY THE THIRTEEN ARE LOAD-BEARING, each proven not assumed: the six regenerate.ts hold a
+      HARDCODED `fixtures` tuple, so no S9 is emitted without an entry; the six scenarios.box.ts hold
+      a hardcoded `paths` map and adding 's9' to scenarioIds makes paths[scenario] a TYPE ERROR in
+      all six; and enriched-ir.test.ts holds a hardcoded FIXTURES list plus two TOTAL Record tables,
+      with the golden writer looping over FIXTURES - SO THE S9 GOLDEN CANNOT BE PRODUCED AT ALL
+      WITHOUT IT, making the first verify command a no-op and the slice unstartable at step one.
     verify:
       - "UPDATE_GOLDENS=1 pnpm test, then pnpm test WITHOUT it"
       - "pnpm --dir packages/frameworks/react/ regenerate"
@@ -4870,6 +4900,104 @@ tasks:
     constraints:
       - "Record S9's size budget in both size.test.ts files. A budget is a RECORDED MEASUREMENT and cannot be derived."
       - "The corpus INVENTORIES are derived and should pick S9 up with ZERO edits. If any needs a hand edit, that is a defect in the derivation and a FINDING."
+    receipt:
+      result: blocked
+      harness: claude-code
+      verification_attempts: 1
+      blocked_reason: "Need files outside allowed_files - THIRTEEN of them, each PROVEN required from source at HEAD rather than assumed. The decisive one is packages/compiler/test/enriched-ir.test.ts: its FIXTURES list is hardcoded and the golden writer loops over it, so the first verify command (UPDATE_GOLDENS=1 pnpm test) CANNOT PRODUCE THE S9 GOLDEN AT ALL. The slice is not merely narrowed but UNSTARTABLE AT STEP ONE."
+      summary: "S9 was not written and the tree is byte-identical to dispatch at 9ec17bc, 1004 tests intact. Rather than land a partial that would leave the derived inventories red for the next agent, the Worker measured the compiler and emitter half from scratchpad probes and stopped. T049's lowering is CONFIRMED LIVE AND NOT REFUTED."
+      IT_FOUND_THE_CARDS_DERIVATION_WAS_SHORT_AND_WHY: "T028 instructed deriving allowed_files from the landed S7 shape via `git show --name-only 97f6062`; the PM used that plus 5c79782. BOTH WERE WRONG SETS. PM RE-VERIFIED THE COUNTS: the S7 landing spans THREE commits - 2bf42b5 carries 13 S7 files including all six regenerate.ts fixture tuples and enriched-ir.test.ts, dd9a875 carries the six scenarios.box.ts, 97f6062 carries the demo half. AND 5c79782 - THE COMMIT ACTUALLY NAMED 'feat(corpus): S7 form controls' - CARRIES ZERO S7 FILES. So the audit's own section 6 observation, that 97f6062 holds 'the entire S7 corpus landing', is FALSE AT HEAD, and the PM repeated it to the owner before this Worker checked."
+      the_root_cause_is_the_PMs_git_add_A_breach_for_the_THIRD_time: "That breach scattered S7 across commits whose messages describe something else. It has now: committed a live Worker's files including two red-test states; cost the T028 audit two probes to establish the mutation surface had not moved; and supplied a WRONG DERIVATION BASIS that misled both the audit and this Worker. A commit message that does not describe its contents is not a cosmetic fault - it is a false record that downstream agents reason from."
+      T049s_LOWERING_IS_CONFIRMED_LIVE_AND_NOT_REFUTED: "Measured from scratchpad probes with NO fixture and NO golden, so nothing was enlisted into the derived inventories - T031's technique. IR kinds for the candidate authoring: button.disabled, p.hidden, input.readonly, input.required all lower to kind=property; input.data-note stays attribute. SIX SITES, ZERO ZERO-READ. Neither the whitespace v-limit nor Solid's show-two-arm policy fired. ALL SIX EMITTERS ACCEPTED, and Angular emits [disabled]=\"locked\" NOT [attr.disabled] - exactly the form T041 specified. The two lanes the ruling turned on were RE-DERIVED at the pinned versions: react-dom 19.2.3 and the bundled domino Angular serializes from BOTH serve nothing on false and disabled=\"\" on true."
+      it_refused_to_close_entry_10_on_what_it_could_reach: "The four unmeasured lanes are unmeasured BECAUSE THEY ARE THE BLOCKED WORK - and that served-payload half is precisely what entry 10 is open for. So the Worker wrote NOTHING to docs/DEFECTS.md. Closing an entry on the half of the evidence you happened to be able to gather is the exact failure this ledger keeps catching."
+      FINDING_1_THREE_OF_THE_FOURTEEN_ADMITTED_NAMES_ARE_NON_PORTABLE_THROUGH_REACT: "PM RE-VERIFIED INDEPENDENTLY: react-dom 19.2.3 serves <input/> for `readonly` in BOTH true and false states and raises console.error 'Invalid DOM property', while `disabled` correctly serves disabled=\"\". Same for autofocus and autoplay. React's canonical props are autoFocus, autoPlay, readOnly, and NO EMITTER IN THIS REPO CARRIES A CASING MAP - Angular's RUNTIME does (mapPropName), which is why the divergence is one lane. THIS IS THE T049 SHAPE ONE LEVEL DEEPER: those three pass all four admission clauses, lower to kind:'property' correctly, emit valid-LOOKING JSX, and are then SILENTLY DROPPED by react-dom while tripping runScenario's consoleErrors: 0. T049's clause 3 asked whether the DOM would accept the lowercase name; NOBODY ASKED WHETHER EACH LANE WOULD. Not upstream - React supports all three under different prop names. Carded as T051. Does NOT block S9: `disabled` is in the portable eleven."
+      changed_files: []
+      commands:
+        - cmd: "git status --porcelain; git rev-parse HEAD"
+          status: pass
+          note: "EMPTY and 9ec17bc at FIRST AND LAST command - tree byte-identical to dispatch, verified rather than trusted"
+        - cmd: "ps -eo pid,command | grep vitest/playwright/pnpm"
+          status: pass
+          note: "sole writer CONFIRMED for this repo; the vitest/playwright processes found belong to OTHER repos, and it said so rather than reporting a bare count"
+        - cmd: "pnpm test"
+          status: pass
+          note: "51 files, 1004 tests - matches dispatch exactly"
+        - cmd: "git show --name-only 97f6062 / 2bf42b5 / dd9a875"
+          status: pass
+          note: "THE BLOCKER'S EVIDENCE; PM re-verified the per-commit counts"
+        - cmd: "buildEnrichedIr over a candidate S9 authoring (scratchpad, no fixture, no golden)"
+          status: pass
+          note: "disabled/hidden/readonly/required lower to kind=property; 6 sites, ZERO zero-read"
+        - cmd: "emit(ir) + formatEmitted over all six emitters"
+          status: pass
+          note: "all six ACCEPT; Angular emits [disabled], not [attr.disabled]"
+        - cmd: "domino boolean property table"
+          status: pass
+          note: "false -> <button></button>; true -> <button disabled=\"\">. Re-derived, not inherited"
+        - cmd: "react-dom 19.2.3 over all 14 admitted names"
+          status: pass
+          note: "11 portable; autofocus, autoplay, readonly serve NOTHING in BOTH states and raise console.error. PM re-verified readonly and disabled"
+        - cmd: "grep readOnly|autoFocus|autoPlay|mapPropName over all six emitters"
+          status: pass
+          note: "NO casing map exists in any emitter"
+        - cmd: "pnpm mutate:corpus"
+          status: active
+          note: "per stop_if; and there is no S9 mutant for it to run"
+      deviations: []
+      remaining_blockers:
+        - "allowed_files WIDENED BY 13 by the PM, with each file's necessity recorded on the card. T050 is re-dispatchable."
+        - "The T028 audit's section 6 process observation is FALSE AT HEAD and is corrected on the T050 card, so a future derivation does not repeat it."
+        - "FINDING_1 carded as T051, unrouted until then."
+        - "docs/DEFECTS.md entry 10 remains OPEN and untouched - its close trigger is a served payload, which is the blocked work."
+      stopped_because: "Need files outside allowed_files. It proved each of the 13 required from source rather than asserting the card was wrong, and left the tree untouched rather than landing a partial that the derived inventories would have turned red for the next agent."
+  - id: T051
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    spec: "T050 receipt FINDING_1 - AUTHORITATIVE."
+    objective: >-
+      Three of the 14 names in DOM_BOOLEAN_CONTENT_ATTRIBUTES are NON-PORTABLE THROUGH THE REACT
+      LANE. Decide and implement: a casing map in the React emitter, or removal from the admitted
+      set. Proof before fix.
+    the_finding: >-
+      MEASURED against react-dom 19.2.3, and PM RE-VERIFIED: `readonly` serves <input/> in BOTH
+      states and raises console.error 'Invalid DOM property', while `disabled` correctly serves
+      disabled="". The same holds for `autofocus` and `autoplay`. React's canonical props are
+      autoFocus, autoPlay and readOnly, and NO EMITTER IN THIS REPO CARRIES A CASING MAP - Angular's
+      own RUNTIME does (mapPropName maps readonly -> readOnly), which is why the divergence is one
+      lane.
+    why_it_slipped_through_T049s_admission_rule: >-
+      THIS IS THE T049 SHAPE ONE LEVEL DEEPER, and worth understanding before repairing. T049's
+      clause 3 required that the lowercase attribute spelling REACH THE BROWSER DOM PROPERTY, and
+      verified it against lib.dom.d.ts. THAT IS THE DOM'S ANSWER, NOT EACH LANE'S SERIALIZER'S.
+      These three pass all four clauses, lower to kind:'property' correctly, emit valid-LOOKING JSX,
+      and are then SILENTLY DROPPED by react-dom while tripping runScenario's consoleErrors: 0.
+      T049 caught nomodule and seamless by asking whether the DOM would accept them; nobody asked
+      whether each LANE would.
+    constraints:
+      - "PROOF BEFORE FIX: witness the RED first - both states serving nothing, plus the console.error - before changing anything."
+      - "NOT UPSTREAM. React supports all three under autoFocus/autoPlay/readOnly, so this is OUR emitter's defect. It is NOT an out-of-envelope test and must not be filed as one."
+      - "If you add a casing map, it belongs in the REACT emitter and must be registered with a two-sided test, not a comment. If you instead remove the three names, the admission rule's clause 3 must be AMENDED to say per-lane serializer rather than DOM - otherwise the next addition repeats this exactly."
+      - "Do NOT weaken runScenario's consoleErrors: 0. The console.error is the instrument working."
+    allowed_files:
+      - packages/compiler/src/build.ts
+      - packages/compiler/test/enriched-ir.test.ts
+      - packages/frameworks/react/src/emitter/index.ts
+      - packages/frameworks/react/test/emitter.test.ts
+      - docs/DEFECTS.md
+      - docs/goals/frameless-defects-and-targets-v1/notes/T051-react-boolean-casing.md
+    verify:
+      - "pnpm test"
+      - "pnpm check"
+      - "pnpm lint"
+      - "regenerate all six lanes, then git diff --exit-code over all six generated/ and the goldens   # no emitted byte may move; no golden binds these three today"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You cannot witness the RED before the fix."
+      - "Any golden or generated byte moves."
+      - "You are about to weaken consoleErrors: 0, or to file this upstream against React."
+      - "You find a FOURTH non-portable name. Report it verbatim - the admission rule is then wrong in a way removal cannot fix."
     receipt: null
 
   - id: T042
