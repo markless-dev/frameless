@@ -1613,7 +1613,6 @@ tasks:
       - "per lane, report whether any IR record you touch is validated or accepted silently"
     stop_if:
       - "You are drawn into the async axis. That is a separate, unchartered piece of work."
-    allowed_files: []
     receipt: null
 
   - id: T007
