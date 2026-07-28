@@ -169,7 +169,7 @@ visual_board:
     url: null
     command: "npx goalbuddy board docs/goals/frameless-vue-v1"
 
-active_task: T011
+active_task: T012
 
 tasks:
   - id: T001
@@ -1336,7 +1336,7 @@ tasks:
   - id: T011
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     depends_on: ["T010"]
     objective: "Re-audit the Vue lane after the two-way-binding fold, and rule the full owner outcome complete or not."
@@ -1357,6 +1357,88 @@ tasks:
       - "full_outcome_complete: true | false"
       - "Whether the flagship-sugar clause is discharged, with evidence"
       - "Missing evidence"
+    receipt:
+      result: done
+      decision: not_complete
+      full_outcome_complete: false
+      harness: claude-code
+      note: notes/T011-vue-reaudit.md
+      rationale: "THE FLAGSHIP-SUGAR CLAUSE IS DISCHARGED: both limbs ruled through six gates at vue@3.5.40, DENIED at G5, G1/G6 non-DEFERRED, every limb citing its OWN grounds in policy, gate message and test. The audit re-derived all 19 pre-split assertions RED from the recoverable pre-split strings, re-enumerated both domains from scratch, reproduced three of T009's deciding measurements, and re-verified the oracle plus four T999 claims over the GROWN corpus. WITHHELD ON ONE IMMINENT DEFECT: T010 folded both re-enumerated counts in as STRING LITERALS, in the file whose own header forbids literalled corpus facts, while S7 - full form controls, which is 12a's domain definition verbatim - lands across six lanes right now."
+      summary: "Vue lane certified on every axis but one: oracle passes, nothing weakened, goldens 6/6 byte-identical to the demo copies, flagship-sugar clause discharged with measured grounds and 19/19 red-calibrated pins. Not complete on one bounded slice - two domain figures are literals that S7 will silently falsify inside a user-facing gate message, plus a +13 line-citation drift the fold's own comment insertion caused."
+      THE_DEFECT_CLASS_WE_REMOVED_REPO_WIDE_CAME_BACK_SIX_COMMITS_LATER: "PM VERIFIED IN SOURCE. gate.test.ts:430 asserts toContain('FIVE shipped instances and the sugar applies to ONE') and :462 asserts toContain('FIFTEEN printed entries') - string containment against CONSTANT messages, which cannot go red when the corpus grows. AND THE SAME FILE SAYS AT LINE 34: 'THE SCENARIO INVENTORY IS DERIVED, NOT RE-LITERALLED', with line 40 spelling out 'A literal that must be edited once per scenario is the same defect one scenario later'. Commit 1bb0552 removed THIRTEEN such literals repo-wide SIX COMMITS EARLIER. And T030 - S7, FULL FORM CONTROLS folded with boolean and dynamic attributes, six lanes, IN FLIGHT AS THIS RULING LANDED - is 12a's domain definition verbatim. After S7 lands, the shipped no-two-way-binding message states counts S7 falsifies and the suite stays GREEN. That is the exact defect T008, T009 and T010 were spent removing from that very string."
+      the_clause_really_is_discharged_and_the_check_was_mechanical: "grep for the borrowed sentence 'worked example 3 is already ruled DENIED at Gate 5' returns EXACTLY ONE HIT repo-wide - gate.test.ts:432, inside the guard that FORBIDS it. Gone from the gate, the policy and the emitter. And git show 6190058 confirms the gate diff is exactly two deletion lines, with T008's defineEmits message producing NO DIFF LINE AT ALL, so the byte-identical fold-through claim is mechanically true rather than asserted."
+      it_re_derived_rather_than_certifying: "All 19 assertions were shown decidable RED from strings recovered at 6190058^, not taken from T010's receipt - including the two the audit singled out: pre-split, BOTH macros carried onTraceOnce AND 'silent no-op', so the exclusivity guards are genuinely stronger than the one-sided negatives they replaced. Both domains re-enumerated from scratch and matched exactly: five instances with one applicable, fifteen printed entries with six distinct names. IR-1 re-measured 6/6 - single graph node prop:props, writable false, zero writes."
+      IT_CAUGHT_TWO_GREEN_VACUUMS_IN_ITS_OWN_INSTRUMENTS: "Recorded in the note's sections 2.2 and 2.3, and worth more than a clean run: the audit's first hash loop compared EMPTY STRINGS, and its first planted-error control did not report. BOTH WERE CAUGHT ONLY BY STDERR NOISE. It rebuilt them and said so. An auditor that publishes the two instruments that nearly fooled it is doing the thing this project has been trying to institutionalise all session."
+      it_corrected_T010s_own_count: "T010's receipt reports 'two stop_if conflicts' in the ruling it folded. THERE WERE THREE - section 9.4 requirement 2's /defineEmits/ negative is equally unsatisfiable against section 9.3(b)'s own prescribed message, and was dropped WITHOUT RECORD. A dropped requirement that nobody wrote down is how a fold quietly narrows a ruling."
+      citation_drift_measured: "T010's own comment insertion shifted every emitter citation by exactly +13, the length of the insertion: propsDeclaration 400->413, eventAttribute 730->743, attributesOf 753->766, renderHost 815->828, renderNode 921->934, its throw 934->947. The policy cites the stale values at six sites. LOW SEVERITY because each citation also names its symbol - but it is drift, and it is measured."
+      evidence:
+        - "grep 'worked example 3 is already ruled DENIED at Gate 5' repo-wide: ONE hit, gate.test.ts:432, inside a not.toMatch guard"
+        - "git show 6190058 -- vue/src/gate/index.ts: exactly two deletion lines; T008's message produces no diff line"
+        - "Pre-split strings recovered at 6190058^; all 19 assertions decidable RED, including the exclusivity pair"
+        - "vitest packages/frameworks/vue/test/gate.test.ts at a6bd400: 42 passed"
+        - "12a re-enumerated with @vue/compiler-sfc over all SIX emitted goldens: S2:14, S2:32, S2:43, S3:19, S3:27; S5/S6 contribute zero; only S2:14 is a bare assignment"
+        - "12b re-enumerated: 4+2+2+2+2+3 = 15 printed entries, 6 distinct names, matching the six emitted defineProps arrays"
+        - "IR-1 measured 6/6: single graph node prop:props, writable=false, writes=0; component-reference count 0 in all six"
+        - "T009 G5 reproduced: v-model ALONE gives patchFlag 512 NEED_PATCH vs baseline 40 PROPS,NEED_HYDRATION - the auditor's first probe kept @input and read 544, and it recorded that as ITS OWN instrument fault rather than a defect"
+        - "Oracle: e2e.mjs:39 vue row, six threeWayScenarios, asserted equality with process.exit(1); readThreeWayResults guards intact"
+        - "Nothing weakened: the contract diff 41aaed0..a6bd400 deletes only union and table type lines; both tables still total Readonly<Record<...>>; calibrateDevSink untouched"
+        - "PM VERIFIED THE BLOCKER: gate.test.ts:430 and :462 literal the counts; the same file says at :34 'THE SCENARIO INVENTORY IS DERIVED, NOT RE-LITERALLED' and at :40 that such a literal 'is the same defect one scenario later'"
+      missing_evidence:
+        - "pnpm e2e, pnpm test:browser and pnpm mutate:corpus were NOT re-run by this Judge - the dispatch forbade them while S7 lands. The PM's a6bd400 figures are the oracle of record and MUST be re-taken on a clean tree AFTER S7 and after the owed slice, with the Vue row read against the react row per scenario."
+        - "T010's claim that the e2e observation block is byte-identical to the 8af8ed1 capture is unverified here; plausible because the fold moves no emitted byte."
+        - "CARRIED FORWARD, NOT INTRODUCED: IR-8; pnpm e2e still pins modes ['dev'] on every lane; T007's native-click arm remains jsdom-only and was ruled sufficient by T999 - this audit did not disturb that ruling."
+      worker_package_recorded_as: "T012 on this board"
+      spawned_tasks:
+        - T012
+  - id: T012
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    spec: "T011 re-audit and docs/goals/frameless-vue-v1/notes/T011-vue-reaudit.md - AUTHORITATIVE."
+    serialization_hold: >-
+      BEHIND frameless-defects-and-targets-v1 T030 (S7). S7's landing IS THE EVENT these figures
+      must survive - measuring them mid-flight measures nothing. Also contended with the Angular
+      board over docs/emitter-idiom-policy.md.
+    objective: >-
+      Make the two corpus-derived figures in no-two-way-binding FAIL-CLOSED against the golden
+      corpus, so a seventh scenario cannot leave them silently false, and re-point the five emitter
+      line citations T010's own comment insertion shifted by +13.
+    why_this_blocks_completion: >-
+      T010 folded both re-enumerated counts in as STRING LITERALS: gate.test.ts:430 asserts
+      toContain('FIVE shipped instances and the sugar applies to ONE') and :462 asserts
+      toContain('FIFTEEN printed entries'), by string containment against CONSTANT messages. THEY
+      CANNOT GO RED WHEN THE CORPUS GROWS. The same file says at line 34 "THE SCENARIO INVENTORY IS
+      DERIVED, NOT RE-LITERALLED" and at line 40 that such a literal "is the same defect one
+      scenario later". COMMIT 1bb0552 REMOVED THIRTEEN OF THEM REPO-WIDE SIX COMMITS EARLIER. And
+      S7 is FULL FORM CONTROLS folded with boolean and dynamic attributes across six lanes - 12a's
+      domain definition VERBATIM. After S7 lands, the shipped gate message states counts S7
+      falsifies and the suite stays GREEN, inside a user-facing string. That is the exact defect
+      T008, T009 and T010 were spent removing from that very string.
+    allowed_files:
+      - packages/frameworks/vue/test/gate.test.ts
+      - packages/frameworks/vue/src/gate/index.ts
+      - docs/emitter-idiom-policy.md
+      - docs/goals/frameless-vue-v1/notes/T012-derived-domain-figures.md
+    verify:
+      - "pnpm --dir packages/frameworks/vue exec vitest run --config vitest.node.config.ts"
+      - "pnpm test"
+      - "pnpm check"
+      - "pnpm lint"
+      - "RED CALIBRATION, REQUIRED BEFORE LANDING: show the new derived-count assertion FAIL against a planted extra golden, and record the verbatim failure text in the note"
+      - "git diff --exit-code -- packages/frameworks/vue/generated   # no emitted byte moves"
+    stop_if:
+      - "The S7 worker has not finished, or packages/compiler/test/goldens or packages/frameworks/vue/generated is dirty. SERIALIZE - S7's landing is the event these figures must survive."
+      - "Any emitted golden byte moves. T010's fold changed none and neither may this one."
+      - "The derivation can return an EMPTY SET, or the new assertion cannot be shown RED. A derivation that cannot fail is the defect it replaces."
+      - "You are about to change a RULING - 12a or 12b's verdict, their deciding gate G5, the IR-4 refutation, or any limb's grounds. THIS IS A DURABILITY FIX, NOT A RE-RULING."
+      - "The gate message stops STATING the number (e.g. softened to 'several instances'). The number must stay, and be CHECKED."
+      - "Any of the four exclusivity assertions in the split-limbs test is weakened or removed."
+      - "docs/emitter-idiom-policy.md is contended by another board's fold when you start."
+    constraints:
+      - "Derive 12a's domain by walking the emitted .vue templates for a value/checked bind plus a same-host on directive; derive 12b's from props.entries across packages/compiler/test/goldens. Assert the numbers SPELLED IN THE SHIPPED MESSAGES equal the derived counts, with the derivation THROWING on an empty result. Same pattern as commit 1bb0552, same file."
+      - "Also correct the +13 citation drift, measured: propsDeclaration 400->413, eventAttribute 730->743, attributesOf 753->766, renderHost 815->828, renderNode 921->934 with its throw 934->947; the policy cites stale values at six sites."
+      - "RECORD that T010 reported 'two stop_if conflicts' when there were THREE - section 9.4 requirement 2's /defineEmits/ negative was equally unsatisfiable and was dropped WITHOUT RECORD."
     receipt: null
 
   - id: T999

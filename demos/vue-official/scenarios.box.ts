@@ -10,7 +10,7 @@ import {
 } from '../react-official/three-way-contract.ts'
 import { createSsrHandler } from './ssr-handler.js'
 
-const paths = { s1: '/', s2: '/s2', s3: '/s3', s4: '/s4', s5: '/s5', s6: '/s6' } as const
+const paths = { s1: '/', s2: '/s2', s3: '/s3', s4: '/s4', s5: '/s5', s6: '/s6', s7: '/s7' } as const
 
 /**
  * The calibration route. Not part of the three scenarios and never compared
@@ -282,7 +282,7 @@ async function calibrateDevSink(
 
 export default box(
 	{
-		name: 'vue-official — S1/S2/S3/S4/S5/S6 from emitted output',
+		name: 'vue-official — S1/S2/S3/S4/S5/S6/S7 from emitted output',
 		modes: ['dev'],
 		tags: ['three-way'],
 	},

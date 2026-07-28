@@ -23,7 +23,7 @@ export function FormBoard({ seed, onTrace }) @{
 			data-control="size"
 			data-size={size}
 			value={size}
-			onChange={(event) => {
+			onInput={(event) => {
 				const next = event.currentTarget.value;
 				size = next;
 				onTrace('size', { size: next }, event);
