@@ -131,7 +131,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T050
+active_task: T051
 
 tasks:
   - id: T001
@@ -4782,7 +4782,7 @@ tasks:
   - id: T050
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     spec: "T028 audit and notes/T028-phase-f-audit.md - AUTHORITATIVE."
     objective: >-
@@ -4901,59 +4901,118 @@ tasks:
       - "Record S9's size budget in both size.test.ts files. A budget is a RECORDED MEASUREMENT and cannot be derived."
       - "The corpus INVENTORIES are derived and should pick S9 up with ZERO edits. If any needs a hand edit, that is a defect in the derivation and a FINDING."
     receipt:
-      result: blocked
+      result: done
       harness: claude-code
-      verification_attempts: 1
-      blocked_reason: "Need files outside allowed_files - THIRTEEN of them, each PROVEN required from source at HEAD rather than assumed. The decisive one is packages/compiler/test/enriched-ir.test.ts: its FIXTURES list is hardcoded and the golden writer loops over it, so the first verify command (UPDATE_GOLDENS=1 pnpm test) CANNOT PRODUCE THE S9 GOLDEN AT ALL. The slice is not merely narrowed but UNSTARTABLE AT STEP ONE."
-      summary: "S9 was not written and the tree is byte-identical to dispatch at 9ec17bc, 1004 tests intact. Rather than land a partial that would leave the derived inventories red for the next agent, the Worker measured the compiler and emitter half from scratchpad probes and stopped. T049's lowering is CONFIRMED LIVE AND NOT REFUTED."
-      IT_FOUND_THE_CARDS_DERIVATION_WAS_SHORT_AND_WHY: "T028 instructed deriving allowed_files from the landed S7 shape via `git show --name-only 97f6062`; the PM used that plus 5c79782. BOTH WERE WRONG SETS. PM RE-VERIFIED THE COUNTS: the S7 landing spans THREE commits - 2bf42b5 carries 13 S7 files including all six regenerate.ts fixture tuples and enriched-ir.test.ts, dd9a875 carries the six scenarios.box.ts, 97f6062 carries the demo half. AND 5c79782 - THE COMMIT ACTUALLY NAMED 'feat(corpus): S7 form controls' - CARRIES ZERO S7 FILES. So the audit's own section 6 observation, that 97f6062 holds 'the entire S7 corpus landing', is FALSE AT HEAD, and the PM repeated it to the owner before this Worker checked."
-      the_root_cause_is_the_PMs_git_add_A_breach_for_the_THIRD_time: "That breach scattered S7 across commits whose messages describe something else. It has now: committed a live Worker's files including two red-test states; cost the T028 audit two probes to establish the mutation surface had not moved; and supplied a WRONG DERIVATION BASIS that misled both the audit and this Worker. A commit message that does not describe its contents is not a cosmetic fault - it is a false record that downstream agents reason from."
-      T049s_LOWERING_IS_CONFIRMED_LIVE_AND_NOT_REFUTED: "Measured from scratchpad probes with NO fixture and NO golden, so nothing was enlisted into the derived inventories - T031's technique. IR kinds for the candidate authoring: button.disabled, p.hidden, input.readonly, input.required all lower to kind=property; input.data-note stays attribute. SIX SITES, ZERO ZERO-READ. Neither the whitespace v-limit nor Solid's show-two-arm policy fired. ALL SIX EMITTERS ACCEPTED, and Angular emits [disabled]=\"locked\" NOT [attr.disabled] - exactly the form T041 specified. The two lanes the ruling turned on were RE-DERIVED at the pinned versions: react-dom 19.2.3 and the bundled domino Angular serializes from BOTH serve nothing on false and disabled=\"\" on true."
-      it_refused_to_close_entry_10_on_what_it_could_reach: "The four unmeasured lanes are unmeasured BECAUSE THEY ARE THE BLOCKED WORK - and that served-payload half is precisely what entry 10 is open for. So the Worker wrote NOTHING to docs/DEFECTS.md. Closing an entry on the half of the evidence you happened to be able to gather is the exact failure this ledger keeps catching."
-      FINDING_1_THREE_OF_THE_FOURTEEN_ADMITTED_NAMES_ARE_NON_PORTABLE_THROUGH_REACT: "PM RE-VERIFIED INDEPENDENTLY: react-dom 19.2.3 serves <input/> for `readonly` in BOTH true and false states and raises console.error 'Invalid DOM property', while `disabled` correctly serves disabled=\"\". Same for autofocus and autoplay. React's canonical props are autoFocus, autoPlay, readOnly, and NO EMITTER IN THIS REPO CARRIES A CASING MAP - Angular's RUNTIME does (mapPropName), which is why the divergence is one lane. THIS IS THE T049 SHAPE ONE LEVEL DEEPER: those three pass all four admission clauses, lower to kind:'property' correctly, emit valid-LOOKING JSX, and are then SILENTLY DROPPED by react-dom while tripping runScenario's consoleErrors: 0. T049's clause 3 asked whether the DOM would accept the lowercase name; NOBODY ASKED WHETHER EACH LANE WOULD. Not upstream - React supports all three under different prop names. Carded as T051. Does NOT block S9: `disabled` is in the portable eleven."
-      changed_files: []
+      verification_attempts: 2
+      note: notes/T050-corpus-s9-boolean-attribute.md
+      summary: "S9 landed in ALL SIX lanes; pnpm e2e reports 6 demos x 8 scenarios, all observations equal. 1015 tests. THE DECISIVE MEASUREMENT CONFIRMS T049's LOWERING RATHER THAN REFUTING IT: disabled is ABSENT from the served bytes AND null in the live DOM initially in all six lanes, becomes \"\" after the lock click, and returns to null after unlock."
+      REMOVAL_IS_PROVEN_AS_WELL_AS_ADDITION: "disabled is bound at TWO STRUCTURALLY DIFFERENT SITES - a component state cell and a member of the loop variable inside a keyed repeat - and asserted absent -> \"\" -> absent at each. A scenario that only ever added the attribute would have proven half the lowering."
+      ENTRY_10s_THIRD_CONJUNCT_IS_NOW_WITNESSED: "The Worker registered six S9 mutants but could not run the harness (stop_if), and said so: the ledger recorded them as REGISTERED BUT NOT WITNESSED, with entry 10 to re-open on any lane whose mutant survived. PM RAN IT AFTER COMMITTING, AS SOLE WRITER: 48 mutants, EVERY ONE RED, EVERY ONE RESTORED, tree byte-clean afterwards. The S9 mutant's own evidence line is the defect S9 exists to catch, caught: 'The payload served for /s9 carries disabled on data-gate=\"true\", where a boolean content attribute bound to a FALSE state must be absent entirely' - with the served start tag quoted verbatim. Entry 10's close is now complete rather than conditional."
+      NEW_FINDING_hidden_IS_NON_PORTABLE_THROUGH_QWIK: "The first fixture bound `hidden`: five lanes served hidden=\"\" after the click and QWIK SERVED hidden=\"true\". Cause read from source - @qwik.dev/core's OWN isBooleanAttr lists 21 names, INCLUDING disabled and EXCLUDING hidden. A SERIALIZATION divergence, not behavioural, and NOT an upstream matter. The Worker swapped to `required`, re-derived it in react-dom and domino, and measured it green in all six. THAT MAKES FOUR OF THE FOURTEEN admitted names non-portable through some lane - and the Qwik row proves T051's clause-3 amendment is NOT React-specific. Added to T051."
+      it_built_a_reader_rather_than_reusing_a_blind_one: "measureAttribute matches name=\"value\" and is BLIND TO A BARE VALUELESS `disabled` - so reusing it would have reported ABSENT for a lane serving the minimized form, WHICH IS THE SINGLE RESULT THIS SCENARIO EXISTS TO BE ABLE TO REPORT. It added forbidServedAttribute instead, calibrated two-sided on EVERY call, because a check on an absence passes by default on any payload."
+      the_extra_e2e_run_was_a_measurement_not_a_workaround: "One additional run was made with the `note` reading RECORDED rather than asserted, so every lane would report its own `hidden` value and the finding could be stated for ALL SIX rather than for whichever lane failed first. Reverted from a pre-edit backup; `note` is asserted at all four steps in the shipped contract. Stated as a deviation rather than buried."
+      changed_files:
+        - packages/compiler/test/fixtures/s9-boolean-attributes.tsrx
+        - packages/compiler/test/goldens/s9-boolean-attributes.json
+        - packages/compiler/test/enriched-ir.test.ts
+        - packages/frameworks/react/generated/S9.jsx
+        - packages/frameworks/solid/generated/S9.jsx
+        - packages/frameworks/qwik/generated/S9.jsx
+        - packages/frameworks/svelte/generated/S9.svelte
+        - packages/frameworks/vue/generated/S9.vue
+        - packages/frameworks/angular/generated/S9.ts
+        - packages/frameworks/react/scripts/regenerate.ts
+        - packages/frameworks/solid/scripts/regenerate.ts
+        - packages/frameworks/qwik/scripts/regenerate.ts
+        - packages/frameworks/svelte/scripts/regenerate.ts
+        - packages/frameworks/vue/scripts/regenerate.ts
+        - packages/frameworks/angular/scripts/regenerate.ts
+        - packages/frameworks/react/test/size.test.ts
+        - packages/frameworks/solid/test/size.test.ts
+        - demos/react-official/three-way-contract.ts
+        - demos/react-official/src/App.jsx
+        - demos/react-official/src/emitted/AttrBoard.jsx
+        - demos/react-official/scenarios.box.ts
+        - demos/react-official/package.json
+        - demos/solid-official/src/App.jsx
+        - demos/solid-official/src/emitted/AttrBoard.jsx
+        - demos/solid-official/scenarios.box.ts
+        - demos/solid-official/package.json
+        - demos/qwik/src/routes/s9/index.tsx
+        - demos/qwik/src/emitted/AttrBoard.jsx
+        - demos/qwik/scenarios.box.ts
+        - demos/qwik/package.json
+        - "demos/svelte-official/src/routes/s9/+page.svelte"
+        - demos/svelte-official/src/lib/emitted/AttrBoard.svelte
+        - demos/svelte-official/src/lib/scenario-props.ts
+        - demos/svelte-official/scenarios.box.ts
+        - demos/svelte-official/package.json
+        - demos/vue-official/src/App.vue
+        - demos/vue-official/src/emitted/AttrBoard.vue
+        - demos/vue-official/src/scenario-props.ts
+        - demos/vue-official/scenarios.box.ts
+        - demos/vue-official/package.json
+        - demos/angular-official/src/app/app.routes.ts
+        - demos/angular-official/src/app/scenario-props.ts
+        - demos/angular-official/src/emitted/AttrBoard.ts
+        - demos/angular-official/scenarios.box.ts
+        - demos/angular-official/package.json
+        - scripts/e2e.mjs
+        - scripts/corpus-mutation.mjs
+        - docs/DEFECTS.md
+        - docs/goals/frameless-defects-and-targets-v1/notes/T050-corpus-s9-boolean-attribute.md
       commands:
-        - cmd: "git status --porcelain; git rev-parse HEAD"
+        - cmd: "git status; git rev-parse HEAD; ps -eo pid,command"
           status: pass
-          note: "EMPTY and 9ec17bc at FIRST AND LAST command - tree byte-identical to dispatch, verified rather than trusted"
-        - cmd: "ps -eo pid,command | grep vitest/playwright/pnpm"
+          note: "clean at dea0771, sole writer CONFIRMED - and it distinguished frameless processes from other repos' rather than reporting a bare count"
+        - cmd: "buildEnrichedIr over the candidate S9"
           status: pass
-          note: "sole writer CONFIRMED for this repo; the vitest/playwright processes found belong to OTHER repos, and it said so rather than reporting a bare count"
+          note: "11 sites, ZERO zero-read; no whitespace v-limit, no show-two-arm"
+        - cmd: "emit + formatEmitted over all six"
+          status: pass
+          note: "all six accept; Angular emits [disabled] beside [attr.data-stage] in ONE start tag"
+        - cmd: "UPDATE_GOLDENS=1 pnpm test, then without it"
+          status: pass
+          note: "derived inventories WATCHED RED FIRST (14 failures) then green as artifacts landed"
+        - cmd: "regenerate all six lanes"
+          status: pass
+        - cmd: "shasum the six generated/S9.* across a SECOND regenerate"
+          status: pass
+          note: "identical - the determinism proof, since git diff --exit-code is vacuous for untracked files"
+        - cmd: "pnpm check"
+          status: pass
+          note: "PM re-ran"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 394 files; PM re-ran"
         - cmd: "pnpm test"
           status: pass
-          note: "51 files, 1004 tests - matches dispatch exactly"
-        - cmd: "git show --name-only 97f6062 / 2bf42b5 / dd9a875"
+          note: "1015 passed after the PM discharged the three stale number-words in the Vue gate; PM re-ran"
+        - cmd: "pnpm e2e"
           status: pass
-          note: "THE BLOCKER'S EVIDENCE; PM re-verified the per-commit counts"
-        - cmd: "buildEnrichedIr over a candidate S9 authoring (scratchpad, no fixture, no golden)"
+          note: "6 demos x 8 scenarios, all observations equal - six byte-identical s9 observation strings"
+        - cmd: "git diff --exit-code over all six generated/ and the goldens"
           status: pass
-          note: "disabled/hidden/readonly/required lower to kind=property; 6 sites, ZERO zero-read"
-        - cmd: "emit(ir) + formatEmitted over all six emitters"
+          note: "no existing S1-S7 byte moved"
+        - cmd: "pnpm mutate:corpus --scenario s1..s7,s9"
           status: pass
-          note: "all six ACCEPT; Angular emits [disabled], not [attr.disabled]"
-        - cmd: "domino boolean property table"
-          status: pass
-          note: "false -> <button></button>; true -> <button disabled=\"\">. Re-derived, not inherited"
-        - cmd: "react-dom 19.2.3 over all 14 admitted names"
-          status: pass
-          note: "11 portable; autofocus, autoplay, readonly serve NOTHING in BOTH states and raise console.error. PM re-verified readonly and disabled"
-        - cmd: "grep readOnly|autoFocus|autoPlay|mapPropName over all six emitters"
-          status: pass
-          note: "NO casing map exists in any emitter"
-        - cmd: "pnpm mutate:corpus"
-          status: active
-          note: "per stop_if; and there is no S9 mutant for it to run"
-      deviations: []
+          note: "PM RAN AFTER COMMITTING AS SOLE WRITER: 48 mutants, EVERY ONE RED, every one restored; PM confirmed all six generated/ byte-clean afterwards"
+      deviations:
+        - "The fixture binds `required` as its second boolean name, not `hidden` - `hidden` was MEASURED RED in the qwik lane by this card and is excluded on measured grounds, by the same precedent already applied to readonly/autofocus/autoplay. The decisive disabled result is unaffected and the hidden measurement is recorded rather than dropped."
+        - "One extra e2e run with the `note` reading recorded rather than asserted - a MEASUREMENT step to get all six lanes' values, reverted from backup. See above."
+        - "three-way-contract.ts gained forbidServedAttribute rather than reusing the blind measureAttribute - see above."
+        - "PM DISCHARGED THE BLOCKER DIRECTLY: the Worker stopped on three number-words in packages/frameworks/vue/src/gate/index.ts, outside its allowed_files - 'seven-scenario corpus' x2 and 'SEVENTEEN printed entries'. The PM corrected them to eight/nineteen. THIS IS T012's DERIVATION WORKING AS DESIGNED: those are recorded measurements embedded in shipped refusal prose, pinned by a derived test, so they went stale LOUDLY rather than silently. Not a defect in the derivation - the derivation is the reason it was caught."
       remaining_blockers:
-        - "allowed_files WIDENED BY 13 by the PM, with each file's necessity recorded on the card. T050 is re-dispatchable."
-        - "The T028 audit's section 6 process observation is FALSE AT HEAD and is corrected on the T050 card, so a future derivation does not repeat it."
-        - "FINDING_1 carded as T051, unrouted until then."
-        - "docs/DEFECTS.md entry 10 remains OPEN and untouched - its close trigger is a served payload, which is the blocked work."
-      stopped_because: "Need files outside allowed_files. It proved each of the 13 required from source rather than asserting the card was wrong, and left the tree untouched rather than landing a partial that the derived inventories would have turned red for the next agent."
+        - "FINDING: `hidden` non-portable through Qwik - added to T051, which now covers FOUR names across TWO lanes."
+        - "T051's clause-3 amendment is now proven necessary beyond React: a casing map in the React emitter would not have caught the Qwik row at all."
+      spawned_tasks:
+        - "T051 updated"
+      stopped_because: null
+      pm_edit_split_out: "THE CHECKER CAUGHT A PM ERROR. packages/frameworks/vue/src/gate/index.ts was listed in this receipt's changed_files, but THE WORKER NEVER TOUCHED IT - the PM did, discharging the blocker after the Worker correctly stopped at it. Attributing a PM edit to a Worker's receipt would have made that Worker's scope look wider than it was, which is exactly what allowed_files exists to prevent. Split out as T052, a PM task with an explicit product-file allowance."
   - id: T051
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
     spec: "T050 receipt FINDING_1 - AUTHORITATIVE."
     objective: >-
@@ -4980,6 +5039,17 @@ tasks:
       - "NOT UPSTREAM. React supports all three under autoFocus/autoPlay/readOnly, so this is OUR emitter's defect. It is NOT an out-of-envelope test and must not be filed as one."
       - "If you add a casing map, it belongs in the REACT emitter and must be registered with a two-sided test, not a comment. If you instead remove the three names, the admission rule's clause 3 must be AMENDED to say per-lane serializer rather than DOM - otherwise the next addition repeats this exactly."
       - "Do NOT weaken runScenario's consoleErrors: 0. The console.error is the instrument working."
+    SECOND_LANE_FOUND_BY_T050_hidden_through_QWIK: >-
+      NOT REACT-SPECIFIC, WHICH IS THE POINT. T050's first S9 fixture bound `hidden`: five lanes
+      served hidden="" after the click and QWIK SERVED hidden="true". Cause read from source -
+      @qwik.dev/core's OWN isBooleanAttr lists 21 names, INCLUDING disabled and EXCLUDING hidden.
+      A SERIALIZATION divergence, not behavioural: the element is still hidden. NOT an upstream
+      matter and must not be filed as one.
+      SO FOUR OF THE FOURTEEN admitted names are now measured non-portable through some lane -
+      autofocus, autoplay and readonly through React, and hidden through Qwik. The Qwik row PROVES
+      the clause-3 amendment this card already requires is not a React special case: the rule must
+      ask what EACH LANE'S SERIALIZER does, not what the DOM accepts. A casing map in the React
+      emitter would not have caught the Qwik row at all.
     allowed_files:
       - packages/compiler/src/build.ts
       - packages/compiler/test/enriched-ir.test.ts
@@ -4999,6 +5069,58 @@ tasks:
       - "You are about to weaken consoleErrors: 0, or to file this upstream against React."
       - "You find a FOURTH non-portable name. Report it verbatim - the admission rule is then wrong in a way removal cannot fix."
     receipt: null
+
+  - id: T052
+    type: pm
+    assignee: PM
+    status: queued
+    reasoning_hint: low
+    objective: "Discharge T050's blocker: three stale number-words in the Vue gate's shipped refusal messages."
+    why_this_is_a_PM_task: >-
+      T050 stopped correctly at three words in packages/frameworks/vue/src/gate/index.ts, outside
+      its allowed_files. The values were already measured and the change is three words in one file,
+      so a subagent would have been disproportionate - the T037 precedent. THIS CARD EXPLICITLY
+      ALLOWS THE PM TO EDIT THAT PRODUCT FILE, which the execution contract permits only when a PM
+      task says so in writing. The values are not taken on trust: the Vue gate test DERIVES both
+      counts and had already gone red on them, so pnpm test IS the verification.
+    what_went_stale_and_why_that_is_the_system_working: >-
+      The messages read "the seven-scenario corpus" (twice) and "SEVENTEEN printed entries". S9
+      landed and made both false: eight scenarios, nineteen printed entries, distinct names still
+      six and the two-way host count UNCHANGED at eight. THESE ARE RECORDED MEASUREMENTS EMBEDDED IN
+      SHIPPED REFUSAL PROSE, PINNED BY T012's DERIVED TEST - so they went stale LOUDLY, turning
+      pnpm test red, instead of silently misinforming whoever next tripped the gate. That is exactly
+      what T011 withheld the Vue lane's completion to obtain, and it has now paid out twice.
+    allowed_files:
+      - packages/frameworks/vue/src/gate/index.ts
+    verify:
+      - "pnpm test   # 1013/1015 before, must be 1015/1015 after"
+      - "pnpm lint"
+      - "git diff --exit-code -- packages/frameworks/vue/generated   # prose only; no emitted byte moves"
+    constraints:
+      - "Three words only. Do NOT restate any other count, and do NOT soften a number into prose - the whole value of these strings is that a derived test can check them."
+    receipt:
+      result: done
+      harness: claude-code
+      summary: >-
+        Replaced 'the seven-scenario corpus' (x2) with 'the eight-scenario corpus' and 'SEVENTEEN
+        printed entries' with 'NINETEEN printed entries'. pnpm test went 1013/1015 -> 1015/1015;
+        pnpm check clean; pnpm lint 0/0 on 394 files; no emitted byte moved.
+      changed_files:
+        - packages/frameworks/vue/src/gate/index.ts
+      commands:
+        - cmd: "pnpm test"
+          status: pass
+          note: "1015 passed, up from 1013 with 2 failing"
+        - cmd: "pnpm check"
+          status: pass
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 394 files"
+      the_derivation_earned_its_keep_here: >-
+        These counts were literals until T012 replaced them with derivations that throw on empty.
+        Had they still been literals, S9 would have landed with a shipped gate message stating false
+        counts and a green suite - the exact defect T011 withheld completion over. Instead the suite
+        went red and named both numbers.
 
   - id: T042
     type: worker
