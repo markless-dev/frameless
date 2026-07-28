@@ -17,10 +17,10 @@ import { Component, Input, type OnInit } from '@angular/core';
 	`,
 })
 export class RenderOnce implements OnInit {
-	@Input() label: any;
-	@Input() multiplier: any;
-	@Input() visible: any;
-	@Input() onTrace: any;
+	@Input() label!: string;
+	@Input() multiplier!: number;
+	@Input() visible!: boolean;
+	@Input() onTrace!: (name: string, detail: Record<string, unknown>) => void;
 	setup: any;
 	count: any;
 	prefix: any;

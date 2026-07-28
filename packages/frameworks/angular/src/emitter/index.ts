@@ -6,6 +6,7 @@ import {
 	type EnrichedGraphBinding,
 	type EnrichedIR,
 	type LocalDeclaration,
+	type SerializableAstNode,
 	type StaticAttribute,
 	type SyncPolicy,
 	type TemplateNode,
@@ -645,29 +646,195 @@ function collectEventScopes(component: EnrichedComponent): Map<string, string[]>
 // ---------------------------------------------------------------------------
 
 /**
- * EVERY emitted declaration carries `: any`, and that is IR-8 recorded rather
- * than closed.
+ * EVERY emitted declaration carries `: any` UNLESS IR-8 supplies a type for it,
+ * and only `@Input()` members can be supplied today.
  *
- * `PropDestructuringEntry` is `sourceName`/`localName`/`path`/`alias`/
+ * THE CLAUSE THAT USED TO STAND HERE IS WITHDRAWN AS MEASURED FALSE.  It read
+ * "`PropDestructuringEntry` is `sourceName`/`localName`/`path`/`alias`/
  * `graphNodeId`/`defaultValue?` and carries NO type, so any emitted type would be
  * INFERRED from what the corpus happens to do with the member - a content-based
- * trigger (Gate 3) that is unsound outside the exercised subset (Gate 4).
- * `frameless-angular-v1` T002 ruling 5 puts prop types OUT OF SCOPE for T003 and
- * requires this limitation be written down so a green is not over-read:
- * `strictTemplates` types `$event` at all fifteen lowered call sites and validates
- * every `@for` track expression, but an `any` member defeats it exactly as it
- * defeats `svelte-check`.
+ * trigger (Gate 3) that is unsound outside the exercised subset (Gate 4)".
+ * `frameless-emitter-capability-v1` T003 added `PropDestructuringEntry.type`,
+ * sourced from an annotation THE AUTHOR WROTE, so the trigger is now a declared
+ * IR field rather than a content inference: Gate 3 PASSES, and Gate 4 is not at
+ * risk because the field is ABSENT wherever nothing was authored and this
+ * function falls straight back to `: any` there.
+ *
+ * WHAT IS STILL TRUE, AND IS THE REASON THE OTHER THREE CALLERS BELOW ARE
+ * UNTOUCHED: locals, getters and handler parameters have no IR type channel at
+ * all.  IR-8 supplies PROP types only, so `setup`, `count`, `prefix`,
+ * `get derived()` and every `$event` parameter keep `: any`, and a green here
+ * must not be read as "the emitted class is typed".  `strictTemplates` now
+ * type-checks BINDINGS INTO this component - which an `any` input defeated
+ * entirely - while `$event` at the fifteen lowered call sites stays `any`.
  *
  * The annotation is not decoration. The scaffold's `strict` implies
  * `noImplicitAny`, and a bare `count;` is TS7008 while a bare `event` parameter
- * is TS7006 - so an unannotated member would not survive T004's `ng build` at
- * all. `event: Event` is refused for the opposite reason: the real DOM type makes
+ * is TS7006 - so an unannotated member would not survive `ng build` at all.
+ * `event: Event` is refused for the opposite reason: the real DOM type makes
  * `event.currentTarget.value` a type error, which would be this emitter inventing
  * a type the IR does not carry in order to look better typed than it is.
  */
 const MEMBER_TYPE = ': any';
 
+/**
+ * `!` on a TYPED `@Input()`, and ONLY on a typed one.
+ *
+ * MEASURED against `demos/angular-official`, whose scaffold leaves TypeScript
+ * 6.0.3's default `strict` on and relaxes `noImplicitAny` ALONE: an `@Input()`
+ * declared `label: string;` with no initialiser is TS2564 "Property 'label' has
+ * no initializer and is not definitely assigned in the constructor", because
+ * `strictPropertyInitialization` rides on `strict`. Angular writes inputs after
+ * construction, so the assertion is TRUE of how the class is used and is the
+ * form the framework's own documentation uses for a non-required input.
+ *
+ * It is scoped to the typed branch because `: any` never trips TS2564 and adding
+ * `!` there would move eight goldens' bytes for no diagnostic. AND IT ASSERTS
+ * NOTHING TO ANGULAR: `!` is erased before the AOT compiler sees the class, so
+ * an unbound input still reads `undefined` exactly as it did before - the IR has
+ * no requiredness field and this emitter still claims none.
+ */
+const DEFINITE_ASSIGNMENT = '!';
+
 type ClassMember = { readonly text: string };
+
+const TYPE_PROBE = '__frameless_angular_type__';
+
+/**
+ * IR-8 CONSUMPTION, AND THE HAZARD IT IS BUILT AGAINST.
+ *
+ * `PropDestructuringEntry.type` is a serialized type-node subtree in the dialect
+ * `@tsrx/core` (oxc) produces.  `yuku-codegen` prints the ESTree/typescript-eslint
+ * dialect.  THEY DISAGREE ON `TSFunctionType`, AND THE DISAGREEMENT IS SILENT:
+ * MEASURED at yuku-codegen 0.7.0, handing the corpus's own `onTrace` node
+ * straight to `generate()` prints `() => ;` - MALFORMED TEXT - and returns
+ * `errors: []`.  A permissive `structuredClone`-and-hope converter of the kind
+ * `expression()` can safely use for VALUE nodes would therefore have shipped a
+ * broken type into eight emitted files with every instrument green, because no
+ * instrument in this lane reads a type it did not itself print.
+ *
+ * So this converter is TOTAL AND FAIL-CLOSED: every accepted node kind is named
+ * here, every field it forwards is copied BY NAME, and anything else throws.
+ * The accepted set is exactly what the corpus authors today, which is what keeps
+ * it out of Gate 4 territory - there is no branch here that nothing exercises.
+ * Widening it is a deliberate edit with a fixture behind it, not a default.
+ */
+function typeNode(node: SerializableAstNode, where: string): Node {
+	const kind = String((node as { readonly type?: unknown }).type ?? '');
+	const record = node as Record<string, any>;
+	switch (kind) {
+		// Leaf keywords carry no children, so the two dialects cannot disagree.
+		case 'TSStringKeyword':
+		case 'TSNumberKeyword':
+		case 'TSBooleanKeyword':
+		case 'TSVoidKeyword':
+		case 'TSUnknownKeyword':
+			return { type: kind };
+		case 'TSTypeReference': {
+			// oxc and ESTree agree on `typeName` and on `typeArguments` here; only a
+			// BARE identifier is accepted, because `A.B` would name a type this
+			// emitter cannot prove is imported into the emitted module.
+			if (record.typeName?.type !== 'Identifier')
+				throw new Error(
+					`Angular emitter refuses a qualified type name in ${where}: only a bare type reference can be proven resolvable in emitted output`,
+				);
+			const reference: Node = {
+				type: 'TSTypeReference',
+				typeName: { type: 'Identifier', name: String(record.typeName.name) },
+			};
+			if (record.typeArguments === undefined) return reference;
+			if (record.typeArguments?.type !== 'TSTypeParameterInstantiation')
+				throw new Error(
+					`Angular emitter received unexpected type arguments in ${where}: ${String(record.typeArguments?.type)}`,
+				);
+			return {
+				...reference,
+				typeArguments: {
+					type: 'TSTypeParameterInstantiation',
+					params: (record.typeArguments.params as SerializableAstNode[]).map((param) =>
+						typeNode(param, where),
+					),
+				},
+			};
+		}
+		case 'TSFunctionType': {
+			// THE DIALECT DELTA, AND THE ONLY ONE THE CORPUS REACHES. oxc spells the
+			// parameter list `parameters` and the return type `typeAnnotation`;
+			// yuku-codegen reads `params` and `returnType`. Renaming them is what
+			// turns `() => ;` back into the authored signature.
+			const parameters = (record.parameters ?? record.params) as SerializableAstNode[] | undefined;
+			const returns = (record.typeAnnotation ?? record.returnType) as Record<string, any> | undefined;
+			if (!Array.isArray(parameters) || returns?.type !== 'TSTypeAnnotation')
+				throw new Error(
+					`Angular emitter received a malformed function type in ${where}`,
+				);
+			return {
+				type: 'TSFunctionType',
+				params: parameters.map((parameter) => typeParameter(parameter, where)),
+				returnType: {
+					type: 'TSTypeAnnotation',
+					typeAnnotation: typeNode(returns.typeAnnotation as SerializableAstNode, where),
+				},
+			};
+		}
+		default:
+			throw new Error(
+				`Angular emitter has no IR-8 lowering for the type node ${kind || 'without a type'} in ${where}`,
+			);
+	}
+}
+
+/** One parameter of a `TSFunctionType`; annotated plain identifiers only. */
+function typeParameter(node: SerializableAstNode, where: string): Node {
+	const record = node as Record<string, any>;
+	if (record.type !== 'Identifier' || record.typeAnnotation?.type !== 'TSTypeAnnotation')
+		throw new Error(
+			`Angular emitter has no IR-8 lowering for the function-type parameter ${String(record.type)} in ${where}: only an annotated plain identifier is printed`,
+		);
+	return {
+		type: 'Identifier',
+		name: String(record.name),
+		typeAnnotation: {
+			type: 'TSTypeAnnotation',
+			typeAnnotation: typeNode(record.typeAnnotation.typeAnnotation as SerializableAstNode, where),
+		},
+	};
+}
+
+/**
+ * Render an IR-8 type node as the text after a member's `:`.
+ *
+ * Isolated through a declarator with an asserted prefix/suffix, exactly as
+ * `printExpression` does, so a codegen change surfaces as a throw rather than a
+ * silently truncated type. The single-line assertion is not cosmetic: a class
+ * member is spliced into an indented body, and `printStatements` re-indents from
+ * column zero, so a wrapped type would arrive with the wrong leading tabs.
+ */
+function printTypeAnnotation(node: SerializableAstNode, where: string): string {
+	const prefix = `const ${TYPE_PROBE}: `;
+	const printed = printStatements([
+		{
+			type: 'VariableDeclaration',
+			kind: 'const',
+			declarations: [
+				{
+					type: 'VariableDeclarator',
+					id: {
+						type: 'Identifier',
+						name: TYPE_PROBE,
+						typeAnnotation: { type: 'TSTypeAnnotation', typeAnnotation: typeNode(node, where) },
+					},
+					init: null,
+				},
+			],
+		},
+	]);
+	if (!printed.startsWith(prefix) || !printed.endsWith(';') || printed.includes('\n'))
+		throw new Error(
+			`Angular emitter could not isolate a printed type for ${where} from ${JSON.stringify(printed.slice(0, 80))}`,
+		);
+	return printed.slice(prefix.length, -1);
+}
 
 /**
  * `@Input() <localName>: any;` IS A RULING, NOT A DEFAULT, and this is the decision
@@ -698,7 +865,10 @@ type ClassMember = { readonly text: string };
  * MEASURED FALSE for this emitter - plain `input()` read unset returns `undefined`
  * exactly as `@Input()` does, and `input.required()` is UNREACHABLE, because
  * `PropDestructuringEntry` has no `required` field and this function throws on the
- * only adjacent field, `defaultValue`.
+ * only adjacent field, `defaultValue`. IR-8 DID NOT CHANGE THIS: it supplies a
+ * TYPE, never a REQUIREDNESS, and the `!` below is a definite-assignment
+ * assertion to TypeScript rather than a claim to Angular that the input must be
+ * bound - see `DEFINITE_ASSIGNMENT`.
  *
  * Gate 6 also FAILs, and it is the honest negative result: `pnpm e2e` would NOT go
  * red if this line silently became `input()`, because both arms were measured to
@@ -720,7 +890,13 @@ function propMembers(component: EnrichedComponent): ClassMember[] {
 			throw new Error(
 				`Angular emitter refuses the aliased prop ${entry.sourceName} -> ${entry.localName}: the only Angular spelling is @Input('${entry.sourceName}') ${entry.localName}, which @angular-eslint/no-input-rename - a rule INSIDE this lane's applied set - reports`,
 			);
-		return { text: `@Input() ${entry.localName}${MEMBER_TYPE};` };
+		if (entry.type === undefined) return { text: `@Input() ${entry.localName}${MEMBER_TYPE};` };
+		return {
+			text: `@Input() ${entry.localName}${DEFINITE_ASSIGNMENT}: ${printTypeAnnotation(
+				entry.type,
+				`@Input() ${entry.localName} of ${component.name}`,
+			)};`,
+		};
 	});
 }
 

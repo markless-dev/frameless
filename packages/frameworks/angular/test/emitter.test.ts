@@ -386,19 +386,64 @@ describe('Angular 22 emitter', () => {
 	 * types out of scope for T003 and requires the limitation be written down so a
 	 * green is not over-read.
 	 */
-	test('every emitted declaration is `: any`, which is IR-8 recorded not closed', async () => {
-		for (const [file] of FIXTURES) {
+	/**
+	 * THIS TEST WENT VACUOUS THE MOMENT IR-8 LANDED, AND IT PASSED WHILE DOING SO.
+	 *
+	 * It used to be called "every emitted declaration is `: any`, which is IR-8
+	 * recorded not closed", and it asserted `matchAll(/…: any;/gm).length > 2`
+	 * plus two anti-vacuity rows aimed at UNANNOTATED members. When
+	 * `frameless-emitter-capability-v1` T004 made S1's four `@Input()`s print
+	 * their authored types, the count arm still saw `setup`/`count`/`prefix` and
+	 * stayed above 2, and neither anti-vacuity row matches `label!: string;` - so
+	 * THE FILE'S OWN TITLE BECAME FALSE AND THE ASSERTION STAYED GREEN. The arms
+	 * were aimed at "is anything unannotated?" when the question that mattered
+	 * was "is anything TYPED?", one axis over.
+	 *
+	 * The expectation is now DERIVED FROM THE GOLDEN rather than counted, so a
+	 * fixture that gains or loses an annotation moves this test instead of
+	 * sliding under it.
+	 */
+	test('a member is `: any` EXACTLY WHERE IR-8 supplies nothing, and typed exactly where it does', async () => {
+		let typedInputsSeen = 0;
+		let untypedInputsSeen = 0;
+		for (const [file, goldenName] of FIXTURES) {
 			const source = await emitted(file);
-			// Positive: every field and every method parameter carries the annotation.
-			expect([...source.matchAll(/^\t(?:@Input\(\) )?\w+: any;$/gm)].length).toBeGreaterThan(2);
+			const artifact = await golden(goldenName);
+			for (const component of artifact.components)
+				for (const entry of component.props.entries) {
+					const declaration = new RegExp(`^\\t@Input\\(\\) ${entry.localName}(.*);$`, 'm');
+					const [, suffix] = declaration.exec(source) ?? [];
+					expect(suffix, `${file} @Input() ${entry.localName}`).toBeDefined();
+					if (entry.type === undefined) {
+						// THE CONTROL ARM, and it is why this loop keys off the golden.
+						// Seven of the eight scenarios carry no authored prop type, so
+						// they must still print `: any` - which is what proves a printed
+						// type came from SOURCE rather than being synthesized here.
+						expect(suffix, `${file} ${entry.localName}`).toBe(': any');
+						untypedInputsSeen += 1;
+					} else {
+						expect(suffix, `${file} ${entry.localName}`).toMatch(/^!: /);
+						expect(suffix, `${file} ${entry.localName}`).not.toContain('any');
+						typedInputsSeen += 1;
+					}
+				}
+			// EVERY NON-INPUT MEMBER AND EVERY HANDLER PARAMETER IS STILL `: any`,
+			// and that is the honest limit of this step: IR-8 supplies PROP types
+			// only, so locals, getters and `$event` have no type channel at all.
+			// Scoped to the CLASS BODY: the `@Component({ selector: '…' })` decorator
+			// above it is object-literal syntax that the same shape would match.
+			const classBody = source.slice(source.indexOf('\nexport class '));
+			expect(classBody, file).not.toBe('');
+			for (const [, name, suffix] of classBody.matchAll(/^\t(\w+)(: [^;]+);$/gm))
+				if (!source.includes(`@Input() ${name}`)) expect(suffix, `${file} ${name}`).toBe(': any');
 			for (const [, parameters] of source.matchAll(/^\t\w+\(([^)]*)\): void \{$/gm))
 				for (const parameter of parameters.split(', ').filter(Boolean))
 					expect(parameter, `${file} ${parameter}`).toMatch(/^\w+: any$/);
-			// ANTI-VACUITY for the two rows above: neither an unannotated field nor an
-			// unannotated parameter exists anywhere, so the positives are not just
-			// matching the subset that happens to be annotated. A bare `count;` is
-			// TS7008 and a bare `event` parameter TS7006 under the scaffold's `strict`,
-			// so an unannotated member would not survive T004's `ng build` at all.
+			// ANTI-VACUITY: neither an unannotated field nor an unannotated parameter
+			// exists anywhere, so the rows above are not just matching the subset that
+			// happens to be annotated. A bare `count;` is TS7008 and a bare `event`
+			// parameter TS7006 under the scaffold's `strict`, so an unannotated member
+			// would not survive `ng build` at all.
 			expect(source).not.toMatch(/^\t(?:@Input\(\) )?\w+;$/m);
 			expect(source).not.toMatch(/^\t\w+\(\w+(?:[,)])/m);
 			// `event: Event` is refused for the opposite reason to `: any`: the real
@@ -406,6 +451,117 @@ describe('Angular 22 emitter', () => {
 			// would be the emitter inventing a type to look better typed than it is.
 			expect(source).not.toContain('event: Event');
 		}
+		// BOTH BRANCHES MUST BE EXERCISED. A corpus that lost its one annotated
+		// fixture, or that annotated all of them, would make one arm above vacuous
+		// and this row is what refuses that rather than reporting a green.
+		expect({ typedInputsSeen, untypedInputsSeen }).toEqual({
+			typedInputsSeen: 4,
+			untypedInputsSeen: 15,
+		});
+	});
+
+	/**
+	 * IR-8's type nodes arrive in the dialect `@tsrx/core` (oxc) produces, and
+	 * `yuku-codegen` prints the ESTree/typescript-eslint one. THIS ROW IS THE
+	 * REASON THE EMITTER CONVERTS FIELD-BY-FIELD INSTEAD OF CLONING.
+	 *
+	 * It drives the printer through the emitter's real entry point, so it fails
+	 * if the conversion is removed, and it names the exact text a permissive
+	 * converter produces: `onTrace: () => ;` - MALFORMED, and emitted with
+	 * `errors: []` from the codegen. A whole class of broken output would have
+	 * shipped green, because no instrument in this lane reads a type it did not
+	 * itself print.
+	 */
+	test('the oxc -> ESTree dialect conversion is load-bearing on the corpus function type', async () => {
+		const source = await emitted('S1.ts');
+		expect(source).toContain(
+			'@Input() onTrace!: (name: string, detail: Record<string, unknown>) => void;',
+		);
+		// The silent-garbage shape, spelled out so a reader can recognise it.
+		expect(source).not.toContain('=> ;');
+		// CALIBRATION: yuku-codegen really does accept the unconverted node and
+		// really does report no error, measured here rather than asserted.
+		const { generate } = await import('yuku-codegen');
+		const artifact = await golden('s1-render-once.json');
+		const raw = artifact.components[0]!.props.entries.find(
+			(entry) => entry.localName === 'onTrace',
+		)!.type as unknown as Record<string, unknown>;
+		expect(raw.type).toBe('TSFunctionType');
+		const printed = generate(
+			{
+				type: 'Program',
+				sourceType: 'module',
+				body: [
+					{
+						type: 'VariableDeclaration',
+						kind: 'const',
+						declarations: [
+							{
+								type: 'VariableDeclarator',
+								id: {
+									type: 'Identifier',
+									name: 'x',
+									typeAnnotation: { type: 'TSTypeAnnotation', typeAnnotation: raw },
+								},
+								init: null,
+							},
+						],
+					},
+				],
+			} as never,
+			{ quotes: 'single' },
+		);
+		expect(printed.errors).toEqual([]);
+		expect(printed.code).toBe('const x: () => ;');
+	});
+
+	describe('IR-8 printing fails closed rather than guessing', () => {
+		async function withPropType(node: unknown): Promise<() => string> {
+			const artifact = structuredClone(await golden('s1-render-once.json'));
+			const entry = artifact.components[0]!.props.entries.find(
+				(candidate) => candidate.localName === 'label',
+			)!;
+			(entry as { type?: unknown }).type = node;
+			return () => emit(artifact);
+		}
+
+		test('on a type node kind the emitter has no lowering for', async () => {
+			const run = await withPropType({ type: 'TSUnionType', types: [] });
+			expect(run).toThrow(/no IR-8 lowering for the type node TSUnionType/);
+		});
+
+		test('on a qualified type name it cannot prove is imported', async () => {
+			const run = await withPropType({
+				type: 'TSTypeReference',
+				typeName: {
+					type: 'TSQualifiedName',
+					left: { type: 'Identifier', name: 'A' },
+					right: { type: 'Identifier', name: 'B' },
+				},
+			});
+			expect(run).toThrow(/refuses a qualified type name/);
+		});
+
+		test('on a function-type parameter that is not an annotated plain identifier', async () => {
+			const run = await withPropType({
+				type: 'TSFunctionType',
+				parameters: [{ type: 'RestElement', argument: { type: 'Identifier', name: 'rest' } }],
+				typeAnnotation: {
+					type: 'TSTypeAnnotation',
+					typeAnnotation: { type: 'TSVoidKeyword' },
+				},
+			});
+			expect(run).toThrow(/no IR-8 lowering for the function-type parameter RestElement/);
+		});
+
+		/**
+		 * CALIBRATION for the three rows above: the SAME constructor with a node the
+		 * emitter DOES accept must emit, or all three would pass on any throw at all.
+		 */
+		test('CALIBRATION: an accepted node kind emits instead of throwing', async () => {
+			const run = await withPropType({ type: 'TSUnknownKeyword' });
+			expect(run()).toContain('@Input() label!: unknown;');
+		});
 	});
 
 	describe('fails closed', () => {

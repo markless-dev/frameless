@@ -90,7 +90,7 @@ visual_board:
     predecessor goal that closed complete this session. Recorded as an explicit choice, not an
     omission - the command above turns it on at any time.
 
-active_task: T004
+active_task: T013
 
 tasks:
   - id: T001
@@ -922,7 +922,7 @@ tasks:
   - id: T004
     type: worker
     assignee: Worker
-    status: active
+    status: blocked
     reasoning_hint: high
     objective: "STEP 2. Consume IR-8: all six emitters print types on emitted props."
     YOU_INHERIT_A_RED_pnpm_check_AND_YOU_OWN_DRIVING_IT_GREEN: >-
@@ -994,7 +994,145 @@ tasks:
     stop_if:
       - "A lane prints a type its own checker will not accept."
       - "A lane's RED does not reproduce against emitted output even though it reproduced on the hand-written probe. That is the phase's real question surfacing - report it verbatim."
+    receipt:
+      result: blocked
+      harness: claude-code
+      verification_attempts: 2
+      note: notes/T004-ir8-consumption.md
+      blocked_reason: "Five of six lanes need packages/frameworks/*/src/gate/index.ts, and FOUR of them additionally need @typescript-eslint/parser as a NEW DEPENDENCY - four package.json files plus a pnpm-lock.yaml move, against a lockfile that is one of the three FOREIGN dirty files this task was told not to touch. Angular was delivered whole and fully verified rather than stopping with nothing measured."
+      changed_files:
+        - packages/frameworks/angular/src/emitter/index.ts
+        - packages/frameworks/angular/generated/S1.ts
+        - packages/frameworks/angular/test/emitter.test.ts
+        - demos/angular-official/src/emitted/RenderOnce.ts
+        - docs/goals/frameless-emitter-capability-v1/notes/T004-ir8-consumption.md
+      commands:
+        - cmd: "pnpm test (baseline, pre-edit)"
+          status: pass
+          note: "1103/1 confirmed BEFORE any edit"
+        - cmd: "pnpm test (final)"
+          status: pass
+          note: "1108 passed / 1 failed (1109) = baseline + EXACTLY the 5 added; failures stayed at exactly 1, same foreign cause"
+        - cmd: "pnpm check"
+          status: blocked
+          note: "STILL 73, UNCHANGED - and structurally so: all 73 live in react/generated/, and angular's emitted output is in NO pnpm check project at all (its tsconfig includes src/, test/, scripts/ only). This slice CANNOT move the number. No compiler option was reached for."
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0/0 over 396 files"
+        - cmd: "pnpm check:citations"
+          status: pass
+          note: "clean, re-run after the note landed"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "6 demos x 8 scenarios all equal; angular demo REBUILT from the newly typed emitted artifact"
+        - cmd: "regenerate angular + git diff --exit-code over the seven unannotated scenarios"
+          status: pass
+          note: "exit 0 - THE CONTROL ARM DID NOT MOVE. Non-vacuity proved first."
+        - cmd: "git diff --exit-code over the other five lanes' generated*/"
+          status: pass
+          note: "exit 0 across all"
+        - cmd: "ng build AOT + strictTemplates, three arms against EMITTED output"
+          status: pass
+          note: "THE ORACLE - control GREEN, negative RED TS2322, positive GREEN"
+        - cmd: "git status --short"
+          status: pass
+          note: "4 owned + 1 note + exactly the 3 FOREIGN entries, untouched; nothing committed"
+      THE_ORACLE_REPRODUCED_AGAINST_EMITTED_OUTPUT_IN_ANGULAR: "ng build AOT + strictTemplates, @angular/compiler-cli 22.0.8. CONTROL (HEAD's UNTYPED emitted S1.ts + wrong-typed call site) GREEN exit 0 | NEGATIVE (T004's TYPED emitted S1.ts, same call site) RED TS2322 'Type string is not assignable to type number.' at negative/Parent.ts:8:48 exit 1 | POSITIVE GREEN exit 0. MATCHES T001's hand-written angular row EXACTLY. That is one of the six rows T999 requires."
+      five_lanes_NOT_MEASURABLE_and_the_reasons_were_MEASURED: "react: gate refuses the printed type - component-shape (yuku-parser lang:'jsx' at gate:194) plus eslint:parse 'Unexpected token :'. solid: same two refusals at gate:203. qwik: eslint:parse 'Unexpected token :'. svelte: eslint:parse 'Complex binding patterns require an initialization value'. vue: no-typed-props plus eslint:parse - AND VUE'S IS A RULING, NOT A PARSER."
+      IT_REFUSED_AN_INSTRUMENT_THAT_WOULD_HAVE_LIED: "The PM's brief said of vue's defineProps<T>(): 'if you print it, you must show the behaviour is unchanged, and pnpm e2e is the instrument'. THE WORKER RE-MEASURED T010's Gate 5 claim - it reproduces exactly - AND THEN FOUND THE INSTRUMENT INCAPABLE: every demo binds visible={true} EXPLICITLY, in all six lanes, so NEITHER TRIGGERING CASE (absent, or empty-string) EXISTS ANYWHERE e2e DRIVES. A green e2e on defineProps<T>() would have been TRUE AND WOULD HAVE PROVED NOTHING. Reading it as the required proof would have shipped a rendering change under a passing oracle - the exact green vacuum this project keeps finding."
+      THE_TRIPWIRE_SET_T011_NAMED_WAS_INCOMPLETE: "T011 recorded format-emitted.ts's lang:'jsx' as THE deliberate Step 2 tripwire and put exactly those three files in scope. THE GATES CARRY THE SAME TRIPWIRE AND NOBODY ENUMERATED THEM - react/src/gate/index.ts:194 and solid:203 also parse emitted output with lang:'jsx', and four gates lint it with espree. AND format-emitted.ts TURNED OUT NOT TO BE THE BLOCKING SITE AT ALL: it is never reached, because the gate refuses first."
+      the_blocker_is_a_DEPENDENCY_not_just_scope: "@typescript-eslint/parser is NOT RESOLVABLE from react, solid, qwik or svelte - measured with createRequire from each gate, and PM INDEPENDENTLY CONFIRMED all four NOT resolvable while angular IS. THAT IS WHY ANGULAR IS THE LANE THAT WORKED. Making the four gates parse a printed type needs four package.json edits AND a lockfile move."
+      the_converter_is_fail_closed_because_the_silent_hazard_is_REAL: "yuku-codegen prints the corpus's own onTrace node as '() => ;' WITH errors:[] - silent garbage. Removing only the oxc->ESTree dialect rename regenerates that string and turns 20 TESTS RED across three suites. The '!' definite-assignment assertion was proved load-bearing too: dropping it and running the REAL demo build reports TS2564."
+      IT_FOUND_A_TEST_THAT_WENT_VACUOUS_THE_INSTANT_IR_8_LANDED: "An angular ': any' test PASSED WHILE BECOMING MEANINGLESS. It was REWRITTEN rather than extended, and the replacement DERIVES its expectation from the golden and pins BOTH branch counts - so a corpus that annotated everything, or nothing, now FAILS instead of going quiet."
+      brief_errors_found:
+        - "THE BOARD WAS UNPARSEABLE AND T004's EFFECTIVE allowed_files WAS []. The card carried TWO allowed_files keys - js-yaml THROWS 'duplicated mapping key'. THIS IS THE EXACT DEFECT T003 FOUND, and T003's receipt correction 'measured, ONLY T003 had a duplicate; T004-T007 carry a SINGLE empty allowed_files' IS NOW FALSE - the PM introduced a new one while scoping T004. The Worker followed T003's precedent: used the populated list on its provenance block and REPORTED rather than edited the board. PM CONFIRMED, removed it, and swept all 20 boards clean with a new duplicate-key guard - PyYAML silently last-wins where js-yaml throws, so the PM's own verification instrument was weaker than the checker."
+        - "'pnpm e2e is the instrument' for vue is STRUCTURALLY INCAPABLE of discharging that burden - see above."
+        - "The tripwire set T011 named is incomplete - see above."
+        - "The blocker is a DEPENDENCY and an environment constraint, not merely files outside allowed_files."
+      deviations:
+        - "PARTIAL DELIVERY BY DESIGN: 1 of 6 lanes fully verified, rather than 6 lanes with 4 gate suites red. Weakening a gate.test.ts assertion from inside test/ - which IS in scope - would have manufactured the vacuous pass this project keeps catching."
+        - "The angular emitted-output probe rig was staged in the scratchpad because probes/ is NOT in this card's allowed_files. No repo file moved."
+        - "REWROTE rather than extended the vacuous ': any' test - see above."
+        - "Added 5 tests beyond the ask, including an ACCEPTED-NODE CALIBRATION so the three fail-closed throw rows cannot pass on any throw at all."
+        - "Ran pnpm lint and check:citations though this card's verify omits both."
+      remaining_blockers:
+        - "FIVE LANES need packages/frameworks/{react,solid,qwik,svelte,vue}/src/gate/index.ts; react/solid also need the yuku-parser lang:'jsx' -> 'tsx' flip at react:194 / solid:203."
+        - "FOUR LANES additionally need @typescript-eslint/parser - four package.json files plus a pnpm-lock.yaml move, against a FOREIGN-DIRTY lockfile, and the worker sandbox has no network."
+        - "VUE NEEDS A RULING, NOT A PARSER: no-typed-props denies defineProps<T>(), the only channel that types a Vue call site, and its Gate 5 basis is CONFIRMED by independent re-measurement. Re-opening it means deciding whether a falsy->truthy flip on an absent or empty boolean prop is acceptable - AND pnpm e2e CANNOT INFORM THAT DECISION."
+        - "pnpm check REMAINS RED AT 73 (react), unchanged, and this slice structurally could not move it. Classes re-measured identical to T012's census."
+        - "IR-8 supplies PROP types ONLY. Angular's locals, getters and every $event parameter are still ': any' - the emitted class is NOT typed, only its inputs are."
+      stopped_because: "Five lanes need gate files outside allowed_files; four additionally need a new dependency and a lockfile move against a foreign-dirty lockfile."
+  - id: T013
+    type: judge
+    assignee: Judge
+    status: active
+    reasoning_hint: high
+    spec: "T004 receipt + T010's Gate 5 measurement - AUTHORITATIVE. Read-only; needs NO new dependency."
+    objective: >-
+      Rule whether Vue may print prop types at all - i.e. whether no-typed-props re-opens - given
+      that defineProps<T>() is the ONLY channel that types a Vue call site and that it changes
+      runtime behaviour.
+    why_this_runs_NOW_while_the_other_lanes_wait: >-
+      Four lanes are blocked on a new dependency and a lockfile move. VUE IS NOT: its blocker is a
+      RULING. T010 measured the Gate 5 basis and T004 re-measured it independently, and both agree -
+      so the evidence is in hand and only the decision is missing. This is the one piece of Step 2
+      that can advance without touching the environment.
+    the_measured_conflict_you_are_ruling_on: >-
+      At vue@3.5.40, defineProps<T>() versus the array form: with `visible` ABSENT the array form
+      yields undefined and the type form yields FALSE; with visible="" the array form is FALSY ""
+      and the type form is TRUTHY TRUE; and multiplier="2" newly warns "Invalid prop: type check
+      failed". A FALSY-TO-TRUTHY FLIP IS A RENDERING CHANGE, and it lands on the one corpus
+      component that could take the sugar. The required:true enforcing those diagnostics is
+      synthesized from TS non-optionality that NO IR FIELD DECLARES.
+    AND_THE_OBVIOUS_INSTRUMENT_CANNOT_SETTLE_IT: >-
+      T004 established that pnpm e2e is STRUCTURALLY INCAPABLE of discharging this: every demo binds
+      visible={true} EXPLICITLY in all six lanes, so neither triggering case - absent, or empty
+      string - exists anywhere e2e drives. A GREEN e2e WOULD BE TRUE AND WOULD PROVE NOTHING. If you
+      want behavioural evidence you must say what would produce it, not point at the existing run.
+    what_a_ruling_must_contain:
+      - "Does no-typed-props re-open, stay, or narrow? Name the deciding gate."
+      - "If it stays: state plainly that VUE CANNOT SATISFY THE PHASE ORACLE, because no other channel types a Vue call site - and say what that costs T999, which requires a per-lane RED."
+      - "If it re-opens or narrows: name the evidence that would have to be produced first, and what instrument could produce it, given e2e cannot."
+      - "Either way: whether a corpus scenario binding an ABSENT or EMPTY-STRING boolean prop should exist, since its absence is why the instrument is blind."
+    constraints:
+      - "READ-ONLY. Do not implement, do not edit a gate, do not annotate a fixture."
+      - "Do NOT re-litigate T010's or T004's measurements - two independent measurements agree. Rule on what they MEAN."
+      - "A verdict that survives on new grounds is a legitimate outcome; so is one that re-opens. An unargued one is not."
+    expected_output:
+      - "The ruling, with its deciding gate"
+      - "What it costs the phase oracle and T999"
+      - "The evidence and instrument any re-open would require"
+      - "A recommendation on the absent/empty-boolean corpus gap"
+    receipt: null
+
+  - id: T014
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    spec: "T004 receipt, remaining_blockers - AUTHORITATIVE."
+    objective: >-
+      Make the four JSX/Svelte lanes' gates accept a printed type, then print types and reproduce
+      the Step 0 oracle against emitted output per lane.
+    BLOCKED_ON_AN_ENVIRONMENT_DECISION_THE_OWNER_MUST_MAKE: >-
+      @typescript-eslint/parser is NOT RESOLVABLE from react, solid, qwik or svelte - measured by
+      T004 with createRequire from each gate, and INDEPENDENTLY CONFIRMED by the PM (all four NOT
+      resolvable; angular IS, which is exactly why angular is the lane that worked). Adding it means
+      four package.json edits AND a pnpm-lock.yaml move - and pnpm-lock.yaml is one of the three
+      FOREIGN uncommitted files belonging to the owner's in-flight `website` work. The PM will not
+      run an install that rewrites a lockfile the owner has uncommitted changes in without saying
+      so first. Worker sandboxes additionally have no network, so this cannot be delegated.
+    also_needed_beyond_the_dependency: >-
+      react/src/gate/index.ts:194 and solid:203 parse emitted output with the yuku-parser at
+      lang:'jsx' and need 'tsx'. T011 recorded format-emitted.ts as THE Step 2 tripwire; T004
+      measured that it is never even reached, because the gate refuses first. The tripwire set was
+      incomplete.
     allowed_files: []
+    verify:
+      - "per lane: the Step 0 probe RED against EMITTED output, correctly-typed twin GREEN, exact diagnostic recorded"
+      - "pnpm test / pnpm check / pnpm lint / pnpm e2e"
+    stop_if:
+      - "Scope to be set when the environment decision is made."
     receipt: null
 
   - id: T005
