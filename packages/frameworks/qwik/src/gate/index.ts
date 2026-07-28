@@ -60,6 +60,12 @@ function persistenceArtifactPolicy() {
  * one that matters most for a resumable emitter - it catches non-serializable
  * values captured across a QRL boundary, which is the defining failure mode of
  * generated Qwik code and which nothing else in this repo checks.
+ *
+ * THIS SET IS NOW TOTAL over `configs.recommended`: every rule upstream
+ * recommends is either applied here or named in
+ * `QWIK_ESLINT_RULES_REQUIRING_TYPES` below with the reason it cannot run.
+ * `test/gate.test.ts` asserts that in BOTH directions - see
+ * `QWIK_ESLINT_RECOMMENDED_RULES`.
  */
 export const QWIK_ESLINT_RULES = {
 	'qwik/use-method-usage': 'error',
@@ -74,6 +80,33 @@ export const QWIK_ESLINT_RULES = {
 	'qwik/unused-server': 'error',
 	'qwik/jsx-img': 'error',
 	'qwik/jsx-a': 'error',
+	// ADDED BY T029, and they are an ADDITIONS-ONLY delta on purpose: a change
+	// that only adds arbiter rules cannot be used to make a corpus green.
+	//
+	// Both sat in `configs.recommended` and in NEITHER list below it - dropped
+	// with no recorded reason, which is precisely what the omission list exists to
+	// make impossible. Found by the Angular T003a Judge while ruling on arbiter
+	// independence.
+	//
+	// MEASURED BEFORE APPLYING, per the charter's proof-before-fix. Both are
+	// PURELY SYNTACTIC at 2.0.0-beta.38 - no type information, no `@qwik.dev/router`
+	// dependency, no Qwik City app - so the "cannot run" reason that covers the two
+	// rules below does not cover these. `loader-location` keys on a callee name in
+	// {loader$, routeLoader$, routeAction$, routeHandler$, action$, globalAction$}
+	// plus a path test against `routesDir`; `no-await-navigate-in-use-task` keys on
+	// `await <binding>()` inside a `useTask$`/`useTaskQrl` body where the binding
+	// came from `useNavigate()`, unless that task opted out with
+	// `{ deferUpdates: false }`. Both report ZERO messages across the entire shipped
+	// `generated/` corpus, and both go RED on a planted violation - watched in
+	// "MUTATION: Qwik lint policies reject violating emitted source". Silent but
+	// CAPABLE is a reason to apply, not a reason to omit.
+	//
+	// `loader-location` earns its keep here specifically: emitted components are
+	// library modules, never route boundary files, so a `routeLoader$` reaching
+	// emitted output would ALWAYS be misplaced - and this emitter fails closed on
+	// persistence-bearing IR rather than emitting one today.
+	'qwik/loader-location': 'error',
+	'qwik/no-await-navigate-in-use-task': 'error',
 } as const;
 
 /**
@@ -93,6 +126,53 @@ export const QWIK_ESLINT_RULES_REQUIRING_TYPES = [
 	'qwik/valid-lexical-scope',
 	'qwik/use-async-top',
 ] as const;
+
+/**
+ * UPSTREAM'S OWN INVENTORY, read off the plugin at runtime rather than
+ * transcribed. Transcribing would freeze the set at the version that was read,
+ * which is the same failure the omission list prevents, one level up.
+ *
+ * `eslint-plugin-qwik` PUBLISHES `configs.recommended`, so unlike the Angular
+ * lane - which must derive its applied set from per-rule
+ * `meta.docs.recommended` because `@angular-eslint` ships no configs at all -
+ * there is a third-party-authored list here to measure against directly.
+ *
+ * DO NOT SUBSTITUTE per-rule `meta.docs.recommended` FOR THIS. Measured at
+ * 2.0.0-beta.38 it carries six different shapes across the 16 rules - `true`,
+ * `'recommended'`, `'warn'`, `'error'`, `false` and `undefined` - and two rules
+ * that ARE in `configs.recommended` (`prefer-classlist`, `use-async-top`)
+ * declare `recommended: false`. A metadata derivation would therefore drop rules
+ * upstream recommends. The published config is the only coherent source here,
+ * and the Angular precedent transfers as a PRINCIPLE (measure against something
+ * upstream authored) rather than as a mechanism.
+ *
+ * WHY THE APPLIED SET IS STILL A LITERAL RATHER THAN DERIVED FROM THIS.
+ * Deriving it would let a rule added in a future plugin release enter this gate
+ * UNMEASURED - proof-before-fix inverted. A new upstream rule must be run
+ * against the corpus first, then applied, or omitted with its reason recorded.
+ * So the literal stays, and `test/gate.test.ts` asserts that applied plus
+ * omitted equals this list in BOTH directions. A plugin upgrade that adds or
+ * removes a rule then turns that test RED and forces the measurement, instead of
+ * diverging in silence - which is exactly how the two rules T029 recovered went
+ * missing in the first place.
+ */
+export const QWIK_ESLINT_RECOMMENDED_RULES: readonly string[] = (() => {
+	const configs = (qwikPlugin as { readonly configs?: Readonly<Record<string, unknown>> })
+		?.configs;
+	const recommended = configs?.recommended as
+		| { readonly rules?: Readonly<Record<string, unknown>> }
+		| undefined;
+	const ids = Object.keys(recommended?.rules ?? {});
+	// Fail LOUD rather than returning []. An empty inventory would make the
+	// divergence assertion agree with ANY applied set at all - the one way this
+	// check could end up weaker than having no check.
+	if (ids.length === 0)
+		throw new Error(
+			'eslint-plugin-qwik exposed no configs.recommended.rules, so the upstream inventory ' +
+				"that this gate's applied set and omission list are measured against has moved",
+		);
+	return ids;
+})();
 
 /** A JSX event prop. The `$` suffix is deliberately not required - see below. */
 const EVENT_PROP = /^on[A-Z]/;

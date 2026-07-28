@@ -10,6 +10,9 @@ import {
 	checkGeneratedFiles,
 	checkSources,
 	discoverGeneratedFiles,
+	QWIK_ESLINT_RECOMMENDED_RULES,
+	QWIK_ESLINT_RULES,
+	QWIK_ESLINT_RULES_REQUIRING_TYPES,
 	QWIK_GATE_POLICIES,
 } from '../src/gate/index.ts';
 
@@ -167,12 +170,70 @@ describe('Qwik v2 dossier gate', () => {
 			'eslint:qwik/unused-server',
 			'eslint:qwik/jsx-img',
 			'eslint:qwik/jsx-a',
+			// T029: recovered from a silent drop out of configs.recommended.
+			'eslint:qwik/loader-location',
+			'eslint:qwik/no-await-navigate-in-use-task',
 		]);
 		expect(
 			QWIK_GATE_POLICIES.filter((policy) => policy.requiresArtifact).map(
 				(policy) => policy.id,
 			),
 		).toEqual(['persistence-render-lowering']);
+	});
+
+	/**
+	 * THE INVENTORY ASSERTION (T029). This is the durable half of that task:
+	 * without it, the next `eslint-plugin-qwik` release re-opens the same hole in
+	 * silence.
+	 *
+	 * WHAT WENT WRONG WITHOUT IT. `configs.recommended` carried 16 rules, the gate
+	 * applied 12 and recorded 2 as needing type information, and the remaining
+	 * TWO - `qwik/loader-location` and `qwik/no-await-navigate-in-use-task` - were
+	 * dropped with no comment anywhere accounting for them. Nothing in the suite
+	 * could tell that apart from a deliberate decision, because a dropped rule and
+	 * a rule that simply never fires look identical from the outside. That is the
+	 * arbiter being quietly shaped to fit the thing it judges, and it survived
+	 * shipped for as long as it did precisely because no test compared the applied
+	 * set to what upstream publishes.
+	 *
+	 * IT IS A REAL CROSS-CHECK, not a restatement: the left side is a hand-written
+	 * literal in `src/gate/index.ts` and the right side is read out of the
+	 * installed third-party plugin at runtime. Two-sidedly fail-closed - upstream
+	 * adding a rule goes red, and naming a rule upstream has REMOVED goes red too.
+	 */
+	test('every upstream recommended rule is either applied or omitted with a reason', () => {
+		const applied = Object.keys(QWIK_ESLINT_RULES);
+		const omitted = [...QWIK_ESLINT_RULES_REQUIRING_TYPES] as string[];
+		const accounted = [...applied, ...omitted];
+		// Measured at eslint-plugin-qwik 2.0.0-beta.38. Asserted, not assumed: a
+		// plugin whose recommended config went empty would otherwise satisfy every
+		// assertion below.
+		expect(QWIK_ESLINT_RECOMMENDED_RULES.length).toBeGreaterThan(0);
+		expect(
+			new Set(accounted).size,
+			'a rule is named in BOTH the applied set and the omission list',
+		).toBe(accounted.length);
+
+		const accountedFor = new Set(accounted);
+		expect(
+			QWIK_ESLINT_RECOMMENDED_RULES.filter((rule) => !accountedFor.has(rule)),
+			'upstream recommends these and this gate neither applies them nor records a reason - ' +
+				'measure each on the corpus, then apply it or omit it with its evidence',
+		).toEqual([]);
+
+		const upstream = new Set(QWIK_ESLINT_RECOMMENDED_RULES);
+		expect(
+			accounted.filter((rule) => !upstream.has(rule)),
+			'this gate names these but upstream recommended no longer contains them',
+		).toEqual([]);
+
+		// THE OMISSION LIST IS ASSERTED AS A LITERAL, DELIBERATELY - the opposite
+		// call from the derived scenario inventory above, and for the opposite
+		// reason. The scenario corpus is MEANT to grow, so a literal there bought
+		// nothing but a hand-edit per scenario. The omission list must never grow
+		// without someone deciding it should, so friction is the feature: widening
+		// it means editing this line and saying why.
+		expect(omitted).toEqual(['qwik/valid-lexical-scope', 'qwik/use-async-top']);
 	});
 
 	test('discovers and accepts the clean emitted scenario corpus', async () => {
@@ -692,6 +753,33 @@ describe('MUTATION: Qwik lint policies reject violating emitted source', () => {
 		{
 			rule: 'qwik/jsx-img',
 			source: `export const C = () => <img src="/a.png" />;`,
+		},
+		// T029. These two are the reason this describe block matters more than the
+		// four above it: they were dropped from the applied set with no recorded
+		// reason, and the ONLY thing that justifies adding them back rather than
+		// writing down an excuse is watching each one go red. A rule that cannot
+		// fail is not an arbiter.
+		//
+		// Both planted sources are imported-and-used so that no core rule
+		// (`no-undef`, `no-unused-vars`) accounts for the message instead.
+		{
+			rule: 'qwik/loader-location',
+			source: `import { component$ } from '@qwik.dev/core';
+import { routeLoader$ } from '@qwik.dev/router';
+export const useThing = routeLoader$(() => ({ a: 1 }));
+export const C = component$(() => <div>{useThing().value.a}</div>);`,
+		},
+		{
+			rule: 'qwik/no-await-navigate-in-use-task',
+			source: `import { component$, useTask$ } from '@qwik.dev/core';
+import { useNavigate } from '@qwik.dev/router';
+export const C = component$(() => {
+	const nav = useNavigate();
+	useTask$(async () => {
+		await nav('/next');
+	});
+	return <div />;
+});`,
 		},
 	];
 
