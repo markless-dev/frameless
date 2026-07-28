@@ -205,4 +205,77 @@ describe('Qwik v2 structural emitter', () => {
 		ir.records.persistence.push({ graphNodeId: 'state:count' });
 		expect(() => emit(ir)).toThrow('does not support persistence-bearing IR');
 	});
+
+	/**
+	 * THIS LANE HAD NO ANTI-DRIFT PROBE AT ALL, WHICH IS WORTH SAYING PLAINLY.
+	 *
+	 * T002 recorded the mis-aimed `on an unknown semantic field, so a schema
+	 * addition cannot pass silently` probe in the angular, svelte and vue emitter
+	 * suites - three lanes. Qwik was the FOURTH lax validator and carried no such
+	 * test in either aim, so its silence on IR-8 was not a probe pointed at the
+	 * wrong level; there was nothing to re-aim. Both arms are added here so all
+	 * four tightened lanes assert the same pair.
+	 */
+	describe('rejects a schema addition rather than emitting past it', () => {
+		test('on an unknown semantic field at the top level of EnrichedIR', async () => {
+			const artifact = structuredClone(await golden('s1-render-once.json'));
+			(artifact as unknown as Record<string, unknown>).newField = [];
+			expect(() => emit(artifact)).toThrow(/unknown semantic field: newField/);
+		});
+
+		/**
+		 * THE ARM THE OTHER THREE LANES WERE MISSING, AND THE ONE THAT MATTERS.
+		 *
+		 * MEASURED at 127a75b, before T010 tightened this validator: a key planted
+		 * on a NESTED `PropDestructuringEntry` was ACCEPTED by qwik, svelte, vue AND
+		 * angular with BYTE-IDENTICAL output across all eight goldens, while react
+		 * and solid threw. That is why the IR-8 plan believed the six validators
+		 * were symmetric - "a schema addition cannot pass silently" was true of the
+		 * shape the probes planted and false of the shape actually being added.
+		 *
+		 * THE CALIBRATION IS THE SECOND ASSERTION, not the first: it pins that the
+		 * nested plant is INVISIBLE to the top-level allowlist, because the message
+		 * names `PropDestructuringEntry` and never `EnrichedIR`. The two checks are
+		 * not substitutes and neither replaced the other.
+		 */
+		test('on an unknown field NESTED on a PropDestructuringEntry, which the top-level probe cannot see', async () => {
+			const artifact = structuredClone(await golden('s1-render-once.json'));
+			const entries = artifact.components[0]!.props.entries as unknown as Array<
+				Record<string, unknown>
+			>;
+			expect(entries.length).toBeGreaterThan(0);
+			entries[0]!.newNestedField = 'planted';
+			expect(() => emit(artifact)).toThrow(
+				/PropDestructuringEntry has unknown semantic field: newNestedField/,
+			);
+			expect(() => emit(artifact)).not.toThrow(/EnrichedIR has unknown semantic field/);
+		});
+
+		/**
+		 * IR-8's `type` is ADMITTED, not banned - so the allowlist must not be read
+		 * as "this lane refuses a typed prop". It refuses an UNCHECKED one: a `type`
+		 * that is not an AST node is named as loudly as an unknown key, which is
+		 * what stops admitting the field from trading one blind spot for another.
+		 *
+		 * The positive arm is not decoration. `s1-render-once` is the ONLY annotated
+		 * fixture in the corpus - four typed entries against fifteen untyped ones
+		 * across the other seven goldens - so without it the allowlist entry would
+		 * be indistinguishable from a dead one that nothing ever exercises.
+		 */
+		test('on a malformed IR-8 type annotation, while a well-formed one is admitted', async () => {
+			const admitted = structuredClone(await golden('s1-render-once.json'));
+			expect(
+				admitted.components[0]!.props.entries.filter((entry) => entry.type !== undefined),
+			).not.toHaveLength(0);
+			expect(() => emit(admitted)).not.toThrow();
+			const artifact = structuredClone(await golden('s1-render-once.json'));
+			const entries = artifact.components[0]!.props.entries as unknown as Array<
+				Record<string, unknown>
+			>;
+			entries[0]!.type = 'string';
+			expect(() => emit(artifact)).toThrow(
+				/PropDestructuringEntry has malformed type annotation AST/,
+			);
+		});
+	});
 });

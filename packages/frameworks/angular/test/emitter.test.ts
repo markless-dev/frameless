@@ -602,6 +602,66 @@ describe('Angular 22 emitter', () => {
 			(artifact as unknown as Record<string, unknown>).newField = [];
 			expect(() => emit(artifact)).toThrow(/unknown semantic field: newField/);
 		});
+		/**
+		 * THE PROBE ABOVE IS AIMED ONE LEVEL TOO HIGH, AND THIS IS THE ARM THAT
+		 * SAYS SO.
+		 *
+		 * `newField` on `EnrichedIR` was caught by all six lanes from the day it
+		 * was written; a key on a NESTED `PropDestructuringEntry` was caught by
+		 * exactly two. MEASURED at 127a75b, before T010 tightened this validator:
+		 * qwik, svelte, vue AND angular all ACCEPTED the nested key and emitted
+		 * BYTE-IDENTICAL output across all eight goldens, while react and solid
+		 * threw. That is why the IR-8 plan believed the six validators were
+		 * symmetric - the test that would have shown otherwise never looked below
+		 * the top level, so "a schema addition cannot pass silently" was true of
+		 * one shape of addition and false of the shape actually being added.
+		 *
+		 * THE CALIBRATION IS THE SECOND ASSERTION, not the first: it pins that the
+		 * nested plant is INVISIBLE to the top-level allowlist, because the message
+		 * names `PropDestructuringEntry` and never `EnrichedIR`. Delete the nested
+		 * check and this test goes red; delete the top-level one and the test above
+		 * goes red instead. The two are not substitutes and neither replaced the
+		 * other.
+		 */
+		test('on an unknown field NESTED on a PropDestructuringEntry, which the top-level probe cannot see', async () => {
+			const artifact = structuredClone(await golden('s1-render-once.json'));
+			const entries = artifact.components[0]!.props.entries as unknown as Array<
+				Record<string, unknown>
+			>;
+			expect(entries.length).toBeGreaterThan(0);
+			entries[0]!.newNestedField = 'planted';
+			expect(() => emit(artifact)).toThrow(
+				/PropDestructuringEntry has unknown semantic field: newNestedField/,
+			);
+			expect(() => emit(artifact)).not.toThrow(/EnrichedIR has unknown semantic field/);
+		});
+
+		/**
+		 * IR-8's `type` is ADMITTED, not banned - so the allowlist above must not be
+		 * read as "this lane refuses a typed prop". It refuses an UNCHECKED one: a
+		 * `type` that is not an AST node is named as loudly as an unknown key, which
+		 * is what stops admitting the field from trading one blind spot for another.
+		 *
+		 * The positive arm is not decoration. `s1-render-once` is the ONLY annotated
+		 * fixture in the corpus - four typed entries against fifteen untyped ones
+		 * across the other seven goldens - so without it the allowlist entry would
+		 * be indistinguishable from a dead one that nothing ever exercises.
+		 */
+		test('on a malformed IR-8 type annotation, while a well-formed one is admitted', async () => {
+			const admitted = structuredClone(await golden('s1-render-once.json'));
+			expect(
+				admitted.components[0]!.props.entries.filter((entry) => entry.type !== undefined),
+			).not.toHaveLength(0);
+			expect(() => emit(admitted)).not.toThrow();
+			const artifact = structuredClone(await golden('s1-render-once.json'));
+			const entries = artifact.components[0]!.props.entries as unknown as Array<
+				Record<string, unknown>
+			>;
+			entries[0]!.type = 'string';
+			expect(() => emit(artifact)).toThrow(
+				/PropDestructuringEntry has malformed type annotation AST/,
+			);
+		});
 
 		/**
 		 * `emit()` runs ARBITER 1 - `@angular/compiler`'s own `parseTemplate` - over

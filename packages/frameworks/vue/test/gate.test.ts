@@ -932,9 +932,60 @@ describe('Vue dossier gate', () => {
 		);
 	});
 
-	test('MUTATION: rejects lang="ts", which is how a typed defineProps would arrive', async () => {
+	/**
+	 * RE-AIMED BY T010, AND THE RE-AIM IS THE POINT.
+	 *
+	 * This row read `rejects lang="ts", which is how a typed defineProps would
+	 * arrive` and asserted `no-typed-props`. Both halves were wrong. `lang="ts"`
+	 * is NOT how a typed `defineProps` arrives - MEASURED at 3.5.40, `lang="ts"`
+	 * over untyped source compiles to the IDENTICAL `props: ['label', ...]`
+	 * option as the no-lang baseline - and the policy that actually refuses the
+	 * form is `baseline-form-inventory`, on IR-4 grounds that have nothing to do
+	 * with prop types.
+	 *
+	 * So the mutant is kept and the ASSERTION is inverted: the lang form is still
+	 * refused, by the policy that has a reason for it, and `no-typed-props` is
+	 * pinned as SILENT on a file that contains no type. That negative is what
+	 * makes the row a measurement rather than a restatement - it goes red the day
+	 * anyone reinstates a lang-shaped trigger under this id.
+	 */
+	test('MUTATION: lang="ts" is refused by baseline-form-inventory, NOT by no-typed-props', async () => {
 		const mutant = mutate(s3, '<script setup>', '<script setup lang="ts">');
-		expect(await policiesFor('generated/LangMutant.vue', mutant)).toContain('no-typed-props');
+		const policies = await policiesFor('generated/LangMutant.vue', mutant);
+		expect(policies).toContain('baseline-form-inventory');
+		expect(policies).not.toContain('no-typed-props');
+	});
+
+	/**
+	 * THE ARM THAT CARRIES THE DENIAL NOW. `defineProps<{...}>()` is the form
+	 * whose Gate 5 failure T010 measured, and it is refused on its own terms -
+	 * with `lang="ts"` present, so the refusal cannot be mistaken for the lang
+	 * trigger this file just retired.
+	 *
+	 * THE MESSAGE'S GROUNDS ARE ASSERTED, NOT JUST ITS ID. The withdrawn IR-8
+	 * rationale is pinned ABSENT and the three measured runtime deltas pinned
+	 * PRESENT, because "a correct verdict resting on a borrowed reason" is the
+	 * exact defect this gate has now been repaired for three times, and an id-only
+	 * assertion is blind to it.
+	 */
+	test('MUTATION: rejects defineProps<{...}>() on its MEASURED Gate 5 grounds, not on IR-8', async () => {
+		const mutant = mutate(
+			mutate(s3, '<script setup>', '<script setup lang="ts">'),
+			"const props = defineProps(['initial', 'onTrace']);",
+			'const props = defineProps<{ initial: number; onTrace: (phase: string) => void }>();',
+		);
+		const typed = (await violationsFor('generated/TypeArgMutant.vue', mutant)).filter(
+			(entry) => entry.policy === 'no-typed-props',
+		);
+		expect(typed).toHaveLength(1);
+		const message = typed[0]!.message;
+		expect(message).toContain('defineProps() in its type-argument form');
+		// The dead reason must not have survived the repair anywhere in the string.
+		expect(message).not.toMatch(/the IR carries no prop type field/);
+		// The three measurements that replaced it.
+		expect(message).toContain('type: Boolean, required: true');
+		expect(message).toContain('undefined to false');
+		expect(message).toContain('Missing required prop');
 	});
 
 	test('MUTATION: rejects stopPropagation, and the emitter refuses to produce it', async () => {

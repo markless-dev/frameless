@@ -95,6 +95,47 @@ function exactKeys(construct: string, value: object, allowed: readonly string[])
 	if (unknown.length) throw new Error(`${construct} has unknown semantic field: ${unknown[0]}`);
 }
 
+/**
+ * NESTED EXACTNESS. ADDED BY T010 AFTER IT WAS MEASURED MISSING, NOT ASSUMED.
+ *
+ * Every other allowlist in `validateEnrichedIr` guards a top-level or one-deep
+ * construct, and this lane's anti-drift probe plants its unknown field on
+ * `EnrichedIR` - which every lane already caught. MEASURED at 127a75b, before
+ * this function existed: a key planted on a `PropDestructuringEntry` was
+ * accepted by qwik, svelte, vue AND angular with BYTE-IDENTICAL output across
+ * all eight goldens, while react and solid threw. Four validators had simply
+ * never looked this deep, and that asymmetry is why IR-8's `type` could be
+ * added believing all six agreed. The probe was aimed one level too high.
+ *
+ * `type` is IR-8: ADMITTED AND SHAPE-CHECKED HERE, DELIBERATELY NOT PRINTED.
+ * Admitting a key without checking its shape would trade one blind spot for
+ * another, so a `type` that is not an AST node is rejected by name too. What
+ * this lane may do with the field once it prints one is decided in the gate,
+ * not here - see the `no-typed-props` policy in `src/gate/index.ts`.
+ */
+function validatePropEntries(entries: EnrichedIR['components'][number]['props']['entries']): void {
+	for (const entry of entries) {
+		exactKeys('PropDestructuringEntry', entry, [
+			'sourceName',
+			'localName',
+			'path',
+			'alias',
+			'graphNodeId',
+			'defaultValue',
+			'type',
+		]);
+		if (
+			entry.type !== undefined &&
+			(typeof entry.type !== 'object' ||
+				entry.type === null ||
+				typeof (entry.type as { type?: unknown }).type !== 'string')
+		)
+			throw new Error(
+				`PropDestructuringEntry has malformed type annotation AST: ${entry.localName}`,
+			);
+	}
+}
+
 /** Fail closed at the public emitter boundary before constructing output. */
 export function validateEnrichedIr(ir: EnrichedIR): void {
 	exactKeys('EnrichedIR', ir, [
@@ -126,6 +167,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 			'computedBindings',
 		]);
 		exactKeys('ComponentProps', component.props, ['graphNodeId', 'entries']);
+		validatePropEntries(component.props.entries);
 		if (
 			component.evaluation.ordinaryLocals !== 'once-per-instance' ||
 			component.evaluation.computedBindings !== 'reactive'

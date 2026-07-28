@@ -15,9 +15,20 @@ export type DossierRef =
 	// VALUE are sugar, all six gates PASS. 2b (v-slot / #header) is DENIED and has
 	// no emitter path. Adopted by frameless-vue-v1 T006.
 	| 'frameless-vue-v1 T005 shorthand ruling (worked example 2a)'
-	// IR-8: the IR carries no prop type field, so a type would have to be invented
-	// from expression contents. Gate 3 and Gate 4 both forbid that.
-	| 'frameless-vue-v1 T002 ruling 3 (IR-8)'
+	// SUPERSEDED, AND LEFT HERE UNREFERENCED ON PURPOSE. This read "IR-8: the IR
+	// carries no prop type field, so a type would have to be invented from
+	// expression contents. Gate 3 and Gate 4 both forbid that." IR-8 LANDED at
+	// T003 of frameless-emitter-capability-v1: the field exists, Gate 3 now
+	// PASSES on a declared trigger, and Gate 4 is repairable by narrowing to
+	// fully-annotated components. The denial survives on the entry below instead.
+	// Deleting this line would erase the record that the ruling ever rested here.
+	| 'frameless-vue-v1 T002 ruling 3 (IR-8) - SUPERSEDED'
+	// `no-typed-props` re-derived after IR-8 landed. GATE 5 DECIDES AND FAILS,
+	// measured at 3.5.40: the type-argument form compiles to runtime prop options
+	// the array form has none of, so an absent boolean prop becomes `false` rather
+	// than `undefined`, `visible=""` flips from FALSY to TRUTHY, and two
+	// diagnostics appear enforcing a `required: true` no IR field declares.
+	| 'frameless-emitter-capability-v1 T010 (Gate 5, IR-8 landed)'
 	// IR-1/IR-2: no bindable prop kind and no emit concept. defineModel/defineEmits
 	// are out of scope on two independent axes.
 	| 'frameless-vue-v1 T002 ruling 5 (IR-1/IR-2)'
@@ -263,7 +274,12 @@ export const VUE_GATE_POLICIES = [
 	},
 	{ id: 'no-directive-modifier', dossierRef: 'frameless-vue-v1 T002 ruling 5 (IR-5)' },
 	{ id: 'no-two-way-binding', dossierRef: 'frameless-vue-v1 T002 ruling 5 (IR-1/IR-2)' },
-	{ id: 'no-typed-props', dossierRef: 'frameless-vue-v1 T002 ruling 3 (IR-8)' },
+	// The ref moved WITH the grounds. `frameless-vue-v1 T002 ruling 3` denied this
+	// form BECAUSE IR-8 was missing; IR-8 landed at T003 of
+	// `frameless-emitter-capability-v1` and the denial was re-derived there on a
+	// measured Gate 5 failure instead. Leaving the old ref would have sent anyone
+	// checking this policy to a document whose stated blocker is now discharged.
+	{ id: 'no-typed-props', dossierRef: 'frameless-emitter-capability-v1 T010 (Gate 5, IR-8 landed)' },
 	{ id: 'no-stop-propagation', dossierRef: 'frameless-vue-v1 T002 ruling 5 (IR-5)' },
 	{ id: 'computed-expression-purity', dossierRef: 'frameless-vue-v1 T002 ruling 5 (IR-7)' },
 	{ id: 'condense-stable-text', dossierRef: 'frameless-vue-v1 T003 measurement M1' },
@@ -1020,18 +1036,39 @@ function directiveViolations(file: string, parsed: Parsed): GateViolation[] {
 
 const TYPE_ONLY_MACROS = new Set(['withDefaults']);
 
+/**
+ * THE `lang` LIMB THAT USED TO STAND HERE IS WITHDRAWN. T010, on measurement.
+ *
+ * It raised `no-typed-props` on `<script setup lang="...">` - the LANGUAGE
+ * ATTRIBUTE, not a typed prop - and justified itself with "the IR carries no
+ * prop type field (PropDestructuringEntry)". T003 supplied that field, so the
+ * reason died; `s1-render-once`'s golden now carries four of them including a
+ * full `TSFunctionType`. Two further measurements at 3.5.40 say the trigger was
+ * never the right one even while the reason held:
+ *
+ *  - `<script setup lang="ts">` over UNTYPED source compiles clean and yields
+ *    the IDENTICAL `props: ['label', 'multiplier', 'visible', 'onTrace']`
+ *    option as the no-lang baseline. The only delta is a `defineComponent()`
+ *    wrapper. A lang attribute does not imply a printed type; the coupling runs
+ *    one way only, which is what makes Step 1.5 a legal seam.
+ *  - REMOVING THIS LIMB OPENS NO HOLE, and that was measured rather than hoped.
+ *    `baseline-form-inventory` refuses the very same mutant on ITS OWN grounds -
+ *    the sfc-block form `script[setup,lang=ts]` is not in the recorded
+ *    inventory and IR-4 is DEFERRED - and the type-argument limb below refuses
+ *    `defineProps<T>()` and `withDefaults()` directly. TS the parser cannot read
+ *    (type arguments with no `lang`) draws `eslint:parse`. Three independent
+ *    refusals remain; this was the fourth, and the only one whose id, name and
+ *    stated reason all pointed somewhere other than where it fired.
+ *
+ * SO THE VERDICT SURVIVES AND THIS LIMB DOES NOT. A `no-typed-props` violation
+ * on a file containing zero types taught a reader nothing, and left the real
+ * refusal - Gate 5, below - looking like a formality behind it. Note for
+ * whoever runs Step 1.5: DELETING THIS DID NOT UNBLOCK THE `lang="ts"` FLIP.
+ * `baseline-form-inventory` still refuses that form and must be given a
+ * measured version floor first; that is a ruling, not a side effect.
+ */
 function scriptViolations(file: string, parsed: Parsed): GateViolation[] {
 	const violations: GateViolation[] = [];
-	const scriptSetup = parsed.descriptor.scriptSetup as Node | undefined;
-	if (scriptSetup?.lang)
-		violations.push(
-			violation(
-				file,
-				'no-typed-props',
-				`Emitted Vue source declares <script setup lang="${String(scriptSetup.lang)}">; the IR carries no prop type field (PropDestructuringEntry), so every emitted type would be inferred from what the corpus happens to do with a prop - which Gate 3 forbids as a content-based trigger and Gate 4 forbids as unsound outside the exercised subset. Named IR-8 and deferred`,
-				lineOfTemplate(scriptSetup),
-			),
-		);
 	walk(parsed.script, (node) => {
 		if (node.type !== 'CallExpression' || node.callee?.type !== 'Identifier') return;
 		const name = String(node.callee.name);
@@ -1068,12 +1105,51 @@ function scriptViolations(file: string, parsed: Parsed): GateViolation[] {
 					line,
 				),
 			);
+		// THE REFUSAL SURVIVES. ITS REASON DOES NOT, AND THE REPLACEMENT WAS
+		// MEASURED RATHER THAN REASONED.
+		//
+		// This message used to read "the IR carries no prop type field, so the
+		// type would have to be invented from expression contents (IR-8,
+		// deferred)". T003 SUPPLIED THAT FIELD. `PropDestructuringEntry.type`
+		// exists, `s1-render-once`'s golden carries four of them including a full
+		// `TSFunctionType`, and a deferral whose blocker has landed is not a
+		// denial. Re-derived through all six gates at vue@3.5.40:
+		//
+		//   G3 now PASSES - the trigger "the entry declares a type" reads a
+		//   DECLARED IR field, which is exactly what the old message said was
+		//   unavailable. G4 is REPAIRABLE, so it does not decide either: annotation
+		//   is per-component all-or-nothing in the corpus today (RenderOnce 4 of 4
+		//   typed, the other seven goldens 0 of 15), so "components whose every
+		//   entry carries a type" is a stated, emitter-decidable narrowing.
+		//
+		// G5 DECIDES, AND IT FAILS ON THREE RUNTIME MEASUREMENTS. The array form
+		// compiles to `props: ['label', ...]`; the type-argument form compiles to
+		// `props: { visible: { type: Boolean, required: true }, ... }` - runtime
+		// prop OPTIONS, which the baseline has none of. Rendered both ways:
+		//   1. `visible` absent -> baseline gives `undefined`, candidate gives
+		//      `false`. Boolean casting invents a value.
+		//   2. `visible=""` -> baseline gives the string `""`, which is FALSY;
+		//      candidate gives `true`, which is TRUTHY. A `v-if` on that prop
+		//      renders the other branch. This is a rendering change, not a typing
+		//      one, and it lands on the ONE corpus component that could take the
+		//      sugar today.
+		//   3. Two diagnostics appear that the baseline never emits - `Missing
+		//      required prop: "visible"` and `Invalid prop: type check failed`.
+		//      `required: true` is synthesized from the TS type being
+		//      non-optional, and NO IR FIELD DECLARES REQUIREDNESS - so the
+		//      candidate asserts something about every prop that the IR never
+		//      said, which is the invention the old message named in the wrong
+		//      place.
+		//
+		// G6: this check pins the DENIAL, not the sugar. Re-open on a measurement
+		// that these three deltas are gone or intended - NOT on IR-8, which has
+		// already landed and did not change the answer.
 		if (TYPE_ONLY_MACROS.has(name) || node.typeParameters || node.typeArguments)
 			violations.push(
 				violation(
 					file,
 					'no-typed-props',
-					`Emitted Vue source calls ${name}() in its type-argument form; the IR carries no prop type field, so the type would have to be invented from expression contents (IR-8, deferred)`,
+					`Emitted Vue source calls ${name}() in its type-argument form. The IR-8 rationale this message used to carry is WITHDRAWN as measured false: PropDestructuringEntry DOES carry a type field since T003 and s1-render-once's golden holds four, so Gate 3 now PASSES on a declared trigger and Gate 4 is repairable by narrowing to components whose every entry is annotated (RenderOnce 4 of 4; the other seven goldens 0 of 15). GATE 5 DECIDES AND FAILS, measured at vue@3.5.40: the array form compiles to props: ['label', ...] while the type-argument form compiles to props: { visible: { type: Boolean, required: true }, ... }, and those runtime options change what renders - an absent "visible" goes from undefined to false, and visible="" goes from the FALSY string "" to a TRUTHY true, flipping any v-if reading it. Two diagnostics also appear that the baseline never emits, Missing required prop and Invalid prop type check failed, and the required:true they enforce is synthesized from TS non-optionality that NO IR FIELD DECLARES. Re-open on those three deltas, not on IR-8`,
 					line,
 				),
 			);

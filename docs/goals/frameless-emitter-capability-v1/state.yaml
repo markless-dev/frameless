@@ -90,7 +90,7 @@ visual_board:
     predecessor goal that closed complete this session. Recorded as an explicit choice, not an
     omission - the command above turns it on at any time.
 
-active_task: T010
+active_task: T009
 
 tasks:
   - id: T001
@@ -408,7 +408,7 @@ tasks:
   - id: T009
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
     spec: "T002 receipt, finding F7 - AUTHORITATIVE. Runs AFTER T003 and BEFORE T004."
     objective: >-
@@ -439,6 +439,58 @@ tasks:
       - "NO TYPE MAY BE PRINTED IN THIS STEP. That is what makes it verifiable: emitted output must be behaviour-identical, only its extension and script lang differ."
       - "Re-derive the 93 yourself. T002 measured it read-only; a rename changes the set as it runs."
       - "The vue/svelte flip is lang=\"ts\" ONLY. Do not add annotations - that is Step 2."
+    allowed_files:
+      - packages/cli/src/program.ts
+      - packages/frameworks/react/scripts/regenerate.ts
+      - packages/frameworks/solid/scripts/regenerate.ts
+      - packages/frameworks/qwik/scripts/regenerate.ts
+      - packages/frameworks/vue/scripts/regenerate.ts
+      - packages/frameworks/svelte/scripts/regenerate.ts
+      - packages/frameworks/react/generated
+      - packages/frameworks/solid/generated
+      - packages/frameworks/qwik/generated
+      - packages/frameworks/react/generated-composition
+      - packages/frameworks/solid/generated-composition
+      - packages/frameworks/react/generated-persistence
+      - packages/frameworks/solid/generated-persistence
+      - packages/frameworks/vue/generated
+      - packages/frameworks/svelte/generated
+      - packages/frameworks/react/src/emitter/index.ts
+      - packages/frameworks/solid/src/emitter/index.ts
+      - packages/frameworks/qwik/src/emitter/index.ts
+      - packages/frameworks/vue/src/emitter/index.ts
+      - packages/frameworks/svelte/src/emitter/index.ts
+      - packages/frameworks/vue/src/gate/index.ts
+      - packages/frameworks/vue/test/gate.test.ts
+      - packages/frameworks/react/test
+      - packages/frameworks/solid/test
+      - packages/frameworks/qwik/test
+      - packages/frameworks/vue/test
+      - packages/frameworks/svelte/test
+      - demos/react-official
+      - demos/solid-official
+      - demos/qwik
+      - demos/vue-official
+      - demos/svelte-official
+      - demos/composition-kit
+      - demos/persistence
+      - scripts/e2e.mjs
+      - docs/goals/frameless-emitter-capability-v1/notes/T009-extension-migration.md
+    allowed_files_provenance: >-
+      Broad BY NECESSITY and stated as such: T002 measured 93 files referencing .jsx outside
+      generated/, and a rename touches every one. Angular is absent - its lane is already .ts.
+      RE-DERIVE THE SET YOURSELF; a rename changes it as it runs.
+    THE_SOLE_GATE_SIDE_BLOCKER_HANDED_OVER_BY_T010: >-
+      YOU CANNOT FLIP VUE TO lang="ts" UNTIL script[setup,lang=ts] IS IN BASELINE_FORM_INVENTORY
+      WITH A MEASURED VERSION FLOOR. T010 measured that removing the no-typed-props lang limb is
+      NECESSARY BUT NOT SUFFICIENT: the lang="ts" mutant draws `baseline-form-inventory`
+      INDEPENDENTLY, on IR-4 grounds that are still sound. T010 deliberately left this undone
+      because giving a form a version floor is A RULING, not a side effect - so it is yours, and it
+      must be MEASURED against the vue version this repo resolves, not asserted.
+    a_real_delta_T010_measured_so_you_are_not_surprised_by_it: >-
+      lang="ts" makes @vue/compiler-sfc compileScript wrap the module in defineComponent() where the
+      baseline emits a plain object literal. RUNTIME-NEUTRAL, but a genuine change in compiled
+      output. NAME IT in your behaviour-neutrality claim rather than discovering it mid-verify.
     verify:
       - "pnpm test"
       - "pnpm check"
@@ -456,7 +508,7 @@ tasks:
   - id: T010
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     spec: "T002 receipt, finding F3 - AUTHORITATIVE. Queued BEFORE T004."
     objective: >-
@@ -503,8 +555,65 @@ tasks:
     stop_if:
       - "A lane cannot express a nested exactness check without restructuring its validator - report the shape, do not force it."
       - "Any emitted byte moves."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 3
+      note: notes/T010-nested-validators.md
+      changed_files:
+        - packages/frameworks/qwik/src/emitter/index.ts
+        - packages/frameworks/svelte/src/emitter/index.ts
+        - packages/frameworks/vue/src/emitter/index.ts
+        - packages/frameworks/angular/src/emitter/index.ts
+        - packages/frameworks/qwik/test/emitter.test.ts
+        - packages/frameworks/svelte/test/emitter.test.ts
+        - packages/frameworks/vue/test/emitter.test.ts
+        - packages/frameworks/angular/test/emitter.test.ts
+        - packages/frameworks/vue/src/gate/index.ts
+        - packages/frameworks/vue/test/gate.test.ts
+        - docs/goals/frameless-emitter-capability-v1/notes/T010-nested-validators.md
+      commands:
+        - cmd: "pnpm test (baseline, pre-edit)"
+          status: pass
+          note: "1092/1 independently confirmed BEFORE any edit - the brief's baseline CONFIRMED"
+        - cmd: "pnpm test"
+          status: pass
+          note: "1102 passed / 1 failed (1103) = baseline + EXACTLY the 10 added. PM RE-RAN AND GOT THE SAME. Failure identical, zero pre-existing tests changed status."
+        - cmd: "pnpm check"
+          status: pass
+          note: "exit 0. Failed once on the DossierRef closed union rejecting the new ref - a REAL DESIGN CATCH, fixed by extending the union rather than widening the type."
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0/0 over 396 files"
+        - cmd: "pnpm check:citations"
+          status: pass
+          note: "clean. Failed once on the Worker's OWN comment citing a line ordinal - the guard the predecessor goal built caught this task's author."
+        - cmd: "regenerate all six lanes + composition, then git diff --exit-code over all 11 generated*/ dirs"
+          status: pass
+          note: "exit 0. NON-VACUITY PROVED FIRST: appended junk to vue/generated/S1.vue and angular/generated/S1.ts, regenerated, watched both restored. Re-diffed after e2e - still clean."
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "6 demos x 8 scenarios, all observations equal"
+        - cmd: "git status --short"
+          status: pass
+          note: "10 owned + 1 note + exactly the 3 FOREIGN entries, untouched; nothing committed"
+      summary: "Closed T002 finding F3: added a nested-exactness check to the four lax emitters, bringing ALL SIX LANES TO PARITY - PM confirmed each now carries an 'unknown semantic field' guard. Re-aimed the three mis-aimed anti-drift probes BY ADDITION, keeping every top-level arm, and gave qwik the two arms it never had. Separately re-derived the vue no-typed-props rule, found a SECOND limb, withdrew one limb as measured-redundant and KEPT the refusal on newly measured grounds. No emitted byte moved."
+      BRIEF_ERROR_1_IT_NAMED_ONE_SITE_AND_THERE_WERE_TWO: "Both the board and the PM's dispatch point at vue/src/gate/index.ts:1026-1034. A SECOND no-typed-props limb at :1071-1079 carried the IDENTICAL dead premise on the withDefaults/type-argument trigger - AND IT IS THE LIMB THAT ACTUALLY DECIDES. PM CONFIRMED at 127a75b: 'the IR carries no prop type field' appears at BOTH :1031 AND :1076. Repairing only the named site would have left half the false premise shipping, in the half that matters."
+      BRIEF_ERROR_2_REMOVING_THE_RULE_DOES_NOT_UNBLOCK_STEP_1_5: "The dispatch said the vue rule 'will otherwise block Step 1.5's lang=\"ts\" flip'. MEASURED FALSE AS STATED: driven through the real gate, the lang=\"ts\" mutant draws BASELINE-FORM-INVENTORY independently, on IR-4 grounds that are STILL SOUND. Removing the lang limb is NECESSARY BUT NOT SUFFICIENT. The Worker deliberately did NOT add script[setup,lang=ts] to BASELINE_FORM_INVENTORY despite it sitting in an allowed file, because giving a form a version floor is A RULING, not a side effect of this slice. That restraint is correct and it hands T009 a precise blocker instead of a surprise."
+      IT_DID_NOT_DELETE_THE_REFUSAL_IT_RE_DERIVED_IT: "The easy move was to delete a rule whose stated reason had just been falsified. Instead: GATE 3 NOW PASSES (the trigger reads a declared IR field) and GATE 4 IS REPAIRABLE (annotation is per-component all-or-nothing - RenderOnce 4/4, the other seven goldens 0/15). GATE 5 DECIDES AND FAILS, on three runtime measurements at vue@3.5.40: with `visible` absent the array form yields undefined but the type-argument form yields FALSE; with visible=\"\" the array form is FALSY \"\" but the type-argument form is TRUTHY TRUE; and multiplier=\"2\" newly warns 'Invalid prop: type check failed'. A FALSY-TO-TRUTHY FLIP IS A RENDERING CHANGE, and it lands on the one corpus component that could take the sugar. The required:true enforcing those diagnostics is synthesized from TS non-optionality THAT NO IR FIELD DECLARES - the invention the old message named, in the wrong place. So the verdict survives, the reason is replaced, and IR-8 is struck as the re-open condition. The lang limb does NOT survive: it fired on a LANGUAGE ATTRIBUTE, not a typed prop, and three independent refusals already cover that ground."
+      the_guards_were_watched_firing_including_on_their_own_author: "Disabling the four validatePropEntries calls turned 8 TESTS RED, exactly two per lane. Reinstating the withdrawn gate limb AND the dead reason turned both new gate tests red - and THE DEAD REASON ALONE turned one red, proving the message-grounds assertions are load-bearing rather than decoration. Regeneration was proved NON-VACUOUS first (T003's catch): junk appended to two generated files, regenerated, restored, THEN trusted. And the citation guard the predecessor goal built caught this Worker's own comment citing a line ordinal."
+      deviations:
+        - "Brief errors 1 and 2 - see above."
+        - "RE-AIMED THE PROBES BY ADDITION, NOT REPLACEMENT. 'Re-aim those probes at a nested construct' read literally would replace the top-level arm, which the same brief forbids. Both arms now stand and each test asserts the other is not its substitute."
+        - "Added the IR-8 type SHAPE CHECK to all four lanes beyond bare allowlisting, matching what T003 gave react and solid."
+        - "Added qwik's MISSING top-level probe as well as the nested one - qwik had no anti-drift test in either aim, so there was nothing to re-aim."
+        - "Extended the DossierRef closed union because pnpm check correctly rejected the new ref. KEPT the superseded IR-8 member, renamed '- SUPERSEDED' and unreferenced, so the record that the ruling once rested there is not erased."
+      remaining_blockers:
+        - "T009 CANNOT flip vue to lang=\"ts\" until script[setup,lang=ts] is added to BASELINE_FORM_INVENTORY WITH A MEASURED VERSION FLOOR. Sole gate-side blocker, deliberately left as a ruling."
+        - "FOR T009's behaviour-neutrality claim: lang=\"ts\" makes compileScript wrap the module in defineComponent() where the baseline emits a plain object literal. Runtime-neutral, but a REAL DELTA in compiled output that Step 1.5 should name rather than be surprised by."
+        - "PARSE-VISIBILITY HOLE, unrepaired and out of scope: vue gate parseEmitted() swallows compileScript failures with `catch { script = [] }`, so an unreadable script yields an EMPTY AST and EVERY script-walking limb goes silent. The withdrawn lang limb never covered this - it fired when lang was PRESENT, precisely when the parser was most capable. Only the eslint arbiter notices today."
+        - "IR-8's type is admitted and shape-checked by all six lanes but PRINTED BY NONE. T004 owns that - and the vue Gate 5 measurement says the type-argument form is NOT the shape it may print."
+      stopped_because: null
   - id: T004
     type: worker
     assignee: Worker
