@@ -127,6 +127,25 @@ async function violationsFor(file: string, source: string) {
 	return (await checkSources([{ file, source }])).violations;
 }
 
+/**
+ * The single `no-two-way-binding` message a mutant drew.
+ *
+ * The count is ASSERTED rather than assumed. `find()` over a list of two would
+ * silently read the first and every row below would stop measuring the limb it
+ * names - and this policy now has three limbs firing from two different files
+ * (template directive, `defineModel`, `defineEmits`), so "which one answered"
+ * is exactly the question these rows exist to settle.
+ */
+async function twoWayMessage(file: string, source: string): Promise<string> {
+	const messages = (await violationsFor(file, source))
+		.filter((entry) => entry.policy === 'no-two-way-binding')
+		.map((entry) => entry.message);
+	expect(messages, `expected exactly one no-two-way-binding violation in ${file}`).toHaveLength(
+		1,
+	);
+	return messages[0]!;
+}
+
 /** The messages the THIRD-PARTY arbiter produced, keyed by its `eslint:` prefix. */
 async function eslintMessagesFor(
 	file: string,
@@ -388,11 +407,64 @@ describe('Vue dossier gate', () => {
 		expect(violations.map((entry) => entry.policy)).toContain('eslint:vue/valid-v-on');
 	});
 
-	test('MUTATION: rejects v-model and defineEmits, which IR-1 and IR-2 do not support', async () => {
+	test("MUTATION: rejects v-model on a host, on worked example 12a's OWN grounds", async () => {
 		const model = mutate(s3, ':value="text"', 'v-model="text"');
 		expect(await policiesFor('generated/ModelMutant.vue', model)).toContain(
 			'no-two-way-binding',
 		);
+		// THE MESSAGE IS PINNED, not just the policy id - and until T010 it was NOT.
+		// This row asserted the policy id alone while the defineEmits row below
+		// pinned its message four ways, and the limb with no calibration was also
+		// the limb whose message justified itself by citing worked example 3, WHICH
+		// RULES A DIFFERENT MACRO. That is not a coincidence: an unpinned message is
+		// one nobody has to justify. `frameless-vue-v1` T009 ran all six gates on
+		// this form against vue@3.5.40; the four measured grounds are pinned here.
+		const message = await twoWayMessage('generated/ModelMutant.vue', model);
+		expect(message).toContain('Worked example 12a');
+		// G5's four differences, one anchor each.
+		expect(message).toContain('NEED_HYDRATION');
+		expect(message).toContain('el.composing');
+		expect(message).toContain('ssrLooseContain');
+		// G4's re-enumerated domain. T009 counted over four goldens; T010 re-counted
+		// over six - S5 and S6 emit no value/checked binding, so the figure held.
+		expect(message).toContain('FIVE shipped instances and the sugar applies to ONE');
+		// THE BORROWED REASON, in the exact spelling it shipped in, must not return.
+		expect(message).not.toMatch(/worked example 3 is already ruled DENIED at Gate 5/);
+		// Nor may Gate 2 come back as the denier: the T002 dissent's Gate 2 mechanism
+		// was imported from worked example 4, which is ANGULAR, and G2 PASSES here.
+		expect(message).toContain('denied at Gate 2, which it PASSES');
+	});
+
+	test("MUTATION: rejects defineModel, on worked example 12b's OWN grounds", async () => {
+		// THERE WAS NO defineModel ROW IN THIS FILE BEFORE T010. `defineModel` and
+		// `defineEmits` shared one gate branch and one message, and that message was
+		// entirely about `defineEmits`, so the macro this board's tranche actually
+		// names was refused on another macro's reasoning and nothing measured it.
+		const model = mutate(
+			s3,
+			"const props = defineProps(['initial', 'onTrace']);",
+			"const props = defineProps(['initial', 'onTrace']);\n\tconst initial = defineModel('initial');",
+		);
+		expect(await policiesFor('generated/DefineModelMutant.vue', model)).toContain(
+			'no-two-way-binding',
+		);
+		const message = await twoWayMessage('generated/DefineModelMutant.vue', model);
+		expect(message).toContain('Worked example 12b');
+		// G5's deciding measurement: the synthesized `<name>Modifiers` prop overwrites
+		// a legal frameless prop of that name, with zero diagnostics.
+		expect(message).toContain('mergeModels');
+		expect(message).toContain('Modifiers');
+		// G4's: the repair narrowing is not statable, because per-prop write-back has
+		// no channel in the IR - one shared graph node, no writes. This is IR-1, and
+		// the message has to say which gap it is or it is back to inherited prose.
+		expect(message).toContain('prop:props');
+		expect(message).toContain('writable=false');
+		expect(message).toContain('FIFTEEN printed entries');
+		// DENIED, not DEFERRED, and IR-4 is not why.
+		expect(message).toContain('FAIL outranks DEFERRED');
+	});
+
+	test('MUTATION: rejects defineEmits, which IR-1 and IR-2 do not support', async () => {
 		const emits = mutate(
 			s3,
 			"const props = defineProps(['initial', 'onTrace']);",
@@ -415,6 +487,76 @@ describe('Vue dossier gate', () => {
 		expect(emitsMessage).toContain('onTraceOnce');
 		// The refuted claim must not creep back in any spelling of "native events".
 		expect(emitsMessage).not.toMatch(/receiving native|no longer to native/);
+	});
+
+	/**
+	 * TWO MACROS, TWO BRANCHES, TWO MESSAGES - asserted as EXCLUSIVITY rather than
+	 * as one-sided negatives, and the difference is the whole calibration.
+	 *
+	 * A bare `expect(emitsMessage).not.toContain('mergeModels')` passes against the
+	 * PRE-SPLIT strings too, because the shared message never mentioned
+	 * `mergeModels` either - it is green before and after, which is the green
+	 * vacuum this repo keeps paying for. Phrased as "`mergeModels` appears in
+	 * EXACTLY the defineModel message", the same guard goes RED against the shared
+	 * branch (it appeared in neither) and RED again if it ever leaks into the
+	 * defineEmits message. Every assertion below was run against the pre-split gate
+	 * and every one of them failed there.
+	 */
+	test('THE SPLIT: each no-two-way-binding limb carries its own grounds', async () => {
+		const templateMessage = await twoWayMessage(
+			'generated/ModelMutant.vue',
+			mutate(s3, ':value="text"', 'v-model="text"'),
+		);
+		const modelMessage = await twoWayMessage(
+			'generated/DefineModelMutant.vue',
+			mutate(
+				s3,
+				"const props = defineProps(['initial', 'onTrace']);",
+				"const props = defineProps(['initial', 'onTrace']);\n\tconst initial = defineModel('initial');",
+			),
+		);
+		const emitsMessage = await twoWayMessage(
+			'generated/EmitsMutant.vue',
+			mutate(
+				s3,
+				"const props = defineProps(['initial', 'onTrace']);",
+				"const props = defineProps(['initial', 'onTrace']);\n\tconst emit = defineEmits(['go']);",
+			),
+		);
+		const all = [templateMessage, modelMessage, emitsMessage];
+		// 12b's grounds reach the defineModel limb and NOTHING else.
+		expect(all.filter((entry) => entry.includes('mergeModels'))).toEqual([modelMessage]);
+		// Worked example 3's grounds reach the defineEmits limb and NOTHING else.
+		// Pre-split BOTH macros received these, which is exactly the defect.
+		expect(all.filter((entry) => entry.includes('onTraceOnce'))).toEqual([emitsMessage]);
+		expect(all.filter((entry) => entry.includes('silent no-op'))).toEqual([emitsMessage]);
+		// 12a's grounds reach the template limb and NOTHING else.
+		expect(all.filter((entry) => entry.includes('NEED_HYDRATION'))).toEqual([templateMessage]);
+		// And the GROUNDS themselves are three distinct texts, not one text wearing
+		// three macro names. Pre-split this set had two members: strip the leading
+		// `Emitted Vue source calls defineX();` and the model and emits limbs were
+		// byte-identical. That is the assertion the other four exist to make legible.
+		const groundsOf = (entry: string): string =>
+			entry.replace(/^Emitted Vue source calls define\w+\(\)[.;] ?/, '');
+		expect(new Set(all.map(groundsOf)).size).toBe(3);
+
+		// CALIBRATION of `twoWayMessage`'s OWN precondition (instrument rule 4). Its
+		// `toHaveLength(1)` is the only assertion in this fold that is green against
+		// both the pre-split and post-split gate, so it is shown to be REACHABLE
+		// rather than asserted to be sound: a source calling both macros draws TWO
+		// violations and the helper refuses it instead of silently reading the first.
+		const both = mutate(
+			s3,
+			"const props = defineProps(['initial', 'onTrace']);",
+			"const props = defineProps(['initial', 'onTrace']);\n\tconst initial = defineModel('initial');\n\tconst emit = defineEmits(['go']);",
+		);
+		const bothViolations = (await violationsFor('generated/BothMacrosMutant.vue', both)).filter(
+			(entry) => entry.policy === 'no-two-way-binding',
+		);
+		expect(bothViolations).toHaveLength(2);
+		await expect(twoWayMessage('generated/BothMacrosMutant.vue', both)).rejects.toThrow(
+			/expected exactly one no-two-way-binding violation/,
+		);
 	});
 
 	test('MUTATION: rejects lang="ts", which is how a typed defineProps would arrive', async () => {

@@ -990,12 +990,19 @@ function directiveViolations(file: string, parsed: Parsed): GateViolation[] {
 					line,
 				),
 			);
+		// TEMPLATE LIMB of `no-two-way-binding`, and it carries ITS OWN grounds.
+		// This message used to justify itself with "worked example 3 is already
+		// ruled DENIED at Gate 5" - and worked example 3 rules `defineEmits`, a
+		// DIFFERENT macro. A correct rule resting on a borrowed reason, in a string
+		// read at the moment someone decides whether to trust the rule. The script
+		// limb below was repaired for the same defect by T008; this is the other
+		// half, on `frameless-vue-v1` T009's own measurements against vue@3.5.40.
 		if (directive.name === 'model')
 			violations.push(
 				violation(
 					file,
 					'no-two-way-binding',
-					'Emitted Vue source uses v-model; two-way binding needs a bindable prop kind the IR does not have (IR-1) and an emit concept it does not have (IR-2), and worked example 3 is already ruled DENIED at Gate 5',
+					'Emitted Vue source uses v-model. Worked example 12a rules this form DENIED on ITS OWN grounds, MEASURED against vue@3.5.40 - do not read it as worked example 3, which rules a different macro (defineEmits), and do not read it as denied at Gate 2, which it PASSES. G4 FAIL: the domain is every host renderHost() prints with a value/checked binding from attributesOf() plus a same-host event from eventAttribute(); re-enumerated over the six-scenario corpus it holds FIVE shipped instances and the sugar applies to ONE, because the other four handlers do strictly more than the assignment - they call props.onTrace(...), which is the e2e oracle observation channel, and v-model generates $event => ((x) = $event) and nothing else. G3 FAIL on the repair: StateWriteRecord (schema.ts:266) records operation "assign" and carries the right-hand side only as an AST, so draft = event.currentTarget.value and draft = otherEl.value are the SAME declared record, and separating them means matching the shape of an expression. G5 FAIL, four measured differences: the value stops being a vnode prop and the element LOSES the NEED_HYDRATION patch flag (40 PROPS|NEED_HYDRATION becomes 512 NEED_PATCH); vModelText.created attaches its own input/compositionstart/compositionend/change listeners and DROPS any input fired while el.composing is true; vModelText.mounted writes el.value unconditionally, on hydration too; and on a checkbox the SSR OUTPUT itself gains an Array.isArray(...) ? ssrLooseContain(...) branch the baseline does not have. G6 FAIL: no emitted artifact to regress. IR-1 and IR-2 are real gaps but they are NOT what denies this form, and IR-4 was never its blocker - v-model on a host element is not version-gated at all',
 					line,
 				),
 			);
@@ -1021,7 +1028,26 @@ function scriptViolations(file: string, parsed: Parsed): GateViolation[] {
 		if (node.type !== 'CallExpression' || node.callee?.type !== 'Identifier') return;
 		const name = String(node.callee.name);
 		const line = lineOfScript(parsed, node);
-		if (name === 'defineModel' || name === 'defineEmits')
+		// TWO MACROS, TWO BRANCHES, TWO MESSAGES.
+		//
+		// These shared one branch and one message until `frameless-vue-v1` T010,
+		// and the shared message was entirely about `defineEmits` - so a
+		// `defineModel` call was refused on another macro's grounds. Worked
+		// examples 3 and 12b are different entries reaching the same answer by
+		// different routes: 3 decides on the callback-prop call/emit delta, 12b on
+		// the props/emits surface `defineModel` synthesizes. Neither reason
+		// substitutes for the other, and the split is what keeps that true.
+		if (name === 'defineModel')
+			violations.push(
+				violation(
+					file,
+					'no-two-way-binding',
+					'Emitted Vue source calls defineModel(). Worked example 12b rules it DENIED on ITS OWN grounds, MEASURED against vue@3.5.40. It is NOT worked example 3, which rules defineEmits, and it is NOT denied at Gate 2 - that prediction is REFUTED: useModel (runtime-core 3.5.40, useModel setter) reads the PARENT vnode props at runtime and falls back to a purely local value when the parent did not use v-model, so defineModel is the child module declaring itself and asks nothing of anyone. G4 FAIL: the domain is every PropDestructuringEntry propsDeclaration() prints into defineProps([...]); re-enumerated over the six-scenario corpus it holds FIFTEEN printed entries spanning six distinct prop names, and the sugar applies to ZERO of them, because its precondition is the component writing back to the prop. The repair narrowing "props the component writes back to" is NOT STATABLE: every prop entry in every golden shares ONE graph node, prop:props, declared writable=false with zero writes, so per-prop write-back has no channel in the IR at all. That is IR-1, and it is distinct from IR-8, which is a missing prop TYPE field. G5 FAIL: defineModel("x") compiles to props: mergeModels([...], { x: {}, xModifiers: {} }) plus emits: ["update:x"] plus a customRef local, so the module SILENTLY gains a prop the author never declared, gains an emits option, and changes every read site from a value to a ref - and xModifiers COLLIDES with a legal frameless prop of that name with ZERO diagnostics, because mergeModels falls to extend({}, normalizePropsOrEmits(a), normalizePropsOrEmits(b)) and the synthesized object wins. That is the Vue instance of worked example 4 Angular count/countChange, measured here rather than borrowed. G6 FAIL: no emitted artifact to regress; this check pins the DENIAL, not the sugar. IR-4 was never the blocker - four gates FAIL at the version this repo ships, and FAIL outranks DEFERRED',
+					line,
+				),
+			);
+		// T008's message, MEASURED, and it folds through this split verbatim.
+		if (name === 'defineEmits')
 			violations.push(
 				violation(
 					file,

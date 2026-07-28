@@ -169,7 +169,7 @@ visual_board:
     url: null
     command: "npx goalbuddy board docs/goals/frameless-vue-v1"
 
-active_task: T010
+active_task: T011
 
 tasks:
   - id: T001
@@ -1223,7 +1223,7 @@ tasks:
   - id: T010
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     spec: "T009 receipt and docs/goals/frameless-vue-v1/notes/T009-define-model.md sections 9.1, 9.3, 9.4, 9.5 - AUTHORITATIVE, fold VERBATIM."
     serialization_hold: >-
@@ -1275,12 +1275,68 @@ tasks:
       - "You are about to restructure docs/emitter-idiom-policy.md or renumber existing entries. Insert 12a and 12b after 11b; touch nothing else."
       - "frameless-angular-v1 T009 is in flight. Worked example 4 is cited by both new entries and must not move underneath this fold."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T010-two-way-binding-fold.md
+      summary: "Re-enumerated BOTH domains over the six-scenario corpus BEFORE folding any number. Inserted worked examples 12a and 12b after 11b as a PURE INSERTION (159 lines, zero deletions) including 12a's stated non-ruling for v-model on a child component. Split no-two-way-binding into three limbs with three messages; defineEmits' T008 message folds through BYTE-IDENTICALLY with no diff line at all. Split and extended gate.test.ts, adding the defineModel row that did not exist. Named 12b at propsDeclaration's decision site, comment-only."
+      THE_BORROWED_REASON_IS_GONE: "PM VERIFIED: grep for 'worked example 3 is already ruled DENIED at Gate 5' in packages/frameworks/vue/src/gate/index.ts now returns ZERO. The whole gate diff is three deletions - the borrowed-reason v-model message, the merged defineModel-or-defineEmits condition, and the merged test name. Two macros, two branches, two messages, each citing its own grounds."
+      IT_CAUGHT_TWO_STOP_IF_CONFLICTS_IN_THE_RULING_ITSELF: "THE MOST VALUABLE THING THIS TASK DID, and one of them is the exact fault the card's own stop_if forbids. (1) Section 9.4 prescribed not.toMatch(/worked example 3/) on the v-model row - UNSATISFIABLE, because the prescribed replacement message mentions worked example 3 IN ORDER TO DISCLAIM IT. Resolved by pinning the withdrawn justification CLAUSE instead, which is T008's own precedent: guard the refuted claim's spelling, not its topic. RED pre-edit, because that is the exact shipped string. (2) Section 9.4 also prescribed emitsMessage.not.toMatch(/defineModel|mergeModels/) - A GREEN VACUUM BY CONSTRUCTION, since T008's message folds through verbatim and never mentioned either token, so it passes before AND after. THE RULING PRESCRIBED AN ASSERTION THE CARD'S OWN STOP_IF FORBIDS. Rewritten as EXCLUSIVITY - 'mergeModels appears in exactly the defineModel message' - which is strictly stronger and goes RED against the shared branch. The symmetric row is the sharpest evidence the split was needed: PRE-SPLIT, BOTH MACROS RECEIVED onTraceOnce AND 'silent no-op'."
+      calibration_19_of_19_red: "The gate was reverted to HEAD and the three new rows failed there. Because vitest stops a test at its first failing assertion, EACH PREDICATE WAS ADDITIONALLY EVALUATED ONE BY ONE against the two pre-split strings captured from that run: 19 of 19 message assertions RED. The single assertion green both ways - twoWayMessage's toHaveLength(1) precondition - was calibrated against a KNOWN MEMBER instead: a mutant calling both macros draws two violations and the helper is asserted to reject it. That is instrument rule 4 applied to the one place the two-sided method could not reach."
+      the_re_enumeration_found_that_one_number_moved_and_one_did_not: "12a: 'ONE OF FIVE' HOLDS, and it holds BECAUSE it was re-measured rather than assumed. Enumerated by parsing all six emitted .vue goldens and walking for elements carrying both a value/checked bind and a same-host on directive: S2:14, S2:32, S2:43, S3:19, S3:27. S5 AND S6 CONTRIBUTE ZERO - neither emits a value or checked binding at all. 12b: THE DOMAIN MOVED AND THE HEADLINE FIGURE DID NOT. Printed PropDestructuringEntry values went 10 -> 15 across six goldens, while DISTINCT NAMES stayed at 6, because S5 and S6 introduce no new prop name. T009's 'six shipped props' was a distinct-name count over four goldens. BOTH figures are now stated in the entry and the gate message, since only one had ever been re-measured and the two are trivially confusable."
+      changed_files:
+        - docs/emitter-idiom-policy.md
+        - packages/frameworks/vue/src/gate/index.ts
+        - packages/frameworks/vue/test/gate.test.ts
+        - packages/frameworks/vue/src/emitter/index.ts
+        - docs/goals/frameless-vue-v1/notes/T010-two-way-binding-fold.md
+      commands:
+        - cmd: "pnpm check"
+          status: pass
+        - cmd: "pnpm test"
+          status: pass
+          note: "50 files, 947 tests (944 at dispatch, +3 from the row split); PM re-ran and confirms 947"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 367 files"
+        - cmd: "regenerate && git diff --exit-code -- packages/frameworks/vue/generated"
+          status: pass
+          note: "goldens unmoved; PM re-verified"
+        - cmd: "git diff -- vue/src/emitter/index.ts | filter non-comment added lines"
+          status: pass
+          note: "EMPTY. PM re-ran independently: 0 non-comment added lines"
+        - cmd: "pnpm test:browser"
+          status: pass
+          note: "SEE THE CORRECTION BELOW - the Worker reported react 55 / solid 44; the PM re-ran and measured react 60, solid 49, svelte 13, vue 18"
+        - cmd: "pnpm e2e, pre-change baseline and post-change"
+          status: pass
+          note: "36 of 36 observation lines BYTE-IDENTICAL to the baseline; full output identical modulo one Angular bundle timing line"
+        - cmd: "git diff --exit-code -- other five lanes, packages/compiler, demos"
+          status: pass
+        - cmd: "git status --short"
+          status: pass
+          note: "every path inside allowed_files; pnpm-lock.yaml absent"
+        - cmd: "vitest gate.test.ts with the gate reverted to HEAD"
+          status: pass
+          note: "the three new rows RED as required"
+        - cmd: "per-predicate calibration of all 19 message assertions against the captured pre-split strings"
+          status: pass
+          note: "19/19 RED"
+      PM_CORRECTION_TO_THIS_RECEIPT: "THE WORKER'S test:browser FIGURE WAS WRONG AND THE PM CHECKED IT RATHER THAN RECORDING IT. The receipt reported 'react 55, solid 44' where every prior run this session reported 60 and 49 - a drop of five in each, which would have been a silent regression of exactly the kind this board exists to catch. PM RE-RAN ON THE DELIVERED TREE: react 60, solid 49, svelte 13, vue 18, identical to every previous run. NO REGRESSION - the tree is correct and the receipt's number was not. Recorded rather than quietly amended, because a wrong figure in a green receipt is how a real regression would eventually be waved through, and the only reason this one was caught is that the number moved in the suspicious direction."
+      deviations:
+        - "Section 9.4's not.toMatch(/worked example 3/) is UNSATISFIABLE against the prescribed message - resolved by pinning the withdrawn justification clause instead. See above."
+        - "Section 9.4's emitsMessage.not.toMatch(/defineModel|mergeModels/) is a GREEN VACUUM - reimplemented as exclusivity, which is strictly stronger. See above."
+        - "Added a twoWayMessage helper asserting exactly one no-two-way-binding violation. It is the ONLY assertion in this fold green against both gates, so it is calibrated against a known member per instrument rule 4."
+        - "CITATION CORRECTED: renderNode's throw is at emitter/index.ts:934, not :935 as section 9.1 has it. Verified at HEAD; renderHost:815, attributesOf:753, eventAttribute:730 and propsDeclaration:400 all re-read and correct as cited."
+        - "Section 9.1's 'zero of the FIVE compiler goldens contains one' folded as SIX, re-counted: grep -c component-reference is 0 across all six."
+        - "12b's headline folded as BOTH 'fifteen printed entries' and 'six distinct names' rather than the note's single 'six shipped props'."
+      remaining_blockers: []
+      stopped_because: null
   - id: T011
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     depends_on: ["T010"]
     objective: "Re-audit the Vue lane after the two-way-binding fold, and rule the full owner outcome complete or not."

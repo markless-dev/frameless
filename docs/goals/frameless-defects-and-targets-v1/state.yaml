@@ -131,7 +131,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T038
+active_task: T039
 
 tasks:
   - id: T001
@@ -3596,7 +3596,7 @@ tasks:
   - id: T038
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     spec: "T027 receipt and docs/goals/frameless-defects-and-targets-v1/notes/T027-corpus-s6-whitespace.md section 4 - AUTHORITATIVE."
     objective: >-
@@ -3652,6 +3652,116 @@ tasks:
       - "A ruling on the Solid gate's missing whitespace policy"
       - "Worker package if one follows: exact objective, allowed_files, verify, stop_if"
       - "The re-open trigger, if the ruling is accept-and-document"
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      harness: claude-code
+      note: notes/T038-whitespace-ruling.md
+      rationale: "RULING: (b) GATE AT THE COMPILER, FAIL-CLOSED, CARRYING (c)'s DOCUMENTATION. Normalisation is disqualified by a measurement T027 did not have: Solid alone rewrites U+00A0 / U+2009 / U+3000 / U+2007 to U+0020, so 'make the six agree' means normalising FIVE lanes down to Solid's floor and DELETING NON-BREAKING-SPACE SEMANTICS PRODUCT-WIDE. T027's omission of the divergent construct from the shipped fixture is RATIFIED and upgraded to REQUIRED, since the ruling makes the construct inexpressible. Solid's missing whitespace policy is a defect of the RECORDED-REASON kind, not a missing predicate. Belongs in docs/DEFECTS.md; does NOT extend half 1's oracle."
+      summary: "Repair = refuse interior whitespace runs and non-U+0020 whitespace in static IR text nodes, at the compiler, fail-closed. Measured 0 violations across 108 static text nodes in every live .tsrx, so it is a PURE GUARD that cannot be used to make anything green - and therefore must be calibrated with a planted violation. Two claims in the PM's own card were overturned by measurement."
+      THE_FINDING_IS_BIGGER_THAN_T027_MEASURED_AND_THAT_DISQUALIFIES_NORMALISATION: "Solid does not merely condense RUNS - it rewrites the IDENTITY of every Unicode whitespace character to U+0020. A single U+00A0 comes out of babel-preset-solid 1.9.12 as U+0020, in both dom and ssr. React-dom 19.2.3, svelte 5.56.8, @vue/compiler-sfc 3.5.40 and @angular/compiler 22.0.8 all preserve it byte-for-byte. SO ON NON-ASCII WHITESPACE THE SPLIT IS 5-1, NOT 3-3, and the only uniform rule yielding six-way agreement is Solid's /\\s+/g -> ' '. PM VERIFIED INDEPENDENTLY: Solid U+00A0 -> U+0020; Vue U+00A0 -> U+00A0. Normalisation would delete non-breaking-space semantics across the whole product to make a matrix agree - the tempting-wrong-move at its most destructive, and it was invisible until someone probed a character T027 had no reason to try."
+      THE_PMs_CARD_WAS_BACKWARDS_AND_MEASUREMENT_CAUGHT_IT: "The card argued 'the compiler already normalises tabs and newlines to one space each, so a gate at the compiler is arguably where the existing behaviour already lives'. MEASURED AND OVERTURNED: normalizeJsxText does line.replace(/\\t/g, ' ') - A 1:1 CHARACTER MAP, NOT A CONDENSE. PM CONFIRMED AT build.ts:2894. Probed through buildEnrichedIr, 'one\\t\\ttwo' becomes 'one  two', so THE COMPILER MANUFACTURES THE DIVERGENT CONSTRUCT rather than setting precedent against it. The compiler is still the right layer - for the OPPOSITE reason to the one offered. THIRD TIME THIS SESSION A PM BRIEF CARRIED A WRONG PREMISE THAT MEASUREMENT CAUGHT, and the third time it was labelled as a hypothesis rather than a fact, which is the only reason it did not propagate."
+      THE_GATES_ARE_STRUCTURALLY_BLIND_NOT_MERELY_NARROW: "A second overturned assumption, and it changes the repair. The Vue gate parses to descriptor.template.ast and the Angular gate to parseTemplate under preserveWhitespaces:false - BOTH ALREADY CONDENSED. Probed: 'one  two three' reaches BOTH predicates as 'one two three'. WIDENING THE PREDICATE WOULD NOT FIRE - it would need a second parse with preserve options. So 'the gates are too narrow' was wrong; they cannot see the construct at all, which is why the ruling adds NO gate predicate."
+      measured_scope_boundaries_that_shape_the_worker: "THE INTERIOR RULE FIRES ON ZERO OF 108 STATIC TEXT NODES across every live .tsrx in demos/, packages/ and poc/ - a PURE GUARD, which is exactly why it must be calibrated against a planted violation rather than trusted for being green. THE EDGE HALF OF THE SAME RULE WOULD BREAK FOUR LIVE DEMO TEXTS (' open' in demos/ui-kit and demos/ssr TaskList.tsrx, ' seats' in the two PricingCard.tsrx), so edges are excluded BY MEASUREMENT rather than by taste. And attribute values preserve runs in all three condensing lanes, so the refusal correctly scopes to text nodes."
+      the_portable_spelling_already_exists_and_is_already_asserted: "Whitespace carried as an interpolated VALUE is preserved verbatim by all six lanes, and demos/react-official/three-way-contract.ts ALREADY asserts '[ wide  load ]' and '[  wide  load  ]' equal across six. So the v-limit does not remove a capability - it redirects authors to a spelling the corpus already proves portable. AND THE ERROR MESSAGE MUST NOT SUGGEST &nbsp; OR U+00A0, because Solid rewrites it - advice that would be wrong in the one lane it matters for."
+      evidence:
+        - "build.ts normalizeJsxText - line.replace(/\\t/g,' ') is a 1:1 map; 'one\\t\\ttwo' -> 'one  two' through buildEnrichedIr. PM confirmed at :2894"
+        - "Pinned-version probes with String.fromCharCode inputs and code-point output: babel-preset-solid 1.9.12 rewrites U+00A0, U+2009, U+3000, U+2007 each to U+0020; react-dom 19.2.3, svelte 5.56.8, @vue/compiler-sfc 3.5.40, @angular/compiler 22.0.8 preserve. PM re-probed Solid and Vue independently"
+        - "Space-run 3-3 split reconfirmed at each lane's own compiler"
+        - "vue gate:809 reads descriptor.template.ast; angular gate:473 reads parseTemplate under preserveWhitespaces:false - 'one  two three' reaches both as 'one two three'"
+        - "Corpus scan via buildEnrichedIr over every live .tsrx: 108 static text nodes, 0 interior violations, 4 edge violations in ui-kit and ssr demos"
+        - "Attribute values unaffected: <p title=\"a  b\"> preserves the run in angular, vue and solid"
+        - "three-way-contract.ts:1626,1661 assert '[ wide  load ]' and '[  wide  load  ]' equal across six lanes"
+        - "packages/frameworks/solid/src/gate/{index,custom-policies}.ts at 8af8ed1: grep -c whitespace = 0 in both"
+      missing_evidence:
+        - "QWIK'S BEHAVIOUR ON NON-ASCII WHITESPACE IS UNMEASURED. @qwik.dev/core 2.0.0-beta.38 exposes no callable transform on its ./optimizer subpath, and building the lane was out of bounds with a Worker live. Qwik's space-run PRESERVE row rests on T027's end-to-end browser measurement, which is sound. THE WORKER MUST FILL THE NBSP CELL - a matrix with a hole is a matrix that cannot be trusted at the hole."
+        - "pnpm e2e, pnpm test:browser and pnpm mutate:corpus were not re-run by this ruling; the 6x6 all-equal and 36/36 red figures are the PM's at 8af8ed1 and are RELIED ON rather than re-derived."
+      rulings_recorded_for_T999:
+        - "This is the ONLY OPEN defect in frameless's OWN emitted output. Entries 3, 4 and 6 are test-suite defects, 5 is upstream, 2 is not a defect, 1 is closed. T999 MUST STATE ITS STATUS EXPLICITLY rather than let it pass unmentioned."
+        - "It belongs in docs/DEFECTS.md but does NOT extend half 1's oracle - half 1 is scoped to the six defects the charter named."
+        - "LIFT TRIGGER: the v-limit may be removed when all six lanes are measured to render an interior whitespace run byte-identically at pinned versions. The registered cross-lane matrix test re-opens the ruling if ANY single lane moves, in EITHER direction."
+      parallel_safety:
+        safe: false
+        reason: "T038 verified the proposed file sets are disjoint from the live Vue T010 Worker's surface, but the contract permits parallel Workers only when disjointness is proven AND the user asked for parallel agent work. The second condition is unmet."
+        pm_action: "T039 created with a serialization hold; dispatched after T010 lands. The Judge also noted correctly that a git-status snapshot is not a declaration - the PM confirmed T010's declared allowed_files, not merely what it had touched so far."
+      worker_package_recorded_as: T039
+      spawned_tasks:
+        - T039
+  - id: T039
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    spec: "T038 receipt and docs/goals/frameless-defects-and-targets-v1/notes/T038-whitespace-ruling.md - AUTHORITATIVE."
+    serialization_hold: >-
+      Behind the live frameless-vue-v1 T010 fold. T038 verified the file sets are DISJOINT, but the
+      execution contract permits parallel Workers only when disjointness is proven AND the user has
+      asked for parallel agent work; the second condition is not met. Dispatch after T010 lands.
+    objective: >-
+      Land the interior-whitespace portability refusal in the compiler as a FAIL-CLOSED v-limit,
+      two-sided calibrated, with the ledger entry and the recorded Solid measurement. Reject a
+      static IR text node whose value matches /\s\s/ or /[^\S ]/ - any whitespace character that is
+      not U+0020. TEXT-NODE EDGES ARE EXPLICITLY OUT OF SCOPE. Throw at packages/compiler/src/build.ts
+      immediately after normalizeJsxText, so the error carries the source file and the offending value.
+    why_gate_and_not_normalise: >-
+      NORMALISATION IS DISQUALIFIED BY A MEASUREMENT T027 DID NOT HAVE. Solid does not merely
+      condense runs - it rewrites the IDENTITY of every Unicode whitespace character to U+0020.
+      PM VERIFIED INDEPENDENTLY: babel-preset-solid 1.9.12 turns U+00A0 into U+0020, while
+      @vue/compiler-sfc 3.5.40 preserves it. React, Svelte, Vue and Angular all preserve. SO ON
+      NON-ASCII WHITESPACE THE SPLIT IS 5-1, NOT 3-3, and the only uniform rule that yields six-way
+      agreement is Solid's /\s+/g -> ' '. "Make the matrix agree" therefore means normalising FIVE
+      lanes down to Solid's floor and DELETING NON-BREAKING-SPACE SEMANTICS PRODUCT-WIDE. That is
+      the tempting-wrong-move at its most destructive.
+    the_PM_card_was_backwards_and_measurement_caught_it: >-
+      T038's card argued that "the compiler already normalises tabs and newlines to one space each,
+      so a gate at the compiler is where the existing behaviour already lives". MEASURED AND
+      OVERTURNED: build.ts normalizeJsxText does line.replace(/\t/g, ' '), A 1:1 CHARACTER MAP, NOT
+      A CONDENSE. PM confirmed at build.ts:2894. So `one\t\ttwo` becomes `one  two` - THE COMPILER
+      MANUFACTURES THE DIVERGENT CONSTRUCT rather than setting precedent against it. The compiler is
+      still the right layer, for the OPPOSITE reason to the one the PM offered. Third time this
+      session a PM brief carried a wrong premise that measurement caught.
+    the_gates_are_structurally_blind_not_narrow: >-
+      A second overturned assumption. The Vue gate reads descriptor.template.ast and the Angular
+      gate reads parseTemplate under preserveWhitespaces:false - BOTH ALREADY CONDENSED. Probed:
+      "one  two three" reaches both predicates as "one two three". WIDENING THE PREDICATE WOULD NOT
+      FIRE; it would need a second parse with preserve options. That is why no gate predicate is
+      added by this task.
+    measured_scope_boundaries: >-
+      THE INTERIOR RULE FIRES ON ZERO OF 108 STATIC TEXT NODES across every live .tsrx in demos/,
+      packages/ and poc/ - a PURE GUARD that cannot be used to make anything green, which is
+      precisely why it must be calibrated with a planted violation. THE EDGE HALF OF THE SAME RULE
+      WOULD BREAK FOUR LIVE DEMO TEXTS (" open" in demos/ui-kit and demos/ssr TaskList.tsrx,
+      " seats" in the two PricingCard.tsrx) - hence edges are excluded, measured rather than assumed.
+      Attribute values preserve runs in all three condensing lanes, so the refusal correctly scopes
+      to text nodes only.
+    allowed_files:
+      - packages/compiler/src/build.ts
+      - packages/compiler/test/enriched-ir.test.ts
+      - packages/frameworks/solid/src/gate/index.ts
+      - docs/DEFECTS.md
+      - docs/goals/frameless-defects-and-targets-v1/notes/T039-whitespace-v-limit.md
+    verify:
+      - "pnpm check"
+      - "pnpm test"
+      - "pnpm lint"
+      - "git diff --exit-code -- packages/frameworks/react/generated packages/frameworks/solid/generated packages/frameworks/qwik/generated packages/frameworks/svelte/generated packages/frameworks/vue/generated packages/frameworks/angular/generated   # GUARD-ONLY change; emitted output must NOT move"
+      - "git diff --exit-code -- packages/compiler/test/goldens   # no golden may move"
+      - "git status --short"
+    stop_if:
+      - "The refusal fires on any existing fixture or demo other than a deliberately planted violation. MEASURED at 8af8ed1: 108 static text nodes, 0 interior violations. If it fires, that measurement was wrong - report the value VERBATIM and stop."
+      - "You are about to extend the refusal to text-node EDGES. MEASURED: that breaks four live demo texts. Ruled out of scope."
+      - "You are about to make the compiler CONDENSE - any \s+ -> ' ' in normalizeJsxText or anywhere else. THAT IS THE FORBIDDEN NORMALISATION RELOCATED TO ITS MOST DESTRUCTIVE SITE, and T038 rejects it by name."
+      - "You are about to add a whitespace PREDICATE to any of the six gates. Ruled NOT required - the gates are structurally blind, and the Solid gate change is a RECORDED MEASUREMENT ONLY, no predicate."
+      - "You cannot show the new rule going RED on a planted violation. A rule that fires on nothing and cannot be shown to fail is theatre."
+      - "The error message suggests &nbsp; or U+00A0 as the portable spelling. SOLID REWRITES IT TO U+0020 - that advice would be wrong in the one lane it matters for."
+      - "Need any file outside allowed_files - in particular packages/frameworks/vue/** or docs/emitter-idiom-policy.md."
+      - "Verification fails twice for the same reason."
+    constraints:
+      - "The message must name the value, state that three of six lanes rewrite it, and point at THE PORTABLE SPELLING: whitespace carried as an interpolated VALUE, which all six lanes preserve and which three-way-contract.ts already asserts equal across six as '[ wide  load ]'."
+      - "Register a CROSS-LANE MATRIX TEST recording, per lane and pinned version, what happens to a space run AND to a single U+00A0 - so a version bump that moves ANY lane goes red here. FILL THE ONE UNMEASURED CELL: Qwik on non-ASCII whitespace, which T038 could not measure because @qwik.dev/core exposes no callable transform on its optimizer subpath."
+      - "Add docs/DEFECTS.md entry 7 as an OPEN defect in frameless's OWN emitted output, with the LIFT TRIGGER: the v-limit may be removed when all six lanes are measured to render an interior whitespace run byte-identically at pinned versions, and the matrix test re-opens the ruling if ANY single lane moves in EITHER direction."
+      - "RULED OUT OF SCOPE, recorded so a later Worker does not churn: no gate whitespace predicates in any of the six; no change to text-node edge handling; no change to normalizeJsxText's tab/newline mapping."
     receipt: null
 
   - id: T030

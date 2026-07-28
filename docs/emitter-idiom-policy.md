@@ -1221,6 +1221,165 @@ point all six gates are re-run on a real instance and entry 11's `FAIL` does not
 `packages/frameworks/angular/src/gate/index.ts`'s `SIGNAL_APIS` set covers `output` and `model`
 alongside `input`, so the shipped gate pins both halves. That is correct and stays.
 
+### 12a. Vue — `v-model` on an emitted host element → **no-sugar**
+
+Baseline (what the emitter ships): `:value="x"` (or `:checked="x"`) plus a `@input` / `@change`
+handler that performs the assignment. Candidate: `v-model="x"`.
+
+Domain, in emitter terms: every host node `renderHost()`
+(`packages/frameworks/vue/src/emitter/index.ts:815`) prints that carries a `DynamicBinding` named
+`value` or `checked` from `attributesOf()` (`:753`) together with an event directive on the same
+host from `eventAttribute()` (`:730`). **Re-enumerated over the six-scenario corpus by
+`frameless-vue-v1` T010** — `frameless-vue-v1` T009 took its figure over four goldens, and S5 and S6
+have since landed. **Both new goldens contribute zero instances: neither emits a `value` or a
+`checked` binding at all.** The domain is **populated**, and it is still five shipped instances: S2
+`h2`/`event:0`, S2 `h7`/`event:2`, S2 `h8`/`event:3`, S3 `h1`/`event:1`, S3 `h2`/`event:2`. The
+figure is unchanged because it was re-measured, not because it was re-read.
+
+- **G1 PASS.** Measured, not read, against `vue@3.5.40` / `@vue/compiler-sfc@3.5.40`. Baseline and
+  candidate both produce an **exact empty** diagnostic set — parse errors, template `errors` *and*
+  `tips` — across `ssr × isProd`, on the text arm, the checkbox arm and the `v-model` + `@input`
+  combination. A planted syntax error reports at parse and in all four modes, so the probe can fail.
+- **G2 PASS.** A spelling inside the emitted template; the compiler injects `vModelText` /
+  `vModelCheckbox` into the emitted module's **own** import list. Nothing is asked of a parent, a
+  child, a plugin, a dependency or the build graph. **Gate 2 is not what denies this** — see the
+  note under 12b.
+- **G3 FAIL.** The trigger would be "this handler assigns the element's own value to the node the
+  sibling binding reads". `StateWriteRecord` (`packages/compiler/src/schema.ts:266`) records
+  `operation: 'assign'` and carries the right-hand side only as `value?: SerializableAstNode`, so
+  `draft = event.currentTarget.value`, `draft = event.currentTarget.value.trim()` and
+  `draft = otherEl.value` are the same declared record modulo that AST. `v-model`'s assign is
+  `castValue(el.value, trim, castToNumber)` (`runtime-dom.cjs.js:1515`) on the element's own value.
+  Separating them means matching the shape of an expression, which this gate forbids outright.
+- **G4 FAIL.** The sugar applies to **one of five**. S2 `h7`, S2 `h8`, S3 `h1` and S3 `h2` all have
+  handlers that do strictly more than the assignment — each calls `props.onTrace(…)`, and S2's two
+  additionally mutate a row alias and re-slice the array. The candidate's generated handler is
+  `$event => (($setup.X) = $event)` and nothing else. Counterexamples exhibited from shipped output.
+  **The repair step was run and it is not vacuous:** narrowing to *handlers whose declared `writes`
+  is exactly the bound node, whose `reads` is empty, and which carry no `syncPolicy`* uses only
+  declared IR fields, and its domain is **not** empty — S2 `h2`/`event:0` satisfies it exactly. The
+  narrowing is beaten on its merits, at Gate 3 above (the right-hand side is still unchecked, and
+  the unsoundness is now *reachable* because the corpus contains an instance the rule fires on) and
+  at Gate 5 below (the one instance it correctly identifies is still not neutral).
+- **G5 FAIL, and it is the deciding gate.** Four measured differences.
+  1. **The value stops being a vnode prop, and the element loses `NEED_HYDRATION`.** Baseline:
+     `value: $setup.text`, patchFlag `40 /* PROPS, NEED_HYDRATION */`, `dynamicProps ["value"]`.
+     Candidate: no `value` prop at all, `withDirectives(…, [[vModelText, $setup.text]])`, patchFlag
+     `512 /* NEED_PATCH */`. `40 = 8 | 32`; the `32` is gone.
+  2. **Event routing.** `vModelText.created` (`runtime-dom.cjs.js:1510-1527`) attaches its own
+     `input` (or `change` under `.lazy`), `compositionstart`, `compositionend` and `change`
+     listeners, and its input listener opens `if (e.target.composing) return;`. A keystroke
+     delivered during an IME composition writes state under the baseline and does not under the
+     candidate.
+  3. **`mounted` writes the DOM unconditionally** — `el.value = value == null ? "" : value`
+     (`:1529-1531`), and `mounted` runs on hydration. `beforeUpdate` (`:1532-1550`) adds an
+     `activeElement === el` guard that can skip a write the baseline performs.
+  4. **On a checkbox the SSR output itself changes.** Baseline
+     `ssrIncludeBooleanAttr($setup.checked)`; candidate
+     `ssrIncludeBooleanAttr(Array.isArray($setup.checked) ? ssrLooseContain($setup.checked, null) : $setup.checked)`.
+     `v-model` overloads the bound value's type at runtime. **Stated so the green is not
+     over-read:** the *text* arm's SSR output is byte-identical in both SSR modes — the two arms of
+     the same sugar do not agree, which is why the checkbox arm is the proof and the text arm is not.
+- **G6 FAIL.** A Vue lane exists, so `DEFERRED` is discharged. `attributesOf()` and
+  `eventAttribute()` never print `v-model` and the gate actively refuses it, so there is no emitted
+  artifact to regress; the check pins the *denial*, not the sugar. Same clause as entries 2b, 3 and 7.
+
+Four `FAIL`s: **denied, not deferred.** Say which one decides it: **Gate 5 does** — it is the one
+that survives every repair, holding even on the single instance the narrowed domain correctly
+identifies. Gates 3, 4 and 6 deny it independently. **Re-open only if the IR gains a declared
+"this handler is exactly the element's own write-back" fact** — a narrowing, not a type field, and
+not IR-8.
+
+**Not covered by this entry, and deliberately not folded into it: `v-model` on an emitted child
+component.** `renderNode` (`emitter/index.ts:921`) throws at `:934` on any template node kind it has
+no lowering for, `component-reference` included, and **zero of the six compiler goldens contains
+one** — re-counted over S1–S6 rather than carried. That domain is **empty**, which gives `UNKNOWN` at
+Gate 4 and `FAIL` at Gate 6 — entry 2b's shape, a different reason for the same answer. Ruling it
+inside 12a would be the vacuous-totality move worked example 7 refused.
+
+### 12b. Vue — declaring a prop as a `defineModel()` model → **no-sugar**
+
+Baseline (what the emitter ships): the prop is declared in the string-literal array —
+`defineProps(['initial', 'onTrace'])`, read as `props.initial`. Candidate:
+`const initial = defineModel('initial')`.
+
+Domain, in emitter terms: every `PropDestructuringEntry` in `component.props.entries` printed as a
+string literal into the `defineProps([...])` array by `propsDeclaration()`
+(`packages/frameworks/vue/src/emitter/index.ts:400`) — **the same domain as worked example 3**.
+**Re-enumerated over the six-scenario corpus by `frameless-vue-v1` T010**, and unlike 12a's this one
+moved. The domain is **populated** with **fifteen printed entries** — S1 four, S2 two, S3 two, S4
+two, S5 two, S6 three — spanning **six distinct prop names**: `label`, `multiplier`, `visible`,
+`seed`, `initial`, `onTrace`. `frameless-vue-v1` T009 recorded "six shipped props" over four
+goldens; **the entry count went 10 → 15 and the distinct-name count did not move**, because S5 and
+S6 introduce no prop name S1–S4 did not already carry. Both figures are stated because a single
+number that happens to survive a corpus change looks identical to one nobody re-checked.
+
+- **G1 PASS.** Measured at `vue@3.5.40`; both forms exact-empty across `ssr × isProd`, calibrated by
+  a planted error that reports in all four modes.
+- **G2 PASS — and this refutes the prediction that stood against this entry.** `frameless-vue-v1`
+  T002's dissent predicted `defineModel` **DENIED at Gate 2**, on the ground that "the child must
+  declare bindability and frameless emits one module per IR". **That is worked example 4's Angular
+  mechanism and it does not transfer.** Angular's `[(prop)]` is a *parent-side* form that is illegal
+  unless the child declared the pair. `defineModel` is the **child's own declaration, made inside
+  the module being emitted**. Measured from `runtime-core.cjs.js:4378-4384`: `useModel`'s setter
+  reads `i.vnode.props` at runtime, computes `hasVModel` from whether the parent passed both the
+  prop and an `onUpdate:` listener, and **falls back to a purely local value when the parent did
+  not**. A `defineModel` component is fully functional in a tree whose parent knows nothing about
+  it, and the imports it needs land in its own import list. This is the scoping the Gate 2 import
+  clause already settles, and which already names `defineModel`.
+- **G3 FAIL.** Unlike worked example 3 there is no name-shape reading available: `/^on[A-Z]/` over
+  `sourceName` was at least *decidable* from a declared field, and nothing in a prop's `sourceName`
+  indicates two-way intent. The only selective trigger is "the body assigns to `props.X`", which is
+  flat content inspection. A **totalising** rule — declare every prop as a model — would have a
+  declared trigger and pass this gate; it is refuted at Gate 4 by its own counterexamples and at
+  Gate 5 outright.
+- **G4 FAIL.** The sugar applies to **zero of the fifteen printed entries, and to zero of the six
+  distinct names**: its precondition is the component writing back to the prop, and no shipped prop
+  is written back. **The repair narrowing "props the component writes back to" is not statable at
+  all.** Measured across all six base goldens: every prop entry shares one graph node, `prop:props`,
+  declared `writable: false` with zero writes. Per-prop write-back has no channel in the IR — not an
+  unsound one, none. **This is IR-1, and it is distinct from IR-8:** IR-8 is a missing *type* field
+  on `PropDestructuringEntry`; this is a missing *per-prop identity* in the graph.
+  `ComponentPropExpression` (`packages/compiler/src/schema.ts:149-156`) carrying no bindable `kind`
+  is the parent-side face of the same gap.
+- **G5 FAIL, and it is the deciding gate.** `defineModel('initial')` compiles at 3.5.40 to
+  `props: mergeModels(['onTrace'], { "initial": {}, "initialModifiers": {} })`,
+  `emits: ["update:initial"]`, and `const initial = useModel(__props, 'initial')`. Three differences
+  this gate names:
+  1. **The module's exports change.** The `props` option gains **`initialModifiers`**, a prop the
+     author never declared, and the component gains an `emits` option it did not have.
+  2. **Reactivity depth.** The local becomes a `customRef` (`runtime-core.cjs.js:4357`) rather than
+     a value; every read site changes shape.
+  3. **The synthesized `<name>Modifiers` prop collides silently with a legal frameless prop.**
+     Measured: `defineModel('initial')` alongside `defineProps(['initialModifiers', 'onTrace'])`
+     compiles to `mergeModels(['initialModifiers', 'onTrace'], { "initial": {}, "initialModifiers":
+     {} })` with **zero diagnostics**; `mergeModels` (`runtime-core.cjs.js:3665-3669`) falls to
+     `extend({}, normalizePropsOrEmits(a), normalizePropsOrEmits(b))` when `a` is an array and `b`
+     an object, so the author's declaration is overwritten. **This is the Vue instance of worked
+     example 4's Angular `count`/`countChange` collision** — and it is worse, because Angular's
+     derived name is visible in the template while this one is silent.
+  Also live: declaring `emits: ["update:initial"]` holds `onUpdate:initial` back from fallthrough
+  `$attrs`. Here that *is* the delta, because the baseline declares no emits at all — the converse
+  of worked example 3, where the baseline already declared the prop and the delta vanished.
+- **G6 FAIL.** A Vue lane exists, so `DEFERRED` is discharged. `propsDeclaration()` emits only the
+  string-literal array form and `packages/frameworks/vue/src/gate/index.ts` actively refuses an
+  emitted `defineModel(` call; the check pins the *denial*, not the sugar. Same clause as 2b, 3, 7
+  and 12a.
+
+Four `FAIL`s: **denied, not deferred.** Say which one decides it: **Gate 5 does**, and Gates 3, 4
+and 6 deny it independently. **Re-open only if the IR gains a per-prop graph node with declared
+write-back (IR-1 proper) *and* Vue's model-modifier prop stops sharing the prop namespace** — the
+second is upstream and is not ours to wait on.
+
+**The standing lesson this pair adds, and it is why IR-4 is mentioned only here.** This board carried
+"the flagship sugar is blocked by IR-1 **and** IR-4" as inherited prose for the whole of its life.
+Scored properly, **IR-4 was never the blocker for either limb** — both `FAIL` four gates at the
+version this repo ships, `FAIL` outranks `DEFERRED`, and no target-version input would move either
+ruling by a word. `v-model` on a host element is not even version-gated; it has shipped since Vue 2.
+IR-1 is load-bearing and IR-4 is decorative, and the two had been travelling together unexamined —
+the same failure worked example 3 records one level down. **A conjunction inherited as a blocker is
+two claims, and the weaker one is the one nobody scores.**
+
 ## The baseline form inventory
 
 The version corollary at Gate 6 has two conjuncts: the lockfile pins ≥ *N*, **and** the emitter can

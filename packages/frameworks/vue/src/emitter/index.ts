@@ -396,6 +396,19 @@ function rewriteScript(
  * S1's `computed` reads `multiplier` on every recomputation. IR-4 is deferred, so
  * this lane discharges the version corollary by emitting only baseline-safe
  * forms - and `props.multiplier` means the same thing at every Vue 3 version.
+ *
+ * `defineModel()` IS ALSO REFUSED HERE, and it now has a ruling of record rather
+ * than an inherited sentence: `docs/emitter-idiom-policy.md` WORKED EXAMPLE 12b,
+ * ruled by `frameless-vue-v1` T009 and folded by T010. Denied at Gate 5 - the
+ * deciding gate - with Gates 3, 4 and 6 denying independently and Gates 1 and 2
+ * PASSING. This function's array is exactly 12b's domain: fifteen printed
+ * `PropDestructuringEntry` values across the six goldens, six distinct names, and
+ * the sugar applies to ZERO of them, because every prop entry shares one graph
+ * node (`prop:props`, `writable: false`, zero writes) so per-prop write-back has
+ * no channel in the IR. That gap is IR-1, and it is NOT the IR-8 gap two
+ * paragraphs up: 12b's is a missing per-prop IDENTITY, IR-8's a missing TYPE.
+ * IR-4 is NOT why this is refused - `v-model` and `defineModel` FAIL four gates
+ * at the version this repo ships, and FAIL outranks DEFERRED.
  */
 function propsDeclaration(component: EnrichedComponent): Statement | null {
 	if (component.props.entries.length === 0) return null;
