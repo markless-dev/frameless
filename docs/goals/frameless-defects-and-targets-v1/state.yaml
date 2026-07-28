@@ -131,7 +131,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T028
+active_task: T050
 
 tasks:
   - id: T001
@@ -3568,26 +3568,27 @@ tasks:
   - id: T028
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Audit Phase F against its RATIFIED stopping rule: is the corpus ENOUGH, measured by mutants that cannot survive rather than by scenario count?"
     depends_on: ["T031"]
-    the_stopping_rule_as_ratified_by_T024_superseding_twelve: >-
-      EIGHT scenarios, not twelve. s1-s3 (existing) plus S4 nested lists, S5 branch teardown,
-      S6 whitespace, S7 form controls folded with boolean/dynamic attributes, S8 async handlers.
-      Phase F closes when ALL of: eight scenarios exist; each lands in ALL SIX lanes; 48 observation
-      strings are byte-identical cross-lane; 48 recorded mutants each have a NAMED RED SITE; the
-      mutation harness is calibrated TWO-SIDED on the pre-existing s1-s3; and no two scenarios
-      duplicate a divergence axis.
-    THE_EXPLICIT_ANSWER_T043_GAVE_SO_THIS_AUDIT_NEED_NOT_INFER_IT: >-
-      PHASE F CLOSES AT EIGHT if T045, T046 and T047 all land with witnessed RED calibrations and
-      the re-specified S8 then lands in six lanes. IT CLOSES AT SEVEN, with a documented measured
-      refusal NAMING LANE, FILE, LINE AND VERBATIM MESSAGE, if any of the three is refused or fails
-      calibration. Either way HALF 1's ORACLE DOES NOT EXTEND - the T038 precedent, which ruled the
-      whitespace finding did not extend it either.
-      DO NOT let the eighth scenario's status pass unmentioned in either direction. T031 measured it
-      unlandable and T043 refuted that measurement; an audit that records neither would be the third
-      pass over this question and the least informed.
+    the_stopping_rule_AS_AMENDED_BY_T028_2026_07_28: >-
+      NINE scenarios, not eight - and EIGHT WAS WRONG IN BOTH DIRECTIONS.
+      T024 FOLDED proposal 7 (boolean and dynamic attributes) into S7. That fold forced S7 to author
+      aria-disabled instead of a real boolean attribute, because a dynamic `disabled` had no portable
+      spelling at the time. T041 then ruled the construct MIS-LOWERED rather than unspellable, and
+      T049 shipped the lowering - 14 names at packages/compiler/src/build.ts:221. SO THE REPO NOW
+      SHIPS A COMPILER CAPABILITY WITH ZERO CORPUS INSTANCES, and docs/DEFECTS.md entry 10 sits OPEN
+      for EXACTLY ONE REASON: no served payload. That is the same "a rule with no instances is
+      folklore" condition T024 ITSELF used to justify landing S4 first, and the ledger already names
+      a corpus card as entry 10's own close trigger. S9 IS LANDABLE TODAY.
+      T024's OTHER cut - composition, refs and effects to the capability goal - is RATIFIED and stands.
+      SO: NINE scenarios, 54 observation strings, 54 mutants each with a named red site, the harness
+      two-sided calibrated on the pre-existing s1-s3, and no two scenarios duplicating a divergence axis.
+    optional_close_path_offered_by_T028: >-
+      8 / 48 / 48 with S9 LANDED and S8 DEFERRED on its named external trigger is a DEFENSIBLE close
+      of Phase F, if this board will not be held open for another goal's lowering work. SEVEN IS NOT
+      DEFENSIBLE, because S9 is landable today and its absence is already a filed OPEN defect.
     constraints:
       - "Do not implement."
       - "REJECT IF THE CORPUS GREW BUT THE MUTATION BUDGET WAS NOT PROVEN RED PER LANE. That is volume, not coverage, and it is the specific failure this phase was designed against."
@@ -3600,8 +3601,44 @@ tasks:
       - "Per scenario: axis, six-lane status, and its mutants' red sites"
       - "Whether eight was the right number, with evidence"
       - "What remains, if anything"
-    receipt: null
-
+    receipt:
+      result: done
+      decision: not_complete
+      full_outcome_complete: false
+      harness: claude-code
+      note: notes/T028-phase-f-audit.md
+      rationale: "SIX OF SEVEN stopping-rule clauses are MET at seven scenarios, verified not inherited: 42 tracked emitted files, 42 mutants with LIVE UNIQUE ANCHORS at HEAD, and a harness with a demonstrated failing mode. THE COUNT CLAUSE FAILS IN BOTH DIRECTIONS. S8 is DEFERRED, not refused - all three repairs landed, but e2e.mjs compares lanes by strict JSON equality against react with NO EXCEPTION PATH, and entry 12.2 makes react's async row wrong. T024's fold of boolean attributes into S7 cost a red site and left entry 10 OPEN naming a corpus card as its own close trigger. THE NUMBER IS NINE."
+      summary: "Phase F not_complete. Seven scenarios in six lanes, 42/42 mutants red at named sites, harness two-sided calibrated, no duplicated axis, and the mutation surface byte-unmoved since the 42/42 run so that figure is HEAD-attributable. EIGHT WAS WRONG IN BOTH DIRECTIONS: S9 is landable today and its absence is already a filed OPEN defect; S8 is blocked by entry 12.2 alone. Half 1's oracle does NOT extend."
+      S8s_REAL_BLOCKER_IS_IN_THE_ORACLE_NOT_THE_EMITTERS: "THE FINDING THAT REFRAMES THE WHOLE QUESTION. PM VERIFIED scripts/e2e.mjs:436-451: it compares every lane's observations to officialDemos[0] - REACT - by strict JSON.stringify equality with process.exit(1), and NO PER-LANE EXCEPTION MECHANISM EXISTS ANYWHERE. Entry 12.2 makes react's async row measurably wrong. SO S8 COULD ONLY LAND BY ENCODING A KNOWN OPEN DEFECT AS EXPECTED BEHAVIOUR IN THIS REPO'S STRONGEST INSTRUMENT. That is T043's branch two firing WITHOUT ANY OF THE THREE REPAIRS HAVING FAILED - and the audit verified all three landed correctly, including that React's diff is literally one line."
+      EIGHT_WAS_WRONG_IN_BOTH_DIRECTIONS: "T024 FOLDED boolean/dynamic attributes into S7, which forced S7's aria-disabled substitute because a dynamic disabled had no portable spelling THEN. T041 later ruled it MIS-LOWERED rather than unspellable and T049 shipped the lowering - 14 names. SO THE REPO NOW SHIPS A COMPILER CAPABILITY WITH ZERO CORPUS INSTANCES, and entry 10 is OPEN for EXACTLY ONE REASON: no served payload. THAT IS THE SAME 'A RULE WITH NO INSTANCES IS FOLKLORE' CONDITION T024 ITSELF USED TO JUSTIFY LANDING S4 FIRST. The number is NINE."
+      it_proved_the_42_42_figure_is_still_attributable: "The audit could not re-run the harness, so instead of relying on the PM's figure it PROVED THE FIGURE STILL APPLIES: git log over MUTATION_SURFACE tops out at 97f6062, and the six commits since - including the compiler change f4d2e01 - moved no golden and no emitted byte. That is the right move when you cannot re-measure: establish that the measurement's subject has not changed."
+      it_verified_the_harness_can_fail: "Per-lane positive baseline that refuses a non-green lane, a real SURVIVOR class exiting 1, requiredSite enforcement on the classifier calibration, a no-op-mutant throw, anchor-uniqueness throw, dirty-surface refusal, and verified restoration. It also sampled five mutant anchors and confirmed each occurs EXACTLY ONCE in current output - including angular/generated/S4.ts's onH9Click(group, row, $event), so ruling 3d has a real instance AND a real red site."
+      half_1_oracle_does_not_extend: "Entries 7-12 are OUTPUTS OF THIS GOAL'S INSTRUMENTS, NOT INPUTS TO ITS ORACLE - the T038 precedent, followed by T041 and stated in entry 10's own text. Entries 9 and 11 are CLOSED; 7, 8, 10 and 12 are OPEN with lift triggers handing to frameless-emitter-capability-v1. That is a VALID TERMINAL STATE, and T999 should be told so rather than left to infer it."
+      PM_COMMIT_HYGIENE_FINDING_AND_IT_IS_MINE: "The audit recorded a legibility fault that cost it two probes. COMMIT 97f6062, MESSAGED 'docs(goals): capability phase gets its own goal', ACTUALLY CONTAINS THE ENTIRE S7 CORPUS LANDING - PM VERIFIED: six generated/S7.* files in it - while the commit NAMED 'feat(corpus): S7 form controls' contains only the harness rows and the note. That is the direct consequence of the PM's `git add -A` breach, and it is the second time that breach has cost a downstream agent real work. Not a correctness fault; a legibility one, and a future auditor needs the same fact again."
+      evidence:
+        - "VERIFIED: tree clean at fc69860, HEAD == origin/main; pnpm test re-run: 51 files, 1004 passing"
+        - "VERIFIED: 7 fixtures, 7 goldens, 7 emitted files x 6 lanes = 42, all tracked via git ls-files"
+        - "VERIFIED: the MUTANTS table is exactly 6 lanes x 7 scenarios; each factory carries axis and expect, and report() prints both"
+        - "VERIFIED: five sampled mutant anchors occur EXACTLY ONCE in current generated output"
+        - "VERIFIED: the mutation surface is byte-unmoved since the 42/42 run - so the figure is HEAD-attributable"
+        - "DECISIVE, PM RE-VERIFIED: scripts/e2e.mjs compares to officialDemos[0] by strict JSON.stringify equality with process.exit(1); no exception mechanism exists"
+        - "VERIFIED T045: angular/test/emitted-typecheck.test.ts now exists; 'async' occurs 8x where T031 measured 0"
+        - "VERIFIED T046: the accidental '|| fn.async' is gone; the legitimate computed-binding predicate at :828 is untouched"
+        - "VERIFIED T047: exactly one added non-comment line, 'fn.async = true;'"
+        - "VERIFIED T049: 14 names, with nomodule/seamless/inert/muted/webkitdirectory all ABSENT"
+        - "VERIFIED T038: the Solid-gate ruling landed as a RECORDED REASON, not a predicate - prose only, no whitespace rule added"
+      missing_evidence:
+        - "pnpm e2e and pnpm mutate:corpus were not re-run (command restriction). The figures are the PM's sole-writer run, RELIED ON - but the audit proved the mutation surface byte-unmoved since, so they remain attributable at HEAD."
+        - "The 6/6 cross-lane observation-diff calibration was last measured at T025, BEFORE measureExactText (S6) and measureForm (S7) joined the observation readers. Its anchor is untouched by both, so it is judged standing - but it is THE ONE FIGURE ON THIS BOARD WHOSE INSTRUMENT HAS BEEN EXTENDED SINCE IT WAS TAKEN. One serial --calibrate-classifier would close it; not required."
+        - "NO SERVED PAYLOAD for entry 10 (boolean lowering) or entry 11 (async handlers). Both are corpus cards - S9 and S8 - not repairs."
+      board_updates_applied_by_pm:
+        - "T031's blocked_reason REWRITTEN. The recorded sentence - 'S8 cannot land by ANY authoring; the proof is structural' - was refuted and FALSE AT HEAD. Replaced with the true blocker (entry 12.2, one lane) and a falsifiable external unblock trigger. Leaving a refuted claim on the board is how a third pass would start from the least informed place."
+        - "T028's stopping rule amended from EIGHT to NINE, with the reason recorded rather than the number silently changed."
+        - "T028's optional close path recorded verbatim: 8/48/48 with S9 landed and S8 deferred is DEFENSIBLE; seven is NOT."
+        - "T050 created for S9, with allowed_files derived from `git show --name-only` over the LANDED S7 commits rather than curated from memory, exactly as the audit instructed."
+      worker_package_recorded_as: T050
+      spawned_tasks:
+        - T050
   - id: T038
     type: judge
     assignee: Judge
@@ -4742,6 +4779,99 @@ tasks:
       remaining_blockers:
         - "Entry 10 remains OPEN by design: the repair is proven at the compiler and the emitter but in NO SERVED PAYLOAD, because no scenario binds a boolean attribute. Its close trigger is a corpus card binding a real dynamic disabled with a six-lane observation, absent -> disabled='', and a per-emitter mutation proven red."
       stopped_because: null
+  - id: T050
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    spec: "T028 audit and notes/T028-phase-f-audit.md - AUTHORITATIVE."
+    objective: >-
+      Land S9 DYNAMIC BOOLEAN ATTRIBUTE across all SIX targets, CLOSING docs/DEFECTS.md entry 10 by
+      giving the shipped lowering a SERVED PAYLOAD. Bind a real dynamic `disabled` - NOT
+      aria-disabled - driven by state, so a correct lane serves NO attribute initially and grows
+      disabled="" after the click. Six byte-identical observation strings, one mutant per lane
+      proven RED.
+    why_this_is_the_ninth_and_not_a_bonus: >-
+      T024 folded boolean attributes into S7, which forced S7's aria-disabled SUBSTITUTE because a
+      dynamic disabled had no portable spelling then. T041 ruled it MIS-LOWERED rather than
+      unspellable and T049 shipped the lowering. SO THE REPO NOW SHIPS A COMPILER CAPABILITY WITH
+      ZERO CORPUS INSTANCES, and entry 10 is OPEN for exactly one reason: NO SERVED PAYLOAD. That is
+      the same "a rule with no instances is folklore" condition T024 used to justify landing S4
+      first, and the ledger already names a corpus card as entry 10's own close trigger.
+    allowed_files:
+      - demos/angular-official/package.json
+      - demos/angular-official/src/app/app.routes.ts
+      - demos/angular-official/src/app/scenario-props.ts
+      - demos/angular-official/src/emitted/AttrBoard.ts
+      - demos/qwik/package.json
+      - demos/qwik/src/emitted/AttrBoard.jsx
+      - demos/qwik/src/routes/s9/index.tsx
+      - demos/react-official/package.json
+      - demos/react-official/src/App.jsx
+      - demos/react-official/src/emitted/AttrBoard.jsx
+      - demos/react-official/three-way-contract.ts
+      - demos/solid-official/package.json
+      - demos/solid-official/src/App.jsx
+      - demos/solid-official/src/emitted/AttrBoard.jsx
+      - demos/svelte-official/package.json
+      - demos/svelte-official/src/lib/emitted/AttrBoard.svelte
+      - demos/svelte-official/src/lib/scenario-props.ts
+      - demos/svelte-official/src/routes/s9/+page.svelte
+      - demos/vue-official/package.json
+      - demos/vue-official/src/App.vue
+      - demos/vue-official/src/emitted/AttrBoard.vue
+      - demos/vue-official/src/scenario-props.ts
+      - packages/compiler/test/fixtures/s9-boolean-attributes.tsrx
+      - packages/compiler/test/goldens/s9-boolean-attributes.json
+      - packages/frameworks/angular/generated/S9.ts
+      - packages/frameworks/qwik/generated/S9.jsx
+      - packages/frameworks/react/generated/S9.jsx
+      - packages/frameworks/react/test/size.test.ts
+      - packages/frameworks/solid/generated/S9.jsx
+      - packages/frameworks/solid/test/size.test.ts
+      - packages/frameworks/svelte/generated/S9.svelte
+      - packages/frameworks/vue/generated/S9.vue
+      - scripts/corpus-mutation.mjs
+      - scripts/e2e.mjs
+      - docs/DEFECTS.md
+      - docs/goals/frameless-defects-and-targets-v1/notes/T050-corpus-s9-boolean-attribute.md
+    verify:
+      - "UPDATE_GOLDENS=1 pnpm test, then pnpm test WITHOUT it"
+      - "pnpm --dir packages/frameworks/react/ regenerate"
+      - "pnpm --dir packages/frameworks/solid/ regenerate"
+      - "pnpm --dir packages/frameworks/qwik/ regenerate"
+      - "pnpm --dir packages/frameworks/svelte/ regenerate"
+      - "pnpm --dir packages/frameworks/vue/ regenerate"
+      - "pnpm --dir packages/frameworks/angular/ regenerate"
+      - "pnpm check"
+      - "pnpm lint"
+      - "pnpm test   # 1004 at dispatch"
+      - "pnpm test:browser"
+      - "pnpm e2e   # must report 6 demos x 8 scenarios, all observations equal"
+      - "shasum the six new generated/S9.* across a SECOND regenerate   # git diff --exit-code is VACUOUS for untracked files"
+      - "git diff --exit-code -- packages/frameworks/react/generated packages/frameworks/solid/generated packages/frameworks/qwik/generated packages/frameworks/svelte/generated packages/frameworks/vue/generated packages/frameworks/angular/generated   # covers S1-S7, which must NOT move"
+      - "git status --short"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "S9 lands in fewer than SIX lanes."
+      - "You are about to author aria-disabled instead of a real boolean content attribute. THAT SUBSTITUTION IS EXACTLY WHAT LEFT ENTRY 10 OPEN; S9 exists to remove it."
+      - "The attribute you bind is not in DOM_BOOLEAN_CONTENT_ATTRIBUTES at packages/compiler/src/build.ts:221. Pick one of the 14; do NOT add a name - the admission rule is measured and the tests register it in BOTH directions."
+      - "THE INITIAL STATE SERVES THE ATTRIBUTE AT ALL. A correct lane serves NOTHING until the click. If any lane serves disabled=\"false\" or disabled=\"\" initially, that REFUTES T049's lowering and the ruling re-opens - report it VERBATIM and STOP."
+      - "A ratified mutant cannot be made RED in some lane - record lane, axis and mutant VERBATIM as an open FINDING. That is a RESULT, not a failure."
+      - "Any mutant is byte-identical to its input, or its anchor does not occur exactly once."
+      - "Any EXISTING golden or generated byte moves, or the 42/42 degrades."
+      - "The S9 IR carries ANY zero-read site. S4 through S7 are all zero."
+      - "THE WHITESPACE V-LIMIT or the Solid show-two-arm policy fires on your fixture. Both are CORRECT refusals - move the fixture, NEVER the guard."
+      - "You are about to weaken an activation-neutrality assertion, relax expectedNavigations, or add a PER-LANE EXCEPTION to the equality check in scripts/e2e.mjs. There is no exception path today and S9 must not introduce one."
+      - "You are about to write entry 10 as CLOSED before pnpm e2e has reported six equal s9 observations."
+      - "You are about to run pnpm mutate:corpus. It restores with `git checkout --` over MUTATION_SURFACE and is DANGEROUS on a shared tree. Report it blocked; the PM runs it after committing, as sole writer."
+      - "You are about to commit or rewrite history."
+      - "Verification fails twice for the same reason."
+    constraints:
+      - "Record S9's size budget in both size.test.ts files. A budget is a RECORDED MEASUREMENT and cannot be derived."
+      - "The corpus INVENTORIES are derived and should pick S9 up with ZERO edits. If any needs a hand edit, that is a defect in the derivation and a FINDING."
+    receipt: null
+
   - id: T042
     type: worker
     assignee: Worker
@@ -4886,7 +5016,25 @@ tasks:
       harness: claude-code
       verification_attempts: 1
       note: notes/T031-corpus-s8-async.md
-      blocked_reason: "stop_if 'S8 lands in fewer than SIX lanes' fired, and it is UNAVOIDABLE rather than an authoring failure. FOUR AUTHORINGS WERE EMITTED THROUGH ALL SIX REAL EMITTERS. The proof is structural, not a survey: an async boundary is either (a) async/await or (b) a continuation function; Solid REFUSES every async arrow, React MISCOMPILES every write inside a nested function, and there is no third way to defer a state write in JavaScript. So Solid and React between them exclude the whole space."
+      blocked_reason: >-
+        REWRITTEN 2026-07-28 BY T028. THE RECORDED REASON WAS REFUTED AND IS NOW FALSE AT HEAD. It
+        read "S8 cannot land in six lanes on today's emitters, by ANY authoring; the proof is
+        structural." ALL SIX EMITTERS NOW ACCEPT THE RE-SPECIFIED AUTHORING - T045 gave Angular
+        async lowering and the typecheck oracle it never had, T046 removed Solid's accidental
+        refusal with an across-await proof, T047 made React's re-parse wrapper async in ONE LINE.
+        NOTHING REFUSES.
+        THE TRUE BLOCKER IS ONE LANE AND ONE DEFECT: docs/DEFECTS.md entry 12.2. PM VERIFIED that
+        scripts/e2e.mjs compares every lane to REACT by strict JSON.stringify equality with
+        process.exit(1) and NO EXCEPTION PATH ANYWHERE. Entry 12.2 makes react's async row
+        measurably wrong - 1|done where solid reads 2|done, plus a dropped pre-await write. So S8
+        could only land by ENCODING A KNOWN OPEN DEFECT AS EXPECTED BEHAVIOUR in this repo's
+        strongest instrument.
+        S8 IS THEREFORE DEFERRED, NOT REFUSED - T043's branch two firing WITHOUT ANY OF THE THREE
+        REPAIRS HAVING FAILED. Do NOT record it as a "documented measured refusal": nothing refuses,
+        so there is no lane, file, line or verbatim message to name.
+        UNBLOCK TRIGGER, falsifiable and external: docs/DEFECTS.md entry 12.2 CLOSED. That work
+        lives in docs/goals/frameless-emitter-capability-v1 (the toConstSsa lowering) and is
+        recorded there as a CROSS-GOAL DEPENDENCY so it is not rediscovered.
       summary: "S8 cannot land in six lanes on today's emitters, by ANY authoring. Qwik alone is correct - including the sync$ split, generalised on its first try from the single synchronous site Defect 1 proved it at. Nothing was written to the corpus; the tree is byte-identical to dispatch at 4566540 with 968 tests intact."
       IT_REFUSED_TO_LAND_A_PARTIAL_AND_THE_REASONING_IS_EXACTLY_RIGHT: "A four-lane S8 was rejected because T035/T036 made the corpus inventories DERIVED from goldens/s<n>-*.json. Dropping s8-async-handlers.json into that directory ALONE enlists S8 into every gate, emitter, parse-emitted, type-check and size-budget test in all six lanes - so a partial landing would leave pnpm test RED for the next agent on this tree. The derivation that made S5, S6 and S7 free is exactly what makes a partial S8 poisonous, and the Worker understood that rather than discovering it."
       FINDING_1_ANGULAR_HAS_NO_CONCEPT_OF_ASYNC_AT_ALL: "SILENT, and the most dangerous of the six. PM VERIFIED: the string 'async' occurs ZERO times in packages/frameworks/angular/src/emitter/index.ts. qualify() transplants the arrow body into a class method and DROPS THE MODIFIER. With an await present the output is invalid TypeScript - TS1308, caught only downstream. WITHOUT an await it COMPILES CLEAN AND IS SEMANTICALLY WRONG: an authored async handler becomes a synchronous method whose return value is no longer a promise, and pnpm check, pnpm lint and the emitted-typecheck gate ALL PASS ON IT. Angular does not refuse; it quietly changes the meaning."
