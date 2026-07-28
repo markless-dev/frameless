@@ -131,7 +131,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T055
+active_task: T056
 
 tasks:
   - id: T001
@@ -5912,7 +5912,7 @@ tasks:
   - id: T055
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     spec: "T054 receipt, remaining_blockers - AUTHORITATIVE. All three were measured, none inherited."
     objective: >-
@@ -5972,6 +5972,124 @@ tasks:
       - "A citation needs a symbol that does not exist - report it, do not invent one."
       - "Any emitted byte, golden, gate predicate or existing assertion moves."
       - "The source-comment scope turns out to be far larger than one card can clear. Report the measured count and clear what you can - a PARTIAL scope with a recorded remainder beats a scope quietly narrowed."
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 2
+      changed_files:
+        - scripts/check-citations.mjs
+        - packages/compiler/test/citations.test.ts
+        - docs/report.md
+        - packages/frameworks/solid/src/emitter/index.ts
+      commands:
+        - cmd: "pnpm test"
+          status: pass
+          note: "52 files, 1077 tests = 1055 at dispatch + exactly 22 new; no existing test deleted"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 396 files"
+        - cmd: "pnpm check"
+          status: pass
+          note: "six tsc passes"
+        - cmd: "pnpm check:citations"
+          status: pass
+          note: "clean over 4 watched documents (was 3) and 7 watched source files (was 0)"
+        - cmd: "regenerate all six lanes + react/solid composition, then git diff --exit-code -- packages/frameworks/*/generated packages/compiler/test/goldens"
+          status: pass
+          note: "exit 0; no emitted byte or golden moved"
+        - cmd: "comment-only diff filter over the solid emitter"
+          status: pass
+          note: "empty, and also verified empty for REMOVED lines. PM re-ran it independently and also got empty"
+        - cmd: "git status --short"
+          status: pass
+          note: "exactly four files, all in allowed_files; nothing committed"
+      summary: "Closed all three holes, each by measurement. poc/ RULED LIVE, source comments now watched across 7 files via a lexical comment separator validated in both directions, and the comma-continuation gap closed for the abutting form with the spaced form left open BY DECISION and pinned as a test."
+      THE_ARCHIVE_REFUTED_THE_ARCHIVE_READING: "Hole 3's whole question was whether poc/ is a DATED RECORD like state.yaml receipts or LIVE like the ledger. MEASURED: report.md's poc citations were written 2026-07-19 in e396d00, and the file they point into was EDITED TWICE AFTERWARDS - the ordinals survived only because both edits happened to be same-line substitutions (s1-render-once.tsrx -> s1-render-once-plain.tsrx, and label=\"Arcade\" -> label=\"Frameless\"). A DATED RECORD CANNOT BE EDITED AFTER ITS DATE; this one was. So poc/ is LIVE, NO EXCLUSION WAS ADDED, and report.md is promoted and cleared. PM CONFIRMED the dates independently: e396d00 is 2026-07-19 and poc/08-equivalence-results carries multiple 2026-07-20 commits."
+      THE_SCOPE_WAS_RED_ON_REAL_CONTENT_BEFORE_ANY_REPAIR: "First run over the new scope: 11 problems on untouched content - the solid emitter's two bare :828 citations in the ASYNC HANDLERS doc comment, plus 9 in report.md including a ,40 that ruling 9 newly sees. Third scope in a row to calibrate itself on real defects before any planted fault. THE PLANT THEN EXERCISED ALL THREE SHAPES AT ONCE INSIDE A SOURCE COMMENT - path citation, ruling-9 continuation (,343) and bare-ordinal inheritance (:400) - exit 1 naming file, line, column, kind and reason for all four; restored byte-for-byte; exit 0."
+      SEPARATION_PROVEN_IN_BOTH_DIRECTIONS: "The card required that watching source means CITATIONS IN COMMENTS, not code. The same ordinal planted as a STRING LITERAL in that same watched emitter yields ZERO violations. Proving the negative direction is what makes the comment separator a claim rather than a hope, and it is validated across 380 files."
+      hole_2_got_BOTH_halves_which_is_the_right_answer: "Ruling 9 closes the ABUTTING form via adjacency to an already-accepted ordinal. THE SPACED FORM IS LEFT OPEN BY DECISION, because `build.ts:12, 141` is BYTE-IDENTICAL to 'at build.ts:12, 141 tests passed' and only the author knows which is meant - a guard that fires on prose numerals gets disabled, which is worse than the gap. The failing shape is recorded AS A NAMED TEST rather than a comment, so the next person to widen this cannot mistake it for an oversight."
+      measured_scope_and_remainder:
+        watched_now: "4 documents + 7 source files by comments only: packages/compiler/src/build.ts and all six lane emitters."
+        measured_surface: "436 tracked JS/TS source files scanned. 12 still carry comment-citation violations, 70 total - NONE watched."
+        ruled_specimen_text: "scripts/check-citations.mjs (20) and packages/compiler/test/citations.test.ts (3). Their comments QUOTE citation shapes IN ORDER TO DEFINE THEM; clearing them would delete the description of what the detector matches. Recorded as a ruling with its reason - the same refusal T054 made about poc/."
+        remainder_outside_allowed_files: "10 files, 47 violations, named individually. Densest: packages/compiler/test/generative.test.ts (12) and metamorphic.test.ts (17). TWO ARE OUTRIGHT FIRST-PARTY ORDINALS - angular/src/gate/index.ts cites qwik/src/gate/index.ts, and three gate suites cite packages/compiler/test/metamorphic.test.ts."
+      resolver_was_not_loosened: "All three changes are TIGHTENINGS that can only find MORE citations. Source comments add a scope the guard could not see; ruling 9 adds ordinals it could not see; ruling 7 adds NO EXCLUSION AT ALL. classify's ordering is untouched, so a path that exists here is still first-party before any list is consulted."
+      deviations:
+        - "REPLACED T054's PIN ON report.md RATHER THAN LEAVING IT. That test asserted report.md still carried first-party poc violations so 'the blocker cannot evaporate without a test going red'. Ruling 7 resolves the blocker, SO THE TRIPWIRE FIRED EXACTLY AS DESIGNED. Replaced by a strictly stronger property: the document scans clean, is in WATCHED and not in NOT_YET_WATCHED, and ruling 5 still allows its markless paths. No assertion weakened or deleted silently."
+        - "EXTRACTED emitterClassificationProblems AS AN EXPORTED SEAM so a seventh unruled lane could be handed to it and watched to fire - T054's foreignShadowProblems precedent."
+        - "ADDED AN ANTI-VACUITY INTEGRITY CHECK not asked for: if commentsOnly ever returned blanks, every watched source file would read green. A watched source file with no prose now FAILS integrity; both halves pinned."
+        - "QUALIFIED ONE NON-VIOLATING PATH in the solid comment: an abbreviated notes/T046-... path resolved nowhere and was the WRONG ANTECEDENT the two :828 ordinals inherited. Expanded, removing a future inheritance trap."
+        - "WATCHED 7 SOURCE FILES, NOT ALL 436 - the partial scope the card's own stop_if anticipates. The other 12 violation-carrying files are outside allowed_files, so watching them would have meant a red guard nobody could clear. Every one is named."
+      remaining_blockers:
+        - "THE SPACED CONTINUED-ORDINAL FORM STILL ESCAPES, BY DECISION - recorded as a named test, not a comment."
+        - "packages/compiler/test/{generative,metamorphic}.test.ts carry 29 comment citations between them, both tabulating build.ts sites by ordinal abbreviated to the bare filename. Highest-value promotion left."
+        - "TWO GENUINE FIRST-PARTY ORDINALS IN UNWATCHED SOURCE COMMENTS: angular/src/gate/index.ts -> qwik/src/gate/index.ts, and three gate suites -> packages/compiler/test/metamorphic.test.ts."
+        - "SPECIMEN TEXT IS AN UNRULED CLASS: whether files whose subject matter IS citation shapes can ever be watched is a decision nobody has been asked for."
+      stopped_because: null
+  - id: T056
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: medium
+    spec: "T055 receipt, measured_scope_and_remainder and remaining_blockers - AUTHORITATIVE."
+    objective: >-
+      CONVERGE the source-comment surface. T055 measured it exactly: 436 files scanned, 12 carrying
+      violations, 2 of those ruled specimen text. Clear and watch the remaining 10 so the class
+      closes instead of carrying a named remainder forever.
+    why_this_CONVERGES_rather_than_loops: >-
+      T053, T054 and T055 each widened this guard and each ended with a recorded remainder. THAT IS
+      NOT AN OPEN-ENDED PATTERN, because the surface is FINITE AND NOW MEASURED: 47 violations
+      across 10 files, every one named in the T055 receipt. Clearing them ends the class - after
+      this card the guard covers every document and every source file that carries a citation,
+      and the only thing outside is specimen text with a written ruling. If the measurement is
+      wrong, THAT is the finding; report the real count rather than clearing what you can and
+      quietly leaving the rest.
+    the_two_that_are_OUTRIGHT_first_party_ordinals: >-
+      packages/frameworks/angular/src/gate/index.ts cites packages/frameworks/qwik/src/gate/index.ts
+      by ordinal, and three gate suites cite packages/compiler/test/metamorphic.test.ts by ordinal.
+      These are the same defect class as the solid emitter's :828 - correct today, unwatched, free
+      to rot. The rest report as unclassified because their paths are ABBREVIATED to a bare filename.
+    the_densest_and_why_it_is_real_work: >-
+      packages/compiler/test/generative.test.ts (12) and metamorphic.test.ts (17) both TABULATE
+      build.ts sites by ordinal abbreviated to the bare filename. Clearing them means naming a
+      symbol for every row of two tables, read out of the code. That is the work; it is not
+      mechanical, and a wrong symbol is worse than an ordinal.
+    constraints:
+      - "PROVE RED FIRST on each newly watched file, as all three previous scopes did on real content."
+      - "Do NOT loosen the resolver. Every widening so far has been a tightening that can only find MORE."
+      - "Comment-only in every source file touched, proven by the diff filter. No emitted byte, golden, gate predicate or existing assertion may move."
+      - "A wrong symbol is worse than a bare ordinal. Read the code; if a row has no nameable symbol, report it rather than inventing one."
+      - "Do NOT clear specimen text (check-citations.mjs, citations.test.ts). T055 ruled it and the ruling stands: those comments QUOTE citation shapes in order to define them."
+    allowed_files:
+      - scripts/check-citations.mjs
+      - packages/compiler/test/citations.test.ts
+      - packages/compiler/test/generative.test.ts
+      - packages/compiler/test/metamorphic.test.ts
+      - packages/frameworks/angular/src/gate/index.ts
+      - packages/frameworks/qwik/src/gate/index.ts
+      - packages/frameworks/react/test/gate.test.ts
+      - packages/frameworks/react/test/emitter.test.ts
+      - packages/frameworks/solid/test/gate.test.ts
+      - packages/frameworks/solid/test/emitter.test.ts
+      - packages/frameworks/qwik/test/gate.test.ts
+      - packages/frameworks/vue/test/emitted-smoke.browser.test.ts
+      - demos/angular-official/scenarios.box.ts
+    verify:
+      - "pnpm test"
+      - "pnpm lint"
+      - "pnpm check"
+      - "pnpm check:citations"
+      - "regenerate ALL SIX lanes, then git diff --exit-code -- packages/frameworks/*/generated packages/compiler/test/goldens"
+      - "comment-only diff filter over EVERY source file touched - MUST be empty"
+      - "pnpm e2e"
+      - "git status --short"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You cannot show the guard RED on a newly watched file before clearing it."
+      - "A citation row has no nameable symbol - report it, do not invent one."
+      - "The measured remainder is materially different from T055's 47 across 10 - report the real number."
+      - "Any emitted byte, golden, gate predicate or existing assertion moves."
+      - "Verification fails twice for the same reason."
     receipt: null
 
   - id: T999

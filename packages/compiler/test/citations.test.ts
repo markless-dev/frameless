@@ -7,7 +7,10 @@ import {
 	NOT_YET_WATCHED,
 	THIRD_PARTY_TARGETS,
 	WATCHED,
+	WATCHED_SOURCE,
 	classify,
+	commentsOnly,
+	emitterClassificationProblems,
 	findCitations,
 	foreignShadowProblems,
 	integrityProblems,
@@ -39,6 +42,7 @@ describe('T053 citation-ordinal guard', () => {
 	test('every ruling carries a reason, so an exclusion is never an unexplained omission', () => {
 		const listed = [
 			...WATCHED,
+			...WATCHED_SOURCE,
 			...NOT_YET_WATCHED,
 			...EXCLUDED_FILES,
 			...THIRD_PARTY_TARGETS,
@@ -161,19 +165,18 @@ describe('T053 citation-ordinal guard', () => {
 			}
 		});
 
-		test("docs/report.md's markless citations are ruled, and NOTHING ELSE of it is", () => {
-			// THE EXCLUSION DID NOT SILENCE THE DOCUMENT. Ruling 5 accounts for exactly
-			// the three markless paths; what the guard still reports in this same file is
-			// the `poc/` residue, which is why it stays NOT_YET_WATCHED. Pinned here so
-			// the blocker cannot evaporate without a test going red.
+		test("docs/report.md's markless citations are ruled, and the document is now clean", () => {
+			// THE EXCLUSION DID NOT SILENCE THE DOCUMENT. T054 wrote this test to pin the
+			// `poc/` residue that kept report.md out of WATCHED, saying the blocker could
+			// not evaporate without a test going red. T055's RULING 7 resolved it - so the
+			// tripwire fired exactly as designed, and what replaces it is the stronger
+			// property: the file is clean AND ruling 5 still accounts for markless.
 			const found = scanText(readDoc('docs/report.md'), 'docs/report.md');
-			expect(found.map((violation) => violation.path)).not.toContain(
-				'packages/web/src/render.ts',
-			);
-			expect(found.every((violation) => violation.path?.endsWith('.tsrx'))).toBe(true);
-			expect(
-				found.filter((violation) => violation.kind === 'first-party-ordinal').length,
-			).toBeGreaterThan(0);
+			expect(found).toEqual([]);
+			expect(WATCHED.map((entry) => entry.path)).toContain('docs/report.md');
+			expect(NOT_YET_WATCHED.map((entry) => entry.path)).not.toContain('docs/report.md');
+			// The markless paths are ALLOWED, not absent - the document still cites them.
+			expect(readDoc('docs/report.md')).toContain('packages/web/src/render.ts:71');
 		});
 
 		test('AND IT IS STILL RED on a first-party ordinal in that same document', () => {
@@ -253,6 +256,210 @@ describe('T053 citation-ordinal guard', () => {
 		const found = scanText('the fixture at `poc/08-equivalence-results/src/fixtures/s2-keyed-todo.tsrx:4`');
 		expect(found).toHaveLength(1);
 		expect(found[0].kind).toBe('first-party-ordinal');
+	});
+
+	/**
+	 * T055 RULING 7 — `poc/` IS FIRST-PARTY AND LIVE. There is no exclusion to
+	 * exercise here, and that IS the ruling: the ordinary first-party rule applies
+	 * to archived experiment fixtures unmodified, because the archive turned out to
+	 * be edited after the citations into it were written.
+	 */
+	describe('T055 ruling 7 — an archived experiment record is not a dated record', () => {
+		test('a `poc/` ordinal is an ordinary first-party violation, not an exemption', () => {
+			const found = scanText(
+				'the workaround at `poc/08-equivalence-results/src/wrappers/s1-visible.app.tsrx:5-12`',
+			);
+			expect(found).toHaveLength(1);
+			expect(found[0].kind).toBe('first-party-ordinal');
+		});
+
+		test('no ruling anywhere quietly exempts `poc/`', () => {
+			// The ruling is the ABSENCE of an exclusion, so the thing to pin is that none
+			// crept in. A `poc/` entry in any list would silently undo it.
+			const paths = [
+				...THIRD_PARTY_TARGETS.map((entry) => entry.suffix),
+				...FOREIGN_REPOSITORY_TARGETS.map((entry) => entry.path),
+				...NOT_YET_WATCHED.map((entry) => entry.path ?? entry.directory),
+			];
+			expect(paths.filter((path) => path.includes('poc/'))).toEqual([]);
+			expect(EXCLUDED_FILES.some((rule) => rule.match.test('poc/08/src/a.tsrx'))).toBe(false);
+		});
+
+		test('the evidence for the ruling is still on disk: the cited fixtures exist', () => {
+			// If these ever stop existing, `classify` silently downgrades them from
+			// first-party-ordinal to unclassified-path — a different verdict for the same
+			// text. Ruling 7 rests on them resolving, so it is asserted rather than assumed.
+			for (const path of [
+				'poc/08-equivalence-results/src/wrappers/s1-visible.app.tsrx',
+				'poc/08-equivalence-results/src/fixtures/s2-keyed-todo.tsrx',
+				'poc/08-equivalence-results/src/fixtures/s3-event-form.tsrx',
+			])
+				expect(
+					classify({ path, ordinal: '4', inheritedFrom: null }).kind,
+				).toBe('first-party-ordinal');
+		});
+	});
+
+	/**
+	 * T055 RULING 8 — SOURCE COMMENTS ARE WATCHED, CODE IS NOT. The separation is
+	 * the whole safety argument: if a string literal or an import specifier could be
+	 * read as a citation, the guard would go red on things that are not claims at
+	 * all and get switched off. So it is exercised in BOTH directions.
+	 */
+	describe('T055 ruling 8 — comments are prose, code is not', () => {
+		test('a citation in a line comment is found', () => {
+			const found = scanText(commentsOnly('// see packages/compiler/src/build.ts:342\n'));
+			expect(found).toHaveLength(1);
+			expect(found[0].kind).toBe('first-party-ordinal');
+		});
+
+		test('a citation in a doc comment is found, at its true line and column', () => {
+			const source = 'const a = 1;\n/**\n * see `packages/compiler/src/build.ts:342` here\n */\n';
+			const found = scanText(commentsOnly(source));
+			expect(found).toHaveLength(1);
+			expect(found[0].lineNumber).toBe(3);
+			expect(found[0].column).toBe(source.split('\n')[2].indexOf('packages/') + 1);
+		});
+
+		test('A STRING LITERAL IS NOT A CITATION', () => {
+			expect(scanText(commentsOnly("const p = 'packages/compiler/src/build.ts:342';\n"))).toEqual([]);
+			expect(scanText(commentsOnly('const p = "packages/compiler/src/build.ts:342";\n'))).toEqual([]);
+			expect(scanText(commentsOnly('const p = `packages/compiler/src/build.ts:342`;\n'))).toEqual([]);
+		});
+
+		test('an import specifier is not a citation', () => {
+			expect(scanText(commentsOnly("import { build } from './build.ts:342';\n"))).toEqual([]);
+		});
+
+		test('a `//` inside a URL string does not open a comment and swallow the line', () => {
+			const source = "fetch('https://example.com/x'); const q = 'packages/compiler/src/build.ts:342';\n";
+			expect(scanText(commentsOnly(source))).toEqual([]);
+		});
+
+		test('a regex literal containing a slash does not desynchronise the lexer', () => {
+			const source = 'const r = /a\\/\\/b/g;\nconst p = "packages/compiler/src/build.ts:342";\n';
+			expect(scanText(commentsOnly(source))).toEqual([]);
+		});
+
+		test('an interpolation inside a template literal is still not prose', () => {
+			const source = 'const t = `x ${cite("packages/compiler/src/build.ts:342")} y`;\n';
+			expect(scanText(commentsOnly(source))).toEqual([]);
+		});
+
+		test('code and comment on the SAME line are separated, not the line dropped', () => {
+			const source = "const p = 'src/a.ts:1'; // and packages/compiler/src/build.ts:342\n";
+			const found = scanText(commentsOnly(source));
+			expect(found).toHaveLength(1);
+			expect(found[0].path).toBe('packages/compiler/src/build.ts');
+		});
+
+		test('geometry is preserved exactly, so reported line and column are the file’s', () => {
+			const source = 'const a = 1;\n// b\n\n/* c */\n';
+			expect(commentsOnly(source)).toHaveLength(source.length);
+			expect(commentsOnly(source).split('\n')).toHaveLength(source.split('\n').length);
+		});
+
+		test('AND IT IS STILL RED on a planted ordinal in a real watched source file', () => {
+			// The bar T054 set, applied to the newly watched file type: the scope is only
+			// real if the guard still fires INSIDE one of the files it now watches.
+			const original = readDoc('packages/frameworks/solid/src/emitter/index.ts');
+			expect(scanText(commentsOnly(original))).toEqual([]);
+			const planted = `${original}\n// See packages/compiler/src/build.ts:342.\n`;
+			const found = scanText(commentsOnly(planted));
+			expect(found).toHaveLength(1);
+			expect(found[0].kind).toBe('first-party-ordinal');
+			expect(found[0].path).toBe('packages/compiler/src/build.ts');
+		});
+
+		test('planting it in CODE in that same file changes nothing — the separation is the point', () => {
+			const original = readDoc('packages/frameworks/solid/src/emitter/index.ts');
+			const planted = `${original}\nconst where = 'packages/compiler/src/build.ts:342';\n`;
+			expect(scanText(commentsOnly(planted))).toEqual([]);
+		});
+
+		test('every lane emitter is watched, and a seventh lane cannot arrive unruled', () => {
+			const classified = new Set([
+				...WATCHED.map((entry) => entry.path),
+				...WATCHED_SOURCE.map((entry) => entry.path),
+			]);
+			expect(emitterClassificationProblems(classified)).toEqual([]);
+			expect(
+				emitterClassificationProblems(classified, [
+					'packages/frameworks/newlang/src/emitter/index.ts',
+				]),
+			).toHaveLength(1);
+			for (const lane of ['react', 'solid', 'qwik', 'svelte', 'vue', 'angular'])
+				expect(WATCHED_SOURCE.map((entry) => entry.path)).toContain(
+					`packages/frameworks/${lane}/src/emitter/index.ts`,
+				);
+		});
+
+		test('the scope cannot be emptied by breaking the separator', () => {
+			// ANTI-VACUITY. A watched source file whose comments vanish reads as green, so
+			// `integrityProblems` refuses it. Both halves are pinned: a file with no prose
+			// produces nothing (the shape that trips it), and every file actually watched
+			// today carries far more than the threshold.
+			expect(commentsOnly('const a = 1;\nexport { a };\n').trim()).toBe('');
+			for (const entry of WATCHED_SOURCE)
+				expect(
+					commentsOnly(readDoc(entry.path)).replaceAll(/\s/g, '').length,
+				).toBeGreaterThan(200);
+		});
+	});
+
+	/**
+	 * T055 RULING 9 — CONTINUED ORDINAL LISTS. T054 measured the hole and declined
+	 * to patch it because the obvious widening fires on prose. What is asserted here
+	 * is BOTH halves: the shape it now catches, and the prose it must never catch.
+	 */
+	describe('T055 ruling 9 — a comma-continued list is several citations', () => {
+		test('the exact shape T054 measured and could not see', () => {
+			const found = scanText(
+				'the assertion at `packages/frameworks/react/test/emitter.test.ts:133-134,141,150`',
+			);
+			expect(found.map((violation) => violation.raw)).toEqual([
+				'packages/frameworks/react/test/emitter.test.ts:133-134',
+				',141',
+				',150',
+			]);
+			for (const violation of found)
+				expect(violation.path).toBe('packages/frameworks/react/test/emitter.test.ts');
+		});
+
+		test('IT MUST NOT FIRE ON PROSE NUMERALS — the reason T054 left it open', () => {
+			expect(scanText('in 2026, 141 tests passed in `packages/compiler/src/build.ts`')).toEqual([]);
+			expect(scanText('we ran 1,055 tests over `packages/compiler/src/build.ts`')).toEqual([]);
+			expect(scanText('at 12:30, 141 tests passed')).toEqual([]);
+		});
+
+		test('THE SPACED VARIANT IS THE GAP THAT STANDS, and this is it written down', () => {
+			// `build.ts:12, 141` and "at `build.ts:12`, 141 tests passed" are the same
+			// bytes with different meanings, so the guard reports the first citation only.
+			// Recorded as a test rather than a comment so the decision cannot be mistaken
+			// for an oversight by whoever next widens this.
+			const found = scanText('see `packages/compiler/src/build.ts:12, 141` for both');
+			expect(found).toHaveLength(1);
+			expect(found[0].raw).toBe('packages/compiler/src/build.ts:12');
+		});
+
+		test('a continuation of a BARE ordinal inherits the same antecedent', () => {
+			const found = scanText('`packages/compiler/src/build.ts`, at :420,431 and later');
+			expect(found.map((violation) => violation.raw)).toEqual([':420', ',431']);
+			expect(found[1].inheritedFrom).toContain('packages/compiler/src/build.ts');
+		});
+
+		test('a continuation cannot cross a fence or resurrect an allowed ruling', () => {
+			expect(scanText('```\n`packages/compiler/src/build.ts:12,141`\n```')).toEqual([]);
+			expect(scanText('`_debug_node-chunk.mjs:8516,8590` is the same chunk')).toEqual([]);
+		});
+
+		test('ADJACENCY IS REQUIRED IN BOTH DIRECTIONS, which is what keeps it off prose', () => {
+			// A comma that does not abut the ordinal, and a comma not followed by digits,
+			// are both ordinary punctuation. Only `:<digits>,<digits>` continues.
+			expect(scanText('see `packages/compiler/src/build.ts:12` ,141 later')).toHaveLength(1);
+			expect(scanText('see `packages/compiler/src/build.ts:12,and` later')).toHaveLength(1);
+			expect(scanText('see `packages/compiler/src/build.ts:12,141`')).toHaveLength(2);
+		});
 	});
 
 	/**

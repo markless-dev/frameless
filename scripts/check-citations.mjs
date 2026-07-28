@@ -18,6 +18,18 @@
  * would leave the next reader guessing which omissions were decisions; a path
  * that resolves to no repository file AND appears in no list is a FAILURE, so the
  * allowlist cannot be widened by accident.
+ *
+ * THE RULINGS ARE NUMBERED BY DATE, NOT BY POSITION. They accumulate as the board
+ * meets a class it has not met before, so ruling 8 sits next to ruling 1 because
+ * WATCHED_SOURCE belongs beside WATCHED, and ruling 9 sits with the detector it
+ * changes. Reading order: 1 watched documents, 8 watched source comments, 2 the
+ * recorded remainder, 3 board receipts, 4 third-party artifacts, 5 another
+ * repository, 6 quoted transcripts, 7 `poc/`, 9 continued ordinal lists.
+ *
+ * EVERY SCOPE WIDENING HERE HAS BEEN A TIGHTENING. `.tsrx` (T054), source comments
+ * and continued lists (T055) can each only find MORE citations than before; not one
+ * of them relaxes what counts as first-party. That property is the reason this file
+ * can grow without quietly going blind, and it is the thing to preserve.
  */
 
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
@@ -57,6 +69,89 @@ export const WATCHED = [
 			'citation still matched its quoted code verbatim. A dated record cannot be wrong ' +
 			'about its own date; this one was wrong about HEAD, which is the class it belongs to.',
 	},
+	{
+		path: 'docs/report.md',
+		reason:
+			'T055 RULED `poc/` LIVE, BY MEASUREMENT, AND THE ARCHIVE ITSELF REFUTED THE ARCHIVE ' +
+			'READING - see RULING 7. Once its evidence sites are ordinary live first-party ' +
+			'citations there is nothing left holding this file back: ruling 5 already accounts ' +
+			'for its markless paths, and the `.tsrx` sites now name symbols like every other ' +
+			'watched document. It is also the document most likely to be read by someone outside ' +
+			'this repository, which is the worst possible place for a citation that no longer lands.',
+	},
+];
+
+/**
+ * RULING 8 - SOURCE COMMENTS ARE WATCHED; CODE IS NOT. Ruled by T055 on the
+ * finding that the guard watched `.md` ONLY, while the largest citation surface in
+ * the repository is prose written beside the code it cites.
+ *
+ * THE MEASUREMENT THAT MOTIVATED IT. `packages/frameworks/solid/src/emitter/index.ts`
+ * cited a bare `:828` TWICE in one doc comment, and both were ACCURATE at HEAD.
+ * That is the danger, not the reassurance: an ordinal that is right today, sitting
+ * in a file nothing checks, is exactly the state the five T048 measured were in
+ * before they rotted, and exactly the state the DEFECTS.md table was in before T054
+ * found it wrong in both directions.
+ *
+ * COMMENTS, NOT CODE - AND THE SEPARATION IS LEXICAL, NOT A REGEX GUESS. A string
+ * literal, an import specifier and a path built at runtime are NOT citations; only
+ * a human sentence is. `commentsOnly` blanks every byte that is not inside a `//`
+ * or block comment, preserving line and column geometry, so the same detector,
+ * rulings and reporting run over source and over Markdown with nothing special-cased.
+ *
+ * WHY THIS LIST IS SHORT AND SAYS SO. Measured across every tracked JS/TS source
+ * file: THIRTEEN carry citation violations in their comments. Most sit in files
+ * outside this card's writ, so watching them would have meant a red guard nobody
+ * could clear. The remainder is recorded in NOT_YET_WATCHED by name - a partial
+ * scope with a written-down remainder, never a scope quietly narrowed to whatever
+ * happened to be green.
+ */
+export const WATCHED_SOURCE = [
+	{
+		path: 'packages/compiler/src/build.ts',
+		reason:
+			'The compiler core. It is the single most-cited file in the repository - the ' +
+			'DEFECTS.md determinism table, the idiom policy and the generative and metamorphic ' +
+			'suites all point into it - so its own comments are read by everyone chasing those.',
+	},
+	{
+		path: 'packages/frameworks/react/src/emitter/index.ts',
+		reason:
+			'A lane emitter. Emitter doc comments explain WHY an emission is shaped the way it ' +
+			'is, and they argue it by pointing at other code; that is a live citation by ' +
+			'construction, and the reader is standing in the file when they follow it.',
+	},
+	{
+		path: 'packages/frameworks/solid/src/emitter/index.ts',
+		reason:
+			'THE FILE THAT PROVED THE CLASS. Its "ASYNC HANDLERS ARE ACCEPTED" comment carried ' +
+			'the bare `:828` twice, correct at HEAD and watched by nothing. Same lane-emitter ' +
+			'reason as react above; this one also carries the measurement.',
+	},
+	{
+		path: 'packages/frameworks/qwik/src/emitter/index.ts',
+		reason:
+			'A lane emitter, same reason as react above. Qwik is the lane whose comments carry ' +
+			'the most upstream argument, so its pointers are the most load-bearing.',
+	},
+	{
+		path: 'packages/frameworks/svelte/src/emitter/index.ts',
+		reason:
+			'A lane emitter, same reason as react above. It owns IR-4 under the idiom policy, ' +
+			'so its comments cite the policy and the compiler together.',
+	},
+	{
+		path: 'packages/frameworks/vue/src/emitter/index.ts',
+		reason:
+			'A lane emitter, same reason as react above. Its comments cite third-party Vue ' +
+			'bundles as well, which ruling 4 already governs.',
+	},
+	{
+		path: 'packages/frameworks/angular/src/emitter/index.ts',
+		reason:
+			'A lane emitter, same reason as react above. The newest lane, and the one whose ' +
+			'comments are most likely to be written while the cited code is still moving.',
+	},
 ];
 
 /**
@@ -67,16 +162,49 @@ export const WATCHED = [
  */
 export const NOT_YET_WATCHED = [
 	{
-		path: 'docs/report.md',
+		path: 'scripts/check-citations.mjs',
 		reason:
-			"T054 RULED ON ITS MARKLESS PATHS AND FOUND A SECOND, LARGER REASON IT IS NOT READY. " +
-			'The markless citations that blocked T053 are now ruled in RULING 5, so they are no ' +
-			'longer what holds this file back. What does: its findings rest on `.tsrx` evidence ' +
-			'sites under `poc/`, and those ARE files in this repository. Watching this file today ' +
-			'would report a green covering the citations nobody has ruled on. `poc/` is a THIRD ' +
-			'class - archived experiment records whose fixtures are the evidence a recorded result ' +
-			'was produced from - and it is neither ruling 3 nor ruling 5. It needs a card, and ' +
-			'THIS entry is the record that it does, not an exemption.',
+			'THIS FILE, AND IT IS A GENUINELY DIFFERENT CLASS - SPECIMEN TEXT. Its comments ' +
+			'QUOTE citation shapes in order to define them: `(:8590)`, ":535." and ":498/:642" ' +
+			'are the detector\'s specification, not pointers to anywhere. Clearing them would ' +
+			'mean deleting the description of what the detector matches, which is a worse ' +
+			'document for a better number. That is a ruling nobody has been asked for, so it is ' +
+			'recorded here rather than invented - the same refusal T054 made about `poc/`.',
+	},
+	{
+		path: 'packages/compiler/test/citations.test.ts',
+		reason:
+			"The guard's own suite, and specimen text for the same reason as check-citations.mjs " +
+			'above: every planted ordinal in it exists precisely to be matched. A red-calibration ' +
+			'test that could not contain the shape it calibrates against would be no test.',
+	},
+	{
+		directory: 'packages/frameworks',
+		reason:
+			'THE MEASURED REMAINDER, NAMED SO IT CANNOT BE MISTAKEN FOR A CLEAN SWEEP. Beyond ' +
+			'the emitters in WATCHED_SOURCE, comment citations survive in the react, solid and ' +
+			"qwik test suites, the angular gate, and vue's browser smoke test - mostly ABBREVIATED " +
+			'paths like `custom-policies.ts:199-204` that resolve to no file and would report as ' +
+			'unclassified. Two of them (`packages/frameworks/qwik/src/gate/index.ts` cited from ' +
+			'the angular gate, and `packages/compiler/test/metamorphic.test.ts` cited from three ' +
+			'gate suites) are outright first-party ordinals. They are out of T055\'s writ, not ' +
+			'out of scope forever.',
+	},
+	{
+		directory: 'packages/compiler/test',
+		reason:
+			'THE MEASURED REMAINDER, PART TWO. `generative.test.ts` and `metamorphic.test.ts` ' +
+			'carry the densest comment citations in the repository - both tabulate `build.ts` ' +
+			'sites by ordinal, abbreviated to the bare filename. That is the highest-value ' +
+			'promotion left and it is a card, because clearing it means naming a symbol for ' +
+			'every row of two tables.',
+	},
+	{
+		directory: 'demos',
+		reason:
+			'THE MEASURED REMAINDER, PART THREE. The demos cite published framework chunks by ' +
+			'ordinal, which ruling 4 would mostly allow once the citations are qualified enough ' +
+			'to be recognised; today they are abbreviated and would report as unclassified.',
 	},
 	{
 		directory: 'docs/goals',
@@ -252,6 +380,34 @@ export const FOREIGN_REPOSITORY_TARGETS = [
  */
 const FENCE = /^\s*(`{3,}|~{3,})/;
 
+/**
+ * RULING 7 - `poc/` IS FIRST-PARTY AND LIVE. THERE IS NO EXCLUSION HERE, AND THAT
+ * IS THE RULING. Asked by T055, deferred by T054, and it needed a decision because
+ * `poc/` is a third class: archived experiment records whose fixtures are the
+ * evidence a recorded finding was produced from. Are they dated, like the board
+ * receipts of ruling 3, or live, like the ledger of ruling 1?
+ *
+ * THE ARCHIVE REFUTED THE ARCHIVE READING. docs/report.md's findings 5, 7 and 8
+ * cited `poc/08-equivalence-results` fixtures by ordinal, written on 2026-07-19.
+ * `src/wrappers/s1-visible.app.tsrx` was then edited TWICE after that date - by the
+ * Arcade-to-Frameless rename, and again by the c9-flip commit that repointed its
+ * import at `s1-render-once-plain.tsrx`. The ordinals still landed at HEAD when
+ * T054 measured them, but ONLY BECAUSE BOTH EDITS HAPPENED TO BE SAME-LINE
+ * SUBSTITUTIONS. That is not a frozen record; that is a live file that has not yet
+ * been unlucky. A dated record cannot be edited after its date - this one was.
+ *
+ * AND THE CITING SENTENCES READ AS LIVE, NOT AS HISTORY. "Evidence sites are...",
+ * "The workaround is visible at...", "Prop-derived state starts at..." all invite
+ * the reader to go and look NOW. Ruling 3 protects text that says where something
+ * STOOD; nothing in these findings says that.
+ *
+ * SO THE ORDINARY RULE APPLIES, UNMODIFIED. `poc/` fixtures are ordinary source
+ * with ordinary symbols - `App`, `RenderOnce`, `KeyedTodo`, named handlers - so
+ * the reason for naming a symbol transfers intact, unlike ruling 4's minified
+ * bundles or ruling 5's unreachable foreign repository. The consequence is that
+ * docs/report.md is now WATCHED rather than NOT_YET_WATCHED.
+ */
+
 const SOURCE_EXTENSIONS = [
 	'ts',
 	'tsx',
@@ -291,6 +447,167 @@ const PATH_MENTION = new RegExp(`${PATH}(?![\\w-])`, 'g');
 // separator: ":535." and ":498/:642" are both shapes this repository actually
 // contains, and a lookahead that excluded them would go quiet on them.
 const BARE_ORDINAL = /(?<![\w.:-]):(\d+(?:-\d+)?)(?![\w-]|\.\d)/g;
+
+/**
+ * RULING 9 - A CONTINUED ORDINAL LIST IS SEVERAL CITATIONS, AND ONLY THE FIRST WAS
+ * BEING SEEN. T054 measured the hole and declined to patch it: in
+ * `react/test/emitter.test.ts:133-134,141,150` the guard reported `:133-134` and
+ * went silent on 141 and 150, so a citation could rot in the tail of a list the
+ * guard had already looked at and passed.
+ *
+ * IT DECLINED BECAUSE THE OBVIOUS WIDENING IS WORSE THAN THE GAP. A rule that
+ * matches "a comma then a number" fires on "in 2026, 141 tests passed", and a guard
+ * that cries wolf on ordinary prose gets switched off - which loses every citation
+ * it was catching, not just the ones it missed.
+ *
+ * WHAT CLOSES IT WITHOUT THAT RISK: ADJACENCY TO AN ORDINAL ALREADY MATCHED. A
+ * continuation is recognised ONLY when `,<digits>` abuts, with ZERO intervening
+ * whitespace, the exact end of a citation this pass has already accepted. Both
+ * halves of that are load-bearing. The antecedent must be a real ordinal - which
+ * requires a `:` that is itself not preceded by a word character, so "12:30," never
+ * qualifies and neither does "2026,". And the zero-whitespace requirement is what
+ * makes it impossible to reach prose: no English sentence continues a line-number
+ * citation with no space after the comma. It is a TIGHTENING, like every widening
+ * on this guard so far - it can only find MORE, never unwatch anything.
+ *
+ * THE SHAPE THAT STILL ESCAPES, WRITTEN DOWN RATHER THAN GLOSSED: the SPACED
+ * variant, `emitter.test.ts:133-134, 141`. It is deliberately not matched, because
+ * it is not distinguishable from "at `build.ts:12`, 141 tests passed" - same bytes,
+ * different meaning, and only the author knows which. Anyone writing a list must
+ * therefore close it up or name symbols; the guard cannot tell them apart and does
+ * not pretend to.
+ *
+ * MEASURED BEFORE IT WAS ADDED: exactly ONE comma-continued ordinal exists in the
+ * watched set, in docs/report.md finding 4 (`s3-event-form.tsrx:30,40`) - a real
+ * live citation whose second half no previous version of this guard could see.
+ */
+const CONTINUED_ORDINAL = /^,(\d+(?:-\d+)?)(?![\w-]|\.\d)/;
+
+/**
+ * RULING 8's SEPARATOR. Blanks every byte of `text` that is not inside a `//` or
+ * `/* *\/` comment, replacing it with a space and leaving newlines alone, so line
+ * and column numbers are identical to the original file. That is what lets the
+ * SAME detector, the SAME rulings and the SAME reporting run over source.
+ *
+ * WHY A LEXER AND NOT A REGEX. The separation has to be exact in one direction: a
+ * string literal, an import specifier or a URL must NEVER be read as prose. So this
+ * walks the text tracking string, template and regular-expression literals, and
+ * only text it is standing inside a comment for is kept. A `//` inside `'http://'`
+ * or inside a template literal is skipped for the same reason a reader skips it.
+ *
+ * VALIDATED BY MEASUREMENT ACROSS EVERY TRACKED SOURCE FILE, IN BOTH DIRECTIONS.
+ * No line it retains fails to begin with `//`, `/*` or `*` - so no code leaks into
+ * the prose stream. And of the comment-shaped lines in those files it drops exactly
+ * two, both inside a template literal in a `poc/` probe that BUILDS JavaScript
+ * source as a string; those are comments in generated output, not in this file, and
+ * dropping them is correct.
+ */
+export const commentsOnly = (text) => {
+	const out = [...text].map((character) => (character === '\n' ? '\n' : ' '));
+	const keep = (from, to) => {
+		for (let index = from; index < to; index += 1)
+			if (text[index] !== '\n') out[index] = text[index];
+	};
+	// The previous significant character, which is how a lexer without a parser tells
+	// a regular-expression literal from a division: `/` after an operator or an
+	// opening bracket starts a regex, `/` after a value divides it.
+	let previous = '';
+	let index = 0;
+	const skipTemplate = (start) => {
+		let cursor = start;
+		while (cursor < text.length) {
+			if (text[cursor] === '\\') {
+				cursor += 2;
+				continue;
+			}
+			if (text[cursor] === '`') break;
+			if (text[cursor] === '$' && text[cursor + 1] === '{') {
+				// An interpolation is code again, but nothing in this repository writes a
+				// comment inside one, so it is skipped whole by brace balance.
+				let depth = 1;
+				cursor += 2;
+				while (cursor < text.length && depth > 0) {
+					if (text[cursor] === '{') depth += 1;
+					else if (text[cursor] === '}') depth -= 1;
+					else if (text[cursor] === '`') cursor = skipTemplate(cursor + 1);
+					cursor += 1;
+				}
+				continue;
+			}
+			cursor += 1;
+		}
+		return cursor;
+	};
+	while (index < text.length) {
+		const character = text[index];
+		const next = text[index + 1];
+		if (character === '/' && next === '/') {
+			let end = index;
+			while (end < text.length && text[end] !== '\n') end += 1;
+			keep(index, end);
+			index = end;
+			continue;
+		}
+		if (character === '/' && next === '*') {
+			const close = text.indexOf('*/', index + 2);
+			const end = close === -1 ? text.length : close + 2;
+			keep(index, end);
+			index = end;
+			continue;
+		}
+		if (character === "'" || character === '"') {
+			let end = index + 1;
+			while (end < text.length) {
+				if (text[end] === '\\') {
+					end += 2;
+					continue;
+				}
+				if (text[end] === character || text[end] === '\n') break;
+				end += 1;
+			}
+			index = end + 1;
+			previous = 'x';
+			continue;
+		}
+		if (character === '`') {
+			index = skipTemplate(index + 1) + 1;
+			previous = 'x';
+			continue;
+		}
+		if (character === '/') {
+			if (previous === '' || /[=(,:[!&|?{};+\-*%<>~^]/.test(previous)) {
+				let end = index + 1;
+				let inCharacterClass = false;
+				while (end < text.length) {
+					if (text[end] === '\\') {
+						end += 2;
+						continue;
+					}
+					if (text[end] === '[') inCharacterClass = true;
+					else if (text[end] === ']') inCharacterClass = false;
+					else if (text[end] === '/' && !inCharacterClass) break;
+					else if (text[end] === '\n') {
+						// An unterminated regex on one line was a division after all.
+						end = index;
+						break;
+					}
+					end += 1;
+				}
+				if (end > index) {
+					index = end + 1;
+					previous = 'x';
+					continue;
+				}
+			}
+			previous = '/';
+			index += 1;
+			continue;
+		}
+		if (!/\s/.test(character)) previous = character;
+		index += 1;
+	}
+	return out.join('');
+};
 
 const isExcludedFile = (relativePath) =>
 	EXCLUDED_FILES.find((rule) => rule.match.test(relativePath)) ?? null;
@@ -375,6 +692,28 @@ export const findCitations = (text) => {
 				inheritedFrom: source === null ? null : `${source.path} (line ${source.lineNumber})`,
 			});
 		}
+		// RULING 9. A `,141` that abuts the end of a citation already accepted on this
+		// line continues it, and inherits its path. Iterated, so `:133-134,141,150`
+		// yields both tail entries rather than only the first.
+		const continuations = [];
+		for (const cited of onThisLine) {
+			let end = cited.column - 1 + cited.raw.length;
+			for (;;) {
+				const continued = CONTINUED_ORDINAL.exec(line.slice(end));
+				if (continued === null) break;
+				continuations.push({
+					lineNumber,
+					column: end + 1,
+					raw: continued[0],
+					path: cited.path,
+					ordinal: continued[1],
+					inheritedFrom:
+						cited.path === null ? null : `${cited.path} (line ${lineNumber}, continued list)`,
+				});
+				end += continued[0].length;
+			}
+		}
+		onThisLine.push(...continuations);
 		onThisLine.sort((a, b) => a.column - b.column);
 		citations.push(...onThisLine);
 		antecedent = mentions.at(-1) ?? antecedent;
@@ -434,6 +773,35 @@ const listDocsTopLevel = () =>
 		.map((entry) => `docs/${entry.name}`);
 
 /**
+ * RULING 8's ANTI-DRIFT COUNTERPART TO `listDocsTopLevel`. Six lanes exist today
+ * and the board keeps adding them; a seventh emitter must not be able to arrive
+ * unruled, which is precisely how source comments stayed unwatched through four
+ * hand-sweeps in the first place.
+ */
+const listEmitterSources = () =>
+	readdirSync(resolve(root, 'packages/frameworks'), { withFileTypes: true })
+		.filter((entry) => entry.isDirectory())
+		.map((entry) => `packages/frameworks/${entry.name}/src/emitter/index.ts`)
+		.filter((path) => existsSync(resolve(root, path)));
+
+/**
+ * Takes its list as an argument for the same reason `foreignShadowProblems` does:
+ * so the suite can hand it a seventh lane that nobody has ruled and WATCH IT FIRE.
+ * A drift check that has only ever been seen to pass is decoration.
+ */
+export const emitterClassificationProblems = (
+	classified,
+	emitters = listEmitterSources(),
+) =>
+	emitters
+		.filter((path) => !classified.has(path))
+		.map(
+			(path) =>
+				`${path} is a lane emitter that is neither WATCHED_SOURCE nor NOT_YET_WATCHED. ` +
+				'Rule its comments: ruling 8 watches every emitter, so a new lane must say why not.',
+		);
+
+/**
  * RULING 5 CANNOT SHADOW A REAL FILE. If one of those paths ever comes to exist
  * here, the exclusion has silently stopped meaning "another repository's file"
  * and must be re-ruled. `classify` already prefers the local file, so the citation
@@ -475,16 +843,41 @@ export const integrityProblems = () => {
 		if (entry.directory && !existsSync(resolve(root, entry.directory)))
 			problems.push(`NOT_YET_WATCHED names directory ${entry.directory}, which does not exist.`);
 	}
+	for (const entry of WATCHED_SOURCE) {
+		if (!existsSync(resolve(root, entry.path))) {
+			problems.push(`WATCHED_SOURCE names ${entry.path}, which does not exist.`);
+			continue;
+		}
+		if (notWatched.has(entry.path))
+			problems.push(`${entry.path} is both WATCHED_SOURCE and NOT_YET_WATCHED.`);
+		// RULING 8 CANNOT BE EMPTIED BY BREAKING ITS SEPARATOR. If `commentsOnly` ever
+		// returns blanks - a lexer bug, a new syntax it mis-tracks - every watched source
+		// file would pass vacuously and read as green. A watched source file with no
+		// prose in it is not a clean file; it is a broken check.
+		const comments = commentsOnly(readFileSync(resolve(root, entry.path), 'utf8'));
+		if (comments.replaceAll(/\s/g, '').length < 200)
+			problems.push(
+				`WATCHED_SOURCE names ${entry.path}, but commentsOnly finds almost no comment text ` +
+					'in it. Either the file lost its doc comments or the separator is broken; either ' +
+					'way the guard would pass it vacuously.',
+			);
+	}
 	problems.push(...foreignShadowProblems());
 	// Every living top-level doc must be classified. A new one with bare ordinals
 	// cannot slip in unruled, which is how this class survived four sweeps.
-	const classified = new Set([...WATCHED.map((entry) => entry.path), ...notWatched]);
+	const classified = new Set([
+		...WATCHED.map((entry) => entry.path),
+		...WATCHED_SOURCE.map((entry) => entry.path),
+		...notWatched,
+	]);
 	for (const file of listDocsTopLevel())
 		if (!classified.has(file))
 			problems.push(
 				`${file} is neither WATCHED nor NOT_YET_WATCHED. Rule it: watched files must be ` +
 					'clean, unwatched ones must say why not.',
 			);
+	// RULING 8's equivalent for the lanes: a seventh emitter cannot arrive unruled.
+	problems.push(...emitterClassificationProblems(classified));
 	return problems;
 };
 
@@ -493,6 +886,12 @@ export const scanRepository = () => {
 	for (const entry of WATCHED) {
 		const text = readFileSync(resolve(root, entry.path), 'utf8');
 		violations.push(...scanText(text, entry.path));
+	}
+	// RULING 8. Same detector, same rulings, same reporting - the only difference is
+	// that everything which is not a comment has been blanked out first.
+	for (const entry of WATCHED_SOURCE) {
+		const text = readFileSync(resolve(root, entry.path), 'utf8');
+		violations.push(...scanText(commentsOnly(text), entry.path));
 	}
 	return { violations, integrity: integrityProblems() };
 };
@@ -517,5 +916,8 @@ if (isMain) {
 		);
 		process.exit(1);
 	}
-	console.log(`check-citations: clean over ${WATCHED.length} watched file(s).`);
+	console.log(
+		`check-citations: clean over ${WATCHED.length} watched document(s) and ` +
+			`${WATCHED_SOURCE.length} watched source file(s) (comments only).`,
+	);
 }
