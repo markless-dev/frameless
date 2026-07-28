@@ -10,11 +10,24 @@ goal:
     a type instrument actually goes RED on a wrong-typed prop when the type IS present - never
     measured in any lane. Then IR-8 supply (the only schema change), IR-8 consumption, refs,
     effects, composition.
-  status: not_started
-  blocked_until: >-
-    frameless-defects-and-targets-v1 T028 closes Phase F. Step 1 touches packages/compiler
-    schema and build, seven goldens, module-set.ts and all six emitter validators - not provably
-    disjoint from the active T030 or the queued T031.
+  status: active
+  blocked_until_DISCHARGED: >-
+    SATISFIED 2026-07-28. The hold read: "frameless-defects-and-targets-v1 T028 closes Phase F.
+    Step 1 touches packages/compiler schema and build, seven goldens, module-set.ts and all six
+    emitter validators - not provably disjoint from the active T030 or the queued T031."
+    T028 closed, and the whole umbrella goal closed COMPLETE at 3639a12 under a final Judge audit
+    (full_outcome_complete true, 48 done / 9 blocked / 0 active). T030 and T031 are both settled
+    and the tree is quiescent, so the disjointness concern that motivated the hold no longer holds.
+  what_changed_under_the_plan_while_it_WAITED: >-
+    THE PLAN'S MECHANICAL FACTS HAVE DRIFTED. They are PRESERVED AS WRITTEN rather than quietly
+    corrected, because silently editing a number is the exact fault the predecessor goal spent five
+    tasks catching. Measured at 3639a12: the plan says "seven goldens" - THERE ARE EIGHT, S9 having
+    landed via T050. It says Step 1's danger is "seven exactKeys validators must move together or
+    every lane hard-throws" - NINE files carry exactKeys and TWENTY-ONE reference
+    validateEnrichedIr. The corpus is eight scenarios / 48 mutants, not the twelve the old charter
+    assumed. NONE OF THIS REFUTES THE PLAN. All of it changes Step 1's blast radius, which is the
+    step the plan itself names as the dangerous one - so T002 re-derives the real set before Step 1
+    runs, and the binding constraint is ALL OF THEM, not seven.
   oracle:
     signal: >-
       Steps 0-5 complete: a per-lane falsification gate proving typed output goes RED on a
@@ -29,6 +42,13 @@ goal:
       on a TYPED one.
   intake:
     input_shape: existing_plan
+    existing_plan_facts:
+      - "Six steps, in this order: Step 0 falsification gate; Step 1 IR-8 supply (the ONLY schema change); Step 2 IR-8 consumption across six emitters; Step 3 refs; Step 4 effects; Step 5 composition."
+      - "PropDestructuringEntry.type and ComponentPropExpression.type are supplied FROM THE EXISTING @tsrx/core annotations. The plan does not invent a new source and must not."
+      - "ALL validateEnrichedIr copies move in the SAME SLICE as the schema change or every lane hard-throws. The plan says seven; measurement says nine exactKeys files, twenty-one referencing validateEnrichedIr. THE BINDING CONSTRAINT IS 'ALL OF THEM', NOT A NUMBER."
+      - "resolveModuleSet's ONE-EXPORT GUARD STAYS. emit() -> file map was REJECTED on measurement: the pressure is a corpus-shape artifact (C1-C8 pack many components per file) and resolveModuleSet already models one component per module."
+      - "T032's card asserted emit() changes a PUBLISHED signature. MEASURED FALSE - all six framework packages are version 0.0.0 private:true, and the CLI targets react and solid only."
+      - "PRESERVED BUT NOT YET VALIDATED: this plan was written before ~20 tasks landed. T002 validates its shape and facts against HEAD BEFORE Step 1 - deliberately not before Step 0, see T002's own card for why."
     authority: approved
     proof_type: test
     completion_proof: >-
@@ -58,13 +78,25 @@ agents:
   worker: installed
   judge: installed
 
-active_task: null
+visual_board:
+  # none | local | unknown
+  selected: none
+  local:
+    status: not_requested
+    url: null
+    command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-emitter-capability-v1"
+  why: >-
+    The owner has run fifteen-plus goals in this repo against the file board alone, including the
+    predecessor goal that closed complete this session. Recorded as an explicit choice, not an
+    omission - the command above turns it on at any time.
+
+active_task: T001
 
 tasks:
   - id: T001
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
     objective: >-
       STEP 0, THE FALSIFICATION GATE. Hand-write typed emitted output per lane with a wrong-typed
@@ -76,11 +108,183 @@ tasks:
       svelte-check, Solid, and the Vue defineEmits re-run where the missing type made every Gate 4
       narrowing unsound. NOT ONE measured an instrument RED on a TYPED prop. The whole phase rests
       on an inference nobody has tested.
+    allowed_files:
+      - probes/ir8-falsification/
+      - docs/goals/frameless-emitter-capability-v1/notes/T001-falsification-gate.md
+    scope_note: >-
+      HAND-WRITTEN PROBES ONLY, in a directory that exists for this gate and nothing else. No IR,
+      no emitter, no golden, no test in packages/ - the point of Step 0 is to measure the
+      INSTRUMENTS, so touching the thing being measured would defeat it. The probe directory is
+      disposable; if the gate refutes IR-8 the phase stops and the directory is the evidence.
+    verify:
+      - "per lane, BOTH arms: a wrong-typed call site against typed output must go RED, and its correctly-typed twin GREEN"
+      - "vue-tsc (vue), svelte-check (svelte), Angular strictTemplates + AOT (angular), tsc (react, solid, qwik)"
+      - "record the EXACT diagnostic code and message per lane - 'it went red' is not a measurement"
+      - "pnpm test   # 1083 at prep; the gate must not move it"
+      - "git diff --exit-code -- packages/ demos/ scripts/   # probes live outside the product tree"
+      - "git status --short"
     stop_if:
       - "A lane's negative arm comes back GREEN with the type present. That REFUTES IR-8 for that lane - report it verbatim and STOP the phase; do not proceed to Step 1 and do not explain it away."
       - "You are about to change the IR, an emitter or a golden. Step 0 is hand-written probes only."
       - "A correctly-typed twin goes red. That is an instrument fault, not a finding - fix the probe and say so."
     receipt: null
+
+  - id: T002
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: >-
+      Validate this existing plan against HEAD before the only schema change runs. Re-derive Step
+      1's real blast radius; do not inherit the plan's numbers.
+    why_it_runs_AFTER_the_gate_and_not_before: >-
+      The contract says validate an existing plan before executing it. STEP 0 IS NOT EXECUTION OF
+      THE PLAN - it is an attempt to REFUTE the plan's premise, and it can stop the phase outright.
+      Spending a Judge on plan shape before knowing whether the phase exists would be planning work
+      that a green negative arm throws away. So the gate runs first and this validation lands
+      before STEP 1, which is the first step that writes schema and the one the plan itself names
+      as dangerous.
+    what_to_re_derive_rather_than_inherit: >-
+      The plan says "seven goldens" (measured: EIGHT) and "seven exactKeys validators" (measured:
+      NINE files carrying exactKeys, TWENTY-ONE referencing validateEnrichedIr). Enumerate the
+      ACTUAL set that must move together, and say plainly whether moving them in one slice is
+      still feasible or whether Step 1 needs splitting. Also confirm the @tsrx/core annotations
+      still carry the types the plan intends to source from, and that resolveModuleSet's one-export
+      guard is intact.
+    constraints:
+      - "READ-ONLY. Do not implement, do not edit schema, do not touch an emitter."
+      - "Do NOT re-litigate Step 0's design or its verdict - that is measured evidence, not a plan choice."
+      - "A number in the plan that is wrong is a FINDING, not a typo to fix in passing. Name it, say what it changes, and let the PM record it."
+    expected_output:
+      - "The ACTUAL set of files that must move with the schema change, enumerated"
+      - "Feasible in one slice, or a proposed split with its seam"
+      - "Confirmation the @tsrx/core type source exists as the plan assumes"
+      - "Any plan premise that measurement now refutes"
+    receipt: null
+
+  - id: T003
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    objective: >-
+      STEP 1. Supply PropDestructuringEntry.type and ComponentPropExpression.type from the existing
+      @tsrx/core annotations, moving EVERY validateEnrichedIr copy in the same slice.
+    why_this_is_the_dangerous_one: >-
+      This is THE ONLY SCHEMA CHANGE in the phase. The exactKeys validators reject unknown keys, so
+      a schema field added without moving all of them makes EVERY LANE HARD-THROW. The plan flagged
+      this; T002 supplies the real set.
+    constraints:
+      - "Use T002's enumerated set, not the plan's number."
+      - "All goldens regenerate together; no lane may be left behind."
+      - "PROVE THE FAILURE MODE ONCE: land the field without a validator and watch a lane throw, then restore. A guard nobody has seen fire is not a guard."
+    verify:
+      - "pnpm test"
+      - "pnpm check"
+      - "pnpm lint"
+      - "regenerate all six lanes; goldens move TOGETHER or not at all"
+      - "pnpm e2e   # 6 demos x 8 scenarios must stay equal"
+    stop_if:
+      - "Any lane throws after the slice is complete."
+      - "The goldens cannot be moved in one slice - report and stop; that is T002's split, not an improvisation."
+      - "You are about to widen the schema beyond the two named fields."
+    allowed_files: []
+    receipt: null
+
+  - id: T004
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    objective: "STEP 2. Consume IR-8: all six emitters print types on emitted props."
+    constraints:
+      - "The oracle for this step is Step 0's instrument, re-run against EMITTED output rather than hand-written probes. The RED must reproduce per lane."
+      - "No emitted byte may change for a component with no typed prop - prove it with git diff --exit-code over the untouched scenarios."
+    verify:
+      - "pnpm test"
+      - "pnpm e2e"
+      - "per lane: the Step 0 wrong-typed probe now goes RED against EMITTED output, correctly-typed twin GREEN"
+    stop_if:
+      - "A lane prints a type its own checker will not accept."
+      - "A lane's RED does not reproduce against emitted output even though it reproduced on the hand-written probe. That is the phase's real question surfacing - report it verbatim."
+    allowed_files: []
+    receipt: null
+
+  - id: T005
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "STEP 3. Refs across the lanes that do not have them."
+    constraints:
+      - "Measure what each lane's ref idiom actually is before emitting one. The six-gate idiom policy at docs/emitter-idiom-policy.md governs any sugar choice."
+    verify: ["pnpm test", "pnpm e2e", "pnpm check:citations"]
+    stop_if:
+      - "A lane has no ref idiom inside its design envelope - record it, do not invent one."
+    allowed_files: []
+    receipt: null
+
+  - id: T006
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: "STEP 4. Effects across the lanes that do not have them."
+    constraints:
+      - "Same idiom-policy discipline as Step 3."
+      - "DEFECTS.md 12.2 (async handler staleness) is OPEN and is NOT this step's to fix. If effects collide with it, record the collision and keep the scope."
+    verify: ["pnpm test", "pnpm e2e"]
+    stop_if:
+      - "You are drawn into the async axis. That is a separate, unchartered piece of work."
+    allowed_files: []
+    receipt: null
+
+  - id: T007
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    objective: >-
+      STEP 5. Composition via resolveModuleSet, with the one-export guard INTACT - the step that
+      turns three two-lane oracle legs into six-lane ones.
+    the_gap_this_closes: >-
+      MEASURED 2026-07-28: generated-composition (C1-C8) and generated-persistence (P1) exist for
+      REACT AND SOLID ONLY, and the e2e pairs read "CLI-emitted React vs CLI-emitted Solid". The
+      reason is structural, not clerical - qwik, svelte, vue and angular emitters contain ZERO
+      occurrences of component-reference, against six in react and four in solid. Those four lanes
+      cannot emit composition at all today.
+    constraints:
+      - "THE ONE-EXPORT GUARD STAYS. emit() -> file map was already rejected on measurement; do not reopen it without new evidence."
+      - "Composition scenarios must join the SAME oracle the S-scenarios use - a second, weaker comparison path would defeat the point."
+    verify:
+      - "pnpm test"
+      - "pnpm e2e   # composition compared across SIX lanes, not two"
+      - "pnpm mutate:corpus   # only with a quiescent tree - it restores with git checkout"
+    stop_if:
+      - "A lane cannot express a composition case inside its design envelope - record it as a lane limit, do not force it."
+      - "You are about to add a per-lane exception to the equality check. There is no exception path today and adding one is out of scope."
+    allowed_files: []
+    receipt: null
+
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Final audit: certify the phase against its oracle, or refuse."
+    constraints:
+      - "NAME, PER LANE, THE RED MEASURED AT STEP 0. Every prior IR-8 measurement was an instrument GREEN on an UNTYPED prop and not one was a RED on a TYPED one - if this audit cannot name the per-lane RED, the phase is not complete whatever else landed."
+      - "Reject completion if composition still compares only two lanes."
+      - "Reject if the one-export guard was weakened."
+      - "Certify prior step audits rather than re-deriving them, but spot-check at least one claim from each."
+      - "Assume the PM's brief contains at least one error and find it. The predecessor goal's final audit found the PM had described a three-part oracle as two-part."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "The per-lane Step 0 RED, named"
+      - "next task if not complete"
+    receipt: null
+
 
 checks:
   dirty_fingerprint: "not started"

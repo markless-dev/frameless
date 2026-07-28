@@ -84,3 +84,37 @@ through.
 Starts **after `frameless-defects-and-targets-v1` T028** closes Phase F. Step 1 is not provably
 disjoint from T030, T031 or the queued corpus work; the umbrella board is at 40 tasks; and that
 board's own intake pre-authorised splitting rather than pushing on.
+
+## Prep update — 2026-07-28
+
+**The hold is discharged.** This charter was written blocked on `frameless-defects-and-targets-v1`
+T028. That goal closed **complete** at `3639a12` under a final Judge audit
+(`full_outcome_complete: true`, 48 done / 9 blocked / 0 active). The tree is quiescent, so the
+disjointness concern that motivated the hold no longer applies.
+
+**The plan's numbers drifted while it waited, and are preserved rather than quietly corrected.**
+Measured at `3639a12`: the plan says *seven goldens* — there are **eight** (S9 landed via T050). It
+says Step 1's danger is *"seven exactKeys validators must move together or every lane hard-throws"*
+— **nine** files carry `exactKeys` and **twenty-one** reference `validateEnrichedIr`. The corpus is
+eight scenarios / 48 mutants, not the twelve the old text assumed.
+
+None of that refutes the plan. All of it changes **Step 1's blast radius** — the step the plan
+itself names as the dangerous one. So the binding constraint is recorded as **"all of them"**, not
+a number, and T002 re-derives the real set before Step 1 runs.
+
+**Why the gate runs before the plan validation.** The execution contract says validate an existing
+plan before executing it. Step 0 is not execution — it is an attempt to **refute the plan's
+premise**, and it can stop the phase outright. Validating plan shape before knowing whether the
+phase exists would be work a green negative arm throws away. So Step 0 runs first, and T002's
+validation lands before **Step 1**, the first step that writes schema.
+
+**What Step 5 actually closes**, measured this session: `generated-composition` (C1–C8) and
+`generated-persistence` (P1) exist for **react and solid only**, and the e2e pairs read
+*"CLI-emitted React vs CLI-emitted Solid"*. The cause is structural — the qwik, svelte, vue and
+angular emitters contain **zero** occurrences of `component-reference`, against six in react and
+four in solid. Those four lanes cannot emit composition at all today. Step 5 is what turns three
+two-lane oracle legs into six-lane ones.
+
+**Explicitly out of scope**: the async axis. `DEFECTS.md` 12.2 is OPEN and measured (react
+post-await staleness), which is why S8 is deferred from the corpus. It is real work and no board
+covers it — but it is not this phase, and Step 4 carries a `stop_if` against being drawn into it.
