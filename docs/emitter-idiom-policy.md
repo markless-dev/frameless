@@ -194,9 +194,9 @@ it must satisfy both of the following, or it is `FAIL`:
 1. The test runs on the emitter's **final lowered output** for that construct, not on the IR
    record it started from. The emitter injects statements into handler bodies from IR channels
    other than the one a content trigger would read. In this repo, `buildPersistenceRecords`
-   (`packages/compiler/src/build.ts:420`) lands persistence records on the IR
-   (`packages/compiler/src/schema.ts:476`), and the React emitter then injects a
-   `__framelessWrite(...)` statement into the handler during its own lowering
+   (`packages/compiler/src/build.ts`) lands persistence records on the IR
+   (`EnrichedRecordTable.persistence` in `packages/compiler/src/schema.ts`), and the React emitter
+   then injects a `__framelessWrite(...)` statement into the handler during its own lowering
    (`persistenceStatements()` in `packages/frameworks/react/src/emitter/index.ts`). The visible
    result is `packages/frameworks/react/generated-persistence/P1.jsx`, where a handler that is a bare
    assignment in the base golden acquires a second statement. A trigger that matched on the IR's
@@ -464,7 +464,8 @@ Baseline: `v-slot:header`. Candidate: `#header`.
 - **G4 UNKNOWN — which is a no.** The Vue emitter **exists**, so `DEFERRED — emitter absent` is
   discharged and unavailable. There is no deciding function to state a domain against: the emitter
   has no `v-slot` emission path anywhere, and the IR's slot vocabulary is a single
-  `default-slot-projection` kind (`packages/compiler/src/schema.ts:173`) — IR-3, default slot only.
+  `default-slot-projection` kind (`TemplateDefaultSlotProjection` in
+  `packages/compiler/src/schema.ts`) — IR-3, default slot only.
   The tempting move is "the domain is empty, so totality is vacuous, so `PASS`". It is refused on
   this document's own precedent: worked example 7 refused exactly that move, and a vacuous totality
   is the folklore domain arriving by the back door.
@@ -489,8 +490,9 @@ curdled. The difference is not optimism — it is that the shorthand's whole cla
 **Re-run, not re-read.** This entry previously read `DEFERRED` at Gates 1, 4 and 6 on the ground
 that Vue was absent from the lockfile and no Vue emitter existed. All three conditions are gone —
 `vue@3.5.40` is in the lockfile at two importers, `packages/frameworks/vue` exists, and `pnpm e2e`
-drives `demos/vue-official` (`scripts/e2e.mjs:38`) in a six-row run. `frameless-vue-v1` T007 re-ran
-the entry. **The ruling is unchanged and its basis is not:** the denial rested on a single `G5 FAIL`
+drives `demos/vue-official` (a row of `officialDemos` in `scripts/e2e.mjs`) in a six-row run.
+`frameless-vue-v1` T007 re-ran the entry. **The ruling is unchanged and its basis is not:** the
+denial rested on a single `G5 FAIL`
 whose stated mechanism has been *measured false*, and it now rests on three independent `FAIL`s.
 
 Baseline (what the emitter ships): the callback is a declared prop —
@@ -521,7 +523,7 @@ string literal into the `defineProps([...])` array by `propsDeclaration()` in
   `initial`, `onTrace` — and the sugar applies to **one of six**. The counterexample is exhibited
   from shipped output, not hypothesised. The repair step is run and every narrowing is unavailable:
   "props whose value is a callback" is not decidable — `PropDestructuringEntry`
-  (`packages/compiler/src/schema.ts:205`) carries no type field, which is IR-8; "props whose
+  (`packages/compiler/src/schema.ts`) carries no type field, which is IR-8; "props whose
   `sourceName` matches `/^on[A-Z]/`" is decidable but **unsound**, since nothing in the IR says such
   a prop holds a function; "props the body calls" is killed by Gate 3. Contrast entry 2b, which took
   `UNKNOWN` on an *empty* domain with nothing to exhibit. Empty domain gives `UNKNOWN`; a populated
@@ -1278,8 +1280,13 @@ handler that performs the assignment. Candidate: `v-model="x"`.
 Domain, in emitter terms: every host node `renderHost()` prints that carries a `DynamicBinding`
 named `value` or `checked` from `attributesOf()`, together with an event directive on the same host
 from `eventAttribute()` — all three in `packages/frameworks/vue/src/emitter/index.ts`.
-**Re-enumerated over the shipped corpus by `frameless-vue-v1` T012.** The domain is **populated** with **eight shipped instances**: `S2.vue:14`,
-`S2.vue:32`, `S2.vue:43`, `S3.vue:19`, `S3.vue:27`, `S7.vue:41`, `S7.vue:51`, `S7.vue:65`.
+**Re-enumerated over the shipped corpus by `frameless-vue-v1` T012.** The domain is **populated**
+with **eight shipped instances**, named here by the `data-*` marker each host carries in the
+authored source *and* in the emitted SFC: S2 `data-action="new"`, S2 `:data-edit`, S2
+`:data-toggle`, S3 `data-action="text"`, S3 `data-action="checked"`, S7 `data-pick="r1"`, S7
+`data-pick="r2"` and S7 `:data-tag`. They were previously listed by line ordinal into
+`packages/frameworks/vue/generated/`, which is a citation into files **the emitter regenerates** —
+the marker survives a re-emit and an ordinal does not.
 
 **This figure has now been wrong once, and the reason is worth more than the number.** T009 took it
 over four goldens; T010 re-took it over six, correctly found "five, S5 and S6 contribute zero", and
@@ -1301,7 +1308,7 @@ entry silently false again.
   child, a plugin, a dependency or the build graph. **Gate 2 is not what denies this** — see the
   note under 12b.
 - **G3 FAIL.** The trigger would be "this handler assigns the element's own value to the node the
-  sibling binding reads". `StateWriteRecord` (`packages/compiler/src/schema.ts:266`) records
+  sibling binding reads". `StateWriteRecord` (`packages/compiler/src/schema.ts`) records
   `operation: 'assign'` and carries the right-hand side only as `value?: SerializableAstNode`, so
   `draft = event.currentTarget.value`, `draft = event.currentTarget.value.trim()` and
   `draft = otherEl.value` are the same declared record modulo that AST. `v-model`'s assign is
@@ -1402,7 +1409,7 @@ survived every corpus addition.
   declared `writable: false` with zero writes. Per-prop write-back has no channel in the IR — not an
   unsound one, none. **This is IR-1, and it is distinct from IR-8:** IR-8 is a missing *type* field
   on `PropDestructuringEntry`; this is a missing *per-prop identity* in the graph.
-  `ComponentPropExpression` (`packages/compiler/src/schema.ts:149-156`) carrying no bindable `kind`
+  `ComponentPropExpression` (`packages/compiler/src/schema.ts`) carrying no bindable `kind`
   is the parent-side face of the same gap.
 - **G5 FAIL, and it is the deciding gate.** `defineModel('initial')` compiles at 3.5.40 to
   `props: mergeModels(['onTrace'], { "initial": {}, "initialModifiers": {} })`,

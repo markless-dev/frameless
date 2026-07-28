@@ -131,7 +131,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T053
+active_task: T054
 
 tasks:
   - id: T001
@@ -5705,7 +5705,7 @@ tasks:
   - id: T053
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     spec: "T048 receipt, residual_grep_hits_classified and remaining_blockers - AUTHORITATIVE."
     objective: >-
@@ -5759,6 +5759,105 @@ tasks:
       - "Need files outside allowed_files."
       - "You cannot show the guard going RED on a planted first-party ordinal."
       - "The guard would flag a RULED-CORRECT site and you are tempted to re-open that ruling. It is ruled; encode it as an exclusion with its reason."
+      - "A citation needs a symbol that does not exist - report it, do not invent one."
+      - "Any emitted byte, golden or existing assertion moves."
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      changed_files:
+        - scripts/check-citations.mjs
+        - packages/compiler/test/citations.test.ts
+        - package.json
+        - docs/emitter-idiom-policy.md
+        - docs/goals/frameless-defects-and-targets-v1/notes/T024-corpus-breadth.md
+      commands:
+        - cmd: "pnpm test"
+          status: pass
+          note: "1044 passed / 52 files = 1027 at dispatch + exactly the 17 new citation tests; no existing test moved"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 396 files (394 + the two new)"
+        - cmd: "pnpm check"
+          status: pass
+          note: "six tsc passes"
+        - cmd: "git diff --exit-code -- packages/frameworks demos/ packages/compiler/src packages/compiler/test/goldens"
+          status: pass
+          note: "no emitted byte, golden or source moved"
+        - cmd: "node scripts/check-citations.mjs"
+          status: pass
+          note: "clean over 2 watched files; was RED with 29 violations before the sweep"
+        - cmd: "git status --short"
+          status: pass
+          note: "exactly the five files; nothing committed"
+      summary: "Built scripts/check-citations.mjs: a citation to a path that RESOLVES IN THIS REPOSITORY may not carry a line ordinal. Four exclusions encoded as REASONED DATA rather than a lucky regex. Wired via packages/compiler/test/citations.test.ts (runs on pnpm test) plus pnpm check:citations. Re-measured T048's residue rather than inheriting it: it was WRONG on one item, INCOMPLETE BY 17 SITES, and three more ordinals had rotted since it ran. Cleared all 29."
+      THE_GUARD_WAS_RED_ON_REAL_CONTENT_BEFORE_ANY_DOC_BYTE_MOVED: "29 violations across the two watched files on UNTOUCHED HEAD CONTENT. That is the strongest possible calibration - the check did not have to be shown a planted fault to prove it works, it found the real ones first. Four further red proofs on planted faults, each restored to green: a path ordinal, a cross-line INHERITED ordinal, an unclassified new top-level doc (the INTEGRITY arm - the watch scope cannot be silently emptied or bypassed), and 17 permanent calibration tests covering sentence-final ':535.', slash-joined ':498/:642', and antecedent-less bare ordinals. PM RE-PROVED IT INDEPENDENTLY: planted packages/compiler/src/schema.ts:266 into the T024 note, guard exited 1 naming the file and the reason, restored, exited 0."
+      THE_SHARPEST_CATCH_WAS_NOT_ON_THE_RESIDUE_LIST: "docs/emitter-idiom-policy.md cited scripts/e2e.mjs:38 as the row driving demos/vue-official. LINE 38 IS THE SVELTE ROW; vue is 39. A reader following that citation lands on the WRONG LANE, in a paragraph whose entire argument is that the Vue lane now exists. PM VERIFIED THIS DIRECTLY at HEAD. It was on no residue list, no grep pattern anyone had written, and no human had noticed it - which is the case for the guard in one line."
+      IT_REFUSED_TO_INHERIT_T048s_CLASSIFICATION_AND_T048_WAS_WRONG: "T048 carded policy's build.ts:420 as SYMBOL ABSENT, needing a decision rather than a sweep. THE SAME SENTENCE ALREADY NAMES buildPersistenceRecords TWO WORDS EARLIER - no decision was needed, just drop the ordinal. The other two 'symbol absent' cases DO have symbols, READ OUT OF THE CODE rather than invented: schema.ts:476 is EnrichedRecordTable.persistence, schema.ts:173 is the readonly kind inside TemplateDefaultSlotProjection. Neither needed the stop T048 predicted."
+      a_shape_based_rule_would_have_been_wrong_and_it_showed_why: "The card's third-party allowlist named FIVE artifacts; the policy actually cites TEN distinct third-party targets. Two are REPO-RELATIVE IN SHAPE - svelte/src/internal/client/reactivity/props.js and src/compiler/utils/extract_svelte_ignore.js, both inside the resolved svelte package. A regex keyed on shape would have swept them as first-party. THAT is why the guard RESOLVES AGAINST THE FILESYSTEM and keeps a reasoned list, and it is a stronger argument for the design than the card gave."
+      drift_measured_not_predicted:
+        - "scripts/e2e.mjs:38 cited for demos/vue-official - line 38 is SVELTE, vue is 39. Off by one, wrong lane, not on any residue list."
+        - "packages/compiler/src/build.ts:420 no longer sits in buildPersistenceRecords - it is inside the alias-resolution block."
+        - "T024 note angular :475 -> loweredHandlerBody's ruling-3d comment, now 481; :535 -> collectEventScopes, now 569 (+34)."
+        - "STILL EXACTLY RIGHT AT HEAD: schema.ts:150, :205, :266, angular:32, qwik:498 and :642, and all eight S2/S3/S7.vue ordinals. Correct and rotted ordinals in the SAME SENTENCES with nothing in the text to tell them apart - T048's finding reproduced on a wider sample."
+      deviations:
+        - "WIDENED WITHIN allowed_files: the carded residue was 12 sites, the guard measured 29. Extras include policy's scripts/e2e.mjs:38, four T024-note angular/qwik ordinals, and five emitted-output ordinals in the S4 mutant table."
+        - "Corrected T048's classification on build.ts:420 and resolved the other two 'symbol absent' cases from the code - see above."
+        - "Did NOT chain the guard into pnpm check or pnpm lint: stop_if forbids moving a gate predicate. It runs on every pnpm test via citations.test.ts, plus a standalone pnpm check:citations."
+        - "Added PATH_MENTION antecedent resolution mid-build because red proof 3 EXPOSED A REAL DEFECT: an ordinal-free path was not registered as an antecedent, so an inherited ':266' reported as 'unresolvable' instead of naming the first-party file. The proof found it; the fix is tested."
+        - "Left 12a's 'eight shipped instances' COUNT alone - T048 already ruled on counts in this file. Replaced only the eight ordinals, with the data-* marker each host carries in BOTH authored source and emitted SFC, and recorded why (the emitter regenerates those files)."
+        - "Did NOT create notes/T053-citation-guard.md though allowed: harness rules forbid writing findings .md files. The rulings live in check-citations.mjs's own doc comments - arguably a better home, since the next reader meets the ruling AT THE CHECK rather than in a note beside it."
+      remaining_blockers:
+        - "docs/DEFECTS.md and docs/report.md carry first-party bare ordinals and are OUTSIDE T053's allowed_files. Both are recorded in NOT_YET_WATCHED WITH REASONS rather than silently skipped. report.md additionally needs a ruling T053 was not given: its packages/compiler/... paths are MARKLESS', not this repo's, so they LOOK first-party and are not."
+        - "Task notes and goal.md under docs/goals/*/ on other boards are ruled NOT_YET_WATCHED as dated task records, the same class as state.yaml receipts. One entry to change if the PM disagrees - the guard already reports every file it does not watch."
+      stopped_because: null
+  - id: T054
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: medium
+    spec: "T053 receipt, remaining_blockers - AUTHORITATIVE. The guard exists; this decides its scope."
+    objective: >-
+      Rule on the two documents T053's guard reports as NOT_YET_WATCHED, and promote whichever
+      should be watched. THE POINT IS THE RULING, not the sweep.
+    why_this_is_a_card_and_not_a_footnote: >-
+      T029 exists because a real finding was filed upward as "not this board's to fix" and then sat
+      on NO board at all, which is how a finding becomes chat. T053 did the honest thing - it
+      recorded both files in NOT_YET_WATCHED WITH REASONS rather than silently skipping them, so
+      the guard already reports every file it does not watch. This card is what stops that honest
+      record from becoming a permanent exemption.
+    the_two_documents: >-
+      docs/DEFECTS.md carries first-party bare ordinals and is the project's defect ledger - the
+      document most likely to be read by someone chasing a citation. It looks like a straightforward
+      promotion, but MEASURE IT: the ledger cites code AS IT WAS WHEN THE DEFECT WAS FILED, which
+      may be the state.yaml-receipt class (dated historical record, ordinal correct as written)
+      rather than the live-citation class.
+      docs/report.md NEEDS A RULING T053 WAS NOT GIVEN AND CORRECTLY DID NOT INVENT. Its
+      packages/compiler/... paths are MARKLESS' paths, not this repository's - so they RESOLVE
+      against this filesystem and look first-party while pointing at a different project entirely.
+      A guard that resolves paths against the filesystem cannot tell those apart without being told.
+    constraints:
+      - "DECIDE PER DOCUMENT, with the reason recorded in scripts/check-citations.mjs next to the ruling it changes. A promotion with no reason is the unexplained allowlist the guard was built to avoid."
+      - "If DEFECTS.md is the dated-record class, say so and leave it - that is a ruling, not a skip, and it must read as one."
+      - "If report.md's markless paths need a distinct exclusion kind, add one. Do NOT solve it by making the resolver looser, which would silently unwatch real first-party sites."
+      - "PROVE ANY NEW EXCLUSION RED: it must still fire on a genuine first-party ordinal in the same file. An exclusion that disables the check for a whole document is not an exclusion, it is a hole."
+      - "No emitted byte, golden, gate predicate or existing assertion may move."
+    allowed_files:
+      - scripts/check-citations.mjs
+      - packages/compiler/test/citations.test.ts
+      - docs/DEFECTS.md
+      - docs/report.md
+    verify:
+      - "pnpm test"
+      - "pnpm lint"
+      - "pnpm check"
+      - "pnpm check:citations"
+      - "git diff --exit-code -- packages/frameworks demos/ packages/compiler/src packages/compiler/test/goldens"
+      - "git status --short"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You cannot show the guard still going RED on a genuine first-party ordinal inside a newly excluded document."
+      - "You are about to loosen the path resolver rather than add a named exclusion."
       - "A citation needs a symbol that does not exist - report it, do not invent one."
       - "Any emitted byte, golden or existing assertion moves."
     receipt: null
