@@ -1045,18 +1045,37 @@ function renderHost(
  * subtree renders not at all. What pins this form choice is the emitter gate,
  * not the browser.
  *
- * TWO THINGS A LATER AUDITOR MUST NOT REDISCOVER AS A SURPRISE.
- * 1. GATE 6'S READING IS CONTESTABLE and was decided on Gate 5's own routing
+ * TWO THINGS A LATER AUDITOR MUST NOT REDISCOVER AS A SURPRISE - both of which
+ * this comment previously recorded as OPEN, and both of which are now closed.
+ * 1. GATE 6'S READING WAS CONTESTABLE and was decided on Gate 5's own routing
  *    sentence, which sends non-behavioural reasons to Gate 6 and demands only
- *    that they be MEASURED. Under the strict reading - Gate 6's preamble
- *    governing every bullet - this entry flips to FAIL and the emitter is forced
- *    to rewrite its shipped control-flow call sites into a form this lane's own
- *    applied arbiter reports as a violation. Both readings are recorded in
+ *    that they be MEASURED. The contest came from the preamble stating its
+ *    lane-and-version-and-behaviour requirement as ONE UNDIVIDED SENTENCE above
+ *    a PASS clause that is a DISJUNCTION - so read as governing every arm it
+ *    contradicted its own second arm, and this entry flipped to FAIL along with
+ *    worked example 10, which is ALREADY SHIPPED in the Qwik emitter on the
+ *    identical ground. `frameless-defects-and-targets-v1` T040 SCOPED the
+ *    requirement to the behavioural arm; this entry is carried by the
+ *    claimed-benefit arm and was NOT re-scored. Both readings, and the scoping,
+ *    are recorded in
  *    `docs/goals/frameless-angular-v1/notes/T009-control-flow.md`.
  * 2. GATE 6'S PASS DEPENDS ON UPSTREAM keeping `prefer-control-flow` in its
- *    `recommended` metadata tier. If it moves to `all`, the deciding gate loses
- *    its PASS and worked example 5 must be re-run. That is the single most
- *    fragile input in this ruling.
+ *    `recommended` metadata tier - AND THAT DEPENDENCY IS TRIPWIRED, which this
+ *    comment used to deny by calling it the single most fragile input in the
+ *    ruling and leaving it there. It cannot move silently. `test/gate.test.ts`
+ *    asserts ANGULAR_ESLINT_TEMPLATE_RULES_DERIVED equals the EXACT FOUR NAMES
+ *    - banana-in-box, eqeqeq, no-negated-async, prefer-control-flow - and
+ *    separately asserts ANGULAR_ESLINT_RULES_APPLIED does NOT contain
+ *    `@angular-eslint/prefer-signals`, the opposite-direction read worked
+ *    example 11 turns on. A DEMOTION of prefer-control-flow OR A PROMOTION of
+ *    prefer-signals therefore goes RED BY NAME on a routine `pnpm test`, and
+ *    four further rows fail with them: the applied-set cardinalities 17/12/4,
+ *    the baseline-floor row asserting prefer-control-flow is applied, and the
+ *    `*ngFor` mutation row expecting it to report. So the re-run of worked
+ *    example 5 that a tier move would owe is TRIGGERED BY A FAILING TEST rather
+ *    than left to be noticed. The residual risk is only what a tripwire cannot
+ *    cover: it fires when the lockfile moves, so it says nothing about an
+ *    upstream release nobody has installed.
  *
  * `*ngIf` would additionally need an `imports: [NgIf]` entry on the standalone
  * component, which is machinery the IR does not declare. The version floor this

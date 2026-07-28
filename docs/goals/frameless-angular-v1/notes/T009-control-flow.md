@@ -643,9 +643,25 @@ because `const`/`let` and `UpdateExpression` remain absent from the action gramm
   (the tag says intent), the sanctioned set becomes a singleton and this entry becomes a
   non-question rather than a sugar — the ruling would not change but its *shape* would. If upstream
   moves `prefer-control-flow` out of `recommended`, **Gate 6 loses its `PASS`** and this entry must
-  be re-run, because Gate 6 is the deciding gate and that metadata read is what carries it. That is
-  the single most fragile input in this ruling and it is named here so it is not discovered by
-  accident.
+  be re-run, because Gate 6 is the deciding gate and that metadata read is what carries it. **That
+  trigger is tripwired, and this bullet originally understated it.** It was written as the single
+  most fragile input in the ruling, named here so it would not be discovered by accident — which
+  reads as though discovery depended on someone reading this note. It does not.
+  `packages/frameworks/angular/test/gate.test.ts` asserts `ANGULAR_ESLINT_TEMPLATE_RULES_DERIVED`
+  equals the **exact four names** — `banana-in-box`, `eqeqeq`, `no-negated-async`,
+  `prefer-control-flow` — and separately asserts `ANGULAR_ESLINT_RULES_APPLIED` does **not** contain
+  `@angular-eslint/prefer-signals`, the opposite-direction metadata read worked example 11 turns on.
+  So a demotion of `prefer-control-flow` **or** a promotion of `prefer-signals` goes **red by name**
+  on a routine `pnpm test`. **Measured rather than inferred** by `frameless-defects-and-targets-v1`
+  T040: with each plugin's `meta.docs.recommended` mutated in memory before the gate module is
+  evaluated, the demotion drops the derived template set to 3 and removes `prefer-control-flow` from
+  the applied set, and the promotion raises the derived TS set from 12 to 13 and puts
+  `prefer-signals` into the applied set — each of which contradicts a pinned assertion. Four further
+  rows fail alongside them: the three applied-set cardinalities (17 / 12 / 4), the baseline-floor row
+  asserting `prefer-control-flow` is applied, and the `*ngFor` mutation row expecting it to report.
+  **The re-open is triggered by a failing test, not by an auditor's attention.** The residual risk
+  is what a tripwire cannot cover: it fires when the lockfile moves, so it says nothing about an
+  upstream release nobody has installed yet.
 
 ---
 
@@ -682,3 +698,33 @@ transcribes it unchanged, because that is the number the ruling was taken on. §
 move it and it has: `generated/S6.ts` carries one `@for` and no `@if`, so the corpus now stands at
 **9 blocks across 5 of 6 goldens**. The emitter comment states both, with the qualification that the
 count moves with the corpus while the form-level ruling does not.
+
+---
+
+## 9. Addendum — `frameless-defects-and-targets-v1` T040
+
+Two corrections to this note's own record. **No gate outcome, ruling or verdict is touched by
+either**; §6 is deliberately left as the as-folded text, since it is the record of what was written
+into `docs/emitter-idiom-policy.md`, and the policy document is the live copy.
+
+1. **The upstream-tier dependency was recorded as an unmitigated risk, and it is mechanically
+   tripwired.** Corrected in §7's re-open trigger above, where the tripwire is named and the
+   measurement that confirms it is recorded. The direction of the error is worth naming: it
+   **understated** our own safety rather than overstating it, which is the less dangerous error and
+   was still wrong.
+2. **§8's claim that the carry-forwards were "recorded at three sites" did not hold for one of the
+   three.** Measured at T040: worked example 5 in `docs/emitter-idiom-policy.md` carried the Gate 6
+   *derivation* — the applied set is derived from `meta.docs.recommended`, `prefer-control-flow` is
+   1 of 4 of 41 — but it did **not** carry the upstream-dependency carry-forward in any form. §8's
+   sentence is left standing as the record of what T011 believed it had done; the third site now
+   exists, created by T040 and stated as tripwired rather than as fragile.
+
+**And the contestable-reading carry-forward is no longer a carry-forward.** Gate 6's preamble stated
+its lane-and-version-and-behaviour requirement as one undivided sentence above a `PASS` clause that
+is a **disjunction**, so the preamble contradicted its own second arm. T040 scoped the requirement to
+the behavioural arm. Two shipped entries turn on the second arm — worked example 10, whose `G6 PASS`
+is carried entirely by standing non-behavioural checks and which says so outright, and worked
+example 5 — and **neither was re-scored**; per this note's §6 and per `frameless-angular-v1` T999,
+example 5's reading holds on example 10's precedent, and its evidence is the stronger of the two
+because its arbiter is third-party-derived rather than frameless-authored. The scoping is a
+statement of the rule both entries were already decided under.

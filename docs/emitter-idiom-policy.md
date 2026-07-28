@@ -274,13 +274,37 @@ and as such they are adjudicated by Gate 6, which requires them to be measured.
 
 *If this sugar silently regressed, would a check this repo already runs fail?*
 
-The check must exercise the target lane — the framework's own official scaffold — at the exact
-framework version in the lockfile, and assert observable behavior.
+**The `PASS` is a disjunction, and its two arms are held to different things.** This was stated
+once, as a single lane-and-version-and-behaviour sentence governing both arms, which contradicted
+the second arm it sat above: a claimed benefit that is not behavioural cannot be asserted by a
+check that asserts observable behaviour, so under the undivided reading the second arm could never
+be reached and Gate 5's own routing sentence — non-behavioural reasons "are adjudicated by Gate 6,
+which requires them to be measured" — would have nowhere to land. The requirement is therefore
+scoped to the arm it was written for. **This is a scoping, not a relaxation:** nothing that fails
+Gate 6 today passes it under the text below.
 
-- `PASS` — such a check exists, or the sugar's claimed benefit is itself asserted by one.
+- `PASS` — **behavioural arm.** Such a check exists. It must exercise the target lane — the
+  framework's own official scaffold — at the exact framework version in the lockfile, and assert
+  observable behavior.
+- `PASS` — **claimed-benefit arm.** The sugar's claimed benefit is itself asserted by one. Here the
+  benefit is by hypothesis not behavioural — Gate 5 has already ruled the forms indistinguishable
+  to a consumer and routed the reason here — so the asserting check is not required to run on the
+  scaffold and not required to assert behaviour. It is still required to be a **standing** check
+  this repo already runs rather than a one-off probe, to be **calibrated red** so that a check
+  which cannot fail is not counted as one, and to run against a toolchain this repo ships. An entry
+  carried by this arm **states plainly what behavioural coverage it does not have**, so that a
+  `PASS` on this arm is never read as a behavioural proof.
 - `FAIL` — the sugar's only justification is an artifact property nothing checks, or the
   justification was measured against a toolchain this repo does not ship.
 - `DEFERRED` — no lane exists for that framework yet. Emit the baseline and re-run when it lands.
+
+**Two shipped entries turn on the second arm and neither is re-scored by this scoping.** Worked
+example 10 (Qwik forced lowering, adopted and shipped) carries its `G6 PASS` entirely on standing
+non-behavioural checks and says outright that no behavioural three-way scenario exists; worked
+example 5 (Angular `@if`/`@for`) carries its `G6 PASS` on a third-party-authored lint derivation and
+states the negative result — `pnpm e2e` would not go red on a competent switch to the baseline —
+in the entry itself. Both already satisfy every condition above. The scoping makes the rule they
+were decided under legible; it does not revisit either verdict.
 
 **Version corollary.** A sugar available only from framework version *N* can pass Gate 6 only if
 the lockfile pins ≥ *N* **and** the emitter can know the version it is targeting. Frameless has no
@@ -679,7 +703,23 @@ every `TemplateNode` of kind `'keyed-repeat'` reaching `renderKeyedRepeat()` in
   would **not** go red on a competent switch to the baseline, because Gate 5 measured the two forms
   behaviourally indistinguishable; it would go red on an incompetent one, because dropping `@if`
   without adding `imports: [NgIf]` yields `NG8103` and renders the guarded subtree not at all. What
-  pins this form choice is the emitter gate, not the browser.
+  pins this form choice is the emitter gate, not the browser. This entry is carried by Gate 6's
+  **claimed-benefit arm**, and it meets that arm's conditions: the arbiter is a standing check, it
+  is calibrated red, and the sentence above is the required statement of what behavioural coverage
+  it does not have.
+- **The upstream-tier dependency this `PASS` rests on is tripwired, not merely noted.** The applied
+  set is derived from upstream metadata, so upstream could in principle move `prefer-control-flow`
+  out of `recommended` and dissolve the deciding measurement. That cannot happen silently:
+  `packages/frameworks/angular/test/gate.test.ts` asserts `ANGULAR_ESLINT_TEMPLATE_RULES_DERIVED`
+  equals the **exact four names** — `banana-in-box`, `eqeqeq`, `no-negated-async`,
+  `prefer-control-flow` — and separately asserts `ANGULAR_ESLINT_RULES_APPLIED` does **not** contain
+  `@angular-eslint/prefer-signals`, which is the metadata read worked example 11 turns on. So a
+  demotion of `prefer-control-flow` **or** a promotion of `prefer-signals` goes **red by name** on a
+  routine `pnpm test`, before any emitted output changes. Four further rows fail alongside them —
+  the applied-set cardinalities (17 / 12 / 4), the baseline-floor row that asserts
+  `prefer-control-flow` is applied, and the `*ngFor` mutation row that expects it to report. The
+  re-run this entry would then owe is **triggered by a failing test**, not left to be discovered by
+  an auditor.
 
 All six `PASS` → **sugar**. Say which one carries it: **Gate 6**, and it is the only one that was
 ever in doubt.
@@ -691,13 +731,18 @@ living in `all` rather than `recommended`, so the applied set is **silent** on a
 call for control flow, and the applied set is **loud**. Two Angular sugars, one metadata read each,
 opposite answers.
 
-**On Gate 6's reading, because it is contestable.** Gate 6's preamble demands a check that exercises
-the target lane and asserts observable behaviour. Read as governing every bullet, no non-behavioural
+**On Gate 6's reading — contested when this entry was ruled, and since settled in the gate text
+itself.** Gate 6's preamble used to demand, in one undivided sentence, a check that exercises the
+target lane and asserts observable behaviour. Read as governing every bullet, no non-behavioural
 benefit could ever pass this gate — yet Gate 5 explicitly *routes* non-behavioural reasons here,
 saying they "may be the reason to adopt a sugar, and as such they are adjudicated by Gate 6, which
 requires them to be **measured**." Measurement is what this gate demands of them, and it is what was
-supplied. Recorded because the strict reading would flip this entry to `FAIL` and force the emitter
-to rewrite 8 shipped call sites into a form its own applied arbiter reports as a violation.
+supplied. The strict reading would have flipped this entry to `FAIL` and forced the emitter to
+rewrite 8 shipped call sites into a form its own applied arbiter reports as a violation — and it
+would have flipped worked example 10, which is already shipped, on the identical ground. The
+preamble now **scopes** the lane-and-version-and-behaviour requirement to the behavioural arm, so
+the disjunction and the sentence above it no longer pull against each other. **The reading this
+entry was decided under is unchanged; only its statement is.** This entry was not re-scored.
 
 **The version corollary is discharged the second way and this entry does not weaken it.**
 `@if`/`@for` floors at 17.0, and the emitted module **already floors at 19.0** for an unrelated
@@ -1022,7 +1067,11 @@ remainder; that is sound precisely because it is pure over event fields.
   three-way scenario asserting that a conditional cancel fires for the declared key and does not
   fire for another. The G1 two-sided check above is a one-off probe on a scratch route, not a
   standing lane. That is queued as its own package; emitted text plus a gate is the evidence base
-  defect 1 defeated.
+  defect 1 defeated. This paragraph is what Gate 6's **claimed-benefit arm** requires of an entry it
+  carries, and this entry is the precedent for that arm: its `PASS` rests entirely on standing
+  non-behavioural checks, each calibrated red, and it says so rather than letting the `PASS` be read
+  as behavioural. The arm's scoping in the gate text records this reading; it did not create it, and
+  this entry was not re-scored by it.
 
 **Explicitly considered and refused: mirroring graph state into a `data-` attribute** so a
 `sync$()` could read `element.dataset.locked` and thereby express a `graph-truthy` guard. It would
