@@ -360,9 +360,33 @@ so `expect.page.text` can observe it live in all four lanes — would **close** 
 gap rather than record it. It is a corpus change touching the compiler goldens
 and all four emitters, so it belongs to a future package, not this one.
 
-**Latent twin, recorded so it is not rediscovered as a new finding:** Svelte's
-`remove_input_defaults` strips `checked` identically. S3's checkbox carries
-`checked={checked}` and is not asserted today, so there is no impact.
+**Latent twin, corrected 2026-07-28 by T042 — no longer latent.** This
+paragraph used to say the `checked` deletion "is not asserted today, so there
+is no impact." That is false at HEAD. Svelte's `remove_input_defaults` strips
+`checked` exactly as it strips `value`, and S7
+(`docs/goals/frameless-defects-and-targets-v1/notes/T030-corpus-s7-form-controls.md`
+§4.1) now measures the deletion end to end, in a real browser, on the served
+payload and the live DOM: svelte serves `checked` and hydration deletes it,
+where react/angular serve it and never move it again, solid/qwik add it at
+activation and freeze it, and vue adds it at activation and tracks state — a
+four-way split from one shared IR.
+
+`checked` still never enters the cross-lane **observation string** — the same
+trade `assertS3` records for `value` above: each control's effect is witnessed
+through `picked` and `chosen` instead of by reading the attribute back. So "not
+asserted" remains literally true; "no impact" does not. The deletion now has a
+measured, recorded behavioural consequence, even though it is witnessed
+indirectly rather than by reading the attribute.
+
+Re-derived, not inherited, before writing this correction:
+`packages/frameworks/svelte/generated/S7.svelte` carries exactly three
+`checked=` bindings at HEAD (two radios sharing a group, one checkbox inside a
+keyed repeat), matching T030's count. S9 (`AttrBoard`) also binds boolean
+attributes — `disabled` and `required` — but adds no `checked` binding in any
+of the six generated lanes, so "three" is not yet stale in either direction.
+This count names one scenario's own bindings, not a corpus-wide total, and
+should be re-derived again rather than copied forward if the corpus grows
+another form scenario.
 
 ## The T999 correction
 

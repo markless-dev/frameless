@@ -330,29 +330,70 @@ plain-value output *identically*. The emitter is not inventing a house idiom —
 is reproducing one, and the idiom is load-bearing rather than stylistic. That
 removes the last reading in which `attr:` could have been called gratuitous.
 
+**Corrected 2026-07-28 by T042 — the scope drafted below undersold what was
+already true of solid-js's own types.** As first written, the draft scoped the
+gap to `InputHTMLAttributes`. S7
+(`docs/goals/frameless-defects-and-targets-v1/notes/T030-corpus-s7-form-controls.md`
+§4.3) measured the identical `attr:value` diagnostic firing for
+`SelectHTMLAttributes` and `TextareaHTMLAttributes` too, reproduced verbatim
+below. Reading solid-js 1.8.22's own `types/jsx.d.ts` independently confirms
+the wider claim rather than merely adding two data points to a narrower one:
+`InputHTMLAttributes`, `SelectHTMLAttributes` and `TextareaHTMLAttributes` all
+extend `HTMLAttributes<T>`, which extends `DOMAttributes<T>`, which extends
+`CustomAttributes<T>` — and so do the file's other ~46 element-specific
+attribute interfaces (`AnchorHTMLAttributes`, `ButtonHTMLAttributes`,
+`ImgHTMLAttributes`, and the rest). None of them widen `CustomAttributes<T>`
+with `attr:${string}`. The gap was never element-specific; it lives in the one
+interface every element interface shares, so it reaches every JSX attribute
+interface Solid's types define, not a subset of three. The draft's own "Ask"
+already asked for the general fix ("the JSX attribute interfaces that already
+accept `CustomAttributes`"); only the "Title" and "What happens" framing below
+undersold that scope, and both are corrected here. This does not change the
+decision on this card — `attr:` stays required, the emitter stays untouched,
+the deliverable stays an unsent upstream report — it corrects a scope
+statement inside the draft.
+
 ### Upstream report — draft for the owner to file against solid-js
 
 Nothing has been sent. This is filing material.
 
-> **Title:** `InputHTMLAttributes` does not admit `attr:*` namespaced props that
-> Solid supports at runtime
+> **Title:** No JSX attribute interface that extends `CustomAttributes` admits
+> `attr:*` namespaced props that Solid supports at runtime — measured on
+> `InputHTMLAttributes`, `SelectHTMLAttributes` and `TextareaHTMLAttributes`
 >
 > **Version:** solid-js 1.8.22
 >
 > **What happens.** Solid supports `attr:*` namespaced props generically, forcing a
-> value to be written as an HTML **attribute** rather than a DOM property. The
-> shipped `JSX.InputHTMLAttributes` does not declare them, so `attr:value={…}` on an
-> `<input>` is a type error under `tsc` even though it is correct, supported code:
+> value to be written as an HTML **attribute** rather than a DOM property.
+> `CustomAttributes<T>` is the interface solid-js's own types reserve for exactly
+> this kind of namespaced augmentation, and every element-specific attribute
+> interface in the shipped `.d.ts` — `InputHTMLAttributes`, `SelectHTMLAttributes`,
+> `TextareaHTMLAttributes`, and, by the same inheritance chain
+> (`HTMLAttributes<T> extends AriaAttributes, DOMAttributes<T>` and
+> `DOMAttributes<T> extends CustomAttributes<T>`), every other element interface
+> the file declares — inherits an **empty** `CustomAttributes<T>`, never widened
+> with `attr:${string}`. So `attr:value={…}` is a type error under `tsc` on an
+> `<input>`, a `<select>` or a `<textarea>` alike, even though it is correct,
+> supported code in every case:
 >
 > ```
 > TS2322: Property 'attr:value' does not exist on type 'InputHTMLAttributes<HTMLInputElement>'.
+> TS2322: Property 'attr:value' does not exist on type 'SelectHTMLAttributes<HTMLSelectElement>'.
+> TS2322: Property 'attr:value' does not exist on type 'TextareaHTMLAttributes<HTMLTextAreaElement>'.
 > ```
 >
-> **Why it is not merely cosmetic.** For `<input>`, plain `value` sets the property
-> only; the attribute is never written. Anything that reads the serialized DOM — SSR
-> hydration comparison, snapshot testing, cross-framework differential testing,
-> `getAttribute('value')`, `outerHTML` — sees a different document. Measured on
-> chromium 1.8.22:
+> The select/textarea instances were measured against the shipped emitter rule
+> rather than a hand probe: `packages/frameworks/solid/src/emitter/index.ts:2158`
+> adds `attr:value` for every `kind: 'property'` binding named `value`,
+> unconditionally, and running it against S7's IR (before the `value` bindings
+> were pulled back out of that fixture — see the S7 note §4.3 cited above)
+> reproduced exactly the two diagnostics above, verbatim.
+>
+> **Why it is not merely cosmetic.** For all three control kinds, plain `value`
+> sets the property only; the attribute is never written. Anything that reads the
+> serialized DOM — SSR hydration comparison, snapshot testing, cross-framework
+> differential testing, `getAttribute('value')`, `outerHTML` — sees a different
+> document. Measured on chromium 1.8.22, on `<input>`:
 >
 > ```
 > <input value={sig()} attr:value={sig()} />   attribute="Beta!"  property="Beta!"
@@ -360,7 +401,8 @@ Nothing has been sent. This is filing material.
 > ```
 >
 > So `attr:*` is the only way to express "keep the attribute in sync", and it is
-> currently unexpressible in TypeScript without an augmentation.
+> currently unexpressible in TypeScript without an augmentation — on any element,
+> not only `<input>`.
 >
 > **Workaround in the wild.** Consumers declare it themselves:
 >
