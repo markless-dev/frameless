@@ -10,7 +10,21 @@ goal:
   slug: "frameless-angular-v1"
   kind: specific
   tranche: "Land an Angular lane end to end - official scaffold, emitter with handler-to-class-method lowering, gate, goldens, demo, e2e row asserting S1/S2/S3 equality - then re-run the held-out decorator-vs-signal question against a real build."
-  status: active
+  status: done
+  closed: >-
+    2026-07-28 by the T999 audit, which returned complete with full_outcome_complete: true and
+    SCOPED THE CERTIFICATE TO COMMIT a6bd400. It spot-checked at least one claim per task and all
+    five held, each by independent probe: R1's served-attribute assertion is a STANDING check with
+    two negative arms every run, not a one-off; prefer-signals really does carry no recommended
+    flag, so worked example 11's G6 FAIL and the no-signal-members policy's sole-enforcement role
+    both hold; the toolchain leak's mechanism is workspace membership, refuting exactness; and a
+    THIRD independently written peer-atom parser agreed at 67 after the auditor debugged a bug in
+    its own implementation first.
+    It also CORRECTED THE BOARD'S OWN RECORD in the safe direction: three carry-forward sites call
+    Gate 6's upstream-tier dependency unmitigated when gate.test.ts pins the derived set as an exact
+    literal, so a demotion or promotion goes red by name. Those corrections, and the Gate 6 preamble
+    contradiction the audit filed upward, are tracked as T040 on the umbrella board rather than
+    reopening this one - they are documentation defects about a MITIGATED dependency.
   started: >-
     STARTED 2026-07-27. T001 Scout dispatched by the PM after frameless-svelte-v1 landed its
     lane (pnpm e2e green, four rows) and ruled IR-4. This board is no longer prepped-only;
@@ -158,7 +172,7 @@ visual_board:
     url: null
     command: "npx goalbuddy board docs/goals/frameless-angular-v1"
 
-active_task: T999
+active_task: null
 
 tasks:
   - id: T001
@@ -1525,7 +1539,7 @@ tasks:
   - id: T999
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Audit whether the Angular lane satisfies the oracle and the full owner outcome."
     inputs:
@@ -1543,8 +1557,41 @@ tasks:
       - "full_outcome_complete: true | false"
       - "missing evidence"
       - "next task if not complete"
-    receipt: null
-
+    receipt:
+      result: done
+      decision: complete
+      full_outcome_complete: true
+      harness: claude-code
+      note: notes/T999-angular-audit.md
+      rationale: "Oracle satisfied and exceeded. scripts/e2e.mjs cross-lane JSON-compares the angular row against five lanes over SIX scenarios and exits 1 on divergence - ASSERTED, not reported. The contract diff at d1ad075 is FOUR non-comment added lines: 'angular' into the hydrate union plus one entry in each total Record. No literal moved, nothing relaxed. Emitted source IS activated: copy-emitted copies all six goldens verbatim into six routed components the box visits. Goldens are byte-stable against fresh emission with a calibrated comparison, names keyed on declared IR fields, collisions throw on a planted duplicate. Every deviation cites a witnessed prior failure."
+      summary: "Angular lane complete. Spot-checked at least one claim per task and ALL FIVE HELD, each by independent probe rather than by reading the receipt."
+      IT_WROTE_A_THIRD_PARSER_AND_CAUGHT_ITS_OWN_BUG_FIRST: "The peer-atom count has now been derived by THREE independently written parsers. This one read 68 until it found a multi-suffix base-name bug IN ITS OWN IMPLEMENTATION, fixed it, and landed on 67 = the recorded 66 plus the opaque hash asserted separately. Set difference EMPTY IN BOTH DIRECTIONS, jsdom@28.1.0 present. An auditor that debugs its own instrument before trusting its disagreement is the whole discipline in one act."
+      THE_GATE_6_RULING_AND_WHY_IT_HOLDS: "The recorded reading HOLDS, and the argument is structural rather than convenient. GATE 6'S PASS CLAUSE IS DISJUNCTIVE - 'or the sugar's claimed benefit is itself asserted by one' - and worked example 10, an ADOPTED forced-lowering ruling already shipped in the Qwik emitter, is a G6 PASS carried ENTIRELY by non-behavioural standing checks while explicitly stating it has no behavioural scenario. THE STRICT READING WOULD RETROACTIVELY VOID THAT TOO, and would force nine shipped call sites into a form this lane's own upstream-authored arbiter reports as a violation. Example 5's evidence is STRICTLY STRONGER than example 10's, because its arbiter is third-party-derived rather than frameless-authored."
+      IT_CORRECTED_THREE_CARRY_FORWARDS_THAT_UNDERSTATED_OUR_OWN_SAFETY: "Three prose sites - T009's note section 7, worked example 5, and the renderBranch comment - call Gate 6's upstream-tier dependency UNMITIGATED. IT IS MITIGATED, and mechanically: gate.test.ts asserts the derived template set equals the exact four names AND that prefer-signals is absent, so a demotion of prefer-control-flow or a promotion of prefer-signals GOES RED BY NAME. The PM wrote two of those carry-forwards. Note the direction - this understates our safety rather than overstating it, which is the less dangerous error but still a false statement in three places."
+      the_missing_evidence_was_ruled_not_owed_with_a_reason: "T005's SSR served-payload comparison is SUFFICIENT AS-IS, not owed: it cannot flip a Gate 5 FAIL that holds by construction, the caveat lives in the POLICY rather than only in a receipt, and the jsdom caveat ships with a standing re-run-in-Chromium instruction. Both would be owed only if either ruling were an ADOPTION resting on the unmeasured site. Closing an open question with a reason beats carrying it forward politely."
+      IR_8_is_carried_forward_not_closed: "Visible in shipped output as '@Input() initial: any'; recorded in tsconfig.app.json with the six-TS7006 measurement and an explicit statement of what is NOT relaxed; recorded in the package README under a heading that says 'recorded, not closed'; and OWNED by frameless-defects-and-targets-v1 T032, which gates the whole capability phase on it."
+      limitations_recorded_rather_than_waived: "Dev configuration only in pnpm e2e - though AOT and strictTemplates DO run every pass, which retires T002's dissent; optimization and hashing do not. chokidar 4->5 is benign only for the measured suites. And THIS CERTIFICATE IS SCOPED TO a6bd400 while a Worker lands S7 - S7 is Phase F's oracle, not this board's."
+      evidence:
+        - "scripts/e2e.mjs - angular row with prepare 'build:e2e'; per-scenario JSON.stringify comparison against the reference lane with process.exit(1) on divergence"
+        - "git show d1ad075 -- three-way-contract.ts under a non-comment filter: 4 added lines only; both tables remain total Readonly<Record<>>"
+        - "assertS3 -> measureServedAttribute({marker:'data-action=\"text\"', name:'value', equals:'hello'}) with payload-wide AND scoped negative arms plus two vacuity guards, EVERY call - so R1 is a standing check, not a one-off"
+        - "packages/frameworks/angular/generated/S3.ts - [value]=\"text\" and [checked]=\"checked\" still shipped; @Input() initial: any"
+        - "probe: @angular-eslint/eslint-plugin-template@22.1.0 has 41 rules, exactly 4 recommended including prefer-control-flow; prefer-signals has NO recommended field"
+        - "packages/frameworks/angular/test/gate.test.ts asserts the derived sets as exact literals (12 of 50, 4 of 41) and not.toContain prefer-signals"
+        - "independent depth-counting reader: 67 atoms = the recorded 66 plus the opaque hash; set difference empty both directions"
+        - "golden control-flow census at a6bd400: 9 blocks across 5 of 6 goldens, ZERO *ngIf/*ngFor - reproducing T011's reconciliation exactly"
+        - "@angular/build vendors vite 7.3.6; @angular/compiler-cli chokidar ^5.0.0; demos/angular-official devDeps jsdom ^28.0.0 and prettier ^3.8.1 - exactness refuted, workspace membership confirmed"
+        - "docs/emitter-idiom-policy.md worked example 10's G6 PASS carried by non-behavioural standing checks - the precedent that decides example 5's reading"
+        - "packages/frameworks/angular/test/emitter.test.ts - per-golden byte-identity against fresh emission with calibration, plus a planted collision proving the named throw"
+      missing_evidence:
+        - "SSR served-payload comparison between decorator and signal forms (ngh annotations) - UNMEASURED, recorded in worked example 11, ruled NOT OWED because it cannot flip a Gate 5 FAIL"
+        - "Worked examples 5 and 11 probes ran in jsdom against real AOT bundles rather than Chromium - carried with a standing re-run instruction"
+        - "Event routing across a control-flow boundary in both arms of example 5 was inferred from identical elements, bindings and node identity rather than driven"
+        - "Production ng build configuration is not standing in pnpm e2e - a repo-wide limitation already in goal.md, verified green once at T004"
+        - "chokidar 4->5 blast radius on markless watch/storage paths - outside every measured suite, owned by T007's recorded scope"
+      worker_package: null
+      spawned_tasks:
+        - "T040 on the umbrella board"
 checks:
   dirty_fingerprint: unknown
   last_verification:

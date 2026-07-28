@@ -3910,6 +3910,61 @@ tasks:
       - "R1 on the Angular board - whether a property binding reaches the served attribute - IS this axis, and it was measured on ONE control. S7 is where it gets a population."
       - "Record S7's size budget in both size.test.ts files. A budget is a RECORDED MEASUREMENT and cannot be derived; every scenario needs one."
       - "The corpus INVENTORIES are derived and should pick S7 up with ZERO edits. If any needs a hand edit, that is a defect in the derivation and a FINDING."
+  - id: T040
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    spec: "frameless-angular-v1 T999 audit and docs/goals/frameless-angular-v1/notes/T999-angular-audit.md - AUTHORITATIVE."
+    objective: >-
+      Correct three prose sites that understate our own safety, and scope Gate 6's preamble so it
+      stops contradicting its own PASS clause. Documentation only; no emitted output, no gate
+      predicate, no test assertion changes.
+    part_1_three_sites_say_UNMITIGATED_and_it_is_MITIGATED: >-
+      docs/goals/frameless-angular-v1/notes/T009-control-flow.md section 7, worked example 5 in
+      docs/emitter-idiom-policy.md, and the renderBranch decision-site comment in
+      packages/frameworks/angular/src/emitter/index.ts all carry Gate 6's upstream-tier dependency
+      as an UNMITIGATED risk - "if upstream moves prefer-control-flow to all, the deciding gate
+      loses its PASS and this must be re-run". IT IS MECHANICALLY MITIGATED:
+      packages/frameworks/angular/test/gate.test.ts asserts the derived template set equals the
+      EXACT FOUR NAMES and that prefer-signals is ABSENT, so a demotion of prefer-control-flow OR a
+      promotion of prefer-signals GOES RED BY NAME. Rewrite all three to say the dependency is
+      tripwired and name the test. NOTE THE DIRECTION - these understate our safety rather than
+      overstating it, which is the less dangerous error and still false in three places. THE PM
+      WROTE TWO OF THEM.
+    part_2_the_Gate_6_preamble_contradicts_its_own_PASS_clause: >-
+      Gate 6's preamble says a sugar "must exercise the target lane and assert observable behavior",
+      while its own second PASS clause reads "or the sugar's claimed benefit is itself asserted by
+      one". TWO SHIPPED ENTRIES NOW TURN ON THE DISJUNCTION: worked example 10 (adopted forced
+      lowering, already shipped in the Qwik emitter, a G6 PASS carried ENTIRELY by non-behavioural
+      standing checks while explicitly stating it has no behavioural scenario) and worked example 5.
+      SCOPE THE PREAMBLE'S lane-and-version requirement TO THE BEHAVIOURAL ARM so the two stop
+      pulling against each other. DO NOT re-score either entry and DO NOT change either ruling -
+      the T999 audit ruled example 5's reading HOLDS on example 10's precedent, and example 5's
+      evidence is strictly stronger because its arbiter is third-party-derived rather than
+      frameless-authored.
+    allowed_files:
+      - docs/emitter-idiom-policy.md
+      - packages/frameworks/angular/src/emitter/index.ts
+      - docs/goals/frameless-angular-v1/notes/T009-control-flow.md
+      - docs/goals/frameless-defects-and-targets-v1/notes/T040-gate6-scoping.md
+    verify:
+      - "pnpm check"
+      - "pnpm test"
+      - "pnpm lint"
+      - "node packages/frameworks/angular/scripts/regenerate.ts && git diff --exit-code -- packages/frameworks/angular/generated   # run TWICE; the emitter edit is COMMENT-ONLY"
+      - "git diff -- packages/frameworks/angular/src/emitter/index.ts | grep '^+' | grep -v '^+++' | grep -vE '^\\+\\s*(//|\\*|/\\*)' | grep -vE '^\\+\\s*$'   # MUST be EMPTY - mechanically verified, not asserted"
+      - "git diff --exit-code -- packages/compiler packages/frameworks/react packages/frameworks/solid packages/frameworks/qwik packages/frameworks/svelte packages/frameworks/vue"
+      - "git status --short"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "ANY byte of packages/frameworks/angular/generated moves."
+      - "You re-score, re-derive or change the RULING of worked example 5 or worked example 10. T999 ruled example 5's reading HOLDS; this task scopes a preamble, it does not revisit a verdict."
+      - "You are about to change a gate predicate or a test assertion. gate.test.ts ALREADY carries the tripwire - that is the whole point. Documentation only."
+      - "You weaken the Gate 6 requirement generally rather than scoping the preamble to the behavioural arm. The disjunction is the existing rule; this makes it legible, not looser."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
   - id: T031
     type: worker
     assignee: Worker

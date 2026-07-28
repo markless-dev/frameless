@@ -14,6 +14,7 @@ const FIXTURES = [
 	's4-nested-list.tsrx',
 	's5-branch-teardown.tsrx',
 	's6-whitespace-text.tsrx',
+	's7-form-controls.tsrx',
 ] as const;
 
 const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>> = {
@@ -136,6 +137,51 @@ const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>>
 		['button', 'data-widen'],
 		['button', 'data-action'],
 		['button', 'data-action'],
+	],
+	// S7's rows carry `data-oracle-form-key`, a FIFTH key attribute, for the reason
+	// the second, third and fourth exist: every key reader in
+	// `three-way-contract.ts` matches its own attribute globally, so a scenario
+	// reusing one would silently join that scenario's observation string.
+	//
+	// THE TWO AXES THIS FIXTURE FOLDS TOGETHER, and why they share a host.
+	//
+	// FORM CONTROLS. The corpus had exactly two control types before S7 - a text
+	// `input` and a checkbox `input`, both in S3 - so `value`/`checked`
+	// projection had never been observed on a `select`, a `textarea`, a radio
+	// group or a keyed group of checkboxes. All four are here, and all four
+	// lower to `kind: 'property'` bindings, which is the half of the divergence
+	// that matters: `value` and `checked` are DOM properties, and whether a
+	// property binding reaches the SERVED attribute is decided by each lane's own
+	// renderer rather than by this IR.
+	//
+	// BOOLEAN AND DYNAMIC ATTRIBUTES. `data-size`, `data-notes`, `data-tag`,
+	// `data-lock`, `disabled` and `aria-disabled` all lower to
+	// `kind: 'attribute'`, and `data-lock`/`aria-disabled` are bound to values
+	// that are `null` in one state and a string in the other - the
+	// present-versus-absent axis, measured live in all six lanes.
+	//
+	// `disabled` is the third state, `="false"`, and it is deliberately in the
+	// fixture rather than left to a comment: Angular lowers an `attribute`-kind
+	// binding to `[attr.disabled]`, whose runtime removes the attribute only for
+	// `null`/`undefined` and otherwise writes `renderStringify(value)`. See the
+	// T030 note for what the six lanes actually did with it.
+	's7-form-controls.tsrx': [
+		['form', 'data-scenario'],
+		['select', 'data-control'],
+		['option', 'value'],
+		['option', 'value'],
+		['option', 'value'],
+		['textarea', 'data-control'],
+		['input', 'data-pick'],
+		['input', 'data-pick'],
+		['p', 'data-picked'],
+		['p', 'data-chosen'],
+		['ul', 'data-tags'],
+		['li', 'data-oracle-form-key'],
+		['input', 'data-tag'],
+		['button', 'data-action'],
+		['button', 'data-action'],
+		['button', 'data-guard'],
 	],
 };
 
@@ -593,6 +639,7 @@ describe('fixture-family sufficiency', () => {
 			's4-nested-list.tsrx': ['flip', 'reorder', 'select'],
 			's5-branch-teardown.tsrx': ['toggle', 'tick', 'pick', 'drop'],
 			's6-whitespace-text.tsrx': ['widen', 'tick', 'pad'],
+			's7-form-controls.tsrx': ['size', 'notes', 'pick', 'tag', 'resize', 'lock'],
 		};
 		for (const file of FIXTURES) {
 			const ir = await fixtureIr(file);

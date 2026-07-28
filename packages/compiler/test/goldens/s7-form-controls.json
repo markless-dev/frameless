@@ -1,0 +1,3994 @@
+{
+  "components": [
+    {
+      "evaluation": {
+        "computedBindings": "reactive",
+        "ordinaryLocals": "once-per-instance"
+      },
+      "guards": [],
+      "id": "component:0:FormBoard",
+      "locals": [
+        {
+          "declarationKind": "let",
+          "initializer": {
+            "arguments": [
+              {
+                "end": 120,
+                "raw": "'s'",
+                "start": 117,
+                "type": "Literal",
+                "value": "s"
+              }
+            ],
+            "callee": {
+              "end": 116,
+              "name": "state",
+              "start": 111,
+              "type": "Identifier"
+            },
+            "end": 121,
+            "optional": false,
+            "start": 111,
+            "type": "CallExpression"
+          },
+          "names": [
+            "size"
+          ],
+          "order": 0,
+          "pattern": {
+            "end": 108,
+            "name": "size",
+            "start": 104,
+            "type": "Identifier"
+          },
+          "reads": [],
+          "semanticRecordIds": [
+            "state:size"
+          ]
+        },
+        {
+          "declarationKind": "let",
+          "initializer": {
+            "arguments": [
+              {
+                "end": 149,
+                "raw": "'draft'",
+                "start": 142,
+                "type": "Literal",
+                "value": "draft"
+              }
+            ],
+            "callee": {
+              "end": 141,
+              "name": "state",
+              "start": 136,
+              "type": "Identifier"
+            },
+            "end": 150,
+            "optional": false,
+            "start": 136,
+            "type": "CallExpression"
+          },
+          "names": [
+            "notes"
+          ],
+          "order": 1,
+          "pattern": {
+            "end": 133,
+            "name": "notes",
+            "start": 128,
+            "type": "Identifier"
+          },
+          "reads": [],
+          "semanticRecordIds": [
+            "state:notes"
+          ]
+        },
+        {
+          "declarationKind": "let",
+          "initializer": {
+            "arguments": [
+              {
+                "end": 174,
+                "raw": "'r1'",
+                "start": 170,
+                "type": "Literal",
+                "value": "r1"
+              }
+            ],
+            "callee": {
+              "end": 169,
+              "name": "state",
+              "start": 164,
+              "type": "Identifier"
+            },
+            "end": 175,
+            "optional": false,
+            "start": 164,
+            "type": "CallExpression"
+          },
+          "names": [
+            "pick"
+          ],
+          "order": 2,
+          "pattern": {
+            "end": 161,
+            "name": "pick",
+            "start": 157,
+            "type": "Identifier"
+          },
+          "reads": [],
+          "semanticRecordIds": [
+            "state:pick"
+          ]
+        },
+        {
+          "declarationKind": "let",
+          "initializer": {
+            "arguments": [
+              {
+                "end": 199,
+                "raw": "null",
+                "start": 195,
+                "type": "Literal",
+                "value": null
+              }
+            ],
+            "callee": {
+              "end": 194,
+              "name": "state",
+              "start": 189,
+              "type": "Identifier"
+            },
+            "end": 200,
+            "optional": false,
+            "start": 189,
+            "type": "CallExpression"
+          },
+          "names": [
+            "lock"
+          ],
+          "order": 3,
+          "pattern": {
+            "end": 186,
+            "name": "lock",
+            "start": 182,
+            "type": "Identifier"
+          },
+          "reads": [],
+          "semanticRecordIds": [
+            "state:lock"
+          ]
+        },
+        {
+          "declarationKind": "let",
+          "initializer": {
+            "arguments": [
+              {
+                "arguments": [
+                  {
+                    "async": false,
+                    "body": {
+                      "end": 249,
+                      "properties": [
+                        {
+                          "argument": {
+                            "end": 247,
+                            "name": "row",
+                            "start": 244,
+                            "type": "Identifier"
+                          },
+                          "end": 247,
+                          "start": 241,
+                          "type": "SpreadElement"
+                        }
+                      ],
+                      "start": 239,
+                      "type": "ObjectExpression"
+                    },
+                    "end": 250,
+                    "expression": true,
+                    "generator": false,
+                    "id": null,
+                    "params": [
+                      {
+                        "end": 233,
+                        "name": "row",
+                        "start": 230,
+                        "type": "Identifier"
+                      }
+                    ],
+                    "start": 229,
+                    "type": "ArrowFunctionExpression"
+                  }
+                ],
+                "callee": {
+                  "computed": false,
+                  "end": 228,
+                  "object": {
+                    "end": 224,
+                    "name": "seed",
+                    "start": 220,
+                    "type": "Identifier"
+                  },
+                  "optional": false,
+                  "property": {
+                    "end": 228,
+                    "name": "map",
+                    "start": 225,
+                    "type": "Identifier"
+                  },
+                  "start": 220,
+                  "type": "MemberExpression"
+                },
+                "end": 251,
+                "optional": false,
+                "start": 220,
+                "type": "CallExpression"
+              }
+            ],
+            "callee": {
+              "end": 219,
+              "name": "state",
+              "start": 214,
+              "type": "Identifier"
+            },
+            "end": 252,
+            "optional": false,
+            "start": 214,
+            "type": "CallExpression"
+          },
+          "names": [
+            "rows"
+          ],
+          "order": 4,
+          "pattern": {
+            "end": 211,
+            "name": "rows",
+            "start": 207,
+            "type": "Identifier"
+          },
+          "reads": [
+            {
+              "graphNodeId": "prop:props",
+              "path": [
+                "seed"
+              ],
+              "via": "alias"
+            }
+          ],
+          "semanticRecordIds": [
+            "state:rows"
+          ]
+        },
+        {
+          "declarationKind": "const",
+          "initializer": {
+            "arguments": [
+              {
+                "async": false,
+                "body": {
+                  "end": 375,
+                  "left": {
+                    "arguments": [
+                      {
+                        "end": 364,
+                        "raw": "'+'",
+                        "start": 361,
+                        "type": "Literal",
+                        "value": "+"
+                      }
+                    ],
+                    "callee": {
+                      "computed": false,
+                      "end": 360,
+                      "object": {
+                        "arguments": [
+                          {
+                            "async": false,
+                            "body": {
+                              "computed": false,
+                              "end": 349,
+                              "object": {
+                                "end": 346,
+                                "name": "row",
+                                "start": 343,
+                                "type": "Identifier"
+                              },
+                              "optional": false,
+                              "property": {
+                                "end": 349,
+                                "name": "id",
+                                "start": 347,
+                                "type": "Identifier"
+                              },
+                              "start": 343,
+                              "type": "MemberExpression"
+                            },
+                            "end": 349,
+                            "expression": true,
+                            "generator": false,
+                            "id": null,
+                            "params": [
+                              {
+                                "end": 338,
+                                "name": "row",
+                                "start": 335,
+                                "type": "Identifier"
+                              }
+                            ],
+                            "start": 334,
+                            "type": "ArrowFunctionExpression"
+                          }
+                        ],
+                        "callee": {
+                          "computed": false,
+                          "end": 333,
+                          "object": {
+                            "arguments": [
+                              {
+                                "async": false,
+                                "body": {
+                                  "computed": false,
+                                  "end": 323,
+                                  "object": {
+                                    "end": 320,
+                                    "name": "row",
+                                    "start": 317,
+                                    "type": "Identifier"
+                                  },
+                                  "optional": false,
+                                  "property": {
+                                    "end": 323,
+                                    "name": "on",
+                                    "start": 321,
+                                    "type": "Identifier"
+                                  },
+                                  "start": 317,
+                                  "type": "MemberExpression"
+                                },
+                                "end": 323,
+                                "expression": true,
+                                "generator": false,
+                                "id": null,
+                                "params": [
+                                  {
+                                    "end": 312,
+                                    "name": "row",
+                                    "start": 309,
+                                    "type": "Identifier"
+                                  }
+                                ],
+                                "start": 308,
+                                "type": "ArrowFunctionExpression"
+                              }
+                            ],
+                            "callee": {
+                              "computed": false,
+                              "end": 307,
+                              "object": {
+                                "end": 295,
+                                "name": "rows",
+                                "start": 291,
+                                "type": "Identifier"
+                              },
+                              "optional": false,
+                              "property": {
+                                "end": 307,
+                                "name": "filter",
+                                "start": 301,
+                                "type": "Identifier"
+                              },
+                              "start": 291,
+                              "type": "MemberExpression"
+                            },
+                            "end": 324,
+                            "optional": false,
+                            "start": 291,
+                            "type": "CallExpression"
+                          },
+                          "optional": false,
+                          "property": {
+                            "end": 333,
+                            "name": "map",
+                            "start": 330,
+                            "type": "Identifier"
+                          },
+                          "start": 291,
+                          "type": "MemberExpression"
+                        },
+                        "end": 350,
+                        "optional": false,
+                        "start": 291,
+                        "type": "CallExpression"
+                      },
+                      "optional": false,
+                      "property": {
+                        "end": 360,
+                        "name": "join",
+                        "start": 356,
+                        "type": "Identifier"
+                      },
+                      "start": 291,
+                      "type": "MemberExpression"
+                    },
+                    "end": 365,
+                    "optional": false,
+                    "start": 291,
+                    "type": "CallExpression"
+                  },
+                  "operator": "||",
+                  "right": {
+                    "end": 375,
+                    "raw": "'none'",
+                    "start": 369,
+                    "type": "Literal",
+                    "value": "none"
+                  },
+                  "start": 291,
+                  "type": "LogicalExpression"
+                },
+                "end": 375,
+                "expression": true,
+                "generator": false,
+                "id": null,
+                "params": [],
+                "start": 282,
+                "type": "ArrowFunctionExpression"
+              }
+            ],
+            "callee": {
+              "end": 278,
+              "name": "computed",
+              "start": 270,
+              "type": "Identifier"
+            },
+            "end": 379,
+            "optional": false,
+            "start": 270,
+            "type": "CallExpression"
+          },
+          "names": [
+            "chosen"
+          ],
+          "order": 5,
+          "pattern": {
+            "end": 267,
+            "name": "chosen",
+            "start": 261,
+            "type": "Identifier"
+          },
+          "reads": [
+            {
+              "graphNodeId": "state:rows",
+              "path": [],
+              "via": "direct"
+            }
+          ],
+          "semanticRecordIds": [
+            "computed:chosen"
+          ]
+        },
+        {
+          "declarationKind": "const",
+          "initializer": {
+            "arguments": [
+              {
+                "async": false,
+                "body": {
+                  "end": 426,
+                  "left": {
+                    "end": 417,
+                    "name": "pick",
+                    "start": 413,
+                    "type": "Identifier"
+                  },
+                  "operator": "===",
+                  "right": {
+                    "end": 426,
+                    "raw": "'r1'",
+                    "start": 422,
+                    "type": "Literal",
+                    "value": "r1"
+                  },
+                  "start": 413,
+                  "type": "BinaryExpression"
+                },
+                "end": 426,
+                "expression": true,
+                "generator": false,
+                "id": null,
+                "params": [],
+                "start": 407,
+                "type": "ArrowFunctionExpression"
+              }
+            ],
+            "callee": {
+              "end": 406,
+              "name": "computed",
+              "start": 398,
+              "type": "Identifier"
+            },
+            "end": 427,
+            "optional": false,
+            "start": 398,
+            "type": "CallExpression"
+          },
+          "names": [
+            "onFirst"
+          ],
+          "order": 6,
+          "pattern": {
+            "end": 395,
+            "name": "onFirst",
+            "start": 388,
+            "type": "Identifier"
+          },
+          "reads": [
+            {
+              "graphNodeId": "state:pick",
+              "path": [],
+              "via": "direct"
+            }
+          ],
+          "semanticRecordIds": [
+            "computed:onFirst"
+          ]
+        },
+        {
+          "declarationKind": "const",
+          "initializer": {
+            "arguments": [
+              {
+                "async": false,
+                "body": {
+                  "end": 475,
+                  "left": {
+                    "end": 466,
+                    "name": "pick",
+                    "start": 462,
+                    "type": "Identifier"
+                  },
+                  "operator": "===",
+                  "right": {
+                    "end": 475,
+                    "raw": "'r2'",
+                    "start": 471,
+                    "type": "Literal",
+                    "value": "r2"
+                  },
+                  "start": 462,
+                  "type": "BinaryExpression"
+                },
+                "end": 475,
+                "expression": true,
+                "generator": false,
+                "id": null,
+                "params": [],
+                "start": 456,
+                "type": "ArrowFunctionExpression"
+              }
+            ],
+            "callee": {
+              "end": 455,
+              "name": "computed",
+              "start": 447,
+              "type": "Identifier"
+            },
+            "end": 476,
+            "optional": false,
+            "start": 447,
+            "type": "CallExpression"
+          },
+          "names": [
+            "onSecond"
+          ],
+          "order": 7,
+          "pattern": {
+            "end": 444,
+            "name": "onSecond",
+            "start": 436,
+            "type": "Identifier"
+          },
+          "reads": [
+            {
+              "graphNodeId": "state:pick",
+              "path": [],
+              "via": "direct"
+            }
+          ],
+          "semanticRecordIds": [
+            "computed:onSecond"
+          ]
+        },
+        {
+          "declarationKind": "const",
+          "initializer": {
+            "arguments": [
+              {
+                "async": false,
+                "body": {
+                  "end": 522,
+                  "left": {
+                    "end": 513,
+                    "name": "lock",
+                    "start": 509,
+                    "type": "Identifier"
+                  },
+                  "operator": "!==",
+                  "right": {
+                    "end": 522,
+                    "raw": "null",
+                    "start": 518,
+                    "type": "Literal",
+                    "value": null
+                  },
+                  "start": 509,
+                  "type": "BinaryExpression"
+                },
+                "end": 522,
+                "expression": true,
+                "generator": false,
+                "id": null,
+                "params": [],
+                "start": 503,
+                "type": "ArrowFunctionExpression"
+              }
+            ],
+            "callee": {
+              "end": 502,
+              "name": "computed",
+              "start": 494,
+              "type": "Identifier"
+            },
+            "end": 523,
+            "optional": false,
+            "start": 494,
+            "type": "CallExpression"
+          },
+          "names": [
+            "locked"
+          ],
+          "order": 8,
+          "pattern": {
+            "end": 491,
+            "name": "locked",
+            "start": 485,
+            "type": "Identifier"
+          },
+          "reads": [
+            {
+              "graphNodeId": "state:lock",
+              "path": [],
+              "via": "direct"
+            }
+          ],
+          "semanticRecordIds": [
+            "computed:locked"
+          ]
+        },
+        {
+          "declarationKind": "const",
+          "initializer": {
+            "arguments": [
+              {
+                "async": false,
+                "body": {
+                  "alternate": {
+                    "end": 585,
+                    "raw": "'true'",
+                    "start": 579,
+                    "type": "Literal",
+                    "value": "true"
+                  },
+                  "consequent": {
+                    "end": 576,
+                    "raw": "null",
+                    "start": 572,
+                    "type": "Literal",
+                    "value": null
+                  },
+                  "end": 585,
+                  "start": 556,
+                  "test": {
+                    "end": 569,
+                    "left": {
+                      "end": 560,
+                      "name": "lock",
+                      "start": 556,
+                      "type": "Identifier"
+                    },
+                    "operator": "===",
+                    "right": {
+                      "end": 569,
+                      "raw": "null",
+                      "start": 565,
+                      "type": "Literal",
+                      "value": null
+                    },
+                    "start": 556,
+                    "type": "BinaryExpression"
+                  },
+                  "type": "ConditionalExpression"
+                },
+                "end": 586,
+                "expression": true,
+                "generator": false,
+                "id": null,
+                "params": [],
+                "start": 549,
+                "type": "ArrowFunctionExpression"
+              }
+            ],
+            "callee": {
+              "end": 548,
+              "name": "computed",
+              "start": 540,
+              "type": "Identifier"
+            },
+            "end": 587,
+            "optional": false,
+            "start": 540,
+            "type": "CallExpression"
+          },
+          "names": [
+            "guard"
+          ],
+          "order": 9,
+          "pattern": {
+            "end": 537,
+            "name": "guard",
+            "start": 532,
+            "type": "Identifier"
+          },
+          "reads": [
+            {
+              "graphNodeId": "state:lock",
+              "path": [],
+              "via": "direct"
+            }
+          ],
+          "semanticRecordIds": [
+            "computed:guard"
+          ]
+        }
+      ],
+      "name": "FormBoard",
+      "props": {
+        "entries": [
+          {
+            "alias": false,
+            "graphNodeId": "prop:props",
+            "localName": "seed",
+            "path": [
+              "seed"
+            ],
+            "sourceName": "seed"
+          },
+          {
+            "alias": false,
+            "graphNodeId": "prop:props",
+            "localName": "onTrace",
+            "path": [
+              "onTrace"
+            ],
+            "sourceName": "onTrace"
+          }
+        ],
+        "graphNodeId": "prop:props"
+      },
+      "template": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "children": [
+                    {
+                      "id": "text:0",
+                      "kind": "text",
+                      "value": "small"
+                    }
+                  ],
+                  "dynamicBindings": [],
+                  "eventIds": [],
+                  "id": "h2",
+                  "kind": "host",
+                  "staticAttributes": [
+                    {
+                      "name": "value",
+                      "value": "s"
+                    }
+                  ],
+                  "tag": "option"
+                },
+                {
+                  "children": [
+                    {
+                      "id": "text:1",
+                      "kind": "text",
+                      "value": "medium"
+                    }
+                  ],
+                  "dynamicBindings": [],
+                  "eventIds": [],
+                  "id": "h3",
+                  "kind": "host",
+                  "staticAttributes": [
+                    {
+                      "name": "value",
+                      "value": "m"
+                    }
+                  ],
+                  "tag": "option"
+                },
+                {
+                  "children": [
+                    {
+                      "id": "text:2",
+                      "kind": "text",
+                      "value": "large"
+                    }
+                  ],
+                  "dynamicBindings": [],
+                  "eventIds": [],
+                  "id": "h4",
+                  "kind": "host",
+                  "staticAttributes": [
+                    {
+                      "name": "value",
+                      "value": "l"
+                    }
+                  ],
+                  "tag": "option"
+                }
+              ],
+              "dynamicBindings": [
+                {
+                  "expression": {
+                    "end": 668,
+                    "name": "size",
+                    "start": 664,
+                    "type": "Identifier"
+                  },
+                  "kind": "attribute",
+                  "name": "data-size",
+                  "reads": [
+                    {
+                      "graphNodeId": "state:size",
+                      "path": [],
+                      "via": "direct"
+                    }
+                  ]
+                },
+                {
+                  "expression": {
+                    "end": 684,
+                    "name": "size",
+                    "start": 680,
+                    "type": "Identifier"
+                  },
+                  "kind": "property",
+                  "name": "value",
+                  "reads": [
+                    {
+                      "graphNodeId": "state:size",
+                      "path": [],
+                      "via": "direct"
+                    }
+                  ]
+                }
+              ],
+              "eventIds": [
+                "event:0"
+              ],
+              "id": "h1",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-control",
+                  "value": "size"
+                }
+              ],
+              "tag": "select"
+            },
+            {
+              "children": [],
+              "dynamicBindings": [
+                {
+                  "expression": {
+                    "end": 1004,
+                    "name": "notes",
+                    "start": 999,
+                    "type": "Identifier"
+                  },
+                  "kind": "attribute",
+                  "name": "data-notes",
+                  "reads": [
+                    {
+                      "graphNodeId": "state:notes",
+                      "path": [],
+                      "via": "direct"
+                    }
+                  ]
+                },
+                {
+                  "expression": {
+                    "end": 1021,
+                    "name": "notes",
+                    "start": 1016,
+                    "type": "Identifier"
+                  },
+                  "kind": "property",
+                  "name": "value",
+                  "reads": [
+                    {
+                      "graphNodeId": "state:notes",
+                      "path": [],
+                      "via": "direct"
+                    }
+                  ]
+                }
+              ],
+              "eventIds": [
+                "event:1"
+              ],
+              "id": "h5",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-control",
+                  "value": "notes"
+                }
+              ],
+              "tag": "textarea"
+            },
+            {
+              "children": [],
+              "dynamicBindings": [
+                {
+                  "expression": {
+                    "end": 1246,
+                    "name": "onFirst",
+                    "start": 1239,
+                    "type": "Identifier"
+                  },
+                  "kind": "property",
+                  "name": "checked",
+                  "reads": [
+                    {
+                      "graphNodeId": "computed:onFirst",
+                      "path": [],
+                      "via": "direct"
+                    }
+                  ]
+                }
+              ],
+              "eventIds": [
+                "event:2"
+              ],
+              "id": "h6",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "type",
+                  "value": "radio"
+                },
+                {
+                  "name": "name",
+                  "value": "s7pick"
+                },
+                {
+                  "name": "data-pick",
+                  "value": "r1"
+                }
+              ],
+              "tag": "input"
+            },
+            {
+              "children": [],
+              "dynamicBindings": [
+                {
+                  "expression": {
+                    "end": 1426,
+                    "name": "onSecond",
+                    "start": 1418,
+                    "type": "Identifier"
+                  },
+                  "kind": "property",
+                  "name": "checked",
+                  "reads": [
+                    {
+                      "graphNodeId": "computed:onSecond",
+                      "path": [],
+                      "via": "direct"
+                    }
+                  ]
+                }
+              ],
+              "eventIds": [
+                "event:3"
+              ],
+              "id": "h7",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "type",
+                  "value": "radio"
+                },
+                {
+                  "name": "name",
+                  "value": "s7pick"
+                },
+                {
+                  "name": "data-pick",
+                  "value": "r2"
+                }
+              ],
+              "tag": "input"
+            },
+            {
+              "children": [
+                {
+                  "expression": {
+                    "end": 1555,
+                    "name": "pick",
+                    "start": 1551,
+                    "type": "Identifier"
+                  },
+                  "id": "text:3",
+                  "kind": "dynamic-text",
+                  "reads": [
+                    {
+                      "graphNodeId": "state:pick",
+                      "path": [],
+                      "via": "direct"
+                    }
+                  ]
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [],
+              "id": "h8",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-picked",
+                  "value": "true"
+                }
+              ],
+              "tag": "p"
+            },
+            {
+              "children": [
+                {
+                  "expression": {
+                    "end": 1592,
+                    "name": "chosen",
+                    "start": 1586,
+                    "type": "Identifier"
+                  },
+                  "id": "text:4",
+                  "kind": "dynamic-text",
+                  "reads": [
+                    {
+                      "graphNodeId": "computed:chosen",
+                      "path": [],
+                      "via": "direct"
+                    }
+                  ]
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [],
+              "id": "h9",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-chosen",
+                  "value": "true"
+                }
+              ],
+              "tag": "p"
+            },
+            {
+              "children": [
+                {
+                  "collection": {
+                    "expression": {
+                      "end": 1648,
+                      "name": "rows",
+                      "start": 1644,
+                      "type": "Identifier"
+                    },
+                    "reads": [
+                      {
+                        "graphNodeId": "state:rows",
+                        "path": [],
+                        "via": "direct"
+                      }
+                    ]
+                  },
+                  "empty": [],
+                  "id": "repeat:0",
+                  "item": "row",
+                  "key": {
+                    "expression": {
+                      "computed": false,
+                      "end": 1660,
+                      "object": {
+                        "end": 1657,
+                        "name": "row",
+                        "start": 1654,
+                        "type": "Identifier"
+                      },
+                      "optional": false,
+                      "property": {
+                        "end": 1660,
+                        "name": "id",
+                        "start": 1658,
+                        "type": "Identifier"
+                      },
+                      "start": 1654,
+                      "type": "MemberExpression"
+                    },
+                    "reads": [
+                      {
+                        "graphNodeId": "state:rows",
+                        "path": [
+                          "id"
+                        ],
+                        "via": "repeat-item"
+                      }
+                    ]
+                  },
+                  "kind": "keyed-repeat",
+                  "row": [
+                    {
+                      "children": [
+                        {
+                          "children": [],
+                          "dynamicBindings": [
+                            {
+                              "expression": {
+                                "computed": false,
+                                "end": 1759,
+                                "object": {
+                                  "end": 1756,
+                                  "name": "row",
+                                  "start": 1753,
+                                  "type": "Identifier"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 1759,
+                                  "name": "id",
+                                  "start": 1757,
+                                  "type": "Identifier"
+                                },
+                                "start": 1753,
+                                "type": "MemberExpression"
+                              },
+                              "kind": "attribute",
+                              "name": "data-tag",
+                              "reads": [
+                                {
+                                  "graphNodeId": "state:rows",
+                                  "path": [
+                                    "id"
+                                  ],
+                                  "via": "repeat-item"
+                                }
+                              ]
+                            },
+                            {
+                              "expression": {
+                                "computed": false,
+                                "end": 1782,
+                                "object": {
+                                  "end": 1779,
+                                  "name": "row",
+                                  "start": 1776,
+                                  "type": "Identifier"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 1782,
+                                  "name": "on",
+                                  "start": 1780,
+                                  "type": "Identifier"
+                                },
+                                "start": 1776,
+                                "type": "MemberExpression"
+                              },
+                              "kind": "property",
+                              "name": "checked",
+                              "reads": [
+                                {
+                                  "graphNodeId": "state:rows",
+                                  "path": [
+                                    "on"
+                                  ],
+                                  "via": "repeat-item"
+                                }
+                              ]
+                            }
+                          ],
+                          "eventIds": [
+                            "event:4"
+                          ],
+                          "id": "h12",
+                          "kind": "host",
+                          "staticAttributes": [
+                            {
+                              "name": "type",
+                              "value": "checkbox"
+                            }
+                          ],
+                          "tag": "input"
+                        }
+                      ],
+                      "dynamicBindings": [
+                        {
+                          "expression": {
+                            "computed": false,
+                            "end": 1700,
+                            "object": {
+                              "end": 1697,
+                              "name": "row",
+                              "start": 1694,
+                              "type": "Identifier"
+                            },
+                            "optional": false,
+                            "property": {
+                              "end": 1700,
+                              "name": "id",
+                              "start": 1698,
+                              "type": "Identifier"
+                            },
+                            "start": 1694,
+                            "type": "MemberExpression"
+                          },
+                          "kind": "attribute",
+                          "name": "data-oracle-form-key",
+                          "reads": [
+                            {
+                              "graphNodeId": "state:rows",
+                              "path": [
+                                "id"
+                              ],
+                              "via": "repeat-item"
+                            }
+                          ]
+                        }
+                      ],
+                      "eventIds": [],
+                      "id": "h11",
+                      "kind": "host",
+                      "staticAttributes": [],
+                      "tag": "li"
+                    }
+                  ]
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [],
+              "id": "h10",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-tags",
+                  "value": "true"
+                }
+              ],
+              "tag": "ul"
+            },
+            {
+              "children": [
+                {
+                  "id": "text:5",
+                  "kind": "text",
+                  "value": "resize"
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [
+                "event:5"
+              ],
+              "id": "h13",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "type",
+                  "value": "button"
+                },
+                {
+                  "name": "data-action",
+                  "value": "resize"
+                }
+              ],
+              "tag": "button"
+            },
+            {
+              "children": [
+                {
+                  "id": "text:6",
+                  "kind": "text",
+                  "value": "lock"
+                }
+              ],
+              "dynamicBindings": [
+                {
+                  "expression": {
+                    "end": 2306,
+                    "name": "lock",
+                    "start": 2302,
+                    "type": "Identifier"
+                  },
+                  "kind": "attribute",
+                  "name": "data-lock",
+                  "reads": [
+                    {
+                      "graphNodeId": "state:lock",
+                      "path": [],
+                      "via": "direct"
+                    }
+                  ]
+                }
+              ],
+              "eventIds": [
+                "event:6"
+              ],
+              "id": "h14",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "type",
+                  "value": "button"
+                },
+                {
+                  "name": "data-action",
+                  "value": "lock"
+                }
+              ],
+              "tag": "button"
+            },
+            {
+              "children": [
+                {
+                  "id": "text:7",
+                  "kind": "text",
+                  "value": "guard"
+                }
+              ],
+              "dynamicBindings": [
+                {
+                  "expression": {
+                    "end": 2521,
+                    "name": "locked",
+                    "start": 2515,
+                    "type": "Identifier"
+                  },
+                  "kind": "attribute",
+                  "name": "disabled",
+                  "reads": [
+                    {
+                      "graphNodeId": "computed:locked",
+                      "path": [],
+                      "via": "direct"
+                    }
+                  ]
+                },
+                {
+                  "expression": {
+                    "end": 2543,
+                    "name": "guard",
+                    "start": 2538,
+                    "type": "Identifier"
+                  },
+                  "kind": "attribute",
+                  "name": "aria-disabled",
+                  "reads": [
+                    {
+                      "graphNodeId": "computed:guard",
+                      "path": [],
+                      "via": "direct"
+                    }
+                  ]
+                }
+              ],
+              "eventIds": [],
+              "id": "h15",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "type",
+                  "value": "button"
+                },
+                {
+                  "name": "data-guard",
+                  "value": "true"
+                }
+              ],
+              "tag": "button"
+            }
+          ],
+          "dynamicBindings": [],
+          "eventIds": [],
+          "id": "h0",
+          "kind": "host",
+          "staticAttributes": [
+            {
+              "name": "data-scenario",
+              "value": "s7"
+            }
+          ],
+          "tag": "form"
+        }
+      ]
+    }
+  ],
+  "filename": "src/fixtures/s7-form-controls.tsrx",
+  "imports": [],
+  "module": {
+    "exports": [
+      {
+        "componentName": "FormBoard",
+        "exportedName": "FormBoard",
+        "kind": "named"
+      }
+    ]
+  },
+  "records": {
+    "aliases": [
+      {
+        "componentId": "component:0:FormBoard",
+        "declarationKind": "const",
+        "graphNodeId": "prop:props",
+        "id": "alias:FormBoard:onTrace",
+        "name": "onTrace",
+        "path": [
+          "onTrace"
+        ],
+        "sourceSpan": {
+          "end": 92,
+          "filename": "src/fixtures/s7-form-controls.tsrx",
+          "start": 85
+        },
+        "target": "props.onTrace"
+      },
+      {
+        "componentId": "component:0:FormBoard",
+        "declarationKind": "const",
+        "graphNodeId": "prop:props",
+        "id": "alias:FormBoard:seed",
+        "name": "seed",
+        "path": [
+          "seed"
+        ],
+        "sourceSpan": {
+          "end": 83,
+          "filename": "src/fixtures/s7-form-controls.tsrx",
+          "start": 79
+        },
+        "target": "props.seed"
+      }
+    ],
+    "behaviors": [],
+    "bindings": [
+      {
+        "async": false,
+        "asyncCapable": false,
+        "componentId": "component:0:FormBoard",
+        "computed": {
+          "expression": {
+            "async": false,
+            "body": {
+              "end": 375,
+              "left": {
+                "arguments": [
+                  {
+                    "end": 364,
+                    "raw": "'+'",
+                    "start": 361,
+                    "type": "Literal",
+                    "value": "+"
+                  }
+                ],
+                "callee": {
+                  "computed": false,
+                  "end": 360,
+                  "object": {
+                    "arguments": [
+                      {
+                        "async": false,
+                        "body": {
+                          "computed": false,
+                          "end": 349,
+                          "object": {
+                            "end": 346,
+                            "name": "row",
+                            "start": 343,
+                            "type": "Identifier"
+                          },
+                          "optional": false,
+                          "property": {
+                            "end": 349,
+                            "name": "id",
+                            "start": 347,
+                            "type": "Identifier"
+                          },
+                          "start": 343,
+                          "type": "MemberExpression"
+                        },
+                        "end": 349,
+                        "expression": true,
+                        "generator": false,
+                        "id": null,
+                        "params": [
+                          {
+                            "end": 338,
+                            "name": "row",
+                            "start": 335,
+                            "type": "Identifier"
+                          }
+                        ],
+                        "start": 334,
+                        "type": "ArrowFunctionExpression"
+                      }
+                    ],
+                    "callee": {
+                      "computed": false,
+                      "end": 333,
+                      "object": {
+                        "arguments": [
+                          {
+                            "async": false,
+                            "body": {
+                              "computed": false,
+                              "end": 323,
+                              "object": {
+                                "end": 320,
+                                "name": "row",
+                                "start": 317,
+                                "type": "Identifier"
+                              },
+                              "optional": false,
+                              "property": {
+                                "end": 323,
+                                "name": "on",
+                                "start": 321,
+                                "type": "Identifier"
+                              },
+                              "start": 317,
+                              "type": "MemberExpression"
+                            },
+                            "end": 323,
+                            "expression": true,
+                            "generator": false,
+                            "id": null,
+                            "params": [
+                              {
+                                "end": 312,
+                                "name": "row",
+                                "start": 309,
+                                "type": "Identifier"
+                              }
+                            ],
+                            "start": 308,
+                            "type": "ArrowFunctionExpression"
+                          }
+                        ],
+                        "callee": {
+                          "computed": false,
+                          "end": 307,
+                          "object": {
+                            "end": 295,
+                            "name": "rows",
+                            "start": 291,
+                            "type": "Identifier"
+                          },
+                          "optional": false,
+                          "property": {
+                            "end": 307,
+                            "name": "filter",
+                            "start": 301,
+                            "type": "Identifier"
+                          },
+                          "start": 291,
+                          "type": "MemberExpression"
+                        },
+                        "end": 324,
+                        "optional": false,
+                        "start": 291,
+                        "type": "CallExpression"
+                      },
+                      "optional": false,
+                      "property": {
+                        "end": 333,
+                        "name": "map",
+                        "start": 330,
+                        "type": "Identifier"
+                      },
+                      "start": 291,
+                      "type": "MemberExpression"
+                    },
+                    "end": 350,
+                    "optional": false,
+                    "start": 291,
+                    "type": "CallExpression"
+                  },
+                  "optional": false,
+                  "property": {
+                    "end": 360,
+                    "name": "join",
+                    "start": 356,
+                    "type": "Identifier"
+                  },
+                  "start": 291,
+                  "type": "MemberExpression"
+                },
+                "end": 365,
+                "optional": false,
+                "start": 291,
+                "type": "CallExpression"
+              },
+              "operator": "||",
+              "right": {
+                "end": 375,
+                "raw": "'none'",
+                "start": 369,
+                "type": "Literal",
+                "value": "none"
+              },
+              "start": 291,
+              "type": "LogicalExpression"
+            },
+            "end": 375,
+            "expression": true,
+            "generator": false,
+            "id": null,
+            "params": [],
+            "start": 282,
+            "type": "ArrowFunctionExpression"
+          },
+          "reads": [
+            {
+              "graphNodeId": "state:rows",
+              "path": [],
+              "via": "direct"
+            }
+          ]
+        },
+        "declarationKind": "const",
+        "id": "computed:chosen",
+        "kind": "computed",
+        "name": "chosen",
+        "reads": [
+          {
+            "componentId": "component:0:FormBoard",
+            "graphNodeId": "state:rows",
+            "path": []
+          }
+        ],
+        "writable": false,
+        "writes": []
+      },
+      {
+        "async": false,
+        "asyncCapable": false,
+        "componentId": "component:0:FormBoard",
+        "computed": {
+          "expression": {
+            "async": false,
+            "body": {
+              "alternate": {
+                "end": 585,
+                "raw": "'true'",
+                "start": 579,
+                "type": "Literal",
+                "value": "true"
+              },
+              "consequent": {
+                "end": 576,
+                "raw": "null",
+                "start": 572,
+                "type": "Literal",
+                "value": null
+              },
+              "end": 585,
+              "start": 556,
+              "test": {
+                "end": 569,
+                "left": {
+                  "end": 560,
+                  "name": "lock",
+                  "start": 556,
+                  "type": "Identifier"
+                },
+                "operator": "===",
+                "right": {
+                  "end": 569,
+                  "raw": "null",
+                  "start": 565,
+                  "type": "Literal",
+                  "value": null
+                },
+                "start": 556,
+                "type": "BinaryExpression"
+              },
+              "type": "ConditionalExpression"
+            },
+            "end": 586,
+            "expression": true,
+            "generator": false,
+            "id": null,
+            "params": [],
+            "start": 549,
+            "type": "ArrowFunctionExpression"
+          },
+          "reads": [
+            {
+              "graphNodeId": "state:lock",
+              "path": [],
+              "via": "direct"
+            }
+          ]
+        },
+        "declarationKind": "const",
+        "id": "computed:guard",
+        "kind": "computed",
+        "name": "guard",
+        "reads": [
+          {
+            "componentId": "component:0:FormBoard",
+            "graphNodeId": "state:lock",
+            "path": []
+          }
+        ],
+        "writable": false,
+        "writes": []
+      },
+      {
+        "async": false,
+        "asyncCapable": false,
+        "componentId": "component:0:FormBoard",
+        "computed": {
+          "expression": {
+            "async": false,
+            "body": {
+              "end": 522,
+              "left": {
+                "end": 513,
+                "name": "lock",
+                "start": 509,
+                "type": "Identifier"
+              },
+              "operator": "!==",
+              "right": {
+                "end": 522,
+                "raw": "null",
+                "start": 518,
+                "type": "Literal",
+                "value": null
+              },
+              "start": 509,
+              "type": "BinaryExpression"
+            },
+            "end": 522,
+            "expression": true,
+            "generator": false,
+            "id": null,
+            "params": [],
+            "start": 503,
+            "type": "ArrowFunctionExpression"
+          },
+          "reads": [
+            {
+              "graphNodeId": "state:lock",
+              "path": [],
+              "via": "direct"
+            }
+          ]
+        },
+        "declarationKind": "const",
+        "id": "computed:locked",
+        "kind": "computed",
+        "name": "locked",
+        "reads": [
+          {
+            "componentId": "component:0:FormBoard",
+            "graphNodeId": "state:lock",
+            "path": []
+          }
+        ],
+        "writable": false,
+        "writes": []
+      },
+      {
+        "async": false,
+        "asyncCapable": false,
+        "componentId": "component:0:FormBoard",
+        "computed": {
+          "expression": {
+            "async": false,
+            "body": {
+              "end": 426,
+              "left": {
+                "end": 417,
+                "name": "pick",
+                "start": 413,
+                "type": "Identifier"
+              },
+              "operator": "===",
+              "right": {
+                "end": 426,
+                "raw": "'r1'",
+                "start": 422,
+                "type": "Literal",
+                "value": "r1"
+              },
+              "start": 413,
+              "type": "BinaryExpression"
+            },
+            "end": 426,
+            "expression": true,
+            "generator": false,
+            "id": null,
+            "params": [],
+            "start": 407,
+            "type": "ArrowFunctionExpression"
+          },
+          "reads": [
+            {
+              "graphNodeId": "state:pick",
+              "path": [],
+              "via": "direct"
+            }
+          ]
+        },
+        "declarationKind": "const",
+        "id": "computed:onFirst",
+        "kind": "computed",
+        "name": "onFirst",
+        "reads": [
+          {
+            "componentId": "component:0:FormBoard",
+            "graphNodeId": "state:pick",
+            "path": []
+          }
+        ],
+        "writable": false,
+        "writes": []
+      },
+      {
+        "async": false,
+        "asyncCapable": false,
+        "componentId": "component:0:FormBoard",
+        "computed": {
+          "expression": {
+            "async": false,
+            "body": {
+              "end": 475,
+              "left": {
+                "end": 466,
+                "name": "pick",
+                "start": 462,
+                "type": "Identifier"
+              },
+              "operator": "===",
+              "right": {
+                "end": 475,
+                "raw": "'r2'",
+                "start": 471,
+                "type": "Literal",
+                "value": "r2"
+              },
+              "start": 462,
+              "type": "BinaryExpression"
+            },
+            "end": 475,
+            "expression": true,
+            "generator": false,
+            "id": null,
+            "params": [],
+            "start": 456,
+            "type": "ArrowFunctionExpression"
+          },
+          "reads": [
+            {
+              "graphNodeId": "state:pick",
+              "path": [],
+              "via": "direct"
+            }
+          ]
+        },
+        "declarationKind": "const",
+        "id": "computed:onSecond",
+        "kind": "computed",
+        "name": "onSecond",
+        "reads": [
+          {
+            "componentId": "component:0:FormBoard",
+            "graphNodeId": "state:pick",
+            "path": []
+          }
+        ],
+        "writable": false,
+        "writes": []
+      },
+      {
+        "componentId": "component:0:FormBoard",
+        "declarationKind": "const",
+        "id": "prop:props",
+        "kind": "prop",
+        "name": "props",
+        "reads": [],
+        "valueKind": "object",
+        "writable": false,
+        "writes": []
+      },
+      {
+        "componentId": "component:0:FormBoard",
+        "declarationKind": "let",
+        "id": "state:lock",
+        "initialValue": null,
+        "initializer": {
+          "end": 199,
+          "raw": "null",
+          "start": 195,
+          "type": "Literal",
+          "value": null
+        },
+        "kind": "state",
+        "name": "lock",
+        "reads": [],
+        "valueKind": "scalar",
+        "writable": true,
+        "writes": [
+          {
+            "assignmentOperator": "=",
+            "componentId": "component:0:FormBoard",
+            "graphNodeId": "state:lock",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 2387,
+              "filename": "src/fixtures/s7-form-controls.tsrx",
+              "start": 2383
+            },
+            "value": {
+              "end": 2394,
+              "name": "next",
+              "start": 2390,
+              "type": "Identifier"
+            },
+            "via": "direct"
+          }
+        ]
+      },
+      {
+        "componentId": "component:0:FormBoard",
+        "declarationKind": "let",
+        "id": "state:notes",
+        "initialValue": "draft",
+        "initializer": {
+          "end": 149,
+          "raw": "'draft'",
+          "start": 142,
+          "type": "Literal",
+          "value": "draft"
+        },
+        "kind": "state",
+        "name": "notes",
+        "reads": [],
+        "valueKind": "scalar",
+        "writable": true,
+        "writes": [
+          {
+            "assignmentOperator": "=",
+            "componentId": "component:0:FormBoard",
+            "graphNodeId": "state:notes",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 1101,
+              "filename": "src/fixtures/s7-form-controls.tsrx",
+              "start": 1096
+            },
+            "value": {
+              "end": 1108,
+              "name": "next",
+              "start": 1104,
+              "type": "Identifier"
+            },
+            "via": "direct"
+          },
+          {
+            "assignmentOperator": "=",
+            "componentId": "component:0:FormBoard",
+            "graphNodeId": "state:notes",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 2141,
+              "filename": "src/fixtures/s7-form-controls.tsrx",
+              "start": 2136
+            },
+            "value": {
+              "end": 2151,
+              "raw": "'final'",
+              "start": 2144,
+              "type": "Literal",
+              "value": "final"
+            },
+            "via": "direct"
+          }
+        ]
+      },
+      {
+        "componentId": "component:0:FormBoard",
+        "declarationKind": "let",
+        "id": "state:pick",
+        "initialValue": "r1",
+        "initializer": {
+          "end": 174,
+          "raw": "'r1'",
+          "start": 170,
+          "type": "Literal",
+          "value": "r1"
+        },
+        "kind": "state",
+        "name": "pick",
+        "reads": [],
+        "valueKind": "scalar",
+        "writable": true,
+        "writes": [
+          {
+            "assignmentOperator": "=",
+            "componentId": "component:0:FormBoard",
+            "graphNodeId": "state:pick",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 1282,
+              "filename": "src/fixtures/s7-form-controls.tsrx",
+              "start": 1278
+            },
+            "value": {
+              "end": 1289,
+              "raw": "'r1'",
+              "start": 1285,
+              "type": "Literal",
+              "value": "r1"
+            },
+            "via": "direct"
+          },
+          {
+            "assignmentOperator": "=",
+            "componentId": "component:0:FormBoard",
+            "graphNodeId": "state:pick",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 1462,
+              "filename": "src/fixtures/s7-form-controls.tsrx",
+              "start": 1458
+            },
+            "value": {
+              "end": 1469,
+              "raw": "'r2'",
+              "start": 1465,
+              "type": "Literal",
+              "value": "r2"
+            },
+            "via": "direct"
+          }
+        ]
+      },
+      {
+        "componentId": "component:0:FormBoard",
+        "declarationKind": "let",
+        "id": "state:rows",
+        "initializer": {
+          "arguments": [
+            {
+              "async": false,
+              "body": {
+                "end": 249,
+                "properties": [
+                  {
+                    "argument": {
+                      "end": 247,
+                      "name": "row",
+                      "start": 244,
+                      "type": "Identifier"
+                    },
+                    "end": 247,
+                    "start": 241,
+                    "type": "SpreadElement"
+                  }
+                ],
+                "start": 239,
+                "type": "ObjectExpression"
+              },
+              "end": 250,
+              "expression": true,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 233,
+                  "name": "row",
+                  "start": 230,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 229,
+              "type": "ArrowFunctionExpression"
+            }
+          ],
+          "callee": {
+            "computed": false,
+            "end": 228,
+            "object": {
+              "end": 224,
+              "name": "seed",
+              "start": 220,
+              "type": "Identifier"
+            },
+            "optional": false,
+            "property": {
+              "end": 228,
+              "name": "map",
+              "start": 225,
+              "type": "Identifier"
+            },
+            "start": 220,
+            "type": "MemberExpression"
+          },
+          "end": 251,
+          "optional": false,
+          "start": 220,
+          "type": "CallExpression"
+        },
+        "kind": "state",
+        "name": "rows",
+        "reads": [
+          {
+            "componentId": "component:0:FormBoard",
+            "graphNodeId": "prop:props",
+            "path": [
+              "seed"
+            ]
+          }
+        ],
+        "valueKind": "unknown",
+        "writable": true,
+        "writes": [
+          {
+            "assignmentOperator": "=",
+            "componentId": "component:0:FormBoard",
+            "graphNodeId": "state:rows",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 1945,
+              "filename": "src/fixtures/s7-form-controls.tsrx",
+              "start": 1941
+            },
+            "value": {
+              "end": 1952,
+              "name": "next",
+              "start": 1948,
+              "type": "Identifier"
+            },
+            "via": "direct"
+          }
+        ]
+      },
+      {
+        "componentId": "component:0:FormBoard",
+        "declarationKind": "let",
+        "id": "state:size",
+        "initialValue": "s",
+        "initializer": {
+          "end": 120,
+          "raw": "'s'",
+          "start": 117,
+          "type": "Literal",
+          "value": "s"
+        },
+        "kind": "state",
+        "name": "size",
+        "reads": [],
+        "valueKind": "scalar",
+        "writable": true,
+        "writes": [
+          {
+            "assignmentOperator": "=",
+            "componentId": "component:0:FormBoard",
+            "graphNodeId": "state:size",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 764,
+              "filename": "src/fixtures/s7-form-controls.tsrx",
+              "start": 760
+            },
+            "value": {
+              "end": 771,
+              "name": "next",
+              "start": 767,
+              "type": "Identifier"
+            },
+            "via": "direct"
+          },
+          {
+            "assignmentOperator": "=",
+            "componentId": "component:0:FormBoard",
+            "graphNodeId": "state:size",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 2124,
+              "filename": "src/fixtures/s7-form-controls.tsrx",
+              "start": 2120
+            },
+            "value": {
+              "end": 2130,
+              "raw": "'l'",
+              "start": 2127,
+              "type": "Literal",
+              "value": "l"
+            },
+            "via": "direct"
+          }
+        ]
+      }
+    ],
+    "elementHandleBindings": [],
+    "events": [
+      {
+        "componentId": "component:0:FormBoard",
+        "eventName": "change",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "declarations": [
+                      {
+                        "end": 754,
+                        "id": {
+                          "end": 726,
+                          "name": "next",
+                          "start": 722,
+                          "type": "Identifier"
+                        },
+                        "init": {
+                          "computed": false,
+                          "end": 754,
+                          "object": {
+                            "computed": false,
+                            "end": 748,
+                            "object": {
+                              "end": 734,
+                              "name": "event",
+                              "start": 729,
+                              "type": "Identifier"
+                            },
+                            "optional": false,
+                            "property": {
+                              "end": 748,
+                              "name": "currentTarget",
+                              "start": 735,
+                              "type": "Identifier"
+                            },
+                            "start": 729,
+                            "type": "MemberExpression"
+                          },
+                          "optional": false,
+                          "property": {
+                            "end": 754,
+                            "name": "value",
+                            "start": 749,
+                            "type": "Identifier"
+                          },
+                          "start": 729,
+                          "type": "MemberExpression"
+                        },
+                        "start": 722,
+                        "type": "VariableDeclarator"
+                      }
+                    ],
+                    "end": 755,
+                    "kind": "const",
+                    "start": 716,
+                    "type": "VariableDeclaration"
+                  },
+                  {
+                    "end": 772,
+                    "expression": {
+                      "end": 771,
+                      "left": {
+                        "end": 764,
+                        "name": "size",
+                        "start": 760,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "end": 771,
+                        "name": "next",
+                        "start": 767,
+                        "type": "Identifier"
+                      },
+                      "start": 760,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 760,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 816,
+                    "expression": {
+                      "arguments": [
+                        {
+                          "end": 791,
+                          "raw": "'size'",
+                          "start": 785,
+                          "type": "Literal",
+                          "value": "size"
+                        },
+                        {
+                          "end": 807,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 805,
+                              "key": {
+                                "end": 799,
+                                "name": "size",
+                                "start": 795,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 795,
+                              "type": "Property",
+                              "value": {
+                                "end": 805,
+                                "name": "next",
+                                "start": 801,
+                                "type": "Identifier"
+                              }
+                            }
+                          ],
+                          "start": 793,
+                          "type": "ObjectExpression"
+                        },
+                        {
+                          "end": 814,
+                          "name": "event",
+                          "start": 809,
+                          "type": "Identifier"
+                        }
+                      ],
+                      "callee": {
+                        "end": 784,
+                        "name": "onTrace",
+                        "start": 777,
+                        "type": "Identifier"
+                      },
+                      "end": 815,
+                      "optional": false,
+                      "start": 777,
+                      "type": "CallExpression"
+                    },
+                    "start": 777,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 821,
+                "start": 710,
+                "type": "BlockStatement"
+              },
+              "end": 821,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 705,
+                  "name": "event",
+                  "start": 700,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 699,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              }
+            ],
+            "writes": [
+              {
+                "assignmentOperator": "=",
+                "componentId": "component:0:FormBoard",
+                "graphNodeId": "state:size",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 764,
+                  "filename": "src/fixtures/s7-form-controls.tsrx",
+                  "start": 760
+                },
+                "value": {
+                  "end": 771,
+                  "name": "next",
+                  "start": 767,
+                  "type": "Identifier"
+                },
+                "via": "direct"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h1",
+        "id": "event:0"
+      },
+      {
+        "componentId": "component:0:FormBoard",
+        "eventName": "input",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "declarations": [
+                      {
+                        "end": 1090,
+                        "id": {
+                          "end": 1062,
+                          "name": "next",
+                          "start": 1058,
+                          "type": "Identifier"
+                        },
+                        "init": {
+                          "computed": false,
+                          "end": 1090,
+                          "object": {
+                            "computed": false,
+                            "end": 1084,
+                            "object": {
+                              "end": 1070,
+                              "name": "event",
+                              "start": 1065,
+                              "type": "Identifier"
+                            },
+                            "optional": false,
+                            "property": {
+                              "end": 1084,
+                              "name": "currentTarget",
+                              "start": 1071,
+                              "type": "Identifier"
+                            },
+                            "start": 1065,
+                            "type": "MemberExpression"
+                          },
+                          "optional": false,
+                          "property": {
+                            "end": 1090,
+                            "name": "value",
+                            "start": 1085,
+                            "type": "Identifier"
+                          },
+                          "start": 1065,
+                          "type": "MemberExpression"
+                        },
+                        "start": 1058,
+                        "type": "VariableDeclarator"
+                      }
+                    ],
+                    "end": 1091,
+                    "kind": "const",
+                    "start": 1052,
+                    "type": "VariableDeclaration"
+                  },
+                  {
+                    "end": 1109,
+                    "expression": {
+                      "end": 1108,
+                      "left": {
+                        "end": 1101,
+                        "name": "notes",
+                        "start": 1096,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "end": 1108,
+                        "name": "next",
+                        "start": 1104,
+                        "type": "Identifier"
+                      },
+                      "start": 1096,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 1096,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 1155,
+                    "expression": {
+                      "arguments": [
+                        {
+                          "end": 1129,
+                          "raw": "'notes'",
+                          "start": 1122,
+                          "type": "Literal",
+                          "value": "notes"
+                        },
+                        {
+                          "end": 1146,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 1144,
+                              "key": {
+                                "end": 1138,
+                                "name": "notes",
+                                "start": 1133,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 1133,
+                              "type": "Property",
+                              "value": {
+                                "end": 1144,
+                                "name": "next",
+                                "start": 1140,
+                                "type": "Identifier"
+                              }
+                            }
+                          ],
+                          "start": 1131,
+                          "type": "ObjectExpression"
+                        },
+                        {
+                          "end": 1153,
+                          "name": "event",
+                          "start": 1148,
+                          "type": "Identifier"
+                        }
+                      ],
+                      "callee": {
+                        "end": 1121,
+                        "name": "onTrace",
+                        "start": 1114,
+                        "type": "Identifier"
+                      },
+                      "end": 1154,
+                      "optional": false,
+                      "start": 1114,
+                      "type": "CallExpression"
+                    },
+                    "start": 1114,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 1160,
+                "start": 1046,
+                "type": "BlockStatement"
+              },
+              "end": 1160,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 1041,
+                  "name": "event",
+                  "start": 1036,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 1035,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              }
+            ],
+            "writes": [
+              {
+                "assignmentOperator": "=",
+                "componentId": "component:0:FormBoard",
+                "graphNodeId": "state:notes",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 1101,
+                  "filename": "src/fixtures/s7-form-controls.tsrx",
+                  "start": 1096
+                },
+                "value": {
+                  "end": 1108,
+                  "name": "next",
+                  "start": 1104,
+                  "type": "Identifier"
+                },
+                "via": "direct"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h5",
+        "id": "event:1"
+      },
+      {
+        "componentId": "component:0:FormBoard",
+        "eventName": "change",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "end": 1290,
+                    "expression": {
+                      "end": 1289,
+                      "left": {
+                        "end": 1282,
+                        "name": "pick",
+                        "start": 1278,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "end": 1289,
+                        "raw": "'r1'",
+                        "start": 1285,
+                        "type": "Literal",
+                        "value": "r1"
+                      },
+                      "start": 1278,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 1278,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 1334,
+                    "expression": {
+                      "arguments": [
+                        {
+                          "end": 1309,
+                          "raw": "'pick'",
+                          "start": 1303,
+                          "type": "Literal",
+                          "value": "pick"
+                        },
+                        {
+                          "end": 1325,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 1323,
+                              "key": {
+                                "end": 1317,
+                                "name": "pick",
+                                "start": 1313,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 1313,
+                              "type": "Property",
+                              "value": {
+                                "end": 1323,
+                                "raw": "'r1'",
+                                "start": 1319,
+                                "type": "Literal",
+                                "value": "r1"
+                              }
+                            }
+                          ],
+                          "start": 1311,
+                          "type": "ObjectExpression"
+                        },
+                        {
+                          "end": 1332,
+                          "name": "event",
+                          "start": 1327,
+                          "type": "Identifier"
+                        }
+                      ],
+                      "callee": {
+                        "end": 1302,
+                        "name": "onTrace",
+                        "start": 1295,
+                        "type": "Identifier"
+                      },
+                      "end": 1333,
+                      "optional": false,
+                      "start": 1295,
+                      "type": "CallExpression"
+                    },
+                    "start": 1295,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 1339,
+                "start": 1272,
+                "type": "BlockStatement"
+              },
+              "end": 1339,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 1267,
+                  "name": "event",
+                  "start": 1262,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 1261,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              }
+            ],
+            "writes": [
+              {
+                "assignmentOperator": "=",
+                "componentId": "component:0:FormBoard",
+                "graphNodeId": "state:pick",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 1282,
+                  "filename": "src/fixtures/s7-form-controls.tsrx",
+                  "start": 1278
+                },
+                "value": {
+                  "end": 1289,
+                  "raw": "'r1'",
+                  "start": 1285,
+                  "type": "Literal",
+                  "value": "r1"
+                },
+                "via": "direct"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h6",
+        "id": "event:2"
+      },
+      {
+        "componentId": "component:0:FormBoard",
+        "eventName": "change",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "end": 1470,
+                    "expression": {
+                      "end": 1469,
+                      "left": {
+                        "end": 1462,
+                        "name": "pick",
+                        "start": 1458,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "end": 1469,
+                        "raw": "'r2'",
+                        "start": 1465,
+                        "type": "Literal",
+                        "value": "r2"
+                      },
+                      "start": 1458,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 1458,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 1514,
+                    "expression": {
+                      "arguments": [
+                        {
+                          "end": 1489,
+                          "raw": "'pick'",
+                          "start": 1483,
+                          "type": "Literal",
+                          "value": "pick"
+                        },
+                        {
+                          "end": 1505,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 1503,
+                              "key": {
+                                "end": 1497,
+                                "name": "pick",
+                                "start": 1493,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 1493,
+                              "type": "Property",
+                              "value": {
+                                "end": 1503,
+                                "raw": "'r2'",
+                                "start": 1499,
+                                "type": "Literal",
+                                "value": "r2"
+                              }
+                            }
+                          ],
+                          "start": 1491,
+                          "type": "ObjectExpression"
+                        },
+                        {
+                          "end": 1512,
+                          "name": "event",
+                          "start": 1507,
+                          "type": "Identifier"
+                        }
+                      ],
+                      "callee": {
+                        "end": 1482,
+                        "name": "onTrace",
+                        "start": 1475,
+                        "type": "Identifier"
+                      },
+                      "end": 1513,
+                      "optional": false,
+                      "start": 1475,
+                      "type": "CallExpression"
+                    },
+                    "start": 1475,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 1519,
+                "start": 1452,
+                "type": "BlockStatement"
+              },
+              "end": 1519,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 1447,
+                  "name": "event",
+                  "start": 1442,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 1441,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              }
+            ],
+            "writes": [
+              {
+                "assignmentOperator": "=",
+                "componentId": "component:0:FormBoard",
+                "graphNodeId": "state:pick",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 1462,
+                  "filename": "src/fixtures/s7-form-controls.tsrx",
+                  "start": 1458
+                },
+                "value": {
+                  "end": 1469,
+                  "raw": "'r2'",
+                  "start": 1465,
+                  "type": "Literal",
+                  "value": "r2"
+                },
+                "via": "direct"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h7",
+        "id": "event:3"
+      },
+      {
+        "componentId": "component:0:FormBoard",
+        "eventName": "change",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "declarations": [
+                      {
+                        "end": 1932,
+                        "id": {
+                          "end": 1830,
+                          "name": "next",
+                          "start": 1826,
+                          "type": "Identifier"
+                        },
+                        "init": {
+                          "arguments": [
+                            {
+                              "async": false,
+                              "body": {
+                                "alternate": {
+                                  "end": 1922,
+                                  "name": "entry",
+                                  "start": 1917,
+                                  "type": "Identifier"
+                                },
+                                "consequent": {
+                                  "end": 1914,
+                                  "properties": [
+                                    {
+                                      "computed": false,
+                                      "end": 1897,
+                                      "key": {
+                                        "end": 1887,
+                                        "name": "id",
+                                        "start": 1885,
+                                        "type": "Identifier"
+                                      },
+                                      "kind": "init",
+                                      "method": false,
+                                      "shorthand": false,
+                                      "start": 1885,
+                                      "type": "Property",
+                                      "value": {
+                                        "computed": false,
+                                        "end": 1897,
+                                        "object": {
+                                          "end": 1894,
+                                          "name": "entry",
+                                          "start": 1889,
+                                          "type": "Identifier"
+                                        },
+                                        "optional": false,
+                                        "property": {
+                                          "end": 1897,
+                                          "name": "id",
+                                          "start": 1895,
+                                          "type": "Identifier"
+                                        },
+                                        "start": 1889,
+                                        "type": "MemberExpression"
+                                      }
+                                    },
+                                    {
+                                      "computed": false,
+                                      "end": 1912,
+                                      "key": {
+                                        "end": 1901,
+                                        "name": "on",
+                                        "start": 1899,
+                                        "type": "Identifier"
+                                      },
+                                      "kind": "init",
+                                      "method": false,
+                                      "shorthand": false,
+                                      "start": 1899,
+                                      "type": "Property",
+                                      "value": {
+                                        "argument": {
+                                          "computed": false,
+                                          "end": 1912,
+                                          "object": {
+                                            "end": 1909,
+                                            "name": "entry",
+                                            "start": 1904,
+                                            "type": "Identifier"
+                                          },
+                                          "optional": false,
+                                          "property": {
+                                            "end": 1912,
+                                            "name": "on",
+                                            "start": 1910,
+                                            "type": "Identifier"
+                                          },
+                                          "start": 1904,
+                                          "type": "MemberExpression"
+                                        },
+                                        "end": 1912,
+                                        "operator": "!",
+                                        "prefix": true,
+                                        "start": 1903,
+                                        "type": "UnaryExpression"
+                                      }
+                                    }
+                                  ],
+                                  "start": 1883,
+                                  "type": "ObjectExpression"
+                                },
+                                "end": 1922,
+                                "start": 1861,
+                                "test": {
+                                  "end": 1880,
+                                  "left": {
+                                    "computed": false,
+                                    "end": 1869,
+                                    "object": {
+                                      "end": 1866,
+                                      "name": "entry",
+                                      "start": 1861,
+                                      "type": "Identifier"
+                                    },
+                                    "optional": false,
+                                    "property": {
+                                      "end": 1869,
+                                      "name": "id",
+                                      "start": 1867,
+                                      "type": "Identifier"
+                                    },
+                                    "start": 1861,
+                                    "type": "MemberExpression"
+                                  },
+                                  "operator": "===",
+                                  "right": {
+                                    "computed": false,
+                                    "end": 1880,
+                                    "object": {
+                                      "end": 1877,
+                                      "name": "row",
+                                      "start": 1874,
+                                      "type": "Identifier"
+                                    },
+                                    "optional": false,
+                                    "property": {
+                                      "end": 1880,
+                                      "name": "id",
+                                      "start": 1878,
+                                      "type": "Identifier"
+                                    },
+                                    "start": 1874,
+                                    "type": "MemberExpression"
+                                  },
+                                  "start": 1861,
+                                  "type": "BinaryExpression"
+                                },
+                                "type": "ConditionalExpression"
+                              },
+                              "end": 1922,
+                              "expression": true,
+                              "generator": false,
+                              "id": null,
+                              "params": [
+                                {
+                                  "end": 1848,
+                                  "name": "entry",
+                                  "start": 1843,
+                                  "type": "Identifier"
+                                }
+                              ],
+                              "start": 1842,
+                              "type": "ArrowFunctionExpression"
+                            }
+                          ],
+                          "callee": {
+                            "computed": false,
+                            "end": 1841,
+                            "object": {
+                              "end": 1837,
+                              "name": "rows",
+                              "start": 1833,
+                              "type": "Identifier"
+                            },
+                            "optional": false,
+                            "property": {
+                              "end": 1841,
+                              "name": "map",
+                              "start": 1838,
+                              "type": "Identifier"
+                            },
+                            "start": 1833,
+                            "type": "MemberExpression"
+                          },
+                          "end": 1932,
+                          "optional": false,
+                          "start": 1833,
+                          "type": "CallExpression"
+                        },
+                        "start": 1826,
+                        "type": "VariableDeclarator"
+                      }
+                    ],
+                    "end": 1933,
+                    "kind": "const",
+                    "start": 1820,
+                    "type": "VariableDeclaration"
+                  },
+                  {
+                    "end": 1953,
+                    "expression": {
+                      "end": 1952,
+                      "left": {
+                        "end": 1945,
+                        "name": "rows",
+                        "start": 1941,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "end": 1952,
+                        "name": "next",
+                        "start": 1948,
+                        "type": "Identifier"
+                      },
+                      "start": 1941,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 1941,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 1999,
+                    "expression": {
+                      "arguments": [
+                        {
+                          "end": 1974,
+                          "raw": "'tag'",
+                          "start": 1969,
+                          "type": "Literal",
+                          "value": "tag"
+                        },
+                        {
+                          "end": 1990,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 1988,
+                              "key": {
+                                "end": 1980,
+                                "name": "id",
+                                "start": 1978,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 1978,
+                              "type": "Property",
+                              "value": {
+                                "computed": false,
+                                "end": 1988,
+                                "object": {
+                                  "end": 1985,
+                                  "name": "row",
+                                  "start": 1982,
+                                  "type": "Identifier"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 1988,
+                                  "name": "id",
+                                  "start": 1986,
+                                  "type": "Identifier"
+                                },
+                                "start": 1982,
+                                "type": "MemberExpression"
+                              }
+                            }
+                          ],
+                          "start": 1976,
+                          "type": "ObjectExpression"
+                        },
+                        {
+                          "end": 1997,
+                          "name": "event",
+                          "start": 1992,
+                          "type": "Identifier"
+                        }
+                      ],
+                      "callee": {
+                        "end": 1968,
+                        "name": "onTrace",
+                        "start": 1961,
+                        "type": "Identifier"
+                      },
+                      "end": 1998,
+                      "optional": false,
+                      "start": 1961,
+                      "type": "CallExpression"
+                    },
+                    "start": 1961,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 2007,
+                "start": 1811,
+                "type": "BlockStatement"
+              },
+              "end": 2007,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 1806,
+                  "name": "event",
+                  "start": 1801,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 1800,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              },
+              {
+                "graphNodeId": "state:rows",
+                "path": [],
+                "via": "direct"
+              },
+              {
+                "graphNodeId": "state:rows",
+                "path": [
+                  "id"
+                ],
+                "via": "repeat-item"
+              }
+            ],
+            "writes": [
+              {
+                "assignmentOperator": "=",
+                "componentId": "component:0:FormBoard",
+                "graphNodeId": "state:rows",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 1945,
+                  "filename": "src/fixtures/s7-form-controls.tsrx",
+                  "start": 1941
+                },
+                "value": {
+                  "end": 1952,
+                  "name": "next",
+                  "start": 1948,
+                  "type": "Identifier"
+                },
+                "via": "direct"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h12",
+        "id": "event:4"
+      },
+      {
+        "componentId": "component:0:FormBoard",
+        "eventName": "click",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "end": 2131,
+                    "expression": {
+                      "end": 2130,
+                      "left": {
+                        "end": 2124,
+                        "name": "size",
+                        "start": 2120,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "end": 2130,
+                        "raw": "'l'",
+                        "start": 2127,
+                        "type": "Literal",
+                        "value": "l"
+                      },
+                      "start": 2120,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 2120,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 2152,
+                    "expression": {
+                      "end": 2151,
+                      "left": {
+                        "end": 2141,
+                        "name": "notes",
+                        "start": 2136,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "end": 2151,
+                        "raw": "'final'",
+                        "start": 2144,
+                        "type": "Literal",
+                        "value": "final"
+                      },
+                      "start": 2136,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 2136,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 2213,
+                    "expression": {
+                      "arguments": [
+                        {
+                          "end": 2173,
+                          "raw": "'resize'",
+                          "start": 2165,
+                          "type": "Literal",
+                          "value": "resize"
+                        },
+                        {
+                          "end": 2204,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 2186,
+                              "key": {
+                                "end": 2181,
+                                "name": "size",
+                                "start": 2177,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 2177,
+                              "type": "Property",
+                              "value": {
+                                "end": 2186,
+                                "raw": "'l'",
+                                "start": 2183,
+                                "type": "Literal",
+                                "value": "l"
+                              }
+                            },
+                            {
+                              "computed": false,
+                              "end": 2202,
+                              "key": {
+                                "end": 2193,
+                                "name": "notes",
+                                "start": 2188,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 2188,
+                              "type": "Property",
+                              "value": {
+                                "end": 2202,
+                                "raw": "'final'",
+                                "start": 2195,
+                                "type": "Literal",
+                                "value": "final"
+                              }
+                            }
+                          ],
+                          "start": 2175,
+                          "type": "ObjectExpression"
+                        },
+                        {
+                          "end": 2211,
+                          "name": "event",
+                          "start": 2206,
+                          "type": "Identifier"
+                        }
+                      ],
+                      "callee": {
+                        "end": 2164,
+                        "name": "onTrace",
+                        "start": 2157,
+                        "type": "Identifier"
+                      },
+                      "end": 2212,
+                      "optional": false,
+                      "start": 2157,
+                      "type": "CallExpression"
+                    },
+                    "start": 2157,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 2218,
+                "start": 2114,
+                "type": "BlockStatement"
+              },
+              "end": 2218,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 2109,
+                  "name": "event",
+                  "start": 2104,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 2103,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              }
+            ],
+            "writes": [
+              {
+                "assignmentOperator": "=",
+                "componentId": "component:0:FormBoard",
+                "graphNodeId": "state:notes",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 2141,
+                  "filename": "src/fixtures/s7-form-controls.tsrx",
+                  "start": 2136
+                },
+                "value": {
+                  "end": 2151,
+                  "raw": "'final'",
+                  "start": 2144,
+                  "type": "Literal",
+                  "value": "final"
+                },
+                "via": "direct"
+              },
+              {
+                "assignmentOperator": "=",
+                "componentId": "component:0:FormBoard",
+                "graphNodeId": "state:size",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 2124,
+                  "filename": "src/fixtures/s7-form-controls.tsrx",
+                  "start": 2120
+                },
+                "value": {
+                  "end": 2130,
+                  "raw": "'l'",
+                  "start": 2127,
+                  "type": "Literal",
+                  "value": "l"
+                },
+                "via": "direct"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h13",
+        "id": "event:5"
+      },
+      {
+        "componentId": "component:0:FormBoard",
+        "eventName": "click",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "declarations": [
+                      {
+                        "end": 2377,
+                        "id": {
+                          "end": 2347,
+                          "name": "next",
+                          "start": 2343,
+                          "type": "Identifier"
+                        },
+                        "init": {
+                          "alternate": {
+                            "end": 2377,
+                            "raw": "null",
+                            "start": 2373,
+                            "type": "Literal",
+                            "value": null
+                          },
+                          "consequent": {
+                            "end": 2370,
+                            "raw": "'on'",
+                            "start": 2366,
+                            "type": "Literal",
+                            "value": "on"
+                          },
+                          "end": 2377,
+                          "start": 2350,
+                          "test": {
+                            "end": 2363,
+                            "left": {
+                              "end": 2354,
+                              "name": "lock",
+                              "start": 2350,
+                              "type": "Identifier"
+                            },
+                            "operator": "===",
+                            "right": {
+                              "end": 2363,
+                              "raw": "null",
+                              "start": 2359,
+                              "type": "Literal",
+                              "value": null
+                            },
+                            "start": 2350,
+                            "type": "BinaryExpression"
+                          },
+                          "type": "ConditionalExpression"
+                        },
+                        "start": 2343,
+                        "type": "VariableDeclarator"
+                      }
+                    ],
+                    "end": 2378,
+                    "kind": "const",
+                    "start": 2337,
+                    "type": "VariableDeclaration"
+                  },
+                  {
+                    "end": 2395,
+                    "expression": {
+                      "end": 2394,
+                      "left": {
+                        "end": 2387,
+                        "name": "lock",
+                        "start": 2383,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "end": 2394,
+                        "name": "next",
+                        "start": 2390,
+                        "type": "Identifier"
+                      },
+                      "start": 2383,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 2383,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 2439,
+                    "expression": {
+                      "arguments": [
+                        {
+                          "end": 2414,
+                          "raw": "'lock'",
+                          "start": 2408,
+                          "type": "Literal",
+                          "value": "lock"
+                        },
+                        {
+                          "end": 2430,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 2428,
+                              "key": {
+                                "end": 2422,
+                                "name": "lock",
+                                "start": 2418,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 2418,
+                              "type": "Property",
+                              "value": {
+                                "end": 2428,
+                                "name": "next",
+                                "start": 2424,
+                                "type": "Identifier"
+                              }
+                            }
+                          ],
+                          "start": 2416,
+                          "type": "ObjectExpression"
+                        },
+                        {
+                          "end": 2437,
+                          "name": "event",
+                          "start": 2432,
+                          "type": "Identifier"
+                        }
+                      ],
+                      "callee": {
+                        "end": 2407,
+                        "name": "onTrace",
+                        "start": 2400,
+                        "type": "Identifier"
+                      },
+                      "end": 2438,
+                      "optional": false,
+                      "start": 2400,
+                      "type": "CallExpression"
+                    },
+                    "start": 2400,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 2444,
+                "start": 2331,
+                "type": "BlockStatement"
+              },
+              "end": 2444,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 2326,
+                  "name": "event",
+                  "start": 2321,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 2320,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              },
+              {
+                "graphNodeId": "state:lock",
+                "path": [],
+                "via": "direct"
+              }
+            ],
+            "writes": [
+              {
+                "assignmentOperator": "=",
+                "componentId": "component:0:FormBoard",
+                "graphNodeId": "state:lock",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 2387,
+                  "filename": "src/fixtures/s7-form-controls.tsrx",
+                  "start": 2383
+                },
+                "value": {
+                  "end": 2394,
+                  "name": "next",
+                  "start": 2390,
+                  "type": "Identifier"
+                },
+                "via": "direct"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h14",
+        "id": "event:6"
+      }
+    ],
+    "handleCalls": [],
+    "handleForwards": [],
+    "persistence": [],
+    "sharedCalls": [],
+    "sharedDefinitions": [],
+    "sharedInstances": [],
+    "sharedReads": [],
+    "sharedWrites": [],
+    "stateReads": [
+      {
+        "componentId": "component:0:FormBoard",
+        "graphNodeId": "computed:chosen",
+        "path": []
+      },
+      {
+        "componentId": "component:0:FormBoard",
+        "graphNodeId": "computed:guard",
+        "path": []
+      },
+      {
+        "componentId": "component:0:FormBoard",
+        "graphNodeId": "computed:locked",
+        "path": []
+      },
+      {
+        "componentId": "component:0:FormBoard",
+        "graphNodeId": "computed:onFirst",
+        "path": []
+      },
+      {
+        "componentId": "component:0:FormBoard",
+        "graphNodeId": "computed:onSecond",
+        "path": []
+      },
+      {
+        "componentId": "component:0:FormBoard",
+        "graphNodeId": "prop:props",
+        "path": [
+          "onTrace"
+        ]
+      },
+      {
+        "componentId": "component:0:FormBoard",
+        "graphNodeId": "prop:props",
+        "path": [
+          "seed"
+        ]
+      },
+      {
+        "componentId": "component:0:FormBoard",
+        "graphNodeId": "state:lock",
+        "path": []
+      },
+      {
+        "componentId": "component:0:FormBoard",
+        "graphNodeId": "state:notes",
+        "path": []
+      },
+      {
+        "componentId": "component:0:FormBoard",
+        "graphNodeId": "state:pick",
+        "path": []
+      },
+      {
+        "componentId": "component:0:FormBoard",
+        "graphNodeId": "state:rows",
+        "path": []
+      },
+      {
+        "componentId": "component:0:FormBoard",
+        "graphNodeId": "state:rows",
+        "path": [
+          "id"
+        ]
+      },
+      {
+        "componentId": "component:0:FormBoard",
+        "graphNodeId": "state:rows",
+        "path": [
+          "on"
+        ]
+      },
+      {
+        "componentId": "component:0:FormBoard",
+        "graphNodeId": "state:size",
+        "path": []
+      }
+    ],
+    "stateWrites": [
+      {
+        "assignmentOperator": "=",
+        "componentId": "component:0:FormBoard",
+        "graphNodeId": "state:lock",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 2387,
+          "filename": "src/fixtures/s7-form-controls.tsrx",
+          "start": 2383
+        },
+        "value": {
+          "end": 2394,
+          "name": "next",
+          "start": 2390,
+          "type": "Identifier"
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "componentId": "component:0:FormBoard",
+        "graphNodeId": "state:notes",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 1101,
+          "filename": "src/fixtures/s7-form-controls.tsrx",
+          "start": 1096
+        },
+        "value": {
+          "end": 1108,
+          "name": "next",
+          "start": 1104,
+          "type": "Identifier"
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "componentId": "component:0:FormBoard",
+        "graphNodeId": "state:notes",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 2141,
+          "filename": "src/fixtures/s7-form-controls.tsrx",
+          "start": 2136
+        },
+        "value": {
+          "end": 2151,
+          "raw": "'final'",
+          "start": 2144,
+          "type": "Literal",
+          "value": "final"
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "componentId": "component:0:FormBoard",
+        "graphNodeId": "state:pick",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 1282,
+          "filename": "src/fixtures/s7-form-controls.tsrx",
+          "start": 1278
+        },
+        "value": {
+          "end": 1289,
+          "raw": "'r1'",
+          "start": 1285,
+          "type": "Literal",
+          "value": "r1"
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "componentId": "component:0:FormBoard",
+        "graphNodeId": "state:pick",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 1462,
+          "filename": "src/fixtures/s7-form-controls.tsrx",
+          "start": 1458
+        },
+        "value": {
+          "end": 1469,
+          "raw": "'r2'",
+          "start": 1465,
+          "type": "Literal",
+          "value": "r2"
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "componentId": "component:0:FormBoard",
+        "graphNodeId": "state:rows",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 1945,
+          "filename": "src/fixtures/s7-form-controls.tsrx",
+          "start": 1941
+        },
+        "value": {
+          "end": 1952,
+          "name": "next",
+          "start": 1948,
+          "type": "Identifier"
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "componentId": "component:0:FormBoard",
+        "graphNodeId": "state:size",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 764,
+          "filename": "src/fixtures/s7-form-controls.tsrx",
+          "start": 760
+        },
+        "value": {
+          "end": 771,
+          "name": "next",
+          "start": 767,
+          "type": "Identifier"
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "componentId": "component:0:FormBoard",
+        "graphNodeId": "state:size",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 2124,
+          "filename": "src/fixtures/s7-form-controls.tsrx",
+          "start": 2120
+        },
+        "value": {
+          "end": 2130,
+          "raw": "'l'",
+          "start": 2127,
+          "type": "Literal",
+          "value": "l"
+        },
+        "via": "direct"
+      }
+    ]
+  },
+  "version": "frameless-enriched-ir/2"
+}

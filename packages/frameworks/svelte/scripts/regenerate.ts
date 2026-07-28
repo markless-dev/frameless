@@ -15,6 +15,7 @@ const fixtures = [
 	['S4.svelte', 's4-nested-list.json'],
 	['S5.svelte', 's5-branch-teardown.json'],
 	['S6.svelte', 's6-whitespace-text.json'],
+	['S7.svelte', 's7-form-controls.json'],
 ] as const;
 for (const [output, golden] of fixtures) {
 	const ir = JSON.parse(await readFile(resolve(goldenRoot, golden), 'utf8')) as EnrichedIR;
