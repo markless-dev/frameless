@@ -32,6 +32,13 @@ type EmitContext = {
 	readonly storeStateNames: ReadonlySet<string>;
 	readonly statesByName: ReadonlyMap<string, StateBinding>;
 	readonly onceSignals: ReadonlySet<string>;
+	/** Names bound by `useSignal()` to a rendered element, read through `.value`. */
+	readonly elementHandleNames: ReadonlySet<string>;
+	/**
+	 * Host node id -> the `ref={}` target name, for every `ElementHandleBinding`
+	 * this component owns. Empty for every scenario in the corpus.
+	 */
+	readonly handleHosts: ReadonlyMap<string, string>;
 };
 type QwikApi =
 	| '$'
@@ -115,6 +122,75 @@ function walk(value: unknown, visit: (record: Record<string, any>) => void): voi
 	}
 }
 
+/**
+ * SHAPE-CHECKS THE TWO RECORD FAMILIES THIS LANE STARTED CONSUMING AT STEP 3.
+ *
+ * Before refs landed here, `validateEnrichedIr` checked only that
+ * `elementHandleBindings` and `handleCalls` were ARRAYS - the family loop below -
+ * because the emitter refused any IR that carried one. That is the same defect
+ * class T003 measured and T010 closed one level up: four lanes accepted a field
+ * planted on a nested `PropDestructuringEntry` with byte-identical output while
+ * react and solid threw. React validates both families key-by-key (its inline
+ * `keys` closure, NOT an `exactKeys`); this lane now does too, so a field added to
+ * either record fails HERE, by name, rather than being dropped by a lane that
+ * consumes it.
+ *
+ * `handleForwards` and `behaviors` are deliberately NOT checked: `emit` still
+ * refuses them, so they stay unreachable, and a checker over an unreachable path
+ * asserts nothing. Step 4 and Step 5 own them.
+ */
+function validateHandleRecords(ir: EnrichedIR): void {
+	const componentIds = new Set(ir.components.map((component) => component.id));
+	const eventIds = new Set(ir.records.events.map((event) => event.id));
+	const handleIds = new Set<string>();
+	for (const binding of ir.records.elementHandleBindings) {
+		exactKeys('ElementHandleBinding', binding, [
+			'id',
+			'handleName',
+			'componentId',
+			'hostNodeId',
+		]);
+		if (
+			typeof binding.id !== 'string' ||
+			typeof binding.handleName !== 'string' ||
+			typeof binding.hostNodeId !== 'string'
+		)
+			throw new Error('ElementHandleBinding has malformed construct');
+		if (!componentIds.has(binding.componentId))
+			throw new Error(`ElementHandleBinding has dangling componentId: ${binding.componentId}`);
+		handleIds.add(binding.id);
+	}
+	for (const call of ir.records.handleCalls) {
+		exactKeys('HandleCallRecord', call, [
+			'handleBindingId',
+			'componentId',
+			'method',
+			'arguments',
+			'optional',
+			'eventId',
+			'site',
+			'order',
+		]);
+		if (
+			typeof call.handleBindingId !== 'string' ||
+			typeof call.method !== 'string' ||
+			!Array.isArray(call.arguments) ||
+			typeof call.optional !== 'boolean' ||
+			(call.eventId !== undefined && typeof call.eventId !== 'string') ||
+			typeof call.order !== 'number'
+		)
+			throw new Error('HandleCallRecord has malformed construct');
+		if (!componentIds.has(call.componentId))
+			throw new Error(`HandleCallRecord has dangling componentId: ${call.componentId}`);
+		if (!handleIds.has(call.handleBindingId))
+			throw new Error(
+				`HandleCallRecord has dangling ElementHandleBinding: ${call.handleBindingId}`,
+			);
+		if (call.eventId !== undefined && !eventIds.has(call.eventId))
+			throw new Error(`HandleCallRecord has dangling event: ${call.eventId}`);
+	}
+}
+
 /** Fail closed at the public emitter boundary before constructing output AST. */
 export function validateEnrichedIr(ir: EnrichedIR): void {
 	exactKeys('EnrichedIR', ir, [
@@ -189,6 +265,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 	] as const)
 		if (!Array.isArray(records))
 			throw new Error(`EnrichedRecordTable ${family} has malformed record family`);
+	validateHandleRecords(ir);
 	exactKeys('ModuleRecord', ir.module, ['exports']);
 	for (const imported of ir.imports)
 		exactKeys('ModuleImport', imported, [
@@ -311,7 +388,14 @@ function rewriteExpression(
 				return pathMember(identifier(context.propsName), path);
 			}
 			if (context.storeStateNames.has(node.name)) return structuredClone(node);
-			if (context.statesByName.has(node.name) || context.onceSignals.has(node.name))
+			if (
+				context.statesByName.has(node.name) ||
+				context.onceSignals.has(node.name) ||
+				// STEP 3, REFS. A Qwik element handle IS a `Signal`, so a read of it goes
+				// through `.value` for exactly the same reason a state read does. This is
+				// the whole lowering of `input?.focus()` in this lane.
+				context.elementHandleNames.has(node.name)
+			)
 				return member(identifier(node.name), 'value');
 			if (context.computedByName.has(node.name))
 				return member(identifier(node.name), 'value');
@@ -1133,6 +1217,14 @@ function templateNode(node: TemplateNode, context: EmitContext): RenderedNode {
 				rewriteExpression(expression(binding.expression), context),
 			),
 		);
+	// STEP 3, REFS. Qwik's `ref` prop accepts a `Signal<Element | undefined>` OR a
+	// `(el) => void` callback; both are sanctioned at 2.0.0-beta.38 and both have
+	// been there for the whole v2 line, so the tie breaks on obligations: the signal
+	// form reuses `useSignal`, which this emitter already imports and already
+	// respells through `.value`, while the callback form would need a QRL boundary
+	// the optimizer has to serialize. See notes/T005-refs.md.
+	const handleName = context.handleHosts.get(node.id);
+	if (handleName !== undefined) attributes.push(jsxAttribute('ref', identifier(handleName)));
 	for (const eventId of node.eventIds) {
 		const event = context.eventsById.get(eventId);
 		if (!event) throw new Error(`Unknown event record: ${eventId}`);
@@ -1196,6 +1288,93 @@ function collectionInitializerKind(
 	return null;
 }
 
+/**
+ * The `hostNodeId -> ref target` map, plus every fail-closed check that has to
+ * hold before one byte of `ref={}` is printed.
+ *
+ * `handleCalls` IS AN ASSERTION HERE, NOT A LOWERING. `rewriteExpression` already
+ * turns `input?.focus()` into `input.value?.focus()` from the name set alone, so
+ * this emitter never builds the call - and a `HandleCallRecord` the handler does
+ * NOT spell would be dropped in silence, leaving a module that compiles, resumes,
+ * and quietly does not do the declared thing. Same shape as `syncActionPlan`.
+ *
+ * A call with NO `eventId` is REFUSED: `ref` writes the signal during render, and
+ * the component body runs before that. Its repair is `useVisibleTask$` - a Step 4
+ * lifecycle construct.
+ */
+function elementHandleHosts(
+	ir: EnrichedIR,
+	component: EnrichedComponent,
+): ReadonlyMap<string, string> {
+	const handleHosts = new Map<string, string>();
+	for (const binding of ir.records.elementHandleBindings) {
+		if (binding.componentId !== component.id)
+			throw new Error(
+				`ElementHandleBinding ${binding.id} belongs to another component: ${binding.componentId}`,
+			);
+		if (!SYNTHESIZABLE_IDENTIFIER.test(binding.handleName))
+			throw new Error(
+				`Qwik emitter cannot bind an element handle named ${JSON.stringify(binding.handleName)}`,
+			);
+		if (handleHosts.has(binding.hostNodeId))
+			throw new Error(
+				`Qwik emitter cannot bind two element handles to one host: ${binding.hostNodeId}`,
+			);
+		handleHosts.set(binding.hostNodeId, binding.handleName);
+	}
+	if (handleHosts.size === 0) return handleHosts;
+	const hostIds = new Set<string>();
+	walk(component.template, (record) => {
+		if (record.kind === 'host' && typeof record.id === 'string') hostIds.add(record.id);
+	});
+	for (const [hostNodeId, name] of handleHosts)
+		if (!hostIds.has(hostNodeId))
+			throw new Error(
+				`Qwik element handle ${name} names a host this component does not render: ${hostNodeId}`,
+			);
+	const nameById = new Map(
+		ir.records.elementHandleBindings.map((binding) => [binding.id, binding.handleName]),
+	);
+	const eventById = new Map(
+		ir.records.events
+			.filter((event) => event.componentId === component.id)
+			.map((event) => [event.id, event]),
+	);
+	for (const call of ir.records.handleCalls) {
+		if (call.componentId !== component.id)
+			throw new Error(`HandleCallRecord belongs to another component: ${call.componentId}`);
+		const name = nameById.get(call.handleBindingId)!;
+		if (!call.eventId)
+			throw new Error(
+				`Qwik emitter has no lowering for a handle call outside an event handler (${name}.${call.method}): ref writes the signal during render, and the component body runs first`,
+			);
+		const event = eventById.get(call.eventId);
+		if (!event) throw new Error(`HandleCallRecord has dangling event: ${call.eventId}`);
+		let spelled = false;
+		walk(
+			event.handlers.map((handler) => handler.expression),
+			(record) => {
+				const callee = record.callee as Record<string, any> | undefined;
+				if (record.type !== 'CallExpression' || !callee) return;
+				if (
+					callee.type === 'MemberExpression' &&
+					callee.computed === false &&
+					callee.object?.type === 'Identifier' &&
+					callee.object.name === name &&
+					callee.property?.type === 'Identifier' &&
+					callee.property.name === call.method
+				)
+					spelled = true;
+			},
+		);
+		if (!spelled)
+			throw new Error(
+				`Qwik event ${call.eventId} declares a handle call ${name}.${call.method}() its handler AST does not spell`,
+			);
+	}
+	return handleHosts;
+}
+
 function componentDeclaration(
 	ir: EnrichedIR,
 	component: EnrichedComponent,
@@ -1222,7 +1401,10 @@ function componentDeclaration(
 			local.names.forEach((name) => onceSignals.add(name));
 	}
 	const imports = new Set<QwikApi>(['component$']);
+	const handleHosts = elementHandleHosts(ir, component);
 	const context: EmitContext = {
+		elementHandleNames: new Set(handleHosts.values()),
+		handleHosts,
 		arrayStoreStateNames: new Set(
 			[...storeKinds].filter(([, kind]) => kind === 'array').map(([name]) => name),
 		),
@@ -1252,6 +1434,60 @@ function componentDeclaration(
 		const semantic = local.semanticRecordIds
 			.map((id) => bindingById.get(id))
 			.filter((binding): binding is EnrichedGraphBinding => Boolean(binding));
+		const handle = semantic.find((binding) => binding.kind === 'element');
+		if (handle) {
+			if (semantic.length > 1)
+				throw new Error(
+					`Qwik element handle has unsupported multi-semantic shape: ${local.names.join(',')}`,
+				);
+			// THE AUTHORED `element<T>()` CALL IS NOT EMITTED. `useSignal()` with no
+			// argument is the Qwik declaration a `ref={}` writes into, and reads of it
+			// are respelled `.value` by `rewriteExpression` above.
+			//
+			// THE TYPE ARGUMENT IS NOT DECORATION - MEASURED, IT IS THE DIFFERENCE
+			// BETWEEN VALID AND INVALID OUTPUT. `useSignal()` bare is `Signal<unknown>`
+			// (`UseSignal` in `@qwik.dev/core` 2.0.0-beta.38 `dist/core-internal.d.ts`
+			// :4884-4887), and the `ref` prop is
+			// `Ref<EL> = Signal<Element | undefined> | RefFnInterface<EL>` (:2971), so the
+			// bare form is a hard TS2322 at the prop AND a TS2339 at every `.value`
+			// read - at `strict` and at `strict: false` alike, because assignability is
+			// not a strictness setting. The lane's own `emitted-typecheck` row watches
+			// both go away.
+			//
+			// `HTMLElement` and NOT the authored `element<HTMLInputElement>()` narrowing:
+			// `ElementHandleBinding` carries `id`, `handleName`, `componentId` and
+			// `hostNodeId` and NO element type, so there is no declared channel to read
+			// one from - the authored type argument survives only on the local's
+			// initializer, which this branch discards. Widening from a discarded AST is
+			// the same move T002 struck from Step 1 for `ComponentPropExpression.type`.
+			// `HTMLElement` is chosen because the signal arm of `Ref` is
+			// `Signal<Element | undefined>` REGARDLESS of `EL`, so one fixed bound is
+			// total over every host tag - and it is the narrowest bound carrying the DOM
+			// methods a handle call reaches. A call to a method that is NOT on
+			// `HTMLElement` would be type-invalid here; the corpus has no instance, and
+			// the repair is an element type on the IR record, not a wider guess.
+			imports.add('useSignal');
+			body.push(
+				variable(handle.name, {
+					...call(identifier('useSignal'), []),
+					// `typeArguments`, NOT `typeParameters`. MEASURED at yuku-codegen
+					// 0.7.0: the same node under `typeParameters` prints
+					// `const input = useSignal();` with `errors: []` - the type argument is
+					// dropped in total silence, which is the identical hazard the Angular
+					// lane's `typeNode` converter was built against.
+					typeArguments: {
+						type: 'TSTypeParameterInstantiation',
+						params: [
+							{
+								type: 'TSTypeReference',
+								typeName: identifier('HTMLElement'),
+							},
+						],
+					},
+				}),
+			);
+			continue;
+		}
 		if (semantic.length > 1)
 			throw new Error(
 				`Qwik local has unsupported multi-semantic shape: ${local.names.join(',')}`,
@@ -1421,13 +1657,17 @@ export function emit(ir: EnrichedIR): string {
 		ir.records.sharedInstances.length ||
 		ir.records.sharedReads.length ||
 		ir.records.sharedCalls.length ||
-		ir.records.sharedWrites.length ||
-		ir.records.elementHandleBindings.length ||
-		ir.records.handleForwards.length ||
-		ir.records.behaviors.length ||
-		ir.records.handleCalls.length
+		ir.records.sharedWrites.length
 	)
-		throw new Error('Qwik emitter does not support composition or shared/handle constructs');
+		throw new Error('Qwik emitter does not support composition or shared constructs');
+	// STEP 3 OPENED `elementHandleBindings` AND `handleCalls` AND NOTHING ELSE.
+	// `handleForwards` hands a child's node to a PARENT module, which needs the
+	// composition path Step 5 owns; `behaviors` is the authored `attach=` effect
+	// Step 4 owns. Both stay refused by name.
+	if (ir.records.handleForwards.length)
+		throw new Error('Qwik emitter does not support forwarding a handle to a parent module');
+	if (ir.records.behaviors.length)
+		throw new Error('Qwik emitter does not support element attach behaviors');
 	const component = ir.components[0]!;
 	const { declaration, imports } = componentDeclaration(ir, component);
 	const orderedApis = [
@@ -1457,7 +1697,22 @@ export function emit(ir: EnrichedIR): string {
 	})}\n`;
 	if (/\buseVisibleTask\$\b|\bonQVisible\$\b/.test(source))
 		throw new Error('Qwik emission introduced a forbidden visible task');
-	const verified = analyze(source, { lang: 'jsx', sourceType: 'module', preserveParens: false });
+	// `tsx`, NOT `jsx`, AND THE CHANGE IS A REPAIR THIS STEP FORCED RATHER THAN A
+	// TIDY-UP. This artifact became `.tsx` at `frameless-emitter-capability-v1` T009
+	// / T011 and `formatEmitted` moved with it; THIS verifier did not. MEASURED at
+	// yuku-analyzer 0.7.0 on `const input = useSignal<HTMLElement>()` beside a JSX
+	// element: `jsx` reports `Empty parentheses are only valid as arrow function
+	// parameters` - it reads `<` as a comparison - `ts` reports `Expected '>' to
+	// close a type assertion`, and only `tsx` reports zero. So the moment this lane
+	// prints its first type argument, a `jsx` verifier rejects VALID output. The
+	// eight goldens are byte-identical across the change, which is what makes it
+	// safe to land here: they carry no type, so `jsx` and `tsx` agree on all of them.
+	//
+	// The same `lang: 'jsx'` sits on `.tsx` output in the react and solid emitters.
+	// It is NOT wrong there yet - neither prints a type - and it is REPORTED rather
+	// than changed, because moving a verifier those lanes' 73 standing `pnpm check`
+	// errors are measured against is not this step's to do.
+	const verified = analyze(source, { lang: 'tsx', sourceType: 'module', preserveParens: false });
 	if (verified.diagnostics.length)
 		throw new Error(
 			`Emitted Qwik module failed output verification: ${verified.diagnostics.map((item) => item.message).join('; ')}`,

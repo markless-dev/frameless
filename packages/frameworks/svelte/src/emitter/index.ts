@@ -40,6 +40,12 @@ type EmitContext = {
 	readonly usedApis: Set<SvelteApi>;
 	/** Elements that received a sanctioned `svelte-ignore`, by warning code. */
 	readonly suppressed: Set<string>;
+	/**
+	 * Host node id -> the `bind:this` target name, for every `ElementHandleBinding`
+	 * this component owns. Empty for every scenario in the corpus, which is what
+	 * keeps the emitted bytes of the eight goldens unmoved.
+	 */
+	readonly handleHosts: ReadonlyMap<string, string>;
 };
 
 type SvelteApi = 'untrack';
@@ -157,6 +163,77 @@ function validatePropEntries(entries: EnrichedIR['components'][number]['props'][
 }
 
 /** Fail closed at the public emitter boundary before constructing output. */
+/**
+ * SHAPE-CHECKS THE TWO RECORD FAMILIES THIS LANE STARTED CONSUMING AT STEP 3.
+ *
+ * Before refs landed here, `validateEnrichedIr` checked only that
+ * `elementHandleBindings` and `handleCalls` were ARRAYS - the family loop above -
+ * because the emitter refused any IR that carried one. That was survivable while
+ * the records were unreachable. It is not survivable now: this is the same defect
+ * class T003 measured and T010 closed one level up, where four lanes accepted a
+ * field planted on a nested `PropDestructuringEntry` with byte-identical output
+ * while react and solid threw. React validates both families key-by-key
+ * (`packages/frameworks/react/src/emitter/index.ts`, the inline `keys` closure);
+ * this lane now does too, so a field added to either record fails HERE, by name,
+ * rather than being silently dropped on the floor by a lane that consumes it.
+ *
+ * `handleForwards` and `behaviors` are deliberately NOT checked here: this lane
+ * still refuses them outright in `emit`, so they remain unreachable and a checker
+ * for them would assert over a path that cannot be taken. They are Step 4's and
+ * Step 5's to open, and theirs to validate when they do.
+ */
+function validateHandleRecords(ir: EnrichedIR): void {
+	const componentIds = new Set(ir.components.map((component) => component.id));
+	const eventIds = new Set(ir.records.events.map((event) => event.id));
+	const handleIds = new Set<string>();
+	for (const binding of ir.records.elementHandleBindings) {
+		exactKeys('ElementHandleBinding', binding, [
+			'id',
+			'handleName',
+			'componentId',
+			'hostNodeId',
+		]);
+		if (
+			typeof binding.id !== 'string' ||
+			typeof binding.handleName !== 'string' ||
+			typeof binding.hostNodeId !== 'string'
+		)
+			throw new Error('ElementHandleBinding has malformed construct');
+		if (!componentIds.has(binding.componentId))
+			throw new Error(`ElementHandleBinding has dangling componentId: ${binding.componentId}`);
+		handleIds.add(binding.id);
+	}
+	for (const call of ir.records.handleCalls) {
+		exactKeys('HandleCallRecord', call, [
+			'handleBindingId',
+			'componentId',
+			'method',
+			'arguments',
+			'optional',
+			'eventId',
+			'site',
+			'order',
+		]);
+		if (
+			typeof call.handleBindingId !== 'string' ||
+			typeof call.method !== 'string' ||
+			!Array.isArray(call.arguments) ||
+			typeof call.optional !== 'boolean' ||
+			(call.eventId !== undefined && typeof call.eventId !== 'string') ||
+			typeof call.order !== 'number'
+		)
+			throw new Error('HandleCallRecord has malformed construct');
+		if (!componentIds.has(call.componentId))
+			throw new Error(`HandleCallRecord has dangling componentId: ${call.componentId}`);
+		if (!handleIds.has(call.handleBindingId))
+			throw new Error(
+				`HandleCallRecord has dangling ElementHandleBinding: ${call.handleBindingId}`,
+			);
+		if (call.eventId !== undefined && !eventIds.has(call.eventId))
+			throw new Error(`HandleCallRecord has dangling event: ${call.eventId}`);
+	}
+}
+
 export function validateEnrichedIr(ir: EnrichedIR): void {
 	exactKeys('EnrichedIR', ir, [
 		'version',
@@ -216,6 +293,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 	))
 		if (!Array.isArray(records))
 			throw new Error(`EnrichedRecordTable ${family} has malformed record family`);
+	validateHandleRecords(ir);
 	exactKeys('ModuleRecord', ir.module, ['exports']);
 	for (const imported of ir.imports)
 		exactKeys('ModuleImport', imported, [
@@ -329,6 +407,36 @@ function scriptStatements(ir: EnrichedIR, context: EmitContext): Statement[] {
 		const semantic = local.semanticRecordIds
 			.map((id) => bindingById.get(id))
 			.filter((binding): binding is EnrichedGraphBinding => Boolean(binding));
+		const handle = semantic.find((binding) => binding.kind === 'element');
+		if (handle) {
+			// THE AUTHORED `element<T>()` CALL IS NOT EMITTED. `bind:this` assigns the
+			// node into the variable itself, so the declaration is a bare `let` with no
+			// initializer - the same shape the Solid lane emits for the same binding.
+			//
+			// NOT `$state()` - AND THE FIRST REASON WRITTEN HERE WAS MEASURED FALSE, SO
+			// THE REFUSAL BELOW EXISTS INSTEAD OF IT. This comment claimed a plain `let`
+			// read from the template would raise `non_reactive_update` and that
+			// `assertCompilesClean` would therefore be two-sided over the choice. MEASURED
+			// at svelte/compiler 5.56.8, four ways (client/server x dev/prod): `let input`
+			// with `bind:this` AND a template read is CLEAN, `let input = $state()` with
+			// the same shape is CLEAN, and even a plain `let n = 0` reassigned in a
+			// handler and read in the template is CLEAN. No warning distinguishes the two
+			// forms at all.
+			//
+			// That is what makes the difference SILENT rather than harmless: with a plain
+			// `let`, a template read would not re-render; with `$state()` it would. So
+			// this lane keeps the minimal form - the same `let input` the Solid lane
+			// emits for the same binding - and `emit` REFUSES a template read of a handle
+			// name outright, rather than picking a rune on a runtime property no
+			// instrument in this package can check. Vue, Qwik and Angular need no such
+			// refusal because their handles are reactive by construction.
+			if (semantic.length > 1)
+				throw new Error(
+					`Svelte element handle has unsupported multi-semantic shape: ${local.names.join(',')}`,
+				);
+			statements.push(variable('let', identifier(handle.name), null));
+			continue;
+		}
 		if (semantic.length > 1)
 			throw new Error(
 				`Svelte local has unsupported multi-semantic shape: ${local.names.join(',')}`,
@@ -586,6 +694,13 @@ function renderHost(
 	if (!/^[a-z][a-z0-9-]*$/.test(node.tag))
 		throw new Error(`Svelte emitter rejects the host tag ${JSON.stringify(node.tag)}`);
 	const attributes = attributesOf(node, indent);
+	// STEP 3, REFS. `bind:this` is the ONLY sanctioned Svelte 5 form for getting a
+	// handle on a rendered DOM node - `use:` actions and `{@attach}` hand the node
+	// to a function rather than to a variable, so neither is a member of the
+	// sanctioned set for THIS construct. With one member there is no baseline-versus-
+	// sugar question to run the six gates over; see notes/T005-refs.md.
+	const handleName = context.handleHosts.get(node.id);
+	if (handleName !== undefined) attributes.push(`bind:this={${handleName}}`);
 	for (const eventId of node.eventIds) {
 		const event = context.eventsById.get(eventId);
 		if (!event) throw new Error(`Unknown event record: ${eventId}`);
@@ -698,6 +813,70 @@ function renderNode(node: TemplateNode, indent: string, inline: boolean): string
 }
 
 /**
+ * THIS LANE PRINTS THE AUTHORED HANDLER AST VERBATIM, SO `handleCalls` IS AN
+ * ASSERTION RATHER THAN A LOWERING - AND AN UNASSERTED ONE WOULD BE INVISIBLE.
+ *
+ * `bind:this` puts the node in the variable the author already wrote, so
+ * `input?.focus()` needs no rewriting and the emitter never builds the call. The
+ * cost of that is that a `HandleCallRecord` the handler does NOT spell would be
+ * dropped in total silence - the emitted module would still compile, still run,
+ * and simply not do the thing the IR declared. Same shape as `syncPolicyGuard`
+ * above, which exists for the same reason.
+ *
+ * A call with NO `eventId` is refused rather than checked: `bind:this` assigns
+ * during mount, so a call in the component body would run against `undefined`.
+ * That is a real Svelte lifecycle fact, not a limitation of this printer, and the
+ * repair is `onMount` - which is Step 4's construct, not this one's.
+ */
+function assertHandleCallsAreSpelled(
+	ir: EnrichedIR,
+	component: EnrichedComponent,
+	handleHosts: ReadonlyMap<string, string>,
+): void {
+	const nameById = new Map(
+		ir.records.elementHandleBindings.map((binding) => [binding.id, binding.handleName]),
+	);
+	const handlerByEvent = new Map(
+		ir.records.events
+			.filter((event) => event.componentId === component.id)
+			.map((event) => [event.id, event]),
+	);
+	for (const call of ir.records.handleCalls) {
+		if (call.componentId !== component.id)
+			throw new Error(
+				`HandleCallRecord belongs to another component: ${call.componentId}`,
+			);
+		const name = nameById.get(call.handleBindingId)!;
+		if (![...handleHosts.values()].includes(name))
+			throw new Error(`HandleCallRecord has no emitted handle: ${call.handleBindingId}`);
+		if (!call.eventId)
+			throw new Error(
+				`Svelte emitter has no lowering for a handle call outside an event handler (${name}.${call.method}): bind:this assigns during mount, so the variable is undefined while the component body runs`,
+			);
+		const event = handlerByEvent.get(call.eventId);
+		if (!event) throw new Error(`HandleCallRecord has dangling event: ${call.eventId}`);
+		let spelled = false;
+		walk(event.handlers.map((handler) => handler.expression), (record) => {
+			if (record.type !== 'CallExpression') return;
+			const callee = record.callee as Record<string, any> | undefined;
+			if (
+				callee?.type === 'MemberExpression' &&
+				callee.computed === false &&
+				callee.object?.type === 'Identifier' &&
+				callee.object.name === name &&
+				callee.property?.type === 'Identifier' &&
+				callee.property.name === call.method
+			)
+				spelled = true;
+		});
+		if (!spelled)
+			throw new Error(
+				`Svelte event ${call.eventId} declares a handle call ${name}.${call.method}() its handler AST does not spell`,
+			);
+	}
+}
+
+/**
  * The template printer is a pure string walk, so the context is held in a
  * module-local rather than threaded through every signature. `emit` is
  * synchronous and single-shot, so there is no interleaving to worry about; the
@@ -772,13 +951,18 @@ export function emit(ir: EnrichedIR): string {
 		ir.records.sharedInstances.length ||
 		ir.records.sharedReads.length ||
 		ir.records.sharedCalls.length ||
-		ir.records.sharedWrites.length ||
-		ir.records.elementHandleBindings.length ||
-		ir.records.handleForwards.length ||
-		ir.records.behaviors.length ||
-		ir.records.handleCalls.length
+		ir.records.sharedWrites.length
 	)
-		throw new Error('Svelte emitter does not support composition or shared/handle constructs');
+		throw new Error('Svelte emitter does not support composition or shared constructs');
+	// STEP 3 OPENED `elementHandleBindings` AND `handleCalls` AND NOTHING ELSE.
+	// `handleForwards` is a CROSS-MODULE construct - it hands a child's node to a
+	// parent, which needs the composition path Step 5 owns - and `behaviors` is the
+	// authored `attach=` effect Step 4 owns. Both stay refused, by name, so a
+	// half-supported construct cannot reach the printer.
+	if (ir.records.handleForwards.length)
+		throw new Error('Svelte emitter does not support forwarding a handle to a parent module');
+	if (ir.records.behaviors.length)
+		throw new Error('Svelte emitter does not support element attach behaviors');
 	if (ir.module.exports.length !== 1)
 		throw new Error('A .svelte module exports exactly one component');
 	const component = ir.components[0]!;
@@ -786,6 +970,45 @@ export function emit(ir: EnrichedIR): string {
 		throw new Error(
 			`Svelte emitter has no lowering for an early component guard (${component.name}): a .svelte component has no return statement to guard`,
 		);
+	const handleHosts = new Map<string, string>();
+	for (const binding of ir.records.elementHandleBindings) {
+		if (binding.componentId !== component.id)
+			throw new Error(
+				`ElementHandleBinding ${binding.id} belongs to another component: ${binding.componentId}`,
+			);
+		// A dotted handle name is a FORWARDED handle's spelling, and this lane has no
+		// lowering for one; refusing it here keeps `bind:this={a.b}` off the printer.
+		if (!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(binding.handleName))
+			throw new Error(
+				`Svelte emitter cannot bind an element handle named ${JSON.stringify(binding.handleName)}`,
+			);
+		if (handleHosts.has(binding.hostNodeId))
+			throw new Error(
+				`Svelte emitter cannot bind two element handles to one host: ${binding.hostNodeId}`,
+			);
+		handleHosts.set(binding.hostNodeId, binding.handleName);
+	}
+	const hostIds = new Set<string>();
+	walk(component.template, (record) => {
+		if (record.kind === 'host' && typeof record.id === 'string') hostIds.add(record.id);
+	});
+	for (const [hostNodeId, name] of handleHosts)
+		if (!hostIds.has(hostNodeId))
+			throw new Error(
+				`Svelte element handle ${name} names a host this component does not render: ${hostNodeId}`,
+			);
+	// See the `bind:this` decision site in `scriptStatements`: neither `let` nor
+	// `$state()` produces a warning for a template read, so the reactivity
+	// difference between them is invisible to this lane's only instrument. The
+	// shape that would expose it is refused rather than guessed at.
+	const handleNames = new Set(handleHosts.values());
+	walk(component.template, (record) => {
+		if (record.type === 'Identifier' && handleNames.has(String(record.name)))
+			throw new Error(
+				`Svelte emitter refuses the template expression read of the element handle ${String(record.name)}: bind:this writes a plain let, which is not reactive, and svelte/compiler 5.56.8 reports no warning either way`,
+			);
+	});
+	assertHandleCallsAreSpelled(ir, component, handleHosts);
 	const context: EmitContext = {
 		component,
 		eventsById: new Map(
@@ -796,6 +1019,7 @@ export function emit(ir: EnrichedIR): string {
 		reactiveNames: new Set<string>(),
 		usedApis: new Set<SvelteApi>(),
 		suppressed: new Set<string>(),
+		handleHosts,
 	};
 	currentContext = context;
 	try {

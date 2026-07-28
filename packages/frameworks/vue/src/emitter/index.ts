@@ -50,6 +50,11 @@ type EmitContext = {
 	/** Bare-identifier respellings applied to SCRIPT expressions only. */
 	readonly rewrites: Map<string, ScriptRewrite>;
 	readonly usedApis: Set<VueApi>;
+	/**
+	 * Host node id -> the template-ref name, for every `ElementHandleBinding` this
+	 * component owns. Empty for every scenario in the corpus.
+	 */
+	readonly handleHosts: ReadonlyMap<string, string>;
 };
 
 type VueApi = 'computed' | 'ref';
@@ -154,6 +159,75 @@ function validatePropEntries(entries: EnrichedIR['components'][number]['props'][
 	}
 }
 
+/**
+ * SHAPE-CHECKS THE TWO RECORD FAMILIES THIS LANE STARTED CONSUMING AT STEP 3.
+ *
+ * Before refs landed here, `validateEnrichedIr` checked only that
+ * `elementHandleBindings` and `handleCalls` were ARRAYS - the family loop below -
+ * because the emitter refused any IR that carried one. That is the same defect
+ * class T003 measured and T010 closed one level up: four lanes accepted a field
+ * planted on a nested `PropDestructuringEntry` with byte-identical output while
+ * react and solid threw. React validates both families key-by-key (its inline
+ * `keys` closure, NOT an `exactKeys`); this lane now does too, so a field added to
+ * either record fails HERE, by name, rather than being dropped by a lane that
+ * consumes it.
+ *
+ * `handleForwards` and `behaviors` are deliberately NOT checked: `emit` still
+ * refuses them, so they stay unreachable, and a checker over an unreachable path
+ * asserts nothing. Step 4 and Step 5 own them.
+ */
+function validateHandleRecords(ir: EnrichedIR): void {
+	const componentIds = new Set(ir.components.map((component) => component.id));
+	const eventIds = new Set(ir.records.events.map((event) => event.id));
+	const handleIds = new Set<string>();
+	for (const binding of ir.records.elementHandleBindings) {
+		exactKeys('ElementHandleBinding', binding, [
+			'id',
+			'handleName',
+			'componentId',
+			'hostNodeId',
+		]);
+		if (
+			typeof binding.id !== 'string' ||
+			typeof binding.handleName !== 'string' ||
+			typeof binding.hostNodeId !== 'string'
+		)
+			throw new Error('ElementHandleBinding has malformed construct');
+		if (!componentIds.has(binding.componentId))
+			throw new Error(`ElementHandleBinding has dangling componentId: ${binding.componentId}`);
+		handleIds.add(binding.id);
+	}
+	for (const call of ir.records.handleCalls) {
+		exactKeys('HandleCallRecord', call, [
+			'handleBindingId',
+			'componentId',
+			'method',
+			'arguments',
+			'optional',
+			'eventId',
+			'site',
+			'order',
+		]);
+		if (
+			typeof call.handleBindingId !== 'string' ||
+			typeof call.method !== 'string' ||
+			!Array.isArray(call.arguments) ||
+			typeof call.optional !== 'boolean' ||
+			(call.eventId !== undefined && typeof call.eventId !== 'string') ||
+			typeof call.order !== 'number'
+		)
+			throw new Error('HandleCallRecord has malformed construct');
+		if (!componentIds.has(call.componentId))
+			throw new Error(`HandleCallRecord has dangling componentId: ${call.componentId}`);
+		if (!handleIds.has(call.handleBindingId))
+			throw new Error(
+				`HandleCallRecord has dangling ElementHandleBinding: ${call.handleBindingId}`,
+			);
+		if (call.eventId !== undefined && !eventIds.has(call.eventId))
+			throw new Error(`HandleCallRecord has dangling event: ${call.eventId}`);
+	}
+}
+
 /** Fail closed at the public emitter boundary before constructing output. */
 export function validateEnrichedIr(ir: EnrichedIR): void {
 	exactKeys('EnrichedIR', ir, [
@@ -214,6 +288,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 	))
 		if (!Array.isArray(records))
 			throw new Error(`EnrichedRecordTable ${family} has malformed record family`);
+	validateHandleRecords(ir);
 	exactKeys('ModuleRecord', ir.module, ['exports']);
 	for (const imported of ir.imports)
 		exactKeys('ModuleImport', imported, [
@@ -652,7 +727,16 @@ function collectRewrites(ir: EnrichedIR, context: EmitContext): void {
 		for (const id of local.semanticRecordIds) {
 			const binding = bindingById.get(id);
 			if (!binding) continue;
-			if (binding.kind === 'state' || binding.kind === 'computed')
+			// An `element` binding joins `state` and `computed` here because a Vue
+			// template ref IS a `ref()`: a SCRIPT read of it needs `.value` for exactly
+			// the same reason. The template needs no rewrite - Vue's own compiler
+			// unwraps setup refs there, which is why the whole `ScriptRewrite` family
+			// is script-scoped.
+			if (
+				binding.kind === 'state' ||
+				binding.kind === 'computed' ||
+				binding.kind === 'element'
+			)
 				context.rewrites.set(binding.name, { kind: 'ref' });
 		}
 	}
@@ -686,6 +770,46 @@ function scriptStatements(ir: EnrichedIR, context: EmitContext): Statement[] {
 		const semantic = local.semanticRecordIds
 			.map((id) => bindingById.get(id))
 			.filter((binding): binding is EnrichedGraphBinding => Boolean(binding));
+		const handle = semantic.find((binding) => binding.kind === 'element');
+		if (handle) {
+			if (semantic.length > 1)
+				throw new Error(
+					`Vue element handle has unsupported multi-semantic shape: ${local.names.join(',')}`,
+				);
+			// THE AUTHORED `element<T>()` CALL IS NOT EMITTED. A Vue template ref is a
+			// `ref()` whose name matches the template's `ref="..."` string; Vue's runtime
+			// writes the node into it on mount and `null` on unmount.
+			//
+			// `ref()` and NOT `useTemplateRef('input')`: `useTemplateRef` is 3.5+, and
+			// this lane's discharge of the idiom policy's version corollary is that it
+			// emits nothing but forms in the gate's BASELINE_FORM_INVENTORY, every one of
+			// which floors at 3.0/3.2. A 3.5 form would raise the emitted module's floor
+			// for a spelling change - and MEASURED at 3.5.40, `useTemplateRef` produces
+			// template codegen IDENTICAL to the string-ref form anyway.
+			//
+			// `ref()` AND NOT `ref(null)`, AND THAT IS A CORRECTION THIS STEP HAD TO
+			// MAKE. `ref(null)` was emitted first and is a HARD TYPE ERROR: measured with
+			// the demo's own `vue-tsc` over the emitted SFC, `ref(null)` infers
+			// `Ref<null>` and `input?.focus()` reports
+			// `TS2339: Property 'focus' does not exist on type 'never'`. `compileDiagnostics`
+			// - THIS LANE'S OWN in-process oracle, and the thing `assertCompilesClean`
+			// runs - reported an EXACT EMPTY diagnostic set on the same file in all four
+			// `COMPILE_MODES`. The lane's own checker is structurally blind to this class,
+			// which is the `pnpm e2e` warning one level in.
+			//
+			// NO TYPE ARGUMENT, and that asymmetry with the Qwik lane is deliberate.
+			// Qwik's bare `useSignal()` is `Signal<unknown>`, which its `ref` prop
+			// REFUSES, so that lane is forced into a fixed `HTMLElement` bound it cannot
+			// source from the IR. Vue is not forced: `ref()` is clean under `vue-tsc`.
+			// Importing Qwik's guess here would narrow a lane whose toolchain does not
+			// ask for it and would make `input?.select()` red in Vue for no reason.
+			// See notes/T005-refs.md for all four candidates and their measurements.
+			context.usedApis.add('ref');
+			statements.push(
+				variable('const', identifier(handle.name), call(identifier('ref'), [])),
+			);
+			continue;
+		}
 		if (semantic.length > 1)
 			throw new Error(
 				`Vue local has unsupported multi-semantic shape: ${local.names.join(',')}`,
@@ -1050,6 +1174,18 @@ function renderHost(
 	if (!/^[a-z][a-z0-9-]*$/.test(node.tag))
 		throw new Error(`Vue emitter rejects the host tag ${JSON.stringify(node.tag)}`);
 	const attributes = [...structural, ...attributesOf(node, indent)];
+	// STEP 3, REFS. A PLAIN `ref="name"` ATTRIBUTE, not `:ref="(el) => ..."`.
+	//
+	// Both are sanctioned at 3.5.40 and both floor at 3.0, so the tie is broken on
+	// the mechanism the compiler itself provides: with `<script setup>` and a setup
+	// binding of the same name, `@vue/compiler-sfc` rewrites the STRING form into a
+	// `ref_key`/`ref` pair in inline mode and resolves it against `setupState` in
+	// non-inline mode. That machinery exists BECAUSE this is the form. A function
+	// ref asks Vue to run an assignment it does not need to run. See
+	// notes/T005-refs.md for the measurement, including the codegen in all four
+	// `COMPILE_MODES`.
+	const handleName = activeContext().handleHosts.get(node.id);
+	if (handleName !== undefined) attributes.push(`ref="${escapeAttributeValue(handleName)}"`);
 	for (const eventId of node.eventIds) {
 		const event = activeContext().eventsById.get(eventId);
 		if (!event) throw new Error(`Unknown event record: ${eventId}`);
@@ -1267,6 +1403,98 @@ function assertCompilesClean(source: string, filename: string): void {
  * attribute can land in its own behaviour-neutral step ahead of the annotations.
  * See `propsDeclaration` for the still-standing IR-8 ruling on what may be printed.
  */
+/**
+ * The `hostNodeId -> template-ref name` map, plus every fail-closed check that
+ * has to hold before one byte of `ref="..."` is printed.
+ *
+ * `handleCalls` IS AN ASSERTION HERE, NOT A LOWERING, and an unasserted one would
+ * be invisible. Vue template expressions are emitted VERBATIM and Vue's compiler
+ * unwraps setup refs itself, so `input?.focus()` needs no rewriting and this
+ * emitter never builds the call. The cost is that a `HandleCallRecord` the handler
+ * does NOT spell would be dropped in silence - the module would compile, run, and
+ * quietly not do the declared thing. Same shape as `syncPolicyGuard`.
+ *
+ * A call with NO `eventId` is REFUSED rather than checked: Vue writes a template
+ * ref during mount, and `<script setup>` is the `setup()` body, which runs BEFORE
+ * mount. Such a call would run against `null`. That is a Vue lifecycle fact, and
+ * its repair is `onMounted` - a Step 4 construct, not this one's.
+ */
+function elementHandleHosts(
+	ir: EnrichedIR,
+	component: EnrichedComponent,
+): ReadonlyMap<string, string> {
+	const handleHosts = new Map<string, string>();
+	for (const binding of ir.records.elementHandleBindings) {
+		if (binding.componentId !== component.id)
+			throw new Error(
+				`ElementHandleBinding ${binding.id} belongs to another component: ${binding.componentId}`,
+			);
+		// A dotted handle name is a FORWARDED handle's spelling and this lane has no
+		// lowering for one; refusing it keeps `ref="a.b"` off the printer, where Vue
+		// would resolve it as a flat string key that matches no setup binding.
+		if (!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(binding.handleName))
+			throw new Error(
+				`Vue emitter cannot bind an element handle named ${JSON.stringify(binding.handleName)}`,
+			);
+		if (handleHosts.has(binding.hostNodeId))
+			throw new Error(
+				`Vue emitter cannot bind two element handles to one host: ${binding.hostNodeId}`,
+			);
+		handleHosts.set(binding.hostNodeId, binding.handleName);
+	}
+	const hostIds = new Set<string>();
+	walk(component.template, (record) => {
+		if (record.kind === 'host' && typeof record.id === 'string') hostIds.add(record.id);
+	});
+	for (const [hostNodeId, name] of handleHosts)
+		if (!hostIds.has(hostNodeId))
+			throw new Error(
+				`Vue element handle ${name} names a host this component does not render: ${hostNodeId}`,
+			);
+	const nameById = new Map(
+		ir.records.elementHandleBindings.map((binding) => [binding.id, binding.handleName]),
+	);
+	const eventById = new Map(
+		ir.records.events
+			.filter((event) => event.componentId === component.id)
+			.map((event) => [event.id, event]),
+	);
+	for (const call of ir.records.handleCalls) {
+		if (call.componentId !== component.id)
+			throw new Error(`HandleCallRecord belongs to another component: ${call.componentId}`);
+		const name = nameById.get(call.handleBindingId)!;
+		if (!call.eventId)
+			throw new Error(
+				`Vue emitter has no lowering for a handle call outside an event handler (${name}.${call.method}): a template ref is written on mount, and <script setup> runs before it`,
+			);
+		const event = eventById.get(call.eventId);
+		if (!event) throw new Error(`HandleCallRecord has dangling event: ${call.eventId}`);
+		let spelled = false;
+		walk(
+			event.handlers.map((handler) => handler.expression),
+			(record) => {
+				const callee = record.callee as Record<string, unknown> | undefined;
+				if (record.type !== 'CallExpression' || !callee) return;
+				if (
+					callee.type === 'MemberExpression' &&
+					callee.computed === false &&
+					(callee.object as Record<string, unknown> | undefined)?.type === 'Identifier' &&
+					(callee.object as Record<string, unknown>).name === name &&
+					(callee.property as Record<string, unknown> | undefined)?.type ===
+						'Identifier' &&
+					(callee.property as Record<string, unknown>).name === call.method
+				)
+					spelled = true;
+			},
+		);
+		if (!spelled)
+			throw new Error(
+				`Vue event ${call.eventId} declares a handle call ${name}.${call.method}() its handler AST does not spell`,
+			);
+	}
+	return handleHosts;
+}
+
 export function emit(ir: EnrichedIR): string {
 	validateEnrichedIr(ir);
 	if (ir.records.persistence.length)
@@ -1278,13 +1506,17 @@ export function emit(ir: EnrichedIR): string {
 		ir.records.sharedInstances.length ||
 		ir.records.sharedReads.length ||
 		ir.records.sharedCalls.length ||
-		ir.records.sharedWrites.length ||
-		ir.records.elementHandleBindings.length ||
-		ir.records.handleForwards.length ||
-		ir.records.behaviors.length ||
-		ir.records.handleCalls.length
+		ir.records.sharedWrites.length
 	)
-		throw new Error('Vue emitter does not support composition or shared/handle constructs');
+		throw new Error('Vue emitter does not support composition or shared constructs');
+	// STEP 3 OPENED `elementHandleBindings` AND `handleCalls` AND NOTHING ELSE.
+	// `handleForwards` hands a child's node to a PARENT module, which needs the
+	// composition path Step 5 owns; `behaviors` is the authored `attach=` effect
+	// Step 4 owns. Both stay refused by name.
+	if (ir.records.handleForwards.length)
+		throw new Error('Vue emitter does not support forwarding a handle to a parent module');
+	if (ir.records.behaviors.length)
+		throw new Error('Vue emitter does not support element attach behaviors');
 	if (ir.module.exports.length !== 1)
 		throw new Error('A .vue module exports exactly one component');
 	const component = ir.components[0]!;
@@ -1296,6 +1528,7 @@ export function emit(ir: EnrichedIR): string {
 		throw new Error(
 			`Vue emitter requires exactly one root template node (${component.name}): multiple roots compile to a Fragment, which is server-rendered with anchor comments the e2e lane would read out of the payload`,
 		);
+	const handleHosts = elementHandleHosts(ir, component);
 	const context: EmitContext = {
 		component,
 		eventsById: new Map(
@@ -1305,6 +1538,7 @@ export function emit(ir: EnrichedIR): string {
 		),
 		rewrites: new Map<string, ScriptRewrite>(),
 		usedApis: new Set<VueApi>(),
+		handleHosts,
 	};
 	currentContext = context;
 	try {

@@ -25,6 +25,7 @@ import {
 	returnStatement,
 	type Statement,
 	thisExpression,
+	walk,
 } from './estree.ts';
 
 /**
@@ -59,6 +60,12 @@ type EmitContext = {
 	 */
 	readonly members: ReadonlySet<string>;
 	readonly handlersByEventId: ReadonlyMap<string, LoweredHandler>;
+	/**
+	 * Host node id -> the `#name` template reference variable, for every
+	 * `ElementHandleBinding` this component owns. Empty for every scenario in the
+	 * corpus, which is what keeps the emitted bytes of the eight goldens unmoved.
+	 */
+	readonly handleHosts: ReadonlyMap<string, string>;
 };
 
 /**
@@ -159,6 +166,75 @@ function validatePropEntries(entries: EnrichedIR['components'][number]['props'][
 	}
 }
 
+/**
+ * SHAPE-CHECKS THE TWO RECORD FAMILIES THIS LANE STARTED CONSUMING AT STEP 3.
+ *
+ * Before refs landed here, `validateEnrichedIr` checked only that
+ * `elementHandleBindings` and `handleCalls` were ARRAYS - the family loop below -
+ * because the emitter refused any IR that carried one. That is the same defect
+ * class T003 measured and T010 closed one level up: four lanes accepted a field
+ * planted on a nested `PropDestructuringEntry` with byte-identical output while
+ * react and solid threw. React validates both families key-by-key (its inline
+ * `keys` closure, NOT an `exactKeys`); this lane now does too, so a field added to
+ * either record fails HERE, by name, rather than being dropped by a lane that
+ * consumes it.
+ *
+ * `handleForwards` and `behaviors` are deliberately NOT checked: `emit` still
+ * refuses them, so they stay unreachable, and a checker over an unreachable path
+ * asserts nothing. Step 4 and Step 5 own them.
+ */
+function validateHandleRecords(ir: EnrichedIR): void {
+	const componentIds = new Set(ir.components.map((component) => component.id));
+	const eventIds = new Set(ir.records.events.map((event) => event.id));
+	const handleIds = new Set<string>();
+	for (const binding of ir.records.elementHandleBindings) {
+		exactKeys('ElementHandleBinding', binding, [
+			'id',
+			'handleName',
+			'componentId',
+			'hostNodeId',
+		]);
+		if (
+			typeof binding.id !== 'string' ||
+			typeof binding.handleName !== 'string' ||
+			typeof binding.hostNodeId !== 'string'
+		)
+			throw new Error('ElementHandleBinding has malformed construct');
+		if (!componentIds.has(binding.componentId))
+			throw new Error(`ElementHandleBinding has dangling componentId: ${binding.componentId}`);
+		handleIds.add(binding.id);
+	}
+	for (const call of ir.records.handleCalls) {
+		exactKeys('HandleCallRecord', call, [
+			'handleBindingId',
+			'componentId',
+			'method',
+			'arguments',
+			'optional',
+			'eventId',
+			'site',
+			'order',
+		]);
+		if (
+			typeof call.handleBindingId !== 'string' ||
+			typeof call.method !== 'string' ||
+			!Array.isArray(call.arguments) ||
+			typeof call.optional !== 'boolean' ||
+			(call.eventId !== undefined && typeof call.eventId !== 'string') ||
+			typeof call.order !== 'number'
+		)
+			throw new Error('HandleCallRecord has malformed construct');
+		if (!componentIds.has(call.componentId))
+			throw new Error(`HandleCallRecord has dangling componentId: ${call.componentId}`);
+		if (!handleIds.has(call.handleBindingId))
+			throw new Error(
+				`HandleCallRecord has dangling ElementHandleBinding: ${call.handleBindingId}`,
+			);
+		if (call.eventId !== undefined && !eventIds.has(call.eventId))
+			throw new Error(`HandleCallRecord has dangling event: ${call.eventId}`);
+	}
+}
+
 /** Fail closed at the public emitter boundary before constructing output. */
 export function validateEnrichedIr(ir: EnrichedIR): void {
 	exactKeys('EnrichedIR', ir, [
@@ -217,6 +293,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 	for (const [family, records] of Object.entries(ir.records as unknown as Record<string, unknown>))
 		if (!Array.isArray(records))
 			throw new Error(`EnrichedRecordTable ${family} has malformed record family`);
+	validateHandleRecords(ir);
 	exactKeys('ModuleRecord', ir.module, ['exports']);
 	for (const imported of ir.imports)
 		exactKeys('ModuleImport', imported, [
@@ -961,14 +1038,66 @@ function classMembers(
 	ir: EnrichedIR,
 	component: EnrichedComponent,
 	context: EmitContext,
-): { readonly members: ClassMember[]; readonly implementsOnInit: boolean } {
+): {
+	readonly members: ClassMember[];
+	readonly implementsOnInit: boolean;
+	readonly usesViewChild: boolean;
+} {
 	const members: ClassMember[] = [...propMembers(component)];
 	const fields: ClassMember[] = [];
 	const getters: ClassMember[] = [];
 	const initialisation: Statement[] = [];
+	let usesViewChild = false;
 	for (const local of [...component.locals].sort((left, right) => left.order - right.order)) {
 		const name = localName(local);
 		const binding = componentBinding(ir, component, local);
+		if (binding?.kind === 'element') {
+			// STEP 3, REFS, AND THE ONE LANE WHERE THE HANDLE IS NOT THE NODE.
+			//
+			// `@ViewChild('input')` resolves to an `ElementRef`, never to the element -
+			// no Angular query of any generation hands back the raw node - so a lane
+			// that promised `this.input` IS the node has to unwrap somewhere. It
+			// unwraps HERE, in a getter, and NOT by rewriting the handler:
+			// `qualify()` earns its totality argument by mapping every declared member
+			// name to `this.<name>` identically, and teaching it to splice
+			// `?.nativeElement` into an optional chain would make it produce a DIFFERENT
+			// shape for one name set - and would have to synthesise `ChainExpression`
+			// wrappers, which yuku-codegen has already been measured to print malformed
+			// and report `errors: []` for (see `typeNode`). One getter keeps `qualify`
+			// total and keeps every lane's handler AST identical.
+			//
+			// The getter reads `undefined` until `ngAfterViewInit`, which is what solid,
+			// svelte, vue and qwik all read for an unbound handle; only react's
+			// `useRef(null)` reads `null`. No oracle can tell them apart - `?.`
+			// short-circuits on either - so the majority spelling is kept rather than
+			// normalised.
+			//
+			// `@ViewChild` and not `viewChild()`: the signal query floors at 17.2, the
+			// decorator at 2.0, and this class is already all-decorator (`@Input`).
+			// `@angular-eslint/prefer-signals` - the rule that would report the choice -
+			// lives upstream in `all`, NOT in `recommended`, so this lane's derived
+			// applied set is silent on it; that is worked example 11's measurement, and
+			// it is why this is the baseline rather than a denied sugar.
+			// See notes/T005-refs.md.
+			const handle = ir.records.elementHandleBindings.find(
+				(record) => record.componentId === component.id && record.handleName === name,
+			);
+			if (!handle || context.handleHosts.get(handle.hostNodeId) !== name)
+				throw new Error(
+					`Angular element handle ${name} has no emitted template reference variable`,
+				);
+			const backing = `elementRef${upperCamel(handle.hostNodeId)}`;
+			if (context.members.has(backing))
+				throw new Error(
+					`Angular emitter refuses the element handle ${name}: its backing member ${backing} collides with a declared component member`,
+				);
+			usesViewChild = true;
+			fields.push({ text: `@ViewChild('${name}') ${backing}?: ElementRef;` });
+			getters.push({
+				text: `get ${name}()${MEMBER_TYPE} {\n\treturn this.${backing}?.nativeElement;\n}`,
+			});
+			continue;
+		}
 		if (binding?.kind === 'computed') {
 			if (!binding.computed) throw new Error(`Computed binding ${binding.id} has no expression`);
 			const site = expression(binding.computed.expression);
@@ -1037,7 +1166,7 @@ function classMembers(
 			text: `${modifier}${handler.name}(${parameters})${returnType} {\n${indentBlock(body, '\t')}\n}`,
 		});
 	}
-	return { members, implementsOnInit };
+	return { members, implementsOnInit, usesViewChild };
 }
 
 // ---------------------------------------------------------------------------
@@ -1129,6 +1258,12 @@ function attributesOf(
 	context: EmitContext,
 ): string[] {
 	const attributes = node.staticAttributes.map(staticAttribute);
+	// STEP 3, REFS. The template half of the `@ViewChild` pair: a template
+	// reference variable is the ONLY thing an Angular element query can name, so
+	// `#input` is not a spelling choice - without it there is nothing for
+	// `@ViewChild('input')` to select. See `classMembers` for the class half.
+	const templateRef = context.handleHosts.get(node.id);
+	if (templateRef !== undefined) attributes.push(`#${templateRef}`);
 	for (const binding of node.dynamicBindings) {
 		assertPlainAttributeName(binding.name);
 		const target = binding.kind === 'property' ? binding.name : `attr.${binding.name}`;
@@ -1487,6 +1622,116 @@ export function componentSelector(name: string): string {
  * `ComponentExport` by spelling, so the class is exported under the IR's own
  * `exportedName` and the emitter asserts the two agree.
  */
+/**
+ * The `hostNodeId -> #templateRef` map, plus every fail-closed check that has to
+ * hold before one byte of `#name` or `@ViewChild` is printed.
+ *
+ * TWO OF THESE CHECKS ARE ANGULAR-ONLY, and both are lane limits rather than
+ * missing work.
+ *
+ * 1. A TEMPLATE REFERENCE VARIABLE SHADOWS THE COMPONENT MEMBER OF THE SAME NAME
+ *    inside the template. `#input` makes `input` resolve to the ELEMENT in any
+ *    template expression, while the class getter of the same name resolves to the
+ *    element too - but through `ElementRef`, and only after `ngAfterViewInit`. The
+ *    two are not the same value at the same time, so a template expression that
+ *    reads a handle name is REFUSED rather than emitted into that ambiguity. No
+ *    other lane has this problem: Svelte, Vue and the JSX lanes all read the
+ *    author's own variable.
+ * 2. A CALL WITH NO `eventId` IS REFUSED. Angular resolves a non-static
+ *    `@ViewChild` at `ngAfterViewInit`, and this emitter's once-per-instance site
+ *    is `ngOnInit`, which runs BEFORE it. Such a call would read `null`. Its
+ *    repair is `ngAfterViewInit`, a Step 4 lifecycle construct.
+ *
+ * `handleCalls` is otherwise an ASSERTION here, not a lowering: the handler AST is
+ * transplanted into a class method by `qualify()`, so `input?.focus()` becomes
+ * `this.input?.focus()` with no help from this function - and a record the handler
+ * does not spell would vanish in silence. Same shape as `syncPolicyGuard`.
+ */
+function elementHandleHosts(
+	ir: EnrichedIR,
+	component: EnrichedComponent,
+	members: ReadonlySet<string>,
+): ReadonlyMap<string, string> {
+	const handleHosts = new Map<string, string>();
+	for (const binding of ir.records.elementHandleBindings) {
+		if (binding.componentId !== component.id)
+			throw new Error(
+				`ElementHandleBinding ${binding.id} belongs to another component: ${binding.componentId}`,
+			);
+		if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(binding.handleName))
+			throw new Error(
+				`Angular emitter cannot bind an element handle named ${JSON.stringify(binding.handleName)}: a template reference variable is a bare identifier`,
+			);
+		if (!members.has(binding.handleName))
+			throw new Error(
+				`ElementHandleBinding ${binding.id} names no component local: ${binding.handleName}`,
+			);
+		if (handleHosts.has(binding.hostNodeId))
+			throw new Error(
+				`Angular emitter cannot bind two element handles to one host: ${binding.hostNodeId}`,
+			);
+		handleHosts.set(binding.hostNodeId, binding.handleName);
+	}
+	if (handleHosts.size === 0) return handleHosts;
+	const hostIds = new Set<string>();
+	walk(component.template, (record) => {
+		if (record.kind === 'host' && typeof record.id === 'string') hostIds.add(record.id);
+	});
+	for (const [hostNodeId, name] of handleHosts)
+		if (!hostIds.has(hostNodeId))
+			throw new Error(
+				`Angular element handle ${name} names a host this component does not render: ${hostNodeId}`,
+			);
+	const shadowed = new Set(handleHosts.values());
+	walk(component.template, (record) => {
+		if (record.type === 'Identifier' && shadowed.has(String(record.name)))
+			throw new Error(
+				`Angular emitter refuses the template expression read of the element handle ${String(record.name)}: the #${String(record.name)} template reference variable shadows the component member of the same name, so the two spellings would not be the same value`,
+			);
+	});
+	const nameById = new Map(
+		ir.records.elementHandleBindings.map((binding) => [binding.id, binding.handleName]),
+	);
+	const eventById = new Map(
+		ir.records.events
+			.filter((event) => event.componentId === component.id)
+			.map((event) => [event.id, event]),
+	);
+	for (const call of ir.records.handleCalls) {
+		if (call.componentId !== component.id)
+			throw new Error(`HandleCallRecord belongs to another component: ${call.componentId}`);
+		const name = nameById.get(call.handleBindingId)!;
+		if (!call.eventId)
+			throw new Error(
+				`Angular emitter has no lowering for a handle call outside an event handler (${name}.${call.method}): @ViewChild resolves at ngAfterViewInit and this emitter's once-per-instance site is ngOnInit, which runs first`,
+			);
+		const event = eventById.get(call.eventId);
+		if (!event) throw new Error(`HandleCallRecord has dangling event: ${call.eventId}`);
+		let spelled = false;
+		walk(
+			event.handlers.map((handler) => handler.expression),
+			(record) => {
+				const callee = record.callee as Record<string, any> | undefined;
+				if (record.type !== 'CallExpression' || !callee) return;
+				if (
+					callee.type === 'MemberExpression' &&
+					callee.computed === false &&
+					callee.object?.type === 'Identifier' &&
+					callee.object.name === name &&
+					callee.property?.type === 'Identifier' &&
+					callee.property.name === call.method
+				)
+					spelled = true;
+			},
+		);
+		if (!spelled)
+			throw new Error(
+				`Angular event ${call.eventId} declares a handle call ${name}.${call.method}() its handler AST does not spell`,
+			);
+	}
+	return handleHosts;
+}
+
 export function emit(ir: EnrichedIR): string {
 	validateEnrichedIr(ir);
 	if (ir.records.persistence.length)
@@ -1498,13 +1743,17 @@ export function emit(ir: EnrichedIR): string {
 		ir.records.sharedInstances.length ||
 		ir.records.sharedReads.length ||
 		ir.records.sharedCalls.length ||
-		ir.records.sharedWrites.length ||
-		ir.records.elementHandleBindings.length ||
-		ir.records.handleForwards.length ||
-		ir.records.behaviors.length ||
-		ir.records.handleCalls.length
+		ir.records.sharedWrites.length
 	)
-		throw new Error('Angular emitter does not support composition or shared/handle constructs');
+		throw new Error('Angular emitter does not support composition or shared constructs');
+	// STEP 3 OPENED `elementHandleBindings` AND `handleCalls` AND NOTHING ELSE.
+	// `handleForwards` hands a child's node to a PARENT module, which needs the
+	// composition path Step 5 owns; `behaviors` is the authored `attach=` effect
+	// Step 4 owns. Both stay refused by name.
+	if (ir.records.handleForwards.length)
+		throw new Error('Angular emitter does not support forwarding a handle to a parent module');
+	if (ir.records.behaviors.length)
+		throw new Error('Angular emitter does not support element attach behaviors');
 	if (ir.module.exports.length !== 1)
 		throw new Error('Angular emitter emits exactly one exported component per module');
 	const component = ir.components[0]!;
@@ -1556,13 +1805,20 @@ export function emit(ir: EnrichedIR): string {
 		});
 	}
 
-	const context: EmitContext = { component, members, handlersByEventId };
+	const handleHosts = elementHandleHosts(ir, component, members);
+	const context: EmitContext = { component, members, handlersByEventId, handleHosts };
 
 	const template = renderChildren(component.template, TEMPLATE_INDENT, false, context);
 	assertTemplateParsesClean(template, `${component.name}.html`);
 	const emitted = classMembers(ir, component, context);
 	const body = emitted.members.map((entry) => indentBlock(entry.text, '\t')).join('\n');
-	const imported = ['Component', 'Input', ...(emitted.implementsOnInit ? ['type OnInit'] : [])];
+	const imported = [
+		'Component',
+		...(emitted.usesViewChild ? ['ElementRef'] : []),
+		'Input',
+		...(emitted.implementsOnInit ? ['type OnInit'] : []),
+		...(emitted.usesViewChild ? ['ViewChild'] : []),
+	];
 	return (
 		`// @generated by @frameless/angular from ${component.name}; do not edit.\n` +
 		`import { ${imported.join(', ')} } from '@angular/core';\n\n` +
