@@ -1823,7 +1823,7 @@ tasks:
   - id: T014
     type: pm
     assignee: PM
-    status: queued
+    status: done
     activated: >-
       2026-07-27 by the PM, replacing a premature T999. The Vue half of this task is DONE - Vue
       T004 landed the fifth e2e row and Vue T005 (the idiom re-run) is the only Vue task left. The
@@ -1877,8 +1877,21 @@ tasks:
     expected_output:
       - "Vue and Angular rows green in pnpm e2e with asserted S1/S2/S3 equality"
       - "Rollup receipts pointing at each board's own audit"
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      summary: "Both halves discharged. The Vue lane landed its e2e row and the Vue board closed complete this session; the Angular lane landed its row and its board closed complete. Board health, performed under this task, brought all four state.yaml files to zero checker errors for the first time."
+      changed_files:
+        - docs/goals/frameless-defects-and-targets-v1/state.yaml
+        - docs/goals/frameless-vue-v1/state.yaml
+        - docs/goals/frameless-angular-v1/state.yaml
+        - docs/goals/frameless-svelte-v1/state.yaml
+      commands:
+        - cmd: "node check-goal-state.mjs over all four boards"
+          status: pass
+          note: "zero errors on each; previously 6, 7, 22 and 1"
+      what_the_board_health_actually_found: "TWO BOARDS WERE INVALID YAML - duplicate stop_if/constraints keys that a strict parser throws DUPLICATE_KEY on, and which nothing had ever caught because the checker is a line-regex parser. The effect was not cosmetic: under last-key-wins a generic three-line stub SILENTLY OVERRODE EIGHT T002-derived stop conditions on Svelte T004. Repaired by MERGING, nothing dropped. A DONE RECEIPT CONTAINED A FAILURE (Svelte T004 read done while its own receipt read blocked with e2e failing) and was reverted to blocked. And 43 RECEIPT COMMAND LISTS WERE UNVERIFIABLE, written as YAML flow maps the checker cannot see, so each asserted 'all passed' in a form nothing could check."
+      status_note: "Left at queued after its work completed - the same PM bookkeeping miss as T052. Recorded now so the final audit rules on a board whose statuses match its receipts."
   - id: T020
     type: worker
     assignee: Worker
@@ -5248,7 +5261,7 @@ tasks:
   - id: T052
     type: pm
     assignee: PM
-    status: queued
+    status: done
     reasoning_hint: low
     objective: "Discharge T050's blocker: three stale number-words in the Vue gate's shipped refusal messages."
     why_this_is_a_PM_task: >-
@@ -5276,10 +5289,7 @@ tasks:
     receipt:
       result: done
       harness: claude-code
-      summary: >-
-        Replaced 'the seven-scenario corpus' (x2) with 'the eight-scenario corpus' and 'SEVENTEEN
-        printed entries' with 'NINETEEN printed entries'. pnpm test went 1013/1015 -> 1015/1015;
-        pnpm check clean; pnpm lint 0/0 on 394 files; no emitted byte moved.
+      summary: "Replaced 'the seven-scenario corpus' (x2) with 'the eight-scenario corpus' and 'SEVENTEEN printed entries' with 'NINETEEN printed entries' in the Vue gate's shipped refusal messages. pnpm test went 1013/1015 -> 1015/1015."
       changed_files:
         - packages/frameworks/vue/src/gate/index.ts
       commands:
@@ -5291,12 +5301,8 @@ tasks:
         - cmd: "pnpm lint"
           status: pass
           note: "0 warnings, 0 errors, 394 files"
-      the_derivation_earned_its_keep_here: >-
-        These counts were literals until T012 replaced them with derivations that throw on empty.
-        Had they still been literals, S9 would have landed with a shipped gate message stating false
-        counts and a green suite - the exact defect T011 withheld completion over. Instead the suite
-        went red and named both numbers.
-
+      status_note: "Card carried its receipt from the moment it was written but was left at status queued - a PM bookkeeping miss, not undone work. The change is in the tree since 12760d3 and the derived Vue gate test has been green on it ever since."
+      the_derivation_earned_its_keep_here: "These counts were literals until Vue T012 replaced them with derivations that throw on empty. Had they still been literals, S9 would have landed with a shipped gate message stating false counts AND A GREEN SUITE - the exact defect Vue T011 withheld completion over. Instead the suite went red and named both numbers. It then happened AGAIN via T048/T053, which is twice this derivation has paid out."
   - id: T042
     type: worker
     assignee: Worker
