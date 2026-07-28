@@ -134,7 +134,11 @@ export function Search() @{
 		expect(() => emit(unknown)).toThrow(/names no component local: notALocal/);
 	});
 
-	test('still refuses handle forwarding and attach behaviors, by name', async () => {
+	// STEP 4 OPENED `behaviors` IN THIS LANE, so the second half of this row -
+	// which required `emit` to throw `does not support element attach behaviors` -
+	// is gone rather than weakened, and the construct is covered by
+	// `test/effects.test.ts`. `handleForwards` is still Step 5's and still refused.
+	test('still refuses handle forwarding, by name', async () => {
 		const forwarded = clone(await ir(REF_SOURCE));
 		forwarded.records.handleForwards = [
 			{
@@ -145,20 +149,6 @@ export function Search() @{
 			},
 		];
 		expect(() => emit(forwarded)).toThrow(/does not support forwarding a handle to a parent/);
-
-		const behaved = clone(await ir(REF_SOURCE));
-		behaved.records.behaviors = [
-			{
-				id: 'behavior:0',
-				hostNodeId: 'h1',
-				componentId: behaved.components[0].id,
-				behavior: { type: 'ArrowFunctionExpression' },
-				inputs: [],
-				returnsCleanup: false,
-				order: 0,
-			},
-		];
-		expect(() => emit(behaved)).toThrow(/does not support element attach behaviors/);
 	});
 
 	/**

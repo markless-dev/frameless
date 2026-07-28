@@ -46,6 +46,13 @@ type EmitContext = {
 	 * keeps the emitted bytes of the eight goldens unmoved.
 	 */
 	readonly handleHosts: ReadonlyMap<string, string>;
+	/**
+	 * Host node id -> the `{@attach ...}` target name, for every host this
+	 * component declares an `attach=` behavior on. Empty for every scenario in the
+	 * corpus, which is what keeps the emitted bytes of the eight goldens unmoved.
+	 */
+	readonly behaviorHosts: ReadonlyMap<string, string>;
+	readonly behaviorPlans: readonly SvelteBehaviorPlan[];
 };
 
 type SvelteApi = 'untrack';
@@ -177,10 +184,11 @@ function validatePropEntries(entries: EnrichedIR['components'][number]['props'][
  * this lane now does too, so a field added to either record fails HERE, by name,
  * rather than being silently dropped on the floor by a lane that consumes it.
  *
- * `handleForwards` and `behaviors` are deliberately NOT checked here: this lane
- * still refuses them outright in `emit`, so they remain unreachable and a checker
- * for them would assert over a path that cannot be taken. They are Step 4's and
- * Step 5's to open, and theirs to validate when they do.
+ * `handleForwards` is deliberately NOT checked here: this lane still refuses it
+ * outright in `emit`, so it remains unreachable and a checker for it would assert
+ * over a path that cannot be taken. It is Step 5's to open and Step 5's to
+ * validate. `behaviors` WAS in that sentence until Step 4 opened it; it is now
+ * checked by `validateBehaviorRecords` below.
  */
 function validateHandleRecords(ir: EnrichedIR): void {
 	const componentIds = new Set(ir.components.map((component) => component.id));
@@ -231,6 +239,77 @@ function validateHandleRecords(ir: EnrichedIR): void {
 			);
 		if (call.eventId !== undefined && !eventIds.has(call.eventId))
 			throw new Error(`HandleCallRecord has dangling event: ${call.eventId}`);
+	}
+}
+
+/**
+ * SHAPE-CHECKS THE RECORD FAMILY THIS LANE STARTED CONSUMING AT STEP 4.
+ *
+ * Same defect class as `validateHandleRecords`, one construct along, and it was
+ * MEASURED before it was written rather than assumed from the board's summary.
+ * The brief inherited from T005 says the split is "react and solid reject a
+ * planted field, the other four accept silently". At `BehaviorRecord` THAT IS
+ * WRONG, and it is wrong in the direction that matters: measured at 48dd38d on a
+ * real `attach=` IR, only REACT rejects an unknown field planted on a
+ * `BehaviorRecord`. SOLID ACCEPTS IT, through `validateEnrichedIr` AND through
+ * `emit()`, even though its own `validateEnrichedIr` contains an `exactKeys` call
+ * naming exactly this construct.
+ *
+ * The cause is structural, not a missing line: `validateEnrichedIr` in
+ * `packages/frameworks/solid/src/emitter/index.ts` EARLY-RETURNS into
+ * `validateCompositionIr` when `hasComposition(ir)` holds, and `hasComposition`
+ * returns true the moment `elementHandleBindings`, `handleCalls` OR `behaviors`
+ * is non-empty. So the strict path's key checks for those three families are
+ * UNREACHABLE FOR ANY IR THAT CARRIES ONE - a checker that can only run when it
+ * has nothing to check. `validateCompositionIr` does check
+ * `BehaviorRecord GraphReadRef`, which is why a field planted on an INPUT is
+ * still caught there and a field planted on the RECORD is not.
+ *
+ * The real matrix at this construct is therefore ONE-versus-FIVE, not two-versus-
+ * four. See notes/T006-effects.md.
+ */
+function validateBehaviorRecords(ir: EnrichedIR): void {
+	const componentIds = new Set(ir.components.map((component) => component.id));
+	for (const behavior of ir.records.behaviors) {
+		exactKeys('BehaviorRecord', behavior, [
+			'id',
+			'hostNodeId',
+			'componentId',
+			'behavior',
+			'inputs',
+			'returnsCleanup',
+			'order',
+		]);
+		if (
+			typeof behavior.id !== 'string' ||
+			typeof behavior.hostNodeId !== 'string' ||
+			!Array.isArray(behavior.inputs) ||
+			typeof behavior.returnsCleanup !== 'boolean' ||
+			typeof behavior.order !== 'number'
+		)
+			throw new Error('BehaviorRecord has malformed construct');
+		if (
+			!behavior.behavior ||
+			typeof behavior.behavior !== 'object' ||
+			typeof (behavior.behavior as { type?: unknown }).type !== 'string'
+		)
+			throw new Error(`BehaviorRecord has malformed behavior AST: ${behavior.id}`);
+		if (!componentIds.has(behavior.componentId))
+			throw new Error(`BehaviorRecord has dangling componentId: ${behavior.componentId}`);
+		for (const input of behavior.inputs) {
+			exactKeys('BehaviorRecord GraphReadRef', input, [
+				'graphNodeId',
+				'path',
+				'via',
+				'provenance',
+			]);
+			if (typeof input.graphNodeId !== 'string' || !Array.isArray(input.path))
+				throw new Error('BehaviorRecord GraphReadRef has malformed construct');
+			if (!['layer-a', 'derived-from-ast'].includes(String(input.provenance)))
+				throw new Error(
+					`BehaviorRecord GraphReadRef has unsupported provenance: ${String(input.provenance)}`,
+				);
+		}
 	}
 }
 
@@ -294,6 +373,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		if (!Array.isArray(records))
 			throw new Error(`EnrichedRecordTable ${family} has malformed record family`);
 	validateHandleRecords(ir);
+	validateBehaviorRecords(ir);
 	exactKeys('ModuleRecord', ir.module, ['exports']);
 	for (const imported of ir.imports)
 		exactKeys('ModuleImport', imported, [
@@ -390,6 +470,214 @@ function identifierIsUsed(ir: EnrichedIR, component: EnrichedComponent, name: st
 		},
 	);
 	return found;
+}
+
+// ---------------------------------------------------------------------------
+// step 4 - behaviors (`attach=`)
+// ---------------------------------------------------------------------------
+
+/**
+ * ONE ATTACHMENT PER HOST, carrying every behavior declared on that host in
+ * authored `order`, installed forwards and torn down BACKWARDS.
+ *
+ * The host-level grouping is not a simplification - it is what the REACT lane
+ * already does (one `useCallback` callback ref per host, one merged dependency
+ * array), so an input change re-runs every behavior on that host in both lanes.
+ * Solid tracks per behavior; that difference predates this step and is not
+ * introduced by it.
+ */
+type SvelteBehaviorPlan = {
+	readonly hostNodeId: string;
+	readonly attachName: string;
+	readonly nodeParam: string;
+	readonly steps: ReadonlyArray<{
+		readonly behaviorName: string;
+		readonly behavior: Expression;
+		readonly captures: readonly string[];
+		readonly cleanupName: string | null;
+	}>;
+};
+
+function claimName(base: string, taken: Set<string>): string {
+	let name = base;
+	let index = 1;
+	while (taken.has(name)) {
+		name = `${base}${index}`;
+		index += 1;
+	}
+	taken.add(name);
+	return name;
+}
+
+/**
+ * THE INPUT CAPTURE, AND WHY IT IS A PARAMETER RATHER THAN A REWRITE.
+ *
+ * `attach=` has three obligations: install with the node, honour a returned
+ * cleanup, and RE-RUN when a declared input changes. The third one carries a
+ * fourth, quieter obligation that both shipped lanes already meet and that is
+ * easy to miss: THE CLEANUP MUST OBSERVE THE INPUT VALUES CURRENT AT ITS OWN
+ * INSTALL, not the ones that replaced them. React gets that from closure identity
+ * (the previous callback ref closed over the previous render's consts); Solid
+ * gets it by running the cleanup BEFORE assigning `capture = captureNext`.
+ *
+ * This lane gets it by appending the input names to the authored function's own
+ * PARAMETER LIST and calling it with the current values. The authored body is
+ * transplanted BYTE-FOR-BYTE - no identifier in it is renamed - the parameter
+ * shadows the component-level binding, and the authored cleanup closes over the
+ * parameter, so it reads the install-time value by construction rather than by
+ * relying on any framework's teardown semantics.
+ *
+ * MEASURED that Svelte would in fact have given it to us for free: at
+ * svelte/compiler 5.56.8, `get()` in `svelte/src/internal/client/runtime.js`
+ * serves a signal read from `old_values` while `is_destroying_effect` is set, so
+ * a teardown inside `{@attach}` reads the PRE-UPDATE value. That is a real and deliberate Svelte behaviour, and it is
+ * recorded here precisely because the lowering does NOT depend on it - the same
+ * capture shape has to work in Vue and Angular, which have no such rule, and a
+ * contract that holds structurally in three lanes is worth more than one that
+ * holds by three different framework accidents.
+ */
+function behaviorPlansFor(
+	ir: EnrichedIR,
+	component: EnrichedComponent,
+	hostIds: ReadonlySet<string>,
+	scopeNames: ReadonlySet<string>,
+	taken: Set<string>,
+): readonly SvelteBehaviorPlan[] {
+	const behaviors = ir.records.behaviors.filter(
+		(behavior) => behavior.componentId === component.id,
+	);
+	for (const behavior of ir.records.behaviors)
+		if (behavior.componentId !== component.id)
+			throw new Error(
+				`BehaviorRecord ${behavior.id} belongs to another component: ${behavior.componentId}`,
+			);
+	const bindingById = new Map(
+		ir.records.bindings
+			.filter((binding) => binding.componentId === component.id)
+			.map((binding) => [binding.id, binding]),
+	);
+	const byHost = new Map<string, typeof behaviors>();
+	for (const behavior of [...behaviors].sort((left, right) => left.order - right.order)) {
+		if (!hostIds.has(behavior.hostNodeId))
+			throw new Error(
+				`Svelte behavior ${behavior.id} names a host this component does not render: ${behavior.hostNodeId}`,
+			);
+		byHost.set(behavior.hostNodeId, [...(byHost.get(behavior.hostNodeId) ?? []), behavior]);
+	}
+	const plans: SvelteBehaviorPlan[] = [];
+	for (const [hostNodeId, hostBehaviors] of byHost) {
+		const attachName = claimName('attachHost', taken);
+		// The attachment's own parameter is claimed from `scopeNames`, NOT from
+		// `taken`. `taken` additionally carries every identifier occurring inside a
+		// behavior body, which is right for the three names the attachment REFERS to
+		// - a body that reads a global of the same name would otherwise be captured -
+		// and wrong for the parameter, which no behavior body is inside any more.
+		const nodeParam = claimName('node', new Set(scopeNames));
+		const steps = hostBehaviors.map((behavior) => {
+			const fn = expression(behavior.behavior);
+			if (fn.type !== 'ArrowFunctionExpression' && fn.type !== 'FunctionExpression')
+				throw new Error(
+					`Svelte emitter has no lowering for a non-literal attach behavior: ${behavior.id}`,
+				);
+			const params = (fn.params ?? []) as Node[];
+			if (params.some((param) => param.type !== 'Identifier'))
+				throw new Error(
+					`Svelte emitter has no lowering for a destructured attach parameter: ${behavior.id}`,
+				);
+			const paramNames = new Set(params.map((param) => String(param.name)));
+			const captures: string[] = [];
+			for (const input of behavior.inputs) {
+				// REFUSED RATHER THAN GUESSED. A path or a non-direct read cannot be
+				// captured by shadowing the base name: the body reads `value.a.b`, so a
+				// parameter named `value` would have to hold the whole object, and reading
+				// only the root of a `$state` proxy does not subscribe to `.a.b`. React and
+				// Solid carry the full path in their dependency channels; this lane has no
+				// such channel and the corpus has no instance, so the shape throws by name
+				// instead of shipping a silently under-reactive attachment.
+				if (input.path.length > 0)
+					throw new Error(
+						`Svelte emitter has no lowering for a behavior input with a member path (${behavior.id}: ${input.graphNodeId}.${input.path.join('.')})`,
+					);
+				if (input.via !== 'direct')
+					throw new Error(
+						`Svelte emitter has no lowering for a ${input.via} behavior input: ${behavior.id}`,
+					);
+				const binding = bindingById.get(input.graphNodeId);
+				if (!binding)
+					throw new Error(`BehaviorRecord input has no binding: ${input.graphNodeId}`);
+				if (paramNames.has(binding.name))
+					throw new Error(
+						`Svelte emitter refuses the attach behavior ${behavior.id}: its input ${binding.name} collides with its own parameter of the same name`,
+					);
+				if (!captures.includes(binding.name)) captures.push(binding.name);
+			}
+			fn.params = [...params, ...captures.map((name) => identifier(name))];
+			return {
+				behaviorName: claimName('behavior', taken),
+				behavior: fn,
+				captures,
+				cleanupName: behavior.returnsCleanup
+					? claimName('cleanup', taken)
+					: null,
+			};
+		});
+		plans.push({ hostNodeId, attachName, nodeParam, steps });
+	}
+	return plans;
+}
+
+function attachmentStatements(plan: SvelteBehaviorPlan): Statement[] {
+	const hoisted = plan.steps.map((step) =>
+		variable('const', identifier(step.behaviorName), step.behavior),
+	);
+	const body: Statement[] = [];
+	for (const step of plan.steps) {
+		const invocation = call(identifier(step.behaviorName), [
+			identifier(plan.nodeParam),
+			...step.captures.map((name) => identifier(name)),
+		]);
+		body.push(
+			step.cleanupName
+				? variable('const', identifier(step.cleanupName), invocation)
+				: expressionStatement(invocation),
+		);
+	}
+	const teardown: Statement[] = [];
+	for (const step of [...plan.steps].reverse()) {
+		if (!step.cleanupName) continue;
+		teardown.push({
+			type: 'IfStatement',
+			test: {
+				type: 'BinaryExpression',
+				operator: '===',
+				left: {
+					type: 'UnaryExpression',
+					operator: 'typeof',
+					prefix: true,
+					argument: identifier(step.cleanupName),
+				},
+				right: { type: 'Literal', value: 'function', raw: "'function'" },
+			},
+			consequent: {
+				type: 'BlockStatement',
+				body: [expressionStatement(call(identifier(step.cleanupName), []))],
+			},
+			alternate: null,
+		});
+	}
+	if (teardown.length)
+		body.push({
+			type: 'ReturnStatement',
+			argument: arrow([], { type: 'BlockStatement', body: teardown }),
+		});
+	return [
+		...hoisted,
+		variable(
+			'const',
+			identifier(plan.attachName),
+			arrow([identifier(plan.nodeParam)], { type: 'BlockStatement', body }),
+		),
+	];
 }
 
 function scriptStatements(ir: EnrichedIR, context: EmitContext): Statement[] {
@@ -494,6 +782,7 @@ function scriptStatements(ir: EnrichedIR, context: EmitContext): Statement[] {
 		// and deliberately not added to `reactiveNames`.
 		statements.push(variable(local.declarationKind, expression(local.pattern), initializer));
 	}
+	for (const plan of context.behaviorPlans) statements.push(...attachmentStatements(plan));
 	return statements;
 }
 
@@ -701,6 +990,12 @@ function renderHost(
 	// sugar question to run the six gates over; see notes/T005-refs.md.
 	const handleName = context.handleHosts.get(node.id);
 	if (handleName !== undefined) attributes.push(`bind:this={${handleName}}`);
+	// STEP 4, BEHAVIORS. `{@attach fn}` is the only member of this lane's
+	// sanctioned set for the `attach=` construct, and `use:` is OUTSIDE it rather
+	// than merely losing a tie - see `behaviorPlans` and notes/T006-effects.md for
+	// the two measurements that put it there.
+	const attachName = context.behaviorHosts.get(node.id);
+	if (attachName !== undefined) attributes.push(`{@attach ${attachName}}`);
 	for (const eventId of node.eventIds) {
 		const event = context.eventsById.get(eventId);
 		if (!event) throw new Error(`Unknown event record: ${eventId}`);
@@ -954,15 +1249,12 @@ export function emit(ir: EnrichedIR): string {
 		ir.records.sharedWrites.length
 	)
 		throw new Error('Svelte emitter does not support composition or shared constructs');
-	// STEP 3 OPENED `elementHandleBindings` AND `handleCalls` AND NOTHING ELSE.
-	// `handleForwards` is a CROSS-MODULE construct - it hands a child's node to a
-	// parent, which needs the composition path Step 5 owns - and `behaviors` is the
-	// authored `attach=` effect Step 4 owns. Both stay refused, by name, so a
-	// half-supported construct cannot reach the printer.
+	// STEP 4 OPENED `behaviors`. `handleForwards` STAYS REFUSED, by name: it is a
+	// CROSS-MODULE construct - it hands a child's node to a parent - which needs
+	// the composition path Step 5 owns, so a half-supported construct still cannot
+	// reach the printer.
 	if (ir.records.handleForwards.length)
 		throw new Error('Svelte emitter does not support forwarding a handle to a parent module');
-	if (ir.records.behaviors.length)
-		throw new Error('Svelte emitter does not support element attach behaviors');
 	if (ir.module.exports.length !== 1)
 		throw new Error('A .svelte module exports exactly one component');
 	const component = ir.components[0]!;
@@ -1009,6 +1301,24 @@ export function emit(ir: EnrichedIR): string {
 			);
 	});
 	assertHandleCallsAreSpelled(ir, component, handleHosts);
+	// Every name already spoken for at component scope. A synthesized attachment
+	// or cleanup name that collided with one of these would capture it silently,
+	// so the claimer is seeded with all of them rather than trusting a prefix.
+	const scopeNames = new Set<string>([
+		...component.props.entries.map((entry) => entry.localName),
+		...component.locals.flatMap((local) => local.names),
+		...handleHosts.values(),
+		'untrack',
+	]);
+	const taken = new Set<string>(scopeNames);
+	walk(
+		ir.records.behaviors.filter((behavior) => behavior.componentId === component.id),
+		(record) => {
+			if (record.type === 'Identifier' && typeof record.name === 'string')
+				taken.add(record.name);
+		},
+	);
+	const behaviorPlans = behaviorPlansFor(ir, component, hostIds, scopeNames, taken);
 	const context: EmitContext = {
 		component,
 		eventsById: new Map(
@@ -1020,6 +1330,8 @@ export function emit(ir: EnrichedIR): string {
 		usedApis: new Set<SvelteApi>(),
 		suppressed: new Set<string>(),
 		handleHosts,
+		behaviorHosts: new Map(behaviorPlans.map((plan) => [plan.hostNodeId, plan.attachName])),
+		behaviorPlans,
 	};
 	currentContext = context;
 	try {

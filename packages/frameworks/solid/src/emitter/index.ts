@@ -1833,6 +1833,31 @@ function validateCompositionIr(ir: EnrichedIR): void {
 			throw new Error(`HandleForwardRecord has dangling edge: ${forward.edgeId}`);
 	}
 	for (const behavior of ir.records.behaviors) {
+		// A CHECK THAT COULD ONLY RUN WHEN IT HAD NOTHING TO CHECK, REPAIRED WHERE
+		// IT WAS MEASURED - `frameless-emitter-capability-v1` T006.
+		//
+		// This lane already carries an `exactKeys` for `BehaviorRecord`, in the
+		// STRICT path at the top of `validateEnrichedIr`. MEASURED at 48dd38d: a
+		// field planted on a `BehaviorRecord` was ACCEPTED SILENTLY, through
+		// `validateEnrichedIr` AND through `emit()`. The cause is the early return at
+		// the head of this file's `validateEnrichedIr` - `hasComposition(ir)` is TRUE
+		// the moment `behaviors` is non-empty, so IR that carries the record is routed
+		// here and the strict path's own check for it is unreachable BY CONSTRUCTION.
+		// The nested `GraphReadRef` check below is the reason a field planted one
+		// level DOWN was still caught, which is what made the hole look absent.
+		//
+		// The board's inherited summary said the split at this record class is "react
+		// and solid reject, the other four accept silently". At `BehaviorRecord` it
+		// was ONE versus five. It is now two versus four for real.
+		//
+		// STILL OPEN, REPORTED RATHER THAN WIDENED: `ElementHandleBinding` and
+		// `HandleCallRecord` have exactly the same dead check for exactly the same
+		// reason, and they are Step 3's records, not Step 4's.
+		exactKeys(
+			behavior,
+			['id', 'hostNodeId', 'componentId', 'behavior', 'inputs', 'returnsCleanup', 'order'],
+			'BehaviorRecord',
+		);
 		if (!hostIds.has(behavior.hostNodeId))
 			throw new Error(`BehaviorRecord has dangling host: ${behavior.hostNodeId}`);
 		if (typeof behavior.returnsCleanup !== 'boolean')

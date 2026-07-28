@@ -66,6 +66,13 @@ type EmitContext = {
 	 * corpus, which is what keeps the emitted bytes of the eight goldens unmoved.
 	 */
 	readonly handleHosts: ReadonlyMap<string, string>;
+	/**
+	 * Host node id -> the `#name` template reference variable the `attach=`
+	 * lowering reads its node through. Shares the handle's own reference when the
+	 * host already carries one, and is empty for every scenario in the corpus.
+	 */
+	readonly behaviorHosts: ReadonlyMap<string, string>;
+	readonly behaviorPlans: readonly AngularBehaviorPlan[];
 };
 
 /**
@@ -73,7 +80,16 @@ type EmitContext = {
  * names would silently collide with emitter-owned machinery, so it is refused
  * rather than renamed.
  */
-const RESERVED_MEMBER_NAMES = new Set(['constructor', 'ngOnInit']);
+const RESERVED_MEMBER_NAMES = new Set([
+	'constructor',
+	'ngOnInit',
+	// STEP 4's three hooks join the list for the reason the first two are on it: a
+	// component member of the same name would silently collide with a method the
+	// emitted class owns.
+	'ngAfterViewInit',
+	'ngDoCheck',
+	'ngOnDestroy',
+]);
 
 /**
  * Void elements are emitted WITHOUT the self-closing slash. MEASURED at
@@ -179,9 +195,9 @@ function validatePropEntries(entries: EnrichedIR['components'][number]['props'][
  * either record fails HERE, by name, rather than being dropped by a lane that
  * consumes it.
  *
- * `handleForwards` and `behaviors` are deliberately NOT checked: `emit` still
- * refuses them, so they stay unreachable, and a checker over an unreachable path
- * asserts nothing. Step 4 and Step 5 own them.
+ * `handleForwards` is deliberately NOT checked here: `emit` still
+ * refuses it, so it stays unreachable, and a checker over an unreachable path
+ * asserts nothing. Step 5 owns it.
  */
 function validateHandleRecords(ir: EnrichedIR): void {
 	const componentIds = new Set(ir.components.map((component) => component.id));
@@ -236,6 +252,77 @@ function validateHandleRecords(ir: EnrichedIR): void {
 }
 
 /** Fail closed at the public emitter boundary before constructing output. */
+/**
+ * SHAPE-CHECKS THE RECORD FAMILY THIS LANE STARTED CONSUMING AT STEP 4.
+ *
+ * Same defect class as `validateHandleRecords`, one construct along, and it was
+ * MEASURED before it was written rather than assumed from the board's summary.
+ * The brief inherited from T005 says the split is "react and solid reject a
+ * planted field, the other four accept silently". At `BehaviorRecord` THAT IS
+ * WRONG, and it is wrong in the direction that matters: measured at 48dd38d on a
+ * real `attach=` IR, only REACT rejects an unknown field planted on a
+ * `BehaviorRecord`. SOLID ACCEPTS IT, through `validateEnrichedIr` AND through
+ * `emit()`, even though its own `validateEnrichedIr` contains an `exactKeys` call
+ * naming exactly this construct.
+ *
+ * The cause is structural, not a missing line: `validateEnrichedIr` in
+ * `packages/frameworks/solid/src/emitter/index.ts` EARLY-RETURNS into
+ * `validateCompositionIr` when `hasComposition(ir)` holds, and `hasComposition`
+ * returns true the moment `elementHandleBindings`, `handleCalls` OR `behaviors`
+ * is non-empty. So the strict path's key checks for those three families are
+ * UNREACHABLE FOR ANY IR THAT CARRIES ONE - a checker that can only run when it
+ * has nothing to check. `validateCompositionIr` does check
+ * `BehaviorRecord GraphReadRef`, which is why a field planted on an INPUT is
+ * still caught there and a field planted on the RECORD is not.
+ *
+ * The real matrix at this construct is therefore ONE-versus-FIVE, not two-versus-
+ * four. See notes/T006-effects.md.
+ */
+function validateBehaviorRecords(ir: EnrichedIR): void {
+	const componentIds = new Set(ir.components.map((component) => component.id));
+	for (const behavior of ir.records.behaviors) {
+		exactKeys('BehaviorRecord', behavior, [
+			'id',
+			'hostNodeId',
+			'componentId',
+			'behavior',
+			'inputs',
+			'returnsCleanup',
+			'order',
+		]);
+		if (
+			typeof behavior.id !== 'string' ||
+			typeof behavior.hostNodeId !== 'string' ||
+			!Array.isArray(behavior.inputs) ||
+			typeof behavior.returnsCleanup !== 'boolean' ||
+			typeof behavior.order !== 'number'
+		)
+			throw new Error('BehaviorRecord has malformed construct');
+		if (
+			!behavior.behavior ||
+			typeof behavior.behavior !== 'object' ||
+			typeof (behavior.behavior as { type?: unknown }).type !== 'string'
+		)
+			throw new Error(`BehaviorRecord has malformed behavior AST: ${behavior.id}`);
+		if (!componentIds.has(behavior.componentId))
+			throw new Error(`BehaviorRecord has dangling componentId: ${behavior.componentId}`);
+		for (const input of behavior.inputs) {
+			exactKeys('BehaviorRecord GraphReadRef', input, [
+				'graphNodeId',
+				'path',
+				'via',
+				'provenance',
+			]);
+			if (typeof input.graphNodeId !== 'string' || !Array.isArray(input.path))
+				throw new Error('BehaviorRecord GraphReadRef has malformed construct');
+			if (!['layer-a', 'derived-from-ast'].includes(String(input.provenance)))
+				throw new Error(
+					`BehaviorRecord GraphReadRef has unsupported provenance: ${String(input.provenance)}`,
+				);
+		}
+	}
+}
+
 export function validateEnrichedIr(ir: EnrichedIR): void {
 	exactKeys('EnrichedIR', ir, [
 		'version',
@@ -294,6 +381,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		if (!Array.isArray(records))
 			throw new Error(`EnrichedRecordTable ${family} has malformed record family`);
 	validateHandleRecords(ir);
+	validateBehaviorRecords(ir);
 	exactKeys('ModuleRecord', ir.module, ['exports']);
 	for (const imported of ir.imports)
 		exactKeys('ModuleImport', imported, [
@@ -1034,6 +1122,204 @@ function localName(local: LocalDeclaration): string {
  * every change-detection pass. That is the only construct in the emitted class
  * that re-runs, and it is why the gate carries the IR-7 purity guard over getters.
  */
+// ---------------------------------------------------------------------------
+// step 4 - behaviors (`attach=`)
+// ---------------------------------------------------------------------------
+
+/**
+ * ONE INSTALL/DISPOSE PAIR PER HOST, carrying every behavior declared on that
+ * host in authored `order`, installed forwards and torn down BACKWARDS - the
+ * host-level granularity the React lane already has.
+ *
+ * THE SANCTIONED SET FOR THIS CONSTRUCT, and why this is FORCED LOWERING rather
+ * than a sugar question. `attach=` needs three things Angular has no single
+ * construct for: a reference to the rendered node, a mount-time install, and a
+ * re-run keyed on a declared input. The node reference is `@ViewChild` + a
+ * template reference variable, which Step 3 already ruled and shipped; the
+ * install point is `ngAfterViewInit`, because that is the first hook at which a
+ * `@ViewChild` element query is resolved; teardown is `ngOnDestroy`. All three
+ * float at Angular 2.0, and there is no second spelling of any of them for a
+ * non-signal component - which is exactly the position the idiom policy's
+ * preamble describes for Angular, where the baseline is simply the more
+ * permissive of the sanctioned forms.
+ *
+ * THE RE-RUN IS THE ONE PLACE THERE WAS A CHOICE, and it is `ngDoCheck` with an
+ * explicit previous-value comparison:
+ *
+ *   - `ngOnChanges` sees only `@Input()` props. A behavior input is whatever
+ *     graph node the author read, and the corpus's own probe reads `state`, so
+ *     `ngOnChanges` is not total over the domain and Gate 4 would kill it.
+ *   - `effect()` from `@angular/core` needs the inputs to be SIGNALS. This class
+ *     is all-decorator and all-plain-field by worked example 11's measurement, so
+ *     adopting it here would mean re-spelling every state field as a signal -
+ *     a different ruling on a different construct, not this one.
+ *
+ * `ngDoCheck` runs on every change-detection cycle, so the comparison is what
+ * makes the re-run keyed on the input rather than on the cycle - the same manual
+ * previous-value check the SOLID lane performs inside its `createEffect`.
+ */
+type AngularBehaviorPlan = {
+	readonly hostNodeId: string;
+	readonly templateRef: string;
+	readonly backing: string;
+	/** True when the `@ViewChild` field is this lowering's own, not the handle's. */
+	readonly ownsBacking: boolean;
+	readonly installName: string;
+	readonly disposeName: string;
+	readonly installedName: string;
+	readonly captures: ReadonlyArray<{ readonly member: string; readonly field: string }>;
+	readonly steps: ReadonlyArray<{
+		readonly methodName: string;
+		readonly parameters: readonly string[];
+		readonly body: string;
+		readonly captureMembers: readonly string[];
+		readonly cleanupName: string | null;
+	}>;
+};
+
+function claimMemberName(base: string, taken: Set<string>): string {
+	let name = base;
+	let index = 1;
+	while (taken.has(name)) {
+		name = `${base}${index}`;
+		index += 1;
+	}
+	taken.add(name);
+	return name;
+}
+
+/**
+ * THE INPUT CAPTURE, AND WHY IT IS A PARAMETER RATHER THAN A REWRITE.
+ *
+ * `attach=` obliges the emitter to install with the node, honour a returned
+ * cleanup, re-run on a declared input change - and to let THE CLEANUP OBSERVE THE
+ * INPUT VALUES CURRENT AT ITS OWN INSTALL. React gets that from closure identity;
+ * Solid by running the cleanup before assigning its captures. Angular would get
+ * the opposite for free: `ngDoCheck` fires after the field has already changed,
+ * so a cleanup body qualified to `this.value` would read the NEW value.
+ *
+ * The input names are therefore appended to the authored function's own PARAMETER
+ * LIST and the current values are passed at install. `qualify()` is scope-aware
+ * and already treats a parameter as in-scope, so the appended parameters suppress
+ * exactly the `this.`-qualification that would otherwise re-read through the
+ * field - and `qualify()` stays total, which is the property Step 3 declined to
+ * spend on the `ElementRef` unwrap.
+ */
+function angularBehaviorPlans(
+	ir: EnrichedIR,
+	component: EnrichedComponent,
+	hostIds: ReadonlySet<string>,
+	handleHosts: ReadonlyMap<string, string>,
+	members: ReadonlySet<string>,
+	taken: Set<string>,
+): readonly AngularBehaviorPlan[] {
+	for (const behavior of ir.records.behaviors)
+		if (behavior.componentId !== component.id)
+			throw new Error(
+				`BehaviorRecord ${behavior.id} belongs to another component: ${behavior.componentId}`,
+			);
+	const bindingById = new Map(
+		ir.records.bindings
+			.filter((binding) => binding.componentId === component.id)
+			.map((binding) => [binding.id, binding]),
+	);
+	const byHost = new Map<string, Array<(typeof ir.records.behaviors)[number]>>();
+	for (const behavior of [...ir.records.behaviors].sort(
+		(left, right) => left.order - right.order,
+	)) {
+		if (!hostIds.has(behavior.hostNodeId))
+			throw new Error(
+				`Angular behavior ${behavior.id} names a host this component does not render: ${behavior.hostNodeId}`,
+			);
+		byHost.set(behavior.hostNodeId, [...(byHost.get(behavior.hostNodeId) ?? []), behavior]);
+	}
+	const plans: AngularBehaviorPlan[] = [];
+	for (const [hostNodeId, hostBehaviors] of byHost) {
+		// A host that already carries an element handle SHARES its template
+		// reference variable and its `@ViewChild`. A second `#name` on one element
+		// is legal Angular but would mean two queries for one node.
+		const shared = handleHosts.get(hostNodeId);
+		const templateRef = shared ?? claimMemberName('attachHost', taken);
+		const backing = `elementRef${upperCamel(hostNodeId)}`;
+		if (shared === undefined && members.has(backing))
+			throw new Error(
+				`Angular emitter refuses the attach behavior on ${hostNodeId}: its backing member ${backing} collides with a declared component member`,
+			);
+		const captures: Array<{ member: string; field: string }> = [];
+		const steps = hostBehaviors.map((behavior) => {
+			const fn = expression(behavior.behavior);
+			if (fn.type !== 'ArrowFunctionExpression' && fn.type !== 'FunctionExpression')
+				throw new Error(
+					`Angular emitter has no lowering for a non-literal attach behavior: ${behavior.id}`,
+				);
+			const params = (fn.params ?? []) as Node[];
+			if (params.some((param) => param.type !== 'Identifier'))
+				throw new Error(
+					`Angular emitter has no lowering for a destructured attach parameter: ${behavior.id}`,
+				);
+			const paramNames = params.map((param) => String(param.name));
+			const captureMembers: string[] = [];
+			for (const input of behavior.inputs) {
+				// REFUSED RATHER THAN GUESSED, and for the same reason in all three lanes
+				// Step 4 opened: a parameter can only shadow a BASE name, so a `value.a.b`
+				// read has no capture spelling. React and Solid carry the full path in
+				// their dependency channels; this lane has none and the corpus has no
+				// instance.
+				if (input.path.length > 0)
+					throw new Error(
+						`Angular emitter has no lowering for a behavior input with a member path (${behavior.id}: ${input.graphNodeId}.${input.path.join('.')})`,
+					);
+				if (input.via !== 'direct')
+					throw new Error(
+						`Angular emitter has no lowering for a ${input.via} behavior input: ${behavior.id}`,
+					);
+				const binding = bindingById.get(input.graphNodeId);
+				if (!binding)
+					throw new Error(`BehaviorRecord input has no binding: ${input.graphNodeId}`);
+				if (!members.has(binding.name))
+					throw new Error(
+						`Angular behavior ${behavior.id} reads ${binding.name}, which is not a declared component member`,
+					);
+				if (paramNames.includes(binding.name))
+					throw new Error(
+						`Angular emitter refuses the attach behavior ${behavior.id}: its input ${binding.name} collides with its own parameter of the same name`,
+					);
+				if (!captureMembers.includes(binding.name)) captureMembers.push(binding.name);
+				if (!captures.some((entry) => entry.member === binding.name))
+					captures.push({
+						member: binding.name,
+						field: claimMemberName(`${binding.name}Input`, taken),
+					});
+			}
+			const parameters = [...paramNames, ...captureMembers];
+			const scope = new Set(parameters);
+			const lowered =
+				fn.body.type === 'BlockStatement'
+					? ((qualify(fn.body, members, scope) as Node).body as Statement[])
+					: [returnStatement(qualify(fn.body, members, scope) as Expression)];
+			return {
+				methodName: claimMemberName('behavior', taken),
+				parameters,
+				body: printStatements(lowered),
+				captureMembers,
+				cleanupName: behavior.returnsCleanup ? claimMemberName('cleanup', taken) : null,
+			};
+		});
+		plans.push({
+			hostNodeId,
+			templateRef,
+			backing,
+			ownsBacking: shared === undefined,
+			installName: claimMemberName('installAttachHost', taken),
+			disposeName: claimMemberName('disposeAttachHost', taken),
+			installedName: claimMemberName('attachHostInstalled', taken),
+			captures,
+			steps,
+		});
+	}
+	return plans;
+}
+
 function classMembers(
 	ir: EnrichedIR,
 	component: EnrichedComponent,
@@ -1042,6 +1328,7 @@ function classMembers(
 	readonly members: ClassMember[];
 	readonly implementsOnInit: boolean;
 	readonly usesViewChild: boolean;
+	readonly lifecycle: readonly string[];
 } {
 	const members: ClassMember[] = [...propMembers(component)];
 	const fields: ClassMember[] = [];
@@ -1141,14 +1428,107 @@ function classMembers(
 			),
 		);
 	}
+	// STEP 4, BEHAVIORS. Fields first, then the transplanted behavior methods,
+	// then the install/dispose pair, then the lifecycle hooks that drive them.
+	const install: string[] = [];
+	const doCheck: string[] = [];
+	const destroy: string[] = [];
+	for (const plan of context.behaviorPlans) {
+		if (plan.ownsBacking) {
+			usesViewChild = true;
+			fields.push({ text: `@ViewChild('${plan.templateRef}') ${plan.backing}?: ElementRef;` });
+		}
+		for (const step of plan.steps)
+			if (step.cleanupName) fields.push({ text: `private ${step.cleanupName}${MEMBER_TYPE};` });
+		for (const capture of plan.captures)
+			fields.push({ text: `private ${capture.field}${MEMBER_TYPE};` });
+		// Only a host with declared inputs has an `ngDoCheck` to guard, so a host
+		// without them gets no flag - an always-true private field nothing reads is
+		// exactly what `@typescript-eslint/no-unused-private-class-members` is for.
+		if (plan.captures.length) fields.push({ text: `private ${plan.installedName} = false;` });
+	}
 	members.push(...fields, ...getters);
+	for (const plan of context.behaviorPlans) {
+		for (const step of plan.steps) {
+			const parameters = step.parameters.map((name) => `${name}${MEMBER_TYPE}`).join(', ');
+			members.push({
+				text: `private ${step.methodName}(${parameters})${MEMBER_TYPE} {\n${indentBlock(step.body, '\t')}\n}`,
+			});
+		}
+		const installBody: string[] = [];
+		for (const step of plan.steps) {
+			const args = [
+				`this.${plan.backing}?.nativeElement`,
+				...step.captureMembers.map((name) => `this.${name}`),
+			].join(', ');
+			installBody.push(
+				step.cleanupName
+					? `this.${step.cleanupName} = this.${step.methodName}(${args});`
+					: `this.${step.methodName}(${args});`,
+			);
+		}
+		for (const capture of plan.captures)
+			installBody.push(`this.${capture.field} = this.${capture.member};`);
+		if (plan.captures.length) installBody.push(`this.${plan.installedName} = true;`);
+		members.push({
+			text: `private ${plan.installName}(): void {\n${indentBlock(installBody.join('\n'), '\t')}\n}`,
+		});
+		const disposeBody: string[] = [];
+		for (const step of [...plan.steps].reverse()) {
+			if (!step.cleanupName) continue;
+			disposeBody.push(
+				`if (typeof this.${step.cleanupName} === 'function') {\n\tthis.${step.cleanupName}();\n}`,
+				`this.${step.cleanupName} = undefined;`,
+			);
+		}
+		if (disposeBody.length)
+			members.push({
+				text: `private ${plan.disposeName}(): void {\n${indentBlock(disposeBody.join('\n'), '\t')}\n}`,
+			});
+		install.push(`this.${plan.installName}();`);
+		if (disposeBody.length) destroy.push(`this.${plan.disposeName}();`);
+		if (plan.captures.length) {
+			const changed = plan.captures
+				.map((capture) => `this.${capture.field} !== this.${capture.member}`)
+				.join(' || ');
+			// The `installed` guard is not defensive padding. `ngDoCheck` runs BEFORE
+			// `ngAfterViewInit` on the first cycle, and a `@ViewChild` element query is
+			// not resolved until `ngAfterViewInit` - so without it the first check would
+			// install against an undefined node and the real install would then run a
+			// second time.
+			const reinstall = [
+				...(disposeBody.length ? [`this.${plan.disposeName}();`] : []),
+				`this.${plan.installName}();`,
+			].join('\n');
+			doCheck.push(
+				`if (this.${plan.installedName} && (${changed})) {\n${indentBlock(reinstall, '\t')}\n}`,
+			);
+		}
+	}
 	// `@angular-eslint/no-empty-lifecycle-method` is in the applied set, and
 	// `implements OnInit` without an `ngOnInit` is a type error, so BOTH are
-	// emitted together or neither is.
+	// emitted together or neither is. The same rule governs every hook below.
 	const implementsOnInit = initialisation.length > 0;
 	if (implementsOnInit) {
 		const body = printStatements(initialisation);
 		members.push({ text: `ngOnInit(): void {\n${indentBlock(body, '\t')}\n}` });
+	}
+	const lifecycle: string[] = [];
+	if (install.length) {
+		lifecycle.push('AfterViewInit');
+		members.push({
+			text: `ngAfterViewInit(): void {\n${indentBlock(install.join('\n'), '\t')}\n}`,
+		});
+	}
+	if (doCheck.length) {
+		lifecycle.push('DoCheck');
+		members.push({ text: `ngDoCheck(): void {\n${indentBlock(doCheck.join('\n'), '\t')}\n}` });
+	}
+	if (destroy.length) {
+		lifecycle.push('OnDestroy');
+		members.push({
+			text: `ngOnDestroy(): void {\n${indentBlock(destroy.join('\n'), '\t')}\n}`,
+		});
 	}
 	for (const handler of context.handlersByEventId.values()) {
 		const parameters = [...handler.forVariables, handler.eventParameter]
@@ -1166,7 +1546,7 @@ function classMembers(
 			text: `${modifier}${handler.name}(${parameters})${returnType} {\n${indentBlock(body, '\t')}\n}`,
 		});
 	}
-	return { members, implementsOnInit, usesViewChild };
+	return { members, implementsOnInit, usesViewChild, lifecycle };
 }
 
 // ---------------------------------------------------------------------------
@@ -1262,7 +1642,7 @@ function attributesOf(
 	// reference variable is the ONLY thing an Angular element query can name, so
 	// `#input` is not a spelling choice - without it there is nothing for
 	// `@ViewChild('input')` to select. See `classMembers` for the class half.
-	const templateRef = context.handleHosts.get(node.id);
+	const templateRef = context.handleHosts.get(node.id) ?? context.behaviorHosts.get(node.id);
 	if (templateRef !== undefined) attributes.push(`#${templateRef}`);
 	for (const binding of node.dynamicBindings) {
 		assertPlainAttributeName(binding.name);
@@ -1746,14 +2126,11 @@ export function emit(ir: EnrichedIR): string {
 		ir.records.sharedWrites.length
 	)
 		throw new Error('Angular emitter does not support composition or shared constructs');
-	// STEP 3 OPENED `elementHandleBindings` AND `handleCalls` AND NOTHING ELSE.
-	// `handleForwards` hands a child's node to a PARENT module, which needs the
-	// composition path Step 5 owns; `behaviors` is the authored `attach=` effect
-	// Step 4 owns. Both stay refused by name.
+	// STEP 4 OPENED `behaviors`. `handleForwards` STAYS REFUSED, by name: it hands
+	// a child's node to a PARENT module, which needs the composition path Step 5
+	// owns.
 	if (ir.records.handleForwards.length)
 		throw new Error('Angular emitter does not support forwarding a handle to a parent module');
-	if (ir.records.behaviors.length)
-		throw new Error('Angular emitter does not support element attach behaviors');
 	if (ir.module.exports.length !== 1)
 		throw new Error('Angular emitter emits exactly one exported component per module');
 	const component = ir.components[0]!;
@@ -1806,16 +2183,40 @@ export function emit(ir: EnrichedIR): string {
 	}
 
 	const handleHosts = elementHandleHosts(ir, component, members);
-	const context: EmitContext = { component, members, handlersByEventId, handleHosts };
+	const hostIds = new Set<string>();
+	walk(component.template, (record) => {
+		if (record.kind === 'host' && typeof record.id === 'string') hostIds.add(record.id);
+	});
+	const behaviorNames = new Set<string>([...members, ...RESERVED_MEMBER_NAMES, ...takenNames]);
+	const behaviorPlans = angularBehaviorPlans(
+		ir,
+		component,
+		hostIds,
+		handleHosts,
+		members,
+		behaviorNames,
+	);
+	const context: EmitContext = {
+		component,
+		members,
+		handlersByEventId,
+		handleHosts,
+		behaviorHosts: new Map(behaviorPlans.map((plan) => [plan.hostNodeId, plan.templateRef])),
+		behaviorPlans,
+	};
 
 	const template = renderChildren(component.template, TEMPLATE_INDENT, false, context);
 	assertTemplateParsesClean(template, `${component.name}.html`);
 	const emitted = classMembers(ir, component, context);
 	const body = emitted.members.map((entry) => indentBlock(entry.text, '\t')).join('\n');
+	const interfaces = [...(emitted.implementsOnInit ? ['OnInit'] : []), ...emitted.lifecycle];
 	const imported = [
+		...(emitted.lifecycle.includes('AfterViewInit') ? ['type AfterViewInit'] : []),
 		'Component',
+		...(emitted.lifecycle.includes('DoCheck') ? ['type DoCheck'] : []),
 		...(emitted.usesViewChild ? ['ElementRef'] : []),
 		'Input',
+		...(emitted.lifecycle.includes('OnDestroy') ? ['type OnDestroy'] : []),
 		...(emitted.implementsOnInit ? ['type OnInit'] : []),
 		...(emitted.usesViewChild ? ['ViewChild'] : []),
 	];
@@ -1826,6 +2227,6 @@ export function emit(ir: EnrichedIR): string {
 		`\tselector: '${componentSelector(component.name)}',\n` +
 		`\ttemplate: \`\n${TEMPLATE_INDENT}${template}\n\t\`,\n` +
 		'})\n' +
-		`export class ${component.name}${emitted.implementsOnInit ? ' implements OnInit' : ''} {\n${body}\n}\n`
+		`export class ${component.name}${interfaces.length ? ` implements ${interfaces.join(', ')}` : ''} {\n${body}\n}\n`
 	);
 }

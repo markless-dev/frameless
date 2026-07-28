@@ -519,22 +519,33 @@ describe('MUTATION: baseline-form-inventory (T005)', () => {
 		).toContain('svelte/events#on');
 	});
 
-	test('rejects template forms above the 5.0 baseline: {@html}, {@attach}, {#key}', async () => {
-		// {@attach} is 5.29 and is one of the four constructs T005 recorded as
-		// satisfying the corollary's FIRST conjunct at 5.56.8 and failing the second
-		// one alone. This is where that ruling is enforced rather than described.
+	test('rejects template forms outside the inventory: {@html}, {@render}, {#key}', async () => {
+		// THIS ROW USED TO NAME `{@attach}` AND IT NO LONGER CAN. Step 4 lowers
+		// `attach=` onto `{@attach}`, so `template-node:AttachTag` is now an
+		// INVENTORIED form with a floor of 5.29 and a VERIFIED citation - the first
+		// verified floor this lane has. Its arm is inverted below rather than deleted,
+		// because "the gate accepts the one form we deliberately added" is exactly as
+		// load-bearing as "the gate rejects the ones we did not".
 		const html = mutate(s1, '{derived}', '{@html derived}');
 		expect(await policiesFor('generated/HtmlTagMutant.svelte', html)).toContain(
 			'baseline-form-inventory',
 		);
 		const attach = mutate(s1, 'data-s1-root=""', 'data-s1-root="" {@attach (node) => {}}');
-		const attachViolations = (await checkSources([
-			{ file: 'generated/AttachMutant.svelte', source: attach },
+		expect(await policiesFor('generated/AttachMutant.svelte', attach)).not.toContain(
+			'baseline-form-inventory',
+		);
+		// A template tag that is NOT inventoried still goes red by name, so the arm
+		// above is a measurement of the inventory rather than of a disabled check.
+		const renderViolations = (await checkSources([
+			{
+				file: 'generated/RenderMutant.svelte',
+				source: mutate(s1, '{derived}', '{@render thing()}'),
+			},
 		])).violations;
-		expect(attachViolations.map((entry) => entry.policy)).toContain('baseline-form-inventory');
+		expect(renderViolations.map((entry) => entry.policy)).toContain('baseline-form-inventory');
 		expect(
-			attachViolations.find((entry) => entry.policy === 'baseline-form-inventory')?.message,
-		).toContain('AttachTag');
+			renderViolations.find((entry) => entry.policy === 'baseline-form-inventory')?.message,
+		).toContain('RenderTag');
 		const key = mutate(
 			mutate(s2, '{#if todos.length === 0}', '{#key todos.length}{#if todos.length === 0}'),
 			'{/if}',
@@ -600,10 +611,6 @@ describe('MUTATION: baseline-form-inventory (T005)', () => {
 	});
 
 	test('CALIBRATION: a verified floor citation is re-read, and can fail', async () => {
-		// EVERY entry is `unverified` today, so the loop above never enters its
-		// verified branch and would be vacuous on its own. This plants both arms.
-		// The real one is `$props.id()`, which the resolved package's own shipped
-		// types date at 5.20.0 - the shape a verified floor has to have.
 		await expect(
 			citationHolds({ file: 'types/index.d.ts', needle: '@since 5.20.0' }),
 		).resolves.toBe(true);
@@ -613,10 +620,18 @@ describe('MUTATION: baseline-form-inventory (T005)', () => {
 		await expect(
 			citationHolds({ file: 'types/there-is-no-such-file.d.ts', needle: 'x' }),
 		).rejects.toThrow();
-		expect(
-			BASELINE_FORM_INVENTORY.every((entry) => entry.evidence.status === 'unverified'),
-			'if this fails a floor was verified - good; delete this line and keep the loop above',
-		).toBe(true);
+		// THIS LINE USED TO ASSERT THAT EVERY ENTRY IS `unverified`, with a note
+		// saying "if this fails a floor was verified - good". STEP 4 IS WHEN THAT
+		// HAPPENED: `template-node:AttachTag` floors at 5.29 and the resolved package
+		// dates it itself, so the loop above now really does enter its verified
+		// branch. The assertion is INVERTED rather than deleted, so the loop cannot
+		// go vacuous again without this row noticing.
+		const verified = BASELINE_FORM_INVENTORY.filter(
+			(entry) => entry.evidence.status === 'verified',
+		);
+		expect(verified.map((entry) => `${entry.kind}:${entry.form}`)).toEqual([
+			'template-node:AttachTag',
+		]);
 	});
 });
 

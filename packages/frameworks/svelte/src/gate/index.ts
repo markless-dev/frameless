@@ -534,6 +534,32 @@ export const BASELINE_FORM_INVENTORY: readonly BaselineForm[] = [
 		}),
 	),
 	{
+		// STEP 4, BEHAVIORS - and THE FIRST ENTRY IN THIS INVENTORY WITH A VERIFIED
+		// FLOOR, which is why the calibration test that asserted "every entry is
+		// unverified" had to move.
+		//
+		// It is also the first entry that COSTS this lane version reach, and that is
+		// stated rather than buried: every other form here floors at 5.0, and a module
+		// carrying an `attach=` behavior floors at 5.29 instead. The cost is confined
+		// to behavior-bearing modules - the eight goldens carry none - and it is
+		// accepted because `{@attach}` is the ONLY member of this framework's
+		// sanctioned set for the construct, not a preferred one. `use:` is outside the
+		// set on measurement: `svelte/src/internal/client/dom/elements/actions.js`
+		// calls the action inside `untrack(...)`, so the re-run obligation is
+		// unreachable through it, and a synthesized `{update, destroy}` wrapper that
+		// reaches it was measured to give the CLEANUP the post-change input value,
+		// diverging from the shipped React and Solid lanes. See
+		// docs/goals/frameless-emitter-capability-v1/notes/T006-effects.md.
+		kind: 'template-node',
+		form: 'AttachTag',
+		floor: '5.29',
+		evidence: {
+			status: 'verified',
+			file: 'types/index.d.ts',
+			needle: '@since 5.29',
+		},
+	},
+	{
 		kind: 'event-attribute',
 		form: 'on<name>',
 		floor: '5.0',

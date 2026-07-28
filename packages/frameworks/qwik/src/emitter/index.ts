@@ -136,8 +136,11 @@ function walk(value: unknown, visit: (record: Record<string, any>) => void): voi
  * consumes it.
  *
  * `handleForwards` and `behaviors` are deliberately NOT checked: `emit` still
- * refuses them, so they stay unreachable, and a checker over an unreachable path
- * asserts nothing. Step 4 and Step 5 own them.
+ * refuses BOTH, so they stay unreachable, and a checker over an unreachable path
+ * asserts nothing. Step 4 MEASURED that this lane has no in-envelope lowering for
+ * `behaviors` at all and left the refusal standing, so unlike the svelte, vue and
+ * angular lanes this one gains no `validateBehaviorRecords` - see the refusal in
+ * `emit` and notes/T006-effects.md.
  */
 function validateHandleRecords(ir: EnrichedIR): void {
 	const componentIds = new Set(ir.components.map((component) => component.id));
@@ -1660,14 +1663,48 @@ export function emit(ir: EnrichedIR): string {
 		ir.records.sharedWrites.length
 	)
 		throw new Error('Qwik emitter does not support composition or shared constructs');
-	// STEP 3 OPENED `elementHandleBindings` AND `handleCalls` AND NOTHING ELSE.
 	// `handleForwards` hands a child's node to a PARENT module, which needs the
-	// composition path Step 5 owns; `behaviors` is the authored `attach=` effect
-	// Step 4 owns. Both stay refused by name.
+	// composition path Step 5 owns. It stays refused by name.
 	if (ir.records.handleForwards.length)
 		throw new Error('Qwik emitter does not support forwarding a handle to a parent module');
+	// STEP 4 OPENED `behaviors` IN THE SVELTE, VUE AND ANGULAR LANES AND
+	// DELIBERATELY LEFT THIS ONE REFUSED. THE REFUSAL IS A MEASUREMENT, NOT AN
+	// OMISSION, AND IT IS THE ONE FINDING OF THAT STEP WORTH READING TWICE.
+	//
+	// `attach=` obliges the emitter to run application code against a MOUNTED DOM
+	// NODE. Measured at @qwik.dev/core 2.0.0-beta.38, the resolved build:
+	//
+	//   1. The `ref` prop - BOTH arms of `Ref<EL> = Signal<Element | undefined> |
+	//      RefFnInterface<EL>` (`dist/core-internal.d.ts:2971`) - is applied by
+	//      `applyRef` (`dist/core.mjs:4815`), which has exactly TWO call sites,
+	//      `createNewElement` (`:4868`) and `patchProperty` (`:5035`). Both are in
+	//      the CLIENT vnode diff. `dist/server.mjs` contains ZERO occurrences of
+	//      `applyRef`. So for markup this container SERVER-RENDERED AND RESUMED -
+	//      which is the only mode this lane ships - a `ref` callback never runs.
+	//   2. `useTask$` runs before render and has no DOM on the server.
+	//   3. The construct that DOES run against a mounted node is the visible-
+	//      lifecycle family, and this lane BANS it in two places: `emit` throws on
+	//      `useVisibleTask$`/`onQVisible$` a few lines below, and the gate policy
+	//      `no-visible-task` (`src/gate/index.ts`) additionally bans `q-e:qvisible`
+	//      and `on:qvisible` over emitted source. That ban is the lane's
+	//      activation-neutrality doctrine - "it must do no client work merely
+	//      because the element became visible" (`frameless-qwik-v1` T001) - and
+	//      lowering `attach=` onto it would make EVERY behavior-bearing component
+	//      eagerly wake its container, which is the property this whole target
+	//      exists to demonstrate.
+	//
+	// `useOnDocument('DOMContentLoaded', ...)` would evade the marker regex and is
+	// NOT a loophole this emitter walks through: it is the same eager client work
+	// under a spelling the ban does not name.
+	//
+	// So Qwik has no `attach=` idiom inside its design envelope, and the owner's
+	// standing rule is that a framework is not tested outside its envelope and that
+	// output is not read as a defect. The construct is refused BY NAME, with the
+	// reason, rather than lowered onto a form the lane already forbids.
 	if (ir.records.behaviors.length)
-		throw new Error('Qwik emitter does not support element attach behaviors');
+		throw new Error(
+			'Qwik emitter does not support element attach behaviors: the only Qwik construct that runs application code against a mounted node is the visible-lifecycle family, which this lane bans as eager client work, and the ref prop is applied only by the client vnode diff (never by dist/server.mjs) so it does not run for resumed markup',
+		);
 	const component = ir.components[0]!;
 	const { declaration, imports } = componentDeclaration(ir, component);
 	const orderedApis = [

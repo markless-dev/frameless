@@ -11,6 +11,7 @@ import {
 	type TemplateNode,
 } from '@frameless/compiler';
 import {
+	arrow,
 	call,
 	type Expression,
 	expression,
@@ -55,9 +56,16 @@ type EmitContext = {
 	 * component owns. Empty for every scenario in the corpus.
 	 */
 	readonly handleHosts: ReadonlyMap<string, string>;
+	/**
+	 * Host node id -> the template-ref name the `attach=` lowering reads the node
+	 * through. Shares the handle's own ref when the host already carries one, and
+	 * is empty for every scenario in the corpus.
+	 */
+	readonly behaviorHosts: Map<string, string>;
+	readonly behaviorPlans: VueBehaviorPlan[];
 };
 
-type VueApi = 'computed' | 'ref';
+type VueApi = 'computed' | 'onMounted' | 'onUnmounted' | 'ref' | 'watch';
 
 /**
  * Names this emitter introduces into `<script setup>` scope itself. A component
@@ -65,7 +73,18 @@ type VueApi = 'computed' | 'ref';
  * so it is refused rather than renamed - renaming would make emitted identifiers
  * stop matching the authored ones for no gain the corpus can test.
  */
-const RESERVED_SCRIPT_NAMES = new Set(['props', 'ref', 'computed', 'defineProps']);
+const RESERVED_SCRIPT_NAMES = new Set([
+	'props',
+	'ref',
+	'computed',
+	'defineProps',
+	// STEP 4 added three more emitter-introduced bindings. They join the list for
+	// the same reason the first four are on it: a component local of the same name
+	// would silently shadow the import this lane emits.
+	'onMounted',
+	'onUnmounted',
+	'watch',
+]);
 
 /**
  * Void elements are emitted WITHOUT the self-closing slash.
@@ -172,9 +191,9 @@ function validatePropEntries(entries: EnrichedIR['components'][number]['props'][
  * either record fails HERE, by name, rather than being dropped by a lane that
  * consumes it.
  *
- * `handleForwards` and `behaviors` are deliberately NOT checked: `emit` still
- * refuses them, so they stay unreachable, and a checker over an unreachable path
- * asserts nothing. Step 4 and Step 5 own them.
+ * `handleForwards` is deliberately NOT checked here: `emit` still
+ * refuses it, so it stays unreachable, and a checker over an unreachable path
+ * asserts nothing. Step 5 owns it.
  */
 function validateHandleRecords(ir: EnrichedIR): void {
 	const componentIds = new Set(ir.components.map((component) => component.id));
@@ -229,6 +248,77 @@ function validateHandleRecords(ir: EnrichedIR): void {
 }
 
 /** Fail closed at the public emitter boundary before constructing output. */
+/**
+ * SHAPE-CHECKS THE RECORD FAMILY THIS LANE STARTED CONSUMING AT STEP 4.
+ *
+ * Same defect class as `validateHandleRecords`, one construct along, and it was
+ * MEASURED before it was written rather than assumed from the board's summary.
+ * The brief inherited from T005 says the split is "react and solid reject a
+ * planted field, the other four accept silently". At `BehaviorRecord` THAT IS
+ * WRONG, and it is wrong in the direction that matters: measured at 48dd38d on a
+ * real `attach=` IR, only REACT rejects an unknown field planted on a
+ * `BehaviorRecord`. SOLID ACCEPTS IT, through `validateEnrichedIr` AND through
+ * `emit()`, even though its own `validateEnrichedIr` contains an `exactKeys` call
+ * naming exactly this construct.
+ *
+ * The cause is structural, not a missing line: `validateEnrichedIr` in
+ * `packages/frameworks/solid/src/emitter/index.ts` EARLY-RETURNS into
+ * `validateCompositionIr` when `hasComposition(ir)` holds, and `hasComposition`
+ * returns true the moment `elementHandleBindings`, `handleCalls` OR `behaviors`
+ * is non-empty. So the strict path's key checks for those three families are
+ * UNREACHABLE FOR ANY IR THAT CARRIES ONE - a checker that can only run when it
+ * has nothing to check. `validateCompositionIr` does check
+ * `BehaviorRecord GraphReadRef`, which is why a field planted on an INPUT is
+ * still caught there and a field planted on the RECORD is not.
+ *
+ * The real matrix at this construct is therefore ONE-versus-FIVE, not two-versus-
+ * four. See notes/T006-effects.md.
+ */
+function validateBehaviorRecords(ir: EnrichedIR): void {
+	const componentIds = new Set(ir.components.map((component) => component.id));
+	for (const behavior of ir.records.behaviors) {
+		exactKeys('BehaviorRecord', behavior, [
+			'id',
+			'hostNodeId',
+			'componentId',
+			'behavior',
+			'inputs',
+			'returnsCleanup',
+			'order',
+		]);
+		if (
+			typeof behavior.id !== 'string' ||
+			typeof behavior.hostNodeId !== 'string' ||
+			!Array.isArray(behavior.inputs) ||
+			typeof behavior.returnsCleanup !== 'boolean' ||
+			typeof behavior.order !== 'number'
+		)
+			throw new Error('BehaviorRecord has malformed construct');
+		if (
+			!behavior.behavior ||
+			typeof behavior.behavior !== 'object' ||
+			typeof (behavior.behavior as { type?: unknown }).type !== 'string'
+		)
+			throw new Error(`BehaviorRecord has malformed behavior AST: ${behavior.id}`);
+		if (!componentIds.has(behavior.componentId))
+			throw new Error(`BehaviorRecord has dangling componentId: ${behavior.componentId}`);
+		for (const input of behavior.inputs) {
+			exactKeys('BehaviorRecord GraphReadRef', input, [
+				'graphNodeId',
+				'path',
+				'via',
+				'provenance',
+			]);
+			if (typeof input.graphNodeId !== 'string' || !Array.isArray(input.path))
+				throw new Error('BehaviorRecord GraphReadRef has malformed construct');
+			if (!['layer-a', 'derived-from-ast'].includes(String(input.provenance)))
+				throw new Error(
+					`BehaviorRecord GraphReadRef has unsupported provenance: ${String(input.provenance)}`,
+				);
+		}
+	}
+}
+
 export function validateEnrichedIr(ir: EnrichedIR): void {
 	exactKeys('EnrichedIR', ir, [
 		'version',
@@ -289,6 +379,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		if (!Array.isArray(records))
 			throw new Error(`EnrichedRecordTable ${family} has malformed record family`);
 	validateHandleRecords(ir);
+	validateBehaviorRecords(ir);
 	exactKeys('ModuleRecord', ir.module, ['exports']);
 	for (const imported of ir.imports)
 		exactKeys('ModuleImport', imported, [
@@ -742,6 +833,302 @@ function collectRewrites(ir: EnrichedIR, context: EmitContext): void {
 	}
 }
 
+// ---------------------------------------------------------------------------
+// step 4 - behaviors (`attach=`)
+// ---------------------------------------------------------------------------
+
+/**
+ * ONE INSTALL/DISPOSE PAIR PER HOST, carrying every behavior declared on that
+ * host in authored `order`, installed forwards and torn down BACKWARDS - the same
+ * host-level granularity the React lane already has.
+ *
+ * THE SANCTIONED SET FOR THIS CONSTRUCT, stated before the gates rather than
+ * after, and measured at vue@3.5.40:
+ *
+ *   1. `onMounted` + `onUnmounted` + `watch(sources, cb, { flush: 'post' })` over
+ *      a template ref. Floors at 3.0. THIS IS WHAT IS EMITTED.
+ *   2. A custom directive object (`vAttach = { mounted, updated, unmounted }`).
+ *      Floors at 3.0, and is OUTSIDE the sanctioned set for this construct:
+ *      `updated` fires on every component update, not on a declared input
+ *      change, so the re-run obligation could only be met by re-implementing the
+ *      dirty check inside the hook - at which point the directive is carrying no
+ *      weight - and `<script setup>`'s `vFoo` naming convention would put a
+ *      second synthesized name in template scope for nothing.
+ *   3. A function ref `:ref="(el) => ..."`. Outside the set for the same reason
+ *      the string form beat it at Step 3, plus one more: a function ref is
+ *      re-invoked on RE-RENDER, which is neither mount nor a declared input
+ *      change, so an unrelated re-render would tear the behavior down and
+ *      reinstall it.
+ *
+ * There is therefore no baseline-versus-candidate pair to run the six gates over
+ * - the same position Step 3's Svelte half was in - and every API named in (1)
+ * floors at 3.0, so this lane's standing discharge of the idiom policy's version
+ * corollary ("emit nothing but forms whose floor is 3.0/3.2") is unchanged.
+ */
+type VueBehaviorPlan = {
+	readonly hostNodeId: string;
+	readonly refName: string;
+	/** True when the ref is this lowering's own, rather than a shared handle. */
+	readonly ownsRef: boolean;
+	readonly installName: string;
+	readonly disposeName: string;
+	readonly captureSources: readonly Expression[];
+	readonly steps: ReadonlyArray<{
+		readonly behaviorName: string;
+		readonly behavior: Expression;
+		readonly captureArguments: readonly Expression[];
+		readonly cleanupName: string | null;
+	}>;
+};
+
+function claimName(base: string, taken: Set<string>): string {
+	let name = base;
+	let index = 1;
+	while (taken.has(name)) {
+		name = `${base}${index}`;
+		index += 1;
+	}
+	taken.add(name);
+	return name;
+}
+
+/**
+ * THE INPUT CAPTURE, AND WHY IT IS A PARAMETER RATHER THAN A REWRITE.
+ *
+ * `attach=` obliges the emitter to install with the node, honour a returned
+ * cleanup, re-run on a declared input change - and, the quiet one, to let THE
+ * CLEANUP OBSERVE THE INPUT VALUES CURRENT AT ITS OWN INSTALL. React gets that
+ * from closure identity, Solid by running the cleanup before assigning its
+ * captures. Vue would get the opposite for free: `disposeX()` runs after the ref
+ * has already been written, so a cleanup body reading `value.value` would see the
+ * NEW value and diverge from both shipped lanes.
+ *
+ * So the input names are appended to the authored function's own PARAMETER LIST
+ * and the current values are passed at install. The body is transplanted with no
+ * identifier renamed; `rewriteScript` is scope-aware and already treats a
+ * parameter as shadowed, so the appended parameters suppress exactly the `.value`
+ * respelling that would otherwise re-read through the ref.
+ */
+function vueBehaviorPlans(
+	ir: EnrichedIR,
+	component: EnrichedComponent,
+	hostIds: ReadonlySet<string>,
+	handleHosts: ReadonlyMap<string, string>,
+	context: EmitContext,
+	scopeNames: ReadonlySet<string>,
+	taken: Set<string>,
+): readonly VueBehaviorPlan[] {
+	for (const behavior of ir.records.behaviors)
+		if (behavior.componentId !== component.id)
+			throw new Error(
+				`BehaviorRecord ${behavior.id} belongs to another component: ${behavior.componentId}`,
+			);
+	const bindingById = new Map(
+		ir.records.bindings
+			.filter((binding) => binding.componentId === component.id)
+			.map((binding) => [binding.id, binding]),
+	);
+	const byHost = new Map<string, Array<(typeof ir.records.behaviors)[number]>>();
+	for (const behavior of [...ir.records.behaviors].sort((left, right) => left.order - right.order)) {
+		if (!hostIds.has(behavior.hostNodeId))
+			throw new Error(
+				`Vue behavior ${behavior.id} names a host this component does not render: ${behavior.hostNodeId}`,
+			);
+		byHost.set(behavior.hostNodeId, [...(byHost.get(behavior.hostNodeId) ?? []), behavior]);
+	}
+	const plans: VueBehaviorPlan[] = [];
+	for (const [hostNodeId, hostBehaviors] of byHost) {
+		// A host that already carries an element handle SHARES its template ref. Two
+		// `ref=` attributes on one element is not a Vue form, and synthesizing a
+		// second name would be the shape `elementHandleHosts` already refuses.
+		const shared = handleHosts.get(hostNodeId);
+		const refName = shared ?? claimName('attachHost', taken);
+		const captureNames: string[] = [];
+		const steps = hostBehaviors.map((behavior) => {
+			const fn = expression(behavior.behavior);
+			if (fn.type !== 'ArrowFunctionExpression' && fn.type !== 'FunctionExpression')
+				throw new Error(
+					`Vue emitter has no lowering for a non-literal attach behavior: ${behavior.id}`,
+				);
+			const params = (fn.params ?? []) as Node[];
+			if (params.some((param) => param.type !== 'Identifier'))
+				throw new Error(
+					`Vue emitter has no lowering for a destructured attach parameter: ${behavior.id}`,
+				);
+			const paramNames = new Set(params.map((param) => String(param.name)));
+			const captures: string[] = [];
+			for (const input of behavior.inputs) {
+				// REFUSED RATHER THAN GUESSED, and for the same reason in all three lanes
+				// Step 4 opened: a parameter can only shadow a BASE name, so a `value.a.b`
+				// read has no capture spelling here. React and Solid carry the full path in
+				// their dependency channels; this lane has none and the corpus has no
+				// instance, so the shape throws by name instead of shipping a watch source
+				// that is right and a capture that is stale.
+				if (input.path.length > 0)
+					throw new Error(
+						`Vue emitter has no lowering for a behavior input with a member path (${behavior.id}: ${input.graphNodeId}.${input.path.join('.')})`,
+					);
+				if (input.via !== 'direct')
+					throw new Error(
+						`Vue emitter has no lowering for a ${input.via} behavior input: ${behavior.id}`,
+					);
+				const binding = bindingById.get(input.graphNodeId);
+				if (!binding)
+					throw new Error(`BehaviorRecord input has no binding: ${input.graphNodeId}`);
+				if (paramNames.has(binding.name))
+					throw new Error(
+						`Vue emitter refuses the attach behavior ${behavior.id}: its input ${binding.name} collides with its own parameter of the same name`,
+					);
+				if (!captures.includes(binding.name)) captures.push(binding.name);
+				if (!captureNames.includes(binding.name)) captureNames.push(binding.name);
+			}
+			fn.params = [...params, ...captures.map((name) => identifier(name))];
+			return {
+				behaviorName: claimName('behavior', taken),
+				behavior: rewriteScript(fn, context.rewrites, new Set()),
+				captureArguments: captures.map((name) =>
+					rewriteScript(identifier(name), context.rewrites, new Set()),
+				),
+				cleanupName: behavior.returnsCleanup ? claimName('cleanup', taken) : null,
+			};
+		});
+		plans.push({
+			hostNodeId,
+			refName,
+			ownsRef: shared === undefined,
+			installName: claimName('installAttachHost', new Set(scopeNames)),
+			disposeName: claimName('disposeAttachHost', new Set(scopeNames)),
+			captureSources: captureNames.map((name) =>
+				arrow([], rewriteScript(identifier(name), context.rewrites, new Set())),
+			),
+			steps,
+		});
+	}
+	return plans;
+}
+
+function vueBehaviorStatements(plan: VueBehaviorPlan, context: EmitContext): Statement[] {
+	const statements: Statement[] = [];
+	if (plan.ownsRef) {
+		context.usedApis.add('ref');
+		statements.push(variable('const', identifier(plan.refName), call(identifier('ref'), [])));
+	}
+	for (const step of plan.steps)
+		statements.push(variable('const', identifier(step.behaviorName), step.behavior));
+	for (const step of plan.steps)
+		if (step.cleanupName)
+			statements.push(variable('let', identifier(step.cleanupName), null));
+	const node = member(identifier(plan.refName), 'value');
+	const installBody: Statement[] = plan.steps.map((step) => {
+		const invocation = call(identifier(step.behaviorName), [node, ...step.captureArguments]);
+		return step.cleanupName
+			? expressionStatement({
+					type: 'AssignmentExpression',
+					operator: '=',
+					left: identifier(step.cleanupName),
+					right: invocation,
+				})
+			: expressionStatement(invocation);
+	});
+	const disposeBody: Statement[] = [];
+	for (const step of [...plan.steps].reverse()) {
+		if (!step.cleanupName) continue;
+		disposeBody.push({
+			type: 'IfStatement',
+			test: {
+				type: 'BinaryExpression',
+				operator: '===',
+				left: {
+					type: 'UnaryExpression',
+					operator: 'typeof',
+					prefix: true,
+					argument: identifier(step.cleanupName),
+				},
+				right: literal('function'),
+			},
+			consequent: {
+				type: 'BlockStatement',
+				body: [expressionStatement(call(identifier(step.cleanupName), []))],
+			},
+			alternate: null,
+		});
+		disposeBody.push(
+			expressionStatement({
+				type: 'AssignmentExpression',
+				operator: '=',
+				left: identifier(step.cleanupName),
+				right: identifier('undefined'),
+			}),
+		);
+	}
+	statements.push(
+		variable(
+			'const',
+			identifier(plan.installName),
+			arrow([], { type: 'BlockStatement', body: installBody }),
+		),
+	);
+	// No behavior on this host returns a cleanup, so there is nothing to dispose.
+	// An empty `disposeX` handed to `onUnmounted` would be a lifecycle hook that
+	// does nothing - the shape `@angular-eslint/no-empty-lifecycle-method` exists
+	// to catch in the sibling lane - so neither is emitted.
+	const disposes = disposeBody.length > 0;
+	if (disposes)
+		statements.push(
+			variable(
+				'const',
+				identifier(plan.disposeName),
+				arrow([], { type: 'BlockStatement', body: disposeBody }),
+			),
+		);
+	context.usedApis.add('onMounted');
+	statements.push(expressionStatement(call(identifier('onMounted'), [identifier(plan.installName)])));
+	if (disposes) {
+		context.usedApis.add('onUnmounted');
+		statements.push(
+			expressionStatement(call(identifier('onUnmounted'), [identifier(plan.disposeName)])),
+		);
+	}
+	if (plan.captureSources.length) {
+		context.usedApis.add('watch');
+		// `flush: 'post'` is not decoration: the re-install reads the node out of the
+		// template ref, so it has to run AFTER Vue has patched the DOM for the same
+		// change. It is also what keeps the re-run ordered like the shipped lanes -
+		// dispose, then install, once per change.
+		statements.push(
+			expressionStatement(
+				call(identifier('watch'), [
+					{ type: 'ArrayExpression', elements: [...plan.captureSources] },
+					arrow([], {
+						type: 'BlockStatement',
+						body: [
+							...(disposes
+								? [expressionStatement(call(identifier(plan.disposeName), []))]
+								: []),
+							expressionStatement(call(identifier(plan.installName), [])),
+						],
+					}),
+					{
+						type: 'ObjectExpression',
+						properties: [
+							{
+								type: 'Property',
+								kind: 'init',
+								computed: false,
+								shorthand: false,
+								method: false,
+								key: identifier('flush'),
+								value: literal('post'),
+							},
+						],
+					},
+				]),
+			),
+		);
+	}
+	return statements;
+}
+
 /**
  * `ComponentEvaluationPolicy.ordinaryLocals` is `once-per-instance`, and in Vue
  * that needs NO lowering at all: `<script setup>` is the component's `setup()`
@@ -874,6 +1261,8 @@ function scriptStatements(ir: EnrichedIR, context: EmitContext): Statement[] {
 		}
 		statements.push(variable(local.declarationKind, expression(local.pattern), initializer));
 	}
+	for (const plan of context.behaviorPlans)
+		statements.push(...vueBehaviorStatements(plan, context));
 	return statements;
 }
 
@@ -1185,7 +1574,12 @@ function renderHost(
 	// notes/T005-refs.md for the measurement, including the codegen in all four
 	// `COMPILE_MODES`.
 	const handleName = activeContext().handleHosts.get(node.id);
-	if (handleName !== undefined) attributes.push(`ref="${escapeAttributeValue(handleName)}"`);
+	// STEP 4, BEHAVIORS. The `attach=` lowering reads its node through a template
+	// ref too, and SHARES the handle's ref when the host already has one - two
+	// `ref=` attributes on one element is not a Vue form.
+	const behaviorRef = activeContext().behaviorHosts.get(node.id);
+	const refName = handleName ?? behaviorRef;
+	if (refName !== undefined) attributes.push(`ref="${escapeAttributeValue(refName)}"`);
 	for (const eventId of node.eventIds) {
 		const event = activeContext().eventsById.get(eventId);
 		if (!event) throw new Error(`Unknown event record: ${eventId}`);
@@ -1509,14 +1903,11 @@ export function emit(ir: EnrichedIR): string {
 		ir.records.sharedWrites.length
 	)
 		throw new Error('Vue emitter does not support composition or shared constructs');
-	// STEP 3 OPENED `elementHandleBindings` AND `handleCalls` AND NOTHING ELSE.
-	// `handleForwards` hands a child's node to a PARENT module, which needs the
-	// composition path Step 5 owns; `behaviors` is the authored `attach=` effect
-	// Step 4 owns. Both stay refused by name.
+	// STEP 4 OPENED `behaviors`. `handleForwards` STAYS REFUSED, by name: it hands
+	// a child's node to a PARENT module, which needs the composition path Step 5
+	// owns.
 	if (ir.records.handleForwards.length)
 		throw new Error('Vue emitter does not support forwarding a handle to a parent module');
-	if (ir.records.behaviors.length)
-		throw new Error('Vue emitter does not support element attach behaviors');
 	if (ir.module.exports.length !== 1)
 		throw new Error('A .vue module exports exactly one component');
 	const component = ir.components[0]!;
@@ -1539,10 +1930,41 @@ export function emit(ir: EnrichedIR): string {
 		rewrites: new Map<string, ScriptRewrite>(),
 		usedApis: new Set<VueApi>(),
 		handleHosts,
+		behaviorHosts: new Map<string, string>(),
+		behaviorPlans: [],
 	};
 	currentContext = context;
 	try {
 		collectRewrites(ir, context);
+		const hostIds = new Set<string>();
+		walk(component.template, (record) => {
+			if (record.kind === 'host' && typeof record.id === 'string') hostIds.add(record.id);
+		});
+		const scopeNames = new Set<string>([
+			...RESERVED_SCRIPT_NAMES,
+			...component.props.entries.map((entry) => entry.localName),
+			...component.locals.flatMap((local) => local.names),
+			...handleHosts.values(),
+		]);
+		const taken = new Set<string>(scopeNames);
+		walk(
+			ir.records.behaviors.filter((behavior) => behavior.componentId === component.id),
+			(record) => {
+				if (record.type === 'Identifier' && typeof record.name === 'string')
+					taken.add(record.name);
+			},
+		);
+		const behaviorPlans = vueBehaviorPlans(
+			ir,
+			component,
+			hostIds,
+			handleHosts,
+			context,
+			scopeNames,
+			taken,
+		);
+		context.behaviorPlans.push(...behaviorPlans);
+		for (const plan of behaviorPlans) context.behaviorHosts.set(plan.hostNodeId, plan.refName);
 		const statements = scriptStatements(ir, context);
 		const template = renderChildren(component.template, '\t', false);
 		const imports: Statement[] = context.usedApis.size
