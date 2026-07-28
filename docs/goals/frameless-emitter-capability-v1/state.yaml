@@ -90,7 +90,7 @@ visual_board:
     predecessor goal that closed complete this session. Recorded as an explicit choice, not an
     omission - the command above turns it on at any time.
 
-active_task: T002
+active_task: T003
 
 tasks:
   - id: T001
@@ -218,7 +218,7 @@ tasks:
   - id: T002
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       Validate this existing plan against HEAD before the only schema change runs. Re-derive Step
@@ -246,16 +246,56 @@ tasks:
       - "Feasible in one slice, or a proposed split with its seam"
       - "Confirmation the @tsrx/core type source exists as the plan assumes"
       - "Any plan premise that measurement now refutes"
-    receipt: null
-
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      harness: claude-code
+      rationale: "Plan premise SURVIVES; its DANGER MODEL IS REFUTED. Measured by planting PropDestructuringEntry.type on all 8 IR goldens and running each lane's own emit(): ONLY react and solid throw. qwik/svelte/vue/angular accept silently and emit byte-identical output 8/8; resolveModuleSet accepts it too. Step 1 is far smaller than chartered and feasible in one slice. Two blockers the plan does not see: no .tsrx in the live corpus carries a prop type annotation, so Step 1 as written proves nothing; and ComponentPropExpression.type has no annotation source."
+      summary: "Step 1 approved, RE-SCOPED to PropDestructuringEntry.type plus one annotated fixture. Seven findings; the extension/lang migration must become its own step between Step 1 and Step 2."
+      IT_RAN_THE_PLANS_PREMISES_AS_EXPERIMENTS_INSTEAD_OF_READING_THEM: "The card asked it to enumerate a file set. It PLANTED THE FIELD ON ALL EIGHT GOLDENS AND RAN EVERY LANE'S REAL emit(). That is the difference between a grep and a measurement, and the two answers disagree."
+      THE_BLAST_RADIUS_IS_SMALLER_AND_THE_FEAR_POINTED_AT_THE_WRONG_FILES: "Charter: 'all validateEnrichedIr copies move in the same slice or EVERY LANE HARD-THROWS'. MEASURED: exactly TWO validators reject the field - react/src/emitter/index.ts:330 and solid/src/emitter/index.ts:659. Four lanes and resolveModuleSet accept it SILENTLY with byte-identical output. AND THE 'NINE exactKeys FILES' COUNT IS WRONG IN BOTH DIRECTIONS: three of the nine (analyzer expectations.ts, analyzer trace-io.ts, cli receipts.ts) validate TRACES and RECEIPTS, not EnrichedIR - while the single most affected file, the REACT EMITTER, IS NOT AMONG THE NINE AT ALL, because its checker is an inline closure named `keys`. PM CONFIRMED: grep -c exactKeys in the react emitter returns ZERO. Every grep-derived count in this charter - including mine at prep - has missed the one file that actually breaks."
+      THE_FINDING_THAT_MATTERS_MORE_THAN_THE_COUNT: "NOT ONE .tsrx IN THE LIVE CORPUS CARRIES A PROP TYPE ANNOTATION - PM CONFIRMED, 0 of 43 non-poc files. @tsrx/core 0.1.32 DOES preserve annotations and buildEnrichedIr already ACCEPTS typed props; it drops them at build.ts propsEntries(). So the supply channel is real, but STEP 1 AS CHARTERED WOULD SHIP A FIELD THAT IS undefined IN 100% OF THE CORPUS, move no golden byte, and prove nothing. Worse, T004's own verify line - 'the Step 0 probe now goes RED against EMITTED output' - IS UNREACHABLE until a corpus source is annotated, AND NO STEP IN THE PLAN OWNS THAT AUTHORING CHANGE."
+      IT_REFUTED_THE_PMs_DISPATCH_TEXT: "I wrote that vue/svelte need lang=\"ts\" flipped IN THE SAME EDIT as the type, 'so a split edit turns it red'. MEASURED FALSE IN THE DIRECTION THAT MATTERS: @vue/compiler-sfc compileScript on <script setup lang=\"ts\"> with UNTYPED source is clean, and svelte/compiler 5.56.8 on <script lang=\"ts\"> untyped is clean in BOTH client and server modes with zero warnings. Only type-WITHOUT-lang throws. THE COUPLING IS ONE-DIRECTIONAL - which is precisely what makes a Step 1.5 migration a legal seam. My second premise was also incomplete: program.ts:164 is 1 of NINETY-THREE .jsx references, so moving Step 5's extension map earlier would NOT have unblocked Step 2."
+      TWO_MORE_PLAN_PREMISES_REFUTED: "(1) ComponentPropExpression.type HAS NO ANNOTATION SOURCE: build.ts:1321-1357 builds it from the parent's JSX attribute, which carries no annotation, and NOT ONE of Step 0's six negative arms types a call site - every measured RED came from the CHILD DECLARATION alone. Struck from Step 1. (2) THE ONE-EXPORT GUARD IS NOT IN resolveModuleSet AT ALL - PM CONFIRMED zero occurrences in module-set.ts. It lives in solid:495, svelte:724, vue:1101, angular:1275, and REACT AND QWIK HAVE NONE. T999 currently says 'reject if the one-export guard was weakened', which points an auditor at module-set.ts where they would find nothing and could certify a weakened guard as intact."
+      THE_REPOS_OWN_ANTI_DRIFT_TESTS_ARE_FALSE_COMFORT: "angular/test/emitter.test.ts:600, svelte:277 and vue:473 each claim 'a schema addition cannot pass silently' - and all three plant newField at the TOP LEVEL of EnrichedIR, which every lane checks. NONE plants it on a NESTED PropDestructuringEntry, which is exactly what Step 1 adds and exactly what four lanes accept silently. THAT IS WHY THE PLAN BELIEVED THE VALIDATORS WERE SYMMETRIC."
+      resequencing_ruling: "DO NOT reorder the phase and DO NOT split Step 2. INSERT A STEP 1.5 owning the extension map, the .jsx -> .tsx rename across 93 referencing files, and the vue/svelte lang=\"ts\" flip, with NO type printing - verifiable as behaviour-neutral precisely because the coupling is one-directional. Cost: those 93 files include emitted-typecheck.test.ts's exact diagnostic strings and all four demo apps pnpm e2e drives."
+      missing_evidence:
+        - "pnpm e2e was NOT run - read-only validation, and it is slow. Step 1's card carries it."
+        - "Step 0's one prop-type pair (string/number) does not cover the onTrace CALLBACK prop every scenario carries. Whether a function type survives @tsrx/core -> IR -> six emitters is UNMEASURED and is Step 2's risk."
+        - "Whether annotating s1-render-once.tsrx disturbs per-lane gate.test.ts or mutate:corpus is unmeasured; pnpm test in Step 1's verify is the instrument."
+        - "The Judge did NOT write notes/T002-plan-validation.md - the read-only contract makes the receipt the artifact."
+      required_board_updates:
+        - "F1 blast radius"
+        - "F2 exactKeys count wrong both ways"
+        - "F3 nested-field anti-drift gap"
+        - "F4 no annotated corpus source"
+        - "F5 strike ComponentPropExpression.type"
+        - "F6 one-export guard location + T999"
+        - "F7 insert Step 1.5"
   - id: T003
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
     objective: >-
-      STEP 1. Supply PropDestructuringEntry.type and ComponentPropExpression.type from the existing
-      @tsrx/core annotations, moving EVERY validateEnrichedIr copy in the same slice.
+      STEP 1, RE-SCOPED BY T002 ON MEASUREMENT. Supply PropDestructuringEntry.type ONLY, sourced
+      from the @tsrx/core annotation already present in the parsed AST at build.ts propsEntries().
+      Do NOT add ComponentPropExpression.type. Annotate EXACTLY ONE corpus fixture
+      (packages/compiler/test/fixtures/s1-render-once.tsrx) so the supply is PROVABLE - without it
+      the field is undefined in 100% of the corpus and Step 1 proves nothing.
+    T002_REFUTED_THIS_CARDS_DANGER_MODEL: >-
+      The card said "ALL validateEnrichedIr copies move in the same slice or EVERY LANE
+      HARD-THROWS". T002 planted the field on all eight goldens and ran every lane's real emit():
+      ONLY TWO validators reject it - react/src/emitter/index.ts:330 and solid/src/emitter/index.ts:659.
+      qwik, svelte, vue, angular AND resolveModuleSet accept it silently with byte-identical output
+      8/8 per lane. Record all six lanes, not just the throwers.
+    and_the_exactKeys_COUNT_WAS_WRONG_IN_BOTH_DIRECTIONS: >-
+      Three of the "nine exactKeys files" validate TRACES and RECEIPTS, not EnrichedIR. And the
+      single most affected file - THE REACT EMITTER - is not among the nine at all, because its
+      checker is an inline closure named `keys`. PM confirmed: grep -c exactKeys in the react
+      emitter returns ZERO. Every grep-derived count in this charter, including the PM's at prep,
+      missed the one file that actually breaks.
     why_this_is_the_dangerous_one: >-
       This is THE ONLY SCHEMA CHANGE in the phase. The exactKeys validators reject unknown keys, so
       a schema field added without moving all of them makes EVERY LANE HARD-THROW. The plan flagged
@@ -264,17 +304,114 @@ tasks:
       - "Use T002's enumerated set, not the plan's number."
       - "All goldens regenerate together; no lane may be left behind."
       - "PROVE THE FAILURE MODE ONCE: land the field without a validator and watch a lane throw, then restore. A guard nobody has seen fire is not a guard."
+    allowed_files:
+      - packages/compiler/src/schema.ts
+      - packages/compiler/src/build.ts
+      - packages/compiler/test/fixtures/s1-render-once.tsrx
+      - packages/compiler/test/goldens/s1-render-once.json
+      - packages/compiler/test/enriched-ir.test.ts
+      - packages/frameworks/react/src/emitter/index.ts
+      - packages/frameworks/solid/src/emitter/index.ts
+      - packages/frameworks/react/test/emitter.test.ts
+      - packages/frameworks/solid/test/emitter.test.ts
+      - docs/goals/frameless-emitter-capability-v1/notes/T003-ir8-supply.md
+    allowed_files_provenance: >-
+      DERIVED BY MEASUREMENT, NOT COPIED. This card's allowed_files was empty and the charter names
+      no file list for Step 1. schema.ts defines PropDestructuringEntry; build.ts propsEntries() is
+      the ONLY construction site; react:330 and solid:659 are the ONLY two validators measured to
+      reject the field.
+    verify:
+      - "pnpm test   # BASELINE IS 1082 passed / 1 failed (1083). The failure is package-inventory ARM B, caused by the FOREIGN uncommitted pnpm-lock.yaml. It must stay EXACTLY 1082/1 - neither better nor worse."
+      - "pnpm check   # exit 0 at HEAD; an optional field must keep it there"
+      - "pnpm lint"
+      - "git diff --exit-code over all generated*/ dirs   # emitters ignore the field at Step 1; MEASURED byte-identical for qwik/svelte/vue/angular across all 8 goldens"
+      - "RECORD ALL SIX LANES: plant the field on a golden and report per lane whether validateEnrichedIr throws or accepts. Expected: react THROWS, solid THROWS, qwik/svelte/vue/angular ACCEPT SILENTLY, resolveModuleSet ACCEPTS. If your matrix differs, report the difference VERBATIM before proceeding."
+      - "pnpm e2e   # 6 demos x 8 scenarios must not move"
+      - "git status --short   # exactly three FOREIGN entries expected; leave them alone"
+    stop_if:
+      - "You are about to add ComponentPropExpression.type. MEASURED: build.ts:1321-1357 builds it from the parent's JSX attribute, which carries NO annotation, and not one of Step 0's six negative arms types a call site - every measured RED came from the CHILD DECLARATION alone. Supplying it would require inferring across modules, the exact 'new source' the charter forbids. Report and STOP."
+      - "You are about to bump ENRICHED_IR_VERSION. 37 files carry the literal 'frameless-enriched-ir/2' including 8 goldens, 6 emitters, 6 READMEs and a persistence fixture. That is an explicit ruling, not a side effect of this slice."
+      - "You are about to edit module-set.ts or the qwik, svelte, vue or angular emitter. MEASURED: none rejects this field and none of their bytes move. Tightening them is real follow-up work but NOT this slice - it is F3."
+      - "Any emitted golden byte moves in any generated*/ directory."
+      - "You cannot make the annotated fixture's type reach the golden without inventing a source outside the parsed @tsrx/core annotation."
+      - "You are about to touch packages/cli/test/fixtures/s1-render-once.tsrx. Byte-identical to the compiler's copy but no test couples them; diverging it is out of scope."
+    allowed_files: []
+    receipt: null
+
+  - id: T009
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    spec: "T002 receipt, finding F7 - AUTHORITATIVE. Runs AFTER T003 and BEFORE T004."
+    objective: >-
+      STEP 1.5, INSERTED BY T002. Extension + lang migration, WITH NO TYPE PRINTING: the per-target
+      extension map, the .jsx -> .tsx rename for react/solid/qwik generated output and every file
+      referencing it, and the vue/svelte lang="ts" flip.
+    why_this_step_EXISTS_and_why_it_is_a_LEGAL_seam: >-
+      T001 measured TS8010 - a type annotation CANNOT live in a .jsx file - and the react/solid/qwik
+      goldens ARE .jsx. So Step 2 cannot print a type where the plan puts it, while the charter parks
+      the extension map under Step 5: the dependency runs BACKWARDS. T002 then measured WHY this can
+      be its own step: @vue/compiler-sfc compileScript on <script setup lang="ts"> with UNTYPED
+      source is CLEAN, and svelte/compiler 5.56.8 on <script lang="ts"> untyped is clean in BOTH
+      client and server modes with zero warnings. Only type-WITHOUT-lang throws. THE COUPLING IS
+      ONE-DIRECTIONAL, which is exactly what makes a no-type-printing migration verifiable as
+      behaviour-neutral.
+    the_PMs_original_premise_was_WRONG_and_is_recorded_here: >-
+      The PM's T002 dispatch said vue/svelte need lang="ts" flipped IN THE SAME EDIT as the type,
+      "so a split edit turns it red". MEASURED FALSE in the direction that matters - see above. The
+      PM also said moving Step 5's extension map earlier would unblock Step 2; RIGHT CONCLUSION,
+      INCOMPLETE PREMISE - packages/cli/src/program.ts:164 is 1 of NINETY-THREE .jsx references,
+      and the goldens the lanes actually test are hardcoded in per-lane suites.
+    the_cost_measured_not_estimated: >-
+      93 files reference .jsx outside generated/ and .svelte-kit, INCLUDING
+      packages/frameworks/react/test/emitted-typecheck.test.ts's exact diagnostic strings,
+      format-emitted.test.ts, browser tests importing '../generated/S3.jsx', and all four demo apps
+      pnpm e2e drives. This is the largest mechanical change in the phase and it prints no type.
+    constraints:
+      - "NO TYPE MAY BE PRINTED IN THIS STEP. That is what makes it verifiable: emitted output must be behaviour-identical, only its extension and script lang differ."
+      - "Re-derive the 93 yourself. T002 measured it read-only; a rename changes the set as it runs."
+      - "The vue/svelte flip is lang=\"ts\" ONLY. Do not add annotations - that is Step 2."
     verify:
       - "pnpm test"
       - "pnpm check"
       - "pnpm lint"
-      - "regenerate all six lanes; goldens move TOGETHER or not at all"
-      - "pnpm e2e   # 6 demos x 8 scenarios must stay equal"
+      - "pnpm e2e   # 6 demos x 8 scenarios, all observations equal - THE decisive check for behaviour-neutrality"
+      - "per lane: emitted output differs from HEAD ONLY in extension and script lang - prove it by normalising both and diffing"
+      - "git status --short   # three FOREIGN entries expected; leave them alone"
     stop_if:
-      - "Any lane throws after the slice is complete."
-      - "The goldens cannot be moved in one slice - report and stop; that is T002's split, not an improvisation."
-      - "You are about to widen the schema beyond the two named fields."
-    allowed_files: []
+      - "You are about to print a type. That is Step 2."
+      - "pnpm e2e moves. A migration that changes behaviour is not this step."
+      - "The real .jsx reference count differs materially from 93 - report the actual number."
+      - "A demo app breaks in a way that needs a scaffold change - report it; the charter requires official scaffolds AS THEY SHIP."
+    receipt: null
+
+  - id: T010
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    spec: "T002 receipt, finding F3 - AUTHORITATIVE. Queued BEFORE T004."
+    objective: >-
+      Tighten the four lax validators and re-aim the repo's "a schema addition cannot pass silently"
+      tests at a NESTED construct.
+    the_repos_own_anti_drift_tests_are_FALSE_COMFORT: >-
+      angular/test/emitter.test.ts:600, svelte:277 and vue:473 each claim a schema addition cannot
+      pass silently - and ALL THREE PLANT newField AT THE TOP LEVEL of EnrichedIR, which every lane
+      checks. NONE plants it on a nested PropDestructuringEntry, which is exactly what Step 1 adds
+      and exactly what four lanes accept SILENTLY with byte-identical output. THAT IS WHY THE PLAN
+      BELIEVED THE VALIDATORS WERE SYMMETRIC - the tests that would have caught the asymmetry were
+      aimed one level too high.
+    constraints:
+      - "PROVE RED FIRST: plant a nested unknown field and watch each newly-tightened lane name it."
+      - "Do not weaken any existing top-level check while adding the nested one."
+    verify:
+      - "pnpm test"
+      - "pnpm e2e"
+      - "per lane: a nested unknown field on PropDestructuringEntry is REJECTED BY NAME"
+    stop_if:
+      - "A lane cannot express a nested exactness check without restructuring its validator - report the shape, do not force it."
+      - "Any emitted byte moves."
     receipt: null
 
   - id: T004
@@ -361,7 +498,7 @@ tasks:
     constraints:
       - "NAME, PER LANE, THE RED MEASURED AT STEP 0. Every prior IR-8 measurement was an instrument GREEN on an UNTYPED prop and not one was a RED on a TYPED one - if this audit cannot name the per-lane RED, the phase is not complete whatever else landed."
       - "Reject completion if composition still compares only two lanes."
-      - "Reject if the one-export guard was weakened."
+      - "Reject if the one-export guard was weakened - AND LOOK IN THE RIGHT PLACE. T002 MEASURED that resolveModuleSet has NO such guard: it accepts multi-export modules GREEN. The guard lives in solid/src/emitter/index.ts:495, svelte:724, vue:1101 and angular:1275, and REACT AND QWIK HAVE NONE. As originally written this line pointed an auditor at module-set.ts, where they would find nothing and could certify a weakened guard as intact."
       - "Certify prior step audits rather than re-deriving them, but spot-check at least one claim from each."
       - "Assume the PM's brief contains at least one error and find it. The predecessor goal's final audit found the PM had described a three-part oracle as two-part."
     expected_output:

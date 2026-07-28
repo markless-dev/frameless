@@ -118,3 +118,45 @@ two-lane oracle legs into six-lane ones.
 **Explicitly out of scope**: the async axis. `DEFECTS.md` 12.2 is OPEN and measured (react
 post-await staleness), which is why S8 is deferred from the corpus. It is real work and no board
 covers it — but it is not this phase, and Step 4 carries a `stop_if` against being drawn into it.
+
+## T002 plan validation — 2026-07-28
+
+The plan's **premise survives**; its **danger model is refuted**, and two blockers it could not see
+are now on the board.
+
+**The blast radius was measured, not grepped.** T002 planted `PropDestructuringEntry.type` on all
+eight IR goldens and ran every lane's real `emit()`. The charter said *"all validateEnrichedIr
+copies move in the same slice or every lane hard-throws."* In fact **two** validators reject it —
+`react/src/emitter/index.ts:330` and `solid/src/emitter/index.ts:659`. qwik, svelte, vue, angular
+and `resolveModuleSet` accept it **silently**, byte-identical 8/8.
+
+The `exactKeys` count was wrong in **both** directions: three of the nine validate traces and
+receipts rather than EnrichedIR, and the single most affected file — the **react emitter** — is not
+among them at all, because its checker is an inline closure named `keys`. Every grep-derived count
+here, including the one written at prep, missed the one file that actually breaks.
+
+**The phase's real gap**: *no `.tsrx` in the live corpus carries a prop type annotation* — 0 of 43.
+`@tsrx/core` preserves annotations and `buildEnrichedIr` already accepts typed props; it drops them
+at `build.ts` `propsEntries()`. So the supply channel is real, but Step 1 as chartered would ship a
+field that is `undefined` everywhere and prove nothing — and Step 2's own verify line is unreachable
+until a corpus source is annotated. **No step owned that authoring change.** Step 1 now owns exactly
+one fixture.
+
+**Struck from Step 1**: `ComponentPropExpression.type`. It has no annotation source — `build.ts`
+reads a JSX attribute, and every one of Step 0's six negative arms types the *child declaration*
+only, never the call site.
+
+**Corrected**: the one-export guard is **not in `resolveModuleSet`**. It lives in `solid:495`,
+`svelte:724`, `vue:1101`, `angular:1275` — and react and qwik have none. T999's instruction has been
+repointed, because as written it sent an auditor to a file where they would find nothing.
+
+**Step 1.5 inserted (T009)**, superseding this charter's placement of the extension map under Step 5.
+It owns the extension map, the `.jsx` → `.tsx` rename across 93 referencing files, and the
+`lang="ts"` flip — **with no type printing**. That is a legal seam because the coupling is
+**one-directional**: `lang="ts"` on untyped source is clean in both compilers, and only
+type-without-`lang` throws.
+
+**T010 added** for the anti-drift gap: three lanes' *"a schema addition cannot pass silently"* tests
+all plant their probe at the **top level** of EnrichedIR, never on a nested `PropDestructuringEntry`
+— which is why the plan believed the validators were symmetric.
+
