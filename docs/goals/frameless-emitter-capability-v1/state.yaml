@@ -90,7 +90,7 @@ visual_board:
     predecessor goal that closed complete this session. Recorded as an explicit choice, not an
     omission - the command above turns it on at any time.
 
-active_task: T015
+active_task: T016
 
 tasks:
   - id: T001
@@ -1168,7 +1168,7 @@ tasks:
   - id: T015
     type: worker
     assignee: Worker
-    status: active
+    status: blocked
     reasoning_hint: high
     spec: "T013 receipt worker_package - AUTHORITATIVE. Vue needs NO new dependency."
     objective: >-
@@ -1208,6 +1208,125 @@ tasks:
       - "You need to edit vue/src/gate/index.ts or weaken a gate.test.ts assertion. MEASURED at HEAD: the shipped gate returns ZERO violations on this shape. If it does not for you, something changed - REPORT IT, do not weaken it."
       - "compile-emitted.test.ts's exact-empty error/tip set stops being empty."
       - "The type-node -> constructor map cannot be made total over the accepted kinds without guessing. FAIL CLOSED to `null`, which degrades to the array form's exact behaviour."
+    receipt:
+      result: blocked
+      harness: claude-code
+      verification_attempts: 0
+      changed_files: []
+      blocked_reason: "The only form satisfying the card's three-arm oracle needs requiredness the IR cannot represent, and supplying it needs packages/compiler/src/build.ts, outside allowed_files. The PRESCRIBED form is measurably RED on its own positive arm AND on pnpm e2e."
+      summary: "THE BRIEF'S PRESCRIBED CONSTRUCTION CANNOT SATISFY THE BRIEF'S OWN VERIFICATION. Bare runtime constructors make every prop OPTIONAL, so the emitted component's own script block fails strict TS in three places INDEPENDENT OF THE PARENT - making the required positive arm unreachable and turning pnpm e2e RED. Zero edits made."
+      commands:
+        - cmd: "git status / rev-parse"
+          status: pass
+          note: "only the 3 foreign paths; HEAD 0567390, unchanged at exit"
+        - cmd: "vue-tsc rig on HEAD's array form - CALIBRATION"
+          status: pass
+          note: "exit 0. THE RIG IS PROVEN NOT TO MANUFACTURE REDS, which is what makes the reds attributable."
+        - cmd: "vue-tsc three arms x three forms (6 runs)"
+          status: pass
+          note: "measurement completed; see the decision table"
+        - cmd: "checkSources + compileDiagnostics on all three forms"
+          status: pass
+          note: "0 violations and 0 diagnostics on ALL THREE - T013 confirmed"
+        - cmd: "SSR neutrality probe, 5 cases x 4 forms"
+          status: pass
+          note: "A/B/C byte-identical; D (visible:Boolean) flips visible=\"\""
+        - cmd: "pnpm test / check / lint / e2e"
+          status: blocked
+          note: "NOT RUN: zero edits were made, so there was nothing to verify. Recorded rather than reported as passing."
+      THE_PRESCRIBED_FORM_FAILS_ITS_OWN_POSITIVE_ARM: "defineProps({label:String, multiplier:Number, visible:null, onTrace:Function}) types the CALL SITE exactly as T013 measured - but BARE CONSTRUCTORS MAKE EVERY PROP OPTIONAL, so props.multiplier becomes number|undefined INSIDE the emitted component. S1 consumes them strictly: RenderOnce.vue(5,2) TS2722 cannot invoke possibly-undefined; (8,59) TS18048 'props.multiplier' is possibly undefined; (20,6) TS2722. THESE FIRE REGARDLESS OF THE PARENT, so the card's 'positive = correctly typed parent (GREEN)' IS UNREACHABLE. And they land in pnpm e2e: the eight emitted SFCs carry lang=\"ts\", tsconfig.app.json includes src/**/*.vue, and @vue/tsconfig sets strict:true, so vue-tsc -b checks them and THE DEMO BUILD GOES RED. T013 measured the PARENT only; it never type-checked the emitted component against its own props."
+      the_measured_decision_table:
+        A array (HEAD): "S1 internals GREEN | negative GREEN - THE HOLE | positive GREEN | SSR baseline | no warnings"
+        B bare constructors (the brief's spec): "S1 internals RED x3 | negative RED TS2322 x2 PLUS the 3 | positive RED x3 | SSR byte-identical | +type-check-failed"
+        C {type, required:true}: "S1 internals GREEN | negative RED TS2322 x2 ONLY | positive GREEN | SSR byte-identical | +Missing required prop"
+        D visible:Boolean: "SSR FLIPS visible=\"\" from <p>hidden</p> to <section>shown</section> - T013's Gate 5 flip reproduced INDEPENDENTLY"
+      IT_COULD_NOT_ROUTE_AROUND_IT_AND_SAID_SO: "The blocker is OPTIONALITY, not the constructor. Vue makes a prop non-optional via exactly three routes - required:true, default, or Boolean - and this card denied all three. required:true is THE ONLY form satisfying the three-arm oracle. Typing only the props that happen not to be strictly consumed would be a CONTENT-BASED TRIGGER, which Gate 3 forbids. So it stopped rather than manufacturing a slice."
+      AND_IT_FOUND_THE_DENIAL_IS_NOT_ENFORCED: "checkSources returns ZERO violations on required:true. THAT DENIAL IS A GATE 5 POLICY RULING CARRIED IN A GATE MESSAGE, NOT AN ENFORCED CHECK - so it is the PM's call, and the Worker correctly declined to make it."
+      deviations:
+        - "Measured THREE candidate forms rather than only the prescribed one, so the receipt carries a DECISION TABLE instead of a bare refusal."
+        - "ADDED A CALIBRATION ARM not requested by the card - HEAD's form in the same rig, GREEN - without which the reds would not be attributable to the change."
+        - "Added SSR cases beyond the two the card names, to PRICE the required:true alternative for the PM."
+        - "Side effect disclosed: deleted the gitignored vue-tsc incremental cache via the rig symlink. Regenerable; pnpm e2e recreates it."
+      remaining_blockers:
+        - "IR-8 SUPPLIES NO REQUIREDNESS. build.ts propTypeMembers serializes only member.typeAnnotation.typeAnnotation and never reads member.optional - the flag is DROPPED AT SERIALIZATION. PM CONFIRMED: the fixture declares all four props NON-OPTIONAL (`label: string;` not `label?:`), so the fact EXISTS IN SOURCE and is discarded."
+        - "Vue offers exactly three ways to make a runtime-declared prop non-optional; all three were denied by T015's card."
+        - "The required:true denial is NOT enforced by the gate - 0 violations. It is a policy ruling in a message."
+        - "Still shipping and still false: vue/src/emitter/index.ts:419-456 claims PropDestructuringEntry carries no type field. Not corrected - no code landed in that region."
+        - "demos/vue-official/tsconfig.app.json's premise is false AND NOW LOAD-BEARING: it says three emitted components lack lang=\"ts\"; there are eight and all have it - which is precisely WHY vue-tsc reaches them and why the prescribed form breaks the build."
+      stopped_because: "The only form satisfying the three-arm oracle requires requiredness the IR cannot represent; supplying it needs build.ts, outside allowed_files."
+  - id: T016
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    spec: "T015 receipt decision table - AUTHORITATIVE. T015 made ZERO edits; its measurements are the whole input."
+    objective: >-
+      Stop dropping requiredness. Supply PropDestructuringEntry.optional from the source annotation,
+      then emit Vue's props as {type, required: !optional} with booleans still mapping to `null`.
+    THE_GROUND_FOR_THE_DENIAL_DISSOLVES_ONCE_THE_IR_CARRIES_THE_FACT: >-
+      Gate 5 denies required:true because it "is synthesized from TS non-optionality that NO IR
+      FIELD DECLARES". THE FACT EXISTS IN SOURCE AND IS DISCARDED: s1-render-once.tsrx declares
+      `label: string;` `multiplier: number;` `visible: boolean;` `onTrace: (...) => void;` - all
+      NON-OPTIONAL, PM CONFIRMED - and build.ts propTypeMembers serializes only
+      member.typeAnnotation.typeAnnotation, never reading member.optional. Once the IR carries it,
+      required:true is READ FROM SOURCE rather than invented, and that specific ground is gone.
+      THE OTHER GATE 5 GROUND STILL STANDS AND IS UNAFFECTED: {visible: Boolean} flips visible=""
+      from falsy to truthy - T013 and T015 measured it independently - so BOOLEANS STILL MAP TO
+      `null`. You are dissolving one ground, not the rule.
+    what_T015_measured_that_makes_this_the_only_route: >-
+      Bare constructors make every prop OPTIONAL, so the emitted component's OWN script fails strict
+      TS in three places regardless of the parent (TS2722 x2, TS18048), making the positive arm
+      unreachable and turning pnpm e2e RED. {type, required:true} is THE ONLY form that passes all
+      three arms: S1 internals GREEN, negative RED with TS2322 only, positive GREEN, SSR
+      byte-identical. Its one delta is a DEV-ONLY "Missing required prop" warning.
+    YOU_MUST_RULE_THE_DEV_WARNING_EXPLICITLY_NOT_WAVE_IT_THROUGH: >-
+      required:true adds a dev-only "Missing required prop" warning the baseline never emits, with
+      RENDERED OUTPUT IDENTICAL. That is a real Gate 5 line. Measure it, and rule it: it fires only
+      when a parent violates a contract the source declares, which is arguably correct - but say so
+      on measurement, and record what it costs. If you conclude it is NOT acceptable, STOP and
+      report rather than shipping it quietly.
+    allowed_files:
+      - packages/compiler/src/schema.ts
+      - packages/compiler/src/build.ts
+      - packages/compiler/test/goldens/s1-render-once.json
+      - packages/compiler/test/enriched-ir.test.ts
+      - packages/frameworks/react/src/emitter/index.ts
+      - packages/frameworks/solid/src/emitter/index.ts
+      - packages/frameworks/qwik/src/emitter/index.ts
+      - packages/frameworks/svelte/src/emitter/index.ts
+      - packages/frameworks/vue/src/emitter/index.ts
+      - packages/frameworks/angular/src/emitter/index.ts
+      - packages/frameworks/vue/generated
+      - packages/frameworks/vue/test
+      - packages/frameworks/react/test
+      - packages/frameworks/solid/test
+      - packages/frameworks/qwik/test
+      - packages/frameworks/svelte/test
+      - packages/frameworks/angular/test
+      - demos/vue-official/src/emitted
+      - demos/vue-official/tsconfig.app.json
+      - docs/goals/frameless-emitter-capability-v1/notes/T016-requiredness.md
+    allowed_files_provenance: >-
+      The schema plus its single construction site; all six emitter validators, because T003 and
+      T010 proved a new nested field must move through EVERY validator in one slice or a lane
+      accepts it silently; the vue lane and its demo; and tsconfig.app.json, whose stale comment
+      T015 found is now LOAD-BEARING.
+    verify:
+      - "pnpm test   # baseline 1108 passed / 1 failed - the 1 is package-inventory against the owner's dirty lockfile"
+      - "pnpm check  # must stay at EXACTLY 73, all in packages/frameworks/react/generated/"
+      - "pnpm lint && pnpm check:citations"
+      - "pnpm e2e"
+      - "THE THREE ARMS with demos/vue-official's own vue-tsc, rig staged OUTSIDE the repo and CALIBRATED against HEAD first, as T015 did: control GREEN, negative RED TS2322, positive GREEN. RECORD EXACT DIAGNOSTICS - this is a row T999 requires."
+      - "SSR byte-identical for `visible` ABSENT and visible=\"\", HEAD vs new. pnpm e2e CANNOT see this."
+      - "ALL SIX VALIDATORS: report per lane whether the new optional field throws or is accepted, as T003 and T010 did"
+      - "git diff --exit-code over the seven unannotated vue scenarios and the other five lanes' generated*/"
+    stop_if:
+      - "You are about to print a runtime constructor for a BOOLEAN-typed entry. Emit `null` - the flip is measured twice."
+      - "You conclude the dev-only warning is NOT acceptable. Stop and report; do not ship it quietly."
+      - "A lane's validator accepts the new nested field silently. That is the T010 defect class - fix it in this slice or report."
+      - "You reach for defineProps<T>() or withDefaults(). Still denied."
+      - "pnpm e2e moves, or pnpm check leaves 73."
+      - "Verification fails twice for the same reason."
     receipt: null
 
   - id: T005
