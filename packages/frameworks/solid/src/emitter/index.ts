@@ -1818,6 +1818,34 @@ function validateCompositionIr(ir: EnrichedIR): void {
 		);
 	const handleIds = new Set(ir.records.elementHandleBindings.map((binding) => binding.id));
 	for (const call of ir.records.handleCalls) {
+		// THE SECOND HALF OF THE DEAD-CHECK REPAIR T006 REPORTED AND LEFT OPEN
+		// (`frameless-emitter-capability-v1` T005 recorded this lane as REJECTING
+		// here; T006 measured that row false; T007 measured it again and repaired
+		// it). The strict path at the top of `validateEnrichedIr` carries an
+		// `exactKeys` for `HandleCallRecord`, but `hasComposition(ir)` is TRUE the
+		// moment `handleCalls` is non-empty, so that check is unreachable BY
+		// CONSTRUCTION for every IR that carries the record it names.
+		//
+		// MEASURED at 14a1e90, before this line existed: a field planted on a
+		// `HandleCallRecord` was accepted silently through `validateEnrichedIr`
+		// AND through `emit()`, and SOLID WAS THE ONLY LANE OF SIX THAT ACCEPTED
+		// IT - react, qwik, svelte, vue and angular all named the field. The
+		// board's standing "2-versus-4 split" is 5-versus-1 at this record, with
+		// this lane on the wrong side of it.
+		exactKeys(
+			call,
+			[
+				'handleBindingId',
+				'componentId',
+				'method',
+				'arguments',
+				'optional',
+				'eventId',
+				'site',
+				'order',
+			],
+			'HandleCallRecord',
+		);
 		if (!handleIds.has(call.handleBindingId))
 			throw new Error(
 				`HandleCallRecord has dangling ElementHandleBinding: ${call.handleBindingId}`,
@@ -1850,9 +1878,10 @@ function validateCompositionIr(ir: EnrichedIR): void {
 		// and solid reject, the other four accept silently". At `BehaviorRecord` it
 		// was ONE versus five. It is now two versus four for real.
 		//
-		// STILL OPEN, REPORTED RATHER THAN WIDENED: `ElementHandleBinding` and
-		// `HandleCallRecord` have exactly the same dead check for exactly the same
-		// reason, and they are Step 3's records, not Step 4's.
+		// `ElementHandleBinding` and `HandleCallRecord` carried exactly the same
+		// dead check for exactly the same reason. T006 reported them rather than
+		// widening them because they are Step 3's records; T007 repaired both,
+		// beside their own dangling-reference loops further down this function.
 		exactKeys(
 			behavior,
 			['id', 'hostNodeId', 'componentId', 'behavior', 'inputs', 'returnsCleanup', 'order'],
@@ -1872,9 +1901,19 @@ function validateCompositionIr(ir: EnrichedIR): void {
 				throw new Error('BehaviorRecord GraphReadRef has unsupported provenance');
 		}
 	}
-	for (const handle of ir.records.elementHandleBindings)
+	for (const handle of ir.records.elementHandleBindings) {
+		// THE FIRST HALF OF THE SAME REPAIR - see the `HandleCallRecord` note
+		// above. `hasComposition(ir)` is true the moment `elementHandleBindings` is
+		// non-empty, so the strict path's `exactKeys` for this record could only
+		// ever run on IR carrying NO element handle at all.
+		exactKeys(
+			handle,
+			['id', 'handleName', 'componentId', 'hostNodeId'],
+			'ElementHandleBinding',
+		);
 		if (!hostIds.has(handle.hostNodeId))
 			throw new Error(`ElementHandleBinding has dangling host: ${handle.hostNodeId}`);
+	}
 	walk(ir, (record) => {
 		for (const field of LEGACY_STRING_FIELDS)
 			if (field in record)

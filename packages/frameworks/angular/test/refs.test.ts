@@ -46,7 +46,7 @@ describe('Angular element handles', () => {
 		// `ElementRef` and `ViewChild` join the emitted module's OWN import list -
 		// self-scoped, which the idiom policy's Gate 2 scoping paragraph settles.
 		expect(source).toContain(
-			"import { Component, ElementRef, Input, ViewChild } from '@angular/core';",
+			"import { Component, ElementRef, ViewChild } from '@angular/core';",
 		);
 		// The decorator family, not the signal query: `viewChild()` floors at 17.2 and
 		// `@angular-eslint/prefer-signals` lives upstream in `all`, NOT `recommended`,
@@ -71,7 +71,14 @@ export function Plain() @{
 		);
 		expect(source).not.toContain('ViewChild');
 		expect(source).not.toContain('ElementRef');
-		expect(source).toContain("import { Component, Input, type OnInit } from '@angular/core';");
+		// `Input` IS ABSENT, AND `pnpm lint` IS WHY. This assertion listed `Input`
+		// unconditionally until `frameless-emitter-capability-v1` T007, which emitted
+		// the first modules with NO props at all and took `pnpm lint` from 0 warnings
+		// to 2 - `eslint(no-unused-vars): Identifier 'Input' is imported but never
+		// used`. Every one of the eight committed `generated/` scenarios declares an
+		// `@Input()`, so the propless case had only ever existed inside a test's
+		// source string and the unconditional import had never been observed on disk.
+		expect(source).toContain("import { Component, type OnInit } from '@angular/core';");
 	});
 
 	/**

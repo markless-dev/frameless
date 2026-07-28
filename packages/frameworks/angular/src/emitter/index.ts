@@ -73,6 +73,16 @@ type EmitContext = {
 	 */
 	readonly behaviorHosts: ReadonlyMap<string, string>;
 	readonly behaviorPlans: readonly AngularBehaviorPlan[];
+	/**
+	 * STEP 5. Class name -> element selector, for every name a `component-reference`
+	 * may take: each `.tsrx` `ModuleImport` plus every component DECLARED IN THIS
+	 * MODULE. Angular is the second of the two lanes that can carry both - a `.ts`
+	 * file holds as many `@Component` classes as the module has components - so
+	 * there is no self-reference limit to record here.
+	 */
+	readonly referenceableComponents: ReadonlyMap<string, string>;
+	/** Class names this component's template actually referenced, for `imports:`. */
+	readonly referenced: Set<string>;
 };
 
 /**
@@ -323,6 +333,83 @@ function validateBehaviorRecords(ir: EnrichedIR): void {
 	}
 }
 
+/**
+ * STEP 5. Shape checks for the two template kinds this step made reachable, and
+ * for the prop expressions that ride a `component-reference` edge.
+ *
+ * THIS IS THE T003/T010 DEFECT CLASS AT THIS STEP'S RECORDS. Every lane that has
+ * ever opened a construct without one of these has accepted an unknown field in
+ * silence - measured at `PropDestructuringEntry` (T002), `ElementHandleBinding`
+ * and `HandleCallRecord` (T005), `BehaviorRecord` (T006) and again at
+ * `HandleCallRecord` in the SOLID lane at this step. The check is written at the
+ * same commit as the lowering so this lane never joins that list.
+ *
+ * `validateEnrichedIr` walks EVERY component, not just the emitted one, because
+ * a multi-component module is refused in `emit` rather than here: the shape of a
+ * record must not depend on whether the lane happens to be able to print it.
+ */
+function validateCompositionNodes(ir: EnrichedIR): void {
+	const visit = (node: TemplateNode): void => {
+		if (node.kind === 'component-reference') {
+			exactKeys('TemplateComponentReference', node, [
+				'kind',
+				'id',
+				'edgeId',
+				'target',
+				'props',
+				'children',
+			]);
+			if (typeof node.edgeId !== 'string' || !Array.isArray(node.props))
+				throw new Error('TemplateComponentReference has malformed construct');
+			exactKeys(
+				'TemplateComponentReference target',
+				node.target,
+				node.target.module === 'self'
+					? ['localName', 'module']
+					: ['localName', 'module', 'exportedName'],
+			);
+			if (
+				typeof node.target.localName !== 'string' ||
+				typeof node.target.module !== 'string'
+			)
+				throw new Error('TemplateComponentReference target has malformed construct');
+			for (const prop of node.props) {
+				exactKeys('ComponentPropExpression', prop, [
+					'name',
+					'kind',
+					'value',
+					'graphNodeId',
+					'path',
+				]);
+				if (
+					typeof prop.name !== 'string' ||
+					!['graph-reference', 'callback', 'serializable', 'opaque'].includes(prop.kind)
+				)
+					throw new Error('ComponentPropExpression has malformed construct');
+				exactKeys('ComponentPropExpression value', prop.value, ['expression', 'reads']);
+			}
+			node.children.forEach(visit);
+			return;
+		}
+		if (node.kind === 'default-slot-projection') {
+			exactKeys('TemplateDefaultSlotProjection', node, ['kind', 'id', 'site']);
+			exactKeys('TemplateDefaultSlotProjection site', node.site, ['expression', 'reads']);
+			return;
+		}
+		if (node.kind === 'host' || node.kind === 'fragment') node.children.forEach(visit);
+		else if (node.kind === 'branch') node.arms.forEach((arm) => arm.children.forEach(visit));
+		else if (node.kind === 'keyed-repeat') {
+			node.row.forEach(visit);
+			node.empty.forEach(visit);
+		}
+	};
+	for (const component of ir.components) {
+		component.template.forEach(visit);
+		for (const guard of component.guards)
+			if (guard.whenTrue.kind === 'template') guard.whenTrue.children.forEach(visit);
+	}
+}
+
 export function validateEnrichedIr(ir: EnrichedIR): void {
 	exactKeys('EnrichedIR', ir, [
 		'version',
@@ -382,6 +469,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 			throw new Error(`EnrichedRecordTable ${family} has malformed record family`);
 	validateHandleRecords(ir);
 	validateBehaviorRecords(ir);
+	validateCompositionNodes(ir);
 	exactKeys('ModuleRecord', ir.module, ['exports']);
 	for (const imported of ir.imports)
 		exactKeys('ModuleImport', imported, [
@@ -1059,8 +1147,27 @@ function printTypeAnnotation(node: SerializableAstNode, where: string): string {
  * pin this form choice. The only thing that does is the frameless-owned
  * `no-signal-members` policy in `../gate/index.ts`.
  */
+/**
+ * STEP 5. The prop locals a `default-slot-projection` consumes. Angular projects
+ * child content through `<ng-content />`, never through an `@Input()`, so these
+ * names must not become class members: an `@Input() children` would announce an
+ * input no parent binds and leave the member permanently `undefined`.
+ */
+function slotProjectedPropNames(component: EnrichedComponent): Set<string> {
+	const names = new Set<string>();
+	walk(component.template, (record) => {
+		if (record.kind !== 'default-slot-projection') return;
+		const site = record.site?.expression;
+		if (site?.type === 'Identifier' && typeof site.name === 'string') names.add(site.name);
+	});
+	return names;
+}
+
 function propMembers(component: EnrichedComponent): ClassMember[] {
-	return component.props.entries.map((entry) => {
+	const projected = slotProjectedPropNames(component);
+	return component.props.entries
+		.filter((entry) => !projected.has(entry.localName))
+		.map((entry) => {
 		if (entry.defaultValue !== undefined)
 			throw new Error(
 				`Angular emitter has no lowering for a prop default value: ${entry.localName}`,
@@ -1080,7 +1187,7 @@ function propMembers(component: EnrichedComponent): ClassMember[] {
 				`@Input() ${entry.localName} of ${component.name}`,
 			)};`,
 		};
-	});
+		});
 }
 
 function componentBinding(
@@ -1696,7 +1803,16 @@ function attributesOf(
  * interpolated - that carries an untrimmed edge.
  */
 function isBlockLevel(node: TemplateNode): boolean {
-	if (node.kind === 'host' || node.kind === 'branch' || node.kind === 'keyed-repeat') return true;
+	if (
+		node.kind === 'host' ||
+		node.kind === 'branch' ||
+		node.kind === 'keyed-repeat' ||
+		node.kind === 'component-reference'
+	)
+		return true;
+	// `default-slot-projection` is deliberately NOT block-level, for the same
+	// reason it is not in the Vue lane: it stands where React prints `{children}`,
+	// and the whitespace rule above is what makes the classification observable.
 	if (node.kind === 'fragment') return node.children.every(isBlockLevel);
 	return false;
 }
@@ -1941,9 +2057,70 @@ function renderNode(
 	if (node.kind === 'branch') return renderBranch(node, indent, context);
 	if (node.kind === 'keyed-repeat') return renderKeyedRepeat(node, indent, context);
 	if (node.kind === 'host') return renderHost(node, indent, inline, context);
+	if (node.kind === 'component-reference')
+		return renderComponentReference(node, indent, inline, context);
+	// STEP 5. `<ng-content />` is Angular's only content-projection construct and
+	// the only member of the sanctioned set for this one, so the six gates have
+	// nothing to decide. It takes no expression: an unfilled `<ng-content />`
+	// renders its fallback children and this emitter prints none, so it renders
+	// NOTHING - which is React's and Solid's `{children}` behaviour.
+	if (node.kind === 'default-slot-projection') {
+		if (expression(node.site.expression).type !== 'Identifier')
+			throw new Error(
+				'Angular emitter has no lowering for a default-slot projection that is not a plain prop read',
+			);
+		return ['<ng-content />'];
+	}
 	throw new Error(
 		`Angular emitter has no lowering for template node kind ${(node as { kind: string }).kind}`,
 	);
+}
+
+/**
+ * STEP 5, COMPOSITION. A component reference is the child's ELEMENT SELECTOR,
+ * and the parent's `@Component` gains the child class in `imports:`.
+ *
+ * Standalone is the only mode here: `@Component` at 22.0.8 is standalone by
+ * default, and the emitted classes carry no `NgModule`, so `imports:` on the
+ * decorator is the whole resolution mechanism. The selector is derived from the
+ * IR component name by `componentSelector`, the same total function the child's
+ * own decorator uses, so the two sides cannot drift.
+ */
+function renderComponentReference(
+	node: Extract<TemplateNode, { kind: 'component-reference' }>,
+	indent: string,
+	inline: boolean,
+	context: EmitContext,
+): string[] {
+	const name = node.target.localName;
+	const selector = context.referenceableComponents.get(name);
+	if (selector === undefined)
+		throw new Error(
+			`TemplateComponentReference names no import or component in this module: ${name}`,
+		);
+	context.referenced.add(name);
+	const attributes = node.props.map((prop) => {
+		assertPlainAttributeName(prop.name);
+		return `[${prop.name}]="${templateExpression(expression(prop.value.expression), `${indent}\t`)}"`;
+	});
+	const singleLine = `<${selector}${attributes.map((attribute) => ` ${attribute}`).join('')}>`;
+	const fits =
+		!attributes.some((attribute) => attribute.includes('\n')) &&
+		width(indent, singleLine) <= PRINT_WIDTH;
+	if (inline && !fits)
+		throw new Error(
+			`Angular emitter cannot inline <${selector}>: it sits in a text-bearing run and needs a multi-line start tag`,
+		);
+	const open = fits
+		? singleLine
+		: `<${selector}\n${attributes.map((attribute) => `${indent}\t${attribute}`).join('\n')}\n${indent}>`;
+	const close = `</${selector}>`;
+	if (node.children.length === 0) return [open + close];
+	if (inline || !node.children.every(isBlockLevel))
+		return [open + renderChildren(node.children, indent, true, context) + close];
+	return [
+		`${open}\n${indent}\t${renderChildren(node.children, `${indent}\t`, false, context)}\n${indent}${close}`,
+	];
 }
 
 // ---------------------------------------------------------------------------
@@ -2112,33 +2289,18 @@ function elementHandleHosts(
 	return handleHosts;
 }
 
-export function emit(ir: EnrichedIR): string {
-	validateEnrichedIr(ir);
-	if (ir.records.persistence.length)
-		throw new Error('Angular emitter does not support persistence-bearing IR');
-	if (
-		ir.components.length !== 1 ||
-		ir.imports.length ||
-		ir.records.sharedDefinitions.length ||
-		ir.records.sharedInstances.length ||
-		ir.records.sharedReads.length ||
-		ir.records.sharedCalls.length ||
-		ir.records.sharedWrites.length
-	)
-		throw new Error('Angular emitter does not support composition or shared constructs');
-	// STEP 4 OPENED `behaviors`. `handleForwards` STAYS REFUSED, by name: it hands
-	// a child's node to a PARENT module, which needs the composition path Step 5
-	// owns.
-	if (ir.records.handleForwards.length)
-		throw new Error('Angular emitter does not support forwarding a handle to a parent module');
-	if (ir.module.exports.length !== 1)
-		throw new Error('Angular emitter emits exactly one exported component per module');
-	const component = ir.components[0]!;
-	const exported = ir.module.exports[0]!;
-	if (exported.kind !== 'named' || exported.exportedName !== component.name)
-		throw new Error(
-			`Angular emitter requires a named export whose exportedName is the component name, received ${exported.kind} ${exported.exportedName}`,
-		);
+/** One emitted `@Component` class, plus what its decorator and module need. */
+type EmittedClass = {
+	readonly text: string;
+	readonly angularImports: readonly string[];
+};
+
+function emitComponentClass(
+	ir: EnrichedIR,
+	component: EnrichedComponent,
+	referenceableComponents: ReadonlyMap<string, string>,
+	exported: boolean,
+): EmittedClass {
 	if (component.guards.length)
 		throw new Error(
 			`Angular emitter has no lowering for an early component guard (${component.name}): a component class has no return statement to guard`,
@@ -2203,6 +2365,8 @@ export function emit(ir: EnrichedIR): string {
 		handleHosts,
 		behaviorHosts: new Map(behaviorPlans.map((plan) => [plan.hostNodeId, plan.templateRef])),
 		behaviorPlans,
+		referenceableComponents,
+		referenced: new Set<string>(),
 	};
 
 	const template = renderChildren(component.template, TEMPLATE_INDENT, false, context);
@@ -2210,23 +2374,152 @@ export function emit(ir: EnrichedIR): string {
 	const emitted = classMembers(ir, component, context);
 	const body = emitted.members.map((entry) => indentBlock(entry.text, '\t')).join('\n');
 	const interfaces = [...(emitted.implementsOnInit ? ['OnInit'] : []), ...emitted.lifecycle];
-	const imported = [
+	const angularImports = [
 		...(emitted.lifecycle.includes('AfterViewInit') ? ['type AfterViewInit'] : []),
 		'Component',
 		...(emitted.lifecycle.includes('DoCheck') ? ['type DoCheck'] : []),
 		...(emitted.usesViewChild ? ['ElementRef'] : []),
-		'Input',
+		// CONDITIONAL, AND `pnpm lint` IS WHAT SETTLED IT. Three prior-step tests
+		// asserted that a component with NO props still emits `Input` in its import
+		// list, so this was written unconditional first and then reverted to match
+		// them. THE REVERT TOOK `pnpm lint` FROM 0 WARNINGS TO 2:
+		// `eslint(no-unused-vars): Identifier 'Input' is imported but never used`
+		// on `generated-composition/C1-slot.ts` and `M2-page.ts`. The old contract
+		// had never been exercised by a COMMITTED artifact - every one of the eight
+		// `generated/` scenarios declares at least one `@Input()`, so the propless
+		// case existed only inside a test's source string - and Step 5 emits the
+		// first modules that have no props at all. The three tests were updated
+		// with the lint evidence rather than the emitter bent to keep them green.
+		...(body.includes('@Input()') ? ['Input'] : []),
 		...(emitted.lifecycle.includes('OnDestroy') ? ['type OnDestroy'] : []),
 		...(emitted.implementsOnInit ? ['type OnInit'] : []),
 		...(emitted.usesViewChild ? ['ViewChild'] : []),
 	];
-	return (
-		`// @generated by @frameless/angular from ${component.name}; do not edit.\n` +
-		`import { ${imported.join(', ')} } from '@angular/core';\n\n` +
-		'@Component({\n' +
-		`\tselector: '${componentSelector(component.name)}',\n` +
-		`\ttemplate: \`\n${TEMPLATE_INDENT}${template}\n\t\`,\n` +
-		'})\n' +
-		`export class ${component.name}${interfaces.length ? ` implements ${interfaces.join(', ')}` : ''} {\n${body}\n}\n`
+	// STEP 5. `imports:` is emitted ONLY for the classes this template actually
+	// referenced, in the module's own component order, so a decorator never
+	// declares a dependency the template does not use - Angular's own
+	// `NG8113 unused import` diagnostic is what would report that, and the
+	// emitter fails closed of it rather than relying on the demo build to notice.
+	const referenced = [...referenceableComponents.keys()].filter((name) =>
+		context.referenced.has(name),
 	);
+	return {
+		text:
+			'@Component({\n' +
+			`\tselector: '${componentSelector(component.name)}',\n` +
+			(referenced.length ? `\timports: [${referenced.join(', ')}],\n` : '') +
+			`\ttemplate: \`\n${TEMPLATE_INDENT}${template}\n\t\`,\n` +
+			'})\n' +
+			`${exported ? 'export ' : ''}class ${component.name}${interfaces.length ? ` implements ${interfaces.join(', ')}` : ''} ${body ? `{\n${body}\n}` : '{}'}\n`,
+		angularImports,
+	};
+}
+
+export function emit(ir: EnrichedIR): string {
+	validateEnrichedIr(ir);
+	if (ir.records.persistence.length)
+		throw new Error('Angular emitter does not support persistence-bearing IR');
+	// STEP 5 SPLIT THIS GATE. `imports`, `component-reference` and
+	// `default-slot-projection` are LOWERED, and so is the MULTI-COMPONENT MODULE:
+	// a `.ts` file holds as many `@Component` classes as the module has
+	// components, so this lane has no counterpart to the one-component-per-file
+	// limit the Svelte and Vue lanes record. Only the `shared` family stays
+	// refused, and now by its own name.
+	if (
+		ir.records.sharedDefinitions.length ||
+		ir.records.sharedInstances.length ||
+		ir.records.sharedReads.length ||
+		ir.records.sharedCalls.length ||
+		ir.records.sharedWrites.length
+	)
+		throw new Error('Angular emitter does not support shared constructs');
+	// `handleForwards` hands a child's node to a PARENT module. It stays refused by
+	// name: the construct needs a `@ViewChild` on the PARENT that resolves through
+	// the child's own view, which is a second element-query generation this lane
+	// has not measured, and no fixture in this step's corpus carries one.
+	if (ir.records.handleForwards.length)
+		throw new Error('Angular emitter does not support forwarding a handle to a parent module');
+	if (ir.module.exports.length !== 1)
+		throw new Error('Angular emitter emits exactly one exported component per module');
+	const exported = ir.module.exports[0]!;
+	if (exported.kind !== 'named')
+		throw new Error(
+			`Angular emitter requires a named export, received ${exported.kind} ${exported.exportedName}`,
+		);
+	if (exported.exportedName !== exported.componentName)
+		throw new Error(
+			`Angular emitter requires an export whose exportedName is the component name, received ${exported.exportedName} for ${exported.componentName}`,
+		);
+	const moduleImports = moduleImportSpecifiers(ir);
+	const referenceableComponents = new Map<string, string>([
+		...[...moduleImports.keys()].map(
+			(name) => [name, componentSelector(name)] as [string, string],
+		),
+		...ir.components.map(
+			(component) => [component.name, componentSelector(component.name)] as [string, string],
+		),
+	]);
+	const classes = ir.components.map((component) =>
+		emitComponentClass(
+			ir,
+			component,
+			referenceableComponents,
+			component.name === exported.componentName,
+		),
+	);
+	const angularImports = [...new Set(classes.flatMap((entry) => entry.angularImports))];
+	const ORDER = [
+		'type AfterViewInit',
+		'Component',
+		'type DoCheck',
+		'ElementRef',
+		'Input',
+		'type OnDestroy',
+		'type OnInit',
+		'ViewChild',
+	];
+	angularImports.sort((left, right) => ORDER.indexOf(left) - ORDER.indexOf(right));
+	return (
+		`// @generated by @frameless/angular from ${exported.componentName}; do not edit.\n` +
+		`import { ${angularImports.join(', ')} } from '@angular/core';\n` +
+		[...moduleImports]
+			.map(([name, source]) => `import { ${name} } from '${source}';\n`)
+			.join('') +
+		'\n' +
+		classes.map((entry) => entry.text).join('\n')
+	);
+}
+
+/**
+ * STEP 5. `ModuleImport` -> the specifier the emitted `.ts` module imports.
+ *
+ * `.tsrx` -> `.ts` here rather than `.jsx`: this lane's artifact is a plain
+ * TypeScript module with no JSX in it at all, so the React/Solid/Qwik `.jsx`
+ * convention would name a file that does not exist. The extension is DROPPED
+ * entirely, which is what every emitted Angular demo module already does and
+ * what Angular's own resolution expects.
+ */
+function moduleImportSpecifiers(ir: EnrichedIR): Map<string, string> {
+	const specifiers = new Map<string, string>();
+	const declared = new Set(ir.components.map((component) => component.name));
+	for (const imported of ir.imports) {
+		if (imported.resolvesTo !== 'tsrx-module' || !imported.source.endsWith('.tsrx'))
+			throw new Error(`ModuleImport cannot be lowered: ${imported.source}`);
+		if (imported.kind !== 'named' || typeof imported.importedName !== 'string')
+			throw new Error(
+				`Angular emitter has no lowering for a ${imported.kind} ModuleImport: ${imported.source}`,
+			);
+		if (imported.importedName !== imported.localName)
+			throw new Error(
+				`Angular emitter has no lowering for a renamed ModuleImport: ${imported.importedName} as ${imported.localName}`,
+			);
+		if (!/^[A-Z][A-Za-z0-9]*$/.test(imported.localName))
+			throw new Error(`Angular emitter rejects the import binding ${imported.localName}`);
+		if (specifiers.has(imported.localName) || declared.has(imported.localName))
+			throw new Error(
+				`Angular emitter cannot import ${imported.localName}: the name is already declared in this module`,
+			);
+		specifiers.set(imported.localName, imported.source.replace(/\.tsrx$/, ''));
+	}
+	return specifiers;
 }

@@ -16,6 +16,15 @@ export const compositionFixtures = [
 	'C6-scalar-context',
 	'C7-object-context',
 	'C8-page-store',
+	// STEP 5 ADDED THE TWO-MODULE SET, and it is the first composition fixture
+	// EVERY ONE OF THE SIX LANES CAN EMIT. C1-C8 all pack several components
+	// into ONE module, which a `.svelte` file and a `.vue` SFC cannot express at
+	// all - so before this pair there was no composition fixture the six emitters
+	// could be compared on. `M1-panel` is the slot receiver with a prop;
+	// `M2-page` imports it across a real `ModuleImport` and projects children
+	// into it.
+	'M1-panel',
+	'M2-page',
 ] as const;
 
 export async function emitCompositionFixture(

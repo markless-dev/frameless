@@ -90,7 +90,7 @@ visual_board:
     predecessor goal that closed complete this session. Recorded as an explicit choice, not an
     omission - the command above turns it on at any time.
 
-active_task: T007
+active_task: T017
 
 tasks:
   - id: T001
@@ -1695,7 +1695,7 @@ tasks:
   - id: T007
     type: worker
     assignee: Worker
-    status: active
+    status: blocked
     reasoning_hint: high
     objective: >-
       STEP 5. Composition via resolveModuleSet, with the one-export guard INTACT - the step that
@@ -1723,6 +1723,15 @@ tasks:
       stop only for the reasons on the board card. Stopping on a validator would have abandoned
       three lanes that had a working idiom - which is exactly what T006 declined to do.
     constraints:
+    THE_GUARDS_STATED_JUSTIFICATION_IS_REFUTED_AND_THE_GUARD_STILL_STANDS: >-
+      T007 measured that "resolveModuleSet already models one component per module" is FALSE: it
+      has an explicit target.module === 'self' branch resolving against the module's own
+      componentNames - PM CONFIRMED at module-set.ts:344. And the pressure is NOT a corpus
+      artifact: demos/composition-kit/src/dashboard.tsrx packs THREE components into one module,
+      status and search two each, so THREE OF THE FIVE modules in the e2e module set have the
+      shape. So Svelte's and Vue's one-component-per-file limit is STRUCTURAL, not incidental.
+      THE GUARD IS UNTOUCHED AND STAYS - this records that its stated REASON was wrong, which is
+      the distinction this project keeps insisting on.
       - "THE ONE-EXPORT GUARD STAYS. emit() -> file map was already rejected on measurement; do not reopen it without new evidence."
       - "Composition scenarios must join the SAME oracle the S-scenarios use - a second, weaker comparison path would defeat the point."
     verify:
@@ -1779,6 +1788,161 @@ tasks:
       (4) REGENERATION HAS THREE TIERS - six regenerate.ts, TWO regenerate-composition.ts, and
       generated-persistence/P1.tsx which has NO SCRIPT AT ALL. Prove regeneration real before
       trusting any diff.
+    receipt:
+      result: blocked
+      harness: claude-code
+      verification_attempts: 2
+      note: notes/T007-composition.md
+      blocked_reason: "The verify line requires pnpm e2e to compare composition across SIX lanes. THREE OF THE FIVE demos/composition-kit modules need the shared() family and handleForwards, which four lanes still refuse BY NAME and which are per-lane lowerings of the SAME SIZE as this step's - and page.tsrx imports all three. A LOWERING GAP, NOT PLUMBING. Adding a per-lane exception to the equality check was an explicit stop_if and was not done; scripts/e2e.mjs is unmodified."
+      summary: "Qwik, Svelte, Vue and Angular now emit composition - module imports, cross-module component-reference, default-slot projection and edge props - taking component-reference FROM ZERO OCCURRENCES to all six lanes (PM confirmed 6/4/5/7/8/7). Solid's two dead validators are repaired. M1-panel/M2-page is the FIRST composition fixture ALL SIX LANES EMIT."
+      changed_files:
+        - packages/frameworks/qwik/src/emitter/index.ts
+        - packages/frameworks/svelte/src/emitter/index.ts
+        - packages/frameworks/vue/src/emitter/index.ts
+        - packages/frameworks/angular/src/emitter/index.ts
+        - packages/frameworks/solid/src/emitter/index.ts
+        - packages/frameworks/react/scripts/regenerate-composition.ts
+        - packages/frameworks/solid/scripts/regenerate-composition.ts
+        - packages/frameworks/qwik/scripts/regenerate-composition.ts
+        - packages/frameworks/svelte/scripts/regenerate-composition.ts
+        - packages/frameworks/vue/scripts/regenerate-composition.ts
+        - packages/frameworks/angular/scripts/regenerate-composition.ts
+        - packages/frameworks/react/test/gate.test.ts
+        - packages/frameworks/solid/test/gate.test.ts
+        - packages/frameworks/solid/test/emitter.test.ts
+        - packages/frameworks/qwik/test/composition.test.ts
+        - packages/frameworks/svelte/test/composition.test.ts
+        - packages/frameworks/vue/test/composition.test.ts
+        - packages/frameworks/angular/test/composition.test.ts
+        - packages/frameworks/angular/test/effects.test.ts
+        - packages/frameworks/angular/test/refs.test.ts
+        - docs/goals/frameless-emitter-capability-v1/notes/T007-composition.md
+      commands:
+        - cmd: "pnpm test"
+          status: pass
+          note: "1235 passed / 1 failed (1236) = baseline 1195/1 + 40 new; the 1 is foreign, still exactly 1"
+        - cmd: "pnpm check"
+          status: pass
+          note: "EXACTLY 73 and BYTE-IDENTICAL BY DIFF. Measured WHY: no framework tsconfig includes a generated* dir - react's 73 arrive TRANSITIVELY via composition-emitted-smoke.browser.test.ts, which imports C1-C8 and not M1/M2"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0/0 over 426 files. IT WENT RED FIRST at 2 warnings, and that red OVERTURNED A SHIPPED CONTRACT - see deviations"
+        - cmd: "pnpm check:citations"
+          status: pass
+          note: "clean over 4 documents, 17 watched, 490 swept"
+        - cmd: "pnpm e2e"
+          status: blocked
+          note: "PASSES, but composition is STILL react=4 / solid=4. Six lanes NOT reached. e2e.mjs unmodified, no per-lane exception added."
+        - cmd: "all THREE regeneration tiers, then git diff --exit-code"
+          status: pass
+          note: "exit 0, zero PRE-EXISTING generated bytes moved. Proved real first; junk into S1 x6, M2-page x6, P1 x2, EACH TIER OBSERVED RESTORING ONLY ITS OWN FILES. The tier count is now 6/6/0, not 6/2/0."
+        - cmd: "validator matrix: ElementHandleBinding + HandleCallRecord"
+          status: pass
+          note: "PRE and POST on all six lanes through validateEnrichedIr AND emit()"
+        - cmd: "validator matrix: TemplateComponentReference + ComponentPropExpression + TemplateDefaultSlotProjection"
+          status: pass
+          note: "SIX OF SIX REJECT at every record - THE FIRST CLASS IN THIS PHASE WHERE THE SPLIT DOES NOT RECUR"
+        - cmd: "ngc AOT strictTemplates over the emitted Angular composition modules"
+          status: pass
+          note: "OUT OF BAND from a scratch dir; NO repo file outside allowed_files touched. CLEAN, calibrated red TWO WAYS (NG8001 dropped imports:, NG8002 renamed input)"
+        - cmd: "vue/server-renderer SSR of the emitted Vue composition pair"
+          status: pass
+          note: "IN-PACKAGE, standing. Projection proven on REAL BYTES - and it FOUND a served-payload difference; see blockers"
+        - cmd: "git status --short"
+          status: pass
+          note: "49 owned + exactly the three FOREIGN entries, verified untouched; HEAD unchanged; nothing committed"
+      SOLIDS_DEAD_VALIDATORS_ARE_REPAIRED_AND_THE_SPLIT_WAS_5_VS_1: "T006 found solid's exactKeys checks unreachable behind an early return. Repaired here for ElementHandleBinding and HandleCallRecord - and the measured split was FIVE REJECT, SOLID ALONE ACCEPTS, which CORRECTS T005's recorded matrix listing solid as rejecting at both. Then, at the three composition records, SIX OF SIX REJECT: the first class in this phase where the 2-vs-4 / 1-vs-5 split does not recur at all."
+      MY_GUARD_CITATIONS_WERE_STALE_IN_FOUR_OF_SIX_PLACES: "I told both T007 and T999 the one-export guard lives at solid:495, svelte:724, vue:1101, angular:1275. MEASURED AT HEAD: solid:463, svelte:1243, vue:1803, angular:2135 - react and qwik correctly have none. 724/1101/1275 are behavior and handle code that T005 and T006 pushed the guard past. WORSE, THE SAME STALE ORDINALS WERE ON THE T999 CARD, in the very line telling an auditor to look in the right place. AND THE WORKER'S OWN CORRECTIONS WENT STALE WITHIN ITS OWN TASK (it measured 1258/1911/2134). T999 now cites the guard BY SYMBOL - the ratified pattern from the predecessor goal's citation work."
+      AND_THE_GUARDS_STATED_JUSTIFICATION_IS_REFUTED: "I wrote that emit() -> file map was rejected because 'resolveModuleSet already models one component per module'. FALSE: it has an explicit target.module === 'self' branch - PM CONFIRMED at module-set.ts:344 - and demos/composition-kit/src/dashboard.tsrx packs THREE components into one module, status and search two each. So the pressure is NOT a corpus artifact and Svelte's and Vue's one-component-per-file limit is STRUCTURAL. THE GUARD IS UNTOUCHED AND STAYS; what was wrong was its stated reason."
+      VUES_OWN_CHECKER_WAS_OVER_FIRING_THE_MIRROR_OF_T005s_BLIND_ONE: "compileDiagnostics required descriptor.scriptSetup UNCONDITIONALLY, and @vue/compiler-sfc's parse DROPS a whitespace-only block - so THE FIRST TEMPLATE-ONLY SFC THIS REPO EMITS WAS REJECTED BY ITS OWN ORACLE. The check now fires only when a non-setup <script> exists, which is the Options-API leak it was built for; the existing calibration arm stays red."
+      lint_overturned_a_shipped_contract: "Angular imported `Input` unconditionally and refs.test.ts asserted a propless component still does. Making it conditional broke three tests, so it was reverted - AND THE REVERT TOOK LINT FROM 0 TO 2 WARNINGS, because Step 5 emits the first modules with NO PROPS AT ALL. The old contract had never been exercised by a committed artifact. The emitter keeps the conditional import and the three assertions were updated WITH THE LINT EVIDENCE ATTACHED, rather than the emitter bent to keep tests green."
+      deviations:
+        - "My one-export-guard line numbers were stale in four of six places - see above."
+        - "The guard's stated justification is refuted; the guard still stands untouched."
+        - "lint overturned a shipped contract - see above."
+        - "REMOVED A SECOND SOURCE OF TRUTH rather than retyping it: react and solid gate.test.ts each carried a hand-written compositionNames literal duplicating compositionFixtures. Both now derive from the regeneration script."
+        - "SVELTE'S appendSibling GAINED A '/>' ARM. A childless component reference is the first self-closing form this printer emits, and splitting at the final '>' produced '<Dashboard /' + newline + '>', which svelte/compiler rejects. FOUND BY RUNNING IT, NOT BY READING."
+        - "ADDED M1-panel/M2-page TO REACT AND SOLID TOO, not in the task text - without it there is NO composition fixture the six emitters can be compared on at all, because C1-C8 every one packs several components into one module. Verified it does not move the 73."
+      remaining_blockers:
+        - "pnpm e2e STILL COMPARES COMPOSITION ACROSS TWO LANES. Per module: frame.tsrx and page.tsrx emit in all six; dashboard.tsrx and status.tsrx need shared() in qwik/angular and are multi-component for svelte/vue; search.tsrx needs handleForwards in qwik/angular and is multi-component for svelte/vue. THREE OF FIVE, and page.tsrx imports all three."
+        - "OUTSIDE allowed_files, recorded so the next task is not surprised: TARGET_INVENTORY in packages/cli/src/program.ts lists react and solid ONLY and e2e builds the module set through the CLI; the composition browser projects are registered in the ROOT vite.config.ts; and demos/composition-kit cannot resolve vue, svelte, @angular/core, @qwik.dev/core or the two vite plugins - measured from its own directory."
+        - "A .svelte file and a .vue SFC declare exactly ONE component, so both REFUSE a multi-component module BY NAME. Snippets and defineComponent({setup,render}) were EXCLUDED ON MEMBERSHIP, not overlooked. That is why those two lanes carry no C1-slot."
+        - "NO BROWSER ARM FOR COMPOSITION IN SVELTE OR QWIK; the Vue arm is server-side SSR and the Angular arm is compile-time AOT. No runtime-render claim is made for those two."
+        - "SVELTE HAS NO TYPE-LEVEL ARM HERE - svelte-check is coupled to demos/svelte-official's separate install."
+        - "VUE SERVER-RENDERS PROJECTED SLOT CONTENT wrapped in <!--[--> / <!--]--> fragment anchors that react, solid and angular do NOT emit. Invisible to the e2e observation oracle today; ASSERTED EXACTLY rather than hidden behind toContain, and named so a future payload-byte comparison finds it already measured."
+        - "The two-module set carries ONE prop, a string literal. A graph-reference or callback prop across a module boundary uses the same code path and has NO fixture."
+        - "react and solid still verify .tsx output with lang:'jsx' at five sites (carried from T005)."
+      stopped_because: "Six-lane e2e composition needs shared() and handleForwards in four lanes plus three files outside allowed_files."
+  - id: T017
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    spec: "T007 receipt, remaining_blockers - AUTHORITATIVE. T007 landed the largest safe slice and stopped at a LOWERING gap."
+    objective: >-
+      Close the six-lane composition comparison: the shared() family and handleForwards in qwik and
+      angular, plus the three out-of-scope files T007 named, so pnpm e2e compares composition across
+      SIX lanes instead of two.
+    exactly_what_is_missing_measured_per_module: >-
+      frame.tsrx and page.tsrx ALREADY EMIT IN ALL SIX. dashboard.tsrx and status.tsrx need shared()
+      in qwik/angular and are MULTI-COMPONENT for svelte/vue. search.tsrx needs handleForwards in
+      qwik/angular and is multi-component for svelte/vue. THREE OF FIVE MODULES, and page.tsrx
+      imports all three.
+    the_svelte_and_vue_half_may_NOT_be_forcible: >-
+      A .svelte file and a .vue SFC declare EXACTLY ONE COMPONENT, so both refuse a multi-component
+      module BY NAME. T007 excluded snippets and defineComponent({setup,render}) ON MEMBERSHIP, not
+      by oversight. IF THAT LIMIT HOLDS, the six-lane comparison needs a composition fixture whose
+      modules are one-component-per-module - M1-panel/M2-page is already exactly that and all six
+      lanes emit it. RULE WHICH ROUTE YOU TAKE and say why: extend the e2e module set to the
+      two-module fixture, or lower shared()/handleForwards, or both.
+    the_three_files_T007_could_not_reach: >-
+      TARGET_INVENTORY in packages/cli/src/program.ts lists react and solid ONLY, and e2e builds the
+      module set through the CLI; the composition browser projects are registered in the ROOT
+      vite.config.ts; and demos/composition-kit cannot resolve vue, svelte, @angular/core,
+      @qwik.dev/core or the two vite plugins - measured from its own directory. THE LAST ONE MAY
+      NEED A DEPENDENCY INSTALL: pnpm-lock.yaml is one of three FOREIGN uncommitted files belonging
+      to the owner's in-flight website work, and the PM has NOT authorised rewriting it. If you need
+      it, STOP and report rather than running an install.
+    constraints:
+      - "THE ONE-EXPORT GUARD STAYS. Its stated justification was refuted by T007 - resolveModuleSet DOES have a target.module === 'self' branch - but the guard itself is untouched and stays. Do not reopen emit() -> file map."
+      - "Composition must join the SAME oracle the S-scenarios use. There is no per-lane exception in scripts/e2e.mjs and adding one is an explicit stop_if."
+      - "If a lane cannot express a case inside its design envelope, RECORD IT as a lane limit - T007's svelte/vue refusal is the model."
+    allowed_files:
+      - packages/cli/src/program.ts
+      - packages/cli/test/**
+      - vite.config.ts
+      - scripts/e2e.mjs
+      - packages/compiler/src/**
+      - packages/compiler/test/**
+      - packages/frameworks/qwik/src/**
+      - packages/frameworks/angular/src/**
+      - packages/frameworks/svelte/src/**
+      - packages/frameworks/vue/src/**
+      - packages/frameworks/qwik/test/**
+      - packages/frameworks/angular/test/**
+      - packages/frameworks/svelte/test/**
+      - packages/frameworks/vue/test/**
+      - packages/frameworks/react/generated-composition/**
+      - packages/frameworks/solid/generated-composition/**
+      - packages/frameworks/qwik/generated-composition/**
+      - packages/frameworks/svelte/generated-composition/**
+      - packages/frameworks/vue/generated-composition/**
+      - packages/frameworks/angular/generated-composition/**
+      - demos/composition-kit/**
+      - docs/goals/frameless-emitter-capability-v1/notes/T017-composition-six-lane.md
+    verify:
+      - "pnpm test   # 1235/1 at dispatch; the 1 is foreign and must stay exactly 1"
+      - "pnpm check  # must stay at EXACTLY 73 and the error list BYTE-IDENTICAL BY DIFF, not by count"
+      - "pnpm lint && pnpm check:citations"
+      - "pnpm e2e    # THE DEFINING ITEM: composition compared across SIX lanes, not two"
+      - "ALL THREE REGENERATION TIERS - now 6 / 6 / 0, corrected by T007 - proved REAL before any diff is trusted"
+      - "per-lane validator matrix for any IR record you touch"
+    stop_if:
+      - "Need files outside allowed_files - INCLUDING pnpm-lock.yaml, which is foreign and unauthorised."
+      - "A lane cannot express a case inside its design envelope - record it, do not force it."
+      - "You are about to add a per-lane exception to the equality check, or weaken/relocate the one-export guard."
+      - "pnpm check leaves 73 or its list stops being byte-identical."
+      - "Verification fails twice for the same reason."
     receipt: null
 
   - id: T999
@@ -1790,7 +1954,7 @@ tasks:
     constraints:
       - "NAME, PER LANE, THE RED MEASURED AT STEP 0. Every prior IR-8 measurement was an instrument GREEN on an UNTYPED prop and not one was a RED on a TYPED one - if this audit cannot name the per-lane RED, the phase is not complete whatever else landed."
       - "Reject completion if composition still compares only two lanes."
-      - "Reject if the one-export guard was weakened - AND LOOK IN THE RIGHT PLACE. T002 MEASURED that resolveModuleSet has NO such guard: it accepts multi-export modules GREEN. The guard lives in solid/src/emitter/index.ts:495, svelte:724, vue:1101 and angular:1275, and REACT AND QWIK HAVE NONE. As originally written this line pointed an auditor at module-set.ts, where they would find nothing and could certify a weakened guard as intact."
+      - "Reject if the one-export guard was weakened - AND LOOK IN THE RIGHT PLACE. T002 MEASURED that resolveModuleSet has NO such guard: it accepts multi-export modules GREEN. The guard lives in the one-export guard in the solid, svelte, vue and angular emitters - CITED BY SYMBOL, NOT LINE, because T007 measured these ordinals stale in four of six places and its OWN corrections went stale again within the same task, and REACT AND QWIK HAVE NONE. As originally written this line pointed an auditor at module-set.ts, where they would find nothing and could certify a weakened guard as intact."
       - "Certify prior step audits rather than re-deriving them, but spot-check at least one claim from each."
       - "Assume the PM's brief contains at least one error and find it. The predecessor goal's final audit found the PM had described a three-part oracle as two-part."
     expected_output:

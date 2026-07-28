@@ -53,6 +53,14 @@ type EmitContext = {
 	 */
 	readonly behaviorHosts: ReadonlyMap<string, string>;
 	readonly behaviorPlans: readonly SvelteBehaviorPlan[];
+	/**
+	 * STEP 5. Local name -> emitted `.svelte` specifier, one entry per
+	 * `ModuleImport` that resolves to a `.tsrx` module. A `component-reference`
+	 * may only name a key of this map: this lane has NO in-file component
+	 * declaration, so a reference into the module's own scope is refused rather
+	 * than lowered. See the lane-limit note on `emit`.
+	 */
+	readonly componentImports: ReadonlyMap<string, string>;
 };
 
 type SvelteApi = 'untrack';
@@ -313,6 +321,83 @@ function validateBehaviorRecords(ir: EnrichedIR): void {
 	}
 }
 
+/**
+ * STEP 5. Shape checks for the two template kinds this step made reachable, and
+ * for the prop expressions that ride a `component-reference` edge.
+ *
+ * THIS IS THE T003/T010 DEFECT CLASS AT THIS STEP'S RECORDS. Every lane that has
+ * ever opened a construct without one of these has accepted an unknown field in
+ * silence - measured at `PropDestructuringEntry` (T002), `ElementHandleBinding`
+ * and `HandleCallRecord` (T005), `BehaviorRecord` (T006) and again at
+ * `HandleCallRecord` in the SOLID lane at this step. The check is written at the
+ * same commit as the lowering so this lane never joins that list.
+ *
+ * `validateEnrichedIr` walks EVERY component, not just the emitted one, because
+ * a multi-component module is refused in `emit` rather than here: the shape of a
+ * record must not depend on whether the lane happens to be able to print it.
+ */
+function validateCompositionNodes(ir: EnrichedIR): void {
+	const visit = (node: TemplateNode): void => {
+		if (node.kind === 'component-reference') {
+			exactKeys('TemplateComponentReference', node, [
+				'kind',
+				'id',
+				'edgeId',
+				'target',
+				'props',
+				'children',
+			]);
+			if (typeof node.edgeId !== 'string' || !Array.isArray(node.props))
+				throw new Error('TemplateComponentReference has malformed construct');
+			exactKeys(
+				'TemplateComponentReference target',
+				node.target,
+				node.target.module === 'self'
+					? ['localName', 'module']
+					: ['localName', 'module', 'exportedName'],
+			);
+			if (
+				typeof node.target.localName !== 'string' ||
+				typeof node.target.module !== 'string'
+			)
+				throw new Error('TemplateComponentReference target has malformed construct');
+			for (const prop of node.props) {
+				exactKeys('ComponentPropExpression', prop, [
+					'name',
+					'kind',
+					'value',
+					'graphNodeId',
+					'path',
+				]);
+				if (
+					typeof prop.name !== 'string' ||
+					!['graph-reference', 'callback', 'serializable', 'opaque'].includes(prop.kind)
+				)
+					throw new Error('ComponentPropExpression has malformed construct');
+				exactKeys('ComponentPropExpression value', prop.value, ['expression', 'reads']);
+			}
+			node.children.forEach(visit);
+			return;
+		}
+		if (node.kind === 'default-slot-projection') {
+			exactKeys('TemplateDefaultSlotProjection', node, ['kind', 'id', 'site']);
+			exactKeys('TemplateDefaultSlotProjection site', node.site, ['expression', 'reads']);
+			return;
+		}
+		if (node.kind === 'host' || node.kind === 'fragment') node.children.forEach(visit);
+		else if (node.kind === 'branch') node.arms.forEach((arm) => arm.children.forEach(visit));
+		else if (node.kind === 'keyed-repeat') {
+			node.row.forEach(visit);
+			node.empty.forEach(visit);
+		}
+	};
+	for (const component of ir.components) {
+		component.template.forEach(visit);
+		for (const guard of component.guards)
+			if (guard.whenTrue.kind === 'template') guard.whenTrue.children.forEach(visit);
+	}
+}
+
 export function validateEnrichedIr(ir: EnrichedIR): void {
 	exactKeys('EnrichedIR', ir, [
 		'version',
@@ -374,6 +459,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 			throw new Error(`EnrichedRecordTable ${family} has malformed record family`);
 	validateHandleRecords(ir);
 	validateBehaviorRecords(ir);
+	validateCompositionNodes(ir);
 	exactKeys('ModuleRecord', ir.module, ['exports']);
 	for (const imported of ir.imports)
 		exactKeys('ModuleImport', imported, [
@@ -410,6 +496,35 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
  * ...)`, with no `proxy()` anywhere in the emitted module), so an object or
  * array default is not equivalent to defaulting at each read site.
  */
+/**
+ * STEP 5. `ModuleImport` -> the `.svelte` specifier the emitted module imports.
+ *
+ * The `.tsrx` -> `.svelte` rewrite is the same one-for-one substitution React and
+ * Solid make to `.jsx`; the extension is the lane's artifact extension and
+ * nothing else about the specifier is touched, so a relative path stays exactly
+ * as authored. `resolvesTo` is re-asserted here rather than trusted from the
+ * validator, because this is the function that turns the record into a byte.
+ */
+function moduleImportSpecifiers(ir: EnrichedIR, scopeNames: ReadonlySet<string>): Map<string, string> {
+	const specifiers = new Map<string, string>();
+	for (const imported of ir.imports) {
+		if (imported.resolvesTo !== 'tsrx-module' || !imported.source.endsWith('.tsrx'))
+			throw new Error(`ModuleImport cannot be lowered: ${imported.source}`);
+		if (imported.kind === 'namespace')
+			throw new Error(
+				`Svelte emitter has no lowering for a namespace ModuleImport: ${imported.source}`,
+			);
+		if (!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(imported.localName))
+			throw new Error(`Svelte emitter rejects the import binding ${imported.localName}`);
+		if (specifiers.has(imported.localName) || scopeNames.has(imported.localName))
+			throw new Error(
+				`Svelte emitter cannot import ${imported.localName}: the name is already bound in this module`,
+			);
+		specifiers.set(imported.localName, imported.source.replace(/\.tsrx$/, '.svelte'));
+	}
+	return specifiers;
+}
+
 function propsDeclaration(component: EnrichedComponent): Statement | null {
 	if (component.props.entries.length === 0) return null;
 	const properties = component.props.entries.map((entry) => {
@@ -953,6 +1068,16 @@ function attributesOf(node: Extract<TemplateNode, { kind: 'host' }>, indent: str
  * so the next sibling follows it directly on the same line.
  */
 function appendSibling(left: string, right: string, indent: string): string {
+	// STEP 5 ADDED THE `/>` ARM. A childless `component-reference` is the first
+	// form this printer emits that ends in a SELF-CLOSING tag, and splitting it at
+	// the final `>` alone would produce `<Dashboard /` + newline + `>`, which
+	// svelte/compiler 5.56.8 rejects outright (`expected_token >`) - measured, and
+	// it is how this arm was found. The break goes before the whole `/>` instead.
+	// No host form reaches it: void elements print `<input ...>` with no slash.
+	if (left.endsWith('/>')) {
+		const head = left.slice(0, -2).replace(/[\t ]*$/, '').replace(/\n[\t ]*$/, '');
+		return `${head}\n${indent}/>${right}`;
+	}
 	if (!left.endsWith('>')) return left + right;
 	const head = left.slice(0, -1).replace(/\n[\t ]*$/, '');
 	return `${head}\n${indent}>${right}`;
@@ -1090,9 +1215,89 @@ function renderKeyedRepeat(
 	return `{#each ${collection} as ${node.item} (${key})}${row}{/each}`;
 }
 
+/**
+ * STEP 5, COMPOSITION. A `.svelte` file IS a component, so a reference to one is
+ * a capitalised tag over an imported default binding - the same shape React and
+ * Solid print, with the specifier rewritten from `.tsrx` to `.svelte`.
+ *
+ * There is no attribute-versus-property question here (Svelte resolves props by
+ * name on a component) and no `key`, so the printer is the host printer with the
+ * host-only concerns removed.
+ */
+function renderComponentReference(
+	node: Extract<TemplateNode, { kind: 'component-reference' }>,
+	indent: string,
+	inline: boolean,
+	context: EmitContext,
+): string {
+	const name = node.target.localName;
+	// THE LANE LIMIT, ENFORCED AT THE ONE PLACE IT CAN BE OBSERVED. `module:
+	// 'self'` means "another component declared in THIS module", and a `.svelte`
+	// file has no way to declare a second component - snippets are template-only
+	// and cannot own `$state`, `$props` or a lifecycle. `emit` already refuses a
+	// multi-component module up front; this is the second, template-side face of
+	// the same refusal, so a self-reference can never reach the printer even if
+	// the front gate is ever widened.
+	if (node.target.module === 'self')
+		throw new Error(
+			`Svelte emitter has no lowering for a same-module component reference (${name}): a .svelte file declares exactly one component, and a snippet cannot own state or a lifecycle`,
+		);
+	if (!context.componentImports.has(name))
+		throw new Error(`TemplateComponentReference has no matching ModuleImport: ${name}`);
+	const attributes = node.props.map((prop) => {
+		if (!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(prop.name))
+			throw new Error(`Svelte emitter rejects the component prop name ${prop.name}`);
+		return `${prop.name}={${indentContinuation(printExpression(expression(prop.value.expression)), `${indent}\t`)}}`;
+	});
+	const singleLine = `<${name}${attributes.map((attribute) => ` ${attribute}`).join('')}`;
+	const fits =
+		!attributes.some((attribute) => attribute.includes('\n')) &&
+		width(indent, `${singleLine} />`) <= PRINT_WIDTH;
+	if (inline && !fits)
+		throw new Error(
+			`Svelte emitter cannot inline <${name}>: it sits beside text and needs a multi-line start tag`,
+		);
+	if (node.children.length === 0) return fits ? `${singleLine} />` : `${singleLine}\n${attributes.map((attribute) => `${indent}\t${attribute}`).join('\n')}\n${indent}/>`;
+	const open = fits
+		? `${singleLine}>`
+		: `<${name}\n${attributes.map((attribute) => `${indent}\t${attribute}`).join('\n')}\n${indent}>`;
+	const close = `</${name}>`;
+	if (inline || hasTextChild(node.children))
+		return open + node.children.map((child) => renderNode(child, indent, true)).join('') + close;
+	const body = joinSiblings(
+		[open, ...node.children.map((child) => renderNode(child, `${indent}\t`, false))],
+		`${indent}\t`,
+	);
+	return appendSibling(body, close, indent);
+}
+
 function renderNode(node: TemplateNode, indent: string, inline: boolean): string {
 	const context = activeContext();
 	if (node.kind === 'text') return escapeText(node.value);
+	if (node.kind === 'component-reference')
+		return renderComponentReference(node, indent, inline, context);
+	// STEP 5. The receiving side of composition. Svelte 5 delivers a component's
+	// child content as the `children` SNIPPET prop, and `{@render}` is the only
+	// construct that invokes one - so this is a singleton sanctioned set for this
+	// construct, exactly as `bind:this` was for element handles at T005, and the
+	// six-gate procedure has nothing to decide.
+	//
+	// The call is OPTIONAL. `{@render children()}` THROWS at runtime when the
+	// parent passed no children, while React's `{children}` and Solid's
+	// `{props.children}` render nothing - so the unguarded form would make this
+	// lane diverge from the oracle on exactly the case the other five treat as
+	// empty. MEASURED at svelte/compiler 5.56.8: both forms compile clean in all
+	// four client x server, dev x prod modes, so no diagnostic distinguishes them
+	// and the ruling had to come from the runtime semantics. Pinned in
+	// test/composition.test.ts.
+	if (node.kind === 'default-slot-projection') {
+		const site = expression(node.site.expression);
+		if (site.type !== 'Identifier')
+			throw new Error(
+				'Svelte emitter has no lowering for a default-slot projection that is not a plain prop read',
+			);
+		return `{@render ${printExpression(site)}?.()}`;
+	}
 	if (node.kind === 'dynamic-text')
 		return `{${indentContinuation(printExpression(expression(node.expression)), indent)}}`;
 	if (node.kind === 'fragment')
@@ -1239,16 +1444,34 @@ export function emit(ir: EnrichedIR): string {
 	validateEnrichedIr(ir);
 	if (ir.records.persistence.length)
 		throw new Error('Svelte emitter does not support persistence-bearing IR');
+	// STEP 5 SPLIT THIS GATE, the way Step 3 split the ten-way disjunction it
+	// inherited. `imports` and the `component-reference` / `default-slot-projection`
+	// template kinds are now LOWERED; the `shared` family and the multi-component
+	// module are refused BY THEIR OWN NAMES, so a reader of the message learns
+	// which construct stopped and why.
+	//
+	// THE MULTI-COMPONENT REFUSAL IS A LANE LIMIT, NOT A DEFERRAL. A `.svelte`
+	// file declares exactly one component; there is no in-file component
+	// declaration in the language at 5.56.8. A snippet is the nearest construct
+	// and is NOT a member of the sanctioned set for this one - a snippet body is
+	// template-only, cannot declare `$state`, cannot receive `$props()` and has no
+	// lifecycle, so a component with its own state or an `attach=` behavior has no
+	// snippet spelling at all. The corpus's own composition fixtures pack many
+	// components into one module (C1's `Frame` + `SlotPage`,
+	// demos/composition-kit's `dashboard.tsrx` packs three), so this refusal is
+	// load-bearing rather than theoretical, and it is RECORDED rather than forced.
+	if (ir.components.length !== 1)
+		throw new Error(
+			`Svelte emitter has no lowering for a multi-component module (${ir.components.map((component) => component.name).join(', ')}): a .svelte file declares exactly one component`,
+		);
 	if (
-		ir.components.length !== 1 ||
-		ir.imports.length ||
 		ir.records.sharedDefinitions.length ||
 		ir.records.sharedInstances.length ||
 		ir.records.sharedReads.length ||
 		ir.records.sharedCalls.length ||
 		ir.records.sharedWrites.length
 	)
-		throw new Error('Svelte emitter does not support composition or shared constructs');
+		throw new Error('Svelte emitter does not support shared constructs');
 	// STEP 4 OPENED `behaviors`. `handleForwards` STAYS REFUSED, by name: it is a
 	// CROSS-MODULE construct - it hands a child's node to a parent - which needs
 	// the composition path Step 5 owns, so a half-supported construct still cannot
@@ -1319,8 +1542,10 @@ export function emit(ir: EnrichedIR): string {
 		},
 	);
 	const behaviorPlans = behaviorPlansFor(ir, component, hostIds, scopeNames, taken);
+	const componentImports = moduleImportSpecifiers(ir, scopeNames);
 	const context: EmitContext = {
 		component,
+		componentImports,
 		eventsById: new Map(
 			ir.records.events
 				.filter((event) => event.componentId === component.id)
@@ -1352,6 +1577,15 @@ export function emit(ir: EnrichedIR): string {
 					} as Node,
 				]
 			: [];
+		// A `.svelte` module's component is its DEFAULT export - the same fact the
+		// header comment above records - so every cross-module component reference
+		// imports the default binding, whatever the IR's `ComponentExport` named it.
+		for (const [localName, source] of componentImports)
+			imports.push({
+				type: 'ImportDeclaration',
+				specifiers: [{ type: 'ImportDefaultSpecifier', local: identifier(localName) }],
+				source: { type: 'Literal', value: source, raw: `'${source}'` },
+			} as Node);
 		const script = printStatements([...imports, ...statements])
 			.split('\n')
 			.map((line) => (line === '' ? line : `\t${line}`))

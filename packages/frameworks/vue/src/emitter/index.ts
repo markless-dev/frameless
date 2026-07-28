@@ -63,6 +63,12 @@ type EmitContext = {
 	 */
 	readonly behaviorHosts: Map<string, string>;
 	readonly behaviorPlans: VueBehaviorPlan[];
+	/**
+	 * STEP 5. Local name -> emitted `.vue` specifier, one entry per `ModuleImport`
+	 * that resolves to a `.tsrx` module. A `component-reference` may only name a
+	 * key of this map; see the lane-limit note on `emit`.
+	 */
+	readonly componentImports: ReadonlyMap<string, string>;
 };
 
 type VueApi = 'computed' | 'onMounted' | 'onUnmounted' | 'ref' | 'watch';
@@ -319,6 +325,83 @@ function validateBehaviorRecords(ir: EnrichedIR): void {
 	}
 }
 
+/**
+ * STEP 5. Shape checks for the two template kinds this step made reachable, and
+ * for the prop expressions that ride a `component-reference` edge.
+ *
+ * THIS IS THE T003/T010 DEFECT CLASS AT THIS STEP'S RECORDS. Every lane that has
+ * ever opened a construct without one of these has accepted an unknown field in
+ * silence - measured at `PropDestructuringEntry` (T002), `ElementHandleBinding`
+ * and `HandleCallRecord` (T005), `BehaviorRecord` (T006) and again at
+ * `HandleCallRecord` in the SOLID lane at this step. The check is written at the
+ * same commit as the lowering so this lane never joins that list.
+ *
+ * `validateEnrichedIr` walks EVERY component, not just the emitted one, because
+ * a multi-component module is refused in `emit` rather than here: the shape of a
+ * record must not depend on whether the lane happens to be able to print it.
+ */
+function validateCompositionNodes(ir: EnrichedIR): void {
+	const visit = (node: TemplateNode): void => {
+		if (node.kind === 'component-reference') {
+			exactKeys('TemplateComponentReference', node, [
+				'kind',
+				'id',
+				'edgeId',
+				'target',
+				'props',
+				'children',
+			]);
+			if (typeof node.edgeId !== 'string' || !Array.isArray(node.props))
+				throw new Error('TemplateComponentReference has malformed construct');
+			exactKeys(
+				'TemplateComponentReference target',
+				node.target,
+				node.target.module === 'self'
+					? ['localName', 'module']
+					: ['localName', 'module', 'exportedName'],
+			);
+			if (
+				typeof node.target.localName !== 'string' ||
+				typeof node.target.module !== 'string'
+			)
+				throw new Error('TemplateComponentReference target has malformed construct');
+			for (const prop of node.props) {
+				exactKeys('ComponentPropExpression', prop, [
+					'name',
+					'kind',
+					'value',
+					'graphNodeId',
+					'path',
+				]);
+				if (
+					typeof prop.name !== 'string' ||
+					!['graph-reference', 'callback', 'serializable', 'opaque'].includes(prop.kind)
+				)
+					throw new Error('ComponentPropExpression has malformed construct');
+				exactKeys('ComponentPropExpression value', prop.value, ['expression', 'reads']);
+			}
+			node.children.forEach(visit);
+			return;
+		}
+		if (node.kind === 'default-slot-projection') {
+			exactKeys('TemplateDefaultSlotProjection', node, ['kind', 'id', 'site']);
+			exactKeys('TemplateDefaultSlotProjection site', node.site, ['expression', 'reads']);
+			return;
+		}
+		if (node.kind === 'host' || node.kind === 'fragment') node.children.forEach(visit);
+		else if (node.kind === 'branch') node.arms.forEach((arm) => arm.children.forEach(visit));
+		else if (node.kind === 'keyed-repeat') {
+			node.row.forEach(visit);
+			node.empty.forEach(visit);
+		}
+	};
+	for (const component of ir.components) {
+		component.template.forEach(visit);
+		for (const guard of component.guards)
+			if (guard.whenTrue.kind === 'template') guard.whenTrue.children.forEach(visit);
+	}
+}
+
 export function validateEnrichedIr(ir: EnrichedIR): void {
 	exactKeys('EnrichedIR', ir, [
 		'version',
@@ -380,6 +463,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 			throw new Error(`EnrichedRecordTable ${family} has malformed record family`);
 	validateHandleRecords(ir);
 	validateBehaviorRecords(ir);
+	validateCompositionNodes(ir);
 	exactKeys('ModuleRecord', ir.module, ['exports']);
 	for (const imported of ir.imports)
 		exactKeys('ModuleImport', imported, [
@@ -736,10 +820,74 @@ function propOptionsProperty(name: string, type: SerializableAstNode, optional: 
 	};
 }
 
+/**
+ * STEP 5. `ModuleImport` -> the `.vue` specifier the emitted SFC imports. Same
+ * one-for-one extension substitution React and Solid make to `.jsx`; nothing
+ * else about the specifier is touched.
+ *
+ * The binding name is additionally checked against `RESERVED_SCRIPT_NAMES` and
+ * the component's own scope, because `<script setup>` puts imports and setup
+ * bindings in ONE namespace - an import that collided would shadow a binding the
+ * template already resolves through, silently.
+ */
+function moduleImportSpecifiers(
+	ir: EnrichedIR,
+	component: EnrichedComponent,
+): Map<string, string> {
+	const specifiers = new Map<string, string>();
+	const bound = new Set<string>([
+		...RESERVED_SCRIPT_NAMES,
+		...component.props.entries.map((entry) => entry.localName),
+		...component.locals.flatMap((local) => local.names),
+	]);
+	for (const imported of ir.imports) {
+		if (imported.resolvesTo !== 'tsrx-module' || !imported.source.endsWith('.tsrx'))
+			throw new Error(`ModuleImport cannot be lowered: ${imported.source}`);
+		if (imported.kind === 'namespace')
+			throw new Error(
+				`Vue emitter has no lowering for a namespace ModuleImport: ${imported.source}`,
+			);
+		if (!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(imported.localName))
+			throw new Error(`Vue emitter rejects the import binding ${imported.localName}`);
+		if (specifiers.has(imported.localName) || bound.has(imported.localName))
+			throw new Error(
+				`Vue emitter cannot import ${imported.localName}: the name is already bound in this module`,
+			);
+		specifiers.set(imported.localName, imported.source.replace(/\.tsrx$/, '.vue'));
+	}
+	return specifiers;
+}
+
+/**
+ * STEP 5. The prop locals a `default-slot-projection` consumes, which Vue does
+ * NOT deliver as props.
+ *
+ * `<Frame>...</Frame>` hands its children to Vue's DEFAULT SLOT, not to a
+ * `children` prop, so declaring one in `defineProps` would announce an interface
+ * no caller can satisfy and leave the emitted `props` binding unread. React and
+ * Solid are the other way round - `children` really is a prop there - so this is
+ * a genuine per-lane difference in where the same authored parameter lands, and
+ * it is dropped from the declaration rather than declared and ignored.
+ *
+ * A name read BOTH as a slot site and somewhere else has no Vue spelling at all
+ * (the slot content is not a value), and is refused by name in `emit`.
+ */
+function slotProjectedPropNames(component: EnrichedComponent): Set<string> {
+	const names = new Set<string>();
+	walk(component.template, (record) => {
+		if (record.kind !== 'default-slot-projection') return;
+		const site = record.site?.expression;
+		if (site?.type === 'Identifier' && typeof site.name === 'string') names.add(site.name);
+	});
+	return names;
+}
+
 function propsDeclaration(component: EnrichedComponent): Statement | null {
-	if (component.props.entries.length === 0) return null;
+	const projected = slotProjectedPropNames(component);
+	const entries = component.props.entries.filter((entry) => !projected.has(entry.localName));
+	if (entries.length === 0) return null;
 	const names: string[] = [];
-	for (const entry of component.props.entries) {
+	for (const entry of entries) {
 		if (entry.defaultValue !== undefined)
 			throw new Error(
 				`Vue emitter has no lowering for a prop default value: ${entry.localName}`,
@@ -760,7 +908,7 @@ function propsDeclaration(component: EnrichedComponent): Statement | null {
 	// writing: annotation is per-component all-or-nothing across the corpus
 	// (RenderOnce 4/4, the other seven scenarios 0/15), so this branch is a
 	// guard against a corpus that changes, not a live split.
-	const typed = component.props.entries.every((entry) => entry.type !== undefined);
+	const typed = entries.every((entry) => entry.type !== undefined);
 	if (!typed)
 		return variable(
 			'const',
@@ -775,7 +923,7 @@ function propsDeclaration(component: EnrichedComponent): Statement | null {
 		call(identifier('defineProps'), [
 			{
 				type: 'ObjectExpression',
-				properties: component.props.entries.map((entry, index) =>
+				properties: entries.map((entry, index) =>
 					propOptionsProperty(names[index]!, entry.type!, entry.optional === true),
 				),
 			},
@@ -1543,8 +1691,19 @@ function attributesOf(node: Extract<TemplateNode, { kind: 'host' }>, indent: str
  * leading or trailing whitespace.
  */
 function isBlockLevel(node: TemplateNode): boolean {
-	if (node.kind === 'host' || node.kind === 'branch' || node.kind === 'keyed-repeat')
+	if (
+		node.kind === 'host' ||
+		node.kind === 'branch' ||
+		node.kind === 'keyed-repeat' ||
+		node.kind === 'component-reference'
+	)
 		return true;
+	// `default-slot-projection` is deliberately NOT block-level. It stands where
+	// React prints `{children}` and Solid prints `{props.children}`, both of which
+	// keep their parent on one line, and `@vue/compiler-sfc` CONDENSES the
+	// whitespace either way - so the inline classification is what keeps this
+	// lane's served payload character-for-character equal to theirs at the slot
+	// site, which is the axis s6 joined the corpus to protect.
 	if (node.kind === 'fragment') return node.children.every(isBlockLevel);
 	return false;
 }
@@ -1690,9 +1849,69 @@ function renderNode(node: TemplateNode, indent: string, inline: boolean): string
 	if (node.kind === 'branch') return renderBranch(node, indent, inline);
 	if (node.kind === 'keyed-repeat') return renderKeyedRepeat(node, indent, inline);
 	if (node.kind === 'host') return renderHost(node, indent, inline, []);
+	if (node.kind === 'component-reference') return renderComponentReference(node, indent, inline);
+	// STEP 5. `<slot />` is the only Vue construct that renders a component's
+	// default children, so this is a singleton sanctioned set and the six gates
+	// have nothing to decide - the same shape T005 recorded for `bind:this` in the
+	// Svelte lane. Vue delivers the parent's children to it with no call and no
+	// optional guard: an unfilled `<slot />` renders its fallback content, and
+	// this emitter prints none, so it renders NOTHING. That is the React and Solid
+	// behaviour for `{children}` without the Svelte lane's `?.()` problem.
+	if (node.kind === 'default-slot-projection') {
+		const site = expression(node.site.expression);
+		if (site.type !== 'Identifier')
+			throw new Error(
+				'Vue emitter has no lowering for a default-slot projection that is not a plain prop read',
+			);
+		return ['<slot />'];
+	}
 	throw new Error(
 		`Vue emitter has no lowering for template node kind ${(node as { kind: string }).kind}`,
 	);
+}
+
+/**
+ * STEP 5, COMPOSITION. `<script setup>` puts an imported binding directly in
+ * template scope, so a component reference is a PascalCase tag over the import
+ * this module already prints - no `components:` option and no resolution table.
+ */
+function renderComponentReference(
+	node: Extract<TemplateNode, { kind: 'component-reference' }>,
+	indent: string,
+	inline: boolean,
+): string[] {
+	const name = node.target.localName;
+	// The template-side face of the multi-component lane limit; see `emit`.
+	if (node.target.module === 'self')
+		throw new Error(
+			`Vue emitter has no lowering for a same-module component reference (${name}): a .vue SFC declares exactly one component`,
+		);
+	if (!activeContext().componentImports.has(name))
+		throw new Error(`TemplateComponentReference has no matching ModuleImport: ${name}`);
+	const attributes = node.props.map((prop) => {
+		assertPlainAttributeName(prop.name);
+		return `:${prop.name}="${escapeDirectiveValue(
+			indentContinuation(printExpression(expression(prop.value.expression)), `${indent}\t`),
+		)}"`;
+	});
+	const singleLine = `<${name}${attributes.map((attribute) => ` ${attribute}`).join('')}`;
+	const fits =
+		!attributes.some((attribute) => attribute.includes('\n')) &&
+		width(indent, `${singleLine} />`) <= PRINT_WIDTH;
+	if (inline && !fits)
+		throw new Error(
+			`Vue emitter cannot inline <${name}>: it sits in a text-bearing run and needs a multi-line start tag`,
+		);
+	const open = fits
+		? `${singleLine}>`
+		: `<${name}\n${attributes.map((attribute) => `${indent}\t${attribute}`).join('\n')}\n${indent}>`;
+	if (node.children.length === 0) return [fits ? `${singleLine} />` : `${open}</${name}>`];
+	const close = `</${name}>`;
+	if (inline || !node.children.every(isBlockLevel))
+		return [open + renderChildren(node.children, indent, true) + close];
+	return [
+		`${open}\n${indent}\t${renderChildren(node.children, `${indent}\t`, false)}\n${indent}${close}`,
+	];
 }
 
 /**
@@ -1742,14 +1961,27 @@ export function compileDiagnostics(source: string, filename: string): string[] {
 	const { descriptor, errors } = parse(source, { filename });
 	for (const error of errors) found.push(String(error));
 	if (found.length) return found;
-	if (!descriptor.scriptSetup)
+	// A SCRIPT BLOCK THAT IS NOT `setup` IS STILL AN ERROR - that is the Options
+	// API leaking into this lane's output, and it is what the calibration arm in
+	// test/compile-emitted.test.ts mutates for. NO SCRIPT BLOCK AT ALL IS NOT.
+	//
+	// STEP 5 MADE THAT CASE REACHABLE for the first time: a purely presentational
+	// component - `frame.tsrx` is one - has no state, no events and no props Vue
+	// declares, because its only prop is the slot-projected `children`, which this
+	// lane delivers through `<slot />` rather than through `defineProps`. Vue's own
+	// answer to that is a TEMPLATE-ONLY SFC, and `parse` drops a `<script setup>`
+	// block whose content is only whitespace, so the previous unconditional check
+	// rejected the emitter's own correct output. Measured: it did.
+	if (!descriptor.scriptSetup && descriptor.script)
 		return [`emitted Vue SFC ${filename} has no <script setup> block`];
 	if (!descriptor.template) return [`emitted Vue SFC ${filename} has no <template> block`];
 	for (const { ssr, isProd } of COMPILE_MODES) {
 		let bindings;
 		try {
-			bindings = compileScript(descriptor, { id: filename, inlineTemplate: false, isProd })
-				.bindings;
+			bindings = descriptor.scriptSetup
+				? compileScript(descriptor, { id: filename, inlineTemplate: false, isProd })
+						.bindings
+				: undefined;
 		} catch (error) {
 			found.push(`compileScript(ssr=${ssr}, prod=${isProd}): ${(error as Error).message}`);
 			continue;
@@ -1893,16 +2125,32 @@ export function emit(ir: EnrichedIR): string {
 	validateEnrichedIr(ir);
 	if (ir.records.persistence.length)
 		throw new Error('Vue emitter does not support persistence-bearing IR');
+	// STEP 5 SPLIT THIS GATE. `imports`, `component-reference` and
+	// `default-slot-projection` are LOWERED; the `shared` family and the
+	// multi-component module are refused BY THEIR OWN NAMES.
+	//
+	// THE MULTI-COMPONENT REFUSAL IS A LANE LIMIT, NOT A DEFERRAL - the same one
+	// the Svelte lane records, for the same reason and with a different escape
+	// hatch rejected. A `.vue` SFC is one component; the construct that would
+	// declare a second in the same file is `defineComponent({ setup, render })`,
+	// which abandons the `<template>` block entirely and would put this lane's
+	// output on a render-function path none of its instruments cover -
+	// `compileDiagnostics`, the SSR whitespace contract and the `ref_key`
+	// machinery T005 chose the string ref for all assume the SFC template
+	// compiler. That is outside the sanctioned set for this construct, not merely
+	// second in a tie, so the module is refused and recorded.
+	if (ir.components.length !== 1)
+		throw new Error(
+			`Vue emitter has no lowering for a multi-component module (${ir.components.map((component) => component.name).join(', ')}): a .vue SFC declares exactly one component`,
+		);
 	if (
-		ir.components.length !== 1 ||
-		ir.imports.length ||
 		ir.records.sharedDefinitions.length ||
 		ir.records.sharedInstances.length ||
 		ir.records.sharedReads.length ||
 		ir.records.sharedCalls.length ||
 		ir.records.sharedWrites.length
 	)
-		throw new Error('Vue emitter does not support composition or shared constructs');
+		throw new Error('Vue emitter does not support shared constructs');
 	// STEP 4 OPENED `behaviors`. `handleForwards` STAYS REFUSED, by name: it hands
 	// a child's node to a PARENT module, which needs the composition path Step 5
 	// owns.
@@ -1919,9 +2167,62 @@ export function emit(ir: EnrichedIR): string {
 		throw new Error(
 			`Vue emitter requires exactly one root template node (${component.name}): multiple roots compile to a Fragment, which is server-rendered with anchor comments the e2e lane would read out of the payload`,
 		);
+	// STEP 5. A slot-projected prop local is NOT a value in this lane - the content
+	// lives in the default slot - so any OTHER read of the same name has no
+	// spelling here and is refused by name rather than lowered to a `props.x` that
+	// would be `undefined` at runtime.
+	const projectedNames = slotProjectedPropNames(component);
+	if (projectedNames.size) {
+		// The projection sites are skipped by NOT DESCENDING INTO THEM. `walk` visits
+		// every nested object, so a guard inside the visitor would still let the
+		// site's own `Identifier` through and refuse every slot in the corpus -
+		// measured, on the first run of this check.
+		const readOutsideProjections = (nodes: readonly TemplateNode[], into: Set<string>): void => {
+			const collect = (value: unknown): void => {
+				walk(value, (record) => {
+					if (record.type === 'Identifier' && typeof record.name === 'string')
+						into.add(record.name);
+				});
+			};
+			for (const node of nodes) {
+				if (node.kind === 'default-slot-projection') continue;
+				if (node.kind === 'host') {
+					collect(node.dynamicBindings);
+					readOutsideProjections(node.children, into);
+				} else if (node.kind === 'fragment') readOutsideProjections(node.children, into);
+				else if (node.kind === 'component-reference') {
+					collect(node.props);
+					readOutsideProjections(node.children, into);
+				} else if (node.kind === 'branch') {
+					collect(node.expression);
+					node.arms.forEach((arm) => readOutsideProjections(arm.children, into));
+				} else if (node.kind === 'keyed-repeat') {
+					collect([node.collection, node.key]);
+					readOutsideProjections(node.row, into);
+					readOutsideProjections(node.empty, into);
+				} else collect(node);
+			}
+		};
+		const read = new Set<string>();
+		readOutsideProjections(component.template, read);
+		walk(
+			ir.records.events.filter((event) => event.componentId === component.id),
+			(record) => {
+				if (record.type === 'Identifier' && typeof record.name === 'string')
+					read.add(record.name);
+			},
+		);
+		for (const projected of projectedNames)
+			if (read.has(projected))
+				throw new Error(
+					`Vue emitter has no lowering for reading the slot-projected prop ${projected} as a value: Vue delivers child content through the default slot, not through a prop`,
+				);
+	}
 	const handleHosts = elementHandleHosts(ir, component);
+	const componentImports = moduleImportSpecifiers(ir, component);
 	const context: EmitContext = {
 		component,
+		componentImports,
 		eventsById: new Map(
 			ir.records.events
 				.filter((event) => event.componentId === component.id)
@@ -1970,13 +2271,27 @@ export function emit(ir: EnrichedIR): string {
 		const imports: Statement[] = context.usedApis.size
 			? [importDeclaration([...context.usedApis].sort(), 'vue')]
 			: [];
-		const script = printStatements([...imports, ...statements])
+		// A `.vue` SFC's component is its DEFAULT export, so every cross-module
+		// component reference imports the default binding whatever the IR's
+		// `ComponentExport` named it - the same substitution the Svelte lane makes.
+		for (const [localName, source] of componentImports)
+			imports.push({
+				type: 'ImportDeclaration',
+				specifiers: [{ type: 'ImportDefaultSpecifier', local: identifier(localName) }],
+				source: { type: 'Literal', value: source, raw: `'${source}'` },
+			} as unknown as Statement);
+		const body = [...imports, ...statements];
+		const script = printStatements(body)
 			.split('\n')
 			.map((line) => (line === '' ? line : `\t${line}`))
 			.join('\n');
+		// A TEMPLATE-ONLY SFC when there is nothing to put in the script block. An
+		// empty `<script setup>` is not a smaller version of a script block: `parse`
+		// drops it, so the emitted module would claim a setup block it does not have.
+		// See the matching arm in `compileDiagnostics`.
 		const source =
 			`<!-- @generated by @frameless/vue from ${component.name}; do not edit. -->\n` +
-			`<script setup lang="ts">\n${script}\n</script>\n\n` +
+			(body.length ? `<script setup lang="ts">\n${script}\n</script>\n\n` : '') +
 			`<template>\n\t${template}\n</template>\n`;
 		assertCompilesClean(source, `${component.name}.vue`);
 		return source;

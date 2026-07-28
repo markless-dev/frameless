@@ -117,12 +117,15 @@ describe('Angular attach behaviors', () => {
 
 	test('imports exactly the lifecycle interfaces the class implements', async () => {
 		const tracked = emit(await ir(TRACKED));
+		// `Input` IS CONDITIONAL ON AN `@Input()` MEMBER BEING PRINTED, and it was
+		// `pnpm lint` that settled that - see the note in test/refs.test.ts. Neither
+		// probe here declares a prop.
 		expect(tracked).toContain(
-			"import { type AfterViewInit, Component, type DoCheck, ElementRef, Input, type OnDestroy, type OnInit, ViewChild } from '@angular/core';",
+			"import { type AfterViewInit, Component, type DoCheck, ElementRef, type OnDestroy, type OnInit, ViewChild } from '@angular/core';",
 		);
 		const zero = emit(await ir(ZERO_INPUT));
 		expect(zero).toContain(
-			"import { type AfterViewInit, Component, ElementRef, Input, ViewChild } from '@angular/core';",
+			"import { type AfterViewInit, Component, ElementRef, ViewChild } from '@angular/core';",
 		);
 	});
 

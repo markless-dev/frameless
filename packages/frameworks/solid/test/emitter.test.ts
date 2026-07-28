@@ -1139,6 +1139,59 @@ export function Locked({ onTrace }) @{
 			);
 		});
 
+		/**
+		 * A CHECK THAT COULD ONLY RUN WHEN IT HAD NOTHING TO CHECK - the second half
+		 * of the repair T006 opened, at the two records it reported and left.
+		 *
+		 * `validateEnrichedIr` EARLY-RETURNS into `validateCompositionIr` when
+		 * `hasComposition(ir)` holds, and `hasComposition` is true the moment
+		 * `elementHandleBindings` OR `handleCalls` is non-empty - while the strict
+		 * path's `exactKeys` for both records sits AFTER that return. So each check
+		 * was unreachable for every IR that carried the record it names.
+		 *
+		 * MEASURED at 14a1e90, before the repair: a field planted on either record
+		 * was ACCEPTED SILENTLY through `validateEnrichedIr` AND through `emit()`,
+		 * and SOLID WAS THE ONLY LANE OF SIX THAT ACCEPTED IT - react, qwik, svelte,
+		 * vue and angular all named the field. The board's standing "2-versus-4
+		 * split" was 5-versus-1 here, with this lane on the wrong side of it, and
+		 * T005's recorded matrix row reading "rejects (exactKeys)" was false.
+		 */
+		test('names an unknown field on ElementHandleBinding and HandleCallRecord', async () => {
+			const source = `import { element } from "@markless/core";
+export function Search() @{
+	const input = element<HTMLInputElement>();
+	<div data-scenario="ref"><input el={input} data-action="target" /><button data-action="focus" onClick={() => input?.focus()}>focus</button></div>
+}`;
+			const lawful = await build('src/handle-records.tsrx', source);
+			// Lawful IR is green, so neither rejection below is green by accident.
+			expect(() => validateEnrichedIr(lawful)).not.toThrow();
+
+			const binding = structuredClone(lawful) as any;
+			binding.records.elementHandleBindings[0].elementType = 'HTMLInputElement';
+			expect(() => validateEnrichedIr(binding)).toThrow(
+				/ElementHandleBinding has unknown semantic field: elementType/,
+			);
+			expect(() => emit(binding)).toThrow(
+				/ElementHandleBinding has unknown semantic field: elementType/,
+			);
+
+			const handleCall = structuredClone(lawful) as any;
+			handleCall.records.handleCalls[0].awaited = true;
+			expect(() => validateEnrichedIr(handleCall)).toThrow(
+				/HandleCallRecord has unknown semantic field: awaited/,
+			);
+			expect(() => emit(handleCall)).toThrow(
+				/HandleCallRecord has unknown semantic field: awaited/,
+			);
+
+			// AND THE ROUTE IS THE ONE THAT WAS DEAD. The IR really does take the
+			// composition path - `hasComposition` is true here - so these assertions
+			// are over `validateCompositionIr`, not over the strict path that could
+			// never see them.
+			expect(lawful.records.elementHandleBindings.length).toBeGreaterThan(0);
+			expect(lawful.records.handleCalls.length).toBeGreaterThan(0);
+		});
+
 		test('fails closed when shared writes or handle linkage are incomplete', async () => {
 			const shared = structuredClone(
 				await build(

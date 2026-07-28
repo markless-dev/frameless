@@ -39,9 +39,18 @@ type EmitContext = {
 	 * this component owns. Empty for every scenario in the corpus.
 	 */
 	readonly handleHosts: ReadonlyMap<string, string>;
+	/**
+	 * STEP 5. Every name a `component-reference` may take: the local name of each
+	 * `.tsrx` `ModuleImport`, plus every component DECLARED IN THIS MODULE. Qwik
+	 * is one of the two lanes that can carry both - a `.tsx` file holds as many
+	 * `component$` declarations as the module has components - so unlike the
+	 * Svelte and Vue lanes there is no self-reference limit to record here.
+	 */
+	readonly referenceableComponents: ReadonlySet<string>;
 };
 type QwikApi =
 	| '$'
+	| 'Slot'
 	| 'component$'
 	| 'sync$'
 	| 'useComputed$'
@@ -195,6 +204,83 @@ function validateHandleRecords(ir: EnrichedIR): void {
 }
 
 /** Fail closed at the public emitter boundary before constructing output AST. */
+/**
+ * STEP 5. Shape checks for the two template kinds this step made reachable, and
+ * for the prop expressions that ride a `component-reference` edge.
+ *
+ * THIS IS THE T003/T010 DEFECT CLASS AT THIS STEP'S RECORDS. Every lane that has
+ * ever opened a construct without one of these has accepted an unknown field in
+ * silence - measured at `PropDestructuringEntry` (T002), `ElementHandleBinding`
+ * and `HandleCallRecord` (T005), `BehaviorRecord` (T006) and again at
+ * `HandleCallRecord` in the SOLID lane at this step. The check is written at the
+ * same commit as the lowering so this lane never joins that list.
+ *
+ * `validateEnrichedIr` walks EVERY component, not just the emitted one, because
+ * a multi-component module is refused in `emit` rather than here: the shape of a
+ * record must not depend on whether the lane happens to be able to print it.
+ */
+function validateCompositionNodes(ir: EnrichedIR): void {
+	const visit = (node: TemplateNode): void => {
+		if (node.kind === 'component-reference') {
+			exactKeys('TemplateComponentReference', node, [
+				'kind',
+				'id',
+				'edgeId',
+				'target',
+				'props',
+				'children',
+			]);
+			if (typeof node.edgeId !== 'string' || !Array.isArray(node.props))
+				throw new Error('TemplateComponentReference has malformed construct');
+			exactKeys(
+				'TemplateComponentReference target',
+				node.target,
+				node.target.module === 'self'
+					? ['localName', 'module']
+					: ['localName', 'module', 'exportedName'],
+			);
+			if (
+				typeof node.target.localName !== 'string' ||
+				typeof node.target.module !== 'string'
+			)
+				throw new Error('TemplateComponentReference target has malformed construct');
+			for (const prop of node.props) {
+				exactKeys('ComponentPropExpression', prop, [
+					'name',
+					'kind',
+					'value',
+					'graphNodeId',
+					'path',
+				]);
+				if (
+					typeof prop.name !== 'string' ||
+					!['graph-reference', 'callback', 'serializable', 'opaque'].includes(prop.kind)
+				)
+					throw new Error('ComponentPropExpression has malformed construct');
+				exactKeys('ComponentPropExpression value', prop.value, ['expression', 'reads']);
+			}
+			node.children.forEach(visit);
+			return;
+		}
+		if (node.kind === 'default-slot-projection') {
+			exactKeys('TemplateDefaultSlotProjection', node, ['kind', 'id', 'site']);
+			exactKeys('TemplateDefaultSlotProjection site', node.site, ['expression', 'reads']);
+			return;
+		}
+		if (node.kind === 'host' || node.kind === 'fragment') node.children.forEach(visit);
+		else if (node.kind === 'branch') node.arms.forEach((arm) => arm.children.forEach(visit));
+		else if (node.kind === 'keyed-repeat') {
+			node.row.forEach(visit);
+			node.empty.forEach(visit);
+		}
+	};
+	for (const component of ir.components) {
+		component.template.forEach(visit);
+		for (const guard of component.guards)
+			if (guard.whenTrue.kind === 'template') guard.whenTrue.children.forEach(visit);
+	}
+}
+
 export function validateEnrichedIr(ir: EnrichedIR): void {
 	exactKeys('EnrichedIR', ir, [
 		'version',
@@ -269,6 +355,7 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		if (!Array.isArray(records))
 			throw new Error(`EnrichedRecordTable ${family} has malformed record family`);
 	validateHandleRecords(ir);
+	validateCompositionNodes(ir);
 	exactKeys('ModuleRecord', ir.module, ['exports']);
 	for (const imported of ir.imports)
 		exactKeys('ModuleImport', imported, [
@@ -1191,6 +1278,56 @@ function emitEvent(event: EnrichedEventRecord, context: EmitContext): Expression
 
 function templateNode(node: TemplateNode, context: EmitContext): RenderedNode {
 	if (node.kind === 'text') return { type: 'JSXText', value: node.value, raw: node.value };
+	if (node.kind === 'component-reference') {
+		const name = node.target.localName;
+		if (!context.referenceableComponents.has(name))
+			throw new Error(
+				`TemplateComponentReference names no import or component in this module: ${name}`,
+			);
+		const attributes = node.props.map((prop) =>
+			jsxAttribute(prop.name, rewriteExpression(expression(prop.value.expression), context)),
+		);
+		const children = node.children.map((child) => templateNode(child, context));
+		const jsxName = { type: 'JSXIdentifier', name };
+		const selfClosing = children.length === 0;
+		return {
+			type: 'JSXElement',
+			openingElement: { type: 'JSXOpeningElement', name: jsxName, attributes, selfClosing },
+			closingElement: selfClosing
+				? null
+				: { type: 'JSXClosingElement', name: structuredClone(jsxName) },
+			children,
+			selfClosing,
+		};
+	}
+	// STEP 5. `<Slot />` is Qwik's dedicated content-projection construct and the
+	// only member of the sanctioned set for this one. `props.children` EXISTS in
+	// Qwik v2, but it is not the same construct: projected content in Qwik is
+	// placed by the parent's own render and must survive RESUMPTION without the
+	// child serialising it, which is exactly what `Slot` models and what reading
+	// `children` as a value does not. This lane's whole doctrine is
+	// activation-neutrality, so the form that keeps projection out of the child's
+	// serialised state is not a preference here - it is the constraint.
+	if (node.kind === 'default-slot-projection') {
+		if (expression(node.site.expression).type !== 'Identifier')
+			throw new Error(
+				'Qwik emitter has no lowering for a default-slot projection that is not a plain prop read',
+			);
+		context.imports.add('Slot');
+		const jsxName = { type: 'JSXIdentifier', name: 'Slot' };
+		return {
+			type: 'JSXElement',
+			openingElement: {
+				type: 'JSXOpeningElement',
+				name: jsxName,
+				attributes: [],
+				selfClosing: true,
+			},
+			closingElement: null,
+			children: [],
+			selfClosing: true,
+		};
+	}
 	if (node.kind === 'dynamic-text')
 		return {
 			type: 'JSXExpressionContainer',
@@ -1378,10 +1515,62 @@ function elementHandleHosts(
 	return handleHosts;
 }
 
+/**
+ * STEP 5. `ModuleImport` -> the specifier the emitted `.tsx` module imports.
+ *
+ * `.tsrx` -> `.jsx`, BYTE-FOR-BYTE THE SUBSTITUTION THE REACT AND SOLID LANES
+ * ALREADY MAKE, and deliberately not `.tsx`: the artifact on disk is `.tsx`, and
+ * TypeScript's bundler resolution maps a `.jsx` specifier onto it. Diverging
+ * here would make the three JSX lanes emit three different specifiers for one
+ * IR record, which is the opposite of what a shared IR is for.
+ */
+function moduleImportSpecifiers(ir: EnrichedIR): Map<string, string> {
+	const specifiers = new Map<string, string>();
+	const declared = new Set(ir.components.map((component) => component.name));
+	for (const imported of ir.imports) {
+		if (imported.resolvesTo !== 'tsrx-module' || !imported.source.endsWith('.tsrx'))
+			throw new Error(`ModuleImport cannot be lowered: ${imported.source}`);
+		if (imported.kind !== 'named' || typeof imported.importedName !== 'string')
+			throw new Error(
+				`Qwik emitter has no lowering for a ${imported.kind} ModuleImport: ${imported.source}`,
+			);
+		if (imported.importedName !== imported.localName)
+			throw new Error(
+				`Qwik emitter has no lowering for a renamed ModuleImport: ${imported.importedName} as ${imported.localName}`,
+			);
+		if (!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(imported.localName))
+			throw new Error(`Qwik emitter rejects the import binding ${imported.localName}`);
+		if (specifiers.has(imported.localName) || declared.has(imported.localName))
+			throw new Error(
+				`Qwik emitter cannot import ${imported.localName}: the name is already declared in this module`,
+			);
+		specifiers.set(imported.localName, imported.source.replace(/\.tsrx$/, '.jsx'));
+	}
+	return specifiers;
+}
+
+/**
+ * STEP 5. The prop locals a `default-slot-projection` consumes. Qwik places
+ * projected content through `<Slot />`, so these names are never read as values
+ * in the emitted module.
+ */
+function slotProjectedPropNames(component: EnrichedComponent): Set<string> {
+	const names = new Set<string>();
+	walk(component.template, (record) => {
+		if (record.kind !== 'default-slot-projection') return;
+		const site = record.site?.expression;
+		if (site?.type === 'Identifier' && typeof site.name === 'string') names.add(site.name);
+	});
+	return names;
+}
+
 function componentDeclaration(
 	ir: EnrichedIR,
 	component: EnrichedComponent,
-): { readonly declaration: Statement; readonly imports: ReadonlySet<QwikApi> } {
+	referenceableComponents: ReadonlySet<string>,
+	imports: Set<QwikApi>,
+	exported: boolean,
+): { readonly declaration: Statement } {
 	const componentBindings = ir.records.bindings.filter(
 		(binding) => binding.componentId === component.id,
 	);
@@ -1403,9 +1592,10 @@ function componentDeclaration(
 		)
 			local.names.forEach((name) => onceSignals.add(name));
 	}
-	const imports = new Set<QwikApi>(['component$']);
+	imports.add('component$');
 	const handleHosts = elementHandleHosts(ir, component);
 	const context: EmitContext = {
+		referenceableComponents,
 		elementHandleNames: new Set(handleHosts.values()),
 		handleHosts,
 		arrayStoreStateNames: new Set(
@@ -1597,8 +1787,16 @@ function componentDeclaration(
 		type: 'ReturnStatement',
 		argument: expressionFromNodes(component.template, context),
 	});
+	// STEP 5. A prop whose ONLY consumer is a `default-slot-projection` is not a
+	// props parameter in this lane: `<Slot />` takes its content from the parent's
+	// render, so declaring the parameter would leave it unread. Same reasoning the
+	// Vue lane applies to `defineProps`, reached from a different construct.
+	const slotProjected = slotProjectedPropNames(component);
+	const declaredProps = component.props.entries.filter(
+		(entry) => !slotProjected.has(entry.localName),
+	);
 	const callback = arrow(
-		component.props.entries.length ? [identifier(context.propsName)] : [],
+		declaredProps.length ? [identifier(context.propsName)] : [],
 		block(body),
 		{ expression: false },
 	);
@@ -1613,14 +1811,15 @@ function componentDeclaration(
 			},
 		],
 	};
+	// STEP 5. Only the components the IR's `ModuleRecord` actually exports get an
+	// `export`. A `.tsx` module carries as many `component$` declarations as it
+	// has components, and a non-exported one is module-private exactly as it is in
+	// the authored `.tsrx` - the same shape the React and Solid lanes already
+	// print for C1's `Frame`.
 	return {
-		declaration: {
-			type: 'ExportNamedDeclaration',
-			declaration,
-			specifiers: [],
-			source: null,
-		},
-		imports,
+		declaration: exported
+			? { type: 'ExportNamedDeclaration', declaration, specifiers: [], source: null }
+			: declaration,
 	};
 }
 
@@ -1653,16 +1852,20 @@ export function emit(ir: EnrichedIR): string {
 		throw new Error(
 			'Qwik emitter does not support persistence-bearing IR; persistence-on-Qwik is deferred',
 		);
+	// STEP 5 SPLIT THIS GATE. `imports`, `component-reference` and
+	// `default-slot-projection` are LOWERED, and so is the MULTI-COMPONENT MODULE:
+	// a `.tsx` file holds as many `component$` declarations as the module has
+	// components, so this lane has no counterpart to the one-component-per-file
+	// limit the Svelte and Vue lanes record. Only the `shared` family stays
+	// refused, and now by its own name.
 	if (
-		ir.components.length !== 1 ||
-		ir.imports.length ||
 		ir.records.sharedDefinitions.length ||
 		ir.records.sharedInstances.length ||
 		ir.records.sharedReads.length ||
 		ir.records.sharedCalls.length ||
 		ir.records.sharedWrites.length
 	)
-		throw new Error('Qwik emitter does not support composition or shared constructs');
+		throw new Error('Qwik emitter does not support shared constructs');
 	// `handleForwards` hands a child's node to a PARENT module, which needs the
 	// composition path Step 5 owns. It stays refused by name.
 	if (ir.records.handleForwards.length)
@@ -1705,10 +1908,26 @@ export function emit(ir: EnrichedIR): string {
 		throw new Error(
 			'Qwik emitter does not support element attach behaviors: the only Qwik construct that runs application code against a mounted node is the visible-lifecycle family, which this lane bans as eager client work, and the ref prop is applied only by the client vnode diff (never by dist/server.mjs) so it does not run for resumed markup',
 		);
-	const component = ir.components[0]!;
-	const { declaration, imports } = componentDeclaration(ir, component);
+	const componentImports = moduleImportSpecifiers(ir);
+	const referenceableComponents = new Set<string>([
+		...componentImports.keys(),
+		...ir.components.map((entry) => entry.name),
+	]);
+	const exportedNames = new Set(ir.module.exports.map((entry) => entry.componentName));
+	const imports = new Set<QwikApi>();
+	const declarations = ir.components.map(
+		(component) =>
+			componentDeclaration(
+				ir,
+				component,
+				referenceableComponents,
+				imports,
+				exportedNames.has(component.name),
+			).declaration,
+	);
 	const orderedApis = [
 		'$',
+		'Slot',
 		'component$',
 		'sync$',
 		'useComputed$',
@@ -1727,10 +1946,17 @@ export function emit(ir: EnrichedIR): string {
 			})),
 		source: literal('@qwik.dev/core'),
 	};
+	const moduleImports = [...componentImports].map(([localName, source]) => ({
+		type: 'ImportDeclaration',
+		specifiers: [
+			{ type: 'ImportSpecifier', imported: identifier(localName), local: identifier(localName) },
+		],
+		source: literal(source),
+	}));
 	const source = `// @generated by @frameless/qwik; do not edit.\n${printTopLevel({
 		type: 'Program',
 		sourceType: 'module',
-		body: [importDeclaration, declaration],
+		body: [importDeclaration, ...moduleImports, ...declarations],
 	})}\n`;
 	if (/\buseVisibleTask\$\b|\bonQVisible\$\b/.test(source))
 		throw new Error('Qwik emission introduced a forbidden visible task');

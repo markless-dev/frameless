@@ -20,6 +20,7 @@ import {
 } from '../src/gate/index.ts';
 import { emit } from '../src/emitter/index.ts';
 import { formatEmitted } from '../src/format-emitted.ts';
+import { compositionFixtures } from '../scripts/regenerate-composition.ts';
 
 /**
  * THE SCENARIO INVENTORY IS DERIVED, NOT RE-LITERALLED.
@@ -111,16 +112,14 @@ export function Mutant({ items = [] }) {
 
 const dossierRef =
 	/^(?:T002 ruling \d+|T004 §3\.1 R-[A-Z]+\d+|T002-persistence-architecture Decision 6)$/;
-const compositionNames = [
-	'C1-slot',
-	'C2-shared',
-	'C3-ref',
-	'C4-attach',
-	'C5-props',
-	'C6-scalar-context',
-	'C7-object-context',
-	'C8-page-store',
-] as const;
+// DERIVED FROM THE REGENERATION SCRIPT, NOT RE-HARDCODED. This was a literal
+// list duplicating `compositionFixtures`, and Step 5's two-module fixtures made
+// the duplication fail loudly - which is the good outcome, but the repair is to
+// remove the second source of truth rather than to retype it. Same reasoning
+// `emitted-typecheck.test.ts` already records for its own derived inventory:
+// a hand-edited list cannot tell "a fixture was added" from "a fixture went
+// missing and another appeared".
+const compositionNames = compositionFixtures;
 const compositionArtifacts = new Map<string, EnrichedIR>();
 const compositionSources = new Map<string, string>();
 for (const name of compositionNames) {
