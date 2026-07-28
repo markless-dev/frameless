@@ -397,16 +397,16 @@ function rewriteScript(
  * this lane discharges the version corollary by emitting only baseline-safe
  * forms - and `props.multiplier` means the same thing at every Vue 3 version.
  *
- * `defineModel()` IS ALSO REFUSED HERE, and it now has a ruling of record rather
- * than an inherited sentence: `docs/emitter-idiom-policy.md` WORKED EXAMPLE 12b,
- * ruled by `frameless-vue-v1` T009 and folded by T010. Denied at Gate 5 - the
- * deciding gate - with Gates 3, 4 and 6 denying independently and Gates 1 and 2
- * PASSING. This function's array is exactly 12b's domain: fifteen printed
- * `PropDestructuringEntry` values across the six goldens, six distinct names, and
- * the sugar applies to ZERO of them, because every prop entry shares one graph
- * node (`prop:props`, `writable: false`, zero writes) so per-prop write-back has
- * no channel in the IR. That gap is IR-1, and it is NOT the IR-8 gap two
- * paragraphs up: 12b's is a missing per-prop IDENTITY, IR-8's a missing TYPE.
+ * `defineModel()` IS ALSO REFUSED HERE, on a ruling of record:
+ * `docs/emitter-idiom-policy.md` WORKED EXAMPLE 12b (T009/T010, re-derived T012),
+ * DENIED at the deciding Gate 5; Gates 3, 4 and 6 deny independently, 1 and 2 PASS.
+ * This array IS 12b's domain, and ITS SIZE IS NOT A LITERAL THIS COMMENT OWNS:
+ * `derivePrintedPropEntries()` in `test/gate.test.ts` counts it off the goldens,
+ * THROWS on empty, and pins the shipped message to it - today SEVENTEEN values, six
+ * distinct names, seven goldens, corpus-derived and CHECKED THERE, not restated
+ * here. ZERO are in reach BY CONSTRUCTION: one shared `prop:props` node
+ * (`writable: false`, zero writes) leaves per-prop write-back no IR channel - a
+ * missing per-prop IDENTITY (IR-1), not IR-8's TYPE.
  * IR-4 is NOT why this is refused - `v-model` and `defineModel` FAIL four gates
  * at the version this repo ships, and FAIL outranks DEFERRED.
  */

@@ -169,7 +169,7 @@ visual_board:
     url: null
     command: "npx goalbuddy board docs/goals/frameless-vue-v1"
 
-active_task: T013
+active_task: T014
 
 tasks:
   - id: T001
@@ -1497,7 +1497,7 @@ tasks:
   - id: T013
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: low
     spec: "T012 receipt - AUTHORITATIVE."
     objective: "Correct the stale corpus count in propsDeclaration's doc comment, the last surviving instance of the defect T012 removed."
@@ -1522,6 +1522,97 @@ tasks:
       - "Need files outside allowed_files."
       - "Any non-comment line changes, or any emitted byte moves."
       - "You are about to restate a bare number without pointing at the derivation. That reintroduces exactly what T012 removed."
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T013-stale-count.md
+      summary: "Replaced propsDeclaration's stale literal ('fifteen across six goldens') with a POINTER to the derivation in test/gate.test.ts, which counts the domain off the goldens and throws on empty. The figure is still stated - seventeen values, six distinct names, seven goldens - but explicitly marked corpus-derived and CHECKED THERE, not owned by the comment, so the eighth scenario moves the derivation rather than silently falsifying prose. ZERO is marked BY CONSTRUCTION, preserving T012's distinction."
+      it_re_derived_and_agreed: "Counted 17 entries across 7 goldens with 6 distinct names INDEPENDENTLY off packages/compiler/test/goldens (s1=4, s2=2, s3=2, s4=2, s5=2, s6=3, s7=2), rather than inheriting T012's figures or the dispatch's. Agrees on all three. The card said a disagreement would BE the finding; there was none, which is worth recording as a confirmation rather than a non-event."
+      THE_SCOPE_DISCIPLINE_IS_THE_REAL_RESULT: "docs/emitter-idiom-policy.md cites this emitter by BARE LINE ORDINAL at :478 and :1317 (pointing at propsDeclaration:413) and at :1230/:1303 (pointing at :828/:934/:947) - AND THAT DOC IS OUTSIDE THIS CARD'S allowed_files. So growing the comment by even ONE LINE would have falsified four citations it could not repair: the same defect class one level up, and exactly the +13 drift T012 had just finished cleaning. THE WORKER HELD THE REPLACEMENT TO EXACTLY TEN LINES FOR TEN. PM VERIFIED: git diff --stat is 10 insertions / 10 deletions, propsDeclaration is still at 413 and renderNode still at 934. It also RECORDED THE COST rather than hiding it - a dropped clause and compressed provenance, to fit the pointer, the derived figures, the by-construction zero and the IR-1/IR-8 distinction into the same ten lines."
+      two_more_stale_counts_found_and_reported_not_fixed: "The card said report, do not widen, and it did. (1) index.ts:686-687 claims 'zero instances across all TWELVE existing goldens'. THE ZERO HOLDS - re-measured, stopPropagation in 0 of 7, only preventDefault, 8 times in s3 - but 'twelve' NEVER MATCHED THIS CORPUS: written at 5ca20c7 when the goldens directory held THREE files. It has been wrong since the day it was written, in both directions at different times. (2) index.ts:658 'byte-identical SSR HTML for all THREE scenario components' - a dated measurement phrased as COVERAGE. Both carded as T014."
+      the_standing_suggestion_is_worth_acting_on: "SECOND CONSECUTIVE TASK TO PAY A PROSE TAX to the policy's bare line ordinals. They buy nothing - every citation already names its symbol, which is what a reader navigates by - and they impose an EDIT-TIME LINE BUDGET on any comment above them. T014 now covers dropping them alongside the two stale counts."
+      changed_files:
+        - packages/frameworks/vue/src/emitter/index.ts
+        - docs/goals/frameless-vue-v1/notes/T013-stale-count.md
+      commands:
+        - cmd: "git status --porcelain && git rev-parse HEAD origin/main"
+          status: pass
+          note: "clean at 8b9d9e2 and MATCHING ORIGIN - the Worker checked the tree itself for the fifth card running"
+        - cmd: "node -e '<independent count over packages/compiler/test/goldens>'"
+          status: pass
+          note: "17 entries / 7 goldens / 6 distinct names - re-derived, agrees with T012"
+        - cmd: "pnpm test"
+          status: pass
+          note: "989 passed, 51 files - unchanged"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors"
+        - cmd: "regenerate && git diff --exit-code -- packages/frameworks/vue/generated"
+          status: pass
+          note: "clean; PM re-verified"
+        - cmd: "git diff | filter non-comment added lines"
+          status: pass
+          note: "EMPTY; PM re-ran independently - 0 non-comment added lines"
+        - cmd: "git diff --stat"
+          status: pass
+          note: "10 insertions, 10 deletions - LINE-NEUTRAL BY DESIGN; PM verified propsDeclaration still at 413 and renderNode at 934"
+      deviations:
+        - "Held the replacement LINE-NEUTRAL rather than expanding it, to avoid falsifying four out-of-scope citations - see above."
+        - "Cost of that neutrality, recorded rather than hidden: dropped the clause 'rather than an inherited sentence' and compressed provenance to '(T009/T010, re-derived T012)'."
+      remaining_blockers:
+        - "index.ts:686-687 'twelve existing goldens' and index.ts:658 'three scenario components' - reported not fixed per the card, carded as T014 together with dropping the policy's bare line ordinals."
+      spawned_tasks:
+        - T014
+      stopped_because: null
+  - id: T014
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: medium
+    spec: "T013 receipt remaining_blockers - AUTHORITATIVE."
+    objective: >-
+      Fix the last two stale corpus counts in the Vue emitter AND remove the bare line ordinals from
+      docs/emitter-idiom-policy.md's citations, which are the reason the previous two cards had to
+      pay a line budget.
+    why_the_ordinals_go: >-
+      TWO CONSECUTIVE TASKS HAVE NOW PAID A PROSE TAX TO THEM. The policy cites
+      packages/frameworks/vue/src/emitter/index.ts by BARE LINE ORDINAL at :478, :1230, :1303 and
+      :1317. T012 had to correct six of them after a comment insertion shifted everything by +13,
+      and T013 then had to hold its replacement to EXACTLY TEN LINES FOR TEN - dropping a clause and
+      compressing provenance to fit - because growing the comment by one line would have falsified
+      four citations that were outside its allowed_files. THE ORDINALS BUY NOTHING: every citation
+      ALREADY NAMES ITS SYMBOL, which is what a reader actually navigates by. They are
+      drift-by-construction and they impose an edit-time line budget on every comment above them.
+    the_two_stale_counts: >-
+      (1) index.ts:686-687 reads "zero instances across all TWELVE EXISTING GOLDENS". THE ZERO
+      HOLDS - T013 re-measured: stopPropagation appears in 0 of 7 goldens, and only preventDefault
+      appears, 8 times in s3. But "twelve" NEVER MATCHED THIS CORPUS: the line was written at
+      5ca20c7, when packages/compiler/test/goldens/ held THREE files. It has been wrong since the
+      day it was written, in both directions at different times.
+      (2) index.ts:658 reads "byte-identical SSR HTML for all THREE scenario components" - a dated
+      T005 measurement phrased as COVERAGE, which now reads as a claim about a seven-scenario
+      corpus. Lower confidence than (1); re-measure before rewording.
+    constraints:
+      - "Do NOT restate a bare count for either. Point at a derivation or state the measurement WITH ITS DATE AND SCOPE, so the eighth scenario cannot silently falsify it - the T012/T013 pattern."
+      - "Replace each policy citation's bare ordinal with the SYMBOL NAME it already carries. Do not renumber, restructure or re-score any worked example."
+      - "Documentation and comments only. No behaviour, no assertion, no golden may move."
+    allowed_files:
+      - packages/frameworks/vue/src/emitter/index.ts
+      - docs/emitter-idiom-policy.md
+      - docs/goals/frameless-vue-v1/notes/T014-citation-ordinals.md
+    verify:
+      - "pnpm test"
+      - "pnpm lint"
+      - "node packages/frameworks/vue/scripts/regenerate.ts && git diff --exit-code -- packages/frameworks/vue/generated"
+      - "git diff -- packages/frameworks/vue/src/emitter/index.ts | grep '^+' | grep -v '^+++' | grep -vE '^\\+\\s*(//|\\*|/\\*)' | grep -vE '^\\+\\s*$'   # MUST be EMPTY"
+      - "grep -nE 'index\\.ts:[0-9]+' docs/emitter-idiom-policy.md   # must return NOTHING for the vue emitter"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Any non-comment line changes in the emitter, or any emitted byte moves."
+      - "You are about to restate a bare corpus count without a derivation or a dated scope."
+      - "Re-measuring (2) shows the SSR claim is false rather than merely stale-scoped. That is a FINDING about a T005 measurement - report it verbatim and stop."
+      - "You are about to renumber or re-score a worked example while editing citations."
     receipt: null
 
   - id: T999
