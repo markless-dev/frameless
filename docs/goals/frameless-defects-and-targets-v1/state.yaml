@@ -131,7 +131,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T039
+active_task: T030
 
 tasks:
   - id: T001
@@ -3691,7 +3691,7 @@ tasks:
   - id: T039
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     spec: "T038 receipt and docs/goals/frameless-defects-and-targets-v1/notes/T038-whitespace-ruling.md - AUTHORITATIVE."
     serialization_hold: >-
@@ -3762,12 +3762,59 @@ tasks:
       - "Register a CROSS-LANE MATRIX TEST recording, per lane and pinned version, what happens to a space run AND to a single U+00A0 - so a version bump that moves ANY lane goes red here. FILL THE ONE UNMEASURED CELL: Qwik on non-ASCII whitespace, which T038 could not measure because @qwik.dev/core exposes no callable transform on its optimizer subpath."
       - "Add docs/DEFECTS.md entry 7 as an OPEN defect in frameless's OWN emitted output, with the LIFT TRIGGER: the v-limit may be removed when all six lanes are measured to render an interior whitespace run byte-identically at pinned versions, and the matrix test re-opens the ruling if ANY single lane moves in EITHER direction."
       - "RULED OUT OF SCOPE, recorded so a later Worker does not churn: no gate whitespace predicates in any of the six; no change to text-node edge handling; no change to normalizeJsxText's tab/newline mapping."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T039-whitespace-v-limit.md
+      summary: "Landed the interior-whitespace refusal as a FAIL-CLOSED v-limit in build.ts immediately after normalizeJsxText, carrying the source file, the value and its code points, naming the three-of-six split and the interpolated portable spelling, and explicitly warning AGAINST NBSP. Added a two-sided calibration suite and a registered six-lane matrix test; added DEFECTS.md entry 7 as the only OPEN defect in frameless's own output with its lift trigger; added the Solid gate's recorded measurement with NO predicate. All figures re-derived; five mutants killed."
+      THE_QWIK_CELL_IS_FILLED_AND_THE_DIRECTION_STRENGTHENS_THE_RULING: "T038 could not measure Qwik on non-ASCII whitespace because @qwik.dev/core 2.0.0-beta.38's ./optimizer subpath exports only qwikVite and qwikRollup. That was accurate, and THE WORKER FOUND THE ROUTE AROUND IT rather than accepting the hole: dist/optimizer.mjs loads its own binding via import('@qwik.dev/optimizer'), which is linked into core's own node_modules, so resolving THROUGH CORE reaches createOptimizer() - whose transformModules is the transform the Qwik lane's build actually runs. No dependency added, no store path hard-coded. RESULT: QWIK PRESERVES the space run AND U+00A0, U+2009, U+3000, U+2007 and U+200B, byte for byte. It lands on the preserving side of the 5-1 split. AND THE WORKER NAMED WHY THE DIRECTION MATTERS: had it come back CONDENSE, the split would have been 4-2 and T038's 'Solid is alone' argument would have needed re-examination. A filled cell that could have refuted the ruling and did not is worth more than one that could only confirm it."
+      THE_INSTRUMENT_WAS_SHOWN_TO_FAIL_FIVE_WAYS: "This guard fires on NOTHING in the current corpus, so its calibration is the only thing that makes it real - and the Worker treated it that way. Five mutants, all killed: guard body replaced with an unconditional return (4 failed); predicate reduced to /\\s\\s/ only (1 failed); predicate reduced to /[^\\S ]/ only (3 failed); THE FORBIDDEN \\s+ -> ' ' CONDENSE planted in normalizeJsxText (4 failed); one matrix cell moved (1 failed, printing the six pinned versions). BOTH HALVES OF THE PREDICATE ARE INDEPENDENTLY LOAD-BEARING, and the move T038 feared most - the one-line condense, which would make the guard silently unreachable - is the one the suite catches loudest. PM INDEPENDENTLY REPRODUCED the first mutant: disabling the guard yields exactly 4 failures, matching the Worker's figure, and the restored file is green at 48/48."
+      it_re_derived_rather_than_inheriting_and_then_re_ran_after_the_change: "The 0-of-108 figure was reproduced TO THE DIGIT (60 files, 3 pre-existing unrelated compile errors, 4 edge violations at exactly the four named demo texts) - and then RE-RUN AFTER the guard landed, identical. That second run is the one that matters: it proves the refusal fires on nothing real, rather than proving only that it did not before it existed."
+      it_corrected_the_ruling_it_was_implementing: "T038 section 1.1 records Solid + ZWSP as 'survives'. TRUE OF THE CHARACTER, MISLEADING ABOUT THE SOURCE: Solid emits U+200B into the generated template literal as a backslash-u ESCAPE, so a byte comparison of generated source reports a difference. It is a spelling change, not a substitution. Stated explicitly in the gate comment so the next person to run the probe does not read the escape as a rewrite. That is the fourth correction-to-a-predecessor this chain has produced, and every one came from someone re-running rather than reading."
+      changed_files:
+        - packages/compiler/src/build.ts
+        - packages/compiler/test/enriched-ir.test.ts
+        - packages/frameworks/solid/src/gate/index.ts
+        - docs/DEFECTS.md
+        - docs/goals/frameless-defects-and-targets-v1/notes/T039-whitespace-v-limit.md
+      commands:
+        - cmd: "git status --short (pre-edit)"
+          status: pass
+          note: "clean at 6190058 - VERIFIED rather than trusted, after the PM twice gave a stale concurrency statement this session"
+        - cmd: "corpus scan: every live .tsrx through buildEnrichedIr"
+          status: pass
+          note: "re-derived 0/108 interior, 4 edge, 3 pre-existing errors; RE-RUN POST-GUARD, identical"
+        - cmd: "six-lane whitespace probe through each lane's own pinned compiler"
+          status: pass
+          note: "3-3 on a space run; 5-1 on U+00A0 with Solid alone; QWIK NBSP CELL FILLED = PRESERVE"
+        - cmd: "mutation runs x5"
+          status: pass
+          note: "all killed: 4/1/3/4/1 failures. PM independently reproduced the guard-off mutant at exactly 4"
+        - cmd: "pnpm check"
+          status: pass
+        - cmd: "pnpm test"
+          status: pass
+          note: "957 passed, up from 947 (+10); PM re-ran and confirms 957"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 367 files"
+        - cmd: "git diff --exit-code over all six generated/ and packages/compiler/test/goldens"
+          status: pass
+          note: "guard-only change - emitted output and goldens did NOT move. PM re-verified"
+        - cmd: "git status --short"
+          status: pass
+          note: "exactly the five allowed files; not committed"
+      deviations:
+        - "The matrix asserts BEHAVIOUR strictly and RECORDS versions in the failure message rather than asserting them. svelte, @vue/compiler-sfc and @angular/compiler are pinned with carets, so asserting exact versions would go red on every unrelated patch bump - an expected red nobody reads, which is how a real red gets ignored. The card's trigger is 'a bump that MOVES a lane', and the behaviour assertion is exactly that."
+        - "The pre-existing S6 test asserting 'two  spaces' and 'a   b' survive into the IR necessarily collided with the refusal. AMENDED RATHER THAN DELETED: the tab-run measurement it carried (tab\\t\\there -> 'tab  here') is preserved by reading the value back out of the refusal message, which is now the only place the manufactured value is observable. Deleting it would have silently discarded the measurement that proves the compiler manufactures the construct."
+        - "Corrected one row of the ruling's own text - Solid + ZWSP. See above."
+      remaining_blockers: []
+      stopped_because: null
   - id: T030
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
     spec: "T024 ruling - AUTHORITATIVE."
     depends_on: ["T027"]
@@ -3780,11 +3827,89 @@ tasks:
       present-vs-absent-vs-"false" divergence, adjacent to the exact bug class the Option D chain
       spent two audits on. R1 on the Angular board - whether a property binding reaches the served
       attribute - is this axis, and it was measured on ONE control.
+    allowed_files:
+      - packages/compiler/test/fixtures/s7-form-controls.tsrx
+      - packages/compiler/test/goldens/s7-form-controls.json
+      - packages/compiler/test/enriched-ir.test.ts
+      - packages/frameworks/react/scripts/regenerate.ts
+      - packages/frameworks/react/generated/S7.jsx
+      - packages/frameworks/solid/scripts/regenerate.ts
+      - packages/frameworks/solid/generated/S7.jsx
+      - packages/frameworks/qwik/scripts/regenerate.ts
+      - packages/frameworks/qwik/generated/S7.jsx
+      - packages/frameworks/svelte/scripts/regenerate.ts
+      - packages/frameworks/svelte/generated/S7.svelte
+      - packages/frameworks/vue/scripts/regenerate.ts
+      - packages/frameworks/vue/generated/S7.vue
+      - packages/frameworks/angular/scripts/regenerate.ts
+      - packages/frameworks/angular/generated/S7.ts
+      - packages/frameworks/react/test/size.test.ts
+      - packages/frameworks/solid/test/size.test.ts
+      - demos/react-official/package.json
+      - demos/react-official/src/App.jsx
+      - demos/react-official/src/emitted/FormBoard.jsx
+      - demos/react-official/scenarios.box.ts
+      - demos/react-official/three-way-contract.ts
+      - demos/solid-official/package.json
+      - demos/solid-official/src/App.jsx
+      - demos/solid-official/src/emitted/FormBoard.jsx
+      - demos/solid-official/scenarios.box.ts
+      - demos/qwik/package.json
+      - demos/qwik/src/emitted/FormBoard.jsx
+      - demos/qwik/src/routes/s7/index.tsx
+      - demos/qwik/scenarios.box.ts
+      - demos/svelte-official/package.json
+      - demos/svelte-official/src/lib/emitted/FormBoard.svelte
+      - demos/svelte-official/src/lib/scenario-props.ts
+      - demos/svelte-official/src/routes/s7/+page.svelte
+      - demos/svelte-official/scenarios.box.ts
+      - demos/vue-official/package.json
+      - demos/vue-official/src/emitted/FormBoard.vue
+      - demos/vue-official/src/App.vue
+      - demos/vue-official/src/scenario-props.ts
+      - demos/vue-official/scenarios.box.ts
+      - demos/angular-official/package.json
+      - demos/angular-official/src/emitted/FormBoard.ts
+      - demos/angular-official/src/app/app.routes.ts
+      - demos/angular-official/src/app/scenario-props.ts
+      - demos/angular-official/scenarios.box.ts
+      - scripts/e2e.mjs
+      - scripts/corpus-mutation.mjs
+      - docs/goals/frameless-defects-and-targets-v1/notes/T030-corpus-s7-form-controls.md
+    verify:
+      - "UPDATE_GOLDENS=1 pnpm test, then pnpm test WITHOUT it   # golden created then proven stable"
+      - "pnpm --dir packages/frameworks/react/ regenerate"
+      - "pnpm --dir packages/frameworks/solid/ regenerate"
+      - "pnpm --dir packages/frameworks/qwik/ regenerate"
+      - "pnpm --dir packages/frameworks/svelte/ regenerate"
+      - "pnpm --dir packages/frameworks/vue/ regenerate"
+      - "pnpm --dir packages/frameworks/angular/ regenerate"
+      - "pnpm check"
+      - "pnpm lint"
+      - "pnpm test"
+      - "pnpm test:browser   # react 60, solid 49, svelte 13, vue 18"
+      - "pnpm e2e   # 6 demos x 7 scenarios, all observations equal"
+      - "shasum the six new generated/S7.* across a SECOND regenerate   # git diff --exit-code is VACUOUS for untracked files"
+      - "git diff --exit-code -- packages/frameworks/*/generated   # covers S1-S6"
+      - "git status --short"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "S7 lands in fewer than SIX lanes."
+      - "Any lane emitter THROWS on the S7 IR - S7 was ratified capability-free; a throw falsifies that."
+      - "The S7 IR carries ANY zero-read site. S4, S5 and S6 are all zero."
+      - "THE NEW WHITESPACE V-LIMIT FIRES on your fixture. It refuses interior whitespace runs and non-U+0020 whitespace in static text. That is a CORRECT refusal - author the text without interior runs, or carry the whitespace as an interpolated value, which all six lanes preserve. Do NOT weaken the guard."
+      - "A ratified mutant cannot be made RED in some lane - record lane, axis and mutant verbatim as an open FINDING."
+      - "Any mutant is byte-identical to its input - mutate() must THROW."
+      - "Any EXISTING golden moves, or the 36/36 degrades."
+      - "THE SOLID GATE'S show-two-arm POLICY rejects an element subtree appearing verbatim in both arms of a Show, and its prescribed remedy - hoist out of the branch - is unavailable to a scenario whose claim is about the branch contents. If S7 uses a branch, its arms must differ structurally. Inherited from S5, measured."
+      - "You are about to weaken an activation-neutrality assertion or relax expectedNavigations."
+      - "You are about to run pnpm mutate:corpus. It refuses a dirty surface and --dry-run does NOT bypass that check. Report both harness commands as blocked; the PM runs them after committing. Do NOT commit or rewrite history to work around it."
+      - "Verification fails twice for the same reason."
     constraints:
-      - "allowed_files follow the T025/T026/T027 shape with s7-form-controls / S7 / FormBoard substituted, plus whatever additional demo route files the six scaffolds require."
-      - "The PM fills allowed_files and verify from the landed T027 card's actual shape rather than predicting them, because the first three batches will have taught what the real file set is."
-    receipt: null
-
+      - "TWO axes deliberately folded into one scenario because they share a host. Form controls: radio, select, textarea, multi-checkbox - in one night this repo hit React's defaultValue attribute rewrite, Svelte's remove_input_defaults and Solid's attr:, THREE frameworks behaving three ways on the ONE control currently tested. Boolean/dynamic attributes: the present-vs-absent-vs-\"false\" divergence, adjacent to the exact bug class the Option D chain spent two audits on."
+      - "R1 on the Angular board - whether a property binding reaches the served attribute - IS this axis, and it was measured on ONE control. S7 is where it gets a population."
+      - "Record S7's size budget in both size.test.ts files. A budget is a RECORDED MEASUREMENT and cannot be derived; every scenario needs one."
+      - "The corpus INVENTORIES are derived and should pick S7 up with ZERO edits. If any needs a hand edit, that is a defect in the derivation and a FINDING."
   - id: T031
     type: worker
     assignee: Worker
