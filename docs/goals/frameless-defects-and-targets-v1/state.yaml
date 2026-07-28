@@ -131,7 +131,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T043
+active_task: T041
 
 tasks:
   - id: T001
@@ -3579,6 +3579,15 @@ tasks:
       strings are byte-identical cross-lane; 48 recorded mutants each have a NAMED RED SITE; the
       mutation harness is calibrated TWO-SIDED on the pre-existing s1-s3; and no two scenarios
       duplicate a divergence axis.
+    THE_EXPLICIT_ANSWER_T043_GAVE_SO_THIS_AUDIT_NEED_NOT_INFER_IT: >-
+      PHASE F CLOSES AT EIGHT if T045, T046 and T047 all land with witnessed RED calibrations and
+      the re-specified S8 then lands in six lanes. IT CLOSES AT SEVEN, with a documented measured
+      refusal NAMING LANE, FILE, LINE AND VERBATIM MESSAGE, if any of the three is refused or fails
+      calibration. Either way HALF 1's ORACLE DOES NOT EXTEND - the T038 precedent, which ruled the
+      whitespace finding did not extend it either.
+      DO NOT let the eighth scenario's status pass unmentioned in either direction. T031 measured it
+      unlandable and T043 refuted that measurement; an audit that records neither would be the third
+      pass over this question and the least informed.
     constraints:
       - "Do not implement."
       - "REJECT IF THE CORPUS GREW BUT THE MUTATION BUDGET WAS NOT PROVEN RED PER LANE. That is volume, not coverage, and it is the specific failure this phase was designed against."
@@ -4165,7 +4174,7 @@ tasks:
   - id: T043
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     spec: "T031 receipt and notes/T031-corpus-s8-async.md - AUTHORITATIVE."
     depends_on: ["T044"]
@@ -4200,12 +4209,178 @@ tasks:
       - "Whether S8 is re-specified or Phase F closes at seven"
       - "Which findings become DEFECTS.md entries, and whether half 1's oracle extends"
       - "Worker packages, or an explicit hand-off to the capability goal"
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      harness: claude-code
+      note: notes/T043-async-axis.md
+      rationale: "T031's IMPOSSIBILITY PROOF IS REFUTED. It is valid arithmetic over INVALID PREMISES - it treats two emitter BUGS as fixed points and never enumerated the one authoring that clears both REAL v-limits. Awaiting a promise-valued prop emits correctly in qwik, svelte and vue TODAY; only React (one boolean in a discarded scratch wrapper) and Solid (an accidental flag check, blame-traced to an abandoned commit) refuse. So S8 is RE-SPECIFIED, not dropped, and Phase F closes at EIGHT if the three repairs land. Angular's finding is WORSE than briefed: the lane typechecks NONE of its emitted TypeScript, so the instrument gap IS the defect and a throw would not close it. LOWER, DO NOT REFUSE."
+      summary: "Re-derived every finding and overturned the headline. S8 is re-specified around Angular's globals rule and Qwik's callback rule - both AFFIRMED, neither weakened - and lands in six lanes after three small repairs, now carded as T045, T046 and T047."
+      THE_REFUTATION_AND_WHY_THE_PM_SHOULD_HAVE_CAUGHT_IT: "T031 concluded 'an async boundary is either async/await or a continuation function; Solid refuses the first, React miscompiles the second, so the space is empty.' THE ARITHMETIC IS FINE AND BOTH PREMISES ARE BUGS. PM ACCEPTED IT AND SAID SO TO THE OWNER IN THOSE WORDS - 'the proof is structural, not a survey' - having verified only the THREE CODE SITES, never the claim that the space was empty. Verifying that the cited lines exist is not verifying that they are structural. T043 tried a fourth authoring - `await ready` on a PROMISE-VALUED PROP - and it emits correctly in three lanes today."
+      T031_ALSO_MISREAD_ITS_OWN_MATRIX: "It recorded svelte, vue and angular as 'OK' on the nested-write authoring, where OK meant only 'did not throw' - AND IT CHECKED NONE OF THEM. Measured: SOLID, QWIK, SVELTE, VUE AND ANGULAR ALL LOWER NESTED WRITES CORRECTLY. React is one lane of six, not one of two. That single misreading is what made the space look empty."
+      ANGULAR_IS_WORSE_THAN_BRIEFED_AND_THE_FIX_IS_NOT_A_THROW: "PM VERIFIED BOTH HALVES: only react and solid have an emitted-typecheck.test.ts, and packages/frameworks/angular/tsconfig.json does not include generated/**. ANGULAR IS THE ONLY LANE THAT EMITS TYPESCRIPT AND TYPECHECKS NONE OF IT - parse-emitted.test.ts checks template grammar, not the class body. A fail-closed throw would have left that hole exactly as open. And the two failure modes differ: async-WITH-await emits TS1308 which an oracle catches, while async-WITHOUT-await emits VALID TypeScript that NO ORACLE COULD EVER CATCH - the handler silently stops returning a promise and every instrument passes. One instrument is insufficient by construction."
+      FINDING_4_IS_AN_ACCIDENT_ON_FOUR_INDEPENDENT_LINES: "PM VERIFIED THE FIRST: git blame lands solid/src/emitter/index.ts:1174 in commit 1309b00, whose own message reads 'codex killed at ceiling; PM completing' - an abandoned run finished by hand. It has no test, no docs and ONE repo-wide occurrence; it is the computed-binding predicate from :828 with the arity clause dropped; and Solid's reanalyzeExpression wraps NOTHING, so its pipeline was already async-safe. SOLID SUPPORTS ASYNC LISTENERS NATIVELY. The hardest blocker on the axis was never a decision."
+      what_it_affirmed_rather_than_weakened: "Angular's globals v-limit and Qwik's callback-prop rule are both AFFIRMED as correct, and the re-specified S8 is authored AROUND them rather than through them. Qwik remains the only lane that gets the axis right, and its sync$ split was independently reproduced on an authored async handler opening with preventDefault()."
+      evidence:
+        - "MEASURED: `await ready` on a promise-valued prop emits correctly in qwik, svelte and vue TODAY; only react and solid refuse"
+        - "MEASURED: five of six emitters lower nested writes correctly - T031's 'OK' meant 'did not throw' and it checked none of them"
+        - "MEASURED: Vue's correctness comes from @vue/compiler-sfc rewriting SETUP_REF bindings at every depth - a dependency on Vue, not a property of our emitter"
+        - "PM VERIFIED: only react and solid have emitted-typecheck.test.ts; angular's tsconfig omits generated/**"
+        - "tsc 5.9.3 over emitted Angular: TS1308 with an await; CLEAN without one - two distinct failure modes, only one catchable"
+        - "PM VERIFIED: git blame solid emitter:1174 -> 1309b00 'codex killed at ceiling; PM completing'"
+        - "Stack trace react replaceFreeNames(:167) -> reanalyzeFunction(:150); replicated against yuku-analyzer: async=false gives 2 diagnostics and unresolved=[]; async=true gives 0 and unresolved=[phase,ready]"
+        - "Independently reproduced Qwik's sync$ split on an authored async handler opening with preventDefault()"
+      missing_evidence:
+        - "REACT POST-AWAIT STALENESS IS PREDICTED, NOT MEASURED. toConstSsa reads the render closure while Solid reads the live signal, so they should diverge on a SECOND dispatch across an await - unmeasurable without making the T047 repair. THAT IS WHY THE RE-SPECIFIED S8 MUST DISPATCH TWICE, NOT ONCE."
+        - "Solid's async pipeline is ARGUED sound from its re-parse primitive and from normalizeHandler mutating the arrow in place, not proven end to end - the validator cannot be bypassed without editing. T046 must witness the RED and then prove it."
+        - "Qwik also has no compile oracle over its emitted .jsx. Ranked one below Angular because its output is the same JSX the react and solid oracles cover, and deliberately not carded."
+      parallel_safety:
+        safe: true
+        reason: "T045's allowed_files are provably disjoint from the LIVE frameless-vue-v1 T012, which holds docs/emitter-idiom-policy.md, vue/src/gate/index.ts and vue/test/gate.test.ts. Three stop_if conditions plus a git-diff verify enforce it."
+        residual_the_PM_owns: "T045's verify list runs pnpm test, which includes the Vue gate test T012 is mid-edit on. T045 MUST be dispatched AFTER T012 lands or its full-suite run reports failures that are not its own. Recorded as a serialization hold on the card."
+      worker_package_recorded_as: "T045, with T046 and T047 following"
+      spawned_tasks:
+        - T045
+        - T046
+        - T047
+  - id: T045
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    spec: "T043 receipt and notes/T043-async-axis.md - AUTHORITATIVE."
+    serialization_hold: "Behind frameless-vue-v1 T012. Its verify runs pnpm test, which includes the Vue gate test T012 is mid-edit on - dispatching earlier would report failures that are not its own."
+    objective: >-
+      Close the Angular lane's async hole AT ITS ROOT: build the MISSING TYPECHECK ORACLE over
+      emitted Angular TypeScript, watch it go RED on a planted async authoring, THEN carry the
+      authored arrow's `async` onto the emitted class method. File DEFECTS.md entry 9 recording BOTH
+      failure modes separately.
+    why_a_throw_would_not_have_closed_this: >-
+      THE INSTRUMENT GAP IS THE DEFECT. PM VERIFIED: only react and solid have an
+      emitted-typecheck.test.ts, and packages/frameworks/angular/tsconfig.json does not include
+      generated/** - SO ANGULAR IS THE ONLY LANE THAT EMITS TYPESCRIPT AND TYPECHECKS NONE OF IT.
+      parse-emitted.test.ts checks template grammar, not the class body. A fail-closed throw would
+      have left that hole exactly as open, and would have made Angular the only lane unable to
+      express a construct its own framework supports natively. LOWER, DO NOT REFUSE.
+    the_two_failure_modes_are_different_and_only_one_is_catchable: >-
+      async-WITH-await emits `await` inside a non-async method - TS1308, which an oracle catches and
+      this lane had none. async-WITHOUT-await drops the keyword and emits VALID TypeScript that NO
+      ORACLE COULD EVER CATCH: the handler silently stops returning a promise and every instrument
+      passes. The second must be asserted directly on the emitted keyword, and the note must say why
+      one instrument is insufficient.
+    allowed_files:
+      - packages/frameworks/angular/src/emitter/index.ts
+      - packages/frameworks/angular/test/emitted-typecheck.test.ts
+      - packages/frameworks/angular/test/emitter.test.ts
+      - packages/frameworks/angular/package.json
+      - docs/DEFECTS.md
+      - docs/goals/frameless-defects-and-targets-v1/notes/T045-angular-async.md
+    verify:
+      - "pnpm --dir packages/frameworks/angular exec vitest run --config vitest.node.config.ts"
+      - "pnpm test"
+      - "pnpm check"
+      - "pnpm lint"
+      - "RED CALIBRATION 1, REQUIRED BEFORE THE EMITTER MOVES: the new oracle FAILS on a planted async authoring with the verbatim TS1308, recorded in the note"
+      - "RED CALIBRATION 2: the oracle CANNOT catch the async-without-await case (valid TS) - assert the keyword directly in emitter.test.ts instead, and name in the note why one instrument is insufficient"
+      - "RED CALIBRATION 3: the oracle fires on NOTHING in the shipped corpus - all seven generated/S*.ts clean apart from the expected TS2307 for @angular/*"
+      - "node packages/frameworks/angular/scripts/regenerate.ts && git diff --exit-code -- packages/frameworks/angular/generated   # no emitted byte moves; the corpus has no async handler"
+      - "git diff --exit-code -- packages/compiler packages/frameworks/react packages/frameworks/solid packages/frameworks/qwik packages/frameworks/svelte packages/frameworks/vue demos scripts docs/emitter-idiom-policy.md"
+    stop_if:
+      - "You are about to add @angular/core, @angular/build or ANY Angular runtime dependency. Its ABSENCE is the structural guarantee that Vite 7 and Vite 8 never meet in one package (toolchain.test.ts, T002 ruling 1). The oracle must instead assert 'no diagnostic other than TS2307 for @angular/*', which T043 measured to work."
+      - "You are about to add generated/** to packages/frameworks/angular/tsconfig.json. That routes emitted output into pnpm check where the unresolvable @angular/core import makes it PERMANENTLY RED. The oracle is a vitest file running ts.createProgram, in React's shape."
+      - "The emitter fix lands before a witnessed RED. Proof before fix is this board's non-negotiable."
+      - "You are about to make the repair a THROW instead of lowering the async. RULED AGAINST EXPLICITLY - a throw leaves the instrument gap open."
+      - "Any byte moves in packages/frameworks/angular/generated. The shipped corpus has no async handler, so a correct repair is INVISIBLE to it - which is why the planted calibration is the whole proof."
+      - "You are about to create an S8 fixture or golden. S8 is blocked on T046 and T047; a golden alone enlists it into every lane's derived gates at once."
+      - "You are about to weaken Angular's globals v-limit. T043 AFFIRMED it as correct and S8 is authored around it."
+      - "You are about to edit docs/emitter-idiom-policy.md or packages/frameworks/vue/**. Record gate outcomes in your note instead."
+    receipt: null
+
+  - id: T046
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    depends_on: ["T045"]
+    spec: "T043 receipt - AUTHORITATIVE."
+    objective: >-
+      Narrow packages/frameworks/solid/src/emitter/index.ts:1174 from `!isArrowFunctionExpression(fn)
+      || fn.async` to `!isArrowFunctionExpression(fn)`, then PROVE reads and writes lower correctly
+      ACROSS the await. File DEFECTS.md entry 10 recording the accident finding.
+    why_this_is_an_accident_and_not_a_v_limit: >-
+      FOUR INDEPENDENT LINES OF EVIDENCE, and the PM verified the first. (1) git blame lands the
+      line in commit 1309b00, whose own message reads "codex killed at ceiling; PM completing" -
+      an abandoned run finished by hand. (2) The string occurs ONCE repo-wide, with no test and no
+      documentation. (3) It is the computed-binding predicate from :828 with the arity clause
+      dropped. (4) Solid's reanalyzeExpression wraps NOTHING, so its pipeline was ALREADY async-safe
+      - unlike React's. AND SOLID ITSELF SUPPORTS ASYNC LISTENERS NATIVELY. This is the hardest
+      blocker on the axis and it was never a decision.
+    constraints:
+      - "PROOF BEFORE FIX: witness the RED first - the current bare throw - then prove reads and writes lower correctly ACROSS the await. T043 could not prove the end-to-end path without editing the validator, so that proof is THIS card's deliverable, not an inherited claim."
+      - "Solid is the lane that lowers NESTED writes correctly. Do not disturb that while widening the async gate."
+    allowed_files:
+      - packages/frameworks/solid/src/emitter/index.ts
+      - packages/frameworks/solid/test/emitter.test.ts
+      - docs/DEFECTS.md
+      - docs/goals/frameless-defects-and-targets-v1/notes/T046-solid-async.md
+    verify:
+      - "pnpm --dir packages/frameworks/solid exec vitest run --config vitest.node.config.ts"
+      - "pnpm test"
+      - "pnpm check"
+      - "pnpm lint"
+      - "node packages/frameworks/solid/scripts/regenerate.ts && git diff --exit-code -- packages/frameworks/solid/generated   # no emitted byte moves"
+      - "git diff --exit-code -- packages/compiler packages/frameworks/react packages/frameworks/qwik packages/frameworks/svelte packages/frameworks/vue packages/frameworks/angular demos scripts"
+    stop_if:
+      - "You cannot witness the RED before the fix."
+      - "Reads or writes do NOT lower correctly across the await. That would mean the flag check was load-bearing after all - report it VERBATIM and STOP; it inverts the ruling."
+      - "Any byte moves in packages/frameworks/solid/generated."
+      - "You are about to touch the nested-write lowering. Solid gets that right and it is the reference implementation for React's lift trigger."
+    receipt: null
+
+  - id: T047
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    depends_on: ["T046"]
+    spec: "T043 receipt - AUTHORITATIVE."
+    objective: >-
+      Make the replaceFreeNames re-parse wrapper ASYNC at packages/frameworks/react/src/emitter/index.ts:161,
+      so an await survives re-analysis. File DEFECTS.md entry 11 CARRYING THE STALENESS QUESTION AS OPEN.
+    the_measurement_T043_could_not_take: >-
+      REACT POST-AWAIT STALENESS IS PREDICTED, NOT MEASURED. toConstSsa reads the RENDER CLOSURE
+      while Solid reads the LIVE SIGNAL, so they should diverge on a SECOND dispatch across an await
+      - and T043 could not measure it without making this repair. THAT IS WHY S8's BEHAVIOURAL
+      CONTRACT MUST DISPATCH TWICE, NOT ONCE. If this repair makes the await survive but leaves the
+      second dispatch reading a stale closure, entry 11 stays OPEN and S8 must assert the divergence
+      rather than hide it.
+    constraints:
+      - "PROOF BEFORE FIX. T043 replicated the wrapper against yuku-analyzer: async=false gives 2 diagnostics AND unresolvedReferences=[]; async=true gives 0 diagnostics and unresolved=[phase,ready]. Reproduce that before editing."
+      - "Do NOT touch assertLowerableWrites (T044's guard). Entry 8 stays OPEN with its lift trigger - lowering nested writes is handed to the capability goal, where T043 recorded that FIVE emitters already agree on the semantics."
+    allowed_files:
+      - packages/frameworks/react/src/emitter/index.ts
+      - packages/frameworks/react/test/emitter.test.ts
+      - docs/DEFECTS.md
+      - docs/goals/frameless-defects-and-targets-v1/notes/T047-react-async.md
+    verify:
+      - "pnpm --dir packages/frameworks/react exec vitest run --config vitest.node.config.ts"
+      - "pnpm test"
+      - "pnpm check"
+      - "pnpm lint"
+      - "node packages/frameworks/react/scripts/regenerate.ts && git diff --exit-code -- packages/frameworks/react/generated"
+      - "git diff --exit-code -- packages/compiler packages/frameworks/solid packages/frameworks/qwik packages/frameworks/svelte packages/frameworks/vue packages/frameworks/angular demos scripts"
+    stop_if:
+      - "You cannot witness the RED before the fix."
+      - "Any byte moves in packages/frameworks/react/generated."
+      - "You are about to touch assertLowerableWrites or implement nested-write lowering."
+      - "The staleness question resolves as REAL. Record it verbatim in entry 11 and STOP - S8's contract depends on knowing, and hiding it would make the second dispatch meaningless."
     receipt: null
 
   - id: T041
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     spec: "T030 receipt and notes/T030-corpus-s7-form-controls.md sections 4.2 and 4.4 - AUTHORITATIVE."
     objective: >-
@@ -4271,6 +4446,21 @@ tasks:
     reasoning_hint: high
     spec: "T024 ruling - AUTHORITATIVE."
     depends_on: ["T030"]
+    RE_SPECIFIED_BY_T043: >-
+      T031's IMPOSSIBILITY PROOF IS REFUTED. It is valid arithmetic over INVALID PREMISES: it treats
+      Solid's fn.async check and React's sync re-parse wrapper as STRUCTURAL LIMITS when both are
+      ONE-LINE BUGS, and it declared the authoring space empty after four probes WITHOUT TRYING the
+      one shape that clears both genuine v-limits. MEASURED: `await ready`, where ready is a
+      PROMISE-VALUED PROP, emits correctly in qwik, svelte and vue TODAY.
+      T031 also recorded svelte/vue/angular as "OK" on the nested-write authoring meaning only "did
+      not throw", and checked none of them - in fact FIVE emitters lower nested writes correctly and
+      React is one lane of six, not one of two.
+      RE-SPECIFICATION: await a PROMISE-VALUED PROP, never a free global (Angular's globals v-limit,
+      AFFIRMED) and never a callback-prop call (Qwik's rule, AFFIRMED). The fixture must include
+      preventDefault() so Qwik's sync$ split is exercised. THE BEHAVIOURAL CONTRACT MUST DISPATCH
+      TWICE, NOT ONCE, because React's post-await closure staleness is predicted and only a second
+      dispatch can expose it.
+      depends_on T045, T046, T047.
     objective: "Land S8 ASYNC EVENT HANDLERS across all SIX targets, alone, with the mutation budget proven RED."
     divergence_axis: >-
       DEFECT 1 ON THIS VERY GOAL WAS EXACTLY THIS - a Qwik QRL emitting preventDefault() inside an
