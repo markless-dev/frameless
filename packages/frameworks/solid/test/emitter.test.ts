@@ -449,8 +449,9 @@ describe('Solid structural emitter', () => {
 	/**
 	 * ASYNC EVENT HANDLERS - T046 of frameless-defects-and-targets-v1.
 	 *
-	 * Until this card, `validateEnrichedIr` refused every async handler at
-	 * `src/emitter/index.ts:1174` with `|| fn.async`. THE WITNESSED RED, verbatim,
+	 * Until this card, `validateEnrichedIr` in
+	 * `packages/frameworks/solid/src/emitter/index.ts` refused every async handler
+	 * with a `|| fn.async` clause in its handler check. THE WITNESSED RED, verbatim,
 	 * on the source below before the clause was dropped:
 	 *
 	 *     EventHandlerRecord event:0 requires a synchronous arrow

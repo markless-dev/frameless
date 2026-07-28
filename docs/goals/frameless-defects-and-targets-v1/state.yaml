@@ -131,7 +131,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T056
+active_task: T999
 
 tasks:
   - id: T001
@@ -6029,7 +6029,7 @@ tasks:
   - id: T056
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     spec: "T055 receipt, measured_scope_and_remainder and remaining_blockers - AUTHORITATIVE."
     objective: >-
@@ -6090,12 +6090,76 @@ tasks:
       - "The measured remainder is materially different from T055's 47 across 10 - report the real number."
       - "Any emitted byte, golden, gate predicate or existing assertion moves."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      changed_files:
+        - scripts/check-citations.mjs
+        - packages/compiler/test/citations.test.ts
+        - packages/compiler/test/metamorphic.test.ts
+        - packages/compiler/test/generative.test.ts
+        - packages/frameworks/react/test/emitter.test.ts
+        - packages/frameworks/react/test/gate.test.ts
+        - packages/frameworks/solid/test/emitter.test.ts
+        - packages/frameworks/solid/test/gate.test.ts
+        - packages/frameworks/qwik/test/gate.test.ts
+        - packages/frameworks/angular/src/gate/index.ts
+        - packages/frameworks/vue/test/emitted-smoke.browser.test.ts
+        - demos/angular-official/scenarios.box.ts
+      commands:
+        - cmd: "pnpm test"
+          status: pass
+          note: "52 files, 1083 tests = 1077 at dispatch + exactly 6 new; none deleted"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 396 files"
+        - cmd: "pnpm check"
+          status: pass
+          note: "six tsc passes"
+        - cmd: "pnpm check:citations"
+          status: pass
+          note: "clean over 4 documents, 17 watched source files (was 7) and 457 SWEPT (was 0). PM re-ran: exit 0"
+        - cmd: "regenerate all six lanes + composition, then git diff --exit-code -- packages/frameworks/*/generated packages/compiler/test/goldens"
+          status: pass
+          note: "exit 0"
+        - cmd: "comment-only diff filter over all 10 source files touched"
+          status: pass
+          note: "empty for ADDED and independently for REMOVED lines. PM SPOT-CHECKED SIX FILES INDEPENDENTLY, all comment-only"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "6 demos x 8 scenarios, all observations equal"
+        - cmd: "git status --short"
+          status: pass
+          note: "exactly 12 files, all in allowed_files; nothing committed"
+      summary: "CONVERGED THE CLASS. Re-measured the surface independently, cleared all 47 violations across 10 files by naming a symbol read out of the code for every row, and added ruling 10 so the guard covers EVERY TRACKED SOURCE FILE rather than a named set. Final state: 476 scanned, only the 2 ruled specimen files carry violations."
+      THE_TABLES_HAD_ALREADY_ROTTED_WHICH_WAS_NOT_THE_CARDS_PREMISE: "The card framed generative/metamorphic as 'correct today, unwatched, free to rot'. MEASURED: ALL 17 METAMORPHIC ORDINALS WERE ALREADY WRONG AT HEAD. build.ts:428, cited as the records.bindings comparator, points at an alias-map write inside an alias loop; the real comparator is buildEnrichedIrArtifact's records.bindings initializer. Same for :429/:430/:431, :342, :464, :629 (-> enrichComponent), :2079 (-> buildSharedWrites), :326 (-> enrichedHandlers), and the sortWrites/dedupeReads/collectCanonicalReads bodies, all moved several hundred lines. A VIEW WHOSE STATED JUSTIFICATION IS 'APPLIED BY CITATION, NOT BY TASTE' WAS RESTING ON CITATIONS THAT NO LONGER LAND - the same instrument fault defect 6 was."
+      ONE_CITATION_WAS_BORN_WRONG_AND_PM_CONFIRMED_IT: "metamorphic.test.ts:79, cited IDENTICALLY by all three gate suites as 'same pattern as'. At commit 39c8a6d - THE COMMIT THAT INTRODUCED THE CITATION - line 79 was ALREADY the `event:<allocation index>` comment, unrelated to the mutation-no-op pattern it claimed. It was never correct, so no amount of drift explains it. PM VERIFIED DIRECTLY with git show 39c8a6d and got exactly that line. The real referent is the expect(...).not.toBe(original) precondition guarding the rename-all invariant; named by symbol in all three suites."
+      AN_ORDINAL_WAS_PROPPING_UP_A_FALSE_SENTENCE: "The angular gate justified ANGULAR_ESLINT_RULES_OMITTED = [] by asserting the qwik gate 'drops two rules from configs.recommended with no recorded reason'. T029 FIXED THAT THIS SESSION - and :64 landed precisely on the comment now saying 'THIS SET IS NOW TOTAL over configs.recommended'. SWAPPING IN A SYMBOL ALONE WOULD HAVE PRESERVED A FALSE CLAIM, so the prose was corrected to past tense and repointed. Constant and predicates untouched. That is the difference between fixing a citation and fixing a document."
+      THE_DENOMINATOR_WAS_WRONG_AND_THE_FINDING_WAS_EXACT: "T055 reported 436 tracked files scanned; the real figure is 476, the 40-file gap being EXACTLY packages/frameworks/*/generated - T055 excluded emitted output. Both denominators are defensible. THE SUBSTANTIVE COUNTS REPRODUCED TO THE UNIT: 12 files / 70 violations, remainder 10 files / 47, and each of the 10 was independently RED at HEAD - 17+12+5+5+2+2+1+1+1+1 = 47. Fourth scope in a row calibrated on real defects rather than a planted fault."
+      THE_DIRECTORY_EXEMPTION_REGRESSION_IT_WATCHED_TO_FIRE: "Ruling 10 exempts BY PATH ONLY. Three stale NOT_YET_WATCHED `directory` entries were removed rather than updated - and the mechanical reason is the important one: leaving a directory entry would have been AN EXEMPTION WAITING TO BE HONORED. It made the implementation honor them and watched the result: 144 FILES SILENTLY EXEMPTED, pinning test red with 'expected [ ...(144) ] to deeply equal []'. Reverted. That is a test of the guard's own escape hatches, not of the repository."
+      resolver_was_not_loosened: "Ruling 10 is a TIGHTENING like every widening before it: it adds ~457 files and relaxes nothing. classify is BYTE-UNTOUCHED, no entry was added to THIRD_PARTY_TARGETS, FOREIGN_REPOSITORY_TARGETS or EXCLUDED_FILES, and the two vue/angular third-party citations were cleared by QUALIFYING the path to node_modules/ - which classify already allows - rather than by adding an exclusion for them."
+      final_state:
+        before: "476 scanned, 12 carry violations, 70 total."
+        after: "476 scanned, 2 carry violations, 23 total - both the ruled specimen text (check-citations.mjs 20, citations.test.ts 3). NOTHING ELSE IN THE REPOSITORY CARRIES AN UNRULED CITATION."
+        markup_limit_measured: "All 43 tracked .vue/.svelte files scanned: ZERO carry a comment citation, so ruling 10's JS/TS scope hides nothing today. Recorded as a MEASURED INSTRUMENT LIMIT and pinned as a test, not a silent exclusion."
+      deviations:
+        - "ADDED RULING 10, A REPOSITORY-WIDE SWEEP, beyond swapping the 10 files into WATCHED_SOURCE. The card's convergence claim is only a SNAPSHOT if the guard watches a named list - it rots the moment a file is added. The sweep makes it a PROPERTY. Tightening, inside allowed_files, pinned by 6 tests."
+        - "REMOVED THREE stale NOT_YET_WATCHED directory entries rather than updating their text - see the 144-file regression above."
+        - "REWROTE THE REACT STACK-TRACE BLOCK BY SYMBOL rather than treating it as ruling 6 quoted output. Applying ruling 6 would have required teaching FENCE to see a fence inside a JSDoc * prefix - AN EXCLUSION WIDENING, the one thing the card forbids. It also is not verbatim output (a real trace carries absolute paths and columns; this carries hand-aligned abbreviated ones) and every frame already names its symbol. Error message preserved unchanged."
+        - "CORRECTED PROSE, NOT ONLY CITATIONS, in the angular gate - leaving a true citation under a false sentence would have been a worse document for a better number."
+        - "EXPORTED listTrackedSourceFiles, sweptSourceFiles and sweepProblems as seams so the suite can hand each an adversarial list and watch it fire."
+        - "CAUGHT AND FIXED TWO FLAWS IN ITS OWN NEW TESTS before running verify: a TAUTOLOGICAL expect(x).toEqual(x) in the directory-side assertion, and a call to a helper that did not exist. Also hoisted a sweptSourceFiles() call out of a per-file filter that was spawning git 476 times (3.62s -> 422ms)."
+      remaining_blockers:
+        - "THE SPACED CONTINUED-ORDINAL FORM STILL ESCAPES, BY DECISION - unchanged from T055, still pinned as a named test. Not reopened."
+        - "RULING 10 IS SCOPED TO JS/TS because commentsOnly is a JS lexer; .vue and .svelte are swept by NOTHING. Measured today as zero-impact (all 43 clean) and pinned, but a citation written into a .vue comment tomorrow would be invisible. THE ONE REMAINING INSTRUMENT GAP, recorded rather than glossed."
+        - "SPECIMEN TEXT REMAINS THE ONLY EXEMPT CLASS and is still unruled as a general question. It is now THE ONLY THING OUTSIDE THE GUARD, which is what makes the class closed."
+        - "The two citation tables are still DUPLICATED between generative.test.ts and metamorphic.test.ts by a deliberate earlier decision. Both are now watched, so drift between them is detectable only where it produces a violation - identical prose drift is not."
+      stopped_because: null
   - id: T999
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     deactivated_by_pm: >-
       2026-07-27. T999 was left ACTIVE at the end of the previous session, which is wrong and would
       have burned a final audit on a provably incomplete goal. Oracle half 2 requires SIX e2e rows;

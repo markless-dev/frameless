@@ -99,8 +99,10 @@ afterEach(async () =>
  * precondition the row actually depends on: a search that matched but changed
  * nothing yields a non-mutant just the same, and is rejected just the same.
  *
- * Same pattern as `packages/compiler/test/metamorphic.test.ts:79`. Audited and
- * applied corpus-wide by T018; see
+ * Same pattern as the `expect(...).not.toBe(original)` precondition in
+ * `packages/compiler/test/metamorphic.test.ts` - guarding both its `rename-all`
+ * invariant and its `CALIBRATION: meaning-CHANGING edits must be rejected` block.
+ * Audited and applied corpus-wide by T018; see
  * `docs/goals/frameless-defects-and-targets-v1/notes/T018-mutation-no-op-audit.md`.
  */
 function assertMutated(source: string, mutated: string, search: string | RegExp): string {

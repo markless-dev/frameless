@@ -58,31 +58,48 @@ function structural(value: unknown, renamed: ReadonlySet<string>): unknown {
 // compiler bug.
 //
 // The view is applied by CITATION, not by taste. Every collection below names the
-// exact `packages/compiler/src/build.ts` line whose comparator keys on a
+// exact `packages/compiler/src/build.ts` SYMBOL whose comparator keys on a
 // name-derived field, and every one has been WITNESSED permuting under an
 // equal-length rename (the `can permute` cases further down are that witness,
 // checked in so it cannot rot):
 //
-//   records.bindings                  build.ts:428  compareText(left.id, right.id), id = `state:<name>` / `computed:<name>`
-//   records.aliases                   build.ts:429  compareText(left.id, right.id), id = `alias:<Component>:<aliasName>` (build.ts:2440)
-//   records.stateReads                build.ts:431 -> collectCanonicalReads -> build.ts:2725 `.sort(compareReads)` (2732: componentId, graphNodeId, path)
-//   records.stateWrites               build.ts:342 -> sortWrites -> build.ts:2740-2752 (componentId, graphNodeId, path, ...)
-//   every `reads` array, any depth    build.ts:1370 -> dedupeReads build.ts:2866-2874 (graphNodeId, path, via); also toStateReads 2684-2688
-//   every `writes` array, any depth   build.ts:2671 and :389 -> sortWrites build.ts:2740-2752
-//   components[].locals[].semanticRecordIds   build.ts:629, a bare `.sort()` over `state:<name>` / `alias:<...>` ids
+//   records.bindings      `buildEnrichedIrArtifact`'s `records.bindings` initializer,
+//                         `compareText(left.id, right.id)`; a binding id is
+//                         `state:<name>` or `computed:<name>`.
+//   records.aliases       `buildEnrichedIrArtifact`'s `records.aliases` initializer, the
+//                         same `compareText(left.id, right.id)`; `resolveAliases` builds
+//                         that id as `alias:<Component>:<aliasName>`.
+//   records.stateReads    `buildEnrichedIrArtifact`'s `records.stateReads`, produced by
+//                         `collectCanonicalReads`, whose trailing `.sort(compareReads)`
+//                         keys componentId, then graphNodeId, then path.
+//   records.stateWrites   `buildEnrichedIrArtifact`'s `const writes = sortWrites(...)`;
+//                         `sortWrites` keys componentId, graphNodeId, path, then more.
+//   every `reads` array, any depth
+//                         `deriveReads`, which returns `dedupeReads(...)`; `dedupeReads`
+//                         keys graphNodeId, path, via. `toStateReads` reaches the same
+//                         ordering through `compareReads`.
+//   every `writes` array, any depth
+//                         `sortWrites` again, reached from `buildEnrichedIrArtifact` and
+//                         from `deriveHandlerEffects`.
+//   components[].locals[].semanticRecordIds
+//                         `enrichComponent`, a bare `.sort()` over `state:<name>` /
+//                         `alias:<...>` ids.
 //
 // DELIBERATELY EXCLUDED - these stay order-SENSITIVE, because no rename can move
 // them and a view applied to a collection nobody has seen misbehave is the same
 // unexamined assumption defect 6 was:
 //
-//   records.events        build.ts:430 sorts by id, but an event id is
-//                         `event:<allocation index>` or `event:<hostNodeId>:<eventName>`.
-//                         A local rename cannot touch either; probed, order unchanged.
-//                         Its nested reads/writes DO permute and are covered above.
-//   module.exports        build.ts:464 keys on `exportedName`, part of the observable
-//                         contract, which a meaning-preserving rename never touches.
-//   records.sharedWrites  build.ts:2079 is SPAN-keyed (targetSpan.start).
-//   events[].handlers     build.ts:326 is SPAN-keyed (expression.start).
+//   records.events        `buildEnrichedIrArtifact`'s `records.events` initializer sorts
+//                         by id, but an event id is `event:<allocation index>` or
+//                         `event:<hostNodeId>:<eventName>`. A local rename cannot touch
+//                         either; probed, order unchanged. Its nested reads/writes DO
+//                         permute and are covered above.
+//   module.exports        `buildEnrichedIrArtifact`'s returned `module.exports` keys on
+//                         `exportedName`, part of the observable contract, which a
+//                         meaning-preserving rename never touches.
+//   records.sharedWrites  `buildSharedWrites` is SPAN-keyed (`targetSpan.start`).
+//   events[].handlers     `buildEnrichedIrArtifact`'s `enrichedHandlers` sort is
+//                         SPAN-keyed (`expression.start`, then `expression.end`).
 //
 // The comparison is a MULTISET OF WHOLE ENTRIES. Whole entries carry their own
 // `sourceSpan`, so a genuine authored reorder still changes the multiset and is
@@ -96,7 +113,7 @@ function structural(value: unknown, renamed: ReadonlySet<string>): unknown {
 // So the case against it is not "it silences these calibrations". It is that it
 // discards order for the whole artifact in order to fix seven collections, which
 // makes every future order-bearing array silently unchecked. This view is minimal
-// and cited: order-insensitivity applies exactly where a build.ts line justifies
+// and cited: order-insensitivity applies exactly where a build.ts symbol justifies
 // it, and everywhere else the comparison is still exact.
 
 /** Deterministic serialisation with key order removed, so entries compare as values. */

@@ -78,8 +78,10 @@ afterEach(async () => {
  * precondition the row actually depends on: a search that matched but changed
  * nothing yields a non-mutant just the same, and is rejected just the same.
  *
- * Same pattern as `packages/compiler/test/metamorphic.test.ts:79`. Audited and
- * applied corpus-wide by T018; see
+ * Same pattern as the `expect(...).not.toBe(original)` precondition in
+ * `packages/compiler/test/metamorphic.test.ts` - guarding both its `rename-all`
+ * invariant and its `CALIBRATION: meaning-CHANGING edits must be rejected` block.
+ * Audited and applied corpus-wide by T018; see
  * `docs/goals/frameless-defects-and-targets-v1/notes/T018-mutation-no-op-audit.md`.
  */
 function assertMutated(source: string, mutated: string, search: string | RegExp): string {
@@ -340,9 +342,11 @@ describe('React dossier gate', async () => {
 		// Was a byte-identical copy of the 'computed-member setter' row above, name
 		// and policy included (T018 F3, adjudicated by T021). Rewritten rather than
 		// deleted, because the rewrite buys a branch no other row reaches: this is
-		// the first row to combine identifier-object resolution
-		// (custom-policies.ts:199-204) with a `constantString`-folded computed
-		// access (:154-171). Its twin above resolves its object from an inline
+		// the first row to combine `resolveCallable`'s identifier-object branch (its
+		// `MemberExpression` arm, in
+		// `packages/frameworks/react/src/gate/custom-policies.ts`) with a computed
+		// access folded by `constantString` through `callablePropertyName`.
+		// Its twin above resolves its object from an inline
 		// ObjectExpression, so it never takes the identifier path; 'render
 		// member-wrapped setter' takes the identifier path but with a static
 		// property name, so it never folds a key.
@@ -464,8 +468,10 @@ describe('React dossier gate', async () => {
 		],
 		// Was a byte-identical mutant and policy to the 'unused import' row at the top
 		// of this table, under a second name (T018, adjudicated by T021). Rewritten
-		// to the `!imported` branch of the react import allowlist
-		// (custom-policies.ts:284-294): a default import produces an
+		// to the `!imported` branch of the `REACT_IMPORT_ALLOWLIST` check in the
+		// `ImportDeclaration` visitor of
+		// `packages/frameworks/react/src/gate/custom-policies.ts`:
+		// a default import produces an
 		// ImportDefaultSpecifier, which has no `imported` name at all, so it takes a
 		// different arm from every named-specifier row. 'forwardRef member' is the
 		// only other row that reaches it, incidentally and while asserting
@@ -703,8 +709,9 @@ describe('React dossier gate', async () => {
 		// iteration' would have produced a third near-duplicate.
 		//
 		// Rewritten instead to the one notify shape nothing in either corpus
-		// reached: the `.forEach(cb)` branch of invokesListenerSet
-		// (custom-policies.ts:1133-1152), including its recursion into the callback.
+		// reached: the `.forEach(cb)` branch of `invokesListenerSet` in
+		// `packages/frameworks/react/src/gate/custom-policies.ts`, including its
+		// recursion into the callback.
 		// With this row the R-SH3 notify family maps 1:1 onto the detector's four
 		// branches - for-of, forEach, helper-forwarding, member-method helper -
 		// which is the mapping a new corpus should inherit rather than a name list.

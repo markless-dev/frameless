@@ -168,7 +168,10 @@ async function startAngularServer(): Promise<AngularServer> {
 			PORT: String(port),
 			// Angular's OWN runtime configuration point, read by
 			// `AngularNodeAppEngine`'s constructor through `getAllowedHostsFromEnv()`
-			// (@angular/ssr 22.0.8 `fesm2022/node.mjs:10` and `:286`).
+			// (@angular/ssr 22.0.8,
+			// `node_modules/@angular/ssr/fesm2022/node.mjs:10` and `:286` - a
+			// published bundle, so ruling 4 in scripts/check-citations.mjs keeps the
+			// ordinals; the path is qualified so the guard can see that).
 			//
 			// The scaffold ships `security.allowedHosts: []` in angular.json, and the
 			// built engine then rejects EVERY request with a 400 — measured, on the

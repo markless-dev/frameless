@@ -76,9 +76,11 @@ function scenarioCorpus(extension: string, directory = 'generated'): string[] {
  * nothing yields a non-mutant just the same, and is rejected just the same.
  *
  * The React and Solid corpora carry an identical block plus a `mutateAll` twin
- * for `replaceAll`; add it here if a mutation ever needs one. Same pattern as
- * `packages/compiler/test/metamorphic.test.ts:79`. Audited and applied
- * corpus-wide by T018; see
+ * for `replaceAll`; add it here if a mutation ever needs one. Same pattern as the
+ * `expect(...).not.toBe(original)` precondition in
+ * `packages/compiler/test/metamorphic.test.ts` - guarding both its `rename-all`
+ * invariant and its `CALIBRATION: meaning-CHANGING edits must be rejected` block.
+ * Audited and applied corpus-wide by T018; see
  * `docs/goals/frameless-defects-and-targets-v1/notes/T018-mutation-no-op-audit.md`.
  */
 function mutate(source: string, search: string | RegExp, replacement: string): string {

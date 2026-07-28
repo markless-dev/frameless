@@ -22,16 +22,26 @@
  * THE RULINGS ARE NUMBERED BY DATE, NOT BY POSITION. They accumulate as the board
  * meets a class it has not met before, so ruling 8 sits next to ruling 1 because
  * WATCHED_SOURCE belongs beside WATCHED, and ruling 9 sits with the detector it
- * changes. Reading order: 1 watched documents, 8 watched source comments, 2 the
- * recorded remainder, 3 board receipts, 4 third-party artifacts, 5 another
- * repository, 6 quoted transcripts, 7 `poc/`, 9 continued ordinal lists.
+ * changes. Reading order: 1 watched documents, 8 watched source comments, 2 what
+ * is exempt and why, 3 board receipts, 4 third-party artifacts, 5 another
+ * repository, 6 quoted transcripts, 7 `poc/`, 9 continued ordinal lists, 10 the
+ * sweep over everything else.
  *
  * EVERY SCOPE WIDENING HERE HAS BEEN A TIGHTENING. `.tsrx` (T054), source comments
- * and continued lists (T055) can each only find MORE citations than before; not one
- * of them relaxes what counts as first-party. That property is the reason this file
- * can grow without quietly going blind, and it is the thing to preserve.
+ * and continued lists (T055), and the sweep (T056) can each only find MORE
+ * citations than before; not one of them relaxes what counts as first-party. That
+ * property is the reason this file can grow without quietly going blind, and it is
+ * the thing to preserve.
+ *
+ * THE CLASS IS CLOSED, WHICH CHANGES WHAT THIS FILE IS FOR. Through T055 the guard
+ * watched a NAMED SET and recorded what it could not reach. Ruling 10 inverts that:
+ * every tracked source file is checked unless a ruling excuses it by name, so the
+ * lists below no longer decide what is seen. The next person here is adding a
+ * reason, not a scope - and if they find themselves adding a `directory` entry to
+ * widen an exemption, that is the one move this file has never made.
  */
 
+import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -99,12 +109,16 @@ export const WATCHED = [
  * or block comment, preserving line and column geometry, so the same detector,
  * rulings and reporting run over source and over Markdown with nothing special-cased.
  *
- * WHY THIS LIST IS SHORT AND SAYS SO. Measured across every tracked JS/TS source
- * file: THIRTEEN carry citation violations in their comments. Most sit in files
- * outside this card's writ, so watching them would have meant a red guard nobody
- * could clear. The remainder is recorded in NOT_YET_WATCHED by name - a partial
- * scope with a written-down remainder, never a scope quietly narrowed to whatever
- * happened to be green.
+ * THE LIST WAS SHORT AND SAID SO; T056 CLOSED IT. T055 watched seven files and
+ * recorded the rest by name: ten more files carrying forty-seven violations. T056
+ * re-measured that remainder independently, found it exact, cleared all forty-seven
+ * and added those ten below. Every one was RED at the commit before it was cleared,
+ * per file - the calibration each previous scope also did on real content.
+ *
+ * WATCHING BY NAME IS NOW THE INNER RING, NOT THE WHOLE GUARD. Ruling 10 sweeps
+ * every tracked source file, so this list no longer decides what is seen; it
+ * decides what carries a written reason and what is protected against being
+ * emptied. A file here must have prose in it, which the integrity check enforces.
  */
 export const WATCHED_SOURCE = [
 	{
@@ -152,6 +166,80 @@ export const WATCHED_SOURCE = [
 			'A lane emitter, same reason as react above. The newest lane, and the one whose ' +
 			'comments are most likely to be written while the cited code is still moving.',
 	},
+	{
+		path: 'packages/compiler/test/metamorphic.test.ts',
+		reason:
+			'THE DENSEST CITATION TABLE IN THE REPOSITORY, AND IT HAD ALREADY ROTTED. Its ' +
+			'order-insensitive view is applied BY CITATION - seven included collections and four ' +
+			'excluded ones, each naming the build.ts site whose comparator justifies it. Every ' +
+			'one of those seventeen ordinals was WRONG at HEAD when T056 measured them: `:428` ' +
+			'was cited as the `records.bindings` comparator and pointed at an alias-map write. ' +
+			'A view that says it is justified by a citation, resting on citations that no longer ' +
+			'land, is the exact instrument fault defect 6 was. Now named by symbol and watched.',
+	},
+	{
+		path: 'packages/compiler/test/generative.test.ts',
+		reason:
+			'The second copy of that table, kept deliberately duplicated because importing one ' +
+			'test file from another would register its suites twice. Duplication is the reason ' +
+			'it must be watched: two copies drift independently, and the comment that tells you ' +
+			'to change both cannot enforce it. Same twelve rows, same rot, now the same symbols.',
+	},
+	{
+		path: 'packages/frameworks/react/test/emitter.test.ts',
+		reason:
+			'A lane test suite. Its comments carry the WITNESSED RED for defect 12 and the ' +
+			"conditional-cancellation pinning, both arguing from the emitter's code - the class " +
+			'of prose that is worthless the moment its pointers stop landing.',
+	},
+	{
+		path: 'packages/frameworks/react/test/gate.test.ts',
+		reason:
+			'The largest gate corpus. Rows rewritten by T021 justify themselves by naming the ' +
+			'exact custom-policies branch no other row reaches, so a citation that drifts turns ' +
+			'a deliberate coverage argument back into the near-duplicate it replaced.',
+	},
+	{
+		path: 'packages/frameworks/solid/test/emitter.test.ts',
+		reason:
+			'A lane test suite, same reason as react above. It records the async-handler ' +
+			'refusal T046 removed, which means it cites a site that no longer exists at all.',
+	},
+	{
+		path: 'packages/frameworks/solid/test/gate.test.ts',
+		reason:
+			"A gate corpus carrying the mutation-no-op guard's rationale, one of three copies " +
+			'that all cited the same wrong ordinal - see the react gate entry above.',
+	},
+	{
+		path: 'packages/frameworks/qwik/test/gate.test.ts',
+		reason:
+			'The third copy of that guard, over the most exposed corpus of the three: its ' +
+			'mutants are built from emitted files the emitter is free to reshape.',
+	},
+	{
+		path: 'packages/frameworks/angular/src/gate/index.ts',
+		reason:
+			'A GATE, NOT A TEST - and its citation was load-bearing for a claim about ANOTHER ' +
+			"lane. It justified Angular's zero-omissions discipline by pointing at the qwik " +
+			'gate dropping two rules unrecorded. The qwik gate stopped doing that; the ordinal ' +
+			'landed on the very comment that says so, and the sentence around it stayed false.',
+	},
+	{
+		path: 'packages/frameworks/vue/test/emitted-smoke.browser.test.ts',
+		reason:
+			"Carries the lane's most surprising measured finding - Vue's `createInvoker` " +
+			'timestamp guard - argued from a published bundle. Ruling 4 governs the ordinals; ' +
+			'watching it is what forces the path to stay qualified enough to be recognised.',
+	},
+	{
+		path: 'demos/angular-official/scenarios.box.ts',
+		reason:
+			'THE ONLY WATCHED FILE OUTSIDE `packages/`, and the one a newcomer meets first. It ' +
+			"cites @angular/ssr's published bundle to explain why the demo sets an env var " +
+			'instead of editing the scaffold - an argument that has to be checkable, because ' +
+			'its whole point is that the scaffold was left byte-identical.',
+	},
 ];
 
 /**
@@ -159,6 +247,15 @@ export const WATCHED_SOURCE = [
  * says why it is out of scope; none of them is ruled correct, so promoting one is
  * a card, not a discovery. NO COUNTS ARE STATED HERE - the own-no-size pattern
  * this board ratified in T048 applies to the guard's own prose too.
+ *
+ * THE THREE `MEASURED REMAINDER` DIRECTORY ENTRIES ARE GONE, AND THEIR ABSENCE IS
+ * THE POINT. T055 recorded `packages/frameworks`, `packages/compiler/test` and
+ * `demos` here because each still held unwatched comment citations it could not
+ * clear. T056 cleared every one and ruling 10 now sweeps all three directories, so
+ * leaving the entries would have been worse than useless: a directory named here
+ * is a directory the sweep must skip, which would have re-blinded the guard to the
+ * exact files this card was written to watch. What remains is only the specimen
+ * text below and `docs/goals`, which the sweep does not reach because it is prose.
  */
 export const NOT_YET_WATCHED = [
 	{
@@ -177,34 +274,6 @@ export const NOT_YET_WATCHED = [
 			"The guard's own suite, and specimen text for the same reason as check-citations.mjs " +
 			'above: every planted ordinal in it exists precisely to be matched. A red-calibration ' +
 			'test that could not contain the shape it calibrates against would be no test.',
-	},
-	{
-		directory: 'packages/frameworks',
-		reason:
-			'THE MEASURED REMAINDER, NAMED SO IT CANNOT BE MISTAKEN FOR A CLEAN SWEEP. Beyond ' +
-			'the emitters in WATCHED_SOURCE, comment citations survive in the react, solid and ' +
-			"qwik test suites, the angular gate, and vue's browser smoke test - mostly ABBREVIATED " +
-			'paths like `custom-policies.ts:199-204` that resolve to no file and would report as ' +
-			'unclassified. Two of them (`packages/frameworks/qwik/src/gate/index.ts` cited from ' +
-			'the angular gate, and `packages/compiler/test/metamorphic.test.ts` cited from three ' +
-			'gate suites) are outright first-party ordinals. They are out of T055\'s writ, not ' +
-			'out of scope forever.',
-	},
-	{
-		directory: 'packages/compiler/test',
-		reason:
-			'THE MEASURED REMAINDER, PART TWO. `generative.test.ts` and `metamorphic.test.ts` ' +
-			'carry the densest comment citations in the repository - both tabulate `build.ts` ' +
-			'sites by ordinal, abbreviated to the bare filename. That is the highest-value ' +
-			'promotion left and it is a card, because clearing it means naming a symbol for ' +
-			'every row of two tables.',
-	},
-	{
-		directory: 'demos',
-		reason:
-			'THE MEASURED REMAINDER, PART THREE. The demos cite published framework chunks by ' +
-			'ordinal, which ruling 4 would mostly allow once the citations are qualified enough ' +
-			'to be recognised; today they are abbreviated and would report as unclassified.',
 	},
 	{
 		directory: 'docs/goals',
@@ -407,6 +476,87 @@ const FENCE = /^\s*(`{3,}|~{3,})/;
  * bundles or ruling 5's unreachable foreign repository. The consequence is that
  * docs/report.md is now WATCHED rather than NOT_YET_WATCHED.
  */
+
+/**
+ * RULING 10 - EVERY TRACKED SOURCE FILE IS SWEPT. Ruled by T056, the card that
+ * CONVERGED this class instead of widening it a fourth time.
+ *
+ * WHY A SWEEP AND NOT A LONGER LIST. T053, T054 and T055 each widened the guard by
+ * name and each ended with a recorded remainder, which is a pattern that terminates
+ * only if someone eventually stops naming files. T056 cleared the last of the
+ * measured remainder - ten files, forty-seven violations - so the honest end state
+ * is not "seventeen files are watched" but "nothing carries an unruled citation".
+ * The first is a snapshot that rots the moment a file is added. The second is a
+ * property, and a property is what a check can hold.
+ *
+ * IT IS A TIGHTENING, LIKE EVERY WIDENING BEFORE IT. `.tsrx` (T054), source
+ * comments and continued lists (T055) could each only find MORE; so can this. It
+ * adds files to the scan and relaxes nothing: `classify` is untouched, no exclusion
+ * is added, and the two files it skips are skipped because RULING 2 already names
+ * them by path.
+ *
+ * THE SKIP LIST IS BY PATH ONLY, DELIBERATELY. A NOT_YET_WATCHED entry with a
+ * `directory` no longer suppresses anything here. If directories could suppress the
+ * sweep, then `packages/frameworks` - one of the three entries T055 recorded - would
+ * have exempted six lanes from the check written to cover them, and the guard would
+ * have read green over the largest surface it has. Only `path` entries exempt, so
+ * an exemption is always one named file with one written reason.
+ *
+ * SCOPED TO JS/TS BECAUSE `commentsOnly` IS A JS LEXER, AND THE LIMIT IS MEASURED
+ * RATHER THAN ASSUMED. `.vue` and `.svelte` files have their own grammars around
+ * their script blocks, so running this lexer over them whole would be a guess. All
+ * 43 tracked `.vue`/`.svelte` files were scanned anyway when this ruling was
+ * written: ZERO carry a comment citation of any kind, so nothing is being hidden by
+ * the scope - it is a limit on the instrument, recorded, not a silent exclusion.
+ *
+ * TRACKED, NOT PRESENT. The list comes from `git ls-files`, so a scratch file, a
+ * build output or an untracked worktree cannot turn the guard red, and a file
+ * cannot escape it by being ignored either - if it is checked in, it is swept.
+ */
+const SWEPT_SOURCE_EXTENSIONS = /\.(?:ts|tsx|js|jsx|mjs|cjs)$/;
+
+export const listTrackedSourceFiles = () =>
+	execFileSync('git', ['ls-files', '-z'], { cwd: root, encoding: 'utf8', maxBuffer: 1 << 28 })
+		.split('\0')
+		.filter(
+			(path) =>
+				path !== '' &&
+				SWEPT_SOURCE_EXTENSIONS.test(path) &&
+				!path.includes('node_modules/') &&
+				existsSync(resolve(root, path)),
+		);
+
+/**
+ * Ruling 10's anti-vacuity check, and it takes its list as an argument for the same
+ * reason `foreignShadowProblems` and `emitterClassificationProblems` do: so the
+ * suite can hand it an empty sweep and WATCH IT FIRE. If `git ls-files` ever fails
+ * softly - a detached checkout, an export without a `.git` - the sweep would find
+ * nothing and every unlisted file would read green, which is precisely the vacuous
+ * pass this guard's header warns about. The threshold is a floor, not a count: this
+ * repository tracks several hundred source files, so anything under a hundred means
+ * the enumeration broke rather than that the repository shrank.
+ */
+/**
+ * The sweep's actual scope: tracked, lexable, not already scanned by name, and not
+ * exempted BY PATH under ruling 2. Exported so the suite can assert what it covers
+ * rather than infer it from a green run.
+ */
+export const sweptSourceFiles = (files = listTrackedSourceFiles()) => {
+	const ruledByPath = new Set([
+		...WATCHED_SOURCE.map((entry) => entry.path),
+		...NOT_YET_WATCHED.filter((entry) => entry.path).map((entry) => entry.path),
+	]);
+	return files.filter((path) => !ruledByPath.has(path));
+};
+
+export const sweepProblems = (files = listTrackedSourceFiles()) =>
+	files.length < 100
+		? [
+				`RULING 10's sweep enumerated only ${files.length} tracked source file(s). That is ` +
+					'too few for this repository, so `git ls-files` failed rather than the repository ' +
+					'shrinking - and every unswept file would have passed vacuously.',
+			]
+		: [];
 
 const SOURCE_EXTENSIONS = [
 	'ts',
@@ -863,6 +1013,7 @@ export const integrityProblems = () => {
 			);
 	}
 	problems.push(...foreignShadowProblems());
+	problems.push(...sweepProblems());
 	// Every living top-level doc must be classified. A new one with bare ordinals
 	// cannot slip in unruled, which is how this class survived four sweeps.
 	const classified = new Set([
@@ -893,6 +1044,13 @@ export const scanRepository = () => {
 		const text = readFileSync(resolve(root, entry.path), 'utf8');
 		violations.push(...scanText(commentsOnly(text), entry.path));
 	}
+	// RULING 10. Everything else that is checked in and lexable, minus the files
+	// ruling 2 exempts BY PATH. Same detector, same rulings, same reporting again -
+	// a file needs no entry anywhere to be checked, only to be excused.
+	for (const path of sweptSourceFiles()) {
+		const text = readFileSync(resolve(root, path), 'utf8');
+		violations.push(...scanText(commentsOnly(text), path));
+	}
 	return { violations, integrity: integrityProblems() };
 };
 
@@ -917,7 +1075,8 @@ if (isMain) {
 		process.exit(1);
 	}
 	console.log(
-		`check-citations: clean over ${WATCHED.length} watched document(s) and ` +
-			`${WATCHED_SOURCE.length} watched source file(s) (comments only).`,
+		`check-citations: clean over ${WATCHED.length} watched document(s), ` +
+			`${WATCHED_SOURCE.length} watched source file(s) and ${sweptSourceFiles().length} ` +
+			'swept source file(s) (comments only).',
 	);
 }

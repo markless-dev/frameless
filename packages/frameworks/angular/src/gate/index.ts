@@ -169,10 +169,13 @@ export const ANGULAR_ESLINT_RULES_ADDED: readonly AddedEslintRule[] = [
 
 /**
  * ZERO OMISSIONS, asserted as a constant so the absence is a decision rather than
- * an oversight. The qwik gate drops two rules from `configs.recommended` with no
- * recorded reason (`packages/frameworks/qwik/src/gate/index.ts:64`), which is the
- * silent-drop this discipline exists to prevent; T003a routed that upward as a
- * defect in shipped code. Nothing is dropped here.
+ * an oversight. The qwik gate USED TO drop two rules from `configs.recommended`
+ * with no recorded reason - the silent-drop this discipline exists to prevent, and
+ * the defect T003a routed upward against shipped code. It no longer does: see
+ * `QWIK_ESLINT_RULES_REQUIRING_TYPES` in `packages/frameworks/qwik/src/gate/index.ts`,
+ * which now names every unapplied rule with the reason it cannot run, and
+ * `QWIK_ESLINT_RECOMMENDED_RULES`, which asserts totality in both directions.
+ * Nothing is dropped here either.
  */
 export const ANGULAR_ESLINT_RULES_OMITTED: readonly { rule: string; reason: string }[] = [];
 

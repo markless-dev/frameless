@@ -138,25 +138,26 @@ const compile = (source: string) => buildEnrichedIr({ filename: 'generated.tsrx'
 // ORDER-INSENSITIVE VIEW OVER THE CANONICALLY NAME-SORTED COLLECTIONS.
 //
 // Kept byte-identical to the copy in `metamorphic.test.ts`, which carries the full
-// citation table: each collection below names the exact `build.ts` line whose
+// citation table: each collection below names the exact `build.ts` SYMBOL whose
 // comparator keys on a name-derived field, and each has been witnessed permuting.
 // The two copies are duplicated rather than shared because a common helper would
 // need a new module, and importing one test file from another registers its suites
 // twice. If you change one, change both.
 //
-//   records.bindings                        build.ts:428
-//   records.aliases                         build.ts:429
-//   records.stateReads                      build.ts:431 -> 2725 (compareReads, 2732)
-//   records.stateWrites                     build.ts:342 -> sortWrites, 2740-2752
-//   every `reads` array, any depth          build.ts:1370 -> dedupeReads, 2866-2874
-//   every `writes` array, any depth         build.ts:2671/:389 -> sortWrites, 2740-2752
-//   components[].locals[].semanticRecordIds build.ts:629
+//   records.bindings                        `buildEnrichedIrArtifact`, `records.bindings`
+//   records.aliases                         `buildEnrichedIrArtifact`, `records.aliases`
+//   records.stateReads                      `collectCanonicalReads` -> `compareReads`
+//   records.stateWrites                     `buildEnrichedIrArtifact` -> `sortWrites`
+//   every `reads` array, any depth          `deriveReads` -> `dedupeReads`
+//   every `writes` array, any depth         `deriveHandlerEffects` -> `sortWrites`
+//   components[].locals[].semanticRecordIds `enrichComponent`, a bare `.sort()`
 //
-// Excluded and still order-sensitive: records.events (build.ts:430 - an event id is
-// an allocation index or hostNodeId:eventName, which no local rename can move),
-// module.exports (build.ts:464, keyed on the observable exportedName),
-// records.sharedWrites (build.ts:2079, span-keyed) and events[].handlers
-// (build.ts:326, span-keyed).
+// Excluded and still order-sensitive: records.events (`buildEnrichedIrArtifact`'s
+// `records.events` - an event id is an allocation index or hostNodeId:eventName,
+// which no local rename can move), module.exports (`buildEnrichedIrArtifact`'s
+// returned `module.exports`, keyed on the observable exportedName),
+// records.sharedWrites (`buildSharedWrites`, span-keyed) and events[].handlers
+// (`buildEnrichedIrArtifact`'s `enrichedHandlers`, span-keyed).
 
 /** Blank the renamed identifiers so two IRs compare for structure, not naming. */
 function structural(value: unknown, renamed: ReadonlySet<string>): unknown {

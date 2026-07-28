@@ -488,8 +488,10 @@ describe('React structural emitter', () => {
 	 *
 	 * T011 §3.2 measured that React needs no change here: its handlers are
 	 * synchronous and resident, so the authored guard is emitted verbatim and the
-	 * declared `SyncPolicy` is used only as a cross-check
-	 * (`emitter/index.ts:2140-2152`). But NO TEST ASSERTED IT, which made "React
+	 * declared `SyncPolicy` is used only as a cross-check - `emitEvent`'s
+	 * `requiredActions` loop in `packages/frameworks/react/src/emitter/index.ts`,
+	 * which throws when a declared action is absent from the handler AST rather
+	 * than synthesising anything. But NO TEST ASSERTED IT, which made "React
 	 * needs no change" an assumption rather than a fact - and the Qwik lowering
 	 * and the Solid repair both lean on React being the reference behaviour.
 	 *
@@ -803,10 +805,13 @@ ${body}
 	 *   yuku-analyzer rejected emitted handler: 'await' is reserved in an
 	 *   async/module context and cannot be used as an identifier; Expected a
 	 *   semicolon or an implicit semicolon after a statement, but found 'ready'
-	 *       at reanalyzeFunction  (react/src/emitter/index.ts:150)
-	 *       at replaceFreeNames   (react/src/emitter/index.ts:167)
-	 *       at replaceVersionReads(react/src/emitter/index.ts:1951)
-	 *       at toConstSsa         (react/src/emitter/index.ts:2050)
+	 *
+	 * The frames are given BY SYMBOL rather than by line, which is also how they
+	 * were already abbreviated here - the raw trace carries absolute paths and
+	 * columns, so no ordinal in this block was ever a transcript byte. Innermost
+	 * first, all four in `packages/frameworks/react/src/emitter/index.ts`:
+	 * `reanalyzeFunction` <- `replaceFreeNames` <- `replaceVersionReads` <-
+	 * `toConstSsa`. `reanalyzeFunction`'s own doc comment records the same chain.
 	 *
 	 * `buildEnrichedIr` and `validateEnrichedIr` BOTH succeeded - unlike the Solid
 	 * lane, React's refusal was not a validator rule but a scratch wrapper in the

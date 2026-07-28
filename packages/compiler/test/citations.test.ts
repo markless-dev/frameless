@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, test } from 'vitest';
@@ -14,8 +15,11 @@ import {
 	findCitations,
 	foreignShadowProblems,
 	integrityProblems,
+	listTrackedSourceFiles,
 	scanRepository,
 	scanText,
+	sweepProblems,
+	sweptSourceFiles,
 } from '../../../scripts/check-citations.mjs';
 
 const repoRoot = resolve(import.meta.dirname, '../../..');
@@ -459,6 +463,113 @@ describe('T053 citation-ordinal guard', () => {
 			expect(scanText('see `packages/compiler/src/build.ts:12` ,141 later')).toHaveLength(1);
 			expect(scanText('see `packages/compiler/src/build.ts:12,and` later')).toHaveLength(1);
 			expect(scanText('see `packages/compiler/src/build.ts:12,141`')).toHaveLength(2);
+		});
+	});
+
+	/**
+	 * T056 RULING 10 — THE SWEEP, which is what CLOSED this class rather than
+	 * widening it a fourth time. T053, T054 and T055 each watched a longer named set
+	 * and each left a recorded remainder. What is asserted here is the property that
+	 * replaced the list: a tracked source file is checked because it is checked in,
+	 * not because someone remembered to name it.
+	 */
+	describe('T056 ruling 10 — every tracked source file is swept', () => {
+		test('a file in no list at all is still covered', () => {
+			// The plant that proved this ran against `packages/compiler/src/dump.ts`, a
+			// file named in NO ruling: the guard reported both the path citation and the
+			// bare ordinal that inherits it, then exited 1. Pinned here as membership so
+			// it cannot quietly fall out of scope.
+			const swept = sweptSourceFiles();
+			expect(swept).toContain('packages/compiler/src/dump.ts');
+			expect(swept).toContain('packages/compiler/src/schema.ts');
+			expect(
+				scanText(
+					commentsOnly('// see `packages/compiler/src/build.ts:428`, and also :429 nearby.\n'),
+				).map((violation) => violation.raw),
+			).toEqual(['packages/compiler/src/build.ts:428', ':429']);
+		});
+
+		test('ONLY A `path` RULING EXEMPTS — a `directory` one cannot re-blind the sweep', () => {
+			// This is the whole safety property. T055 recorded `packages/frameworks`,
+			// `packages/compiler/test` and `demos` as directory-shaped remainders; if a
+			// directory entry suppressed the sweep, re-adding one would silently exempt
+			// six lanes from the check written to cover them. So the exempted set is
+			// asserted to be EXACTLY the by-path rulings, with nothing else in it.
+			const tracked = listTrackedSourceFiles();
+			const swept = new Set(sweptSourceFiles());
+			const exempt = tracked.filter((path) => !swept.has(path));
+			const byPath = new Set([
+				...WATCHED_SOURCE.map((entry) => entry.path),
+				...NOT_YET_WATCHED.filter((entry) => entry.path).map((entry) => entry.path),
+			]);
+			expect(exempt.filter((path) => !byPath.has(path))).toEqual([]);
+			// And the same property stated from the directory side: living under a
+			// NOT_YET_WATCHED directory exempts nothing. Every tracked source file below
+			// one is still swept unless it is ALSO ruled by its own path.
+			for (const entry of NOT_YET_WATCHED) {
+				if (!entry.directory) continue;
+				const under = tracked.filter((path) => path.startsWith(`${entry.directory}/`));
+				for (const path of under) if (!byPath.has(path)) expect(swept.has(path)).toBe(true);
+			}
+		});
+
+		test('the specimen text stays exempt, and it is the ONLY thing that is', () => {
+			// T055's ruling stands: these two files QUOTE citation shapes in order to
+			// define them. Everything else that is checked in is checked.
+			const exemptSpecimens = NOT_YET_WATCHED.filter((entry) => entry.path).map(
+				(entry) => entry.path,
+			);
+			expect(exemptSpecimens).toEqual([
+				'scripts/check-citations.mjs',
+				'packages/compiler/test/citations.test.ts',
+			]);
+			const swept = new Set(sweptSourceFiles());
+			for (const path of exemptSpecimens) expect(swept.has(path)).toBe(false);
+		});
+
+		test('the ten files T056 cleared are watched BY NAME, not merely swept', () => {
+			// Being swept is the floor. These ten each carry a written reason because each
+			// was measured RED before it was cleared, and a reason is what stops the next
+			// reader assuming the ordinals were never there.
+			for (const path of [
+				'packages/compiler/test/metamorphic.test.ts',
+				'packages/compiler/test/generative.test.ts',
+				'packages/frameworks/react/test/emitter.test.ts',
+				'packages/frameworks/react/test/gate.test.ts',
+				'packages/frameworks/solid/test/emitter.test.ts',
+				'packages/frameworks/solid/test/gate.test.ts',
+				'packages/frameworks/qwik/test/gate.test.ts',
+				'packages/frameworks/angular/src/gate/index.ts',
+				'packages/frameworks/vue/test/emitted-smoke.browser.test.ts',
+				'demos/angular-official/scenarios.box.ts',
+			])
+				expect(WATCHED_SOURCE.map((entry) => entry.path)).toContain(path);
+		});
+
+		test('THE SWEEP CANNOT PASS VACUOUSLY — watched firing, not merely defined', () => {
+			// If `git ls-files` ever fails softly the sweep finds nothing and every
+			// unlisted file reads green. Both halves are pinned: the real enumeration is
+			// plausible, and a broken one is refused.
+			expect(sweepProblems()).toEqual([]);
+			expect(listTrackedSourceFiles().length).toBeGreaterThan(100);
+			expect(sweepProblems([])).toHaveLength(1);
+			expect(sweepProblems(['a.ts', 'b.ts'])[0]).toContain('only 2 tracked source file(s)');
+		});
+
+		test('`.vue`/`.svelte` are out of the lexer, and that limit is MEASURED not assumed', () => {
+			// Ruling 10 scopes to JS/TS because `commentsOnly` is a JS lexer. The honest
+			// version of that limit is a measurement: no tracked `.vue`/`.svelte` file
+			// carries a comment citation, so the scope hides nothing today.
+			const markup = execFileSync('git', ['ls-files', '-z'], {
+				cwd: repoRoot,
+				encoding: 'utf8',
+				maxBuffer: 1 << 28,
+			})
+				.split('\0')
+				.filter((path) => /\.(vue|svelte)$/.test(path));
+			expect(markup.length).toBeGreaterThan(0);
+			for (const path of markup)
+				expect(scanText(commentsOnly(readDoc(path)), path)).toEqual([]);
 		});
 	});
 

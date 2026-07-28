@@ -59,7 +59,9 @@ function component(name: string): Component {
  * This is a MEASURED property of Vue, not a flake mitigation, and it is the
  * single most surprising thing this lane found. `createInvoker` in the resolved
  * `@vue/runtime-dom@3.5.40`
- * (`dist/runtime-dom.esm-bundler.js:739-741`, `:777`) reads:
+ * (`node_modules/@vue/runtime-dom/dist/runtime-dom.esm-bundler.js:739-741`,
+ * `:777` - a published bundle, so ruling 4 in scripts/check-citations.mjs keeps
+ * the ordinals; the path is qualified so the guard can see that) reads:
  *
  *     if (!e._vts) { e._vts = Date.now(); }
  *     else if (e._vts <= invoker.attached) { return; }
