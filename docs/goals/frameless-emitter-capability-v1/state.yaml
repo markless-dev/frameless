@@ -10,7 +10,7 @@ goal:
     a type instrument actually goes RED on a wrong-typed prop when the type IS present - never
     measured in any lane. Then IR-8 supply (the only schema change), IR-8 consumption, refs,
     effects, composition.
-  status: active
+  status: blocked
   blocked_until_DISCHARGED: >-
     SATISFIED 2026-07-28. The hold read: "frameless-defects-and-targets-v1 T028 closes Phase F.
     Step 1 touches packages/compiler schema and build, seven goldens, module-set.ts and all six
@@ -90,7 +90,7 @@ visual_board:
     predecessor goal that closed complete this session. Recorded as an explicit choice, not an
     omission - the command above turns it on at any time.
 
-active_task: T999
+active_task: null
 
 tasks:
   - id: T001
@@ -2001,7 +2001,7 @@ tasks:
   - id: T999
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Final audit: certify the phase against its oracle, or refuse."
     constraints:
@@ -2015,9 +2015,43 @@ tasks:
       - "full_outcome_complete: true | false"
       - "The per-lane Step 0 RED, named"
       - "next task if not complete"
-    receipt: null
-
-
+    receipt:
+      result: done
+      decision: not_complete
+      full_outcome_complete: false
+      harness: claude-code
+      rationale: "Step 0 is FULLY DISCHARGED - six lanes, six TS2322 REDs, six green twins, plus a control arm the card never asked for. Completion fails on three independent counts: the board's own reject condition fires (e2e.mjs captures composition for react and solid ONLY); the oracle demands SIX emitters printing types and TWO do; and intake.completion_proof requires the RED against TYPED EMITTED OUTPUT, which only angular and vue have. Separately the phase SHIPPED pnpm check RED at 73 to origin/main. One-export guard verified INTACT by symbol in all four lanes."
+      summary: "Steps 0, 3 and 4 are genuinely complete; Step 1 complete as re-scoped. Steps 2 and 5 are each about a third delivered and BOTH are blocked on the same foreign lockfile. The board's evidentiary discipline is exceptionally high - every task corrected its own dispatch - BUT DISCIPLINE IS NOT COMPLETION."
+      IT_FOUND_THE_ERROR_IN_MY_BRIEF_AND_IT_IS_THE_SAME_ONE_AS_LAST_TIME: "I presented the oracle as TWO parts - signal and final_proof - and asked it to rule whether hand-written rows satisfy final_proof 'because the charter's wording is what governs'. THE CHARTER IS THREE PARTS. intake.completion_proof explicitly requires the RED 'against typed emitted output' - PM CONFIRMED at state.yaml lines 53-56. The question I framed as OPEN was ALREADY SETTLED ON THE BOARD. THIS IS THE SECOND FINAL AUDIT THIS SESSION TO CATCH ME DESCRIBING A THREE-PART ORACLE AS TWO-PART - the predecessor goal's audit found exactly the same shape."
+      the_ruling_it_gave_anyway: "final_proof ALONE is satisfiable by hand-written rows, because Step 0 is hand-written BY CHARTER DEFINITION (T001's card says HAND-WRITTEN PROBES ONLY). So naming the six hand-written REDs discharges the AUDIT obligation. It does NOT discharge the COMPLETION obligation, which completion_proof independently requires against emitted output. Four of six lanes have no emitted-output row."
+      THE_PHASE_SHIPPED_A_REGRESSION_TO_MAIN_AND_I_OWN_IT: "pnpm check was EXIT 0 before this phase - PM CONFIRMED by checking out d6b37b6, where generated/ holds .jsx files that checkJs:false left unchecked. T011's rename enrolled emitted output into the strict program via test imports; T012 measured `exclude` ineffective and moved the obligation to Step 2; STEP 2 DELIVERED 1 OF 6 LANES, so the 73 never closed. react/generated/S1.tsx:4 is still ({ label, multiplier, visible, onTrace }), untyped. THIS IS A SHIPPED REGRESSION ON MAIN, NOT DEFERRED DEBT, and no open task currently owns driving it to zero."
+      evidence:
+        step_0_per_lane_RED_hand_written_ALL_SIX_TS2322:
+          react: "tsc 5.9.3 | control GREEN | NEGATIVE RED TS2322 'Type string is not assignable to type number.' negative/Parent.tsx(6,32) exit 2 | positive GREEN"
+          solid: "tsc 5.9.3 | control GREEN | NEGATIVE RED TS2322 negative/Parent.tsx(5,32) exit 2 | positive GREEN"
+          qwik: "tsc 5.9.3 | control RED FOR A DIFFERENT CAUSE (untyped component$ rejects EVERY prop by name) | NEGATIVE RED TS2322 negative/Parent.tsx(6,32) exit 2 | positive GREEN - ROW IS REAL BUT ITS CONTROL IS NOT A CLEAN CALIBRATION"
+          vue: "vue-tsc 3.3.8 | control GREEN | NEGATIVE RED TS2322 negative/Parent.vue(7,21) exit 2 | positive GREEN"
+          svelte: "svelte-check 4.7.3 | control GREEN | NEGATIVE RED code 2322 source 'ts' negative/Parent.svelte:5:18 exit 1 | positive GREEN"
+          angular: "ng build AOT + strictTemplates | control GREEN | NEGATIVE RED TS2322 [plugin angular-compiler] negative/Parent.ts:8:48 exit 1 | positive GREEN"
+        emitted_output_RED_2_of_6_ONLY: "angular (T004): ng build AOT+strictTemplates, NEGATIVE RED TS2322 at negative/Parent.ts:8:48, control and positive GREEN. vue (T016): vue-tsc, NEGATIVE RED EXACTLY ONE diagnostic TS2322 at Parent.vue(7,15), CALIBRATION HEAD+same wrong parent GREEN, positive GREEN. react, solid, qwik and svelte have NONE - blocked on @typescript-eslint/parser, unresolvable from all four while angular HAS it, which is exactly why angular is the lane that worked."
+        one_export_guard_INTACT_cited_by_SYMBOL: "solid 'Fixture-family Solid emitter requires exactly one component'; svelte 'A .svelte module exports exactly one component'; vue 'A .vue module exports exactly one component'; angular 'Angular emitter emits exactly one exported component per module'. react and qwik have none; module-set.ts has ZERO occurrences. T007's CORRECTED ordinals went stale A THIRD TIME - svelte:1243 is the same-module-reference refusal, vue:1803 the branch-arm refusal, angular:2135 a doc comment. Only solid:463 survived. The instruction to cite by symbol was load-bearing."
+        verified_independently: "pnpm test 1235/1 (sole failure package-inventory ARM B); pnpm check exit 2 with EXACTLY 73 - 19 react/generated, 54 react/generated-composition, zero elsewhere; HEAD c06c30b == origin/main with exactly the three foreign paths."
+        no_unwitnessed_fixes_no_weakened_gates: "T004 REFUSED to weaken gate assertions and stopped at 1/6 lanes; T015 made ZERO edits rather than manufacture a slice; T007's lint red overturned a shipped contract rather than bending the emitter."
+      missing_evidence:
+        - "No emitted-output RED for react, solid, qwik or svelte - the completion_proof obligation for four of six lanes."
+        - "NO BEHAVIOURAL (BROWSER) ARM ANYWHERE for refs or effects. No corpus scenario carries an element handle or attach=, so e2e never renders one. Every Step 3/4 arm is compile-time or type-time."
+        - "No standing behavioural check in ANY lane observes a boolean prop bound ABSENT or EMPTY STRING - the strongest Vue denial on the board is pinned by text checks only."
+        - "Vue's row is REAL BUT PARTIAL by two measured constraints: booleans emit type:null by the Gate 5 flip, and only RenderOnce is annotated."
+        - "demos/vue-official is 40-RED at HEAD under vue-tsc -b, every error inside src/emitted/, and nothing in this repo runs it."
+        - "react and solid still verify their own .tsx output with lang:'jsx' at five sites - fires the moment either prints a type."
+      required_board_updates:
+        - "Record T999 not_complete, full_outcome_complete false. Steps 0,1,3,4 complete; Steps 2 and 5 partial."
+        - "CORRECT THE PM'S BRIEF ON THE RECORD: the oracle is THREE-part; completion_proof already required emitted output."
+        - "RECORD THE STANDING REGRESSION: pnpm check RED at 73 on origin/main, green before this phase. No open task owns driving it to zero."
+        - "Replace every one-export-guard citation with the four throw messages - the ordinals have now gone stale three times."
+        - "T014 IS OWNER-GATED, NOT PM-GATED. Do not dispatch it with allowed_files []. Adding the parser rewrites the owner's in-flight pnpm-lock.yaml, and T013 warned it WILL move package-inventory.test.ts - the same test currently failing - so that movement must not be read as unrelated."
+        - "A SUCCESSOR GOAL owns the rest: parser on a clean lockfile then four lanes printing types plus the five-site verifier flip; pnpm check driven to zero with the 33 narrowing errors RULED not suppressed; six-lane composition (adapters for svelte/vue/angular - angular's CANNOT be written from packages/frameworks/angular); behavioural arms via a corpus scenario carrying a handle and an attach=; and the absent/empty-string boolean tripwire."
+        - "ROUTE 2 IS PERMANENTLY CLOSED: search.tsrx carries behaviors=1, so Qwik refuses it even with handleForwards fully lowered. The five-module set caps at three lanes forever, and Route 1's M1/M2 comparison is STRICTLY NARROWER."
 checks:
   dirty_fingerprint: "not started"
   last_verification:
