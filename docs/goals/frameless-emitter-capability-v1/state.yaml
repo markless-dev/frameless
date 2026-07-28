@@ -90,7 +90,7 @@ visual_board:
     predecessor goal that closed complete this session. Recorded as an explicit choice, not an
     omission - the command above turns it on at any time.
 
-active_task: T017
+active_task: T999
 
 tasks:
   - id: T001
@@ -1876,7 +1876,7 @@ tasks:
   - id: T017
     type: worker
     assignee: Worker
-    status: active
+    status: blocked
     reasoning_hint: high
     spec: "T007 receipt, remaining_blockers - AUTHORITATIVE. T007 landed the largest safe slice and stopped at a LOWERING gap."
     objective: >-
@@ -1943,12 +1943,65 @@ tasks:
       - "You are about to add a per-lane exception to the equality check, or weaken/relocate the one-export guard."
       - "pnpm check leaves 73 or its list stops being byte-identical."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: blocked
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T017-composition-six-lane.md
+      blocked_reason: "Files outside allowed_files are needed, INCLUDING the explicitly unauthorised pnpm-lock.yaml. ROUTE 2 WAS MEASURED INCAPABLE of reaching six lanes even if fully delivered, and Route 1 needs three adapters, a CLI target inventory, composition-kit's dependency graph and an @angular/core install."
+      changed_files:
+        - docs/goals/frameless-emitter-capability-v1/notes/T017-composition-six-lane.md
+      commands:
+        - cmd: "pnpm test"
+          status: pass
+          note: "1235 passed / 1 failed (1236); the 1 is foreign, still exactly 1"
+        - cmd: "pnpm check"
+          status: pass
+          note: "EXACTLY 73, byte-identical by diff. Zero source diff, so nothing COULD move it"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0/0 over 426 files"
+        - cmd: "pnpm check:citations"
+          status: pass
+          note: "clean; 508 swept - T007 recorded 490, the sweep grew with the tree"
+        - cmd: "pnpm e2e"
+          status: blocked
+          note: "PASSES and prints 'composition-kit react=4, solid=4'. SIX LANES NOT REACHED. e2e.mjs unmodified; no per-lane exception added"
+        - cmd: "all three regeneration tiers, then git diff --exit-code"
+          status: pass
+          note: "exit 0. Proved REAL first; tier count 6/6/0 confirmed BY COUNT"
+        - cmd: "emit() over all five composition-kit modules x six lanes"
+          status: pass
+          note: "reproduced the card's per-module table EXACTLY, then FALSIFIED ITS ATTRIBUTION"
+        - cmd: "qwik emit() on search.tsrx with handleForwards stripped to []"
+          status: pass
+          note: "THE DECISIVE MEASUREMENT - refuses AGAIN on behaviors with T006's attach= design-envelope message"
+        - cmd: "import.meta.resolve probes from five directories"
+          status: pass
+          note: "@angular/core resolves ONLY from demos/angular-official"
+        - cmd: "git status --short"
+          status: pass
+          note: "the note plus exactly the three FOREIGN entries, verified untouched; HEAD unchanged; nothing committed"
+      summary: "RULED ROUTE 1, because Route 2 was MEASURED IMPOSSIBLE. Route 1's fixture emits in all six lanes but its blockers are RUNTIME, not emitter. No source file changed."
+      ROUTE_2_CANNOT_REACH_SIX_LANES_EVEN_IF_FULLY_DELIVERED: "The card and T007 both attribute search.tsrx's refusal to handleForwards ALONE. MEASURED: search.tsrx carries behaviors=1 - PM CONFIRMED, line 7 is `attach={(node) => {` - and with handleForwards STRIPPED TO [] the Qwik emitter REFUSES AGAIN with T006's attach= design-envelope message, which the owner's standing no-out-of-envelope rule protects. So a COMPLETE handleForwards lowering still leaves Qwik at 4/5 modules PERMANENTLY, and page.tsrx imports Search. THE FIVE-MODULE SET IS CAPPED AT THREE LANES (react, solid, angular), NOT SIX. That is why it declined to write a lowering that was inside its own allowed_files: it could not close the verify line, and shipping two lanes of work scoped to a route now known closed is a PM scoping decision."
+      MY_OUT_OF_SCOPE_LIST_WAS_WRONG_IN_BOTH_DIRECTIONS: "I named three files out of reach. It is AT LEAST FIVE - and one of the three, vite.config.ts, WAS ALREADY IN T017'S OWN allowed_files (PM CONFIRMED). Newly out of scope: packages/cli/package.json, demos/*-official/**, and packages/frameworks/*/generated/** which copy-emitted reads. AND packages/cli/src/program.ts ALONE CANNOT EXTEND THE CLI: importFrameworkTarget resolves through packages/cli/node_modules/@frameless, which holds EXACTLY compiler, react and solid (PM CONFIRMED), and emittedFilenameFor maps every .tsrx to .tsx with NO target parameter - svelte needs .svelte, vue .vue, angular .ts."
+      route_1s_blockers_are_RUNTIME_not_emitter: "src/adapter.ts exists in react, solid and qwik ONLY - PM CONFIRMED svelte, vue and angular have NONE. Svelte's and Vue's could be written here (their src/** is allowed and their runtimes resolve in-package). ANGULAR'S CANNOT: @angular/core is not a dependency of packages/frameworks/angular and resolves NOWHERE in the repo except demos/angular-official. And demos/composition-kit resolves NONE of the six required packages."
+      AND_A_SIX_LANE_M1_M2_COMPARISON_WOULD_BE_STRICTLY_NARROWER: "Named so nobody reads it as equal. ABSENT from M1/M2: the whole shared() family, elementHandleBindings, handleForwards, handleCalls, behaviors, events, ALL STATE, multi-component modules, every target.module==='self' reference, a module importing three siblings, and any non-literal cross-boundary prop. OF THE FOUR e2e COMPOSITION SCENARIOS ONLY slot-rendering HAS AN M1/M2 COUNTERPART - shared-dashboard, status-tier and search-focus-cleanup would have none."
+      deviations:
+        - "Wrote only the note, no emitter code - see the Route 2 finding for why that was the right call rather than a shortfall."
+        - "Its first resolution probe used require.resolve and wrongly reported @qwik.dev/core unresolvable from its own package. RE-MEASURED with import.meta.resolve: it resolves. The angular finding survived both probes, which is why it is stated as strongly as it is."
+      remaining_blockers:
+        - "QWIK CAN NEVER EMIT search.tsrx - behaviors, by design-envelope doctrine. The five-module set is capped at three lanes."
+        - "NO ADAPTER for svelte, vue or angular; angular's cannot be written from packages/frameworks/angular at all."
+        - "demos/composition-kit resolves none of vue, svelte, @angular/core, @qwik.dev/core or the two vite plugins - closing it needs its package.json plus an install that rewrites the FOREIGN lockfile."
+        - "packages/cli/src/program.ts alone cannot extend the CLI - node_modules/@frameless holds three packages and emittedFilenameFor has no target parameter."
+        - "COMPOSITION CANNOT JOIN THE S-SCENARIO ORACLE FROM HERE: that oracle is the three-way matrix over demos/*-official, whose scenarios.box.ts, three-way-contract.ts and copy-emitted are all outside allowed_files."
+        - "A six-lane M1/M2 comparison would be STRICTLY NARROWER - the omissions are enumerated above."
+      stopped_because: "Files outside allowed_files including the unauthorised lockfile; and Route 2 was measured incapable of reaching six lanes at all."
   - id: T999
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     objective: "Final audit: certify the phase against its oracle, or refuse."
     constraints:
