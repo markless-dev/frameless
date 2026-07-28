@@ -11,7 +11,7 @@
  * `onTrace` is the emitted components' trace callback. The official demos are
  * activation lanes, not analyzer lanes, so every lane passes a no-op.
  */
-export type ScenarioId = 's1' | 's2' | 's3' | 's4' | 's5'
+export type ScenarioId = 's1' | 's2' | 's3' | 's4' | 's5' | 's6'
 
 export const noTrace = () => {}
 
@@ -41,6 +41,27 @@ export const s4Seed = [
 export const s5Seed = [{ id: 'k1' }, { id: 'k2' }, { id: 'k3' }]
 
 /**
+ * S6's whitespace seed. TWO rows, each with two single-character values, because
+ * the scenario's observable is what sits BETWEEN them: `pairs` reads
+ * `{row.left}{joiner}{row.right}` per row, and one row could not distinguish
+ * "the separator changed" from "the clicked row was rebuilt".
+ */
+export const s6Seed = [
+  { id: 'w1', left: 'a', right: 'b' },
+  { id: 'w2', left: 'c', right: 'd' },
+]
+
+/**
+ * S6's whitespace-bearing label, and the reason the scenario can measure
+ * interpolated whitespace at all. Its leading space, its interior DOUBLE space
+ * and its trailing space are significant and must survive verbatim in all six
+ * lanes. A template text node could not carry them: this lane's own gate
+ * (`condense-stable-text`) rejects an emitted text node with a whitespace edge
+ * and the Angular emitter throws on one, so the whitespace travels as DATA.
+ */
+export const s6Label = ' wide  load '
+
+/**
  * Maps a request URL onto a scenario id. Character-for-character the same
  * function `demos/react-official/src/App.jsx` and `demos/solid-official/src/App.jsx`
  * carry, so all three `template-ssr-*` lanes route identically.
@@ -59,5 +80,6 @@ export function scenarioFor(url: string | undefined): ScenarioId {
   if (path === 's3') return 's3'
   if (path === 's4') return 's4'
   if (path === 's5') return 's5'
+  if (path === 's6') return 's6'
   return 's1'
 }

@@ -10,7 +10,7 @@ import {
 
 // SvelteKit's default `trailingSlash: 'never'`, so these are the canonical
 // forms and the lane never pays for a redirect navigation.
-const paths = { s1: '/', s2: '/s2', s3: '/s3', s4: '/s4', s5: '/s5' } as const
+const paths = { s1: '/', s2: '/s2', s3: '/s3', s4: '/s4', s5: '/s5', s6: '/s6' } as const
 
 /**
  * The dev-warning check witness itself cannot make.
@@ -62,7 +62,7 @@ async function assertNoDevDiagnostics(page: PageHandle): Promise<string> {
 
 export default box(
 	{
-		name: 'svelte-official — S1/S2/S3/S4/S5 from emitted output',
+		name: 'svelte-official — S1/S2/S3/S4/S5/S6 from emitted output',
 		modes: ['dev'],
 		tags: ['three-way'],
 	},

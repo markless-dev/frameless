@@ -120,10 +120,12 @@ One line per framework, so a lane that lands can discharge itself without rewrit
   example 2 was re-run on that ground by T005, split into 2a and 2b, and folded back by T006.
 - **Angular**, since `frameless-angular-v1` T004 put `@angular/core@22.0.8` in the lockfile and
   landed `demos/angular-official` on the official Angular CLI SSR scaffold. Worked example 11 was
-  re-run on that ground by T005 and folded back by T008. Worked examples 4 and 5 still read
-  `DEFERRED — framework absent` and are therefore stale by this line alone; their re-run is owed and
-  is queued as `frameless-angular-v1` T009, which is why they are left standing here rather than
-  silently re-labelled.
+  re-run on that ground by T005 and folded back by T008. Worked examples 4 and 5 were the two
+  entries this line left standing as stale-and-owed; **that re-run has landed.** Both were re-run in
+  full by T009 and folded back by T011, so **no Angular entry reads `DEFERRED` at any gate any
+  more.** Example 4 keeps its `no-sugar` ruling and its deciding Gate 2, with its three `DEFERRED`s
+  replaced by two `UNKNOWN`s and one `FAIL`; example 5's ruling **changed** — all six gates `PASS`
+  and it is now **sugar, adopted**, carried by Gate 6. Nothing is owed on this line.
 
 Any entry still reading `DEFERRED — framework absent` for a framework named above is stale by that
 fact alone, and must be **re-run** rather than re-read: a stale label is not a verdict, and the
@@ -543,31 +545,174 @@ rationale**; clearing the labels is the occasion to measure the rationale, not a
 
 ### 4. Angular — two-way binding `[(prop)]` on an emitted child → **no-sugar**
 
+**Re-run in full, not amended.** This entry carried three `DEFERRED`s recorded when Angular was
+absent from this repo. Every deferring condition is now discharged — `@angular/core@22.0.8` is in
+the lockfile and `packages/frameworks/angular` exists — so all six gates were re-run by
+`frameless-angular-v1` T009. **The ruling is unchanged and its deciding gate is unchanged. Three
+`DEFERRED`s became two `UNKNOWN`s and one `FAIL`, and Gate 5's reason was re-measured rather than
+carried forward.**
+
 Baseline: `[prop]="x"` plus `(propChange)="x = $event"`, with the handler as a class method.
 Note this baseline is itself a sanctioned Angular form — there is no naive form to fall back to.
 
-**G1 DEFERRED — framework absent** (no Angular in this repo's lockfile). **G2 FAIL**: `[(prop)]` is
-legal only if the child module declares the prop as two-way capable. Frameless emits one module per
-`EnrichedIR`; the parent cannot decide the child's declaration form. **G4 DEFERRED — emitter
-absent.** Independently **G5 FAIL**: the implicit change-output name is derived by appending
-`Change` to the input name, so a component with sibling props `count` and `countChange` — both
-legal frameless props — collides, whereas the baseline uses the author's two names as written.
-**G6 DEFERRED** (no Angular lane, and the sugar is version-gated with no target-version input).
-Two independent `FAIL`s, which outrank the three deferrals: **denied, not deferred**. The ruling is
-stable.
+Domain, in emitter terms: a two-way binding on a **child component instantiated by the emitted
+module**. The emitter emits one component per `EnrichedIR` and instantiates no child components, so
+this domain is **empty** — which is what makes two of the six gates unanswerable rather than
+passing.
 
-### 5. Angular — `@if` / `@for` control-flow blocks → **deferred**
+- **G1 `UNKNOWN` — which is a no.** `DEFERRED — framework absent` is **discharged and unavailable**.
+  No `[(prop)]` / `[prop]`+`(propChange)` pair was ever built, because there is no instance to build
+  one from, so the correspondence was not measured and `PASS` is not earned. Same shape as worked
+  example 11b's Gate 1.
+- **G2 `FAIL`, and this is the ruling.** `[(prop)]` is legal only if the child module declares the
+  prop two-way capable. Frameless emits one module per `EnrichedIR`; the parent cannot decide the
+  child's declaration form. This is this gate's own general statement — *this is the gate that every
+  framework's two-way-binding sugar fails* — and it holds at every Angular version, with or without
+  a lane, with or without IR-1.
+- **G3 `PASS`.** The trigger would be declared IR fields; no handler contents and no expression
+  shapes are inspected.
+- **G4 `UNKNOWN` — which is a no.** `DEFERRED — emitter absent` is **discharged and unavailable**:
+  the emitter exists. The domain is empty, and "the sugar applies to all zero of them, therefore
+  total, therefore `PASS`" is the vacuous totality worked example 7 refused and worked example 11b
+  named *the folklore domain arriving by the back door*.
+- **G5 `FAIL`, re-measured at the pin rather than inherited.** The implicit change-output name is
+  derived by appending `Change` to the input name, so a component with sibling props `count` and
+  `countChange` — both legal frameless props — collides, whereas the baseline uses the author's two
+  names as written. Measured in `@angular/core@22.0.8`: the derivation is literal string
+  concatenation, `hasInput(directiveDef, name) && hasOutput(directiveDef, name + 'Change')`
+  (`_debug_node-chunk.mjs:8516`) and `outputBinding(publicName + 'Change', …)` (`:8590`).
+- **G6 `FAIL`.** `DEFERRED — no lane` is **discharged** by `demos/angular-official`. It does not
+  ripen into `PASS`: no check can exist for a path the emitter refuses to emit — the same clause
+  worked examples 2b, 6's `on()` arm, 7 and 11b record.
 
-**G1 DEFERRED — framework absent**: no Angular in this repo's lockfile, so the only available
-evidence is documentary, which this gate does not accept. G2 PASS, G3 PASS (structural template
-facts). **G4 DEFERRED — emitter absent.** G5 PASS. **G6 DEFERRED** (no Angular lane). No gate
-`FAIL`s. Ruling: baseline until an Angular lane exists. This is a deferral, not a rejection.
+Three `FAIL`s and two `UNKNOWN`s → **denied, not deferred.** Say which one decides it: **Gate 2**,
+because it is structural — it follows from frameless emitting one module per `EnrichedIR`. Gate 5's
+collision is real and measured but is a naming accident a different IR could avoid; Gate 6's `FAIL`
+is retirable in principle. The ruling is stable.
 
-Read this example together with the forced-lowering note above: most of what looks like Angular
-"idiom sugar" is not sugar at all. Angular template expressions forbid `const`, arrow functions,
-destructuring and `++`, so frameless handler bodies must become class methods regardless of any
-ruling here. The procedure applies to genuine choices between sanctioned forms, not to lowerings
-the target language forces.
+**Re-open** when the IR grows a bindable prop kind (IR-1) **and** the emitter instantiates child
+components, at which point Gates 1 and 4 become answerable on a real instance — and Gate 2 will
+still be `FAIL`.
+
+### 5. Angular — `@if` / `@for` control-flow blocks → **sugar**
+
+**Re-run in full, not amended. The ruling changed.** This entry previously read *deferred, not
+denied — baseline until an Angular lane exists*. Every deferring condition is now met —
+`@angular/core@22.0.8` is in the lockfile, `packages/frameworks/angular` exists, and `pnpm e2e`
+drives `demos/angular-official` on the official Angular CLI SSR scaffold — so the procedure was
+re-run in full by `frameless-angular-v1` T009. **All six gates `PASS`. It ripened rather than
+curdling**, which worked example 6 did not and worked example 7 did.
+
+**The emitter has shipped this form since the lane landed.** That was a live contradiction between
+this document and shipped code, flagged by `frameless-angular-v1` T005 and deliberately left unruled
+there. The re-run resolves it **in the emitter's favour, on measurement** — not by relabelling.
+
+Baseline: `*ngIf` / `*ngFor` with `<ng-template #else>`, a `trackBy:` method, and
+`imports: [NgIf, NgForOf]` on the standalone component. Candidate sugar: `@if` / `@else` /
+`@for … ; track …`.
+
+**The baseline is `*ngIf`/`*ngFor` and the deprecation tag does not change that.** Limb (a) of the
+baseline definition resolves to `*ngIf`/`*ngFor` — valid from Angular 2.0, and **measured** to
+compile with zero errors and zero warnings at 22.0.8 under `strict` + `strictTemplates`. Limb (b)
+ties at zero: the baseline's `imports: [NgIf]` is an entry in the emitted module's **own** metadata,
+which Gate 2's scoping paragraph settles. `NgIf`, `NgForOf` and `NgSwitch` do carry
+`@deprecated 20.0 / Intent to remove in a future major release`
+(`@angular/common/types/_common_module-chunk.d.ts:840, :507, :1097`), and it has **no diagnostic
+force**: it surfaces only as TypeScript *suggestion* diagnostic `6385`, which `ng build`,
+`performCompilation` and this repo's emitted-typecheck lanes all do not collect. **A tag is not a
+diagnostic.** The baseline definition has no deprecation limb, and an inversion argued from the tag
+would be arguing from a criterion this document does not contain.
+
+Domain, in emitter terms: every `TemplateNode` of kind `'branch'` reaching `renderBranch()` and
+every `TemplateNode` of kind `'keyed-repeat'` reaching `renderKeyedRepeat()` in
+`packages/frameworks/angular/src/emitter/index.ts`.
+
+- **G1 `PASS`.** Was `DEFERRED — framework absent`; **discharged**, and the coupling rule required
+  it to move together with Gate 6. Measured, not read, at `@angular/core@22.0.8`: the shipped
+  `generated/S1.ts` and `generated/S2.ts` were AOT-compiled **byte-for-byte** beside twins whose
+  only change is the control-flow form, under `strict` + `strictTemplates`. **Every arm reports zero
+  errors and zero warnings**, including a `*ngFor` arm carrying no `trackBy` at all. The instrument
+  is calibrated four ways and goes red on **both** arms — a planted unknown member in the test
+  expression yields `TS2339` under `@if` *and* under `*ngIf`, so the clean baseline is a measurement
+  and not an unexercised path.
+- **G2 `PASS`.** `@if`/`@for` require nothing of anyone: no import, no plugin, no dependency, and no
+  declaration by a parent, a child, another module or the build graph.
+- **G3 `PASS`.** The trigger is `TemplateNode.kind`, a declared IR structural fact. The deciding
+  functions read only declared fields — `arms[].kind`, `index`, `empty`, `item`,
+  `collection.expression`, `key.expression`. No handler body is inspected, so the later-pass rider
+  does not engage.
+- **G4 `PASS` on a narrowed rule.** `DEFERRED — emitter absent` is **discharged and unavailable**.
+  Counterexamples are exhibitable from the emitter's own code — `renderKeyedRepeat` refuses an
+  `index` binding and an `empty` fallback, `renderBranch` refuses more than two arms, `blockBody`
+  refuses non-block-level children. The repair applies and every narrowing term is a declared IR
+  field: branches with one `then` arm and at most one `else` arm whose children are all block-level,
+  and keyed repeats with no `index`, no `empty`, and an identifier-safe `item`. On the narrowed rule
+  the sugar is **total** — all 8 control-flow blocks in the shipped corpus take it with zero
+  refusals. Re-running from Gate 1 on the narrowed rule changes no outcome.
+- **G5 `PASS`, measured on node identity rather than on rendered markup.** Both forms were driven
+  through four collection mutations with live DOM nodes tagged before each. Under a reverse, nodes
+  **move** and keys read `c,b,a` with marks `n2,n1,n0` — **identically in both arms**. Under a
+  wholesale replacement of every item object with a fresh clone carrying the same ids, nodes are
+  **reused**, identically in both arms. Removing the middle row and prepending a new one are
+  identical too, and the prepend's `NEW` cell is what proves the reader can tell reuse from
+  recreation. `@if`/`@else` against `*ngIf` + `<ng-template #else>` renders identical DOM in the
+  then state, in the else state, and after toggling back. **Two differences were found and neither
+  is on this gate's list:** comment-anchor placement in the else state, and duplicate track keys —
+  where **neither arm throws** and both render both rows, but the candidate emits a dev-mode
+  `console.warn` `NG0955` while the baseline is silent, which is the candidate being *more*
+  diagnostic. *Recorded so nothing is over-claimed:* event routing and lifecycle were not
+  independently driven across a control-flow boundary in both arms, and the probes ran in `jsdom`
+  against a real AOT compile; if either is challenged, re-run in Chromium rather than defend `jsdom`.
+- **G6 `PASS`, and it is the deciding gate.** Was `DEFERRED — no lane`; **discharged** by
+  `demos/angular-official`, so `DEFERRED` is unavailable. A check this repo already runs **does** go
+  red on the regression, and it is **third-party-authored**:
+  `packages/frameworks/angular/src/gate/index.ts` derives its applied `@angular-eslint` set from
+  upstream's own `meta.docs.recommended`, and `@angular-eslint/template/prefer-control-flow` is
+  **1 of only 4** template rules in it (of 41). Measured: it reports the baseline three times by
+  name — *"Use built-in control flow instead of directive ngIf / ngForOf"* — and the shipped
+  candidate zero times, with a planted `([ngModel])` drawing `banana-in-box` as calibration. A
+  second claimed benefit is asserted by a second standing check: `@for`'s `track` is **syntactically
+  mandatory**, pinned by the gate's `parseTemplate` arbiter with a track-deletion mutation proving
+  red, whereas `*ngFor`'s `trackBy` is **optional and its omission silent** — measured, a `*ngFor`
+  arm with no `trackBy` compiles clean. The gate's `BASELINE_FORM_INVENTORY` additionally pins
+  `@if` / `@else` / `@for` as an exact allowlist. **State the negative result plainly:** `pnpm e2e`
+  would **not** go red on a competent switch to the baseline, because Gate 5 measured the two forms
+  behaviourally indistinguishable; it would go red on an incompetent one, because dropping `@if`
+  without adding `imports: [NgIf]` yields `NG8103` and renders the guarded subtree not at all. What
+  pins this form choice is the emitter gate, not the browser.
+
+All six `PASS` → **sugar**. Say which one carries it: **Gate 6**, and it is the only one that was
+ever in doubt.
+
+**The contrast with worked example 11 is the argument, and both rulings rest on the same
+measurement taken twice.** That entry's Gate 6 `FAIL` turned on `@angular-eslint/prefer-signals`
+living in `all` rather than `recommended`, so the applied set is **silent** on a planted
+`seed = input()` — "they decided it is an opinion you may opt into." Upstream made the **opposite**
+call for control flow, and the applied set is **loud**. Two Angular sugars, one metadata read each,
+opposite answers.
+
+**On Gate 6's reading, because it is contestable.** Gate 6's preamble demands a check that exercises
+the target lane and asserts observable behaviour. Read as governing every bullet, no non-behavioural
+benefit could ever pass this gate — yet Gate 5 explicitly *routes* non-behavioural reasons here,
+saying they "may be the reason to adopt a sugar, and as such they are adjudicated by Gate 6, which
+requires them to be **measured**." Measurement is what this gate demands of them, and it is what was
+supplied. Recorded because the strict reading would flip this entry to `FAIL` and force the emitter
+to rewrite 8 shipped call sites into a form its own applied arbiter reports as a violation.
+
+**The version corollary is discharged the second way and this entry does not weaken it.**
+`@if`/`@for` floors at 17.0, and the emitted module **already floors at 19.0** for an unrelated
+reason — the absence of a `standalone` key, which is the entry that sets `ANGULAR_BASELINE_FLOOR`.
+So this sugar costs the lane **no version reach at all**: adopting the baseline would widen the
+form's range and widen the emitted module's range by exactly zero. IR-4 is **not** this ruling's
+blocker; per `frameless-svelte-v1` T999 it could not have been, since no gate `FAIL`s.
+
+Read this example together with the forced-lowering note in the preamble. Most of what looks like
+Angular "idiom sugar" is not sugar at all — frameless handler bodies must become class methods
+regardless of any ruling here. **This one is genuine sugar**, which is why it went through all six
+gates, and it is the first Angular entry to reach `PASS` at every one. Note also that the preamble's
+claim that Angular template expressions forbid **arrow functions** is stale at 22.0.8
+(`compiler.d.ts:1964` declares `class ArrowFunction extends AST`); forced lowering is unaffected,
+because `const`/`let` and `UpdateExpression` remain absent from the action grammar.
 
 ### 6. Svelte 5 — routing a declared `stopPropagation` through `on()` from `svelte/events` → **no-sugar**
 

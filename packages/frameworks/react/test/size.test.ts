@@ -132,6 +132,11 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// the Solid gate forbids sharing one between them, so the cost is paid twice by
 	// construction rather than by choice.
 	S5: { physicalLoc: 73, structuralNodes: 343 },
+	// S6 likewise has no handwritten reference, so this is a budget. It is the
+	// corpus's cheapest scenario per DOM site: whitespace-sensitive text costs
+	// nothing structural at all - the observable is which characters end up
+	// between the nodes, not how many nodes there are.
+	S6: { physicalLoc: 73, structuralNodes: 353 },
 };
 
 describe('honest emitted structure comparison', () => {

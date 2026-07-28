@@ -154,7 +154,7 @@ const LANES = [
 	},
 ];
 
-const SCENARIO_FILES = { s1: 'S1', s2: 'S2', s3: 'S3', s4: 'S4', s5: 'S5' };
+const SCENARIO_FILES = { s1: 'S1', s2: 'S2', s3: 'S3', s4: 'S4', s5: 'S5', s6: 'S6' };
 
 // ---------------------------------------------------------------------------
 // Byte-verified text surgery
@@ -315,6 +315,47 @@ const s5RebuiltFromStaleCollection = (find, replacement) => ({
 	apply: (source) => replaceOnce(source, find, replacement),
 });
 
+/**
+ * S6's axis, in all six lanes: ONE text node's edge whitespace, and nothing else.
+ *
+ * T024 ratified the axis in those words — "the mutant must alter exactly one text
+ * node's leading or trailing whitespace" — and this is the smallest edit that
+ * satisfies it: a single space is inserted between the `start` text node and the
+ * interpolation glued to it, giving that text node a trailing space it did not
+ * have. Not a character is changed anywhere else, no value moves, no structure
+ * moves, and the emitted file still parses, type-checks and renders.
+ *
+ * It is the mutant that makes the scenario's own instrument load-bearing. Every
+ * OTHER scenario in this corpus reads its text through `measureText`, which ends
+ * `.replace(/\s+/g, ' ').trim()` — S6 is the first scenario with a reader
+ * (`measureExactText`) that does not, and this mutant is the thing that reader
+ * exists to catch. It is also the exact class the corpus nearly shipped: S2's
+ * `1/2` becoming `1 /2` under Vue's condense, one authored line, one invisible
+ * character, no error anywhere.
+ *
+ * WHY THE `start` RUN AND NOT ONE OF THE OTHER FOUR TEXT SITES. It is the only
+ * one all six lanes spell as text immediately followed by an interpolation on the
+ * SAME line, which is what makes the inserted space survive in every lane: in
+ * react, solid and qwik the run is JSX, and a space adjacent to a NEWLINE is
+ * discarded by the JSX text rule, so a mutant placed at a line boundary there
+ * would be a silent no-op in three lanes and a real edit in three others. That
+ * asymmetry would have made the harness's verdict a property of the emitters'
+ * line breaking rather than of the corpus.
+ *
+ * Spelled in each lane's own interpolation idiom, not inherited between lanes:
+ * `{done}` in react and svelte, `{done()}` in solid, `{done.value}` in qwik and
+ * `{{ done }}` in vue and angular.
+ */
+const s6TextEdgeWidened = (find, replacement) => ({
+	axis: "one text node's edge whitespace, with nothing else changed",
+	text: `${find}  ->  ${replacement}`,
+	expect:
+		'the glue run renders "start 1pxend" instead of "start1pxend" as served, so the scenario ' +
+		'goes red on its FIRST reading — before any click — with a one-character difference that ' +
+		'`measureText` would have collapsed away',
+	apply: (source) => replaceOnce(source, find, replacement),
+});
+
 const MUTANTS = {
 	react: {
 		s1: s1DerivedFrozen('${count * multiplier}', '${1 * multiplier}'),
@@ -328,6 +369,7 @@ const MUTANTS = {
 			'{entries.map((entry) => (',
 			'{seed.map((entry) => (',
 		),
+		s6: s6TextEdgeWidened('start{done}', 'start {done}'),
 	},
 	solid: {
 		s1: s1DerivedFrozen('${count() * props.multiplier}', '${1 * props.multiplier}'),
@@ -338,6 +380,7 @@ const MUTANTS = {
 		),
 		s4: s4NestingCollapsed('<For each={group.rows}>', '<For each={groups[0].rows}>'),
 		s5: s5RebuiltFromStaleCollection('<For each={entries}>', '<For each={props.seed}>'),
+		s6: s6TextEdgeWidened('start{done()}', 'start {done()}'),
 	},
 	qwik: {
 		s1: s1DerivedFrozen('${count.value * props.multiplier}', '${1 * props.multiplier}'),
@@ -351,6 +394,7 @@ const MUTANTS = {
 			'{entries.map((entry) => (',
 			'{props.seed.map((entry) => (',
 		),
+		s6: s6TextEdgeWidened('start{done.value}', 'start {done.value}'),
 	},
 	svelte: {
 		s1: s1DerivedFrozen('${count * multiplier}', '${1 * multiplier}'),
@@ -370,6 +414,10 @@ const MUTANTS = {
 			'{#each entries as entry (entry.id)}',
 			'{#each seed as entry (entry.id)}',
 		),
+		s6: s6TextEdgeWidened(
+			'start{done}{unit}end',
+			'start {done}{unit}end',
+		),
 	},
 	vue: {
 		s1: s1DerivedFrozen('${count.value * props.multiplier}', '${1 * props.multiplier}'),
@@ -380,6 +428,10 @@ const MUTANTS = {
 		),
 		s4: s4NestingCollapsed('v-for="row in group.rows"', 'v-for="row in groups[0].rows"'),
 		s5: s5RebuiltFromStaleCollection('v-for="entry in entries"', 'v-for="entry in seed"'),
+		s6: s6TextEdgeWidened(
+			'start{{ done }}{{ unit }}end',
+			'start {{ done }}{{ unit }}end',
+		),
 	},
 	angular: {
 		s1: s1DerivedFrozen('${this.count * this.multiplier}', '${1 * this.multiplier}'),
@@ -398,6 +450,10 @@ const MUTANTS = {
 		s5: s5RebuiltFromStaleCollection(
 			'@for (entry of entries; track entry.id)',
 			'@for (entry of seed; track entry.id)',
+		),
+		s6: s6TextEdgeWidened(
+			'start{{ done }}{{ unit }}end',
+			'start {{ done }}{{ unit }}end',
 		),
 	},
 };

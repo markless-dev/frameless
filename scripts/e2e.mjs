@@ -55,7 +55,14 @@ const officialDemos = [
 // down: s1's is selected by a static prop and s2's `@else` arm is empty, so the
 // axis on which block-based, reconciling and RESUMED renderers differ most had
 // no instance at all.
-const threeWayScenarios = ['s1', 's2', 's3', 's4', 's5'];
+// s6 joined it because the corpus's only text/interpolation adjacency was s2's
+// `{complete}/{todos.length}`, and that one nearly broke: Vue's SFC compiler
+// condenses whitespace and Angular's `parseTemplate` keeps a lone newline
+// verbatim, so the SAME authored layout would have rendered `1 /2` in one lane
+// and `1\n/2` in another. Nothing in the corpus measured the characters BETWEEN
+// values until s6, and `measureText` — which every other scenario reads through
+// — collapses whitespace before comparing, so it could not have.
+const threeWayScenarios = ['s1', 's2', 's3', 's4', 's5', 's6'];
 // @async/witness is a dev tool of the workspace, already installed for the ssr
 // and persistence demos. The runner aliases '@async/witness' for the box files
 // it loads, so the official demos run boxes without depending on it themselves.

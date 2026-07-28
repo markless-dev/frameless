@@ -30,9 +30,9 @@
  */
 import type { EnvironmentResponse, ExpectApi, PageHandle } from '@async/witness'
 
-export type ScenarioId = 's1' | 's2' | 's3' | 's4' | 's5'
+export type ScenarioId = 's1' | 's2' | 's3' | 's4' | 's5' | 's6'
 
-export const scenarioIds: readonly ScenarioId[] = ['s1', 's2', 's3', 's4', 's5']
+export const scenarioIds: readonly ScenarioId[] = ['s1', 's2', 's3', 's4', 's5', 's6']
 
 /**
  * How each framework becomes interactive. React, Solid, Svelte, Vue and Angular
@@ -268,6 +268,41 @@ export function measureText(html: string, marker: string): string {
     .trim()
 }
 
+/**
+ * The text of the element carrying `marker`, WITH ITS WHITESPACE INTACT.
+ *
+ * Deliberately NOT a parameter on `measureText`, and deliberately not a
+ * refactor of it. `measureText` ends `.replace(/\s+/g, ' ').trim()`, which is
+ * correct for every scenario whose observable is the VALUE rendered — S1's
+ * `kit:2` reads the same however a framework laid the markup out, and five
+ * scenarios' worth of recorded observation strings depend on that reading
+ * staying byte-identical. It is also exactly the normalisation S6 exists to
+ * measure, so a shared reader would have made this scenario unable to fail.
+ *
+ * The comment and tag stripping is retained and is not optional: React writes
+ * `<!-- -->` between adjacent text children, Solid wraps every interpolation in
+ * `<!--$-->…<!--/-->`, Qwik and Angular write their own markers, and
+ * `1<!-- -->/<!-- -->2` and `1/2` have to measure the same. What must NOT be
+ * stripped is whitespace, because whitespace is the observation.
+ *
+ * Two independent instruments end up on this scenario, which is the point: this
+ * one reads the SERIALIZED DOM through `page.content()` and preserves
+ * everything, while `expect.page.text` compares `el.textContent.trim()` in the
+ * browser. Every S6 marker's text begins and ends with a non-space character, so
+ * the trim in the second one removes nothing and the two must agree.
+ */
+export function measureExactText(html: string, marker: string): string {
+  const { tag, afterOpen } = locate(html, marker)
+  const close = html.indexOf(`</${tag}>`, afterOpen)
+  if (close === -1) {
+    throw new Error(`Cannot measure: no closing </${tag}> for ${marker}.`)
+  }
+  return html
+    .slice(afterOpen + 1, close)
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<[^>]*>/g, '')
+}
+
 /** The value of one attribute on the element carrying `marker`. */
 export function measureAttribute(html: string, marker: string, name: string): string | null {
   const { open, afterOpen } = locate(html, marker)
@@ -315,6 +350,19 @@ export function measureGroupKeys(html: string): string[] {
  */
 export function measureBranchKeys(html: string): string[] {
   return measureKeyAttribute(html, 'data-oracle-branch-key')
+}
+
+/**
+ * Every row identity in S6's list, in document order.
+ *
+ * A FOURTH key attribute, for the reason the second and third exist:
+ * `measureRowKeys`, `measureCellKeys` and `measureBranchKeys` each match their
+ * own attribute, so a scenario reusing one would silently join that scenario's
+ * observation string, and S2's, S4's and S5's reads have to keep measuring
+ * exactly what they measured before S6 existed.
+ */
+export function measureTextKeys(html: string): string[] {
+  return measureKeyAttribute(html, 'data-oracle-text-key')
 }
 
 /**
@@ -516,6 +564,22 @@ export const resumeSymbols: Record<
   // for the subtree that was destroyed, which is worth recording because it is
   // the answer to "did the rebuild rebind" being yes without a second fetch.
   s5: { includes: '_button_q_e_click_', atLeast: 4 },
+  // S6 clicks three DISTINCT handlers: `tick` and `pad` on the board and one
+  // `widen` inside a keyed row. `_button_q_e_click_` is the segment prefix all
+  // three share — the same structural read s2, s4 and s5 make.
+  //
+  // MEASURED off this lane's own `handlerSegments` evidence — three segments, in
+  // click order, verbatim:
+  //
+  //   WhitespaceBoard.jsx_WhitespaceBoard_component_section_button_q_e_click_C410pHxdYjw.js
+  //   WhitespaceBoard.jsx_WhitespaceBoard_component_section_button_q_e_click_1_6HsIOE63DYU.js
+  //   WhitespaceBoard.jsx_WhitespaceBoard_component_section_ul_li_button_q_e_click_imyNaruplkc.js
+  //
+  // THREE clicks, THREE segments, and that one-to-one is itself the reading: no
+  // handler here shares a QRL with another, so each click paid for exactly its
+  // own import. S5's six clicks pulled four segments; this scenario has no
+  // rebuilt subtree to resolve a handler out of an already-imported QRL.
+  s6: { includes: '_button_q_e_click_', atLeast: 3 },
 }
 
 function forbidInServedPayload(served: EnvironmentResponse, fragments: string[]): void {
@@ -1413,14 +1477,233 @@ export async function assertS5(page: PageHandle, expect: ExpectApi): Promise<str
 }
 
 /**
+ * The exact characters S6's five text sites currently carry, read through
+ * `measureExactText` so that nothing is trimmed or collapsed on the way out.
+ *
+ * `pairs` is read per row, keyed by `data-oracle-text-key`, so the reading also
+ * says WHICH row carried which characters. A renderer that updated one row's
+ * separator and not the other's changes this string while a flat read of the
+ * document's text would not.
+ */
+async function measureWhitespace(page: PageHandle): Promise<{
+  ratio: string
+  glue: string
+  wrap: string
+  mixed: string
+  fixed: string
+  pairs: string
+}> {
+  const html = await page.content()
+  return {
+    ratio: measureExactText(html, 'data-ratio="true"'),
+    glue: measureExactText(html, 'data-glue="true"'),
+    wrap: measureExactText(html, 'data-wrap="true"'),
+    mixed: measureExactText(html, 'data-mixed="true"'),
+    fixed: measureExactText(html, 'data-static="true"'),
+    pairs: measureTextKeys(html)
+      .map((key) => `${key}=${JSON.stringify(measureExactText(html, `data-pair="${key}"`))}`)
+      .join(' '),
+  }
+}
+
+/**
+ * The whitespace assertion, hand-rolled for the same reason `requireNesting` and
+ * `requireBranch` are: the sentence a failure raises has to name WHICH text site
+ * moved and what a move there means, and `expect.page.*` cannot compare a string
+ * without trimming its edges first.
+ *
+ * Every expected value is quoted with `JSON.stringify` in the message. That is
+ * not decoration — a failure on this scenario is by construction a difference of
+ * invisible characters, and `expected "a b" but got "a b"` is not a diagnostic.
+ */
+function requireWhitespace(
+  actual: Record<string, string>,
+  expected: Record<string, string> & { step: string },
+): void {
+  const why: Record<string, string> = {
+    ratio:
+      'two interpolations separated by a single "/" and nothing else. Anything between them ' +
+      'was injected by a renderer, and this is the reading S2 nearly lost when a lane ' +
+      'condensed `1/2` into `1 /2`.',
+    glue:
+      'a text run holding TWO ADJACENT interpolations with no separator at all. A ' +
+      'pretty-printer that broke this run across lines and a template compiler that turned ' +
+      'the line break into a space would both show up here and nowhere else.',
+    wrap:
+      'whitespace carried by the DATA, not by the template: leading, trailing and interior ' +
+      'runs inside an interpolated value. Template whitespace is normalised by four of the ' +
+      'six lanes; an interpolated value must not be, and this is the reading that says so.',
+    mixed:
+      'text, an inline element and text again with no whitespace anywhere between them. An ' +
+      'emitter that put the inline element on its own line changes this and nothing else.',
+    fixed:
+      'a static text node whose interior single spaces must survive verbatim. It never ' +
+      'changes for the whole scenario, so a move here is a renderer rewriting text it was ' +
+      'never asked to touch.',
+    pairs:
+      'THREE adjacent interpolations inside a keyed row, with the middle one holding a value ' +
+      'whose own edges are spaces. This is the deepest site in the scenario and the only one ' +
+      'inside a repeat.',
+  }
+  for (const [key, want] of Object.entries(expected)) {
+    if (key === 'step') continue
+    if (actual[key] === want) continue
+    throw new Error(
+      `${expected.step} the ${key} text reads ${JSON.stringify(actual[key])}, not ` +
+        `${JSON.stringify(want)}. That site is ${why[key]}`,
+    )
+  }
+}
+
+/**
+ * S6 — whitespace-sensitive text: the exact characters between and around
+ * interpolations, as served and across three updates.
+ *
+ * ## Why this scenario exists at all
+ *
+ * The corpus's only text/interpolation adjacency was S2's
+ * `{complete}/{todos.length}`, and it very nearly broke: Vue's SFC compiler
+ * defaults to `whitespace: 'condense'` and would have rendered `1/2` as `1 /2`
+ * had the emitter broken that run across lines, while Angular's `parseTemplate`
+ * keeps a lone newline verbatim and would have produced `1\n/2` from the SAME
+ * layout. Two lanes, two different wrong answers, from one authored string. That
+ * is measured, not hypothetical — the Angular lane refuted the Vue lane's
+ * measurement of this exact shape.
+ *
+ * So this scenario puts five differently-shaped text runs in one component and
+ * asserts their characters exactly. Nothing here is about a value being right;
+ * every reading is about what is, or is not, between the values.
+ *
+ * ## What the fixture may and may not contain, and why
+ *
+ * Every static text node in `s6-whitespace-text.tsrx` is `trim()`-stable. That
+ * is a MEASURED constraint, not a style: the Angular emitter's `escapeText`
+ * THROWS on template text whose own edges are whitespace, and the Vue gate's
+ * `condense-stable-text` rejects the emitted result of the same shape. So a
+ * space next to an interpolation cannot be authored in the template at all, and
+ * every space this scenario needs beside a value is carried by the DATA instead
+ * — `label` for `wrap`, the `joiner` state for `pairs`.
+ *
+ * That split is the scenario's sharpest claim, because the two halves are not
+ * treated alike: template whitespace is normalised by four of the six lanes,
+ * interpolated whitespace by none of them. `wrap` and `pairs` are where the
+ * second half is asserted.
+ *
+ * ## The three transitions, and what each one isolates
+ *
+ * | step | what must move | what must not |
+ * |---|---|---|
+ * | `tick` | `ratio`, `glue`, `mixed` | `wrap`, `fixed`, `pairs` |
+ * | `pad` | `wrap`, and ONLY by whitespace | everything else |
+ * | `widen` (inside a keyed row) | `pairs` | `glue`, `fixed` |
+ *
+ * `pad` is the one that could not be written any other way. It replaces the
+ * interpolated value with the same value plus one leading and one trailing
+ * space, so the update is INVISIBLE to any comparison that trims — including
+ * `measureText`, which every other scenario in this file reads through. A
+ * renderer that diffed text after normalising it would satisfy every other step
+ * and produce no change at all here.
+ *
+ * `widen` is the same claim one level deeper and at a site that is genuinely
+ * shared: it sets a single component-level separator that BOTH rows interpolate
+ * between their own two values, so `pairs` moves in both rows at once and a
+ * lane that rebuilt only the clicked row reads a mixed string.
+ *
+ * Nothing here reads `data-oracle-row-key`, `data-oracle-cell-key` or
+ * `data-oracle-branch-key`: S2, S4 and S5 own those, and S6 keys its rows with
+ * `data-oracle-text-key`.
+ */
+export async function assertS6(page: PageHandle, expect: ExpectApi): Promise<string[]> {
+  const observed: string[] = []
+  await expect.page.exists(page, '[data-scenario="s6"]')
+  await expect.page.text(page, '[data-ratio="true"]', '1/2')
+  await expect.page.text(page, '[data-glue="true"]', 'start1pxend')
+
+  const initial = await measureWhitespace(page)
+  requireWhitespace(initial, {
+    ratio: '1/2',
+    glue: 'start1pxend',
+    wrap: '[ wide  load ]',
+    mixed: 'apxz',
+    fixed: 'one two three',
+    pairs: 'w1="a|b" w2="c|d"',
+    step: 'as served',
+  })
+  observed.push(
+    `server-rendered ratio ${JSON.stringify(initial.ratio)}, glue ${JSON.stringify(initial.glue)}, ` +
+      `wrap ${JSON.stringify(initial.wrap)}, mixed ${JSON.stringify(initial.mixed)}, static ` +
+      `${JSON.stringify(initial.fixed)} and pairs ${initial.pairs}`,
+  )
+
+  // Two values change at once, and they are projected at three different kinds
+  // of site: between a "/" separator, glued to another interpolation, and inside
+  // an inline element. The update must not widen any of them.
+  await page.click('[data-action="tick"]')
+  await expect.page.text(page, '[data-glue="true"]', 'start2emend')
+  const ticked = await measureWhitespace(page)
+  requireWhitespace(ticked, {
+    ratio: '2/2',
+    glue: 'start2emend',
+    wrap: '[ wide  load ]',
+    mixed: 'aemz',
+    fixed: 'one two three',
+    pairs: 'w1="a|b" w2="c|d"',
+    step: 'after one tick',
+  })
+  observed.push(
+    `after one tick ratio ${JSON.stringify(ticked.ratio)}, glue ${JSON.stringify(ticked.glue)} ` +
+      `and mixed ${JSON.stringify(ticked.mixed)} with wrap still ${JSON.stringify(ticked.wrap)}`,
+  )
+
+  // A text update whose ENTIRE content is whitespace. Everything that trims
+  // sees no change here at all.
+  await page.click('[data-action="pad"]')
+  await expect.page.text(page, '[data-wrap="true"]', '[  wide  load  ]')
+  const padded = await measureWhitespace(page)
+  requireWhitespace(padded, {
+    ratio: '2/2',
+    glue: 'start2emend',
+    wrap: '[  wide  load  ]',
+    mixed: 'aemz',
+    fixed: 'one two three',
+    pairs: 'w1="a|b" w2="c|d"',
+    step: 'after padding the note',
+  })
+  observed.push(
+    `after padding the note wrap ${JSON.stringify(padded.wrap)} and static still ` +
+      `${JSON.stringify(padded.fixed)}`,
+  )
+
+  // A handler inside a keyed row sets a separator both rows interpolate, and the
+  // new separator's own edges are spaces.
+  await page.click('[data-widen="w2"]')
+  await expect.page.text(page, '[data-pair="w2"]', 'c w2 d')
+  const widened = await measureWhitespace(page)
+  requireWhitespace(widened, {
+    ratio: '2/2',
+    glue: 'start2emend',
+    wrap: '[  wide  load  ]',
+    mixed: 'aemz',
+    fixed: 'one two three',
+    pairs: 'w1="a w2 b" w2="c w2 d"',
+    step: 'after widening w2',
+  })
+  observed.push(
+    `after widening w2 pairs ${widened.pairs} and glue still ${JSON.stringify(widened.glue)}`,
+  )
+  return observed
+}
+
+/**
  * Every scenario is handed both sites — the live page and the payload the
  * server sent for it — and reads each observation from the one it names. S1, S2,
- * S4 and S5 observe only live state and declare two parameters; S3 observes both.
+ * S4, S5 and S6 observe only live state and declare two parameters; S3 observes
+ * both.
  */
 const assertions: Record<
   ScenarioId,
   (page: PageHandle, expect: ExpectApi, served: EnvironmentResponse) => Promise<string[]>
-> = { s1: assertS1, s2: assertS2, s3: assertS3, s4: assertS4, s5: assertS5 }
+> = { s1: assertS1, s2: assertS2, s3: assertS3, s4: assertS4, s5: assertS5, s6: assertS6 }
 
 /**
  * Runs one scenario end to end: wait for the framework to be able to react,

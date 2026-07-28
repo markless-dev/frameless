@@ -34,3 +34,24 @@ export const s4Seed = [
  * distinguishable from each other and from a correct one.
  */
 export const s5Seed = [{ id: 'k1' }, { id: 'k2' }, { id: 'k3' }];
+
+/**
+ * S6's whitespace seed. TWO rows, each with two single-character values, because
+ * the scenario's observable is what sits BETWEEN them: `pairs` reads
+ * `{row.left}{joiner}{row.right}` per row, and one row could not distinguish
+ * "the separator changed" from "the clicked row was rebuilt".
+ */
+export const s6Seed = [
+	{ id: 'w1', left: 'a', right: 'b' },
+	{ id: 'w2', left: 'c', right: 'd' }
+];
+
+/**
+ * S6's whitespace-bearing label, and the reason the scenario can measure
+ * interpolated whitespace at all. Its leading space, its interior DOUBLE space
+ * and its trailing space are significant and must survive verbatim in all six
+ * lanes. A template text node could not carry them: the Angular emitter refuses
+ * template text whose own edges are whitespace and the Vue gate rejects the
+ * emitted result, so the whitespace has to travel as DATA.
+ */
+export const s6Label = ' wide  load ';

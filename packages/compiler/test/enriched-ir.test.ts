@@ -11,6 +11,7 @@ const FIXTURES = [
 	's3-event-form.tsrx',
 	's4-nested-list.tsrx',
 	's5-branch-teardown.tsrx',
+	's6-whitespace-text.tsrx',
 ] as const;
 
 const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>> = {
@@ -103,6 +104,35 @@ const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>>
 		['div', 'data-arm'],
 		['output', 'data-idle-ticks'],
 		['p', 'data-idle-seen'],
+		['button', 'data-action'],
+	],
+	// S6's rows carry `data-oracle-text-key`, a FOURTH key attribute, for the same
+	// reason S4 introduced the second and S5 the third: every key reader in
+	// `three-way-contract.ts` matches its own attribute, so a scenario reusing one
+	// would silently join that scenario's observation string.
+	//
+	// EVERY text node in this fixture is `trim()`-stable, and that is a MEASURED
+	// constraint rather than a style choice. The Angular emitter's `escapeText`
+	// throws on any template text whose own edges are whitespace, and the Vue
+	// gate's `condense-stable-text` rejects the emitted result for the same shape.
+	// So the only whitespace this scenario can put in the TEMPLATE is interior —
+	// `one two three` — and every space that has to sit next to an interpolation
+	// is carried by the DATA instead (`label`, and the `joiner` state). See the
+	// T027 note for the divergence that constraint is guarding against, and for
+	// the part of it the two gates do NOT guard.
+	's6-whitespace-text.tsrx': [
+		['section', 'data-scenario'],
+		['p', 'data-ratio'],
+		['p', 'data-glue'],
+		['p', 'data-wrap'],
+		['p', 'data-mixed'],
+		['b', 'data-emph'],
+		['p', 'data-static'],
+		['ul', 'data-lines'],
+		['li', 'data-oracle-text-key'],
+		['span', 'data-pair'],
+		['button', 'data-widen'],
+		['button', 'data-action'],
 		['button', 'data-action'],
 	],
 };
@@ -518,6 +548,7 @@ describe('fixture-family sufficiency', () => {
 			's3-event-form.tsrx': ['text', 'checked', 'submit', 'bubble'],
 			's4-nested-list.tsrx': ['flip', 'reorder', 'select'],
 			's5-branch-teardown.tsrx': ['toggle', 'tick', 'pick', 'drop'],
+			's6-whitespace-text.tsrx': ['widen', 'tick', 'pad'],
 		};
 		for (const file of FIXTURES) {
 			const ir = await fixtureIr(file);
@@ -728,6 +759,127 @@ describe('a branch that tears a POPULATED arm down at runtime', () => {
 		// and rebuilt by the flip.
 		expect(handlersIn(hostIdsInLiveArm)).toBe(2);
 		expect(handlersIn(hostIdsInIdleArm)).toBe(1);
+	});
+});
+
+describe('text nodes whose exact characters are the observable', () => {
+	/**
+	 * T027. Its own walker again, for the reason `armSites` gives: S6's claim is
+	 * about the CHARACTERS of static text and about what sits either side of it,
+	 * and a shared helper would make S6's measurement depend on a function S4 and
+	 * S5 also drive.
+	 */
+	function textSites(ir: EnrichedIR): Array<{ label: string; reads: readonly unknown[] }> {
+		const sites: Array<{ label: string; reads: readonly unknown[] }> = [];
+		for (const node of allTemplateNodes(ir)) {
+			if (node.kind === 'dynamic-text') sites.push({ label: `${node.id} text`, reads: node.reads });
+			if (node.kind === 'host')
+				for (const binding of node.dynamicBindings)
+					sites.push({ label: `host ${node.id} ${binding.name}`, reads: binding.reads });
+			if (node.kind === 'branch') sites.push({ label: `${node.id} branch`, reads: node.reads });
+			if (node.kind === 'keyed-repeat') {
+				sites.push({ label: `${node.id} collection`, reads: node.collection.reads });
+				sites.push({ label: `${node.id} key`, reads: node.key.reads });
+			}
+		}
+		return sites;
+	}
+
+	function staticTexts(ir: EnrichedIR): string[] {
+		return allTemplateNodes(ir)
+			.filter((node) => node.kind === 'text')
+			.map((node) => (node.kind === 'text' ? node.value : ''));
+	}
+
+	test('S6: no dynamic site lowers to reads: []', async () => {
+		const ir = await compileOnlyFixtureIr('s6-whitespace-text.tsrx');
+		const sites = textSites(ir);
+		expect(sites.length).toBe(14);
+		expect(sites.filter((site) => site.reads.length === 0).map((site) => site.label)).toEqual([]);
+	});
+
+	/**
+	 * THE CONSTRAINT THE FIXTURE IS AUTHORED UNDER, asserted rather than left as a
+	 * comment. `escapeText` in the Angular emitter throws on any template text
+	 * whose own edges are whitespace, and the Vue gate rejects the same shape after
+	 * condense. A future edit that adds `<p>{a} of {b}</p>` to this fixture would
+	 * otherwise be discovered as a THROW three lanes downstream.
+	 */
+	test('S6: every static text node is trim-stable and non-empty', async () => {
+		const ir = await compileOnlyFixtureIr('s6-whitespace-text.tsrx');
+		const texts = staticTexts(ir);
+		expect(texts.length).toBeGreaterThan(0);
+		expect(texts.filter((value) => value !== value.trim() || value.length === 0)).toEqual([]);
+	});
+
+	/**
+	 * THE INPUT SIDE OF THE WHITESPACE FINDING, and the half of it that turned out
+	 * to be narrower than expected. MEASURED at `@markless/compiler` 0.1.1, not
+	 * assumed:
+	 *
+	 *   `two  spaces`  -> `two  spaces`   a run of SPACES survives verbatim
+	 *   `a   b`        -> `a   b`         at any length
+	 *   `tab\there`    -> `tab here`      a TAB becomes exactly one space
+	 *   `tab\t\there`  -> `tab  here`     one space PER tab, not condensed
+	 *   `x\ny`         -> `x y`           a NEWLINE becomes exactly one space
+	 *
+	 * So an emitter can never be handed a tab or a newline inside template text
+	 * from a `.tsrx` source, and the lanes' divergent treatment of those two
+	 * characters is unreachable from this toolchain. A run of SPACES is fully
+	 * reachable, and that is the one the T027 note reports as an open finding: the
+	 * emitters hand it through unchanged and four of the six lanes' own template
+	 * compilers then disagree about it.
+	 */
+	test('S6: the IR preserves space runs verbatim and maps tabs and newlines to one space each', async () => {
+		const ir = await compileOnlyFixtureIr('s6-whitespace-text.tsrx');
+		expect(staticTexts(ir)).toContain('one two three');
+		const probe = async (text: string): Promise<string[]> =>
+			staticTexts(
+				await buildEnrichedIr({
+					filename: 'probe.tsrx',
+					source: `import { state } from '@markless/core';
+
+export function Probe({ seed }) @{
+	let a = state(seed);
+
+	<p data-probe={a}>${text}</p>
+}
+`,
+				}),
+			);
+		expect(await probe('two  spaces')).toEqual(['two  spaces']);
+		expect(await probe('a   b')).toEqual(['a   b']);
+		expect(await probe('tab\there')).toEqual(['tab here']);
+		expect(await probe('tab\t\there')).toEqual(['tab  here']);
+		expect(await probe('x\ny')).toEqual(['x y']);
+	});
+
+	/**
+	 * The three adjacencies the scenario exists to measure, each of which a
+	 * pretty-printer could break across lines and silently widen:
+	 * interpolation/text/interpolation, text/interpolation/interpolation/text and
+	 * three interpolations with nothing at all between them.
+	 */
+	test('S6: the corpus gains runs of adjacent dynamic text with no whitespace', async () => {
+		const ir = await compileOnlyFixtureIr('s6-whitespace-text.tsrx');
+		const runs = allTemplateNodes(ir)
+			.filter((node) => node.kind === 'host')
+			.map((node) =>
+				node.kind === 'host'
+					? node.children
+							.map((child) =>
+								child.kind === 'text'
+									? JSON.stringify(child.value)
+									: child.kind === 'dynamic-text'
+										? '{}'
+										: `<${child.kind}>`,
+							)
+							.join('')
+					: '',
+			);
+		expect(runs).toContain('{}"/"{}');
+		expect(runs).toContain('"start"{}{}"end"');
+		expect(runs).toContain('{}{}{}');
 	});
 });
 

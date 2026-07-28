@@ -12,6 +12,7 @@ const fixtures = [
 	['S3.jsx', 's3-event-form.json'],
 	['S4.jsx', 's4-nested-list.json'],
 	['S5.jsx', 's5-branch-teardown.json'],
+	['S6.jsx', 's6-whitespace-text.json'],
 ] as const;
 
 await mkdir(resolve(root, 'generated'), { recursive: true });

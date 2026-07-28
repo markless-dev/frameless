@@ -3,6 +3,7 @@ import { EventForm } from './emitted/EventForm.jsx'
 import { KeyedTodo } from './emitted/KeyedTodo.jsx'
 import { NestedBoard } from './emitted/NestedBoard.jsx'
 import { RenderOnce } from './emitted/RenderOnce.jsx'
+import { WhitespaceBoard } from './emitted/WhitespaceBoard.jsx'
 
 // One shared IR, three emitters. These props are the same ones demos/qwik passes
 // in src/routes/**, so the three official demos are directly comparable.
@@ -25,6 +26,21 @@ const s4Seed = [
 // zero, so a rebuild from a stale snapshot and a rebuild from nothing are
 // distinguishable from each other and from a correct one.
 const s5Seed = [{ id: 'k1' }, { id: 'k2' }, { id: 'k3' }]
+// S6's whitespace seed. TWO rows, each with two single-character values, because
+// the scenario's observable is what sits BETWEEN them: `pairs` reads
+// `{row.left}{joiner}{row.right}` per row, and one row could not distinguish "the
+// separator changed" from "the clicked row was rebuilt".
+//
+// `s6Label` is the whole reason the scenario can measure interpolated whitespace
+// at all. Its leading space, its interior DOUBLE space and its trailing space are
+// significant and must survive verbatim in all six lanes; a template text node
+// could not carry them, because the Angular emitter refuses template text whose
+// own edges are whitespace and the Vue gate rejects the emitted result.
+const s6Seed = [
+  { id: 'w1', left: 'a', right: 'b' },
+  { id: 'w2', left: 'c', right: 'd' },
+]
+const s6Label = ' wide  load '
 
 /**
  * Maps a request URL onto a scenario id. The stock create-vite SSR scaffold
@@ -32,7 +48,7 @@ const s5Seed = [{ id: 'k1' }, { id: 'k2' }, { id: 'k3' }]
  * mirrors the Qwik demo's `/`, `/s2`, `/s3` routes without adding a router.
  *
  * @param {string} url
- * @returns {'s1' | 's2' | 's3' | 's4' | 's5'}
+ * @returns {'s1' | 's2' | 's3' | 's4' | 's5' | 's6'}
  */
 export function scenarioFor(url) {
   const path = String(url ?? '')
@@ -42,6 +58,7 @@ export function scenarioFor(url) {
   if (path === 's3') return 's3'
   if (path === 's4') return 's4'
   if (path === 's5') return 's5'
+  if (path === 's6') return 's6'
   return 's1'
 }
 
@@ -58,6 +75,8 @@ export default function App({ url }) {
       return <NestedBoard seed={s4Seed} onTrace={noTrace} />
     case 's5':
       return <BranchBoard seed={s5Seed} onTrace={noTrace} />
+    case 's6':
+      return <WhitespaceBoard seed={s6Seed} label={s6Label} onTrace={noTrace} />
     default:
       return <RenderOnce label="kit" multiplier={2} visible={true} onTrace={noTrace} />
   }

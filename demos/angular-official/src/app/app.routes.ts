@@ -5,7 +5,8 @@ import { EventForm } from '../emitted/EventForm';
 import { KeyedTodo } from '../emitted/KeyedTodo';
 import { NestedBoard } from '../emitted/NestedBoard';
 import { RenderOnce } from '../emitted/RenderOnce';
-import { noTrace, s2Seed, s4Seed, s5Seed } from './scenario-props';
+import { WhitespaceBoard } from '../emitted/WhitespaceBoard';
+import { noTrace, s2Seed, s4Seed, s5Seed, s6Label, s6Seed } from './scenario-props';
 
 /**
  * DELTA from the `ng new --ssr` scaffold's `app.routes.ts`, which ships
@@ -48,5 +49,10 @@ export const routes: Routes = [
     path: 's5',
     component: BranchBoard,
     data: { seed: s5Seed, onTrace: noTrace },
+  },
+  {
+    path: 's6',
+    component: WhitespaceBoard,
+    data: { seed: s6Seed, label: s6Label, onTrace: noTrace },
   },
 ];

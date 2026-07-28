@@ -46,3 +46,25 @@ export const s4Seed = [
  * distinguishable from each other and from a correct one.
  */
 export const s5Seed = [{ id: 'k1' }, { id: 'k2' }, { id: 'k3' }];
+
+/**
+ * S6's whitespace seed. TWO rows, each with two single-character values, because
+ * the scenario's observable is what sits BETWEEN them: `pairs` reads
+ * `{row.left}{joiner}{row.right}` per row, and one row could not distinguish
+ * "the separator changed" from "the clicked row was rebuilt".
+ */
+export const s6Seed = [
+  { id: 'w1', left: 'a', right: 'b' },
+  { id: 'w2', left: 'c', right: 'd' },
+];
+
+/**
+ * S6's whitespace-bearing label, and THIS LANE IS THE REASON IT EXISTS. The
+ * scenario needs a space either side of an interpolated value, and this
+ * emitter's `escapeText` throws outright on template text whose own edges are
+ * whitespace - `preserveWhitespaces: false` condenses a run to one space and
+ * keeps a lone newline verbatim, so a text node placed next to an interpolation
+ * would render differently here from the other five lanes. The whitespace
+ * therefore travels as DATA, where no template compiler touches it.
+ */
+export const s6Label = ' wide  load ';

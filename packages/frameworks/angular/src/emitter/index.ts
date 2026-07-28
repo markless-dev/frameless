@@ -966,11 +966,69 @@ function renderHost(
  * A branch becomes Angular 17+ BUILT-IN CONTROL FLOW - `@if` / `@else` - never
  * `*ngIf`.
  *
- * That is not a preference: `@angular-eslint/template/prefer-control-flow` is in
- * this lane's applied rule set and reports `*ngIf`/`*ngFor` directly (MEASURED,
- * see `test/gate.test.ts`). `*ngIf` would additionally need an `imports: [NgIf]`
- * entry on the standalone component, which is machinery the IR does not declare.
- * The version floor this costs is recorded in the gate's baseline form inventory.
+ * `@if`/`@else`/`@for` IS A RULING, NOT A PREFERENCE, and this is the decision
+ * site the idiom policy's "Recording a ruling" item 2 requires a comment at.
+ * Ruled SUGAR, ADOPTED - re-run in full against the landed lane by
+ * `frameless-angular-v1` T009 and folded into `docs/emitter-idiom-policy.md` as
+ * worked example 5 by T011. Six outcomes: G1 PASS, G2 PASS, G3 PASS, G4 PASS
+ * (narrowed), G5 PASS, G6 PASS. No gate is DEFERRED - the lane landed, so both
+ * deferring conditions are discharged - and this is the first Angular entry to
+ * reach PASS at every gate.
+ *
+ * GATE 6 CARRIES IT, and it is the only gate that was ever in doubt. This
+ * comment used to assert, bare, that `@angular-eslint/template/prefer-control-flow`
+ * is in this lane's applied rule set and reports `*ngIf`/`*ngFor` directly. That
+ * claim is now MEASURED TRUE rather than asserted: the applied set is DERIVED
+ * from upstream's own `meta.docs.recommended === 'recommended'`, and
+ * `prefer-control-flow` is 1 of only 4 template rules in it out of 41. On the
+ * shipped candidate it reports 0 messages; on the `*ngIf`/`*ngFor` baseline it
+ * reports 3, by name - "Use built-in control flow instead of directive ngIf /
+ * ngForOf" - with a planted `([ngModel])` drawing `banana-in-box` as the
+ * calibration proving the harness can report at all. See `test/gate.test.ts`.
+ *
+ * THE CONTRAST WITH WORKED EXAMPLE 11 IS THE ARGUMENT, and it is the same
+ * metadata read taken twice. `prefer-signals` lives in `all`, not `recommended`,
+ * so the applied set is SILENT on a planted `seed = input()` and that entry's
+ * Gate 6 FAILs; upstream made the opposite call here and the applied set is
+ * LOUD. Opposite answers because the measurements are opposite.
+ *
+ * NOT THE REASON, and it must not be reinstated: "`NgIf` carries `@deprecated
+ * 20.0`, therefore the baseline/candidate assignment inverts." MEASURED AND
+ * REFUTED TWICE OVER. The policy's baseline definition has no deprecation limb
+ * at all, and `*ngIf`/`*ngFor` AOT-compiles with 0 errors and 0 warnings at
+ * 22.0.8 under `strict` + `strictTemplates`, including a `*ngFor` arm carrying
+ * no `trackBy`. The deprecation surfaces only as TypeScript SUGGESTION
+ * diagnostic 6385, which `ng build`, `performCompilation` and this repo's
+ * emitted-typecheck lanes all decline to collect. A tag is not a diagnostic. So
+ * `*ngIf`/`*ngFor` stays the baseline and `@if`/`@for` stays the candidate: the
+ * ASSIGNMENT is unchanged and the RULING is what moved.
+ *
+ * THE HONEST NEGATIVE. Gate 5 measured the two forms behaviourally
+ * indistinguishable - node identity preserved identically across reverse,
+ * whole-object replacement, removal and prepend - so `pnpm e2e` would NOT go red
+ * on a competent switch to `*ngIf`. It would go red on an incompetent one:
+ * dropping `@if` without adding `imports: [NgIf]` yields NG8103 and the guarded
+ * subtree renders not at all. What pins this form choice is the emitter gate,
+ * not the browser.
+ *
+ * TWO THINGS A LATER AUDITOR MUST NOT REDISCOVER AS A SURPRISE.
+ * 1. GATE 6'S READING IS CONTESTABLE and was decided on Gate 5's own routing
+ *    sentence, which sends non-behavioural reasons to Gate 6 and demands only
+ *    that they be MEASURED. Under the strict reading - Gate 6's preamble
+ *    governing every bullet - this entry flips to FAIL and the emitter is forced
+ *    to rewrite its shipped control-flow call sites into a form this lane's own
+ *    applied arbiter reports as a violation. Both readings are recorded in
+ *    `docs/goals/frameless-angular-v1/notes/T009-control-flow.md`.
+ * 2. GATE 6'S PASS DEPENDS ON UPSTREAM keeping `prefer-control-flow` in its
+ *    `recommended` metadata tier. If it moves to `all`, the deciding gate loses
+ *    its PASS and worked example 5 must be re-run. That is the single most
+ *    fragile input in this ruling.
+ *
+ * `*ngIf` would additionally need an `imports: [NgIf]` entry on the standalone
+ * component, which is machinery the IR does not declare. The version floor this
+ * costs is recorded in the gate's baseline form inventory, and it is ZERO reach:
+ * `@if` floors at 17.0 but the emitted module already floors at 19.0 on the
+ * absence of a `standalone` key, which dominates it.
  */
 function renderBranch(
 	node: Extract<TemplateNode, { kind: 'branch' }>,
@@ -1014,6 +1072,36 @@ function blockBody(
  * the `require-each-key` hole at the compiler, exactly as
  * `frameless-angular-v1` T002's dissent 2 predicted, and the IR's `key`
  * expression supplies it directly.
+ *
+ * `@for … ; track …` OVER `*ngFor` + `trackBy:` IS A RULING, and this is the
+ * second of the two decision sites it is recorded at - see `renderBranch` above
+ * for the full six-gate record. Ruled SUGAR, ADOPTED by `frameless-angular-v1`
+ * T009, folded in as `docs/emitter-idiom-policy.md` worked example 5 by T011.
+ * All six gates PASS; none is DEFERRED. THE DECIDING GATE IS G6, and the
+ * measurement is that the lane's applied `@angular-eslint` set - DERIVED from
+ * upstream's `meta.docs.recommended === 'recommended'` - carries
+ * `prefer-control-flow` as 1 of only 4 template rules of 41, reporting the
+ * `*ngFor` baseline by name and the shipped `@for` zero times.
+ *
+ * THE `track` MANDATE ABOVE IS G6'S SECOND LIMB, and its force comes from the
+ * asymmetry: under the baseline, `trackBy` is OPTIONAL AND ITS OMISSION SILENT -
+ * measured, a `*ngFor` arm with no `trackBy` at all AOT-compiles with 0
+ * diagnostics at 22.0.8. The candidate cannot be written wrong in that way; the
+ * baseline can, and nothing would say so.
+ *
+ * G4 IS TOTAL ON A NARROWED RULE whose every term is a declared IR field: no
+ * `index`, no `empty`, an identifier-safe `item`. The refusals below are that
+ * narrowing, and they are also the exhibited counterexamples the gate wants. At
+ * `abb5e44` the corpus offered 8 control-flow blocks across 4 of 5 goldens - S3
+ * emits neither `@if` nor `@for`, S1 emits no `@for` - and every one takes the
+ * sugar with zero refusals. S6 has since added a ninth. THE COUNT MOVES WITH THE
+ * CORPUS; THE RULING IS AT THE FORM LEVEL AND DOES NOT.
+ *
+ * G5 measured node identity across reverse, whole-object replacement with
+ * preserved ids, removal and prepend: nodes MOVE rather than being recreated,
+ * IDENTICALLY IN BOTH ARMS. The one candidate-only behaviour found - a dev-mode
+ * `console.warn` NG0955 on duplicate track keys, where NEITHER arm throws - is
+ * the candidate being MORE diagnostic, and is not on Gate 5's failure list.
  */
 function renderKeyedRepeat(
 	node: Extract<TemplateNode, { kind: 'keyed-repeat' }>,

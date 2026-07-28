@@ -131,7 +131,7 @@ visual_board:
     url: "http://goalbuddy.localhost:41737/frameless-defects-and-targets-v1/"
     command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-defects-and-targets-v1"
 
-active_task: T027
+active_task: T038
 
 tasks:
   - id: T001
@@ -3361,7 +3361,7 @@ tasks:
   - id: T027
     type: worker
     assignee: Worker
-    status: active
+    status: blocked
     reasoning_hint: high
     pm_card_defect_corrected_from_T026: >-
       T026 SHIPPED WITH scripts/corpus-mutation.mjs MISSING FROM ITS allowed_files while its
@@ -3458,8 +3458,113 @@ tasks:
       - "You are about to weaken an existing activation-neutrality assertion to make the scenario pass."
       - "Need files outside allowed_files."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: blocked
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T027-corpus-s6-whitespace.md
+      summary: "S6 whitespace-sensitive text landed in ALL SIX lanes; pnpm e2e reports 6 demos x 6 scenarios, all observations equal (30 -> 36 records). No emitter threw; the S6 IR has ZERO zero-read sites. Six mutants, six red sites, all at the lane's own in-box assertion. measureText was left BYTE-UNCHANGED and a new measureExactText added - a shared reader would have made this scenario unable to fail."
+      THE_AXIS_PRODUCED_THE_FINDING_IT_WAS_RATIFIED_TO_PRODUCE: "T024 ranked whitespace as the axis most likely to yield a REAL divergence rather than a test artefact. IT DID. One authored space inside a static text node splits the six lanes THREE-THREE. Measured end to end in each lane's OWN demo pipeline in a real browser: react, qwik and svelte PRESERVE 'one  two three' and their boxes went RED; solid, vue and angular CONDENSE it to 'one two three' and their boxes PASSED - the change was ERASED. Confirmed per lane in isolation on 'two  spaces here': react-dom 19.2.3 and svelte 5.56.8 preserve; babel-preset-solid 1.9.12, @vue/compiler-sfc 3.5.40 and @angular/compiler 22.0.8 condense."
+      SOLID_IS_THE_SURPRISE_AND_IT_BREAKS_THE_TIDY_STORY: "Solid takes the SAME JSX path as react and qwik and is THE ONLY JSX LANE THAT CONDENSES. So the split is not 'template compilers condense, JSX preserves' - which is exactly the tidy story a reader would have assumed without measuring. AND THE SOLID GATE HAS NO WHITESPACE POLICY AT ALL: PM verified independently, grep -c whitespace returns 0 in both packages/frameworks/solid/src/gate/index.ts and custom-policies.ts. The lane most likely to be assumed safe by analogy is the one with no instrument."
+      NO_GATE_CATCHES_IT_AND_THE_REASON_IS_STRUCTURAL: "Both documented whitespace policies - vue's condense-stable-text and angular's whitespace-stable-text - reduce to the SAME predicate, content !== content.trim() || content.length === 0, WHICH GUARDS TEXT-NODE EDGES. 'one  two three' is TRIM-STABLE, so it passes both gates, both emitters, pnpm check and pnpm lint, and then renders differently in three of six lanes. PM CONFIRMED: the angular gate's own violation message names 'an untrimmed EDGE'. And it is reachable from .tsrx, because the compiler passes space runs through VERBATIM - measured."
+      IT_DID_NOT_SHIP_THE_DIVERGENT_CONSTRUCT_AND_ARGUED_THE_CALL: "The Worker kept the divergent construct OUT of the shipped fixture rather than either normalising an emitter or shipping a permanently-red scenario. Its reasoning, at length in note section 4.4: shipping it would make S6 PERMANENTLY RED in three lanes and forfeit the FOUR whitespace claims S6 CAN prove across all six. NOTHING WAS NORMALISED AND NO GATE WAS WIDENED - the two moves the charter forbids. The PM finds the reasoning sound and the alternatives worse, but it is a judgement about what the corpus ASSERTS, so it is routed to T038 to ratify or overturn EXPLICITLY rather than standing by default."
+      two_measurements_that_narrowed_the_axis: "(1) Tabs and newlines in template text are mapped to ONE SPACE EACH BY THE COMPILER, so the Vue-versus-Angular tab disagreement T024 anticipated is UNREACHABLE from .tsrx - a ratified sub-axis retired by measurement rather than left hanging. (2) Whitespace carried by DATA is preserved verbatim by all six lanes, which is why every space S6 needs beside a value travels as data (' wide  load '): the template cannot carry one at all, since Angular's escapeText throws and Vue's condense-stable-text rejects it."
+      changed_files:
+        - packages/compiler/test/fixtures/s6-whitespace-text.tsrx
+        - packages/compiler/test/goldens/s6-whitespace-text.json
+        - packages/compiler/test/enriched-ir.test.ts
+        - packages/frameworks/react/scripts/regenerate.ts
+        - packages/frameworks/react/generated/S6.jsx
+        - packages/frameworks/react/test/size.test.ts
+        - packages/frameworks/solid/scripts/regenerate.ts
+        - packages/frameworks/solid/generated/S6.jsx
+        - packages/frameworks/solid/test/size.test.ts
+        - packages/frameworks/qwik/scripts/regenerate.ts
+        - packages/frameworks/qwik/generated/S6.jsx
+        - packages/frameworks/svelte/scripts/regenerate.ts
+        - packages/frameworks/svelte/generated/S6.svelte
+        - packages/frameworks/vue/scripts/regenerate.ts
+        - packages/frameworks/vue/generated/S6.vue
+        - packages/frameworks/angular/scripts/regenerate.ts
+        - packages/frameworks/angular/generated/S6.ts
+        - demos/react-official/package.json
+        - demos/react-official/src/App.jsx
+        - demos/react-official/src/emitted/WhitespaceBoard.jsx
+        - demos/react-official/scenarios.box.ts
+        - demos/react-official/three-way-contract.ts
+        - demos/solid-official/package.json
+        - demos/solid-official/src/App.jsx
+        - demos/solid-official/src/emitted/WhitespaceBoard.jsx
+        - demos/solid-official/scenarios.box.ts
+        - demos/qwik/package.json
+        - demos/qwik/src/emitted/WhitespaceBoard.jsx
+        - demos/qwik/src/routes/s6/index.tsx
+        - demos/qwik/scenarios.box.ts
+        - demos/svelte-official/package.json
+        - demos/svelte-official/src/lib/emitted/WhitespaceBoard.svelte
+        - demos/svelte-official/src/lib/scenario-props.ts
+        - "demos/svelte-official/src/routes/s6/+page.svelte"
+        - demos/svelte-official/scenarios.box.ts
+        - demos/vue-official/package.json
+        - demos/vue-official/src/emitted/WhitespaceBoard.vue
+        - demos/vue-official/src/App.vue
+        - demos/vue-official/src/scenario-props.ts
+        - demos/vue-official/scenarios.box.ts
+        - demos/angular-official/package.json
+        - demos/angular-official/src/emitted/WhitespaceBoard.ts
+        - demos/angular-official/src/app/app.routes.ts
+        - demos/angular-official/src/app/scenario-props.ts
+        - demos/angular-official/scenarios.box.ts
+        - scripts/e2e.mjs
+        - scripts/corpus-mutation.mjs
+        - docs/goals/frameless-defects-and-targets-v1/notes/T027-corpus-s6-whitespace.md
+      commands:
+        - cmd: "UPDATE_GOLDENS=1 pnpm test, then pnpm test without it"
+          status: pass
+          note: "golden created and stable; S1-S5 goldens UNMOVED. 944 passed, up from 929 - and 11 of the 15 new tests came from the DERIVED inventories with ZERO edits, which is T035/T036 paying off for the second scenario running"
+        - cmd: "pnpm --dir packages/frameworks/{react,solid,qwik,svelte,vue,angular}/ regenerate"
+          status: pass
+          note: "all six produced output, NONE threw"
+        - cmd: "shasum -a 256 over the six generated/S6.* across a SECOND regenerate"
+          status: pass
+          note: "identical - git diff --exit-code is VACUOUS for untracked new files, so this is the real check"
+        - cmd: "pnpm check"
+          status: pass
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 367 files"
+        - cmd: "pnpm test:browser"
+          status: pass
+          note: "react 60, solid 49, svelte 13, vue 18"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "6 demos x 6 scenarios, all observations equal; the s1-s5 strings are byte-identical to T026's"
+        - cmd: "HAND RUN of the harness's steps across 6 lanes"
+          status: pass
+          note: "anchor-unique, byte-changed, copy-emitted/build, witness run, restore-by-sha: 6/6 RED at the lane's own in-box assertion, same sentence"
+        - cmd: "HAND RUN of the divergence probe across 6 lanes"
+          status: pass
+          note: "THE FINDING: react/qwik/svelte RED (preserved), solid/vue/angular passed (condensed)"
+        - cmd: "git diff --exit-code over all six generated/"
+          status: pass
+          note: "clean after all twelve hand runs - every probe restored"
+        - cmd: "pnpm mutate:corpus --scenario s6 and --scenario s1..s5"
+          status: blocked
+          note: "assertCleanSurface() refuses a dirty surface; --dry-run does not bypass it. NO temporary commit and NO history rewrite. The 30/30 regression is explicitly NOT claimed; what IS claimed is narrower and measured"
+      deviations:
+        - "Card verify line 1 (pnpm --dir packages/compiler exec vitest run) FAILS AT STARTUP on this tree - vitest resolves the project list relative to the package dir. Used the root UPDATE_GOLDENS=1 pnpm test then pnpm test, which the dispatch text itself specifies. THE THIRD TASK TO HIT THIS; the PM should strike that line from T030 and T031."
+        - "Registered the zero-read assertion at 14 sites (the S4/S5 walker shape) while the generic re-derivation counts 17 including the three handler reads arrays. BOTH ARE ZERO; both numbers are recorded so the two are not mistaken for a disagreement."
+        - "Added a fourth registered compiler test not asked for: the compiler's OWN whitespace normalisation table. It pins the INPUT side of the finding and proves the tab/newline half of T024's ratified axis is unreachable from .tsrx, so a future compiler bump goes RED there rather than surfacing as a mysterious cross-lane diff."
+        - "demos/qwik s6 route passes label as an expression rather than a JSX string attribute - a string attribute is the one position where a JSX transform may normalise whitespace, and that value IS the observation."
+        - "demos/vue-official/src/App.vue: BranchBoard's v-else became v-else-if so WhitespaceBoard can be the single default - the identical move S5 made to S4."
+      remaining_blockers:
+        - "THE OPEN FINDING, routed to T038 for a ruling: one authored space inside a static text node renders differently in three of six lanes, no gate catches it, and it is reachable from .tsrx."
+        - "Both mutate:corpus runs are owed by the PM after committing."
+      pm_error_recorded: "THE DISPATCH TOLD THIS WORKER 'a read-only Judge is running on the Angular board'. BY THE TIME IT MATTERED THAT WAS FALSE: the Judge finished and the PM dispatched T011, a WORKER that edits packages/frameworks/angular/src/emitter/index.ts - inside packages/frameworks/**, which the Worker had been told was safe. THE PM DID NOT UPDATE THE LIVE WORKER. It caught the discrepancy itself and CHECKED ATTRIBUTION RATHER THAN ASSUMING IT: the Angular emitter diff is comment-only, and re-running the angular regenerate against the edited emitter reproduces generated/S6.ts at the identical sha 8bd2770c, so every Angular measurement in this receipt stands. This is the second stale-concurrency statement the PM has given a Worker this session. The lesson is the same both times and the Worker drew it correctly: verify the tree, do not trust the dispatch's description of it."
+      spawned_tasks:
+        - T038
+      stopped_because: null
+      blocked_reason: "The two pnpm mutate:corpus verify commands could not run: assertCleanSurface() refuses a dirty mutation surface and --dry-run does not bypass it, and registering S6 necessarily dirties that surface with 12 untracked files. THE CARD ANTICIPATED THIS AND CALLED IT A LEGITIMATE BLOCKED-VERIFY. No temporary commit and no history rewrite was made to work around it - the previous Worker to face this created one and had to unwind it. EVERY OTHER VERIFY PASSED, including the objective: S6 landed in all six lanes with pnpm e2e reporting 6 demos x 6 scenarios, all observations equal. The PM runs both harness commands after committing; until then the 30/30 regression is NOT claimed."
   - id: T028
     type: judge
     assignee: Judge
@@ -3486,6 +3591,67 @@ tasks:
       - "Per scenario: axis, six-lane status, and its mutants' red sites"
       - "Whether eight was the right number, with evidence"
       - "What remains, if anything"
+    receipt: null
+
+  - id: T038
+    type: judge
+    assignee: Judge
+    status: active
+    reasoning_hint: high
+    spec: "T027 receipt and docs/goals/frameless-defects-and-targets-v1/notes/T027-corpus-s6-whitespace.md section 4 - AUTHORITATIVE."
+    objective: >-
+      Rule on the cross-lane whitespace divergence S6 found: one authored space inside a static text
+      node renders differently in THREE OF SIX LANES, and no gate catches it. Decide the repair -
+      normalise, gate, or accept-and-document - and spec it.
+    why_this_exists: >-
+      THIS IS THE FINDING PHASE F WAS BUILT TO PRODUCE, and it arrived on the axis T024 ranked most
+      likely to produce a real one. It is not a test artefact and not a framework bug: it is a
+      genuine activation-neutrality divergence in a construct the IR can express and the compiler
+      passes through verbatim.
+    the_measurement: >-
+      Measured END TO END in each lane's OWN demo pipeline in a real browser, by changing
+      "one two three" to "one  two three" in that lane's generated/S6.*, then running that lane's
+      copy-emitted and witness box. PRESERVE (box went red): react, qwik, svelte. CONDENSE (box
+      passed, the change was ERASED): solid, vue, angular. Confirmed per lane in isolation on
+      "two  spaces here": react-dom 19.2.3 and svelte 5.56.8 preserve; babel-preset-solid 1.9.12,
+      @vue/compiler-sfc 3.5.40 and @angular/compiler 22.0.8 condense.
+      PM INDEPENDENTLY RE-PROBED @vue/compiler-sfc and @angular/compiler: both CONDENSE. Confirmed.
+    SOLID_IS_THE_SURPRISE: >-
+      Same JSX path as react and qwik, and THE ONLY JSX LANE THAT CONDENSES - so the split is not
+      "template compilers condense, JSX preserves", which is the tidy story a reader would assume.
+      AND THE SOLID GATE HAS NO WHITESPACE POLICY AT ALL: PM verified, grep -c whitespace returns 0
+      in both packages/frameworks/solid/src/gate/index.ts and custom-policies.ts. The lane most
+      likely to be assumed safe by analogy is the one with no instrument.
+    WHY_NO_GATE_CATCHES_IT: >-
+      Both documented whitespace policies - vue's condense-stable-text and angular's
+      whitespace-stable-text - reduce to the SAME predicate: content !== content.trim() ||
+      content.length === 0. THAT GUARDS TEXT-NODE EDGES. "one  two three" is TRIM-STABLE, so it
+      passes both gates, both emitters, pnpm check and pnpm lint, and then renders differently in
+      three of six lanes. PM confirmed the angular gate's own message names an "untrimmed EDGE".
+    the_worker_did_not_ship_it_and_that_call_needs_ratifying: >-
+      T027 deliberately kept the divergent construct OUT of the shipped fixture, arguing that
+      shipping it would have made S6 PERMANENTLY RED in three lanes and forfeited the four
+      whitespace claims S6 CAN prove across six. The PM finds that reasoning sound and the
+      alternative worse - but it is a judgement about what the corpus asserts, so RATIFY OR OVERTURN
+      IT EXPLICITLY rather than letting it stand by default.
+    inputs:
+      - "notes/T027-corpus-s6-whitespace.md sections 4 and 4.4"
+      - "packages/frameworks/vue/src/gate/index.ts condense-stable-text; packages/frameworks/angular/src/gate/index.ts whitespace-stable-text"
+      - "packages/frameworks/solid/src/gate/ - which has no whitespace policy"
+      - "The compiler's measured normalisation: space runs passed through VERBATIM; each tab and each newline mapped to exactly ONE space"
+    constraints:
+      - "Do not implement. Rule."
+      - "DO NOT REACH FOR NORMALISATION BY REFLEX. Making three emitters condense would make the matrix agree by DESTROYING author intent in three lanes, and this charter's whole objection to the tempting-wrong-move is that it converts a finding into silence. If normalisation IS right, say why the destroyed intent does not matter."
+      - "Weigh the three repairs explicitly: (a) NORMALISE - emitters collapse interior runs so all six agree; (b) GATE - reject interior whitespace runs at emission, making the construct inexpressible and the divergence unreachable; (c) ACCEPT AND DOCUMENT - record it as a known non-neutral construct with a re-open trigger. Name the cost of each."
+      - "The compiler ALREADY normalises tabs and newlines to a single space each. Say whether interior space runs are the same KIND of thing - if so, (b) at the compiler is arguably where the existing behaviour already lives."
+      - "Whatever is ruled, the Solid gate's total absence of a whitespace policy is a separate gap. Rule on it too: is it a defect, or correct because Solid's divergence is upstream?"
+      - "This is a DEFECT-CLASS finding on a board whose half 1 is defects. Say plainly whether it belongs in the defects half's ledger."
+    expected_output:
+      - "The ruling: normalise | gate | accept-and-document, with the cost of each stated"
+      - "Whether T027's decision to keep the construct out of the shipped fixture is RATIFIED or overturned"
+      - "A ruling on the Solid gate's missing whitespace policy"
+      - "Worker package if one follows: exact objective, allowed_files, verify, stop_if"
+      - "The re-open trigger, if the ruling is accept-and-document"
     receipt: null
 
   - id: T030

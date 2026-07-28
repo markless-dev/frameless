@@ -131,6 +131,11 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// for FEWER physical lines here, which is the <Show> wrapper plus two distinct
 	// arm subtrees the show-two-arm ruling requires be kept distinct.
 	S5: { physicalLoc: 72, structuralNodes: 357 },
+	// S6 likewise has no handwritten reference, so this is a budget. Solid records
+	// FEWER structural nodes than react for the same IR here, the reverse of S5:
+	// S6 has no branch, and `<For>` over a flat list costs less than react's
+	// `.map()` arrow once no `<Show>` wrapper is in the way.
+	S6: { physicalLoc: 67, structuralNodes: 351 },
 };
 
 describe('honest emitted structure comparison', () => {

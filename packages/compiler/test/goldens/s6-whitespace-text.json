@@ -1,0 +1,2097 @@
+{
+  "components": [
+    {
+      "evaluation": {
+        "computedBindings": "reactive",
+        "ordinaryLocals": "once-per-instance"
+      },
+      "guards": [],
+      "id": "component:0:WhitespaceBoard",
+      "locals": [
+        {
+          "declarationKind": "let",
+          "initializer": {
+            "arguments": [
+              {
+                "end": 131,
+                "raw": "1",
+                "start": 130,
+                "type": "Literal",
+                "value": 1
+              }
+            ],
+            "callee": {
+              "end": 129,
+              "name": "state",
+              "start": 124,
+              "type": "Identifier"
+            },
+            "end": 132,
+            "optional": false,
+            "start": 124,
+            "type": "CallExpression"
+          },
+          "names": [
+            "done"
+          ],
+          "order": 0,
+          "pattern": {
+            "end": 121,
+            "name": "done",
+            "start": 117,
+            "type": "Identifier"
+          },
+          "reads": [],
+          "semanticRecordIds": [
+            "state:done"
+          ]
+        },
+        {
+          "declarationKind": "let",
+          "initializer": {
+            "arguments": [
+              {
+                "end": 156,
+                "raw": "'px'",
+                "start": 152,
+                "type": "Literal",
+                "value": "px"
+              }
+            ],
+            "callee": {
+              "end": 151,
+              "name": "state",
+              "start": 146,
+              "type": "Identifier"
+            },
+            "end": 157,
+            "optional": false,
+            "start": 146,
+            "type": "CallExpression"
+          },
+          "names": [
+            "unit"
+          ],
+          "order": 1,
+          "pattern": {
+            "end": 143,
+            "name": "unit",
+            "start": 139,
+            "type": "Identifier"
+          },
+          "reads": [],
+          "semanticRecordIds": [
+            "state:unit"
+          ]
+        },
+        {
+          "declarationKind": "let",
+          "initializer": {
+            "arguments": [
+              {
+                "end": 182,
+                "name": "label",
+                "start": 177,
+                "type": "Identifier"
+              }
+            ],
+            "callee": {
+              "end": 176,
+              "name": "state",
+              "start": 171,
+              "type": "Identifier"
+            },
+            "end": 183,
+            "optional": false,
+            "start": 171,
+            "type": "CallExpression"
+          },
+          "names": [
+            "note"
+          ],
+          "order": 2,
+          "pattern": {
+            "end": 168,
+            "name": "note",
+            "start": 164,
+            "type": "Identifier"
+          },
+          "reads": [
+            {
+              "graphNodeId": "prop:props",
+              "path": [
+                "label"
+              ],
+              "via": "alias"
+            }
+          ],
+          "semanticRecordIds": [
+            "state:note"
+          ]
+        },
+        {
+          "declarationKind": "let",
+          "initializer": {
+            "arguments": [
+              {
+                "end": 208,
+                "raw": "'|'",
+                "start": 205,
+                "type": "Literal",
+                "value": "|"
+              }
+            ],
+            "callee": {
+              "end": 204,
+              "name": "state",
+              "start": 199,
+              "type": "Identifier"
+            },
+            "end": 209,
+            "optional": false,
+            "start": 199,
+            "type": "CallExpression"
+          },
+          "names": [
+            "joiner"
+          ],
+          "order": 3,
+          "pattern": {
+            "end": 196,
+            "name": "joiner",
+            "start": 190,
+            "type": "Identifier"
+          },
+          "reads": [],
+          "semanticRecordIds": [
+            "state:joiner"
+          ]
+        },
+        {
+          "declarationKind": "let",
+          "initializer": {
+            "arguments": [
+              {
+                "arguments": [],
+                "callee": {
+                  "computed": false,
+                  "end": 239,
+                  "object": {
+                    "end": 233,
+                    "name": "seed",
+                    "start": 229,
+                    "type": "Identifier"
+                  },
+                  "optional": false,
+                  "property": {
+                    "end": 239,
+                    "name": "slice",
+                    "start": 234,
+                    "type": "Identifier"
+                  },
+                  "start": 229,
+                  "type": "MemberExpression"
+                },
+                "end": 241,
+                "optional": false,
+                "start": 229,
+                "type": "CallExpression"
+              }
+            ],
+            "callee": {
+              "end": 228,
+              "name": "state",
+              "start": 223,
+              "type": "Identifier"
+            },
+            "end": 242,
+            "optional": false,
+            "start": 223,
+            "type": "CallExpression"
+          },
+          "names": [
+            "rows"
+          ],
+          "order": 4,
+          "pattern": {
+            "end": 220,
+            "name": "rows",
+            "start": 216,
+            "type": "Identifier"
+          },
+          "reads": [
+            {
+              "graphNodeId": "prop:props",
+              "path": [
+                "seed"
+              ],
+              "via": "alias"
+            }
+          ],
+          "semanticRecordIds": [
+            "state:rows"
+          ]
+        },
+        {
+          "declarationKind": "const",
+          "initializer": {
+            "arguments": [
+              {
+                "async": false,
+                "body": {
+                  "computed": false,
+                  "end": 285,
+                  "object": {
+                    "end": 278,
+                    "name": "rows",
+                    "start": 274,
+                    "type": "Identifier"
+                  },
+                  "optional": false,
+                  "property": {
+                    "end": 285,
+                    "name": "length",
+                    "start": 279,
+                    "type": "Identifier"
+                  },
+                  "start": 274,
+                  "type": "MemberExpression"
+                },
+                "end": 285,
+                "expression": true,
+                "generator": false,
+                "id": null,
+                "params": [],
+                "start": 268,
+                "type": "ArrowFunctionExpression"
+              }
+            ],
+            "callee": {
+              "end": 267,
+              "name": "computed",
+              "start": 259,
+              "type": "Identifier"
+            },
+            "end": 286,
+            "optional": false,
+            "start": 259,
+            "type": "CallExpression"
+          },
+          "names": [
+            "total"
+          ],
+          "order": 5,
+          "pattern": {
+            "end": 256,
+            "name": "total",
+            "start": 251,
+            "type": "Identifier"
+          },
+          "reads": [
+            {
+              "graphNodeId": "state:rows",
+              "path": [
+                "length"
+              ],
+              "via": "direct"
+            }
+          ],
+          "semanticRecordIds": [
+            "computed:total"
+          ]
+        }
+      ],
+      "name": "WhitespaceBoard",
+      "props": {
+        "entries": [
+          {
+            "alias": false,
+            "graphNodeId": "prop:props",
+            "localName": "seed",
+            "path": [
+              "seed"
+            ],
+            "sourceName": "seed"
+          },
+          {
+            "alias": false,
+            "graphNodeId": "prop:props",
+            "localName": "label",
+            "path": [
+              "label"
+            ],
+            "sourceName": "label"
+          },
+          {
+            "alias": false,
+            "graphNodeId": "prop:props",
+            "localName": "onTrace",
+            "path": [
+              "onTrace"
+            ],
+            "sourceName": "onTrace"
+          }
+        ],
+        "graphNodeId": "prop:props"
+      },
+      "template": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "expression": {
+                    "end": 347,
+                    "name": "done",
+                    "start": 343,
+                    "type": "Identifier"
+                  },
+                  "id": "text:0",
+                  "kind": "dynamic-text",
+                  "reads": [
+                    {
+                      "graphNodeId": "state:done",
+                      "path": [],
+                      "via": "direct"
+                    }
+                  ]
+                },
+                {
+                  "id": "text:1",
+                  "kind": "text",
+                  "value": "/"
+                },
+                {
+                  "expression": {
+                    "end": 355,
+                    "name": "total",
+                    "start": 350,
+                    "type": "Identifier"
+                  },
+                  "id": "text:2",
+                  "kind": "dynamic-text",
+                  "reads": [
+                    {
+                      "graphNodeId": "computed:total",
+                      "path": [],
+                      "via": "direct"
+                    }
+                  ]
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [],
+              "id": "h1",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-ratio",
+                  "value": "true"
+                }
+              ],
+              "tag": "p"
+            },
+            {
+              "children": [
+                {
+                  "id": "text:3",
+                  "kind": "text",
+                  "value": "start"
+                },
+                {
+                  "expression": {
+                    "end": 393,
+                    "name": "done",
+                    "start": 389,
+                    "type": "Identifier"
+                  },
+                  "id": "text:4",
+                  "kind": "dynamic-text",
+                  "reads": [
+                    {
+                      "graphNodeId": "state:done",
+                      "path": [],
+                      "via": "direct"
+                    }
+                  ]
+                },
+                {
+                  "expression": {
+                    "end": 399,
+                    "name": "unit",
+                    "start": 395,
+                    "type": "Identifier"
+                  },
+                  "id": "text:5",
+                  "kind": "dynamic-text",
+                  "reads": [
+                    {
+                      "graphNodeId": "state:unit",
+                      "path": [],
+                      "via": "direct"
+                    }
+                  ]
+                },
+                {
+                  "id": "text:6",
+                  "kind": "text",
+                  "value": "end"
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [],
+              "id": "h2",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-glue",
+                  "value": "true"
+                }
+              ],
+              "tag": "p"
+            },
+            {
+              "children": [
+                {
+                  "id": "text:7",
+                  "kind": "text",
+                  "value": "["
+                },
+                {
+                  "expression": {
+                    "end": 436,
+                    "name": "note",
+                    "start": 432,
+                    "type": "Identifier"
+                  },
+                  "id": "text:8",
+                  "kind": "dynamic-text",
+                  "reads": [
+                    {
+                      "graphNodeId": "state:note",
+                      "path": [],
+                      "via": "direct"
+                    }
+                  ]
+                },
+                {
+                  "id": "text:9",
+                  "kind": "text",
+                  "value": "]"
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [],
+              "id": "h3",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-wrap",
+                  "value": "true"
+                }
+              ],
+              "tag": "p"
+            },
+            {
+              "children": [
+                {
+                  "id": "text:10",
+                  "kind": "text",
+                  "value": "a"
+                },
+                {
+                  "children": [
+                    {
+                      "expression": {
+                        "end": 492,
+                        "name": "unit",
+                        "start": 488,
+                        "type": "Identifier"
+                      },
+                      "id": "text:11",
+                      "kind": "dynamic-text",
+                      "reads": [
+                        {
+                          "graphNodeId": "state:unit",
+                          "path": [],
+                          "via": "direct"
+                        }
+                      ]
+                    }
+                  ],
+                  "dynamicBindings": [],
+                  "eventIds": [],
+                  "id": "h5",
+                  "kind": "host",
+                  "staticAttributes": [
+                    {
+                      "name": "data-emph",
+                      "value": "true"
+                    }
+                  ],
+                  "tag": "b"
+                },
+                {
+                  "id": "text:12",
+                  "kind": "text",
+                  "value": "z"
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [],
+              "id": "h4",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-mixed",
+                  "value": "true"
+                }
+              ],
+              "tag": "p"
+            },
+            {
+              "children": [
+                {
+                  "id": "text:13",
+                  "kind": "text",
+                  "value": "one two three"
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [],
+              "id": "h6",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-static",
+                  "value": "true"
+                }
+              ],
+              "tag": "p"
+            },
+            {
+              "children": [
+                {
+                  "collection": {
+                    "expression": {
+                      "end": 596,
+                      "name": "rows",
+                      "start": 592,
+                      "type": "Identifier"
+                    },
+                    "reads": [
+                      {
+                        "graphNodeId": "state:rows",
+                        "path": [],
+                        "via": "direct"
+                      }
+                    ]
+                  },
+                  "empty": [],
+                  "id": "repeat:0",
+                  "item": "row",
+                  "key": {
+                    "expression": {
+                      "computed": false,
+                      "end": 608,
+                      "object": {
+                        "end": 605,
+                        "name": "row",
+                        "start": 602,
+                        "type": "Identifier"
+                      },
+                      "optional": false,
+                      "property": {
+                        "end": 608,
+                        "name": "id",
+                        "start": 606,
+                        "type": "Identifier"
+                      },
+                      "start": 602,
+                      "type": "MemberExpression"
+                    },
+                    "reads": [
+                      {
+                        "graphNodeId": "state:rows",
+                        "path": [
+                          "id"
+                        ],
+                        "via": "repeat-item"
+                      }
+                    ]
+                  },
+                  "kind": "keyed-repeat",
+                  "row": [
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "expression": {
+                                "computed": false,
+                                "end": 690,
+                                "object": {
+                                  "end": 685,
+                                  "name": "row",
+                                  "start": 682,
+                                  "type": "Identifier"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 690,
+                                  "name": "left",
+                                  "start": 686,
+                                  "type": "Identifier"
+                                },
+                                "start": 682,
+                                "type": "MemberExpression"
+                              },
+                              "id": "text:14",
+                              "kind": "dynamic-text",
+                              "reads": [
+                                {
+                                  "graphNodeId": "state:rows",
+                                  "path": [
+                                    "left"
+                                  ],
+                                  "via": "repeat-item"
+                                }
+                              ]
+                            },
+                            {
+                              "expression": {
+                                "end": 698,
+                                "name": "joiner",
+                                "start": 692,
+                                "type": "Identifier"
+                              },
+                              "id": "text:15",
+                              "kind": "dynamic-text",
+                              "reads": [
+                                {
+                                  "graphNodeId": "state:joiner",
+                                  "path": [],
+                                  "via": "direct"
+                                }
+                              ]
+                            },
+                            {
+                              "expression": {
+                                "computed": false,
+                                "end": 709,
+                                "object": {
+                                  "end": 703,
+                                  "name": "row",
+                                  "start": 700,
+                                  "type": "Identifier"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 709,
+                                  "name": "right",
+                                  "start": 704,
+                                  "type": "Identifier"
+                                },
+                                "start": 700,
+                                "type": "MemberExpression"
+                              },
+                              "id": "text:16",
+                              "kind": "dynamic-text",
+                              "reads": [
+                                {
+                                  "graphNodeId": "state:rows",
+                                  "path": [
+                                    "right"
+                                  ],
+                                  "via": "repeat-item"
+                                }
+                              ]
+                            }
+                          ],
+                          "dynamicBindings": [
+                            {
+                              "expression": {
+                                "computed": false,
+                                "end": 679,
+                                "object": {
+                                  "end": 676,
+                                  "name": "row",
+                                  "start": 673,
+                                  "type": "Identifier"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 679,
+                                  "name": "id",
+                                  "start": 677,
+                                  "type": "Identifier"
+                                },
+                                "start": 673,
+                                "type": "MemberExpression"
+                              },
+                              "kind": "attribute",
+                              "name": "data-pair",
+                              "reads": [
+                                {
+                                  "graphNodeId": "state:rows",
+                                  "path": [
+                                    "id"
+                                  ],
+                                  "via": "repeat-item"
+                                }
+                              ]
+                            }
+                          ],
+                          "eventIds": [],
+                          "id": "h9",
+                          "kind": "host",
+                          "staticAttributes": [],
+                          "tag": "span"
+                        },
+                        {
+                          "children": [
+                            {
+                              "id": "text:17",
+                              "kind": "text",
+                              "value": "widen"
+                            }
+                          ],
+                          "dynamicBindings": [
+                            {
+                              "expression": {
+                                "computed": false,
+                                "end": 755,
+                                "object": {
+                                  "end": 752,
+                                  "name": "row",
+                                  "start": 749,
+                                  "type": "Identifier"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 755,
+                                  "name": "id",
+                                  "start": 753,
+                                  "type": "Identifier"
+                                },
+                                "start": 749,
+                                "type": "MemberExpression"
+                              },
+                              "kind": "attribute",
+                              "name": "data-widen",
+                              "reads": [
+                                {
+                                  "graphNodeId": "state:rows",
+                                  "path": [
+                                    "id"
+                                  ],
+                                  "via": "repeat-item"
+                                }
+                              ]
+                            }
+                          ],
+                          "eventIds": [
+                            "event:0"
+                          ],
+                          "id": "h10",
+                          "kind": "host",
+                          "staticAttributes": [],
+                          "tag": "button"
+                        }
+                      ],
+                      "dynamicBindings": [
+                        {
+                          "expression": {
+                            "computed": false,
+                            "end": 648,
+                            "object": {
+                              "end": 645,
+                              "name": "row",
+                              "start": 642,
+                              "type": "Identifier"
+                            },
+                            "optional": false,
+                            "property": {
+                              "end": 648,
+                              "name": "id",
+                              "start": 646,
+                              "type": "Identifier"
+                            },
+                            "start": 642,
+                            "type": "MemberExpression"
+                          },
+                          "kind": "attribute",
+                          "name": "data-oracle-text-key",
+                          "reads": [
+                            {
+                              "graphNodeId": "state:rows",
+                              "path": [
+                                "id"
+                              ],
+                              "via": "repeat-item"
+                            }
+                          ]
+                        }
+                      ],
+                      "eventIds": [],
+                      "id": "h8",
+                      "kind": "host",
+                      "staticAttributes": [],
+                      "tag": "li"
+                    }
+                  ]
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [],
+              "id": "h7",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-lines",
+                  "value": "true"
+                }
+              ],
+              "tag": "ul"
+            },
+            {
+              "children": [
+                {
+                  "id": "text:18",
+                  "kind": "text",
+                  "value": "tick"
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [
+                "event:1"
+              ],
+              "id": "h11",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-action",
+                  "value": "tick"
+                }
+              ],
+              "tag": "button"
+            },
+            {
+              "children": [
+                {
+                  "id": "text:19",
+                  "kind": "text",
+                  "value": "pad"
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [
+                "event:2"
+              ],
+              "id": "h12",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-action",
+                  "value": "pad"
+                }
+              ],
+              "tag": "button"
+            }
+          ],
+          "dynamicBindings": [],
+          "eventIds": [],
+          "id": "h0",
+          "kind": "host",
+          "staticAttributes": [
+            {
+              "name": "data-scenario",
+              "value": "s6"
+            }
+          ],
+          "tag": "section"
+        }
+      ]
+    }
+  ],
+  "filename": "src/fixtures/s6-whitespace-text.tsrx",
+  "imports": [],
+  "module": {
+    "exports": [
+      {
+        "componentName": "WhitespaceBoard",
+        "exportedName": "WhitespaceBoard",
+        "kind": "named"
+      }
+    ]
+  },
+  "records": {
+    "aliases": [
+      {
+        "componentId": "component:0:WhitespaceBoard",
+        "declarationKind": "const",
+        "graphNodeId": "prop:props",
+        "id": "alias:WhitespaceBoard:label",
+        "name": "label",
+        "path": [
+          "label"
+        ],
+        "sourceSpan": {
+          "end": 96,
+          "filename": "src/fixtures/s6-whitespace-text.tsrx",
+          "start": 91
+        },
+        "target": "props.label"
+      },
+      {
+        "componentId": "component:0:WhitespaceBoard",
+        "declarationKind": "const",
+        "graphNodeId": "prop:props",
+        "id": "alias:WhitespaceBoard:onTrace",
+        "name": "onTrace",
+        "path": [
+          "onTrace"
+        ],
+        "sourceSpan": {
+          "end": 105,
+          "filename": "src/fixtures/s6-whitespace-text.tsrx",
+          "start": 98
+        },
+        "target": "props.onTrace"
+      },
+      {
+        "componentId": "component:0:WhitespaceBoard",
+        "declarationKind": "const",
+        "graphNodeId": "prop:props",
+        "id": "alias:WhitespaceBoard:seed",
+        "name": "seed",
+        "path": [
+          "seed"
+        ],
+        "sourceSpan": {
+          "end": 89,
+          "filename": "src/fixtures/s6-whitespace-text.tsrx",
+          "start": 85
+        },
+        "target": "props.seed"
+      }
+    ],
+    "behaviors": [],
+    "bindings": [
+      {
+        "async": false,
+        "asyncCapable": false,
+        "componentId": "component:0:WhitespaceBoard",
+        "computed": {
+          "expression": {
+            "async": false,
+            "body": {
+              "computed": false,
+              "end": 285,
+              "object": {
+                "end": 278,
+                "name": "rows",
+                "start": 274,
+                "type": "Identifier"
+              },
+              "optional": false,
+              "property": {
+                "end": 285,
+                "name": "length",
+                "start": 279,
+                "type": "Identifier"
+              },
+              "start": 274,
+              "type": "MemberExpression"
+            },
+            "end": 285,
+            "expression": true,
+            "generator": false,
+            "id": null,
+            "params": [],
+            "start": 268,
+            "type": "ArrowFunctionExpression"
+          },
+          "reads": [
+            {
+              "graphNodeId": "state:rows",
+              "path": [
+                "length"
+              ],
+              "via": "direct"
+            }
+          ]
+        },
+        "declarationKind": "const",
+        "id": "computed:total",
+        "kind": "computed",
+        "name": "total",
+        "reads": [
+          {
+            "componentId": "component:0:WhitespaceBoard",
+            "graphNodeId": "state:rows",
+            "path": [
+              "length"
+            ]
+          }
+        ],
+        "writable": false,
+        "writes": []
+      },
+      {
+        "componentId": "component:0:WhitespaceBoard",
+        "declarationKind": "const",
+        "id": "prop:props",
+        "kind": "prop",
+        "name": "props",
+        "reads": [],
+        "valueKind": "object",
+        "writable": false,
+        "writes": []
+      },
+      {
+        "componentId": "component:0:WhitespaceBoard",
+        "declarationKind": "let",
+        "id": "state:done",
+        "initialValue": 1,
+        "initializer": {
+          "end": 131,
+          "raw": "1",
+          "start": 130,
+          "type": "Literal",
+          "value": 1
+        },
+        "kind": "state",
+        "name": "done",
+        "reads": [],
+        "valueKind": "scalar",
+        "writable": true,
+        "writes": [
+          {
+            "componentId": "component:0:WhitespaceBoard",
+            "graphNodeId": "state:done",
+            "operation": "update",
+            "path": [],
+            "prefix": false,
+            "sourceSpan": {
+              "end": 1022,
+              "filename": "src/fixtures/s6-whitespace-text.tsrx",
+              "start": 1018
+            },
+            "updateOperator": "++",
+            "via": "direct"
+          }
+        ]
+      },
+      {
+        "componentId": "component:0:WhitespaceBoard",
+        "declarationKind": "let",
+        "id": "state:joiner",
+        "initialValue": "|",
+        "initializer": {
+          "end": 208,
+          "raw": "'|'",
+          "start": 205,
+          "type": "Literal",
+          "value": "|"
+        },
+        "kind": "state",
+        "name": "joiner",
+        "reads": [],
+        "valueKind": "scalar",
+        "writable": true,
+        "writes": [
+          {
+            "assignmentOperator": "=",
+            "componentId": "component:0:WhitespaceBoard",
+            "graphNodeId": "state:joiner",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 833,
+              "filename": "src/fixtures/s6-whitespace-text.tsrx",
+              "start": 827
+            },
+            "value": {
+              "end": 840,
+              "name": "next",
+              "start": 836,
+              "type": "Identifier"
+            },
+            "via": "direct"
+          }
+        ]
+      },
+      {
+        "componentId": "component:0:WhitespaceBoard",
+        "declarationKind": "let",
+        "id": "state:note",
+        "initializer": {
+          "end": 182,
+          "name": "label",
+          "start": 177,
+          "type": "Identifier"
+        },
+        "kind": "state",
+        "name": "note",
+        "reads": [
+          {
+            "componentId": "component:0:WhitespaceBoard",
+            "graphNodeId": "prop:props",
+            "path": [
+              "label"
+            ]
+          }
+        ],
+        "valueKind": "unknown",
+        "writable": true,
+        "writes": [
+          {
+            "assignmentOperator": "=",
+            "componentId": "component:0:WhitespaceBoard",
+            "graphNodeId": "state:note",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 1206,
+              "filename": "src/fixtures/s6-whitespace-text.tsrx",
+              "start": 1202
+            },
+            "value": {
+              "end": 1215,
+              "name": "padded",
+              "start": 1209,
+              "type": "Identifier"
+            },
+            "via": "direct"
+          }
+        ]
+      },
+      {
+        "componentId": "component:0:WhitespaceBoard",
+        "declarationKind": "let",
+        "id": "state:rows",
+        "initializer": {
+          "arguments": [],
+          "callee": {
+            "computed": false,
+            "end": 239,
+            "object": {
+              "end": 233,
+              "name": "seed",
+              "start": 229,
+              "type": "Identifier"
+            },
+            "optional": false,
+            "property": {
+              "end": 239,
+              "name": "slice",
+              "start": 234,
+              "type": "Identifier"
+            },
+            "start": 229,
+            "type": "MemberExpression"
+          },
+          "end": 241,
+          "optional": false,
+          "start": 229,
+          "type": "CallExpression"
+        },
+        "kind": "state",
+        "name": "rows",
+        "reads": [
+          {
+            "componentId": "component:0:WhitespaceBoard",
+            "graphNodeId": "prop:props",
+            "path": [
+              "seed"
+            ]
+          }
+        ],
+        "valueKind": "unknown",
+        "writable": true,
+        "writes": []
+      },
+      {
+        "componentId": "component:0:WhitespaceBoard",
+        "declarationKind": "let",
+        "id": "state:unit",
+        "initialValue": "px",
+        "initializer": {
+          "end": 156,
+          "raw": "'px'",
+          "start": 152,
+          "type": "Literal",
+          "value": "px"
+        },
+        "kind": "state",
+        "name": "unit",
+        "reads": [],
+        "valueKind": "scalar",
+        "writable": true,
+        "writes": [
+          {
+            "assignmentOperator": "=",
+            "componentId": "component:0:WhitespaceBoard",
+            "graphNodeId": "state:unit",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 1034,
+              "filename": "src/fixtures/s6-whitespace-text.tsrx",
+              "start": 1030
+            },
+            "value": {
+              "end": 1041,
+              "raw": "'em'",
+              "start": 1037,
+              "type": "Literal",
+              "value": "em"
+            },
+            "via": "direct"
+          }
+        ]
+      }
+    ],
+    "elementHandleBindings": [],
+    "events": [
+      {
+        "componentId": "component:0:WhitespaceBoard",
+        "eventName": "click",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "declarations": [
+                      {
+                        "end": 818,
+                        "id": {
+                          "end": 802,
+                          "name": "next",
+                          "start": 798,
+                          "type": "Identifier"
+                        },
+                        "init": {
+                          "end": 818,
+                          "expressions": [
+                            {
+                              "computed": false,
+                              "end": 815,
+                              "object": {
+                                "end": 812,
+                                "name": "row",
+                                "start": 809,
+                                "type": "Identifier"
+                              },
+                              "optional": false,
+                              "property": {
+                                "end": 815,
+                                "name": "id",
+                                "start": 813,
+                                "type": "Identifier"
+                              },
+                              "start": 809,
+                              "type": "MemberExpression"
+                            }
+                          ],
+                          "quasis": [
+                            {
+                              "end": 807,
+                              "start": 806,
+                              "tail": false,
+                              "type": "TemplateElement",
+                              "value": {
+                                "cooked": " ",
+                                "raw": " "
+                              }
+                            },
+                            {
+                              "end": 817,
+                              "start": 816,
+                              "tail": true,
+                              "type": "TemplateElement",
+                              "value": {
+                                "cooked": " ",
+                                "raw": " "
+                              }
+                            }
+                          ],
+                          "start": 805,
+                          "type": "TemplateLiteral"
+                        },
+                        "start": 798,
+                        "type": "VariableDeclarator"
+                      }
+                    ],
+                    "end": 819,
+                    "kind": "const",
+                    "start": 792,
+                    "type": "VariableDeclaration"
+                  },
+                  {
+                    "end": 841,
+                    "expression": {
+                      "end": 840,
+                      "left": {
+                        "end": 833,
+                        "name": "joiner",
+                        "start": 827,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "end": 840,
+                        "name": "next",
+                        "start": 836,
+                        "type": "Identifier"
+                      },
+                      "start": 827,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 827,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 903,
+                    "expression": {
+                      "arguments": [
+                        {
+                          "end": 864,
+                          "raw": "'widen'",
+                          "start": 857,
+                          "type": "Literal",
+                          "value": "widen"
+                        },
+                        {
+                          "end": 894,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 878,
+                              "key": {
+                                "end": 870,
+                                "name": "id",
+                                "start": 868,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 868,
+                              "type": "Property",
+                              "value": {
+                                "computed": false,
+                                "end": 878,
+                                "object": {
+                                  "end": 875,
+                                  "name": "row",
+                                  "start": 872,
+                                  "type": "Identifier"
+                                },
+                                "optional": false,
+                                "property": {
+                                  "end": 878,
+                                  "name": "id",
+                                  "start": 876,
+                                  "type": "Identifier"
+                                },
+                                "start": 872,
+                                "type": "MemberExpression"
+                              }
+                            },
+                            {
+                              "computed": false,
+                              "end": 892,
+                              "key": {
+                                "end": 886,
+                                "name": "joiner",
+                                "start": 880,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 880,
+                              "type": "Property",
+                              "value": {
+                                "end": 892,
+                                "name": "next",
+                                "start": 888,
+                                "type": "Identifier"
+                              }
+                            }
+                          ],
+                          "start": 866,
+                          "type": "ObjectExpression"
+                        },
+                        {
+                          "end": 901,
+                          "name": "event",
+                          "start": 896,
+                          "type": "Identifier"
+                        }
+                      ],
+                      "callee": {
+                        "end": 856,
+                        "name": "onTrace",
+                        "start": 849,
+                        "type": "Identifier"
+                      },
+                      "end": 902,
+                      "optional": false,
+                      "start": 849,
+                      "type": "CallExpression"
+                    },
+                    "start": 849,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 911,
+                "start": 783,
+                "type": "BlockStatement"
+              },
+              "end": 911,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 778,
+                  "name": "event",
+                  "start": 773,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 772,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              },
+              {
+                "graphNodeId": "state:rows",
+                "path": [
+                  "id"
+                ],
+                "via": "repeat-item"
+              }
+            ],
+            "writes": [
+              {
+                "assignmentOperator": "=",
+                "componentId": "component:0:WhitespaceBoard",
+                "graphNodeId": "state:joiner",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 833,
+                  "filename": "src/fixtures/s6-whitespace-text.tsrx",
+                  "start": 827
+                },
+                "value": {
+                  "end": 840,
+                  "name": "next",
+                  "start": 836,
+                  "type": "Identifier"
+                },
+                "via": "direct"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h10",
+        "id": "event:0"
+      },
+      {
+        "componentId": "component:0:WhitespaceBoard",
+        "eventName": "click",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "end": 1025,
+                    "expression": {
+                      "argument": {
+                        "end": 1022,
+                        "name": "done",
+                        "start": 1018,
+                        "type": "Identifier"
+                      },
+                      "end": 1024,
+                      "operator": "++",
+                      "prefix": false,
+                      "start": 1018,
+                      "type": "UpdateExpression"
+                    },
+                    "start": 1018,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 1042,
+                    "expression": {
+                      "end": 1041,
+                      "left": {
+                        "end": 1034,
+                        "name": "unit",
+                        "start": 1030,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "end": 1041,
+                        "raw": "'em'",
+                        "start": 1037,
+                        "type": "Literal",
+                        "value": "em"
+                      },
+                      "start": 1030,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 1030,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 1086,
+                    "expression": {
+                      "arguments": [
+                        {
+                          "end": 1061,
+                          "raw": "'tick'",
+                          "start": 1055,
+                          "type": "Literal",
+                          "value": "tick"
+                        },
+                        {
+                          "end": 1077,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 1069,
+                              "key": {
+                                "end": 1069,
+                                "name": "done",
+                                "start": 1065,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": true,
+                              "start": 1065,
+                              "type": "Property",
+                              "value": {
+                                "end": 1069,
+                                "name": "done",
+                                "start": 1065,
+                                "type": "Identifier"
+                              }
+                            },
+                            {
+                              "computed": false,
+                              "end": 1075,
+                              "key": {
+                                "end": 1075,
+                                "name": "unit",
+                                "start": 1071,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": true,
+                              "start": 1071,
+                              "type": "Property",
+                              "value": {
+                                "end": 1075,
+                                "name": "unit",
+                                "start": 1071,
+                                "type": "Identifier"
+                              }
+                            }
+                          ],
+                          "start": 1063,
+                          "type": "ObjectExpression"
+                        },
+                        {
+                          "end": 1084,
+                          "name": "event",
+                          "start": 1079,
+                          "type": "Identifier"
+                        }
+                      ],
+                      "callee": {
+                        "end": 1054,
+                        "name": "onTrace",
+                        "start": 1047,
+                        "type": "Identifier"
+                      },
+                      "end": 1085,
+                      "optional": false,
+                      "start": 1047,
+                      "type": "CallExpression"
+                    },
+                    "start": 1047,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 1091,
+                "start": 1012,
+                "type": "BlockStatement"
+              },
+              "end": 1091,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 1007,
+                  "name": "event",
+                  "start": 1002,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 1001,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              },
+              {
+                "graphNodeId": "state:done",
+                "path": [],
+                "via": "direct"
+              },
+              {
+                "graphNodeId": "state:unit",
+                "path": [],
+                "via": "direct"
+              }
+            ],
+            "writes": [
+              {
+                "componentId": "component:0:WhitespaceBoard",
+                "graphNodeId": "state:done",
+                "operation": "update",
+                "path": [],
+                "prefix": false,
+                "sourceSpan": {
+                  "end": 1022,
+                  "filename": "src/fixtures/s6-whitespace-text.tsrx",
+                  "start": 1018
+                },
+                "updateOperator": "++",
+                "via": "direct"
+              },
+              {
+                "assignmentOperator": "=",
+                "componentId": "component:0:WhitespaceBoard",
+                "graphNodeId": "state:unit",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 1034,
+                  "filename": "src/fixtures/s6-whitespace-text.tsrx",
+                  "start": 1030
+                },
+                "value": {
+                  "end": 1041,
+                  "raw": "'em'",
+                  "start": 1037,
+                  "type": "Literal",
+                  "value": "em"
+                },
+                "via": "direct"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h11",
+        "id": "event:1"
+      },
+      {
+        "componentId": "component:0:WhitespaceBoard",
+        "eventName": "click",
+        "handlers": [
+          {
+            "expression": {
+              "async": false,
+              "body": {
+                "body": [
+                  {
+                    "declarations": [
+                      {
+                        "end": 1196,
+                        "id": {
+                          "end": 1182,
+                          "name": "padded",
+                          "start": 1176,
+                          "type": "Identifier"
+                        },
+                        "init": {
+                          "end": 1196,
+                          "expressions": [
+                            {
+                              "end": 1193,
+                              "name": "note",
+                              "start": 1189,
+                              "type": "Identifier"
+                            }
+                          ],
+                          "quasis": [
+                            {
+                              "end": 1187,
+                              "start": 1186,
+                              "tail": false,
+                              "type": "TemplateElement",
+                              "value": {
+                                "cooked": " ",
+                                "raw": " "
+                              }
+                            },
+                            {
+                              "end": 1195,
+                              "start": 1194,
+                              "tail": true,
+                              "type": "TemplateElement",
+                              "value": {
+                                "cooked": " ",
+                                "raw": " "
+                              }
+                            }
+                          ],
+                          "start": 1185,
+                          "type": "TemplateLiteral"
+                        },
+                        "start": 1176,
+                        "type": "VariableDeclarator"
+                      }
+                    ],
+                    "end": 1197,
+                    "kind": "const",
+                    "start": 1170,
+                    "type": "VariableDeclaration"
+                  },
+                  {
+                    "end": 1216,
+                    "expression": {
+                      "end": 1215,
+                      "left": {
+                        "end": 1206,
+                        "name": "note",
+                        "start": 1202,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "end": 1215,
+                        "name": "padded",
+                        "start": 1209,
+                        "type": "Identifier"
+                      },
+                      "start": 1202,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 1202,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 1261,
+                    "expression": {
+                      "arguments": [
+                        {
+                          "end": 1234,
+                          "raw": "'pad'",
+                          "start": 1229,
+                          "type": "Literal",
+                          "value": "pad"
+                        },
+                        {
+                          "end": 1252,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 1250,
+                              "key": {
+                                "end": 1242,
+                                "name": "note",
+                                "start": 1238,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 1238,
+                              "type": "Property",
+                              "value": {
+                                "end": 1250,
+                                "name": "padded",
+                                "start": 1244,
+                                "type": "Identifier"
+                              }
+                            }
+                          ],
+                          "start": 1236,
+                          "type": "ObjectExpression"
+                        },
+                        {
+                          "end": 1259,
+                          "name": "event",
+                          "start": 1254,
+                          "type": "Identifier"
+                        }
+                      ],
+                      "callee": {
+                        "end": 1228,
+                        "name": "onTrace",
+                        "start": 1221,
+                        "type": "Identifier"
+                      },
+                      "end": 1260,
+                      "optional": false,
+                      "start": 1221,
+                      "type": "CallExpression"
+                    },
+                    "start": 1221,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 1266,
+                "start": 1164,
+                "type": "BlockStatement"
+              },
+              "end": 1266,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 1159,
+                  "name": "event",
+                  "start": 1154,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 1153,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              },
+              {
+                "graphNodeId": "state:note",
+                "path": [],
+                "via": "direct"
+              }
+            ],
+            "writes": [
+              {
+                "assignmentOperator": "=",
+                "componentId": "component:0:WhitespaceBoard",
+                "graphNodeId": "state:note",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 1206,
+                  "filename": "src/fixtures/s6-whitespace-text.tsrx",
+                  "start": 1202
+                },
+                "value": {
+                  "end": 1215,
+                  "name": "padded",
+                  "start": 1209,
+                  "type": "Identifier"
+                },
+                "via": "direct"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h12",
+        "id": "event:2"
+      }
+    ],
+    "handleCalls": [],
+    "handleForwards": [],
+    "persistence": [],
+    "sharedCalls": [],
+    "sharedDefinitions": [],
+    "sharedInstances": [],
+    "sharedReads": [],
+    "sharedWrites": [],
+    "stateReads": [
+      {
+        "componentId": "component:0:WhitespaceBoard",
+        "graphNodeId": "computed:total",
+        "path": []
+      },
+      {
+        "componentId": "component:0:WhitespaceBoard",
+        "graphNodeId": "prop:props",
+        "path": [
+          "label"
+        ]
+      },
+      {
+        "componentId": "component:0:WhitespaceBoard",
+        "graphNodeId": "prop:props",
+        "path": [
+          "onTrace"
+        ]
+      },
+      {
+        "componentId": "component:0:WhitespaceBoard",
+        "graphNodeId": "prop:props",
+        "path": [
+          "seed"
+        ]
+      },
+      {
+        "componentId": "component:0:WhitespaceBoard",
+        "graphNodeId": "state:done",
+        "path": []
+      },
+      {
+        "componentId": "component:0:WhitespaceBoard",
+        "graphNodeId": "state:joiner",
+        "path": []
+      },
+      {
+        "componentId": "component:0:WhitespaceBoard",
+        "graphNodeId": "state:note",
+        "path": []
+      },
+      {
+        "componentId": "component:0:WhitespaceBoard",
+        "graphNodeId": "state:rows",
+        "path": []
+      },
+      {
+        "componentId": "component:0:WhitespaceBoard",
+        "graphNodeId": "state:rows",
+        "path": [
+          "id"
+        ]
+      },
+      {
+        "componentId": "component:0:WhitespaceBoard",
+        "graphNodeId": "state:rows",
+        "path": [
+          "left"
+        ]
+      },
+      {
+        "componentId": "component:0:WhitespaceBoard",
+        "graphNodeId": "state:rows",
+        "path": [
+          "length"
+        ]
+      },
+      {
+        "componentId": "component:0:WhitespaceBoard",
+        "graphNodeId": "state:rows",
+        "path": [
+          "right"
+        ]
+      },
+      {
+        "componentId": "component:0:WhitespaceBoard",
+        "graphNodeId": "state:unit",
+        "path": []
+      }
+    ],
+    "stateWrites": [
+      {
+        "componentId": "component:0:WhitespaceBoard",
+        "graphNodeId": "state:done",
+        "operation": "update",
+        "path": [],
+        "prefix": false,
+        "sourceSpan": {
+          "end": 1022,
+          "filename": "src/fixtures/s6-whitespace-text.tsrx",
+          "start": 1018
+        },
+        "updateOperator": "++",
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "componentId": "component:0:WhitespaceBoard",
+        "graphNodeId": "state:joiner",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 833,
+          "filename": "src/fixtures/s6-whitespace-text.tsrx",
+          "start": 827
+        },
+        "value": {
+          "end": 840,
+          "name": "next",
+          "start": 836,
+          "type": "Identifier"
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "componentId": "component:0:WhitespaceBoard",
+        "graphNodeId": "state:note",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 1206,
+          "filename": "src/fixtures/s6-whitespace-text.tsrx",
+          "start": 1202
+        },
+        "value": {
+          "end": 1215,
+          "name": "padded",
+          "start": 1209,
+          "type": "Identifier"
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "componentId": "component:0:WhitespaceBoard",
+        "graphNodeId": "state:unit",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 1034,
+          "filename": "src/fixtures/s6-whitespace-text.tsrx",
+          "start": 1030
+        },
+        "value": {
+          "end": 1041,
+          "raw": "'em'",
+          "start": 1037,
+          "type": "Literal",
+          "value": "em"
+        },
+        "via": "direct"
+      }
+    ]
+  },
+  "version": "frameless-enriched-ir/2"
+}

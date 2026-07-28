@@ -158,7 +158,7 @@ visual_board:
     url: null
     command: "npx goalbuddy board docs/goals/frameless-angular-v1"
 
-active_task: T009
+active_task: T999
 
 tasks:
   - id: T001
@@ -1266,7 +1266,7 @@ tasks:
   - id: T009
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Re-run worked examples 4 and 5 of docs/emitter-idiom-policy.md against the landed Angular lane. Example 5 is the live one."
     why_this_exists: >-
@@ -1288,8 +1288,41 @@ tasks:
       - "Six gate outcomes for worked examples 4 and 5 against the landed lane"
       - "Whether example 5's baseline/candidate assignment inverts, with measured evidence"
       - "Exact replacement text for a later fold"
-    receipt: null
-
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      harness: claude-code
+      note: notes/T009-control-flow.md
+      rationale: "THE EMITTER IS NOT INDICTED, AND THE BOARD'S HYPOTHESIS IS REFUTED ANYWAY. Worked example 5's assignment does NOT invert: the policy's baseline definition has no deprecation limb at all, and *ngIf/*ngFor was MEASURED compiling with 0 errors and 0 warnings at 22.0.8 under strict + strictTemplates, four-way calibrated. A tag is not a diagnostic and does not become one. So *ngIf stays the baseline and @if/@for remains candidate sugar - but THE RULING CHANGES: all six gates PASS, so the entry moves from DEFERRED to SUGAR, ADOPTED. Gate 6 decides."
+      summary: "Example 5, six gates: G1 PASS (both forms 0 diagnostics under AOT, calibrated M1-M4), G2 PASS, G3 PASS, G4 PASS narrowed, G5 PASS (node identity identical across reverse/clone/remove/prepend), G6 PASS. Example 4: G1 UNKNOWN (empty domain), G2 FAIL (decider, structural), G3 PASS, G4 UNKNOWN (empty domain), G5 FAIL (re-measured), G6 FAIL - denied, not deferred, ruling and deciding gate UNCHANGED. *ngIf/*ngFor DOES still compile clean at 22.0.8, measured rather than inferred: the deprecation surfaces only as TypeScript suggestion 6385, which ng build, performCompilation and this repo's emitted-typecheck lanes all decline to collect."
+      THE_REFUTED_HYPOTHESIS_WAS_IN_THE_PMs_OWN_BRIEF: "THE FIFTH RULING ON THIS GOAL FOUND RESTING ON A WRONG REASON - AND THE FIRST WHERE THE WRONG REASON WAS IN THE TASK BRIEF RATHER THAN A PRIOR RECEIPT. The PM wrote the 'likely direction' that NgIf's @deprecated 20.0 tag would invert example 5's baseline/candidate assignment. REFUTED TWICE OVER: the policy's baseline definition contains no deprecation limb, so a deprecation cannot bear on the assignment at all; and the form measured clean. THE ONLY REASON THIS DID NOT PROPAGATE is that the brief labelled it a hypothesis rather than the answer and required a real compile - 'a tag is not a diagnostic' was in the dispatch. A brief that had stated it as fact would have produced a confidently wrong relabelling of shipped, correct output."
+      GATE_6_CARRIES_IT_AND_THE_CONTRAST_WITH_WORKED_EXAMPLE_11_IS_THE_ARGUMENT: "Worked example 11's Gate 6 FAILED because @angular-eslint/prefer-signals lives in `all`, not `recommended`, so nothing in the applied set could catch a silent switch. MEASURED HERE: prefer-control-flow is 1 of only 4 template rules (out of 41) whose own meta.docs.recommended === 'recommended', so it IS in this lane's derived applied set - and it reports the BASELINE three times by name while the shipped candidate draws zero. SAME METADATA READ, OPPOSITE ANSWER, because upstream made the opposite call. That is the derived-set discipline from T006/T003a paying off twice in opposite directions, which is what makes it a real arbiter rather than a preference."
+      AN_INSTRUMENT_TRIED_TO_LIE_AND_A_PRECONDITION_CAUGHT_IT: "The first Gate 5 probe drove the shipped S2 golden's own handlers and reported no reordering - which the Judge nearly recorded as 'the two forms are identical'. THE REORDER HAD NOT HAPPENED AT ALL: Angular 22's lane is ZONELESS, so a plain property write marks nothing dirty and ApplicationRef.tick() is a no-op over it; only setInput propagates. The probe was rebuilt on that path and CALIBRATED against T005's published S1 result (kit:2 -> kit:10), which it reproduces exactly. A green from an instrument that never ran the transition is the exact green vacuum this project keeps finding, caught here by the instrument asserting its own precondition."
+      three_corrections_to_the_record_all_measured: "(1) T005's flag that 'ALL THREE Angular goldens EMIT @if AND @for TODAY' is FALSE IN BOTH QUANTIFIERS: S3 emits NEITHER and S1 emits @if but no @for. Correct count: 8 control-flow blocks across 4 of 5 goldens at abb5e44, 9 across 5 of 6 once S6 lands. (2) Worked example 4's Change-suffix collision reason was RE-MEASURED rather than inherited - it holds at 22.0.8 as literal string concatenation at _debug_node-chunk.mjs:8516 and :8590. (3) The emitted modules already floor at 19.0 for an unrelated reason (component-metadata, no standalone key), so @if's 17.0 floor costs the lane NO version reach whatsoever."
+      evidence:
+        - "@angular/compiler-cli@22.0.8 performCompilation over 5 files under strict + strictTemplates: 0 diagnostics total. Arms: the shipped generated/S1.ts and generated/S2.ts BYTE-FOR-BYTE, plus *ngIf/*ngFor twins with and without trackBy"
+        - "Calibration M1 NG8103 (NgIf removed from imports), M2 TS2339 on @if, M3 TS2339 on *ngIf, M4 -995002 '@for loop must have a track expression' - four families, both arms"
+        - "TypeScript suggestion diagnostics: NgIf/NgForOf/NgFor deprecated = code 6385 reportsDeprecated, on baseline arms ONLY; the candidate has 6 suggestions and 0 deprecated-flagged (control)"
+        - "@angular-eslint/eslint-plugin-template@22.1.0: 41 template rules, derived recommended = [banana-in-box, eqeqeq, no-negated-async, prefer-control-flow]. Baseline twin draws 3 messages by name; shipped candidate draws 0; a planted ([ngModel]) draws banana-in-box as calibration"
+        - "jsdom two-arm render probe, calibrated against T005's published S1 result and reproducing it exactly: node identity IDENTICAL across reverse / clone-same-ids / remove-middle / prepend in both arms"
+        - "@angular/core 22.0.8 _debug_node-chunk.mjs:14297-14310 - NG0955 duplicate track keys is console.warn inside if(ngDevMode), NOT a throw; baseline *ngFor is silent"
+        - "@angular/core 22.0.8 _debug_node-chunk.mjs:8516 and :8590 - two-way output name is literal `name + 'Change'` concatenation"
+        - "packages/frameworks/angular/src/gate/index.ts BASELINE_FORM_INVENTORY - component-metadata floor 19.0 dominates @if/@for's 17.0"
+        - "packages/frameworks/angular/src/emitter/index.ts renderBranch() / renderKeyedRepeat() / blockBody() at abb5e44 - the Gate 4 deciding functions and their four declared-field refusals"
+      missing_evidence:
+        - "Event routing and lifecycle were NOT independently driven across a control-flow boundary in both arms - inferred from identical elements, bindings and node identity. Cannot change the ruling (G5 already PASS on what WAS measured) but must not be read as a routing claim."
+        - "The SSR SERVED PAYLOAD was not compared between the two forms. @if and *ngIf place hydration comment anchors differently in the else state; whether ngh annotations differ is UNMEASURED. Worked example 11 carries the identical caveat for the identical reason."
+        - "Probes ran in jsdom, not Chromium, per the command restriction (an S6 Worker was concurrently running the full e2e matrix). Calibrated against T005's published result, which is the strongest available substitute and not the same thing."
+        - "THE SINGLE MOST FRAGILE INPUT: Gate 6's PASS rests on upstream keeping prefer-control-flow in its RECOMMENDED metadata tier. If upstream moves it to 'all', the DECIDING gate loses its PASS and worked example 5 must be re-run. Named so it is not discovered by accident."
+      parallel_safety:
+        safe: false
+        reason: "The fold writes docs/emitter-idiom-policy.md, which the queued Vue 12a/12b fold also writes AND which CITES worked example 4."
+        remedy: "Serialize. This fold's example-4 replacement preserves the heading and the ruling word 'no-sugar' VERBATIM, so the Vue citation survives whichever order is chosen; whichever lands second must READ WHAT LANDED. Disjoint from the live S6 Worker, which touches demos/**, scripts/**, packages/compiler/test/** and generated/** - none of them in this package, and this package moves no emitted output."
+        pm_decision: "Angular fold goes FIRST. The Vue fold must re-enumerate its 12a/12b domain counts against the current corpus anyway, and S6 is landing right now - sequencing Vue second means it enumerates once against a settled six-scenario corpus instead of twice."
+      worker_package_recorded_as: "T011 on this board"
+      spawned_tasks:
+        - T011
   - id: T010
     type: worker
     assignee: Worker
@@ -1391,10 +1424,108 @@ tasks:
       PM_OWNS_THE_PRE_RED_VERIFY_COMMANDS: "This is a consequence of a PM decision, not a Worker or card defect. The tree has carried the entire uncommitted Angular lane for this whole session because the PM has no instruction to commit. That is now materially degrading verification: `git diff --exit-code` gates are the standard freeze mechanism on these boards, and they are unusable against a tree with large legitimate uncommitted work. The Worker's sha256-baseline substitute is the correct workaround and it worked, but every subsequent task pays this cost and the workaround is strictly weaker than the gate it replaces. RAISED TO THE OWNER."
       remaining_blockers: []
       stopped_because: null
+  - id: T011
+    type: worker
+    assignee: Worker
+    status: done
+    reasoning_hint: medium
+    spec: "T009 receipt and docs/goals/frameless-angular-v1/notes/T009-control-flow.md SECTION 6 - the replacement text folds in VERBATIM, unparaphrased."
+    serialization_hold: >-
+      Against the queued frameless-vue-v1 T010 fold (worked examples 12a/12b): both write
+      docs/emitter-idiom-policy.md and the Vue entries CITE worked example 4. PM RULED ANGULAR
+      FIRST - the Vue fold must re-enumerate its domain counts against the current corpus anyway,
+      and S6 is landing now, so sequencing Vue second means it enumerates ONCE against a settled
+      six-scenario corpus instead of twice. This fold preserves example 4's heading and its ruling
+      word "no-sugar" VERBATIM, so the Vue citation survives either order.
+    objective: >-
+      Fold the T009 ruling into the policy and the emitter, changing NO emitted output. (1) Replace
+      worked examples 4 and 5 with the verbatim text in the note's section 6 - do not paraphrase,
+      re-score or re-derive. Example 5's ruling word changes DEFERRED -> SUGAR; example 4's heading
+      and ruling word "no-sugar" are UNCHANGED. (2) Rewrite Gate 1's Angular discharge sentence,
+      which currently says examples 4 and 5 "still read DEFERRED - framework absent ... their
+      re-run is owed and is queued as frameless-angular-v1 T009", to record the re-run as LANDED -
+      preserving the one-line-per-framework shape and touching no other framework's line.
+      (3) Add decision-site comments at renderBranch() and renderKeyedRepeat() naming the ruling,
+      the deciding gate (G6) and the measurement, AND correct the existing renderBranch comment
+      whose claim that prefer-control-flow "is in this lane's applied rule set and reports
+      *ngIf/*ngFor directly" is now MEASURED TRUE and should cite the ruling rather than stand as a
+      bare assertion.
+    allowed_files:
+      - docs/emitter-idiom-policy.md
+      - packages/frameworks/angular/src/emitter/index.ts
+      - docs/goals/frameless-angular-v1/notes/T009-control-flow.md
+    verify:
+      - "pnpm check"
+      - "pnpm test"
+      - "pnpm lint"
+      - "node packages/frameworks/angular/scripts/regenerate.ts && git diff --exit-code -- packages/frameworks/angular/generated   # run TWICE; the emitter edit is COMMENT-ONLY, goldens MUST NOT move"
+      - "git diff -- packages/frameworks/angular/src/emitter/index.ts | grep '^+' | grep -v '^+++' | grep -vE '^\+\s*(//|\*|/\*)' | grep -vE '^\+\s*$'   # MUST BE EMPTY - the comment-only claim is mechanically verified, not asserted (T008 precedent)"
+      - "git diff --exit-code -- packages/compiler packages/frameworks/react packages/frameworks/solid packages/frameworks/qwik packages/frameworks/svelte packages/frameworks/vue"
+      - "git status --short"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "ANY byte of packages/frameworks/angular/generated moves. The emitter edit is COMMENT-ONLY."
+      - "You are about to change @if/@else/@for to *ngIf/*ngFor anywhere, or add NgIf/NgForOf/CommonModule to an emitted imports array. RULED SUGAR, ADOPTED at all six gates - the shipped form is CORRECT."
+      - "You are about to record DEFERRED at any gate in worked example 4 or 5. Every deferring condition is discharged at both entries; DEFERRED is UNAVAILABLE at Gates 1, 4 and 6 for Angular."
+      - "You are about to carry forward 'NgIf carries @deprecated 20.0, therefore the assignment inverts'. MEASURED AND REFUTED: the baseline definition has no deprecation limb, and *ngIf/*ngFor compiles with 0 errors and 0 warnings at 22.0.8. The deprecation is TypeScript suggestion 6385, which nothing in this repo collects."
+      - "You are about to write that all three (or all five) Angular goldens emit @if AND @for. MEASURED FALSE: S3 emits NEITHER and S1 emits no @for. 8 blocks across 4 of 5 goldens at abb5e44."
+      - "You re-score, re-derive or 'tighten' any gate outcome. The six outcomes per entry ARE the ruling; this package TRANSCRIBES them."
+      - "You overwrite or reshape another framework's line in Gate 1's discharge list, or DELETE the Angular sentence instead of rewriting it to record the re-run as landed."
+      - "The Vue 12a/12b fold has already edited docs/emitter-idiom-policy.md and you are about to overwrite it rather than read what landed. It CITES worked example 4 - if its citation no longer resolves, STOP."
+      - "Verification fails twice for the same reason."
+    constraints:
+      - "CARRY FORWARD TO T999: Gate 6's reading is contestable and was decided on Gate 5's own routing sentence. The strict reading would flip example 5 to FAIL and force 9 shipped call sites into a form the lane's own applied arbiter reports as a violation. Both readings are in the note; a future auditor must not rediscover this as a surprise."
+      - "CARRY FORWARD: Gate 6's PASS depends on upstream keeping prefer-control-flow in its RECOMMENDED metadata tier. If upstream moves it to 'all', the deciding gate loses its PASS and example 5 must be re-run."
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T009-control-flow.md
+      summary: "Folded the T009 ruling into the policy and the emitter with NO emitted output moving. Worked examples 4 and 5 replaced with the note's section 6 VERBATIM: example 4 keeps its heading and 'no-sugar' ruling word so the queued Vue 12a/12b citation still resolves, with three DEFERREDs becoming two UNKNOWNs and one FAIL; example 5 moves deferred -> SUGAR, ADOPTED, all six gates PASS, carried by Gate 6. Gate 1's Angular bullet REWRITTEN to record the re-run as landed, one-line-per-framework shape preserved, no other framework's line touched. Decision-site comments at renderBranch and renderKeyedRepeat name the ruling, G6 and the measurement."
+      it_corrected_a_bare_assertion_into_a_cited_measurement: "The pre-existing renderBranch comment CLAIMED that prefer-control-flow 'is in this lane's applied rule set and reports *ngIf/*ngFor directly' - true, but standing as a bare assertion nobody had measured. It now cites the ruling: 1 of only 4 template rules out of 41 carries the recommended flag, and on the shipped candidate it reports 0 messages while on the baseline it reports 3, by name. Turning an unverified true statement into a measured one is worth as much as fixing a false one, because the next reader cannot tell them apart."
+      IT_MEASURED_RATHER_THAN_PICKING_BETWEEN_TWO_NUMBERS: "THE PM'S BRIEF SAID '9 shipped call sites'; the note's verbatim text said 8. The Worker did not choose - IT COUNTED THE GOLDENS: S1 1/0, S2 1/1, S3 0/0, S4 1/2, S5 1/1 = 8 across 4 of 5 at abb5e44, and the concurrent S6 golden adds a ninth. BOTH ARE CORRECT AT DIFFERENT TREE STATES. The policy entry transcribes 8 unchanged, because that is the count the ruling was TAKEN ON; the emitter comment states both, qualified with 'the count moves with the corpus; the ruling is at the form level and does not'. That is exactly the stale-label fault worked example 3 records, avoided by someone noticing two sources disagreed instead of trusting the more recent one."
+      changed_files:
+        - docs/emitter-idiom-policy.md
+        - packages/frameworks/angular/src/emitter/index.ts
+        - docs/goals/frameless-angular-v1/notes/T009-control-flow.md
+      commands:
+        - cmd: "pnpm check"
+          status: pass
+        - cmd: "pnpm test"
+          status: pass
+          note: "50 files, 944 tests - the count includes the concurrent S6 Worker's additions"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 367 files"
+        - cmd: "regenerate && git diff --exit-code -- packages/frameworks/angular/generated"
+          status: pass
+          note: "run TWICE, both clean; PM re-verified goldens unmoved"
+        - cmd: "git diff -- angular/src/emitter/index.ts | filter non-comment added lines"
+          status: pass
+          note: "EMPTY. PM RE-RAN INDEPENDENTLY: 0 non-comment added lines. The comment-only claim is mechanically verified, not asserted - the T008 precedent applied again"
+        - cmd: "grep -c '@if (' / '@for (' over angular/generated/*.ts"
+          status: pass
+          note: "8 blocks across 4 of 5 goldens at abb5e44; the untracked S6 golden adds a ninth"
+        - cmd: "git status --short"
+          status: pass
+          note: "three paths plus the concurrent S6 Worker's dirt"
+        - cmd: "git diff --exit-code -- packages/compiler packages/frameworks/{react,solid,qwik,svelte,vue}"
+          status: pass
+          note: "non-zero AND EXPECTED - every file in it was already dirty at task start and belongs to the concurrent S6 Worker. ZERO of this task's paths appear. The Worker checked provenance rather than reporting a red gate"
+      pm_independent_verification: "PM confirmed the two claims whose failure would be silent: the emitter diff has ZERO non-comment added lines, and packages/frameworks/angular/generated is byte-unmoved. PM also read the folded entries - heading 4 still reads 'no-sugar' and heading 5 now reads 'sugar', and every remaining DEFERRED in that region is HISTORICAL PROSE explicitly marked 'discharged and unavailable', not a live gate outcome."
+      deviations:
+        - "Section 6's own '---' horizontal rules, which separate the two entries inside the NOTE, were not copied into the policy. That document uses '---' only for top-level section breaks and carries no rule between worked examples; copying them would have been byte-faithful but structurally wrong. The entries' PROSE is byte-verbatim."
+        - "The 8-versus-9 count discrepancy between the brief and the note was resolved BY MEASUREMENT - see above."
+        - "Appended a section 8 fold record to the T009 note documenting what landed, the '---' departure, the count reconciliation, and that the two carry-forwards now sit at three sites. Not requested; it is the audit trail T999 will read."
+      carried_forward_to_T999:
+        - "GATE 6'S READING IS CONTESTABLE and was decided on Gate 5's own routing sentence. The strict reading would flip example 5 to FAIL and force the shipped call sites into a form the lane's OWN applied arbiter reports as a violation. Both readings are in the note; a future auditor must not rediscover this as a surprise."
+        - "GATE 6'S PASS DEPENDS ON UPSTREAM keeping prefer-control-flow in its RECOMMENDED metadata tier. If upstream moves it to 'all', the deciding gate loses its PASS and worked example 5 must be re-run. This is the single most fragile input in the ruling."
+      remaining_blockers: []
+      stopped_because: null
   - id: T999
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     objective: "Audit whether the Angular lane satisfies the oracle and the full owner outcome."
     inputs:
