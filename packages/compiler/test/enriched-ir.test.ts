@@ -613,6 +613,86 @@ export function Probe({ label, ...rest }: { label: string }) @{
 			});
 			expect(entries.find((entry) => entry.sourceName === '*')?.type).toBeUndefined();
 		});
+
+		// IR-8 REQUIREDNESS. `optional`, read from the SAME type-literal member as
+		// `type`. Before this, `propTypeMembers` serialized only
+		// `member.typeAnnotation.typeAnnotation` and never looked at
+		// `member.optional`, so a fact the source states outright was parsed,
+		// reached, and dropped at serialization.
+		test('every prop reports its authored requiredness, and the corpus fixture is all-required', async () => {
+			const ir = await fixtureIr('s1-render-once.tsrx');
+			expect(
+				Object.fromEntries(
+					ir.components[0]!.props.entries.map((entry) => [
+						entry.sourceName,
+						entry.optional,
+					]),
+				),
+			).toEqual({ label: false, multiplier: false, visible: false, onTrace: false });
+		});
+
+		test('an OPTIONAL member reports optional: true - the flag tracks the `?`', async () => {
+			// THE ARM THAT MAKES THE ONE ABOVE MEAN SOMETHING. All four corpus props
+			// are non-optional, so `optional: false` everywhere is equally
+			// consistent with a builder that hard-codes `false`. This is the only
+			// input in the suite where the two hypotheses disagree.
+			const ir = await buildEnrichedIr({
+				filename: 'probe.tsrx',
+				source: `import { computed } from '@markless/core';
+
+export function Probe({ required, optional }: { required: string; optional?: string }) @{
+	const derived = computed(() => \`\${required}\${optional}\`);
+
+	<output data-probe="">{derived}</output>
+}
+`,
+			});
+			expect(
+				ir.components[0]!.props.entries.map((entry) => [entry.sourceName, entry.optional]),
+			).toEqual([
+				['required', false],
+				['optional', true],
+			]);
+		});
+
+		test('CONTROL: requiredness is ABSENT wherever the type is absent, never defaulted', async () => {
+			// ABSENCE MUST NOT READ AS "OPTIONAL". An unannotated prop has no
+			// authored requiredness at all, and a consumer that saw `optional:
+			// false` here would print a contract the author never wrote. The two
+			// fields are supplied together or not at all, and every emitter
+			// validator rejects the mismatched pairing.
+			for (const file of FIXTURES.filter((name) => name !== 's1-render-once.tsrx')) {
+				const ir = await fixtureIr(file);
+				const withFlag = ir.components
+					.flatMap((component) => component.props.entries)
+					.filter((entry) => entry.optional !== undefined);
+				expect(withFlag, `${file} should carry no authored requiredness`).toEqual([]);
+			}
+			// And the coupling holds in the ONE annotated direction too.
+			const s1 = await fixtureIr('s1-render-once.tsrx');
+			for (const entry of s1.components[0]!.props.entries)
+				expect(entry.type === undefined).toBe(entry.optional === undefined);
+		});
+
+		test('CONTROL: an implicit-any member (`{ a }`) supplies NEITHER type nor requiredness', async () => {
+			// `{ a }` inside a type literal is legal TS meaning `a: any`. There is no
+			// member type to read, so there is no authored requiredness to report
+			// either - the pair stays absent rather than half-supplied.
+			const ir = await buildEnrichedIr({
+				filename: 'probe.tsrx',
+				source: `import { computed } from '@markless/core';
+
+export function Probe({ label }: { label }) @{
+	const derived = computed(() => \`\${label}\`);
+
+	<output data-probe="">{derived}</output>
+}
+`,
+			});
+			expect(ir.components[0]!.props.entries[0]).toMatchObject({ sourceName: 'label' });
+			expect(ir.components[0]!.props.entries[0]!.type).toBeUndefined();
+			expect(ir.components[0]!.props.entries[0]!.optional).toBeUndefined();
+		});
 	});
 
 	test('S2 carries complete branch and keyed-row subtrees plus structural computed dependencies', async () => {

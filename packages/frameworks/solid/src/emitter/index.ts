@@ -663,7 +663,18 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		// writes .tsx - so the remaining work is the printing itself.
 		exactKeys(
 			entry,
-			['sourceName', 'localName', 'path', 'alias', 'graphNodeId', 'defaultValue', 'type'],
+			[
+				'sourceName',
+				'localName',
+				'path',
+				'alias',
+				'graphNodeId',
+				'defaultValue',
+				'type',
+				// IR-8 REQUIREDNESS, ADMITTED AND SHAPE-CHECKED, NOT PRINTED HERE.
+				// Supplied beside `type` from the same `TSPropertySignature`.
+				'optional',
+			],
 			'PropDestructuringEntry',
 		);
 		if (entry.defaultValue !== undefined) expression(entry.defaultValue);
@@ -675,6 +686,17 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 		)
 			throw new Error(
 				`PropDestructuringEntry has malformed type annotation AST: ${entry.localName}`,
+			);
+		if (entry.optional !== undefined && typeof entry.optional !== 'boolean')
+			throw new Error(
+				`PropDestructuringEntry has malformed optional flag: ${entry.localName}`,
+			);
+		// Requiredness and type have ONE supply site and are read from one member,
+		// so `optional` without `type` is requiredness invented downstream rather
+		// than reported from source.
+		if (entry.optional !== undefined && entry.type === undefined)
+			throw new Error(
+				`PropDestructuringEntry declares optionality without a type annotation: ${entry.localName}`,
 			);
 		if (entry.alias !== (entry.sourceName !== entry.localName))
 			throw new Error(

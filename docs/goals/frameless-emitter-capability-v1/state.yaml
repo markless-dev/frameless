@@ -1337,7 +1337,54 @@ tasks:
     objective: "STEP 3. Refs across the lanes that do not have them."
     constraints:
       - "Measure what each lane's ref idiom actually is before emitting one. The six-gate idiom policy at docs/emitter-idiom-policy.md governs any sugar choice."
-    verify: ["pnpm test", "pnpm e2e", "pnpm check:citations"]
+    allowed_files:
+      - packages/compiler/src/schema.ts
+      - packages/compiler/src/build.ts
+      - packages/compiler/test/fixtures
+      - packages/compiler/test/goldens
+      - packages/compiler/test/enriched-ir.test.ts
+      - packages/frameworks/react/src
+      - packages/frameworks/solid/src
+      - packages/frameworks/qwik/src
+      - packages/frameworks/svelte/src
+      - packages/frameworks/vue/src
+      - packages/frameworks/angular/src
+      - packages/frameworks/react/test
+      - packages/frameworks/solid/test
+      - packages/frameworks/qwik/test
+      - packages/frameworks/svelte/test
+      - packages/frameworks/vue/test
+      - packages/frameworks/angular/test
+      - packages/frameworks/react/generated
+      - packages/frameworks/solid/generated
+      - packages/frameworks/qwik/generated
+      - packages/frameworks/svelte/generated
+      - packages/frameworks/vue/generated
+      - packages/frameworks/angular/generated
+      - demos/react-official/src/emitted
+      - demos/solid-official/src/emitted
+      - demos/qwik/src/emitted
+      - demos/svelte-official/src/lib/emitted
+      - demos/vue-official/src/emitted
+      - demos/angular-official/src/emitted
+      - docs/goals/frameless-emitter-capability-v1/notes/T005-refs.md
+    inherited_state_measured_at_dispatch: >-
+      pnpm test 1120 passed / 1 failed (1121) - the 1 is package-inventory against the OWNER'S
+      DIRTY LOCKFILE, foreign, and must stay at exactly 1. pnpm check RED at EXACTLY 73, and the
+      board previously described those wrongly: NINETEEN are in react/generated/ and FIFTY-FOUR in
+      react/generated-composition/ - corrected by T016, PM confirmed. It must stay at 73.
+    a_measured_warning_about_your_instrument: >-
+      pnpm e2e DOES NOT RUN vue-tsc, svelte-check OR ng build on the three-way lanes. T016 measured
+      that scripts/e2e.mjs runs each demo's copy-emitted and then the witness against the DEV
+      SERVER. A GREEN e2e IS NOT EVIDENCE THAT ANY DEMO TYPE-CHECKS. If your step needs a
+      type-level claim, run that lane's own checker directly and say so.
+    verify:
+      - "pnpm test   # 1120/1 at dispatch; the 1 is foreign and must stay 1"
+      - "pnpm check  # must stay at EXACTLY 73"
+      - "pnpm lint && pnpm check:citations"
+      - "pnpm e2e    # behavioural only - see the warning above"
+      - "regenerate all six lanes BEFORE diffing; a generated*/ diff passes vacuously if nothing regenerates"
+      - "per lane, report whether any new IR field is accepted or rejected by its validator - the T003/T010 defect class"
     stop_if:
       - "A lane has no ref idiom inside its design envelope - record it, do not invent one."
     allowed_files: []

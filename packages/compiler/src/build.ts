@@ -931,7 +931,8 @@ function propsEntries(
 					property.value?.type === 'AssignmentPattern'
 						? serializeAst(property.value.right)
 						: undefined,
-				type: propTypes.get(sourceName),
+				type: propTypes.get(sourceName)?.type,
+				optional: propTypes.get(sourceName)?.optional,
 			}) as unknown as PropDestructuringEntry,
 		);
 	}
@@ -964,9 +965,20 @@ function propsEntries(
  * must match on `label`. Keying on the local name would silently supply nothing
  * for every aliased prop - and `alias-coverage.tsrx` exists precisely because
  * aliasing is where prop metadata has gone wrong before.
+ *
+ * REQUIREDNESS TRAVELS WITH THE TYPE, from the same member, in the same pass.
+ * `member.optional` is the `?` in `a?: string`, and this function used to read
+ * `member.typeAnnotation.typeAnnotation` and nothing else - so a fact the source
+ * states outright was parsed, reached, and dropped at serialization. A target
+ * that declares props at runtime cannot express a contract without it, and
+ * re-deriving it downstream from "does the corpus ever omit this prop" would be
+ * the inference this phase forbids. It is reported, never inferred: the two
+ * facts are supplied together or not at all.
  */
-function propTypeMembers(parameter: AnyNode): Map<string, SerializableAstNode> {
-	const members = new Map<string, SerializableAstNode>();
+function propTypeMembers(
+	parameter: AnyNode,
+): Map<string, { type: SerializableAstNode; optional: boolean }> {
+	const members = new Map<string, { type: SerializableAstNode; optional: boolean }>();
 	const annotation = parameter.typeAnnotation?.typeAnnotation;
 	if (annotation?.type !== 'TSTypeLiteral') return members;
 	for (const member of annotation.members ?? []) {
@@ -983,7 +995,15 @@ function propTypeMembers(parameter: AnyNode): Map<string, SerializableAstNode> {
 		if (!name || !memberType) continue;
 		// FIRST WINS. A duplicate key in a type literal is a TS error, not a
 		// meaning; picking the first keeps this deterministic if one appears.
-		if (!members.has(name)) members.set(name, serializeAst(memberType));
+		//
+		// `member.optional === true` is the only truth this reads; a parser that
+		// omits the flag on a non-optional member means NOT optional, which is
+		// what `=== true` says and what a bare cast would have guessed at.
+		if (!members.has(name))
+			members.set(name, {
+				type: serializeAst(memberType),
+				optional: member.optional === true,
+			});
 	}
 	return members;
 }

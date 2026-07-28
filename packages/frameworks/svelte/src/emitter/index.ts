@@ -111,9 +111,18 @@ function exactKeys(construct: string, value: object, allowed: readonly string[])
  * never looked this deep, and that asymmetry is why IR-8's `type` could be
  * added believing all six agreed. The probe was aimed one level too high.
  *
- * `type` is IR-8: ADMITTED AND SHAPE-CHECKED HERE, DELIBERATELY NOT PRINTED.
- * Admitting a key without checking its shape would trade one blind spot for
- * another, so a `type` that is not an AST node is rejected by name too.
+ * `type` and `optional` are IR-8: ADMITTED AND SHAPE-CHECKED HERE, DELIBERATELY
+ * NOT PRINTED. Admitting a key without checking its shape would trade one blind
+ * spot for another, so a `type` that is not an AST node is rejected by name too,
+ * and so is an `optional` that is not a boolean.
+ *
+ * `optional` IS ALSO CHECKED AGAINST `type`, not just in isolation. The two are
+ * read from ONE `TSPropertySignature` at the compiler's only supply site, so an
+ * `optional` arriving WITHOUT a `type` did not come from source - it is
+ * requiredness synthesized somewhere downstream, which is precisely the
+ * invention this phase refuses. This lane rejects that pairing even though it
+ * prints neither field, because a validator that only guards what it consumes
+ * is how the nested blind spot arose in the first place.
  */
 function validatePropEntries(entries: EnrichedIR['components'][number]['props']['entries']): void {
 	for (const entry of entries) {
@@ -125,6 +134,7 @@ function validatePropEntries(entries: EnrichedIR['components'][number]['props'][
 			'graphNodeId',
 			'defaultValue',
 			'type',
+			'optional',
 		]);
 		if (
 			entry.type !== undefined &&
@@ -134,6 +144,14 @@ function validatePropEntries(entries: EnrichedIR['components'][number]['props'][
 		)
 			throw new Error(
 				`PropDestructuringEntry has malformed type annotation AST: ${entry.localName}`,
+			);
+		if (entry.optional !== undefined && typeof entry.optional !== 'boolean')
+			throw new Error(
+				`PropDestructuringEntry has malformed optional flag: ${entry.localName}`,
+			);
+		if (entry.optional !== undefined && entry.type === undefined)
+			throw new Error(
+				`PropDestructuringEntry declares optionality without a type annotation: ${entry.localName}`,
 			);
 	}
 }

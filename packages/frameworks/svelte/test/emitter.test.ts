@@ -371,6 +371,41 @@ describe('Svelte 5 emitter', () => {
 				/PropDestructuringEntry has malformed type annotation AST/,
 			);
 		});
+
+		/**
+		 * IR-8 REQUIREDNESS, GUARDED THE SAME WAY AS ITS TYPE - see the fuller doc
+		 * comment on the copy in `packages/frameworks/qwik/test/emitter.test.ts`.
+		 * MEASURED: `optional` planted on every `PropDestructuringEntry` of all
+		 * eight goldens was rejected BY NAME by all six lanes before the field
+		 * landed. The ORPHAN arm is the one with teeth - `type` and `optional` are
+		 * read from ONE `TSPropertySignature`, so an `optional` with no `type` is
+		 * requiredness invented downstream rather than reported from source.
+		 */
+		test('on a malformed or ORPHANED IR-8 requiredness flag, while a well-formed one is admitted', async () => {
+			const admitted = structuredClone(await golden('s1-render-once.json'));
+			expect(
+				admitted.components[0]!.props.entries.filter(
+					(entry) => entry.optional !== undefined,
+				),
+			).not.toHaveLength(0);
+			expect(() => emit(admitted)).not.toThrow();
+
+			const malformed = structuredClone(await golden('s1-render-once.json'));
+			(
+				malformed.components[0]!.props.entries as unknown as Array<Record<string, unknown>>
+			)[0]!.optional = 'yes';
+			expect(() => emit(malformed)).toThrow(
+				/PropDestructuringEntry has malformed optional flag: label/,
+			);
+
+			const orphaned = structuredClone(await golden('s1-render-once.json'));
+			delete (
+				orphaned.components[0]!.props.entries as unknown as Array<Record<string, unknown>>
+			)[0]!.type;
+			expect(() => emit(orphaned)).toThrow(
+				/PropDestructuringEntry declares optionality without a type annotation: label/,
+			);
+		});
 	});
 });
 

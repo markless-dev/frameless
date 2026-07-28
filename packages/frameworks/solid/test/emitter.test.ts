@@ -1722,7 +1722,14 @@ export function Locked({ onTrace }) @{
 			expect(ir.components[0]!.props.entries.some((entry) => entry.type)).toBe(true);
 			expect(() => validateEnrichedIr(ir)).not.toThrow();
 			const stripped = clone(ir) as any;
-			for (const entry of stripped.components[0].props.entries) delete entry.type;
+			// BOTH IR-8 FIELDS COME OFF TOGETHER. `type` and `optional` are read
+			// from one `TSPropertySignature` and the validator rejects one without
+			// the other, so stripping only `type` no longer produces a lawful IR -
+			// it produces requiredness with nothing to attach to.
+			for (const entry of stripped.components[0].props.entries) {
+				delete entry.type;
+				delete entry.optional;
+			}
 			// The types are ADMITTED, not consumed. The .jsx -> .tsx migration that
 			// used to block printing them HAS LANDED - TS8010 forbids a type
 			// annotation in a .jsx file, and this emitter now writes .tsx - so what
@@ -1741,6 +1748,35 @@ export function Locked({ onTrace }) @{
 			ir.components[0].props.entries[0].type = { notAType: true };
 			expect(() => validateEnrichedIr(ir)).toThrow(
 				/PropDestructuringEntry has malformed type annotation AST: label/,
+			);
+		});
+
+		/**
+		 * IR-8 REQUIREDNESS, GUARDED THE SAME WAY AS ITS TYPE - see the fuller doc
+		 * comment on the copy in `packages/frameworks/qwik/test/emitter.test.ts`.
+		 * MEASURED: `optional` planted on every `PropDestructuringEntry` of all
+		 * eight goldens was rejected BY NAME by all six lanes before the field
+		 * landed.
+		 */
+		test('rejects a malformed or ORPHANED IR-8 requiredness flag', async () => {
+			const admitted = clone(await golden('s1-render-once.json'));
+			expect(
+				admitted.components[0]!.props.entries.some((entry) => entry.optional !== undefined),
+			).toBe(true);
+			expect(() => validateEnrichedIr(admitted)).not.toThrow();
+
+			const ir = clone(await golden('s1-render-once.json')) as any;
+			ir.components[0].props.entries[0].optional = 'yes';
+			expect(() => validateEnrichedIr(ir)).toThrow(
+				/PropDestructuringEntry has malformed optional flag: label/,
+			);
+
+			// ORPHANED: requiredness with no type did not come from the compiler's
+			// only supply site, where both are read from one member.
+			const orphaned = clone(await golden('s1-render-once.json')) as any;
+			delete orphaned.components[0].props.entries[0].type;
+			expect(() => validateEnrichedIr(orphaned)).toThrow(
+				/PropDestructuringEntry declares optionality without a type annotation: label/,
 			);
 		});
 

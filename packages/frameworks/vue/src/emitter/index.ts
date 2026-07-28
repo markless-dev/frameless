@@ -5,6 +5,7 @@ import {
 	type EnrichedEventRecord,
 	type EnrichedGraphBinding,
 	type EnrichedIR,
+	type SerializableAstNode,
 	type StaticAttribute,
 	type SyncPolicy,
 	type TemplateNode,
@@ -107,11 +108,19 @@ function exactKeys(construct: string, value: object, allowed: readonly string[])
  * never looked this deep, and that asymmetry is why IR-8's `type` could be
  * added believing all six agreed. The probe was aimed one level too high.
  *
- * `type` is IR-8: ADMITTED AND SHAPE-CHECKED HERE, DELIBERATELY NOT PRINTED.
- * Admitting a key without checking its shape would trade one blind spot for
- * another, so a `type` that is not an AST node is rejected by name too. What
- * this lane may do with the field once it prints one is decided in the gate,
- * not here - see the `no-typed-props` policy in `src/gate/index.ts`.
+ * `type` and `optional` are IR-8, and THIS LANE NOW PRINTS BOTH - see
+ * `propsDeclaration` for the runtime-declaration form and the boolean carve-out.
+ * They are still shape-checked here rather than at the point of use, because the
+ * validator is the fail-closed boundary and a malformed field must be named
+ * before any output AST is built: a `type` that is not an AST node is rejected
+ * by name, and so is an `optional` that is not a boolean.
+ *
+ * `optional` IS ALSO CHECKED AGAINST `type`, not just in isolation. The two are
+ * read from ONE `TSPropertySignature` at the compiler's only supply site, so an
+ * `optional` arriving WITHOUT a `type` did not come from source - it is
+ * requiredness synthesized somewhere downstream, which is precisely the
+ * invention this phase refuses, and which this lane would otherwise print
+ * straight into a `required:` field.
  */
 function validatePropEntries(entries: EnrichedIR['components'][number]['props']['entries']): void {
 	for (const entry of entries) {
@@ -123,6 +132,7 @@ function validatePropEntries(entries: EnrichedIR['components'][number]['props'][
 			'graphNodeId',
 			'defaultValue',
 			'type',
+			'optional',
 		]);
 		if (
 			entry.type !== undefined &&
@@ -132,6 +142,14 @@ function validatePropEntries(entries: EnrichedIR['components'][number]['props'][
 		)
 			throw new Error(
 				`PropDestructuringEntry has malformed type annotation AST: ${entry.localName}`,
+			);
+		if (entry.optional !== undefined && typeof entry.optional !== 'boolean')
+			throw new Error(
+				`PropDestructuringEntry has malformed optional flag: ${entry.localName}`,
+			);
+		if (entry.optional !== undefined && entry.type === undefined)
+			throw new Error(
+				`PropDestructuringEntry declares optionality without a type annotation: ${entry.localName}`,
 			);
 	}
 }
@@ -417,15 +435,51 @@ function rewriteScript(
 // ---------------------------------------------------------------------------
 
 /**
- * DECISION SITE - `defineProps` takes the ARRAY form, never a type argument.
+ * DECISION SITE - `defineProps` takes the RUNTIME DECLARATION form when the IR
+ * carries authored prop types, and the ARRAY form when it does not. NEVER a type
+ * argument.
  *
- * `docs/emitter-idiom-policy.md` Gate 3 forbids a content-based trigger and Gate
- * 4 forbids a rule that is unsound outside a recognised subset. `defineProps<{ …
- * }>()` needs a type per prop, and the IR carries none: `PropDestructuringEntry`
- * is `sourceName`/`localName`/`path`/`alias`/`graphNodeId`/`defaultValue?` and
- * `EnrichedComponent.props` adds nothing. Every emitted type would therefore be
- * INFERRED from what the corpus happens to do with the prop, which is exactly
- * both refusals. Named IR-8 and DEFERRED by frameless-vue-v1 T002 ruling 3.
+ * THE PREMISE THIS COMMENT USED TO CARRY IS DEAD, AND IT IS RECORDED RATHER THAN
+ * ERASED. It said `PropDestructuringEntry` is
+ * `sourceName`/`localName`/`path`/`alias`/`graphNodeId`/`defaultValue?` and that
+ * "every emitted type would therefore be INFERRED". Both halves are now false:
+ * the construct carries `type` (IR-8, supplied from the authored `@tsrx/core`
+ * annotation) and `optional` (its requiredness, from the same type-literal
+ * member). Nothing printed below is inferred from what the corpus does with a
+ * prop; every value is read from syntax the author wrote. The gate's copy of
+ * this premise was repaired earlier; THIS one - the actual decision site -
+ * outlived it, which is why the refusal it justified stood two tasks longer
+ * than its reason did.
+ *
+ * WHAT IS PRINTED, and why this shape rather than the two obvious alternatives:
+ *
+ *   defineProps({ label: { type: String, required: true }, … })
+ *
+ * `defineProps<T>()` and `withDefaults()` STAY DENIED at Gate 5. The runtime
+ * declaration reaches the same call-site type checking with no type argument, no
+ * TypeScript syntax in the emitted expression and no new dependency.
+ *
+ * BARE CONSTRUCTORS - `{ label: String }` - WERE MEASURED AND REJECTED. They
+ * make every prop OPTIONAL, so `props.multiplier` becomes `number | undefined`
+ * and the emitted component's OWN script fails strict TS regardless of any
+ * parent: TS2722 on the `onTrace` calls and TS18048 on the `multiplier` read.
+ * That is why `required` is not decoration here - it is what makes the printed
+ * declaration type-check at all.
+ *
+ * `required` IS READ, NEVER SYNTHESIZED. It is `!optional`, and `optional` is
+ * the `?` the author did or did not write. An entry with no `type` has no
+ * `optional` either, and this function falls back to the array form rather than
+ * assert a contract for a prop whose annotation it never saw.
+ *
+ * BOOLEAN IS THE ONE CARVE-OUT, AND IT IS BEHAVIOURAL, NOT STYLISTIC. `{ visible:
+ * Boolean }` makes Vue cast an empty-string binding, flipping `visible=""` from
+ * FALSY to TRUTHY and turning `<p>hidden</p>` into `<section data-scenario="s1">`
+ * at vue@3.5.40 - measured three times independently. So a boolean prints
+ * `type: null`, which normalizes to the array form's exact behaviour, while
+ * KEEPING its `required`: the coercion hazard is a reason to drop the
+ * constructor, not a reason to drop a second fact the source also states.
+ * `type: null` is fail-closed for every type node this map does not recognise,
+ * so an unmapped kind degrades to today's behaviour instead of guessing.
  *
  * A declared prop DEFAULT throws for the same reason one level down: Vue's only
  * baseline-safe route to a default in `<script setup>` is `withDefaults()`, which
@@ -442,7 +496,9 @@ function rewriteScript(
  * `defineModel()` IS ALSO REFUSED HERE, on a ruling of record:
  * `docs/emitter-idiom-policy.md` WORKED EXAMPLE 12b (T009/T010, re-derived T012),
  * DENIED at the deciding Gate 5; Gates 3, 4 and 6 deny independently, 1 and 2 PASS.
- * This array IS 12b's domain, and ITS SIZE IS NOT A LITERAL THIS COMMENT OWNS:
+ * This DECLARATION IS 12b's domain - whichever of the two forms it takes, the
+ * printed prop ENTRIES are the same set - and ITS SIZE IS NOT A LITERAL THIS
+ * COMMENT OWNS:
  * `derivePrintedPropEntries()` in `test/gate.test.ts` counts it off the goldens,
  * THROWS on empty, and pins the shipped message to it - corpus-derived and
  * CHECKED THERE, which is where today's figures are. This clause used to carry
@@ -454,6 +510,66 @@ function rewriteScript(
  * IR-4 is NOT why this is refused - `v-model` and `defineModel` FAIL four gates
  * at the version this repo ships, and FAIL outranks DEFERRED.
  */
+/**
+ * TS type node -> Vue runtime prop constructor. TOTAL BY FAILING CLOSED.
+ *
+ * Every kind this map does not name returns `null`, which is Vue's own "do not
+ * type-check this prop" and is behaviourally identical to the array form - so an
+ * unrecognised annotation degrades to today's output instead of printing a guess
+ * into an emitted artifact. Only the kinds the corpus actually carries are
+ * mapped; adding speculative rows would be untested dead code, and the SHAPE of
+ * a wrong row is a rendering change rather than a cosmetic one.
+ *
+ * `TSBooleanKeyword` IS DELIBERATELY ABSENT rather than missing. `Boolean` is
+ * the one constructor that CASTS: it turns an empty-string binding into `true`,
+ * which is a rendering change, so boolean falls through to `null` on purpose.
+ * Its `required` still prints - see `propsDeclaration`.
+ */
+const PROP_TYPE_CONSTRUCTORS: ReadonlyMap<string, string> = new Map([
+	['TSStringKeyword', 'String'],
+	['TSNumberKeyword', 'Number'],
+	['TSFunctionType', 'Function'],
+]);
+
+function propConstructor(type: SerializableAstNode | undefined): Expression {
+	const name = type ? PROP_TYPE_CONSTRUCTORS.get(String(type.type)) : undefined;
+	return name ? identifier(name) : literal(null);
+}
+
+function propOptionsProperty(name: string, type: SerializableAstNode, optional: boolean): Node {
+	return {
+		type: 'Property',
+		kind: 'init',
+		computed: false,
+		method: false,
+		shorthand: false,
+		key: identifier(name),
+		value: {
+			type: 'ObjectExpression',
+			properties: [
+				{
+					type: 'Property',
+					kind: 'init',
+					computed: false,
+					method: false,
+					shorthand: false,
+					key: identifier('type'),
+					value: propConstructor(type),
+				},
+				{
+					type: 'Property',
+					kind: 'init',
+					computed: false,
+					method: false,
+					shorthand: false,
+					key: identifier('required'),
+					value: literal(!optional),
+				},
+			],
+		},
+	};
+}
+
 function propsDeclaration(component: EnrichedComponent): Statement | null {
 	if (component.props.entries.length === 0) return null;
 	const names: string[] = [];
@@ -468,11 +584,35 @@ function propsDeclaration(component: EnrichedComponent): Statement | null {
 			);
 		names.push(entry.path[0]!);
 	}
+	// ALL OR NOTHING, and the alternative is worse than it looks. A component
+	// whose entries are only PARTLY annotated cannot be declared honestly in one
+	// object: the unannotated entries have no authored requiredness, so they
+	// would have to be given an INVENTED `required` - or a `required: false` that
+	// silently contradicts a source that may well demand them. Emitting the array
+	// form for the whole component keeps every prop in one regime and fails
+	// closed to the behaviour this lane already ships. MEASURED at the time of
+	// writing: annotation is per-component all-or-nothing across the corpus
+	// (RenderOnce 4/4, the other seven scenarios 0/15), so this branch is a
+	// guard against a corpus that changes, not a live split.
+	const typed = component.props.entries.every((entry) => entry.type !== undefined);
+	if (!typed)
+		return variable(
+			'const',
+			identifier('props'),
+			call(identifier('defineProps'), [
+				{ type: 'ArrayExpression', elements: names.map((name) => literal(name)) },
+			]),
+		);
 	return variable(
 		'const',
 		identifier('props'),
 		call(identifier('defineProps'), [
-			{ type: 'ArrayExpression', elements: names.map((name) => literal(name)) },
+			{
+				type: 'ObjectExpression',
+				properties: component.props.entries.map((entry, index) =>
+					propOptionsProperty(names[index]!, entry.type!, entry.optional === true),
+				),
+			},
 		]),
 	);
 }

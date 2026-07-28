@@ -176,24 +176,36 @@ describe('Vue 3 emitter', () => {
 	/**
 	 * STEP 1.5 FLIPPED THE `lang` ARM OF THIS ROW AND KEPT ITS SHAPE. It used to
 	 * read `<script setup>` plus `not.toContain('lang=')`; the attribute is now
-	 * REQUIRED and the thing that must stay absent is A PRINTED TYPE, which is what
-	 * the annotation arms below assert. Both halves of the pairing are load-bearing:
-	 * `lang="ts"` WITHOUT a type is the whole claim of a behaviour-neutral migration,
-	 * so a row that only checked the attribute would go green on a step that had
-	 * quietly started printing types.
+	 * REQUIRED.
+	 *
+	 * WHAT THIS ROW DENIES HAS NARROWED, AND THE NARROWING IS THE POINT. It used
+	 * to read "NO PRINTED TYPE", justified by defineProps keeping its ARRAY form.
+	 * That is no longer true and the claim is corrected rather than deleted: prop
+	 * types ARE now printed, through Vue's RUNTIME DECLARATION channel, as
+	 * ordinary JavaScript values. What stays denied is TYPESCRIPT TYPE SYNTAX in
+	 * the emitted script - `defineProps<T>()` and `withDefaults()` - which Gate 5
+	 * refuses because the type-argument form makes Vue infer runtime prop types,
+	 * and the `Boolean` it would infer for `visible` flips an empty-string binding
+	 * from falsy to truthy. That denial is unchanged and is asserted below; the
+	 * one that rested on "the IR carries no type" is gone, because the IR carries
+	 * one.
 	 */
-	test('emits an SFC with <script setup lang="ts">, NO printed type, and a default-exported component', async () => {
+	test('emits an SFC with <script setup lang="ts">, NO TypeScript type syntax, and a default-exported component', async () => {
 		for (const [file] of FIXTURES) {
 			const source = await emitted(file);
 			expect(source).toContain('<script setup lang="ts">\n');
 			// The ONLY `lang=` in the file is the one above - a second would mean a
 			// normal <script> block appeared alongside the setup block.
 			expect(source.match(/lang=/g)).toHaveLength(1);
-			// NO TYPE IS PRINTED. defineProps keeps its ARRAY form (no type argument),
-			// and no annotation reaches the script. This is what makes Step 1.5's
-			// behaviour-neutrality claim checkable rather than asserted.
+			// STILL DENIED AT GATE 5, and these two lines are the whole reason the
+			// runtime declaration was reachable at all.
 			expect(source).not.toContain('defineProps<');
 			expect(source).not.toContain('withDefaults(');
+			// NO TYPE ANNOTATION REACHES THE SCRIPT. The runtime declaration prints
+			// VALUES (`String`, `null`), never a `: T`, so the emitted script stays
+			// syntactically JavaScript even under `lang="ts"`.
+			expect(source).not.toMatch(/as\s+PropType</);
+			expect(source).not.toContain('satisfies ');
 			expect(source).toContain('<template>\n');
 			// A .vue module is one component exported as the module DEFAULT, so the
 			// IR's named ComponentExport cannot be honoured by spelling. The name is
@@ -297,8 +309,13 @@ describe('Vue 3 emitter', () => {
 	 */
 	test('respells SCRIPT expressions and leaves TEMPLATE expressions verbatim', async () => {
 		const s1 = await emitted('S1.vue');
-		// Script: prop through the defineProps object, ref through .value.
-		expect(s1).toContain("const props = defineProps(['label', 'multiplier', 'visible', 'onTrace']);");
+		// Script: prop through the defineProps object, ref through .value. S1 is the
+		// corpus's ONLY annotated module, so its declaration takes the RUNTIME
+		// OBJECT form; the array form is asserted on an unannotated scenario in the
+		// requiredness row below, so both regimes stay pinned.
+		expect(s1).toContain(
+			"const props = defineProps({ label: { type: String, required: true }, multiplier: { type: Number, required: true }, visible: { type: null, required: true }, onTrace: { type: Function, required: true } });",
+		);
 		expect(s1).toContain("props.onTrace('setup', { runs: 1 });");
 		expect(s1).toContain('const prefix = `${props.label}:`;');
 		expect(s1).toContain(
@@ -313,6 +330,79 @@ describe('Vue 3 emitter', () => {
 		expect(s1).toContain('{{ derived }}');
 		expect(s1).toContain("onTrace('change', { count });");
 		expect(s1).not.toContain('props.visible');
+	});
+
+	/**
+	 * IR-8 REQUIREDNESS, PRINTED. The three regimes this lane now has, plus the
+	 * two carve-outs that keep it behaviour-neutral.
+	 *
+	 * `required` is `!optional` READ FROM SOURCE. The corpus fixture declares all
+	 * four props non-optional (`label: string`, not `label?:`), so all four print
+	 * `required: true` - and the synthetic arms below flip the flag and watch the
+	 * printed value follow, which is what distinguishes "read from the IR" from
+	 * "hard-coded true".
+	 */
+	test('prints {type, required} from IR-8, with booleans mapped to null', async () => {
+		const s1 = await emitted('S1.vue');
+		// TYPED COMPONENT -> runtime declaration, required from source.
+		expect(s1).toContain('label: { type: String, required: true }');
+		expect(s1).toContain('multiplier: { type: Number, required: true }');
+		expect(s1).toContain('onTrace: { type: Function, required: true }');
+
+		// THE BOOLEAN CARVE-OUT, and it is the strongest denial on this board.
+		// `{ visible: Boolean }` makes Vue cast an empty-string binding, flipping
+		// `visible=""` from FALSY to TRUTHY and rendering <section> where the
+		// array form renders <p>hidden</p> - measured three times at vue@3.5.40.
+		// `type: null` normalizes to the array form's exact behaviour, so the
+		// REQUIREDNESS still prints while the coercing constructor does not.
+		expect(s1).toContain('visible: { type: null, required: true }');
+		for (const [file] of FIXTURES) {
+			const source = await emitted(file);
+			expect(source, `${file} must never print the coercing Boolean constructor`).not.toMatch(
+				/\btype: Boolean\b/,
+			);
+		}
+
+		// UNANNOTATED COMPONENT -> the ARRAY form, byte-for-byte what this lane
+		// shipped before IR-8. The other seven scenarios carry no annotation, so
+		// this is the control arm proving the object form is TRIGGERED by the IR
+		// field rather than printed unconditionally.
+		const s2 = await emitted('S2.vue');
+		expect(s2).toContain("const props = defineProps(['seed', 'onTrace']);");
+		expect(s2).not.toContain('required:');
+	});
+
+	/**
+	 * THE SAME THREE RULES DRIVEN OFF SYNTHETIC IR, because the corpus can only
+	 * ever show ONE combination and a rule proved on one input is a coincidence.
+	 */
+	test('requiredness, the fail-closed constructor map and the all-or-nothing trigger', async () => {
+		const entriesOf = (ir: EnrichedIR) => ir.components[0]!.props.entries as Array<any>;
+
+		// `optional: true` MUST print `required: false`. Without this arm every
+		// assertion above is satisfied by an emitter that hard-codes `true`.
+		const optionalIr = await golden('s1-render-once.json');
+		for (const entry of entriesOf(optionalIr)) entry.optional = true;
+		const optionalOut = emit(optionalIr);
+		expect(optionalOut).toContain('label: { type: String, required: false }');
+		expect(optionalOut).not.toContain('required: true');
+
+		// FAIL CLOSED. A type node the constructor map does not recognise prints
+		// `type: null` - Vue's own "do not type-check" - which degrades to the
+		// array form's behaviour instead of guessing a constructor.
+		const exoticIr = await golden('s1-render-once.json');
+		entriesOf(exoticIr)[0]!.type = { type: 'TSTypeReference', typeName: 'Whatever' };
+		expect(emit(exoticIr)).toContain('label: { type: null, required: true }');
+
+		// ALL OR NOTHING. One unannotated entry sends the WHOLE component back to
+		// the array form, rather than inventing a `required` for the prop whose
+		// annotation the compiler never saw.
+		const partialIr = await golden('s1-render-once.json');
+		delete entriesOf(partialIr)[2]!.type;
+		delete entriesOf(partialIr)[2]!.optional;
+		const partialOut = emit(partialIr);
+		expect(partialOut).toContain("defineProps(['label', 'multiplier', 'visible', 'onTrace'])");
+		expect(partialOut).not.toContain('required:');
 	});
 
 	test('the script respelling is SCOPE-AWARE, not a name substitution', async () => {
@@ -549,6 +639,46 @@ describe('Vue 3 emitter', () => {
 			entries[0]!.type = 'string';
 			expect(() => emit(artifact)).toThrow(
 				/PropDestructuringEntry has malformed type annotation AST/,
+			);
+		});
+
+		/**
+		 * IR-8 REQUIREDNESS, GUARDED THE SAME WAY AS ITS TYPE - see the fuller doc
+		 * comment on the copy in `packages/frameworks/qwik/test/emitter.test.ts`.
+		 * MEASURED: `optional` planted on every `PropDestructuringEntry` of all
+		 * eight goldens was rejected BY NAME by all six lanes before the field
+		 * landed.
+		 *
+		 * THIS LANE HAS THE MOST TO LOSE BY THE ORPHAN ARM, because it is the one
+		 * that PRINTS the flag: an `optional` with no `type` would reach
+		 * `propsDeclaration` and be printed straight into a `required:` field, so
+		 * requiredness invented downstream would become requiredness asserted in
+		 * an emitted artifact. The validator refuses it before any output AST is
+		 * built.
+		 */
+		test('on a malformed or ORPHANED IR-8 requiredness flag, while a well-formed one is admitted', async () => {
+			const admitted = structuredClone(await golden('s1-render-once.json'));
+			expect(
+				admitted.components[0]!.props.entries.filter(
+					(entry) => entry.optional !== undefined,
+				),
+			).not.toHaveLength(0);
+			expect(() => emit(admitted)).not.toThrow();
+
+			const malformed = structuredClone(await golden('s1-render-once.json'));
+			(
+				malformed.components[0]!.props.entries as unknown as Array<Record<string, unknown>>
+			)[0]!.optional = 'yes';
+			expect(() => emit(malformed)).toThrow(
+				/PropDestructuringEntry has malformed optional flag: label/,
+			);
+
+			const orphaned = structuredClone(await golden('s1-render-once.json'));
+			delete (
+				orphaned.components[0]!.props.entries as unknown as Array<Record<string, unknown>>
+			)[0]!.type;
+			expect(() => emit(orphaned)).toThrow(
+				/PropDestructuringEntry declares optionality without a type annotation: label/,
 			);
 		});
 

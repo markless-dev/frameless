@@ -277,5 +277,48 @@ describe('Qwik v2 structural emitter', () => {
 				/PropDestructuringEntry has malformed type annotation AST/,
 			);
 		});
+
+		/**
+		 * IR-8 REQUIREDNESS, GUARDED THE SAME WAY AND FOR THE SAME REASON.
+		 *
+		 * MEASURED before this field landed: `optional` planted on every
+		 * `PropDestructuringEntry` of all eight goldens was rejected BY NAME by all
+		 * six lanes - the parity the nested checks bought. This row keeps that
+		 * true for the SHAPE as well as the key, so the field cannot arrive as a
+		 * string, and cannot arrive alone.
+		 *
+		 * THE ORPHAN ARM IS THE INTERESTING ONE. `type` and `optional` are read
+		 * from one `TSPropertySignature` at the compiler's only supply site, so an
+		 * `optional` with no `type` cannot have come from source - it is
+		 * requiredness synthesized downstream, which is the exact invention the
+		 * Vue lane's Gate 5 refusal was built to prevent. This lane prints
+		 * neither field and still refuses the pairing, because a validator that
+		 * only guards what it consumes is how the nested blind spot arose.
+		 */
+		test('on a malformed or ORPHANED IR-8 requiredness flag, while a well-formed one is admitted', async () => {
+			const admitted = structuredClone(await golden('s1-render-once.json'));
+			expect(
+				admitted.components[0]!.props.entries.filter(
+					(entry) => entry.optional !== undefined,
+				),
+			).not.toHaveLength(0);
+			expect(() => emit(admitted)).not.toThrow();
+
+			const malformed = structuredClone(await golden('s1-render-once.json'));
+			(
+				malformed.components[0]!.props.entries as unknown as Array<Record<string, unknown>>
+			)[0]!.optional = 'yes';
+			expect(() => emit(malformed)).toThrow(
+				/PropDestructuringEntry has malformed optional flag: label/,
+			);
+
+			const orphaned = structuredClone(await golden('s1-render-once.json'));
+			delete (
+				orphaned.components[0]!.props.entries as unknown as Array<Record<string, unknown>>
+			)[0]!.type;
+			expect(() => emit(orphaned)).toThrow(
+				/PropDestructuringEntry declares optionality without a type annotation: label/,
+			);
+		});
 	});
 });

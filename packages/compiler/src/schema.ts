@@ -225,6 +225,34 @@ export interface PropDestructuringEntry {
 	 * type at all.
 	 */
 	readonly type?: SerializableAstNode;
+	/**
+	 * IR-8, REQUIREDNESS. Whether the author marked this prop optional - `a?:`
+	 * rather than `a:` - read from the SAME type-literal member `type` is read
+	 * from, never synthesized from how the corpus happens to use the prop.
+	 *
+	 * COUPLED TO `type` BY CONSTRUCTION, AND THE COUPLING IS CHECKED. Both come
+	 * from one `TSPropertySignature`, so this field is present exactly when
+	 * `type` is present and absent exactly when it is absent. `{ a }` inside a
+	 * type literal means `a: any` and supplies NEITHER - there is no member type
+	 * to read, so there is no authored requiredness to report either. Every
+	 * emitter validator rejects an `optional` that arrives without a `type`,
+	 * because the two facts have one source and a lone `optional` could only
+	 * have been invented downstream.
+	 *
+	 * WHY IT IS A SEPARATE FIELD RATHER THAN FOLDED INTO `type`. A target that
+	 * declares props at RUNTIME needs requiredness even where it cannot safely
+	 * print the type itself: the Vue emitter maps `boolean` to `null` because
+	 * the `Boolean` constructor flips an empty-string binding from falsy to
+	 * truthy - measured three times, at vue@3.5.40 - yet the source still says
+	 * that prop is not optional, and dropping that fact with the constructor
+	 * would discard a second fact for the first one's reason.
+	 *
+	 * ABSENCE DOES NOT MEAN OPTIONAL. When the parameter is unannotated this
+	 * field is absent, which says "the author declared nothing", not "the author
+	 * declared it optional". A consumer that reads absence as `optional: true`
+	 * would invent a contract, so consumers key off the field being PRESENT.
+	 */
+	readonly optional?: boolean;
 }
 
 /** Ordered component-local declaration, including the authored binding pattern. */

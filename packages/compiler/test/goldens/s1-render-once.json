@@ -309,6 +309,7 @@
             "alias": false,
             "graphNodeId": "prop:props",
             "localName": "label",
+            "optional": false,
             "path": [
               "label"
             ],
@@ -323,6 +324,7 @@
             "alias": false,
             "graphNodeId": "prop:props",
             "localName": "multiplier",
+            "optional": false,
             "path": [
               "multiplier"
             ],
@@ -337,6 +339,7 @@
             "alias": false,
             "graphNodeId": "prop:props",
             "localName": "visible",
+            "optional": false,
             "path": [
               "visible"
             ],
@@ -351,6 +354,7 @@
             "alias": false,
             "graphNodeId": "prop:props",
             "localName": "onTrace",
+            "optional": false,
             "path": [
               "onTrace"
             ],

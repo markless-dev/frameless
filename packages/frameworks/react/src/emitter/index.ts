@@ -343,6 +343,15 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 				// a .jsx file and this emitter now writes .tsx - so the remaining
 				// work is the printing itself, not the extension.
 				'type',
+				// IR-8 REQUIREDNESS, ADMITTED AND SHAPE-CHECKED, NOT PRINTED HERE.
+				// Supplied beside `type` from the same `TSPropertySignature`, so
+				// this lane admits it for the same reason it admits `type`: the
+				// field cannot exist at all unless the two validators that reject
+				// unknown nested keys let it through. The Vue lane consumes it -
+				// its runtime prop declarations need requiredness to express a
+				// contract - while React reads props positionally out of a
+				// destructured parameter and has nothing to do with the flag yet.
+				'optional',
 			]);
 			if (
 				entry.type !== undefined &&
@@ -352,6 +361,17 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 			)
 				throw new Error(
 					`PropDestructuringEntry has malformed type annotation AST: ${entry.localName}`,
+				);
+			if (entry.optional !== undefined && typeof entry.optional !== 'boolean')
+				throw new Error(
+					`PropDestructuringEntry has malformed optional flag: ${entry.localName}`,
+				);
+			// Requiredness and type have ONE supply site and are read from one
+			// member, so `optional` without `type` is requiredness invented
+			// downstream rather than reported from source.
+			if (entry.optional !== undefined && entry.type === undefined)
+				throw new Error(
+					`PropDestructuringEntry declares optionality without a type annotation: ${entry.localName}`,
 				);
 			const alias = ir.records.aliases.find(
 				(record) => record.componentId === component.id && record.name === entry.localName,
