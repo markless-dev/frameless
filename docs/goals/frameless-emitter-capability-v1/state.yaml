@@ -90,7 +90,7 @@ visual_board:
     predecessor goal that closed complete this session. Recorded as an explicit choice, not an
     omission - the command above turns it on at any time.
 
-active_task: T013
+active_task: T015
 
 tasks:
   - id: T001
@@ -1065,7 +1065,7 @@ tasks:
   - id: T013
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     spec: "T004 receipt + T010's Gate 5 measurement - AUTHORITATIVE. Read-only; needs NO new dependency."
     objective: >-
@@ -1103,8 +1103,38 @@ tasks:
       - "What it costs the phase oracle and T999"
       - "The evidence and instrument any re-open would require"
       - "A recommendation on the absent/empty-boolean corpus gap"
-    receipt: null
-
+    receipt:
+      result: done
+      decision: rejected
+      full_outcome_complete: false
+      harness: claude-code
+      rationale: "defineProps<T>() STAYS DENIED at Gate 5, on STRONGER grounds. But the brief's premise is MEASURED FALSE: defineProps({label:String, multiplier:Number, visible:null}) types the call site - vue-tsc 3.3.8/vue 3.5.40 gives TS2322 on the negative arm with GREEN control and positive - renders IDENTICALLY for absent and visible=\"\", clears the SHIPPED vue gate with ZERO violations, and NEEDS NO DEPENDENCY. Vue is not blocked on a ruling."
+      summary: "no-typed-props STAYS and needs no narrowing, because it was ALREADY narrow. Vue CAN satisfy the phase oracle via the runtime declaration channel, measured. Vue LEAVES T014's blocked set; the parser dependency still binds react/solid/qwik/svelte."
+      THE_BRIEFS_CENTRAL_PREMISE_WAS_FALSE_AND_IT_FOUND_A_THIRD_CHANNEL: "I wrote 'defineProps<T>() is the ONLY channel that types a Vue call site' and the board had assumed it for two tasks. MEASURED FALSE on the exact toolchain in the lockfile. The RUNTIME DECLARATION form - defineProps({label:String, multiplier:Number, visible:null}) - produces the SAME TS2322 every lane's Step 0 row records, WITH NO TYPE ARGUMENT, NO TYPESCRIPT SYNTAX AND NO NEW DEPENDENCY. Neither T004 nor T010 measured it, and I asserted its non-existence."
+      AND_THE_GATE_NEVER_DENIED_WHAT_WE_THOUGHT_IT_DENIED: "PM VERIFIED at gate/index.ts:1165: no-typed-props fires on `TYPE_ONLY_MACROS.has(name) || node.typeParameters || node.typeArguments` - THE TYPE-ARGUMENT FORM ONLY. It does not deny a runtime-typed declaration and never did. The board read a narrow rule as a broad one for two tasks, and my dispatch repeated the misreading."
+      gate_5_gets_STRONGER_grounds_not_weaker: "The falsy->truthy flip is caused by the RUNTIME PROP TYPE, not by the macro form: measured by SSR-rendering three declaration forms, {visible:Boolean} flips visible=\"\" from falsy to TRUTHY while {visible:null} normalizes to the array form's exact EMPTY_OBJ and is behaviourally IDENTICAL on both triggering cases. And PM CONFIRMED build.ts propTypeMembers contains ZERO references to member.optional - so required:true asserts optionality the IR CANNOT REPRESENT AT ALL, not merely does not declare."
+      the_shipped_gate_ACCEPTS_the_new_shape: "Ran the REAL checkSources against generated/S1.vue with the runtime-object substitution: ZERO violations, identical to HEAD. @vue/compiler-sfc compileScript on it: 0 errors, 0 warnings, 0 tips in BOTH ssr modes - so compile-emitted.test.ts's exact-empty assertion SURVIVES, unlike the defineProps<T>() route which throws."
+      evidence:
+        - "gate/index.ts:1165 - fires only on TYPE_ONLY_MACROS / typeParameters / typeArguments. PM VERIFIED."
+        - "Real shipped checkSources on the runtime-object form: 0 violations, same as HEAD."
+        - "vue-tsc 3.3.8 / vue 3.5.40 three arms: control GREEN exit 0; negative RED TS2322 at Parent.vue(6,21) exit 2; positive GREEN exit 0."
+        - "Per-prop coverage: label, multiplier and onTrace all RED on wrong types; visible deliberately uncovered."
+        - "SSR: absent -> array undefined, {visible:Boolean} false, {visible:null} undefined. visible=\"\" -> array FALSY \"\", {visible:Boolean} TRUTHY true, {visible:null} FALSY \"\"."
+        - "Dev warnings: {multiplier:Number} + multiplier=\"2\" emits 'Invalid prop: type check failed' where array and {multiplier:null} emit none; RENDERED OUTPUT IDENTICAL (<p>2</p>) in all three."
+        - "build.ts propTypeMembers never reads member.optional - PM CONFIRMED zero occurrences."
+      missing_evidence:
+        - "Whether `null as unknown as PropType<T>` - the variant that is fully neutral INCLUDING dev warnings and closes the boolean hole - clears the vue gate. It is TS syntax and needs the eslint arbiter's parser, i.e. T014's dependency decision. The vue-tsc arms are already measured RED/GREEN correctly."
+        - "NO STANDING BEHAVIOURAL CHECK ANYWHERE IN THIS REPO, IN ANY LANE, observes a boolean prop bound absent or bound to an empty string. The strongest Vue denial on the board is pinned by text checks only."
+        - "Gate 4 totality of the type-node -> constructor map over the accepted node set is ARGUED here, not measured. The Worker owns it."
+      required_board_updates:
+        - "T004's 'VUE NEEDS A RULING, NOT A PARSER ... deciding whether a falsy->truthy flip is acceptable' is SUPERSEDED. The flip need not be accepted - a third channel avoids it. Vue leaves the five-lane blocked set and leaves T014."
+        - "T004 note section 7's 'the runtime object form changes runtime harder, not less' is MEASURED FALSE: its runtime delta is a strict SUBSET, and with boolean -> null it is EMPTY."
+        - "T013's own card premise is measured false - recorded as a brief error in the same register as the earlier ones."
+        - "OPEN A TASK: the dead premise still shipping at vue/src/emitter/index.ts:420-478 - THE ACTUAL DECISION SITE - still says PropDestructuringEntry has no type field and every printed type would be INFERRED, with :1128 sending readers there as 'the still-standing IR-8 ruling'. T010 repaired only the GATE's copy."
+        - "OPEN A TASK: demos/vue-official/tsconfig.app.json says 'three components in src/emitted' carry 'NO lang=\"ts\"'. There are EIGHT and all carry it since 0f51527. Its four measured rows must be RE-RUN, not edited - three of four will flip RED."
+        - "T999: vue's Step 0 row will be REAL BUT PARTIAL - boolean-typed props stay untyped at call sites by measured Gate 5 constraint, NOT by omission. Record it so the audit reads neither a partial row as full nor a full row where a boolean was silently typed."
+        - "T014: adding the parser rewrites pnpm-lock.yaml peer suffixes and WILL move package-inventory.test.ts - the same test currently failing on the owner's dirty lockfile. Expect it; do not read its movement as unrelated."
+        - "The absent/empty-string boolean corpus scenario: queue AFTER Step 5 as a DENIAL TRIPWIRE, not as a precondition."
   - id: T014
     type: worker
     assignee: Worker
@@ -1133,6 +1163,51 @@ tasks:
       - "pnpm test / pnpm check / pnpm lint / pnpm e2e"
     stop_if:
       - "Scope to be set when the environment decision is made."
+    receipt: null
+
+  - id: T015
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    spec: "T013 receipt worker_package - AUTHORITATIVE. Vue needs NO new dependency."
+    objective: >-
+      STEP 2, VUE LANE. Print IR-8 prop types through Vue's RUNTIME DECLARATION channel -
+      defineProps({...}) with a TOTAL, FAIL-CLOSED TS-type-node -> runtime-constructor map that
+      emits `null` for TSBooleanKeyword and for every kind it does not map - then reproduce the
+      Step 0 oracle against EMITTED output using demos/vue-official's own vue-tsc.
+    why_this_is_possible_when_two_tasks_said_it_was_not: >-
+      T004 and T010 both concluded vue was blocked on a ruling, and the PM's own dispatch asserted
+      that defineProps<T>() is THE ONLY CHANNEL that types a Vue call site. T013 MEASURED THAT
+      FALSE. The runtime declaration form produces the SAME TS2322 with no type argument, no
+      TypeScript syntax and no new dependency; it renders IDENTICALLY for the two triggering cases
+      when booleans map to `null`; and the SHIPPED gate returns ZERO violations on it.
+    do_NOT_use_the_denied_form: >-
+      defineProps<T>() and withDefaults() STAY DENIED at Gate 5, on grounds T013 made stronger:
+      the falsy->truthy flip is caused by the RUNTIME PROP TYPE rather than the macro form, and
+      build.ts propTypeMembers never reads member.optional - PM CONFIRMED zero occurrences - so
+      required:true asserts optionality THE IR CANNOT REPRESENT.
+    allowed_files:
+      - packages/frameworks/vue/src/emitter/index.ts
+      - packages/frameworks/vue/generated
+      - packages/frameworks/vue/test
+      - demos/vue-official/src/emitted
+      - docs/goals/frameless-emitter-capability-v1/notes/T015-vue-runtime-typed-props.md
+    verify:
+      - "pnpm test   # baseline 1108 passed / 1 failed; the 1 is package-inventory against the owner's dirty lockfile, NOT yours"
+      - "pnpm check  # must stay at EXACTLY 73, all in packages/frameworks/react/generated/"
+      - "pnpm lint && pnpm check:citations"
+      - "pnpm e2e    # the vue demo build runs vue-tsc -b over the newly typed emitted artifact"
+      - "THREE ARMS with demos/vue-official/node_modules/.bin/vue-tsc, rig staged OUTSIDE the repo: control = HEAD's array-form S1.vue + wrong-typed parent (GREEN exit 0); negative = the new emitted S1.vue, SAME parent (RED TS2322); positive = correctly typed parent (GREEN)"
+      - "BEHAVIOURAL NEUTRALITY: SSR-render the emitted component's compiled props options with `visible` ABSENT and with visible=\"\", HEAD vs new, require byte-identical output. pnpm e2e CANNOT see this and is NOT the proof."
+      - "git diff --exit-code over the seven unannotated vue scenarios - the control arm must not move"
+      - "git diff --exit-code over the other five lanes' generated*/ dirs"
+    stop_if:
+      - "You are about to print a runtime constructor for a BOOLEAN-typed entry. That is the measured Gate 5 flip - emit `null` and keep that prop untyped at call sites."
+      - "You reach for defineProps<T>(), withDefaults(), or `as unknown as PropType<T>`. The first two are denied; the third is TS syntax that draws eslint:parse and belongs to T014's dependency decision."
+      - "You need to edit vue/src/gate/index.ts or weaken a gate.test.ts assertion. MEASURED at HEAD: the shipped gate returns ZERO violations on this shape. If it does not for you, something changed - REPORT IT, do not weaken it."
+      - "compile-emitted.test.ts's exact-empty error/tip set stops being empty."
+      - "The type-node -> constructor map cannot be made total over the accepted kinds without guessing. FAIL CLOSED to `null`, which degrades to the array form's exact behaviour."
     receipt: null
 
   - id: T005
