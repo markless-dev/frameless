@@ -903,6 +903,7 @@ function propsEntries(
 			binding.kind === 'prop' && environment.bindings.get(binding.name)?.id === binding.id,
 	);
 	if (!parameter || parameter.type !== 'ObjectPattern' || !propBinding) return [];
+	const propTypes = propTypeMembers(parameter);
 	const entries: PropDestructuringEntry[] = [];
 	for (const property of parameter.properties ?? []) {
 		if (property.type === 'RestElement') {
@@ -930,10 +931,61 @@ function propsEntries(
 					property.value?.type === 'AssignmentPattern'
 						? serializeAst(property.value.right)
 						: undefined,
+				type: propTypes.get(sourceName),
 			}) as unknown as PropDestructuringEntry,
 		);
 	}
 	return entries;
+}
+
+/**
+ * IR-8 SUPPLY. The authored type of each destructured prop, keyed by its SOURCE
+ * name, read from the annotation `@tsrx/core` already parsed onto the props
+ * parameter. Nothing here infers, resolves or reparses: it walks one type
+ * literal that is physically present on the pattern, or returns nothing.
+ *
+ * ONLY AN INLINE TYPE LITERAL SUPPLIES ANYTHING, and that is deliberate. TS
+ * admits three shapes on this parameter:
+ *
+ *   1. `({ a }: { a: string })`  - TSTypeLiteral. Members are RIGHT HERE. Supplied.
+ *   2. `({ a }: Props)`          - TSTypeReference. The members live in a
+ *                                  declaration this function cannot see, and
+ *                                  possibly in another module. Resolving it is
+ *                                  cross-module INFERENCE - the "new source" the
+ *                                  phase charter forbids. Not supplied.
+ *   3. no annotation             - nothing to read. Not supplied.
+ *
+ * Intersections and unions of literals (`A & { a: string }`) fall under 2 for
+ * the same reason: deciding which arm wins for a given key is type-system work,
+ * not syntax work, and a wrong answer here prints a wrong type into six lanes.
+ *
+ * The KEY is `sourceName`, never `localName`: an annotation names the property
+ * as the CALLER spells it, so `({ label: displayLabel }: { label: string })`
+ * must match on `label`. Keying on the local name would silently supply nothing
+ * for every aliased prop - and `alias-coverage.tsrx` exists precisely because
+ * aliasing is where prop metadata has gone wrong before.
+ */
+function propTypeMembers(parameter: AnyNode): Map<string, SerializableAstNode> {
+	const members = new Map<string, SerializableAstNode>();
+	const annotation = parameter.typeAnnotation?.typeAnnotation;
+	if (annotation?.type !== 'TSTypeLiteral') return members;
+	for (const member of annotation.members ?? []) {
+		// Call/construct/index signatures carry no property name to key on, and a
+		// computed key is not statically a prop name. Both are skipped rather than
+		// guessed at.
+		if (member?.type !== 'TSPropertySignature' || member.computed) continue;
+		const name = staticPropertyName(member.key);
+		const memberType = member.typeAnnotation?.typeAnnotation;
+		// `{ a }` inside a type literal is legal TS and means `a: any` - implicit,
+		// not authored. An absent field says "the author wrote no type", which is
+		// exactly true here, and is more useful to an emitter than a synthesized
+		// `any` it would then have to print.
+		if (!name || !memberType) continue;
+		// FIRST WINS. A duplicate key in a type literal is a TS error, not a
+		// meaning; picking the first keeps this deterministic if one appears.
+		if (!members.has(name)) members.set(name, serializeAst(memberType));
+	}
+	return members;
 }
 
 export function buildTemplateNode(

@@ -334,7 +334,24 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 				'alias',
 				'graphNodeId',
 				'defaultValue',
+				// IR-8. ADMITTED AND SHAPE-CHECKED, DELIBERATELY NOT PRINTED YET.
+				// This emitter is one of exactly TWO that reject an unknown nested
+				// key on this construct - qwik, svelte, vue and angular accept it
+				// silently - so admitting it here is what lets the field exist at
+				// all. Printing it is a later step and is blocked on the .jsx ->
+				// .tsx migration: TS8010 forbids a type annotation in a .jsx file,
+				// which is what this emitter still writes.
+				'type',
 			]);
+			if (
+				entry.type !== undefined &&
+				(typeof entry.type !== 'object' ||
+					entry.type === null ||
+					typeof (entry.type as { type?: unknown }).type !== 'string')
+			)
+				throw new Error(
+					`PropDestructuringEntry has malformed type annotation AST: ${entry.localName}`,
+				);
 			const alias = ir.records.aliases.find(
 				(record) => record.componentId === component.id && record.name === entry.localName,
 			);

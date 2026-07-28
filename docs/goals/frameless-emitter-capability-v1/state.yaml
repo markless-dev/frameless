@@ -90,7 +90,7 @@ visual_board:
     predecessor goal that closed complete this session. Recorded as an explicit choice, not an
     omission - the command above turns it on at any time.
 
-active_task: T003
+active_task: T010
 
 tasks:
   - id: T001
@@ -276,7 +276,7 @@ tasks:
   - id: T003
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       STEP 1, RE-SCOPED BY T002 ON MEASUREMENT. Supply PropDestructuringEntry.type ONLY, sourced
@@ -335,9 +335,76 @@ tasks:
       - "Any emitted golden byte moves in any generated*/ directory."
       - "You cannot make the annotated fixture's type reach the golden without inventing a source outside the parsed @tsrx/core annotation."
       - "You are about to touch packages/cli/test/fixtures/s1-render-once.tsrx. Byte-identical to the compiler's copy but no test couples them; diverging it is out of scope."
-    allowed_files: []
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T003-ir8-supply.md
+      changed_files:
+        - packages/compiler/src/schema.ts
+        - packages/compiler/src/build.ts
+        - packages/compiler/test/fixtures/s1-render-once.tsrx
+        - packages/compiler/test/goldens/s1-render-once.json
+        - packages/compiler/test/enriched-ir.test.ts
+        - packages/frameworks/react/src/emitter/index.ts
+        - packages/frameworks/solid/src/emitter/index.ts
+        - packages/frameworks/react/test/emitter.test.ts
+        - packages/frameworks/solid/test/emitter.test.ts
+        - docs/goals/frameless-emitter-capability-v1/notes/T003-ir8-supply.md
+      commands:
+        - cmd: "pnpm test (baseline, pre-edit)"
+          status: pass
+          note: "1082/1 independently confirmed BEFORE any edit"
+        - cmd: "six-lane plant-and-emit matrix (PRE-change)"
+          status: pass
+          note: "react THROWS, solid THROWS, qwik/svelte/vue/angular ACCEPT SILENTLY byte-identical 8/8, resolveModuleSet ACCEPTS - reproduces T002 EXACTLY, no difference to report"
+        - cmd: "six-lane plant-and-emit matrix (POST-change)"
+          status: pass
+          note: "all six emitters + resolveModuleSet ACCEPT, byte-identical 8/8"
+        - cmd: "regenerate all six lanes + react/solid composition"
+          status: pass
+          note: "full regeneration from the MOVED golden before diffing"
+        - cmd: "git diff --exit-code over all 10 generated*/ dirs"
+          status: pass
+          note: "exit 0, verified per-dir as well as in aggregate"
+        - cmd: "pnpm test"
+          status: pass
+          note: "1092 passed / 1 failed (1093) = baseline + EXACTLY the 10 tests added. Failure identical: package-inventory ARM B, same cause. Zero pre-existing tests changed status. See the brief-error deviation."
+        - cmd: "pnpm check"
+          status: pass
+          note: "exit 0; the optional field kept it there"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0/0 over 396 files - one introduced warning found and fixed"
+        - cmd: "pnpm check:citations"
+          status: pass
+          note: "clean; run unprompted because the task adds a doc note the guard sweeps"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "6 demos x 8 scenarios, all observations equal"
+        - cmd: "git status --short"
+          status: pass
+          note: "9 owned modified + 1 new note + exactly the 3 FOREIGN entries, untouched"
+      summary: "Supplied PropDestructuringEntry.type ONLY, as an optional serialized TS type-node read from the @tsrx/core annotation at build.ts propsEntries(). Widened the two MEASURED validators and added a malformed-AST shape check to each. Annotated s1-render-once.tsrx - now the corpus's ONLY annotated module - so the field is PROVABLE; its golden carries string/number/boolean plus a full TSFunctionType for onTrace. Six other scenarios stay unannotated AS THE CONTROL ARM. No emitted byte moved across 10 generated*/ dirs after full regeneration."
+      six_lane_matrix_re_derived:
+        method: "planted type:{type:'TSStringKeyword'} on EVERY PropDestructuringEntry of ALL 8 goldens, called each lane's real exported emit(), compared byte-for-byte against un-planted output. Verdicts identical across all 8 goldens per lane."
+        before: "react THROWS 'PropDestructuringEntry has unknown semantic field: type' | solid THROWS same | qwik ACCEPTS byte-identical 8/8 | svelte ACCEPTS 8/8 | vue ACCEPTS 8/8 | angular ACCEPTS 8/8 | resolveModuleSet ACCEPTS, link table identical 8/8"
+        after: "all seven ACCEPT, byte-identical"
+        agreement: "MATCHES T002 EXACTLY - no difference to report."
+      THE_KEYS_TRAP_IS_REAL_AND_CONFIRMED: "react's checker is an INLINE CLOSURE at packages/frameworks/react/src/emitter/index.ts:219 and grep -c exactKeys there returns ZERO. Solid's is exactKeys at solid/src/emitter/index.ts:63. THE TWO BREAKING LANES ARE SPELLED DIFFERENTLY, which is why every grep-derived count in this phase missed one of them."
+      IT_FOUND_A_BOARD_DEFECT_THE_PM_INTRODUCED: "The T003 card carried TWO allowed_files keys - the populated one the PM wrote from T002's worker_package, and the ORIGINAL EMPTY ONE left below it. Under last-key-wins THE EMPTY LIST GOVERNED, which would have made the task unexecutable. PM CONFIRMED with a real YAML load: effective value was []. The Worker used the populated list on the strength of its own allowed_files_provenance block and REPORTED rather than edited the board, which is the right call - the board is the PM's file. THIS IS THE SAME DEFECT CLASS the predecessor goal found on the Svelte board, where duplicate keys silently overrode eight stop conditions, and the checker's line-regex parser cannot see it. PM removed the duplicate; effective list is now 10 entries. ONE CORRECTION TO THE WORKER: it said 'several other cards share the pattern' - measured, ONLY T003 had a duplicate. T004-T007 carry a SINGLE empty allowed_files because they were seeded that way at prep, to be filled before activation."
+      the_briefs_error: "'pnpm test must stay EXACTLY 1082/1' is arithmetically incompatible with the same card's 'PROVE THE FAILURE MODE ONCE - a guard nobody has seen fire is not a guard' plus its allowlisting of three test files. A task told to add guard tests cannot leave the count unchanged. Landed at 1092/1 = baseline + exactly the 10 added. THE INVARIANT THAT ACTUALLY MATTERED HELD: failures stayed at exactly 1, same file, same test name, same foreign cause, and no pre-existing test changed status."
+      deviations:
+        - "Reported the duplicate-allowed_files board defect rather than editing it - the board is the PM's file."
+        - "Brief error on the test count - see above."
+        - "ADDED A SHAPE CHECK BEYOND BARE ALLOWLISTING in both validators: a `type` that is not an AST node throws 'PropDestructuringEntry has malformed type annotation AST'. Admitting an unvalidated key would have traded one blind spot for another."
+        - "Added 6 compiler tests rather than only asserting supply: 2 positive and FOUR CONTROL/BOUNDARY ARMS (seven unannotated scenarios carry no type; a bare type reference supplies nothing; aliased props key on sourceName; rest elements get none). THE ABSENCE CASES ARE WHAT PROVE the value came from source rather than being defaulted in."
+        - "Ran each lane's regenerate BEFORE the generated*/ diff - THE DIFF PASSES VACUOUSLY IF NOTHING REGENERATES, so it was strengthened into a real round-trip."
+        - "Ran pnpm check:citations unprompted because this task adds a doc note the guard sweeps."
+      remaining_blockers:
+        - "packages/frameworks/vue/src/gate/index.ts:1026-1034 raises a no-typed-props violation whenever <script setup lang=\"...\"> appears, JUSTIFIED BY 'the IR carries no prop type field (PropDestructuringEntry)'. THAT PREMISE IS NOW FALSE. Out of scope here; lands on T009/T010."
+        - "T002's function-type gap is now HALF-closed: onTrace supplies a full TSFunctionType - both params, their annotations including a generic TSTypeReference, and TSVoidKeyword return. PRINTING it is still Step 2's risk."
+      stopped_because: null
   - id: T009
     type: worker
     assignee: Worker
@@ -389,7 +456,7 @@ tasks:
   - id: T010
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
     spec: "T002 receipt, finding F3 - AUTHORITATIVE. Queued BEFORE T004."
     objective: >-
@@ -405,6 +472,30 @@ tasks:
     constraints:
       - "PROVE RED FIRST: plant a nested unknown field and watch each newly-tightened lane name it."
       - "Do not weaken any existing top-level check while adding the nested one."
+    allowed_files:
+      - packages/frameworks/qwik/src/emitter/index.ts
+      - packages/frameworks/svelte/src/emitter/index.ts
+      - packages/frameworks/vue/src/emitter/index.ts
+      - packages/frameworks/angular/src/emitter/index.ts
+      - packages/frameworks/qwik/test/emitter.test.ts
+      - packages/frameworks/svelte/test/emitter.test.ts
+      - packages/frameworks/vue/test/emitter.test.ts
+      - packages/frameworks/angular/test/emitter.test.ts
+      - packages/frameworks/vue/src/gate/index.ts
+      - packages/frameworks/vue/test/gate.test.ts
+      - docs/goals/frameless-emitter-capability-v1/notes/T010-nested-validators.md
+    allowed_files_provenance: >-
+      The four lax lanes measured by T002 and re-confirmed by T003, plus their emitter test suites
+      which carry the three mis-aimed anti-drift probes. The vue gate is included for the SECOND
+      finding below, which T003 surfaced and which lives in the same lane.
+    a_SECOND_false_premise_now_shipping_in_a_GATE: >-
+      T003 FOUND THIS AND IT IS NOT THE SAME BUG. packages/frameworks/vue/src/gate/index.ts:1026-1034
+      raises a `no-typed-props` violation whenever <script setup lang="..."> appears, and its stated
+      justification is "the IR carries no prop type field (PropDestructuringEntry)". SINCE T003 THAT
+      PREMISE IS FALSE - the field exists and s1-render-once's golden carries four of them. A shipped
+      refusal resting on a premise the repo just falsified is exactly the class this project keeps
+      catching, and it will block Step 1.5's lang="ts" flip if left standing. Correct the REASON, and
+      re-derive whether the refusal itself should survive - do not simply delete the rule.
     verify:
       - "pnpm test"
       - "pnpm e2e"

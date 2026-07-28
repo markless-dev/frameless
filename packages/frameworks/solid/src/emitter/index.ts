@@ -654,12 +654,27 @@ export function validateEnrichedIr(ir: EnrichedIR): void {
 	};
 
 	for (const entry of component.props.entries) {
+		// IR-8's `type` is ADMITTED AND SHAPE-CHECKED, DELIBERATELY NOT PRINTED YET.
+		// This emitter is one of exactly TWO that reject an unknown nested key on
+		// this construct - qwik, svelte, vue and angular accept it silently - so
+		// admitting it here is what lets the field exist at all. Printing it is a
+		// later step and is blocked on the .jsx -> .tsx migration: TS8010 forbids a
+		// type annotation in a .jsx file, which is what this emitter still writes.
 		exactKeys(
 			entry,
-			['sourceName', 'localName', 'path', 'alias', 'graphNodeId', 'defaultValue'],
+			['sourceName', 'localName', 'path', 'alias', 'graphNodeId', 'defaultValue', 'type'],
 			'PropDestructuringEntry',
 		);
 		if (entry.defaultValue !== undefined) expression(entry.defaultValue);
+		if (
+			entry.type !== undefined &&
+			(typeof entry.type !== 'object' ||
+				entry.type === null ||
+				typeof entry.type.type !== 'string')
+		)
+			throw new Error(
+				`PropDestructuringEntry has malformed type annotation AST: ${entry.localName}`,
+			);
 		if (entry.alias !== (entry.sourceName !== entry.localName))
 			throw new Error(
 				`PropDestructuringEntry has inconsistent alias metadata: ${entry.localName}`,

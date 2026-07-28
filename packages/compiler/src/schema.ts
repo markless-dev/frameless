@@ -209,6 +209,22 @@ export interface PropDestructuringEntry {
 	readonly alias: boolean;
 	readonly graphNodeId: string;
 	readonly defaultValue?: SerializableAstNode;
+	/**
+	 * IR-8. The authored TypeScript type of this prop, as a serialized type-node
+	 * subtree, never a source string - the same stance `defaultValue` takes, so an
+	 * emitter that prints a type prints it from syntax it can walk.
+	 *
+	 * OPTIONAL, AND THE OPTIONALITY IS LOAD-BEARING. The only source is an
+	 * annotation the author actually wrote on the destructured prop parameter:
+	 * `function C({ a }: { a: string })` supplies `a`, and nothing else does.
+	 * When the parameter is unannotated, annotated by a bare type REFERENCE whose
+	 * members live in another declaration (`({ a }: Props)`), or the entry is a
+	 * rest element with no single member to name, this field is ABSENT. Frameless
+	 * does not infer it: inferring across modules is the "new source" the phase
+	 * charter forbids, and a guessed type printed into six lanes is worse than no
+	 * type at all.
+	 */
+	readonly type?: SerializableAstNode;
 }
 
 /** Ordered component-local declaration, including the authored binding pattern. */

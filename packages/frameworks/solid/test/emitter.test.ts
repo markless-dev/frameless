@@ -1711,6 +1711,37 @@ export function Locked({ onTrace }) @{
 			);
 		});
 
+		// IR-8. THIS EMITTER IS ONE OF EXACTLY TWO THAT EVER REJECTED THIS FIELD.
+		// Measured across all eight goldens against every lane's real `emit()`:
+		// solid and react threw `PropDestructuringEntry has unknown semantic
+		// field: type`; qwik, svelte, vue, angular and `resolveModuleSet` accepted
+		// it SILENTLY with byte-identical output. So this pair of tests is not
+		// ceremony - without the allowlist entry below, S1 would not emit at all.
+		test('admits the authored prop type and still emits byte-identically without printing it', async () => {
+			const ir = clone(await golden('s1-render-once.json'));
+			expect(ir.components[0]!.props.entries.some((entry) => entry.type)).toBe(true);
+			expect(() => validateEnrichedIr(ir)).not.toThrow();
+			const stripped = clone(ir) as any;
+			for (const entry of stripped.components[0].props.entries) delete entry.type;
+			// The types are ADMITTED, not consumed: printing them waits on the
+			// .jsx -> .tsx migration, since TS8010 forbids a type annotation in the
+			// .jsx file this emitter still writes.
+			expect(emit(ir)).toBe(emit(stripped));
+			expect(emit(ir)).not.toContain('string');
+		});
+
+		test('rejects a malformed prop type that is not an AST node', async () => {
+			const ir = clone(await golden('s1-render-once.json')) as any;
+			ir.components[0].props.entries[0].type = 'string';
+			expect(() => validateEnrichedIr(ir)).toThrow(
+				/PropDestructuringEntry has malformed type annotation AST: label/,
+			);
+			ir.components[0].props.entries[0].type = { notAType: true };
+			expect(() => validateEnrichedIr(ir)).toThrow(
+				/PropDestructuringEntry has malformed type annotation AST: label/,
+			);
+		});
+
 		test.each([
 			[
 				'unknown field',

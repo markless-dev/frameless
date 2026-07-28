@@ -491,6 +491,130 @@ describe('fixture-family sufficiency', () => {
 		});
 	});
 
+	// IR-8 SUPPLY. `PropDestructuringEntry.type`, sourced from the annotation
+	// `@tsrx/core` already parses onto the props parameter.
+	//
+	// THE CONTROL ARM IS THE HALF THAT MATTERS. Before this field existed, no
+	// `.tsrx` in the corpus carried a prop type at all, so a suite that only
+	// asserted "S1 has types" would pass identically if the builder hard-coded
+	// them. The absence cases below - unannotated scenarios, a bare type
+	// reference, a rest element - are what prove the value came from the source.
+	describe('IR-8: authored prop types', () => {
+		test('S1, the one annotated corpus module, supplies a type per prop keyed by source name', async () => {
+			const ir = await fixtureIr('s1-render-once.tsrx');
+			const entries = ir.components[0]!.props.entries;
+			expect(
+				Object.fromEntries(
+					entries.map((entry) => [entry.sourceName, entry.type?.type]),
+				),
+			).toEqual({
+				label: 'TSStringKeyword',
+				multiplier: 'TSNumberKeyword',
+				visible: 'TSBooleanKeyword',
+				onTrace: 'TSFunctionType',
+			});
+		});
+
+		test('the CALLBACK prop keeps its whole signature, not just the fact that it is a function', async () => {
+			// T002 recorded as MISSING EVIDENCE that "whether a function type
+			// survives @tsrx/core -> IR" was unmeasured. This is the supply half of
+			// that measurement: parameters, their annotations and the return type
+			// all arrive as walkable syntax. Whether six emitters can PRINT it is a
+			// later step's risk, but it can no longer be lost here silently.
+			const ir = await fixtureIr('s1-render-once.tsrx');
+			const onTrace = ir.components[0]!.props.entries.find(
+				(entry) => entry.sourceName === 'onTrace',
+			)!;
+			const signature = onTrace.type!;
+			expect(signature.type).toBe('TSFunctionType');
+			const parameters = signature.parameters as SerializableAstNode[];
+			expect(parameters.map((parameter) => parameter.name)).toEqual(['name', 'detail']);
+			expect(
+				parameters.map(
+					(parameter) =>
+						(parameter.typeAnnotation as SerializableAstNode).typeAnnotation,
+				),
+			).toMatchObject([{ type: 'TSStringKeyword' }, { type: 'TSTypeReference' }]);
+			expect((signature.typeAnnotation as SerializableAstNode).typeAnnotation).toMatchObject({
+				type: 'TSVoidKeyword',
+			});
+		});
+
+		test('CONTROL: every other corpus scenario is unannotated and carries NO type', async () => {
+			for (const file of FIXTURES.filter((name) => name !== 's1-render-once.tsrx')) {
+				const ir = await fixtureIr(file);
+				const typed = ir.components
+					.flatMap((component) => component.props.entries)
+					.filter((entry) => entry.type !== undefined);
+				expect(typed, `${file} should carry no authored prop type`).toEqual([]);
+			}
+		});
+
+		test('an ALIASED prop keys on the SOURCE name the annotation uses, not the local one', async () => {
+			// `alias-coverage.tsrx` renames `label` to `displayLabel`. An annotation
+			// names the property as the CALLER spells it, so keying on the local
+			// name would supply nothing for exactly the props most likely to break.
+			const ir = await buildEnrichedIr({
+				filename: 'probe.tsrx',
+				source: `import { computed } from '@markless/core';
+
+export function Probe({ label: displayLabel }: { label: string }) @{
+	const derived = computed(() => \`\${displayLabel}\`);
+
+	<output data-probe="">{derived}</output>
+}
+`,
+			});
+			expect(ir.components[0]!.props.entries[0]).toMatchObject({
+				sourceName: 'label',
+				localName: 'displayLabel',
+				alias: true,
+				type: { type: 'TSStringKeyword' },
+			});
+		});
+
+		test('CONTROL: a bare type REFERENCE supplies nothing - frameless does not resolve it', async () => {
+			// THE BOUNDARY OF THE SUPPLY CHANNEL, ENCODED. `({ label }: Props)` has
+			// its members in another declaration, possibly another module. Reading
+			// them is cross-module inference, which is the "new source" this phase
+			// is forbidden to invent - so the field is ABSENT rather than guessed.
+			const ir = await buildEnrichedIr({
+				filename: 'probe.tsrx',
+				source: `import { computed } from '@markless/core';
+
+type Props = { label: string };
+
+export function Probe({ label }: Props) @{
+	const derived = computed(() => \`\${label}\`);
+
+	<output data-probe="">{derived}</output>
+}
+`,
+			});
+			expect(ir.components[0]!.props.entries[0]!.sourceName).toBe('label');
+			expect(ir.components[0]!.props.entries[0]!.type).toBeUndefined();
+		});
+
+		test('CONTROL: a REST element gets no type - there is no single member to name it', async () => {
+			const ir = await buildEnrichedIr({
+				filename: 'probe.tsrx',
+				source: `import { computed } from '@markless/core';
+
+export function Probe({ label, ...rest }: { label: string }) @{
+	const derived = computed(() => \`\${label}\`);
+
+	<output data-probe="" data-rest={rest}>{derived}</output>
+}
+`,
+			});
+			const entries = ir.components[0]!.props.entries;
+			expect(entries.find((entry) => entry.sourceName === 'label')?.type).toMatchObject({
+				type: 'TSStringKeyword',
+			});
+			expect(entries.find((entry) => entry.sourceName === '*')?.type).toBeUndefined();
+		});
+	});
+
 	test('S2 carries complete branch and keyed-row subtrees plus structural computed dependencies', async () => {
 		const ir = await fixtureIr('s2-keyed-todo.tsrx');
 		const nodes = allTemplateNodes(ir);
