@@ -90,13 +90,13 @@ visual_board:
     predecessor goal that closed complete this session. Recorded as an explicit choice, not an
     omission - the command above turns it on at any time.
 
-active_task: T001
+active_task: T002
 
 tasks:
   - id: T001
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       STEP 0, THE FALSIFICATION GATE. Hand-write typed emitted output per lane with a wrong-typed
@@ -127,12 +127,98 @@ tasks:
       - "A lane's negative arm comes back GREEN with the type present. That REFUTES IR-8 for that lane - report it verbatim and STOP the phase; do not proceed to Step 1 and do not explain it away."
       - "You are about to change the IR, an emitter or a golden. Step 0 is hand-written probes only."
       - "A correctly-typed twin goes red. That is an instrument fault, not a finding - fix the probe and say so."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T001-falsification-gate.md
+      changed_files:
+        - docs/goals/frameless-emitter-capability-v1/notes/T001-falsification-gate.md
+        - probes/ir8-falsification/
+      summary: "IR-8 IS NOT REFUTED. All six lanes went RED with TS2322 on a wrong-typed call site against hand-written typed output, and all six correctly-typed twins went GREEN. The phase proceeds."
+      THE_GATE_ADDED_A_THIRD_ARM_AND_THAT_IS_WHAT_MAKES_IT_CAUSAL: "The card asked for two arms: a wrong-typed RED and a correctly-typed GREEN twin. THAT PAIR SHOWS THE INSTRUMENT DISCRIMINATES, BUT NOT THAT THE TYPE IS WHAT MADE IT DISCRIMINATE. The Worker added a CONTROL arm per lane - today's UNTYPED emitted shape with the same wrong-typed call site - and it reproduced the five prior GREEN-on-untyped results INSIDE THE SAME RIG. That makes the annotation the only variable and turns a correlation into a cause. It is a better experiment than the one the card specified."
+      per_lane_matrix:
+        react: "tsc 5.9.3 | control GREEN | NEGATIVE RED TS2322 'Type string is not assignable to type number.' negative/Parent.tsx(6,32) exit 2 | positive GREEN"
+        solid: "tsc 5.9.3 | control GREEN | NEGATIVE RED TS2322 same message negative/Parent.tsx(5,32) exit 2 | positive GREEN"
+        qwik: "tsc 5.9.3 | control RED FOR A DIFFERENT CAUSE (untyped component$ rejects EVERY prop by name) | NEGATIVE RED TS2322 negative/Parent.tsx(6,32) exit 2 | positive GREEN"
+        vue: "vue-tsc 3.3.8 / ts 6.0.3 | control GREEN | NEGATIVE RED TS2322 negative/Parent.vue(7,21) exit 2 | positive GREEN"
+        svelte: "svelte-check 4.7.3 | control GREEN | NEGATIVE RED code 2322 source 'ts' negative/Parent.svelte:5:18 exit 1 | positive GREEN"
+        angular: "ng build AOT + strictTemplates | control GREEN | NEGATIVE RED TS2322 [plugin angular-compiler] negative/Parent.ts:8:48 exit 1 | positive GREEN"
+      FINDING_THE_PHASE_ORDER_IS_INVERTED: "STEP 2 CANNOT RUN WHERE THE PLAN PUTS IT. TS8010 'Type annotations can only be used in TypeScript files' - the react/solid/qwik goldens are .jsx, so a type CANNOT BE PRINTED THERE AT ALL. The charter parks the extension map under STEP 5, so the dependency runs Step 2 -> Step 5, BACKWARDS FROM THE PLAN. And vue/svelte need lang=\"ts\" flipped IN THE SAME EDIT as the type: @vue/compiler-sfc compileScript THROWS otherwise, and packages/frameworks/vue/test/compile-emitted.test.ts asserts an EXACT-EMPTY error set, so a split edit turns it red. This is T002's problem to resolve before Step 1."
+      TWO_REPO_CITATIONS_MEASURED_WRONG: "(1) demos/svelte-official/tsconfig.json claims 'a bogus prop and a wrong-typed prop each turn this check red'. ITS OWN CITED SOURCE says wrong-typed is GREEN - an honest limitation - and the gate's control arm independently reproduces GREEN. The comment contradicts the note it cites. (2) demos/angular-official/tsconfig.app.json says strictTemplates 'keys off TypeScript's strict'. MEASURED FALSE at @angular/compiler-cli 22.0.8: the getter is `return this.options.strictTemplates !== false` - AN OPT-OUT THAT DEFAULTS TRUE. Right conclusion, wrong mechanism. Both live in demos/, outside allowed_files - REPORTED, NOT REPAIRED."
+      QWIK_HAS_NO_TYPECHECK_LANE_AND_STRUCTURALLY_CANNOT_TODAY: "Its control arm fails with 'Property label does not exist on type IntrinsicAttributes & ComponentBaseProps' - untyped component$((props) => ...) REJECTS EVERY PROP BY NAME, not just wrong-typed ones. So qwik's control is red for a DIFFERENT CAUSE than its negative arm, which the Worker recorded rather than counting as a pass. Only angular, react and solid have an emitted-typecheck.test.ts at all."
+      THE_BASELINE_ON_THE_CARD_WAS_STALE_AND_THE_CAUSE_IS_FOREIGN: "Measured BEFORE any probe existed: 1082 passed / 1 FAILED (1083). packages/compiler/test/package-inventory.test.ts 'ARM B: every shared consumer resolves to its recorded peer-suffix key'. PM CONFIRMED INDEPENDENTLY, twice: the uncommitted foreign pnpm-lock.yaml - which adds `website` to the workspace - SPLIT @markless/core INTO TWO PEER-SUFFIX KEYS, one with (chokidar)(lru-cache)(rollup) and one with (@typescript-eslint/types)(rolldown). ARM B exists precisely to catch a duplicated shared dependency and IS WORKING CORRECTLY. Pre-existing, not attributable to this task, and the post-gate run is byte-identical."
+      deviations:
+        - "ADDED A THIRD CONTROL ARM per lane beyond the brief's two - see above; it is what lets the phase claim causation rather than correlation."
+        - "Added supporting probes not requested: react at strict:false (the setting the repo's OWN emitted-typecheck lanes use - THE RED SURVIVES IT), the .jsx extension probe, vue/svelte lang=\"ts\" coupling probes, and an Angular strictTemplates:false calibration PROVING THE FLAG IS LOAD-BEARING."
+        - "Angular measured against a probe-local angular.json + ng build rather than demos/angular-official, which is outside allowed_files. Same builder, same AOT path, same compiler version."
+        - "Each lane's node_modules is a SYMLINK to the package or demo owning its instrument - the sandbox has no network, and probes/ is not a workspace member, so no lockfile moved."
+        - "ADDED svelte.config.js AS AN INSTRUMENT FIX under stop_if 3: without it svelte-check escapes the probe dir, finds the repo-root vite.config.ts and emits 'No Svelte configuration found' against every .svelte file. That noise appeared in the first run and would have polluted the positive twin."
+        - "Added probes/ir8-falsification/.gitignore - the root .gitignore's node_modules/ pattern does NOT match a symlink, so six symlinks and Angular's build cache would otherwise commit. Verified: 66 probe files stage, zero symlinks."
+      remaining_blockers: []
+      stopped_because: null
+      commands:
+        - cmd: "bash probes/ir8-falsification/run.sh"
+          status: pass
+          note: "full 18-arm matrix reproduces from a cleaned state; every arm matched its expectation"
+        - cmd: "git diff --exit-code -- packages/ demos/ scripts/"
+          status: pass
+          note: "exit 0, product tree untouched"
+        - cmd: "git status --short"
+          status: pass
+          note: "probes/ and the new note, plus exactly the three FOREIGN entries (M pnpm-lock.yaml, M pnpm-workspace.yaml, ?? website/). Nothing else."
+        - cmd: "pnpm test (after the gate)"
+          status: pass
+          note: "1082 passed / 1 failed (1083) - BYTE-IDENTICAL to the pre-probe baseline. The gate moved nothing; no probe file is inside any vitest project. The single failure is pre-existing and foreign - see THE_BASELINE_ON_THE_CARD_WAS_STALE. Recorded as pass because the task's obligation was NOT TO MOVE the suite, which it did not."
+      pre_existing_failure_not_owned_by_this_task: "pnpm test does NOT go green at HEAD and did not before this task existed: 1082/1 with packages/compiler/test/package-inventory.test.ts ARM B failing. The cause is the uncommitted FOREIGN lockfile adding `website` to the workspace, which split @markless/core into two peer-suffix keys. PM VERIFIED THE CAUSE DIRECTLY from the lockfile diff and the assertion output. Recorded here in full rather than hidden in prose so the receipt does not read as a clean green it did not earn."
+  - id: T008
+    type: pm
+    assignee: PM
+    status: done
+    reasoning_hint: low
+    objective: >-
+      Lint-ignore probes/** so Step 0's deliberately-invalid specimens can be committed.
+    why_this_is_a_PM_task_with_an_explicit_product_file_allowance: >-
+      THE PRE-COMMIT HOOK REFUSED T001'S COMMIT, AND IT WAS RIGHT TO. Four probe files are
+      DELIBERATELY UN-PARSEABLE - they are the TS8010 extension probe and the vue/svelte lang="ts"
+      coupling probes, whose entire purpose is to fail to parse. `vp lint` reported 4 errors across
+      them. THIS CARD EXPLICITLY ALLOWS THE PM TO EDIT vite.config.ts, which the execution contract
+      permits only when a task says so in writing.
+    the_precedent_is_already_in_the_file: >-
+      lint.ignorePatterns already carries poc/** (archived experiment records) and website/**. The
+      probes are the same CLASS for a sharper reason: they are INSTRUMENT SPECIMENS whose validity
+      is the thing under test, so linting them asserts the opposite of what they exist to show.
+      This is the same shape as the citation guard's ruled "specimen text" exemption - a file whose
+      subject matter IS the invalid form cannot be held to the valid form.
+    constraints:
+      - "Add probes/** to lint.ignorePatterns ONLY. Do not touch fmt, test, or any other block."
+      - "Record the reason inline, next to the pattern, the way the svelte-kit entries already do. An unexplained ignore entry is the thing this repo keeps catching."
+      - "Do NOT use --no-verify to get around the hook. The hook is correct; the scope is what is wrong."
+    allowed_files:
+      - vite.config.ts
+    verify:
+      - "pnpm lint   # must pass WITHOUT probes/, and must still lint everything else"
+      - "git diff --exit-code -- packages/ demos/ scripts/"
+    receipt:
+      result: done
+      harness: claude-code
+      summary: "Added probes/** to lint.ignorePatterns with an inline reason. pnpm lint returns to 0/0 over 396 files - the probes are excluded and nothing else lost coverage."
+      changed_files:
+        - vite.config.ts
+      commands:
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 396 files - was 4 errors over 433 with probes/ in scope"
+        - cmd: "git diff --exit-code -- packages/ demos/ scripts/"
+          status: pass
+          note: "product tree untouched"
+      THE_HOOK_WAS_RIGHT_AND_THE_SCOPE_WAS_WRONG: "The pre-commit hook REFUSED T001's commit with 4 lint errors, and it was correct: four probe files are DELIBERATELY UN-PARSEABLE. The TS8010 probe proves a type annotation cannot live in a .jsx file; the vue and svelte coupling probes prove defineProps<T>() and an annotated $props() throw without lang=\"ts\". THEIR INVALIDITY IS THE MEASUREMENT. Linting them asserts the opposite of what they exist to show. --no-verify was NOT used - bypassing a correct gate to land work it correctly caught is the fault, not the fix."
+      it_follows_a_precedent_already_in_the_file: "lint.ignorePatterns already carries poc/** and website/**. probes/** is the same class for a sharper reason, and it is the SAME REASONING the predecessor goal's citation guard used to exempt specimen text: a file whose subject matter IS the malformed shape cannot be held to the well-formed one. The entry carries its reason inline, next to the pattern, the way the svelte-kit entries do."
+      scope_note: "lint.ignorePatterns only. fmt, test and every other block untouched."
   - id: T002
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     objective: >-
       Validate this existing plan against HEAD before the only schema change runs. Re-derive Step

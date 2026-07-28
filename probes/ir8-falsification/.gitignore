@@ -1,0 +1,10 @@
+# Probe-local. The root .gitignore's `node_modules/` pattern does NOT match
+# these: each lane's node_modules is a SYMLINK to the package or official demo
+# that owns its instrument, and a symlink is not a directory, so the trailing
+# slash makes the root pattern miss it. Without this file they would be
+# committed as symlinks.
+node_modules
+
+# Instrument build output. `ng build` writes both; they regenerate on every run.
+.angular/
+dist/

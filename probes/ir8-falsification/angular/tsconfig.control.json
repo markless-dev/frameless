@@ -1,0 +1,4 @@
+{
+	"extends": "./tsconfig.json",
+	"files": ["control/Child.ts", "control/Parent.ts", "control/main.ts"]
+}

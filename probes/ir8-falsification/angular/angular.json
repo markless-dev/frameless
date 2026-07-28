@@ -1,0 +1,87 @@
+{
+	"$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+	"version": 1,
+	"cli": {
+		"packageManager": "pnpm",
+		"analytics": false
+	},
+	"newProjectRoot": "projects",
+	"projects": {
+		"negative": {
+			"projectType": "application",
+			"root": "",
+			"sourceRoot": "negative",
+			"prefix": "frameless",
+			"architect": {
+				"build": {
+					"builder": "@angular/build:application",
+					"options": {
+						"browser": "negative/main.ts",
+						"index": "index.html",
+						"tsConfig": "tsconfig.negative.json",
+						"outputPath": "dist/negative",
+						"optimization": false,
+						"aot": true
+					}
+				}
+			}
+		},
+		"positive": {
+			"projectType": "application",
+			"root": "",
+			"sourceRoot": "positive",
+			"prefix": "frameless",
+			"architect": {
+				"build": {
+					"builder": "@angular/build:application",
+					"options": {
+						"browser": "positive/main.ts",
+						"index": "index.html",
+						"tsConfig": "tsconfig.positive.json",
+						"outputPath": "dist/positive",
+						"optimization": false,
+						"aot": true
+					}
+				}
+			}
+		},
+		"control": {
+			"projectType": "application",
+			"root": "",
+			"sourceRoot": "control",
+			"prefix": "frameless",
+			"architect": {
+				"build": {
+					"builder": "@angular/build:application",
+					"options": {
+						"browser": "control/main.ts",
+						"index": "index.html",
+						"tsConfig": "tsconfig.control.json",
+						"outputPath": "dist/control",
+						"optimization": false,
+						"aot": true
+					}
+				}
+			}
+		},
+		"negative-nostrict": {
+			"projectType": "application",
+			"root": "",
+			"sourceRoot": "negative",
+			"prefix": "frameless",
+			"architect": {
+				"build": {
+					"builder": "@angular/build:application",
+					"options": {
+						"browser": "negative/main.ts",
+						"index": "index.html",
+						"tsConfig": "tsconfig.negative.nostrict.json",
+						"outputPath": "dist/nostrict",
+						"optimization": false,
+						"aot": true
+					}
+				}
+			}
+		}
+	}
+}

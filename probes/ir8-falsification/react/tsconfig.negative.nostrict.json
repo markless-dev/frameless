@@ -1,0 +1,14 @@
+{
+	"compilerOptions": {
+		"target": "ES2022",
+		"module": "preserve",
+		"moduleResolution": "bundler",
+		"lib": ["ES2022", "DOM", "DOM.Iterable"],
+		"jsx": "react-jsx",
+		"strict": false,
+		"noEmit": true,
+		"skipLibCheck": true,
+		"types": []
+	},
+	"files": ["Child.tsx", "negative/Parent.tsx"]
+}

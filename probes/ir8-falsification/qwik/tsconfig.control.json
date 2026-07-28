@@ -1,0 +1,19 @@
+{
+	"compilerOptions": {
+		"target": "es2020",
+		"module": "esnext",
+		"moduleResolution": "Bundler",
+		"lib": ["es2022", "DOM", "WebWorker", "DOM.Iterable"],
+		"jsx": "react-jsx",
+		"jsxImportSource": "@qwik.dev/core",
+		"strict": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"isolatedModules": true,
+		"noEmit": true,
+		"allowJs": true,
+		"checkJs": false,
+		"types": []
+	},
+	"files": ["control/Child.jsx", "control/Parent.tsx"]
+}

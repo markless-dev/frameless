@@ -1,0 +1,5 @@
+{
+	"extends": "./tsconfig.json",
+	"angularCompilerOptions": { "strictTemplates": false },
+	"files": ["src/Child.ts", "negative/Parent.ts", "negative/main.ts"]
+}

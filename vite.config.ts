@@ -72,6 +72,15 @@ const productConfig = defineConfig({
 			'node_modules/**',
 			'poc/**',
 			'website/**',
+			// Falsification probes. These are INSTRUMENT SPECIMENS, and several are
+			// deliberately un-parseable: the TS8010 probe proves a type annotation
+			// cannot live in a .jsx file, and the vue/svelte coupling probes prove
+			// `defineProps<T>()` and an annotated `$props()` throw without
+			// lang="ts". Their invalidity IS the measurement, so linting them
+			// asserts the opposite of what they exist to show. Same class as
+			// poc/**, and the same reasoning the citation guard uses to exempt
+			// text whose subject matter is the malformed shape it describes.
+			'probes/**',
 			// SvelteKit's generated output, and the scaffold's own empty `$lib`
 			// placeholder. Both ship with `npx sv create` untouched, and the
 			// charter requires the official scaffold AS IT SHIPS - so the lint
