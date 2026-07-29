@@ -10,7 +10,35 @@ goal:
     a type instrument actually goes RED on a wrong-typed prop when the type IS present - never
     measured in any lane. Then IR-8 supply (the only schema change), IR-8 consumption, refs,
     effects, composition.
-  status: active
+  status: blocked
+  CLOSED_AS_BLOCKED_2026_07_28: >-
+    The T999 re-audit ruled not_complete, full_outcome_complete false, and NOTHING BOUNDED REMAINS.
+    DELIVERED: Step 0 (IR-8 NOT refuted - six lanes RED, six green twins, plus a control arm the
+    card never asked for); Step 1 as re-scoped (type + optional, both read from source); Step 1.5
+    (lang="ts" and .jsx->.tsx across 66 artifacts); STEP 2 COMPLETE - all six lanes print types and
+    all six reproduce the RED against EMITTED output, independently re-measured by the audit, which
+    discharges intake.completion_proof; Step 3 refs in four lanes; Step 4 effects in three, with
+    QWIK REFUSING ON MEASUREMENT and a test that re-measures its own premise every run.
+    NOT DELIVERED: Step 5 - composition emits in all six lanes on M1/M2 but pnpm e2e still compares
+    TWO. That is the board's own reject condition and it stands.
+  WHAT_THE_SUCCESSOR_INHERITS: >-
+    (1) pnpm check is 267 on main and was EXIT 0 before this phase. The number went 73 -> 116 -> 186
+    -> 267 not because anything got worse but because ONE FAULT WAS FOUND AT FOUR DEPTHS: the runner
+    did not run every project (T014); the project set did not cover the artifacts (T999); the
+    transitive reach inside a covered project did not cover its lane (T019); and solid's eleven
+    artifacts hung off A SINGLE IMPORT LINE whose deletion would have made the total go DOWN with
+    every gate green (T020). Coverage is now 57 covered / 16 shadow / 7 unreached, of 80.
+    (2) 62 measured real errors sit behind vue-tsc and svelte-check, instruments NOTHING in this
+    repo invokes. Wiring them in is a RULING, not a slice.
+    (3) TWO STRUCTURAL DEFECTS T020 found and correctly did not repair: generated/S7 fails
+    IDENTICALLY in react and solid at the same site - two independent emitters, same unsound shape,
+    which points at the IR or the scenario rather than either emitter - and P1 reports TS7017 on the
+    globalThis read the persistence design depends on. Both INVISIBLE to pnpm e2e.
+    (4) Six-lane composition needs adapters for svelte/vue/angular (angular's CANNOT be written from
+    packages/frameworks/angular), a CLI TARGET_INVENTORY and a target parameter on
+    emittedFilenameFor, and composition-kit dependency resolution. ROUTE 2 IS PERMANENTLY CLOSED.
+    (5) One annotated fixture in the whole corpus, so "six emitters printing types" is proven on a
+    SINGLE component; and no behavioural browser arm exists for refs or effects in any lane.
   blocked_on_OWNER_DISCHARGED_at_773181e: >-
     2026-07-28, ruled by the T999 final audit. EVERY remaining task depends on adding
     @typescript-eslint/parser, which rewrites pnpm-lock.yaml - one of three files carrying the
@@ -125,7 +153,7 @@ visual_board:
     predecessor goal that closed complete this session. Recorded as an explicit choice, not an
     omission - the command above turns it on at any time.
 
-active_task: T020
+active_task: null
 
 tasks:
   - id: T001
@@ -2297,7 +2325,7 @@ tasks:
   - id: T020
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     spec: "T019 receipt, remaining_blockers[0] - AUTHORITATIVE. The LAST bounded slice in this phase."
     objective: >-
@@ -2336,8 +2364,58 @@ tasks:
       - "You need any file outside allowed_files, including the three owner paths."
       - "pnpm test, pnpm e2e or pnpm lint moves."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T020-react-solid-coverage.md
+      changed_files:
+        - packages/frameworks/react/tsconfig.json
+        - packages/frameworks/solid/tsconfig.json
+        - docs/goals/frameless-emitter-capability-v1/notes/T020-react-solid-coverage.md
+      commands:
+        - cmd: "tsc -p <7 projects> --noEmit (BASELINE, counted OUTSIDE the runner)"
+          status: pass
+          note: "186 reproduced exactly: root 0, react 69, solid 47, qwik 70, svelte/vue/angular 0"
+        - cmd: "tsc --listFiles (BASELINE membership cross-check)"
+          status: pass
+          note: "11 generated* files per lane in-program - matching T019's census WITHOUT inheriting it"
+        - cmd: "pnpm check"
+          status: pass
+          note: "RUNNER TOTAL 267 (exit 6 = three projects x exit 2). Was 186. PM CONFIRMED 267."
+        - cmd: "tsc -p <7 projects> --noEmit (INDEPENDENT of the runner)"
+          status: pass
+          note: "267 = react 117 + solid 80 + qwik 70, rest 0. PM CONFIRMED per project. Runner and independent sum AGREE EXACTLY."
+        - cmd: "pnpm test"
+          status: pass
+          note: "1235 passed / 1 failed - EXACTLY the dispatch baseline; the foreign failure did not move"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0/0 over 426 files; re-run after the note"
+        - cmd: "pnpm check:citations"
+          status: pass
+          note: "clean; re-run after the note"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "exit 0, 6 demos x 8 scenarios all equal. Did not move."
+        - cmd: "owner-path FINGERPRINTS at start AND finish"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169 - BYTE-IDENTICAL at both ends AND identical to T019's recorded values. It REVERSE-ENGINEERED T019's aggregation method and reproduced it exactly; a naive variant gives b1dd182a, so the method matters."
+        - cmd: "git status --short"
+          status: pass
+          note: "exactly its 3 paths plus the 3 untouched owner paths; nothing committed"
+      summary: "react and solid go 11 of 19 -> 19 OF 19 artifacts, by three include globs each and nothing else. pnpm check 186 -> 267. THE NUMBER ROSE AND THE PRE-EXISTING 116 DID NOT MOVE: summed per artifact the already-covered files still total exactly 69 and 47, so all 81 new errors are ADDITIVE. 76 of 81 are the implicit-any fault the phase exists to fix. Standing coverage 41/16/23 -> 57 covered / 16 shadow / 7 unreached."
+      IT_ADDED_A_CAUSAL_CONTROL_THE_CARD_DID_NOT_ASK_FOR: "The treatment arm - plant TS2304 in all 38 artifacts, get 19 of 19 hits per lane - proves the 19 are MEMBERS. It then HELD THE PLANT FIXED and REVERTED THE TSCONFIGS to their dispatch state: exactly 11 per lane, and the 8 misses are precisely S4 S5 S6 S7 S9, M1-panel, M2-page and P1. THAT is what proves the include is the sole variable, and it reproduces T019's census independently rather than inheriting it."
+      THE_ERROR_IT_FOUND_IN_MY_BRIEF_MAKES_THE_CASE_WORSE: "I wrote that 'S1 S2 S3 arrive via three DIFFERENT tests' of EITHER lane. TRUE OF REACT ONLY. Measured by --listFiles: solid's S1, S2 and S3 ALL ARRIVE THROUGH A SINGLE FILE, test/emitted-smoke.browser.test.ts. The T019 census had it right; my brief mis-summarised its own input. AND IT MATTERS IN THE DIRECTION THAT MAKES THE CASE WORSE: one file's import list was carrying ELEVEN OF NINETEEN solid artifacts, so deleting a single import line would have dropped three out of pnpm check WITH THE TOTAL GOING DOWN AND EVERY GATE STAYING GREEN. The transitive channel was also a '.jsx' specifier resolving to a '.tsx' file, so coverage depended on an extension rewrite too. Both dependencies are now gone."
+      TWO_STRUCTURAL_DEFECTS_REPORTED_NOT_REPAIRED: "(1) generated/S7.tsx FAILS IDENTICALLY IN BOTH LANES AT THE SAME SITE - react TS2345 and solid TS2769, both 'Argument of type \"on\" | null': a cell initialised null is later set to \"on\". TWO INDEPENDENT EMITTERS, SAME SCENARIO, SAME UNSOUND SHAPE - that points at the IR or the scenario, not either emitter, and AN ADDED ANNOTATION WOULD NOT HAVE SURFACED IT. (2) generated-persistence/P1.tsx reports TS7017 in both lanes on the globalThis/__FRAMELESS_STATE__ read THE PERSISTENCE DESIGN DEPENDS ON. Both are INVISIBLE TO pnpm e2e, which passes S7 in all six lanes."
+      deviations:
+        - "ADDED A CAUSAL CONTROL ARM the card did not ask for - see above."
+        - "Reported two STRUCTURAL defects rather than repairing them, per stop_if 2 - see above."
+      remaining_blockers:
+        - "NEEDS A RULING, not a Worker: svelte and vue remain 0 of 10 covered, with 62 measured real errors behind vue-tsc and svelte-check - instruments nothing in this repo invokes."
+        - "NEEDS A DEMO/SCRIPT CHANGE, not a tsconfig: 7 artifacts are reached by nothing at all - angular's C1-slot/M1-panel/M2-page and svelte's and vue's M1-panel/M2-page. Nothing copies them into the demo that owns their instrument."
+        - "The two structural defects need an emitter or generated-file edit."
+      stopped_because: null
   - id: T998
     type: judge
     assignee: Judge
