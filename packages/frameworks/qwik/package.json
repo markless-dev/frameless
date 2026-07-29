@@ -26,6 +26,7 @@
 		"@frameless/analyzer": "workspace:*",
 		"@frameless/compiler": "workspace:*",
 		"@qwik.dev/core": "2.0.0-beta.38",
+		"@typescript-eslint/parser": "^8.65.0",
 		"eslint": "^9.39.2",
 		"globals": "^16.5.0",
 		"oxfmt": "0.46.0",

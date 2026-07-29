@@ -10,7 +10,7 @@ goal:
     a type instrument actually goes RED on a wrong-typed prop when the type IS present - never
     measured in any lane. Then IR-8 supply (the only schema change), IR-8 consumption, refs,
     effects, composition.
-  status: blocked
+  status: active
   blocked_on_OWNER_not_PM: >-
     2026-07-28, ruled by the T999 final audit. EVERY remaining task depends on adding
     @typescript-eslint/parser, which rewrites pnpm-lock.yaml - one of three files carrying the
@@ -107,7 +107,7 @@ visual_board:
     predecessor goal that closed complete this session. Recorded as an explicit choice, not an
     omission - the command above turns it on at any time.
 
-active_task: null
+active_task: T014
 
 tasks:
   - id: T001
@@ -1155,7 +1155,7 @@ tasks:
   - id: T014
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
     spec: "T004 receipt, remaining_blockers - AUTHORITATIVE."
     objective: >-
@@ -1183,12 +1183,53 @@ tasks:
       lang:'jsx' and need 'tsx'. T011 recorded format-emitted.ts as THE Step 2 tripwire; T004
       measured that it is never even reached, because the gate refuses first. The tripwire set was
       incomplete.
-    allowed_files: []
+    THE_OWNER_GATE_IS_DISCHARGED: >-
+      2026-07-28. The owner authorised the install. PM added @typescript-eslint/parser ^8.65.0 -
+      matching angular's existing pin - to react, solid, qwik and svelte, then ran pnpm install.
+      VERIFIED AFTERWARDS: the parser now resolves from ALL FIVE lanes; the owner's website work
+      SURVIVED INTACT (96 source files, the website: importer re-derived into the lockfile, and the
+      pnpm-workspace.yaml entry); and pnpm test is UNCHANGED at 1235/1 with the same
+      package-inventory ARM B failure, so the install neither fixed nor worsened it - exactly the
+      movement T013 said to expect and not to misread.
+    allowed_files:
+      - packages/frameworks/react/src/**
+      - packages/frameworks/solid/src/**
+      - packages/frameworks/qwik/src/**
+      - packages/frameworks/svelte/src/**
+      - packages/frameworks/react/test/**
+      - packages/frameworks/solid/test/**
+      - packages/frameworks/qwik/test/**
+      - packages/frameworks/svelte/test/**
+      - packages/frameworks/react/generated/**
+      - packages/frameworks/solid/generated/**
+      - packages/frameworks/qwik/generated/**
+      - packages/frameworks/svelte/generated/**
+      - packages/frameworks/react/generated-composition/**
+      - packages/frameworks/solid/generated-composition/**
+      - packages/frameworks/react/generated-persistence/**
+      - packages/frameworks/solid/generated-persistence/**
+      - packages/compiler/test/fixtures/**
+      - packages/compiler/test/goldens/**
+      - packages/compiler/test/enriched-ir.test.ts
+      - demos/react-official/src/emitted/**
+      - demos/solid-official/src/emitted/**
+      - demos/qwik/src/emitted/**
+      - demos/svelte-official/src/lib/emitted/**
+      - docs/goals/frameless-emitter-capability-v1/notes/T014-four-lane-types.md
     verify:
-      - "per lane: the Step 0 probe RED against EMITTED output, correctly-typed twin GREEN, exact diagnostic recorded"
-      - "pnpm test / pnpm check / pnpm lint / pnpm e2e"
+      - "PER LANE, the deliverable T999 requires: the Step 0 probe RED against EMITTED output with a correctly-typed twin GREEN and a CALIBRATION arm (HEAD's untyped artifact + the SAME wrong parent must be GREEN), exact diagnostic recorded"
+      - "pnpm test   # 1235/1 at dispatch; the 1 is package-inventory ARM B, foreign, must stay exactly 1"
+      - "pnpm check  # RED at 73 at dispatch. THIS IS THE ONE VERIFY THAT SHOULD MOVE - drive it DOWN and report the number. 40 of 73 are the implicit-any family printing types deletes."
+      - "pnpm lint && pnpm check:citations"
+      - "pnpm e2e"
+      - "ALL THREE REGENERATION TIERS - 6 / 6 / 0 - proved REAL before any diff is trusted"
     stop_if:
-      - "Scope to be set when the environment decision is made."
+      - "Need files outside allowed_files."
+      - "A lane prints a type its own checker will not accept."
+      - "A LANE'S RED DOES NOT REPRODUCE against emitted output though it reproduced hand-written at Step 0. That is the phase's real question surfacing - report it VERBATIM and stop."
+      - "You are about to reach for a compiler option to suppress the inherited 73."
+      - "pnpm e2e moves."
+      - "Verification fails twice for the same reason."
     receipt: null
 
   - id: T015
