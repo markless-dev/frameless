@@ -125,7 +125,7 @@ visual_board:
     predecessor goal that closed complete this session. Recorded as an explicit choice, not an
     omission - the command above turns it on at any time.
 
-active_task: T019
+active_task: T020
 
 tasks:
   - id: T001
@@ -2209,7 +2209,7 @@ tasks:
   - id: T019
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     spec: "T999 re-audit worker_package - AUTHORITATIVE."
     objective: >-
@@ -2244,6 +2244,96 @@ tasks:
       - "You are about to make the number smaller rather than honest."
       - "Closing qwik's coverage requires editing an emitter, a gate or a generated artifact. NOT THIS SLICE - report the count and stop."
       - "You need any of the three owner paths."
+      - "pnpm test, pnpm e2e or pnpm lint moves."
+      - "Verification fails twice for the same reason."
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T019-check-coverage-census.md
+      changed_files:
+        - packages/frameworks/qwik/tsconfig.json
+        - package.json
+        - docs/goals/frameless-emitter-capability-v1/notes/T019-check-coverage-census.md
+      commands:
+        - cmd: "80-artifact planted-error membership probe across 11 instruments"
+          status: pass
+          note: "DELIBERATE REDS, not failures. react 11/19 reported, solid 11/19, qwik 11/11 (new), root/svelte/vue/angular tsc projects 0 hits = PROVEN NOT COVERED, ng build 8/8 TS2304 exit 1, vue-tsc 8/8, svelte-check 8/8, tsc -p demos/qwik 8/8. Reverted; marker sweep returns NONE."
+        - cmd: "pnpm check"
+          status: pass
+          note: "116 -> 186. PM CONFIRMED both ways: runner reports 186, and per project independently react 69, solid 47, qwik 70, svelte/vue/angular 0. Runner and independent sum AGREE EXACTLY."
+        - cmd: "pnpm test"
+          status: pass
+          note: "1235 passed / 1 failed - the 1 is foreign, unchanged"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0/0 over 426 files; re-run after the note landed"
+        - cmd: "pnpm check:citations"
+          status: pass
+          note: "clean; re-run after the note landed"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "6 demos x 8 scenarios all equal. DID NOT MOVE."
+        - cmd: "owner-path FINGERPRINTS at start AND finish"
+          status: pass
+          note: "pnpm-lock.yaml f326d314, pnpm-workspace.yaml aeb7edc1, website/ 116 files sorted-content sha f936e169 - BYTE-IDENTICAL AT BOTH ENDS, and the newest website/ mtime predates this session. PM re-confirmed all three still dirty and untouched."
+      summary: "Produced the per-artifact coverage census for ALL 80 generated*/ artifacts, EVERY membership PROVEN BY PLANTED ERROR. pnpm check 116 -> 186 via a new qwik tsconfig (11/11 covered) wired into the runner; coverage 30/80 -> 41/80. REFUTED THE BRIEF ON ANGULAR. Found a second shadow instrument and found the same coverage fault A THIRD TIME, inside the two lanes we thought were covered. No compiler option, exclude, skipLibCheck or checkJs:false used."
+      IT_REFUTED_MY_CLAIM_ABOUT_ANGULAR: "I wrote 'svelte/vue/angular 0 means NOT COVERED'. FALSE FOR ANGULAR'S generated/. pnpm e2e runs `pnpm --dir demos/angular-official build:e2e` = copy-emitted && ng build --configuration development, and Angular's compiler plugin type-checks with AOT + strictTemplates. PLANTING IN ALL EIGHT packages/frameworks/angular/generated/S*.ts MADE ng build EXIT 1 WITH EXACTLY EIGHT TS2304s. Angular's generated/ is COVERED-AND-CLEAN - the only lane on this board that can say so - just by pnpm e2e rather than pnpm check."
+      THE_SAME_FAULT_A_THIRD_TIME_INSIDE_THE_LANES_WE_THOUGHT_WERE_COVERED: "composition-emitted-smoke.browser.test.ts reaches C1..C8 ONLY; generated/S1 S2 S3 arrive via three DIFFERENT tests. In BOTH react and solid, generated/S4 S5 S6 S7 S9, generated-composition/M1-panel, M2-page AND generated-persistence/P1.tsx ARE REACHED BY NOTHING. So the two 'covered' lanes are ELEVEN OF NINETEEN each. This is the third appearance of one fault: the runner did not run every project (T014), the project set did not cover the artifacts (T999), and now the transitive reach inside a covered project does not cover its own lane."
+      two_shadow_instruments_not_one: "demos/svelte-official ships a `check` script running svelte-check that reports 22 ERRORS, ALL INSIDE src/lib/emitted/, INVOKED BY NOTHING - alongside vue-tsc's 40, which it reproduced. TOTAL MEASURED-BUT-UNRUN: 62."
+      the_method_correction_it_made_mid_task: "The first plant round used TS2322 - whose message DOES NOT NAME THE OFFENDING IDENTIFIER, making the run ungreppable. Redone with TS2304, which does. Discovered and fixed inside the task rather than reported as a limitation, and it is why the census can distinguish UNREACHED from SHADOW at all."
+      qwik_cross_checked_against_an_independent_config: "The new project reports 67 across generated/S2..S9, and `tsc -p demos/qwik` - an INDEPENDENT config on the OFFICIAL SCAFFOLD - reports 67 across its emitted copies. Exact match. The new project also surfaces 1 pre-existing error in qwik's own test/gate.test.ts, LEFT STANDING rather than dropping test/** - excluding it would have shrunk the number rather than made it honest, and every sibling lane includes test/**."
+      deviations:
+        - "First plant round used TS2322 and was ungreppable; redone with TS2304 - see above."
+        - "Mirrored all five sibling lanes by including test/** and scripts/** in the qwik tsconfig, which surfaces 1 pre-existing error. LEFT STANDING."
+        - "Ran FOUR instruments outside the verify list (vue-tsc, svelte-check, ng build, tsc -p demos/qwik). Required to answer 'or the fact that none does' - THE CENSUS CANNOT DISTINGUISH UNREACHED FROM SHADOW WITHOUT THEM, and it is how the angular refutation was found."
+        - "Added qwik to package.json's check runner as well as creating the tsconfig - a project nothing runs is exactly the fault this task exists to fix."
+      remaining_blockers:
+        - "REACT AND SOLID ARE 11 OF 19 EACH - generated/S4 S5 S6 S7 S9, M1-panel, M2-page and generated-persistence/P1.tsx are reached by NOTHING. Their tsconfigs are outside this card. 16 artifacts stay uncovered."
+        - "SVELTE AND VUE CANNOT BE CLOSED FROM THE PACKAGE - svelte-check and vue-tsc resolve only from the demos, and only generated/S1..S9 is copied there. Wiring them into pnpm check would add 62 MEASURED REAL ERRORS and is A RULING, not a Worker slice."
+        - "generated-composition/ IS UNCOVERED IN FIVE OF SIX LANES (11 artifacts) - nothing copies them to any demo, so no instrument reaches them at all."
+        - "23 OF 80 ARTIFACTS ARE REACHED BY NO INSTRUMENT, invoked or not, so their error count remains genuinely unmeasured. The successor's target is 186 in pnpm check, 248 across all instruments, against a denominator that is STILL 41 OF 80."
+      stopped_because: null
+  - id: T020
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: medium
+    spec: "T019 receipt, remaining_blockers[0] - AUTHORITATIVE. The LAST bounded slice in this phase."
+    objective: >-
+      Close the coverage hole INSIDE the two lanes already in pnpm check: bring react and solid from
+      11 of 19 artifacts to 19 of 19, and report the new honest total.
+    THE_SAME_FAULT_A_THIRD_TIME: >-
+      T014 found the runner did not run every project. T999 found the project set did not cover the
+      artifacts. T019 found THE TRANSITIVE REACH INSIDE A COVERED PROJECT DOES NOT COVER ITS OWN
+      LANE: composition-emitted-smoke.browser.test.ts reaches C1..C8 only, generated/S1 S2 S3 arrive
+      via three DIFFERENT tests, and generated/S4 S5 S6 S7 S9, generated-composition/M1-panel,
+      M2-page and generated-persistence/P1.tsx ARE REACHED BY NOTHING in either lane.
+    membership_must_be_PROVEN_not_inferred: >-
+      T019 established the only method that works here: plant a deliberate error in the artifact and
+      observe it reported, then remove it. USE TS2304, NOT TS2322 - T019 measured that TS2322's
+      message DOES NOT NAME THE OFFENDING IDENTIFIER, which made its first plant round ungreppable.
+      "The project reports 0" is not evidence of coverage; it is what fooled three prior
+      measurements.
+    constraints:
+      - "MAKE THE NUMBER HONEST, NOT SMALLER. Expect it to RISE - these 16 artifacts have never been type-checked. No compiler option, no exclude, no skipLibCheck, no checkJs:false."
+      - "Include the artifacts DIRECTLY rather than relying on a test to import them. A transitive reach is exactly what failed here."
+      - "Do NOT touch qwik, svelte, vue or angular - qwik was closed by T019, and svelte/vue need a RULING about wiring shadow instruments, not a Worker slice."
+    allowed_files:
+      - packages/frameworks/react/tsconfig.json
+      - packages/frameworks/solid/tsconfig.json
+      - docs/goals/frameless-emitter-capability-v1/notes/T020-react-solid-coverage.md
+    verify:
+      - "pnpm check   # 186 at dispatch. Report the new total AND the per-project breakdown counted INDEPENDENTLY of the runner"
+      - "per artifact, membership PROVEN by a planted TS2304 observed and then removed - all 19 in each lane"
+      - "pnpm test    # 1235/1 at dispatch; the 1 is foreign and must stay exactly 1"
+      - "pnpm lint && pnpm check:citations"
+      - "pnpm e2e     # must not move"
+      - "git status --short   # pnpm-lock.yaml, pnpm-workspace.yaml and website/ are the OWNER's - FINGERPRINT them at start AND finish, as T019 did"
+    stop_if:
+      - "You are about to make the number smaller rather than honest."
+      - "Closing an artifact needs an emitter, gate or generated-file edit. NOT THIS SLICE - report and stop."
+      - "You need any file outside allowed_files, including the three owner paths."
       - "pnpm test, pnpm e2e or pnpm lint moves."
       - "Verification fails twice for the same reason."
     receipt: null

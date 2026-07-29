@@ -1,0 +1,15 @@
+{
+	"extends": "../../../tsconfig.json",
+	"compilerOptions": { "jsx": "react-jsx", "jsxImportSource": "@qwik.dev/core", "types": ["node", "vitest/globals"] },
+	"include": [
+		"src/**/*.ts",
+		"src/**/*.d.ts",
+		"test/**/*.ts",
+		"test/**/*.tsx",
+		"scripts/**/*.ts",
+		"vitest.node.config.ts",
+		"../../compiler/src/tsrx-core.d.ts",
+		"generated/**/*.tsx",
+		"generated-composition/**/*.tsx"
+	]
+}

@@ -10,7 +10,7 @@
 	},
 	"scripts": {
 		"build": "vp pack",
-		"check": "tsc --noEmit; s=$?; tsc -p packages/frameworks/react --noEmit; s=$((s+$?)); tsc -p packages/frameworks/solid --noEmit; s=$((s+$?)); tsc -p packages/frameworks/svelte --noEmit; s=$((s+$?)); tsc -p packages/frameworks/vue --noEmit; s=$((s+$?)); tsc -p packages/frameworks/angular --noEmit; s=$((s+$?)); exit $s",
+		"check": "tsc --noEmit; s=$?; tsc -p packages/frameworks/react --noEmit; s=$((s+$?)); tsc -p packages/frameworks/solid --noEmit; s=$((s+$?)); tsc -p packages/frameworks/qwik --noEmit; s=$((s+$?)); tsc -p packages/frameworks/svelte --noEmit; s=$((s+$?)); tsc -p packages/frameworks/vue --noEmit; s=$((s+$?)); tsc -p packages/frameworks/angular --noEmit; s=$((s+$?)); exit $s",
 		"check:citations": "node scripts/check-citations.mjs",
 		"demo": "node scripts/demo.mjs",
 		"e2e": "node scripts/e2e.mjs",
