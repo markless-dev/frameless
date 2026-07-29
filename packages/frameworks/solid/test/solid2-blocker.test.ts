@@ -4,6 +4,12 @@ import { resolve } from 'pathe';
 import { describe, expect, test } from 'vitest';
 import { parse } from 'yuku-parser';
 
+// `tsx`, NOT `jsx`, AT EVERY SITE IN THIS FILE THAT PARSES EMITTED OUTPUT.
+// The artifact became `.tsx` at `frameless-emitter-capability-v1` T009/T011 and
+// carries an IR-8 props type from T014. MEASURED at yuku-parser/yuku-analyzer
+// 0.7.0: `jsx` reports "Expected ')' to close parameter list, but found ':'" on a
+// typed props parameter, so a stale `jsx` here fails on VALID output.
+
 const root = resolve(import.meta.dirname, '..');
 const nodeRequire = createRequire(import.meta.url);
 
@@ -20,7 +26,7 @@ interface PackageManifest {
 }
 
 function importSources(source: string): string[] {
-	const program = parse(source, { sourceType: 'module', lang: 'jsx' }).program;
+	const program = parse(source, { sourceType: 'module', lang: 'tsx' }).program;
 	return program.body.flatMap((statement) =>
 		statement.type === 'ImportDeclaration' ? [statement.source.value] : [],
 	);

@@ -25,6 +25,12 @@ import { emit, reactPropSpellings, validateEnrichedIr } from '../src/emitter/ind
 import { formatEmitted } from '../src/format-emitted.ts';
 import { checkSources } from '../src/gate/index.ts';
 
+// `tsx`, NOT `jsx`, AT EVERY SITE IN THIS FILE THAT PARSES EMITTED OUTPUT.
+// The artifact became `.tsx` at `frameless-emitter-capability-v1` T009/T011 and
+// carries an IR-8 props type from T014. MEASURED at yuku-parser/yuku-analyzer
+// 0.7.0: `jsx` reports "Expected ')' to close parameter list, but found ':'" on a
+// typed props parameter, so a stale `jsx` here fails on VALID output.
+
 const root = resolve(import.meta.dirname, '..');
 const goldenRoot = resolve(root, '../../compiler/test/goldens');
 const generatedRoot = resolve(root, 'generated');
@@ -143,9 +149,9 @@ function renameIdentifier(ir: EnrichedIR, from: string, to: string): void {
 }
 
 function staticAttributeValue(source: string, name: string): string {
-	const parsed = parse(source, { lang: 'jsx', sourceType: 'module', preserveParens: false });
+	const parsed = parse(source, { lang: 'tsx', sourceType: 'module', preserveParens: false });
 	expect(parsed.diagnostics).toEqual([]);
-	const module = analyze(source, { lang: 'jsx', sourceType: 'module', preserveParens: false });
+	const module = analyze(source, { lang: 'tsx', sourceType: 'module', preserveParens: false });
 	let result: string | undefined;
 	visit(module.ast, (record) => {
 		if (record.type === 'JSXAttribute' && record.name?.name === name && result === undefined) {
@@ -161,7 +167,7 @@ function staticAttributeValue(source: string, name: string): string {
 }
 
 function expectTopLevelSpacing(source: string): void {
-	const parsed = parse(source, { lang: 'jsx', sourceType: 'module', preserveParens: false });
+	const parsed = parse(source, { lang: 'tsx', sourceType: 'module', preserveParens: false });
 	expect(parsed.diagnostics).toEqual([]);
 	for (let index = 1; index < parsed.program.body.length; index += 1) {
 		const previous = parsed.program.body[index - 1]!;
@@ -859,7 +865,7 @@ export function AsyncProbe({ ready, onTrace }) @{
 		/** Lift the emitted `onClick` arrow back out of the emitted JSX, by AST. */
 		function emittedHandler(emitted: string): string {
 			const module = analyze(emitted, {
-				lang: 'jsx',
+				lang: 'tsx',
 				sourceType: 'module',
 				preserveParens: false,
 			});
@@ -1098,7 +1104,7 @@ export function SyncProbe({ onTrace }) @{
 				if (root?.kind !== 'host') throw new Error('expected host root');
 				(root.staticAttributes as any[]).push({ name: 'data-probe', value });
 				const source = emit(ir);
-				const module = analyze(source, { lang: 'jsx', sourceType: 'module' });
+				const module = analyze(source, { lang: 'tsx', sourceType: 'module' });
 				expect(module.diagnostics).toEqual([]);
 				let actual: unknown;
 				module.walk({
@@ -1259,7 +1265,7 @@ export function SyncProbe({ onTrace }) @{
 			expect(hookSource).toContain('useState as useState2');
 			expect(hookSource).toContain('const [useState, setUseState] = useState2(1)');
 			const hookModule = analyze(hookSource, {
-				lang: 'jsx',
+				lang: 'tsx',
 				sourceType: 'module',
 				preserveParens: false,
 			});
@@ -1613,7 +1619,7 @@ export function SyncProbe({ onTrace }) @{
 			expect(source).toContain('let countSnapshot2 = count');
 			expect(source).toContain('const countListeners2 = new Set()');
 			expect(source).toContain('const writeCount2 =');
-			expect(analyze(source, { lang: 'jsx', sourceType: 'module' }).diagnostics).toEqual([]);
+			expect(analyze(source, { lang: 'tsx', sourceType: 'module' }).diagnostics).toEqual([]);
 		});
 
 		test('durably allocates every shared generated name family around authored collisions', async () => {
@@ -1634,7 +1640,7 @@ export function SyncProbe({ onTrace }) @{
 			expect(containerSource).toContain('const subscribeLedgerToNothing2 =');
 			expect(containerSource).toContain('const getLedgerNothing2 =');
 			expect(
-				analyze(containerSource, { lang: 'jsx', sourceType: 'module' }).diagnostics,
+				analyze(containerSource, { lang: 'tsx', sourceType: 'module' }).diagnostics,
 			).toEqual([]);
 
 			const page = clone(ir) as any;
@@ -1644,7 +1650,7 @@ export function SyncProbe({ onTrace }) @{
 			expect(pageSource).toContain('const ledgerStore2 = createLedgerStore2()');
 			expect(pageSource).toContain('const subscribeLedgerToNothing2 =');
 			expect(pageSource).toContain('const getLedgerNothing2 =');
-			expect(analyze(pageSource, { lang: 'jsx', sourceType: 'module' }).diagnostics).toEqual(
+			expect(analyze(pageSource, { lang: 'tsx', sourceType: 'module' }).diagnostics).toEqual(
 				[],
 			);
 		});
@@ -1994,7 +2000,7 @@ export function SyncProbe({ onTrace }) @{
 		// The react emitter's checker is an inline closure named `keys`, NOT
 		// `exactKeys`, which is why every grep-derived survey of this phase missed
 		// the one file that actually broke.
-		test('admits the authored prop type and still emits byte-identically without printing it', async () => {
+		test('CONSUMES the authored prop type, and prints NOTHING when it is absent', async () => {
 			const ir = clone(await golden('s1-render-once.json'));
 			expect(ir.components[0]!.props.entries.some((entry) => entry.type)).toBe(true);
 			expect(() => validateEnrichedIr(ir)).not.toThrow();
@@ -2002,20 +2008,37 @@ export function SyncProbe({ onTrace }) @{
 			// BOTH IR-8 FIELDS COME OFF TOGETHER. `type` and `optional` are read
 			// from one `TSPropertySignature` and the validator rejects one without
 			// the other, so stripping only `type` no longer produces a lawful IR -
-			// it produces requiredness with nothing to attach to. Widening this
-			// strip is what the coupling check demands, and it is the check that
-			// caught this line rather than a reviewer.
+			// it produces requiredness with nothing to attach to.
 			for (const entry of stripped.components[0].props.entries) {
 				delete entry.type;
 				delete entry.optional;
 			}
-			// The types are ADMITTED, not consumed. The .jsx -> .tsx migration that
-			// used to block printing them HAS LANDED - TS8010 forbids a type
-			// annotation in a .jsx file, and this emitter now writes .tsx - so what
-			// this row still pins is that admitting the field prints nothing.
-			// `not.toContain('string')` below is what keeps that honest.
-			expect(emit(ir)).toBe(emit(stripped));
-			expect(emit(ir)).not.toContain('string');
+			// REWRITTEN AT `frameless-emitter-capability-v1` T014, NOT EXTENDED. Until
+			// this step the row asserted `emit(ir) === emit(stripped)` - "admitted but
+			// not printed" - and that assertion is now FALSE BY DESIGN, because Step 2
+			// is the step that prints. A row that kept passing here would have been
+			// pinning the hole the phase exists to close.
+			//
+			// The pair is what makes it a measurement rather than a text check: the
+			// SAME IR with the annotation prints the authored type, and WITHOUT it
+			// prints no annotation at all. So an emitter that synthesized a type from
+			// how the corpus uses the prop fails the second arm, and an emitter that
+			// dropped IR-8 on the floor fails the first.
+			const typed = emit(ir);
+			const untyped = emit(stripped);
+			expect(typed).not.toBe(untyped);
+			expect(typed).toContain('label: string');
+			expect(typed).toContain('multiplier: number');
+			expect(typed).toContain('visible: boolean');
+			expect(typed).toContain('onTrace: (name: string, detail: Record<string, unknown>) => void');
+			expect(untyped).not.toContain('string');
+			expect(untyped).toContain('{ label, multiplier, visible, onTrace }');
+			// ALL-OR-NOTHING. One prop losing its annotation suppresses the whole
+			// literal rather than printing `any` for the one that lost it.
+			const partial = clone(ir) as any;
+			delete partial.components[0].props.entries[0].type;
+			delete partial.components[0].props.entries[0].optional;
+			expect(emit(partial)).toBe(untyped);
 		});
 
 		test('rejects a malformed prop type that is not an AST node', async () => {

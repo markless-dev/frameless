@@ -5,6 +5,12 @@ import { describe, expect, test } from 'vitest';
 import { parse, walk, type Node } from 'yuku-parser';
 import { measureAll } from '../scripts/measure-size.ts';
 
+// `tsx`, NOT `jsx`, AT EVERY SITE IN THIS FILE THAT PARSES EMITTED OUTPUT.
+// The artifact became `.tsx` at `frameless-emitter-capability-v1` T009/T011 and
+// carries an IR-8 props type from T014. MEASURED at yuku-parser/yuku-analyzer
+// 0.7.0: `jsx` reports "Expected ')' to close parameter list, but found ':'" on a
+// typed props parameter, so a stale `jsx` here fails on VALID output.
+
 const packageRoot = resolve(import.meta.dirname, '..');
 const compilerGoldenRoot = resolve(packageRoot, '../../compiler/test/goldens');
 
@@ -95,7 +101,7 @@ async function measureEmitted(scenario: string): Promise<{
 }> {
 	const file = resolve(packageRoot, 'generated', `${scenario}.tsx`);
 	const source = await readFile(file, 'utf8');
-	const parsed = parse(source, { sourceType: 'module', lang: 'jsx' });
+	const parsed = parse(source, { sourceType: 'module', lang: 'tsx' });
 	if (parsed.diagnostics.length)
 		throw new Error(parsed.diagnostics.map((entry) => entry.message).join('; '));
 	const name = await componentName(scenario);
@@ -118,7 +124,15 @@ async function measureEmitted(scenario: string): Promise<{
  * trimmed to look tidy beside S1's.
  */
 const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: number }> = {
-	S1: { physicalLoc: 31, structuralNodes: 153 },
+	// S1 IS THE ONLY ROW `frameless-emitter-capability-v1` T014 MOVED, and it moved
+	// because it is the corpus's ONLY ANNOTATED SCENARIO: printing the authored
+	// prop type costs this lane +10 physical lines and +30 structural nodes.
+	// RECORD THE CONSEQUENCE RATHER THAN THE NUMBER ALONE - it FLIPS S1's headline
+	// comparison. Emitted S1 was 31 lines against a 39-line handwritten reference
+	// and is now 41, so emitted output is LARGER than the hand-written twin for the
+	// first time in this corpus. That is the honest price of a typed prop surface
+	// the reference does not declare, and the row exists to say so out loud.
+	S1: { physicalLoc: 41, structuralNodes: 183 },
 	S2: { physicalLoc: 102, structuralNodes: 537 },
 	S3: { physicalLoc: 84, structuralNodes: 326 },
 	// S4 has NO handwritten reference to be compared against, so this row is a
@@ -163,7 +177,7 @@ describe('honest emitted structure comparison', () => {
 			{
 				scenario: 'S1',
 				reference: { physicalLoc: 39, structuralNodes: 161 },
-				emitted: { physicalLoc: 31, structuralNodes: 153 },
+				emitted: { physicalLoc: 41, structuralNodes: 183 },
 			},
 			{
 				scenario: 'S2',

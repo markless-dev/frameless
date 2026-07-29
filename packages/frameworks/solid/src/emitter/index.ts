@@ -172,6 +172,25 @@ function reanalyzeExpression(
 			]),
 		]),
 	);
+	// `jsx`, AND THE `tsx` FLIP IS REFUSED HERE ON MEASUREMENT.
+	//
+	// The whole-module OUTPUT VERIFIER below did have to move to `tsx` at
+	// `frameless-emitter-capability-v1` T014, because the emitted module now carries
+	// an IR-8 props type. THIS SITE IS NOT THAT SITE: it prints ONE handler
+	// expression into a throwaway declarator, and a handler expression comes from
+	// IR expression nodes that carry no type annotation, so `jsx` is not merely
+	// tolerable here - it is the correct grammar.
+	//
+	// AND THE FLIP IS NOT NEUTRAL, WHICH IS WHY IT IS RECORDED RATHER THAN LEFT
+	// UNSAID. MEASURED at yuku-analyzer 0.7.0: an `Identifier` parsed as `jsx` has
+	// keys [type, start, end, name]; parsed as `tsx` it additionally carries
+	// `decorators: []`, `optional: false` and `typeAnnotation: null`. `equivalent()`
+	// compares this re-analyzed AST against nodes this emitter BUILT, which have the
+	// bare shape, so flipping this site makes every structural match fail:
+	// `reconcileHandlerWrites` then throws "write record absent from handler AST" on
+	// SEVEN OF EIGHT SCENARIOS. Measured directly, both ways, before this comment
+	// was written. The T014 dispatch listed this site as one that "fires the moment
+	// you print a type"; it does not fire, and flipping it breaks the lane.
 	const module = analyze(source, { lang: 'jsx', sourceType: 'module', preserveParens: false });
 	if (module.diagnostics.length)
 		throw new Error(
@@ -2634,6 +2653,180 @@ function onceValue(
 	return t.callExpression(api(context, 'untrack'), [t.arrowFunctionExpression([], value)]);
 }
 
+/**
+ * IR-8 CONSUMPTION, AND THE HAZARD IT IS BUILT AGAINST.
+ *
+ * `PropDestructuringEntry.type` is a serialized type-node subtree in the dialect
+ * `@tsrx/core` (oxc) produces. `yuku-codegen` prints the ESTree/typescript-eslint
+ * dialect. THEY DISAGREE ON `TSFunctionType`, AND THE DISAGREEMENT IS SILENT:
+ * measured at yuku-codegen 0.7.0, handing the corpus's own `onTrace` node
+ * straight to `generate()` prints `() => ;` - MALFORMED TEXT - and returns
+ * `errors: []`. The Angular lane measured this first at
+ * `frameless-emitter-capability-v1` T004 and this lane re-measured it rather than
+ * inheriting it.
+ *
+ * So this converter is TOTAL AND FAIL-CLOSED: every accepted node kind is named
+ * here, every field it forwards is copied BY NAME, and anything else throws. The
+ * accepted set is exactly what the corpus authors today, which is what keeps it
+ * out of Gate 4 territory - there is no branch here that nothing exercises.
+ * Widening it is a deliberate edit with a fixture behind it, not a default.
+ */
+function typeNode(node: SerializableAstNode, where: string): t.Node {
+	const kind = String((node as { readonly type?: unknown }).type ?? '');
+	const record = node as Record<string, any>;
+	switch (kind) {
+		// Leaf keywords carry no children, so the two dialects cannot disagree.
+		case 'TSStringKeyword':
+		case 'TSNumberKeyword':
+		case 'TSBooleanKeyword':
+		case 'TSVoidKeyword':
+		case 'TSUnknownKeyword':
+			return t.tsKeywordType(kind);
+		case 'TSTypeReference': {
+			// Only a BARE identifier is accepted: `A.B` would name a type this
+			// emitter cannot prove is imported into the emitted module, and the
+			// emitted module imports nothing but React.
+			if (record.typeName?.type !== 'Identifier')
+				throw new Error(
+					`Solid emitter refuses a qualified type name in ${where}: only a bare type reference can be proven resolvable in emitted output`,
+				);
+			const typeName = t.identifier(String(record.typeName.name));
+			if (record.typeArguments === undefined) return t.tsTypeReference(typeName);
+			if (record.typeArguments?.type !== 'TSTypeParameterInstantiation')
+				throw new Error(
+					`Solid emitter received unexpected type arguments in ${where}: ${String(record.typeArguments?.type)}`,
+				);
+			return t.tsTypeReference(
+				typeName,
+				t.tsTypeParameterInstantiation(
+					(record.typeArguments.params as SerializableAstNode[]).map((param) =>
+						typeNode(param, where),
+					),
+				),
+			);
+		}
+		case 'TSFunctionType': {
+			// THE DIALECT DELTA, AND THE ONLY ONE THE CORPUS REACHES. oxc spells the
+			// parameter list `parameters` and the return type `typeAnnotation`;
+			// yuku-codegen reads `params` and `returnType`. Renaming them is what
+			// turns `() => ;` back into the authored signature.
+			const parameters = (record.parameters ?? record.params) as
+				| SerializableAstNode[]
+				| undefined;
+			const returns = (record.typeAnnotation ?? record.returnType) as
+				| Record<string, any>
+				| undefined;
+			if (!Array.isArray(parameters) || returns?.type !== 'TSTypeAnnotation')
+				throw new Error(`Solid emitter received a malformed function type in ${where}`);
+			return t.tsFunctionType(
+				parameters.map((parameter) => typeParameter(parameter, where)),
+				t.tsTypeAnnotation(
+					typeNode(returns.typeAnnotation as SerializableAstNode, where),
+				),
+			);
+		}
+		default:
+			throw new Error(
+				`Solid emitter has no IR-8 lowering for the type node ${kind || 'without a type'} in ${where}`,
+			);
+	}
+}
+
+/** One parameter of a `TSFunctionType`; annotated plain identifiers only. */
+function typeParameter(node: SerializableAstNode, where: string): t.Node {
+	const record = node as Record<string, any>;
+	if (record.type !== 'Identifier' || record.typeAnnotation?.type !== 'TSTypeAnnotation')
+		throw new Error(
+			`Solid emitter has no IR-8 lowering for the function-type parameter ${String(record.type)} in ${where}: only an annotated plain identifier is printed`,
+		);
+	const identifier = t.identifier(String(record.name));
+	identifier.typeAnnotation = t.tsTypeAnnotation(
+		typeNode(record.typeAnnotation.typeAnnotation as SerializableAstNode, where),
+	);
+	return identifier;
+}
+
+/**
+ * THE PROPS TYPE IS ALL-OR-NOTHING, AND THAT IS THE RULING.
+ *
+ * Solid does NOT destructure - destructuring a Solid props object severs
+ * reactivity - so this lane's annotation lands on the single `props` parameter
+ * as ONE type literal covering EVERY member the emitted body reads. A partially
+ * annotated literal would therefore have to name a type for the props IR-8 says
+ * nothing about, and the only spellings available are `any` - which
+ * re-introduces the implicit-any this step exists to delete, while pretending
+ * the author declared it - or a guess. Both are the "new source" the phase
+ * charter forbids.
+ *
+ * So the annotation is printed only when every entry carries an authored type,
+ * and is omitted entirely otherwise. THE OMITTED CASE IS THE COMMON ONE AND IS
+ * LOAD-BEARING: seven of the corpus's eight scenarios are unannotated on
+ * purpose, and they are the control arm proving a printed type came from source
+ * rather than being synthesized here.
+ *
+ * AND THE LITERAL IS CHECKED AGAINST THE BODY, FAIL-CLOSED. Unlike React's
+ * destructuring pattern, `props.x` can name a member no `PropDestructuringEntry`
+ * declares - a projected `props.children`, a forwarded `ref`, a shared-prop
+ * route. Those have no IR-8 channel, so a literal that omitted them would make
+ * VALID emitted output a type error in a lane whose own checker never reads it.
+ * `assertPropsTypeCoversBody` throws instead.
+ */
+function propsTypeAnnotation(
+	entries: ReadonlyArray<{
+		readonly key: string;
+		readonly entry?: { readonly type?: SerializableAstNode; readonly optional?: boolean };
+	}>,
+	where: string,
+): t.Node | undefined {
+	if (entries.length === 0) return undefined;
+	if (entries.some(({ entry }) => entry?.type === undefined)) return undefined;
+	return t.tsTypeAnnotation(
+		t.tsTypeLiteral(
+			entries.map(({ key, entry }) =>
+				t.tsPropertySignature(
+					t.identifier(key),
+					t.tsTypeAnnotation(typeNode(entry!.type!, `${where}.${key}`)),
+					entry!.optional === true,
+				),
+			),
+		),
+	);
+}
+
+/**
+ * Every `<propsName>.<member>` the emitted body reads must be declared by the
+ * printed literal. See the ruling above: this is the check that keeps an
+ * omission loud instead of shipping a type error into emitted output.
+ */
+function assertPropsTypeCoversBody(
+	body: unknown,
+	propsName: string,
+	declared: ReadonlySet<string>,
+	where: string,
+): void {
+	const visit = (value: unknown): void => {
+		if (!value || typeof value !== 'object') return;
+		if (Array.isArray(value)) {
+			value.forEach(visit);
+			return;
+		}
+		const record = value as Record<string, any>;
+		if (
+			record.type === 'MemberExpression' &&
+			record.computed === false &&
+			record.object?.type === 'Identifier' &&
+			record.object.name === propsName &&
+			record.property?.type === 'Identifier' &&
+			!declared.has(record.property.name)
+		)
+			throw new Error(
+				`Solid emitter printed an IR-8 props type for ${where} that does not declare ${propsName}.${record.property.name}`,
+			);
+		for (const child of Object.values(record)) visit(child);
+	};
+	visit(body);
+}
+
 function componentFunction(
 	ir: EnrichedIR,
 	component: EnrichedComponent,
@@ -2730,10 +2923,42 @@ function componentFunction(
 	return t.exportNamedDeclaration(
 		t.functionDeclaration(
 			t.identifier(component.name),
-			component.props.entries.length > 0 ? [t.identifier(context.propsName)] : [],
+			component.props.entries.length > 0
+				? [typedPropsParameter(component, context.propsName, body)]
+				: [],
 			t.blockStatement(body),
 		),
 	);
+}
+
+/**
+ * The `props` parameter, annotated from IR-8 when - and only when - every entry
+ * carries an authored type. See `propsTypeAnnotation` for the all-or-nothing
+ * ruling and `assertPropsTypeCoversBody` for the fail-closed coverage check.
+ */
+function typedPropsParameter(
+	component: EnrichedComponent,
+	propsName: string,
+	body: unknown,
+	extraMembers: ReadonlyArray<{ readonly key: string }> = [],
+): t.Node {
+	const parameter = t.identifier(propsName);
+	const annotation = propsTypeAnnotation(
+		[
+			...component.props.entries.map((entry) => ({ key: entry.sourceName, entry })),
+			...extraMembers,
+		],
+		`${component.name} props`,
+	);
+	if (!annotation) return parameter;
+	assertPropsTypeCoversBody(
+		body,
+		propsName,
+		new Set(component.props.entries.map((entry) => entry.sourceName)),
+		`${component.name} props`,
+	);
+	parameter.typeAnnotation = annotation;
+	return parameter;
 }
 
 function collectStoreKeys(component: EnrichedComponent): Map<string, string> {
@@ -3711,11 +3936,26 @@ function compositionComponent(
 		);
 	}
 	body.push(t.returnStatement(expressionFromCompositionNodes(component.template, context)));
+	// STEP 5. A composition component's `props` can additionally carry a forwarded
+	// `ref` and a shared-prop route, NEITHER OF WHICH HAS AN IR-8 CHANNEL. They
+	// are declared to `propsTypeAnnotation` as untyped members, which is exactly
+	// what makes the all-or-nothing rule suppress the annotation for them rather
+	// than invent a type. They are NOT filtered out: an omission here would print
+	// a literal that the fail-closed body check then rejects.
+	const forwardsRef = ir.records.handleForwards.some(
+		(forward) => forward.childComponentId === component.id,
+	);
 	const declaration = t.functionDeclaration(
 		t.identifier(component.name),
-		component.props.entries.length > 0 ||
-			ir.records.handleForwards.some((forward) => forward.childComponentId === component.id)
-			? [t.identifier(propsName)]
+		component.props.entries.length > 0 || forwardsRef
+			? [
+					typedPropsParameter(
+						component,
+						propsName,
+						body,
+						forwardsRef ? [{ key: 'ref' }] : [],
+					),
+				]
 			: [],
 		t.blockStatement(body),
 	);
@@ -3840,7 +4080,8 @@ function emitComposition(ir: EnrichedIR): string {
 		programBody.splice(lastImport + 1, 0, persistenceHelperDeclaration());
 	}
 	const source = `// @generated by @frameless/solid; do not edit.\n// Solid event batching exposes final post-dispatch state while preserving authored write order (T004b); no deferred notifications are needed.\n${printTopLevel(t.program(programBody))}\n`;
-	const verified = analyze(source, { lang: 'jsx', sourceType: 'module', preserveParens: false });
+	// `tsx`, NOT `jsx` - see the verifier above; same artifact, same reason.
+	const verified = analyze(source, { lang: 'tsx', sourceType: 'module', preserveParens: false });
 	if (verified.diagnostics.length)
 		throw new Error(
 			`Emitted Solid composition module failed output verification: ${verified.diagnostics.map((item) => item.message).join('; ')}`,
@@ -3939,7 +4180,8 @@ export function emit(ir: EnrichedIR): string {
 	if (persistenceWrites.emitted) declarations.push(persistenceHelperDeclaration());
 	declarations.push(exported);
 	const source = `// @generated by @frameless/solid; do not edit.\n${printTopLevel(t.program(declarations))}\n`;
-	const verified = analyze(source, { lang: 'jsx', sourceType: 'module', preserveParens: false });
+	// `tsx`, NOT `jsx` - see the verifier above; same artifact, same reason.
+	const verified = analyze(source, { lang: 'tsx', sourceType: 'module', preserveParens: false });
 	if (verified.diagnostics.length) {
 		throw new Error(
 			`Emitted Solid module failed output verification: ${verified.diagnostics.map((item) => item.message).join('; ')}`,

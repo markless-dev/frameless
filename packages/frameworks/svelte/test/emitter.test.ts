@@ -194,7 +194,13 @@ describe('Svelte 5 emitter', () => {
 			),
 		);
 		const [s1, s2, s3] = sources as [string, string, string];
-		expect(s1).toContain('let { label, multiplier, visible, onTrace } = $props();');
+		// IR-8. S1 is THE ONLY ANNOTATED SCENARIO IN THE CORPUS, so this pins the
+		// TYPED form here and the BARE form on S2 below. Pinning only one of the two
+		// would pass for an emitter that annotated everything, or nothing.
+		expect(s1).toContain('let { label, multiplier, visible, onTrace }: {');
+		expect(s1).toContain('} = $props();');
+		expect(s2).toContain('let { seed, onTrace } = $props();');
+		expect(s2).not.toMatch(/\}: \{[\s\S]*?\} = \$props\(\);/);
 		expect(s1).toContain('let count = $state(1);');
 		expect(s1).toContain('const derived = $derived(`${prefix}${count * multiplier}`);');
 		expect(s1).toContain('{#if !visible}');

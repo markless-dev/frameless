@@ -5,6 +5,12 @@ import { describe, expect, test } from 'vitest';
 import { parse, walk, type Node } from 'yuku-parser';
 import { measureAll } from '../scripts/measure-size.ts';
 
+// `tsx`, NOT `jsx`, AT EVERY SITE IN THIS FILE THAT PARSES EMITTED OUTPUT.
+// The artifact became `.tsx` at `frameless-emitter-capability-v1` T009/T011 and
+// carries an IR-8 props type from T014. MEASURED at yuku-parser/yuku-analyzer
+// 0.7.0: `jsx` reports "Expected ')' to close parameter list, but found ':'" on a
+// typed props parameter, so a stale `jsx` here fails on VALID output.
+
 const packageRoot = resolve(import.meta.dirname, '..');
 const compilerGoldenRoot = resolve(packageRoot, '../../compiler/test/goldens');
 
@@ -95,7 +101,7 @@ async function measureEmitted(scenario: string): Promise<{
 }> {
 	const file = resolve(packageRoot, 'generated', `${scenario}.tsx`);
 	const source = await readFile(file, 'utf8');
-	const parsed = parse(source, { sourceType: 'module', lang: 'jsx' });
+	const parsed = parse(source, { sourceType: 'module', lang: 'tsx' });
 	if (parsed.diagnostics.length)
 		throw new Error(parsed.diagnostics.map((entry) => entry.message).join('; '));
 	const name = await componentName(scenario);
@@ -118,7 +124,13 @@ async function measureEmitted(scenario: string): Promise<{
  * trimmed to look tidy beside S1's.
  */
 const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: number }> = {
-	S1: { physicalLoc: 29, structuralNodes: 144 },
+	// S1 IS THE ONLY ROW `frameless-emitter-capability-v1` T014 MOVED, and it moved
+	// because it is the corpus's ONLY ANNOTATED SCENARIO: printing the authored
+	// prop type on the single `props` parameter costs this lane +5 physical lines
+	// and +30 structural nodes. The node delta matches React's exactly - the same
+	// type literal - while the line delta is half, because Solid annotates ONE
+	// parameter where React annotates a four-binding destructuring pattern.
+	S1: { physicalLoc: 34, structuralNodes: 174 },
 	S2: { physicalLoc: 112, structuralNodes: 563 },
 	S3: { physicalLoc: 81, structuralNodes: 334 },
 	// S4 has NO handwritten reference to be compared against, so this row is a
@@ -158,7 +170,7 @@ describe('honest emitted structure comparison', () => {
 			{
 				scenario: 'S1',
 				reference: { physicalLoc: 35, structuralNodes: 166 },
-				emitted: { physicalLoc: 29, structuralNodes: 144 },
+				emitted: { physicalLoc: 34, structuralNodes: 174 },
 			},
 			{
 				scenario: 'S2',

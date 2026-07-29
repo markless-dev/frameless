@@ -1,6 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { ESLint } from 'eslint';
+import * as tsParser from '@typescript-eslint/parser';
 import sveltePlugin from 'eslint-plugin-svelte';
 import { parse } from 'svelte/compiler';
 import type { EnrichedIR } from '@frameless/compiler';
@@ -164,6 +165,30 @@ function makeEslint(): ESLint {
 			...(sveltePlugin.configs.recommended as never[]),
 			{
 				files: ['**/*.svelte'],
+				languageOptions: {
+					// `svelte-eslint-parser` DELEGATES THE `<script>` BLOCK, and with
+					// no delegate it uses espree, which has no TypeScript grammar.
+					// MEASURED at eslint-plugin-svelte 3.22.0 / svelte-eslint-parser:
+					// on the IR-8-typed `$props()` pattern this lane prints from
+					// `frameless-emitter-capability-v1` T014 onward, the default path
+					// reports `eslint:parse` "Complex binding patterns require an
+					// initialization value" - the EXACT string T004 measured and
+					// stopped on, because the parser was not a dependency here. It
+					// reads `let { a, b }: {...} = $props()` as a destructuring with
+					// no initializer, having failed at the `:`.
+					//
+					// THE `<script lang="ts">` THIS DELEGATES FOR IS NOT NEW. This
+					// lane has emitted `lang="ts"` since before this step; what is new
+					// is the first TYPE inside it. So the delegate is required by the
+					// annotation, not by the attribute.
+					//
+					// NO `parserOptions.project`. `svelte/no-unused-props` therefore
+					// stays silent BY CONSTRUCTION, exactly as SVELTE_ESLINT_RULES_OMITTED
+					// already records - a parser is not a program, and that entry's
+					// stated unblocking condition (a tsconfig covering emitted output)
+					// is still unmet.
+					parserOptions: { parser: tsParser as never },
+				},
 				rules: Object.fromEntries(
 					SVELTE_ESLINT_RULES_OMITTED.map((entry) => [entry.rule, 'off']),
 				),

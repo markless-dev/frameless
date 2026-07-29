@@ -33,6 +33,44 @@ export function literal(value: string | number | boolean | null): Node {
 	};
 }
 
+/**
+ * IR-8. TypeScript type nodes, in the ESTree/typescript-eslint dialect
+ * `yuku-codegen` prints - NOT the oxc dialect `@tsrx/core` serializes into the
+ * IR. The translation between the two is `typeNode` in `./index.ts`, which is
+ * total and fail-closed for exactly the reason recorded there: yuku-codegen
+ * prints a mis-dialected `TSFunctionType` as the malformed text `() => ;` and
+ * reports `errors: []`, so a permissive converter ships broken output green.
+ */
+export function tsTypeAnnotation(typeAnnotation: Node): Node {
+	return { type: 'TSTypeAnnotation', typeAnnotation };
+}
+
+export function tsKeywordType(kind: string): Node {
+	return { type: kind };
+}
+
+export function tsTypeLiteral(members: Node[]): Node {
+	return { type: 'TSTypeLiteral', members };
+}
+
+export function tsPropertySignature(key: Node, typeAnnotation: Node, optional: boolean): Node {
+	return { type: 'TSPropertySignature', key, typeAnnotation, computed: false, optional, readonly: false };
+}
+
+export function tsTypeReference(typeName: Node, typeArguments?: Node): Node {
+	return typeArguments === undefined
+		? { type: 'TSTypeReference', typeName }
+		: { type: 'TSTypeReference', typeName, typeArguments };
+}
+
+export function tsTypeParameterInstantiation(params: Node[]): Node {
+	return { type: 'TSTypeParameterInstantiation', params };
+}
+
+export function tsFunctionType(params: Node[], returnType: Node): Node {
+	return { type: 'TSFunctionType', params, returnType };
+}
+
 export function call(callee: Expression, args: Expression[]): Expression {
 	return { type: 'CallExpression', callee, arguments: args, optional: false };
 }

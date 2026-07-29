@@ -4,6 +4,7 @@ import eslintJs from '@eslint/js';
 import { ESLint } from 'eslint';
 import qwikPlugin from 'eslint-plugin-qwik';
 import globals from 'globals';
+import * as tsParser from '@typescript-eslint/parser';
 import type { EnrichedIR } from '@frameless/compiler';
 import { dirname, normalize, relative, resolve } from 'pathe';
 
@@ -431,6 +432,103 @@ export const QWIK_GATE_POLICIES = [
 ] as const satisfies readonly GatePolicy[];
 
 let cachedEslint: ESLint | undefined;
+/**
+ * `no-unused-vars` STAYS ON, AND THIS SUPPRESSES EXACTLY ONE PARSER ARTIFACT.
+ *
+ * MEASURED at eslint 9.39.5 with `@typescript-eslint/parser` 8.65.0. The parser's
+ * scope manager registers the PARAMETER NAMES OF A FUNCTION TYPE as variables:
+ * in `onTrace: (name: string, detail: Record<string, unknown>) => void` - the type
+ * this lane prints from `frameless-emitter-capability-v1` T014 onward, read
+ * straight from the authored annotation - `name` and `detail` are reported "is
+ * defined but never used". THEY ARE NOT BINDINGS AT ALL. They are documentation
+ * inside a type, they cannot be referenced, and TypeScript's own grammar has no
+ * way to write that type without them.
+ *
+ * THE OBVIOUS KNOBS WERE MEASURED AND ALL OF THEM WEAKEN THE RULE. `args: 'none'`
+ * silences the artifact AND a genuinely dead emitted parameter in the same
+ * breath - measured on a probe carrying both, where it dropped the real report
+ * too. `argsIgnorePattern` cannot be written: the pattern would have to match
+ * every parameter name an author might ever write in a type.
+ *
+ * THE CORRECT INSTRUMENT IS `@typescript-eslint/no-unused-vars`, which exists
+ * precisely because the base rule is not TypeScript-aware. It lives in
+ * `@typescript-eslint/eslint-plugin`, WHICH RESOLVES FROM NO PACKAGE IN THIS
+ * WORKSPACE - verified from all five framework lanes - so it is a new dependency
+ * and a lockfile move, and that is recorded rather than taken.
+ *
+ * So this filter re-parses the SAME SOURCE WITH THE SAME PARSER, collects the
+ * EXACT source positions of every function-type parameter name, and drops a
+ * `no-unused-vars` message only when its position is one of them. It is a
+ * position-exact match against the parser's own tree, not a message-text or
+ * name-shaped heuristic: a real unused binding cannot occupy the same position
+ * as a type parameter. `test/gate.test.ts` CALIBRATES it - a genuinely dead
+ * emitted argument still reports - so this cannot silently become an off switch.
+ */
+function typeOnlyParameterPositions(source: string): Set<string> {
+	const positions = new Set<string>();
+	let tree: unknown;
+	try {
+		tree = (tsParser as unknown as { parse: (code: string, options: unknown) => unknown }).parse(
+			source,
+			{ ecmaFeatures: { jsx: true }, ecmaVersion: 'latest', sourceType: 'module', loc: true },
+		);
+	} catch {
+		// A source this parser cannot read is already an `eslint:parse` violation;
+		// suppressing nothing is the fail-closed answer.
+		return positions;
+	}
+	const TYPE_ONLY_SIGNATURES = new Set([
+		'TSCallSignatureDeclaration',
+		'TSConstructSignatureDeclaration',
+		'TSConstructorType',
+		'TSDeclareFunction',
+		'TSEmptyBodyFunctionExpression',
+		'TSFunctionType',
+		'TSMethodSignature',
+	]);
+	const record = (parameter: unknown): void => {
+		if (!parameter || typeof parameter !== 'object') return;
+		const entry = parameter as Record<string, any>;
+		if (entry.type === 'AssignmentPattern') return record(entry.left);
+		if (entry.type === 'RestElement') return record(entry.argument);
+		if (entry.type === 'ObjectPattern')
+			return (entry.properties as unknown[]).forEach((property) =>
+				record((property as Record<string, any>).value ?? property),
+			);
+		if (entry.type === 'ArrayPattern')
+			return (entry.elements as unknown[]).forEach(record);
+		if (entry.type === 'Identifier' && entry.loc?.start)
+			positions.add(`${entry.loc.start.line}:${entry.loc.start.column + 1}`);
+	};
+	const visit = (value: unknown): void => {
+		if (!value || typeof value !== 'object') return;
+		if (Array.isArray(value)) return value.forEach(visit);
+		const node = value as Record<string, any>;
+		if (TYPE_ONLY_SIGNATURES.has(String(node.type)) && Array.isArray(node.params))
+			node.params.forEach(record);
+		for (const [key, child] of Object.entries(node)) {
+			if (key === 'parent' || key === 'loc' || key === 'range') continue;
+			visit(child);
+		}
+	};
+	visit(tree);
+	return positions;
+}
+
+/** Drop the one `no-unused-vars` artifact described above; keep everything else. */
+export function withoutTypeOnlyParameterReports<
+	T extends { readonly ruleId?: string | null; readonly line?: number; readonly column?: number },
+>(messages: readonly T[], source: string): T[] {
+	if (!messages.some((message) => message.ruleId === 'no-unused-vars')) return [...messages];
+	const positions = typeOnlyParameterPositions(source);
+	if (positions.size === 0) return [...messages];
+	return messages.filter(
+		(message) =>
+			message.ruleId !== 'no-unused-vars' ||
+			!positions.has(`${message.line}:${message.column}`),
+	);
+}
+
 function makeEslint(): ESLint {
 	cachedEslint ??= new ESLint({
 		overrideConfigFile: true,
@@ -448,6 +546,19 @@ function makeEslint(): ESLint {
 					frameless: framelessQwikPlugin as never,
 				},
 				languageOptions: {
+					// `@typescript-eslint/parser`, NOT espree, AND THE DEFAULT WAS
+					// MEASURED REFUSING VALID OUTPUT. espree has no TypeScript
+					// grammar at all: on the IR-8-typed props parameter this lane
+					// prints from `frameless-emitter-capability-v1` T014 onward it
+					// reports `eslint:parse` "Unexpected token :", so every rule
+					// below would sit behind a parse failure. T004 measured that
+					// refusal in this lane and stopped on it, because the parser was
+					// not a dependency here; the owner authorised adding it at T014.
+					//
+					// NO `parserOptions.project`, so the two rules this gate already
+					// records as *_REQUIRING_TYPES stay out of the applied set for the
+					// SAME reason as before. Adding a parser is not adding a program.
+					parser: tsParser as never,
 					ecmaVersion: 'latest',
 					sourceType: 'module',
 					parserOptions: { ecmaFeatures: { jsx: true } },
@@ -471,7 +582,7 @@ function eslintPolicyId(ruleId: string | null | undefined): string {
 
 async function eslintViolations(file: string, source: string): Promise<GateViolation[]> {
 	const [result] = await makeEslint().lintText(source, { filePath: resolve(PACKAGE_ROOT, file) });
-	return (result?.messages ?? []).map((message) =>
+	return withoutTypeOnlyParameterReports(result?.messages ?? [], source).map((message) =>
 		violation(file, eslintPolicyId(message.ruleId), message.message, message.line ?? null),
 	);
 }

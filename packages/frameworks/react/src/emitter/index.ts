@@ -145,6 +145,25 @@ function reanalyzeFunction(
 			]),
 		]),
 	);
+	// `jsx`, AND THE `tsx` FLIP IS REFUSED HERE ON MEASUREMENT.
+	//
+	// The whole-module OUTPUT VERIFIER below did have to move to `tsx` at
+	// `frameless-emitter-capability-v1` T014, because the emitted module now carries
+	// an IR-8 props type. THIS SITE IS NOT THAT SITE: it prints ONE handler
+	// expression into a throwaway declarator, and a handler expression comes from
+	// IR expression nodes that carry no type annotation, so `jsx` is not merely
+	// tolerable here - it is the correct grammar.
+	//
+	// AND THE FLIP IS NOT NEUTRAL, WHICH IS WHY IT IS RECORDED RATHER THAN LEFT
+	// UNSAID. MEASURED at yuku-analyzer 0.7.0: an `Identifier` parsed as `jsx` has
+	// keys [type, start, end, name]; parsed as `tsx` it additionally carries
+	// `decorators: []`, `optional: false` and `typeAnnotation: null`. `equivalent()`
+	// compares this re-analyzed AST against nodes this emitter BUILT, which have the
+	// bare shape, so flipping this site makes every structural match fail:
+	// `reconcileHandlerWrites` then throws "write record absent from handler AST" on
+	// SEVEN OF EIGHT SCENARIOS. Measured directly, both ways, before this comment
+	// was written. The T014 dispatch listed this site as one that "fires the moment
+	// you print a type"; it does not fire, and flipping it breaks the lane.
 	const module = analyze(source, { lang: 'jsx', sourceType: 'module', preserveParens: false });
 	if (module.diagnostics.length) {
 		throw new Error(
@@ -3312,12 +3331,152 @@ function storeHookDeclaration(
 	);
 }
 
+/**
+ * IR-8 CONSUMPTION, AND THE HAZARD IT IS BUILT AGAINST.
+ *
+ * `PropDestructuringEntry.type` is a serialized type-node subtree in the dialect
+ * `@tsrx/core` (oxc) produces. `yuku-codegen` prints the ESTree/typescript-eslint
+ * dialect. THEY DISAGREE ON `TSFunctionType`, AND THE DISAGREEMENT IS SILENT:
+ * measured at yuku-codegen 0.7.0, handing the corpus's own `onTrace` node
+ * straight to `generate()` prints `() => ;` - MALFORMED TEXT - and returns
+ * `errors: []`. The Angular lane measured this first at
+ * `frameless-emitter-capability-v1` T004 and this lane re-measured it rather than
+ * inheriting it.
+ *
+ * So this converter is TOTAL AND FAIL-CLOSED: every accepted node kind is named
+ * here, every field it forwards is copied BY NAME, and anything else throws. The
+ * accepted set is exactly what the corpus authors today, which is what keeps it
+ * out of Gate 4 territory - there is no branch here that nothing exercises.
+ * Widening it is a deliberate edit with a fixture behind it, not a default.
+ */
+function typeNode(node: SerializableAstNode, where: string): t.Node {
+	const kind = String((node as { readonly type?: unknown }).type ?? '');
+	const record = node as Record<string, any>;
+	switch (kind) {
+		// Leaf keywords carry no children, so the two dialects cannot disagree.
+		case 'TSStringKeyword':
+		case 'TSNumberKeyword':
+		case 'TSBooleanKeyword':
+		case 'TSVoidKeyword':
+		case 'TSUnknownKeyword':
+			return t.tsKeywordType(kind);
+		case 'TSTypeReference': {
+			// Only a BARE identifier is accepted: `A.B` would name a type this
+			// emitter cannot prove is imported into the emitted module, and the
+			// emitted module imports nothing but React.
+			if (record.typeName?.type !== 'Identifier')
+				throw new Error(
+					`React emitter refuses a qualified type name in ${where}: only a bare type reference can be proven resolvable in emitted output`,
+				);
+			const typeName = t.identifier(String(record.typeName.name));
+			if (record.typeArguments === undefined) return t.tsTypeReference(typeName);
+			if (record.typeArguments?.type !== 'TSTypeParameterInstantiation')
+				throw new Error(
+					`React emitter received unexpected type arguments in ${where}: ${String(record.typeArguments?.type)}`,
+				);
+			return t.tsTypeReference(
+				typeName,
+				t.tsTypeParameterInstantiation(
+					(record.typeArguments.params as SerializableAstNode[]).map((param) =>
+						typeNode(param, where),
+					),
+				),
+			);
+		}
+		case 'TSFunctionType': {
+			// THE DIALECT DELTA, AND THE ONLY ONE THE CORPUS REACHES. oxc spells the
+			// parameter list `parameters` and the return type `typeAnnotation`;
+			// yuku-codegen reads `params` and `returnType`. Renaming them is what
+			// turns `() => ;` back into the authored signature.
+			const parameters = (record.parameters ?? record.params) as
+				| SerializableAstNode[]
+				| undefined;
+			const returns = (record.typeAnnotation ?? record.returnType) as
+				| Record<string, any>
+				| undefined;
+			if (!Array.isArray(parameters) || returns?.type !== 'TSTypeAnnotation')
+				throw new Error(`React emitter received a malformed function type in ${where}`);
+			return t.tsFunctionType(
+				parameters.map((parameter) => typeParameter(parameter, where)),
+				t.tsTypeAnnotation(
+					typeNode(returns.typeAnnotation as SerializableAstNode, where),
+				),
+			);
+		}
+		default:
+			throw new Error(
+				`React emitter has no IR-8 lowering for the type node ${kind || 'without a type'} in ${where}`,
+			);
+	}
+}
+
+/** One parameter of a `TSFunctionType`; annotated plain identifiers only. */
+function typeParameter(node: SerializableAstNode, where: string): t.Node {
+	const record = node as Record<string, any>;
+	if (record.type !== 'Identifier' || record.typeAnnotation?.type !== 'TSTypeAnnotation')
+		throw new Error(
+			`React emitter has no IR-8 lowering for the function-type parameter ${String(record.type)} in ${where}: only an annotated plain identifier is printed`,
+		);
+	const identifier = t.identifier(String(record.name));
+	identifier.typeAnnotation = t.tsTypeAnnotation(
+		typeNode(record.typeAnnotation.typeAnnotation as SerializableAstNode, where),
+	);
+	return identifier;
+}
+
+/**
+ * THE PROPS TYPE IS ALL-OR-NOTHING, AND THAT IS THE RULING.
+ *
+ * React's props parameter is ONE `ObjectPattern`, so its annotation is ONE type
+ * literal covering EVERY binding in the pattern. A partially annotated pattern
+ * would therefore need a type for the props IR-8 says nothing about, and the
+ * only spellings available are `any` - which re-introduces the implicit-any this
+ * step exists to delete, while pretending the author declared it - or a guess.
+ * Both are the "new source" the phase charter forbids.
+ *
+ * So the annotation is printed only when every binding in the pattern carries an
+ * authored type, and is omitted entirely otherwise. THE OMITTED CASE IS THE
+ * COMMON ONE AND IS LOAD-BEARING: seven of the corpus's eight scenarios are
+ * unannotated on purpose, and they are the control arm proving a printed type
+ * came from source rather than being synthesized here.
+ *
+ * The synthesized bindings this pattern can also carry - a forwarded `ref`, and
+ * a shared-definition prop route - have no IR-8 channel at all, so their
+ * presence alone suppresses the annotation. That is deliberate: they are exactly
+ * the props whose type this emitter would have had to invent.
+ */
+function propsTypeAnnotation(
+	entries: ReadonlyArray<{
+		readonly key: string;
+		readonly entry?: { readonly type?: SerializableAstNode; readonly optional?: boolean };
+	}>,
+	where: string,
+): t.Node | undefined {
+	if (entries.length === 0) return undefined;
+	if (entries.some(({ entry }) => entry?.type === undefined)) return undefined;
+	return t.tsTypeAnnotation(
+		t.tsTypeLiteral(
+			entries.map(({ key, entry }) =>
+				t.tsPropertySignature(
+					t.identifier(key),
+					t.tsTypeAnnotation(typeNode(entry!.type!, `${where}.${key}`)),
+					entry!.optional === true,
+				),
+			),
+		),
+	);
+}
+
 function componentFunction(
 	ir: EnrichedIR,
 	component: EnrichedComponent,
 	context: EmitContext,
 	usedHooks: Set<ReactHook>,
 ): t.FunctionDeclaration {
+	const propTypes: Array<{
+		readonly key: string;
+		readonly entry?: { readonly type?: SerializableAstNode; readonly optional?: boolean };
+	}> = component.props.entries.map((entry) => ({ key: entry.sourceName, entry }));
 	const props = component.props.entries.map((entry) => {
 		const key = t.identifier(entry.sourceName);
 		let value: t.Identifier | t.AssignmentPattern = t.identifier(entry.localName);
@@ -3337,10 +3496,12 @@ function componentFunction(
 	if (
 		ir.records.handleForwards.some((forward) => forward.childComponentId === component.id) &&
 		!component.props.entries.some((entry) => entry.sourceName === 'ref')
-	)
+	) {
 		props.push(t.objectProperty(t.identifier('ref'), t.identifier('ref'), false, true));
+		propTypes.push({ key: 'ref' });
+	}
 	for (const route of context.sharedPropRoutes.values())
-		if (route.consumerComponentIds.has(component.id))
+		if (route.consumerComponentIds.has(component.id)) {
 			props.push(
 				t.objectProperty(
 					t.identifier(route.propName),
@@ -3349,6 +3510,8 @@ function componentFunction(
 					true,
 				),
 			);
+			propTypes.push({ key: route.propName });
+		}
 	const body: t.Statement[] = [];
 	const callbackRefStatements: t.Statement[] = [];
 	const pendingInitializers: t.Expression[] = [];
@@ -3628,9 +3791,15 @@ function componentFunction(
 			? branchExpression(component.template[0], context)
 			: expressionFromChildren(component.template, context);
 	body.push(t.returnStatement(rendered));
+	let pattern: t.Node | undefined;
+	if (props.length > 0) {
+		pattern = t.objectPattern(props);
+		const annotation = propsTypeAnnotation(propTypes, `${component.name} props`);
+		if (annotation) pattern.typeAnnotation = annotation;
+	}
 	const fn = t.functionDeclaration(
 		t.identifier(component.name),
-		props.length > 0 ? [t.objectPattern(props)] : [],
+		pattern ? [pattern] : [],
 		t.blockStatement(body),
 	);
 	return fn;
@@ -3893,7 +4062,8 @@ export function emit(ir: EnrichedIR): string {
 	const program = t.program(programBody);
 	const expectedNames = declaredNames(program);
 	const source = `${printTopLevel(program)}\n`;
-	const verified = analyze(source, { lang: 'jsx', sourceType: 'module', preserveParens: false });
+	// `tsx`, NOT `jsx` - see the verifier above; same artifact, same reason.
+	const verified = analyze(source, { lang: 'tsx', sourceType: 'module', preserveParens: false });
 	if (verified.diagnostics.length) {
 		throw new Error(
 			`Emitted React module failed collision verification: ${verified.diagnostics.map((item) => item.message).join('; ')}\n${source}`,

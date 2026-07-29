@@ -120,6 +120,33 @@ export const jsxClosingFragment = (): any => node('JSXClosingFragment');
 export const jsxFragment = (openingFragment: any, closingFragment: any, children: any[]): any =>
 	node('JSXFragment', { openingFragment, closingFragment, children });
 
+// IR-8. TypeScript type nodes, in the ESTree/typescript-eslint dialect
+// `yuku-codegen` prints - NOT the oxc dialect `@tsrx/core` serializes into the
+// IR. The translation between the two is `typeNode` in `./index.ts`, which is
+// total and fail-closed for exactly the reason recorded there: yuku-codegen
+// prints a mis-dialected `TSFunctionType` as the malformed text `() => ;` and
+// reports `errors: []`, so a permissive converter ships broken output green.
+export const tsTypeAnnotation = (typeAnnotation: any): any =>
+	node('TSTypeAnnotation', { typeAnnotation });
+export const tsKeywordType = (kind: string): any => node(kind);
+export const tsTypeLiteral = (members: any[]): any => node('TSTypeLiteral', { members });
+export const tsPropertySignature = (key: any, typeAnnotation: any, optional: boolean): any =>
+	node('TSPropertySignature', {
+		key,
+		typeAnnotation,
+		computed: false,
+		optional,
+		readonly: false,
+	});
+export const tsTypeReference = (typeName: any, typeArguments?: any): any =>
+	typeArguments === undefined
+		? node('TSTypeReference', { typeName })
+		: node('TSTypeReference', { typeName, typeArguments });
+export const tsTypeParameterInstantiation = (params: any[]): any =>
+	node('TSTypeParameterInstantiation', { params });
+export const tsFunctionType = (params: any[], returnType: any): any =>
+	node('TSFunctionType', { params, returnType });
+
 export const cloneNode = <T>(value: T, _deep = true): T => structuredClone(value);
 export const isIdentifier = (value: unknown, properties?: Properties): boolean =>
 	matches(value, 'Identifier', properties);

@@ -5,6 +5,7 @@ import {
 	type EnrichedEventRecord,
 	type EnrichedGraphBinding,
 	type EnrichedIR,
+	type SerializableAstNode,
 	type StaticAttribute,
 	type SyncPolicy,
 	type TemplateNode,
@@ -22,6 +23,13 @@ import {
 	printExpression,
 	printStatements,
 	type Statement,
+	tsFunctionType,
+	tsKeywordType,
+	tsPropertySignature,
+	tsTypeAnnotation,
+	tsTypeLiteral,
+	tsTypeParameterInstantiation,
+	tsTypeReference,
 	variable,
 	walk,
 } from './estree.ts';
@@ -525,6 +533,143 @@ function moduleImportSpecifiers(ir: EnrichedIR, scopeNames: ReadonlySet<string>)
 	return specifiers;
 }
 
+/**
+ * IR-8 CONSUMPTION, AND THE HAZARD IT IS BUILT AGAINST.
+ *
+ * `PropDestructuringEntry.type` is a serialized type-node subtree in the dialect
+ * `@tsrx/core` (oxc) produces. `yuku-codegen` prints the ESTree/typescript-eslint
+ * dialect. THEY DISAGREE ON `TSFunctionType`, AND THE DISAGREEMENT IS SILENT:
+ * measured at yuku-codegen 0.7.0, handing the corpus's own `onTrace` node
+ * straight to `generate()` prints `() => ;` - MALFORMED TEXT - and returns
+ * `errors: []`. The Angular lane measured this first at
+ * `frameless-emitter-capability-v1` T004 and this lane re-measured it rather than
+ * inheriting it.
+ *
+ * So this converter is TOTAL AND FAIL-CLOSED: every accepted node kind is named
+ * here, every field it forwards is copied BY NAME, and anything else throws. The
+ * accepted set is exactly what the corpus authors today, which is what keeps it
+ * out of Gate 4 territory - there is no branch here that nothing exercises.
+ * Widening it is a deliberate edit with a fixture behind it, not a default.
+ */
+function typeNode(node: SerializableAstNode, where: string): Node {
+	const kind = String((node as { readonly type?: unknown }).type ?? '');
+	const record = node as Record<string, any>;
+	switch (kind) {
+		// Leaf keywords carry no children, so the two dialects cannot disagree.
+		case 'TSStringKeyword':
+		case 'TSNumberKeyword':
+		case 'TSBooleanKeyword':
+		case 'TSVoidKeyword':
+		case 'TSUnknownKeyword':
+			return tsKeywordType(kind);
+		case 'TSTypeReference': {
+			// Only a BARE identifier is accepted: `A.B` would name a type this
+			// emitter cannot prove is imported into the emitted module, and the
+			// emitted module imports nothing but React.
+			if (record.typeName?.type !== 'Identifier')
+				throw new Error(
+					`Svelte emitter refuses a qualified type name in ${where}: only a bare type reference can be proven resolvable in emitted output`,
+				);
+			const typeName = identifier(String(record.typeName.name));
+			if (record.typeArguments === undefined) return tsTypeReference(typeName);
+			if (record.typeArguments?.type !== 'TSTypeParameterInstantiation')
+				throw new Error(
+					`Svelte emitter received unexpected type arguments in ${where}: ${String(record.typeArguments?.type)}`,
+				);
+			return tsTypeReference(
+				typeName,
+				tsTypeParameterInstantiation(
+					(record.typeArguments.params as SerializableAstNode[]).map((param) =>
+						typeNode(param, where),
+					),
+				),
+			);
+		}
+		case 'TSFunctionType': {
+			// THE DIALECT DELTA, AND THE ONLY ONE THE CORPUS REACHES. oxc spells the
+			// parameter list `parameters` and the return type `typeAnnotation`;
+			// yuku-codegen reads `params` and `returnType`. Renaming them is what
+			// turns `() => ;` back into the authored signature.
+			const parameters = (record.parameters ?? record.params) as
+				| SerializableAstNode[]
+				| undefined;
+			const returns = (record.typeAnnotation ?? record.returnType) as
+				| Record<string, any>
+				| undefined;
+			if (!Array.isArray(parameters) || returns?.type !== 'TSTypeAnnotation')
+				throw new Error(`Svelte emitter received a malformed function type in ${where}`);
+			return tsFunctionType(
+				parameters.map((parameter) => typeParameter(parameter, where)),
+				tsTypeAnnotation(
+					typeNode(returns.typeAnnotation as SerializableAstNode, where),
+				),
+			);
+		}
+		default:
+			throw new Error(
+				`Svelte emitter has no IR-8 lowering for the type node ${kind || 'without a type'} in ${where}`,
+			);
+	}
+}
+
+/** One parameter of a `TSFunctionType`; annotated plain identifiers only. */
+function typeParameter(node: SerializableAstNode, where: string): Node {
+	const record = node as Record<string, any>;
+	if (record.type !== 'Identifier' || record.typeAnnotation?.type !== 'TSTypeAnnotation')
+		throw new Error(
+			`Svelte emitter has no IR-8 lowering for the function-type parameter ${String(record.type)} in ${where}: only an annotated plain identifier is printed`,
+		);
+	const parameter = identifier(String(record.name));
+	parameter.typeAnnotation = tsTypeAnnotation(
+		typeNode(record.typeAnnotation.typeAnnotation as SerializableAstNode, where),
+	);
+	return parameter;
+}
+
+/**
+ * THE PROPS TYPE IS ALL-OR-NOTHING, AND THAT IS THE RULING.
+ *
+ * Svelte's props are ONE `$props()` destructuring pattern, so its annotation is
+ * ONE type literal covering EVERY binding in the pattern. A partially annotated
+ * pattern would therefore need a type for the props IR-8 says nothing about, and
+ * the only spellings available are `any` - which re-introduces the implicit-any
+ * this step exists to delete, while pretending the author declared it - or a
+ * guess. Both are the "new source" the phase charter forbids.
+ *
+ * So the annotation is printed only when every binding carries an authored type,
+ * and is omitted entirely otherwise. THE OMITTED CASE IS THE COMMON ONE AND IS
+ * LOAD-BEARING: seven of the corpus's eight scenarios are unannotated on
+ * purpose, and they are the control arm proving a printed type came from source
+ * rather than being synthesized here.
+ *
+ * `lang="ts"` IS ALREADY UNCONDITIONAL ON THIS LANE'S OUTPUT and needs no
+ * coupling edit here. T001 measured that the annotation and `lang="ts"` must move
+ * together or `@vue/compiler-sfc`-equivalent parsing throws; the Svelte emitter
+ * started writing `lang="ts"` before this step, so the coupling is already
+ * satisfied and is re-asserted by `assertScriptIsTypeScript` at the emit site.
+ */
+function propsTypeAnnotation(
+	entries: ReadonlyArray<{
+		readonly key: string;
+		readonly entry?: { readonly type?: SerializableAstNode; readonly optional?: boolean };
+	}>,
+	where: string,
+): Node | undefined {
+	if (entries.length === 0) return undefined;
+	if (entries.some(({ entry }) => entry?.type === undefined)) return undefined;
+	return tsTypeAnnotation(
+		tsTypeLiteral(
+			entries.map(({ key, entry }) =>
+				tsPropertySignature(
+					identifier(key),
+					tsTypeAnnotation(typeNode(entry!.type!, `${where}.${key}`)),
+					entry!.optional === true,
+				),
+			),
+		),
+	);
+}
+
 function propsDeclaration(component: EnrichedComponent): Statement | null {
 	if (component.props.entries.length === 0) return null;
 	const properties = component.props.entries.map((entry) => {
@@ -546,11 +691,17 @@ function propsDeclaration(component: EnrichedComponent): Statement | null {
 			value: identifier(entry.localName),
 		};
 	});
-	return variable(
-		'let',
-		{ type: 'ObjectPattern', properties },
-		call(identifier('$props'), []),
+	// IR-8. The annotation is all-or-nothing - see `propsTypeAnnotation`. The key
+	// is `path[0]`, the AUTHORED prop name, which is what the pattern's `key`
+	// above already uses; `localName` is the binding it is read through and would
+	// be the wrong name for a renamed prop.
+	const pattern: Node = { type: 'ObjectPattern', properties };
+	const annotation = propsTypeAnnotation(
+		component.props.entries.map((entry) => ({ key: entry.path[0]!, entry })),
+		`${component.name} props`,
 	);
+	if (annotation) pattern.typeAnnotation = annotation;
+	return variable('let', pattern, call(identifier('$props'), []));
 }
 
 /**

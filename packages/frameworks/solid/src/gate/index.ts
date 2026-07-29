@@ -4,6 +4,7 @@ import eslintJs from '@eslint/js';
 import { ESLint } from 'eslint';
 import solidPlugin from 'eslint-plugin-solid';
 import globals from 'globals';
+import * as tsParser from '@typescript-eslint/parser';
 import type { EnrichedIR } from '@frameless/compiler';
 import { emit } from '../emitter/index.ts';
 import { formatEmitted } from '../format-emitted.ts';
@@ -200,8 +201,15 @@ function normalizedAst(value: unknown): unknown {
 	);
 }
 function parseModule(source: string): AstNode {
+	// `tsx`, NOT `jsx`. This gate reads EMITTED `.tsx`, which carries an IR-8 props
+	// type annotation from `frameless-emitter-capability-v1` T014 onward. Measured
+	// at yuku-parser/yuku-analyzer 0.7.0: `jsx` reports "Expected ')' to close
+	// parameter list, but found ':'" on a typed props parameter, so a stale `jsx`
+	// here turns VALID emitted output into a `component-shape` violation. T004
+	// measured this refusal in both lanes; T005 repaired the qwik twin and carried
+	// react and solid here.
 	const parsed = parse(source, {
-		lang: 'jsx',
+		lang: 'tsx',
 		sourceType: 'module',
 		preserveParens: false,
 		attachComments: true,
@@ -651,6 +659,103 @@ export async function discoverGeneratedFiles(
 	return (await collectJsxFiles(cwd, options.directory ?? 'generated')).sort();
 }
 
+/**
+ * `no-unused-vars` STAYS ON, AND THIS SUPPRESSES EXACTLY ONE PARSER ARTIFACT.
+ *
+ * MEASURED at eslint 9.39.5 with `@typescript-eslint/parser` 8.65.0. The parser's
+ * scope manager registers the PARAMETER NAMES OF A FUNCTION TYPE as variables:
+ * in `onTrace: (name: string, detail: Record<string, unknown>) => void` - the type
+ * this lane prints from `frameless-emitter-capability-v1` T014 onward, read
+ * straight from the authored annotation - `name` and `detail` are reported "is
+ * defined but never used". THEY ARE NOT BINDINGS AT ALL. They are documentation
+ * inside a type, they cannot be referenced, and TypeScript's own grammar has no
+ * way to write that type without them.
+ *
+ * THE OBVIOUS KNOBS WERE MEASURED AND ALL OF THEM WEAKEN THE RULE. `args: 'none'`
+ * silences the artifact AND a genuinely dead emitted parameter in the same
+ * breath - measured on a probe carrying both, where it dropped the real report
+ * too. `argsIgnorePattern` cannot be written: the pattern would have to match
+ * every parameter name an author might ever write in a type.
+ *
+ * THE CORRECT INSTRUMENT IS `@typescript-eslint/no-unused-vars`, which exists
+ * precisely because the base rule is not TypeScript-aware. It lives in
+ * `@typescript-eslint/eslint-plugin`, WHICH RESOLVES FROM NO PACKAGE IN THIS
+ * WORKSPACE - verified from all five framework lanes - so it is a new dependency
+ * and a lockfile move, and that is recorded rather than taken.
+ *
+ * So this filter re-parses the SAME SOURCE WITH THE SAME PARSER, collects the
+ * EXACT source positions of every function-type parameter name, and drops a
+ * `no-unused-vars` message only when its position is one of them. It is a
+ * position-exact match against the parser's own tree, not a message-text or
+ * name-shaped heuristic: a real unused binding cannot occupy the same position
+ * as a type parameter. `test/gate.test.ts` CALIBRATES it - a genuinely dead
+ * emitted argument still reports - so this cannot silently become an off switch.
+ */
+function typeOnlyParameterPositions(source: string): Set<string> {
+	const positions = new Set<string>();
+	let tree: unknown;
+	try {
+		tree = (tsParser as unknown as { parse: (code: string, options: unknown) => unknown }).parse(
+			source,
+			{ ecmaFeatures: { jsx: true }, ecmaVersion: 'latest', sourceType: 'module', loc: true },
+		);
+	} catch {
+		// A source this parser cannot read is already an `eslint:parse` violation;
+		// suppressing nothing is the fail-closed answer.
+		return positions;
+	}
+	const TYPE_ONLY_SIGNATURES = new Set([
+		'TSCallSignatureDeclaration',
+		'TSConstructSignatureDeclaration',
+		'TSConstructorType',
+		'TSDeclareFunction',
+		'TSEmptyBodyFunctionExpression',
+		'TSFunctionType',
+		'TSMethodSignature',
+	]);
+	const record = (parameter: unknown): void => {
+		if (!parameter || typeof parameter !== 'object') return;
+		const entry = parameter as Record<string, any>;
+		if (entry.type === 'AssignmentPattern') return record(entry.left);
+		if (entry.type === 'RestElement') return record(entry.argument);
+		if (entry.type === 'ObjectPattern')
+			return (entry.properties as unknown[]).forEach((property) =>
+				record((property as Record<string, any>).value ?? property),
+			);
+		if (entry.type === 'ArrayPattern')
+			return (entry.elements as unknown[]).forEach(record);
+		if (entry.type === 'Identifier' && entry.loc?.start)
+			positions.add(`${entry.loc.start.line}:${entry.loc.start.column + 1}`);
+	};
+	const visit = (value: unknown): void => {
+		if (!value || typeof value !== 'object') return;
+		if (Array.isArray(value)) return value.forEach(visit);
+		const node = value as Record<string, any>;
+		if (TYPE_ONLY_SIGNATURES.has(String(node.type)) && Array.isArray(node.params))
+			node.params.forEach(record);
+		for (const [key, child] of Object.entries(node)) {
+			if (key === 'parent' || key === 'loc' || key === 'range') continue;
+			visit(child);
+		}
+	};
+	visit(tree);
+	return positions;
+}
+
+/** Drop the one `no-unused-vars` artifact described above; keep everything else. */
+export function withoutTypeOnlyParameterReports<
+	T extends { readonly ruleId?: string | null; readonly line?: number; readonly column?: number },
+>(messages: readonly T[], source: string): T[] {
+	if (!messages.some((message) => message.ruleId === 'no-unused-vars')) return [...messages];
+	const positions = typeOnlyParameterPositions(source);
+	if (positions.size === 0) return [...messages];
+	return messages.filter(
+		(message) =>
+			message.ruleId !== 'no-unused-vars' ||
+			!positions.has(`${message.line}:${message.column}`),
+	);
+}
+
 function makeEslint(cwd: string): ESLint {
 	const plugin = solidPlugin as unknown as {
 		configs?: Record<string, any>;
@@ -672,6 +777,21 @@ function makeEslint(cwd: string): ESLint {
 				// silently drops the parser options, globals and every rule below.
 				files: ['**/*.tsx'],
 				languageOptions: {
+					// `@typescript-eslint/parser`, NOT espree, AND THE DEFAULT WAS
+					// MEASURED REFUSING VALID OUTPUT. espree has no TypeScript
+					// grammar at all: on the IR-8-typed props parameter this lane
+					// prints from `frameless-emitter-capability-v1` T014 onward it
+					// reports `eslint:parse` "Unexpected token :", so every rule
+					// below would sit behind a parse failure. T004 measured that
+					// refusal in this lane and stopped on it, because the parser was
+					// not a dependency here; the owner authorised adding it at T014.
+					//
+					// NO `parserOptions.project`. This gate lints emitted output that
+					// is deliberately outside every tsconfig in the repo, so a typed
+					// rule would be silent by construction rather than by verdict -
+					// the class the qwik gate's *_REQUIRING_TYPES list already
+					// records. Parsing is all that is needed and all that is claimed.
+					parser: tsParser as never,
 					ecmaVersion: 'latest',
 					sourceType: 'module',
 					parserOptions: { ecmaFeatures: { jsx: true } },
@@ -739,7 +859,7 @@ export async function checkSources(
 			filePath: resolve(cwd, file),
 			warnIgnored: false,
 		});
-		for (const message of result?.messages ?? []) {
+		for (const message of withoutTypeOnlyParameterReports(result?.messages ?? [], source)) {
 			if ((message.severity as number) === 0) continue;
 			const policy = `eslint:${message.ruleId ?? 'parse'}`;
 			violations.push({

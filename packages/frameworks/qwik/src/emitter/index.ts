@@ -1389,6 +1389,192 @@ function templateNode(node: TemplateNode, context: EmitContext): RenderedNode {
 	};
 }
 
+/**
+ * IR-8 CONSUMPTION, AND THE HAZARD IT IS BUILT AGAINST.
+ *
+ * `PropDestructuringEntry.type` is a serialized type-node subtree in the dialect
+ * `@tsrx/core` (oxc) produces. `yuku-codegen` prints the ESTree/typescript-eslint
+ * dialect. THEY DISAGREE ON `TSFunctionType`, AND THE DISAGREEMENT IS SILENT:
+ * measured at yuku-codegen 0.7.0, handing the corpus's own `onTrace` node
+ * straight to `generate()` prints `() => ;` - MALFORMED TEXT - and returns
+ * `errors: []`. The Angular lane measured this first at
+ * `frameless-emitter-capability-v1` T004 and this lane re-measured it rather than
+ * inheriting it.
+ *
+ * So this converter is TOTAL AND FAIL-CLOSED: every accepted node kind is named
+ * here, every field it forwards is copied BY NAME, and anything else throws. The
+ * accepted set is exactly what the corpus authors today, which is what keeps it
+ * out of Gate 4 territory - there is no branch here that nothing exercises.
+ * Widening it is a deliberate edit with a fixture behind it, not a default.
+ */
+function typeNode(node: SerializableAstNode, where: string): Node {
+	const kind = String((node as { readonly type?: unknown }).type ?? '');
+	const record = node as Record<string, any>;
+	switch (kind) {
+		// Leaf keywords carry no children, so the two dialects cannot disagree.
+		case 'TSStringKeyword':
+		case 'TSNumberKeyword':
+		case 'TSBooleanKeyword':
+		case 'TSVoidKeyword':
+		case 'TSUnknownKeyword':
+			return { type: kind };
+		case 'TSTypeReference': {
+			// Only a BARE identifier is accepted: `A.B` would name a type this
+			// emitter cannot prove is imported into the emitted module.
+			if (record.typeName?.type !== 'Identifier')
+				throw new Error(
+					`Qwik emitter refuses a qualified type name in ${where}: only a bare type reference can be proven resolvable in emitted output`,
+				);
+			const reference: Node = {
+				type: 'TSTypeReference',
+				typeName: identifier(String(record.typeName.name)),
+			};
+			if (record.typeArguments === undefined) return reference;
+			if (record.typeArguments?.type !== 'TSTypeParameterInstantiation')
+				throw new Error(
+					`Qwik emitter received unexpected type arguments in ${where}: ${String(record.typeArguments?.type)}`,
+				);
+			return {
+				...reference,
+				typeArguments: {
+					type: 'TSTypeParameterInstantiation',
+					params: (record.typeArguments.params as SerializableAstNode[]).map((param) =>
+						typeNode(param, where),
+					),
+				},
+			};
+		}
+		case 'TSFunctionType': {
+			// THE DIALECT DELTA, AND THE ONLY ONE THE CORPUS REACHES. oxc spells the
+			// parameter list `parameters` and the return type `typeAnnotation`;
+			// yuku-codegen reads `params` and `returnType`. Renaming them is what
+			// turns `() => ;` back into the authored signature.
+			const parameters = (record.parameters ?? record.params) as
+				| SerializableAstNode[]
+				| undefined;
+			const returns = (record.typeAnnotation ?? record.returnType) as
+				| Record<string, any>
+				| undefined;
+			if (!Array.isArray(parameters) || returns?.type !== 'TSTypeAnnotation')
+				throw new Error(`Qwik emitter received a malformed function type in ${where}`);
+			return {
+				type: 'TSFunctionType',
+				params: parameters.map((parameter) => typeParameter(parameter, where)),
+				returnType: {
+					type: 'TSTypeAnnotation',
+					typeAnnotation: typeNode(returns.typeAnnotation as SerializableAstNode, where),
+				},
+			};
+		}
+		default:
+			throw new Error(
+				`Qwik emitter has no IR-8 lowering for the type node ${kind || 'without a type'} in ${where}`,
+			);
+	}
+}
+
+/** One parameter of a `TSFunctionType`; annotated plain identifiers only. */
+function typeParameter(node: SerializableAstNode, where: string): Node {
+	const record = node as Record<string, any>;
+	if (record.type !== 'Identifier' || record.typeAnnotation?.type !== 'TSTypeAnnotation')
+		throw new Error(
+			`Qwik emitter has no IR-8 lowering for the function-type parameter ${String(record.type)} in ${where}: only an annotated plain identifier is printed`,
+		);
+	return {
+		...identifier(String(record.name)),
+		typeAnnotation: {
+			type: 'TSTypeAnnotation',
+			typeAnnotation: typeNode(record.typeAnnotation.typeAnnotation as SerializableAstNode, where),
+		},
+	};
+}
+
+/**
+ * THE PROPS TYPE IS ALL-OR-NOTHING, AND THE `$` SUFFIX IS PART OF THE TYPE.
+ *
+ * Qwik keeps a single `props` object, so the annotation lands on the
+ * `component$` callback parameter as ONE type literal. A partially annotated
+ * literal would have to name a type for the props IR-8 says nothing about, and
+ * the only spellings available are `any` - which re-introduces the implicit-any
+ * this step exists to delete, while pretending the author declared it - or a
+ * guess. Both are the "new source" the phase charter forbids, so the annotation
+ * is printed only when every declared entry carries an authored type.
+ *
+ * THE KEY IS THE EMITTED NAME, NOT THE AUTHORED ONE. This lane renames a
+ * callback prop's last path segment to `<name>$` - the same rename
+ * `rewriteExpression` applies to every read - so the type literal must declare
+ * `onTrace$`, not `onTrace`, or the emitted `props.onTrace$` would be a member
+ * the type does not have. The TYPE ITSELF is the authored one, unchanged: this
+ * emitter does not know a `QRL<T>` and will not invent one.
+ *
+ * THE OMITTED CASE IS THE COMMON ONE AND IS LOAD-BEARING: seven of the corpus's
+ * eight scenarios are unannotated on purpose, and they are the control arm
+ * proving a printed type came from source rather than being synthesized here.
+ */
+function propsTypeAnnotation(
+	members: ReadonlyArray<{
+		readonly key: string;
+		readonly entry?: { readonly type?: SerializableAstNode; readonly optional?: boolean };
+	}>,
+	where: string,
+): Node | undefined {
+	if (members.length === 0) return undefined;
+	if (members.some(({ entry }) => entry?.type === undefined)) return undefined;
+	return {
+		type: 'TSTypeAnnotation',
+		typeAnnotation: {
+			type: 'TSTypeLiteral',
+			members: members.map(({ key, entry }) => ({
+				type: 'TSPropertySignature',
+				key: identifier(key),
+				computed: false,
+				optional: entry!.optional === true,
+				readonly: false,
+				typeAnnotation: {
+					type: 'TSTypeAnnotation',
+					typeAnnotation: typeNode(entry!.type!, `${where}.${key}`),
+				},
+			})),
+		},
+	};
+}
+
+/**
+ * Every `props.<member>` the emitted body reads must be declared by the printed
+ * literal. `props.x` can name a member no `PropDestructuringEntry` declares - a
+ * projected slot prop, a forwarded handle - and those have no IR-8 channel, so a
+ * literal that omitted one would make VALID emitted output a type error in a
+ * lane that has no standing type-check of its own to catch it. Fail-closed.
+ */
+function assertPropsTypeCoversBody(
+	body: unknown,
+	propsName: string,
+	declared: ReadonlySet<string>,
+	where: string,
+): void {
+	const visit = (value: unknown): void => {
+		if (!value || typeof value !== 'object') return;
+		if (Array.isArray(value)) {
+			value.forEach(visit);
+			return;
+		}
+		const record = value as Record<string, any>;
+		if (
+			record.type === 'MemberExpression' &&
+			record.computed === false &&
+			record.object?.type === 'Identifier' &&
+			record.object.name === propsName &&
+			record.property?.type === 'Identifier' &&
+			!declared.has(record.property.name)
+		)
+			throw new Error(
+				`Qwik emitter printed an IR-8 props type for ${where} that does not declare ${propsName}.${record.property.name}`,
+			);
+		for (const child of Object.values(record)) visit(child);
+	};
+	visit(body);
+}
+
 function callbackProps(ir: EnrichedIR, component: EnrichedComponent): Set<string> {
 	const propNames = new Set(component.props.entries.map((entry) => entry.localName));
 	const callbacks = new Set<string>();
@@ -1795,11 +1981,31 @@ function componentDeclaration(
 	const declaredProps = component.props.entries.filter(
 		(entry) => !slotProjected.has(entry.localName),
 	);
-	const callback = arrow(
-		declaredProps.length ? [identifier(context.propsName)] : [],
-		block(body),
-		{ expression: false },
-	);
+	// IR-8. The emitted member name, not the authored one - see
+	// `propsTypeAnnotation`. `path` is the authored spelling and its last segment
+	// is what `rewriteExpression` suffixes with `$` for a callback prop, so the
+	// same rule is applied here rather than re-derived.
+	const propsMembers = declaredProps.map((entry) => {
+		const segment = entry.path[entry.path.length - 1] ?? entry.sourceName;
+		return {
+			key: context.callbackProps.has(entry.localName) ? `${segment}$` : segment,
+			entry,
+		};
+	});
+	const propsParameter = identifier(context.propsName);
+	const propsAnnotation = propsTypeAnnotation(propsMembers, `${component.name} props`);
+	if (propsAnnotation) {
+		assertPropsTypeCoversBody(
+			body,
+			context.propsName,
+			new Set(propsMembers.map((entry) => entry.key)),
+			`${component.name} props`,
+		);
+		propsParameter.typeAnnotation = propsAnnotation;
+	}
+	const callback = arrow(declaredProps.length ? [propsParameter] : [], block(body), {
+		expression: false,
+	});
 	const declaration = {
 		type: 'VariableDeclaration',
 		kind: 'const',

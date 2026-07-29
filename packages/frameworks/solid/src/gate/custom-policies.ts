@@ -137,8 +137,15 @@ export function customPolicies(
 	makeViolation: Violate,
 	recordedRelativeImports: ReadonlySet<string> = new Set(),
 ): GateViolation[] {
+	// `tsx`, NOT `jsx`. This gate reads EMITTED `.tsx`, which carries an IR-8 props
+	// type annotation from `frameless-emitter-capability-v1` T014 onward. Measured
+	// at yuku-parser/yuku-analyzer 0.7.0: `jsx` reports "Expected ')' to close
+	// parameter list, but found ':'" on a typed props parameter, so a stale `jsx`
+	// here turns VALID emitted output into a `component-shape` violation. T004
+	// measured this refusal in both lanes; T005 repaired the qwik twin and carried
+	// react and solid here.
 	const parsed = parse(source, {
-		lang: 'jsx',
+		lang: 'tsx',
 		sourceType: 'module',
 		preserveParens: false,
 		attachComments: true,
@@ -146,7 +153,7 @@ export function customPolicies(
 	if (parsed.diagnostics.length)
 		throw new Error(parsed.diagnostics.map((entry) => entry.message).join('; '));
 	const module = analyze(source, {
-		lang: 'jsx',
+		lang: 'tsx',
 		sourceType: 'module',
 		preserveParens: false,
 		attachComments: true,
