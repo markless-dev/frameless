@@ -462,9 +462,39 @@ tasks:
       ban as T003.
       A CAPABILITY LIST IS A LEGITIMATE DELIVERABLE HERE. Record each refusal verbatim and
       ship whatever subset stands.
+    THE_NAMED_VISUAL_REFERENCE_RECORDED_BEFORE_THE_BUILD: >-
+      SETTLED BY THE PM WITH A WEB TOOL, because T002 was granted browsing and its harness had
+      none. THREE NAMED SOURCES, ALL LICENSE-CHECKED AT SOURCE.
+      (1) TOKENS, VENDORED VERBATIM: the shadcn/ui default theme - the oklch CSS custom
+      properties --background/--foreground/--card/--primary/--muted/--border/--ring/--radius
+      AND THE --sidebar-* FAMILY, which is exactly what this app's left rail needs. MIT,
+      "Copyright (c) 2023 shadcn", github.com/shadcn-ui/ui/LICENSE.md, documented at
+      ui.shadcn.com/docs/theming. Vendor it the SAME WAY todomvc-app-css@2.4.3 was vendored:
+      verbatim bytes + LICENSE + README carrying the exact source URL.
+      (2) LAYOUT OF THE RAIL: shadcn/ui official block `sidebar-07`, "a sidebar that collapses
+      to icons", ui.shadcn.com/blocks. Same MIT.
+      (3) LAYOUT OF THE THREAD AND COMPOSER: Vercel AI ELEMENTS, github.com/vercel/ai-elements
+      - a component library and custom registry BUILT ON TOP OF shadcn/ui for AI-native apps -
+      specifically its `conversation`, `message` and `prompt-input` families. APACHE-2.0,
+      "Copyright 2023 Vercel, Inc." NOTE THE DIFFERENT LICENSE from (1) and (2); attribute it
+      separately.
+    HOW_TO_USE_A_REFERENCE_YOU_CANNOT_COPY: >-
+      All three references are TAILWIND + REACT. Frameless emits plain markup into SIX lanes,
+      so THEIR CODE CANNOT BE COPIED and must not be. The TodoMVC precedent is the procedure:
+      VENDOR THE TOKENS VERBATIM (they are plain CSS custom properties and are lane-neutral),
+      HAND-WRITE THE COMPONENT CSS AGAINST THOSE TOKEN NAMES, and prove the match against A
+      SCREENSHOT OF THE REAL BLOCK rather than against the stylesheet. T007 is why: it found a
+      3614-pixel heading divergence INVISIBLE to every computed-style check, and a `margin: 0`
+      that made all six lanes identical AND ALL SIX WRONG. Assert features OFF THE IMAGE.
+    DASHBOARD_IS_A_CANDIDATE_NOT_SCOPE_BUT_ITS_REFERENCE_IS_NOW_NAMED_TOO: >-
+      shadcn/ui official block `dashboard-01` - "a dashboard with sidebar, charts and data
+      table" - ui.shadcn.com/blocks, MIT. Recorded so a successor board does not re-litigate
+      the choice. NOT this tranche.
     allowed_files: []
     verify:
       - "PER LANE: what runs, what refused, with the verbatim message"
+      - "VISUAL: the shipped lanes compared against a screenshot of the NAMED reference, with features asserted OFF THE IMAGE, not off the CSS"
+      - "PROVENANCE: vendored token bytes byte-identical to source, with LICENSE and source URL recorded. shadcn/ui is MIT; AI Elements is APACHE-2.0 - do not merge the two attributions."
       - "the same derivation and no-hand-written-lanes proofs as T003"
       - "pnpm test at exactly 1 / pnpm check not above 267 / pnpm e2e 6 x 9 / lint / check:citations"
     stop_if:
