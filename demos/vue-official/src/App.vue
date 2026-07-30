@@ -102,5 +102,23 @@ const s8Ready = ref<Promise<string>>(s8ResolvedGate)
     only. It takes no seed prop in any lane: IR-8 has no lowering for an array
     type, so the list is seeded inside the emitted component.
   -->
-  <TodoMvc v-else-if="scenario === 'todomvc'" v-bind:onTrace="noTrace" />
+  <!--
+    IT IS ALSO THE ONLY BRANCH THAT LINKS A STYLESHEET, and deliberately so. The
+    pair is rendered HERE rather than in index.html because s1-s9 are the 6 x 9
+    three-way contract: todomvc-app-css restyles `body` and every `button` in the
+    document, so linking it globally would change the geometry of nine scenarios
+    that exist to be compared across six lanes. The `<template>` wrapper is what
+    lets one `v-else-if` arm carry three nodes, the same shape the s8 arm above
+    already uses.
+
+    `index.css` is todomvc-app-css@2.4.3 verbatim; the supplement overrides some of
+    it at equal specificity and must load second. Both are copied into
+    `public/todomvc-app-css/` by `pnpm copy-todomvc-css`, and all six lanes serve
+    them at these same two URLs. See demos/shared/copy-todomvc-css.mjs.
+  -->
+  <template v-else-if="scenario === 'todomvc'">
+    <link rel="stylesheet" href="/todomvc-app-css/index.css" />
+    <link rel="stylesheet" href="/todomvc-app-css/frameless-supplement.css" />
+    <TodoMvc v-bind:onTrace="noTrace" />
+  </template>
 </template>

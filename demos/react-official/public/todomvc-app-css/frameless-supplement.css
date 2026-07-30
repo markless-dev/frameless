@@ -1,0 +1,300 @@
+/*
+	frameless-supplement.css — FRAMELESS-SPECIFIC. NOT UPSTREAM.
+
+	`index.css` beside this file is todomvc-app-css@2.4.3 verbatim and must never be
+	edited. This file is loaded AFTER it, and exists for exactly two reasons, both
+	MEASURED in this tree rather than assumed:
+
+	  (A) THE EMITTED MARKUP IS NOT CANONICAL TODOMVC IN FOUR PLACES, three of which
+	      are load-bearing. Every one of them is a consequence of a lane refusal
+	      recorded in docs/goals/frameless-real-apps-v1/notes/T002-todomvc.md, not a
+	      styling preference, and none of them can be repaired in the authored source
+	      without re-provoking the refusal that caused it.
+
+	  (B) THREE OF THE SIX HOST SCAFFOLDS SHIP THEIR OWN GLOBAL CSS that overrides
+	      todomvc-app-css. react-official/src/index.css, solid-official/src/index.css
+	      and vue-official/src/style.css are the create-vite landing-page stylesheets;
+	      qwik/src/global.css, angular-official/src/styles.css and the SvelteKit lane
+	      are empty or absent. Without the neutralising block below the six lanes do
+	      NOT look the same as each other, which is the thing this card had to prove.
+
+	Both sets of rules are written to be inert on markup that does not carry them, so
+	one file serves all six lanes and no lane has a hand-maintained variant.
+
+	--------------------------------------------------------------------------------
+	(A) THE FOUR NON-CANONICAL ELEMENTS, AND WHAT EACH ONE BREAKS
+	--------------------------------------------------------------------------------
+
+	1. `<button class="todo-title">` WHERE CANONICAL TODOMVC HAS `<label>`.
+	   THE BIGGEST ONE, and the one that is easy to miss because `todo-title` looks
+	   like a class the stylesheet would own. It is not in index.css at all, and
+	   index.css hangs THREE separate things off `label`:
+	     - `.todo-list li label`            — the title's 60px left gutter and colour
+	     - `.todo-list li.completed label`  — THE STRIKETHROUGH
+	     - `.todo-list li .toggle + label`  — THE ROUND TOGGLE CIRCLE, which is a
+	       background-image on the element ADJACENT to the checkbox, because
+	       `.todo-list li .toggle` is itself `opacity: 0`.
+	   So without this file: the title has no gutter and overlaps the toggle column,
+	   completed items are NOT struck through, and there is NO visible circle at all —
+	   only an invisible 40px hit area. Three of the five things the owner named.
+	   The `<button>` is a MEASURED svelte refusal: `<label>{todo.title}</label>` is
+	   rejected with `a11y_label_has_associated_control` and the `<span>` alternative
+	   with `a11y_no_static_element_interactions`.
+	   The adjacent-sibling repair works unchanged, because the button sits in exactly
+	   the position the label did: `.toggle + .todo-title`.
+
+	2. `<form class="new-todo-form">` AND `<form class="edit-form">`.
+	   Canonical TodoMVC has no `<form>` wrappers. They exist because no two-word DOM
+	   event is spellable in ANY lane — every emitter lowercases the whole event name,
+	   so `onKeyDown` prints `onKeydown`, which react-dom 19.2.3 never fires — so Enter
+	   had to ride implicit form submission.
+
+	3. `<button class="cancel-edit">`.
+	   Canonical TodoMVC reverts an edit with Escape. `keydown` is Escape's only
+	   possible spelling, so the KEY is unreachable for the same reason as (2) and the
+	   BEHAVIOUR survives as an explicit control. Nothing in index.css styles it, and
+	   unstyled it lands on its own line under the edit input and doubles the row
+	   height. Styled here as a subdued right-hand control, stated plainly as an
+	   addition to the canonical design rather than dressed up as one.
+
+	4. THE DESTROY BUTTON CARRIES THE TEXT `x`.
+	   index.css draws the destroy glyph as `.todo-list li .destroy:after { content: '×' }`,
+	   so the emitted text renders BESIDE the pseudo-element and the button reads `x×`.
+	   The text is kept — it is the button's accessible name — and hidden visually.
+*/
+
+/* ------------------------------------------------------------------------------
+   (A1) THE TITLE. These are `.todo-list li label`'s own declarations from
+   index.css lines 213-221, re-pointed at `.todo-title`, plus the four that a
+   <button> needs and a <label> did not: full width, left-aligned text, a
+   transparent background over the button UA default, and a pointer cursor.
+   ------------------------------------------------------------------------------ */
+.todo-list li .todo-title {
+	overflow-wrap: break-word;
+	padding: 15px 15px 15px 60px;
+	display: block;
+	width: 100%;
+	box-sizing: border-box;
+	text-align: left;
+	background-color: transparent;
+	cursor: pointer;
+	line-height: 1.2;
+	transition: color 0.4s;
+	font-weight: 400;
+	color: #484848;
+}
+
+/* THE STRIKETHROUGH. index.css line 223. */
+.todo-list li.completed .todo-title {
+	color: #949494;
+	text-decoration: line-through;
+}
+
+/* ------------------------------------------------------------------------------
+   (A1) THE ROUND TOGGLE CIRCLE. The two data URIs below are copied VERBATIM from
+   index.css lines 204 and 210 — they are duplicated rather than referenced because
+   CSS has no way to inherit a declaration, and index.css is upstream bytes that
+   must not be edited to add a selector. If index.css is ever refreshed, these two
+   values must be re-copied with it; that is recorded in this directory's README.
+   ------------------------------------------------------------------------------ */
+.todo-list li .toggle + .todo-title {
+	background-image: url('data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%22-10%20-18%20100%20135%22%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2250%22%20fill%3D%22none%22%20stroke%3D%22%23949494%22%20stroke-width%3D%223%22/%3E%3C/svg%3E');
+	background-repeat: no-repeat;
+	background-position: center left;
+}
+
+.todo-list li .toggle:checked + .todo-title {
+	background-image: url('data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%22-10%20-18%20100%20135%22%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2250%22%20fill%3D%22none%22%20stroke%3D%22%2359A193%22%20stroke-width%3D%223%22%2F%3E%3Cpath%20fill%3D%22%233EA390%22%20d%3D%22M72%2025L42%2071%2027%2056l-4%204%2020%2020%2034-52z%22%2F%3E%3C%2Fsvg%3E');
+}
+
+/* index.css line 389 is `.toggle:focus + label`; same substitution. */
+.todo-list li .toggle:focus + .todo-title {
+	box-shadow: 0 0 2px 2px #cf7d7d;
+	outline: 0;
+}
+
+/* The toggle sits above the title's background-image, not beneath it. index.css
+   relies on the label being the NEXT sibling in a static flow; the button is too,
+   so this only re-asserts the stacking the absolute-positioned checkbox needs. */
+.todo-list li .toggle {
+	z-index: 1;
+}
+
+/* ------------------------------------------------------------------------------
+   (A4) THE DESTROY GLYPH. Keep `×` from index.css's :after, drop the emitted `x`.
+   Both selectors match index.css's own specificity exactly, so this file winning
+   depends only on it loading second — which every lane's markup guarantees.
+   ------------------------------------------------------------------------------ */
+.todo-list li .destroy {
+	font-size: 0;
+}
+
+.todo-list li .destroy:after {
+	font-size: 30px;
+}
+
+/* ------------------------------------------------------------------------------
+   (A2) THE TWO FORM WRAPPERS. A <form> is a block box the canonical layout never
+   had; left alone it contributes UA margin and breaks the header's 65px row.
+   ------------------------------------------------------------------------------ */
+.todoapp .new-todo-form,
+.todoapp .edit-form {
+	margin: 0;
+	padding: 0;
+}
+
+.todoapp .edit-form {
+	position: relative;
+}
+
+/* `.todo-list li.editing .edit` (index.css line 170) still resolves — it is a
+   descendant selector, so the form wrapper does not break it — but the input now
+   needs room on the right for the cancel control. */
+.todo-list li.editing .edit {
+	padding-right: 72px;
+}
+
+/* ------------------------------------------------------------------------------
+   (A3) THE CANCEL CONTROL. NOT PART OF CANONICAL TODOMVC. It stands in for the
+   Escape key, which is unspellable in every lane.
+   ------------------------------------------------------------------------------ */
+.todo-list li.editing .cancel-edit {
+	position: absolute;
+	top: 0;
+	right: 8px;
+	bottom: 0;
+	height: 24px;
+	margin: auto 0;
+	padding: 0 8px;
+	font-size: 12px;
+	line-height: 24px;
+	letter-spacing: 0.5px;
+	text-transform: uppercase;
+	color: #949494;
+	cursor: pointer;
+}
+
+.todo-list li.editing .cancel-edit:hover,
+.todo-list li.editing .cancel-edit:focus {
+	color: #c18585;
+}
+
+/* The cancel button only has a job while the row is in edit mode, and the edit
+   form is only rendered then; this keeps it out of the flow if that ever changes,
+   mirroring index.css line 258's treatment of `.edit`. */
+.todo-list li .cancel-edit {
+	display: none;
+}
+
+.todo-list li.editing .cancel-edit {
+	display: block;
+}
+
+/* ------------------------------------------------------------------------------
+   (B) NEUTRALISING THE HOST SCAFFOLDS.
+
+   MEASURED: react-official/src/index.css, solid-official/src/index.css and
+   vue-official/src/style.css each ship `:root { font; color; background;
+   letter-spacing; color-scheme: light dark }`, `body { margin: 0 }`, a
+   `#root`/`#app` flex column pinned to 1126px with `text-align: center` and side
+   borders, and an `h1 { font-size: 56px; margin: 32px 0 }`. qwik/src/global.css is
+   EMPTY, angular-official/src/styles.css is a comment, and svelte-official has no
+   global stylesheet at all.
+
+   So three lanes would render the card left-aligned inside a bordered 1126px
+   column, on a white (or, in an OS dark theme, near-black) canvas, with the giant
+   `todos` heading pushed 32px off its mark — and the other three would not. Every
+   rule below exists to close a divergence that was actually observed, not to
+   pre-empt one.
+
+   These selectors are inert where the host does not ship the thing they override:
+   `#root` and `#app` simply do not exist in the qwik, svelte or angular lanes.
+
+   AND THEY ARE WRITTEN `:has(.todoapp)` RATHER THAN BARE, WHICH IS NOT COSMETIC.
+   Everything in section (A) overrides upstream at EQUAL specificity and so depends
+   on this file loading second — which the paired `<link>`s guarantee, because they
+   sit next to each other and move together. Section (B) cannot lean on that,
+   because it must beat a THIRD stylesheet whose position is not ours to fix:
+   React 19 hoists a `<link>` rendered anywhere in the tree into `<head>`, while
+   Vite injects `src/index.css` into `<head>` at module-eval time during hydration,
+   so in that lane the scaffold's sheet can land AFTER ours. `:has(.todoapp)` adds a
+   class to each selector — `html:has(.todoapp)` beats `:root`, `#root:has(.todoapp)`
+   beats `#root` — so section (B) wins on SPECIFICITY and the outcome no longer
+   depends on which sheet the host happens to inject last. It also makes every rule
+   here self-limiting to a page that actually renders TodoMVC.
+   ------------------------------------------------------------------------------ */
+html:has(.todoapp) {
+	background: #f5f5f5;
+	/* The create-vite scaffolds declare `light dark`, which in an OS dark theme
+	   flips form-control rendering in three lanes and not the other three. */
+	color-scheme: light;
+	font: 14px 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	letter-spacing: normal;
+	color: #111111;
+	/* index.css pins `-webkit-font-smoothing: antialiased` on `body` and
+	   `text-rendering: optimizeLegibility` on `.todoapp h1`, and nothing else — so
+	   these three are the inherited typography the scaffolds could still move.
+	   MEASURED: at this corpus's text they change no pixel today, and they are
+	   pinned anyway because a lane-dependent default is a divergence waiting for
+	   longer strings. The values are the ones the three lanes with no global CSS
+	   already have. */
+	text-rendering: auto;
+	font-synthesis: initial;
+	-webkit-font-smoothing: auto;
+}
+
+body:has(.todoapp) {
+	margin: 0 auto;
+	min-width: 230px;
+	max-width: 550px;
+	background: #f5f5f5;
+	color: #111111;
+	text-align: left;
+	font: 14px 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	line-height: 1.4em;
+	font-weight: 300;
+}
+
+#root:has(.todoapp),
+#app:has(.todoapp) {
+	width: auto;
+	max-width: none;
+	min-height: 0;
+	margin: 0;
+	padding: 0;
+	border: none;
+	display: block;
+	text-align: left;
+}
+
+/* index.css sets this h1's size, weight and colour but NOT its margin, so the
+   scaffolds' `h1 { margin: 32px 0 }` was the one declaration that survived, and it
+   moved the giant `todos` heading in exactly three of the six lanes.
+
+   THE VALUE IS `0.67em 0` AND NOT `0`. That is the UA default for `h1`, and
+   canonical TodoMVC depends on it: the heading is absolutely positioned at
+   `top: -140px` inside a card whose own top is at 130px, so its margin box starts
+   at -10px and only the UA's 0.67em (53.6px at this 80px font) drops the text into
+   view. MEASURED: `margin: 0` renders all six lanes identically AND all six wrong,
+   with the heading sheared off by the top of the viewport. Six lanes agreeing is
+   not the same as six lanes being right.
+
+   `font-family` AND `letter-spacing` ARE THE SAME CLASS OF LEAK AND WERE CAUGHT BY
+   A PIXEL DIFF, NOT BY READING. index.css gives `.todoapp h1` a size, a weight, a
+   colour and a text-rendering hint — and NO font-family, because canonical TodoMVC
+   lets the heading inherit `body`'s Helvetica Neue stack. Inheritance loses to any
+   rule, so the scaffolds' `h1, h2 { font-family: var(--heading) }` and
+   `h1 { letter-spacing: -1.68px }` both won. MEASURED: the giant `todos` rendered
+   in system-ui at -1.68px tracking in react/solid/vue and in Helvetica Neue at
+   normal tracking in qwik/svelte/angular — 3614 differing pixels, all of them in
+   the heading, invisible in every computed-style check that did not look at
+   `fontFamily` specifically. */
+.todoapp h1 {
+	margin: 0.67em 0;
+	font-family: inherit;
+	letter-spacing: normal;
+}
+
+.todoapp {
+	text-align: left;
+}

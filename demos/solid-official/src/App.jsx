@@ -175,7 +175,21 @@ export default function App(props) {
       <Match when={scenario() === 's9'}>
         <AttrBoard seed={s9Seed} onTrace={noTrace} />
       </Match>
+      {/*
+        THE ONLY ROUTE THAT LINKS A STYLESHEET, and deliberately so. The pair is
+        rendered HERE rather than in index.html because s1-s9 are the 6 x 9
+        three-way contract: todomvc-app-css restyles `body` and every `button` in
+        the document, so linking it globally would change the geometry of nine
+        scenarios that exist to be compared across six lanes.
+
+        `index.css` is todomvc-app-css@2.4.3 verbatim; the supplement overrides
+        some of it at equal specificity and must load second. Both are copied into
+        `public/todomvc-app-css/` by `pnpm copy-todomvc-css`, and all six lanes
+        serve them at these same two URLs. See demos/shared/copy-todomvc-css.mjs.
+      */}
       <Match when={scenario() === 'todomvc'}>
+        <link rel="stylesheet" href="/todomvc-app-css/index.css" />
+        <link rel="stylesheet" href="/todomvc-app-css/frameless-supplement.css" />
         <TodoMvc onTrace={noTrace} />
       </Match>
     </Switch>
