@@ -55,7 +55,11 @@ goal:
       recursive comment thread is refused, THE REFUSAL MESSAGE IS WORTH MORE THAN A WORKING
       PAGE.
     blind_spots_considered:
-      - "MEASURED 2026-07-30: zero fetch, zero routing, zero recursion anywhere in the corpus or composition-kit. HN's three new axes are all genuinely unexercised, and any of them may hard-stop."
+      - "CORRECTED BY T001: zero fetch and zero recursion hold, but ZERO ROUTING IS TRUE OF THE CORPUS AND FALSE OF THE DELIVERY SURFACE - all six official demos already route (PM confirmed: qwik src/routes/, angular app.routes.ts with 9 paths). HN's second route needs NO new authoring construct."
+      - "AND THE DATA AXIS IS NOT WHAT THE PM SAID. packages/core/src/index.ts exports exactly state, computed, element, shared - PM VERIFIED zero lifecycle hooks. 'A free global in a lifecycle' IS NOT AUTHORABLE. The only door is computed(async () => ...) whose type unwraps promises but whose LOWERING HAS ZERO INSTANCES IN ANY LANE. Probe it before HN is planned; if it refuses, HN ships on host-supplied props - which is s2Seed, and exercises nothing new."
+      - "FATAL TO THE ORIGINAL PLAN SHAPE: composition-kit CANNOT deliver this. TARGET_INVENTORY in packages/cli/src/program.ts is literally [react, solid] - PM CONFIRMED. A kit-shaped todomvc caps at 2 of 6 lanes and 0 of 12 sites, failing oracle parts 1 and 2 BY CONSTRUCTION. Both apps route through the CORPUS CHAIN instead."
+      - "THE CONSTRAINT NOBODY COSTED: the authored source MUST be fully prop-annotated. pnpm check type-checks generated*/ in react, solid and qwik and all 267 errors are emitted output. MEASURED: S8 (annotated) contributes ZERO in all three checked lanes, while S2 contributes 34, S7 28, S4 26, S9 21. Annotation is what makes oracle part 3 reachable."
+      - "TODOMVC'S FILTERS ARE INTERNAL STATE, NOT URL ROUTES - the one place the published spec is knowingly not met, because three host routes would mean three instances with independent state, breaking six-lane comparison. A DELIBERATE NARROWING; the final audit must read it as that, not as a lane limit."
       - "demos/ is the E2E SURFACE, not a gallery - all ten entries are driven by pnpm e2e. A probe designed to stop at the first refusal cannot also be a gate, which is why e2e wiring comes last per lane."
       - "Per-lane launch commands are NOT uniform: react/solid/svelte/vue use `dev`, angular uses `start`, qwik has `dev` and `preview`. The launch table must be measured per lane, not assumed."
       - "vue-tsc and svelte-check are NOT INSTALLED, so those two lanes have no type instrument - a site that runs there is weaker evidence than one that runs in a typed lane, and the audit must say so."
@@ -92,13 +96,13 @@ visual_board:
     The owner has run nineteen-plus goals in this repo against the file board alone, including
     three that closed in the previous session. Recorded as an explicit choice, not an omission.
 
-active_task: T001
+active_task: T002
 
 tasks:
   - id: T001
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       Validate the plan shape before any app is authored: rule the PM's three assumptions, and
@@ -127,12 +131,42 @@ tasks:
       - "MEASURE before ruling on the kit shape - composition-kit is the closest precedent and its per-lane wiring is real, not hypothetical."
       - "A lane limit is a legitimate outcome; an unargued one is not."
       - "FINGERPRINT the owner's three paths at start and finish."
-    receipt: null
-
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      harness: claude-code
+      rationale: "Plan shape is sound but rested on THREE FALSE PREMISES, one of them fatal. composition-kit CANNOT deliver this goal: the CLI target inventory is literally [react, solid] and the kit produces no dev server, so a todomvc-kit caps at 2/6 lanes and 0/12 sites. Six viewable lanes are reachable only via the CORPUS CHAIN. And oracle part 3 collides with the deliverable: pnpm check reads generated/ in react/solid/qwik, so the source MUST be prop-annotated. Assumptions 2 and 3 upheld; 1 upheld but RE-BASED - there is no lifecycle to fetch in."
+      summary: "TodoMVC first, authored as ONE fully-annotated component reaching six lanes through the corpus pipeline, not through a composition-kit-shaped kit."
+      THE_FATAL_PREMISE: "My question 4 asked 'does hn-kit follow composition-kit'. IT MUST NOT. packages/cli/src/program.ts TARGET_INVENTORY is literally [react, solid] - PM CONFIRMED - and unknown targets throw 'Unknown target (known: react, solid)'. composition-kit, ui-kit and ssr all build react+solid ONLY and SERVE NO SITE. A kit-shaped todomvc caps at TWO OF SIX LANES AND ZERO OF TWELVE SITES, failing oracle parts 1 and 2 BY CONSTRUCTION. Both apps must route through the corpus chain: fixture -> golden -> six regenerate.ts -> generated/ -> six copy-emitted -> six host wirings -> six dev servers."
+      THE_DATA_AXIS_I_NAMED_DOES_NOT_EXIST: "Assumption 1's conclusion is UPHELD - determinism across lanes is a good reason to pin - but ITS STATED REASON IS UNSOUND. packages/core/src/index.ts exports exactly state, computed, element and shared, held closed by surface-contract.ts, and PM VERIFIED ZERO LIFECYCLE HOOKS OF ANY KIND. So 'a free global in a lifecycle that must survive SSR and resumption' IS NOT AUTHORABLE, snapshot or live. The only door is computed(async () => ...), whose type unwraps promises via AsyncComputedValue<T> but WHOSE LOWERING HAS ZERO INSTANCES IN ANY LANE. Probe it before HN is planned; if it refuses, HN's front page ships on host-supplied props - which is s2Seed, and exercises NOTHING NEW."
+      and_zero_routing_was_true_of_the_wrong_thing: "'Zero routing' holds for the CORPUS and is FALSE of the DELIVERY SURFACE: all six official demos ALREADY ROUTE - PM CONFIRMED qwik src/routes/ and angular app.routes.ts carrying 9 paths. HN's second route needs NO NEW AUTHORING CONSTRUCT, which makes T004's premise wrong as written."
+      assumption_2_upheld_but_MY_REASON_ARGUED_THE_OPPOSITE: "I justified TodoMVC-first with 's2 already covers its shapes' - WHICH IS A REASON IT TEACHES LITTLE. The real justification is THE DELIVERY CHAIN: golden -> six regenerate.ts -> generated/ -> six copy-emitted -> six host wirings -> six dev servers, where EVERY LINK CARRIES A HARDCODED 9-ENTRY LIST AND NONE HAS EVER GROWN. That risk is APP-INDEPENDENT, so de-risk it on the app whose shapes are known."
+      THE_CONSTRAINT_NOBODY_COSTED: "pnpm check type-checks generated*/ in react, solid and qwik, and ALL 267 ERRORS ARE EMITTED OUTPUT. The mandated deliverable IS new files in generated/. MEASURED BY PM: S8, the annotated fixture, contributes ZERO errors in all three checked lanes, while S2 contributes 34, S7 28, S4 26 and S9 21. ANNOTATION IS THE PRECONDITION FOR ORACLE PART 3, not a style choice."
+      three_hazards_measured_in_EXISTING_fixtures: "(1) state(null) POISONS THE INFERRED TYPE - s7's `lock = state(null)` is a live qwik TS2322. Use a '' sentinel. (2) A TOP-LEVEL SIDE-EFFECT CALL emits useRef(null) in react and costs a type error - it is S1's ONLY error. (3) QWIK EMITS onKeydown$ / onDblclick$ rather than its declared onKeyDown$ / onDblClick$, because eventAttributeName capitalises an ALREADY-LOWERCASED name - invisible today because the corpus's three events are all single-word, and the qwik demo is type-checked by no gate."
+      evidence:
+        - "packages/cli/src/program.ts TARGET_INVENTORY = [react, solid] - PM CONFIRMED"
+        - "packages/core/src/index.ts exports state, computed, element, shared only - PM CONFIRMED zero lifecycle hooks"
+        - "qwik src/routes/ and angular app.routes.ts with 9 paths - PM CONFIRMED the demos already route"
+        - "check census: S2 34, S7 28, S4 26, S9 21, S3 12, S6 11 - and S8 ABSENT - PM CONFIRMED"
+        - "svelte emitter: 'a .svelte file declares exactly one component'; vue: 'a .vue SFC declares exactly one component' - both apps must be ONE component per module"
+        - "scripts/e2e.mjs threeWayScenarios is the literal ['s1'..'s9'] and officialDemos is 6, so 6 x 9 is a hardcoded invariant a 10th fixture cannot move"
+        - "Protected paths unchanged start and finish: f326d314 / aeb7edc1 / f936e169, 116 files"
+      missing_evidence:
+        - "WHETHER THE COMPILER LOWERS AN ASYNC COMPUTED AT ALL, and whether each of the six emitters can express it. This is the ONLY authorable door to HN's data axis and it is UNMEASURED. Must be probed before T003 is planned."
+        - "Whether onKeyDown / onDblClick survive end to end in all six lanes - structurally accepted by every guard, but ZERO corpus instances and no served payload has ever carried a two-word event name."
+        - "Whether the six per-lane regenerate.ts / copy-emitted chains tolerate a 10th artifact - each carries a hardcoded 9-entry list and NONE HAS EVER GROWN."
+      required_board_updates:
+        - "goal.md and blind_spots: 'zero routing' corrected - true of the corpus, FALSE of the delivery surface."
+        - "goal.md assumption 1 and T003: 'a free global in a lifecycle' is NOT AUTHORABLE. Re-stated as 'async computed lowering, unmeasured in all six lanes', with a probe owed before T003."
+        - "T001 question 4's premise recorded as false: it must NOT follow composition-kit."
+        - "Oracle constraint added: the authored source MUST be fully prop-annotated."
+        - "T002 populated from worker_package with the three measured hazards."
+        - "TodoMVC's filters recorded as INTERNAL STATE, not URL routes - a deliberate narrowing the final audit must not read as a lane limit."
   - id: T002
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
     objective: "Ship TodoMVC: one authored .tsrx source, emitted to all six lanes, six viewable sites."
     THE_MISFIRE_THIS_CARD_EXISTS_TO_AVOID: >-
@@ -140,9 +174,64 @@ tasks:
       apps by hand, and it would prove NOTHING. Every lane's app must be GENERATED from the
       single authored source. A lane that cannot be generated is LEFT UNBUILT and its refusal
       recorded verbatim.
-    allowed_files: []
+    THE_PLAN_SHAPE_CHANGED_composition_kit_CANNOT_DELIVER_THIS: >-
+      TARGET_INVENTORY in packages/cli/src/program.ts is literally [react, solid] - PM
+      CONFIRMED. A todomvc-kit shaped like composition-kit caps at TWO OF SIX LANES AND ZERO OF
+      TWELVE SITES, failing oracle parts 1 and 2 BY CONSTRUCTION. Route through the CORPUS
+      CHAIN instead: fixture -> golden -> six regenerate.ts -> generated/ -> six copy-emitted
+      -> six host wirings -> six dev servers. Every link carries a HARDCODED 9-ENTRY LIST and
+      NONE HAS EVER GROWN - that risk is app-independent, and de-risking it on the app whose
+      shapes are already proven is the REAL reason TodoMVC goes first.
+    THE_SOURCE_MUST_BE_FULLY_PROP_ANNOTATED: >-
+      pnpm check type-checks generated*/ in react, solid and qwik, and all 267 errors are
+      emitted output. MEASURED: S8, the annotated fixture, contributes ZERO in all three
+      checked lanes, while S2 contributes 34, S7 28, S4 26 and S9 21. ANNOTATION IS WHAT MAKES
+      ORACLE PART 3 REACHABLE - not a style choice. Annotate every prop, s8 style.
+    the_authored_surface_ruled_by_T001: >-
+      IN: add-via-Enter (trimmed, clears input), toggle item, destroy item, toggle-all,
+      active-count with pluralisation, clear-completed, filter All/Active/Completed as INTERNAL
+      STATE, hide main+footer when empty, edit mode via dblclick with Enter-commit and
+      Escape-revert, dynamic class for completed/editing/selected.
+      OUT with reasons: localStorage persistence (a separate proven axis, demos/persistence);
+      URL routing for filters (no routing construct exists in .tsrx, and three host routes
+      would mean THREE INSTANCES WITH INDEPENDENT STATE, breaking six-lane comparison);
+      blur-commits-edit (focus behaviour untestable in this harness); vendored todomvc-app-css
+      (a new dependency, and the sandbox has NO NETWORK - use the real class names only).
+    three_hazards_T001_measured_in_existing_fixtures: >-
+      (1) DO NOT WRITE state(null) - it poisons the inferred type. s7's `lock = state(null)` is
+      a LIVE qwik TS2322 'Type "on" | null is not assignable to type null'. Use a '' sentinel
+      for edit mode. (2) DO NOT make a top-level side-effect call in the component body - it
+      emits useRef(null) in react and costs a type error; that is S1's ONLY error. (3) QWIK
+      EMITS onKeydown$ / onDblclick$, not Qwik's declared onKeyDown$ / onDblClick$, because
+      eventAttributeName capitalises an ALREADY-LOWERCASED name. Invisible today because the
+      corpus's three events are all single-word. RECORD IT IF IT BITES; do not fix the emitter
+      under this card.
+    allowed_files:
+      - packages/compiler/test/fixtures/todomvc.tsrx
+      - packages/compiler/test/goldens/todomvc.json
+      - packages/compiler/test/enriched-ir.test.ts
+      - packages/frameworks/react/scripts/regenerate.ts
+      - packages/frameworks/solid/scripts/regenerate.ts
+      - packages/frameworks/qwik/scripts/regenerate.ts
+      - packages/frameworks/svelte/scripts/regenerate.ts
+      - packages/frameworks/vue/scripts/regenerate.ts
+      - packages/frameworks/angular/scripts/regenerate.ts
+      - packages/frameworks/react/generated/**
+      - packages/frameworks/solid/generated/**
+      - packages/frameworks/qwik/generated/**
+      - packages/frameworks/svelte/generated/**
+      - packages/frameworks/vue/generated/**
+      - packages/frameworks/angular/generated/**
+      - demos/react-official/**
+      - demos/solid-official/**
+      - demos/qwik/**
+      - demos/svelte-official/**
+      - demos/vue-official/**
+      - demos/angular-official/**
+      - docs/goals/frameless-real-apps-v1/notes/T002-todomvc.md
     verify:
-      - "PER LANE: the site RUNS, and the exact command that starts it is recorded. Six rows."
+      - "DERIVATION PROOF, the anti-hand-writing gate: DELETE all six generated/TodoMvc.* and all six demos/*/src/emitted/TodoMvc.*, re-run each lane's regenerate and each demo's copy-emitted, and confirm every file returns BYTE-IDENTICAL. ASSERT derivation; never claim it."
+      - "PER LANE: the site RUNS, and the exact command that starts it is recorded. Six rows. VERBS ARE NOT UNIFORM - react/solid/vue/svelte `dev`, angular `start`, qwik `dev` (port 5175 strict)."
       - "PROOF THAT NO PER-LANE APP CODE WAS HAND-WRITTEN: every lane's app derives from the authored source via the emitter."
       - "pnpm test / pnpm lint / pnpm check:citations"
       - "pnpm check  # must NOT rise above 267"

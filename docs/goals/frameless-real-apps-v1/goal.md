@@ -17,6 +17,20 @@ Frameless has never emitted anything that was not designed to be tested.
 Across the whole corpus and `composition-kit`: **zero** `fetch`, **zero** routing, **zero**
 recursion.
 
+**CORRECTED BY T001**: "zero routing" is true of the **corpus** and **false of the delivery
+surface** — all six official demos already route (qwik `src/routes/s2..s9`, svelte
+`src/routes/s*/+page.svelte`, angular `app.routes.ts` with 9 paths, react/solid via `App.jsx`).
+HN's second route needs **no new authoring construct**.
+
+**AND THE DATA AXIS IS NOT WHAT THE PM SAID IT WAS.** `packages/core/src/index.ts` exports
+exactly `state`, `computed`, `element`, `shared` — held closed by `surface-contract.ts`, and
+**verified: zero lifecycle hooks of any kind**. So "a free global in a lifecycle that must
+survive SSR and resumption" is **not authorable**, snapshot or live. The only door is
+`computed(async () => …)`, whose type unwraps promises (`AsyncComputedValue<T>`) but whose
+**lowering has zero instances in any lane**. That must be probed before HN's front page is
+planned; if it refuses, HN ships on host-supplied props — which is `s2Seed`, and exercises
+nothing new.
+
 The last three goals each found real faults — a `&&`-chained check script, 108 inert
 `allowed_files` entries, a validator that could only run when it had nothing to check, a
 mutation harness dead for 22 commits, four regeneration tiers wired to nothing. Every one is
@@ -44,11 +58,11 @@ than hand-patched.
 
 ## Labeled assumptions — the PM made these, and they are reversible
 
-1. **HN data is a PINNED LOCAL SNAPSHOT, not a live `fetch` to the HN API.** The oracle is
-   six-lane agreement, and live data changes between lanes, which makes that comparison
-   meaningless. A local endpoint still fully exercises the axis nobody has touched — a free
-   global in a lifecycle that must survive SSR and resumption. **If the owner wants live
-   data, this reverses and part 3 of the oracle weakens.**
+1. **HN data is a PINNED LOCAL SNAPSHOT, not a live `fetch`.** **UPHELD on its conclusion by
+   T001, but its stated reason was unsound.** Determinism across lanes is a good reason to
+   pin. But ~~a free global in a lifecycle~~ **is not authorable — there is no lifecycle**.
+   The real axis is **async `computed` lowering, unmeasured in all six lanes**, and it must be
+   probed before HN is planned.
 2. **TodoMVC ships FIRST, Hacker News second.** TodoMVC's shapes are already proven by
    `s2-keyed-todo`, `s3-event-form` and `s7-form-controls`, so it de-risks the *pipeline* —
    kit → six lanes → viewable site. When HN then hits a refusal, you know it is the axis and
@@ -101,3 +115,22 @@ same question.
 Ship TodoMVC across six lanes with viewable sites; then Hacker News front page; then the HN
 item page. Stop at the first thing that cannot be authored, record it with its refusal
 message, and continue with what remains. Deliver the launch table either way.
+
+## T001's ruling — the plan shape had a fatal premise
+
+**`composition-kit` cannot deliver this goal.** `packages/cli/src/program.ts` — `TARGET_INVENTORY`
+is literally `[react, solid]`, verified. A `todomvc-kit` shaped like `composition-kit` caps at
+**2 of 6 lanes and 0 of 12 sites**, failing oracle parts 1 and 2 **by construction**. Both apps
+route through the **corpus chain** instead: fixture → golden → six `regenerate.ts` →
+`generated/` → six `copy-emitted` → six host wirings → six dev servers.
+
+**And a constraint nobody costed: the authored source MUST be fully prop-annotated.**
+`pnpm check` type-checks `generated*/` in react, solid and qwik, and all 267 errors are emitted
+output. Measured: **S8, the annotated fixture, contributes 0 errors in all three checked lanes**,
+while `S2` contributes 34, `S7` 28, `S4` 26, `S9` 21. Annotation is what makes oracle part 3
+reachable at all — not a style choice.
+
+**TodoMVC's filters are internal state, not URL routes.** The one place the published spec is
+knowingly not met: three host routes would mean three component instances with independent
+state, breaking six-lane comparison. A **deliberate narrowing**, and the final audit must read
+it as that rather than as a lane limit.
