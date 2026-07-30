@@ -1,0 +1,273 @@
+# GoalBuddy v2 state.yaml
+# Board truth lives here. goal.md is the editable charter; notes/ holds long receipts only.
+
+version: 2
+
+goal:
+  title: "Frameless real apps: Hacker News and TodoMVC in all six lanes"
+  slug: "frameless-real-apps-v1"
+  kind: existing_plan
+  tranche: >-
+    Ship TodoMVC across six lanes with viewable sites; then the Hacker News front page; then
+    the HN item page. Stop at the first thing that cannot be authored, RECORD IT WITH ITS
+    REFUSAL MESSAGE, and continue with what remains. Deliver the launch table either way.
+  status: active
+  oracle:
+    signal: >-
+      THREE PARTS, ALL REQUIRED. (1) AUTHORED ONCE, EMITTED SIX WAYS: both apps have a SINGLE
+      authored .tsrx source and every lane's app is generated from it - NO HAND-WRITTEN
+      PER-LANE APP CODE. Where a lane cannot express something that is a LANE LIMIT recorded
+      WITH ITS REFUSAL MESSAGE, never worked around by hand-writing the lane. (2) TWELVE
+      VIEWABLE SITES: each app runs in each of the six lanes, launchable by a DOCUMENTED
+      COMMAND, and pnpm demo lists them - the owner asked how to see the sites, and an answer
+      they cannot run is not an answer. (3) NOTHING REGRESSES: pnpm test at baseline plus only
+      what this goal adds; PNPM CHECK DOES NOT RISE above its inherited 267; lint and
+      check:citations clean; pnpm e2e stays green at 6 x 9.
+    cadence: "after each app lands in each lane, and at final audit"
+    final_proof: >-
+      A final audit that names, PER LANE PER APP, whether the site runs and by what command -
+      and for every lane that does NOT, the VERBATIM REFUSAL that stopped it. A missing lane
+      with a recorded refusal is a legitimate outcome; a missing lane with no refusal is not.
+      Plus proof that no per-lane app code was hand-written.
+  intake:
+    original_request: "Ok now let's do hacker news and todoMVC now for all the frameworks, let me know when done and how I can see the sites on each framework"
+    interpreted_outcome: >-
+      Two recognisable applications, authored ONCE in .tsrx, emitted to all six lanes, and
+      VIEWABLE - twelve running sites the owner can open and click, with a documented launch
+      command for each.
+    input_shape: existing_plan
+    audience: "the owner, who wants to see frameless emit something that was not built to be tested"
+    authority: approved
+    proof_type: demo
+    completion_proof: >-
+      Both apps emitted from ONE source into six lanes, twelve sites the owner can open, and a
+      written per-lane launch table - with every refusal recorded rather than hand-patched.
+    existing_plan_facts:
+      - "The owner named BOTH apps and the scope: all six frameworks."
+      - "The owner asked HOW TO SEE THE SITES. That is a deliverable, not a courtesy - it is oracle part 2."
+      - "PM ADVISED HN over TodoMVC on the grounds that s2-keyed-todo IS TodoMVC; the owner asked for BOTH. Both are in scope. The PM's measurement stands as a reason to sequence TodoMVC first, not to drop it."
+    likely_misfire: >-
+      HAND-WRITING THE LANES. Twelve viewable sites is a satisfying deliverable and the fastest
+      route to it is to write six React-ish apps by hand. That would produce exactly the demo
+      the owner asked for and PROVE NOTHING. The whole value is that ONE authored source
+      produced all twelve - so a lane that cannot be generated must be LEFT UNBUILT AND
+      RECORDED, not filled in by hand. THE SECOND MISFIRE is pushing through a refusal: if HN's
+      recursive comment thread is refused, THE REFUSAL MESSAGE IS WORTH MORE THAN A WORKING
+      PAGE.
+    blind_spots_considered:
+      - "MEASURED 2026-07-30: zero fetch, zero routing, zero recursion anywhere in the corpus or composition-kit. HN's three new axes are all genuinely unexercised, and any of them may hard-stop."
+      - "demos/ is the E2E SURFACE, not a gallery - all ten entries are driven by pnpm e2e. A probe designed to stop at the first refusal cannot also be a gate, which is why e2e wiring comes last per lane."
+      - "Per-lane launch commands are NOT uniform: react/solid/svelte/vue use `dev`, angular uses `start`, qwik has `dev` and `preview`. The launch table must be measured per lane, not assumed."
+      - "vue-tsc and svelte-check are NOT INSTALLED, so those two lanes have no type instrument - a site that runs there is weaker evidence than one that runs in a typed lane, and the audit must say so."
+    PM_LABELED_ASSUMPTIONS_REVERSIBLE: >-
+      (1) HN DATA IS A PINNED LOCAL SNAPSHOT, not a live fetch to the HN API. The oracle is
+      six-lane agreement and LIVE DATA CHANGES BETWEEN LANES, which makes that comparison
+      meaningless; a local endpoint still exercises the untouched axis - a free global in a
+      lifecycle that must survive SSR and resumption. IF THE OWNER WANTS LIVE DATA THIS
+      REVERSES and oracle part 3 weakens. (2) TODOMVC SHIPS FIRST because its shapes are
+      already proven by s2/s3/s7, so it de-risks the PIPELINE - kit to six lanes to viewable
+      site - and when HN then hits a refusal you know it is the axis and not the plumbing.
+      (3) BROWSABLE FIRST, e2e wiring only once a lane is green.
+
+rules:
+  pm_owns_state: true
+  one_active_task: true
+  max_write_workers: 1
+  no_implementation_without_worker_or_pm_task: true
+  no_completion_without_judge_or_pm_audit: true
+  continuous_until_full_outcome: true
+
+agents:
+  scout: installed
+  worker: installed
+  judge: installed
+
+visual_board:
+  selected: none
+  local:
+    status: not_requested
+    url: null
+    command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-real-apps-v1"
+  why: >-
+    The owner has run nineteen-plus goals in this repo against the file board alone, including
+    three that closed in the previous session. Recorded as an explicit choice, not an omission.
+
+active_task: T001
+
+tasks:
+  - id: T001
+    type: judge
+    assignee: Judge
+    status: active
+    reasoning_hint: high
+    objective: >-
+      Validate the plan shape before any app is authored: rule the PM's three assumptions, and
+      spec the smallest authored surface that still honestly counts as "TodoMVC" and "Hacker
+      News".
+    why_a_judge_and_not_a_worker_first: >-
+      This is an EXISTING PLAN - the owner named both apps and the scope - and the contract
+      says validate a plan before executing it. There is also a real question underneath: WHAT
+      COUNTS AS THE APP. TodoMVC has a published spec with a conformance list; HN has no spec
+      at all. Authored too small, the demo proves nothing; authored too large, it stalls on
+      cosmetics before reaching the axes that matter.
+    the_three_assumptions_to_rule: >-
+      (1) PINNED SNAPSHOT vs LIVE FETCH for HN. The PM chose snapshot because live data breaks
+      six-lane comparison. Is that right, and does it still exercise the axis?
+      (2) TODOMVC FIRST. The PM chose it to de-risk the pipeline because s2-keyed-todo already
+      covers its shapes. Is that ordering right, or does it just delay the real information?
+      (3) BROWSABLE BEFORE e2e-WIRED. Everything in demos/ is a gate today.
+    what_a_ruling_must_contain:
+      - "Each assumption: upheld, reversed, or narrowed - with the reason"
+      - "The authored surface for TodoMVC: which of the spec's behaviours are in, which are out, and why - it must be recognisably TodoMVC, not s2 renamed"
+      - "The authored surface for HN front page and item page, and WHICH AXIS each part exists to exercise"
+      - "The kit shape: does hn-kit / todomvc-kit follow composition-kit, or does the routing requirement need something composition-kit does not have?"
+      - "The exact Worker spec for the FIRST app: objective, allowed_files, verify, stop_if"
+    constraints:
+      - "READ-ONLY. Author nothing, emit nothing, edit no product file."
+      - "MEASURE before ruling on the kit shape - composition-kit is the closest precedent and its per-lane wiring is real, not hypothetical."
+      - "A lane limit is a legitimate outcome; an unargued one is not."
+      - "FINGERPRINT the owner's three paths at start and finish."
+    receipt: null
+
+  - id: T002
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    objective: "Ship TodoMVC: one authored .tsrx source, emitted to all six lanes, six viewable sites."
+    THE_MISFIRE_THIS_CARD_EXISTS_TO_AVOID: >-
+      DO NOT HAND-WRITE THE LANES. The fastest route to six running TodoMVCs is to write six
+      apps by hand, and it would prove NOTHING. Every lane's app must be GENERATED from the
+      single authored source. A lane that cannot be generated is LEFT UNBUILT and its refusal
+      recorded verbatim.
+    allowed_files: []
+    verify:
+      - "PER LANE: the site RUNS, and the exact command that starts it is recorded. Six rows."
+      - "PROOF THAT NO PER-LANE APP CODE WAS HAND-WRITTEN: every lane's app derives from the authored source via the emitter."
+      - "pnpm test / pnpm lint / pnpm check:citations"
+      - "pnpm check  # must NOT rise above 267"
+      - "pnpm e2e    # must stay green at 6 x 9 - this app is not wired into it yet"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "A lane cannot express something - RECORD THE VERBATIM REFUSAL and leave that lane unbuilt. Do not hand-write it."
+      - "You are about to write per-lane app code by hand."
+      - "pnpm check rises, or pnpm e2e moves."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
+  - id: T003
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    objective: "Ship the Hacker News FRONT PAGE: one authored source, six lanes, six viewable sites."
+    the_axes_this_exercises_that_NOTHING_has: >-
+      MEASURED 2026-07-30 across the whole corpus and composition-kit: ZERO fetch, ZERO
+      routing, ZERO recursion. The front page brings the first two. Data loading is a FREE
+      GLOBAL IN A LIFECYCLE that must survive SSR and resumption - S8 opened the async axis but
+      deliberately on a PROP-VALUED promise, to satisfy Angular's globals rule and Qwik's
+      serializer. This is the harder case.
+    allowed_files: []
+    verify:
+      - "PER LANE: the site runs and shows the list, with the launch command recorded"
+      - "the same no-hand-written-lanes proof as T002"
+      - "pnpm test / pnpm check (not above 267) / pnpm lint / pnpm check:citations / pnpm e2e at 6 x 9"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "A lane refuses the fetch-in-lifecycle shape - RECORD IT VERBATIM as a lane limit. If Qwik cannot serialize it the way it could not serialize a pending promise gate, THAT IS A DESIGN-ENVELOPE LIMIT, not a defect, and it is not to be chased."
+      - "You are about to write per-lane app code by hand."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
+  - id: T004
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    objective: "Ship the Hacker News ITEM PAGE: a second route and a recursive comment thread."
+    THIS_IS_THE_ONE_MOST_LIKELY_TO_REFUSE_AND_THAT_IS_THE_POINT: >-
+      A comment component that renders itself is composition depth beyond anything attempted.
+      composition-kit already proved svelte and vue REFUSE MULTI-COMPONENT MODULES BY NAME, and
+      recursion asks a sharper version of the same question. THE REFUSAL MESSAGE IS WORTH MORE
+      THAN A WORKING PAGE. Record it and stop; do not invent a flattening scheme.
+    allowed_files: []
+    verify:
+      - "PER LANE: the item page runs, or its verbatim refusal is recorded"
+      - "the same no-hand-written-lanes proof"
+      - "pnpm test / pnpm check (not above 267) / pnpm lint / pnpm check:citations / pnpm e2e at 6 x 9"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Recursion is refused - RECORD THE VERBATIM MESSAGE PER LANE and stop. Do not invent a flattening or manual-unroll workaround."
+      - "You are about to write per-lane app code by hand."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
+  - id: T005
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: >-
+      Make the sites findable: extend `pnpm demo` so every app that landed is listed with its
+      launch command, and write the per-lane launch table the owner asked for.
+    this_is_ORACLE_PART_2_not_a_courtesy: >-
+      The owner's request ends "let me know when done and HOW I CAN SEE THE SITES ON EACH
+      FRAMEWORK". An answer they cannot run is not an answer. MEASURED: the launch verbs are
+      NOT uniform - react/solid/svelte/vue use `dev`, angular uses `start`, qwik has `dev` and
+      `preview`. The table must be measured per lane, not assumed, AND EVERY COMMAND IN IT MUST
+      BE RUN ONCE before it is written down.
+    allowed_files: []
+    verify:
+      - "EVERY command in the table was actually run and the site actually served"
+      - "pnpm demo lists every app that landed"
+      - "lanes that did NOT land appear with their refusal, not omitted silently"
+      - "pnpm test / pnpm check (not above 267) / pnpm lint / pnpm check:citations"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "A command in the table does not actually start a site - fix the table, never the claim."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Final audit: certify all three oracle parts, or refuse."
+    constraints:
+      - "QUOTE EVERY COMPLETION FIELD VERBATIM before ruling - signal, cadence, final_proof AND intake.completion_proof. Three final audits across the prior boards caught the PM describing a multi-part oracle with fewer parts than the board defines; the last one also found a refuted figure still standing in goal.md after the PM reported all sites corrected."
+      - "REJECT IF ANY PER-LANE APP CODE WAS HAND-WRITTEN. That is the named misfire and it would produce exactly the demo the owner asked for while proving nothing. Verify by derivation, not by assertion."
+      - "REJECT if a lane is missing WITHOUT a recorded verbatim refusal. A missing lane with a refusal is a legitimate outcome."
+      - "REJECT if any launch command in the table was not actually run."
+      - "REJECT if pnpm check ROSE above its inherited 267, or pnpm e2e left 6 x 9."
+      - "Assume the PM's brief contains at least one error and find it. EVERY task on the three prior boards corrected its dispatch."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "The per-lane per-app table: runs / refused-with-message, and the launch command"
+      - "next task if not complete"
+    receipt: null
+
+checks:
+  dirty_fingerprint: >-
+    2026-07-30 at prep. Clean except the OWNER'S three in-flight paths - pnpm-lock.yaml,
+    pnpm-workspace.yaml and website/ - which are never to be modified. Expected f326d314 /
+    aeb7edc1 / f936e169, website/ 116 files all-in. Method: sort the DIGESTS, not the paths;
+    with no sort the value is not deterministic.
+  last_verification:
+    result: mixed
+    task: "prep inventory"
+    run_by: PM
+    when: "2026-07-30"
+    commands:
+      - cmd: "pnpm check"
+        status: fail
+        note: "267 errors. INHERITED RED from the emitter-capability phase, whose successor owns driving it to zero. NOT this goal's to fix; its only obligation is that it does not RISE."
+      - cmd: "pnpm test"
+        status: fail
+        note: "1248 passed / 1 FAILED - package-inventory ARM B, caused by the owner's uncommitted lockfile. FOREIGN and pre-existing; must stay at exactly 1."
+      - cmd: "pnpm e2e"
+        status: pass
+        note: "6 demos x 9 scenarios, all observations equal - must stay green; the new apps are not wired into it until a lane is proven"
+      - cmd: "pnpm lint"
+        status: pass
