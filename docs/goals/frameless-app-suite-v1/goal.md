@@ -93,8 +93,35 @@ global to make its own. The binding constraint is **one promise per render, or l
 - **Do not file anything upstream.**
 - **The owner's three uncommitted paths** — `pnpm-lock.yaml`, `pnpm-workspace.yaml`,
   `website/` — are in-flight work. Fingerprint at start and end of every task; never modify.
-  **Sort the digests, not the paths.** Expected `f326d314` / `aeb7edc1` / `f936e169`,
-  116 files.
+  Expected `f326d314` / `aeb7edc1` / `f936e169`, 116 files.
+  **THE METHOD IS: SORT THE WHOLE `shasum` OUTPUT LINES.**
+
+  ```sh
+  shasum -a 256 pnpm-lock.yaml                                   # f326d314…
+  shasum -a 256 pnpm-workspace.yaml                              # aeb7edc1…
+  find website -type f -print0 | xargs -0 shasum -a 256 | sort | shasum -a 256   # f936e169…
+  find website -type f | wc -l                                   # 116
+  ```
+
+  **Two wrong readings, both measured at HEAD, both of which have already fired on this
+  board.** Sorting the **bare digest column** (`| awk '{print $1}' | sort |`) gives
+  **`feddd40b`** — T004 hit this one. Sorting the **paths** and hashing the lines in that
+  order gives **`b1dd182a`** — T005 hit this one. With **no sort** the value is not
+  deterministic: two consecutive runs at HEAD gave `599f32e1` and `1314b5fb`, and the cause
+  is `find`'s traversal order alone — both runs produced the same 116 digests, differing
+  only in line order, so **do not record an expected value for the unsorted reading.**
+
+  *"Sort the paths" is worth spelling out, because it names two different operations and
+  only one of them is a fingerprint: sorting by path and hashing the resulting `shasum`
+  **lines** gives `b1dd182a`, while hashing the sorted **path list itself** gives
+  `ff230487` and reads no file content at all.*
+
+  *This paragraph used to instruct the bare-digest-column reading — the refuted wording is
+  preserved verbatim in `notes/T999-final-audit.md` §3 and on T007's card, and is not
+  repeated here so that no successor can grep it back into use. It returns `feddd40b` and
+  therefore **could not produce the expected value printed alongside it**. It fired twice,
+  on T005 and T004, before T999 caught it. If you change the method, change the expected
+  values in the same edit.*
 - **Never `pkill -f` on a broad pattern.** A prior task killed one of the owner's long-running
   servers that way. Kill by recorded PID only, and only PIDs you started.
 

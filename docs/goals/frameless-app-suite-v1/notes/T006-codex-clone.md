@@ -425,7 +425,7 @@ PM should correct the entry on the card.
 | vue `v-model` vs baseline on `<textarea>`, client + SSR | five G5 differences, the fifth measured on the new tag |
 | **DERIVATION PROOF** — delete 22 S12 artifacts, re-run 5 regenerate + 5 copy-emitted + 6 copy-shadcn-theme | `PRESENT AFTER DELETE: 0`, then **22/22 BYTE-IDENTICAL**; each demo copy's digest EQUALS its lane's generated digest; all six theme copies equal |
 | `git diff --exit-code` over every S1–S11 artifact and `demos/shared/todomvc-app-css` | **exit 0** |
-| **5 sites launched and driven** (chromium, ports **5321–5325**) | 10 axes per lane; react/solid/qwik/svelte clean, vue synchronous-clean and stream-throwing |
+| **5 sites launched and driven** (chromium, ports **5321–5325**) | 10 axes per lane; react/solid/qwik/svelte clean, vue synchronous-clean and stream-throwing. **Per-lane commands and `/codex` URLs: §8.1** |
 | screenshots + 14 ink probes across 5 lanes | §6.1 |
 | **mutation test of the image assertions** (10 mutants, injected live) | control green, **10/10 KILLED** |
 | `pnpm test` | **EXACTLY 1** failure — `package-inventory` ARM B, foreign / **1281 passed** |
@@ -439,6 +439,74 @@ PM should correct the entry on the card.
 free before use. Every process was started by this card and stopped by **recorded PID**
 after `ps`/`lsof` confirmed its working directory; **`pkill -f` on a broad pattern was
 never used**, and no port held by a foreign process was touched.
+
+### 8.1 LAUNCH COMMANDS — ACTUALLY RUN, and the ports actually used
+
+> **Provenance, stated first, because it is the whole point of this table.** T006 launched
+> and drove five sites at ports 5321–5325 but **wrote down no command and no URL** — the
+> `ACTUALLY-RUN` half of `oracle.signal` (2) without the `documented` half. T999 caught it.
+> **T007 did not reconstruct these commands from T006's memory; it RE-RAN every one of
+> them** at its own ports **5331–5336**, checked free first, and read the result off the
+> wire. What is recorded below is what T007 executed and what the server answered.
+
+| lane | command actually run | URL | result |
+|---|---|---|---|
+| react | `PORT=5331 pnpm dev` in `demos/react-official` | `http://localhost:5331/codex` | **200**, 4234 B of SSR HTML |
+| solid | `PORT=5332 pnpm dev` in `demos/solid-official` | `…:5332/codex` | **200**, 4597 B |
+| qwik | `pnpm copy-emitted && pnpm copy-todomvc-css && pnpm copy-shadcn-theme && npx vite --port 5333 --strictPort` in `demos/qwik` | `…:5333/codex/` — **note the trailing slash** | **200**, 55 250 B |
+| svelte | `pnpm copy-emitted && pnpm copy-todomvc-css && pnpm copy-shadcn-theme && npx vite dev --port 5334 --strictPort` in `demos/svelte-official` | `…:5334/codex` | **200**, 6990 B |
+| vue | `PORT=5335 pnpm dev` in `demos/vue-official` | `…:5335/codex` | **200**, 8248 B |
+| angular | `pnpm start --port 5336` in `demos/angular-official` | `…:5336/codex` | **404**, body `Cannot GET /codex` — **NO ROUTE** |
+
+Every 200 above was confirmed to be the Codex clone and not a fallback page: each body
+carries the emitted root marker **`data-app="codex-clone"`** and a link to
+`/shadcn-theme/codex.css`. `pnpm dev` in the react, solid and vue lanes is
+`copy-emitted && copy-todomvc-css && copy-shadcn-theme && node server`, so the emitted
+bytes and the theme are re-copied by the launch itself.
+
+**Angular's absence is recorded, not omitted.** The 404 is structural, not a
+misconfiguration: `demos/angular-official/src/app/app.routes.ts` declares `''`, `s2`–`s9`
+and `todomvc` and **no `codex` path**, and `packages/frameworks/angular/generated/` holds
+`S1`–`S10` and **no `S12.ts`** — the lane refused at emit (§5.3), so there is no component
+to route to. `/codex/` with a trailing slash is also **404**. The **control** on the same
+server: `…:5336/todomvc` returns **200**, which is what proves the site itself runs and the
+absence is S12-specific.
+
+**Three things this re-run measured that the commands do not show on their face:**
+
+1. **`PORT=` is not optional for react/solid/vue.** All three read
+   `process.env.PORT || 5173` in their own `server.js`, so all three default to the *same*
+   port and only one can run at a time without it.
+2. **qwik's own `pnpm dev` FAILS ON THIS MACHINE, and it is not the demo's fault.** That
+   script is pinned to `vite --port 5175 --strictPort`, and **port 5175 is still held by
+   the foreign `node` process PID 64413** — the same foreign PID T003 recorded. Run
+   verbatim it exits 1 with `Error: Port 5175 is already in use`. **The port was recorded
+   and routed around, never killed**, exactly as T003 did; the explicit-port form in the
+   table is what works. *The script has not drifted — the machine is occupied. Nothing in
+   `demos/qwik` was edited.*
+3. **Angular is `start`, not `dev`, and `--` collides.** There is no `dev` script in that
+   package. `pnpm start -- --port 5336` **fails**, verbatim:
+   ```
+   Option '--' has been specified multiple times. The value '5336' will be used.
+   Error: Schema validation failed with the following errors:
+     Data path "" must NOT have additional properties().
+   ```
+   **`pnpm start --port 5336`, without the `--`, works** — pnpm appends the flag to the end
+   of the `&&` chain, where `ng serve` receives it. That is the form in the table, and it is
+   simpler than T003 §5's `npx ng serve` workaround for the same lane.
+
+**A correction to T003 §5's table shape, found by re-running it here:** that table records
+qwik's URL as `…/todomvc-advanced` with no trailing slash. Qwik City **canonicalises to a
+trailing slash** — `/codex` and `/todomvc-advanced` both answer **301** with
+`location: /codex/`. A browser follows it silently, which is why driving the lane never
+surfaced it; a `curl` or `fetch` check sees the 301 and reads zero bytes. The qwik row
+above records `/codex/` directly.
+
+Ports **5331–5336** were confirmed free with `lsof` before use, each server was started by
+T007 and stopped by **recorded PID** (the `pnpm` launcher *and* the `node` child that
+actually held the socket, found with `lsof -t` on the port), and all six were confirmed
+free afterwards. **`pkill -f` was never used.** Foreign PID 64413 was still listening on
+5175 at the end, untouched.
 
 ---
 

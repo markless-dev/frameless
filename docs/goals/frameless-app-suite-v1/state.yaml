@@ -100,7 +100,7 @@ visual_board:
     The owner has run twenty-plus goals in this repo against the file board alone. Recorded as
     an explicit choice, not an omission.
 
-active_task: T007
+active_task: T008
 
 tasks:
   - id: T001
@@ -1096,7 +1096,7 @@ tasks:
   - id: T007
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: >-
       Close the TWO DOCUMENTATION DEFECTS the final audit found. No product code, no emitters,
@@ -1136,6 +1136,98 @@ tasks:
       - "pnpm-lock.yaml, pnpm-workspace.yaml or website/ is touched."
       - "NEVER pkill -f on a broad pattern. Kill by recorded PID only, and only PIDs you started. A port held by a foreign process is RECORD-IT-AND-USE-ANOTHER-PORT."
       - "Verification fails twice for the same reason."
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      summary: "BOTH DOCUMENTATION DEFECTS CLOSED. goal.md now names the measured method - SORT THE WHOLE shasum OUTPUT LINES - with a RUNNABLE fenced block, and both wrong readings attributed to the cards they fired on; expected values and 116 files unchanged. T006's note gains section 8.1, a SIX-ROW launch table in T003 section 5's shape, EVERY COMMAND RE-RUN BY THIS CARD at ports 5331-5336 and read off the wire, with angular's 404 recorded as an absence against a 200 /todomvc CONTROL. Product tree exit 0; fingerprints identical at both ends."
+      THE_THREE_READINGS_REPRODUCED_NOT_COPIED: "lines-sorted f936e169d45d39afba81d2964b29cf803516b2c0e89501cc41787c7a7336cdfa (stable across three runs); digest-column feddd40b2b2a0e4bd92a5f5fc6cdb463eed747e4c2e0fc001108febf88cf0cd6; paths-sorted-lines b1dd182a133448aa9b7a285ad3dd08a9f493d749fd8ce9a5ae6e98d8463ee464."
+      THREE_ERRORS_IN_THE_PMs_BRIEF_ALL_MEASURED: "(1) 'SORT THE PATHS -> b1dd182a' NAMES TWO DIFFERENT OPERATIONS. Hashing the sorted PATH LIST ITSELF gives ff2304873e4987ce and READS NO FILE CONTENT AT ALL; only 'sort by path, hash the shasum LINES in that order' gives b1dd182a. The audit listed these as two rows carrying one value; measured, they differ. goal.md now spells the distinction out so a successor cannot invent a THIRD wrong reading. (2) THE NO-SORT VALUE 559a8b8e IS NOT REPRODUCIBLE BY CONSTRUCTION - two consecutive runs gave 599f32e120 and 1314b5fb7c. Cause ISOLATED by diffing the intermediates: find's traversal order alone, both runs producing the SAME 116 digests in different order. goal.md now instructs successors NOT to record an expected value for that reading. (3) The brief's two angular facts reproduced verbatim, BUT ITS IMPLIED WORKAROUND IS UNNECESSARY - `pnpm start --port 5336` WORKS without the `--`."
+      A_NEW_FINDING_NEITHER_THE_BRIEF_NOR_THE_AUDIT_HAD: "QWIK CITY CANONICALISES TO A TRAILING SLASH. /codex answers 301 -> /codex/; only /codex/ returns 200. T003 section 5's qwik row records .../todomvc-advanced WITHOUT the slash, which ALSO 301s - A BROWSER FOLLOWS IT SILENTLY, so driving the lane never surfaced it. Recorded as a correction to T003 inside T006's note, since T003's note is outside allowed_files."
+      THE_FOREIGN_PORT_HELD_AGAIN_AND_WAS_ROUTED_AROUND: "qwik's OWN pnpm dev CANNOT RUN HERE: it is pinned to `vite --port 5175 --strictPort` and 5175 is still held by foreign node PID 64413 - THE SAME PID T003 RECORDED. 'Error: Port 5175 is already in use'. THE SCRIPT HAS NOT DRIFTED, THE MACHINE IS OCCUPIED. Recorded and routed around, NEVER killed; nothing in demos/qwik was touched."
+      changed_files:
+        - docs/goals/frameless-app-suite-v1/goal.md
+        - docs/goals/frameless-app-suite-v1/notes/T006-codex-clone.md
+      commands:
+        - cmd: "fingerprint START, all five readings measured by this card"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169, 116 files. Plus a SIXTH the brief did not have: sorted-path-list-only = ff230487"
+        - cmd: "PORT=5331 pnpm dev in demos/react-official -> curl /codex"
+          status: pass
+          note: "200, 4234 B, data-app=\"codex-clone\" + /shadcn-theme/codex.css. PIDs 18092/18170 stopped by record"
+        - cmd: "PORT=5332 pnpm dev in demos/solid-official -> curl /codex"
+          status: pass
+          note: "200, 4597 B, marker present. PIDs 18298/18373 stopped"
+        - cmd: "npx vite --port 5333 --strictPort in demos/qwik -> curl /codex/"
+          status: pass
+          note: "/codex = 301 location:/codex/ ; /codex/ = 200, 55250 B, marker present. PIDs 18711/18795 stopped"
+        - cmd: "npx vite dev --port 5334 --strictPort in demos/svelte-official -> curl /codex"
+          status: pass
+          note: "200, 6990 B, marker present. PIDs 18990/19074 stopped"
+        - cmd: "PORT=5335 pnpm dev in demos/vue-official -> curl /codex"
+          status: pass
+          note: "200, 8248 B, marker present. PIDs 18424/18499 stopped"
+        - cmd: "pnpm start --port 5336 in demos/angular-official -> curl /codex"
+          status: pass
+          note: "SERVER RUNS - the brief's npx ng serve workaround is UNNECESSARY. /codex 404, /codex/ 404, CONTROL /todomvc 200. No codex route, no generated/S12.ts. PIDs 19286/19361 stopped"
+        - cmd: "pnpm test"
+          status: pass
+          note: "EXACTLY 1 failure - package-inventory ARM B peer-suffix, foreign / 1281 passed"
+        - cmd: "pnpm check"
+          status: pass
+          note: "267 'error TS' lines. Did NOT rise"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "PASS - 6 demos x 9 scenarios, all observations equal"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 479 files"
+        - cmd: "pnpm check:citations"
+          status: pass
+          note: "clean - 547 swept. Re-run after the final edit"
+        - cmd: "git diff --exit-code -- packages/ demos/ scripts/"
+          status: pass
+          note: "exit 0 BEFORE AND AFTER all six launches - the copy-emitted/copy-theme steps rewrote byte-identical files"
+        - cmd: "fingerprint FINISH by the CORRECTED method"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169, 116 files - IDENTICAL to START"
+      deviations:
+        - "MEASURED A SIXTH READING THE BRIEF DID NOT HAVE - see error (1) above."
+        - "DID NOT record 559a8b8e for the unsorted method; it is unreproducible by construction and goal.md now says so rather than naming a value."
+        - "RESTRUCTURED the goal.md bullet (expected values, then a fenced RUNNABLE block, then the wrong readings) rather than swapping one sentence. A one-line swap would have left the method unrunnable without reconstruction - THE SAME CLASS OF DEFECT BEING FIXED."
+        - "REMOVED the refuted phrase entirely instead of quoting it, because quoting it left a LIVE GREP HIT inside the charter. It is preserved verbatim in notes/T999-final-audit.md and on T007's card, and goal.md points there."
+        - "PLACED the table as section 8.1 rather than a new top-level section, to avoid renumbering T006's sections 0-9 and invalidating cross-references."
+        - "USED MY OWN PORTS 5331-5336, NOT T006's 5321-5325, and said so in the note. Writing down commands at ports I did not use would have been RECONSTRUCTION FROM MEMORY - the exact thing the reject condition forbids. The note states the provenance split: T006 ran the sites, T007 re-ran the commands."
+        - "VERIFIED EACH LANE BY HTTP STATUS PLUS THE EMITTED ROOT MARKER AND THE codex.css LINK, NOT by re-driving the ten behavioural axes. The oracle clause at issue is 'a documented and ACTUALLY-RUN launch command per lane'; the behavioural record already exists in T006. STATED SO NOBODY READS SECTION 8.1 AS A SECOND BROWSER DRIVE."
+        - "RECORDED A CORRECTION TO T003 SECTION 5 (qwik's trailing-slash 301) INSIDE T006'S NOTE, since T003's note is outside allowed_files."
+      remaining_blockers: []
+      stopped_because: null
+  - id: T008
+    type: judge
+    assignee: Judge
+    status: active
+    reasoning_hint: high
+    objective: >-
+      FINAL RE-AUDIT. T999 ruled not_complete on exactly TWO documentation defects and named
+      T007 as the remedy. Verify BOTH are closed and rule on completion. NOTHING ELSE ON THIS
+      BOARD IS REOPENED - T999 certified oracle parts 1 and 3 in full, and part 2 except one
+      named clause, BY DERIVATION.
+    scope:
+      - "DEFECT 1: goal.md must no longer instruct a method that cannot produce its own expected value. RUN the charter's own command block yourself and confirm it yields f936e169 / f326d314 / aeb7edc1 and 116 files."
+      - "DEFECT 2: notes/T006-codex-clone.md must carry a per-lane launch table naming all SIX lanes, with angular's absence recorded as a 404 against a working control - not omitted."
+      - "RE-RUN the five part-3 commands at HEAD: pnpm test (exactly 1, foreign), pnpm check (not above 267), pnpm e2e (6 x 9), pnpm lint, pnpm check:citations."
+      - "Confirm the product tree did not move: git diff --exit-code -- packages/ demos/ scripts/"
+    constraints:
+      - "READ-ONLY. Your only write is your note."
+      - "DO NOT re-litigate what T999 already certified by derivation. Verify the DELTA."
+      - "T007 reported THREE errors in ITS dispatch and one NEW finding (qwik 301s /codex to /codex/). Check that the note records them rather than quietly dropping them."
+      - "T004 stays BLOCKED. Its receipt is evidence, not an open obligation - T999 already ruled that compatible with completion."
+      - "Assume this brief contains at least one error and find it. EVERY card on this board corrected its dispatch, including T999, which found a reject condition in the PM's brief that the oracle does not impose."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "the two defects, each verified or not, with the command you ran"
+      - "next task if not complete"
     receipt: null
 
   - id: T999
