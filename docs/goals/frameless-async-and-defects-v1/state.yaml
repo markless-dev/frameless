@@ -11,7 +11,28 @@ goal:
     Diagnose the two structural defects and NAME their causes; repair the async axis across
     the lanes that can express it, recording a lane limit for any that cannot; then land S8
     as the corpus scenario that PINS the repair behaviourally - and stop.
-  status: active
+  status: done
+  CLOSED_COMPLETE_2026_07_29: >-
+    T999 ruled complete, full_outcome_complete TRUE, with all three oracle parts REPRODUCED
+    INDEPENDENTLY at f290b12 rather than read off receipts. 12.2 closed in react - the only
+    lane it reaches - at BOTH the unit and served-payload level; S8 in the corpus at 9
+    scenarios / 54 red mutants / e2e 6x9 all equal; check held at exactly 267 and S8
+    contributes ZERO of them; S7 named and untouched; P1 ruled.
+  THE_AUDITS_STRONGEST_EVIDENCE_WAS_SOMETHING_NOBODY_POINTED_IT_AT: >-
+    At db6e275, BEFORE the repair, the same test file ALREADY contained a calibration arm
+    asserting 0|pending / 2|done / 3|done over a hand-written live handler. The diff moves
+    the emitted arm to those numbers and NEVER TOUCHES THE CALIBRATION LINES. The target moved
+    to numbers A FIXED INDEPENDENT CONTROL WAS ALREADY REPORTING - the opposite shape to a
+    goalpost move, and why "the corpus changed so the test changed" was not sufficient grounds
+    for suspicion here.
+  OWED_TO_THE_SUCCESSOR_named_by_the_audit: >-
+    (1) A RED MUTATION ROW for the react (suspension segment, setter) boundary - two calls to
+    one setter inside a single segment. The code enforces it; NOTHING PINS IT, and by this
+    board's own standard an unmeasured boundary is a claim. (2) S7's IR cell-type field, which
+    needs resolving handler-local bindings out of records.events. (3) P1 TS7017, owned by the
+    emitted artifact. (4) The 12.2 v-limit: a post-await read of a cell OTHER than the one
+    being written. (5) Entry 14's residue: notifyAfterSuspension does not descend into nested
+    functions. (6) pnpm check at its inherited 267.
   oracle:
     signal: >-
       THREE PARTS, ALL REQUIRED. (1) DEFECT REPAIR: DEFECTS.md 12.2 is CLOSED on a WITNESSED
@@ -91,7 +112,7 @@ visual_board:
     The owner has run eighteen-plus goals in this repo against the file board alone,
     including two that closed this session. Recorded as an explicit choice, not an omission.
 
-active_task: T999
+active_task: null
 
 tasks:
   - id: T001
@@ -466,7 +487,7 @@ tasks:
           note: "clean over 4 documents, 17 watched, 516 swept"
         - cmd: "owner-path fingerprints at start AND finish"
           status: pass
-          note: "f326d314 / aeb7edc1 / f936e169 identical, website/ 116 files. METHOD REPRODUCED not asserted - the naive xargs variant gives b1dd182a, which is exactly what the prior phase flagged."
+          note: "f326d314 / aeb7edc1 / f936e169 identical, website/ 116 files. METHOD REPRODUCED not asserted - THE DISCRIMINATOR IS WHERE THE SORT HAPPENS, NOT exec-vs-xargs - three boards described this wrongly. MEASURED: -exec and `xargs -0` BOTH give f936e169; b1dd182a comes from sorting the FILE PATHS before hashing and not re-sorting the digests; and with NO sort the value is NOT EVEN DETERMINISTIC, which is exactly what the prior phase flagged."
         - cmd: "git rev-parse HEAD"
           status: pass
           note: "61a6779 at start AND finish. NOTHING COMMITTED."
@@ -495,7 +516,7 @@ tasks:
   - id: T999
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Final audit: certify all three oracle parts, or refuse."
     constraints:
@@ -510,8 +531,34 @@ tasks:
       - "full_outcome_complete: true | false"
       - "The per-lane before/after behavioural table"
       - "next task if not complete"
-    receipt: null
-
+    receipt:
+      result: done
+      decision: complete
+      full_outcome_complete: true
+      harness: claude-code
+      rationale: "ALL THREE ORACLE PARTS REPRODUCED INDEPENDENTLY at f290b12, not read off receipts: check exactly 267 exit 6, test 1248/1 (foreign ARM B), lint 0/0, citations clean, e2e 6x9 all equal, and 54 mutants every one RED every one restored. 12.2's before/after is named at TWO LEVELS in react, the only lane it reaches. S7 named and UNTOUCHED - zero diff on compiler src, fixture, golden and all six generated/S7. P1 ruled, still firing twice inside the 267. The whole-goal generated diff is EXACTLY SIX NEW S8 FILES."
+      summary: "Oracle fields quoted verbatim. Three gate edits and every test edit ruled FORCED OR STRENGTHENING, not goalpost moves. DEFECTS.md entry 14 legitimately closed in-task. The mutation dead-window BOUNDED: no prior board's completion rested on it. Found the brief's error and an uncorrected refuted figure still standing in goal.md."
+      THE_STRONGEST_EVIDENCE_WAS_SOMETHING_NOBODY_POINTED_IT_AT: "At db6e275, BEFORE the repair, the same test file ALREADY contained a calibration arm asserting 0|pending / 2|done / 3|done over a hand-written live handler. The diff to 61a6779 moves the emitted arm to those numbers and NEVER TOUCHES THE CALIBRATION LINES. THE TARGET MOVED TO NUMBERS A FIXED INDEPENDENT CONTROL WAS ALREADY REPORTING. That is the opposite shape to a goalpost move, and it is why the audit declined to treat 'the corpus changed so the test changed' as sufficient grounds for suspicion."
+      the_before_after_rows:
+        react_unit: "duringSuspension 0|idle -> 0|pending | afterOverlap 1|done -> 2|done | afterSequential 2|done -> 3|done | rendered ['0|idle','0|idle','1|done','2|done'] -> ['0|idle','0|pending','2|done','3|done']"
+        react_served: "the s8 mutant restores the pre-T003 lowering VERBATIM; RED verbatim: expected [data-async=\"phase\"] to have text \"pending\", but it was \"done\""
+        angular_entry_14: "RED: expected [data-async=\"ticks\"] to have text \"3\", but it was \"1\"; with one extra click it read 3 then failed at \"4 but it was 3\" - BOTH CONTINUATIONS RAN, STATE CORRECT, DOM STALE. markForCheck census: S8.ts=2, ZERO in all eleven other angular artifacts."
+        six_lane_S8_row: "IDENTICAL in all six: server-rendered ticks=0 phase=idle cancels=0 | one run over a resolved gate ticks=1 done | WHILE TWO DISPATCHES ARE SUSPENDED ticks=1 phase=pending | after release the overlapping pair left ticks=3 done | a fourth run from the newest render ticks=4 done | after cancel-run 1 document request and cancels=1"
+      three_gate_edits_ruled_individually: "REACT re-keying is SEMANTICALLY IDENTITY on every synchronous handler - no await means exactly one segment - and gate.test.ts is BYTE-UNTOUCHED with all four synchronous rows still firing; the shipped message was updated rather than left describing a check that no longer exists. VUE's figures are DERIVED and were re-counted independently (S8 declares exactly two props, so 19->21 and 6->7, and the two-way host count correctly did NOT move); the calibration plant moved to S10 because a real S8 now collides with it - FOUND BY THE ROW'S OWN PRECONDITION. ANGULAR's widening PREVENTED A SILENT VACUITY: the old '): void {' pattern would have skipped S8's Promise-returning methods entirely, and the arm went one-sided -> two-sided."
+      entry_14_closed_in_task_RULED_LEGITIMATE: "It tripped no stop_if - the relevant one is 'the async repair does not hold under S8', and T003's react repair DID hold; the Angular fault is a DISTINCT MECHANISM (zoneless change-detection notification, not stale closure or dropped write) and was correctly filed as its own entry rather than folded into 12.2. Inside allowed_files, explicitly within the tranche, and T002's own missing_evidence had PRE-ASSIGNED browser measurement to T004. The card's defining item is unreachable without it."
+      the_mid_run_oracle_correction_ruled_legitimate: "It landed BEFORE any repair ran. It removed a clause unsatisfiable in the direction of demanding a witnessed RED in five lanes THAT WERE NEVER BROKEN - you cannot witness a red where there is no defect. The corrected final_proof explicitly PRESERVES THE FORCE. DECISIVE TEST: the correction DID NOT SHRINK THE WORK - T002 then ran the live six-lane probe T001 had not, and T004's served payload found and closed a REAL SIXTH-LANE DEFECT. A goalpost move would have used 'react only' to AVOID looking at the other five."
+      the_mutation_dead_window_BOUNDED: "extension:'jsx' went stale at 974df3a and stayed stale until f290b12 - 22 commits in which mutate:corpus threw ENOENT before its first verdict in three lanes. THE IMPLICATION IS NARROWER THAN FEARED: the only board active in that window is frameless-emitter-capability-v1, whose sole mutate:corpus mention records it as UNMEASURED, and the 48/48 claims PREDATE the rename when 'jsx' was correct. NO PRIOR BOARD'S COMPLETION RESTED ON A MUTATION CLAIM TAKEN INSIDE THE DEAD WINDOW. Record it; nothing to retract."
+      two_errors_it_found_in_the_PMs_own_material: "(1) THE FINGERPRINT METHOD DESCRIPTION IS WRONG ON THREE BOARDS. All three say 'the naive xargs variant gives b1dd182a'. FALSE - PM CONFIRMED: -exec and `xargs -0` BOTH give f936e169, byte-identical. b1dd182a comes from sorting the FILE PATHS before hashing and not re-sorting the digests. THE DISCRIMINATOR IS WHERE THE SORT HAPPENS. And the no-sort variant is NOT EVEN DETERMINISTIC - the audit measured 559a8b8e, the PM measured 932d01d3. (2) goal.md WAS A FIFTH SITE AND WAS MISSED. T001 corrected oracle.signal, final_proof, T999's reject condition and intake, and reported 'all four sites corrected'. THE EDITABLE CHARTER STILL ASSERTED THE REFUTED FIGURE AS PRESENT FACT - which is exactly the transmission path that put it into this board. Both corrected."
+      missing_evidence:
+        - "THE NEW REACT GATE KEYING HAS NO RED MUTANT. gate.test.ts is untouched, so nothing pins 'two calls to the same setter INSIDE one suspension segment still violates'. The code enforces it, but BY THIS BOARD'S OWN STANDARD - T003 added a structural arm because 'an unmeasured v-limit is a claim' - that arm is OWED."
+        - "'The react s8 mutant is red at three of the scenario's five readings' is ASSERTED, NOT WITNESSED: the harness stops at the first failing assertion. RED is proven; three-of-five is not."
+        - "The angular gate mutation anchor swap (inject -> NgZone, because inject entering the inventory KILLED the mutant) is disclosed ONLY in a code comment - in neither T004's receipt deviations nor its note. The swap is correct; the disclosure gap is the defect."
+        - "T004's receipt cites 'pnpm mutate:corpus (54 cells)', which LITERALLY FAILS - the harness refuses to guess a scope. The claim is true; the citation is not runnable."
+        - "ng build, parse-emitted and emitted-typecheck were not re-run as instruments blind to entry 14; only that pnpm check is silent on S8 and the served payload is green."
+      required_board_updates:
+        - "goal.md corrected - the fifth site, with the refutation recorded rather than deleted."
+        - "Fingerprint method corrected: the discriminator is WHERE THE SORT HAPPENS, and no-sort is nondeterministic."
+        - "Owed to the successor: a red mutation row for the react (suspension segment, setter) boundary; S7's IR cell-type field; P1's TS7017; the 12.2 v-limit; entry 14's nested-function residue; and check at 267."
 checks:
   dirty_fingerprint: >-
     2026-07-29 at prep. Clean except the OWNER'S three in-flight paths - pnpm-lock.yaml,

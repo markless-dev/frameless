@@ -12,9 +12,17 @@ Three measured wrong behaviours are repaired, and the async repair is **pinned b
 scenario rather than by unit tests**:
 
 1. **`DEFECTS.md` 12.2 — react post-await staleness.** Two clicks produce one increment,
-   plus a dropped pre-await write. **Four of six emitters are broken on this axis, two of
-   them silently.** Angular's emitter contained the string `async` zero times when this was
-   found. This has never been on any board.
+   plus a dropped pre-await write. **REACT-ONLY** — measured by T001 and confirmed by T002's
+   live six-lane probe. ~~Four of six emitters are broken, two of them silently; Angular's
+   emitter contained `async` zero times~~ — **both figures were FALSE and are struck.**
+   `toConstSsa` appears 4× in the react emitter and **0×** in all five others, `DEFECTS.md`
+   says *"React alone reads a value fixed at handler-creation time"*, and the "four of six"
+   figure **inverted** T043's headline *"emits **correctly** in four of six lanes"*. Angular
+   carries an `isAsync` flag and emits the modifier today.
+   **This was a FIFTH site.** T001 corrected `oracle.signal`, `final_proof`, T999's reject
+   condition and `intake` — and reported "all four sites corrected". The charter was missed,
+   and the final audit caught it. A refuted figure left in the editable charter is exactly
+   the transmission path that put it into this board in the first place. This has never been on any board.
 2. **`generated/S7` fails identically in react and solid at the same site** — react
    `TS2345`, solid `TS2769`, both on a cell initialised `null` and later set to `"on"`. Two
    independent emitters producing the same unsound shape points at **the IR or the
