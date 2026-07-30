@@ -100,7 +100,7 @@ visual_board:
     The owner has run twenty-plus goals in this repo against the file board alone. Recorded as
     an explicit choice, not an omission.
 
-active_task: T002
+active_task: T003
 
 tasks:
   - id: T001
@@ -213,7 +213,7 @@ tasks:
   - id: T002
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       Rule what the door supports, and spec TodoMVC Advanced against it - including its NAMED
@@ -229,33 +229,208 @@ tasks:
       - "Do NOT re-litigate T001's measurements - rule on what they MEAN."
       - "FINDING A REFERENCE DESIGN NEEDS BROWSING. That is task work and it is in scope for you as a Judge input, but do not generate assets."
       - "A lane limit is a legitimate outcome; an unargued one is not."
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      harness: claude-code
+      note: notes/T002-ruling.md
+      summary: "TodoMVC Advanced ships in FIVE lanes, not six, and the reason is NOT the one the dispatch named. Codex clone is REACHABLE-NARROWED, not out of reach. The narrowing from 'loads when it appears' to 'when the user asks' is ACCEPTED and does NOT gut the app - both async axes are user-initiated by nature, so an explicit initial-load button is ruled OUT and the list is seeded in-component as S10 already does. Named visual reference: todomvc-app-css@2.4.3 vendored verbatim PLUS the shipped /todomvc page at HEAD as rendered ground truth; new pixels go in a third stylesheet linked only on the new route."
+      THE_LOAD_BEARING_CORRECTION_TO_THE_PMs_BRIEF: "'Streaming and optimistic write-then-revert both emit in all six lanes' is TRUE OF THE LOWERING AND FALSE OF THE SOURCE. probes/async-door/sources/P8-promise-prop-streaming.tsrx says so in its own header: 'what is being measured is whether the SECOND and THIRD post-await writes are lowered and land, NOT whether the source can produce distinct chunks.' Ask instead for a NEW PROMISE PER USER ACTION and the six-lane intersection is EMPTY. QWIK cannot consume a callback prop's return value ANYWHERE: lowerStatement accepts a callback-bearing statement on exactly one path, an ExpressionStatement whose expression IS the CallExpression, so `const next = await load()` throws AND the obvious workaround `value = await load()` throws too, being an AssignmentExpression. THE ASSIGNMENT-FORM WORKAROUND DOES NOT EXIST. ANGULAR cannot NAME a global to make its own promise. So the binding constraint is not 'fetch-on-render becomes fetch-on-ask' - IT IS ONE PROMISE PER RENDER, OR LOSE A LANE."
+      rationale: "Ruled on meaning, not measurement. Read the qwik and angular emitters directly rather than inheriting T001's summary, and the two refusals close on each other: no six-lane shape produces a fresh promise per action. That reframes the narrowing and makes angular an UNBUILT LANE WITH A RECORDED REFUSAL - an outcome this board's oracle explicitly permits. T003 is the largest reversible slice: one authored source, six ATTEMPTED lanes, the inventory suites closed up front so it cannot stop where its predecessor stopped, and the styling reference named before the build as goal.md demands."
+      THREE_SUB_RULINGS: "(1) The narrowing does NOT gut the app and an explicit initial-load button is ruled OUT - both async axes are user-initiated by nature, and S10 already seeds its list in-component for an unrelated measured reason (IR-8 has no TSArrayType lowering). (2) The Codex clone is REACHABLE-NARROWED. The card's multi-component blocker is WEAKER THAN STATED: demos/composition-kit/src/page.tsrx composes four .tsrx modules today, so the limit is one component per MODULE, not per app. What actually binds is streaming's source (five lanes) and the unspellable keyboard. (3) A VARIABLE-LENGTH stream is unauthorable in EVERY lane - a write inside a loop body is DEFECTS.md 8.1 - so a fixed unrolled chunk count is the only shape."
+      evidence:
+        - "packages/frameworks/qwik/src/emitter/index.ts lowerStatement: a callback-prop call is accepted ONLY as an ExpressionStatement whose expression IS the CallExpression, so both `const x = await load()` and `x = await load()` hit 'Qwik v1 callbacks must be observational expression statements in ${event.id}'. Same function: 'Qwik v1 rejects synchronous actions after an awaited callback'."
+        - "packages/frameworks/angular/src/emitter/index.ts: every Identifier in a transplanted body is resolved against scope + declared members or the emitter throws. T001 measured six globals refusing on the FULLY SYNCHRONOUS PC control."
+        - "probes/async-door/sources/P8-promise-prop-streaming.tsrx header, verbatim - the source of the load-bearing correction"
+        - "demos/composition-kit/src/page.tsrx imports Frame/Dashboard/Status/Search across FOUR .tsrx module boundaries - multi-MODULE composition is shipped and e2e-wired"
+        - "demos/shared/todomvc-app-css/README.md: index.css is todomvc-app-css@2.4.3 verbatim with MIT LICENSE and the exact tarball URL; frameless-supplement.css is this repo's own and the only editable file there"
+        - "docs/goals/frameless-real-apps-v1/notes/T007-todomvc-style.md sections 2-3: five byte-identical PNGs; a 3614-pixel heading divergence INVISIBLE to every computed-style check; and a `margin: 0` making all six lanes identical AND ALL SIX WRONG"
+        - "packages/frameworks/react/scripts/regenerate.ts: the ordinal slot is LOAD-BEARING - ten-plus per-lane suites derive their generated/ inventory from /^s(\\d+)-[\\w-]+\\.json$/ and assert it EXACTLY"
+        - "packages/frameworks/vue/src/gate/index.ts carries a shipped refusal asserting a LIVE census over 'the ten-scenario corpus ... TWELVE shipped instances ... applies to THREE'"
+        - "git ls-files: demos/*/public|static/todomvc-app-css/*.css are TRACKED, not gitignored - a third stylesheet adds six tracked derived copies"
+      missing_evidence:
+        - "UNMEASURED, and T003 must measure it ON THE REAL MODULE: whether angular's global ban actually fires on the authored TodoMVC Advanced source, or only on the probe shape. T001 measured PA/PC, NOT this app."
+        - "UNMEASURED: whether a promise created in a handler survives each lane's own output verification for a module of this size. Angular verifies nothing at all, so its EMITS means only 'did not throw'."
+        - "NOT BROWSED: this harness gave Read and Bash only, with NO web tool, though the dispatch said browsing was in scope for the Judge. The visual reference was settled from VENDORED UPSTREAM BYTES WITH RECORDED PROVENANCE instead - stronger evidence than a screenshot, but not what was asked for."
+        - "The pnpm check / test / e2e baselines are inherited from T001's receipt at HEAD, not re-run - a Judge re-run would have changed nothing and the Judge is read-only."
+      remaining_blockers:
+        - "ANGULAR IS EXPECTED TO GO UNBUILT ON BOTH APPS, for a reason that is NOT async: the global-identifier ban in transplanted bodies. It is NOT filed in docs/DEFECTS.md and has NO ENTRY NUMBER. Filing it belongs on its own card, as T006 filed entries 15 and 8.1."
+        - "FOR T004: a variable-length stream is unauthorable in every lane (DEFECTS.md 8.1). A fixed unrolled chunk count is the only shape."
+        - "FOR T004: NO KEYBOARD INTERACTION AT ALL - no Enter-to-send, no shortcuts, no Escape, no Tab pane navigation (DEFECTS.md 15, still OPEN). Angular additionally HAS NO CLOCK, so message timestamps must arrive as props."
+        - "T003 is the size of THREE cards on the prior board. The inventory surface is enumerated in section 5 of the note so it does not stop where its predecessor stopped, but THE STYLING PASS NEEDS ITS OWN BROWSER BUDGET - recorded as T005."
+      board_updates_applied_by_pm:
+        - "T003 rewritten with the ruled shape, the named visual reference recorded BEFORE the build, 50 allowed_files in glob form, 10 verify items and 12 stop_if items."
+        - "T005 CREATED as the separate styling card the ruling required (T003b was renamed T005 - the checker rejects the T###b id shape)."
+        - "T004's blocker block corrected: the multi-component claim is true but NOT limiting, and streaming is five-lane not six."
+        - "goal.md: the stale 'unmeasured everywhere' blocker replaced, the multi-component blocker corrected, a Rulings section added, and the completion proof clarified that 'six lanes' means SIX ATTEMPTED, not six shipped - which section 2 already granted."
+      verification_attempts: 1
+      stopped_because: null
+  - id: T003
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    sequence: "T003 author+emit+browse -> T005 styling -> T004 codex clone"
+    objective: >-
+      Ship TodoMVC ADVANCED as the ELEVENTH corpus scenario: ONE authored source at
+      packages/compiler/test/fixtures/s11-todomvc-advanced.tsrx, emitted to all six lanes as
+      S11.*, browsable in six sites. EXPECT FIVE LANES TO SHIP; angular is expected to refuse.
+    THE_RULED_SHAPE_FROM_T002: >-
+      SEED THE LIST IN THE COMPONENT exactly as S10 does. NO initial-load button - T002 ruled
+      it OUT because both async axes are user-initiated by nature, so a button would add a
+      control the real app does not have and demonstrate nothing extra. The async source is
+      `new Promise` + `setTimeout` created INSIDE the handler (the PA shape), which gives a
+      genuine fresh delay per search term and a genuine per-action optimistic revert.
+      AXES: CRUD + in-memory state (six lanes); local filtering via a computed plus S10's
+      `hidden` binding (six lanes); remote query with artificial delay (FIVE); optimistic
+      write-then-revert with a per-row pending flag (FIVE).
+    WHY_FIVE_AND_NOT_SIX: >-
+      T002 CORRECTED THE BOARD'S INHERITED CLAIM. "Streaming and optimistic updates emit in
+      all six lanes" is true of the LOWERING and false of the SOURCE. P8's own header says it
+      measured "whether the SECOND and THIRD post-await writes are lowered and land, NOT
+      whether the source can produce distinct chunks." Ask for a NEW PROMISE PER USER ACTION
+      and the six-lane intersection is EMPTY: qwik cannot consume a callback prop's return
+      value anywhere (lowerStatement accepts a callback-bearing statement ONLY as an
+      ExpressionStatement whose expression IS the CallExpression, so both `const x = await
+      load()` and `x = await load()` throw), and angular cannot NAME a global to make its own
+      promise. The binding constraint is not fetch-on-render becoming fetch-on-ask; it is ONE
+      PROMISE PER RENDER, OR LOSE A LANE.
+    THE_NAMED_VISUAL_REFERENCE_RECORDED_BEFORE_THE_BUILD: >-
+      todomvc-app-css@2.4.3, vendored VERBATIM at demos/shared/todomvc-app-css/index.css with
+      its MIT LICENSE and the exact tarball URL in README.md, PLUS THE SHIPPED /todomvc PAGE
+      AT HEAD as rendered ground truth. New controls get a THIRD stylesheet,
+      demos/shared/todomvc-app-css/frameless-advanced.css, linked ONLY on the advanced route.
+      index.css and LICENSE are UPSTREAM BYTES and are not editable.
+    CONSTRAINTS_MEASURED_NOT_GUESSED: >-
+      Every conditional is an EXPRESSION. Every state write is top-level and unconditional -
+      DEFECTS.md 8.1, react's if-nested write is NEITHER LOWERED NOR REFUSED. NO for/while
+      around an await, same reason. Any callback-prop call is the LAST statement in its
+      handler - qwik emits "Qwik v1 rejects synchronous actions after an awaited callback".
+      The ordinal slot is LOAD-BEARING: ten-plus per-lane suites derive their generated/
+      inventory from /^s(\d+)-[\w-]+\.json$/ and assert it EXACTLY, so closing those suites
+      is part of THIS card and not a follow-up.
+    ATTEMPT_ANGULAR_ANYWAY: >-
+      Angular is expected to refuse via its global-identifier ban - every Identifier in a
+      transplanted body must resolve to scope or a declared member, and Promise/setTimeout/
+      fetch/Date/JSON are all globals. RECORD ITS VERBATIM MESSAGE FROM THE REAL MODULE. T001
+      measured the PA/PC probes, NOT this app; whether the ban fires here is UNMEASURED.
+      A missing lane WITH a verbatim refusal is a legitimate outcome under this board's oracle.
+    full_ruling: "docs/goals/frameless-app-suite-v1/notes/T002-ruling.md"
+    allowed_files:
+      - "packages/compiler/test/fixtures/s11-todomvc-advanced.tsrx"
+      - "packages/compiler/test/goldens/s11-todomvc-advanced.json"
+      - "packages/compiler/test/enriched-ir.test.ts"
+      - "packages/frameworks/react/scripts/regenerate.ts"
+      - "packages/frameworks/solid/scripts/regenerate.ts"
+      - "packages/frameworks/qwik/scripts/regenerate.ts"
+      - "packages/frameworks/svelte/scripts/regenerate.ts"
+      - "packages/frameworks/vue/scripts/regenerate.ts"
+      - "packages/frameworks/angular/scripts/regenerate.ts"
+      - "packages/frameworks/react/generated/**"
+      - "packages/frameworks/solid/generated/**"
+      - "packages/frameworks/qwik/generated/**"
+      - "packages/frameworks/svelte/generated/**"
+      - "packages/frameworks/vue/generated/**"
+      - "packages/frameworks/angular/generated/**"
+      - "packages/frameworks/react/test/**"
+      - "packages/frameworks/solid/test/**"
+      - "packages/frameworks/qwik/test/**"
+      - "packages/frameworks/svelte/test/**"
+      - "packages/frameworks/vue/test/**"
+      - "packages/frameworks/angular/test/**"
+      - "packages/frameworks/vue/src/gate/index.ts"
+      - "demos/react-official/src/emitted/**"
+      - "demos/solid-official/src/emitted/**"
+      - "demos/qwik/src/emitted/**"
+      - "demos/svelte-official/src/lib/emitted/**"
+      - "demos/vue-official/src/emitted/**"
+      - "demos/angular-official/src/emitted/**"
+      - "demos/react-official/package.json"
+      - "demos/solid-official/package.json"
+      - "demos/qwik/package.json"
+      - "demos/svelte-official/package.json"
+      - "demos/vue-official/package.json"
+      - "demos/angular-official/package.json"
+      - "demos/react-official/src/App.jsx"
+      - "demos/solid-official/src/App.jsx"
+      - "demos/vue-official/src/App.vue"
+      - "demos/qwik/src/routes/**"
+      - "demos/svelte-official/src/routes/**"
+      - "demos/angular-official/src/app/**"
+      - "demos/shared/copy-todomvc-css.mjs"
+      - "demos/shared/todomvc-app-css/frameless-advanced.css"
+      - "demos/shared/todomvc-app-css/README.md"
+      - "demos/react-official/public/todomvc-app-css/**"
+      - "demos/solid-official/public/todomvc-app-css/**"
+      - "demos/qwik/public/todomvc-app-css/**"
+      - "demos/svelte-official/static/todomvc-app-css/**"
+      - "demos/vue-official/public/todomvc-app-css/**"
+      - "demos/angular-official/public/todomvc-app-css/**"
+      - "docs/goals/frameless-app-suite-v1/notes/T003-todomvc-advanced.md"
+    verify:
+      - "PER LANE: EMITS with the emitted shape, or REFUSES with the VERBATIM message READ OFF THE REAL MODULE - not inherited from the probe"
+      - "DERIVATION PROOF: delete every S11 artifact (6 generated, 6 demo copies, 6 stylesheet copies), re-run each lane's regenerate + copy-emitted + copy-todomvc-css, shasum, confirm BYTE-IDENTICAL and that each demo copy's digest EQUALS its lane's generated digest"
+      - "git diff --exit-code -- packages/frameworks/react/generated/S10.tsx packages/compiler/test/fixtures/s10-todomvc.tsrx demos/shared/todomvc-app-css/index.css demos/shared/todomvc-app-css/LICENSE   # S10 and the upstream bytes MUST NOT MOVE"
+      - "pnpm test   # EXACTLY ONE failure, the foreign package-inventory ARM B. Two is a stop."
+      - "pnpm check  # count 'error TS' lines; MUST NOT RISE above 267"
+      - "pnpm e2e    # MUST stay 6 x 9. scripts/e2e.mjs is NOT in scope; S11 does not join the three-way contract."
+      - "pnpm lint and pnpm check:citations"
+      - "SIX SITES LAUNCHED AND DRIVEN in a real browser, launch command RECORDED AND ACTUALLY RUN; per-lane observations for add/toggle/destroy/filter/search-local/search-remote/optimistic-revert, and ZERO console errors"
+      - "VUE GATE CENSUS re-derived with an INDEPENDENT script and the ruling RE-ARGUED, not renumbered"
+      - "fingerprint the owner's three paths at START and FINISH - SORT THE DIGESTS, NOT THE PATHS: f326d314 / aeb7edc1 / f936e169, website/ 116 files"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to hand-write or hand-edit per-lane app code - anything under generated/ or src/emitted/ that did not come out of a regenerate or copy script."
+      - "Any S1-S10 artifact changes a byte. That means an emitter moved, which is out of scope."
+      - "You are about to modify an emitter, the IR, the authoring surface, or scripts/e2e.mjs to make an axis work. RECORD THE VERBATIM REFUSAL AND NARROW INSTEAD."
+      - "You are about to edit demos/shared/todomvc-app-css/index.css or LICENSE. They are upstream bytes; repairs go in frameless-advanced.css."
+      - "An axis the owner named is not authorable - record the VERBATIM refusal, ship the rest, and say which axis is missing."
+      - "THE ANGULAR LANE REFUSES: record the VERBATIM message, leave it UNBUILT, ship five, and DO NOT CHASE IT."
+      - "pnpm check rises above 267, pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
+      - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched."
+      - "You are about to renumber the vue gate census instead of re-deriving and re-arguing it."
+      - "NEVER pkill -f on a broad pattern. Kill by recorded PID only, and only PIDs you started. A port held by a foreign process is RECORD-IT-AND-USE-ANOTHER-PORT, never a kill."
+      - "Verification fails twice for the same reason."
     receipt: null
 
-  - id: T003
+  - id: T005
     type: worker
     assignee: Worker
     status: queued
     reasoning_hint: high
+    sequence: "runs AFTER T003, BEFORE T004"
     objective: >-
-      Ship TodoMVC ADVANCED: one authored source, six lanes, six viewable sites, styled to its
-      named reference.
-    the_owners_axes_verbatim: >-
-      Data fetching (artificial delay acceptable), OPTIMISTIC UPDATES, search that is BOTH
-      local filtering AND remote query, and local/in-memory state management. Patrick's
-      framing: TodoMVC is the app that covers CRUD plus all of these at once.
-      SIMPLE TODOMVC ALREADY SHIPPED as S10 on frameless-real-apps-v1 - six lanes, styled,
-      screenshots byte-identical in five. DO NOT MODIFY IT. Advanced is a SEPARATE scenario.
-    allowed_files: []
+      Style TodoMVC Advanced to its named reference and PROVE the match by image, not by CSS.
+    WHY_THIS_IS_ITS_OWN_CARD: >-
+      T002 required it. T007 on the prior board is the precedent: styling was a SEPARATE card
+      with its own browser measurement, and it found a 3614-pixel heading divergence that was
+      INVISIBLE to every computed-style check, plus a `margin: 0` that made all six lanes
+      identical AND ALL SIX WRONG. A stop after "browsable in six lanes" is therefore a
+      PLANNED HANDOFF, not a failure.
+    allowed_files:
+      - "demos/shared/todomvc-app-css/frameless-advanced.css"
+      - "demos/shared/todomvc-app-css/README.md"
+      - "demos/shared/copy-todomvc-css.mjs"
+      - "demos/react-official/public/todomvc-app-css/**"
+      - "demos/solid-official/public/todomvc-app-css/**"
+      - "demos/qwik/public/todomvc-app-css/**"
+      - "demos/svelte-official/static/todomvc-app-css/**"
+      - "demos/vue-official/public/todomvc-app-css/**"
+      - "demos/angular-official/public/todomvc-app-css/**"
+      - "docs/goals/frameless-app-suite-v1/notes/T005-advanced-style.md"
     verify:
-      - "PER LANE: the site runs, the launch command is RECORDED AND WAS RUN, and it VISUALLY MATCHES the named reference"
-      - "DERIVATION PROOF: delete every generated and copied artifact for this app, rebuild, confirm BYTE-IDENTICAL"
-      - "pnpm test at exactly 1 failure / pnpm check not above 267 / pnpm e2e 6 x 9 / lint / check:citations"
+      - "SIX SCREENSHOTS at 900x900 headless chromium colorScheme light; the shipped lanes byte-identical, qwik compared over the app region EXCLUDING #qwik-inspector-overlay and #qwik-inspector-info-popup"
+      - "PIXEL-DIFF the shared region against the shipped /todomvc page on the same data - header, card, rows and footer identical"
+      - "ASSERT VISUAL FEATURES ONE BY ONE OFF THE IMAGE, NOT THE CSS: grey page + 550px shadowed card with torn-paper edges; 80px weight-200 #b83f45 heading; round toggle circles; strikethrough on completed; footer filter pills with the selected one boxed in red"
+      - "pnpm test at exactly 1 / pnpm check not above 267 / pnpm e2e 6 x 9 / lint / check:citations"
+      - "fingerprint the owner's three paths at START and FINISH - SORT THE DIGESTS, NOT THE PATHS"
     stop_if:
       - "Need files outside allowed_files."
-      - "You are about to write per-lane app code by hand."
-      - "An axis the owner named is not authorable - RECORD THE VERBATIM REFUSAL, ship the rest, and say which axis is missing."
-      - "You are about to modify the simple TodoMVC (S10)."
-      - "NEVER pkill -f on a broad pattern."
+      - "You are about to edit demos/shared/todomvc-app-css/index.css or LICENSE - UPSTREAM BYTES. Repairs go in frameless-advanced.css."
+      - "You are about to assert a visual feature from the stylesheet instead of from the rendered image."
+      - "You are about to modify an emitter or any generated/ or src/emitted/ file to fix appearance."
+      - "NEVER pkill -f on a broad pattern. A port held by a foreign process is RECORD-IT-AND-USE-ANOTHER-PORT, never a kill."
       - "Verification fails twice for the same reason."
     receipt: null
 
@@ -269,12 +444,22 @@ tasks:
       detail pane with tabs, and a streaming response that continues while the app is
       navigated.
     THIS_IS_THE_ONE_MOST_LIKELY_TO_REFUSE_AND_THAT_IS_INFORMATION: >-
-      THREE measured blockers point straight at it. (1) TWO-WORD DOM EVENTS ARE UNSPELLABLE IN
-      EVERY LANE - no onKeyDown, no onDoubleClick, and onKeydown/onDblclick NEVER FIRE
-      (DEFECTS.md 15). Keyboard shortcuts, tab navigation and pane focus are exactly what this
-      app is made of. (2) STREAMING IS REPEATED ASYNC OVER TIME, and Qwik's SSR serializer
-      AWAITS promises - which is why S8's gate had to be click-armed. (3) .svelte and .vue
-      REFUSE MULTI-COMPONENT MODULES BY NAME, and a Codex clone is naturally many components.
+      T002 RULED IT REACHABLE-NARROWED, NOT OUT OF REACH - and corrected one of the three
+      blockers this card used to name. (1) TWO-WORD DOM EVENTS ARE UNSPELLABLE IN EVERY LANE -
+      no onKeyDown, no onDoubleClick, and onKeydown/onDblclick NEVER FIRE (DEFECTS.md 15,
+      still OPEN). So there is NO KEYBOARD INTERACTION AT ALL: no Enter-to-send, no shortcuts,
+      no Escape, no Tab pane navigation. That is what actually binds this app.
+      (2) STREAMING IS FIVE-LANE, NOT SIX, for the reason recorded on T003 - a fresh promise
+      per action has an empty six-lane intersection. And a VARIABLE-LENGTH stream is
+      unauthorable in EVERY lane, because a write inside a loop body is DEFECTS.md 8.1: A
+      FIXED UNROLLED CHUNK COUNT IS THE ONLY SHAPE.
+      (3) CORRECTED: ".svelte and .vue refuse multi-component modules" is TRUE BUT NOT
+      LIMITING. Multi-MODULE composition is SHIPPED and e2e-proven - demos/composition-kit/
+      src/page.tsrx composes Frame/Dashboard/Status/Search across four .tsrx module
+      boundaries. The limit is ONE COMPONENT PER MODULE, not one component per app.
+      Angular additionally HAS NO CLOCK - it cannot name Date - so message timestamps must
+      arrive as props, and it is expected to go unbuilt here for the same global-identifier
+      ban as T003.
       A CAPABILITY LIST IS A LEGITIMATE DELIVERABLE HERE. Record each refusal verbatim and
       ship whatever subset stands.
     allowed_files: []

@@ -38,11 +38,33 @@ Three parts, all required.
 
 **Completion proof**: the six-lane door result; each shipped app emitted from one source into
 six lanes with a launch command that was run and a visual match to its named reference; and
-every refusal recorded verbatim.
+every refusal recorded verbatim. **Per §2 a lane may be UNBUILT when it carries a verbatim
+refusal** — so "six lanes" means *six attempted*, not *six shipped*. **T002 ruled TodoMVC
+Advanced ships in FIVE**; that is a satisfied oracle, not a narrowed one. A missing lane with
+no refusal is still a rejection.
+
+## Rulings (measured — these override anything above them)
+
+**T001, the door.** `computed(async …)` is **closed in all six lanes**, by a pincer **upstream
+of every emitter**: the Markless compiler demands an `@try`/`@pending`/`@catch` boundary, and
+the IR cannot represent `JSXTryExpression`. The surface has a **fourth template control-flow
+form** this charter originally missed — `@try`/`@pending`/`@catch`, whose `@pending` *is* the
+spinner. **Fetch-on-render is unreachable in every lane.** **Angular is the only lane that does
+not verify its own bytes** — its `EMITS` means "did not throw", not "produced valid output".
+
+**T002, what that means.** "Streaming and optimistic updates emit in all six lanes" is true of
+the **lowering** and false of the **source**: P8 measured one host-made promise awaited N
+times. A **new promise per user action** has an **empty six-lane intersection** — qwik cannot
+consume a callback prop's return value in any statement form, and angular cannot **name** a
+global to make its own. The binding constraint is **one promise per render, or lose a lane**.
 
 ## Known blockers, all measured, that this goal will hit
 
-- **NO LIFECYCLE.** The only data-fetching door is `computed(async …)`, unmeasured everywhere.
+- **NO LIFECYCLE**, and **the door is now MEASURED — see §Rulings.** `computed(async …)` is
+  **closed in all six lanes**.
+- **`.svelte` and `.vue` refuse multi-component modules by name.** One component per module —
+  but **T002 ruled this is not limiting**: multi-*module* composition is shipped and
+  e2e-proven at `demos/composition-kit/src/page.tsrx`, which composes four `.tsrx` modules.
 - **TWO-WORD DOM EVENTS ARE UNSPELLABLE IN EVERY LANE.** `build.ts` does
   `name.slice(2).toLowerCase()`, so `onKeyDown` and `onDoubleClick` cannot be produced —
   and React's double-click name is `onDoubleClick`, which no capitalisation over `dblclick`
@@ -51,7 +73,6 @@ every refusal recorded verbatim.
 - **REACT MISCOMPILES A STATE WRITE NESTED IN AN `if`** — and entry 8's shipped refusal has a
   hole exactly that shape, so it is **neither lowered nor refused** (`DEFECTS.md` 8.1).
   Every conditional in an authored handler must be an **expression**.
-- **`.svelte` and `.vue` refuse multi-component modules by name.** One component per module.
 - **No routing construct exists in `.tsrx`**, though all six demos already route at the host.
 - **`grep` is blind to the React emitter** — one NUL byte, `exit 1` with no output. T008 on
   the sibling board owns it; until then, use Python for sweeps of that file.
