@@ -979,51 +979,86 @@ export function AsyncProbe({ ready, onTrace }) @{
 			const emitted = await emitProbe(plain);
 			expect(emitted).toContain('onClick={async (event) => {');
 			expect(emitted).toContain('await ready;');
-			expect(emitted).toContain('setTicks(nextTicks);');
+			// T003: the two 12.2 repairs, read STRUCTURALLY. The pre-await write
+			// survives the sync retention, and the post-await read of the cell being
+			// written is a functional updater rather than a closure read.
+			expect(emitted).toContain('setTicks((currentTicks) => currentTicks + 1);');
 			expect(emitted).toContain('setPhase(nextPhase);');
+			expect(emitted).toContain("const nextPhase = 'pending';");
+			expect(emitted).not.toContain('const nextTicks =');
+			// ORDER, not just presence: the pending sync is BEFORE the boundary and the
+			// increment and the done sync are after it. A body that emitted all six
+			// lines in the wrong order would satisfy every `toContain` above.
+			const positions = [
+				"const nextPhase = 'pending';",
+				'setPhase(nextPhase);',
+				'await ready;',
+				'setTicks((currentTicks) => currentTicks + 1);',
+				"const nextPhase2 = 'done';",
+				'setPhase(nextPhase2);',
+			].map((line) => emitted.indexOf(line));
+			expect(positions).not.toContain(-1);
+			expect(positions).toEqual([...positions].sort((left, right) => left - right));
 		});
 
 		/**
-		 * THE MEASUREMENT T043 COULD NOT TAKE, AND IT COMES BACK DIRTY.
+		 * DEFECTS.md 12.2 CLOSED - THE WITNESSED BEFORE AND AFTER, T003.
 		 *
 		 * T043 predicted from the shape of `toConstSsa` that React reads the RENDER
-		 * CLOSURE where Solid reads the live signal, so the two lanes would diverge
-		 * on a second dispatch across an `await`. Measured here against real
-		 * `react-dom` 19.2.3, with the identical three-dispatch sequence the Solid
-		 * lane uses, the prediction HOLDS - and the divergence is larger than
-		 * predicted, because a second, independent defect rides with it:
+		 * CLOSURE where Solid reads the live signal. Measured against real `react-dom`
+		 * 19.2.3 with the identical three-dispatch sequence the Solid lane uses, the
+		 * prediction held, and a second independent defect rode with it. This arm
+		 * PINNED THAT DEFECT until T003, and DEFECTS.md 12.2 instructed in writing
+		 * that it be rewritten to the calibration's numbers on repair. It is:
 		 *
-		 *            react (emitted)   solid (T046, measured)
-		 *   suspended    0|idle             0|pending
-		 *   overlap 2    1|done             2|done
-		 *   sequential   2|done             3|done
+		 *                RED (before T003)   GREEN (after)   calibration / solid
+		 *   suspended         0|idle            0|pending         0|pending
+		 *   overlap 2         1|done            2|done            2|done
+		 *   sequential        2|done            3|done            3|done
+		 *   renders             3                 4                 4
 		 *
-		 * TWO defects, both recorded OPEN in docs/DEFECTS.md entry 12:
+		 * The RED, verbatim, was the emitted handler below - `setPhase('pending')`
+		 * ABSENT and `ticks` read from the render closure:
 		 *
-		 *   (a) STALE CLOSURE. `const nextTicks = ticks + 1` reads the `useState`
-		 *       binding of the render that created the handler. Two dispatches that
-		 *       overlap at the `await` both compute 0 + 1, so two clicks produce ONE
-		 *       increment.
+		 *   async (event) => {
+		 *     await ready;
+		 *     const nextTicks = ticks + 1;
+		 *     setTicks(nextTicks);
+		 *     const nextPhase = 'done';
+		 *     setPhase(nextPhase);
+		 *     onTrace('run', { phase: 'done' }, event);
+		 *   }
+		 *
+		 * The two causes and the two repairs, both in `toConstSsa`:
+		 *
+		 *   (a) STALE CLOSURE. `const nextTicks = ticks + 1` read the `useState`
+		 *       binding of the render that created the handler, so two dispatches
+		 *       overlapping at the `await` both computed 0 + 1 and two clicks produced
+		 *       ONE increment. `liftPostAwaitReadsToUpdaters` folds that version and
+		 *       its sync into `setTicks((currentTicks) => currentTicks + 1)`.
 		 *   (b) DROPPED PRE-AWAIT WRITE. The authored `phase = 'pending'` never
-		 *       reaches the output at all: `toConstSsa` keeps only the final write per
-		 *       cell, which is sound when nothing can render in between and is NOT
-		 *       sound across an `await`. React renders 3 times where the live shape
-		 *       renders 4, and `pending` is never observable.
+		 *       reached the output: the final-sync retention keeps one sync per cell,
+		 *       which is sound only while nothing can render in between. The retention
+		 *       is now SEGMENTED at every suspending statement.
 		 *
-		 * THIS TEST PINS THE DEFECT, NOT THE DESIRED BEHAVIOUR. When entry 12 is
-		 * closed it must go red and be rewritten to the calibration's numbers.
+		 * THE CALIBRATION ARM BELOW IS THE CONTROL AND IT DID NOT MOVE. Both arms now
+		 * report the same row, over two different handlers - one emitted, one
+		 * hand-written - so the row is a property of the lowering and not of the
+		 * instrument.
 		 */
-		test('MEASURED, OPEN DEFECT: a second dispatch across the await reads a STALE closure', async () => {
+		test('REPAIRED: dispatches across the await read LIVE and the pending write survives', async () => {
 			const outcome = await dispatchAcrossAwait(emittedHandler(await emitProbe(plain)));
-			// (b) the pre-await write was dropped, so `pending` is never rendered.
-			expect(outcome.duringSuspension).toBe('0|idle');
-			expect(outcome.rendered).not.toContain('0|pending');
-			// (a) two overlapping dispatches produced ONE increment. Solid gives 2.
-			expect(outcome.afterOverlap).toBe('1|done');
+			// (b) the pre-await write reaches the output and IS rendered.
+			expect(outcome.duringSuspension).toBe('0|pending');
+			expect(outcome.rendered).toContain('0|pending');
+			// (a) two overlapping dispatches now produce TWO increments, as Solid does.
+			expect(outcome.afterOverlap).toBe('2|done');
 			// A third dispatch from the newest closure adds one more. Solid gives 3.
-			expect(outcome.afterSequential).toBe('2|done');
-			// The handler itself ran three times end to end - the loss is in the
-			// lowering, not in a dispatch that never happened.
+			expect(outcome.afterSequential).toBe('3|done');
+			// FOUR observations where the defect produced three: the extra one is the
+			// `pending` render that (b) used to delete.
+			expect(outcome.rendered).toEqual(['0|idle', '0|pending', '2|done', '3|done']);
+			// The handler still ran three times end to end.
 			expect(outcome.trace).toEqual([
 				'run:{"phase":"done"}',
 				'run:{"phase":"done"}',
@@ -1053,6 +1088,49 @@ export function AsyncProbe({ ready, onTrace }) @{
 			expect(outcome.duringSuspension).toBe('0|pending');
 			expect(outcome.afterOverlap).toBe('2|done');
 			expect(outcome.afterSequential).toBe('3|done');
+		});
+
+		/**
+		 * THE V-LIMIT T003 RECORDED RATHER THAN ENGINEERED AROUND, MEASURED.
+		 *
+		 * A functional updater receives ONE cell's value. Where a post-`await` write
+		 * reads a DIFFERENT cell, no shape of `setX((current) => ...)` can read that
+		 * second cell live, so `liftPostAwaitReadsToUpdaters` declines and the closure
+		 * read stands. Closing it needs a ref mirror or a reducer over a record - a
+		 * design change, not a bigger updater - so it is pinned here as an OPEN limit
+		 * with its triggering authoring, exactly as docs/DEFECTS.md 12.2 now records
+		 * it. This arm goes red the day someone closes it, which is the point.
+		 */
+		test('V-LIMIT, MEASURED: a post-await read of ANOTHER cell still reads the closure', async () => {
+			const emitted = await emitProbe(`import { state } from '@markless/core';
+
+export function CrossCellProbe({ ready, onTrace }) @{
+	let ticks = state(0);
+	let mirror = state(0);
+
+	<form>
+		<button
+			type="button"
+			data-action="run"
+			onClick={async (event) => {
+				await ready;
+				ticks = ticks + 1;
+				mirror = ticks + 1;
+				onTrace('run', event);
+			}}
+		>Run</button>
+		<output data-role="ticks">{ticks}</output>
+		<output data-role="mirror">{mirror}</output>
+	</form>
+}
+`);
+			// `ticks` writes itself, so IT is repaired - but its version is then read
+			// again by `mirror`, so the fold declines on BOTH and the pair stays in the
+			// const-SSA form. Neither line is the repair; both are the limit.
+			expect(emitted).toContain('const nextTicks = ticks + 1;');
+			expect(emitted).toContain('const nextMirror = nextTicks + 1;');
+			expect(emitted).not.toContain('setTicks((');
+			expect(emitted).not.toContain('setMirror((');
 		});
 
 		test('preserves the authored preventDefault at the top of an async body', async () => {

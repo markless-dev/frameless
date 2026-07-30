@@ -84,7 +84,12 @@ repairing**, and if the cause is the IR or the scenario, say so and fix it there
   exact-empty in all four modes and `vue-tsc` then rejected it.
 - **A lane's own checker can also over-fire** — Vue's `compileDiagnostics` demanded
   `scriptSetup` unconditionally and rejected the first template-only SFC the repo emitted.
-- **Regeneration has three tiers** — six `regenerate.ts`, **six** `regenerate-composition.ts`,
+- **Regeneration has three tiers, and four of them are wired to nothing.** Six
+  `regenerate.ts`; six `regenerate-composition.ts` **files** but only **react and solid**
+  expose a `regenerate:composition` npm script — qwik, svelte, vue and angular fail with
+  `ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL` (T003, PM-confirmed all six). **Running "the six"
+  through pnpm silently skips four tiers and then reads a vacuous empty diff.** Invoke those
+  four directly with `node --experimental-strip-types`. Plus
   and `generated-persistence/P1` which has **no script at all** (written only by
   `UPDATE_GOLDENS=1` inside react/solid `test/emitter.test.ts`). A `generated*/` diff passes
   **vacuously** if nothing regenerates.

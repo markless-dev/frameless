@@ -1362,24 +1362,34 @@ the row above is the reference the React lane is measured against.
 
 ---
 
-## 12. The React emitter could not emit **any** handler containing `await`, and the repair uncovered two more defects behind it — **OPEN — frameless's own emitted output**
+## 12. The React emitter could not emit **any** handler containing `await`, and the repair uncovered two more defects behind it — **CLOSED — frameless's own emitted output**
 
 > **The sixth defect in frameless's own shipped output, and the first one whose
 > repair made the *real* defect visible rather than closing it.** Entry 11's
-> sibling in the Solid lane came back clean. This one did not. The syntax half is
-> fixed and proven; **two behavioural halves are open**, and they were found only
-> because the syntax fix made them measurable at all. Raised by
-> `frameless-defects-and-targets-v1` (T031 measured, T043 ruled, T047 repaired and
-> measured), so it does **not** extend that goal's oracle, which is defined over
-> findings 1–6.
+> sibling in the Solid lane came back clean. This one did not. The syntax half was
+> fixed and proven first; **two behavioural halves stayed open for a phase**, and
+> they were found only because the syntax fix made them measurable at all. Raised
+> by `frameless-defects-and-targets-v1` (T031 measured, T043 ruled, T047 repaired
+> and measured), so it does **not** extend that goal's oracle, which is defined
+> over findings 1–6. Closed by `frameless-async-and-defects-v1` T003.
 >
 > **Numbering note.** T043 §7 reserved entry 11 for this defect. Entry 10 was
 > taken by the boolean-attribute repair and entry 11 by the Solid one, so this is
 > **12**. The reservation is stale; the ledger is not.
 
-**Status:** OPEN. The `await` now survives, and that is the whole of what is
-closed. What the emitted handler then *does* across the boundary is wrong in two
-independent ways, both measured below.
+**Status:** CLOSED. `12.1` closed the syntax half at T047. `12.2` — the two
+behavioural halves — is **closed at T003**, on a witnessed before-and-after
+measurement in the only lane the defect reaches, with the calibration arm held
+fixed as the control. One boundary the repair does **not** cross is recorded as a
+**v-limit** in 12.2, with its triggering authoring and a registered test.
+
+**The lane count is measured, not inherited.** Both mechanisms are **React
+alone**. `toConstSsa` — the named cause of (b) — appears four times in the React
+emitter and **zero** times in the other five. A live six-lane emit of the probe
+below (T002) confirms it end to end: Solid, Qwik, Svelte, Vue and Angular all keep
+the pre-await write and read live at resume, and Qwik's `preventDefault` variant
+splits correctly into `sync$` + `$(async)`. **There is no lane limit on this
+axis**, which is a stronger result than "four of six broken" in either direction.
 
 ### 12.1 The syntax half — CLOSED
 
@@ -1426,7 +1436,7 @@ is real output whose `async` must stay `false`. It cannot change existing output
 differently under an async wrapper. The falsifier is cheap and was run —
 `regenerate.ts` reproduces `generated/` byte-for-byte.
 
-### 12.2 THE MEASUREMENT T043 COULD NOT TAKE — and it comes back **REAL**
+### 12.2 THE MEASUREMENT T043 COULD NOT TAKE — it came back **REAL**, and it is now **CLOSED**
 
 T043 predicted, from the *shape* of `toConstSsa`, that React reads the **render
 closure** where Solid reads the **live signal**, and that the two lanes therefore
@@ -1439,13 +1449,14 @@ handler lifted back out of the emitted JSX by AST, with the identical
 three-dispatch sequence the Solid lane uses — two dispatches overlapping at the
 `await`, then one sequential from the newest render's closure:
 
-|                       | react (emitted) | solid (entry 11, measured) |
-| --------------------- | --------------- | -------------------------- |
-| while both suspended  | `0\|idle`       | `0\|pending`               |
-| after the overlap     | `1\|done`       | `2\|done`                  |
-| after the third click | `2\|done`       | `3\|done`                  |
+|                       | react RED (before T003) | react GREEN (after T003) | solid (entry 11, measured) |
+| --------------------- | ----------------------- | ------------------------ | -------------------------- |
+| while both suspended  | `0\|idle`               | `0\|pending`             | `0\|pending`               |
+| after the overlap     | `1\|done`               | `2\|done`                | `2\|done`                  |
+| after the third click | `2\|done`               | `3\|done`                | `3\|done`                  |
+| renders observed      | 3                       | 4                        | 4                          |
 
-The emitted React handler:
+The emitted React handler, **before**:
 
 ```jsx
 onClick={async (event) => {
@@ -1454,6 +1465,20 @@ onClick={async (event) => {
 	setTicks(nextTicks);
 	const nextPhase = 'done';
 	setPhase(nextPhase);
+	onTrace('run', { phase: 'done' }, event);
+}}
+```
+
+and **after**:
+
+```jsx
+onClick={async (event) => {
+	const nextPhase = 'pending';
+	setPhase(nextPhase);
+	await ready;
+	setTicks((currentTicks) => currentTicks + 1);
+	const nextPhase2 = 'done';
+	setPhase(nextPhase2);
 	onTrace('run', { phase: 'done' }, event);
 }}
 ```
@@ -1493,19 +1518,93 @@ nothing re-implements a hook.
   the guard throws at load instead. This is the React analogue of entry 11's
   `createMemo` check, and it exists for the same reason.
 
-**These tests pin the DEFECT, not the desired behaviour.** When 12.2 is repaired
-they must go red and be rewritten to the calibration's numbers. That is
-deliberate: a ledger entry whose test agrees with the bug is the only kind that
-reports the day it stops being true.
+**These tests pinned the DEFECT, not the desired behaviour.** This entry said, in
+writing, that on repair they must go red and be **rewritten to the calibration's
+numbers**. T003 did exactly that, and the rewrite is compliance with this
+paragraph rather than a moved goalpost. That is why the instruction was written
+here in the first place: a ledger entry whose test agrees with the bug is the only
+kind that reports the day it stops being true.
+
+### 12.2.R The repair — T003
+
+Both mechanisms live in `toConstSsa`, and both are gated on the **suspension
+boundary** rather than on anything else, which is what makes the repair
+byte-neutral.
+
+**(b) SEGMENTED SYNC RETENTION.** The "retain only the final sync per cell" filter
+now keys on `(segment, cell)` rather than on `cell`, where a new segment opens
+after every statement that can suspend the handler. Collapsing to one sync is
+still applied — to the interval it is actually true of. A new `suspends()` helper
+answers the boundary question, and it stops at every nested function type
+(`assertLowerableWrites`'s set), because an `await` inside a callback belongs to
+that callback's suspension and not to this handler's.
+
+**(a) FUNCTIONAL UPDATER.** `liftPostAwaitReadsToUpdaters` folds a post-suspension
+version const and its sync into `setTicks((currentTicks) => currentTicks + 1)`
+when — and only when — the version's initializer freely reads **the render binding
+of the cell it is writing**, the version is read nowhere else, the initializer
+does not itself suspend, the cell is `state`-storage, and the cell carries no
+persistence record. The parameter name comes from the emitter's own allocator, so
+it cannot collide with an authored name. This is React's own documented answer to
+(a) and it is the same shape the calibration arm has always used.
+
+**BYTE-NEUTRALITY IS THE FALSIFIER, AND IT WAS RUN.** No corpus fixture contains
+`await` and no generated artifact in any tier contains `async`, so a repair gated
+on the boundary must move **zero** generated bytes. All three tiers were
+regenerated — six `regenerate.ts`, six `regenerate-composition.ts`, and
+`generated-persistence/P1` in the React and Solid lanes, which has no script and is
+written only by `UPDATE_GOLDENS=1` — and the regeneration was **proved real before
+the diff was read**: all 80 artifacts' mtimes moved, and a planted marker in one
+artifact per tier was restored by the run. `git diff` over `generated*/` is then
+empty. A vacuous green here would have been indistinguishable from a real one.
+
+**THE V-LIMIT, RECORDED RATHER THAN ENGINEERED AROUND.** A functional updater
+receives **one** cell's value, so a post-`await` read of a cell **other than** the
+one being written cannot be repaired this way. Triggering authoring:
+
+```jsx
+onClick={async (event) => {
+	await ready;
+	ticks = ticks + 1;
+	mirror = ticks + 1;   // reads `ticks` — a second live cell
+}}
+```
+
+The fold declines on both writes here (the first because its version is read again,
+the second because it reads a different cell), and the emitted output keeps the
+const-SSA form. Three narrower shapes are out of reach for the same reason: a
+post-`await` read that is not part of a write at all, a version whose own
+initializer suspends (an updater callback cannot be `async`), and a **persisted**
+cell, whose sync argument is re-read by `persistenceStatements` as a *value*. All
+four are **emittable and behaviourally stale**, not refused — closing them needs a
+ref mirror or a reducer over a record, which is a design change, not a bigger
+updater. `V-LIMIT, MEASURED: a post-await read of ANOTHER cell still reads the
+closure` in the React emitter suite pins the boundary and goes red the day it
+moves.
+
+**THE CALIBRATION ARM DID NOT MOVE, AND THAT IS THE POINT.** The hand-written
+live-reading handler is the harness's control, and it was left **byte-untouched**
+across this repair. It reports `0|pending` / 2 / 3 before and after. Both arms now
+report the same row over two different handlers — one emitted, one hand-written —
+so the row is a property of the lowering. Had the calibration moved, the instrument
+would have moved and the emitted arm's green would have meant nothing.
 
 ### 12.3 What this means for S8, and what it is not
 
 **S8 must assert the divergence rather than hide it.** A single-dispatch
 assertion passes under both lowerings and asserts nothing about the axis it exists
-to test; the two-dispatch contract T043 specified is now not a precaution but a
-measured requirement, and S8's React row is `1|done` / `2|done` until 12.2 is
-repaired. **Hiding it behind a one-click assertion would make the second dispatch
-meaningless.**
+to test; the two-dispatch contract T043 specified is not a precaution but a
+measured requirement. With 12.2 closed, **S8's React row is now expected to equal
+every other lane's** — `0|pending`, then 2, then 3 — and the two-dispatch shape is
+what makes that equality mean anything. **Hiding it behind a one-click assertion
+would make the second dispatch meaningless.**
+
+**And S8's action button must carry a TEXT CHILD.** The probe as first authored
+used a self-closing `<button ... />`, and the **Svelte emitter refuses it**: `did
+not compile warning-free: a11y_consider_explicit_label`. Nobody saw it because the
+probe had only ever been run through React. With a label, all six lanes emit
+cleanly. Measured by T002; recorded here because it would otherwise block S8 at
+the Svelte lane for a reason that has nothing to do with async.
 
 **This is not entry 8.** Entry 8 is React's inability to lower a **nested** state
 write, and it stays OPEN with its own lift trigger; `assertLowerableWrites` was
@@ -1686,10 +1785,10 @@ matrix proved green rather than from the error message's claim.
 | 9   | **product defect — CLOSED**     | **removed**, not contained: the construct is lowered, and the missing typecheck oracle over emitted Angular now exists (T045) | none — but note the oracle is structurally blind to mode B, which the emitted-keyword assertion covers instead |
 | 10  | **product defect — CLOSED**     | **removed**, not contained: boolean content attributes reach Angular as `[disabled]`, not `[attr.disabled]` (T049), and S9 gives the lowering a **served payload** — six lanes byte-identical on *absent* → `disabled=""` → *absent*, at a state cell and inside a keyed repeat (T050) | none for the defect — the six registered mutants are witnessed by `pnpm mutate:corpus`, and a survivor re-opens it on that lane |
 | 11  | **product defect — CLOSED**     | **removed**, not contained: the accidental `\|\| fn.async` is gone from the Solid validator and the across-await lowering is proven by running it (T046) | none for the defect — but no **served** payload observes an async handler yet, which is a corpus card, not a repair |
-| 12  | **product defect — OPEN**       | **half removed**: the `await` survives re-analysis (T047), but the emitted handler reads a **stale render closure** after the boundary and **drops the pre-await write** — both measured against real `react-dom`, both pinned by registered tests | the lift trigger — React lowers post-await reads live and stops collapsing writes that a render can be observed between |
+| 12  | **product defect — CLOSED**     | **removed**, not contained: the `await` survives re-analysis (T047), the final-sync retention is **segmented at the suspension boundary** and post-await reads of the cell being written are lowered to React's **functional updater** (T003). Witnessed before/after against real `react-dom`, with the calibration arm held fixed as the control, and **zero generated bytes moved** across three proven-real regeneration tiers | none for the defect — a **v-limit** (post-await read of a *different* cell) is recorded in 12.2 with its triggering authoring and its own registered test, and no **served** payload observes an async React handler yet, which is a corpus card |
 | 13  | **product defect — OPEN**       | **half removed**: react's three names are repaired in `jsxName` and pinned against react-dom's own rejections; `hidden` and `readonly` are **contained** — excluded from `LANE_PORTABLE_BOOLEAN_ATTRIBUTES`, unrepairable from any emitter, because both fail inside `@qwik.dev/core`'s own `isBooleanAttr` | the lift trigger — a qwik release whose `isBooleanAttr` admits `hidden` and stops gating `readonly` on `key in element`, at which point the clause-5 matrix goes red and the portable set widens |
 
-**Entries 7, 8, 12 and 13 are the OPEN defects in frameless's own emitted output**,
+**Entries 7, 8 and 13 are the OPEN defects in frameless's own emitted output**,
 and they are the ones on this table a later reader could mistake for closed
 because their repairs are green. Entries 7 and 8 *contain* something that is still
 there — a non-neutrality in 7, an unlowerable construct in 8 — so their repairs
@@ -1707,18 +1806,27 @@ bytes as well as the live DOM. "Repaired but unwitnessed" was a real and distinc
 status for eight days, and it is recorded here rather than erased, because the
 next repair proven at the compiler and the emitter alone will be in it too.
 
-**Entry 12 is open for a THIRD reason, and it is the one a reader is most likely
-to mistake for closed.** Entries 7 and 8 are *contained* — the construct is
+**Entry 12 was open for a THIRD reason, and the status it occupied is worth
+keeping on the record.** Entries 7 and 8 are *contained* — the construct is
 refused, loudly, so nothing wrong ships. Entry 10 was *repaired but unwitnessed*,
-and is now witnessed and closed. Entry 12 is neither: the emitter now **accepts** the construct and **emits output
-that is behaviourally wrong**, with no refusal in front of it, and that state is
-deliberate rather than accidental. Refusing async handlers again would have thrown
-away a measurement nobody had ever taken, and the alternative — a lowering that
-reads live and stops collapsing writes across a suspension point — is a design
-change this repair explicitly did not make. So entry 12's registered tests assert
-the **defect's own numbers**, and they are the only tests in this ledger that must
-be **rewritten**, not merely re-run, on the day it is fixed. A test that agrees
-with a bug is a liability unless the entry it belongs to says so; this one says so.
+and is now witnessed and closed. Entry 12 was neither: for a phase the emitter
+**accepted** the construct and **emitted output that was behaviourally wrong**,
+with no refusal in front of it, and that state was deliberate rather than
+accidental. Refusing async handlers again would have thrown away a measurement
+nobody had ever taken, and the alternative — a lowering that reads live and stops
+collapsing writes across a suspension point — was a design change T047 explicitly
+did not make. **T003 made it.** So entry 12's registered tests asserted the
+**defect's own numbers** for a phase, and they are the only tests in this ledger
+that had to be **rewritten**, not merely re-run, on the day it was fixed. That
+rewrite happened, to the numbers this entry named in advance, with the calibration
+arm untouched. A test that agrees with a bug is a liability unless the entry it
+belongs to says so **and says what it must become**; this one said both.
+
+**Entry 12 is CLOSED to entry 11's standard, not entry 10's**, and it carries the
+same residue: a calibrated instrument watched red on the exact construct before
+the emitter moved, plus a v-limit that is recorded rather than hidden — but **no
+served payload**. No browser has yet run a frameless-emitted async React handler.
+That is a corpus gap for S8, not an open repair.
 
 **Entry 11 is CLOSED to entry 9's standard, not entry 10's**, and the difference
 is worth stating because both lack a served payload. Entry 9 and entry 11 each

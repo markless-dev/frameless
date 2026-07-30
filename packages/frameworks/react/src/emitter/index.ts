@@ -1848,6 +1848,43 @@ const NESTED_FUNCTION_TYPES: ReadonlySet<string> = new Set([
 ]);
 
 /**
+ * DOES THIS STATEMENT SUSPEND THE HANDLER IT SITS IN? - docs/DEFECTS.md 12.2.
+ *
+ * The two 12.2 defects are both consequences of one assumption: that a handler
+ * body runs to completion with no render in between. An `await` is precisely a
+ * point where React CAN render, so every lowering that collapses across the body
+ * has to be segmented at it.
+ *
+ * An `await` inside a NESTED function belongs to that function's own suspension
+ * and not to this handler's, so the walk stops at every function boundary - the
+ * same boundary set `assertLowerableWrites` uses. A statement containing no
+ * `await` answers false, which is why a corpus with no async handler at all
+ * cannot reach either repair site: measured, no fixture contains `await` and no
+ * generated artifact in any tier contains `async`.
+ */
+function suspends(node: t.Node): boolean {
+	let found = false;
+	const visit = (value: unknown): void => {
+		if (found || !value || typeof value !== 'object') return;
+		if (Array.isArray(value)) {
+			value.forEach(visit);
+			return;
+		}
+		const record = value as Record<string, unknown>;
+		if (typeof record.type !== 'string') return;
+		if (record.type === 'AwaitExpression') {
+			found = true;
+			return;
+		}
+		if (NESTED_FUNCTION_TYPES.has(record.type)) return;
+		for (const [key, child] of Object.entries(record))
+			if (!['loc', 'range', 'start', 'end', 'comments'].includes(key)) visit(child);
+	};
+	visit(node);
+	return found;
+}
+
+/**
  * `settle().then`, `defer`, `rows.forEach` - enough to point at ONE callback when
  * a handler has several. Best-effort by design: it returns '' rather than
  * guessing at a shape it does not recognise, and the caller falls back.
@@ -2201,19 +2238,40 @@ function toConstSsa(
 	}
 
 	// Each mutable lowering write was followed by a sync. Retain only the final
-	// sync per cell, at its authored final-write position (T002 rulings 4 and 5).
+	// sync per cell, at its authored final-write position (T002 rulings 4 and 5) -
+	// PER SUSPENSION SEGMENT.
+	//
+	// DEFECT 12.2 (b), CLOSED HERE. Collapsing to one sync per cell is sound only
+	// while nothing can render between the writes; across an `await` it is not, and
+	// the authored `phase = 'pending'` before the boundary was DELETED - never
+	// emitted, never observable. Segmenting the retention at every suspending
+	// statement keeps the last write of each segment, which is the same rule
+	// applied to the interval it is actually true of.
+	//
+	// A handler with no `await` has exactly one segment, so this is byte-identical
+	// to the unsegmented retention on every artifact in the corpus - the
+	// `generated*/` diff in this card's verify is that claim.
+	const segmentOf = new Map<t.Statement, number>();
+	let suspensions = 0;
+	for (const statement of output) {
+		segmentOf.set(statement, suspensions);
+		if (suspends(statement)) suspensions += 1;
+	}
+	const segmented = (statement: t.Statement, variable: string): string =>
+		`${segmentOf.get(statement) ?? 0} ${variable}`;
 	const finalSync = new Map<string, number>();
 	for (let index = 0; index < output.length; index += 1) {
 		const variable = syncVariableName(output[index]!, writable, context);
-		if (variable) finalSync.set(variable, index);
+		if (variable) finalSync.set(segmented(output[index]!, variable), index);
 	}
 	fn.body.body = output.filter((statement, index) => {
 		const variable = syncVariableName(statement, writable, context);
-		return !variable || finalSync.get(variable) === index;
+		return !variable || finalSync.get(segmented(statement, variable)) === index;
 	});
 	collapseRefSyncVersions(fn, writable);
 	removeDeadPureVersions(fn);
 	normalizeSoleVersionNames(fn, writable, context);
+	liftPostAwaitReadsToUpdaters(fn, writable, context);
 	fn.body.body = fn.body.body.flatMap((statement: t.Statement) => {
 		const variable = syncVariableName(statement, writable, context);
 		if (!variable) return [statement];
@@ -2226,6 +2284,119 @@ function toConstSsa(
 		return [statement, ...persistenceStatements(context, persistence, finalValue)];
 	});
 	return fn;
+}
+
+/**
+ * DEFECT 12.2 (a), CLOSED HERE: the stale render-closure read across an `await`.
+ *
+ * `toConstSsa` lowers `ticks = ticks + 1` to `const nextTicks = ticks + 1`, where
+ * `ticks` is the `useState` binding OF THE RENDER THAT CREATED THE HANDLER. That
+ * is correct for a synchronous body - the render cannot have moved - and wrong
+ * after a suspension: two dispatches that overlap at the `await` both resume with
+ * the same captured `ticks` and both compute `0 + 1`, so two clicks produce ONE
+ * increment. MEASURED against real react-dom 19.2.3 as `1|done` where every other
+ * frameless lane reports `2|done`.
+ *
+ * React's own answer is the FUNCTIONAL UPDATER: `setTicks((current) => current +
+ * 1)` hands the reducer the value React holds now rather than the one the closure
+ * captured. So where a post-suspension write reads the cell IT IS WRITING, the
+ * version const and its sync fold into one updater call and the stale binding is
+ * never read.
+ *
+ * FOUR SHAPES ARE DELIBERATELY OUT OF REACH, and all four stay v-limits rather
+ * than becoming refusals, because each one is emittable today and only the two
+ * mechanisms above are in this card:
+ *
+ *   1. A post-`await` read of a cell OTHER than the one being written. An updater
+ *      callback receives ONE cell's value; there is no form of it that can read a
+ *      second live. Triggering authoring: `let a = state(0); let b = state(0);`
+ *      with `await ready; b = a + 1;` - `a` is still the captured render's `a`.
+ *      Closing it needs a design change (a ref mirror or a reducer over a record),
+ *      NOT a bigger updater, so it is recorded here and not invented.
+ *   2. A post-`await` read that is not part of a write at all - `await ready;
+ *      onTrace('run', { ticks })`. Nothing to fold it into.
+ *   3. A version whose own initializer suspends (`ticks = (await load()) + ticks`).
+ *      An updater callback cannot be async.
+ *   4. A version the body reads again after its sync, and a persisted cell, whose
+ *      sync argument `persistenceStatements` re-reads as a VALUE - an updater
+ *      function is not one.
+ *
+ * `ref` cells are untouched on purpose: they sync through `handle.current`, which
+ * is already live at resume, so there is nothing stale to repair.
+ */
+function liftPostAwaitReadsToUpdaters(
+	fn: t.ArrowFunctionExpression,
+	writable: readonly StateBinding[],
+	context: EmitContext,
+): void {
+	// THE BYTE-NEUTRALITY GATE. Nothing below runs - and in particular the
+	// print/re-parse round trip inside `reanalyzeFunction` does not run - for a
+	// handler that cannot suspend, which is every handler in the corpus today.
+	if (
+		!t.isBlockStatement(fn.body) ||
+		!(fn.body.body as t.Statement[]).some((statement) => suspends(statement))
+	)
+		return;
+	reanalyzeFunction(fn, (module, analyzed) => {
+		if (!t.isBlockStatement(analyzed.body)) return;
+		const body = analyzed.body.body as t.Statement[];
+		const firstSuspension = body.findIndex((statement) => suspends(statement));
+		if (firstSuspension < 0) return;
+		const folded = new Set<t.Statement>();
+		for (let index = firstSuspension + 1; index < body.length; index += 1) {
+			const statement = body[index]!;
+			const variable = syncVariableName(statement, writable, context);
+			if (!variable) continue;
+			const state = writable.find((candidate) => nextFor(context, candidate) === variable);
+			if (!state || state.storage !== 'state') continue;
+			if (persistenceForGraph(context, state.id)) continue;
+			const call = (statement as t.ExpressionStatement).expression;
+			if (!t.isCallExpression(call) || call.arguments.length !== 1) continue;
+			const argument = call.arguments[0];
+			if (!t.isIdentifier(argument)) continue;
+			const declaration = body.find(
+				(candidate, at): candidate is t.VariableDeclaration =>
+					at > firstSuspension &&
+					at < index &&
+					!folded.has(candidate) &&
+					t.isVariableDeclaration(candidate, { kind: 'const' }) &&
+					candidate.declarations.length === 1 &&
+					t.isIdentifier(candidate.declarations[0]!.id, { name: argument.name }),
+			);
+			const identifier = declaration?.declarations[0]!.id;
+			const initializer = declaration?.declarations[0]!.init;
+			if (!declaration || !identifier || !initializer || !t.isExpression(initializer)) continue;
+			if (suspends(initializer)) continue;
+			const symbol = t.isIdentifier(identifier) ? module.symbolOf(identifier) : null;
+			if (!symbol || symbol.references.length !== 1) continue;
+			if ((symbol.references[0] as { node: t.Node }).node !== argument) continue;
+			// The reads that make it stale: FREE references to the cell's own render
+			// binding, inside this initializer. Free, because the handler is analyzed
+			// standalone - anything the component declared resolves to nothing here.
+			const stale = module.unresolvedReferences.filter((reference) => {
+				if (reference.name !== state.name) return false;
+				let ancestor: unknown = reference.node;
+				while (ancestor && ancestor !== initializer)
+					ancestor = module.parentOf(ancestor as t.Node);
+				return ancestor === initializer;
+			});
+			if (stale.length === 0) continue;
+			const parameter = context.names.claim(
+				`current${state.name[0]!.toUpperCase()}${state.name.slice(1)}`,
+			);
+			for (const reference of stale) {
+				reference.node.name = parameter;
+				const parent = module.parentOf(reference.node as t.Node) as {
+					type?: string;
+					shorthand?: boolean;
+				} | null;
+				if (parent?.type === 'Property' && parent.shorthand) parent.shorthand = false;
+			}
+			call.arguments[0] = t.arrowFunctionExpression([t.identifier(parameter)], initializer);
+			folded.add(declaration);
+		}
+		if (folded.size) analyzed.body.body = body.filter((statement) => !folded.has(statement));
+	});
 }
 
 function collapseRefSyncVersions(
