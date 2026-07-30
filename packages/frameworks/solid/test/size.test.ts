@@ -171,6 +171,22 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// correctness in bytes and solid does not.
 	S8: { physicalLoc: 40, structuralNodes: 200 },
 	S9: { physicalLoc: 69, structuralNodes: 369 },
+	// S10 likewise has no handwritten reference, so this is a budget, MEASURED off
+	// the emitted output. It is the corpus's first WHOLE APPLICATION rather than an
+	// axis probe, and solid prints 29 MORE physical lines and 37 MORE structural
+	// nodes than react on it. THAT DIRECTION IS NOT NEW AND THIS COMMENT DOES NOT
+	// CLAIM A FIRST: S2 (+10/+26) and S4 (+1/+13) already have solid larger on both
+	// axes, and S10's node gap of 37 is actually UNDER their combined 39 - only the
+	// line gap of 29 exceeds their combined 11.
+	// NO CAUSE IS ASSERTED HERE, AND THE OBVIOUS ONE WAS CHECKED AND REFUTED.
+	// S7's row attributes solid's node premium to its per-computed accessor arrows,
+	// which would predict S10 - the biggest scenario - carries the most `computed`
+	// derivations. IT DOES NOT: S10 declares FOUR against S7's FIVE, measured off
+	// the goldens. So whatever produces this gap scales with something other than
+	// derivation count, and the row records the measurement rather than inventing
+	// the mechanism. A budget is allowed to say "this is what it costs"; it is not
+	// allowed to say why on a hypothesis its own corpus contradicts.
+	S10: { physicalLoc: 304, structuralNodes: 1299 },
 };
 
 describe('honest emitted structure comparison', () => {

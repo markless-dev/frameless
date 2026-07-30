@@ -181,6 +181,22 @@ describe('Solid emitted output type-checks', () => {
 			`generated/S3.tsx: TS2322 Type '{ "data-action": string; value: any; "attr:value": any; onInput: (event: InputEvent & { currentTarget: HTMLInputElement; target: HTMLInputElement; }) => void; }' is not assignable to type 'InputHTMLAttributes<HTMLInputElement>'.   Property 'attr:value' does not exist on type 'InputHTMLAttributes<HTMLInputElement>'.`,
 			'OPEN FINDING 002 - not an artifact. See notes/findings-002-solid-attr-namespace.md.',
 		],
+		// S10's TWO ROWS ARE THE SAME FINDING 002, NOT NEW DEFECTS, and that is a
+		// measurement rather than a family resemblance: both are TS2322 on
+		// `attr:value` against `InputHTMLAttributes<HTMLInputElement>`, the identical
+		// producer S2 and S3 already carry. What S10 adds is REACH - finding 002 was
+		// only ever visible on axis probes, and it now reproduces on a whole
+		// application at both of its text inputs. TodoMVC's new-todo field and its
+		// edit field are separate hosts, so the diagnostic legitimately appears twice
+		// for the same reason C4-attach's `.dataset` does.
+		[
+			`generated/S10.tsx: TS2322 Type '{ class: string; placeholder: string; "data-action": string; value: string; "attr:value": string; onInput: (event: InputEvent & { currentTarget: HTMLInputElement; target: HTMLInputElement; }) => void; }' is not assignable to type 'InputHTMLAttributes<HTMLInputElement>'.   Property 'attr:value' does not exist on type 'InputHTMLAttributes<HTMLInputElement>'.`,
+			'OPEN FINDING 002 - not an artifact, and not new: the same `attr:value` producer S2 and S3 carry, reaching S10 via TodoMVC\'s new-todo input. See notes/findings-002-solid-attr-namespace.md.',
+		],
+		[
+			`generated/S10.tsx: TS2322 Type '{ class: string; "data-edit": string; value: string; "attr:value": string; onInput: (event: InputEvent & { currentTarget: HTMLInputElement; target: HTMLInputElement; }) => void; }' is not assignable to type 'InputHTMLAttributes<HTMLInputElement>'.   Property 'attr:value' does not exist on type 'InputHTMLAttributes<HTMLInputElement>'.`,
+			'OPEN FINDING 002 - not an artifact. S10\'s SECOND text input, the edit field, is a distinct host, so the same diagnostic legitimately appears twice. See notes/findings-002-solid-attr-namespace.md.',
+		],
 		// THE FOURTEEN BELOW ARRIVED WITH THE .jsx -> .tsx MIGRATION, ON UNCHANGED
 		// BYTES - see the header. Two producers, both removable only by printing a
 		// type: an argument-less `createContext()` and an uncontextualised `produce`.

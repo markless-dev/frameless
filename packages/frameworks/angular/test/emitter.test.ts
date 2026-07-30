@@ -416,9 +416,14 @@ describe('Angular 22 emitter', () => {
 					expect(suffix, `${file} @Input() ${entry.localName}`).toBeDefined();
 					if (entry.type === undefined) {
 						// THE CONTROL ARM, and it is why this loop keys off the golden.
-						// Seven of the eight scenarios carry no authored prop type, so
+						// SEVEN OF THE TEN scenarios carry no authored prop type, so
 						// they must still print `: any` - which is what proves a printed
 						// type came from SOURCE rather than being synthesized here.
+						// THE DENOMINATOR WAS STALE: this read "seven of the eight"
+						// while the corpus already held nine. The numerator surviving
+						// the move to ten is a coincidence - S10 declares exactly one
+						// prop and declares it TYPED - so the sentence would have gone
+						// on reading true-ish while counting the wrong corpus.
 						expect(suffix, `${file} ${entry.localName}`).toBe(': any');
 						untypedInputsSeen += 1;
 					} else {
@@ -459,8 +464,12 @@ describe('Angular 22 emitter', () => {
 		// BOTH BRANCHES MUST BE EXERCISED. A corpus that lost its one annotated
 		// fixture, or that annotated all of them, would make one arm above vacuous
 		// and this row is what refuses that rather than reporting a green.
+		// S10 IS THE THIRD ANNOTATED MODULE, after S1 and S8, and it moves the typed
+		// arm alone: it declares a single prop entry (`onTrace`) and declares it with
+		// a type, so `typedInputsSeen` goes 6 -> 7 while `untypedInputsSeen` holds at
+		// 15. MEASURED off the goldens rather than inferred from the failure text.
 		expect({ typedInputsSeen, untypedInputsSeen }).toEqual({
-			typedInputsSeen: 6,
+			typedInputsSeen: 7,
 			untypedInputsSeen: 15,
 		});
 	});

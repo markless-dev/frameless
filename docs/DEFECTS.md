@@ -927,6 +927,61 @@ defect from the same T031 sweep — an authored `async` handler became a synchro
 method — now ruled by T043 and filed as **entry 9**. **None of this is upstream.**
 React supports every construct involved; the defect is entirely in our emitter.
 
+### 8.1 THE REFUSAL HAS A HOLE THE SHAPE OF AN `if` BLOCK — `frameless-real-apps-v1` T002, filed by T006
+
+**The miscompile this entry says is contained is still reachable, and the way in
+is a plain `if`.** T002 hit it authoring TodoMVC and worked around it; T006 traced
+it to source. It is filed **here rather than as a new entry** because it is the
+same defect with the same mechanism and the same emitted symptom — what is new is
+that entry 8's own containment does not cover it.
+
+**Two conditions have to line up, and they are checked in different places.**
+
+- **The lowering gap is wider than the refusal.** `emitMutableHandler` iterates
+  `fn.body.body`, the handler body's **top-level statements**. Entry 8 above
+  describes what escapes that as "a write inside any nested *function*", and that
+  is the description that let the hole through. A write inside `if (cond) { … }`
+  is not inside a nested function — it is in the **same function**, one block
+  down — and it is equally invisible to an iteration over top-level statements.
+- **The guard only looks for functions.** `assertLowerableWrites`
+  (`packages/frameworks/react/src/emitter/index.ts`) walks from the write up to the
+  handler and refuses only if it passes a node in `NESTED_FUNCTION_TYPES` —
+  `ArrowFunctionExpression`, `FunctionExpression`, `FunctionDeclaration`,
+  `ObjectMethod`, `ClassMethod`. A write inside an `if` passes `BlockStatement` and
+  `IfStatement`, neither of which is in that set, so `nested` stays `null` and the
+  loop hits `if (!nested) continue;` — **no refusal**.
+
+**So the construct falls between the two: not lowered, and not refused.** It is
+copied through verbatim as an assignment to the `const` that `useState`
+destructured — the exact `TS2588` output this entry was opened for, arriving
+through the door the repair left open. **Svelte, Vue, Angular, Solid and Qwik all
+lower it correctly** (T002), which matches entry 8's existing five-lanes-of-six
+reading and is a further reason a later ruling can port rather than invent.
+
+**Status of the evidence, stated precisely so it is not over-read.** The
+*mechanism* above is read off the emitter source by T006 and is exact — the
+`NESTED_FUNCTION_TYPES` set and the `if (!nested) continue;` are quoted from it.
+The *emitted symptom* is T002's measurement while authoring S10. **No planted
+`if`-nested fixture has been driven through `emitOrRefuse` and pinned**, because
+this card records and does not repair. **That is the first measurement a repair
+card owes**, and it belongs beside the existing `nested-then` / `nested-callback`
+rows in `packages/frameworks/react/test/emitter.test.ts`, whose invariant —
+*refuse or typecheck* — is already the right one to hold it to.
+
+**Why nothing caught it, again.** The same reason as entry 8 proper, one axis
+over: **no S1–S9 handler writes state inside an `if`**. The guard's own
+calibration row asserts it "fires on NOTHING in the shipped corpus", which was
+true and stayed true, because the corpus could not exhibit the construct. **S10 is
+the first authoring that wanted to** — TodoMVC's Escape-revert and its
+commit-on-Enter both want a conditional write — and T002 rewrote every conditional
+as an expression to get around it, recording that as a deviation.
+
+**What this does to entry 8's lift trigger:** nothing, and that is the point. The
+trigger is still "React lowers a nested state write the way Solid already does",
+and a correct lowering closes both forms at once. What changes is the
+**containment claim**: entry 8 is contained against nested *functions* only, and
+the table below now says so.
+
 ---
 
 ## 9. Angular silently dropped `async` from an authored event handler — **CLOSED — frameless's own emitted output**
@@ -1871,6 +1926,119 @@ cost is registered as a test, not as a promise.
 
 ---
 
+## 15. A two-word DOM event name is UNSPELLABLE in all six lanes, and the emitted binding silently never fires — **OPEN — frameless's own emitted output**
+
+> **Found by building a real application** — `frameless-real-apps-v1` T002,
+> authoring TodoMVC — and filed by T006. It is the first defect in this ledger
+> that no lane can be blamed for: the casing is destroyed in the **compiler**,
+> before any emitter sees it, so all six lanes are downstream of the same loss.
+
+**Status:** OPEN, **and not contained** — there is no refusal in front of it.
+Authoring `onKeyDown` today produces an emitted binding that type-checks in some
+lanes, renders without complaint, and **never fires**. Ranked above entries 7 and
+13 by this document's own rule (how wrong the shipped output is) and filed last
+only because it was found last, which is the convention entry 8 already set.
+
+**The mechanism, in one line.** `jsxEventName` in
+`packages/compiler/src/build.ts`:
+
+```ts
+if (!/^on[A-Z]/.test(name)) return null;
+return name.slice(2).toLowerCase();
+```
+
+The guard requires a capital — so `onKeyDown` is *accepted* — and then
+`.toLowerCase()` flattens `KeyDown` to `keydown`. **The word boundary is gone from
+the IR and no emitter can recover it**, because nothing downstream records where
+the capital was.
+
+**What each lane can therefore produce.** React's event-prop naming in
+`packages/frameworks/react/src/emitter/index.ts` is
+`` `on${name[0].toUpperCase()}${name.slice(1)}` ``, so
+`keydown` can only ever become **`onKeydown`**. The other five lanes capitalise
+the same already-lowercased string by the same construction — T001 first noticed
+this in Qwik and read it as **cosmetic and Qwik-only**, which was wrong on both
+counts.
+
+**It is BEHAVIOURAL, and it was measured in a real DOM.** T002, at
+`react-dom@19.2.3`, drove both spellings and recorded which handlers fired:
+
+- `onKeyDown` and `onDoubleClick` — **fire**.
+- `onKeydown` and `onDblclick` — **never fire**, and React warns
+  `Invalid event handler property`.
+
+So the emitted binding is not merely ugly; it is inert, and React says so at
+runtime while nothing in this repo listens.
+
+**The half that makes a spelling map unavoidable.** React's name for the
+double-click is **`onDoubleClick`**, and the DOM event is **`dblclick`**. Authoring
+`onDblClick` lowers to `dblclick`, and **no capitalisation rule over `dblclick`
+can produce `onDoubleClick`** — the two names do not share a stem. Authoring
+`onDoubleClick` lowers to `doubleclick`, which is not a DOM event at all. A
+repair therefore needs a **per-lane spelling map**, not a smarter capitaliser, and
+that is why this is filed rather than fixed: it is a design change with six
+downstream consumers.
+
+**It also costs `pnpm check`.** A single `onKeyDown` binding took the inherited
+count **267 → 272**, across three lanes (T002). The type instruments see the
+damage even where the runtime is silent.
+
+**What it cost the deliverable.** TodoMVC's **Escape-revert** — `keydown` is its
+only spelling — was dropped and recorded as a lane limit rather than hand-written,
+and the revert behaviour ships as an explicit cancel control instead. That is the
+honest cost of an unspellable event, and it is the strongest argument for the
+repair.
+
+**Why nothing caught it.** **All three events in the S1–S9 corpus are
+single-word** (`click`, `input`, `change`), for which `.toLowerCase()` is the
+identity and the defect is invisible. No served payload had ever carried a
+two-word event name until S10 tried to. This is the same shape as entry 8: **not a
+weak instrument, an absent input.**
+
+**What a repair owes, and it is not just the map.** The `/^on[A-Z]/` guard
+currently **accepts** a name it cannot represent. Whatever the map does, the
+compiler should stop silently accepting a spelling it is about to destroy — a
+refusal here would have surfaced this on the day `onKeyDown` was first authored,
+which is the standard entry 8's repair already set.
+
+---
+
+## 16. The todo title is a `<button>` where canonical TodoMVC has a `<label>` — **NOT A DEFECT — adjudicated by T006**
+
+Raised by `frameless-real-apps-v1` T007 while styling the six TodoMVC sites, and
+recorded here because the ledger keeps adjudications that came back negative
+(entry 2 is the precedent). **This is a lane limit plus a stylesheet assumption,
+not an emitter defect.**
+
+**What was observed.** The emitted markup carries
+`<button className="todo-title">` where `todomvc-app-css@2.4.3` hangs the title
+gutter, the strikethrough (its `.todo-list li.completed label` rule) and the round
+toggle circle (its `.todo-list li .toggle + label` background rule, drawn on the
+label because `.toggle` is `opacity: 0`) off
+**`label` selectors**. Three of the five things the PM had named to the owner as
+"the TodoMVC look" were exactly the ones that would have been missing.
+
+**Why it is not an emitter defect.** The emitter is **not unable to print a
+`<label>`**. T002 recorded the actual cause: the **Svelte gate refuses** the
+canonical markup as `a11y_label_has_associated_control`, and refuses the `<span>`
+alternative as `a11y_no_static_element_interactions`. Both refusals are
+**correct** — canonical TodoMVC's clickable `<label>` with no associated control
+is a genuine accessibility anti-pattern, and Svelte is right to say so. Ruling
+this a defect would mean asking an emitter to reproduce an upstream anti-pattern
+because a stylesheet assumed it.
+
+**Disposition.** No emitter change. T007 repaired the rendering in a **separate,
+clearly-marked supplement** (`demos/shared/todomvc-app-css/frameless-supplement.css`)
+without touching the vendored upstream bytes, which is the right layer: the
+markup is defensible and the stylesheet's `label` assumption is the thing that
+does not transfer.
+
+**What would re-open it.** Evidence that the emitter cannot print a `<label>` for
+a reason **other** than an a11y refusal — that would be a real expressiveness gap
+rather than a rule working as designed.
+
+---
+
 ## Closed, for the record
 
 **`findings-001` — `engines.node: ">=20"` was false.** The toolchain cannot load
@@ -1890,21 +2058,39 @@ matrix proved green rather than from the error message's claim.
 | 5   | upstream                        | **nothing to change locally**                 | the owner files the solid-js typing report                   |
 | 6   | test-suite defect               | **instrument repaired** (T008)                | none                                                         |
 | 7   | **product defect — OPEN**       | **contained**, not removed: fail-closed v-limit at the compiler (T039) | the lift trigger — all six lanes measured byte-identical on an interior run at pinned versions |
-| 8   | **product defect — OPEN**       | **contained**, not removed: fail-closed refusal in the React emitter (T044) | the lift trigger — React lowers a nested state write the way Solid already does |
+| 8   | **product defect — OPEN**       | **contained AGAINST NESTED FUNCTIONS ONLY**, not removed: the fail-closed refusal (T044) tests `NESTED_FUNCTION_TYPES`, so a write inside an `if` is neither lowered nor refused — see **8.1** | the lift trigger — React lowers a nested state write the way Solid already does — **plus** the planted `if`-nested row 8.1 says a repair card owes first |
 | 9   | **product defect — CLOSED**     | **removed**, not contained: the construct is lowered, and the missing typecheck oracle over emitted Angular now exists (T045) | none — but note the oracle is structurally blind to mode B, which the emitted-keyword assertion covers instead |
 | 10  | **product defect — CLOSED**     | **removed**, not contained: boolean content attributes reach Angular as `[disabled]`, not `[attr.disabled]` (T049), and S9 gives the lowering a **served payload** — six lanes byte-identical on *absent* → `disabled=""` → *absent*, at a state cell and inside a keyed repeat (T050) | none for the defect — the six registered mutants are witnessed by `pnpm mutate:corpus`, and a survivor re-opens it on that lane |
 | 11  | **product defect — CLOSED**     | **removed**, not contained: the accidental `\|\| fn.async` is gone from the Solid validator and the across-await lowering is proven by running it (T046), and S8 gives it a **served payload** — six lanes byte-identical on the suspended reading and on the overlap (T004) | none |
 | 12  | **product defect — CLOSED**     | **removed**, not contained: the `await` survives re-analysis (T047), the final-sync retention is **segmented at the suspension boundary** and post-await reads of the cell being written are lowered to React's **functional updater** (T003). Witnessed before/after against real `react-dom`, with the calibration arm held fixed as the control, and **zero generated bytes moved** across three proven-real regeneration tiers | none for the defect — a **v-limit** (post-await read of a *different* cell) is recorded in 12.2 with its triggering authoring and its own registered test. The **served payload** landed with S8 (T004): six lanes byte-identical, and the react mutant is the pre-T003 lowering restored verbatim, RED at three of five readings |
 | 13  | **product defect — OPEN**       | **half removed**: react's three names are repaired in `jsxName` and pinned against react-dom's own rejections; `hidden` and `readonly` are **contained** — excluded from `LANE_PORTABLE_BOOLEAN_ATTRIBUTES`, unrepairable from any emitter, because both fail inside `@qwik.dev/core`'s own `isBooleanAttr` | the lift trigger — a qwik release whose `isBooleanAttr` admits `hidden` and stops gating `readonly` on `key in element`, at which point the clause-5 matrix goes red and the portable set widens |
 | 14  | **product defect — CLOSED**     | **removed**, not contained: a class with an async handler injects `ChangeDetectorRef` and every suspension segment after the first ends with `markForCheck()` (T004). Found by a **served payload** and by nothing else, with the diagnosis measured — one extra click made the stale DOM jump to the correct value | none for the defect — nested-function writes are NOT covered and the pass says so; no corpus authoring produces one |
+| 15  | **product defect — OPEN**       | **not contained** — no refusal anywhere: the casing is destroyed in the compiler (`jsxEventName` in `packages/compiler/src/build.ts`), so no emitter in any of the six lanes can spell `onKeyDown`, and the emitted binding is inert at runtime | a per-lane spelling map (`dblclick` → React's `onDoubleClick` shares no stem with it), **and** a compiler-side refusal so `/^on[A-Z]/` stops accepting a name it is about to flatten |
+| 16  | **not a defect**                | nothing to change in any emitter — the Svelte a11y refusals are correct and canonical TodoMVC's clickable `<label>` is the anti-pattern | **nothing** — rendered via a marked supplement (T007), vendored bytes untouched |
 
-**Entries 7, 8 and 13 are the OPEN defects in frameless's own emitted output**,
-and they are the ones on this table a later reader could mistake for closed
-because their repairs are green. Entries 7 and 8 *contain* something that is still
-there — a non-neutrality in 7, an unlowerable construct in 8 — so their repairs
-are refusals, and a refusal is not a removal. In all of these cases a registered
-test reports the day the status should change, and in all of them it reports in
-**either** direction.
+**Entries 7, 8, 13 and 15 are the OPEN defects in frameless's own emitted
+output**, and 7, 8 and 13 are the ones on this table a later reader could mistake
+for closed because their repairs are green. Entries 7 and 8 *contain* something
+that is still there — a non-neutrality in 7, an unlowerable construct in 8 — so
+their repairs are refusals, and a refusal is not a removal. In all of these cases
+a registered test reports the day the status should change, and in all of them it
+reports in **either** direction.
+
+**Entry 15 is in none of those states, and that is what distinguishes it.** It is
+not contained, not repaired-but-unwitnessed, and not accepted-and-wrong-by-design
+the way entry 12 was for a phase. **Nothing refuses it and nothing reports it**:
+the compiler accepts `onKeyDown`, flattens it, and every lane emits a binding that
+renders clean and never fires. Entry 12's phase was a deliberate choice with tests
+asserting the defect's own numbers; entry 15 has **no instrument at all**, because
+the corpus's three events are single-word and `.toLowerCase()` is the identity on
+every one of them.
+
+**And entry 8's containment claim was overstated until T006 measured it.** This
+table said "contained" for eight entries' worth of reading; what is contained is
+the *nested-function* form. The `if` form was never refused, and the entry's own
+prose — "a write inside any nested **function**" — is where the gap hid. A
+containment claim is only as wide as the predicate that enforces it, and the
+predicate here is a five-member set of function node types.
 
 **Entry 10 moved to CLOSED on 2026-07-28, and the distinction it used to
 illustrate is worth keeping.** Its repair always *removed* the defect the way

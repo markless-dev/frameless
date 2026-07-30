@@ -96,7 +96,7 @@ visual_board:
     The owner has run nineteen-plus goals in this repo against the file board alone, including
     three that closed in the previous session. Recorded as an explicit choice, not an omission.
 
-active_task: T006
+active_task: T008
 
 tasks:
   - id: T001
@@ -436,7 +436,7 @@ tasks:
   - id: T006
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     spec: "T002 receipt, remaining_blockers - AUTHORITATIVE. The deliverable is DONE and browsable; this closes pnpm test."
     objective: >-
@@ -491,6 +491,109 @@ tasks:
       - "You are about to EDIT THE VUE GATE'S CENSUS NUMBERS to fit rather than re-measuring and re-arguing the ruling. That message is a shipped refusal, and a number changed without its reason re-derived is the fault this project keeps catching."
       - "pnpm check rises above 267, or pnpm e2e leaves 6 x 9."
       - "You are about to repair either emitter defect. RECORD ONLY - the repair is a separate goal."
+      - "Verification fails twice for the same reason."
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 2
+      note: notes/T006-tenth-scenario.md
+      changed_files:
+        - packages/frameworks/react/test/size.test.ts
+        - packages/frameworks/solid/test/size.test.ts
+        - packages/frameworks/solid/test/emitted-typecheck.test.ts
+        - packages/frameworks/angular/test/emitter.test.ts
+        - packages/frameworks/vue/src/gate/index.ts
+        - packages/frameworks/vue/test/gate.test.ts
+        - docs/DEFECTS.md
+        - docs/goals/frameless-real-apps-v1/notes/T006-tenth-scenario.md
+      commands:
+        - cmd: "pnpm test"
+          status: pass
+          note: "EXACTLY 1 failure - the foreign package-inventory ARM B. 1259 passed / 1260. PM CONFIRMED. Nine S10 failures closed with ZERO tests added."
+        - cmd: "pnpm check"
+          status: pass
+          note: "EXACTLY 267, unmoved - PM CONFIRMED"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "6 demos x 9 scenarios, all observations equal"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0/0 over 455 files"
+        - cmd: "pnpm check:citations"
+          status: pass
+          note: "clean - after repairing 5 bare ordinals its OWN DEFECTS.md prose introduced"
+        - cmd: "six sites launched and probed"
+          status: pass
+          note: "each verified with its OWN identity. THE FIRST SWEEP WAS A FALSE GREEN - four identical bodies from ONE react server because a kill had failed - caught and re-run with a port-free precondition."
+        - cmd: "independent census derivation"
+          status: pass
+          note: "own script, NOT read from the failure text"
+        - cmd: "owner fingerprints at start AND finish"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169, identical"
+      summary: "pnpm test reaches EXACTLY ONE failure, the foreign ARM B. The vue gate census was RE-DERIVED with an independent script and RE-ARGUED rather than renumbered. Defect (a) filed as entry 15; defect (b) is NOT NEW - it is entry 8, whose shipped refusal has a hole the shape of an if block, filed as 8.1. The <label> item adjudicated NOT A DEFECT."
+      THE_VUE_GATE_WAS_RE_DERIVED_NOT_RENUMBERED: "It wrote an INDEPENDENT CENSUS SCRIPT rather than reading numbers out of the failure text: 12a went 8 -> TWELVE instances and 1 -> THREE applicable; 12b 21 -> 22 entries with 7 distinct names unchanged. AND THE RE-ARGUMENT MOVED THE RULING TOWARD DENIAL: Gate 4 still FAILs because 3 of 12 is a proper subset, but the repair narrowing's domain TRIPLED from one shipped instance to three, so the Gate 3 unsoundness is reachable on three handlers instead of one. All nine outside handlers still call onTrace(, so the message's stated reason survives too."
+      DEFECT_b_IS_NOT_NEW_AND_THE_TRUTH_IS_WORSE: "It is docs/DEFECTS.md ENTRY 8, which already documents the identical mechanism - filing it again would have duplicated the ledger. THE GENUINELY NEW FACT IS WORSE: entry 8's shipped refusal assertLowerableWrites only fires on NESTED_FUNCTION_TYPES, so a write inside `if (c) { ... }` passes only BlockStatement/IfStatement, hits `if (!nested) continue;` and IS NEVER REFUSED - while emitMutableHandler, iterating top-level statements, still fails to lower it. NOT LOWERED, NOT REFUSED. Filed as 8.1, and the ledger's standing table no longer claims entry 8 is simply 'contained'."
+      IT_REFUTED_TWO_OF_ITS_OWN_DRAFT_COMMENTS_BEFORE_SHIPPING: "It attributed solid's S10 size premium to per-computed accessor arrows - but S10 declares FOUR computed against S7's FIVE. And 'the gap exceeds S2's and S4's combined' is true on LINES (29 > 11) and FALSE ON NODES (37 < 39). The row now records the measurement and EXPLICITLY DECLINES to name a mechanism its own corpus contradicts."
+      and_the_calibration_row_hit_the_exact_hazard_its_header_described: "The vue calibration planted s10-planted-calibration colliding with the REAL tenth scenario. It derived the plant's ordinal as one past the highest shipped scenario with two anti-collision assertions, so an eleventh scenario moves it without touching the file - rather than hard-coding s11, which is the same defect with a bigger number."
+      deviations:
+        - "Defect (b) filed as an AMENDMENT (8.1) rather than a new entry - see above."
+        - "ENTRY 16 ADDED, MARKED NOT A DEFECT. The card made recording the <label> finding conditional on judging it one. It judged NOT - the Svelte a11y refusals are correct and canonical TodoMVC's clickable label is the anti-pattern - and RECORDED THE ADJUDICATION ANYWAY, following entry 2's precedent."
+        - "REVERTED demos/angular-official/angular.json, which the Angular CLI wrote 'analytics: false' into during pnpm e2e. Outside allowed_files, so restored to HEAD."
+        - "Stale prose corrected in passing inside allowed_files: angular's control-arm comment read 'seven of the eight scenarios' while the corpus already held nine."
+      remaining_blockers:
+        - "IT KILLED FOREIGN PID 96248 (ng serve, port 4200) with an over-broad pkill while cleaning up its own 4201 server. T002 and T007 both deliberately left it running; the owner's process CANNOT BE RESTORED. Port 4200 is now free - which did let angular be verified on its DOCUMENTED command for the first time. Qwik's PID 64413 was NOT touched."
+        - "docs/emitter-idiom-policy.md IS OUTSIDE allowed_files AND NOW STALE: 12a says 'eight shipped instances' and 'one of eight' against a true twelve and three. NOTHING IN verify GOES RED - the doc is prose the gate test does not read - so THE RULING OF RECORD DISAGREES WITH THE SHIPPED REFUSAL IT GOVERNS. And 12b was ALREADY FALSE before this goal: it claims 'the distinct-name count has not moved once' at six, but S8 introduced `ready` and the derived count is SEVEN. Carried to T008."
+        - "packages/frameworks/react/src/emitter/index.ts CONTAINS A NUL BYTE so grep is blind to all 4306 lines. PM TRACED IT: db6e275 has zero NULs and grep -c import returns 44; 61a6779 - T003'S OWN ASYNC REPAIR - introduced it, and grep now returns EXIT 1 WITH NO OUTPUT AT ALL. Carried to T008."
+        - "Entry 8.1's repair card owes a planted if-nested fixture driven through emitOrRefuse. Its evidence is emitter source plus T002's observation, and 8.1 SAYS SO rather than implying a measurement nobody took."
+      stopped_because: null
+  - id: T008
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: medium
+    spec: "T006 receipt, remaining_blockers - AUTHORITATIVE."
+    objective: >-
+      Restore greppability to the React emitter, and reconcile the idiom policy with the
+      shipped refusal it governs.
+    WE_BLINDED_GREP_TO_A_4306_LINE_FILE_THIS_SESSION: >-
+      packages/frameworks/react/src/emitter/index.ts contains ONE NUL BYTE at line 2261, a
+      deliberate map-key separator in segmented(): `${segmentOf.get(statement) ?? 0}\x00${...}`.
+      PM TRACED IT EXACTLY: at db6e275 the file has ZERO NULs and `grep -c import` returns 44;
+      at 61a6779 - T003'S OWN ASYNC REPAIR - it has one, and grep returns EXIT 1 WITH NO OUTPUT
+      AT ALL. Not "0". Not "Binary file matches". NOTHING. So every grep-based sweep of this
+      repo has been SILENTLY BLIND to the entire React emitter since T003 landed, and a
+      reviewer would read the empty result as "no matches" rather than "not searched".
+      Replace the separator with a non-NUL control or delimiter that cannot occur in an
+      identifier, and PROVE grep sees the file again.
+    the_policy_doc_now_disagrees_with_the_refusal_it_governs: >-
+      docs/emitter-idiom-policy.md worked example 12a states "eight shipped instances" and
+      "one of eight"; T006 re-derived the true figures as TWELVE and THREE. AND 12b WAS
+      ALREADY FALSE BEFORE THIS GOAL: it lists six distinct prop names and claims "the
+      distinct-name count has not moved once", but S8 introduced `ready` and the derived count
+      is SEVEN. NOTHING IN ANY verify GOES RED ON EITHER - the doc is prose the gate test does
+      not read - so the RULING OF RECORD disagrees with the SHIPPED REFUSAL. Correct both with
+      their provenance, and say plainly that the doc is unpinned.
+    constraints:
+      - "The NUL fix must not move an emitted byte. Prove it: regenerate all three tiers and diff."
+      - "Do NOT renumber the policy doc's figures without recording WHERE they came from - T006 derived them with an independent script, not from failure text."
+      - "Consider whether the policy doc's counts should be DERIVED rather than written, the way the vue gate's message already is. Recommend; do not build it under this card unless it is small."
+    allowed_files:
+      - packages/frameworks/react/src/emitter/index.ts
+      - packages/frameworks/react/test/**
+      - docs/emitter-idiom-policy.md
+      - docs/goals/frameless-real-apps-v1/notes/T008-grep-and-policy.md
+    verify:
+      - "grep -c import on the react emitter RETURNS A NUMBER - it currently returns exit 1 and no output. That is the whole point of the card."
+      - "pnpm test   # exactly 1 failure - the foreign ARM B"
+      - "pnpm check  # exactly 267"
+      - "pnpm e2e    # 6 x 9"
+      - "pnpm lint && pnpm check:citations"
+      - "regenerate all three tiers and confirm ZERO emitted bytes moved"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Any emitted byte moves."
+      - "pnpm check rises above 267, or pnpm e2e leaves 6 x 9."
       - "Verification fails twice for the same reason."
     receipt: null
 

@@ -180,6 +180,18 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// served payload has to.
 	S8: { physicalLoc: 45, structuralNodes: 205 },
 	S9: { physicalLoc: 72, structuralNodes: 369 },
+	// S10 likewise has no handwritten reference, so this is a budget, MEASURED off
+	// the emitted output. IT IS THE COMPARISON THIS TABLE HAS NEVER BEEN ABLE TO
+	// MAKE: S1-S9 are axis probes, each authored to isolate one construct, and S10
+	// is a whole application (TodoMVC) authored as an application. The number says
+	// what that costs against S7, the previous heavyweight on BOTH axes: 275/118 =
+	// 2.33x the physical lines and 1262/573 = 2.20x the structural nodes. The two
+	// ratios agreeing to within 6% is the reading worth recording - an emitter that
+	// paid a per-element tax the probes were too small to expose would grow nodes
+	// FASTER than lines, and this one does not. Stated as the two ratios rather
+	// than as "flat", because 2.33 and 2.20 are not equal and rounding them into
+	// agreement is how a budget starts describing a claim instead of a measurement.
+	S10: { physicalLoc: 275, structuralNodes: 1262 },
 };
 
 describe('honest emitted structure comparison', () => {

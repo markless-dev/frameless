@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { copyFile, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
@@ -762,17 +762,27 @@ describe('Vue dossier gate', () => {
 	 * shipped gate messages (not a lookalike) through the SAME assertion helpers
 	 * the two rows above call, and asserts they fail.
 	 *
-	 * S10, NOT S8: S8 is now a real corpus scenario (the async one), and a plant
-	 * that reused its number would be COPIED OVER by the faithful-copy loop above
-	 * and counted twice - once per golden mapping to the same emitted file. That
-	 * near-miss is why the precondition below compares the copy to the shipped
-	 * derivation before anything is planted.
+	 * THE PLANT'S ORDINAL IS DERIVED, AND IT IS DERIVED BECAUSE HARDCODING IT
+	 * FAILED TWICE. This row first planted an EIGHTH scenario; S8 landed and the
+	 * comment was moved to S10 with the hazard written out - "a plant that reused
+	 * its number would be COPIED OVER by the faithful-copy loop and counted twice,
+	 * once per golden mapping to the same emitted file". Then `frameless-real-apps-v1`
+	 * shipped a real S10 and the row hit THE EXACT HAZARD ITS OWN COMMENT NAMED:
+	 * `s10-planted-calibration.json` joined the real `s10-todomvc.json`, both
+	 * mapping to `generated/S10.vue`, whose bytes the plant had just overwritten -
+	 * so the derivation counted 10 where it should have counted 13, and the row
+	 * failed on its own scaffolding rather than on the thing it measures.
+	 *
+	 * Naming the next free number is the same defect with a bigger literal. The
+	 * ordinal is now taken as one past the highest scenario the corpus actually
+	 * holds, so the plant is UNOCCUPIED BY CONSTRUCTION and an eleventh scenario
+	 * moves it without touching this file.
 	 *
 	 * The planted scenario is deliberately inside BOTH domains at once: a host
 	 * with a `:value` bind and a same-host `@input` (12a) whose IR declares one
 	 * more prop entry under a name no golden uses (12b).
 	 */
-	test('CALIBRATION: the derived domain figures go RED against a planted tenth scenario', async () => {
+	test('CALIBRATION: the derived domain figures go RED against a planted scenario', async () => {
 		const shippedHosts = deriveTwoWayHostDomain();
 		const shippedProps = derivePrintedPropEntries();
 		const root = await realpath(await mkdtemp(resolve(tmpdir(), 'frameless-vue-domain-')));
@@ -791,14 +801,27 @@ describe('Vue dossier gate', () => {
 			expect(deriveTwoWayHostDomain(planted).instances).toEqual(shippedHosts.instances);
 			expect(derivePrintedPropEntries(planted)).toEqual(shippedProps);
 
+			// ONE PAST THE HIGHEST SHIPPED ORDINAL, derived from the same
+			// `scenarioGoldens` the assertions use. A literal here is what collided
+			// with the real S10; see the header. The plant must occupy a slot the
+			// corpus does not, or it overwrites a real emitted file and the row
+			// measures its own scaffolding.
+			const plantedDigits =
+				Math.max(...scenarioGoldens(goldenRoot).map(({ digits }) => Number(digits))) + 1;
+			// ANTI-COLLISION, ASSERTED RATHER THAN ASSUMED: neither the golden slot
+			// nor the emitted file the plant is about to write may already exist.
+			expect(scenarioGoldens(goldenRoot).map(({ digits }) => digits)).not.toContain(
+				String(plantedDigits),
+			);
+			expect(existsSync(resolve(generatedRoot, `S${plantedDigits}.vue`))).toBe(false);
 			await writeFile(
-				resolve(goldenRoot, 's10-planted-calibration.json'),
+				resolve(goldenRoot, `s${plantedDigits}-planted-calibration.json`),
 				JSON.stringify({
 					components: [{ props: { entries: [{ path: ['plantedCalibrationProp'] }] } }],
 				}),
 			);
 			await writeFile(
-				resolve(generatedRoot, 'S10.vue'),
+				resolve(generatedRoot, `S${plantedDigits}.vue`),
 				'<template>\n' +
 					'\t<input\n' +
 					'\t\t:value="planted"\n' +
