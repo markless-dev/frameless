@@ -91,7 +91,7 @@ visual_board:
     The owner has run eighteen-plus goals in this repo against the file board alone,
     including two that closed this session. Recorded as an explicit choice, not an omission.
 
-active_task: T004
+active_task: T999
 
 tasks:
   - id: T001
@@ -317,7 +317,7 @@ tasks:
   - id: T004
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       Land S8 as the corpus scenario that PINS the async repair: nine scenarios in all six
@@ -372,12 +372,130 @@ tasks:
       - "A mutant survives."
       - "pnpm e2e moves on scenarios 1-7 and 9."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T004-s8-async-scenario.md
+      changed_files:
+        - demos/angular-official/package.json
+        - demos/angular-official/scenarios.box.ts
+        - demos/angular-official/src/app/app.routes.ts
+        - demos/angular-official/src/app/async-gate.ts
+        - demos/angular-official/src/app/scenario-props.ts
+        - demos/angular-official/src/emitted/AsyncBoard.ts
+        - demos/qwik/package.json
+        - demos/qwik/scenarios.box.ts
+        - demos/qwik/src/emitted/AsyncBoard.tsx
+        - demos/qwik/src/routes/s8/index.tsx
+        - demos/react-official/package.json
+        - demos/react-official/scenarios.box.ts
+        - demos/react-official/src/App.jsx
+        - demos/react-official/src/emitted/AsyncBoard.tsx
+        - demos/react-official/three-way-contract.ts
+        - demos/solid-official/package.json
+        - demos/solid-official/scenarios.box.ts
+        - demos/solid-official/src/App.jsx
+        - demos/solid-official/src/emitted/AsyncBoard.tsx
+        - demos/svelte-official/package.json
+        - demos/svelte-official/scenarios.box.ts
+        - demos/svelte-official/src/lib/emitted/AsyncBoard.svelte
+        - demos/svelte-official/src/lib/scenario-props.ts
+        - "demos/svelte-official/src/routes/s8/+page.svelte"
+        - demos/vue-official/package.json
+        - demos/vue-official/scenarios.box.ts
+        - demos/vue-official/src/App.vue
+        - demos/vue-official/src/emitted/AsyncBoard.vue
+        - demos/vue-official/src/scenario-props.ts
+        - docs/DEFECTS.md
+        - docs/goals/frameless-async-and-defects-v1/notes/T004-s8-async-scenario.md
+        - packages/compiler/test/enriched-ir.test.ts
+        - packages/compiler/test/fixtures/s8-async-handlers.tsrx
+        - packages/compiler/test/goldens/s8-async-handlers.json
+        - packages/frameworks/angular/generated/S8.ts
+        - packages/frameworks/angular/package.json
+        - packages/frameworks/angular/scripts/regenerate.ts
+        - packages/frameworks/angular/src/emitter/index.ts
+        - packages/frameworks/angular/src/gate/index.ts
+        - packages/frameworks/angular/test/emitter.test.ts
+        - packages/frameworks/angular/test/gate.test.ts
+        - packages/frameworks/qwik/generated/S8.tsx
+        - packages/frameworks/qwik/package.json
+        - packages/frameworks/qwik/scripts/regenerate.ts
+        - packages/frameworks/react/generated/S8.tsx
+        - packages/frameworks/react/scripts/regenerate.ts
+        - packages/frameworks/react/src/gate/custom-policies.ts
+        - packages/frameworks/react/test/size.test.ts
+        - packages/frameworks/solid/generated/S8.tsx
+        - packages/frameworks/solid/scripts/regenerate.ts
+        - packages/frameworks/solid/test/size.test.ts
+        - packages/frameworks/svelte/generated/S8.svelte
+        - packages/frameworks/svelte/package.json
+        - packages/frameworks/svelte/scripts/regenerate.ts
+        - packages/frameworks/vue/generated/S8.vue
+        - packages/frameworks/vue/package.json
+        - packages/frameworks/vue/scripts/regenerate.ts
+        - packages/frameworks/vue/src/gate/index.ts
+        - packages/frameworks/vue/test/gate.test.ts
+        - scripts/corpus-mutation.mjs
+        - scripts/e2e.mjs
+      commands:
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "6 demos x NINE scenarios, all observations equal. Scenarios 1-7 and 9 BYTE-UNCHANGED. PM CONFIRMED threeWayScenarios now carries s8. The S8 row is IDENTICAL IN ALL SIX LANES: server-rendered ticks=0 phase=idle cancels=0 | one run over a resolved gate ticks=1 done | WHILE TWO DISPATCHES ARE SUSPENDED AT THE AWAIT ticks=1 phase=PENDING | after release the two overlapping dispatches left ticks=3 done | a fourth run from the newest render ticks=4 done | after cancel-run 1 document request and cancels=1"
+        - cmd: "pnpm mutate:corpus (54 cells)"
+          status: pass
+          note: "54 mutants, EVERY ONE RED, EVERY ONE RESTORED, 0 survivors. All six s8 cells red at the in-box assertion, verbatim: 'expected [data-async=\"phase\"] to have text \"pending\", but it was \"done\"'. THE REACT s8 MUTANT IS THE PRE-T003 EMITTED LOWERING RESTORED VERBATIM - the repair's own falsifier."
+        - cmd: "pnpm mutate:corpus --dry-run"
+          status: pass
+          note: "54 anchor uniquely and every one changes bytes"
+        - cmd: "all three regeneration tiers, PROVED REAL FIRST"
+          status: pass
+          note: "__T004_PLANT__ planted in one artifact PER TIER and every one restored. After the run the ONLY generated paths differing from HEAD are the six new S8.*"
+        - cmd: "pnpm test"
+          status: pass
+          note: "1248 passed / 1 failed = baseline 1236/1 + 12 tests this task adds. The 1 is the FOREIGN package-inventory ARM B; the count stayed at exactly 1."
+        - cmd: "pnpm check"
+          status: pass
+          note: "EXACTLY 267 - the inherited RED DID NOT RISE. PM CONFIRMED 267. It first measured 274; see the annotation deviation."
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0/0 over 440 files"
+        - cmd: "pnpm check:citations"
+          status: pass
+          note: "clean over 4 documents, 17 watched, 516 swept"
+        - cmd: "owner-path fingerprints at start AND finish"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169 identical, website/ 116 files. METHOD REPRODUCED not asserted - the naive xargs variant gives b1dd182a, which is exactly what the prior phase flagged."
+        - cmd: "git rev-parse HEAD"
+          status: pass
+          note: "61a6779 at start AND finish. NOTHING COMMITTED."
+      summary: "S8 IS IN THE CORPUS IN ALL SIX LANES. e2e reports 6 x 9 all equal; mutate:corpus reports 54 cells, every one RED, every one restored. The scenario pins BOTH of 12.2's mechanisms AT THE SERVED-PAYLOAD LEVEL: the dropped pre-await write by a render taken WHILE TWO DISPATCHES ARE SUSPENDED, and the stale render-closure read by those two dispatches overlapping. It also found and closed a NEW defect that only the served payload could see."
+      THE_MUTATION_HARNESS_HAS_BEEN_BROKEN_SINCE_THE_RENAME: "pnpm mutate:corpus COULD NOT RUN AT ALL in react, solid or qwik at HEAD. corpus-mutation.mjs still declared extension: 'jsx' after the emitter-capability phase renamed those artifacts to .tsx, so it threw ENOENT on generated/S1.jsx BEFORE ISSUING A SINGLE VERDICT - on every scenario, in three lanes. PM CONFIRMED at 61a6779: three 'jsx' entries, now 'tsx'. THE 54-CELL BUDGET THIS CARD DEMANDED WAS LITERALLY UNREACHABLE, and any mutants-all-red claim for those three lanes since the rename was unobtainable. Fixed, with the measurement recorded at the table."
+      A_NEW_DEFECT_THE_SERVED_PAYLOAD_FOUND_AND_NOTHING_ELSE_COULD: "EMITTED ANGULAR NEVER RE-RENDERED A STATE WRITE MADE AFTER AN await. Angular 22 is zoneless, the lane holds state in plain class fields, and the template listener's own notification has ALREADY FIRED by the time the continuation runs. INVISIBLE to ng build, parse-emitted, emitted-typecheck AND pnpm check - it took a served payload. The witness is verbatim: 'expected [data-async=\"ticks\"] to have text \"3\", but it was \"1\"', and with one extra click inserted it read 3 immediately then failed at '4 but it was 3' - SO BOTH CONTINUATIONS RAN, THE STATE WAS CORRECT, AND THE DOM WAS STALE. Repaired by notifyAfterSuspension, gated on handler.isAsync so zero generated bytes moved outside S8. DEFECTS.md entry 14. The alternative - lowering every cell to an Angular signal - is a re-lowering of the lane and is recorded as an architecture decision NOT TAKEN."
+      the_overlap_is_satisfiable_but_not_as_I_briefed_it: "The arm drives two dispatches overlapping the await in all six lanes - BUT ONLY BECAUSE THE PROMISE IS ARMED BY A CLICK. MEASURED in @qwik.dev/core 2.0.0-beta.38: the SSR serializer resolves a promise by AWAITING it, so a gate pending at serialization HANGS THE RENDER, and a timer gate serializes RESOLVED so the client has no window. NEITHER IS A DEFECT - a pending promise with a live resolver is not serializable, which is what resumability IS. So /s8 serves an already-resolved gate and arms a pending one client-side. THE SCENARIO WAS NOT WEAKENED: it still drives the overlap and still reads the suspended render."
+      two_instruments_would_have_gone_VACUOUS_and_it_caught_both: "(1) The Angular async arm asserted 'no emitted scenario contains an async member' - now two-sided as 'S8 is the ONE scenario with async members and the other eight have none'. Its untyped-parameter sweep matched only `): void {`, SO IT WOULD HAVE GONE SILENTLY VACUOUS on the one scenario whose methods are `: Promise<void>`. Widened. (2) The Vue gate's calibration row PLANTED A SCENARIO AT S8, which now COLLIDES with the real one and was counted twice; it plants S10 instead, with the near-miss written down."
+      reacts_own_gate_refused_the_repaired_output: "generated/S8.tsx violated one-call-per-setter because T003's SEGMENTED retention is exactly what makes the handler call setPhase twice, once either side of the boundary. The count is now keyed by (suspension segment, setter): inside a segment nothing can render in between, so THE RULING'S FORCE IS UNCHANGED and its four synchronous mutation rows still pass."
+      deviations:
+        - "THE MUTATION HARNESS WAS BROKEN AT HEAD - see above. Fixed inside scripts/corpus-mutation.mjs."
+        - "A NEW ANGULAR DEFECT found and closed - see above."
+        - "The overlap constraint is satisfiable but not as briefed - see above."
+        - "S8'S PROPS ARE ANNOTATED and pnpm check first measured 274 without it. DISCLOSED rather than reported clean. The justification is ON THE AXIS: `ready` is the thing the handlers await, and on an unannotated prop 'await on a promise-VALUED prop' is UNPROVABLE - the emitted `await ready` is an await of `any`. This is NOT T002's rejected tsrx-core.d.ts move, which changed nothing a consumer sees; this changes the emitted type in all six lanes."
+        - "THE MUTATION HARNESS'S CLEAN-SURFACE PRECONDITION now compares the working tree to the INDEX rather than HEAD, because `git checkout --` restores FROM THE INDEX. That is what lets it run on a tree whose new corpus artifacts are staged but not committed. Untracked paths are still refused."
+        - "TWELVE NEW FILES ARE STAGED - git add by NAMED PATHS ONLY, never -A. Nothing committed, HEAD unchanged. `git reset` undoes it."
+        - "THE VUE GATE'S SHIPPED MESSAGES CARRY CORPUS FIGURES and had to move with the corpus: eight-scenario -> nine, NINETEEN/six -> TWENTY-ONE/seven printed prop entries."
+        - "T003'S REMAINING BLOCKER CLOSED: the four unwired regenerate:composition scripts are wired; all six now run through pnpm."
+      remaining_blockers:
+        - "notifyAfterSuspension does NOT descend into nested functions: a state write inside a .then callback or a setTimeout in an Angular handler would still land unrendered. No corpus authoring produces one, AND THE PASS SAYS SO AT ITS OWN DEFINITION. It is the Angular twin of DEFECTS.md entry 8."
+        - "The 12.2 v-limit stands unchanged: a post-await read of a cell OTHER than the one being written still reads the closure in React. S8 does not author that shape and its registered arm still pins it."
+        - "S7 is still OPEN and still owned by the IR - untouched, per T002's routing."
+        - "pnpm check remains at its inherited 267. Not this goal's to lower."
+      stopped_because: null
+      pm_receipt_defect: "The PM's first draft ended changed_files with a PROSE entry - '(plus per-lane regenerate.ts, package.json, demo routes and emitted artifacts - full list in the note)'. The applier's scope check refused it, correctly: A changed_files ENTRY THAT MATCHES NO FILESYSTEM PATH CANNOT BE SCOPE-CHECKED AT ALL, which is the whole point of the field. Replaced with the real list derived from git status. Same defect the PM made on the emitter-capability board with brace expansion."
   - id: T999
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     objective: "Final audit: certify all three oracle parts, or refuse."
     constraints:

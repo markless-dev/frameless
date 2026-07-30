@@ -16,6 +16,7 @@ const fixtures = [
 	['S5.ts', 's5-branch-teardown.json'],
 	['S6.ts', 's6-whitespace-text.json'],
 	['S7.ts', 's7-form-controls.json'],
+	['S8.ts', 's8-async-handlers.json'],
 	['S9.ts', 's9-boolean-attributes.json'],
 ] as const;
 for (const [output, golden] of fixtures) {

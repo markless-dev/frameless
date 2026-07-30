@@ -20,6 +20,7 @@ const FIXTURES = [
 	's5-branch-teardown.tsrx',
 	's6-whitespace-text.tsrx',
 	's7-form-controls.tsrx',
+	's8-async-handlers.tsrx',
 	's9-boolean-attributes.tsrx',
 ] as const;
 
@@ -188,6 +189,48 @@ const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>>
 		['button', 'data-action'],
 		['button', 'data-action'],
 		['button', 'data-guard'],
+	],
+	// S8 is the ASYNC scenario, and it is the first fixture in this corpus whose
+	// handlers contain `await` at all. T031 measured that S8 had NO six-lane
+	// spelling on the emitters of the time and wrote nothing; T043 refuted the
+	// impossibility proof and re-specified the authoring as `await` on a
+	// promise-VALUED prop - no call and no free global, which is what clears
+	// Angular's globals rule and Qwik's callback-statement rule simultaneously.
+	// The two handlers below are T043's A7 and A8 verbatim in shape: A7 writes
+	// state either side of the boundary, A8 opens with `event.preventDefault()`
+	// so the Qwik lane has to split the handler into `sync$()` + `$(async)`.
+	//
+	// THE BUTTONS CARRY TEXT CHILDREN, and that is a MEASURED constraint rather
+	// than a style choice. T002 of frameless-async-and-defects-v1 ran the probe
+	// through all six emitters for the first time - it had only ever been run
+	// through react - and the SVELTE EMITTER REFUSES a self-closing
+	// `<button ... />`: "did not compile warning-free:
+	// a11y_consider_explicit_label". With a label all six lanes emit cleanly.
+	//
+	// WHY `phase` IS WRITTEN ON BOTH SIDES OF THE `await` AND `ticks` ONLY AFTER
+	// IT. Those are the two mechanisms `docs/DEFECTS.md` 12.2 records, and each
+	// one needs its own shape to be observable at all:
+	//
+	//   (b) the DROPPED PRE-AWAIT WRITE needs a cell written on BOTH sides, so
+	//       that a lowering retaining only the final sync per cell loses the
+	//       first write. Its only observable is a render taken WHILE the handler
+	//       is suspended, which is why the scenario has to be able to hold the
+	//       promise open - see the /s8 page in each demo.
+	//   (a) the STALE RENDER-CLOSURE READ needs a post-await read of a cell
+	//       written after the boundary, driven by two dispatches that OVERLAP at
+	//       the `await`: one dispatch, or a final-state trace, passes under both
+	//       lowerings. T001 measured that.
+	//
+	// `cancels` is A8's, and it is a third cell rather than a reuse of `ticks`
+	// on purpose: the cancellation arm must be observable without disturbing the
+	// counter the overlap claim is read off.
+	's8-async-handlers.tsrx': [
+		['form', 'data-scenario'],
+		['p', 'data-async'],
+		['p', 'data-async'],
+		['p', 'data-async'],
+		['button', 'data-action'],
+		['button', 'data-action'],
 	],
 	// S9's rows carry `data-oracle-attr-key`, a SIXTH key attribute, for the reason
 	// the second through fifth exist: every key reader in `three-way-contract.ts`
@@ -540,14 +583,60 @@ describe('fixture-family sufficiency', () => {
 			});
 		});
 
-		test('CONTROL: every other corpus scenario is unannotated and carries NO type', async () => {
-			for (const file of FIXTURES.filter((name) => name !== 's1-render-once.tsrx')) {
+		/**
+		 * The annotated set is NAMED, and the control arm is what is left over.
+		 *
+		 * S8 joined S1 here when the async scenario landed, and the row is written
+		 * this way rather than as `filter(name !== 's1')` because that spelling
+		 * would have had to be widened by one filter clause per new annotated
+		 * fixture until the control arm was empty and nobody noticed. `ANNOTATED` is
+		 * asserted to be non-empty AND a strict subset, so both halves stay real: a
+		 * corpus that annotated everything, or nothing, fails here rather than
+		 * reporting a green over a vacuous loop.
+		 */
+		const ANNOTATED: readonly (typeof FIXTURES)[number][] = [
+			's1-render-once.tsrx',
+			's8-async-handlers.tsrx',
+		];
+
+		test('CONTROL: every UNannotated corpus scenario carries NO type, and both sets are non-empty', async () => {
+			const control = FIXTURES.filter((name) => !ANNOTATED.includes(name));
+			expect(ANNOTATED.length).toBeGreaterThan(0);
+			expect(control.length).toBeGreaterThan(0);
+			for (const file of control) {
 				const ir = await fixtureIr(file);
 				const typed = ir.components
 					.flatMap((component) => component.props.entries)
 					.filter((entry) => entry.type !== undefined);
 				expect(typed, `${file} should carry no authored prop type`).toEqual([]);
 			}
+			// The other side: every named module really does supply a type for EVERY
+			// prop it declares, so `ANNOTATED` cannot drift into a skip list.
+			for (const file of ANNOTATED) {
+				const ir = await fixtureIr(file);
+				const entries = ir.components.flatMap((component) => component.props.entries);
+				expect(entries.length, file).toBeGreaterThan(0);
+				expect(
+					entries.filter((entry) => entry.type === undefined),
+					`${file} should carry an authored type for every prop`,
+				).toEqual([]);
+			}
+		});
+
+		test('S8 supplies the PROMISE type its `await` depends on, as walkable syntax', async () => {
+			// The async axis's own supply check. `await ready` on an unannotated prop
+			// is an `await` of `any`, which is indistinguishable from awaiting a
+			// number; this is the field that makes the emitted output say what T043's
+			// re-specification claims.
+			const ir = await fixtureIr('s8-async-handlers.tsrx');
+			const ready = ir.components[0]!.props.entries.find(
+				(entry) => entry.sourceName === 'ready',
+			)!;
+			expect(ready.type?.type).toBe('TSTypeReference');
+			expect((ready.type!.typeName as SerializableAstNode).name).toBe('Promise');
+			expect(
+				(ready.type!.typeArguments as SerializableAstNode).params as SerializableAstNode[],
+			).toMatchObject([{ type: 'TSStringKeyword' }]);
 		});
 
 		test('an ALIASED prop keys on the SOURCE name the annotation uses, not the local one', async () => {
@@ -661,17 +750,22 @@ export function Probe({ required, optional }: { required: string; optional?: str
 			// false` here would print a contract the author never wrote. The two
 			// fields are supplied together or not at all, and every emitter
 			// validator rejects the mismatched pairing.
-			for (const file of FIXTURES.filter((name) => name !== 's1-render-once.tsrx')) {
+			for (const file of FIXTURES.filter((name) => !ANNOTATED.includes(name))) {
 				const ir = await fixtureIr(file);
 				const withFlag = ir.components
 					.flatMap((component) => component.props.entries)
 					.filter((entry) => entry.optional !== undefined);
 				expect(withFlag, `${file} should carry no authored requiredness`).toEqual([]);
 			}
-			// And the coupling holds in the ONE annotated direction too.
-			const s1 = await fixtureIr('s1-render-once.tsrx');
-			for (const entry of s1.components[0]!.props.entries)
-				expect(entry.type === undefined).toBe(entry.optional === undefined);
+			// And the coupling holds in the annotated direction too, in every
+			// annotated module rather than only in the first one.
+			for (const file of ANNOTATED) {
+				const annotated = await fixtureIr(file);
+				for (const entry of annotated.components[0]!.props.entries)
+					expect(entry.type === undefined, `${file} ${entry.sourceName}`).toBe(
+						entry.optional === undefined,
+					);
+			}
 		});
 
 		test('CONTROL: an implicit-any member (`{ a }`) supplies NEITHER type nor requiredness', async () => {
@@ -918,6 +1012,7 @@ export function Probe({ label }: { label }) @{
 			's5-branch-teardown.tsrx': ['toggle', 'tick', 'pick', 'drop'],
 			's6-whitespace-text.tsrx': ['widen', 'tick', 'pad'],
 			's7-form-controls.tsrx': ['size', 'notes', 'pick', 'tag', 'resize', 'lock'],
+			's8-async-handlers.tsrx': ['run', 'cancel'],
 			's9-boolean-attributes.tsrx': ['seal', 'lock', 'unlock'],
 		};
 		for (const file of FIXTURES) {

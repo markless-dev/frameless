@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { AttrBoard } from '../emitted/AttrBoard';
+import { AsyncGate } from './async-gate';
 import { BranchBoard } from '../emitted/BranchBoard';
 import { EventForm } from '../emitted/EventForm';
 import { FormBoard } from '../emitted/FormBoard';
@@ -61,6 +62,13 @@ export const routes: Routes = [
     path: 's7',
     component: FormBoard,
     data: { seed: s7Seed, onTrace: noTrace },
+  },
+  // S8 is the one route with a WRAPPER component. Its `ready` prop is a promise
+  // the scenario decides when to resolve, so it changes after the route
+  // resolved, and route `data` is static by construction. See `./async-gate`.
+  {
+    path: 's8',
+    component: AsyncGate,
   },
   {
     path: 's9',

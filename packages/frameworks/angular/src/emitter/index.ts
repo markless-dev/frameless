@@ -816,6 +816,82 @@ function loweredHandlerBody(
 	return body;
 }
 
+/** The injected `ChangeDetectorRef` field an async handler notifies through. */
+const CHANGE_DETECTOR_MEMBER = 'changeDetector';
+
+/**
+ * ZONELESS CHANGE DETECTION AFTER A SUSPENSION POINT, and why the emitter has to
+ * spell it.
+ *
+ * MEASURED IN A BROWSER by S8, and by nothing before it. Angular 22 scaffolds
+ * are zoneless (`demos/angular-official/src/app/app.ts` records the
+ * measurement), and this lane holds component state in PLAIN CLASS FIELDS. That
+ * works for a synchronous handler for one reason only: invoking a template
+ * `(click)` listener notifies the scheduler itself, so the writes the listener
+ * made are picked up by the tick that follows. AN `await` ENDS THAT. The
+ * continuation runs after the listener has already returned, nothing notifies
+ * anything, and the fields are updated while THE DOM IS NEVER RE-RENDERED.
+ *
+ * The state is correct and the page is stale, which is the worst shape a defect
+ * can have: `ng build` compiles it, `parse-emitted` parses it,
+ * `emitted-typecheck` type-checks it and the emitted output READS correctly. It
+ * took a served payload to see it, which is the whole reason S8 is a corpus
+ * scenario and not a unit test. Measured verbatim: after the release click the
+ * board's own `ticks` field held 3 and `[data-async="ticks"]` still read 1;
+ * clicking ANY other control made it jump to 3 in one tick.
+ *
+ * The notification is `ChangeDetectorRef.markForCheck()`, which in zoneless
+ * Angular marks the ancestor path for traversal AND notifies the scheduler, so
+ * it schedules a tick rather than merely flagging a view. It is inserted at the
+ * END of every suspension segment except the first: the first is the one the
+ * listener's own notification already covers, and a segment with no write still
+ * gets one because a `markForCheck` on a clean view is a no-op tick, which is
+ * cheaper than deciding write-freedom from a transplanted body.
+ *
+ * WHAT THIS DELIBERATELY IS NOT. The other answer is to lower every cell to an
+ * Angular signal, which notifies on write wherever the write happens and would
+ * make this function unnecessary. That is a re-lowering of the whole lane and an
+ * architecture decision; this is the minimal correct one, and it moves ZERO
+ * bytes in any synchronous scenario because it is gated on `isAsync`.
+ */
+function notifyAfterSuspension(body: readonly Statement[]): Statement[] {
+	const notify = (): Statement =>
+		expressionStatement({
+			type: 'CallExpression',
+			callee: member(member(thisExpression(), CHANGE_DETECTOR_MEMBER), 'markForCheck'),
+			arguments: [],
+			optional: false,
+		} as Expression);
+	// Hand-rolled rather than `walk()`, because `walk()` cannot be told to stop:
+	// a nested function has its own suspension structure and its own
+	// notification problem, and this pass does not claim to solve that one.
+	const suspends = (value: unknown): boolean => {
+		if (!value || typeof value !== 'object') return false;
+		if (Array.isArray(value)) return value.some(suspends);
+		const node = value as Record<string, unknown>;
+		if (node.type === 'AwaitExpression') return true;
+		if (
+			typeof node.type === 'string' &&
+			['FunctionExpression', 'ArrowFunctionExpression', 'FunctionDeclaration'].includes(
+				node.type,
+			)
+		)
+			return false;
+		return Object.values(node).some(suspends);
+	};
+	const result: Statement[] = [];
+	let seenSuspension = false;
+	for (const statement of body) {
+		if (suspends(statement)) {
+			if (seenSuspension) result.push(notify());
+			seenSuspension = true;
+		}
+		result.push(statement);
+	}
+	if (seenSuspension) result.push(notify());
+	return result;
+}
+
 /**
  * RULING 3e's surviving property, stated where it is implemented: the CLASS
  * METHOD KEEPS THE IR'S OWN PARAMETER NAME. `$event` is not a rename of the
@@ -1435,6 +1511,7 @@ function classMembers(
 	readonly members: ClassMember[];
 	readonly implementsOnInit: boolean;
 	readonly usesViewChild: boolean;
+	readonly usesChangeDetector: boolean;
 	readonly lifecycle: readonly string[];
 } {
 	const members: ClassMember[] = [...propMembers(component)];
@@ -1442,6 +1519,7 @@ function classMembers(
 	const getters: ClassMember[] = [];
 	const initialisation: Statement[] = [];
 	let usesViewChild = false;
+	let usesChangeDetector = false;
 	for (const local of [...component.locals].sort((left, right) => left.order - right.order)) {
 		const name = localName(local);
 		const binding = componentBinding(ir, component, local);
@@ -1637,11 +1715,16 @@ function classMembers(
 			text: `ngOnDestroy(): void {\n${indentBlock(destroy.join('\n'), '\t')}\n}`,
 		});
 	}
+	const handlerMembers: ClassMember[] = [];
 	for (const handler of context.handlersByEventId.values()) {
 		const parameters = [...handler.forVariables, handler.eventParameter]
 			.map((parameter) => `${parameter}${MEMBER_TYPE}`)
 			.join(', ');
-		const body = printStatements(loweredHandlerBody(handler, context.members));
+		const lowered = loweredHandlerBody(handler, context.members);
+		const body = printStatements(
+			handler.isAsync ? notifyAfterSuspension(lowered) : lowered,
+		);
+		if (handler.isAsync) usesChangeDetector = true;
 		// DEFECTS.md entry 9. `qualify()` transplants the arrow's BODY into this
 		// template, so before this line the arrow's `async` modifier had nowhere to
 		// go and was dropped - the string `async` occurred ZERO times in this file.
@@ -1649,11 +1732,21 @@ function classMembers(
 		// annotated `: void` is itself a type error.
 		const modifier = handler.isAsync ? 'async ' : '';
 		const returnType = handler.isAsync ? ': Promise<void>' : ': void';
-		members.push({
+		handlerMembers.push({
 			text: `${modifier}${handler.name}(${parameters})${returnType} {\n${indentBlock(body, '\t')}\n}`,
 		});
 	}
-	return { members, implementsOnInit, usesViewChild, lifecycle };
+	// The injected field is declared IMMEDIATELY BEFORE the methods that use it,
+	// so a reader meets the notification channel where the notifications are.
+	// `inject()` rather than a constructor parameter: the emitted classes have no
+	// constructor at all, and adding one for this would put a second
+	// initialisation site beside `ngOnInit`.
+	if (usesChangeDetector)
+		members.push({
+			text: `private readonly ${CHANGE_DETECTOR_MEMBER} = inject(ChangeDetectorRef);`,
+		});
+	members.push(...handlerMembers);
+	return { members, implementsOnInit, usesViewChild, usesChangeDetector, lifecycle };
 }
 
 // ---------------------------------------------------------------------------
@@ -2378,7 +2471,9 @@ function emitComponentClass(
 		...(emitted.lifecycle.includes('AfterViewInit') ? ['type AfterViewInit'] : []),
 		'Component',
 		...(emitted.lifecycle.includes('DoCheck') ? ['type DoCheck'] : []),
+		...(emitted.usesChangeDetector ? ['ChangeDetectorRef'] : []),
 		...(emitted.usesViewChild ? ['ElementRef'] : []),
+		...(emitted.usesChangeDetector ? ['inject'] : []),
 		// CONDITIONAL, AND `pnpm lint` IS WHAT SETTLED IT. Three prior-step tests
 		// asserted that a component with NO props still emits `Input` in its import
 		// list, so this was written unconditional first and then reverted to match
@@ -2470,9 +2565,11 @@ export function emit(ir: EnrichedIR): string {
 	const angularImports = [...new Set(classes.flatMap((entry) => entry.angularImports))];
 	const ORDER = [
 		'type AfterViewInit',
+		'ChangeDetectorRef',
 		'Component',
 		'type DoCheck',
 		'ElementRef',
+		'inject',
 		'Input',
 		'type OnDestroy',
 		'type OnInit',

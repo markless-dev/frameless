@@ -15,6 +15,7 @@
   },
   "scripts": {
     "regenerate": "node scripts/regenerate.ts",
+		"regenerate:composition": "node scripts/regenerate-composition.ts",
     "test": "vitest run --config vitest.node.config.ts"
   },
   "dependencies": {

@@ -653,16 +653,26 @@ describe('MUTATION: baseline-form-inventory (IR-4)', () => {
 		).toContain('"set"');
 	});
 
+	// `NgZone`, NOT `inject`. This row used `inject` until S8, the async scenario,
+	// made the emitter spell `inject(ChangeDetectorRef)` in any class with an
+	// async handler - at which point `inject` entered BASELINE_FORM_INVENTORY with
+	// a recorded 14.0 floor and this mutant silently stopped being a mutant. That
+	// is the "an anchor that has stopped biting" failure the harness elsewhere
+	// guards with occurrence counts, and it is why the replacement is a form the
+	// emitter has no route to at all: `NgZone` is the zone-based answer to exactly
+	// the change-detection problem `notifyAfterSuspension` solves zonelessly, so
+	// if it ever appears in emitted output this row going red is the correct
+	// outcome and not an obstacle.
 	test('rejects a runtime import the emitter has no ruling for', async () => {
 		const mutant = mutate(
 			s1,
 			"import { Component, Input, type OnInit } from '@angular/core';",
-			"import { Component, Input, inject, type OnInit } from '@angular/core';",
+			"import { Component, Input, NgZone, type OnInit } from '@angular/core';",
 		);
 		const violations = await violationsFor('generated/ImportMutant.ts', mutant);
 		expect(
 			violations.find((entry) => entry.policy === 'baseline-form-inventory')?.message,
-		).toContain('@angular/core#inject');
+		).toContain('@angular/core#NgZone');
 	});
 
 	test('rejects a component metadata key above the emitted surface', async () => {

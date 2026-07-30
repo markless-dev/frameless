@@ -14,6 +14,7 @@ const fixtures = [
 	['S5.tsx', 's5-branch-teardown.json'],
 	['S6.tsx', 's6-whitespace-text.json'],
 	['S7.tsx', 's7-form-controls.json'],
+	['S8.tsx', 's8-async-handlers.json'],
 	['S9.tsx', 's9-boolean-attributes.json'],
 ] as const;
 

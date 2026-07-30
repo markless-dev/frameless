@@ -436,7 +436,12 @@ describe('Angular 22 emitter', () => {
 			expect(classBody, file).not.toBe('');
 			for (const [, name, suffix] of classBody.matchAll(/^\t(\w+)(: [^;]+);$/gm))
 				if (!source.includes(`@Input() ${name}`)) expect(suffix, `${file} ${name}`).toBe(': any');
-			for (const [, parameters] of source.matchAll(/^\t\w+\(([^)]*)\): void \{$/gm))
+			// `Promise<void>` as well as `void`: S8's handlers are `async`, and a
+			// pattern that matched only the synchronous return type would have gone
+			// silently vacuous on the one scenario whose methods differ.
+			for (const [, parameters] of source.matchAll(
+				/^\t(?:async )?\w+\(([^)]*)\): (?:void|Promise<void>) \{$/gm,
+			))
 				for (const parameter of parameters.split(', ').filter(Boolean))
 					expect(parameter, `${file} ${parameter}`).toMatch(/^\w+: any$/);
 			// ANTI-VACUITY: neither an unannotated field nor an unannotated parameter
@@ -445,7 +450,7 @@ describe('Angular 22 emitter', () => {
 			// parameter TS7006 under the scaffold's `strict`, so an unannotated member
 			// would not survive `ng build` at all.
 			expect(source).not.toMatch(/^\t(?:@Input\(\) )?\w+;$/m);
-			expect(source).not.toMatch(/^\t\w+\(\w+(?:[,)])/m);
+			expect(source).not.toMatch(/^\t(?:async )?\w+\(\w+(?:[,)])/m);
 			// `event: Event` is refused for the opposite reason to `: any`: the real
 			// DOM type makes `event.currentTarget.value` a type error, so emitting it
 			// would be the emitter inventing a type to look better typed than it is.
@@ -455,7 +460,7 @@ describe('Angular 22 emitter', () => {
 		// fixture, or that annotated all of them, would make one arm above vacuous
 		// and this row is what refuses that rather than reporting a green.
 		expect({ typedInputsSeen, untypedInputsSeen }).toEqual({
-			typedInputsSeen: 4,
+			typedInputsSeen: 6,
 			untypedInputsSeen: 15,
 		});
 	});
@@ -1108,12 +1113,28 @@ export function HandlerProbe({ ready, onTrace }) @{
 	});
 
 	/**
-	 * AND THE WHOLE SHIPPED CORPUS IS SYNCHRONOUS, asserted rather than assumed.
-	 * This is what licenses the `git diff --exit-code -- generated` check that the
-	 * repair had to pass: no emitted byte may move, because there is no async
-	 * handler in the corpus for the repair to change.
+	 * EXACTLY ONE SHIPPED SCENARIO IS ASYNC, asserted rather than assumed.
+	 *
+	 * This row used to read "no emitted scenario contains an async member", which
+	 * is what licensed T045's `git diff --exit-code -- generated` check: there was
+	 * no async handler in the corpus for that repair to change. S8 IS THAT
+	 * HANDLER, so the claim is now the sharper one - the async members are in S8
+	 * and nowhere else - and it is two-sided for the same reason the pair of rows
+	 * above is. An emitter that stamped `async` on everything fails the second
+	 * arm; one that dropped it again - T043's FINDING 1, where the modifier went
+	 * silently missing and the surviving `await` made the class invalid
+	 * TypeScript - fails the first.
 	 */
-	test('no emitted scenario contains an async member, so the repair moves no committed byte', async () => {
-		for (const file of emittedScenarios()) expect(await emitted(file)).not.toMatch(/\basync\b/);
+	test('S8 is the ONE emitted scenario with async members, and the other eight have none', async () => {
+		const asyncScenarios: string[] = [];
+		for (const file of emittedScenarios())
+			if (/\basync\b/.test(await emitted(file))) asyncScenarios.push(file);
+		expect(asyncScenarios).toEqual(['S8.ts']);
+		// The modifier is on the METHODS, with the promise return type that makes
+		// the emitted `await` legal: a bare `async` anywhere else in the file would
+		// satisfy the line above without the class being correct.
+		const s8 = await emitted('S8.ts');
+		expect(s8.match(/^\tasync onH\d+Click\(event: any\): Promise<void> \{$/gm)).toHaveLength(2);
+		expect(s8).toContain('await this.ready;');
 	});
 });

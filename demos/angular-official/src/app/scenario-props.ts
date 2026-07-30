@@ -95,3 +95,23 @@ export const s9Seed = [
   { id: 'f1', off: false },
   { id: 'f2', off: false },
 ];
+
+// ---------------------------------------------------------------------------
+// S8's ASYNC GATE. Harness, not emitted output, and deliberately outside the
+// emitted component: the `ready` prop is what the emitted handlers `await`, and
+// the scenario needs it PENDING at a moment the driver chooses.
+//
+// The initial gate is ALREADY RESOLVED and the pending one is created by a
+// click. That order is a MEASURED constraint from the Qwik lane, and it is
+// uniform here so that all six lanes run the identical sequence: Qwik's SSR
+// serializer awaits every promise it reaches, so a gate that was pending when
+// the server rendered would hang that lane's render outright. See
+// `assertS8` in three-way-contract.ts.
+// ---------------------------------------------------------------------------
+export const s8ResolvedGate: Promise<string> = Promise.resolve('go');
+/** The live resolver of the promise `armS8Gate` most recently created. */
+export const s8Gate: { release: () => void } = { release: () => {} };
+export const armS8Gate = (): Promise<string> =>
+  new Promise<string>((resolve) => {
+    s8Gate.release = () => resolve('go');
+  });

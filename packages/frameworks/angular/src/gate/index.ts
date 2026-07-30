@@ -663,6 +663,12 @@ const STANDALONE_FLOOR_REASON =
 const TEMPLATE_NODE_FLOOR_REASON =
 	'A node kind of the Angular template parser present for the whole Angular 2+ line, so 2.0 is a safe lower bound rather than a tight one. The resolved package dates neither the class nor its name.';
 
+const CHANGE_DETECTOR_FLOOR_REASON =
+	'ChangeDetectorRef and its markForCheck() are part of the original Angular 2 change-detection surface, so 2.0 is a safe lower bound rather than a tight one. What is NOT documentary is what the call MEANS here: under zoneless change detection markForCheck() also NOTIFIES THE SCHEDULER, which is what makes it schedule a tick rather than merely flag a view, and that behaviour is the reason the emitter spells it. That semantic is Angular 18+, and it is covered by the 19.0 standalone floor this inventory already carries rather than by a second entry - a form whose meaning changed under a fixed spelling is exactly what this inventory says it cannot see, so it is written down here instead.';
+
+const INJECT_FLOOR_REASON =
+	'The standalone inject() function shipped in Angular 14.0, which is a lower bound taken from the release history. The resolved @angular/core ships no CHANGELOG and no @since tag, so the floor could not be checked against something on disk; the entry is below this lane\'s 19.0 standalone floor either way, so it does not move ANGULAR_BASELINE_FLOOR.';
+
 const LIFECYCLE_FLOOR_REASON =
 	'ngOnInit and the OnInit interface are part of the original Angular 2 component lifecycle. Documentary, not checkable against an artifact this repo has.';
 
@@ -684,6 +690,23 @@ export const BASELINE_FORM_INVENTORY: readonly BaselineForm[] = [
 		form: '@angular/core#OnInit',
 		floor: '2.0',
 		evidence: { status: 'unverified', reason: LIFECYCLE_FLOOR_REASON },
+	},
+	// Both entered the inventory with S8, the corpus's async scenario, and both
+	// are emitted ONLY into a class that has an async handler. See
+	// `notifyAfterSuspension` in ../emitter/index.ts for the browser measurement
+	// that made them necessary: without the notification the post-`await` writes
+	// land in the fields and the DOM is never re-rendered.
+	{
+		kind: 'import',
+		form: '@angular/core#ChangeDetectorRef',
+		floor: '2.0',
+		evidence: { status: 'unverified', reason: CHANGE_DETECTOR_FLOOR_REASON },
+	},
+	{
+		kind: 'import',
+		form: '@angular/core#inject',
+		floor: '14.0',
+		evidence: { status: 'unverified', reason: INJECT_FLOOR_REASON },
 	},
 	{
 		kind: 'decorator',

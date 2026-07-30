@@ -436,7 +436,30 @@ export function customPolicies(
 			)
 				return;
 			const handler = node.value.expression;
+			// SCOPED TO ONE SUSPENSION SEGMENT, not to the whole handler.
+			//
+			// T002 ruling 5 reads "at most one call per setter per handler", and it
+			// was written when no handler in this repo could contain `await` at all:
+			// the React emitter's final-sync retention collapsed every write to a
+			// cell into ONE setter call, so a second call could only be an emitter
+			// fault. `docs/DEFECTS.md` 12.2 (b) is that collapse being WRONG across a
+			// suspending boundary - a write before the `await` has to render before
+			// the continuation runs - and T003 segmented the retention to close it.
+			// The emitted S8 handler therefore calls `setPhase` twice on purpose,
+			// once either side of the boundary.
+			//
+			// So the count is keyed by (suspension segment, setter). Inside any one
+			// segment nothing can render in between and the ruling's original force
+			// is unchanged; ACROSS a boundary two calls are the repair. `await` is
+			// counted only where this walk already looks - the handler's own body and
+			// the helpers it calls - because nested functions are skipped above.
 			const setterCalls = new Map<YukuSymbol, number>();
+			let repeatedSetter = false;
+			/** Close the current suspension segment and start a fresh count. */
+			const endSegment = (): void => {
+				if ([...setterCalls.values()].some((count) => count > 1)) repeatedSetter = true;
+				setterCalls.clear();
+			};
 			const invoked = new Set<Node>();
 			const opening = ancestors(module, node).find((entry) => is(entry, 'JSXOpeningElement'));
 			const leaf =
@@ -480,6 +503,9 @@ export function customPolicies(
 									),
 								);
 						},
+						AwaitExpression() {
+							endSegment();
+						},
 						CallExpression(call: Node) {
 							const resolved = resolveCallable(call.callee);
 							if (resolved?.kind === 'setter')
@@ -513,12 +539,13 @@ export function customPolicies(
 				);
 			};
 			inspectHandler(handler);
-			if ([...setterCalls.values()].some((count) => count > 1))
+			endSegment();
+			if (repeatedSetter)
 				violations.push(
 					violation(
 						file,
 						'one-call-per-setter',
-						'A handler may call each state setter at most once',
+						'A handler may call each state setter at most once between suspension points',
 						handler,
 					),
 				);

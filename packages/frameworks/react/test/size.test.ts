@@ -168,6 +168,17 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// is the same shape as the `data-stage={stage}` printed beside it in the same
 	// start tag — so the repair T049 shipped is FREE in this lane, and the number
 	// is what says so rather than a comment claiming it.
+	// S8 likewise has no handwritten reference, so this is a budget, MEASURED off
+	// the emitted output. It is the CHEAPEST scenario in the corpus on both axes -
+	// fewer lines than S1 - and that is the reading the async axis needs: an
+	// authored `async` handler with an `await` inside it costs this lane the same
+	// shape a synchronous one costs. What the number does NOT show, and this is
+	// the point of recording it, is the 12.2 repair: `setPhase` is called TWICE
+	// here, once either side of the boundary, and `setTicks` is a functional
+	// updater rather than a closure read. Both are structural changes at the same
+	// size, which is exactly why a budget could never have caught 12.2 and a
+	// served payload has to.
+	S8: { physicalLoc: 45, structuralNodes: 205 },
 	S9: { physicalLoc: 72, structuralNodes: 369 },
 };
 

@@ -30,9 +30,19 @@
  */
 import type { EnvironmentResponse, ExpectApi, PageHandle } from '@async/witness'
 
-export type ScenarioId = 's1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7' | 's9'
+export type ScenarioId = 's1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7' | 's8' | 's9'
 
-export const scenarioIds: readonly ScenarioId[] = ['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's9']
+export const scenarioIds: readonly ScenarioId[] = [
+  's1',
+  's2',
+  's3',
+  's4',
+  's5',
+  's6',
+  's7',
+  's8',
+  's9',
+]
 
 /**
  * How each framework becomes interactive. React, Solid, Svelte, Vue and Angular
@@ -613,6 +623,31 @@ export const resumeSymbols: Record<
   // `_button_q_e_click_` is the segment prefix all three share — the same
   // structural read s2, s4, s5 and s6 make, and NOT s7's `_form_button_…`: S9's
   // board is a `<section>`, so the narrower prefix would not match.
+  // S8 issues FOUR clicks on the emitted board: three `run` and one
+  // `cancel-run`, both of which are `<button>`s inside a `<form>`, so the
+  // prefix is s7's `_form_button_q_e_click_` and NOT the `_button_q_e_click_`
+  // s2, s4, s5, s6 and s9 share - S8's board is a `<form>`, so the wider prefix
+  // would also match the two HARNESS buttons the /s8 page renders outside the
+  // emitted component, and this read has to be about the emitted handlers.
+  //
+  // `atLeast: 2` for FIVE clicks on the emitted board, and the gap is the
+  // reading. MEASURED off this lane's own `handlerSegments` evidence — the four
+  // segments this page pulls, in click order, verbatim:
+  //
+  //   AsyncBoard.tsx_AsyncBoard_component_form_button_q_e_click_G4p1LfBKokM.js
+  //   index.tsx_s8_component_Fragment_button_q_e_click_NrcYX0K0V30.js
+  //   index.tsx_s8_component_Fragment_button_q_e_click_1_GQ22bqieMu0.js
+  //   AsyncBoard.tsx_AsyncBoard_component_form_button_q_e_click_1_gXjhqtx43Js.js
+  //
+  // TWO of them are the emitted board's — `run` and `cancel-run` — and the
+  // middle two are the /s8 page's own `arm` and `release`, which is why the
+  // prefix asserted here is `_form_button_` and not the `_button_q_e_click_`
+  // s2, s4, s5, s6 and s9 share: the harness buttons sit in a `Fragment`, the
+  // emitted ones in the board's `<form>`, so the narrower prefix is what makes
+  // this read about resumed EMITTED handlers. Five clicks, two segments: `run`
+  // is clicked three more times and pays for no further import, which is the
+  // same "already-imported QRL" reading s5 records.
+  s8: { includes: '_form_button_q_e_click_', atLeast: 2 },
   s9: { includes: '_button_q_e_click_', atLeast: 3 },
 }
 
@@ -2428,10 +2463,266 @@ export async function assertS9(
 }
 
 /**
+ * The async board as the live DOM currently serializes it.
+ *
+ * Three cells, read together and reported together, because the ORDER they move
+ * in is the observation: `docs/DEFECTS.md` 12.2 is two mechanisms, and a
+ * final-state reading passes under both of them. See `assertS8`.
+ */
+async function measureAsync(page: PageHandle): Promise<{
+  ticks: string
+  phase: string
+  cancels: string
+}> {
+  const html = await page.content()
+  return {
+    ticks: measureText(html, 'data-async="ticks"'),
+    phase: measureText(html, 'data-async="phase"'),
+    cancels: measureText(html, 'data-async="cancels"'),
+  }
+}
+
+/**
+ * The async assertion, hand-rolled for the same reason `requireNesting` and
+ * `requireBranch` are: the sentence a failure raises has to name WHICH of the
+ * two 12.2 mechanisms moved, and `expect.page.*` has no accessor that can
+ * compare a triple.
+ */
+function requireAsync(
+  actual: { ticks: string; phase: string; cancels: string },
+  expected: { ticks: string; phase: string; cancels: string; step: string },
+): void {
+  if (actual.phase !== expected.phase) {
+    throw new Error(
+      `${expected.step} phase reads ${JSON.stringify(actual.phase)}, not ` +
+        `${JSON.stringify(expected.phase)}. \`phase\` is written on BOTH sides of the ` +
+        '`await` — `pending` before it and `done` after it — so a reading of "idle" where ' +
+        '"pending" is required is the PRE-AWAIT WRITE HAVING BEEN DROPPED: a lowering that ' +
+        'retains only the final write per cell is sound only while nothing can render in ' +
+        'between, and a suspended handler is exactly when something can. That is ' +
+        'docs/DEFECTS.md 12.2 mechanism (b).',
+    )
+  }
+  if (actual.ticks !== expected.ticks) {
+    throw new Error(
+      `${expected.step} ticks reads ${JSON.stringify(actual.ticks)}, not ` +
+        `${JSON.stringify(expected.ticks)}. \`ticks\` is only ever written AFTER the ` +
+        '`await`, by `ticks = ticks + 1`, so a count one short of the number of dispatches ' +
+        'means two dispatches overlapping at the boundary both read the SAME value: a read ' +
+        'captured when the handler was created rather than taken live at resume. That is ' +
+        'docs/DEFECTS.md 12.2 mechanism (a).',
+    )
+  }
+  if (actual.cancels !== expected.cancels) {
+    throw new Error(
+      `${expected.step} cancels reads ${JSON.stringify(actual.cancels)}, not ` +
+        `${JSON.stringify(expected.cancels)}. That counter is written by the handler whose ` +
+        'body OPENS with `event.preventDefault()` and then suspends, so it is the evidence ' +
+        'that the continuation after the boundary ran at all — separately from whether the ' +
+        'cancellation reached the browser, which the Document-request count below measures.',
+    )
+  }
+}
+
+/**
+ * S8 — ASYNC EVENT HANDLERS: state written on both sides of an `await`, driven
+ * by three dispatches, two of which overlap at the boundary.
+ *
+ * ## Why this scenario exists at all
+ *
+ * `docs/DEFECTS.md` 12.2 was a React miscompilation of exactly this shape, and
+ * it survived a green unit suite. T031 measured that S8 had NO six-lane
+ * spelling on the emitters of the day and deliberately wrote nothing; T043
+ * refuted that impossibility proof and re-specified the authoring; T003 of
+ * frameless-async-and-defects-v1 repaired React and closed 12.2 on a witnessed
+ * before/after — AT THE EMITTER. Until this scenario, NO LANE'S EMITTED ASYNC
+ * OUTPUT HAD EVER BEEN SERVED TO A BROWSER. That is what S8 is: the repair,
+ * pinned at the served-payload level, where the unit suite cannot reach.
+ *
+ * ## Why the gate is HELD OPEN rather than timed
+ *
+ * The two mechanisms need different things and only one instrument gives both:
+ *
+ * - (b) the DROPPED PRE-AWAIT WRITE has exactly one observable — a render taken
+ *   WHILE the handler is suspended. It leaves no trace afterwards, because the
+ *   post-await write to the same cell lands either way. So the scenario has to
+ *   be able to read the DOM mid-flight, deterministically.
+ * - (a) the STALE RENDER-CLOSURE READ needs two dispatches IN FLIGHT AT ONCE. A
+ *   single dispatch, and a sequential pair, both pass under either lowering,
+ *   because the framework re-renders between clicks and the closure is fresh.
+ *
+ * A promise on a TIMER would give both only by racing the driver, and a raced
+ * observation is not one. So `/s8` in every lane renders two harness controls
+ * OUTSIDE the emitted component — `[data-harness="arm"]`, which hands the board
+ * a fresh promise nobody has resolved, and `[data-harness="release"]`, which
+ * resolves it — and the whole scenario is deterministic with no timeout
+ * anywhere. `expect.page.text` waits UNTIL a value appears, and every value
+ * below appears because a click made it appear, never because time passed.
+ *
+ * ## Why the harness lives in the page and not in the props file
+ *
+ * QWIK, MEASURED. Resumability serializes the props the server rendered with,
+ * and `@qwik.dev/core` 2.0.0-beta.38 serializes a promise by AWAITING IT: the
+ * SSR serializer loops on `await Promise.race(this.$promises$)` until none are
+ * left. A promise that is pending at serialization time therefore HANGS the
+ * server render, and one that resolves on a timer is serialized RESOLVED, so
+ * the client would deserialize a settled promise and no suspension window could
+ * exist in that lane at all. Neither is a defect: a pending promise with a live
+ * resolver is by construction not serializable, and that is what resumability
+ * is. Arming CLIENT-SIDE is what makes the window reachable in six lanes rather
+ * than five — the initial gate is already resolved, so the payload Qwik
+ * serializes carries nothing that cannot be serialized, and the pending promise
+ * the `arm` click creates never crosses the boundary.
+ *
+ * ## The order of the four dispatches, and what each one isolates
+ *
+ * | step | what must move | what it isolates |
+ * |---|---|---|
+ * | `run` with the gate OPEN | ticks 0 -> 1 | the handler completes at all |
+ * | `arm`, then `run` twice | phase -> pending, ticks STAYS 1 | mechanism (b) |
+ * | `release` | ticks 1 -> 3 | mechanism (a): a stale read gives 2 |
+ * | `run` again, gate resolved | ticks 3 -> 4 | the newest render's closure |
+ * | `cancel-run` | cancels 0 -> 1, no navigation | `preventDefault` from an async body |
+ *
+ * The first `run` is deliberately BEFORE the arm and it is load-bearing twice
+ * over: it is the dispatch the Qwik lane resumes out of the served, paused
+ * markup (see `resumeSymbols.s8`), and it is what makes the ticks count after
+ * the overlap THREE rather than two — a number that is neither the dispatch
+ * count nor zero, so "the overlap was lost" and "nothing ran" are different
+ * readings.
+ *
+ * The pre-T003 React lowering fails this scenario at THREE of its five
+ * readings: `phase` stays `idle` while suspended, ticks reads 2 after the
+ * release rather than 3, and 3 rather than 4 after the fourth dispatch. Those
+ * are the two mechanisms, separately visible. `pnpm mutate:corpus --scenario s8`
+ * ships that exact lowering as this lane's ratified mutant.
+ *
+ * ## Why `cancel-run` is a real submit
+ *
+ * S3 already proves cancellation during dispatch, but its handler is
+ * SYNCHRONOUS. This one opens with `event.preventDefault()` and then suspends,
+ * which is the authoring that makes the Qwik emitter split the handler into
+ * `sync$()` plus `$(async)` — the cancellation has to reach the browser from
+ * the synchronous half while the rest of the body rides a lazily fetched QRL.
+ * It is clicked LAST, with the gate resolved, so a failure here cannot be
+ * confused with the suspension window above it.
+ */
+export async function assertS8(page: PageHandle, expect: ExpectApi): Promise<string[]> {
+  const observed: string[] = []
+  await expect.page.exists(page, '[data-scenario="s8"]')
+  await expect.page.text(page, '[data-async="ticks"]', '0')
+  await expect.page.text(page, '[data-async="phase"]', 'idle')
+
+  const initial = await measureAsync(page)
+  requireAsync(initial, { ticks: '0', phase: 'idle', cancels: '0', step: 'as served' })
+  observed.push(
+    `server-rendered ticks = ${initial.ticks} with phase = ${initial.phase} and cancels = ` +
+      `${initial.cancels}`,
+  )
+
+  // ONE dispatch over an already-resolved gate. In the resumed lane this is the
+  // click that pulls the emitted handler's QRL out of the served markup.
+  await page.click('[data-action="run"]')
+  await expect.page.text(page, '[data-async="ticks"]', '1')
+  await expect.page.text(page, '[data-async="phase"]', 'done')
+  const first = await measureAsync(page)
+  requireAsync(first, { ticks: '1', phase: 'done', cancels: '0', step: 'after one sequential run' })
+  observed.push(
+    `after one run over a resolved gate ticks = ${first.ticks} with phase = ${first.phase}`,
+  )
+
+  // THE WINDOW. Two dispatches, both suspended at the `await`, read while they
+  // are still in flight — the only site at which the pre-await write exists.
+  await page.click('[data-harness="arm"]')
+  // WAIT FOR THE ARM TO COMMIT before dispatching into it. MEASURED in the Qwik
+  // lane: `page.click` returns once the click is dispatched, and arming is a
+  // state change in the PAGE component, so in a lane whose route component has
+  // to be imported before it can re-render, the two `run` clicks below can both
+  // read the OLD, resolved gate and complete. The lane then reads `done` where
+  // `pending` is required and the failure looks like the emitter's. Every lane
+  // projects the same two words from the same state the board's prop is derived
+  // from, so this is the arm having landed and not a settle delay.
+  await expect.page.text(page, '[data-harness="gate"]', 'held')
+  await page.click('[data-action="run"]')
+  await page.click('[data-action="run"]')
+  await expect.page.text(page, '[data-async="phase"]', 'pending')
+  const suspended = await measureAsync(page)
+  requireAsync(suspended, {
+    ticks: '1',
+    phase: 'pending',
+    cancels: '0',
+    step: 'while two dispatches are suspended at the await',
+  })
+  observed.push(
+    `while two dispatches are suspended at the await ticks = ${suspended.ticks} with phase = ` +
+      `${suspended.phase}`,
+  )
+
+  // RESUME. Both continuations read the counter LIVE, so two overlapping
+  // dispatches produce TWO increments and not one.
+  await page.click('[data-harness="release"]')
+  await expect.page.text(page, '[data-async="ticks"]', '3')
+  await expect.page.text(page, '[data-async="phase"]', 'done')
+  const resumed = await measureAsync(page)
+  requireAsync(resumed, {
+    ticks: '3',
+    phase: 'done',
+    cancels: '0',
+    step: 'after releasing the gate',
+  })
+  observed.push(
+    `after releasing the gate the two overlapping dispatches left ticks = ${resumed.ticks} ` +
+      `with phase = ${resumed.phase}`,
+  )
+
+  // A fourth dispatch, from the NEWEST render, over the now-resolved gate.
+  await page.click('[data-action="run"]')
+  await expect.page.text(page, '[data-async="ticks"]', '4')
+  const sequential = await measureAsync(page)
+  requireAsync(sequential, {
+    ticks: '4',
+    phase: 'done',
+    cancels: '0',
+    step: 'after a fourth sequential run',
+  })
+  observed.push(
+    `after a fourth run from the newest render ticks = ${sequential.ticks} with phase = ` +
+      `${sequential.phase}`,
+  )
+
+  // CANCELLATION OUT OF AN ASYNC BODY. The handler's first statement is
+  // `event.preventDefault()` and its default action is a real GET navigation.
+  await page.click('[data-action="cancel-run"]')
+  const documents = await settleAfterCancellableClick(page)
+  if (documents.length !== 1) {
+    throw new Error(
+      `clicking [data-action="cancel-run"] left ${documents.length} Document requests on this ` +
+        'page; exactly one means the form submit never reached the network. That handler is ' +
+        'ASYNC and its body OPENS with event.preventDefault(), so a second Document request ' +
+        'means the cancellation was deferred past dispatch — which is what happens when the ' +
+        'call rides the same asynchronous segment as the rest of the body.',
+    )
+  }
+  await expect.page.text(page, '[data-async="cancels"]', '1')
+  const cancelled = await measureAsync(page)
+  requireAsync(cancelled, {
+    ticks: '4',
+    phase: 'done',
+    cancels: '1',
+    step: 'after cancel-run',
+  })
+  observed.push(
+    `after cancel-run ${documents.length} document request served this page and cancels = ` +
+      `${cancelled.cancels}`,
+  )
+  return observed
+}
+
+/**
  * Every scenario is handed both sites — the live page and the payload the
  * server sent for it — and reads each observation from the one it names. S1, S2,
- * S4, S5 and S6 observe only live state and declare two parameters; S3, S7 and
- * S9 observe both.
+ * S4, S5, S6 and S8 observe only live state and declare two parameters; S3, S7
+ * and S9 observe both.
  */
 const assertions: Record<
   ScenarioId,
@@ -2444,6 +2735,7 @@ const assertions: Record<
   s5: assertS5,
   s6: assertS6,
   s7: assertS7,
+  s8: assertS8,
   s9: assertS9,
 }
 

@@ -27,10 +27,11 @@
  *    `replaceOnce` THROWS unless its anchor occurs exactly once. A no-op mutant
  *    that "passes" is the vacuity this exists to prevent, and this repo has
  *    shipped that exact fault before.
- * 2. Restoration is verified with `git status --porcelain` over the whole
- *    mutation surface — the six `generated/` directories AND the six demo
- *    `emitted/` copies, all of which are tracked. A harness that leaves a mutant
- *    on disk poisons every run after it.
+ * 2. Restoration is verified over the whole mutation surface — the six
+ *    `generated/` directories AND the six demo `emitted/` copies. A harness that
+ *    leaves a mutant on disk poisons every run after it. The comparison is
+ *    against the INDEX rather than HEAD, because `git checkout --` restores from
+ *    the index; see `surfaceDrift`.
  *
  * ## Two-sided, and the baseline is the positive arm
  *
@@ -108,27 +109,34 @@ const MUTATION_SURFACE = [
  * it is measuring. Angular's is `build:e2e` because its scaffold owns its build
  * outright and nothing runs until `ng build` has produced `dist/`.
  */
+// `tsx`, NOT `jsx`, for react, solid and qwik. MEASURED BY T004: the extension
+// migration renamed every emitted module in those three lanes from `.jsx` to
+// `.tsx` and this table was not moved with it, so `pnpm mutate:corpus` threw
+// ENOENT on `generated/S1.jsx` before it could issue a single verdict — in the
+// three lanes, and on EVERY scenario. The mutation budget therefore could not
+// have been run at all since that migration, which is why nothing had reported
+// it: a harness that dies before its first mutant produces no survivors either.
 const LANES = [
 	{
 		framework: 'react',
 		activation: 'hydrate',
 		directory: 'demos/react-official',
 		generated: 'packages/frameworks/react/generated',
-		extension: 'jsx',
+		extension: 'tsx',
 	},
 	{
 		framework: 'solid',
 		activation: 'hydrate',
 		directory: 'demos/solid-official',
 		generated: 'packages/frameworks/solid/generated',
-		extension: 'jsx',
+		extension: 'tsx',
 	},
 	{
 		framework: 'qwik',
 		activation: 'resume',
 		directory: 'demos/qwik',
 		generated: 'packages/frameworks/qwik/generated',
-		extension: 'jsx',
+		extension: 'tsx',
 	},
 	{
 		framework: 'svelte',
@@ -162,6 +170,7 @@ const SCENARIO_FILES = {
 	s5: 'S5',
 	s6: 'S6',
 	s7: 'S7',
+	s8: 'S8',
 	s9: 'S9',
 };
 
@@ -452,6 +461,45 @@ const s9BooleanAttributeFrozen = (find, replacement) => ({
 	apply: (source) => replaceOnce(source, find, replacement),
 });
 
+/**
+ * S8's axis, in all six lanes: STATE WRITTEN EITHER SIDE OF AN `await` LANDS IN
+ * AUTHORED ORDER, AND THE POST-AWAIT READ IS TAKEN LIVE.
+ *
+ * This is the one mutant on the table that is not invented: in the REACT lane it
+ * is the emitted output `docs/DEFECTS.md` 12.2 actually shipped, restored
+ * verbatim. Both of that entry's mechanisms are in it at once:
+ *
+ *   (b) `setPhase('pending')` is GONE. The pre-await write was collapsed by a
+ *       final-sync retention that keeps one setter call per cell — sound only
+ *       while nothing can render in between, which a suspended handler refutes.
+ *   (a) `const nextTicks = ticks + 1` reads the RENDER CLOSURE rather than the
+ *       live cell, so two dispatches overlapping at the boundary both compute
+ *       0 + 1 and two clicks produce ONE increment.
+ *
+ * The other five lanes never had the defect, so their mutants are the same two
+ * breakages hand-spelled in each lane's own idiom: the pre-await write is
+ * replaced by a capture of the counter, and the post-await write adds to that
+ * capture instead of to the live value. Not inherited between lanes —
+ * `setTicks(ticks() + 1)` in solid, `ticks.value = ticks.value + 1` in qwik,
+ * `ticks = ticks + 1` in svelte and vue, `this.ticks = this.ticks + 1` in
+ * angular.
+ *
+ * It is red at THREE of the scenario's five readings, and deliberately: `phase`
+ * reads `idle` where `pending` is required while the dispatches are suspended,
+ * ticks reads 2 rather than 3 after the release, and 3 rather than 4 after the
+ * fourth dispatch. A mutant red at only one of them could be satisfied by a lane
+ * that had lost one mechanism and kept the other.
+ */
+const s8AsyncBoundaryCollapsed = (find, replacement) => ({
+	axis: 'state written either side of an `await`, with the post-await read taken LIVE',
+	text: `${find}  ->  ${replacement}`,
+	expect:
+		'`phase` never reaches "pending", so the scenario goes red while the two dispatches are ' +
+		'SUSPENDED - the only site at which the pre-await write exists - and again after the ' +
+		'release, where two overlapping dispatches leave ticks at 2 instead of 3',
+	apply: (source) => replaceOnce(source, find, replacement),
+});
+
 const MUTANTS = {
 	react: {
 		s1: s1DerivedFrozen('${count * multiplier}', '${1 * multiplier}'),
@@ -467,6 +515,10 @@ const MUTANTS = {
 		),
 		s6: s6TextEdgeWidened('start{done}', 'start {done}'),
 		s7: s7DynamicAttributeFrozen('data-lock={lock}', 'data-lock="false"'),
+		s8: s8AsyncBoundaryCollapsed(
+			'\t\t\t\t\tconst nextPhase = \'pending\';\n\t\t\t\t\tsetPhase(nextPhase);\n\t\t\t\t\tawait ready;\n\t\t\t\t\tsetTicks((currentTicks) => currentTicks + 1);',
+			'\t\t\t\t\tawait ready;\n\t\t\t\t\tconst nextTicks = ticks + 1;\n\t\t\t\t\tsetTicks(nextTicks);',
+		),
 		s9: s9BooleanAttributeFrozen('disabled={locked}', 'disabled="false"'),
 	},
 	solid: {
@@ -480,6 +532,10 @@ const MUTANTS = {
 		s5: s5RebuiltFromStaleCollection('<For each={entries}>', '<For each={props.seed}>'),
 		s6: s6TextEdgeWidened('start{done()}', 'start {done()}'),
 		s7: s7DynamicAttributeFrozen('data-lock={lock()}', 'data-lock="false"'),
+		s8: s8AsyncBoundaryCollapsed(
+			'\t\t\t\t\tsetPhase(\'pending\');\n\t\t\t\t\tawait props.ready;\n\t\t\t\t\tsetTicks(ticks() + 1);',
+			'\t\t\t\t\tconst staleTicks = ticks();\n\t\t\t\t\tawait props.ready;\n\t\t\t\t\tsetTicks(staleTicks + 1);',
+		),
 		s9: s9BooleanAttributeFrozen('disabled={locked()}', 'disabled="false"'),
 	},
 	qwik: {
@@ -496,6 +552,10 @@ const MUTANTS = {
 		),
 		s6: s6TextEdgeWidened('start{done.value}', 'start {done.value}'),
 		s7: s7DynamicAttributeFrozen('data-lock={lock.value}', 'data-lock="false"'),
+		s8: s8AsyncBoundaryCollapsed(
+			'\t\t\t\t\t\tphase.value = \'pending\';\n\t\t\t\t\t\tawait props.ready;\n\t\t\t\t\t\tticks.value = ticks.value + 1;',
+			'\t\t\t\t\t\tconst staleTicks = ticks.value;\n\t\t\t\t\t\tawait props.ready;\n\t\t\t\t\t\tticks.value = staleTicks + 1;',
+		),
 		s9: s9BooleanAttributeFrozen('disabled={locked.value}', 'disabled="false"'),
 	},
 	svelte: {
@@ -521,6 +581,10 @@ const MUTANTS = {
 			'start {done}{unit}end',
 		),
 		s7: s7DynamicAttributeFrozen('data-lock={lock}', 'data-lock="false"'),
+		s8: s8AsyncBoundaryCollapsed(
+			'\t\t\tphase = \'pending\';\n\t\t\tawait ready;\n\t\t\tticks = ticks + 1;',
+			'\t\t\tconst staleTicks = ticks;\n\t\t\tawait ready;\n\t\t\tticks = staleTicks + 1;',
+		),
 		s9: s9BooleanAttributeFrozen('disabled={locked}', 'disabled="false"'),
 	},
 	vue: {
@@ -537,6 +601,10 @@ const MUTANTS = {
 			'start {{ done }}{{ unit }}end',
 		),
 		s7: s7DynamicAttributeFrozen(':data-lock="lock"', 'data-lock="false"'),
+		s8: s8AsyncBoundaryCollapsed(
+			'\t\t\t\tphase = \'pending\';\n\t\t\t\tawait ready;\n\t\t\t\tticks = ticks + 1;',
+			'\t\t\t\tconst staleTicks = ticks;\n\t\t\t\tawait ready;\n\t\t\t\tticks = staleTicks + 1;',
+		),
 		s9: s9BooleanAttributeFrozen(':disabled="locked"', 'disabled="false"'),
 	},
 	angular: {
@@ -562,6 +630,10 @@ const MUTANTS = {
 			'start {{ done }}{{ unit }}end',
 		),
 		s7: s7DynamicAttributeFrozen('[attr.data-lock]="lock"', 'data-lock="false"'),
+		s8: s8AsyncBoundaryCollapsed(
+			'\t\tthis.phase = \'pending\';\n\t\tawait this.ready;\n\t\tthis.ticks = this.ticks + 1;',
+			'\t\tconst staleTicks = this.ticks;\n\t\tawait this.ready;\n\t\tthis.ticks = staleTicks + 1;',
+		),
 		s9: s9BooleanAttributeFrozen('[disabled]="locked"', 'disabled="false"'),
 	},
 };
@@ -630,16 +702,44 @@ function git(args) {
  * untracked files: a mutant that renamed a file, or a demo script that emitted a
  * new one, would be invisible to a diff of tracked content.
  */
-function restore() {
-	git(['checkout', '--', ...MUTATION_SURFACE]);
+/**
+ * The lines on which the WORKING TREE differs from the INDEX, which is the only
+ * drift this harness can create and the only drift it can undo.
+ *
+ * `git checkout -- <path>` restores from the INDEX, not from HEAD, so the
+ * precondition and the restoration check both have to be stated against the
+ * index too. `git status --porcelain` prints two status columns per line — the
+ * first is index-against-HEAD and the second is worktree-against-index — and
+ * only the second one is this harness's business. `??` is kept as drift because
+ * `git checkout` cannot restore a file git does not know about, so a mutant
+ * placed in an untracked file would survive the run.
+ *
+ * WHY THIS IS NOT A WEAKENING. The guarantee is unchanged: after a run, every
+ * path on the surface is byte-identical to what it was before, because the index
+ * is what `git checkout` writes back and the index did not move. What it buys is
+ * that the harness runs on a tree whose new corpus artifacts are STAGED but not
+ * yet committed — which is the state a Worker landing a scenario is in, and
+ * which the old predicate refused outright while `git checkout` would have
+ * handled it correctly.
+ */
+function surfaceDrift() {
 	const status = git(['status', '--porcelain', '--', ...MUTATION_SURFACE]);
 	if (status.status !== 0) {
-		throw new Error(`git status failed while verifying restoration:\n${status.stderr}`);
+		throw new Error(`git status failed over the mutation surface:\n${status.stderr}`);
 	}
-	if (status.stdout.trim() !== '') {
+	return status.stdout
+		.split('\n')
+		.filter((line) => line.length > 2 && (line.startsWith('??') || line[1] !== ' '))
+		.join('\n');
+}
+
+function restore() {
+	git(['checkout', '--', ...MUTATION_SURFACE]);
+	const drift = surfaceDrift();
+	if (drift !== '') {
 		throw new Error(
-			'Restoration is NOT verified — the mutation surface is still dirty after ' +
-				`git checkout:\n${status.stdout}`,
+			'Restoration is NOT verified — the mutation surface still differs from the index ' +
+				`after git checkout:\n${drift}`,
 		);
 	}
 }
@@ -653,15 +753,13 @@ function restore() {
  * out. So the precondition is asserted rather than assumed.
  */
 function assertCleanSurface() {
-	const status = git(['status', '--porcelain', '--', ...MUTATION_SURFACE]);
-	if (status.status !== 0) {
-		throw new Error(`git status failed:\n${status.stderr}`);
-	}
-	if (status.stdout.trim() !== '') {
+	const drift = surfaceDrift();
+	if (drift !== '') {
 		throw new Error(
-			'The mutation surface is dirty before the first mutation, so no verdict this ' +
-				'harness issues would be attributable to its own mutant, and restoring would ' +
-				`discard uncommitted work. Commit or stash first:\n${status.stdout}`,
+			'The mutation surface differs from the index before the first mutation, so no ' +
+				'verdict this harness issues would be attributable to its own mutant, and ' +
+				'restoring would discard that work. Stage, commit or stash it first — an ' +
+				`UNTRACKED file cannot be restored by git checkout at all:\n${drift}`,
 		);
 	}
 }

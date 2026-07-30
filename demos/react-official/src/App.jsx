@@ -6,6 +6,8 @@
 // both TypeScript's and Vite's JS-to-TS extension substitution. It is also what
 // the Frameless emitters write inside emitted output, so this file exercises the
 // same resolution a real consumer does.
+import { useState } from 'react'
+import { AsyncBoard } from './emitted/AsyncBoard.jsx'
 import { AttrBoard } from './emitted/AttrBoard.jsx'
 import { BranchBoard } from './emitted/BranchBoard.jsx'
 import { EventForm } from './emitted/EventForm.jsx'
@@ -75,13 +77,54 @@ const s9Seed = [
   { id: 'f2', off: false },
 ]
 
+
+// ---------------------------------------------------------------------------
+// S8's ASYNC GATE. Harness, not emitted output, and deliberately outside the
+// emitted component: the `ready` prop is what the emitted handlers `await`, and
+// the scenario needs it PENDING at a moment the driver chooses.
+//
+// The initial gate is ALREADY RESOLVED and the pending one is created by a
+// click. That order is a MEASURED constraint from the Qwik lane, and it is
+// uniform here so that all six lanes run the identical sequence: Qwik's SSR
+// serializer awaits every promise it reaches, so a gate that was pending when
+// the server rendered would hang that lane's render outright. See
+// `assertS8` in three-way-contract.ts.
+// ---------------------------------------------------------------------------
+const s8ResolvedGate = Promise.resolve('go')
+/** The live resolver of the promise `arm` most recently created. */
+const s8Gate = { release: () => {} }
+const armS8Gate = () => new Promise((resolve) => { s8Gate.release = () => resolve('go') })
+
+/**
+ * The /s8 page: the two harness controls plus the emitted board.
+ *
+ * `useState` rather than a module-level mutable: the board reads `ready` off
+ * the props of the render that created its handler, so the new promise has to
+ * arrive through a re-render. Nothing here is emitted output.
+ */
+function AsyncGate() {
+  const [ready, setReady] = useState(s8ResolvedGate)
+  return (
+    <>
+      <button type="button" data-harness="arm" onClick={() => setReady(armS8Gate())}>
+        arm
+      </button>
+      <button type="button" data-harness="release" onClick={() => s8Gate.release()}>
+        release
+      </button>
+      <p data-harness="gate">{ready === s8ResolvedGate ? 'open' : 'held'}</p>
+      <AsyncBoard ready={ready} onTrace={noTrace} />
+    </>
+  )
+}
+
 /**
  * Maps a request URL onto a scenario id. The stock create-vite SSR scaffold
  * already threads `req.originalUrl` into `render(url)`, so branching on it here
  * mirrors the Qwik demo's `/`, `/s2`, `/s3` routes without adding a router.
  *
  * @param {string} url
- * @returns {'s1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7' | 's9'}
+ * @returns {'s1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7' | 's8' | 's9'}
  */
 export function scenarioFor(url) {
   const path = String(url ?? '')
@@ -93,6 +136,7 @@ export function scenarioFor(url) {
   if (path === 's5') return 's5'
   if (path === 's6') return 's6'
   if (path === 's7') return 's7'
+  if (path === 's8') return 's8'
   if (path === 's9') return 's9'
   return 's1'
 }
@@ -114,6 +158,8 @@ export default function App({ url }) {
       return <WhitespaceBoard seed={s6Seed} label={s6Label} onTrace={noTrace} />
     case 's7':
       return <FormBoard seed={s7Seed} onTrace={noTrace} />
+    case 's8':
+      return <AsyncGate />
     case 's9':
       return <AttrBoard seed={s9Seed} onTrace={noTrace} />
     default:

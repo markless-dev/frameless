@@ -161,6 +161,15 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// fewer printed lines than react's `.map()` arrow, and S9's two `computed`
 	// derivations are small enough that solid's per-computed accessor arrows do
 	// not overtake the difference the way they do in S7.
+	// S8 likewise has no handwritten reference, so this is a budget, MEASURED off
+	// the emitted output. Solid prints TWO fewer physical lines and FIVE fewer
+	// structural nodes than react on the same scenario, and the reason is the
+	// repair rather than the template: react has to spell `setPhase` twice and
+	// `setTicks((currentTicks) => currentTicks + 1)` to be correct across the
+	// `await`, while solid's signal reads are live already and cost it nothing.
+	// The async axis is the one place in this corpus where react pays for
+	// correctness in bytes and solid does not.
+	S8: { physicalLoc: 40, structuralNodes: 200 },
 	S9: { physicalLoc: 69, structuralNodes: 369 },
 };
 

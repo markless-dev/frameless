@@ -69,7 +69,19 @@ const officialDemos = [
 // entry 10 stayed open naming a corpus card as its own close trigger. s7 had to
 // SUBSTITUTE `aria-disabled` for the construct; s9 binds the real `disabled`, so
 // a correct lane serves nothing at all and grows `disabled=""` after the click.
-const threeWayScenarios = ['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's9'];
+// s8 joined it because DEFECTS.md 12.2 - a React miscompilation of a handler
+// that writes state either side of an `await` - was CLOSED on a witnessed
+// before/after AT THE EMITTER, and no lane's emitted async output had ever been
+// served to a browser at all. Both of 12.2's mechanisms are invisible to a
+// final-state reading: the dropped pre-await write only exists in a render
+// taken WHILE the handler is suspended, and the stale render-closure read only
+// separates from a live one when two dispatches are IN FLIGHT AT ONCE. So s8 is
+// the one scenario whose page renders harness controls outside the emitted
+// component - `arm` hands the board a promise nobody has resolved and `release`
+// resolves it - which makes both observations deterministic with no timer
+// anywhere. Arming CLIENT-SIDE rather than serving a pending promise is a
+// MEASURED constraint from the Qwik lane; see `assertS8`.
+const threeWayScenarios = ['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9'];
 // @async/witness is a dev tool of the workspace, already installed for the ssr
 // and persistence demos. The runner aliases '@async/witness' for the box files
 // it loads, so the official demos run boxes without depending on it themselves.

@@ -95,7 +95,7 @@ function scenarioCorpus(extension: string, directory = 'generated'): string[] {
  *   a reader can audit the ruling at all.
  * - the derivations THROW on an empty domain. A derivation that cannot fail is
  *   the defect it replaces, which is why the `CALIBRATION` row below drives the
- *   real shipped message against a planted eighth scenario and asserts it goes
+ *   real shipped message against a planted tenth scenario and asserts it goes
  *   RED.
  */
 const SPELLED_NUMBERS = [
@@ -120,6 +120,11 @@ const SPELLED_NUMBERS = [
 	'EIGHTEEN',
 	'NINETEEN',
 	'TWENTY',
+	'TWENTY-ONE',
+	'TWENTY-TWO',
+	'TWENTY-THREE',
+	'TWENTY-FOUR',
+	'TWENTY-FIVE',
 ] as const;
 
 /**
@@ -753,15 +758,21 @@ describe('Vue dossier gate', () => {
 	 * The literals it replaces were green against a corpus that had already
 	 * falsified them, so "derived" is not self-evidently better - a derivation
 	 * nobody has watched go red is the same instrument wearing a better name.
-	 * This row plants an EIGHTH scenario into a throwaway corpus, drives the REAL
+	 * This row plants a TENTH scenario into a throwaway corpus, drives the REAL
 	 * shipped gate messages (not a lookalike) through the SAME assertion helpers
 	 * the two rows above call, and asserts they fail.
+	 *
+	 * S10, NOT S8: S8 is now a real corpus scenario (the async one), and a plant
+	 * that reused its number would be COPIED OVER by the faithful-copy loop above
+	 * and counted twice - once per golden mapping to the same emitted file. That
+	 * near-miss is why the precondition below compares the copy to the shipped
+	 * derivation before anything is planted.
 	 *
 	 * The planted scenario is deliberately inside BOTH domains at once: a host
 	 * with a `:value` bind and a same-host `@input` (12a) whose IR declares one
 	 * more prop entry under a name no golden uses (12b).
 	 */
-	test('CALIBRATION: the derived domain figures go RED against a planted eighth scenario', async () => {
+	test('CALIBRATION: the derived domain figures go RED against a planted tenth scenario', async () => {
 		const shippedHosts = deriveTwoWayHostDomain();
 		const shippedProps = derivePrintedPropEntries();
 		const root = await realpath(await mkdtemp(resolve(tmpdir(), 'frameless-vue-domain-')));
@@ -781,13 +792,13 @@ describe('Vue dossier gate', () => {
 			expect(derivePrintedPropEntries(planted)).toEqual(shippedProps);
 
 			await writeFile(
-				resolve(goldenRoot, 's8-planted-calibration.json'),
+				resolve(goldenRoot, 's10-planted-calibration.json'),
 				JSON.stringify({
 					components: [{ props: { entries: [{ path: ['plantedCalibrationProp'] }] } }],
 				}),
 			);
 			await writeFile(
-				resolve(generatedRoot, 'S8.vue'),
+				resolve(generatedRoot, 'S10.vue'),
 				'<template>\n' +
 					'\t<input\n' +
 					'\t\t:value="planted"\n' +

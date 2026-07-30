@@ -11,7 +11,7 @@
  * `onTrace` is the emitted components' trace callback. The official demos are
  * activation lanes, not analyzer lanes, so every lane passes a no-op.
  */
-export type ScenarioId = 's1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7' | 's9'
+export type ScenarioId = 's1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7' | 's8' | 's9'
 
 export const noTrace = () => {}
 
@@ -109,6 +109,27 @@ export function scenarioFor(url: string | undefined): ScenarioId {
   if (path === 's5') return 's5'
   if (path === 's6') return 's6'
   if (path === 's7') return 's7'
+  if (path === 's8') return 's8'
   if (path === 's9') return 's9'
   return 's1'
 }
+
+// ---------------------------------------------------------------------------
+// S8's ASYNC GATE. Harness, not emitted output, and deliberately outside the
+// emitted component: the `ready` prop is what the emitted handlers `await`, and
+// the scenario needs it PENDING at a moment the driver chooses.
+//
+// The initial gate is ALREADY RESOLVED and the pending one is created by a
+// click. That order is a MEASURED constraint from the Qwik lane, and it is
+// uniform here so that all six lanes run the identical sequence: Qwik's SSR
+// serializer awaits every promise it reaches, so a gate that was pending when
+// the server rendered would hang that lane's render outright. See
+// `assertS8` in three-way-contract.ts.
+// ---------------------------------------------------------------------------
+export const s8ResolvedGate: Promise<string> = Promise.resolve('go')
+/** The live resolver of the promise `armS8Gate` most recently created. */
+export const s8Gate: { release: () => void } = { release: () => {} }
+export const armS8Gate = (): Promise<string> =>
+  new Promise<string>((resolve) => {
+    s8Gate.release = () => resolve('go')
+  })

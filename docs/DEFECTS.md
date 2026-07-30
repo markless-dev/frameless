@@ -1349,10 +1349,12 @@ shipped corpus.
 **Not upstream.** Solid supports async event handlers natively; the refusal was
 entirely ours.
 
-**What this does NOT close.** The re-specified S8 is not yet in the corpus, so no
-**served payload** has ever observed an async handler in Solid — the proof is at
-the emitter and in a node harness over the real client runtime, not in a browser.
-That is a corpus card's job, and it is the same gap entry 10 carries. It also does
+**What this did NOT close, WHEN IT WAS WRITTEN.** The re-specified S8 was not yet
+in the corpus, so no **served payload** had ever observed an async handler in
+Solid — the proof was at the emitter and in a node harness over the real client
+runtime, not in a browser. **S8 landed at T004 and closed it**: `pnpm e2e` runs
+this lane's emitted async output in Chromium and its row is byte-identical to the
+other five. See 12.4. It also does
 not touch entry 12: React's `await` failure is a different mechanism in a
 different lane, and T043's prediction that the two lanes **diverge on a second
 dispatch across an await** was half-measured here — Solid's half is above, and it
@@ -1622,10 +1624,117 @@ updater in the calibration is React's own documented answer to (a). Both halves 
 inventories are derived from `goldens/s<n>-*.json`, so a golden alone enlists a
 scenario into every lane's gates. Consequently **no emitted byte moved**.
 
-**And no served payload.** No browser has run a frameless-emitted async React
-handler; the proof is at the emitter and in a node harness over the real client
-runtime. That is the same gap entries 10 and 11 carry, and it is a corpus card's
-job.
+**And no served payload** — WHEN THIS WAS WRITTEN. Closed by 12.4.
+
+### 12.4 S8 HAS LANDED, and the served payload closes the last residue — T004
+
+**Six browsers have now run a frameless-emitted async handler**, which is the one
+thing entries 10, 11 and 12 all said they were missing. `s8-async-handlers.tsrx`
+is in the corpus, `pnpm e2e` reports **6 demos x 9 scenarios, all observations
+equal**, and the six S8 mutants are RED in `pnpm mutate:corpus` at a budget of
+**54 cells**.
+
+The row every lane records, verbatim and byte-identical across all six:
+
+```
+server-rendered ticks = 0 with phase = idle and cancels = 0
+after one run over a resolved gate ticks = 1 with phase = done
+while two dispatches are suspended at the await ticks = 1 with phase = pending
+after releasing the gate the two overlapping dispatches left ticks = 3 with phase = done
+after a fourth run from the newest render ticks = 4 with phase = done
+after cancel-run 1 document request served this page and cancels = 1
+```
+
+**Both of 12.2's mechanisms have a served red site now, and they are different
+readings.** The React mutant is not invented: it is the pre-T003 emitted output
+restored verbatim, and it fails at THREE of the five readings — `phase` reads
+`idle` where `pending` is required while the dispatches are suspended (mechanism
+b), ticks reads 2 rather than 3 after the release (mechanism a), and 3 rather
+than 4 after the fourth dispatch.
+
+**12.3's two-dispatch requirement was satisfiable, and its OVERLAP half was NOT
+satisfiable the way it was written.** 12.3 says the arm must drive two dispatches
+that overlap at the `await`. It can, in all six lanes — but only because the
+promise is armed by a CLICK. Two facts about `@qwik.dev/core` 2.0.0-beta.38,
+measured by T004: its SSR serializer resolves a promise by AWAITING it
+(`await Promise.race(this.$promises$)` in a loop), so a gate that is pending when
+the server renders hangs that lane outright, and a timer gate is serialized
+RESOLVED so the client has no window at all. Neither is a defect — a pending
+promise with a live resolver is by construction not serializable, and that is
+what resumability is. The `/s8` page in every lane therefore serves an
+already-resolved gate and arms a pending one client-side.
+
+**And the pre-await write is observable at exactly one site, which is why the
+gate is held rather than timed.** Mechanism (b) leaves no trace after the fact:
+the post-await write to the same cell lands either way, so a final-state reading
+passes under both lowerings. The only observation that separates them is a render
+taken WHILE the handler is suspended. A timer would have made that a race.
+
+---
+
+## 14. Emitted Angular never re-rendered a state write made AFTER an `await` — **CLOSED — frameless's own emitted output**
+
+> **The sixth defect in frameless's own shipped output, and the first found by a
+> SERVED PAYLOAD rather than by a compiler, a type-checker or a unit test.** It
+> was invisible to every instrument this repo had, and it was invisible for a
+> structural reason: nothing in the corpus contained an `await` until S8, and no
+> instrument except a browser renders anything.
+
+**THE WITNESSED RED, verbatim.** Driving `/s8` in `demos/angular-official`, after
+the release click:
+
+```
+expected '[data-async="ticks"]' to have text "3", but it was "1"
+  (page http://127.0.0.1:5173/s8, waited 5000ms)
+```
+
+**And the diagnosis was measured rather than inferred.** The same run was repeated
+with ONE extra click on an unrelated harness control inserted after the release,
+and the reading became `3` immediately — then failed one step later at `expected
+"4", but it was "3"`, the same fault one dispatch downstream. So both continuations
+had run and both writes had landed: **the state was correct and the DOM was
+stale.**
+
+**The cause.** Angular 22 scaffolds are zoneless, and this lane holds component
+state in PLAIN CLASS FIELDS. That works for a synchronous handler for exactly one
+reason: invoking a template `(click)` listener notifies the change-detection
+scheduler itself, so whatever the listener wrote is picked up by the tick that
+follows. An `await` ends that. The continuation runs after the listener has
+returned, nothing notifies anything, and no tick is scheduled.
+
+**The repair — `notifyAfterSuspension` in the Angular emitter.** A class with an
+async handler injects `ChangeDetectorRef` and every suspension segment after the
+first ends with `this.changeDetector.markForCheck()`, which under zoneless
+Angular notifies the scheduler rather than merely flagging a view. The first
+segment is deliberately not notified: the listener's own notification covers it.
+
+**ZERO generated bytes moved.** The insertion is gated on `handler.isAsync`, and
+S8 is the only scenario in the corpus with an async handler, so the other eight
+scenarios and both composition tiers are byte-identical across three
+proven-real regeneration tiers.
+
+**What this deliberately is NOT.** The other answer is to lower every cell to an
+Angular signal, which notifies on write wherever the write happens and would make
+the pass unnecessary. That is a re-lowering of the whole lane and an architecture
+decision; it is recorded here as the alternative and not taken. The narrow one is
+correct at the corpus's authorings and moves nothing else.
+
+**Two forms entered `BASELINE_FORM_INVENTORY`** with recorded floors —
+`@angular/core#ChangeDetectorRef` at 2.0 and `@angular/core#inject` at 14.0, both
+below this lane's 19.0 standalone floor, so `ANGULAR_BASELINE_FLOOR` did not
+move. The gate refused the emitted output until they were entered, which is that
+inventory working exactly as designed.
+
+**Not upstream.** Angular supports async event handlers natively and documents
+`markForCheck()` as the notification channel for code that is not signal-based.
+The defect was entirely ours.
+
+**The residue is honest and it is named.** `notifyAfterSuspension` does not
+descend into nested functions: a state write inside a `.then` callback or a
+`setTimeout` in an Angular handler would still land unrendered. No authoring in
+the corpus produces one — entry 8 is the React twin of the same nesting question
+— and the pass says so at its own definition rather than claiming more than it
+does.
 
 ---
 
@@ -1784,9 +1893,10 @@ matrix proved green rather than from the error message's claim.
 | 8   | **product defect — OPEN**       | **contained**, not removed: fail-closed refusal in the React emitter (T044) | the lift trigger — React lowers a nested state write the way Solid already does |
 | 9   | **product defect — CLOSED**     | **removed**, not contained: the construct is lowered, and the missing typecheck oracle over emitted Angular now exists (T045) | none — but note the oracle is structurally blind to mode B, which the emitted-keyword assertion covers instead |
 | 10  | **product defect — CLOSED**     | **removed**, not contained: boolean content attributes reach Angular as `[disabled]`, not `[attr.disabled]` (T049), and S9 gives the lowering a **served payload** — six lanes byte-identical on *absent* → `disabled=""` → *absent*, at a state cell and inside a keyed repeat (T050) | none for the defect — the six registered mutants are witnessed by `pnpm mutate:corpus`, and a survivor re-opens it on that lane |
-| 11  | **product defect — CLOSED**     | **removed**, not contained: the accidental `\|\| fn.async` is gone from the Solid validator and the across-await lowering is proven by running it (T046) | none for the defect — but no **served** payload observes an async handler yet, which is a corpus card, not a repair |
-| 12  | **product defect — CLOSED**     | **removed**, not contained: the `await` survives re-analysis (T047), the final-sync retention is **segmented at the suspension boundary** and post-await reads of the cell being written are lowered to React's **functional updater** (T003). Witnessed before/after against real `react-dom`, with the calibration arm held fixed as the control, and **zero generated bytes moved** across three proven-real regeneration tiers | none for the defect — a **v-limit** (post-await read of a *different* cell) is recorded in 12.2 with its triggering authoring and its own registered test, and no **served** payload observes an async React handler yet, which is a corpus card |
+| 11  | **product defect — CLOSED**     | **removed**, not contained: the accidental `\|\| fn.async` is gone from the Solid validator and the across-await lowering is proven by running it (T046), and S8 gives it a **served payload** — six lanes byte-identical on the suspended reading and on the overlap (T004) | none |
+| 12  | **product defect — CLOSED**     | **removed**, not contained: the `await` survives re-analysis (T047), the final-sync retention is **segmented at the suspension boundary** and post-await reads of the cell being written are lowered to React's **functional updater** (T003). Witnessed before/after against real `react-dom`, with the calibration arm held fixed as the control, and **zero generated bytes moved** across three proven-real regeneration tiers | none for the defect — a **v-limit** (post-await read of a *different* cell) is recorded in 12.2 with its triggering authoring and its own registered test. The **served payload** landed with S8 (T004): six lanes byte-identical, and the react mutant is the pre-T003 lowering restored verbatim, RED at three of five readings |
 | 13  | **product defect — OPEN**       | **half removed**: react's three names are repaired in `jsxName` and pinned against react-dom's own rejections; `hidden` and `readonly` are **contained** — excluded from `LANE_PORTABLE_BOOLEAN_ATTRIBUTES`, unrepairable from any emitter, because both fail inside `@qwik.dev/core`'s own `isBooleanAttr` | the lift trigger — a qwik release whose `isBooleanAttr` admits `hidden` and stops gating `readonly` on `key in element`, at which point the clause-5 matrix goes red and the portable set widens |
+| 14  | **product defect — CLOSED**     | **removed**, not contained: a class with an async handler injects `ChangeDetectorRef` and every suspension segment after the first ends with `markForCheck()` (T004). Found by a **served payload** and by nothing else, with the diagnosis measured — one extra click made the stale DOM jump to the correct value | none for the defect — nested-function writes are NOT covered and the pass says so; no corpus authoring produces one |
 
 **Entries 7, 8 and 13 are the OPEN defects in frameless's own emitted output**,
 and they are the ones on this table a later reader could mistake for closed

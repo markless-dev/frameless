@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import AsyncBoard from './emitted/AsyncBoard.vue'
 import AttrBoard from './emitted/AttrBoard.vue'
 import BranchBoard from './emitted/BranchBoard.vue'
 import EventForm from './emitted/EventForm.vue'
@@ -9,7 +10,10 @@ import NestedBoard from './emitted/NestedBoard.vue'
 import RenderOnce from './emitted/RenderOnce.vue'
 import WhitespaceBoard from './emitted/WhitespaceBoard.vue'
 import {
+  armS8Gate,
   noTrace,
+  s8Gate,
+  s8ResolvedGate,
   s2Seed,
   s4Seed,
   s5Seed,
@@ -56,6 +60,12 @@ const scenario = computed(() => scenarioFor(props.url))
 onMounted(() => {
   document.documentElement.setAttribute('data-frameless-activated', 'vue')
 })
+
+// The /s8 harness. A `ref` rather than a module-level mutable: the board reads
+// `ready` as a prop, so the new promise has to arrive through a reactive
+// update. Nothing here is emitted output — see `assertS8` in
+// demos/react-official/three-way-contract.ts.
+const s8Ready = ref<Promise<string>>(s8ResolvedGate)
 </script>
 
 <template>
@@ -77,5 +87,11 @@ onMounted(() => {
     v-bind:onTrace="noTrace"
   />
   <FormBoard v-else-if="scenario === 's7'" v-bind:seed="s7Seed" v-bind:onTrace="noTrace" />
+  <template v-else-if="scenario === 's8'">
+    <button type="button" data-harness="arm" v-on:click="s8Ready = armS8Gate()">arm</button>
+    <button type="button" data-harness="release" v-on:click="s8Gate.release()">release</button>
+    <p data-harness="gate">{{ s8Ready === s8ResolvedGate ? 'open' : 'held' }}</p>
+    <AsyncBoard v-bind:ready="s8Ready" v-bind:onTrace="noTrace" />
+  </template>
   <AttrBoard v-else v-bind:seed="s9Seed" v-bind:onTrace="noTrace" />
 </template>

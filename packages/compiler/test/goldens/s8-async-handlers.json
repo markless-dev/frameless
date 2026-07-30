@@ -1,0 +1,1336 @@
+{
+  "components": [
+    {
+      "evaluation": {
+        "computedBindings": "reactive",
+        "ordinaryLocals": "once-per-instance"
+      },
+      "guards": [],
+      "id": "component:0:AsyncBoard",
+      "locals": [
+        {
+          "declarationKind": "let",
+          "initializer": {
+            "arguments": [
+              {
+                "end": 855,
+                "raw": "0",
+                "start": 854,
+                "type": "Literal",
+                "value": 0
+              }
+            ],
+            "callee": {
+              "end": 853,
+              "name": "state",
+              "start": 848,
+              "type": "Identifier"
+            },
+            "end": 856,
+            "optional": false,
+            "start": 848,
+            "type": "CallExpression"
+          },
+          "names": [
+            "ticks"
+          ],
+          "order": 0,
+          "pattern": {
+            "end": 845,
+            "name": "ticks",
+            "start": 840,
+            "type": "Identifier"
+          },
+          "reads": [],
+          "semanticRecordIds": [
+            "state:ticks"
+          ]
+        },
+        {
+          "declarationKind": "let",
+          "initializer": {
+            "arguments": [
+              {
+                "end": 883,
+                "raw": "'idle'",
+                "start": 877,
+                "type": "Literal",
+                "value": "idle"
+              }
+            ],
+            "callee": {
+              "end": 876,
+              "name": "state",
+              "start": 871,
+              "type": "Identifier"
+            },
+            "end": 884,
+            "optional": false,
+            "start": 871,
+            "type": "CallExpression"
+          },
+          "names": [
+            "phase"
+          ],
+          "order": 1,
+          "pattern": {
+            "end": 868,
+            "name": "phase",
+            "start": 863,
+            "type": "Identifier"
+          },
+          "reads": [],
+          "semanticRecordIds": [
+            "state:phase"
+          ]
+        },
+        {
+          "declarationKind": "let",
+          "initializer": {
+            "arguments": [
+              {
+                "end": 908,
+                "raw": "0",
+                "start": 907,
+                "type": "Literal",
+                "value": 0
+              }
+            ],
+            "callee": {
+              "end": 906,
+              "name": "state",
+              "start": 901,
+              "type": "Identifier"
+            },
+            "end": 909,
+            "optional": false,
+            "start": 901,
+            "type": "CallExpression"
+          },
+          "names": [
+            "cancels"
+          ],
+          "order": 2,
+          "pattern": {
+            "end": 898,
+            "name": "cancels",
+            "start": 891,
+            "type": "Identifier"
+          },
+          "reads": [],
+          "semanticRecordIds": [
+            "state:cancels"
+          ]
+        }
+      ],
+      "name": "AsyncBoard",
+      "props": {
+        "entries": [
+          {
+            "alias": false,
+            "graphNodeId": "prop:props",
+            "localName": "ready",
+            "optional": false,
+            "path": [
+              "ready"
+            ],
+            "sourceName": "ready",
+            "type": {
+              "end": 744,
+              "start": 729,
+              "type": "TSTypeReference",
+              "typeArguments": {
+                "end": 744,
+                "params": [
+                  {
+                    "end": 743,
+                    "start": 737,
+                    "type": "TSStringKeyword"
+                  }
+                ],
+                "start": 736,
+                "type": "TSTypeParameterInstantiation"
+              },
+              "typeName": {
+                "end": 736,
+                "name": "Promise",
+                "start": 729,
+                "type": "Identifier"
+              }
+            }
+          },
+          {
+            "alias": false,
+            "graphNodeId": "prop:props",
+            "localName": "onTrace",
+            "optional": false,
+            "path": [
+              "onTrace"
+            ],
+            "sourceName": "onTrace",
+            "type": {
+              "end": 827,
+              "parameters": [
+                {
+                  "end": 769,
+                  "name": "name",
+                  "start": 757,
+                  "type": "Identifier",
+                  "typeAnnotation": {
+                    "end": 769,
+                    "start": 761,
+                    "type": "TSTypeAnnotation",
+                    "typeAnnotation": {
+                      "end": 769,
+                      "start": 763,
+                      "type": "TSStringKeyword"
+                    }
+                  }
+                },
+                {
+                  "end": 802,
+                  "name": "detail",
+                  "start": 771,
+                  "type": "Identifier",
+                  "typeAnnotation": {
+                    "end": 802,
+                    "start": 777,
+                    "type": "TSTypeAnnotation",
+                    "typeAnnotation": {
+                      "end": 802,
+                      "start": 779,
+                      "type": "TSTypeReference",
+                      "typeArguments": {
+                        "end": 802,
+                        "params": [
+                          {
+                            "end": 792,
+                            "start": 786,
+                            "type": "TSStringKeyword"
+                          },
+                          {
+                            "end": 801,
+                            "start": 794,
+                            "type": "TSUnknownKeyword"
+                          }
+                        ],
+                        "start": 785,
+                        "type": "TSTypeParameterInstantiation"
+                      },
+                      "typeName": {
+                        "end": 785,
+                        "name": "Record",
+                        "start": 779,
+                        "type": "Identifier"
+                      }
+                    }
+                  }
+                },
+                {
+                  "end": 818,
+                  "name": "event",
+                  "start": 804,
+                  "type": "Identifier",
+                  "typeAnnotation": {
+                    "end": 818,
+                    "start": 809,
+                    "type": "TSTypeAnnotation",
+                    "typeAnnotation": {
+                      "end": 818,
+                      "start": 811,
+                      "type": "TSUnknownKeyword"
+                    }
+                  }
+                }
+              ],
+              "start": 756,
+              "type": "TSFunctionType",
+              "typeAnnotation": {
+                "end": 827,
+                "start": 820,
+                "type": "TSTypeAnnotation",
+                "typeAnnotation": {
+                  "end": 827,
+                  "start": 823,
+                  "type": "TSVoidKeyword"
+                }
+              }
+            }
+          }
+        ],
+        "graphNodeId": "prop:props"
+      },
+      "template": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "expression": {
+                    "end": 969,
+                    "name": "ticks",
+                    "start": 964,
+                    "type": "Identifier"
+                  },
+                  "id": "text:0",
+                  "kind": "dynamic-text",
+                  "reads": [
+                    {
+                      "graphNodeId": "state:ticks",
+                      "path": [],
+                      "via": "direct"
+                    }
+                  ]
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [],
+              "id": "h1",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-async",
+                  "value": "ticks"
+                }
+              ],
+              "tag": "p"
+            },
+            {
+              "children": [
+                {
+                  "expression": {
+                    "end": 1005,
+                    "name": "phase",
+                    "start": 1000,
+                    "type": "Identifier"
+                  },
+                  "id": "text:1",
+                  "kind": "dynamic-text",
+                  "reads": [
+                    {
+                      "graphNodeId": "state:phase",
+                      "path": [],
+                      "via": "direct"
+                    }
+                  ]
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [],
+              "id": "h2",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-async",
+                  "value": "phase"
+                }
+              ],
+              "tag": "p"
+            },
+            {
+              "children": [
+                {
+                  "expression": {
+                    "end": 1045,
+                    "name": "cancels",
+                    "start": 1038,
+                    "type": "Identifier"
+                  },
+                  "id": "text:2",
+                  "kind": "dynamic-text",
+                  "reads": [
+                    {
+                      "graphNodeId": "state:cancels",
+                      "path": [],
+                      "via": "direct"
+                    }
+                  ]
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [],
+              "id": "h3",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "data-async",
+                  "value": "cancels"
+                }
+              ],
+              "tag": "p"
+            },
+            {
+              "children": [
+                {
+                  "id": "text:3",
+                  "kind": "text",
+                  "value": "run"
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [
+                "event:0"
+              ],
+              "id": "h4",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "type",
+                  "value": "button"
+                },
+                {
+                  "name": "data-action",
+                  "value": "run"
+                }
+              ],
+              "tag": "button"
+            },
+            {
+              "children": [
+                {
+                  "id": "text:4",
+                  "kind": "text",
+                  "value": "cancel"
+                }
+              ],
+              "dynamicBindings": [],
+              "eventIds": [
+                "event:1"
+              ],
+              "id": "h5",
+              "kind": "host",
+              "staticAttributes": [
+                {
+                  "name": "type",
+                  "value": "submit"
+                },
+                {
+                  "name": "data-action",
+                  "value": "cancel-run"
+                }
+              ],
+              "tag": "button"
+            }
+          ],
+          "dynamicBindings": [],
+          "eventIds": [],
+          "id": "h0",
+          "kind": "host",
+          "staticAttributes": [
+            {
+              "name": "data-scenario",
+              "value": "s8"
+            }
+          ],
+          "tag": "form"
+        }
+      ]
+    }
+  ],
+  "filename": "src/fixtures/s8-async-handlers.tsrx",
+  "imports": [],
+  "module": {
+    "exports": [
+      {
+        "componentName": "AsyncBoard",
+        "exportedName": "AsyncBoard",
+        "kind": "named"
+      }
+    ]
+  },
+  "records": {
+    "aliases": [
+      {
+        "componentId": "component:0:AsyncBoard",
+        "declarationKind": "const",
+        "graphNodeId": "prop:props",
+        "id": "alias:AsyncBoard:onTrace",
+        "name": "onTrace",
+        "path": [
+          "onTrace"
+        ],
+        "sourceSpan": {
+          "end": 715,
+          "filename": "src/fixtures/s8-async-handlers.tsrx",
+          "start": 708
+        },
+        "target": "props.onTrace"
+      },
+      {
+        "componentId": "component:0:AsyncBoard",
+        "declarationKind": "const",
+        "graphNodeId": "prop:props",
+        "id": "alias:AsyncBoard:ready",
+        "name": "ready",
+        "path": [
+          "ready"
+        ],
+        "sourceSpan": {
+          "end": 706,
+          "filename": "src/fixtures/s8-async-handlers.tsrx",
+          "start": 701
+        },
+        "target": "props.ready"
+      }
+    ],
+    "behaviors": [],
+    "bindings": [
+      {
+        "componentId": "component:0:AsyncBoard",
+        "declarationKind": "const",
+        "id": "prop:props",
+        "kind": "prop",
+        "name": "props",
+        "reads": [],
+        "valueKind": "object",
+        "writable": false,
+        "writes": []
+      },
+      {
+        "componentId": "component:0:AsyncBoard",
+        "declarationKind": "let",
+        "id": "state:cancels",
+        "initialValue": 0,
+        "initializer": {
+          "end": 908,
+          "raw": "0",
+          "start": 907,
+          "type": "Literal",
+          "value": 0
+        },
+        "kind": "state",
+        "name": "cancels",
+        "reads": [],
+        "valueKind": "scalar",
+        "writable": true,
+        "writes": [
+          {
+            "assignmentOperator": "=",
+            "componentId": "component:0:AsyncBoard",
+            "graphNodeId": "state:cancels",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 1423,
+              "filename": "src/fixtures/s8-async-handlers.tsrx",
+              "start": 1416
+            },
+            "value": {
+              "end": 1437,
+              "left": {
+                "end": 1433,
+                "name": "cancels",
+                "start": 1426,
+                "type": "Identifier"
+              },
+              "operator": "+",
+              "right": {
+                "end": 1437,
+                "raw": "1",
+                "start": 1436,
+                "type": "Literal",
+                "value": 1
+              },
+              "start": 1426,
+              "type": "BinaryExpression"
+            },
+            "via": "direct"
+          }
+        ]
+      },
+      {
+        "componentId": "component:0:AsyncBoard",
+        "declarationKind": "let",
+        "id": "state:phase",
+        "initialValue": "idle",
+        "initializer": {
+          "end": 883,
+          "raw": "'idle'",
+          "start": 877,
+          "type": "Literal",
+          "value": "idle"
+        },
+        "kind": "state",
+        "name": "phase",
+        "reads": [],
+        "valueKind": "scalar",
+        "writable": true,
+        "writes": [
+          {
+            "assignmentOperator": "=",
+            "componentId": "component:0:AsyncBoard",
+            "graphNodeId": "state:phase",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 1139,
+              "filename": "src/fixtures/s8-async-handlers.tsrx",
+              "start": 1134
+            },
+            "value": {
+              "end": 1151,
+              "raw": "'pending'",
+              "start": 1142,
+              "type": "Literal",
+              "value": "pending"
+            },
+            "via": "direct"
+          },
+          {
+            "assignmentOperator": "=",
+            "componentId": "component:0:AsyncBoard",
+            "graphNodeId": "state:phase",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 1202,
+              "filename": "src/fixtures/s8-async-handlers.tsrx",
+              "start": 1197
+            },
+            "value": {
+              "end": 1211,
+              "raw": "'done'",
+              "start": 1205,
+              "type": "Literal",
+              "value": "done"
+            },
+            "via": "direct"
+          }
+        ]
+      },
+      {
+        "componentId": "component:0:AsyncBoard",
+        "declarationKind": "let",
+        "id": "state:ticks",
+        "initialValue": 0,
+        "initializer": {
+          "end": 855,
+          "raw": "0",
+          "start": 854,
+          "type": "Literal",
+          "value": 0
+        },
+        "kind": "state",
+        "name": "ticks",
+        "reads": [],
+        "valueKind": "scalar",
+        "writable": true,
+        "writes": [
+          {
+            "assignmentOperator": "=",
+            "componentId": "component:0:AsyncBoard",
+            "graphNodeId": "state:ticks",
+            "operation": "assign",
+            "path": [],
+            "sourceSpan": {
+              "end": 1179,
+              "filename": "src/fixtures/s8-async-handlers.tsrx",
+              "start": 1174
+            },
+            "value": {
+              "end": 1191,
+              "left": {
+                "end": 1187,
+                "name": "ticks",
+                "start": 1182,
+                "type": "Identifier"
+              },
+              "operator": "+",
+              "right": {
+                "end": 1191,
+                "raw": "1",
+                "start": 1190,
+                "type": "Literal",
+                "value": 1
+              },
+              "start": 1182,
+              "type": "BinaryExpression"
+            },
+            "via": "direct"
+          }
+        ]
+      }
+    ],
+    "elementHandleBindings": [],
+    "events": [
+      {
+        "componentId": "component:0:AsyncBoard",
+        "eventName": "click",
+        "handlers": [
+          {
+            "expression": {
+              "async": true,
+              "body": {
+                "body": [
+                  {
+                    "end": 1152,
+                    "expression": {
+                      "end": 1151,
+                      "left": {
+                        "end": 1139,
+                        "name": "phase",
+                        "start": 1134,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "end": 1151,
+                        "raw": "'pending'",
+                        "start": 1142,
+                        "type": "Literal",
+                        "value": "pending"
+                      },
+                      "start": 1134,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 1134,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 1169,
+                    "expression": {
+                      "argument": {
+                        "end": 1168,
+                        "name": "ready",
+                        "start": 1163,
+                        "type": "Identifier"
+                      },
+                      "end": 1168,
+                      "start": 1157,
+                      "type": "AwaitExpression"
+                    },
+                    "start": 1157,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 1192,
+                    "expression": {
+                      "end": 1191,
+                      "left": {
+                        "end": 1179,
+                        "name": "ticks",
+                        "start": 1174,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "end": 1191,
+                        "left": {
+                          "end": 1187,
+                          "name": "ticks",
+                          "start": 1182,
+                          "type": "Identifier"
+                        },
+                        "operator": "+",
+                        "right": {
+                          "end": 1191,
+                          "raw": "1",
+                          "start": 1190,
+                          "type": "Literal",
+                          "value": 1
+                        },
+                        "start": 1182,
+                        "type": "BinaryExpression"
+                      },
+                      "start": 1174,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 1174,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 1212,
+                    "expression": {
+                      "end": 1211,
+                      "left": {
+                        "end": 1202,
+                        "name": "phase",
+                        "start": 1197,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "end": 1211,
+                        "raw": "'done'",
+                        "start": 1205,
+                        "type": "Literal",
+                        "value": "done"
+                      },
+                      "start": 1197,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 1197,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 1258,
+                    "expression": {
+                      "arguments": [
+                        {
+                          "end": 1230,
+                          "raw": "'run'",
+                          "start": 1225,
+                          "type": "Literal",
+                          "value": "run"
+                        },
+                        {
+                          "end": 1249,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 1247,
+                              "key": {
+                                "end": 1239,
+                                "name": "phase",
+                                "start": 1234,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 1234,
+                              "type": "Property",
+                              "value": {
+                                "end": 1247,
+                                "raw": "'done'",
+                                "start": 1241,
+                                "type": "Literal",
+                                "value": "done"
+                              }
+                            }
+                          ],
+                          "start": 1232,
+                          "type": "ObjectExpression"
+                        },
+                        {
+                          "end": 1256,
+                          "name": "event",
+                          "start": 1251,
+                          "type": "Identifier"
+                        }
+                      ],
+                      "callee": {
+                        "end": 1224,
+                        "name": "onTrace",
+                        "start": 1217,
+                        "type": "Identifier"
+                      },
+                      "end": 1257,
+                      "optional": false,
+                      "start": 1217,
+                      "type": "CallExpression"
+                    },
+                    "start": 1217,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 1263,
+                "start": 1128,
+                "type": "BlockStatement"
+              },
+              "end": 1263,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 1123,
+                  "name": "event",
+                  "start": 1118,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 1111,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              },
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "ready"
+                ],
+                "via": "alias"
+              },
+              {
+                "graphNodeId": "state:ticks",
+                "path": [],
+                "via": "direct"
+              }
+            ],
+            "writes": [
+              {
+                "assignmentOperator": "=",
+                "componentId": "component:0:AsyncBoard",
+                "graphNodeId": "state:phase",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 1139,
+                  "filename": "src/fixtures/s8-async-handlers.tsrx",
+                  "start": 1134
+                },
+                "value": {
+                  "end": 1151,
+                  "raw": "'pending'",
+                  "start": 1142,
+                  "type": "Literal",
+                  "value": "pending"
+                },
+                "via": "direct"
+              },
+              {
+                "assignmentOperator": "=",
+                "componentId": "component:0:AsyncBoard",
+                "graphNodeId": "state:phase",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 1202,
+                  "filename": "src/fixtures/s8-async-handlers.tsrx",
+                  "start": 1197
+                },
+                "value": {
+                  "end": 1211,
+                  "raw": "'done'",
+                  "start": 1205,
+                  "type": "Literal",
+                  "value": "done"
+                },
+                "via": "direct"
+              },
+              {
+                "assignmentOperator": "=",
+                "componentId": "component:0:AsyncBoard",
+                "graphNodeId": "state:ticks",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 1179,
+                  "filename": "src/fixtures/s8-async-handlers.tsrx",
+                  "start": 1174
+                },
+                "value": {
+                  "end": 1191,
+                  "left": {
+                    "end": 1187,
+                    "name": "ticks",
+                    "start": 1182,
+                    "type": "Identifier"
+                  },
+                  "operator": "+",
+                  "right": {
+                    "end": 1191,
+                    "raw": "1",
+                    "start": 1190,
+                    "type": "Literal",
+                    "value": 1
+                  },
+                  "start": 1182,
+                  "type": "BinaryExpression"
+                },
+                "via": "direct"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h4",
+        "id": "event:0"
+      },
+      {
+        "componentId": "component:0:AsyncBoard",
+        "eventName": "click",
+        "handlers": [
+          {
+            "expression": {
+              "async": true,
+              "body": {
+                "body": [
+                  {
+                    "end": 1394,
+                    "expression": {
+                      "arguments": [],
+                      "callee": {
+                        "computed": false,
+                        "end": 1391,
+                        "object": {
+                          "end": 1376,
+                          "name": "event",
+                          "start": 1371,
+                          "type": "Identifier"
+                        },
+                        "optional": false,
+                        "property": {
+                          "end": 1391,
+                          "name": "preventDefault",
+                          "start": 1377,
+                          "type": "Identifier"
+                        },
+                        "start": 1371,
+                        "type": "MemberExpression"
+                      },
+                      "end": 1393,
+                      "optional": false,
+                      "start": 1371,
+                      "type": "CallExpression"
+                    },
+                    "start": 1371,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 1411,
+                    "expression": {
+                      "argument": {
+                        "end": 1410,
+                        "name": "ready",
+                        "start": 1405,
+                        "type": "Identifier"
+                      },
+                      "end": 1410,
+                      "start": 1399,
+                      "type": "AwaitExpression"
+                    },
+                    "start": 1399,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 1438,
+                    "expression": {
+                      "end": 1437,
+                      "left": {
+                        "end": 1423,
+                        "name": "cancels",
+                        "start": 1416,
+                        "type": "Identifier"
+                      },
+                      "operator": "=",
+                      "right": {
+                        "end": 1437,
+                        "left": {
+                          "end": 1433,
+                          "name": "cancels",
+                          "start": 1426,
+                          "type": "Identifier"
+                        },
+                        "operator": "+",
+                        "right": {
+                          "end": 1437,
+                          "raw": "1",
+                          "start": 1436,
+                          "type": "Literal",
+                          "value": 1
+                        },
+                        "start": 1426,
+                        "type": "BinaryExpression"
+                      },
+                      "start": 1416,
+                      "type": "AssignmentExpression"
+                    },
+                    "start": 1416,
+                    "type": "ExpressionStatement"
+                  },
+                  {
+                    "end": 1484,
+                    "expression": {
+                      "arguments": [
+                        {
+                          "end": 1459,
+                          "raw": "'cancel'",
+                          "start": 1451,
+                          "type": "Literal",
+                          "value": "cancel"
+                        },
+                        {
+                          "end": 1475,
+                          "properties": [
+                            {
+                              "computed": false,
+                              "end": 1473,
+                              "key": {
+                                "end": 1470,
+                                "name": "cancels",
+                                "start": 1463,
+                                "type": "Identifier"
+                              },
+                              "kind": "init",
+                              "method": false,
+                              "shorthand": false,
+                              "start": 1463,
+                              "type": "Property",
+                              "value": {
+                                "end": 1473,
+                                "raw": "1",
+                                "start": 1472,
+                                "type": "Literal",
+                                "value": 1
+                              }
+                            }
+                          ],
+                          "start": 1461,
+                          "type": "ObjectExpression"
+                        },
+                        {
+                          "end": 1482,
+                          "name": "event",
+                          "start": 1477,
+                          "type": "Identifier"
+                        }
+                      ],
+                      "callee": {
+                        "end": 1450,
+                        "name": "onTrace",
+                        "start": 1443,
+                        "type": "Identifier"
+                      },
+                      "end": 1483,
+                      "optional": false,
+                      "start": 1443,
+                      "type": "CallExpression"
+                    },
+                    "start": 1443,
+                    "type": "ExpressionStatement"
+                  }
+                ],
+                "end": 1489,
+                "start": 1365,
+                "type": "BlockStatement"
+              },
+              "end": 1489,
+              "expression": false,
+              "generator": false,
+              "id": null,
+              "params": [
+                {
+                  "end": 1360,
+                  "name": "event",
+                  "start": 1355,
+                  "type": "Identifier"
+                }
+              ],
+              "start": 1348,
+              "type": "ArrowFunctionExpression"
+            },
+            "reads": [
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "onTrace"
+                ],
+                "via": "alias"
+              },
+              {
+                "graphNodeId": "prop:props",
+                "path": [
+                  "ready"
+                ],
+                "via": "alias"
+              },
+              {
+                "graphNodeId": "state:cancels",
+                "path": [],
+                "via": "direct"
+              }
+            ],
+            "writes": [
+              {
+                "assignmentOperator": "=",
+                "componentId": "component:0:AsyncBoard",
+                "graphNodeId": "state:cancels",
+                "operation": "assign",
+                "path": [],
+                "sourceSpan": {
+                  "end": 1423,
+                  "filename": "src/fixtures/s8-async-handlers.tsrx",
+                  "start": 1416
+                },
+                "value": {
+                  "end": 1437,
+                  "left": {
+                    "end": 1433,
+                    "name": "cancels",
+                    "start": 1426,
+                    "type": "Identifier"
+                  },
+                  "operator": "+",
+                  "right": {
+                    "end": 1437,
+                    "raw": "1",
+                    "start": 1436,
+                    "type": "Literal",
+                    "value": 1
+                  },
+                  "start": 1426,
+                  "type": "BinaryExpression"
+                },
+                "via": "direct"
+              }
+            ]
+          }
+        ],
+        "hostNodeId": "h5",
+        "id": "event:1",
+        "syncPolicy": {
+          "actions": [
+            "preventDefault"
+          ],
+          "when": {
+            "type": "constant-truthy",
+            "value": true
+          }
+        }
+      }
+    ],
+    "handleCalls": [],
+    "handleForwards": [],
+    "persistence": [],
+    "sharedCalls": [],
+    "sharedDefinitions": [],
+    "sharedInstances": [],
+    "sharedReads": [],
+    "sharedWrites": [],
+    "stateReads": [
+      {
+        "componentId": "component:0:AsyncBoard",
+        "graphNodeId": "prop:props",
+        "path": [
+          "onTrace"
+        ]
+      },
+      {
+        "componentId": "component:0:AsyncBoard",
+        "graphNodeId": "prop:props",
+        "path": [
+          "ready"
+        ]
+      },
+      {
+        "componentId": "component:0:AsyncBoard",
+        "graphNodeId": "state:cancels",
+        "path": []
+      },
+      {
+        "componentId": "component:0:AsyncBoard",
+        "graphNodeId": "state:phase",
+        "path": []
+      },
+      {
+        "componentId": "component:0:AsyncBoard",
+        "graphNodeId": "state:ticks",
+        "path": []
+      }
+    ],
+    "stateWrites": [
+      {
+        "assignmentOperator": "=",
+        "componentId": "component:0:AsyncBoard",
+        "graphNodeId": "state:cancels",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 1423,
+          "filename": "src/fixtures/s8-async-handlers.tsrx",
+          "start": 1416
+        },
+        "value": {
+          "end": 1437,
+          "left": {
+            "end": 1433,
+            "name": "cancels",
+            "start": 1426,
+            "type": "Identifier"
+          },
+          "operator": "+",
+          "right": {
+            "end": 1437,
+            "raw": "1",
+            "start": 1436,
+            "type": "Literal",
+            "value": 1
+          },
+          "start": 1426,
+          "type": "BinaryExpression"
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "componentId": "component:0:AsyncBoard",
+        "graphNodeId": "state:phase",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 1139,
+          "filename": "src/fixtures/s8-async-handlers.tsrx",
+          "start": 1134
+        },
+        "value": {
+          "end": 1151,
+          "raw": "'pending'",
+          "start": 1142,
+          "type": "Literal",
+          "value": "pending"
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "componentId": "component:0:AsyncBoard",
+        "graphNodeId": "state:phase",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 1202,
+          "filename": "src/fixtures/s8-async-handlers.tsrx",
+          "start": 1197
+        },
+        "value": {
+          "end": 1211,
+          "raw": "'done'",
+          "start": 1205,
+          "type": "Literal",
+          "value": "done"
+        },
+        "via": "direct"
+      },
+      {
+        "assignmentOperator": "=",
+        "componentId": "component:0:AsyncBoard",
+        "graphNodeId": "state:ticks",
+        "operation": "assign",
+        "path": [],
+        "sourceSpan": {
+          "end": 1179,
+          "filename": "src/fixtures/s8-async-handlers.tsrx",
+          "start": 1174
+        },
+        "value": {
+          "end": 1191,
+          "left": {
+            "end": 1187,
+            "name": "ticks",
+            "start": 1182,
+            "type": "Identifier"
+          },
+          "operator": "+",
+          "right": {
+            "end": 1191,
+            "raw": "1",
+            "start": 1190,
+            "type": "Literal",
+            "value": 1
+          },
+          "start": 1182,
+          "type": "BinaryExpression"
+        },
+        "via": "direct"
+      }
+    ]
+  },
+  "version": "frameless-enriched-ir/2"
+}
