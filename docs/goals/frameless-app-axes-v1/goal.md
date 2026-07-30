@@ -129,15 +129,21 @@ Reference URLs, all QA'd live by the PM except where noted:
   find website -type f | wc -l                                   # 116
   ```
 
-  **Three wrong readings, all measured.** The bare **digest column** gives `feddd40b`. Sorting
+  **Three wrong readings, all measured.** The **sorted digest column** gives `feddd40b` — note
+  *sorted*: **bare** it is nondeterministic (`990e3330` and `d6faf15e` on consecutive runs). Sorting
   by **path** and hashing the lines in that order gives `b1dd182a`. Hashing the sorted **path
   list itself** gives `ff230487` and reads no file content at all. With **no sort** the value is
   not deterministic — `find`'s traversal order alone — so **record no expected value for it**.
   If you change the method, change the expected values in the same edit.
 - **Never `pkill -f` on a broad pattern.** A prior task killed one of the owner's long-running
   servers this way and it could not be restored. Kill by recorded PID only, and only PIDs you
-  started. **Port 5175 is held by foreign `node` PID 64413** — record it and use another port.
+  started. **TWO foreign processes are running**: `node` PID **64413** on **5175** and `node` PID **24931**
+  on **5178**. Both were left alive. **Do not assume either port is free, and never kill them.**
 - **`git diff --exit-code` is blind to untracked additions.** Pair it with `git status --short`.
+- **REACT, SOLID AND VUE ANSWER 200 FOR ANY PATH** — they fall through to S1. **A 200 in those
+  lanes is not proof a page exists.** Hash the response body and prove it differs per route.
+  T001 caught this as a verification that could pass while measuring almost nothing. svelte,
+  qwik and angular 404 correctly.
 - **No new dependency.** Resolve harness tools out of `node_modules/.pnpm` instead.
 
 ## Likely misfire

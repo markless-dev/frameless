@@ -58,7 +58,7 @@ goal:
       evaporates. If drag refuses and is quietly replaced by click-to-move, the axis goes
       unmeasured while the demo looks complete.
 
-active_task: T001
+active_task: T002
 
 rules:
   - "state.yaml is board truth; goal.md is the charter."
@@ -80,7 +80,7 @@ tasks:
   - id: T001
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: >-
       Restore greppability to the React emitter, and list every shipped app in `pnpm demo`.
@@ -120,12 +120,94 @@ tasks:
       - "pnpm check rises above 267, pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
       - "NEVER pkill -f on a broad pattern. Port 5175 is held by FOREIGN node PID 64413."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T001-tooling.md
+      summary: "Removed the single NUL from the React emitter by spelling the segment separator as the \\\\u0000 ESCAPE - AN IDENTICAL RUNTIME STRING - restoring `grep -c import` to 44, matching db6e275. Rewrote scripts/demo.mjs from 3 lanes/3 scenarios to 6 lanes/12 scenarios with qwik trailing slashes and angular's two refusals stated, plus a port preflight that NEVER KILLS. Launched all six lanes: 70/70 routes 200, ALL BODIES DISTINCT. Baselines unmoved."
+      THE_FIX_CANNOT_MOVE_AN_EMITTED_BYTE_BY_CONSTRUCTION: "The separator is now `${segmentOf.get(statement) ?? 0}\\\\u0000${variable}` - the ESCAPE, not the raw byte - so it is THE SAME RUNTIME STRING. Proved with a PRE-FIX delete/regenerate CONTROL first (present-after-delete = 0, then 102/102 byte-identical), so the post-fix 102/102 compared REBUILT FILES rather than two empty sets - the exact vacuous-proof trap a prior card fell into."
+      PNPM_DEMO_WAS_NOT_MERELY_STALE_IT_WAS_LYING: "MEASURED BASELINE: `pnpm demo` EXITED 1 and served nothing, because qwik was hardcoded to foreign-held port 5175 - AND IT PRINTED ITS FULL SUCCESS BANNER FIRST, because waitForAll ACCEPTED THE FOREIGN SERVER'S 200 AS QWIK BEING READY. IT WAS ADVERTISING A URL SERVING A STRANGER'S APP. The rewrite adds a port preflight that confirms each port EMPTY BEFORE SPAWN - which is what makes a later 200 attributable to us - skips occupied ports reporting the holder, and never kills."
+      THE_MOST_CONSEQUENTIAL_CATCH_A_VERIFICATION_THAT_COULD_PASS_WHILE_MEASURING_NOTHING: "A NEGATIVE CONTROL SHOWED REACT, SOLID AND VUE RETURN 200 FOR ANY PATH (they fall through to S1), so the card's stated check - 'the URL answers 200' - IS SATISFIABLE BY A NONEXISTENT ROUTE. Replaced with per-route BODY HASHING: 12/12 distinct bodies per lane, 10/10 for angular. svelte, qwik and angular 404 correctly."
+      ITS_OWN_GUARD_COMMENT_BRIEFLY_FALSIFIED_ITSELF: "The new guard test's comment CONTAINED THE STRING `import`, pushing `grep -c import` to 45 while the test asserted 44. Caught and fixed. A guard that breaks the invariant it guards is the same family as the assertions this project keeps mutation-testing."
+      changed_files:
+        - packages/frameworks/react/src/emitter/index.ts
+        - packages/frameworks/react/test/emitter-source.test.ts
+        - scripts/demo.mjs
+        - docs/goals/frameless-app-axes-v1/notes/T001-tooling.md
+      commands:
+        - cmd: "grep -c import <react emitter> BEFORE"
+          status: pass
+          note: "exit 1, NO OUTPUT - defect reproduced"
+        - cmd: "python NUL sweep over 1162 tracked text files"
+          status: pass
+          note: "EXACTLY 1 NUL, offset 83957, line 2261"
+        - cmd: "grep -c import AFTER"
+          status: pass
+          note: "44, exit 0; db6e275 baseline also 44"
+        - cmd: "CONTROL pre-fix: delete generated+generated-composition, regenerate 6 lanes"
+          status: pass
+          note: "PRESENT-AFTER-DELETE=0 asserted first; 102/102 byte-identical"
+        - cmd: "post-fix: delete again (=0), regenerate 6 lanes"
+          status: pass
+          note: "102/102 BYTE-IDENTICAL vs committed"
+        - cmd: "MUTATION: reinstate raw NUL"
+          status: pass
+          note: "grep exit 1 AND emitter-source.test.ts FAILS (nulAt 84525) - mutant killed; restored"
+        - cmd: "pnpm demo BEFORE (measured baseline)"
+          status: pass
+          note: "EXIT=1, qwik 'Port 5175 already in use', SUCCESS BANNER PRINTED ANYWAY"
+        - cmd: "pnpm demo AFTER"
+          status: pass
+          note: "6 lanes, S1-S12, qwik trailing slashes, angular S11/S12 absences stated"
+        - cmd: "probe all announced routes"
+          status: pass
+          note: "70/70 HTTP 200, 0 non-200, 2 recorded absences"
+        - cmd: "negative controls"
+          status: pass
+          note: "angular S11/S12 404 vs S10 200; qwik /codex 301->/codex/ 200; dead port ERR"
+        - cmd: "CONTROL C: body-hash distinctness"
+          status: pass
+          note: "react+vue answered 200 on a BOGUS route; body hashes 12/12 distinct per lane, angular 10/10"
+        - cmd: "pnpm test"
+          status: pass
+          note: "EXACTLY 1 failure (foreign package-inventory ARM B), 1284 passed"
+        - cmd: "pnpm check"
+          status: pass
+          note: "267 error TS lines - did not rise"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "PASS - 6 demos x 9 scenarios, all observations equal"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 480 files"
+        - cmd: "pnpm check:citations"
+          status: pass
+          note: "clean - 4 docs / 17 watched sources / 547 swept"
+        - cmd: "git diff --exit-code over packages/frameworks/*/generated*"
+          status: pass
+          note: "exit 0, PAIRED with git status --short"
+        - cmd: "owner fingerprint START==FINISH"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169 / 116 files, sorting the whole shasum OUTPUT LINES"
+        - cmd: "six demo servers stopped by recorded PID 67947-67952"
+          status: pass
+          note: "foreign PIDs 64413 (5175) and 24931 (5178) verified ALIVE; pkill -f NEVER used"
+      deviations:
+        - "ADDED packages/frameworks/react/test/emitter-source.test.ts. The card asked only for removal, but A RAW NUL IS INVISIBLE IN EVERY EDITOR AND DIFF, and the Write tool REINTRODUCED ONE TWICE during this task, so the invariant needed a test rather than a convention. Mutation-tested: reinstating the NUL fails it."
+        - "REWROTE demo.mjs more deeply than adding rows - see the lying-banner finding above."
+        - "VERIFIED MORE THAN 'THE URL ANSWERS 200' - see the body-hash finding above."
+        - "KEPT EVERY LANE ON ITS OWN OFFICIAL DEV SCRIPT. Measured that an appended --port BEATS qwik's pinned '--port 5175 --strictPort', so the npx-vite re-implementation recorded in T006 8.1 WAS NOT NEEDED and demo.mjs's founding constraint stands."
+        - "Did not touch docs/emitter-idiom-policy.md (allowed but unnecessary): it cites the emitter BY SYMBOL, not line ordinal, so the +8 line shift rotted nothing. No census renumbered or softened."
+      remaining_blockers:
+        - "SECOND FOREIGN PROCESS, NOT ON THE BOARD: node PID 24931 on port 5178 (since Jul 30 15:55), in addition to the recorded PID 64413 on 5175. BOTH LEFT RUNNING. T002-T007 must not assume 5178 is free."
+        - "goal.md's 'bare digest column gives feddd40b' IS UNDER-SPECIFIED: bare, it is NONDETERMINISTIC (990e3330 and d6faf15e on two consecutive runs). feddd40b REQUIRES A SORT. The correct method and f936e169 are unaffected; relabel the decoy 'SORTED digest column'."
+        - "REACT, SOLID AND VUE ANSWER 200 FOR ANY PATH. Later cards MUST NOT read a 200 in those lanes as proof a page exists. svelte, qwik and angular 404 correctly."
+      stopped_because: null
   - id: T002
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
     objective: >-
       Ship HACKER NEWS FRONT PAGE as scenario `s13-hn-front`: ONE authored source, emitted to all six lanes as the
@@ -208,7 +290,8 @@ tasks:
       - "The axis this card exists to measure turns out unauthorable - RECORD THE VERBATIM REFUSAL, ship whatever stands, and SAY WHICH AXIS IS MISSING. Do not substitute a different interaction and call the axis measured."
       - "pnpm check rises above 267, pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
       - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched."
-      - "NEVER pkill -f on a broad pattern. Kill by recorded PID only, and only PIDs you started. Port 5175 is held by FOREIGN node PID 64413 - record it and use another port."
+      - "NEVER pkill -f on a broad pattern. Kill by recorded PID only, and only PIDs you started. TWO FOREIGN PROCESSES ARE ALIVE: node PID 64413 on 5175 and node PID 24931 on 5178. Do not assume either port is free."
+      - "You are about to read an HTTP 200 as proof a page exists. REACT, SOLID AND VUE ANSWER 200 FOR ANY PATH (fall-through to S1). HASH THE BODY and prove it differs per route - T001 caught this as a check that passes while measuring nothing."
       - "Verification fails twice for the same reason."
     receipt: null
 
@@ -298,7 +381,8 @@ tasks:
       - "The axis this card exists to measure turns out unauthorable - RECORD THE VERBATIM REFUSAL, ship whatever stands, and SAY WHICH AXIS IS MISSING. Do not substitute a different interaction and call the axis measured."
       - "pnpm check rises above 267, pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
       - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched."
-      - "NEVER pkill -f on a broad pattern. Kill by recorded PID only, and only PIDs you started. Port 5175 is held by FOREIGN node PID 64413 - record it and use another port."
+      - "NEVER pkill -f on a broad pattern. Kill by recorded PID only, and only PIDs you started. TWO FOREIGN PROCESSES ARE ALIVE: node PID 64413 on 5175 and node PID 24931 on 5178. Do not assume either port is free."
+      - "You are about to read an HTTP 200 as proof a page exists. REACT, SOLID AND VUE ANSWER 200 FOR ANY PATH (fall-through to S1). HASH THE BODY and prove it differs per route - T001 caught this as a check that passes while measuring nothing."
       - "Verification fails twice for the same reason."
     receipt: null
 
@@ -388,7 +472,8 @@ tasks:
       - "The axis this card exists to measure turns out unauthorable - RECORD THE VERBATIM REFUSAL, ship whatever stands, and SAY WHICH AXIS IS MISSING. Do not substitute a different interaction and call the axis measured."
       - "pnpm check rises above 267, pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
       - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched."
-      - "NEVER pkill -f on a broad pattern. Kill by recorded PID only, and only PIDs you started. Port 5175 is held by FOREIGN node PID 64413 - record it and use another port."
+      - "NEVER pkill -f on a broad pattern. Kill by recorded PID only, and only PIDs you started. TWO FOREIGN PROCESSES ARE ALIVE: node PID 64413 on 5175 and node PID 24931 on 5178. Do not assume either port is free."
+      - "You are about to read an HTTP 200 as proof a page exists. REACT, SOLID AND VUE ANSWER 200 FOR ANY PATH (fall-through to S1). HASH THE BODY and prove it differs per route - T001 caught this as a check that passes while measuring nothing."
       - "Verification fails twice for the same reason."
     receipt: null
 
@@ -478,7 +563,8 @@ tasks:
       - "The axis this card exists to measure turns out unauthorable - RECORD THE VERBATIM REFUSAL, ship whatever stands, and SAY WHICH AXIS IS MISSING. Do not substitute a different interaction and call the axis measured."
       - "pnpm check rises above 267, pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
       - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched."
-      - "NEVER pkill -f on a broad pattern. Kill by recorded PID only, and only PIDs you started. Port 5175 is held by FOREIGN node PID 64413 - record it and use another port."
+      - "NEVER pkill -f on a broad pattern. Kill by recorded PID only, and only PIDs you started. TWO FOREIGN PROCESSES ARE ALIVE: node PID 64413 on 5175 and node PID 24931 on 5178. Do not assume either port is free."
+      - "You are about to read an HTTP 200 as proof a page exists. REACT, SOLID AND VUE ANSWER 200 FOR ANY PATH (fall-through to S1). HASH THE BODY and prove it differs per route - T001 caught this as a check that passes while measuring nothing."
       - "Verification fails twice for the same reason."
     receipt: null
 
@@ -568,7 +654,8 @@ tasks:
       - "The axis this card exists to measure turns out unauthorable - RECORD THE VERBATIM REFUSAL, ship whatever stands, and SAY WHICH AXIS IS MISSING. Do not substitute a different interaction and call the axis measured."
       - "pnpm check rises above 267, pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
       - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched."
-      - "NEVER pkill -f on a broad pattern. Kill by recorded PID only, and only PIDs you started. Port 5175 is held by FOREIGN node PID 64413 - record it and use another port."
+      - "NEVER pkill -f on a broad pattern. Kill by recorded PID only, and only PIDs you started. TWO FOREIGN PROCESSES ARE ALIVE: node PID 64413 on 5175 and node PID 24931 on 5178. Do not assume either port is free."
+      - "You are about to read an HTTP 200 as proof a page exists. REACT, SOLID AND VUE ANSWER 200 FOR ANY PATH (fall-through to S1). HASH THE BODY and prove it differs per route - T001 caught this as a check that passes while measuring nothing."
       - "Verification fails twice for the same reason."
     receipt: null
 

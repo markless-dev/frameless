@@ -2257,8 +2257,16 @@ function toConstSsa(
 		segmentOf.set(statement, suspensions);
 		if (suspends(statement)) suspensions += 1;
 	}
+	// The separator MUST stay the ESCAPE `\u0000` and never a raw NUL byte. A literal
+	// NUL here makes `grep` classify this whole file as binary, so it exits 1 with NO
+	// OUTPUT AT ALL - a sweep then reports "no matches" when it means "NOT SEARCHED",
+	// and one prior card read a false zero off exactly that. The escape produces the
+	// IDENTICAL runtime string, so this is a source-only distinction: `grep` searches
+	// this file again and exits 0, and NOT ONE EMITTED BYTE MOVES - all 102 artifacts
+	// across the six lanes were deleted, regenerated and shown byte-identical.
+	// `test/emitter-source.test.ts` fails the suite if a raw NUL is reintroduced.
 	const segmented = (statement: t.Statement, variable: string): string =>
-		`${segmentOf.get(statement) ?? 0} ${variable}`;
+		`${segmentOf.get(statement) ?? 0}\u0000${variable}`;
 	const finalSync = new Map<string, number>();
 	for (let index = 0; index < output.length; index += 1) {
 		const variable = syncVariableName(output[index]!, writable, context);

@@ -1,13 +1,32 @@
 #!/usr/bin/env node
-// `pnpm demo` — boot the three official demos side by side.
+// `pnpm demo` — boot every official demo side by side and print every scenario.
 //
-// One compiled source, three activation models: React hydrates, Solid hydrates,
-// Qwik resumes. Each demo is booted through its OWN official dev script
-// (`pnpm --dir demos/<name> dev`). This runner never re-implements a demo's dev
-// command and never serves anything itself — hand-rolling a build/SSR harness is
-// the single most expensive mistake recorded in this repo's decision trail.
+// One compiled source, six lanes, three activation models: React, Solid, Svelte,
+// Vue and Angular hydrate; Qwik resumes. Each demo is booted through its OWN
+// official dev script — this runner never re-implements a demo's dev command and
+// never serves anything itself. Hand-rolling a build/SSR harness is the single
+// most expensive mistake recorded in this repo's decision trail.
 //
 // No dependencies: no concurrently, no npm-run-all, no wait-on.
+//
+// ---------------------------------------------------------------------------
+// WHAT THIS FILE IS FOR, AND WHY IT KEEPS GOING STALE
+//
+// It is the front door. An app that ships and is not listed here is, for every
+// practical purpose, not shipped: `frameless-app-axes-v1`'s oracle makes "AN
+// ENTRY IN pnpm demo" a completion condition precisely because three shipped
+// applications had already gone invisible here.
+//
+// Measured before this rewrite: it listed THREE of six lanes (react, solid,
+// qwik) and THREE of twelve scenarios (S1-S3). S10 TodoMVC, S11 TodoMVC Advanced
+// and S12 Codex clone were invisible, as were svelte, vue and angular entirely.
+// The route list was three hardcoded `demo.routes[0..2]` reads, so a fourth
+// scenario could not be displayed even if it were added to the array.
+//
+// APPENDING A NEW APP IS ONE ROW IN `SCENARIOS`, plus an entry in a lane's
+// `unbuilt` map if that lane refuses it. Nothing else in this file should need
+// to change.
+// ---------------------------------------------------------------------------
 
 import { spawn } from 'node:child_process';
 import path from 'node:path';
@@ -16,45 +35,178 @@ import { fileURLToPath } from 'node:url';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-// The one port table. demos/{react,solid}-official/server.js already honour
-// process.env.PORT, so PORT is injected for those two. Vite ignores PORT, so
-// demos/qwik carries `--port 5175 --strictPort` inside its own dev script.
+/**
+ * THE ONE SCENARIO TABLE. Ordinals are load-bearing well beyond this file:
+ * ten-plus per-lane suites derive their `generated/` inventory from
+ * /^s(\d+)-[\w-]+\.json$/ and assert it exactly, which is why the applications
+ * ride ordinal slots (S10, S11, S12) instead of taking names of their own.
+ *
+ * `path` is the CANONICAL, UNSLASHED form. Lanes transform it — see `routeFor`.
+ *
+ * S1-S9 are the three-way contract `scripts/e2e.mjs` pins to the literal
+ * ['s1'..'s9']. S10-S12 are the applications, deliberately OUTSIDE that contract
+ * and browsable only. Both kinds belong in the front door regardless.
+ *
+ * @type {ReadonlyArray<{ id: string, path: string, title: string }>}
+ */
+const SCENARIOS = [
+	{ id: 'S1', path: '/', title: 'render once' },
+	{ id: 'S2', path: '/s2', title: 'keyed todo' },
+	{ id: 'S3', path: '/s3', title: 'event form' },
+	{ id: 'S4', path: '/s4', title: 'nested list' },
+	{ id: 'S5', path: '/s5', title: 'branch teardown' },
+	{ id: 'S6', path: '/s6', title: 'whitespace text' },
+	{ id: 'S7', path: '/s7', title: 'form controls' },
+	{ id: 'S8', path: '/s8', title: 'async handlers' },
+	{ id: 'S9', path: '/s9', title: 'boolean attributes' },
+	{ id: 'S10', path: '/todomvc', title: 'TodoMVC' },
+	{ id: 'S11', path: '/todomvc-advanced', title: 'TodoMVC Advanced' },
+	{ id: 'S12', path: '/codex', title: 'Codex clone' },
+];
+
+/**
+ * ANGULAR'S TWO ABSENCES ARE RECORDED, NOT OMITTED. The lane is built for
+ * everything else in the corpus including S10, so this is a recorded lane limit
+ * and not a missing lane. The refusal is read off the real modules and lives in
+ * `packages/frameworks/angular/scripts/regenerate.ts`:
+ *
+ *   Angular emitter cannot resolve the identifier "Promise" in a transplanted
+ *   body: it is neither a body-local binding, a function parameter, a @for
+ *   variable, nor a declared component member (...). The emitter throws rather
+ *   than guessing whether it is a global
+ *
+ * It is NOT about async: every identifier in a transplanted body must resolve to
+ * lexical scope or a declared component member, and `Promise`, `setTimeout`,
+ * `fetch`, `Date` and `JSON` are all globals. Both apps need an artificial delay
+ * built from `new Promise` + `setTimeout`, so neither can be NAMED in this lane.
+ */
+const ANGULAR_REFUSAL = 'emitter refuses: cannot name the global `Promise`';
+
+/**
+ * The lanes. `port` is a PREFERENCE, not a guarantee — see `allocatePorts`.
+ *
+ * HOW EACH LANE TAKES A PORT, ALL SIX MEASURED RATHER THAN ASSUMED:
+ *
+ *  - react / solid / vue read `process.env.PORT || 5173` in their own
+ *    `server.js`, so all three default to the SAME port and only one can run at
+ *    a time without the injection. `PORT` is not optional for them.
+ *  - qwik's dev script is pinned `vite --port 5175 --strictPort`. Appending
+ *    `--port <n>` WINS — vite takes the last occurrence — so the official script
+ *    is still what runs, and `--strictPort` survives, which means a busy port
+ *    fails loudly instead of drifting silently.
+ *  - svelte's dev script ends in `vite dev`, which takes `--port` appended.
+ *  - ANGULAR HAS NO `dev` SCRIPT; it is `start`. And `pnpm start -- --port <n>`
+ *    FAILS on a `--` collision:
+ *      Option '--' has been specified multiple times.
+ *      Error: Schema validation failed ... must NOT have additional properties()
+ *    `pnpm start --port <n>`, WITHOUT the `--`, works: pnpm appends the flag to
+ *    the end of the `&&` chain where `ng serve` receives it.
+ *
+ * @type {ReadonlyArray<{
+ *   name: string, dir: string, port: number, activation: string,
+ *   script: string, portFlag: boolean, portEnv: boolean,
+ *   trailingSlash: boolean, unbuilt: Record<string, string>,
+ * }>}
+ */
 const DEMOS = [
 	{
 		name: 'react',
 		dir: 'demos/react-official',
 		port: 5173,
 		activation: 'hydrates',
-		routes: ['/', '/s2', '/s3'],
+		script: 'dev',
+		portFlag: false,
+		portEnv: true,
+		trailingSlash: false,
+		unbuilt: {},
 	},
 	{
 		name: 'solid',
 		dir: 'demos/solid-official',
 		port: 5174,
 		activation: 'hydrates',
-		routes: ['/', '/s2', '/s3'],
+		script: 'dev',
+		portFlag: false,
+		portEnv: true,
+		trailingSlash: false,
+		unbuilt: {},
 	},
 	{
 		name: 'qwik',
 		dir: 'demos/qwik',
 		port: 5175,
 		activation: 'resumes',
-		routes: ['/', '/s2/', '/s3/'],
+		script: 'dev',
+		portFlag: true,
+		portEnv: false,
+		// QWIK CITY CANONICALISES TO A TRAILING SLASH. `/codex` answers 301 with
+		// `location: /codex/`, and every other non-root route does the same. A
+		// BROWSER FOLLOWS IT SILENTLY, which is why clicking through the lane never
+		// surfaces a missing slash — but `curl` and `fetch` see the 301 and read
+		// zero bytes, so a checker that omits the slash measures a redirect rather
+		// than a page. Measured on every route in this table.
+		trailingSlash: true,
+		unbuilt: {},
+	},
+	{
+		name: 'svelte',
+		dir: 'demos/svelte-official',
+		port: 5176,
+		activation: 'hydrates',
+		script: 'dev',
+		portFlag: true,
+		portEnv: false,
+		trailingSlash: false,
+		unbuilt: {},
+	},
+	{
+		name: 'vue',
+		dir: 'demos/vue-official',
+		port: 5177,
+		activation: 'hydrates',
+		script: 'dev',
+		portFlag: false,
+		portEnv: true,
+		trailingSlash: false,
+		unbuilt: {},
+	},
+	{
+		name: 'angular',
+		dir: 'demos/angular-official',
+		port: 5178,
+		activation: 'hydrates',
+		script: 'start',
+		portFlag: true,
+		portEnv: false,
+		trailingSlash: false,
+		unbuilt: { S11: ANGULAR_REFUSAL, S12: ANGULAR_REFUSAL },
 	},
 ];
 
-const READY_TIMEOUT_MS = 60_000;
+// Angular's `ng serve` compiles the whole app before it answers, which is far
+// slower than the five vite/express lanes. The old 60s budget was sized for
+// three fast lanes.
+const READY_TIMEOUT_MS = 240_000;
 const POLL_INTERVAL_MS = 250;
 const HEARTBEAT_MS = 10_000;
 const PROBE_TIMEOUT_MS = 2_000;
 const SIGINT_GRACE_MS = 3_000;
 const SIGKILL_GRACE_MS = 1_500;
+const PORT_SCAN_LIMIT = 40;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** The route a given lane actually serves for a scenario. */
+function routeFor(demo, scenario) {
+	if (demo.unbuilt[scenario.id]) return null;
+	if (!demo.trailingSlash || scenario.path === '/') return scenario.path;
+	return `${scenario.path}/`;
+}
 
 /**
  * @typedef {{
  *   demo: (typeof DEMOS)[number]
+ *   port: number
  *   child: import('node:child_process').ChildProcess
  *   exited: boolean
  *   code: number | null
@@ -100,10 +252,87 @@ function collect(runner, stream) {
 	});
 }
 
-function start(demo) {
-	const child = spawn('pnpm', ['--dir', demo.dir, 'dev'], {
+/**
+ * Is anything already listening here? Used for two different jobs, and the
+ * second one is the important one.
+ *
+ * 1. Pick ports that are free.
+ * 2. MAKE THE READINESS PROBE MEAN SOMETHING. `waitForAll` decides a lane is up
+ *    when its port answers 200 — but a port answering 200 only proves SOMEBODY
+ *    is there, not that it is the process we started. That is not hypothetical:
+ *    port 5175 was this runner's hardcoded qwik port AND is held on this machine
+ *    by a FOREIGN `node`, so the old runner printed its whole "here are your
+ *    URLs" banner — qwik included, satisfied by the stranger's 200 — and only
+ *    then died with `Error: Port 5175 is already in use`. It advertised a URL
+ *    that served someone else's application.
+ *
+ *    Confirming the port was EMPTY before we spawned is what makes a later 200
+ *    attributable to us.
+ */
+async function portInUse(port) {
+	const controller = new AbortController();
+	const timer = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
+	try {
+		await fetch(`http://localhost:${port}/`, { signal: controller.signal, redirect: 'manual' });
+		return true;
+	} catch {
+		return false;
+	} finally {
+		clearTimeout(timer);
+	}
+}
+
+/**
+ * Assign each lane a port that is CONFIRMED FREE, preferring its historical one.
+ *
+ * NEVER KILLS ANYTHING. A prior task killed one of the owner's long-running
+ * servers with a broad `pkill -f` and it could not be restored; the standing
+ * rule is to record an occupied port and route around it. Occupancy is reported
+ * rather than swallowed, so a stale demo of your own still looks like a problem
+ * instead of silently shifting every port by one.
+ */
+async function allocatePorts() {
+	/** @type {Map<string, number>} */
+	const assigned = new Map();
+	const taken = new Set();
+	const skipped = [];
+
+	for (const demo of DEMOS) {
+		let port = demo.port;
+		let scanned = 0;
+		while (scanned < PORT_SCAN_LIMIT && (taken.has(port) || (await portInUse(port)))) {
+			if (!taken.has(port)) skipped.push({ name: demo.name, port });
+			port += 1;
+			scanned += 1;
+		}
+		if (scanned >= PORT_SCAN_LIMIT) {
+			await fail(
+				`could not find a free port for ${demo.name} within ${PORT_SCAN_LIMIT} of ${demo.port}.`,
+			);
+			return assigned;
+		}
+		taken.add(port);
+		assigned.set(demo.name, port);
+	}
+
+	for (const { name, port } of skipped) {
+		process.stdout.write(
+			`pnpm demo: port ${port} is already in use, so ${name} was moved off it. ` +
+				`Nothing was killed — find the holder with \`lsof -nP -iTCP:${port} -sTCP:LISTEN\`.\n`,
+		);
+	}
+	return assigned;
+}
+
+function start(demo, port) {
+	const args = ['--dir', demo.dir, demo.script];
+	// `--port <n>` with NO `--` separator. See the DEMOS comment: the `--` form
+	// is what fails on angular.
+	if (demo.portFlag) args.push('--port', String(port));
+
+	const child = spawn('pnpm', args, {
 		cwd: repoRoot,
-		env: { ...process.env, PORT: String(demo.port) },
+		env: demo.portEnv ? { ...process.env, PORT: String(port) } : { ...process.env },
 		// Its own process group, so SIGINT can be delivered to the whole
 		// pnpm -> node -> vite chain. child.kill() alone orphans vite.
 		detached: true,
@@ -113,6 +342,7 @@ function start(demo) {
 	/** @type {Runner} */
 	const runner = {
 		demo,
+		port,
 		child,
 		exited: false,
 		code: null,
@@ -218,7 +448,7 @@ async function waitForAll() {
 			nextHeartbeat += HEARTBEAT_MS;
 			const waiting = runners
 				.filter((runner) => pending.has(runner.demo.name))
-				.map((runner) => `${runner.demo.name} (:${runner.demo.port})`)
+				.map((runner) => `${runner.demo.name} (:${runner.port})`)
 				.join(', ');
 			process.stdout.write(
 				`pnpm demo: ${Math.round((Date.now() - started) / 1000)}s — still waiting for ${waiting}\n`,
@@ -228,19 +458,18 @@ async function waitForAll() {
 		if (dead) {
 			await fail(
 				`${dead.demo.name} (${dead.demo.dir}) exited before it was ready ` +
-					`(code ${dead.code ?? 'null'}, signal ${dead.signal ?? 'null'}). ` +
-					`Is port ${dead.demo.port} already in use?`,
+					`(code ${dead.code ?? 'null'}, signal ${dead.signal ?? 'null'}).`,
 			);
 			return;
 		}
 		if (Date.now() > deadline) {
 			const ports = runners
 				.filter((runner) => pending.has(runner.demo.name))
-				.map((runner) => runner.demo.port)
+				.map((runner) => runner.port)
 				.join(', ');
 			await fail(
 				`timed out after ${READY_TIMEOUT_MS / 1000}s waiting for HTTP 200 from: ` +
-					`${[...pending].join(', ')}. Check that port(s) ${ports} are free — ` +
+					`${[...pending].join(', ')} on port(s) ${ports}. ` +
 					`express does not report EADDRINUSE, it just never answers.`,
 			);
 			return;
@@ -248,7 +477,8 @@ async function waitForAll() {
 
 		for (const runner of runners) {
 			if (!pending.has(runner.demo.name)) continue;
-			const status = await probe(`http://localhost:${runner.demo.port}/`);
+			// The port was confirmed EMPTY in allocatePorts(), so a 200 here is ours.
+			const status = await probe(`http://localhost:${runner.port}/`);
 			if (status === 200) pending.delete(runner.demo.name);
 		}
 		if (pending.size > 0) await sleep(POLL_INTERVAL_MS);
@@ -258,36 +488,68 @@ async function waitForAll() {
 function announce() {
 	const lines = [
 		'',
-		'  Frameless — one source, three activations.',
+		'  Frameless — one source, six lanes, two activation models.',
 		'  Same .tsrx source, same compiled IR, same observable behavior.',
 		'',
 	];
-	for (const demo of DEMOS) {
-		const label = demo.name.padEnd(6);
-		const activation = `(${demo.activation})`.padEnd(11);
-		lines.push(`  ${label}${activation}http://localhost:${demo.port}/`);
+
+	for (const runner of runners) {
+		const { demo } = runner;
 		lines.push(
-			`  ${' '.repeat(17)}S1 ${demo.routes[0]}   S2 ${demo.routes[1]}   S3 ${demo.routes[2]}`,
+			`  ${demo.name.padEnd(8)}${`(${demo.activation})`.padEnd(11)}http://localhost:${runner.port}/`,
 		);
+
+		// Every scenario, wrapped — never a fixed `routes[0..2]` read.
+		const cells = [];
+		for (const scenario of SCENARIOS) {
+			const route = routeFor(demo, scenario);
+			if (route === null) continue;
+			cells.push(`${scenario.id} ${route}`);
+		}
+		for (let index = 0; index < cells.length; index += 3) {
+			const row = cells
+				.slice(index, index + 3)
+				.map((cell) => cell.padEnd(26))
+				.join('')
+				.trimEnd();
+			lines.push(`  ${' '.repeat(17)}${row}`);
+		}
+
+		// A LANE THAT CANNOT SERVE A SCENARIO SAYS SO. The oracle counts a missing
+		// lane WITH a verbatim refusal as a satisfied result and one WITHOUT as a
+		// rejection, so silence here would be the actual defect.
+		for (const scenario of SCENARIOS) {
+			const reason = demo.unbuilt[scenario.id];
+			if (!reason) continue;
+			lines.push(`  ${' '.repeat(17)}${scenario.id} —  not served (${reason})`);
+		}
+		lines.push('');
 	}
-	lines.push('');
-	lines.push('  Qwik routes keep their trailing slash — its router normalises them.');
+
+	lines.push('  Scenarios: S1-S9 are the 6 x 9 three-way contract; S10 TodoMVC,');
+	lines.push('  S11 TodoMVC Advanced and S12 Codex clone are the applications.');
+	lines.push('  Qwik routes keep their trailing slash — its router 301s without it.');
 	lines.push('  Walkthrough: README.md, "See It Yourself: Hydrate, Hydrate, Resume".');
-	lines.push('  Ctrl-C stops all three.');
+	lines.push(`  Ctrl-C stops all ${runners.length}.`);
 	lines.push('');
 	process.stdout.write(`${lines.join('\n')}\n`);
 }
 
 async function main() {
-	process.stdout.write('pnpm demo: starting react (5173), solid (5174), qwik (5175)...\n');
+	process.stdout.write(`pnpm demo: checking ports for ${DEMOS.length} lanes...\n`);
+	const ports = await allocatePorts();
+	process.stdout.write(
+		`pnpm demo: starting ${DEMOS.map((demo) => `${demo.name} (${ports.get(demo.name)})`).join(', ')}...\n`,
+	);
+	process.stdout.write('pnpm demo: angular compiles before it answers, so give it a moment.\n');
 
-	for (const demo of DEMOS) runners.push(start(demo));
+	for (const demo of DEMOS) runners.push(start(demo, ports.get(demo.name)));
 
 	for (const signal of /** @type {const} */ (['SIGINT', 'SIGTERM'])) {
 		process.on(signal, () => {
 			if (shuttingDown) return;
 			interrupted = true;
-			process.stdout.write('\npnpm demo: stopping all three demos...\n');
+			process.stdout.write('\npnpm demo: stopping all demos...\n');
 			shutdown().then(() => {
 				process.exit(0);
 			});
