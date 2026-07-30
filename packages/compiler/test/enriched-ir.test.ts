@@ -24,6 +24,7 @@ const FIXTURES = [
 	's9-boolean-attributes.tsrx',
 	's10-todomvc.tsrx',
 	's11-todomvc-advanced.tsrx',
+	's12-codex-clone.tsrx',
 ] as const;
 
 const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>> = {
@@ -418,6 +419,83 @@ const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>>
 		['a', 'href'],
 		['button', 'type'],
 	],
+	// THE THIRD APPLICATION IN THE CORPUS - the CODEX CLONE - and the largest
+	// template here at FIFTY-THREE hosts. It rides the ORDINAL slot for the
+	// reason S10's and S11's entries record: every per-lane suite derives its
+	// `generated/` inventory from `/^s(\d+)-[\w-]+\.json$/` and asserts it
+	// EXACTLY. `scripts/e2e.mjs` still pins `threeWayScenarios` to the literal
+	// `['s1'..'s9']`, so S12 does NOT join the 6 x 9 three-way contract.
+	//
+	// It is the SECOND fixture the Angular emitter refuses, on the same
+	// global-identifier ban and with the same verbatim opening - `Angular emitter
+	// cannot resolve the identifier "Promise" in a transplanted body` - because
+	// the streamed answer's three unrolled chunks are separated by `new Promise` +
+	// `setTimeout`. There is no `generated/S12.ts`, and that lane's four inventory
+	// suites subtract this scenario BY NAME through `test/unbuilt-scenarios.ts`.
+	//
+	// FOUR TAGS ARRIVE IN THE CORPUS HERE FOR THE FIRST TIME - `aside`, `h2`,
+	// `h3`, `ol` - and one OLD tag arrives in a NEW shape: `textarea` has been in
+	// the corpus since S7, but S7 binds `data-notes` and this is the first
+	// `value`-bound textarea any lane has been asked to print. TWO `strong` hosts
+	// carry no attribute name below because they carry neither a static attribute
+	// nor a dynamic binding; the assertion treats an empty name as "match on the
+	// tag alone" and still consumes the host, so the list stays a complete
+	// multiset rather than a filter.
+	's12-codex-clone.tsrx': [
+		['section', 'class'],
+		['aside', 'class'],
+		['div', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['button', 'type'],
+		['p', 'class'],
+		['ul', 'class'],
+		['li', 'class'],
+		['button', 'type'],
+		['main', 'class'],
+		['header', 'class'],
+		['h2', 'class'],
+		['p', 'class'],
+		['strong', ''],
+		['div', 'class'],
+		['h3', 'class'],
+		['p', 'class'],
+		['ol', 'class'],
+		['li', 'class'],
+		['p', 'class'],
+		['p', 'class'],
+		['p', 'class'],
+		['span', 'class'],
+		['form', 'class'],
+		['textarea', 'class'],
+		['div', 'class'],
+		['p', 'class'],
+		['button', 'type'],
+		['aside', 'class'],
+		['div', 'class'],
+		['button', 'type'],
+		['button', 'type'],
+		['div', 'class'],
+		['p', 'class'],
+		['strong', ''],
+		['p', 'class'],
+		['p', 'class'],
+		['div', 'class'],
+		['p', 'class'],
+		['p', 'class'],
+		['p', 'class'],
+		['section', 'class'],
+		['div', 'class'],
+		['button', 'type'],
+		['button', 'type'],
+		['div', 'class'],
+		['p', 'class'],
+		['p', 'class'],
+		['p', 'class'],
+		['div', 'class'],
+		['p', 'class'],
+		['p', 'class'],
+	],
 };
 
 async function fixtureIr(file: (typeof FIXTURES)[number]): Promise<EnrichedIR> {
@@ -717,6 +795,7 @@ describe('fixture-family sufficiency', () => {
 			's8-async-handlers.tsrx',
 			's10-todomvc.tsrx',
 			's11-todomvc-advanced.tsrx',
+			's12-codex-clone.tsrx',
 		];
 
 		test('CONTROL: every UNannotated corpus scenario carries NO type, and both sets are non-empty', async () => {
@@ -1162,6 +1241,21 @@ export function Probe({ label }: { label }) @{
 				'revert',
 				'toggle',
 				'toggle-all',
+			],
+			// SIX NAMES, and only ONE of them - `press` - is shared with the two
+			// TodoMVC fixtures. `send` is the only trace in the corpus that fires
+			// after THREE awaits rather than one, so a lane that dropped any part of
+			// the post-suspension tail would lose exactly this name; `open`,
+			// `right-tab` and `bottom-tab` are the NAVIGATION channel the streaming
+			// axis is measured against, which is what makes "streaming while the app
+			// is navigated" observable in the trace rather than only on screen.
+			's12-codex-clone.tsrx': [
+				'bottom-tab',
+				'new-chat',
+				'open',
+				'press',
+				'right-tab',
+				'send',
 			],
 		};
 		for (const file of FIXTURES) {

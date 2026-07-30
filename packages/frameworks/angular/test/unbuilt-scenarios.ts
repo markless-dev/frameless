@@ -70,6 +70,14 @@ export const ANGULAR_UNBUILT_SCENARIOS: readonly UnbuiltScenario[] = [
 		reason:
 			"S11's remote query and optimistic revert both create their own promise with `new Promise` + `setTimeout`, and this lane cannot NAME a global inside a transplanted body. Measured on a fully synchronous control (probes/async-door PC), so it is a global-identifier ban and not an async limit.",
 	},
+	{
+		golden: 's12-codex-clone.json',
+		emitted: 'S12.ts',
+		refusalContains:
+			'Angular emitter cannot resolve the identifier "Promise" in a transplanted body',
+		reason:
+			"S12's streamed answer separates THREE unrolled chunks with `new Promise` + `setTimeout`, so the ban reaches it at the first chunk boundary. THE MESSAGE WAS READ OFF THE REAL S12 MODULE, not carried over from S11: it names S12's own declared members (blocked, bottomTab, draft, messages, nextMessage, nextThread, onTrace, openThread, openTitle, rightTab, status, streaming, threads, turns, turnsLabel, visible, visibleLabel), which is why `refusalContains` is a substring and stops before that list. Every SYNCHRONOUS axis of this app - thread navigation, both tab pairs, the composer draft - is inside this lane's envelope; it is the delay alone that is unnameable, and `computed(async ...)` is closed in all six lanes anyway (frameless-app-suite-v1 T001), so there is no other delay to reach for.",
+	},
 ];
 
 const UNBUILT_GOLDENS = new Set(ANGULAR_UNBUILT_SCENARIOS.map((entry) => entry.golden));

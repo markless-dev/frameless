@@ -10,6 +10,7 @@ import { Match, Switch, createSignal } from 'solid-js'
 import { AsyncBoard } from './emitted/AsyncBoard.jsx'
 import { AttrBoard } from './emitted/AttrBoard.jsx'
 import { BranchBoard } from './emitted/BranchBoard.jsx'
+import { CodexClone } from './emitted/CodexClone.jsx'
 import { EventForm } from './emitted/EventForm.jsx'
 import { FormBoard } from './emitted/FormBoard.jsx'
 import { KeyedTodo } from './emitted/KeyedTodo.jsx'
@@ -123,7 +124,7 @@ function AsyncGate() {
  * mirrors the Qwik demo's `/`, `/s2`, `/s3` routes without adding a router.
  *
  * @param {string} url
- * @returns {'s1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7' | 's8' | 's9' | 'todomvc' | 'todomvc-advanced'}
+ * @returns {'s1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7' | 's8' | 's9' | 'todomvc' | 'todomvc-advanced' | 'codex'}
  */
 export function scenarioFor(url) {
   const path = String(url ?? '')
@@ -144,6 +145,9 @@ export function scenarioFor(url) {
   if (path === 'todomvc') return 'todomvc'
   // THE SECOND APPLICATION. Five lanes, not six - angular refuses S11.
   if (path === 'todomvc-advanced') return 'todomvc-advanced'
+  // THE THIRD APPLICATION - the Codex clone. Five lanes emit it, four run its
+  // stream; angular has no route at all. Browsable only, like the two above.
+  if (path === 'codex') return 'codex'
   return 's1'
 }
 
@@ -227,6 +231,50 @@ export default function App(props) {
         <link rel="stylesheet" href="/todomvc-app-css/frameless-supplement.css" />
         <link rel="stylesheet" href="/todomvc-app-css/frameless-advanced.css" />
         <TodoMvcAdvanced onTrace={noTrace} />
+      </Match>
+      {/*
+        THE THIRD APPLICATION - the CODEX CLONE - and the route this board expected
+        to be REFUSED outright. It is not: FOUR lanes run it, one emits and
+        misbehaves, one refuses at emit.
+
+        ANGULAR HAS NO COUNTERPART TO THIS PAGE. That emitter refuses S12 with the
+        message read off THIS module - `Angular emitter cannot resolve the
+        identifier "Promise" in a transplanted body` - because a streamed answer is
+        three unrolled chunks separated by `new Promise` + `setTimeout`, and that
+        lane cannot NAME a global inside a transplanted body. Recorded, not chased.
+
+        VUE SERVES THIS ROUTE AND ITS STREAM THROWS, exactly as on
+        /todomvc-advanced and for the same measured reason: the vue emitter inlines
+        handlers into TEMPLATE EXPRESSIONS and Vue's template compiler prefixes any
+        identifier outside GLOBALS_ALLOWED with `_ctx.` - a list carrying Date and
+        JSON but not Promise or setTimeout. Every SYNCHRONOUS axis of the app -
+        thread navigation, both tab pairs, the composer draft - works there.
+
+        WHAT THIS APP CANNOT DO, AND IT IS NOT FAKED ANYWHERE: there is no
+        Enter-to-send and no keyboard interaction of any kind. Two-word DOM events
+        are unspellable in every lane (DEFECTS.md 15) - `onKeyDown` prints
+        `onKeydown` and never fires - so the composer ships the SEND BUTTON, which
+        is the reference's other affordance and a plain click.
+
+        Like /todomvc and /todomvc-advanced it is deliberately OUT of the 6 x 9
+        three-way contract: `scripts/e2e.mjs` pins `threeWayScenarios` to the
+        literal ['s1'..'s9']. It takes no seed prop - IR-8 has no lowering for an
+        array type - so threads and messages are seeded inside the emitted
+        component and every shipped lane starts from byte-identical data.
+
+        IT LINKS TWO STYLESHEETS, BOTH FROM A DIFFERENT FAMILY THAN THE TODOMVC
+        ROUTES. `/shadcn-theme/tokens.css` is the shadcn/ui default theme (MIT,
+        (c) 2023 shadcn), DERIVED at copy time from the verbatim upstream block
+        because that block is Tailwind source and not a browser stylesheet;
+        `/shadcn-theme/codex.css` is this repo's own component sheet, hand-written
+        against those token names. Order is load-bearing: the tokens must load
+        first. Both are written into this lane's asset root by
+        `pnpm copy-shadcn-theme`. See demos/shared/copy-shadcn-theme.mjs.
+      */}
+      <Match when={scenario() === 'codex'}>
+        <link rel="stylesheet" href="/shadcn-theme/tokens.css" />
+        <link rel="stylesheet" href="/shadcn-theme/codex.css" />
+        <CodexClone onTrace={noTrace} />
       </Match>
     </Switch>
   )

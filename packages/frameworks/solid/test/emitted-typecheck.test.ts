@@ -221,6 +221,23 @@ describe('Solid emitted output type-checks', () => {
 			`generated/S11.tsx: TS2322 Type '{ class: string; placeholder: string; "data-action": string; value: string; "attr:value": string; onInput: (event: InputEvent & { currentTarget: HTMLInputElement; target: HTMLInputElement; }) => void; }' is not assignable to type 'InputHTMLAttributes<HTMLInputElement>'.   Property 'attr:value' does not exist on type 'InputHTMLAttributes<HTMLInputElement>'.`,
 			"OPEN FINDING 002 - not an artifact. S11's SEARCH field, the input TodoMVC Advanced adds; byte-identical to the new-todo row above because the two hosts print the same attribute set. See notes/findings-002-solid-attr-namespace.md.",
 		],
+		// S12'S SINGLE ROW IS FINDING 002 CROSSING ITS FIRST TAG BOUNDARY, and that
+		// is a strictly stronger reading than the count S11's three rows added.
+		// Every prior instance - S2, S3, S10 x2, S11 x3 - is an `<input>`, so the
+		// finding had only ever been observed on ONE element type and its note's
+		// claim that the producer is "any host with a bound `value`" was, so far,
+		// untested against that "any". The Codex clone's composer is the corpus's
+		// FIRST `value`-bound `<textarea>` (S7 ships a textarea, but binds
+		// `data-notes`, not `value`), and the diagnostic reproduces with the tag
+		// substituted straight through on BOTH sides: `HTMLTextAreaElement` in the
+		// handler's event type and `TextareaHTMLAttributes<HTMLTextAreaElement>` as
+		// the target type. The producer is therefore confirmed to be the `value`
+		// BINDING and not the `input` tag - which is what the finding predicted and
+		// nothing in the corpus could previously distinguish.
+		[
+			`generated/S12.tsx: TS2322 Type '{ class: string; placeholder: string; "data-action": string; value: string; "attr:value": string; onInput: (event: InputEvent & { currentTarget: HTMLTextAreaElement; target: HTMLTextAreaElement; }) => void; }' is not assignable to type 'TextareaHTMLAttributes<HTMLTextAreaElement>'.   Property 'attr:value' does not exist on type 'TextareaHTMLAttributes<HTMLTextAreaElement>'.`,
+			"OPEN FINDING 002 - not an artifact, and the FIRST instance that is not an `<input>`: S12's composer textarea. Same producer, different tag, which is the first evidence that the finding follows the `value` binding rather than the element. See notes/findings-002-solid-attr-namespace.md.",
+		],
 		// THE FOURTEEN BELOW ARRIVED WITH THE .jsx -> .tsx MIGRATION, ON UNCHANGED
 		// BYTES - see the header. Two producers, both removable only by printing a
 		// type: an argument-less `createContext()` and an uncontextualised `produce`.

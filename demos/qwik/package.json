@@ -6,12 +6,13 @@
   "//vite": "vite is pinned to an exact 7.3.1, not `catalog:`, because 7.3.1 is the version the official `pnpm create qwik` scaffold produced for @qwik.dev/core 2.0.0-beta.38 — recorded at docs/goals/frameless-qwik-v1/state.yaml:421. That is the whole reason. NO incompatibility with the root catalog's vite 8 has been observed or tested; moving this to `catalog:` is unverified, not forbidden, and needs a green `pnpm e2e` (the qwik three-way lane) first. See ./README.md.",
   "scripts": {
     "copy-todomvc-css": "node ../shared/copy-todomvc-css.mjs public",
-    "dev": "pnpm copy-emitted && pnpm copy-todomvc-css && vite --port 5175 --strictPort",
+    "copy-shadcn-theme": "node ../shared/copy-shadcn-theme.mjs public",
+    "dev": "pnpm copy-emitted && pnpm copy-todomvc-css && pnpm copy-shadcn-theme && vite --port 5175 --strictPort",
     "build.client": "vite build",
     "build.preview": "vite build --ssr src/entry.preview.tsx",
-    "build": "pnpm copy-emitted && pnpm copy-todomvc-css && pnpm build.client && pnpm build.preview",
+    "build": "pnpm copy-emitted && pnpm copy-todomvc-css && pnpm copy-shadcn-theme && pnpm build.client && pnpm build.preview",
     "preview": "pnpm build && vite preview",
-    "copy-emitted": "node -e \"require('fs').mkdirSync('src/emitted',{recursive:true});[['S1','RenderOnce'],['S2','KeyedTodo'],['S3','EventForm'],['S4','NestedBoard'],['S5','BranchBoard'],['S6','WhitespaceBoard'],['S7','FormBoard'],['S8','AsyncBoard'],['S9','AttrBoard'],['S10','TodoMvc'],['S11','TodoMvcAdvanced']].forEach(([s,n])=>require('fs').copyFileSync('../../packages/frameworks/qwik/generated/'+s+'.tsx','src/emitted/'+n+'.tsx'))\""
+    "copy-emitted": "node -e \"require('fs').mkdirSync('src/emitted',{recursive:true});[['S1','RenderOnce'],['S2','KeyedTodo'],['S3','EventForm'],['S4','NestedBoard'],['S5','BranchBoard'],['S6','WhitespaceBoard'],['S7','FormBoard'],['S8','AsyncBoard'],['S9','AttrBoard'],['S10','TodoMvc'],['S11','TodoMvcAdvanced'],['S12','CodexClone']].forEach(([s,n])=>require('fs').copyFileSync('../../packages/frameworks/qwik/generated/'+s+'.tsx','src/emitted/'+n+'.tsx'))\""
   },
   "dependencies": {
     "@qwik.dev/core": "2.0.0-beta.38",

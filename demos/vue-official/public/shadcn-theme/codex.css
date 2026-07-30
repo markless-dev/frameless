@@ -1,0 +1,521 @@
+/*
+ * THE CODEX CLONE'S COMPONENT SHEET. This repo's own bytes, hand-written against the
+ * VENDORED shadcn/ui token names and nothing else. It is the only editable stylesheet
+ * in this directory; `theming-default.css` is upstream and `tokens.css` is derived
+ * from it at copy time by demos/shared/copy-shadcn-theme.mjs.
+ *
+ * WHY IT IS HAND-WRITTEN RATHER THAN COPIED. The named references are Tailwind + React
+ * component libraries and Frameless emits plain markup into six lanes, so their code
+ * cannot be copied and must not be. What CAN be reproduced is the RESULT, because the
+ * reference's own styles are stock Tailwind utilities bound to stock shadcn tokens -
+ * `w-64 border-r border-border`, `bg-sidebar`, `text-xs font-medium
+ * text-muted-foreground uppercase tracking-wider`, `rounded-md text-sm font-medium`.
+ * Every colour below is a `var(--token)` from the MIT layer; every length below is a
+ * number MEASURED off the live reference and recorded on the card that ordered this
+ * work. Nothing was copied from the ln-dev-licensed Square UI repository, which is why
+ * the geometry is stated as numbers here rather than lifted as declarations.
+ *
+ * THE MEASURED TARGETS, and each one is asserted off the RENDERED IMAGE in
+ * docs/goals/frameless-app-suite-v1/notes/T006-codex-clone.md rather than off this
+ * file: sidebar 256px; nav item 230x36 radius 8 padding 8/12 gap 8 at 14px/500;
+ * section label 12px/500 uppercase wide-tracked; empty-state heading 24px/600;
+ * composer shell 630x175 radius 14; textarea 628x120 padding 12/16; body
+ * ui-sans-serif at 16px/24px.
+ *
+ * TWO OF THOSE NUMBERS DETERMINE A THIRD, and it is recorded rather than guessed. A
+ * 230px nav item inside a 256px rail fixes the rail's horizontal padding at
+ * (256 - 230) / 2 = 13px; and a 630px shell holding a 628px textarea fixes the shell's
+ * border at 1px a side. Neither 13 nor 1 was read off any stylesheet.
+ *
+ * RADIUS PROVENANCE. `--radius` is 0.625rem = 10px, and upstream's scale is
+ * MULTIPLICATIVE at current source - `--radius-md: calc(var(--radius) * 0.8)` = 8px,
+ * `--radius-xl: calc(var(--radius) * 1.4)` = 14px. Those are exactly the nav item's
+ * measured 8 and the composer's measured 14, on two DIFFERENT tokens, which is two
+ * independent confirmations that the reference sits on the stock scale. The older
+ * additive form (`calc(var(--radius) - 2px)`) coincides at the stock value and
+ * diverges anywhere else; this sheet names the tokens so the question does not arise.
+ */
+
+/* --------------------------------------------------------------------------
+ * FRAME
+ * ----------------------------------------------------------------------- */
+
+body {
+	margin: 0;
+	background: var(--background);
+	color: var(--foreground);
+	font-family: ui-sans-serif, system-ui, sans-serif;
+	font-size: 16px;
+	line-height: 24px;
+}
+
+/*
+ * `position: fixed; inset: 0` IS LOAD-BEARING AND WAS MEASURED, NOT CHOSEN.
+ *
+ * Five of the six demos are official framework scaffolds and several ship their own
+ * container styling. MEASURED in this lane before this rule existed: the rail
+ * rendered 256px wide as intended and started at x=78, because the React scaffold's
+ * `src/index.css` centres `#root` inside a `max-width` with `padding: 2rem`. The app
+ * was correct and the page was not, and no assertion on the app's own boxes could
+ * have seen it - `.rail` reported exactly 256x900 the whole time.
+ *
+ * Taking the app out of flow pins it to the VIEWPORT instead of to whatever ancestor
+ * each scaffold happens to provide, so the five shipped lanes are comparable to each
+ * other and to the reference at a stated viewport size. It is one lane-neutral rule
+ * rather than five per-scaffold overrides, and it touches no scaffold file.
+ *
+ * `text-align: left` IS THE SECOND HALF OF THE SAME REPAIR AND IT COST A SEPARATE
+ * MEASUREMENT. Taking the app out of flow fixes its POSITION and inherits nothing
+ * less: the same scaffold sheet also sets `text-align: center` on its container, and
+ * `position: fixed` does not reset an inherited property. So every message body,
+ * every detail-pane row and the terminal output rendered CENTRED while the rail, the
+ * thread header and both tab strips looked correct - because those are flex or grid
+ * items whose own alignment already wins.
+ *
+ * NOTHING IN THE GEOMETRY PASS COULD SEE IT. The rail measured 256, the nav item
+ * 230x36, the composer 630x175 at radius 14, the textarea padding 16 - every target
+ * on the card was already green, and each one is an EDGE or a BOX. Centred text
+ * changes neither. It was found by LOOKING AT THE RENDERED IMAGE, which is what the
+ * card asked for and what an assertion list is not a substitute for.
+ */
+.codex {
+	position: fixed;
+	inset: 0;
+	text-align: left;
+	display: grid;
+	grid-template-columns: 256px 1fr 320px;
+	grid-template-rows: 1fr 200px;
+	grid-template-areas:
+		'rail thread right'
+		'rail bottom bottom';
+	height: 100vh;
+	font-family: ui-sans-serif, system-ui, sans-serif;
+	font-size: 16px;
+	line-height: 24px;
+	color: var(--foreground);
+}
+
+/*
+ * LOAD-BEARING, NOT TIDINESS. Several rules below give a hidden-able element a
+ * `display`, and an author `display` BEATS the UA sheet's `[hidden] { display: none }`.
+ * Message rows, both detail panels and the streaming caret are all switched by the
+ * emitted `hidden` binding, so without this rule the app would render every thread's
+ * messages at once and both tabs of both panes simultaneously - visible, and with no
+ * error anywhere. This is the same class of defect T005 measured from the other
+ * direction: a control that was reachable and NOT DRAWN.
+ */
+.codex [hidden] {
+	display: none !important;
+}
+
+/* --------------------------------------------------------------------------
+ * RAIL - the 256px sidebar
+ * ----------------------------------------------------------------------- */
+
+.rail {
+	grid-area: rail;
+	box-sizing: border-box;
+	width: 256px;
+	padding: 8px 13px;
+	background: var(--sidebar);
+	color: var(--sidebar-foreground);
+	border-right: 1px solid var(--sidebar-border);
+	overflow-y: auto;
+}
+
+.brand {
+	box-sizing: border-box;
+	height: 40px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 0 4px;
+}
+
+.brand-mark {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	border-radius: var(--radius-md);
+	background: var(--sidebar-primary);
+	color: var(--sidebar-primary-foreground);
+	font-size: 13px;
+	font-weight: 600;
+	line-height: 24px;
+}
+
+.brand-name {
+	font-size: 14px;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+}
+
+/* The nav-item metric, shared by the New chat button and every thread row. */
+.new-chat,
+.rail-item {
+	box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 230px;
+	height: 36px;
+	padding: 8px 12px;
+	border: 0;
+	border-radius: var(--radius-md);
+	background: transparent;
+	color: inherit;
+	font-family: inherit;
+	font-size: 14px;
+	font-weight: 500;
+	line-height: 20px;
+	text-align: left;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	cursor: pointer;
+}
+
+.new-chat {
+	margin: 4px 0 8px;
+	background: var(--sidebar-accent);
+	color: var(--sidebar-accent-foreground);
+}
+
+.rail-label {
+	margin: 0;
+	padding: 0 12px;
+	height: 32px;
+	display: flex;
+	align-items: center;
+	font-size: 12px;
+	font-weight: 500;
+	line-height: 16px;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--muted-foreground);
+}
+
+.rail-list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.rail-row {
+	margin: 0 0 2px;
+}
+
+.rail-item:hover {
+	background: var(--sidebar-accent);
+}
+
+.rail-item.selected {
+	background: var(--sidebar-accent);
+	color: var(--sidebar-accent-foreground);
+	font-weight: 500;
+}
+
+/* --------------------------------------------------------------------------
+ * THREAD
+ * ----------------------------------------------------------------------- */
+
+.thread {
+	grid-area: thread;
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	background: var(--background);
+	border-right: 1px solid var(--border);
+	overflow: hidden;
+}
+
+.thread-head {
+	box-sizing: border-box;
+	height: 56px;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 0 24px;
+	border-bottom: 1px solid var(--border);
+}
+
+.thread-title {
+	margin: 0;
+	font-size: 15px;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.thread-meta {
+	margin: 0 0 0 auto;
+	font-size: 13px;
+	line-height: 20px;
+	color: var(--muted-foreground);
+	white-space: nowrap;
+}
+
+.empty {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 0 24px;
+	text-align: center;
+}
+
+.empty-heading {
+	margin: 0;
+	font-size: 24px;
+	font-weight: 600;
+	line-height: 32px;
+	letter-spacing: -0.025em;
+}
+
+.empty-note {
+	margin: 0;
+	font-size: 14px;
+	line-height: 20px;
+	color: var(--muted-foreground);
+}
+
+.messages {
+	flex: 1;
+	margin: 0;
+	padding: 24px;
+	list-style: none;
+	overflow-y: auto;
+	min-height: 0;
+}
+
+.message {
+	display: grid;
+	grid-template-columns: auto 1fr auto;
+	grid-template-areas:
+		'role stamp stamp'
+		'text text text'
+		'caret caret caret';
+	gap: 2px 8px;
+	max-width: 630px;
+	margin: 0 auto 16px;
+	padding: 12px 16px;
+	border-radius: var(--radius-lg);
+	border: 1px solid var(--border);
+	background: var(--card);
+	color: var(--card-foreground);
+}
+
+.message-user {
+	background: var(--secondary);
+	color: var(--secondary-foreground);
+}
+
+.message-role {
+	grid-area: role;
+	margin: 0;
+	font-size: 12px;
+	font-weight: 500;
+	line-height: 16px;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--muted-foreground);
+}
+
+.message-stamp {
+	grid-area: stamp;
+	margin: 0;
+	font-size: 12px;
+	line-height: 16px;
+	text-align: right;
+	color: var(--muted-foreground);
+}
+
+.message-text {
+	grid-area: text;
+	margin: 0;
+	font-size: 15px;
+	line-height: 24px;
+	white-space: pre-wrap;
+}
+
+.message-caret {
+	grid-area: caret;
+	display: inline-block;
+	width: fit-content;
+	margin-top: 4px;
+	padding: 2px 8px;
+	border-radius: var(--radius-sm);
+	background: var(--accent);
+	color: var(--accent-foreground);
+	font-size: 12px;
+	line-height: 16px;
+}
+
+/* --------------------------------------------------------------------------
+ * COMPOSER - 630 x 175, radius 14; textarea 628 x 120, padding 12/16
+ * ----------------------------------------------------------------------- */
+
+.composer {
+	box-sizing: border-box;
+	width: 630px;
+	height: 175px;
+	margin: 0 auto 24px;
+	border: 1px solid var(--input);
+	border-radius: var(--radius-xl);
+	background: var(--background);
+	box-shadow: 0 1px 2px 0 oklch(0 0 0 / 5%);
+	overflow: hidden;
+}
+
+.composer-input {
+	box-sizing: border-box;
+	display: block;
+	width: 628px;
+	height: 120px;
+	padding: 12px 16px;
+	border: 0;
+	outline: 0;
+	resize: none;
+	background: transparent;
+	color: inherit;
+	font-family: inherit;
+	font-size: 15px;
+	line-height: 24px;
+}
+
+.composer-input::placeholder {
+	color: var(--muted-foreground);
+}
+
+.composer-actions {
+	box-sizing: border-box;
+	height: 53px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 0 12px 0 16px;
+}
+
+.composer-status {
+	margin: 0;
+	font-size: 12px;
+	line-height: 16px;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--muted-foreground);
+}
+
+.send {
+	box-sizing: border-box;
+	margin-left: auto;
+	height: 36px;
+	padding: 8px 16px;
+	border: 0;
+	border-radius: var(--radius-md);
+	background: var(--primary);
+	color: var(--primary-foreground);
+	font-family: inherit;
+	font-size: 14px;
+	font-weight: 500;
+	line-height: 20px;
+	cursor: pointer;
+}
+
+.send:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+/* --------------------------------------------------------------------------
+ * DETAIL PANES - right and bottom, each with tabs
+ * ----------------------------------------------------------------------- */
+
+.pane {
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+	background: var(--background);
+	overflow: hidden;
+}
+
+.pane-right {
+	grid-area: right;
+}
+
+.pane-bottom {
+	grid-area: bottom;
+	border-top: 1px solid var(--border);
+}
+
+.tabs {
+	box-sizing: border-box;
+	height: 40px;
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	padding: 0 8px;
+	border-bottom: 1px solid var(--border);
+	background: var(--muted);
+}
+
+.tab {
+	box-sizing: border-box;
+	height: 28px;
+	padding: 4px 10px;
+	border: 0;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--muted-foreground);
+	font-family: inherit;
+	font-size: 13px;
+	font-weight: 500;
+	line-height: 20px;
+	cursor: pointer;
+}
+
+.tab.selected {
+	background: var(--background);
+	color: var(--foreground);
+	box-shadow: 0 1px 2px 0 oklch(0 0 0 / 8%);
+}
+
+.pane-body {
+	flex: 1;
+	padding: 12px 16px;
+	overflow: auto;
+	min-height: 0;
+}
+
+.pane-row,
+.term-row,
+.diff-row {
+	margin: 0 0 6px;
+	font-size: 13px;
+	line-height: 20px;
+	color: var(--muted-foreground);
+}
+
+.pane-row strong {
+	color: var(--foreground);
+}
+
+.term-row,
+.diff-row {
+	font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+	font-size: 12px;
+}
+
+.diff-add {
+	color: oklch(0.52 0.14 150);
+}
+
+.diff-del {
+	color: var(--destructive);
+}

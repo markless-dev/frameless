@@ -37,6 +37,15 @@ const fixtures = [
 	// in that lane's regenerate.ts - and, like S10, it stays out of the 6 x 9
 	// three-way contract, which scripts/e2e.mjs pins to the literal ['s1'..'s9'].
 	['S11.svelte', 's11-todomvc-advanced.json'],
+	// THE THIRD APPLICATION IN THE CORPUS - the CODEX CLONE - and it takes the next
+	// ORDINAL slot for exactly the reason the two rows above record: the suites
+	// derive their inventory from /^s(\d+)-[\w-]+\.json$/ and assert it EXACTLY.
+	// Like S10 and S11 it stays OUT of the 6 x 9 three-way contract, which
+	// scripts/e2e.mjs pins to the literal ['s1'..'s9']. It is the SECOND scenario
+	// the angular emitter refuses, on the same global-identifier ban recorded in
+	// that lane's regenerate.ts: its streamed answer separates three unrolled
+	// chunks with `new Promise` + `setTimeout`.
+	['S12.svelte', 's12-codex-clone.json'],
 ] as const;
 for (const [output, golden] of fixtures) {
 	const ir = JSON.parse(await readFile(resolve(goldenRoot, golden), 'utf8')) as EnrichedIR;

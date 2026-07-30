@@ -10,6 +10,7 @@ import NestedBoard from './emitted/NestedBoard.vue'
 import RenderOnce from './emitted/RenderOnce.vue'
 import TodoMvc from './emitted/TodoMvc.vue'
 import TodoMvcAdvanced from './emitted/TodoMvcAdvanced.vue'
+import CodexClone from './emitted/CodexClone.vue'
 import WhitespaceBoard from './emitted/WhitespaceBoard.vue'
 import {
   armS8Gate,
@@ -56,6 +57,26 @@ const advanced = computed(
     String(props.url ?? '')
       .replace(/^\/+/, '')
       .replace(/\/+$/, '') === 'todomvc-advanced',
+)
+
+/**
+ * The /codex branch, decided HERE for the identical reason `advanced` above is:
+ * `scenarioFor` and its `ScenarioId` union live in `./scenario-props`, which is
+ * outside the file envelope of the card that added this route
+ * (`frameless-app-suite-v1` T006), so the id is not in that union. The path
+ * normalisation is character-for-character the one `scenarioFor` applies, and the
+ * react and solid lanes spell it inside `scenarioFor`; folding both of these in
+ * later is a pure refactor with no behavioural delta.
+ *
+ * It reads `props.url` - the same value `scenario` reads - and not
+ * `window.location`, because both sides must agree or Vue would hydrate a
+ * different branch than it rendered.
+ */
+const codex = computed(
+  () =>
+    String(props.url ?? '')
+      .replace(/^\/+/, '')
+      .replace(/\/+$/, '') === 'codex',
 )
 
 /**
@@ -137,6 +158,37 @@ const s8Ready = ref<Promise<string>>(s8ResolvedGate)
     <link rel="stylesheet" href="/todomvc-app-css/frameless-supplement.css" />
     <link rel="stylesheet" href="/todomvc-app-css/frameless-advanced.css" />
     <TodoMvcAdvanced v-bind:onTrace="noTrace" />
+  </template>
+  <!--
+    THE THIRD APPLICATION - the CODEX CLONE - and IT MUST SIT BESIDE `advanced` AT
+    THE HEAD OF THIS CHAIN FOR THE SAME MEASURED REASON: `scenarioFor` does not know
+    this path either, so it falls through to 's1', and the chain's first
+    `v-else-if` tests for 's1'. A trailing arm could never fire.
+
+    THIS LANE EMITS S12 AND MISBEHAVES ON EXACTLY ONE AXIS, which is why the route
+    is served rather than withheld. The emitter inlines handlers into TEMPLATE
+    EXPRESSIONS and Vue's template compiler prefixes any identifier outside
+    GLOBALS_ALLOWED with `_ctx.`; that list carries Date and JSON and does NOT carry
+    Promise or setTimeout (measured at @vue/shared@3.5.40), so the composer's
+    three-chunk stream throws `_ctx.Promise is not a constructor`. Thread
+    navigation, both tab pairs and the composer draft all work here. Deleting the
+    route would delete a measured finding - it is EMITS-BUT-MISBEHAVES, the third
+    verdict T001 established, and a LANE LIMIT inside Vue's own design envelope
+    rather than a defect to file upstream.
+
+    ANGULAR has no counterpart page at all: that emitter refuses S12 outright.
+
+    Two stylesheets, and the order is load-bearing: `/shadcn-theme/tokens.css`
+    carries the shadcn/ui default theme (MIT, (c) 2023 shadcn) and must load first;
+    `/shadcn-theme/codex.css` is this repo's own component sheet written against
+    those token names. Both are written into public/shadcn-theme/ by
+    `pnpm copy-shadcn-theme`. Like /todomvc and /todomvc-advanced this page is
+    OUT of the 6 x 9 three-way contract, which pins ['s1'..'s9'].
+  -->
+  <template v-else-if="codex">
+    <link rel="stylesheet" href="/shadcn-theme/tokens.css" />
+    <link rel="stylesheet" href="/shadcn-theme/codex.css" />
+    <CodexClone v-bind:onTrace="noTrace" />
   </template>
   <RenderOnce
     v-else-if="scenario === 's1'"

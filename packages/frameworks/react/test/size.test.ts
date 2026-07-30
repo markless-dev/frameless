@@ -209,6 +209,25 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// live cell. That is a behavioural divergence at an identical size, so a budget
 	// could never catch it; only a served payload can.
 	S11: { physicalLoc: 424, structuralNodes: 1891 },
+	// S12 (the CODEX CLONE) IS THE CORPUS'S BIGGEST TEMPLATE AND NOT ITS BIGGEST
+	// EMISSION, and that inversion is the reading worth recording. Its template
+	// carries FIFTY-THREE hosts against S11's forty-one - the largest in the
+	// corpus by a third - yet it emits SMALLER on both axes: 386/424 = 0.91x the
+	// physical lines and 1760/1891 = 0.93x the structural nodes. The ratios agree
+	// to within 2%, so the emitter is not trading one axis for the other; the app
+	// simply has a different SHAPE. S11 is dense in HANDLERS (nineteen recorded
+	// events, several with a full list rebuild inside a `.map`), while S12 is dense
+	// in STATIC MARKUP - two tab pairs and two detail panes that are mostly literal
+	// rows. Emitted size tracks handler bodies, not host count, which is exactly
+	// what a per-element tax would NOT look like.
+	// WHAT THE NUMBER CANNOT SEE, recorded for the same reason S8's and S11's rows
+	// record it. S12 is the corpus's first scenario with THREE awaits in one
+	// handler, and its three post-suspension writes are chained through `const`s
+	// (`opened` -> `chunk1` -> `chunk2` -> `chunk3`) precisely so that this lane's
+	// const-SSA resume and the other three lanes' live-cell resume produce the SAME
+	// behaviour. That agreement is authored, not emitted - the divergence S11's row
+	// records is still there in the emitter, and a budget cannot see either half.
+	S12: { physicalLoc: 386, structuralNodes: 1760 },
 };
 
 describe('honest emitted structure comparison', () => {

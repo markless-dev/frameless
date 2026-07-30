@@ -50,6 +50,29 @@ const fixtures = [
 	// names as a legitimate outcome, and `ANGULAR_UNBUILT_SCENARIOS` in
 	// test/emitter.test.ts carries the same subtraction so the omission is
 	// asserted rather than merely true.
+	//
+	// S12 (the CODEX CLONE) IS ABSENT FOR THE SAME REASON, AND THE MESSAGE WAS
+	// READ OFF THE REAL S12 MODULE RATHER THAN ASSUMED FROM S11's. Attempted here,
+	// once, by adding the row and running this script; it threw with S12's OWN
+	// declared-member list, which is what proves the refusal was measured on this
+	// module and not inherited:
+	//
+	//   Angular emitter cannot resolve the identifier "Promise" in a transplanted
+	//   body: it is neither a body-local binding, a function parameter, a @for
+	//   variable, nor a declared component member (blocked, bottomTab, draft,
+	//   messages, nextMessage, nextThread, onTrace, openThread, openTitle,
+	//   rightTab, status, streaming, threads, turns, turnsLabel, visible,
+	//   visibleLabel). The emitter throws rather than guessing whether it is a
+	//   global
+	//
+	// A streamed answer is three unrolled chunks separated by an artificial delay,
+	// and the only delay this authoring surface can express is `new Promise` +
+	// `setTimeout` created inside the handler - `computed(async ...)` is closed in
+	// all six lanes (frameless-app-suite-v1 T001), and this lane additionally
+	// cannot NAME the globals a delay is made of. THE ANGULAR LANE THEREFORE
+	// CANNOT HOLD A STREAMING APP AT ALL, on a limit that is not about streaming.
+	// It IS built for everything else in the corpus, including S10, so this is a
+	// recorded lane limit and not a missing lane.
 ] as const;
 for (const [output, golden] of fixtures) {
 	const ir = JSON.parse(await readFile(resolve(goldenRoot, golden), 'utf8')) as EnrichedIR;

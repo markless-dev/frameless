@@ -202,6 +202,21 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// budget may say what something costs, and this table has now twice caught
 	// itself about to say why on a hypothesis its own corpus contradicts.
 	S11: { physicalLoc: 440, structuralNodes: 1930 },
+	// S12 (the CODEX CLONE) IS WHERE THE LINE PREMIUM FLIPS SIGN, and this row
+	// records that without asserting a cause, exactly as S11's row above declined
+	// to.
+	// Measured, against the react lane's same-scenario budget: solid printed 29
+	// MORE physical lines at S10, 16 more at S11, and TWENTY-FOUR FEWER at S12
+	// (362 vs 386). The NODE premium is unchanged in sign and barely moved in size:
+	// +37 at S10, +39 at S11, +2 at S12. So the two axes have now been shown to
+	// move independently three times, and the one hypothesis this table has twice
+	// been tempted by - a per-`computed` accessor tax - is refuted a third time:
+	// S12 declares SEVEN computeds, one fewer than S11, while the node gap
+	// collapsed by 37.
+	// The scenario is also this table's first with NO ANGULAR TWIN besides S11:
+	// that lane refuses S12 on the same global-identifier ban, so `S12` exists in
+	// five `generated/` directories and not six.
+	S12: { physicalLoc: 362, structuralNodes: 1762 },
 };
 
 describe('honest emitted structure comparison', () => {
