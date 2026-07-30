@@ -1,0 +1,227 @@
+# GoalBuddy v2 state.yaml
+# Board truth lives here. goal.md is the editable charter; notes/ holds long receipts only.
+
+version: 2
+
+goal:
+  title: "Frameless async axis and the two structural defects"
+  slug: "frameless-async-and-defects-v1"
+  kind: specific
+  tranche: >-
+    Diagnose the two structural defects and NAME their causes; repair the async axis across
+    the lanes that can express it, recording a lane limit for any that cannot; then land S8
+    as the corpus scenario that PINS the repair behaviourally - and stop.
+  status: active
+  oracle:
+    signal: >-
+      THREE PARTS, ALL REQUIRED. (1) DEFECT REPAIR: DEFECTS.md 12.2 is CLOSED on a WITNESSED
+      BEFORE-AND-AFTER BEHAVIOURAL MEASUREMENT PER LANE - a recorded RED before and a GREEN
+      after, not a green suite; S7's cause is NAMED (IR, scenario, or lane) BEFORE anything
+      is repaired; and P1's TS7017 is closed or ruled. (2) S8 LANDS AND PINS THE REPAIR: the
+      corpus goes to NINE scenarios in all six lanes, the mutation budget to 54 CELLS WITH
+      EVERY ONE RED AND EVERY ONE RESTORED, and pnpm e2e reports 6 demos x 9 scenarios, all
+      observations equal. (3) NOTHING REGRESSES: pnpm test stays at baseline plus only tests
+      this goal adds; PNPM CHECK DOES NOT RISE above its inherited 267; lint and
+      check:citations stay clean.
+    cadence: "after each Worker package and at final audit"
+    final_proof: >-
+      A final audit naming, PER LANE, the behavioural RED measured before the async repair
+      and the GREEN measured after - because 12.2's entire history is that four of six
+      emitters were broken and TWO OF THEM SILENTLY, so a green suite is exactly what hid
+      it. Plus S8 at 9 scenarios / 54 red mutants and pnpm e2e green at 6x9.
+  intake:
+    original_request: "prepare for next line of work"
+    interpreted_outcome: >-
+      Repair the three measured wrong behaviours that are invisible to pnpm e2e, and land S8
+      so the async repair is pinned by a corpus scenario rather than by unit tests.
+    input_shape: specific
+    audience: "the frameless emitter lanes and anyone who trusts pnpm e2e as the behavioural oracle"
+    authority: approved
+    proof_type: test
+    completion_proof: >-
+      12.2 closed on a PER-LANE witnessed before/after, S8 in the corpus at 9 scenarios and
+      54 red mutants, and pnpm e2e green at 6 demos x 9 scenarios.
+    likely_misfire: >-
+      REPAIRING THE ASYNC AXIS AND DECLARING IT DONE ON A GREEN UNIT SUITE. 12.2's whole
+      history is that four of six emitters were broken and TWO SILENTLY - a green suite is
+      what hid it. That is why S8 is INSIDE this tranche rather than after it: the scenario
+      is what makes the repair falsifiable. THE SECOND MISFIRE is repairing S7 in the
+      emitters: it fails IDENTICALLY in two independent lanes, which is evidence the fault
+      is UPSTREAM OF BOTH. Diagnose before repairing.
+    blind_spots_considered:
+      - "A lane may be unable to express async inside its design envelope. Qwik refused effects on measurement in the prior phase and that refusal stands. Record a lane limit; do not force it, and do not read an out-of-envelope result as a defect."
+      - "S8 landing means goldens, six lanes, six demos, e2e and six mutants - it is the largest single slice here and it must not be attempted before the repair it exists to pin."
+      - "pnpm check is inherited RED at 267 and is NOT this goal's to fix. Its only obligation is not to RISE. Confusing the two would either scope-creep this goal or let it hide a regression."
+
+rules:
+  pm_owns_state: true
+  one_active_task: true
+  max_write_workers: 1
+  no_implementation_without_worker_or_pm_task: true
+  no_completion_without_judge_or_pm_audit: true
+  continuous_until_full_outcome: true
+
+agents:
+  scout: installed
+  worker: installed
+  judge: installed
+
+visual_board:
+  selected: none
+  local:
+    status: not_requested
+    url: null
+    command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-async-and-defects-v1"
+  why: >-
+    The owner has run eighteen-plus goals in this repo against the file board alone,
+    including two that closed this session. Recorded as an explicit choice, not an omission.
+
+active_task: T001
+
+tasks:
+  - id: T001
+    type: scout
+    assignee: Scout
+    status: active
+    reasoning_hint: medium
+    objective: >-
+      Map the async axis and the two structural defects as they stand TODAY, without
+      repairing anything.
+    why_scout_first_and_not_a_worker: >-
+      Every figure this goal inherits came from a phase in which ONE FAULT WAS FOUND AT FOUR
+      DEPTHS, each time because someone measured independently of the instrument rather than
+      reading its output. DEFECTS.md 12.2 was last measured some tasks ago; S7 and P1 were
+      found by a task that deliberately did NOT repair them. Re-derive all of it before a
+      single line is written.
+    inputs:
+      - "docs/DEFECTS.md entry 12 (12.1 closed, 12.2 OPEN, 12.3 what it means for S8)"
+      - "docs/goals/frameless-emitter-capability-v1/notes/T020-react-solid-coverage.md - where S7 and P1 were found"
+      - "The six emitters and their async handling, per lane"
+      - "packages/compiler/test/fixtures/s7-form-controls.tsrx and its golden - S7's authored source"
+    expected_output:
+      - "Per lane: does async work, is it broken, or is it out of design envelope? Four of six were broken and TWO SILENTLY - name which two, and how the silence manifests."
+      - "S7: is the null -> \"on\" shape authored in the .tsrx, produced by the IR, or produced per-lane? THE ANSWER DECIDES WHO OWNS THE REPAIR."
+      - "P1: what reads globalThis.__FRAMELESS_STATE__ and why TS7017 rather than a narrower error"
+      - "What a behavioural before/after arm for async would have to drive, per lane, given pnpm e2e type-checks nothing and runs against the dev server"
+    constraints:
+      - "READ-ONLY. Repair nothing, edit no product file."
+      - "Do not test a framework outside its design envelope, and do not read such output as a defect."
+      - "FINGERPRINT the owner's three uncommitted paths at start and finish: pnpm-lock.yaml, pnpm-workspace.yaml, website/."
+    receipt: null
+
+  - id: T002
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: >-
+      Rule who owns the S7 repair, and spec the async repair slice.
+    the_question_that_decides_the_shape: >-
+      S7 fails IDENTICALLY in react and solid at the same site - react TS2345, solid TS2769,
+      both on a cell initialised null and later set to "on". TWO INDEPENDENT EMITTERS
+      PRODUCING THE SAME UNSOUND SHAPE is evidence the fault is upstream of both. If the
+      cause is the IR or the authored scenario, a per-lane repair would be six patches over
+      one bug - and would leave the other four lanes latent.
+    expected_output:
+      - "S7's cause NAMED, with the evidence that distinguishes IR from scenario from lane"
+      - "Who owns the repair, and what the other lanes inherit from it"
+      - "The exact Worker spec for the async repair: objective, allowed_files, verify, stop_if"
+      - "Per lane, what the behavioural before/after arm must drive - and whether any lane cannot express async inside its envelope"
+    constraints:
+      - "READ-ONLY."
+      - "Do NOT re-litigate T001's measurements. Rule on what they MEAN."
+      - "A lane limit is a legitimate outcome; an unargued one is not."
+    receipt: null
+
+  - id: T003
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    objective: "Repair the async axis, per the Judge's spec, with a witnessed RED before and GREEN after in every lane that can express it."
+    allowed_files: []
+    verify:
+      - "PER LANE, the deliverable the oracle requires: a recorded behavioural RED BEFORE the repair and a GREEN AFTER. A green suite is what hid this defect for four of six emitters."
+      - "pnpm test   # baseline + only tests this task adds; the pre-existing package-inventory failure must stay at exactly 1"
+      - "pnpm check  # inherited RED at 267 - it MUST NOT RISE. It is not this goal's to lower."
+      - "pnpm lint && pnpm check:citations"
+      - "pnpm e2e    # BEHAVIOURAL ONLY - it type-checks nothing and runs against the dev server"
+      - "REGENERATE ALL THREE TIERS before any diff is trusted: six regenerate.ts, SIX regenerate-composition.ts, and generated-persistence/P1 which has NO SCRIPT and is written only by UPDATE_GOLDENS=1 in react/solid test/emitter.test.ts. A generated*/ diff passes VACUOUSLY if nothing regenerates."
+    stop_if:
+      - "Need files outside allowed_files."
+      - "A lane cannot express async inside its design envelope - RECORD IT as a lane limit, do not force it."
+      - "You cannot witness the RED before the repair. An unwitnessed fix is exactly what this defect's history warns about."
+      - "pnpm check RISES."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
+  - id: T004
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    objective: >-
+      Land S8 as the corpus scenario that PINS the async repair: nine scenarios in all six
+      lanes, 54 mutation cells all RED, pnpm e2e 6x9 all equal.
+    why_this_is_INSIDE_the_tranche: >-
+      DEFECTS.md 12.2 is the ONLY thing deferring S8, and the trigger is explicit and
+      falsifiable. Repairing the axis WITHOUT landing S8 leaves the repair pinned by unit
+      tests - which is precisely the evidence shape that let four of six emitters stay broken,
+      two of them silently.
+    allowed_files: []
+    verify:
+      - "pnpm e2e   # 6 demos x 9 SCENARIOS, all observations equal - the defining item"
+      - "pnpm mutate:corpus   # 54 cells, EVERY ONE RED, EVERY ONE RESTORED. Only on a quiescent tree: it restores with git checkout over its surface."
+      - "pnpm test / pnpm lint / pnpm check:citations"
+      - "pnpm check  # must not RISE above 267"
+      - "all three regeneration tiers, proved REAL before any diff is trusted"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "The async repair does not hold under S8. That is the scenario doing its job - report it VERBATIM and stop; do not weaken the scenario to fit the repair."
+      - "A mutant survives."
+      - "pnpm e2e moves on scenarios 1-7 and 9."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Final audit: certify all three oracle parts, or refuse."
+    constraints:
+      - "NAME, PER LANE, THE BEHAVIOURAL RED MEASURED BEFORE THE ASYNC REPAIR AND THE GREEN MEASURED AFTER. If this audit cannot name them, the goal is NOT complete whatever else landed - four of six emitters were broken and two SILENTLY, so a green suite proves nothing here."
+      - "Reject if S8 is not in the corpus at 9 scenarios with 54 red mutants and e2e green at 6x9."
+      - "Reject if pnpm check ROSE above its inherited 267."
+      - "Reject if S7 was repaired per-lane when its cause was measured to be the IR or the scenario."
+      - "QUOTE EVERY COMPLETION FIELD VERBATIM before ruling - signal, cadence, final_proof AND intake.completion_proof. Two final audits in the prior sessions caught the PM describing a multi-part oracle with fewer parts than the board defines."
+      - "Assume the PM's brief contains at least one error and find it. Every task on the two prior boards corrected its dispatch."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "The per-lane before/after behavioural table"
+      - "next task if not complete"
+    receipt: null
+
+checks:
+  dirty_fingerprint: >-
+    2026-07-29 at prep. Clean except the OWNER'S three in-flight paths - pnpm-lock.yaml,
+    pnpm-workspace.yaml and website/ - which are never to be modified. Fingerprints recorded
+    by the prior phase: f326d314 / aeb7edc1 / f936e169.
+  last_verification:
+    result: mixed
+    task: "prep inventory"
+    run_by: PM
+    when: "2026-07-29"
+    commands:
+      - cmd: "pnpm test"
+        status: fail
+        note: "1235 passed / 1 FAILED - package-inventory ARM B, caused by the owner's uncommitted lockfile. FOREIGN and pre-existing; must stay at exactly 1."
+      - cmd: "pnpm check"
+        status: fail
+        note: "267 errors. INHERITED RED from the emitter-capability phase, whose successor owns driving it to zero. NOT this goal's to fix; its only obligation is that it does not RISE."
+      - cmd: "pnpm lint"
+        status: pass
+      - cmd: "pnpm e2e"
+        status: pass
+        note: "6 demos x 8 scenarios, all observations equal - the baseline S8 must extend to 6x9"
