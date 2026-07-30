@@ -96,7 +96,7 @@ visual_board:
     The owner has run nineteen-plus goals in this repo against the file board alone, including
     three that closed in the previous session. Recorded as an explicit choice, not an omission.
 
-active_task: T006
+active_task: T007
 
 tasks:
   - id: T001
@@ -306,10 +306,79 @@ tasks:
         - "The two emitter defects belong in docs/DEFECTS.md under their own card; repairing them is a separate goal."
         - "ENVIRONMENTAL: foreign PID 64413 (vite preview, 3d08h old, PREDATES this session and was NOT killed) holds port 5175, so qwik's documented dev command cannot bind until the owner releases it. Verified identical on 5176."
       stopped_because: "pnpm test needs five files outside allowed_files, one of them a lane policy source."
-  - id: T006
+  - id: T007
     type: worker
     assignee: Worker
     status: active
+    reasoning_hint: medium
+    spec: "Owner request 2026-07-30: 'Do all the todos in the todoMVC style... there's a specific style to all the demos'."
+    objective: >-
+      Make all six TodoMVC sites LOOK like TodoMVC: wire the vendored canonical stylesheet into
+      every lane's demo and confirm each one renders correctly in a browser.
+    THE_PM_ALREADY_VENDORED_THE_STYLESHEET_because_workers_have_no_network: >-
+      demos/shared/todomvc-app-css/index.css is todomvc-app-css@2.4.3 VERBATIM from the npm
+      tarball, with its MIT LICENSE beside it and a README recording provenance. DO NOT EDIT
+      index.css - it is upstream bytes. It was VENDORED rather than added as a dependency for
+      two measured reasons: worker sandboxes have no network, and pnpm-lock.yaml currently
+      carries the OWNER'S uncommitted website/ work, which a dependency would rewrite.
+    THE_MARKUP_IS_ALREADY_CANONICAL_AND_THE_PM_CHECKED: >-
+      The emitted TodoMVC uses the real class names - todoapp, header, new-todo, main,
+      toggle-all, todo-list, view, toggle, edit, destroy, footer, todo-count, filters,
+      clear-completed - and PM CONFIRMED every one is covered by the stylesheet. So the
+      stylesheet should apply AS-IS.
+    THE_RISK_THE_PM_FOUND_WHILE_CHECKING: >-
+      The emitted markup ALSO carries new-todo-form, edit-form and cancel-edit - NON-CANONICAL
+      ELEMENTS introduced by T002's form-submission workaround for the two-word event defect,
+      because Enter had to ride form submission and Escape-revert was unspellable. CANONICAL
+      TODOMVC HAS NO <form> WRAPPERS, so the stylesheet has no rules for them and the layout
+      may break in ways that LOOK like a styling bug but originate in the workaround. MEASURE
+      IT. If the layout is wrong, prefer supplementary CSS in a SEPARATE file that is clearly
+      marked as frameless-specific, over editing the vendored bytes or contorting the authored
+      source.
+    constraints:
+      - "DO NOT EDIT demos/shared/todomvc-app-css/index.css. It is upstream. If something looks wrong the markup is wrong, not the stylesheet."
+      - "Any supplementary CSS goes in a SEPARATE, CLEARLY NAMED file - never mixed into the vendored bytes."
+      - "If a lane needs its own COPY rather than a shared import, derive it with a script the way copy-emitted already does. DO NOT hand-maintain six copies."
+      - "No new dependency. Worker sandboxes have no network, and the lockfile carries the owner's work."
+      - "Changing the authored .tsrx means regenerating all six lanes and re-proving derivation. Allowed, but say so and do it properly."
+    allowed_files:
+      - demos/shared/**
+      - demos/react-official/**
+      - demos/solid-official/**
+      - demos/qwik/**
+      - demos/svelte-official/**
+      - demos/vue-official/**
+      - demos/angular-official/**
+      - packages/compiler/test/fixtures/s10-todomvc.tsrx
+      - packages/compiler/test/goldens/s10-todomvc.json
+      - packages/frameworks/react/generated/**
+      - packages/frameworks/solid/generated/**
+      - packages/frameworks/qwik/generated/**
+      - packages/frameworks/svelte/generated/**
+      - packages/frameworks/vue/generated/**
+      - packages/frameworks/angular/generated/**
+      - docs/goals/frameless-real-apps-v1/notes/T007-todomvc-style.md
+    verify:
+      - "PER LANE, OPEN THE SITE IN A BROWSER AND CONFIRM IT LOOKS LIKE TODOMVC - the framed white card on the grey background, the giant thin 'todos' heading, the round toggle circles, strikethrough on completed, the footer with count and filter pills. Six rows. A screenshot-level description per lane, not 'the CSS loaded'."
+      - "The six lanes must look THE SAME as each other. A divergence is a finding - report it verbatim."
+      - "pnpm check  # must stay at EXACTLY 267"
+      - "pnpm e2e    # must stay 6 x 9"
+      - "pnpm lint && pnpm check:citations"
+      - "IF you touched the authored source: re-prove derivation by deleting all twelve artifacts and rebuilding byte-identical, as T002 did"
+      - "record the launch command per lane, RUN, exactly as T002 did"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to edit the vendored index.css."
+      - "You are about to add a dependency, or hand-maintain six copies of the stylesheet."
+      - "A lane cannot load the stylesheet at all - RECORD THE VERBATIM ERROR and continue with the rest."
+      - "pnpm check rises above 267, or pnpm e2e leaves 6 x 9."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
+  - id: T006
+    type: worker
+    assignee: Worker
+    status: queued
     reasoning_hint: high
     spec: "T002 receipt, remaining_blockers - AUTHORITATIVE. The deliverable is DONE and browsable; this closes pnpm test."
     objective: >-
