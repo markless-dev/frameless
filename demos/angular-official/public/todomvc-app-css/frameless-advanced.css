@@ -14,19 +14,36 @@
 	  styling step reversible by deletion.
 
 	--------------------------------------------------------------------------------
-	SCOPE, STATED PLAINLY: THE PIXEL PASS IS **T005'S CARD, NOT THIS ONE**.
+	T005 IS THE PIXEL PASS, AND IT FOUND TWO DEFECTS NEITHER READABLE FROM CSS
 	--------------------------------------------------------------------------------
 
-	`frameless-app-suite-v1` T003 ships the app: one authored source, five emitted
-	lanes, six sites launched and driven. T002 ruled the visual match a SEPARATE
-	card with its own browser budget, on the T007 precedent — that pass found a
-	3614-pixel heading divergence INVISIBLE to every computed-style check, and a
-	`margin: 0` that made all six lanes identical AND ALL SIX WRONG. So a stop
-	after "browsable and driven" is a PLANNED HANDOFF.
+	T003 shipped this file as plumbing and handed the pixels to T005. T005 shot
+	`/todomvc-advanced` and the shipped `/todomvc` page at 900x900 in headless
+	chromium on IDENTICAL DATA and diffed them. Both defects below were found in
+	the IMAGE. Both would have passed any stylesheet or computed-style review,
+	which is the T007 precedent this card exists to honour — that pass found a
+	3614-pixel heading divergence invisible to every computed-style check, and a
+	`margin: 0` that made all six lanes identical AND ALL SIX WRONG.
 
-	What this file therefore is: the MINIMUM that makes the controls TodoMVC
-	Advanced adds legible and operable, so that T005 inherits a plumbed route and
-	tunes pixels rather than re-plumbing six lanes. It is deliberately small.
+	  DEFECT 1 — THE TOGGLE-ALL CHEVRON WAS INVISIBLE ON THE ADVANCED PAGE.
+	  Upstream puts `.toggle-all + label` at `top: -65px` relative to `.main`,
+	  which in canonical TodoMVC lands inside `.header`, at the left of the
+	  new-todo input. On the advanced page the element 65px above `.main` is THIS
+	  BAR, and the bar is opaque and above it, so the control simply was not
+	  drawn. Measured: the 45x65 header band contained ZERO non-white pixels on
+	  `/todomvc-advanced` and 90 on `/todomvc`, and those 90 were the WHOLE of the
+	  header-region diff between the two pages. Fixed under `.todoapp-advanced
+	  .main` below.
+
+	  DEFECT 2 — THE BAR'S HEIGHT WAS FRACTIONAL, AND IT PUSHED THE WHOLE LIST OFF
+	  THE PIXEL GRID. `line-height: 1.4em` at 14px is 19.6px, so the bar measured
+	  198.765625px tall and `.todoapp` measured 424.359375px where the simple
+	  card measures 225.59375px — A DIFFERENT SUBPIXEL PHASE. The rows survived
+	  it (chromium snaps their backgrounds), but the footer, the torn-paper sheets
+	  and the card's bottom edge all resolved differently: 17976 differing pixels
+	  in a region that is supposed to be IDENTICAL. Every length in the bar is now
+	  an integer, so the bar is exactly 200px and the advanced card lands on the
+	  SAME subpixel phase as the simple one.
 
 	--------------------------------------------------------------------------------
 	PROVENANCE, PER T002 RULING §3: every declaration is either traceable to a
@@ -36,7 +53,8 @@
 
 	TRACEABLE TO UPSTREAM:
 	  .advanced            — box model and background borrowed from `.todoapp`,
-	                         which is the white card the whole app sits in.
+	                         which is the white card the whole app sits in, and the
+	                         hairline from `.main`'s own `border-top`.
 	  .advanced .search    — borrowed from `.new-todo, .edit`, the shared input
 	                         rule, and from `.new-todo` for the placeholder italic.
 	  .advanced .search-go — borrowed from `.clear-completed`, upstream's only
@@ -46,6 +64,10 @@
 	  .remote-status,
 	  .sync-note           — borrowed from `.todo-count`, upstream's small grey
 	                         status line, and `.todo-count strong` for the numeral.
+	  ::before LABELS      — borrowed from `.toggle-all + label:before` (`content:
+	                         '❯'`) and `.todo-list li .destroy:after` (`content:
+	                         '×'`). Generated content is upstream's OWN idiom here,
+	                         used twice, so a third use is in the house style.
 	  .todo-list li.saving — borrowed from `.todo-list li.completed`, upstream's
 	                         only other per-row state class.
 	  .row-pending         — borrowed from `.todo-list li .destroy`, upstream's
@@ -66,7 +88,64 @@
 	  3. `.server-fails` AND ITS LABEL. A control that exists to make a REVERT
 	     observable on demand. It is a test affordance that the real app would not
 	     have, and it is styled to look subordinate for that reason.
+
+	NOTHING IN THIS FILE MAY TOUCH THE HEADER, THE ROWS OR THE FOOTER. Those three
+	regions are asserted pixel-identical to the shipped `/todomvc` page, so every
+	selector below is either scoped to `.advanced`, to `.todoapp-advanced`, or to
+	a class (`saving`, `row-pending`) that the simple app's markup does not carry.
 */
+
+/* ---------------------------------------------------------------------------
+   THE CHEVRON, PUT BACK WHERE THE REFERENCE DRAWS IT. (Defect 1.)
+
+   Upstream:  `.toggle-all + label { position: absolute; top: -65px; left: -0 }`
+   and        `.main { position: relative; z-index: 2 }`.
+
+   So the chevron's containing block is `.main`, and `-65px` is "one header
+   height above the list". That arithmetic is only true while the list follows
+   the header directly. Insert a bar and the same declaration aims the control
+   into the bar instead — where it is painted over and, before T003 raised the
+   bar's `z-index`, where it also ATE THE BAR'S CLICKS.
+
+   THE REPAIR IS TO CHANGE THE CONTAINING BLOCK, NOT THE OFFSET. Dropping
+   `.main` to `position: static` hands the label to `.todoapp`, which is already
+   `position: relative`, and then `top: 0` is the CARD's top — which is the
+   header's top, and the label's own 65px height is exactly the header's height.
+   The alternative was `top: calc(-65px - <bar height>)`, and it was rejected:
+   it hard-codes the bar's height into a second place, so a longer status line
+   would silently slide the chevron out of the header again.
+
+   THE RISK WAS MEASURED, NOT REASONED AWAY. `position: static` also drops
+   `.main`'s `z-index: 2`, and `.footer:before` — the torn-paper stack — is an
+   absolutely-positioned box whose bottom 50px overlap `.main`'s last row. If it
+   painted anything inside its own border box it would now paint OVER the row.
+   It does not: every one of its five shadows is an OUTER shadow. Confirmed by
+   the region diff, which is byte-clean across the rows, the footer AND the torn
+   paper after this change.
+   --------------------------------------------------------------------------- */
+.todoapp-advanced .main {
+	position: static;
+}
+
+/*
+	`top: 1px`, NOT `top: 0`, AND THE 1px IS `.main`'s OWN BORDER.
+
+	An absolutely-positioned box is offset from its containing block's PADDING
+	box, and upstream gives `.main` a `border-top: 1px solid #e6e6e6`. So on the
+	simple page `top: -65px` resolves against 195 + 1, and the chevron's border
+	box lands at y=131 — not 130. Handing the label to `.todoapp`, which has no
+	border, moves that reference point up by exactly that one pixel.
+
+	`top: 0` WAS TRIED FIRST AND MEASURED TO FAIL. It put the label at y=130
+	against the simple page's y=131, and the region diff went from 90 differing
+	pixels to 80 rather than to 0 — the chevron was present, one pixel high, and
+	the count barely moved. THAT IS THE WHOLE REASON THIS CARD ASSERTS OFF THE
+	IMAGE: "the chevron is back" was true, and still wrong.
+*/
+.todoapp-advanced .toggle-all + label {
+	top: 1px;
+	left: 0;
+}
 
 /* ---------------------------------------------------------------------------
    The advanced control bar. Sits between the header and the list, inside the
@@ -76,33 +155,46 @@
 /*
 	THE `z-index` IS LOAD-BEARING AND IT WAS MEASURED IN A BROWSER, NOT GUESSED.
 
-	Upstream `index.css` gives `.toggle-all + label` `position: absolute` with
-	`width: 45px; height: 65px; top: -65px` — the chevron that toggles every row.
-	`top: -65px` means it deliberately reaches SIXTY-FIVE PIXELS ABOVE `.main`,
-	into whatever sits before it. In canonical TodoMVC that is the header, which
-	has nothing clickable at that corner. TodoMVC Advanced puts THIS BAR there.
+	T003 measured it. With the bar at `z-index: 2` — a TIE with upstream's
+	`.main`, lost on document order — clicking `[data-action="server-fails"]`
+	timed out after 30s with `<label for="toggle-all">Mark all as complete</label>
+	from <main class="main">…</main> subtree intercepts pointer events`. The
+	control was visible, enabled and stable, and unclickable, because the
+	chevron's invisible 45x65 hit area sat on top of it. `z-index: 3` cleared it.
 
-	MEASURED with playwright on the react lane: clicking `[data-action=
-	"server-fails"]` timed out after 30s with `<label for="toggle-all">Mark all as
-	complete</label> from <main class="main">…</main> subtree intercepts pointer
-	events`. The control was visible, enabled and stable — and unclickable. An
-	invisible 45x65 hit area from the section BELOW was sitting on top of it.
-
-	THE VALUE IS 3, AND 2 WAS TRIED FIRST AND MEASURED TO FAIL. Upstream index.css
-	already gives `.main` `position: relative; z-index: 2`, so a bar at z-index 2
-	TIES with it and loses on document order — `.main` comes later. Measured in the
-	browser at that value: `.advanced` occupied y 195..393 with z-index 2, `.main`
-	y 393..572 with z-index 2, the toggle-all label y 329..394, and
-	`document.elementFromPoint` at the checkbox's own centre returned
-	`LABEL for=toggle-all`. Raising the bar to 3 is what actually clears it.
+	IT IS KEPT, AND IT IS NOW BELT-AND-BRACES RATHER THAN THE ONLY THING HOLDING
+	THE BAR UP. Moving the chevron into the header removes the overlap that
+	caused the interception in the first place, and `.todoapp-advanced .main`
+	above drops `.main`'s `z-index: 2` besides. T005 re-measured the click after
+	both changes and the bar's checkbox toggles. The declaration stays because it
+	is free, because it is the recorded outcome of a real measurement, and
+	because any future control the bar grows in that corner would meet the same
+	chevron if the header ever stopped being 65px tall.
 */
 .advanced {
 	position: relative;
 	z-index: 3;
+	box-sizing: border-box;
 	background: #fff;
 	border-top: 1px solid #e6e6e6;
 	padding: 12px 16px;
 	font-size: 14px;
+	/*
+		EVERY LENGTH IN THIS BAR IS AN INTEGER, AND THAT IS DEFECT 2's REPAIR.
+		`line-height` is stated in `px` rather than the `1.4em` this file used to
+		inherit, because 1.4 x 14px is 19.6px and four of those made the bar
+		198.765625px tall. The bar's height is the ONLY thing standing between the
+		advanced card's bottom edge and the simple card's, so a fractional bar
+		puts the footer, the torn-paper sheets and the card edge on a different
+		subpixel phase from the page they are asserted identical to.
+
+		THE TOTAL IS 201, AND IT IS MEASURED RATHER THAN DERIVED. The arithmetic
+		was first written down as 200 and the browser reported 201: the missing
+		term is this rule's own 1px `border-top`, which sits outside the padding
+		box. Corrected and stated in full, border first:
+		1 + 12 + 36 + 3x(8+20) + 8 + 20 + (8+20) + 12 = 201.
+	*/
+	line-height: 20px;
 	color: #777;
 }
 
@@ -112,17 +204,20 @@
 	align-items: center;
 }
 
-/* Borrowed from `.new-todo, .edit`: same box model, same inherited font. */
+/* Borrowed from `.new-todo, .edit`: same box model, same inherited font.
+   `height` is explicit and integral for the reason given on `.advanced`:
+   20 (line) + 14 (padding) + 2 (border) = 36. */
 .advanced .search {
 	flex: 1;
-	padding: 8px 8px 8px 12px;
+	box-sizing: border-box;
+	height: 36px;
+	padding: 7px 12px;
 	border: 1px solid #ededed;
 	background: rgba(0, 0, 0, 0.003);
-	box-sizing: border-box;
 	font-size: 16px;
 	font-family: inherit;
 	font-weight: inherit;
-	line-height: 1.4em;
+	line-height: 20px;
 	color: inherit;
 }
 
@@ -133,11 +228,14 @@
 	color: rgba(0, 0, 0, 0.4);
 }
 
-/* Borrowed from `.clear-completed`. */
+/* Borrowed from `.clear-completed`. Same 36px box as the field beside it, so
+   the row's height is one number and not the taller of two. */
 .advanced .search-go {
+	box-sizing: border-box;
+	height: 36px;
+	padding: 7px 12px;
 	font-size: 14px;
 	line-height: 20px;
-	padding: 4px 10px;
 	border: 1px solid #e6e6e6;
 	background: #fff;
 	color: inherit;
@@ -157,6 +255,11 @@
 
 /* ---------------------------------------------------------------------------
    The four status lines. All borrowed from `.todo-count` / `.todo-count strong`.
+
+   `white-space: nowrap` with an ellipsis is not decoration: it is what MAKES the
+   bar 200px. A remote term long enough to wrap would add a line, change the
+   bar's height, and move the whole list — the exact class of defect the pixel
+   diff caught. `.todo-count` is a single line upstream for the same reason.
    --------------------------------------------------------------------------- */
 
 .advanced .local-count,
@@ -166,7 +269,11 @@
 	margin: 8px 0 0;
 	text-align: left;
 	font-size: 14px;
+	line-height: 20px;
 	color: #777;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .advanced .local-count strong,
@@ -174,26 +281,62 @@
 	font-weight: 300;
 }
 
-/* `remoteStatus` is a bare word, so it is set apart rather than left to read as
-   prose. INVENTION: upstream has no pending state to show. */
+/* `remoteStatus` and `syncNote` are BARE WORDS in the emitted markup — both
+   render the single token `idle` on load, so the bar showed the same word twice
+   with nothing to tell the two apart. MEASURED OFF THE IMAGE: two identical
+   `idle` lines, 78px apart, neither labelled.
+
+   The markup is NOT this card's to change — an emitter or a `generated/` file
+   edited to fix appearance is a stop condition — so the label is generated in
+   the stylesheet, which is upstream's own idiom in this very file's ancestor:
+   `.toggle-all + label:before` draws the chevron with `content: '❯'` and
+   `.todo-list li .destroy:after` draws the delete glyph with `content: '×'`.
+   The words are set upright so the state token keeps the italic to itself. */
 .advanced .remote-status,
 .advanced .sync-note {
 	font-style: italic;
 }
 
+.advanced .remote-status::before {
+	content: 'remote ';
+	font-style: normal;
+}
+
+.advanced .sync-note::before {
+	content: 'sync ';
+	font-style: normal;
+}
+
+/* The failure control sits between `.remote-count` and `.sync-note` in the
+   emitted markup, and it is left there rather than floated or reordered: it is
+   the control that PRODUCES the `reverted` state on the line directly beneath
+   it. This is the 8px that opens the gap above it — the control is an anonymous
+   block with no box of its own to hang a margin on. */
+.advanced .remote-count {
+	margin-bottom: 8px;
+}
+
 /* ---------------------------------------------------------------------------
    The server-failure control. INVENTION — a test affordance, styled subordinate.
+
+   The box is pinned to 13x13 with zero margins so the anonymous line it shares
+   with its label cannot grow past the bar's 20px line box; before this it
+   carried `margin: 10px 6px 0 0` and `vertical-align: middle`, and its label
+   collided with the `.remote-count` line above it in the rendered image.
    --------------------------------------------------------------------------- */
 
 .advanced .server-fails {
-	margin: 10px 6px 0 0;
-	vertical-align: middle;
+	box-sizing: border-box;
+	width: 13px;
+	height: 13px;
+	margin: 0 6px 0 0;
+	vertical-align: -1px;
 }
 
 .advanced .server-fails + label {
-	font-size: 13px;
+	font-size: 14px;
+	line-height: 20px;
 	color: #949494;
-	vertical-align: middle;
 }
 
 /* ---------------------------------------------------------------------------
