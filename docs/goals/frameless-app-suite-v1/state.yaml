@@ -100,7 +100,7 @@ visual_board:
     The owner has run twenty-plus goals in this repo against the file board alone. Recorded as
     an explicit choice, not an omission.
 
-active_task: T004
+active_task: T006
 
 tasks:
   - id: T001
@@ -622,7 +622,7 @@ tasks:
   - id: T004
     type: worker
     assignee: Worker
-    status: active
+    status: blocked
     reasoning_hint: high
     objective: >-
       Attempt the CODEX CLONE: sidebar, chat thread, right detail pane with tabs, bottom
@@ -793,6 +793,169 @@ tasks:
       - "pnpm test at exactly 1 / pnpm check not above 267 / pnpm e2e 6 x 9 / lint / check:citations"
     stop_if:
       - "Need files outside allowed_files."
+      - "You are about to hand-write or hand-edit per-lane app code - anything under generated/ or src/emitted/ that did not come out of a regenerate or copy script."
+      - "Any S1-S11 artifact changes a byte."
+      - "You are about to modify an emitter, the IR, the authoring surface, or scripts/e2e.mjs to make an axis work. RECORD THE VERBATIM REFUSAL AND NARROW INSTEAD."
+      - "You are about to fake Enter-to-send with a per-lane shim. IT IS UNSPELLABLE (DEFECTS.md 15). Ship the Send BUTTON, record that Enter is unavailable."
+      - "You are about to write a loop around an await to produce a variable-length stream. IT IS DEFECTS.md 8.1 IN EVERY LANE. A FIXED UNROLLED CHUNK COUNT IS THE ONLY SHAPE."
+      - "You are about to copy any file from the Square UI repository. ITS LICENCE FORBIDS PUBLISHING DERIVATIVES IN ANY REPOSITORY. Reproduce the measured geometry on the VENDORED MIT shadcn tokens instead - their styles ARE those tokens."
+      - "You are about to name a global (Date, Promise, setTimeout, fetch, JSON) in a handler body and expect angular to take it. IT WILL NOT. Timestamps arrive as props or the lane goes unbuilt."
+      - "A lane refuses: record the VERBATIM message, leave it UNBUILT, ship the rest. A CAPABILITY LIST IS A LEGITIMATE DELIVERABLE FOR THIS CARD."
+      - "pnpm check rises above 267, pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
+      - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched."
+      - "NEVER pkill -f on a broad pattern. Kill by recorded PID only, and only PIDs you started. A port held by a foreign process is RECORD-IT-AND-USE-ANOTHER-PORT, never a kill."
+      - "Verification fails twice for the same reason."
+    receipt:
+      result: blocked
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T004-codex-clone.md
+      summary: "STOPPED AT stop_if #1 BEFORE ANY PRODUCT EDIT, on a blocker MEASURED rather than predicted. Adding packages/compiler/test/goldens/s12-codex-clone.json - itself IN allowed_files - turns pnpm test red in packages/frameworks/vue/test/gate.test.ts, whose repair site is packages/frameworks/vue/src/gate/index.ts, which T003's card carried as its 22nd entry and T004's 48-entry list DROPPED. A ONE-FILE HOLE IN THE PM'S CARD."
+      THE_MECHANISM_IS_A_LIVE_DERIVATION_NOT_A_LITERAL: "packages/frameworks/vue/test/gate.test.ts asserts the shipped denial prose contains `${spelled(scenarioGoldens(roots.goldenRoot).length).toLowerCase()}-scenario corpus`. scenarioGoldens() globs /^s(\\d+)-[\\w-]+\\.json$/, so A TWELFTH GOLDEN ALONE forces the prose from 'eleven-scenario corpus' to 'twelve-scenario corpus' INDEPENDENT OF WHAT S12 CONTAINS. Three more spelled counts move with it, and deriveTwoWayHostDomain() reads S{digits}.vue for EVERY golden, so THE VUE LANE CANNOT EVEN BE LEFT UNBUILT TO DODGE IT. All four numbers live in prose inside src/gate/index.ts and are unreachable from test/**. IT REJECTED SOFTENING THE ASSERTIONS: that file's own doc comment is an extended account of why those numbers were converted FROM literals TO derivations after S7 silently falsified them."
+      IT_PROBED_INSTEAD_OF_PREDICTING_AND_PROVED_THE_PROBE_BOTH_WAYS: "Staged a two-file probe (a duplicated golden plus a stand-in S12.vue, BOTH inside allowed_files) rather than reasoning from a grep - the board's own MEASURE NEVER INHERIT rule - at a cost of about three minutes against a full build that would have hit the same stop. Then extended it to all five emitting lanes to enumerate the COMPLETE blast radius (16 failed / 1213 passed across 9 files; 8 repairs inside allowed_files, ONE outside) so the PM can unblock in ONE round trip. Reverted and PROVED BOTH DIRECTIONS: 16 failures staged vs exactly 1 after revert, and git status back to the exact 3-line start state."
+      THREE_DISPATCH_ERRORS_ALL_MEASURED: "(1) 'SORT THE DIGESTS, NOT THE PATHS' IS UNDER-SPECIFIED AND ONE LITERAL READING IS WRONG: sorting the bare digest column returns feddd40b, not f936e169. The recorded method sorts whole shasum OUTPUT LINES. PM CONFIRMED INDEPENDENTLY and corrected the standing instruction. (2) The card's `rounded-md = calc(var(--radius) - 2px)` is the PRE-V4 additive scale; current source is `calc(var(--radius) * 0.8)`. The 8px conclusion SURVIVES - the scales coincide exactly at the stock 0.625rem and diverge anywhere else. Bonus corroboration the card missed: the composer's measured 14px radius is exactly --radius-xl = 0.625rem * 1.4, a SECOND independent confirmation on a DIFFERENT token. (3) shadcn's apps/v4/app/globals.css is the DOCS SITE's theme, NOT the documented default theme (--foreground oklch(0% 0 0) vs oklch(0.145 0 0), chart tokens rebound to blues). THE OBVIOUS VENDORING MOVE FETCHES THE WRONG FILE; vendor from theming.mdx's 'Default Theme CSS' block."
+      LICENCES_VERIFIED_AT_SOURCE: "This harness had network, unlike T002's. shadcn-ui/ui/LICENSE.md = MIT (c) 2023 shadcn CONFIRMED; vercel/ai-elements/LICENSE = Apache-2.0, Copyright 2023 Vercel, Inc. CONFIRMED. Both card claims correct. NOTHING WAS FETCHED OR COPIED FROM SQUARE UI."
+      changed_files:
+        - docs/goals/frameless-app-suite-v1/notes/T004-codex-clone.md
+      commands:
+        - cmd: "fingerprint the owner's three paths at START (sorting the shasum output LINES)"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169, website/ 116 files"
+        - cmd: "PROBE: stage s12 golden + S12.vue (both inside allowed_files), vitest packages/frameworks/vue/test/gate.test.ts"
+          status: blocked
+          note: "2 failed | 42 passed. Repair site is vue/src/gate/index.ts - NOT in allowed_files. THE BLOCKER, measured not predicted."
+        - cmd: "PROBE: stage S12 in all 5 emitting lanes, pnpm test (blast radius)"
+          status: blocked
+          note: "16 failed | 1213 passed across 9 files. 8 repairs inside allowed_files; only vue/src/gate/index.ts outside. LOWER BOUND - stand-ins were S11 copies."
+        - cmd: "rm all 6 staged probe artifacts; git status --short; pnpm test"
+          status: pass
+          note: "PROVES BOTH DIRECTIONS: 16 failures staged vs 1 after revert (the probe measured something), and status back to the exact 3-line start state (the probe left nothing). exactly 1 failed | 1271 passed"
+        - cmd: "git diff --exit-code -- packages/ demos/ scripts/"
+          status: pass
+          note: "exit 0 - product tree unmodified"
+        - cmd: "verify shadcn + ai-elements licences at source"
+          status: pass
+          note: "MIT (c) 2023 shadcn; Apache-2.0 Copyright 2023 Vercel, Inc. Both card claims correct."
+        - cmd: "fingerprint the owner's three paths at FINISH (same method)"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169, 116 files - IDENTICAL at both ends"
+      deviations:
+        - "Ran a two-file PROBE instead of reasoning from a grep, then extended it to five lanes to enumerate the COMPLETE blast radius so the PM can unblock in ONE round trip rather than discovering a second missing file later."
+        - "Wrote the note despite the blocked result, so the successor inherits the measured blocker, the three dispatch corrections, the verified licence provenance and the authoring-constraint list rather than re-deriving them."
+        - "DID NOT RUN pnpm check / e2e / lint / citations. No file they inspect changed in either direction, and git diff --exit-code proves it. REPORTING THEM WOULD HAVE REPORTED A BASELINE AS A VERIFICATION OF WORK THAT DOES NOT EXIST."
+      remaining_blockers:
+        - "THE ONE-LINE FIX, APPLIED BY THE PM AS T006: add packages/frameworks/vue/src/gate/index.ts to the retry card's allowed_files."
+        - "CARRY T003's STOP_IF FORWARD: the twelfth scenario must RE-ARGUE the 12a/12b denials, not renumber them. S12 IS A GENUINELY STRONG TEST OF 12b - a streaming chat is the best chance yet for a written-back prop."
+        - "The blast-radius table is a LOWER BOUND. The qwik and svelte gates were silent only because the stand-in was already-passing S11 output; a real S12 may move more."
+        - "UNMEASURED, and the card's own rule applies to its own prediction: the four-run / one-misbehaves / one-refuses lane table for S12 is INHERITED FROM S11. Re-run each lane's OWN gate on the real module, then run it in a browser."
+      stopped_because: "stop_if #1 - 'Need files outside allowed_files.' Repairing the vue gate test's corpus-derived census requires editing packages/frameworks/vue/src/gate/index.ts, which T004's list dropped. Proceeding would additionally have tripped stop_if 'pnpm test exceeds exactly 1 failure'. Per the Worker contract, needing a file outside allowed_files is a stop_if and NOT a deviation - so the stop was taken BEFORE any product edit rather than after a full build."
+  - id: T006
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    objective: >-
+      RETRY OF T004 WITH THE SCOPE HOLE CLOSED. Attempt the CODEX CLONE as S12: sidebar, chat
+      thread, a streaming response, and detail panes. Read T004's receipt and
+      notes/T004-codex-clone.md FIRST - the blocker, the blast radius, the three dispatch
+      corrections and the verified licence provenance are all already measured. DO NOT
+      RE-DERIVE THEM.
+    WHY_T004_STOPPED_AND_WHAT_CHANGED: >-
+      T004 stopped at stop_if #1 BEFORE ANY PRODUCT EDIT. Adding the s12 golden - itself IN
+      allowed_files - turns pnpm test red in packages/frameworks/vue/test/gate.test.ts, whose
+      repair site is packages/frameworks/vue/src/gate/index.ts. T003's card carried that file
+      as its 22nd entry; T004's 48-entry list DROPPED IT. A ONE-FILE HOLE IN THE PM'S CARD, now
+      closed. The mechanism: the gate test asserts the shipped denial prose contains
+      `${spelled(scenarioGoldens().length)}-scenario corpus`, so THE TWELFTH GOLDEN ALONE
+      forces eleven -> twelve regardless of what S12 contains; three more spelled counts move
+      with it, and deriveTwoWayHostDomain() reads S{digits}.vue for EVERY golden, so the vue
+      lane cannot be left unbuilt to dodge it.
+    THE_BLAST_RADIUS_IS_MEASURED_AND_IS_A_LOWER_BOUND: >-
+      16 failed / 1213 passed across 9 files with S12 staged in five lanes. EIGHT repairs are
+      inside this card's list (react+solid size budgets, solid emitted-typecheck, four angular
+      suites, vue test/**); the ninth was the hole. IT IS A LOWER BOUND - the qwik and svelte
+      gates were silent only because the stand-in was already-passing S11 output. A real S12
+      may move more, and that is expected, not a surprise.
+    THREE_CORRECTIONS_INHERIT_THEM_DO_NOT_REDISCOVER_THEM: >-
+      (1) FINGERPRINT METHOD: sort the whole shasum OUTPUT LINES. "Sort the digests" is
+      under-specified - sorting the bare digest column returns feddd40b, NOT f936e169. PM
+      confirmed independently. (2) shadcn's rounded-md is `calc(var(--radius) * 0.8)` in
+      current source, not the pre-v4 `- 2px`; the 8px conclusion survives because the scales
+      coincide exactly at the stock 0.625rem. The composer's 14px is --radius-xl = 0.625rem *
+      1.4, a second independent confirmation on a different token. (3) DO NOT VENDOR FROM
+      apps/v4/app/globals.css - that is the DOCS SITE's theme, not the documented default
+      (--foreground oklch(0% 0 0) vs oklch(0.145 0 0), chart tokens rebound to blues). Vendor
+      from theming.mdx's "Default Theme CSS" block. LICENCES ALREADY VERIFIED AT SOURCE:
+      shadcn MIT (c) 2023 shadcn, ai-elements Apache-2.0 Copyright 2023 Vercel, Inc.
+    predecessor: "T004 (blocked - scope hole, receipt on that card)"
+    allowed_files:
+      - "packages/compiler/test/fixtures/s12-codex-clone.tsrx"
+      - "packages/compiler/test/goldens/s12-codex-clone.json"
+      - "packages/compiler/test/enriched-ir.test.ts"
+      - "packages/frameworks/react/scripts/regenerate.ts"
+      - "packages/frameworks/solid/scripts/regenerate.ts"
+      - "packages/frameworks/qwik/scripts/regenerate.ts"
+      - "packages/frameworks/svelte/scripts/regenerate.ts"
+      - "packages/frameworks/vue/scripts/regenerate.ts"
+      - "packages/frameworks/angular/scripts/regenerate.ts"
+      - "packages/frameworks/react/generated/**"
+      - "packages/frameworks/solid/generated/**"
+      - "packages/frameworks/qwik/generated/**"
+      - "packages/frameworks/svelte/generated/**"
+      - "packages/frameworks/vue/generated/**"
+      - "packages/frameworks/angular/generated/**"
+      - "packages/frameworks/react/test/**"
+      - "packages/frameworks/solid/test/**"
+      - "packages/frameworks/qwik/test/**"
+      - "packages/frameworks/svelte/test/**"
+      - "packages/frameworks/vue/test/**"
+      - "packages/frameworks/vue/src/gate/index.ts"
+      - "packages/frameworks/angular/test/**"
+      - "demos/react-official/src/emitted/**"
+      - "demos/solid-official/src/emitted/**"
+      - "demos/qwik/src/emitted/**"
+      - "demos/svelte-official/src/lib/emitted/**"
+      - "demos/vue-official/src/emitted/**"
+      - "demos/angular-official/src/emitted/**"
+      - "demos/react-official/package.json"
+      - "demos/solid-official/package.json"
+      - "demos/qwik/package.json"
+      - "demos/svelte-official/package.json"
+      - "demos/vue-official/package.json"
+      - "demos/angular-official/package.json"
+      - "demos/react-official/src/App.jsx"
+      - "demos/solid-official/src/App.jsx"
+      - "demos/vue-official/src/App.vue"
+      - "demos/qwik/src/routes/**"
+      - "demos/svelte-official/src/routes/**"
+      - "demos/angular-official/src/app/**"
+      - "demos/shared/shadcn-theme/**"
+      - "demos/shared/copy-shadcn-theme.mjs"
+      - "demos/react-official/public/shadcn-theme/**"
+      - "demos/solid-official/public/shadcn-theme/**"
+      - "demos/qwik/public/shadcn-theme/**"
+      - "demos/svelte-official/static/shadcn-theme/**"
+      - "demos/vue-official/public/shadcn-theme/**"
+      - "demos/angular-official/public/shadcn-theme/**"
+      - "docs/goals/frameless-app-suite-v1/notes/T004-codex-clone.md"
+    verify:
+      - "PER LANE: EMITS / REFUSES with the VERBATIM message read off the REAL module / EMITS-BUT-MISBEHAVES with the observed behaviour. A PROBE OR PRIOR-CARD VERDICT IS NOT A LANE VERDICT - re-run each lane's OWN GATE, which is how T001's 'solid EMITS P9' survived until T003."
+      - "RUN IT IN A BROWSER. T003 shipped a module that passed its gate, compileScript, tsc AND pnpm check and still threw at runtime. FIVE STATIC GATES ARE NOT A LANE VERDICT."
+      - "DERIVATION PROOF: delete every S12 artifact, re-run regenerate + copy-emitted + copy-shadcn-theme, shasum. PROVE THE DELETE LANDED by asserting present-after-delete == 0 - T003's first proof compared two empty files and printed BYTE-IDENTICAL while measuring nothing."
+      - "RE-ARGUE the vue 12a/12b denials against the TWELVE-scenario corpus with an INDEPENDENT script - DO NOT RENUMBER THEM. src/gate/index.ts's own doc comment records why those counts were converted FROM literals TO derivations after S7 silently falsified them. S12 IS A GENUINELY STRONG TEST OF 12b: a streaming chat is the best chance yet for a written-back prop."
+      - "git diff --exit-code over every S1-S11 artifact and demos/shared/todomvc-app-css/** - NOTHING EARLIER MAY MOVE"
+      - "pnpm test   # EXACTLY ONE failure, the foreign package-inventory ARM B"
+      - "pnpm check  # MUST NOT RISE above 267"
+      - "pnpm e2e    # MUST stay 6 x 9. scripts/e2e.mjs is NOT in scope."
+      - "pnpm lint and pnpm check:citations"
+      - "VISUAL: assert features OFF THE RENDERED IMAGE, never off the CSS. T005 found a control that was CLICKABLE BUT NOT DRAWN and a one-pixel offset that a presence check would have passed."
+      - "VISUAL TARGET (measured off the live reference, numbers not adjectives): sidebar 256px; nav item 230x36 radius 8 padding 8/12 gap 8 at 14px/500; section label 12px/500 uppercase wide-tracked; empty-state heading 24px/600; composer shell 630x175 radius 14; textarea 628x120 padding 12/16; body ui-sans-serif 16/24."
+      - "fingerprint the owner's three paths at START and FINISH - SORT THE DIGESTS, NOT THE PATHS. Sorting the paths returns b1dd182a and is WRONG; T005 hit this exact trap and caught it."
+      - "the same derivation and no-hand-written-lanes proofs as T003"
+      - "pnpm test at exactly 1 / pnpm check not above 267 / pnpm e2e 6 x 9 / lint / check:citations"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to SOFTEN a corpus-derived assertion in packages/frameworks/vue/test/gate.test.ts instead of re-deriving the prose in src/gate/index.ts. The derivation is the point."
       - "You are about to hand-write or hand-edit per-lane app code - anything under generated/ or src/emitted/ that did not come out of a regenerate or copy script."
       - "Any S1-S11 artifact changes a byte."
       - "You are about to modify an emitter, the IR, the authoring surface, or scripts/e2e.mjs to make an axis work. RECORD THE VERBATIM REFUSAL AND NARROW INSTEAD."
