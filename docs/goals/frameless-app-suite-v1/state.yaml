@@ -478,6 +478,26 @@ tasks:
       specifically its `conversation`, `message` and `prompt-input` families. APACHE-2.0,
       "Copyright 2023 Vercel, Inc." NOTE THE DIFFERENT LICENSE from (1) and (2); attribute it
       separately.
+    SQUARE_UI_WAS_QA_D_LIVE_AND_ITS_LICENCE_RULES_OUT_COPYING: >-
+      The owner named square.lndevui.com and square-ui-chat.vercel.app. THE REPO IS NOT MIT:
+      zerostaticthemes/square-ui ships a bespoke "ln-dev UI License" (c) 2026 lndev, which
+      GitHub classifies NOASSERTION and which FORBIDS publishing the templates or ANY
+      DERIVATIVES in any repository. Frameless is public, so copying is out. OWNER RULED:
+      REFERENCE ONLY, BUILD ON MIT. Square UI is itself built on shadcn/ui, so the vendored
+      token layer above is unaffected. NOTHING from that repo is cloned, copied or vendored.
+      FULL QA CENSUS: notes/T004-visual-reference.md
+    THREE_QA_FINDINGS_THAT_CHANGE_THIS_BUILD: >-
+      (a) THE CHAT REFERENCE DOES NOT DEMONSTRATE STREAMING. It answers the FIRST message with
+      one canned reply and is SILENT to every message after. It gives us a LOOK, not a
+      behaviour spec - so T001 and T002 remain the only authority on streaming.
+      (b) ENTER-TO-SEND IS THE REFERENCE'S PRIMARY INTERACTION AND IS THE ONE THING WE CANNOT
+      SPELL (DEFECTS.md 15). The demo ALSO ships a Send BUTTON, which is a plain click and IS
+      spellable. NARROW TO CLICK-TO-SEND, RECORD THAT ENTER IS UNAVAILABLE, DO NOT FAKE IT.
+      (c) MOST OF THESE DEMOS ARE LESS INTERACTIVE THAN THEY LOOK. Measured: task-management's
+      Filter popover OPENS but DOES NOT FILTER, "Add task" is INERT, and cards DO NOT DRAG -
+      the drag selected text. Emails' list selection and Files' grid/list toggle ARE stateful.
+      OUR DEMOS WILL BE MORE FUNCTIONAL THAN THE REFERENCE. A visual match against a static
+      demo IS NOT EVIDENCE OF BEHAVIOURAL PARITY and must not be reported as one.
     HOW_TO_USE_A_REFERENCE_YOU_CANNOT_COPY: >-
       All three references are TAILWIND + REACT. Frameless emits plain markup into SIX lanes,
       so THEIR CODE CANNOT BE COPIED and must not be. The TodoMVC precedent is the procedure:
