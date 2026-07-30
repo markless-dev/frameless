@@ -29,6 +29,31 @@ const fixtures = [
 	// ['s1'..'s9'], so the app does NOT join the 6 x 9 three-way contract - browsable
 	// first, e2e wiring only once a lane is proven.
 	['S10.vue', 's10-todomvc.json'],
+	// THE SECOND APPLICATION IN THE CORPUS - TodoMVC ADVANCED - and it takes the
+	// next ORDINAL slot for exactly the reason the row above records: the suites
+	// derive their inventory from /^s(\d+)-[\w-]+\.json$/ and assert it EXACTLY.
+	// It is the first corpus scenario that does NOT emit in all six lanes - the
+	// angular emitter refuses it on its global-identifier ban, recorded verbatim
+	// in that lane's regenerate.ts - and, like S10, it stays out of the 6 x 9
+	// three-way contract, which scripts/e2e.mjs pins to the literal ['s1'..'s9'].
+	//
+	// THIS LANE EMITS IT AND THE EMITTED OUTPUT THROWS IN A BROWSER, WHICH NOTHING
+	// IN THIS PACKAGE CAN SEE. `emit()` succeeds, the dossier gate passes, and
+	// `compileScript` reports an empty diagnostic set - and then the served page
+	// reports `_ctx.Promise is not a constructor` on every optimistic toggle and
+	// every remote search. The cause is this emitter's own shape: handlers are
+	// inlined into TEMPLATE EXPRESSIONS, and Vue's template compiler prefixes any
+	// identifier outside GLOBALS_ALLOWED with `_ctx.`. Measured at
+	// @vue/shared@3.5.40, that list carries Date and JSON and carries NEITHER
+	// Promise NOR setTimeout.
+	//
+	// THE ROW STAYS. The artifact is genuinely emitted, four of the app's seven
+	// axes run on it, and deleting the row would delete the evidence. This is a
+	// LANE LIMIT inside Vue's own design envelope - template expressions are
+	// deliberately scoped to the render context - and it is recorded rather than
+	// worked around, because working around it would mean changing this emitter,
+	// which frameless-app-suite-v1 T003 was explicitly forbidden to do.
+	['S11.vue', 's11-todomvc-advanced.json'],
 ] as const;
 for (const [output, golden] of fixtures) {
 	const ir = JSON.parse(await readFile(resolve(goldenRoot, golden), 'utf8')) as EnrichedIR;

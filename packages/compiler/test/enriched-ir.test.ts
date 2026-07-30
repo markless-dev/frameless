@@ -23,6 +23,7 @@ const FIXTURES = [
 	's8-async-handlers.tsrx',
 	's9-boolean-attributes.tsrx',
 	's10-todomvc.tsrx',
+	's11-todomvc-advanced.tsrx',
 ] as const;
 
 const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>> = {
@@ -350,6 +351,73 @@ const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>>
 		['a', 'href'],
 		['button', 'type'],
 	],
+	// THE SECOND APPLICATION IN THE CORPUS, and the first fixture whose defining
+	// mechanism is ASYNCHRONOUS rather than an isolated axis. It rides the ORDINAL
+	// slot for the reason S10's entry records: every per-lane suite derives its
+	// `generated/` inventory from `/^s(\d+)-[\w-]+\.json$/` and asserts it
+	// EXACTLY, so a differently-named artifact is rejected by construction in
+	// ten-plus suites at once. `scripts/e2e.mjs` still pins `threeWayScenarios` to
+	// the literal `['s1'..'s9']`, so S11 does NOT join the 6 x 9 three-way
+	// contract either.
+	//
+	// IT IS THE FIRST FIXTURE THAT DOES NOT EMIT IN SIX LANES. The Angular emitter
+	// refuses it - verbatim, read off THIS module and not off a probe: `Angular
+	// emitter cannot resolve the identifier "Promise" in a transplanted body`. The
+	// artificial delay the owner accepted as a stand-in for a real remote is
+	// `new Promise` + `setTimeout`, and Angular resolves every Identifier in a
+	// transplanted body against scope plus declared members. That refusal is
+	// SYNCHRONOUS in origin - `probes/async-door` PC reproduces it with no async
+	// in the module at all - so it is a global-identifier ban and not an async
+	// limit. There is therefore no `generated/S11.ts` in the angular lane, and
+	// that lane's inventory suites subtract this scenario BY NAME.
+	//
+	// THREE HOSTS CARRY NO ATTRIBUTE NAME BELOW (`h1`, two `strong`) because they
+	// carry neither a static attribute nor a dynamic binding; the assertion treats
+	// an empty name as "match on the tag alone" and still consumes the host, so
+	// the list stays a complete multiset rather than a filter.
+	's11-todomvc-advanced.tsrx': [
+		['section', 'class'],
+		['header', 'class'],
+		['h1', ''],
+		['form', 'class'],
+		['input', 'class'],
+		['div', 'class'],
+		['form', 'class'],
+		['input', 'class'],
+		['button', 'type'],
+		['p', 'class'],
+		['strong', ''],
+		['p', 'class'],
+		['p', 'class'],
+		['strong', ''],
+		['input', 'id'],
+		['label', 'for'],
+		['p', 'class'],
+		['main', 'class'],
+		['input', 'id'],
+		['label', 'for'],
+		['ul', 'class'],
+		['li', 'class'],
+		['form', 'class'],
+		['input', 'class'],
+		['button', 'type'],
+		['div', 'class'],
+		['input', 'class'],
+		['button', 'type'],
+		['span', 'class'],
+		['button', 'type'],
+		['footer', 'class'],
+		['span', 'class'],
+		['strong', ''],
+		['ul', 'class'],
+		['li', ''],
+		['a', 'href'],
+		['li', ''],
+		['a', 'href'],
+		['li', ''],
+		['a', 'href'],
+		['button', 'type'],
+	],
 };
 
 async function fixtureIr(file: (typeof FIXTURES)[number]): Promise<EnrichedIR> {
@@ -648,6 +716,7 @@ describe('fixture-family sufficiency', () => {
 			's1-render-once.tsrx',
 			's8-async-handlers.tsrx',
 			's10-todomvc.tsrx',
+			's11-todomvc-advanced.tsrx',
 		];
 
 		test('CONTROL: every UNannotated corpus scenario carries NO type, and both sets are non-empty', async () => {
@@ -1073,6 +1142,23 @@ export function Probe({ label }: { label }) @{
 				'edit',
 				'filter',
 				'press',
+				'revert',
+				'toggle',
+				'toggle-all',
+			],
+			// S10's ten names plus `remote-search`, which is the only NEW observation
+			// channel the advanced app opens: it is the one handler whose trace fires
+			// AFTER an `await`, so a lane that dropped the post-suspension tail would
+			// lose exactly this name and no other.
+			's11-todomvc-advanced.tsrx': [
+				'add',
+				'clear-completed',
+				'commit',
+				'destroy',
+				'edit',
+				'filter',
+				'press',
+				'remote-search',
 				'revert',
 				'toggle',
 				'toggle-all',

@@ -100,7 +100,7 @@ visual_board:
     The owner has run twenty-plus goals in this repo against the file board alone. Recorded as
     an explicit choice, not an omission.
 
-active_task: T003
+active_task: T005
 
 tasks:
   - id: T001
@@ -269,7 +269,7 @@ tasks:
   - id: T003
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     sequence: "T003 author+emit+browse -> T005 styling -> T004 codex clone"
     objective: >-
@@ -392,12 +392,123 @@ tasks:
       - "You are about to renumber the vue gate census instead of re-deriving and re-arguing it."
       - "NEVER pkill -f on a broad pattern. Kill by recorded PID only, and only PIDs you started. A port held by a foreign process is RECORD-IT-AND-USE-ANOTHER-PORT, never a kill."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 2
+      note: notes/T003-todomvc-advanced.md
+      summary: "Shipped TodoMVC Advanced as S11 from ONE authored source, attempted in six lanes, emitted in five, WITH ITS ASYNC AXES ACTUALLY RUNNING IN FOUR. Inventory closed across eleven surfaces; the vue census re-derived independently and re-argued. All baselines held: pnpm test exactly 1 foreign failure, pnpm check 267 (did not rise), pnpm e2e 6x9, lint and citations clean, owner fingerprints identical at both ends."
+      THE_LANE_COUNT_IS_FOUR_AND_THAT_CORRECTS_BOTH_THE_DISPATCH_AND_T002: "Both predicted the new Promise + setTimeout shape loses ANGULAR ALONE. Measured on the REAL MODULE it loses TWO LANES AT TWO DIFFERENT STAGES. (1) ANGULAR REFUSES AT EMIT, verbatim with S11's own member list: 'Angular emitter cannot resolve the identifier \"Promise\" in a transplanted body: it is neither a body-local binding, a function parameter, a @for variable, nor a declared component member (active, allDone, ..., todos). The emitter throws rather than guessing whether it is a global'. (2) VUE EMITS, PASSES ITS GATE, ITS compileScript, tsc AND pnpm check - THEN THROWS IN THE BROWSER: '_ctx.Promise is not a constructor'. The vue emitter inlines handlers into TEMPLATE EXPRESSIONS, and @vue/shared@3.5.40's GLOBALS_ALLOWED carries Date and JSON but NOT Promise or setTimeout, so it compiles to `new _ctx.Promise(...)`. FIVE STATIC GATES SAID THE MODULE WAS FINE; ONLY A BROWSER REFUTED IT."
+      TWO_MORE_INHERITED_CLAIMS_CORRECTED: "(1) T001's 'solid EMITS P9' WAS emit()-ONLY. The Solid gate's third-party arbiter refuses P9's captured-list revert - solid/reactivity: 'The reactive variable \\'todos\\' should be used within JSX, a tracked scope...'. Re-authored the revert to UN-APPLY (done: rejected ? !wanted : wanted) rather than restore. ANY FUTURE TASK INHERITING A PROBE VERDICT MUST RE-RUN THE GATE. (2) The optimistic axis TRIPS DEFECTS.md 12.2's v-limit BY CONSTRUCTION: it writes one cell on BOTH sides of the await, so the functional-updater fold declines and react resumes from nextTodos.map(...), the pre-suspension const, where the other three read live. Emitted, not refused, invisible to every check here."
+      IT_CAUGHT_ITS_OWN_VACUOUS_PROOF: "The first derivation proof used `shasum $FILES` with an UNQUOTED SCALAR. ZSH DOES NOT WORD-SPLIT, so rm deleted nothing and two EMPTY digest files compared equal - it printed '16 artifacts BYTE-IDENTICAL' while measuring NOTHING. Caught by its own 'artifacts before: 0' line, redone with an array, and RECORDED IN THE NOTE rather than quietly fixed. Same class as the dead mutation harness and the green-vacuum findings this project keeps producing."
+      changed_files:
+        - packages/compiler/test/fixtures/s11-todomvc-advanced.tsrx
+        - packages/compiler/test/goldens/s11-todomvc-advanced.json
+        - packages/compiler/test/enriched-ir.test.ts
+        - packages/frameworks/react/scripts/regenerate.ts
+        - packages/frameworks/solid/scripts/regenerate.ts
+        - packages/frameworks/qwik/scripts/regenerate.ts
+        - packages/frameworks/svelte/scripts/regenerate.ts
+        - packages/frameworks/vue/scripts/regenerate.ts
+        - packages/frameworks/angular/scripts/regenerate.ts
+        - packages/frameworks/react/generated/S11.tsx
+        - packages/frameworks/solid/generated/S11.tsx
+        - packages/frameworks/qwik/generated/S11.tsx
+        - packages/frameworks/svelte/generated/S11.svelte
+        - packages/frameworks/vue/generated/S11.vue
+        - packages/frameworks/react/test/size.test.ts
+        - packages/frameworks/solid/test/size.test.ts
+        - packages/frameworks/solid/test/emitted-typecheck.test.ts
+        - packages/frameworks/angular/test/unbuilt-scenarios.ts
+        - packages/frameworks/angular/test/emitter.test.ts
+        - packages/frameworks/angular/test/gate.test.ts
+        - packages/frameworks/angular/test/parse-emitted.test.ts
+        - packages/frameworks/angular/test/emitted-typecheck.test.ts
+        - packages/frameworks/vue/src/gate/index.ts
+        - demos/shared/copy-todomvc-css.mjs
+        - demos/shared/todomvc-app-css/frameless-advanced.css
+        - demos/shared/todomvc-app-css/README.md
+        - demos/react-official/package.json
+        - demos/solid-official/package.json
+        - demos/qwik/package.json
+        - demos/svelte-official/package.json
+        - demos/vue-official/package.json
+        - demos/react-official/src/App.jsx
+        - demos/solid-official/src/App.jsx
+        - demos/vue-official/src/App.vue
+        - demos/qwik/src/routes/todomvc-advanced/index.tsx
+        - "demos/svelte-official/src/routes/todomvc-advanced/+page.svelte"
+        - demos/react-official/src/emitted/TodoMvcAdvanced.tsx
+        - demos/solid-official/src/emitted/TodoMvcAdvanced.tsx
+        - demos/qwik/src/emitted/TodoMvcAdvanced.tsx
+        - demos/svelte-official/src/lib/emitted/TodoMvcAdvanced.svelte
+        - demos/vue-official/src/emitted/TodoMvcAdvanced.vue
+        - demos/react-official/public/todomvc-app-css/frameless-advanced.css
+        - demos/solid-official/public/todomvc-app-css/frameless-advanced.css
+        - demos/qwik/public/todomvc-app-css/frameless-advanced.css
+        - demos/svelte-official/static/todomvc-app-css/frameless-advanced.css
+        - demos/vue-official/public/todomvc-app-css/frameless-advanced.css
+        - demos/angular-official/public/todomvc-app-css/frameless-advanced.css
+        - docs/goals/frameless-app-suite-v1/notes/T003-todomvc-advanced.md
+      commands:
+        - cmd: "six-lane emit of the REAL module"
+          status: pass
+          note: "react/solid/qwik/svelte/vue EMIT; angular REFUSES with the verbatim message read off THIS module, not the probe"
+        - cmd: "tsc -p packages/frameworks/{react,solid,qwik} --noEmit (consuming-variant vs control)"
+          status: pass
+          note: "consuming the awaited value costs +1 each (TS2345/TS2769/TS2322) = check would rise to 270; the SHIPPED shape adds ZERO (117/80/70 both ways)"
+        - cmd: "UPDATE_GOLDENS=1 vitest run packages/compiler/test/enriched-ir.test.ts, then without the flag"
+          status: pass
+          note: "golden written and byte-stable; 81 passed"
+        - cmd: "INDEPENDENT vue census re-derived from the goldens"
+          status: pass
+          note: "18 instances / 7 applicable / 23 printed entries / 7 distinct names - agrees exactly with gate.test.ts's emitted-template route. RE-ARGUED, not renumbered"
+        - cmd: "DERIVATION PROOF: delete 16 S11 artifacts, re-run 5 regenerate + 6 copy-emitted + 6 copy-todomvc-css, shasum -a 256"
+          status: pass
+          note: "16/16 BYTE-IDENTICAL; each demo copy's digest EQUALS its lane's generated digest. FIRST ATTEMPT WAS VACUOUS (zsh non-splitting) - caught, recorded, redone with an array"
+        - cmd: "git diff --exit-code -- react/generated/S10.tsx s10-todomvc.tsrx index.css LICENSE"
+          status: pass
+          note: "exit 0 - S10 and the upstream bytes did not move"
+        - cmd: "SIX SITES LAUNCHED AND DRIVEN (playwright, real chromium)"
+          status: pass
+          note: "react:5301 solid:5302 qwik:5303 svelte:5304 vue:5305 angular:5306. react/solid/qwik/svelte 7/7 axes ZERO console errors. vue 4/7 with exactly 3x '_ctx.Promise is not a constructor'. angular /todomvc 200, /todomvc-advanced 404 - no component to mount"
+        - cmd: "pnpm test"
+          status: pass
+          note: "EXACTLY 1 failure - package-inventory ARM B, foreign / 1271 passed"
+        - cmd: "pnpm check"
+          status: pass
+          note: "267 'error TS' lines. Did NOT rise."
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "PASS - 6 demos x 9 scenarios, all observations equal. scripts/e2e.mjs untouched."
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 467 files"
+        - cmd: "pnpm check:citations"
+          status: pass
+          note: "clean over 4 documents, 17 watched sources, 531 swept"
+        - cmd: "fingerprint the owner's three paths at START and FINISH (sorting the DIGESTS)"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169, website/ 116 files - IDENTICAL at both ends"
+      deviations:
+        - "VUE ROUTE BRANCH DECIDED IN App.vue, not scenarioFor: scenario-props.ts is outside allowed_files, so App.vue derives an `advanced` computed with scenarioFor's exact path normalisation. It had to become the FIRST arm - scenarioFor falls through to 's1' and the chain opened with v-if on 's1', so a trailing arm could never fire. Folding it into scenarioFor later is a pure refactor."
+        - "KEPT THE VUE ROUTE despite its runtime failure, labelled EMITS-BUT-MISBEHAVES in three places. It is genuinely emitted, 4 of 7 axes run, and DELETING IT WOULD DELETE A MEASURED FINDING. T001 established EMITS-BUT-MISBEHAVES as a legitimate verdict."
+        - "ADDED packages/frameworks/angular/test/unbuilt-scenarios.ts so the S11 subtraction is declared ONCE for four suites, plus rows that drive every declared unbuilt scenario through the REAL emit() and assert it throws with the recorded message, AND A CONTROL (s10) that must NOT throw. Without them the list would be indistinguishable from a SKIP LIST."
+        - "RE-AUTHORED the optimistic revert away from P9's captured-list shape after the Solid gate refused it: `done: rejected ? !wanted : wanted` un-applies instead of restoring. Identical outcome for the touched row, strictly better for the others."
+        - "frameless-advanced.css carries `z-index: 3`, which is PLUMBING not pixels: upstream's toggle-all chevron (top:-65px) made the new bar's controls unclickable, measured in a browser. z-index 2 was tried FIRST and measured to fail because upstream already gives .main z-index 2. Pixel work remains T005's."
+        - "Ran each demo on a NON-DEFAULT PORT (5301-5306) because six servers ran side by side; qwik got 5303 rather than its default 5175, which a FOREIGN process (PID 64413) held. RECORDED AND ROUTED AROUND, NEVER KILLED."
+        - "Re-drove solid and vue ALONE after the concurrent run produced Vite HMR websocket errors (port 24678 contention). Solid then reported zero console errors and vue only its three real ones - REPORTING THE FIRST READING WOULD HAVE BLAMED THE APP FOR THE HARNESS."
+      remaining_blockers:
+        - "VUE IS NOT A SHIPPING LANE FOR THE ASYNC AXES. T004'S STREAMING AXIS IS FOUR-LANE, NOT FIVE. The board's 'expect five to ship' is now FOUR RUN, ONE EMITS-BUT-MISBEHAVES, ONE REFUSES."
+        - "NEITHER REFUSAL IS FILED IN docs/DEFECTS.md. Angular's global-identifier ban was already flagged unfiled by T002; VUE'S TEMPLATE-EXPRESSION GLOBAL LIMIT IS NEW and also unfiled. Both belong on a filing card."
+        - "A THIRD UNFILED FINDING: react keeps const-SSA form for a post-await read of a cell written on BOTH sides of the boundary, so it resumes from a pre-suspension snapshot where solid/qwik/svelte read live. It sits JUST OUTSIDE DEFECTS.md 12.2's recorded v-limit, which enumerates only reads of ANOTHER cell. Invisible to every gate and typecheck here."
+        - "T001's per-lane verdicts were emit()-ONLY and did not run each lane's own gate - which is how 'solid EMITS P9' survived until this card."
+        - "STYLING/PIXEL PASS IS T005, a planned handoff. The six sites run and are driven; the visual match is next."
+      stopped_because: null
   - id: T005
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
     sequence: "runs AFTER T003, BEFORE T004"
     objective: >-
@@ -486,6 +597,17 @@ tasks:
       REFERENCE ONLY, BUILD ON MIT. Square UI is itself built on shadcn/ui, so the vendored
       token layer above is unaffected. NOTHING from that repo is cloned, copied or vendored.
       FULL QA CENSUS: notes/T004-visual-reference.md
+    T003_MEASURED_THE_STREAMING_AXIS_AT_FOUR_LANES_NOT_FIVE: >-
+      CORRECTS THIS BOARD AND T002. Both predicted the new Promise + setTimeout shape loses
+      ANGULAR ALONE. On the real module it loses TWO LANES AT TWO DIFFERENT STAGES. Angular
+      REFUSES AT EMIT (global-identifier ban, verbatim). VUE EMITS, passes its gate, its
+      compileScript, tsc AND pnpm check - THEN THROWS IN THE BROWSER: "_ctx.Promise is not a
+      constructor", because the vue emitter inlines handlers into TEMPLATE EXPRESSIONS and
+      @vue/shared@3.5.40's GLOBALS_ALLOWED carries Date and JSON but NOT Promise or setTimeout.
+      FIVE STATIC GATES PASSED IT; ONLY A BROWSER REFUTED IT. So this card's streaming axis is
+      FOUR RUN, ONE EMITS-BUT-MISBEHAVES, ONE REFUSES. Any lane verdict inherited from a probe
+      MUST BE RE-RUN THROUGH THAT LANE'S OWN GATE - T001's "solid EMITS P9" was emit()-only and
+      the Solid gate refuses it.
     THREE_QA_FINDINGS_THAT_CHANGE_THIS_BUILD: >-
       (a) THE CHAT REFERENCE DOES NOT DEMONSTRATE STREAMING. It answers the FIRST message with
       one canned reply and is SILENT to every message after. It gives us a LOOK, not a

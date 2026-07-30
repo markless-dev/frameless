@@ -5,6 +5,7 @@ import ts from 'typescript';
 import { describe, expect, test } from 'vitest';
 import { emit } from '../src/emitter/index.ts';
 import { formatEmitted } from '../src/format-emitted.ts';
+import { isUnbuiltEmitted } from './unbuilt-scenarios.ts';
 
 /**
  * THE MISSING ORACLE. `frameless-defects-and-targets-v1` T043 §1.3 measured that
@@ -85,6 +86,9 @@ function expectedEmittedFiles(goldenRoot = COMPILER_GOLDEN_ROOT): string[] {
 		.map((entry) => /^s(\d+)-[\w-]+\.json$/.exec(entry)?.[1])
 		.filter((digits): digits is string => digits !== undefined)
 		.map((digits) => resolve(GENERATED_ROOT, `S${digits}.ts`))
+		// The subtraction declared in `unbuilt-scenarios.ts`. `emitter.test.ts`
+		// asserts the underlying refusal is live, so this is not a skip list.
+		.filter((file) => !isUnbuiltEmitted(file))
 		.sort(byScenarioNumber);
 	// Fail LOUD rather than returning []. Two empty lists comparing equal is the
 	// one way a derived inventory could be greener than the count it replaced.
@@ -96,6 +100,7 @@ function expectedEmittedFiles(goldenRoot = COMPILER_GOLDEN_ROOT): string[] {
 function emittedFiles(root = GENERATED_ROOT): string[] {
 	return readdirSync(root)
 		.filter((entry) => /^S\d+\.ts$/.test(entry))
+		.filter((entry) => !isUnbuiltEmitted(entry))
 		.map((entry) => resolve(root, entry))
 		.sort(byScenarioNumber);
 }

@@ -9,6 +9,7 @@ import KeyedTodo from './emitted/KeyedTodo.vue'
 import NestedBoard from './emitted/NestedBoard.vue'
 import RenderOnce from './emitted/RenderOnce.vue'
 import TodoMvc from './emitted/TodoMvc.vue'
+import TodoMvcAdvanced from './emitted/TodoMvcAdvanced.vue'
 import WhitespaceBoard from './emitted/WhitespaceBoard.vue'
 import {
   armS8Gate,
@@ -34,6 +35,28 @@ import {
 // directly comparable.
 const props = defineProps<{ url?: string }>()
 const scenario = computed(() => scenarioFor(props.url))
+
+/**
+ * The /todomvc-advanced branch, decided HERE rather than inside `scenarioFor`.
+ *
+ * `scenarioFor` and its `ScenarioId` union live in `./scenario-props`, which is
+ * OUTSIDE the file envelope of the card that added this route
+ * (`frameless-app-suite-v1` T003), so the id is not in that union and this
+ * component derives the branch itself. The path normalisation is character-for-
+ * character the one `scenarioFor` applies, so the two agree on every input;
+ * folding this into `scenarioFor` later is a pure refactor with no behavioural
+ * delta, and the react and solid lanes already spell it that way.
+ *
+ * Both sides must agree or Vue would hydrate a different branch than it
+ * rendered, which is why this reads `props.url` - the same value `scenario`
+ * reads - rather than `window.location`.
+ */
+const advanced = computed(
+  () =>
+    String(props.url ?? '')
+      .replace(/^\/+/, '')
+      .replace(/\/+$/, '') === 'todomvc-advanced',
+)
 
 /**
  * The activation marker the shared contract waits for before it clicks.
@@ -70,8 +93,53 @@ const s8Ready = ref<Promise<string>>(s8ResolvedGate)
 </script>
 
 <template>
+  <!--
+    THE SECOND APPLICATION, and the first route in this demo whose lane count is
+    FIVE rather than six: the angular emitter REFUSES S11 on its
+    global-identifier ban ("Angular emitter cannot resolve the identifier
+    Promise in a transplanted body"), so demos/angular-official has no
+    counterpart to this page. Like /todomvc it is deliberately OUT of the 6 x 9
+    three-way contract - scripts/e2e.mjs pins threeWayScenarios to the literal
+    ['s1'..'s9'] - so this page is browsable only. It takes no seed prop: IR-8
+    has no lowering for an array type, so the list is seeded inside the emitted
+    component.
+
+    THIS LANE EMITS, PASSES ITS OWN GATE, AND THEN THROWS. MEASURED IN A BROWSER
+    at this route, verbatim: `_ctx.Promise is not a constructor`.
+    The vue emitter inlines handlers into TEMPLATE EXPRESSIONS, and Vue's template
+    compiler prefixes every identifier outside its own allowlist with `_ctx.`.
+    @vue/shared@3.5.40's GLOBALS_ALLOWED carries Date and JSON and does NOT carry
+    Promise or setTimeout, so S11's artificial delay compiles to
+    `new _ctx.Promise(...)` and is undefined at runtime. compileScript is happy,
+    the vue gate is happy and `pnpm check` is happy; ONLY A BROWSER SEES IT.
+    CONSEQUENCE, STATED PLAINLY: on this page add, destroy, filter and LOCAL
+    search work, and the REMOTE SEARCH and the OPTIMISTIC TOGGLE do not - each
+    throws on its first statement past the boundary. The route is kept rather than
+    deleted because it is genuinely emitted and four of its seven axes run, and
+    because removing it would delete a measured finding. It is a LANE LIMIT inside
+    Vue's own design envelope - template expressions are deliberately scoped to
+    the render context - not a defect to file upstream.
+
+    IT MUST BE THE FIRST ARM OF THIS CHAIN, not the last, and that is a real
+    constraint rather than a layout choice: `scenarioFor` does not know this
+    path, so it falls through to 's1', and the chain used to OPEN with
+    `v-if="scenario === 's1'"`. A trailing arm could therefore never fire.
+
+    It links THREE stylesheets where /todomvc links two. index.css is
+    todomvc-app-css@2.4.3 verbatim, frameless-supplement.css is the repair layer
+    the simple app needs, and frameless-advanced.css carries the controls this
+    app adds. Cascade order is load-bearing at both joints and the advanced
+    sheet MUST load third. All three are copied into public/todomvc-app-css/ by
+    `pnpm copy-todomvc-css`. THE PIXEL PASS IS T005'S CARD, NOT T003'S.
+  -->
+  <template v-if="advanced">
+    <link rel="stylesheet" href="/todomvc-app-css/index.css" />
+    <link rel="stylesheet" href="/todomvc-app-css/frameless-supplement.css" />
+    <link rel="stylesheet" href="/todomvc-app-css/frameless-advanced.css" />
+    <TodoMvcAdvanced v-bind:onTrace="noTrace" />
+  </template>
   <RenderOnce
-    v-if="scenario === 's1'"
+    v-else-if="scenario === 's1'"
     label="kit"
     v-bind:multiplier="2"
     v-bind:visible="true"

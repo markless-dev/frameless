@@ -49,16 +49,45 @@ a declaration and `index.css` cannot be edited to add a `.todo-title` selector, 
 upstream bytes that exist twice, and a refresh that changes the artwork would otherwise leave
 the checked/unchecked circles stale.
 
+## `frameless-advanced.css` — the THIRD file, for TodoMVC **Advanced**
+
+Added by `frameless-app-suite-v1` T003 for the `/todomvc-advanced` route, and **also this
+repo's own file**, editable like the supplement. It carries the controls the advanced app adds
+and that canonical TodoMVC has no artwork for at all — a search field, a local/remote result
+pair, a sync status line, a server-failure control, and the per-row `saving` state an
+optimistic update needs.
+
+**It is a third file rather than more rules in the supplement, and that is deliberate.**
+`/todomvc`'s six byte-identical screenshots are a shipped result, and nothing that edits
+`index.css` or `frameless-supplement.css` can leave them untouched. A separate sheet linked
+only on the new route makes the advanced styling reversible by deletion.
+
+Its header records, per selector, which declarations are traceable to a named selector in
+vendored `index.css` and which are **this repo's own inventions** — the bar itself, the
+`saving` row state, and the server-failure control. The amber "in flight" colour is a
+convention, not a measurement, and is recorded as such.
+
+One rule in it is **not cosmetic**: `.advanced { z-index: 3 }`. Upstream gives
+`.toggle-all + label` `position: absolute; top: -65px`, so the toggle-all chevron reaches 65px
+**above** `.main` — into the advanced bar — and upstream also gives `.main` `z-index: 2`, so a
+tie loses on document order. Measured in a browser: at `z-index: 2` the bar's own controls were
+visible, enabled and **unclickable**.
+
 ## How the lanes load them
 
-Neither file is imported by any lane. `demos/shared/copy-todomvc-css.mjs` copies **both, in
-cascade order**, into each lane's static-asset root — `public/todomvc-app-css/` in five lanes,
-`static/todomvc-app-css/` in SvelteKit — so all six serve them at the identical URLs
-`/todomvc-app-css/index.css` and `/todomvc-app-css/frameless-supplement.css`. Each lane's
-`copy-todomvc-css` script runs it, chained ahead of `dev` / `start` / `build` beside
-`copy-emitted`. The six copies are **derived, never hand-kept**: delete them, re-run, compare
-digests.
+No file here is imported by any lane. `demos/shared/copy-todomvc-css.mjs` copies **all three,
+in cascade order**, into each lane's static-asset root — `public/todomvc-app-css/` in five
+lanes, `static/todomvc-app-css/` in SvelteKit — so all six serve them at the identical URLs
+`/todomvc-app-css/index.css`, `/todomvc-app-css/frameless-supplement.css` and
+`/todomvc-app-css/frameless-advanced.css`. Each lane's `copy-todomvc-css` script runs it,
+chained ahead of `dev` / `start` / `build` beside `copy-emitted`. The copies are **derived,
+never hand-kept**: delete them, re-run, compare digests.
 
-Only the `/todomvc` route links them. `index.css` restyles `body` and every `button` in the
-document, so a global link would move the geometry of the nine `s1`–`s9` scenarios that
-`pnpm e2e` compares across six lanes.
+**All three land in all six lanes, including the one that cannot link the third.** The angular
+lane has no `/todomvc-advanced` route at all, because the angular emitter refuses S11 on its
+global-identifier ban. Copying uniformly keeps "delete the copies, re-run, compare digests" a
+single check; making one lane conditional would trade a real invariant for one unserved file.
+
+Only the `/todomvc` route links the first two, and only `/todomvc-advanced` links all three.
+`index.css` restyles `body` and every `button` in the document, so a global link would move the
+geometry of the nine `s1`–`s9` scenarios that `pnpm e2e` compares across six lanes.

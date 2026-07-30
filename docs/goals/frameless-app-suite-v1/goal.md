@@ -52,6 +52,16 @@ form** this charter originally missed — `@try`/`@pending`/`@catch`, whose `@pe
 spinner. **Fetch-on-render is unreachable in every lane.** **Angular is the only lane that does
 not verify its own bytes** — its `EMITS` means "did not throw", not "produced valid output".
 
+**T003, what it actually cost.** The ruling said five lanes. **It is four**, and the second
+loss was invisible to every static gate. **Vue emits, passes its own gate, `compileScript`,
+`tsc` and `pnpm check` — then throws in the browser**: `_ctx.Promise is not a constructor`. The
+vue emitter inlines handlers into *template expressions*, and `@vue/shared`'s `GLOBALS_ALLOWED`
+carries `Date` and `JSON` but not `Promise` or `setTimeout`. **Five static gates passed a module
+only a browser could refute.** Angular refuses at emit, as predicted. Verdict for the async
+axes: **four run, one emits-but-misbehaves, one refuses.** And: a probe verdict is not a lane
+verdict — T001's per-lane results were `emit()`-only, which is how "solid EMITS P9" survived
+until the Solid gate refused it.
+
 **T002, what that means.** "Streaming and optimistic updates emit in all six lanes" is true of
 the **lowering** and false of the **source**: P8 measured one host-made promise awaited N
 times. A **new promise per user action** has an **empty six-lane intersection** — qwik cannot

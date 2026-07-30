@@ -27,8 +27,22 @@ import { fileURLToPath } from 'node:url';
 const here = dirname(fileURLToPath(import.meta.url));
 const source = resolve(here, 'todomvc-app-css');
 
-/** The pair, in cascade order. `index.css` MUST precede the supplement. */
-const stylesheets = ['index.css', 'frameless-supplement.css'];
+/**
+ * The THREE stylesheets, IN CASCADE ORDER, and the order is load-bearing at both
+ * joints. `index.css` is upstream and must come first; `frameless-supplement.css`
+ * overrides upstream declarations at equal specificity and is correct only while
+ * it loads second; `frameless-advanced.css` overrides BOTH for the controls
+ * TodoMVC Advanced adds and is correct only while it loads third.
+ *
+ * ALL THREE ARE COPIED INTO ALL SIX LANES, INCLUDING THE ONE THAT CANNOT LINK
+ * THE THIRD. The angular lane has no `/todomvc-advanced` route at all, because
+ * the angular emitter REFUSES S11 on its global-identifier ban and there is no
+ * `S11.ts` to mount. Copying uniformly anyway is deliberate: this script's whole
+ * contract is that the six asset roots are DERIVED and byte-identical, so that
+ * `delete the copies, re-run, compare digests` stays a single check. Making one
+ * lane's copy conditional would trade a real invariant for one unserved file.
+ */
+const stylesheets = ['index.css', 'frameless-supplement.css', 'frameless-advanced.css'];
 
 const assetRoot = process.argv[2];
 if (assetRoot === undefined) {

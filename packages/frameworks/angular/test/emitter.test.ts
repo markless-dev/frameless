@@ -7,6 +7,11 @@ import { resolve } from 'pathe';
 import { describe, expect, test } from 'vitest';
 import { componentSelector, emit, validateEnrichedIr } from '../src/emitter/index.ts';
 import { formatEmitted } from '../src/format-emitted.ts';
+import {
+	ANGULAR_UNBUILT_SCENARIOS,
+	isUnbuiltEmitted,
+	isUnbuiltGolden,
+} from './unbuilt-scenarios.ts';
 
 const packageRoot = resolve(import.meta.dirname, '..');
 const compilerGoldenRoot = resolve(packageRoot, '../../compiler/test/goldens');
@@ -58,6 +63,11 @@ function byScenarioNumber(left: string, right: string): number {
 function scenarioFixtures(goldenDir = compilerGoldenRoot): Array<readonly [string, string]> {
 	const table = readdirSync(goldenDir)
 		.filter((entry) => /^s\d+-[\w-]+\.json$/.test(entry))
+		// THE ONE SUBTRACTION, declared in `unbuilt-scenarios.ts` and ASSERTED against
+		// a live `emit()` refusal by the row below - so this cannot degenerate into a
+		// skip list. See that file for why the ban is a global-identifier rule rather
+		// than an async one.
+		.filter((entry) => !isUnbuiltGolden(entry))
 		.sort(byScenarioNumber)
 		.map((entry) => [`S${/^s(\d+)-/.exec(entry)![1]}.ts`, entry] as const);
 	// Fail LOUD rather than returning []. An empty table would emit zero freshness
@@ -72,6 +82,7 @@ function scenarioFixtures(goldenDir = compilerGoldenRoot): Array<readonly [strin
 function emittedScenarios(directory = generatedRoot): string[] {
 	return readdirSync(directory)
 		.filter((entry) => /^S\d+\.ts$/.test(entry))
+		.filter((entry) => !isUnbuiltEmitted(entry))
 		.sort(byScenarioNumber);
 }
 
@@ -111,6 +122,46 @@ describe('Angular 22 emitter', () => {
 		// Two independent readings compared: the goldens this repo agreed to
 		// compile, and the files the emitter actually wrote.
 		expect(emittedScenarios()).toEqual(FIXTURES.map(([file]) => file));
+	});
+
+	/**
+	 * THE SUBTRACTION IS ASSERTED AGAINST A LIVE REFUSAL, which is what stops
+	 * `unbuilt-scenarios.ts` from being a skip list.
+	 *
+	 * The row above compares two derived inventories and would be perfectly green
+	 * if this lane silently stopped emitting a scenario for a reason nobody
+	 * recorded - both sides subtract the same names. This row is the other half:
+	 * every declared unbuilt scenario is driven through the REAL `emit()` on its
+	 * REAL golden, and must throw with the recorded message. It goes red three
+	 * ways: the day the ban is lifted and the scenario emits, the day it starts
+	 * refusing for a different reason, and the day a listed golden disappears.
+	 */
+	test('every UNBUILT scenario really is refused, with the recorded message', async () => {
+		// A vacuous loop would make this row agree with an empty declaration, which
+		// is exactly the greener-than-the-literal failure the derivations guard.
+		expect(ANGULAR_UNBUILT_SCENARIOS.length).toBeGreaterThan(0);
+		for (const scenario of ANGULAR_UNBUILT_SCENARIOS) {
+			const ir = await golden(scenario.golden);
+			expect(() => emit(ir), `${scenario.golden} should still be refused`).toThrow(
+				scenario.refusalContains,
+			);
+			// And the artifact really is absent, rather than present and ignored.
+			expect(
+				readdirSync(generatedRoot).includes(scenario.emitted),
+				`${scenario.emitted} must not exist in generated/`,
+			).toBe(false);
+		}
+	});
+
+	/**
+	 * THE CONTROL FOR THE ROW ABOVE. Without it, `toThrow(...)` proves only that
+	 * SOMETHING throws - a broken `golden()` or an emitter that refused every
+	 * input would satisfy it just as well. A built scenario is emitted through the
+	 * same call, and must NOT throw.
+	 */
+	test('CONTROL: a BUILT scenario emits through the same call that refuses the unbuilt one', async () => {
+		const ir = await golden('s10-todomvc.json');
+		expect(() => emit(ir)).not.toThrow();
 	});
 
 	/**

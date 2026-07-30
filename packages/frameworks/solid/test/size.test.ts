@@ -187,6 +187,21 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// the mechanism. A budget is allowed to say "this is what it costs"; it is not
 	// allowed to say why on a hypothesis its own corpus contradicts.
 	S10: { physicalLoc: 304, structuralNodes: 1299 },
+	// S11 (TodoMVC ADVANCED) is the corpus's largest scenario in this lane too, and
+	// it RE-TESTS S10's row rather than merely extending it.
+	// THE PER-COMPUTED-ACCESSOR HYPOTHESIS IS REFUTED AGAIN, AND HARDER. S7's row
+	// attributes solid's structural-node premium over react to its per-`computed`
+	// accessor arrows; S10's row already refuted that by declaring FOUR computeds
+	// against S7's five while the gap grew. S11 declares EIGHT - double S10's, and
+	// the most in the corpus - and the node gap barely moves: +37 nodes at S10,
+	// +39 at S11. Two doublings of the derivation count have now failed to move it.
+	// THE LINE GAP WENT THE OTHER WAY, WHICH IS THE NEW DATUM. Solid printed 29
+	// MORE physical lines than react at S10 and only 16 more at S11, so the line
+	// premium NEARLY HALVED on the larger scenario while the node premium held
+	// flat. Those two facts are recorded as measured and NO cause is asserted: a
+	// budget may say what something costs, and this table has now twice caught
+	// itself about to say why on a hypothesis its own corpus contradicts.
+	S11: { physicalLoc: 440, structuralNodes: 1930 },
 };
 
 describe('honest emitted structure comparison', () => {

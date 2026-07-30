@@ -29,6 +29,14 @@ const fixtures = [
 	// ['s1'..'s9'], so the app does NOT join the 6 x 9 three-way contract - browsable
 	// first, e2e wiring only once a lane is proven.
 	['S10.svelte', 's10-todomvc.json'],
+	// THE SECOND APPLICATION IN THE CORPUS - TodoMVC ADVANCED - and it takes the
+	// next ORDINAL slot for exactly the reason the row above records: the suites
+	// derive their inventory from /^s(\d+)-[\w-]+\.json$/ and assert it EXACTLY.
+	// It is the first corpus scenario that does NOT emit in all six lanes - the
+	// angular emitter refuses it on its global-identifier ban, recorded verbatim
+	// in that lane's regenerate.ts - and, like S10, it stays out of the 6 x 9
+	// three-way contract, which scripts/e2e.mjs pins to the literal ['s1'..'s9'].
+	['S11.svelte', 's11-todomvc-advanced.json'],
 ] as const;
 for (const [output, golden] of fixtures) {
 	const ir = JSON.parse(await readFile(resolve(goldenRoot, golden), 'utf8')) as EnrichedIR;

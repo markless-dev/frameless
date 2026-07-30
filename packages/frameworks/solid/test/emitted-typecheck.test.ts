@@ -197,6 +197,30 @@ describe('Solid emitted output type-checks', () => {
 			`generated/S10.tsx: TS2322 Type '{ class: string; "data-edit": string; value: string; "attr:value": string; onInput: (event: InputEvent & { currentTarget: HTMLInputElement; target: HTMLInputElement; }) => void; }' is not assignable to type 'InputHTMLAttributes<HTMLInputElement>'.   Property 'attr:value' does not exist on type 'InputHTMLAttributes<HTMLInputElement>'.`,
 			'OPEN FINDING 002 - not an artifact. S10\'s SECOND text input, the edit field, is a distinct host, so the same diagnostic legitimately appears twice. See notes/findings-002-solid-attr-namespace.md.',
 		],
+		// S11'S THREE ROWS ARE THE SAME FINDING 002 AGAIN, and the COUNT is the datum.
+		// TodoMVC ADVANCED carries THREE text inputs rather than S10's two - the
+		// new-todo field, the edit field, and the SEARCH field the advanced app adds -
+		// and finding 002 reaches every one of them, because its producer is any host
+		// with a bound `value`. Nothing here is new in kind; what these rows record is
+		// that the finding scales one-for-one with bound text inputs, which is the
+		// prediction notes/findings-002-solid-attr-namespace.md makes and the first
+		// scenario able to test it at three.
+		// Two of the three are BYTE-IDENTICAL to each other because the search input
+		// and the new-todo input print the same attribute set (`class`, `placeholder`,
+		// `data-action`, `value`); they are separate hosts, so the diagnostic
+		// legitimately appears twice for the same reason C4-attach's `.dataset` does.
+		[
+			`generated/S11.tsx: TS2322 Type '{ class: string; "data-edit": string; value: string; "attr:value": string; onInput: (event: InputEvent & { currentTarget: HTMLInputElement; target: HTMLInputElement; }) => void; }' is not assignable to type 'InputHTMLAttributes<HTMLInputElement>'.   Property 'attr:value' does not exist on type 'InputHTMLAttributes<HTMLInputElement>'.`,
+			"OPEN FINDING 002 - not an artifact. S11's edit field. See notes/findings-002-solid-attr-namespace.md.",
+		],
+		[
+			`generated/S11.tsx: TS2322 Type '{ class: string; placeholder: string; "data-action": string; value: string; "attr:value": string; onInput: (event: InputEvent & { currentTarget: HTMLInputElement; target: HTMLInputElement; }) => void; }' is not assignable to type 'InputHTMLAttributes<HTMLInputElement>'.   Property 'attr:value' does not exist on type 'InputHTMLAttributes<HTMLInputElement>'.`,
+			"OPEN FINDING 002 - not an artifact. S11's new-todo field. See notes/findings-002-solid-attr-namespace.md.",
+		],
+		[
+			`generated/S11.tsx: TS2322 Type '{ class: string; placeholder: string; "data-action": string; value: string; "attr:value": string; onInput: (event: InputEvent & { currentTarget: HTMLInputElement; target: HTMLInputElement; }) => void; }' is not assignable to type 'InputHTMLAttributes<HTMLInputElement>'.   Property 'attr:value' does not exist on type 'InputHTMLAttributes<HTMLInputElement>'.`,
+			"OPEN FINDING 002 - not an artifact. S11's SEARCH field, the input TodoMVC Advanced adds; byte-identical to the new-todo row above because the two hosts print the same attribute set. See notes/findings-002-solid-attr-namespace.md.",
+		],
 		// THE FOURTEEN BELOW ARRIVED WITH THE .jsx -> .tsx MIGRATION, ON UNCHANGED
 		// BYTES - see the header. Two producers, both removable only by printing a
 		// type: an argument-less `createContext()` and an uncontextualised `produce`.

@@ -1,0 +1,231 @@
+/*
+	frameless-advanced.css — FRAMELESS-SPECIFIC. NOT UPSTREAM. THIRD IN THE CASCADE.
+
+	Loaded ONLY by the `/todomvc-advanced` route, after `index.css` and
+	`frameless-supplement.css`. `index.css` is todomvc-app-css@2.4.3 verbatim and
+	must never be edited; the supplement is the repair layer the SIMPLE app needs.
+	This file is the layer the ADVANCED app needs, and it is a THIRD file rather
+	than an addition to the supplement for one measured reason:
+
+	  `/todomvc`'s six byte-identical screenshots are a SHIPPED RESULT
+	  (docs/goals/frameless-real-apps-v1/notes/T007-todomvc-style.md), and nothing
+	  that edits `index.css` or `frameless-supplement.css` can leave them
+	  untouched. A third file, linked only on the new route, makes this whole
+	  styling step reversible by deletion.
+
+	--------------------------------------------------------------------------------
+	SCOPE, STATED PLAINLY: THE PIXEL PASS IS **T005'S CARD, NOT THIS ONE**.
+	--------------------------------------------------------------------------------
+
+	`frameless-app-suite-v1` T003 ships the app: one authored source, five emitted
+	lanes, six sites launched and driven. T002 ruled the visual match a SEPARATE
+	card with its own browser budget, on the T007 precedent — that pass found a
+	3614-pixel heading divergence INVISIBLE to every computed-style check, and a
+	`margin: 0` that made all six lanes identical AND ALL SIX WRONG. So a stop
+	after "browsable and driven" is a PLANNED HANDOFF.
+
+	What this file therefore is: the MINIMUM that makes the controls TodoMVC
+	Advanced adds legible and operable, so that T005 inherits a plumbed route and
+	tunes pixels rather than re-plumbing six lanes. It is deliberately small.
+
+	--------------------------------------------------------------------------------
+	PROVENANCE, PER T002 RULING §3: every declaration is either traceable to a
+	NAMED SELECTOR in vendored `index.css`, or is listed here as THIS REPO'S OWN
+	INVENTION with the reason it has no upstream ancestor. Cited BY SELECTOR, never
+	by line ordinal — `pnpm check:citations` bans first-party ordinals.
+
+	TRACEABLE TO UPSTREAM:
+	  .advanced            — box model and background borrowed from `.todoapp`,
+	                         which is the white card the whole app sits in.
+	  .advanced .search    — borrowed from `.new-todo, .edit`, the shared input
+	                         rule, and from `.new-todo` for the placeholder italic.
+	  .advanced .search-go — borrowed from `.clear-completed`, upstream's only
+	                         in-card text button.
+	  .local-count,
+	  .remote-count,
+	  .remote-status,
+	  .sync-note           — borrowed from `.todo-count`, upstream's small grey
+	                         status line, and `.todo-count strong` for the numeral.
+	  .todo-list li.saving — borrowed from `.todo-list li.completed`, upstream's
+	                         only other per-row state class.
+	  .row-pending         — borrowed from `.todo-list li .destroy`, upstream's
+	                         only other absolutely-positioned per-row affordance.
+
+	THIS REPO'S OWN INVENTIONS, with the reason each has no upstream ancestor:
+	  1. THE `.advanced` BAR ITSELF. Canonical TodoMVC has no search field, no
+	     local/remote distinction, no server-failure control and no sync status,
+	     so there is no upstream artwork for any of them. There is no upstream
+	     "TodoMVC Advanced" stylesheet anywhere — T002 looked and recorded its
+	     absence — so this bar is invention by necessity, not by preference.
+	  2. THE `saving` ROW STATE and its `.row-pending` marker. An optimistic
+	     update has no canonical TodoMVC appearance because canonical TodoMVC has
+	     no asynchrony at all. Amber was chosen as "in flight" — it is a
+	     convention, not a measurement, and it is recorded as such exactly as
+	     `CANCEL` was recorded on the prior board as a stand-in rather than
+	     dressed up.
+	  3. `.server-fails` AND ITS LABEL. A control that exists to make a REVERT
+	     observable on demand. It is a test affordance that the real app would not
+	     have, and it is styled to look subordinate for that reason.
+*/
+
+/* ---------------------------------------------------------------------------
+   The advanced control bar. Sits between the header and the list, inside the
+   same 550px column `.todoapp` establishes.
+   --------------------------------------------------------------------------- */
+
+/*
+	THE `z-index` IS LOAD-BEARING AND IT WAS MEASURED IN A BROWSER, NOT GUESSED.
+
+	Upstream `index.css` gives `.toggle-all + label` `position: absolute` with
+	`width: 45px; height: 65px; top: -65px` — the chevron that toggles every row.
+	`top: -65px` means it deliberately reaches SIXTY-FIVE PIXELS ABOVE `.main`,
+	into whatever sits before it. In canonical TodoMVC that is the header, which
+	has nothing clickable at that corner. TodoMVC Advanced puts THIS BAR there.
+
+	MEASURED with playwright on the react lane: clicking `[data-action=
+	"server-fails"]` timed out after 30s with `<label for="toggle-all">Mark all as
+	complete</label> from <main class="main">…</main> subtree intercepts pointer
+	events`. The control was visible, enabled and stable — and unclickable. An
+	invisible 45x65 hit area from the section BELOW was sitting on top of it.
+
+	THE VALUE IS 3, AND 2 WAS TRIED FIRST AND MEASURED TO FAIL. Upstream index.css
+	already gives `.main` `position: relative; z-index: 2`, so a bar at z-index 2
+	TIES with it and loses on document order — `.main` comes later. Measured in the
+	browser at that value: `.advanced` occupied y 195..393 with z-index 2, `.main`
+	y 393..572 with z-index 2, the toggle-all label y 329..394, and
+	`document.elementFromPoint` at the checkbox's own centre returned
+	`LABEL for=toggle-all`. Raising the bar to 3 is what actually clears it.
+*/
+.advanced {
+	position: relative;
+	z-index: 3;
+	background: #fff;
+	border-top: 1px solid #e6e6e6;
+	padding: 12px 16px;
+	font-size: 14px;
+	color: #777;
+}
+
+.advanced .search-form {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+
+/* Borrowed from `.new-todo, .edit`: same box model, same inherited font. */
+.advanced .search {
+	flex: 1;
+	padding: 8px 8px 8px 12px;
+	border: 1px solid #ededed;
+	background: rgba(0, 0, 0, 0.003);
+	box-sizing: border-box;
+	font-size: 16px;
+	font-family: inherit;
+	font-weight: inherit;
+	line-height: 1.4em;
+	color: inherit;
+}
+
+/* Borrowed from `.new-todo`'s placeholder treatment. */
+.advanced .search::placeholder {
+	font-style: italic;
+	font-weight: 400;
+	color: rgba(0, 0, 0, 0.4);
+}
+
+/* Borrowed from `.clear-completed`. */
+.advanced .search-go {
+	font-size: 14px;
+	line-height: 20px;
+	padding: 4px 10px;
+	border: 1px solid #e6e6e6;
+	background: #fff;
+	color: inherit;
+	cursor: pointer;
+	position: relative;
+}
+
+.advanced .search-go:hover {
+	text-decoration: underline;
+}
+
+.advanced .search-go:disabled {
+	cursor: default;
+	opacity: 0.5;
+	text-decoration: none;
+}
+
+/* ---------------------------------------------------------------------------
+   The four status lines. All borrowed from `.todo-count` / `.todo-count strong`.
+   --------------------------------------------------------------------------- */
+
+.advanced .local-count,
+.advanced .remote-count,
+.advanced .remote-status,
+.advanced .sync-note {
+	margin: 8px 0 0;
+	text-align: left;
+	font-size: 14px;
+	color: #777;
+}
+
+.advanced .local-count strong,
+.advanced .remote-count strong {
+	font-weight: 300;
+}
+
+/* `remoteStatus` is a bare word, so it is set apart rather than left to read as
+   prose. INVENTION: upstream has no pending state to show. */
+.advanced .remote-status,
+.advanced .sync-note {
+	font-style: italic;
+}
+
+/* ---------------------------------------------------------------------------
+   The server-failure control. INVENTION — a test affordance, styled subordinate.
+   --------------------------------------------------------------------------- */
+
+.advanced .server-fails {
+	margin: 10px 6px 0 0;
+	vertical-align: middle;
+}
+
+.advanced .server-fails + label {
+	font-size: 13px;
+	color: #949494;
+	vertical-align: middle;
+}
+
+/* ---------------------------------------------------------------------------
+   The optimistic in-flight row state. INVENTION — canonical TodoMVC has no
+   asynchrony, so there is no upstream appearance to borrow. Structured after
+   `.todo-list li.completed` (the only other per-row state class) and
+   `.todo-list li .destroy` (the only other absolutely-positioned affordance).
+   --------------------------------------------------------------------------- */
+
+.todo-list li.saving .todo-title {
+	color: #b98b2f;
+	font-style: italic;
+}
+
+.todo-list li .row-pending {
+	position: absolute;
+	top: 0;
+	right: 46px;
+	bottom: 0;
+	height: 40px;
+	margin: auto 0;
+	font-size: 12px;
+	line-height: 40px;
+	color: #b98b2f;
+	font-style: italic;
+}
+
+/* `hidden` must win over the layout above, exactly as it must on the row itself.
+   The emitted markup binds `hidden` rather than a class, and the qwik lane
+   serves `hidden="true"` where five lanes serve `hidden=""` — a SERIALIZATION
+   divergence recorded on S9, not a behavioural one — so this selector is written
+   on the attribute's PRESENCE and matches both spellings. */
+.todo-list li .row-pending[hidden] {
+	display: none;
+}

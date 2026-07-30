@@ -29,6 +29,27 @@ const fixtures = [
 	// ['s1'..'s9'], so the app does NOT join the 6 x 9 three-way contract - browsable
 	// first, e2e wiring only once a lane is proven.
 	['S10.ts', 's10-todomvc.json'],
+	// S11 (TodoMVC ADVANCED) IS DELIBERATELY ABSENT FROM THIS LIST, AND IT IS THE
+	// ONLY LANE THAT OMITS IT. The angular emitter REFUSES the eleventh scenario,
+	// verbatim and read off the real module rather than off a probe:
+	//
+	//   Angular emitter cannot resolve the identifier "Promise" in a transplanted
+	//   body: it is neither a body-local binding, a function parameter, a @for
+	//   variable, nor a declared component member (...). The emitter throws rather
+	//   than guessing whether it is a global
+	//
+	// The refusal is NOT about async. `probes/async-door` PC reproduces it on a
+	// FULLY SYNCHRONOUS module: every Identifier in a transplanted body must
+	// resolve to lexical scope or a declared component member, and `Promise`,
+	// `setTimeout`, `fetch`, `Date` and `JSON` are all globals. S11's artificial
+	// delay - the stand-in for a real remote that this goal's owner accepted - is
+	// `new Promise` + `setTimeout`, so it cannot be NAMED in this lane at all.
+	//
+	// Adding the row would not produce output; it would make this script THROW.
+	// The lane is left UNBUILT WITH A RECORDED REFUSAL, which this board's oracle
+	// names as a legitimate outcome, and `ANGULAR_UNBUILT_SCENARIOS` in
+	// test/emitter.test.ts carries the same subtraction so the omission is
+	// asserted rather than merely true.
 ] as const;
 for (const [output, golden] of fixtures) {
 	const ir = JSON.parse(await readFile(resolve(goldenRoot, golden), 'utf8')) as EnrichedIR;

@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "copy-emitted": "node -e \"require('fs').mkdirSync('src/emitted',{recursive:true});[['S1','RenderOnce'],['S2','KeyedTodo'],['S3','EventForm'],['S4','NestedBoard'],['S5','BranchBoard'],['S6','WhitespaceBoard'],['S7','FormBoard'],['S8','AsyncBoard'],['S9','AttrBoard'],['S10','TodoMvc']].forEach(([s,n])=>require('fs').copyFileSync('../../packages/frameworks/solid/generated/'+s+'.tsx','src/emitted/'+n+'.tsx'))\"",
+    "copy-emitted": "node -e \"require('fs').mkdirSync('src/emitted',{recursive:true});[['S1','RenderOnce'],['S2','KeyedTodo'],['S3','EventForm'],['S4','NestedBoard'],['S5','BranchBoard'],['S6','WhitespaceBoard'],['S7','FormBoard'],['S8','AsyncBoard'],['S9','AttrBoard'],['S10','TodoMvc'],['S11','TodoMvcAdvanced']].forEach(([s,n])=>require('fs').copyFileSync('../../packages/frameworks/solid/generated/'+s+'.tsx','src/emitted/'+n+'.tsx'))\"",
     "copy-todomvc-css": "node ../shared/copy-todomvc-css.mjs public",
     "dev": "pnpm copy-emitted && pnpm copy-todomvc-css && node server",
     "build": "pnpm copy-emitted && pnpm copy-todomvc-css && vite build --outDir dist/client && vite build --ssr src/entry-server.jsx --outDir dist/server"

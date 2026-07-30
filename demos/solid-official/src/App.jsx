@@ -16,6 +16,7 @@ import { KeyedTodo } from './emitted/KeyedTodo.jsx'
 import { NestedBoard } from './emitted/NestedBoard.jsx'
 import { RenderOnce } from './emitted/RenderOnce.jsx'
 import { TodoMvc } from './emitted/TodoMvc.jsx'
+import { TodoMvcAdvanced } from './emitted/TodoMvcAdvanced.jsx'
 import { WhitespaceBoard } from './emitted/WhitespaceBoard.jsx'
 
 // One shared IR, three emitters. These props are the same ones demos/qwik passes
@@ -122,7 +123,7 @@ function AsyncGate() {
  * mirrors the Qwik demo's `/`, `/s2`, `/s3` routes without adding a router.
  *
  * @param {string} url
- * @returns {'s1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7' | 's8' | 's9' | 'todomvc'}
+ * @returns {'s1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7' | 's8' | 's9' | 'todomvc' | 'todomvc-advanced'}
  */
 export function scenarioFor(url) {
   const path = String(url ?? '')
@@ -141,6 +142,8 @@ export function scenarioFor(url) {
   // `threeWayScenarios` to the literal ['s1'..'s9'] - so this route is browsable
   // only, which is exactly the sequencing the goal asked for.
   if (path === 'todomvc') return 'todomvc'
+  // THE SECOND APPLICATION. Five lanes, not six - angular refuses S11.
+  if (path === 'todomvc-advanced') return 'todomvc-advanced'
   return 's1'
 }
 
@@ -191,6 +194,39 @@ export default function App(props) {
         <link rel="stylesheet" href="/todomvc-app-css/index.css" />
         <link rel="stylesheet" href="/todomvc-app-css/frameless-supplement.css" />
         <TodoMvc onTrace={noTrace} />
+      </Match>
+      {/*
+        THE SECOND APPLICATION, and the first route in this demo whose lane count is
+        FOUR rather than six: the angular emitter REFUSES S11 on its global-identifier
+        ban ("Angular emitter cannot resolve the identifier \"Promise\" in a
+        transplanted body"), so demos/angular-official has no counterpart to this page.
+
+        AND THE SIXTH LANE IS LOST DIFFERENTLY, WHICH IS WHY THE COUNT IS FOUR AND NOT
+        FIVE. VUE emits this scenario, passes its own gate and its typecheck, and then
+        THROWS IN THE BROWSER: `_ctx.Promise is not a constructor`. That emitter inlines
+        handlers into TEMPLATE EXPRESSIONS, and Vue's template compiler prefixes any
+        identifier outside GLOBALS_ALLOWED with `_ctx.` - a list that carries Date and
+        JSON and does NOT carry Promise or setTimeout (measured at @vue/shared@3.5.40).
+        So demos/vue-official DOES serve this route, with add/destroy/filter/local
+        search working and the two ASYNC axes throwing. Both losses are lane limits
+        inside each framework's own design envelope, not defects to file upstream.
+        Like /todomvc it is deliberately OUT of the 6 x 9 three-way contract -
+        `scripts/e2e.mjs` pins `threeWayScenarios` to the literal ['s1'..'s9'] - so this
+        page is browsable only. It takes no seed prop: IR-8 has no lowering for an array
+        type, so the list is seeded inside the emitted component.
+
+        It links THREE stylesheets where /todomvc links two. `index.css` is
+        todomvc-app-css@2.4.3 verbatim, `frameless-supplement.css` is the repair layer
+        the simple app needs, and `frameless-advanced.css` carries the controls this app
+        adds. Cascade order is load-bearing at both joints and the advanced sheet MUST
+        load third. All three are copied into this lane's asset root by
+        `pnpm copy-todomvc-css`. THE PIXEL PASS IS T005'S CARD, NOT T003'S.
+      */}
+      <Match when={scenario() === 'todomvc-advanced'}>
+        <link rel="stylesheet" href="/todomvc-app-css/index.css" />
+        <link rel="stylesheet" href="/todomvc-app-css/frameless-supplement.css" />
+        <link rel="stylesheet" href="/todomvc-app-css/frameless-advanced.css" />
+        <TodoMvcAdvanced onTrace={noTrace} />
       </Match>
     </Switch>
   )

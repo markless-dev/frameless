@@ -192,6 +192,23 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// than as "flat", because 2.33 and 2.20 are not equal and rounding them into
 	// agreement is how a budget starts describing a claim instead of a measurement.
 	S10: { physicalLoc: 275, structuralNodes: 1262 },
+	// S11 (TodoMVC ADVANCED) IS THE CORPUS'S NEW HEAVYWEIGHT ON BOTH AXES, and it
+	// is the first row in this table with NO ANGULAR TWIN - that lane refuses the
+	// scenario outright on its global-identifier ban, so `S11` exists in five
+	// `generated/` directories and not six.
+	// Against S10, the previous heaviest: 424/275 = 1.54x the physical lines and
+	// 1891/1262 = 1.50x the structural nodes. The two ratios agreeing to within 3%
+	// is the same reading S10's row made against S7 and it survives one size step
+	// further out: this emitter still pays no per-element tax that grows nodes
+	// faster than lines.
+	// WHAT THE NUMBER CANNOT SEE, recorded for the same reason S8's row records it.
+	// S11 is the first corpus scenario to write ONE CELL ON BOTH SIDES OF AN
+	// `await` - the optimistic update - and DEFECTS.md 12.2's functional-updater
+	// fold therefore DECLINES on both writes, leaving the post-suspension read in
+	// const-SSA form (`nextTodos.map(...)`) where the other four lanes read the
+	// live cell. That is a behavioural divergence at an identical size, so a budget
+	// could never catch it; only a served payload can.
+	S11: { physicalLoc: 424, structuralNodes: 1891 },
 };
 
 describe('honest emitted structure comparison', () => {

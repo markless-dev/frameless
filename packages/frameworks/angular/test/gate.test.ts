@@ -24,6 +24,7 @@ import {
 	collectEmittedForms,
 	discoverGeneratedFiles,
 } from '../src/gate/index.ts';
+import { isUnbuiltEmitted } from './unbuilt-scenarios.ts';
 
 const packageRoot = resolve(import.meta.dirname, '..');
 const compilerGoldenRoot = resolve(packageRoot, '../../compiler/test/goldens');
@@ -57,6 +58,10 @@ function scenarioCorpus(extension: string, directory = 'generated'): string[] {
 		.map((entry) => /^s(\d+)-[\w-]+\.json$/.exec(entry)?.[1])
 		.filter((digits): digits is string => digits !== undefined)
 		.map((digits) => `${directory}/S${digits}.${extension}`)
+		// The subtraction declared in `unbuilt-scenarios.ts`: this lane REFUSES S11
+		// on its global-identifier ban, so there is no artifact for the gate to read.
+		// `emitter.test.ts` asserts that refusal is live.
+		.filter((file) => !isUnbuiltEmitted(file))
 		.sort();
 	// Fail LOUD rather than returning []. An empty derivation would make the
 	// inventory assertion agree with an empty `generated/` directory, which is the
