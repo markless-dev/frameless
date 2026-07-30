@@ -1,0 +1,679 @@
+# GoalBuddy v2 state.yaml
+# Board truth lives here. goal.md is the editable charter; notes/ holds long receipts only.
+
+version: 2
+
+goal:
+  title: "Frameless app axes: recursion, drag, six-lane fan-out, forms - and Hacker News"
+  slug: "frameless-app-axes-v1"
+  kind: existing_plan
+  status: active
+  tranche: >-
+    Measure FOUR UNTESTED AXES by building the cleanest probe of each - recursion (HN item
+    page), drag and drop (task management), six-lane fan-out (habit tracker), form input types
+    (contacts) - plus the HN front page the owner asked to carry over. Fix the front door first.
+    STOP AT EACH REFUSAL AND RECORD IT VERBATIM.
+  supersedes: >-
+    The OPEN app cards on frameless-real-apps-v1 - HN front page, HN item page, pnpm demo, and
+    React emitter greppability - so HN is not split across two boards. That board's COMPLETED
+    receipts (T001, T006, T007) stay as record and are not reopened.
+  oracle:
+    signal: >-
+      THREE PARTS, ALL REQUIRED. (1) EVERY AXIS GETS A VERDICT: recursion, drag-and-drop,
+      six-lane fan-out and form input types each measured in ALL SIX LANES with a witnessed
+      per-lane result - emits / refuses-with-verbatim-message / emits-but-misbehaves. A PROBE
+      VERDICT IS NOT A LANE VERDICT (re-run each lane's own gate) and FIVE STATIC GATES ARE NOT
+      A LANE VERDICT EITHER (run it in a browser) - both rules were bought with defects.
+      (2) EVERY APP THAT SHIPS IS AUTHORED ONCE, EMITTED SIX WAYS, LOOKS LIKE ITS REFERENCE, AND
+      IS FINDABLE: one .tsrx source, NO hand-written per-lane app code proved BY DERIVATION, a
+      documented and ACTUALLY-RUN command per lane, a visual match to a NAMED reference recorded
+      BEFORE the build, and AN ENTRY IN pnpm demo. A lane that cannot be generated is left
+      UNBUILT with its verbatim refusal. (3) NOTHING REGRESSES: pnpm test at EXACTLY ONE failure
+      (the foreign package-inventory ARM B); pnpm check DOES NOT RISE above 267; pnpm e2e stays
+      6 x 9; lint and check:citations clean.
+    cadence: "after the tooling card, after each app, and at final audit"
+    final_proof: >-
+      The FOUR AXIS VERDICTS stated per lane; then, for each shipped app, the launch command that
+      was RUN, its pnpm demo entry, and a visual comparison against its NAMED reference. For every
+      lane NOT shipped, the VERBATIM refusal. "Six lanes" means SIX ATTEMPTED, not six shipped: a
+      missing lane WITH a verbatim refusal is a satisfied oracle, one WITHOUT is a rejection. AN
+      AXIS QUIETLY SUBSTITUTED FOR AN EASIER INTERACTION IS A REJECTION EVEN IF THE APP LOOKS RIGHT.
+  intake:
+    original_request: >-
+      The owner listed the Square UI demos and asked what else was worth building, then chose:
+      "I want #2 but with hacker news too" - #2 being a new board for task management (drag),
+      habit tracker (six-lane fan-out) and contacts (forms).
+    interpreted_outcome: >-
+      Four capability axes measured across six lanes, each probed by the app that tests it most
+      cleanly, with Hacker News carried over from the superseded board.
+    input_shape: existing_plan
+    proof_type: demo
+    completion_proof: >-
+      Four axis verdicts per lane, every shipped app browsable AND listed in pnpm demo with a
+      run launch command and a named-reference visual match, every refusal verbatim, baselines
+      unmoved.
+    likely_misfire: >-
+      SHIPPING FOUR APPS AND MEASURING THREE AXES. The apps are the INSTRUMENT, not the product.
+      If the habit tracker takes its date from Date and loses angular, the six-lane claim
+      evaporates. If drag refuses and is quietly replaced by click-to-move, the axis goes
+      unmeasured while the demo looks complete.
+
+active_task: T001
+
+rules:
+  - "state.yaml is board truth; goal.md is the charter."
+  - "Exactly one active task unless disjoint write scopes are proven."
+  - "Scout and Judge are READ-ONLY. Workers write only inside allowed_files and run their verify commands."
+  - "Every completed, blocked or escalated task gets a receipt."
+  - "The goal completes only through a final Judge audit recording full_outcome_complete: true."
+  - "MEASURE, NEVER INHERIT. Every card on the predecessor board corrected its dispatch, including both audits."
+
+agents:
+  scout: installed
+  judge: installed
+  worker: installed
+
+visual_board:
+  enabled: false
+
+tasks:
+  - id: T001
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: medium
+    objective: >-
+      Restore greppability to the React emitter, and list every shipped app in `pnpm demo`.
+      TOOLING FIRST, because every later card on this board reads that emitter and every later
+      card ships an app that must become findable.
+    WHY_THIS_IS_FIRST: >-
+      packages/frameworks/react/src/emitter/index.ts CONTAINS ONE NUL BYTE, so grep exits 1 with
+      NO OUTPUT AT ALL - a sweep reports "no matches" when it means "NOT SEARCHED". Traced:
+      db6e275 = 0 NULs and `grep -c import` = 44; 61a6779 = 1 NUL and grep returns nothing. It
+      is in T003's suspension-segment map key. Until it is gone every card must use Python for
+      that file, and one already read a false zero because of it.
+    AND_THE_FRONT_DOOR_IS_THREE_YEARS_STALE: >-
+      MEASURED: scripts/demo.mjs lists THREE OF SIX LANES (react, solid, qwik) and THREE OF
+      TWELVE SCENARIOS (S1-S3). S10 TodoMVC, S11 TodoMVC Advanced and S12 Codex clone are
+      INVISIBLE, as are svelte, vue and angular entirely. The only record of how to launch S11
+      and S12 is a table buried in a note. EVERY APP THIS BOARD SHIPS MUST APPEND HERE.
+      Qwik routes keep their TRAILING SLASH - /codex answers 301 -> /codex/ and a browser
+      follows it silently, which is why driving a lane never surfaces a missing slash.
+    allowed_files:
+      - "packages/frameworks/react/src/emitter/**"
+      - "packages/frameworks/react/test/**"
+      - "scripts/demo.mjs"
+      - "docs/emitter-idiom-policy.md"
+      - "docs/goals/frameless-app-axes-v1/notes/T001-tooling.md"
+    verify:
+      - "grep -c import on the React emitter RETURNS A NUMBER, not exit 1 with no output. Show the before and after."
+      - "The emitted React output is BYTE-IDENTICAL after the NUL removal - regenerate all lanes and shasum. THE FIX MUST NOT CHANGE A SINGLE EMITTED BYTE."
+      - "pnpm demo lists ALL SIX LANES and EVERY scenario that exists, S1-S12, with qwik's trailing slashes correct"
+      - "LAUNCH AT LEAST ONE LANE FROM THE pnpm demo OUTPUT and confirm the URL it printed actually answers 200"
+      - "pnpm test at exactly 1 / pnpm check not above 267 / pnpm e2e 6 x 9 / lint / check:citations"
+      - "git diff --exit-code over packages/frameworks/*/generated, PAIRED WITH git status --short"
+      - "fingerprint the owner's three paths at START and FINISH - SORT THE WHOLE shasum OUTPUT LINES"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "Removing the NUL changes ANY emitted byte. That is a different card; report it."
+      - "You are about to renumber or soften docs/emitter-idiom-policy.md's census instead of re-deriving it."
+      - "pnpm check rises above 267, pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
+      - "NEVER pkill -f on a broad pattern. Port 5175 is held by FOREIGN node PID 64413."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
+  - id: T002
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    objective: >-
+      Ship HACKER NEWS FRONT PAGE as scenario `s13-hn-front`: ONE authored source, emitted to all six lanes as the
+      next ordinal, browsable at /hn, styled to its named reference, and LISTED IN pnpm demo.
+    THE_AXIS_THIS_CARD_MEASURES: >-
+      DATA WITHOUT A DOOR - and a warm-up that unblocks the recursion card.
+    WHAT_IS_ALREADY_MEASURED: >-
+      FETCH-ON-RENDER IS UNREACHABLE IN EVERY LANE (no lifecycle hook, and computed(async ...) is closed by a pincer upstream of every emitter). THE FRONT PAGE CANNOT LOAD ON APPEAR - seed the story list IN THE COMPONENT exactly as S10 and S11 do, and say so plainly in the note. Relative times ('3 hours ago') MUST ARRIVE AS PROPS: angular cannot name Date and would go unbuilt for a reason unrelated to any axis.
+    THE_NAMED_VISUAL_REFERENCE_RECORDED_BEFORE_THE_BUILD: >-
+      news.ycombinator.com - its own canonical styling: the orange #ff6600 masthead bar, Verdana-ish 10pt type, rank / title / domain on one line and points / author / age / comments beneath.
+    allowed_files:
+      - "packages/compiler/test/fixtures/s13-hn-front.tsrx"
+      - "packages/compiler/test/goldens/s13-hn-front.json"
+      - "packages/compiler/test/enriched-ir.test.ts"
+      - "packages/frameworks/react/scripts/regenerate.ts"
+      - "packages/frameworks/react/generated/**"
+      - "packages/frameworks/react/test/**"
+      - "packages/frameworks/solid/scripts/regenerate.ts"
+      - "packages/frameworks/solid/generated/**"
+      - "packages/frameworks/solid/test/**"
+      - "packages/frameworks/qwik/scripts/regenerate.ts"
+      - "packages/frameworks/qwik/generated/**"
+      - "packages/frameworks/qwik/test/**"
+      - "packages/frameworks/svelte/scripts/regenerate.ts"
+      - "packages/frameworks/svelte/generated/**"
+      - "packages/frameworks/svelte/test/**"
+      - "packages/frameworks/vue/scripts/regenerate.ts"
+      - "packages/frameworks/vue/generated/**"
+      - "packages/frameworks/vue/test/**"
+      - "packages/frameworks/angular/scripts/regenerate.ts"
+      - "packages/frameworks/angular/generated/**"
+      - "packages/frameworks/angular/test/**"
+      - "packages/frameworks/vue/src/gate/index.ts"
+      - "scripts/demo.mjs"
+      - "demos/react-official/src/emitted/**"
+      - "demos/solid-official/src/emitted/**"
+      - "demos/qwik/src/emitted/**"
+      - "demos/svelte-official/src/lib/emitted/**"
+      - "demos/vue-official/src/emitted/**"
+      - "demos/angular-official/src/emitted/**"
+      - "demos/react-official/package.json"
+      - "demos/solid-official/package.json"
+      - "demos/qwik/package.json"
+      - "demos/svelte-official/package.json"
+      - "demos/vue-official/package.json"
+      - "demos/angular-official/package.json"
+      - "demos/react-official/src/App.jsx"
+      - "demos/solid-official/src/App.jsx"
+      - "demos/vue-official/src/App.vue"
+      - "demos/qwik/src/routes/**"
+      - "demos/svelte-official/src/routes/**"
+      - "demos/angular-official/src/app/**"
+      - "demos/shared/**"
+      - "demos/react-official/public/**"
+      - "demos/solid-official/public/**"
+      - "demos/qwik/public/**"
+      - "demos/svelte-official/static/**"
+      - "demos/vue-official/public/**"
+      - "demos/angular-official/public/**"
+      - "docs/goals/frameless-app-axes-v1/notes/T002-hn.md"
+    verify:
+      - "PER LANE: EMITS with the emitted shape / REFUSES with the VERBATIM message read off the REAL module / EMITS-BUT-MISBEHAVES with the observed behaviour. A PROBE OR PRIOR-CARD VERDICT IS NOT A LANE VERDICT - re-run each lane's OWN gate."
+      - "RUN IT IN A BROWSER. FIVE STATIC GATES ARE NOT A LANE VERDICT - S11 passed its gate, compileScript, tsc AND pnpm check and still threw at runtime."
+      - "DERIVATION PROOF: delete every artifact this card added, re-run regenerate + copy scripts, shasum. ASSERT present-after-delete == 0 BEFORE rebuilding - a prior proof compared two empty files and printed BYTE-IDENTICAL while measuring nothing."
+      - "git diff --exit-code over every S1-S12 artifact, PAIRED WITH git status --short (diff alone is blind to untracked additions)"
+      - "pnpm test   # EXACTLY ONE failure, the foreign package-inventory ARM B"
+      - "pnpm check  # MUST NOT RISE above 267"
+      - "pnpm e2e    # MUST stay 6 x 9. scripts/e2e.mjs is NOT in scope."
+      - "pnpm lint and pnpm check:citations"
+      - "VISUAL: assert features OFF THE RENDERED IMAGE, never off the CSS."
+      - "fingerprint the owner's three paths at START and FINISH - SORT THE WHOLE shasum OUTPUT LINES (not the digest column: feddd40b; not the paths: b1dd182a; not the sorted path list: ff230487)"
+      - "THE APP IS APPENDED TO scripts/demo.mjs and appears in `pnpm demo` output with the route /hn (qwik keeps its TRAILING SLASH)"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to hand-write or hand-edit per-lane app code - anything under generated/ or src/emitted/ that did not come out of a regenerate or copy script."
+      - "Any earlier scenario artifact (S1-S12) changes a byte."
+      - "You are about to modify an emitter, the IR, the authoring surface, or scripts/e2e.mjs to make an axis work. RECORD THE VERBATIM REFUSAL AND NARROW INSTEAD."
+      - "You are about to copy any file from the Square UI repository. ITS LICENCE FORBIDS PUBLISHING DERIVATIVES IN ANY REPOSITORY."
+      - "You are about to name a global (Date, Promise, setTimeout, fetch, JSON) in a handler body and expect angular to take it. IT WILL NOT."
+      - "The axis this card exists to measure turns out unauthorable - RECORD THE VERBATIM REFUSAL, ship whatever stands, and SAY WHICH AXIS IS MISSING. Do not substitute a different interaction and call the axis measured."
+      - "pnpm check rises above 267, pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
+      - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched."
+      - "NEVER pkill -f on a broad pattern. Kill by recorded PID only, and only PIDs you started. Port 5175 is held by FOREIGN node PID 64413 - record it and use another port."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
+  - id: T003
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    objective: >-
+      Ship HACKER NEWS ITEM PAGE - THE RECURSION CARD as scenario `s14-hn-item`: ONE authored source, emitted to all six lanes as the
+      next ordinal, browsable at /hn-item, styled to its named reference, and LISTED IN pnpm demo.
+    THE_AXIS_THIS_CARD_MEASURES: >-
+      RECURSION - THE LARGEST REMAINING STRUCTURAL UNKNOWN. This is the card this board exists for.
+    WHAT_IS_ALREADY_MEASURED: >-
+      A COMMENT THREAD IS SELF-REFERENTIAL AND NOTHING IN THE CORPUS IS. It may refuse in every lane and THAT IS THE RESULT - this exact card was queued on the previous board, expected to refuse, and never ran, so the question has been dodged once already. Multi-MODULE composition IS shipped (demos/composition-kit/src/page.tsrx composes four .tsrx modules) and the limit is ONE COMPONENT PER MODULE - so if direct self-reference refuses, MEASURE whether a two-module mutual reference also refuses before concluding recursion is closed. If BOTH refuse, a fixed-depth unrolled thread is the fallback and MUST be labelled as such.
+    THE_NAMED_VISUAL_REFERENCE_RECORDED_BEFORE_THE_BUILD: >-
+      news.ycombinator.com item page - indented comment tree, the same masthead as T002.
+    allowed_files:
+      - "packages/compiler/test/fixtures/s14-hn-item.tsrx"
+      - "packages/compiler/test/goldens/s14-hn-item.json"
+      - "packages/compiler/test/enriched-ir.test.ts"
+      - "packages/frameworks/react/scripts/regenerate.ts"
+      - "packages/frameworks/react/generated/**"
+      - "packages/frameworks/react/test/**"
+      - "packages/frameworks/solid/scripts/regenerate.ts"
+      - "packages/frameworks/solid/generated/**"
+      - "packages/frameworks/solid/test/**"
+      - "packages/frameworks/qwik/scripts/regenerate.ts"
+      - "packages/frameworks/qwik/generated/**"
+      - "packages/frameworks/qwik/test/**"
+      - "packages/frameworks/svelte/scripts/regenerate.ts"
+      - "packages/frameworks/svelte/generated/**"
+      - "packages/frameworks/svelte/test/**"
+      - "packages/frameworks/vue/scripts/regenerate.ts"
+      - "packages/frameworks/vue/generated/**"
+      - "packages/frameworks/vue/test/**"
+      - "packages/frameworks/angular/scripts/regenerate.ts"
+      - "packages/frameworks/angular/generated/**"
+      - "packages/frameworks/angular/test/**"
+      - "packages/frameworks/vue/src/gate/index.ts"
+      - "scripts/demo.mjs"
+      - "demos/react-official/src/emitted/**"
+      - "demos/solid-official/src/emitted/**"
+      - "demos/qwik/src/emitted/**"
+      - "demos/svelte-official/src/lib/emitted/**"
+      - "demos/vue-official/src/emitted/**"
+      - "demos/angular-official/src/emitted/**"
+      - "demos/react-official/package.json"
+      - "demos/solid-official/package.json"
+      - "demos/qwik/package.json"
+      - "demos/svelte-official/package.json"
+      - "demos/vue-official/package.json"
+      - "demos/angular-official/package.json"
+      - "demos/react-official/src/App.jsx"
+      - "demos/solid-official/src/App.jsx"
+      - "demos/vue-official/src/App.vue"
+      - "demos/qwik/src/routes/**"
+      - "demos/svelte-official/src/routes/**"
+      - "demos/angular-official/src/app/**"
+      - "demos/shared/**"
+      - "demos/react-official/public/**"
+      - "demos/solid-official/public/**"
+      - "demos/qwik/public/**"
+      - "demos/svelte-official/static/**"
+      - "demos/vue-official/public/**"
+      - "demos/angular-official/public/**"
+      - "docs/goals/frameless-app-axes-v1/notes/T003-hn-item.md"
+    verify:
+      - "PER LANE: EMITS with the emitted shape / REFUSES with the VERBATIM message read off the REAL module / EMITS-BUT-MISBEHAVES with the observed behaviour. A PROBE OR PRIOR-CARD VERDICT IS NOT A LANE VERDICT - re-run each lane's OWN gate."
+      - "RUN IT IN A BROWSER. FIVE STATIC GATES ARE NOT A LANE VERDICT - S11 passed its gate, compileScript, tsc AND pnpm check and still threw at runtime."
+      - "DERIVATION PROOF: delete every artifact this card added, re-run regenerate + copy scripts, shasum. ASSERT present-after-delete == 0 BEFORE rebuilding - a prior proof compared two empty files and printed BYTE-IDENTICAL while measuring nothing."
+      - "git diff --exit-code over every S1-S12 artifact, PAIRED WITH git status --short (diff alone is blind to untracked additions)"
+      - "pnpm test   # EXACTLY ONE failure, the foreign package-inventory ARM B"
+      - "pnpm check  # MUST NOT RISE above 267"
+      - "pnpm e2e    # MUST stay 6 x 9. scripts/e2e.mjs is NOT in scope."
+      - "pnpm lint and pnpm check:citations"
+      - "VISUAL: assert features OFF THE RENDERED IMAGE, never off the CSS."
+      - "fingerprint the owner's three paths at START and FINISH - SORT THE WHOLE shasum OUTPUT LINES (not the digest column: feddd40b; not the paths: b1dd182a; not the sorted path list: ff230487)"
+      - "THE APP IS APPENDED TO scripts/demo.mjs and appears in `pnpm demo` output with the route /hn-item (qwik keeps its TRAILING SLASH)"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to hand-write or hand-edit per-lane app code - anything under generated/ or src/emitted/ that did not come out of a regenerate or copy script."
+      - "Any earlier scenario artifact (S1-S12) changes a byte."
+      - "You are about to modify an emitter, the IR, the authoring surface, or scripts/e2e.mjs to make an axis work. RECORD THE VERBATIM REFUSAL AND NARROW INSTEAD."
+      - "You are about to copy any file from the Square UI repository. ITS LICENCE FORBIDS PUBLISHING DERIVATIVES IN ANY REPOSITORY."
+      - "You are about to name a global (Date, Promise, setTimeout, fetch, JSON) in a handler body and expect angular to take it. IT WILL NOT."
+      - "The axis this card exists to measure turns out unauthorable - RECORD THE VERBATIM REFUSAL, ship whatever stands, and SAY WHICH AXIS IS MISSING. Do not substitute a different interaction and call the axis measured."
+      - "pnpm check rises above 267, pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
+      - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched."
+      - "NEVER pkill -f on a broad pattern. Kill by recorded PID only, and only PIDs you started. Port 5175 is held by FOREIGN node PID 64413 - record it and use another port."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
+  - id: T004
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    objective: >-
+      Ship HABIT TRACKER - THE SIX-LANE CARD as scenario `s15-habit-tracker`: ONE authored source, emitted to all six lanes as the
+      next ordinal, browsable at /habits, styled to its named reference, and LISTED IN pnpm demo.
+    THE_AXIS_THIS_CARD_MEASURES: >-
+      SIX-LANE FAN-OUT - the first app on this project that could lose NO lane.
+    WHAT_IS_ALREADY_MEASURED: >-
+      PURE SYNCHRONOUS DERIVED STATE, NO ASYNC DOOR NEEDED, so unlike every app before it this one is reachable in ALL SIX LANES INCLUDING ANGULAR. Measured on the live reference: ONE CLICK FANS OUT TO FIVE OBSERVABLE UPDATES - checkbox fill, title strikethrough, header counter 0/6 -> 1/6, sidebar badge, progress bar, and the encouragement line changing from 'Let's make today count!' to 'Good start! Stay consistent.' THE TRAP THAT WOULD QUIETLY KILL THIS CARD: the live demo renders a REAL DATE, and ANGULAR CANNOT NAME Date. The date MUST arrive as a prop. If angular goes unbuilt over a clock, this card measured nothing.
+    THE_NAMED_VISUAL_REFERENCE_RECORDED_BEFORE_THE_BUILD: >-
+      https://square-ui-habit-tracker.vercel.app/ - QA'd live by the PM. REFERENCE-ONLY, build on the vendored MIT shadcn tokens at demos/shared/shadcn-theme/.
+    allowed_files:
+      - "packages/compiler/test/fixtures/s15-habit-tracker.tsrx"
+      - "packages/compiler/test/goldens/s15-habit-tracker.json"
+      - "packages/compiler/test/enriched-ir.test.ts"
+      - "packages/frameworks/react/scripts/regenerate.ts"
+      - "packages/frameworks/react/generated/**"
+      - "packages/frameworks/react/test/**"
+      - "packages/frameworks/solid/scripts/regenerate.ts"
+      - "packages/frameworks/solid/generated/**"
+      - "packages/frameworks/solid/test/**"
+      - "packages/frameworks/qwik/scripts/regenerate.ts"
+      - "packages/frameworks/qwik/generated/**"
+      - "packages/frameworks/qwik/test/**"
+      - "packages/frameworks/svelte/scripts/regenerate.ts"
+      - "packages/frameworks/svelte/generated/**"
+      - "packages/frameworks/svelte/test/**"
+      - "packages/frameworks/vue/scripts/regenerate.ts"
+      - "packages/frameworks/vue/generated/**"
+      - "packages/frameworks/vue/test/**"
+      - "packages/frameworks/angular/scripts/regenerate.ts"
+      - "packages/frameworks/angular/generated/**"
+      - "packages/frameworks/angular/test/**"
+      - "packages/frameworks/vue/src/gate/index.ts"
+      - "scripts/demo.mjs"
+      - "demos/react-official/src/emitted/**"
+      - "demos/solid-official/src/emitted/**"
+      - "demos/qwik/src/emitted/**"
+      - "demos/svelte-official/src/lib/emitted/**"
+      - "demos/vue-official/src/emitted/**"
+      - "demos/angular-official/src/emitted/**"
+      - "demos/react-official/package.json"
+      - "demos/solid-official/package.json"
+      - "demos/qwik/package.json"
+      - "demos/svelte-official/package.json"
+      - "demos/vue-official/package.json"
+      - "demos/angular-official/package.json"
+      - "demos/react-official/src/App.jsx"
+      - "demos/solid-official/src/App.jsx"
+      - "demos/vue-official/src/App.vue"
+      - "demos/qwik/src/routes/**"
+      - "demos/svelte-official/src/routes/**"
+      - "demos/angular-official/src/app/**"
+      - "demos/shared/**"
+      - "demos/react-official/public/**"
+      - "demos/solid-official/public/**"
+      - "demos/qwik/public/**"
+      - "demos/svelte-official/static/**"
+      - "demos/vue-official/public/**"
+      - "demos/angular-official/public/**"
+      - "docs/goals/frameless-app-axes-v1/notes/T004-habits.md"
+    verify:
+      - "PER LANE: EMITS with the emitted shape / REFUSES with the VERBATIM message read off the REAL module / EMITS-BUT-MISBEHAVES with the observed behaviour. A PROBE OR PRIOR-CARD VERDICT IS NOT A LANE VERDICT - re-run each lane's OWN gate."
+      - "RUN IT IN A BROWSER. FIVE STATIC GATES ARE NOT A LANE VERDICT - S11 passed its gate, compileScript, tsc AND pnpm check and still threw at runtime."
+      - "DERIVATION PROOF: delete every artifact this card added, re-run regenerate + copy scripts, shasum. ASSERT present-after-delete == 0 BEFORE rebuilding - a prior proof compared two empty files and printed BYTE-IDENTICAL while measuring nothing."
+      - "git diff --exit-code over every S1-S12 artifact, PAIRED WITH git status --short (diff alone is blind to untracked additions)"
+      - "pnpm test   # EXACTLY ONE failure, the foreign package-inventory ARM B"
+      - "pnpm check  # MUST NOT RISE above 267"
+      - "pnpm e2e    # MUST stay 6 x 9. scripts/e2e.mjs is NOT in scope."
+      - "pnpm lint and pnpm check:citations"
+      - "VISUAL: assert features OFF THE RENDERED IMAGE, never off the CSS."
+      - "fingerprint the owner's three paths at START and FINISH - SORT THE WHOLE shasum OUTPUT LINES (not the digest column: feddd40b; not the paths: b1dd182a; not the sorted path list: ff230487)"
+      - "THE APP IS APPENDED TO scripts/demo.mjs and appears in `pnpm demo` output with the route /habits (qwik keeps its TRAILING SLASH)"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to hand-write or hand-edit per-lane app code - anything under generated/ or src/emitted/ that did not come out of a regenerate or copy script."
+      - "Any earlier scenario artifact (S1-S12) changes a byte."
+      - "You are about to modify an emitter, the IR, the authoring surface, or scripts/e2e.mjs to make an axis work. RECORD THE VERBATIM REFUSAL AND NARROW INSTEAD."
+      - "You are about to copy any file from the Square UI repository. ITS LICENCE FORBIDS PUBLISHING DERIVATIVES IN ANY REPOSITORY."
+      - "You are about to name a global (Date, Promise, setTimeout, fetch, JSON) in a handler body and expect angular to take it. IT WILL NOT."
+      - "The axis this card exists to measure turns out unauthorable - RECORD THE VERBATIM REFUSAL, ship whatever stands, and SAY WHICH AXIS IS MISSING. Do not substitute a different interaction and call the axis measured."
+      - "pnpm check rises above 267, pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
+      - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched."
+      - "NEVER pkill -f on a broad pattern. Kill by recorded PID only, and only PIDs you started. Port 5175 is held by FOREIGN node PID 64413 - record it and use another port."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
+  - id: T005
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    objective: >-
+      Ship TASK MANAGEMENT - THE DRAG CARD as scenario `s16-task-board`: ONE authored source, emitted to all six lanes as the
+      next ordinal, browsable at /board, styled to its named reference, and LISTED IN pnpm demo.
+    THE_AXIS_THIS_CARD_MEASURES: >-
+      DRAG AND DROP - the largest remaining INTERACTION unknown.
+    WHAT_IS_ALREADY_MEASURED: >-
+      LIKELY REFUSES AND THAT IS THE POINT. onDragStart / onDragOver / onDrop / onPointerDown are ALL TWO-WORD, and build.ts does name.slice(2).toLowerCase(), so DEFECTS.md 15 predicts they cannot be produced and their lowercase forms never fire. MEASURE IT PER LANE AND RECORD THE VERBATIM RESULT. DO NOT SUBSTITUTE CLICK-TO-MOVE AND CALL THE AXIS MEASURED - if drag refuses, ship the board with whatever interaction IS spellable, label it, and say the drag axis is REFUSED. MEASURED BY THE PM ON THE LIVE REFERENCE: IT HAS NO WORKING DRAG EITHER (the drag selected text), its Filter popover opens but does not filter, and Add task is inert - so the visual bar is low and we would ship something MORE functional than the original.
+    THE_NAMED_VISUAL_REFERENCE_RECORDED_BEFORE_THE_BUILD: >-
+      https://square-ui-task-management.vercel.app/ - QA'd live by the PM. REFERENCE-ONLY.
+    allowed_files:
+      - "packages/compiler/test/fixtures/s16-task-board.tsrx"
+      - "packages/compiler/test/goldens/s16-task-board.json"
+      - "packages/compiler/test/enriched-ir.test.ts"
+      - "packages/frameworks/react/scripts/regenerate.ts"
+      - "packages/frameworks/react/generated/**"
+      - "packages/frameworks/react/test/**"
+      - "packages/frameworks/solid/scripts/regenerate.ts"
+      - "packages/frameworks/solid/generated/**"
+      - "packages/frameworks/solid/test/**"
+      - "packages/frameworks/qwik/scripts/regenerate.ts"
+      - "packages/frameworks/qwik/generated/**"
+      - "packages/frameworks/qwik/test/**"
+      - "packages/frameworks/svelte/scripts/regenerate.ts"
+      - "packages/frameworks/svelte/generated/**"
+      - "packages/frameworks/svelte/test/**"
+      - "packages/frameworks/vue/scripts/regenerate.ts"
+      - "packages/frameworks/vue/generated/**"
+      - "packages/frameworks/vue/test/**"
+      - "packages/frameworks/angular/scripts/regenerate.ts"
+      - "packages/frameworks/angular/generated/**"
+      - "packages/frameworks/angular/test/**"
+      - "packages/frameworks/vue/src/gate/index.ts"
+      - "scripts/demo.mjs"
+      - "demos/react-official/src/emitted/**"
+      - "demos/solid-official/src/emitted/**"
+      - "demos/qwik/src/emitted/**"
+      - "demos/svelte-official/src/lib/emitted/**"
+      - "demos/vue-official/src/emitted/**"
+      - "demos/angular-official/src/emitted/**"
+      - "demos/react-official/package.json"
+      - "demos/solid-official/package.json"
+      - "demos/qwik/package.json"
+      - "demos/svelte-official/package.json"
+      - "demos/vue-official/package.json"
+      - "demos/angular-official/package.json"
+      - "demos/react-official/src/App.jsx"
+      - "demos/solid-official/src/App.jsx"
+      - "demos/vue-official/src/App.vue"
+      - "demos/qwik/src/routes/**"
+      - "demos/svelte-official/src/routes/**"
+      - "demos/angular-official/src/app/**"
+      - "demos/shared/**"
+      - "demos/react-official/public/**"
+      - "demos/solid-official/public/**"
+      - "demos/qwik/public/**"
+      - "demos/svelte-official/static/**"
+      - "demos/vue-official/public/**"
+      - "demos/angular-official/public/**"
+      - "docs/goals/frameless-app-axes-v1/notes/T005-board.md"
+    verify:
+      - "PER LANE: EMITS with the emitted shape / REFUSES with the VERBATIM message read off the REAL module / EMITS-BUT-MISBEHAVES with the observed behaviour. A PROBE OR PRIOR-CARD VERDICT IS NOT A LANE VERDICT - re-run each lane's OWN gate."
+      - "RUN IT IN A BROWSER. FIVE STATIC GATES ARE NOT A LANE VERDICT - S11 passed its gate, compileScript, tsc AND pnpm check and still threw at runtime."
+      - "DERIVATION PROOF: delete every artifact this card added, re-run regenerate + copy scripts, shasum. ASSERT present-after-delete == 0 BEFORE rebuilding - a prior proof compared two empty files and printed BYTE-IDENTICAL while measuring nothing."
+      - "git diff --exit-code over every S1-S12 artifact, PAIRED WITH git status --short (diff alone is blind to untracked additions)"
+      - "pnpm test   # EXACTLY ONE failure, the foreign package-inventory ARM B"
+      - "pnpm check  # MUST NOT RISE above 267"
+      - "pnpm e2e    # MUST stay 6 x 9. scripts/e2e.mjs is NOT in scope."
+      - "pnpm lint and pnpm check:citations"
+      - "VISUAL: assert features OFF THE RENDERED IMAGE, never off the CSS."
+      - "fingerprint the owner's three paths at START and FINISH - SORT THE WHOLE shasum OUTPUT LINES (not the digest column: feddd40b; not the paths: b1dd182a; not the sorted path list: ff230487)"
+      - "THE APP IS APPENDED TO scripts/demo.mjs and appears in `pnpm demo` output with the route /board (qwik keeps its TRAILING SLASH)"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to hand-write or hand-edit per-lane app code - anything under generated/ or src/emitted/ that did not come out of a regenerate or copy script."
+      - "Any earlier scenario artifact (S1-S12) changes a byte."
+      - "You are about to modify an emitter, the IR, the authoring surface, or scripts/e2e.mjs to make an axis work. RECORD THE VERBATIM REFUSAL AND NARROW INSTEAD."
+      - "You are about to copy any file from the Square UI repository. ITS LICENCE FORBIDS PUBLISHING DERIVATIVES IN ANY REPOSITORY."
+      - "You are about to name a global (Date, Promise, setTimeout, fetch, JSON) in a handler body and expect angular to take it. IT WILL NOT."
+      - "The axis this card exists to measure turns out unauthorable - RECORD THE VERBATIM REFUSAL, ship whatever stands, and SAY WHICH AXIS IS MISSING. Do not substitute a different interaction and call the axis measured."
+      - "pnpm check rises above 267, pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
+      - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched."
+      - "NEVER pkill -f on a broad pattern. Kill by recorded PID only, and only PIDs you started. Port 5175 is held by FOREIGN node PID 64413 - record it and use another port."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
+  - id: T006
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    objective: >-
+      Ship CONTACTS - THE FORMS CARD as scenario `s17-contacts`: ONE authored source, emitted to all six lanes as the
+      next ordinal, browsable at /contacts, styled to its named reference, and LISTED IN pnpm demo.
+    THE_AXIS_THIS_CARD_MEASURES: >-
+      FORM INPUT TYPES.
+    WHAT_IS_ALREADY_MEASURED: >-
+      ONLY checkbox AND textarea ARE PROVEN. select, radio, number, date and the multi-field form shape are ALL UNMEASURED. The textarea ALONE produced a finding on the last board - solid's finding-002 reproducing as TextareaHTMLAttributes<HTMLTextAreaElement>, its FIRST non-<input> instance and the first evidence the producer is the `value` BINDING rather than the `input` ELEMENT. Expect more here. A `date` input is NOT a clock and does not need Date - but any DEFAULT value computed from today does, so pass it as a prop.
+    THE_NAMED_VISUAL_REFERENCE_RECORDED_BEFORE_THE_BUILD: >-
+      https://square-ui-contacts.vercel.app/ - NOT QA'd by the PM; the Worker must look at it before building. REFERENCE-ONLY.
+    allowed_files:
+      - "packages/compiler/test/fixtures/s17-contacts.tsrx"
+      - "packages/compiler/test/goldens/s17-contacts.json"
+      - "packages/compiler/test/enriched-ir.test.ts"
+      - "packages/frameworks/react/scripts/regenerate.ts"
+      - "packages/frameworks/react/generated/**"
+      - "packages/frameworks/react/test/**"
+      - "packages/frameworks/solid/scripts/regenerate.ts"
+      - "packages/frameworks/solid/generated/**"
+      - "packages/frameworks/solid/test/**"
+      - "packages/frameworks/qwik/scripts/regenerate.ts"
+      - "packages/frameworks/qwik/generated/**"
+      - "packages/frameworks/qwik/test/**"
+      - "packages/frameworks/svelte/scripts/regenerate.ts"
+      - "packages/frameworks/svelte/generated/**"
+      - "packages/frameworks/svelte/test/**"
+      - "packages/frameworks/vue/scripts/regenerate.ts"
+      - "packages/frameworks/vue/generated/**"
+      - "packages/frameworks/vue/test/**"
+      - "packages/frameworks/angular/scripts/regenerate.ts"
+      - "packages/frameworks/angular/generated/**"
+      - "packages/frameworks/angular/test/**"
+      - "packages/frameworks/vue/src/gate/index.ts"
+      - "scripts/demo.mjs"
+      - "demos/react-official/src/emitted/**"
+      - "demos/solid-official/src/emitted/**"
+      - "demos/qwik/src/emitted/**"
+      - "demos/svelte-official/src/lib/emitted/**"
+      - "demos/vue-official/src/emitted/**"
+      - "demos/angular-official/src/emitted/**"
+      - "demos/react-official/package.json"
+      - "demos/solid-official/package.json"
+      - "demos/qwik/package.json"
+      - "demos/svelte-official/package.json"
+      - "demos/vue-official/package.json"
+      - "demos/angular-official/package.json"
+      - "demos/react-official/src/App.jsx"
+      - "demos/solid-official/src/App.jsx"
+      - "demos/vue-official/src/App.vue"
+      - "demos/qwik/src/routes/**"
+      - "demos/svelte-official/src/routes/**"
+      - "demos/angular-official/src/app/**"
+      - "demos/shared/**"
+      - "demos/react-official/public/**"
+      - "demos/solid-official/public/**"
+      - "demos/qwik/public/**"
+      - "demos/svelte-official/static/**"
+      - "demos/vue-official/public/**"
+      - "demos/angular-official/public/**"
+      - "docs/goals/frameless-app-axes-v1/notes/T006-contacts.md"
+    verify:
+      - "PER LANE: EMITS with the emitted shape / REFUSES with the VERBATIM message read off the REAL module / EMITS-BUT-MISBEHAVES with the observed behaviour. A PROBE OR PRIOR-CARD VERDICT IS NOT A LANE VERDICT - re-run each lane's OWN gate."
+      - "RUN IT IN A BROWSER. FIVE STATIC GATES ARE NOT A LANE VERDICT - S11 passed its gate, compileScript, tsc AND pnpm check and still threw at runtime."
+      - "DERIVATION PROOF: delete every artifact this card added, re-run regenerate + copy scripts, shasum. ASSERT present-after-delete == 0 BEFORE rebuilding - a prior proof compared two empty files and printed BYTE-IDENTICAL while measuring nothing."
+      - "git diff --exit-code over every S1-S12 artifact, PAIRED WITH git status --short (diff alone is blind to untracked additions)"
+      - "pnpm test   # EXACTLY ONE failure, the foreign package-inventory ARM B"
+      - "pnpm check  # MUST NOT RISE above 267"
+      - "pnpm e2e    # MUST stay 6 x 9. scripts/e2e.mjs is NOT in scope."
+      - "pnpm lint and pnpm check:citations"
+      - "VISUAL: assert features OFF THE RENDERED IMAGE, never off the CSS."
+      - "fingerprint the owner's three paths at START and FINISH - SORT THE WHOLE shasum OUTPUT LINES (not the digest column: feddd40b; not the paths: b1dd182a; not the sorted path list: ff230487)"
+      - "THE APP IS APPENDED TO scripts/demo.mjs and appears in `pnpm demo` output with the route /contacts (qwik keeps its TRAILING SLASH)"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to hand-write or hand-edit per-lane app code - anything under generated/ or src/emitted/ that did not come out of a regenerate or copy script."
+      - "Any earlier scenario artifact (S1-S12) changes a byte."
+      - "You are about to modify an emitter, the IR, the authoring surface, or scripts/e2e.mjs to make an axis work. RECORD THE VERBATIM REFUSAL AND NARROW INSTEAD."
+      - "You are about to copy any file from the Square UI repository. ITS LICENCE FORBIDS PUBLISHING DERIVATIVES IN ANY REPOSITORY."
+      - "You are about to name a global (Date, Promise, setTimeout, fetch, JSON) in a handler body and expect angular to take it. IT WILL NOT."
+      - "The axis this card exists to measure turns out unauthorable - RECORD THE VERBATIM REFUSAL, ship whatever stands, and SAY WHICH AXIS IS MISSING. Do not substitute a different interaction and call the axis measured."
+      - "pnpm check rises above 267, pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
+      - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched."
+      - "NEVER pkill -f on a broad pattern. Kill by recorded PID only, and only PIDs you started. Port 5175 is held by FOREIGN node PID 64413 - record it and use another port."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
+  - id: T007
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    objective: >-
+      THE FIFTH AXIS: PERSISTENCE. Make TodoMVC Advanced (S11) survive a refresh, in every lane
+      that can, and record the verbatim refusal in every lane that cannot.
+    WHY_THIS_CARD_EXISTS_THE_OWNER_FOUND_IT: >-
+      The owner opened /todomvc-advanced and asked why the completed state was lost on refresh.
+      MEASURED: s11-todomvc-advanced.tsrx has ZERO localStorage, ZERO __FRAMELESS_STATE__ and
+      ZERO persistence hits. "Synced" simulates a server round-trip that never writes anything.
+      Persistence was NOT among the axes S11 was built against (fetch, optimistic updates, local
+      filter + remote query, IN-MEMORY state), so S11 met its spec - BUT A TODO APP THAT FORGETS
+      ON REFRESH READS AS BROKEN, AND THE OWNER IS RIGHT TO FLAG IT.
+    THE_CAPABILITY_EXISTS_AND_NOTHING_USES_IT: >-
+      packages/compiler/src/persistence.ts ships a real design - compile-time-baked keys, a
+      __FRAMELESS_STATE__ pre-paint seed, a vendor storage-fact boundary - with
+      packages/compiler/test/persistence.test.ts covering it. BUT THE EMITTED OUTPUT EXISTS IN
+      TWO OF SIX LANES ONLY (generated-persistence/P1.tsx in react and solid), it is written
+      ONLY by UPDATE_GOLDENS=1 with NO npm script of its own, and NO .tsrx FIXTURE AUTHORS IT.
+      A SHIPPED CAPABILITY AT 2/6 LANES WITH NO APP EXERCISING IT IS THE SAME SHAPE AS THE
+      MUTATION HARNESS THAT WAS DEAD FOR 22 COMMITS. THE REAL QUESTION THIS CARD ANSWERS: does
+      persistence work in the FOUR LANES THAT HAVE NEVER EMITTED IT?
+    allowed_files:
+      - "packages/compiler/test/fixtures/s11-todomvc-advanced.tsrx"
+      - "packages/compiler/test/goldens/s11-todomvc-advanced.json"
+      - "packages/compiler/test/enriched-ir.test.ts"
+      - "packages/compiler/test/persistence.test.ts"
+      - "packages/frameworks/react/scripts/**"
+      - "packages/frameworks/solid/scripts/**"
+      - "packages/frameworks/qwik/scripts/**"
+      - "packages/frameworks/svelte/scripts/**"
+      - "packages/frameworks/vue/scripts/**"
+      - "packages/frameworks/angular/scripts/**"
+      - "packages/frameworks/react/generated/**"
+      - "packages/frameworks/solid/generated/**"
+      - "packages/frameworks/qwik/generated/**"
+      - "packages/frameworks/svelte/generated/**"
+      - "packages/frameworks/vue/generated/**"
+      - "packages/frameworks/angular/generated/**"
+      - "packages/frameworks/react/generated-persistence/**"
+      - "packages/frameworks/solid/generated-persistence/**"
+      - "packages/frameworks/qwik/generated-persistence/**"
+      - "packages/frameworks/svelte/generated-persistence/**"
+      - "packages/frameworks/vue/generated-persistence/**"
+      - "packages/frameworks/angular/generated-persistence/**"
+      - "packages/frameworks/react/test/**"
+      - "packages/frameworks/solid/test/**"
+      - "packages/frameworks/qwik/test/**"
+      - "packages/frameworks/svelte/test/**"
+      - "packages/frameworks/vue/test/**"
+      - "packages/frameworks/angular/test/**"
+      - "packages/frameworks/vue/src/gate/index.ts"
+      - "demos/react-official/src/emitted/**"
+      - "demos/solid-official/src/emitted/**"
+      - "demos/qwik/src/emitted/**"
+      - "demos/svelte-official/src/lib/emitted/**"
+      - "demos/vue-official/src/emitted/**"
+      - "demos/angular-official/src/emitted/**"
+      - "docs/goals/frameless-app-axes-v1/notes/T007-persistence.md"
+    verify:
+      - "PER LANE: does persistence EMIT, REFUSE with a verbatim message, or EMIT-BUT-MISBEHAVE? FOUR OF SIX LANES HAVE NEVER EMITTED IT - that is the measurement."
+      - "THE BEHAVIOURAL PROOF, IN A BROWSER: toggle a todo, RELOAD THE PAGE, and assert the completed state SURVIVED. A unit test asserting a seed was written is NOT this proof."
+      - "PROVE IT IS PRE-PAINT, not a post-hydration flash: the seeded state must be present in the FIRST painted frame, not applied after. That is what __FRAMELESS_STATE__ is for."
+      - "A NEGATIVE CONTROL: clear the storage key and confirm the app returns to its seeded default. Without it, 'state survived' is indistinguishable from 'state was never cleared'."
+      - "DERIVATION PROOF: delete every artifact this card touches, rebuild, shasum. ASSERT present-after-delete == 0 BEFORE rebuilding."
+      - "pnpm test at exactly 1 / pnpm check not above 267 / pnpm e2e 6 x 9 / lint / check:citations"
+      - "git diff --exit-code over every OTHER scenario's artifacts, PAIRED WITH git status --short"
+      - "fingerprint the owner's three paths at START and FINISH - SORT THE WHOLE shasum OUTPUT LINES"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to hand-write per-lane persistence glue. It must come out of the emitter like everything else."
+      - "You are about to change S11's OTHER axes. Persistence is additive; CRUD, filtering, remote query and the optimistic revert must behave exactly as they do today."
+      - "A lane refuses: RECORD THE VERBATIM MESSAGE, leave it unpersisted, ship the rest."
+      - "You are about to report 'the seed was written' as the behavioural proof. RELOAD THE PAGE OR RECORD THE LANE AS UNVERIFIED."
+      - "pnpm check rises above 267, pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
+      - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched."
+      - "NEVER pkill -f on a broad pattern. Port 5175 is held by FOREIGN node PID 64413."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Final audit: certify all three oracle parts, or refuse."
+    constraints:
+      - "QUOTE EVERY COMPLETION FIELD VERBATIM before ruling - signal, cadence, final_proof AND intake.completion_proof - and STATE THE ORACLE'S OWN PART COUNT before evaluating it. Prior boards caught the PM describing a multi-part oracle with fewer parts than it defines, more than once."
+      - "REJECT IF ANY PER-LANE APP CODE WAS HAND-WRITTEN. Verify BY DERIVATION - re-emit from the goldens yourself - not by assertion."
+      - "REJECT if an app shipped without a visual comparison against its NAMED reference, or is MISSING FROM pnpm demo."
+      - "REJECT if a lane is missing WITHOUT a verbatim refusal. A missing lane WITH one is legitimate."
+      - "REJECT if any launch command in the report was not actually RUN."
+      - "REJECT IF AN AXIS WAS QUIETLY SUBSTITUTED - e.g. click-to-move shipped where drag was the axis, and the axis reported as measured."
+      - "REJECT if pnpm check ROSE above 267, pnpm e2e left 6 x 9, or pnpm test left exactly one failure."
+      - "IF A CERTIFICATION FROM AN EARLIER COMMIT IS BEING RELIED ON, PROVE IT TRANSFERS: git diff --exit-code <that-commit>..HEAD over packages/ demos/ scripts/. T008 on the last board added this check unprompted and the ruling would have been unsound without it."
+      - "A CAPABILITY LIST IS A LEGITIMATE OUTCOME. If an axis refused, certify the MEASUREMENT - do not manufacture a partial demo to look complete."
+      - "Assume the PM's brief contains at least one error and find it. EVERY card on the last board corrected its dispatch, INCLUDING BOTH AUDITS."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "the FOUR AXIS VERDICTS stated per lane, and per app: runs / refused-with-message, launch command, pnpm demo entry, visual match"
+      - "next task if not complete"
+    receipt: null
