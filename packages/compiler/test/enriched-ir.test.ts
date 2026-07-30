@@ -22,6 +22,7 @@ const FIXTURES = [
 	's7-form-controls.tsrx',
 	's8-async-handlers.tsrx',
 	's9-boolean-attributes.tsrx',
+	's10-todomvc.tsrx',
 ] as const;
 
 const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>> = {
@@ -299,6 +300,55 @@ const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>>
 		['button', 'data-seal'],
 		['button', 'data-action'],
 		['button', 'data-action'],
+	],
+	// THE FIRST APPLICATION IN THE CORPUS, and the only entry here whose name is
+	// not `s<n>-`. That naming is load-bearing in two places rather than
+	// decorative: every per-lane emitter suite derives its freshness table from
+	// `/^s\d+-[\w-]+\.json$/` against `/^S\d+\.tsx$/`, and `scripts/e2e.mjs` pins
+	// `threeWayScenarios` to the literal `['s1'..'s9']`. So `todomvc.json` and
+	// `TodoMvc.tsx` are INVISIBLE to both - the app rides the same emitters
+	// without joining the 6 x 9 three-way contract, which is exactly the
+	// separation the goal asked for: browsable first, e2e wiring only once a lane
+	// is proven.
+	//
+	// Two `form` hosts, and both are measured rather than chosen. Enter cannot be
+	// authored as `onKeyDown`, because the react emitter's `eventProp` prints
+	// `onKeydown` and react-dom 19.2.3 drops it with "Invalid event handler
+	// property" - measured in a real DOM, see the T002 note. Implicit form
+	// submission is the portable spelling, and the Svelte emitter then requires
+	// each of those forms to carry a CLICK handler too: it prefixes
+	// `<!-- svelte-ignore -->` to any `<form>` with an event and its two-sided
+	// assertion rejects the suppression as an over-fire when only `submit` is
+	// bound.
+	's10-todomvc.tsrx': [
+		['section', 'class'],
+		['header', 'class'],
+		['h1', ''],
+		['form', 'class'],
+		['input', 'class'],
+		['main', 'class'],
+		['input', 'id'],
+		['label', 'for'],
+		['ul', 'class'],
+		['li', 'class'],
+		['form', 'class'],
+		['input', 'class'],
+		['button', 'type'],
+		['div', 'class'],
+		['input', 'class'],
+		['button', 'type'],
+		['button', 'type'],
+		['footer', 'class'],
+		['span', 'class'],
+		['strong', ''],
+		['ul', 'class'],
+		['li', ''],
+		['a', 'href'],
+		['li', ''],
+		['a', 'href'],
+		['li', ''],
+		['a', 'href'],
+		['button', 'type'],
 	],
 };
 
@@ -597,6 +647,7 @@ describe('fixture-family sufficiency', () => {
 		const ANNOTATED: readonly (typeof FIXTURES)[number][] = [
 			's1-render-once.tsrx',
 			's8-async-handlers.tsrx',
+			's10-todomvc.tsrx',
 		];
 
 		test('CONTROL: every UNannotated corpus scenario carries NO type, and both sets are non-empty', async () => {
@@ -1014,6 +1065,18 @@ export function Probe({ label }: { label }) @{
 			's7-form-controls.tsrx': ['size', 'notes', 'pick', 'tag', 'resize', 'lock'],
 			's8-async-handlers.tsrx': ['run', 'cancel'],
 			's9-boolean-attributes.tsrx': ['seal', 'lock', 'unlock'],
+			's10-todomvc.tsrx': [
+				'add',
+				'clear-completed',
+				'commit',
+				'destroy',
+				'edit',
+				'filter',
+				'press',
+				'revert',
+				'toggle',
+				'toggle-all',
+			],
 		};
 		for (const file of FIXTURES) {
 			const ir = await fixtureIr(file);

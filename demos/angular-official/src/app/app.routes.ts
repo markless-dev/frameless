@@ -8,6 +8,7 @@ import { FormBoard } from '../emitted/FormBoard';
 import { KeyedTodo } from '../emitted/KeyedTodo';
 import { NestedBoard } from '../emitted/NestedBoard';
 import { RenderOnce } from '../emitted/RenderOnce';
+import { TodoMvc } from '../emitted/TodoMvc';
 import { WhitespaceBoard } from '../emitted/WhitespaceBoard';
 import { noTrace, s2Seed, s4Seed, s5Seed, s6Label, s6Seed, s7Seed, s9Seed } from './scenario-props';
 
@@ -74,5 +75,19 @@ export const routes: Routes = [
     path: 's9',
     component: AttrBoard,
     data: { seed: s9Seed, onTrace: noTrace },
+  },
+  // THE FIRST APPLICATION, and the only path here that is not an ordinal. It is
+  // deliberately NOT part of the 6 x 9 three-way contract - `scripts/e2e.mjs`
+  // pins `threeWayScenarios` to the literal ['s1'..'s9'] - so this route is
+  // browsable only, which is the sequencing the goal asked for.
+  //
+  // It is also the ONLY route whose `data` carries no seed. IR-8 has no lowering
+  // for an array type in any lane, so the list is seeded INSIDE the emitted
+  // component and all six lanes start from byte-identical data with no host
+  // wiring to keep in step. See packages/compiler/test/fixtures/s10-todomvc.tsrx.
+  {
+    path: 'todomvc',
+    component: TodoMvc,
+    data: { onTrace: noTrace },
   },
 ];

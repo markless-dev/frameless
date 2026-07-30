@@ -18,6 +18,17 @@ const fixtures = [
 	['S7.ts', 's7-form-controls.json'],
 	['S8.ts', 's8-async-handlers.json'],
 	['S9.ts', 's9-boolean-attributes.json'],
+	// THE FIRST APPLICATION IN THE CORPUS, as opposed to the first scenario, and it
+	// takes the next ORDINAL slot rather than a name of its own. That is measured,
+	// not stylistic: this package's emitter, gate and size suites all derive their
+	// inventory of `generated/` by matching the compiler goldens against
+	// /^s(\d+)-[\w-]+\.json$/, and every one of them asserts the inventory EXACTLY.
+	// A tenth artifact named anything else is rejected by construction in ten-plus
+	// per-lane suites at once. Riding the ordinal makes all of them adopt it with no
+	// edit, while `scripts/e2e.mjs` pins threeWayScenarios to the literal
+	// ['s1'..'s9'], so the app does NOT join the 6 x 9 three-way contract - browsable
+	// first, e2e wiring only once a lane is proven.
+	['S10.ts', 's10-todomvc.json'],
 ] as const;
 for (const [output, golden] of fixtures) {
 	const ir = JSON.parse(await readFile(resolve(goldenRoot, golden), 'utf8')) as EnrichedIR;

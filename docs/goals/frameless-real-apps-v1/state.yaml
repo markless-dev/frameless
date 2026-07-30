@@ -96,7 +96,7 @@ visual_board:
     The owner has run nineteen-plus goals in this repo against the file board alone, including
     three that closed in the previous session. Recorded as an explicit choice, not an omission.
 
-active_task: T002
+active_task: T006
 
 tasks:
   - id: T001
@@ -166,7 +166,7 @@ tasks:
   - id: T002
     type: worker
     assignee: Worker
-    status: active
+    status: blocked
     reasoning_hint: high
     objective: "Ship TodoMVC: one authored .tsrx source, emitted to all six lanes, six viewable sites."
     THE_MISFIRE_THIS_CARD_EXISTS_TO_AVOID: >-
@@ -241,6 +241,129 @@ tasks:
       - "A lane cannot express something - RECORD THE VERBATIM REFUSAL and leave that lane unbuilt. Do not hand-write it."
       - "You are about to write per-lane app code by hand."
       - "pnpm check rises, or pnpm e2e moves."
+      - "Verification fails twice for the same reason."
+    receipt:
+      result: blocked
+      harness: claude-code
+      verification_attempts: 2
+      note: notes/T002-todomvc.md
+      blocked_reason: "pnpm test cannot go green inside allowed_files. generated/ is an EXACT-INVENTORY-ASSERTED directory in ten-plus per-lane suites, and the residual needs FIVE files outside the envelope - one of them a vue GATE POLICY SOURCE whose refusal message asserts a nine-scenario census that a tenth scenario invalidates. EVERY OTHER VERIFY ITEM PASSED, so the deliverable itself is complete and browsable."
+      changed_files:
+        - packages/compiler/test/fixtures/s10-todomvc.tsrx
+        - packages/compiler/test/goldens/s10-todomvc.json
+        - packages/compiler/test/enriched-ir.test.ts
+        - packages/frameworks/react/generated/S10.tsx
+        - packages/frameworks/solid/generated/S10.tsx
+        - packages/frameworks/qwik/generated/S10.tsx
+        - packages/frameworks/svelte/generated/S10.svelte
+        - packages/frameworks/vue/generated/S10.vue
+        - packages/frameworks/angular/generated/S10.ts
+        - demos/react-official/src/emitted/TodoMvc.tsx
+        - demos/solid-official/src/emitted/TodoMvc.tsx
+        - demos/qwik/src/emitted/TodoMvc.tsx
+        - demos/svelte-official/src/lib/emitted/TodoMvc.svelte
+        - demos/vue-official/src/emitted/TodoMvc.vue
+        - demos/angular-official/src/emitted/TodoMvc.ts
+        - docs/goals/frameless-real-apps-v1/notes/T002-todomvc.md
+      commands:
+        - cmd: "pnpm check"
+          status: pass
+          note: "EXACTLY 267, unchanged. S10 contributes ZERO in react, solid and qwik - PM CONFIRMED 267."
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "6 demos x 9 scenarios, all observations equal - unmoved"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0/0 over 453 files"
+        - cmd: "pnpm check:citations"
+          status: pass
+          note: "clean over 4 documents, 17 watched, 518 swept"
+        - cmd: "DERIVATION PROOF: rm 12 artifacts, 6x regenerate, 6x copy-emitted, shasum"
+          status: pass
+          note: "ALL TWELVE BYTE-IDENTICAL, and each demo copy's digest equals its lane's generated digest. Derivation ASSERTED, not claimed."
+        - cmd: "six sites launched AND DRIVEN in chromium"
+          status: pass
+          note: "add/toggle/destroy/toggle-all/filters/edit/commit/revert/clear-completed/hide-when-empty - IDENTICAL observations and ZERO console errors in every lane"
+        - cmd: "react-dom 19.2.3 event probe"
+          status: pass
+          note: "DELIBERATE MEASUREMENT: handlers that fired = ['onKeyDown','onDoubleClick']. onKeydown and onDblclick NEVER FIRE; react warns 'Invalid event handler property'."
+        - cmd: "owner fingerprints at start AND finish"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169, 116 files - identical at both ends. PM RE-CONFIRMED."
+      summary: "TodoMVC ships from ONE annotated .tsrx to ALL SIX LANES; six sites launched and DRIVEN in a real browser with identical behaviour and zero console errors, and derivation ASSERTED by deleting and rebuilding twelve byte-identical artifacts. check holds at exactly 267 with S10 contributing zero; e2e stays 6x9."
+      TWO_REAL_EMITTER_DEFECTS_FOUND_BY_BUILDING_A_REAL_APP: "(1) TWO-WORD DOM EVENT NAMES ARE UNSPELLABLE IN EVERY LANE, AND IT IS BEHAVIOURAL. T001 thought this was qwik-only and cosmetic. MEASURED: build.ts does name.slice(2).toLowerCase(), destroying casing irrecoverably - PM CONFIRMED ZERO emitters can produce onKeyDown or onDoubleClick. In a real DOM at react-dom 19.2.3, onKeydown and onDblclick NEVER FIRE. React's name for the double-click is onDoubleClick, WHICH NO CAPITALISATION OVER 'dblclick' CAN PRODUCE, so a per-lane spelling map is required. One onKeyDown binding also took check 267 -> 272 across three lanes. (2) REACT SILENTLY MISCOMPILES A STATE WRITE NESTED INSIDE AN if - it lowers only top-level handler statements and prints the write as an assignment to the const from useState: invalid TS, TypeError at runtime. FIVE OTHER LANES LOWER IT CORRECTLY. Invisible until now because NO S1-S9 HANDLER WRITES STATE INSIDE AN if."
+      T001s_NAMED_BLOCKER_WAS_THE_WRONG_ONE: "T001 warned that the hardcoded 9-entry lists in regenerate.ts had never grown. THEY WERE TRIVIAL and inside allowed_files. The real barrier is that TEN-PLUS PER-LANE SUITES ASSERT THE INVENTORY OF generated/ EXACTLY, derived from goldens matching /^s(\\d+)-...\\.json$/. Naming the fixture s10-todomvc cut the out-of-envelope need from TEN files to FIVE - and the hardest is not a test but a POLICY SOURCE: vue/src/gate/index.ts:1047 hardcodes a refusal asserting a live census over 'the nine-scenario corpus'."
+      deviations:
+        - "FIXTURE RENAMED to s10-todomvc with emitted S10.* - the card said todomvc.* / TodoMvc.*. MEASURED REASON: the literal naming turns TEN outside files red because every per-lane suite derives the exact inventory from the golden ordinal pattern. The ordinal slot cuts it to five. Demo-side names are TodoMvc.* exactly as specified, and e2e still pins ['s1'..'s9'] so 6x9 holds."
+        - "NO seed PROP: IR-8 has no lowering for TSArrayType in react, svelte or angular. Side benefit - all six lanes start from byte-identical data with no host wiring to keep in step."
+        - "ESCAPE-REVERT DROPPED as a RECORDED LANE LIMIT, not a convenience narrowing: keydown is its only spelling and it cost 5 check errors across three lanes, which is a stop_if. The revert BEHAVIOUR survives as an explicit cancel control."
+        - "THE TITLE IS A <button>, not TodoMVC's <label>: svelte refuses the label with a11y_label_has_associated_control and the <span> alternative with a11y_no_static_element_interactions."
+        - "THE FILTER DRIVES A hidden BINDING rather than removing rows: solid refuses a keyed repeat over a computed, and react/qwik/vue refuse a branch as the repeat row root. Rows keep their keys across a filter change."
+        - "BOTH <form>s CARRY AN onClick THAT ONLY TRACES - the svelte emitter attaches a two-code svelte-ignore to any form with an event and then rejects it as an over-fire when only submit is bound. STATED PLAINLY rather than dressed as a feature."
+        - "EVERY CONDITIONAL IS AN EXPRESSION, never an if-wrapped write, because of defect (2)."
+      remaining_blockers:
+        - "FIVE FILES OUTSIDE allowed_files for pnpm test: react/solid size.test.ts (2 each), solid emitted-typecheck.test.ts (the SAME pre-existing solid defect S2 carries), angular emitter.test.ts (typedInputsSeen 6->7), and vue gate.test.ts PLUS vue/src/gate/index.ts - A POLICY SOURCE whose refusal asserts a nine-scenario census that must be RE-MEASURED AND RE-ARGUED, not edited."
+        - "The two emitter defects belong in docs/DEFECTS.md under their own card; repairing them is a separate goal."
+        - "ENVIRONMENTAL: foreign PID 64413 (vite preview, 3d08h old, PREDATES this session and was NOT killed) holds port 5175, so qwik's documented dev command cannot bind until the owner releases it. Verified identical on 5176."
+      stopped_because: "pnpm test needs five files outside allowed_files, one of them a lane policy source."
+  - id: T006
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    spec: "T002 receipt, remaining_blockers - AUTHORITATIVE. The deliverable is DONE and browsable; this closes pnpm test."
+    objective: >-
+      Take pnpm test green for the tenth scenario, and record the two emitter defects T002
+      surfaced in docs/DEFECTS.md.
+    why_this_is_a_SEPARATE_card: >-
+      T002 shipped six lanes and six browsable sites with check at exactly 267 and e2e at 6x9.
+      It stopped ONLY because generated/ is an EXACT-INVENTORY-ASSERTED directory in ten-plus
+      per-lane suites, and the residual needs five files outside its envelope. T001 named the
+      wrong blocker: the hardcoded 9-entry lists in regenerate.ts were trivial and in scope.
+    the_five_files_and_the_ONE_that_is_not_mechanical: >-
+      react/test/size.test.ts and solid/test/size.test.ts need an S10 row in EMITTED_BUDGETS
+      (2 tests each). solid/test/emitted-typecheck.test.ts needs two accepted rows for THE SAME
+      PRE-EXISTING solid defect S2 already carries. angular/test/emitter.test.ts needs
+      typedInputsSeen 6 -> 7, S10 being the third annotated module.
+      AND THE ONE THAT IS NOT MECHANICAL: packages/frameworks/vue/src/gate/index.ts:1047 is a
+      LANE POLICY SOURCE whose shipped refusal text asserts a LIVE CENSUS - "over the
+      nine-scenario corpus it holds EIGHT shipped instances and the sugar applies to ONE". A
+      tenth scenario makes that TWELVE and THREE. RE-MEASURE AND RE-ARGUE THE RULING; do not
+      edit the numbers to fit. A third vue test plants its own tenth scenario and now collides
+      with the real one.
+    ALSO_RECORD_TWO_REAL_EMITTER_DEFECTS_T002_FOUND: >-
+      (1) TWO-WORD DOM EVENT NAMES ARE UNSPELLABLE IN EVERY LANE, and it is BEHAVIOURAL, not
+      cosmetic. build.ts does name.slice(2).toLowerCase(), so casing is destroyed
+      irrecoverably - PM CONFIRMED zero emitters produce onKeyDown or onDoubleClick. Measured
+      in a real DOM at react-dom 19.2.3: onKeydown and onDblclick NEVER FIRE. React's name for
+      the double-click is onDoubleClick, which NO capitalisation over "dblclick" can produce,
+      so a per-lane spelling map is required. One onKeyDown binding also took pnpm check
+      267 -> 272 across three lanes. THIS COST T002 ESCAPE-REVERT, recorded as a lane limit.
+      (2) REACT SILENTLY MISCOMPILES A STATE WRITE NESTED INSIDE AN if. It lowers only
+      top-level handler statements and prints the write as an assignment to the const from
+      useState - invalid TS, TypeError at runtime. Svelte, vue, angular, solid and qwik all
+      lower it correctly. Invisible until now because NO S1-S9 HANDLER WRITES STATE INSIDE AN
+      if. RECORD BOTH; repairing them is a separate goal.
+    allowed_files:
+      - packages/frameworks/react/test/size.test.ts
+      - packages/frameworks/solid/test/size.test.ts
+      - packages/frameworks/solid/test/emitted-typecheck.test.ts
+      - packages/frameworks/angular/test/emitter.test.ts
+      - packages/frameworks/vue/test/gate.test.ts
+      - packages/frameworks/vue/src/gate/index.ts
+      - docs/DEFECTS.md
+      - docs/goals/frameless-real-apps-v1/notes/T006-tenth-scenario.md
+    verify:
+      - "pnpm test   # 1250 passed / 10 failed at dispatch. Must reach EXACTLY 1 failure - the FOREIGN package-inventory ARM B - plus only tests this card adds."
+      - "pnpm check  # must stay at EXACTLY 267"
+      - "pnpm e2e    # must stay 6 x 9"
+      - "pnpm lint && pnpm check:citations"
+      - "the six TodoMVC sites must still launch - this card must not break the deliverable"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to EDIT THE VUE GATE'S CENSUS NUMBERS to fit rather than re-measuring and re-arguing the ruling. That message is a shipped refusal, and a number changed without its reason re-derived is the fault this project keeps catching."
+      - "pnpm check rises above 267, or pnpm e2e leaves 6 x 9."
+      - "You are about to repair either emitter defect. RECORD ONLY - the repair is a separate goal."
       - "Verification fails twice for the same reason."
     receipt: null
 

@@ -11,7 +11,17 @@
  * `onTrace` is the emitted components' trace callback. The official demos are
  * activation lanes, not analyzer lanes, so every lane passes a no-op.
  */
-export type ScenarioId = 's1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7' | 's8' | 's9'
+export type ScenarioId =
+  | 's1'
+  | 's2'
+  | 's3'
+  | 's4'
+  | 's5'
+  | 's6'
+  | 's7'
+  | 's8'
+  | 's9'
+  | 'todomvc'
 
 export const noTrace = () => {}
 
@@ -111,6 +121,11 @@ export function scenarioFor(url: string | undefined): ScenarioId {
   if (path === 's7') return 's7'
   if (path === 's8') return 's8'
   if (path === 's9') return 's9'
+  // THE FIRST APPLICATION, and the only id here that is not an ordinal. It is
+  // deliberately NOT part of the 6 x 9 three-way contract - `scripts/e2e.mjs`
+  // pins `threeWayScenarios` to the literal ['s1'..'s9'] - so this route is
+  // browsable only.
+  if (path === 'todomvc') return 'todomvc'
   return 's1'
 }
 

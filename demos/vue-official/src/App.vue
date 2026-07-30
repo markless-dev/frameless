@@ -8,6 +8,7 @@ import FormBoard from './emitted/FormBoard.vue'
 import KeyedTodo from './emitted/KeyedTodo.vue'
 import NestedBoard from './emitted/NestedBoard.vue'
 import RenderOnce from './emitted/RenderOnce.vue'
+import TodoMvc from './emitted/TodoMvc.vue'
 import WhitespaceBoard from './emitted/WhitespaceBoard.vue'
 import {
   armS8Gate,
@@ -93,5 +94,13 @@ const s8Ready = ref<Promise<string>>(s8ResolvedGate)
     <p data-harness="gate">{{ s8Ready === s8ResolvedGate ? 'open' : 'held' }}</p>
     <AsyncBoard v-bind:ready="s8Ready" v-bind:onTrace="noTrace" />
   </template>
-  <AttrBoard v-else v-bind:seed="s9Seed" v-bind:onTrace="noTrace" />
+  <AttrBoard v-else-if="scenario === 's9'" v-bind:seed="s9Seed" v-bind:onTrace="noTrace" />
+  <!--
+    THE FIRST APPLICATION, and the only branch here that is not an ordinal. It is
+    deliberately NOT part of the 6 x 9 three-way contract - `scripts/e2e.mjs` pins
+    `threeWayScenarios` to the literal ['s1'..'s9'] - so this page is browsable
+    only. It takes no seed prop in any lane: IR-8 has no lowering for an array
+    type, so the list is seeded inside the emitted component.
+  -->
+  <TodoMvc v-else-if="scenario === 'todomvc'" v-bind:onTrace="noTrace" />
 </template>

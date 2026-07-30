@@ -15,6 +15,7 @@ import { FormBoard } from './emitted/FormBoard.jsx'
 import { KeyedTodo } from './emitted/KeyedTodo.jsx'
 import { NestedBoard } from './emitted/NestedBoard.jsx'
 import { RenderOnce } from './emitted/RenderOnce.jsx'
+import { TodoMvc } from './emitted/TodoMvc.jsx'
 import { WhitespaceBoard } from './emitted/WhitespaceBoard.jsx'
 
 // One shared IR, three emitters. These props are the same ones demos/qwik passes
@@ -124,7 +125,7 @@ function AsyncGate() {
  * mirrors the Qwik demo's `/`, `/s2`, `/s3` routes without adding a router.
  *
  * @param {string} url
- * @returns {'s1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7' | 's8' | 's9'}
+ * @returns {'s1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7' | 's8' | 's9' | 'todomvc'}
  */
 export function scenarioFor(url) {
   const path = String(url ?? '')
@@ -138,6 +139,11 @@ export function scenarioFor(url) {
   if (path === 's7') return 's7'
   if (path === 's8') return 's8'
   if (path === 's9') return 's9'
+  // THE FIRST APPLICATION, and the only path here that is not an ordinal. It is
+  // NOT part of the 6 x 9 three-way contract - `scripts/e2e.mjs` pins
+  // `threeWayScenarios` to the literal ['s1'..'s9'] - so this route is browsable
+  // only, which is exactly the sequencing the goal asked for.
+  if (path === 'todomvc') return 'todomvc'
   return 's1'
 }
 
@@ -160,6 +166,8 @@ export default function App({ url }) {
       return <FormBoard seed={s7Seed} onTrace={noTrace} />
     case 's8':
       return <AsyncGate />
+    case 'todomvc':
+      return <TodoMvc onTrace={noTrace} />
     case 's9':
       return <AttrBoard seed={s9Seed} onTrace={noTrace} />
     default:
