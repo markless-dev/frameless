@@ -100,7 +100,7 @@ visual_board:
     The owner has run twenty-plus goals in this repo against the file board alone. Recorded as
     an explicit choice, not an omission.
 
-active_task: T999
+active_task: T007
 
 tasks:
   - id: T001
@@ -1093,10 +1093,55 @@ tasks:
         - "T003's three findings remain UNFILED in docs/DEFECTS.md. Two were reproduced on new bytes here (vue's template-expression global limit, angular's global-identifier ban). The third - react's post-await const-SSA divergence - is AVOIDED BY CONSTRUCTION in S12 via the const chain, so it is now unfiled AND unexercised."
         - "S12 is browsable only and does NOT join the 6 x 9 three-way contract; scripts/e2e.mjs pins ['s1'..'s9'] and is out of scope. Same sequencing S10 and S11 took."
       stopped_because: null
+  - id: T007
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: medium
+    objective: >-
+      Close the TWO DOCUMENTATION DEFECTS the final audit found. No product code, no emitters,
+      no generated/ or src/emitted/ files, no CSS. The engineering on this board is sound and
+      none of it needs redoing.
+    DEFECT_1_THE_CHARTER_INSTRUCTS_A_METHOD_THAT_CANNOT_PRODUCE_ITS_OWN_EXPECTED_VALUE: >-
+      goal.md still reads "Sort the digests, not the paths" while stating expected f936e169.
+      MEASURED FIVE WAYS AT HEAD: sorting the whole shasum OUTPUT LINES gives f936e169 (the
+      value goal.md states); the bare digest column gives feddd40b; sorting paths gives
+      b1dd182a; no sort gives 559a8b8e and is nondeterministic. THE INSTRUCTION AND ITS OWN
+      EXPECTED VALUE CONTRADICT EACH OTHER. It has ALREADY FIRED ON TWO CARDS - T005 hit the
+      paths reading, T004 the digest-column reading. state.yaml was corrected; THE CHARTER WAS
+      NOT.
+    DEFECT_2_S12_SATISFIES_ONLY_HALF_OF_A_NAMED_ORACLE_CLAUSE: >-
+      oracle.signal (2) requires "a documented and ACTUALLY-RUN launch command per lane". T003
+      has a six-row table with URLs and angular's 404. T006 HAS NONE - no command, no /codex
+      URL, nothing recoverable from the repo, only "ports 5321-5325" and "5 sites launched and
+      driven". The RUN half is well attested; THE DOCUMENTED HALF IS ABSENT. This is the only
+      thing standing between this board and completion on part 2.
+    allowed_files:
+      - "docs/goals/frameless-app-suite-v1/goal.md"
+      - "docs/goals/frameless-app-suite-v1/notes/T006-codex-clone.md"
+    verify:
+      - "goal.md no longer says 'Sort the digests, not the paths'. It names the MEASURED method - SORT THE WHOLE shasum OUTPUT LINES - and BOTH wrong readings explicitly: not the paths (b1dd182a), not the bare digest column (feddd40b). Expected values f326d314 / aeb7edc1 / f936e169 and 116 files UNCHANGED."
+      - "REPRODUCE ALL THREE READINGS YOURSELF and paste them in the receipt. DO NOT COPY THEM FROM THE AUDIT."
+      - "notes/T006-codex-clone.md carries a per-lane launch table in T003 section 5's shape: lane, the command ACTUALLY RUN, and the /codex URL. Angular's absence recorded as 404 / no route, NOT omitted."
+      - "EVERY COMMAND IN THAT TABLE WAS RUN BY THIS CARD BEFORE IT WAS WRITTEN DOWN. A command reconstructed from memory is EXACTLY what this board's reject condition forbids. Record the ports used."
+      - "pnpm test at exactly 1 (foreign package-inventory ARM B) / pnpm check not above 267 / pnpm e2e 6 x 9 / pnpm lint / pnpm check:citations"
+      - "git diff --exit-code -- packages/ demos/ scripts/   # DOC-ONLY CARD; the product tree must not move"
+      - "fingerprint the owner's three paths at START and FINISH by the CORRECTED method"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to edit any emitter, fixture, golden, generated/ or src/emitted/ file, or any CSS. THIS CARD CHANGES DOCUMENTATION ONLY."
+      - "You are about to write a launch command you did not run. RUN IT, or record the lane as unverified."
+      - "A demo will not start on the documented command - RECORD WHAT ACTUALLY WORKS and say the script drifted; DO NOT EDIT THE DEMO."
+      - "pnpm check rises above 267, pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
+      - "pnpm-lock.yaml, pnpm-workspace.yaml or website/ is touched."
+      - "NEVER pkill -f on a broad pattern. Kill by recorded PID only, and only PIDs you started. A port held by a foreign process is RECORD-IT-AND-USE-ANOTHER-PORT."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
   - id: T999
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Final audit: certify all three oracle parts, or refuse."
     constraints:
@@ -1113,8 +1158,41 @@ tasks:
       - "full_outcome_complete: true | false"
       - "The six-lane door table, and per app per lane: runs / refused-with-message, launch command, visual match"
       - "next task if not complete"
-    receipt: null
-
+    receipt:
+      result: done
+      decision: not_complete
+      full_outcome_complete: false
+      harness: claude-code
+      note: notes/T999-final-audit.md
+      summary: "THE ORACLE DECLARES ITS OWN COUNT - 'THREE PARTS, ALL REQUIRED' - and three were evaluated. PARTS 1 AND 3 FULLY CERTIFIED; PART 2 FAILS ONE NAMED CLAUSE. Blocking on TWO DOCUMENTATION DEFECTS ONLY: S12 has no documented per-lane launch command, and goal.md still carries a measurably refuted fingerprint method. THE ENGINEERING ON THIS BOARD IS SOUND AND NONE OF IT NEEDS REDOING."
+      CERTIFIED_BY_DERIVATION_NOT_ASSERTION: "The Judge RE-EMITTED S10/S11/S12 itself from the compiler goldens through each lane's REAL emit()+formatEmitted(), in a scratchpad script writing NOTHING into the tree. All five emitting lanes BYTE-IDENTICAL to disk for both apps; every demo copy's digest EQUALS its lane's generated digest; angular S10 identical as a CONTROL while S11/S12 refused. NO PER-LANE APP CODE WAS HAND-WRITTEN, PROVED BY DERIVATION. Angular's S12 refusal reproduced verbatim naming S12's OWN 17 declared members, which is what proves it was read off THIS module and not carried from S11."
+      THE_LOAD_BEARING_ERROR_IN_THE_PMs_BRIEF: "The dispatch told the Judge to verify VUE has a 'verbatim refusal recorded, read off the real module' for S11 and S12. VUE HAS NONE AND NEEDS NONE - IT EMITS IN BOTH, and the Judge re-derived S11.vue and S12.vue byte-identically. oracle.signal (1) names THREE verdicts including 'emits-but-misbehaves', and (2) requires a verbatim refusal only for 'a lane that CANNOT BE GENERATED'. APPLYING THE BRIEF LITERALLY WOULD HAVE REJECTED THIS BOARD ON A CONDITION ITS OWN ORACLE DOES NOT IMPOSE. Angular is the sole subject of that reject condition and it passes twice."
+      SECOND_BRIEF_ERROR: "The dispatch listed 'solid's finding-002 textarea instance' among findings UNFILED in docs/DEFECTS.md. FINDING-002 IS FILED - DEFECTS.md section 5, with a note at docs/goals/frameless-testing-ci-v1/notes/findings-002-solid-attr-namespace.md. PM CONFIRMED INDEPENDENTLY. Only the NEW non-<input> instance is unrecorded."
+      THE_6x9_POINT_INVERTS: "Part 3 says 'pnpm e2e STAYS 6 x 9' and scripts/e2e.mjs pins threeWayScenarios = ['s1'..'s9']. Adding S11/S12 would make it 6 x 11 and VIOLATE PART 3. THE ORACLE FORBIDS JOINING THE CONTRACT. Browsable-only is what the oracle demands, not a shortfall - part 2 asks only for a launch command per lane."
+      THREE_OTHER_JUDGEMENTS: "(1) T004 STAYING BLOCKED IS COMPATIBLE WITH COMPLETION: zero product edits, scope fully re-issued as T006 and met, and its receipt is LOAD-BEARING - it probed rather than predicted, enumerated the 16-failure blast radius, proved the probe in both directions and banked three corrections T006 consumed. RE-MARKING IT WOULD DESTROY THE RECORD. (2) T006 DECLINING BYTE-IDENTITY IS HONEST NARROWING, NOT AN ORACLE GAP - the oracle asks each app to look like ITS REFERENCE, never that the five lanes be pixel-identical to each other; that was T005's bonus on a text-light page. (3) THE CAPABILITY-LIST ESCAPE HATCH DOES NOT APPLY: the door refused but the apps were buildable and were built. Nothing was manufactured to look complete."
+      evidence:
+        - "DERIVATION run by the Judge: re-emitted S10/S11/S12 through each lane's real emit(). react/solid/qwik/svelte/vue IDENTICAL to bytes on disk for both apps; angular S10 IDENTICAL (control), S11/S12 REFUSED."
+        - "Demo copies equal generated digests, both apps, five lanes - e.g. react S12 a0d41f708cf9d == demos/react-official/src/emitted/CodexClone.tsx"
+        - "Angular S12 refusal reproduced verbatim naming S12's own 17 members (blocked, bottomTab, draft, messages, nextMessage, nextThread, onTrace, openThread, openTitle, rightTab, status, streaming, threads, turns, turnsLabel, visible, visibleLabel)"
+        - "packages/frameworks/angular/test/unbuilt-scenarios.ts drives every declared unbuilt scenario through the real emit() asserting the recorded message, PLUS an s10 control that must not throw - STRONGER THAN A DEFECTS.md ENTRY"
+        - "pnpm check = 267 (did not rise). pnpm test = 1 failed / 1281 passed, the failure being package-inventory ARM B on a @markless/core peer-suffix split from the owner's uncommitted lockfile - FOREIGN. pnpm e2e = PASS, 6 x 9, all observations equal. lint 0/0 over 479 files. citations clean, 547 swept."
+        - "scripts/e2e.mjs pins threeWayScenarios = ['s1'..'s9']"
+        - "Both sources are ONE MODULE, ONE EXPORTED COMPONENT, importing only @markless/core: s11 (490 lines) and s12 (408 lines, export function CodexClone)"
+        - "FINGERPRINT MEASURED FIVE WAYS AT HEAD: whole shasum output lines = f936e169 (the value goal.md states); bare digest column = feddd40b; paths = b1dd182a; no sort = 559a8b8e. GOAL.MD INSTRUCTS A METHOD THAT CANNOT PRODUCE ITS OWN EXPECTED VALUE."
+        - "git status --short after all five baseline runs: only the owner's three in-flight paths. Nothing the Judge ran moved a tracked byte."
+      missing_evidence:
+        - "No per-lane launch command or /codex URL exists for S12 ANYWHERE - not in the note, not in a README, not in scripts/demo.mjs. Only 'ports 5321-5325' and '5 sites launched and driven'."
+        - "NEITHER APP WAS COMPARED AGAINST A LIVE RENDERING OF ITS NAMED REFERENCE. T002 had no web tool and substituted vendored upstream bytes with provenance; T006 hit seven geometry numbers the PM measured off the live reference. Both are real named-reference comparisons asserted off the image and mutation-tested (13/13, 10/10) - THE PROXY CHAIN IS RECORDED so it is not later mistaken for a side-by-side."
+        - "The playwright walkthroughs that produced every S10/S11/S12 behavioural observation live in worker SCRATCHPADS - both T005 and T006 record that nothing was added to the repository - SO THEY ARE NOT RE-RUNNABLE by the Judge or by CI."
+        - "T006 measured but could not EXPLAIN the glyph/arc rasterisation split between the SSR-express trio (react/solid/vue) and the Vite-dev pair (qwik/svelte), and it is unreconciled with T005's single-image claim for S11 at 900x900."
+      remaining_blockers:
+        - "BLOCKING: oracle.signal (2) requires 'a documented and ACTUALLY-RUN launch command per lane'. The Codex clone satisfies only the ACTUALLY-RUN half."
+        - "BLOCKING: goal.md carries a measurably refuted fingerprint method that has ALREADY FIRED ON TWO CARDS. state.yaml was corrected; the charter was not."
+        - "NOT BLOCKING - successor board: angular's global-identifier ban and vue's template-expression global limit have NO docs/DEFECTS.md entry, though both are durably asserted in the product tree. react's post-await const-SSA divergence is unfiled AND NOW UNEXERCISED. finding-002's new textarea instance needs adding to its EXISTING note."
+        - "NOT BLOCKING - successor board: S10/S11/S12 cross-lane behavioural equality IS NOT UNDER WITNESS, BY ORACLE DESIGN. A re-runnable in-repo harness, or a plain statement that those observations are one-shot, is the natural first card."
+      next_task_if_not_complete: "T007 (worker, doc-only): correct goal.md's refuted fingerprint method and add S12's per-lane launch table, RE-RUNNING every command first."
+      verification_attempts: 1
+      stopped_because: null
 checks:
   dirty_fingerprint: >-
     2026-07-30 at prep. Clean except the OWNER'S three in-flight paths - pnpm-lock.yaml,
