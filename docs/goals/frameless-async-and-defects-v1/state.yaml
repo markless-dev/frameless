@@ -91,7 +91,7 @@ visual_board:
     The owner has run eighteen-plus goals in this repo against the file board alone,
     including two that closed this session. Recorded as an explicit choice, not an omission.
 
-active_task: T002
+active_task: T003
 
 tasks:
   - id: T001
@@ -153,7 +153,7 @@ tasks:
   - id: T002
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       Rule who owns the S7 repair, and spec the async repair slice.
@@ -172,25 +172,88 @@ tasks:
       - "READ-ONLY."
       - "Do NOT re-litigate T001's measurements. Rule on what they MEAN."
       - "A lane limit is a legitimate outcome; an unargued one is not."
-    receipt: null
-
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      harness: claude-code
+      rationale: "Every instrument that CAN see S7 reports it - react, solid and qwik are the only tsconfigs including generated/**, and vue-tsc and svelte-check are NOT INSTALLED, so vue and svelte have no vote. Authoring a type argument PROVABLY reaches no emitter, collapsing the brief's dichotomy to the IR. But the oracle requires S7 NAMED, not repaired, and widening needs real inference, so repairing it now would move six lanes' bytes before S8 for no async gain. Async is REACT-ONLY BY LIVE MEASUREMENT."
+      summary: "S7's cause is THE IR, and the brief's 'author a type argument' alternative is EMPIRICALLY DEAD. Angular's `lock: any` is blanket untyped emission, not an S7 escape. The async matrix is now MEASURED live in six lanes rather than inherited: react-only, no lane limit - and the probe as written DOES NOT EMIT IN SVELTE AT ALL, a blocker for S8 nobody had recorded. P1 RULED to the emitted artifact and deferred."
+      IT_RAN_THE_PROBE_T001_DID_NOT_AND_KILLED_A_HORN_OF_MY_DICHOTOMY: "I offered a choice: author a type argument in the .tsrx, or add a cell-type field to the IR. THE FIRST IS EMPIRICALLY DEAD. It built the IR from `let lock = state<string | null>(null)`: it parses, and THE TYPE ARGUMENT IS DISCARDED AT THE IR BOUNDARY - the binding returns with no type field and react still emits `useState(null)`. PM CONFIRMED the mechanism at build.ts:588, which stores serializeAst(helperArgument) - THE ARGUMENT, NEVER THE CALL - so a call's type arguments have nowhere to travel. Authoring cannot fix even the one fixture."
+      AND_IT_CORRECTED_T001s_CHARACTERISATION_OF_THE_IR: "T001 said 'the information to widen is present'. ONE INPUT IS PRESENT; THE OTHER IS A REFERENCE. state:lock's single write is value: {type:'Identifier', name:'next'} - pointing at a handler-local const. Widening therefore requires RESOLVING HANDLER-LOCAL BINDINGS OUT OF records.events, i.e. real inference, not a two-field lookup. That is the difference between a one-hour field and a multi-day pass, and it is why S7 is routed out of this tranche."
+      the_census_is_stronger_than_three_of_six: "Only react, solid and qwik include generated/** in their tsconfigs - angular, vue and svelte include only src/test/scripts. So it is THREE OF THREE INSTRUMENTED LANES FAILING and three of three uninstrumented lanes UNMEASURED. And vue-tsc and svelte-check are NOT INSTALLED ANYWHERE in this workspace, so there is no instrument to reach them even in principle at this tree. That does not move ownership - IT REMOVES THEIR VOTE."
+      angular_lock_any_is_a_FRAMING_ERROR_IN_MY_BRIEF: "I called it an escape hatch. Angular emits `@Input() seed: any; size: any; notes: any; pick: any; lock: any; rows: any;` and `get locked(): any` - A BLANKET UNTYPED EMISSION FOR EVERY CELL AND PROP, the same class as react's 46 TS7006/TS7031. IT MASKS NOTHING S7-SPECIFIC. Ruled acceptable TODAY, and it MUST inherit the upstream fix the moment the IR carries a cell type - keeping `any` over a known type would then be a deliberate discard."
+      A_BLOCKER_FOR_S8_NOBODY_HAD_RECORDED: "The A7/A8 probe source uses a SELF-CLOSING <button ... />, and THE SVELTE EMITTER REFUSES IT: 'did not compile warning-free: a11y_consider_explicit_label'. Nobody saw it because the probe had ONLY EVER BEEN RUN THROUGH REACT. Give the button a text child and all six lanes emit A7 and A8 cleanly. S8's authoring must carry a label - now on T004's card."
+      the_async_matrix_MEASURED: "With a labelled button: react emits `await ready; const nextTicks = ticks + 1; setTicks(nextTicks); ...` with phase='pending' ABSENT and ticks read from the render closure. Solid, qwik, svelte, vue and angular ALL keep the pending write and read live at resume. Qwik's A8 splits correctly into sync$ + $(async). NO LANE LIMIT ON THE ASYNC AXIS - which is a stronger result than the charter assumed in either direction."
+      the_RED_already_exists_and_the_ledger_mandates_the_rewrite: "react's emitter.test.ts already asserts duringSuspension === '0|idle', not.toContain('0|pending') and the 1/2 counts, WITH AN ADJACENT CALIBRATION ARM proving the same harness reports 0|pending/2/3 over a hand-written live handler. AND DEFECTS.md ITSELF MANDATES that these arms be rewritten to the calibration numbers on repair - so T003 editing that file is COMPLIANCE, NOT GOALPOST-MOVING, and T999 must read it that way."
+      P1_RULED_not_closed_and_the_cheap_route_REJECTED: "TS7017 fires TWICE, not once - react P1.tsx(18,20) and solid (17,14), both inside the 267. Emitted P1 imports ONLY react / solid-js, nothing from frameless, SO A DECLARATION SHIPPED IN A FRAMELESS PACKAGE REACHES NO CONSUMER. Owner is THE EMITTED ARTIFACT. It EXPLICITLY REJECTED adding it to tsrx-core.d.ts: that would drop pnpm check by 2 while changing nothing a consumer sees - STRUCTURALLY THE SAME MOVE AS ANGULAR'S `lock: any`. Deferred because it moves bytes in the ONE TIER WITH NO REGENERATE SCRIPT."
+      evidence:
+        - "LIVE PROBE: buildEnrichedIr on `state<string|null>(null)` returns a binding with NO type field; react still emits useState(null). build.ts:588 serializeAst(helperArgument) - PM CONFIRMED."
+        - "s7 golden state:lock write value = {type:'Identifier', name:'next'} - a reference, not a value."
+        - "tsconfig census: only react/solid/qwik include generated/**. vue-tsc and svelte-check not installed in root or either package .bin."
+        - "SVELTE REFUSES the self-closing probe button: a11y_consider_explicit_label. Adding a text child clears all six."
+        - "Six-lane async emit: react drops the pending write and reads the closure; the other five keep it live. Qwik A8 splits sync$ + $(async)."
+        - "TS7017 twice: react P1.tsx(18,20), solid P1.tsx(17,14), both inside the 267."
+        - "qwik S7 TS2322 IS inside the inherited 267 - closes T001's open question."
+        - "No corpus fixture contains `await`; no react generated file contains `async` - so the repair must be byte-neutral."
+        - "Baselines re-derived: pnpm check EXACTLY 267 exit 6; pnpm test 1235/1."
+      missing_evidence:
+        - "website/'s fingerprint was flagged as unreproduced at 98 files against a recorded 116. PM RE-RAN THE ORIGINAL RECORDED METHOD AND IT REPRODUCES f936e169 EXACTLY - 116 all-files, 96 excluding node_modules. A COUNTING-METHOD DIFFERENCE, NOT A CHANGE. The owner's work is untouched, and flagging rather than asserting was still the right call."
+        - "Whether vue's and svelte's generated S7 would fail under vue-tsc / svelte-check is UNMEASURABLE at this tree - neither tool is installed and workers have no network. Installing them is a PM pre-dispatch action."
+        - "The A7/A8 probe was measured AT THE EMITTER ONLY. No lane's emitted async output has been served to a browser - that is T004's job."
+      required_board_updates:
+        - "S7's cause is THE IR; the scenario horn is REFUTED BY PROBE."
+        - "T001's 'the information to widen is present' corrected: one input is present, the other is a reference into records.events."
+        - "S7's REPAIR IS OUT OF THIS TRANCHE - the oracle requires the cause NAMED, not repaired. Route the IR cell-type field to the pnpm-check successor."
+        - "Angular's `lock: any` is blanket untyped emission, not an S7 mask; acceptable today, must inherit the upstream type."
+        - "qwik's S7 TS2322 IS inside the inherited 267 - closes T001's open item."
+        - "Replace T001's INHERITED async matrix with T002's MEASURED one: all six emit, react alone is broken, NO LANE LIMIT."
+        - "T004: S8's action button MUST carry a text child - svelte refuses the self-closing form."
+        - "P1 RULED to the emitted artifact; tsrx-core.d.ts route REJECTED as instrument-masking; deferred."
+        - "T003 filled from worker_package verbatim."
+        - "Re-baseline: pnpm check 267 exit 6, pnpm test 1235/1, both re-measured at HEAD 4b17d66."
   - id: T003
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
-    objective: "Repair the async axis, per the Judge's spec, with a witnessed RED before and GREEN after in every lane that can express it."
-    allowed_files: []
+    objective: >-
+      Close DEFECTS.md 12.2 in the REACT LANE ONLY - (a) the stale render-closure read across
+      `await` and (b) the dropped pre-await write - by segmenting toConstSsa's final-sync
+      retention at await boundaries and emitting React's functional-updater form for
+      post-await reads of the cell being written.
+    REACT_ONLY_IS_MEASURED_NOT_INHERITED: >-
+      T002 ran the live six-lane emit T001 explicitly did not. ALL SIX LANES EMIT A7 AND A8;
+      react alone drops the pre-await write and reads the render closure. Solid, qwik,
+      svelte, vue and angular all keep the pending write and read live at resume, and qwik's
+      A8 splits correctly into sync$ + $(async). THERE IS NO LANE LIMIT ON THIS AXIS and no
+      other emitter is touched.
+    the_repair_site_is_exact: >-
+      toConstSsa at packages/frameworks/react/src/emitter/index.ts around the "Retain only the
+      final sync per cell" block, which is sound ONLY when nothing can render in between.
+      Segment it at await boundaries and (b) closes; use the functional updater for post-await
+      reads of the written cell and (a) closes.
+    editing_DEFECTS_md_is_the_LEDGERS_OWN_INSTRUCTION: >-
+      DEFECTS.md mandates that the defect-pinning arms be rewritten to the calibration numbers
+      ON REPAIR. T003 doing so is compliance, NOT goalpost-moving, and T999 must read it that
+      way.
+    allowed_files:
+      - packages/frameworks/react/src/emitter/index.ts
+      - packages/frameworks/react/test/emitter.test.ts
+      - docs/DEFECTS.md
     verify:
-      - "PER LANE, the deliverable the oracle requires: a recorded behavioural RED BEFORE the repair and a GREEN AFTER. A green suite is what hid this defect for four of six emitters."
+      - "BEFORE ANY EDIT, witness the RED verbatim at HEAD: run react's emitter async-handler tests and paste (i) the passing assertions duringSuspension === '0|idle', not.toContain('0|pending'), and the 1-then-2 counts, and (ii) the emitted handler text showing setPhase('pending') ABSENT before the await."
+      - "AFTER: the same command, with the emitted-handler arm reporting the calibration row EXACTLY - duringSuspension '0|pending', 2 after the overlap, 3 after the third dispatch - AND the hand-written live-handler calibration arm STILL reporting the same row. THE CALIBRATION IS THE HARNESS'S CONTROL: if it moves, the instrument moved, not the emitter."
+      - "BYTE-NEUTRALITY IS THE FALSIFIER: no corpus fixture contains `await` and no react generated file contains `async`, so a CORRECT repair moves ZERO generated bytes. Regenerate all three tiers, then git diff --stat over all generated*/ must be EMPTY."
       - "pnpm test   # baseline + only tests this task adds; the pre-existing package-inventory failure must stay at exactly 1"
       - "pnpm check  # inherited RED at 267 - it MUST NOT RISE. It is not this goal's to lower."
       - "pnpm lint && pnpm check:citations"
       - "pnpm e2e    # BEHAVIOURAL ONLY - it type-checks nothing and runs against the dev server"
       - "REGENERATE ALL THREE TIERS before any diff is trusted: six regenerate.ts, SIX regenerate-composition.ts, and generated-persistence/P1 which has NO SCRIPT and is written only by UPDATE_GOLDENS=1 in react/solid test/emitter.test.ts. A generated*/ diff passes VACUOUSLY if nothing regenerates."
     stop_if:
-      - "Need files outside allowed_files."
-      - "A lane cannot express async inside its design envelope - RECORD IT as a lane limit, do not force it."
+      - "Need files outside allowed_files. IN PARTICULAR: do NOT touch the other five emitters (MEASURED CLEAN on both A7 and A8), do NOT add a fixture or golden for the async probe (a golden alone enlists it into every lane's gate), and do NOT touch the IR schema - S7 is ruled OUT of this tranche."
+      - "Any byte under packages/frameworks/*/generated*/ moves. That means the repair is NOT gated on the await boundary and is changing synchronous lowerings."
+      - "The repair would need a live post-await read of a cell OTHER than the one being written - React's functional updater CANNOT express that. Record the boundary as a v-limit with its triggering authoring and STOP; do not invent a ref-mirroring scheme."
       - "You cannot witness the RED before the repair. An unwitnessed fix is exactly what this defect's history warns about."
       - "pnpm check RISES."
       - "Verification fails twice for the same reason."
@@ -209,6 +272,12 @@ tasks:
       falsifiable. Repairing the axis WITHOUT landing S8 leaves the repair pinned by unit
       tests - which is precisely the evidence shape that let four of six emitters stay broken,
       two of them silently.
+    A_BLOCKER_T002_MEASURED_THAT_NOBODY_HAD_RECORDED: >-
+      S8'S ACTION BUTTON MUST CARRY A TEXT CHILD. The A7/A8 probe as authored in react's
+      emitter test uses a SELF-CLOSING <button ... />, and THE SVELTE EMITTER REFUSES IT:
+      "did not compile warning-free: a11y_consider_explicit_label". Nobody saw this because
+      the probe had only ever been run through react. With a label, all six lanes emit
+      cleanly. This would have blocked S8 at the svelte lane.
     allowed_files: []
     verify:
       - "pnpm e2e   # 6 demos x 9 SCENARIOS, all observations equal - the defining item"
