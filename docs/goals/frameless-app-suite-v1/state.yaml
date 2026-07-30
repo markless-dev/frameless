@@ -1,0 +1,275 @@
+# GoalBuddy v2 state.yaml
+# Board truth lives here. goal.md is the editable charter; notes/ holds long receipts only.
+
+version: 2
+
+goal:
+  title: "Frameless app suite: the data-fetching door, TodoMVC Advanced, and a Codex clone"
+  slug: "frameless-app-suite-v1"
+  kind: existing_plan
+  tranche: >-
+    Probe the async door in six lanes and rule what it supports. Then ship TodoMVC Advanced
+    styled to a NAMED reference. Then attempt the Codex clone. STOP AT EACH REFUSAL AND
+    RECORD IT. Dashboard and Twitter are recorded as candidates, not scope.
+  status: active
+  oracle:
+    signal: >-
+      THREE PARTS, ALL REQUIRED. (1) THE DOOR IS MEASURED: computed(async ...) probed in ALL
+      SIX LANES with a witnessed per-lane result - emits / refuses-with-verbatim-message /
+      emits-but-misbehaves - landing BEFORE any app depends on it. A REFUSAL IS A LEGITIMATE
+      RESULT. (2) EVERY APP THAT SHIPS IS AUTHORED ONCE, EMITTED SIX WAYS, AND LOOKS LIKE ITS
+      REFERENCE: one .tsrx source, NO hand-written per-lane app code, a documented and
+      ACTUALLY-RUN launch command per lane, and a visual match to a NAMED reference design
+      recorded on the card. A lane that cannot be generated is left UNBUILT with its verbatim
+      refusal. (3) NOTHING REGRESSES: pnpm test at EXACTLY ONE failure (the foreign
+      package-inventory ARM B); pnpm check DOES NOT RISE above 267; pnpm e2e stays 6 x 9;
+      lint and check:citations clean.
+    cadence: "after the probe, after each app, and at final audit"
+    final_proof: >-
+      The six-lane door result stated per lane; then, for each shipped app, the launch command
+      that was RUN, a visual comparison against its NAMED reference, and proof that no
+      per-lane app code was hand-written. For every lane NOT shipped, the VERBATIM refusal. A
+      missing lane with a refusal is a legitimate outcome; a missing lane with no refusal is
+      not.
+  intake:
+    original_request: >-
+      Slack with Patrick Stapleton: build the apps frameworks get tested with - TodoMVC simple
+      AND advanced, a Codex/ChatGPT clone with streaming and window management - prove
+      behaviour matches across lanes with witness, and COPY THE STYLES OF THE REAL THING
+      ("find a good shadcn dashboard template or something... same with chatgpt copy").
+    interpreted_outcome: >-
+      Measure whether the authoring surface can express data fetching at all; then build the
+      apps it supports, each authored once, emitted six ways, visually matching a named
+      reference, with every refusal recorded.
+    input_shape: existing_plan
+    audience: "framework authors evaluating frameless, and Patrick's 'apps frameworks use for testing' bar"
+    authority: approved
+    proof_type: demo
+    completion_proof: >-
+      The six-lane door result; each shipped app emitted from ONE source into six lanes with a
+      launch command that was RUN and a visual match to its named reference; every refusal
+      verbatim.
+    existing_plan_facts:
+      - "PATRICK: 'you basically have to do the same thing all frameworks do' - the suite is the standard evaluation set, not a showcase."
+      - "PATRICK: TodoMVC 'is actually surprisingly good' and covers CRUD, search local/remote, local/in-memory state management, AND OPTIMISTIC UPDATES."
+      - "OWNER: split it - 'todoMVC simple and todoMVC advanced or something like that'. The simple one SHIPPED on frameless-real-apps-v1 (S10, six lanes, styled). Advanced is NEW."
+      - "PATRICK: 'the most important one is recreating ChatGPT... so streaming... streaming and window management. So codex basically. Sidebar, chat thread. Right detail pane with tabs. Bottom detail pane with tabs. Streaming response while still navigating the app.'"
+      - "PATRICK: 'Twitter was crud/infinite scrolling. Codex clone will cover all that.' - so Twitter is SUBSUMED, not separate scope."
+      - "PATRICK: dashboards. OWNER: 'I can make the same for each framework.' RECORDED AS A CANDIDATE, not this tranche."
+      - "OWNER: the music player demo is IN MARKLESS already - explicitly NOT this repo's scope."
+      - "OWNER: 'Witness verifies the behavior across each' - the cross-lane oracle is the existing witness/e2e machinery, not a new one."
+      - "OWNER: search 'needs to be local filtering and remote query' - BOTH, not either."
+      - "OWNER: data fetching, 'or artificial delay' - the delay is an acceptable stand-in for a real remote."
+      - "OWNER, EXPLICIT AND EASY TO UNDER-READ: 'I want you to copy the styles of the actual dashboards, for example find a good shadcn dashboard template or something there's tons of those, same with chatgpt copy, etc.' FINDING THE REFERENCE IS TASK WORK - it needs browsing, which prep may not do."
+    likely_misfire: >-
+      BUILDING THE APPS ON AN UNMEASURED DOOR. Streaming, optimistic updates and remote query
+      all reduce to "can a component fetch". If the answer is no, four apps' worth of
+      authoring gets written against a shape that CANNOT EXIST. That is why the probe is Phase
+      A and not a footnote. SECOND MISFIRE: hand-writing the lanes - the fastest route to six
+      impressive demos, and it proves nothing. THIRD: shipping unstyled - TodoMVC's first pass
+      emitted correct markup with no stylesheet and THREE OF THE FIVE visual features were
+      missing, so THE VISUAL REFERENCE BELONGS ON THE CARD BEFORE THE APP IS BUILT.
+    blind_spots_considered:
+      - "MEASURED AT PREP: the authoring surface is state, computed, element, shared - ZERO lifecycle hooks - and there are ZERO computed(async) instances in the corpus. Every capability Patrick named depends on that one unopened door."
+      - "TWO-WORD DOM EVENTS ARE UNSPELLABLE IN EVERY LANE (DEFECTS.md 15). onKeyDown and onDoubleClick cannot be produced and onKeydown/onDblclick NEVER FIRE. THIS WILL HIT THE CODEX CLONE HARD - keyboard shortcuts, tab navigation, pane focus are exactly what it needs."
+      - "REACT MISCOMPILES A STATE WRITE NESTED IN AN if, and entry 8's shipped refusal has a hole that exact shape - NEITHER LOWERED NOR REFUSED (8.1). Every authored conditional must be an EXPRESSION."
+      - ".svelte and .vue refuse multi-component modules BY NAME. A Codex clone is naturally many components - this is a structural question, not a styling one."
+      - "STREAMING IS HARDER THAN FETCHING: it is repeated async updates over time, and Qwik's SSR serializer AWAITS promises, which is why S8's gate had to be click-armed. A streaming response may be unserializable in that lane by design."
+      - "grep is BLIND to the React emitter (one NUL byte, exit 1 with no output). Use Python for sweeps of that file until T008 on the sibling board lands."
+
+rules:
+  pm_owns_state: true
+  one_active_task: true
+  max_write_workers: 1
+  no_implementation_without_worker_or_pm_task: true
+  no_completion_without_judge_or_pm_audit: true
+  continuous_until_full_outcome: true
+
+agents:
+  scout: installed
+  worker: installed
+  judge: installed
+
+visual_board:
+  selected: none
+  local:
+    status: not_requested
+    url: null
+    command: "node ~/.claude/skills/goal-prep/surfaces/local-goal-board/scripts/local-goal-board.mjs --goal docs/goals/frameless-app-suite-v1"
+  why: >-
+    The owner has run twenty-plus goals in this repo against the file board alone. Recorded as
+    an explicit choice, not an omission.
+
+active_task: T001
+
+tasks:
+  - id: T001
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    objective: >-
+      PROBE THE DATA-FETCHING DOOR. Measure computed(async ...) in all six lanes: does it
+      emit, does it refuse with a verbatim message, or does it emit and misbehave?
+    why_this_is_PHASE_A_and_not_a_footnote: >-
+      EVERY capability Patrick named - fetch, optimistic updates, remote query, streaming -
+      reduces to "can a component fetch". MEASURED AT PREP: the authoring surface is state,
+      computed, element, shared with ZERO LIFECYCLE HOOKS, and there are ZERO computed(async)
+      instances in the corpus in any lane. If the door does not open, four apps' worth of
+      authoring would be written against a shape that CANNOT EXIST.
+    what_a_result_looks_like: >-
+      Per lane, one of: EMITS (with the emitted shape quoted), REFUSES (with the verbatim
+      message), or EMITS-BUT-MISBEHAVES (with the observed behaviour and how it differs). A
+      REFUSAL IS A LEGITIMATE RESULT and is worth more than a guess. If a lane cannot express
+      it INSIDE ITS DESIGN ENVELOPE - Qwik's SSR serializer AWAITS promises, which is why S8's
+      gate had to be click-armed - that is a LANE LIMIT, recorded, not chased.
+    also_measure_because_the_apps_need_them: >-
+      (a) Whether the resolved value can be READ in the template and whether a pending state
+      is observable at all - an app needs a spinner. (b) Whether a SECOND resolution updates
+      the view, which is the difference between fetching and STREAMING. (c) Whether an
+      optimistic write followed by a revert is expressible, given that every conditional must
+      be an EXPRESSION because of DEFECTS.md 8.1.
+    allowed_files:
+      - probes/async-door/**
+      - docs/goals/frameless-app-suite-v1/notes/T001-async-door.md
+    verify:
+      - "PER LANE, a recorded result with its evidence - emitted shape, verbatim refusal, or observed misbehaviour"
+      - "pnpm test   # baseline is EXACTLY ONE failure, the foreign package-inventory ARM B - must stay exactly 1"
+      - "pnpm check  # must stay at EXACTLY 267"
+      - "pnpm lint && pnpm check:citations"
+      - "git diff --exit-code -- packages/ demos/ scripts/   # probes live OUTSIDE the product tree"
+      - "fingerprint the owner's three paths at start AND finish"
+    stop_if:
+      - "Need files outside allowed_files. This is a PROBE - it must not touch the product tree."
+      - "You are about to change the authoring surface, an emitter, or the IR. Measuring is the whole task."
+      - "A lane cannot express it inside its design envelope - RECORD THE LANE LIMIT and continue with the rest."
+      - "pnpm check rises above 267."
+      - "NEVER pkill -f on a broad pattern - a prior task killed one of the owner's long-running servers that way. Kill by recorded PID only, and only PIDs you started."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
+  - id: T002
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: >-
+      Rule what the door supports, and spec TodoMVC Advanced against it - including its NAMED
+      visual reference.
+    what_the_ruling_must_contain:
+      - "Per lane: what is authorable today - fetch, repeated resolution, optimistic write-then-revert - and what is not"
+      - "Whether TodoMVC Advanced is buildable AS THE OWNER DESCRIBED IT (fetch, optimistic, artificial delay, local filtering AND remote query) or must narrow - and exactly where"
+      - "Whether the Codex clone is reachable at all, or whether streaming is refused. SAY SO PLAINLY - a capability list is a legitimate deliverable for this goal."
+      - "THE NAMED VISUAL REFERENCE for TodoMVC Advanced, and how a Worker will compare against it. The owner asked for the styles of the real thing; TodoMVC's first pass shipped unstyled and THREE OF FIVE visual features were missing."
+      - "The exact Worker spec: objective, allowed_files, verify, stop_if"
+    constraints:
+      - "READ-ONLY. Author nothing, emit nothing, edit no product file."
+      - "Do NOT re-litigate T001's measurements - rule on what they MEAN."
+      - "FINDING A REFERENCE DESIGN NEEDS BROWSING. That is task work and it is in scope for you as a Judge input, but do not generate assets."
+      - "A lane limit is a legitimate outcome; an unargued one is not."
+    receipt: null
+
+  - id: T003
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    objective: >-
+      Ship TodoMVC ADVANCED: one authored source, six lanes, six viewable sites, styled to its
+      named reference.
+    the_owners_axes_verbatim: >-
+      Data fetching (artificial delay acceptable), OPTIMISTIC UPDATES, search that is BOTH
+      local filtering AND remote query, and local/in-memory state management. Patrick's
+      framing: TodoMVC is the app that covers CRUD plus all of these at once.
+      SIMPLE TODOMVC ALREADY SHIPPED as S10 on frameless-real-apps-v1 - six lanes, styled,
+      screenshots byte-identical in five. DO NOT MODIFY IT. Advanced is a SEPARATE scenario.
+    allowed_files: []
+    verify:
+      - "PER LANE: the site runs, the launch command is RECORDED AND WAS RUN, and it VISUALLY MATCHES the named reference"
+      - "DERIVATION PROOF: delete every generated and copied artifact for this app, rebuild, confirm BYTE-IDENTICAL"
+      - "pnpm test at exactly 1 failure / pnpm check not above 267 / pnpm e2e 6 x 9 / lint / check:citations"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to write per-lane app code by hand."
+      - "An axis the owner named is not authorable - RECORD THE VERBATIM REFUSAL, ship the rest, and say which axis is missing."
+      - "You are about to modify the simple TodoMVC (S10)."
+      - "NEVER pkill -f on a broad pattern."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
+  - id: T004
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    objective: >-
+      Attempt the CODEX CLONE: sidebar, chat thread, right detail pane with tabs, bottom
+      detail pane with tabs, and a streaming response that continues while the app is
+      navigated.
+    THIS_IS_THE_ONE_MOST_LIKELY_TO_REFUSE_AND_THAT_IS_INFORMATION: >-
+      THREE measured blockers point straight at it. (1) TWO-WORD DOM EVENTS ARE UNSPELLABLE IN
+      EVERY LANE - no onKeyDown, no onDoubleClick, and onKeydown/onDblclick NEVER FIRE
+      (DEFECTS.md 15). Keyboard shortcuts, tab navigation and pane focus are exactly what this
+      app is made of. (2) STREAMING IS REPEATED ASYNC OVER TIME, and Qwik's SSR serializer
+      AWAITS promises - which is why S8's gate had to be click-armed. (3) .svelte and .vue
+      REFUSE MULTI-COMPONENT MODULES BY NAME, and a Codex clone is naturally many components.
+      A CAPABILITY LIST IS A LEGITIMATE DELIVERABLE HERE. Record each refusal verbatim and
+      ship whatever subset stands.
+    allowed_files: []
+    verify:
+      - "PER LANE: what runs, what refused, with the verbatim message"
+      - "the same derivation and no-hand-written-lanes proofs as T003"
+      - "pnpm test at exactly 1 / pnpm check not above 267 / pnpm e2e 6 x 9 / lint / check:citations"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to write per-lane app code by hand, or to fake streaming with a per-lane shim."
+      - "Streaming is refused - RECORD IT VERBATIM PER LANE and stop. Do not invent a workaround that only one lane can run."
+      - "NEVER pkill -f on a broad pattern."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Final audit: certify all three oracle parts, or refuse."
+    constraints:
+      - "QUOTE EVERY COMPLETION FIELD VERBATIM before ruling - signal, cadence, final_proof AND intake.completion_proof. Four final audits across prior boards caught the PM describing a multi-part oracle with fewer parts than the board defines, and one found a refuted figure still standing in goal.md after the PM reported all sites corrected."
+      - "REJECT IF ANY PER-LANE APP CODE WAS HAND-WRITTEN. Verify by DERIVATION, not by assertion."
+      - "REJECT if an app shipped without a visual comparison against its NAMED reference. The owner asked for the styles of the real thing, and TodoMVC's first pass shipped unstyled with three of five visual features missing."
+      - "REJECT if a lane is missing WITHOUT a verbatim refusal. A missing lane WITH one is legitimate."
+      - "REJECT if any launch command in the report was not actually run."
+      - "REJECT if pnpm check ROSE above 267, pnpm e2e left 6 x 9, or pnpm test left exactly one failure."
+      - "A CAPABILITY LIST IS A LEGITIMATE OUTCOME. If the door refused and the apps could not be built, say so plainly and certify the measurement instead - do not manufacture a partial demo to look complete."
+      - "Assume the PM's brief contains at least one error and find it. EVERY task across the last five boards corrected its dispatch."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "The six-lane door table, and per app per lane: runs / refused-with-message, launch command, visual match"
+      - "next task if not complete"
+    receipt: null
+
+checks:
+  dirty_fingerprint: >-
+    2026-07-30 at prep. Clean except the OWNER'S three in-flight paths - pnpm-lock.yaml,
+    pnpm-workspace.yaml and website/ - never to be modified. Expected f326d314 / aeb7edc1 /
+    f936e169, website/ 116 files. Method: SORT THE DIGESTS, NOT THE PATHS; with no sort the
+    value is not deterministic.
+  last_verification:
+    result: mixed
+    task: "prep inventory"
+    run_by: PM
+    when: "2026-07-30"
+    commands:
+      - cmd: "pnpm test"
+        status: fail
+        note: "EXACTLY ONE failure - package-inventory ARM B, caused by the owner's uncommitted lockfile. FOREIGN and pre-existing; must stay at exactly 1."
+      - cmd: "pnpm check"
+        status: fail
+        note: "267. INHERITED RED from the emitter-capability phase. NOT this goal's to fix; its only obligation is that it does not RISE."
+      - cmd: "pnpm e2e"
+        status: pass
+        note: "6 demos x 9 scenarios, all observations equal"
+      - cmd: "pnpm lint"
+        status: pass
