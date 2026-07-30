@@ -100,13 +100,13 @@ visual_board:
     The owner has run twenty-plus goals in this repo against the file board alone. Recorded as
     an explicit choice, not an omission.
 
-active_task: T001
+active_task: T002
 
 tasks:
   - id: T001
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       PROBE THE DATA-FETCHING DOOR. Measure computed(async ...) in all six lanes: does it
@@ -146,12 +146,74 @@ tasks:
       - "pnpm check rises above 267."
       - "NEVER pkill -f on a broad pattern - a prior task killed one of the owner's long-running servers that way. Kill by recorded PID only, and only PIDs you started."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T001-async-door.md
+      summary: "Measured the data-fetching door in six lanes. computed(async ...) is CLOSED IN ALL SIX, and closed TWICE BEFORE ANY EMITTER RUNS: the Markless compiler demands an @try/@pending/@catch boundary, and the Frameless IR cannot represent JSXTryExpression. Five emitters refuse verbatim; Angular EMITS INVALID TYPESCRIPT (TS1308, a non-async getter containing await) because it is the only lane that does not verify its own output. Streaming (repeated resolution) and optimistic write-then-revert BOTH EMIT IN ALL SIX LANES via async event handlers. Fetch-on-render is unreachable in every lane."
+      THE_DOOR_IS_CLOSED_BY_A_PINCER_AND_BOTH_JAWS_ARE_UPSTREAM_OF_THE_EMITTERS: "MARKLESS_ASYNC_BOUNDARY_REQUIRED: 'Cannot read async computed \"greeting\" outside @try/@pending/@catch. Wrap the read in an async boundary.' AND 'Unsupported template construct JSXTryExpression cannot be represented in frameless-enriched-ir/2.' You may not read an async computed without the boundary, and the boundary is unrepresentable. Neither jaw is an emitter. THE DOOR IS DESIGNED UPSTREAM AND UNIMPLEMENTED DOWNSTREAM: @markless/core already declares computed<T>(derive: () => T): AsyncComputedValue<T> with Awaited<Value> unwrapping, and the vendored compiler carries async-computed-runner, async-boundary-update and per-arm boundary records. THE REFUSAL IS FRAMELESS'S."
+      THE_PM_BRIEF_WAS_WRONG_ABOUT_THE_AUTHORING_SURFACE: "The brief said the surface is exactly state/computed/element/shared with zero lifecycle hooks - that count is INCOMPLETE. There is a FOURTH template control-flow form, @try / @pending / @catch, which the parser HAS and the Markless compiler DEMANDS. @pending IS THE SPINNER THE BOARD ASKED FOR, and it is unrepresentable downstream. Every prior board that counted this surface counted four constructs and missed it."
+      THREE_OF_ITS_OWN_READINGS_WERE_CONFOUNDS_AND_CONTROLS_REFUTED_THEM: "P2-P6 produced refusals that read as async limits and are NOT. Qwik's is a CALLBACK-PROP rule. Solid's is a ZERO-PROP defect - reproduces with no async at all. Angular's is a GLOBAL-IDENTIFIER ban - fetch, setTimeout, Promise, JSON, Date all refused, measured on a FULLY SYNCHRONOUS control. Without PB and PC, which contain no async whatsoever, all three would have been reported as async refusals and three false lane limits would have entered the record."
+      ANGULAR_IS_THE_ONLY_LANE_THAT_DOES_NOT_VERIFY_ITS_OWN_BYTES: "For an async computed it emits `get greeting(): any { return await this.ready; }` - a NON-ASYNC getter containing await. tsc reports TS1308 on EXACTLY the three async-computed scenarios and NONE of the five handler ones. Its EMITS is not a capability; it is an unchecked lane. 'Did not throw' is not 'produced valid output'. NOT THIS BOARD'S TO FIX."
+      door_table: "async computed: REFUSES in react/solid/qwik/svelte/vue, MISBEHAVES in angular. Streaming, 3 awaits (P8): EMITS in all six. Optimistic write-then-revert (P9): EMITS in all six. Bare async-computed read and @try-wrapped read: refused pre-emitter for all six."
+      changed_files:
+        - docs/goals/frameless-app-suite-v1/notes/T001-async-door.md
+        - probes/async-door/.gitignore
+        - probes/async-door/run.mjs
+        - probes/async-door/typecheck.mjs
+        - probes/async-door/sources/P0-bare-read.tsrx
+        - probes/async-door/sources/P1-basic.tsrx
+        - probes/async-door/sources/P2-unread.tsrx
+        - probes/async-door/sources/P3-handler-read.tsrx
+        - probes/async-door/sources/P4-handler-fetch.tsrx
+        - probes/async-door/sources/P5-streaming.tsrx
+        - probes/async-door/sources/P6-optimistic.tsrx
+        - probes/async-door/sources/P7-promise-prop-computed.tsrx
+        - probes/async-door/sources/P8-promise-prop-streaming.tsrx
+        - probes/async-door/sources/P9-promise-prop-optimistic.tsrx
+        - probes/async-door/sources/PA-self-contained-delay.tsrx
+        - probes/async-door/sources/PB-zero-prop-control.tsrx
+        - probes/async-door/sources/PC-global-identifier-control.tsrx
+      commands:
+        - cmd: "node probes/async-door/run.mjs"
+          status: pass
+          note: "13 scenarios x 6 lanes; per-lane verdict with verbatim refusal recorded"
+        - cmd: "pnpm test"
+          status: pass
+          note: "EXACTLY 1 failure (package-inventory ARM B, foreign) / 1259 passed"
+        - cmd: "pnpm check"
+          status: pass
+          note: "EXACTLY 267 'error TS' lines. Did not rise."
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 455 files"
+        - cmd: "pnpm check:citations"
+          status: pass
+          note: "clean over 4 documents, 17 watched sources, 529 swept"
+        - cmd: "git diff --exit-code -- packages/ demos/ scripts/"
+          status: pass
+          note: "exit 0 - product tree untouched"
+        - cmd: "shasum fingerprints (start and finish)"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169, website/ 116 files - IDENTICAL at both ends"
+      deviations:
+        - "Added 13 probe scenarios rather than one. A single scenario could not separate the two pre-emitter gates from the six emitter results, and could not have caught the three confounds."
+        - "Added PB and PC, which contain NO async, as controls. Without them Solid's zero-prop refusal and Angular's global-identifier refusal would have been reported as async refusals - both false."
+        - "Rewrote two citations from line ordinals to symbol names (buildTemplateNode, validateEnrichedIr) to satisfy check:citations' first-party ordinal ban."
+        - "Did not run pnpm e2e: not in T001's verify list, and git diff --exit-code over packages/ demos/ scripts/ proves nothing it exercises was touched."
+        - "probes/async-door/emitted/ is gitignored - derived output regenerated by one command."
+      remaining_blockers:
+        - "FOR T002: NO LANE CAN FETCH ON RENDER. There is no lifecycle hook and computed(async ...) is closed, so any app spec saying 'loads its data when it appears' must narrow to 'when the user asks', or the IR must grow a template node kind (out of scope)."
+        - "FOR T003/T004: the Angular emitter refuses EVERY global identifier in a handler body - fetch, setTimeout, Promise, JSON, Date - measured on a synchronous control. Angular-lane async work must arrive via a prop or declared member."
+        - "FOR T004: the Solid emitter refuses any component with NO props ('ComponentProps has dangling graph record id: prop:props'), reproduced on a fully synchronous module. A Codex clone has prop-less components."
+        - "The Angular emitter has no output-verification step, unlike the other five. Its EMITS is 'did not throw', not 'produced valid output'. Not this board's to fix."
+      stopped_because: null
+      THE_DELIBERATE_RED_IS_EVIDENCE_NOT_A_FAILED_VERIFICATION: "`node probes/async-door/typecheck.mjs` exits 2 BY DESIGN and is deliberately NOT in the commands ledger, because the checker admits only `pass` there and recording this as a pass would launder a red into a green - the exact green vacuum this project keeps finding. IT IS RECORDED HERE INSTEAD, IN FULL: tsc reports TS1308 ('await' is only allowed within an async function) on EXACTLY the three async-computed scenarios and on NONE of the five handler scenarios. That discrimination IS the Angular measurement. Same class as probes/** being lint-exempt in vite.config.ts, whose comment reads: several are deliberately un-parseable ... their invalidity IS the measurement, so linting them asserts the opposite of what they exist to show. Verbatim command record: [{\"cmd\": \"node probes/async-door/typecheck.mjs\", \"status\": \"deliberate-red\", \"note\": \"tsc exit=2 BY DESIGN: TS1308 on exactly the three async-computed scenarios, none of the five handler ones. This red IS the Angular misbehaviour evidence.\"}]"
   - id: T002
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     objective: >-
       Rule what the door supports, and spec TodoMVC Advanced against it - including its NAMED
