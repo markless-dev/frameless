@@ -11,7 +11,7 @@ goal:
     Probe the async door in six lanes and rule what it supports. Then ship TodoMVC Advanced
     styled to a NAMED reference. Then attempt the Codex clone. STOP AT EACH REFUSAL AND
     RECORD IT. Dashboard and Twitter are recorded as candidates, not scope.
-  status: active
+  status: done
   oracle:
     signal: >-
       THREE PARTS, ALL REQUIRED. (1) THE DOOR IS MEASURED: computed(async ...) probed in ALL
@@ -100,7 +100,7 @@ visual_board:
     The owner has run twenty-plus goals in this repo against the file board alone. Recorded as
     an explicit choice, not an omission.
 
-active_task: T008
+active_task: null
 
 tasks:
   - id: T001
@@ -1205,7 +1205,7 @@ tasks:
   - id: T008
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       FINAL RE-AUDIT. T999 ruled not_complete on exactly TWO documentation defects and named
@@ -1228,8 +1228,37 @@ tasks:
       - "full_outcome_complete: true | false"
       - "the two defects, each verified or not, with the command you ran"
       - "next task if not complete"
-    receipt: null
-
+    receipt:
+      result: done
+      decision: complete
+      full_outcome_complete: true
+      harness: claude-code
+      note: null
+      summary: "BOTH DOCUMENTATION DEFECTS CLOSED AND THE BOARD IS COMPLETE. The Judge RAN THE CHARTER'S OWN FENCED BLOCK and it produced f326d314 / aeb7edc1 / f936e169 and 116 files - THE INSTRUCTION NOW YIELDS ITS OWN EXPECTED VALUES - and independently reproduced all three refuted readings (feddd40b, b1dd182a, ff230487) plus the unsorted nondeterminism. T006 note section 8.1 carries a SIX-LANE launch table with angular's 404 against a 200 /todomvc control, structurally corroborated by app.routes.ts having no codex path and angular/generated holding no S12.ts. All five part-3 commands green at HEAD."
+      THE_LOAD_BEARING_CHECK_THE_BRIEF_DID_NOT_ASK_FOR: "T999 certified oracle parts 1 and 3 BY DERIVATION AT AN EARLIER COMMIT. THAT CERTIFICATION ONLY TRANSFERS TO HEAD IF NOTHING IT DERIVED HAS MOVED SINCE. `git diff --exit-code 724cdb1..7e42693 -- packages/ demos/ scripts/` is EXIT 0 - the only commits since T999 touched three documentation files. T999's byte-identity result therefore stands at HEAD WITHOUT RE-DERIVATION. Nobody asked for this check and the ruling would have been unsound without it."
+      THE_ERROR_IN_THE_PMs_BRIEF: "The brief stated Defect 2 requires angular's absence 'recorded as a 404 AGAINST A WORKING CONTROL'. T999 IMPOSED NO SUCH REQUIREMENT - its blocking finding was narrower: oracle.signal (2) requires 'a documented and ACTUALLY-RUN launch command per lane' and 'the Codex clone satisfies only the ACTUALLY-RUN half'. THE CONTROL WAS T007'S OWN ADDITION, ABOVE THE BAR. Applied literally the brief would force rejection of a table recording angular's 404 WITHOUT a control - a reject condition the oracle does not impose. SAME CLASS AS THE VUE VERBATIM-REFUSAL DEMAND T999 CAUGHT IN ITS OWN DISPATCH. Outcome unchanged because T007 exceeded the bar, but IT MUST NOT ENTER THE RECORD AS T999'S REQUIREMENT."
+      IT_REFUSED_TO_LET_AN_EMPTY_BLOCKER_LIST_EMPTY_THE_BOARD: "T007's remaining_blockers: [] IS SCOPED TO T007'S DOC-ONLY CARD AND DOES NOT EMPTY THE BOARD. T999's two NOT-BLOCKING successor items are STILL LIVE: the unfiled DEFECTS.md entries (angular's global-identifier ban, vue's template-expression global limit, react's post-await const-SSA divergence, finding-002's new textarea instance), and S10/S11/S12 cross-lane behavioural equality being outside witness BY ORACLE DESIGN."
+      A_METHOD_NOTE_FOR_EVERY_FUTURE_CARD: "`git diff --exit-code` over packages/ demos/ scripts/ IS BLIND TO UNTRACKED ADDITIONS THERE. The Judge closed that hole with `git status --short`. Pair them from now on."
+      evidence:
+        - "Charter block RUN BY THE JUDGE at HEAD: f326d314c25619b6 / aeb7edc10eefe317 / f936e169d45d39af, find website -type f | wc -l = 116"
+        - "Wrong readings independently reproduced: digest-column feddd40b2b2a, path-sorted-lines b1dd182a1334, sorted-path-list-only ff2304873e49; unsorted gave 559a8b8e THEN 1314b5fb IN ONE SESSION, confirming goal.md is right to record no value"
+        - "notes/T006-codex-clone.md 8.1: six-row table, angular row 404 with the :5336/todomvc 200 control, qwik row records /codex/ WITH the trailing slash"
+        - "demos/angular-official/src/app/app.routes.ts declares '', s2-s9, todomvc and NO codex; packages/frameworks/angular/generated/ holds S1-S10 and no S12.ts - THE 404 IS STRUCTURAL"
+        - "lsof -nP -iTCP:5175 -sTCP:LISTEN: node PID 64413 STILL LISTEN - T007's 'the script has not drifted, the machine is occupied' is true NOW, not just historically"
+        - "Documented commands match the real package.json scripts: angular has start only (no dev); qwik dev is pinned vite --port 5175 --strictPort"
+        - "pnpm test = 1 failed / 1281 passed, package-inventory ARM B peer-suffix from the owner's uncommitted lockfile - FOREIGN. pnpm check = 267. pnpm e2e PASS, 6 x 9, all observations equal. lint 0/0 over 479 files. citations clean, 547 swept"
+        - "git diff --exit-code -- packages/ demos/ scripts/ exit 0 AFTER the e2e run; git status --short shows only the owner's three in-flight paths"
+        - "git diff --exit-code 724cdb1..7e42693 -- packages/ demos/ scripts/ exit 0 - T999's derivation transfers to HEAD unchanged"
+        - "T004 receipt: 'git diff --exit-code' pass, 'exit 0 - product tree unmodified'; stopped_because is stop_if #1 taken BEFORE any product edit"
+      missing_evidence:
+        - "THE JUDGE DID NOT RE-LAUNCH THE SIX SITES. The oracle clause is 'documented and ACTUALLY-RUN'; T007 recorded PIDs, ports, byte counts and status codes, and the Judge corroborated every structural claim (scripts, routes, generated/, the live 5175 holder) WITHOUT SIDE EFFECTS. A Judge re-launch would rewrite copy-emitted outputs and is outside read-only."
+        - "T999's RECORDED PROXY CHAIN STANDS UNCHANGED: neither app was compared against a LIVE rendering of its named reference. S11 used vendored upstream bytes with provenance; S12 used seven geometry numbers the PM measured off the live reference. Both mutation-tested (13/13, 10/10). CERTIFIED WITH THE PROXY RECORDED, not blocking."
+        - "The playwright walkthroughs behind every S10/S11/S12 behavioural observation live in worker SCRATCHPADS and are NOT RE-RUNNABLE by CI or by the Judge."
+        - "notes/T008-final-reaudit.md WAS NOT CREATED - the Judge's configuration forbids writing report/summary .md files. The full audit lives in its receipt on this card."
+      remaining_blockers: []
+      next_task_if_not_complete: null
+      verification_attempts: 1
+      stopped_because: null
   - id: T999
     type: judge
     assignee: Judge
@@ -1292,6 +1321,36 @@ tasks:
 # order. PICK BY UNTESTED AXIS, NEVER BY APP - every app on this board earned its
 # place by breaking something, and the ones that broke nothing taught nothing.
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# CARRIED FORWARD - T007's `remaining_blockers: []` is scoped to a DOC-ONLY CARD
+# and DOES NOT EMPTY THE BOARD. T008 insisted on this. These are NOT-BLOCKING
+# items T999 raised and they belong on the successor board.
+# ---------------------------------------------------------------------------
+carried_to_successor:
+  unfiled_in_DEFECTS_md:
+    - "angular's GLOBAL-IDENTIFIER BAN in transplanted bodies (Date, Promise, setTimeout, fetch, JSON). Durably asserted in the product tree via packages/frameworks/angular/test/unbuilt-scenarios.ts, which drives every declared unbuilt scenario through the REAL emit() with an s10 control that must not throw - T999 called that STRONGER THAN A DEFECTS.md ENTRY - but it has no entry number."
+    - "vue's TEMPLATE-EXPRESSION GLOBAL LIMIT. @vue/shared's GLOBALS_ALLOWED carries Date and JSON but not Promise or setTimeout, and the emitter inlines handlers into template expressions, so it emits `new _ctx.Promise(...)`. FIVE STATIC GATES PASS IT; ONLY A BROWSER REFUTES IT."
+    - "react's POST-AWAIT CONST-SSA DIVERGENCE. Sits just outside DEFECTS.md 12.2's recorded v-limit, which enumerates only reads of ANOTHER cell. Unfiled AND NOW UNEXERCISED - S12 avoids it by construction via the const chain."
+    - "finding-002's NEW non-<input> instance. The finding IS filed (DEFECTS.md section 5); only the TextareaHTMLAttributes instance is unrecorded - and it is the first evidence the producer is the `value` BINDING rather than the `input` ELEMENT."
+  not_under_witness_by_oracle_design: >-
+    S10/S11/S12 CROSS-LANE BEHAVIOURAL EQUALITY IS NOT WITNESSED, and that is the oracle's own
+    design: part 3 requires pnpm e2e to STAY 6 x 9 and scripts/e2e.mjs pins ['s1'..'s9'], so
+    JOINING THE CONTRACT WOULD VIOLATE THE ORACLE. Every behavioural observation for the three
+    apps came from playwright walkthroughs living in WORKER SCRATCHPADS, which both T005 and
+    T006 record as never added to the repository - SO THEY ARE NOT RE-RUNNABLE BY CI OR BY AN
+    AUDITOR. A re-runnable in-repo harness, or a plain statement that those observations are
+    one-shot, is the natural first card of the successor board.
+  the_recorded_proxy_chain: >-
+    NEITHER APP WAS COMPARED AGAINST A LIVE RENDERING OF ITS NAMED REFERENCE. S11 used
+    todomvc-app-css@2.4.3 vendored bytes plus the shipped /todomvc page; S12 used seven geometry
+    numbers the PM measured off the live reference. Both are real named-reference comparisons,
+    asserted off the IMAGE and mutation-tested (13/13 and 10/10). CERTIFIED WITH THE PROXY
+    RECORDED so it is not later mistaken for a side-by-side.
+  method_notes_for_every_future_card:
+    - "`git diff --exit-code` over packages/ demos/ scripts/ IS BLIND TO UNTRACKED ADDITIONS THERE. Pair it with `git status --short`. T008 found this."
+    - "'angular's 404 AGAINST A WORKING CONTROL' WAS T007'S OWN ADDITION, ABOVE THE BAR - NOT a T999 requirement. T999's finding was only that oracle.signal (2)'s DOCUMENTED half was absent. Do not let it enter the record as an oracle condition."
+    - "A PROBE VERDICT IS NOT A LANE VERDICT - re-run each lane's OWN gate. FIVE STATIC GATES ARE NOT A LANE VERDICT EITHER - run it in a browser. Both rules were bought with a defect."
+
 successor_candidates:
   method: >-
     An app is worth building when it exercises a capability the corpus cannot yet
