@@ -85,3 +85,44 @@ left-aligned rounded blocks with a square logo mark.
 **Our demos will be more functional than the reference**, not less. That is worth stating
 plainly in the final report, because a visual match against a static demo is not evidence of
 behavioural parity and must not be presented as one.
+
+## 6. The measured spec — and why "use all their styles" is not a licence problem
+
+Owner direction: reproduce the layout faithfully and supply our own interactivity. Read the
+rendered geometry off the live page to turn that into numbers rather than adjectives.
+
+**The decisive observation: there is almost no bespoke CSS to copy.** Every class read off the
+live chat page is a stock Tailwind utility bound to a stock shadcn token:
+
+- `hidden md:block w-64 border-r border-border`
+- `flex h-full w-full flex-col bg-sidebar border-r border-sidebar-border`
+- `text-xs font-medium text-muted-foreground uppercase tracking-wider`
+- `text-2xl font-semibold tracking-tight`
+- `inline-flex items-center whitespace-nowrap rounded-md text-sm font-medium transition-all`
+
+So "their styles" **are** the shadcn defaults we are already vendoring under MIT, composed with
+conventional Tailwind utilities. Reproducing the look faithfully requires copying nothing from
+the restricted repo — the creative layer being licensed is the *template files*, and the visual
+result is reachable from the MIT layer directly.
+
+**Measured at 1440×757:**
+
+| element | measurement |
+| --- | --- |
+| sidebar | **256px** (`w-64`), `--sidebar` fill, 1px right border on `--sidebar-border` |
+| sidebar nav item | 230px × **36px**, radius **8px**, padding `8px 12px`, gap `8px`, 14px/500 |
+| sidebar section label | 12px, weight 500, uppercase, wide tracking, `--muted-foreground` |
+| brand row (top) | 40px tall |
+| empty-state heading | **24px**, weight **600**, tight tracking |
+| composer shell | **630px** wide × 175px, radius **14px** |
+| composer textarea | 628 × **120px**, padding `12px 16px` |
+| body type | `ui-sans-serif, system-ui, sans-serif` at **16px**/24px |
+
+The radii corroborate the token set: shadcn ships `--radius: 0.625rem` (10px) and `rounded-md`
+resolves to `calc(var(--radius) - 2px)` = **8px**, which is exactly what the buttons measure.
+That is independent confirmation that the reference sits on the stock token scale, so our
+vendored tokens reproduce it rather than approximate it.
+
+**Procedure for T004/T005**: write our own CSS to hit these numbers on the vendored MIT tokens,
+then compare our render against the live demo side by side. No files from the restricted repo
+enter this tree at any point.

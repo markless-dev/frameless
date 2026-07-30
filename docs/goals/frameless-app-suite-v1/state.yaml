@@ -498,6 +498,28 @@ tasks:
       the drag selected text. Emails' list selection and Files' grid/list toggle ARE stateful.
       OUR DEMOS WILL BE MORE FUNCTIONAL THAN THE REFERENCE. A visual match against a static
       demo IS NOT EVIDENCE OF BEHAVIOURAL PARITY and must not be reported as one.
+    OWNER_DIRECTION_REPRODUCE_THE_LAYOUT_FAITHFULLY: >-
+      "We will add the interactivity but basically just use all their styles / layout." SO THE
+      BAR IS A FAITHFUL VISUAL REPRODUCTION, NOT AN INSPIRED-BY. And measuring the live page
+      showed WHY THAT IS NOT A LICENCE PROBLEM: THERE IS ALMOST NO BESPOKE CSS TO COPY. Every
+      class read off the rendered chat page is a stock Tailwind utility bound to a stock
+      shadcn token - `w-64 border-r border-border`, `bg-sidebar border-r border-sidebar-border`,
+      `text-xs font-medium text-muted-foreground uppercase tracking-wider`, `text-2xl
+      font-semibold tracking-tight`, `rounded-md text-sm font-medium`. Their styles ARE the
+      shadcn defaults we already vendor under MIT. The licensed creative layer is the TEMPLATE
+      FILES; the visual result is reachable from the MIT layer directly, copying nothing.
+    THE_MEASURED_SPEC_NUMBERS_NOT_ADJECTIVES: >-
+      Read off the live page at 1440x757. Sidebar 256px (w-64), --sidebar fill, 1px right
+      border on --sidebar-border. Sidebar nav item 230x36, radius 8, padding 8px 12px, gap 8px,
+      14px/500. Section label 12px/500 uppercase wide-tracking on --muted-foreground. Brand row
+      40px. Empty-state heading 24px/600 tight tracking. Composer shell 630x175 radius 14.
+      Textarea 628x120 padding 12px 16px. Body type ui-sans-serif/system-ui at 16px/24px.
+      CORROBORATION THAT THE TOKEN SCALE IS STOCK: shadcn ships --radius 0.625rem = 10px and
+      rounded-md resolves to calc(var(--radius) - 2px) = 8px, which is EXACTLY what the buttons
+      measure. So the vendored tokens REPRODUCE the reference rather than approximate it.
+      PROCEDURE: write our own CSS to hit these numbers on the vendored MIT tokens, then
+      compare our render against the LIVE demo side by side. NO FILE FROM THE RESTRICTED REPO
+      ENTERS THIS TREE AT ANY POINT.
     HOW_TO_USE_A_REFERENCE_YOU_CANNOT_COPY: >-
       All three references are TAILWIND + REACT. Frameless emits plain markup into SIX lanes,
       so THEIR CODE CANNOT BE COPIED and must not be. The TodoMVC precedent is the procedure:
