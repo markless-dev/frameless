@@ -1193,6 +1193,84 @@ tasks:
       next_task_if_not_complete: "T007 (worker, doc-only): correct goal.md's refuted fingerprint method and add S12's per-lane launch table, RE-RUNNING every command first."
       verification_attempts: 1
       stopped_because: null
+# ---------------------------------------------------------------------------
+# SUCCESSOR SPEC - NOT THIS TRANCHE'S SCOPE.
+# Recorded here so the next board is prepped from measurement rather than from a
+# demo list. The owner supplied the app list; the AXIS column is what decides
+# order. PICK BY UNTESTED AXIS, NEVER BY APP - every app on this board earned its
+# place by breaking something, and the ones that broke nothing taught nothing.
+# ---------------------------------------------------------------------------
+successor_candidates:
+  method: >-
+    An app is worth building when it exercises a capability the corpus cannot yet
+    reach. S10 covered CRUD + in-memory state + filtering; S11 added fetch with
+    delay, optimistic updates and remote query; S12 added streaming, panes, tabs,
+    navigation-during-stream and the textarea value binding. Everything below is
+    ranked by what is STILL UNMEASURED.
+  recommended:
+    - rank: 1
+      axis: "RECURSION - the largest remaining STRUCTURAL unknown"
+      probe: "Files + folders"
+      reference: "https://square-ui-files.vercel.app/ (QA'd live: grid/list toggle IS stateful)"
+      why: >-
+        A folder tree is self-referential and NOTHING in the corpus is. The HN item page was
+        EXPECTED TO REFUSE on recursion and was never run - it is still queued on
+        frameless-real-apps-v1 as T004. If a component cannot reference itself that is a
+        headline limit, and it has now been dodged once.
+    - rank: 2
+      axis: "DRAG AND DROP - the largest remaining INTERACTION unknown"
+      probe: "Task management (Trello-like)"
+      reference: "https://square-ui-task-management.vercel.app/"
+      why: >-
+        onDragStart / onDragOver / onPointerDown are ALL two-word, so DEFECTS.md 15 predicts a
+        hard refusal - and a refusal is the result. MEASURED IN THE PM'S QA PASS: THE REFERENCE
+        ITSELF HAS NO WORKING DRAG (the drag selected text), its Filter popover opens but does
+        not filter, and Add task is inert. So this lane would ship something MORE functional
+        than the original, and the visual bar is low while the capability answer is high-value.
+    - rank: 3
+      axis: "SIX-LANE FAN-OUT - the first app that could lose NO lane"
+      probe: "Habit tracker"
+      reference: "https://square-ui-habit-tracker.vercel.app/"
+      why: >-
+        MEASURED IN THE PM'S QA PASS: one click fans out to FIVE observable updates - checkbox
+        fill, title strikethrough, header counter 0/6 -> 1/6, sidebar badge, progress bar, and
+        the encouragement line. PURE SYNCHRONOUS DERIVED STATE, no async door, so it is the ONLY
+        candidate reachable in ALL SIX LANES. Every app so far lost lanes to async; proving one
+        that loses none is a different KIND of claim. CAVEAT: the live demo renders a real date,
+        and angular cannot name Date - the authored version must take the date as a prop or it
+        loses angular for a reason unrelated to its axis.
+    - rank: 4
+      axis: "FORM INPUT TYPES"
+      probe: "Contacts"
+      reference: "https://square-ui-contacts.vercel.app/ - NOT QA'd by the PM"
+      why: >-
+        Only checkbox and (as of S12) textarea are proven. select, radio, number, date and the
+        multi-field form shape are ALL unmeasured. S12 already produced one finding from the
+        textarea alone - solid's finding-002 reproducing as TextareaHTMLAttributes, its first
+        non-<input> instance.
+  recorded_but_lower_value:
+    - axis: "DATE ARITHMETIC"
+      probe: "Calendar / projects timeline"
+      note: "Mostly CONFIRMS angular's known no-clock ban rather than finding anything new. Grid layout is the only novel part."
+    - axis: "ROUTING"
+      probe: "Ticket management (circle.lndev.me, Linear-like)"
+      note: "NO ROUTING CONSTRUCT EXISTS IN .tsrx at all, though all six demos route at the host. Would refuse outright or lean entirely on the host - decide which question is being asked before building it."
+    - axis: "MASTER/DETAIL SELECTION"
+      probe: "Emails"
+      note: "QA'd live and genuinely stateful, but the shape is covered by S12's thread+panes. Low information."
+    - axis: "CARD GRIDS / MEDIA"
+      probe: "Notes, rentals, media vault"
+      note: "NOT QA'd by the PM. Shapes appear covered by S10-S12. Lowest information per unit of work."
+  dashboard:
+    status: "CANDIDATE, NEVER BUILT - do not let a summary imply otherwise"
+    reference: "shadcn/ui block dashboard-01, MIT, already recorded on T004"
+  standing_constraint: >-
+    SQUARE UI IS NOT MIT. zerostaticthemes/square-ui ships a bespoke 'ln-dev UI License' (c) 2026
+    lndev forbidding publication of the templates OR ANY DERIVATIVES in any repository, and
+    frameless is public. OWNER RULED REFERENCE-ONLY. This costs almost nothing: every class
+    measured off the live reference is a stock Tailwind utility on a stock shadcn token, so their
+    styles ARE the MIT tokens already vendored at demos/shared/shadcn-theme/.
+
 checks:
   dirty_fingerprint: >-
     2026-07-30 at prep. Clean except the OWNER'S three in-flight paths - pnpm-lock.yaml,
