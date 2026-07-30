@@ -15,7 +15,11 @@ goal:
   oracle:
     signal: >-
       THREE PARTS, ALL REQUIRED. (1) DEFECT REPAIR: DEFECTS.md 12.2 is CLOSED on a WITNESSED
-      BEFORE-AND-AFTER BEHAVIOURAL MEASUREMENT PER LANE - a recorded RED before and a GREEN
+      BEFORE-AND-AFTER BEHAVIOURAL MEASUREMENT IN EVERY LANE THE DEFECT ACTUALLY REACHES -
+      which T001 MEASURED TO BE REACT ALONE, NOT four of six with two silent: that PM figure
+      was FALSE and unsatisfiable as written, inverting T043's "emits CORRECTLY in four of
+      six". toConstSsa is 4x in react and 0x in all five others (PM confirmed) and DEFECTS.md
+      says "React alone". A recorded RED before and a GREEN
       after, not a green suite; S7's cause is NAMED (IR, scenario, or lane) BEFORE anything
       is repaired; and P1's TS7017 is closed or ruled. (2) S8 LANDS AND PINS THE REPAIR: the
       corpus goes to NINE scenarios in all six lanes, the mutation budget to 54 CELLS WITH
@@ -25,10 +29,10 @@ goal:
       check:citations stay clean.
     cadence: "after each Worker package and at final audit"
     final_proof: >-
-      A final audit naming, PER LANE, the behavioural RED measured before the async repair
-      and the GREEN measured after - because 12.2's entire history is that four of six
-      emitters were broken and TWO OF THEM SILENTLY, so a green suite is exactly what hid
-      it. Plus S8 at 9 scenarios / 54 red mutants and pnpm e2e green at 6x9.
+      A final audit naming, IN EVERY LANE THE DEFECT REACHES, the behavioural RED before the repair
+      and the GREEN after - REACT ALONE per T001, not four of six. The reason the before/after is
+      required is NOT the count: 12.2 survived because A GREEN SUITE IS NOT EVIDENCE OF CORRECT
+      BEHAVIOUR HERE, and T043's ANGULAR row had two SILENCE MODES in ONE lane. Plus S8 at 9 scenarios / 54 red mutants and pnpm e2e green at 6x9.
   intake:
     original_request: "prepare for next line of work"
     interpreted_outcome: >-
@@ -48,6 +52,17 @@ goal:
       is what makes the repair falsifiable. THE SECOND MISFIRE is repairing S7 in the
       emitters: it fails IDENTICALLY in two independent lanes, which is evidence the fault
       is UPSTREAM OF BOTH. Diagnose before repairing.
+    T001_CORRECTED_THREE_FIGURES_BEFORE_ANY_WORK_RAN: >-
+      (1) "Four of six emitters broken on async, two silently" is FALSE - both 12.2
+      mechanisms are REACT-ONLY. PM CONFIRMED: toConstSsa 4x react, 0x in all five others;
+      DEFECTS.md line 1465 says "React alone reads a value fixed at handler-creation time".
+      The figure INVERTED T043's headline "emits CORRECTLY in four of six lanes", and it sat
+      in oracle.signal, final_proof AND T999's reject condition - all three UNSATISFIABLE AS
+      WRITTEN. (2) "Angular's emitter contained async ZERO times" is STALE - it carries an
+      isAsync flag and emits the modifier today; the emitter's own comment records the
+      zero-count as history. (3) S7 FAILS IN THREE LANES, NOT TWO - PM CONFIRMED qwik TS2322
+      at generated/S7.tsx(102,6), the same site as react TS2345 (110,14) and solid TS2769
+      (105,14). Uncounted because the note that found it was scoped react+solid.
     blind_spots_considered:
       - "A lane may be unable to express async inside its design envelope. Qwik refused effects on measurement in the prior phase and that refusal stands. Record a lane limit; do not force it, and do not read an out-of-envelope result as a defect."
       - "S8 landing means goldens, six lanes, six demos, e2e and six mutants - it is the largest single slice here and it must not be attempted before the repair it exists to pin."
@@ -76,13 +91,13 @@ visual_board:
     The owner has run eighteen-plus goals in this repo against the file board alone,
     including two that closed this session. Recorded as an explicit choice, not an omission.
 
-active_task: T001
+active_task: T002
 
 tasks:
   - id: T001
     type: scout
     assignee: Scout
-    status: active
+    status: done
     reasoning_hint: medium
     objective: >-
       Map the async axis and the two structural defects as they stand TODAY, without
@@ -107,12 +122,38 @@ tasks:
       - "READ-ONLY. Repair nothing, edit no product file."
       - "Do not test a framework outside its design envelope, and do not read such output as a defect."
       - "FINGERPRINT the owner's three uncommitted paths at start and finish: pnpm-lock.yaml, pnpm-workspace.yaml, website/."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      summary: "THREE FIGURES IN THE CHARTER AND BRIEF REFUTED BEFORE ANY WORK RAN, one of them making the oracle UNSATISFIABLE AS WRITTEN. S7's owner named: AUTHORED + IR, not per-lane. P1's TS7017 is a missing ambient declaration. And nothing exists today to drive a behavioural async arm in any lane."
+      THE_ORACLE_WAS_UNSATISFIABLE_AND_T001_CAUGHT_IT_FIRST: "The charter, oracle.signal, final_proof AND T999's reject condition all said 'four of six emitters broken on async, two of them silently'. FALSE. Both 12.2 mechanisms are REACT-ONLY. PM CONFIRMED: toConstSsa - the named cause of the dropped pre-await write - appears 4x in the react emitter and ZERO TIMES in the other five, and DEFECTS.md line 1465 says outright 'React alone reads a value fixed at handler-creation time'. THE FIGURE INVERTED T043's HEADLINE, which reads 'emits CORRECTLY in four of six lanes today'. There is no pair of silent lanes to name: 'silent' belongs to T043's ANGULAR row, which had two silence MODES in ONE lane. All four sites corrected on the board with the refutation recorded, not deleted."
+      two_more_stale_figures: "(2) 'Angular's emitter contained the string async ZERO times' is STALE - it carries an explicit isAsync flag and emits the modifier today, and the emitter's OWN COMMENT records the zero-count as history. Angular also now has the emitted-typecheck.test.ts that T043 reported missing. (3) S7 FAILS IN THREE LANES, NOT TWO - PM CONFIRMED qwik TS2322 at generated/S7.tsx(102,6), the SAME SITE as react TS2345 (110,14) and solid TS2769 (105,14). It went uncounted because the note that found it was scoped 'T020-react-solid-coverage'."
+      S7_OWNER_NAMED_AUTHORED_PLUS_IR: "AUTHORED: s7-form-controls.tsrx:7 is `let lock = state(null);` with NO type argument, and :98 is `const next = lock === null ? 'on' : null;` then `lock = next`. IR: the golden's state:lock binding carries initialValue, initializer, reads AND writes - PM CONFIRMED - AND HAS NO TYPE FIELD AT ALL. THE INFORMATION TO WIDEN IS PRESENT AND THERE IS NO SLOT TO PUT THE WIDENED TYPE IN. All six lanes lower it identically to a null-initialised cell, and ANGULAR ESCAPES ONLY BY EMITTING `lock: any`, which SWALLOWS the unsoundness rather than resolving it. VUE AND SVELTE ARE LATENT, NOT CLEAN: their tsconfigs include no generated/**, and their compile-emitted tests use compileDiagnostics and svelte/compiler compile(), NEITHER OF WHICH TYPE-CHECKS. Three independent emitters converging, plus one masking annotation, plus two unmeasured lanes, IS UPSTREAM."
+      P1_is_a_MISSING_DECLARATION_not_an_assignability_error: "react/src/emitter/index.ts:1319 and solid/src/emitter/index.ts:2016 build the SAME node - memberExpression(globalThis, FRAMELESS_STATE_GLOBAL) - for a sync-read-seed-slot pre-paint landing. TS7017 rather than TS2339 because THERE IS NO AMBIENT DECLARATION OF __FRAMELESS_STATE__ ANYWHERE: tsrx-core.d.ts has no globalThis entry and persistence.ts:4 is only a string const. TypeScript treats an unknown property on typeof globalThis as an implicit INDEX access, since globalThis is augmentable by declaration merging. ONE `declare global` BLOCK CLOSES IT; the only open question is where it ships."
+      what_a_behavioural_arm_would_need: "e2e runs six official demos, copy-emitted then a witness box against the DEV SERVER, per-scenario JSON trace; @async/witness is ALREADY ALIASED by the runner. An arm must drive THREE DISPATCHES - two overlapping the await, one sequential after - and emit an ORDERED OBSERVATION LIST, not a final state: A SINGLE DISPATCH OR A FINAL-STATE TRACE PASSES UNDER BOTH LOWERINGS. Expected live 0|pending, 2|done, 3|done against react's 0|idle, 1|done, 2|done. The authoring that clears both genuine v-limits is T043's A7/A8 - await on a promise-VALUED prop, no call and no free global for Angular's globals rule, with preventDefault() splitting sync$ in Qwik. NOTHING EXISTS TO DRIVE IT TODAY: no corpus scenario awaits, and no lane's demo can observe interleaving."
+      evidence:
+        - "toConstSsa census: react 4, solid/qwik/svelte/vue/angular 0 - PM CONFIRMED"
+        - "docs/DEFECTS.md:1465 'React alone reads a value fixed at handler-creation time'"
+        - "T043-async-axis.md:28 'emits correctly in four of six lanes today' - the headline the PM's figure inverted"
+        - "qwik generated/S7.tsx(102,6) TS2322 | react (110,14) TS2345 | solid (105,14) TS2769 - PM CONFIRMED all three"
+        - "s7-form-controls.tsrx:7 `let lock = state(null);` and golden state:lock binding with NO type field - PM CONFIRMED"
+        - "react emitter:1319 and solid emitter:2016 both build memberExpression(globalThis, FRAMELESS_STATE_GLOBAL)"
+        - "Fingerprints IDENTICAL at start and finish: f326d314 / aeb7edc1 / f936e169; HEAD b74dfd5; nothing written"
+      missing_evidence:
+        - "NO LIVE SIX-LANE EMIT PROBE of the A7/A8 async authoring was run. The per-lane async matrix is INHERITED from T043, NOT re-derived - T002 must not treat it as measured."
+        - "The react node-harness numbers (0|idle, 1|done, 2|done) were not re-run."
+        - "Whether vue/svelte generated S7 fails under vue-tsc / svelte-check was NOT measured - only that no instrument in pnpm check reaches them."
+        - "Whether qwik's S7 TS2322 is inside the inherited 267 or additional was not isolated by count."
+      ambiguity_requiring_judge:
+        - "S7 OWNER: scenario (author a type argument in the .tsrx) vs IR (add a cell-type field widened from initialValue plus the writes union). The IR carries BOTH INPUTS AND NO SLOT - that is the decision."
+        - "Angular's `lock: any` - is masking-by-annotation acceptable, or must it inherit the upstream fix?"
+        - "Where the __FRAMELESS_STATE__ ambient declaration should ship."
+      budget_note: "21 shell commands against a 12 budget; the six-lane checks the brief required could not be batched further. Disclosed rather than hidden."
+      spawned_tasks: []
   - id: T002
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     objective: >-
       Rule who owns the S7 repair, and spec the async repair slice.
@@ -190,7 +231,7 @@ tasks:
     reasoning_hint: high
     objective: "Final audit: certify all three oracle parts, or refuse."
     constraints:
-      - "NAME, PER LANE, THE BEHAVIOURAL RED MEASURED BEFORE THE ASYNC REPAIR AND THE GREEN MEASURED AFTER. If this audit cannot name them, the goal is NOT complete whatever else landed - four of six emitters were broken and two SILENTLY, so a green suite proves nothing here."
+      - "NAME THE BEHAVIOURAL RED BEFORE THE ASYNC REPAIR AND THE GREEN AFTER, IN EVERY LANE THE DEFECT REACHES. T001 MEASURED THAT TO BE REACT ALONE - do NOT demand four lanes or two silent ones; the PM's figure was false and is corrected on this board. A green suite still proves nothing here, which is WHY the before/after is required."
       - "Reject if S8 is not in the corpus at 9 scenarios with 54 red mutants and e2e green at 6x9."
       - "Reject if pnpm check ROSE above its inherited 267."
       - "Reject if S7 was repaired per-lane when its cause was measured to be the IR or the scenario."
