@@ -58,7 +58,7 @@ goal:
       evaporates. If drag refuses and is quietly replaced by click-to-move, the axis goes
       unmeasured while the demo looks complete.
 
-active_task: T003
+active_task: T004
 
 rules:
   - "state.yaml is board truth; goal.md is the charter."
@@ -292,6 +292,8 @@ tasks:
       - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched."
       - "NEVER pkill -f on a broad pattern. Kill by recorded PID only, and only PIDs you started. TWO FOREIGN PROCESSES ARE ALIVE: node PID 64413 on 5175 and node PID 24931 on 5178. Do not assume either port is free."
       - "You are about to read an HTTP 200 as proof a page exists. REACT, SOLID AND VUE ANSWER 200 FOR ANY PATH (fall-through to S1). HASH THE BODY and prove it differs per route - T001 caught this as a check that passes while measuring nothing."
+      - "TWO OPEN EMITTER DEFECTS HIT ANY CARD THAT COMPOSES, not just recursion. SOLID: a same-module component reference makes every signal read inside a handler DOUBLE-CALL (TS2349) and DROPS attr:value. QWIK: a function-typed prop CANNOT CROSS A COMPONENT BOUNDARY IN ANY SPELLING (onTrace$ prints as onTrace, authoring onTrace$ gives onTrace$$). If you compose, EXPECT THEM, narrow around them, and DO NOT touch an emitter."
+      - "You are about to assume a list prop is impossible. `Array<string>` LOWERS IN FIVE LANES where `string[]` refuses - the limit is the SPELLING, not arrays. T003 refuted the stronger claim T002 recorded."
       - "Verification fails twice for the same reason."
     receipt:
       result: done
@@ -429,7 +431,7 @@ tasks:
   - id: T003
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       Ship HACKER NEWS ITEM PAGE - THE RECURSION CARD as scenario `s14-hn-item`: ONE authored source, emitted to all six lanes as the
@@ -514,13 +516,153 @@ tasks:
       - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched."
       - "NEVER pkill -f on a broad pattern. Kill by recorded PID only, and only PIDs you started. TWO FOREIGN PROCESSES ARE ALIVE: node PID 64413 on 5175 and node PID 24931 on 5178. Do not assume either port is free."
       - "You are about to read an HTTP 200 as proof a page exists. REACT, SOLID AND VUE ANSWER 200 FOR ANY PATH (fall-through to S1). HASH THE BODY and prove it differs per route - T001 caught this as a check that passes while measuring nothing."
+      - "TWO OPEN EMITTER DEFECTS HIT ANY CARD THAT COMPOSES, not just recursion. SOLID: a same-module component reference makes every signal read inside a handler DOUBLE-CALL (TS2349) and DROPS attr:value. QWIK: a function-typed prop CANNOT CROSS A COMPONENT BOUNDARY IN ANY SPELLING (onTrace$ prints as onTrace, authoring onTrace$ gives onTrace$$). If you compose, EXPECT THEM, narrow around them, and DO NOT touch an emitter."
+      - "You are about to assume a list prop is impossible. `Array<string>` LOWERS IN FIVE LANES where `string[]` refuses - the limit is the SPELLING, not arrays. T003 refuted the stronger claim T002 recorded."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T003-hn-item.md
+      summary: "RECURSION IS OPEN, NOT CLOSED. Measured THREE spellings, not the card's two, and the first two turned out to be EXACT COMPLEMENTS - which is why one refusal could never have been the verdict. Shipped s14-hn-item on the only spelling that emits AND links, WITH NO FIXED DEPTH ANYWHERE - the card's unroll fallback was NEVER TRIGGERED. Three lanes serve /hn-item. Recursion exposed two emitter defects, isolated on probes and narrowed around with no emitter touched."
+      THE_RECURSION_VERDICT_THREE_SPELLINGS_AND_THE_FIRST_TWO_ARE_COMPLEMENTS: "A: SAME-MODULE SELF-REFERENCE - EMITS in react/solid/qwik/angular, REFUSES in svelte/vue, LINKER LINKS. B: MODULE IMPORTS ITSELF, ALIASED - EMITS in react/solid/svelte/vue, REFUSES in qwik/angular, LINKER REFUSES ('Component-reference cycle: src/comment.tsrx -> src/comment.tsrx'). C: TWO MODULES A->B->A - EMITS IN ALL SIX, LINKER REFUSES. THE UNION OF A AND B IS ALL SIX LANES. Mechanism: assertNoCycles in packages/compiler/src/module-set.ts builds edges from externalTargets ONLY, so a module:'self' target NEVER ENTERS THE CYCLE GRAPH - self-recursion links by construction, mutual recursion does not."
+      A_THIRD_KIND_OF_ABSENCE_NOT_SEEN_BEFORE_ON_THIS_PROJECT: "ANGULAR IS NOT AN EMITTER REFUSAL. emit() SUCCEEDS and produces a correct recursive component; THE LANE'S OWN GATE REJECTS IT because `imports` is not in BASELINE_FORM_INVENTORY. Admitting it needs a version floor + floor evidence and MOVES THE DERIVED ANGULAR_BASELINE_FLOOR FOR EVERY SCENARIO AT ONCE - a dossier ruling, not a code edit, and the gate source is outside allowed_files. Declared in a NEW packages/frameworks/angular/test/ungated-scenarios.ts, kept SEPARATE from unbuilt-scenarios.ts because that file's contract is that emit() THROWS. The new assertion is STRICTLY STRONGER: it asserts the emit SUCCEEDS and the gate reports the recorded policy and message, with a control that a shipped artifact comes back clean."
+      TWO_EMITTER_DEFECTS_ONLY_RECURSION_COULD_REACH: "SOLID: a same-module component reference makes EVERY SIGNAL READ INSIDE A HANDLER DOUBLE-CALL (draft()() , TS2349) AND DROPS the attr:value pair (own gate: controlled-input). QWIK: A FUNCTION-TYPED PROP CANNOT CROSS A COMPONENT BOUNDARY IN ANY SPELLING - declared/read as onTrace$, printed as onTrace at the call site; authoring onTrace$ gives onTrace$$. Each isolated on a TWO-SOURCE PROBE one @if arm apart, each cost a feature, each narrowing BOUGHT A LANE (2 -> 3 shipped). ANY CARD THAT COMPOSES WILL HIT THESE, NOT JUST RECURSION."
+      THE_BRIEF_INHERITED_A_CLAIM_THAT_IS_TOO_STRONG: "T002's 'IR-8 has no lowering for TSArrayType, so NO PROP SHAPE CAN CARRY A LIST' is FALSE AS STATED: Array<string> LOWERS IN FIVE LANES where string[] refuses. typeNode() accepts TSTypeReference with type arguments and simply has no TSArrayType case. THE LIMIT IS THE SPELLING, NOT ARRAYS."
+      THE_TRAP_FIRED: "VUE ANSWERS 200 ON /hn-item WITH A BODY HASH BYTE-IDENTICAL TO ITS BOGUS ROUTE (a3731810 = S1). BODY HASHING IS THE ONLY THING THAT CAUGHT IT. react and solid do the same on bogus routes."
+      THE_RENDERED_DOM_IS_ITS_ORACLE_AND_THAT_IS_STRONGER_HERE: "S14 IS THE FIRST FIXTURE IN THE CORPUS WITH NO onTrace CHANNEL (qwik's defect forced it). Its oracle is the rendered DOM instead: 15 recursive instances, DOM nesting depth 4, indent 104->132->160->188->216, exactly ONE masthead - and COLLAPSING c1 REMOVES c4, A DEPTH-3 DESCENDANT NO HANDLER NAMES. That falsifies an unrolled thread in a way a callback could not."
+      changed_files:
+        - packages/compiler/test/fixtures/s14-hn-item.tsrx
+        - packages/compiler/test/goldens/s14-hn-item.json
+        - packages/compiler/test/enriched-ir.test.ts
+        - packages/frameworks/react/scripts/regenerate.ts
+        - packages/frameworks/react/generated/S14.tsx
+        - packages/frameworks/react/test/size.test.ts
+        - packages/frameworks/solid/scripts/regenerate.ts
+        - packages/frameworks/solid/generated/S14.tsx
+        - packages/frameworks/solid/test/size.test.ts
+        - packages/frameworks/qwik/scripts/regenerate.ts
+        - packages/frameworks/qwik/generated/S14.tsx
+        - packages/frameworks/svelte/scripts/regenerate.ts
+        - packages/frameworks/svelte/test/unbuilt-scenarios.ts
+        - packages/frameworks/svelte/test/emitter.test.ts
+        - packages/frameworks/svelte/test/gate.test.ts
+        - packages/frameworks/svelte/test/compile-emitted.test.ts
+        - packages/frameworks/svelte/test/emitted-smoke.browser.test.ts
+        - packages/frameworks/vue/scripts/regenerate.ts
+        - packages/frameworks/vue/test/unbuilt-scenarios.ts
+        - packages/frameworks/vue/test/emitter.test.ts
+        - packages/frameworks/vue/test/gate.test.ts
+        - packages/frameworks/vue/test/compile-emitted.test.ts
+        - packages/frameworks/vue/test/emitted-smoke.browser.test.ts
+        - packages/frameworks/angular/scripts/regenerate.ts
+        - packages/frameworks/angular/test/ungated-scenarios.ts
+        - packages/frameworks/angular/test/gate.test.ts
+        - packages/frameworks/angular/test/emitter.test.ts
+        - packages/frameworks/angular/test/parse-emitted.test.ts
+        - packages/frameworks/angular/test/emitted-typecheck.test.ts
+        - demos/shared/hn-css/hn.css
+        - demos/react-official/package.json
+        - demos/react-official/src/App.jsx
+        - demos/react-official/src/emitted/HnItem.tsx
+        - demos/react-official/public/hn-css/hn.css
+        - demos/solid-official/package.json
+        - demos/solid-official/src/App.jsx
+        - demos/solid-official/src/emitted/HnItem.tsx
+        - demos/solid-official/public/hn-css/hn.css
+        - demos/qwik/package.json
+        - demos/qwik/src/routes/hn-item/index.tsx
+        - demos/qwik/src/emitted/HnItem.tsx
+        - demos/qwik/public/hn-css/hn.css
+        - demos/svelte-official/static/hn-css/hn.css
+        - demos/vue-official/public/hn-css/hn.css
+        - demos/angular-official/public/hn-css/hn.css
+        - scripts/demo.mjs
+        - docs/goals/frameless-app-axes-v1/notes/T003-hn-item.md
+      commands:
+        - cmd: "owner fingerprint START"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169 / 116, sorting the whole shasum OUTPUT LINES"
+        - cmd: "STEP 1 probe: direct self-reference, six emitters + linker"
+          status: pass
+          note: "react/solid/qwik/angular EMIT; svelte+vue REFUSE verbatim; resolveModuleSet LINKS"
+        - cmd: "STEP 2 probe: aliased self-import"
+          status: pass
+          note: "svelte+vue EMIT it; qwik+angular refuse a renamed ModuleImport; linker refuses the cycle"
+        - cmd: "STEP 2b probe: two-module mutual reference A->B->A"
+          status: pass
+          note: "ALL SIX emitters emit both modules; LINKER refuses 'src/a.tsrx -> src/b.tsrx -> src/a.tsrx'"
+        - cmd: "STEP 3 fallback"
+          status: pass
+          note: "NOT TRIGGERED - the condition was BOTH refusing. No unroll, no depth cap in the source"
+        - cmd: "prop-type lowering probe"
+          status: pass
+          note: "REFUTES the brief: Array<string> lowers in 5 lanes where string[] refuses"
+        - cmd: "solid defect isolation (two sources, one @if arm apart)"
+          status: pass
+          note: "self-reference => draft()() TS2349 AND attr:value dropped. Narrowed, emitter untouched"
+        - cmd: "qwik defect isolation"
+          status: pass
+          note: "onTrace$ -> onTrace$$; no spelling survives. Narrowed to no trace channel"
+        - cmd: "per-lane OWN gates x6"
+          status: pass
+          note: "react 206, solid 201, qwik 95, svelte 125, vue 149, angular 160 - all pass"
+        - cmd: "DERIVATION PROOF"
+          status: pass
+          note: "13 artifacts; PRESENT AFTER DELETE = 0 ASSERTED AND GATING; rebuild -> 13/13 BYTE-IDENTICAL"
+        - cmd: "pnpm demo (RUN)"
+          status: pass
+          note: "S14 /hn-item in 3 lanes, qwik /hn-item/; THREE distinct refusal strings; ports 5175+5178 SKIPPED"
+        - cmd: "route probe with BODY HASHING"
+          status: pass
+          note: "TRAP FIRED: vue answers 200 on /hn-item with its BOGUS-route hash. react/solid/qwik distinct; svelte+angular 404"
+        - cmd: "browser drive, chromium, 3 lanes"
+          status: pass
+          note: "15 instances, DOM depth 4, indent 104->216, ONE masthead; collapse c1 removes depth-3 c4; pageerror []"
+        - cmd: "VISUAL off getBoundingClientRect/getComputedStyle"
+          status: pass
+          note: "#ff6600 masthead, #f6f6ef at 85%, Verdana 13.33px, #828282; three lanes identical on every field"
+        - cmd: "pnpm test"
+          status: pass
+          note: "EXACTLY 1 failure (foreign ARM B), 1307 passed"
+        - cmd: "pnpm check"
+          status: pass
+          note: "267 - did not rise. REACHED 268 MID-CARD on rows=\"6\"; THE FIXTURE WAS NARROWED, THE BUDGET WAS NOT RAISED"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "PASS - 6 demos x 9 scenarios, all observations equal"
+        - cmd: "pnpm lint / pnpm check:citations"
+          status: pass
+          note: "0 warnings 0 errors, 505 files; citations clean, 559 swept"
+        - cmd: "git diff --exit-code over S1-S13 + composition + goldens + emitted"
+          status: pass
+          note: "exit 0, PAIRED with git status --short. The six tracked hn.css copies DID change: +154/-0 each, all seven byte-identical"
+        - cmd: "demo servers stopped by recorded PID 8945"
+          status: pass
+          note: "foreign PIDs 64413 and 24931 ALIVE with original start times; pkill -f NEVER used"
+        - cmd: "owner fingerprint FINISH"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169 / 116 - IDENTICAL to START"
+      deviations:
+        - "THE BRIEF IS WRONG THAT NO PROP CAN CARRY A LIST - see above. S14 still seeds in-component, but for a different recorded reason than the one inherited."
+        - "ANGULAR IS NOT SHIPPED AND IT IS NOT AN EMITTER REFUSAL - see the third-kind-of-absence finding."
+        - "NARROWED TWICE, EACH TIME AGAINST A MEASURED DEFECT RATHER THAN A GUESS. The reply box and story-header vote state went because of the solid defect; the onTrace prop went entirely because of the qwik one. Each narrowing BOUGHT A LANE and each is recorded verbatim with its isolating probe."
+        - "ADDED test/unbuilt-scenarios.ts to the SVELTE and VUE packages (the shape angular already had) and wired the subtraction into all four inventory suites in each, with a TWO-SIDED refusal assertion plus a control."
+        - "THE VUE 12a/12b CENSUS DID NOT MOVE, AND THAT IS THE RE-ARGUMENT. Both are censuses of what THIS LANE SHIPS and this lane does not ship S14, so the subtraction was applied inside scenarioGoldens - not only scenarioCorpus - because 12a reads emitted templates and 12b counts PRINTED prop entries. All four counts still hold BY DERIVATION. Its calibration row needed one repair: the planted ordinal now advances past any subtracted slot, or the plant would be filtered back out and THE CALIBRATION WOULD ASSERT AGAINST ITS OWN SCAFFOLDING."
+        - "REACT AND SOLID SIZE ROWS RE-ARGUED, NOT JUST FILLED. S14 is the first row in either table whose number does not bound what it renders - 39 authored hosts, 15 instances, ~200 li."
+        - "CORRECTED TWO OF ITS OWN DRAFTED CLAIMS BEFORE SHIPPING: that git diff exits 0 over demos/*/public (it exits 1 - the six hn.css copies gained +154/-0), and an unmeasured qwik 301 on /hn-item (the control was not re-run, and the note now says so)."
+      remaining_blockers:
+        - "TWO OPEN EMITTER DEFECTS, BOTH UNREPAIRED, BOTH HIT BY ANY CARD THAT COMPOSES - not just recursion. SOLID: same-module component reference makes every signal read in a handler double-call (TS2349) and drops attr:value. QWIK: a function-typed prop cannot cross a component boundary in any spelling."
+        - "ANGULAR IS ONE INVENTORY ENTRY AWAY FROM A FOURTH SHIPPED LANE. `imports` needs a version floor and floor evidence in packages/frameworks/angular/src/gate/index.ts and MAY RAISE THE DERIVED ANGULAR_BASELINE_FLOOR FOR EVERY SCENARIO AT ONCE. NEEDS AN OWNER/PM RULING."
+        - "VUE ANSWERS 200 FOR /hn-item WITH THE S1 BODY. Re-confirmed by hash."
+        - "THIS AUTHORING SURFACE CANNOT SPELL A STATIC NUMERIC ATTRIBUTE. rows=\"6\" is a string and fails react's emitted typecheck (TS2322)."
+        - "BOTH FOREIGN PROCESSES STILL ALIVE: PID 64413 on 5175, PID 24931 on 5178."
+        - "T002's OPEN ITEM UNTOUCHED: /todomvc, /todomvc-advanced and /codex geometry across all six lanes is still unmeasured (queued as T008)."
+      stopped_because: null
   - id: T004
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
     objective: >-
       Ship HABIT TRACKER - THE SIX-LANE CARD as scenario `s15-habit-tracker`: ONE authored source, emitted to all six lanes as the
@@ -605,6 +747,8 @@ tasks:
       - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched."
       - "NEVER pkill -f on a broad pattern. Kill by recorded PID only, and only PIDs you started. TWO FOREIGN PROCESSES ARE ALIVE: node PID 64413 on 5175 and node PID 24931 on 5178. Do not assume either port is free."
       - "You are about to read an HTTP 200 as proof a page exists. REACT, SOLID AND VUE ANSWER 200 FOR ANY PATH (fall-through to S1). HASH THE BODY and prove it differs per route - T001 caught this as a check that passes while measuring nothing."
+      - "TWO OPEN EMITTER DEFECTS HIT ANY CARD THAT COMPOSES, not just recursion. SOLID: a same-module component reference makes every signal read inside a handler DOUBLE-CALL (TS2349) and DROPS attr:value. QWIK: a function-typed prop CANNOT CROSS A COMPONENT BOUNDARY IN ANY SPELLING (onTrace$ prints as onTrace, authoring onTrace$ gives onTrace$$). If you compose, EXPECT THEM, narrow around them, and DO NOT touch an emitter."
+      - "You are about to assume a list prop is impossible. `Array<string>` LOWERS IN FIVE LANES where `string[]` refuses - the limit is the SPELLING, not arrays. T003 refuted the stronger claim T002 recorded."
       - "Verification fails twice for the same reason."
     receipt: null
 
@@ -696,6 +840,8 @@ tasks:
       - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched."
       - "NEVER pkill -f on a broad pattern. Kill by recorded PID only, and only PIDs you started. TWO FOREIGN PROCESSES ARE ALIVE: node PID 64413 on 5175 and node PID 24931 on 5178. Do not assume either port is free."
       - "You are about to read an HTTP 200 as proof a page exists. REACT, SOLID AND VUE ANSWER 200 FOR ANY PATH (fall-through to S1). HASH THE BODY and prove it differs per route - T001 caught this as a check that passes while measuring nothing."
+      - "TWO OPEN EMITTER DEFECTS HIT ANY CARD THAT COMPOSES, not just recursion. SOLID: a same-module component reference makes every signal read inside a handler DOUBLE-CALL (TS2349) and DROPS attr:value. QWIK: a function-typed prop CANNOT CROSS A COMPONENT BOUNDARY IN ANY SPELLING (onTrace$ prints as onTrace, authoring onTrace$ gives onTrace$$). If you compose, EXPECT THEM, narrow around them, and DO NOT touch an emitter."
+      - "You are about to assume a list prop is impossible. `Array<string>` LOWERS IN FIVE LANES where `string[]` refuses - the limit is the SPELLING, not arrays. T003 refuted the stronger claim T002 recorded."
       - "Verification fails twice for the same reason."
     receipt: null
 
@@ -787,6 +933,8 @@ tasks:
       - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched."
       - "NEVER pkill -f on a broad pattern. Kill by recorded PID only, and only PIDs you started. TWO FOREIGN PROCESSES ARE ALIVE: node PID 64413 on 5175 and node PID 24931 on 5178. Do not assume either port is free."
       - "You are about to read an HTTP 200 as proof a page exists. REACT, SOLID AND VUE ANSWER 200 FOR ANY PATH (fall-through to S1). HASH THE BODY and prove it differs per route - T001 caught this as a check that passes while measuring nothing."
+      - "TWO OPEN EMITTER DEFECTS HIT ANY CARD THAT COMPOSES, not just recursion. SOLID: a same-module component reference makes every signal read inside a handler DOUBLE-CALL (TS2349) and DROPS attr:value. QWIK: a function-typed prop CANNOT CROSS A COMPONENT BOUNDARY IN ANY SPELLING (onTrace$ prints as onTrace, authoring onTrace$ gives onTrace$$). If you compose, EXPECT THEM, narrow around them, and DO NOT touch an emitter."
+      - "You are about to assume a list prop is impossible. `Array<string>` LOWERS IN FIVE LANES where `string[]` refuses - the limit is the SPELLING, not arrays. T003 refuted the stronger claim T002 recorded."
       - "Verification fails twice for the same reason."
     receipt: null
 
@@ -918,6 +1066,33 @@ tasks:
       - "NEVER pkill -f on a broad pattern. TWO FOREIGN PROCESSES ARE ALIVE: node PID 64413 on 5175 and node PID 24931 on 5178."
       - "You are about to read an HTTP 200 as proof a page exists. REACT, SOLID AND VUE ANSWER 200 FOR ANY PATH. Hash the body."
       - "Verification fails twice for the same reason."
+    receipt: null
+
+  - id: T009
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: >-
+      RULE whether angular's `imports` form is admitted to BASELINE_FORM_INVENTORY. It is ONE
+      INVENTORY ENTRY away from a fourth shipped lane on S14 - but admitting it MAY RAISE THE
+      DERIVED ANGULAR_BASELINE_FLOOR FOR EVERY SCENARIO AT ONCE.
+    WHY_THIS_IS_A_RULING_NOT_A_CODE_EDIT: >-
+      T003 found A THIRD KIND OF ABSENCE this project had not seen. Angular's emit() SUCCEEDS on
+      the recursive component and produces correct output; THE LANE'S OWN GATE REJECTS IT
+      because `imports` is not in BASELINE_FORM_INVENTORY. That is not an emitter refusal and
+      not a defect - it is the dossier working as designed. Admitting the form needs a VERSION
+      FLOOR plus FLOOR EVIDENCE, and the floor is DERIVED, so the change is global.
+    constraints:
+      - "READ-ONLY. Your only write is your note. Do NOT edit the gate."
+      - "MEASURE THE BLAST RADIUS FIRST: what does ANGULAR_BASELINE_FLOOR resolve to today, what would it become, and which scenarios' recorded floors move? A ruling without that number is a guess."
+      - "Apply the SIX-GATE SUGAR POLICY at docs/emitter-idiom-policy.md. It is the existing arbiter for exactly this question and it has ruled both ways before."
+      - "T003's ungated-scenarios.ts already asserts the CURRENT state two-sidedly with a control. If you rule ADMIT, say what happens to that file; if you rule DENY, the lane stays at three and that is a satisfied oracle."
+      - "Assume this brief contains at least one error and find it."
+    expected_output:
+      - "admit | deny, with the deciding gate named"
+      - "the measured floor today, and the floor after, per scenario"
+      - "the worker spec if admit; the recorded rationale if deny"
     receipt: null
 
   - id: T999

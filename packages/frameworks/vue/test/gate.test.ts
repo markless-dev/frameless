@@ -9,6 +9,7 @@ import type { EnrichedIR } from '@frameless/compiler';
 import { basename, dirname, resolve } from 'pathe';
 import { beforeAll, describe, expect, test } from 'vitest';
 import { compileDiagnostics, emit } from '../src/emitter/index.ts';
+import { isUnbuiltEmitted } from './unbuilt-scenarios.ts';
 import type { GatePolicy } from '../src/gate/index.ts';
 import {
 	BASELINE_FORM_INVENTORY,
@@ -55,6 +56,15 @@ function scenarioGoldens(goldenRoot: string): Array<{ digits: string; file: stri
 		.map((entry) => ({ entry, digits: /^s(\d+)-[\w-]+\.json$/.exec(entry)?.[1] }))
 		.filter((match): match is { entry: string; digits: string } => match.digits !== undefined)
 		.map((match) => ({ digits: match.digits, file: match.entry }))
+		// THE SUBTRACTION, declared once in ./unbuilt-scenarios.ts, and it belongs
+		// HERE rather than only in `scenarioCorpus` because BOTH worked-example
+		// censuses below are censuses of what THIS LANE SHIPS. 12a walks the emitted
+		// templates and would try to read an `S<n>.vue` this emitter never wrote;
+		// 12b counts PRINTED prop entries, and a golden this lane refuses prints
+		// none. Subtracting here is why the fourteenth scenario re-argues the census
+		// to the SAME figures rather than renumbering them - see the note in
+		// src/gate/index.ts worked example 12a.
+		.filter((match) => !isUnbuiltEmitted(`S${match.digits}.vue`))
 		.sort((left, right) => Number(left.digits) - Number(right.digits));
 	// Fail LOUD rather than returning []. An empty derivation would make the
 	// inventory assertion agree with an empty `generated/` directory, which is the
@@ -807,8 +817,15 @@ describe('Vue dossier gate', () => {
 			// with the real S10; see the header. The plant must occupy a slot the
 			// corpus does not, or it overwrites a real emitted file and the row
 			// measures its own scaffolding.
-			const plantedDigits =
+			// AND PAST ANY SUBTRACTED ORDINAL. `scenarioGoldens` now filters out the
+			// scenarios this lane refuses, so "one past the highest it returns" can
+			// land ON a subtracted slot - and the plant would then be filtered
+			// straight back out, leaving the derivation unmoved and this calibration
+			// asserting against its own scaffolding. Advance until the slot is one
+			// the subtraction does not claim.
+			let plantedDigits =
 				Math.max(...scenarioGoldens(goldenRoot).map(({ digits }) => Number(digits))) + 1;
+			while (isUnbuiltEmitted(`S${plantedDigits}.vue`)) plantedDigits += 1;
 			// ANTI-COLLISION, ASSERTED RATHER THAN ASSUMED: neither the golden slot
 			// nor the emitted file the plant is about to write may already exist.
 			expect(scenarioGoldens(goldenRoot).map(({ digits }) => digits)).not.toContain(

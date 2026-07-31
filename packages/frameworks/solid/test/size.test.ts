@@ -236,6 +236,21 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// of a scattered series, not a new low, and the row says so instead of
 	// describing a trend three data points refute.
 	S13: { physicalLoc: 578, structuralNodes: 2138 },
+	// S14 (the HACKER NEWS ITEM PAGE) IS THE FIRST ROW IN THIS TABLE WHOSE NUMBER
+	// DOES NOT BOUND WHAT IT RENDERS. Its `HnItem` NAMES ITSELF, so thirty-nine
+	// authored hosts render once per comment per level - fifteen instances for the
+	// seeded forest - and the emitted size is independent of the tree. A budget on
+	// a recursive component measures the source only.
+	// AGAINST S13: 340/578 = 0.59x the physical lines and 1261/2138 = 0.59x the
+	// structural nodes - the two axes agree to the percent, which is what S13's
+	// row predicted would happen once its sixteen separator spans went away.
+	// THE PREMIUM SERIES, RE-DERIVED RATHER THAN CARRIED. S13's row declined to
+	// name a trend in this lane's size against react, and S14 is the fifth point
+	// and does not create one: 340/329 = 1.03x, against S10 1.11x, S11 1.04x, S12
+	// 0.94x and S13 1.04x. Five points, two of them below 1.00x on either side of
+	// the middle - still a scatter, still no trend, and the row still declines to
+	// describe one.
+	S14: { physicalLoc: 340, structuralNodes: 1261 },
 };
 
 describe('honest emitted structure comparison', () => {

@@ -245,6 +245,28 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// the fixture's constraint 8), and NOT evidence of a per-element tax: the
 	// divergence points the safe way, with nodes growing SLOWER than lines.
 	S13: { physicalLoc: 555, structuralNodes: 2073 },
+	// S14 (the HACKER NEWS ITEM PAGE) IS THE FIRST ROW IN THIS TABLE WHOSE NUMBER
+	// DOES NOT BOUND WHAT IT RENDERS, and that is the whole reading. Every earlier
+	// row measures a template whose emitted size and whose DOM are the same order:
+	// sixty-two hosts emit sixty-two hosts. S14's `HnItem` NAMES ITSELF, so its
+	// thirty-nine authored hosts render once per comment per level - fifteen
+	// instances and roughly two hundred `<li>` for the seeded forest - and the
+	// EMITTED SIZE IS INDEPENDENT OF THE TREE. A budget on a recursive component
+	// measures the source and says nothing at all about the output, which is worth
+	// stating because every other row in this table is legitimately read as a
+	// proxy for both.
+	// AGAINST S13, the previous heaviest: 329/555 = 0.59x the physical lines and
+	// 1237/2073 = 0.60x the structural nodes. THE TWO RATIOS AGREE TO WITHIN 1%,
+	// which restores the pattern S13 broke - S13's 19% split was caused by its
+	// sixteen single-character separator spans, and this page has three. So S13's
+	// row was right to blame the separators rather than to suspect a per-element
+	// tax: remove most of them and the axes re-converge.
+	// WHAT THE NUMBER CANNOT SEE, and here it is bigger than usual: this lane is
+	// one of only FOUR that emit S14 at all - svelte and vue refuse a same-module
+	// component reference outright - and one of only THREE that ship it, because
+	// the angular lane emits it and then rejects the result at its own baseline
+	// form inventory. Size is the least interesting fact about this row.
+	S14: { physicalLoc: 329, structuralNodes: 1237 },
 };
 
 describe('honest emitted structure comparison', () => {

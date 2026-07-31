@@ -6,6 +6,7 @@ import type { EnrichedIR } from '@frameless/compiler';
 import { dirname, resolve } from 'pathe';
 import { beforeAll, describe, expect, test } from 'vitest';
 import { emit } from '../src/emitter/index.ts';
+import { isUnbuiltEmitted } from './unbuilt-scenarios.ts';
 import type { GatePolicy } from '../src/gate/index.ts';
 import {
 	BASELINE_FORM_INVENTORY,
@@ -50,6 +51,8 @@ function scenarioCorpus(extension: string, directory = 'generated'): string[] {
 		.map((entry) => /^s(\d+)-[\w-]+\.json$/.exec(entry)?.[1])
 		.filter((digits): digits is string => digits !== undefined)
 		.map((digits) => `${directory}/S${digits}.${extension}`)
+		// THE SUBTRACTION, declared once in ./unbuilt-scenarios.ts.
+		.filter((file) => !isUnbuiltEmitted(file))
 		.sort();
 	// Fail LOUD rather than returning []. An empty derivation would make the
 	// inventory assertion agree with an empty `generated/` directory, which is the

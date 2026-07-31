@@ -45,6 +45,17 @@ const fixtures = [
 	// chunks with `new Promise` + `setTimeout`.
 	['S12.tsx', 's12-codex-clone.json'],
 	['S13.tsx', 's13-hn-front.json'],
+	// THE FIFTH APPLICATION IN THE CORPUS - the HACKER NEWS ITEM PAGE - and THE
+	// RECURSION SCENARIO. It takes the next ORDINAL slot for the reason every row
+	// above records. `HnItem` NAMES ITSELF in its own template, so the emitted
+	// module below contains a component that renders itself; the thread on screen
+	// is whatever the seeded `parentId` chain describes and no depth is fixed
+	// anywhere. MEASURED PER LANE at frameless-app-axes-v1 T003: react, solid,
+	// qwik and angular EMIT a same-module self-reference; SVELTE AND VUE REFUSE IT
+	// and are left UNBUILT with their verbatim messages, recorded in each of those
+	// packages' test/unbuilt-scenarios.ts. Like S10-S13 it stays OUT of the 6 x 9
+	// three-way contract, which scripts/e2e.mjs pins to the literal ['s1'..'s9'].
+	['S14.tsx', 's14-hn-item.json'],
 ] as const;
 
 await mkdir(resolve(root, 'generated'), { recursive: true });

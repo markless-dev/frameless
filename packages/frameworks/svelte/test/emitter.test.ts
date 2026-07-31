@@ -6,6 +6,10 @@ import { resolve } from 'pathe';
 import { describe, expect, test } from 'vitest';
 import { emit, validateEnrichedIr } from '../src/emitter/index.ts';
 import { formatEmitted } from '../src/format-emitted.ts';
+import {
+	isUnbuiltEmitted,
+	SVELTE_UNBUILT_SCENARIOS,
+} from './unbuilt-scenarios.ts';
 
 const packageRoot = resolve(import.meta.dirname, '..');
 const compilerGoldenRoot = resolve(packageRoot, '../../compiler/test/goldens');
@@ -59,12 +63,15 @@ function scenarioFixtures(goldenDir = compilerGoldenRoot): Array<readonly [strin
 		.filter((entry) => /^s\d+-[\w-]+\.json$/.test(entry))
 		.sort(byScenarioNumber)
 		.map((entry) => [`S${/^s(\d+)-/.exec(entry)![1]}.svelte`, entry] as const);
+	// THE SUBTRACTION, declared once in ./unbuilt-scenarios.ts, and asserted from
+	// the other side by `every UNBUILT scenario really is refused` below.
+	const built = table.filter(([file]) => !isUnbuiltEmitted(file));
 	// Fail LOUD rather than returning []. An empty table would emit zero freshness
 	// tests and the file would still report green, which is the one way a derived
 	// list could be greener than the literal it replaced.
 	if (table.length === 0)
 		throw new Error(`no s<n>-*.json scenario goldens found in ${goldenDir}`);
-	return table;
+	return built;
 }
 
 /** What the emitter actually wrote - the other side of the cross-check. */
@@ -107,6 +114,48 @@ describe('Svelte 5 emitter', () => {
 			expect(openTags, `${file} emitted no script block`).toHaveLength(1);
 			expect(openTags[0], `${file} script open tag`).toBe('<script lang="ts">');
 		}
+	});
+
+	/**
+	 * THE OTHER HALF OF THE SUBTRACTION, and the reason `./unbuilt-scenarios.ts`
+	 * is a declaration rather than a skip list.
+	 *
+	 * The row above compares two derived inventories and would be perfectly green
+	 * if this lane silently stopped emitting a scenario for a reason nobody
+	 * recorded - both sides subtract the same names. This row is the other half:
+	 * every declared unbuilt scenario is driven through the REAL `emit()` on its
+	 * REAL golden, and must throw with the recorded message. It goes red three
+	 * ways: the day the limit is lifted and the scenario emits, the day it starts
+	 * refusing for a different reason, and the day a listed golden disappears.
+	 */
+	test('every UNBUILT scenario really is refused, with the recorded message', async () => {
+		// A vacuous loop would make this row agree with an empty declaration, which
+		// is exactly the greener-than-the-literal failure the derivations guard.
+		expect(SVELTE_UNBUILT_SCENARIOS.length).toBeGreaterThan(0);
+		for (const scenario of SVELTE_UNBUILT_SCENARIOS) {
+			const ir = await golden(scenario.golden);
+			expect(() => emit(ir), `${scenario.golden} should still be refused`).toThrow(
+				scenario.refusalContains,
+			);
+			// And the artifact really is absent, rather than present and ignored.
+			expect(
+				readdirSync(generatedRoot).includes(scenario.emitted),
+				`${scenario.emitted} must not exist in generated/`,
+			).toBe(false);
+		}
+	});
+
+	/**
+	 * THE CONTROL FOR THE ROW ABOVE. Without it, `toThrow(...)` proves only that
+	 * SOMETHING throws - a broken `golden()` or an emitter that refused every
+	 * input would satisfy it just as well. A BUILT scenario goes through the same
+	 * call and must NOT throw.
+	 */
+	test('CONTROL: a BUILT scenario is not refused by the same call', async () => {
+		const firstBuilt = FIXTURES[0];
+		expect(firstBuilt).toBeDefined();
+		const ir = await golden(firstBuilt![1]);
+		expect(() => emit(ir)).not.toThrow();
 	});
 
 	test('the derived fixture table is the corpus, and the emitter wrote exactly it', () => {

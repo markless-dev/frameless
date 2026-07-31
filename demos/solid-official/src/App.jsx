@@ -13,6 +13,7 @@ import { BranchBoard } from './emitted/BranchBoard.jsx'
 import { CodexClone } from './emitted/CodexClone.jsx'
 import { EventForm } from './emitted/EventForm.jsx'
 import { HnFront } from './emitted/HnFront.jsx'
+import { HnItem } from './emitted/HnItem.jsx'
 import { FormBoard } from './emitted/FormBoard.jsx'
 import { KeyedTodo } from './emitted/KeyedTodo.jsx'
 import { NestedBoard } from './emitted/NestedBoard.jsx'
@@ -125,7 +126,7 @@ function AsyncGate() {
  * mirrors the Qwik demo's `/`, `/s2`, `/s3` routes without adding a router.
  *
  * @param {string} url
- * @returns {'s1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7' | 's8' | 's9' | 'todomvc' | 'todomvc-advanced' | 'codex' | 'hn'}
+ * @returns {'s1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7' | 's8' | 's9' | 'todomvc' | 'todomvc-advanced' | 'codex' | 'hn' | 'hn-item'}
  */
 export function scenarioFor(url) {
   const path = String(url ?? '')
@@ -154,6 +155,7 @@ export function scenarioFor(url) {
   // like the three above: `scripts/e2e.mjs` pins `threeWayScenarios` to the
   // literal ['s1'..'s9'].
   if (path === 'hn') return 'hn'
+  if (path === 'hn-item') return 'hn-item'
   return 's1'
 }
 
@@ -208,6 +210,52 @@ export default function App(props) {
         into `public/hn-css/` by `pnpm copy-hn-css`, and is linked HERE rather
         than globally because it restyles `body`.
       */}
+      {/*
+        THE FIFTH APPLICATION - the HACKER NEWS ITEM PAGE - and THE RECURSION PAGE.
+        `HnItem` NAMES ITSELF: the emitted component renders `<HnItem>` inside its
+        own template, so the thread on screen is whatever the seeded `parentId`
+        chain describes and NO DEPTH IS FIXED ANYWHERE. The indentation you see is
+        real DOM nesting, not a computed margin - each level's `<ul>` is a
+        descendant of the previous level's `.hn-cnest`.
+
+        THREE OF SIX LANES SERVE THIS PAGE, and the three absences are the
+        measurement this page exists for:
+          svelte and vue REFUSE a same-module component reference outright - a
+            `.svelte` file and a `.vue` SFC each declare exactly one component, so
+            the self-reference has nowhere to land. Recorded verbatim in
+            packages/frameworks/{svelte,vue}/test/unbuilt-scenarios.ts.
+          angular EMITS a correct recursive component and its OWN GATE REJECTS the
+            result: the decorator must carry `imports: [HnItem]` for the selector
+            to resolve, and `imports` is not in that lane's BASELINE_FORM_INVENTORY.
+            Recorded in packages/frameworks/angular/test/ungated-scenarios.ts.
+
+        WHAT WORKS: collapse `[-]` and expand `[+]` on any comment - which take the
+        whole recursive subtree with them - and the per-comment upvote arrow.
+        WHAT IS INERT AND NOT FAKED: the story vote arrow, `hide`, `past`,
+        `favorite`, `reply` and the masthead links. `.tsrx` has no routing
+        construct, so this page is not reachable from /hn by clicking.
+        WHAT IS ABSENT: the reference's reply BOX. A controlled `<textarea>` needs
+        a scalar cell, and the Solid emitter mis-lowers every scalar read inside a
+        handler once a module carries a same-module component reference - see
+        packages/compiler/test/fixtures/s14-hn-item.tsrx constraint (16), which
+        isolates it on a two-source probe.
+
+        IT LINKS THE SAME `hn-css/hn.css` /hn does - one sheet, this repository's
+        own work, nothing copied from news.ycombinator.com - and links it HERE
+        rather than globally because it restyles `body`, which would move the
+        geometry of the nine s1-s9 scenarios `pnpm e2e` compares across six lanes.
+        NO TRACE CHANNEL, AND THAT IS ALSO A MEASUREMENT. S14 is the only module in
+        the corpus with no `onTrace` prop: a recursive component must forward every
+        required prop to itself, and the qwik emitter cannot forward a FUNCTION
+        prop across a component boundary in any spelling - it declares and reads
+        `onTrace$` and prints `onTrace` at the call site. The oracle for this page
+        is the RENDERED DOM instead, which is stronger anyway: collapse, expand and
+        the comment upvote each change what is on screen. See constraint (18).
+      */}
+      <Match when={scenario() === 'hn-item'}>
+        <link rel="stylesheet" href="/hn-css/hn.css" />
+        <HnItem parent="root" depth={0} />
+      </Match>
       <Match when={scenario() === 'hn'}>
         <link rel="stylesheet" href="/hn-css/hn.css" />
         <HnFront onTrace={noTrace} />

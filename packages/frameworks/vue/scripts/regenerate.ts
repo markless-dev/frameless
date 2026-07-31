@@ -64,6 +64,30 @@ const fixtures = [
 	// chunks with `new Promise` + `setTimeout`.
 	['S12.vue', 's12-codex-clone.json'],
 	['S13.vue', 's13-hn-front.json'],
+	// S14 (the HACKER NEWS ITEM PAGE - the RECURSION scenario) IS DELIBERATELY
+	// ABSENT FROM THIS LIST. The vue emitter REFUSES it, verbatim and read off the
+	// real module rather than off a probe:
+	//
+	//   Vue emitter has no lowering for a same-module component reference
+	//   (HnItem): a .vue SFC declares exactly one component
+	//
+	// S14's `HnItem` names ITSELF in its own template, which is a component
+	// reference whose target module is `self`, and an SFC has room for exactly one
+	// component.
+	//
+	// THE REFUSAL IS NOT A VERDICT ON RECURSION IN THIS LANE, and T003 measured
+	// the difference rather than assuming it. Spelled the way Vue spells recursion
+	// NATIVELY - the module importing ITSELF under an alias - THIS EMITTER TAKES
+	// IT. That spelling is refused one layer up instead: `resolveModuleSet` throws
+	// "Component-reference cycle: src/comment.tsrx -> src/comment.tsrx", and the
+	// emitted import specifier is derived from the `.tsrx` specifier, so a module
+	// built from `s14-hn-item.tsrx` would import `./s14-hn-item.vue` while the
+	// artifact on disk is `generated/S14.vue`. Two-module mutual reference
+	// (A -> B -> A) is refused by the same linker.
+	//
+	// Adding the row would not produce output; it would make this script THROW.
+	// `VUE_UNBUILT_SCENARIOS` in test/unbuilt-scenarios.ts carries the same
+	// subtraction so the omission is ASSERTED rather than merely true.
 ] as const;
 for (const [output, golden] of fixtures) {
 	const ir = JSON.parse(await readFile(resolve(goldenRoot, golden), 'utf8')) as EnrichedIR;

@@ -74,6 +74,42 @@ const fixtures = [
 	// It IS built for everything else in the corpus, including S10, so this is a
 	// recorded lane limit and not a missing lane.
 	['S13.ts', 's13-hn-front.json'],
+	// S14 (the HACKER NEWS ITEM PAGE - the RECURSION scenario) IS ABSENT FOR A
+	// REASON THAT IS NEW TO THIS LANE AND TO THIS REPO: THE EMITTER TAKES IT AND
+	// THE LANE'S OWN GATE REFUSES THE RESULT.
+	//
+	// `emit()` succeeds. S14's `HnItem` names ITSELF in its own template, and this
+	// emitter lowers a same-module component reference without complaint - it is
+	// one of only FOUR lanes that do (react, solid, qwik, angular; svelte and vue
+	// refuse it outright). The emitted class is a correct recursive Angular
+	// component, `<frameless-hn-item>` inside its own template, with
+	// `imports: [HnItem]` in the decorator so the selector resolves.
+	//
+	// THAT `imports` ENTRY IS WHAT THE GATE REFUSES, verbatim:
+	//
+	//   Emitted Angular source uses the component-metadata form "imports", which
+	//   is not in the baseline form inventory. IR-4 is DEFERRED, so this emitter's
+	//   only discharge of the version corollary's second conjunct is an explicit
+	//   allowlist with a recorded floor per entry; a new form has to be added to
+	//   BASELINE_FORM_INVENTORY with a version floor and an honest floor-evidence
+	//   status, and it may raise ANGULAR_BASELINE_FLOOR
+	//
+	// S14 IS THE FIRST SCENARIO IN THE CORPUS WITH A COMPONENT REFERENCE AT ALL,
+	// so it is the first emitted module in this lane ever to print `imports`, and
+	// `BASELINE_FORM_INVENTORY` in ../src/gate/index.ts has thirteen entries and
+	// no component-metadata `imports` among them. Admitting it is not a code edit:
+	// it needs a version FLOOR and a floor-EVIDENCE status, and `imports` on
+	// `@Component` arrives with standalone components at Angular 14/15, which is
+	// ABOVE several inventory entries and would move the DERIVED
+	// `ANGULAR_BASELINE_FLOOR`. That is a dossier ruling, and
+	// frameless-app-axes-v1 T003 did not have the authority to make it - the gate
+	// source is outside that card's write scope by construction.
+	//
+	// So the lane is left UNBUILT WITH A RECORDED REFUSAL, and the refusal is
+	// recorded ON THE RIGHT LAYER: `ANGULAR_UNGATED_SCENARIOS` in
+	// test/ungated-scenarios.ts asserts that `emit()` SUCCEEDS and that the gate
+	// then reports exactly this diagnostic - which is a strictly stronger claim
+	// than the S11/S12 rows next to it, where the emitter itself throws.
 ] as const;
 for (const [output, golden] of fixtures) {
 	const ir = JSON.parse(await readFile(resolve(goldenRoot, golden), 'utf8')) as EnrichedIR;

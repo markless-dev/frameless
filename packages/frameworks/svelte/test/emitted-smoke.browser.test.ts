@@ -1,6 +1,7 @@
 import { flushSync, mount, unmount } from 'svelte';
 import { describe, expect, test } from 'vitest';
 import { assertNoConsoleDiagnostics, takeConsoleDiagnostics } from './setup.ts';
+import { isUnbuiltEmitted } from './unbuilt-scenarios.ts';
 
 type MountableComponent = Parameters<typeof mount>[0];
 type Trace = Array<[string, Record<string, unknown>]>;
@@ -36,6 +37,10 @@ const EXPECTED_MODULES = Object.keys(goldenModules)
 	.map((path) => /\/s(\d+)-[\w-]+\.json$/.exec(path)?.[1])
 	.filter((digits): digits is string => digits !== undefined)
 	.map((digits) => `../generated/S${digits}.svelte`)
+	// THE SUBTRACTION, declared once in ./unbuilt-scenarios.ts. This file runs in
+	// a browser where `node:fs` does not exist, so the module is imported for its
+	// PREDICATE only - it reads nothing from disk.
+	.filter((file) => !isUnbuiltEmitted(file))
 	.sort();
 
 function component(name: string): MountableComponent {

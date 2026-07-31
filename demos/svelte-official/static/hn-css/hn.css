@@ -385,3 +385,157 @@ body {
 	background: #ffffff;
 	width: 12em;
 }
+
+/* ==================================================================== S14 ===
+ * THE HACKER NEWS ITEM PAGE - the RECURSION scenario. Everything below is
+ * additive: /hn-item links the same sheet /hn does, so the shell neutralisation,
+ * the masthead, the `[hidden]` override and the subtext scale above are shared
+ * rather than restated. Three lanes serve this page (react, solid, qwik); svelte
+ * and vue refuse a same-module component reference and angular's own gate
+ * rejects the `imports` its recursive component needs.
+ *
+ * THE ONE RULE THAT MATTERS IS `.hn-cnest .hn-comments`, AND IT IS ONE RULE
+ * BECAUSE THE INDENTATION IS REAL DOM NESTING. `HnItem` names itself, so a
+ * depth-4 comment is physically inside four `.hn-cnest` elements and inherits
+ * four paddings. A `depth`-driven margin would have rendered the same picture
+ * while proving nothing about recursion - which is exactly the substitution this
+ * scenario exists to refuse - so there is deliberately no `[data-depth]` rule
+ * for indentation anywhere in this file.
+ */
+
+.hn-thread {
+	display: block;
+}
+
+/* The root instance carries the page frame; the recursive ones must not. */
+.hn-thread[data-depth='0'] {
+	width: 85%;
+	margin: 0 auto;
+	background: #f6f6ef;
+	padding: 0 0 12px;
+}
+
+.hn-itemhead {
+	display: block;
+	padding: 0;
+}
+
+/* ------------------------------------------------------- the story header */
+
+.hn-story {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	padding: 6px 4px 0 8px;
+}
+
+/* ---------------------------------------------------- the comment tree */
+
+.hn-comments {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	list-style: none;
+	margin: 0;
+	padding: 10px 4px 0 8px;
+}
+
+/*
+ * THE RECURSION'S ONLY VISUAL RULE. Each level's `<ul>` sits inside the previous
+ * level's `.hn-cnest`, so the indent COMPOUNDS with real nesting depth. The
+ * reference indents with `<td class="ind"><img width="40 x depth">`; 28px is the
+ * measured equivalent at this type size.
+ */
+.hn-cnest .hn-comments {
+	padding: 10px 0 0 28px;
+	gap: 10px;
+}
+
+/* A row whose comment is not a child of this instance's `parent` renders empty
+ * and hidden. `[hidden]` above already wins; this keeps it out of the flex gap
+ * calculation as well, which is what stops the tree growing blank stripes. */
+.hn-comment {
+	display: block;
+	margin: 0;
+	padding: 0;
+}
+
+.hn-c {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+}
+
+.hn-chead {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	font-size: 7pt;
+	color: #828282;
+}
+
+.hn-cby {
+	color: #828282;
+	font-size: 7pt;
+}
+
+.hn-cby:hover {
+	text-decoration: underline;
+}
+
+.hn-cage {
+	color: #828282;
+	font-size: 7pt;
+}
+
+.hn-ctoggle {
+	appearance: none;
+	background: none;
+	border: none;
+	padding: 0;
+	margin: 0;
+	font: inherit;
+	color: #828282;
+	cursor: pointer;
+}
+
+.hn-ctoggle:hover {
+	text-decoration: underline;
+}
+
+/* The "3 replies" run that takes the collapsed subtree's place. */
+.hn-ckids {
+	color: #828282;
+	font-size: 7pt;
+	font-style: italic;
+}
+
+.hn-ctext {
+	display: block;
+	padding: 0;
+}
+
+.hn-cbody {
+	color: #000000;
+	font-size: 9pt;
+	line-height: 1.35;
+}
+
+.hn-creply {
+	display: block;
+}
+
+.hn-creply .hn-act {
+	font-size: 7pt;
+	color: #828282;
+}
+
+/*
+ * THE ELEMENT THAT HOLDS THE RECURSIVE INSTANCE. It carries no visual styling of
+ * its own on purpose: the indent belongs to the `<ul>` inside it, so a collapsed
+ * comment - which hides this element - removes the whole subtree AND its indent
+ * in one binding.
+ */
+.hn-cnest {
+	display: block;
+}

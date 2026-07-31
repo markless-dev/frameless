@@ -8,6 +8,7 @@ import { resolve } from 'pathe';
 import { beforeAll, describe, expect, test } from 'vitest';
 import { COMPILE_MODES, compileDiagnostics } from '../src/emitter/index.ts';
 import { discoverGeneratedFiles } from '../src/gate/index.ts';
+import { isUnbuiltEmitted } from './unbuilt-scenarios.ts';
 
 const packageRoot = resolve(import.meta.dirname, '..');
 const compilerGoldenRoot = resolve(packageRoot, '../../compiler/test/goldens');
@@ -30,6 +31,10 @@ function scenarioCorpus(extension: string, directory = 'generated'): string[] {
 		.map((entry) => /^s(\d+)-[\w-]+\.json$/.exec(entry)?.[1])
 		.filter((digits): digits is string => digits !== undefined)
 		.map((digits) => `${directory}/S${digits}.${extension}`)
+		// THE SUBTRACTION, declared once in ./unbuilt-scenarios.ts. A golden this
+		// emitter REFUSES has no artifact to compile, and leaving it in would make
+		// this suite demand a file the lane is recorded as never writing.
+		.filter((file) => !isUnbuiltEmitted(file))
 		.sort();
 	// Fail LOUD rather than returning []. An empty derivation would silently
 	// produce zero `test.each` rows, which vitest reports as a passing file.

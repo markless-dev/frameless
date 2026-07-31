@@ -39,12 +39,12 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
  * THE ONE SCENARIO TABLE. Ordinals are load-bearing well beyond this file:
  * ten-plus per-lane suites derive their `generated/` inventory from
  * /^s(\d+)-[\w-]+\.json$/ and assert it exactly, which is why the applications
- * ride ordinal slots (S10, S11, S12, S13) instead of taking names of their own.
+ * ride ordinal slots (S10, S11, S12, S13, S14) instead of taking names of their own.
  *
  * `path` is the CANONICAL, UNSLASHED form. Lanes transform it — see `routeFor`.
  *
  * S1-S9 are the three-way contract `scripts/e2e.mjs` pins to the literal
- * ['s1'..'s9']. S10-S13 are the applications, deliberately OUTSIDE that contract
+ * ['s1'..'s9']. S10-S14 are the applications, deliberately OUTSIDE that contract
  * and browsable only. Both kinds belong in the front door regardless.
  *
  * @type {ReadonlyArray<{ id: string, path: string, title: string }>}
@@ -68,6 +68,17 @@ const SCENARIOS = [
 	// relative age on the page is a literal string in the seeded data rather than
 	// something computed from `Date`. Six lanes, six routes.
 	{ id: 'S13', path: '/hn', title: 'Hacker News front page' },
+	// S14 IS THE FIRST APPLICATION IN THIS TABLE WITH THREE ABSENCES AND THREE
+	// DIFFERENT REASONS, which is what makes it the RECURSION measurement rather
+	// than just another page. `HnItem` names ITSELF in its own template.
+	//   svelte, vue: the emitter REFUSES a same-module component reference - a
+	//     `.svelte` file and a `.vue` SFC each hold exactly one component.
+	//   angular: the emitter EMITS a correct recursive component and the LANE'S
+	//     OWN GATE rejects it, because the decorator needs `imports: [HnItem]`
+	//     for the selector to resolve and `imports` is not in that lane's
+	//     baseline form inventory.
+	// react, solid and qwik serve it. See the three refusal constants below.
+	{ id: 'S14', path: '/hn-item', title: 'Hacker News item page (recursive comments)' },
 ];
 
 /**
@@ -87,6 +98,41 @@ const SCENARIOS = [
  * built from `new Promise` + `setTimeout`, so neither can be NAMED in this lane.
  */
 const ANGULAR_REFUSAL = 'emitter refuses: cannot name the global `Promise`';
+
+/**
+ * THE THREE S14 ABSENCES, AND THEY ARE NOT THE SAME KIND OF ABSENCE.
+ *
+ * S14's `HnItem` NAMES ITSELF, which is a component reference whose target
+ * module is `self` - the first one in this corpus. Measured per lane at
+ * frameless-app-axes-v1 T003, on the real module and not on a probe.
+ *
+ * SVELTE AND VUE REFUSE AT THE EMITTER, verbatim:
+ *
+ *   Svelte emitter has no lowering for a same-module component reference
+ *   (HnItem): a .svelte file declares exactly one component, and a snippet
+ *   cannot own state or a lifecycle
+ *   Vue emitter has no lowering for a same-module component reference (HnItem):
+ *   a .vue SFC declares exactly one component
+ *
+ * That is a FILE-FORMAT limit, not a recursion verdict: spelled the way those
+ * two frameworks spell recursion natively - the module importing itself under an
+ * alias - BOTH EMITTERS TAKE IT, and the compiler's linker refuses that instead
+ * with `Component-reference cycle`.
+ *
+ * ANGULAR IS THE DIFFERENT ONE: `emit()` SUCCEEDS and produces a correct
+ * recursive component, and the lane's own dossier gate then rejects the result:
+ *
+ *   Emitted Angular source uses the component-metadata form "imports", which is
+ *   not in the baseline form inventory
+ *
+ * Admitting `imports` needs a version floor and floor evidence and would move
+ * the derived ANGULAR_BASELINE_FLOOR, which is a dossier ruling rather than a
+ * code edit. Recorded in packages/frameworks/angular/test/ungated-scenarios.ts.
+ */
+const SELF_REFERENCE_REFUSAL =
+	'emitter refuses: one component per module, so a self-reference has nowhere to land';
+const ANGULAR_IMPORTS_REFUSAL =
+	'emits, but the lane gate rejects `imports` (not in the baseline form inventory)';
 
 /**
  * The lanes. `port` is a PREFERENCE, not a guarantee — see `allocatePorts`.
@@ -163,7 +209,7 @@ const DEMOS = [
 		portFlag: true,
 		portEnv: false,
 		trailingSlash: false,
-		unbuilt: {},
+		unbuilt: { S14: SELF_REFERENCE_REFUSAL },
 	},
 	{
 		name: 'vue',
@@ -174,7 +220,7 @@ const DEMOS = [
 		portFlag: false,
 		portEnv: true,
 		trailingSlash: false,
-		unbuilt: {},
+		unbuilt: { S14: SELF_REFERENCE_REFUSAL },
 	},
 	{
 		name: 'angular',
@@ -185,7 +231,7 @@ const DEMOS = [
 		portFlag: true,
 		portEnv: false,
 		trailingSlash: false,
-		unbuilt: { S11: ANGULAR_REFUSAL, S12: ANGULAR_REFUSAL },
+		unbuilt: { S11: ANGULAR_REFUSAL, S12: ANGULAR_REFUSAL, S14: ANGULAR_IMPORTS_REFUSAL },
 	},
 ];
 
@@ -533,8 +579,10 @@ function announce() {
 	}
 
 	lines.push('  Scenarios: S1-S9 are the 6 x 9 three-way contract; S10 TodoMVC,');
-	lines.push('  S11 TodoMVC Advanced, S12 Codex clone and S13 Hacker News are');
-	lines.push('  the applications. S13 is the first one all SIX lanes serve.');
+	lines.push('  S11 TodoMVC Advanced, S12 Codex clone, S13 Hacker News and');
+	lines.push('  S14 Hacker News item are the applications. S13 is the only one');
+	lines.push('  all SIX lanes serve; S14 is the RECURSION page and three lanes');
+	lines.push('  refuse it, each for a different recorded reason.');
 	lines.push('  Qwik routes keep their trailing slash — its router 301s without it.');
 	lines.push('  Walkthrough: README.md, "See It Yourself: Hydrate, Hydrate, Resume".');
 	lines.push(`  Ctrl-C stops all ${runners.length}.`);

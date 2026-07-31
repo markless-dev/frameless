@@ -12,6 +12,7 @@ import {
 	isUnbuiltEmitted,
 	isUnbuiltGolden,
 } from './unbuilt-scenarios.ts';
+import { isUngatedEmitted, isUngatedGolden } from './ungated-scenarios.ts';
 
 const packageRoot = resolve(import.meta.dirname, '..');
 const compilerGoldenRoot = resolve(packageRoot, '../../compiler/test/goldens');
@@ -67,7 +68,7 @@ function scenarioFixtures(goldenDir = compilerGoldenRoot): Array<readonly [strin
 		// a live `emit()` refusal by the row below - so this cannot degenerate into a
 		// skip list. See that file for why the ban is a global-identifier rule rather
 		// than an async one.
-		.filter((entry) => !isUnbuiltGolden(entry))
+		.filter((entry) => !isUnbuiltGolden(entry) && !isUngatedGolden(entry))
 		.sort(byScenarioNumber)
 		.map((entry) => [`S${/^s(\d+)-/.exec(entry)![1]}.ts`, entry] as const);
 	// Fail LOUD rather than returning []. An empty table would emit zero freshness
@@ -82,7 +83,7 @@ function scenarioFixtures(goldenDir = compilerGoldenRoot): Array<readonly [strin
 function emittedScenarios(directory = generatedRoot): string[] {
 	return readdirSync(directory)
 		.filter((entry) => /^S\d+\.ts$/.test(entry))
-		.filter((entry) => !isUnbuiltEmitted(entry))
+		.filter((entry) => !isUnbuiltEmitted(entry) && !isUngatedEmitted(entry))
 		.sort(byScenarioNumber);
 }
 

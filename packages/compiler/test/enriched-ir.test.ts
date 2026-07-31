@@ -26,6 +26,7 @@ const FIXTURES = [
 	's11-todomvc-advanced.tsrx',
 	's12-codex-clone.tsrx',
 	's13-hn-front.tsrx',
+	's14-hn-item.tsrx',
 ] as const;
 
 const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>> = {
@@ -586,6 +587,54 @@ const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>>
 		['label', 'class'],
 		['input', 'id'],
 	],
+	// THIRTY-NINE HOSTS, and the census is worth reading against S13's sixty-two:
+	// this page is SMALLER in source and UNBOUNDED on screen. Every host below the
+	// `['ul', 'class']` row is authored ONCE and rendered once per comment per
+	// level, because `HnItem` names itself inside its own repeat. The three
+	// `['div', 'class']` rows at the tail are `.hn-ctext`, `.hn-creply` and
+	// `.hn-cnest` - and `.hn-cnest` is the one that HOLDS THE RECURSIVE INSTANCE,
+	// which is why collapse hides it rather than hiding the comment body alone.
+	's14-hn-item.tsrx': [
+		['div', 'class'],
+		['div', 'class'],
+		['header', 'class'],
+		['a', 'class'],
+		['span', 'class'],
+		['a', 'class'],
+		['a', 'class'],
+		['div', 'class'],
+		['span', 'class'],
+		['button', 'type'],
+		['a', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['a', 'class'],
+		['span', 'class'],
+		['a', 'class'],
+		['span', 'class'],
+		['a', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['ul', 'class'],
+		['li', 'class'],
+		['div', 'class'],
+		['div', 'class'],
+		['button', 'type'],
+		['span', 'class'],
+		['span', 'class'],
+		['button', 'type'],
+		['button', 'type'],
+		['span', 'class'],
+		['div', 'class'],
+		['span', 'class'],
+		['div', 'class'],
+		['a', 'class'],
+		['div', 'class'],
+	],
 };
 
 async function fixtureIr(file: (typeof FIXTURES)[number]): Promise<EnrichedIR> {
@@ -887,6 +936,7 @@ describe('fixture-family sufficiency', () => {
 			's11-todomvc-advanced.tsrx',
 			's12-codex-clone.tsrx',
 			's13-hn-front.tsrx',
+			's14-hn-item.tsrx',
 		];
 
 		test('CONTROL: every UNannotated corpus scenario carries NO type, and both sets are non-empty', async () => {
@@ -1382,6 +1432,24 @@ export function Probe({ label }: { label }) @{
 				'unvote',
 				'vote',
 			],
+			// ZERO NAMES, AND S14 IS THE ONLY FIXTURE IN THIS TABLE WITH AN EMPTY
+			// LIST. That is a MEASUREMENT, not an omission, and it is the reason the
+			// row is worth reading: a recursive component must forward every
+			// required prop TO ITSELF, and the qwik emitter cannot forward a
+			// FUNCTION prop across a component boundary in any spelling - it
+			// declares and reads `onTrace$` and prints `onTrace` at the call site,
+			// which that lane's own emitted-output typecheck rejects. Authoring the
+			// prop as `onTrace$` only produces `onTrace$$`. Nothing in the corpus
+			// had reached it because the composition fixtures forward only DATA
+			// props and every scenario before this one is a single component. See
+			// the fixture's constraint (18). THE ORACLE MOVED TO THE DOM INSTEAD:
+			// collapse, expand and the comment upvote are the three recorded events,
+			// and each of them changes what is on screen and what `[hidden]`
+			// reports, which is a stronger observation than a callback. The
+			// non-vacuity guard for this table is the CONTROL below, which requires
+			// both the annotated and the unannotated sets to be non-empty across the
+			// corpus - not every fixture to trace.
+			's14-hn-item.tsrx': [],
 		};
 		for (const file of FIXTURES) {
 			const ir = await fixtureIr(file);
