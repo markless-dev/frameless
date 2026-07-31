@@ -5,10 +5,12 @@ import { tmpdir } from 'node:os';
 import { pathToFileURL } from 'node:url';
 import { runInNewContext } from 'node:vm';
 import {
+	adaptPersistenceFacts,
 	buildEnrichedIr,
 	FRAMELESS_STATE_GLOBAL,
 	type EnrichedIR,
 	type FramelessPersistenceRecord,
+	type MarklessStorageSourceFact,
 } from '@frameless/compiler';
 import { resolve } from 'pathe';
 import { parse } from 'yuku-parser';
@@ -1555,6 +1557,63 @@ export function Search() @{
 			);
 			expect(persistedGolden).toContain(`globalThis.${FRAMELESS_STATE_GLOBAL}`);
 			expect(persistedGolden).not.toContain(`window.${FRAMELESS_STATE_GLOBAL}`);
+		});
+
+		// SOLID DROPS THE WRITE-THROUGH FOR A HANDLER-ONLY PERSISTED BINDING, AND
+		// REACT DOES NOT. Measured at `frameless-app-axes-v1` T007 with the SAME
+		// canonical record built by the SAME vendor adapter: React emits one
+		// `__framelessWrite('markless:next', ...)`, Solid emits ZERO.
+		//
+		// `next` is read only inside handlers, so Solid lowers it to a plain `let`
+		// and the assignment `next = next + 1` never routes through
+		// `persistenceStatements`. `validatePersistenceCorrelation` accepts the
+		// record - it asks only that a `kind: 'state'` binding of that name exists -
+		// so nothing refuses and nothing warns: the binding SEEDS from storage in
+		// the render-read case and can NEVER WRITE BACK.
+		//
+		// `generated-persistence/P1` cannot see this, because it persists `draft`,
+		// a render-read signal, which sits in the covered half. THIS TEST IS A
+		// CHARACTERIZATION OF A DEFECT, NOT AN ENDORSEMENT OF IT. It is paired with
+		// React's "honours write-through for a HANDLER-ONLY persisted binding". If
+		// the Solid emitter learns to write these back, THIS TEST GOING RED IS THE
+		// INTENDED SIGNAL - update it, do not soften it.
+		test('DEFECT: drops the write-through for a HANDLER-ONLY persisted binding', async () => {
+			const ir = clone(await golden('s2-keyed-todo.json')) as any;
+			const state = ir.records.bindings.find((binding: any) => binding.id === 'state:next');
+			expect(state).toBeDefined();
+
+			const [record] = adaptPersistenceFacts(
+				[
+					{
+						graphNodeId: state.id,
+						moduleId: ir.filename,
+						bindingName: state.name,
+						key: {
+							origin: 'derived',
+							sourceIdentifier: state.name,
+							literal: `markless:${state.name}`,
+							bakedAtCompileTime: true,
+						},
+						authoredInitial: '3',
+						writable: state.writable,
+					} as MarklessStorageSourceFact,
+				],
+				() => ({ render: false, handler: true }),
+			);
+			expect(record!.seed.lowering).toBe('none');
+			// The contract the emitted output is about to ignore.
+			expect(record!.writeThrough.trigger).toBe('ordinary-assignment');
+			ir.records.persistence = [record];
+
+			const source = emit(ir);
+			// The emitter ACCEPTED the record - this is silent, not a refusal.
+			expect(source).not.toContain(`${FRAMELESS_STATE_GLOBAL}?.['markless:next']`);
+			expect(source).toContain("let next = '3'");
+			// AN ORDINARY ASSIGNMENT IS PRESENT ...
+			expect(source).toMatch(/next = next \+ 1|next\+\+/);
+			// ... AND NOT ONE WRITE-THROUGH FOLLOWS IT.
+			expect(source).not.toContain("__framelessWrite('markless:next'");
+			expect(source.match(/__framelessWrite\(/g) ?? []).toHaveLength(0);
 		});
 
 		test('keeps an artifact with no persistence records byte-identical', async () => {

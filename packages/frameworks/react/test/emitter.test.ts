@@ -3,10 +3,12 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { runInNewContext } from 'node:vm';
 import {
+	adaptPersistenceFacts,
 	buildEnrichedIr,
 	FRAMELESS_STATE_GLOBAL,
 	type EnrichedIR,
 	type FramelessPersistenceRecord,
+	type MarklessStorageSourceFact,
 } from '@frameless/compiler';
 import { resolve } from 'pathe';
 // Type-only: erased at runtime, so it does not hoist a `react` load above the
@@ -1854,6 +1856,63 @@ export function SyncProbe({ onTrace }) @{
 					/__framelessWrite\('markless:history', 'data-markless-history', history\)/g,
 				),
 			).toHaveLength(definition.methods.length);
+		});
+
+		// THE HANDLER-ONLY HALF OF THE PERSISTENCE CONTRACT, WHICH `P1` CANNOT SEE.
+		// `P1` persists `draft`, a binding read in render, so it exercises only the
+		// pre-paint seed plus the write-through of a `useState` cell. `next` in the
+		// same golden is read ONLY inside handlers, so React lowers it to `useRef`
+		// and the record's seed lowering is `none`. React still honours
+		// `writeThrough.trigger: 'ordinary-assignment'` and emits the write.
+		//
+		// THIS TEST IS ONE HALF OF A CROSS-LANE PAIR. Its Solid twin
+		// ("SOLID DROPS THE WRITE-THROUGH ...") runs the SAME canonical record
+		// through the Solid emitter and measures ZERO writes. Measured at
+		// `frameless-app-axes-v1` T007. If this file and that one ever agree, one
+		// of the two lanes has changed and the split must be re-recorded.
+		test('honours write-through for a HANDLER-ONLY persisted binding', async () => {
+			const ir = clone(await golden('s2-keyed-todo.json')) as any;
+			const state = ir.records.bindings.find((binding: any) => binding.id === 'state:next');
+			expect(state).toBeDefined();
+
+			// Built through the REAL vendor adapter rather than hand-shaped, so the
+			// record cannot be an artifact of the test's own opinion about seeds.
+			const [record] = adaptPersistenceFacts(
+				[
+					{
+						graphNodeId: state.id,
+						moduleId: ir.filename,
+						bindingName: state.name,
+						key: {
+							origin: 'derived',
+							sourceIdentifier: state.name,
+							literal: `markless:${state.name}`,
+							bakedAtCompileTime: true,
+						},
+						authoredInitial: '3',
+						writable: state.writable,
+					} as MarklessStorageSourceFact,
+				],
+				() => ({ render: false, handler: true }),
+			);
+			expect(record!.seed.lowering).toBe('none');
+			expect(record!.writeThrough.trigger).toBe('ordinary-assignment');
+			ir.records.persistence = [record];
+
+			const source = emit(ir);
+			// No render read, so no seed slot - the contract's own `no-render-read`.
+			expect(source).not.toContain(`${FRAMELESS_STATE_GLOBAL}?.['markless:next']`);
+			// AND THE INITIALIZER IS REPLACED BY THE RECORD'S STRING ANYWAY. The
+			// golden authors `next = state(3)`; a persistence record turns that into
+			// `useRef('3')` even with seed lowering `none`, because `persistenceSeed`
+			// falls back to `authoredInitial`, which the record type declares as a
+			// STRING. This is exactly why the vendor boundary refuses a non-string
+			// authored initial upstream - persistence is scalar-string-only, and the
+			// emitter does not re-check it.
+			expect(source).toContain("useRef('3')");
+			expect(
+				source.match(/__framelessWrite\('markless:next', 'data-markless-next', /g),
+			).toHaveLength(1);
 		});
 
 		test('keeps an artifact with no persistence records byte-identical', async () => {

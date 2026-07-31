@@ -1,8 +1,9 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
 import {
 	adaptPersistenceFacts,
 	buildEnrichedIr,
+	extractPersistenceSourceFacts,
 	FRAMELESS_STATE_GLOBAL,
 	type MarklessStorageSourceFact,
 } from '../src/index.ts';
@@ -171,5 +172,109 @@ describe('pinned Markless 0.1.1 production path', () => {
 			source,
 		});
 		expect(ir.records.persistence).toEqual([]);
+	});
+});
+
+// THERE IS NO AUTHORING SURFACE FOR PERSISTENCE, AND THAT IS THE WHOLE REASON NO
+// APPLICATION IN THIS REPOSITORY SURVIVES A REFRESH.
+//
+// Measured at `frameless-app-axes-v1` T007. `@markless/core` declares
+// `state<T>(initial: T): T` - ONE parameter, no options object - and pinned
+// Markless 0.1.1's `SemanticGraphBinding` carries no `storage` field at all, so
+// `extractPersistenceSourceFacts` can never see one no matter what a `.tsrx`
+// says. The refusal is therefore UPSTREAM OF EVERY EMITTER: it is not a lane
+// property and no lane can be narrowed around it.
+//
+// The census below would ALSO pass if the extractor were simply dead, which is
+// the vacuous-proof trap this project keeps buying. The POSITIVE CONTROL is what
+// makes it mean something: feed the extractor a binding that DOES carry
+// `storage` and it produces the fact, so a zero over the corpus is a statement
+// about the CORPUS AND THE VENDOR, not about the extractor.
+describe('the persistence authoring surface, and why the corpus reports zero', () => {
+	const fixtureRoot = new URL('./fixtures/', import.meta.url);
+
+	test('NO .tsrx IN THE CORPUS CAN AUTHOR A PERSISTENCE RECORD', async () => {
+		const names = readdirSync(fixtureRoot)
+			.filter((name) => name.endsWith('.tsrx'))
+			.sort();
+		expect(names.length).toBeGreaterThan(20);
+
+		const authored: string[] = [];
+		let built = 0;
+		for (const name of names) {
+			const source = readFileSync(new URL(name, fixtureRoot), 'utf8');
+			let ir;
+			try {
+				ir = await buildEnrichedIr({ filename: `test/fixtures/${name}`, source });
+			} catch {
+				// A handful of fixtures exist only to be REFUSED, or only resolve
+				// inside a module set. They cannot report a persistence record
+				// either, and skipping them is recorded rather than hidden by the
+				// `built` floor asserted below.
+				continue;
+			}
+			built += 1;
+			if (ir.records.persistence.length > 0)
+				authored.push(`${name}: ${ir.records.persistence.length}`);
+		}
+
+		expect(built).toBeGreaterThanOrEqual(names.length - 1);
+		expect(authored).toEqual([]);
+	});
+
+	test('POSITIVE CONTROL: the extractor is alive - a binding WITH storage yields a fact', () => {
+		const facts = extractPersistenceSourceFacts({
+			filename: 'src/settings.tsrx',
+			graphBindings: [
+				{
+					id: 'state:theme',
+					name: 'theme',
+					kind: 'state',
+					writable: true,
+					initialValue: 'light',
+					storage: {
+						key: {
+							origin: 'derived',
+							sourceIdentifier: 'theme',
+							literal: 'markless:theme',
+							bakedAtCompileTime: true,
+						},
+					},
+				},
+			],
+		} as never);
+
+		expect(facts).toHaveLength(1);
+		expect(facts[0]).toMatchObject({
+			graphNodeId: 'state:theme',
+			moduleId: 'src/settings.tsrx',
+			bindingName: 'theme',
+			authoredInitial: 'light',
+			writable: true,
+		});
+	});
+
+	// PERSISTENCE IS SCALAR-STRING-ONLY, AND ONLY THIS BOUNDARY SAYS SO. The
+	// emitters do NOT re-check it, so a record for an array- or number-valued
+	// binding reaches React and Solid lowering intact when it is injected into
+	// `ir.records.persistence` directly - which is how every persistence test in
+	// this repository reaches the feature, the vendor path being inert.
+	test.each([
+		['a number', 4],
+		['an array', [{ id: 't1', done: true }]],
+		['a boolean', false],
+		['an object', { done: true }],
+	])('the vendor boundary refuses %s authored initial', (_label, authoredInitial) => {
+		expect(() =>
+			adaptPersistenceFacts(
+				[
+					{
+						...PERSISTENCE_SOURCE_FACTS[1],
+						authoredInitial,
+					} as unknown as MarklessStorageSourceFact,
+				],
+				() => ({ render: true, handler: false }),
+			),
+		).toThrow('authoredInitial must be a string');
 	});
 });

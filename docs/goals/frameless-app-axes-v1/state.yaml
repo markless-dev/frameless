@@ -58,7 +58,7 @@ goal:
       evaporates. If drag refuses and is quietly replaced by click-to-move, the axis goes
       unmeasured while the demo looks complete.
 
-active_task: T007
+active_task: T008
 
 rules:
   - "state.yaml is board truth; goal.md is the charter."
@@ -1382,7 +1382,7 @@ tasks:
   - id: T007
     type: worker
     assignee: Worker
-    status: active
+    status: blocked
     reasoning_hint: high
     objective: >-
       THE FIFTH AXIS: PERSISTENCE. Make TodoMVC Advanced (S11) survive a refresh, in every lane
@@ -1459,12 +1459,89 @@ tasks:
       - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched."
       - "NEVER pkill -f on a broad pattern. Port 5175 is held by FOREIGN node PID 64413."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: blocked
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T007-persistence.md
+      summary: "PERSISTENCE HAS NO AUTHORING SURFACE. @markless/core declares state<T>(initial: T) WITH ONE PARAMETER and pinned Markless 0.1.1's SemanticGraphBinding HAS NO `storage` FIELD, so ALL 23 BUILDABLE CORPUS FIXTURES PRODUCE ZERO PERSISTENCE RECORDS - upstream of every emitter. EDITING s11-todomvc-advanced.tsrx CANNOT MAKE IT SURVIVE A REFRESH. The card's deliverable - the per-lane verdict - is measured in full: react and solid EMIT, qwik/svelte/vue/angular REFUSE verbatim."
+      THE_OWNERS_BUG_IS_REPRODUCED_AND_IT_IS_A_DESIGN_GAP_NOT_A_FIXTURE_EDIT: "Drove /todomvc-advanced in chromium across six lanes: FIVE SERVING LANES FORGET ON RELOAD, localStorage EMPTY, angular 404. Exactly what the owner reported. But the fix is not in the fixture: persistence needs state() or the vendored Markless semantic graph to grow a `storage` channel. NOTHING ON ANY BOARD CAN SHIP A PERSISTED APP UNTIL THEN."
+      THE_CARDS_CENTRAL_PREMISE_IS_WRONG: "The card called the four non-emitting lanes 'the same shape as the mutation harness that was dead for 22 commits'. MEASURED: THOSE FOUR ARE THE BEST-GUARDED PART OF THIS AXIS - each has an explicit emitter throw, a `persistence-render-lowering` gate policy, AND A SHIPPED MUTATION TEST asserting both. THE UNGUARDED FACTS WERE ELSEWHERE: the absent authoring surface, and solid's dropped write-through."
+      A_NEW_DEFECT_FOUND_BY_THE_CROSS_LANE_PAIR: "SOLID SILENTLY DROPS THE WRITE-THROUGH for a handler-only persisted binding WHERE REACT EMITS IT - react emits 1 __framelessWrite, solid emits 0. validatePersistenceCorrelation accepts a record for a binding whose ordinary assignment never routes through persistenceStatements. Characterized in solid/test/emitter.test.ts; needs a DEFECTS.md entry."
+      AND_A_SECOND_SMALLER_ONE: "A persistence record REPLACES THE AUTHORED INITIALIZER with the record's string authoredInitial EVEN WHEN SEED LOWERING IS `none`, so state(3) emits useRef('3') and `next + 1` becomes '31'."
+      IT_PROVED_THE_LOOP_WORKS_WHERE_BOTH_HALVES_EXIST: "Drove demos/persistence in react and solid, SERVED READ-ONLY FROM ITS PREBUILT dist: state SURVIVED a reload, a per-frame sampler showed it PRE-PAINT with no flash, and TWO NEGATIVE CONTROLS ran - clear the key, and plant a wrong value. That is the only place in the repository with BOTH halves of the loop."
+      THE_READ_HALF_IS_HOST_OWNED_AND_ABSENT_EVERYWHERE: "Swept all six official demo shells: 0 OF 6 INSTALL __FRAMELESS_STATE__. Persistence shipped without the shell half would WRITE AND NEVER READ."
+      changed_files:
+        - packages/compiler/test/persistence.test.ts
+        - packages/frameworks/react/test/emitter.test.ts
+        - packages/frameworks/solid/test/emitter.test.ts
+        - docs/goals/frameless-app-axes-v1/notes/T007-persistence.md
+      commands:
+        - cmd: "owner fingerprint START"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169 / 116, sorting the whole shasum OUTPUT LINES"
+        - cmd: "authoring census: 24 corpus .tsrx through buildEnrichedIr"
+          status: pass
+          note: "23 built, TOTAL persistence records = 0. state<T>(initial: T) has ONE parameter; SemanticGraphBinding has NO storage field"
+        - cmd: "vendor boundary adaptPersistenceFacts, 4 non-string arms"
+          status: pass
+          note: "number/array/boolean/object ALL refuse 'authoredInitial must be a string'"
+        - cmd: "six REAL emitters x 4 arms on the REAL S11 IR"
+          status: pass
+          note: "react+solid EMIT; qwik/svelte/vue/angular REFUSE, verbatim messages recorded"
+        - cmd: "canonical record via adaptPersistenceFacts on state:next"
+          status: pass
+          note: "react 1 __framelessWrite, SOLID 0 - NEW DEFECT"
+        - cmd: "pre-paint installer sweep, six official demo shells"
+          status: pass
+          note: "0 OF 6 install __FRAMELESS_STATE__; the read half is host-owned and absent"
+        - cmd: "pnpm demo + chromium /todomvc-advanced, six lanes"
+          status: pass
+          note: "5 serving lanes FORGET on reload, localStorage empty, angular 404 - THE OWNER'S REPORT REPRODUCED"
+        - cmd: "chromium reload proof on demos/persistence react+solid"
+          status: pass
+          note: "SURVIVED; per-frame sampler shows PRE-PAINT, no flash; TWO negative controls"
+        - cmd: "DERIVATION: delete both generated-persistence/P1.tsx, rebuild"
+          status: pass
+          note: "PRESENT-AFTER-DELETE = 0 ASSERTED FIRST; 2/2 BYTE-IDENTICAL"
+        - cmd: "pnpm test"
+          status: pass
+          note: "EXACTLY 1 failure (foreign ARM B), 1348 passed (+8)"
+        - cmd: "pnpm check"
+          status: pass
+          note: "267 - did not rise"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "PASS - 6 demos x 9 scenarios, all observations equal"
+        - cmd: "pnpm lint / pnpm check:citations"
+          status: pass
+          note: "0 warnings 0 errors on 550 files; citations clean, 602 swept"
+        - cmd: "git diff --exit-code over generated/goldens/fixtures/emitted"
+          status: pass
+          note: "exit 0, PAIRED with git status --short; all inside allowed_files"
+        - cmd: "demo servers stopped by recorded PID 60685"
+          status: pass
+          note: "six ports free; foreign PIDs 64413 and 24931 re-verified ALIVE; pkill -f NEVER used"
+        - cmd: "owner fingerprint FINISH"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169 / 116 - IDENTICAL to START"
+      deviations:
+        - "THE CARD'S CENTRAL PREMISE IS WRONG - see above."
+        - "DID NOT SHIP A PERSISTED S11. Two independent requirements are OUTSIDE allowed_files (the compiler/vendor authoring surface; demos/*/index.html pre-paint script), and a third is a DESIGN LIMIT: S11's completed state is state:todos, AN ARRAY, while the persistence contract is SCALAR-STRING-ONLY. Recorded rather than substituted."
+        - "REJECTED SYNTHESISING THE RECORD INSIDE regenerate.ts, WHICH IS IN allowed_files. It fabricates a compile input the authored source does not contain and breaks oracle part 2's 'authored once, one .tsrx'."
+        - "DROVE demos/persistence RATHER THAN A NEW APP for the behavioural proof, SERVED READ-ONLY from its prebuilt dist - no file in demos/persistence was modified."
+        - "ADDED THREE TESTS THE CARD DID NOT ASK FOR, all inside allowed_files: a corpus authoring census WITH A POSITIVE CONTROL proving the extractor is alive (A BARE CENSUS WOULD PASS IDENTICALLY IF IT WERE DEAD), and a cross-lane pair pinning react's write-through against solid's missing one. Each names the other so the split cannot rot silently."
+      remaining_blockers:
+        - "PERSISTENCE HAS NO AUTHORING SURFACE. Nothing on any board can ship a persisted app until state() or the vendored Markless semantic graph grows a `storage` channel. THIS IS A DESIGN CARD, NOT A FIXTURE EDIT."
+        - "SOLID SILENTLY DROPS THE WRITE-THROUGH for a handler-only persisted binding while react emits it. Needs a docs/DEFECTS.md entry."
+        - "PERSISTENCE IS SCALAR-STRING-ONLY AND THE EMITTERS DO NOT ENFORCE IT - only the inert vendor boundary does. An array or numeric binding LOWERS CLEANLY AND CORRUPTS."
+        - "THE PRE-PAINT SEED IS HOST-OWNED AND ABSENT FROM ALL SIX OFFICIAL SHELLS (0 of 6)."
+        - "REACT, SOLID AND VUE STILL ANSWER 200 FOR ANY PATH; `style` lowering still unmeasured; BOTH FOREIGN PROCESSES STILL ALIVE."
+      stopped_because: "stop_if: 'Need files outside allowed_files.' Making /todomvc-advanced survive a refresh requires an AUTHORING SURFACE (packages/compiler/src/** or the vendored Markless tarball) AND a PRE-PAINT HOST SCRIPT (demos/*/index.html); neither is in allowed_files, and S11's completed state is an ARRAY the string-only contract cannot carry. The card's deliverable - the per-lane persistence verdict - IS MEASURED IN FULL AND RECORDED."
   - id: T008
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
     objective: >-
       Measure whether the create-vite shell divergence T002 found on /hn ALSO affects the three
@@ -1583,8 +1660,22 @@ tasks:
       - "You are about to leave any factual claim in the banner hand-written."
       - "NEVER pkill -f on a broad pattern. TWO FOREIGN PROCESSES ARE ALIVE: PID 64413 on 5175, PID 24931 on 5178."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      summary: "CLOSED EARLY BY T006, WHICH DID THE WORK RATHER THAN THE THIRD HAND REPAIR. T006 DERIVED the two figures in pnpm demo's closing paragraph from the same table they sit beside, instead of correcting them by hand for the third time - and THE DERIVATION IMMEDIATELY CAUGHT A FOURTH ERROR NOBODY HAD NOTICED: S10 has been served by all six lanes and BOTH prior hand repairs omitted it. Exactly the failure this card predicted would keep happening."
+      THE_CARDS_PREDICTION_CAME_TRUE_TWICE_BEFORE_IT_WAS_CLOSED: "T004 found the banner reading 'S13 is the only one all SIX lanes serve' - false the moment S15 landed. T005 predicted a third six-lane app would stale it again and it did. T006 stopped repairing and started deriving. A number that lives in prose beside a derived table rots silently every time."
+      changed_files:
+        - scripts/demo.mjs
+      commands:
+        - cmd: "closed by T006's derivation of scripts/demo.mjs"
+          status: pass
+          note: "see T006's receipt and notes/T006-contacts.md; the derivation caught a fourth error the hand repairs had missed"
+      deviations:
+        - "NO SEPARATE WORKER RAN. The work landed inside T006, whose allowed_files already carried scripts/demo.mjs. Recording it here rather than dispatching a card whose work is already done."
+      remaining_blockers: []
+      stopped_because: null
   - id: T011
     type: worker
     assignee: Worker
@@ -1625,6 +1716,43 @@ tasks:
       - "Re-measurement CONTRADICTS T005 - STOP AND REPORT. Two measurements disagreeing is a finding, not a tie to break."
       - "NEVER pkill -f on a broad pattern. TWO FOREIGN PROCESSES ARE ALIVE: PID 64413 on 5175, PID 24931 on 5178."
       - "Verification fails twice for the same reason."
+    receipt: null
+
+  - id: T012
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: >-
+      DESIGN RULING: how should persistence be AUTHORED? T007 proved there is no authoring
+      surface at all, so no fixture edit on any board can make an app survive a refresh.
+    WHAT_T007_MEASURED: >-
+      @markless/core declares state<T>(initial: T) WITH ONE PARAMETER, and pinned Markless
+      0.1.1's SemanticGraphBinding HAS NO `storage` FIELD. All 23 buildable corpus fixtures
+      produce ZERO persistence records. packages/compiler/src/persistence.ts is a REAL and
+      TESTED design - baked keys, a __FRAMELESS_STATE__ pre-paint seed, a vendor storage-fact
+      boundary - WITH NOTHING ABLE TO FEED IT. react and solid EMIT from a synthesised record;
+      qwik/svelte/vue/angular REFUSE verbatim, and those four are the BEST-GUARDED part of the
+      axis (explicit throw + gate policy + shipped mutation test).
+    THREE_CONSTRAINTS_ANY_DESIGN_MUST_ANSWER: >-
+      (1) THE CONTRACT IS SCALAR-STRING-ONLY AND THE EMITTERS DO NOT ENFORCE IT - only the inert
+      vendor boundary does, so an array or numeric binding LOWERS CLEANLY AND CORRUPTS. A todo
+      list is an ARRAY, which is why S11 could not have been persisted even with a surface.
+      (2) THE READ HALF IS HOST-OWNED AND ABSENT FROM ALL SIX OFFICIAL SHELLS (0 of 6 install
+      __FRAMELESS_STATE__), so persistence shipped without the shell half WRITES AND NEVER READS.
+      (3) THE VENDORED MARKLESS TARBALL IS PINNED. Decide whether the channel goes in Markless
+      (correct, slower, and the owner is upstream) or in the frameless compiler (faster, and a
+      second place for semantics to live).
+    constraints:
+      - "READ-ONLY. Your only write is your note. Do NOT edit the authoring surface."
+      - "THE OWNER FOUND THIS BUG by refreshing /todomvc-advanced. Say plainly what they would have to accept for it to be fixed, and what it costs."
+      - "A DESIGN THAT ONLY WORKS FOR SCALARS IS A LEGITIMATE ANSWER - say so and name what it excludes, rather than designing an array channel nobody asked for."
+      - "Assume this brief contains at least one error and find it."
+    expected_output:
+      - "the recommended authoring shape, with the deciding constraint named"
+      - "Markless or frameless-compiler, and why"
+      - "what it excludes, stated plainly"
+      - "the worker spec if it should proceed"
     receipt: null
 
   - id: T999
