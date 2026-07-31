@@ -4,6 +4,7 @@ import { AttrBoard } from '../emitted/AttrBoard';
 import { AsyncGate } from './async-gate';
 import { BranchBoard } from '../emitted/BranchBoard';
 import { EventForm } from '../emitted/EventForm';
+import { HnPage } from './hn-page';
 import { FormBoard } from '../emitted/FormBoard';
 import { KeyedTodo } from '../emitted/KeyedTodo';
 import { NestedBoard } from '../emitted/NestedBoard';
@@ -95,5 +96,27 @@ export const routes: Routes = [
   {
     path: 'todomvc',
     component: TodomvcPage,
+  },
+  // THE FOURTH APPLICATION - the HACKER NEWS FRONT PAGE - and THE FIRST
+  // APPLICATION ROUTE THIS LANE HAS GAINED SINCE /todomvc. S11 and S12 are
+  // absent from this file because the emitter REFUSES them on its
+  // global-identifier ban; S13 names no global at all, because every relative
+  // age is a literal string in the seeded data. So this lane is back to parity
+  // with the other five, and S13 is the first corpus application that all SIX
+  // lanes serve.
+  //
+  // It goes through a WRAPPER, like /todomvc and for the same reason: a `<link>`
+  // has to be rendered by something, and putting it in src/index.html or
+  // angular.json's `styles` array would apply hn.css to all nine three-way
+  // scenarios. See `./hn-page`.
+  //
+  // Like /todomvc it is deliberately NOT part of the 6 x 9 three-way contract -
+  // `scripts/e2e.mjs` pins `threeWayScenarios` to the literal ['s1'..'s9'] - so
+  // this route is browsable only. It carries no seed: IR-8 has no lowering for
+  // an array type, so the stories are seeded INSIDE the emitted component and
+  // all six lanes start from byte-identical data.
+  {
+    path: 'hn',
+    component: HnPage,
   },
 ];

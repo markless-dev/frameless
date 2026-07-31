@@ -18,7 +18,7 @@
 // applications had already gone invisible here.
 //
 // Measured before this rewrite: it listed THREE of six lanes (react, solid,
-// qwik) and THREE of twelve scenarios (S1-S3). S10 TodoMVC, S11 TodoMVC Advanced
+// qwik) and THREE of the twelve scenarios that then existed (S1-S3). S10 TodoMVC, S11 TodoMVC Advanced
 // and S12 Codex clone were invisible, as were svelte, vue and angular entirely.
 // The route list was three hardcoded `demo.routes[0..2]` reads, so a fourth
 // scenario could not be displayed even if it were added to the array.
@@ -39,12 +39,12 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
  * THE ONE SCENARIO TABLE. Ordinals are load-bearing well beyond this file:
  * ten-plus per-lane suites derive their `generated/` inventory from
  * /^s(\d+)-[\w-]+\.json$/ and assert it exactly, which is why the applications
- * ride ordinal slots (S10, S11, S12) instead of taking names of their own.
+ * ride ordinal slots (S10, S11, S12, S13) instead of taking names of their own.
  *
  * `path` is the CANONICAL, UNSLASHED form. Lanes transform it — see `routeFor`.
  *
  * S1-S9 are the three-way contract `scripts/e2e.mjs` pins to the literal
- * ['s1'..'s9']. S10-S12 are the applications, deliberately OUTSIDE that contract
+ * ['s1'..'s9']. S10-S13 are the applications, deliberately OUTSIDE that contract
  * and browsable only. Both kinds belong in the front door regardless.
  *
  * @type {ReadonlyArray<{ id: string, path: string, title: string }>}
@@ -62,6 +62,12 @@ const SCENARIOS = [
 	{ id: 'S10', path: '/todomvc', title: 'TodoMVC' },
 	{ id: 'S11', path: '/todomvc-advanced', title: 'TodoMVC Advanced' },
 	{ id: 'S12', path: '/codex', title: 'Codex clone' },
+	// S13 IS THE FIRST APPLICATION IN THIS TABLE WITH NO `unbuilt` ENTRY IN ANY
+	// LANE. S11 and S12 are absent from angular because that emitter refuses them
+	// on its global-identifier ban; S13 names no global at all, because every
+	// relative age on the page is a literal string in the seeded data rather than
+	// something computed from `Date`. Six lanes, six routes.
+	{ id: 'S13', path: '/hn', title: 'Hacker News front page' },
 ];
 
 /**
@@ -527,7 +533,8 @@ function announce() {
 	}
 
 	lines.push('  Scenarios: S1-S9 are the 6 x 9 three-way contract; S10 TodoMVC,');
-	lines.push('  S11 TodoMVC Advanced and S12 Codex clone are the applications.');
+	lines.push('  S11 TodoMVC Advanced, S12 Codex clone and S13 Hacker News are');
+	lines.push('  the applications. S13 is the first one all SIX lanes serve.');
 	lines.push('  Qwik routes keep their trailing slash — its router 301s without it.');
 	lines.push('  Walkthrough: README.md, "See It Yourself: Hydrate, Hydrate, Resume".');
 	lines.push(`  Ctrl-C stops all ${runners.length}.`);

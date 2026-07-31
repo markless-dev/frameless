@@ -11,6 +11,7 @@ import RenderOnce from './emitted/RenderOnce.vue'
 import TodoMvc from './emitted/TodoMvc.vue'
 import TodoMvcAdvanced from './emitted/TodoMvcAdvanced.vue'
 import CodexClone from './emitted/CodexClone.vue'
+import HnFront from './emitted/HnFront.vue'
 import WhitespaceBoard from './emitted/WhitespaceBoard.vue'
 import {
   armS8Gate,
@@ -77,6 +78,26 @@ const codex = computed(
     String(props.url ?? '')
       .replace(/^\/+/, '')
       .replace(/\/+$/, '') === 'codex',
+)
+
+/**
+ * The /hn branch, decided HERE for the identical reason `advanced` and `codex`
+ * above are: `scenarioFor` and its `ScenarioId` union live in
+ * `./scenario-props`, which is outside the file envelope of the card that added
+ * this route (`frameless-app-axes-v1` T002), so the id is not in that union.
+ * The path normalisation is character-for-character the one `scenarioFor`
+ * applies, and the react and solid lanes spell it inside `scenarioFor`; folding
+ * all three of these in later is a pure refactor with no behavioural delta.
+ *
+ * It reads `props.url` - the same value `scenario` reads - and not
+ * `window.location`, because both sides must agree or Vue would hydrate a
+ * different branch than it rendered.
+ */
+const hn = computed(
+  () =>
+    String(props.url ?? '')
+      .replace(/^\/+/, '')
+      .replace(/\/+$/, '') === 'hn',
 )
 
 /**
@@ -189,6 +210,40 @@ const s8Ready = ref<Promise<string>>(s8ResolvedGate)
     <link rel="stylesheet" href="/shadcn-theme/tokens.css" />
     <link rel="stylesheet" href="/shadcn-theme/codex.css" />
     <CodexClone v-bind:onTrace="noTrace" />
+  </template>
+  <!--
+    THE FOURTH APPLICATION - the HACKER NEWS FRONT PAGE - and IT MUST SIT BESIDE
+    `advanced` AND `codex` AT THE HEAD OF THIS CHAIN FOR THE SAME MEASURED
+    REASON: `scenarioFor` does not know this path either, so it falls through to
+    's1', and the chain's first `v-else-if` tests for 's1'. A trailing arm could
+    never fire.
+
+    THIS IS THE FIRST APPLICATION ROUTE IN THIS DEMO WHOSE LANE COUNT IS SIX, and
+    the first that this lane serves with NOTHING misbehaving. S11 and S12 both
+    throw here on `_ctx.Promise is not a constructor`, because the emitter inlines
+    handlers into template expressions and @vue/shared@3.5.40's GLOBALS_ALLOWED
+    omits Promise and setTimeout. S13 NAMES NO GLOBAL AT ALL - every relative age
+    is a literal string in the seeded data rather than something computed from
+    `Date` - so the pincer that costs this lane its two async apps does not reach
+    it. That is a constraint of the fixture (constraint 9), not luck.
+
+    IT CANNOT LOAD ON APPEAR AND NOTHING HERE PRETENDS OTHERWISE: fetch-on-render
+    is unreachable in every lane, so the twelve stories are seeded inside the
+    emitted component exactly as TodoMVC's are. No seed prop - IR-8 has no array
+    lowering. `past`, `comments`, `ask`, `show`, `jobs` and `submit` are INERT
+    because `.tsrx` has no routing construct, and the footer search FILTERS IN
+    PLACE rather than reaching Algolia for the same reason.
+
+    ONE STYLESHEET, AND IT IS THIS REPOSITORY'S OWN WORK - nothing was copied from
+    news.ycombinator.com. `demos/shared/hn-css/hn.css` reproduces the measured
+    geometry against the class names the emitters print, is written into
+    public/hn-css/ by `pnpm copy-hn-css`, and is linked HERE rather than globally
+    because it restyles `body`. Like the three application routes above, this page
+    is OUT of the 6 x 9 three-way contract, which pins ['s1'..'s9'].
+  -->
+  <template v-else-if="hn">
+    <link rel="stylesheet" href="/hn-css/hn.css" />
+    <HnFront v-bind:onTrace="noTrace" />
   </template>
   <RenderOnce
     v-else-if="scenario === 's1'"

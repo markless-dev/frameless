@@ -73,6 +73,7 @@ const fixtures = [
 	// CANNOT HOLD A STREAMING APP AT ALL, on a limit that is not about streaming.
 	// It IS built for everything else in the corpus, including S10, so this is a
 	// recorded lane limit and not a missing lane.
+	['S13.ts', 's13-hn-front.json'],
 ] as const;
 for (const [output, golden] of fixtures) {
 	const ir = JSON.parse(await readFile(resolve(goldenRoot, golden), 'utf8')) as EnrichedIR;

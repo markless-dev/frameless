@@ -217,6 +217,25 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// that lane refuses S12 on the same global-identifier ban, so `S12` exists in
 	// five `generated/` directories and not six.
 	S12: { physicalLoc: 362, structuralNodes: 1762 },
+	// S13 (the HACKER NEWS FRONT PAGE) IS THE CORPUS'S NEW HEAVYWEIGHT ON BOTH
+	// AXES, and the FIRST application row here with a twin in all SIX lanes -
+	// S11 and S12 exist in five `generated/` directories, S13 in six. Against
+	// S11, the previous heaviest in this lane: 578/440 = 1.31x the physical lines
+	// and 2138/1930 = 1.11x the structural nodes, so the two ratios are 19% apart
+	// where every earlier application row agreed to within 6%. MEASURED CAUSE,
+	// not a guess: sixteen of the template's sixty-two hosts are
+	// `<span class="hn-bar">|</span>` separators carrying one character and no
+	// binding, which cost a LINE each and almost no nodes. The reference
+	// separates its links with a literal `" | "` text node that is unauthorable
+	// in this corpus, so the separators have to become elements.
+	// A CLAIM THIS ROW DECLINES TO MAKE. The obvious reading is that S13 narrows
+	// this lane's premium over react, since 578/555 = 1.04x on lines. MEASURED
+	// ACROSS THE FOUR APPLICATIONS, THE PREMIUM HAS NO TREND TO NARROW: S10 is
+	// 304/275 = 1.11x, S11 is 440/424 = 1.04x, and S12 is 362/386 = 0.94x - this
+	// lane is SMALLER than react on the codex clone. So S13's 1.04x is the middle
+	// of a scattered series, not a new low, and the row says so instead of
+	// describing a trend three data points refute.
+	S13: { physicalLoc: 578, structuralNodes: 2138 },
 };
 
 describe('honest emitted structure comparison', () => {

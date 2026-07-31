@@ -4,11 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "copy-emitted": "node -e \"require('fs').mkdirSync('src/emitted',{recursive:true});[['S1','RenderOnce'],['S2','KeyedTodo'],['S3','EventForm'],['S4','NestedBoard'],['S5','BranchBoard'],['S6','WhitespaceBoard'],['S7','FormBoard'],['S8','AsyncBoard'],['S9','AttrBoard'],['S10','TodoMvc'],['S11','TodoMvcAdvanced'],['S12','CodexClone']].forEach(([s,n])=>require('fs').copyFileSync('../../packages/frameworks/react/generated/'+s+'.tsx','src/emitted/'+n+'.tsx'))\"",
+    "copy-emitted": "node -e \"require('fs').mkdirSync('src/emitted',{recursive:true});[['S1','RenderOnce'],['S2','KeyedTodo'],['S3','EventForm'],['S4','NestedBoard'],['S5','BranchBoard'],['S6','WhitespaceBoard'],['S7','FormBoard'],['S8','AsyncBoard'],['S9','AttrBoard'],['S10','TodoMvc'],['S11','TodoMvcAdvanced'],['S12','CodexClone'],['S13','HnFront']].forEach(([s,n])=>require('fs').copyFileSync('../../packages/frameworks/react/generated/'+s+'.tsx','src/emitted/'+n+'.tsx'))\"",
     "copy-todomvc-css": "node ../shared/copy-todomvc-css.mjs public",
     "copy-shadcn-theme": "node ../shared/copy-shadcn-theme.mjs public",
-    "dev": "pnpm copy-emitted && pnpm copy-todomvc-css && pnpm copy-shadcn-theme && node server",
-    "build": "pnpm copy-emitted && pnpm copy-todomvc-css && pnpm copy-shadcn-theme && vite build --outDir dist/client && vite build --ssr src/entry-server.jsx --outDir dist/server"
+    "copy-hn-css": "node ../shared/copy-hn-css.mjs public",
+    "dev": "pnpm copy-emitted && pnpm copy-todomvc-css && pnpm copy-shadcn-theme && pnpm copy-hn-css && node server",
+    "build": "pnpm copy-emitted && pnpm copy-todomvc-css && pnpm copy-shadcn-theme && pnpm copy-hn-css && vite build --outDir dist/client && vite build --ssr src/entry-server.jsx --outDir dist/server"
   },
   "dependencies": { "compression": "^1.8.1", "express": "^5.2.1", "react": "19.2.3", "react-dom": "19.2.3", "sirv": "^3.0.2" },
   "devDependencies": { "@vitejs/plugin-react": "^6.0.1", "cross-env": "^10.1.0", "vite": "catalog:" }

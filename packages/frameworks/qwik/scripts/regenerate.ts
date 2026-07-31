@@ -46,6 +46,7 @@ const fixtures = [
 	// that lane's regenerate.ts: its streamed answer separates three unrolled
 	// chunks with `new Promise` + `setTimeout`.
 	['S12.tsx', 's12-codex-clone.json'],
+	['S13.tsx', 's13-hn-front.json'],
 ] as const;
 for (const [output, golden] of fixtures) {
 	const ir = JSON.parse(

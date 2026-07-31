@@ -12,6 +12,7 @@ import { AttrBoard } from './emitted/AttrBoard.jsx'
 import { BranchBoard } from './emitted/BranchBoard.jsx'
 import { CodexClone } from './emitted/CodexClone.jsx'
 import { EventForm } from './emitted/EventForm.jsx'
+import { HnFront } from './emitted/HnFront.jsx'
 import { FormBoard } from './emitted/FormBoard.jsx'
 import { KeyedTodo } from './emitted/KeyedTodo.jsx'
 import { NestedBoard } from './emitted/NestedBoard.jsx'
@@ -124,7 +125,7 @@ function AsyncGate() {
  * mirrors the Qwik demo's `/`, `/s2`, `/s3` routes without adding a router.
  *
  * @param {string} url
- * @returns {'s1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7' | 's8' | 's9' | 'todomvc' | 'todomvc-advanced' | 'codex'}
+ * @returns {'s1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7' | 's8' | 's9' | 'todomvc' | 'todomvc-advanced' | 'codex' | 'hn'}
  */
 export function scenarioFor(url) {
   const path = String(url ?? '')
@@ -148,6 +149,11 @@ export function scenarioFor(url) {
   // THE THIRD APPLICATION - the Codex clone. Five lanes emit it, four run its
   // stream; angular has no route at all. Browsable only, like the two above.
   if (path === 'codex') return 'codex'
+  // THE FOURTH APPLICATION - the HACKER NEWS FRONT PAGE - and the first one in
+  // this corpus that SIX lanes emit rather than five or four. Browsable only,
+  // like the three above: `scripts/e2e.mjs` pins `threeWayScenarios` to the
+  // literal ['s1'..'s9'].
+  if (path === 'hn') return 'hn'
   return 's1'
 }
 
@@ -181,6 +187,30 @@ export default function App(props) {
       </Match>
       <Match when={scenario() === 's9'}>
         <AttrBoard seed={s9Seed} onTrace={noTrace} />
+      </Match>
+      {/*
+        THE FOURTH APPLICATION - the HACKER NEWS FRONT PAGE - and the FIRST route
+        in this demo whose lane count is SIX. S11 and S12 lose angular to its
+        global-identifier ban; S13 names no global at all, because every relative
+        age is a literal string in the seeded data rather than something computed
+        from `Date`. That is a constraint of the fixture, not luck - see
+        packages/compiler/test/fixtures/s13-hn-front.tsrx constraint (9).
+
+        IT CANNOT LOAD ON APPEAR AND NOTHING HERE PRETENDS OTHERWISE. There is no
+        lifecycle hook in the authoring surface and `computed(async ...)` is
+        closed upstream of every emitter, so the twelve stories are seeded inside
+        the emitted component exactly as TodoMVC's are. No seed prop, for the same
+        reason the three routes above take none: IR-8 has no array lowering.
+
+        ONE STYLESHEET, and it is this repository's own work - NOTHING was copied
+        from news.ycombinator.com. `demos/shared/hn-css/hn.css` reproduces the
+        measured geometry against the class names the emitters print, is written
+        into `public/hn-css/` by `pnpm copy-hn-css`, and is linked HERE rather
+        than globally because it restyles `body`.
+      */}
+      <Match when={scenario() === 'hn'}>
+        <link rel="stylesheet" href="/hn-css/hn.css" />
+        <HnFront onTrace={noTrace} />
       </Match>
       {/*
         THE ONLY ROUTE THAT LINKS A STYLESHEET, and deliberately so. The pair is

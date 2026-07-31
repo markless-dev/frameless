@@ -228,6 +228,23 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// behaviour. That agreement is authored, not emitted - the divergence S11's row
 	// records is still there in the emitter, and a budget cannot see either half.
 	S12: { physicalLoc: 386, structuralNodes: 1760 },
+	// S13 (the HACKER NEWS FRONT PAGE) IS THE CORPUS'S NEW HEAVYWEIGHT ON BOTH
+	// AXES, and it is the FIRST application row in this table that has a twin in
+	// all SIX lanes: S11 and S12 exist in five `generated/` directories, S13 in
+	// six. Against S11, the previous heaviest: 555/424 = 1.31x the physical lines
+	// and 2073/1891 = 1.10x the structural nodes. THE TWO RATIOS DO NOT AGREE
+	// HERE, and that is the reading worth recording rather than smoothing - every
+	// earlier application row in this table (S10 vs S7 at 2.33/2.20, S11 vs S10 at
+	// 1.54/1.50, S12 vs S11 at 0.91/0.93) agreed to within 6%, and this one is 19%
+	// apart. The cause is measured, not guessed: S13's template is sixty-two hosts
+	// of which SIXTEEN are `<span class="hn-bar">|</span>` separators carrying one
+	// character and no binding. A separator span is nearly free in NODES - one
+	// element, one text - but the formatter still spends a LINE on it, so lines
+	// grow while nodes do not. That is a property of the reference's markup, which
+	// separates every link with a literal `" | "` this corpus cannot author (see
+	// the fixture's constraint 8), and NOT evidence of a per-element tax: the
+	// divergence points the safe way, with nodes growing SLOWER than lines.
+	S13: { physicalLoc: 555, structuralNodes: 2073 },
 };
 
 describe('honest emitted structure comparison', () => {

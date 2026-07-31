@@ -238,6 +238,23 @@ describe('Solid emitted output type-checks', () => {
 			`generated/S12.tsx: TS2322 Type '{ class: string; placeholder: string; "data-action": string; value: string; "attr:value": string; onInput: (event: InputEvent & { currentTarget: HTMLTextAreaElement; target: HTMLTextAreaElement; }) => void; }' is not assignable to type 'TextareaHTMLAttributes<HTMLTextAreaElement>'.   Property 'attr:value' does not exist on type 'TextareaHTMLAttributes<HTMLTextAreaElement>'.`,
 			"OPEN FINDING 002 - not an artifact, and the FIRST instance that is not an `<input>`: S12's composer textarea. Same producer, different tag, which is the first evidence that the finding follows the `value` binding rather than the element. See notes/findings-002-solid-attr-namespace.md.",
 		],
+		// S13'S SINGLE ROW IS FINDING 002 AGAIN, AND WHAT IT ADDS IS AN ATTRIBUTE
+		// THE PRODUCER HAS NEVER SEEN BESIDE IT. Every prior instance prints
+		// `class` FIRST; S13's footer search field has to carry an `id` (its
+		// `<label for>` points at it, which is the whole reason the corpus's other
+		// text inputs never needed one), so the printed attribute object opens with
+		// `id: string` and the diagnostic's type literal differs from all eight
+		// earlier rows at its first member. It is still TS2322 on `attr:value`
+		// against `InputHTMLAttributes<HTMLInputElement>`: the producer does not
+		// care what else is on the host, which is one more thing the finding
+		// predicted and this is the first row able to say so.
+		// NINE INSTANCES NOW, ACROSS FOUR APPLICATIONS AND TWO TAGS. The count is
+		// the only thing that has moved since S12 established the tag-independence;
+		// no new producer has appeared in a whole additional application.
+		[
+			`generated/S13.tsx: TS2322 Type '{ id: string; class: string; type: string; "data-action": string; value: string; "attr:value": string; onInput: (event: InputEvent & { currentTarget: HTMLInputElement; target: HTMLInputElement; }) => void; }' is not assignable to type 'InputHTMLAttributes<HTMLInputElement>'.   Property 'attr:value' does not exist on type 'InputHTMLAttributes<HTMLInputElement>'.`,
+			"OPEN FINDING 002 - not an artifact. S13's footer search field, the corpus's first bound text input that also carries an `id`. See notes/findings-002-solid-attr-namespace.md.",
+		],
 		// THE FOURTEEN BELOW ARRIVED WITH THE .jsx -> .tsx MIGRATION, ON UNCHANGED
 		// BYTES - see the header. Two producers, both removable only by printing a
 		// type: an argument-less `createContext()` and an uncontextualised `produce`.

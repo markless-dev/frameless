@@ -58,7 +58,7 @@ goal:
       evaporates. If drag refuses and is quietly replaced by click-to-move, the axis goes
       unmeasured while the demo looks complete.
 
-active_task: T002
+active_task: T003
 
 rules:
   - "state.yaml is board truth; goal.md is the charter."
@@ -207,7 +207,7 @@ tasks:
   - id: T002
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       Ship HACKER NEWS FRONT PAGE as scenario `s13-hn-front`: ONE authored source, emitted to all six lanes as the
@@ -293,12 +293,143 @@ tasks:
       - "NEVER pkill -f on a broad pattern. Kill by recorded PID only, and only PIDs you started. TWO FOREIGN PROCESSES ARE ALIVE: node PID 64413 on 5175 and node PID 24931 on 5178. Do not assume either port is free."
       - "You are about to read an HTTP 200 as proof a page exists. REACT, SOLID AND VUE ANSWER 200 FOR ANY PATH (fall-through to S1). HASH THE BODY and prove it differs per route - T001 caught this as a check that passes while measuring nothing."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T002-hn.md
+      summary: "Shipped the Hacker News front page as s13-hn-front from ONE authored .tsrx, emitted to ALL SIX LANES - THE FIRST CORPUS APPLICATION SINCE S10 TO LOSE NONE - because every relative age is a LITERAL STRING rather than anything computed from Date. Browsable at /hn in six lanes, listed in pnpm demo, proved by derivation (present-after-delete=0 asserted FIRST, then 19/19 byte-identical), and driven in a browser where all six produced IDENTICAL vote/unvote/hide/search results. Three emitter refusals recorded verbatim. Baselines unmoved."
+      THREE_REFUSALS_THE_BRIEF_DID_NOT_PREDICT: "The load-bearing one: SVELTE, VUE AND ANGULAR ALL REFUSE AN ELEMENT WITH A HANDLER PLACED BESIDE TEXT. Verbatim: 'Svelte emitter cannot inline <button>: it sits beside text and needs a multi-line start tag' / 'Vue emitter cannot inline <button>: it sits in a text-bearing run and needs a multi-line start tag' / 'Angular emitter cannot inline <button>: it sits in a text-bearing run and needs a multi-line start tag'. Then a SECOND svelte refusal on the retry: it 'suppresses [a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions] but without those annotations Svelte reports []'. ALL THREE NARROWED WITHOUT TOUCHING AN EMITTER - every subtext run got its own <span> and all spacing moved to flex gap."
+      THE_PMs_INSTRUCTION_WAS_UNACHIEVABLE_AND_UNNECESSARY: "The card said RELATIVE TIMES MUST ARRIVE AS PROPS. THAT CANNOT BE DONE: an age is PER ROW, and IR-8 HAS NO LOWERING FOR TSArrayType ('has no IR-8 lowering for the type node TSArrayType' in react, svelte AND angular), so NO PROP SHAPE CAN CARRY TWELVE AGES. The REASONING behind the instruction is right - angular cannot name Date - but the spelling that works is S12 constraint 12's: LITERAL STRINGS IN THE SEEDED DATA. Recorded in the fixture as constraint (9)."
+      SIX_LANES_WERE_RENDERING_TWO_DIFFERENT_PAGES_AND_NOBODY_HAD_EVER_CHECKED: "MEASURED OFF THE RENDERED PAGE: /hn came out at 1088px with 16px rows in qwik/svelte/angular and 955px with 26px rows in react/solid/vue, with 'More' CENTRED in the latter three - because their create-vite scaffold sets `:root { font: 18px/145%; letter-spacing: 0.18px }` and `#root { width: 1126px; text-align: center }`. NEUTRALISED IN THE PAGE-SCOPED SHEET rather than in the three shells, which are shared with the nine three-way scenarios. Six lanes now agree TO THE PIXEL. The visual pass also caught an arrow between the lines and a '412points' run - THREE DEFECTS NO CSS CHECK COULD SEE."
+      changed_files:
+        - packages/compiler/test/fixtures/s13-hn-front.tsrx
+        - packages/compiler/test/goldens/s13-hn-front.json
+        - packages/compiler/test/enriched-ir.test.ts
+        - packages/frameworks/react/scripts/regenerate.ts
+        - packages/frameworks/react/generated/S13.tsx
+        - packages/frameworks/react/test/size.test.ts
+        - packages/frameworks/solid/scripts/regenerate.ts
+        - packages/frameworks/solid/generated/S13.tsx
+        - packages/frameworks/solid/test/size.test.ts
+        - packages/frameworks/solid/test/emitted-typecheck.test.ts
+        - packages/frameworks/qwik/scripts/regenerate.ts
+        - packages/frameworks/qwik/generated/S13.tsx
+        - packages/frameworks/svelte/scripts/regenerate.ts
+        - packages/frameworks/svelte/generated/S13.svelte
+        - packages/frameworks/vue/scripts/regenerate.ts
+        - packages/frameworks/vue/generated/S13.vue
+        - packages/frameworks/vue/src/gate/index.ts
+        - packages/frameworks/vue/test/gate.test.ts
+        - packages/frameworks/angular/scripts/regenerate.ts
+        - packages/frameworks/angular/generated/S13.ts
+        - packages/frameworks/angular/test/emitter.test.ts
+        - scripts/demo.mjs
+        - demos/shared/hn-css/hn.css
+        - demos/shared/hn-css/README.md
+        - demos/shared/copy-hn-css.mjs
+        - demos/react-official/package.json
+        - demos/react-official/src/App.jsx
+        - demos/react-official/src/emitted/HnFront.tsx
+        - demos/react-official/public/hn-css/hn.css
+        - demos/solid-official/package.json
+        - demos/solid-official/src/App.jsx
+        - demos/solid-official/src/emitted/HnFront.tsx
+        - demos/solid-official/public/hn-css/hn.css
+        - demos/qwik/package.json
+        - demos/qwik/src/routes/hn/index.tsx
+        - demos/qwik/src/emitted/HnFront.tsx
+        - demos/qwik/public/hn-css/hn.css
+        - demos/svelte-official/package.json
+        - "demos/svelte-official/src/routes/hn/+page.svelte"
+        - demos/svelte-official/src/lib/emitted/HnFront.svelte
+        - demos/svelte-official/static/hn-css/hn.css
+        - demos/vue-official/package.json
+        - demos/vue-official/src/App.vue
+        - demos/vue-official/src/emitted/HnFront.vue
+        - demos/vue-official/public/hn-css/hn.css
+        - demos/angular-official/package.json
+        - demos/angular-official/src/app/app.routes.ts
+        - demos/angular-official/src/app/hn-page.ts
+        - demos/angular-official/src/emitted/HnFront.ts
+        - demos/angular-official/public/hn-css/hn.css
+        - docs/goals/frameless-app-axes-v1/notes/T002-hn.md
+      commands:
+        - cmd: "owner fingerprint START"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169 / 116, sorting the whole shasum OUTPUT LINES"
+        - cmd: "pnpm test (baseline before any edit)"
+          status: pass
+          note: "1 failed / 1284 passed - foreign package-inventory ARM B"
+        - cmd: "6 x regenerate, attempt 3 (after two recorded refusal rounds)"
+          status: pass
+          note: "ALL SIX LANES EMIT - S13.tsx x3, S13.svelte, S13.vue, S13.ts"
+        - cmd: "per-lane OWN gates x6"
+          status: pass
+          note: "react 200, solid 200, vue 147, angular 158, qwik + svelte pass"
+        - cmd: "pnpm demo (RUN, twice)"
+          status: pass
+          note: "6 lanes, S1-S13; S13 /hn everywhere, qwik /hn/; ports 5175+5178 SKIPPED, nothing killed"
+        - cmd: "route probe with BODY HASHING"
+          status: pass
+          note: "13/13 distinct per lane (angular 11/11); react+solid+vue answer 200 on a bogus route WITH THE S1 HASH - /hn matches neither"
+        - cmd: "qwik /hn negative control"
+          status: pass
+          note: "301 -> /hn/ then 200"
+        - cmd: "browser drive, chromium, all six lanes"
+          status: pass
+          note: "vote 1->2 point->points, unvote, hide 12->11, search->2 rows, clear->11: SIX IDENTICAL RESULT OBJECTS"
+        - cmd: "control: is the solid/vue pageerror ours?"
+          status: pass
+          note: "same vite HMR WebSocket error on / and /todomvc - PRE-EXISTING, not S13"
+        - cmd: "VISUAL: getBoundingClientRect + getComputedStyle off the RENDERED page"
+          status: pass
+          note: "found 3 defects no CSS check could see, including the six-lane divergence. All fixed; six lanes now pixel-identical"
+        - cmd: "vue 12a/12b census re-derived independently with @vue/compiler-sfc"
+          status: pass
+          note: "20 instances / 9 applicable / 11 outside, all 11 still call props.onTrace - agrees with gate.test.ts"
+        - cmd: "DERIVATION PROOF (run twice, final after the fixture header was frozen)"
+          status: pass
+          note: "19 artifacts; PRESENT AFTER DELETE = 0 ASSERTED AND GATING; rebuild -> 19/19 BYTE-IDENTICAL"
+        - cmd: "git diff --exit-code over S1-S12, PAIRED with git status --short"
+          status: pass
+          note: "exit 0; all 19 S13 artifacts are UNTRACKED so the diff is blind to them BY DESIGN"
+        - cmd: "pnpm test (final)"
+          status: pass
+          note: "EXACTLY 1 failure (foreign ARM B), 1295 passed (+11 derived S13 tests)"
+        - cmd: "pnpm check (final)"
+          status: pass
+          note: "267 error TS lines - did not rise"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "PASS - 6 demos x 9 scenarios, all observations equal"
+        - cmd: "pnpm lint / pnpm check:citations"
+          status: pass
+          note: "0 warnings 0 errors; citations clean, 548 swept"
+        - cmd: "demo servers stopped by recorded PID 79334 then 89279"
+          status: pass
+          note: "foreign PIDs 64413 and 24931 verified ALIVE with original start times; pkill -f NEVER used"
+        - cmd: "owner fingerprint FINISH"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169 / 116 - IDENTICAL to START"
+      deviations:
+        - "THE CARD'S 'RELATIVE TIMES MUST ARRIVE AS PROPS' IS UNACHIEVABLE - see above. Literal strings in the seeded data instead."
+        - "ADDED demos/shared/hn-css/ and copy-hn-css.mjs. The card did not name a stylesheet, but 'styled to HN's canonical look' needs one, and the derived-copy shape copy-todomvc-css.mjs already uses is the only thing that works uniformly. NOTHING was copied from news.ycombinator.com; the geometry was reproduced."
+        - "NEUTRALISED THE create-vite SHELL INSIDE hn.css - see the two-different-pages finding."
+        - "ADDED an onClick 'press' trace to the footer search form. NOT DECORATION - the svelte emitter refuses the module without it."
+        - "GAVE EVERY SUBTEXT RUN ITS OWN <span> AND MOVED ALL SPACING TO FLEX GAP. Forced by the three-lane inline refusal PLUS the fact that the six emitters print inter-element whitespace differently, so no layout may lean on it."
+        - "SEEDED ONE STORY AT 1 POINT, which a real front page would not carry. It is the ONLY way the point/points flip is reachable, since unvote is offered only after a vote."
+        - "CORRECTED THREE OF ITS OWN DRAFTED NUMBERS after measuring: the solid-over-react 'trend' (REFUTED - S12 is 0.94x), the solid S11 baseline (440/1930, not 446/1953), and the host census (26 spans / 21 anchors, not 24 / 17)."
+      remaining_blockers:
+        - "NOT REPAIRED AND WORTH A CARD: /todomvc, /todomvc-advanced and /codex are served by the SAME THREE create-vite SHELLS and are presumably ALSO 26px-line-height and centred in react, solid and vue while qwik, svelte and angular are not. NOT MEASURED. NOBODY HAD COMPARED GEOMETRY ACROSS ALL SIX LANES BEFORE THIS CARD."
+        - "BOTH FOREIGN PROCESSES STILL ALIVE: node PID 64413 on 5175 (since Jul 27) and PID 24931 on 5178 (since Jul 30 15:55). pnpm demo routes around both."
+        - "THE SEARCH FILTER LEAVES RANK GAPS - a filtered list shows 5. and 10. where news.ycombinator.com would renumber. No index in a keyed repeat and no routing construct, so this is a RECORDED INFIDELITY rather than a bug."
+        - "REACT, SOLID AND VUE STILL ANSWER 200 FOR ANY PATH with the S1 body. Re-confirmed here."
+      stopped_because: null
   - id: T003
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
     objective: >-
       Ship HACKER NEWS ITEM PAGE - THE RECURSION CARD as scenario `s14-hn-item`: ONE authored source, emitted to all six lanes as the
@@ -738,6 +869,54 @@ tasks:
       - "pnpm check rises above 267, pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
       - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched."
       - "NEVER pkill -f on a broad pattern. Port 5175 is held by FOREIGN node PID 64413."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
+  - id: T008
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    objective: >-
+      Measure whether the create-vite shell divergence T002 found on /hn ALSO affects the three
+      apps already shipped - /todomvc, /todomvc-advanced and /codex - and repair whatever it hits.
+    WHY_THIS_EXISTS_NOBODY_HAD_EVER_COMPARED_GEOMETRY_ACROSS_ALL_SIX_LANES: >-
+      T002 measured /hn rendering at 1088px with 16px rows in qwik/svelte/angular and 955px with
+      26px rows in react/solid/vue, with content CENTRED in the latter three - because the
+      create-vite scaffold sets `:root { font: 18px/145%; letter-spacing: 0.18px }` and
+      `#root { width: 1126px; text-align: center }`. SIX LANES WERE RENDERING TWO DIFFERENT
+      PAGES. The same three shells serve /todomvc, /todomvc-advanced and /codex, so those are
+      PRESUMABLY DIVERGENT TOO - AND UNMEASURED.
+    WHY_THE_EARLIER_STYLE_CARDS_DID_NOT_CATCH_IT: >-
+      T005 and T006 on the predecessor board compared each app's lanes AGAINST EACH OTHER and
+      found them byte-identical or near it - but BOTH COMPARED WITHIN A SINGLE SCREENSHOT SET
+      taken the same way, and T005's 900x900 viewport may have masked a 1126px centred shell.
+      A CLAIM OF BYTE-IDENTICAL LANES IS NOT A CLAIM THAT THE PAGE IS CORRECT. Re-measure; do
+      not inherit either result.
+    allowed_files:
+      - "demos/shared/**"
+      - "demos/react-official/public/**"
+      - "demos/solid-official/public/**"
+      - "demos/qwik/public/**"
+      - "demos/svelte-official/static/**"
+      - "demos/vue-official/public/**"
+      - "demos/angular-official/public/**"
+      - "docs/goals/frameless-app-axes-v1/notes/T008-shell-divergence.md"
+    verify:
+      - "MEASURE FIRST, REPAIR SECOND: for /todomvc, /todomvc-advanced and /codex, record width, line-height and text-align in ALL SIX LANES off the RENDERED page before changing anything. A page that is already consistent needs no repair and must be reported as such."
+      - "REPAIR ONLY IN PAGE-SCOPED SHEETS. The three create-vite shells are SHARED WITH THE NINE THREE-WAY SCENARIOS - editing them risks pnpm e2e. T002 neutralised the shell inside its own page sheet for exactly this reason."
+      - "AFTER: the shipped lanes of each app agree to the pixel, asserted OFF THE IMAGE"
+      - "pnpm test at exactly 1 / pnpm check not above 267 / pnpm e2e 6 x 9 / lint / check:citations"
+      - "git diff --exit-code over packages/ and every generated/ + src/emitted/, PAIRED WITH git status --short"
+      - "fingerprint the owner's three paths at START and FINISH - SORT THE WHOLE shasum OUTPUT LINES"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to edit a create-vite shell or any file shared with the nine three-way scenarios. USE A PAGE-SCOPED SHEET."
+      - "You are about to modify an emitter, a fixture, a golden, or any generated/ or src/emitted/ file. THIS CARD CHANGES CSS ONLY."
+      - "An app turns out CONSISTENT already - REPORT THAT AND MOVE ON. Do not manufacture a repair."
+      - "pnpm check rises above 267, pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
+      - "NEVER pkill -f on a broad pattern. TWO FOREIGN PROCESSES ARE ALIVE: node PID 64413 on 5175 and node PID 24931 on 5178."
+      - "You are about to read an HTTP 200 as proof a page exists. REACT, SOLID AND VUE ANSWER 200 FOR ANY PATH. Hash the body."
       - "Verification fails twice for the same reason."
     receipt: null
 

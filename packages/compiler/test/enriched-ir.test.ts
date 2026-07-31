@@ -25,6 +25,7 @@ const FIXTURES = [
 	's10-todomvc.tsrx',
 	's11-todomvc-advanced.tsrx',
 	's12-codex-clone.tsrx',
+	's13-hn-front.tsrx',
 ] as const;
 
 const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>> = {
@@ -496,6 +497,95 @@ const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>>
 		['p', 'class'],
 		['p', 'class'],
 	],
+	// THE FOURTH APPLICATION IN THE CORPUS - the HACKER NEWS FRONT PAGE - at
+	// SIXTY hosts, seven more than S12's fifty-three and the largest template
+	// here. It rides the ORDINAL slot for the reason the three rows above
+	// record: every per-lane suite derives its `generated/` inventory from
+	// `/^s(\\d+)-[\\w-]+\\.json$/` and asserts it EXACTLY, and `scripts/e2e.mjs`
+	// still pins `threeWayScenarios` to the literal `['s1'..'s9']`, so S13 does
+	// NOT join the 6 x 9 three-way contract.
+	//
+	// THE SHAPE OF THIS LIST IS ITSELF THE MEASUREMENT. TWENTY-SIX of the sixty
+	// hosts are `span class` and TWENTY-ONE are `a class` - both counted off
+	// this list, not estimated - and SIXTEEN of those twenty-six spans carry
+	// nothing but a `|`. That is not decoration: news.ycombinator.com separates
+	// its links with LITERAL `" | "` TEXT NODES, and a template text node whose
+	// own edges are whitespace is refused outright by the Angular emitter
+	// (`escapeText`) and rejected by the Vue gate. Every separator therefore has
+	// to become its own `<span class="hn-bar">|</span>` host with its spacing in
+	// the stylesheet. The reference's markup is unauthorable in this corpus and
+	// the host census is where that shows up.
+	//
+	// TWO TAGS ARRIVE IN THE CORPUS HERE FOR THE FIRST TIME - `header` and
+	// `footer` - and `label` arrives in a NEW shape: S10 and S11 ship a
+	// `<label for>` beside a checkbox, and this is the first one bound to a
+	// TEXT input. The `input id` row is also the corpus's first host whose
+	// FIRST printed attribute is `id` rather than `class` or `type`, because
+	// the search field has to carry the id its label points at.
+	's13-hn-front.tsrx': [
+		['section', 'class'],
+		['div', 'class'],
+		['header', 'class'],
+		['a', 'class'],
+		['span', 'class'],
+		['a', 'class'],
+		['span', 'class'],
+		['a', 'class'],
+		['span', 'class'],
+		['a', 'class'],
+		['span', 'class'],
+		['a', 'class'],
+		['span', 'class'],
+		['a', 'class'],
+		['span', 'class'],
+		['a', 'class'],
+		['span', 'class'],
+		['a', 'class'],
+		['span', 'class'],
+		['a', 'class'],
+		['a', 'class'],
+		['main', 'class'],
+		['ul', 'class'],
+		['li', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['button', 'type'],
+		['span', 'class'],
+		['span', 'class'],
+		['a', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['button', 'type'],
+		['span', 'class'],
+		['button', 'type'],
+		['span', 'class'],
+		['a', 'class'],
+		['a', 'class'],
+		['footer', 'class'],
+		['span', 'class'],
+		['a', 'class'],
+		['span', 'class'],
+		['a', 'class'],
+		['span', 'class'],
+		['a', 'class'],
+		['span', 'class'],
+		['a', 'class'],
+		['span', 'class'],
+		['a', 'class'],
+		['span', 'class'],
+		['a', 'class'],
+		['span', 'class'],
+		['a', 'class'],
+		['span', 'class'],
+		['a', 'class'],
+		['form', 'class'],
+		['label', 'class'],
+		['input', 'id'],
+	],
 };
 
 async function fixtureIr(file: (typeof FIXTURES)[number]): Promise<EnrichedIR> {
@@ -796,6 +886,7 @@ describe('fixture-family sufficiency', () => {
 			's10-todomvc.tsrx',
 			's11-todomvc-advanced.tsrx',
 			's12-codex-clone.tsrx',
+			's13-hn-front.tsrx',
 		];
 
 		test('CONTROL: every UNannotated corpus scenario carries NO type, and both sets are non-empty', async () => {
@@ -1256,6 +1347,40 @@ export function Probe({ label }: { label }) @{
 				'press',
 				'right-tab',
 				'send',
+			],
+			// NINE NAMES, and only ONE - `press` - is shared with the three earlier
+			// applications. `press` is here for a MEASURED reason rather than for
+			// symmetry: the Svelte emitter suppresses
+			// [a11y_click_events_have_key_events,
+			// a11y_no_noninteractive_element_interactions] at every `<form>` that
+			// carries an event, and `assertCompilesClean` then proves the
+			// suppression fires in BOTH directions. A footer search form with a
+			// `submit` handler and no `click` handler makes that suppression
+			// redundant, and this lane REFUSES the module outright: "Emitted Svelte
+			// module HnFront.svelte suppresses [a11y_click_events_have_key_events,
+			// a11y_no_noninteractive_element_interactions] but without those
+			// annotations Svelte reports []. A suppression that changes nothing is a
+			// silent over-fire." S10, S11 and S12 all happen to carry a `press`
+			// trace on their forms, which is why no earlier fixture ever exposed it.
+			// `vote` and `unvote` are the pair that makes a row's
+			// DERIVED text observable: both write `points` and `pointsLabel` in one
+			// unconditional top-level write, so a lane that re-rendered the row
+			// without recomputing the label would keep the trace and lose the
+			// screen. `nav` is the widest channel here at SIXTEEN inert sites
+			// (logo, brand, seven header links, login, eight footer links), which is
+			// what records that this app has NO page routing rather than hiding it:
+			// `.tsrx` has no routing construct, so every one of them is
+			// preventDefault + trace and nothing else.
+			's13-hn-front.tsrx': [
+				'comments',
+				'hide',
+				'more',
+				'nav',
+				'open',
+				'press',
+				'search',
+				'unvote',
+				'vote',
 			],
 		};
 		for (const file of FIXTURES) {

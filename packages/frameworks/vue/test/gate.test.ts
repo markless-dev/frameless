@@ -125,6 +125,7 @@ const SPELLED_NUMBERS = [
 	'TWENTY-THREE',
 	'TWENTY-FOUR',
 	'TWENTY-FIVE',
+	'TWENTY-SIX',
 ] as const;
 
 /**

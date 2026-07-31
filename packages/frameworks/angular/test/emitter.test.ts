@@ -519,8 +519,17 @@ describe('Angular 22 emitter', () => {
 		// arm alone: it declares a single prop entry (`onTrace`) and declares it with
 		// a type, so `typedInputsSeen` goes 6 -> 7 while `untypedInputsSeen` holds at
 		// 15. MEASURED off the goldens rather than inferred from the failure text.
+		// S13 (HACKER NEWS FRONT PAGE) IS THE FOURTH ANNOTATED MODULE THIS LANE
+		// ACTUALLY EMITS, and it moves the typed arm alone for the same reason:
+		// one prop entry (`onTrace`), declared with a type, so `typedInputsSeen`
+		// goes 7 -> 8 and `untypedInputsSeen` holds at 15 again. S11 and S12 are
+		// annotated too and do NOT appear here, because this lane REFUSES both on
+		// its global-identifier ban - `test/unbuilt-scenarios.ts` subtracts them by
+		// name. That is what makes the count 8 rather than 10, and it is the datum
+		// worth keeping: this figure tracks the modules this lane EMITS, not the
+		// modules the corpus AUTHORS.
 		expect({ typedInputsSeen, untypedInputsSeen }).toEqual({
-			typedInputsSeen: 7,
+			typedInputsSeen: 8,
 			untypedInputsSeen: 15,
 		});
 	});

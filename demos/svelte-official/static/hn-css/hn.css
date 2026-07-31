@@ -1,0 +1,387 @@
+/*
+ * The Hacker News front-page look, reproduced from measured geometry.
+ * THIS FILE IS THIS REPOSITORY'S OWN WORK - see ./README.md. Nothing was copied
+ * from news.ycombinator.com.
+ *
+ * Class names come from packages/compiler/test/fixtures/s13-hn-front.tsrx and
+ * are printed unchanged by all six emitters, so this one file styles all six
+ * lanes.
+ */
+
+/*
+ * SHELL NEUTRALISATION, AND IT IS A MEASURED REPAIR RATHER THAN HOUSEKEEPING.
+ *
+ * Driven in a browser across all six lanes, `/hn` rendered TWO DIFFERENT PAGES:
+ * qwik, svelte and angular put `.hn-page` at x=96, 1088px wide, with 16px story
+ * rows; react, solid and vue put it at x=162, 955px wide, with 26px rows. Every
+ * declared value in this file was identical in all six - a computed-style check
+ * would have reported six passes.
+ *
+ * The cause is the create-vite SHELL, not the emitted output. Those three lanes
+ * ship a scaffold stylesheet that sets `:root { font: 18px/145% system-ui }` and
+ * `#root`/`#app { width: 1126px; text-align: center; display: flex }`. The root
+ * `line-height: 145%` computes to 26.1px and is inherited as a LENGTH by every
+ * descendant; the fixed shell width makes `.hn-page`'s `85%` resolve against
+ * 1126px instead of the viewport; and `text-align: center` was centring the
+ * "More" link, which the reference left-aligns under the titles.
+ *
+ * This sheet is linked ONLY by the `/hn` route in each lane, so neutralising the
+ * shell here is scoped to this page and touches nothing else. It is done HERE
+ * rather than in the three shells because those files are shared with S1-S12 and
+ * with the nine three-way scenarios `pnpm e2e` compares byte for byte.
+ *
+ * NOTE FOR A LATER CARD: /todomvc, /todomvc-advanced and /codex are served by
+ * the same three shells and are presumably ALSO 26px-line-height and centred in
+ * react, solid and vue while the other three lanes are not. That was not
+ * measured here and is not repaired here.
+ */
+:root {
+	font: normal 10pt/normal Verdana, Geneva, sans-serif;
+	/*
+	 * `letter-spacing` IS THE LAST 10 PIXELS, and it was found the same way the
+	 * line-height was: by measuring. After the width and line-height were
+	 * neutralised the six lanes agreed on every POSITION and still disagreed on
+	 * TEXT WIDTH - a 53-character headline measured 366px in react/solid/vue and
+	 * 356px in qwik/svelte/angular. The scaffold sets `letter-spacing: 0.18px`,
+	 * and 53 x 0.18 = 9.5px. `text-rendering: optimizeLegibility` enables
+	 * kerning and ligatures on the same declaration, so both are reset.
+	 * `color-scheme` is pinned because the scaffold declares `light dark` and
+	 * flips its palette under a dark-mode preference.
+	 */
+	letter-spacing: normal;
+	text-rendering: auto;
+	color-scheme: light;
+}
+
+#root,
+#app {
+	width: 100%;
+	max-width: none;
+	min-height: 0;
+	margin: 0;
+	padding: 0;
+	border: none;
+	display: block;
+	text-align: left;
+}
+
+body {
+	margin: 0;
+	padding: 0;
+	background: #ffffff;
+	color: #000000;
+	font-family: Verdana, Geneva, sans-serif;
+	font-size: 10pt;
+	line-height: normal;
+	text-align: left;
+}
+
+/*
+ * `hidden` MUST WIN. Every rule below that sets `display` would otherwise beat
+ * the UA stylesheet's `[hidden] { display: none }` at equal specificity, and
+ * three of this app's controls - the vote arrow, the unvote link and its
+ * separator - are hidden by a `hidden` BINDING rather than by a class. S9
+ * measured qwik serving `hidden="true"` where the other five serve `hidden=""`;
+ * the attribute selector matches both, so the six lanes agree here too.
+ */
+[hidden] {
+	display: none !important;
+}
+
+.hn {
+	display: block;
+	background: #ffffff;
+}
+
+/* The reference's `#hnmain`: 85% of the viewport, centred, on #f6f6ef. */
+.hn-page {
+	width: 85%;
+	margin: 0 auto;
+	background: #f6f6ef;
+	padding: 0;
+}
+
+/* ------------------------------------------------------------------ masthead */
+
+.hn-head {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	background: #ff6600;
+	padding: 2px;
+	font-size: 10pt;
+}
+
+.hn-logo {
+	display: block;
+	width: 18px;
+	height: 18px;
+	border: 1px solid #ffffff;
+	background: #ff6600;
+	text-decoration: none;
+	flex: 0 0 auto;
+}
+
+.hn-y {
+	display: block;
+	width: 18px;
+	height: 18px;
+	line-height: 18px;
+	text-align: center;
+	font-weight: bold;
+	font-size: 12pt;
+	color: #ffffff;
+}
+
+.hn-brand {
+	font-weight: bold;
+	color: #000000;
+	text-decoration: none;
+	margin-right: 6px;
+}
+
+.hn-nav {
+	display: flex;
+	align-items: baseline;
+	gap: 3px;
+	flex: 1 1 auto;
+}
+
+.hn-navlink {
+	color: #000000;
+	text-decoration: none;
+}
+
+.hn-navlink:hover {
+	text-decoration: underline;
+}
+
+/*
+ * The separator span. It stands where the reference serves a literal `" | "`
+ * text node, which this corpus cannot author - see ./README.md. `gap` on the
+ * flex parent supplies the two spaces.
+ */
+.hn-bar {
+	color: #000000;
+}
+
+.hn-login {
+	color: #000000;
+	text-decoration: none;
+	margin-right: 4px;
+	flex: 0 0 auto;
+}
+
+.hn-login:hover {
+	text-decoration: underline;
+}
+
+/* ---------------------------------------------------------------- story list */
+
+.hn-body {
+	display: block;
+	padding: 6px 0 0 4px;
+}
+
+.hn-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.hn-story {
+	display: flex;
+	align-items: baseline;
+	gap: 4px;
+	padding: 0 0 5px 0;
+}
+
+.hn-rank {
+	color: #828282;
+	font-size: 10pt;
+	text-align: right;
+	min-width: 24px;
+	flex: 0 0 auto;
+}
+
+/*
+ * The vote column keeps its width whether or not the arrow is showing, so a
+ * vote does not shift the title one character to the left. The reference does
+ * the same thing with a fixed-width table cell.
+ */
+.hn-votebox {
+	display: block;
+	width: 12px;
+	flex: 0 0 auto;
+	/*
+	 * THE ARROW SITS ON THE TITLE LINE, NOT IN THE MIDDLE OF THE ROW. Measured
+	 * off the rendered page, not off this file: with `align-self: center` the
+	 * 6px triangle landed BETWEEN the title and the subtext in all six lanes, a
+	 * defect no computed-style check would have reported because every declared
+	 * value was correct. The reference puts the arrow beside the title
+	 * (`<td class="votelinks" valign="top">`), so this one is top-aligned and
+	 * nudged to the middle of the 16px title line: (16 - 6) / 2 = 5.
+	 */
+	align-self: flex-start;
+	margin-top: 5px;
+}
+
+/*
+ * The upvote triangle is DRAWN, not lettered. A `▲` glyph renders at a
+ * different size and baseline in Verdana, DejaVu Sans and Helvetica, so the
+ * three platforms this repo is browsed on would each show a different arrow.
+ */
+.hn-vote {
+	display: block;
+	width: 0;
+	height: 0;
+	margin: 0 auto;
+	padding: 0;
+	border: none;
+	border-left: 5px solid transparent;
+	border-right: 5px solid transparent;
+	border-bottom: 6px solid #999999;
+	background: transparent;
+	cursor: pointer;
+}
+
+.hn-item {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.hn-titleline {
+	display: flex;
+	align-items: baseline;
+	gap: 4px;
+	flex-wrap: wrap;
+}
+
+.hn-storylink {
+	color: #000000;
+	text-decoration: none;
+	font-size: 10pt;
+}
+
+.hn-storylink:visited {
+	color: #828282;
+}
+
+.hn-storylink:hover {
+	text-decoration: underline;
+}
+
+.hn-domain {
+	color: #828282;
+	font-size: 8pt;
+}
+
+/*
+ * An Ask HN post has no domain, and the emitted markup still prints the span.
+ * Without this the flex `gap` would leave a hole where the domain would be.
+ */
+.hn-domain:empty {
+	display: none;
+}
+
+.hn-subtext {
+	display: flex;
+	align-items: baseline;
+	gap: 3px;
+	color: #828282;
+	font-size: 7pt;
+}
+
+.hn-score,
+.hn-scorelabel,
+.hn-meta {
+	color: #828282;
+}
+
+.hn-act {
+	color: #828282;
+	font-size: 7pt;
+	font-family: Verdana, Geneva, sans-serif;
+	background: transparent;
+	border: none;
+	padding: 0;
+	margin: 0;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.hn-act:hover {
+	text-decoration: underline;
+}
+
+.hn-subtext .hn-bar {
+	color: #828282;
+	font-size: 7pt;
+}
+
+.hn-more {
+	display: inline-block;
+	margin: 4px 0 0 32px;
+	color: #000000;
+	text-decoration: none;
+	font-size: 10pt;
+}
+
+.hn-more:hover {
+	text-decoration: underline;
+}
+
+/* -------------------------------------------------------------------- footer */
+
+.hn-foot {
+	display: block;
+	margin-top: 10px;
+	padding: 10px 0 20px 0;
+	border-top: 2px solid #ff6600;
+	text-align: center;
+}
+
+.hn-footlinks {
+	display: flex;
+	justify-content: center;
+	align-items: baseline;
+	gap: 3px;
+	font-size: 8pt;
+}
+
+.hn-foot .hn-navlink {
+	color: #828282;
+	font-size: 8pt;
+}
+
+.hn-foot .hn-bar {
+	color: #828282;
+	font-size: 8pt;
+}
+
+.hn-search {
+	display: flex;
+	justify-content: center;
+	align-items: baseline;
+	gap: 4px;
+	margin-top: 10px;
+	font-size: 8pt;
+	color: #828282;
+}
+
+.hn-searchlabel {
+	color: #828282;
+	font-size: 8pt;
+}
+
+.hn-searchinput {
+	font-family: Verdana, Geneva, sans-serif;
+	font-size: 8pt;
+	padding: 1px 2px;
+	border: 1px solid #828282;
+	background: #ffffff;
+	width: 12em;
+}
