@@ -491,3 +491,98 @@ in-flight state, exactly as at START** — all three fingerprints match §1.
   add a sheet; the `:root` / `#root` / `#app` shell neutralisation at the top is what keeps
   the lanes comparable.
 - **`vue` answers 200 for `/hn-item` with the S1 body.** It does not serve that page.
+
+---
+
+## 13. AMENDMENT — added by T015 (2026-07-31). Nothing above was rewritten.
+
+**This section is an append. Not one character of §1–§12 was edited, reordered or
+deleted**, so the record of what T003 believed at HEAD `c50595f` stays readable. Two
+later cards flagged claims in this file and neither had write access to it —
+`frameless-app-axes-v1` T009 (the ruling) and T014 (the card that landed it). T015 has
+write access and applies the corrections here.
+
+### 13.1 The floor claim in §3.1 is REFUTED, twice over
+
+§3.1 says, of admitting `component-metadata:imports`:
+
+> …it would move the **derived** `ANGULAR_BASELINE_FLOOR` for every scenario at once.
+
+**That is false, and it was false in both of its halves.** T009 measured it, T014
+re-measured it independently before landing, and T015 re-measured it again at HEAD
+`f3d751c`:
+
+| claim | measured |
+|---|---|
+| the floor moves | `ANGULAR_BASELINE_FLOOR` = **`19.0` before, `19.0` after** — it did not move |
+| there is a per-scenario floor to move | **there is no per-scenario floor in the repo at all** |
+
+`ANGULAR_BASELINE_FLOOR` is **one lane-wide constant**, derived as a `max` reduce over
+`BASELINE_FORM_INVENTORY`, with a single entry at the top (`component-metadata:(no
+standalone key)`, floor `19.0`). `imports` was admitted at floor `14.0` — *below* the
+pin — so a `max` reduce could not have moved. The same shape as `ChangeDetectorRef`
+(`2.0`) and `inject` (`14.0`), which entered the same inventory for S8 and moved nothing.
+
+The mechanism §3.1 got wrong is worth stating, because the sentence is plausible: it
+reasoned from "`imports` arrives with standalone components **well above several
+entries' `2.0` floors**", which is true, to "so it raises the derived floor", which does
+not follow. A `max` is only moved by an entry above the *current maximum*, not above
+*some* entries.
+
+### 13.2 The "must list its own selector's provider" wording IS NOT IN THIS FILE — and three
+documents say it is
+
+T009's ruling, T014's note and T015's own dispatch all state that **this file** says the
+Angular decorator *"must list its own selector's provider."* **T015 grepped this file for
+it and it is not here.** `provider`, `must list` and `own selector` do not occur in
+§1–§12 in any form. The sentence lived in
+`packages/frameworks/angular/test/ungated-scenarios.ts`, which T014 **deleted**:
+
+> "S14's `HnItem` names ITSELF in its own template. This emitter lowers that to a
+> recursive standalone component whose decorator must list its own selector's provider…"
+
+So the claim is corrected by having been deleted with its file, and the correction owed to
+*this* file is the record that **it never carried it**. The misattribution propagated
+through three documents unchecked, which is the same failure mode as a stale citation:
+each hop cited the previous hop rather than the source.
+
+**What this file does say, in §3.1, is accurate and stands**: `emit()` succeeds, the
+output is a correct recursive standalone component, and the emitted decorator *does*
+contain `imports: [HnItem]`. It never claimed Angular requires it.
+
+For completeness, since the surrounding claim is what mattered: **Angular 22.0.8 provably
+ignores the self-entry.** T009 measured 0 AOT diagnostics with `imports: [HnItem]` and 0
+without, with `dependencies: [HnItem]` in both compiled arms, because
+`StandaloneComponentScopeReader` seeds the component's own scope and then skips a
+self-entry (`if (seen.has(ref.node)) continue;`). The form was still admitted — as the
+*wider-range spelling*, not as a requirement.
+
+### 13.3 Three references in this file now point at things that no longer exist
+
+Recorded rather than edited, because §9.1 and §12 are a snapshot of what T003 changed:
+
+- **§9.1 and §3.1 cite `angular/test/ungated-scenarios.ts`.** T014 **deleted** it — not
+  emptied it — and unwound all four wirings, because admitting `imports` left
+  `ANGULAR_UNGATED_SCENARIOS` empty while `gate.test.ts` asserted `length > 0`. Its
+  standing check was replaced by two rows in `angular/test/gate.test.ts` ("S14 really
+  prints the `imports` form, and the inventory really admits it", plus its mutation).
+- **§12's "Angular's `imports` inventory ruling is the one thing standing between this
+  lane and a fourth shipped lane for S14"** was discharged by T014: S14 ships, and
+  `demos/angular-official` serves `/hn-item` as the fourth lane, verified in chromium
+  against all eleven of §7's own DOM oracle fields.
+- **§12's closing bullet, `vue` answers 200 for `/hn-item` with the S1 body**, is still
+  true at HEAD. React and Solid do the same. Angular 404s correctly.
+
+### 13.4 What T015 measured that §3.1 could not have known
+
+§3.1's diagnosis — "the emitter is not at fault and neither is the gate" — was right, and
+it was incomplete in a way nobody could see at the time. **The gate corpus was
+`generated/` only.** `packages/frameworks/angular/generated-composition/M2-page.ts` and
+`C1-slot.ts` had already been printing `imports:` since composition landed, uninventoried,
+because no policy had ever been pointed at that directory. So S14 was not the first
+emitted Angular module to print `imports` in the repo — **it was the first one the gate
+could see.** §3.1's "S14 is the first emitted Angular module ever to print `imports`" is
+therefore **false as written and true as intended**.
+
+The full per-lane, per-directory measurement is in
+`docs/goals/frameless-app-axes-v1/notes/T015-composition-gate-hole.md`.

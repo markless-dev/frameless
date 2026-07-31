@@ -58,7 +58,7 @@ goal:
       evaporates. If drag refuses and is quietly replaced by click-to-move, the axis goes
       unmeasured while the demo looks complete.
 
-active_task: T015
+active_task: T013
 
 rules:
   - "state.yaml is board truth; goal.md is the charter."
@@ -2015,7 +2015,7 @@ tasks:
   - id: T013
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
     objective: >-
       Two things T008 measured but could not touch: correct the REFUTED four-way `checked` claim
@@ -2242,7 +2242,7 @@ tasks:
   - id: T015
     type: worker
     assignee: Worker
-    status: active
+    status: blocked
     reasoning_hint: high
     objective: >-
       Close the gate hole T009 found: `generated-composition/` IS NEVER GATE-CHECKED in the
@@ -2288,8 +2288,92 @@ tasks:
       - "You are about to raise a derived floor to admit a form. Report the cost and stop."
       - "NEVER pkill -f on a broad pattern. TWO FOREIGN PROCESSES ARE ALIVE: node PID 64413 on 5175 and PID 24931 on 5178."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: blocked
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T015-composition-gate-hole.md
+      summary: "Measured ALL SIX LANES against ALL THREE generation tiers. The gate corpus was generated/ ONLY in FOUR lanes, not five - react and solid ALREADY gate composition WITH ARTIFACTS and are REPORTED, NOT REPAIRED. Closed qwik (0 violations) and the react/solid persistence discovery; pinned svelte/vue/angular composition as EXACT, MUTATION-KILLED DEBT. NOTHING ADMITTED; ANGULAR_BASELINE_FLOOR 19.0 before and after, 32/32 unverified."
+      THE_COVERAGE_TABLE: "react generated/ GATED 17 files 0 | generated-composition/ ALREADY GATED WITH ARTIFACTS 10 files 0/0 | persistence discovery closed here. solid same. qwik generated/ 17 0 | composition was UNGATED -> CLOSED, 3 files, 0 violations | no persistence tier. svelte 16 0 | UNGATED -> DEBT PIN, 4 VIOLATIONS. vue 16 0 | UNGATED -> DEBT PIN, 1 VIOLATION. angular 15 0 | UNGATED -> DEBT PIN, 2 VIOLATIONS."
+      THREE_DISPATCH_CLAIMS_REFUTED_BY_MEASUREMENT: "(1) 'FIVE violations across THREE forms' - MEASURED FOUR. inventoryViolations DEDUPES per (file, kind:form). Reconstructed exactly, since T014's diff to the gate is +15 lines all in one inventory entry so observeForms is byte-identical. At HEAD it is 2 across 2. (2) notes/T003-hn-item.md NEVER CONTAINED 'must list its own selector's provider' - the strings `provider`, `must list` and `own selector` DO NOT OCCUR IN IT. That wording lived ONLY in the deleted ungated-scenarios.ts. THREE DOCUMENTS CITED EACH OTHER, NOT THE SOURCE. The FLOOR half of the claim IS real and IS corrected. (3) 'the other FIVE lanes' - react and solid already cover composition. THE HOLE WAS FOUR LANES."
+      THE_CONTROL_THAT_MATTERED_AND_IT_IS_THE_SAME_ONE_T014_HIT: "The first probe ran SOURCE-ONLY and reported react and solid each drawing `undisclosed-import`. FALSE - their rows pass ARTIFACTS, and undisclosed-import resolves against recordedRelativeImportSpecifiers(artifact). REPORTING IT WOULD HAVE OPENED REPAIRS AGAINST TWO CORRECT LANES. Re-run in both modes; the four dirty lanes read identically either way."
+      TWO_FINDINGS_NOBODY_WAS_LOOKING_FOR: "(1) angular's parseEmitted OVERWRITES its component binding - `if (node.type === 'ClassDeclaration' && decoratorNamed(node,'Component')) component = node;` - SO ONLY THE LAST @Component IN A FILE IS PARSED. C1-slot.ts declares Frame then SlotPage, so Frame's <ng-content /> IS INVISIBLE - the likely origin of the phantom fifth violation. It is the only multi-component emitted file in the package; THAT IS NOW ASSERTED. (2) angular's gate.test.ts ships a row planting <ng-content> as a MUST-REJECT construct WHILE generated-composition/M1-panel.ts SHIPS <ng-content />. A STANDING TEST AND A COMMITTED ARTIFACT IN DIRECT CONTRADICTION FOR THE LIFE OF THE COMPOSITION TIER."
+      AND_A_THIRD_HEARD_BY_NOBODY: "eslint:svelte/no-useless-mustaches has been FIRING on label={'Composed'} in generated-composition/M2-page.svelte SINCE IT WAS COMMITTED. Emitter finding, not touched - the card forbids touching an emitter, and silencing the rule would be worse."
+      changed_files:
+        - packages/frameworks/qwik/test/gate.test.ts
+        - packages/frameworks/angular/test/gate.test.ts
+        - packages/frameworks/vue/test/gate.test.ts
+        - packages/frameworks/svelte/test/gate.test.ts
+        - packages/frameworks/react/test/gate.test.ts
+        - packages/frameworks/solid/test/gate.test.ts
+        - docs/goals/frameless-app-axes-v1/notes/T003-hn-item.md
+        - docs/goals/frameless-app-axes-v1/notes/T015-composition-gate-hole.md
+      commands:
+        - cmd: "owner fingerprint START"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169 / 116, sorting the whole shasum OUTPUT LINES"
+        - cmd: "six-lane x three-tier gate probe"
+          status: pass
+          note: "gate corpus is generated/ ONLY in qwik, svelte, vue, angular; react+solid ALREADY gate composition WITH ARTIFACTS at 0/0"
+        - cmd: "CONTROL: composition gate WITH vs WITHOUT artifacts"
+          status: pass
+          note: "REFUTED ITS OWN PROBE - source-only reported react+solid drawing undisclosed-import; WITH artifacts both are 0/0"
+        - cmd: "pre-T014 reconstruction of the angular count"
+          status: pass
+          note: "T009 recorded FIVE; MEASURED FOUR. observeForms byte-identical across T014"
+        - cmd: "grep T003-hn-item.md for the selector-provider wording"
+          status: pass
+          note: "NOT PRESENT - never was. Three documents propagated the misattribution"
+        - cmd: "ANGULAR_BASELINE_FLOOR before / after"
+          status: pass
+          note: "19.0 / 19.0, 32 entries, 32 of 32 unverified. UNCHANGED BECAUSE NOTHING WAS ADMITTED"
+        - cmd: "MUTATION: qwik composition row, on-disk artifact"
+          status: pass
+          note: "planted useVisibleTask$ -> RED on no-visible-task; restored, diff clean"
+        - cmd: "MUTATION: angular debt pin, inventory"
+          status: pass
+          note: "added Content -> pin RED, AND the pre-existing ng-content rejection row RED. Restored"
+        - cmd: "MUTATION: vue + svelte debt pins, on-disk artifacts"
+          status: pass
+          note: "both RED; artifacts restored, git diff --exit-code clean"
+        - cmd: "MUTATION: react + solid persistence rows"
+          status: pass
+          note: "planted an extra file -> both RED; files removed"
+        - cmd: "all seven new rows executed BY NAME (--reporter=verbose)"
+          status: pass
+          note: "A ROW NEVER COLLECTED IS THE SAME GREEN AS A ROW MEASURING NOTHING"
+        - cmd: "pnpm test"
+          status: pass
+          note: "1 failed / 1357 passed - EXACTLY 1, the foreign ARM B. T014 left 1350; +7 is exactly the seven rows"
+        - cmd: "pnpm check"
+          status: pass
+          note: "267 - VERIFIED BY SET DIFF NOT COUNT: stashed vs applied differ only in one pre-existing qwik error moving line 180 -> 184"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "PASS - 6 demos x 9 scenarios, all observations equal"
+        - cmd: "pnpm lint / pnpm check:citations"
+          status: pass
+          note: "0 warnings 0 errors 552 files; citations clean, 604 swept"
+        - cmd: "git diff --exit-code over all three tiers and demos/*/src/emitted"
+          status: pass
+          note: "exit 0, PAIRED with git status --short"
+        - cmd: "owner fingerprint FINISH"
+          status: pass
+          note: "IDENTICAL to START; both foreign PIDs alive with original start times; pkill -f never used"
+      deviations:
+        - "CLOSED QWIK AND THE REACT/SOLID PERSISTENCE TIER rather than only recording them. Neither needs a ruling, and leaving a hole that costs nothing to close would have shrunk the slice below the largest safe useful one."
+        - "PINNED the three dirty lanes as LITERAL VIOLATION SETS instead of leaving them unwatched. Each pin asserts (file, policy) AND the quoted form, carries an ANTI-VACUITY HALF, and was killed by a real on-disk or inventory mutation. Every one opens with 'THIS IS A DEBT PIN, NOT COVERAGE'."
+        - "CORRECTED T003's note BY APPENDING A MARKED AMENDMENT. The card said do not rewrite its history; NOT ONE CHARACTER of the original was edited."
+        - "RECORDED, in that amendment, that the selector-provider wording WAS NEVER IN THAT FILE, instead of editing a sentence that does not exist. SILENTLY 'FIXING' IT WOULD HAVE MANUFACTURED THE VERY CLAIM THREE DOCUMENTS HAD MISATTRIBUTED."
+        - "DID NOT ADMIT template-node:Content even though its floor is straightforward - angular's gate.test.ts ALREADY PLANTS <ng-content> AS A MUST-REJECT CONSTRUCT, so admitting it RETIRES A STANDING ROW'S PREMISE. That is a ruling."
+      remaining_blockers:
+        - "RULING NEEDED, ONE DECISION FOR THREE LANES: the RELATIVE SIBLING IMPORT (angular ./M1-panel#Panel, vue ./M1-panel.vue#default, svelte ./M1-panel.svelte#default). EVERY import: entry in all three inventories is a FRAMEWORK PACKAGE specifier WITH A VERSION FLOOR; a relative path has none, and allowlisting the literal admits ONE FILENAME. The two principled answers are structural, and REACT/SOLID ALREADY SHIP THE BETTER ONE (undisclosed-import against recordedRelativeImportSpecifiers). vue's and svelte's src/gate/index.ts are OUTSIDE allowed_files."
+        - "RULING NEEDED: angular template-node:Content, JOINTLY with the standing ng-content rejection row that uses the same construct as its must-reject example. BOTH SITES MOVE TOGETHER."
+        - "RULING NEEDED: svelte template-node:RenderTag and template-node:Component - also outside allowed_files."
+        - "EMITTER FINDING, NEEDS ITS OWN CARD: svelte emits label={'Composed'} and eslint:svelte/no-useless-mustaches has been reporting it SINCE COMPOSITION LANDED."
+        - "angular's parseEmitted keeps only the LAST @Component per file. Harmless today (C1-slot.ts is the only multi-component emitted file, NOW ASSERTED) but MUST BE FIXED BEFORE any multi-component module reaches generated/."
+        - "T009's ruling text records FIVE violations where the gate measures FOUR. The ruling is landed VERBATIM and must not be edited; the correction is in notes/T015 and the board carries it."
+      stopped_because: "stop_if fired: 'A form needs a ruling you cannot make from the six-gate policy alone - RECORD IT AND STOP.' Three forms across three lanes are ONE ARCHITECTURE DECISION about whether a relative module specifier is an inventory form at all, and two of the three lanes' gate sources are outside allowed_files. The angular Content form is additionally blocked by a standing test that uses the same construct as its must-reject example. NOTHING WAS ADMITTED, NO FLOOR WAS RAISED, NO EMITTER OR EMITTED ARTIFACT WAS TOUCHED."
   - id: T016
     type: worker
     assignee: Worker
@@ -2359,6 +2443,86 @@ tasks:
       - "pnpm check rises above 267, pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
       - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched."
       - "NEVER pkill -f on a broad pattern. FOREIGN node PID 64413 holds 5175 and PID 24931 holds 5178."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
+  - id: T017
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: >-
+      ONE ARCHITECTURE RULING FOR THREE LANES: is a RELATIVE MODULE SPECIFIER an inventory form
+      at all? Plus two smaller rulings T015 measured and could not make.
+    THE_DECISION: >-
+      angular ./M1-panel#Panel, vue ./M1-panel.vue#default, svelte ./M1-panel.svelte#default all
+      draw baseline-form-inventory. EVERY `import:` ENTRY IN ALL THREE INVENTORIES IS A FRAMEWORK
+      PACKAGE SPECIFIER WITH A VERSION FLOOR. A RELATIVE PATH HAS NO VERSION, so allowlisting the
+      literal admits ONE FILENAME and nothing generalises. REACT AND SOLID ALREADY SHIP THE
+      BETTER ANSWER: `undisclosed-import` resolved against recordedRelativeImportSpecifiers(artifact),
+      which is why they measure 0 violations and 0 unevaluated on the SAME composition artifacts.
+      RULE WHETHER THE OTHER THREE ADOPT IT.
+    TWO_SMALLER_RULINGS_THAT_MOVE_TOGETHER: >-
+      (1) angular template-node:Content CANNOT be admitted alone: packages/frameworks/angular/
+      test/gate.test.ts ships a row planting <ng-content> AS A MUST-REJECT CONSTRUCT while
+      generated-composition/M1-panel.ts SHIPS <ng-content />. A STANDING TEST AND A COMMITTED
+      ARTIFACT HAVE BEEN IN DIRECT CONTRADICTION FOR THE LIFE OF THE COMPOSITION TIER. Both sites
+      move together or neither does. (2) svelte template-node:RenderTag and template-node:Component.
+    DO_NOT_REPEAT_THE_MISATTRIBUTION_T015_CAUGHT: >-
+      T015 found that 'the decorator must list its own selector's provider' WAS NEVER IN
+      notes/T003-hn-item.md - the strings do not occur there. It lived only in the deleted
+      ungated-scenarios.ts, and THREE DOCUMENTS CITED EACH OTHER RATHER THAN THE SOURCE. VERIFY
+      EVERY CLAIM AT ITS ORIGIN, not at a document quoting it.
+    constraints:
+      - "READ-ONLY. Your only write is your note - and if your harness forbids report .md files, SAY SO and let your receipt be the ruling, as T009 and T012 did."
+      - "MEASURE THE COST OF EACH OPTION. react/solid's undisclosed-import approach is already shipping - measure what adopting it costs the other three, do not assume it ports."
+      - "T015's debt pins are EXACT, MUTATION-KILLED violation sets. If you rule, say what happens to each pin - a pin left standing after its debt is paid is a check that cannot fail."
+      - "Assume this brief contains at least one error and find it."
+    expected_output:
+      - "the relative-import ruling, with the deciding argument and the measured cost per lane"
+      - "the angular Content + ng-content-rejection joint ruling"
+      - "the svelte RenderTag/Component ruling"
+      - "worker spec if any should proceed"
+    receipt: null
+
+  - id: T018
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: >-
+      Two emitter-adjacent findings T015 measured and was forbidden to touch.
+    WHAT_WAS_MEASURED: >-
+      (1) THE SVELTE EMITTER EMITS `label={'Composed'}` and eslint:svelte/no-useless-mustaches
+      HAS BEEN REPORTING IT SINCE COMPOSITION LANDED, HEARD BY NOBODY. Do not silence the rule -
+      fix the emitter or record why the mustache is load-bearing. (2) ANGULAR'S parseEmitted
+      OVERWRITES ITS COMPONENT BINDING, so ONLY THE LAST @Component IN A FILE IS PARSED.
+      C1-slot.ts declares Frame then SlotPage, so Frame's <ng-content /> is INVISIBLE to the
+      gate - the likely origin of a phantom violation count. HARMLESS TODAY because C1-slot.ts
+      is the only multi-component emitted file, which T015 asserted - BUT IT MUST BE FIXED
+      BEFORE ANY MULTI-COMPONENT MODULE REACHES generated/.
+    allowed_files:
+      - "packages/frameworks/svelte/src/**"
+      - "packages/frameworks/svelte/test/**"
+      - "packages/frameworks/svelte/generated-composition/**"
+      - "packages/frameworks/svelte/scripts/**"
+      - "packages/frameworks/angular/src/**"
+      - "packages/frameworks/angular/test/**"
+      - "docs/DEFECTS.md"
+      - "docs/goals/frameless-app-axes-v1/notes/T018-emitter-findings.md"
+    verify:
+      - "pnpm lint reports ZERO svelte/no-useless-mustaches - and PROVE THE RULE STILL FIRES by planting one, so the green is not a disabled rule."
+      - "angular's parseEmitted sees EVERY @Component in a file. MUTATION-TEST IT: a two-component fixture where the FIRST component carries a form the gate must reject MUST go red."
+      - "T015's assertion that C1-slot.ts is the only multi-component emitted file must still hold, or be updated with its reason."
+      - "Any emitted byte that moves is REGENERATED, never hand-edited, and the derivation proof asserts present-after-delete == 0 FIRST."
+      - "pnpm test at exactly 1 / pnpm check not above 267 / pnpm e2e 6 x 9 / lint / check:citations"
+      - "git diff --exit-code over every OTHER lane's artifacts, PAIRED WITH git status --short"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to silence or downgrade an eslint rule instead of fixing what it reports."
+      - "Fixing parseEmitted turns any currently-green gate RED - that is a real finding; RECORD IT AND STOP rather than adjusting the inventory to hide it."
+      - "pnpm check rises above 267, pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
+      - "NEVER pkill -f on a broad pattern. TWO FOREIGN PROCESSES ARE ALIVE: PID 64413 on 5175, PID 24931 on 5178."
       - "Verification fails twice for the same reason."
     receipt: null
 
