@@ -1,25 +1,41 @@
 import { $, component$ } from "@qwik.dev/core";
 import { TodoMvcAdvanced } from "../../emitted/TodoMvcAdvanced.jsx";
 
-// THE SECOND APPLICATION, and the first route in this demo whose lane count is
-// FOUR rather than six. The angular emitter REFUSES S11 outright - `Angular
-// emitter cannot resolve the identifier "Promise" in a transplanted body: it is
-// neither a body-local binding, a function parameter, a @for variable, nor a
-// declared component member` - because TodoMVC Advanced creates its own
-// artificial delay with `new Promise` + `setTimeout`, and that lane cannot NAME
-// a global inside a transplanted body. So demos/angular-official has no
-// counterpart to this page, and that is a RECORDED REFUSAL rather than an
-// omission. See packages/frameworks/angular/test/unbuilt-scenarios.ts.
+// THE SECOND APPLICATION. SIX LANES SERVE IT. This comment used to say the lane
+// count here was FOUR rather than six, and both absences it named are closed.
 //
-// AND THE SIXTH LANE IS LOST DIFFERENTLY, WHICH IS WHY THE COUNT IS FOUR AND NOT
-// FIVE. VUE emits this scenario, passes its own gate and its typecheck, and then
-// THROWS IN THE BROWSER: `_ctx.Promise is not a constructor`. That emitter inlines
-// handlers into TEMPLATE EXPRESSIONS, and Vue's template compiler prefixes any
-// identifier outside GLOBALS_ALLOWED with `_ctx.` - a list that carries Date and
-// JSON and does NOT carry Promise or setTimeout (measured at @vue/shared@3.5.40).
-// So demos/vue-official DOES serve this route, with add/destroy/filter/local
-// search working and the two ASYNC axes throwing. Both losses are lane limits
-// inside each framework's own design envelope, not defects to file upstream.
+// THE ANGULAR EMITTER USED TO REFUSE S11 OUTRIGHT - `Angular emitter cannot
+// resolve the identifier "Promise" in a transplanted body: it is neither a
+// body-local binding, a function parameter, a @for variable, nor a declared
+// component member` - because TodoMVC Advanced creates its own artificial delay
+// with `new Promise` + `setTimeout`, and that lane could not NAME a global inside
+// a transplanted body. `frameless-app-fidelity-v1` T003 ruled a TWO-NAME
+// ALLOWLIST - `Promise` and `setTimeout`, nothing else - and T007 landed it, so
+// demos/angular-official HAS a counterpart to this page.
+// THE CITATION THIS PARAGRAPH USED TO CARRY WAS DANGLING BY THE TIME YOU READ IT:
+// it pointed at packages/frameworks/angular/test/unbuilt-scenarios.ts "as the
+// record of the refusal", and `ANGULAR_UNBUILT_SCENARIOS` there is `[]`. That file
+// is still worth reading - its header records the refusal as HISTORY and explains
+// why an empty list is a hazard rather than a clean slate - but the LIVE record of
+// which globals are admitted is `TRANSPLANTED_GLOBALS` in
+// packages/frameworks/angular/src/emitter/index.ts. MEASURED AT HEAD BY T014:
+// `ng serve` answers /todomvc-advanced with 5,049 bytes of SSR body carrying
+// `<app-root>`, "What needs to be done", "todoapp" and a LINKED
+// /todomvc-app-css/frameless-advanced.css, against a bogus path that answers 404
+// with no app-root at all.
+//
+// AND THE SIXTH LANE WAS LOST DIFFERENTLY, WHICH IS WHY THE COUNT USED TO BE FOUR
+// AND NOT FIVE. VUE emitted this scenario, passed its own gate and its typecheck,
+// and then THREW IN THE BROWSER: `_ctx.Promise is not a constructor`. That emitter
+// inlines handlers into TEMPLATE EXPRESSIONS, and Vue's template compiler prefixes
+// any identifier outside GLOBALS_ALLOWED with `_ctx.` - a list that carries Date
+// and JSON and does NOT carry Promise or setTimeout (measured at
+// @vue/shared@3.5.40). THE SAME T007 REPAIRED IT, without touching that upstream
+// list, by emitting a bound `<script setup>` shim const per allowlisted free
+// identifier - see demos/vue-official/src/App.vue for that lane's own account. So
+// demos/vue-official serves this route with EVERY axis running, the two ASYNC ones
+// included. Both losses were lane limits inside each framework's own design
+// envelope and NEITHER WAS EVER FILED UPSTREAM.
 //
 // THIS LANE IS THE ONE THE ASYNC AXIS WAS MOST LIKELY TO LOSE, and it did not.
 // The T002 ruling records that qwik cannot consume a callback prop's return

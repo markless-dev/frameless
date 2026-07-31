@@ -34,13 +34,23 @@ const source = resolve(here, 'todomvc-app-css');
  * it loads second; `frameless-advanced.css` overrides BOTH for the controls
  * TodoMVC Advanced adds and is correct only while it loads third.
  *
- * ALL THREE ARE COPIED INTO ALL SIX LANES, INCLUDING THE ONE THAT CANNOT LINK
- * THE THIRD. The angular lane has no `/todomvc-advanced` route at all, because
- * the angular emitter REFUSES S11 on its global-identifier ban and there is no
- * `S11.ts` to mount. Copying uniformly anyway is deliberate: this script's whole
- * contract is that the six asset roots are DERIVED and byte-identical, so that
- * `delete the copies, re-run, compare digests` stays a single check. Making one
- * lane's copy conditional would trade a real invariant for one unserved file.
+ * ALL THREE ARE COPIED INTO ALL SIX LANES, AND ALL SIX LANES LINK ALL THREE.
+ * THE REASONING HERE USED TO BE WRONG, AND THE INVARIANT IT DEFENDED WAS RIGHT.
+ * This comment read "INCLUDING THE ONE THAT CANNOT LINK THE THIRD - the angular
+ * lane has no `/todomvc-advanced` route at all, because the angular emitter
+ * REFUSES S11 on its global-identifier ban and there is no `S11.ts` to mount".
+ * Both halves are false: `packages/frameworks/angular/generated/S11.ts` EXISTS,
+ * since `frameless-app-fidelity-v1` T003 ruled a two-name allowlist (`Promise`
+ * and `setTimeout`) and T007 landed it, and the angular lane SERVES
+ * /todomvc-advanced with `frameless-advanced.css` LINKED in the body it returns -
+ * measured at HEAD by T014 off a booted `ng serve`, not inferred from this file.
+ *
+ * COPYING UNIFORMLY WAS NEVER CONTINGENT ON THAT ARGUMENT AND DOES NOT MOVE NOW.
+ * This script's whole contract is that the six asset roots are DERIVED and
+ * byte-identical, so that `delete the copies, re-run, compare digests` stays a
+ * single check. Making any lane's copy conditional would trade a real invariant
+ * for at most one unserved file - and today it would not even buy that, because
+ * there is no lane left that fails to link the third sheet.
  */
 const stylesheets = ['index.css', 'frameless-supplement.css', 'frameless-advanced.css'];
 

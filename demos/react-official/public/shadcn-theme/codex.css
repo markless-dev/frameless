@@ -57,8 +57,15 @@
  * before anyone compared the six lanes property by property, and they close the
  * container half only.
  *
- * MEASURED HERE at 1440x1000 across the five lanes that serve this page, BEFORE
- * this block existed. `/codex` WAS THE ONLY PAGE IN THE WHOLE SHIPPED SET STILL
+ * MEASURED HERE at 1440x1000 across the five lanes THAT SERVED THIS PAGE AT THE
+ * TIME, BEFORE this block existed. THE FIVE IS THE POPULATION THAT WAS ACTUALLY
+ * MEASURED AND IS LEFT STANDING DELIBERATELY - it is a historical reading, not a
+ * current lane count. SIX LANES SERVE /codex TODAY: angular refused S12 at emit
+ * on its global-identifier ban until `frameless-app-fidelity-v1` T007 landed a
+ * two-name allowlist, and T014 measured that lane answering /codex off a booted
+ * `ng serve`. ANGULAR WAS NOT IN THE SWEEP BELOW, so the 43/13/4 divergence
+ * counts describe five lanes and have never been re-run over six.
+ * `/codex` WAS THE ONLY PAGE IN THE WHOLE SHIPPED SET STILL
  * DIVERGING: 43 elements differed in computed style, 13 text runs in width and
  * 4 boxes in rect between react/solid/vue and qwik/svelte. Three distinct
  * mechanisms, and the middle one is the expensive one:
@@ -192,7 +199,13 @@ html:has(.codex) {
  * (0,1,1): it beats the scaffold, and the heading class is re-scoped
  * `.codex .thread-title` (0,2,0) so it still beats this. A `html:has(.codex) h1`
  * form would have been (0,1,2), which outranks the class and would have silently
- * rewritten the thread title in ALL FIVE lanes that serve this page.
+ * rewritten the thread title in ALL SIX lanes that serve this page. THIS LINE
+ * SAID FIVE. It was written while angular refused S12 at emit on its
+ * global-identifier ban and had no /codex route; `frameless-app-fidelity-v1`
+ * T007 landed a two-name allowlist and T014 measured that lane serving /codex,
+ * so the blast radius of the rejected `html:has(.codex) h1` form is SIX lanes,
+ * not five. The specificity argument itself is unchanged - it never depended on
+ * how many lanes were downstream of it.
  */
 .codex h1,
 .codex h2 {

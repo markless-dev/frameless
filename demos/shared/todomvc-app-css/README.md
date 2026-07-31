@@ -104,10 +104,17 @@ lanes, `static/todomvc-app-css/` in SvelteKit — so all six serve them at the i
 chained ahead of `dev` / `start` / `build` beside `copy-emitted`. The copies are **derived,
 never hand-kept**: delete them, re-run, compare digests.
 
-**All three land in all six lanes, including the one that cannot link the third.** The angular
-lane has no `/todomvc-advanced` route at all, because the angular emitter refuses S11 on its
-global-identifier ban. Copying uniformly keeps "delete the copies, re-run, compare digests" a
-single check; making one lane conditional would trade a real invariant for one unserved file.
+**All three land in all six lanes, and all six lanes link all three.** This paragraph used to
+read "including the one that cannot link the third — the angular lane has no
+`/todomvc-advanced` route at all, because the angular emitter refuses S11 on its
+global-identifier ban". That is false: `packages/frameworks/angular/generated/S11.ts` exists,
+because `frameless-app-fidelity-v1` T003 ruled a two-name allowlist (`Promise` and
+`setTimeout`) and T007 landed it, and the angular lane serves `/todomvc-advanced` with
+`/todomvc-app-css/frameless-advanced.css` **linked in the body it returns** — measured at HEAD
+off a booted `ng serve` rather than inferred from this file. The uniform copy never rested on
+that argument and does not move now: copying uniformly keeps "delete the copies, re-run,
+compare digests" a single check, and making any lane conditional would trade a real invariant
+for at most one unserved file.
 
 Only the `/todomvc` route links the first two, and only `/todomvc-advanced` links all three.
 `index.css` restyles `body` and every `button` in the document, so a global link would move the

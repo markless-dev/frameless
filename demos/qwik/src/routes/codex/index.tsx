@@ -15,13 +15,21 @@ import { CodexClone } from "../../emitted/CodexClone.jsx";
 // THREE TIMES before reaching that call, which is the deepest this constraint has
 // been exercised in the corpus.
 //
-// TWO LANES DO NOT HAVE THIS PAGE IN THE SAME FORM. ANGULAR has no /codex route at
-// all - that emitter refuses S12 with the message read off this module, `Angular
-// emitter cannot resolve the identifier "Promise" in a transplanted body`, because
-// it cannot NAME a global inside a transplanted body and an artificial delay is
-// made of globals. VUE serves its route and its stream throws in the browser
-// (`_ctx.Promise is not a constructor`) while every synchronous axis works. Both
-// are lane limits inside each framework's own design envelope.
+// TWO LANES USED NOT TO HAVE THIS PAGE IN THE SAME FORM, AND NOW ALL SIX DO.
+// ANGULAR had no /codex route at all - that emitter refused S12 with the message
+// read off this module, `Angular emitter cannot resolve the identifier "Promise" in
+// a transplanted body`, because it could not NAME a global inside a transplanted
+// body and an artificial delay is made of globals. `frameless-app-fidelity-v1` T007
+// landed the two-name allowlist (`Promise` and `setTimeout`, nothing else) and the
+// route exists. MEASURED AT HEAD BY T014: `ng serve` answers /codex with 5,356
+// bytes of SSR body carrying `<app-root>`, "composer" five times and "thread"
+// twelve times, against a bogus path that answers 404 with no app-root at all.
+// VUE served its route while its stream threw in the browser (`_ctx.Promise is not
+// a constructor`) with every synchronous axis working; THE SAME T007 REPAIRED THAT
+// TOO, with bound `<script setup>` shim consts rather than any change to upstream's
+// GLOBALS_ALLOWED, and the streamed answer was then driven and observed GROWING
+// across three distinct readings. Both were lane limits inside each framework's own
+// design envelope and NEITHER WAS EVER FILED UPSTREAM.
 //
 // NO KEYBOARD INTERACTION EXISTS ANYWHERE IN THIS APP, and none is faked. Two-word
 // DOM events are unspellable in every lane (DEFECTS.md 15) - `onKeyDown` prints

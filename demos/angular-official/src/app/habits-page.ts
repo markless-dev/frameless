@@ -4,7 +4,9 @@ import { HabitTracker } from '../emitted/HabitTracker';
 import { noTrace } from './scenario-props';
 
 /**
- * The /habits route, and the FOURTH of four wrapper components in this lane.
+ * The /habits route, and the SIXTH of EIGHT wrapper components in this lane.
+ * This line used to read "the FOURTH of four", which was true only while this
+ * lane was missing S11, S12 and S14. It is missing none of them now.
  *
  * It exists for the reason `./todomvc-page.ts` and `./hn-page.ts` record: to link
  * stylesheets on this route and no other. Putting the `<link>`s in
@@ -14,19 +16,37 @@ import { noTrace } from './scenario-props';
  * for byte across six lanes. All five other lanes put the links in their route
  * wiring for the same reason, so the six pages stay like for like.
  *
- * THIS IS THE FOURTH APPLICATION ROUTE THIS LANE HAS, AND S15 IS THE SECOND
- * CORPUS APPLICATION IT SHIPS ALONGSIDE THE OTHER FIVE LANES. Its three absences
- * have three different causes and none of them is reachable from this module:
- *   S11 and S12 are refused AT EMIT on the global-identifier ban - "Angular
+ * THIS IS THE SIXTH OF THIS LANE'S EIGHT APPLICATION ROUTES, AND THIS LANE HAS NO
+ * ABSENCES LEFT. This paragraph used to say S15 was "the SECOND corpus application
+ * it ships alongside the other five lanes" and then listed "its three absences" IN
+ * THE PRESENT TENSE. All three are closed, each by a different card, and none of
+ * them was ever reachable from this module:
+ *   S11 and S12 WERE refused AT EMIT on the global-identifier ban - "Angular
  *     emitter cannot resolve the identifier \"Promise\" in a transplanted body" -
  *     because their artificial delays are `new Promise` + `setTimeout`.
- *   S14 EMITS CORRECTLY and this lane's own dossier gate rejects the result: a
+ *     `frameless-app-fidelity-v1` T003 ruled a TWO-NAME allowlist (`Promise` and
+ *     `setTimeout`, nothing else) and T007 landed it. `TRANSPLANTED_GLOBALS` in
+ *     packages/frameworks/angular/src/emitter/index.ts is that set, and it is
+ *     literally `new Set(['Promise', 'setTimeout'])`: the ban did not become an
+ *     allowlist of the usual suspects, it acquired two exceptions. EVERY other
+ *     free name - `Date`, `JSON`, `Math`, `console`, `fetch`, `localStorage`,
+ *     `document` and anything not yet imagined - IS STILL A LOUD THROW. A third
+ *     name is a new ruling.
+ *   S14 EMITTED CORRECTLY and this lane's own dossier gate rejected the result: a
  *     same-module component reference needs `imports: [HnItem]` on the decorator
- *     and `imports` is not in BASELINE_FORM_INVENTORY.
+ *     and `imports` was not in BASELINE_FORM_INVENTORY. `frameless-app-axes-v1`
+ *     T009 ruled ADMIT and T014 landed it; ANGULAR_BASELINE_FLOOR did not move.
+ * MEASURED AT HEAD BY `frameless-app-fidelity-v1` T014, on a booted `ng serve`
+ * rather than from this table: all EIGHT application routes - /todomvc,
+ * /todomvc-advanced, /codex, /hn, /hn-item, /habits, /board, /contacts - answer
+ * with `<app-root>` in EIGHT DISTINCT SSR bodies, against a bogus path that
+ * answers 404 with no app-root at all. `ANGULAR_UNBUILT_SCENARIOS` in
+ * packages/frameworks/angular/test/unbuilt-scenarios.ts is `[]` to match.
  * S15 NAMES NO GLOBAL AND REFERENCES NO COMPONENT. It is a single component whose
- * entire mechanism is synchronous derived state, so there is nothing for the ban
+ * entire mechanism is synchronous derived state, so there was nothing for the ban
  * to catch and no `imports` for the inventory to reject. That is a constraint of
- * the fixture rather than luck - see its constraint (10).
+ * the fixture rather than luck - see its constraint (10) - and it is why S15 kept
+ * six lanes BEFORE the two doors above were shut rather than because of it.
  *
  * THE DATE IS THE WHOLE SIX-LANE CLAIM, AND IT IS THIS LANE THAT PUTS IT AT RISK.
  * The live reference renders a REAL date. `Date` is a global, so a computed

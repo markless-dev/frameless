@@ -199,10 +199,16 @@ export function scenarioFor(url) {
   // `threeWayScenarios` to the literal ['s1'..'s9'] - so this route is browsable
   // only, which is exactly the sequencing the goal asked for.
   if (path === 'todomvc') return 'todomvc'
-  // THE SECOND APPLICATION. Five lanes, not six - angular refuses S11.
+  // THE SECOND APPLICATION. SIX LANES - this used to read "five lanes, not six -
+  // angular refuses S11". That refusal was real and IS CLOSED: T007 of
+  // `frameless-app-fidelity-v1` landed a TWO-NAME allowlist (Promise,
+  // setTimeout) and demos/angular-official now serves /todomvc-advanced.
   if (path === 'todomvc-advanced') return 'todomvc-advanced'
-  // THE THIRD APPLICATION - the Codex clone. Five lanes emit it, four run its
-  // stream; angular has no route at all. Browsable only, like the two above.
+  // THE THIRD APPLICATION - the Codex clone. SIX lanes emit it and six run its
+  // stream; this used to read "five lanes emit it, four run its stream; angular
+  // has no route at all", and the same T007 closed both halves - angular's
+  // /codex exists and vue's stream no longer throws. Browsable only, like the
+  // two above.
   if (path === 'codex') return 'codex'
   // THE FOURTH APPLICATION - the HACKER NEWS FRONT PAGE - and the first one in
   // this corpus that SIX lanes emit rather than five or four. Browsable only,
@@ -261,20 +267,34 @@ export default function App({ url }) {
         </>
       )
     case 'todomvc-advanced':
-      // THE SECOND APPLICATION, and the first route in this demo whose lane count is
-      // FOUR rather than six: the angular emitter REFUSES S11 on its global-identifier
-      // ban ("Angular emitter cannot resolve the identifier \"Promise\" in a
-      // transplanted body"), so demos/angular-official has no counterpart to this page.
+      // THE SECOND APPLICATION, and the route whose lane count moved the furthest.
+      // IT IS SIX NOW. THIS COMMENT USED TO SAY FOUR, and both absences it named are
+      // closed, each by a measurement rather than by an argument.
       //
-      // AND THE SIXTH LANE IS LOST DIFFERENTLY, WHICH IS WHY THE COUNT IS FOUR AND NOT
-      // FIVE. VUE emits this scenario, passes its own gate and its typecheck, and then
-      // THROWS IN THE BROWSER: `_ctx.Promise is not a constructor`. That emitter inlines
-      // handlers into TEMPLATE EXPRESSIONS, and Vue's template compiler prefixes any
-      // identifier outside GLOBALS_ALLOWED with `_ctx.` - a list that carries Date and
-      // JSON and does NOT carry Promise or setTimeout (measured at @vue/shared@3.5.40).
-      // So demos/vue-official DOES serve this route, with add/destroy/filter/local
-      // search working and the two ASYNC axes throwing. Both losses are lane limits
-      // inside each framework's own design envelope, not defects to file upstream.
+      // ANGULAR USED TO REFUSE S11 at emit on its global-identifier ban ("Angular
+      // emitter cannot resolve the identifier \"Promise\" in a transplanted body"), so
+      // demos/angular-official had no counterpart to this page. T003 of
+      // `frameless-app-fidelity-v1` ruled a TWO-NAME allowlist - Promise and
+      // setTimeout, nothing else - and T007 landed it. packages/frameworks/angular/
+      // generated/S11.ts exists and THE ANGULAR LANE SERVES /todomvc-advanced: measured
+      // at HEAD by T014 on a booted `ng serve`, 5,049 bytes of SSR body carrying
+      // `<app-root>`, "What needs to be done", "todoapp" and a LINKED
+      // /todomvc-app-css/frameless-advanced.css, against a bogus path that answers 404
+      // with no app-root at all. Date, JSON, Math, console, fetch, localStorage and
+      // document are STILL refused, each with a recorded reason.
+      //
+      // AND THE SIXTH LANE WAS LOST DIFFERENTLY, WHICH IS WHY THE COUNT USED TO BE FOUR
+      // AND NOT FIVE. VUE emitted this scenario, passed its own gate and its typecheck,
+      // and then THREW IN THE BROWSER: `_ctx.Promise is not a constructor`. That emitter
+      // inlines handlers into TEMPLATE EXPRESSIONS, and Vue's template compiler prefixes
+      // any identifier outside GLOBALS_ALLOWED with `_ctx.` - a list that carries Date
+      // and JSON and does NOT carry Promise or setTimeout (measured at
+      // @vue/shared@3.5.40). THE SAME T007 REPAIRED IT, without touching that upstream
+      // list, by emitting a bound `<script setup>` shim const per allowlisted free
+      // identifier; the binding is load-bearing and an unbound shim merely traded the
+      // throw for `Illegal invocation`. See demos/vue-official/src/App.vue, which
+      // carries that lane's own account. Both losses were lane limits inside each
+      // framework's own design envelope and NEITHER WAS EVER FILED UPSTREAM.
       // Like /todomvc it is deliberately OUT of the 6 x 9 three-way contract -
       // `scripts/e2e.mjs` pins `threeWayScenarios` to the literal ['s1'..'s9'] - so this
       // page is browsable only. It takes no seed prop: IR-8 has no lowering for an array
@@ -296,21 +316,31 @@ export default function App({ url }) {
       )
     case 'codex':
       // THE THIRD APPLICATION - the CODEX CLONE - and the route this board expected
-      // to be REFUSED outright. It is not: FOUR lanes run it, one emits and
-      // misbehaves, one refuses at emit.
+      // to be REFUSED outright. It is not, and it is no longer even partial: SIX
+      // lanes run it. This comment used to read "FOUR lanes run it, one emits and
+      // misbehaves, one refuses at emit", and BOTH of those exceptions are closed.
 
-      // ANGULAR HAS NO COUNTERPART TO THIS PAGE. That emitter refuses S12 with the
-      // message read off THIS module - `Angular emitter cannot resolve the
-      // identifier "Promise" in a transplanted body` - because a streamed answer is
-      // three unrolled chunks separated by `new Promise` + `setTimeout`, and that
-      // lane cannot NAME a global inside a transplanted body. Recorded, not chased.
+      // ANGULAR SERVES /codex. It used to have no counterpart to this page: that
+      // emitter refused S12 with the message read off THIS module - `Angular emitter
+      // cannot resolve the identifier "Promise" in a transplanted body` - because a
+      // streamed answer is three unrolled chunks separated by `new Promise` +
+      // `setTimeout`, and that lane could not NAME a global inside a transplanted
+      // body. `frameless-app-fidelity-v1` T007 landed the two-name allowlist and the
+      // route exists. MEASURED AT HEAD BY T014 on a booted `ng serve`: /codex answers
+      // with 5,356 bytes of SSR body carrying `<app-root>`, "composer" five times and
+      // "thread" twelve times, against a bogus path that answers 404 with no app-root.
 
-      // VUE SERVES THIS ROUTE AND ITS STREAM THROWS, exactly as on
-      // /todomvc-advanced and for the same measured reason: the vue emitter inlines
-      // handlers into TEMPLATE EXPRESSIONS and Vue's template compiler prefixes any
-      // identifier outside GLOBALS_ALLOWED with `_ctx.` - a list carrying Date and
-      // JSON but not Promise or setTimeout. Every SYNCHRONOUS axis of the app -
-      // thread navigation, both tab pairs, the composer draft - works there.
+      // VUE SERVES THIS ROUTE AND ITS STREAM USED TO THROW - `_ctx.Promise is not a
+      // constructor` - exactly as on /todomvc-advanced and for the same measured
+      // reason: the vue emitter inlines handlers into TEMPLATE EXPRESSIONS and Vue's
+      // template compiler prefixes any identifier outside GLOBALS_ALLOWED with `_ctx.`
+      // - a list carrying Date and JSON but not Promise or setTimeout. Every
+      // SYNCHRONOUS axis of the app - thread navigation, both tab pairs, the composer
+      // draft - worked throughout, and THE STREAM NOW RUNS TOO: the same T007 replaced
+      // the `_ctx.` path with bound `<script setup>` shim consts and drove the answer
+      // GROWING across three distinct readings in a real browser. Zero `_ctx` remains
+      // in any emitted vue SFC, which is now a permanent assertion in that lane's
+      // tests rather than a claim in a comment.
 
       // WHAT THIS APP CANNOT DO, AND IT IS NOT FAKED ANYWHERE: there is no
       // Enter-to-send and no keyboard interaction of any kind. Two-word DOM events

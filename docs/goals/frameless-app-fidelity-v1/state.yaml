@@ -44,7 +44,7 @@ goal:
       FIXING THE FIVE FINDINGS AND LEAVING THE ORACLE HOLE OPEN. The findings are symptoms; the
       cause is that nothing ever compared a shipped app to the thing it copies.
 
-active_task: T014
+active_task: T015
 
 # ---------------------------------------------------------------------------
 # OWNER DECISIONS - taken from the owner DIRECTLY on 2026-07-31 while T009 ran.
@@ -1999,7 +1999,7 @@ tasks:
   - id: T014
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       CLOSE THE SIXTH UNDERCOUNT - a claim family NO record sweep on this board has EVER swept.
@@ -2056,5 +2056,136 @@ tasks:
       - "pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
       - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched. ALL THREE ARE ALREADY DIRTY, YOU DID NOT DO IT, DO NOT `git add -A`."
       - "NEVER pkill -f. Stop only what you start, BY ITS RECORDED PID. NOTE FROM T013: `pnpm --dir demos/angular-official start --port <n>` leaves a CHILD node process HOLDING THE PORT after SIGINT to the pnpm wrapper - STOP BOTH PIDs and record both. The `--` separator form FAILS on angular, exactly as scripts/demo.mjs:477-479 documents."
+      - "Verification fails twice for the same reason."
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T014-globals-record.md
+      summary: "Closed the sixth undercount AND FOUND IT WAS TWO SUB-FAMILIES, NOT ONE. Corrected 33 CLAIM SENTENCES across 16 files: 25 asserting angular refuses S11/S12 or has no /todomvc-advanced or /codex route, and 8 ASSERTING VUE'S STREAM STILL THROWS - which T007 repaired IN THE SAME COMMIT and which NO SWEEP ON THIS BOARD, INCLUDING T013'S AND THIS CARD'S BRIEF, HAD EVER COUNTED. Every correction anchored to its OWN HEAD measurement: angular serves ALL EIGHT application routes in eight DISTINCT SSR bodies with app-root, against a 404 / 170 B / zero-app-root control. Comments, prose and one markdown file only; nothing derives; check 261 -> 261; e2e still 6 x 9."
+      THE_BRIEF_INHERITED_T013s_FRAMING_AND_THE_FRAMING_WAS_HALF_THE_POPULATION: "T007 CLOSED TWO LANE LIMITS IN ONE COMMIT - angular gained the sixth lane AND VUE WAS REPAIRED. Eight sites saying vue's stream still throws are EQUALLY FALSE AT HEAD, IN THE SAME PARAGRAPHS, and no card ever counted them. CORRECTING ONLY THE ANGULAR HALF IS THE SAME UNDERCOUNT ONE LEVEL IN - the board's signature failure, committed by the card that existed to end it."
+      THE_BODY_HASH_IS_A_BUILD_HASH_NOT_A_COMMIT_HASH: "T013's digests ARE NOT REPRODUCIBLE AT THE SAME COMMIT. Each angular SSR body embeds a PER-BUILD COMPONENT ID in its hydration payload ('i':'c2347178594' / 'c3645144048') AND ITS DIGIT COUNT VARIES - which is why this card measured /codex at 5,356 B rather than the card's 5,358 B, with a different digest, at the identical commit. Masked digests ARE stable (a0a94f395a4e / 016df73fc7c8). THE LOAD-BEARING EVIDENCE IS THE 404 CONTROL PLUS CONTENT MARKERS, NEVER DIGEST EQUALITY WITH A PREDECESSOR. This board's instrument assumed otherwise."
+      AND_T013s_16_SITE_LIST_OMITTED_THREE_INSIDE_ITS_OWN_SUB_FAMILY: "svelte todomvc-advanced +page.svelte:31 'all FIVE shipped lanes'; angular habits-page.ts:7 'the FOURTH of four wrapper components'; angular habits-page.ts:17 'THE FOURTH APPLICATION ROUTE ... S15 IS THE SECOND'. All three inside allowed_files, all three false at HEAD, all three found BY SWEEPING rather than by correcting T013's sample."
+      record_population_count: "33 CLAIM SENTENCES ACROSS 16 FILES IN TWO SUB-FAMILIES, both closed by ONE commit (T007). Sub-family A (angular refuses S11/S12): 25 - T013 named 16 line-RANGES, several carrying two independent false claims, and omitted three sites entirely. Sub-family B (vue's S11/S12 stream throws): 8, across react x2, solid x2, qwik x2, svelte x2 - NEVER SWEPT BY ANY CARD. codex.css:60 RULED IN and repaired BY TENSE, not by number."
+      changed_files:
+        - demos/react-official/src/App.jsx
+        - demos/solid-official/src/App.jsx
+        - demos/qwik/src/routes/todomvc-advanced/index.tsx
+        - demos/qwik/src/routes/codex/index.tsx
+        - "demos/svelte-official/src/routes/todomvc-advanced/+page.svelte"
+        - "demos/svelte-official/src/routes/codex/+page.svelte"
+        - demos/angular-official/src/app/habits-page.ts
+        - demos/shared/copy-todomvc-css.mjs
+        - demos/shared/todomvc-app-css/README.md
+        - demos/shared/shadcn-theme/codex.css
+        - demos/react-official/public/shadcn-theme/codex.css
+        - demos/solid-official/public/shadcn-theme/codex.css
+        - demos/qwik/public/shadcn-theme/codex.css
+        - demos/svelte-official/static/shadcn-theme/codex.css
+        - demos/vue-official/public/shadcn-theme/codex.css
+        - demos/angular-official/public/shadcn-theme/codex.css
+        - docs/goals/frameless-app-fidelity-v1/notes/T014-globals-record.md
+      commands:
+        - cmd: "owner fingerprint at START and FINISH, shasum -a 256, sorting whole LINES"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169 over 116 files. IDENTICAL at both ends"
+        - cmd: "SWEEP FOR THE CLAIM (not T013's quoted lines) across the WHOLE REPO"
+          status: pass
+          note: "33 claim sentences / 16 files, TWO SUB-FAMILIES. Residual sweep after editing returns only its own explicit 'this used to read' quotations"
+        - cmd: "ANGULAR MEASURED BY BODY HASH, booted alone on 5190, ALL EIGHT application routes not just the two named"
+          status: pass
+          note: "/todomvc-advanced 200 5,049 B; /codex 200 5,356 B; each <app-root>; markers 'What needs to be done' x1 + 'todoapp' x2 + LINKED frameless-advanced.css, and 'composer' x5 + 'thread' x12. EIGHT DISTINCT DIGESTS. NEGATIVE CONTROL 404 / 170 B / zero app-root. THIS LANE HAS NO ABSENCES LEFT"
+        - cmd: "copy-todomvc-css.mjs + todomvc-app-css/README.md reasoning corrected, INVARIANT KEPT"
+          status: pass
+          note: "S11.ts is 10,858 B and frameless-advanced.css IS linked in the served body. NON-COMMENT CHANGED LINES IN THE .mjs: ZERO. `const stylesheets` UNTOUCHED"
+        - cmd: "shared codex.css edited, copy-shadcn-theme.mjs re-run in all six lanes"
+          status: pass
+          note: "NO LANE COPY HAND-EDITED. ALL SEVEN share 967335beb3ed..., re-confirmed after stash-pop AND again after e2e. PM INDEPENDENTLY RE-VERIFIED ALL SEVEN DIGESTS: one unique value"
+        - cmd: "dangling citations to the EMPTY ANGULAR_UNBUILT_SCENARIOS re-pointed"
+          status: pass
+          note: "list is `[]` at :84 - PM VERIFIED. svelte codex +page.svelte:19-20 was WORSE THAN DANGLING: it said the file 'ASSERTS IT THROWS' while emitter.test.ts at HEAD DRIVES BOTH GOLDENS AND REQUIRES SUCCESS. AN INVERTED CITATION. Both re-pointed at TRANSPLANTED_GLOBALS"
+        - cmd: "DERIVATION over 13 EXPLICIT paths, SHELL ARRAY, NO WILDCARD PATHSPEC"
+          status: pass
+          note: "counts asserted non-empty first: 17/17/17/16/16/17 generated, 17 goldens, 17/17/17/16/17 emitted, 16 svelte lib/emitted. rc=0 and git status EMPTY - after re-running all six regenerate + six copy-emitted BY HAND, and again after e2e. PATHSPEC NEGATIVE CONTROL: git ls-files over the same array = 217 TRACKED FILES, SO THE CLEAN IS REAL"
+        - cmd: "pnpm check START (T014 edits stashed BY EXPLICIT PATH) / END"
+          status: pass
+          note: "261 -> 261, DELTA 0. Stash named all 16 paths; THE OWNER'S THREE DIRTY PATHS NEVER ENTERED IT"
+        - cmd: "pnpm test"
+          status: pass
+          note: "1 failed / 1412 passed; 1 failed | 64 passed files. EXACTLY 1, the foreign ARM B"
+        - cmd: "pnpm e2e RUN ALONE (ports confirmed free first)"
+          status: pass
+          note: "PASS - 'Three-way: 6 demos x 9 scenarios, all observations equal'"
+        - cmd: "pnpm lint / pnpm check:citations after every prose edit"
+          status: pass
+          note: "0/0 over 558 files; clean over 4 watched docs, 17 watched sources, 610 swept. Both re-run after the note file"
+        - cmd: "processes stopped BY RECORDED PID"
+          status: pass
+          note: "42062 (pnpm wrapper), 42077, 42264 (node child holding 5190) ALL THREE stopped by PID; ports 5173-5195 free. pkill NEVER RUN"
+      deviations:
+        - "codex.css:60 RULED IN as a claim-site (T013 left the call to T014) but REPAIRED BY TENSE rather than by number: the FIVE is the population that was ACTUALLY MEASURED, and changing it to six would CLAIM A SWEEP THAT NEVER COVERED ANGULAR. Added an explicit recorded gap - the 43/13/4 divergence counts have never been re-run over six lanes."
+        - "Corrected THREE sites T013 did not name (angular habits-page.ts:7 and :17, svelte todomvc-advanced :31). All inside allowed_files, same claim family, false at HEAD. SWEPT FOR THE CLAIM rather than correcting T013's sample."
+        - "Wrote notes/T014-globals-record.md although its harness's default guidance discourages report .md files: THE CARD LISTS THIS EXACT PATH IN allowed_files and directs long findings to it, SO THE CARD WINS. Findings also returned in full in the receipt."
+      remaining_blockers:
+        - "A SEVENTH POPULATION, FOUND AND DELIBERATELY NOT CORRECTED - THE SIX-LANE ORDINAL CHAIN. scripts/demo.mjs was fixed by T012 and now reads 'THE ORDER IS S10, S11, S12, S13, S15, S16, S17' with S13 fourth. ALL SIX DEMO LANES STILL CARRY THE PRE-CORRECTION ORDINALS: 15 sites across 12 files - angular contacts-page.ts:10; qwik board:5, contacts:5, habits:5; react App.jsx:469/:512/:586; solid App.jsx:324/:365/:415; svelte board:8, contacts:8, habits:8; vue App.vue:347/:400. NINE ARE OUTSIDE allowed_files, so correcting the six inside WOULD HALF-CLOSE A POPULATION ACROSS LANES - THIS BOARD'S SIGNATURE FAILURE MODE. CORRECTLY REFUSED. NEEDS ITS OWN CARD. PM VERIFIED FOUR OF THE CITED LINES DIRECTLY."
+        - "THE BODY HASH IS A BUILD HASH, NOT A COMMIT HASH - see above. Any future card comparing a digest to a predecessor's WILL FAIL FOR THE WRONG REASON. Mask the per-build component id or rely on the 404 control plus content markers."
+        - "check-citations.mjs STILL does not verify that a cited path SUPPORTS ITS CLAIM. Unowned, and it let an INVERTED citation pass clean for the whole life of this board."
+        - "Carried and untouched: the drag remains a CHROMIUM-only claim in all six lanes; the qwik lost drop (1 of 16 from a fresh page), inside qwik's own resumability envelope."
+      stopped_because: null
+  - id: T015
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    objective: >-
+      CLOSE THE SEVENTH POPULATION - THE SIX-LANE ORDINAL CHAIN - IN ONE CARD, ACROSS ALL TWELVE
+      FILES. T012 corrected scripts/demo.mjs, which now reads 'THE ORDER IS S10, S11, S12, S13,
+      S15, S16, S17' with S13 FOURTH. ALL SIX DEMO LANES STILL CARRY THE PRE-CORRECTION ORDINALS.
+      T014 found them and CORRECTLY REFUSED to fix the six inside its scope, because nine were
+      outside it and half-closing a population across lanes IS THIS BOARD'S SIGNATURE FAILURE.
+    THE_SCOPE_IS_DELIBERATELY_THE_WHOLE_POPULATION: >-
+      SEVEN CARDS RUNNING HAVE UNDERCOUNTED by correcting the sites a predecessor quoted. THE ONLY
+      REASON THIS CARD'S allowed_files IS WIDE IS SO THE POPULATION CANNOT BE HALF-CLOSED AGAIN.
+      T014's list is 15 sites across 12 files. IT IS A STARTING POINT, NOT THE POPULATION.
+    THE_ORDINALS_ARE_HAND_WRITTEN_AND_WILL_ROT_AGAIN: >-
+      T012 recorded this: demo.mjs's announce() DERIVES the order from SCENARIOS while the
+      comments HAND-WRITE it. The demo lanes do the same. S13/S15/S16/S17 are the 4th/5th/6th/7th
+      rows with no `unbuilt` entry - S14 is the only row that has one. VERIFY THAT YOURSELF from
+      the real tables, DO NOT COPY IT FROM THIS CARD.
+    allowed_files:
+      - "demos/angular-official/src/app/contacts-page.ts"
+      - "demos/qwik/src/routes/board/index.tsx"
+      - "demos/qwik/src/routes/contacts/index.tsx"
+      - "demos/qwik/src/routes/habits/index.tsx"
+      - "demos/react-official/src/App.jsx"
+      - "demos/solid-official/src/App.jsx"
+      - "demos/svelte-official/src/routes/board/+page.svelte"
+      - "demos/svelte-official/src/routes/contacts/+page.svelte"
+      - "demos/svelte-official/src/routes/habits/+page.svelte"
+      - "demos/vue-official/src/App.vue"
+      - "demos/angular-official/src/app/board-page.ts"
+      - "demos/angular-official/src/app/habits-page.ts"
+      - "docs/goals/frameless-app-fidelity-v1/notes/T015-ordinal-chain.md"
+    verify:
+      - "SWEEP FOR THE CLAIM ACROSS ALL SIX LANES AND REPORT YOUR OWN COUNT AGAINST T014's 15 SITES / 12 FILES. SEVEN CARDS HAVE NOW UNDERCOUNTED. If you find more, THAT IS THE EXPECTED RESULT. If fewer, PROVE each site T014 named is already correct at HEAD."
+      - "DERIVE THE ORDINALS FROM THE REAL TABLES YOURSELF - import or read SCENARIOS/DEMOS in scripts/demo.mjs and count the rows with no `unbuilt` entry. DO NOT COPY THE ORDER FROM THIS CARD OR FROM T012's RECEIPT. State the derived list and the ordinal of every scenario you rewrite."
+      - "THE FIX MUST NOT BE ANOTHER HAND-WRITTEN ORDINAL WHERE A DERIVED ONE WOULD DO. Where a comment can state the FACT without the fragile count - naming the lanes rather than the position - PREFER THAT, and say where you chose it. THE ROT RECURS WHEN S18 LANDS."
+      - "THIS CARD DERIVES NOTHING. git diff --exit-code over 13 EXPLICIT derived paths, EACH ASSERTED TO EXIST AND BE NON-EMPTY FIRST, paired with git status --short. *** NEVER USE A WILDCARD PATHSPEC. *** Re-run all six regenerate steps AND all six copy-emitted steps and show the trees STILL clean. USE A SHELL ARRAY."
+      - "pnpm check: BASELINE 261, PREDICTED DELTA 0 - comments only. Report START and END."
+      - "pnpm test EXACTLY 1 failure (foreign ARM B) / pnpm e2e 6 x 9 RUN ALONE / pnpm lint / pnpm check:citations AFTER EVERY prose edit."
+      - "fingerprint the owner's three dirty paths at START and FINISH with `shasum -a 256`, sorting whole output LINES: f326d314 / aeb7edc1 / f936e169, 116 files."
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to correct a site BECAUSE THIS CARD NAMED IT. Sweep and report your own count."
+      - "You are about to change WHAT ANY APP DOES. T015 CHANGES ONLY THE RECORD - comments and prose, never logic, never a route, never a scenario list."
+      - "You are about to write an ordinal YOU DID NOT DERIVE FROM THE REAL TABLES AT HEAD."
+      - "You are about to half-close this population - correcting some lanes and leaving others. THAT IS THE EXACT REASON THIS CARD EXISTS AND WHY ITS SCOPE IS TWELVE FILES."
+      - "You are about to edit a .tsrx fixture. NONE IS IN SCOPE, and a BYTE-LENGTH change there moves the checked-in golden while the derivation proof is STRUCTURALLY BLIND to it."
+      - "You are about to compare an angular SSR BODY DIGEST to a predecessor's. T014 PROVED THOSE ARE BUILD HASHES, NOT COMMIT HASHES - a per-build component id varies IN DIGIT COUNT. Use the 404 control plus content markers."
+      - "You are about to rewrite ANY prior receipt or note. PRIOR RECEIPTS ARE HISTORY - RECORD, NEVER EDIT."
+      - "pnpm check rises at all. BASELINE 261, PREDICTED DELTA 0."
+      - "pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
+      - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched. ALL THREE ARE ALREADY DIRTY, YOU DID NOT DO IT, DO NOT `git add -A`."
+      - "NEVER pkill -f. Stop only what you start, BY ITS RECORDED PID - and note angular leaves a CHILD node process holding the port after SIGINT to the pnpm wrapper."
       - "Verification fails twice for the same reason."
     receipt: null
