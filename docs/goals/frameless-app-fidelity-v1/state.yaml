@@ -44,7 +44,7 @@ goal:
       FIXING THE FIVE FINDINGS AND LEAVING THE ORACLE HOLE OPEN. The findings are symptoms; the
       cause is that nothing ever compared a shipped app to the thing it copies.
 
-active_task: T013
+active_task: T014
 
 # ---------------------------------------------------------------------------
 # OWNER DECISIONS - taken from the owner DIRECTLY on 2026-07-31 while T009 ran.
@@ -1906,7 +1906,7 @@ tasks:
   - id: T013
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       FINAL AUDIT. T009 ruled not_complete on TWO grounds: T010 unrun, and the record population
@@ -1929,4 +1929,132 @@ tasks:
       - "each of the three oracle parts, certified or refused, quoted verbatim"
       - "your own record-population count"
       - "next task if not complete"
+    receipt:
+      result: done
+      harness: claude-code
+      decision: not_complete
+      full_outcome_complete: false
+      verification_attempts: 1
+      rationale: "ALL THREE ORACLE PARTS CERTIFY AT HEAD - THE FIRST AUDIT ON THIS BOARD THAT CAN SAY THAT. Part 1 covers all eight apps (S12 exempt by OD1); part 2's findings transfer, PROVEN NOT ASSUMED (no HN/habits/board emitted artifact moved since 72ee1bd, and contacts was re-driven at HEAD by T010); part 3 is check 261, test exactly 1, e2e 6 x 9, lint and citations clean, derived trees clean over 13 explicit paths. BUT THE RECORD POPULATION IS OPEN IN A FAMILY NO SWEEP EVER LOOKED AT: 16 claim-sites across 16 files still say angular REFUSES S11/S12 and has no /todomvc-advanced or /codex route. THAT IS THIS BOARD'S OWN HEADLINE FIX. Angular measured serving BOTH, by body hash against a 404 control."
+      THE_POPULATION_WAS_NEVER_THE_S16_DRAG_CLAIM: "Six sweeps all chased the S16-DRAG claim and the /hn-item LANE COUNT. BOTH ARE NOW GENUINELY CLOSED and T013 verified it: board.css:556, board-css/README.md and react App.jsx:487 are correctly PAST TENSE, and all seven hn.css copies read 'FOUR LANES SERVE THIS PAGE - react, solid, qwik AND ANGULAR' at one shared digest 0973ee54. THE OPEN FAMILY IS THE ANGULAR S11/S12 REFUSAL, WHICH THIS BOARD'S OWN T007 CLOSED. The real population is 'EVERY PLACE THE REPO DESCRIBES A LANE LIMIT THIS BOARD ALREADY CLOSED'."
+      T012s_CARD_CALLED_scripts_THE_LAST_KNOWN_OPEN_GROUND_AND_THAT_WAS_FALSE: "The same shape as every previous undercount, ONE LEVEL UP AGAIN. Count history now reads six -> four -> five -> 18 -> 19 -> seven-in-scripts -> 16-IN-A-DIFFERENT-FAMILY."
+      THE_PM_BRIEF_MISCOUNTED_THE_COMMITS_IN_THE_VERY_CARD_WARNING_AGAINST_IT: "The dispatch said 'FOUR commits have landed since (a37d198, 8b321af, 50d7c37, 833f74f)'. THERE ARE FIVE. PM RE-VERIFIED: `git rev-list --count f86713c..HEAD` = 5 and the omitted one is 2d1d148, T009's OWN BOARD COMMIT. It touches only state.yaml so the code transfer is unaffected - BUT THE BRIEF COUNTED THE COMMITS A PREDECESSOR QUOTED INSTEAD OF LISTING THE RANGE, which is this board's signature error in miniature, COMMITTED INSIDE THE CARD WARNING AGAINST IT."
+      commands:
+        - cmd: "ORACLE PART 1 quoted VERBATIM from goal.oracle.signal and ruled"
+          status: pass
+          note: "CERTIFIED. Eight apps ship. S10 todomvc.com driven (T008, re-run at ORIGIN by T009); S11 todomvc.com (T007); S12 EXEMPT BY NAME under OD1; S13 HN front driven 1440x1000 (T001); S14 a real item page driven (T008, re-run at ORIGIN by T009); S15 habit reference driven (T005); S16 square-ui-task-management driven 161,874 B [draggable]=0 (T004); S17 contacts reference driven (T005). NO FIDELITY CLAIM RESTS ON CROSS-LANE AGREEMENT"
+        - cmd: "ORACLE PART 2 quoted VERBATIM and ruled, WITH THE TRANSFER PROVEN"
+          status: pass
+          note: "CERTIFIED. git diff 72ee1bd..HEAD over the HN/habits/board emitted artifacts and their shared sheets moves ZERO EMITTED ARTIFACTS - only hn.css, board.css and a README, and every changed line in both stylesheets is a COMMENT (non-comment grep returns EMPTY). Findings 1/2/4 transfer from T999's drive; finding 3 RE-DRIVEN AT HEAD by T011 and again T012; finding 5 re-driven at HEAD by T010 in two lanes at two viewports. The chevron stands as a REFUSAL measured at the reference (0 collapse toggles on the real HN front page)"
+        - cmd: "ORACLE PART 3 quoted VERBATIM and RE-RUN BY THIS JUDGE, not inherited"
+          status: pass
+          note: CERTIFIED
+        - cmd: "pnpm check"
+          status: pass
+          note: "261 'error TS' lines, exit 6. IDENTICAL to baseline. NO RISE, NOTHING TO ATTRIBUTE"
+        - cmd: "pnpm test"
+          status: pass
+          note: "1 failed / 1412 passed, 1 failed | 64 passed test files. The single failure is package-inventory ARM B - THE KNOWN FOREIGN ONE. EXACTLY 1"
+        - cmd: "pnpm e2e RUN ALONE"
+          status: pass
+          note: "PASS - 'Three-way: 6 demos x 9 scenarios, all observations equal', six per-lane receipts"
+        - cmd: "pnpm lint / pnpm check:citations"
+          status: pass
+          note: "0/0 over 558 files; clean over 4 watched documents, 17 watched sources, 610 swept"
+        - cmd: "DERIVATION AT HEAD over 13 EXPLICIT paths, each asserted to EXIST AND BE NON-EMPTY first"
+          status: pass
+          note: "17/17/17/16/16/17 generated, 17 goldens, 17/17/17/16/17 emitted, 16 svelte lib/emitted. git diff --exit-code rc=0 and git status --short EMPTY over the same paths, AFTER e2e re-ran regenerate + copy-emitted for all six lanes. NO WILDCARD PATHSPEC USED"
+        - cmd: "TRANSFER PROVEN, NOT ASSUMED: git diff --stat f86713c..HEAD over packages/ demos/ scripts/"
+          status: pass
+          note: "37 files, classified: 12 derived artifacts + the fixture's one placeholder + the golden's 972 AST offsets + prose/comment-only edits. THE DELTA IS NOT COMMENT-ONLY - T010 CHANGED BEHAVIOUR - WHICH IS WHY PART 3 WAS RE-RUN IN FULL rather than inherited"
+        - cmd: "T012's ROOT-CAUSE FINDING VERIFIED AT ITS ORIGIN, not at its write-up"
+          status: pass
+          note: "In c50595f the DEMOS table gives angular `unbuilt: { S11, S12 }` and every other lane `unbuilt: {}`, so S10 ALREADY carried no unbuilt entry in any lane while :65 declared S13 first. FALSE THE DAY IT WAS WRITTEN. The corrected HEAD ordinals also check out: S14 is the only row with an unbuilt entry, leaving seven qualifying rows, so S13=4th S15=5th S16=6th S17=7th"
+        - cmd: "ANGULAR ROUTES MEASURED BY BODY HASH, NEVER BY HTTP 200 (angular booted ALONE on 5190)"
+          status: fail
+          note: "ANGULAR SHIPS BOTH - SIX LANES. /todomvc-advanced 200, 5,049 B, hash d4b1fa42e144, <app-root> present, serving 'What needs to be done' + 'todoapp' + a LINKED frameless-advanced.css. /codex 200, 5,358 B, hash e33705868cba, <app-root>, 'composer' x5 'thread' x12. NEGATIVE CONTROL /definitely-not-a-real-route-xyz = 404, 169 B, ZERO app-root. SIXTEEN CLAIM-SITES SAY IT DOES NOT"
+        - cmd: "PM independent re-verification of the two decisive claims"
+          status: pass
+          note: "git rev-list --count f86713c..HEAD = 5, omitted commit 2d1d148 CONFIRMED. packages/frameworks/angular/generated/S11.ts (10,858 B) and S12.ts (10,086 B) BOTH EXIST. todomvc-app-css/README.md:107 carries the false claim VERBATIM as quoted"
+        - cmd: "READ-ONLY CONFIRMED, owner fingerprints at START and FINISH"
+          status: pass
+          note: "shasum -a 256 sorting whole LINES: f326d314 / aeb7edc1 / f936e169 over 116 files, IDENTICAL at both ends. git status --short is exactly the owner's three dirt paths at both ends. Three PIDs started (40034, 40355, 40546) and ALL THREE stopped by recorded PID; 5173-5195 free. pkill NEVER RUN. No report .md - the harness forbids it, so the receipt IS the ruling, as six Judges before it recorded"
+      MY_OWN_INSTRUMENT_FAILED_TWICE_AND_I_CAUGHT_BOTH: "(1) `pnpm --dir demos/angular-official start -- --port 5190` died on 'Option -- has been specified multiple times' - THE EXACT FAILURE scripts/demo.mjs:477-479 ALREADY DOCUMENTS, so the comment is accurate and the Judge had simply not read it first. (2) Its non-comment-line grep over the T011/T012 diff flagged 20 lines that are all inside `{/* */}` JSX BLOCK COMMENTS - THE SAME FALSE POSITIVE the PM hit. NEITHER FILED AS A FINDING."
+      record_population_count: "16 CLAIM-SITES ACROSS 16 FILES, in the ANGULAR S11/S12 REFUSAL family: react-official/src/App.jsx x4 (:202, :204-205, :264-267, :298-306); solid-official/src/App.jsx x4 (:196, :198-199, :485-488, :520-523); qwik/src/routes/todomvc-advanced/index.tsx:4-12; qwik/src/routes/codex/index.tsx:19; svelte-official/src/routes/todomvc-advanced/+page.svelte:7-15; svelte-official/src/routes/codex/+page.svelte:11-20; shared/copy-todomvc-css.mjs:37-39; shared/todomvc-app-css/README.md:107-108; angular-official/src/app/habits-page.ts:20 - IN THE ANGULAR LANE ITSELF; and shadcn-theme/codex.css:195 replicated across the shared sheet and all six lane copies."
+      missing_evidence:
+        - "S11, S13, S15, S16 and S17's oracle-part-1 comparisons are INHERITED from T001/T004/T005/T007 with a proven transfer, NOT re-driven by this Judge. S10's and S14's were re-verified at their write-ups only; T009 re-ran those two at ORIGIN and this Judge did not repeat it. IT DID NOT PUT A MOUSE ON SIX LANES AND WILL NOT PRETEND OTHERWISE."
+        - "Oracle part 2's five browser observations are inherited-with-a-proven-transfer for findings 1, 2 and 4, and re-driven at HEAD by other cards for 3 and 5. This Judge's own browser-grade work at HEAD was CONFINED TO ANGULAR'S ROUTE BODIES."
+        - "S12's part-1 comparison does not exist and is EXEMPT BY NAME under OD1. The exemption is CONDITIONAL by the owner's own words and T009 measured only that the PUBLIC surface is a marketing page with zero composer elements, NOT a login wall specifically. If any later card reaches the live Codex UI unauthenticated, PART 1 REOPENS FOR S12."
+        - "The drag remains a CHROMIUM claim in all six lanes. Firefox still unmeasured, ACROSS FOUR CARDS NOW."
+        - "The qwik lost drop (1 of 16, first from a fresh page) is reproduced by THREE cards and still unresolved. Inside qwik's own resumability envelope - NOTHING TO FILE UPSTREAM."
+        - "check-citations.mjs STILL DOES NOT VERIFY THAT A CITED PATH EXISTS. THAT IS WHY the qwik/svelte citations to an EMPTIED unbuilt-scenarios.ts passed clean FOR THE WHOLE LIFE OF THIS BOARD. UNOWNED."
+        - "shadcn-theme/codex.css:60 is BORDERLINE - it reads as a HISTORICAL measurement rather than a current lane count, so it was NOT counted among the 16. T014 MUST RULE IT EXPLICITLY rather than inheriting the Judge's call."
+      parallel_safety: "T014 MUST RUN ALONE. It needs demos/shared/shadcn-theme/codex.css plus all six lane copies and must re-run copy-shadcn-theme.mjs - any concurrent card touching a demos/*/public or demos/*/static asset root, or running regenerate, would RACE THE COPY STEP and falsify the single-digest assertion. It also boots angular for its body-hash measurement, so nothing else may hold a port in 5173-5195."
+      blocked_tasks:
+        - "T014 - THE GLOBALS RECORD SWEEP. 16 claim-sites across 16 files still tell every reader that angular refuses S11 and S12 and has no /todomvc-advanced or /codex route, WHILE ANGULAR WAS MEASURED SERVING BOTH. Sixth undercount of this board's record population and the FIRST IN THIS CLAIM FAMILY. Prose-and-comment only, predicted check delta 0, fully reversible, and the largest safe useful slice left."
+      spawned_tasks:
+        - T014
+      next_task_if_not_complete: "T014 - the globals record sweep, run ALONE."
+      stopped_because: null
+  - id: T014
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    objective: >-
+      CLOSE THE SIXTH UNDERCOUNT - a claim family NO record sweep on this board has EVER swept.
+      T007 landed the two-name globals allowlist and ANGULAR GAINED ITS SIXTH LANE for S11 and
+      S12, but T007 updated only the two lanes it touched. FOUR OTHER LANES, TWO SHARED FILES and
+      ANGULAR'S OWN habits-page.ts still assert IN THE PRESENT TENSE that angular refuses S11/S12
+      and has no /todomvc-advanced or /codex route. Correct every site against a measurement YOU
+      make at HEAD. RECORD ONLY - CHANGE WHAT NOTHING DOES.
+    THE_POPULATION_WAS_NEVER_THE_S16_DRAG_CLAIM: >-
+      Six sweeps all chased the S16 drag claim and the /hn-item lane count. BOTH ARE NOW CLOSED
+      and T013 verified it. The real population is EVERY PLACE THE REPO DESCRIBES A LANE LIMIT
+      THIS BOARD ALREADY CLOSED. Count history: six -> four -> five -> 18 -> 19 -> seven-in-scripts
+      -> 16-IN-A-DIFFERENT-FAMILY. T012's card called scripts/ 'the LAST known open ground' AND
+      THAT WAS FALSE.
+    allowed_files:
+      - "demos/react-official/src/App.jsx"
+      - "demos/solid-official/src/App.jsx"
+      - "demos/qwik/src/routes/todomvc-advanced/index.tsx"
+      - "demos/qwik/src/routes/codex/index.tsx"
+      - "demos/svelte-official/src/routes/todomvc-advanced/+page.svelte"
+      - "demos/svelte-official/src/routes/codex/+page.svelte"
+      - "demos/angular-official/src/app/habits-page.ts"
+      - "demos/shared/copy-todomvc-css.mjs"
+      - "demos/shared/todomvc-app-css/README.md"
+      - "demos/shared/shadcn-theme/codex.css"
+      - "demos/react-official/public/shadcn-theme/codex.css"
+      - "demos/solid-official/public/shadcn-theme/codex.css"
+      - "demos/qwik/public/shadcn-theme/codex.css"
+      - "demos/svelte-official/static/shadcn-theme/codex.css"
+      - "demos/vue-official/public/shadcn-theme/codex.css"
+      - "demos/angular-official/public/shadcn-theme/codex.css"
+      - "docs/goals/frameless-app-fidelity-v1/notes/T014-globals-record.md"
+    verify:
+      - "SWEEP FOR THE CLAIM, NOT FOR T013'S QUOTED LINES, AND REPORT YOUR OWN COUNT AGAINST 16 CLAIM-SITES ACROSS 16 FILES. SIX CARDS RUNNING HAVE UNDERCOUNTED by correcting a predecessor's sample. If you find more, THAT IS THE EXPECTED RESULT. If fewer, PROVE each site T013 named is already correct at HEAD."
+      - "MEASURE ANGULAR SERVING BOTH ROUTES YOURSELF, BY BODY HASH, NEVER BY HTTP 200. T013 at HEAD on port 5190: /todomvc-advanced 5,049 B hash d4b1fa42e144, /codex 5,358 B hash e33705868cba, each with <app-root>, against a bogus path 404 / 169 B / zero app-root. Confirm content markers too: 'What needs to be done' + 'todoapp' + a LINKED todomvc-app-css/frameless-advanced.css on the first, 'composer' x5 and 'thread' x12 on the second."
+      - "todomvc-app-css/README.md AND copy-todomvc-css.mjs BOTH say angular 'CANNOT LINK THE THIRD' sheet and that 'THERE IS NO S11.ts TO MOUNT'. BOTH ARE FALSE AT HEAD: packages/frameworks/angular/generated/S11.ts EXISTS (10,858 B, PM verified) and frameless-advanced.css IS LINKED in angular's served body. Correct the REASONING, KEEP the uniform-copy invariant, and CHANGE NO LOGIC in the .mjs."
+      - "codex.css: EDIT demos/shared/shadcn-theme/codex.css ONLY and RE-RUN demos/shared/copy-shadcn-theme.mjs for all six lanes. NEVER hand-edit a lane copy. Report the single digest all seven share afterwards. Line 195's 'ALL FIVE lanes that serve this page' is the PRESENT-TENSE claim; line 60's 'MEASURED HERE ... BEFORE this block existed' is a HISTORICAL measurement T013 did NOT count - RULE IT EXPLICITLY EITHER WAY rather than inheriting T013's call."
+      - "qwik's and svelte's todomvc-advanced comments cite packages/frameworks/angular/test/unbuilt-scenarios.ts as the record of the refusal. THAT LIST IS EMPTY AT HEAD and its own header says so. A CITATION TO AN EMPTY LIST IS A DANGLING CITATION - re-point or re-word it."
+      - "THIS CARD DERIVES NOTHING. git diff --exit-code over 13 EXPLICIT derived paths, EACH ASSERTED TO EXIST AND BE NON-EMPTY FIRST, paired with git status --short. *** NEVER USE A WILDCARD PATHSPEC *** - git disables leading-directory matching once a pathspec contains a wildcard. Prove it by re-running all six regenerate steps AND all six copy-emitted steps and showing the trees STILL clean. USE A SHELL ARRAY."
+      - "pnpm check: BASELINE 261 (react 113 + solid 78 + qwik 70), PREDICTED DELTA 0 - comments and prose only. Report START and END."
+      - "pnpm test EXACTLY 1 failure (foreign ARM B) / pnpm e2e 6 x 9 RUN ALONE / pnpm lint / pnpm check:citations AFTER EVERY prose edit."
+      - "fingerprint the owner's three dirty paths at START and FINISH with `shasum -a 256`, sorting whole output LINES: f326d314 / aeb7edc1 / f936e169, 116 files."
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to correct a site BECAUSE THIS CARD NAMED IT. Sweep for the claim and report your own count."
+      - "You are about to change WHAT ANY APP OR SCRIPT DOES. T014 CHANGES ONLY THE RECORD - comments, prose and message strings; never logic, never a threshold, never the copy script's stylesheet list."
+      - "You are about to write a lane count YOU DID NOT MEASURE YOURSELF AT HEAD BY BODY HASH."
+      - "You are about to read an HTTP 200 as proof a page exists. REACT, SOLID AND VUE ANSWER 200 FOR ANY PATH. Angular answers 404 for a bogus path - T013 measured it - but HASH THE BODY ANYWAY."
+      - "You are about to hand-edit a lane copy of codex.css instead of the shared sheet plus the copy script."
+      - "You are about to edit a .tsrx fixture. NONE IS IN SCOPE, and a BYTE-LENGTH change there moves the checked-in golden while the derivation proof is STRUCTURALLY BLIND to it - only pnpm test catches it."
+      - "You are about to rewrite ANY prior receipt or note. PRIOR RECEIPTS ARE HISTORY - RECORD, NEVER EDIT."
+      - "You are about to re-word a site ALREADY CORRECTLY FRAMED IN THE PAST TENSE. demos/vue-official/src/App.vue, demos/angular-official/src/app/hn-page.ts and demos/angular-official/src/app/todomvc-advanced-page.ts ARE ALREADY RIGHT at HEAD - T013 checked all three. LEAVE THEM."
+      - "pnpm check rises at all. BASELINE 261, PREDICTED DELTA 0."
+      - "pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
+      - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched. ALL THREE ARE ALREADY DIRTY, YOU DID NOT DO IT, DO NOT `git add -A`."
+      - "NEVER pkill -f. Stop only what you start, BY ITS RECORDED PID. NOTE FROM T013: `pnpm --dir demos/angular-official start --port <n>` leaves a CHILD node process HOLDING THE PORT after SIGINT to the pnpm wrapper - STOP BOTH PIDs and record both. The `--` separator form FAILS on angular, exactly as scripts/demo.mjs:477-479 documents."
+      - "Verification fails twice for the same reason."
     receipt: null
