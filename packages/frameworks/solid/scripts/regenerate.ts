@@ -73,16 +73,29 @@ const fixtures = [
 	// It takes the next ORDINAL slot for the reason every row above records, and
 	// it is the THIRD scenario all six lanes emit, after S13 and S15.
 	//
-	// THE AXIS IT MEASURES IS NOT IN THE FILE, AND THAT IS THE MEASUREMENT. The
+	// THE AXIS IT MEASURES IS IN THE FILE. This row used to say it was not. The
 	// board predicted `onDragStart`/`onDragOver`/`onDrop` "cannot be produced"
 	// because `jsxEventName` does `name.slice(2).toLowerCase()`. Measured on a
 	// probe through this very emitter: THEY ARE PRODUCED - `onDragover`,
 	// `onDragstart`, `onDragend`, `onPointerdown` - exactly as DEFECTS.md 15 says
-	// ("there is no refusal in front of it"). What keeps them out is the TYPE
-	// BASELINE: one drop zone and one draggable card take THIS PROJECT from 80 to
-	// 86 `error TS` lines and the whole `pnpm check` from 267 to 280, which this
-	// board's oracle forbids. Cards move with arrow buttons instead and the page
-	// SAYS SO. See the fixture header.
+	// ("there is no refusal in front of it"), and THIS LANE FIRES THEM: it
+	// delegates by lowercasing the suffix, so the listeners land on the real DOM
+	// event names.
+	//
+	// WHAT KEPT THEM OUT WAS THE TYPE BASELINE, AND IT WAS A BUDGET READ AS A
+	// WALL. An earlier probe spelled `draggable` as a STATIC string and measured
+	// this project 80 -> 86 `error TS` lines and the whole `pnpm check` 267 -> 280.
+	// The fixture BINDS `draggable` to an expression instead; the rise was stated
+	// in advance, spent and attributed, and `S16.tsx` below is emitted WITH the
+	// drop zone and the draggable card. RE-MEASURED AT HEAD BY THIS COMMENT'S OWN
+	// CARD: `pnpm check` is 261 WITH the drag shipped, and a REAL NATIVE MOUSE
+	// DRAG (mouse down, twenty interpolated moves, mouse up; no synthetic
+	// `DragEvent` anywhere) moved card `t1` from `backlog` to `review` AND IT
+	// STAYED in THIS LANE, with `data-dragging="yes"` on `t1` mid-gesture - and in
+	// qwik, svelte, vue and angular. REACT IS THE ONLY LANE THAT DOES NOT MOVE THE
+	// CARD, because react-dom matches by prop name. The arrow buttons stay in all
+	// six lanes for that reason, and the page SAYS which lane does which. See the
+	// fixture header.
 	//
 	// This lane has no component reference here and neither of the two emitter
 	// defects T003 isolated is reachable: S16 is a SINGLE component, so the

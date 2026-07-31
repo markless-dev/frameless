@@ -4,8 +4,8 @@ import { TaskBoard } from "../../emitted/TaskBoard.jsx";
 // THE SEVENTH APPLICATION - the TASK BOARD - and THE DRAG CARD. It is the THIRD
 // scenario in this corpus that all six lanes emit and ship, after S13 and S15.
 //
-// THE AXIS THIS PAGE EXISTS TO MEASURE IS NOT ON IT, AND THAT IS THE
-// MEASUREMENT. The board predicted `onDragStart`/`onDragOver`/`onDrop` "cannot
+// THE AXIS THIS PAGE EXISTS TO MEASURE IS ON IT, AND THIS COMMENT USED TO SAY IT
+// WAS NOT. The board predicted `onDragStart`/`onDragOver`/`onDrop` "cannot
 // be produced" because the compiler does `name.slice(2).toLowerCase()`.
 // Measured on a probe through all six real emitters: THEY ARE PRODUCED. This
 // lane prints `onDragover$`, `onDragstart$`, `onDragend$` and `onPointerdown$`,
@@ -16,10 +16,23 @@ import { TaskBoard } from "../../emitted/TaskBoard.jsx";
 // `error TS` line the probe added here came from `draggable="true"`: this corpus
 // lowers a static attribute as a STRING and this lane's JSX types declare
 // `draggable?: boolean`. That is T003's `rows="6"` finding in a NON-NUMERIC
-// shape. Across the three JSX lanes the drag took `pnpm check` from 267 to 280,
-// which this board's oracle forbids, so cards move with the `◀`/`▶` ARROWS
-// instead - a DIFFERENT INTERACTION - and the page SAYS SO in `.tb-note` rather
-// than passing it off as the axis. See
+// shape. AND IT IS THE ONE COST THIS PAGE AVOIDS RATHER THAN PAYS: across the
+// three JSX lanes that probe took `pnpm check` from 267 to 280 and the board of
+// the day read the rise as a wall, but the fixture BINDS `draggable` to an
+// expression rather than spelling it as a static string, so this lane's single
+// line never appears. RE-MEASURED AT HEAD BY THIS COMMENT'S OWN CARD: `pnpm
+// check` is 261 WITH the drag shipped, and a chromium driven with a REAL NATIVE
+// MOUSE (mouse down, twenty interpolated moves, mouse up; no synthetic
+// `DragEvent` anywhere) dragged card `t1` from `backlog` onto `review` AND IT
+// STAYED in this lane. `[draggable="true"]` counts 9 here, the same 9 as the
+// other five.
+//
+// THE `◀`/`▶` ARROWS ARE NOT A SUBSTITUTE AND NOT A LEFTOVER: they move a card in
+// ALL SIX lanes and they are how REACT moves one - the one lane where the drag is
+// inert, because react-dom matches by prop name. `.tb-note` on the page names
+// which lane does which. The fixture header records ONE MEASURED INTERMITTENCY IN
+// THIS LANE AND ONLY THIS LANE - a first drop after a cancelled drag is lost -
+// and it is left standing rather than smoothed over. See
 // packages/compiler/test/fixtures/s16-task-board.tsrx.
 //
 // WHAT ONE ARROW CLICK MOVES, all derived from ONE `columns` cell and none of it

@@ -75,7 +75,7 @@ const fixtures = [
 	// It takes the next ORDINAL slot for the reason every row above records, and
 	// it is the THIRD scenario all six lanes emit, after S13 and S15.
 	//
-	// THE AXIS IT MEASURES IS NOT IN THE FILE, AND THAT IS THE MEASUREMENT. The
+	// THE AXIS IT MEASURES IS IN THE FILE. This row used to say it was not. The
 	// board predicted `onDragStart`/`onDragOver`/`onDrop` "cannot be produced"
 	// because `jsxEventName` does `name.slice(2).toLowerCase()`. Measured on a
 	// probe through this very emitter: THEY ARE PRODUCED, as `onDragover$`,
@@ -88,9 +88,22 @@ const fixtures = [
 	// attribute as a STRING and this lane's JSX types declare `draggable?:
 	// boolean`. That is T003's `rows="6"` finding in a NON-NUMERIC shape, and it
 	// widens the corpus rule from "no static numeric attribute" to "no static
-	// attribute whose DOM type is not `string`". The whole `pnpm check` went 267
-	// -> 280 and this board's oracle forbids the rise, so cards move with arrow
-	// buttons instead and the page SAYS SO. See the fixture header.
+	// attribute whose DOM type is not `string`".
+	//
+	// AND IT IS THE ONE COST `S16.tsx` AVOIDS RATHER THAN PAYS. The probe's whole
+	// `pnpm check` went 267 -> 280 and the board of the day read that as a wall;
+	// it was a budget. The fixture BINDS `draggable` to an expression rather than
+	// spelling it as a static string, so this lane's single line never appears and
+	// the drop zone and the draggable card are emitted below. RE-MEASURED AT HEAD
+	// BY THIS COMMENT'S OWN CARD: `pnpm check` is 261 WITH the drag shipped, and a
+	// REAL NATIVE MOUSE DRAG (mouse down, twenty interpolated moves, mouse up; no
+	// synthetic `DragEvent` anywhere) moved card `t1` from `backlog` to `review`
+	// AND IT STAYED in THIS LANE - and in solid, svelte, vue and angular. REACT IS
+	// THE ONLY LANE THAT DOES NOT MOVE THE CARD. The arrow buttons stay in all six
+	// lanes for that reason and the page SAYS which lane does which. The fixture
+	// header records ONE MEASURED INTERMITTENCY IN THIS LANE AND ONLY THIS LANE -
+	// a first drop after a cancelled drag is lost - and it is left standing here
+	// rather than smoothed over. See the fixture header.
 	//
 	// S16 is a SINGLE component, so this lane keeps its `onTrace$`: a function
 	// prop never crosses a component boundary here and the un-forwardable-prop

@@ -365,16 +365,30 @@ export default function App(props) {
         THIRD scenario in this corpus that all six lanes emit and ship, after S13
         and S15.
 
-        THE AXIS THIS PAGE EXISTS TO MEASURE IS NOT ON IT, AND THAT IS THE
-        MEASUREMENT. The board predicted `onDragStart`/`onDragOver`/`onDrop`
+        THE AXIS THIS PAGE EXISTS TO MEASURE IS ON IT, AND THIS COMMENT USED TO SAY
+        IT WAS NOT. The board predicted `onDragStart`/`onDragOver`/`onDrop`
         "cannot be produced" because the compiler does `name.slice(2).toLowerCase()`.
         Measured on a probe through all six real emitters: THEY ARE PRODUCED. Five
         lanes take them; svelte refuses the ELEMENT ("a11y_no_static_element_interactions"
-        on a <div> or <span>) and not the event. WHAT KEPT THEM OFF THE PAGE IS THE
-        TYPE BASELINE: one drop zone and one draggable card take THIS LANE from 80
-        to 86 `error TS` lines and `pnpm check` from 267 to 280, which this board's
-        oracle forbids. Cards move with the arrow buttons instead - a DIFFERENT
-        INTERACTION, and the page SAYS SO in `.tb-note`.
+        on a <div> or <span>) and not the event, which is why the drop zone is a
+        <ul> and the draggable card an <li>.
+
+        WHAT KEPT THEM OFF THE PAGE WAS THE TYPE BASELINE, AND IT WAS A BUDGET READ
+        AS A WALL: an earlier probe spelled `draggable` as a STATIC string and took
+        THIS LANE from 80 to 86 `error TS` lines and `pnpm check` from 267 to 280.
+        The fixture BINDS `draggable` instead, and the rise was stated in advance,
+        spent and attributed. RE-MEASURED AT HEAD BY THIS COMMENT'S OWN CARD, in a
+        chromium driven with a REAL NATIVE MOUSE (mouse down, twenty interpolated
+        moves, mouse up; no synthetic DragEvent anywhere): DRAGGING CARD `t1` FROM
+        `backlog` ONTO `review` MOVED IT AND IT STAYED IN THIS LANE, with
+        `data-dragging="yes"` on `t1` during the gesture. `[draggable="true"]`
+        counts 9 here, the same 9 as the other five, and `pnpm check` is 261 with
+        the drag shipped.
+
+        THE ARROW BUTTONS ARE NOT A SUBSTITUTE AND NOT A LEFTOVER: they move a card
+        in ALL SIX lanes and they are how REACT moves one - the one lane where the
+        drag is inert, because react-dom matches by prop name. `.tb-note` on the
+        page names which lane does which.
 
         WHAT ONE ARROW CLICK MOVES, all derived from ONE `columns` cell: the card
         leaves one column's list and appears in another's - a real subtree move
@@ -399,7 +413,10 @@ export default function App(props) {
       {/*
         THE EIGHTH APPLICATION - CONTACTS - and THE FORMS CARD. It is the FOURTH
       scenario in this corpus that all six lanes emit and ship, after S13, S15 and
-      S16, and UNLIKE S16 THE AXIS IT MEASURES IS ACTUALLY ON THE PAGE: THIRTEEN
+      S16. This comment used to add "UNLIKE S16 THE AXIS IT MEASURES IS ACTUALLY ON
+      THE PAGE" - S16's axis is on its page now, in five of six lanes, so the
+      contrast is WITHDRAWN rather than left to read as current. What is true of
+      THIS page, and unlike S16, is that its axis is on it in ALL SIX: THIRTEEN
       control kinds - text, search, email, tel, url, number, date, time, range,
       select, radio, checkbox and textarea - every one of them bound and every one
       of them observable in the live preview card beneath the form.

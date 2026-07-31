@@ -105,17 +105,27 @@ const fixtures = [
 	// It takes the next ORDINAL slot for the reason every row above records, and
 	// it is the THIRD scenario all six lanes emit, after S13 and S15.
 	//
-	// THE AXIS IT MEASURES IS NOT IN THE FILE, AND THAT IS THE MEASUREMENT. The
+	// THE AXIS IT MEASURES IS IN THE FILE, AND THIS LANE DRAGS. This row used to
+	// say the axis was not in the file and that it had been "RECORDED rather than
+	// shipped"; both sentences outlived the change that falsified them. The
 	// board predicted the two-word drag events "cannot be produced" because
 	// `jsxEventName` does `name.slice(2).toLowerCase()`. Measured on a probe
 	// through this very emitter: THEY ARE PRODUCED, as `@dragover`,
 	// `@dragstart`, `@dragend` and `@pointerdown` - and `dragover` IS the real DOM
 	// event name, so this lane is CORRECT BY ACCIDENT of the same casing loss that
 	// makes react's `onDragover` inert. It costs this lane no type errors at all.
-	// WHAT KEPT THEM OUT is the type baseline in the three JSX lanes - `pnpm
-	// check` 267 -> 280, which this board's oracle forbids - so the axis was
-	// RECORDED rather than shipped. Cards move with arrow buttons instead and the
-	// page SAYS SO. See the fixture header.
+	//
+	// WHAT KEPT THEM OUT WAS THE TYPE BASELINE IN THE THREE JSX LANES, AND IT WAS
+	// A BUDGET READ AS A WALL: an earlier probe measured `pnpm check` 267 -> 280
+	// with `draggable` spelled as a STATIC string. The fixture BINDS it instead;
+	// the rise was stated in advance, spent and attributed. RE-MEASURED AT HEAD BY
+	// THIS COMMENT'S OWN CARD: `pnpm check` is 261 WITH the drag shipped, and a
+	// REAL NATIVE MOUSE DRAG (mouse down, twenty interpolated moves, mouse up; no
+	// synthetic `DragEvent` anywhere) moved card `t1` from `backlog` to `review`
+	// AND IT STAYED in THIS LANE, with `data-dragging="yes"` on `t1` mid-gesture -
+	// and in solid, qwik, svelte and angular. REACT IS THE ONLY LANE THAT DOES NOT
+	// MOVE THE CARD. The arrow buttons stay in all six lanes for that reason and
+	// the page SAYS which lane does which. See the fixture header.
 	//
 	// This page has NO FORM CONTROL AT ALL, so like S15 it contributes zero hosts
 	// to worked example 12a's domain in src/gate/index.ts; that census is

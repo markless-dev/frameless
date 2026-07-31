@@ -73,21 +73,33 @@ const fixtures = [
 	// It takes the next ORDINAL slot for the reason every row above records, and
 	// it is the THIRD scenario all six lanes emit, after S13 and S15.
 	//
-	// THE AXIS IT MEASURES IS NOT IN THE FILE, AND THAT IS THE MEASUREMENT. The
-	// board predicted `onDragStart`/`onDragOver`/`onDrop` "cannot be produced"
-	// because `jsxEventName` does `name.slice(2).toLowerCase()`. Measured on a
-	// probe through this very emitter: THEY ARE PRODUCED - `onDragover`,
-	// `onDragstart`, `onDragend`, `onPointerdown` - exactly as DEFECTS.md 15 says
-	// ("there is no refusal in front of it"). THIS LANE IS THE ONE WHERE THE
-	// CASING LOSS IS FATAL: react-dom matches by prop name, so `onDragover` never
-	// fires, while vue's `@dragover`, angular's `(dragover)` and svelte's
-	// `ondragover` are the real DOM event names and DO fire.
-	// WHAT KEEPS IT OUT IS THE TYPE BASELINE, measured here: one drop zone and one
-	// draggable card take THIS PROJECT from 117 to 123 `error TS` lines (one
-	// TS2322 per host for the unknown prop, one TS7006 per handler whose parameter
-	// can no longer be contextually typed) and the whole `pnpm check` from 267 to
-	// 280, which this board's oracle forbids. Cards move with arrow buttons
-	// instead and the page SAYS SO. See the fixture header.
+	// THE AXIS IT MEASURES IS IN THE FILE. This row used to say it was not, and
+	// that sentence outlived the change that falsified it. The board predicted
+	// `onDragStart`/`onDragOver`/`onDrop` "cannot be produced" because
+	// `jsxEventName` does `name.slice(2).toLowerCase()`. Measured on a probe
+	// through this very emitter: THEY ARE PRODUCED - `onDragover`, `onDragstart`,
+	// `onDragend`, `onPointerdown` - exactly as DEFECTS.md 15 says ("there is no
+	// refusal in front of it"). THIS LANE IS THE ONE WHERE THE CASING LOSS IS
+	// FATAL: react-dom matches by prop name, so `onDragover` never fires, while
+	// vue's `@dragover`, angular's `(dragover)` and svelte's `ondragover` are the
+	// real DOM event names and DO fire.
+	//
+	// WHAT KEPT IT OUT WAS THE TYPE BASELINE, AND IT WAS A BUDGET READ AS A WALL.
+	// An earlier probe spelled `draggable` as a STATIC string and measured this
+	// project 117 -> 123 `error TS` lines and the whole `pnpm check` 267 -> 280.
+	// The fixture BINDS `draggable` to an expression instead; the rise was stated
+	// in advance, spent and attributed, and `S16.tsx` below is emitted WITH the
+	// drop zone and the draggable card. RE-MEASURED AT HEAD BY THIS COMMENT'S OWN
+	// CARD: `pnpm check` is 261 WITH the drag shipped, and a REAL NATIVE MOUSE
+	// DRAG (mouse down, twenty interpolated moves, mouse up; no synthetic
+	// `DragEvent` anywhere) moved card `t1` from `backlog` to `review` AND IT
+	// STAYED in solid, qwik, svelte, vue and angular - and NOT in this lane, where
+	// chromium logged exactly three errors: "Invalid event handler property
+	// `onDragstart` / `onDragend` / `onDragover`". `[draggable="true"]` counts 9
+	// IN ALL SIX LANES, so a card here LOOKS draggable and the listener is what
+	// never arrives. THE ARROW BUTTONS ARE NOT A SUBSTITUTE AND NOT A LEFTOVER:
+	// they move a card in all six lanes, they are how THIS lane moves one, and the
+	// page SAYS which lane does which. See the fixture header.
 	//
 	// Like S10-S15 it stays OUT of the 6 x 9 three-way contract, which
 	// scripts/e2e.mjs pins to the literal ['s1'..'s9'].
@@ -96,10 +108,13 @@ const fixtures = [
 	// takes the next ORDINAL slot for the reason every row above records, and it
 	// is the FOURTH scenario all six lanes emit, after S13, S15 and S16.
 	//
-	// THE AXIS IS ON THE PAGE THIS TIME, WHICH IS THE DIFFERENCE FROM S16.
-	// THIRTEEN control kinds ship - text, search, email, tel, url, number, date,
-	// time, range, select, radio, checkbox and textarea - every one of them bound
-	// and every one of them observable in a live preview card.
+	// THE AXIS IS ON THE PAGE. This line used to add "WHICH IS THE DIFFERENCE FROM
+	// S16" - S16's axis is on its page now too, in five of six lanes, so the
+	// contrast is WITHDRAWN rather than left to read as current. What is true here
+	// and not of S16 is that this axis is on the page in ALL SIX: THIRTEEN control
+	// kinds ship - text, search, email, tel, url, number, date, time, range,
+	// select, radio, checkbox and textarea - every one of them bound and every one
+	// of them observable in a live preview card.
 	//
 	// AND THE BOARD'S PREMISE IS PARTLY REFUTED. It said only `checkbox` and
 	// `textarea` were proven and that `select`, `radio` and the multi-field form

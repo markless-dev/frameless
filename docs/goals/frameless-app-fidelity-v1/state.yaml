@@ -44,7 +44,7 @@ goal:
       FIXING THE FIVE FINDINGS AND LEAVING THE ORACLE HOLE OPEN. The findings are symptoms; the
       cause is that nothing ever compared a shipped app to the thing it copies.
 
-active_task: T011
+active_task: T012
 
 # ---------------------------------------------------------------------------
 # OWNER DECISIONS - taken from the owner DIRECTLY on 2026-07-31 while T009 ran.
@@ -1633,7 +1633,7 @@ tasks:
   - id: T011
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       THE RECORD SWEEP. Correct EVERY site that contradicts the shipped behaviour at HEAD, found
@@ -1704,5 +1704,132 @@ tasks:
       - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched. ALL THREE ARE ALREADY DIRTY, YOU DID NOT DO IT, DO NOT `git add -A`."
       - "NEVER pkill -f - THE BAN STANDS ON ITS OWN MERITS. But the four PIDs every card has recited (64413, 24931, 31456, 51893) ARE ALL DEAD: T010 measured it and THE PM RE-MEASURED ALL FOUR AT HEAD. Nothing was listening on 5173-5181. STOP ONLY WHAT YOU STARTED, BY ITS RECORDED PID, and re-measure rather than reciting this list again."
       - "Verification fails twice for the same reason."
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 2
+      note: notes/T011-record-sweep.md
+      summary: "Swept FOR THE CLAIM rather than for a quoted string and found 19 CLAIM-SITES ACROSS 23 FILES - ONE MORE THAN T009's 18. react/scripts/regenerate.ts carries the family-A claim at :76 AND the family-B contrast at :99, and EVERY PRIOR CARD COUNTED THAT FILE ONCE. All 19 corrected against measurements made AT HEAD: the drag re-driven with a REAL NATIVE MOUSE in six lanes (five drag, react inert), /hn-item re-hashed BODY BY BODY (four lanes serve it, angular among them). Shared hn.css edited once and re-copied; all seven now share 0973ee54. check 261 -> 261, test exactly 1, e2e 6 x 9, derived trees clean by 13 EXPLICIT paths."
+      THE_FIFTH_UNDERCOUNT_IS_BROKEN_AND_IT_BROKE_THE_RIGHT_WAY: "T008 recorded that its own brief 'COUNTED FILES, NOT CLAIMS'. T009's brief then counted regenerate.ts as ONE SITE EACH - the same error one level up. react/scripts/regenerate.ts:99 is a SECOND claim in an ALREADY-COUNTED FILE, and correcting only the S16 row would have left that file CONTRADICTING ITSELF - exactly the failure T008 named when it found the fifth site ninety lines below the one its brief quoted."
+      A_TWENTIETH_SITE_EXISTS_OUTSIDE_allowed_files_AND_IS_UNCORRECTED: "scripts/demo.mjs:122 reads 'S17 IS ... THE FIRST APPLICATION ROW SINCE S15 WHOSE AXIS IS ACTUALLY ON THE PAGE', WHICH ASSERTS S16'S AXIS IS NOT ON ITS PAGE. FALSE AT HEAD. VERIFIED INDEPENDENTLY BY THE PM. It is THE NEWCOMER FRONT DOOR and it is the THIRD TIME THIS BOARD HAS FOUND A STALE CLAIM IN IT. Correctly refused under stop_if rather than reached for. T012 owns it."
+      A_COMMENT_EDIT_IN_A_TSRX_FIXTURE_MOVES_THE_GOLDEN_AND_THE_DERIVATION_PROOF_CANNOT_SEE_IT: "packages/compiler/test/goldens/s17-contacts.json stores ABSOLUTE CHARACTER OFFSETS into the fixture, so a LINE-COUNT-NEUTRAL rewrite of s17-contacts.tsrx:12 STILL took pnpm test to 2 FAILURES. `pnpm regenerate` DOES NOT WRITE GOLDENS - only UPDATE_GOLDENS=1 does - so the standard regenerate + copy-emitted + git diff proof IS STRUCTURALLY BLIND TO IT. ONLY pnpm test CATCHES IT. Shipped edit is BYTE-LENGTH NEUTRAL: ', AND UNLIKE S16 THE AXIS IS' -> ', AND IN ALL SIX LANES IT IS', 28 CHARACTERS FOR 28. PM VERIFIED the fixture is 49,476 B at HEAD."
+      changed_files:
+        - packages/frameworks/react/scripts/regenerate.ts
+        - packages/frameworks/solid/scripts/regenerate.ts
+        - packages/frameworks/qwik/scripts/regenerate.ts
+        - packages/frameworks/svelte/scripts/regenerate.ts
+        - packages/frameworks/vue/scripts/regenerate.ts
+        - packages/frameworks/angular/scripts/regenerate.ts
+        - demos/angular-official/src/app/board-page.ts
+        - demos/angular-official/src/app/contacts-page.ts
+        - demos/angular-official/src/app/app.routes.ts
+        - demos/qwik/src/routes/board/index.tsx
+        - demos/qwik/src/routes/contacts/index.tsx
+        - demos/solid-official/src/App.jsx
+        - "demos/svelte-official/src/routes/board/+page.svelte"
+        - "demos/svelte-official/src/routes/contacts/+page.svelte"
+        - demos/vue-official/src/App.vue
+        - packages/compiler/test/fixtures/s17-contacts.tsrx
+        - demos/shared/hn-css/hn.css
+        - demos/react-official/public/hn-css/hn.css
+        - demos/solid-official/public/hn-css/hn.css
+        - demos/vue-official/public/hn-css/hn.css
+        - demos/angular-official/public/hn-css/hn.css
+        - demos/qwik/public/hn-css/hn.css
+        - demos/svelte-official/static/hn-css/hn.css
+        - docs/goals/frameless-app-fidelity-v1/notes/T011-record-sweep.md
+      commands:
+        - cmd: "owner fingerprint START and FINISH, shasum -a 256, sorted whole LINES"
+          status: pass
+          note: "BOTH ENDS f326d314 / aeb7edc1 / f936e169, 116 files. Owner's three dirty paths untouched and NEVER STAGED"
+        - cmd: "SWEEP FOR THE CLAIM (3 phrase families + per-file read of every S16/task-board file)"
+          status: pass
+          note: "19 CLAIM-SITES ACROSS 23 FILES vs T009's 18. NEW: react/scripts/regenerate.ts:99, a SECOND claim in an already-counted file. A 20TH IS OUTSIDE allowed_files: scripts/demo.mjs:122"
+        - cmd: "DRAG RE-DRIVEN AT HEAD, real native mouse, six official demos on 5183-5188 (ports asserted empty first)"
+          status: pass
+          note: "FIVE lanes drag and STAY 1.3s after the drop (solid, qwik, svelte, vue, angular); REACT INERT with 3 VERBATIM 'Invalid event handler property' errors; [draggable=true]=9 in ALL SIX; arrows move a card in all six. Six PIDs stopped by recorded PID; NO pkill"
+        - cmd: "/hn-item RE-HASHED BODY BY BODY across six lanes, plus /hn /board /contacts and a bogus route"
+          status: pass
+          note: "FOUR LANES SERVE IT. angular 33,915 B DISTINCT, <app-root> + 15 <frameless-hn-item> + 14 nested .hn-cnest levels. svelte 404 byte-identical to its bogus-path 404; VUE'S 200 BYTE-IDENTICAL TO ITS BOGUS-PATH 200. NO HTTP 200 READ AS PROOF"
+        - cmd: "edit demos/shared/hn-css/hn.css + 6x pnpm copy-hn-css"
+          status: pass
+          note: "NO LANE COPY HAND-EDITED. All seven b64089ab before, ALL SEVEN 0973ee54 after - PM RE-VERIFIED ALL SEVEN DIGESTS INDEPENDENTLY"
+        - cmd: "pnpm check:citations after EVERY prose edit (3 runs)"
+          status: pass
+          note: "clean over 4 watched documents, 17 watched source files, 610 swept"
+        - cmd: "6x regenerate + 6x copy-emitted, then git diff --exit-code over 13 EXPLICIT derived paths"
+          status: pass
+          note: "rc=0 CLEAN, paired with git status --short AND --porcelain over the same paths. EVERY PATH ASSERTED TO EXIST AND BE NON-EMPTY FIRST. NO WILDCARD PATHSPEC USED ANYWHERE"
+        - cmd: "CALIBRATION OF THE WILDCARD HAZARD ON ITS OWN CHANGES"
+          status: pass
+          note: "git diff --name-only -- 'demos/*/src' returned 0 while the explicit form returned 9 FILES IT HAD ACTUALLY CHANGED. THE FALSE PASS REPRODUCED DELIBERATELY"
+        - cmd: "pnpm check"
+          status: pass
+          note: "START 261 -> END 261. Delta 0 as predicted"
+        - cmd: "pnpm test"
+          status: pass
+          note: "EXACTLY 1 failure - the foreign ARM B peer-suffix inventory over the owner's dirty pnpm-lock.yaml. FIRST ATTEMPT GAVE 2 - see the golden-offset finding"
+        - cmd: "pnpm e2e RUN ALONE (no demos or regeneration in flight)"
+          status: pass
+          note: "PASS - 'Three-way: 6 demos x 9 scenarios, all observations equal'"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 558 files"
+      deviations:
+        - "s17-contacts.tsrx:12 was rewritten BYTE-LENGTH NEUTRAL (28 chars for 28) instead of freely, because the first line-count-neutral rewrite took pnpm test to 2 FAILURES via the golden's absolute character offsets. Regenerating the golden was the alternative and WOULD HAVE DIRTIED packages/compiler/test/goldens, WHICH THIS CARD MUST LEAVE CLEAN. Fixture 49,476 B before and after; LINE 1018 (T010's) VERIFIED UNTOUCHED."
+        - "TWO FILES T009's BRIEF NAMED AS FALSE WERE ALREADY CORRECT AT HEAD and were LEFT ALONE rather than rewritten: demos/vue-official/src/App.vue's BOARD comment ('THE AXIS ... IS NOW ON IT') and demos/react-official/src/App.jsx. Only vue's CONTACTS contrast needed the fix."
+        - "The drag harness ran from the scratchpad with an absolute import path to node_modules/.pnpm/playwright@1.58.2. A copy briefly written to the repo root as .t011-drag.mjs for module resolution WAS DELETED IMMEDIATELY - PM INDEPENDENTLY CONFIRMED NO TRACE AT HEAD."
+      remaining_blockers:
+        - "A 20TH CLAIM-SITE IS UNCORRECTED AND OUTSIDE THIS CARD'S SCOPE: scripts/demo.mjs:122. It is THE NEWCOMER FRONT DOOR and the THIRD stale claim this board has found in it. One line, prose only. T012 OWNS IT."
+        - "NEW TRAP FOR EVERY FUTURE CARD: 'prose-only, so nothing derives' IS FALSE FOR .tsrx FIXTURES. Any BYTE-LENGTH change - comment or not - moves the checked-in golden, and the standard derivation proof CANNOT SEE IT because regenerate does not write goldens. ONLY pnpm test CATCHES IT."
+        - "The drag remains a CHROMIUM claim in all six lanes. Firefox still unmeasured."
+        - "The qwik lost drop (1 of 16, first from a fresh page) is still unresolved. Inside qwik's own resumability envelope; NOTHING TO FILE UPSTREAM."
+      stopped_because: null
+  - id: T012
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: medium
+    objective: >-
+      CLOSE THE TWENTIETH CLAIM-SITE - the one T011 correctly REFUSED because it sat outside its
+      write scope - AND SWEEP THE WHOLE OF scripts/ FOR THE CLAIM WHILE YOU ARE IN THERE. This is
+      the LAST known open ground on this board.
+    THE_NEWCOMER_FRONT_DOOR_HAS_NOW_LIED_THREE_TIMES: >-
+      scripts/demo.mjs:122 reads 'S17 IS THE FOURTH ROW WITH NO `unbuilt` ENTRY IN ANY LANE, AND
+      THE FIRST APPLICATION ROW SINCE S15 WHOSE AXIS IS ACTUALLY ON THE PAGE'. THE SECOND CLAUSE
+      ASSERTS S16'S AXIS IS NOT ON ITS PAGE. IT IS FALSE AT HEAD - five lanes drag, T011 re-drove
+      it. VERIFIED INDEPENDENTLY BY THE PM AT HEAD. `pnpm demo` IS THE NEWCOMER FRONT DOOR and
+      this board has ALREADY REPAIRED A FRONT-DOOR LIE IN IT TWICE.
+    DO_NOT_FIX_ONLY_THE_LINE_YOU_WERE_GIVEN: >-
+      FIVE CARDS RUNNING HAVE UNDERCOUNTED THIS POPULATION by correcting the site a predecessor
+      QUOTED. T005 said six, T999 said four, T008 found a fifth, T009 swept and found 18, T011
+      swept harder and found 19 - the extra being A SECOND CLAIM IN A FILE ALREADY COUNTED ONCE.
+      SWEEP ALL OF scripts/ - demo.mjs, e2e.mjs, check-citations.mjs, corpus-mutation.mjs - FOR
+      THE CLAIM, NOT FOR THE QUOTED STRING, AND REPORT YOUR OWN COUNT.
+    allowed_files:
+      - "scripts/demo.mjs"
+      - "scripts/e2e.mjs"
+      - "scripts/check-citations.mjs"
+      - "scripts/corpus-mutation.mjs"
+      - "docs/goals/frameless-app-fidelity-v1/notes/T012-front-door.md"
+    verify:
+      - "SWEEP ALL FOUR FILES IN scripts/ FOR THE CLAIM and REPORT YOUR OWN COUNT. T011 found exactly one (demo.mjs:122) but it was sweeping from OUTSIDE this scope and was not looking for anything else. If you find more, THAT IS THE EXPECTED RESULT."
+      - "EVERY CORRECTION CITES A MEASUREMENT YOU MADE AT HEAD, NOT T011'S RECEIPT. RE-DRIVE THE DRAG YOURSELF before writing any drag count - at MINIMUM two lanes with a real native mouse, one that drags and react which does not."
+      - "`pnpm demo` MUST STILL RUN. Start it, observe the row you edited RENDER, and stop it BY ITS RECORDED PID. A comment edit that breaks the front door is worse than the stale comment."
+      - "THIS CARD DERIVES NOTHING AND MUST NOT MOVE ONE EMITTED BYTE. git diff --exit-code over 13 EXPLICIT derived paths, EACH ASSERTED TO EXIST FIRST. *** NEVER USE A WILDCARD PATHSPEC *** - git disables leading-directory matching once a pathspec contains a wildcard, so `git diff -- 'demos/*/src/emitted'` MATCHES NOTHING AND EXITS CLEAN. T010 hit this and T011 reproduced it deliberately on its own changes."
+      - "pnpm check:citations AFTER EVERY EDIT - check-citations.mjs IS THE CITATION GUARD ITSELF, so if you edit it, RUN IT AND PROVE IT STILL CATCHES A PLANTED BAD CITATION rather than only that it exits 0."
+      - "pnpm check 261 START and END, predicted delta 0 / pnpm test EXACTLY 1 failure / pnpm e2e 6 x 9 RUN ALONE / pnpm lint."
+      - "fingerprint the owner's three dirty paths at START and FINISH with `shasum -a 256`, sorting whole output LINES: f326d314 / aeb7edc1 / f936e169, 116 files."
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to correct ONLY demo.mjs:122 BECAUSE THIS CARD NAMED IT. Sweep and report your own count."
+      - "You are about to change WHAT ANY SCRIPT DOES. T012 CHANGES ONLY THE RECORD - comments and message strings, never logic, never a threshold, never a scenario list."
+      - "You are about to write a drag count YOU DID NOT MEASURE YOURSELF AT HEAD."
+      - "You are about to edit a .tsrx fixture. A BYTE-LENGTH CHANGE THERE MOVES THE CHECKED-IN GOLDEN and the derivation proof IS STRUCTURALLY BLIND TO IT - only pnpm test catches it. T011 hit this. NO FIXTURE IS IN YOUR SCOPE ANYWAY."
+      - "You are about to rewrite ANY prior receipt or note. PRIOR RECEIPTS ARE HISTORY - RECORD, NEVER EDIT."
+      - "pnpm check rises at all. BASELINE 261, PREDICTED DELTA 0."
+      - "pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
+      - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched. ALL THREE ARE ALREADY DIRTY, YOU DID NOT DO IT, DO NOT `git add -A`."
+      - "NEVER pkill -f. The four PIDs earlier cards recited are ALL DEAD - stop only what you started, by its recorded PID."
+      - "Verification fails twice for the same reason."
     receipt: null
-

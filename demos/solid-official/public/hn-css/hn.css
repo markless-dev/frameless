@@ -501,9 +501,21 @@ body:has(.hn, .hn-thread) {
  * THE HACKER NEWS ITEM PAGE - the RECURSION scenario. Everything below is
  * additive: /hn-item links the same sheet /hn does, so the shell neutralisation,
  * the masthead, the `[hidden]` override and the subtext scale above are shared
- * rather than restated. Three lanes serve this page (react, solid, qwik); svelte
- * and vue refuse a same-module component reference and angular's own gate
- * rejects the `imports` its recursive component needs.
+ * rather than restated. FOUR LANES SERVE THIS PAGE - react, solid, qwik AND
+ * ANGULAR - and svelte and vue refuse a same-module component reference, so
+ * those two have no item page for this sheet to reach.
+ *
+ * THIS COMMENT USED TO SAY THREE, AND USED TO SAY ANGULAR'S OWN GATE REJECTS THE
+ * `imports` ITS RECURSIVE COMPONENT NEEDS. That gate ADMITTED the form and the
+ * lane ships. RE-MEASURED AT HEAD by fetching `/hn-item` in all six lanes and
+ * HASHING THE BODY - necessary because react, solid and vue answer HTTP 200 for
+ * any path at all, so a status code proves nothing here. Angular's `/hn-item` is
+ * 33,915 bytes, DISTINCT from every other route in that lane, and carries
+ * `<app-root>`, FIFTEEN `<frameless-hn-item>` elements and FOURTEEN nested
+ * `.hn-cnest` levels - the self-reference rendering, not a fixed depth. React,
+ * solid and qwik each return their own distinct body. Svelte answers 404,
+ * byte-identical to its 404 for a nonsense path; vue answers 200 BYTE-IDENTICAL
+ * to its answer for a nonsense path, which is the SPA shell and not the page.
  *
  * THE ONE RULE THAT MATTERS IS `.hn-cnest .hn-comments`, AND IT IS ONE RULE
  * BECAUSE THE INDENTATION IS REAL DOM NESTING. `HnItem` names itself, so a

@@ -7,8 +7,11 @@
 	THE SEVENTH APPLICATION - the TASK BOARD - and THE DRAG CARD. It is the THIRD
 	scenario in this corpus that all six lanes emit and ship, after S13 and S15.
 
-	THE AXIS THIS PAGE EXISTS TO MEASURE IS NOT ON IT, AND THIS LANE IS THE ONLY
-	ONE THAT REFUSED ANY PART OF IT. The board predicted the two-word drag events
+	THE AXIS THIS PAGE EXISTS TO MEASURE IS ON IT, AND THIS LANE DRAGS. This
+	comment used to say the axis was not on the page and that THIS LANE WAS THE
+	ONLY ONE THAT REFUSED ANY PART OF IT; the refusal was always about an ELEMENT
+	and never about the drag, and svelte is one of the FIVE lanes that drags.
+	The board predicted the two-word drag events
 	"cannot be produced" because the compiler does `name.slice(2).toLowerCase()`.
 	Measured on a probe through all six real emitters, THEY ARE PRODUCED, and this
 	lane prints `ondragover`, `ondragstart`, `ondragend`, `onpointerdown` - which
@@ -26,13 +29,24 @@
 
 	on a <button> with no accessible name. The identical handlers on <ul> and <li>
 	emit clean - which is why S16's ONE <ul>/<li> pair is exactly where the drop
-	zone and the draggable card would have gone.
+	zone and the draggable card ACTUALLY WENT. The refusal SHAPED the markup rather
+	than removing the axis.
 
-	WHAT KEPT THEM OFF THE PAGE is the type baseline in the three JSX lanes: one
-	drop zone and one draggable card take `pnpm check` from 267 to 280, which this
-	board's oracle forbids. Cards move with the arrow buttons instead - a DIFFERENT
-	INTERACTION - and the page SAYS SO in `.tb-note` rather than passing it off as
-	the axis. See packages/compiler/test/fixtures/s16-task-board.tsrx.
+	WHAT KEPT THEM OFF THE PAGE WAS THE TYPE BASELINE IN THE THREE JSX LANES, AND
+	IT WAS A BUDGET READ AS A WALL: an earlier probe spelled `draggable` as a
+	STATIC string and measured `pnpm check` 267 -> 280. The fixture BINDS it
+	instead, and the rise was stated in advance, spent and attributed. RE-MEASURED
+	AT HEAD BY THIS COMMENT'S OWN CARD, in a chromium driven with a REAL NATIVE
+	MOUSE (mouse down, twenty interpolated moves, mouse up; no synthetic DragEvent
+	anywhere): DRAGGING CARD `t1` FROM `backlog` ONTO `review` MOVED IT AND IT
+	STAYED IN THIS LANE, with `data-dragging="yes"` on `t1` during the gesture and
+	no console error. `[draggable="true"]` counts 9 here, the same 9 as the other
+	five, and `pnpm check` is 261 with the drag shipped.
+
+	THE ARROW BUTTONS ARE NOT A SUBSTITUTE AND NOT A LEFTOVER: they move a card in
+	ALL SIX lanes and they are how REACT moves one - the one lane where the drag is
+	inert, because react-dom matches by prop name. `.tb-note` on the page names
+	which lane does which. See packages/compiler/test/fixtures/s16-task-board.tsrx.
 
 	WHAT ONE ARROW CLICK MOVES, all derived from ONE `columns` cell: the card
 	leaves one column's list and appears in another's - a real subtree move across

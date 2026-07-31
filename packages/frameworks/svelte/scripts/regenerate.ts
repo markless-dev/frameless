@@ -91,8 +91,11 @@ const fixtures = [
 	// It takes the next ORDINAL slot for the reason every row above records, and
 	// it is the THIRD scenario all six lanes emit, after S13 and S15.
 	//
-	// THE AXIS IT MEASURES IS NOT IN THE FILE, AND THIS LANE IS THE ONLY ONE THAT
-	// REFUSED ANY PART OF IT. The board predicted the two-word drag events
+	// THE AXIS IT MEASURES IS IN THE FILE, AND THIS LANE DRAGS. This row used to
+	// say the axis was not in the file and that this lane "refused any part of
+	// it"; the second half was always about an ELEMENT and never about the drag,
+	// and the first half is now simply false.
+	// The board predicted the two-word drag events
 	// "cannot be produced"; measured on a probe through this very emitter, they
 	// ARE produced - `ondragover`, `ondragstart`, `ondragend`, `onpointerdown`,
 	// which are the REAL DOM EVENT NAMES, so this lane would have been CORRECT BY
@@ -104,10 +107,20 @@ const fixtures = [
 	//   "... a11y_consider_explicit_label."
 	// on a `<button>` with no accessible name. The identical handlers on `<ul>`
 	// and `<li>` emit clean, which is why this fixture's one `<ul>`/`<li>` pair is
-	// where the drop zone and the draggable card WOULD have gone.
-	// What kept them out is the TYPE BASELINE in the three JSX lanes: `pnpm check`
-	// 267 -> 280, which this board's oracle forbids. Cards move with arrow buttons
-	// instead and the page SAYS SO. See the fixture header.
+	// where the drop zone and the draggable card ACTUALLY WENT - the refusal
+	// SHAPED the markup rather than removing the axis.
+	//
+	// WHAT KEPT THEM OUT WAS THE TYPE BASELINE IN THE THREE JSX LANES, AND IT WAS
+	// A BUDGET READ AS A WALL: an earlier probe measured `pnpm check` 267 -> 280
+	// with `draggable` spelled as a STATIC string. The fixture BINDS it instead;
+	// the rise was stated in advance, spent and attributed. RE-MEASURED AT HEAD BY
+	// THIS COMMENT'S OWN CARD: `pnpm check` is 261 WITH the drag shipped, and a
+	// REAL NATIVE MOUSE DRAG (mouse down, twenty interpolated moves, mouse up; no
+	// synthetic `DragEvent` anywhere) moved card `t1` from `backlog` to `review`
+	// AND IT STAYED in THIS LANE, with `data-dragging="yes"` on `t1` mid-gesture -
+	// and in solid, qwik, vue and angular. REACT IS THE ONLY LANE THAT DOES NOT
+	// MOVE THE CARD. The arrow buttons stay in all six lanes for that reason and
+	// the page SAYS which lane does which. See the fixture header.
 	//
 	// There is no `<form>` and no component reference here, so neither the a11y
 	// refusal S13 hit in this lane nor the same-module self-reference refusal that

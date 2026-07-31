@@ -228,11 +228,16 @@ export const routes: Routes = [
   // seed and the board's ordering is DATA rather than arithmetic. See the
   // fixture's constraint (10).
   //
-  // THE AXIS IT MEASURES IS NOT ON THE PAGE, AND THAT IS THE MEASUREMENT. This
-  // emitter PRINTS the two-word drag events - `(dragover)`, `(dragstart)`,
+  // THE AXIS IT MEASURES IS ON THE PAGE, AND THIS COMMENT USED TO SAY IT WAS NOT.
+  // This emitter PRINTS the two-word drag events - `(dragover)`, `(dragstart)`,
   // `(dragend)`, `(pointerdown)` - and those are the real DOM event names, so
-  // this lane would have fired them at no type cost. What kept them out is the
-  // three JSX lanes' `pnpm check` baseline, 267 -> 280. The page says so itself.
+  // this lane fires them at no type cost. What kept them out was the three JSX
+  // lanes' type baseline, an earlier `pnpm check` 267 -> 280 read as a wall when
+  // it was a budget. DRIVEN AT HEAD BY THIS COMMENT'S OWN CARD with a real native
+  // mouse: card `t1` dragged from `backlog` onto `review` MOVED AND STAYED in
+  // this lane, and `pnpm check` is 261 with the drag shipped. The `◀`/`▶` arrows
+  // stay in all six lanes and are how REACT - the one inert lane - moves a card.
+  // The page says which lane does which. See `./board-page`.
   //
   // It goes through a WRAPPER, like /todomvc, /hn and /habits and for the same
   // reason: a `<link>` has to be rendered by something, and putting it in

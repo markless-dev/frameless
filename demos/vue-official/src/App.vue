@@ -435,7 +435,10 @@ const s8Ready = ref<Promise<string>>(s8ResolvedGate)
   <!--
     THE EIGHTH APPLICATION - CONTACTS - and THE FORMS CARD. It is the FOURTH scenario
     in this corpus that all six lanes emit and ship, after S13, S15 and S16, and
-    UNLIKE S16 THE AXIS IT MEASURES IS ACTUALLY ON THE PAGE: THIRTEEN control kinds -
+    This comment used to add "UNLIKE S16 THE AXIS IT MEASURES IS ACTUALLY ON THE PAGE"
+    - S16's axis is on its page now, in five of six lanes, so the contrast is WITHDRAWN
+    rather than left to read as current. What is true of THIS page, and unlike S16, is
+    that its axis is on it in ALL SIX: THIRTEEN control kinds -
     text, search, email, tel, url, number, date, time, range, select, radio, checkbox
     and textarea - every one bound and every one observable in the live preview card.
 

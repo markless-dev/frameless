@@ -9,7 +9,7 @@ import { computed, state } from '@markless/core';
 // 6 x 9 three-way contract - browsable first.
 //
 // ==========================================================================
-// THE AXIS THIS CARD MEASURES IS FORM INPUT TYPES, AND UNLIKE S16 THE AXIS IS
+// THE AXIS THIS CARD MEASURES IS FORM INPUT TYPES, AND IN ALL SIX LANES IT IS
 // ON THE PAGE. THIRTEEN CONTROL KINDS SHIP HERE, EVERY ONE OF THEM BOUND AND
 // EVERY ONE OF THEM OBSERVABLE.
 // ==========================================================================
