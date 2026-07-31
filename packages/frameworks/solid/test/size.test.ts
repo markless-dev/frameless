@@ -251,6 +251,33 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// the middle - still a scatter, still no trend, and the row still declines to
 	// describe one.
 	S14: { physicalLoc: 340, structuralNodes: 1261 },
+	// S15 (THE HABIT TRACKER) IS THE CORPUS'S LARGEST TEMPLATE AND ITS CHEAPEST
+	// ONE PER HOST. EIGHTY-ONE hosts - nineteen more than S13, the previous largest
+	// - emit 425 physical lines against S13's 578, which is 5.25 lines per host
+	// against S13's 9.32: the lowest in this table.
+	// THE CAUSE IS DERIVED: emitted size tracks HANDLER BODIES, and this app has
+	// SEVEN recorded events and exactly ONE state write, fewer than any other
+	// application in the corpus (S13: 27 events, S11: 19, S10: 15), because its
+	// whole mechanism is one write fanning out through `computed` values and
+	// class/hidden bindings.
+	// AGAINST S13: 425/578 = 0.74x the physical lines and 2029/2138 = 0.95x the
+	// structural nodes - 21% apart, and DIVERGING THE OPPOSITE WAY from S13's own
+	// split. S13's lines ran ahead of its nodes because of sixteen one-character
+	// separator spans; S15's nodes run ahead of its lines because its seed carries
+	// thirty-six nested `{ id: 'h1d1', on: true },` literals that the formatter
+	// packs one per line. Two opposite divergences of similar magnitude from two
+	// different source shapes is what confirms the split tracks the SOURCE'S SHAPE
+	// rather than a per-element tax.
+	// THE SOLID PREMIUM, re-derived rather than carried: 425/411 = 1.03x react on
+	// lines and 2029/2002 = 1.01x on nodes. The series is now 1.11 / 1.04 / 0.94 /
+	// 1.04 / 1.03 / 1.03 across S10-S15 and STILL REFUSES TO NAME A TREND - it has
+	// now held within 3% of parity for four consecutive applications spanning a
+	// stream, a doorless page, a recursive component and a fan-out page, which is a
+	// stronger statement of "no trend" than the earlier rows could make.
+	// WHAT THE NUMBER CANNOT SEE: S15's claim is that ONE CLICK MOVES EIGHT DERIVED
+	// OBSERVABLES, and an emitter that repainted only the clicked row would measure
+	// identically here. Only a driven browser separates them.
+	S15: { physicalLoc: 425, structuralNodes: 2029 },
 };
 
 describe('honest emitted structure comparison', () => {

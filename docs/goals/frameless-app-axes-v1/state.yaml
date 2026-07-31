@@ -58,7 +58,7 @@ goal:
       evaporates. If drag refuses and is quietly replaced by click-to-move, the axis goes
       unmeasured while the demo looks complete.
 
-active_task: T004
+active_task: T005
 
 rules:
   - "state.yaml is board truth; goal.md is the charter."
@@ -294,6 +294,7 @@ tasks:
       - "You are about to read an HTTP 200 as proof a page exists. REACT, SOLID AND VUE ANSWER 200 FOR ANY PATH (fall-through to S1). HASH THE BODY and prove it differs per route - T001 caught this as a check that passes while measuring nothing."
       - "TWO OPEN EMITTER DEFECTS HIT ANY CARD THAT COMPOSES, not just recursion. SOLID: a same-module component reference makes every signal read inside a handler DOUBLE-CALL (TS2349) and DROPS attr:value. QWIK: a function-typed prop CANNOT CROSS A COMPONENT BOUNDARY IN ANY SPELLING (onTrace$ prints as onTrace, authoring onTrace$ gives onTrace$$). If you compose, EXPECT THEM, narrow around them, and DO NOT touch an emitter."
       - "You are about to assume a list prop is impossible. `Array<string>` LOWERS IN FIVE LANES where `string[]` refuses - the limit is the SPELLING, not arrays. T003 refuted the stronger claim T002 recorded."
+      - "You are about to bind a `style` attribute. NO FIXTURE IN THE CORPUS DOES, so style lowering is UNMEASURED IN ALL SIX LANES - S15 used a class name for exactly this reason. MEASURE IT AS ITS OWN PROBE FIRST and record the per-lane result; do not discover it mid-build."
       - "Verification fails twice for the same reason."
     receipt:
       result: done
@@ -518,6 +519,7 @@ tasks:
       - "You are about to read an HTTP 200 as proof a page exists. REACT, SOLID AND VUE ANSWER 200 FOR ANY PATH (fall-through to S1). HASH THE BODY and prove it differs per route - T001 caught this as a check that passes while measuring nothing."
       - "TWO OPEN EMITTER DEFECTS HIT ANY CARD THAT COMPOSES, not just recursion. SOLID: a same-module component reference makes every signal read inside a handler DOUBLE-CALL (TS2349) and DROPS attr:value. QWIK: a function-typed prop CANNOT CROSS A COMPONENT BOUNDARY IN ANY SPELLING (onTrace$ prints as onTrace, authoring onTrace$ gives onTrace$$). If you compose, EXPECT THEM, narrow around them, and DO NOT touch an emitter."
       - "You are about to assume a list prop is impossible. `Array<string>` LOWERS IN FIVE LANES where `string[]` refuses - the limit is the SPELLING, not arrays. T003 refuted the stronger claim T002 recorded."
+      - "You are about to bind a `style` attribute. NO FIXTURE IN THE CORPUS DOES, so style lowering is UNMEASURED IN ALL SIX LANES - S15 used a class name for exactly this reason. MEASURE IT AS ITS OWN PROBE FIRST and record the per-lane result; do not discover it mid-build."
       - "Verification fails twice for the same reason."
     receipt:
       result: done
@@ -662,7 +664,7 @@ tasks:
   - id: T004
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       Ship HABIT TRACKER - THE SIX-LANE CARD as scenario `s15-habit-tracker`: ONE authored source, emitted to all six lanes as the
@@ -670,7 +672,7 @@ tasks:
     THE_AXIS_THIS_CARD_MEASURES: >-
       SIX-LANE FAN-OUT - the first app on this project that could lose NO lane.
     WHAT_IS_ALREADY_MEASURED: >-
-      PURE SYNCHRONOUS DERIVED STATE, NO ASYNC DOOR NEEDED, so unlike every app before it this one is reachable in ALL SIX LANES INCLUDING ANGULAR. Measured on the live reference: ONE CLICK FANS OUT TO FIVE OBSERVABLE UPDATES - checkbox fill, title strikethrough, header counter 0/6 -> 1/6, sidebar badge, progress bar, and the encouragement line changing from 'Let's make today count!' to 'Good start! Stay consistent.' THE TRAP THAT WOULD QUIETLY KILL THIS CARD: the live demo renders a REAL DATE, and ANGULAR CANNOT NAME Date. The date MUST arrive as a prop. If angular goes unbuilt over a clock, this card measured nothing.
+      PURE SYNCHRONOUS DERIVED STATE, NO ASYNC DOOR NEEDED, so unlike every app before it this one is reachable in ALL SIX LANES INCLUDING ANGULAR. Measured on the live reference: ONE CLICK FANS OUT TO FIVE OBSERVABLE UPDATES - checkbox fill, title strikethrough, header counter 0/6 -> 1/6, sidebar badge, progress bar, and the encouragement line changing from 'Let's make today count!' to 'Good start! Stay consistent.' THE TRAP THAT WOULD QUIETLY KILL THIS CARD: the live demo renders a REAL DATE, and ANGULAR CANNOT NAME Date. RECONCILED AFTER T004 MEASURED IT: the date MUST NOT BE COMPUTED, and the ruling is a LITERAL IN THE SEEDED DATA, not a prop. Both satisfy the constraint - a page date is a SCALAR and a scalar string prop lowers in all six lanes - but the date is not computed anywhere, so a prop would move one constant into SIX host shells and create six places to diverge. AND THIS CARD'S OWN COUNT WAS WRONG: it says FIVE and lists SIX; driven on the LIVE reference it is SEVEN, because the encouragement EMOJI runs a ladder parallel to the sentence. S15 shipped EIGHT authored observables and TWELVE were measured.
     THE_NAMED_VISUAL_REFERENCE_RECORDED_BEFORE_THE_BUILD: >-
       https://square-ui-habit-tracker.vercel.app/ - QA'd live by the PM. REFERENCE-ONLY, build on the vendored MIT shadcn tokens at demos/shared/shadcn-theme/.
     allowed_files:
@@ -749,13 +751,161 @@ tasks:
       - "You are about to read an HTTP 200 as proof a page exists. REACT, SOLID AND VUE ANSWER 200 FOR ANY PATH (fall-through to S1). HASH THE BODY and prove it differs per route - T001 caught this as a check that passes while measuring nothing."
       - "TWO OPEN EMITTER DEFECTS HIT ANY CARD THAT COMPOSES, not just recursion. SOLID: a same-module component reference makes every signal read inside a handler DOUBLE-CALL (TS2349) and DROPS attr:value. QWIK: a function-typed prop CANNOT CROSS A COMPONENT BOUNDARY IN ANY SPELLING (onTrace$ prints as onTrace, authoring onTrace$ gives onTrace$$). If you compose, EXPECT THEM, narrow around them, and DO NOT touch an emitter."
       - "You are about to assume a list prop is impossible. `Array<string>` LOWERS IN FIVE LANES where `string[]` refuses - the limit is the SPELLING, not arrays. T003 refuted the stronger claim T002 recorded."
+      - "You are about to bind a `style` attribute. NO FIXTURE IN THE CORPUS DOES, so style lowering is UNMEASURED IN ALL SIX LANES - S15 used a class name for exactly this reason. MEASURE IT AS ITS OWN PROBE FIRST and record the per-lane result; do not discover it mid-build."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T004-habits.md
+      summary: "SIX-LANE FAN-OUT IS OPEN AND NO LANE WAS LOST - THE FIRST CARD ON THIS PROJECT TO LOSE NONE. s15-habit-tracker emits, gates, ships and DRIVES in all six lanes, ON THE FIRST EMIT ATTEMPT, with NO REFUSAL TO RECORD. One click moves TWELVE measured observables and the six lanes are IDENTICAL on every field at four rungs, with a NEGATIVE CONTROL proving an untouched sibling row does not move. The date trap was real and is neutralised by literal seeded data. Browsable at /habits in six lanes, listed in pnpm demo, proved by derivation. Baselines unmoved."
+      IT_QA_D_THE_LIVE_REFERENCE_BEFORE_BUILDING_AND_THE_BOARD_UNDERCOUNTED: "THE BOARD SAYS FIVE OBSERVABLES AND THEN LISTS SIX. DRIVEN ON THE LIVE REFERENCE IT IS SEVEN - the encouragement EMOJI runs a ladder PARALLEL to the sentence and is named nowhere on the board. S15 ships EIGHT authored observables (adding today's dot inside a NESTED repeat) and TWELVE WERE MEASURED, because the toggle alone moves three ways at once."
+      IT_FOUND_A_DEFECT_IN_THE_REFERENCE_AND_DECLINED_TO_COPY_IT: "The live reference renders 'All habits tracked for today - great job!' AT 0/6, measured at EVERY RUNG of its own ladder. S15's footnote carries hidden={doneCount < habits.length}, SO THIS PAGE IS DELIBERATELY MORE CORRECT THAN THE THING IT REPRODUCES, and the line becomes a NINTH derived observable."
+      THE_DATE_TRAP_WAS_REAL_AND_THE_BOARD_CONTRADICTED_ITSELF_ABOUT_IT: "The live reference DOES render a real date ('JULY 30, 2026' / 'Thursday'), so the trap was not hypothetical. BUT state.yaml says the date MUST ARRIVE AS A PROP while the dispatch said LITERAL IN THE SEEDED DATA. Unlike T002's version THIS instruction IS achievable - a page date is a SCALAR and a scalar string prop lowers in all six lanes. LITERAL was chosen with the reason recorded: the date is not computed ANYWHERE, so a prop would move one constant into SIX host shells and create six places to diverge. PM MUST RECONCILE THE BOARD TEXT."
+      A_SINGLE_COMPONENT_ON_PURPOSE: "Shipping one component makes BOTH of T003's open emitter defects UNREACHABLE - solid's double-called signal read and qwik's un-forwardable function prop each need a component reference - and qwik got its onTrace$ back. S14 remains the corpus's only fixture with no trace channel."
+      IT_REPAIRED_A_LIE_IN_PNPM_DEMO_NOBODY_ASKED_ABOUT: "The closing banner read 'S13 is the only one all SIX lanes serve' - FALSE THE MOMENT S15 LANDED, and INVISIBLE TO EVERY CHECK because that paragraph is HAND-WRITTEN PROSE BESIDE A DERIVED TABLE. Repaired to name both. A third six-lane app will stale it again and nothing will catch it."
+      changed_files:
+        - packages/compiler/test/fixtures/s15-habit-tracker.tsrx
+        - packages/compiler/test/goldens/s15-habit-tracker.json
+        - packages/compiler/test/enriched-ir.test.ts
+        - packages/frameworks/react/scripts/regenerate.ts
+        - packages/frameworks/react/generated/S15.tsx
+        - packages/frameworks/react/test/size.test.ts
+        - packages/frameworks/solid/scripts/regenerate.ts
+        - packages/frameworks/solid/generated/S15.tsx
+        - packages/frameworks/solid/test/size.test.ts
+        - packages/frameworks/qwik/scripts/regenerate.ts
+        - packages/frameworks/qwik/generated/S15.tsx
+        - packages/frameworks/svelte/scripts/regenerate.ts
+        - packages/frameworks/svelte/generated/S15.svelte
+        - packages/frameworks/vue/scripts/regenerate.ts
+        - packages/frameworks/vue/generated/S15.vue
+        - packages/frameworks/vue/src/gate/index.ts
+        - packages/frameworks/vue/test/gate.test.ts
+        - packages/frameworks/angular/scripts/regenerate.ts
+        - packages/frameworks/angular/generated/S15.ts
+        - packages/frameworks/angular/test/emitter.test.ts
+        - scripts/demo.mjs
+        - demos/shared/habit-css/habits.css
+        - demos/shared/habit-css/README.md
+        - demos/shared/copy-habit-css.mjs
+        - demos/react-official/package.json
+        - demos/react-official/src/App.jsx
+        - demos/react-official/src/emitted/HabitTracker.tsx
+        - demos/react-official/public/habit-css/habits.css
+        - demos/solid-official/package.json
+        - demos/solid-official/src/App.jsx
+        - demos/solid-official/src/emitted/HabitTracker.tsx
+        - demos/solid-official/public/habit-css/habits.css
+        - demos/qwik/package.json
+        - demos/qwik/src/routes/habits/index.tsx
+        - demos/qwik/src/emitted/HabitTracker.tsx
+        - demos/qwik/public/habit-css/habits.css
+        - demos/svelte-official/package.json
+        - "demos/svelte-official/src/routes/habits/+page.svelte"
+        - demos/svelte-official/src/lib/emitted/HabitTracker.svelte
+        - demos/svelte-official/static/habit-css/habits.css
+        - demos/vue-official/package.json
+        - demos/vue-official/src/App.vue
+        - demos/vue-official/src/emitted/HabitTracker.vue
+        - demos/vue-official/public/habit-css/habits.css
+        - demos/angular-official/package.json
+        - demos/angular-official/src/app/app.routes.ts
+        - demos/angular-official/src/app/habits-page.ts
+        - demos/angular-official/src/emitted/HabitTracker.ts
+        - demos/angular-official/public/habit-css/habits.css
+        - docs/goals/frameless-app-axes-v1/notes/T004-habits.md
+      commands:
+        - cmd: "owner fingerprint START"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169 / 116, sorting the whole shasum OUTPUT LINES"
+        - cmd: "baseline BEFORE any edit"
+          status: pass
+          note: "1 failed 1307 passed (foreign ARM B); check 267"
+        - cmd: "LIVE QA of the named reference in chromium, BEFORE the build"
+          status: pass
+          note: "TRAP CONFIRMED: renders a real date. Ladder read off the page: 5 bands, TWO parallel ladders"
+        - cmd: "scripted click on the LIVE reference"
+          status: pass
+          note: "the board says FIVE and lists SIX; MEASURED SEVEN"
+        - cmd: "6 x emitter probe on the real golden"
+          status: pass
+          note: "ALL SIX EMIT ON THE FIRST ATTEMPT - no refusal to record"
+        - cmd: "per-lane OWN gates x6"
+          status: pass
+          note: "react 207, solid 202, qwik 96, svelte 127, vue 151, angular 161 - ALL PASS"
+        - cmd: "pnpm demo (RUN, twice)"
+          status: pass
+          note: "6 lanes, S1-S15; S15 /habits in ALL SIX, qwik /habits/; 5175+5178 SKIPPED"
+        - cmd: "route probe with BODY HASHING"
+          status: pass
+          note: "15/15 distinct per lane; react+solid+vue answer 200 on bogus - /habits matches NONE. Trap live, did not fire"
+        - cmd: "qwik trailing-slash control (T003 did NOT re-measure)"
+          status: pass
+          note: "/habits 301 -> /habits/ 0 bytes; /habits/ 200 104527 bytes"
+        - cmd: "BROWSER DRIVE, chromium, ALL SIX LANES"
+          status: pass
+          note: "ONE CLICK MOVES 12 OBSERVABLES IN EVERY LANE; six lanes IDENTICAL on every field at at0/at1/at6/at5"
+        - cmd: "NEGATIVE CONTROL: untouched sibling row"
+          status: pass
+          note: "h2 name, h2 sidebar name and h2 toggle DID NOT MOVE - not a page re-render"
+        - cmd: "CONTROL: is the solid/vue pageerror ours?"
+          status: pass
+          note: "same vite HMR error on /, /todomvc, /hn - PRE-EXISTING"
+        - cmd: "VISUAL off getBoundingClientRect/getComputedStyle, six lanes"
+          status: pass
+          note: "sidebar 256, topbar 60, content 704@x496, fill 16.6667%; SIX LANES AGREE TO THE PIXEL"
+        - cmd: "DERIVATION PROOF"
+          status: pass
+          note: "19 artifacts; PRESENT AFTER DELETE = 0 ASSERTED AND GATING; 19/19 BYTE-IDENTICAL; 1 unique digest over 7 CSS copies"
+        - cmd: "git diff --exit-code over S1-S14 + composition + goldens + emitted"
+          status: pass
+          note: "exit 0; ALSO exit 0 over demos/*/public and static - T003's row exited 1 there"
+        - cmd: "git status --short"
+          status: pass
+          note: "27 untracked, 25 modified; PAIRED with the diff; every path inside allowed_files"
+        - cmd: "pnpm test (final)"
+          status: pass
+          note: "EXACTLY 1 failure (foreign ARM B), 1318 passed"
+        - cmd: "pnpm check (final)"
+          status: pass
+          note: "267 - DID NOT RISE, with six new artifacts"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "PASS - 6 demos x 9 scenarios, all observations equal"
+        - cmd: "pnpm lint / pnpm check:citations"
+          status: pass
+          note: "0 warnings 0 errors, 520 files; citations clean, 569 swept"
+        - cmd: "demo servers stopped by recorded PID 18768 then 22815"
+          status: pass
+          note: "foreign PIDs 64413 and 24931 ALIVE; pkill -f NEVER used"
+        - cmd: "owner fingerprint FINISH"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169 / 116 - IDENTICAL to START"
+      deviations:
+        - "THE CARD AND THE DISPATCH CONTRADICT EACH OTHER ON THE DATE - see above. Both satisfy the constraint the card protects; the board text needs reconciling."
+        - "THE BRIEF UNDERCOUNTS THE FAN-OUT - five stated, six listed, SEVEN measured live."
+        - "FOUND A DEFECT IN THE REFERENCE AND DID NOT COPY IT - see above."
+        - "REPAIRED A LIE IN pnpm demo THAT THE CARD DID NOT ASK ABOUT - see above."
+        - "ADDED demos/shared/habit-css/ and copy-habit-css.mjs. NOTHING copied from Square UI - the geometry was MEASURED in a browser and reproduced on the vendored MIT shadcn tokens. The create-vite shell is neutralised INSIDE habits.css."
+        - "USED --primary (near-black) RATHER THAN THE REFERENCE'S PURPLE. oklch(0.6 0.22 290) is NOT a shadcn default token; reproducing it would be reproducing THEIR THEME rather than the measured geometry, which the licence ruling forbids. Cost: card radius reads 14px against the reference's 12px. Both recorded."
+        - "SHIPPED A SINGLE COMPONENT ON PURPOSE - see above."
+        - "EXTENDED vue gate.test.ts SPELLED_NUMBERS to TWENTY-SEVEN, which that table's own doc comment instructs: 'Extend the table; do not soften the message.'"
+        - "RE-ARGUED FIVE DERIVED CENSUSES RATHER THAN RENUMBERING. The strongest is vue 12a: S15 contributes ZERO hosts to that domain - THE FIRST APPLICATION IN THE CORPUS WITH NO FORM CONTROL AT ALL - so instances hold at twenty and only the scenario count moves. A SECOND NEGATIVE, stronger than S13's, making the G5-completeness reading rest on two applications instead of one."
+        - "THE SIZE ROWS CARRY A NEW READING: 81 hosts (the corpus's largest template) emit FEWER lines than S13's 62, at 5.07 lines/host, because emitted size tracks HANDLER BODIES and this app has 7 events and ONE state write. The line/node split diverges the OPPOSITE way from S13's, from a different cause, which CONFIRMS S13's explanation rather than repeating it."
+      remaining_blockers:
+        - "pnpm demo's CLOSING PARAGRAPH IS HAND-WRITTEN PROSE BESIDE A DERIVED TABLE. Repaired here, but a third six-lane app will stale it again and NOTHING WILL CATCH IT."
+        - "TWO OPEN EMITTER DEFECTS FROM T003 STILL UNREPAIRED. S15 avoids them by having no component reference; they will hit T005/T006 if either composes."
+        - "ANGULAR'S `imports` INVENTORY RULING IS STILL OPEN and still blocks S14's fourth lane (T009)."
+        - "REACT, SOLID AND VUE STILL ANSWER 200 FOR ANY PATH. Re-confirmed live."
+        - "NO FIXTURE IN THE CORPUS BINDS A `style` ATTRIBUTE - so `style` LOWERING IS UNMEASURED IN ALL SIX LANES. S15's progress bar is a class name for that reason. Also: still no static numeric attribute."
+        - "T002's OPEN ITEM UNTOUCHED: /todomvc, /todomvc-advanced and /codex geometry (T008)."
+        - "BOTH FOREIGN PROCESSES STILL ALIVE: PID 64413 on 5175, PID 24931 on 5178."
+      stopped_because: null
   - id: T005
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
     objective: >-
       Ship TASK MANAGEMENT - THE DRAG CARD as scenario `s16-task-board`: ONE authored source, emitted to all six lanes as the
@@ -842,6 +992,7 @@ tasks:
       - "You are about to read an HTTP 200 as proof a page exists. REACT, SOLID AND VUE ANSWER 200 FOR ANY PATH (fall-through to S1). HASH THE BODY and prove it differs per route - T001 caught this as a check that passes while measuring nothing."
       - "TWO OPEN EMITTER DEFECTS HIT ANY CARD THAT COMPOSES, not just recursion. SOLID: a same-module component reference makes every signal read inside a handler DOUBLE-CALL (TS2349) and DROPS attr:value. QWIK: a function-typed prop CANNOT CROSS A COMPONENT BOUNDARY IN ANY SPELLING (onTrace$ prints as onTrace, authoring onTrace$ gives onTrace$$). If you compose, EXPECT THEM, narrow around them, and DO NOT touch an emitter."
       - "You are about to assume a list prop is impossible. `Array<string>` LOWERS IN FIVE LANES where `string[]` refuses - the limit is the SPELLING, not arrays. T003 refuted the stronger claim T002 recorded."
+      - "You are about to bind a `style` attribute. NO FIXTURE IN THE CORPUS DOES, so style lowering is UNMEASURED IN ALL SIX LANES - S15 used a class name for exactly this reason. MEASURE IT AS ITS OWN PROBE FIRST and record the per-lane result; do not discover it mid-build."
       - "Verification fails twice for the same reason."
     receipt: null
 
@@ -935,6 +1086,7 @@ tasks:
       - "You are about to read an HTTP 200 as proof a page exists. REACT, SOLID AND VUE ANSWER 200 FOR ANY PATH (fall-through to S1). HASH THE BODY and prove it differs per route - T001 caught this as a check that passes while measuring nothing."
       - "TWO OPEN EMITTER DEFECTS HIT ANY CARD THAT COMPOSES, not just recursion. SOLID: a same-module component reference makes every signal read inside a handler DOUBLE-CALL (TS2349) and DROPS attr:value. QWIK: a function-typed prop CANNOT CROSS A COMPONENT BOUNDARY IN ANY SPELLING (onTrace$ prints as onTrace, authoring onTrace$ gives onTrace$$). If you compose, EXPECT THEM, narrow around them, and DO NOT touch an emitter."
       - "You are about to assume a list prop is impossible. `Array<string>` LOWERS IN FIVE LANES where `string[]` refuses - the limit is the SPELLING, not arrays. T003 refuted the stronger claim T002 recorded."
+      - "You are about to bind a `style` attribute. NO FIXTURE IN THE CORPUS DOES, so style lowering is UNMEASURED IN ALL SIX LANES - S15 used a class name for exactly this reason. MEASURE IT AS ITS OWN PROBE FIRST and record the per-lane result; do not discover it mid-build."
       - "Verification fails twice for the same reason."
     receipt: null
 
@@ -1093,6 +1245,36 @@ tasks:
       - "admit | deny, with the deciding gate named"
       - "the measured floor today, and the floor after, per scenario"
       - "the worker spec if admit; the recorded rationale if deny"
+    receipt: null
+
+  - id: T010
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: >-
+      Make scripts/demo.mjs's closing banner DERIVED rather than hand-written, so it cannot
+      state something false about the table sitting next to it.
+    WHY: >-
+      T004 found the banner reading "S13 is the only one all SIX lanes serve" - FALSE THE MOMENT
+      S15 LANDED, and INVISIBLE TO EVERY CHECK, because that paragraph is HAND-WRITTEN PROSE
+      BESIDE A DERIVED TABLE. It was repaired by hand. A THIRD SIX-LANE APP WILL STALE IT AGAIN
+      AND NOTHING WILL CATCH IT. Same family as the citation guard and the vue gate's derived
+      census: a number that lives in prose rots silently.
+    allowed_files:
+      - "scripts/demo.mjs"
+      - "docs/goals/frameless-app-axes-v1/notes/T010-derived-banner.md"
+    verify:
+      - "EVERY factual claim in the banner is COMPUTED from the same table it sits beside - no hand-written count, no hand-written lane name."
+      - "MUTATION TEST IT: add a fake six-lane scenario to the table in memory and confirm the banner text CHANGES. A derived banner that never varies is indistinguishable from a hardcoded one."
+      - "pnpm demo RUNS and its output is correct against the real corpus"
+      - "pnpm test at exactly 1 / pnpm check not above 267 / pnpm e2e 6 x 9 / lint / check:citations"
+      - "git diff --exit-code -- packages/ demos/, PAIRED WITH git status --short"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to leave any factual claim in the banner hand-written."
+      - "NEVER pkill -f on a broad pattern. TWO FOREIGN PROCESSES ARE ALIVE: PID 64413 on 5175, PID 24931 on 5178."
+      - "Verification fails twice for the same reason."
     receipt: null
 
   - id: T999

@@ -14,6 +14,7 @@ import { CodexClone } from './emitted/CodexClone.jsx'
 import { EventForm } from './emitted/EventForm.jsx'
 import { HnFront } from './emitted/HnFront.jsx'
 import { HnItem } from './emitted/HnItem.jsx'
+import { HabitTracker } from './emitted/HabitTracker.jsx'
 import { FormBoard } from './emitted/FormBoard.jsx'
 import { KeyedTodo } from './emitted/KeyedTodo.jsx'
 import { NestedBoard } from './emitted/NestedBoard.jsx'
@@ -129,7 +130,7 @@ function AsyncGate() {
  * mirrors the Qwik demo's `/`, `/s2`, `/s3` routes without adding a router.
  *
  * @param {string} url
- * @returns {'s1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7' | 's8' | 's9' | 'todomvc' | 'todomvc-advanced' | 'codex' | 'hn' | 'hn-item'}
+ * @returns {'s1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7' | 's8' | 's9' | 'todomvc' | 'todomvc-advanced' | 'codex' | 'hn' | 'hn-item' | 'habits'}
  */
 export function scenarioFor(url) {
   const path = String(url ?? '')
@@ -159,6 +160,9 @@ export function scenarioFor(url) {
   // literal ['s1'..'s9'].
   if (path === 'hn') return 'hn'
   if (path === 'hn-item') return 'hn-item'
+  // THE SIXTH APPLICATION - the HABIT TRACKER - and the second scenario in
+  // this corpus that all SIX lanes emit and ship. Browsable only.
+  if (path === 'habits') return 'habits'
   return 's1'
 }
 
@@ -353,6 +357,49 @@ export default function App({ url }) {
         <>
           <link rel="stylesheet" href="/hn-css/hn.css" />
           <HnItem parent="root" depth={0} />
+        </>
+      )
+    case 'habits':
+      // THE SIXTH APPLICATION - the HABIT TRACKER - and THE SIX-LANE FAN-OUT
+      // PAGE. It is the SECOND scenario in this corpus that all six lanes emit
+      // and ship, after S13, and the FIRST that was designed to be so: the whole
+      // app is SYNCHRONOUS DERIVED STATE, so there is no `Promise`/`setTimeout`
+      // for angular's global-identifier ban to catch, no async door for vue's
+      // GLOBALS_ALLOWED gap to open, and no component reference for either of
+      // T003's two emitter defects to reach. Its date - "JULY 30, 2026" over
+      // "Thursday" - is a LITERAL STRING in the seeded data, because the angular
+      // emitter cannot NAME `Date` and a clock would have cost this app the very
+      // lane count it exists to measure.
+      //
+      // WHAT ONE CLICK ON A HABIT TOGGLE MOVES, all derived from ONE `habits`
+      // cell and none of it written by the handler: the toggle's own fill, the
+      // row title's strikethrough, THE SIDEBAR ROW'S strikethrough (a second
+      // repeat in a different subtree - which is what makes this fan-out rather
+      // than a row re-render), the header counter, the sidebar badge, the
+      // progress bar's width class, the encouragement sentence AND its emoji,
+      // and today's dot inside that row's nested day strip. EIGHT observables.
+      //
+      // WHAT IS INERT AND NOT FAKED: `Statistics`, `New habit`, the sidebar
+      // toggle and the theme toggle. `.tsrx` has no routing construct at all.
+      // WHAT IS ABSENT: the reference's 30-day heat-map and sparkline - roughly
+      // two hundred decorative cells per habit that would triple the template
+      // while measuring nothing the eight observables do not already measure.
+      //
+      // TWO STYLESHEETS, ORDER LOAD-BEARING. `/shadcn-theme/tokens.css` is the
+      // vendored shadcn/ui DEFAULT theme (MIT, (c) 2023 shadcn) and must load
+      // FIRST, because every colour in the second file is a `var()` from it.
+      // `/habit-css/habits.css` is THIS REPOSITORY'S OWN WORK - the Square UI
+      // reference is licence-restricted to REFERENCE-ONLY, so nothing was copied
+      // from it and its geometry was MEASURED in a browser instead. Both are
+      // linked HERE rather than globally because `habits.css` restyles `body`,
+      // and a global link would move the geometry of the nine s1-s9 scenarios
+      // `pnpm e2e` compares. Like S10-S14 this page is OUT of the 6 x 9
+      // three-way contract, which pins `threeWayScenarios` to ['s1'..'s9'].
+      return (
+        <>
+          <link rel="stylesheet" href="/shadcn-theme/tokens.css" />
+          <link rel="stylesheet" href="/habit-css/habits.css" />
+          <HabitTracker onTrace={noTrace} />
         </>
       )
     case 's9':

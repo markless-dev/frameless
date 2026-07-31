@@ -4,6 +4,7 @@ import { AttrBoard } from '../emitted/AttrBoard';
 import { AsyncGate } from './async-gate';
 import { BranchBoard } from '../emitted/BranchBoard';
 import { EventForm } from '../emitted/EventForm';
+import { HabitsPage } from './habits-page';
 import { HnPage } from './hn-page';
 import { FormBoard } from '../emitted/FormBoard';
 import { KeyedTodo } from '../emitted/KeyedTodo';
@@ -118,5 +119,30 @@ export const routes: Routes = [
   {
     path: 'hn',
     component: HnPage,
+  },
+  // THE SIXTH APPLICATION - the HABIT TRACKER - and THE SECOND CORPUS
+  // APPLICATION THIS LANE SHIPS ALONGSIDE THE OTHER FIVE. S11 and S12 are absent
+  // because this emitter REFUSES them on its global-identifier ban; S14 is absent
+  // because this emitter EMITS it and the lane's own gate rejects `imports`. S15
+  // names no global and references no component, so neither absence is reachable:
+  // it is a single component whose entire mechanism is synchronous derived state,
+  // and its date is a LITERAL STRING in the seeded data rather than anything
+  // computed from `Date`. See its fixture's constraint (10) - that is the
+  // constraint the whole six-lane claim rests on, and it rests on THIS LANE.
+  //
+  // It goes through a WRAPPER, like /todomvc and /hn and for the same reason: a
+  // `<link>` has to be rendered by something, and putting it in src/index.html or
+  // angular.json's `styles` array would apply habits.css - which restyles `body`,
+  // `:root`, `#root` and `#app` - to all nine three-way scenarios. It links TWO
+  // sheets where /hn links one, tokens first. See `./habits-page`.
+  //
+  // Like /todomvc and /hn it is deliberately NOT part of the 6 x 9 three-way
+  // contract - `scripts/e2e.mjs` pins `threeWayScenarios` to the literal
+  // ['s1'..'s9'] - so this route is browsable only. It carries no seed: IR-8 has
+  // no lowering for an array type, so the six habits are seeded INSIDE the
+  // emitted component and all six lanes start from byte-identical data.
+  {
+    path: 'habits',
+    component: HabitsPage,
   },
 ];

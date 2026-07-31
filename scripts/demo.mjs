@@ -79,6 +79,16 @@ const SCENARIOS = [
 	//     baseline form inventory.
 	// react, solid and qwik serve it. See the three refusal constants below.
 	{ id: 'S14', path: '/hn-item', title: 'Hacker News item page (recursive comments)' },
+	// S15 IS THE SECOND ROW IN THIS TABLE WITH NO `unbuilt` ENTRY IN ANY LANE, and
+	// the FIRST that was designed to be so rather than turning out that way. S13
+	// kept six lanes because nothing in it happened to name a global; S15 keeps
+	// them because its axis IS six-lane fan-out - it is pure SYNCHRONOUS DERIVED
+	// STATE, so there is no `Promise`/`setTimeout` for angular's global-identifier
+	// ban, no async door for vue's GLOBALS_ALLOWED gap, and no component reference
+	// for either of the two emitter defects S14 exposed. Its date is a LITERAL
+	// STRING in the seeded data, which is the one constraint the six-lane claim
+	// actually rests on. ONE CLICK MOVES EIGHT DERIVED OBSERVABLES.
+	{ id: 'S15', path: '/habits', title: 'Habit tracker (one click, eight derived updates)' },
 ];
 
 /**
@@ -579,10 +589,12 @@ function announce() {
 	}
 
 	lines.push('  Scenarios: S1-S9 are the 6 x 9 three-way contract; S10 TodoMVC,');
-	lines.push('  S11 TodoMVC Advanced, S12 Codex clone, S13 Hacker News and');
-	lines.push('  S14 Hacker News item are the applications. S13 is the only one');
-	lines.push('  all SIX lanes serve; S14 is the RECURSION page and three lanes');
-	lines.push('  refuse it, each for a different recorded reason.');
+	lines.push('  S11 TodoMVC Advanced, S12 Codex clone, S13 Hacker News,');
+	lines.push('  S14 Hacker News item and S15 Habit tracker are the applications.');
+	lines.push('  S13 and S15 are the two that all SIX lanes serve. S14 is the');
+	lines.push('  RECURSION page and three lanes refuse it, each for a different');
+	lines.push('  recorded reason; S15 is the FAN-OUT page, where one click moves');
+	lines.push('  eight derived observables and no lane is lost.');
 	lines.push('  Qwik routes keep their trailing slash — its router 301s without it.');
 	lines.push('  Walkthrough: README.md, "See It Yourself: Hydrate, Hydrate, Resume".');
 	lines.push(`  Ctrl-C stops all ${runners.length}.`);

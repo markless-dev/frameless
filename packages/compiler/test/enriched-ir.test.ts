@@ -27,6 +27,7 @@ const FIXTURES = [
 	's12-codex-clone.tsrx',
 	's13-hn-front.tsrx',
 	's14-hn-item.tsrx',
+	's15-habit-tracker.tsrx',
 ] as const;
 
 const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>> = {
@@ -635,6 +636,116 @@ const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>>
 		['a', 'class'],
 		['div', 'class'],
 	],
+	// THE SIXTH APPLICATION IN THE CORPUS - the HABIT TRACKER - at EIGHTY-ONE
+	// hosts, nineteen more than S13's sixty-two and the largest template here by
+	// a third. It rides the ORDINAL slot for the reason every row above records.
+	//
+	// THE SHAPE OF THIS LIST IS THE MEASUREMENT, AND IT IS A DIFFERENT SHAPE THAN
+	// S13'S. FORTY-FIVE of the eighty-one hosts are `span class` and FIFTEEN are
+	// `div class` - both counted off this list, not estimated - against S13's
+	// twenty-six spans and twenty-one anchors. The spans are not separators here:
+	// S13's sixteen `<span class="hn-bar">|</span>` exist because
+	// news.ycombinator.com writes literal `" | "` text nodes that constraint (8)
+	// forbids, whereas THESE spans are text runs that had to be un-inlined for
+	// constraint (9) - no element carrying a handler may sit beside text, and
+	// every emoji, label, count and glyph on this page shares a parent with a
+	// `<button>` or an `<a>`. TWENTY-ONE ANCHORS BECAME TWO, because this page
+	// has no link bar; the five `button type` rows are the sidebar add, the
+	// sidebar toggle, `New habit`, the theme toggle and the per-habit TOGGLE -
+	// and that last one is the only host in the corpus whose single click is
+	// asserted to move EIGHT other hosts.
+	//
+	// ONE ROW HERE IS NOT LIKE THE OTHERS AND IT IS THE PROGRESS BAR:
+	// `['span', 'data-ht']` is the only host in this list whose FIRST name is not
+	// `class`, because its `class` is a DYNAMIC binding (`{fillClass}`) and the
+	// static `data-ht` therefore prints ahead of it. That is the fan-out target
+	// with no text of its own - constraint (13) - so the census is where the
+	// class-name-as-width decision becomes visible.
+	//
+	// `aside` and `nav` ARRIVE IN THE CORPUS HERE FOR THE FIRST TIME.
+	's15-habit-tracker.tsrx': [
+		['section', 'class'],
+		['div', 'class'],
+		['aside', 'class'],
+		['div', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['nav', 'class'],
+		['a', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['a', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['div', 'class'],
+		['span', 'class'],
+		['button', 'type'],
+		['span', 'class'],
+		['ul', 'class'],
+		['li', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['div', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['div', 'class'],
+		['header', 'class'],
+		['button', 'type'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['button', 'type'],
+		['span', 'class'],
+		['span', 'class'],
+		['button', 'type'],
+		['span', 'class'],
+		['main', 'class'],
+		['div', 'class'],
+		['div', 'class'],
+		['span', 'class'],
+		['h1', 'class'],
+		['p', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['div', 'class'],
+		['p', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['div', 'class'],
+		['span', 'data-ht'],
+		['div', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['div', 'class'],
+		['div', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['ul', 'class'],
+		['li', 'class'],
+		['button', 'type'],
+		['span', 'class'],
+		['span', 'class'],
+		['div', 'class'],
+		['div', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['div', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['p', 'class'],
+	],
 };
 
 async function fixtureIr(file: (typeof FIXTURES)[number]): Promise<EnrichedIR> {
@@ -937,6 +1048,7 @@ describe('fixture-family sufficiency', () => {
 			's12-codex-clone.tsrx',
 			's13-hn-front.tsrx',
 			's14-hn-item.tsrx',
+			's15-habit-tracker.tsrx',
 		];
 
 		test('CONTROL: every UNannotated corpus scenario carries NO type, and both sets are non-empty', async () => {
@@ -1450,6 +1562,25 @@ export function Probe({ label }: { label }) @{
 			// both the annotated and the unannotated sets to be non-empty across the
 			// corpus - not every fixture to trace.
 			's14-hn-item.tsrx': [],
+			// TWO NAMES, AND THAT IS THE SMALLEST NON-EMPTY ROW IN THIS TABLE.
+			// It is a MEASUREMENT of where this app's oracle lives, not a sign of a
+			// thin app: S15 has EIGHTY-ONE hosts, more than any other fixture here,
+			// and only two trace channels. `toggle` is the one interaction the card
+			// exists to measure, and it is authored ONCE inside a keyed repeat, so
+			// the six seeded habits share a single handler; `press` covers the four
+			// INERT controls (the sidebar add, the sidebar toggle, `New habit` and
+			// the theme toggle) whose only job is to record that this page has no
+			// routing construct rather than to hide it. `nav` covers the two
+			// sidebar links for the same reason.
+			// THE REST OF THE PAGE IS DERIVED AND HAS NO CHANNEL AT ALL, which is
+			// the point. The eight observables one `toggle` moves - the fill, two
+			// strikethroughs in two different subtrees, the counter, the badge, the
+			// progress class, the encouragement pair and today's dot - are every one
+			// of them a `computed` or a `class`/`hidden` binding off the single
+			// `habits` cell, so a lane that fired the trace and repainted only the
+			// clicked row would be INDISTINGUISHABLE HERE and is caught in the DOM
+			// instead. S14's row records the same move for a different reason.
+			's15-habit-tracker.tsrx': ['nav', 'press', 'toggle'],
 		};
 		for (const file of FIXTURES) {
 			const ir = await fixtureIr(file);

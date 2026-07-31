@@ -267,6 +267,42 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// the angular lane emits it and then rejects the result at its own baseline
 	// form inventory. Size is the least interesting fact about this row.
 	S14: { physicalLoc: 329, structuralNodes: 1237 },
+	// S15 (THE HABIT TRACKER) IS THE CORPUS'S LARGEST TEMPLATE AND ITS CHEAPEST
+	// ONE PER HOST, and that inversion is a stronger version of the reading S12's
+	// row opened. EIGHTY-ONE hosts - nineteen more than S13, the previous largest,
+	// and more than half again S12's fifty-three - emit 411 physical lines against
+	// S13's 555. That is 5.07 lines per host against S13's 8.95, S14's 8.44 and
+	// S12's 7.28: the LOWEST in the corpus.
+	// THE CAUSE IS DERIVED, NOT GUESSED: emitted size tracks HANDLER BODIES, and
+	// this app has SEVEN recorded events and exactly ONE STATE WRITE - fewer than
+	// any other application here (S13: 27 events, S11: 19, S10: 15) - because its
+	// whole mechanism is one write fanning out through `computed` values and
+	// class/hidden bindings rather than many handlers each rebuilding a list. S12's
+	// row claimed emitted size follows handlers and not host count; S15 is that
+	// claim's strongest instance, with the largest host count in the corpus and the
+	// smallest write count of any application in it.
+	// AGAINST S13: 411/555 = 0.74x the physical lines and 2002/2073 = 0.97x the
+	// structural nodes. THE TWO RATIOS ARE 22% APART - as far apart as S13's own
+	// 19% split - AND THEY DIVERGE IN THE OPPOSITE DIRECTION, which is what makes
+	// this row confirm S13's explanation instead of merely repeating it. S13's
+	// lines ran AHEAD of its nodes because sixteen one-character separator spans
+	// each cost a line and almost no nodes. S15's nodes run ahead of its LINES
+	// because of its SEED: six habits each carrying a nested six-day array is
+	// thirty-six `{ id: 'h1d1', on: true },` object literals, and the formatter
+	// packs every one of them onto a SINGLE LINE. A nested seed is node-dense and
+	// line-cheap; a separator span is line-expensive and node-cheap. Two opposite
+	// divergences of the same magnitude from two different source shapes is
+	// evidence that the split tracks WHAT THE SOURCE IS MADE OF and not a
+	// per-element tax in the emitter - which is exactly what S13's row asserted and
+	// could not, on its own evidence, distinguish.
+	// WHAT THE NUMBER CANNOT SEE, and on this row it is the entire point of the
+	// scenario. S15 is the SECOND scenario in the corpus that all six lanes emit
+	// and the first built to be so deliberately, and its claim is that ONE CLICK
+	// MOVES EIGHT DERIVED OBSERVABLES IN ALL SIX LANES AT ONCE. A budget cannot see
+	// a fan-out at all: an emitter that repainted only the clicked row would emit
+	// byte-identical output and measure identically here. Only a driven browser
+	// separates them, which is where that claim is actually settled.
+	S15: { physicalLoc: 411, structuralNodes: 2002 },
 };
 
 describe('honest emitted structure comparison', () => {

@@ -529,8 +529,24 @@ describe('Angular 22 emitter', () => {
 		// name. That is what makes the count 8 rather than 10, and it is the datum
 		// worth keeping: this figure tracks the modules this lane EMITS, not the
 		// modules the corpus AUTHORS.
+		// S15 (HABIT TRACKER) IS THE FIFTH ANNOTATED MODULE THIS LANE EMITS, and it
+		// moves the typed arm alone once more: one prop entry (`onTrace`), declared
+		// with a type, so `typedInputsSeen` goes 8 -> 9 while `untypedInputsSeen`
+		// holds at 15 for the third consecutive application. THE UNTYPED ARM HOLDING
+		// IS THE HALF WORTH READING: S15 is the largest template in the corpus at
+		// eighty-one hosts and its single click drives eight derived observables, and
+		// it still adds not one untyped member, because every one of those
+		// observables is a `computed` GETTER rather than an `@Input()`. A lane that
+		// had started widening its untyped surface as applications grew would show it
+		// here first, and it does not.
+		// S14 IS ANNOTATED AND ABSENT FOR A THIRD, DIFFERENT REASON - not the
+		// global-identifier ban that subtracts S11 and S12. This lane EMITS S14
+		// correctly and its own dossier gate then rejects the result over `imports`;
+		// `test/ungated-scenarios.ts` carries that subtraction. So the figure 9 is
+		// short of the corpus's annotated count by THREE modules and by TWO distinct
+		// kinds of absence, which is exactly why it is derived per lane.
 		expect({ typedInputsSeen, untypedInputsSeen }).toEqual({
-			typedInputsSeen: 8,
+			typedInputsSeen: 9,
 			untypedInputsSeen: 15,
 		});
 	});

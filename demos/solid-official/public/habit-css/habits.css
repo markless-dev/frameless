@@ -1,0 +1,822 @@
+/*
+ * The habit-tracker look, reproduced from MEASURED geometry.
+ *
+ * THIS FILE IS THIS REPOSITORY'S OWN WORK - see ./README.md. NOTHING was copied
+ * from the Square UI habit-tracker template or its repository, whose bespoke
+ * "ln-dev UI License" forbids publishing the templates OR ANY DERIVATIVE in any
+ * repository. The reference was QA'd LIVE in a browser and every number below
+ * is a `getBoundingClientRect()` / `getComputedStyle()` reading off the rendered
+ * page; every colour is a token from `demos/shared/shadcn-theme/`, which is the
+ * MIT shadcn/ui default theme, and NOT a value read off that site.
+ *
+ * It is the second sheet in this repo to sit on those tokens (`codex.css` is the
+ * first), and it is linked BESIDE `/shadcn-theme/tokens.css`, which must load
+ * FIRST because every colour here is a `var(--...)` from it.
+ *
+ * Class names come from packages/compiler/test/fixtures/s15-habit-tracker.tsrx
+ * and are printed unchanged by all SIX emitters, so this one file styles all six
+ * lanes.
+ */
+
+/*
+ * SHELL NEUTRALISATION, AND IT IS A MEASURED REPAIR RATHER THAN HOUSEKEEPING.
+ *
+ * `hn.css` records the finding this block inherits: driven across all six lanes,
+ * `/hn` rendered TWO DIFFERENT PAGES, because the create-vite scaffold used by
+ * react, solid and vue sets `:root { font: 18px/145% system-ui; letter-spacing:
+ * 0.18px }` and `#root`/`#app { width: 1126px; text-align: center; display:
+ * flex }`, while qwik, svelte and angular ship no such scaffold. Every DECLARED
+ * value was identical in all six - a computed-style check would have reported
+ * six passes.
+ *
+ * It is neutralised HERE, in the page-scoped sheet, and NOT in the three shells:
+ * those files are shared with S1-S12 and with the nine three-way scenarios that
+ * `pnpm e2e` compares byte for byte across six lanes.
+ *
+ * `color-scheme` is pinned because the scaffold declares `light dark` and flips
+ * its palette under a dark-mode preference, which would make the six lanes
+ * disagree on a machine whose OS is in dark mode and agree on one that is not.
+ */
+:root {
+	font:
+		normal 16px/1.5 ui-sans-serif,
+		system-ui,
+		-apple-system,
+		'Segoe UI',
+		Roboto,
+		'Helvetica Neue',
+		Arial,
+		sans-serif;
+	letter-spacing: normal;
+	text-rendering: auto;
+	color-scheme: light;
+}
+
+#root,
+#app {
+	width: 100%;
+	max-width: none;
+	min-height: 0;
+	margin: 0;
+	padding: 0;
+	border: none;
+	display: block;
+	text-align: left;
+}
+
+body {
+	margin: 0;
+	padding: 0;
+	background: var(--background);
+	color: var(--foreground);
+	font-family:
+		ui-sans-serif,
+		system-ui,
+		-apple-system,
+		'Segoe UI',
+		Roboto,
+		'Helvetica Neue',
+		Arial,
+		sans-serif;
+	font-size: 16px;
+	line-height: 1.5;
+	text-align: left;
+}
+
+/*
+ * `hidden` MUST WIN, and on this page it is load-bearing in a way it was not on
+ * /hn. FIVE of the eight things one click moves are `hidden` flips - the toggle's
+ * emoji, the toggle's check mark, the streak chip, the streak card and the 6/6
+ * footnote - and every rule below that sets `display` would otherwise beat the
+ * UA's `[hidden] { display: none }` on specificity alone. A page whose fan-out
+ * silently stopped being observable is the exact failure this card exists to
+ * catch, so the guard is `!important` rather than a specificity race.
+ */
+[hidden] {
+	display: none !important;
+}
+
+/* --------------------------------------------------------------------------
+ * FRAME. Measured on the reference at a 1440x1000 viewport: the sidebar is
+ * 256px and full height, the top bar is 60px, and the main column is centred in
+ * what is left with its content spanning x=496..1200 - 704px, which is 44rem.
+ * -------------------------------------------------------------------------- */
+.ht {
+	display: block;
+	min-height: 100vh;
+	background: var(--background);
+	color: var(--foreground);
+}
+
+.ht-shell {
+	display: flex;
+	align-items: stretch;
+	min-height: 100vh;
+}
+
+.ht-side {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	width: 256px;
+	flex: 0 0 256px;
+	box-sizing: border-box;
+	padding: 12px;
+	background: var(--sidebar);
+	color: var(--sidebar-foreground);
+	border-right: 1px solid var(--sidebar-border);
+}
+
+.ht-content {
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+/* -------------------------------------------------------------------------- */
+/* SIDEBAR                                                                    */
+/* -------------------------------------------------------------------------- */
+.ht-brand {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	height: 36px;
+	padding: 0 4px;
+}
+
+.ht-mark {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border-radius: var(--radius-md);
+	background: var(--sidebar-primary);
+	color: var(--sidebar-primary-foreground);
+	font-size: 14px;
+	line-height: 1;
+}
+
+.ht-brandname {
+	font-size: 14px;
+	font-weight: 600;
+	letter-spacing: -0.1px;
+}
+
+.ht-nav {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.ht-navlink {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	height: 32px;
+	padding: 0 8px;
+	border-radius: var(--radius-md);
+	color: var(--sidebar-foreground);
+	font-size: 14px;
+	text-decoration: none;
+}
+
+.ht-navlink-on {
+	background: var(--sidebar-accent);
+	color: var(--sidebar-accent-foreground);
+	font-weight: 500;
+}
+
+.ht-navicon {
+	font-size: 14px;
+	line-height: 1;
+}
+
+.ht-navtext {
+	flex: 1 1 auto;
+}
+
+/*
+ * THE SIDEBAR BADGE - fan-out observable 5. It is a text swap ('0/6' -> '1/6')
+ * inside a fixed-width pill, so the pill is sized in `ch` rather than by content
+ * and the six lanes cannot disagree about its width as the number changes.
+ */
+.ht-badge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 4ch;
+	height: 20px;
+	padding: 0 6px;
+	border-radius: 999px;
+	background: var(--accent);
+	color: var(--accent-foreground);
+	font-size: 11px;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+}
+
+.ht-sidehead {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	height: 24px;
+	padding: 0 8px;
+	margin-top: 8px;
+}
+
+.ht-sidetitle {
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.6px;
+	color: var(--muted-foreground);
+}
+
+.ht-sideadd {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 20px;
+	height: 20px;
+	padding: 0;
+	border: none;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--muted-foreground);
+	font: inherit;
+	font-size: 14px;
+	line-height: 1;
+	cursor: pointer;
+}
+
+.ht-sideadd:hover {
+	background: var(--accent);
+	color: var(--accent-foreground);
+}
+
+.ht-plus {
+	line-height: 1;
+}
+
+.ht-sidelist {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.ht-siderow {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	height: 44px;
+	padding: 0 8px;
+	border-radius: var(--radius-md);
+}
+
+.ht-sideemoji {
+	font-size: 18px;
+	line-height: 1;
+}
+
+.ht-sidebody {
+	display: flex;
+	flex-direction: column;
+	gap: 1px;
+	min-width: 0;
+}
+
+.ht-sidename {
+	font-size: 13px;
+	line-height: 1.3;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 168px;
+}
+
+/*
+ * FAN-OUT OBSERVABLE 3, and it is the one that makes this page a fan-out rather
+ * than a row re-render: the SIDEBAR name is struck through by a click on a
+ * control in a DIFFERENT SUBTREE - the habit card in the main column. Both
+ * repeats read the same `habits` cell.
+ */
+.ht-sidename-done {
+	text-decoration: line-through;
+	color: var(--muted-foreground);
+}
+
+.ht-sidestreak {
+	font-size: 11px;
+	line-height: 1.3;
+	color: var(--muted-foreground);
+}
+
+.ht-promo {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	margin-top: auto;
+	padding: 12px;
+	border: 1px solid var(--sidebar-border);
+	border-radius: var(--radius-lg);
+	background: var(--background);
+}
+
+.ht-promotitle {
+	font-size: 13px;
+	font-weight: 600;
+	line-height: 1.3;
+}
+
+.ht-promotext {
+	font-size: 11px;
+	line-height: 1.45;
+	color: var(--muted-foreground);
+}
+
+/* -------------------------------------------------------------------------- */
+/* TOP BAR - 60px on the reference                                            */
+/* -------------------------------------------------------------------------- */
+.ht-top {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	height: 60px;
+	flex: 0 0 60px;
+	box-sizing: border-box;
+	padding: 0 20px;
+	border-bottom: 1px solid var(--border);
+}
+
+.ht-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	border: none;
+	border-radius: var(--radius-md);
+	background: transparent;
+	color: var(--muted-foreground);
+	font: inherit;
+	font-size: 15px;
+	line-height: 1;
+	cursor: pointer;
+}
+
+.ht-icon:hover {
+	background: var(--accent);
+	color: var(--accent-foreground);
+}
+
+.ht-iconglyph {
+	line-height: 1;
+}
+
+.ht-crumb {
+	font-size: 14px;
+	color: var(--foreground);
+}
+
+.ht-topgap {
+	display: block;
+	flex: 1 1 auto;
+}
+
+.ht-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	height: 32px;
+	padding: 0 14px;
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	background: var(--background);
+	color: var(--foreground);
+	font: inherit;
+	font-size: 14px;
+	font-weight: 500;
+	line-height: 1;
+	cursor: pointer;
+}
+
+.ht-pill:hover {
+	background: var(--accent);
+	color: var(--accent-foreground);
+}
+
+.ht-pilltext {
+	line-height: 1;
+}
+
+/* -------------------------------------------------------------------------- */
+/* MAIN - 44rem centred, matching the measured 704px content span             */
+/* -------------------------------------------------------------------------- */
+.ht-main {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	width: 100%;
+	max-width: 44rem;
+	box-sizing: border-box;
+	margin: 0 auto;
+	padding: 40px 20px 64px;
+}
+
+.ht-hero {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 24px;
+}
+
+.ht-heroleft {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+}
+
+.ht-date {
+	font-size: 12px;
+	font-weight: 500;
+	letter-spacing: 0.6px;
+	color: var(--muted-foreground);
+}
+
+.ht-weekday {
+	margin: 0;
+	font-size: 30px;
+	font-weight: 900;
+	letter-spacing: -0.75px;
+	line-height: 1.2;
+}
+
+.ht-cheerline {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin: 0;
+}
+
+.ht-cheeremoji {
+	font-size: 14px;
+	line-height: 1;
+}
+
+/*
+ * FAN-OUT OBSERVABLES 7a AND 7b. The emoji and the sentence run PARALLEL ladders
+ * off the same count, so a lane that re-derived one and not the other is
+ * distinguishable here - which is why they are two hosts and not one string.
+ */
+.ht-cheertext {
+	font-size: 14px;
+	line-height: 1.3;
+	color: var(--muted-foreground);
+}
+
+.ht-heroright {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 0;
+	flex: 0 0 auto;
+}
+
+.ht-tally {
+	display: flex;
+	align-items: baseline;
+	gap: 1px;
+	margin: 0;
+	font-variant-numeric: tabular-nums;
+}
+
+.ht-tallydone {
+	font-size: 30px;
+	font-weight: 700;
+	line-height: 1.1;
+}
+
+.ht-tallytotal {
+	font-size: 18px;
+	font-weight: 500;
+	color: var(--muted-foreground);
+}
+
+.ht-tallylabel {
+	font-size: 12px;
+	color: var(--muted-foreground);
+}
+
+/* --------------------------------------------------------------------------
+ * PROGRESS BAR - fan-out observable 6.
+ *
+ * THE WIDTH IS A CLASS NAME, NOT AN INLINE STYLE. No fixture in this corpus
+ * binds a `style` attribute, so that lowering is unmeasured in all six lanes;
+ * `class={fillClass}` is the binding this corpus has printed in every lane since
+ * S10. The seven widths below are the seven reachable states of a six-habit day
+ * and each is `n/6` to four decimal places, which is what the reference's own
+ * inline width computes to (measured: 16.6667% at 1/6, 100% at 6/6).
+ *
+ * The rendered bar is asserted in the browser by its MEASURED
+ * getBoundingClientRect().width, never by which class it carries.
+ * -------------------------------------------------------------------------- */
+.ht-progress {
+	width: 100%;
+	height: 6px;
+	border-radius: 999px;
+	background: var(--muted);
+	overflow: hidden;
+}
+
+.ht-fill {
+	display: block;
+	height: 100%;
+	border-radius: 999px;
+	background: var(--primary);
+	transition: width 700ms ease;
+}
+
+.ht-fill-0 {
+	width: 0%;
+}
+
+.ht-fill-1 {
+	width: 16.6667%;
+}
+
+.ht-fill-2 {
+	width: 33.3333%;
+}
+
+.ht-fill-3 {
+	width: 50%;
+}
+
+.ht-fill-4 {
+	width: 66.6667%;
+}
+
+.ht-fill-5 {
+	width: 83.3333%;
+}
+
+.ht-fill-6 {
+	width: 100%;
+}
+
+/* -------------------------------------------------------------------------- */
+/* ACTIVE STREAKS                                                             */
+/* -------------------------------------------------------------------------- */
+.ht-streakhead {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-top: 8px;
+}
+
+.ht-streakflame {
+	font-size: 13px;
+	line-height: 1;
+}
+
+.ht-streaklabel {
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.6px;
+	color: var(--muted-foreground);
+}
+
+.ht-streakrow {
+	display: flex;
+	align-items: stretch;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.ht-streakcard {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 6px;
+	min-width: 80px;
+	box-sizing: border-box;
+	padding: 12px;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-xl);
+	background: var(--card);
+	color: var(--card-foreground);
+}
+
+.ht-streakemoji {
+	font-size: 20px;
+	line-height: 1;
+}
+
+.ht-streakname {
+	font-size: 12px;
+	font-weight: 500;
+	text-align: center;
+}
+
+.ht-streakcount {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+}
+
+.ht-flame {
+	font-size: 11px;
+	line-height: 1;
+}
+
+.ht-streaknum {
+	font-size: 12px;
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+}
+
+/* -------------------------------------------------------------------------- */
+/* HABIT CARDS                                                                */
+/* -------------------------------------------------------------------------- */
+.ht-list {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	list-style: none;
+	margin: 8px 0 0;
+	padding: 0;
+}
+
+.ht-card {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	box-sizing: border-box;
+	padding: 14px 16px;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-xl);
+	background: var(--card);
+	color: var(--card-foreground);
+}
+
+.ht-card-done {
+	background: var(--muted);
+}
+
+/*
+ * FAN-OUT OBSERVABLE 1 - the toggle's fill.
+ *
+ * OFF is a 2px DASHED ring on a transparent field; ON is a solid `--primary`
+ * field with no ring. Both halves change, so the observation survives a lane
+ * that got one of them right. `--primary` in the vendored MIT default theme is
+ * near-black (oklch(0.205 0 0)); the reference's accent is a purple that is NOT
+ * a shadcn default token, and reproducing it would be reproducing THEIR THEME
+ * rather than the measured geometry, which the licence forbids.
+ */
+.ht-check {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 44px;
+	height: 44px;
+	flex: 0 0 44px;
+	box-sizing: border-box;
+	padding: 0;
+	border: 2px dashed color-mix(in oklab, var(--muted-foreground) 30%, transparent);
+	border-radius: var(--radius-xl);
+	background: transparent;
+	font: inherit;
+	font-size: 20px;
+	line-height: 1;
+	cursor: pointer;
+	transition:
+		background 200ms ease,
+		border-color 200ms ease;
+}
+
+.ht-check:hover {
+	border-color: color-mix(in oklab, var(--muted-foreground) 60%, transparent);
+}
+
+.ht-check-on {
+	border: 2px solid transparent;
+	background: var(--primary);
+	color: var(--primary-foreground);
+}
+
+.ht-checkemoji {
+	line-height: 1;
+}
+
+.ht-checkmark {
+	font-size: 22px;
+	font-weight: 700;
+	line-height: 1;
+	color: var(--primary-foreground);
+}
+
+.ht-cardbody {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+.ht-cardtitle {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.ht-name {
+	font-size: 14px;
+	font-weight: 600;
+	line-height: 1.3;
+}
+
+/* FAN-OUT OBSERVABLE 2 - the row title's strikethrough. */
+.ht-name-done {
+	text-decoration: line-through;
+	color: var(--muted-foreground);
+}
+
+.ht-pillstreak {
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+}
+
+.ht-pillnum {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--muted-foreground);
+	font-variant-numeric: tabular-nums;
+}
+
+.ht-cardmeta {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.ht-dots {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.ht-dot {
+	display: block;
+	width: 7px;
+	height: 7px;
+	border-radius: 999px;
+	background: var(--border);
+}
+
+.ht-dot-on {
+	background: color-mix(in oklab, var(--primary) 55%, var(--background));
+}
+
+/*
+ * FAN-OUT OBSERVABLE 8 - today's dot. It is the ONE fan-out target that sits
+ * beside a NESTED repeat (the six seeded days), which is the placement none of
+ * the other seven cover. The ring marks it as today so the strip reads correctly
+ * whether or not it is filled.
+ */
+.ht-dot-today {
+	box-shadow: 0 0 0 2px color-mix(in oklab, var(--muted-foreground) 25%, transparent);
+}
+
+.ht-window {
+	font-size: 11px;
+	color: var(--muted-foreground);
+}
+
+.ht-rate {
+	font-size: 11px;
+	color: var(--muted-foreground);
+}
+
+/*
+ * THE 6/6 FOOTNOTE, and it is the ONE place this page is deliberately MORE
+ * CORRECT than its reference. The reference renders "All habits tracked for
+ * today - great job!" AT 0/6, before anything is ticked - measured live at every
+ * rung of its own ladder. Here it carries `hidden={doneCount < habits.length}`.
+ */
+.ht-footnote {
+	margin: 12px 0 0;
+	padding: 12px 16px;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-lg);
+	background: var(--card);
+	font-size: 13px;
+	font-weight: 500;
+	text-align: center;
+}

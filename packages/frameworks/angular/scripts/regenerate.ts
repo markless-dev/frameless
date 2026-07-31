@@ -110,6 +110,19 @@ const fixtures = [
 	// test/ungated-scenarios.ts asserts that `emit()` SUCCEEDS and that the gate
 	// then reports exactly this diagnostic - which is a strictly stronger claim
 	// than the S11/S12 rows next to it, where the emitter itself throws.
+	// THE SIXTH APPLICATION IN THE CORPUS - the HABIT TRACKER - and THE SIX-LANE
+	// FAN-OUT SCENARIO. It takes the next ORDINAL slot for the reason every row
+	// above records. IT IS THE SECOND SCENARIO IN THE CORPUS THAT ALL SIX LANES
+	// EMIT, after S13, and the first that was built to be so ON PURPOSE: the
+	// whole app is SYNCHRONOUS DERIVED STATE, so there is no `Promise` or
+	// `setTimeout` for the angular lane's global-identifier ban to catch, no
+	// async door for the vue lane's GLOBALS_ALLOWED gap to open, and no component
+	// reference for either of the two emitter defects T003 isolated to reach. Its
+	// date is a LITERAL STRING in the seeded data for exactly the reason S13's
+	// relative ages are - the angular emitter cannot NAME `Date`. Like S10-S14 it
+	// stays OUT of the 6 x 9 three-way contract, which scripts/e2e.mjs pins to
+	// the literal ['s1'..'s9'].
+	['S15.ts', 's15-habit-tracker.json'],
 ] as const;
 for (const [output, golden] of fixtures) {
 	const ir = JSON.parse(await readFile(resolve(goldenRoot, golden), 'utf8')) as EnrichedIR;

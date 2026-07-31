@@ -12,6 +12,7 @@ import TodoMvc from './emitted/TodoMvc.vue'
 import TodoMvcAdvanced from './emitted/TodoMvcAdvanced.vue'
 import CodexClone from './emitted/CodexClone.vue'
 import HnFront from './emitted/HnFront.vue'
+import HabitTracker from './emitted/HabitTracker.vue'
 import WhitespaceBoard from './emitted/WhitespaceBoard.vue'
 import {
   armS8Gate,
@@ -98,6 +99,23 @@ const hn = computed(
     String(props.url ?? '')
       .replace(/^\/+/, '')
       .replace(/\/+$/, '') === 'hn',
+)
+
+/**
+ * The /habits branch, decided HERE for the identical reason `advanced`, `codex`
+ * and `hn` above are: `scenarioFor` and its `ScenarioId` union live in
+ * `./scenario-props`, which is outside the file envelope of the card that added
+ * this route (`frameless-app-axes-v1` T004), so the id is not in that union.
+ * The path normalisation is character-for-character the one `scenarioFor`
+ * applies. It reads `props.url` - the same value `scenario` reads - and not
+ * `window.location`, because both sides must agree or Vue would hydrate a
+ * different branch than it rendered.
+ */
+const habits = computed(
+  () =>
+    String(props.url ?? '')
+      .replace(/^\/+/, '')
+      .replace(/\/+$/, '') === 'habits',
 )
 
 /**
@@ -241,6 +259,55 @@ const s8Ready = ref<Promise<string>>(s8ResolvedGate)
     because it restyles `body`. Like the three application routes above, this page
     is OUT of the 6 x 9 three-way contract, which pins ['s1'..'s9'].
   -->
+  <!--
+        THE SIXTH APPLICATION - the HABIT TRACKER - and THE SIX-LANE FAN-OUT PAGE.
+        It is the SECOND scenario in this corpus that all six lanes emit and ship,
+        after S13, and the FIRST designed to be so: the whole app is SYNCHRONOUS
+        DERIVED STATE, so there is no `Promise`/`setTimeout` for angular's
+        global-identifier ban to catch, no async door for vue's GLOBALS_ALLOWED gap
+        to open, and no component reference for either of T003's two emitter
+        defects to reach. Its date - "JULY 30, 2026" over "Thursday" - is a LITERAL
+        STRING in the seeded data, because the angular emitter cannot NAME `Date`
+        and a clock would have cost this app the very lane count it exists to
+        measure.
+
+        WHAT ONE CLICK ON A HABIT TOGGLE MOVES, all derived from ONE `habits` cell
+        and none of it written by the handler: the toggle's own fill, the row
+        title's strikethrough, THE SIDEBAR ROW'S strikethrough (a second repeat in
+        a different subtree - which is what makes this fan-out rather than a row
+        re-render), the header counter, the sidebar badge, the progress bar's width
+        class, the encouragement sentence AND its emoji, and today's dot inside
+        that row's nested day strip. EIGHT observables.
+
+        WHAT IS INERT AND NOT FAKED: `Statistics`, `New habit`, the sidebar toggle
+        and the theme toggle - `.tsrx` has no routing construct at all. WHAT IS
+        ABSENT: the reference's 30-day heat-map and sparkline, roughly two hundred
+        decorative cells per habit that would triple the template while measuring
+        nothing the eight observables do not already measure.
+
+        TWO STYLESHEETS, ORDER LOAD-BEARING. `/shadcn-theme/tokens.css` is the
+        vendored shadcn/ui DEFAULT theme (MIT, (c) 2023 shadcn) and must load
+        FIRST, because every colour in the second file is a `var()` from it.
+        `/habit-css/habits.css` is THIS REPOSITORY'S OWN WORK - the Square UI
+        reference is licence-restricted to REFERENCE-ONLY, so nothing was copied
+        from it and its geometry was MEASURED in a browser instead. Both are linked
+        HERE rather than globally because `habits.css` restyles `body`. Like
+        S10-S14 this page is OUT of the 6 x 9 three-way contract, which pins
+        `threeWayScenarios` to ['s1'..'s9'].
+
+    AND THIS LANE'S OWN HISTORY IS THE REASON THE ABSENCE OF ASYNC MATTERS HERE.
+    S11 and S12 EMIT in this lane, pass its gate, pass its typecheck, and THROW IN
+    THE BROWSER - `_ctx.Promise is not a constructor` - because this emitter
+    inlines handlers into TEMPLATE EXPRESSIONS and Vue's compiler prefixes any
+    identifier outside GLOBALS_ALLOWED with `_ctx.`, a list carrying Date and JSON
+    but not Promise or setTimeout. S15 names NO global at all, so five static
+    gates AND the browser agree. That was checked in a browser, not assumed.
+  -->
+  <template v-else-if="habits">
+    <link rel="stylesheet" href="/shadcn-theme/tokens.css" />
+    <link rel="stylesheet" href="/habit-css/habits.css" />
+    <HabitTracker v-bind:onTrace="noTrace" />
+  </template>
   <template v-else-if="hn">
     <link rel="stylesheet" href="/hn-css/hn.css" />
     <HnFront v-bind:onTrace="noTrace" />
