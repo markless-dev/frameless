@@ -58,7 +58,7 @@ goal:
       evaporates. If drag refuses and is quietly replaced by click-to-move, the axis goes
       unmeasured while the demo looks complete.
 
-active_task: T014
+active_task: T015
 
 rules:
   - "state.yaml is board truth; goal.md is the charter."
@@ -2072,7 +2072,7 @@ tasks:
   - id: T014
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       LAND T009's ADMIT RULING. Admit `component-metadata:imports` to BASELINE_FORM_INVENTORY at
@@ -2135,12 +2135,114 @@ tasks:
       - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched."
       - "NEVER pkill -f on a broad pattern. TWO FOREIGN PROCESSES ARE ALIVE: node PID 64413 on 5175 and PID 24931 on 5178."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 2
+      note: notes/T014-angular-s14.md
+      summary: "Landed T009's ADMIT: component-metadata:imports at floor 14.0, evidence unverified. ANGULAR_BASELINE_FLOOR measured 19.0 BEFORE and 19.0 AFTER, tier still exactly ['(no standalone key)']; BOTH MUTATIONS KILLED. ungated-scenarios.ts DELETED, not emptied, all four wirings unwound. S14 ships and demos/angular-official serves /hn-item AS THE FOURTH LANE. THE BROWSER DRIVE IS THE VERDICT AND IT PASSED - all eleven T003 oracle fields. No emitter touched. Baselines unmoved."
+      IT_CAUGHT_ITS_OWN_INSTRUMENT_WITH_A_CROSS_LANE_CONTROL: "FIRST PASS REPORTED TWO ORACLE FAILURES - 'max nesting 5 want 4' and an extra 96px indent row. RUNNING THE IDENTICAL SCRIPT AGAINST THE REACT LANE RETURNED BYTE-IDENTICAL READINGS, INCLUDING BOTH SUPPOSED DIVERGENCES. They were the instrument's own counting origin, not angular. COMPARING AGAINST T003'S TRANSCRIBED TABLE ALONE WOULD HAVE FILED A FALSE DIVERGENCE REPORT against a lane that was behaving correctly."
+      AND_TWO_MORE_FIRST_PASS_REDS_WERE_TIMING_NOT_BEHAVIOUR: "'expand c1' and 'upvote c9' recorded as dead on the first pass. Isolated on a step probe, both work: THIS LANE IS ZONELESS and change detection flushes AFTER the listener returns, so page.evaluate ran before the flush. A 400ms settle was added, and it is NEUTRAL - it does not wait for the expected value."
+      IT_REFUSED_TO_LEAVE_THE_NEW_ENTRY_UNFALSIFIABLE: "Deleting the ungated row alone would have left the new inventory entry UNFALSIFIABLE - an allowlist row for a form NOTHING EMITS is indistinguishable from one for a form EVERYTHING EMITS, both green. gate.test.ts gained 'S14 really prints the imports form, and the inventory really admits it' PLUS a mutation row. That is the card's own 'A DECORATIVE ENTRY IS NOT AN ENTRY' applied to the STANDING CHECK, not just to the one-off."
+      AND_IT_DECLINED_TO_WEAKEN_A_CORPUS_WIDE_ASSERTION: "emitter.test.ts's corpus-wide not.toContain('imports:') was NOT softened to 'S14 may differ' - THAT WOULD LET A FUTURE MODULE START PRINTING THE FORM UNNOTICED. It is a NAMED SET {'S14.ts'} asserted in BOTH DIRECTIONS with an anti-vacuity row. Its typedInputsSeen census moved 11 -> 13 and the narrative was RENUMBERED rather than left stale."
+      changed_files:
+        - packages/frameworks/angular/src/gate/index.ts
+        - packages/frameworks/angular/scripts/regenerate.ts
+        - packages/frameworks/angular/generated/S14.ts
+        - packages/frameworks/angular/test/gate.test.ts
+        - packages/frameworks/angular/test/emitter.test.ts
+        - packages/frameworks/angular/test/parse-emitted.test.ts
+        - packages/frameworks/angular/test/emitted-typecheck.test.ts
+        - packages/frameworks/angular/README.md
+        - demos/angular-official/package.json
+        - demos/angular-official/src/app/app.routes.ts
+        - demos/angular-official/src/app/hn-item-page.ts
+        - demos/angular-official/src/emitted/HnItem.ts
+        - demos/react-official/src/App.jsx
+        - demos/solid-official/src/App.jsx
+        - demos/qwik/src/routes/hn-item/index.tsx
+        - scripts/demo.mjs
+        - docs/DEFECTS.md
+        - docs/goals/frameless-app-axes-v1/notes/T009-angular-imports.md
+        - docs/goals/frameless-app-axes-v1/notes/T014-angular-s14.md
+      commands:
+        - cmd: "owner fingerprint START"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169 / 116, sorting the whole shasum OUTPUT LINES"
+        - cmd: "ANGULAR_BASELINE_FLOOR BEFORE"
+          status: pass
+          note: "19.0, 31 entries, floor tier exactly ['(no standalone key)'], imports absent"
+        - cmd: "real emit + real checkSources on s14 BEFORE"
+          status: pass
+          note: "REPRODUCED T009: 28 forms, EXACTLY 1 uninventoried, EXACTLY 1 violation; CONTROL S13 = 0"
+        - cmd: "ANGULAR_BASELINE_FLOOR AFTER"
+          status: pass
+          note: "19.0 - DID NOT MOVE; 32 entries; tier still exactly ['(no standalone key)']"
+        - cmd: "MUTATION A: remove the new entry"
+          status: pass
+          note: "S14 draws baseline-form-inventory again, same verbatim message. Restored; control re-run clean"
+        - cmd: "MUTATION B: floor 20.0"
+          status: pass
+          note: "derived-floor row RED. Restored"
+        - cmd: "angular gate over full generated/ corpus"
+          status: pass
+          note: "15 files DERIVED, S14 in, S11/S12 still subtracted, 0 violations"
+        - cmd: "pnpm --dir packages/frameworks/angular test"
+          status: pass
+          note: "8 files / 165 tests; both new gate rows RUN and pass"
+        - cmd: "DERIVATION PROOF"
+          status: pass
+          note: "PRESENT-AFTER-DELETE = 0 ASSERTED FIRST; both files sha256 cd6ab9f2, byte-identical"
+        - cmd: "BROWSER DRIVE chromium /hn-item (angular)"
+          status: pass
+          note: "ALL 11 T003 ORACLE FIELDS MATCH: 15 instances, 14 visible, depth 4, indent 104/132/160/188/216, 1 masthead, collapse 14->10 with c4 GONE, expand 10->14, upvote c9, pageerror []"
+        - cmd: "CROSS-LANE CONTROL: identical script vs react"
+          status: pass
+          note: "BYTE-IDENTICAL on all 11 fields - PROVING the two apparent mismatches were INSTRUMENT ORIGIN"
+        - cmd: "body-hash angular routes"
+          status: pass
+          note: "/ , /hn, /hn-item all distinct; bogus route 404. react answered bogus 200 with / hash in the same run"
+        - cmd: "pnpm demo (RUN)"
+          status: pass
+          note: "angular lists S14 /hn-item; DERIVED banner reads '4 lanes serve it and 2 refuse'; ANGULAR_IMPORTS_REFUSAL gone"
+        - cmd: "pnpm test"
+          status: pass
+          note: "EXACTLY 1 failure (foreign ARM B), 1350 passed"
+        - cmd: "pnpm check"
+          status: pass
+          note: "267 - DID NOT RISE"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "PASS - 6 demos x 9 scenarios, all observations equal"
+        - cmd: "pnpm lint / pnpm check:citations"
+          status: pass
+          note: "0 warnings 0 errors, 552 files; citations clean, 601 swept"
+        - cmd: "git diff --exit-code over every non-S14 artifact"
+          status: pass
+          note: "exit 0, PAIRED with git status --short"
+        - cmd: "foreign process check"
+          status: pass
+          note: "PID 64413 and 24931 ALIVE with original start times; my servers stopped by recorded PID; pkill -f NEVER used"
+        - cmd: "owner fingerprint FINISH"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169 / 116 - IDENTICAL to START"
+      deviations:
+        - "REPLACED THE DELETED UNGATED ROW RATHER THAN JUST REMOVING IT - see the unfalsifiable-entry finding."
+        - "DID NOT WEAKEN emitter.test.ts's corpus-wide assertion - see above."
+        - "DERIVED scripts/demo.mjs's 'S14 ... three lanes refuse it' instead of hand-repairing it. THE EXACT ROT T004 repaired, T005 repaired again and predicted would recur, and T006 fixed by deriving."
+        - "RE-BASED ITS BROWSER INSTRUMENT AFTER A CONTROL REFUTED IT - see above."
+        - "ADDED A 400ms SETTLE AFTER EACH CLICK, neutral by construction - see above."
+        - "ADDED A PRECEDENT POINTER TO docs/DEFECTS.md. T009 cited its ChangeDetectorRef/inject paragraph as the on-the-record precedent; leaving it reading 'Two forms entered' with no pointer to the third would have made THE PRECEDENT CHAIN UNFINDABLE FROM THE PLACE THE RULING CITED."
+        - "DID NOT EDIT docs/emitter-idiom-policy.md (allowed but unnecessary): worked example 5's baseline is what T009 relied on and is unchanged."
+      remaining_blockers:
+        - "notes/T003-hn-item.md STILL CARRIES BOTH REFUTED CLAIMS - the decorator 'must list its own selector's provider' AND 'moves the derived floor for every scenario at once'. OUTSIDE this card's allowed_files. A card with write access must fix it."
+        - "generated-composition/ IS STILL NEVER GATE-CHECKED (T015). This admission retired ONE of its three uninventoried forms; import:./M1-panel#Panel and template-node:Content remain, and whether the OTHER FIVE LANES have the same hole is unmeasured."
+        - "REACT, SOLID AND VUE STILL ANSWER 200 FOR ANY PATH - re-confirmed in this card's own run. Angular 404s correctly."
+      stopped_because: null
   - id: T015
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
     objective: >-
       Close the gate hole T009 found: `generated-composition/` IS NEVER GATE-CHECKED in the
@@ -2151,6 +2253,13 @@ tasks:
       component-metadata:imports, import:./M1-panel#Panel, and template-node:Content.
       packages/frameworks/angular/generated-composition/M2-page.ts and C1-slot.ts have been
       shipping the `imports` form all along. T014 retires ONE of the three; TWO NEED RULINGS.
+    ALSO_FIX_TWO_REFUTED_CLAIMS_IN_T003s_NOTE: >-
+      notes/T003-hn-item.md still says the angular decorator 'MUST list its own selector's
+      provider' (T009 measured 0 AOT diagnostics WITH and WITHOUT, and read the seen-guard off
+      the shipped bundle) and that admitting the form 'MOVES THE DERIVED ANGULAR_BASELINE_FLOOR
+      FOR EVERY SCENARIO AT ONCE' (T009 and T014 both measured 19.0 -> 19.0, and there is no
+      per-scenario floor at all). Two cards have now flagged this note and neither had write
+      access. CORRECT IT IN PLACE, marked as an amendment - do not rewrite its history.
     THE_REAL_QUESTION_IS_WIDER_THAN_ANGULAR: >-
       CHECK WHETHER THE OTHER FIVE LANES HAVE THE SAME HOLE before ruling on angular's. A gate
       that inspects one of two output directories is the same family as the mutation harness
@@ -2165,6 +2274,7 @@ tasks:
       - "packages/frameworks/angular/test/**"
       - "packages/frameworks/angular/src/gate/index.ts"
       - "docs/goals/frameless-app-axes-v1/notes/T015-composition-gate-hole.md"
+      - "docs/goals/frameless-app-axes-v1/notes/T003-hn-item.md"
     verify:
       - "MEASURE FIRST, IN ALL SIX LANES: which output directories does each lane's gate corpus actually inspect, and what does each lane's gate report when pointed at the ones it skips? A lane that already covers everything must be REPORTED AS SUCH, not repaired."
       - "Every form admitted gets a FLOOR and FLOOR EVIDENCE, and the derived floor is PRINTED BEFORE AND AFTER. Evidence is 'unverified' unless you actually date it."

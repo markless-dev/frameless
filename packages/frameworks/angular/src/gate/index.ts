@@ -672,6 +672,9 @@ const INJECT_FLOOR_REASON =
 const LIFECYCLE_FLOOR_REASON =
 	'ngOnInit and the OnInit interface are part of the original Angular 2 component lifecycle. Documentary, not checkable against an artifact this repo has.';
 
+const IMPORTS_FLOOR_REASON =
+	"The `imports` array on @Component arrived with STANDALONE COMPONENTS in Angular 14.0, which is a lower bound taken from the release history; before 14 the key existed only on @NgModule. The resolved @angular/core ships no CHANGELOG and no @since tag, so the floor could not be checked against something on disk, and the entry is below this lane's 19.0 standalone floor either way, so it does not move ANGULAR_BASELINE_FLOOR. WHAT THIS ENTRY CANNOT SEE, and it is the sharpest instance of the caveat this inventory's doc comment states in general: at the PIN, Angular IGNORES the entry this emitter writes. The only `imports` the emitter produces is a component naming ITSELF for a same-module component reference, and @angular/compiler-cli@22.0.8 compiles the module IDENTICALLY with and without it - 0 diagnostics either way, `dependencies: [HnItem]` in both arms - because StandaloneComponentScopeReader seeds the component's own scope and then skips a self-entry with `if (seen.has(ref.node)) continue;`. So NO STATIC LAYER IN THIS REPO CAN WITNESS THE FORM DOING WORK, and this floor is a claim about the RANGE the spelling is safe across rather than about anything measurable at 22.0.8. That asymmetry is precisely why the wider-range spelling is the baseline: the OMIT form - leaning on the implicit self-scope - fails the version corollary, since no standing check here would go red if upstream stopped self-seeding. Ruled by frameless-app-axes-v1 T009; the behavioural evidence that the recursion renders is the BROWSER drive recorded on T014, not this gate.";
+
 export const BASELINE_FORM_INVENTORY: readonly BaselineForm[] = [
 	{
 		kind: 'import',
@@ -731,6 +734,18 @@ export const BASELINE_FORM_INVENTORY: readonly BaselineForm[] = [
 		form: 'template',
 		floor: '2.0',
 		evidence: { status: 'unverified', reason: CORE_DECORATOR_FLOOR_REASON },
+	},
+	// Entered the inventory with S14, the corpus's RECURSION scenario, and emitted
+	// ONLY into a component that holds a same-module component reference - today
+	// that is a component naming ITSELF. See `imports` in ../emitter/index.ts.
+	// Admitted by frameless-app-axes-v1 T009 at 14.0, BELOW this lane's 19.0 floor,
+	// so ANGULAR_BASELINE_FLOOR is unchanged at 19.0 - the same shape as the
+	// ChangeDetectorRef and inject entries above, which entered for S8.
+	{
+		kind: 'component-metadata',
+		form: 'imports',
+		floor: '14.0',
+		evidence: { status: 'unverified', reason: IMPORTS_FLOOR_REASON },
 	},
 	{
 		// The ABSENCE of `standalone` is itself a version-gated form, and it is the

@@ -8,6 +8,7 @@ import { BoardPage } from './board-page';
 import { ContactsPage } from './contacts-page';
 import { HabitsPage } from './habits-page';
 import { HnPage } from './hn-page';
+import { HnItemPage } from './hn-item-page';
 import { FormBoard } from '../emitted/FormBoard';
 import { KeyedTodo } from '../emitted/KeyedTodo';
 import { NestedBoard } from '../emitted/NestedBoard';
@@ -121,6 +122,37 @@ export const routes: Routes = [
   {
     path: 'hn',
     component: HnPage,
+  },
+  // THE FIFTH APPLICATION - the HACKER NEWS ITEM PAGE - and THE RECURSION
+  // ROUTE. It is the FOURTH of the six lanes to serve this page, and the LAST to
+  // arrive, on an absence that was never an emitter refusal.
+  //
+  // The emitted `HnItem` NAMES ITSELF - `<frameless-hn-item>` inside its own
+  // template - so the thread is whatever the seeded `parentId` chain describes
+  // and no depth is fixed anywhere. svelte and vue have no counterpart here at
+  // all: a `.svelte` file and a `.vue` SFC each declare exactly one component,
+  // so a same-module self-reference has nowhere to land, and both REFUSE it
+  // outright. THIS lane always EMITTED it; its own dossier gate rejected the
+  // result over the decorator's `imports: [HnItem]`, which was not in
+  // BASELINE_FORM_INVENTORY. frameless-app-axes-v1 T009 ruled ADMIT at floor
+  // 14.0 and the derived ANGULAR_BASELINE_FLOOR did not move - 19.0 before, 19.0
+  // after.
+  //
+  // AND ANGULAR IGNORES THAT ENTRY AT THE PIN: 0 AOT diagnostics with it and 0
+  // without, `dependencies: [HnItem]` in both arms, because the compiler seeds a
+  // component's own scope and skips a self-entry. The verdict on this route is
+  // therefore the RENDERED DOM, not any compile. See `./hn-item-page`.
+  //
+  // It goes through a WRAPPER, like /todomvc, /hn, /habits, /board and /contacts
+  // and for the same reason: `hn.css` restyles `body`, so a global link would
+  // move the geometry of the nine three-way scenarios. Like them it is
+  // deliberately NOT part of the 6 x 9 contract - `scripts/e2e.mjs` pins
+  // `threeWayScenarios` to the literal ['s1'..'s9'] - so this route is browsable
+  // only. It carries no seed: the comment tree is seeded INSIDE the emitted
+  // component, so all four serving lanes start from byte-identical data.
+  {
+    path: 'hn-item',
+    component: HnItemPage,
   },
   // THE SIXTH APPLICATION - the HABIT TRACKER - and THE SECOND CORPUS
   // APPLICATION THIS LANE SHIPS ALONGSIDE THE OTHER FIVE. S11 and S12 are absent

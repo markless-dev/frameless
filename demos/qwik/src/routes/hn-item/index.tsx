@@ -8,16 +8,22 @@ import { HnItem } from "../../emitted/HnItem.jsx";
 // real DOM nesting, not a computed margin - each level's `<ul>` is a
 // descendant of the previous level's `.hn-cnest`.
 
-// THREE OF SIX LANES SERVE THIS PAGE, and the three absences are the
+// FOUR OF SIX LANES SERVE THIS PAGE, and the two absences are the
 // measurement this page exists for:
 //   svelte and vue REFUSE a same-module component reference outright - a
 //     `.svelte` file and a `.vue` SFC each declare exactly one component, so
 //     the self-reference has nowhere to land. Recorded verbatim in
-//     packages/frameworks/{svelte,vue}/test/unbuilt-scenarios.ts.
-//   angular EMITS a correct recursive component and its OWN GATE REJECTS the
-//     result: the decorator must carry `imports: [HnItem]` for the selector
-//     to resolve, and `imports` is not in that lane's BASELINE_FORM_INVENTORY.
-//     Recorded in packages/frameworks/angular/test/ungated-scenarios.ts.
+//     packages/frameworks/{svelte,vue}/test/unbuilt-scenarios.ts. That is a
+//     FILE-FORMAT limit rather than a recursion verdict.
+//   angular WAS A THIRD KIND OF ABSENCE AND NOW SHIPS. Its emitter always
+//     EMITTED a correct recursive component; the LANE'S OWN GATE rejected the
+//     result, because the decorator carries `imports: [HnItem]` and `imports`
+//     was not in that lane's BASELINE_FORM_INVENTORY. frameless-app-axes-v1
+//     T009 ruled ADMIT at floor 14.0 and T014 landed it; ANGULAR_BASELINE_FLOOR
+//     did not move (19.0 before, 19.0 after) and ungated-scenarios.ts is gone.
+//     NOTE WHAT NO COMPILER THERE COULD SEE: Angular 22.0.8 reports 0 AOT
+//     diagnostics WITH that `imports` entry and 0 WITHOUT, so the lane was
+//     proven in a browser, not on a green build.
 
 // WHAT WORKS: collapse `[-]` and expand `[+]` on any comment - which take the
 // whole recursive subtree with them - and the per-comment upvote arrow.

@@ -68,16 +68,19 @@ const SCENARIOS = [
 	// relative age on the page is a literal string in the seeded data rather than
 	// something computed from `Date`. Six lanes, six routes.
 	{ id: 'S13', path: '/hn', title: 'Hacker News front page' },
-	// S14 IS THE FIRST APPLICATION IN THIS TABLE WITH THREE ABSENCES AND THREE
-	// DIFFERENT REASONS, which is what makes it the RECURSION measurement rather
-	// than just another page. `HnItem` names ITSELF in its own template.
+	// S14 IS THE RECURSION MEASUREMENT, and FOUR of the six lanes serve it.
+	// `HnItem` names ITSELF in its own template, so the thread on screen is
+	// whatever the seeded `parentId` chain describes and no depth is fixed.
 	//   svelte, vue: the emitter REFUSES a same-module component reference - a
-	//     `.svelte` file and a `.vue` SFC each hold exactly one component.
-	//   angular: the emitter EMITS a correct recursive component and the LANE'S
-	//     OWN GATE rejects it, because the decorator needs `imports: [HnItem]`
-	//     for the selector to resolve and `imports` is not in that lane's
-	//     baseline form inventory.
-	// react, solid and qwik serve it. See the three refusal constants below.
+	//     `.svelte` file and a `.vue` SFC each hold exactly one component. That
+	//     is a FILE-FORMAT limit, not a recursion verdict.
+	//   angular: SERVES IT SINCE frameless-app-axes-v1 T014. It was the third
+	//     kind of absence - the emitter always EMITTED a correct recursive
+	//     component and the LANE'S OWN GATE rejected the decorator's
+	//     `imports: [HnItem]`, which was not in the baseline form inventory. T009
+	//     ruled ADMIT at floor 14.0 and the derived ANGULAR_BASELINE_FLOOR did
+	//     NOT move: 19.0 before, 19.0 after.
+	// See the refusal constant below for the two that remain.
 	{ id: 'S14', path: '/hn-item', title: 'Hacker News item page (recursive comments)' },
 	// S15 IS THE SECOND ROW IN THIS TABLE WITH NO `unbuilt` ENTRY IN ANY LANE, and
 	// the FIRST that was designed to be so rather than turning out that way. S13
@@ -162,20 +165,31 @@ const ANGULAR_REFUSAL = 'emitter refuses: cannot name the global `Promise`';
  * alias - BOTH EMITTERS TAKE IT, and the compiler's linker refuses that instead
  * with `Component-reference cycle`.
  *
- * ANGULAR IS THE DIFFERENT ONE: `emit()` SUCCEEDS and produces a correct
- * recursive component, and the lane's own dossier gate then rejects the result:
+ * ANGULAR WAS THE DIFFERENT ONE AND IT NOW SHIPS. `emit()` always SUCCEEDED and
+ * produced a correct recursive component; the lane's own dossier gate rejected
+ * the result:
  *
  *   Emitted Angular source uses the component-metadata form "imports", which is
  *   not in the baseline form inventory
  *
- * Admitting `imports` needs a version floor and floor evidence and would move
- * the derived ANGULAR_BASELINE_FLOOR, which is a dossier ruling rather than a
- * code edit. Recorded in packages/frameworks/angular/test/ungated-scenarios.ts.
+ * That was the dossier working as designed, not an emitter defect - a THIRD kind
+ * of absence this repo had not seen before. frameless-app-axes-v1 T009 ruled
+ * ADMIT at floor 14.0 with evidence `unverified`, and the fear that delayed it
+ * was false twice over: the floor is a MAX reduce so a 14.0 entry cannot raise
+ * it, and there is no per-scenario floor in the repo at all. Measured 19.0
+ * before and 19.0 after. T014 landed it, so the lane serves /hn-item and
+ * `test/ungated-scenarios.ts` is deleted rather than emptied - its own row
+ * asserted `length > 0`, so an empty list would have been a check that cannot
+ * fail.
+ *
+ * AND NO STATIC LAYER CAN WITNESS THAT RECURSION, which is why the lane was
+ * proven in a BROWSER before this row changed: `@angular/compiler-cli@22.0.8`
+ * reports 0 diagnostics WITH `imports: [HnItem]` and 0 WITHOUT, with
+ * `dependencies: [HnItem]` in both arms, because the compiler seeds a
+ * component's own scope and skips a self-entry.
  */
 const SELF_REFERENCE_REFUSAL =
 	'emitter refuses: one component per module, so a self-reference has nowhere to land';
-const ANGULAR_IMPORTS_REFUSAL =
-	'emits, but the lane gate rejects `imports` (not in the baseline form inventory)';
 
 /**
  * The lanes. `port` is a PREFERENCE, not a guarantee — see `allocatePorts`.
@@ -274,7 +288,7 @@ const DEMOS = [
 		portFlag: true,
 		portEnv: false,
 		trailingSlash: false,
-		unbuilt: { S11: ANGULAR_REFUSAL, S12: ANGULAR_REFUSAL, S14: ANGULAR_IMPORTS_REFUSAL },
+		unbuilt: { S11: ANGULAR_REFUSAL, S12: ANGULAR_REFUSAL },
 	},
 ];
 
@@ -638,8 +652,16 @@ function announce() {
 		`  Of those, ${universal.join(', ')} are the ${universal.length} that all SIX`,
 	);
 	lines.push('  lanes serve. (S1-S9 are served by all six by construction.)');
-	lines.push('  S14 is the RECURSION page and three lanes refuse it, each for a');
-	lines.push('  different recorded reason; S15 is the FAN-OUT page, where one');
+	// DERIVED FOR THE SAME REASON THE TWO FIGURES ABOVE ARE. This sentence read
+	// "three lanes refuse it" and went stale the moment the angular lane landed at
+	// T014 - a hand-written count sitting beside a table that already knows the
+	// answer, which is the exact rot T004, T005 and T006 each repaired by hand
+	// before T006 started deriving instead.
+	const s14Missing = DEMOS.filter((demo) => demo.unbuilt.S14).length;
+	lines.push(
+		`  S14 is the RECURSION page; ${DEMOS.length - s14Missing} lanes serve it and ${s14Missing} refuse,`,
+	);
+	lines.push('  each for a different recorded reason. S15 is the FAN-OUT page, where one');
 	lines.push('  click moves eight derived observables and no lane is lost;');
 	lines.push('  S16 is the DRAG page AND IT HAS NO DRAG - the events emit in five');
 	lines.push('  lanes and cost the type baseline 267 -> 280, so the axis is');

@@ -90,9 +90,30 @@ decision:
   downstream lane must not assume eager change detection.
 - **No `standalone`.** It defaults to `true` from Angular 19. This is the entry
   that sets `ANGULAR_BASELINE_FLOOR`.
-- **No `imports`.** Built-in control flow needs none — a second reason `@if`/`@for`
-  beat `*ngIf`/`*ngFor`, the first being that `prefer-control-flow` is in the
-  applied set and reports the directives directly.
+- **`imports` ONLY where a component names another component**, which today means
+  **only where it names itself**. Built-in control flow needs none — a second
+  reason `@if`/`@for` beat `*ngIf`/`*ngFor`, the first being that
+  `prefer-control-flow` is in the applied set and reports the directives directly
+  — so **S14 is the only emitted module in the corpus that carries the key**, for
+  its recursive `imports: [HnItem]`. `emitter.test.ts` pins that set by name in
+  **both directions**: every other module must still be free of it.
+
+  This entry read **"No `imports`"** until `frameless-app-axes-v1` **T009** ruled
+  the form into `BASELINE_FORM_INVENTORY` at floor **14.0**, evidence
+  `unverified`. `ANGULAR_BASELINE_FLOOR` **did not move** — 19.0 before, 19.0
+  after — because the floor is a `max` reduce and the sole 19.0 entry is
+  `component-metadata:(no standalone key)`.
+
+  **What this dossier cannot see, and it is the sharpest case of the caveat the
+  inventory states in general:** at the pin **Angular ignores the entry**.
+  `@angular/compiler-cli@22.0.8` reports **0 diagnostics with `imports: [HnItem]`
+  and 0 without**, with `dependencies: [HnItem]` in **both** arms, because
+  `StandaloneComponentScopeReader` seeds the component's own scope and then skips
+  a self-entry. A **sibling** selector and an **unknown** element both draw
+  `NG-998001`, so the instrument is calibrated. The emitter writes the entry
+  because it is the spelling that is safe across the **range**, not because
+  anything here can observe it working; the evidence that the recursion renders is
+  a **browser** drive, recorded on T014.
 - **No signal member anywhere.** `input()`/`output()`/`signal()` were ruled
   NO-SUGAR twice independently and T005 re-runs the six gates against this landed
   lane; shipping one would hand T005 a fact to ratify. The applied arbiter is

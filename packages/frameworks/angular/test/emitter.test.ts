@@ -12,7 +12,6 @@ import {
 	isUnbuiltEmitted,
 	isUnbuiltGolden,
 } from './unbuilt-scenarios.ts';
-import { isUngatedEmitted, isUngatedGolden } from './ungated-scenarios.ts';
 
 const packageRoot = resolve(import.meta.dirname, '..');
 const compilerGoldenRoot = resolve(packageRoot, '../../compiler/test/goldens');
@@ -68,7 +67,7 @@ function scenarioFixtures(goldenDir = compilerGoldenRoot): Array<readonly [strin
 		// a live `emit()` refusal by the row below - so this cannot degenerate into a
 		// skip list. See that file for why the ban is a global-identifier rule rather
 		// than an async one.
-		.filter((entry) => !isUnbuiltGolden(entry) && !isUngatedGolden(entry))
+		.filter((entry) => !isUnbuiltGolden(entry))
 		.sort(byScenarioNumber)
 		.map((entry) => [`S${/^s(\d+)-/.exec(entry)![1]}.ts`, entry] as const);
 	// Fail LOUD rather than returning []. An empty table would emit zero freshness
@@ -83,7 +82,7 @@ function scenarioFixtures(goldenDir = compilerGoldenRoot): Array<readonly [strin
 function emittedScenarios(directory = generatedRoot): string[] {
 	return readdirSync(directory)
 		.filter((entry) => /^S\d+\.ts$/.test(entry))
-		.filter((entry) => !isUnbuiltEmitted(entry) && !isUngatedEmitted(entry))
+		.filter((entry) => !isUnbuiltEmitted(entry))
 		.sort(byScenarioNumber);
 }
 
@@ -237,15 +236,39 @@ describe('Angular 22 emitter', () => {
 	 * other five lanes carry in a header comment.
 	 */
 	test('emits a standalone single-file component exported under the IR name', async () => {
+		// `imports` IS EMITTED BY EXACTLY ONE MODULE, AND THE EXCEPTION IS PINNED BY
+		// NAME RATHER THAN BY WEAKENING THE LOOP.
+		//
+		// This assertion read `not.toContain('imports:')` for every module until
+		// S14, the corpus's RECURSION scenario, whose `HnItem` NAMES ITSELF in its
+		// own template - the only route this emitter has to the form. Relaxing the
+		// loop to "S14 may differ" would have let any FUTURE module start printing
+		// `imports` unnoticed, so the exception is a set: every other module must
+		// still be free of it, and S14 must still carry it. Both directions go red.
+		//
+		// The form was admitted to BASELINE_FORM_INVENTORY at floor 14.0 by
+		// frameless-app-axes-v1 T009 and landed by T014; `test/gate.test.ts` carries
+		// the inventory half and its mutant.
+		const MODULES_THAT_EMIT_IMPORTS = new Set(['S14.ts']);
 		for (const [file] of FIXTURES) {
 			const source = await emitted(file);
 			expect(source).toContain('@Component({');
 			expect(source).toMatch(/\nexport class [A-Z]/);
-			// No `standalone`, no `imports`, and - see the T003a ruling below - no
+			// No `standalone` anywhere - the Angular 19+ default is what this lane's
+			// 19.0 floor entry records - and - see the T003a ruling below - no
 			// `changeDetection`.
 			expect(source).not.toContain('standalone');
-			expect(source).not.toContain('imports:');
+			expect(source.includes('imports:'), `${file} imports:`).toBe(
+				MODULES_THAT_EMIT_IMPORTS.has(file),
+			);
 		}
+		// ANTI-VACUITY for the exception set: a name in it that no longer exists in
+		// the corpus would make the loop above pass while measuring nothing.
+		for (const file of MODULES_THAT_EMIT_IMPORTS)
+			expect(
+				FIXTURES.map(([name]) => name),
+				`${file} is declared to emit imports but is not in the corpus`,
+			).toContain(file);
 		expect(await emitted('S1.ts')).toContain('export class RenderOnce implements OnInit {');
 		expect(await emitted('S2.ts')).toContain('export class KeyedTodo implements OnInit {');
 		expect(await emitted('S3.ts')).toContain('export class EventForm implements OnInit {');
@@ -529,26 +552,42 @@ describe('Angular 22 emitter', () => {
 		// name. That is what makes the count 8 rather than 10, and it is the datum
 		// worth keeping: this figure tracks the modules this lane EMITS, not the
 		// modules the corpus AUTHORS.
-		// S15 (HABIT TRACKER) IS THE FIFTH ANNOTATED MODULE THIS LANE EMITS, and it
+		// S14 (HN ITEM - RECURSION) IS THE FIFTH ANNOTATED MODULE THIS LANE EMITS,
+		// THE ONLY ONE THAT MOVES THIS ARM BY TWO, AND THE ONLY MODULE IN THE WHOLE
+		// CORPUS WITH NO `onTrace` PROP AT ALL. Every application above adds exactly
+		// one typed entry and it is always the same one. S14 adds `parent!: string`
+		// and `depth!: number` and NOT `onTrace`, so `typedInputsSeen` goes 8 -> 10
+		// while `untypedInputsSeen` holds at 15 for a third consecutive application.
+		// Both halves are structural rather than incidental: a RECURSIVE component
+		// must forward every required prop to ITSELF, so its props are exactly the
+		// two the recursion is parameterised by; and the trace channel is absent
+		// because the qwik emitter cannot forward a FUNCTION prop across a component
+		// boundary in any spelling, so the SHARED fixture carries none. That makes
+		// this module's oracle the RENDERED DOM rather than a callback - see the
+		// chromium drive in docs/goals/frameless-app-axes-v1/notes/T014-angular-s14.md.
+		//
+		// IT ALSO USED TO BE ABSENT FROM THIS CENSUS FOR A THIRD, DIFFERENT REASON -
+		// not the global-identifier ban that subtracts S11 and S12. This lane always
+		// EMITTED S14 correctly and its own dossier gate then rejected the result
+		// over `imports`. frameless-app-axes-v1 T009 ruled the form IN at floor 14.0
+		// (BELOW this lane's 19.0 floor, which did not move) and T014 landed it, so
+		// the subtraction and the file that declared it are gone. This figure is now
+		// short of the corpus's annotated count by TWO modules and ONE kind of
+		// absence - S11 and S12, the emitter's own refusal.
+		// S15 (HABIT TRACKER) IS THE SIXTH ANNOTATED MODULE THIS LANE EMITS, and it
 		// moves the typed arm alone once more: one prop entry (`onTrace`), declared
-		// with a type, so `typedInputsSeen` goes 8 -> 9 while `untypedInputsSeen`
-		// holds at 15 for the third consecutive application. THE UNTYPED ARM HOLDING
+		// with a type, so `typedInputsSeen` goes 10 -> 11 while `untypedInputsSeen`
+		// holds at 15 for the fourth consecutive application. THE UNTYPED ARM HOLDING
 		// IS THE HALF WORTH READING: S15 is the largest template in the corpus at
 		// eighty-one hosts and its single click drives eight derived observables, and
 		// it still adds not one untyped member, because every one of those
 		// observables is a `computed` GETTER rather than an `@Input()`. A lane that
 		// had started widening its untyped surface as applications grew would show it
 		// here first, and it does not.
-		// S14 IS ANNOTATED AND ABSENT FOR A THIRD, DIFFERENT REASON - not the
-		// global-identifier ban that subtracts S11 and S12. This lane EMITS S14
-		// correctly and its own dossier gate then rejects the result over `imports`;
-		// `test/ungated-scenarios.ts` carries that subtraction. So the figure 9 is
-		// short of the corpus's annotated count by THREE modules and by TWO distinct
-		// kinds of absence, which is exactly why it is derived per lane.
-		// S16 (TASK BOARD) IS THE SIXTH ANNOTATED MODULE THIS LANE EMITS, and it
-		// moves the typed arm alone for the fourth consecutive application: one prop
-		// entry (`onTrace`), declared with a type, so `typedInputsSeen` goes 9 -> 10
-		// while `untypedInputsSeen` HOLDS AT 15 FOR THE FOURTH TIME. That hold is
+		// S16 (TASK BOARD) IS THE SEVENTH ANNOTATED MODULE THIS LANE EMITS, and it
+		// moves the typed arm alone for the fifth consecutive application: one prop
+		// entry (`onTrace`), declared with a type, so `typedInputsSeen` goes 11 -> 12
+		// while `untypedInputsSeen` HOLDS AT 15 FOR THE FIFTH TIME. That hold is
 		// the half worth reading here, and S16 tests it harder than S15 did: it takes
 		// the largest-template title at EIGHTY-NINE hosts, records TWELVE events to
 		// S15's seven and TWO state writes to S15's one, and adds NOT ONE untyped
@@ -564,10 +603,10 @@ describe('Angular 22 emitter', () => {
 		// those ARE the real DOM event names, so this lane would have fired them.
 		// It costs this lane no type error at all; what kept the drag out of S16 is
 		// the JSX lanes' `pnpm check` baseline. See the fixture header.
-		// S17 (CONTACTS) IS THE SEVENTH ANNOTATED MODULE THIS LANE EMITS, and it
-		// moves the typed arm alone for the FIFTH consecutive application: one prop
-		// entry (`onTrace`), declared with a type, so `typedInputsSeen` goes 10 -> 11
-		// while `untypedInputsSeen` HOLDS AT 15 FOR THE FIFTH TIME.
+		// S17 (CONTACTS) IS THE EIGHTH ANNOTATED MODULE THIS LANE EMITS, and it
+		// moves the typed arm alone for the SIXTH consecutive application: one prop
+		// entry (`onTrace`), declared with a type, so `typedInputsSeen` goes 12 -> 13
+		// while `untypedInputsSeen` HOLDS AT 15 FOR THE SIXTH TIME.
 		// AND THIS IS BY FAR THE HARDEST TEST THAT HOLD HAS HAD, because S17 is the
 		// FORMS card and a form is the one shape that could plausibly have wanted
 		// per-field inputs. It takes the largest-template title at TWO HUNDRED AND
@@ -588,7 +627,7 @@ describe('Angular 22 emitter', () => {
 		// live in the CLASS rather than the inline template. See the fixture's
 		// angular row in scripts/regenerate.ts.
 		expect({ typedInputsSeen, untypedInputsSeen }).toEqual({
-			typedInputsSeen: 11,
+			typedInputsSeen: 13,
 			untypedInputsSeen: 15,
 		});
 	});

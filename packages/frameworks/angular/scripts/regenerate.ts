@@ -74,18 +74,20 @@ const fixtures = [
 	// It IS built for everything else in the corpus, including S10, so this is a
 	// recorded lane limit and not a missing lane.
 	['S13.ts', 's13-hn-front.json'],
-	// S14 (the HACKER NEWS ITEM PAGE - the RECURSION scenario) IS ABSENT FOR A
-	// REASON THAT IS NEW TO THIS LANE AND TO THIS REPO: THE EMITTER TAKES IT AND
-	// THE LANE'S OWN GATE REFUSES THE RESULT.
+	// S14 (the HACKER NEWS ITEM PAGE - the RECURSION scenario) IS THE FIFTH
+	// APPLICATION THIS LANE SHIPS, AND IT ARRIVED HERE BY A ROUTE NO OTHER ROW ON
+	// THIS LIST TOOK: THE EMITTER ALWAYS TOOK IT AND THE LANE'S OWN GATE USED TO
+	// REFUSE THE RESULT.
 	//
-	// `emit()` succeeds. S14's `HnItem` names ITSELF in its own template, and this
-	// emitter lowers a same-module component reference without complaint - it is
-	// one of only FOUR lanes that do (react, solid, qwik, angular; svelte and vue
-	// refuse it outright). The emitted class is a correct recursive Angular
-	// component, `<frameless-hn-item>` inside its own template, with
-	// `imports: [HnItem]` in the decorator so the selector resolves.
+	// `emit()` has always succeeded. S14's `HnItem` names ITSELF in its own
+	// template, and this emitter lowers a same-module component reference without
+	// complaint - it is one of only FOUR lanes that do (react, solid, qwik,
+	// angular; svelte and vue refuse it outright, because a `.svelte` file and a
+	// `.vue` SFC each hold exactly one component). The emitted class is a
+	// recursive standalone Angular component: `<frameless-hn-item>` inside its own
+	// template, with `imports: [HnItem]` in the decorator.
 	//
-	// THAT `imports` ENTRY IS WHAT THE GATE REFUSES, verbatim:
+	// THAT `imports` ENTRY IS WHAT THE GATE USED TO REFUSE, verbatim:
 	//
 	//   Emitted Angular source uses the component-metadata form "imports", which
 	//   is not in the baseline form inventory. IR-4 is DEFERRED, so this emitter's
@@ -95,21 +97,34 @@ const fixtures = [
 	//   status, and it may raise ANGULAR_BASELINE_FLOOR
 	//
 	// S14 IS THE FIRST SCENARIO IN THE CORPUS WITH A COMPONENT REFERENCE AT ALL,
-	// so it is the first emitted module in this lane ever to print `imports`, and
-	// `BASELINE_FORM_INVENTORY` in ../src/gate/index.ts has thirteen entries and
-	// no component-metadata `imports` among them. Admitting it is not a code edit:
-	// it needs a version FLOOR and a floor-EVIDENCE status, and `imports` on
-	// `@Component` arrives with standalone components at Angular 14/15, which is
-	// ABOVE several inventory entries and would move the DERIVED
-	// `ANGULAR_BASELINE_FLOOR`. That is a dossier ruling, and
-	// frameless-app-axes-v1 T003 did not have the authority to make it - the gate
-	// source is outside that card's write scope by construction.
+	// so it was the first emitted module in this lane ever to print `imports`.
+	// Admitting the form was NOT a code edit but a dossier ruling, and
+	// frameless-app-axes-v1 T003 correctly stopped short of making it - the gate
+	// source was outside that card's write scope by construction. T009 ruled ADMIT
+	// at floor 14.0, evidence `unverified`, and T014 landed it.
 	//
-	// So the lane is left UNBUILT WITH A RECORDED REFUSAL, and the refusal is
-	// recorded ON THE RIGHT LAYER: `ANGULAR_UNGATED_SCENARIOS` in
-	// test/ungated-scenarios.ts asserts that `emit()` SUCCEEDS and that the gate
-	// then reports exactly this diagnostic - which is a strictly stronger claim
-	// than the S11/S12 rows next to it, where the emitter itself throws.
+	// THE FEAR THAT DELAYED IT WAS FALSE TWICE OVER, and the correction is worth
+	// keeping next to the row. T003 and the T009 card both recorded that admitting
+	// `imports` "would move the DERIVED ANGULAR_BASELINE_FLOOR for every scenario
+	// at once". MEASURED: the floor is a MAX reduce, `imports` floors at 14.0
+	// BELOW the sole 19.0 entry, and there is NO PER-SCENARIO FLOOR IN THIS REPO
+	// AT ALL - `ANGULAR_BASELINE_FLOOR` is one lane-wide constant. It reads 19.0
+	// before the admission and 19.0 after. `ChangeDetectorRef` and `inject`
+	// entered the same inventory the same way for S8 with the same non-effect.
+	//
+	// AND THE STATIC LAYERS CANNOT SEE WHAT THIS ROW SHIPS. `imports: [HnItem]` is
+	// a SELF-entry, and @angular/compiler-cli@22.0.8 compiles the module
+	// identically with and without it - 0 AOT diagnostics either way,
+	// `dependencies: [HnItem]` in both arms - because
+	// `StandaloneComponentScopeReader` seeds the component's own scope and then
+	// skips a self-entry. The gate, `tsc` and AOT are all green AND ALL BLIND
+	// here. The evidence that the recursion RENDERS is the chromium drive of
+	// demos/angular-official at /hn-item, recorded in
+	// docs/goals/frameless-app-axes-v1/notes/T014-angular-s14.md.
+	//
+	// Like S10-S13 it stays OUT of the 6 x 9 three-way contract, which
+	// scripts/e2e.mjs pins to the literal ['s1'..'s9'].
+	['S14.ts', 's14-hn-item.json'],
 	// THE SIXTH APPLICATION IN THE CORPUS - the HABIT TRACKER - and THE SIX-LANE
 	// FAN-OUT SCENARIO. It takes the next ORDINAL slot for the reason every row
 	// above records. IT IS THE SECOND SCENARIO IN THE CORPUS THAT ALL SIX LANES
@@ -145,8 +160,8 @@ const fixtures = [
 	// to the right" is `columns.indexOf(...)` clamped with `Math.min`, and `Math`
 	// is a global this emitter cannot resolve in a transplanted body, so each
 	// column CARRIES its own `prevId`/`nextId` in the seed instead. See the
-	// fixture's constraint (10). There is no component reference either, so the
-	// `imports` inventory rejection that leaves S14 ungated here is not reachable.
+	// fixture's constraint (10). There is no component reference either, so this
+	// module never prints the `imports` form S14 introduced.
 	//
 	// Like S10-S15 it stays OUT of the 6 x 9 three-way contract, which
 	// scripts/e2e.mjs pins to the literal ['s1'..'s9'].

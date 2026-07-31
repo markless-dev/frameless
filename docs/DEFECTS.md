@@ -1780,6 +1780,17 @@ below this lane's 19.0 standalone floor, so `ANGULAR_BASELINE_FLOOR` did not
 move. The gate refused the emitted output until they were entered, which is that
 inventory working exactly as designed.
 
+> **These two are the on-the-record precedent a later ruling leaned on.** A
+> third form, `component-metadata:imports`, entered the same inventory the same
+> way for **S14** (the recursion scenario) at floor **14.0**, evidence
+> `unverified`, again below 19.0 and again leaving `ANGULAR_BASELINE_FLOOR`
+> unmoved — measured 19.0 before and 19.0 after. **The difference worth knowing**
+> is that S14's admission is the one case where the inventory's own "it cannot
+> see what a form MEANS" caveat bites hardest: Angular 22.0.8 compiles the module
+> **identically with and without** the entry, so no static layer in this repo can
+> witness it. That lane was proven in a **browser**. Ruled by
+> `frameless-app-axes-v1` T009, landed by T014.
+
 **Not upstream.** Angular supports async event handlers natively and documents
 `markForCheck()` as the notification channel for code that is not signal-based.
 The defect was entirely ours.
