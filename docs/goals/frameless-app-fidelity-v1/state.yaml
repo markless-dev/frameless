@@ -44,7 +44,7 @@ goal:
       FIXING THE FIVE FINDINGS AND LEAVING THE ORACLE HOLE OPEN. The findings are symptoms; the
       cause is that nothing ever compared a shipped app to the thing it copies.
 
-active_task: T999
+active_task: T008
 
 # ---------------------------------------------------------------------------
 # KNOWN WORKING-TREE DIRT - NOT OURS, DO NOT "CLEAN UP", DO NOT `git add -A`.
@@ -142,7 +142,7 @@ tasks:
       - "DRIVE IT IN A BROWSER AT HEAD AFTER THE CHANGE. A fix that cannot be driven is not a fix."
       - "DERIVATION PROOF: delete every artifact this card rebuilt, ASSERT present-after-delete == 0 BEFORE rebuilding, then rebuild and shasum byte-identical."
       - "pnpm test at EXACTLY 1 failure (foreign package-inventory ARM B) / pnpm e2e 6 x 9 / pnpm lint / pnpm check:citations"
-      - "pnpm check: REPORT THE START AND END VALUE and attribute every rise. Baseline is 251."
+      - "pnpm check: REPORT THE START AND END VALUE and attribute every rise. BASELINE IS 261 (react 113 / solid 78 / qwik 70) - RATCHETED BY T999 AT HEAD. T004 spent a stated, attributed +10 on the drag. The 267 ceiling now leaves SIX of headroom, not sixteen."
       - "git diff --exit-code over every artifact this card did not intend to move, PAIRED WITH git status --short"
       - "fingerprint the owner's three paths at START and FINISH with `shasum -a 256`, RELATIVE paths, sorting WHOLE OUTPUT LINES: f326d314 / aeb7edc1 / f936e169, 116 files"
       - "THE INLINE ASSERTION IS MADE OFF THE RENDERED IMAGE, not off the CSS: rank, triangle and title must share a bounding-box row, measured by their y-extents overlapping, in ALL SIX LANES."
@@ -461,7 +461,7 @@ tasks:
       - "DRIVE IT IN A BROWSER AT HEAD AFTER THE CHANGE. A fix that cannot be driven is not a fix."
       - "DERIVATION PROOF: delete every artifact this card rebuilt, ASSERT present-after-delete == 0 BEFORE rebuilding, then rebuild and shasum byte-identical."
       - "pnpm test at EXACTLY 1 failure (foreign package-inventory ARM B) / pnpm e2e 6 x 9 / pnpm lint / pnpm check:citations"
-      - "pnpm check: REPORT THE START AND END VALUE and attribute every rise. Baseline is 251."
+      - "pnpm check: REPORT THE START AND END VALUE and attribute every rise. BASELINE IS 261 (react 113 / solid 78 / qwik 70) - RATCHETED BY T999 AT HEAD. T004 spent a stated, attributed +10 on the drag. The 267 ceiling now leaves SIX of headroom, not sixteen."
       - "git diff --exit-code over every artifact this card did not intend to move, PAIRED WITH git status --short"
       - "fingerprint the owner's three paths at START and FINISH with `shasum -a 256`, RELATIVE paths, sorting WHOLE OUTPUT LINES: f326d314 / aeb7edc1 / f936e169, 116 files"
       - "DRIVE A REAL MOUSE DRAG, not a synthetic DragEvent, in every lane that emits it - a card must move column and STAY there. The previous board proved four lanes can do this; reproduce it ON THE SHIPPED APP."
@@ -651,7 +651,7 @@ tasks:
       - "DRIVE IT IN A BROWSER AT HEAD AFTER THE CHANGE. A fix that cannot be driven is not a fix."
       - "DERIVATION PROOF: delete every artifact this card rebuilt, ASSERT present-after-delete == 0 BEFORE rebuilding, then rebuild and shasum byte-identical."
       - "pnpm test at EXACTLY 1 failure (foreign package-inventory ARM B) / pnpm e2e 6 x 9 / pnpm lint / pnpm check:citations"
-      - "pnpm check: REPORT THE START AND END VALUE and attribute every rise. Baseline is 251."
+      - "pnpm check: REPORT THE START AND END VALUE and attribute every rise. BASELINE IS 261 (react 113 / solid 78 / qwik 70) - RATCHETED BY T999 AT HEAD. T004 spent a stated, attributed +10 on the drag. The 267 ceiling now leaves SIX of headroom, not sixteen."
       - "git diff --exit-code over every artifact this card did not intend to move, PAIRED WITH git status --short"
       - "fingerprint the owner's three paths at START and FINISH with `shasum -a 256`, RELATIVE paths, sorting WHOLE OUTPUT LINES: f326d314 / aeb7edc1 / f936e169, 116 files"
       - "HABITS: the WHOLE ROW is the target, or the target carries an unmistakable affordance - measured by clicking the EMOJI and the ROW BODY, not only the circle, and asserting the five downstream updates fire."
@@ -702,7 +702,7 @@ tasks:
           note: "f326d314 / aeb7edc1 / f936e169, 116 files. IDENTICAL. The three dirty paths untouched"
         - cmd: "A PRIORI pnpm check prediction written to disk BEFORE the first edit"
           status: pass
-          note: "PREDICTED END 261, DELTA 0, BOUND +0 - css and md only. ALSO recorded that the card's 'Baseline is 251' IS STALE"
+          note: "PREDICTED END 261, DELTA 0, BOUND +0 - css and md only. ALSO recorded that the card's 'BASELINE IS 261 (react 113 / solid 78 / qwik 70) - RATCHETED BY T999 AT HEAD. T004 spent a stated, attributed +10 on the drag. The 267 ceiling now leaves SIX of headroom, not sixteen' IS STALE"
         - cmd: "pnpm check"
           status: pass
           note: "START 261 -> END 261. Delta 0 exactly as predicted. RE-MEASURED at HEAD, not inherited"
@@ -747,7 +747,7 @@ tasks:
           note: "FOUR foreign PIDs confirmed alive at start AND exit. pkill NEVER RUN"
       deviations:
         - "THE BRIEF'S 'THE EMOJI DOES NOTHING' IS FALSE - see above. Measured before trusting it."
-        - "THE CARD'S VERIFY SAYS 'Baseline is 251' AND IT IS STALE - T004 spent a stated +10. Re-measured 261 and recorded in the a-priori file BEFORE editing."
+        - "THE CARD'S VERIFY SAYS 'BASELINE IS 261 (react 113 / solid 78 / qwik 70) - RATCHETED BY T999 AT HEAD. T004 spent a stated, attributed +10 on the drag. The 267 ceiling now leaves SIX of headroom, not sixteen' AND IT IS STALE - T004 spent a stated +10. Re-measured 261 and recorded in the a-priori file BEFORE editing."
         - "DELIVERED THE ROW TARGET IN CSS rather than by restructuring the fixture - see above."
         - "ITS FIRST OVERLAY WAS WRONG AND ITS OWN NEGATIVE CONTROL CAUGHT IT - see above."
         - "THE CONTACTS RAIL IS GATED AT @media (min-width: 1360px). Below that the 480px rail leaves the two card columns UNDER 240px - narrower than a single email address - so the page keeps the layout it had."
@@ -842,7 +842,7 @@ tasks:
       - "RE-MEASURE THE ANCHOR CENSUS PER LANE IN A BROWSER - do not inherit T002's react-only number. Report total anchors, stubs, real, and how many stubs now resolve. THE NUMBER TO MOVE IS 71 STUBS OF 84."
       - "DERIVATION PROOF: delete every artifact this card rebuilt, ASSERT present-after-delete == 0 BEFORE rebuilding, then rebuild byte-identical. USE A SHELL ARRAY - THIS IS ZSH AND IT DOES NOT WORD-SPLIT, which made T001's first attempt VACUOUSLY TRUE."
       - "pnpm test at EXACTLY 1 failure / pnpm e2e 6 x 9 / pnpm lint / pnpm check:citations"
-      - "pnpm check: STATE THE EXPECTED RISE IN ADVANCE, then report START and END and attribute every new error line. Baseline 251."
+      - "pnpm check: STATE THE EXPECTED RISE IN ADVANCE, then report START and END and attribute every new error line. BASELINE 261 - ratcheted by T999; the 267 ceiling leaves SIX of headroom."
       - "git diff --exit-code over every artifact this card did not intend to move, PAIRED WITH git status --short. S13 IS THE ONLY s-NUMBERED ARTIFACT THAT MOVES."
       - "fingerprint the owner's three paths at START and FINISH with `shasum -a 256`, RELATIVE paths, WHOLE OUTPUT LINES: f326d314 / aeb7edc1 / f936e169, 116 files"
     stop_if:
@@ -1019,7 +1019,7 @@ tasks:
       - "docs/goals/frameless-app-fidelity-v1/notes/T007-globals.md"
     verify:
       - "STATE THE FIVE PREDICTIONS BEFORE TOUCHING CODE, then falsify or confirm each. T003 ALREADY MEASURED THEM WITH A SCRATCHPAD PATCH: both emit with no second refusal behind the first; the typecheck oracle reports 0 UNEXPECTED diagnostics; the gate reports NOVEL: [] and the floor does not move; pnpm check delta 0; e2e stays 6x9."
-      - "pnpm check: REPORT START AND END. Baseline 251, RE-MEASURED at HEAD by T003, not inherited. PREDICTED DELTA IS 0 BY CONSTRUCTION - the angular and vue tsconfigs do NOT include generated/**. ANY RISE MEANS SOMETHING ELSE MOVED: STOP AND REPORT IT."
+      - "pnpm check: REPORT START AND END. BASELINE 261 - ratcheted by T999; the 267 ceiling leaves SIX of headroom, RE-MEASURED at HEAD by T003, not inherited. PREDICTED DELTA IS 0 BY CONSTRUCTION - the angular and vue tsconfigs do NOT include generated/**. ANY RISE MEANS SOMETHING ELSE MOVED: STOP AND REPORT IT."
       - "VUE RUNTIME PROOF, WHICH IS THE WHOLE POINT: drive S11's optimistic toggle AND its remote search, and S12's streamed answer, IN A REAL BROWSER at HEAD after the change. Assert `_ctx.Promise is not a constructor` NO LONGER APPEARS and the observable state ACTUALLY ADVANCES. A PAGE THAT MOUNTS IS NOT THE PROOF - emitted-smoke.browser.test.ts mounts every SFC and NEVER SAW THIS BUG because it does not fire handlers."
       - "NEGATIVE CONTROL ON THE VUE REPAIR: confirm the assertion CAN FAIL by restoring the pre-fix emission in memory and observing the browser throw. AN UNFALSIFIABLE GREEN IS WHAT SHIPPED THIS DEFECT."
       - "GREP THE EMITTED VUE OUTPUT FOR `_ctx.` AFTER Vue's own compileTemplate WITH bindingMetadata, NOT off the .vue source. THE .vue FILE NEVER CONTAINS _ctx - the defect is created by Vue's template compiler, so reading the SFC PROVES NOTHING."
@@ -1151,10 +1151,68 @@ tasks:
         - "ORACLE PART 1 FOR S12 IS PARTIAL. The reference was named and CAPTURED RENDERED, but the public surface is a MARKETING page and the live Codex UI is behind a login this card has no authority to create. Cross-lane agreement was NOT substituted. NEEDS AN OWNER DECISION."
         - "Inherited: hn.css's stale Angular claim, the shared-sheet cascade sweep, the HN domain span-vs-anchor, the subtext author/age links, and the seventeen stubs."
       stopped_because: null
+  - id: T008
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    objective: >-
+      Close ORACLE PART 1 for the two apps that have no reference comparison at all, and MAKE THE
+      RECORD TRUE where four documents still say this board has no drag.
+    WHY_PART_1_FAILED_AND_IT_IS_THIS_BOARDS_OWN_STATED_MISFIRE: >-
+      Part 1 binds to EVERY SHIPPED APP. EIGHT apps ship. S10 TodoMVC and S14 HN item have NO
+      named reference, NO rendered capture and NO feature comparison ANYWHERE on this board -
+      todomvc.com was captured FOR S11 ONLY, and T001's byte-identical /hn-item screenshots are a
+      REGRESSION CHECK, NOT A REFERENCE COMPARISON. goal.md's own likely_misfire reads 'fixing the
+      five findings and leaving the oracle hole open'. IT SURVIVED IN TWO APPS.
+    FOUR_DOCUMENTS_CONTRADICT_THE_SHIPPED_BEHAVIOUR: >-
+      demos/shared/board-css/README.md 'S16 is the drag scenario and it has no drag'; board.css
+      'This page is the DRAG scenario and it has no drag'; demos/react-official/src/App.jsx 'THE
+      AXIS THIS PAGE EXISTS TO MEASURE IS NOT ON IT'; and docs/DEFECTS.md entry 15 still reading
+      FOUR lanes where ANGULAR MAKES FIVE. TWO OF THESE WERE INSIDE T004'S OWN allowed_files AND
+      T004 EDITED board.css. SAME CLASS AS THE demo.mjs FRONT-DOOR LIE THIS BOARD ALREADY REPAIRED
+      TWICE - a demo that lies about what it does.
+    allowed_files:
+      - "demos/shared/board-css/README.md"
+      - "demos/shared/board-css/board.css"
+      - "demos/react-official/public/board-css/board.css"
+      - "demos/solid-official/public/board-css/board.css"
+      - "demos/qwik/public/board-css/board.css"
+      - "demos/svelte-official/static/board-css/board.css"
+      - "demos/vue-official/public/board-css/board.css"
+      - "demos/angular-official/public/board-css/board.css"
+      - "demos/react-official/src/App.jsx"
+      - "docs/DEFECTS.md"
+      - "docs/goals/frameless-app-fidelity-v1/notes/T008-references-and-truth.md"
+    verify:
+      - "ORACLE PART 1 FOR S10: capture todomvc.com RENDERED and state the measured feature-by-feature comparison against our /todomvc. 'IT WAS CAPTURED FOR S11' IS NOT A COMPARISON FOR S10."
+      - "ORACLE PART 1 FOR S14: capture A REAL news.ycombinator.com ITEM PAGE rendered and compare feature by feature against our /hn-item. S14 SHIPS IN FOUR LANES - label every claim as a four-lane claim and record svelte's and vue's verbatim refusals."
+      - "'SIX LANES AGREE' IS FORBIDDEN as any part of this evidence."
+      - "EVERY PROSE CORRECTION MUST CITE A MEASUREMENT YOU MADE AT HEAD, not T999's receipt. RE-DRIVE THE DRAG YOURSELF in all six lanes before rewriting the drag count."
+      - "DERIVATION PROOF: re-emit all six lanes from the goldens and re-run all six copy-emitted steps; assert git diff clean over generated/ and src/emitted/. USE A SHELL ARRAY - zsh does not word-split and it has made THREE cards' proofs vacuously true before they caught it."
+      - "pnpm test at EXACTLY 1 failure / pnpm e2e 6 x 9 RUN ALONE, NEVER CONCURRENTLY WITH ANY REGENERATION - T999 measured solid S8 reporting 0 instead of 1 under that churn / pnpm lint / pnpm check:citations AFTER every prose edit, since DEFECTS.md is a WATCHED document."
+      - "pnpm check: BASELINE IS 261, NOT 251. Predicted delta 0 - this card is prose and CSS comments only. Report START and END."
+      - "git diff --exit-code over every artifact this card did not intend to move, PAIRED WITH git status --short. THE SIX LANE COPIES OF board.css MUST STAY BYTE-IDENTICAL to demos/shared/board-css/board.css - change the shared sheet and RE-RUN THE COPY SCRIPT, never edit a lane copy by hand."
+      - "fingerprint the owner's three paths at START and FINISH with `shasum -a 256`: f326d314 / aeb7edc1 / f936e169, 116 files"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to change WHAT any app does. THIS CARD CHANGES ONLY THE RECORD AND THE TWO MISSING MEASUREMENTS."
+      - "You are about to hand-write or hand-edit anything under generated/ or src/emitted/."
+      - "You are about to offer 'the six lanes agree' as evidence of FIDELITY."
+      - "You are about to read an HTTP 200 as proof a page exists. REACT, SOLID AND VUE ANSWER 200 FOR ANY PATH. Hash the body."
+      - "You are about to write a corrected drag count YOU DID NOT MEASURE YOURSELF IN A BROWSER AT HEAD."
+      - "You are about to fix the /contacts submit trap. IT CHANGES BEHAVIOUR AND NEEDS ITS OWN RULING."
+      - "pnpm check rises at all without stating the amount in advance. BASELINE 261."
+      - "pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
+      - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched. ALL THREE ARE ALREADY DIRTY, YOU DID NOT DO IT, DO NOT `git add -A`."
+      - "NEVER pkill -f. FOUR FOREIGN PIDs ARE ALIVE: 64413, 24931, 31456, 51893."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
   - id: T999
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: "Final audit: certify all three oracle parts, or refuse."
     constraints:
@@ -1171,4 +1229,40 @@ tasks:
       - "full_outcome_complete: true | false"
       - "per app: the reference comparison actually run; per owner-finding: the browser observation"
       - "next task if not complete"
-    receipt: null
+    receipt:
+      result: done
+      decision: not_complete
+      full_outcome_complete: false
+      harness: claude-code
+      summary: "ORACLE PARTS 2 AND 3 ARE SATISFIED and the Judge RE-MEASURED BOTH ITSELF at HEAD rather than inheriting them. PART 1 IS NOT: it binds to EVERY SHIPPED APP, EIGHT apps ship, and S10 TodoMVC and S14 HN item have NO named reference, NO rendered capture and NO feature comparison anywhere on this board - plus S12 is partial by its own receipt. Four prose sites still tell the reader the board has no drag, TWO OF THEM INSIDE THE allowed_files OF THE CARD THAT SHIPPED THE DRAG."
+      THE_BRIEF_ERROR_AND_IT_IS_A_SUBSTITUTION_IN_MY_OWN_FRAMING: "The brief's 'five findings' are goal.md's five. THEY ARE NOT THE OWNER'S FIVE. The owner's verbatim complaint ends 'Clicking the chevron of a hacker news item does not disclose it?' - THE DISCLOSURE ITEM IS ONE OF THE OWNER'S FIVE AND IS ABSENT FROM MY LIST, DISPLACED BY THE HN LAYOUT, WHICH THE OWNER NEVER REPORTED (goal.md says 'I drove the same lane and confirmed'). Oracle part 2 binds to 'EVERY DEFECT THE OWNER FOUND', so AUDITING MY LIST ALONE WOULD HAVE SKIPPED THE ONLY FINDING THAT WAS REFUSED RATHER THAN FIXED. The Judge audited it anyway and it HOLDS - verified AT THE REFERENCE, not at T002's write-up."
+      IT_VERIFIED_BY_DERIVATION_WITH_A_NEGATIVE_CONTROL: "Re-emitted all six lanes from the goldens and re-ran all six copy-emitted steps: 200 artifacts, git status returns ONLY the owner's three pre-existing paths. NEGATIVE CONTROL: appended /*MUTANT*/ to three emitted files in three different lanes - ALL THREE SHOWED AS MODIFIED, and re-derivation ERASED ALL THREE. THE PROOF CAN FAIL. No per-lane app code is hand-written."
+      AND_IT_REFUSED_TO_INHERIT_ANY_EARLIER_CERTIFICATION: "git diff --stat over packages/ demos/ scripts/ is 100 files from T001's commit to HEAD, 70 from T006's, 50 from T007's - SO NOTHING TRANSFERRED, and it re-drove all six lanes itself. Every observation in the receipt is its own at 72ee1bd."
+      THE_FIVE_FINDINGS_RE_MEASURED_AT_HEAD: "(1) HN layout: flexDirection row, overlaps +6/+16/+6, title^domain +13 EXACT to the reference; a memory-injected column rule returns -9/-19/-4 in all six. (2) Links: a real click moves URL AND body hash and renders 15 threads in four lanes; #/ask navigates in NONE. (3) Drag: a real mouse drag moved Backlog 3->2 and Todo 3->4 AND IT STAYED in FIVE lanes; react inert; the right-arrow moves a card in ALL SIX. (4) Habits: clicking the card TITLE changes 10 observables in all six, and Playwright's OWN actionability check refused the click because .ht-check intercepts - WHICH IS THE FIX; with the overlay disabled, 0 change. (5) Contacts: first field y=336, in fold, all six - and a CALIBRATION at 1200px returns y=953, OUT of fold, reproducing the recorded media-query limit exactly."
+      THE_OWNERS_FIFTH_COMPLAINT_HOLDS_AS_A_REFUSAL: "0 collapse toggles on our /hn in all six lanes, AND 0 on the reference front page - MEASURED AT THE REFERENCE rather than at a document quoting it. The refusal is correct."
+      T007s_PAYOFF_CONFIRMED_INDEPENDENTLY: "S11 remote search goes idle -> searching -> done with hits 0 -> 3 IN ALL SIX LANES including vue and angular, ZERO page errors. S12 streams: messages 2 -> 4, last message 24 -> 89 -> 107 chars. Angular's sixth lane and vue's repaired fifth both confirmed at HEAD."
+      rationale: "Part 1 binds to EVERY shipped app and to the comparison being ACTUALLY RUN. Five of eight have a real one, S12 is partial by its own admission, and S10 and S14 have NONE - which is this board's own stated likely_misfire surviving in two apps. Separately, four documents still assert the board has no drag, and a live silent submit dead-end on /contacts is unowned. Everything else passes and was verified by measurement, not inheritance."
+      evidence:
+        - "DERIVATION with a three-lane mutation negative control - the proof can fail"
+        - "Reference measured at origin: news.ycombinator.com, 227 anchors, ZERO href='#', 30 of 30 sitebits are ANCHORS, 0 collapse toggles, title^site +13 matching ours EXACTLY"
+        - "Drag: five lanes moved and stayed; react inert; arrows work in all six"
+        - "pnpm test 1 failed / 1412 passed (foreign ARM B); lint 0/0 over 558 files; citations clean, 610 swept; e2e PASS 6 x 9"
+        - "pnpm check AT HEAD = 261, attributed BY PROJECT: react 113 + solid 78 + qwik 70 = 261, exactly T004's stated end state. NO unattributed rise"
+        - "Owner paths with shasum -a 256 IDENTICAL at both ends; four foreign PIDs alive after teardown; pkill NEVER run"
+      missing_evidence:
+        - "S10 TodoMVC: NO named reference, NO rendered capture, NO feature comparison on this board. todomvc.com was captured FOR S11 ONLY."
+        - "S14 HN item: NO reference comparison at all. T001 proved /hn-item did not REGRESS - THAT IS A REGRESSION CHECK, NOT A REFERENCE COMPARISON. No real item page was ever captured."
+        - "S12 Codex: named and captured, cross-lane agreement correctly NOT substituted, cause measured - but THE FEATURES S12 ACTUALLY CLONES WERE NEVER COMPARED, because the public surface is a MARKETING page. NEEDS AN OWNER DECISION; a Judge cannot certify it."
+        - "The drag is a CHROMIUM claim in six lanes; Firefox unmeasured."
+        - "T006's '18 of 18 body hash did not move' is INSTRUMENT-DEPENDENT: a LIVE-DOM hash moved in qwik after clicking #/ask while the URL did not - qwik attaching state on first interaction. Not a defect; the claim needs its instrument named."
+      remaining_blockers:
+        - "FOUR PROSE SITES CONTRADICT THE SHIPPED BEHAVIOUR AT HEAD: board-css/README.md 'S16 is the drag scenario and it has no drag'; board.css:555 the same; react App.jsx 'THE AXIS THIS PAGE EXISTS TO MEASURE IS NOT ON IT'; and docs/DEFECTS.md 15 still reading FOUR lanes where angular makes FIVE. TWO OF THESE WERE INSIDE T004'S OWN allowed_files AND T004 EDITED board.css. Same class as the demo.mjs front-door lie this board already repaired twice."
+        - "LIVE SILENT SUBMIT DEAD-END ON /contacts, REPRODUCED BY THE JUDGE at HEAD in react AND qwik. T005 was RIGHT to refuse it under its stop_if, but IT IS AN UNCLOSED USER-VISIBLE DEAD END OF EXACTLY THE CLASS THE OWNER COMPLAINED ABOUT, and no card owns it. NEEDS AN OWNER DECISION: placeholder, input type, or hint - each changes behaviour."
+        - "QWIK LANE LIMIT unresolved: the first drop after a drag released outside a zone is lost. Inside qwik's own envelope; do NOT file upstream."
+        - "Below 1360px the contacts form is still below the fold."
+        - "Open fidelity gaps re-confirmed by the Judge's own capture: our domain is a <span> x12 against 30 of 30 anchors, and the reference links its subtext author and age while ours are plain text."
+        - "Seventeen of thirty-one /hn stubs remain dead BY DESIGN. ACCEPTED AS A MEASURED REFUSAL - and the reference having ZERO dead links out of 227 makes it a CORRECTLY RECORDED fidelity gap, not a hidden one."
+        - "E2E INSTRUMENT HAZARD, newly recorded: pnpm e2e must NOT be run concurrently with any regeneration - solid S8 reports 0 instead of 1 under that churn. A clean solo re-run is 6 x 9 PASS."
+      next_task_if_not_complete: "T008 - close oracle part 1 for S10 and S14, and make the record true."
+      verification_attempts: 1
+      stopped_because: null
