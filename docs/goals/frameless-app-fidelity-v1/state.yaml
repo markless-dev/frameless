@@ -44,7 +44,7 @@ goal:
       FIXING THE FIVE FINDINGS AND LEAVING THE ORACLE HOLE OPEN. The findings are symptoms; the
       cause is that nothing ever compared a shipped app to the thing it copies.
 
-active_task: T009
+active_task: T010
 
 # ---------------------------------------------------------------------------
 # OWNER DECISIONS - taken from the owner DIRECTLY on 2026-07-31 while T009 ran.
@@ -1397,7 +1397,7 @@ tasks:
   - id: T009
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       FINAL RE-AUDIT. T999 ruled not_complete on TWO things: oracle part 1 missing for S10 and
@@ -1418,12 +1418,71 @@ tasks:
       - "full_outcome_complete: true | false"
       - "the two reference comparisons, verified or not"
       - "next task if not complete"
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      decision: not_complete
+      full_outcome_complete: false
+      verification_attempts: 1
+      rationale: "T008's two reference comparisons ACTUALLY RAN - reproduced at ORIGIN, not at its write-up. Parts 2 and 3 CERTIFY: the 72ee1bd->HEAD delta is COMMENT-ONLY (9 files, zero non-comment lines) and part 3 was re-run by this Judge. OD1 exempts S12 and the Judge MEASURED the premise the PM could not prove. Two things block: T010 is owner-ordered and unrun, and the brief's 'ALL FIVE stale sites' is FALSE - 18 claim-sites across 23 files still contradict the shipped behaviour at HEAD, including all six regenerate.ts scripts and all seven hn.css copies. T005 recorded six of them and no card owns them."
+      THE_BRIEF_WAS_WRONG_AND_SO_WERE_ITS_THREE_PREDECESSORS: "'VERIFY ALL FIVE stale sites are corrected' has a false premise. state.yaml:589 - T005's OWN RECEIPT - recorded 'SIX MORE HOST FILES CARRY THE SAME STALE S16 DRAG PROSE' BEFORE T999 narrowed the count to four. T999 audited to four, T008's brief inherited four, T008 found a fifth, T009's brief inherited five. FOUR SUCCESSIVE CARDS COUNTED THE SITES A PREDECESSOR QUOTED INSTEAD OF SWEEPING FOR THE CLAIM. Swept for the CLAIM at HEAD: 18 claim-sites across 23 files."
+      THE_DERIVATION_FRONT_DOOR_IS_ONE_OF_THE_LIARS: "ALL SIX packages/frameworks/{react,solid,qwik,svelte,vue,angular}/scripts/regenerate.ts still say 'THE AXIS IT MEASURES IS NOT IN THE FILE, AND THAT IS THE MEASUREMENT' and 'the whole pnpm check from 267 to 280, which this board's oracle forbids. Cards move with arrow buttons instead' - while every emitted S16 carries draggable and dragover AND pnpm check is 261 WITH THE DRAG SHIPPED. Same class as the demo.mjs front-door lie this board already repaired twice."
+      AND_ALL_SEVEN_HN_CSS_COPIES: "hn.css:504 (shared sheet + six byte-identical lane copies, all seven digest b64089ab): 'Three lanes serve this page (react, solid, qwik); svelte and vue refuse a same-module component reference and angular's own gate rejects the imports its recursive component needs.' FALSE. T001 measured angular serving /hn-item, T007's AOT build prerendered 17 static routes, and T008's body-hash table records angular /hn-item at 33,966 B, distinct and carrying the app-root marker. IT IS FOUR LANES. T001 recorded it and T003, T007 and T999 all carried it forward UNOWNED."
+      commands:
+        - cmd: "TRANSFER PROVEN, NOT ASSUMED: git diff --stat 72ee1bd..HEAD over packages/ demos/ scripts/"
+          status: pass
+          note: "9 files, ZERO under packages/ and ZERO under scripts/. Added lines of board.css and react App.jsx filtered for any NON-COMMENT line: EMPTY. a37d198 touches ONLY state.yaml. T999's part-2 observations at 72ee1bd TRANSFER"
+        - cmd: "ORACLE PART 1 FOR S10 RE-RUN AT ORIGIN by the Judge (playwright 1.58.2, 1440x1000, three todos typed and one toggled)"
+          status: pass
+          note: "javascript-es6 / es5 / vue ALL render '2 items left'; ONLY react renders '2 items left!'. Row height 59.8px and title tag LABEL in all four. T008's table reproduces EXACTLY and its refutation of T007's '!' gap HOLDS AT THE ORIGIN"
+        - cmd: "ORACLE PART 1 FOR S14 RE-RUN AT ORIGIN by the Judge (news.ycombinator.com/item?id=49120097, driven)"
+          status: pass
+          note: "masthead 9 links, title^site overlap +13 EXACT, 4 subtext pipes, collapse glyph U+2013, collapsed placeholder '[40 more]' DERIVED, indent 40px, Verdana, width 1210px, 3820 anchors / 0 exactly '#' / 1430 starting '#', collapse 455->416. T008 read 454 points, it now reads 460 - THE PAGE TICKING IS ITSELF PROOF THE CAPTURE WAS LIVE"
+        - cmd: "OD1 PREMISE MEASURED, NOT INHERITED - the PM asked to be held to this"
+          status: pass
+          note: "chatgpt.com/codex answers 200 IN A REAL BROWSER, so the PM's curl 403 WAS BOT-BLOCKING exactly as the PM suspected. But the 200 body is a MARKETING page: title 'Codex in ChatGPT | AI Coding Agents', 3,627 chars, 'Download for macOS / Contact sales / Log in', ZERO composer elements. openai.com/codex/ fails to render. chatgpt.com/ exposes a chat shell unauthenticated but THAT IS CHATGPT, NOT CODEX. THE LIVE CODEX UI IS NOT PUBLICLY REACHABLE - THE EXEMPTION IS NOT VOID"
+        - cmd: "pnpm check RE-RUN AT HEAD"
+          status: pass
+          note: "261 error TS lines. Attributed: react 113 (generated 51 + composition 56 + persistence 6), solid 78 (35 + 37 + 6), qwik 70 (67 + 2 + 1). NO RISE, NOTHING TO ATTRIBUTE"
+        - cmd: "pnpm test RE-RUN AT HEAD"
+          status: pass
+          note: "1 failed / 1412 passed. The failure is package-inventory.test.ts 'ARM B: every shared consumer resolves to its recorded peer-suffix key' - THE KNOWN FOREIGN ONE. EXACTLY 1"
+        - cmd: "pnpm e2e RUN ALONE (nothing else running, no demo up)"
+          status: pass
+          note: "PASS - 'Three-way: 6 demos x 9 scenarios, all observations equal', six per-lane receipts written"
+        - cmd: "pnpm lint / pnpm check:citations"
+          status: pass
+          note: "0 warnings / 0 errors over 558 files. Citations clean over 4 watched documents, 17 watched source files, 610 swept"
+        - cmd: "DERIVATION, incidentally proved by e2e itself - AND THE PM'S THIRD-TREE POINT COVERED"
+          status: pass
+          note: "e2e re-ran regenerate + copy-emitted for all six lanes; afterwards git diff --exit-code over generated/, src/emitted/ and svelte's src/lib/emitted/ is CLEAN. goldens/ IS a third derived tree and git status --short showed NO GOLDEN MOVED EITHER"
+        - cmd: "STALE-RECORD SWEEP FOR THE CLAIM, not for the quoted string"
+          status: fail
+          note: "18 CLAIM-SITES ACROSS 23 FILES REMAIN AT HEAD. Six regenerate.ts; five host board pages (angular board-page.ts:28 + app.routes.ts:231, qwik board/index.tsx:7, solid App.jsx:368, svelte board/+page.svelte:10 - the last reading 'THIS LANE IS THE ONLY ONE THAT REFUSED ANY PART OF IT' WHILE SVELTE IS ONE OF THE FIVE THAT DRAGS); six carrying the contrast T008 WITHDREW from react (angular contacts-page.ts:11, qwik contacts/index.tsx:6, solid App.jsx:402, svelte contacts/+page.svelte:9, vue App.vue:438, s17-contacts.tsrx:12); and hn.css:504 x7"
+        - cmd: "T010's SCOPE AUDITED INDEPENDENTLY"
+          status: pass
+          note: "CORRECT. The golden really does carry the placeholder (goldens/s17-contacts.json:17586 '\"name\": \"placeholder\", \"value\": \"example.com\"') and the fixture line IS 1018. Other example.com hits UNRELATED and correctly excluded: demos/ui-kit/scenarios.ts:75 and the SSR witness fixture are 'avery@example.com' S3/S7 values, citations.test.ts:339 is synthetic, s13 hits are HN story domains. NO lane test asserts the placeholder. FOURTEEN DERIVED ARTIFACTS IS THE RIGHT NUMBER"
+        - cmd: "READ-ONLY CONFIRMED - owner fingerprints at exit, shasum -a 256, sorted whole LINES"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169 over 116 files - IDENTICAL to the board. git status --short is exactly those three paths. pkill NEVER run; the four foreign PIDs never signalled. No report .md written - the harness forbids it, so this receipt IS the ruling"
+      missing_evidence:
+        - "S15, S16 and S17's oracle-part-1 comparisons are INHERITED FROM T999, not re-run by this Judge. T999 measured them at 72ee1bd and the delta to HEAD is PROVEN comment-only, so they transfer - but the Judge did not re-drive their references and WILL NOT PRETEND OTHERWISE."
+        - "T999's five browser observations for oracle part 2 are likewise inherited-with-a-proven-transfer, not re-driven. The Judge re-ran the machine gates itself and verified byte-identical re-derivation, but DID NOT PUT A MOUSE ON THE SIX LANES."
+        - "The drag remains a CHROMIUM claim in all six lanes. Firefox still unmeasured."
+        - "The qwik lost drop (1 of 16, first from a fresh page) is reproduced by two cards and still unresolved. Inside qwik's own resumability envelope; NOTHING TO FILE UPSTREAM."
+        - "OD1's exemption rests on the live Codex UI being unreachable. The Judge measured the PUBLIC surface is a marketing page with zero composer - it did NOT prove a login wall specifically, and the owner's ruling is conditional by its own words. If a later card reaches the live Codex UI unauthenticated, PART 1 REOPENS FOR S12."
+      parallel_safety: "T010 AND T011 ARE NOT DISJOINT AND MUST BE SERIALIZED. Both need packages/compiler/test/fixtures/s17-contacts.tsrx - T010 for line 1018, T011 for line 12. Separate cards are not proof; this is the same overlap T002 flagged and T007 honoured. RUN T010 FIRST AND ALONE, because its derivation proof asserts the ONLY line to move under generated/ and emitted/ is the placeholder - a prose edit in the same fixture would falsify that assertion FOR THE WRONG REASON. T011 also needs all six scripts/regenerate.ts, which a concurrent regenerate would be reading."
+      blocked_tasks:
+        - "T010 - QUEUED AND UNRUN. It is the owner's direct ruling OD2 ('Fix the placeholder'), so it is OWNER-ORDERED work, not a Judge's preference. The board cannot close over it. Its card as written is RIGHT AND SUFFICIENT FOR ITS OWN SLICE - allowed_files and verify audited and found correct and complete; one stop_if added fencing it off from T011's prose."
+        - "T011 - THE RECORD SWEEP. T999's SECOND not_complete ground is NOT closed: T008 corrected 5 sites, 18 claim-sites across 23 files remain. Largest safe reversible slice left, prose-and-CSS-comment only, predicted pnpm check delta 0."
+      spawned_tasks:
+        - T011
+      next_task_if_not_complete: "T010 first and alone (owner-ordered, derivation-sensitive), then T011 the record sweep."
+      stopped_because: null
   - id: T010
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: >-
       CLOSE THE LIVE SILENT SUBMIT DEAD-END ON /contacts, on the owner's direct ruling OD2. The
@@ -1482,6 +1541,82 @@ tasks:
       - "pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
       - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched. ALL THREE ARE ALREADY DIRTY, YOU DID NOT DO IT, DO NOT `git add -A`."
       - "NEVER pkill -f. FOUR FOREIGN PIDs ARE ALIVE: 64413, 24931, 31456, 51893. Stop only the demo you started, by its recorded PID."
+      - "Verification fails twice for the same reason."
+      - "ADDED BY T009. You are about to also correct the stale S16 drag prose. IT IS T011'S AND IT IS IN THIS VERY FIXTURE (s17-contacts.tsrx:12) - a prose edit here would BREAK THIS CARD'S OWN 'only the placeholder line moved' ASSERTION. Leave it. Line 1018 is yours; line 12 is not."
+    receipt: null
+
+  - id: T011
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    objective: >-
+      THE RECORD SWEEP. Correct EVERY site that contradicts the shipped behaviour at HEAD, found
+      BY SWEEPING FOR THE CLAIM, and report the count you find AGAINST THE 18 T009 MEASURED. This
+      closes T999's SECOND not_complete ground, which four successive cards have now left open.
+    WHY_THIS_CARD_EXISTS_AND_WHY_ITS_NUMBER_IS_NOT_TO_BE_TRUSTED: >-
+      T005's OWN RECEIPT (state.yaml:589) recorded 'SIX MORE HOST FILES CARRY THE SAME STALE S16
+      DRAG PROSE'. T999's audit NARROWED IT TO FOUR. T008's brief inherited four. T008 found a
+      FIFTH. T009's brief inherited five. T009 swept for THE CLAIM and found 18 CLAIM-SITES ACROSS
+      23 FILES. FOUR SUCCESSIVE CARDS COUNTED THE SITES A PREDECESSOR QUOTED. DO NOT BE THE FIFTH.
+    THE_DERIVATION_FRONT_DOOR_IS_LYING: >-
+      ALL SIX scripts/regenerate.ts say 'THE AXIS IT MEASURES IS NOT IN THE FILE' and 'pnpm check
+      from 267 to 280, which this board's oracle forbids. Cards move with arrow buttons instead'.
+      EVERY EMITTED S16 CARRIES draggable AND dragover, AND pnpm check IS 261 WITH THE DRAG
+      SHIPPED. This is the demo.mjs front-door lie a third time.
+    AND_ALL_SEVEN_HN_CSS_COPIES: >-
+      hn.css:504 claims THREE lanes serve /hn-item and that angular's gate rejects it. T001
+      measured angular SERVING it, T007's AOT build prerendered 17 static routes, and T008's
+      body-hash table records angular /hn-item at 33,966 B, distinct and carrying the app-root
+      marker. IT IS FOUR LANES. T001 recorded this and T003, T007 and T999 ALL CARRIED IT FORWARD
+      UNOWNED.
+    allowed_files:
+      - "packages/frameworks/react/scripts/regenerate.ts"
+      - "packages/frameworks/solid/scripts/regenerate.ts"
+      - "packages/frameworks/qwik/scripts/regenerate.ts"
+      - "packages/frameworks/svelte/scripts/regenerate.ts"
+      - "packages/frameworks/vue/scripts/regenerate.ts"
+      - "packages/frameworks/angular/scripts/regenerate.ts"
+      - "demos/angular-official/src/app/board-page.ts"
+      - "demos/angular-official/src/app/contacts-page.ts"
+      - "demos/angular-official/src/app/app.routes.ts"
+      - "demos/qwik/src/routes/board/index.tsx"
+      - "demos/qwik/src/routes/contacts/index.tsx"
+      - "demos/solid-official/src/App.jsx"
+      - "demos/svelte-official/src/routes/board/+page.svelte"
+      - "demos/svelte-official/src/routes/contacts/+page.svelte"
+      - "demos/vue-official/src/App.vue"
+      - "packages/compiler/test/fixtures/s17-contacts.tsrx"
+      - "demos/shared/hn-css/hn.css"
+      - "demos/react-official/public/hn-css/hn.css"
+      - "demos/solid-official/public/hn-css/hn.css"
+      - "demos/vue-official/public/hn-css/hn.css"
+      - "demos/angular-official/public/hn-css/hn.css"
+      - "demos/qwik/public/hn-css/hn.css"
+      - "demos/svelte-official/static/hn-css/hn.css"
+      - "docs/goals/frameless-app-fidelity-v1/notes/T011-record-sweep.md"
+    verify:
+      - "SWEEP FOR THE CLAIM, NOT FOR A QUOTED STRING, AND REPORT YOUR OWN COUNT AGAINST 18 ACROSS 23 FILES. If you find more, THAT IS THE EXPECTED RESULT of doing it properly - say so. If you find fewer, prove each one T009 named is already correct at HEAD."
+      - "EVERY CORRECTION MUST CITE A MEASUREMENT YOU MADE AT HEAD, NOT T009'S RECEIPT. RE-DRIVE THE DRAG YOURSELF IN ALL SIX LANES before rewriting any drag count, and RE-HASH ANGULAR'S /hn-item BODY before rewriting the lane count. Two agents agreeing is not two measurements."
+      - "hn.css: EDIT demos/shared/hn-css/hn.css AND RE-RUN demos/shared/copy-hn-css.mjs. NEVER hand-edit a lane copy. All seven currently share digest b64089ab and MUST STILL SHARE ONE DIGEST afterwards - report it."
+      - "s17-contacts.tsrx:12 IS YOURS (line 1018 was T010's). pnpm check:citations AFTER EVERY PROSE EDIT - that fixture and DEFECTS.md are WATCHED DOCUMENTS."
+      - "THIS CARD DERIVES NOTHING: git diff --exit-code over packages/frameworks/*/generated, packages/compiler/test/goldens, demos/*/src/emitted and demos/svelte-official/src/lib/emitted MUST BE CLEAN, PAIRED WITH git status --short. EDITING A regenerate.ts COMMENT MUST NOT MOVE ONE EMITTED BYTE - prove it by re-running all six regenerate steps and showing the trees still clean. USE A SHELL ARRAY."
+      - "pnpm check: BASELINE 261. PREDICTED DELTA 0 - this card is prose and CSS comments only. Report START and END."
+      - "pnpm test EXACTLY 1 failure (foreign ARM B) / pnpm e2e 6 x 9 RUN ALONE, never concurrently with any regeneration or a running demo / pnpm lint."
+      - "fingerprint the owner's three dirty paths at START and FINISH with `shasum -a 256`, sorting whole output LINES: f326d314 / aeb7edc1 / f936e169, 116 files."
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to correct a site BECAUSE T009'S RECEIPT NAMED IT. SWEEP FOR THE CLAIM AND REPORT YOUR OWN COUNT - four cards in a row have now fixed a predecessor's sample and left the population open."
+      - "You are about to change WHAT ANY APP DOES. T011 CHANGES ONLY THE RECORD."
+      - "You are about to write a corrected drag count or lane count YOU DID NOT MEASURE YOURSELF AT HEAD."
+      - "You are about to hand-edit a lane copy of hn.css instead of the shared sheet plus the copy script."
+      - "You are about to touch T010's line - s17-contacts.tsrx:1018 IS ALREADY FIXED AND IS NOT YOURS."
+      - "You are about to rewrite ANY prior receipt or note. PRIOR RECEIPTS ARE HISTORY - RECORD, NEVER EDIT."
+      - "You are about to read an HTTP 200 as proof a page exists. REACT, SOLID AND VUE ANSWER 200 FOR ANY PATH. Hash the body."
+      - "pnpm check rises at all. BASELINE 261, PREDICTED DELTA 0."
+      - "pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
+      - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched. ALL THREE ARE ALREADY DIRTY, YOU DID NOT DO IT, DO NOT `git add -A`."
+      - "NEVER pkill -f. FOUR FOREIGN PIDs ARE ALIVE: 64413, 24931, 31456, 51893."
       - "Verification fails twice for the same reason."
     receipt: null
 
