@@ -58,7 +58,7 @@ goal:
       evaporates. If drag refuses and is quietly replaced by click-to-move, the axis goes
       unmeasured while the demo looks complete.
 
-active_task: T016
+active_task: T018
 
 rules:
   - "state.yaml is board truth; goal.md is the charter."
@@ -2494,7 +2494,7 @@ tasks:
   - id: T016
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       LAND T012's RULING: open the SCALAR-STRING persistence authoring channel in the FRAMELESS
@@ -2561,8 +2561,82 @@ tasks:
       - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched."
       - "NEVER pkill -f on a broad pattern. FOREIGN node PID 64413 holds 5175 and PID 24931 holds 5178."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T016-persistence-channel.md
+      summary: "Opened the scalar-string persistence authoring channel: state(initial, { storage }) minted through the REAL buildEnrichedIr, refused per binding at ONE choke point. ONE AUTHORED .tsrx SURVIVES A CHROMIUM RELOAD in react and solid WITH NO SYNTHESIZED RECORD IN THE PATH, both negative controls firing. CLOSED TWO SOLID EMITTER DEFECTS, witnessed before/after in a browser. pnpm check FELL to 251."
+      THE_SECOND_SOLID_DEFECT_REPRODUCED_THE_OWNERS_OWN_COMPLAINT_INSIDE_THE_FIX: "The brief named ONE solid defect. There were TWO. The second: appendPersistenceWrites CLONED THE SETTER ARGUMENT AND RE-EVALUATED IT AFTER THE COMMIT, so a persisted signal wrote THE OPPOSITE VALUE on any self-reading set - `setFilter(filter() === 'all' ? 'done' : 'all')` followed by `__framelessWrite(..., filter() === 'all' ? 'done' : 'all')` - plus double-evaluating side effects. THE PRE-FIX SOLID EMITTER, RESTORED FROM 3bddd3b AND DRIVEN ON THE SAME SERVED BYTES, FORGOT ON RELOAD WITH A NON-EMPTY localStorage. The owner's exact complaint, reproduced inside the feature built to fix it."
+      THREE_BRIEF_ERRORS_ALL_MEASURED: "(1) valueKind ALONE IS NOT THE SCALAR GUARD. Pinned Markless reports valueKind 'scalar' for state(3) AND state(false), so it would have admitted EVERY NUMBER AND BOOLEAN. The initial value's own RUNTIME TYPE is the second half. (2) generated-persistence/ IS NOT AN ADDABLE ESCAPE HATCH: test/gate.test.ts (outside allowed_files) asserts the inventory EXACTLY as ['generated-persistence/P1.tsx'], and the directory is in both lanes' tsconfig where P1 already costs 28 OF THE 267 pnpm check errors - so any ADDED artifact would breach the ceiling. The authored artifact TOOK THE P1 SLOT and check fell to 251. (3) Solid had TWO defects, not one - see above."
+      A_DEFECT_FOUND_AND_DELIBERATELY_NOT_FIXED: "React emits an UNDECLARED `nextTouches` when a handler-only cell is READ AFTER BEING WRITTEN. It REPRODUCES IDENTICALLY AT records.persistence.length === 0, so IT IS NOT PERSISTENCE-CAUSED, and react/src/emitter/index.ts is outside allowed_files. The authored fixture was reshaped to route around it, and the defect is recorded with a ONE-LINE REPRODUCTION rather than absorbed."
+      THE_EDITOR_IS_RED_AND_THAT_WAS_UNMEASURED_UNTIL_NOW: "@markless/typescript-plugin 0.2.2 emits TS2554 'Expected 1 arguments, but got 2' ONCE PER PERSISTED BINDING, measured through the plugin's OWN compileToVolarMappings. pnpm check is unaffected because .tsrx is in no tsconfig include - BUT THE OWNER AUTHORS IN AN EDITOR. Fixable only in @markless/core's state<T>(initial: T), which is vendor/."
+      changed_files:
+        - packages/compiler/src/build.ts
+        - packages/compiler/src/persistence.ts
+        - packages/compiler/test/persistence.test.ts
+        - packages/compiler/test/fixtures/persistence-authored.tsrx
+        - packages/frameworks/solid/src/emitter/index.ts
+        - packages/frameworks/solid/test/emitter.test.ts
+        - packages/frameworks/solid/generated-persistence/P1.tsx
+        - packages/frameworks/react/test/emitter.test.ts
+        - packages/frameworks/react/generated-persistence/P1.tsx
+        - docs/DEFECTS.md
+        - docs/goals/frameless-app-axes-v1/notes/T016-persistence-channel.md
+      commands:
+        - cmd: "owner fingerprint START and FINISH"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169 / 116 - IDENTICAL, sorting the whole shasum OUTPUT LINES"
+        - cmd: "pnpm test"
+          status: pass
+          note: "EXACTLY 1 failure (foreign package-inventory ARM B), 1372 passed"
+        - cmd: "pnpm check"
+          status: pass
+          note: "251 - was 267, DID NOT RISE"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "PASS, 6 demos x 9 scenarios, all observations equal"
+        - cmd: "pnpm lint / pnpm check:citations"
+          status: pass
+          note: "0 warnings 0 errors; citations clean, 604 swept"
+        - cmd: "census: 24 pre-existing fixtures"
+          status: pass
+          note: "0 records each; authored fixture at 3; STRIP-OPTION DIFFERENTIAL -> 0, so the fact demonstrably came from the author's own bytes"
+        - cmd: "six REAL emitters on the AUTHORED IR"
+          status: pass
+          note: "react/solid EMIT; qwik/svelte/vue/angular REFUSE VERBATIM"
+        - cmd: "chromium reload proof react+solid"
+          status: pass
+          note: "SURVIVED, PRE-PAINT, BOTH negative controls fired; PRE-FIX SOLID: FORGOT"
+        - cmd: "pre-paint contentSha256 vs served bytes"
+          status: pass
+          note: "1a9f39a2... == the bytes the browser parsed, both lanes"
+        - cmd: DERIVATION
+          status: pass
+          note: "PRESENT-AFTER-DELETE = 0 ASSERTED FIRST, rebuilt 2/2 byte-identical"
+        - cmd: "@markless/typescript-plugin virtual TSX + tsc"
+          status: pass
+          note: "TS2554 x3 - the EDITOR is red"
+        - cmd: "git diff --exit-code over goldens/fixtures/generated"
+          status: pass
+          note: "exit 0, PAIRED with git status --short"
+        - cmd: "foreign PIDs re-verified"
+          status: pass
+          note: "64413 (5175) and 24931 (5178) ALIVE; proof server on 5399, released; pkill -f NEVER used"
+      deviations:
+        - "THE AUTHORED ARTIFACT TOOK THE EXISTING P1 SLOT rather than adding a file - TWO independent hard walls, see brief error (2). Re-pointing P1 at the authored fixture IS the card's objective ('no synthesized record anywhere in the path') and moved check DOWN to 251."
+        - "FIXED A SECOND SOLID DEFECT NOT NAMED IN THE BRIEF - in the same function as the named one, and it SILENTLY CORRUPTS THE EXACT FEATURE THIS CARD SHIPS."
+        - "THE BROWSER PROOF APP WAS BUILT IN THE SCRATCHPAD, not demos/, because demos/*/index.html is a stop_if. It serves the COMMITTED P1.tsx bytes - asserted equal to formatEmitted(emit(ir)) FIRST - and the generated pre-paint script, hash-checked as the browser parsed it."
+        - "THE AUTHORED FIXTURE WAS RESHAPED to stop reading a handler-only cell after writing it, routing around a PRE-EXISTING react defect measured as NOT persistence-caused."
+        - "The old s2-based react 'handler-only' test was RELABELLED as the initializer-swap characterization and kept DELIBERATELY SYNTHESIZED, because the scalar refusal now makes its numeric binding unauthorable."
+      remaining_blockers:
+        - "THE OWNER'S BUG IS NOT FIXED: /todomvc-advanced forgets state:todos, AN ARRAY OF OBJECTS, WHICH THIS CHANNEL REFUSES. An array channel is a separate, explicitly-costed OWNER decision."
+        - "The one-line <script> shell include is still absent from all six official demos, so persistence IN A DEMO still writes and never reads. NEXT SLICE."
+        - "@markless/typescript-plugin emits TS2554 once per persisted binding IN AN EDITOR. Fixable only in vendor/."
+        - "NEW REACT DEFECT, UNFIXED: an undeclared `nextTouches` version reference for a useRef cell read after being written. NOT persistence-caused. Needs its own card."
+        - "A handler-only record has seed.lowering 'none', so it is WRITE-ONLY until something reads the cell in render. BY CONTRACT, recorded rather than repaired."
+        - "PM NOTE: pnpm check is now 251, not 267. The board's ceiling is still written as 267 on every queued card; RATCHETING MID-BOARD COULD FAIL A CARD THAT IS ALREADY RUNNING, so it is recorded for T999 rather than changed here."
+      stopped_because: null
   - id: T017
     type: judge
     assignee: Judge
@@ -2605,7 +2679,7 @@ tasks:
   - id: T018
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: >-
       Two emitter-adjacent findings T015 measured and was forbidden to touch.

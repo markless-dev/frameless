@@ -8,6 +8,7 @@ import { runCompilerPassPipeline } from './pass-pipeline.ts';
 import { enrichedIrPassDefinition } from './pass-registry.ts';
 import {
 	adaptPersistenceFacts,
+	assertScalarStringPersistable,
 	extractPersistenceSourceFacts,
 	type MarklessStorageSourceFact,
 	type PersistenceAccess,
@@ -623,6 +624,7 @@ async function buildEnrichedIrArtifact({
 	const persistence = buildPersistenceRecords(
 		semanticGraph,
 		persistenceSourceFacts,
+		collectAuthoredStorageOptions(program, semanticGraph, bindingOwners),
 		enrichedComponents,
 		bindings,
 		events,
@@ -671,9 +673,115 @@ async function buildEnrichedIrArtifact({
 	};
 }
 
+/**
+ * THE FRAMELESS-OWNED PERSISTENCE AUTHORING CHANNEL.
+ *
+ *     let filter = state('all', { storage: 'markless:filter' });
+ *
+ * A SECOND ARGUMENT ON THE `state()` CALL, and the shape is decided by
+ * MEASUREMENT rather than taste. Against pinned Markless 0.1.1 the second
+ * argument BUILDS CLEANLY with the binding IDENTICAL to baseline - `valueKind`
+ * 'scalar', `initialValue` intact, ZERO diagnostics - because Markless silently
+ * ignores it. The wrapper form `state(persist('all', …))` is DISQUALIFIED by
+ * the same probe: it yields `valueKind: 'unknown'` with `initialValue` GONE,
+ * destroying the two facts the scalar refusal needs.
+ *
+ * The channel lives here rather than in Markless so it can ship now, in the
+ * shape Markless would later adopt, MAKING MIGRATION A DELETION IN FRAMELESS
+ * rather than a rewrite of any application. `extractPersistenceSourceFacts`
+ * stays exactly as it was: when `SemanticGraphBinding` grows a real `storage`
+ * field, the vendor half starts producing facts and this half can go.
+ */
+function helperCallOptions(
+	initializer: AnyNode | null | undefined,
+	kind: string,
+): AnyNode | undefined {
+	if (!initializer || initializer.type !== 'CallExpression') return undefined;
+	if (initializer.callee?.type !== 'Identifier' || initializer.callee.name !== kind)
+		return undefined;
+	return initializer.arguments?.[1];
+}
+
+/** Parse `{ storage: '<key>' }` fail-closed. Anything else refuses with a message. */
+function authoredStorageKey(options: AnyNode, bindingName: string): string {
+	const construct = `Persistence options for state binding "${bindingName}"`;
+	if (options.type !== 'ObjectExpression')
+		throw new Error(`${construct} must be an object literal.`);
+	let literal: string | undefined;
+	for (const property of options.properties ?? []) {
+		if (property.type !== 'Property' || property.computed || property.kind !== 'init')
+			throw new Error(`${construct} must contain only plain "storage" properties.`);
+		const name =
+			property.key?.type === 'Identifier'
+				? property.key.name
+				: property.key?.type === 'Literal' && typeof property.key.value === 'string'
+					? property.key.value
+					: undefined;
+		if (name !== 'storage')
+			throw new Error(
+				`${construct} has unknown field "${name ?? '<computed>'}"; only "storage" is supported.`,
+			);
+		if (
+			property.value?.type !== 'Literal' ||
+			typeof property.value.value !== 'string' ||
+			property.value.value.length === 0
+		)
+			throw new Error(`${construct} field "storage" must be a non-empty string literal.`);
+		literal = property.value.value;
+	}
+	if (literal === undefined) throw new Error(`${construct} is missing required field "storage".`);
+	return literal;
+}
+
+/**
+ * Resolve every authored `state(initial, { storage })` to its graph node id.
+ *
+ * The trailing sweep is the ANTI-SILENT-DROP GUARD and it is the reason this
+ * returns rather than logs: a second argument written on a shared-definition
+ * cell, on a `computed(…)`, or on any `state(…)` that no component-owned
+ * binding claims would otherwise be READ BY NOBODY AND FORGOTTEN, which is the
+ * exact failure mode - a feature that compiles and does nothing - this whole
+ * axis exists to stop shipping.
+ */
+function collectAuthoredStorageOptions(
+	program: AnyNode,
+	semanticGraph: SemanticGraphArtifact,
+	bindingOwners: ReadonlyMap<SemanticGraphArtifact['graphBindings'][number], ComponentWork>,
+): Map<string, string> {
+	const claimed = new Map<string, string>();
+	const claimedNodes = new Set<AnyNode>();
+	for (const binding of semanticGraph.graphBindings) {
+		if (binding.sharedDefinitionId) continue;
+		const owner = bindingOwners.get(binding);
+		const options = helperCallOptions(owner?.locals.get(binding.name)?.initializer, binding.kind);
+		if (!options) continue;
+		if (binding.kind !== 'state')
+			throw new Error(
+				`Persistence options are supported on state(...) only; "${binding.name}" is ${binding.kind}.`,
+			);
+		claimedNodes.add(options);
+		claimed.set(binding.id, authoredStorageKey(options, binding.name));
+	}
+	walkAst(program, (node) => {
+		if (
+			node.type !== 'CallExpression' ||
+			node.callee?.type !== 'Identifier' ||
+			(node.callee.name !== 'state' && node.callee.name !== 'computed')
+		)
+			return;
+		const options = node.arguments?.[1];
+		if (!options || claimedNodes.has(options)) return;
+		throw new Error(
+			`Persistence options on ${node.callee.name}(...) are not attached to a component-owned state binding, so they would be silently dropped.`,
+		);
+	});
+	return claimed;
+}
+
 function buildPersistenceRecords(
 	semanticGraph: SemanticGraphArtifact,
 	sourceFacts: readonly MarklessStorageSourceFact[],
+	authoredStorage: ReadonlyMap<string, string>,
 	components: readonly EnrichedComponent[],
 	bindings: readonly EnrichedGraphBinding[],
 	events: readonly EnrichedEventRecord[],
@@ -697,7 +805,30 @@ function buildPersistenceRecords(
 			handler: handlerReads.has(graphNodeId),
 		};
 	};
-	for (const fact of sourceFacts) {
+	// THE AUTHORED HALF, MINTED AGAINST THE ENRICHED BINDING IT NAMES. The key is
+	// the author's own literal, so its origin is `explicit` - `derived` is
+	// reserved for a key the compiler invented and must keep reconstructible.
+	const minted: MarklessStorageSourceFact[] = [...authoredStorage]
+		.sort(([left], [right]) => compareText(left, right))
+		.map(([graphNodeId, literal]) => {
+			const binding = bindingsById.get(graphNodeId);
+			if (!binding)
+				throw new Error(
+					`Authored persistence option "${graphNodeId}" has no exact enriched graph binding.`,
+				);
+			return {
+				graphNodeId,
+				moduleId: semanticGraph.filename,
+				bindingName: binding.name,
+				key: { origin: 'explicit', literal, bakedAtCompileTime: true },
+				// Refused below at the one choke point every fact passes; the cast
+				// exists only so a non-string reaches the message that names it.
+				authoredInitial: binding.initialValue as unknown as string,
+				writable: binding.writable,
+			} satisfies MarklessStorageSourceFact;
+		});
+	const facts = [...sourceFacts, ...minted];
+	for (const fact of facts) {
 		const binding = bindingsById.get(fact.graphNodeId);
 		if (
 			!binding ||
@@ -708,8 +839,16 @@ function buildPersistenceRecords(
 			throw new Error(
 				`Persistence source fact "${fact.graphNodeId}" does not exactly correlate with its semantic graph binding.`,
 			);
+		// THE SCALAR-STRING REFUSAL, AT THE ONE CHOKE POINT EVERY FACT - VENDOR OR
+		// AUTHORED - ALREADY PASSED THROUGH.
+		assertScalarStringPersistable({
+			graphNodeId: binding.id,
+			bindingName: binding.name,
+			valueKind: binding.valueKind,
+			initialValue: binding.initialValue,
+		});
 	}
-	return adaptPersistenceFacts(sourceFacts, access);
+	return adaptPersistenceFacts(facts, access);
 }
 
 function collectReadGraphNodeIds(values: readonly unknown[]): Set<string> {

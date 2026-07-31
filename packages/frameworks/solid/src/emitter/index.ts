@@ -2076,6 +2076,55 @@ function persistenceHelperDeclaration(): t.Statement {
 	);
 }
 
+/**
+ * Names this arrow declares itself, so a shadowed state name is never written
+ * back. DELIBERATELY DEFENSIVE AND CURRENTLY UNREACHABLE FROM AUTHORED SOURCE:
+ * measured, a handler that declares its own `let touches` next to a
+ * `state:touches` cell is refused far upstream of here with "EventHandlerRecord
+ * event:0 has write record absent from handler AST". It costs ten lines and it
+ * is the difference between a wrong `localStorage` write and none on the
+ * injected-record path every persistence test in this repository uses.
+ */
+function declaredNames(fn: t.ArrowFunctionExpression): Set<string> {
+	const names = new Set<string>();
+	for (const parameter of fn.params) if (t.isIdentifier(parameter)) names.add(parameter.name);
+	if (!t.isBlockStatement(fn.body)) return names;
+	for (const statement of fn.body.body as t.Statement[]) {
+		if (!t.isVariableDeclaration(statement)) continue;
+		for (const declarator of statement.declarations)
+			if (t.isIdentifier(declarator.id)) names.add(declarator.id.name);
+	}
+	return names;
+}
+
+/**
+ * THE WRITE-THROUGH, AND THE TWO HOLES IT USED TO HAVE. Both were MEASURED on
+ * the emitted bytes of `packages/compiler/test/fixtures/persistence-authored.tsrx`,
+ * and REACT GETS BOTH RIGHT - the cross-lane pair in the two `test/emitter.test.ts`
+ * files names them.
+ *
+ * HOLE 1, THE ONE T007 FOUND: A HANDLER-ONLY BINDING NEVER WROTE BACK AT ALL.
+ * A binding no render site reads is not `visible`, so it lowers to a plain `let`
+ * and its assignment stays an `AssignmentExpression`; the filter below matched
+ * only a setter CALL, so nothing appended and NOTHING REFUSED. Open the
+ * authoring channel with that standing and Solid is one of only two consuming
+ * lanes, SEEDING FROM STORAGE AND NEVER WRITING BACK. The plain-let arm closes
+ * it. `UpdateExpression` is included because `touches++` is the same write.
+ *
+ * HOLE 2, FOUND HERE: A SIGNAL WROTE THE WRONG VALUE ON ANY SELF-READING SET.
+ * The old code CLONED the setter's argument expression and re-evaluated it
+ * AFTER the set. For `filter = filter === 'all' ? 'done' : 'all'` that emitted
+ *
+ *     setFilter(filter() === 'all' ? 'done' : 'all');
+ *     __framelessWrite('markless:filter', …, filter() === 'all' ? 'done' : 'all');
+ *
+ * and the second ternary reads the value the first one JUST COMMITTED, so it
+ * evaluates to the OPPOSITE: the page shows `done` and localStorage holds `all`.
+ * The same clone also DOUBLE-EVALUATES any argument with a side effect. Reading
+ * the accessor is both correct and cheaper - after `setX(v)`, `x()` IS `v` -
+ * and it makes the signal arm agree with the store and plain-let arms, which
+ * already read the binding by name.
+ */
 function appendPersistenceWrites(fn: t.ArrowFunctionExpression, context: EmitContext): void {
 	if (!t.isBlockStatement(fn.body)) return;
 	const stateBySetter = new Map(
@@ -2083,22 +2132,34 @@ function appendPersistenceWrites(fn: t.ArrowFunctionExpression, context: EmitCon
 			.filter((state) => context.settersById.has(state.id))
 			.map((state) => [context.settersById.get(state.id)!, state]),
 	);
+	const shadowed = declaredNames(fn);
 	fn.body.body = fn.body.body.flatMap((statement: t.Statement) => {
-		if (
-			!t.isExpressionStatement(statement) ||
-			!t.isCallExpression(statement.expression) ||
-			!t.isIdentifier(statement.expression.callee)
-		)
-			return [statement];
-		const state = stateBySetter.get(statement.expression.callee.name);
-		const persistence = state ? context.persistenceByGraph.get(state.id) : undefined;
-		if (!state || !persistence) return [statement];
-		const argument = statement.expression.arguments[0];
-		const finalValue =
-			state.storage === 'signal' && argument && t.isExpression(argument)
-				? argument
-				: t.identifier(state.name);
-		return [statement, ...persistenceStatements(context, persistence, finalValue)];
+		if (!t.isExpressionStatement(statement)) return [statement];
+		const expression = statement.expression;
+		if (t.isCallExpression(expression) && t.isIdentifier(expression.callee)) {
+			const state = stateBySetter.get(expression.callee.name);
+			const persistence = state ? context.persistenceByGraph.get(state.id) : undefined;
+			if (!state || !persistence) return [statement];
+			const finalValue =
+				state.storage === 'signal'
+					? t.callExpression(t.identifier(state.name), [])
+					: t.identifier(state.name);
+			return [statement, ...persistenceStatements(context, persistence, finalValue)];
+		}
+		const target = t.isAssignmentExpression(expression)
+			? expression.left
+			: t.isUpdateExpression(expression)
+				? expression.argument
+				: undefined;
+		if (!target || !t.isIdentifier(target) || shadowed.has(target.name)) return [statement];
+		const state = context.statesByName.get(target.name);
+		if (!state || state.storage !== 'local') return [statement];
+		const persistence = context.persistenceByGraph.get(state.id);
+		if (!persistence) return [statement];
+		return [
+			statement,
+			...persistenceStatements(context, persistence, t.identifier(state.name)),
+		];
 	});
 }
 

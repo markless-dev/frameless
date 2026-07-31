@@ -163,6 +163,53 @@ function validateSourceFact(value: unknown, index: number): MarklessStorageSourc
 	return value as unknown as MarklessStorageSourceFact;
 }
 
+/**
+ * The subset of an enriched graph binding the scalar-string refusal reads.
+ *
+ * Deliberately structural rather than importing `EnrichedGraphBinding`: this
+ * module is the persistence contract and must not depend on the IR schema.
+ */
+export interface PersistenceCandidateBinding {
+	readonly graphNodeId: string;
+	readonly bindingName: string;
+	readonly valueKind?: string | undefined;
+	readonly initialValue?: unknown;
+}
+
+/**
+ * THE SCALAR-STRING REFUSAL. Persistence is scalar-string-only and this is the
+ * boundary that says so on the AUTHORING side.
+ *
+ * `FramelessPersistenceRecord.authoredInitial` is a `string` and the emitted
+ * `__framelessWrite` calls `localStorage.setItem(key, value)` WITH NO ENCODER,
+ * so an array-, object-, number- or boolean-valued binding lowers cleanly and
+ * corrupts: an array stringifies to `"[object Object],[object Object]"` and a
+ * number round-trips back as a string, turning `next + 1` into `'31'`.
+ *
+ * `valueKind` ALONE IS NOT THE GUARD, and that is MEASURED, not assumed.
+ * Against pinned Markless 0.1.1, `state(3, …)` and `state(false, …)` BOTH
+ * report `valueKind: 'scalar'` with `initialValue` 3 and false respectively.
+ * A `valueKind === 'scalar'` test would therefore admit every number and every
+ * boolean in the corpus. The initial value's own runtime type is the second
+ * half of the refusal and it is not optional.
+ */
+export function assertScalarStringPersistable(binding: PersistenceCandidateBinding): string {
+	const construct = `Persistence refuses state binding "${binding.bindingName}" (${binding.graphNodeId})`;
+	if (binding.valueKind !== 'scalar')
+		throw new TypeError(
+			`${construct}: storage is scalar-string-only and this binding has valueKind "${binding.valueKind ?? 'absent'}".`,
+		);
+	if (binding.initialValue === undefined)
+		throw new TypeError(
+			`${construct}: storage is scalar-string-only and this binding has no statically known initial value.`,
+		);
+	if (typeof binding.initialValue !== 'string')
+		throw new TypeError(
+			`${construct}: storage is scalar-string-only and this binding's initial value is ${binding.initialValue === null ? 'null' : typeof binding.initialValue}, not a string.`,
+		);
+	return binding.initialValue;
+}
+
 function validateAccess(value: unknown, graphNodeId: string): PersistenceAccess {
 	const construct = `Persistence access for graph node "${graphNodeId}"`;
 	assertRecord(value, construct);

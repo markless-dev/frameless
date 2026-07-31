@@ -10,22 +10,21 @@ function __framelessWrite(key, attr, value) {
 	document.documentElement.setAttribute(attr, value);
 }
 
-export function KeyedTodo({ seed, onTrace }) {
-	const [todos, setTodos] = useState(() => {
-		return seed.map((todo) => ({ ...todo }));
-	});
-	const [draft, setDraft] = useState(
-		() => globalThis.__FRAMELESS_STATE__?.['markless:draft'] ?? 'light',
+export function PersistedFilter({ onTrace }) {
+	const [filter, setFilter] = useState(
+		() => globalThis.__FRAMELESS_STATE__?.['markless:filter'] ?? 'all',
 	);
-	const next = useRef(3);
-	const complete = todos.filter((todo) => todo.done).length;
+	const [draft, setDraft] = useState(
+		() => globalThis.__FRAMELESS_STATE__?.['markless:draft'] ?? '',
+	);
+	const touches = useRef('0');
+	const label = `${filter}:${draft}`;
 	return (
-		<section data-scenario="s2">
-			<p data-count="complete">
-				{complete}/{todos.length}
-			</p>
+		<section data-scenario="p1">
+			<p data-filter="value">{filter}</p>
+			<p data-label="value">{label}</p>
 			<input
-				data-action="new"
+				data-action="draft"
 				value={draft}
 				onChange={(event) => {
 					const nextDraft = event.target.value;
@@ -34,84 +33,22 @@ export function KeyedTodo({ seed, onTrace }) {
 				}}
 			/>
 			<button
-				data-action="add"
+				data-action="cycle"
 				onClick={(event) => {
-					const currentState2 = next.current;
-					const item = { id: `c${currentState2}`, title: draft, done: false };
-					next.current = currentState2 + 1;
-					const nextTodos = todos.concat(item);
-					setTodos(nextTodos);
-					const nextDraft = '';
-					setDraft(nextDraft);
-					__framelessWrite('markless:draft', 'data-markless-draft', nextDraft);
-					onTrace('add', { id: item.id, title: item.title }, event);
+					const currentState3 = touches.current;
+					const nextFilter = filter === 'all' ? 'done' : 'all';
+					setFilter(nextFilter);
+					__framelessWrite('markless:filter', 'data-markless-filter', nextFilter);
+					touches.current = `${Number(currentState3) + 1}`;
+					__framelessWrite(
+						'markless:touches',
+						'data-markless-touches',
+						`${Number(currentState3) + 1}`,
+					);
+					onTrace('cycle', { filter: nextFilter }, event);
 				}}
 			>
-				add
-			</button>
-			{todos.length === 0 ? <p data-empty="true">empty</p> : null}
-			<ul>
-				{todos.map((todo) => (
-					<li key={todo.id} data-oracle-row-key={todo.id}>
-						<input
-							data-edit={todo.id}
-							value={todo.title}
-							onChange={(event) => {
-								const title = event.target.value;
-								const nextTodos = todos.map((item) =>
-									item.id === todo.id ? { ...item, title: title } : item,
-								);
-								setTodos(nextTodos);
-								onTrace('edit', { id: todo.id, title }, event);
-							}}
-						/>
-						<input
-							type="checkbox"
-							data-toggle={todo.id}
-							checked={todo.done}
-							onChange={(event) => {
-								const checked = event.target.checked;
-								const nextTodos = todos.map((item) =>
-									item.id === todo.id ? { ...item, done: checked } : item,
-								);
-								setTodos(nextTodos);
-								onTrace('toggle', { id: todo.id, checked }, event);
-							}}
-						/>
-						<button
-							data-remove={todo.id}
-							onClick={(event) => {
-								const nextTodos = todos.filter((item) => item.id !== todo.id);
-								setTodos(nextTodos);
-								onTrace('remove', { id: todo.id }, event);
-							}}
-						>
-							remove
-						</button>
-					</li>
-				))}
-			</ul>
-			<button
-				data-action="reorder"
-				onClick={(event) => {
-					const order = todos.slice().reverse();
-					const nextTodos = order;
-					setTodos(nextTodos);
-					onTrace('reorder', { order: order.map((todo) => todo.id) }, event);
-				}}
-			>
-				reorder
-			</button>
-			<button
-				data-action="clear"
-				onClick={(event) => {
-					const count = todos.length;
-					const nextTodos = [];
-					setTodos(nextTodos);
-					onTrace('clear', { count }, event);
-				}}
-			>
-				clear
+				cycle
 			</button>
 		</section>
 	);

@@ -2256,6 +2256,79 @@ enforced by remembering is not contained.
 
 ---
 
+## 18. Emitted Solid persisted the WRONG value, and for a handler-only cell no value at all — **CLOSED — frameless's own emitted output**
+
+> **Half of this was filed by `frameless-app-axes-v1` T007 and could not be
+> witnessed in a browser, because there was no way to author persistence at all.**
+> T016 opened the authoring channel and BOTH halves became reproducible from a
+> `.tsrx` and measurable in chromium. React gets both right; Solid got both wrong.
+> Neither is a lane property of Solid — both are `appendPersistenceWrites` in
+> `packages/frameworks/solid/src/emitter/index.ts`.
+
+**Status:** CLOSED — **removed, not contained.** Both arms are witnessed in a
+browser, before and after, on the same served bytes.
+
+**HOLE 1 — A HANDLER-ONLY PERSISTED CELL NEVER WROTE BACK, AND NOTHING REFUSED.**
+A binding no render site reads is not `visible`, so Solid lowers it to a plain
+`let` and its write stays an `AssignmentExpression`. `appendPersistenceWrites`
+matched only an `ExpressionStatement` whose expression is a `CallExpression` with
+an `Identifier` callee — the signal setter — so the plain-`let` write **never
+matched**. `validatePersistenceCorrelation` accepted the record anyway; it asks
+only that a `kind: 'state'` binding of that name exists. The cell therefore had a
+seed path and **no write path**, silently.
+
+**HOLE 2 — A SIGNAL WROTE THE OPPOSITE VALUE ON ANY SELF-READING SET, and this
+one was found at T016.** The write-through **cloned the setter's argument
+expression** and re-evaluated it **after** the set. For the ordinary toggle
+`filter = filter === 'all' ? 'done' : 'all'` that emitted
+
+```js
+setFilter(filter() === 'all' ? 'done' : 'all');
+__framelessWrite('markless:filter', 'data-markless-filter', filter() === 'all' ? 'done' : 'all');
+```
+
+and the second ternary reads the value the first one just committed, so it
+evaluates to the **opposite**. The same clone also **double-evaluates** any
+argument with a side effect. `generated-persistence/P1` could not see either hole:
+until T016 it persisted `draft`, a render-read signal set from
+`event.currentTarget.value` — a value that neither reads the cell nor has a side
+effect. **The single artifact exercising the feature was, by construction, blind
+to both.**
+
+**THE BROWSER MEASUREMENT.** Same authored `.tsrx`, same generated pre-paint
+script (`contentSha256` `1a9f39a2…`), same chromium, one emitter change between
+the two rows: type `SURVIVE-ME`, click `cycle`, **reload**.
+
+| | `markless:filter` in storage | screen after the click | `markless:touches` | after RELOAD |
+| --- | --- | --- | --- | --- |
+| **Solid, before** | `"all"` | `done` | **absent** | `all` — **FORGOT** |
+| **Solid, after** | `"done"` | `done` | `"1"` | `done` — **SURVIVED** |
+| **React, both** | `"done"` | `done` | `"1"` | `done` — SURVIVED |
+
+The "before" row is the owner's own complaint reproduced *inside the feature meant
+to fix it*: the page forgot on reload **even though localStorage was non-empty**,
+because the value in it was wrong.
+
+**The repair.** The signal arm reads the accessor — after `setX(v)`, `x()` **is**
+`v` — which is correct, cheaper, and makes the signal arm agree with the store and
+plain-`let` arms that already read the binding by name. A plain-`let` arm handles
+`AssignmentExpression` and `UpdateExpression` targets, guarded against a handler
+that declares its own binding of that name.
+
+**What reports a regression.** The two `test/emitter.test.ts` files carry a
+**cross-lane pair** that names each other and requires **both** lanes to report
+**one** `__framelessWrite` for the handler-only cell; they disagreed for the whole
+life of the feature. The Solid half also asserts the write-through argument is
+`filter()` and **not** a re-printed ternary.
+
+**What this does NOT close.** A handler-only record still has
+`seed.lowering: 'none'`, so `generatePrePaintPersistenceScript` **excludes** it and
+the cell starts at its authored initial after a reload. It is write-only by
+contract (`reason: 'no-render-read'`), and nothing on screen depends on it, but
+the write is only useful to a future render read.
+
+---
+
 ## Closed, for the record
 
 **`findings-001` — `engines.node: ">=20"` was false.** The toolchain cannot load
@@ -2284,6 +2357,7 @@ matrix proved green rather than from the error message's claim.
 | 14  | **product defect — CLOSED**     | **removed**, not contained: a class with an async handler injects `ChangeDetectorRef` and every suspension segment after the first ends with `markForCheck()` (T004). Found by a **served payload** and by nothing else, with the diagnosis measured — one extra click made the stale DOM jump to the correct value | none for the defect — nested-function writes are NOT covered and the pass says so; no corpus authoring produces one |
 | 15  | **product defect — OPEN, REACT ONLY (amended)** | **not contained** — no refusal anywhere: the casing is destroyed in the compiler (`jsxEventName` in `packages/compiler/src/build.ts`), so no emitter can spell `onKeyDown` **as react-dom needs it** and react's emitted binding is inert at runtime. **The other five lanes bind by the DOM event name, which is what the flattening produces, and they FIRE** — measured in browsers (T005) with the react row re-measured (T011). The residue that is genuinely six-lane is narrower: a flattened name that is not a real DOM event, such as `doubleclick` from `onDoubleClick` | a per-lane spelling map **for react** (`dblclick` → React's `onDoubleClick` shares no stem with it), **and** a compiler-side refusal so `/^on[A-Z]/` stops accepting a name it is about to flatten |
 | 16  | **not a defect**                | nothing to change in any emitter — the Svelte a11y refusals are correct and canonical TodoMVC's clickable `<label>` is the anti-pattern | **nothing** — rendered via a marked supplement (T007), vendored bytes untouched |
+| 18  | **product defect — CLOSED**     | **removed**, not contained: `appendPersistenceWrites` reads the committed accessor instead of re-evaluating a cloned setter argument, and grows a plain-`let` arm so a handler-only persisted cell writes back (T016). Witnessed in chromium before and after on the same served bytes — before, Solid stored `"all"` while the screen read `done` and **forgot on reload**; after, it survives, matching React | none for the defect — a **contract limit** is recorded above: a handler-only record has `seed.lowering: 'none'`, so it is write-only until something reads the cell in render |
 | 17  | **product defect — OPEN**       | **contained only by hand** — fixture constraints and board `stop_if` clauses. Every valued static attribute reaches every emitter as a **string** (`StaticAttribute` in `packages/compiler/src/schema.ts`) and no lane's declared JSX prop type is consulted anywhere, so the emitted output fails that lane's own `tsc`. Measured per lane: `rows="6"` costs react and qwik and is free in solid; `draggable="true"` costs qwik alone; the valueless `draggable` costs react alone | a refusal at authoring time instead of a convention — and, first, a ruling on whether the value's kind belongs in the IR or in a per-lane attribute table |
 
 **Entries 7, 8, 13, 15 and 17 are the OPEN defects in frameless's own emitted

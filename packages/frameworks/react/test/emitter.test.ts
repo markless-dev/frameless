@@ -131,6 +131,27 @@ function persistenceRecord(
 	};
 }
 
+/**
+ * THE AUTHORED PERSISTENCE IR, BUILT BY THE REAL COMPILER FROM A REAL `.tsrx`.
+ *
+ * Nothing here constructs a `FramelessPersistenceRecord`. The fixture asks for
+ * persistence with `state(initial, { storage: '<key>' })` and every record in
+ * `ir.records.persistence` is minted by `buildPersistenceRecords` from those
+ * bytes. `packages/compiler/test/persistence.test.ts` proves the same file is
+ * the ONLY `.tsrx` in the corpus that reports a non-zero count.
+ */
+const AUTHORED_PERSISTENCE_FIXTURE = 'test/fixtures/persistence-authored.tsrx';
+
+async function authoredPersistenceIr(): Promise<EnrichedIR> {
+	return buildEnrichedIr({
+		filename: AUTHORED_PERSISTENCE_FIXTURE,
+		source: await readFile(
+			resolve(root, '../../compiler', AUTHORED_PERSISTENCE_FIXTURE),
+			'utf8',
+		),
+	});
+}
+
 function visit(value: unknown, callback: (record: Record<string, any>) => void): void {
 	if (!value || typeof value !== 'object') return;
 	callback(value as Record<string, any>);
@@ -1763,18 +1784,31 @@ export function SyncProbe({ onTrace }) @{
 	});
 
 	describe('fail-closed enriched IR validation', () => {
-		test('emits a persisted useState fixture that passes the artifact gate', async () => {
-			const ir = clone(await golden('s2-keyed-todo.json')) as any;
-			const state = ir.records.bindings.find((binding: any) => binding.id === 'state:draft');
-			state.initializer = { type: 'Literal', value: 'light', raw: "'light'" };
-			ir.records.persistence = [
-				persistenceRecord(state.id, state.name, 'light', ir.filename),
-			];
+		// `P1` IS AUTHORED NOW, NOT SYNTHESISED, AND THAT IS THE WHOLE POINT.
+		//
+		// Until `frameless-app-axes-v1` T016 this artifact was produced by taking
+		// the `s2-keyed-todo` golden and ATTACHING A HAND-BUILT PERSISTENCE RECORD
+		// to it, because there was no way to ask for persistence from a `.tsrx` at
+		// all. That made the only shipped persistence artifact in the repository a
+		// statement about a record the test itself wrote. It is now emitted from
+		// `packages/compiler/test/fixtures/persistence-authored.tsrx` through the
+		// REAL `buildEnrichedIr`, so every record below came out of the author's
+		// own bytes and the artifact is a statement about the compiler.
+		test('emits the AUTHORED persisted fixture and passes the artifact gate', async () => {
+			const ir = clone(await authoredPersistenceIr()) as any;
+			// THE ANTI-VACUOUS ASSERTION. If the authoring channel ever goes dead
+			// this is zero, and every expectation below would still pass on an
+			// artifact with no persistence in it at all.
+			expect(ir.records.persistence.map((record: any) => record.key.literal)).toEqual([
+				'markless:draft',
+				'markless:filter',
+				'markless:touches',
+			]);
 
 			const source = emit(ir);
 			const formatted = await formatEmitted(source);
 			expect(source).toContain(
-				`useState(() => globalThis.${FRAMELESS_STATE_GLOBAL}?.['markless:draft'] ?? 'light')`,
+				`useState(() => globalThis.${FRAMELESS_STATE_GLOBAL}?.['markless:filter'] ?? 'all')`,
 			);
 			expect(source).not.toContain(`window.${FRAMELESS_STATE_GLOBAL}`);
 			expect(source).not.toMatch(
@@ -1802,15 +1836,42 @@ export function SyncProbe({ onTrace }) @{
 			expect(gate.violations, JSON.stringify(gate.violations, null, 2)).toEqual([]);
 		});
 
+		// THE HANDLER-ONLY HALF, NOW FROM THE SAME AUTHORED SOURCE. `touches` is
+		// read only inside the cycle handler, so its record carries
+		// `access.render: false` and `seed.lowering: 'none'` and React lowers the
+		// cell to `useRef`. React honours `writeThrough.trigger` anyway.
+		//
+		// ONE HALF OF A CROSS-LANE PAIR - the Solid twin is
+		// "closes the write-through hole for a HANDLER-ONLY persisted binding".
+		// Both lanes must report ONE write here. Until T016 Solid reported ZERO
+		// and the pair recorded the split; if they diverge again, one lane moved.
+		test('honours write-through for the AUTHORED handler-only binding', async () => {
+			const ir = clone(await authoredPersistenceIr()) as any;
+			const record = ir.records.persistence.find(
+				(candidate: any) => candidate.graphNodeId === 'state:touches',
+			);
+			expect(record.access).toEqual({ render: false, handler: true });
+			expect(record.seed.lowering).toBe('none');
+			expect(record.writeThrough.trigger).toBe('ordinary-assignment');
+
+			const source = emit(ir);
+			// No render read, so no seed slot - the contract's own `no-render-read`.
+			expect(source).not.toContain(`${FRAMELESS_STATE_GLOBAL}?.['markless:touches']`);
+			expect(source).toContain("useRef('0')");
+			expect(
+				source.match(/__framelessWrite\('markless:touches', 'data-markless-touches', /g),
+			).toHaveLength(1);
+		});
+
 		test('reads the persisted fallback without throwing during no-window SSR', async () => {
 			const sandbox = Object.create(null);
 			expect(runInNewContext('typeof window', sandbox)).toBe('undefined');
 			expect(
 				runInNewContext(
-					`globalThis.${FRAMELESS_STATE_GLOBAL}?.['markless:draft'] ?? 'light'`,
+					`globalThis.${FRAMELESS_STATE_GLOBAL}?.['markless:filter'] ?? 'all'`,
 					sandbox,
 				),
-			).toBe('light');
+			).toBe('all');
 
 			const persistedGolden = await readFile(
 				resolve(root, 'generated-persistence/P1.tsx'),
@@ -1858,19 +1919,18 @@ export function SyncProbe({ onTrace }) @{
 			).toHaveLength(definition.methods.length);
 		});
 
-		// THE HANDLER-ONLY HALF OF THE PERSISTENCE CONTRACT, WHICH `P1` CANNOT SEE.
-		// `P1` persists `draft`, a binding read in render, so it exercises only the
-		// pre-paint seed plus the write-through of a `useState` cell. `next` in the
-		// same golden is read ONLY inside handlers, so React lowers it to `useRef`
-		// and the record's seed lowering is `none`. React still honours
-		// `writeThrough.trigger: 'ordinary-assignment'` and emits the write.
+		// THE INITIALIZER SWAP - T007 3a - AND THE ONE PLACE IT IS STILL REACHABLE.
 		//
-		// THIS TEST IS ONE HALF OF A CROSS-LANE PAIR. Its Solid twin
-		// ("SOLID DROPS THE WRITE-THROUGH ...") runs the SAME canonical record
-		// through the Solid emitter and measures ZERO writes. Measured at
-		// `frameless-app-axes-v1` T007. If this file and that one ever agree, one
-		// of the two lanes has changed and the split must be re-recorded.
-		test('honours write-through for a HANDLER-ONLY persisted binding', async () => {
+		// This is a DELIBERATELY SYNTHESISED record, and it must stay that way: it
+		// exists to reach a state the AUTHORING CHANNEL CAN NO LONGER PRODUCE.
+		// `s2-keyed-todo` authors `next = state(3)` - a NUMBER - and the scalar
+		// refusal in `buildPersistenceRecords` now rejects that binding outright,
+		// so no `.tsrx` can put a number-valued cell into `records.persistence`.
+		// Injecting the record directly proves what the EMITTER would do if one
+		// ever arrived: it takes the record's `authoredInitial` STRING over the
+		// authored `3`, which is why the refusal upstream is load-bearing rather
+		// than decorative. It is the array channel's tripwire, kept armed.
+		test('takes the record initializer over a numeric authored one when a record is injected', async () => {
 			const ir = clone(await golden('s2-keyed-todo.json')) as any;
 			const state = ir.records.bindings.find((binding: any) => binding.id === 'state:next');
 			expect(state).toBeDefined();

@@ -5,12 +5,9 @@ import { tmpdir } from 'node:os';
 import { pathToFileURL } from 'node:url';
 import { runInNewContext } from 'node:vm';
 import {
-	adaptPersistenceFacts,
 	buildEnrichedIr,
 	FRAMELESS_STATE_GLOBAL,
 	type EnrichedIR,
-	type FramelessPersistenceRecord,
-	type MarklessStorageSourceFact,
 } from '@frameless/compiler';
 import { resolve } from 'pathe';
 import { parse } from 'yuku-parser';
@@ -119,48 +116,28 @@ async function golden(name: string): Promise<EnrichedIR> {
 function clone<T>(value: T): T {
 	return structuredClone(value);
 }
-function persistenceRecord(
-	graphNodeId: string,
-	bindingName: string,
-	authoredInitial: string,
-	moduleId: string,
-): FramelessPersistenceRecord {
-	return {
-		version: 'frameless-persistence-record/1',
-		graphNodeId,
-		moduleId,
-		bindingName,
-		driver: 'localStorage',
-		key: {
-			origin: 'derived',
-			sourceIdentifier: bindingName,
-			literal: `markless:${bindingName}`,
-			bakedAtCompileTime: true,
-		},
-		authoredInitial,
-		antiFlashAttribute: `data-markless-${bindingName}`,
-		access: { render: true, handler: true },
-		seed: {
-			lowering: 'pre-paint',
-			readFailure: 'authored-initial',
-			corruptedValue: 'authored-initial',
-			landings: [
-				{
-					target: 'solid',
-					kind: 'sync-read-seed-slot',
-					graphNodeId,
-				},
-			],
-		},
-		writeThrough: {
-			trigger: 'ordinary-assignment',
-			value: 'final-committed-string',
-			timing: 'commit-before-notify',
-			writeFailure: 'swallow',
-			crossTabSync: 'off',
-		},
-	};
+
+/**
+ * THE AUTHORED PERSISTENCE IR, BUILT BY THE REAL COMPILER FROM A REAL `.tsrx`.
+ *
+ * Nothing here constructs a `FramelessPersistenceRecord`. The fixture asks for
+ * persistence with `state(initial, { storage: '<key>' })` and every record in
+ * `ir.records.persistence` is minted by `buildPersistenceRecords` from those
+ * bytes. `packages/compiler/test/persistence.test.ts` proves the same file is
+ * the ONLY `.tsrx` in the corpus that reports a non-zero count.
+ */
+const AUTHORED_PERSISTENCE_FIXTURE = 'test/fixtures/persistence-authored.tsrx';
+
+async function authoredPersistenceIr(): Promise<EnrichedIR> {
+	return buildEnrichedIr({
+		filename: AUTHORED_PERSISTENCE_FIXTURE,
+		source: await readFile(
+			resolve(root, '../../compiler', AUTHORED_PERSISTENCE_FIXTURE),
+			'utf8',
+		),
+	});
 }
+
 function visit(value: unknown, callback: (record: Record<string, any>) => void): void {
 	if (!value || typeof value !== 'object') return;
 	callback(value as Record<string, any>);
@@ -1502,18 +1479,24 @@ export function Search() @{
 	});
 
 	describe('fail-closed validation', () => {
-		test('emits a persisted createSignal fixture that passes the artifact gate', async () => {
-			const ir = clone(await golden('s2-keyed-todo.json')) as any;
-			const state = ir.records.bindings.find((binding: any) => binding.id === 'state:draft');
-			state.initializer = { type: 'Literal', value: 'light', raw: "'light'" };
-			ir.records.persistence = [
-				persistenceRecord(state.id, state.name, 'light', ir.filename),
-			];
+		// `P1` IS AUTHORED NOW, NOT SYNTHESISED, AND THAT IS THE WHOLE POINT. See
+		// the identical note on the React twin. Emitted from
+		// `packages/compiler/test/fixtures/persistence-authored.tsrx` through the
+		// REAL `buildEnrichedIr`, so every record came out of the author's bytes.
+		test('emits the AUTHORED persisted fixture and passes the artifact gate', async () => {
+			const ir = clone(await authoredPersistenceIr()) as any;
+			// THE ANTI-VACUOUS ASSERTION. If the authoring channel goes dead this
+			// is zero and every expectation below still passes on a bare artifact.
+			expect(ir.records.persistence.map((record: any) => record.key.literal)).toEqual([
+				'markless:draft',
+				'markless:filter',
+				'markless:touches',
+			]);
 
 			const source = emit(ir);
 			const formatted = await formatEmitted(source);
 			expect(source).toContain(
-				`createSignal(globalThis.${FRAMELESS_STATE_GLOBAL}?.['markless:draft'] ?? 'light')`,
+				`createSignal(globalThis.${FRAMELESS_STATE_GLOBAL}?.['markless:filter'] ?? 'all')`,
 			);
 			expect(source).not.toContain(`window.${FRAMELESS_STATE_GLOBAL}`);
 			expect(source).not.toMatch(
@@ -1521,11 +1504,22 @@ export function Search() @{
 			);
 			const setter = source.indexOf('setDraft(event.currentTarget.value)');
 			const write = source.indexOf(
-				"__framelessWrite('markless:draft', 'data-markless-draft', event.currentTarget.value)",
+				"__framelessWrite('markless:draft', 'data-markless-draft', draft())",
 				setter,
 			);
 			expect(setter).toBeGreaterThan(-1);
 			expect(write).toBeGreaterThan(setter);
+			// THE WRITE-THROUGH READS THE COMMITTED SIGNAL, NEVER A RE-EVALUATION
+			// OF THE SETTER'S ARGUMENT. Cloning the argument was correct only for
+			// an expression that does not read the cell it is setting; on the
+			// authored `filter = filter === 'all' ? 'done' : 'all'` it re-ran the
+			// ternary AFTER the commit and stored the OPPOSITE value.
+			expect(source).toContain(
+				"__framelessWrite('markless:filter', 'data-markless-filter', filter())",
+			);
+			expect(source).not.toMatch(
+				/__framelessWrite\('markless:filter'[\s\S]{0,80}=== 'all' \? 'done' : 'all'/,
+			);
 			expect(source).toMatch(
 				/function __framelessWrite\(key, attr, value\) \{\s*try \{\s*localStorage\.setItem\(key, value\);\s*\} catch \{\s*void 0;\s*\}\s*document\.documentElement\.setAttribute\(attr, value\);\s*\}/,
 			);
@@ -1546,10 +1540,10 @@ export function Search() @{
 			expect(runInNewContext('typeof window', sandbox)).toBe('undefined');
 			expect(
 				runInNewContext(
-					`globalThis.${FRAMELESS_STATE_GLOBAL}?.['markless:draft'] ?? 'light'`,
+					`globalThis.${FRAMELESS_STATE_GLOBAL}?.['markless:filter'] ?? 'all'`,
 					sandbox,
 				),
-			).toBe('light');
+			).toBe('all');
 
 			const persistedGolden = await readFile(
 				resolve(root, 'generated-persistence/P1.tsx'),
@@ -1559,62 +1553,41 @@ export function Search() @{
 			expect(persistedGolden).not.toContain(`window.${FRAMELESS_STATE_GLOBAL}`);
 		});
 
-		// SOLID DROPS THE WRITE-THROUGH FOR A HANDLER-ONLY PERSISTED BINDING, AND
-		// REACT DOES NOT. Measured at `frameless-app-axes-v1` T007 with the SAME
-		// canonical record built by the SAME vendor adapter: React emits one
-		// `__framelessWrite('markless:next', ...)`, Solid emits ZERO.
+		// THE DEFECT T007 FOUND, CLOSED AT T016, AND THE TEST KEPT AS ITS WITNESS.
 		//
-		// `next` is read only inside handlers, so Solid lowers it to a plain `let`
-		// and the assignment `next = next + 1` never routes through
-		// `persistenceStatements`. `validatePersistenceCorrelation` accepts the
-		// record - it asks only that a `kind: 'state'` binding of that name exists -
-		// so nothing refuses and nothing warns: the binding SEEDS from storage in
-		// the render-read case and can NEVER WRITE BACK.
+		// Solid used to DROP the write-through for a handler-only persisted binding
+		// where React emitted it - React one `__framelessWrite`, Solid ZERO - and
+		// nothing refused and nothing warned, so the cell would have seeded from
+		// storage and NEVER WRITTEN BACK. The mechanism: a binding no render site
+		// reads is not `visible`, so it lowers to a plain `let` whose write is an
+		// `AssignmentExpression`, and `appendPersistenceWrites` matched only a
+		// setter CALL. `appendPersistenceWrites` now carries a plain-let arm.
 		//
-		// `generated-persistence/P1` cannot see this, because it persists `draft`,
-		// a render-read signal, which sits in the covered half. THIS TEST IS A
-		// CHARACTERIZATION OF A DEFECT, NOT AN ENDORSEMENT OF IT. It is paired with
-		// React's "honours write-through for a HANDLER-ONLY persisted binding". If
-		// the Solid emitter learns to write these back, THIS TEST GOING RED IS THE
-		// INTENDED SIGNAL - update it, do not soften it.
-		test('DEFECT: drops the write-through for a HANDLER-ONLY persisted binding', async () => {
-			const ir = clone(await golden('s2-keyed-todo.json')) as any;
-			const state = ir.records.bindings.find((binding: any) => binding.id === 'state:next');
-			expect(state).toBeDefined();
-
-			const [record] = adaptPersistenceFacts(
-				[
-					{
-						graphNodeId: state.id,
-						moduleId: ir.filename,
-						bindingName: state.name,
-						key: {
-							origin: 'derived',
-							sourceIdentifier: state.name,
-							literal: `markless:${state.name}`,
-							bakedAtCompileTime: true,
-						},
-						authoredInitial: '3',
-						writable: state.writable,
-					} as MarklessStorageSourceFact,
-				],
-				() => ({ render: false, handler: true }),
+		// ONE HALF OF A CROSS-LANE PAIR - the React twin is "honours write-through
+		// for the AUTHORED handler-only binding". BOTH LANES MUST REPORT ONE WRITE.
+		// They disagreed for the whole life of the feature; if they ever disagree
+		// again, one lane moved and the split must be re-recorded.
+		test('closes the write-through hole for a HANDLER-ONLY persisted binding', async () => {
+			const ir = clone(await authoredPersistenceIr()) as any;
+			const record = ir.records.persistence.find(
+				(candidate: any) => candidate.graphNodeId === 'state:touches',
 			);
-			expect(record!.seed.lowering).toBe('none');
-			// The contract the emitted output is about to ignore.
-			expect(record!.writeThrough.trigger).toBe('ordinary-assignment');
-			ir.records.persistence = [record];
+			expect(record.access).toEqual({ render: false, handler: true });
+			expect(record.seed.lowering).toBe('none');
+			expect(record.writeThrough.trigger).toBe('ordinary-assignment');
 
 			const source = emit(ir);
-			// The emitter ACCEPTED the record - this is silent, not a refusal.
-			expect(source).not.toContain(`${FRAMELESS_STATE_GLOBAL}?.['markless:next']`);
-			expect(source).toContain("let next = '3'");
-			// AN ORDINARY ASSIGNMENT IS PRESENT ...
-			expect(source).toMatch(/next = next \+ 1|next\+\+/);
-			// ... AND NOT ONE WRITE-THROUGH FOLLOWS IT.
-			expect(source).not.toContain("__framelessWrite('markless:next'");
-			expect(source.match(/__framelessWrite\(/g) ?? []).toHaveLength(0);
+			// No render read, so no seed slot - the contract's own `no-render-read`.
+			expect(source).not.toContain(`${FRAMELESS_STATE_GLOBAL}?.['markless:touches']`);
+			// A PLAIN `let`, WHICH IS EXACTLY THE SHAPE THAT USED TO ESCAPE ...
+			expect(source).toContain("let touches = '0'");
+			expect(source).toMatch(/touches = /);
+			// ... AND THE WRITE-THROUGH NOW FOLLOWS IT.
+			expect(
+				source.match(/__framelessWrite\('markless:touches', 'data-markless-touches', /g),
+			).toHaveLength(1);
 		});
+
 
 		test('keeps an artifact with no persistence records byte-identical', async () => {
 			const ir = await golden('s1-render-once.json');
