@@ -1488,6 +1488,41 @@ catches a *new form arriving unannounced* and not a form whose meaning changed u
 spelling. `onclick={…}` parses in Svelte 4 too and means something else entirely there. That is what
 the floor column is for, and why it is not decoration.
 
+### What is NOT an inventory form: relative module specifiers
+
+The scope above is the whole argument, so it is worth stating the boundary it draws rather than
+leaving it to be re-derived per lane. Every entry needs **a version floor**, and the `import:` half
+of the domain is **imported framework APIs** — package specifiers like `svelte#untrack`, `vue#ref`,
+`@angular/core#inject`, each of which names a framework and therefore *has* a version.
+
+A **relative sibling module** — `./M1-panel.svelte`, `./M1-panel.vue`, `./M1-panel` — satisfies
+neither half. It names no framework, so there is no version to floor, and putting the literal on the
+list admits **one filename**: the next composed pair reopens the identical red, and the entry
+generalises to nothing. It is outside the inventory's declared domain, not a missing row in it.
+
+So a relative specifier **leaves** the `import:` domain and is checked a different way: it is
+resolved against the specifiers the **artifact itself records**, rewritten with the emitter's own
+`.tsrx` substitution, and reported as `undisclosed-import` when it does not match. React and Solid
+shipped that mechanism first; `frameless-app-axes-v1` T017 ruled that Angular, Vue and Svelte adopt
+it, and the three lane gates now carry a `recordedRelativeImportSpecifiers` mirroring React's with
+**their own** substitution — `.tsrx` to `.svelte`, to `.vue`, and to no extension at all.
+
+Two consequences worth keeping written down, because both are easy to lose:
+
+- **The inventory keeps its package duty.** The exclusion is a narrowing, and a narrowing that went
+  too far would look identical from the outside — the tier would be green because nothing was being
+  checked. Only specifiers beginning `./` or `../` leave; every bare package specifier still reaches
+  the inventory, and each lane keeps a standing mutation row proving it (`svelte/events#on`,
+  `vue#watchEffect`, `@angular/core#NgZone`).
+- **The new policy is not artifact-required.** With no artifact the recorded set is empty, so a
+  relative import is reported as a *violation* rather than parked as `unevaluated`. Parking it would
+  make an artifact-less caller the way to make the check disappear.
+
+**Template node kinds are INSIDE the domain**, which is why the same ruling *admitted*
+`template-node:Content` in Angular and `template-node:RenderTag` and `template-node:Component` in
+Svelte instead of excluding them. That asymmetry is the domain doing its job: the question is never
+"is this form convenient" but "does this form name a framework surface that can carry a floor".
+
 ### The measurement that made this worth building
 
 `frameless-svelte-v1` T005 argued that the emitter's `svelte-ignore` codes are an unasserted

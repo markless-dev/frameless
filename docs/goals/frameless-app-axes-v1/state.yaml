@@ -58,7 +58,7 @@ goal:
       evaporates. If drag refuses and is quietly replaced by click-to-move, the axis goes
       unmeasured while the demo looks complete.
 
-active_task: T020
+active_task: T019
 
 rules:
   - "state.yaml is board truth; goal.md is the charter."
@@ -2823,7 +2823,7 @@ tasks:
   - id: T019
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: >-
       RULE how to resolve the --accent / --border custom-property collision between the
@@ -2853,7 +2853,7 @@ tasks:
   - id: T020
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       Land T017's THREE RULINGS in ONE card across the angular, vue and svelte gates. NO EMITTER
@@ -2917,8 +2917,83 @@ tasks:
       - "pnpm check rises above 267, pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
       - "NEVER pkill -f on a broad pattern. FOREIGN node PID 64413 holds 5175 and PID 24931 holds 5178."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T020-relative-import-ruling.md
+      summary: "ALL THREE RULINGS LANDED IN ONE CARD. Each lane's gate gained a lane-local recordedRelativeImportSpecifiers using ITS OWN emitter substitution; relative specifiers left observeForms' import: domain WHILE EVERY PACKAGE SPECIFIER STAYED. Admitted angular template-node:Content (2.0) and svelte RenderTag+Component (5.0). BOTH must-reject rows INVERTED, NEITHER DELETED. All three debt pins RETIRED for React-shaped coverage rows asserting 0 violations AND 0 unevaluated, each killed BOTH ways. NO EMITTER, NO EMITTED BYTE."
+      THE_BRIEF_ERROR_AND_IT_WOULD_HAVE_ROTTED_SILENTLY: "'Chosen BY CORPUS-WIDE ABSENCE' ALONE SELECTS template-node:Reference - which has ZERO corpus occurrences AND WHICH THE ANGULAR EMITTER HAS A ROUTE TO: classMembers prints `@ViewChild('${name}') ${backing}?: ElementRef;` paired with #name. THE FIRST EMITTED REFS SCENARIO WOULD HAVE RETIRED THE ROW AGAIN. ng-container was also disqualified by measurement - it produces NO NOVEL FORM, the parser reports it as Element. Chose @switch/SwitchBlock, which satisfies absence AND the NgZone row's actual stated standard of NO EMITTER ROUTE. CORPUS-WIDE ABSENCE IS NECESSARY BUT NOT SUFFICIENT."
+      IT_CONFIRMED_THE_FINGERPRINT_A_THIRD_TIME_INDEPENDENTLY: "Measured f326d314 / aeb7edc1 / f936e169 over 116 files, IDENTICAL at both ends - CONFIRMING THE BOARD and refuting 24edb270/30403cba/f1a06e0f for the third time. AND IT ADDED A FACT: sorting PATHS instead of whole lines gives b1dd182a, EXACTLY THE BOARD'S RECORDED WRONG ANSWER - so the tree digest is SORT-KEY SENSITIVE AS WELL AS PATH-FORM SENSITIVE."
+      THE_PORT_WAS_NOT_A_COPY: "React's substitution is .jsx + basename-only + a component-reference filter, and NONE of that was copied. Each lane's own substitution was READ AT ITS EMITTER: angular DROPS the extension, vue -> .vue, svelte -> .svelte. Calibration ran BOTH DIRECTIONS per lane - WITH artifact 0 violations AND 0 unevaluated; WITHOUT, exactly one undisclosed-import on M2-page line 3; an unrecorded specifier RED. ARTIFACT WITHDRAWAL REOPENS THE RED ON UNMUTATED BYTES, as a violation rather than unevaluated."
+      changed_files:
+        - packages/frameworks/angular/src/gate/index.ts
+        - packages/frameworks/angular/test/gate.test.ts
+        - packages/frameworks/vue/src/gate/index.ts
+        - packages/frameworks/vue/test/gate.test.ts
+        - packages/frameworks/svelte/src/gate/index.ts
+        - packages/frameworks/svelte/test/gate.test.ts
+        - docs/emitter-idiom-policy.md
+        - docs/goals/frameless-app-axes-v1/notes/T020-relative-import-ruling.md
+      commands:
+        - cmd: "owner fingerprint START and FINISH, RELATIVE paths"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169, 116 files, IDENTICAL. Sorting PATHS gives b1dd182a - the board's recorded wrong answer"
+        - cmd: "BEFORE probe: three lanes, standing corpus + composition tier + emitter substitutions"
+          status: pass
+          note: "generated/ 0 violations in all three; ZERO relative imports under any generated/; composition 3/1/3"
+        - cmd: "CALIBRATION both directions, per lane"
+          status: pass
+          note: "WITH artifact 0 violations AND 0 unevaluated; WITHOUT exactly 1 on M2-page line 3; unrecorded specifier RED"
+        - cmd: "package duty: three foreign-import rows run individually"
+          status: pass
+          note: "svelte/events#on, vue#watchEffect, @angular/core#NgZone ALL STILL draw baseline-form-inventory"
+        - cmd: "ANGULAR_BASELINE_FLOOR + full tier lists, stashed vs applied"
+          status: pass
+          note: "19.0 BEFORE and AFTER. 17.0 tier BYTE-IDENTICAL. Entries 32->33 angular, 17->17 vue, 16->18 svelte"
+        - cmd: "corpus-wide candidate probe for angular's replacement must-reject form"
+          status: pass
+          note: "BRIEF ERROR FOUND - see the finding. Chose @switch/SwitchBlock"
+        - cmd: "svelte floor evidence at the resolved package (5.56.8)"
+          status: pass
+          note: "Snippet interface and AST RenderTag/Component carry NO @since; no CHANGELOG. Both unverified with DISTINCT reasons - RenderTag does NOT share TEMPLATE_FLOOR_REASON because snippets did not predate Svelte 5"
+        - cmd: "standing corpora BEFORE vs AFTER, all six lanes side by side"
+          status: pass
+          note: "angular 15/vue 16/svelte 16/react 17/solid 17/qwik 17 files, 0 violations in EVERY lane in BOTH arms"
+        - cmd: "angular / vue / svelte node suites"
+          status: pass
+          note: "169 / 158 / 135 passed, 0 failed"
+        - cmd: "pnpm test + stashed control"
+          status: pass
+          note: "EXACTLY 1 failure, 1380 passed. HEAD control 1374. +6 is exactly the six rows added, two per lane"
+        - cmd: "pnpm check + set diff"
+          status: pass
+          note: "251, ceiling 267. VERIFIED BY SET DIFF NOT COUNT: sorted error lines applied vs stashed, diff EMPTY"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "PASS - 6 demos x 9 scenarios, all observations equal"
+        - cmd: "pnpm lint / pnpm check:citations"
+          status: pass
+          note: "0/0 over 552 files; citations clean, 604 swept"
+        - cmd: "git diff --exit-code over every emitted path + git status --short"
+          status: pass
+          note: "exit 0 for all four tiers. NO EMITTED BYTE MOVED"
+        - cmd: "foreign processes"
+          status: pass
+          note: "PID 64413 and 24931 alive with original start times at both ends; pkill -f never used"
+      deviations:
+        - "THE BRIEF ERROR on absence-alone - see above."
+        - "vue's inventory-entry-removal kill uses macro:defineProps, NOT an import: row. MEASURED: once relative specifiers leave the domain the vue composition tier observes NO import: FORM AT ALL, so an import:vue#ref expectation would have asserted something about a form NOT IN THOSE FILES. Package duty is proved WHERE THE FORMS ARE."
+        - "The on-disk artifact mutation kills READ the committed bytes and mutate IN MEMORY, matching every other mutation row in these files. git diff --exit-code over every emitted path proves nothing moved, so 'restored clean' HOLDS BY CONSTRUCTION rather than by a write-then-revert that could leave the tree dirty on failure."
+        - "AMENDED docs/emitter-idiom-policy.md with a 'What is NOT an inventory form' subsection. IT IS THE ORIGIN OF THE DECIDING ARGUMENT, and leaving the doc scoping the inventory one way while three gates implement another WOULD BE THE CITATION-CHAIN FAILURE T015 IDENTIFIED."
+        - "Did NOT export recordedRelativeImportSpecifiers from any lane - REACT DOES NOT EITHER. The set equality is proven BEHAVIOURALLY through checkSources in both directions, which tests THE WIRED PATH rather than the helper in isolation."
+        - "angular's standing 'MUTATION: a form on the FIRST of two components' control moved from ['baseline-form-inventory'] to [] - a direct consequence of the Content admission. THE CONTROL GOT STRONGER: it no longer has to tolerate an unruled form."
+      remaining_blockers:
+        - "LATENT, RECORDED NOT ACTED ON: template-node:Reference is ABSENT from BASELINE_FORM_INVENTORY while the angular emitter CAN PRODUCE IT (#name + @ViewChild). The day a refs scenario reaches angular's generated/, the gate goes red and the form needs admitting with a floor. THAT IS THE INVENTORY FAILING CLOSED AS DESIGNED - but it was UNDOCUMENTED and is now written down."
+        - "pnpm check measures 251 BY THIS CARD'S OWN MEASUREMENT IN BOTH ARMS while queued cards carry a 267 ceiling. THIRD card to measure 251; T999 owns the ratchet."
+        - "pnpm test's single failure is FOREIGN and pre-existing: compiler ARM B reads the owner's modified pnpm-lock.yaml."
+        - "T019 and T999 are untouched by this card."
+      stopped_because: null
   - id: T999
     type: judge
     assignee: Judge

@@ -2,7 +2,7 @@ import { readdirSync } from 'node:fs';
 import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
-import type { EnrichedIR } from '@frameless/compiler';
+import { buildEnrichedIr, type EnrichedIR } from '@frameless/compiler';
 import { dirname, resolve } from 'pathe';
 import { beforeAll, describe, expect, test } from 'vitest';
 import { emit } from '../src/emitter/index.ts';
@@ -126,6 +126,41 @@ async function policiesFor(file: string, source: string): Promise<string[]> {
 	return (await checkSources([{ file, source }])).violations.map((entry) => entry.policy);
 }
 
+/**
+ * THE COMPOSITION TIER AS THE GATE IS MEANT TO SEE IT: the committed emitted
+ * bytes PAIRED WITH the fixture artifact each was emitted from.
+ *
+ * The pairing is DERIVED from `compositionFixtures`, the same list
+ * `scripts/regenerate-composition.ts` writes the directory from, so a fixture
+ * that is added or renamed cannot leave a file gated without its artifact - the
+ * failure mode that would silently disable `undisclosed-import` and
+ * `persistence-render-lowering` at once. Rebuilt per call rather than cached, so
+ * no row can leave a mutated artifact behind for the next one.
+ */
+async function compositionEntries(): Promise<
+	Array<{ file: string; source: string; artifact: EnrichedIR }>
+> {
+	return Promise.all(
+		[...compositionFixtures]
+			.map((name) => ({
+				name,
+				file: `generated-composition/${name}${COMPOSITION_EXTENSION}`,
+			}))
+			.sort((left, right) => left.file.localeCompare(right.file))
+			.map(async ({ name, file }) => {
+				const filename = `test/composition-fixtures/${name}.tsrx`;
+				return {
+					file,
+					source: await readFile(resolve(packageRoot, file), 'utf8'),
+					artifact: await buildEnrichedIr({
+						filename,
+						source: await readFile(resolve(packageRoot, filename), 'utf8'),
+					}),
+				};
+			}),
+	);
+}
+
 /** The messages the THIRD-PARTY arbiter produced, keyed by its `eslint:` prefix. */
 async function eslintMessagesFor(
 	file: string,
@@ -168,6 +203,7 @@ describe('Svelte dossier gate', () => {
 			'sanctioned-svelte-ignore',
 			'no-inter-sibling-whitespace',
 			'baseline-form-inventory',
+			'undisclosed-import',
 			'persistence-render-lowering',
 		]);
 		expect(
@@ -206,56 +242,75 @@ describe('Svelte dossier gate', () => {
 	});
 
 	/**
-	 * THE SECOND OUTPUT DIRECTORY. THIS ROW IS A DEBT PIN, NOT COVERAGE, AND THIS
-	 * IS THE WORST OF THE SIX LANES - READ THE WHOLE COMMENT BEFORE READING ITS
-	 * GREEN.
+	 * THE SECOND OUTPUT DIRECTORY, AND THIS ROW IS NOW COVERAGE - IT USED TO BE A
+	 * DEBT PIN AND THE DEBT IS PAID. THIS WAS THE WORST OF THE SIX LANES.
 	 *
 	 * `frameless-app-axes-v1` T015 measured every lane against every generation
 	 * tier: this gate's standing corpus is `generated/` ONLY, and
-	 * `generated-composition/` ships committed artifacts no policy in this package
-	 * had ever been pointed at. React and Solid gate their composition tier for
-	 * real; T015 closed Qwik's, which draws zero violations. THIS LANE DREW FOUR
-	 * VIOLATIONS ACROSS TWO FILES - the most of any lane - and one of them was not
-	 * an inventory question at all.
+	 * `generated-composition/` shipped committed artifacts no policy in this
+	 * package had ever been pointed at. THIS LANE DREW FOUR VIOLATIONS ACROSS TWO
+	 * FILES - the most of any lane - and one of them was not an inventory question
+	 * at all. T018 paid that fourth one at the emitter; T017 ruled the other three.
 	 *
-	 * T018 PAID THAT FOURTH ONE AT THE EMITTER, so the pin is now THREE. See
-	 * `THE ONE THAT IS PAID` below; the three that remain are one cross-lane
-	 * ruling, owned by T017.
+	 * A PIN LEFT STANDING AFTER ITS DEBT IS PAID IS A CHECK THAT CANNOT FAIL. The
+	 * old row asserted "this directory STILL DRAWS violations", so once the forms
+	 * were ruled it could only be satisfied by NOT applying the ruling.
 	 *
-	 * THREE UNRULED INVENTORY FORMS:
+	 * WHAT T017 RULED, and the three answers are of TWO different kinds:
 	 *
-	 * - `template-node:RenderTag` - `{@render children()}`, the Svelte 5 snippet
-	 *   render tag this lane's own composition ruling selected.
-	 * - `template-node:Component` - a component reference in a template.
-	 * - `import:./M1-panel.svelte#default` - a RELATIVE SIBLING MODULE import. The
-	 *   only `import:` entry in this inventory is `svelte#untrack`, a FRAMEWORK
-	 *   PACKAGE specifier with a version floor; a relative path has no framework
-	 *   version floor, and allowlisting the literal would admit ONE FILENAME.
-	 *   Angular and Vue carry the SAME form, so the fix is structural and
-	 *   cross-lane.
+	 * - `template-node:RenderTag` - `{@render children?.()}`, the Svelte 5 snippet
+	 *   render tag this lane's own composition ruling selected - and
+	 *   `template-node:Component`, a component reference in a template. Template
+	 *   node kinds ARE inside the inventory's declared domain, so both are
+	 *   ADMISSIONS at floor 5.0, which is this lane's own floor, so neither costs
+	 *   any version reach. `RenderTag` was NOT a free admission: `rejects template
+	 *   forms outside the inventory` further down used `{@render thing()}` as its
+	 *   example of a form this lane MUST REJECT while `M1-panel.svelte` SHIPPED
+	 *   `{@render children?.()}`. That row is INVERTED, not deleted - see its own
+	 *   comment, and note that its `{@attach}` arm was inverted for exactly this
+	 *   reason one card earlier.
+	 * - `import:./M1-panel.svelte#default` - a RELATIVE SIBLING MODULE import, and
+	 *   NOT an inventory form at all. The only `import:` entry here is
+	 *   `svelte#untrack`, a framework PACKAGE specifier with a version floor; a
+	 *   relative path names no framework and has no version, so allowlisting the
+	 *   literal would admit ONE FILENAME and the next composed pair would reopen
+	 *   the identical red. Relative specifiers therefore LEAVE the inventory's
+	 *   domain and are resolved against the artifact's own recorded imports by
+	 *   `undisclosed-import`, which is the mechanism React and Solid already ship.
+	 *   Angular and Vue took the same ruling in the same card.
 	 *
-	 * THE ONE THAT IS PAID, AND IT WAS NEVER AN INVENTORY QUESTION - WHICH IS WHY
-	 * THIS DIRECTORY BEING UNGATED MATTERED. `eslint:svelte/no-useless-mustaches`
-	 * fired on `M2-page.svelte` because the emitter printed `label={'Composed'}`
-	 * for a static string prop where `label="Composed"` is the idiomatic spelling.
-	 * THE THIRD-PARTY ARBITER REPORTED THAT FROM THE DAY THE FILE WAS COMMITTED AND
-	 * NOTHING WAS LISTENING. T015 was forbidden to touch an emitter; T018 fixed it
-	 * at `quotableStringProp` in `src/emitter/index.ts` and REGENERATED the
-	 * artifact, and the rule was never silenced - the row below plants the exact
-	 * shape the emitter used to print and watches upstream still report it.
+	 * THE ONE THAT WAS PAID AT THE EMITTER, AND IT WAS NEVER AN INVENTORY QUESTION
+	 * - WHICH IS WHY THIS DIRECTORY BEING UNGATED MATTERED.
+	 * `eslint:svelte/no-useless-mustaches` fired on `M2-page.svelte` because the
+	 * emitter printed `label={'Composed'}` for a static string prop where
+	 * `label="Composed"` is the idiomatic spelling. THE THIRD-PARTY ARBITER
+	 * REPORTED THAT FROM THE DAY THE FILE WAS COMMITTED AND NOTHING WAS LISTENING.
+	 * T018 fixed it at `quotableStringProp` in `src/emitter/index.ts` and
+	 * REGENERATED the artifact; the rule was never silenced, and a row further down
+	 * plants the exact shape the emitter used to print and watches upstream still
+	 * report it. The spelling is still pinned BOTH WAYS below.
 	 *
-	 * `pnpm lint` CANNOT SEE ANY OF THIS, and that is the reason this row exists at
-	 * all: `pnpm lint` is oxlint over 93 rules and does not carry
+	 * `pnpm lint` CANNOT SEE ANY OF THIS, and it is worth keeping written down:
+	 * `pnpm lint` is oxlint over 93 rules and does not carry
 	 * `svelte/no-useless-mustaches`; it linted this very file at 0 warnings, 0
 	 * errors while the finding was live. THIS GATE is the only instrument in the
 	 * repo that holds the rule.
 	 *
-	 * The violation set is asserted as a LITERAL so this goes red the day any of
-	 * the three is addressed, a fixture is added, or the emitter changes. Measured
-	 * in `docs/goals/frameless-app-axes-v1/notes/T015-composition-gate-hole.md` and
-	 * `.../notes/T018-emitter-findings.md`.
+	 * WHAT THIS ROW IS AND IS NOT. It is the SAME SHAPE as React's
+	 * `discovers and gates every generated composition module with its fixture
+	 * artifact`: discovered, every file supplied WITH ITS FIXTURE ARTIFACT, and
+	 * BOTH halves asserted - 0 violations AND 0 unevaluated. It still does NOT go
+	 * through `checkGeneratedFiles()`, which SUPPLIES NO ARTIFACT; the standing
+	 * corpus is `generated/` only, deliberately, exactly as in React and Solid.
+	 *
+	 * KILLED BOTH WAYS by the two rows immediately below: an ON-DISK ARTIFACT
+	 * MUTATION and an INVENTORY-ENTRY REMOVAL. Neither writes to disk; both read
+	 * the committed bytes. Measured in
+	 * `docs/goals/frameless-app-axes-v1/notes/T015-composition-gate-hole.md`,
+	 * `.../notes/T018-emitter-findings.md` and
+	 * `.../notes/T020-relative-import-ruling.md`.
 	 */
-	test('DEBT PIN: generated-composition/ is discovered, gated by hand, and STILL DRAWS violations', async () => {
+	test('discovers and gates every generated composition module with its fixture artifact', async () => {
 		const expected = compositionFixtures
 			.map((name) => `generated-composition/${name}${COMPOSITION_EXTENSION}`)
 			.sort();
@@ -263,47 +318,130 @@ describe('Svelte dossier gate', () => {
 		expect(await discoverGeneratedFiles({ directory: 'generated-composition' })).toEqual(
 			expected,
 		);
-		// NOT `checkGeneratedFiles`: this directory is NOT in the standing corpus,
-		// and routing it through the corpus entry point would be the very claim
-		// this row exists to deny.
-		const result = await checkSources(
-			await Promise.all(
-				expected.map(async (file) => ({
-					file,
-					source: await readFile(resolve(packageRoot, file), 'utf8'),
-				})),
-			),
-		);
+		// NOT `checkGeneratedFiles`, deliberately - see the comment above.
+		const result = await checkSources(await compositionEntries());
 		expect(result.files).toEqual(expected);
 		expect(
 			result.violations.map((entry) => ({ file: entry.file, policy: entry.policy })),
 			JSON.stringify(result.violations, null, 2),
-		).toEqual([
-			{ file: 'generated-composition/M1-panel.svelte', policy: 'baseline-form-inventory' },
-			{ file: 'generated-composition/M2-page.svelte', policy: 'baseline-form-inventory' },
-			{ file: 'generated-composition/M2-page.svelte', policy: 'baseline-form-inventory' },
-		]);
-		// The FORMS, not just the count.
-		expect(result.violations[0]!.message).toContain('template-node form "RenderTag"');
-		expect(result.violations[1]!.message).toContain('template-node form "Component"');
-		expect(result.violations[2]!.message).toContain(
-			'import form "./M1-panel.svelte#default"',
+		).toEqual([]);
+		// THE HALF THAT IS EASY TO LOSE. A tier gated with no artifact is "clean"
+		// because the artifact-required policies never ran, which is indistinguishable
+		// from a clean tier unless this is asserted too.
+		expect(result.unevaluated).toEqual([]);
+		// THE RULED FORMS ARE STILL PRESENT IN THE BYTES AND STILL OBSERVED. "0
+		// violations" would also be true of a tier that had stopped emitting them, or
+		// of a walk that had stopped seeing them, and both are different facts.
+		const panel = await readFile(
+			resolve(packageRoot, `generated-composition/M1-panel${COMPOSITION_EXTENSION}`),
+			'utf8',
 		);
-		// THE PAID DEBT IS PINNED TO ITS SPELLING, BOTH WAYS. The artifact must carry
-		// the quoted attribute AND must not carry the mustache anywhere, so an emitter
-		// regression turns this row red rather than leaving a stale expectation. The
-		// negative half is the load-bearing one: the positive half alone would still
-		// pass if a second, useless mustache appeared beside it.
 		const composed = await readFile(
 			resolve(packageRoot, `generated-composition/M2-page${COMPOSITION_EXTENSION}`),
 			'utf8',
 		);
+		expect(panel).toContain('{@render children?.()}');
+		expect(composed).toContain("from './M1-panel.svelte'");
+		expect(collectEmittedForms(panel)).toContainEqual({
+			kind: 'template-node',
+			form: 'RenderTag',
+		});
+		expect(collectEmittedForms(composed)).toContainEqual({
+			kind: 'template-node',
+			form: 'Component',
+		});
+		// THE PAID DEBT IS STILL PINNED TO ITS SPELLING, BOTH WAYS. The artifact must
+		// carry the quoted attribute AND must not carry the mustache anywhere, so an
+		// emitter regression turns this row red rather than leaving a stale
+		// expectation. The negative half is the load-bearing one: the positive half
+		// alone would still pass if a second, useless mustache appeared beside it.
 		expect(composed).toContain('label="Composed"');
 		expect(composed).not.toContain("={'");
 		expect(
 			result.violations.map((entry) => entry.policy),
 			JSON.stringify(result.violations, null, 2),
 		).not.toContain('eslint:svelte/no-useless-mustaches');
+	});
+
+	/**
+	 * KILL 1 OF 2 FOR THE ROW ABOVE - THE ON-DISK ARTIFACT MUTATION.
+	 *
+	 * The green above says "every relative specifier this tier emits is one the
+	 * fixture artifact records". A green that cannot go red says nothing, and the
+	 * failure mode is specific: `recordedRelativeImportSpecifiers` reproduces the
+	 * emitter's `.tsrx` -> `.svelte` substitution BY HAND, so a mirror that drifted
+	 * from the emitter - or one that accepted ANY relative specifier - would leave
+	 * the row above just as green.
+	 *
+	 * So the emitted specifier is changed to one the artifact does NOT record,
+	 * WITH the real artifact still supplied, and `undisclosed-import` must fire.
+	 * Nothing is written to disk: the committed bytes are read and mutated in
+	 * memory, exactly as every other mutation row in this file does.
+	 */
+	test('MUTATION: a relative specifier the artifact does not record is rejected', async () => {
+		const entries = await compositionEntries();
+		const page = entries.find((entry) => entry.file.endsWith(`M2-page${COMPOSITION_EXTENSION}`))!;
+		expect(page.source).toContain("from './M1-panel.svelte'");
+		const mutant = mutate(page.source, "from './M1-panel.svelte'", "from './M9-elsewhere.svelte'");
+		const result = await checkSources([
+			{
+				file: `generated-composition/UnrecordedMutant${COMPOSITION_EXTENSION}`,
+				source: mutant,
+				artifact: page.artifact,
+			},
+		]);
+		const undisclosed = result.violations.filter((entry) => entry.policy === 'undisclosed-import');
+		expect(undisclosed.length, JSON.stringify(result.violations, null, 2)).toBe(1);
+		expect(undisclosed[0]!.message).toContain('./M9-elsewhere.svelte');
+		// AND THE OTHER DIRECTION OF THE SAME MECHANISM: the artifact is what makes
+		// the real specifier acceptable, so withdrawing it must reopen the red on the
+		// UNMUTATED bytes. This is what stops "the policy is satisfied by the source
+		// alone" passing as "the policy consults the artifact".
+		const withoutArtifact = await checkSources([{ file: page.file, source: page.source }]);
+		expect(
+			withoutArtifact.violations.map((entry) => entry.policy),
+			JSON.stringify(withoutArtifact.violations, null, 2),
+		).toEqual(['undisclosed-import']);
+		expect(withoutArtifact.violations[0]!.message).toContain('./M1-panel.svelte');
+		// A VIOLATION, NOT `unevaluated` - the same asymmetry React records. An
+		// artifact-less caller must not be the way to make this check disappear.
+		expect(withoutArtifact.unevaluated.map((entry) => entry.policy)).not.toContain(
+			'undisclosed-import',
+		);
+	});
+
+	/**
+	 * KILL 2 OF 2 FOR THE COVERAGE ROW - THE INVENTORY-ENTRY REMOVAL.
+	 *
+	 * "0 violations" would stay true if the tier had stopped being OBSERVED rather
+	 * than started being ALLOWED - a walk that quietly stopped descending looks
+	 * identical from the outside, and this card narrowed what `observeForms`
+	 * reports. So the tier's observed forms are measured against the inventory
+	 * MINUS the two entries T017 admitted, through the SAME
+	 * `BASELINE_FORM_INVENTORY` the gate derives its allowlist from, and the
+	 * uncovered set must be exactly those two.
+	 *
+	 * Both are removed together rather than one at a time because they entered
+	 * together and each covers a DIFFERENT file - `RenderTag` in `M1-panel` and
+	 * `Component` in `M2-page` - so a single-entry removal would leave the other
+	 * file's admission unwatched.
+	 */
+	test('MUTATION: removing the RenderTag and Component entries reopens the composition tier', async () => {
+		const admitted = new Set(['template-node:RenderTag', 'template-node:Component']);
+		const listed = new Set(
+			BASELINE_FORM_INVENTORY.map((entry) => `${entry.kind}:${entry.form}`).filter(
+				(key) => !admitted.has(key),
+			),
+		);
+		// The removal really removed something, or this row measures nothing.
+		expect(listed.size).toBe(BASELINE_FORM_INVENTORY.length - admitted.size);
+		const uncovered = new Set<string>();
+		for (const entry of await compositionEntries())
+			for (const observed of collectEmittedForms(entry.source)) {
+				const key = `${observed.kind}:${observed.form}`;
+				if (!listed.has(key)) uncovered.add(key);
+			}
+		expect([...uncovered].sort()).toEqual([...admitted].sort());
 	});
 
 	/**
@@ -627,33 +765,31 @@ describe('MUTATION: baseline-form-inventory (T005)', () => {
 		).toContain('svelte/events#on');
 	});
 
-	test('rejects template forms outside the inventory: {@html}, {@render}, {#key}', async () => {
-		// THIS ROW USED TO NAME `{@attach}` AND IT NO LONGER CAN. Step 4 lowers
-		// `attach=` onto `{@attach}`, so `template-node:AttachTag` is now an
-		// INVENTORIED form with a floor of 5.29 and a VERIFIED citation - the first
-		// verified floor this lane has. Its arm is inverted below rather than deleted,
-		// because "the gate accepts the one form we deliberately added" is exactly as
-		// load-bearing as "the gate rejects the ones we did not".
+	test('rejects template forms outside the inventory: {@html}, {#key} - and ACCEPTS {@attach}, {@render}', async () => {
+		// THIS ROW HAS NOW HAD TWO ARMS INVERTED, ONE PER CARD, AND THE PATTERN IS
+		// THE POINT RATHER THAN THE COINCIDENCE.
+		//
+		// It used to name `{@attach}`: Step 4 lowers `attach=` onto `{@attach}`, so
+		// `template-node:AttachTag` became an INVENTORIED form with a floor of 5.29
+		// and a VERIFIED citation - the first verified floor this lane has.
+		//
+		// It ALSO named `{@render thing()}` as a form this lane MUST REJECT, while
+		// `generated-composition/M1-panel.svelte` HAD BEEN SHIPPING
+		// `{@render children?.()}` since the day composition landed. A standing test
+		// and a committed artifact were in direct contradiction, and this package only
+		// got away with asserting both because the gated corpus was `generated/` only
+		// - the SAME contradiction the Angular lane carried on `<ng-content>`, which
+		// the T017 dispatch named for Angular alone. `frameless-app-axes-v1` T017
+		// admitted `template-node:RenderTag` at 5.0, so this arm is inverted too.
+		//
+		// INVERTED, NOT DELETED, BOTH TIMES: "the gate ACCEPTS the form we
+		// deliberately added" is exactly as load-bearing as "it rejects the ones we
+		// did not", and a deleted arm would leave nothing watching the admission.
+		// `{@html}` and `{#key}` are untouched and are what keep this row biting.
 		const html = mutate(s1, '{derived}', '{@html derived}');
 		expect(await policiesFor('generated/HtmlTagMutant.svelte', html)).toContain(
 			'baseline-form-inventory',
 		);
-		const attach = mutate(s1, 'data-s1-root=""', 'data-s1-root="" {@attach (node) => {}}');
-		expect(await policiesFor('generated/AttachMutant.svelte', attach)).not.toContain(
-			'baseline-form-inventory',
-		);
-		// A template tag that is NOT inventoried still goes red by name, so the arm
-		// above is a measurement of the inventory rather than of a disabled check.
-		const renderViolations = (await checkSources([
-			{
-				file: 'generated/RenderMutant.svelte',
-				source: mutate(s1, '{derived}', '{@render thing()}'),
-			},
-		])).violations;
-		expect(renderViolations.map((entry) => entry.policy)).toContain('baseline-form-inventory');
-		expect(
-			renderViolations.find((entry) => entry.policy === 'baseline-form-inventory')?.message,
-		).toContain('RenderTag');
 		const key = mutate(
 			mutate(s2, '{#if todos.length === 0}', '{#key todos.length}{#if todos.length === 0}'),
 			'{/if}',
@@ -662,6 +798,29 @@ describe('MUTATION: baseline-form-inventory (T005)', () => {
 		expect(await policiesFor('generated/KeyBlockMutant.svelte', key)).toContain(
 			'baseline-form-inventory',
 		);
+		// THE TWO INVERTED ARMS, driven through the SAME call as the two above so the
+		// difference between them is the inventory and nothing else.
+		const attach = mutate(s1, 'data-s1-root=""', 'data-s1-root="" {@attach (node) => {}}');
+		expect(await policiesFor('generated/AttachMutant.svelte', attach)).not.toContain(
+			'baseline-form-inventory',
+		);
+		const render = mutate(s1, '{derived}', '{@render thing()}');
+		expect(await policiesFor('generated/RenderMutant.svelte', render)).not.toContain(
+			'baseline-form-inventory',
+		);
+		// AND THE ADMISSIONS ARE PINNED TO THEIR RECORDED FLOORS, so an arm that went
+		// green because someone deleted the entry and the observer with it is still
+		// red here.
+		expect(
+			BASELINE_FORM_INVENTORY.find(
+				(entry) => entry.kind === 'template-node' && entry.form === 'RenderTag',
+			)?.floor,
+		).toBe('5.0');
+		expect(
+			BASELINE_FORM_INVENTORY.find(
+				(entry) => entry.kind === 'template-node' && entry.form === 'AttachTag',
+			)?.floor,
+		).toBe('5.29');
 	});
 
 	test('rejects a camelCased event attribute, which Svelte accepts and ignores', async () => {

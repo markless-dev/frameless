@@ -28,6 +28,11 @@ export type DossierRef =
 	| 'frameless-svelte-v1 T002 ruling 6'
 	// Qwik's artifact-required policy, transposed: fail closed on persistence.
 	| 'T002-qwik-architecture D8'
+	// A RELATIVE MODULE SPECIFIER IS NOT AN INVENTORY FORM. It carries no framework
+	// version, so it is outside the inventory's declared domain; it is resolved
+	// against the artifact's own recorded imports instead, as React and Solid
+	// already do. See `recordedRelativeImportSpecifiers` below.
+	| 'frameless-app-axes-v1 T017 ruling 1 (relative specifiers leave the inventory)'
 	// The THIRD-PARTY arbiter. T005 ruled the missing eslint-plugin-svelte import a
 	// real gap in ARBITER INDEPENDENCE: every policy above encodes what WE decided,
 	// while these encode what the Svelte team decided.
@@ -239,6 +244,15 @@ export const SVELTE_GATE_POLICIES = [
 	{
 		id: 'baseline-form-inventory',
 		dossierRef: 'frameless-svelte-v1 T005 baseline form inventory',
+	},
+	// NOT artifact-required, and the asymmetry is deliberate - the same one React
+	// records. The policy ALWAYS runs: with no artifact the recorded set is EMPTY,
+	// so a relative import present in emitted source is unverifiable and is
+	// reported as a VIOLATION rather than parked as `unevaluated`. Parking it would
+	// make an artifact-less caller the way to make the check disappear.
+	{
+		id: 'undisclosed-import',
+		dossierRef: 'frameless-app-axes-v1 T017 ruling 1 (relative specifiers leave the inventory)',
 	},
 	persistenceArtifactPolicy(),
 	...ESLINT_POLICIES,
@@ -558,6 +572,39 @@ export const BASELINE_FORM_INVENTORY: readonly BaselineForm[] = [
 			evidence: { status: 'unverified', reason: TEMPLATE_FLOOR_REASON },
 		}),
 	),
+	// STEP 5, COMPOSITION. `{@render children?.()}` is how this lane lowers a
+	// default-slot projection and `<Panel …>` is how it lowers a
+	// component-reference; `generated-composition/M1-panel.svelte` and
+	// `M2-page.svelte` had been drawing `baseline-form-inventory` on them for the
+	// life of the tier. Both floor at 5.0, which is this lane's own floor, so
+	// nothing about the lane's version reach moves - unlike the `AttachTag` entry
+	// below, which is the only row here that costs reach.
+	//
+	// THEY DO NOT SHARE `TEMPLATE_FLOOR_REASON` AND THE DIFFERENCE IS THE POINT.
+	// That reason says the construct PREDATES Svelte 5 and is unchanged by it,
+	// which is true of `Component` and FALSE of `RenderTag`: snippets are a Svelte
+	// 5 feature, so 5.0 is a tight bound there rather than a loose one, and reusing
+	// the shared string would have recorded a claim nobody measured.
+	{
+		kind: 'template-node',
+		form: 'RenderTag',
+		floor: '5.0',
+		evidence: {
+			status: 'unverified',
+			reason:
+				'{@render} is the snippet render tag, and snippets ARRIVED WITH Svelte 5 - so unlike every other template-node row here 5.0 is a TIGHT bound rather than a loose one, and it is documentary all the same. MEASURED against the resolved package at 5.56.8 rather than inherited: the Snippet interface in types/index.d.ts carries a doc comment naming {@render ...} and NO @since tag, the AST RenderTag interface in the same file carries none either, and the package ships no CHANGELOG - so nothing on disk dates the form. Presence at the pin is not a floor. Recorded unverified for that reason, exactly as the untrack row records its own missing tag beside a settled() that DOES carry one.',
+		},
+	},
+	{
+		kind: 'template-node',
+		form: 'Component',
+		floor: '5.0',
+		evidence: {
+			status: 'unverified',
+			reason:
+				'A component reference in a template - `<Panel …>` - predates Svelte 5 entirely and is unchanged by it, so 5.0 is a safe lower bound rather than a tight one; it is this lane\'s own floor either way, so it cannot move it. MEASURED at 5.56.8: the AST Component interface in types/index.d.ts carries no @since tag and the package ships no CHANGELOG, so the floor could not be checked against an artifact this repo has. What this row CANNOT see is the thing worth writing down: the capitalised tag name is all that distinguishes a component reference from a regular element, so a lower-cased emitted name silently becomes a RegularElement and this entry never engages - which is why the composition tier asserts the form is OBSERVED, not merely allowed.',
+		},
+	},
 	{
 		// STEP 4, BEHAVIORS - and THE FIRST ENTRY IN THIS INVENTORY WITH A VERIFIED
 		// FLOOR, which is why the calibration test that asserted "every entry is
@@ -685,6 +732,27 @@ function observeTemplate(source: string, fragment: unknown, found: ObservedForm[
  */
 const RUNE_IDENTIFIER = /^\$[A-Za-z]/;
 
+/**
+ * A RELATIVE MODULE SPECIFIER IS NOT AN INVENTORY FORM, and this is the predicate
+ * that takes it out of the `import:` domain.
+ *
+ * `docs/emitter-idiom-policy.md` scopes the inventory to "imported framework
+ * APIs" and "template node kinds", and requires a VERSION FLOOR on every entry.
+ * The one `import:` row in `BASELINE_FORM_INVENTORY` is a framework PACKAGE
+ * specifier - `svelte#untrack` - and carries one. A relative sibling module is
+ * not a framework API and has no version at all, so allowlisting
+ * `./M1-panel.svelte#default` would admit ONE FILENAME and nothing would
+ * generalise: the next composed pair reopens the identical red.
+ *
+ * THE INVENTORY KEEPS ITS PACKAGE DUTY. This predicate removes ONLY specifiers
+ * that begin `./` or `../`; every bare package specifier still reaches the
+ * inventory, which is why the `svelte/events#on` mutation row - the denied arm of
+ * worked example 6 - still draws `baseline-form-inventory`.
+ *
+ * Ruled by frameless-app-axes-v1 T017 ruling 1.
+ */
+const RELATIVE_SPECIFIER = /^\.\.?\//;
+
 function observeScript(source: string, scope: unknown, found: ObservedForm[]): void {
 	walk(scope, (node) => {
 		const line = lineOf(source, node.start as number | undefined);
@@ -706,6 +774,11 @@ function observeScript(source: string, scope: unknown, found: ObservedForm[]): v
 			found.push({ kind: 'rune', form: String(node.name), line });
 		if (node.type === 'ImportDeclaration') {
 			const from = String((node.source as Node | undefined)?.value ?? '?');
+			// OUT OF THE INVENTORY'S DOMAIN - see `RELATIVE_SPECIFIER`. Handled by
+			// `undisclosed-import` against the artifact instead, which is why this is
+			// a `return` and not a silently-accepted form: nothing stops observing it,
+			// a different policy decides it.
+			if (RELATIVE_SPECIFIER.test(from)) return;
 			const specifiers = (node.specifiers ?? []) as Node[];
 			if (specifiers.length === 0) found.push({ kind: 'import', form: `${from}#*`, line });
 			for (const specifier of specifiers)
@@ -736,6 +809,80 @@ function observeForms(source: string, root: Node): ObservedForm[] {
 	for (const scope of [root.fragment, root.instance, root.module])
 		observeScript(source, scope, found);
 	return found;
+}
+
+/**
+ * The relative specifiers the ARTIFACT records, spelled the way THIS lane's
+ * emitter spells them - mirroring React's `recordedRelativeImportSpecifiers`,
+ * with this lane's substitution rather than React's.
+ *
+ * THE SUBSTITUTION IS THIS LANE'S OWN AND IT IS NOT THE REACT ONE. React rewrites
+ * `.tsrx` to `.jsx`; this emitter rewrites it to `.svelte`, because a Svelte
+ * consumer imports the component by its real extension.
+ * `moduleImportSpecifiers` in ../emitter/index.ts is the function this mirrors,
+ * and it lowers EVERY `tsrx-module` import unconditionally - so this mirror does
+ * too, rather than filtering by component-reference target the way React's does.
+ * A mirror that is stricter than the emitter would fail on output the emitter is
+ * entitled to write.
+ *
+ * MEASURED, not assumed: over the shipped composition tier the set this returns
+ * is EQUAL to the set of relative specifiers the emitted files actually contain.
+ * `test/gate.test.ts` asserts that equality in both directions.
+ */
+function recordedRelativeImportSpecifiers(artifact: EnrichedIR | undefined): Set<string> {
+	if (!artifact) return new Set();
+	return new Set(
+		artifact.imports.flatMap((imported) =>
+			imported.resolvesTo === 'tsrx-module' &&
+			imported.source.endsWith('.tsrx') &&
+			RELATIVE_SPECIFIER.test(imported.source)
+				? [imported.source.replace(/\.tsrx$/, '.svelte')]
+				: [],
+		),
+	);
+}
+
+/** Every relative specifier the EMITTED source contains, with its line. */
+function observeRelativeImports(
+	source: string,
+	root: Node,
+): Array<{ readonly specifier: string; readonly line: number | null }> {
+	const found: Array<{ specifier: string; line: number | null }> = [];
+	// The SAME three scopes `observeForms` walks - a relative import in the module
+	// script must not be invisible just because the instance script is the usual
+	// place for one.
+	for (const scope of [root.fragment, root.instance, root.module])
+		walk(scope, (node) => {
+			if (node.type !== 'ImportDeclaration') return;
+			const from = String((node.source as Node | undefined)?.value ?? '?');
+			if (RELATIVE_SPECIFIER.test(from))
+				found.push({ specifier: from, line: lineOf(source, node.start as number | undefined) });
+		});
+	return found;
+}
+
+/**
+ * A relative import the artifact does not record. With NO artifact the recorded
+ * set is empty, so every relative import reports - deliberately, and the same way
+ * React's `undisclosed-import` behaves: an artifact-less caller must not be the
+ * way to make this check disappear.
+ */
+function undisclosedImportViolations(
+	file: string,
+	source: string,
+	root: Node,
+	recorded: ReadonlySet<string>,
+): GateViolation[] {
+	return observeRelativeImports(source, root)
+		.filter(({ specifier }) => !recorded.has(specifier))
+		.map(({ specifier, line }) =>
+			violation(
+				file,
+				'undisclosed-import',
+				`Undisclosed import: ${specifier}. A relative module specifier is outside the baseline form inventory's domain - it names no framework and carries no version floor - so it is verified against the artifact's own recorded ModuleImports instead. Either the artifact does not record this module, or no artifact was supplied at all`,
+				line,
+			),
+		);
 }
 
 /**
@@ -825,7 +972,11 @@ function isContentNode(node: Node): boolean {
 	return node.type !== 'Comment' && !isWhitespaceText(node);
 }
 
-function sourceViolations(file: string, source: string): GateViolation[] {
+function sourceViolations(
+	file: string,
+	source: string,
+	recorded: ReadonlySet<string>,
+): GateViolation[] {
 	const violations: GateViolation[] = [];
 	if (!source.startsWith(GENERATED_HEADER))
 		violations.push(
@@ -851,6 +1002,7 @@ function sourceViolations(file: string, source: string): GateViolation[] {
 	}
 	const instance = root.instance as Node | null;
 	violations.push(...inventoryViolations(file, source, root));
+	violations.push(...undisclosedImportViolations(file, source, root, recorded));
 	walk(root.fragment, (node) => {
 		if (node.type === 'OnDirective')
 			violations.push(
@@ -1008,7 +1160,7 @@ export async function checkSources(
 	const violations: GateViolation[] = [];
 	const unevaluatedPolicies = new Set<string>();
 	for (const { file, source, artifact } of entries) {
-		violations.push(...sourceViolations(file, source));
+		violations.push(...sourceViolations(file, source, recordedRelativeImportSpecifiers(artifact)));
 		violations.push(...(await eslintViolations(file, source)));
 		const artifactViolations = artifact ? persistenceViolations(file, artifact) : undefined;
 		if (artifactViolations) violations.push(...artifactViolations);

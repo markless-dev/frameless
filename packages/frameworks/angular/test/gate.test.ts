@@ -4,7 +4,7 @@ import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import ngPlugin from '@angular-eslint/eslint-plugin';
 import tplPlugin from '@angular-eslint/eslint-plugin-template';
-import type { EnrichedIR } from '@frameless/compiler';
+import { buildEnrichedIr, type EnrichedIR } from '@frameless/compiler';
 import { resolve } from 'pathe';
 import { beforeAll, describe, expect, test } from 'vitest';
 import { emit, templateDiagnostics } from '../src/emitter/index.ts';
@@ -122,6 +122,41 @@ async function policiesFor(file: string, source: string): Promise<string[]> {
 	return (await checkSources([{ file, source }])).violations.map((entry) => entry.policy);
 }
 
+/**
+ * THE COMPOSITION TIER AS THE GATE IS MEANT TO SEE IT: the committed emitted
+ * bytes PAIRED WITH the fixture artifact each was emitted from.
+ *
+ * The pairing is DERIVED from `compositionFixtures`, the same list
+ * `scripts/regenerate-composition.ts` writes the directory from, so a fixture
+ * that is added or renamed cannot leave a file gated without its artifact - the
+ * failure mode that would silently disable `undisclosed-import` and
+ * `persistence-render-lowering` at once. Rebuilt per call rather than cached, so
+ * no row can leave a mutated artifact behind for the next one.
+ */
+async function compositionEntries(): Promise<
+	Array<{ file: string; source: string; artifact: EnrichedIR }>
+> {
+	return Promise.all(
+		[...compositionFixtures]
+			.map((name) => ({
+				name,
+				file: `generated-composition/${name}${COMPOSITION_EXTENSION}`,
+			}))
+			.sort((left, right) => left.file.localeCompare(right.file))
+			.map(async ({ name, file }) => {
+				const filename = `test/composition-fixtures/${name}.tsrx`;
+				return {
+					file,
+					source: await readFile(resolve(packageRoot, file), 'utf8'),
+					artifact: await buildEnrichedIr({
+						filename,
+						source: await readFile(resolve(packageRoot, filename), 'utf8'),
+					}),
+				};
+			}),
+	);
+}
+
 async function violationsFor(file: string, source: string) {
 	return (await checkSources([{ file, source }])).violations;
 }
@@ -171,6 +206,7 @@ describe('Angular dossier gate', () => {
 			'no-stop-propagation',
 			'getter-expression-purity',
 			'baseline-form-inventory',
+			'undisclosed-import',
 			'persistence-render-lowering',
 		]);
 		expect(
@@ -300,78 +336,66 @@ describe('Angular dossier gate', () => {
 	});
 
 	/**
-	 * THE SECOND OUTPUT DIRECTORY. THIS ROW IS A DEBT PIN, NOT COVERAGE - READ THE
-	 * WHOLE COMMENT BEFORE READING ITS GREEN.
+	 * THE SECOND OUTPUT DIRECTORY, AND THIS ROW IS NOW COVERAGE - IT USED TO BE A
+	 * DEBT PIN AND THE DEBT IS PAID.
 	 *
 	 * `frameless-app-axes-v1` T009 found, and T015 re-measured across all six
 	 * lanes and all three generation tiers, that this gate's standing corpus is
-	 * `generated/` ONLY. `generated-composition/` ships three committed artifacts
-	 * that no policy in this package had ever been pointed at. React and Solid
-	 * gate their composition tier for real; T015 closed Qwik's, whose tier draws
-	 * zero violations. THIS LANE'S TIER IS NOT CLEAN, so it cannot be closed the
-	 * same way, and pretending otherwise would be the manufactured fix the card
-	 * forbade.
+	 * `generated/` ONLY, and that `generated-composition/` shipped three committed
+	 * artifacts no policy in this package had ever been pointed at. T015 pinned the
+	 * hole as an EXACT violation set rather than pretending it was closed; T018
+	 * grew that pin from two to three by fixing `parseEmitted`; T017 ruled all
+	 * three forms. This row is what the pin promised would replace it.
 	 *
-	 * What this row does instead is make the hole VISIBLE, EXACT AND FALSIFIABLE:
-	 * the violations are asserted as a literal set, so the day someone admits one
-	 * of the forms, adds a composition fixture, or changes the emitter, this goes
-	 * RED and has to be re-decided rather than drifting on unwatched.
+	 * A PIN LEFT STANDING AFTER ITS DEBT IS PAID IS A CHECK THAT CANNOT FAIL. The
+	 * old row asserted "this directory STILL DRAWS violations", so once the forms
+	 * were ruled it could only be satisfied by NOT applying the ruling. Keeping it
+	 * beside the fix would have been an anchor asserting the opposite of what the
+	 * gate now claims.
 	 *
-	 * THE TWO FORMS ARE UNRULED, AND T015 DECLINED TO RULE THEM:
+	 * WHAT T017 RULED, and why each one is a different KIND of answer:
 	 *
 	 * - `template-node:Content` - `<ng-content />`, Angular's content projection
-	 *   node. Not a sugar question (there is no second spelling), so on its own it
-	 *   would be a straight inventory admission needing only a floor. IT IS NOT ON
-	 *   ITS OWN. `rejects a template node kind above the emitted surface:
-	 *   ng-content` further down this file is a STANDING MUTATION ROW that plants
-	 *   `<ng-content>` into S1 as its example of a form this lane MUST REJECT -
-	 *   while `generated-composition/M1-panel.ts` HAS BEEN SHIPPING `<ng-content
-	 *   />` SINCE THE DAY COMPOSITION LANDED. This package asserts both at once,
-	 *   and only ever got away with it because the corpus was `generated/` only.
-	 *   Admitting the form retires that row's chosen construct, so it is a ruling,
-	 *   not a floor. Admitting it would also still leave `M2-page.ts` red, so the
-	 *   directory could not enter the corpus either way.
-	 * - `import:./M1-panel#Panel` - a RELATIVE SIBLING MODULE import. Every
-	 *   `import:` entry in this inventory, and in Vue's and Svelte's, is a
-	 *   FRAMEWORK PACKAGE specifier carrying a version floor. A relative path has
-	 *   no framework version floor at all, and admitting the literal
-	 *   `./M1-panel#Panel` would allowlist ONE FILENAME - the next composed pair
-	 *   reopens the identical red. The principled answers are structural (exclude
-	 *   relative specifiers from the inventory's domain, or verify them against
-	 *   the artifact's recorded imports the way React's and Solid's
-	 *   `undisclosed-import` policy already does), they change the inventory's
-	 *   meaning, and Vue and Svelte carry the SAME form. That is an architecture
-	 *   ruling, not a floor.
+	 *   node. A template node kind IS inside the inventory's declared domain, so
+	 *   this is an ADMISSION: floor 2.0, `unverified`, below this lane's 19.0
+	 *   standalone floor so `ANGULAR_BASELINE_FLOOR` cannot move. It was never a
+	 *   free admission, because `rejects a template node kind above the emitted
+	 *   surface` further down this file used `<ng-content>` as its example of a
+	 *   form this lane MUST REJECT while two committed artifacts SHIPPED it. That
+	 *   row is INVERTED, not deleted - see its own comment.
+	 * - `import:./M1-panel#Panel` - a RELATIVE SIBLING MODULE import, and NOT an
+	 *   inventory form at all. Every `import:` entry here is a framework PACKAGE
+	 *   specifier with a version floor; a relative path names no framework and has
+	 *   no version, so allowlisting the literal would admit ONE FILENAME and the
+	 *   next composed pair would reopen the identical red. Relative specifiers
+	 *   therefore LEAVE the inventory's domain and are resolved against the
+	 *   artifact's own recorded imports by `undisclosed-import`, which is the
+	 *   mechanism React and Solid already ship. Vue and Svelte took the same
+	 *   ruling in the same card.
 	 *
-	 * THE BLINDNESS T015 RECORDED HERE IS FIXED, AND THIS PIN WENT FROM TWO TO
-	 * THREE BECAUSE OF IT. `parseEmitted` used to keep the LAST `@Component` class
-	 * it walked, so `C1-slot.ts` - which declares `Frame` then `SlotPage` - was
-	 * inspected only at `SlotPage`, and `Frame`'s own `<ng-content />` was never
-	 * observed. T015 predicted this was the origin of T009's phantom FIFTH
-	 * violation; T018 fixed `parseEmitted` to collect EVERY component, and
-	 * `C1-slot.ts` now reports `template-node:Content` at line 7. THE PHANTOM WAS
-	 * REAL AND IT IS NOW COUNTED.
+	 * WHAT THIS ROW IS AND IS NOT. It is the SAME SHAPE as React's
+	 * `discovers and gates every generated composition module with its fixture
+	 * artifact`: the tier is discovered, every file is supplied WITH ITS FIXTURE
+	 * ARTIFACT, and BOTH halves are asserted - 0 violations AND 0 unevaluated. The
+	 * second half is the one that is easy to lose: a tier gated without artifacts
+	 * would be "clean" only because the artifact-required policies never ran.
 	 *
-	 * READ THE DELTA CORRECTLY - NO GREEN GATE TURNED RED. Measured with the HEAD
-	 * gate and with the fixed gate, side by side:
+	 * IT STILL DOES NOT GO THROUGH `checkGeneratedFiles()`. That entry point
+	 * SUPPLIES NO ARTIFACT, so routing this directory through it would re-introduce
+	 * exactly the blindness this row exists to remove - and React and Solid do not
+	 * do it either. The standing corpus is still `generated/` only, deliberately.
 	 *
-	 * - `generated/`, the STANDING corpus: 15 files, 0 violations BEFORE and 0
-	 *   AFTER. Unmoved.
-	 * - `generated-composition/`, which is NOT in the standing corpus and was
-	 *   ALREADY RED: 2 violations BEFORE, 3 AFTER.
-	 *
-	 * NOTHING WAS ADMITTED TO `BASELINE_FORM_INVENTORY` TO ABSORB THE THIRD ONE.
-	 * `Content` is still uninventoried, the inventory still has its 32 entries and
-	 * `ANGULAR_BASELINE_FLOOR` is unmoved. The pin got BIGGER, which is the only
-	 * honest direction for a better instrument, and T017 - which owns the
-	 * `template-node:Content` / `ng-content`-must-reject joint ruling - now has TWO
-	 * files to move rather than one.
+	 * KILLED BOTH WAYS by the two rows immediately below: an ON-DISK ARTIFACT
+	 * MUTATION (the emitted specifier no longer matches what the fixture records)
+	 * and an INVENTORY-ENTRY REMOVAL (the tier's observed forms measured against
+	 * the inventory MINUS the `Content` row). Neither writes to disk; both read the
+	 * committed bytes.
 	 *
 	 * `C1-slot.ts` is still the only multi-component emitted file in this package,
-	 * which is why `generated/` could not be affected; the last assertion in this
-	 * row pins that so it stays true.
+	 * which is why `generated/` was never affected by the `parseEmitted` blindness;
+	 * the last assertion here pins that so it stays true.
 	 */
-	test('DEBT PIN: generated-composition/ is discovered, gated by hand, and STILL DRAWS violations', async () => {
+	test('discovers and gates every generated composition module with its fixture artifact', async () => {
 		const expected = compositionFixtures
 			.map((name) => `generated-composition/${name}${COMPOSITION_EXTENSION}`)
 			.sort();
@@ -379,59 +403,41 @@ describe('Angular dossier gate', () => {
 		expect(await discoverGeneratedFiles({ directory: 'generated-composition' })).toEqual(
 			expected,
 		);
-		// NOT `checkGeneratedFiles`, deliberately: this directory is NOT in the
-		// standing corpus, and routing it through the corpus entry point would be
-		// the very claim this row exists to deny.
-		const result = await checkSources(
-			await Promise.all(
-				expected.map(async (file) => ({
-					file,
-					source: await readFile(resolve(packageRoot, file), 'utf8'),
-				})),
-			),
-		);
+		// NOT `checkGeneratedFiles`, deliberately - see the comment above.
+		const result = await checkSources(await compositionEntries());
 		expect(result.files).toEqual(expected);
 		expect(
 			result.violations.map((entry) => ({ file: entry.file, policy: entry.policy })),
 			JSON.stringify(result.violations, null, 2),
-		).toEqual([
-			{ file: 'generated-composition/C1-slot.ts', policy: 'baseline-form-inventory' },
-			{ file: 'generated-composition/M1-panel.ts', policy: 'baseline-form-inventory' },
-			{ file: 'generated-composition/M2-page.ts', policy: 'baseline-form-inventory' },
-		]);
-		// The FORMS, not just the count - a count is satisfied by any three
-		// violations, including three the emitter never used to produce.
-		expect(result.violations[0]!.message).toContain('template-node form "Content"');
-		expect(result.violations[1]!.message).toContain('template-node form "Content"');
-		expect(result.violations[2]!.message).toContain('import form "./M1-panel#Panel"');
-		// AND THE LINE, for the one that only became visible in T018: `C1-slot.ts`
-		// line 7 is inside `Frame`, the FIRST of the file's two components - the
-		// component the old `parseEmitted` threw away. A file-level assertion alone
-		// would not distinguish "Frame is parsed" from "SlotPage grew an ng-content".
-		expect(result.violations[0]!.line).toBe(7);
-		// THE CONTRADICTION, ASSERTED RATHER THAN DESCRIBED. The construct the
-		// mutation row below plants as a REJECTED form is the construct these
-		// committed artifacts SHIP - now TWO of them. Whichever way T017 resolves
-		// it, all the sites move together, and these lines make them impossible to
-		// miss.
-		expect(
-			await readFile(resolve(packageRoot, 'generated-composition/M1-panel.ts'), 'utf8'),
-		).toContain('<ng-content />');
-		// THE ANTI-VACUITY HALF, REWRITTEN FOR THE FIXED PARSER. T015 asserted here
-		// that `Frame`'s `<ng-content />` was NOT seen, precisely so that a
-		// `parseEmitted` which started walking every component would turn this row
-		// red rather than silently widening what the lane claims to inspect. IT DID
-		// TURN RED, and this is the re-taken decision: the form is now seen, and
-		// `C1-slot.ts` is asserted to carry BOTH of its forms - the `imports` metadata
-		// T014 admitted, which stays clean, and the `Content` node, which does not.
-		// Keeping the `imports` half is what stops "this file draws a violation"
-		// collapsing into "this file is rejected wholesale".
+		).toEqual([]);
+		// THE HALF THAT IS EASY TO LOSE. A tier gated with no artifact is "clean"
+		// because the artifact-required policies never ran, which is indistinguishable
+		// from a clean tier unless this is asserted too.
+		expect(result.unevaluated).toEqual([]);
+		// THE RETIRED CONTRADICTION, ASSERTED RATHER THAN DESCRIBED. The construct the
+		// mutation row further down used to plant as a REJECTED form is the construct
+		// these committed artifacts SHIP - in TWO files - and it is now an accepted
+		// inventory form observed in both. If either side moves alone, this goes red.
+		const panel = await readFile(
+			resolve(packageRoot, 'generated-composition/M1-panel.ts'),
+			'utf8',
+		);
 		const slotPage = await readFile(
 			resolve(packageRoot, 'generated-composition/C1-slot.ts'),
 			'utf8',
 		);
-		expect(slotPage).toContain('imports: [Frame]');
+		expect(panel).toContain('<ng-content />');
 		expect(slotPage).toContain('<ng-content />');
+		expect(collectEmittedForms(panel)).toContainEqual({
+			kind: 'template-node',
+			form: 'Content',
+		});
+		// `C1-slot.ts` carries BOTH of its forms - the `imports` metadata T014
+		// admitted and the `Content` node T017 did - and the `Content` one is observed
+		// inside `Frame`, the FIRST of the file's two components. That is the
+		// component the pre-T018 `parseEmitted` threw away, so asserting it here is
+		// what keeps the parser fix from silently regressing behind a green tier.
+		expect(slotPage).toContain('imports: [Frame]');
 		expect(collectEmittedForms(slotPage)).toContainEqual({
 			kind: 'component-metadata',
 			form: 'imports',
@@ -440,15 +446,97 @@ describe('Angular dossier gate', () => {
 			kind: 'template-node',
 			form: 'Content',
 		});
+		const secondComponentLine = slotPage
+			.slice(0, slotPage.indexOf('@Component({', slotPage.indexOf('@Component({') + 1))
+			.split('\n').length;
+		expect(slotPage.split('\n').findIndex((line) => line.includes('<ng-content />')) + 1)
+			.toBeLessThan(secondComponentLine);
 		// And `generated/` really is single-component throughout, which is what
-		// confined the blindness to this directory while it lasted, and is why the
-		// fix could not move a byte or a verdict there. STILL TRUE at T018.
+		// confined that blindness to this directory while it lasted. STILL TRUE.
 		for (const file of scenarioCorpus('ts'))
 			expect(
 				(await readFile(resolve(packageRoot, file), 'utf8')).match(/^@Component\(\{$/gm)
 					?.length ?? 0,
 				file,
 			).toBe(1);
+	});
+
+	/**
+	 * KILL 1 OF 2 FOR THE ROW ABOVE - THE ON-DISK ARTIFACT MUTATION.
+	 *
+	 * The green above says "every relative specifier these files emit is one the
+	 * fixture artifact records". A green that cannot go red says nothing, and the
+	 * failure mode is specific: `recordedRelativeImportSpecifiers` reproduces the
+	 * emitter's `.tsrx` -> extensionless substitution BY HAND, so a mirror that
+	 * drifted from the emitter - or one that accepted ANY relative specifier -
+	 * would leave the row above just as green.
+	 *
+	 * So the emitted specifier is changed to one the artifact does NOT record,
+	 * WITH the real artifact still supplied, and `undisclosed-import` must fire on
+	 * it. Nothing is written to disk: the committed bytes are read and mutated in
+	 * memory, exactly as every other mutation row in this file does.
+	 *
+	 * THE CONTROL IS THE ROW ABOVE, which proves the unmutated pair is accepted -
+	 * so this is a measurement of the recorded set and not of a policy that
+	 * rejects every relative import it sees.
+	 */
+	test('MUTATION: a relative specifier the artifact does not record is rejected', async () => {
+		const entries = await compositionEntries();
+		const page = entries.find((entry) => entry.file.endsWith(`M2-page${COMPOSITION_EXTENSION}`))!;
+		expect(page.source).toContain("from './M1-panel'");
+		const mutant = mutate(page.source, "from './M1-panel'", "from './M9-elsewhere'");
+		const result = await checkSources([
+			{ file: 'generated-composition/UnrecordedMutant.ts', source: mutant, artifact: page.artifact },
+		]);
+		const undisclosed = result.violations.filter((entry) => entry.policy === 'undisclosed-import');
+		expect(undisclosed.length, JSON.stringify(result.violations, null, 2)).toBe(1);
+		expect(undisclosed[0]!.message).toContain('./M9-elsewhere');
+		// AND THE OTHER DIRECTION OF THE SAME MECHANISM: the artifact is what makes
+		// the real specifier acceptable, so withdrawing it must reopen the red on the
+		// UNMUTATED bytes. This is what stops "the policy is satisfied by the source
+		// alone" passing as "the policy consults the artifact".
+		const withoutArtifact = await checkSources([{ file: page.file, source: page.source }]);
+		expect(
+			withoutArtifact.violations.map((entry) => entry.policy),
+			JSON.stringify(withoutArtifact.violations, null, 2),
+		).toEqual(['undisclosed-import']);
+		expect(withoutArtifact.violations[0]!.message).toContain('./M1-panel');
+		// A VIOLATION, NOT `unevaluated` - the same asymmetry React records. An
+		// artifact-less caller must not be the way to make this check disappear.
+		expect(withoutArtifact.unevaluated.map((entry) => entry.policy)).not.toContain(
+			'undisclosed-import',
+		);
+	});
+
+	/**
+	 * KILL 2 OF 2 FOR THE COVERAGE ROW - THE INVENTORY-ENTRY REMOVAL.
+	 *
+	 * The other half of that green is the `template-node:Content` admission, and
+	 * "the tier is clean" would stay true if the form had stopped being OBSERVED
+	 * rather than started being ALLOWED - a walk that quietly stopped descending
+	 * looks identical from the outside.
+	 *
+	 * So the tier's observed forms are measured against the inventory MINUS the
+	 * `Content` entry, through the SAME `BASELINE_FORM_INVENTORY` the gate derives
+	 * its allowlist from, and the uncovered set must be exactly `Content`. That is
+	 * red if the entry is removed AND red if the observation is lost, which are the
+	 * two ways this green could become a lie.
+	 */
+	test('MUTATION: removing the Content entry from the inventory reopens the composition tier', async () => {
+		const listed = new Set(
+			BASELINE_FORM_INVENTORY.filter(
+				(entry) => !(entry.kind === 'template-node' && entry.form === 'Content'),
+			).map((entry) => `${entry.kind}:${entry.form}`),
+		);
+		// The removal really removed something, or this row measures nothing.
+		expect(listed.size).toBe(BASELINE_FORM_INVENTORY.length - 1);
+		const uncovered = new Set<string>();
+		for (const entry of await compositionEntries())
+			for (const observed of collectEmittedForms(entry.source)) {
+				const key = `${observed.kind}:${observed.form}`;
+				if (!listed.has(key)) uncovered.add(key);
+			}
+		expect([...uncovered]).toEqual(['template-node:Content']);
 	});
 
 	/**
@@ -473,8 +561,10 @@ describe('Angular dossier gate', () => {
 	 *
 	 * THE CONTROL, and it is what stops this row degenerating into "the gate
 	 * rejects everything": the same three policies are asserted ABSENT from the
-	 * unmutated artifact, which draws exactly one violation - the `Content` form
-	 * T017 owns.
+	 * unmutated artifact, which since T017 admitted `template-node:Content` draws
+	 * NO violations at all. The control got STRONGER when the ruling landed - it
+	 * used to have to tolerate one unruled form, and an empty expectation is the
+	 * sharpest form this assertion can take.
 	 */
 	test('MUTATION: a form on the FIRST of two components is rejected, not skipped', async () => {
 		const slot = await readFile(
@@ -483,10 +573,10 @@ describe('Angular dossier gate', () => {
 		);
 		// The file really does declare two components, or this row measures nothing.
 		expect(slot.match(/^@Component\(\{$/gm)?.length ?? 0).toBe(2);
-		// THE CONTROL FIRST. Unmutated, this file draws exactly the one unruled form.
-		expect(await policiesFor('generated-composition/C1-slot.ts', slot)).toEqual([
-			'baseline-form-inventory',
-		]);
+		// THE CONTROL FIRST. Unmutated, this file is CLEAN - it draws nothing, and it
+		// is passed here with no artifact deliberately, because it has no imports at
+		// all, so `undisclosed-import` has nothing to consult and nothing to say.
+		expect(await policiesFor('generated-composition/C1-slot.ts', slot)).toEqual([]);
 
 		// 1. TEMPLATE-scoped: a two-way binding inside `Frame`'s template.
 		const twoWay = mutate(slot, '<section data-frame>', '<section data-frame [(value)]="x">');
@@ -1015,12 +1105,74 @@ describe('MUTATION: baseline-form-inventory (IR-4)', () => {
 		).toContain('"host"');
 	});
 
-	test('rejects a template node kind above the emitted surface: ng-content', async () => {
-		const mutant = mutate(s1, '<output data-value="derived">', '<ng-content></ng-content><output data-value="derived">');
-		const violations = await violationsFor('generated/ContentMutant.ts', mutant);
+	/**
+	 * `@switch`, NOT `<ng-content>`. THIS ROW WAS INVERTED, NOT DELETED, AND THE
+	 * PRECEDENT IS TWO ROWS ABOVE.
+	 *
+	 * It used `<ng-content>` as its example of a form this lane must reject, while
+	 * `generated-composition/M1-panel.ts` and the `Frame` component inside
+	 * `C1-slot.ts` HAD BEEN SHIPPING `<ng-content />` since the day composition
+	 * landed. A standing test and two committed artifacts were in direct
+	 * contradiction, and this package only got away with asserting both because the
+	 * gated corpus was `generated/` only. `frameless-app-axes-v1` T017 admitted
+	 * `template-node:Content` at floor 2.0, so the mutant stopped being a mutant -
+	 * the exact "an anchor that has stopped biting" failure the `inject`/`NgZone`
+	 * row above records for itself, arriving a second time.
+	 *
+	 * The repair is the same one that row took: the retired arm is INVERTED rather
+	 * than removed, because "the gate ACCEPTS the form we deliberately added" is
+	 * exactly as load-bearing as "it rejects the ones we did not" - and a deleted
+	 * arm would leave nothing watching the admission.
+	 *
+	 * THE REPLACEMENT WAS CHOSEN BY MEASUREMENT, AND CORPUS-WIDE ABSENCE ALONE WAS
+	 * NOT THE TEST. Every candidate was parsed through this gate's own observer
+	 * against the whole 18-file corpus:
+	 *
+	 * - `<ng-container>` produces NO new form at all - the parser reports it as
+	 *   `Element`, so it would have been an anchor that never bit even once.
+	 * - `<b #ref>` produces `template-node:Reference`, which is absent from the
+	 *   corpus today AND WOULD HAVE BEEN THE WRONG CHOICE: this emitter DOES have
+	 *   a route to it. `classMembers` in ../src/emitter/index.ts prints a `#name`
+	 *   template reference variable paired with `@ViewChild`, so the first emitted
+	 *   refs scenario would retire this row all over again. Corpus-wide absence is
+	 *   NECESSARY and NOT SUFFICIENT; the standard the `NgZone` row states is a
+	 *   form the emitter has NO ROUTE TO.
+	 * - `@switch` produces `template-node:SwitchBlock`, is absent from the corpus,
+	 *   and the string `@switch` occurs ZERO times in the emitter: this lane lowers
+	 *   every conditional to `@if`/`@else`. It is the block-structured answer to
+	 *   exactly the multi-branch problem the emitter solves the other way, which is
+	 *   the same relationship `NgZone` has to `notifyAfterSuspension`. If it ever
+	 *   appears in emitted output, this row going red is the correct outcome.
+	 */
+	test('accepts <ng-content>, the admitted form, and rejects @switch, which the emitter has no route to', async () => {
+		// THE INVERTED ARM. `<ng-content />` is what STEP 5 lowers a default-slot
+		// projection onto, and it is now an inventory entry with a recorded floor.
+		const content = mutate(
+			s1,
+			'<output data-value="derived">',
+			'<ng-content></ng-content><output data-value="derived">',
+		);
+		expect(await policiesFor('generated/ContentMutant.ts', content)).not.toContain(
+			'baseline-form-inventory',
+		);
+		expect(
+			BASELINE_FORM_INVENTORY.find(
+				(entry) => entry.kind === 'template-node' && entry.form === 'Content',
+			)?.floor,
+		).toBe('2.0');
+		// THE REJECTING ARM, so the arm above measures the inventory rather than a
+		// disabled check: a template node kind that is NOT inventoried still goes red
+		// BY NAME through the very same call.
+		const switchBlock = mutate(
+			s1,
+			'<output data-value="derived">',
+			'@switch (derived) { @case (1) { <b>one</b> } @default { <i>other</i> } }<output data-value="derived">',
+		);
+		const violations = await violationsFor('generated/SwitchMutant.ts', switchBlock);
 		expect(
 			violations.find((entry) => entry.policy === 'baseline-form-inventory')?.message,
-		).toContain('Content');
+			JSON.stringify(violations, null, 2),
+		).toContain('SwitchBlock');
 	});
 
 	test('rejects a structural directive, which prefer-control-flow ALSO reports', async () => {

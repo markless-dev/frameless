@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { babelParse, parse } from '@vue/compiler-sfc';
 import { ESLint } from 'eslint';
 import vuePlugin from 'eslint-plugin-vue';
-import type { EnrichedIR } from '@frameless/compiler';
+import { buildEnrichedIr, type EnrichedIR } from '@frameless/compiler';
 import { basename, dirname, resolve } from 'pathe';
 import { beforeAll, describe, expect, test } from 'vitest';
 import { compileDiagnostics, emit } from '../src/emitter/index.ts';
@@ -413,6 +413,41 @@ async function violationsFor(file: string, source: string) {
 }
 
 /**
+ * THE COMPOSITION TIER AS THE GATE IS MEANT TO SEE IT: the committed emitted
+ * bytes PAIRED WITH the fixture artifact each was emitted from.
+ *
+ * The pairing is DERIVED from `compositionFixtures`, the same list
+ * `scripts/regenerate-composition.ts` writes the directory from, so a fixture
+ * that is added or renamed cannot leave a file gated without its artifact - the
+ * failure mode that would silently disable `undisclosed-import` and
+ * `persistence-render-lowering` at once. Rebuilt per call rather than cached, so
+ * no row can leave a mutated artifact behind for the next one.
+ */
+async function compositionEntries(): Promise<
+	Array<{ file: string; source: string; artifact: EnrichedIR }>
+> {
+	return Promise.all(
+		[...compositionFixtures]
+			.map((name) => ({
+				name,
+				file: `generated-composition/${name}${COMPOSITION_EXTENSION}`,
+			}))
+			.sort((left, right) => left.file.localeCompare(right.file))
+			.map(async ({ name, file }) => {
+				const filename = `test/composition-fixtures/${name}.tsrx`;
+				return {
+					file,
+					source: await readFile(resolve(packageRoot, file), 'utf8'),
+					artifact: await buildEnrichedIr({
+						filename,
+						source: await readFile(resolve(packageRoot, filename), 'utf8'),
+					}),
+				};
+			}),
+	);
+}
+
+/**
  * The single `no-two-way-binding` message a mutant drew.
  *
  * The count is ASSERTED rather than assumed. `find()` over a list of two would
@@ -473,6 +508,7 @@ describe('Vue dossier gate', () => {
 			'computed-expression-purity',
 			'condense-stable-text',
 			'baseline-form-inventory',
+			'undisclosed-import',
 			'persistence-render-lowering',
 		]);
 		expect(
@@ -509,30 +545,52 @@ describe('Vue dossier gate', () => {
 	});
 
 	/**
-	 * THE SECOND OUTPUT DIRECTORY. THIS ROW IS A DEBT PIN, NOT COVERAGE.
+	 * THE SECOND OUTPUT DIRECTORY, AND THIS ROW IS NOW COVERAGE - IT USED TO BE A
+	 * DEBT PIN AND THE DEBT IS PAID.
 	 *
 	 * `frameless-app-axes-v1` T015 measured every lane against every generation
 	 * tier: this gate's standing corpus is `generated/` ONLY, and
-	 * `generated-composition/` ships committed artifacts no policy in this package
-	 * had ever been pointed at. React and Solid gate their composition tier for
-	 * real; T015 closed Qwik's, which draws zero violations. THIS LANE'S TIER IS
-	 * NOT CLEAN, so it cannot be closed the same way.
+	 * `generated-composition/` shipped committed artifacts no policy in this
+	 * package had ever been pointed at. `M2-page.vue` drew `baseline-form-inventory`
+	 * on `import:./M1-panel.vue#default`, a RELATIVE SIBLING MODULE import, and
+	 * T015 pinned that as an exact violation set rather than pretending it was
+	 * closed. This row is what the pin promised would replace it.
 	 *
-	 * `M2-page.vue` draws `baseline-form-inventory` on `import:./M1-panel.vue#default`
-	 * - a RELATIVE SIBLING MODULE import. Every `import:` entry in this inventory
-	 * is a FRAMEWORK PACKAGE specifier with a version floor (`vue#ref`,
-	 * `vue#computed`); a relative path has no framework version floor, and
-	 * allowlisting the literal `./M1-panel.vue#default` would admit ONE FILENAME,
-	 * so the next composed pair reopens the identical red. Angular and Svelte
-	 * carry the SAME form, which is why the fix is structural and cross-lane
-	 * rather than one entry here. Measured and recorded in
-	 * `docs/goals/frameless-app-axes-v1/notes/T015-composition-gate-hole.md`.
+	 * A PIN LEFT STANDING AFTER ITS DEBT IS PAID IS A CHECK THAT CANNOT FAIL. The
+	 * old row asserted "this directory STILL DRAWS violations", so once the form
+	 * was ruled it could only be satisfied by NOT applying the ruling.
 	 *
-	 * The violation set is asserted as a LITERAL so this goes red the day the form
-	 * is ruled, a fixture is added, or the emitter changes - rather than drifting
-	 * on unwatched, which is exactly how it got here.
+	 * WHAT T017 RULED. A relative module specifier is NOT AN INVENTORY FORM AT
+	 * ALL. Both `import:` entries here are framework PACKAGE specifiers with
+	 * version floors - `vue#ref`, `vue#computed`; a relative path names no
+	 * framework and has no version, so allowlisting `./M1-panel.vue#default` would
+	 * admit ONE FILENAME and the next composed pair would reopen the identical
+	 * red. Relative specifiers therefore LEAVE the inventory's domain and are
+	 * resolved against the artifact's own recorded imports by `undisclosed-import`,
+	 * which is the mechanism React and Solid already ship. Angular and Svelte took
+	 * the same ruling in the same card - all three lanes carried the same form, so
+	 * the fix had to be structural rather than one entry here.
+	 *
+	 * WHAT THIS ROW IS AND IS NOT. It is the SAME SHAPE as React's
+	 * `discovers and gates every generated composition module with its fixture
+	 * artifact`: the tier is discovered, every file is supplied WITH ITS FIXTURE
+	 * ARTIFACT, and BOTH halves are asserted - 0 violations AND 0 unevaluated. The
+	 * second half is the one that is easy to lose: a tier gated without artifacts
+	 * would be "clean" only because the artifact-required policies never ran.
+	 *
+	 * IT STILL DOES NOT GO THROUGH `checkGeneratedFiles()`. That entry point
+	 * SUPPLIES NO ARTIFACT, so routing this directory through it would re-introduce
+	 * exactly the blindness this row exists to remove - and React and Solid do not
+	 * do it either. The standing corpus is still `generated/` only, deliberately.
+	 *
+	 * KILLED BOTH WAYS by the two rows immediately below: an ON-DISK ARTIFACT
+	 * MUTATION (the emitted specifier no longer matches what the fixture records)
+	 * and an INVENTORY-ENTRY REMOVAL (the tier's observed forms measured against
+	 * the inventory MINUS the `vue#ref` row, which proves the package half of the
+	 * inventory still covers this tier and was not weakened by the exclusion).
+	 * Neither writes to disk; both read the committed bytes.
 	 */
-	test('DEBT PIN: generated-composition/ is discovered, gated by hand, and STILL DRAWS violations', async () => {
+	test('discovers and gates every generated composition module with its fixture artifact', async () => {
 		const expected = compositionFixtures
 			.map((name) => `generated-composition/${name}${COMPOSITION_EXTENSION}`)
 			.sort();
@@ -540,41 +598,109 @@ describe('Vue dossier gate', () => {
 		expect(await discoverGeneratedFiles({ directory: 'generated-composition' })).toEqual(
 			expected,
 		);
-		// NOT `checkGeneratedFiles`: this directory is NOT in the standing corpus,
-		// and routing it through the corpus entry point would be the very claim
-		// this row exists to deny.
-		const result = await checkSources(
-			await Promise.all(
-				expected.map(async (file) => ({
-					file,
-					source: await readFile(resolve(packageRoot, file), 'utf8'),
-				})),
-			),
-		);
+		// NOT `checkGeneratedFiles`, deliberately - see the comment above.
+		const result = await checkSources(await compositionEntries());
 		expect(result.files).toEqual(expected);
 		expect(
 			result.violations.map((entry) => ({ file: entry.file, policy: entry.policy })),
 			JSON.stringify(result.violations, null, 2),
-		).toEqual([
-			{ file: 'generated-composition/M2-page.vue', policy: 'baseline-form-inventory' },
-		]);
-		// The FORM, not just the count - a count is satisfied by any one violation.
-		expect(result.violations[0]!.message).toContain('import form "./M1-panel.vue#default"');
-		// ANTI-VACUITY: `M1-panel.vue` really is clean through the same call, so
-		// "the gate rejects this directory wholesale" is excluded.
-		expect(
-			(
-				await checkSources([
-					{
-						file: `generated-composition/M1-panel${COMPOSITION_EXTENSION}`,
-						source: await readFile(
-							resolve(packageRoot, `generated-composition/M1-panel${COMPOSITION_EXTENSION}`),
-							'utf8',
-						),
-					},
-				])
-			).violations,
 		).toEqual([]);
+		// THE HALF THAT IS EASY TO LOSE. A tier gated with no artifact is "clean"
+		// because the artifact-required policies never ran, which is indistinguishable
+		// from a clean tier unless this is asserted too.
+		expect(result.unevaluated).toEqual([]);
+		// THE RULED FORM IS STILL PRESENT IN THE BYTES. "0 violations" would also be
+		// true of a `M2-page.vue` that had stopped importing anything at all, and that
+		// is a different fact.
+		const page = await readFile(
+			resolve(packageRoot, `generated-composition/M2-page${COMPOSITION_EXTENSION}`),
+			'utf8',
+		);
+		expect(page).toContain("from './M1-panel.vue'");
+	});
+
+	/**
+	 * KILL 1 OF 2 FOR THE ROW ABOVE - THE ON-DISK ARTIFACT MUTATION.
+	 *
+	 * The green above says "every relative specifier this tier emits is one the
+	 * fixture artifact records". A green that cannot go red says nothing, and the
+	 * failure mode is specific: `recordedRelativeImportSpecifiers` reproduces the
+	 * emitter's `.tsrx` -> `.vue` substitution BY HAND, so a mirror that drifted
+	 * from the emitter - or one that accepted ANY relative specifier - would leave
+	 * the row above just as green.
+	 *
+	 * So the emitted specifier is changed to one the artifact does NOT record,
+	 * WITH the real artifact still supplied, and `undisclosed-import` must fire.
+	 * Nothing is written to disk: the committed bytes are read and mutated in
+	 * memory, exactly as every other mutation row in this file does.
+	 */
+	test('MUTATION: a relative specifier the artifact does not record is rejected', async () => {
+		const entries = await compositionEntries();
+		const page = entries.find((entry) => entry.file.endsWith(`M2-page${COMPOSITION_EXTENSION}`))!;
+		expect(page.source).toContain("from './M1-panel.vue'");
+		const mutant = mutate(page.source, "from './M1-panel.vue'", "from './M9-elsewhere.vue'");
+		const result = await checkSources([
+			{
+				file: `generated-composition/UnrecordedMutant${COMPOSITION_EXTENSION}`,
+				source: mutant,
+				artifact: page.artifact,
+			},
+		]);
+		const undisclosed = result.violations.filter((entry) => entry.policy === 'undisclosed-import');
+		expect(undisclosed.length, JSON.stringify(result.violations, null, 2)).toBe(1);
+		expect(undisclosed[0]!.message).toContain('./M9-elsewhere.vue');
+		// AND THE OTHER DIRECTION OF THE SAME MECHANISM: the artifact is what makes
+		// the real specifier acceptable, so withdrawing it must reopen the red on the
+		// UNMUTATED bytes. This is what stops "the policy is satisfied by the source
+		// alone" passing as "the policy consults the artifact".
+		const withoutArtifact = await checkSources([{ file: page.file, source: page.source }]);
+		expect(
+			withoutArtifact.violations.map((entry) => entry.policy),
+			JSON.stringify(withoutArtifact.violations, null, 2),
+		).toEqual(['undisclosed-import']);
+		expect(withoutArtifact.violations[0]!.message).toContain('./M1-panel.vue');
+		// A VIOLATION, NOT `unevaluated` - the same asymmetry React records. An
+		// artifact-less caller must not be the way to make this check disappear.
+		expect(withoutArtifact.unevaluated.map((entry) => entry.policy)).not.toContain(
+			'undisclosed-import',
+		);
+	});
+
+	/**
+	 * KILL 2 OF 2 FOR THE COVERAGE ROW - THE INVENTORY-ENTRY REMOVAL.
+	 *
+	 * "0 violations" would stay true if the tier had stopped being OBSERVED rather
+	 * than started being ALLOWED - a walk that quietly stopped descending looks
+	 * identical from the outside, and this card narrowed what `observeForms`
+	 * reports. So the tier's observed forms are measured against the inventory
+	 * MINUS one entry, through the SAME `BASELINE_FORM_INVENTORY` the gate derives
+	 * its allowlist from, and the uncovered set must be exactly that entry.
+	 *
+	 * `macro:defineProps` IS THE ENTRY, AND IT WAS CHOSEN BY MEASUREMENT. The
+	 * obvious pick was a package `import:` row, to show the package half of the
+	 * inventory still reaches this tier - but MEASURED, THIS TIER OBSERVES NO
+	 * `import:` FORM AT ALL once relative specifiers leave the domain: `M1-panel`
+	 * imports nothing and `M2-page`'s only import is the relative one. An
+	 * `import:vue#ref` expectation here would have been an assertion about a form
+	 * that is not in these two files. The package duty is proved where the forms
+	 * actually are - `rejects a runtime import the emitter has no ruling for`
+	 * further down, on `vue#watchEffect` over the `generated/` corpus.
+	 */
+	test('MUTATION: removing the defineProps entry reopens the composition tier', async () => {
+		const listed = new Set(
+			BASELINE_FORM_INVENTORY.filter(
+				(entry) => !(entry.kind === 'macro' && entry.form === 'defineProps'),
+			).map((entry) => `${entry.kind}:${entry.form}`),
+		);
+		// The removal really removed something, or this row measures nothing.
+		expect(listed.size).toBe(BASELINE_FORM_INVENTORY.length - 1);
+		const uncovered = new Set<string>();
+		for (const entry of await compositionEntries())
+			for (const observed of collectEmittedForms(entry.source)) {
+				const key = `${observed.kind}:${observed.form}`;
+				if (!listed.has(key)) uncovered.add(key);
+			}
+		expect([...uncovered]).toEqual(['macro:defineProps']);
 	});
 
 	/**

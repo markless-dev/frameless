@@ -45,6 +45,11 @@ export type DossierRef =
 	| 'frameless-vue-v1 T003 measurement M1'
 	// Qwik's artifact-required policy, transposed: fail closed on persistence.
 	| 'T002-qwik-architecture D8'
+	// A RELATIVE MODULE SPECIFIER IS NOT AN INVENTORY FORM. It carries no framework
+	// version, so it is outside the inventory's declared domain; it is resolved
+	// against the artifact's own recorded imports instead, as React and Solid
+	// already do. See `recordedRelativeImportSpecifiers` below.
+	| 'frameless-app-axes-v1 T017 ruling 1 (relative specifiers leave the inventory)'
 	// The THIRD-PARTY arbiter. Every policy above encodes what WE decided; these
 	// encode what the Vue team decided.
 	| 'frameless-vue-v1 T003 lint arbiter';
@@ -290,6 +295,15 @@ export const VUE_GATE_POLICIES = [
 	{
 		id: 'baseline-form-inventory',
 		dossierRef: 'frameless-vue-v1 T002 ruling 5 (IR-4 baseline form inventory)',
+	},
+	// NOT artifact-required, and the asymmetry is deliberate - the same one React
+	// records. The policy ALWAYS runs: with no artifact the recorded set is EMPTY,
+	// so a relative import present in emitted source is unverifiable and is
+	// reported as a VIOLATION rather than parked as `unevaluated`. Parking it would
+	// make an artifact-less caller the way to make the check disappear.
+	{
+		id: 'undisclosed-import',
+		dossierRef: 'frameless-app-axes-v1 T017 ruling 1 (relative specifiers leave the inventory)',
 	},
 	persistenceArtifactPolicy(),
 	...ESLINT_POLICIES,
@@ -695,6 +709,95 @@ export type ObservedForm = {
 };
 
 /**
+ * A RELATIVE MODULE SPECIFIER IS NOT AN INVENTORY FORM, and this is the predicate
+ * that takes it out of the `import:` domain above.
+ *
+ * `docs/emitter-idiom-policy.md` scopes the inventory to "imported framework
+ * APIs" and "template node kinds", and requires a VERSION FLOOR on every entry.
+ * Both `import:` rows in `BASELINE_FORM_INVENTORY` are framework PACKAGE
+ * specifiers - `vue#ref`, `vue#computed` - and carry one. A relative sibling
+ * module is not a framework API and has no version at all, so allowlisting
+ * `./M1-panel.vue#default` would admit ONE FILENAME and nothing would
+ * generalise: the next composed pair reopens the identical red.
+ *
+ * THE INVENTORY KEEPS ITS PACKAGE DUTY. This predicate removes ONLY specifiers
+ * that begin `./` or `../`; every bare package specifier still reaches the
+ * inventory, which is why the `vue#watchEffect` mutation row still draws
+ * `baseline-form-inventory`.
+ *
+ * Ruled by frameless-app-axes-v1 T017 ruling 1.
+ */
+const RELATIVE_SPECIFIER = /^\.\.?\//;
+
+/**
+ * The relative specifiers the ARTIFACT records, spelled the way THIS lane's
+ * emitter spells them - mirroring React's `recordedRelativeImportSpecifiers`,
+ * with this lane's substitution rather than React's.
+ *
+ * THE SUBSTITUTION IS THIS LANE'S OWN AND IT IS NOT THE REACT ONE. React rewrites
+ * `.tsrx` to `.jsx`; this emitter rewrites it to `.vue`, because a Vue consumer
+ * imports the SFC by its real extension. `moduleImportSpecifiers` in
+ * ../emitter/index.ts is the function this mirrors, and it lowers EVERY
+ * `tsrx-module` import unconditionally - so this mirror does too, rather than
+ * filtering by component-reference target the way React's does. A mirror that is
+ * stricter than the emitter would fail on output the emitter is entitled to
+ * write.
+ *
+ * MEASURED, not assumed: over the shipped composition tier the set this returns
+ * is EQUAL to the set of relative specifiers the emitted files actually contain.
+ * `test/gate.test.ts` asserts that equality in both directions.
+ */
+function recordedRelativeImportSpecifiers(artifact: EnrichedIR | undefined): Set<string> {
+	if (!artifact) return new Set();
+	return new Set(
+		artifact.imports.flatMap((imported) =>
+			imported.resolvesTo === 'tsrx-module' &&
+			imported.source.endsWith('.tsrx') &&
+			RELATIVE_SPECIFIER.test(imported.source)
+				? [imported.source.replace(/\.tsrx$/, '.vue')]
+				: [],
+		),
+	);
+}
+
+/** Every relative specifier the EMITTED source contains, with its line. */
+function observeRelativeImports(
+	parsed: Parsed,
+): Array<{ readonly specifier: string; readonly line: number | null }> {
+	const found: Array<{ specifier: string; line: number | null }> = [];
+	walk(parsed.script, (node) => {
+		if (node.type !== 'ImportDeclaration') return;
+		const from = String((node.source as Node | undefined)?.value ?? '?');
+		if (RELATIVE_SPECIFIER.test(from))
+			found.push({ specifier: from, line: lineOfScript(parsed, node) });
+	});
+	return found;
+}
+
+/**
+ * A relative import the artifact does not record. With NO artifact the recorded
+ * set is empty, so every relative import reports - deliberately, and the same way
+ * React's `undisclosed-import` behaves: an artifact-less caller must not be the
+ * way to make this check disappear.
+ */
+function undisclosedImportViolations(
+	file: string,
+	parsed: Parsed,
+	recorded: ReadonlySet<string>,
+): GateViolation[] {
+	return observeRelativeImports(parsed)
+		.filter(({ specifier }) => !recorded.has(specifier))
+		.map(({ specifier, line }) =>
+			violation(
+				file,
+				'undisclosed-import',
+				`Undisclosed import: ${specifier}. A relative module specifier is outside the baseline form inventory's domain - it names no framework and carries no version floor - so it is verified against the artifact's own recorded ModuleImports instead. Either the artifact does not record this module, or no artifact was supplied at all`,
+				line,
+			),
+		);
+}
+
+/**
  * The DIRECTIVE form as SPELLED, not as resolved.
  *
  * `v-bind:key` and `:key` are the same directive to Vue's parser - `name` is
@@ -764,6 +867,11 @@ function observeForms(parsed: Parsed): ObservedForm[] {
 	walk(parsed.script, (node) => {
 		if (node.type === 'ImportDeclaration') {
 			const from = String((node.source as Node | undefined)?.value ?? '?');
+			// OUT OF THE INVENTORY'S DOMAIN - see `RELATIVE_SPECIFIER`. Handled by
+			// `undisclosed-import` against the artifact instead, which is why this is
+			// a `return` and not a silently-accepted form: nothing stops observing it,
+			// a different policy decides it.
+			if (RELATIVE_SPECIFIER.test(from)) return;
 			const specifiers = (node.specifiers ?? []) as Node[];
 			const line = lineOfScript(parsed, node);
 			if (specifiers.length === 0) found.push({ kind: 'import', form: `${from}#*`, line });
@@ -1261,7 +1369,11 @@ function stopPropagationViolations(file: string, parsed: Parsed): GateViolation[
 	return violations;
 }
 
-async function sourceViolations(file: string, source: string): Promise<GateViolation[]> {
+async function sourceViolations(
+	file: string,
+	source: string,
+	recorded: ReadonlySet<string>,
+): Promise<GateViolation[]> {
 	const violations: GateViolation[] = [];
 	if (!source.startsWith(GENERATED_HEADER))
 		violations.push(
@@ -1285,6 +1397,7 @@ async function sourceViolations(file: string, source: string): Promise<GateViola
 		];
 	}
 	violations.push(...inventoryViolations(file, parsed));
+	violations.push(...undisclosedImportViolations(file, parsed, recorded));
 	violations.push(...condenseViolations(file, parsed));
 	violations.push(...directiveViolations(file, parsed));
 	violations.push(...scriptViolations(file, parsed));
@@ -1355,7 +1468,9 @@ export async function checkSources(
 	const violations: GateViolation[] = [];
 	const unevaluatedPolicies = new Set<string>();
 	for (const { file, source, artifact } of entries) {
-		violations.push(...(await sourceViolations(file, source)));
+		violations.push(
+			...(await sourceViolations(file, source, recordedRelativeImportSpecifiers(artifact))),
+		);
 		violations.push(...(await eslintViolations(file, source)));
 		const artifactViolations = artifact ? persistenceViolations(file, artifact) : undefined;
 		if (artifactViolations) violations.push(...artifactViolations);

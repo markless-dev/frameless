@@ -39,6 +39,11 @@ export type DossierRef =
 	| 'frameless-angular-v1 T003 measurement M1'
 	// Qwik's artifact-required policy, transposed: fail closed on persistence.
 	| 'T002-qwik-architecture D8'
+	// A RELATIVE MODULE SPECIFIER IS NOT AN INVENTORY FORM. It carries no framework
+	// version, so it is outside the inventory's declared domain; it is resolved
+	// against the artifact's own recorded imports instead, as React and Solid
+	// already do. See `recordedRelativeImportSpecifiers` below.
+	| 'frameless-app-axes-v1 T017 ruling 1 (relative specifiers leave the inventory)'
 	// The THIRD-PARTY arbiter. Every policy above encodes what WE decided; these
 	// encode what the Angular team decided.
 	| 'frameless-angular-v1 T003 lint arbiter';
@@ -321,6 +326,15 @@ export const ANGULAR_GATE_POLICIES = [
 	{
 		id: 'baseline-form-inventory',
 		dossierRef: 'frameless-angular-v1 T002 also ruled (IR-4 baseline form inventory)',
+	},
+	// NOT artifact-required, and the asymmetry is deliberate - the same one React
+	// records. The policy ALWAYS runs: with no artifact the recorded set is EMPTY,
+	// so a relative import present in emitted source is unverifiable and is
+	// reported as a VIOLATION rather than parked as `unevaluated`. Parking it would
+	// make an artifact-less caller the way to make the check disappear.
+	{
+		id: 'undisclosed-import',
+		dossierRef: 'frameless-app-axes-v1 T017 ruling 1 (relative specifiers leave the inventory)',
 	},
 	persistenceArtifactPolicy(),
 	...ESLINT_POLICIES,
@@ -698,6 +712,9 @@ const INJECT_FLOOR_REASON =
 const LIFECYCLE_FLOOR_REASON =
 	'ngOnInit and the OnInit interface are part of the original Angular 2 component lifecycle. Documentary, not checkable against an artifact this repo has.';
 
+const CONTENT_FLOOR_REASON =
+	'<ng-content> is Angular\'s content-projection element and has been in the template language for the whole Angular 2+ line, so 2.0 is a safe lower bound rather than a tight one - the same footing as every other template-node row here. RE-MEASURED at this task against the packages this repo actually resolves rather than inherited: @angular/compiler@22.0.8 parses <ng-content /> into a node whose constructor is named Content, which is what this gate observes, and the package ships no CHANGELOG and no @since tag anywhere, so NOTHING ON DISK DATES THE FORM. Presence at the pin is not a floor. What is worth stating beside the number is what the admission COST: `rejects a template node kind above the emitted surface` used <ng-content> as its example of a form this lane must reject while generated-composition/M1-panel.ts and C1-slot.ts had been SHIPPING it since composition landed, so admitting the form retires that row\'s chosen construct. The row was INVERTED rather than deleted - it now asserts the accepted form is accepted and rejects @switch instead - on the same reasoning the inject/NgZone row in that file already records for itself. Ruled by frameless-app-axes-v1 T017 ruling 2.';
+
 const IMPORTS_FLOOR_REASON =
 	"The `imports` array on @Component arrived with STANDALONE COMPONENTS in Angular 14.0, which is a lower bound taken from the release history; before 14 the key existed only on @NgModule. The resolved @angular/core ships no CHANGELOG and no @since tag, so the floor could not be checked against something on disk, and the entry is below this lane's 19.0 standalone floor either way, so it does not move ANGULAR_BASELINE_FLOOR. WHAT THIS ENTRY CANNOT SEE, and it is the sharpest instance of the caveat this inventory's doc comment states in general: at the PIN, Angular IGNORES the entry this emitter writes. The only `imports` the emitter produces is a component naming ITSELF for a same-module component reference, and @angular/compiler-cli@22.0.8 compiles the module IDENTICALLY with and without it - 0 diagnostics either way, `dependencies: [HnItem]` in both arms - because StandaloneComponentScopeReader seeds the component's own scope and then skips a self-entry with `if (seen.has(ref.node)) continue;`. So NO STATIC LAYER IN THIS REPO CAN WITNESS THE FORM DOING WORK, and this floor is a claim about the RANGE the spelling is safe across rather than about anything measurable at 22.0.8. That asymmetry is precisely why the wider-range spelling is the baseline: the OMIT form - leaning on the implicit self-scope - fails the version corollary, since no standing check here would go red if upstream stopped self-seeding. Ruled by frameless-app-axes-v1 T009; the behavioural evidence that the recursion renders is the BROWSER drive recorded on T014, not this gate.";
 
@@ -816,6 +833,18 @@ export const BASELINE_FORM_INVENTORY: readonly BaselineForm[] = [
 			evidence: { status: 'unverified', reason: TEMPLATE_NODE_FLOOR_REASON },
 		}),
 	),
+	// STEP 5, COMPOSITION. `<ng-content />` is how this lane lowers a default-slot
+	// projection, and the two artifacts that carry one - `generated-composition/
+	// M1-panel.ts` and the `Frame` component inside `C1-slot.ts` - had been drawing
+	// `baseline-form-inventory` for the life of the tier. Admitted at 2.0, WELL
+	// BELOW this lane's 19.0 standalone floor, so `ANGULAR_BASELINE_FLOOR` does not
+	// move - the same shape as the `inject` and `imports` entries above.
+	{
+		kind: 'template-node',
+		form: 'Content',
+		floor: '2.0',
+		evidence: { status: 'unverified', reason: CONTENT_FLOOR_REASON },
+	},
 	...(['IfBlock', 'IfBlockBranch', 'ForLoopBlock'] as const).map(
 		(form): BaselineForm => ({
 			kind: 'template-node',
@@ -863,6 +892,95 @@ export type ObservedForm = {
 	readonly line: number | null;
 };
 
+/**
+ * A RELATIVE MODULE SPECIFIER IS NOT AN INVENTORY FORM, and this is the predicate
+ * that takes it out of the `import:` domain above.
+ *
+ * `docs/emitter-idiom-policy.md` scopes the inventory to "imported framework
+ * APIs" and "template node kinds", and requires a VERSION FLOOR on every entry.
+ * Every `import:` row in `BASELINE_FORM_INVENTORY` is a framework PACKAGE
+ * specifier - `@angular/core#Component`, `@angular/core#inject` - and carries
+ * one. A relative sibling module is not a framework API and has no version at
+ * all, so allowlisting `./M1-panel#Panel` would admit ONE FILENAME and nothing
+ * would generalise: the next composed pair reopens the identical red.
+ *
+ * THE INVENTORY KEEPS ITS PACKAGE DUTY. This predicate removes ONLY specifiers
+ * that begin `./` or `../`; every bare package specifier still reaches the
+ * inventory, which is why the `NgZone` mutation row still draws
+ * `baseline-form-inventory`.
+ *
+ * Ruled by frameless-app-axes-v1 T017 ruling 1.
+ */
+const RELATIVE_SPECIFIER = /^\.\.?\//;
+
+/**
+ * The relative specifiers the ARTIFACT records, spelled the way THIS lane's
+ * emitter spells them - mirroring React's `recordedRelativeImportSpecifiers`,
+ * with this lane's substitution rather than React's.
+ *
+ * THE SUBSTITUTION IS THIS LANE'S OWN AND IT IS NOT THE REACT ONE. React rewrites
+ * `.tsrx` to `.jsx`; this emitter DROPS the extension entirely, because the
+ * artifact is a plain TypeScript module with no JSX in it and a `.jsx` specifier
+ * would name a file that does not exist. `moduleImportSpecifiers` in
+ * ../emitter/index.ts is the function this mirrors, and it lowers EVERY
+ * `tsrx-module` import unconditionally - so this mirror does too, rather than
+ * filtering by component-reference target the way React's does. A mirror that is
+ * stricter than the emitter would fail on output the emitter is entitled to
+ * write.
+ *
+ * MEASURED, not assumed: over the shipped composition tier the set this returns
+ * is EQUAL to the set of relative specifiers the emitted files actually contain.
+ * `test/gate.test.ts` asserts that equality in both directions.
+ */
+function recordedRelativeImportSpecifiers(artifact: EnrichedIR | undefined): Set<string> {
+	if (!artifact) return new Set();
+	return new Set(
+		artifact.imports.flatMap((imported) =>
+			imported.resolvesTo === 'tsrx-module' &&
+			imported.source.endsWith('.tsrx') &&
+			RELATIVE_SPECIFIER.test(imported.source)
+				? [imported.source.replace(/\.tsrx$/, '')]
+				: [],
+		),
+	);
+}
+
+/** Every relative specifier the EMITTED source contains, with its line. */
+function observeRelativeImports(
+	parsed: Parsed,
+): Array<{ readonly specifier: string; readonly line: number | null }> {
+	const found: Array<{ specifier: string; line: number | null }> = [];
+	walkTs(parsed.module, (node) => {
+		if (node.type !== 'ImportDeclaration') return;
+		const from = String((node.source as Node | undefined)?.value ?? '?');
+		if (RELATIVE_SPECIFIER.test(from)) found.push({ specifier: from, line: lineOfTs(node) });
+	});
+	return found;
+}
+
+/**
+ * A relative import the artifact does not record. With NO artifact the recorded
+ * set is empty, so every relative import reports - deliberately, and the same way
+ * React's `undisclosed-import` behaves: an artifact-less caller must not be the
+ * way to make this check disappear.
+ */
+function undisclosedImportViolations(
+	file: string,
+	parsed: Parsed,
+	recorded: ReadonlySet<string>,
+): GateViolation[] {
+	return observeRelativeImports(parsed)
+		.filter(({ specifier }) => !recorded.has(specifier))
+		.map(({ specifier, line }) =>
+			violation(
+				file,
+				'undisclosed-import',
+				`Undisclosed import: ${specifier}. A relative module specifier is outside the baseline form inventory's domain - it names no framework and carries no version floor - so it is verified against the artifact's own recorded ModuleImports instead. Either the artifact does not record this module, or no artifact was supplied at all`,
+				line,
+			),
+		);
+}
+
 function bindingTypeName(type: unknown): string {
 	const name = (BindingType as unknown as Record<number, string>)[type as number];
 	return typeof name === 'string' ? name : `TYPE_${String(type)}`;
@@ -877,6 +995,11 @@ function observeForms(parsed: Parsed): ObservedForm[] {
 	walkTs(parsed.module, (node) => {
 		if (node.type === 'ImportDeclaration') {
 			const from = String((node.source as Node | undefined)?.value ?? '?');
+			// OUT OF THE INVENTORY'S DOMAIN - see `RELATIVE_SPECIFIER`. Handled by
+			// `undisclosed-import` against the artifact instead, which is why this is
+			// a `return` and not a silently-accepted form: nothing stops observing it,
+			// a different policy decides it.
+			if (RELATIVE_SPECIFIER.test(from)) return;
 			const specifiers = (node.specifiers ?? []) as Node[];
 			const line = lineOfTs(node);
 			if (specifiers.length === 0) found.push({ kind: 'import', form: `${from}#*`, line });
@@ -1325,7 +1448,11 @@ function componentTemplateParseViolations(
 	);
 }
 
-async function sourceViolations(file: string, source: string): Promise<GateViolation[]> {
+async function sourceViolations(
+	file: string,
+	source: string,
+	recorded: ReadonlySet<string>,
+): Promise<GateViolation[]> {
 	const violations: GateViolation[] = [];
 	if (!source.startsWith(GENERATED_HEADER))
 		violations.push(
@@ -1354,6 +1481,7 @@ async function sourceViolations(file: string, source: string): Promise<GateViola
 		];
 	violations.push(...templateParseViolations(file, parsed));
 	violations.push(...inventoryViolations(file, parsed));
+	violations.push(...undisclosedImportViolations(file, parsed, recorded));
 	violations.push(...whitespaceViolations(file, parsed));
 	violations.push(...signalViolations(file, parsed));
 	violations.push(...twoWayViolations(file, parsed));
@@ -1417,7 +1545,9 @@ export async function checkSources(
 	const violations: GateViolation[] = [];
 	const unevaluatedPolicies = new Set<string>();
 	for (const { file, source, artifact } of entries) {
-		violations.push(...(await sourceViolations(file, source)));
+		violations.push(
+			...(await sourceViolations(file, source, recordedRelativeImportSpecifiers(artifact))),
+		);
 		violations.push(...(await eslintViolations(file, source)));
 		const artifactViolations = artifact ? persistenceViolations(file, artifact) : undefined;
 		if (artifactViolations) violations.push(...artifactViolations);
