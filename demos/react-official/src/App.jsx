@@ -15,6 +15,7 @@ import { EventForm } from './emitted/EventForm.jsx'
 import { HnFront } from './emitted/HnFront.jsx'
 import { HnItem } from './emitted/HnItem.jsx'
 import { HabitTracker } from './emitted/HabitTracker.jsx'
+import { TaskBoard } from './emitted/TaskBoard.jsx'
 import { FormBoard } from './emitted/FormBoard.jsx'
 import { KeyedTodo } from './emitted/KeyedTodo.jsx'
 import { NestedBoard } from './emitted/NestedBoard.jsx'
@@ -130,7 +131,7 @@ function AsyncGate() {
  * mirrors the Qwik demo's `/`, `/s2`, `/s3` routes without adding a router.
  *
  * @param {string} url
- * @returns {'s1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7' | 's8' | 's9' | 'todomvc' | 'todomvc-advanced' | 'codex' | 'hn' | 'hn-item' | 'habits'}
+ * @returns {'s1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7' | 's8' | 's9' | 'todomvc' | 'todomvc-advanced' | 'codex' | 'hn' | 'hn-item' | 'habits' | 'board'}
  */
 export function scenarioFor(url) {
   const path = String(url ?? '')
@@ -163,6 +164,9 @@ export function scenarioFor(url) {
   // THE SIXTH APPLICATION - the HABIT TRACKER - and the second scenario in
   // this corpus that all SIX lanes emit and ship. Browsable only.
   if (path === 'habits') return 'habits'
+  // THE SEVENTH APPLICATION - the TASK BOARD - and the third scenario all SIX
+  // lanes emit and ship, after S13 and S15. Browsable only.
+  if (path === 'board') return 'board'
   return 's1'
 }
 
@@ -400,6 +404,57 @@ export default function App({ url }) {
           <link rel="stylesheet" href="/shadcn-theme/tokens.css" />
           <link rel="stylesheet" href="/habit-css/habits.css" />
           <HabitTracker onTrace={noTrace} />
+        </>
+      )
+    case 'board':
+      // THE SEVENTH APPLICATION - the TASK BOARD - and THE DRAG CARD. It is the
+      // THIRD scenario in this corpus that all six lanes emit and ship, after
+      // S13 and S15.
+      //
+      // THE AXIS THIS PAGE EXISTS TO MEASURE IS NOT ON IT, AND THAT IS THE
+      // MEASUREMENT. The board predicted `onDragStart`/`onDragOver`/`onDrop`
+      // "cannot be produced" because the compiler does
+      // `name.slice(2).toLowerCase()`. Measured on a probe through all six real
+      // emitters: THEY ARE PRODUCED. Five lanes take them; svelte refuses the
+      // ELEMENT ("a11y_no_static_element_interactions" on a <div> or <span>) and
+      // not the event. And they are inert only where the lane binds by a
+      // FRAMEWORK PROP NAME - THIS LANE prints `onDragover` and react-dom never
+      // fires it, while vue's `@dragover`, angular's `(dragover)` and svelte's
+      // `ondragover` are the real DOM event names and DO fire.
+      // WHAT KEPT THE DRAG OFF THE PAGE IS THE TYPE BASELINE: one drop zone and
+      // one draggable card take this lane from 117 to 123 `error TS` lines and
+      // `pnpm check` from 267 to 280, which this board's oracle forbids. Cards
+      // move with `◀`/`▶` ARROWS instead - a DIFFERENT INTERACTION, and the page
+      // SAYS SO in `.tb-note` rather than passing it off as the axis.
+      //
+      // WHAT ONE ARROW CLICK MOVES, all derived from ONE `columns` cell: the
+      // card leaves one column's <ul> and appears in another's (a real subtree
+      // move across two repeat instances), both column counts, the source
+      // column's empty placeholder, the header's shipped counter and total, the
+      // summary sentence AND its emoji, and the moved card's own arrows, whose
+      // `hidden` is decided by the column it now sits in - so the control that
+      // was clicked can disappear under the pointer. NINE observables.
+      //
+      // WHAT IS INERT AND NOT FAKED: the three sidebar links, `Share`, `Filter`,
+      // `Sort`, `Request task`, the per-column `+` and `Add task`. `.tsrx` has
+      // no routing construct at all - and the reference's own `Filter` and
+      // `Add task` do nothing either, measured live.
+      //
+      // TWO STYLESHEETS, ORDER LOAD-BEARING. `/shadcn-theme/tokens.css` is the
+      // vendored shadcn/ui DEFAULT theme (MIT, (c) 2023 shadcn) and must load
+      // FIRST, because every colour in the second file is a `var()` from it.
+      // `/board-css/board.css` is THIS REPOSITORY'S OWN WORK - the Square UI
+      // reference is licence-restricted to REFERENCE-ONLY, so nothing was copied
+      // from it and its geometry was MEASURED in a browser instead. Both are
+      // linked HERE rather than globally because `board.css` restyles `body`,
+      // and a global link would move the geometry of the nine s1-s9 scenarios
+      // `pnpm e2e` compares. Like S10-S15 this page is OUT of the 6 x 9
+      // three-way contract, which pins `threeWayScenarios` to ['s1'..'s9'].
+      return (
+        <>
+          <link rel="stylesheet" href="/shadcn-theme/tokens.css" />
+          <link rel="stylesheet" href="/board-css/board.css" />
+          <TaskBoard onTrace={noTrace} />
         </>
       )
     case 's9':

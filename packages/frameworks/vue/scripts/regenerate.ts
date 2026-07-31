@@ -101,6 +101,29 @@ const fixtures = [
 	// stays OUT of the 6 x 9 three-way contract, which scripts/e2e.mjs pins to
 	// the literal ['s1'..'s9'].
 	['S15.vue', 's15-habit-tracker.json'],
+	// THE SEVENTH APPLICATION IN THE CORPUS - the TASK BOARD - and THE DRAG CARD.
+	// It takes the next ORDINAL slot for the reason every row above records, and
+	// it is the THIRD scenario all six lanes emit, after S13 and S15.
+	//
+	// THE AXIS IT MEASURES IS NOT IN THE FILE, AND THAT IS THE MEASUREMENT. The
+	// board predicted the two-word drag events "cannot be produced" because
+	// `jsxEventName` does `name.slice(2).toLowerCase()`. Measured on a probe
+	// through this very emitter: THEY ARE PRODUCED, as `@dragover`,
+	// `@dragstart`, `@dragend` and `@pointerdown` - and `dragover` IS the real DOM
+	// event name, so this lane is CORRECT BY ACCIDENT of the same casing loss that
+	// makes react's `onDragover` inert. It costs this lane no type errors at all.
+	// WHAT KEPT THEM OUT is the type baseline in the three JSX lanes - `pnpm
+	// check` 267 -> 280, which this board's oracle forbids - so the axis was
+	// RECORDED rather than shipped. Cards move with arrow buttons instead and the
+	// page SAYS SO. See the fixture header.
+	//
+	// This page has NO FORM CONTROL AT ALL, so like S15 it contributes zero hosts
+	// to worked example 12a's domain in src/gate/index.ts; that census is
+	// re-argued rather than renumbered when this row lands.
+	//
+	// Like S10-S15 it stays OUT of the 6 x 9 three-way contract, which
+	// scripts/e2e.mjs pins to the literal ['s1'..'s9'].
+	['S16.vue', 's16-task-board.json'],
 ] as const;
 for (const [output, golden] of fixtures) {
 	const ir = JSON.parse(await readFile(resolve(goldenRoot, golden), 'utf8')) as EnrichedIR;

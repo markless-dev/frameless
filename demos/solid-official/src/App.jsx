@@ -15,6 +15,7 @@ import { EventForm } from './emitted/EventForm.jsx'
 import { HnFront } from './emitted/HnFront.jsx'
 import { HnItem } from './emitted/HnItem.jsx'
 import { HabitTracker } from './emitted/HabitTracker.jsx'
+import { TaskBoard } from './emitted/TaskBoard.jsx'
 import { FormBoard } from './emitted/FormBoard.jsx'
 import { KeyedTodo } from './emitted/KeyedTodo.jsx'
 import { NestedBoard } from './emitted/NestedBoard.jsx'
@@ -127,7 +128,7 @@ function AsyncGate() {
  * mirrors the Qwik demo's `/`, `/s2`, `/s3` routes without adding a router.
  *
  * @param {string} url
- * @returns {'s1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7' | 's8' | 's9' | 'todomvc' | 'todomvc-advanced' | 'codex' | 'hn' | 'hn-item' | 'habits'}
+ * @returns {'s1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7' | 's8' | 's9' | 'todomvc' | 'todomvc-advanced' | 'codex' | 'hn' | 'hn-item' | 'habits' | 'board'}
  */
 export function scenarioFor(url) {
   const path = String(url ?? '')
@@ -160,6 +161,9 @@ export function scenarioFor(url) {
   // THE SIXTH APPLICATION - the HABIT TRACKER - and the second scenario in
   // this corpus that all SIX lanes emit and ship. Browsable only.
   if (path === 'habits') return 'habits'
+  // THE SEVENTH APPLICATION - the TASK BOARD - and the third scenario all SIX
+  // lanes emit and ship, after S13 and S15. Browsable only.
+  if (path === 'board') return 'board'
   return 's1'
 }
 
@@ -300,6 +304,42 @@ export default function App(props) {
         <link rel="stylesheet" href="/shadcn-theme/tokens.css" />
         <link rel="stylesheet" href="/habit-css/habits.css" />
         <HabitTracker onTrace={noTrace} />
+      </Match>
+      {/*
+        THE SEVENTH APPLICATION - the TASK BOARD - and THE DRAG CARD. It is the
+        THIRD scenario in this corpus that all six lanes emit and ship, after S13
+        and S15.
+
+        THE AXIS THIS PAGE EXISTS TO MEASURE IS NOT ON IT, AND THAT IS THE
+        MEASUREMENT. The board predicted `onDragStart`/`onDragOver`/`onDrop`
+        "cannot be produced" because the compiler does `name.slice(2).toLowerCase()`.
+        Measured on a probe through all six real emitters: THEY ARE PRODUCED. Five
+        lanes take them; svelte refuses the ELEMENT ("a11y_no_static_element_interactions"
+        on a <div> or <span>) and not the event. WHAT KEPT THEM OFF THE PAGE IS THE
+        TYPE BASELINE: one drop zone and one draggable card take THIS LANE from 80
+        to 86 `error TS` lines and `pnpm check` from 267 to 280, which this board's
+        oracle forbids. Cards move with the arrow buttons instead - a DIFFERENT
+        INTERACTION, and the page SAYS SO in `.tb-note`.
+
+        WHAT ONE ARROW CLICK MOVES, all derived from ONE `columns` cell: the card
+        leaves one column's list and appears in another's - a real subtree move
+        across two repeat instances - plus both column counts, the source column's
+        empty placeholder, the header's shipped counter and total, the summary
+        sentence AND its emoji, and the moved card's own arrows, whose `hidden` is
+        decided by the column it now sits in. NINE observables.
+
+        TWO STYLESHEETS, ORDER LOAD-BEARING. `/shadcn-theme/tokens.css` is the
+        vendored shadcn/ui DEFAULT theme (MIT, (c) 2023 shadcn) and must load FIRST.
+        `/board-css/board.css` is THIS REPOSITORY'S OWN WORK - the Square UI
+        reference is licence-restricted to REFERENCE-ONLY, so nothing was copied
+        from it and its geometry was MEASURED in a browser instead. Both are linked
+        HERE rather than globally because `board.css` restyles `body`. Like S10-S15
+        this page is OUT of the 6 x 9 three-way contract.
+      */}
+      <Match when={scenario() === 'board'}>
+        <link rel="stylesheet" href="/shadcn-theme/tokens.css" />
+        <link rel="stylesheet" href="/board-css/board.css" />
+        <TaskBoard onTrace={noTrace} />
       </Match>
       <Match when={scenario() === 'hn'}>
         <link rel="stylesheet" href="/hn-css/hn.css" />

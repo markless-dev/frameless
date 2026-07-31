@@ -71,6 +71,32 @@ const fixtures = [
 	// stays OUT of the 6 x 9 three-way contract, which scripts/e2e.mjs pins to
 	// the literal ['s1'..'s9'].
 	['S15.tsx', 's15-habit-tracker.json'],
+	// THE SEVENTH APPLICATION IN THE CORPUS - the TASK BOARD - and THE DRAG CARD.
+	// It takes the next ORDINAL slot for the reason every row above records, and
+	// it is the THIRD scenario all six lanes emit, after S13 and S15.
+	//
+	// THE AXIS IT MEASURES IS NOT IN THE FILE, AND THAT IS THE MEASUREMENT. The
+	// board predicted `onDragStart`/`onDragOver`/`onDrop` "cannot be produced"
+	// because `jsxEventName` does `name.slice(2).toLowerCase()`. Measured on a
+	// probe through this very emitter: THEY ARE PRODUCED, as `onDragover$`,
+	// `onDragstart$`, `onDragend$` and `onPointerdown$`, with the `sync$` wrapper
+	// this lane already applies to any handler calling `preventDefault()`.
+	//
+	// AND THIS LANE'S COST IS NOT AN EVENT AT ALL, WHICH IS THE FINDING. Its six
+	// emitted drag handlers typecheck clean; the ONE `error TS` line the probe
+	// added here came from `draggable="true"` - the corpus lowers a static
+	// attribute as a STRING and this lane's JSX types declare `draggable?:
+	// boolean`. That is T003's `rows="6"` finding in a NON-NUMERIC shape, and it
+	// widens the corpus rule from "no static numeric attribute" to "no static
+	// attribute whose DOM type is not `string`". The whole `pnpm check` went 267
+	// -> 280 and this board's oracle forbids the rise, so cards move with arrow
+	// buttons instead and the page SAYS SO. See the fixture header.
+	//
+	// S16 is a SINGLE component, so this lane keeps its `onTrace$`: a function
+	// prop never crosses a component boundary here and the un-forwardable-prop
+	// defect T003 isolated is not reachable. Like S10-S15 it stays OUT of the
+	// 6 x 9 three-way contract, which scripts/e2e.mjs pins to ['s1'..'s9'].
+	['S16.tsx', 's16-task-board.json'],
 ] as const;
 for (const [output, golden] of fixtures) {
 	const ir = JSON.parse(

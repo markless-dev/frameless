@@ -545,8 +545,27 @@ describe('Angular 22 emitter', () => {
 		// `test/ungated-scenarios.ts` carries that subtraction. So the figure 9 is
 		// short of the corpus's annotated count by THREE modules and by TWO distinct
 		// kinds of absence, which is exactly why it is derived per lane.
+		// S16 (TASK BOARD) IS THE SIXTH ANNOTATED MODULE THIS LANE EMITS, and it
+		// moves the typed arm alone for the fourth consecutive application: one prop
+		// entry (`onTrace`), declared with a type, so `typedInputsSeen` goes 9 -> 10
+		// while `untypedInputsSeen` HOLDS AT 15 FOR THE FOURTH TIME. That hold is
+		// the half worth reading here, and S16 tests it harder than S15 did: it takes
+		// the largest-template title at EIGHTY-NINE hosts, records TWELVE events to
+		// S15's seven and TWO state writes to S15's one, and adds NOT ONE untyped
+		// member - because every one of its nine observables is a `computed` getter
+		// or a class/`hidden` binding rather than an `@Input()`. Two applications in
+		// a row growing the template and the event count while leaving this arm flat
+		// is what separates "the untyped surface is stable" from "the last app
+		// happened not to touch it".
+		// THIS LANE PRINTS THE DRAG EVENTS THE CARD EXPECTED IT TO REFUSE. Measured
+		// on a probe through this emitter: `(dragover)`, `(dragstart)`, `(dragend)`
+		// and `(pointerdown)`, each bound to a generated `onH1Dragover($event)`
+		// member typed `event: any` exactly as every other handler here is - and
+		// those ARE the real DOM event names, so this lane would have fired them.
+		// It costs this lane no type error at all; what kept the drag out of S16 is
+		// the JSX lanes' `pnpm check` baseline. See the fixture header.
 		expect({ typedInputsSeen, untypedInputsSeen }).toEqual({
-			typedInputsSeen: 9,
+			typedInputsSeen: 10,
 			untypedInputsSeen: 15,
 		});
 	});

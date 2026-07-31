@@ -87,6 +87,33 @@ const fixtures = [
 	// stays OUT of the 6 x 9 three-way contract, which scripts/e2e.mjs pins to
 	// the literal ['s1'..'s9'].
 	['S15.svelte', 's15-habit-tracker.json'],
+	// THE SEVENTH APPLICATION IN THE CORPUS - the TASK BOARD - and THE DRAG CARD.
+	// It takes the next ORDINAL slot for the reason every row above records, and
+	// it is the THIRD scenario all six lanes emit, after S13 and S15.
+	//
+	// THE AXIS IT MEASURES IS NOT IN THE FILE, AND THIS LANE IS THE ONLY ONE THAT
+	// REFUSED ANY PART OF IT. The board predicted the two-word drag events
+	// "cannot be produced"; measured on a probe through this very emitter, they
+	// ARE produced - `ondragover`, `ondragstart`, `ondragend`, `onpointerdown`,
+	// which are the REAL DOM EVENT NAMES, so this lane would have been CORRECT BY
+	// ACCIDENT of the same casing loss that makes react's `onDragover` inert.
+	// WHAT THIS LANE REFUSED IS THE ELEMENT, NOT THE EVENT, verbatim:
+	//   "Emitted Svelte module Probe.svelte did not compile warning-free:
+	//    a11y_no_static_element_interactions."
+	// on a `<div>` or a `<span>` carrying ANY drag handler, and
+	//   "... a11y_consider_explicit_label."
+	// on a `<button>` with no accessible name. The identical handlers on `<ul>`
+	// and `<li>` emit clean, which is why this fixture's one `<ul>`/`<li>` pair is
+	// where the drop zone and the draggable card WOULD have gone.
+	// What kept them out is the TYPE BASELINE in the three JSX lanes: `pnpm check`
+	// 267 -> 280, which this board's oracle forbids. Cards move with arrow buttons
+	// instead and the page SAYS SO. See the fixture header.
+	//
+	// There is no `<form>` and no component reference here, so neither the a11y
+	// refusal S13 hit in this lane nor the same-module self-reference refusal that
+	// leaves S14 unbuilt is reachable. Like S10-S15 it stays OUT of the 6 x 9
+	// three-way contract, which scripts/e2e.mjs pins to ['s1'..'s9'].
+	['S16.svelte', 's16-task-board.json'],
 ] as const;
 for (const [output, golden] of fixtures) {
 	const ir = JSON.parse(await readFile(resolve(goldenRoot, golden), 'utf8')) as EnrichedIR;

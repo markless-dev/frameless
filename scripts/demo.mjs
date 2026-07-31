@@ -89,6 +89,22 @@ const SCENARIOS = [
 	// STRING in the seeded data, which is the one constraint the six-lane claim
 	// actually rests on. ONE CLICK MOVES EIGHT DERIVED OBSERVABLES.
 	{ id: 'S15', path: '/habits', title: 'Habit tracker (one click, eight derived updates)' },
+	// S16 IS THE THIRD ROW IN THIS TABLE WITH NO `unbuilt` ENTRY IN ANY LANE, and
+	// the ONLY ONE WHOSE TITLE NAMES SOMETHING THE PAGE DOES NOT DO. It is the DRAG
+	// scenario and it has no drag, which is the measurement rather than a shortfall:
+	// the two-word drag events ARE produced by five of the six emitters (svelte
+	// refuses the ELEMENT, not the event), and they are inert only where the lane
+	// binds by a framework prop name - react's `onDragover` never fires while vue's
+	// `@dragover`, angular's `(dragover)` and svelte's `ondragover` are the real DOM
+	// event names. What kept them off the page is the TYPE BASELINE: one drop zone
+	// and one draggable card take `pnpm check` from 267 to 280. Cards move with the
+	// arrow buttons instead and THE PAGE SAYS SO. See
+	// `packages/compiler/test/fixtures/s16-task-board.tsrx`.
+	{
+		id: 'S16',
+		path: '/board',
+		title: 'Task board (arrow moves — DRAG IS RECORDED AS REFUSED, see the page)',
+	},
 ];
 
 /**
@@ -590,11 +606,14 @@ function announce() {
 
 	lines.push('  Scenarios: S1-S9 are the 6 x 9 three-way contract; S10 TodoMVC,');
 	lines.push('  S11 TodoMVC Advanced, S12 Codex clone, S13 Hacker News,');
-	lines.push('  S14 Hacker News item and S15 Habit tracker are the applications.');
-	lines.push('  S13 and S15 are the two that all SIX lanes serve. S14 is the');
-	lines.push('  RECURSION page and three lanes refuse it, each for a different');
-	lines.push('  recorded reason; S15 is the FAN-OUT page, where one click moves');
-	lines.push('  eight derived observables and no lane is lost.');
+	lines.push('  S14 Hacker News item, S15 Habit tracker and S16 Task board are');
+	lines.push('  the applications. S13, S15 and S16 are the three that all SIX');
+	lines.push('  lanes serve. S14 is the RECURSION page and three lanes refuse it,');
+	lines.push('  each for a different recorded reason; S15 is the FAN-OUT page,');
+	lines.push('  where one click moves eight derived observables and no lane is');
+	lines.push('  lost; S16 is the DRAG page AND IT HAS NO DRAG - the events emit in');
+	lines.push('  five lanes and cost the type baseline 267 -> 280, so the axis is');
+	lines.push('  RECORDED and the cards move with arrow buttons. The page says so.');
 	lines.push('  Qwik routes keep their trailing slash — its router 301s without it.');
 	lines.push('  Walkthrough: README.md, "See It Yourself: Hydrate, Hydrate, Resume".');
 	lines.push(`  Ctrl-C stops all ${runners.length}.`);

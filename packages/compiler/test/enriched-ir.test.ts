@@ -28,6 +28,7 @@ const FIXTURES = [
 	's13-hn-front.tsrx',
 	's14-hn-item.tsrx',
 	's15-habit-tracker.tsrx',
+	's16-task-board.tsrx',
 ] as const;
 
 const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>> = {
@@ -746,6 +747,128 @@ const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>>
 		['span', 'class'],
 		['p', 'class'],
 	],
+	// THE SEVENTH APPLICATION - the TASK BOARD - and the DRAG card, at EIGHTY-NINE
+	// hosts: eight more than S15's eighty-one and now the largest template in this
+	// corpus. It rides the ORDINAL slot for the reason every row above records.
+	//
+	// THE SHAPE OF THIS LIST IS WHERE THE AXIS BECOMES VISIBLE, BY WHAT IS ABSENT.
+	// There is exactly ONE `['ul', 'class']` and ONE `['li', 'class']` in it, and
+	// they are the drop zone and the draggable card of a board that HAS NEITHER.
+	// Both tags were chosen off a MEASUREMENT rather than for semantics: the svelte
+	// emitted-form gate refuses ANY drag handler on a `<div>` or a `<span>`
+	// ("a11y_no_static_element_interactions") and takes the identical handlers on
+	// `<ul>` and `<li>` without complaint, so this is the one host pairing in the
+	// corpus that would have carried the drag had the TYPE BASELINE allowed it -
+	// see the fixture header for why it does not.
+	//
+	// FIFTY-THREE of the eighty-nine are `span class` and NINE are `button type`,
+	// against S15's forty-five and five. The span share is constraint (9) again -
+	// no element carrying a handler may sit beside text, and this page has more
+	// text runs sharing a parent with a control than any before it - but the BUTTON
+	// count is the row that moved most, and it moved for a reason the fixture
+	// records: SEVEN of the nine are INERT (the sidebar toggle, Share, Filter,
+	// Sort, Request task, the column `+` and `Add task`), mirroring a reference
+	// whose own Filter and Add task do nothing, and only TWO do anything at all.
+	// Those two are the `◀` and `▶` arrows, and they are the entire interaction
+	// surface of this application.
+	//
+	// `ul`, `li` and `h1` all appear exactly once, and `h1` is the page title
+	// rather than a card title: the reference renders its card titles as `<h3>`
+	// inside a board that already has an `<h1>`, and a lone `<h3>` under no `<h2>`
+	// is a heading-order defect this page declines to reproduce, so every card
+	// title is a `span`. That is the second place this module is deliberately more
+	// correct than the thing it reproduces.
+	's16-task-board.tsrx': [
+		['section', 'class'],
+		['div', 'class'],
+		['aside', 'class'],
+		['div', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['nav', 'class'],
+		['a', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['a', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['a', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['div', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['div', 'class'],
+		['header', 'class'],
+		['button', 'type'],
+		['span', 'class'],
+		['h1', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['button', 'type'],
+		['span', 'class'],
+		['span', 'class'],
+		['div', 'class'],
+		['button', 'type'],
+		['span', 'class'],
+		['span', 'class'],
+		['button', 'type'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['button', 'type'],
+		['span', 'class'],
+		['span', 'class'],
+		['div', 'class'],
+		['p', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['p', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['p', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['main', 'class'],
+		['div', 'class'],
+		['div', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['button', 'type'],
+		['span', 'class'],
+		['ul', 'class'],
+		['li', 'class'],
+		['div', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['p', 'class'],
+		['div', 'class'],
+		['span', 'class'],
+		['div', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['button', 'type'],
+		['span', 'class'],
+		['button', 'type'],
+		['span', 'class'],
+		['p', 'class'],
+		['span', 'class'],
+		['button', 'type'],
+		['span', 'class'],
+		['span', 'class'],
+	],
 };
 
 async function fixtureIr(file: (typeof FIXTURES)[number]): Promise<EnrichedIR> {
@@ -1049,6 +1172,7 @@ describe('fixture-family sufficiency', () => {
 			's13-hn-front.tsrx',
 			's14-hn-item.tsrx',
 			's15-habit-tracker.tsrx',
+			's16-task-board.tsrx',
 		];
 
 		test('CONTROL: every UNannotated corpus scenario carries NO type, and both sets are non-empty', async () => {
@@ -1581,6 +1705,24 @@ export function Probe({ label }: { label }) @{
 			// clicked row would be INDISTINGUISHABLE HERE and is caught in the DOM
 			// instead. S14's row records the same move for a different reason.
 			's15-habit-tracker.tsrx': ['nav', 'press', 'toggle'],
+			// THREE NAMES, AND THE INTERESTING ONE IS THE NAME THAT IS NOT HERE.
+			// S16 is the DRAG card, and there is no `drag`, `drop` or `pointer`
+			// channel in this row because no two-word DOM event ships on that page -
+			// see the fixture header for the measurement that decided it. `move` is
+			// the interaction that replaced it and it is authored TWICE, once per
+			// arrow, which is the only interaction in this corpus whose two handlers
+			// differ by a single identifier (`prevId` against `nextId`); the pair is
+			// deliberate, because a single handler taking a direction would have
+			// needed either a second argument channel or an `if`, and DEFECTS.md 8.1
+			// closes the second door. `press` covers the SEVEN inert controls and
+			// `nav` the three sidebar links, exactly as S15's row does.
+			// THE REST OF THE PAGE IS DERIVED AND HAS NO CHANNEL AT ALL: the two
+			// column counts, the shipped counter, the total, the summary sentence and
+			// its emoji, the empty placeholder and the two arrows' own `hidden` are
+			// every one of them a `computed` or a binding off the single `columns`
+			// cell, so a lane that fired `move` and repainted only the clicked column
+			// would be INDISTINGUISHABLE HERE and is caught in the DOM instead.
+			's16-task-board.tsrx': ['move', 'nav', 'press'],
 		};
 		for (const file of FIXTURES) {
 			const ir = await fixtureIr(file);

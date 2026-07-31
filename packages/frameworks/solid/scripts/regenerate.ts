@@ -69,6 +69,31 @@ const fixtures = [
 	// stays OUT of the 6 x 9 three-way contract, which scripts/e2e.mjs pins to
 	// the literal ['s1'..'s9'].
 	['S15.tsx', 's15-habit-tracker.json'],
+	// THE SEVENTH APPLICATION IN THE CORPUS - the TASK BOARD - and THE DRAG CARD.
+	// It takes the next ORDINAL slot for the reason every row above records, and
+	// it is the THIRD scenario all six lanes emit, after S13 and S15.
+	//
+	// THE AXIS IT MEASURES IS NOT IN THE FILE, AND THAT IS THE MEASUREMENT. The
+	// board predicted `onDragStart`/`onDragOver`/`onDrop` "cannot be produced"
+	// because `jsxEventName` does `name.slice(2).toLowerCase()`. Measured on a
+	// probe through this very emitter: THEY ARE PRODUCED - `onDragover`,
+	// `onDragstart`, `onDragend`, `onPointerdown` - exactly as DEFECTS.md 15 says
+	// ("there is no refusal in front of it"). What keeps them out is the TYPE
+	// BASELINE: one drop zone and one draggable card take THIS PROJECT from 80 to
+	// 86 `error TS` lines and the whole `pnpm check` from 267 to 280, which this
+	// board's oracle forbids. Cards move with arrow buttons instead and the page
+	// SAYS SO. See the fixture header.
+	//
+	// This lane has no component reference here and neither of the two emitter
+	// defects T003 isolated is reachable: S16 is a SINGLE component, so the
+	// double-called signal read cannot occur. Its three nested repeats -
+	// columns -> tasks -> tags, the corpus's FIRST three-level nesting - are all
+	// over a state cell or a field of a loop variable, never over a `computed`,
+	// which is this lane's own "unconsumed keyed identity semantics" refusal.
+	//
+	// Like S10-S15 it stays OUT of the 6 x 9 three-way contract, which
+	// scripts/e2e.mjs pins to the literal ['s1'..'s9'].
+	['S16.tsx', 's16-task-board.json'],
 ] as const;
 
 await mkdir(resolve(root, 'generated'), { recursive: true });

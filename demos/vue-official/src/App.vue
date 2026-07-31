@@ -13,6 +13,7 @@ import TodoMvcAdvanced from './emitted/TodoMvcAdvanced.vue'
 import CodexClone from './emitted/CodexClone.vue'
 import HnFront from './emitted/HnFront.vue'
 import HabitTracker from './emitted/HabitTracker.vue'
+import TaskBoard from './emitted/TaskBoard.vue'
 import WhitespaceBoard from './emitted/WhitespaceBoard.vue'
 import {
   armS8Gate,
@@ -116,6 +117,20 @@ const habits = computed(
     String(props.url ?? '')
       .replace(/^\/+/, '')
       .replace(/\/+$/, '') === 'habits',
+)
+
+/**
+ * The /board branch, decided HERE for the identical reason `habits` above is:
+ * `scenarioFor` and its `ScenarioId` union live in `./scenario-props`, which is
+ * outside the file envelope of the card that added this route
+ * (`frameless-app-axes-v1` T005), so the id is not in that union. The path
+ * normalisation is character-for-character the one `scenarioFor` applies.
+ */
+const board = computed(
+  () =>
+    String(props.url ?? '')
+      .replace(/^\/+/, '')
+      .replace(/\/+$/, '') === 'board',
 )
 
 /**
@@ -307,6 +322,37 @@ const s8Ready = ref<Promise<string>>(s8ResolvedGate)
     <link rel="stylesheet" href="/shadcn-theme/tokens.css" />
     <link rel="stylesheet" href="/habit-css/habits.css" />
     <HabitTracker v-bind:onTrace="noTrace" />
+  </template>
+  <!--
+    THE SEVENTH APPLICATION - the TASK BOARD - and THE DRAG CARD. It is the THIRD
+    scenario in this corpus that all six lanes emit and ship, after S13 and S15.
+
+    THE AXIS THIS PAGE EXISTS TO MEASURE IS NOT ON IT, AND THAT IS THE MEASUREMENT.
+    The board predicted the two-word drag events "cannot be produced" because the
+    compiler does `name.slice(2).toLowerCase()`. Measured on a probe through all six
+    real emitters, THEY ARE PRODUCED - and THIS LANE prints `@dragover`, `@dragstart`,
+    `@dragend` and `@pointerdown`, which ARE the real DOM event names, so this lane
+    would have FIRED them and it costs this lane no type error at all. What kept them
+    off the page is the type baseline in the three JSX lanes: `pnpm check` 267 -> 280,
+    which this board's oracle forbids. Cards move with the arrow buttons instead - a
+    DIFFERENT INTERACTION - and the page SAYS SO in `.tb-note`.
+
+    WHAT ONE ARROW CLICK MOVES, all derived from ONE `columns` cell: the card leaves
+    one column's list and appears in another's, both column counts, the source
+    column's empty placeholder, the header's shipped counter and total, the summary
+    sentence AND its emoji, and the moved card's own arrows. NINE observables.
+
+    TWO STYLESHEETS, ORDER LOAD-BEARING. `/shadcn-theme/tokens.css` is the vendored
+    shadcn/ui DEFAULT theme (MIT, (c) 2023 shadcn) and must load FIRST.
+    `/board-css/board.css` is THIS REPOSITORY'S OWN WORK - the Square UI reference is
+    licence-restricted to REFERENCE-ONLY, so nothing was copied from it and its
+    geometry was MEASURED in a browser instead. Both are linked HERE rather than
+    globally because `board.css` restyles `body`.
+  -->
+  <template v-else-if="board">
+    <link rel="stylesheet" href="/shadcn-theme/tokens.css" />
+    <link rel="stylesheet" href="/board-css/board.css" />
+    <TaskBoard v-bind:onTrace="noTrace" />
   </template>
   <template v-else-if="hn">
     <link rel="stylesheet" href="/hn-css/hn.css" />

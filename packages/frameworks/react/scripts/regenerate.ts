@@ -69,6 +69,29 @@ const fixtures = [
 	// stays OUT of the 6 x 9 three-way contract, which scripts/e2e.mjs pins to
 	// the literal ['s1'..'s9'].
 	['S15.tsx', 's15-habit-tracker.json'],
+	// THE SEVENTH APPLICATION IN THE CORPUS - the TASK BOARD - and THE DRAG CARD.
+	// It takes the next ORDINAL slot for the reason every row above records, and
+	// it is the THIRD scenario all six lanes emit, after S13 and S15.
+	//
+	// THE AXIS IT MEASURES IS NOT IN THE FILE, AND THAT IS THE MEASUREMENT. The
+	// board predicted `onDragStart`/`onDragOver`/`onDrop` "cannot be produced"
+	// because `jsxEventName` does `name.slice(2).toLowerCase()`. Measured on a
+	// probe through this very emitter: THEY ARE PRODUCED - `onDragover`,
+	// `onDragstart`, `onDragend`, `onPointerdown` - exactly as DEFECTS.md 15 says
+	// ("there is no refusal in front of it"). THIS LANE IS THE ONE WHERE THE
+	// CASING LOSS IS FATAL: react-dom matches by prop name, so `onDragover` never
+	// fires, while vue's `@dragover`, angular's `(dragover)` and svelte's
+	// `ondragover` are the real DOM event names and DO fire.
+	// WHAT KEEPS IT OUT IS THE TYPE BASELINE, measured here: one drop zone and one
+	// draggable card take THIS PROJECT from 117 to 123 `error TS` lines (one
+	// TS2322 per host for the unknown prop, one TS7006 per handler whose parameter
+	// can no longer be contextually typed) and the whole `pnpm check` from 267 to
+	// 280, which this board's oracle forbids. Cards move with arrow buttons
+	// instead and the page SAYS SO. See the fixture header.
+	//
+	// Like S10-S15 it stays OUT of the 6 x 9 three-way contract, which
+	// scripts/e2e.mjs pins to the literal ['s1'..'s9'].
+	['S16.tsx', 's16-task-board.json'],
 ] as const;
 
 await mkdir(resolve(root, 'generated'), { recursive: true });

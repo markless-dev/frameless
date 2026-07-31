@@ -58,7 +58,7 @@ goal:
       evaporates. If drag refuses and is quietly replaced by click-to-move, the axis goes
       unmeasured while the demo looks complete.
 
-active_task: T005
+active_task: T006
 
 rules:
   - "state.yaml is board truth; goal.md is the charter."
@@ -295,6 +295,7 @@ tasks:
       - "TWO OPEN EMITTER DEFECTS HIT ANY CARD THAT COMPOSES, not just recursion. SOLID: a same-module component reference makes every signal read inside a handler DOUBLE-CALL (TS2349) and DROPS attr:value. QWIK: a function-typed prop CANNOT CROSS A COMPONENT BOUNDARY IN ANY SPELLING (onTrace$ prints as onTrace, authoring onTrace$ gives onTrace$$). If you compose, EXPECT THEM, narrow around them, and DO NOT touch an emitter."
       - "You are about to assume a list prop is impossible. `Array<string>` LOWERS IN FIVE LANES where `string[]` refuses - the limit is the SPELLING, not arrays. T003 refuted the stronger claim T002 recorded."
       - "You are about to bind a `style` attribute. NO FIXTURE IN THE CORPUS DOES, so style lowering is UNMEASURED IN ALL SIX LANES - S15 used a class name for exactly this reason. MEASURE IT AS ITS OWN PROBE FIRST and record the per-lane result; do not discover it mid-build."
+      - "You are about to write a STATIC ATTRIBUTE WHOSE DOM TYPE IS NOT `string`. It will fail an emitted typecheck: rows=\"6\" failed react's, draggable=\"true\" failed qwik's. NARROW THE FIXTURE, NEVER RAISE THE 267 BUDGET."
       - "Verification fails twice for the same reason."
     receipt:
       result: done
@@ -520,6 +521,7 @@ tasks:
       - "TWO OPEN EMITTER DEFECTS HIT ANY CARD THAT COMPOSES, not just recursion. SOLID: a same-module component reference makes every signal read inside a handler DOUBLE-CALL (TS2349) and DROPS attr:value. QWIK: a function-typed prop CANNOT CROSS A COMPONENT BOUNDARY IN ANY SPELLING (onTrace$ prints as onTrace, authoring onTrace$ gives onTrace$$). If you compose, EXPECT THEM, narrow around them, and DO NOT touch an emitter."
       - "You are about to assume a list prop is impossible. `Array<string>` LOWERS IN FIVE LANES where `string[]` refuses - the limit is the SPELLING, not arrays. T003 refuted the stronger claim T002 recorded."
       - "You are about to bind a `style` attribute. NO FIXTURE IN THE CORPUS DOES, so style lowering is UNMEASURED IN ALL SIX LANES - S15 used a class name for exactly this reason. MEASURE IT AS ITS OWN PROBE FIRST and record the per-lane result; do not discover it mid-build."
+      - "You are about to write a STATIC ATTRIBUTE WHOSE DOM TYPE IS NOT `string`. It will fail an emitted typecheck: rows=\"6\" failed react's, draggable=\"true\" failed qwik's. NARROW THE FIXTURE, NEVER RAISE THE 267 BUDGET."
       - "Verification fails twice for the same reason."
     receipt:
       result: done
@@ -752,6 +754,7 @@ tasks:
       - "TWO OPEN EMITTER DEFECTS HIT ANY CARD THAT COMPOSES, not just recursion. SOLID: a same-module component reference makes every signal read inside a handler DOUBLE-CALL (TS2349) and DROPS attr:value. QWIK: a function-typed prop CANNOT CROSS A COMPONENT BOUNDARY IN ANY SPELLING (onTrace$ prints as onTrace, authoring onTrace$ gives onTrace$$). If you compose, EXPECT THEM, narrow around them, and DO NOT touch an emitter."
       - "You are about to assume a list prop is impossible. `Array<string>` LOWERS IN FIVE LANES where `string[]` refuses - the limit is the SPELLING, not arrays. T003 refuted the stronger claim T002 recorded."
       - "You are about to bind a `style` attribute. NO FIXTURE IN THE CORPUS DOES, so style lowering is UNMEASURED IN ALL SIX LANES - S15 used a class name for exactly this reason. MEASURE IT AS ITS OWN PROBE FIRST and record the per-lane result; do not discover it mid-build."
+      - "You are about to write a STATIC ATTRIBUTE WHOSE DOM TYPE IS NOT `string`. It will fail an emitted typecheck: rows=\"6\" failed react's, draggable=\"true\" failed qwik's. NARROW THE FIXTURE, NEVER RAISE THE 267 BUDGET."
       - "Verification fails twice for the same reason."
     receipt:
       result: done
@@ -905,7 +908,7 @@ tasks:
   - id: T005
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       Ship TASK MANAGEMENT - THE DRAG CARD as scenario `s16-task-board`: ONE authored source, emitted to all six lanes as the
@@ -993,13 +996,170 @@ tasks:
       - "TWO OPEN EMITTER DEFECTS HIT ANY CARD THAT COMPOSES, not just recursion. SOLID: a same-module component reference makes every signal read inside a handler DOUBLE-CALL (TS2349) and DROPS attr:value. QWIK: a function-typed prop CANNOT CROSS A COMPONENT BOUNDARY IN ANY SPELLING (onTrace$ prints as onTrace, authoring onTrace$ gives onTrace$$). If you compose, EXPECT THEM, narrow around them, and DO NOT touch an emitter."
       - "You are about to assume a list prop is impossible. `Array<string>` LOWERS IN FIVE LANES where `string[]` refuses - the limit is the SPELLING, not arrays. T003 refuted the stronger claim T002 recorded."
       - "You are about to bind a `style` attribute. NO FIXTURE IN THE CORPUS DOES, so style lowering is UNMEASURED IN ALL SIX LANES - S15 used a class name for exactly this reason. MEASURE IT AS ITS OWN PROBE FIRST and record the per-lane result; do not discover it mid-build."
+      - "You are about to write a STATIC ATTRIBUTE WHOSE DOM TYPE IS NOT `string`. It will fail an emitted typecheck: rows=\"6\" failed react's, draggable=\"true\" failed qwik's. NARROW THE FIXTURE, NEVER RAISE THE 267 BUDGET."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T005-board.md
+      summary: "DRAG DOES NOT REFUSE. Measured through all six REAL emitters and driven in chromium by TWO INDEPENDENT ARMS: the two-word drag events ARE produced in five lanes (svelte refuses the ELEMENT, not the event, and emits on ul/li) and FIRE in five - INERT IN REACT ONLY, because react-dom matches by PROP NAME while solid/qwik/svelte/vue/angular bind the REAL DOM EVENT NAME. What blocks the drag is THE TYPE BASELINE, 267 -> 280, not an emitter. So the axis is RECORDED, NOT SUBSTITUTED: s16-task-board ships in all six lanes with arrow buttons and SAYS SO on the page."
+      DEFECTS_MD_15_IS_REFUTED_AS_WRITTEN_AND_IT_REFUTES_ITSELF: "The entry's title claims ALL SIX LANES. MEASURED: REACT ONLY. And the entry's OWN TEXT says 'there is no refusal in front of it' - the compiler ACCEPTS /^on[A-Z]/ and then destroys the casing, so THE HANDLERS ARE PRODUCED. The casing loss is fatal only where the lane binds by a FRAMEWORK PROP NAME. dragover/dragstart/dragend/pointerdown ARE the real DOM event names, so every lane that binds by DOM name IS CORRECT BY ACCIDENT OF THE SAME BUG. FOUR LANES COMPLETED A REAL END-TO-END HTML5 DRAG WITH A REAL MOUSE. THIS IS THE SAME REACT-ONLY OVER-GENERALISATION AS 12.2."
+      THE_PER_LANE_DRAG_VERDICT: "react: SPELLED (onDragover) / FIRED NO - only single-word onDrop. solid: SPELLED / FIRED all five. qwik: SPELLED (onDragover$) / FIRED all five. svelte: REFUSES THE ELEMENT on div/span (a11y_no_static_element_interactions), EMITS on ul/li / FIRED all five. vue: SPELLED (@dragover) / FIRED all five. angular: SPELLED ((dragover)) / FIRED all five synthetic; native drag not produced on that page, recorded UNRESOLVED."
+      WHAT_ACTUALLY_BLOCKS_THE_DRAG_IS_NOT_AN_EMITTER: "ONE drop zone plus ONE draggable card costs react 117->123, solid 80->86, qwik 70->71, and pnpm check 267 -> 280. QWIK'S SINGLE ERROR IS NOT AN EVENT AT ALL - draggable=\"true\" against draggable?: boolean - WHICH WIDENS T003's rows=\"6\" RULE TO: NO STATIC ATTRIBUTE WHOSE DOM TYPE IS NOT `string`."
+      IT_BUILT_A_SCAFFOLD_TO_ANSWER_QUESTION_2_AND_REMOVED_IT: "'Does it fire' cannot be answered without a browser, and the drag cannot ship, so a temporary /dragprobe route was built in all six shells and then REMOVED. EVERY PROBE MODULE CAME OUT OF emit(ir)+formatEmitted - no per-lane app code was hand-written even temporarily - and git status carries no probe artifact. ARM B drove a NATIVE mouse drag WITH A DRIVER-INSTALLED CONTROL, which is how react's inertness was proven rather than inferred: react's control saw the full native drag and its bindings saw NOTHING."
+      IT_CAUGHT_ITS_OWN_SUMMARY_LADDER_DEAD: "S15's band edges made every reachable state sit inside ONE band, so six lanes agreed unanimously ON A VALUE THAT NEVER MOVED. Edges re-cut and THE FAILURE RECORDED IN THE FIXTURE as constraint (16) rather than tidied away. Also repaired a '/9' sidebar badge found OFF THE RENDERED IMAGE - bound to the header's suffix computed, and every computed-style check would have passed it."
+      changed_files:
+        - packages/compiler/test/fixtures/s16-task-board.tsrx
+        - packages/compiler/test/goldens/s16-task-board.json
+        - packages/compiler/test/enriched-ir.test.ts
+        - packages/frameworks/react/scripts/regenerate.ts
+        - packages/frameworks/react/generated/S16.tsx
+        - packages/frameworks/react/test/size.test.ts
+        - packages/frameworks/solid/scripts/regenerate.ts
+        - packages/frameworks/solid/generated/S16.tsx
+        - packages/frameworks/solid/test/size.test.ts
+        - packages/frameworks/qwik/scripts/regenerate.ts
+        - packages/frameworks/qwik/generated/S16.tsx
+        - packages/frameworks/svelte/scripts/regenerate.ts
+        - packages/frameworks/svelte/generated/S16.svelte
+        - packages/frameworks/vue/scripts/regenerate.ts
+        - packages/frameworks/vue/generated/S16.vue
+        - packages/frameworks/vue/src/gate/index.ts
+        - packages/frameworks/vue/test/gate.test.ts
+        - packages/frameworks/angular/scripts/regenerate.ts
+        - packages/frameworks/angular/generated/S16.ts
+        - packages/frameworks/angular/test/emitter.test.ts
+        - scripts/demo.mjs
+        - demos/shared/board-css/board.css
+        - demos/shared/board-css/README.md
+        - demos/shared/copy-board-css.mjs
+        - demos/react-official/package.json
+        - demos/react-official/src/App.jsx
+        - demos/react-official/src/emitted/TaskBoard.tsx
+        - demos/react-official/public/board-css/board.css
+        - demos/solid-official/package.json
+        - demos/solid-official/src/App.jsx
+        - demos/solid-official/src/emitted/TaskBoard.tsx
+        - demos/solid-official/public/board-css/board.css
+        - demos/qwik/package.json
+        - demos/qwik/src/routes/board/index.tsx
+        - demos/qwik/src/emitted/TaskBoard.tsx
+        - demos/qwik/public/board-css/board.css
+        - demos/svelte-official/package.json
+        - "demos/svelte-official/src/routes/board/+page.svelte"
+        - demos/svelte-official/src/lib/emitted/TaskBoard.svelte
+        - demos/svelte-official/static/board-css/board.css
+        - demos/vue-official/package.json
+        - demos/vue-official/src/App.vue
+        - demos/vue-official/src/emitted/TaskBoard.vue
+        - demos/vue-official/public/board-css/board.css
+        - demos/angular-official/package.json
+        - demos/angular-official/src/app/app.routes.ts
+        - demos/angular-official/src/app/board-page.ts
+        - demos/angular-official/src/emitted/TaskBoard.ts
+        - demos/angular-official/public/board-css/board.css
+        - docs/goals/frameless-app-axes-v1/notes/T005-board.md
+      commands:
+        - cmd: "owner fingerprint START"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169 / 116, sorting the whole shasum OUTPUT LINES"
+        - cmd: "baseline BEFORE any edit"
+          status: pass
+          note: "pnpm test 1 failed 1318 passed (foreign ARM B); pnpm check 267"
+        - cmd: "DRAG PROBE Q1: six real emitters, seven element/handler pairings"
+          status: pass
+          note: "FIVE LANES EMIT the two-word events; svelte refuses the ELEMENT on div/span and EMITS on ul/li"
+        - cmd: "DRAG PROBE type cost, per project tsc"
+          status: pass
+          note: "react 117->123, solid 80->86, qwik 70->71 (from draggable=\"true\", NOT an event); pnpm check 267 -> 280"
+        - cmd: "DRAG PROBE Q2 ARM A: synthetic DragEvent+DataTransfer, six lanes"
+          status: pass
+          note: "react fires ONLY single-word onDrop; solid/qwik/svelte/vue/angular fire all five"
+        - cmd: "DRAG PROBE Q2 ARM B: NATIVE mouse drag with a driver-installed CONTROL"
+          status: pass
+          note: "solid/qwik/svelte/vue complete a real drop; REACT'S CONTROL SAW THE FULL NATIVE DRAG AND ITS BINDINGS SAW NOTHING; angular unresolved"
+        - cmd: "LIVE QA of the named reference BEFORE the build"
+          status: pass
+          note: "[draggable=\"true\"] count = 0 - THE REFERENCE HAS NO DRAG TO BREAK"
+        - cmd: "6 x emitter on the real golden"
+          status: pass
+          note: "ALL SIX EMIT ON THE FIRST ATTEMPT; 89 hosts, largest template in the corpus"
+        - cmd: "per-lane OWN gates x6"
+          status: pass
+          note: "react 208, solid 203, qwik 97, svelte 129, vue 153, angular 162 - ALL PASS"
+        - cmd: "pnpm demo (RUN)"
+          status: pass
+          note: "6 lanes, S1-S16; S16 /board in ALL SIX, qwik /board/; 5175+5178 SKIPPED"
+        - cmd: "route probe with BODY HASHING"
+          status: pass
+          note: "16/16 distinct react+solid+qwik, 15/15 svelte+vue, 13/13 angular; /board matches NO bogus hash"
+        - cmd: "BROWSER DRIVE of /board, six lanes, five stages"
+          status: pass
+          note: "ALL SIX IDENTICAL at at0/at1/atReview/back/emptied"
+        - cmd: "NEGATIVE CONTROL: untouched sibling card t9"
+          status: pass
+          note: "t9Column, t9Title, t9RightHidden never move at any stage in any lane"
+        - cmd: "CONTROL: is the solid/vue pageerror ours?"
+          status: pass
+          note: "same vite HMR error on /, /todomvc, /hn, /habits - PRE-EXISTING"
+        - cmd: "VISUAL off geometry + rendered screenshot"
+          status: pass
+          note: "sidebar 256, topbar 60, column 360 pitch 372, card 334; SIX LANES AGREE TO THE PIXEL; the IMAGE caught a stray '/9' badge"
+        - cmd: "vue 12a/12b census re-derived with @vue/compiler-sfc"
+          status: pass
+          note: "S16 contributes 0 to 12a with TWELVE evented hosts; 12b +1 entry, distinct names held at seven"
+        - cmd: "DERIVATION PROOF"
+          status: pass
+          note: "19 artifacts; PRESENT AFTER DELETE = 0 ASSERTED AND GATING; 19/19 BYTE-IDENTICAL"
+        - cmd: "git diff --exit-code over S1-S15 + composition + persistence + goldens + emitted + assets"
+          status: pass
+          note: "exit 0 on both globs; PAIRED with git status --short, 49 paths all inside allowed_files"
+        - cmd: "pnpm test (final)"
+          status: pass
+          note: "EXACTLY 1 failure (foreign ARM B), 1329 passed"
+        - cmd: "pnpm check (final)"
+          status: pass
+          note: "267 - DID NOT RISE, with six new typechecked artifacts"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "PASS - 6 demos x 9 scenarios, all observations equal"
+        - cmd: "pnpm lint / pnpm check:citations"
+          status: pass
+          note: "0 warnings 0 errors, 535 files; citations clean, 580 swept"
+        - cmd: "demo servers stopped by recorded PID 31188; drag-probe scaffold REMOVED"
+          status: pass
+          note: "six ports free; foreign PIDs 64413 and 24931 ALIVE; pkill -f NEVER used"
+        - cmd: "owner fingerprint FINISH"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169 / 116 - IDENTICAL to START"
+      deviations:
+        - "THE CARD'S CENTRAL PREDICTION IS WRONG IN BOTH DIRECTIONS and the receipt says so rather than reporting a refusal - see the DEFECTS.md 15 finding."
+        - "THE DRAG IS NOT SHIPPED FOR A REASON THE CARD DID NOT ANTICIPATE - the TYPE BASELINE, not an emitter refusal. Measured per project rather than assumed. The card's fallback was followed exactly: ship what IS spellable, LABEL IT PLAINLY on the page, record the axis."
+        - "BUILT A TEMPORARY /dragprobe ROUTE IN ALL SIX SHELLS, then REMOVED it - see above."
+        - "ADDED demos/shared/board-css/ and copy-board-css.mjs. NOTHING copied from Square UI; geometry MEASURED live at 1440x1000 and reproduced on the vendored MIT tokens."
+        - "USED --secondary FOR TAG CHIPS RATHER THAN THE REFERENCE'S PER-CATEGORY COLOURS. Not shadcn default tokens; reproducing them would reproduce THEIR THEME. Same ruling T004 recorded for the purple."
+        - "CARD TITLES ARE <span>, NOT THE REFERENCE'S <h3>. The reference renders <h3> under an <h1> with no <h2> - A HEADING-ORDER DEFECT THIS PAGE DECLINES TO REPRODUCE, the second place it is deliberately more correct than its reference."
+        - "REPAIRED ITS OWN SUMMARY LADDER AFTER THE FIRST DRIVE CAUGHT IT DEAD - see above."
+        - "RE-ARGUED FIVE DERIVED CENSUSES. The strongest is vue 12a: S16 contributes ZERO instances while carrying TWELVE evented hosts - more than any scenario but S13 - WHICH SEPARATES 'this domain has stopped growing' FROM 'those apps happened to have no forms'."
+        - "REPAIRED pnpm demo's CLOSING PARAGRAPH AGAIN. T004 predicted a third six-lane app would stale it and that nothing would catch it. BOTH CAME TRUE."
+        - "THE SIZE ROWS INTERPOLATE the 'size tracks handler bodies' rule in the MIDDLE of its range for the first time. It also records an unflattering cause for its own line count: the two arrow handlers are twenty-line bodies differing by ONE identifier, and a single direction-taking handler is UNAUTHORABLE because DEFECTS.md 8.1 closes the `if` door."
+      remaining_blockers:
+        - "DEFECTS.md 15 IS TOO STRONG AS WRITTEN - its title claims all six lanes; measured, it is REACT ONLY. NEEDS AN AMENDMENT CARD. This card did not touch DEFECTS.md (outside allowed_files)."
+        - "A NEW CONSTRAINT WIDER THAN T003's: draggable=\"true\" fails qwik's emitted typecheck the same way rows=\"6\" failed react's. The rule is NO STATIC ATTRIBUTE WHOSE DOM TYPE IS NOT `string`."
+        - "ANGULAR'S PROBE PAGE SWALLOWED mousedown WHILE DELIVERING pointerdown, so chromium produced no native drag there. CONTROLLED (angular /habits and /board deliver mousedown normally), so it is neither a shell property nor a general defect - UNEXPLAINED AND OPEN."
+        - "`style` LOWERING IS STILL UNMEASURED IN ALL SIX LANES. This card was the likeliest consumer and never needed one because there is no drag."
+        - "pnpm demo's CLOSING PARAGRAPH IS STILL HAND-WRITTEN PROSE. Repaired TWICE now (T010 queued)."
+        - "TWO OPEN EMITTER DEFECTS FROM T003 STILL UNREPAIRED. S16 avoids them by shipping a single component, as S15 does."
+        - "ANGULAR'S `imports` INVENTORY RULING IS STILL OPEN (T009)."
+        - "REACT, SOLID AND VUE STILL ANSWER 200 FOR ANY PATH."
+        - "T002's OPEN ITEM UNTOUCHED: /todomvc, /todomvc-advanced and /codex geometry (T008)."
+        - "BOTH FOREIGN PROCESSES STILL ALIVE: PID 64413 on 5175, PID 24931 on 5178."
+      stopped_because: null
   - id: T006
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
     objective: >-
       Ship CONTACTS - THE FORMS CARD as scenario `s17-contacts`: ONE authored source, emitted to all six lanes as the
@@ -1087,6 +1247,7 @@ tasks:
       - "TWO OPEN EMITTER DEFECTS HIT ANY CARD THAT COMPOSES, not just recursion. SOLID: a same-module component reference makes every signal read inside a handler DOUBLE-CALL (TS2349) and DROPS attr:value. QWIK: a function-typed prop CANNOT CROSS A COMPONENT BOUNDARY IN ANY SPELLING (onTrace$ prints as onTrace, authoring onTrace$ gives onTrace$$). If you compose, EXPECT THEM, narrow around them, and DO NOT touch an emitter."
       - "You are about to assume a list prop is impossible. `Array<string>` LOWERS IN FIVE LANES where `string[]` refuses - the limit is the SPELLING, not arrays. T003 refuted the stronger claim T002 recorded."
       - "You are about to bind a `style` attribute. NO FIXTURE IN THE CORPUS DOES, so style lowering is UNMEASURED IN ALL SIX LANES - S15 used a class name for exactly this reason. MEASURE IT AS ITS OWN PROBE FIRST and record the per-lane result; do not discover it mid-build."
+      - "You are about to write a STATIC ATTRIBUTE WHOSE DOM TYPE IS NOT `string`. It will fail an emitted typecheck: rows=\"6\" failed react's, draggable=\"true\" failed qwik's. NARROW THE FIXTURE, NEVER RAISE THE 267 BUDGET."
       - "Verification fails twice for the same reason."
     receipt: null
 
@@ -1273,6 +1434,48 @@ tasks:
     stop_if:
       - "Need files outside allowed_files."
       - "You are about to leave any factual claim in the banner hand-written."
+      - "NEVER pkill -f on a broad pattern. TWO FOREIGN PROCESSES ARE ALIVE: PID 64413 on 5175, PID 24931 on 5178."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
+  - id: T011
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    objective: >-
+      AMEND docs/DEFECTS.md entry 15. Its title claims ALL SIX LANES; T005 measured it REACT
+      ONLY. Also widen T003's static-attribute rule to what T005 measured.
+    WHY_THIS_MATTERS_MORE_THAN_A_TYPO: >-
+      ENTRY 15 HAS BEEN QUOTED AS A HARD SIX-LANE BLOCKER ON THREE CARDS ACROSS TWO BOARDS -
+      it is why the Codex clone shipped with NO KEYBOARD AT ALL and why this card was written
+      expecting a refusal. MEASURED: the two-word handlers ARE PRODUCED (the entry's own text
+      already says 'there is no refusal in front of it') and they FIRE in solid, qwik, svelte,
+      vue and angular. FOUR LANES COMPLETED A REAL END-TO-END HTML5 DRAG WITH A REAL MOUSE.
+      The casing loss is fatal ONLY where the lane binds by a FRAMEWORK PROP NAME - react-dom.
+      Every lane that binds by DOM event name is correct BY ACCIDENT OF THE SAME BUG.
+      THIS IS THE SAME REACT-ONLY OVER-GENERALISATION AS 12.2, WHICH THIS PROJECT ALREADY
+      CORRECTED ONCE. An unamended entry will keep costing features that were never blocked.
+    ALSO_WIDEN_THE_STATIC_ATTRIBUTE_RULE: >-
+      T003 recorded 'cannot spell a static NUMERIC attribute' from rows="6" failing react's
+      typecheck. T005 measured draggable="true" failing QWIK's the same way. THE RULE IS: NO
+      STATIC ATTRIBUTE WHOSE DOM TYPE IS NOT `string`. Numbers were a special case, not the rule.
+    allowed_files:
+      - "docs/DEFECTS.md"
+      - "docs/goals/frameless-app-axes-v1/notes/T011-defects-amendment.md"
+    verify:
+      - "RE-MEASURE BEFORE AMENDING. Do not take T005's table on trust - re-run the per-lane spelled/fired question yourself, or state plainly that you are citing T005's measurement rather than reproducing it."
+      - "The amended entry states the REACT-ONLY scope in its TITLE, not only in its body - the title is what gets quoted."
+      - "The keyboard consequence is corrected too: onKeyDown was read as unspellable everywhere, and the Codex clone shipped with NO keyboard because of it. Say what is actually available per lane."
+      - "The static-attribute rule is widened to non-string DOM types with BOTH measured instances cited (rows="6" react, draggable="true" qwik)."
+      - "pnpm check:citations clean - this file is watched"
+      - "pnpm test at exactly 1 / pnpm check not above 267 / pnpm e2e 6 x 9 / pnpm lint"
+      - "git diff --exit-code -- packages/ demos/ scripts/, PAIRED WITH git status --short   # DOC-ONLY CARD"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to soften the entry into vagueness. It must stay a precise claim - narrower, not mushier."
+      - "You are about to edit any emitter, fixture, golden, generated/ or src/emitted/ file. THIS CARD CHANGES DOCUMENTATION ONLY."
+      - "Re-measurement CONTRADICTS T005 - STOP AND REPORT. Two measurements disagreeing is a finding, not a tie to break."
       - "NEVER pkill -f on a broad pattern. TWO FOREIGN PROCESSES ARE ALIVE: PID 64413 on 5175, PID 24931 on 5178."
       - "Verification fails twice for the same reason."
     receipt: null

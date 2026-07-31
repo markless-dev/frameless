@@ -278,6 +278,34 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// OBSERVABLES, and an emitter that repainted only the clicked row would measure
 	// identically here. Only a driven browser separates them.
 	S15: { physicalLoc: 425, structuralNodes: 2029 },
+	// S16 (THE TASK BOARD) IS THE CORPUS'S LARGEST TEMPLATE AT EIGHTY-NINE HOSTS,
+	// eight more than S15, and costs 6.27 lines per host - second-cheapest in this
+	// table behind S15's 5.25 and well under S13's 9.32. Both figures interpolate
+	// the claim S12 opened and S15 sharpened, that emitted size tracks HANDLER
+	// BODIES rather than host count: S16 records TWELVE events and TWO state
+	// writes, between S15's seven-and-one and S13's twenty-seven-and-four, and its
+	// cost per host lands between theirs in the same order. THIS IS THE FIRST ROW
+	// TO TEST THAT RULE IN THE MIDDLE OF ITS RANGE rather than at an end.
+	// AGAINST S15: 558/425 = 1.31x the lines on 1.10x the hosts and 2449/2029 =
+	// 1.21x the nodes - 10% apart with LINES AHEAD, which is S13's direction, not
+	// S15's. The cause is in the source: the two arrow handlers are twenty-line
+	// object-rebuilding `.map` bodies DIFFERING BY ONE IDENTIFIER (`prevId`
+	// against `nextId`), so the app pays twice for one idea, and a single handler
+	// taking a direction is not authorable - it needs a second argument channel or
+	// an `if`, and DEFECTS.md 8.1 closes the second door.
+	// THE SOLID PREMIUM, re-derived rather than carried: 558/523 = 1.07x react on
+	// lines and 2449/2410 = 1.02x on nodes. The series is now 1.11 / 1.04 / 0.94 /
+	// 1.04 / 1.03 / 1.03 / 1.07 across S10-S16 and STILL REFUSES TO NAME A TREND:
+	// this is the widest line premium since S10 and it arrives on the application
+	// with the MOST duplicated handler text, which is the shape most likely to
+	// amplify any per-statement difference between the two emitters.
+	// WHAT THE NUMBER CANNOT SEE: S16 is the DRAG scenario and contains NO DRAG.
+	// The four two-word drag events emit cleanly from this emitter -
+	// `onDragover`, `onDragstart`, `onDragend`, `onPointerdown` - and what kept
+	// them out of the shipped module is measurable here and nowhere else in this
+	// file: one drop zone and one draggable card add SIX `error TS` lines to this
+	// project (80 -> 86) and take `pnpm check` from 267 to 280.
+	S16: { physicalLoc: 558, structuralNodes: 2449 },
 };
 
 describe('honest emitted structure comparison', () => {

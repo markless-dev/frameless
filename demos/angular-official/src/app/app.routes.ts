@@ -4,6 +4,7 @@ import { AttrBoard } from '../emitted/AttrBoard';
 import { AsyncGate } from './async-gate';
 import { BranchBoard } from '../emitted/BranchBoard';
 import { EventForm } from '../emitted/EventForm';
+import { BoardPage } from './board-page';
 import { HabitsPage } from './habits-page';
 import { HnPage } from './hn-page';
 import { FormBoard } from '../emitted/FormBoard';
@@ -144,5 +145,34 @@ export const routes: Routes = [
   {
     path: 'habits',
     component: HabitsPage,
+  },
+  // THE SEVENTH APPLICATION - the TASK BOARD - and THE DRAG CARD. It is the THIRD
+  // scenario this lane ships alongside the other five, after S13 and S15, and it
+  // survives here for the same reason S15 does: THE FIXTURE NAMES NO GLOBAL. The
+  // natural spelling of "move one column right" is `columns.indexOf(...)` clamped
+  // with `Math.min`, and `Math` is a global this emitter cannot resolve in a
+  // transplanted body, so each column carries its own `prevId`/`nextId` in the
+  // seed and the board's ordering is DATA rather than arithmetic. See the
+  // fixture's constraint (10).
+  //
+  // THE AXIS IT MEASURES IS NOT ON THE PAGE, AND THAT IS THE MEASUREMENT. This
+  // emitter PRINTS the two-word drag events - `(dragover)`, `(dragstart)`,
+  // `(dragend)`, `(pointerdown)` - and those are the real DOM event names, so
+  // this lane would have fired them at no type cost. What kept them out is the
+  // three JSX lanes' `pnpm check` baseline, 267 -> 280. The page says so itself.
+  //
+  // It goes through a WRAPPER, like /todomvc, /hn and /habits and for the same
+  // reason: a `<link>` has to be rendered by something, and putting it in
+  // src/index.html or angular.json's `styles` array would apply board.css - which
+  // restyles `body`, `:root`, `#root` and `#app` - to all nine three-way
+  // scenarios. It links TWO sheets, tokens first. See `./board-page`.
+  //
+  // Like the four routes above it is deliberately NOT part of the 6 x 9 three-way
+  // contract, so this route is browsable only. It carries no seed: IR-8 has no
+  // lowering for an array type, so the four columns are seeded INSIDE the emitted
+  // component and all six lanes start from byte-identical data.
+  {
+    path: 'board',
+    component: BoardPage,
   },
 ];

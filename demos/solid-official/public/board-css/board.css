@@ -1,0 +1,686 @@
+/*
+ * The task-board look, reproduced from MEASURED geometry.
+ *
+ * THIS FILE IS THIS REPOSITORY'S OWN WORK - see ./README.md. NOTHING was copied
+ * from the Square UI task-management template or its repository, whose bespoke
+ * "ln-dev UI License" forbids publishing the templates OR ANY DERIVATIVE in any
+ * repository. The reference was QA'd LIVE in a browser at 1440x1000 and every
+ * number below is a `getBoundingClientRect()` / `getComputedStyle()` reading off
+ * the rendered page; every colour is a token from `demos/shared/shadcn-theme/`,
+ * which is the MIT shadcn/ui default theme, and NOT a value read off that site.
+ *
+ * It is the third sheet in this repo to sit on those tokens, after `codex.css`
+ * and `habits.css`, and it is linked BESIDE `/shadcn-theme/tokens.css`, which
+ * must load FIRST because every colour here is a `var(--...)` from it.
+ *
+ * Class names come from packages/compiler/test/fixtures/s16-task-board.tsrx and
+ * are printed unchanged by all SIX emitters, so this one file styles all six
+ * lanes.
+ *
+ * WHAT WAS MEASURED ON THE REFERENCE AND REPRODUCED HERE:
+ *   sidebar            [0, 0, 256, 1000]
+ *   top bar            0 -> 60, toolbar row 60 -> 118
+ *   board area starts  y = 134
+ *   column             360 wide, 12 gap, 12 padding, radius 10, muted/70 fill
+ *   card               334 wide, radius 10, 1px border, background fill
+ *   card title         14px / 500
+ *   card vertical gap  12
+ *   page heading       18px / 600
+ *
+ * WHAT WAS MEASURED AND DELIBERATELY NOT REPRODUCED:
+ *   The tag chips are coloured per category on the reference (a blue "Design",
+ *   a pink "Product", an amber "New releases"). Those are NOT shadcn default
+ *   tokens, and reproducing them would be reproducing THEIR THEME rather than
+ *   the measured geometry - the same ruling T004 recorded when it declined the
+ *   habit tracker's purple `--primary`. The chips here are `--secondary` on
+ *   `--secondary-foreground` and keep the measured 20px height and 6px radius.
+ *   The reference's avatar discs are absent for the reason the fixture records.
+ */
+
+/*
+ * SHELL NEUTRALISATION, AND IT IS A MEASURED REPAIR RATHER THAN HOUSEKEEPING.
+ *
+ * `hn.css` records the finding this block inherits: driven across all six lanes,
+ * `/hn` rendered TWO DIFFERENT PAGES, because the create-vite scaffold used by
+ * react, solid and vue sets `:root { font: 18px/145% system-ui; letter-spacing:
+ * 0.18px }` and `#root`/`#app { width: 1126px; text-align: center; display:
+ * flex }`, while qwik, svelte and angular ship no such scaffold. Every DECLARED
+ * value was identical in all six - a computed-style check would have reported
+ * six passes.
+ *
+ * It is neutralised HERE, in the page-scoped sheet, and NOT in the three shells:
+ * those files are shared with S1-S12 and with the nine three-way scenarios that
+ * `pnpm e2e` compares byte for byte across six lanes.
+ */
+:root {
+	font:
+		normal 16px/1.5 ui-sans-serif,
+		system-ui,
+		-apple-system,
+		'Segoe UI',
+		Roboto,
+		'Helvetica Neue',
+		Arial,
+		sans-serif;
+	letter-spacing: normal;
+	text-rendering: auto;
+	color-scheme: light;
+}
+
+#root,
+#app {
+	width: 100%;
+	max-width: none;
+	min-height: 0;
+	margin: 0;
+	padding: 0;
+	border: none;
+	display: block;
+	text-align: left;
+}
+
+body {
+	margin: 0;
+	padding: 0;
+	background: var(--background);
+	color: var(--foreground);
+	font-family:
+		ui-sans-serif,
+		system-ui,
+		-apple-system,
+		'Segoe UI',
+		Roboto,
+		'Helvetica Neue',
+		Arial,
+		sans-serif;
+	font-size: 16px;
+	line-height: 1.5;
+	text-align: left;
+}
+
+/*
+ * `hidden` MUST WIN. On this page it is load-bearing in three places at once -
+ * the two move arrows at the ends of the board, the empty-column placeholder,
+ * and the two optional card meta chips - and every rule below that sets
+ * `display` would otherwise beat the attribute's UA `display: none`.
+ */
+[hidden] {
+	display: none !important;
+}
+
+.tb {
+	display: block;
+	background: var(--background);
+	color: var(--foreground);
+}
+
+.tb-shell {
+	display: flex;
+	align-items: stretch;
+	min-height: 100vh;
+}
+
+/* ---------------------------------------------------------------- sidebar */
+
+.tb-side {
+	width: 256px;
+	flex: 0 0 256px;
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 12px;
+	border-right: 1px solid var(--border);
+	background: var(--sidebar);
+	color: var(--sidebar-foreground);
+}
+
+.tb-brand {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	height: 36px;
+	padding: 0 4px;
+	margin-bottom: 8px;
+}
+
+.tb-mark {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	border-radius: var(--radius-sm);
+	background: var(--primary);
+	color: var(--primary-foreground);
+	font-size: 13px;
+}
+
+.tb-brandname {
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.tb-nav {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.tb-navlink {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	height: 34px;
+	padding: 0 8px;
+	border-radius: var(--radius-sm);
+	color: var(--sidebar-foreground);
+	text-decoration: none;
+	font-size: 14px;
+}
+
+.tb-navlink:hover {
+	background: var(--sidebar-accent);
+}
+
+.tb-navlink-on {
+	background: var(--sidebar-accent);
+	font-weight: 500;
+}
+
+.tb-navicon {
+	width: 16px;
+	text-align: center;
+	color: var(--muted-foreground);
+	font-size: 13px;
+}
+
+.tb-navtext {
+	flex: 1 1 auto;
+}
+
+.tb-badge {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 22px;
+	height: 20px;
+	padding: 0 6px;
+	border-radius: 999px;
+	background: var(--secondary);
+	color: var(--secondary-foreground);
+	font-size: 11px;
+	font-weight: 600;
+}
+
+.tb-promo {
+	margin-top: auto;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 12px;
+	border: 1px solid var(--sidebar-border);
+	border-radius: var(--radius-lg);
+	background: var(--background);
+}
+
+.tb-promotitle {
+	font-size: 13px;
+	font-weight: 600;
+}
+
+.tb-promotext {
+	font-size: 12px;
+	line-height: 1.45;
+	color: var(--muted-foreground);
+}
+
+/* ---------------------------------------------------------------- content */
+
+.tb-content {
+	flex: 1 1 auto;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.tb-top {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	height: 60px;
+	flex: 0 0 60px;
+	box-sizing: border-box;
+	padding: 0 16px;
+	border-bottom: 1px solid var(--border);
+}
+
+.tb-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	border: none;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--muted-foreground);
+	cursor: pointer;
+	font: inherit;
+	font-size: 14px;
+}
+
+.tb-icon:hover {
+	background: var(--accent);
+}
+
+.tb-crumb {
+	margin: 0;
+	font-size: 18px;
+	font-weight: 600;
+	letter-spacing: normal;
+}
+
+.tb-topgap {
+	flex: 1 1 auto;
+}
+
+.tb-stamp {
+	font-size: 13px;
+	color: var(--muted-foreground);
+}
+
+.tb-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	height: 32px;
+	padding: 0 12px;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-md);
+	background: var(--background);
+	color: var(--foreground);
+	cursor: pointer;
+	font: inherit;
+	font-size: 13px;
+	font-weight: 500;
+}
+
+.tb-pill:hover {
+	background: var(--accent);
+}
+
+.tb-pillglyph {
+	font-size: 12px;
+	color: var(--muted-foreground);
+}
+
+.tb-tools {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	height: 58px;
+	flex: 0 0 58px;
+	box-sizing: border-box;
+	padding: 0 16px;
+	border-bottom: 1px solid var(--border);
+}
+
+.tb-tool {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	height: 32px;
+	padding: 0 12px;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-md);
+	background: var(--background);
+	color: var(--foreground);
+	cursor: pointer;
+	font: inherit;
+	font-size: 13px;
+	font-weight: 500;
+}
+
+.tb-tool:hover {
+	background: var(--accent);
+}
+
+.tb-tool-solid {
+	background: var(--primary);
+	color: var(--primary-foreground);
+	border-color: var(--primary);
+}
+
+.tb-tool-solid .tb-toolglyph {
+	color: var(--primary-foreground);
+}
+
+.tb-toolglyph {
+	font-size: 12px;
+	color: var(--muted-foreground);
+}
+
+.tb-toolgap {
+	flex: 1 1 auto;
+}
+
+.tb-date {
+	display: inline-flex;
+	align-items: center;
+	height: 32px;
+	padding: 0 12px;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-md);
+	font-size: 13px;
+	color: var(--foreground);
+}
+
+/* ------------------------------------------------------- headline and note */
+
+.tb-headline {
+	display: flex;
+	align-items: baseline;
+	gap: 16px;
+	padding: 16px 16px 0;
+}
+
+.tb-tally {
+	margin: 0;
+	display: flex;
+	align-items: baseline;
+	gap: 0;
+}
+
+.tb-tallydone {
+	font-size: 30px;
+	font-weight: 900;
+	letter-spacing: -0.75px;
+	line-height: 1;
+}
+
+.tb-tallytotal {
+	font-size: 18px;
+	font-weight: 600;
+	color: var(--muted-foreground);
+	line-height: 1;
+}
+
+.tb-summaryline {
+	margin: 0;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.tb-summaryemoji {
+	font-size: 15px;
+}
+
+.tb-summarytext {
+	font-size: 14px;
+	color: var(--muted-foreground);
+}
+
+/*
+ * THE DRAG NOTE. This page is the DRAG scenario and it has no drag; the note is
+ * the label the card required, and it is styled to be READ rather than to be
+ * decorative - a muted footnote would have been the dishonest choice.
+ */
+.tb-note {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	margin: 12px 16px 0;
+	padding: 10px 12px;
+	border: 1px solid var(--border);
+	border-left: 3px solid var(--primary);
+	border-radius: var(--radius-md);
+	background: var(--muted);
+}
+
+.tb-notemark {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	flex: 0 0 18px;
+	border-radius: 999px;
+	background: var(--primary);
+	color: var(--primary-foreground);
+	font-size: 11px;
+	font-weight: 700;
+}
+
+.tb-notetext {
+	font-size: 12px;
+	line-height: 1.5;
+	color: var(--foreground);
+}
+
+/* ------------------------------------------------------------------ board */
+
+.tb-board {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+	padding: 16px;
+	overflow-x: auto;
+}
+
+.tb-col {
+	width: 360px;
+	flex: 0 0 360px;
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 12px;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-lg);
+	background: var(--muted);
+}
+
+.tb-colhead {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	height: 24px;
+}
+
+.tb-colmark {
+	font-size: 13px;
+	color: var(--muted-foreground);
+}
+
+.tb-coltitle {
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.tb-colcount {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 20px;
+	height: 18px;
+	padding: 0 6px;
+	border-radius: 999px;
+	background: var(--background);
+	color: var(--muted-foreground);
+	font-size: 11px;
+	font-weight: 600;
+}
+
+.tb-colgap {
+	flex: 1 1 auto;
+}
+
+.tb-colicon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	padding: 0;
+	border: none;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--muted-foreground);
+	cursor: pointer;
+	font: inherit;
+	font-size: 13px;
+}
+
+.tb-colicon:hover {
+	background: var(--accent);
+}
+
+.tb-cards {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.tb-card {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 12px;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-lg);
+	background: var(--card);
+	color: var(--card-foreground);
+}
+
+.tb-cardtop {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.tb-cardmark {
+	font-size: 12px;
+	color: var(--muted-foreground);
+}
+
+.tb-cardtitle {
+	font-size: 14px;
+	font-weight: 500;
+}
+
+.tb-cardblurb {
+	margin: 0;
+	font-size: 13px;
+	line-height: 1.45;
+	color: var(--muted-foreground);
+}
+
+.tb-tags {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.tb-tag {
+	display: inline-flex;
+	align-items: center;
+	height: 20px;
+	padding: 0 8px;
+	border-radius: 6px;
+	background: var(--secondary);
+	color: var(--secondary-foreground);
+	font-size: 11px;
+	font-weight: 500;
+}
+
+.tb-cardfoot {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding-top: 8px;
+	border-top: 1px solid var(--border);
+}
+
+.tb-meta {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	height: 22px;
+	padding: 0 6px;
+	border: 1px solid var(--border);
+	border-radius: 6px;
+	font-size: 11px;
+	color: var(--muted-foreground);
+}
+
+.tb-metaglyph {
+	font-size: 10px;
+}
+
+.tb-metagap {
+	flex: 1 1 auto;
+}
+
+.tb-move {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	background: var(--background);
+	color: var(--foreground);
+	cursor: pointer;
+	font: inherit;
+	font-size: 10px;
+}
+
+.tb-move:hover {
+	background: var(--accent);
+}
+
+.tb-empty {
+	margin: 0;
+	padding: 12px;
+	border: 1px dashed var(--border);
+	border-radius: var(--radius-lg);
+	text-align: center;
+}
+
+.tb-emptytext {
+	font-size: 12px;
+	color: var(--muted-foreground);
+}
+
+.tb-add {
+	display: inline-flex;
+	align-items: center;
+	justify-content: flex-start;
+	gap: 6px;
+	height: 32px;
+	padding: 0 8px;
+	border: none;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--muted-foreground);
+	cursor: pointer;
+	font: inherit;
+	font-size: 13px;
+}
+
+.tb-add:hover {
+	background: var(--accent);
+	color: var(--foreground);
+}
+
+.tb-addglyph {
+	font-size: 12px;
+}

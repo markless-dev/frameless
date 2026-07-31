@@ -123,6 +123,34 @@ const fixtures = [
 	// stays OUT of the 6 x 9 three-way contract, which scripts/e2e.mjs pins to
 	// the literal ['s1'..'s9'].
 	['S15.ts', 's15-habit-tracker.json'],
+	// THE SEVENTH APPLICATION IN THE CORPUS - the TASK BOARD - and THE DRAG CARD.
+	// It takes the next ORDINAL slot for the reason every row above records, and
+	// it is the THIRD scenario all six lanes emit, after S13 and S15 - and the
+	// THIRD this lane ships alongside the other five.
+	//
+	// THE AXIS IT MEASURES IS NOT IN THE FILE, AND THAT IS THE MEASUREMENT. The
+	// board predicted the two-word drag events "cannot be produced" because
+	// `jsxEventName` does `name.slice(2).toLowerCase()`. Measured on a probe
+	// through this very emitter: THEY ARE PRODUCED, as `(dragover)`,
+	// `(dragstart)`, `(dragend)` and `(pointerdown)` bound to generated
+	// `onH1Dragover($event)` members - and `dragover` IS the real DOM event name,
+	// so this lane is CORRECT BY ACCIDENT of the same casing loss that makes
+	// react's `onDragover` inert. It costs this lane no type errors at all.
+	// WHAT KEPT THEM OUT is the type baseline in the three JSX lanes - `pnpm
+	// check` 267 -> 280, which this board's oracle forbids. Cards move with arrow
+	// buttons instead and the page SAYS SO. See the fixture header.
+	//
+	// THIS LANE SURVIVES S16 FOR THE SAME REASON IT SURVIVES S15: the fixture
+	// NAMES NO GLOBAL. That is not luck - the natural spelling of "move one column
+	// to the right" is `columns.indexOf(...)` clamped with `Math.min`, and `Math`
+	// is a global this emitter cannot resolve in a transplanted body, so each
+	// column CARRIES its own `prevId`/`nextId` in the seed instead. See the
+	// fixture's constraint (10). There is no component reference either, so the
+	// `imports` inventory rejection that leaves S14 ungated here is not reachable.
+	//
+	// Like S10-S15 it stays OUT of the 6 x 9 three-way contract, which
+	// scripts/e2e.mjs pins to the literal ['s1'..'s9'].
+	['S16.ts', 's16-task-board.json'],
 ] as const;
 for (const [output, golden] of fixtures) {
 	const ir = JSON.parse(await readFile(resolve(goldenRoot, golden), 'utf8')) as EnrichedIR;

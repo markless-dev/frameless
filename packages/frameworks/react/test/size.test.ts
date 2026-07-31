@@ -303,6 +303,34 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// byte-identical output and measure identically here. Only a driven browser
 	// separates them, which is where that claim is actually settled.
 	S15: { physicalLoc: 411, structuralNodes: 2002 },
+	// S16 (THE TASK BOARD) TAKES THE LARGEST-TEMPLATE TITLE OFF S15 AT EIGHTY-NINE
+	// HOSTS and comes second on cost per host at 5.88 lines, behind S15's 5.07 and
+	// ahead of S12's 7.28, S14's 8.44 and S13's 8.95. Both facts are the same
+	// claim S12 opened and S15 sharpened - emitted size tracks HANDLER BODIES, not
+	// host count - and this row is the first one that tests it in the MIDDLE of
+	// the range instead of at an end. S16 records TWELVE events and TWO state
+	// writes against S15's seven and one and S13's twenty-seven and four, and its
+	// lines per host land between them in the same order. Two extremes agreeing
+	// could be a coincidence of two shapes; an interpolated point that lands where
+	// the rule predicts is the first evidence here that the relation is monotone.
+	// AGAINST S15: 523/411 = 1.27x the physical lines on 89/81 = 1.10x the hosts,
+	// and 2410/2002 = 1.20x the structural nodes. The line and node ratios are 7%
+	// apart with LINES AHEAD, which is S13's direction rather than S15's, and the
+	// cause is visible in the source: the two arrow handlers are twenty-line
+	// object-rebuilding `.map` bodies that differ by ONE identifier, so this app
+	// pays twice for one idea. A single handler taking a direction argument would
+	// have halved it and is not authorable - it needs either a second argument
+	// channel or an `if`, and DEFECTS.md 8.1 closes the second door.
+	// WHAT THE NUMBER CANNOT SEE, and on this row it is the whole card: S16 is the
+	// DRAG scenario and contains NO DRAG. The four two-word drag events emit
+	// cleanly from this emitter - `onDragover`, `onDragstart`, `onDragend`,
+	// `onPointerdown`, exactly as DEFECTS.md 15 predicts and refuses to refuse -
+	// and are inert in THIS lane only, because react-dom matches by prop name
+	// while vue, svelte and angular print the real DOM event name and fire. What
+	// kept them out of the shipped module is measurable here and nowhere else in
+	// this file: one drop zone and one draggable card add SIX `error TS` lines to
+	// this project (117 -> 123) and take `pnpm check` from 267 to 280.
+	S16: { physicalLoc: 523, structuralNodes: 2410 },
 };
 
 describe('honest emitted structure comparison', () => {
