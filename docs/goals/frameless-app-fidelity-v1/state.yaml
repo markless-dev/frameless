@@ -44,7 +44,7 @@ goal:
       FIXING THE FIVE FINDINGS AND LEAVING THE ORACLE HOLE OPEN. The findings are symptoms; the
       cause is that nothing ever compared a shipped app to the thing it copies.
 
-active_task: T001
+active_task: T002
 
 rules:
   - "state.yaml is board truth; goal.md is the charter."
@@ -67,7 +67,7 @@ tasks:
   - id: T001
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       FIX THE HACKER NEWS LAYOUT. The rank, the upvote triangle and the title must sit ON ONE
@@ -149,12 +149,86 @@ tasks:
       - "Verification fails twice for the same reason."
       - "You are about to modify an emitter to win the layout. The three-lane inline refusal is a MEASURED rule; solve it in the page-scoped sheet or record that it cannot be solved there."
       - "You are about to edit a create-vite shell. Page-scoped sheets only."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T001-hn-layout.md
+      summary: "Rank, upvote triangle and title now share a bounding-box row IN ALL SIX LANES, asserted OFF THE RENDERED IMAGE by y-extent overlap and calibrated by a NEGATIVE CONTROL THAT FAILS. Compared feature by feature against A RENDERED CAPTURE OF news.ycombinator.com, never against the other lanes. pnpm check 251 -> 251."
+      THE_PMs_STATED_CAUSE_WAS_WRONG_AND_THAT_IS_THE_FINDING: "I said the three-lane refusal of a handler-bearing element beside text broke the layout. IT NEVER BROKE ANYTHING - `.hn-story` was ALWAYS `display: flex; align-items: baseline`, and the span-per-run narrowing lays out inline correctly. THE REAL CAUSE WAS A SINGLE-SELECTOR CASCADE COLLISION inside demos/shared/hn-css/hn.css: the S14 ITEM-PAGE block appended a BARE `.hn-story { flex-direction: column }` LATER IN THE SAME FILE at IDENTICAL specificity (0,1,0) to the S13 front-page rule - SO IT WON ON /hn TOO. Parsed with comments stripped: 47 vs 20 selectors, colliding set ['.hn-story'] - THE ONLY ONE."
+      THE_ENTIRE_FUNCTIONAL_DIFF_IS_ONE_SELECTOR: "`.hn-story {` became `.hn-itemhead .hn-story {`. NO emitter, fixture, golden, generated/ or src/emitted/ file changed - git diff --exit-code over all of them is clean. NO s-NUMBERED ARTIFACT MOVED AT ALL, not merely 'S13 only'. The card budgeted for fixture and emitter changes; the diff is SMALLER THAN THE ALLOWANCE, NOT SMALLER THAN THE TASK."
+      IT_CAUGHT_ITS_OWN_DERIVATION_PROOF_BEING_VACUOUS: "The first attempt used UNQUOTED $PATHS and this shell is ZSH, WHICH DOES NOT WORD-SPLIT - so `rm -f` deleted nothing and 'PRESENT AFTER DELETE = 0' WAS TRUE FOR THE WRONG REASON. Redone with an array: 6 present -> 0 after delete (ASSERTED BEFORE REBUILD) -> 6 rebuilt byte-identical. SAME TRAP T003 ON THE PREVIOUS BOARD HIT, CAUGHT THE SAME WAY."
+      A_STALE_CLAIM_FOUND_AND_DELIBERATELY_NOT_EDITED: "hn.css's S14 header comment claims ANGULAR REFUSES /hn-item. MEASURED: ANGULAR SERVES IT - HTTP 200, 15 .hn-thread, geometry identical to react and solid. Left unchanged because editing that prose is outside this card's slice and would move a citation-watched comment. RECORDED FOR A SUCCESSOR."
+      changed_files:
+        - demos/shared/hn-css/hn.css
+        - demos/react-official/public/hn-css/hn.css
+        - demos/solid-official/public/hn-css/hn.css
+        - demos/qwik/public/hn-css/hn.css
+        - demos/svelte-official/static/hn-css/hn.css
+        - demos/vue-official/public/hn-css/hn.css
+        - demos/angular-official/public/hn-css/hn.css
+        - docs/goals/frameless-app-fidelity-v1/notes/T001-hn-layout.md
+      commands:
+        - cmd: "owner fingerprint START and FINISH with shasum -a 256"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169, website 116 files. SHA-256 NAMED EXPLICITLY. All-three-together is 118 files and a different digest, so the three are fingerprinted SEPARATELY"
+        - cmd: "ORACLE PART 1: playwright capture of https://news.ycombinator.com/"
+          status: pass
+          note: "REFERENCE CAPTURED RENDERED at 1440x1000. rank^arrow +10, rank^title +14.5, arrow^title +10, title^domain +13, subtext just below. Compared FEATURE BY FEATURE; geometry reproduced, MARKUP NOT COPIED"
+        - cmd: "pnpm demo"
+          status: pass
+          note: "Six lanes live. Allocator routed AROUND occupied 5175/5178/5180 and KILLED NOTHING"
+        - cmd: "measure BEFORE"
+          status: pass
+          note: "DEFECT REPRODUCED IN ALL SIX off the RENDERED IMAGE: flex-direction=column, overlaps -7/-15/-2. VERDICT false"
+        - cmd: "measure AFTER"
+          status: pass
+          note: "flex-direction=row in all six; overlaps +6/+16/+6; title^domain +13 EXACT REFERENCE MATCH. VERDICT true"
+        - cmd: "NEGATIVE CONTROL"
+          status: pass
+          note: "pre-fix rule restored in memory -> column, overlaps -9/-19/-4, INLINE FAIL x6. THE ASSERTION CAN FAIL"
+        - cmd: "real mouse click at the drawn triangle's centre"
+          status: pass
+          note: "412 -> 413 in all six, row still inline. HIT AREA SURVIVED THE LAYOUT CHANGE"
+        - cmd: "S14 /hn-item screenshots before vs after"
+          status: pass
+          note: "BYTE-IDENTICAL in all six lanes. Also measured: ANGULAR SERVES /hn-item, contradicting the stale comment"
+        - cmd: "body-hash control vs a bogus route"
+          status: pass
+          note: "distinct=true in all six"
+        - cmd: "derivation proof"
+          status: pass
+          note: "FIRST ATTEMPT VACUOUS (zsh non-splitting) - caught and redone with an array: 6 -> 0 asserted -> 6 byte-identical"
+        - cmd: "pnpm check"
+          status: pass
+          note: "START 251, END 251. NO RISE - nothing to attribute"
+        - cmd: "pnpm test"
+          status: pass
+          note: "1 failed / 1380 passed - exactly the foreign package-inventory ARM B"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "PASS - 6 demos x 9 scenarios, all observations equal"
+        - cmd: "pnpm lint / pnpm check:citations"
+          status: pass
+          note: "0/0 over 552 files; citations clean, 604 swept, re-run after the note"
+        - cmd: "git diff --exit-code over fixtures/goldens/generated/emitted/scripts/tests"
+          status: pass
+          note: "CLEAN. NO s-numbered artifact moved at all. PAIRED with git status --short"
+        - cmd: "stopped the demo by recorded PID"
+          status: pass
+          note: "PID 64413 on 5175 and PID 24931 on 5178 both CONFIRMED ALIVE afterwards. pkill NEVER run"
+      deviations:
+        - "The card budgeted for fixture, golden and emitter changes. NONE WERE NEEDED OR MADE - the defect was one CSS selector."
+        - "Reference and lane screenshots were written to the SESSION SCRATCHPAD rather than the repo. allowed_files admits demos/*/public/**, but COMMITTING BINARY CAPTURES OF news.ycombinator.com INTO A TREE WHOSE README STATES NOTHING WAS COPIED FROM YC would have been a worse outcome. All measurements are transcribed as numbers in the note."
+        - "Found but did NOT change the stale Angular claim in hn.css - see above."
+      remaining_blockers:
+        - "hn.css's S14 header comment claims Angular refuses /hn-item; MEASURED, ANGULAR SERVES IT. Needs a successor with the right slice."
+        - "THE SAME CASCADE SHAPE MAY EXIST ELSEWHERE: one shared sheet per app, with per-scenario blocks appended at equal specificity. Only .hn-story was measured as colliding IN THIS FILE; the other shared sheets were not swept."
+      stopped_because: null
   - id: T002
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     objective: >-
       RULE ON ROUTING. Every link in every shipped app is a stub, because there is NO ROUTING

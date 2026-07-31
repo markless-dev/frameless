@@ -481,7 +481,47 @@ body:has(.hn, .hn-thread) {
 
 /* ------------------------------------------------------- the story header */
 
-.hn-story {
+/*
+ * THIS SELECTOR IS SCOPED `.hn-itemhead` AND THAT SCOPE IS THE WHOLE OF T001.
+ *
+ * It was written BARE - `.hn-story { flex-direction: column }` - when the S14
+ * block was appended to this file. `.hn-story` is ALSO the S13 front-page row
+ * (line ~251 above, `display: flex; align-items: baseline; gap: 4px`). Two bare
+ * rules, IDENTICAL specificity (0,1,0), and this one is LATER IN THE FILE, so it
+ * won on /hn as well as on /hn-item. The front page's story rows were therefore
+ * COLUMN flex, and the rank, the vote triangle and the title each took their own
+ * line - the defect the owner drove in the qwik lane.
+ *
+ * MEASURED OFF THE RENDERED PAGE at 1440x1000, all six lanes, BEFORE this scope:
+ *   li.hn-story computed flex-direction = "column" in ALL SIX
+ *   h1: rank y=[36,52]  arrow y=[59,65]  title y=[67,83]
+ *   y-extent overlap  rank^arrow = -7   rank^title = -15   arrow^title = -2
+ * and AFTER:
+ *   li.hn-story computed flex-direction = "row" in ALL SIX
+ *   h1: rank y=[30,46]  arrow y=[35,41]  title y=[30,46]
+ *   y-extent overlap  rank^arrow = +6   rank^title = +16   arrow^title = +6
+ * (the row also rises 6px because this rule was overriding the front page's
+ * `padding: 0 0 5px 0` with the item page's `padding: 6px 4px 0 8px`.)
+ * The reference, captured rendered the same day, overlaps +10 / +14.5 / +10.
+ *
+ * WHAT THIS CORRECTS. The card's brief named a different cause: that constraint
+ * (12) - the three-lane refusal of a handler-bearing element beside text - had
+ * forced every text run into its own `<span>` and "broke the inline layout".
+ * IT DID NOT. The spans are the children of a flex ROW and lay out inline
+ * correctly; the `<span>` narrowing costs this page nothing. NO EMITTER, NO
+ * FIXTURE AND NO GOLDEN NEEDED TO CHANGE, and none did. The bug was a
+ * SINGLE-SELECTOR CASCADE COLLISION inside this one sheet, and it is the exact
+ * shape of the `margin: 0` trap the charter names: every lane loaded the same
+ * colliding sheet, so every lane was identically wrong and every cross-lane
+ * check passed.
+ *
+ * `.hn-itemhead` is the S14 story header's own parent
+ * (`packages/compiler/test/fixtures/s14-hn-item.tsrx`, the only `.hn-story` on
+ * that page). At (0,2,0) it beats the S13 rule wherever it applies and is inert
+ * everywhere else, so /hn-item renders byte-for-byte what it rendered before -
+ * verified by screenshot in the three lanes that serve it.
+ */
+.hn-itemhead .hn-story {
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
