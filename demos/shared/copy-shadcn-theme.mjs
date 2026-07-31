@@ -31,12 +31,59 @@
 //
 // So the upstream bytes stay VERBATIM and UNLINKED as the source of truth, and the
 // linked `tokens.css` is MECHANICALLY DERIVED from them at copy time by
-// `deriveTokens()` below: the `:root` and `.dark` declaration blocks pass through
-// unchanged, and the `--radius-*` scale is lifted out of `@theme inline` into `:root`,
-// where a browser will actually honour it. The derivation is deliberately dumb —
-// it copies declaration text and never computes a value — so a token whose upstream
-// value changes cannot fail to move here, and `deriveTokens()` THROWS rather than
-// emitting a partial file if any of the three blocks it needs is missing.
+// `deriveTokens()` below: the `:root` and `.dark` DECLARATIONS pass through
+// unchanged, THEIR TWO SELECTORS DO NOT — see the next block — and the `--radius-*`
+// scale is lifted out of `@theme inline` into the root block, where a browser will
+// actually honour it. The derivation is deliberately dumb — it copies declaration
+// text and never computes a value — so a token whose upstream value changes cannot
+// fail to move here, and `deriveTokens()` THROWS rather than emitting a partial file
+// if any of the three blocks it needs is missing.
+//
+// ---------------------------------------------------------------------------
+// AND THE TWO SELECTORS ARE RAISED TO (0,2,0), WHICH IS THE ONE PLACE THIS FILE
+// STOPS BEING A PASS-THROUGH. RULED AT frameless-app-axes-v1 T019, LANDED BY T021.
+//
+// `:root` is emitted as `:root:root` and `.dark` as `:root.dark, :root .dark`.
+// NO VALUE, NO DECLARATION AND NO UPSTREAM BYTE MOVES — the diff is those two
+// lines and nothing else.
+//
+// WHY. The three create-vite scaffolds declare 13 custom properties of their own
+// and this file emits 39; EXACTLY TWO NAMES COLLIDE, `--accent` and `--border`,
+// and both sides declare them on the SAME element from a bare `:root`, which is
+// (0,1,0) on both sides. Only source order can separate a tie, and no rule in a
+// page sheet can reach a token it does not itself declare — which is why
+// `habits.css`'s, `board.css`'s, `contacts.css`'s and `codex.css`'s `:has()`
+// hardening drove /hn and /hn-item to 0 and left a residual on these four pages.
+// The residual IS a selector problem; it is just not one the PAGE sheets can fix.
+//
+// MEASURED, T021, chromium 1440x1000, RAW differing pixels: with each lane's own
+// scaffold bytes forced in as the LAST stylesheet node, /habits, /board,
+// /contacts and /codex read 13498 / 27301 / 37698 / 7303 with the bare selectors
+// — 13956 / 27870 / 38351 / 7343 under an OS-dark client, because the scaffold
+// declares the same two names A SECOND TIME inside `@media (prefers-color-scheme:
+// dark) :root` — and 0 in all 24 of those cells with these. A media query changes
+// MATCHING, not specificity, which is why the answer has to be a specificity bump.
+//
+// BOTH BLOCKS GET IT OR NEITHER DOES. `:root` and `.dark` are both (0,1,0) —
+// `:root` is a pseudo-class and counts in the class column — so `.dark` wins
+// today on SOURCE ORDER ALONE. Bumping only `:root` inverts dark mode: measured,
+// 30 of the 31 `.dark` tokens fall back to their light value when `.dark` sits on
+// `<html>` (the 31st, `--sidebar-primary-foreground`, is declared IDENTICALLY in
+// both blocks and so cannot show it), and it is UNAFFECTED on a wrapper, because
+// custom properties resolve by NEAREST DECLARING ANCESTOR, not by specificity.
+// Equal (0,2,0) bumps preserve the file's own `:root` -> `.dark` source-order
+// precedence in BOTH placements.
+//
+// NOT `@layer`: layered rules LOSE to unlayered ones, so wrapping this file would
+// hand the race to the scaffold rather than settle it. NOT a rename of the host's
+// two tokens either: those three sheets are the untouched official scaffold these
+// demos exist to prove neutrality against, and `git log --follow` gives each
+// EXACTLY ONE commit, the one that created it.
+//
+// THIS IS HARDENING A LATENT RACE, NOT REPAIRING A LIVE DEFECT. In dev AND in a
+// production build, measured, `tokens.css` loads AFTER the scaffold in all three
+// lanes, so it already wins and the observable diff is 0. These bumps make the
+// outcome independent of that order.
 //
 // The tokens are MIT, "Copyright (c) 2023 shadcn"; see `shadcn-theme/LICENSE` and
 // `shadcn-theme/README.md` for the exact source URL and commit. `codex.css` is this
@@ -50,9 +97,15 @@ const source = resolve(here, 'shadcn-theme');
 
 /**
  * Lifts the browser-honourable parts of the upstream theme out of its Tailwind
- * wrapper. Returns plain CSS: one `:root` carrying upstream's own `:root`
- * declarations PLUS the `--radius-*` scale that upstream declares inside
- * `@theme inline`, then upstream's `.dark` block unchanged.
+ * wrapper. Returns plain CSS: one root block carrying upstream's own `:root`
+ * DECLARATIONS PLUS the `--radius-*` scale that upstream declares inside
+ * `@theme inline`, then upstream's `.dark` DECLARATIONS.
+ *
+ * THE DECLARATIONS PASS THROUGH UNCHANGED; THE TWO SELECTORS DO NOT. `:root` is
+ * emitted as `:root:root` and `.dark` as `:root.dark, :root .dark` — both (0,2,0),
+ * both raised EQUALLY so this file's own `:root` -> `.dark` source-order precedence
+ * survives, and bumping only one of them is a measured dark-mode inversion. The
+ * long comment at the top of this file carries the numbers.
  *
  * THROWS on a missing block rather than emitting what it found. A partial theme is
  * the failure mode this whole file exists to avoid, and it is invisible in a browser.
@@ -91,14 +144,14 @@ export function deriveTokens(upstream) {
 		' * declared by upstream inside `@theme inline`, which is an at-rule no',
 		' * browser understands, so it is lifted into :root here. No VALUE is',
 		' * computed, rewritten or reformatted anywhere in this file. */',
-		':root {',
+		':root:root {',
 		rootDeclarations,
 		'',
 		'\t/* lifted verbatim out of upstream\'s `@theme inline` */',
 		radiusScale,
 		'}',
 		'',
-		'.dark {',
+		':root.dark, :root .dark {',
 		darkDeclarations,
 		'}',
 		'',

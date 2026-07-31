@@ -58,7 +58,7 @@ goal:
       evaporates. If drag refuses and is quietly replaced by click-to-move, the axis goes
       unmeasured while the demo looks complete.
 
-active_task: T021
+active_task: T999
 
 rules:
   - "state.yaml is board truth; goal.md is the charter."
@@ -112,7 +112,7 @@ tasks:
       - "LAUNCH AT LEAST ONE LANE FROM THE pnpm demo OUTPUT and confirm the URL it printed actually answers 200"
       - "pnpm test at exactly 1 / pnpm check not above 267 / pnpm e2e 6 x 9 / lint / check:citations"
       - "git diff --exit-code over packages/frameworks/*/generated, PAIRED WITH git status --short"
-      - "fingerprint the owner's three paths at START and FINISH - SORT THE WHOLE shasum OUTPUT LINES"
+      - "fingerprint the owner's three paths at START and FINISH - USE `shasum -a 256` AND SORT THE WHOLE OUTPUT LINES"
     stop_if:
       - "Need files outside allowed_files."
       - "Removing the NUL changes ANY emitted byte. That is a different card; report it."
@@ -189,7 +189,7 @@ tasks:
           note: "exit 0, PAIRED with git status --short"
         - cmd: "owner fingerprint START==FINISH"
           status: pass
-          note: "f326d314 / aeb7edc1 / f936e169 / 116 files, sorting the whole shasum OUTPUT LINES"
+          note: "f326d314 / aeb7edc1 / f936e169 / 116 files, using shasum -a 256 and sorting the whole OUTPUT LINES"
         - cmd: "six demo servers stopped by recorded PID 67947-67952"
           status: pass
           note: "foreign PIDs 64413 (5175) and 24931 (5178) verified ALIVE; pkill -f NEVER used"
@@ -278,7 +278,7 @@ tasks:
       - "pnpm e2e    # MUST stay 6 x 9. scripts/e2e.mjs is NOT in scope."
       - "pnpm lint and pnpm check:citations"
       - "VISUAL: assert features OFF THE RENDERED IMAGE, never off the CSS."
-      - "fingerprint the owner's three paths at START and FINISH - SORT THE WHOLE shasum OUTPUT LINES (not the digest column: feddd40b; not the paths: b1dd182a; not the sorted path list: ff230487)"
+      - "fingerprint the owner's three paths at START and FINISH - USE `shasum -a 256` AND SORT THE WHOLE OUTPUT LINES (not the digest column: feddd40b; not the paths: b1dd182a; not the sorted path list: ff230487)"
       - "THE APP IS APPENDED TO scripts/demo.mjs and appears in `pnpm demo` output with the route /hn (qwik keeps its TRAILING SLASH)"
     stop_if:
       - "Need files outside allowed_files."
@@ -361,7 +361,7 @@ tasks:
       commands:
         - cmd: "owner fingerprint START"
           status: pass
-          note: "f326d314 / aeb7edc1 / f936e169 / 116, sorting the whole shasum OUTPUT LINES"
+          note: "f326d314 / aeb7edc1 / f936e169 / 116, using shasum -a 256 and sorting the whole OUTPUT LINES"
         - cmd: "pnpm test (baseline before any edit)"
           status: pass
           note: "1 failed / 1284 passed - foreign package-inventory ARM B"
@@ -504,7 +504,7 @@ tasks:
       - "pnpm e2e    # MUST stay 6 x 9. scripts/e2e.mjs is NOT in scope."
       - "pnpm lint and pnpm check:citations"
       - "VISUAL: assert features OFF THE RENDERED IMAGE, never off the CSS."
-      - "fingerprint the owner's three paths at START and FINISH - SORT THE WHOLE shasum OUTPUT LINES (not the digest column: feddd40b; not the paths: b1dd182a; not the sorted path list: ff230487)"
+      - "fingerprint the owner's three paths at START and FINISH - USE `shasum -a 256` AND SORT THE WHOLE OUTPUT LINES (not the digest column: feddd40b; not the paths: b1dd182a; not the sorted path list: ff230487)"
       - "THE APP IS APPENDED TO scripts/demo.mjs and appears in `pnpm demo` output with the route /hn-item (qwik keeps its TRAILING SLASH)"
     stop_if:
       - "Need files outside allowed_files."
@@ -586,7 +586,7 @@ tasks:
       commands:
         - cmd: "owner fingerprint START"
           status: pass
-          note: "f326d314 / aeb7edc1 / f936e169 / 116, sorting the whole shasum OUTPUT LINES"
+          note: "f326d314 / aeb7edc1 / f936e169 / 116, using shasum -a 256 and sorting the whole OUTPUT LINES"
         - cmd: "STEP 1 probe: direct self-reference, six emitters + linker"
           status: pass
           note: "react/solid/qwik/angular EMIT; svelte+vue REFUSE verbatim; resolveModuleSet LINKS"
@@ -737,7 +737,7 @@ tasks:
       - "pnpm e2e    # MUST stay 6 x 9. scripts/e2e.mjs is NOT in scope."
       - "pnpm lint and pnpm check:citations"
       - "VISUAL: assert features OFF THE RENDERED IMAGE, never off the CSS."
-      - "fingerprint the owner's three paths at START and FINISH - SORT THE WHOLE shasum OUTPUT LINES (not the digest column: feddd40b; not the paths: b1dd182a; not the sorted path list: ff230487)"
+      - "fingerprint the owner's three paths at START and FINISH - USE `shasum -a 256` AND SORT THE WHOLE OUTPUT LINES (not the digest column: feddd40b; not the paths: b1dd182a; not the sorted path list: ff230487)"
       - "THE APP IS APPENDED TO scripts/demo.mjs and appears in `pnpm demo` output with the route /habits (qwik keeps its TRAILING SLASH)"
     stop_if:
       - "Need files outside allowed_files."
@@ -821,7 +821,7 @@ tasks:
       commands:
         - cmd: "owner fingerprint START"
           status: pass
-          note: "f326d314 / aeb7edc1 / f936e169 / 116, sorting the whole shasum OUTPUT LINES"
+          note: "f326d314 / aeb7edc1 / f936e169 / 116, using shasum -a 256 and sorting the whole OUTPUT LINES"
         - cmd: "baseline BEFORE any edit"
           status: pass
           note: "1 failed 1307 passed (foreign ARM B); check 267"
@@ -979,7 +979,7 @@ tasks:
       - "pnpm e2e    # MUST stay 6 x 9. scripts/e2e.mjs is NOT in scope."
       - "pnpm lint and pnpm check:citations"
       - "VISUAL: assert features OFF THE RENDERED IMAGE, never off the CSS."
-      - "fingerprint the owner's three paths at START and FINISH - SORT THE WHOLE shasum OUTPUT LINES (not the digest column: feddd40b; not the paths: b1dd182a; not the sorted path list: ff230487)"
+      - "fingerprint the owner's three paths at START and FINISH - USE `shasum -a 256` AND SORT THE WHOLE OUTPUT LINES (not the digest column: feddd40b; not the paths: b1dd182a; not the sorted path list: ff230487)"
       - "THE APP IS APPENDED TO scripts/demo.mjs and appears in `pnpm demo` output with the route /board (qwik keeps its TRAILING SLASH)"
     stop_if:
       - "Need files outside allowed_files."
@@ -1063,7 +1063,7 @@ tasks:
       commands:
         - cmd: "owner fingerprint START"
           status: pass
-          note: "f326d314 / aeb7edc1 / f936e169 / 116, sorting the whole shasum OUTPUT LINES"
+          note: "f326d314 / aeb7edc1 / f936e169 / 116, using shasum -a 256 and sorting the whole OUTPUT LINES"
         - cmd: "baseline BEFORE any edit"
           status: pass
           note: "pnpm test 1 failed 1318 passed (foreign ARM B); pnpm check 267"
@@ -1230,7 +1230,7 @@ tasks:
       - "pnpm e2e    # MUST stay 6 x 9. scripts/e2e.mjs is NOT in scope."
       - "pnpm lint and pnpm check:citations"
       - "VISUAL: assert features OFF THE RENDERED IMAGE, never off the CSS."
-      - "fingerprint the owner's three paths at START and FINISH - SORT THE WHOLE shasum OUTPUT LINES (not the digest column: feddd40b; not the paths: b1dd182a; not the sorted path list: ff230487)"
+      - "fingerprint the owner's three paths at START and FINISH - USE `shasum -a 256` AND SORT THE WHOLE OUTPUT LINES (not the digest column: feddd40b; not the paths: b1dd182a; not the sorted path list: ff230487)"
       - "THE APP IS APPENDED TO scripts/demo.mjs and appears in `pnpm demo` output with the route /contacts (qwik keeps its TRAILING SLASH)"
     stop_if:
       - "Need files outside allowed_files."
@@ -1315,7 +1315,7 @@ tasks:
       commands:
         - cmd: "owner fingerprint START"
           status: pass
-          note: "f326d314 / aeb7edc1 / f936e169 / 116, sorting the whole shasum OUTPUT LINES"
+          note: "f326d314 / aeb7edc1 / f936e169 / 116, using shasum -a 256 and sorting the whole OUTPUT LINES"
         - cmd: "REFERENCE QA in chromium incl. its New Contact dialog"
           status: pass
           note: "3 defects recorded - see above"
@@ -1448,7 +1448,7 @@ tasks:
       - "DERIVATION PROOF: delete every artifact this card touches, rebuild, shasum. ASSERT present-after-delete == 0 BEFORE rebuilding."
       - "pnpm test at exactly 1 / pnpm check not above 267 / pnpm e2e 6 x 9 / lint / check:citations"
       - "git diff --exit-code over every OTHER scenario's artifacts, PAIRED WITH git status --short"
-      - "fingerprint the owner's three paths at START and FINISH - SORT THE WHOLE shasum OUTPUT LINES"
+      - "fingerprint the owner's three paths at START and FINISH - USE `shasum -a 256` AND SORT THE WHOLE OUTPUT LINES"
     stop_if:
       - "Need files outside allowed_files."
       - "You are about to hand-write per-lane persistence glue. It must come out of the emitter like everything else."
@@ -1479,7 +1479,7 @@ tasks:
       commands:
         - cmd: "owner fingerprint START"
           status: pass
-          note: "f326d314 / aeb7edc1 / f936e169 / 116, sorting the whole shasum OUTPUT LINES"
+          note: "f326d314 / aeb7edc1 / f936e169 / 116, using shasum -a 256 and sorting the whole OUTPUT LINES"
         - cmd: "authoring census: 24 corpus .tsrx through buildEnrichedIr"
           status: pass
           note: "23 built, TOTAL persistence records = 0. state<T>(initial: T) has ONE parameter; SemanticGraphBinding has NO storage field"
@@ -1588,7 +1588,7 @@ tasks:
       - "AFTER: the shipped lanes of each app agree to the pixel, asserted OFF THE IMAGE"
       - "pnpm test at exactly 1 / pnpm check not above 267 / pnpm e2e 6 x 9 / lint / check:citations"
       - "git diff --exit-code over packages/ and every generated/ + src/emitted/, PAIRED WITH git status --short"
-      - "fingerprint the owner's three paths at START and FINISH - SORT THE WHOLE shasum OUTPUT LINES"
+      - "fingerprint the owner's three paths at START and FINISH - USE `shasum -a 256` AND SORT THE WHOLE OUTPUT LINES"
     stop_if:
       - "Need files outside allowed_files."
       - "You are about to edit a create-vite shell or any file shared with the nine three-way scenarios. USE A PAGE-SCOPED SHEET."
@@ -1648,7 +1648,7 @@ tasks:
       commands:
         - cmd: "owner fingerprint START"
           status: pass
-          note: "f326d314 / aeb7edc1 / f936e169 / 116, sorting the whole shasum OUTPUT LINES"
+          note: "f326d314 / aeb7edc1 / f936e169 / 116, using shasum -a 256 and sorting the whole OUTPUT LINES"
         - cmd: "pnpm demo (6 lanes; 5175 and 5178 SKIPPED, nothing killed)"
           status: pass
           note: "react 5173 solid 5174 qwik 5176 svelte 5177 vue 5179 angular 5180"
@@ -1882,7 +1882,7 @@ tasks:
       commands:
         - cmd: "owner fingerprint START"
           status: pass
-          note: "f326d314 / aeb7edc1 / f936e169 / 116, sorting the whole shasum OUTPUT LINES"
+          note: "f326d314 / aeb7edc1 / f936e169 / 116, using shasum -a 256 and sorting the whole OUTPUT LINES"
         - cmd: "RE-MEASURE q1: emit() six real emitters over buildEnrichedIr probes"
           status: pass
           note: "all six PRODUCE the binding; onClick control unchanged. AGREES WITH T005"
@@ -2058,7 +2058,7 @@ tasks:
       - "MUTATION-TEST THE HARDENING: prove the :has() form still applies when the scaffold sheet is forced to load AFTER the page sheet. A hardening that cannot be shown to survive the case it exists for is decoration."
       - "pnpm test at exactly 1 / pnpm check not above 267 / pnpm e2e 6 x 9 / lint / check:citations"
       - "git diff --exit-code -- packages/ and every generated/ + src/emitted/, PAIRED WITH git status --short"
-      - "fingerprint the owner's three paths at START and FINISH - SORT THE WHOLE shasum OUTPUT LINES"
+      - "fingerprint the owner's three paths at START and FINISH - USE `shasum -a 256` AND SORT THE WHOLE OUTPUT LINES"
     stop_if:
       - "Need files outside allowed_files."
       - "You are about to edit the requireForm `value` claim WITHOUT measuring it yourself."
@@ -2118,7 +2118,7 @@ tasks:
       commands:
         - cmd: "owner fingerprint START"
           status: pass
-          note: "f326d314 / aeb7edc1 / f936e169 / 116, sorting the whole shasum OUTPUT LINES"
+          note: "f326d314 / aeb7edc1 / f936e169 / 116, using shasum -a 256 and sorting the whole OUTPUT LINES"
         - cmd: "body-hash probe, 8 pages x 6 lanes + bogus route"
           status: pass
           note: "derived the REAL serving set: 36 lane pairs, NOT the card's 37"
@@ -2237,7 +2237,7 @@ tasks:
       - "LAND T009's RULING TEXT VERBATIM at notes/T009-angular-imports.md - the Judge's contract forbade it writing report files, so its receipt IS the ruling."
       - "pnpm test at exactly 1 / pnpm check not above 267 / pnpm e2e 6 x 9 / lint / check:citations (src/gate/index.ts is a WATCHED citation source)"
       - "git diff --exit-code over every non-S14 scenario artifact, PAIRED WITH git status --short"
-      - "fingerprint the owner's three paths at START and FINISH - SORT THE WHOLE shasum OUTPUT LINES"
+      - "fingerprint the owner's three paths at START and FINISH - USE `shasum -a 256` AND SORT THE WHOLE OUTPUT LINES"
     stop_if:
       - "Need files outside allowed_files."
       - "THE BROWSER DRIVE DOES NOT REPRODUCE T003's DOM ORACLE. The admission was justified BY THE LANE SHIPPING; if the recursion does not render, REVERT the inventory entry and report. DO NOT SHIP A LANE ON STATIC GREEN."
@@ -2285,7 +2285,7 @@ tasks:
       commands:
         - cmd: "owner fingerprint START"
           status: pass
-          note: "f326d314 / aeb7edc1 / f936e169 / 116, sorting the whole shasum OUTPUT LINES"
+          note: "f326d314 / aeb7edc1 / f936e169 / 116, using shasum -a 256 and sorting the whole OUTPUT LINES"
         - cmd: "ANGULAR_BASELINE_FLOOR BEFORE"
           status: pass
           note: "19.0, 31 entries, floor tier exactly ['(no standalone key)'], imports absent"
@@ -2428,7 +2428,7 @@ tasks:
       commands:
         - cmd: "owner fingerprint START"
           status: pass
-          note: "f326d314 / aeb7edc1 / f936e169 / 116, sorting the whole shasum OUTPUT LINES"
+          note: "f326d314 / aeb7edc1 / f936e169 / 116, using shasum -a 256 and sorting the whole OUTPUT LINES"
         - cmd: "six-lane x three-tier gate probe"
           status: pass
           note: "gate corpus is generated/ ONLY in qwik, svelte, vue, angular; react+solid ALREADY gate composition WITH ARTIFACTS at 0/0"
@@ -2547,7 +2547,7 @@ tasks:
       - "MEASURE AND RECORD whether @markless/typescript-plugin red-squiggles state(initial, options) IN AN EDITOR. pnpm check is proven unaffected; the editor experience is UNMEASURED and the owner authors in one."
       - "pnpm test at EXACTLY 1 failure / pnpm check NOT ABOVE 267 / pnpm e2e 6 x 9 / pnpm lint / pnpm check:citations"
       - "git diff --exit-code over every s-numbered fixture, golden and generated artifact, PAIRED WITH git status --short"
-      - "owner fingerprint at START and FINISH - SORT THE WHOLE shasum OUTPUT LINES"
+      - "owner fingerprint at START and FINISH - USE `shasum -a 256` AND SORT THE WHOLE OUTPUT LINES"
     stop_if:
       - "You are about to persist an ARRAY, OBJECT, NUMBER or BOOLEAN. The contract is scalar-string-only. REFUSE IT AND RECORD THE MESSAGE."
       - "You are about to add, renumber or edit an s-numbered corpus fixture or golden. FOUR LANES THROW ON PERSISTENCE-BEARING IR, so a persisted scenario breaks their regenerate and moves the vue gate's derived census. USE generated-persistence/, WHICH EXISTS FOR EXACTLY THIS."
@@ -2586,7 +2586,7 @@ tasks:
       commands:
         - cmd: "owner fingerprint START and FINISH"
           status: pass
-          note: "f326d314 / aeb7edc1 / f936e169 / 116 - IDENTICAL, sorting the whole shasum OUTPUT LINES"
+          note: "f326d314 / aeb7edc1 / f936e169 / 116 - IDENTICAL, using shasum -a 256 and sorting the whole OUTPUT LINES"
         - cmd: "pnpm test"
           status: pass
           note: "EXACTLY 1 failure (foreign package-inventory ARM B), 1372 passed"
@@ -3027,7 +3027,7 @@ tasks:
   - id: T021
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       Close the --accent/--border collision AT ITS DECLARING BLOCK, inside deriveTokens(), by
@@ -3074,7 +3074,7 @@ tasks:
       - "CORRECT THE FOUR PAGE SHEETS' COMMENT BLOCKS, which now assert something FALSE - they say the residual 'IS NOT A SELECTOR' and that tokens.css is 'not this card's to re-scope'. Amend deriveTokens()'s header and shadcn-theme/README.md too: they say the blocks 'pass through unchanged'; THE DECLARATIONS STILL DO, THE SELECTORS NO LONGER DO, and that distinction is the whole ruling."
       - "pnpm test at EXACTLY 1 failure / pnpm check NOT ABOVE 267 - REPORT THE ACTUAL NUMBER, three cards measured 251 / pnpm e2e 6 x 9 / pnpm lint / pnpm check:citations"
       - "git diff --exit-code over packages/, every generated*/ and demos/*/src/emitted/, PAIRED WITH git status --short"
-      - "OWNER FINGERPRINT at START and FINISH, MEASURED BY YOU, RELATIVE paths, sorting WHOLE shasum OUTPUT LINES: f326d314 / aeb7edc1 / f936e169, 116 files. CONFIRMED FOUR TIMES. Sorting paths gives b1dd182a."
+      - "OWNER FINGERPRINT at START and FINISH, MEASURED BY YOU, RELATIVE paths, using shasum -a 256, sorting WHOLE OUTPUT LINES: f326d314 / aeb7edc1 / f936e169, 116 files. CONFIRMED FOUR TIMES WITH -a 256. RETRACTED: the board previously called 24edb270/30403cba/f1a06e0f UNREPRODUCIBLE. T021 REPRODUCED IT EXACTLY - IT IS PLAIN `shasum`, WHOSE DEFAULT ALGORITHM IS SHA-1. T017 AND T018 WERE RIGHT AND THE PM'S DISMISSAL WAS WRONG. Sorting paths gives b1dd182a."
     stop_if:
       - "Need files outside allowed_files - IN PARTICULAR demos/shared/shadcn-theme/theming-default.css, which is UPSTREAM VERBATIM."
       - "You are about to edit demos/react-official/src/index.css, demos/solid-official/src/index.css or demos/vue-official/src/style.css. RENAMING THE HOST'S TWO TOKENS ALSO CLOSES THIS AND IS THE ANSWER THIS RULING REJECTS: they are the UNTOUCHED OFFICIAL SCAFFOLD the demos exist to prove neutrality against, each with EXACTLY ONE COMMIT."
@@ -3087,12 +3087,125 @@ tasks:
       - "pnpm check rises above 267, pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
       - "NEVER pkill -f on a broad pattern. PID 64413 holds 5175 and PID 24931 holds 5178. Stop your own servers by recorded PID."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T021-token-collision.md
+      summary: "Closed the collision AT ITS DECLARING BLOCK: deriveTokens() now emits :root:root and `:root.dark, :root .dark`, both (0,2,0), raised EQUALLY. TWENTY-FOUR forced-order cells went from 13498/27301/37698/7303 (13956/27870/38351/7343 OS-dark) to ZERO, every control reading 0 FIRST. Dark mode intact in both placements with the check PROVEN ABLE TO FAIL. Nothing moved today: 44 captures unmoved, 36 pairs still 0. MEASURED THE PRODUCTION ORDER: SCAFFOLD FIRST, so this is HARDENING, NOT A REPAIR."
+      IT_SOLVED_THE_FINGERPRINT_DISPUTE_AND_THE_PM_WAS_WRONG: "T017 and T018 reported 24edb270 / 30403cba / f1a06e0f and the PM DISMISSED BOTH, arguing 'a single file's shasum is content-only and admits no method variation'. THAT ARGUMENT IS FALSE. T021 REPRODUCED THEIR NUMBERS EXACTLY FROM THE IDENTICAL BYTES BY THE BOARD'S OWN RECORDED METHOD RUN WITH PLAIN `shasum` - WHOSE DEFAULT ALGORITHM IS SHA-1. The PM was running `shasum -a 256`. THE RECORDED METHOD NEVER NAMED AN ALGORITHM ACROSS ELEVEN CARDS CARRYING IT. PM CONFIRMED INDEPENDENTLY: `shasum --help` reports '-a, --algorithm 1 (default)', and plain shasum gives 24edb270 / 30403cba / f1a06e0f exactly. BOTH AGENTS WERE RIGHT; THE DISMISSAL WAS WRONG; THE BOARD, goal.md AND THE STORED METHOD NOW ALL NAME -a 256."
+      THE_PRODUCTION_READING_CLOSES_T019s_OPEN_ITEM: "Built react-official and served it with NODE_ENV=production: THE SCAFFOLD LANDS FIRST, IN <head>, ON ALL FOUR PAGES, BEFORE AND AFTER - identical to dev. React 19 hoists ONLY links carrying `precedence`, AND NONE OF THESE DO. So no configuration has been found in which the scaffold lands last, and THIS STAYS HARDENING RATHER THAN A REPAIR."
+      TWO_MORE_MEASURED_CORRECTIONS: "(1) IT IS 30 OF 31 DARK TOKENS that invert under the :root-only re-scope, not 31 - --sidebar-primary-foreground is declared IDENTICALLY in both blocks, so it falls back but CANNOT SHOW IT. Both T019's receipt and the T021 dispatch say 31, AND A FUTURE CARD ASSERTING 31 WOULD FAIL A CORRECT CHECK. (2) 'SIX lanes x FOUR pages' is 23 SERVED CELLS, not 24 - angular refuses S12 so it has no /codex."
+      THE_NEGATIVE_CONTROL_WAS_BUILT_TO_STAY_NON_VACUOUS: "The .dark kill raises the root block BY ONE RELATIVE TO WHATEVER IS ON DISK (:root -> :root:root before, :root:root -> :root:root:root after) rather than hardcoding :root:root. A HARDCODED BUMP WOULD HAVE TIED the post-fix dark block at (0,2,0), source order would have handed .dark the win, AND THE KILL WOULD HAVE SILENTLY REPORTED 0 WRONG - a vacuous check dressed as a passing one."
+      changed_files:
+        - demos/shared/copy-shadcn-theme.mjs
+        - demos/shared/shadcn-theme/README.md
+        - demos/shared/shadcn-theme/codex.css
+        - demos/shared/habit-css/habits.css
+        - demos/shared/board-css/board.css
+        - demos/shared/contact-css/contacts.css
+        - docs/goals/frameless-app-axes-v1/notes/T021-token-collision.md
+        - demos/react-official/public/shadcn-theme/tokens.css
+        - demos/react-official/public/shadcn-theme/codex.css
+        - demos/react-official/public/habit-css/habits.css
+        - demos/react-official/public/board-css/board.css
+        - demos/react-official/public/contact-css/contacts.css
+        - demos/solid-official/public/shadcn-theme/tokens.css
+        - demos/solid-official/public/shadcn-theme/codex.css
+        - demos/solid-official/public/habit-css/habits.css
+        - demos/solid-official/public/board-css/board.css
+        - demos/solid-official/public/contact-css/contacts.css
+        - demos/vue-official/public/shadcn-theme/tokens.css
+        - demos/vue-official/public/shadcn-theme/codex.css
+        - demos/vue-official/public/habit-css/habits.css
+        - demos/vue-official/public/board-css/board.css
+        - demos/vue-official/public/contact-css/contacts.css
+        - demos/qwik/public/shadcn-theme/tokens.css
+        - demos/qwik/public/shadcn-theme/codex.css
+        - demos/qwik/public/habit-css/habits.css
+        - demos/qwik/public/board-css/board.css
+        - demos/qwik/public/contact-css/contacts.css
+        - demos/angular-official/public/shadcn-theme/tokens.css
+        - demos/angular-official/public/shadcn-theme/codex.css
+        - demos/angular-official/public/habit-css/habits.css
+        - demos/angular-official/public/board-css/board.css
+        - demos/angular-official/public/contact-css/contacts.css
+        - demos/svelte-official/static/shadcn-theme/tokens.css
+        - demos/svelte-official/static/shadcn-theme/codex.css
+        - demos/svelte-official/static/habit-css/habits.css
+        - demos/svelte-official/static/board-css/board.css
+        - demos/svelte-official/static/contact-css/contacts.css
+      commands:
+        - cmd: "owner fingerprint START and FINISH, sha256, relative paths, whole output lines"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169, 116 files, IDENTICAL. BOARD ERROR FOUND: plain `shasum` (SHA-1) on the SAME method gives exactly what T017/T018 reported"
+        - cmd: "BEFORE forced-order matrix: 3 lanes x 4 pages x 2 OS arms, RAW differing pixels"
+          status: pass
+          note: "control 0 in ALL 24 CELLS FIRST; forced 13498/27301/37698/7303 light and 13956/27870/38351/7343 dark. VACUOUS CELLS: 0. Forced sheet ASSERTED last, harness throws otherwise"
+        - cmd: "BEFORE .dark check, both placements, with the :root-only kill"
+          status: pass
+          note: "as-served 0/31 wrong; ROOT-ONLY re-scope inverts 30/31 on <html> and 0/31 on a wrapper"
+        - cmd: "BEFORE per-lane captures and lane pairs"
+          status: pass
+          note: "44 captures, 36 lane pairs, NON-ZERO 0. Qwik's dev-only elements removed by id and reported"
+        - cmd: "PRODUCTION stylesheet order, react-official built and served"
+          status: pass
+          note: "SCAFFOLD FIRST, in <head>, all four pages, BEFORE and AFTER. No `precedence` attribute anywhere"
+        - cmd: "the change: two emitted selector strings in deriveTokens()"
+          status: pass
+          note: ":root -> :root:root and .dark -> `:root.dark, :root .dark`, both (0,2,0), raised EQUALLY"
+        - cmd: "AFTER forced-order matrix, same 24 cells"
+          status: pass
+          note: "0 in ALL TWENTY-FOUR CELLS, both OS arms, controls still 0 first"
+        - cmd: "AFTER .dark check, both placements, kill re-run"
+          status: pass
+          note: "as-served 0/31 on <html> AND on a wrapper; the kill STILL inverts 30/31, so the readings are not vacuous"
+        - cmd: "AFTER per-lane captures, pairs, BEFORE-vs-AFTER"
+          status: pass
+          note: "44 captures MOVED 0; 36 lane pairs NON-ZERO 0. 23 served cells, not 24"
+        - cmd: "DERIVED not hand-edited"
+          status: pass
+          note: "PRESENT-AFTER-DELETE 0/6 ASSERTED FIRST; all six re-derived byte-identical to one another AND to a fresh in-process deriveTokens() return"
+        - cmd: "deriveTokens() still throws, three negative arms plus a positive control"
+          status: pass
+          note: "CONTROL emitted 3274 bytes without throwing; three removals each THREW. 3/3"
+        - cmd: "NO VALUE MOVED: git diff over every tokens.css copy + theming-default.css"
+          status: pass
+          note: "6 files, 12 insertions / 12 deletions - EXACTLY the two selector lines per copy, ZERO declaration lines. theming-default.css CLEAN"
+        - cmd: "pnpm test"
+          status: pass
+          note: "EXACTLY 1 failure, 1380 passed - the foreign pre-existing ARM B"
+        - cmd: "pnpm check"
+          status: pass
+          note: "251, ceiling 267. FOURTH card to measure 251. ZERO of the 251 name a file this card touched"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "PASS - 6 demos x 9 scenarios, all observations equal"
+        - cmd: "pnpm lint / pnpm check:citations"
+          status: pass
+          note: "0/0 over 552 files; citations clean, 604 swept. Both RE-RUN after the note was written"
+        - cmd: "git diff --exit-code over packages/, generated*/ and demos/*/src/emitted/"
+          status: pass
+          note: "CLEAN on all three, paired with git status --short"
+        - cmd: "foreign processes"
+          status: pass
+          note: "PID 64413 and 24931 alive with original start times at both ends; pkill -f NEVER used; pnpm demo moved around them and reported it"
+      deviations:
+        - "BOARD ERROR SOLVED, NOT DISMISSED - see the fingerprint finding. The load-bearing claim is untouched (START == FINISH, 116 files, ON BOTH ALGORITHMS)."
+        - "BRIEF ERROR, MEASURED: 30 of 31 dark tokens invert, not 31."
+        - "The verify list's 'SIX lanes x FOUR pages' is 23 SERVED cells - angular refuses S12. Nothing is missing: A LANE THAT REFUSES A PAGE CANNOT BE CAPTURED ON IT."
+        - "tokens.css's own emitted header still says the radius scale is 'lifted into :root here' while the block now reads :root:root. NOT AMENDED, because this card's verify BOUNDS the tokens.css diff to exactly the two selector lines. Nothing in the header is false - the transformation is structural - but it is now INCOMPLETE, and it is recorded under its own heading for the next tokens card."
+        - "The .dark negative control raises the root block RELATIVE TO DISK rather than hardcoding - see the non-vacuous finding."
+      remaining_blockers:
+        - "T999 MUST NOT read this as a repaired visual defect. HEAD is in the CLOSED-AT-ITS-CAUSE state and WAS NEVER IN THE LIVE-DEFECT STATE: tokens.css already won in dev AND in production. THIS CARD WAS HARDENING."
+        - "STILL OPEN, narrowed here: NO CONFIGURATION HAS BEEN FOUND IN WHICH THE SCAFFOLD ACTUALLY LANDS LAST. Production was the last plausible place and has now been read. The forced-order arm remains A SIMULATION of a flip, not an observation of one."
+        - "pnpm check measured 251 by this card in a full run while queued cards carry a 267 ceiling. FOURTH card to measure it. T999 owns the ratchet."
+        - "tokens.css's emitted header is now incomplete about its own transformation - next tokens card."
+      stopped_because: null
   - id: T999
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     objective: "Final audit: certify all three oracle parts, or refuse."
     constraints:

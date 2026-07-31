@@ -67,18 +67,27 @@
  * MEASURED, BOTH ARMS, AT frameless-app-axes-v1 T013: with the scaffold's own
  * bytes forced in as the LAST stylesheet in document order, react/solid/vue
  * against svelte on /board went from 0 to 614625 differing pixels with the bare
- * selectors and to 27301 with these - and the remainder IS NOT A SELECTOR AND NO
- * RULE IN THIS FILE CAN REACH IT. Under the forced order every rect still
- * matches and every property these blocks declare still matches; what moves is
- * `border-color` on 66 elements, all of them `var(--border)` reads. The scaffold
- * declares 13 custom properties and `/shadcn-theme/tokens.css` declares 39, and
- * EXACTLY TWO NAMES COLLIDE - `--accent` and `--border` - on the same element,
- * from two `:root` blocks, so only source order can separate them. CONTROL:
- * force the same scaffold in with every `--x:` declaration deleted and /board,
- * /habits, /contacts and /codex all go to 0. `tokens.css` is DERIVED at copy
- * time from upstream MIT bytes and is not this card's to re-scope; /hn, which
- * uses no tokens, is at 0 in both arms, and so is /todomvc, whose sheet already
- * used this form.
+ * selectors and to 27301 with these - and NO RULE IN THIS FILE CAN REACH THE
+ * REMAINDER. Under the forced order every rect still matches and every property
+ * these blocks declare still matches; what moves is `border-color` on 66
+ * elements, all of them `var(--border)` reads. The scaffold declares 13 custom
+ * properties and `/shadcn-theme/tokens.css` declares 39, and EXACTLY TWO NAMES
+ * COLLIDE - `--accent` and `--border` - on the same element, from two `:root`
+ * blocks, so only source order can separate them. CONTROL: force the same
+ * scaffold in with every `--x:` declaration deleted and /board, /habits,
+ * /contacts and /codex all go to 0. /hn, which uses no tokens, is at 0 in both
+ * arms, and so is /todomvc, whose sheet already used this form.
+ *
+ * AND T013 CONCLUDED FROM THAT CONTROL THAT THE REMAINDER "IS NOT A SELECTOR".
+ * REFUTED BY MEASUREMENT AT T019 AND CLOSED AT T021: it IS a selector problem,
+ * just not one THIS file can reach. A PURE SELECTOR REWRITE OF THE DECLARING
+ * BLOCK - `tokens.css`'s own `:root` to `:root:root` and its `.dark` to
+ * `:root.dark, :root .dark`, both (0,2,0), no value and no declaration moved -
+ * drives 27301 to 0. That rewrite is emitted by `copy-shadcn-theme.mjs`, which
+ * carries the full argument and the dark-mode measurement. THE 27301 ABOVE IS
+ * NOW THE PRICE OF AN ORDER FLIP THAT HAS NOT HAPPENED: in dev AND in a
+ * production build `tokens.css` already loads after the scaffold, so the
+ * unmutated diff is 0.
  * --------------------------------------------------------------------------
  */
 html:has(.tb) {

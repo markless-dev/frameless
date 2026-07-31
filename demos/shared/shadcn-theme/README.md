@@ -44,9 +44,42 @@ The upstream block is **not a browser stylesheet**. It opens with
 with a `@layer base` block of `@apply` rules. A browser drops an unknown at-rule and
 everything inside it, so linking these bytes directly would define **none** of
 `--radius-sm/md/lg/xl` — silently, with no error. `copy-shadcn-theme.mjs` therefore
-lifts the `:root` and `.dark` declaration blocks through unchanged and moves the
-`--radius-*` scale out of `@theme inline` into `:root`. It copies declaration TEXT and
-computes no value, and it throws rather than emitting a partial file.
+lifts the `:root` and `.dark` DECLARATIONS through unchanged and moves the
+`--radius-*` scale out of `@theme inline` into the root block. It copies declaration
+TEXT and computes no value, and it throws rather than emitting a partial file.
+
+### The DECLARATIONS pass through unchanged. The two SELECTORS do not.
+
+Ruled at `frameless-app-axes-v1` T019, landed by T021. `tokens.css` emits
+`:root:root` where upstream writes `:root`, and `:root.dark, :root .dark` where
+upstream writes `.dark`. **Both are (0,2,0), raised equally, and nothing else about
+either block moves** — the whole diff against the pre-T021 output is those two lines.
+
+The three create-vite scaffolds these demos are hosted in declare 13 custom
+properties of their own, this file's derivation emits 39, and **exactly two names
+collide**: `--accent` and `--border`. Both sides declare them on the *same element*
+from a bare `:root`, which is `(0,1,0)` on both sides, so only source order could
+separate them and **no rule in a page sheet can reach a token it does not itself
+declare**. Measured with each lane's own scaffold bytes forced in as the last
+stylesheet node, `/habits`, `/board`, `/contacts` and `/codex` read
+13498 / 27301 / 37698 / 7303 raw differing pixels with the bare selectors —
+13956 / 27870 / 38351 / 7343 under an OS-dark client, because the scaffold declares
+the same two names again inside `@media (prefers-color-scheme: dark) :root` — and
+**0 in all 24 of those cells** with these.
+
+**Both blocks are bumped or neither is.** `:root` and `.dark` are both `(0,1,0)`, so
+`.dark` wins on source order alone; bumping only `:root` inverts dark mode, measured,
+for 30 of the 31 `.dark` tokens when `.dark` sits on `<html>` — the 31st,
+`--sidebar-primary-foreground`, is declared identically in both blocks and so cannot
+show it — and not at all on a wrapper, because **custom properties resolve by nearest
+declaring ancestor, not by specificity**.
+
+This is **hardening a latent race, not repairing a live defect**: in dev *and* in a
+production build, measured, `tokens.css` already loads after the scaffold in all
+three lanes and the unmutated pixel diff is 0. `@layer` is the wrong direction —
+layered rules lose to unlayered ones — and renaming the *host's* two tokens is
+rejected, because those three sheets are the untouched official scaffold these demos
+exist to prove neutrality against.
 
 ## Referenced but NOT vendored
 

@@ -120,7 +120,10 @@ Reference URLs, all QA'd live by the PM except where noted:
 - **The owner's three uncommitted paths** — `pnpm-lock.yaml`, `pnpm-workspace.yaml`,
   `website/` — are in-flight work. Fingerprint at start and end of every task; never modify.
   Expected `f326d314` / `aeb7edc1` / `f936e169`, 116 files.
-  **THE METHOD IS: SORT THE WHOLE `shasum` OUTPUT LINES.**
+  **THE METHOD IS: `shasum -a 256`, SORTING THE WHOLE OUTPUT LINES.**
+  **Name the algorithm.** Plain `shasum` defaults to **SHA-1** and gives
+  `24edb270` / `30403cba` / `f1a06e0f` from the identical bytes — which two cards reported
+  and the board wrongly called unreproducible.
 
   ```sh
   shasum -a 256 pnpm-lock.yaml                                   # f326d314…
