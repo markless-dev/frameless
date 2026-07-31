@@ -17543,9 +17543,9 @@
                                       "dynamicBindings": [
                                         {
                                           "expression": {
-                                            "end": 39677,
+                                            "end": 39685,
                                             "name": "site",
-                                            "start": 39673,
+                                            "start": 39681,
                                             "type": "Identifier"
                                           },
                                           "kind": "property",
@@ -17583,7 +17583,7 @@
                                         },
                                         {
                                           "name": "placeholder",
-                                          "value": "example.com"
+                                          "value": "https://example.com"
                                         },
                                         {
                                           "name": "data-control",
@@ -17664,9 +17664,9 @@
                                   "dynamicBindings": [
                                     {
                                       "expression": {
-                                        "end": 40209,
+                                        "end": 40217,
                                         "name": "role",
-                                        "start": 40205,
+                                        "start": 40213,
                                         "type": "Identifier"
                                       },
                                       "kind": "property",
@@ -17774,9 +17774,9 @@
                                         {
                                           "collection": {
                                             "expression": {
-                                              "end": 40960,
+                                              "end": 40968,
                                               "name": "companies",
-                                              "start": 40951,
+                                              "start": 40959,
                                               "type": "Identifier"
                                             },
                                             "reads": [
@@ -17793,21 +17793,21 @@
                                           "key": {
                                             "expression": {
                                               "computed": false,
-                                              "end": 40972,
+                                              "end": 40980,
                                               "object": {
-                                                "end": 40969,
+                                                "end": 40977,
                                                 "name": "row",
-                                                "start": 40966,
+                                                "start": 40974,
                                                 "type": "Identifier"
                                               },
                                               "optional": false,
                                               "property": {
-                                                "end": 40972,
+                                                "end": 40980,
                                                 "name": "id",
-                                                "start": 40970,
+                                                "start": 40978,
                                                 "type": "Identifier"
                                               },
-                                              "start": 40966,
+                                              "start": 40974,
                                               "type": "MemberExpression"
                                             },
                                             "reads": [
@@ -17827,21 +17827,21 @@
                                                 {
                                                   "expression": {
                                                     "computed": false,
-                                                    "end": 41018,
+                                                    "end": 41026,
                                                     "object": {
-                                                      "end": 41013,
+                                                      "end": 41021,
                                                       "name": "row",
-                                                      "start": 41010,
+                                                      "start": 41018,
                                                       "type": "Identifier"
                                                     },
                                                     "optional": false,
                                                     "property": {
-                                                      "end": 41018,
+                                                      "end": 41026,
                                                       "name": "name",
-                                                      "start": 41014,
+                                                      "start": 41022,
                                                       "type": "Identifier"
                                                     },
-                                                    "start": 41010,
+                                                    "start": 41018,
                                                     "type": "MemberExpression"
                                                   },
                                                   "id": "text:60",
@@ -17861,21 +17861,21 @@
                                                 {
                                                   "expression": {
                                                     "computed": false,
-                                                    "end": 41007,
+                                                    "end": 41015,
                                                     "object": {
-                                                      "end": 41004,
+                                                      "end": 41012,
                                                       "name": "row",
-                                                      "start": 41001,
+                                                      "start": 41009,
                                                       "type": "Identifier"
                                                     },
                                                     "optional": false,
                                                     "property": {
-                                                      "end": 41007,
+                                                      "end": 41015,
                                                       "name": "id",
-                                                      "start": 41005,
+                                                      "start": 41013,
                                                       "type": "Identifier"
                                                     },
-                                                    "start": 41001,
+                                                    "start": 41009,
                                                     "type": "MemberExpression"
                                                   },
                                                   "kind": "property",
@@ -17903,9 +17903,9 @@
                                       "dynamicBindings": [
                                         {
                                           "expression": {
-                                            "end": 40722,
+                                            "end": 40730,
                                             "name": "company",
-                                            "start": 40715,
+                                            "start": 40723,
                                             "type": "Identifier"
                                           },
                                           "kind": "property",
@@ -18003,9 +18003,9 @@
                                       "dynamicBindings": [
                                         {
                                           "expression": {
-                                            "end": 41418,
+                                            "end": 41426,
                                             "name": "deals",
-                                            "start": 41413,
+                                            "start": 41421,
                                             "type": "Identifier"
                                           },
                                           "kind": "property",
@@ -18134,9 +18134,9 @@
                                       "dynamicBindings": [
                                         {
                                           "expression": {
-                                            "end": 42020,
+                                            "end": 42028,
                                             "name": "since",
-                                            "start": 42015,
+                                            "start": 42023,
                                             "type": "Identifier"
                                           },
                                           "kind": "property",
@@ -18246,9 +18246,9 @@
                                       "dynamicBindings": [
                                         {
                                           "expression": {
-                                            "end": 42579,
+                                            "end": 42587,
                                             "name": "slot",
-                                            "start": 42575,
+                                            "start": 42583,
                                             "type": "Identifier"
                                           },
                                           "kind": "property",
@@ -18375,9 +18375,9 @@
                                   "dynamicBindings": [
                                     {
                                       "expression": {
-                                        "end": 43147,
+                                        "end": 43155,
                                         "name": "priority",
-                                        "start": 43139,
+                                        "start": 43147,
                                         "type": "Identifier"
                                       },
                                       "kind": "property",
@@ -18491,9 +18491,9 @@
                                           "dynamicBindings": [
                                             {
                                               "expression": {
-                                                "end": 43763,
+                                                "end": 43771,
                                                 "name": "isActive",
-                                                "start": 43755,
+                                                "start": 43763,
                                                 "type": "Identifier"
                                               },
                                               "kind": "property",
@@ -18580,9 +18580,9 @@
                                           "dynamicBindings": [
                                             {
                                               "expression": {
-                                                "end": 44252,
+                                                "end": 44260,
                                                 "name": "isProspect",
-                                                "start": 44242,
+                                                "start": 44250,
                                                 "type": "Identifier"
                                               },
                                               "kind": "property",
@@ -18669,9 +18669,9 @@
                                           "dynamicBindings": [
                                             {
                                               "expression": {
-                                                "end": 44747,
+                                                "end": 44755,
                                                 "name": "isInactive",
-                                                "start": 44737,
+                                                "start": 44745,
                                                 "type": "Identifier"
                                               },
                                               "kind": "property",
@@ -18823,9 +18823,9 @@
                                     {
                                       "collection": {
                                         "expression": {
-                                          "end": 45202,
+                                          "end": 45210,
                                           "name": "tagRows",
-                                          "start": 45195,
+                                          "start": 45203,
                                           "type": "Identifier"
                                         },
                                         "reads": [
@@ -18842,21 +18842,21 @@
                                       "key": {
                                         "expression": {
                                           "computed": false,
-                                          "end": 45214,
+                                          "end": 45222,
                                           "object": {
-                                            "end": 45211,
+                                            "end": 45219,
                                             "name": "row",
-                                            "start": 45208,
+                                            "start": 45216,
                                             "type": "Identifier"
                                           },
                                           "optional": false,
                                           "property": {
-                                            "end": 45214,
+                                            "end": 45222,
                                             "name": "id",
-                                            "start": 45212,
+                                            "start": 45220,
                                             "type": "Identifier"
                                           },
-                                          "start": 45208,
+                                          "start": 45216,
                                           "type": "MemberExpression"
                                         },
                                         "reads": [
@@ -18879,21 +18879,21 @@
                                                 {
                                                   "expression": {
                                                     "computed": false,
-                                                    "end": 45368,
+                                                    "end": 45376,
                                                     "object": {
-                                                      "end": 45362,
+                                                      "end": 45370,
                                                       "name": "row",
-                                                      "start": 45359,
+                                                      "start": 45367,
                                                       "type": "Identifier"
                                                     },
                                                     "optional": false,
                                                     "property": {
-                                                      "end": 45368,
+                                                      "end": 45376,
                                                       "name": "domId",
-                                                      "start": 45363,
+                                                      "start": 45371,
                                                       "type": "Identifier"
                                                     },
-                                                    "start": 45359,
+                                                    "start": 45367,
                                                     "type": "MemberExpression"
                                                   },
                                                   "kind": "attribute",
@@ -18911,21 +18911,21 @@
                                                 {
                                                   "expression": {
                                                     "computed": false,
-                                                    "end": 45396,
+                                                    "end": 45404,
                                                     "object": {
-                                                      "end": 45390,
+                                                      "end": 45398,
                                                       "name": "row",
-                                                      "start": 45387,
+                                                      "start": 45395,
                                                       "type": "Identifier"
                                                     },
                                                     "optional": false,
                                                     "property": {
-                                                      "end": 45396,
+                                                      "end": 45404,
                                                       "name": "domId",
-                                                      "start": 45391,
+                                                      "start": 45399,
                                                       "type": "Identifier"
                                                     },
-                                                    "start": 45387,
+                                                    "start": 45395,
                                                     "type": "MemberExpression"
                                                   },
                                                   "kind": "attribute",
@@ -18943,21 +18943,21 @@
                                                 {
                                                   "expression": {
                                                     "computed": false,
-                                                    "end": 45436,
+                                                    "end": 45444,
                                                     "object": {
-                                                      "end": 45426,
+                                                      "end": 45434,
                                                       "name": "row",
-                                                      "start": 45423,
+                                                      "start": 45431,
                                                       "type": "Identifier"
                                                     },
                                                     "optional": false,
                                                     "property": {
-                                                      "end": 45436,
+                                                      "end": 45444,
                                                       "name": "controlId",
-                                                      "start": 45427,
+                                                      "start": 45435,
                                                       "type": "Identifier"
                                                     },
-                                                    "start": 45423,
+                                                    "start": 45431,
                                                     "type": "MemberExpression"
                                                   },
                                                   "kind": "attribute",
@@ -18975,21 +18975,21 @@
                                                 {
                                                   "expression": {
                                                     "computed": false,
-                                                    "end": 45464,
+                                                    "end": 45472,
                                                     "object": {
-                                                      "end": 45461,
+                                                      "end": 45469,
                                                       "name": "row",
-                                                      "start": 45458,
+                                                      "start": 45466,
                                                       "type": "Identifier"
                                                     },
                                                     "optional": false,
                                                     "property": {
-                                                      "end": 45464,
+                                                      "end": 45472,
                                                       "name": "on",
-                                                      "start": 45462,
+                                                      "start": 45470,
                                                       "type": "Identifier"
                                                     },
-                                                    "start": 45458,
+                                                    "start": 45466,
                                                     "type": "MemberExpression"
                                                   },
                                                   "kind": "property",
@@ -19027,21 +19027,21 @@
                                                 {
                                                   "expression": {
                                                     "computed": false,
-                                                    "end": 45983,
+                                                    "end": 45991,
                                                     "object": {
-                                                      "end": 45978,
+                                                      "end": 45986,
                                                       "name": "row",
-                                                      "start": 45975,
+                                                      "start": 45983,
                                                       "type": "Identifier"
                                                     },
                                                     "optional": false,
                                                     "property": {
-                                                      "end": 45983,
+                                                      "end": 45991,
                                                       "name": "name",
-                                                      "start": 45979,
+                                                      "start": 45987,
                                                       "type": "Identifier"
                                                     },
-                                                    "start": 45975,
+                                                    "start": 45983,
                                                     "type": "MemberExpression"
                                                   },
                                                   "id": "text:70",
@@ -19074,21 +19074,21 @@
                                             {
                                               "expression": {
                                                 "computed": false,
-                                                "end": 45266,
+                                                "end": 45274,
                                                 "object": {
-                                                  "end": 45260,
+                                                  "end": 45268,
                                                   "name": "row",
-                                                  "start": 45257,
+                                                  "start": 45265,
                                                   "type": "Identifier"
                                                 },
                                                 "optional": false,
                                                 "property": {
-                                                  "end": 45266,
+                                                  "end": 45274,
                                                   "name": "domId",
-                                                  "start": 45261,
+                                                  "start": 45269,
                                                   "type": "Identifier"
                                                 },
-                                                "start": 45257,
+                                                "start": 45265,
                                                 "type": "MemberExpression"
                                               },
                                               "kind": "attribute",
@@ -19193,9 +19193,9 @@
                                   "dynamicBindings": [
                                     {
                                       "expression": {
-                                        "end": 46360,
+                                        "end": 46368,
                                         "name": "notes",
-                                        "start": 46355,
+                                        "start": 46363,
                                         "type": "Identifier"
                                       },
                                       "kind": "property",
@@ -19259,9 +19259,9 @@
                                       "children": [
                                         {
                                           "expression": {
-                                            "end": 46717,
+                                            "end": 46725,
                                             "name": "previewInitial",
-                                            "start": 46703,
+                                            "start": 46711,
                                             "type": "Identifier"
                                           },
                                           "id": "text:72",
@@ -19278,9 +19278,9 @@
                                       "dynamicBindings": [
                                         {
                                           "expression": {
-                                            "end": 46678,
+                                            "end": 46686,
                                             "name": "avatarClass",
-                                            "start": 46667,
+                                            "start": 46675,
                                             "type": "Identifier"
                                           },
                                           "kind": "attribute",
@@ -19311,9 +19311,9 @@
                                           "children": [
                                             {
                                               "expression": {
-                                                "end": 46828,
+                                                "end": 46836,
                                                 "name": "previewName",
-                                                "start": 46817,
+                                                "start": 46825,
                                                 "type": "Identifier"
                                               },
                                               "id": "text:73",
@@ -19360,9 +19360,9 @@
                                       "children": [
                                         {
                                           "expression": {
-                                            "end": 46919,
+                                            "end": 46927,
                                             "name": "previewRole",
-                                            "start": 46908,
+                                            "start": 46916,
                                             "type": "Identifier"
                                           },
                                           "id": "text:74",
@@ -19433,9 +19433,9 @@
                                           "children": [
                                             {
                                               "expression": {
-                                                "end": 47127,
+                                                "end": 47135,
                                                 "name": "previewCompany",
-                                                "start": 47113,
+                                                "start": 47121,
                                                 "type": "Identifier"
                                               },
                                               "id": "text:76",
@@ -19489,9 +19489,9 @@
                                           "children": [
                                             {
                                               "expression": {
-                                                "end": 47254,
+                                                "end": 47262,
                                                 "name": "previewIndustry",
-                                                "start": 47239,
+                                                "start": 47247,
                                                 "type": "Identifier"
                                               },
                                               "id": "text:78",
@@ -19560,9 +19560,9 @@
                                           "children": [
                                             {
                                               "expression": {
-                                                "end": 47442,
+                                                "end": 47450,
                                                 "name": "email",
-                                                "start": 47437,
+                                                "start": 47445,
                                                 "type": "Identifier"
                                               },
                                               "id": "text:80",
@@ -19596,22 +19596,22 @@
                                       "dynamicBindings": [
                                         {
                                           "expression": {
-                                            "end": 47332,
+                                            "end": 47340,
                                             "left": {
-                                              "end": 47325,
+                                              "end": 47333,
                                               "name": "email",
-                                              "start": 47320,
+                                              "start": 47328,
                                               "type": "Identifier"
                                             },
                                             "operator": "===",
                                             "right": {
-                                              "end": 47332,
+                                              "end": 47340,
                                               "raw": "''",
-                                              "start": 47330,
+                                              "start": 47338,
                                               "type": "Literal",
                                               "value": ""
                                             },
-                                            "start": 47320,
+                                            "start": 47328,
                                             "type": "BinaryExpression"
                                           },
                                           "kind": "property",
@@ -19662,9 +19662,9 @@
                                           "children": [
                                             {
                                               "expression": {
-                                                "end": 47630,
+                                                "end": 47638,
                                                 "name": "phone",
-                                                "start": 47625,
+                                                "start": 47633,
                                                 "type": "Identifier"
                                               },
                                               "id": "text:82",
@@ -19698,22 +19698,22 @@
                                       "dynamicBindings": [
                                         {
                                           "expression": {
-                                            "end": 47520,
+                                            "end": 47528,
                                             "left": {
-                                              "end": 47513,
+                                              "end": 47521,
                                               "name": "phone",
-                                              "start": 47508,
+                                              "start": 47516,
                                               "type": "Identifier"
                                             },
                                             "operator": "===",
                                             "right": {
-                                              "end": 47520,
+                                              "end": 47528,
                                               "raw": "''",
-                                              "start": 47518,
+                                              "start": 47526,
                                               "type": "Literal",
                                               "value": ""
                                             },
-                                            "start": 47508,
+                                            "start": 47516,
                                             "type": "BinaryExpression"
                                           },
                                           "kind": "property",
@@ -19764,9 +19764,9 @@
                                           "children": [
                                             {
                                               "expression": {
-                                                "end": 47815,
+                                                "end": 47823,
                                                 "name": "site",
-                                                "start": 47811,
+                                                "start": 47819,
                                                 "type": "Identifier"
                                               },
                                               "id": "text:84",
@@ -19800,22 +19800,22 @@
                                       "dynamicBindings": [
                                         {
                                           "expression": {
-                                            "end": 47707,
+                                            "end": 47715,
                                             "left": {
-                                              "end": 47700,
+                                              "end": 47708,
                                               "name": "site",
-                                              "start": 47696,
+                                              "start": 47704,
                                               "type": "Identifier"
                                             },
                                             "operator": "===",
                                             "right": {
-                                              "end": 47707,
+                                              "end": 47715,
                                               "raw": "''",
-                                              "start": 47705,
+                                              "start": 47713,
                                               "type": "Literal",
                                               "value": ""
                                             },
-                                            "start": 47696,
+                                            "start": 47704,
                                             "type": "BinaryExpression"
                                           },
                                           "kind": "property",
@@ -19866,9 +19866,9 @@
                                           "children": [
                                             {
                                               "expression": {
-                                                "end": 47981,
+                                                "end": 47989,
                                                 "name": "since",
-                                                "start": 47976,
+                                                "start": 47984,
                                                 "type": "Identifier"
                                               },
                                               "id": "text:86",
@@ -19922,9 +19922,9 @@
                                           "children": [
                                             {
                                               "expression": {
-                                                "end": 48093,
+                                                "end": 48101,
                                                 "name": "slot",
-                                                "start": 48089,
+                                                "start": 48097,
                                                 "type": "Identifier"
                                               },
                                               "id": "text:88",
@@ -19993,9 +19993,9 @@
                                           "children": [
                                             {
                                               "expression": {
-                                                "end": 48264,
+                                                "end": 48272,
                                                 "name": "dealsLabel",
-                                                "start": 48254,
+                                                "start": 48262,
                                                 "type": "Identifier"
                                               },
                                               "id": "text:90",
@@ -20044,9 +20044,9 @@
                                           "children": [
                                             {
                                               "expression": {
-                                                "end": 48397,
+                                                "end": 48405,
                                                 "name": "priorityWord",
-                                                "start": 48385,
+                                                "start": 48393,
                                                 "type": "Identifier"
                                               },
                                               "id": "text:91",
@@ -20063,9 +20063,9 @@
                                           "dynamicBindings": [
                                             {
                                               "expression": {
-                                                "end": 48358,
+                                                "end": 48366,
                                                 "name": "priorityClass",
-                                                "start": 48345,
+                                                "start": 48353,
                                                 "type": "Identifier"
                                               },
                                               "kind": "attribute",
@@ -20129,9 +20129,9 @@
                                           "children": [
                                             {
                                               "expression": {
-                                                "end": 48585,
+                                                "end": 48593,
                                                 "name": "notes",
-                                                "start": 48580,
+                                                "start": 48588,
                                                 "type": "Identifier"
                                               },
                                               "id": "text:93",
@@ -20165,22 +20165,22 @@
                                       "dynamicBindings": [
                                         {
                                           "expression": {
-                                            "end": 48475,
+                                            "end": 48483,
                                             "left": {
-                                              "end": 48468,
+                                              "end": 48476,
                                               "name": "notes",
-                                              "start": 48463,
+                                              "start": 48471,
                                               "type": "Identifier"
                                             },
                                             "operator": "===",
                                             "right": {
-                                              "end": 48475,
+                                              "end": 48483,
                                               "raw": "''",
-                                              "start": 48473,
+                                              "start": 48481,
                                               "type": "Literal",
                                               "value": ""
                                             },
-                                            "start": 48463,
+                                            "start": 48471,
                                             "type": "BinaryExpression"
                                           },
                                           "kind": "property",
@@ -20224,9 +20224,9 @@
                                       "children": [
                                         {
                                           "expression": {
-                                            "end": 48731,
+                                            "end": 48739,
                                             "name": "previewTags",
-                                            "start": 48720,
+                                            "start": 48728,
                                             "type": "Identifier"
                                           },
                                           "id": "text:94",
@@ -20274,9 +20274,9 @@
                                       "children": [
                                         {
                                           "expression": {
-                                            "end": 48849,
+                                            "end": 48857,
                                             "name": "statusLabel",
-                                            "start": 48838,
+                                            "start": 48846,
                                             "type": "Identifier"
                                           },
                                           "id": "text:95",
@@ -20293,9 +20293,9 @@
                                       "dynamicBindings": [
                                         {
                                           "expression": {
-                                            "end": 48813,
+                                            "end": 48821,
                                             "name": "statusClass",
-                                            "start": 48802,
+                                            "start": 48810,
                                             "type": "Identifier"
                                           },
                                           "kind": "attribute",
@@ -20378,9 +20378,9 @@
                                   "dynamicBindings": [
                                     {
                                       "expression": {
-                                        "end": 48997,
+                                        "end": 49005,
                                         "name": "canAdd",
-                                        "start": 48991,
+                                        "start": 48999,
                                         "type": "Identifier"
                                       },
                                       "kind": "property",
@@ -20449,9 +20449,9 @@
                                   "dynamicBindings": [
                                     {
                                       "expression": {
-                                        "end": 49263,
+                                        "end": 49271,
                                         "name": "blocked",
-                                        "start": 49256,
+                                        "start": 49264,
                                         "type": "Identifier"
                                       },
                                       "kind": "attribute",
@@ -27799,14 +27799,14 @@
             "operation": "assign",
             "path": [],
             "sourceSpan": {
-              "end": 40822,
+              "end": 40830,
               "filename": "src/fixtures/s17-contacts.tsrx",
-              "start": 40815
+              "start": 40823
             },
             "value": {
-              "end": 40829,
+              "end": 40837,
               "name": "next",
-              "start": 40825,
+              "start": 40833,
               "type": "Identifier"
             },
             "via": "direct"
@@ -34148,14 +34148,14 @@
             "operation": "assign",
             "path": [],
             "sourceSpan": {
-              "end": 41516,
+              "end": 41524,
               "filename": "src/fixtures/s17-contacts.tsrx",
-              "start": 41511
+              "start": 41519
             },
             "value": {
-              "end": 41523,
+              "end": 41531,
               "name": "next",
-              "start": 41519,
+              "start": 41527,
               "type": "Identifier"
             },
             "via": "direct"
@@ -34384,14 +34384,14 @@
             "operation": "assign",
             "path": [],
             "sourceSpan": {
-              "end": 46455,
+              "end": 46463,
               "filename": "src/fixtures/s17-contacts.tsrx",
-              "start": 46450
+              "start": 46458
             },
             "value": {
-              "end": 46462,
+              "end": 46470,
               "name": "next",
-              "start": 46458,
+              "start": 46466,
               "type": "Identifier"
             },
             "via": "direct"
@@ -34502,14 +34502,14 @@
             "operation": "assign",
             "path": [],
             "sourceSpan": {
-              "end": 43245,
+              "end": 43253,
               "filename": "src/fixtures/s17-contacts.tsrx",
-              "start": 43237
+              "start": 43245
             },
             "value": {
-              "end": 43252,
+              "end": 43260,
               "name": "next",
-              "start": 43248,
+              "start": 43256,
               "type": "Identifier"
             },
             "via": "direct"
@@ -34600,14 +34600,14 @@
             "operation": "assign",
             "path": [],
             "sourceSpan": {
-              "end": 40303,
+              "end": 40311,
               "filename": "src/fixtures/s17-contacts.tsrx",
-              "start": 40299
+              "start": 40307
             },
             "value": {
-              "end": 40310,
+              "end": 40318,
               "name": "next",
-              "start": 40306,
+              "start": 40314,
               "type": "Identifier"
             },
             "via": "direct"
@@ -34659,14 +34659,14 @@
             "operation": "assign",
             "path": [],
             "sourceSpan": {
-              "end": 42118,
+              "end": 42126,
               "filename": "src/fixtures/s17-contacts.tsrx",
-              "start": 42113
+              "start": 42121
             },
             "value": {
-              "end": 42125,
+              "end": 42133,
               "name": "next",
-              "start": 42121,
+              "start": 42129,
               "type": "Identifier"
             },
             "via": "direct"
@@ -34718,14 +34718,14 @@
             "operation": "assign",
             "path": [],
             "sourceSpan": {
-              "end": 39774,
+              "end": 39782,
               "filename": "src/fixtures/s17-contacts.tsrx",
-              "start": 39770
+              "start": 39778
             },
             "value": {
-              "end": 39781,
+              "end": 39789,
               "name": "next",
-              "start": 39777,
+              "start": 39785,
               "type": "Identifier"
             },
             "via": "direct"
@@ -34777,14 +34777,14 @@
             "operation": "assign",
             "path": [],
             "sourceSpan": {
-              "end": 42676,
+              "end": 42684,
               "filename": "src/fixtures/s17-contacts.tsrx",
-              "start": 42672
+              "start": 42680
             },
             "value": {
-              "end": 42683,
+              "end": 42691,
               "name": "next",
-              "start": 42679,
+              "start": 42687,
               "type": "Identifier"
             },
             "via": "direct"
@@ -34836,14 +34836,14 @@
             "operation": "assign",
             "path": [],
             "sourceSpan": {
-              "end": 43815,
+              "end": 43823,
               "filename": "src/fixtures/s17-contacts.tsrx",
-              "start": 43809
+              "start": 43817
             },
             "value": {
-              "end": 43826,
+              "end": 43834,
               "raw": "'active'",
-              "start": 43818,
+              "start": 43826,
               "type": "Literal",
               "value": "active"
             },
@@ -34856,14 +34856,14 @@
             "operation": "assign",
             "path": [],
             "sourceSpan": {
-              "end": 44304,
+              "end": 44312,
               "filename": "src/fixtures/s17-contacts.tsrx",
-              "start": 44298
+              "start": 44306
             },
             "value": {
-              "end": 44317,
+              "end": 44325,
               "raw": "'prospect'",
-              "start": 44307,
+              "start": 44315,
               "type": "Literal",
               "value": "prospect"
             },
@@ -34876,14 +34876,14 @@
             "operation": "assign",
             "path": [],
             "sourceSpan": {
-              "end": 44799,
+              "end": 44807,
               "filename": "src/fixtures/s17-contacts.tsrx",
-              "start": 44793
+              "start": 44801
             },
             "value": {
-              "end": 44812,
+              "end": 44820,
               "raw": "'inactive'",
-              "start": 44802,
+              "start": 44810,
               "type": "Literal",
               "value": "inactive"
             },
@@ -35870,14 +35870,14 @@
             "operation": "assign",
             "path": [],
             "sourceSpan": {
-              "end": 45830,
+              "end": 45838,
               "filename": "src/fixtures/s17-contacts.tsrx",
-              "start": 45823
+              "start": 45831
             },
             "value": {
-              "end": 45837,
+              "end": 45845,
               "name": "next",
-              "start": 45833,
+              "start": 45841,
               "type": "Identifier"
             },
             "via": "direct"
@@ -41816,177 +41816,177 @@
                   {
                     "declarations": [
                       {
-                        "end": 39758,
+                        "end": 39766,
                         "id": {
-                          "end": 39730,
+                          "end": 39738,
                           "name": "next",
-                          "start": 39726,
+                          "start": 39734,
                           "type": "Identifier"
                         },
                         "init": {
                           "computed": false,
-                          "end": 39758,
+                          "end": 39766,
                           "object": {
                             "computed": false,
-                            "end": 39752,
+                            "end": 39760,
                             "object": {
-                              "end": 39738,
+                              "end": 39746,
                               "name": "event",
-                              "start": 39733,
+                              "start": 39741,
                               "type": "Identifier"
                             },
                             "optional": false,
                             "property": {
-                              "end": 39752,
+                              "end": 39760,
                               "name": "currentTarget",
-                              "start": 39739,
+                              "start": 39747,
                               "type": "Identifier"
                             },
-                            "start": 39733,
+                            "start": 39741,
                             "type": "MemberExpression"
                           },
                           "optional": false,
                           "property": {
-                            "end": 39758,
+                            "end": 39766,
                             "name": "value",
-                            "start": 39753,
+                            "start": 39761,
                             "type": "Identifier"
                           },
-                          "start": 39733,
+                          "start": 39741,
                           "type": "MemberExpression"
                         },
-                        "start": 39726,
+                        "start": 39734,
                         "type": "VariableDeclarator"
                       }
                     ],
-                    "end": 39759,
+                    "end": 39767,
                     "kind": "const",
-                    "start": 39720,
+                    "start": 39728,
                     "type": "VariableDeclaration"
                   },
                   {
-                    "end": 39782,
+                    "end": 39790,
                     "expression": {
-                      "end": 39781,
+                      "end": 39789,
                       "left": {
-                        "end": 39774,
+                        "end": 39782,
                         "name": "site",
-                        "start": 39770,
+                        "start": 39778,
                         "type": "Identifier"
                       },
                       "operator": "=",
                       "right": {
-                        "end": 39781,
+                        "end": 39789,
                         "name": "next",
-                        "start": 39777,
+                        "start": 39785,
                         "type": "Identifier"
                       },
-                      "start": 39770,
+                      "start": 39778,
                       "type": "AssignmentExpression"
                     },
-                    "start": 39770,
+                    "start": 39778,
                     "type": "ExpressionStatement"
                   },
                   {
-                    "end": 39849,
+                    "end": 39857,
                     "expression": {
                       "arguments": [
                         {
-                          "end": 39808,
+                          "end": 39816,
                           "raw": "'field'",
-                          "start": 39801,
+                          "start": 39809,
                           "type": "Literal",
                           "value": "field"
                         },
                         {
-                          "end": 39840,
+                          "end": 39848,
                           "properties": [
                             {
                               "computed": false,
-                              "end": 39825,
+                              "end": 39833,
                               "key": {
-                                "end": 39817,
+                                "end": 39825,
                                 "name": "field",
-                                "start": 39812,
+                                "start": 39820,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 39812,
+                              "start": 39820,
                               "type": "Property",
                               "value": {
-                                "end": 39825,
+                                "end": 39833,
                                 "raw": "'site'",
-                                "start": 39819,
+                                "start": 39827,
                                 "type": "Literal",
                                 "value": "site"
                               }
                             },
                             {
                               "computed": false,
-                              "end": 39838,
+                              "end": 39846,
                               "key": {
-                                "end": 39832,
+                                "end": 39840,
                                 "name": "value",
-                                "start": 39827,
+                                "start": 39835,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 39827,
+                              "start": 39835,
                               "type": "Property",
                               "value": {
-                                "end": 39838,
+                                "end": 39846,
                                 "name": "next",
-                                "start": 39834,
+                                "start": 39842,
                                 "type": "Identifier"
                               }
                             }
                           ],
-                          "start": 39810,
+                          "start": 39818,
                           "type": "ObjectExpression"
                         },
                         {
-                          "end": 39847,
+                          "end": 39855,
                           "name": "event",
-                          "start": 39842,
+                          "start": 39850,
                           "type": "Identifier"
                         }
                       ],
                       "callee": {
-                        "end": 39800,
+                        "end": 39808,
                         "name": "onTrace",
-                        "start": 39793,
+                        "start": 39801,
                         "type": "Identifier"
                       },
-                      "end": 39848,
+                      "end": 39856,
                       "optional": false,
-                      "start": 39793,
+                      "start": 39801,
                       "type": "CallExpression"
                     },
-                    "start": 39793,
+                    "start": 39801,
                     "type": "ExpressionStatement"
                   }
                 ],
-                "end": 39860,
-                "start": 39708,
+                "end": 39868,
+                "start": 39716,
                 "type": "BlockStatement"
               },
-              "end": 39860,
+              "end": 39868,
               "expression": false,
               "generator": false,
               "id": null,
               "params": [
                 {
-                  "end": 39703,
+                  "end": 39711,
                   "name": "event",
-                  "start": 39698,
+                  "start": 39706,
                   "type": "Identifier"
                 }
               ],
-              "start": 39697,
+              "start": 39705,
               "type": "ArrowFunctionExpression"
             },
             "reads": [
@@ -42006,14 +42006,14 @@
                 "operation": "assign",
                 "path": [],
                 "sourceSpan": {
-                  "end": 39774,
+                  "end": 39782,
                   "filename": "src/fixtures/s17-contacts.tsrx",
-                  "start": 39770
+                  "start": 39778
                 },
                 "value": {
-                  "end": 39781,
+                  "end": 39789,
                   "name": "next",
-                  "start": 39777,
+                  "start": 39785,
                   "type": "Identifier"
                 },
                 "via": "direct"
@@ -42036,177 +42036,177 @@
                   {
                     "declarations": [
                       {
-                        "end": 40288,
+                        "end": 40296,
                         "id": {
-                          "end": 40260,
+                          "end": 40268,
                           "name": "next",
-                          "start": 40256,
+                          "start": 40264,
                           "type": "Identifier"
                         },
                         "init": {
                           "computed": false,
-                          "end": 40288,
+                          "end": 40296,
                           "object": {
                             "computed": false,
-                            "end": 40282,
+                            "end": 40290,
                             "object": {
-                              "end": 40268,
+                              "end": 40276,
                               "name": "event",
-                              "start": 40263,
+                              "start": 40271,
                               "type": "Identifier"
                             },
                             "optional": false,
                             "property": {
-                              "end": 40282,
+                              "end": 40290,
                               "name": "currentTarget",
-                              "start": 40269,
+                              "start": 40277,
                               "type": "Identifier"
                             },
-                            "start": 40263,
+                            "start": 40271,
                             "type": "MemberExpression"
                           },
                           "optional": false,
                           "property": {
-                            "end": 40288,
+                            "end": 40296,
                             "name": "value",
-                            "start": 40283,
+                            "start": 40291,
                             "type": "Identifier"
                           },
-                          "start": 40263,
+                          "start": 40271,
                           "type": "MemberExpression"
                         },
-                        "start": 40256,
+                        "start": 40264,
                         "type": "VariableDeclarator"
                       }
                     ],
-                    "end": 40289,
+                    "end": 40297,
                     "kind": "const",
-                    "start": 40250,
+                    "start": 40258,
                     "type": "VariableDeclaration"
                   },
                   {
-                    "end": 40311,
+                    "end": 40319,
                     "expression": {
-                      "end": 40310,
+                      "end": 40318,
                       "left": {
-                        "end": 40303,
+                        "end": 40311,
                         "name": "role",
-                        "start": 40299,
+                        "start": 40307,
                         "type": "Identifier"
                       },
                       "operator": "=",
                       "right": {
-                        "end": 40310,
+                        "end": 40318,
                         "name": "next",
-                        "start": 40306,
+                        "start": 40314,
                         "type": "Identifier"
                       },
-                      "start": 40299,
+                      "start": 40307,
                       "type": "AssignmentExpression"
                     },
-                    "start": 40299,
+                    "start": 40307,
                     "type": "ExpressionStatement"
                   },
                   {
-                    "end": 40377,
+                    "end": 40385,
                     "expression": {
                       "arguments": [
                         {
-                          "end": 40336,
+                          "end": 40344,
                           "raw": "'field'",
-                          "start": 40329,
+                          "start": 40337,
                           "type": "Literal",
                           "value": "field"
                         },
                         {
-                          "end": 40368,
+                          "end": 40376,
                           "properties": [
                             {
                               "computed": false,
-                              "end": 40353,
+                              "end": 40361,
                               "key": {
-                                "end": 40345,
+                                "end": 40353,
                                 "name": "field",
-                                "start": 40340,
+                                "start": 40348,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 40340,
+                              "start": 40348,
                               "type": "Property",
                               "value": {
-                                "end": 40353,
+                                "end": 40361,
                                 "raw": "'role'",
-                                "start": 40347,
+                                "start": 40355,
                                 "type": "Literal",
                                 "value": "role"
                               }
                             },
                             {
                               "computed": false,
-                              "end": 40366,
+                              "end": 40374,
                               "key": {
-                                "end": 40360,
+                                "end": 40368,
                                 "name": "value",
-                                "start": 40355,
+                                "start": 40363,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 40355,
+                              "start": 40363,
                               "type": "Property",
                               "value": {
-                                "end": 40366,
+                                "end": 40374,
                                 "name": "next",
-                                "start": 40362,
+                                "start": 40370,
                                 "type": "Identifier"
                               }
                             }
                           ],
-                          "start": 40338,
+                          "start": 40346,
                           "type": "ObjectExpression"
                         },
                         {
-                          "end": 40375,
+                          "end": 40383,
                           "name": "event",
-                          "start": 40370,
+                          "start": 40378,
                           "type": "Identifier"
                         }
                       ],
                       "callee": {
-                        "end": 40328,
+                        "end": 40336,
                         "name": "onTrace",
-                        "start": 40321,
+                        "start": 40329,
                         "type": "Identifier"
                       },
-                      "end": 40376,
+                      "end": 40384,
                       "optional": false,
-                      "start": 40321,
+                      "start": 40329,
                       "type": "CallExpression"
                     },
-                    "start": 40321,
+                    "start": 40329,
                     "type": "ExpressionStatement"
                   }
                 ],
-                "end": 40387,
-                "start": 40239,
+                "end": 40395,
+                "start": 40247,
                 "type": "BlockStatement"
               },
-              "end": 40387,
+              "end": 40395,
               "expression": false,
               "generator": false,
               "id": null,
               "params": [
                 {
-                  "end": 40234,
+                  "end": 40242,
                   "name": "event",
-                  "start": 40229,
+                  "start": 40237,
                   "type": "Identifier"
                 }
               ],
-              "start": 40228,
+              "start": 40236,
               "type": "ArrowFunctionExpression"
             },
             "reads": [
@@ -42226,14 +42226,14 @@
                 "operation": "assign",
                 "path": [],
                 "sourceSpan": {
-                  "end": 40303,
+                  "end": 40311,
                   "filename": "src/fixtures/s17-contacts.tsrx",
-                  "start": 40299
+                  "start": 40307
                 },
                 "value": {
-                  "end": 40310,
+                  "end": 40318,
                   "name": "next",
-                  "start": 40306,
+                  "start": 40314,
                   "type": "Identifier"
                 },
                 "via": "direct"
@@ -42256,177 +42256,177 @@
                   {
                     "declarations": [
                       {
-                        "end": 40803,
+                        "end": 40811,
                         "id": {
-                          "end": 40775,
+                          "end": 40783,
                           "name": "next",
-                          "start": 40771,
+                          "start": 40779,
                           "type": "Identifier"
                         },
                         "init": {
                           "computed": false,
-                          "end": 40803,
+                          "end": 40811,
                           "object": {
                             "computed": false,
-                            "end": 40797,
+                            "end": 40805,
                             "object": {
-                              "end": 40783,
+                              "end": 40791,
                               "name": "event",
-                              "start": 40778,
+                              "start": 40786,
                               "type": "Identifier"
                             },
                             "optional": false,
                             "property": {
-                              "end": 40797,
+                              "end": 40805,
                               "name": "currentTarget",
-                              "start": 40784,
+                              "start": 40792,
                               "type": "Identifier"
                             },
-                            "start": 40778,
+                            "start": 40786,
                             "type": "MemberExpression"
                           },
                           "optional": false,
                           "property": {
-                            "end": 40803,
+                            "end": 40811,
                             "name": "value",
-                            "start": 40798,
+                            "start": 40806,
                             "type": "Identifier"
                           },
-                          "start": 40778,
+                          "start": 40786,
                           "type": "MemberExpression"
                         },
-                        "start": 40771,
+                        "start": 40779,
                         "type": "VariableDeclarator"
                       }
                     ],
-                    "end": 40804,
+                    "end": 40812,
                     "kind": "const",
-                    "start": 40765,
+                    "start": 40773,
                     "type": "VariableDeclaration"
                   },
                   {
-                    "end": 40830,
+                    "end": 40838,
                     "expression": {
-                      "end": 40829,
+                      "end": 40837,
                       "left": {
-                        "end": 40822,
+                        "end": 40830,
                         "name": "company",
-                        "start": 40815,
+                        "start": 40823,
                         "type": "Identifier"
                       },
                       "operator": "=",
                       "right": {
-                        "end": 40829,
+                        "end": 40837,
                         "name": "next",
-                        "start": 40825,
+                        "start": 40833,
                         "type": "Identifier"
                       },
-                      "start": 40815,
+                      "start": 40823,
                       "type": "AssignmentExpression"
                     },
-                    "start": 40815,
+                    "start": 40823,
                     "type": "ExpressionStatement"
                   },
                   {
-                    "end": 40900,
+                    "end": 40908,
                     "expression": {
                       "arguments": [
                         {
-                          "end": 40856,
+                          "end": 40864,
                           "raw": "'field'",
-                          "start": 40849,
+                          "start": 40857,
                           "type": "Literal",
                           "value": "field"
                         },
                         {
-                          "end": 40891,
+                          "end": 40899,
                           "properties": [
                             {
                               "computed": false,
-                              "end": 40876,
+                              "end": 40884,
                               "key": {
-                                "end": 40865,
+                                "end": 40873,
                                 "name": "field",
-                                "start": 40860,
+                                "start": 40868,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 40860,
+                              "start": 40868,
                               "type": "Property",
                               "value": {
-                                "end": 40876,
+                                "end": 40884,
                                 "raw": "'company'",
-                                "start": 40867,
+                                "start": 40875,
                                 "type": "Literal",
                                 "value": "company"
                               }
                             },
                             {
                               "computed": false,
-                              "end": 40889,
+                              "end": 40897,
                               "key": {
-                                "end": 40883,
+                                "end": 40891,
                                 "name": "value",
-                                "start": 40878,
+                                "start": 40886,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 40878,
+                              "start": 40886,
                               "type": "Property",
                               "value": {
-                                "end": 40889,
+                                "end": 40897,
                                 "name": "next",
-                                "start": 40885,
+                                "start": 40893,
                                 "type": "Identifier"
                               }
                             }
                           ],
-                          "start": 40858,
+                          "start": 40866,
                           "type": "ObjectExpression"
                         },
                         {
-                          "end": 40898,
+                          "end": 40906,
                           "name": "event",
-                          "start": 40893,
+                          "start": 40901,
                           "type": "Identifier"
                         }
                       ],
                       "callee": {
-                        "end": 40848,
+                        "end": 40856,
                         "name": "onTrace",
-                        "start": 40841,
+                        "start": 40849,
                         "type": "Identifier"
                       },
-                      "end": 40899,
+                      "end": 40907,
                       "optional": false,
-                      "start": 40841,
+                      "start": 40849,
                       "type": "CallExpression"
                     },
-                    "start": 40841,
+                    "start": 40849,
                     "type": "ExpressionStatement"
                   }
                 ],
-                "end": 40911,
-                "start": 40753,
+                "end": 40919,
+                "start": 40761,
                 "type": "BlockStatement"
               },
-              "end": 40911,
+              "end": 40919,
               "expression": false,
               "generator": false,
               "id": null,
               "params": [
                 {
-                  "end": 40748,
+                  "end": 40756,
                   "name": "event",
-                  "start": 40743,
+                  "start": 40751,
                   "type": "Identifier"
                 }
               ],
-              "start": 40742,
+              "start": 40750,
               "type": "ArrowFunctionExpression"
             },
             "reads": [
@@ -42446,14 +42446,14 @@
                 "operation": "assign",
                 "path": [],
                 "sourceSpan": {
-                  "end": 40822,
+                  "end": 40830,
                   "filename": "src/fixtures/s17-contacts.tsrx",
-                  "start": 40815
+                  "start": 40823
                 },
                 "value": {
-                  "end": 40829,
+                  "end": 40837,
                   "name": "next",
-                  "start": 40825,
+                  "start": 40833,
                   "type": "Identifier"
                 },
                 "via": "direct"
@@ -42476,177 +42476,177 @@
                   {
                     "declarations": [
                       {
-                        "end": 41499,
+                        "end": 41507,
                         "id": {
-                          "end": 41471,
+                          "end": 41479,
                           "name": "next",
-                          "start": 41467,
+                          "start": 41475,
                           "type": "Identifier"
                         },
                         "init": {
                           "computed": false,
-                          "end": 41499,
+                          "end": 41507,
                           "object": {
                             "computed": false,
-                            "end": 41493,
+                            "end": 41501,
                             "object": {
-                              "end": 41479,
+                              "end": 41487,
                               "name": "event",
-                              "start": 41474,
+                              "start": 41482,
                               "type": "Identifier"
                             },
                             "optional": false,
                             "property": {
-                              "end": 41493,
+                              "end": 41501,
                               "name": "currentTarget",
-                              "start": 41480,
+                              "start": 41488,
                               "type": "Identifier"
                             },
-                            "start": 41474,
+                            "start": 41482,
                             "type": "MemberExpression"
                           },
                           "optional": false,
                           "property": {
-                            "end": 41499,
+                            "end": 41507,
                             "name": "value",
-                            "start": 41494,
+                            "start": 41502,
                             "type": "Identifier"
                           },
-                          "start": 41474,
+                          "start": 41482,
                           "type": "MemberExpression"
                         },
-                        "start": 41467,
+                        "start": 41475,
                         "type": "VariableDeclarator"
                       }
                     ],
-                    "end": 41500,
+                    "end": 41508,
                     "kind": "const",
-                    "start": 41461,
+                    "start": 41469,
                     "type": "VariableDeclaration"
                   },
                   {
-                    "end": 41524,
+                    "end": 41532,
                     "expression": {
-                      "end": 41523,
+                      "end": 41531,
                       "left": {
-                        "end": 41516,
+                        "end": 41524,
                         "name": "deals",
-                        "start": 41511,
+                        "start": 41519,
                         "type": "Identifier"
                       },
                       "operator": "=",
                       "right": {
-                        "end": 41523,
+                        "end": 41531,
                         "name": "next",
-                        "start": 41519,
+                        "start": 41527,
                         "type": "Identifier"
                       },
-                      "start": 41511,
+                      "start": 41519,
                       "type": "AssignmentExpression"
                     },
-                    "start": 41511,
+                    "start": 41519,
                     "type": "ExpressionStatement"
                   },
                   {
-                    "end": 41592,
+                    "end": 41600,
                     "expression": {
                       "arguments": [
                         {
-                          "end": 41550,
+                          "end": 41558,
                           "raw": "'field'",
-                          "start": 41543,
+                          "start": 41551,
                           "type": "Literal",
                           "value": "field"
                         },
                         {
-                          "end": 41583,
+                          "end": 41591,
                           "properties": [
                             {
                               "computed": false,
-                              "end": 41568,
+                              "end": 41576,
                               "key": {
-                                "end": 41559,
+                                "end": 41567,
                                 "name": "field",
-                                "start": 41554,
+                                "start": 41562,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 41554,
+                              "start": 41562,
                               "type": "Property",
                               "value": {
-                                "end": 41568,
+                                "end": 41576,
                                 "raw": "'deals'",
-                                "start": 41561,
+                                "start": 41569,
                                 "type": "Literal",
                                 "value": "deals"
                               }
                             },
                             {
                               "computed": false,
-                              "end": 41581,
+                              "end": 41589,
                               "key": {
-                                "end": 41575,
+                                "end": 41583,
                                 "name": "value",
-                                "start": 41570,
+                                "start": 41578,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 41570,
+                              "start": 41578,
                               "type": "Property",
                               "value": {
-                                "end": 41581,
+                                "end": 41589,
                                 "name": "next",
-                                "start": 41577,
+                                "start": 41585,
                                 "type": "Identifier"
                               }
                             }
                           ],
-                          "start": 41552,
+                          "start": 41560,
                           "type": "ObjectExpression"
                         },
                         {
-                          "end": 41590,
+                          "end": 41598,
                           "name": "event",
-                          "start": 41585,
+                          "start": 41593,
                           "type": "Identifier"
                         }
                       ],
                       "callee": {
-                        "end": 41542,
+                        "end": 41550,
                         "name": "onTrace",
-                        "start": 41535,
+                        "start": 41543,
                         "type": "Identifier"
                       },
-                      "end": 41591,
+                      "end": 41599,
                       "optional": false,
-                      "start": 41535,
+                      "start": 41543,
                       "type": "CallExpression"
                     },
-                    "start": 41535,
+                    "start": 41543,
                     "type": "ExpressionStatement"
                   }
                 ],
-                "end": 41603,
-                "start": 41449,
+                "end": 41611,
+                "start": 41457,
                 "type": "BlockStatement"
               },
-              "end": 41603,
+              "end": 41611,
               "expression": false,
               "generator": false,
               "id": null,
               "params": [
                 {
-                  "end": 41444,
+                  "end": 41452,
                   "name": "event",
-                  "start": 41439,
+                  "start": 41447,
                   "type": "Identifier"
                 }
               ],
-              "start": 41438,
+              "start": 41446,
               "type": "ArrowFunctionExpression"
             },
             "reads": [
@@ -42666,14 +42666,14 @@
                 "operation": "assign",
                 "path": [],
                 "sourceSpan": {
-                  "end": 41516,
+                  "end": 41524,
                   "filename": "src/fixtures/s17-contacts.tsrx",
-                  "start": 41511
+                  "start": 41519
                 },
                 "value": {
-                  "end": 41523,
+                  "end": 41531,
                   "name": "next",
-                  "start": 41519,
+                  "start": 41527,
                   "type": "Identifier"
                 },
                 "via": "direct"
@@ -42696,177 +42696,177 @@
                   {
                     "declarations": [
                       {
-                        "end": 42101,
+                        "end": 42109,
                         "id": {
-                          "end": 42073,
+                          "end": 42081,
                           "name": "next",
-                          "start": 42069,
+                          "start": 42077,
                           "type": "Identifier"
                         },
                         "init": {
                           "computed": false,
-                          "end": 42101,
+                          "end": 42109,
                           "object": {
                             "computed": false,
-                            "end": 42095,
+                            "end": 42103,
                             "object": {
-                              "end": 42081,
+                              "end": 42089,
                               "name": "event",
-                              "start": 42076,
+                              "start": 42084,
                               "type": "Identifier"
                             },
                             "optional": false,
                             "property": {
-                              "end": 42095,
+                              "end": 42103,
                               "name": "currentTarget",
-                              "start": 42082,
+                              "start": 42090,
                               "type": "Identifier"
                             },
-                            "start": 42076,
+                            "start": 42084,
                             "type": "MemberExpression"
                           },
                           "optional": false,
                           "property": {
-                            "end": 42101,
+                            "end": 42109,
                             "name": "value",
-                            "start": 42096,
+                            "start": 42104,
                             "type": "Identifier"
                           },
-                          "start": 42076,
+                          "start": 42084,
                           "type": "MemberExpression"
                         },
-                        "start": 42069,
+                        "start": 42077,
                         "type": "VariableDeclarator"
                       }
                     ],
-                    "end": 42102,
+                    "end": 42110,
                     "kind": "const",
-                    "start": 42063,
+                    "start": 42071,
                     "type": "VariableDeclaration"
                   },
                   {
-                    "end": 42126,
+                    "end": 42134,
                     "expression": {
-                      "end": 42125,
+                      "end": 42133,
                       "left": {
-                        "end": 42118,
+                        "end": 42126,
                         "name": "since",
-                        "start": 42113,
+                        "start": 42121,
                         "type": "Identifier"
                       },
                       "operator": "=",
                       "right": {
-                        "end": 42125,
+                        "end": 42133,
                         "name": "next",
-                        "start": 42121,
+                        "start": 42129,
                         "type": "Identifier"
                       },
-                      "start": 42113,
+                      "start": 42121,
                       "type": "AssignmentExpression"
                     },
-                    "start": 42113,
+                    "start": 42121,
                     "type": "ExpressionStatement"
                   },
                   {
-                    "end": 42194,
+                    "end": 42202,
                     "expression": {
                       "arguments": [
                         {
-                          "end": 42152,
+                          "end": 42160,
                           "raw": "'field'",
-                          "start": 42145,
+                          "start": 42153,
                           "type": "Literal",
                           "value": "field"
                         },
                         {
-                          "end": 42185,
+                          "end": 42193,
                           "properties": [
                             {
                               "computed": false,
-                              "end": 42170,
+                              "end": 42178,
                               "key": {
-                                "end": 42161,
+                                "end": 42169,
                                 "name": "field",
-                                "start": 42156,
+                                "start": 42164,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 42156,
+                              "start": 42164,
                               "type": "Property",
                               "value": {
-                                "end": 42170,
+                                "end": 42178,
                                 "raw": "'since'",
-                                "start": 42163,
+                                "start": 42171,
                                 "type": "Literal",
                                 "value": "since"
                               }
                             },
                             {
                               "computed": false,
-                              "end": 42183,
+                              "end": 42191,
                               "key": {
-                                "end": 42177,
+                                "end": 42185,
                                 "name": "value",
-                                "start": 42172,
+                                "start": 42180,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 42172,
+                              "start": 42180,
                               "type": "Property",
                               "value": {
-                                "end": 42183,
+                                "end": 42191,
                                 "name": "next",
-                                "start": 42179,
+                                "start": 42187,
                                 "type": "Identifier"
                               }
                             }
                           ],
-                          "start": 42154,
+                          "start": 42162,
                           "type": "ObjectExpression"
                         },
                         {
-                          "end": 42192,
+                          "end": 42200,
                           "name": "event",
-                          "start": 42187,
+                          "start": 42195,
                           "type": "Identifier"
                         }
                       ],
                       "callee": {
-                        "end": 42144,
+                        "end": 42152,
                         "name": "onTrace",
-                        "start": 42137,
+                        "start": 42145,
                         "type": "Identifier"
                       },
-                      "end": 42193,
+                      "end": 42201,
                       "optional": false,
-                      "start": 42137,
+                      "start": 42145,
                       "type": "CallExpression"
                     },
-                    "start": 42137,
+                    "start": 42145,
                     "type": "ExpressionStatement"
                   }
                 ],
-                "end": 42205,
-                "start": 42051,
+                "end": 42213,
+                "start": 42059,
                 "type": "BlockStatement"
               },
-              "end": 42205,
+              "end": 42213,
               "expression": false,
               "generator": false,
               "id": null,
               "params": [
                 {
-                  "end": 42046,
+                  "end": 42054,
                   "name": "event",
-                  "start": 42041,
+                  "start": 42049,
                   "type": "Identifier"
                 }
               ],
-              "start": 42040,
+              "start": 42048,
               "type": "ArrowFunctionExpression"
             },
             "reads": [
@@ -42886,14 +42886,14 @@
                 "operation": "assign",
                 "path": [],
                 "sourceSpan": {
-                  "end": 42118,
+                  "end": 42126,
                   "filename": "src/fixtures/s17-contacts.tsrx",
-                  "start": 42113
+                  "start": 42121
                 },
                 "value": {
-                  "end": 42125,
+                  "end": 42133,
                   "name": "next",
-                  "start": 42121,
+                  "start": 42129,
                   "type": "Identifier"
                 },
                 "via": "direct"
@@ -42916,177 +42916,177 @@
                   {
                     "declarations": [
                       {
-                        "end": 42660,
+                        "end": 42668,
                         "id": {
-                          "end": 42632,
+                          "end": 42640,
                           "name": "next",
-                          "start": 42628,
+                          "start": 42636,
                           "type": "Identifier"
                         },
                         "init": {
                           "computed": false,
-                          "end": 42660,
+                          "end": 42668,
                           "object": {
                             "computed": false,
-                            "end": 42654,
+                            "end": 42662,
                             "object": {
-                              "end": 42640,
+                              "end": 42648,
                               "name": "event",
-                              "start": 42635,
+                              "start": 42643,
                               "type": "Identifier"
                             },
                             "optional": false,
                             "property": {
-                              "end": 42654,
+                              "end": 42662,
                               "name": "currentTarget",
-                              "start": 42641,
+                              "start": 42649,
                               "type": "Identifier"
                             },
-                            "start": 42635,
+                            "start": 42643,
                             "type": "MemberExpression"
                           },
                           "optional": false,
                           "property": {
-                            "end": 42660,
+                            "end": 42668,
                             "name": "value",
-                            "start": 42655,
+                            "start": 42663,
                             "type": "Identifier"
                           },
-                          "start": 42635,
+                          "start": 42643,
                           "type": "MemberExpression"
                         },
-                        "start": 42628,
+                        "start": 42636,
                         "type": "VariableDeclarator"
                       }
                     ],
-                    "end": 42661,
+                    "end": 42669,
                     "kind": "const",
-                    "start": 42622,
+                    "start": 42630,
                     "type": "VariableDeclaration"
                   },
                   {
-                    "end": 42684,
+                    "end": 42692,
                     "expression": {
-                      "end": 42683,
+                      "end": 42691,
                       "left": {
-                        "end": 42676,
+                        "end": 42684,
                         "name": "slot",
-                        "start": 42672,
+                        "start": 42680,
                         "type": "Identifier"
                       },
                       "operator": "=",
                       "right": {
-                        "end": 42683,
+                        "end": 42691,
                         "name": "next",
-                        "start": 42679,
+                        "start": 42687,
                         "type": "Identifier"
                       },
-                      "start": 42672,
+                      "start": 42680,
                       "type": "AssignmentExpression"
                     },
-                    "start": 42672,
+                    "start": 42680,
                     "type": "ExpressionStatement"
                   },
                   {
-                    "end": 42751,
+                    "end": 42759,
                     "expression": {
                       "arguments": [
                         {
-                          "end": 42710,
+                          "end": 42718,
                           "raw": "'field'",
-                          "start": 42703,
+                          "start": 42711,
                           "type": "Literal",
                           "value": "field"
                         },
                         {
-                          "end": 42742,
+                          "end": 42750,
                           "properties": [
                             {
                               "computed": false,
-                              "end": 42727,
+                              "end": 42735,
                               "key": {
-                                "end": 42719,
+                                "end": 42727,
                                 "name": "field",
-                                "start": 42714,
+                                "start": 42722,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 42714,
+                              "start": 42722,
                               "type": "Property",
                               "value": {
-                                "end": 42727,
+                                "end": 42735,
                                 "raw": "'slot'",
-                                "start": 42721,
+                                "start": 42729,
                                 "type": "Literal",
                                 "value": "slot"
                               }
                             },
                             {
                               "computed": false,
-                              "end": 42740,
+                              "end": 42748,
                               "key": {
-                                "end": 42734,
+                                "end": 42742,
                                 "name": "value",
-                                "start": 42729,
+                                "start": 42737,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 42729,
+                              "start": 42737,
                               "type": "Property",
                               "value": {
-                                "end": 42740,
+                                "end": 42748,
                                 "name": "next",
-                                "start": 42736,
+                                "start": 42744,
                                 "type": "Identifier"
                               }
                             }
                           ],
-                          "start": 42712,
+                          "start": 42720,
                           "type": "ObjectExpression"
                         },
                         {
-                          "end": 42749,
+                          "end": 42757,
                           "name": "event",
-                          "start": 42744,
+                          "start": 42752,
                           "type": "Identifier"
                         }
                       ],
                       "callee": {
-                        "end": 42702,
+                        "end": 42710,
                         "name": "onTrace",
-                        "start": 42695,
+                        "start": 42703,
                         "type": "Identifier"
                       },
-                      "end": 42750,
+                      "end": 42758,
                       "optional": false,
-                      "start": 42695,
+                      "start": 42703,
                       "type": "CallExpression"
                     },
-                    "start": 42695,
+                    "start": 42703,
                     "type": "ExpressionStatement"
                   }
                 ],
-                "end": 42762,
-                "start": 42610,
+                "end": 42770,
+                "start": 42618,
                 "type": "BlockStatement"
               },
-              "end": 42762,
+              "end": 42770,
               "expression": false,
               "generator": false,
               "id": null,
               "params": [
                 {
-                  "end": 42605,
+                  "end": 42613,
                   "name": "event",
-                  "start": 42600,
+                  "start": 42608,
                   "type": "Identifier"
                 }
               ],
-              "start": 42599,
+              "start": 42607,
               "type": "ArrowFunctionExpression"
             },
             "reads": [
@@ -43106,14 +43106,14 @@
                 "operation": "assign",
                 "path": [],
                 "sourceSpan": {
-                  "end": 42676,
+                  "end": 42684,
                   "filename": "src/fixtures/s17-contacts.tsrx",
-                  "start": 42672
+                  "start": 42680
                 },
                 "value": {
-                  "end": 42683,
+                  "end": 42691,
                   "name": "next",
-                  "start": 42679,
+                  "start": 42687,
                   "type": "Identifier"
                 },
                 "via": "direct"
@@ -43136,177 +43136,177 @@
                   {
                     "declarations": [
                       {
-                        "end": 43226,
+                        "end": 43234,
                         "id": {
-                          "end": 43198,
+                          "end": 43206,
                           "name": "next",
-                          "start": 43194,
+                          "start": 43202,
                           "type": "Identifier"
                         },
                         "init": {
                           "computed": false,
-                          "end": 43226,
+                          "end": 43234,
                           "object": {
                             "computed": false,
-                            "end": 43220,
+                            "end": 43228,
                             "object": {
-                              "end": 43206,
+                              "end": 43214,
                               "name": "event",
-                              "start": 43201,
+                              "start": 43209,
                               "type": "Identifier"
                             },
                             "optional": false,
                             "property": {
-                              "end": 43220,
+                              "end": 43228,
                               "name": "currentTarget",
-                              "start": 43207,
+                              "start": 43215,
                               "type": "Identifier"
                             },
-                            "start": 43201,
+                            "start": 43209,
                             "type": "MemberExpression"
                           },
                           "optional": false,
                           "property": {
-                            "end": 43226,
+                            "end": 43234,
                             "name": "value",
-                            "start": 43221,
+                            "start": 43229,
                             "type": "Identifier"
                           },
-                          "start": 43201,
+                          "start": 43209,
                           "type": "MemberExpression"
                         },
-                        "start": 43194,
+                        "start": 43202,
                         "type": "VariableDeclarator"
                       }
                     ],
-                    "end": 43227,
+                    "end": 43235,
                     "kind": "const",
-                    "start": 43188,
+                    "start": 43196,
                     "type": "VariableDeclaration"
                   },
                   {
-                    "end": 43253,
+                    "end": 43261,
                     "expression": {
-                      "end": 43252,
+                      "end": 43260,
                       "left": {
-                        "end": 43245,
+                        "end": 43253,
                         "name": "priority",
-                        "start": 43237,
+                        "start": 43245,
                         "type": "Identifier"
                       },
                       "operator": "=",
                       "right": {
-                        "end": 43252,
+                        "end": 43260,
                         "name": "next",
-                        "start": 43248,
+                        "start": 43256,
                         "type": "Identifier"
                       },
-                      "start": 43237,
+                      "start": 43245,
                       "type": "AssignmentExpression"
                     },
-                    "start": 43237,
+                    "start": 43245,
                     "type": "ExpressionStatement"
                   },
                   {
-                    "end": 43323,
+                    "end": 43331,
                     "expression": {
                       "arguments": [
                         {
-                          "end": 43278,
+                          "end": 43286,
                           "raw": "'field'",
-                          "start": 43271,
+                          "start": 43279,
                           "type": "Literal",
                           "value": "field"
                         },
                         {
-                          "end": 43314,
+                          "end": 43322,
                           "properties": [
                             {
                               "computed": false,
-                              "end": 43299,
+                              "end": 43307,
                               "key": {
-                                "end": 43287,
+                                "end": 43295,
                                 "name": "field",
-                                "start": 43282,
+                                "start": 43290,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 43282,
+                              "start": 43290,
                               "type": "Property",
                               "value": {
-                                "end": 43299,
+                                "end": 43307,
                                 "raw": "'priority'",
-                                "start": 43289,
+                                "start": 43297,
                                 "type": "Literal",
                                 "value": "priority"
                               }
                             },
                             {
                               "computed": false,
-                              "end": 43312,
+                              "end": 43320,
                               "key": {
-                                "end": 43306,
+                                "end": 43314,
                                 "name": "value",
-                                "start": 43301,
+                                "start": 43309,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 43301,
+                              "start": 43309,
                               "type": "Property",
                               "value": {
-                                "end": 43312,
+                                "end": 43320,
                                 "name": "next",
-                                "start": 43308,
+                                "start": 43316,
                                 "type": "Identifier"
                               }
                             }
                           ],
-                          "start": 43280,
+                          "start": 43288,
                           "type": "ObjectExpression"
                         },
                         {
-                          "end": 43321,
+                          "end": 43329,
                           "name": "event",
-                          "start": 43316,
+                          "start": 43324,
                           "type": "Identifier"
                         }
                       ],
                       "callee": {
-                        "end": 43270,
+                        "end": 43278,
                         "name": "onTrace",
-                        "start": 43263,
+                        "start": 43271,
                         "type": "Identifier"
                       },
-                      "end": 43322,
+                      "end": 43330,
                       "optional": false,
-                      "start": 43263,
+                      "start": 43271,
                       "type": "CallExpression"
                     },
-                    "start": 43263,
+                    "start": 43271,
                     "type": "ExpressionStatement"
                   }
                 ],
-                "end": 43333,
-                "start": 43177,
+                "end": 43341,
+                "start": 43185,
                 "type": "BlockStatement"
               },
-              "end": 43333,
+              "end": 43341,
               "expression": false,
               "generator": false,
               "id": null,
               "params": [
                 {
-                  "end": 43172,
+                  "end": 43180,
                   "name": "event",
-                  "start": 43167,
+                  "start": 43175,
                   "type": "Identifier"
                 }
               ],
-              "start": 43166,
+              "start": 43174,
               "type": "ArrowFunctionExpression"
             },
             "reads": [
@@ -43326,14 +43326,14 @@
                 "operation": "assign",
                 "path": [],
                 "sourceSpan": {
-                  "end": 43245,
+                  "end": 43253,
                   "filename": "src/fixtures/s17-contacts.tsrx",
-                  "start": 43237
+                  "start": 43245
                 },
                 "value": {
-                  "end": 43252,
+                  "end": 43260,
                   "name": "next",
-                  "start": 43248,
+                  "start": 43256,
                   "type": "Identifier"
                 },
                 "via": "direct"
@@ -43354,130 +43354,130 @@
               "body": {
                 "body": [
                   {
-                    "end": 43827,
+                    "end": 43835,
                     "expression": {
-                      "end": 43826,
+                      "end": 43834,
                       "left": {
-                        "end": 43815,
+                        "end": 43823,
                         "name": "status",
-                        "start": 43809,
+                        "start": 43817,
                         "type": "Identifier"
                       },
                       "operator": "=",
                       "right": {
-                        "end": 43826,
+                        "end": 43834,
                         "raw": "'active'",
-                        "start": 43818,
+                        "start": 43826,
                         "type": "Literal",
                         "value": "active"
                       },
-                      "start": 43809,
+                      "start": 43817,
                       "type": "AssignmentExpression"
                     },
-                    "start": 43809,
+                    "start": 43817,
                     "type": "ExpressionStatement"
                   },
                   {
-                    "end": 43901,
+                    "end": 43909,
                     "expression": {
                       "arguments": [
                         {
-                          "end": 43854,
+                          "end": 43862,
                           "raw": "'field'",
-                          "start": 43847,
+                          "start": 43855,
                           "type": "Literal",
                           "value": "field"
                         },
                         {
-                          "end": 43892,
+                          "end": 43900,
                           "properties": [
                             {
                               "computed": false,
-                              "end": 43873,
+                              "end": 43881,
                               "key": {
-                                "end": 43863,
+                                "end": 43871,
                                 "name": "field",
-                                "start": 43858,
+                                "start": 43866,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 43858,
+                              "start": 43866,
                               "type": "Property",
                               "value": {
-                                "end": 43873,
+                                "end": 43881,
                                 "raw": "'status'",
-                                "start": 43865,
+                                "start": 43873,
                                 "type": "Literal",
                                 "value": "status"
                               }
                             },
                             {
                               "computed": false,
-                              "end": 43890,
+                              "end": 43898,
                               "key": {
-                                "end": 43880,
+                                "end": 43888,
                                 "name": "value",
-                                "start": 43875,
+                                "start": 43883,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 43875,
+                              "start": 43883,
                               "type": "Property",
                               "value": {
-                                "end": 43890,
+                                "end": 43898,
                                 "raw": "'active'",
-                                "start": 43882,
+                                "start": 43890,
                                 "type": "Literal",
                                 "value": "active"
                               }
                             }
                           ],
-                          "start": 43856,
+                          "start": 43864,
                           "type": "ObjectExpression"
                         },
                         {
-                          "end": 43899,
+                          "end": 43907,
                           "name": "event",
-                          "start": 43894,
+                          "start": 43902,
                           "type": "Identifier"
                         }
                       ],
                       "callee": {
-                        "end": 43846,
+                        "end": 43854,
                         "name": "onTrace",
-                        "start": 43839,
+                        "start": 43847,
                         "type": "Identifier"
                       },
-                      "end": 43900,
+                      "end": 43908,
                       "optional": false,
-                      "start": 43839,
+                      "start": 43847,
                       "type": "CallExpression"
                     },
-                    "start": 43839,
+                    "start": 43847,
                     "type": "ExpressionStatement"
                   }
                 ],
-                "end": 43913,
-                "start": 43796,
+                "end": 43921,
+                "start": 43804,
                 "type": "BlockStatement"
               },
-              "end": 43913,
+              "end": 43921,
               "expression": false,
               "generator": false,
               "id": null,
               "params": [
                 {
-                  "end": 43791,
+                  "end": 43799,
                   "name": "event",
-                  "start": 43786,
+                  "start": 43794,
                   "type": "Identifier"
                 }
               ],
-              "start": 43785,
+              "start": 43793,
               "type": "ArrowFunctionExpression"
             },
             "reads": [
@@ -43497,14 +43497,14 @@
                 "operation": "assign",
                 "path": [],
                 "sourceSpan": {
-                  "end": 43815,
+                  "end": 43823,
                   "filename": "src/fixtures/s17-contacts.tsrx",
-                  "start": 43809
+                  "start": 43817
                 },
                 "value": {
-                  "end": 43826,
+                  "end": 43834,
                   "raw": "'active'",
-                  "start": 43818,
+                  "start": 43826,
                   "type": "Literal",
                   "value": "active"
                 },
@@ -43526,130 +43526,130 @@
               "body": {
                 "body": [
                   {
-                    "end": 44318,
+                    "end": 44326,
                     "expression": {
-                      "end": 44317,
+                      "end": 44325,
                       "left": {
-                        "end": 44304,
+                        "end": 44312,
                         "name": "status",
-                        "start": 44298,
+                        "start": 44306,
                         "type": "Identifier"
                       },
                       "operator": "=",
                       "right": {
-                        "end": 44317,
+                        "end": 44325,
                         "raw": "'prospect'",
-                        "start": 44307,
+                        "start": 44315,
                         "type": "Literal",
                         "value": "prospect"
                       },
-                      "start": 44298,
+                      "start": 44306,
                       "type": "AssignmentExpression"
                     },
-                    "start": 44298,
+                    "start": 44306,
                     "type": "ExpressionStatement"
                   },
                   {
-                    "end": 44394,
+                    "end": 44402,
                     "expression": {
                       "arguments": [
                         {
-                          "end": 44345,
+                          "end": 44353,
                           "raw": "'field'",
-                          "start": 44338,
+                          "start": 44346,
                           "type": "Literal",
                           "value": "field"
                         },
                         {
-                          "end": 44385,
+                          "end": 44393,
                           "properties": [
                             {
                               "computed": false,
-                              "end": 44364,
+                              "end": 44372,
                               "key": {
-                                "end": 44354,
+                                "end": 44362,
                                 "name": "field",
-                                "start": 44349,
+                                "start": 44357,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 44349,
+                              "start": 44357,
                               "type": "Property",
                               "value": {
-                                "end": 44364,
+                                "end": 44372,
                                 "raw": "'status'",
-                                "start": 44356,
+                                "start": 44364,
                                 "type": "Literal",
                                 "value": "status"
                               }
                             },
                             {
                               "computed": false,
-                              "end": 44383,
+                              "end": 44391,
                               "key": {
-                                "end": 44371,
+                                "end": 44379,
                                 "name": "value",
-                                "start": 44366,
+                                "start": 44374,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 44366,
+                              "start": 44374,
                               "type": "Property",
                               "value": {
-                                "end": 44383,
+                                "end": 44391,
                                 "raw": "'prospect'",
-                                "start": 44373,
+                                "start": 44381,
                                 "type": "Literal",
                                 "value": "prospect"
                               }
                             }
                           ],
-                          "start": 44347,
+                          "start": 44355,
                           "type": "ObjectExpression"
                         },
                         {
-                          "end": 44392,
+                          "end": 44400,
                           "name": "event",
-                          "start": 44387,
+                          "start": 44395,
                           "type": "Identifier"
                         }
                       ],
                       "callee": {
-                        "end": 44337,
+                        "end": 44345,
                         "name": "onTrace",
-                        "start": 44330,
+                        "start": 44338,
                         "type": "Identifier"
                       },
-                      "end": 44393,
+                      "end": 44401,
                       "optional": false,
-                      "start": 44330,
+                      "start": 44338,
                       "type": "CallExpression"
                     },
-                    "start": 44330,
+                    "start": 44338,
                     "type": "ExpressionStatement"
                   }
                 ],
-                "end": 44406,
-                "start": 44285,
+                "end": 44414,
+                "start": 44293,
                 "type": "BlockStatement"
               },
-              "end": 44406,
+              "end": 44414,
               "expression": false,
               "generator": false,
               "id": null,
               "params": [
                 {
-                  "end": 44280,
+                  "end": 44288,
                   "name": "event",
-                  "start": 44275,
+                  "start": 44283,
                   "type": "Identifier"
                 }
               ],
-              "start": 44274,
+              "start": 44282,
               "type": "ArrowFunctionExpression"
             },
             "reads": [
@@ -43669,14 +43669,14 @@
                 "operation": "assign",
                 "path": [],
                 "sourceSpan": {
-                  "end": 44304,
+                  "end": 44312,
                   "filename": "src/fixtures/s17-contacts.tsrx",
-                  "start": 44298
+                  "start": 44306
                 },
                 "value": {
-                  "end": 44317,
+                  "end": 44325,
                   "raw": "'prospect'",
-                  "start": 44307,
+                  "start": 44315,
                   "type": "Literal",
                   "value": "prospect"
                 },
@@ -43698,130 +43698,130 @@
               "body": {
                 "body": [
                   {
-                    "end": 44813,
+                    "end": 44821,
                     "expression": {
-                      "end": 44812,
+                      "end": 44820,
                       "left": {
-                        "end": 44799,
+                        "end": 44807,
                         "name": "status",
-                        "start": 44793,
+                        "start": 44801,
                         "type": "Identifier"
                       },
                       "operator": "=",
                       "right": {
-                        "end": 44812,
+                        "end": 44820,
                         "raw": "'inactive'",
-                        "start": 44802,
+                        "start": 44810,
                         "type": "Literal",
                         "value": "inactive"
                       },
-                      "start": 44793,
+                      "start": 44801,
                       "type": "AssignmentExpression"
                     },
-                    "start": 44793,
+                    "start": 44801,
                     "type": "ExpressionStatement"
                   },
                   {
-                    "end": 44889,
+                    "end": 44897,
                     "expression": {
                       "arguments": [
                         {
-                          "end": 44840,
+                          "end": 44848,
                           "raw": "'field'",
-                          "start": 44833,
+                          "start": 44841,
                           "type": "Literal",
                           "value": "field"
                         },
                         {
-                          "end": 44880,
+                          "end": 44888,
                           "properties": [
                             {
                               "computed": false,
-                              "end": 44859,
+                              "end": 44867,
                               "key": {
-                                "end": 44849,
+                                "end": 44857,
                                 "name": "field",
-                                "start": 44844,
+                                "start": 44852,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 44844,
+                              "start": 44852,
                               "type": "Property",
                               "value": {
-                                "end": 44859,
+                                "end": 44867,
                                 "raw": "'status'",
-                                "start": 44851,
+                                "start": 44859,
                                 "type": "Literal",
                                 "value": "status"
                               }
                             },
                             {
                               "computed": false,
-                              "end": 44878,
+                              "end": 44886,
                               "key": {
-                                "end": 44866,
+                                "end": 44874,
                                 "name": "value",
-                                "start": 44861,
+                                "start": 44869,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 44861,
+                              "start": 44869,
                               "type": "Property",
                               "value": {
-                                "end": 44878,
+                                "end": 44886,
                                 "raw": "'inactive'",
-                                "start": 44868,
+                                "start": 44876,
                                 "type": "Literal",
                                 "value": "inactive"
                               }
                             }
                           ],
-                          "start": 44842,
+                          "start": 44850,
                           "type": "ObjectExpression"
                         },
                         {
-                          "end": 44887,
+                          "end": 44895,
                           "name": "event",
-                          "start": 44882,
+                          "start": 44890,
                           "type": "Identifier"
                         }
                       ],
                       "callee": {
-                        "end": 44832,
+                        "end": 44840,
                         "name": "onTrace",
-                        "start": 44825,
+                        "start": 44833,
                         "type": "Identifier"
                       },
-                      "end": 44888,
+                      "end": 44896,
                       "optional": false,
-                      "start": 44825,
+                      "start": 44833,
                       "type": "CallExpression"
                     },
-                    "start": 44825,
+                    "start": 44833,
                     "type": "ExpressionStatement"
                   }
                 ],
-                "end": 44901,
-                "start": 44780,
+                "end": 44909,
+                "start": 44788,
                 "type": "BlockStatement"
               },
-              "end": 44901,
+              "end": 44909,
               "expression": false,
               "generator": false,
               "id": null,
               "params": [
                 {
-                  "end": 44775,
+                  "end": 44783,
                   "name": "event",
-                  "start": 44770,
+                  "start": 44778,
                   "type": "Identifier"
                 }
               ],
-              "start": 44769,
+              "start": 44777,
               "type": "ArrowFunctionExpression"
             },
             "reads": [
@@ -43841,14 +43841,14 @@
                 "operation": "assign",
                 "path": [],
                 "sourceSpan": {
-                  "end": 44799,
+                  "end": 44807,
                   "filename": "src/fixtures/s17-contacts.tsrx",
-                  "start": 44793
+                  "start": 44801
                 },
                 "value": {
-                  "end": 44812,
+                  "end": 44820,
                   "raw": "'inactive'",
-                  "start": 44802,
+                  "start": 44810,
                   "type": "Literal",
                   "value": "inactive"
                 },
@@ -44017,11 +44017,11 @@
                   {
                     "declarations": [
                       {
-                        "end": 45809,
+                        "end": 45817,
                         "id": {
-                          "end": 45522,
+                          "end": 45530,
                           "name": "next",
-                          "start": 45518,
+                          "start": 45526,
                           "type": "Identifier"
                         },
                         "init": {
@@ -44030,428 +44030,428 @@
                               "async": false,
                               "body": {
                                 "alternate": {
-                                  "end": 45794,
+                                  "end": 45802,
                                   "name": "entry",
-                                  "start": 45789,
+                                  "start": 45797,
                                   "type": "Identifier"
                                 },
                                 "consequent": {
-                                  "end": 45772,
+                                  "end": 45780,
                                   "properties": [
                                     {
                                       "computed": false,
-                                      "end": 45624,
+                                      "end": 45632,
                                       "key": {
-                                        "end": 45614,
+                                        "end": 45622,
                                         "name": "id",
-                                        "start": 45612,
+                                        "start": 45620,
                                         "type": "Identifier"
                                       },
                                       "kind": "init",
                                       "method": false,
                                       "shorthand": false,
-                                      "start": 45612,
+                                      "start": 45620,
                                       "type": "Property",
                                       "value": {
                                         "computed": false,
-                                        "end": 45624,
+                                        "end": 45632,
                                         "object": {
-                                          "end": 45621,
+                                          "end": 45629,
                                           "name": "entry",
-                                          "start": 45616,
+                                          "start": 45624,
                                           "type": "Identifier"
                                         },
                                         "optional": false,
                                         "property": {
-                                          "end": 45624,
+                                          "end": 45632,
                                           "name": "id",
-                                          "start": 45622,
+                                          "start": 45630,
                                           "type": "Identifier"
                                         },
-                                        "start": 45616,
+                                        "start": 45624,
                                         "type": "MemberExpression"
                                       }
                                     },
                                     {
                                       "computed": false,
-                                      "end": 45655,
+                                      "end": 45663,
                                       "key": {
-                                        "end": 45643,
+                                        "end": 45651,
                                         "name": "name",
-                                        "start": 45639,
+                                        "start": 45647,
                                         "type": "Identifier"
                                       },
                                       "kind": "init",
                                       "method": false,
                                       "shorthand": false,
-                                      "start": 45639,
+                                      "start": 45647,
                                       "type": "Property",
                                       "value": {
                                         "computed": false,
-                                        "end": 45655,
+                                        "end": 45663,
                                         "object": {
-                                          "end": 45650,
+                                          "end": 45658,
                                           "name": "entry",
-                                          "start": 45645,
+                                          "start": 45653,
                                           "type": "Identifier"
                                         },
                                         "optional": false,
                                         "property": {
-                                          "end": 45655,
+                                          "end": 45663,
                                           "name": "name",
-                                          "start": 45651,
+                                          "start": 45659,
                                           "type": "Identifier"
                                         },
-                                        "start": 45645,
+                                        "start": 45653,
                                         "type": "MemberExpression"
                                       }
                                     },
                                     {
                                       "computed": false,
-                                      "end": 45683,
+                                      "end": 45691,
                                       "key": {
-                                        "end": 45672,
+                                        "end": 45680,
                                         "name": "on",
-                                        "start": 45670,
+                                        "start": 45678,
                                         "type": "Identifier"
                                       },
                                       "kind": "init",
                                       "method": false,
                                       "shorthand": false,
-                                      "start": 45670,
+                                      "start": 45678,
                                       "type": "Property",
                                       "value": {
                                         "argument": {
                                           "computed": false,
-                                          "end": 45683,
+                                          "end": 45691,
                                           "object": {
-                                            "end": 45680,
+                                            "end": 45688,
                                             "name": "entry",
-                                            "start": 45675,
+                                            "start": 45683,
                                             "type": "Identifier"
                                           },
                                           "optional": false,
                                           "property": {
-                                            "end": 45683,
+                                            "end": 45691,
                                             "name": "on",
-                                            "start": 45681,
+                                            "start": 45689,
                                             "type": "Identifier"
                                           },
-                                          "start": 45675,
+                                          "start": 45683,
                                           "type": "MemberExpression"
                                         },
-                                        "end": 45683,
+                                        "end": 45691,
                                         "operator": "!",
                                         "prefix": true,
-                                        "start": 45674,
+                                        "start": 45682,
                                         "type": "UnaryExpression"
                                       }
                                     },
                                     {
                                       "computed": false,
-                                      "end": 45716,
+                                      "end": 45724,
                                       "key": {
-                                        "end": 45703,
+                                        "end": 45711,
                                         "name": "domId",
-                                        "start": 45698,
+                                        "start": 45706,
                                         "type": "Identifier"
                                       },
                                       "kind": "init",
                                       "method": false,
                                       "shorthand": false,
-                                      "start": 45698,
+                                      "start": 45706,
                                       "type": "Property",
                                       "value": {
                                         "computed": false,
-                                        "end": 45716,
+                                        "end": 45724,
                                         "object": {
-                                          "end": 45710,
+                                          "end": 45718,
                                           "name": "entry",
-                                          "start": 45705,
+                                          "start": 45713,
                                           "type": "Identifier"
                                         },
                                         "optional": false,
                                         "property": {
-                                          "end": 45716,
+                                          "end": 45724,
                                           "name": "domId",
-                                          "start": 45711,
+                                          "start": 45719,
                                           "type": "Identifier"
                                         },
-                                        "start": 45705,
+                                        "start": 45713,
                                         "type": "MemberExpression"
                                       }
                                     },
                                     {
                                       "computed": false,
-                                      "end": 45757,
+                                      "end": 45765,
                                       "key": {
-                                        "end": 45740,
+                                        "end": 45748,
                                         "name": "controlId",
-                                        "start": 45731,
+                                        "start": 45739,
                                         "type": "Identifier"
                                       },
                                       "kind": "init",
                                       "method": false,
                                       "shorthand": false,
-                                      "start": 45731,
+                                      "start": 45739,
                                       "type": "Property",
                                       "value": {
                                         "computed": false,
-                                        "end": 45757,
+                                        "end": 45765,
                                         "object": {
-                                          "end": 45747,
+                                          "end": 45755,
                                           "name": "entry",
-                                          "start": 45742,
+                                          "start": 45750,
                                           "type": "Identifier"
                                         },
                                         "optional": false,
                                         "property": {
-                                          "end": 45757,
+                                          "end": 45765,
                                           "name": "controlId",
-                                          "start": 45748,
+                                          "start": 45756,
                                           "type": "Identifier"
                                         },
-                                        "start": 45742,
+                                        "start": 45750,
                                         "type": "MemberExpression"
                                       }
                                     }
                                   ],
-                                  "start": 45597,
+                                  "start": 45605,
                                   "type": "ObjectExpression"
                                 },
-                                "end": 45794,
-                                "start": 45561,
+                                "end": 45802,
+                                "start": 45569,
                                 "test": {
-                                  "end": 45580,
+                                  "end": 45588,
                                   "left": {
                                     "computed": false,
-                                    "end": 45569,
+                                    "end": 45577,
                                     "object": {
-                                      "end": 45566,
+                                      "end": 45574,
                                       "name": "entry",
-                                      "start": 45561,
+                                      "start": 45569,
                                       "type": "Identifier"
                                     },
                                     "optional": false,
                                     "property": {
-                                      "end": 45569,
+                                      "end": 45577,
                                       "name": "id",
-                                      "start": 45567,
+                                      "start": 45575,
                                       "type": "Identifier"
                                     },
-                                    "start": 45561,
+                                    "start": 45569,
                                     "type": "MemberExpression"
                                   },
                                   "operator": "===",
                                   "right": {
                                     "computed": false,
-                                    "end": 45580,
+                                    "end": 45588,
                                     "object": {
-                                      "end": 45577,
+                                      "end": 45585,
                                       "name": "row",
-                                      "start": 45574,
+                                      "start": 45582,
                                       "type": "Identifier"
                                     },
                                     "optional": false,
                                     "property": {
-                                      "end": 45580,
+                                      "end": 45588,
                                       "name": "id",
-                                      "start": 45578,
+                                      "start": 45586,
                                       "type": "Identifier"
                                     },
-                                    "start": 45574,
+                                    "start": 45582,
                                     "type": "MemberExpression"
                                   },
-                                  "start": 45561,
+                                  "start": 45569,
                                   "type": "BinaryExpression"
                                 },
                                 "type": "ConditionalExpression"
                               },
-                              "end": 45794,
+                              "end": 45802,
                               "expression": true,
                               "generator": false,
                               "id": null,
                               "params": [
                                 {
-                                  "end": 45543,
+                                  "end": 45551,
                                   "name": "entry",
-                                  "start": 45538,
+                                  "start": 45546,
                                   "type": "Identifier"
                                 }
                               ],
-                              "start": 45537,
+                              "start": 45545,
                               "type": "ArrowFunctionExpression"
                             }
                           ],
                           "callee": {
                             "computed": false,
-                            "end": 45536,
+                            "end": 45544,
                             "object": {
-                              "end": 45532,
+                              "end": 45540,
                               "name": "tagRows",
-                              "start": 45525,
+                              "start": 45533,
                               "type": "Identifier"
                             },
                             "optional": false,
                             "property": {
-                              "end": 45536,
+                              "end": 45544,
                               "name": "map",
-                              "start": 45533,
+                              "start": 45541,
                               "type": "Identifier"
                             },
-                            "start": 45525,
+                            "start": 45533,
                             "type": "MemberExpression"
                           },
-                          "end": 45809,
+                          "end": 45817,
                           "optional": false,
-                          "start": 45525,
+                          "start": 45533,
                           "type": "CallExpression"
                         },
-                        "start": 45518,
+                        "start": 45526,
                         "type": "VariableDeclarator"
                       }
                     ],
-                    "end": 45810,
+                    "end": 45818,
                     "kind": "const",
-                    "start": 45512,
+                    "start": 45520,
                     "type": "VariableDeclaration"
                   },
                   {
-                    "end": 45838,
+                    "end": 45846,
                     "expression": {
-                      "end": 45837,
+                      "end": 45845,
                       "left": {
-                        "end": 45830,
+                        "end": 45838,
                         "name": "tagRows",
-                        "start": 45823,
+                        "start": 45831,
                         "type": "Identifier"
                       },
                       "operator": "=",
                       "right": {
-                        "end": 45837,
+                        "end": 45845,
                         "name": "next",
-                        "start": 45833,
+                        "start": 45841,
                         "type": "Identifier"
                       },
-                      "start": 45823,
+                      "start": 45831,
                       "type": "AssignmentExpression"
                     },
-                    "start": 45823,
+                    "start": 45831,
                     "type": "ExpressionStatement"
                   },
                   {
-                    "end": 45908,
+                    "end": 45916,
                     "expression": {
                       "arguments": [
                         {
-                          "end": 45866,
+                          "end": 45874,
                           "raw": "'field'",
-                          "start": 45859,
+                          "start": 45867,
                           "type": "Literal",
                           "value": "field"
                         },
                         {
-                          "end": 45899,
+                          "end": 45907,
                           "properties": [
                             {
                               "computed": false,
-                              "end": 45882,
+                              "end": 45890,
                               "key": {
-                                "end": 45875,
+                                "end": 45883,
                                 "name": "field",
-                                "start": 45870,
+                                "start": 45878,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 45870,
+                              "start": 45878,
                               "type": "Property",
                               "value": {
-                                "end": 45882,
+                                "end": 45890,
                                 "raw": "'tag'",
-                                "start": 45877,
+                                "start": 45885,
                                 "type": "Literal",
                                 "value": "tag"
                               }
                             },
                             {
                               "computed": false,
-                              "end": 45897,
+                              "end": 45905,
                               "key": {
-                                "end": 45889,
+                                "end": 45897,
                                 "name": "value",
-                                "start": 45884,
+                                "start": 45892,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 45884,
+                              "start": 45892,
                               "type": "Property",
                               "value": {
                                 "computed": false,
-                                "end": 45897,
+                                "end": 45905,
                                 "object": {
-                                  "end": 45894,
+                                  "end": 45902,
                                   "name": "row",
-                                  "start": 45891,
+                                  "start": 45899,
                                   "type": "Identifier"
                                 },
                                 "optional": false,
                                 "property": {
-                                  "end": 45897,
+                                  "end": 45905,
                                   "name": "id",
-                                  "start": 45895,
+                                  "start": 45903,
                                   "type": "Identifier"
                                 },
-                                "start": 45891,
+                                "start": 45899,
                                 "type": "MemberExpression"
                               }
                             }
                           ],
-                          "start": 45868,
+                          "start": 45876,
                           "type": "ObjectExpression"
                         },
                         {
-                          "end": 45906,
+                          "end": 45914,
                           "name": "event",
-                          "start": 45901,
+                          "start": 45909,
                           "type": "Identifier"
                         }
                       ],
                       "callee": {
-                        "end": 45858,
+                        "end": 45866,
                         "name": "onTrace",
-                        "start": 45851,
+                        "start": 45859,
                         "type": "Identifier"
                       },
-                      "end": 45907,
+                      "end": 45915,
                       "optional": false,
-                      "start": 45851,
+                      "start": 45859,
                       "type": "CallExpression"
                     },
-                    "start": 45851,
+                    "start": 45859,
                     "type": "ExpressionStatement"
                   }
                 ],
-                "end": 45921,
-                "start": 45498,
+                "end": 45929,
+                "start": 45506,
                 "type": "BlockStatement"
               },
-              "end": 45921,
+              "end": 45929,
               "expression": false,
               "generator": false,
               "id": null,
               "params": [
                 {
-                  "end": 45493,
+                  "end": 45501,
                   "name": "event",
-                  "start": 45488,
+                  "start": 45496,
                   "type": "Identifier"
                 }
               ],
-              "start": 45487,
+              "start": 45495,
               "type": "ArrowFunctionExpression"
             },
             "reads": [
@@ -44483,14 +44483,14 @@
                 "operation": "assign",
                 "path": [],
                 "sourceSpan": {
-                  "end": 45830,
+                  "end": 45838,
                   "filename": "src/fixtures/s17-contacts.tsrx",
-                  "start": 45823
+                  "start": 45831
                 },
                 "value": {
-                  "end": 45837,
+                  "end": 45845,
                   "name": "next",
-                  "start": 45833,
+                  "start": 45841,
                   "type": "Identifier"
                 },
                 "via": "direct"
@@ -44513,177 +44513,177 @@
                   {
                     "declarations": [
                       {
-                        "end": 46439,
+                        "end": 46447,
                         "id": {
-                          "end": 46411,
+                          "end": 46419,
                           "name": "next",
-                          "start": 46407,
+                          "start": 46415,
                           "type": "Identifier"
                         },
                         "init": {
                           "computed": false,
-                          "end": 46439,
+                          "end": 46447,
                           "object": {
                             "computed": false,
-                            "end": 46433,
+                            "end": 46441,
                             "object": {
-                              "end": 46419,
+                              "end": 46427,
                               "name": "event",
-                              "start": 46414,
+                              "start": 46422,
                               "type": "Identifier"
                             },
                             "optional": false,
                             "property": {
-                              "end": 46433,
+                              "end": 46441,
                               "name": "currentTarget",
-                              "start": 46420,
+                              "start": 46428,
                               "type": "Identifier"
                             },
-                            "start": 46414,
+                            "start": 46422,
                             "type": "MemberExpression"
                           },
                           "optional": false,
                           "property": {
-                            "end": 46439,
+                            "end": 46447,
                             "name": "value",
-                            "start": 46434,
+                            "start": 46442,
                             "type": "Identifier"
                           },
-                          "start": 46414,
+                          "start": 46422,
                           "type": "MemberExpression"
                         },
-                        "start": 46407,
+                        "start": 46415,
                         "type": "VariableDeclarator"
                       }
                     ],
-                    "end": 46440,
+                    "end": 46448,
                     "kind": "const",
-                    "start": 46401,
+                    "start": 46409,
                     "type": "VariableDeclaration"
                   },
                   {
-                    "end": 46463,
+                    "end": 46471,
                     "expression": {
-                      "end": 46462,
+                      "end": 46470,
                       "left": {
-                        "end": 46455,
+                        "end": 46463,
                         "name": "notes",
-                        "start": 46450,
+                        "start": 46458,
                         "type": "Identifier"
                       },
                       "operator": "=",
                       "right": {
-                        "end": 46462,
+                        "end": 46470,
                         "name": "next",
-                        "start": 46458,
+                        "start": 46466,
                         "type": "Identifier"
                       },
-                      "start": 46450,
+                      "start": 46458,
                       "type": "AssignmentExpression"
                     },
-                    "start": 46450,
+                    "start": 46458,
                     "type": "ExpressionStatement"
                   },
                   {
-                    "end": 46530,
+                    "end": 46538,
                     "expression": {
                       "arguments": [
                         {
-                          "end": 46488,
+                          "end": 46496,
                           "raw": "'field'",
-                          "start": 46481,
+                          "start": 46489,
                           "type": "Literal",
                           "value": "field"
                         },
                         {
-                          "end": 46521,
+                          "end": 46529,
                           "properties": [
                             {
                               "computed": false,
-                              "end": 46506,
+                              "end": 46514,
                               "key": {
-                                "end": 46497,
+                                "end": 46505,
                                 "name": "field",
-                                "start": 46492,
+                                "start": 46500,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 46492,
+                              "start": 46500,
                               "type": "Property",
                               "value": {
-                                "end": 46506,
+                                "end": 46514,
                                 "raw": "'notes'",
-                                "start": 46499,
+                                "start": 46507,
                                 "type": "Literal",
                                 "value": "notes"
                               }
                             },
                             {
                               "computed": false,
-                              "end": 46519,
+                              "end": 46527,
                               "key": {
-                                "end": 46513,
+                                "end": 46521,
                                 "name": "value",
-                                "start": 46508,
+                                "start": 46516,
                                 "type": "Identifier"
                               },
                               "kind": "init",
                               "method": false,
                               "shorthand": false,
-                              "start": 46508,
+                              "start": 46516,
                               "type": "Property",
                               "value": {
-                                "end": 46519,
+                                "end": 46527,
                                 "name": "next",
-                                "start": 46515,
+                                "start": 46523,
                                 "type": "Identifier"
                               }
                             }
                           ],
-                          "start": 46490,
+                          "start": 46498,
                           "type": "ObjectExpression"
                         },
                         {
-                          "end": 46528,
+                          "end": 46536,
                           "name": "event",
-                          "start": 46523,
+                          "start": 46531,
                           "type": "Identifier"
                         }
                       ],
                       "callee": {
-                        "end": 46480,
+                        "end": 46488,
                         "name": "onTrace",
-                        "start": 46473,
+                        "start": 46481,
                         "type": "Identifier"
                       },
-                      "end": 46529,
+                      "end": 46537,
                       "optional": false,
-                      "start": 46473,
+                      "start": 46481,
                       "type": "CallExpression"
                     },
-                    "start": 46473,
+                    "start": 46481,
                     "type": "ExpressionStatement"
                   }
                 ],
-                "end": 46540,
-                "start": 46390,
+                "end": 46548,
+                "start": 46398,
                 "type": "BlockStatement"
               },
-              "end": 46540,
+              "end": 46548,
               "expression": false,
               "generator": false,
               "id": null,
               "params": [
                 {
-                  "end": 46385,
+                  "end": 46393,
                   "name": "event",
-                  "start": 46380,
+                  "start": 46388,
                   "type": "Identifier"
                 }
               ],
-              "start": 46379,
+              "start": 46387,
               "type": "ArrowFunctionExpression"
             },
             "reads": [
@@ -44703,14 +44703,14 @@
                 "operation": "assign",
                 "path": [],
                 "sourceSpan": {
-                  "end": 46455,
+                  "end": 46463,
                   "filename": "src/fixtures/s17-contacts.tsrx",
-                  "start": 46450
+                  "start": 46458
                 },
                 "value": {
-                  "end": 46462,
+                  "end": 46470,
                   "name": "next",
-                  "start": 46458,
+                  "start": 46466,
                   "type": "Identifier"
                 },
                 "via": "direct"
@@ -46087,14 +46087,14 @@
         "operation": "assign",
         "path": [],
         "sourceSpan": {
-          "end": 40822,
+          "end": 40830,
           "filename": "src/fixtures/s17-contacts.tsrx",
-          "start": 40815
+          "start": 40823
         },
         "value": {
-          "end": 40829,
+          "end": 40837,
           "name": "next",
-          "start": 40825,
+          "start": 40833,
           "type": "Identifier"
         },
         "via": "direct"
@@ -47395,14 +47395,14 @@
         "operation": "assign",
         "path": [],
         "sourceSpan": {
-          "end": 41516,
+          "end": 41524,
           "filename": "src/fixtures/s17-contacts.tsrx",
-          "start": 41511
+          "start": 41519
         },
         "value": {
-          "end": 41523,
+          "end": 41531,
           "name": "next",
-          "start": 41519,
+          "start": 41527,
           "type": "Identifier"
         },
         "via": "direct"
@@ -47551,14 +47551,14 @@
         "operation": "assign",
         "path": [],
         "sourceSpan": {
-          "end": 46455,
+          "end": 46463,
           "filename": "src/fixtures/s17-contacts.tsrx",
-          "start": 46450
+          "start": 46458
         },
         "value": {
-          "end": 46462,
+          "end": 46470,
           "name": "next",
-          "start": 46458,
+          "start": 46466,
           "type": "Identifier"
         },
         "via": "direct"
@@ -47629,14 +47629,14 @@
         "operation": "assign",
         "path": [],
         "sourceSpan": {
-          "end": 43245,
+          "end": 43253,
           "filename": "src/fixtures/s17-contacts.tsrx",
-          "start": 43237
+          "start": 43245
         },
         "value": {
-          "end": 43252,
+          "end": 43260,
           "name": "next",
-          "start": 43248,
+          "start": 43256,
           "type": "Identifier"
         },
         "via": "direct"
@@ -47687,14 +47687,14 @@
         "operation": "assign",
         "path": [],
         "sourceSpan": {
-          "end": 40303,
+          "end": 40311,
           "filename": "src/fixtures/s17-contacts.tsrx",
-          "start": 40299
+          "start": 40307
         },
         "value": {
-          "end": 40310,
+          "end": 40318,
           "name": "next",
-          "start": 40306,
+          "start": 40314,
           "type": "Identifier"
         },
         "via": "direct"
@@ -47726,14 +47726,14 @@
         "operation": "assign",
         "path": [],
         "sourceSpan": {
-          "end": 42118,
+          "end": 42126,
           "filename": "src/fixtures/s17-contacts.tsrx",
-          "start": 42113
+          "start": 42121
         },
         "value": {
-          "end": 42125,
+          "end": 42133,
           "name": "next",
-          "start": 42121,
+          "start": 42129,
           "type": "Identifier"
         },
         "via": "direct"
@@ -47765,14 +47765,14 @@
         "operation": "assign",
         "path": [],
         "sourceSpan": {
-          "end": 39774,
+          "end": 39782,
           "filename": "src/fixtures/s17-contacts.tsrx",
-          "start": 39770
+          "start": 39778
         },
         "value": {
-          "end": 39781,
+          "end": 39789,
           "name": "next",
-          "start": 39777,
+          "start": 39785,
           "type": "Identifier"
         },
         "via": "direct"
@@ -47804,14 +47804,14 @@
         "operation": "assign",
         "path": [],
         "sourceSpan": {
-          "end": 42676,
+          "end": 42684,
           "filename": "src/fixtures/s17-contacts.tsrx",
-          "start": 42672
+          "start": 42680
         },
         "value": {
-          "end": 42683,
+          "end": 42691,
           "name": "next",
-          "start": 42679,
+          "start": 42687,
           "type": "Identifier"
         },
         "via": "direct"
@@ -47843,14 +47843,14 @@
         "operation": "assign",
         "path": [],
         "sourceSpan": {
-          "end": 43815,
+          "end": 43823,
           "filename": "src/fixtures/s17-contacts.tsrx",
-          "start": 43809
+          "start": 43817
         },
         "value": {
-          "end": 43826,
+          "end": 43834,
           "raw": "'active'",
-          "start": 43818,
+          "start": 43826,
           "type": "Literal",
           "value": "active"
         },
@@ -47863,14 +47863,14 @@
         "operation": "assign",
         "path": [],
         "sourceSpan": {
-          "end": 44304,
+          "end": 44312,
           "filename": "src/fixtures/s17-contacts.tsrx",
-          "start": 44298
+          "start": 44306
         },
         "value": {
-          "end": 44317,
+          "end": 44325,
           "raw": "'prospect'",
-          "start": 44307,
+          "start": 44315,
           "type": "Literal",
           "value": "prospect"
         },
@@ -47883,14 +47883,14 @@
         "operation": "assign",
         "path": [],
         "sourceSpan": {
-          "end": 44799,
+          "end": 44807,
           "filename": "src/fixtures/s17-contacts.tsrx",
-          "start": 44793
+          "start": 44801
         },
         "value": {
-          "end": 44812,
+          "end": 44820,
           "raw": "'inactive'",
-          "start": 44802,
+          "start": 44810,
           "type": "Literal",
           "value": "inactive"
         },
@@ -48196,14 +48196,14 @@
         "operation": "assign",
         "path": [],
         "sourceSpan": {
-          "end": 45830,
+          "end": 45838,
           "filename": "src/fixtures/s17-contacts.tsrx",
-          "start": 45823
+          "start": 45831
         },
         "value": {
-          "end": 45837,
+          "end": 45845,
           "name": "next",
-          "start": 45833,
+          "start": 45841,
           "type": "Identifier"
         },
         "via": "direct"

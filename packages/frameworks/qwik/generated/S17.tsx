@@ -1066,7 +1066,7 @@ export const Contacts = component$(
 											class="cs-input"
 											id="cs-site"
 											name="cs-site"
-											placeholder="example.com"
+											placeholder="https://example.com"
 											data-control="site"
 											value={site.value}
 											onInput$={async (event, element) => {

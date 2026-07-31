@@ -994,7 +994,7 @@ export function Contacts(props: {
 										class="cs-input"
 										id="cs-site"
 										name="cs-site"
-										placeholder="example.com"
+										placeholder="https://example.com"
 										data-control="site"
 										value={site()}
 										attr:value={site()}

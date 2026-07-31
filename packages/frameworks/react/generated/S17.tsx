@@ -981,7 +981,7 @@ export function Contacts({
 										className="cs-input"
 										id="cs-site"
 										name="cs-site"
-										placeholder="example.com"
+										placeholder="https://example.com"
 										data-control="site"
 										value={site}
 										onChange={(event) => {

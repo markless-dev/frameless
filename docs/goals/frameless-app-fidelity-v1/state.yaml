@@ -44,7 +44,7 @@ goal:
       FIXING THE FIVE FINDINGS AND LEAVING THE ORACLE HOLE OPEN. The findings are symptoms; the
       cause is that nothing ever compared a shipped app to the thing it copies.
 
-active_task: T010
+active_task: T011
 
 # ---------------------------------------------------------------------------
 # OWNER DECISIONS - taken from the owner DIRECTLY on 2026-07-31 while T009 ran.
@@ -1482,7 +1482,7 @@ tasks:
   - id: T010
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: >-
       CLOSE THE LIVE SILENT SUBMIT DEAD-END ON /contacts, on the owner's direct ruling OD2. The
@@ -1543,12 +1543,97 @@ tasks:
       - "NEVER pkill -f. FOUR FOREIGN PIDs ARE ALIVE: 64413, 24931, 31456, 51893. Stop only the demo you started, by its recorded PID."
       - "Verification fails twice for the same reason."
       - "ADDED BY T009. You are about to also correct the stale S16 drag prose. IT IS T011'S AND IT IS IN THIS VERY FIXTURE (s17-contacts.tsrx:12) - a prose edit here would BREAK THIS CARD'S OWN 'only the placeholder line moved' ASSERTION. Leave it. Line 1018 is yours; line 12 is not."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T010-contacts-submit.md
+      summary: "OD2 CLOSED. One string in one fixture, then thirteen artifacts RE-DERIVED and none hand-edited. The dead end is proven closed BY THE BROWSER, not by lane agreement: react and qwik, at 1440px AND at 1200px where the rail media query does not apply, TYPING THE VALUE READ FROM THE LIVE placeholder ATTRIBUTE - submit fires exactly once and cards rise 9 -> 10. A 'not a url' negative control still refuses with 0 submit events, so type=url SURVIVES INTACT and thirteen control kinds still ship. pnpm check 261 -> 261 with an IDENTICAL ERROR SET."
+      IT_CAUGHT_ITS_OWN_PROOF_BEING_VACUOUS: "ITS FIRST DERIVATION PROOF WAS A FALSE NEGATIVE AND IT FOUND IT. `git diff -- 'demos/*/src/emitted'` REPORTED 1 CHANGED FILE WHEN 12 HAD CHANGED - git DISABLES LEADING-DIRECTORY MATCHING once a pathspec contains a wildcard, so the wildcard path matches NOTHING and the count came entirely from the one non-wildcard path. It looked plausible. Redone with an existence-checked explicit array: 12 files / 12 insertions / 12 deletions, every changed line the placeholder."
+      THE_GOLDEN_MOVED_973_LINES_NOT_ONE: "1 placeholder + 972 AST start/end BYTE OFFSETS. The distinct delta set computed over ALL 972 pairs is [8] EXACTLY = len('https://'). FULLY EXPLAINED, and it is the proof that hand-editing the golden was correctly forbidden - a hand edit would have left 972 offsets wrong."
+      changed_files:
+        - packages/compiler/test/fixtures/s17-contacts.tsrx
+        - packages/compiler/test/goldens/s17-contacts.json
+        - packages/frameworks/react/generated/S17.tsx
+        - packages/frameworks/solid/generated/S17.tsx
+        - packages/frameworks/qwik/generated/S17.tsx
+        - packages/frameworks/svelte/generated/S17.svelte
+        - packages/frameworks/vue/generated/S17.vue
+        - packages/frameworks/angular/generated/S17.ts
+        - demos/react-official/src/emitted/Contacts.tsx
+        - demos/solid-official/src/emitted/Contacts.tsx
+        - demos/qwik/src/emitted/Contacts.tsx
+        - demos/svelte-official/src/lib/emitted/Contacts.svelte
+        - demos/vue-official/src/emitted/Contacts.vue
+        - demos/angular-official/src/emitted/Contacts.ts
+        - docs/goals/frameless-app-fidelity-v1/notes/T010-contacts-submit.md
+      commands:
+        - cmd: "owner fingerprint START and FINISH, shasum -a 256, sorted whole LINES"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169, website 116 files. IDENTICAL at both ends"
+        - cmd: "edit s17-contacts.tsrx:1018 placeholder=\"example.com\" -> \"https://example.com\""
+          status: pass
+          note: "1 insertion / 1 deletion, line count unchanged. LINE 12 - T011's stale S16 prose - VERIFIED UNTOUCHED"
+        - cmd: "UPDATE_GOLDENS=1 pnpm test"
+          status: pass
+          note: "golden REGENERATED, never hand-edited. 1 failed / 1412 passed = the foreign ARM B"
+        - cmd: "pnpm --dir packages/frameworks/<lane> regenerate x6 (shell ARRAY, length asserted -ne 6)"
+          status: pass
+          note: "all six lanes re-emitted"
+        - cmd: "pnpm --dir demos/<demo> copy-emitted x6 (shell ARRAY, length asserted)"
+          status: pass
+          note: "all six demos refreshed"
+        - cmd: "DERIVATION PROOF: git diff --stat then FULL git diff over 12 EXPLICIT paths"
+          status: pass
+          note: "12 files / 12 insertions / 12 deletions, EVERY changed line the placeholder. Full diff READ. FIRST ATTEMPT WAS VACUOUS - see IT_CAUGHT_ITS_OWN_PROOF_BEING_VACUOUS"
+        - cmd: "golden diff CLASSIFIED LINE BY LINE"
+          status: pass
+          note: "973 lines: 1 placeholder + 972 AST offsets, distinct delta set over all 972 pairs = [8] = len('https://')"
+        - cmd: "BROWSER AFTER-ARM, playwright 1.58.2 real Chromium, react + qwik, 1440x900 AND 1200x900"
+          status: pass
+          note: "Website value READ FROM THE LIVE placeholder ATTRIBUTE, not hardcoded. ALL FOUR RUNS: type attr still 'url', site+form checkValidity TRUE, submit events 1, CARDS 9 -> 10, 0 console errors"
+        - cmd: "NEGATIVE CONTROL 'not a url', same form, both lanes, both viewports"
+          status: pass
+          note: "checkValidity FALSE, submit events 0, cards 9 -> 9. THE ASSERTION CAN FAIL and the fix did NOT weaken validation"
+        - cmd: "mechanism reproduced in-browser WITHOUT re-breaking the fixture"
+          status: pass
+          note: "old 'example.com' assigned to the live input: typeMismatch true, 'Please enter a URL.'; 'https://example.com' valid. T005's 'NOTHING ON THE PAGE SAYS SO' IS LITERALLY CORRECT - the message is browser chrome, never page DOM"
+        - cmd: "body hashes, NEVER HTTP 200"
+          status: pass
+          note: "react 200 for a bogus path (796 B) vs /contacts (24,297 B) - DISTINCT. qwik 200/153,889 vs 404/36,735. Served react body carries the NEW placeholder"
+        - cmd: "pnpm check"
+          status: pass
+          note: "START 261 -> END 261, predicted delta 0. STRONGER THAN THE COUNT: diff over the two full 'error TS' line sets is EMPTY"
+        - cmd: "pnpm test (clean, no UPDATE_GOLDENS)"
+          status: pass
+          note: "1 failed / 1412 passed - exactly the foreign package-inventory ARM B. enriched-ir asserts the REGENERATED golden byte-equal"
+        - cmd: "pnpm e2e RUN ALONE"
+          status: pass
+          note: "PASS - 'Three-way: 6 demos x 9 scenarios, all observations equal'. Run AFTER all regeneration, BEFORE any demo was started"
+        - cmd: "pnpm lint / pnpm check:citations"
+          status: pass
+          note: "0/0 over 558 files; citations clean over 4 watched docs, 17 watched sources, 610 swept. BOTH re-run after the note"
+        - cmd: "demo teardown by recorded PID"
+          status: pass
+          note: "started only react (5173) and qwik (5175); stopped six recorded PIDs; ports free. pkill NEVER RUN IN ANY FORM"
+        - cmd: "final git status --short"
+          status: pass
+          note: "exactly the 14 intended files + the new note + the 3 pre-existing owner-dirt paths. Nothing committed; NO git add -A"
+      deviations:
+        - "ADDED A 1200x900 VIEWPORT ARM alongside 1440x900 in both lanes. The card required only two lanes; 1200px is where T005/T999 measured and where the contacts rail media query does NOT apply, so THE FOLD CANNOT CONFOUND THE RESULT."
+        - "Reproduced the BEFORE mechanism in-browser by assigning the old placeholder string to the LIVE INPUT'S VALUE rather than by reverting the fixture. Same measurement, no source touched - the card forbade re-breaking it."
+        - "Started only the two required lanes directly rather than running pnpm demo for all six, to keep the PID surface small and teardown exact."
+        - "Screenshots were not written into the repo; every observation is transcribed AS NUMBERS in the note."
+      remaining_blockers:
+        - "GIT WILDCARD PATHSPECS SILENTLY UNDER-MATCH AND T011'S VERIFY IS WRITTEN IN EXACTLY THAT SHAPE. `git diff -- 'demos/*/src/emitted'` matches NOTHING because git drops leading-directory matching once a pathspec contains a wildcard. For T010 this produced a FALSE NEGATIVE the worker caught; for T011, whose whole claim is THESE TREES DID NOT MOVE, THE SAME SHAPE PRODUCES A FALSE PASS. PM RE-MEASURED AND CONFIRMED: wildcard returns EMPTY, explicit paths return 6 changed files. T011's verify REWRITTEN to explicit paths before dispatch."
+        - "THE FOUR 'ALIVE' FOREIGN PIDs ARE ALL DEAD. 64413, 24931, 31456, 51893 do not exist at HEAD and nothing was listening on 5173-5181. PM RE-MEASURED AND CONFIRMED ALL FOUR DEAD. T011's stop_if corrected before dispatch; the pkill ban STAYS on its own merits."
+        - "THE ARTIFACT COUNT IS WRONG IN BOTH DIRECTIONS AND THIS BOARD HAS NOW MISCOUNTED FIVE TIMES. T010's objective said 'twelve' (omitting the golden, IN THE VERY CARD THAT EXISTS TO INSIST THE GOLDEN IS DERIVED); the dispatch brief and T009 said 'fourteen derived' (counting the HAND-EDITED FIXTURE as derived). MEASURED: 13 DERIVED + 1 SOURCE = 14 files changed. Harmless here because allowed_files enumerates paths."
+        - "RESIDUAL BY DESIGN: an invalid URL is still reported ONLY BY BROWSER CHROME, never by page DOM, because OD2 ruled out hint text and new DOM BY NAME. The owner's dead end is closed; a user typing their own bare host still gets a refusal THE PAGE DOES NOT NARRATE. Recorded, not fixed - needs an owner decision if it is ever to change."
+      stopped_because: null
   - id: T011
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
     objective: >-
       THE RECORD SWEEP. Correct EVERY site that contradicts the shipped behaviour at HEAD, found
@@ -1600,7 +1685,8 @@ tasks:
       - "EVERY CORRECTION MUST CITE A MEASUREMENT YOU MADE AT HEAD, NOT T009'S RECEIPT. RE-DRIVE THE DRAG YOURSELF IN ALL SIX LANES before rewriting any drag count, and RE-HASH ANGULAR'S /hn-item BODY before rewriting the lane count. Two agents agreeing is not two measurements."
       - "hn.css: EDIT demos/shared/hn-css/hn.css AND RE-RUN demos/shared/copy-hn-css.mjs. NEVER hand-edit a lane copy. All seven currently share digest b64089ab and MUST STILL SHARE ONE DIGEST afterwards - report it."
       - "s17-contacts.tsrx:12 IS YOURS (line 1018 was T010's). pnpm check:citations AFTER EVERY PROSE EDIT - that fixture and DEFECTS.md are WATCHED DOCUMENTS."
-      - "THIS CARD DERIVES NOTHING: git diff --exit-code over packages/frameworks/*/generated, packages/compiler/test/goldens, demos/*/src/emitted and demos/svelte-official/src/lib/emitted MUST BE CLEAN, PAIRED WITH git status --short. EDITING A regenerate.ts COMMENT MUST NOT MOVE ONE EMITTED BYTE - prove it by re-running all six regenerate steps and showing the trees still clean. USE A SHELL ARRAY."
+      - "THIS CARD DERIVES NOTHING: git diff --exit-code over the derived trees MUST BE CLEAN, PAIRED WITH git status --short. EDITING A regenerate.ts COMMENT MUST NOT MOVE ONE EMITTED BYTE - prove it by re-running all six regenerate steps and all six copy-emitted steps and showing the trees STILL clean. USE A SHELL ARRAY."
+      - "*** REWRITTEN AFTER T010. NEVER USE A WILDCARD PATHSPEC FOR THIS ASSERTION. *** git DISABLES LEADING-DIRECTORY MATCHING once a pathspec contains a wildcard, so `git diff -- 'demos/*/src/emitted'` MATCHES NOTHING AND EXITS CLEAN. T010's first derivation proof reported 1 changed file WHEN 12 HAD CHANGED. THE PM RE-MEASURED IT AT HEAD: the wildcard form returned EMPTY while explicit paths returned 6 changed files. For T010 that was a false NEGATIVE; FOR YOU, WHOSE WHOLE CLAIM IS THAT THESE TREES DID NOT MOVE, THE SAME SHAPE IS A FALSE PASS. Enumerate EXPLICITLY: packages/frameworks/{react,solid,qwik,svelte,vue,angular}/generated, packages/compiler/test/goldens, demos/{react-official,solid-official,qwik,vue-official,angular-official}/src/emitted, demos/svelte-official/src/lib/emitted. ASSERT EACH PATH EXISTS BEFORE TRUSTING ITS SILENCE."
       - "pnpm check: BASELINE 261. PREDICTED DELTA 0 - this card is prose and CSS comments only. Report START and END."
       - "pnpm test EXACTLY 1 failure (foreign ARM B) / pnpm e2e 6 x 9 RUN ALONE, never concurrently with any regeneration or a running demo / pnpm lint."
       - "fingerprint the owner's three dirty paths at START and FINISH with `shasum -a 256`, sorting whole output LINES: f326d314 / aeb7edc1 / f936e169, 116 files."
@@ -1616,7 +1702,7 @@ tasks:
       - "pnpm check rises at all. BASELINE 261, PREDICTED DELTA 0."
       - "pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
       - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched. ALL THREE ARE ALREADY DIRTY, YOU DID NOT DO IT, DO NOT `git add -A`."
-      - "NEVER pkill -f. FOUR FOREIGN PIDs ARE ALIVE: 64413, 24931, 31456, 51893."
+      - "NEVER pkill -f - THE BAN STANDS ON ITS OWN MERITS. But the four PIDs every card has recited (64413, 24931, 31456, 51893) ARE ALL DEAD: T010 measured it and THE PM RE-MEASURED ALL FOUR AT HEAD. Nothing was listening on 5173-5181. STOP ONLY WHAT YOU STARTED, BY ITS RECORDED PID, and re-measure rather than reciting this list again."
       - "Verification fails twice for the same reason."
     receipt: null
 
