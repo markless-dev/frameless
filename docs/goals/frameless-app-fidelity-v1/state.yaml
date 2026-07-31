@@ -44,7 +44,7 @@ goal:
       FIXING THE FIVE FINDINGS AND LEAVING THE ORACLE HOLE OPEN. The findings are symptoms; the
       cause is that nothing ever compared a shipped app to the thing it copies.
 
-active_task: T015
+active_task: T016
 
 # ---------------------------------------------------------------------------
 # OWNER DECISIONS - taken from the owner DIRECTLY on 2026-07-31 while T009 ran.
@@ -2135,7 +2135,7 @@ tasks:
   - id: T015
     type: worker
     assignee: Worker
-    status: active
+    status: blocked
     reasoning_hint: high
     objective: >-
       CLOSE THE SEVENTH POPULATION - THE SIX-LANE ORDINAL CHAIN - IN ONE CARD, ACROSS ALL TWELVE
@@ -2188,4 +2188,81 @@ tasks:
       - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched. ALL THREE ARE ALREADY DIRTY, YOU DID NOT DO IT, DO NOT `git add -A`."
       - "NEVER pkill -f. Stop only what you start, BY ITS RECORDED PID - and note angular leaves a CHILD node process holding the port after SIGINT to the pnpm wrapper."
       - "Verification fails twice for the same reason."
+    receipt:
+      result: blocked
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T015-ordinal-chain.md
+      blocked_reason: "THE POPULATION IS LARGER THAN THE CARD'S SCOPE AND EVERY SLICE OF IT LEAKS OUT. The six-lane ordinal chain spans 15 demo files, not 12. The S13 root claim is present in ALL SIX LANES but writable in only THREE. Editing the twelve would correct S13 in react/solid/vue and leave it in qwik/svelte/angular - VERBATIM THE stop_if - and would leave THE ANGULAR LANE SELF-CONTRADICTING, with app.routes.ts saying S15 is second while the component it mounts says fifth. BOTH PARTITIONS WERE CHECKED, by lane and by scenario; NEITHER CLOSES INSIDE SCOPE. The largest safe slice of product edits is ZERO."
+      summary: "Derived the chain INDEPENDENTLY from the real tables (S13 fourth; S14 the only unbuilt row) and swept the claim family REPO-WIDE. COUNT: 53 SITES ACROSS 21 FILES against the 15/12 starting point - A 3.5x UNDERCOUNT. React and solid each carry the chain TWICE (route table AND render blocks); T014 saw only the render blocks. habits-page.ts carries ZERO live sites - its only chain wording is a QUOTED HISTORICAL that must NOT be 'corrected'. BLOCKED rather than half-closed. NO PRODUCT FILE EDITED."
+      record_population_count: "53 SITES ACROSS 21 FILES. 28 in 11 of the 12 allowed files; 6 in THREE DEMO FILES OUTSIDE SCOPE (angular app.routes.ts x4, qwik hn/index.tsx, svelte hn/+page.svelte); 19 in SEVEN EMITTER/TEST FILES - the six packages/frameworks/*/scripts/regenerate.ts, WHICH ARE THE UPSTREAM SOURCE THE DEMO WORDING IS PARAPHRASED FROM, plus packages/frameworks/react/test/size.test.ts."
+      THE_CONVERGENCE_ANSWER_THE_PM_ASKED_FOR: "NOT CONVERGING. ALL NINE FAMILIES SHARE ONE GENERATOR: A COUNT DERIVED FROM A TABLE AT AUTHORING TIME AND HAND-WRITTEN INTO PROSE NO CHECK RECOMPILES. Sweeping family-by-family WILL KEEP FINDING THEM. The durable fixes are (a) STATE THE FACT WITHOUT THE FRAGILE POSITION - name the lanes rather than the ordinal - and (b) MAKE A GENUINELY LOAD-BEARING COUNT A CHECK, exactly as scripts/check-citations.mjs already did for citation ordinals AFTER FOUR HAND-CORRECTION CARDS RE-DRIFTED."
+      changed_files:
+        - docs/goals/frameless-app-fidelity-v1/notes/T015-ordinal-chain.md
+      commands:
+        - cmd: "owner fingerprint START and FINISH, shasum -a 256, sorted whole LINES"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169, website 116 files. IDENTICAL at both ends. NEVER TOUCHED"
+        - cmd: "DERIVE the ordinals: slice the REAL SCENARIOS/DEMOS literals out of scripts/demo.mjs, eval them, apply announce()'s OWN predicates"
+          status: pass
+          note: "6 lanes, 17 scenarios, 8 applications. S14 is the ONLY row with an unbuilt entry (svelte, vue) - VERIFIED, NOT COPIED FROM THE CARD. Chain S10=1 S11=2 S12=3 S13=4 S15=5 S16=6 S17=7"
+        - cmd: "SWEEP the claim family REPO-WIDE, not only the six named lanes"
+          status: fail
+          note: "53 SITES / 21 FILES vs the 15/12 starting point. 28 in-scope, 6 demo-layer OUT OF SCOPE, 19 emitter/test OUT OF SCOPE. THE SWEEP IS THE FAILING GATE - the population does not fit the card"
+        - cmd: "13 explicit derived paths asserted to exist and be NON-EMPTY, then git diff --exit-code paired with git status --short. SHELL ARRAY, NO WILDCARD PATHSPEC"
+          status: pass
+          note: "13/13 exist non-empty; diff exit 0; status shows ONLY the three owner-dirty paths plus the untracked note"
+        - cmd: "re-run all six regenerate steps"
+          status: pass
+          note: "All six exit 0, real invocations confirmed from logs. Tree unchanged"
+        - cmd: "re-run all six copy-emitted steps"
+          status: pass
+          note: "All six exit 0. Tree STILL CLEAN after all twelve derivation steps"
+        - cmd: "pnpm check"
+          status: pass
+          note: "START 261, END 261. Delta 0 as predicted. NO PRODUCT FILE MOVED"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings / 0 errors over 558 files"
+        - cmd: "pnpm check:citations"
+          status: pass
+          note: "Clean over 4 watched documents, 17 watched source files, 610 swept. RE-RUN AFTER the note was written"
+        - cmd: "pnpm test / pnpm e2e"
+          status: skipped
+          note: "NOT RUN, AND RECORDED RATHER THAN QUIETLY OMITTED. With an EMPTY PRODUCT DIFF they would measure HEAD, not this card, and e2e would hold the six demo ports for no evidence. PM ACCEPTS THIS: T014 ran both green at 57a1f45 and this card moved no product byte"
+      deviations:
+        - "pnpm test and pnpm e2e were NOT run. The product diff is EMPTY, so they would report on HEAD rather than on this card. pnpm check, lint and check:citations WERE run and are reported with START and END. RECORDED, NOT HIDDEN."
+        - "THE SWEEP WAS WIDENED BEYOND THE SIX DEMO LANES TO THE WHOLE REPOSITORY. That is what surfaced the emitter-layer half of the population and the eighth and ninth families; A LANE-SCOPED SWEEP WOULD HAVE REPRODUCED THE VERY UNDERCOUNT THIS CARD EXISTS TO STOP."
+      remaining_blockers:
+        - "SCOPE IS THREE DEMO FILES SHORT OF ITS OWN POPULATION: add demos/angular-official/src/app/app.routes.ts (4 sites), demos/qwik/src/routes/hn/index.tsx (1) and demos/svelte-official/src/routes/hn/+page.svelte (1) to close the demo layer in ONE pass."
+        - "UPSTREAM SOURCE UNTOUCHED: the six packages/frameworks/*/scripts/regenerate.ts tables (18 sites) are WHERE THE DEMO WORDING IS PARAPHRASED FROM, plus react/test/size.test.ts (1). CORRECTING THE DEMOS ALONE LEAVES THE ORIGIN STALE AND THE ROT WILL RE-PROPAGATE."
+        - "EIGHTH FAMILY, CONFIRMED NOT MANUFACTURED: 'the Nth of M wrapper components in this lane' in demos/angular-official/src/app/*-page.ts. EIGHT wrappers exist; FIVE denominators are stale, and contacts-page.ts 'SIXTH of six' CONTRADICTS habits-page.ts 'SIXTH of EIGHT' IN THE SAME DIRECTORY. 5 sites / 5 files, SPLIT THE SAME WAY across the scope line."
+        - "NINTH FAMILY, PARTLY OPEN: present-tense 'the angular emitter refuses S11/S12' survives in the five non-angular regenerate.ts files and packages/compiler/test/enriched-ir.test.ts, plus four in-demo 'S11 and S12 lose angular' clauses. ~15 live sites. scripts/demo.mjs's OWN claim is PRECISELY TRUE - the word EXECUTABLE is load-bearing - and is NOT disputed."
+        - "NOT STALE, RECORDED SO IT IS NOT RE-OPENED: packages/frameworks/vue/src/gate/index.ts ALREADY counts S13/S15/S16/S17 as fourth/fifth/sixth/seventh - the derived chain, EXACTLY RIGHT."
+      spawned_tasks:
+        - T016
+      stopped_because: "stop_if: 'Need files outside allowed_files' AND 'About to half-close this population - correcting some lanes and leaving others'. No partition of the population, by lane or by scenario, lies wholly inside allowed_files, so THE LARGEST SAFE SLICE OF PRODUCT EDITS IS ZERO. The PM must widen scope and rule on the emitter layer - AND THE OWNER MUST RULE ON WHETHER TO KEEP HAND-CORRECTING AT ALL."
+  - id: T016
+    type: pm
+    assignee: PM
+    status: active
+    reasoning_hint: high
+    objective: >-
+      PUT THE STRUCTURAL DECISION TO THE OWNER. T015 refused to half-close the seventh population
+      and answered the convergence question: NOT CONVERGING. NINE FAMILIES SHARE ONE GENERATOR - a
+      count derived from a table at authoring time and hand-written into prose no check
+      recompiles. This is no longer a sweep-sized decision and the PM may not take it alone.
+    WHY_THIS_IS_THE_OWNERS_CALL_AND_NOT_MINE: >-
+      ALL THREE ORACLE PARTS ALREADY CERTIFY AT HEAD (T013, by its own measurement). The five
+      owner findings are closed. What remains is a DOCUMENTATION-DEBT DECISION whose three paths
+      produce MATERIALLY DIFFERENT WORK: keep hand-sweeping family by family; change the shape of
+      the fix so counts stop rotting; or accept a recorded gap and close. Choosing wrong wastes
+      the owner's time or ships a board that lies to its next reader.
+    scope:
+      - "Present the three paths with their real costs, using T015's measured numbers - 53 sites / 21 files for family seven ALONE, plus a confirmed eighth (5 sites) and a partly-open ninth (~15 sites)."
+      - "State plainly that the oracle certifies and that the record debt is SEPARABLE from it."
+      - "Do NOT recommend a fourth path the owner did not ask for, and do NOT start any of the three before the owner rules."
+    expected_output:
+      - "the owner's ruling, recorded verbatim in owner_decisions as OD3"
+      - "the next card, scoped to whatever the owner chose"
     receipt: null
