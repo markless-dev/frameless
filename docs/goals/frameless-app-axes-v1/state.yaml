@@ -58,7 +58,7 @@ goal:
       evaporates. If drag refuses and is quietly replaced by click-to-move, the axis goes
       unmeasured while the demo looks complete.
 
-active_task: T013
+active_task: T016
 
 rules:
   - "state.yaml is board truth; goal.md is the charter."
@@ -2015,7 +2015,7 @@ tasks:
   - id: T013
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       Two things T008 measured but could not touch: correct the REFUTED four-way `checked` claim
@@ -2067,8 +2067,125 @@ tasks:
       - "pnpm check rises above 267, pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
       - "NEVER pkill -f on a broad pattern. TWO FOREIGN PROCESSES ARE ALIVE: PID 64413 on 5175, PID 24931 on 5178."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T013-hardening.md
+      summary: "Corrected the refuted four-way `checked` comment AFTER REPRODUCING T008'S MEASUREMENT FROM SCRATCH rather than quoting it, with the dev-server-only limit stated and svelte named as the only mutating lane. Hardened FIVE sheets, not four. 36 lane pairs at ZERO and 44 per-lane captures UNMOVED - no lane was broken to make six agree."
+      IT_MEASURED_THE_NEIGHBOURING_CLAIM_RATHER_THAN_LEAVING_IT: "The card offered two options for the `requireForm` <select> `value` claim - measure it on its own evidence, or leave it alone. IT TOOK THE FIRST, because it was measurable without authoring anything: S17 already ships two `<select value={...}>` bindings in six lanes and its golden lowers ALL 15 value bindings to kind:'property'. MEASURED: served splits TWO ways on the attribute and THREE on how the selection is served, and ANGULAR SERVES NEITHER. Corrected on ITS OWN evidence, attributed to S17 not S7, and explicitly NOT on the strength of the checked finding. It also corrected a THIRD claim in the same file that the same reading refutes - and DELIBERATELY DID NOT WIDEN to S3's `value` on a text input, which was not measured."
+      IT_CAUGHT_ITS_OWN_MUTATION_HARNESS_REPORTING_TWENTY_FALSE_ZEROS: "The first mutation run reported 20 zeros WITH THE BARE SELECTORS STILL IN PLACE. Cause: the harness appended to <head>, but ON THE DEV SERVERS THE PAGE SHEET IS A <link> IN <body>. Recorded in the note AND in hn.css, BECAUSE IT NARROWS frameless-supplement.css's HOISTING PREMISE - on dev servers React does NOT hoist."
+      THE_H1_H2_HALF_CANNOT_USE_THE_HAS_FORM_AND_THAT_IS_MEASURED: "html:has() is specificity (0,1,2) and WOULD HAVE REWRITTEN EVERY HEADING IN ALL SIX LANES. The reset is `.X h1` at (0,1,1) instead, with SIX heading classes re-scoped to (0,2,0) to keep them above it. The card did not ask for the re-scoping; WITHOUT IT THE RESET WOULD HAVE OUTRANKED THEM AND MOVED EVERY LANE. Proved neutral by 44 per-lane captures at zero."
+      THE_MUTATION_TEST_EXPOSED_SOMETHING_THAT_IS_NOT_A_SELECTOR_PROBLEM: "Arm 1 (bare selectors, scaffold forced last) LEFT THE MUTANT ALIVE at /hn 307169, /hn-item 327596, /habits 355726, /board 614625, /contacts 883567, /codex 26342 - with /todomvc at 0 as the POSITIVE CONTROL. Arm 2 (hardened) took /hn and /hn-item to ZERO but left four token pages at 13498/27301/37698/7303 WITH ZERO RECT MOVEMENT. A THIRD CONTROL - scaffold forced last with every --x declaration deleted - took all four to 0, PROVING THE RESIDUAL IS A --accent/--border CUSTOM-PROPERTY COLLISION IN THE DERIVED tokens.css, UNREACHABLE FROM A PAGE SHEET."
+      changed_files:
+        - demos/react-official/three-way-contract.ts
+        - demos/shared/hn-css/hn.css
+        - demos/shared/habit-css/habits.css
+        - demos/shared/board-css/board.css
+        - demos/shared/contact-css/contacts.css
+        - demos/shared/shadcn-theme/codex.css
+        - docs/goals/frameless-app-axes-v1/notes/T013-hardening.md
+        - demos/react-official/public/hn-css/hn.css
+        - demos/react-official/public/habit-css/habits.css
+        - demos/react-official/public/board-css/board.css
+        - demos/react-official/public/contact-css/contacts.css
+        - demos/react-official/public/shadcn-theme/codex.css
+        - demos/solid-official/public/hn-css/hn.css
+        - demos/solid-official/public/habit-css/habits.css
+        - demos/solid-official/public/board-css/board.css
+        - demos/solid-official/public/contact-css/contacts.css
+        - demos/solid-official/public/shadcn-theme/codex.css
+        - demos/qwik/public/hn-css/hn.css
+        - demos/qwik/public/habit-css/habits.css
+        - demos/qwik/public/board-css/board.css
+        - demos/qwik/public/contact-css/contacts.css
+        - demos/qwik/public/shadcn-theme/codex.css
+        - demos/svelte-official/static/hn-css/hn.css
+        - demos/svelte-official/static/habit-css/habits.css
+        - demos/svelte-official/static/board-css/board.css
+        - demos/svelte-official/static/contact-css/contacts.css
+        - demos/svelte-official/static/shadcn-theme/codex.css
+        - demos/vue-official/public/hn-css/hn.css
+        - demos/vue-official/public/habit-css/habits.css
+        - demos/vue-official/public/board-css/board.css
+        - demos/vue-official/public/contact-css/contacts.css
+        - demos/vue-official/public/shadcn-theme/codex.css
+        - demos/angular-official/public/hn-css/hn.css
+        - demos/angular-official/public/habit-css/habits.css
+        - demos/angular-official/public/board-css/board.css
+        - demos/angular-official/public/contact-css/contacts.css
+        - demos/angular-official/public/shadcn-theme/codex.css
+      commands:
+        - cmd: "owner fingerprint START"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169 / 116, sorting the whole shasum OUTPUT LINES"
+        - cmd: "body-hash probe, 8 pages x 6 lanes + bogus route"
+          status: pass
+          note: "derived the REAL serving set: 36 lane pairs, NOT the card's 37"
+        - cmd: "RE-MEASURE `checked` on /s7, MutationObserver via addInitScript, six lanes"
+          status: pass
+          note: "SERVED IDENTICAL IN ALL SIX; svelte alone deletes at hydration. T008 REPRODUCED ROW FOR ROW by an INDEPENDENTLY WRITTEN script"
+        - cmd: "MEASURE the neighbouring <select> value claim on S17 /contacts"
+          status: pass
+          note: "15/15 value bindings are kind:'property'; served splits TWO ways on the attribute, THREE on how the selection is served; ANGULAR SERVES NEITHER"
+        - cmd: "CONTROL: instrument false-positive check on the select scan"
+          status: pass
+          note: "vue reported a 3rd <select> - IT WAS FIXTURE PROSE INSIDE AN HTML COMMENT. Comments stripped"
+        - cmd: "stylesheet-position sweep, every lane and page"
+          status: pass
+          note: "ON DEV SERVERS REACT DOES NOT HOIST: scaffold <style> in <head>, page sheet <link> in <body>"
+        - cmd: "MUTATION arm 1 (BARE selectors, scaffold forced last)"
+          status: pass
+          note: "MUTANT ALIVE on six pages; /todomvc 0 as the positive control"
+        - cmd: "MUTATION arm 2 (hardened, same forced order)"
+          status: pass
+          note: "/hn and /hn-item to 0; four token pages residual with ZERO rect movement"
+        - cmd: "CONTROL: scaffold forced last with every --x declaration deleted"
+          status: pass
+          note: "all four token pages go to 0 - the residual is a CUSTOM-PROPERTY COLLISION, not a selector"
+        - cmd: "PIXEL-DIFF all lane pairs after hardening"
+          status: pass
+          note: "36 pairs, NON-ZERO: 0"
+        - cmd: "PIXEL-DIFF per lane BEFORE->AFTER and BEFORE->FINAL"
+          status: pass
+          note: "44 captures, MOVED: 0 - NO LANE WAS BROKEN TO MAKE SIX AGREE"
+        - cmd: "pnpm test"
+          status: pass
+          note: "EXACTLY 1 failure (foreign ARM B), 1357 passed"
+        - cmd: "pnpm check"
+          status: pass
+          note: "267 - did not rise"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "PASS - 6 demos x 9 scenarios, all observations equal"
+        - cmd: "pnpm lint / pnpm check:citations"
+          status: pass
+          note: "0/0 over 552 files; citations clean, 604 swept"
+        - cmd: "git diff --exit-code -- packages/ and generated*/src/emitted, PAIRED with git status --short"
+          status: pass
+          note: "exit 0"
+        - cmd: "copy derivation 30/30 byte-identical, RE-CHECKED AFTER e2e REBUILT EVERY LANE"
+          status: pass
+          note: "no hand-edited lane copy"
+        - cmd: "demo servers stopped by recorded PID"
+          status: pass
+          note: "foreign PIDs 64413 and 24931 alive with original start times; pkill -f NEVER used"
+        - cmd: "owner fingerprint FINISH"
+          status: pass
+          note: "IDENTICAL to START"
+      deviations:
+        - "HARDENED shadcn-theme/codex.css AS A FIFTH SHEET. The card named four; T008's own note says FIVE are bare in one sentence and asks for four in the next, and codex.css got its bare block FROM T008 ITSELF. Leaving it would have left /codex - one of the eight pages THIS SAME CARD pixel-diffs - running the identical race."
+        - "MEASURED AND CORRECTED THE requireForm <select> value CLAIM, taking the card's FIRST option - see above."
+        - "ALSO CORRECTED A THIRD CLAIM IN THE SAME FILE that the same /s7 reading refutes. Deliberately NOT widened to S3's value on a text input, which was not measured."
+        - "RE-SCOPED SIX HEADING CLASS RULES to keep them above the reset. The card did not ask for this; without it the reset would have outranked them and MOVED EVERY LANE."
+        - "CORRECTED ITS OWN MUTATION HARNESS after it reported 20 false zeros - see above."
+      remaining_blockers:
+        - "THE CARD'S '37 LANE PAIRS' IS 36, derived from the measured serving set. T008 measured 35; T014's angular /hn-item lane makes it 36."
+        - "UNREPAIRED AND WORTH A CARD: the create-vite scaffold AND the DERIVED shadcn-theme/tokens.css BOTH declare --accent and --border on :root (exactly two names collide out of 13 and 39). On four pages the winner is STILL LOAD ORDER - 13498/27301/37698/7303 pixels, ZERO rect movement. The fix lives in copy-shadcn-theme.mjs's deriveTokens(), and it must answer what re-scoping does to that file's own .dark block. tokens.css is headed 'DERIVED, DO NOT EDIT' and is upstream MIT, SO THIS IS A RULING, NOT A MECHANICAL HARDENING."
+        - "EVERYTHING MEASURED HERE IS DEV-SERVER ONLY - the checked split, the <select> value split AND the stylesheet-position finding. pnpm e2e drives PRODUCTION builds and passes, but NO BUILT ARTIFACT'S <head> WAS READ."
+        - "/hn and /hn-item still have NO heading elements, so hn.css has no h1,h2 guard. A RULE MATCHING NOTHING CANNOT BE MUTATION-TESTED."
+        - "BOTH FOREIGN PROCESSES STILL ALIVE AND UNTOUCHED."
+      stopped_because: null
   - id: T014
     type: worker
     assignee: Worker
@@ -2377,7 +2494,7 @@ tasks:
   - id: T016
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
     objective: >-
       LAND T012's RULING: open the SCALAR-STRING persistence authoring channel in the FRAMELESS
@@ -2524,6 +2641,36 @@ tasks:
       - "pnpm check rises above 267, pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
       - "NEVER pkill -f on a broad pattern. TWO FOREIGN PROCESSES ARE ALIVE: PID 64413 on 5175, PID 24931 on 5178."
       - "Verification fails twice for the same reason."
+    receipt: null
+
+  - id: T019
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: medium
+    objective: >-
+      RULE how to resolve the --accent / --border custom-property collision between the
+      create-vite scaffold and the DERIVED shadcn-theme/tokens.css.
+    WHAT_T013_MEASURED_AND_WHY_IT_IS_A_RULING: >-
+      Both declare --accent and --border on :root - EXACTLY TWO NAMES COLLIDE out of 13 and 39.
+      On /habits, /board, /contacts and /codex THE WINNER IS STILL LOAD ORDER: 13498 / 27301 /
+      37698 / 7303 differing pixels WITH ZERO RECT MOVEMENT, which is why nothing but a pixel
+      diff can see it. T013's hardening CANNOT reach it - a third control proved the residual
+      vanishes only when the custom properties themselves are removed, so IT IS NOT A SELECTOR
+      PROBLEM. The fix lives in copy-shadcn-theme.mjs's deriveTokens(), and tokens.css is headed
+      'DERIVED, DO NOT EDIT' and is UPSTREAM MIT - so re-scoping it is a ruling about vendored
+      bytes, not a mechanical change. IT MUST ALSO ANSWER WHAT RE-SCOPING DOES TO THAT FILE'S
+      OWN `.dark` BLOCK.
+    constraints:
+      - "READ-ONLY. If your harness forbids report .md files, SAY SO and let your receipt be the ruling, as T009 and T012 did."
+      - "MEASURE BEFORE RULING: which of the two declarations actually wins on each of the four pages today, and what each candidate fix costs in pixels. A ruling without those numbers is a guess."
+      - "RECTS CANNOT SEE THIS. T008 measured 86266 differing pixels while rects, 36 computed properties and text-run widths all reported agreement. PIXEL-DIFF OR THE CLAIM DOES NOT STAND."
+      - "Assume this brief contains at least one error and find it."
+    expected_output:
+      - "the ruling, with the deciding argument"
+      - "measured pixel cost per candidate, per page"
+      - "what happens to tokens.css's .dark block"
+      - "worker spec if it should proceed"
     receipt: null
 
   - id: T999

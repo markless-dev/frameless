@@ -74,8 +74,39 @@
  * It is neutralised HERE, in the page-scoped sheet, and NOT in the three shells:
  * those files are shared with S1-S12 and with the nine three-way scenarios that
  * `pnpm e2e` compares byte for byte across six lanes.
+ *
+ * --------------------------------------------------------------------------
+ * AND EVERY SELECTOR HERE IS SCOPED `:has(.cs)` RATHER THAN BARE. Bare `:root`,
+ * `#root` and `body` tie the scaffold's own `:root`, `#root` and `body` on
+ * specificity, so the winner is decided by LOAD ORDER and this file does not own
+ * that order. `todomvc-app-css/frameless-supplement.css` declined that race from
+ * the start and records why: React 19 hoists a `<link>` rendered anywhere in the
+ * tree into `<head>` while Vite injects `src/index.css` at module-eval time, so
+ * the scaffold's sheet can land AFTER ours. `:has(.cs)` puts a class in each
+ * selector - `html:has(.cs)` beats `:root`, `#root:has(.cs)` beats `#root` - and
+ * also makes every rule here self-limiting to a page that actually renders the
+ * contacts app.
+ *
+ * MEASURED, BOTH ARMS, AT frameless-app-axes-v1 T013: with the scaffold's own
+ * bytes forced in as the LAST stylesheet in document order, react/solid/vue
+ * against svelte on /contacts went from 0 to 883567 differing pixels - and 12px
+ * of document height - with the bare selectors, and to 37698 pixels AND ZERO
+ * height change with these. THE REMAINDER IS NOT A SELECTOR AND NO RULE IN THIS
+ * FILE CAN REACH IT. Under the forced order every one of the 413 aligned rects
+ * still matches and every property these blocks declare still matches; what
+ * moves is `border-color` on 33 elements and `background-color` on 6, all of
+ * them `var(--border)` / `var(--accent)` reads. The scaffold declares 13 custom
+ * properties and `/shadcn-theme/tokens.css` declares 39, and EXACTLY TWO NAMES
+ * COLLIDE - `--accent` and `--border` - on the same element, from two `:root`
+ * blocks, so only source order can separate them. CONTROL: force the same
+ * scaffold in with every `--x:` declaration deleted and /contacts, /habits,
+ * /board and /codex all go to 0. `tokens.css` is DERIVED at copy time from
+ * upstream MIT bytes and is not this card's to re-scope; /hn, which uses no
+ * tokens, is at 0 in both arms, and so is /todomvc, whose sheet already used
+ * this form.
+ * --------------------------------------------------------------------------
  */
-:root {
+html:has(.cs) {
 	font:
 		normal 16px/1.5 ui-sans-serif,
 		system-ui,
@@ -113,8 +144,8 @@
 	color-scheme: light;
 }
 
-#root,
-#app {
+#root:has(.cs),
+#app:has(.cs) {
 	width: 100%;
 	max-width: none;
 	min-height: 0;
@@ -151,9 +182,19 @@
  *
  * Neutralised HERE and never in the three shells, which are shared with S1-S12
  * and with the nine scenarios `pnpm e2e` compares across six lanes.
+ *
+ * THE SCOPE HERE IS `.cs h1` AND NOT `html:has(.cs) h1`, AND THAT IS A
+ * SPECIFICITY MEASUREMENT RATHER THAN A STYLE CHOICE. This rule has to sit ABOVE
+ * the scaffold's `h1, h2` (0,0,1) and BELOW this page's own heading classes,
+ * because `.cs-sidehead` owns `letter-spacing` and `margin` and `.cs-crumb` and
+ * `.cs-formhead` own `margin`. `.cs h1` is (0,1,1): it beats the scaffold, and
+ * all THREE heading classes are re-scoped `.cs .cs-*` (0,2,0) so they still beat
+ * this. A `html:has(.cs) h1` form would have been (0,1,2), which outranks those
+ * classes and would have silently rewritten the sidebar heads, the crumb and the
+ * form head in ALL SIX lanes.
  */
-h1,
-h2 {
+.cs h1,
+.cs h2 {
 	font-family: inherit;
 	letter-spacing: normal;
 	line-height: 1.5;
@@ -161,7 +202,7 @@ h2 {
 	margin: 0;
 }
 
-body {
+body:has(.cs) {
 	margin: 0;
 	padding: 0;
 	background: var(--background);
@@ -312,7 +353,10 @@ body {
 	font-weight: 500;
 }
 
-.cs-sidehead {
+/* RE-SCOPED to outrank the `.cs h1, .cs h2` neutralisation above, which is
+   (0,1,1) and would otherwise take this rule's letter-spacing and margin away in every
+   lane at once. (0,2,0) beats (0,1,1). */
+.cs .cs-sidehead {
 	margin: 16px 0 4px;
 	padding: 0 8px;
 	color: var(--muted-foreground);
@@ -441,7 +485,10 @@ body {
 	font-size: 14px;
 }
 
-.cs-crumb {
+/* RE-SCOPED to outrank the `.cs h1, .cs h2` neutralisation above, which is
+   (0,1,1) and would otherwise take this rule's margin away in every
+   lane at once. (0,2,0) beats (0,1,1). */
+.cs .cs-crumb {
 	margin: 0;
 	font-size: 15px;
 	font-weight: 500;
@@ -763,7 +810,10 @@ body {
 	color: var(--card-foreground);
 }
 
-.cs-formhead {
+/* RE-SCOPED to outrank the `.cs h1, .cs h2` neutralisation above, which is
+   (0,1,1) and would otherwise take this rule's margin away in every
+   lane at once. (0,2,0) beats (0,1,1). */
+.cs .cs-formhead {
 	margin: 0;
 	font-size: 16px;
 	font-weight: 600;

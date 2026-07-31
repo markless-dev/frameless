@@ -98,8 +98,40 @@
  *
  * `color-scheme` is pinned because the scaffold declares `light dark` and flips
  * its palette under a dark-mode preference.
+ *
+ * --------------------------------------------------------------------------
+ * AND EVERY SELECTOR HERE IS SCOPED `:has(.codex)` RATHER THAN BARE. Bare
+ * `:root`, `#root` and `body` tie the scaffold's own `:root`, `#root` and `body`
+ * on specificity, so the winner is decided by LOAD ORDER and this file does not
+ * own that order. `todomvc-app-css/frameless-supplement.css` declined that race
+ * from the start and records why: React 19 hoists a `<link>` rendered anywhere
+ * in the tree into `<head>` while Vite injects `src/index.css` at module-eval
+ * time, so the scaffold's sheet can land AFTER ours. `:has(.codex)` puts a class
+ * in each selector - `html:has(.codex)` beats `:root` - and also makes every
+ * rule here self-limiting to a page that actually renders the codex clone.
+ *
+ * THIS SHEET WAS NOT ON THE HARDENING CARD'S LIST OF FOUR AND IS INCLUDED
+ * ANYWAY, because the sweep that wrote this block wrote it in the same bare form
+ * as the other four on the same day, so "the four newer sheets" undercounts by
+ * one. MEASURED, BOTH ARMS, AT frameless-app-axes-v1 T013: with the scaffold's
+ * own bytes forced in as the LAST stylesheet in document order, react/solid/vue
+ * against svelte on /codex went from 0 to 26342 differing pixels with the bare
+ * selectors and to 7303 with these - and the remainder IS NOT A SELECTOR AND NO
+ * RULE IN THIS FILE CAN REACH IT. Under the forced order every rect still
+ * matches and every property these blocks declare still matches; what moves is
+ * `border-color` on 7 elements, all of them `var(--border)` reads. The scaffold
+ * declares 13 custom properties and the DERIVED `tokens.css` beside this file
+ * declares 39, and EXACTLY TWO NAMES COLLIDE - `--accent` and `--border` - on
+ * the same element, from two `:root` blocks, so only source order can separate
+ * them. CONTROL: force the same scaffold in with every `--x:` declaration
+ * deleted and /codex, /habits, /board and /contacts all go to 0. `tokens.css` is
+ * DERIVED at copy time from upstream MIT bytes by `copy-shadcn-theme.mjs` and is
+ * not this card's to re-scope - re-scoping its `:root` would also put it above
+ * its own `.dark` block. /hn, which uses no tokens, is at 0 in both arms, and so
+ * is /todomvc, whose sheet already used this form.
+ * --------------------------------------------------------------------------
  */
-:root {
+html:has(.codex) {
 	font: normal 16px/1.5 ui-sans-serif, system-ui, sans-serif;
 	letter-spacing: normal;
 	/*
@@ -129,8 +161,8 @@
 	color-scheme: light;
 }
 
-#root,
-#app {
+#root:has(.codex),
+#app:has(.codex) {
 	width: 100%;
 	max-width: none;
 	min-height: 0;
@@ -141,8 +173,18 @@
 	text-align: left;
 }
 
-h1,
-h2 {
+/*
+ * THE SCOPE HERE IS `.codex h1` AND NOT `html:has(.codex) h1`, AND THAT IS A
+ * SPECIFICITY MEASUREMENT RATHER THAN A STYLE CHOICE. This rule has to sit ABOVE
+ * the scaffold's `h1, h2` (0,0,1) and BELOW this page's own heading class,
+ * because `.thread-title` owns `letter-spacing` and must keep it. `.codex h1` is
+ * (0,1,1): it beats the scaffold, and the heading class is re-scoped
+ * `.codex .thread-title` (0,2,0) so it still beats this. A `html:has(.codex) h1`
+ * form would have been (0,1,2), which outranks the class and would have silently
+ * rewritten the thread title in ALL FIVE lanes that serve this page.
+ */
+.codex h1,
+.codex h2 {
 	font-family: inherit;
 	letter-spacing: normal;
 	line-height: inherit;
@@ -150,7 +192,7 @@ h2 {
 	margin: 0;
 }
 
-body {
+body:has(.codex) {
 	margin: 0;
 	background: var(--background);
 	color: var(--foreground);
@@ -351,7 +393,10 @@ body {
 	border-bottom: 1px solid var(--border);
 }
 
-.thread-title {
+/* RE-SCOPED to outrank the `.codex h1, .codex h2` neutralisation above, which
+   is (0,1,1) and would otherwise take this rule's `letter-spacing` away in
+   every lane at once. (0,2,0) beats (0,1,1). */
+.codex .thread-title {
 	margin: 0;
 	font-size: 15px;
 	font-weight: 600;

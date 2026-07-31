@@ -30,12 +30,48 @@
  * rather than in the three shells because those files are shared with S1-S12 and
  * with the nine three-way scenarios `pnpm e2e` compares byte for byte.
  *
- * NOTE FOR A LATER CARD: /todomvc, /todomvc-advanced and /codex are served by
- * the same three shells and are presumably ALSO 26px-line-height and centred in
- * react, solid and vue while the other three lanes are not. That was not
- * measured here and is not repaired here.
+ * THAT NOTE IS NOW SETTLED: all eight shipped pages were swept across six live
+ * lanes at 1440x1000 and every one of them diffs to ZERO PIXELS. /todomvc and
+ * /todomvc-advanced were already clean; /codex was the only other page that was
+ * not, and it is repaired in `shadcn-theme/codex.css`.
+ *
+ * --------------------------------------------------------------------------
+ * AND EVERY SELECTOR IN THIS BLOCK IS SCOPED `:has(.hn, .hn-thread)` RATHER
+ * THAN BARE, WHICH IS THE ONE THING THIS SHEET STILL DEPENDED ON LUCK FOR.
+ *
+ * Bare `:root`, `#root` and `body` sit at EXACTLY the specificity of the
+ * scaffold's own `:root`, `#root` and `body`, so which sheet wins is decided by
+ * LOAD ORDER, and this file does not own that order. `frameless-supplement.css`
+ * declined that race from the start and says why: React 19 hoists a `<link>`
+ * rendered anywhere in the tree into `<head>`, while Vite injects
+ * `src/index.css` at module-eval time, so the scaffold's sheet can land AFTER
+ * ours. Adding `:has(...)` puts a class in each selector - `html:has(.hn)`
+ * beats `:root`, `#root:has(.hn)` beats `#root`, `body:has(.hn)` beats `body` -
+ * so the outcome stops depending on which sheet the host injected last.
+ *
+ * MEASURED, BOTH ARMS, AT frameless-app-axes-v1 T013. With the scaffold's own
+ * bytes forced in as the LAST stylesheet in document order, react/solid/vue
+ * against svelte on /hn went from 0 to 307169 differing pixels with the bare
+ * selectors and stayed at 0 with these. /todomvc, whose sheet already used this
+ * form, was at 0 in BOTH arms - the positive control that says the technique
+ * works rather than that the instrument is asleep.
+ *
+ * THE `:has()` ARGUMENT IS A LIST OF TWO, AND THAT IS NOT DECORATION. This one
+ * sheet is linked by TWO routes and their root elements are different: `/hn`
+ * renders `<section class="hn">` and `/hn-item` renders `<div class="hn-thread">`
+ * with no `.hn` anywhere on the page. Scoping on `.hn` alone would have silently
+ * un-neutralised the shell on /hn-item in four lanes.
+ *
+ * ALSO MEASURED, AND IT NARROWS THE CLAIM ABOVE RATHER THAN CONTRADICTING IT:
+ * on the DEV servers today React does NOT hoist these links - on all seven react
+ * pages the scaffold is a `<style>` in `<head>` and the page sheet is a `<link>`
+ * in `<body>`, so the page sheet is already last. The race is a property of the
+ * hosts, not of this tree's current output, and this scoping is what makes that
+ * irrelevant. `pnpm e2e` drives PRODUCTION builds and their injection order was
+ * NOT measured.
+ * --------------------------------------------------------------------------
  */
-:root {
+html:has(.hn, .hn-thread) {
 	font: normal 10pt/normal Verdana, Geneva, sans-serif;
 	/*
 	 * `letter-spacing` IS THE LAST 10 PIXELS, and it was found the same way the
@@ -76,8 +112,8 @@
 	color-scheme: light;
 }
 
-#root,
-#app {
+#root:has(.hn, .hn-thread),
+#app:has(.hn, .hn-thread) {
 	width: 100%;
 	max-width: none;
 	min-height: 0;
@@ -88,7 +124,7 @@
 	text-align: left;
 }
 
-body {
+body:has(.hn, .hn-thread) {
 	margin: 0;
 	padding: 0;
 	background: #ffffff;

@@ -1785,18 +1785,35 @@ export function measureFormKeys(html: string): string[] {
  * that is a MEASURED constraint rather than a preference. S7's `checked`
  * bindings — the two radios and the checkbox inside the keyed repeat — lower to
  * `kind: 'property'`, and what a property binding does to the serialized
- * `checked` attribute splits the six lanes FOUR ways. Measured on this tree, at
- * this scenario, in a real browser (see the T030 note):
+ * `checked` attribute splits the six lanes TWO ways. Re-measured on this tree,
+ * in a real browser, with a `MutationObserver` installed before any page script
+ * (frameless-app-axes-v1 T008, reproduced independently at T013):
  *
- *   react, angular  the server writes `checked`, and it never moves again
- *   solid, qwik     the server does NOT write it; activation adds it, then frozen
- *   svelte          the server writes it and hydration DELETES it (`remove_input_defaults`)
- *   vue             the server does not write it; activation adds it AND TRACKS state
+ *   all six       the server writes `checked` identically — the served markup is
+ *                 the same string in every lane
+ *   five lanes    react, solid, qwik, vue, angular keep it; the attribute is
+ *                 present after activation and the property agrees
+ *   svelte        hydration DELETES the attribute (`remove_input_defaults`),
+ *                 leaving `.checked` true and the attribute absent
  *
- * So a `checked` reading cannot be part of a cross-lane observation string. It
- * is not silently dropped: what each control DID is observed instead, through
- * `picked` and `chosen`, which are text projections of the state those handlers
- * write. This is the same trade `assertS3` records for `value`, one axis wider.
+ * At the INSTANT of hydration they split three ways: solid, qwik and angular
+ * perform no mutation at all; react and vue re-write the same value; svelte
+ * removes it. An earlier revision of this comment recorded a FOUR-way split in
+ * which solid, qwik and vue did not serve the attribute at all — THAT IS
+ * REFUTED; ALL SIX SERVE IT. The refuted rows came from a probe on an older
+ * tree (the T030 note), which is why this one was re-read off the live payload
+ * rather than inherited.
+ *
+ * WHAT WAS MEASURED AND WHAT WAS NOT, STATED PLAINLY: both measurements drove
+ * the six DEV servers. `pnpm e2e` drives PRODUCTION builds, and the built
+ * artifacts were NOT measured. The SSR path is the same code, but that is an
+ * argument, not a reading.
+ *
+ * So a `checked` reading cannot be part of a cross-lane observation string —
+ * because of svelte, not because of four disagreeing lanes. It is not silently
+ * dropped: what each control DID is observed instead, through `picked` and
+ * `chosen`, which are text projections of the state those handlers write. This
+ * is the same trade `assertS3` records for `value`, one axis wider.
  */
 async function measureForm(page: PageHandle): Promise<{
   size: string
@@ -1841,11 +1858,30 @@ function requireForm(
   expected: Record<string, string> & { step: string },
 ): void {
   const why: Record<string, string> = {
+    // THE "FOUR WAYS" HERE WAS ALSO WRONG, AND IT WAS CORRECTED ON ITS OWN
+    // EVIDENCE RATHER THAN ON THE `checked` FINDING ABOVE. S7 binds `data-size`
+    // and never `value`, so this scenario could not settle it — but S17
+    // (`/contacts`) SHIPS TWO `<select value={...}>` BINDINGS in all six lanes,
+    // and the S17 golden lowers all fifteen of its `value` bindings to
+    // `kind: 'property'`. Measured there, six live dev servers, served payload
+    // with HTML comments stripped:
+    //   react, svelte, angular   NO `value` attribute on the <select>
+    //   solid, qwik, vue         `value="all"` / `value="northgate"` on it
+    // On the exact question this rationale asks — whether it reaches the served
+    // ATTRIBUTE at all — that is a TWO-WAY split, not four. Widen it to "how is
+    // the selection served at all" and it is THREE: react and svelte serve
+    // `<option selected>` instead; solid, qwik and vue serve the attribute and
+    // no `selected` option; ANGULAR SERVES NEITHER, so its payload carries no
+    // selection until JS runs. No lane mutates a select's `value` attribute at
+    // the hydration instant, and all six agree on the `.value` property after
+    // activation. DEV SERVERS ONLY; the production builds `pnpm e2e` drives were
+    // not measured. frameless-app-axes-v1 T013.
     size:
       'the `<select>`\'s state, projected through an `attribute`-kind binding. It is the one ' +
       'reading a select can carry across all six lanes: a `value` binding on a select lowers to ' +
-      '`kind: \'property\'` and the six lanes disagree four ways about whether it reaches the ' +
-      'served attribute at all.',
+      '`kind: \'property\'`, and measured on S17 the six lanes split TWO ways on whether it ' +
+      'reaches the served attribute at all and THREE ways on how the selection is served — with ' +
+      'angular serving no record of it at all.',
     notes: 'the `<textarea>`\'s state, projected the same way and for the same reason.',
     picked:
       'which radio the group holds, as TEXT. The radios themselves bind `checked`, a property ' +
@@ -1902,9 +1938,16 @@ function requireForm(
  * S3's). BOOLEAN AND DYNAMIC ATTRIBUTES are `kind: 'attribute'` bindings. Both
  * live on the same host machinery and both are decided by the same per-lane
  * renderer, so folding them is what lets one scenario show that the two kinds
- * behave completely differently: every `attribute` reading below is identical in
- * all six lanes, and no `property` reading is identical in any two adjacent
- * ones.
+ * behave differently: every `attribute` reading below is identical in all six
+ * lanes, and the `property` readings are not — but NOT in the way this comment
+ * used to claim. It said "no `property` reading is identical in any two adjacent
+ * ones". MEASURED at frameless-app-axes-v1 T013, on this scenario's own three
+ * `checked` bindings, on the dev servers: the SERVED string is IDENTICAL IN ALL
+ * SIX and the post-activation `.checked` property is too; only svelte's
+ * ATTRIBUTE differs, because hydration deletes it. So the divergence is ONE LANE
+ * WIDE at the observable, not five. `assertS3`'s `value` on a text input is a
+ * different property on a different element and was NOT re-measured here — this
+ * correction is deliberately not widened to it.
  *
  * ## The three states of a dynamic attribute, all asserted
  *
