@@ -58,7 +58,7 @@ goal:
       evaporates. If drag refuses and is quietly replaced by click-to-move, the axis goes
       unmeasured while the demo looks complete.
 
-active_task: T017
+active_task: T020
 
 rules:
   - "state.yaml is board truth; goal.md is the charter."
@@ -2640,7 +2640,7 @@ tasks:
   - id: T017
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       ONE ARCHITECTURE RULING FOR THREE LANES: is a RELATIVE MODULE SPECIFIER an inventory form
@@ -2674,8 +2674,37 @@ tasks:
       - "the angular Content + ng-content-rejection joint ruling"
       - "the svelte RenderTag/Component ruling"
       - "worker spec if any should proceed"
-    receipt: null
-
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      harness: claude-code
+      summary: "RULING 1: A RELATIVE MODULE SPECIFIER IS NOT AN INVENTORY FORM. Angular, vue and svelte adopt react/solid's mechanism - relative specifiers leave observeForms' import: domain and are resolved against recordedRelativeImportSpecifiers(artifact). MEASURED, NOT ASSUMED: in all three lanes the recorded set EQUALS the emitted specifier set exactly, using the one-line .tsrx substitution each emitter ALREADY performs. RULING 2: admit angular template-node:Content at floor 2.0 and INVERT the ng-content must-reject row. RULING 3: admit svelte RenderTag and Component at 5.0 - AND THE SVELTE LANE CARRIES THE SAME CONTRADICTION ANGULAR DOES, which the dispatch named only for angular. ALL THREE DEBT PINS DIE."
+      THE_DECIDING_ARGUMENT_READ_AT_ITS_ORIGIN: "docs/emitter-idiom-policy.md scopes the inventory to 'imported FRAMEWORK APIs' and 'template node kinds', and requires A VERSION FLOOR PER ENTRY. A relative sibling module is NOT a framework API and HAS NO FLOOR - it is OUTSIDE THE INVENTORY'S DECLARED DOMAIN, so allowlisting the literal admits ONE FILENAME and nothing generalises. TEMPLATE NODE KINDS ARE INSIDE IT, which is why Content/RenderTag/Component are ADMISSIONS rather than exclusions."
+      THE_BRIEF_ERROR_THAT_MATTERS: "SVELTE HAS THE IDENTICAL STANDING-TEST CONTRADICTION AND THE DISPATCH TREATED IT AS A PLAIN ADMISSION. svelte/test/gate.test.ts plants {@render thing()} as a MUST-REJECT and asserts 'RenderTag' - while generated-composition/M1-panel.svelte SHIPS {@render children?.()}. BOTH SMALLER RULINGS ARE JOINT, NOT ONE. And that same row carries its own repair precedent: its {@attach} arm was INVERTED, NOT DELETED, when AttachTag was inventoried - matching angular's NgZone precedent."
+      ZERO_STANDING_CORPUS_EXPOSURE: "MEASURED: there are ZERO relative imports under generated/ in react, solid, angular, vue or svelte, so the new policy CANNOT FIRE on a standing corpus. And ruling the form does NOT let the tier join checkGeneratedFiles() - that entry point SUPPLIES NO ARTIFACT, which is why react's own tier is gated by a dedicated artifact-supplying row."
+      THE_FINGERPRINT_CLAIM_IS_REFUTED_AND_THIS_IS_THE_LESSON: "T017 reported 24edb270 / 30403cba / f1a06e0f and said the PM's rebuttal of T018 was itself refuted. THE PM RE-MEASURED AGAIN, WITH TIMESTAMPS, AT THE SAME COMMIT T017 NAMED (2c81b5a): pnpm-lock.yaml = f326d314 with mtime 2026-07-28 22:06:17, pnpm-workspace.yaml = aeb7edc1 with mtime 2026-07-28 09:12:26, website/ = f936e169 over 116 files. BOTH FILES PREDATE THIS SESSION AND HAVE NOT BEEN TOUCHED. DECISIVE: A SINGLE FILE'S shasum IS CONTENT-ONLY AND ADMITS NO METHOD VARIATION - measured by absolute path it is STILL f326d314. So 24edb270 CANNOT be a method difference on that file. The TREE digest IS path-sensitive (relative f936e169, absolute 086e7519, ./-prefixed ffc61397), which explains variance on website/ but NOT on the two single files. CONCLUSION: THE BOARD IS CORRECT AND BOTH AGENTS ARE WRONG. TWO AGENTS AGREEING IS NOT TWO MEASUREMENTS - T017 read T018's numbers in its own dispatch and 'confirmed' them. THAT IS THE CITATION-CHAIN FAILURE T015 IDENTIFIED, RECURRING ONE CARD LATER AND IN THE OPPOSITE DIRECTION."
+      rationale: "The inventory's own contract decides ruling 1, and the port was measured in all three lanes rather than assumed. Template node kinds are in the domain, so they are admissions - each entangled with a standing must-reject row whose in-file repair precedent is INVERSION, not deletion. Every pin's debt is paid, so every pin must be retired: A PIN LEFT STANDING AFTER ITS DEBT IS PAID IS A CHECK THAT CANNOT FAIL."
+      evidence:
+        - "MEASURED at 2c81b5a via each lane's own checkSources: angular composition = 3 violations, vue = 1, svelte = 3, qwik = 0"
+        - "MEASURED: react and solid composition tiers WITH fixture artifacts = 0 violations 0 unevaluated; WITHOUT = exactly 1, 'Undisclosed import: ./M1-panel.jsx'"
+        - "MEASURED PORT: in all three lanes recordedRelativeImportSpecifiers with the lane's own substitution yields a set EQUAL to the emitted relative specifiers"
+        - "ORIGIN, not a quoting document: docs/emitter-idiom-policy.md scopes the inventory to imported framework APIs and template node kinds, each carrying a version floor"
+        - "MEASURED: zero relative imports under generated/ in any lane"
+        - "ORIGIN: angular/test/gate.test.ts plants <ng-content> as must-reject while generated-composition ships it in TWO files; repair precedent in the same file (inject/NgZone)"
+        - "BRIEF ERROR, ORIGIN: svelte/test/gate.test.ts plants {@render} as must-reject while M1-panel.svelte ships it; its own {@attach} arm was inverted for exactly this event"
+        - "Content at floor 2.0 CANNOT move ANGULAR_BASELINE_FLOOR, which is a max reduce pinned at 19.0"
+        - "PM COUNTER-MEASUREMENT: single-file shasum is content-only and gives f326d314 by relative AND absolute path; mtimes are 2026-07-28, before this session"
+      missing_evidence:
+        - "Floor EVIDENCE for svelte RenderTag/Component was NOT dated - the Worker must verify a citation in the resolved package or record an unverified reason over 40 chars."
+        - "Which angular template-node kind the emitter has NO ROUTE TO is unmeasured; the Worker must pick it by CORPUS-WIDE ABSENCE, not preference."
+        - "pnpm check at 2c81b5a was not re-run by the Judge; 251 is T018's measurement."
+      remaining_blockers:
+        - "THE FINGERPRINT CORRECTION IS REJECTED. The board keeps f326d314 / aeb7edc1 / f936e169, 116 files, re-verified with timestamps. FUTURE CARDS MUST MEASURE, NOT AGREE WITH THE PREVIOUS CARD."
+        - "THE pnpm check CEILING IS 267 ON QUEUED CARDS AND HEAD MEASURES 251. Two cards have now measured 251. Ratcheting mid-board could fail a running card, so T999 owns it."
+        - "T019 (--accent/--border collision) and T999 are untouched by this ruling."
+      verification_attempts: 1
+      stopped_because: null
   - id: T018
     type: worker
     assignee: Worker
@@ -2819,6 +2848,75 @@ tasks:
       - "measured pixel cost per candidate, per page"
       - "what happens to tokens.css's .dark block"
       - "worker spec if it should proceed"
+    receipt: null
+
+  - id: T020
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    objective: >-
+      Land T017's THREE RULINGS in ONE card across the angular, vue and svelte gates. NO EMITTER
+      AND NO EMITTED BYTE MOVES. Read T017's receipt on this board - it IS the ruling, and it
+      carries the full verify list and every measured citation.
+    RULING_1_RELATIVE_SPECIFIERS_LEAVE_THE_INVENTORY: >-
+      Give each lane a lane-local recordedRelativeImportSpecifiers(artifact) mirroring react's,
+      using ITS OWN substitution as measured in its emitter, and remove relative specifiers from
+      observeForms' import: domain. MEASURED: the recorded set EQUALS the emitted set in all
+      three lanes, and ZERO relative imports exist under any lane's generated/, so the policy
+      cannot fire on a standing corpus. THE INVENTORY KEEPS ITS PACKAGE DUTY - svelte's
+      ForeignImportMutant row, angular's NgZone row and vue's equivalent MUST STILL draw
+      baseline-form-inventory.
+    RULINGS_2_AND_3_ARE_JOINT_IN_BOTH_LANES: >-
+      Admit angular template-node:Content (floor 2.0, unverified, reason over 40 chars) and
+      svelte template-node:RenderTag + template-node:Component (5.0). EACH IS ENTANGLED WITH A
+      STANDING MUST-REJECT ROW THAT USES THE SAME CONSTRUCT AS ITS EXAMPLE - angular's ng-content
+      row AND, WHICH THE T017 DISPATCH MISSED, svelte's {@render} row. INVERT BOTH, DO NOT DELETE
+      THEM: each file carries its own inversion precedent (angular's inject/NgZone, svelte's
+      {@attach}). For angular, ADD a template-node kind the emitter has NO ROUTE TO, chosen BY
+      CORPUS-WIDE ABSENCE, not preference.
+    EVERY_DEBT_PIN_DIES: >-
+      T015's three pins become real coverage rows in the shape of react's - artifact supplied,
+      0 violations AND 0 unevaluated asserted - each killed BOTH WAYS by an on-disk artifact
+      mutation and an inventory-entry removal. A PIN LEFT STANDING AFTER ITS DEBT IS PAID IS A
+      CHECK THAT CANNOT FAIL.
+    THE_FINGERPRINT_IS_f326d314_aeb7edc1_f936e169: >-
+      T018 and T017 BOTH reported 24edb270 / 30403cba / f1a06e0f. THE PM RE-MEASURED WITH
+      TIMESTAMPS AT 2c81b5a AND REFUTED IT: the two single files hash to f326d314 and aeb7edc1
+      with mtimes of 2026-07-28, BEFORE this session, and A SINGLE FILE'S shasum IS CONTENT-ONLY
+      AND ADMITS NO METHOD VARIATION - absolute path gives the same digest. The TREE digest IS
+      path-sensitive (relative f936e169, absolute 086e7519, ./-prefixed ffc61397), so USE
+      RELATIVE PATHS. MEASURE IT YOURSELF; DO NOT AGREE WITH A PREVIOUS CARD.
+    allowed_files:
+      - "packages/frameworks/angular/src/gate/index.ts"
+      - "packages/frameworks/angular/test/**"
+      - "packages/frameworks/vue/src/gate/index.ts"
+      - "packages/frameworks/vue/test/**"
+      - "packages/frameworks/svelte/src/gate/index.ts"
+      - "packages/frameworks/svelte/test/**"
+      - "docs/emitter-idiom-policy.md"
+      - "docs/goals/frameless-app-axes-v1/notes/T020-relative-import-ruling.md"
+    verify:
+      - "CALIBRATION BOTH DIRECTIONS, PER LANE: WITH the fixture artifact the composition tier is 0 violations AND 0 unevaluated; WITHOUT it the tier draws the new policy EXACTLY ONCE on M2-page; and a specifier the artifact does NOT record goes RED."
+      - "THE INVENTORY KEEPS ITS PACKAGE DUTY: the three foreign-import rows must STILL draw baseline-form-inventory. Excluding relative specifiers must not weaken package coverage."
+      - "PRINT ANGULAR_BASELINE_FLOOR BEFORE AND AFTER - it must stay 19.0 - and the exact 17.0 tier list must be unchanged."
+      - "BOTH must-reject rows INVERTED, NOT DELETED, each keeping its other arms."
+      - "EVERY DEBT PIN RETIRED and replaced by an artifact-supplying coverage row, each killed BOTH ways and restored with git diff --exit-code clean."
+      - "STANDING CORPORA UNMOVED: each lane's checkGeneratedFiles() over generated/ ONLY, 0 violations printed BEFORE and AFTER, side by side."
+      - "NO EMITTED BYTE MOVES: git diff --exit-code over every generated/, generated-composition/, generated-persistence/ and demos/*/src/emitted/ path, PAIRED WITH git status --short."
+      - "pnpm test at EXACTLY 1 failure / pnpm check NOT ABOVE 267 - REPORT THE ACTUAL NUMBER, since two cards measured 251 - VERIFIED BY SET DIFF NOT COUNT / pnpm e2e 6 x 9 / pnpm lint / pnpm check:citations (docs/emitter-idiom-policy.md is watched)."
+      - "OWNER FINGERPRINT at START and FINISH, MEASURED BY YOU with RELATIVE paths: f326d314 / aeb7edc1 / f936e169, 116 files."
+    stop_if:
+      - "Need files outside allowed_files - in particular any emitter or any generated artifact."
+      - "You are about to admit a LITERAL relative specifier to any BASELINE_FORM_INVENTORY. THAT IS THE ANSWER THIS RULING REJECTS."
+      - "You are about to DELETE a standing must-reject row instead of INVERTING it. TWO rows are in scope and both have an in-file inversion precedent."
+      - "The ported policy fires on any file under a lane's generated/. RECORD IT AND STOP."
+      - "ANGULAR_BASELINE_FLOOR moves off 19.0."
+      - "You are about to route generated-composition/ through checkGeneratedFiles() to make it look covered. React and solid do NOT do that."
+      - "You are about to verify a lane gate rule with pnpm lint. IT IS OXLINT OVER 93 RULES AND DOES NOT CARRY THEM - T018 measured this."
+      - "pnpm check rises above 267, pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
+      - "NEVER pkill -f on a broad pattern. FOREIGN node PID 64413 holds 5175 and PID 24931 holds 5178."
+      - "Verification fails twice for the same reason."
     receipt: null
 
   - id: T999
