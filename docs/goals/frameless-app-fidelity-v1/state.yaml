@@ -263,6 +263,12 @@ tasks:
     type: judge
     assignee: Judge
     status: queued
+    concurrent_with: >-
+      DISPATCHED ALONGSIDE T002, AND THE DISJOINTNESS IS PROVEN NOT ASSUMED: both are READ-ONLY
+      Judges, so neither writes a product file at all, and their only writes are their own notes
+      at different paths. Their subjects do not touch - T002 rules on ROUTING (anchors and href),
+      T003 on the EMITTER GLOBALS ALLOWLIST. active_task points at T002; that pointer answers
+      "which card owns the write scope", and here neither does.
     reasoning_hint: high
     objective: >-
       RULE THE GLOBALS ALLOWLIST for the angular and vue emitters. This is what costs S11 and S12
