@@ -15,20 +15,23 @@ import { hnDestination } from './scenario-props';
  * the link in their route wiring for the same reason, so the six pages stay like
  * for like.
  *
- * THIS IS THE THIRD APPLICATION ROUTE THIS LANE HAS, AND THE FIRST SINCE S10.
- * S11 (TodoMVC Advanced) and S12 (the Codex clone) have no counterpart here at
- * all: the Angular emitter REFUSES both on its global-identifier ban - "Angular
+ * THIS WAS THE THIRD APPLICATION ROUTE THIS LANE HAD, AND THE FIRST SINCE S10.
+ * S11 (TodoMVC Advanced) and S12 (the Codex clone) had no counterpart here at
+ * all: the Angular emitter REFUSED both on its global-identifier ban - "Angular
  * emitter cannot resolve the identifier \"Promise\" in a transplanted body" -
  * because their artificial delays are `new Promise` + `setTimeout` and this lane
- * cannot NAME a global inside a transplanted body. See
- * `packages/frameworks/angular/test/unbuilt-scenarios.ts`, which drives the real
- * `emit()` and asserts the recorded message.
+ * could not NAME a global inside a transplanted body. `frameless-app-fidelity-v1`
+ * T003 ruled a TWO-NAME allowlist - `Promise` and `setTimeout`, nothing else -
+ * and T007 landed it, so both now serve at /todomvc-advanced and /codex and
+ * `ANGULAR_UNBUILT_SCENARIOS` is empty.
  *
- * S13 CLEARS THAT BAN BY CONSTRUCTION RATHER THAN BY LUCK. Every relative age on
- * the page ("3 hours ago") is a LITERAL STRING in the seeded data, so nothing in
- * the module names `Date` - and it could not have been rescued by passing the
- * ages as props either, because they are PER ROW and IR-8 has no lowering for an
- * array type. See the fixture's constraint (9).
+ * S13 CLEARED THAT BAN BY CONSTRUCTION RATHER THAN BY LUCK, AND STILL DOES ON
+ * THE HALF THAT MATTERS. Every relative age on the page ("3 hours ago") is a
+ * LITERAL STRING in the seeded data, so nothing in the module names `Date` - and
+ * it could not have been rescued by passing the ages as props either, because
+ * they are PER ROW and IR-8 has no lowering for an array type. See the fixture's
+ * constraint (9). `Date` IS STILL REFUSED, on determinism rather than on
+ * capability, so that constraint stands after the allowlist as it did before.
  *
  * IT CANNOT LOAD ON APPEAR AND NOTHING HERE PRETENDS OTHERWISE. Fetch-on-render
  * is unreachable in every lane - no lifecycle hook in the authoring surface, and

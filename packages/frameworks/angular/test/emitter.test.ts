@@ -8,6 +8,7 @@ import { describe, expect, test } from 'vitest';
 import { componentSelector, emit, validateEnrichedIr } from '../src/emitter/index.ts';
 import { formatEmitted } from '../src/format-emitted.ts';
 import {
+	ANGULAR_FORMERLY_UNBUILT,
 	ANGULAR_UNBUILT_SCENARIOS,
 	isUnbuiltEmitted,
 	isUnbuiltGolden,
@@ -125,21 +126,21 @@ describe('Angular 22 emitter', () => {
 	});
 
 	/**
-	 * THE SUBTRACTION IS ASSERTED AGAINST A LIVE REFUSAL, which is what stops
-	 * `unbuilt-scenarios.ts` from being a skip list.
+	 * THE EMPTY LIST IS ASSERTED EXACTLY, BECAUSE AN EMPTY ITERATION ASSERTS
+	 * NOTHING.
 	 *
-	 * The row above compares two derived inventories and would be perfectly green
-	 * if this lane silently stopped emitting a scenario for a reason nobody
-	 * recorded - both sides subtract the same names. This row is the other half:
-	 * every declared unbuilt scenario is driven through the REAL `emit()` on its
-	 * REAL golden, and must throw with the recorded message. It goes red three
-	 * ways: the day the ban is lifted and the scenario emits, the day it starts
-	 * refusing for a different reason, and the day a listed golden disappears.
+	 * `ANGULAR_UNBUILT_SCENARIOS` carried two rows until
+	 * `frameless-app-fidelity-v1` T007 landed the two-name globals allowlist; the
+	 * loop below used to be guarded by `expect(length).toBeGreaterThan(0)`, which
+	 * would now FAIL rather than go quiet, and deleting that guard alone would have
+	 * left four suites iterating an empty array and calling it a pass.
+	 *
+	 * So the emptiness is a LITERAL EXPECTATION. The day this lane refuses a
+	 * scenario again, this row goes red and points at the file to add it to, and
+	 * the loop underneath - kept, not deleted - starts asserting again.
 	 */
-	test('every UNBUILT scenario really is refused, with the recorded message', async () => {
-		// A vacuous loop would make this row agree with an empty declaration, which
-		// is exactly the greener-than-the-literal failure the derivations guard.
-		expect(ANGULAR_UNBUILT_SCENARIOS.length).toBeGreaterThan(0);
+	test('the UNBUILT list is EMPTY, and the emptiness is asserted rather than iterated', async () => {
+		expect(ANGULAR_UNBUILT_SCENARIOS).toEqual([]);
 		for (const scenario of ANGULAR_UNBUILT_SCENARIOS) {
 			const ir = await golden(scenario.golden);
 			expect(() => emit(ir), `${scenario.golden} should still be refused`).toThrow(
@@ -150,6 +151,29 @@ describe('Angular 22 emitter', () => {
 				readdirSync(generatedRoot).includes(scenario.emitted),
 				`${scenario.emitted} must not exist in generated/`,
 			).toBe(false);
+		}
+	});
+
+	/**
+	 * THE OTHER HALF OF THE EMPTY LIST. The row above proves nothing is DECLARED
+	 * unbuilt; this one proves the two scenarios that used to be declared unbuilt
+	 * really do come out of the REAL `emit()` on their REAL goldens, and really are
+	 * on disk. Without it, "the list is empty" and "nobody ever populated the list"
+	 * are the same green.
+	 */
+	test('the two FORMERLY unbuilt scenarios now EMIT, and their artifacts exist', async () => {
+		expect(ANGULAR_FORMERLY_UNBUILT.length).toBe(2);
+		for (const scenario of ANGULAR_FORMERLY_UNBUILT) {
+			const ir = await golden(scenario.golden);
+			let source = '';
+			expect(() => {
+				source = emit(ir);
+			}, `${scenario.golden} must no longer be refused`).not.toThrow();
+			expect(source.length).toBeGreaterThan(0);
+			expect(
+				readdirSync(generatedRoot).includes(scenario.emitted),
+				`${scenario.emitted} must exist in generated/`,
+			).toBe(true);
 		}
 	});
 
@@ -402,9 +426,13 @@ describe('Angular 22 emitter', () => {
 	});
 
 	test('CALIBRATION: an unresolvable identifier THROWS rather than being guessed at', async () => {
-		// There is NO globals allowlist, deliberately: the corpus references zero
-		// globals, so an allowlist would be untested dead code. This is the row that
-		// proves the fail-closed arm actually fires.
+		// THE SURVIVING NEGATIVE CONTROL FOR THE WHOLE GLOBALS RULING, and the reason
+		// `ANGULAR_UNBUILT_SCENARIOS` being empty does not leave the fail-closed arm
+		// unwatched. The allowlist is EXACTLY `Promise` and `setTimeout`
+		// (`TRANSPLANTED_GLOBALS` in src/emitter/index.ts); `Math` is deliberately NOT
+		// on it, scores zero instances across all 17 fixtures, and would be untested
+		// dead code if admitted. This row is what proves the throw still fires - if it
+		// ever goes green, the allowlist has grown without a ruling.
 		const artifact = structuredClone(await golden('s1-render-once.json'));
 		const handler = artifact.records.events[0]!.handlers[0]! as { expression: Record<string, any> };
 		handler.expression.body.body.unshift({
@@ -547,11 +575,13 @@ describe('Angular 22 emitter', () => {
 		// ACTUALLY EMITS, and it moves the typed arm alone for the same reason:
 		// one prop entry (`onTrace`), declared with a type, so `typedInputsSeen`
 		// goes 7 -> 8 and `untypedInputsSeen` holds at 15 again. S11 and S12 are
-		// annotated too and do NOT appear here, because this lane REFUSES both on
-		// its global-identifier ban - `test/unbuilt-scenarios.ts` subtracts them by
-		// name. That is what makes the count 8 rather than 10, and it is the datum
-		// worth keeping: this figure tracks the modules this lane EMITS, not the
-		// modules the corpus AUTHORS.
+		// annotated too and did NOT appear here for as long as this lane REFUSED
+		// both on its global-identifier ban - `test/unbuilt-scenarios.ts` subtracted
+		// them by name, which is what made the count 8 rather than 10. THEY ARE
+		// COUNTED NOW: `frameless-app-fidelity-v1` T007 landed the two-name globals
+		// allowlist and the subtraction is empty. The datum survives the change and
+		// is worth keeping either way: this figure tracks the modules this lane
+		// EMITS, not the modules the corpus AUTHORS - it just no longer differs.
 		// S14 (HN ITEM - RECURSION) IS THE FIFTH ANNOTATED MODULE THIS LANE EMITS,
 		// THE ONLY ONE THAT MOVES THIS ARM BY TWO, AND THE ONLY MODULE IN THE WHOLE
 		// CORPUS WITH NO `onTrace` PROP AT ALL. Every application above adds exactly
@@ -571,9 +601,10 @@ describe('Angular 22 emitter', () => {
 		// EMITTED S14 correctly and its own dossier gate then rejected the result
 		// over `imports`. frameless-app-axes-v1 T009 ruled the form IN at floor 14.0
 		// (BELOW this lane's 19.0 floor, which did not move) and T014 landed it, so
-		// the subtraction and the file that declared it are gone. This figure is now
-		// short of the corpus's annotated count by TWO modules and ONE kind of
-		// absence - S11 and S12, the emitter's own refusal.
+		// the subtraction and the file that declared it are gone. That left this
+		// figure short of the corpus's annotated count by TWO modules and ONE kind of
+		// absence - S11 and S12, the emitter's own refusal - AND THAT LAST GAP IS
+		// CLOSED TOO, at the end of this comment.
 		// S15 (HABIT TRACKER) IS THE SIXTH ANNOTATED MODULE THIS LANE EMITS, and it
 		// moves the typed arm alone once more: one prop entry (`onTrace`), declared
 		// with a type, so `typedInputsSeen` goes 10 -> 11 while `untypedInputsSeen`
@@ -626,8 +657,26 @@ describe('Angular 22 emitter', () => {
 		// them. They are seeded row fields and `computed` getters now, both of which
 		// live in the CLASS rather than the inline template. See the fixture's
 		// angular row in scripts/regenerate.ts.
+		// S11 (TodoMVC ADVANCED) AND S12 (the CODEX CLONE) ARE THE NINTH AND TENTH
+		// ANNOTATED MODULES THIS LANE EMITS, AND THEY ARRIVED LAST HAVING BEEN
+		// AUTHORED FIRST. They are the two the census was short by for its whole
+		// life: this lane refused them on the global-identifier ban until
+		// `frameless-app-fidelity-v1` T007 landed the two-name allowlist. Each moves
+		// the typed arm by exactly one - a single prop entry (`onTrace`), declared
+		// with a type - so `typedInputsSeen` goes 13 -> 15 while `untypedInputsSeen`
+		// HOLDS AT 15 FOR THE SEVENTH AND EIGHTH TIME.
+		// THE HOLD IS THE MEASUREMENT AND THESE TWO TEST IT ON A NEW AXIS. S15, S16
+		// and S17 stressed it on template SIZE, event COUNT and write COUNT; these
+		// two are the corpus's only ASYNCHRONOUS applications, and an emitter that
+		// had reached for an untyped member to carry a promise, a timer handle or an
+		// in-flight flag would show it here and nowhere else. It does not: the
+		// optimistic revert, the remote query and the three-chunk stream are all
+		// component-local `state` and `computed` getters, and the only thing the
+		// allowlist added to the emitted surface is the right to NAME `Promise` and
+		// `setTimeout` inside a transplanted body. THIS FIGURE NOW EQUALS THE
+		// CORPUS'S ANNOTATED COUNT: the lane emits all seventeen.
 		expect({ typedInputsSeen, untypedInputsSeen }).toEqual({
-			typedInputsSeen: 13,
+			typedInputsSeen: 15,
 			untypedInputsSeen: 15,
 		});
 	});
@@ -1280,28 +1329,49 @@ export function HandlerProbe({ ready, onTrace }) @{
 	});
 
 	/**
-	 * EXACTLY ONE SHIPPED SCENARIO IS ASYNC, asserted rather than assumed.
+	 * EXACTLY THREE SHIPPED SCENARIOS ARE ASYNC, asserted rather than assumed.
 	 *
 	 * This row used to read "no emitted scenario contains an async member", which
 	 * is what licensed T045's `git diff --exit-code -- generated` check: there was
-	 * no async handler in the corpus for that repair to change. S8 IS THAT
-	 * HANDLER, so the claim is now the sharper one - the async members are in S8
-	 * and nowhere else - and it is two-sided for the same reason the pair of rows
-	 * above is. An emitter that stamped `async` on everything fails the second
-	 * arm; one that dropped it again - T043's FINDING 1, where the modifier went
-	 * silently missing and the surviving `await` made the class invalid
-	 * TypeScript - fails the first.
+	 * no async handler in the corpus for that repair to change. S8 was that
+	 * handler, and for a long time it was the only one - not because the corpus had
+	 * no other async application but because this lane REFUSED the two it had, on
+	 * the global-identifier ban. `frameless-app-fidelity-v1` T007 landed the
+	 * two-name allowlist and S11 and S12 joined, so THE SET GREW FOR A REASON THIS
+	 * FILE CAN NAME rather than drifting.
+	 *
+	 * It stays two-sided for the same reason the pair of rows above is. An emitter
+	 * that stamped `async` on everything fails the second arm; one that dropped it
+	 * again - T043's FINDING 1, where the modifier went silently missing and the
+	 * surviving `await` made the class invalid TypeScript - fails the first.
 	 */
-	test('S8 is the ONE emitted scenario with async members, and the other eight have none', async () => {
+	test('S8, S11 and S12 are the async emitted scenarios, and the other fourteen have none', async () => {
 		const asyncScenarios: string[] = [];
 		for (const file of emittedScenarios())
 			if (/\basync\b/.test(await emitted(file))) asyncScenarios.push(file);
-		expect(asyncScenarios).toEqual(['S8.ts']);
+		expect(asyncScenarios).toEqual(['S8.ts', 'S11.ts', 'S12.ts']);
 		// The modifier is on the METHODS, with the promise return type that makes
 		// the emitted `await` legal: a bare `async` anywhere else in the file would
 		// satisfy the line above without the class being correct.
 		const s8 = await emitted('S8.ts');
 		expect(s8.match(/^\tasync onH\d+Click\(event: any\): Promise<void> \{$/gm)).toHaveLength(2);
 		expect(s8).toContain('await this.ready;');
+		// AND FOR THE TWO NEW ONES THE MODIFIER IS NOT ENOUGH, because both of them
+		// contain the literal string 'Measure the async door' in their seeded data -
+		// which satisfies `/\basync\b/` on its own. The methods are asserted by
+		// SIGNATURE, and the thing the allowlist actually bought is asserted next to
+		// them: the delay is spelled with the two admitted globals, unqualified.
+		const s11 = await emitted('S11.ts');
+		expect(s11.match(/^\tasync onH\d+\w+\([\w\s:,]*\): Promise<void> \{$/gm)).toHaveLength(2);
+		expect(s11).toContain('await new Promise((settle) => {');
+		expect(s11).toContain('setTimeout(() => settle(true), 600);');
+		expect(s11).not.toContain('this.Promise');
+		expect(s11).not.toContain('this.setTimeout');
+		const s12 = await emitted('S12.ts');
+		expect(s12.match(/^\tasync onH\d+\w+\([\w\s:,]*\): Promise<void> \{$/gm)).toHaveLength(1);
+		expect(s12.match(/await new Promise\(\(settle\) => \{/g)).toHaveLength(3);
+		expect(s12.match(/setTimeout\(\(\) => settle\(true\), 400\);/g)).toHaveLength(3);
+		expect(s12).not.toContain('this.Promise');
+		expect(s12).not.toContain('this.setTimeout');
 	});
 });

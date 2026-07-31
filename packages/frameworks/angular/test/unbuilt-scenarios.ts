@@ -13,20 +13,33 @@
  * So it is declared ONCE, here, and the four suites import it.
  *
  * ---------------------------------------------------------------------------
- * WHY A SUBTRACTION AND NOT A FIXED EMITTER
+ * THE LIST IS EMPTY TODAY, AND THAT IS A RESULT RATHER THAN A DEFAULT.
  *
- * `frameless-app-suite-v1` T001 measured the Angular emitter's standing
- * global-identifier ban: every `Identifier` in a TRANSPLANTED body must resolve
- * to lexical scope, a function parameter, a `@for` variable, or a declared
- * component member, and the emitter THROWS rather than guessing whether the name
- * is a global. `Promise`, `setTimeout`, `fetch`, `Date` and `JSON` are all
- * globals. That was measured on `probes/async-door` PC, a FULLY SYNCHRONOUS
- * control module - so the ban is NOT an async limit, and calling it one would be
- * the third false lane limit that probe run caught.
+ * It carried exactly two rows for its whole life - S11 (TodoMVC ADVANCED) and
+ * S12 (the CODEX CLONE) - subtracted on the Angular emitter's standing
+ * global-identifier ban, which `frameless-app-suite-v1` T001 measured: every
+ * `Identifier` in a TRANSPLANTED body had to resolve to lexical scope, a function
+ * parameter, a `@for` variable, or a declared component member, and the emitter
+ * THREW rather than guessing whether the name was a global. The artificial delay
+ * this repo's owner accepted as a stand-in for a real remote is `new Promise` +
+ * `setTimeout` created inside a handler, and neither name could be spelled here.
  *
- * S11 (TodoMVC ADVANCED) is the first corpus scenario the ban actually reaches,
- * because the artificial delay this repo's owner accepted as a stand-in for a
- * real remote is `new Promise` + `setTimeout` created inside a handler.
+ * The ban was NEVER an async limit, and that correction is worth keeping: it was
+ * reproduced on `probes/async-door` PC, a FULLY SYNCHRONOUS control module, so
+ * calling it one would have been the third false lane limit that probe run caught.
+ *
+ * `frameless-app-fidelity-v1` T003 ruled the hole closed with a TWO-NAME
+ * ALLOWLIST - `Promise` and `setTimeout`, nothing else - and T007 landed it, so
+ * both rows were deleted and this lane now emits all 17 scenarios.
+ * `TRANSPLANTED_GLOBALS` in src/emitter/index.ts is where the two names live and
+ * where the argument for keeping the list at two is recorded.
+ *
+ * AN EMPTY LIST IS A HAZARD, NOT A CLEAN SLATE. Four suites ITERATE this array,
+ * and an empty iteration asserts nothing at all - so `emitter.test.ts` asserts the
+ * emptiness EXACTLY, drives both formerly-refused goldens through the real
+ * `emit()` and requires them to SUCCEED, and keeps a separate `Math` row as the
+ * live negative control proving the fail-closed arm still fires. Read those three
+ * together; no one of them carries the load alone.
  *
  * ---------------------------------------------------------------------------
  * THE SUBTRACTION IS ASSERTED, NOT ASSUMED - AND THAT IS THE WHOLE POINT.
@@ -61,23 +74,26 @@ export type UnbuiltScenario = {
 	readonly reason: string;
 };
 
-export const ANGULAR_UNBUILT_SCENARIOS: readonly UnbuiltScenario[] = [
-	{
-		golden: 's11-todomvc-advanced.json',
-		emitted: 'S11.ts',
-		refusalContains:
-			'Angular emitter cannot resolve the identifier "Promise" in a transplanted body',
-		reason:
-			"S11's remote query and optimistic revert both create their own promise with `new Promise` + `setTimeout`, and this lane cannot NAME a global inside a transplanted body. Measured on a fully synchronous control (probes/async-door PC), so it is a global-identifier ban and not an async limit.",
-	},
-	{
-		golden: 's12-codex-clone.json',
-		emitted: 'S12.ts',
-		refusalContains:
-			'Angular emitter cannot resolve the identifier "Promise" in a transplanted body',
-		reason:
-			"S12's streamed answer separates THREE unrolled chunks with `new Promise` + `setTimeout`, so the ban reaches it at the first chunk boundary. THE MESSAGE WAS READ OFF THE REAL S12 MODULE, not carried over from S11: it names S12's own declared members (blocked, bottomTab, draft, messages, nextMessage, nextThread, onTrace, openThread, openTitle, rightTab, status, streaming, threads, turns, turnsLabel, visible, visibleLabel), which is why `refusalContains` is a substring and stops before that list. Every SYNCHRONOUS axis of this app - thread navigation, both tab pairs, the composer draft - is inside this lane's envelope; it is the delay alone that is unnameable, and `computed(async ...)` is closed in all six lanes anyway (frameless-app-suite-v1 T001), so there is no other delay to reach for.",
-	},
+/**
+ * EMPTY, AND ASSERTED EMPTY. See the header: the two rows this list used to carry
+ * were deleted by `frameless-app-fidelity-v1` T007 when the two-name globals
+ * allowlist landed. The type, the helpers and the four consuming suites stay
+ * exactly as they were, so the next refusal this lane records is a one-row edit
+ * rather than a rebuild - which is the whole reason the mechanism is kept.
+ */
+export const ANGULAR_UNBUILT_SCENARIOS: readonly UnbuiltScenario[] = [];
+
+/**
+ * THE ROWS THAT WERE DELETED, AND THE GOLDENS THAT PROVE THE DELETION WAS EARNED.
+ *
+ * `emitter.test.ts` drives both of these through the real `emit()` and requires
+ * them to SUCCEED. Without this the empty array above would be indistinguishable
+ * from a list nobody ever populated, and the four inventory derivations would
+ * agree with it in silence.
+ */
+export const ANGULAR_FORMERLY_UNBUILT: readonly { golden: string; emitted: string }[] = [
+	{ golden: 's11-todomvc-advanced.json', emitted: 'S11.ts' },
+	{ golden: 's12-codex-clone.json', emitted: 'S12.ts' },
 ];
 
 const UNBUILT_GOLDENS = new Set(ANGULAR_UNBUILT_SCENARIOS.map((entry) => entry.golden));

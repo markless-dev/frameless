@@ -1,7 +1,12 @@
 import { readdirSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
-import { compileTemplate, parse, version as compilerVersion } from '@vue/compiler-sfc';
+import {
+	compileScript,
+	compileTemplate,
+	parse,
+	version as compilerVersion,
+} from '@vue/compiler-sfc';
 import { createSSRApp, version as runtimeVersion } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import { resolve } from 'pathe';
@@ -121,6 +126,78 @@ describe('emitted Vue compiles clean at the resolved version', () => {
 			expect(compileDiagnostics(source, file)).toEqual([]);
 		},
 	);
+});
+
+/**
+ * THE `_ctx.` ORACLE, AND THE ONE PLACE IT CAN HONESTLY BE READ.
+ *
+ * `frameless-app-fidelity-v1` T003 measured the defect this closes: the emitter
+ * inlines handler bodies into `v-on` TEMPLATE EXPRESSIONS, and Vue's template
+ * compiler prefixes any identifier it cannot resolve - anything outside
+ * `@vue/shared`'s `GLOBALS_ALLOWED`, which carries `Date` and `JSON` and does NOT
+ * carry `Promise` or `setTimeout` - with `_ctx.`. S11 and S12 therefore shipped
+ * `new _ctx.Promise(...)`, mounted, and threw `_ctx.Promise is not a constructor`
+ * on the first click.
+ *
+ * THE ASSERTION IS MADE OFF `compileTemplate` WITH `bindingMetadata`, NEVER OFF
+ * THE `.vue` SOURCE. The SFC never contains the string `_ctx` - the template
+ * compiler creates it - so a grep over the emitted file would report a clean zero
+ * on the broken output and prove nothing at all. The metadata is not optional
+ * either: it is what tells the compiler that `Promise` is now a setup binding, so
+ * compiling without it would reproduce the defect on the FIXED output.
+ *
+ * FIVE INSTRUMENTS PASSED ON THE BROKEN OUTPUT - a mount, `compileScript`,
+ * `vue-tsc`, `pnpm check` and this package's own `compileDiagnostics` - which is
+ * why this row exists and why it has a calibration underneath it.
+ */
+describe('no emitted template resolves a name through _ctx', () => {
+	const compiledTemplate = (source: string, filename: string): string => {
+		const { descriptor } = parse(source, { filename });
+		const bindings = descriptor.scriptSetup
+			? compileScript(descriptor, { id: filename, inlineTemplate: false, isProd: false })
+					.bindings
+			: undefined;
+		return compileTemplate({
+			source: descriptor.template!.content,
+			filename,
+			id: filename,
+			ssr: false,
+			ssrCssVars: [],
+			isProd: false,
+			compilerOptions: { bindingMetadata: bindings },
+		}).code;
+	};
+
+	test.each(EMITTED_SCENARIOS)('%s compiles with ZERO _ctx member reads', (file) => {
+		const source = sources.get(file)!;
+		// The reading that proves the source-grep is worthless, kept next to the
+		// real one: the emitted SFC contains no `_ctx` at all, before and after.
+		expect(source).not.toContain('_ctx');
+		const hits = [...new Set(compiledTemplate(source, file).match(/_ctx\.[A-Za-z_$][\w$]*/g) ?? [])];
+		expect(hits).toEqual([]);
+	});
+
+	/**
+	 * THE NEGATIVE CONTROL. Without it, "zero `_ctx` hits" is satisfied just as
+	 * well by a broken reader as by correct output - and a reader that silently
+	 * returned `''` would be green on all sixteen.
+	 *
+	 * The mutant is the PRE-FIX EMISSION, reconstructed by deleting the two shim
+	 * consts from S11. `mutate` refuses a replacement that leaves the source
+	 * byte-identical, so this cannot pass by failing to mutate.
+	 */
+	test('CALIBRATION: deleting the shim consts brings _ctx.Promise straight back', () => {
+		let mutant = mutate(
+			sources.get('generated/S11.vue')!,
+			'\tconst Promise = globalThis.Promise.bind(globalThis);\n',
+			'',
+		);
+		mutant = mutate(mutant, '\tconst setTimeout = globalThis.setTimeout.bind(globalThis);\n', '');
+		const hits = [
+			...new Set(compiledTemplate(mutant, 'S11.vue').match(/_ctx\.[A-Za-z_$][\w$]*/g) ?? []),
+		].sort();
+		expect(hits).toEqual(['_ctx.Promise', '_ctx.setTimeout']);
+	});
 });
 
 /**

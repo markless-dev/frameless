@@ -5,6 +5,7 @@ import { AsyncGate } from './async-gate';
 import { BranchBoard } from '../emitted/BranchBoard';
 import { EventForm } from '../emitted/EventForm';
 import { BoardPage } from './board-page';
+import { CodexPage } from './codex-page';
 import { ContactsPage } from './contacts-page';
 import { HabitsPage } from './habits-page';
 import { HnPage } from './hn-page';
@@ -13,6 +14,7 @@ import { FormBoard } from '../emitted/FormBoard';
 import { KeyedTodo } from '../emitted/KeyedTodo';
 import { NestedBoard } from '../emitted/NestedBoard';
 import { RenderOnce } from '../emitted/RenderOnce';
+import { TodomvcAdvancedPage } from './todomvc-advanced-page';
 import { TodomvcPage } from './todomvc-page';
 import { WhitespaceBoard } from '../emitted/WhitespaceBoard';
 import { noTrace, s2Seed, s4Seed, s5Seed, s6Label, s6Seed, s7Seed, s9Seed } from './scenario-props';
@@ -101,11 +103,43 @@ export const routes: Routes = [
     path: 'todomvc',
     component: TodomvcPage,
   },
+  // THE SECOND AND THIRD APPLICATIONS - TodoMVC ADVANCED and the CODEX CLONE -
+  // AND THE TWO ROUTES THIS LANE WAITED LONGEST FOR. They are the only two
+  // scenarios this lane ever refused: the emitter could not NAME `Promise` or
+  // `setTimeout` inside a transplanted body, and the artificial delay both apps
+  // use is made of exactly those two. `frameless-app-fidelity-v1` T003 ruled a
+  // TWO-NAME allowlist and T007 landed it, so /todomvc-advanced and /codex are
+  // the FIFTH AND SIXTH LANES for S11 and S12 - the corpus now has no scenario
+  // this lane omits.
+  //
+  // The ban was NEVER about async, and the correction is worth keeping next to
+  // the routes it unblocked: it was reproduced on a fully synchronous control
+  // module. `Date`, `JSON`, `Math`, `console`, `fetch`, `localStorage` and
+  // `document` are STILL refused, each with a recorded reason - `Date` on
+  // determinism, the rest on having zero instances in the corpus.
+  //
+  // Both go through WRAPPERS, like /todomvc and for the same reason: their
+  // stylesheets restyle `body`, so a global link would move the geometry of the
+  // nine three-way scenarios. /todomvc-advanced links THREE sheets and /codex
+  // TWO, cascade order load-bearing in both. See `./todomvc-advanced-page` and
+  // `./codex-page`. Like /todomvc they are OUT of the 6 x 9 three-way contract,
+  // which `scripts/e2e.mjs` pins to the literal ['s1'..'s9'], and they carry no
+  // seed: IR-8 has no lowering for an array type, so the data is seeded INSIDE
+  // the emitted components and all six lanes start from byte-identical state.
+  {
+    path: 'todomvc-advanced',
+    component: TodomvcAdvancedPage,
+  },
+  {
+    path: 'codex',
+    component: CodexPage,
+  },
   // THE FOURTH APPLICATION - the HACKER NEWS FRONT PAGE - and THE FIRST
-  // APPLICATION ROUTE THIS LANE HAS GAINED SINCE /todomvc. S11 and S12 are
-  // absent from this file because the emitter REFUSES them on its
-  // global-identifier ban; S13 names no global at all, because every relative
-  // age is a literal string in the seeded data. So this lane is back to parity
+  // APPLICATION ROUTE THIS LANE GAINED AFTER /todomvc. S11 and S12 were absent
+  // from this file for as long as the emitter REFUSED them on its
+  // global-identifier ban - they are the two routes directly above now - while
+  // S13 named no global at all, because every relative age is a literal string
+  // in the seeded data. So this was the route that put this lane back at parity
   // with the other five, and S13 is the first corpus application that all SIX
   // lanes serve.
   //
@@ -155,14 +189,20 @@ export const routes: Routes = [
     component: HnItemPage,
   },
   // THE SIXTH APPLICATION - the HABIT TRACKER - and THE SECOND CORPUS
-  // APPLICATION THIS LANE SHIPS ALONGSIDE THE OTHER FIVE. S11 and S12 are absent
-  // because this emitter REFUSES them on its global-identifier ban; S14 is absent
-  // because this emitter EMITS it and the lane's own gate rejects `imports`. S15
-  // names no global and references no component, so neither absence is reachable:
-  // it is a single component whose entire mechanism is synchronous derived state,
-  // and its date is a LITERAL STRING in the seeded data rather than anything
-  // computed from `Date`. See its fixture's constraint (10) - that is the
-  // constraint the whole six-lane claim rests on, and it rests on THIS LANE.
+  // APPLICATION THIS LANE SHIPS ALONGSIDE THE OTHER FIVE. It was built to clear
+  // the two absences that used to define this file: S11 and S12 were refused on
+  // the global-identifier ban, and S14 was emitted but rejected by the lane's own
+  // gate over `imports`. S15 names no global and references no component, so
+  // neither absence could reach it: it is a single component whose entire
+  // mechanism is synchronous derived state, and its date is a LITERAL STRING in
+  // the seeded data rather than anything computed from `Date`. See its fixture's
+  // constraint (10) - that is the constraint the whole six-lane claim rests on,
+  // and it rests on THIS LANE.
+  //
+  // BOTH OF THOSE ABSENCES ARE NOW CLOSED - `imports` by frameless-app-axes-v1
+  // T009/T014, and the globals ban by frameless-app-fidelity-v1 T003/T007 - so
+  // this comment records why S15 was safe rather than what is still missing.
+  // `Date` IS STILL REFUSED, which is why the literal date stands.
   //
   // It goes through a WRAPPER, like /todomvc and /hn and for the same reason: a
   // `<link>` has to be rendered by something, and putting it in src/index.html or

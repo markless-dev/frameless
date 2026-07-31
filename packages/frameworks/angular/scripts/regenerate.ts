@@ -29,50 +29,53 @@ const fixtures = [
 	// ['s1'..'s9'], so the app does NOT join the 6 x 9 three-way contract - browsable
 	// first, e2e wiring only once a lane is proven.
 	['S10.ts', 's10-todomvc.json'],
-	// S11 (TodoMVC ADVANCED) IS DELIBERATELY ABSENT FROM THIS LIST, AND IT IS THE
-	// ONLY LANE THAT OMITS IT. The angular emitter REFUSES the eleventh scenario,
-	// verbatim and read off the real module rather than off a probe:
+	// S11 (TodoMVC ADVANCED) AND S12 (the CODEX CLONE) WERE THE ONLY TWO ROWS THIS
+	// LANE EVER OMITTED, AND `frameless-app-fidelity-v1` T007 ADDED THEM.
+	//
+	// They were absent because the emitter refused them, verbatim and read off the
+	// real modules rather than off a probe:
 	//
 	//   Angular emitter cannot resolve the identifier "Promise" in a transplanted
 	//   body: it is neither a body-local binding, a function parameter, a @for
 	//   variable, nor a declared component member (...). The emitter throws rather
 	//   than guessing whether it is a global
 	//
-	// The refusal is NOT about async. `probes/async-door` PC reproduces it on a
-	// FULLY SYNCHRONOUS module: every Identifier in a transplanted body must
-	// resolve to lexical scope or a declared component member, and `Promise`,
-	// `setTimeout`, `fetch`, `Date` and `JSON` are all globals. S11's artificial
-	// delay - the stand-in for a real remote that this goal's owner accepted - is
-	// `new Promise` + `setTimeout`, so it cannot be NAMED in this lane at all.
+	// The refusal was NOT about async, and that correction is worth keeping.
+	// `probes/async-door` PC reproduced it on a FULLY SYNCHRONOUS module: every
+	// Identifier in a transplanted body had to resolve to lexical scope or a
+	// declared component member, and the artificial delay both apps use - the
+	// stand-in for a real remote that this goal's owner accepted - is `new Promise`
+	// + `setTimeout`, which could not be NAMED in this lane at all.
 	//
-	// Adding the row would not produce output; it would make this script THROW.
-	// The lane is left UNBUILT WITH A RECORDED REFUSAL, which this board's oracle
-	// names as a legitimate outcome, and `ANGULAR_UNBUILT_SCENARIOS` in
-	// test/emitter.test.ts carries the same subtraction so the omission is
-	// asserted rather than merely true.
+	// T003 RULED THE HOLE CLOSED WITH A TWO-NAME ALLOWLIST - `Promise` and
+	// `setTimeout`, nothing else - and the deciding argument was this lane's OWN
+	// recorded standard rather than a taxonomy of globals. Censused comment-stripped
+	// across all 17 fixtures, the only globals in authored executable code are those
+	// two, at ten call sites in S11 and S12 alone; `Date`, `JSON`, `Math`, `console`,
+	// `fetch`, `localStorage` and `document` score ZERO and are still refused,
+	// because an allowlist entry with no instance is the untested dead code this
+	// emitter's own comment warns against. `Date` additionally stays banned on
+	// DETERMINISM: it is a clock, and this repo proves by byte-equality. See
+	// `TRANSPLANTED_GLOBALS` in src/emitter/index.ts.
 	//
-	// S12 (the CODEX CLONE) IS ABSENT FOR THE SAME REASON, AND THE MESSAGE WAS
-	// READ OFF THE REAL S12 MODULE RATHER THAN ASSUMED FROM S11's. Attempted here,
-	// once, by adding the row and running this script; it threw with S12's OWN
-	// declared-member list, which is what proves the refusal was measured on this
-	// module and not inherited:
-	//
-	//   Angular emitter cannot resolve the identifier "Promise" in a transplanted
-	//   body: it is neither a body-local binding, a function parameter, a @for
-	//   variable, nor a declared component member (blocked, bottomTab, draft,
-	//   messages, nextMessage, nextThread, onTrace, openThread, openTitle,
-	//   rightTab, status, streaming, threads, turns, turnsLabel, visible,
-	//   visibleLabel). The emitter throws rather than guessing whether it is a
-	//   global
-	//
+	// AND THE FIX WAS INVERTED FROM WHAT THE BOARD ASSUMED. The vue lane had a
+	// permissive allowlist (upstream's `GLOBALS_ALLOWED`, which carries `Date` and
+	// `JSON` but not these two) and SHIPPED A DEAD PAGE; this lane threw. Loud and
+	// early won: vue gained THIS lane's fail-closed throw rather than the other way
+	// round.
+	['S11.ts', 's11-todomvc-advanced.json'],
 	// A streamed answer is three unrolled chunks separated by an artificial delay,
 	// and the only delay this authoring surface can express is `new Promise` +
 	// `setTimeout` created inside the handler - `computed(async ...)` is closed in
-	// all six lanes (frameless-app-suite-v1 T001), and this lane additionally
-	// cannot NAME the globals a delay is made of. THE ANGULAR LANE THEREFORE
-	// CANNOT HOLD A STREAMING APP AT ALL, on a limit that is not about streaming.
-	// It IS built for everything else in the corpus, including S10, so this is a
-	// recorded lane limit and not a missing lane.
+	// all six lanes (frameless-app-suite-v1 T001). So S12 was unreachable here for
+	// exactly as long as the two names were, and it is the scenario that proves the
+	// ban was never about streaming: every SYNCHRONOUS axis of this app - thread
+	// navigation, both tab pairs, the composer draft - was always inside this lane's
+	// envelope.
+	//
+	// Like S10 and S11 it stays OUT of the 6 x 9 three-way contract, which
+	// scripts/e2e.mjs pins to the literal ['s1'..'s9'].
+	['S12.ts', 's12-codex-clone.json'],
 	['S13.ts', 's13-hn-front.json'],
 	// S14 (the HACKER NEWS ITEM PAGE - the RECURSION scenario) IS THE FIFTH
 	// APPLICATION THIS LANE SHIPS, AND IT ARRIVED HERE BY A ROUTE NO OTHER ROW ON
@@ -129,12 +132,14 @@ const fixtures = [
 	// FAN-OUT SCENARIO. It takes the next ORDINAL slot for the reason every row
 	// above records. IT IS THE SECOND SCENARIO IN THE CORPUS THAT ALL SIX LANES
 	// EMIT, after S13, and the first that was built to be so ON PURPOSE: the
-	// whole app is SYNCHRONOUS DERIVED STATE, so there is no `Promise` or
-	// `setTimeout` for the angular lane's global-identifier ban to catch, no
-	// async door for the vue lane's GLOBALS_ALLOWED gap to open, and no component
-	// reference for either of the two emitter defects T003 isolated to reach. Its
+	// whole app is SYNCHRONOUS DERIVED STATE, so it named no global at all and no
+	// component reference, and neither of the two emitter defects T003 isolated
+	// could reach it. AT THE TIME THAT MATTERED FOR A REASON THAT NO LONGER
+	// APPLIES - `Promise` and `setTimeout` were unnameable in this lane and blew a
+	// hole in the vue lane's runtime, and `frameless-app-fidelity-v1` T007 closed
+	// both with the two-name allowlist. What it does NOT change is the clock: its
 	// date is a LITERAL STRING in the seeded data for exactly the reason S13's
-	// relative ages are - the angular emitter cannot NAME `Date`. Like S10-S14 it
+	// relative ages are - `Date` IS STILL REFUSED, on determinism. Like S10-S14 it
 	// stays OUT of the 6 x 9 three-way contract, which scripts/e2e.mjs pins to
 	// the literal ['s1'..'s9'].
 	['S15.ts', 's15-habit-tracker.json'],

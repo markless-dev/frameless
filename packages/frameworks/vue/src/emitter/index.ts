@@ -69,6 +69,19 @@ type EmitContext = {
 	 * key of this map; see the lane-limit note on `emit`.
 	 */
 	readonly componentImports: ReadonlyMap<string, string>;
+	/**
+	 * Every name `<script setup>` binds by the time the template runs: the
+	 * emitter's own reserved names, the prop locals, the component locals, the
+	 * template-ref and behavior-ref names, and the component imports. It is the
+	 * resolution set `assertNamesResolve` checks every printed expression against.
+	 */
+	readonly boundNames: Set<string>;
+	/**
+	 * The allowlisted globals this component actually names, collected during the
+	 * checks and turned into `<script setup>` shim consts by `emit`. EMPTY for
+	 * fifteen of the seventeen scenarios - only S11 and S12 name one.
+	 */
+	readonly globalsUsed: Set<string>;
 };
 
 type VueApi = 'computed' | 'onMounted' | 'onUnmounted' | 'ref' | 'watch';
@@ -526,6 +539,288 @@ function blockScopeNames(body: readonly Node[]): Set<string> {
 			declaredNames(statement.id, names);
 	}
 	return names;
+}
+
+/**
+ * THE TWO-NAME GLOBALS ALLOWLIST, ruled by `frameless-app-fidelity-v1` T003, and
+ * THE STRICTEST GLOBALS CHECK IN THIS REPO ON PURPOSE.
+ *
+ * `Promise` and `setTimeout` may be named in an expression this emitter prints.
+ * NOTHING ELSE MAY - INCLUDING NAMES `@vue/shared`'s OWN `GLOBALS_ALLOWED` WOULD
+ * ACCEPT. That asymmetry is deliberate and it is the whole point of the ruling.
+ *
+ * WHY THIS LANE ADOPTED THE ANGULAR LANE'S THROW RATHER THAN THE OTHER WAY ROUND.
+ * Measured at @vue/shared@3.5.40, `GLOBALS_ALLOWED` contains `Date`, `JSON`,
+ * `Math`, `console`, `Number`, `Object`, `Array`, `Symbol` and `Intl`, and does
+ * NOT contain `Promise` or `setTimeout`. `canPrefix()` in
+ * @vue/compiler-core@3.5.40 consults it through `isGloballyAllowed` and TAKES NO
+ * OPTIONS, so the list is upstream's and there is no hook - but extending it was
+ * never required either, because prefixing is bypassed entirely by `<script
+ * setup>` BINDING METADATA. So this lane had a PERMISSIVE list it did not own and
+ * a hole exactly where the corpus lives, and the Angular lane had a total
+ * fail-closed throw. Loud and early beat silent until runtime: S11 and S12
+ * SHIPPED HERE, mounted, passed `compileScript`, passed `vue-tsc`, passed `pnpm
+ * check` - and threw `_ctx.Promise is not a constructor` on the first click.
+ *
+ * IF THIS LANE MERELY DEFERRED TO UPSTREAM'S LIST, A FIXTURE NAMING `Date` OR
+ * `Math` WOULD PASS HERE AND FAIL ANGULAR. That is today's failure in reverse and
+ * it is the bug class, not an inconvenience. Refusing the wider list is what makes
+ * "passes Vue" imply "passes Angular".
+ *
+ * The list is SHARED WITH THE ANGULAR LANE -
+ * `packages/frameworks/angular/src/emitter/index.ts` declares the same two names
+ * under the same identifier, and the two copies exist rather than one import
+ * because neither package depends on the other and the package they both import,
+ * `@frameless/compiler`, is an IR contract rather than a per-lane emission policy.
+ * A THIRD NAME IS A NEW RULING and it has to move both copies.
+ *
+ * `Date` is refused on DETERMINISM rather than on deferral: it is a clock, and
+ * this repo proves by byte-equality - the derivation proofs, the ratified goldens
+ * and e2e's "all observations equal" across six lanes. Every other candidate -
+ * `JSON`, `Math`, `console`, `fetch`, `localStorage`, `document`, `window` -
+ * scores ZERO instances across all 17 fixtures and would be untested dead code.
+ */
+const TRANSPLANTED_GLOBALS: ReadonlySet<string> = new Set(['Promise', 'setTimeout']);
+
+/**
+ * THE SHIM, AND WHY IT IS A `<script setup>` CONST RATHER THAN A HOISTED HANDLER.
+ *
+ * `const Promise = globalThis.Promise` makes `Promise` a SETUP BINDING, so Vue's
+ * template compiler resolves it through `bindingMetadata` and never reaches
+ * `canPrefix` at all - which is the mechanism the compiler itself provides, and
+ * the reason no upstream list has to change.
+ *
+ * The alternative - hoisting every handler body out of its template expression
+ * into a setup function - also works and was measured to work. It was REFUSED ON
+ * BLAST RADIUS: it moves ALL SIXTEEN artifacts in this lane and forces the gate's
+ * worked-example 12a census, which walks handler bodies in the emitted TEMPLATES,
+ * to be re-derived from a different source. The shim moves TWO.
+ *
+ * `globalThis.X` AND NOT A BARE `X`. A bare `const Promise = Promise` is a
+ * temporal-dead-zone self-reference, not a shim.
+ *
+ * `.bind(globalThis)` AND THE REASON IT IS HERE IS A FALSIFIED PREDICTION, NOT
+ * CAUTION. T003 measured an unbound `setTimeout` running clean in real chromium
+ * and recorded "no `.bind()` is needed". THAT MEASUREMENT WAS RIGHT AND THE
+ * CONCLUSION WAS WRONG, because it tested the wrong call shape. A setup binding is
+ * not read as a bare identifier in the emitted render function: in NON-INLINE mode
+ * - which is what `@vitejs/plugin-vue` uses - the template compiler emits
+ * `$setup.setTimeout(...)`, A METHOD CALL, so the receiver is the setup-state
+ * object rather than the window. Web IDL checks that receiver and throws
+ * `Illegal invocation`. MEASURED IN THE SERVED DEMO: the shim traded
+ * `_ctx.Promise is not a constructor` for `Illegal invocation` and S11 still hung
+ * at `syncNote = 'saving'` forever. Four arms in chromium settle it -
+ * `({ s: globalThis.setTimeout }).s(fn, 0)` THROWS, the same object with
+ * `.bind(globalThis)` returns a timer id, `new ({ P: globalThis.Promise }).P(fn)`
+ * is fine because `new` has no receiver to check, and a bound `Promise` still
+ * constructs and still satisfies `instanceof Promise`.
+ *
+ * SO EVERY SHIM IS BOUND, UNIFORMLY. Binding only the names that need it would be
+ * a discriminating predicate over what the body does with each global - the exact
+ * shape Ruling 3a refused in the Angular lane - and it would be re-derived wrongly
+ * the first time a third name arrived.
+ *
+ * THE ONE THING BINDING COSTS IS RECORDED AND REFUSED RATHER THAN LEFT TO BITE. A
+ * bound function does not carry the target's STATIC PROPERTIES: measured,
+ * `globalThis.Promise.bind(globalThis).resolve` is `undefined` where
+ * `globalThis.Promise.resolve` is a function. So a shimmed global is reachable as
+ * a CALLABLE and not as a namespace, and `assertNamesResolve` THROWS on any member
+ * read of one rather than emitting a module where `Promise.resolve(...)` silently
+ * becomes `undefined(...)`. The corpus has zero such reads; the day one arrives it
+ * is a loud refusal and a new ruling.
+ */
+function globalShim(name: string): Statement {
+	return variable(
+		'const',
+		identifier(name),
+		call(member(member(identifier('globalThis'), name), 'bind'), [identifier('globalThis')]),
+	);
+}
+
+/**
+ * Every FREE identifier in an expression this emitter prints, collected under
+ * ordinary lexical scoping.
+ *
+ * It is the read-only twin of `rewriteScript` below and carries the SAME total
+ * switch for the same reason: a node type it has never been taught is a THROW, so
+ * an IR shape this emitter does not understand fails at emit time rather than
+ * slipping past the check it was supposed to face. Reference positions only - a
+ * non-computed member property, a non-computed object key, a declaration id and a
+ * function parameter are identifiers that are not references, and each is stepped
+ * over by name rather than by a generic walk.
+ */
+function collectFreeIdentifiers(node: Node, scope: ReadonlySet<string>, into: Set<string>): void {
+	const visit = (value: Node, inScope: ReadonlySet<string>): void =>
+		collectFreeIdentifiers(value, inScope, into);
+	const visitAll = (values: Array<Node | null> | undefined, inScope: ReadonlySet<string>): void => {
+		if (!values) return;
+		for (const entry of values) if (entry) visit(entry, inScope);
+	};
+	const inner = (names: Iterable<string>): Set<string> => {
+		const next = new Set(scope);
+		for (const name of names) next.add(name);
+		return next;
+	};
+
+	switch (node.type) {
+		case 'Identifier':
+			if (!scope.has(String(node.name))) into.add(String(node.name));
+			return;
+		case 'Literal':
+		case 'ThisExpression':
+		case 'Super':
+			return;
+		case 'TemplateLiteral':
+			visitAll(node.expressions as Node[], scope);
+			return;
+		case 'TaggedTemplateExpression':
+			visit(node.tag, scope);
+			visit(node.quasi, scope);
+			return;
+		case 'MemberExpression':
+			visit(node.object, scope);
+			if (node.computed) visit(node.property, scope);
+			return;
+		case 'CallExpression':
+		case 'NewExpression':
+			visit(node.callee, scope);
+			visitAll(node.arguments as Node[], scope);
+			return;
+		case 'ObjectExpression':
+			for (const property of (node.properties ?? []) as Node[]) {
+				if (property.type === 'SpreadElement') {
+					visit(property.argument, scope);
+					continue;
+				}
+				if (property.type !== 'Property')
+					throw new Error(
+						`Vue emitter has no lowering for the object member ${String(property.type)}`,
+					);
+				if (property.computed) visit(property.key, scope);
+				visit(property.value, scope);
+			}
+			return;
+		case 'ArrayExpression':
+			visitAll(node.elements as Array<Node | null>, scope);
+			return;
+		case 'SpreadElement':
+			visit(node.argument, scope);
+			return;
+		case 'ArrowFunctionExpression':
+		case 'FunctionExpression': {
+			const names = new Set<string>();
+			for (const param of (node.params ?? []) as Node[]) declaredNames(param, names);
+			visit(node.body, inner(names));
+			return;
+		}
+		case 'BinaryExpression':
+		case 'LogicalExpression':
+			visit(node.left, scope);
+			visit(node.right, scope);
+			return;
+		case 'AssignmentExpression':
+			visit(node.left, scope);
+			visit(node.right, scope);
+			return;
+		case 'UnaryExpression':
+		case 'UpdateExpression':
+		case 'AwaitExpression':
+			if (node.argument) visit(node.argument, scope);
+			return;
+		case 'ConditionalExpression':
+			visit(node.test, scope);
+			visit(node.consequent, scope);
+			visit(node.alternate, scope);
+			return;
+		case 'SequenceExpression':
+			visitAll(node.expressions as Node[], scope);
+			return;
+		case 'ChainExpression':
+			visit(node.expression, scope);
+			return;
+		case 'BlockStatement':
+			// The block's own declarations are in scope for the WHOLE block, including
+			// the initialisers - which is what makes `const a = b, b = 1` a TDZ error
+			// rather than a free `b`. Hoisting them first is the same order
+			// `blockScopeNames` is used in by `rewriteScript`.
+			visitAll(node.body as Node[], inner(blockScopeNames((node.body ?? []) as Node[])));
+			return;
+		case 'ExpressionStatement':
+			visit(node.expression, scope);
+			return;
+		case 'ReturnStatement':
+		case 'ThrowStatement':
+			if (node.argument) visit(node.argument, scope);
+			return;
+		case 'IfStatement':
+			visit(node.test, scope);
+			visit(node.consequent, scope);
+			if (node.alternate) visit(node.alternate, scope);
+			return;
+		case 'VariableDeclaration':
+			for (const declarator of (node.declarations ?? []) as Node[])
+				if (declarator.init) visit(declarator.init, scope);
+			return;
+		default:
+			throw new Error(
+				`Vue emitter has no lowering for the expression node ${String(node.type)}`,
+			);
+	}
+}
+
+/**
+ * FAIL CLOSED ON AN UNRESOLVABLE NAME - the Angular lane's behaviour, adopted
+ * here by ruling.
+ *
+ * Every free identifier in `node` must be a `<script setup>` binding this emitter
+ * declares, a name bound INSIDE the expression, a `v-for` alias in scope at the
+ * emission site, or one of the two allowlisted globals. Anything else throws.
+ * An allowlisted hit is RECORDED so `emit` can print its shim; a name that is
+ * already a declared binding SHADOWS the allowlist and records nothing, because a
+ * component that declares its own `setTimeout` means its own.
+ */
+function assertNamesResolve(
+	node: Node,
+	bound: ReadonlySet<string>,
+	where: string,
+	globalsUsed: Set<string>,
+): void {
+	const free = new Set<string>();
+	collectFreeIdentifiers(node, new Set(), free);
+	// A SHIMMED GLOBAL IS A CALLABLE, NOT A NAMESPACE - see `globalShim`. Binding
+	// drops the target's static properties, so `Promise.resolve(...)` would emit a
+	// module in which `resolve` is `undefined`. Refused by name instead. The check
+	// is skipped for a name the component itself BINDS, because then it is not the
+	// shim at all.
+	walk(node, (record) => {
+		if (record.type !== 'MemberExpression' || record.computed) return;
+		const object = record.object as Record<string, unknown> | undefined;
+		if (object?.type !== 'Identifier') return;
+		const name = String(object.name);
+		if (bound.has(name) || !TRANSPLANTED_GLOBALS.has(name)) return;
+		throw new Error(
+			`Vue emitter cannot read the member ${JSON.stringify(String((record.property as Record<string, unknown>)?.name ?? '?'))} off the allowlisted global ${JSON.stringify(name)} in ${where}: ` +
+				'the global is reached through a bound <script setup> shim, and a bound function ' +
+				'does not carry its target\'s static properties, so the read would be undefined at ' +
+				'runtime. The emitter refuses rather than emitting it',
+		);
+	});
+	for (const name of free) {
+		if (bound.has(name)) continue;
+		if (TRANSPLANTED_GLOBALS.has(name)) {
+			globalsUsed.add(name);
+			continue;
+		}
+		throw new Error(
+			`Vue emitter cannot resolve the identifier ${JSON.stringify(name)} in ${where}: ` +
+				'it is neither a binding local to the expression, a v-for alias, a <script setup> ' +
+				`binding this emitter declares (${[...bound].sort().join(', ')}), nor one of the two ` +
+				`allowlisted globals (${[...TRANSPLANTED_GLOBALS].sort().join(', ')}). This check is ` +
+				"DELIBERATELY STRICTER than @vue/shared's GLOBALS_ALLOWED, which would accept Date, " +
+				'JSON, Math and console: accepting them here would let a fixture pass this lane and ' +
+				'fail the Angular one',
+		);
+	}
 }
 
 /**
@@ -1298,8 +1593,33 @@ function scriptStatements(ir: EnrichedIR, context: EmitContext): Statement[] {
 	const props = propsDeclaration(component);
 	if (props) statements.push(props);
 
-	const rewrite = (node: Expression): Expression =>
-		rewriteScript(node, context.rewrites, new Set());
+	// THE SCRIPT SIDE FACES THE SAME CHECK, AND THAT IS NOT BELT-AND-BRACES.
+	//
+	// The `_ctx.` defect is a TEMPLATE phenomenon - upstream's `GLOBALS_ALLOWED` is
+	// consulted only by the template compiler's `canPrefix`, and a `<script setup>`
+	// expression reaches the real globals with no prefixing at all. So a `Math` or a
+	// `Date` in a computed body would run here perfectly well AND FAIL THE ANGULAR
+	// LANE, whose `qualify()` covers computed and state initialisers too. That is
+	// the same "passes vue, fails angular" asymmetry the template check exists to
+	// remove, one scope over, so it is closed in the same pass and by the same list.
+	//
+	// THE REWRITE RUNS FIRST AND THE CHECK SECOND, DELIBERATELY. `rewriteScript` is
+	// this lane's ORIGINAL totality gate for script expressions - the "fails closed
+	// on a script expression node the rewriter has never been taught" calibration
+	// asserts its refusal by message - and putting a second total switch in front of
+	// it would silently take that arm's place. Running it first keeps that
+	// instrument pointed at the same thing.
+	//
+	// It costs nothing here: `rewriteScript` only ever respells names that are in
+	// `context.rewrites`, which holds prop locals and refs and never a global, so
+	// an unresolvable name arrives at the check spelled exactly as it was authored,
+	// and the names the rewrite DOES introduce - `props`, and a ref's own base
+	// identifier - are already in `boundNames`.
+	const rewrite = (node: Expression, where: string): Expression => {
+		const rewritten = rewriteScript(node, context.rewrites, new Set());
+		assertNamesResolve(rewritten, context.boundNames, where, context.globalsUsed);
+		return rewritten;
+	};
 
 	for (const local of [...component.locals].sort((left, right) => left.order - right.order)) {
 		const semantic = local.semanticRecordIds
@@ -1362,7 +1682,12 @@ function scriptStatements(ir: EnrichedIR, context: EmitContext): Statement[] {
 				variable(
 					'const',
 					identifier(state.name),
-					call(identifier('ref'), [rewrite(expression(state.initializer))]),
+					call(identifier('ref'), [
+						rewrite(
+							expression(state.initializer),
+							`the initialiser of state ${state.name}`,
+						),
+					]),
 				),
 			);
 			continue;
@@ -1387,7 +1712,7 @@ function scriptStatements(ir: EnrichedIR, context: EmitContext): Statement[] {
 							type: 'ArrowFunctionExpression',
 							id: null,
 							params: [],
-							body: rewrite(site.body),
+							body: rewrite(site.body, `the body of computed ${computed.name}`),
 							generator: false,
 							async: false,
 							expression: true,
@@ -1399,7 +1724,10 @@ function scriptStatements(ir: EnrichedIR, context: EmitContext): Statement[] {
 		}
 		if (!local.initializer)
 			throw new Error(`Vue local ${local.names.join(',')} has no initializer`);
-		const initializer = rewrite(expression(local.initializer));
+		const initializer = rewrite(
+			expression(local.initializer),
+			`the initialiser of local ${local.names.join(', ')}`,
+		);
 		if (!local.names.some((name) => identifierIsUsed(ir, component, name))) {
 			// A once-per-instance setup call whose binding nothing reads. Emitting the
 			// declaration would leave an unused variable; the observable effect is the
@@ -1915,6 +2243,87 @@ function renderComponentReference(
 }
 
 /**
+ * THE TEMPLATE-SIDE GLOBALS CHECK, run as its OWN PASS rather than inside the
+ * printer.
+ *
+ * The printer is a pure string walk that threads only an indent and an inline
+ * flag; a `v-for` alias is in scope for the whole row it wraps, so checking
+ * inside `renderHost` would need a scope threaded through six more signatures
+ * for a check that runs once. This walks the same tree with the scope it needs
+ * and nothing else, ahead of a single byte being printed.
+ *
+ * IT VISITS EVERY EXPRESSION THE PRINTER EMITS AND NO OTHER: interpolations,
+ * `:attr` bindings, `v-if` tests, `v-for` collections and `:key`s, component-
+ * reference props, and the `v-on` handler bodies where the defect actually lived.
+ * A `default-slot-projection`'s site identifier is deliberately skipped - it
+ * prints as a bare `<slot />` and reading it as a value is refused by name in
+ * `emit`.
+ */
+function assertTemplateNamesResolve(
+	nodes: readonly TemplateNode[],
+	bound: ReadonlySet<string>,
+	context: EmitContext,
+): void {
+	const checkIn = (
+		value: SerializableAstNode | null | undefined,
+		scope: ReadonlySet<string>,
+		where: string,
+	): void => assertNamesResolve(expression(value), scope, where, context.globalsUsed);
+	const check = (value: SerializableAstNode | null | undefined, where: string): void =>
+		checkIn(value, bound, where);
+	for (const node of nodes) {
+		switch (node.kind) {
+			case 'text':
+			case 'default-slot-projection':
+				break;
+			case 'dynamic-text':
+				check(node.expression, 'a template interpolation');
+				break;
+			case 'host': {
+				for (const binding of node.dynamicBindings)
+					check(binding.expression, `the :${binding.name} binding on <${node.tag}>`);
+				for (const eventId of node.eventIds) {
+					const event = context.eventsById.get(eventId);
+					if (!event) throw new Error(`Unknown event record: ${eventId}`);
+					for (const handler of event.handlers)
+						check(handler.expression, `the ${event.eventName} handler ${event.id}`);
+				}
+				assertTemplateNamesResolve(node.children, bound, context);
+				break;
+			}
+			case 'fragment':
+				assertTemplateNamesResolve(node.children, bound, context);
+				break;
+			case 'branch':
+				check(node.expression, `the v-if test on branch ${node.id}`);
+				for (const arm of node.arms) assertTemplateNamesResolve(arm.children, bound, context);
+				break;
+			case 'keyed-repeat': {
+				check(node.collection.expression, `the v-for collection on ${node.id}`);
+				// The alias is in scope for the KEY and the ROW, and not for the
+				// collection - which is exactly what `v-for="todo in todos" :key="todo.id"`
+				// means, and getting it backwards would refuse every keyed list in the
+				// corpus.
+				const row = new Set([...bound, node.item]);
+				checkIn(node.key.expression, row, `the :key on ${node.id}`);
+				assertTemplateNamesResolve(node.row, row, context);
+				assertTemplateNamesResolve(node.empty, bound, context);
+				break;
+			}
+			case 'component-reference':
+				for (const prop of node.props)
+					check(prop.value.expression, `the :${prop.name} prop on <${node.target.localName}>`);
+				assertTemplateNamesResolve(node.children, bound, context);
+				break;
+			default:
+				throw new Error(
+					`Vue emitter has no globals check for template node kind ${(node as { kind: string }).kind}`,
+				);
+		}
+	}
+}
+
+/**
  * The template printer is a pure string walk, so the context is held in a
  * module-local rather than threaded through every signature. `emit` is
  * synchronous and single-shot, so there is no interleaving to worry about; the
@@ -2233,6 +2642,8 @@ export function emit(ir: EnrichedIR): string {
 		handleHosts,
 		behaviorHosts: new Map<string, string>(),
 		behaviorPlans: [],
+		boundNames: new Set<string>(),
+		globalsUsed: new Set<string>(),
 	};
 	currentContext = context;
 	try {
@@ -2266,6 +2677,14 @@ export function emit(ir: EnrichedIR): string {
 		);
 		context.behaviorPlans.push(...behaviorPlans);
 		for (const plan of behaviorPlans) context.behaviorHosts.set(plan.hostNodeId, plan.refName);
+		// EVERY NAME `<script setup>` WILL BIND, assembled before one expression is
+		// checked or printed. `scopeNames` is the same set the behavior planner uses
+		// to avoid collisions; the imports and the behavior refs are the two things it
+		// does not carry, and both are template-visible setup bindings.
+		for (const name of scopeNames) context.boundNames.add(name);
+		for (const name of componentImports.keys()) context.boundNames.add(name);
+		for (const plan of behaviorPlans) context.boundNames.add(plan.refName);
+		assertTemplateNamesResolve(component.template, context.boundNames, context);
 		const statements = scriptStatements(ir, context);
 		const template = renderChildren(component.template, '\t', false);
 		const imports: Statement[] = context.usedApis.size
@@ -2280,7 +2699,13 @@ export function emit(ir: EnrichedIR): string {
 				specifiers: [{ type: 'ImportDefaultSpecifier', local: identifier(localName) }],
 				source: { type: 'Literal', value: source, raw: `'${source}'` },
 			} as unknown as Statement);
-		const body = [...imports, ...statements];
+		// THE SHIMS GO FIRST, ahead of every other setup statement, because a `const`
+		// is in its temporal dead zone until its own line: a state initialiser that
+		// named `Promise` above the shim would be a ReferenceError rather than the
+		// global it used to be. Sorted, so the emission is a function of the SET and
+		// not of the order the checks happened to run in.
+		const shims = [...context.globalsUsed].sort().map(globalShim);
+		const body = [...imports, ...shims, ...statements];
 		const script = printStatements(body)
 			.split('\n')
 			.map((line) => (line === '' ? line : `\t${line}`))

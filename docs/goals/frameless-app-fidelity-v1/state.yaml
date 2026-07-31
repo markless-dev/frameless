@@ -44,7 +44,7 @@ goal:
       FIXING THE FIVE FINDINGS AND LEAVING THE ORACLE HOLE OPEN. The findings are symptoms; the
       cause is that nothing ever compared a shipped app to the thing it copies.
 
-active_task: T007
+active_task: T004
 
 # ---------------------------------------------------------------------------
 # KNOWN WORKING-TREE DIRT - NOT OURS, DO NOT "CLEAN UP", DO NOT `git add -A`.
@@ -383,10 +383,20 @@ tasks:
   - id: T004
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
+    ALSO_FIX_THE_FRONT_DOOR_T007_FOUND_AN_EXECUTABLE_STALE_CLAIM: >-
+      scripts/demo.mjs STILL CARRIES `unbuilt: { S11: ANGULAR_REFUSAL, S12: ANGULAR_REFUSAL }`,
+      and routeFor() RETURNS NULL for an unbuilt scenario - SO THE FRONT DOOR WILL NOT PRINT
+      /todomvc-advanced OR /codex FOR ANGULAR, WILL PRINT A REFUSAL THAT IS NOW FALSE, and will
+      DROP BOTH FROM THE DERIVED 'all six lanes serve' COUNT. T007 gained angular that sixth lane
+      and this is the only thing still saying otherwise. ALSO now-false: three blocks in
+      demos/vue-official/src/App.vue claiming S11/S12 throw _ctx.Promise, and the S11/S12 FIXTURE
+      HEADERS stating both refusals as live. FIX ALL FOUR SITES - a demo that lies about what it
+      serves is the same class as the pnpm demo banner three cards had to repair.
     objective: >-
-      SHIP DRAG AND DROP ON THE TASK BOARD. It is the whole point of a Trello board and it is the
+      SHIP DRAG AND DROP ON THE TASK BOARD, and correct the four now-false claims about angular
+      and vue refusing S11/S12. It is the whole point of a Trello board and it is the
       owner's loudest complaint.
     IT_WAS_NEVER_IMPOSSIBLE_AND_THE_CONSTRAINT_THAT_BLOCKED_IT_WAS_MINE: >-
       MEASURED on the previous board: the two-word drag handlers ARE produced in five lanes, and
@@ -439,6 +449,12 @@ tasks:
       - "packages/compiler/test/fixtures/s16-task-board.tsrx"
       - "packages/compiler/test/goldens/s16-task-board.json"
       - "demos/shared/board-css/**"
+      - "scripts/demo.mjs"
+      - "demos/vue-official/src/App.vue"
+      - "packages/compiler/test/fixtures/s11-todomvc-advanced.tsrx"
+      - "packages/compiler/test/goldens/s11-todomvc-advanced.json"
+      - "packages/compiler/test/fixtures/s12-codex-clone.tsrx"
+      - "packages/compiler/test/goldens/s12-codex-clone.json"
       - "docs/goals/frameless-app-fidelity-v1/notes/T004-drag.md"
     verify:
       - "COMPARE AGAINST THE REFERENCE ITSELF, not against the other lanes: capture the reference rendered, and state the measured comparison feature by feature. THIS IS ORACLE PART 1 AND IT IS THE POINT OF THE BOARD."
@@ -764,7 +780,7 @@ tasks:
   - id: T007
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     serialize_against: >-
       MUST NOT RUN CONCURRENTLY WITH T006. Both need packages/frameworks/{vue,angular}/generated/**
@@ -828,8 +844,112 @@ tasks:
       - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched. ALL THREE ARE ALREADY DIRTY AND YOU DID NOT DO IT - DO NOT 'CLEAN UP', DO NOT COMMIT THEM, DO NOT `git add -A`."
       - "NEVER pkill -f on a broad pattern. FOREIGN node PID 64413 holds 5175 and PID 24931 holds 5178."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T007-globals.md
+      summary: "Closed the globals hole in BOTH emitters with one two-name allowlist. ANGULAR GAINED THE SIXTH LANE; VUE'S SHIPPED-AND-DEAD FIFTH LANE IS REPAIRED AND PROVED BY A DRIVEN BROWSER, with a negative control that fails TWO DIFFERENT WAYS. All five stated predictions confirmed. pnpm check 251 -> 251."
+      THE_SIXTH_PREDICTION_WAS_WRONG_AND_ONLY_A_DRIVEN_BROWSER_COULD_CATCH_IT: "T003 measured an unbound shim clean in chromium and concluded NO .bind() WAS NEEDED. ITS MEASUREMENT WAS CORRECT AND ITS CONCLUSION WAS WRONG: it tested a BARE IDENTIFIER call, but @vitejs/plugin-vue compiles a setup binding to `$setup.setTimeout(...)` - A METHOD CALL whose receiver Web IDL rejects. So the shim TRADED `_ctx.Promise is not a constructor` FOR `Illegal invocation` while EVERY COMPILE-LEVEL INSTRUMENT STAYED GREEN: _ctx was gone, compileTemplate reported zero hits, and the page was still dead. Measured off the module VITE ACTUALLY SERVED. Fixed with globalThis.X.bind(globalThis); eight chromium arms settle it."
+      AND_BINDING_BOUGHT_A_REFUSAL_IT_ADDED_UNASKED: "A BOUND FUNCTION DROPS ITS TARGET'S STATIC PROPERTIES - measured: bound Promise.resolve is undefined. So a shimmed global is A CALLABLE, NOT A NAMESPACE, and any MEMBER READ of one now THROWS rather than emitting a module where Promise.resolve(...) is SILENTLY UNDEFINED. The cost is refused by name rather than left to bite."
+      THE_NEGATIVE_CONTROL_FAILS_TWO_DIFFERENT_WAYS_AND_BOTH_HANG_NOT_CRASH: "ARM 1 pre-fix (no shim) -> '_ctx.Promise is not a constructor'. ARM 2 unbound shim -> 'Illegal invocation'. ARM 0/3 at HEAD -> saved, no errors, file restored BYTE-IDENTICAL. BOTH BROKEN ARMS HANG AT 'saving', NOT AT 'idle' - WHICH IS EXACTLY WHY A MOUNT PROVES NOTHING and why emitted-smoke.browser.test.ts never saw this bug."
+      IT_CAUGHT_ITS_OWN_TYPECHECK_INSTRUMENT: "A first pass with GUESSED compiler options reported 158 diagnostics. Caught, redone with the options READ OFF emitted-typecheck.test.ts: S11+S12 give 2, both expected TS2307, 0 UNEXPECTED; all 17 give 17, 0 unexpected."
+      changed_files:
+        - packages/frameworks/angular/src/emitter/index.ts
+        - packages/frameworks/angular/scripts/regenerate.ts
+        - packages/frameworks/angular/test/unbuilt-scenarios.ts
+        - packages/frameworks/angular/test/emitter.test.ts
+        - packages/frameworks/angular/generated/S11.ts
+        - packages/frameworks/angular/generated/S12.ts
+        - packages/frameworks/vue/src/emitter/index.ts
+        - packages/frameworks/vue/test/emitter.test.ts
+        - packages/frameworks/vue/test/compile-emitted.test.ts
+        - packages/frameworks/vue/generated/S11.vue
+        - packages/frameworks/vue/generated/S12.vue
+        - demos/angular-official/package.json
+        - demos/angular-official/src/app/app.routes.ts
+        - demos/angular-official/src/app/todomvc-advanced-page.ts
+        - demos/angular-official/src/app/codex-page.ts
+        - demos/angular-official/src/app/hn-page.ts
+        - demos/angular-official/src/emitted/TodoMvcAdvanced.ts
+        - demos/angular-official/src/emitted/CodexClone.ts
+        - demos/vue-official/src/emitted/TodoMvcAdvanced.vue
+        - demos/vue-official/src/emitted/CodexClone.vue
+        - docs/goals/frameless-app-fidelity-v1/notes/T007-globals.md
+      commands:
+        - cmd: "owner fingerprint START and FINISH, shasum -a 256"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169, 116 files. IDENTICAL. The three dirty paths NOT touched, NOT cleaned, NOT committed"
+        - cmd: "P1 angular emit over the real goldens"
+          status: pass
+          note: "CONFIRMED EXACTLY: S11 10,858 bytes, S12 10,086. No second refusal behind the first"
+        - cmd: "P2 the lane's OWN typecheck oracle"
+          status: pass
+          note: "0 UNEXPECTED over S11+S12 and over all 17. A guessed-options first pass reported 158 - CAUGHT AND REDONE"
+        - cmd: "P3 gate collectEmittedForms + parseTemplate"
+          status: pass
+          note: "NOVEL: [] over the new pair AND the whole lane; floor 19.0 -> 19.0; parseTemplate 0 errors"
+        - cmd: "P4 pnpm check"
+          status: pass
+          note: "START 251 -> END 251, predicted 0 by construction"
+        - cmd: "P5 pnpm e2e"
+          status: pass
+          note: "PASS - 6 demos x 9 scenarios, all observations equal"
+        - cmd: "VUE RUNTIME PROOF: driven chromium at HEAD"
+          status: pass
+          note: "10/10. S11 sync-note idle->saving->SAVED; remote idle->searching->DONE, hits=1; S12 status idle->STREAMING and THE ANSWER GROWS 34->63->89 CHARS across three distinct readings. Angular identical, measured SEPARATELY. Zero _ctx errors"
+        - cmd: "NEGATIVE CONTROL, DRIVEN, three arms + restore"
+          status: pass
+          note: "two DIFFERENT failures; file restored byte-identical; both mutations guarded against a non-mutant"
+        - cmd: "grep _ctx off compileTemplate WITH bindingMetadata"
+          status: pass
+          note: "DEFECT REPRODUCED AT HEAD BEFORE THE FIX: S11 and S12 alone hit ['_ctx.Promise','_ctx.setTimeout'] while all 16 SFC SOURCES CONTAIN ZERO '_ctx'. After: [] in all 16. Now a permanent test with a calibration that brings both hits straight back"
+        - cmd: "ANGULAR EMPTY-LIST TRAP"
+          status: pass
+          note: "toEqual([]) replaces toBeGreaterThan(0), WHICH WOULD HAVE FAILED; a new row drives both formerly-refused goldens and requires SUCCESS; the Math negative control PROVED STILL RED-CAPABLE, plus four more on the vue side"
+        - cmd: "DERIVATION PROOF with a shell ARRAY"
+          status: pass
+          note: "8 artifacts: 8 -> PRESENT AFTER DELETE 0 ASSERTED BEFORE REBUILD -> 8 byte-identical. generated/ and src/emitted/ hash PAIRWISE EQUAL, so the copy step is proved not assumed"
+        - cmd: "ORACLE PART 1: rendered capture of todomvc.com, DRIVEN"
+          status: pass
+          note: "108,093-byte capture with three todos typed and one toggled. Row height 60px EXACT, toggle 40x40 EXACT, filters and hrefs EXACT. TWO MEASURED GAPS recorded"
+        - cmd: "ORACLE PART 1: the Codex reference"
+          status: pass
+          note: "PARTIAL AND SAID SO. Two attempts 403 with an empty body; with a real user agent both answer 200 - THE 403 WAS UA BLOCKING, NOT AUTH, and the wrong reason was the easy error. Captured rendered, but it is a MARKETING page and the live UI is behind a login"
+        - cmd: "angular AOT build"
+          status: pass
+          note: "GREEN, 17 static routes prerendered, up from 15. CLOSES T003's missing_evidence that AOT was never run on the candidates"
+        - cmd: "body hashes, never HTTP 200"
+          status: pass
+          note: "8 routes ALL DISTINCT. Both new angular routes carry their markers in the SSR payload"
+        - cmd: "pnpm test"
+          status: pass
+          note: "1 failed / 1410 passed - EXACTLY the foreign package-inventory ARM B"
+        - cmd: "pnpm lint / pnpm check:citations AFTER the prose edits"
+          status: pass
+          note: "0/0 over 558 files; citations clean, 604 swept"
+        - cmd: "git diff --exit-code over unintended artifacts, PAIRED with git status --short"
+          status: pass
+          note: "react, solid, qwik, svelte, the compiler and four demos ALL CLEAN. S11 and S12 are the only s-numbered artifacts that moved"
+        - cmd: "demo teardown by recorded PID"
+          status: pass
+          note: "FOREIGN 64413, 24931 AND TWO THE BOARD DOES NOT NAME (31456 on 5180, 51893 on 4173) all CONFIRMED ALIVE. pkill NEVER RUN"
+      deviations:
+        - "THE SHIM NEEDED .bind(globalThis) AND T003 SAID IT DID NOT - see the finding. Eight chromium arms settle it."
+        - "ADDED A REFUSAL THE CARD DID NOT ASK FOR, BECAUSE BINDING BOUGHT IT - a shimmed global is a callable, not a namespace."
+        - "THE VUE CHECK ALSO COVERS SCRIPT-SIDE EXPRESSIONS, not only template ones. The _ctx defect is template-only, but angular's qualify() covers computed and state initialisers too - so a `Math` in a computed body WOULD HAVE PASSED VUE AND FAILED ANGULAR, the same asymmetry one scope over."
+        - "ON THE SCRIPT SIDE THE REWRITE RUNS BEFORE THE CHECK, because rewriteScript is this lane's ORIGINAL totality gate with a documented calibration asserting its refusal by message; a second total switch in front of it WOULD SILENTLY TAKE THAT ARM'S PLACE."
+        - "'ONE SHARED ALLOWLIST' IS TWO COPIES WITH CROSS-REFERENCES. No shared module is in allowed_files and neither package depends on the other. Each copy NAMES the other and states that a third name must move both."
+        - "THE CARD BUDGETED BOTH GATE FILES. NEITHER WAS NEEDED - NOVEL is [] - and git diff over both is clean."
+        - "TWO DERIVED ANGULAR CENSUSES MOVED AND WERE RE-ARGUED, NOT RE-NUMBERED: typedInputsSeen 13 -> 15 with untypedInputsSeen HOLDING at 15 for a seventh and eighth time, and the async-scenario set tightened BY SIGNATURE because both new modules contain the literal string 'Measure the async door' and would satisfy a naive regex on their own."
+      remaining_blockers:
+        - "THE BRIEF'S ERROR, AND IT IS EXECUTABLE RATHER THAN PROSE: the card enumerated the comments that go false and MISSED scripts/demo.mjs. It still carries `unbuilt: { S11: ANGULAR_REFUSAL, S12: ANGULAR_REFUSAL }`, and routeFor() returns null for an unbuilt scenario - SO THE FRONT DOOR WILL NOT PRINT /todomvc-advanced OR /codex FOR ANGULAR, will print a refusal that is NOW FALSE, and will drop both from the derived 'all six lanes serve' count. Outside allowed_files. ONE-LINE FIX."
+        - "demos/vue-official/src/App.vue carries three now-false blocks stating S11 and S12 throw _ctx.Promise in this lane. Outside allowed_files."
+        - "The S11 and S12 FIXTURE HEADERS still state the angular refusal and the vue GLOBALS_ALLOWED gap as LIVE. Outside allowed_files."
+        - "TWO MEASURED S11 FIDELITY GAPS AGAINST todomvc.com, both in the fixture: the counter is missing the reference's '!' and the row title is a <label> there and a .todo-title element here."
+        - "ORACLE PART 1 FOR S12 IS PARTIAL. The reference was named and CAPTURED RENDERED, but the public surface is a MARKETING page and the live Codex UI is behind a login this card has no authority to create. Cross-lane agreement was NOT substituted. NEEDS AN OWNER DECISION."
+        - "Inherited: hn.css's stale Angular claim, the shared-sheet cascade sweep, the HN domain span-vs-anchor, the subtext author/age links, and the seventeen stubs."
+      stopped_because: null
   - id: T999
     type: judge
     assignee: Judge

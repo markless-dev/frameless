@@ -496,6 +496,135 @@ describe('Vue 3 emitter', () => {
 		}
 	});
 
+	/**
+	 * THE TWO-NAME GLOBALS ALLOWLIST, ruled by `frameless-app-fidelity-v1` T003.
+	 *
+	 * This lane's check is DELIBERATELY STRICTER than `@vue/shared`'s own
+	 * `GLOBALS_ALLOWED`, and that asymmetry is the whole ruling rather than a
+	 * detail. Upstream's list carries `Date`, `JSON`, `Math` and `console` and does
+	 * NOT carry `Promise` or `setTimeout`; the Angular lane accepts none of the
+	 * six. If this lane simply deferred to upstream, a fixture naming `Date` would
+	 * pass HERE and fail THERE - which is exactly today's failure in reverse.
+	 */
+	describe('the globals allowlist is exactly two names, and stricter than upstream', () => {
+		/** Plant a statement at the head of S1's existing click handler body. */
+		const plant = async (expressionNode: Record<string, any>): Promise<EnrichedIR> => {
+			const artifact = structuredClone(await golden('s1-render-once.json'));
+			const handler = artifact.records.events[0]!.handlers[0]! as {
+				expression: Record<string, any>;
+			};
+			const before = handler.expression.body.body.length;
+			handler.expression.body.body.unshift({
+				type: 'ExpressionStatement',
+				expression: expressionNode,
+			});
+			// The planted statement really is there, so a refusal cannot be the
+			// emitter rejecting an unmutated S1 for some unrelated reason.
+			expect(handler.expression.body.body.length).toBe(before + 1);
+			return artifact;
+		};
+
+		/** `name(0)` - a DIRECT call on the global, which is how the corpus uses both. */
+		const withGlobalCall = (name: string): Promise<EnrichedIR> =>
+			plant({
+				type: 'CallExpression',
+				optional: false,
+				callee: { type: 'Identifier', name },
+				arguments: [{ type: 'Literal', value: 0, raw: '0' }],
+			});
+
+		/** `name.now()` - a MEMBER read, which a bound shim cannot carry. */
+		const withGlobalMemberCall = (name: string): Promise<EnrichedIR> =>
+			plant({
+				type: 'CallExpression',
+				optional: false,
+				callee: {
+					type: 'MemberExpression',
+					computed: false,
+					optional: false,
+					object: { type: 'Identifier', name },
+					property: { type: 'Identifier', name: 'now' },
+				},
+				arguments: [],
+			});
+
+		// EVERY ONE OF THESE FOUR IS IN UPSTREAM'S `GLOBALS_ALLOWED` AND WOULD COMPILE
+		// WITHOUT A `_ctx.` PREFIX. They are refused anyway: each scores ZERO
+		// instances across all 17 fixtures, so admitting one would ship untested
+		// emitter code, and `Date` is additionally a nondeterministic clock in a repo
+		// that proves by byte-equality.
+		test.each(['Date', 'JSON', 'Math', 'console'])(
+			'%s is REFUSED even though @vue/shared would accept it',
+			async (name) => {
+				const artifact = await withGlobalCall(name);
+				expect(() => emit(artifact)).toThrow(
+					new RegExp(`cannot resolve the identifier "${name}"`),
+				);
+				expect(() => emit(artifact)).toThrow(/DELIBERATELY STRICTER/);
+			},
+		);
+
+		// AND THE OTHER DIRECTION, so the list is not vacuously "refuse everything":
+		// the two admitted names pass the same call that refuses the four above.
+		test.each(['Promise', 'setTimeout'])('%s is ADMITTED and shimmed', async (name) => {
+			const artifact = await withGlobalCall(name);
+			let source = '';
+			expect(() => {
+				source = emit(artifact);
+			}).not.toThrow();
+			expect(source).toContain(`const ${name} = globalThis.${name}.bind(globalThis);`);
+		});
+
+		/**
+		 * THE COST OF `.bind(globalThis)`, REFUSED RATHER THAN LEFT TO BITE.
+		 *
+		 * The shim is bound because a setup binding is read as `$setup.setTimeout(...)`
+		 * in non-inline mode - a METHOD call, whose receiver Web IDL rejects with
+		 * `Illegal invocation`. Measured in chromium: binding fixes that AND drops the
+		 * target's static properties, so `globalThis.Promise.bind(globalThis).resolve`
+		 * is `undefined`. A shimmed global is therefore a CALLABLE and not a namespace.
+		 */
+		test.each(['Promise', 'setTimeout'])(
+			'a MEMBER read off shimmed %s is refused, because a bound function drops statics',
+			async (name) => {
+				const artifact = await withGlobalMemberCall(name);
+				expect(() => emit(artifact)).toThrow(
+					new RegExp(`cannot read the member "now" off the allowlisted global "${name}"`),
+				);
+				expect(() => emit(artifact)).toThrow(/does not carry its target's static properties/);
+			},
+		);
+
+		test('a component member of the same name SHADOWS the allowlist and no shim is emitted', async () => {
+			// A component that declares its own `Promise` means its own, so the
+			// allowlist must be reached LAST. Renaming S1's `derived` computed to
+			// `Promise` puts the name in setup scope; the template read of it must then
+			// resolve to the binding, with no `globalThis` shim printed at all.
+			const artifact = structuredClone(await golden('s1-render-once.json'));
+			const raw = JSON.stringify(artifact).replaceAll('"derived"', '"Promise"');
+			expect(raw).not.toEqual(JSON.stringify(artifact));
+			const source = emit(JSON.parse(raw) as EnrichedIR);
+			expect(source).toContain('const Promise = computed(');
+			expect(source).not.toContain('globalThis.Promise');
+		});
+
+		test('the two SHIPPED scenarios that name a global carry the shim, and no other does', async () => {
+			const carriers: string[] = [];
+			for (const file of readdirSync(generatedRoot).filter((entry) => /^S\d+\.vue$/.test(entry)))
+				if (/const (?:Promise|setTimeout) = globalThis\./.test(await emitted(file)))
+					carriers.push(file);
+			expect(carriers.sort(byScenarioNumber)).toEqual(['S11.vue', 'S12.vue']);
+			// The shims sit ABOVE every other setup statement: a `const` is in its
+			// temporal dead zone until its own line, so an initialiser that named
+			// `Promise` above the shim would be a ReferenceError.
+			const s11 = await emitted('S11.vue');
+			expect(s11.indexOf('const Promise = globalThis.Promise.bind(globalThis);')).toBeLessThan(
+				s11.indexOf('const props = defineProps('),
+			);
+			expect(s11).toContain('const setTimeout = globalThis.setTimeout.bind(globalThis);');
+		});
+	});
+
 	describe('fails closed', () => {
 		test('on a declared stopPropagation', async () => {
 			const artifact = structuredClone(await golden('s3-event-form.json'));

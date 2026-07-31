@@ -521,6 +521,39 @@ function declaredNames(pattern: Node | null | undefined, into: Set<string>): voi
 	}
 }
 
+/**
+ * THE TWO-NAME GLOBALS ALLOWLIST, ruled by `frameless-app-fidelity-v1` T003.
+ *
+ * `Promise` and `setTimeout` MAY be named in a transplanted body. Nothing else
+ * may. The list is SHARED WITH THE VUE LANE - `packages/frameworks/vue/src/emitter/index.ts`
+ * declares the same two names for the same ruling and enforces them with the same
+ * fail-closed throw - and the two copies exist rather than one import because
+ * neither package depends on the other and the shared package they both import,
+ * `@frameless/compiler`, is an IR contract rather than a per-lane emission policy.
+ * A THIRD NAME IS A NEW RULING, NOT AN EDIT, and it has to move both copies.
+ *
+ * WHY EXACTLY THESE TWO, AND WHY THE LIST IS NOT LONGER. T003 censused all 17
+ * compiler fixtures comment-stripped: the ONLY globals named in authored
+ * executable code are `Promise` and `setTimeout`, in S11 and S12 alone. `Date`,
+ * `JSON`, `Math`, `console`, `fetch`, `localStorage` and `document` score ZERO.
+ * The standing argument this file used to make against an allowlist - that it
+ * "would be untested dead code, which in an emitter is worse than absent code" -
+ * is what SELECTS these two and REFUSES the rest: these two have ten call sites
+ * and two whole applications exercising them, and every other candidate has none.
+ *
+ * `Date` IS REFUSED ON DETERMINISM, NOT ON DEFERRAL. It is a nondeterministic
+ * clock, and this repo proves by BYTE-EQUALITY - the derivation proofs, the
+ * ratified goldens, and e2e's "all observations equal" across six lanes. The
+ * literal dates in S13, S15 and S17 are the determinism the oracle requires, not
+ * a workaround for a missing capability.
+ *
+ * The IR's one statement-injecting channel - `ir.records.persistence`, which
+ * injects `__framelessWrite(...)` into handler bodies - is still refused whole by
+ * `emit()`, so that identifier can never arrive here. Any OTHER new free name is
+ * still a loud throw and a deliberate edit.
+ */
+const TRANSPLANTED_GLOBALS: ReadonlySet<string> = new Set(['Promise', 'setTimeout']);
+
 /** Names a block introduces, collected before the block body is visited. */
 function blockScopeNames(body: readonly Node[]): Set<string> {
 	const names = new Set<string>();
@@ -560,13 +593,18 @@ function blockScopeNames(body: readonly Node[]): Set<string> {
  * disagree about. Gate 3 is not engaged; Gate 5 is not engaged. Same
  * admissibility ground as 3d's `@for` variables.
  *
- * THERE IS NO GLOBALS ALLOWLIST, deliberately. `Math`, `JSON`, `console` and
- * friends have ZERO instances across the corpus, so an allowlist would be
- * untested dead code, which in an emitter is worse than absent code. The IR's
- * one other statement-injecting channel - `ir.records.persistence`, which injects
- * `__framelessWrite(...)` into handler bodies - is refused whole by `emit()`, so
- * that identifier can never arrive here either. A new free name is a loud throw
- * and a deliberate edit.
+ * THE GLOBALS ALLOWLIST IS EXACTLY TWO NAMES - `Promise` and `setTimeout` - and
+ * it is declared and argued at `TRANSPLANTED_GLOBALS` above. This comment used to
+ * read "THERE IS NO GLOBALS ALLOWLIST, deliberately", on the ground that `Math`,
+ * `JSON`, `console` and friends have ZERO instances across the corpus and an
+ * allowlist would therefore be untested dead code. THAT ARGUMENT STILL STANDS AND
+ * IT IS WHAT KEEPS THE LIST AT TWO: `frameless-app-fidelity-v1` T003 censused the
+ * corpus and found these two names - and ONLY these two - in authored executable
+ * code, at ten call sites across S11 and S12. Every other candidate still scores
+ * zero and is still refused. A THIRD NAME IS A NEW RULING.
+ *
+ * A name that is neither in scope, nor a declared member, nor one of the two is
+ * still a loud throw and a deliberate edit.
  *
  * Reference positions only. A non-computed member property, a non-computed object
  * key, a declaration id and a function parameter are all IDENTIFIERS that are not
@@ -593,11 +631,18 @@ function qualify(node: Node, members: ReadonlySet<string>, scope: ReadonlySet<st
 			const name = String(node.name);
 			if (scope.has(name)) return node;
 			if (members.has(name)) return member(thisExpression(), name);
+			// LAST, NOT FIRST. A body-local binding and a declared component member
+			// both SHADOW the allowlist, because a component that declares its own
+			// `setTimeout` means `this.setTimeout` and an authored `const Promise = ...`
+			// means the local. The global is only reached when nothing else binds the
+			// name, which is exactly when it IS the global.
+			if (TRANSPLANTED_GLOBALS.has(name)) return node;
 			throw new Error(
 				`Angular emitter cannot resolve the identifier ${JSON.stringify(name)} in a transplanted body: ` +
-					'it is neither a body-local binding, a function parameter, a @for variable, nor a declared ' +
-					`component member (${[...members].sort().join(', ')}). The emitter throws rather than guessing ` +
-					'whether it is a global',
+					'it is neither a body-local binding, a function parameter, a @for variable, a declared ' +
+					`component member (${[...members].sort().join(', ')}), nor one of the two allowlisted ` +
+					`globals (${[...TRANSPLANTED_GLOBALS].sort().join(', ')}). The emitter throws rather than ` +
+					'guessing whether it is a global',
 			);
 		}
 		case 'Literal':
