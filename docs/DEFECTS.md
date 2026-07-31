@@ -1926,21 +1926,38 @@ cost is registered as a test, not as a promise.
 
 ---
 
-## 15. A two-word DOM event name is UNSPELLABLE in all six lanes, and the emitted binding silently never fires — **OPEN — frameless's own emitted output**
+## 15. A two-word DOM event name is UNSPELLABLE IN REACT, and its emitted binding silently never fires — THE OTHER FIVE LANES BIND BY DOM EVENT NAME AND DO FIRE — **OPEN — frameless's own emitted output**
 
 > **Found by building a real application** — `frameless-real-apps-v1` T002,
-> authoring TodoMVC — and filed by T006. It is the first defect in this ledger
-> that no lane can be blamed for: the casing is destroyed in the **compiler**,
-> before any emitter sees it, so all six lanes are downstream of the same loss.
+> authoring TodoMVC — and filed by T006. The casing is destroyed in the
+> **compiler**, before any emitter sees it, so all six lanes are downstream of the
+> same loss — but **only one of them is damaged by it**, and the original title
+> said all six.
 
-**Status:** OPEN, **and not contained** — there is no refusal in front of it.
-Authoring `onKeyDown` today produces an emitted binding that type-checks in some
-lanes, renders without complaint, and **never fires**. Ranked above entries 7 and
-13 by this document's own rule (how wrong the shipped output is) and filed last
-only because it was found last, which is the convention entry 8 already set.
+> **AMENDED BY `frameless-app-axes-v1` T011, ON MEASUREMENT — the scope was wrong
+> and it was expensive.** This entry was filed off `onKeyDown` in **react** and
+> generalised to *"in all six lanes"* without the other five being measured.
+> `frameless-app-axes-v1` T005 measured them and **refuted it**; T011 reproduced
+> the emitter half and the react half here. **This is the same react-only
+> over-generalisation entry 12.2 carried**, and it is corrected the same way: the
+> original reading is kept below, marked, rather than erased.
+>
+> **What the unamended title cost.** It has been quoted as a hard six-lane blocker
+> on **five task cards across two boards** plus both of their charters —
+> `frameless-app-suite-v1` T002, T004, T006 and T999, and `frameless-app-axes-v1`
+> T005. It is why the **Codex clone shipped with no keyboard at all** (that
+> receipt's own words: *"the app actually lost the keyboard entirely"*), and why
+> the drag card was written expecting a refusal it never got. A scope error in a
+> ledger title is not a typo; it removes features nobody ever measured as blocked.
 
-**The mechanism, in one line.** `jsxEventName` in
-`packages/compiler/src/build.ts`:
+**Status:** OPEN, **and not contained** — there is no refusal in front of it. The
+`/^on[A-Z]/` guard **accepts** the spelling and then destroys it, so the binding
+**is** produced. Ranked above entries 7 and 13 by this document's own rule (how
+wrong the shipped output is) and filed last only because it was found last, which
+is the convention entry 8 already set.
+
+**The mechanism, in one line — unchanged, and it was never the wrong half.**
+`jsxEventName` in `packages/compiler/src/build.ts`:
 
 ```ts
 if (!/^on[A-Z]/.test(name)) return null;
@@ -1952,54 +1969,142 @@ The guard requires a capital — so `onKeyDown` is *accepted* — and then
 the IR and no emitter can recover it**, because nothing downstream records where
 the capital was.
 
-**What each lane can therefore produce.** React's event-prop naming in
-`packages/frameworks/react/src/emitter/index.ts` is
-`` `on${name[0].toUpperCase()}${name.slice(1)}` ``, so
-`keydown` can only ever become **`onKeydown`**. The other five lanes capitalise
-the same already-lowercased string by the same construction — T001 first noticed
-this in Qwik and read it as **cosmetic and Qwik-only**, which was wrong on both
-counts.
+**WHAT THE ENTRY MISSED: `keydown` IS THE REAL DOM EVENT NAME.** Almost every DOM
+event name is already all-lowercase — `keydown`, `keyup`, `dblclick`, `dragover`,
+`dragstart`, `dragend`, `drop`, `pointerdown`, `mouseover`, `focusin`. For those,
+`.toLowerCase()` is **lossless with respect to the DOM** and destructive only with
+respect to a **framework's camelCase prop table**. Exactly one lane binds by a
+framework prop table.
 
-**It is BEHAVIOURAL, and it was measured in a real DOM.** T002, at
-`react-dom@19.2.3`, drove both spellings and recorded which handlers fired:
+**THE PER-LANE TABLE. Question (1) — what does the emitter print? — was asked of
+the REAL emitters on a probe module by T005 and REPRODUCED INDEPENDENTLY by T011.
+Question (2) — does it fire? — was asked in chromium.**
 
-- `onKeyDown` and `onDoubleClick` — **fire**.
-- `onKeydown` and `onDblclick` — **never fire**, and React warns
-  `Invalid event handler property`.
+| lane | authored `onKeyDown` prints | binds by | (2) FIRES? | measured on |
+| --- | --- | --- | --- | --- |
+| **react** | `onKeydown` | **the framework prop name** | **NO — inert, and React warns** | `keydown` + `dblclick`, T011 |
+| solid | `onKeydown` | the flattened name, via `addEventListener` | **YES** | the five drag/pointer names, T005 |
+| qwik | `onKeydown$` | the flattened name | **YES** | the five drag/pointer names, T005 |
+| svelte | `onkeydown` | the all-lowercase DOM event name | **YES** | the five drag/pointer names, T005 |
+| vue | `@keydown` | the flattened name | **YES** | the five drag/pointer names, T005 |
+| angular | `(keydown)` | the flattened name | **YES (synthetic)** | the five drag/pointer names, T005 |
 
-So the emitted binding is not merely ugly; it is inert, and React says so at
-runtime while nothing in this repo listens.
+**WHAT IS MEASURED HERE AND WHAT IS INFERRED, stated rather than blurred.**
+T005 drove `dragstart`, `dragover`, `drop`, `dragend` and `pointerdown` — not
+`keydown` — in six real browsers, in two arms, and **FOUR LANES COMPLETED AN
+END-TO-END HTML5 DRAG WITH A REAL MOUSE** (solid, qwik, svelte, vue); angular
+fired all five synthetically while that probe page produced no native drag at all,
+which T005 records as unresolved rather than settled. T011 reproduced the emitter
+half for `keydown` in all six lanes and the runtime half **for react only**. That
+the other five fire `keydown` **specifically** is therefore an **inference**, from
+a binding path that is indifferent to which name it is handed and from `keydown`
+being a real DOM event name exactly as `dragover` is. It is a strong inference and
+it is still an inference: **five lanes × `keydown` in a browser is unrun.**
 
-**The half that makes a spelling map unavoidable.** React's name for the
-double-click is **`onDoubleClick`**, and the DOM event is **`dblclick`**. Authoring
-`onDblClick` lowers to `dblclick`, and **no capitalisation rule over `dblclick`
-can produce `onDoubleClick`** — the two names do not share a stem. Authoring
-`onDoubleClick` lowers to `doubleclick`, which is not a DOM event at all. A
-repair therefore needs a **per-lane spelling map**, not a smarter capitaliser, and
-that is why this is filed rather than fixed: it is a design change with six
-downstream consumers.
+**Five lanes get the correct listener BY ACCIDENT OF THE SAME BUG**: the string
+the compiler flattened to is the string those lanes were going to bind with
+anyway.
 
-**It also costs `pnpm check`.** A single `onKeyDown` binding took the inherited
-count **267 → 272**, across three lanes (T002). The type instruments see the
-damage even where the runtime is silent.
+**The react row, re-measured by T011 in chromium rather than inherited.** Real
+key presses and a real double click against `react-dom@19.2.3`, with two
+plain-DOM controls on the same page:
 
-**What it cost the deliverable.** TodoMVC's **Escape-revert** — `keydown` is its
-only spelling — was dropped and recorded as a lane limit rather than hand-written,
-and the revert behaviour ships as an explicit cancel control instead. That is the
-honest cost of an unspellable event, and it is the strongest argument for the
-repair.
+```
+onKeyDown       (react's own spelling)     2 hits
+onKeydown       (WHAT THIS COMPILER EMITS) 0 hits
+onDoubleClick   (react's own spelling)     1 hit
+onDoubleclick   (from authored onDoubleClick) 0 hits
+onDblclick      (from authored onDblClick)    0 hits
+CONTROL  addEventListener('keydown')       2 hits   <- what solid/vue/angular reduce to
+CONTROL  onkeydown content attribute       2 hits   <- what svelte reduces to
+```
+
+React says so itself, in its own console, while nothing in this repo listens:
+
+```
+Invalid event handler property `onKeydown`. Did you mean `onKeyDown`?
+Invalid event handler property `onDoubleclick`. Did you mean `onDoubleClick`?
+Invalid event handler property `onDblclick`. Did you mean `onDoubleClick`?
+```
+
+**WHAT IS STILL SIX-LANE FATAL, AND IT IS A NARROWER SET.** The binding is dead
+everywhere when the **flattened string is not a real DOM event name**. Authoring
+`onDoubleClick` lowers to `doubleclick`, which is not an event in any lane;
+authoring `onDblClick` lowers to `dblclick`, which is the real event and fires in
+all five DOM-name lanes. React additionally cannot reach `onDoubleClick` from
+either spelling — the DOM's `dblclick` and React's `onDoubleClick` share no stem,
+so **no capitalisation rule can bridge them**. That is why a repair needs a
+**per-lane spelling map** and not a smarter capitaliser, and it is unchanged by
+this amendment.
+
+**THE KEYBOARD, CORRECTED — this is the consequence that cost the most.** The
+Codex clone shipped **no keyboard at all** on the reading that `onKeyDown` is
+unspellable everywhere. **It is spellable in all six**, and the emitter half below
+was measured by T011 through the real emitters, per lane and per host, with a
+single-word `onClick` beside it as the control. The runtime half carries the
+provenance stated above — react measured, the other five inferred:
+
+- **svelte, vue and angular: spellable and FREE.** They do not typecheck emitted
+  templates, so a `keydown` binding costs the `pnpm check` budget nothing.
+- **qwik: spellable and FREE.** `onKeydown$` is accepted by qwik's own JSX types
+  and its handler parameter is contextually typed — **zero** `error TS` lines.
+- **solid: spellable, at +2 `error TS` lines per binding** — one `TS2322` for the
+  unknown prop on that host and one `TS7006` for the parameter that can no longer
+  be contextually typed. Against a fixed 267 budget that is the real constraint,
+  and it is a budget question, not a capability one.
+- **react: spellable, and INERT.** The one lane where the loss is fatal, and the
+  only one measured in a browser on `keydown` itself.
+
+**A keyboard-carrying application is therefore blocked in ONE lane, not six** —
+and the first card to want one owes the five-lane × `keydown` browser run that
+this entry has not done.
+
+**And svelte's refusals are about the ELEMENT, not the event.** Svelte is the only
+lane that refuses anything here, and what it refuses is an interaction on a host
+that a11y rules disallow — measured by T011 across the (element × interaction)
+grid, `<div>` refuses both drag and keyboard as
+`a11y_no_static_element_interactions`; `<li>` **accepts drag** and **refuses
+keyboard** as `a11y_no_noninteractive_element_interactions`; **`<button>` and
+`<textarea>` accept both cleanly.** A `keydown` on a `<textarea>` — which is
+exactly the Codex clone's Enter-to-send host — emits warning-free in all six
+lanes.
+
+**It also costs `pnpm check`, and the cost is react and solid only.** T002
+recorded a single `onKeyDown` binding taking the inherited count **267 → 272**
+across three lanes. Re-measured by T011 on one binding on one host: **react +2,
+solid +2, qwik 0**. The `TS7006` half disappears for a single-word event, because
+a known prop types its own parameter — which is why the corpus never saw this.
+
+**What it cost the deliverable, and the ONE-SOURCE constraint that is easy to
+overstate in the other direction.** TodoMVC's **Escape-revert** was dropped and
+shipped as an explicit cancel control instead. In **react** that was correct and
+remains correct — and because this corpus authors **one** `.tsrx` and emits it six
+ways, authoring the handler anyway would make **react silently wrong** while five
+lanes worked, which is worse than absence and is a real reason to keep it out of a
+**six-lane** fixture. **That is not the same claim as "unspellable in all six",
+and the difference is a whole feature.** An application that does not ship the
+react lane, or that ships it with a labelled limitation the way this board already
+labels absences on the page itself, could have had the keyboard — the Codex clone,
+which angular already refused, is exactly that case. That is the cost of this
+entry's scope error, and it is the strongest argument for amending a ledger title
+rather than only its body.
 
 **Why nothing caught it.** **All three events in the S1–S9 corpus are
 single-word** (`click`, `input`, `change`), for which `.toLowerCase()` is the
 identity and the defect is invisible. No served payload had ever carried a
 two-word event name until S10 tried to. This is the same shape as entry 8: **not a
-weak instrument, an absent input.**
+weak instrument, an absent input.** And nothing caught the **scope** error for the
+same reason in reverse: the one lane the entry was filed from is the one lane it
+is true of.
 
 **What a repair owes, and it is not just the map.** The `/^on[A-Z]/` guard
 currently **accepts** a name it cannot represent. Whatever the map does, the
 compiler should stop silently accepting a spelling it is about to destroy — a
 refusal here would have surfaced this on the day `onKeyDown` was first authored,
-which is the standard entry 8's repair already set.
+which is the standard entry 8's repair already set. **A repair also has a cheaper
+lower bound than this entry implied**: react is the only lane needing a mapped
+name at all, and `pnpm check` would fall by two lines per binding in react and
+solid if the emitted prop were spelled the way each lane's own types declare it.
 
 ---
 
@@ -2039,6 +2144,107 @@ rather than a rule working as designed.
 
 ---
 
+## 17. A static attribute is lowered as a STRING, and each lane's own JSX types decide whether that typechecks — the rule is PER LANE, NOT per DOM type — **OPEN — frameless's own emitted output**
+
+> **Filed by `frameless-app-axes-v1` T011, which was sent to WIDEN this rule and
+> instead had to NARROW it.** It has been carried in fixture headers and board
+> `stop_if` clauses for three cards without ever being written down here, and each
+> restatement was wider than the measurement under it. T003 recorded *"cannot
+> spell a static NUMERIC attribute"* from `rows="6"` failing **react's** emitted
+> typecheck. T005 widened that to *"no static attribute whose DOM type is not
+> `string`"* from `draggable="true"` failing **qwik's**. T006 measured a three-lane
+> table and read it as confirming T005. **T011 re-measured it one attribute per
+> emitted module and the DOM-type formulation is refuted in both directions.**
+
+**Status:** OPEN, **and contained only by hand** — the containment is fixture
+constraints and board `stop_if` clauses, which is to say by authors remembering.
+No emitter refuses it, and the compiler has no per-lane type knowledge to refuse
+it with.
+
+**The mechanism.** `StaticAttribute` in `packages/compiler/src/schema.ts` is
+`{ name: string; value: string | true }`. A **valued** static attribute therefore
+reaches every emitter as a **string**, and no lane's declared JSX prop type is
+consulted anywhere. Three lanes typecheck their emitted output — react, solid and
+qwik — so the whole `pnpm check` budget lives in those three; svelte, vue and
+angular do not typecheck templates and contribute **0** to every row below.
+
+**THE MEASUREMENT. One attribute, one emitted module, per lane, through the REAL
+emitters, typechecked against THAT LANE'S OWN JSX types.** One module per
+attribute matters: a probe that puts many attributes on one host gets **one**
+excess-property diagnostic for the whole host and undercounts the rest.
+
+| static attribute, as authored | DOM IDL type | react | solid | qwik |
+| --- | --- | --- | --- | --- |
+| `id="probe"` · `title="t"` · `data-*="0"` | string | 0 | 0 | 0 |
+| **`draggable="true"`** (on `div`, `li`, `button`) | **boolean** | **0** | **0** | **+1** |
+| `rows="6"` · `cols="20"` | number | **+1** | **0** | **+1** |
+| `maxlength="10"` · `tabindex="0"` | number | **+1** | **0** | **+1** |
+| `spellcheck="true"` · `readonly="true"` | boolean | +1 | +1 | +1 |
+| `hidden="true"` · `contenteditable="true"` | boolean / enum | +1 | +1 | +1 |
+| `autocomplete="off"` | **string** | **+1** | 0 | 0 |
+| `autoComplete="off"` | **string** | 0 | **+1** | **+1** |
+
+**THE TWO CELLS THAT KILL THE "DOM TYPE" FORMULATION.** `draggable` has DOM type
+`boolean` and is **free in react and solid**; `autocomplete` has DOM type `string`
+and **costs react**. The predicate is not the DOM type. It is **the lane's own
+declared JSX prop entry for that exact spelling — its name and its type.**
+
+**Why the DOM-type reading looked right, and it is a lane-shaped illusion.**
+`@qwik.dev/core` derives element attribute types **from the DOM interfaces
+themselves** — `HTMLElementAttrs extends HTMLAttributesBase, FilterBase<HTMLElement>`,
+where `FilterBase` is a mapped type over the DOM interface — so for qwik, and for
+qwik alone, **the DOM IDL type IS the declared prop type**. React's and solid's
+tables are hand-written and deliberately admit the string forms: `@types/react`
+declares `draggable?: Booleanish`, where `Booleanish = boolean | "true" | "false"`.
+T005 measured `draggable` in **the one lane where the DOM type is the rule** and
+generalised from it — the same shape as entry 15's react-only over-generalisation,
+one board later, in the other direction.
+
+**AND THERE IS NO SPELLING OF `draggable` THAT IS FREE IN ALL THREE LANES.** The
+three JSX emitters disagree on how to print a **valueless** static attribute:
+
+```
+authored  draggable="true"   react  draggable="true"   solid  draggable="true"  qwik  draggable="true"
+authored  draggable          react  draggable=""       solid  draggable         qwik  draggable
+```
+
+so the cost simply **moves**:
+
+| authored | react | solid | qwik |
+| --- | --- | --- | --- |
+| `draggable="true"` | 0 | 0 | **+1** |
+| `draggable` (valueless) | **+1** (`""` is not `Booleanish`) | 0 | 0 |
+
+This is T006's `autocomplete` / `autoComplete` finding — *no spelling of it is
+free in both* — repeated on **value presence** instead of on **casing**. Two
+independent axes, same consequence.
+
+**THE OPERATIONAL RULE, stated as narrowly as it was measured.** A static
+attribute is safe to author **only if every typechecked lane's own JSX prop table
+admits a string under that exact spelling.** `id`, `title`, `for`, `name`,
+`placeholder`, `pattern`, `role`, `aria-*`, `data-*`, `min`, `max`, `step` and
+`inputMode` are measured free in all three (T006). Everything else is measured
+per lane or is unmeasured — and *unmeasured* is not *free*.
+
+**An unreconciled reading, recorded rather than smoothed.** T006's table has qwik
+at **0** for `autoComplete` (camel); T011 measures **+1**, with qwik's own
+diagnostic naming `autocomplete` as the member it expected. The likeliest cause is
+the one-host undercount described above, but that is a hypothesis and the two
+readings are left standing side by side. Nothing in this entry rests on that cell.
+
+**What this entry does NOT rule.** Whether the repair belongs in the compiler
+(carry the authored value's kind into the IR), in each emitter (consult a per-lane
+attribute table, which is entry 15's spelling-map problem again), or nowhere at
+all (keep it an authoring constraint and give it a refusal instead of a
+convention). That is a design ruling this entry deliberately does not take.
+
+**What would close it.** An emitted static attribute that cannot typecheck in a
+lane being **refused at authoring time** rather than reaching that lane's `tsc` —
+the same standard entries 8 and 15 already set, and the same reason: a constraint
+enforced by remembering is not contained.
+
+---
+
 ## Closed, for the record
 
 **`findings-001` — `engines.node: ">=20"` was false.** The toolchain cannot load
@@ -2065,10 +2271,11 @@ matrix proved green rather than from the error message's claim.
 | 12  | **product defect — CLOSED**     | **removed**, not contained: the `await` survives re-analysis (T047), the final-sync retention is **segmented at the suspension boundary** and post-await reads of the cell being written are lowered to React's **functional updater** (T003). Witnessed before/after against real `react-dom`, with the calibration arm held fixed as the control, and **zero generated bytes moved** across three proven-real regeneration tiers | none for the defect — a **v-limit** (post-await read of a *different* cell) is recorded in 12.2 with its triggering authoring and its own registered test. The **served payload** landed with S8 (T004): six lanes byte-identical, and the react mutant is the pre-T003 lowering restored verbatim, RED at three of five readings |
 | 13  | **product defect — OPEN**       | **half removed**: react's three names are repaired in `jsxName` and pinned against react-dom's own rejections; `hidden` and `readonly` are **contained** — excluded from `LANE_PORTABLE_BOOLEAN_ATTRIBUTES`, unrepairable from any emitter, because both fail inside `@qwik.dev/core`'s own `isBooleanAttr` | the lift trigger — a qwik release whose `isBooleanAttr` admits `hidden` and stops gating `readonly` on `key in element`, at which point the clause-5 matrix goes red and the portable set widens |
 | 14  | **product defect — CLOSED**     | **removed**, not contained: a class with an async handler injects `ChangeDetectorRef` and every suspension segment after the first ends with `markForCheck()` (T004). Found by a **served payload** and by nothing else, with the diagnosis measured — one extra click made the stale DOM jump to the correct value | none for the defect — nested-function writes are NOT covered and the pass says so; no corpus authoring produces one |
-| 15  | **product defect — OPEN**       | **not contained** — no refusal anywhere: the casing is destroyed in the compiler (`jsxEventName` in `packages/compiler/src/build.ts`), so no emitter in any of the six lanes can spell `onKeyDown`, and the emitted binding is inert at runtime | a per-lane spelling map (`dblclick` → React's `onDoubleClick` shares no stem with it), **and** a compiler-side refusal so `/^on[A-Z]/` stops accepting a name it is about to flatten |
+| 15  | **product defect — OPEN, REACT ONLY (amended)** | **not contained** — no refusal anywhere: the casing is destroyed in the compiler (`jsxEventName` in `packages/compiler/src/build.ts`), so no emitter can spell `onKeyDown` **as react-dom needs it** and react's emitted binding is inert at runtime. **The other five lanes bind by the DOM event name, which is what the flattening produces, and they FIRE** — measured in browsers (T005) with the react row re-measured (T011). The residue that is genuinely six-lane is narrower: a flattened name that is not a real DOM event, such as `doubleclick` from `onDoubleClick` | a per-lane spelling map **for react** (`dblclick` → React's `onDoubleClick` shares no stem with it), **and** a compiler-side refusal so `/^on[A-Z]/` stops accepting a name it is about to flatten |
 | 16  | **not a defect**                | nothing to change in any emitter — the Svelte a11y refusals are correct and canonical TodoMVC's clickable `<label>` is the anti-pattern | **nothing** — rendered via a marked supplement (T007), vendored bytes untouched |
+| 17  | **product defect — OPEN**       | **contained only by hand** — fixture constraints and board `stop_if` clauses. Every valued static attribute reaches every emitter as a **string** (`StaticAttribute` in `packages/compiler/src/schema.ts`) and no lane's declared JSX prop type is consulted anywhere, so the emitted output fails that lane's own `tsc`. Measured per lane: `rows="6"` costs react and qwik and is free in solid; `draggable="true"` costs qwik alone; the valueless `draggable` costs react alone | a refusal at authoring time instead of a convention — and, first, a ruling on whether the value's kind belongs in the IR or in a per-lane attribute table |
 
-**Entries 7, 8, 13 and 15 are the OPEN defects in frameless's own emitted
+**Entries 7, 8, 13, 15 and 17 are the OPEN defects in frameless's own emitted
 output**, and 7, 8 and 13 are the ones on this table a later reader could mistake
 for closed because their repairs are green. Entries 7 and 8 *contain* something
 that is still there — a non-neutrality in 7, an unlowerable construct in 8 — so
@@ -2076,14 +2283,28 @@ their repairs are refusals, and a refusal is not a removal. In all of these case
 a registered test reports the day the status should change, and in all of them it
 reports in **either** direction.
 
-**Entry 15 is in none of those states, and that is what distinguishes it.** It is
-not contained, not repaired-but-unwitnessed, and not accepted-and-wrong-by-design
-the way entry 12 was for a phase. **Nothing refuses it and nothing reports it**:
-the compiler accepts `onKeyDown`, flattens it, and every lane emits a binding that
-renders clean and never fires. Entry 12's phase was a deliberate choice with tests
-asserting the defect's own numbers; entry 15 has **no instrument at all**, because
-the corpus's three events are single-word and `.toLowerCase()` is the identity on
-every one of them.
+**Entries 15 and 17 are in none of those states, and that is what distinguishes
+them.** Neither is contained, repaired-but-unwitnessed, or
+accepted-and-wrong-by-design the way entry 12 was for a phase. **Nothing refuses
+either and nothing reports either**: the compiler accepts `onKeyDown`, flattens
+it, and **react** emits a binding that renders clean and never fires; the compiler
+accepts `rows="6"`, lowers it as a string, and react and qwik emit output their own
+`tsc` rejects. Entry 12's phase was a deliberate choice with tests asserting the
+defect's own numbers; entry 15 has **no instrument at all**, because the corpus's
+three events are single-word and `.toLowerCase()` is the identity on every one of
+them, and entry 17's only instrument is the 267 budget noticing *after* an author
+has already spent one.
+
+**AND ENTRY 15's SCOPE WAS WRONG FROM THE DAY IT WAS FILED UNTIL T011, WHICH IS
+THE SHARPEST THING ON THIS TABLE.** Its title said *"in all six lanes"*; it is
+**react only**, and five task cards across two boards quoted the
+title as a hard six-lane blocker — one of them shipping an application with **no
+keyboard at all**. This is the second time this ledger has generalised a react
+lowering defect to all six lanes (12.2 was the first) and the second time a
+later card had to measure the other five to find out. **A scope claim in a title
+is the part that gets quoted, and this document has now been wrong in that exact
+place twice.** The standing rule it buys: an entry filed from one lane says *one
+lane* in its title until the other five have been run.
 
 **And entry 8's containment claim was overstated until T006 measured it.** This
 table said "contained" for eight entries' worth of reading; what is contained is

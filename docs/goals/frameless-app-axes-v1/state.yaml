@@ -58,7 +58,7 @@ goal:
       evaporates. If drag refuses and is quietly replaced by click-to-move, the axis goes
       unmeasured while the demo looks complete.
 
-active_task: T011
+active_task: T009
 
 rules:
   - "state.yaml is board truth; goal.md is the charter."
@@ -295,7 +295,7 @@ tasks:
       - "TWO OPEN EMITTER DEFECTS HIT ANY CARD THAT COMPOSES, not just recursion. SOLID: a same-module component reference makes every signal read inside a handler DOUBLE-CALL (TS2349) and DROPS attr:value. QWIK: a function-typed prop CANNOT CROSS A COMPONENT BOUNDARY IN ANY SPELLING (onTrace$ prints as onTrace, authoring onTrace$ gives onTrace$$). If you compose, EXPECT THEM, narrow around them, and DO NOT touch an emitter."
       - "You are about to assume a list prop is impossible. `Array<string>` LOWERS IN FIVE LANES where `string[]` refuses - the limit is the SPELLING, not arrays. T003 refuted the stronger claim T002 recorded."
       - "You are about to bind a `style` attribute. NO FIXTURE IN THE CORPUS DOES, so style lowering is UNMEASURED IN ALL SIX LANES - S15 used a class name for exactly this reason. MEASURE IT AS ITS OWN PROBE FIRST and record the per-lane result; do not discover it mid-build."
-      - "You are about to write a STATIC ATTRIBUTE WHOSE DOM TYPE IS NOT `string`. It will fail an emitted typecheck: rows=\"6\" failed react's, draggable=\"true\" failed qwik's. NARROW THE FIXTURE, NEVER RAISE THE 267 BUDGET."
+      - "You are about to write a STATIC ATTRIBUTE. THE PREDICATE IS THE LANE'S OWN DECLARED JSX PROP ENTRY FOR THAT EXACT SPELLING - NOT the DOM type, which T011 refuted in BOTH directions: draggable=\"true\" (boolean) is FREE in react and solid and costs qwik alone, while autocomplete=\"off\" (string) COSTS react. And no spelling of draggable is free in all three JSX lanes, because the emitters disagree on valueless attributes. MEASURE THE SPELLING YOU INTEND; NARROW THE FIXTURE, NEVER RAISE THE 267 BUDGET. docs/DEFECTS.md entry 17."
       - "Verification fails twice for the same reason."
     receipt:
       result: done
@@ -521,7 +521,7 @@ tasks:
       - "TWO OPEN EMITTER DEFECTS HIT ANY CARD THAT COMPOSES, not just recursion. SOLID: a same-module component reference makes every signal read inside a handler DOUBLE-CALL (TS2349) and DROPS attr:value. QWIK: a function-typed prop CANNOT CROSS A COMPONENT BOUNDARY IN ANY SPELLING (onTrace$ prints as onTrace, authoring onTrace$ gives onTrace$$). If you compose, EXPECT THEM, narrow around them, and DO NOT touch an emitter."
       - "You are about to assume a list prop is impossible. `Array<string>` LOWERS IN FIVE LANES where `string[]` refuses - the limit is the SPELLING, not arrays. T003 refuted the stronger claim T002 recorded."
       - "You are about to bind a `style` attribute. NO FIXTURE IN THE CORPUS DOES, so style lowering is UNMEASURED IN ALL SIX LANES - S15 used a class name for exactly this reason. MEASURE IT AS ITS OWN PROBE FIRST and record the per-lane result; do not discover it mid-build."
-      - "You are about to write a STATIC ATTRIBUTE WHOSE DOM TYPE IS NOT `string`. It will fail an emitted typecheck: rows=\"6\" failed react's, draggable=\"true\" failed qwik's. NARROW THE FIXTURE, NEVER RAISE THE 267 BUDGET."
+      - "You are about to write a STATIC ATTRIBUTE. THE PREDICATE IS THE LANE'S OWN DECLARED JSX PROP ENTRY FOR THAT EXACT SPELLING - NOT the DOM type, which T011 refuted in BOTH directions: draggable=\"true\" (boolean) is FREE in react and solid and costs qwik alone, while autocomplete=\"off\" (string) COSTS react. And no spelling of draggable is free in all three JSX lanes, because the emitters disagree on valueless attributes. MEASURE THE SPELLING YOU INTEND; NARROW THE FIXTURE, NEVER RAISE THE 267 BUDGET. docs/DEFECTS.md entry 17."
       - "Verification fails twice for the same reason."
     receipt:
       result: done
@@ -754,7 +754,7 @@ tasks:
       - "TWO OPEN EMITTER DEFECTS HIT ANY CARD THAT COMPOSES, not just recursion. SOLID: a same-module component reference makes every signal read inside a handler DOUBLE-CALL (TS2349) and DROPS attr:value. QWIK: a function-typed prop CANNOT CROSS A COMPONENT BOUNDARY IN ANY SPELLING (onTrace$ prints as onTrace, authoring onTrace$ gives onTrace$$). If you compose, EXPECT THEM, narrow around them, and DO NOT touch an emitter."
       - "You are about to assume a list prop is impossible. `Array<string>` LOWERS IN FIVE LANES where `string[]` refuses - the limit is the SPELLING, not arrays. T003 refuted the stronger claim T002 recorded."
       - "You are about to bind a `style` attribute. NO FIXTURE IN THE CORPUS DOES, so style lowering is UNMEASURED IN ALL SIX LANES - S15 used a class name for exactly this reason. MEASURE IT AS ITS OWN PROBE FIRST and record the per-lane result; do not discover it mid-build."
-      - "You are about to write a STATIC ATTRIBUTE WHOSE DOM TYPE IS NOT `string`. It will fail an emitted typecheck: rows=\"6\" failed react's, draggable=\"true\" failed qwik's. NARROW THE FIXTURE, NEVER RAISE THE 267 BUDGET."
+      - "You are about to write a STATIC ATTRIBUTE. THE PREDICATE IS THE LANE'S OWN DECLARED JSX PROP ENTRY FOR THAT EXACT SPELLING - NOT the DOM type, which T011 refuted in BOTH directions: draggable=\"true\" (boolean) is FREE in react and solid and costs qwik alone, while autocomplete=\"off\" (string) COSTS react. And no spelling of draggable is free in all three JSX lanes, because the emitters disagree on valueless attributes. MEASURE THE SPELLING YOU INTEND; NARROW THE FIXTURE, NEVER RAISE THE 267 BUDGET. docs/DEFECTS.md entry 17."
       - "Verification fails twice for the same reason."
     receipt:
       result: done
@@ -996,7 +996,7 @@ tasks:
       - "TWO OPEN EMITTER DEFECTS HIT ANY CARD THAT COMPOSES, not just recursion. SOLID: a same-module component reference makes every signal read inside a handler DOUBLE-CALL (TS2349) and DROPS attr:value. QWIK: a function-typed prop CANNOT CROSS A COMPONENT BOUNDARY IN ANY SPELLING (onTrace$ prints as onTrace, authoring onTrace$ gives onTrace$$). If you compose, EXPECT THEM, narrow around them, and DO NOT touch an emitter."
       - "You are about to assume a list prop is impossible. `Array<string>` LOWERS IN FIVE LANES where `string[]` refuses - the limit is the SPELLING, not arrays. T003 refuted the stronger claim T002 recorded."
       - "You are about to bind a `style` attribute. NO FIXTURE IN THE CORPUS DOES, so style lowering is UNMEASURED IN ALL SIX LANES - S15 used a class name for exactly this reason. MEASURE IT AS ITS OWN PROBE FIRST and record the per-lane result; do not discover it mid-build."
-      - "You are about to write a STATIC ATTRIBUTE WHOSE DOM TYPE IS NOT `string`. It will fail an emitted typecheck: rows=\"6\" failed react's, draggable=\"true\" failed qwik's. NARROW THE FIXTURE, NEVER RAISE THE 267 BUDGET."
+      - "You are about to write a STATIC ATTRIBUTE. THE PREDICATE IS THE LANE'S OWN DECLARED JSX PROP ENTRY FOR THAT EXACT SPELLING - NOT the DOM type, which T011 refuted in BOTH directions: draggable=\"true\" (boolean) is FREE in react and solid and costs qwik alone, while autocomplete=\"off\" (string) COSTS react. And no spelling of draggable is free in all three JSX lanes, because the emitters disagree on valueless attributes. MEASURE THE SPELLING YOU INTEND; NARROW THE FIXTURE, NEVER RAISE THE 267 BUDGET. docs/DEFECTS.md entry 17."
       - "Verification fails twice for the same reason."
     receipt:
       result: done
@@ -1247,7 +1247,7 @@ tasks:
       - "TWO OPEN EMITTER DEFECTS HIT ANY CARD THAT COMPOSES, not just recursion. SOLID: a same-module component reference makes every signal read inside a handler DOUBLE-CALL (TS2349) and DROPS attr:value. QWIK: a function-typed prop CANNOT CROSS A COMPONENT BOUNDARY IN ANY SPELLING (onTrace$ prints as onTrace, authoring onTrace$ gives onTrace$$). If you compose, EXPECT THEM, narrow around them, and DO NOT touch an emitter."
       - "You are about to assume a list prop is impossible. `Array<string>` LOWERS IN FIVE LANES where `string[]` refuses - the limit is the SPELLING, not arrays. T003 refuted the stronger claim T002 recorded."
       - "You are about to bind a `style` attribute. NO FIXTURE IN THE CORPUS DOES, so style lowering is UNMEASURED IN ALL SIX LANES - S15 used a class name for exactly this reason. MEASURE IT AS ITS OWN PROBE FIRST and record the per-lane result; do not discover it mid-build."
-      - "You are about to write a STATIC ATTRIBUTE WHOSE DOM TYPE IS NOT `string`. It will fail an emitted typecheck: rows=\"6\" failed react's, draggable=\"true\" failed qwik's. NARROW THE FIXTURE, NEVER RAISE THE 267 BUDGET."
+      - "You are about to write a STATIC ATTRIBUTE. THE PREDICATE IS THE LANE'S OWN DECLARED JSX PROP ENTRY FOR THAT EXACT SPELLING - NOT the DOM type, which T011 refuted in BOTH directions: draggable=\"true\" (boolean) is FREE in react and solid and costs qwik alone, while autocomplete=\"off\" (string) COSTS react. And no spelling of draggable is free in all three JSX lanes, because the emitters disagree on valueless attributes. MEASURE THE SPELLING YOU INTEND; NARROW THE FIXTURE, NEVER RAISE THE 267 BUDGET. docs/DEFECTS.md entry 17."
       - "Verification fails twice for the same reason."
     receipt:
       result: done
@@ -1721,7 +1721,7 @@ tasks:
   - id: T009
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     objective: >-
       RULE whether angular's `imports` form is admitted to BASELINE_FORM_INVENTORY. It is ONE
@@ -1797,7 +1797,7 @@ tasks:
   - id: T011
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       AMEND docs/DEFECTS.md entry 15. Its title claims ALL SIX LANES; T005 measured it REACT
@@ -1834,8 +1834,79 @@ tasks:
       - "Re-measurement CONTRADICTS T005 - STOP AND REPORT. Two measurements disagreeing is a finding, not a tie to break."
       - "NEVER pkill -f on a broad pattern. TWO FOREIGN PROCESSES ARE ALIVE: PID 64413 on 5175, PID 24931 on 5178."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T011-defects-amendment.md
+      summary: "Amended DEFECTS.md 15 to REACT ONLY IN ITS TITLE, with an AMENDED-BY block, a per-lane table carrying a MEASURED-ON column, an explicit measured-vs-inferred paragraph, the keyboard consequence corrected per lane, and the residual six-lane-fatal case narrowed to a flattened name that is not a real DOM event. Reproduced the emitter half in ALL SIX LANES and re-measured react in chromium; CITED T005 for the other five rather than inheriting silently. Filed the static-attribute rule as new entry 17 - NARROWER than the card asked, because measurement refuted the card's formulation."
+      THE_BRIEF_WAS_WRONG_IN_THE_HALF_IT_TOLD_ME_TO_WIDEN: "The card said the rule is 'no static attribute whose DOM type is not string'. MEASURED ONE-ATTRIBUTE-PER-EMITTED-MODULE against each lane's own JSX types, THAT IS REFUTED IN BOTH DIRECTIONS: draggable=\"true\" (DOM type BOOLEAN) is FREE IN REACT AND SOLID and costs qwik alone, while autocomplete=\"off\" (DOM type STRING) COSTS REACT. THE PREDICATE IS THE LANE'S OWN DECLARED JSX PROP ENTRY FOR THAT EXACT SPELLING. The DOM-type reading LOOKED right because @qwik.dev/core derives element attribute types from the DOM interfaces themselves, so FOR QWIK ALONE the DOM type IS the declared type - and T005 measured draggable in exactly that one lane. SAME REACT-ONLY OVER-GENERALISATION SHAPE AS ENTRY 15, ONE CARD LATER, IN THE OTHER DIRECTION."
+      AND_A_FURTHER_NEW_FACT: "NO SPELLING OF `draggable` IS FREE IN ALL THREE JSX LANES - the emitters disagree on VALUELESS attributes (react prints draggable=\"\", solid and qwik print bare draggable), so THE COST MOVES RATHER THAN DISAPPEARING."
+      IT_REPRODUCED_WHAT_IT_COULD_AND_SAID_SO_WHERE_IT_COULD_NOT: "Question (1) reproduced through ALL SIX real emitters. The react runtime half RE-MEASURED IN CHROMIUM with real key presses at react-dom@19.2.3: onKeyDown 2 hits, onKeydown 0, with React's own warning 'Invalid event handler property `onKeydown`. Did you mean `onKeyDown`?', PLUS TWO PLAIN-DOM CONTROLS (addEventListener('keydown') and the onkeydown content attribute) firing 2 each in the same page. The other five lanes' firing is CITED FROM T005, NOT REPRODUCED - that needs write access to demos/ - AND THE ENTRY SAYS SO. Five lanes x keydown specifically is marked AN INFERENCE and flagged unrun."
+      A_NEW_CASE_T005_NEVER_RAN: "Across an (element x interaction) grid for svelte: <li> TAKES DRAG BUT REFUSES KEYBOARD (a11y_no_noninteractive_element_interactions), while <button> and <textarea> take both clean."
+      IT_CORRECTED_MY_COUNT: "The brief said entry 15 was quoted as a six-lane blocker on THREE cards. Measured: FIVE TASK CARDS ACROSS TWO BOARDS PLUS BOTH CHARTERS."
+      changed_files:
+        - docs/DEFECTS.md
+        - docs/goals/frameless-app-axes-v1/notes/T011-defects-amendment.md
+      commands:
+        - cmd: "owner fingerprint START"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169 / 116, sorting the whole shasum OUTPUT LINES"
+        - cmd: "RE-MEASURE q1: emit() six real emitters over buildEnrichedIr probes"
+          status: pass
+          note: "all six PRODUCE the binding; onClick control unchanged. AGREES WITH T005"
+        - cmd: "RE-MEASURE q1 across (element x interaction) grid for svelte"
+          status: pass
+          note: "NEW: <li> takes drag but REFUSES keyboard; <button>/<textarea> take both clean"
+        - cmd: "RE-MEASURE q2 react: chromium, real key presses, react-dom@19.2.3"
+          status: pass
+          note: "onKeyDown 2 / onKeydown 0; CONTROLS addEventListener 2 and onkeydown attribute 2; React warns Invalid event handler property"
+        - cmd: "q2 five non-react lanes"
+          status: pass
+          note: "CITED FROM T005, NOT REPRODUCED - needs demos/ writes. STATED IN THE ENTRY"
+        - cmd: "RE-MEASURE type cost per binding, per lane's own JSX types"
+          status: pass
+          note: "onKeyDown: react +2, solid +2, qwik 0; five drag handlers on one host: react +5, solid +5, qwik 0"
+        - cmd: "RE-MEASURE static attributes, one per emitted module, per lane tsc"
+          status: pass
+          note: "REFUTES THE CARD'S DOM-TYPE RULE: draggable=\"true\" free in react+solid, costs qwik only; autocomplete=\"off\" (string) COSTS REACT"
+        - cmd: "count cards quoting entry 15 as a six-lane blocker"
+          status: pass
+          note: "FIVE task cards + TWO charters - the brief said three"
+        - cmd: "pnpm check:citations"
+          status: pass
+          note: "clean - 602 swept; DEFECTS.md is watched, no bare ordinals added"
+        - cmd: "pnpm test"
+          status: pass
+          note: "EXACTLY 1 failure - foreign package-inventory ARM B; 1348 passed"
+        - cmd: "pnpm check"
+          status: pass
+          note: "267 - did not rise"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "PASS - 6 demos x 9 scenarios, all observations equal"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 550 files"
+        - cmd: "git diff --exit-code -- packages/ demos/ scripts/, PAIRED with git status --short"
+          status: pass
+          note: "exit 0; only M docs/DEFECTS.md + the untracked note"
+        - cmd: "foreign process check"
+          status: pass
+          note: "PID 64413 and PID 24931 both ALIVE with original start times; pkill -f NEVER used; no demo server started"
+        - cmd: "owner fingerprint FINISH"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169 / 116 - IDENTICAL to START"
+      deviations:
+        - "THE CARD'S STATIC-ATTRIBUTE RULE IS REFUTED AND THE NARROWER ONE WAS RECORDED - see above. Both instances the card named are still cited, as required."
+        - "THE RULE WAS ABSENT FROM docs/DEFECTS.md ENTIRELY, so widening it meant FILING it: new numbered entry 17 plus a standings row. The entry explicitly takes NO RULING on where a repair belongs (compiler IR, per-lane attribute table, or authoring refusal) - that is a design decision this card does not own."
+        - "EDITED BEYOND ENTRY 15's OWN BLOCK, because two paragraphs and one standings row in 'Where each one stands' RESTATED THE SIX-LANE SCOPE. Leaving them would have left the refuted claim quotable from the same document."
+        - "CORRECTED THE BRIEF'S COUNT - five cards plus both charters, not three."
+        - "RECORDED ONE UNRECONCILED READING vs T006 (qwik autoComplete: T006 0, T011 +1) WITH THE LIKELY CAUSE LABELLED AS A HYPOTHESIS. It is a difference with T006, NOT with T005, and nothing in the amendment rests on it."
+      remaining_blockers:
+        - "FIVE LANES x keydown IN A BROWSER IS UNRUN. The amended entry says so in its own text. Reproducing it needs the emitted modules served by six real shells - write access to demos/."
+        - "ENTRY 17 IS CONTAINED ONLY BY AUTHORS REMEMBERING - fixture headers and board stop_if clauses. THE BOARD STOP_IFS STILL CARRY THE REFUTED 'DOM type is not string' WORDING; state.yaml was outside this card's allowed_files. PM MUST CORRECT THEM."
+      stopped_because: null
   - id: T012
     type: judge
     assignee: Judge
