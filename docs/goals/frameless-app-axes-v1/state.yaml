@@ -58,7 +58,7 @@ goal:
       evaporates. If drag refuses and is quietly replaced by click-to-move, the axis goes
       unmeasured while the demo looks complete.
 
-active_task: T009
+active_task: T012
 
 rules:
   - "state.yaml is board truth; goal.md is the charter."
@@ -657,7 +657,7 @@ tasks:
         - "CORRECTED TWO OF ITS OWN DRAFTED CLAIMS BEFORE SHIPPING: that git diff exits 0 over demos/*/public (it exits 1 - the six hn.css copies gained +154/-0), and an unmeasured qwik 301 on /hn-item (the control was not re-run, and the note now says so)."
       remaining_blockers:
         - "TWO OPEN EMITTER DEFECTS, BOTH UNREPAIRED, BOTH HIT BY ANY CARD THAT COMPOSES - not just recursion. SOLID: same-module component reference makes every signal read in a handler double-call (TS2349) and drops attr:value. QWIK: a function-typed prop cannot cross a component boundary in any spelling."
-        - "ANGULAR IS ONE INVENTORY ENTRY AWAY FROM A FOURTH SHIPPED LANE. `imports` needs a version floor and floor evidence in packages/frameworks/angular/src/gate/index.ts and MAY RAISE THE DERIVED ANGULAR_BASELINE_FLOOR FOR EVERY SCENARIO AT ONCE. NEEDS AN OWNER/PM RULING."
+        - "ANGULAR IS ONE INVENTORY ENTRY AWAY FROM A FOURTH SHIPPED LANE. `imports` needs a version floor and floor evidence in packages/frameworks/angular/src/gate/index.ts and WAS FEARED TO RAISE THE DERIVED FLOOR - REFUTED BY T009: the floor is a MAX reduce, imports floors BELOW the existing 19.0 entry, and THERE IS NO PER-SCENARIO FLOOR IN THE REPO AT ALL. NEEDS AN OWNER/PM RULING."
         - "VUE ANSWERS 200 FOR /hn-item WITH THE S1 BODY. Re-confirmed by hash."
         - "THIS AUTHORING SURFACE CANNOT SPELL A STATIC NUMERIC ATTRIBUTE. rows=\"6\" is a string and fails react's emitted typecheck (TS2322)."
         - "BOTH FOREIGN PROCESSES STILL ALIVE: PID 64413 on 5175, PID 24931 on 5178."
@@ -1721,7 +1721,7 @@ tasks:
   - id: T009
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       RULE whether angular's `imports` form is admitted to BASELINE_FORM_INVENTORY. It is ONE
@@ -1743,8 +1743,39 @@ tasks:
       - "admit | deny, with the deciding gate named"
       - "the measured floor today, and the floor after, per scenario"
       - "the worker spec if admit; the recorded rationale if deny"
-    receipt: null
-
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      harness: claude-code
+      summary: "ADMIT component-metadata:imports at floor 14.0, evidence unverified. ANGULAR_BASELINE_FLOOR IS 19.0 TODAY AND 19.0 AFTER - IT DOES NOT MOVE, and no scenario has a per-scenario floor to move. Deciding gate: GATE 6's VERSION COROLLARY. Three brief errors refuted, ONE LOAD-BEARING: Angular 22.0.8 PROVABLY IGNORES a self-entry in imports, so NO STATIC GATE CAN WITNESS THE RECURSION and the browser drive is mandatory."
+      THE_LOAD_BEARING_BRIEF_ERROR: "ungated-scenarios.ts and T003's note both say the decorator 'MUST list its own selector's provider'. MEASURED against the demo's exact tsconfig plus strictTemplates: WITH imports 0 AOT diagnostics; WITHOUT imports 0 AOT diagnostics. The compiled defineComponent carries `dependencies: [HnItem]` IN BOTH ARMS; the ONLY delta in 289 lines of emitted JS is the imports line inside the dev-mode setClassMetadata block. MECHANISM read off the shipped bundle: StandaloneComponentScopeReader seeds `new Set([clazzMeta])` and `new Set([clazz])`, then `if (seen.has(ref.node)) continue;` SKIPS a self-entry. TWO-SIDED CONTROL: a sibling selector and an unknown element BOTH draw NG-998001; the SELF selector draws nothing, and a planted unknown member draws NG2339 so the instrument goes red. This does NOT flip the ruling - it is exactly WHY imports is the wider-range spelling and therefore the baseline - but it means THE AOT LANE CANNOT WITNESS THE RECURSION."
+      THE_FLOOR_CLAIM_ON_MY_CARD_WAS_FALSE_TWICE_OVER: "I wrote that admitting imports 'MAY RAISE THE DERIVED ANGULAR_BASELINE_FLOOR FOR EVERY SCENARIO AT ONCE'. THE FLOOR IS A MAX REDUCE and imports floors BELOW the existing 19.0 entry - AND THERE IS NO PER-SCENARIO FLOOR IN THE REPO AT ALL. ANGULAR_BASELINE_FLOOR is ONE lane-wide derived constant with a single pin (component-metadata:(no standalone key)). Simulated at 14.0/15.0/19.0/20.0: only 19.0 and 20.0 go red, and for different reasons. All 14 shipped scenarios stay at 19.0 and S14 joins at 19.0."
+      THE_FORM_ALREADY_SHIPS_AND_THE_GATE_NEVER_SEES_IT: "packages/frameworks/angular/generated-composition/M2-page.ts:7 and C1-slot.ts:14 ALREADY PRINT `imports: [...]`. They ship UNINVENTORIED because the gate corpus is `generated/` ONLY. Run by hand, generated-composition/ draws FIVE baseline-form-inventory violations across THREE uninventoried forms. SEPARATE CARD."
+      THE_DECIDING_GATE: "The six-gate sugar procedure DOES NOT APPLY to the admission - imports is a BASELINE form by the policy's own text: worked example 5's stated baseline literally contains `imports: [NgIf, NgForOf]`. The sugar question that DOES exist is the OMIT form - lean on the compiler's implicit self-scope - and it FAILS GATE 6, the version corollary: the omit-form's floor cannot be established from anything this repo ships, and NO STANDING CHECK WOULD GO RED if upstream removed the self-seed, because an AOT compile is PROVABLY BLIND TO IT."
+      rationale: "Measured, not read. Floor today 19.0 with the sole 19.0 entry identified; after-floor simulated at four candidate values with the two governing test rows checked each time. Gate on S14: EXACTLY ONE violation, ONE uninventoried form, CONTROL S13 clean. Typecheck: only the expected TS2307. AOT: zero. DEFECTS.md's ChangeDetectorRef and inject are the on-the-record precedent - both entered this inventory the same way for S8, both below 19.0, floor did not move."
+      UNGATED_SCENARIOS_TS_MUST_BE_DELETED: "ANGULAR_UNGATED_SCENARIOS becomes EMPTY, and gate.test.ts asserts length > 0 - so an empty list GOES RED BY CONSTRUCTION, which is the tripwire that file's own doc comment promised. Delete it and unwind all four wirings (emitter, gate, parse-emitted, emitted-typecheck)."
+      evidence:
+        - "BASELINE_FORM_INVENTORY 31 entries; ANGULAR_BASELINE_FLOOR is a MAX reduce. MEASURED floor = 19.0, sole 19.0 entry = component-metadata:(no standalone key)"
+        - "Real emit + real checkSources on s14: 28 distinct forms, EXACTLY ONE uninventoried, EXACTLY ONE violation; CONTROL S13 = 0"
+        - "typescript 5.9.3 at the lane's own emitted-typecheck options: exactly 1 diagnostic, TS2307. NO TS2449 - experimentalDecorators is what makes the self-reference legal"
+        - "@angular/compiler-cli@22.0.8 performCompilation at the demo's exact tsconfig + strictTemplates: 0 diagnostics WITH imports and 0 WITHOUT; dependencies: [HnItem] in BOTH arms"
+        - "MECHANISM: StandaloneComponentScopeReader seeds its own scope then `if (seen.has(ref.node)) continue;` skips a self-entry"
+        - "CALIBRATED TWO-SIDED CONTROL: sibling selector and unknown element BOTH draw NG-998001; SELF draws nothing; planted unknown member draws NG2339"
+        - "generated-composition/M2-page.ts:7 and C1-slot.ts:14 already print the form; gate run by hand there = 5 violations, 3 uninventoried forms"
+        - "gate.test.ts: expects '19.0', expects the 19.0 tier to be exactly ['(no standalone key)'], and expects ANGULAR_UNGATED_SCENARIOS.length > 0"
+        - "docs/emitter-idiom-policy.md worked example 5's stated BASELINE contains `imports: [NgIf, NgForOf]`"
+        - "docs/DEFECTS.md: ChangeDetectorRef (2.0) and inject (14.0) entered the same way for S8, both below 19.0, floor did not move"
+      missing_evidence:
+        - "NO BROWSER OBSERVATION EXISTS for angular S14. Every static layer is green AND PROVABLY BLIND: the AOT compile is BYTE-INDIFFERENT to imports: [HnItem]. Until demos/angular-official is driven at /hn-item, 'angular emits a CORRECT recursive component' IS A STATIC CLAIM, NOT A LANE VERDICT."
+        - "The version at which Angular's StandaloneComponentScopeReader began self-seeding is UNMEASURABLE in this repo. That UNKNOWN is exactly what makes imports the wider-range spelling - and why the omit-form FAILS Gate 6."
+      remaining_blockers:
+        - "SEPARATE CARD, NEWLY MEASURED: generated-composition/ IS NEVER GATE-CHECKED. Three committed artifacts carry three uninventoried forms drawing five violations when the gate is pointed at them by hand. Admitting imports here retires ONE of the three."
+        - "Three prose sites go stale the moment this lands and NONE IS DERIVED: angular/README.md ('No `imports`'), scripts/demo.mjs's ANGULAR_IMPORTS_REFUSAL block, and three demo App comments citing ungated-scenarios.ts."
+        - "notes/T003-hn-item.md records the 'moves the floor for every scenario' claim THIS RULING REFUTES; the board's own record should carry the correction."
+        - "THE JUDGE DID NOT WRITE notes/T009-angular-imports.md - its contract forbids report .md files. The receipt IS the ruling text; the worker must land it verbatim."
+      verification_attempts: 1
+      stopped_because: null
   - id: T010
     type: worker
     assignee: Worker
@@ -1910,7 +1941,7 @@ tasks:
   - id: T012
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     objective: >-
       DESIGN RULING: how should persistence be AUTHORED? T007 proved there is no authoring
@@ -1998,6 +2029,117 @@ tasks:
       - "You are about to verify with rects alone. PIXEL-DIFF, or the check is the one T002 and T006 both passed while 86266 pixels differed."
       - "pnpm check rises above 267, pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
       - "NEVER pkill -f on a broad pattern. TWO FOREIGN PROCESSES ARE ALIVE: PID 64413 on 5175, PID 24931 on 5178."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
+  - id: T014
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    objective: >-
+      LAND T009's ADMIT RULING. Admit `component-metadata:imports` to BASELINE_FORM_INVENTORY at
+      floor '14.0' with evidence 'unverified', then SHIP S14 IN ANGULAR as the FOURTH /hn-item
+      lane. DO NOT TOUCH AN EMITTER - the emitter is correct and its output was under-inventoried.
+    THE_ONE_THING_THAT_MATTERS_MOST: >-
+      ANGULAR 22.0.8 PROVABLY IGNORES A SELF-ENTRY IN `imports`. T009 measured 0 AOT diagnostics
+      WITH it and 0 WITHOUT, identical `dependencies: [HnItem]` in both arms, and read the
+      mechanism off the shipped bundle - the component seeds its own scope and a `seen` guard
+      skips the self-entry. SO NO STATIC LAYER CAN WITNESS THIS RECURSION. Gate, typecheck and
+      AOT are all green AND ALL BLIND. THE BROWSER DRIVE IS THE ONLY REAL VERDICT ON THIS CARD.
+    WHAT_T009_ALREADY_SETTLED: >-
+      The floor DOES NOT MOVE: 19.0 today, 19.0 after, simulated at four candidate values. There
+      is NO PER-SCENARIO FLOOR IN THE REPO - the fear recorded on T003 and on the T009 card was
+      false twice over. Deciding gate: GATE 6's version corollary, which the OMIT form fails
+      because no standing check would go red if upstream removed the self-seed. Precedent:
+      ChangeDetectorRef and inject entered this same inventory for S8, both below 19.0.
+    allowed_files:
+      - "packages/frameworks/angular/src/gate/index.ts"
+      - "packages/frameworks/angular/scripts/regenerate.ts"
+      - "packages/frameworks/angular/generated/**"
+      - "packages/frameworks/angular/test/**"
+      - "packages/frameworks/angular/README.md"
+      - "demos/angular-official/src/emitted/**"
+      - "demos/angular-official/src/app/**"
+      - "demos/angular-official/package.json"
+      - "demos/angular-official/public/**"
+      - "demos/react-official/src/App.jsx"
+      - "demos/solid-official/src/App.jsx"
+      - "demos/qwik/src/routes/hn-item/index.tsx"
+      - "scripts/demo.mjs"
+      - "docs/DEFECTS.md"
+      - "docs/emitter-idiom-policy.md"
+      - "docs/goals/frameless-app-axes-v1/notes/T009-angular-imports.md"
+      - "docs/goals/frameless-app-axes-v1/notes/T014-angular-s14.md"
+    verify:
+      - "PRINT ANGULAR_BASELINE_FLOOR BEFORE AND AFTER the edit. Both MUST read '19.0', and the entries whose floor equals it MUST still be exactly ['(no standalone key)']."
+      - "MUTATION A - remove the new inventory entry: generated/S14.ts MUST draw `baseline-form-inventory` again. A DECORATIVE ENTRY IS NOT AN ENTRY."
+      - "MUTATION B - set the new entry's floor to '20.0': the derived-floor test row MUST go RED. Restore."
+      - "angular's OWN gate over the full generated/ corpus: 0 violations, with the file count DERIVED (S14 now included, S11/S12 still subtracted)."
+      - "DERIVATION PROOF: delete generated/S14.ts and the demo copy, ASSERT present-after-delete == 0 BEFORE rebuilding, then regenerate + copy and shasum byte-identical."
+      - "RUN IT IN A BROWSER, chromium, at /hn-item. FIVE STATIC GATES ARE NOT A LANE VERDICT AND HERE THEY ARE PROVABLY BLIND - an AOT compile reports 0 diagnostics WITH AND WITHOUT `imports: [HnItem]`. Assert T003's own DOM oracle ON THIS LANE: 15 recursive instances, DOM nesting depth 4, indent 104->132->160->188->216, EXACTLY ONE masthead, collapsing c1 REMOVES depth-3 c4, pageerror []."
+      - "BODY-HASH the angular routes: /hn-item distinct from /hn and from /, and a bogus route still 404s."
+      - "pnpm demo RUN: S14 now lists FOUR lanes including angular; the DERIVED banner updates itself; the hand-written ANGULAR_IMPORTS_REFUSAL string and its comment block are removed, as are the three demo App comments citing ungated-scenarios.ts."
+      - "LAND T009's RULING TEXT VERBATIM at notes/T009-angular-imports.md - the Judge's contract forbade it writing report files, so its receipt IS the ruling."
+      - "pnpm test at exactly 1 / pnpm check not above 267 / pnpm e2e 6 x 9 / lint / check:citations (src/gate/index.ts is a WATCHED citation source)"
+      - "git diff --exit-code over every non-S14 scenario artifact, PAIRED WITH git status --short"
+      - "fingerprint the owner's three paths at START and FINISH - SORT THE WHOLE shasum OUTPUT LINES"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "THE BROWSER DRIVE DOES NOT REPRODUCE T003's DOM ORACLE. The admission was justified BY THE LANE SHIPPING; if the recursion does not render, REVERT the inventory entry and report. DO NOT SHIP A LANE ON STATIC GREEN."
+      - "ANGULAR_BASELINE_FLOOR reads anything other than '19.0' after the edit."
+      - "You are about to record the new entry's floor evidence as 'verified'. PRESENCE AT THE PIN IS NOT A FLOOR - all 31 existing entries are 'unverified'."
+      - "You are about to give `imports` a floor of 19.0 or above. The 19.0 tier is asserted to be EXACTLY ['(no standalone key)'], and the derived-floor row goes red at 20.0."
+      - "You are about to leave ANGULAR_UNGATED_SCENARIOS as an EMPTY ARRAY. gate.test.ts asserts length > 0; AN EMPTY LIST IS A CHECK THAT CANNOT FAIL. Delete the file and unwind all four wirings."
+      - "You are about to gate `generated-composition/` in this card. THAT IS A SEPARATE CARD (T015) - it surfaces THREE uninventoried forms across three committed artifacts. RECORD the finding; do not fix it here."
+      - "You are about to modify an emitter, the IR, the authoring surface, or scripts/e2e.mjs. THE EMITTER IS CORRECT and its output was under-inventoried."
+      - "Any earlier scenario artifact changes a byte."
+      - "pnpm check rises above 267, pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
+      - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched."
+      - "NEVER pkill -f on a broad pattern. TWO FOREIGN PROCESSES ARE ALIVE: node PID 64413 on 5175 and PID 24931 on 5178."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
+  - id: T015
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    objective: >-
+      Close the gate hole T009 found: `generated-composition/` IS NEVER GATE-CHECKED in the
+      angular lane, and three committed artifacts ship uninventoried forms because of it.
+    WHAT_WAS_MEASURED: >-
+      The gate corpus is `generated/` ONLY. Pointed by hand at generated-composition/, angular's
+      own gate draws FIVE baseline-form-inventory violations across THREE uninventoried forms:
+      component-metadata:imports, import:./M1-panel#Panel, and template-node:Content.
+      packages/frameworks/angular/generated-composition/M2-page.ts and C1-slot.ts have been
+      shipping the `imports` form all along. T014 retires ONE of the three; TWO NEED RULINGS.
+    THE_REAL_QUESTION_IS_WIDER_THAN_ANGULAR: >-
+      CHECK WHETHER THE OTHER FIVE LANES HAVE THE SAME HOLE before ruling on angular's. A gate
+      that inspects one of two output directories is the same family as the mutation harness
+      that was dead for 22 commits and the pnpm demo banner that stated something false beside
+      a derived table. MEASURE ALL SIX LANES.
+    allowed_files:
+      - "packages/frameworks/react/test/**"
+      - "packages/frameworks/solid/test/**"
+      - "packages/frameworks/qwik/test/**"
+      - "packages/frameworks/svelte/test/**"
+      - "packages/frameworks/vue/test/**"
+      - "packages/frameworks/angular/test/**"
+      - "packages/frameworks/angular/src/gate/index.ts"
+      - "docs/goals/frameless-app-axes-v1/notes/T015-composition-gate-hole.md"
+    verify:
+      - "MEASURE FIRST, IN ALL SIX LANES: which output directories does each lane's gate corpus actually inspect, and what does each lane's gate report when pointed at the ones it skips? A lane that already covers everything must be REPORTED AS SUCH, not repaired."
+      - "Every form admitted gets a FLOOR and FLOOR EVIDENCE, and the derived floor is PRINTED BEFORE AND AFTER. Evidence is 'unverified' unless you actually date it."
+      - "MUTATION-TEST each admission: remove the entry and the artifact must draw the violation again."
+      - "pnpm test at exactly 1 / pnpm check not above 267 / pnpm e2e 6 x 9 / lint / check:citations"
+      - "git diff --exit-code over every generated/ and src/emitted/ file, PAIRED WITH git status --short"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to modify an emitter or any emitted artifact to satisfy a gate. THE GATE IS THE THING THAT WAS BLIND."
+      - "A form needs a ruling you cannot make from the six-gate policy alone - RECORD IT AND STOP. Two of the three angular forms may be in that category."
+      - "You are about to raise a derived floor to admit a form. Report the cost and stop."
+      - "NEVER pkill -f on a broad pattern. TWO FOREIGN PROCESSES ARE ALIVE: node PID 64413 on 5175 and PID 24931 on 5178."
       - "Verification fails twice for the same reason."
     receipt: null
 
