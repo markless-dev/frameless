@@ -482,21 +482,44 @@ export default function App({ url }) {
       // THIRD scenario in this corpus that all six lanes emit and ship, after
       // S13 and S15.
       //
-      // THE AXIS THIS PAGE EXISTS TO MEASURE IS NOT ON IT, AND THAT IS THE
-      // MEASUREMENT. The board predicted `onDragStart`/`onDragOver`/`onDrop`
-      // "cannot be produced" because the compiler does
-      // `name.slice(2).toLowerCase()`. Measured on a probe through all six real
-      // emitters: THEY ARE PRODUCED. Five lanes take them; svelte refuses the
-      // ELEMENT ("a11y_no_static_element_interactions" on a <div> or <span>) and
-      // not the event. And they are inert only where the lane binds by a
-      // FRAMEWORK PROP NAME - THIS LANE prints `onDragover` and react-dom never
-      // fires it, while vue's `@dragover`, angular's `(dragover)` and svelte's
-      // `ondragover` are the real DOM event names and DO fire.
-      // WHAT KEPT THE DRAG OFF THE PAGE IS THE TYPE BASELINE: one drop zone and
-      // one draggable card take this lane from 117 to 123 `error TS` lines and
-      // `pnpm check` from 267 to 280, which this board's oracle forbids. Cards
-      // move with `◀`/`▶` ARROWS instead - a DIFFERENT INTERACTION, and the page
-      // SAYS SO in `.tb-note` rather than passing it off as the axis.
+      // THE AXIS THIS PAGE EXISTS TO MEASURE IS ON IT IN FIVE LANES AND NOT IN
+      // THIS ONE. This comment used to read "THE AXIS THIS PAGE EXISTS TO
+      // MEASURE IS NOT ON IT", and it stayed that way after the drag shipped.
+      // RE-MEASURED AT HEAD with a REAL NATIVE MOUSE DRAG - mouse down, twenty
+      // interpolated moves, mouse up, no synthetic DragEvent - at 1600x1000,
+      // twice through all six lanes: card `t1` moves out of `backlog`, lands in
+      // `todo` AND IS STILL THERE 1.4s LATER in solid, qwik, svelte, vue and
+      // angular. FIVE. In THIS lane it does not move at all.
+      //
+      // THE BOARD PREDICTED `onDragStart`/`onDragOver`/`onDrop` "cannot be
+      // produced" because the compiler does `name.slice(2).toLowerCase()`.
+      // Measured through all six real emitters: THEY ARE PRODUCED. They are
+      // inert only where the lane binds by a FRAMEWORK PROP NAME - THIS LANE
+      // prints `onDragover` and react-dom never fires it, while vue's
+      // `@dragover`, angular's `(dragover)` and svelte's `ondragover` are the
+      // real DOM event names and DO fire.
+      //
+      // REACT IS NOT MISSING THE ATTRIBUTE, IT IS MISSING THE LISTENER.
+      // `document.querySelectorAll('[draggable="true"]')` returns 9 HERE TOO -
+      // the same 9 as the other five - so a card in this lane LOOKS draggable
+      // and the browser starts a native drag on it. What never arrives is the
+      // `dragover` listener, so no column accepts the drop and no card ever
+      // reaches `data-dragging="yes"`. react-dom logs it while the gesture
+      // runs: "Invalid event handler property `onDragstart` / `onDragend` /
+      // `onDragover`". That is DEFECTS.md 15, measured rather than quoted.
+      //
+      // WHAT KEPT THE DRAG OFF THE PAGE FOR SO LONG WAS THE TYPE BASELINE, and
+      // it was a budget read as a wall. An earlier probe measured one drop zone
+      // plus one STATIC `draggable="true"` at `pnpm check` 267 -> 280 and the
+      // board of the day forbade the rise. The fixture now binds `draggable` to
+      // an EXPRESSION instead, and the rise was stated in advance, spent and
+      // attributed. Re-measured at HEAD by this comment's own card: `pnpm check`
+      // is 261, well inside the 267 ceiling, WITH the drag shipped.
+      //
+      // THE `◀`/`▶` ARROWS STAY, AND THEY ARE NOT A LEFTOVER: they move a card
+      // in ALL SIX LANES and they are how THIS lane moves one. `.tb-note` on
+      // the page names which lane does which rather than passing the drag off
+      // as universal.
       //
       // WHAT ONE ARROW CLICK MOVES, all derived from ONE `columns` cell: the
       // card leaves one column's <ul> and appears in another's (a real subtree
@@ -531,7 +554,10 @@ export default function App({ url }) {
     case 'contacts':
       // THE EIGHTH APPLICATION - CONTACTS - and THE FORMS CARD. It is the FOURTH
       // scenario in this corpus that all six lanes emit and ship, after S13, S15 and
-      // S16, and UNLIKE S16 THE AXIS IT MEASURES IS ACTUALLY ON THE PAGE: THIRTEEN
+      // S16. This comment used to add "UNLIKE S16 THE AXIS IT MEASURES IS ACTUALLY
+      // ON THE PAGE" - S16'S AXIS IS ON ITS PAGE NOW, in five of six lanes, so the
+      // contrast is withdrawn rather than left to read as current. What is true of
+      // THIS page, and unlike S16, is that its axis is on it in ALL SIX: THIRTEEN
       // control kinds - text, search, email, tel, url, number, date, time, range,
       // select, radio, checkbox and textarea - every one of them bound and every one
       // of them observable in the live preview card beneath the form.

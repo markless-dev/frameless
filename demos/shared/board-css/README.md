@@ -42,18 +42,58 @@ The chips here are `--secondary` on `--secondary-foreground` and keep the
 **measured** 20px height, 8px horizontal padding, 6px radius and 11px/500 type.
 Nothing this page asserts depends on chip colour.
 
-## What this page does NOT have, and it is the whole card
+## What this page HAS, in how many lanes, and what it still does not
 
-`S16` is the **drag-and-drop scenario and it has no drag**. There is no drag
-ghost, no drop-target highlight and no `[draggable]` rule in this sheet, because
-there is nothing in the emitted markup for them to attach to. The measurement,
-and the reason, are in the fixture header; the page itself says so in `.tb-note`,
-which is styled to be **read** rather than to sit quietly at the bottom.
+**This section used to say `S16` "is the drag-and-drop scenario and it has no
+drag".** That sentence is **false at HEAD** and it was already false the moment
+the drag landed — the same change that shipped the drag also added the
+`[draggable='true']` cursor rules and the `[data-dragging='yes']` highlight to
+this very sheet, and this paragraph was not updated with them. It is corrected
+here off a measurement taken at HEAD, not off a receipt.
 
-That absence also explains an absence in this file: no rule here binds a
+**The drag is real, and it is a FIVE-LANE claim.** Measured with a **real native
+mouse drag** — mouse down on the card, twenty interpolated moves, mouse up; no
+synthetic `DragEvent` anywhere — at 1600×1000, driving card `t1` out of
+`backlog` and onto `todo`, twice through all six lanes:
+
+| lane | card moved and STAYED | `data-dragging="yes"` during the gesture |
+| --- | --- | --- |
+| react | **NO — inert** | none — the card never reaches it |
+| solid | yes | `t1` |
+| qwik | yes | `t1` |
+| svelte | yes | `t1` |
+| vue | yes | `t1` |
+| angular | yes | `t1` |
+
+`document.querySelectorAll('[draggable="true"]')` returns **9 in all six lanes**,
+so react is not missing the attribute — it is missing the listener. react-dom
+says so in its own console while the gesture runs: *"Invalid event handler
+property `onDragstart` / `onDragend` / `onDragover`"*. That is `docs/DEFECTS.md`
+entry 15 on screen, and `.tb-note` on the page says which lane does which.
+
+**The reading can fail.** The identical gesture released over the sidebar — not a
+drop zone — moves nothing, in **all six** lanes.
+
+**The arrows are not a leftover.** `◀`/`▶` move a card in **all six** lanes and
+are how react moves one, which is why removing them would break a working lane.
+
+### What is still genuinely absent
+
+No drag **ghost** and no **drop-target** highlight. Both need a bound `class` or
+`style`, whose lowering is unmeasured in all six lanes, and the card that shipped
+the drag refused to reach for one by name rather than attempting it. The
+dragging highlight that *does* exist is a bound `data-` attribute
+(`data-dragging`), not a bound class — which is exactly why it was affordable.
+
+That absence still explains an absence in this file: no rule here binds a
 `style`-shaped inline width or transform. A drag ghost is exactly where an
 inline `style` binding would have been reached for, and no fixture in this corpus
-binds one, so the lowering is unmeasured in all six lanes.
+binds one.
+
+**And the reference has no drag at all.** Re-measured at HEAD on the live
+reference: `document.querySelectorAll('[draggable]')` is **0**, and
+`[draggable="true"]` is **0**. This page **overshoots** what it copies — the
+absence above is ours to explain, the drag is not.
 
 ## Cascade order is load-bearing
 

@@ -44,7 +44,7 @@ goal:
       FIXING THE FIVE FINDINGS AND LEAVING THE ORACLE HOLE OPEN. The findings are symptoms; the
       cause is that nothing ever compared a shipped app to the thing it copies.
 
-active_task: T008
+active_task: T009
 
 # ---------------------------------------------------------------------------
 # KNOWN WORKING-TREE DIRT - NOT OURS, DO NOT "CLEAN UP", DO NOT `git add -A`.
@@ -1154,7 +1154,7 @@ tasks:
   - id: T008
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       Close ORACLE PART 1 for the two apps that have no reference comparison at all, and MAKE THE
@@ -1207,8 +1207,94 @@ tasks:
       - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched. ALL THREE ARE ALREADY DIRTY, YOU DID NOT DO IT, DO NOT `git add -A`."
       - "NEVER pkill -f. FOUR FOREIGN PIDs ARE ALIVE: 64413, 24931, 31456, 51893."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T008-references-and-truth.md
+      summary: "ORACLE PART 1 CLOSED for the two apps that had none. S10 compared feature by feature against a DRIVEN capture of todomvc.com; S14 against a DRIVEN capture of a REAL news.ycombinator.com ITEM PAGE, labelled a FOUR-LANE claim and PROVED four-lane by body hash plus both verbatim emitter refusals. CROSS-LANE AGREEMENT IS OFFERED NOWHERE. The drag was RE-DRIVEN BY THIS CARD before any prose moved. Four stale sites corrected - AND THERE WERE FIVE."
+      THE_BRIEF_COUNTED_FILES_NOT_CLAIMS: "I said FOUR stale sites. THERE ARE FIVE. demos/react-official/src/App.jsx carries a SECOND stale claim NINETY LINES BELOW the one I quoted, in `case 'contacts'`: 'UNLIKE S16 THE AXIS IT MEASURES IS ACTUALLY ON THE PAGE'. FIXING ONLY THE QUOTED STRING WOULD HAVE LEFT ONE SWITCH STATEMENT CONTRADICTING ITSELF. Corrected by WITHDRAWING the contrast, since what is true of /contacts is that its axis is on it in all six lanes."
+      IT_REFUTED_A_GAP_T007_HAD_RECORDED_BY_MEASURING_FOUR_REFERENCES: "T007's receipt records 'the counter is missing the reference's !'. MEASURED AT HEAD ACROSS FOUR CANONICAL todomvc.com IMPLEMENTATIONS: javascript-es6, javascript-es5 AND vue ALL render '2 items left' EXACTLY AS WE DO; ONLY THE REACT EXAMPLE ADDS '!'. CLOSING THAT 'GAP' WOULD HAVE ADDED A MARK THREE OF FOUR REFERENCES DO NOT HAVE. Recorded, not edited - T007's receipt is outside this write scope."
+      AN_INSTRUMENT_CAVEAT_ON_A_CLAIM_THE_BOARD_ALREADY_CARRIES: "'The reference has ZERO href=#' holds on the item page as EXACT equality (0 of 3,795) - BUT 1,420 OF ITS ANCHORS START WITH '#', and they are REAL in-page fragment targets (#49120596, the comment next/prev nav). Ours has 20 of 21 starting with '#' and EVERY ONE IS DESTINATION-LESS. The two forms disagree BY A FACTOR OF 1,420 on the reference and agree on ours."
+      IT_CAUGHT_ITS_OWN_PROBE_BEFORE_FILING_A_FALSE_FINDING: "Its first todomvc probe looked for '.cancel' and found nothing, WHICH WOULD HAVE READ AS A MISSING CANCEL CONTROL REFUTING THE FIXTURE HEADER. The class is 'cancel-edit'. Caught by READING THE FIXTURE rather than filing the finding; re-probed and the control reverts the edit in all six lanes."
+      changed_files:
+        - demos/shared/board-css/README.md
+        - demos/shared/board-css/board.css
+        - demos/react-official/public/board-css/board.css
+        - demos/solid-official/public/board-css/board.css
+        - demos/qwik/public/board-css/board.css
+        - demos/svelte-official/static/board-css/board.css
+        - demos/vue-official/public/board-css/board.css
+        - demos/angular-official/public/board-css/board.css
+        - demos/react-official/src/App.jsx
+        - docs/DEFECTS.md
+        - docs/goals/frameless-app-fidelity-v1/notes/T008-references-and-truth.md
+      commands:
+        - cmd: "owner fingerprint START and FINISH, shasum -a 256, sorted whole lines"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169, 116 files. IDENTICAL. Unsorted gives b1dd182a and is WRONG - sorting the LINES is load-bearing"
+        - cmd: "ORACLE PART 1 for S10: todomvc.com captured RENDERED and DRIVEN"
+          status: pass
+          note: "1440x1000, three todos typed and one toggled, PLUS three further implementations as CALIBRATION. 24 features MATCH incl. row height 59.8px and toggle 40x40 EXACT; 6 DIVERGE, each with its recorded fixture reason"
+        - cmd: "ORACLE PART 1 for S14: a REAL news.ycombinator.com ITEM PAGE captured RENDERED and DRIVEN"
+          status: pass
+          note: "item?id=49120097, collapse control clicked. title^domain +13 EXACT, subtext SET AND ORDER EXACT, 4 pipes EXACT, font EXACT; 12 divergences recorded"
+        - cmd: "S14 four-lane proof BY BODY HASH, never HTTP 200"
+          status: pass
+          note: "svelte /hn-item BYTE-IDENTICAL to its bogus 404; vue answers 200 BYTE-IDENTICAL to its bogus body. The other four distinct and carrying the app-root marker"
+        - cmd: "svelte and vue S14 refusals reproduced VERBATIM at HEAD"
+          status: pass
+          note: "'a .svelte file declares exactly one component, and a snippet cannot own state or a lifecycle' / 'a .vue SFC declares exactly one component'"
+        - cmd: "DRAG RE-DRIVEN BY THIS CARD, real native mouse, six lanes, TWO full runs"
+          status: pass
+          note: "FIVE lanes move and it STAYS; react inert three ways; [draggable=true]=9 in ALL SIX including react; negative control onto the sidebar refuses in all six"
+        - cmd: "reference drag re-measured at HEAD"
+          status: pass
+          note: "[draggable]=0 and [draggable='true']=0. WE OVERSHOOT"
+        - cmd: "DERIVATION PROOF with a shell ARRAY"
+          status: pass
+          note: "200 artifacts: 200 -> PRESENT AFTER DELETE 0 ASSERTED BEFORE ANY REBUILD -> 200 byte-identical, 0 different"
+        - cmd: "DERIVATION NEGATIVE CONTROL"
+          status: pass
+          note: "/*T008-MUTANT*/ planted in 3 files in 3 lanes: git saw 3 of 3; re-derivation left 0 of 3. THE PROOF CAN FAIL"
+        - cmd: "pnpm check"
+          status: pass
+          note: "START 261 -> END 261, delta 0 predicted in advance. react 113 + solid 78 + qwik 70 = 261"
+        - cmd: "pnpm test"
+          status: pass
+          note: "1 failed / 1412 passed - exactly the foreign ARM B"
+        - cmd: "pnpm e2e RUN ALONE"
+          status: pass
+          note: "PASS - 6 demos x 9 scenarios. Demo stopped and all regeneration finished FIRST"
+        - cmd: "pnpm lint / pnpm check:citations"
+          status: pass
+          note: "0/0 over 558 files; citations clean, 610 swept - re-run after EVERY prose edit and again after the note"
+        - cmd: "board.css lane copies"
+          status: pass
+          note: "Changed ONLY via the copy script; all seven copies share one digest. No lane copy hand-edited"
+        - cmd: "git diff --exit-code over all emitted trees, PAIRED with git status --short"
+          status: pass
+          note: "CLEAN. Exactly the 10 intended files plus the owner's three pre-existing paths"
+        - cmd: "demo teardown by recorded PID"
+          status: pass
+          note: "SIGINT to its own PID. FOUR foreign PIDs CONFIRMED ALIVE at exit. pkill NEVER RUN"
+      deviations:
+        - "THE BRIEF SAID FOUR STALE SITES AND THERE ARE FIVE - it counted FILES, not CLAIMS."
+        - "T007's RECORDED S11 GAP IS A CHOICE OF REFERENCE, NOT A DIVERGENCE - three of four canonical implementations match us."
+        - "AN INSTRUMENT CAVEAT on the 'zero href=#' claim - the two forms disagree by a factor of 1,420 on the reference."
+        - "A SMALLER REFINEMENT: S14 was not entirely without a NAMED reference - hn-css/README.md names news.ycombinator.com for the sheet. What was genuinely absent, and is closed here, is A RENDERED CAPTURE OF AN ITEM PAGE and any comparison against one."
+        - "ITS OWN FIRST TODOMVC PROBE WOULD HAVE FILED A FALSE FINDING - see above."
+        - "DEFECTS.md 15's 'Where each one stands' ROW WAS NOT STALE - it already read react-only and five-lanes-fire. Only the T005 narrative paragraph was. The row GAINED ONE CLAUSE rather than being rewritten."
+        - "board.css's OTHER drag comments were ALREADY CORRECT and describe five dragging lanes. Left untouched; only the .tb-note block was false."
+      remaining_blockers:
+        - "S12 CODEX ORACLE PART 1 IS STILL PARTIAL and untouched - the public surface is a marketing page and the live UI is behind a login. NEEDS AN OWNER DECISION."
+        - "LIVE SILENT SUBMIT DEAD-END ON /contacts, deliberately NOT fixed. NEEDS AN OWNER RULING between the placeholder, the input type and the hint."
+        - "NEW S14 GAPS, all unowned: our item masthead carries 3 links against the reference's 9; the collapsed placeholder is LITERAL SEEDED DATA where the reference derives a live count; indentation 28px vs 40px; the collapse glyph U+002D vs U+2013; and the reply textarea is absent."
+        - "NEW S10 GAPS, both small and unowned: no autofocus on the new-todo input, and no .info footer."
+        - "RE-CONFIRMED ON THE ITEM PAGE TOO: the HN domain is a <span> here and an anchor there; subtext author and age are links there and plain text here."
+        - "THE QWIK LOST DROP IS REPRODUCED AND STILL UNRESOLVED - 1 of 16 real drops, the first from a fresh page. The mid-drag-DOM-read hypothesis was tested FOUR ARMS AGAINST FOUR AND REFUTED."
+        - "The drag remains a CHROMIUM claim in all six lanes. Firefox unmeasured."
+      stopped_because: null
   - id: T999
     type: judge
     assignee: Judge
@@ -1266,3 +1352,30 @@ tasks:
       next_task_if_not_complete: "T008 - close oracle part 1 for S10 and S14, and make the record true."
       verification_attempts: 1
       stopped_because: null
+
+  - id: T009
+    type: judge
+    assignee: Judge
+    status: active
+    reasoning_hint: high
+    objective: >-
+      FINAL RE-AUDIT. T999 ruled not_complete on TWO things: oracle part 1 missing for S10 and
+      S14, and four prose sites contradicting the shipped behaviour. T008 closed both. VERIFY THE
+      DELTA AND RULE ON COMPLETION.
+    scope:
+      - "T999 certified oracle parts 2 and 3 BY ITS OWN MEASUREMENT at 72ee1bd. If you rely on that, PROVE IT TRANSFERS with git diff over packages/ demos/ scripts/ - T999 itself found 50-100 files between each card's commit and HEAD, so do not assume."
+      - "VERIFY T008's TWO REFERENCE COMPARISONS ACTUALLY RAN: a rendered capture of todomvc.com for S10 and of a REAL news.ycombinator.com ITEM page for S14, each with a measured feature-by-feature comparison. CROSS-LANE AGREEMENT IS FORBIDDEN AS FIDELITY EVIDENCE."
+      - "VERIFY ALL FIVE stale sites are corrected - T008 found a FIFTH the brief missed, ninety lines below the quoted one IN THE SAME FILE."
+      - "RE-RUN part 3 at HEAD: pnpm test EXACTLY 1 (foreign ARM B), pnpm e2e 6 x 9 RUN ALONE, lint and check:citations clean, pnpm check 261 with every rise attributed."
+    constraints:
+      - "READ-ONLY. If your harness forbids report .md files, SAY SO and let your receipt be the ruling - five Judges before you did."
+      - "TWO ITEMS ARE OWNER DECISIONS AND CANNOT BLOCK COMPLETION ON A JUDGE'S SAY-SO: whether S12's marketing-page reference satisfies part 1 or S12 must be exempted BY NAME, and how the /contacts type=url placeholder trap should be fixed. RULE ON WHETHER THE BOARD CAN CLOSE WITH THOSE OPEN, and say plainly which way you read the oracle."
+      - "T008 REFUTED A GAP T007 HAD RECORDED by measuring four canonical todomvc implementations - three of four match us and only react's adds the '!'. CHECK THAT REASONING AT ITS ORIGIN, not at T008's write-up."
+      - "Assume this brief contains at least one error and find it. EVERY card on this board found one in the PM's, including T999, which caught the PM SUBSTITUTING A FINDING THEY MADE FOR ONE THE OWNER REPORTED."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "the two reference comparisons, verified or not"
+      - "next task if not complete"
+    receipt: null
+

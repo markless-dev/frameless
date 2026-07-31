@@ -552,9 +552,21 @@ body:has(.tb) {
 }
 
 /*
- * THE DRAG NOTE. This page is the DRAG scenario and it has no drag; the note is
- * the label the card required, and it is styled to be READ rather than to be
- * decorative - a muted footnote would have been the dishonest choice.
+ * THE DRAG NOTE, AND ITS TEXT CHANGED MEANING UNDER IT. This comment used to
+ * read "this page is the DRAG scenario and it has no drag". THAT IS NOW FALSE
+ * AND WAS ALREADY FALSE WHEN THE DRAG LANDED - the sheet below it grew a
+ * `[draggable='true']` cursor rule and a `[data-dragging='yes']` highlight in
+ * the same commit, and this block was left behind. RE-MEASURED AT HEAD with a
+ * REAL NATIVE MOUSE DRAG (no synthetic DragEvent) at 1600x1000, card `t1` from
+ * `backlog` onto `todo`: it moves AND STAYS in solid, qwik, svelte, vue and
+ * angular - FIVE LANES - and react is inert, its card never reaching
+ * `data-dragging="yes"` while react-dom logs "Invalid event handler property
+ * `onDragstart`/`onDragend`/`onDragover`". The same gesture dropped on the
+ * sidebar is refused in all six, so the reading can fail.
+ *
+ * SO THE NOTE IS NO LONGER AN APOLOGY FOR AN ABSENCE - it is the per-lane LABEL
+ * for a split axis, and it is styled to be READ rather than to be decorative,
+ * because a muted footnote would let a reader assume all six behave alike.
  */
 .tb-note {
 	display: flex;
