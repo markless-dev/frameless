@@ -58,7 +58,7 @@ goal:
       evaporates. If drag refuses and is quietly replaced by click-to-move, the axis goes
       unmeasured while the demo looks complete.
 
-active_task: T019
+active_task: T021
 
 rules:
   - "state.yaml is board truth; goal.md is the charter."
@@ -2823,7 +2823,7 @@ tasks:
   - id: T019
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: medium
     objective: >-
       RULE how to resolve the --accent / --border custom-property collision between the
@@ -2848,8 +2848,38 @@ tasks:
       - "measured pixel cost per candidate, per page"
       - "what happens to tokens.css's .dark block"
       - "worker spec if it should proceed"
-    receipt: null
-
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      harness: claude-code
+      summary: "RULED: fix it in deriveTokens(), but as a SPECIFICITY BUMP APPLIED EQUALLY TO BOTH BLOCKS, not a :has() re-scope - AND IT IS HARDENING A LATENT RACE, NOT REPAIRING A LIVE DEFECT. MEASURED at 6a50b5f across 16 lane x page cells: tokens.css WINS TODAY in react, solid and vue alike, identical to the no-scaffold svelte control, and THE UNMUTATED PIXEL DIFF IS 0 IN ALL 12 SCAFFOLD CELLS."
+      THE_BRIEF_CONFLATED_A_HYPOTHETICAL_WITH_THE_PRESENT: "I wrote 'the winner is STILL LOAD ORDER: 13498 / 27301 / 37698 / 7303 differing pixels'. MEASURED IN ALL 16 CELLS: TOKENS.CSS WINS TODAY AND THE OBSERVABLE DIFF IS ZERO. Those four numbers are THE PRICE OF AN ORDER FLIP THAT HAS NOT HAPPENED. This changes the card FROM A REPAIR TO A HARDENING, and it changes what T999 may claim."
+      AND_NOT_A_SELECTOR_PROBLEM_IS_FALSE_AS_STATED: "T013 concluded the residual vanishes ONLY when the custom properties are removed, 'so it is not a selector problem'. REFUTED BY MEASUREMENT: A PURE SELECTOR REWRITE OF THE DECLARING BLOCK - no value touched, no declaration removed, no page sheet changed - DRIVES ALL TWELVE FORCED-ORDER CELLS TO 0. The true statement is the NARROWER one: NO RULE IN A PAGE SHEET CAN REACH IT. The distinction is the entire ruling, because 'not a selector problem' points at DELETING OR RENAMING TOKENS and the correct fix IS a selector."
+      THE_DARK_ANSWER_MEASURED_NOT_ARGUED: "`:root` and `.dark` are BOTH (0,1,0) - :root is a pseudo-class and counts in the class column - so .dark wins today ON SOURCE ORDER ALONE. Bumping ONLY :root INVERTS DARK MODE: measured, all 31 dark tokens fall back to light when .dark sits on <html>, and it is UNAFFECTED on a wrapper, because custom properties resolve by NEAREST DECLARING ANCESTOR, not by specificity. The equal bump - :root:root plus `:root.dark, :root .dark`, both (0,2,0) - honours dark in BOTH placements. So the .dark warning is not an argument against re-scoping; IT IS AN ARGUMENT FOR BUMPING BOTH."
+      A_THIRD_DECLARATION_SITE_NOBODY_COUNTED: "The scaffold declares --accent and --border TWICE - in `:root` and again in `@media (prefers-color-scheme: dark) :root` WITH DIFFERENT VALUES. Under an OS-dark client the forced-order cost is DIFFERENT: 13956 / 27870 / 38351 / 7343. The bump measures 0 in BOTH OS arms. A MEDIA QUERY CHANGES MATCHING, NOT SPECIFICITY, which is why the fix has to be a specificity bump."
+      T013s_FOUR_NUMBERS_DO_REPRODUCE_UNLIKE_THE_FINGERPRINT: "Independently at 6a50b5f: 13498 / 27301 / 37698 / 7303 raw differing pixels under forced scaffold-last, THE SAME IN ALL THREE SCAFFOLD LANES. (pixelmatch's AA-skipping default gives 11872/24535/33857/7157 for the same images - T013's are RAW per-pixel counts.) And it confirmed the owner fingerprint A FOURTH TIME: f326d314 / aeb7edc1 / f936e169, 116 files."
+      WHY_THE_HOST_SIDE_FIX_IS_REJECTED: "Renaming the host's two tokens ALSO closes this. REJECTED: those three sheets are THE UNTOUCHED OFFICIAL SCAFFOLD THE DEMOS EXIST TO PROVE NEUTRALITY AGAINST - `git log --follow` gives each EXACTLY ONE COMMIT, the one that created it, and frameless-supplement.css already records the standing rule that the host's sheet position is not ours to fix."
+      rationale: "The residual is a specificity defect IN THE DECLARING BLOCK, so a selector-only rewrite that moves no value closes it - measured 0 in all 12 forced-order cells and 0 today. Both tokens blocks are already tied at (0,1,0) with .dark winning on source order, so bumping only :root inverts dark mode; bumping both preserves it, proven with .dark on <html> AND on a wrapper. Page sheets declare ZERO custom properties, so nothing of ours can lose."
+      evidence:
+        - "WHO WINS TODAY - MEASURED, 16 lane x page cells: react, solid and vue ALL resolve --accent oklch(0.97 0 0) and --border oklch(0.922 0 0), IDENTICAL to the no-scaffold svelte control. tokens.css is LAST of the two declarers, so IT WINS, and the unmutated pixel diff is 0 in all 12 scaffold cells"
+        - "T013's four numbers reproduce EXACTLY and independently at 6a50b5f, the same in all three scaffold lanes"
+        - "THE FIX, MEASURED: :root -> :root:root and .dark -> `:root.dark, :root .dark` gives raw diff 0 in ALL TWELVE forced-order cells, and 0 with no mutation"
+        - "THE .dark ANSWER, MEASURED: the :root-only re-scope reads all 31 dark tokens falling back to light with .dark on <html>, and is unaffected on a wrapper"
+        - "A THIRD DECLARATION SITE: the scaffold declares both names again inside @media (prefers-color-scheme: dark) :root with different values; forced-order cost 13956 / 27870 / 38351 / 7343"
+        - "NOTHING OF OURS CAN LOSE: all six shared sheets declare ZERO custom properties. tokens.css is not even linked on the scaffold's landing page"
+        - "COLLISION COUNT CONFIRMED: 39 unique names in :root, 31 in .dark, 13 in the scaffold; the intersection is EXACTLY ['--accent','--border']"
+        - "PROVENANCE: git log --follow gives each of the three scaffold sheets EXACTLY ONE COMMIT"
+        - "OWNER FINGERPRINT confirmed a FOURTH time: f326d314 / aeb7edc1 / f936e169, 116 files"
+      missing_evidence:
+        - "PRODUCTION BUILD ORDER IS STILL UNMEASURED. Every reading on this subject - T008's, T013's and this one - drove DEV servers. The stylesheet order in a PRODUCTION build, which is exactly where React 19's hoisting rules could put the scaffold last, HAS NEVER BEEN READ. Folded into the worker's verify list."
+        - "The forced-order mutation is A SIMULATION of a flip, not an observation of one. NO CONFIGURATION HAS BEEN FOUND IN WHICH THE SCAFFOLD ACTUALLY LANDS LAST."
+      remaining_blockers:
+        - "T999 MUST NOT READ THIS AS A CLOSED VISUAL DEFECT UNTIL THE WORKER LANDS. Today the 36 lane pairs are 0 and THE COLLISION IS LATENT; after the fix it is closed AT ITS CAUSE. Both are legitimate states to certify, but they are DIFFERENT STATES and the note must say which one HEAD is in."
+        - "pnpm check has now been measured at 251 by THREE cards while queued cards carry a 267 ceiling; T999 owns the ratchet."
+        - "pnpm test's single failure is foreign and pre-existing."
+      verification_attempts: 1
+      stopped_because: null
   - id: T020
     type: worker
     assignee: Worker
@@ -2994,6 +3024,71 @@ tasks:
         - "pnpm test's single failure is FOREIGN and pre-existing: compiler ARM B reads the owner's modified pnpm-lock.yaml."
         - "T019 and T999 are untouched by this card."
       stopped_because: null
+  - id: T021
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    objective: >-
+      Close the --accent/--border collision AT ITS DECLARING BLOCK, inside deriveTokens(), by
+      raising the emitted selectors' specificity EQUALLY ON BOTH BLOCKS. NO VALUE, NO DECLARATION
+      AND NO UPSTREAM BYTE MOVES.
+    IT_IS_HARDENING_A_LATENT_RACE_NOT_REPAIRING_A_LIVE_DEFECT: >-
+      T019 MEASURED 16 lane x page cells: TOKENS.CSS WINS TODAY in react, solid and vue alike,
+      identical to the no-scaffold svelte control, AND THE UNMUTATED PIXEL DIFF IS 0 IN ALL 12
+      SCAFFOLD CELLS. T013's four numbers are THE PRICE OF AN ORDER FLIP THAT HAS NOT HAPPENED.
+      SAY SO IN THE NOTE - T999 must be able to tell which state HEAD is in.
+    THE_MEASURED_FORM: >-
+      `:root` -> `:root:root` and `.dark` -> `:root.dark, :root .dark`, BOTH (0,2,0), preserving
+      the file's own :root->.dark source-order precedence. BUMPING ONLY :root INVERTS DARK MODE -
+      measured, all 31 dark tokens fall back to light when .dark sits on <html> - because custom
+      properties resolve by NEAREST DECLARING ANCESTOR, not by specificity.
+    AND_T013s_CONCLUSION_WAS_WRONG: >-
+      'The residual is NOT A SELECTOR PROBLEM' is FALSE AS STATED. A PURE SELECTOR REWRITE of the
+      declaring block drives all twelve forced-order cells to 0. The true statement is narrower:
+      NO RULE IN A PAGE SHEET CAN REACH IT.
+    allowed_files:
+      - "demos/shared/copy-shadcn-theme.mjs"
+      - "demos/shared/shadcn-theme/README.md"
+      - "demos/shared/shadcn-theme/codex.css"
+      - "demos/shared/habit-css/habits.css"
+      - "demos/shared/board-css/board.css"
+      - "demos/shared/contact-css/contacts.css"
+      - "demos/react-official/public/**"
+      - "demos/solid-official/public/**"
+      - "demos/vue-official/public/**"
+      - "demos/qwik/public/**"
+      - "demos/angular-official/public/**"
+      - "demos/svelte-official/static/**"
+      - "docs/goals/frameless-app-axes-v1/notes/T021-token-collision.md"
+    verify:
+      - "FORCED-ORDER MUTATION, BOTH ARMS, THREE SCAFFOLD LANES x FOUR PAGES, chromium 1440x1000: THE CONTROL (no mutation) MUST READ 0 FIRST or the arm measured nothing - T013's first harness reported twenty zeros and measured nothing. Then force the lane's OWN scaffold bytes in as the LAST stylesheet node and ASSERT IT IS LAST against querySelectorAll('link[rel=stylesheet], style'); DO NOT ASSUME head."
+      - "COUNT RAW DIFFERING PIXELS (any channel differs), NOT pixelmatch's default, which SKIPS ANTIALIASING and reports 11872/24535/33857/7157 for the same images. BEFORE the fix the arm must reproduce 13498 / 27301 / 37698 / 7303; AFTER it must be 0 in all twelve cells."
+      - "REPEAT THE WHOLE MATRIX WITH THE BROWSER IN prefers-color-scheme: dark. The scaffold declares the same two names A SECOND TIME inside @media (prefers-color-scheme: dark) :root with DIFFERENT values, which no prior card measured. BEFORE: 13956 / 27870 / 38351 / 7343; AFTER: 0."
+      - "THE .dark BLOCK, MEASURED IN BOTH PLACEMENTS AND KILLED: with class=\"dark\" on <html> AND on a wrapper, every one of the 31 .dark tokens must resolve to its .dark value BEFORE and AFTER. PROVE THE CHECK CAN FAIL by running it against the :root-only re-scope, which measures a REAL INVERSION with .dark on <html>."
+      - "NOTHING MOVES TODAY: unmutated per-lane captures, SIX lanes x FOUR pages, BEFORE vs AFTER, 0 moved; and the 36 lane pairs still 0. The fix measured 0 with no mutation at 6a50b5f, SO ANY MOVEMENT IS A REGRESSION YOU INTRODUCED."
+      - "DERIVED, NOT HAND-EDITED: delete every lane copy of tokens.css, ASSERT PRESENT-AFTER-DELETE == 0 FIRST, re-run each lane's copy-shadcn-theme, then assert all six copies byte-identical to one another AND to a fresh deriveTokens() run."
+      - "deriveTokens() STILL THROWS rather than emitting a partial file: three negative arms, one per required block."
+      - "NO VALUE MOVED: git diff over every tokens.css copy must touch EXACTLY the two selector lines and ZERO declaration lines, and git diff --exit-code -- demos/shared/shadcn-theme/theming-default.css must be CLEAN."
+      - "MEASURE THE PRODUCTION STYLESHEET ORDER ONCE AND RECORD IT. Every reading so far is DEV-ONLY. Build react-official and read the served document's stylesheet node order. IF PRODUCTION ALREADY LANDS THE SCAFFOLD LAST, THIS CARD STOPS BEING HARDENING AND BECOMES A REPAIR - say which, in the note."
+      - "CORRECT THE FOUR PAGE SHEETS' COMMENT BLOCKS, which now assert something FALSE - they say the residual 'IS NOT A SELECTOR' and that tokens.css is 'not this card's to re-scope'. Amend deriveTokens()'s header and shadcn-theme/README.md too: they say the blocks 'pass through unchanged'; THE DECLARATIONS STILL DO, THE SELECTORS NO LONGER DO, and that distinction is the whole ruling."
+      - "pnpm test at EXACTLY 1 failure / pnpm check NOT ABOVE 267 - REPORT THE ACTUAL NUMBER, three cards measured 251 / pnpm e2e 6 x 9 / pnpm lint / pnpm check:citations"
+      - "git diff --exit-code over packages/, every generated*/ and demos/*/src/emitted/, PAIRED WITH git status --short"
+      - "OWNER FINGERPRINT at START and FINISH, MEASURED BY YOU, RELATIVE paths, sorting WHOLE shasum OUTPUT LINES: f326d314 / aeb7edc1 / f936e169, 116 files. CONFIRMED FOUR TIMES. Sorting paths gives b1dd182a."
+    stop_if:
+      - "Need files outside allowed_files - IN PARTICULAR demos/shared/shadcn-theme/theming-default.css, which is UPSTREAM VERBATIM."
+      - "You are about to edit demos/react-official/src/index.css, demos/solid-official/src/index.css or demos/vue-official/src/style.css. RENAMING THE HOST'S TWO TOKENS ALSO CLOSES THIS AND IS THE ANSWER THIS RULING REJECTS: they are the UNTOUCHED OFFICIAL SCAFFOLD the demos exist to prove neutrality against, each with EXACTLY ONE COMMIT."
+      - "You are about to bump `:root` WITHOUT giving `.dark` THE SAME BUMP. That is the MEASURED dark-mode inversion, and it is the one thing this card was told to answer."
+      - "You are about to hardcode an upstream token VALUE into a page sheet to win the cascade, or to recompute, reformat or reorder any value in tokens.css."
+      - "You are about to wrap tokens.css in @layer. LAYERED RULES LOSE TO UNLAYERED ONES; it is the wrong direction."
+      - "You are about to hand-edit a lane copy instead of re-deriving it."
+      - "The forced-order arm does not reproduce 13498 / 27301 / 37698 / 7303 BEFORE the fix. YOUR INSTRUMENT IS WRONG, NOT THE BOARD: those four reproduced exactly in two independent cards."
+      - "A mutated arm is read BEFORE its control arm has reported 0."
+      - "pnpm check rises above 267, pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
+      - "NEVER pkill -f on a broad pattern. PID 64413 holds 5175 and PID 24931 holds 5178. Stop your own servers by recorded PID."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
   - id: T999
     type: judge
     assignee: Judge
