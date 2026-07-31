@@ -1,0 +1,406 @@
+# GoalBuddy v2 state.yaml
+# Board truth lives here. goal.md is the editable charter; notes/ holds long receipts only.
+
+version: 2
+
+goal:
+  title: "Frameless app fidelity: make the demos actually work like the things they copy"
+  slug: "frameless-app-fidelity-v1"
+  kind: recovery
+  status: active
+  tranche: >-
+    Fix the five defects the owner found driving the qwik lane, close the globals hole that costs
+    two apps their sixth lane, and INSTALL THE MISSING ORACLE: compare each app against the thing
+    it copies, not against its other lanes.
+  oracle:
+    signal: >-
+      THREE PARTS, ALL REQUIRED. (1) EVERY SHIPPED APP IS COMPARED AGAINST ITS REFERENCE, NOT ONLY
+      AGAINST ITS OTHER LANES: a named reference, a RENDERED CAPTURE of it, and a measured
+      feature-by-feature comparison. "SIX LANES AGREE" IS NOT EVIDENCE OF FIDELITY AND MAY NOT BE
+      OFFERED AS ANY PART OF THIS ORACLE. (2) EVERY DEFECT THE OWNER FOUND IS EITHER FIXED OR
+      REFUSED WITH A MEASURED REASON - all five, named individually, each with a browser
+      observation at HEAD AFTER the change. (3) NOTHING REGRESSES: pnpm test at EXACTLY ONE
+      failure; pnpm e2e stays 6 x 9; lint and check:citations clean. pnpm check MAY RISE only on a
+      card that states the amount IN ADVANCE and justifies it.
+    cadence: "after each fix, and at final audit"
+    final_proof: >-
+      Per app, the reference comparison ACTUALLY RUN; per owner-finding, the browser observation;
+      per lane not shipped, the verbatim refusal; and the check budget's start and end values with
+      every rise attributed.
+  intake:
+    original_request: >-
+      The owner drove the qwik lane and found five things wrong - habits and contacts reading as
+      dead, the board not dragging, HN links going nowhere, no per-item disclosure - then said
+      "Fix it all."
+    interpreted_outcome: >-
+      The five findings closed, the globals hole ruled and landed, and an oracle that measures
+      fidelity to the reference rather than agreement between lanes.
+    input_shape: recovery
+    proof_type: demo
+    completion_proof: >-
+      Five browser observations, one reference comparison per app, every refusal verbatim, every
+      check-budget rise attributed.
+    likely_misfire: >-
+      FIXING THE FIVE FINDINGS AND LEAVING THE ORACLE HOLE OPEN. The findings are symptoms; the
+      cause is that nothing ever compared a shipped app to the thing it copies.
+
+active_task: T001
+
+rules:
+  - "state.yaml is board truth; goal.md is the charter."
+  - "Exactly one active task unless disjoint write scopes are proven."
+  - "Scout and Judge are READ-ONLY. Workers write only inside allowed_files and run their verify commands."
+  - "Every completed, blocked or escalated task gets a receipt."
+  - "The goal completes only through a final Judge audit recording full_outcome_complete: true."
+  - "MEASURE, NEVER INHERIT. Every card across the last three boards corrected its dispatch, including four final audits."
+  - "FIDELITY IS MEASURED AGAINST THE REFERENCE. Cross-lane agreement is a DIFFERENT claim and may not stand in for it."
+
+agents:
+  scout: installed
+  judge: installed
+  worker: installed
+
+visual_board:
+  enabled: false
+
+tasks:
+  - id: T001
+    type: worker
+    assignee: Worker
+    status: active
+    reasoning_hint: high
+    objective: >-
+      FIX THE HACKER NEWS LAYOUT. The rank, the upvote triangle and the title must sit ON ONE
+      LINE, as they do on news.ycombinator.com. Six lanes.
+    THIS_IS_A_REAL_DEFECT_THAT_EVERY_CHECK_CERTIFIED_AS_FINE: >-
+      MEASURED IN THE QWIK LANE: rank "1.", the triangle and the title each render on THEIR OWN
+      LINE. Real HN puts them inline. CAUSE: svelte, vue and angular REFUSE a handler-bearing
+      element placed beside text - "cannot inline <button>: it sits beside text and needs a
+      multi-line start tag" - so T002 on the previous board gave every run its own <span> and
+      moved all spacing to flex gap, WHICH BROKE THE INLINE LAYOUT. ALL SIX LANES ARE IDENTICALLY
+      WRONG, SO EVERY CROSS-LANE CHECK PASSED. That is the margin:0 trap at a larger scale.
+    THE_CONSTRAINT_IS_REAL_SO_SOLVE_IT_IN_CSS_NOT_BY_FIGHTING_THE_EMITTER: >-
+      The three-lane refusal is a MEASURED emitter rule and this card does NOT get to change an
+      emitter. The spans can stay; what must change is that they LAY OUT INLINE. `display: inline`
+      or an inline-flex row on the containing element is the likely shape. IF THE MARKUP GENUINELY
+      CANNOT PRODUCE AN INLINE ROW, say so with the measurement and stop - that is a finding.
+    THE_REFERENCE_IS_news_ycombinator_com: >-
+      CAPTURE IT RENDERED and compare feature by feature: rank, triangle and title ON ONE LINE;
+      the domain in parentheses after the title ON THE SAME LINE; the subtext line beneath
+      carrying points, author, age, hide and comments. DO NOT copy its markup - reproduce the
+      geometry. "The six lanes agree" IS NOT EVIDENCE HERE and the oracle forbids offering it.
+    allowed_files:
+      - "packages/compiler/test/fixtures/s13-hn-front.tsrx"
+      - "packages/compiler/test/goldens/s13-hn-front.json"
+      - "packages/compiler/test/enriched-ir.test.ts"
+      - "demos/shared/hn-css/**"
+      - "packages/frameworks/react/scripts/regenerate.ts"
+      - "packages/frameworks/react/generated/**"
+      - "packages/frameworks/react/test/**"
+      - "packages/frameworks/solid/scripts/regenerate.ts"
+      - "packages/frameworks/solid/generated/**"
+      - "packages/frameworks/solid/test/**"
+      - "packages/frameworks/qwik/scripts/regenerate.ts"
+      - "packages/frameworks/qwik/generated/**"
+      - "packages/frameworks/qwik/test/**"
+      - "packages/frameworks/svelte/scripts/regenerate.ts"
+      - "packages/frameworks/svelte/generated/**"
+      - "packages/frameworks/svelte/test/**"
+      - "packages/frameworks/vue/scripts/regenerate.ts"
+      - "packages/frameworks/vue/generated/**"
+      - "packages/frameworks/vue/test/**"
+      - "packages/frameworks/angular/scripts/regenerate.ts"
+      - "packages/frameworks/angular/generated/**"
+      - "packages/frameworks/angular/test/**"
+      - "packages/frameworks/vue/src/gate/index.ts"
+      - "demos/react-official/src/emitted/**"
+      - "demos/solid-official/src/emitted/**"
+      - "demos/qwik/src/emitted/**"
+      - "demos/svelte-official/src/lib/emitted/**"
+      - "demos/vue-official/src/emitted/**"
+      - "demos/angular-official/src/emitted/**"
+      - "demos/react-official/public/**"
+      - "demos/solid-official/public/**"
+      - "demos/qwik/public/**"
+      - "demos/svelte-official/static/**"
+      - "demos/vue-official/public/**"
+      - "demos/angular-official/public/**"
+      - "docs/goals/frameless-app-fidelity-v1/notes/T001-hn-layout.md"
+    verify:
+      - "COMPARE AGAINST THE REFERENCE ITSELF, not against the other lanes: capture the reference rendered, and state the measured comparison feature by feature. THIS IS ORACLE PART 1 AND IT IS THE POINT OF THE BOARD."
+      - "DRIVE IT IN A BROWSER AT HEAD AFTER THE CHANGE. A fix that cannot be driven is not a fix."
+      - "DERIVATION PROOF: delete every artifact this card rebuilt, ASSERT present-after-delete == 0 BEFORE rebuilding, then rebuild and shasum byte-identical."
+      - "pnpm test at EXACTLY 1 failure (foreign package-inventory ARM B) / pnpm e2e 6 x 9 / pnpm lint / pnpm check:citations"
+      - "pnpm check: REPORT THE START AND END VALUE and attribute every rise. Baseline is 251."
+      - "git diff --exit-code over every artifact this card did not intend to move, PAIRED WITH git status --short"
+      - "fingerprint the owner's three paths at START and FINISH with `shasum -a 256`, RELATIVE paths, sorting WHOLE OUTPUT LINES: f326d314 / aeb7edc1 / f936e169, 116 files"
+      - "THE INLINE ASSERTION IS MADE OFF THE RENDERED IMAGE, not off the CSS: rank, triangle and title must share a bounding-box row, measured by their y-extents overlapping, in ALL SIX LANES."
+      - "A NEGATIVE CONTROL: prove the assertion CAN FAIL by restoring the pre-fix layout in memory and confirming it reports the rows as separate."
+      - "S13 IS THE ONLY SCENARIO THAT MOVES. git diff --exit-code over every other s-numbered artifact."
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to hand-write or hand-edit per-lane app code - anything under generated/ or src/emitted/ that did not come out of a regenerate or copy script."
+      - "You are about to offer 'the six lanes agree' as evidence of FIDELITY. THIS BOARD'S ORACLE FORBIDS IT - all six lanes were identically wrong about the HN layout and every cross-lane check passed."
+      - "You are about to read an HTTP 200 as proof a page exists. REACT, SOLID AND VUE ANSWER 200 FOR ANY PATH. Hash the body."
+      - "You are about to raise pnpm check without STATING THE AMOUNT IN ADVANCE and justifying it. The ceiling is a budget, not a wall - but an unattributed rise is a regression."
+      - "pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
+      - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched."
+      - "NEVER pkill -f on a broad pattern. TWO FOREIGN PROCESSES ARE ALIVE: node PID 64413 on 5175 and PID 24931 on 5178. Kill by recorded PID only."
+      - "Verification fails twice for the same reason."
+      - "You are about to modify an emitter to win the layout. The three-lane inline refusal is a MEASURED rule; solve it in the page-scoped sheet or record that it cannot be solved there."
+      - "You are about to edit a create-vite shell. Page-scoped sheets only."
+    receipt: null
+
+  - id: T002
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: >-
+      RULE ON ROUTING. Every link in every shipped app is a stub, because there is NO ROUTING
+      CONSTRUCT IN .tsrx AT ALL. Decide what the answer is.
+    WHAT_THE_OWNER_SAW: >-
+      MEASURED on /hn in the qwik lane: 43 anchors, ALL 43 carrying href="#/..." - the masthead,
+      every story title, every domain, every comments link. They render correctly and go nowhere.
+      There is also NO per-item disclosure on the front page; collapse exists only on /hn-item as
+      comment folding, which is a different control the owner reasonably expected to find.
+    THE_THREE_CANDIDATE_ANSWERS_AND_NONE_IS_OBVIOUS: >-
+      (1) HOST ROUTING - every demo already routes at the host, so the emitted app takes a
+      callback prop and the shell decides. Cheapest; makes the app less self-contained and adds
+      per-lane host code the oracle forbids as hand-written. (2) A .tsrx ROUTING CONSTRUCT - the
+      honest answer and by far the largest; it is a new authoring-surface primitive and Markless
+      is PINNED, which T012 on the previous board measured as a real but non-binding constraint.
+      (3) DOCUMENTED STUBS - keep href="#" and say so on the page, as the task board does for
+      drag. Cheapest and honest, but three apps in a row shipping dead links is a pattern.
+      RULE IT. Say what it costs and what it excludes.
+    constraints:
+      - "READ-ONLY. If your harness forbids report .md files, SAY SO and let your receipt be the ruling - three Judges on the previous board did exactly that."
+      - "MEASURE BEFORE RULING: how many links exist across ALL shipped apps, how many are stubs, and what each candidate costs in per-lane host code. A ruling without those numbers is a guess."
+      - "THE OWNER ALSO EXPECTED PER-ITEM DISCLOSURE ON THE HN FRONT PAGE. Rule whether that is a routing question, a separate feature, or a reference-fidelity question - real HN has no such control, so say plainly if the expectation is one the reference does not support."
+      - "Assume this brief contains at least one error and find it. EVERY card across the last three boards corrected its dispatch."
+    expected_output:
+      - "the ruling, with the deciding constraint named"
+      - "measured link and stub counts across all shipped apps"
+      - "what it excludes, stated plainly"
+      - "worker spec if it should proceed"
+    receipt: null
+
+  - id: T003
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: >-
+      RULE THE GLOBALS ALLOWLIST for the angular and vue emitters. This is what costs S11 and S12
+      their sixth lane, and it is our emitter, not the framework.
+    WHAT_IS_MEASURED: >-
+      ANGULAR HAS NO ALLOWLIST AT ALL: every identifier in a transplanted body must resolve to
+      scope or a declared member, so Promise, setTimeout, Date, JSON and fetch are ALL refused -
+      "The emitter throws rather than guessing whether it is a global." VUE HAS ONE AND IT IS
+      INCOMPLETE: @vue/shared's GLOBALS_ALLOWED carries Date and JSON but NOT Promise or
+      setTimeout, so vue emits `new _ctx.Promise(...)`, passes its gate, compileScript, tsc AND
+      pnpm check, and THROWS IN THE BROWSER. SAME MISSING CONCEPT, TWO MATURITIES - and ANGULAR'S
+      IS THE BETTER BEHAVIOUR, because loud and early beats silent until runtime.
+    THE_DECISION_IS_WHICH_GLOBALS_COUNT: >-
+      Promise, setTimeout, Date, JSON and Math are uncontroversial. fetch, localStorage and
+      document touch the SSR and persistence boundaries this project has deliberately fenced -
+      persistence has its own channel ruling and its own pre-paint contract. AND THERE IS A LIVE
+      CONSTRAINT: S13 and S15 pass dates as LITERALS precisely because angular cannot name Date,
+      so admitting Date changes what those fixtures could have been. RULE THE LIST AND SAY WHAT
+      IT EXCLUDES.
+    constraints:
+      - "READ-ONLY. If your harness forbids report .md files, SAY SO and let your receipt be the ruling."
+      - "MEASURE THE COST: what does admitting each candidate do to each lane's emitted typecheck, and does vue's runtime failure actually close if GLOBALS_ALLOWED is extended - or is that upstream's list rather than ours to extend? THAT DISTINCTION DECIDES WHETHER VUE IS FIXABLE HERE AT ALL."
+      - "SAY WHETHER S11 AND S12 REACH SIX LANES. That is the payoff and it should be stated as a prediction the worker can falsify."
+      - "Assume this brief contains at least one error and find it."
+    expected_output:
+      - "the admitted list, with the deciding argument"
+      - "what it excludes, stated plainly"
+      - "whether vue's runtime throw closes here or upstream"
+      - "worker spec if it should proceed"
+    receipt: null
+
+  - id: T004
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    objective: >-
+      SHIP DRAG AND DROP ON THE TASK BOARD. It is the whole point of a Trello board and it is the
+      owner's loudest complaint.
+    IT_WAS_NEVER_IMPOSSIBLE_AND_THE_CONSTRAINT_THAT_BLOCKED_IT_WAS_MINE: >-
+      MEASURED on the previous board: the two-word drag handlers ARE produced in five lanes, and
+      FOUR LANES COMPLETED A REAL END-TO-END HTML5 DRAG WITH A REAL MOUSE. React alone is inert,
+      because react-dom matches by PROP NAME while the others bind the real DOM event name
+      (DEFECTS.md 15, amended to REACT-ONLY). What blocked it is the TYPE BASELINE: one drop zone
+      plus one draggable card costs pnpm check 267 -> 280, and the board forbade raising it.
+      THAT CONSTRAINT WAS MINE AND IT WAS THE WRONG CALL FOR THIS APP.
+    THE_BUDGET_IS_A_BUDGET: >-
+      pnpm check is 251 today, measured by four cards. STATE THE EXPECTED RISE IN ADVANCE, land
+      it, and attribute every error line. React's own drag inertness is a MEASURED LANE LIMIT -
+      ship the arrows AS WELL so react still works, label which lane does which, and DO NOT
+      pretend react drags.
+    allowed_files:
+      - "packages/compiler/test/fixtures/s13-hn-front.tsrx"
+      - "packages/compiler/test/goldens/s13-hn-front.json"
+      - "packages/compiler/test/enriched-ir.test.ts"
+      - "demos/shared/hn-css/**"
+      - "packages/frameworks/react/scripts/regenerate.ts"
+      - "packages/frameworks/react/generated/**"
+      - "packages/frameworks/react/test/**"
+      - "packages/frameworks/solid/scripts/regenerate.ts"
+      - "packages/frameworks/solid/generated/**"
+      - "packages/frameworks/solid/test/**"
+      - "packages/frameworks/qwik/scripts/regenerate.ts"
+      - "packages/frameworks/qwik/generated/**"
+      - "packages/frameworks/qwik/test/**"
+      - "packages/frameworks/svelte/scripts/regenerate.ts"
+      - "packages/frameworks/svelte/generated/**"
+      - "packages/frameworks/svelte/test/**"
+      - "packages/frameworks/vue/scripts/regenerate.ts"
+      - "packages/frameworks/vue/generated/**"
+      - "packages/frameworks/vue/test/**"
+      - "packages/frameworks/angular/scripts/regenerate.ts"
+      - "packages/frameworks/angular/generated/**"
+      - "packages/frameworks/angular/test/**"
+      - "packages/frameworks/vue/src/gate/index.ts"
+      - "demos/react-official/src/emitted/**"
+      - "demos/solid-official/src/emitted/**"
+      - "demos/qwik/src/emitted/**"
+      - "demos/svelte-official/src/lib/emitted/**"
+      - "demos/vue-official/src/emitted/**"
+      - "demos/angular-official/src/emitted/**"
+      - "demos/react-official/public/**"
+      - "demos/solid-official/public/**"
+      - "demos/qwik/public/**"
+      - "demos/svelte-official/static/**"
+      - "demos/vue-official/public/**"
+      - "demos/angular-official/public/**"
+      - "packages/compiler/test/fixtures/s16-task-board.tsrx"
+      - "packages/compiler/test/goldens/s16-task-board.json"
+      - "demos/shared/board-css/**"
+      - "docs/goals/frameless-app-fidelity-v1/notes/T004-drag.md"
+    verify:
+      - "COMPARE AGAINST THE REFERENCE ITSELF, not against the other lanes: capture the reference rendered, and state the measured comparison feature by feature. THIS IS ORACLE PART 1 AND IT IS THE POINT OF THE BOARD."
+      - "DRIVE IT IN A BROWSER AT HEAD AFTER THE CHANGE. A fix that cannot be driven is not a fix."
+      - "DERIVATION PROOF: delete every artifact this card rebuilt, ASSERT present-after-delete == 0 BEFORE rebuilding, then rebuild and shasum byte-identical."
+      - "pnpm test at EXACTLY 1 failure (foreign package-inventory ARM B) / pnpm e2e 6 x 9 / pnpm lint / pnpm check:citations"
+      - "pnpm check: REPORT THE START AND END VALUE and attribute every rise. Baseline is 251."
+      - "git diff --exit-code over every artifact this card did not intend to move, PAIRED WITH git status --short"
+      - "fingerprint the owner's three paths at START and FINISH with `shasum -a 256`, RELATIVE paths, sorting WHOLE OUTPUT LINES: f326d314 / aeb7edc1 / f936e169, 116 files"
+      - "DRIVE A REAL MOUSE DRAG, not a synthetic DragEvent, in every lane that emits it - a card must move column and STAY there. The previous board proved four lanes can do this; reproduce it ON THE SHIPPED APP."
+      - "REACT IS EXPECTED TO BE INERT ON DRAG. Record it as a measured lane limit with the arrows still working, and DO NOT report react as dragging."
+      - "STATE THE pnpm check RISE IN ADVANCE, then report start and end and attribute every new error line."
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to hand-write or hand-edit per-lane app code - anything under generated/ or src/emitted/ that did not come out of a regenerate or copy script."
+      - "You are about to offer 'the six lanes agree' as evidence of FIDELITY. THIS BOARD'S ORACLE FORBIDS IT - all six lanes were identically wrong about the HN layout and every cross-lane check passed."
+      - "You are about to read an HTTP 200 as proof a page exists. REACT, SOLID AND VUE ANSWER 200 FOR ANY PATH. Hash the body."
+      - "You are about to raise pnpm check without STATING THE AMOUNT IN ADVANCE and justifying it. The ceiling is a budget, not a wall - but an unattributed rise is a regression."
+      - "pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
+      - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched."
+      - "NEVER pkill -f on a broad pattern. TWO FOREIGN PROCESSES ARE ALIVE: node PID 64413 on 5175 and PID 24931 on 5178. Kill by recorded PID only."
+      - "Verification fails twice for the same reason."
+      - "You are about to remove the arrow controls. React cannot drag; the arrows are its interaction and removing them breaks a working lane."
+      - "You are about to claim react drags because a synthetic event fired. THE PREVIOUS BOARD MEASURED REACT'S BINDINGS SEEING NOTHING FROM A REAL NATIVE DRAG."
+    receipt: null
+
+  - id: T005
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: >-
+      Close the two DISCOVERABILITY findings: the habit toggle and the contacts form.
+    WHAT_THE_OWNER_EXPERIENCED: >-
+      Both apps WORK and both READ AS STATIC. HABITS: the click target is the dashed circle;
+      the emoji and the sidebar habit name do NOTHING, and the owner clicked and concluded the
+      page was dead. One click moves FIVE things - if you find it. CONTACTS: thirteen control
+      kinds, search and a status filter all function, but the New Contact form is BELOW THE FOLD
+      on first load, so the page reads as a static card wall.
+      A FEATURE NOBODY CAN FIND IS NOT SHIPPED. That is the finding, not a nitpick.
+    allowed_files:
+      - "packages/compiler/test/fixtures/s15-habit-tracker.tsrx"
+      - "packages/compiler/test/goldens/s15-habit-tracker.json"
+      - "packages/compiler/test/fixtures/s17-contacts.tsrx"
+      - "packages/compiler/test/goldens/s17-contacts.json"
+      - "packages/compiler/test/enriched-ir.test.ts"
+      - "demos/shared/habit-css/**"
+      - "demos/shared/contact-css/**"
+      - "packages/frameworks/react/scripts/regenerate.ts"
+      - "packages/frameworks/react/generated/**"
+      - "packages/frameworks/react/test/**"
+      - "packages/frameworks/solid/scripts/regenerate.ts"
+      - "packages/frameworks/solid/generated/**"
+      - "packages/frameworks/solid/test/**"
+      - "packages/frameworks/qwik/scripts/regenerate.ts"
+      - "packages/frameworks/qwik/generated/**"
+      - "packages/frameworks/qwik/test/**"
+      - "packages/frameworks/svelte/scripts/regenerate.ts"
+      - "packages/frameworks/svelte/generated/**"
+      - "packages/frameworks/svelte/test/**"
+      - "packages/frameworks/vue/scripts/regenerate.ts"
+      - "packages/frameworks/vue/generated/**"
+      - "packages/frameworks/vue/test/**"
+      - "packages/frameworks/angular/scripts/regenerate.ts"
+      - "packages/frameworks/angular/generated/**"
+      - "packages/frameworks/angular/test/**"
+      - "packages/frameworks/vue/src/gate/index.ts"
+      - "demos/react-official/src/emitted/**"
+      - "demos/solid-official/src/emitted/**"
+      - "demos/qwik/src/emitted/**"
+      - "demos/svelte-official/src/lib/emitted/**"
+      - "demos/vue-official/src/emitted/**"
+      - "demos/angular-official/src/emitted/**"
+      - "demos/react-official/public/**"
+      - "demos/solid-official/public/**"
+      - "demos/qwik/public/**"
+      - "demos/svelte-official/static/**"
+      - "demos/vue-official/public/**"
+      - "demos/angular-official/public/**"
+      - "docs/goals/frameless-app-fidelity-v1/notes/T005-discoverability.md"
+    verify:
+      - "COMPARE AGAINST THE REFERENCE ITSELF, not against the other lanes: capture the reference rendered, and state the measured comparison feature by feature. THIS IS ORACLE PART 1 AND IT IS THE POINT OF THE BOARD."
+      - "DRIVE IT IN A BROWSER AT HEAD AFTER THE CHANGE. A fix that cannot be driven is not a fix."
+      - "DERIVATION PROOF: delete every artifact this card rebuilt, ASSERT present-after-delete == 0 BEFORE rebuilding, then rebuild and shasum byte-identical."
+      - "pnpm test at EXACTLY 1 failure (foreign package-inventory ARM B) / pnpm e2e 6 x 9 / pnpm lint / pnpm check:citations"
+      - "pnpm check: REPORT THE START AND END VALUE and attribute every rise. Baseline is 251."
+      - "git diff --exit-code over every artifact this card did not intend to move, PAIRED WITH git status --short"
+      - "fingerprint the owner's three paths at START and FINISH with `shasum -a 256`, RELATIVE paths, sorting WHOLE OUTPUT LINES: f326d314 / aeb7edc1 / f936e169, 116 files"
+      - "HABITS: the WHOLE ROW is the target, or the target carries an unmistakable affordance - measured by clicking the EMOJI and the ROW BODY, not only the circle, and asserting the five downstream updates fire."
+      - "CONTACTS: the form is reachable WITHOUT SCROLLING on a 1440x900 viewport, or an affordance above the fold leads to it. MEASURE THE VIEWPORT, do not assume it."
+      - "COMPARE BOTH AGAINST THEIR REFERENCES: the habit tracker's row affordance and the contacts reference's New Contact control. The reference is the standard, not the other lanes."
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to hand-write or hand-edit per-lane app code - anything under generated/ or src/emitted/ that did not come out of a regenerate or copy script."
+      - "You are about to offer 'the six lanes agree' as evidence of FIDELITY. THIS BOARD'S ORACLE FORBIDS IT - all six lanes were identically wrong about the HN layout and every cross-lane check passed."
+      - "You are about to read an HTTP 200 as proof a page exists. REACT, SOLID AND VUE ANSWER 200 FOR ANY PATH. Hash the body."
+      - "You are about to raise pnpm check without STATING THE AMOUNT IN ADVANCE and justifying it. The ceiling is a budget, not a wall - but an unattributed rise is a regression."
+      - "pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
+      - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched."
+      - "NEVER pkill -f on a broad pattern. TWO FOREIGN PROCESSES ARE ALIVE: node PID 64413 on 5175 and PID 24931 on 5178. Kill by recorded PID only."
+      - "Verification fails twice for the same reason."
+      - "You are about to change WHAT the apps do. This card changes only what a user can FIND. The five habit updates and the thirteen contact controls must behave exactly as they do today."
+    receipt: null
+
+  - id: T999
+    type: judge
+    assignee: Judge
+    status: queued
+    reasoning_hint: high
+    objective: "Final audit: certify all three oracle parts, or refuse."
+    constraints:
+      - "QUOTE EVERY COMPLETION FIELD VERBATIM and STATE THE ORACLE'S OWN PART COUNT before evaluating it."
+      - "REJECT ANY FIDELITY CLAIM RESTING ON CROSS-LANE AGREEMENT. That is the hole this board exists to close: all six lanes were identically wrong about the HN layout and every check passed."
+      - "REJECT if any of the owner's FIVE findings is neither fixed nor refused with a measured reason, each with a browser observation at HEAD."
+      - "REJECT if a pnpm check rise is unattributed. The ceiling is a budget - a stated, justified rise is fine; an unexplained one is a regression."
+      - "REJECT if any per-lane app code was hand-written. Verify BY DERIVATION - re-emit from the goldens yourself."
+      - "IF A CERTIFICATION FROM AN EARLIER COMMIT IS RELIED ON, PROVE IT TRANSFERS with git diff over packages/ demos/ scripts/."
+      - "RATCHET THE CHECK BASELINE. Four cards measured 251 against a 267 ceiling and every one deferred it. Say what the number is now and what it should be."
+      - "Assume the PM's brief contains at least one error and find it."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "per app: the reference comparison actually run; per owner-finding: the browser observation"
+      - "next task if not complete"
+    receipt: null
