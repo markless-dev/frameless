@@ -306,6 +306,26 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// file: one drop zone and one draggable card add SIX `error TS` lines to this
 	// project (80 -> 86) and take `pnpm check` from 267 to 280.
 	S16: { physicalLoc: 558, structuralNodes: 2449 },
+	// S17 (CONTACTS) IS THE FORMS CARD, the corpus's largest template at TWO
+	// HUNDRED AND TWELVE hosts, and it carries THIRTY-TWO events and THIRTY-FIVE
+	// state writes - more of both than anything else here.
+	// THE SOLID PREMIUM IS 1401/1373 = 1.02x LINES AND 6519/6279 = 1.04x NODES, and
+	// on this row the two disagree IN A DIRECTION THIS FILE HAS AN EXPLANATION FOR
+	// RATHER THAN A GUESS. Every earlier row's node premium tracked its line
+	// premium within a point or two in either direction; here nodes run ahead by
+	// 2%, and the producer is named in this package's own
+	// test/emitted-typecheck.test.ts: this emitter mirrors a bound `value` into a
+	// second `attr:value` attribute (OPEN FINDING 002), and S17 has FIFTEEN
+	// `value`-bound hosts - more than the rest of the corpus put together. Fifteen
+	// extra attributes are fifteen extra structural NODES on lines that were being
+	// printed anyway, which is exactly a node premium with no line premium behind
+	// it. It is the first row in this table whose divergence has a cause visible in
+	// another test file rather than in the fixture.
+	// THE SERIES IS NOW 1.11 / 1.04 / 0.94 / 1.04 / 1.03 / 1.03 / 1.07 / 1.02 across
+	// S10-S17 and still refuses to name a trend - and this is its LOWEST reading
+	// since S12's 0.94, arriving on the application with the most bound controls,
+	// which is the shape most likely to have widened it.
+	S17: { physicalLoc: 1401, structuralNodes: 6519 },
 };
 
 describe('honest emitted structure comparison', () => {

@@ -331,6 +331,38 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// this file: one drop zone and one draggable card add SIX `error TS` lines to
 	// this project (117 -> 123) and take `pnpm check` from 267 to 280.
 	S16: { physicalLoc: 523, structuralNodes: 2410 },
+	// S17 (CONTACTS) IS THE FORMS CARD AND IT TAKES THE LARGEST-TEMPLATE TITLE OFF
+	// S16 BY A FACTOR OF 2.4 - TWO HUNDRED AND TWELVE HOSTS against eighty-nine.
+	// It also records THIRTY-TWO events and THIRTY-FIVE state writes, more than any
+	// other fixture in this corpus by a wide margin (S13 has twenty-seven events,
+	// S11 twenty-nine writes).
+	// AND THAT COMBINATION IS WHAT MAKES THIS ROW A CORRECTION RATHER THAN A FIFTH
+	// CONFIRMATION. S12 opened the claim that emitted size tracks HANDLER BODIES
+	// and not host count; S15 sharpened it from one end, S16 interpolated it, and
+	// each of those rows used the EVENT COUNT as its proxy. S17 breaks that proxy:
+	// it has the most events AND the most writes of anything here and still costs
+	// 1373/212 = 6.48 lines per host, BELOW S12's 7.28 on nine events and well
+	// below S13's 8.95 on twenty-seven. The proxy was wrong and the underlying
+	// claim survives: fourteen of S17's thirty-two events are THREE-LINE field
+	// handlers - take `next`, write one cell, trace - while S12's nine include a
+	// handler that suspends three times. It is the SIZE OF THE BODIES, and an event
+	// count is only a proxy for that when the bodies are similar.
+	// AGAINST S16: 1373/523 = 2.63x the physical lines on 212/89 = 2.38x the hosts
+	// and 6279/2410 = 2.61x the structural nodes. Lines and nodes are 2% apart -
+	// the closest any pair in this table has been - which is what a template made
+	// almost entirely of ONE repeated shape looks like: sixteen `<label>`s, fifteen
+	// `<input>`s and thirteen four-host field groups, none of them a one-character
+	// separator span (S13's cause) and none of them a thirty-six-literal seed
+	// (S15's cause).
+	// WHAT THE NUMBER CANNOT SEE, and on this row it is the whole card: S17 is the
+	// FORM INPUT TYPES scenario and thirteen control kinds ship on it. A budget
+	// cannot tell a `type="date"` that lowers, binds and fires from one that emits
+	// as inert markup - the emitted bytes are identical either way. Only a driven
+	// browser separates them. What IS measurable here is the cost that kept four
+	// attributes off the page: `required`, `maxlength`, `size` and `multiple` each
+	// add an `error TS` line to this project, and `pnpm check` must not rise above
+	// 267.
+	S17: { physicalLoc: 1373, structuralNodes: 6279 },
 };
 
 describe('honest emitted structure comparison', () => {

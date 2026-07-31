@@ -15,6 +15,7 @@ import { EventForm } from './emitted/EventForm.jsx'
 import { HnFront } from './emitted/HnFront.jsx'
 import { HnItem } from './emitted/HnItem.jsx'
 import { HabitTracker } from './emitted/HabitTracker.jsx'
+import { Contacts } from './emitted/Contacts.jsx'
 import { TaskBoard } from './emitted/TaskBoard.jsx'
 import { FormBoard } from './emitted/FormBoard.jsx'
 import { KeyedTodo } from './emitted/KeyedTodo.jsx'
@@ -128,7 +129,7 @@ function AsyncGate() {
  * mirrors the Qwik demo's `/`, `/s2`, `/s3` routes without adding a router.
  *
  * @param {string} url
- * @returns {'s1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7' | 's8' | 's9' | 'todomvc' | 'todomvc-advanced' | 'codex' | 'hn' | 'hn-item' | 'habits' | 'board'}
+ * @returns {'s1' | 's2' | 's3' | 's4' | 's5' | 's6' | 's7' | 's8' | 's9' | 'todomvc' | 'todomvc-advanced' | 'codex' | 'hn' | 'hn-item' | 'habits' | 'board' | 'contacts'}
  */
 export function scenarioFor(url) {
   const path = String(url ?? '')
@@ -164,6 +165,9 @@ export function scenarioFor(url) {
   // THE SEVENTH APPLICATION - the TASK BOARD - and the third scenario all SIX
   // lanes emit and ship, after S13 and S15. Browsable only.
   if (path === 'board') return 'board'
+  // THE EIGHTH APPLICATION - CONTACTS - and the fourth scenario all SIX lanes
+  // emit and ship, after S13, S15 and S16. Browsable only.
+  if (path === 'contacts') return 'contacts'
   return 's1'
 }
 
@@ -340,6 +344,53 @@ export default function App(props) {
         <link rel="stylesheet" href="/shadcn-theme/tokens.css" />
         <link rel="stylesheet" href="/board-css/board.css" />
         <TaskBoard onTrace={noTrace} />
+      </Match>
+      {/*
+        THE EIGHTH APPLICATION - CONTACTS - and THE FORMS CARD. It is the FOURTH
+      scenario in this corpus that all six lanes emit and ship, after S13, S15 and
+      S16, and UNLIKE S16 THE AXIS IT MEASURES IS ACTUALLY ON THE PAGE: THIRTEEN
+      control kinds - text, search, email, tel, url, number, date, time, range,
+      select, radio, checkbox and textarea - every one of them bound and every one
+      of them observable in the live preview card beneath the form.
+
+      THE BOARD'S PREMISE IS PARTLY REFUTED AND THE REFUTATION IS ALREADY IN THIS
+      DEMO. It said only `checkbox` and `textarea` were proven and that `select`,
+      `radio` and the multi-field form shape were unmeasured in all six lanes. The
+      /s7 route above IS that shape - a `<form>` with a `<select>`, a `<textarea>`,
+      a radio group and a keyed checkbox group - it emits in all six lanes, and
+      `pnpm e2e` drives it in a real browser across six demos.
+
+      MEASURED ON A PROBE THROUGH ALL SIX REAL EMITTERS: every one of the sixteen
+      `type=` values emits everywhere. No emitter reads the VALUE of a `type`
+      attribute, so the axis has no per-type refusal in it at all. WHAT COSTS
+      SOMETHING IS THE ATTRIBUTE BESIDE THE TYPE: `required`, `multiple`,
+      `disabled`, `readonly`, `autofocus`, `spellcheck` and a static `checked` each
+      add an `error TS` line to all three JSX lanes, and `maxlength`, `size`,
+      `rows` and `cols` add one to react and qwik. `min`, `max` and `step` are
+      FREE in all three - which the card predicted would fail and is why the
+      number, date, time and range fields here carry real bounds. The required
+      markers are literal `*` characters and the submit guard is `aria-disabled`.
+
+      TWO REFERENCE DEFECTS, MEASURED LIVE AND NOT COPIED: with its New Contact
+      dialog open the reference holds SEVEN inputs, TWO selects and ZERO
+      textareas - its Notes field is a single-line input - and
+      `document.querySelectorAll('h1,h2,h3,h4')` returns ZERO on the whole
+      document. This page ships a real textarea, an h1 and three h2s.
+
+      TWO STYLESHEETS, ORDER LOAD-BEARING. `/shadcn-theme/tokens.css` is the
+      vendored shadcn/ui DEFAULT theme (MIT, (c) 2023 shadcn) and must load FIRST,
+      because every colour in the second file is a `var()` from it.
+      `/contact-css/contacts.css` is THIS REPOSITORY'S OWN WORK - the Square UI
+      reference is licence-restricted to REFERENCE-ONLY, so nothing was copied and
+      its geometry was MEASURED in a browser instead, dialog included. Both are
+      linked HERE rather than globally because `contacts.css` restyles `body`.
+      Like S10-S16 this page is OUT of the 6 x 9 three-way contract, which pins
+      `threeWayScenarios` to ['s1'..'s9'].
+      */}
+      <Match when={scenario() === 'contacts'}>
+        <link rel="stylesheet" href="/shadcn-theme/tokens.css" />
+        <link rel="stylesheet" href="/contact-css/contacts.css" />
+        <Contacts onTrace={noTrace} />
       </Match>
       <Match when={scenario() === 'hn'}>
         <link rel="stylesheet" href="/hn-css/hn.css" />

@@ -1,29 +1,30 @@
 {
-	"name": "svelte-official",
-	"private": true,
-	"version": "0.0.1",
-	"type": "module",
-	"scripts": {
-		"copy-emitted": "node -e \"require('fs').mkdirSync('src/lib/emitted',{recursive:true});[['S1','RenderOnce'],['S2','KeyedTodo'],['S3','EventForm'],['S4','NestedBoard'],['S5','BranchBoard'],['S6','WhitespaceBoard'],['S7','FormBoard'],['S8','AsyncBoard'],['S9','AttrBoard'],['S10','TodoMvc'],['S11','TodoMvcAdvanced'],['S12','CodexClone'],['S13','HnFront'],['S15','HabitTracker'],['S16','TaskBoard']].forEach(([s,n])=>require('fs').copyFileSync('../../packages/frameworks/svelte/generated/'+s+'.svelte','src/lib/emitted/'+n+'.svelte'))\"",
-		"copy-todomvc-css": "node ../shared/copy-todomvc-css.mjs static",
+  "name": "svelte-official",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "copy-emitted": "node -e \"require('fs').mkdirSync('src/lib/emitted',{recursive:true});[['S1','RenderOnce'],['S2','KeyedTodo'],['S3','EventForm'],['S4','NestedBoard'],['S5','BranchBoard'],['S6','WhitespaceBoard'],['S7','FormBoard'],['S8','AsyncBoard'],['S9','AttrBoard'],['S10','TodoMvc'],['S11','TodoMvcAdvanced'],['S12','CodexClone'],['S13','HnFront'],['S15','HabitTracker'],['S16','TaskBoard'],['S17','Contacts']].forEach(([s,n])=>require('fs').copyFileSync('../../packages/frameworks/svelte/generated/'+s+'.svelte','src/lib/emitted/'+n+'.svelte'))\"",
+    "copy-todomvc-css": "node ../shared/copy-todomvc-css.mjs static",
     "copy-shadcn-theme": "node ../shared/copy-shadcn-theme.mjs static",
     "copy-hn-css": "node ../shared/copy-hn-css.mjs static",
     "copy-habit-css": "node ../shared/copy-habit-css.mjs static",
     "copy-board-css": "node ../shared/copy-board-css.mjs static",
-		"dev": "pnpm copy-emitted && pnpm copy-todomvc-css && pnpm copy-shadcn-theme && pnpm copy-hn-css && pnpm copy-habit-css && pnpm copy-board-css && vite dev",
-		"build": "pnpm copy-emitted && pnpm copy-todomvc-css && pnpm copy-shadcn-theme && pnpm copy-hn-css && pnpm copy-habit-css && pnpm copy-board-css && vite build",
-		"preview": "vite preview",
-		"prepare": "svelte-kit sync || echo ''",
-		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
-	},
-	"devDependencies": {
-		"@sveltejs/adapter-auto": "^7.0.1",
-		"@sveltejs/kit": "^2.63.0",
-		"@sveltejs/vite-plugin-svelte": "^7.1.2",
-		"svelte": "^5.56.1",
-		"svelte-check": "^4.6.0",
-		"typescript": "^6.0.3",
-		"vite": "^8.0.16"
-	}
+    "copy-contact-css": "node ../shared/copy-contact-css.mjs static",
+    "dev": "pnpm copy-emitted && pnpm copy-todomvc-css && pnpm copy-shadcn-theme && pnpm copy-hn-css && pnpm copy-habit-css && pnpm copy-board-css && pnpm copy-contact-css && vite dev",
+    "build": "pnpm copy-emitted && pnpm copy-todomvc-css && pnpm copy-shadcn-theme && pnpm copy-hn-css && pnpm copy-habit-css && pnpm copy-board-css && pnpm copy-contact-css && vite build",
+    "preview": "vite preview",
+    "prepare": "svelte-kit sync || echo ''",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-auto": "^7.0.1",
+    "@sveltejs/kit": "^2.63.0",
+    "@sveltejs/vite-plugin-svelte": "^7.1.2",
+    "svelte": "^5.56.1",
+    "svelte-check": "^4.6.0",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.16"
+  }
 }

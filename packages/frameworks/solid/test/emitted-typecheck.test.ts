@@ -314,6 +314,93 @@ describe('Solid emitted output type-checks', () => {
 			"generated/S2.tsx: TS2339 Property 'find' does not exist on type 'unknown'.",
 			'S2\'s toggle handler calls `.find` on a second `produce` draft, for the same reason, so this appears twice.',
 		],
+		// S17'S FIFTEEN ROWS ARE FINDING 002 AGAIN, AND THEY SETTLE THE QUESTION S12
+		// OPENED RATHER THAN MERELY EXTENDING THE COUNT. S12 was the first instance
+		// that was not an `<input>` and was read as the first evidence that the
+		// producer follows the `value` BINDING rather than the `input` element.
+		// S17 supplies three things that reading could not previously have:
+		//
+		//   * TWO MORE TAGS. `<select>` (twice) and `<option>` (once) join `<input>`
+		//     and `<textarea>`, so the finding now spans FOUR element types and
+		//     TWENTY-FOUR instances across six applications. `SelectHTMLAttributes`
+		//     and `OptionHTMLAttributes` are substituted straight through on both
+		//     sides exactly as `TextareaHTMLAttributes` was.
+		//   * A HOST WITH NO HANDLER AT ALL. The `<option>` row prints THREE members
+		//     - `children`, `value`, `attr:value` - with no event, no `data-*`, no
+		//     `class` and no `id`. Every one of the fourteen earlier instances
+		//     carried an event handler, so `attr:value` could still have been read
+		//     as something the EVENT lowering emitted alongside the value. It cannot
+		//     be: a bound `value` and nothing else produces it.
+		//   * A HOST WHOSE OTHER ATTRIBUTES ARE NUMERIC-SHAPED. `min`, `max` and
+		//     `step` are static strings on four of these hosts and cost this lane
+		//     NOTHING - which is what makes the surviving diagnostic attributable to
+		//     the binding rather than to the bounds beside it.
+		//
+		// WHAT DOES *NOT* PRODUCE IT IS EQUALLY MEASURED AND IS THE NEGATIVE CONTROL
+		// THIS ROW ADDS: S17 ships THREE radios and one keyed checkbox group, all
+		// bound with `checked`, and NOT ONE of them appears below. The emitter mirrors
+		// into `attr:` for `value` and not for `checked`, so the finding's domain is
+		// the `value` binding specifically and not "any property binding".
+		[
+			`generated/S17.tsx: TS2322 Type '{ children: Element; class: string; id: string; name: string; "data-control": string; value: string; "attr:value": string; onInput: (event: InputEvent & { currentTarget: HTMLSelectElement; target: HTMLSelectElement; }) => void; }' is not assignable to type 'SelectHTMLAttributes<HTMLSelectElement>'.   Property 'attr:value' does not exist on type 'SelectHTMLAttributes<HTMLSelectElement>'.`,
+			"OPEN FINDING 002 - not an artifact. S17's COMPANY select on the new-contact form, the second `<select>` instance; its `children` is a single Element because its options come out of a keyed repeat rather than being written four times. See notes/findings-002-solid-attr-namespace.md.",
+		],
+		[
+			`generated/S17.tsx: TS2322 Type '{ children: Element[]; class: string; id: string; name: string; "aria-label": string; "data-control": string; value: string; "attr:value": string; onInput: (event: InputEvent & { currentTarget: HTMLSelectElement; target: HTMLSelectElement; }) => void; }' is not assignable to type 'SelectHTMLAttributes<HTMLSelectElement>'.   Property 'attr:value' does not exist on type 'SelectHTMLAttributes<HTMLSelectElement>'.`,
+			"OPEN FINDING 002 - not an artifact, and the THIRD tag it has ever reached: S17's TOP-BAR STATUS FILTER, a `value`-bound `<select>`. `SelectHTMLAttributes<HTMLSelectElement>` on both sides, same producer. See notes/findings-002-solid-attr-namespace.md.",
+		],
+		[
+			`generated/S17.tsx: TS2322 Type '{ children: string; value: string; "attr:value": string; }' is not assignable to type 'OptionHTMLAttributes<HTMLOptionElement>'.   Property 'attr:value' does not exist on type 'OptionHTMLAttributes<HTMLOptionElement>'.`,
+			"OPEN FINDING 002 - not an artifact, and THE STRONGEST INSTANCE IN THE CORPUS: an `<option value={row.id}>` with NO event handler, NO data-* attribute and no class - three printed members total. Every earlier instance carried a handler, so `attr:value` could still have been read as something the event lowering added. It is not: the `value` BINDING alone produces it. See notes/findings-002-solid-attr-namespace.md.",
+		],
+		[
+			`generated/S17.tsx: TS2322 Type '{ class: string; id: string; name: string; placeholder: string; "data-control": string; value: string; "attr:value": string; onInput: (event: InputEvent & { currentTarget: HTMLTextAreaElement; target: HTMLTextAreaElement; }) => void; }' is not assignable to type 'TextareaHTMLAttributes<HTMLTextAreaElement>'.   Property 'attr:value' does not exist on type 'TextareaHTMLAttributes<HTMLTextAreaElement>'.`,
+			"OPEN FINDING 002 - not an artifact. S17's Notes textarea, the corpus's SECOND `value`-bound `<textarea>` after S12's composer - and the one the reference itself gets wrong, shipping a single-line `<input>` there. See notes/findings-002-solid-attr-namespace.md.",
+		],
+		[
+			`generated/S17.tsx: TS2322 Type '{ type: string; class: string; id: string; name: string; min: string; max: string; "data-control": string; value: string; "attr:value": string; onInput: (event: InputEvent & { currentTarget: HTMLInputElement; target: HTMLInputElement; }) => void; }' is not assignable to type 'InputHTMLAttributes<HTMLInputElement>'.   Property 'attr:value' does not exist on type 'InputHTMLAttributes<HTMLInputElement>'.`,
+			"OPEN FINDING 002 - not an artifact. S17's `type=\"date\"` field, which carries `min`/`max` but no `step`, so its attribute object differs from the three step-bearing controls by exactly one member. See notes/findings-002-solid-attr-namespace.md.",
+		],
+		[
+			`generated/S17.tsx: TS2322 Type '{ type: string; class: string; id: string; name: string; min: string; max: string; step: string; "data-control": string; value: string; "attr:value": string; onInput: (event: InputEvent & { currentTarget: HTMLInputElement; target: HTMLInputElement; }) => void; }' is not assignable to type 'InputHTMLAttributes<HTMLInputElement>'.   Property 'attr:value' does not exist on type 'InputHTMLAttributes<HTMLInputElement>'.`,
+			"OPEN FINDING 002 - not an artifact. One of S17's THREE bounded numeric controls (number, time, range); `min`/`max`/`step` are static strings and cost this lane nothing, so the only diagnostic on the host is the `attr:value` the finding produces. The three print an identical attribute set and are separate hosts, so this row legitimately appears three times. See notes/findings-002-solid-attr-namespace.md.",
+		],
+		[
+			`generated/S17.tsx: TS2322 Type '{ type: string; class: string; id: string; name: string; min: string; max: string; step: string; "data-control": string; value: string; "attr:value": string; onInput: (event: InputEvent & { currentTarget: HTMLInputElement; target: HTMLInputElement; }) => void; }' is not assignable to type 'InputHTMLAttributes<HTMLInputElement>'.   Property 'attr:value' does not exist on type 'InputHTMLAttributes<HTMLInputElement>'.`,
+			"OPEN FINDING 002 - not an artifact. One of S17's THREE bounded numeric controls (number, time, range); `min`/`max`/`step` are static strings and cost this lane nothing, so the only diagnostic on the host is the `attr:value` the finding produces. The three print an identical attribute set and are separate hosts, so this row legitimately appears three times. See notes/findings-002-solid-attr-namespace.md.",
+		],
+		[
+			`generated/S17.tsx: TS2322 Type '{ type: string; class: string; id: string; name: string; min: string; max: string; step: string; "data-control": string; value: string; "attr:value": string; onInput: (event: InputEvent & { currentTarget: HTMLInputElement; target: HTMLInputElement; }) => void; }' is not assignable to type 'InputHTMLAttributes<HTMLInputElement>'.   Property 'attr:value' does not exist on type 'InputHTMLAttributes<HTMLInputElement>'.`,
+			"OPEN FINDING 002 - not an artifact. One of S17's THREE bounded numeric controls (number, time, range); `min`/`max`/`step` are static strings and cost this lane nothing, so the only diagnostic on the host is the `attr:value` the finding produces. The three print an identical attribute set and are separate hosts, so this row legitimately appears three times. See notes/findings-002-solid-attr-namespace.md.",
+		],
+		[
+			`generated/S17.tsx: TS2322 Type '{ type: string; class: string; id: string; name: string; placeholder: string; "aria-label": string; "data-control": string; value: string; "attr:value": string; onInput: (event: InputEvent & { ...; }) => void; }' is not assignable to type 'InputHTMLAttributes<HTMLInputElement>'.   Property 'attr:value' does not exist on type 'InputHTMLAttributes<HTMLInputElement>'.`,
+			"OPEN FINDING 002 - not an artifact. S17's top-bar `type=\"search\"` field; it carries an `aria-label` because it has no visible `<label>`, which is the one member separating it from the six form text inputs below. See notes/findings-002-solid-attr-namespace.md.",
+		],
+		[
+			`generated/S17.tsx: TS2322 Type '{ type: string; class: string; id: string; name: string; placeholder: string; "data-control": string; value: string; "attr:value": string; onInput: (event: InputEvent & { currentTarget: HTMLInputElement; target: HTMLInputElement; }) => void; }' is not assignable to type 'InputHTMLAttributes<HTMLInputElement>'.   Property 'attr:value' does not exist on type 'InputHTMLAttributes<HTMLInputElement>'.`,
+			"OPEN FINDING 002 - not an artifact. One of S17's SIX labelled text-shaped inputs on the new-contact form (text, text, email, tel, url, text). All six print the identical attribute set and are separate hosts, so this row legitimately appears six times, for the same reason C4-attach's `.dataset` does. See notes/findings-002-solid-attr-namespace.md.",
+		],
+		[
+			`generated/S17.tsx: TS2322 Type '{ type: string; class: string; id: string; name: string; placeholder: string; "data-control": string; value: string; "attr:value": string; onInput: (event: InputEvent & { currentTarget: HTMLInputElement; target: HTMLInputElement; }) => void; }' is not assignable to type 'InputHTMLAttributes<HTMLInputElement>'.   Property 'attr:value' does not exist on type 'InputHTMLAttributes<HTMLInputElement>'.`,
+			"OPEN FINDING 002 - not an artifact. One of S17's SIX labelled text-shaped inputs on the new-contact form (text, text, email, tel, url, text). All six print the identical attribute set and are separate hosts, so this row legitimately appears six times, for the same reason C4-attach's `.dataset` does. See notes/findings-002-solid-attr-namespace.md.",
+		],
+		[
+			`generated/S17.tsx: TS2322 Type '{ type: string; class: string; id: string; name: string; placeholder: string; "data-control": string; value: string; "attr:value": string; onInput: (event: InputEvent & { currentTarget: HTMLInputElement; target: HTMLInputElement; }) => void; }' is not assignable to type 'InputHTMLAttributes<HTMLInputElement>'.   Property 'attr:value' does not exist on type 'InputHTMLAttributes<HTMLInputElement>'.`,
+			"OPEN FINDING 002 - not an artifact. One of S17's SIX labelled text-shaped inputs on the new-contact form (text, text, email, tel, url, text). All six print the identical attribute set and are separate hosts, so this row legitimately appears six times, for the same reason C4-attach's `.dataset` does. See notes/findings-002-solid-attr-namespace.md.",
+		],
+		[
+			`generated/S17.tsx: TS2322 Type '{ type: string; class: string; id: string; name: string; placeholder: string; "data-control": string; value: string; "attr:value": string; onInput: (event: InputEvent & { currentTarget: HTMLInputElement; target: HTMLInputElement; }) => void; }' is not assignable to type 'InputHTMLAttributes<HTMLInputElement>'.   Property 'attr:value' does not exist on type 'InputHTMLAttributes<HTMLInputElement>'.`,
+			"OPEN FINDING 002 - not an artifact. One of S17's SIX labelled text-shaped inputs on the new-contact form (text, text, email, tel, url, text). All six print the identical attribute set and are separate hosts, so this row legitimately appears six times, for the same reason C4-attach's `.dataset` does. See notes/findings-002-solid-attr-namespace.md.",
+		],
+		[
+			`generated/S17.tsx: TS2322 Type '{ type: string; class: string; id: string; name: string; placeholder: string; "data-control": string; value: string; "attr:value": string; onInput: (event: InputEvent & { currentTarget: HTMLInputElement; target: HTMLInputElement; }) => void; }' is not assignable to type 'InputHTMLAttributes<HTMLInputElement>'.   Property 'attr:value' does not exist on type 'InputHTMLAttributes<HTMLInputElement>'.`,
+			"OPEN FINDING 002 - not an artifact. One of S17's SIX labelled text-shaped inputs on the new-contact form (text, text, email, tel, url, text). All six print the identical attribute set and are separate hosts, so this row legitimately appears six times, for the same reason C4-attach's `.dataset` does. See notes/findings-002-solid-attr-namespace.md.",
+		],
+		[
+			`generated/S17.tsx: TS2322 Type '{ type: string; class: string; id: string; name: string; placeholder: string; "data-control": string; value: string; "attr:value": string; onInput: (event: InputEvent & { currentTarget: HTMLInputElement; target: HTMLInputElement; }) => void; }' is not assignable to type 'InputHTMLAttributes<HTMLInputElement>'.   Property 'attr:value' does not exist on type 'InputHTMLAttributes<HTMLInputElement>'.`,
+			"OPEN FINDING 002 - not an artifact. One of S17's SIX labelled text-shaped inputs on the new-contact form (text, text, email, tel, url, text). All six print the identical attribute set and are separate hosts, so this row legitimately appears six times, for the same reason C4-attach's `.dataset` does. See notes/findings-002-solid-attr-namespace.md.",
+		],
 	];
 
 	test('produces exactly the accepted diagnostics and no others', () => {

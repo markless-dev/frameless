@@ -58,7 +58,7 @@ goal:
       evaporates. If drag refuses and is quietly replaced by click-to-move, the axis goes
       unmeasured while the demo looks complete.
 
-active_task: T006
+active_task: T007
 
 rules:
   - "state.yaml is board truth; goal.md is the charter."
@@ -1159,7 +1159,7 @@ tasks:
   - id: T006
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       Ship CONTACTS - THE FORMS CARD as scenario `s17-contacts`: ONE authored source, emitted to all six lanes as the
@@ -1249,12 +1249,140 @@ tasks:
       - "You are about to bind a `style` attribute. NO FIXTURE IN THE CORPUS DOES, so style lowering is UNMEASURED IN ALL SIX LANES - S15 used a class name for exactly this reason. MEASURE IT AS ITS OWN PROBE FIRST and record the per-lane result; do not discover it mid-build."
       - "You are about to write a STATIC ATTRIBUTE WHOSE DOM TYPE IS NOT `string`. It will fail an emitted typecheck: rows=\"6\" failed react's, draggable=\"true\" failed qwik's. NARROW THE FIXTURE, NEVER RAISE THE 267 BUDGET."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T006-contacts.md
+      summary: "THE FORM-INPUT AXIS DOES NOT REFUSE. 16 `type=` values emit in ALL SIX LANES - because NO EMITTER READS A TYPE'S VALUE - and 13 bound control kinds FIRE in all six browsers (96/96 drives, all six byte-identical to react on every before/after reading). s17-contacts ships from one .tsrx at /contacts in six lanes and is listed in pnpm demo. Baselines unmoved."
+      THE_CARDS_PREMISE_WAS_WRONG_ABOUT_THREE_OF_FIVE: "The card said select, radio, number, date and the multi-field form shape are 'ALL UNMEASURED'. s7-form-controls ALREADY SHIPS select, radio AND the multi-field form, and pnpm e2e DRIVES IT. Only number and date were genuinely unmeasured. The axis was narrower than the board believed."
+      AND_WRONG_ABOUT_WHAT_WOULD_COST: "The brief predicted min/max/step would fail an emitted typecheck like rows=\"6\" and draggable=\"true\". MEASURED WITH 40 ATTRIBUTES THROUGH EACH JSX LANE'S OWN tsc: min/max/step ARE FREE IN ALL THREE. And a SECOND COST AXIS the board never had: CASING - `autocomplete` costs react while `autoComplete` costs solid."
+      IT_QA_D_THE_UNMEASURED_REFERENCE_AND_FOUND_THREE_DEFECTS: "Notes is a single-line <input> (7 inputs / 2 selects / ZERO textareas); the whole document has ZERO HEADING ELEMENTS; only the email field carries a type at all. The third page in a row where the reference is worse than what replaced it."
+      A_SHELL_DIVERGENCE_THREE_SHIPPED_PAGES_STILL_CARRY: "The rendered image showed six lanes 20px apart at the search field. Cause: the create-vite shells set h1 letter-spacing/-family and h2 line-height, WHICH A CLASS SETTING font-size DOES NOT BEAT. Neutralised in contacts.css only. hn.css, habits.css AND board.css LACK THAT BLOCK, so /hn, /habits and /board are very likely rendering ~20px differently in react/solid/vue than in qwik/svelte/angular AT THEIR HEADINGS, and nothing measures it."
+      A_SHIPPED_COMMENT_CLAIMS_A_SPLIT_THAT_DOES_NOT_REPRODUCE: "demos/react-official/three-way-contract.ts records that a served `checked` binding 'splits the six lanes FOUR ways'. MEASURED LIVE ON BOTH /s7 AND /contacts: ALL SIX LANES SERVE IT IDENTICALLY and the post-activation DOM agrees. The instant of hydration was NOT re-measured, so the mechanism claims stand - but the observable that comment says cannot be cross-lane IS IDENTICAL IN SIX LANES TODAY."
+      changed_files:
+        - packages/compiler/test/fixtures/s17-contacts.tsrx
+        - packages/compiler/test/goldens/s17-contacts.json
+        - packages/compiler/test/enriched-ir.test.ts
+        - packages/frameworks/react/scripts/regenerate.ts
+        - packages/frameworks/react/generated/S17.tsx
+        - packages/frameworks/react/test/size.test.ts
+        - packages/frameworks/solid/scripts/regenerate.ts
+        - packages/frameworks/solid/generated/S17.tsx
+        - packages/frameworks/solid/test/size.test.ts
+        - packages/frameworks/solid/test/emitted-typecheck.test.ts
+        - packages/frameworks/qwik/scripts/regenerate.ts
+        - packages/frameworks/qwik/generated/S17.tsx
+        - packages/frameworks/svelte/scripts/regenerate.ts
+        - packages/frameworks/svelte/generated/S17.svelte
+        - packages/frameworks/vue/scripts/regenerate.ts
+        - packages/frameworks/vue/generated/S17.vue
+        - packages/frameworks/vue/src/gate/index.ts
+        - packages/frameworks/vue/test/gate.test.ts
+        - packages/frameworks/angular/scripts/regenerate.ts
+        - packages/frameworks/angular/generated/S17.ts
+        - packages/frameworks/angular/test/emitter.test.ts
+        - demos/shared/contact-css/contacts.css
+        - demos/shared/contact-css/README.md
+        - demos/shared/copy-contact-css.mjs
+        - demos/react-official/package.json
+        - demos/react-official/src/App.jsx
+        - demos/react-official/src/emitted/Contacts.tsx
+        - demos/react-official/public/contact-css/contacts.css
+        - demos/solid-official/package.json
+        - demos/solid-official/src/App.jsx
+        - demos/solid-official/src/emitted/Contacts.tsx
+        - demos/solid-official/public/contact-css/contacts.css
+        - demos/qwik/package.json
+        - demos/qwik/src/routes/contacts/index.tsx
+        - demos/qwik/src/emitted/Contacts.tsx
+        - demos/qwik/public/contact-css/contacts.css
+        - demos/svelte-official/package.json
+        - "demos/svelte-official/src/routes/contacts/+page.svelte"
+        - demos/svelte-official/src/lib/emitted/Contacts.svelte
+        - demos/svelte-official/static/contact-css/contacts.css
+        - demos/vue-official/package.json
+        - demos/vue-official/src/App.vue
+        - demos/vue-official/src/emitted/Contacts.vue
+        - demos/vue-official/public/contact-css/contacts.css
+        - demos/angular-official/package.json
+        - demos/angular-official/src/app/app.routes.ts
+        - demos/angular-official/src/app/contacts-page.ts
+        - demos/angular-official/src/emitted/Contacts.ts
+        - demos/angular-official/public/contact-css/contacts.css
+        - scripts/demo.mjs
+        - docs/goals/frameless-app-axes-v1/notes/T006-contacts.md
+      commands:
+        - cmd: "owner fingerprint START"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169 / 116, sorting the whole shasum OUTPUT LINES"
+        - cmd: "REFERENCE QA in chromium incl. its New Contact dialog"
+          status: pass
+          note: "3 defects recorded - see above"
+        - cmd: "SPELLED? probe: 16 type= values + 12 structural probes through 6 REAL emitters"
+          status: pass
+          note: "96/96 emits, ZERO per-type refusals. 2 svelte refusals (htmlFor, form-submit-without-click) and 1 angular (template literal in a template expression), verbatim in the note"
+        - cmd: "TYPE-COST probe: 40 attributes into each JSX lane's generated/, that project's own tsc"
+          status: pass
+          note: "min/max/step FREE in all three; casing is a SECOND cost axis"
+        - cmd: "six lane gates"
+          status: pass
+          note: "react 209 / solid 204 / qwik 98 / svelte 131 / vue 155 / angular 163"
+        - cmd: "BROWSER DRIVE: 16 controls x 6 lanes on live pnpm demo servers"
+          status: pass
+          note: "96/96 MOVED; all six byte-identical to react on every before/after reading"
+        - cmd: "SUBMIT probe, four arms x 6 lanes"
+          status: pass
+          note: "type=url constraint validation BLOCKED the submit in all six; repaired -> 9->10->11. Ternary guard held at aria-disabled"
+        - cmd: "VISUAL: geometry off the rendered image"
+          status: pass
+          note: "first run found 7 differing fields; cause = create-vite h1/h2 rules; neutralised -> 19/20 identical, 20th is rootWidth (a non-field)"
+        - cmd: "served-checked control on S7 AND S17"
+          status: pass
+          note: "the documented four-way split DOES NOT REPRODUCE - all six lanes serve the same checked"
+        - cmd: "DERIVATION PROOF"
+          status: pass
+          note: "PRESENT AFTER DELETE = 0 asserted BEFORE rebuild; 19/19 BYTE-IDENTICAL; one CSS digest over all 7 copies"
+        - cmd: "pnpm demo (run 3x) + per-route body hashing"
+          status: pass
+          note: "17/17, 16/16, 14/14 distinct; /contacts distinct from bogus in EVERY lane; qwik /contacts 301 -> /contacts/"
+        - cmd: "pnpm test"
+          status: pass
+          note: "EXACTLY 1 failure (foreign ARM B), 1340 passed"
+        - cmd: "pnpm check"
+          status: pass
+          note: "267 - did not rise; per-project react 117 / solid 80 / qwik 70, all unmoved"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "PASS - 6 demos x 9 scenarios, all observations equal"
+        - cmd: "pnpm lint / pnpm check:citations"
+          status: pass
+          note: "0 warnings 0 errors on 550 files; citations clean, 591 swept"
+        - cmd: "git diff --exit-code over every S1-S16 artifact"
+          status: pass
+          note: "exit 0 twice, PAIRED with git status --short"
+        - cmd: "three demo runs stopped by recorded PID"
+          status: pass
+          note: "six ports free; foreign 64413 and 24931 re-verified ALIVE with original start times; pkill -f NEVER used"
+        - cmd: "owner fingerprint FINISH"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169 / 116 - IDENTICAL to START"
+      deviations:
+        - "AUTHORED A NEW PAGE-SHEET NEUTRALISATION BLOCK (h1/h2) that hn.css, habits.css and board.css LACK - see the shell-divergence finding."
+        - "RECORDED vue/attributes-order in the EXCLUDED flat/recommended tier census RATHER THAN SILENCING IT BY REORDERING THE FIXTURE. The rule is attribute order only, the tier is not applied, and LETTING AN UNAPPLIED TIER DICTATE AUTHORING ORDER IS THE FAILURE THAT CENSUS EXISTS TO PREVENT."
+        - "DERIVED the two figures in pnpm demo's closing paragraph INSTEAD OF REPAIRING THEM BY HAND FOR THE THIRD TIME. The derivation IMMEDIATELY CAUGHT A FOURTH ERROR: S10 has been served by all six lanes and BOTH prior hand repairs omitted it. This closes T010 early."
+        - "EXTENDED vue gate.test.ts SPELLED_NUMBERS from TWENTY-EIGHT to FORTY, as that table's own doc comment instructs."
+        - "The fixture's form is a PERSISTENT PANEL, not the reference's modal: .tsrx has NO portal or dialog construct. Placed below the grid at the dialog's own measured 480px so both geometries stay comparable."
+      remaining_blockers:
+        - "h1/h2 SHELL NEUTRALISATION IS MISSING FROM hn.css, habits.css AND board.css. Three shipped pages very likely render ~20px differently in react/solid/vue at their headings, and NOTHING MEASURES IT. Folded into T008."
+        - "demos/react-official/three-way-contract.ts's 'served checked splits the six lanes FOUR ways' DOES NOT REPRODUCE on /s7 or /contacts. The instant of hydration was not re-measured, so the mechanism claims stand, but the observable is identical in six lanes today."
+        - "style lowering is STILL unmeasured in all six lanes. A type=range was the likeliest consumer yet and used a class ladder instead."
+        - "REACT, SOLID AND VUE STILL ANSWER 200 FOR ANY PATH with the S1 body - re-confirmed."
+      stopped_because: null
   - id: T007
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
     objective: >-
       THE FIFTH AXIS: PERSISTENCE. Make TodoMVC Advanced (S11) survive a refresh, in every lane
@@ -1348,6 +1476,20 @@ tasks:
       `#root { width: 1126px; text-align: center }`. SIX LANES WERE RENDERING TWO DIFFERENT
       PAGES. The same three shells serve /todomvc, /todomvc-advanced and /codex, so those are
       PRESUMABLY DIVERGENT TOO - AND UNMEASURED.
+    T006_FOUND_A_SECOND_SHELL_RULE_AND_THREE_SHIPPED_PAGES_LACK_THE_FIX: >-
+      The create-vite shells ALSO set h1 letter-spacing/-family and h2 line-height, AND A CLASS
+      SETTING font-size DOES NOT BEAT THEM. T006 measured six lanes 20px APART at its search
+      field and neutralised it in contacts.css. hn.css, habits.css AND board.css LACK THAT
+      BLOCK, so /hn, /habits and /board are very likely rendering ~20px differently in
+      react/solid/vue than in qwik/svelte/angular AT THEIR HEADINGS - and nothing measures it.
+      MEASURE ALL SIX PAGES, not only the three this card originally named.
+    A_SHIPPED_COMMENT_CLAIMS_A_SPLIT_THAT_DID_NOT_REPRODUCE: >-
+      demos/react-official/three-way-contract.ts records that a served `checked` binding
+      'splits the six lanes FOUR ways'. T006 measured it live on BOTH /s7 and /contacts: ALL SIX
+      LANES SERVE IT IDENTICALLY and the post-activation DOM agrees. THE INSTANT OF HYDRATION
+      WAS NOT RE-MEASURED, so the mechanism claims may still stand - but the observable that
+      comment says cannot be cross-lane IS IDENTICAL IN SIX LANES TODAY. Settle it or narrow
+      the comment; do not leave a shipped claim standing unmeasured.
     WHY_THE_EARLIER_STYLE_CARDS_DID_NOT_CATCH_IT: >-
       T005 and T006 on the predecessor board compared each app's lanes AGAINST EACH OTHER and
       found them byte-identical or near it - but BOTH COMPARED WITHIN A SINGLE SCREENSHOT SET
@@ -1411,7 +1553,12 @@ tasks:
   - id: T010
     type: worker
     assignee: Worker
-    status: queued
+    status: done
+    CLOSED_EARLY_BY_T006: >-
+      T006 DERIVED the two figures in pnpm demo's closing paragraph rather than repairing them
+      by hand for the third time - and THE DERIVATION IMMEDIATELY CAUGHT A FOURTH ERROR: S10 has
+      been served by all six lanes and BOTH prior hand repairs omitted it. Exactly what this
+      card predicted would keep happening. No separate work needed.
     reasoning_hint: medium
     objective: >-
       Make scripts/demo.mjs's closing banner DERIVED rather than hand-written, so it cannot
@@ -1467,7 +1614,7 @@ tasks:
       - "RE-MEASURE BEFORE AMENDING. Do not take T005's table on trust - re-run the per-lane spelled/fired question yourself, or state plainly that you are citing T005's measurement rather than reproducing it."
       - "The amended entry states the REACT-ONLY scope in its TITLE, not only in its body - the title is what gets quoted."
       - "The keyboard consequence is corrected too: onKeyDown was read as unspellable everywhere, and the Codex clone shipped with NO keyboard because of it. Say what is actually available per lane."
-      - "The static-attribute rule is widened to non-string DOM types with BOTH measured instances cited (rows="6" react, draggable="true" qwik)."
+      - 'The static-attribute rule is widened to non-string DOM types with BOTH measured instances cited (rows="6" react, draggable="true" qwik).'
       - "pnpm check:citations clean - this file is watched"
       - "pnpm test at exactly 1 / pnpm check not above 267 / pnpm e2e 6 x 9 / pnpm lint"
       - "git diff --exit-code -- packages/ demos/ scripts/, PAIRED WITH git status --short   # DOC-ONLY CARD"

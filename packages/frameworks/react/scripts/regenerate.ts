@@ -92,6 +92,39 @@ const fixtures = [
 	// Like S10-S15 it stays OUT of the 6 x 9 three-way contract, which
 	// scripts/e2e.mjs pins to the literal ['s1'..'s9'].
 	['S16.tsx', 's16-task-board.json'],
+	// THE EIGHTH APPLICATION IN THE CORPUS - CONTACTS - and THE FORMS CARD. It
+	// takes the next ORDINAL slot for the reason every row above records, and it
+	// is the FOURTH scenario all six lanes emit, after S13, S15 and S16.
+	//
+	// THE AXIS IS ON THE PAGE THIS TIME, WHICH IS THE DIFFERENCE FROM S16.
+	// THIRTEEN control kinds ship - text, search, email, tel, url, number, date,
+	// time, range, select, radio, checkbox and textarea - every one of them bound
+	// and every one of them observable in a live preview card.
+	//
+	// AND THE BOARD'S PREMISE IS PARTLY REFUTED. It said only `checkbox` and
+	// `textarea` were proven and that `select`, `radio` and the multi-field form
+	// shape were unmeasured in all six lanes. The `s7-form-controls` fixture IS that
+	// shape, has been in this list since the beginning, and is one of the nine
+	// scenarios `pnpm e2e` drives in a real browser across six demos.
+	//
+	// MEASURED ON A PROBE THROUGH THIS VERY EMITTER: ALL SIXTEEN `type=` VALUES
+	// EMIT. No emitter reads the value of `type` at all, so the axis has no
+	// per-type refusal in it anywhere. WHAT COSTS THIS LANE IS THE ATTRIBUTE
+	// BESIDE THE TYPE, and it was measured by dropping a forty-attribute probe
+	// into this project's own `generated/` and running its own tsc: `required`,
+	// `multiple`, `disabled`, `readonly`, `autofocus`, `spellcheck` and a static
+	// `checked` cost one `error TS` line EACH here, and so do `maxlength`,
+	// `maxLength`, `minlength`, `size`, `tabindex`, `rows` and `cols` - all of
+	// which are FREE in the solid lane. `autocomplete` costs THIS lane and
+	// `autoComplete` costs SOLID, so no spelling of it is free in both. `min`,
+	// `max` and `step` are FREE in all three JSX lanes, which is what lets the
+	// number, date, time and range fields carry real bounds. `for` survives only
+	// because THIS EMITTER REWRITES IT to `htmlFor`; authoring `htmlFor` makes the
+	// SVELTE lane refuse the module outright.
+	//
+	// Like S10-S16 it stays OUT of the 6 x 9 three-way contract, which
+	// scripts/e2e.mjs pins to the literal ['s1'..'s9'].
+	['S17.tsx', 's17-contacts.json'],
 ] as const;
 
 await mkdir(resolve(root, 'generated'), { recursive: true });

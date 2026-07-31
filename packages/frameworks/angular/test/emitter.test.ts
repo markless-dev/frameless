@@ -564,8 +564,31 @@ describe('Angular 22 emitter', () => {
 		// those ARE the real DOM event names, so this lane would have fired them.
 		// It costs this lane no type error at all; what kept the drag out of S16 is
 		// the JSX lanes' `pnpm check` baseline. See the fixture header.
+		// S17 (CONTACTS) IS THE SEVENTH ANNOTATED MODULE THIS LANE EMITS, and it
+		// moves the typed arm alone for the FIFTH consecutive application: one prop
+		// entry (`onTrace`), declared with a type, so `typedInputsSeen` goes 10 -> 11
+		// while `untypedInputsSeen` HOLDS AT 15 FOR THE FIFTH TIME.
+		// AND THIS IS BY FAR THE HARDEST TEST THAT HOLD HAS HAD, because S17 is the
+		// FORMS card and a form is the one shape that could plausibly have wanted
+		// per-field inputs. It takes the largest-template title at TWO HUNDRED AND
+		// TWELVE hosts - 2.4x S16's eighty-nine - carries THIRTY-TWO events to S16's
+		// twelve and THIRTY-FIVE state writes to S16's two, and ships THIRTEEN
+		// distinct control kinds each with its own bound cell. Not one of them is an
+		// `@Input()`: every draft cell is component-local `state` and every preview
+		// reading is a `computed` getter or a class/`hidden` binding. THREE
+		// applications in a row have now grown the template, the event count and the
+		// write count together while leaving this arm flat, and the third did it on
+		// the scenario whose entire subject is input.
+		// THE OTHER HALF OF THIS ROW IS THE ONE THAT NEARLY DID NOT LAND. This
+		// emitter refused the first spelling of S17 - not on a type and not on the
+		// axis, but on TEMPLATE LITERALS inside template expressions: "a backtick, a
+		// ${ or a backslash would terminate or interpolate the TypeScript template
+		// literal the inline template lives in". The other five lanes took all six of
+		// them. They are seeded row fields and `computed` getters now, both of which
+		// live in the CLASS rather than the inline template. See the fixture's
+		// angular row in scripts/regenerate.ts.
 		expect({ typedInputsSeen, untypedInputsSeen }).toEqual({
-			typedInputsSeen: 10,
+			typedInputsSeen: 11,
 			untypedInputsSeen: 15,
 		});
 	});

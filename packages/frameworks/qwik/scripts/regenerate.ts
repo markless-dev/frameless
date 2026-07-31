@@ -97,6 +97,26 @@ const fixtures = [
 	// defect T003 isolated is not reachable. Like S10-S15 it stays OUT of the
 	// 6 x 9 three-way contract, which scripts/e2e.mjs pins to ['s1'..'s9'].
 	['S16.tsx', 's16-task-board.json'],
+	// THE EIGHTH APPLICATION IN THE CORPUS - CONTACTS - and THE FORMS CARD, the
+	// FOURTH scenario all six lanes emit. THIRTEEN control kinds ship, every one
+	// bound and every one observable in a live preview card.
+	//
+	// MEASURED ON A PROBE THROUGH THIS VERY EMITTER: all sixteen `type=` values
+	// emit, and this lane wraps every handler that calls `preventDefault()` in
+	// `sync$` - which the `<form>`'s submit handler does. THE COST HERE IS AGAIN
+	// AN ATTRIBUTE AND NOT AN EVENT, exactly as T005 found with `draggable="true"`
+	// against `draggable?: boolean`: this project's own tsc charges one `error TS`
+	// line each for `required`, `multiple`, `disabled`, `readonly`, `autofocus`,
+	// `spellcheck`, a static `checked`, `maxlength`, `maxLength`, `minlength`,
+	// `size`, `tabindex`, `rows` and `cols` - and, uniquely to this lane, for
+	// `list` and `inputmode`. `min`, `max` and `step` are free. The fixture spends
+	// none of them.
+	//
+	// S17 is a SINGLE component, so this lane keeps its `onTrace$`: a function
+	// prop never crosses a component boundary here and the un-forwardable-prop
+	// defect T003 isolated is not reachable. Like S10-S16 it stays OUT of the
+	// 6 x 9 three-way contract.
+	['S17.tsx', 's17-contacts.json'],
 ] as const;
 for (const [output, golden] of fixtures) {
 	const ir = JSON.parse(

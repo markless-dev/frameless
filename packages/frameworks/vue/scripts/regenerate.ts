@@ -124,6 +124,26 @@ const fixtures = [
 	// Like S10-S15 it stays OUT of the 6 x 9 three-way contract, which
 	// scripts/e2e.mjs pins to the literal ['s1'..'s9'].
 	['S16.vue', 's16-task-board.json'],
+	// THE EIGHTH APPLICATION IN THE CORPUS - CONTACTS - and THE FORMS CARD, the
+	// FOURTH scenario all six lanes emit. THIRTEEN control kinds ship, every one
+	// bound and every one observable in a live preview card.
+	//
+	// THIS ROW MOVES worked example 12a IN src/gate/index.ts MORE THAN ANY
+	// SCENARIO SINCE S7, AND THAT IS THE POINT OF IT. S13 moved the count by one,
+	// S15 and S16 moved nothing at all, and three consecutive negatives had been
+	// read as evidence that the domain had stopped growing. S17 adds EIGHTEEN
+	// instances at once and, more importantly, a THIRD TAG - `<select>` - which no
+	// scenario in this corpus had ever bound `value` on (S7 ships two selects and
+	// binds `data-size` on one of them, never `value`). `v-model` on a `<select>`
+	// is `vModelSelect`, a different directive from `vModelText` with different
+	// behaviour, so the G5 difference list grows rather than merely repeating.
+	// THAT CENSUS IS RE-ARGUED, NOT RENUMBERED, when this row lands.
+	//
+	// This emitter takes every one of the thirteen types without complaint; no
+	// emitter in any lane reads the VALUE of a `type` attribute at all.
+	//
+	// Like S10-S16 it stays OUT of the 6 x 9 three-way contract.
+	['S17.vue', 's17-contacts.json'],
 ] as const;
 for (const [output, golden] of fixtures) {
 	const ir = JSON.parse(await readFile(resolve(goldenRoot, golden), 'utf8')) as EnrichedIR;

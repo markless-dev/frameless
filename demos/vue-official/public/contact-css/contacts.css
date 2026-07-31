@@ -1,0 +1,917 @@
+/*
+ * The contacts look, reproduced from MEASURED geometry.
+ *
+ * THIS FILE IS THIS REPOSITORY'S OWN WORK - see ./README.md. NOTHING was copied
+ * from the Square UI contacts template or its repository, whose bespoke
+ * "ln-dev UI License" forbids publishing the templates OR ANY DERIVATIVE in any
+ * repository. The reference was QA'd LIVE in a browser at 1440x1000 - including
+ * its New Contact dialog, which had never been opened by anyone on this project
+ * - and every number below is a `getBoundingClientRect()` / `getComputedStyle()`
+ * reading off the rendered page; every colour is a token from
+ * `demos/shared/shadcn-theme/`, which is the MIT shadcn/ui default theme, and
+ * NOT a value read off that site.
+ *
+ * It is the fourth sheet in this repo to sit on those tokens, after `codex.css`,
+ * `habits.css` and `board.css`, and it is linked BESIDE
+ * `/shadcn-theme/tokens.css`, which must load FIRST because every colour here is
+ * a `var(--...)` from it.
+ *
+ * Class names come from packages/compiler/test/fixtures/s17-contacts.tsrx and
+ * are printed unchanged by all SIX emitters, so this one file styles all six
+ * lanes.
+ *
+ * WHAT WAS MEASURED ON THE REFERENCE AND REPRODUCED HERE:
+ *   sidebar               [0, 0, 256, 1000]
+ *   search field          [439, 21, 320, 36], radius 8, 1px border, 14px type
+ *   card grid starts      y = 86, x = 281 (so 25px inside the 256px sidebar)
+ *   card                  370 wide, 194 tall, 12 gap, radius 14, 1px border,
+ *                         16px padding, column pitch 382, row pitch 206
+ *   card role line        12px, muted
+ *   tag chip              22 tall, 2px/8px padding, pill radius, 12px/500
+ *   NEW CONTACT DIALOG    480 wide, radius 10, 24px padding
+ *   form field            36 tall, radius 8, 1px border, 4px/12px padding, 14px
+ *   form label            14px / 500, 8px above its field
+ *   two-column field row  209 + 12 gap + 209 = 430
+ *   form row pitch        74
+ *   submit button         115 x 36
+ *
+ * WHAT WAS MEASURED AND DELIBERATELY NOT REPRODUCED:
+ *   The reference's avatars are per-contact GRADIENT DISCS and its tag chips are
+ *   coloured per tag (a blue Customer, a violet VIP, an amber Lead). Neither set
+ *   is a shadcn default token, and reproducing them would be reproducing THEIR
+ *   THEME rather than the measured geometry - the same ruling T004 recorded when
+ *   it declined the habit tracker's purple and T005 when it declined the task
+ *   board's category chips. The avatars here are `--secondary` discs carrying the
+ *   contact's initials at the measured 40px, and the chips are `--secondary` at
+ *   the measured 22px height and 12px/500 type.
+ *
+ * WHAT THE REFERENCE DOES THAT THIS PAGE DECLINES TO DO, both measured live:
+ *   Its Notes field is a single-line `<input>` - with the dialog open the whole
+ *   document holds SEVEN inputs, TWO selects and ZERO textareas - and its whole
+ *   document contains NO HEADING ELEMENT AT ALL. This page ships a real
+ *   `<textarea>`, an `<h1>` and three `<h2>`s.
+ *
+ * AND ONE PLACE THE LAYOUT DIVERGES, WITH A REASON: the reference opens the form
+ * as a MODAL DIALOG. `.tsrx` has no portal, no focus trap and no `dialog`
+ * construct, and a modal that is merely an absolutely positioned `<div>` is a
+ * worse artifact than a panel, so the form is a PERSISTENT PANEL below the grid
+ * at the dialog's own measured 480px width. That keeps BOTH geometries
+ * comparable: the grid still reads 370/12/14 and the form still reads
+ * 480/24/10/74.
+ */
+
+/*
+ * SHELL NEUTRALISATION, AND IT IS A MEASURED REPAIR RATHER THAN HOUSEKEEPING.
+ *
+ * `hn.css` records the finding this block inherits: driven across all six lanes,
+ * `/hn` rendered TWO DIFFERENT PAGES, because the create-vite scaffold used by
+ * react, solid and vue sets `:root { font: 18px/145% system-ui; letter-spacing:
+ * 0.18px }` and `#root`/`#app { width: 1126px; text-align: center; display:
+ * flex }`, while qwik, svelte and angular ship no such scaffold. Every DECLARED
+ * value was identical in all six - a computed-style check would have reported
+ * six passes.
+ *
+ * It is neutralised HERE, in the page-scoped sheet, and NOT in the three shells:
+ * those files are shared with S1-S12 and with the nine three-way scenarios that
+ * `pnpm e2e` compares byte for byte across six lanes.
+ */
+:root {
+	font:
+		normal 16px/1.5 ui-sans-serif,
+		system-ui,
+		-apple-system,
+		'Segoe UI',
+		Roboto,
+		'Helvetica Neue',
+		Arial,
+		sans-serif;
+	letter-spacing: normal;
+	text-rendering: auto;
+	color-scheme: light;
+}
+
+#root,
+#app {
+	width: 100%;
+	max-width: none;
+	min-height: 0;
+	margin: 0;
+	padding: 0;
+	border: none;
+	display: block;
+	text-align: left;
+}
+
+/*
+ * AND A SECOND HALF OF THE SAME REPAIR, MEASURED ON THIS PAGE AND ON NO EARLIER
+ * ONE. `hn.css`, `habits.css` and `board.css` neutralise `:root`, `#root`/`#app`
+ * and `body` and stop there. That was enough for them and it is NOT enough here,
+ * because the create-vite scaffold shared by react, solid and vue also carries:
+ *
+ *   h1, h2 { font-family: var(--heading); font-weight: 500; color: var(--text-h) }
+ *   h1     { font-size: 56px; letter-spacing: -1.68px; margin: 32px 0 }
+ *   h2     { font-size: 24px; line-height: 118%; margin: 0 0 8px }
+ *
+ * A CLASS THAT SETS `font-size` AND `font-weight` DOES NOT BEAT ANY OF THAT -
+ * `font-family`, `letter-spacing`, `line-height`, `color` and `margin` all
+ * survive - and qwik, svelte and angular ship no such scaffold. MEASURED across
+ * six live lanes at 1440x1000: the `<h1>` reading "All contacts" is 63px wide in
+ * react, solid and vue and 83px wide in qwik, svelte and angular, so THE SEARCH
+ * FIELD SITS 20 PIXELS APART, and the three `<h2>`s put the sidebar and the form
+ * 6px apart on top of it. Every DECLARED value in this file was identical in all
+ * six; only the rendered rect says so, which is the rule T007 bought and this is
+ * its second instance.
+ *
+ * S16 has an `<h1>` too and never saw this: its crumb reads "Task", four
+ * characters rather than twelve, and the next measured rect is behind a flex
+ * spacer that absorbed the difference. The bug was always there.
+ *
+ * Neutralised HERE and never in the three shells, which are shared with S1-S12
+ * and with the nine scenarios `pnpm e2e` compares across six lanes.
+ */
+h1,
+h2 {
+	font-family: inherit;
+	letter-spacing: normal;
+	line-height: 1.5;
+	color: inherit;
+	margin: 0;
+}
+
+body {
+	margin: 0;
+	padding: 0;
+	background: var(--background);
+	color: var(--foreground);
+	font-family:
+		ui-sans-serif,
+		system-ui,
+		-apple-system,
+		'Segoe UI',
+		Roboto,
+		'Helvetica Neue',
+		Arial,
+		sans-serif;
+	font-size: 16px;
+	line-height: 1.5;
+	text-align: left;
+}
+
+/*
+ * `hidden` MUST WIN. On this page it is load-bearing in SIX places at once - the
+ * per-card filter, the empty-grid placeholder, the four optional preview meta
+ * rows and the required-fields hint - and every rule below that sets `display`
+ * would otherwise beat the attribute's UA `display: none`.
+ */
+[hidden] {
+	display: none !important;
+}
+
+.cs {
+	display: block;
+	background: var(--background);
+	color: var(--foreground);
+}
+
+.cs-shell {
+	display: flex;
+	align-items: stretch;
+	min-height: 100vh;
+}
+
+/* ---------------------------------------------------------------- sidebar */
+
+.cs-side {
+	width: 256px;
+	flex: 0 0 256px;
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 12px;
+	border-right: 1px solid var(--border);
+	background: var(--sidebar);
+	color: var(--sidebar-foreground);
+}
+
+.cs-brand {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	height: 44px;
+	padding: 0 4px;
+}
+
+.cs-mark {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border-radius: 8px;
+	background: var(--primary);
+	color: var(--primary-foreground);
+	font-size: 15px;
+}
+
+.cs-brandname {
+	font-size: 15px;
+	font-weight: 600;
+	letter-spacing: -0.2px;
+}
+
+.cs-new {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	height: 40px;
+	margin: 4px 0 8px;
+	border: none;
+	border-radius: 8px;
+	background: var(--primary);
+	color: var(--primary-foreground);
+	font-family: inherit;
+	font-size: 14px;
+	font-weight: 500;
+	cursor: pointer;
+}
+
+.cs-newglyph {
+	font-size: 15px;
+}
+
+.cs-nav {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.cs-navlink {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	height: 34px;
+	padding: 0 8px;
+	border-radius: 8px;
+	color: var(--sidebar-foreground);
+	text-decoration: none;
+	font-size: 14px;
+}
+
+.cs-navlink-on {
+	background: var(--sidebar-accent);
+	color: var(--sidebar-accent-foreground);
+	font-weight: 500;
+}
+
+.cs-navicon {
+	display: inline-flex;
+	justify-content: center;
+	width: 16px;
+	color: var(--muted-foreground);
+	font-size: 13px;
+}
+
+.cs-navtext {
+	flex: 1 1 auto;
+}
+
+.cs-badge {
+	display: inline-flex;
+	align-items: center;
+	height: 20px;
+	padding: 0 7px;
+	border-radius: 999px;
+	background: var(--secondary);
+	color: var(--secondary-foreground);
+	font-size: 11px;
+	font-weight: 500;
+}
+
+.cs-sidehead {
+	margin: 16px 0 4px;
+	padding: 0 8px;
+	color: var(--muted-foreground);
+	font-size: 11px;
+	font-weight: 500;
+	letter-spacing: 0.6px;
+	text-transform: uppercase;
+}
+
+.cs-complist {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.cs-complink {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	height: 32px;
+	padding: 0 8px;
+	border-radius: 8px;
+	color: var(--sidebar-foreground);
+	text-decoration: none;
+	font-size: 13px;
+}
+
+.cs-comptext {
+	flex: 1 1 auto;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.cs-compcount {
+	color: var(--muted-foreground);
+	font-size: 11px;
+}
+
+.cs-tagfilters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	padding: 0 8px;
+}
+
+/* The tag chips, at the reference's measured 22px height and 12px/500 type. */
+.cs-tagpick {
+	display: inline-flex;
+	align-items: center;
+	height: 22px;
+	padding: 0 8px;
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	background: transparent;
+	color: var(--foreground);
+	font-family: inherit;
+	font-size: 12px;
+	font-weight: 500;
+	cursor: pointer;
+}
+
+.cs-tagpick-on {
+	border-color: transparent;
+	background: var(--primary);
+	color: var(--primary-foreground);
+}
+
+.cs-promo {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	margin-top: auto;
+	padding: 12px;
+	border: 1px solid var(--border);
+	border-radius: 10px;
+	background: var(--card);
+}
+
+.cs-promotitle {
+	font-size: 12px;
+	font-weight: 600;
+}
+
+.cs-promotext {
+	color: var(--muted-foreground);
+	font-size: 11px;
+	line-height: 1.45;
+}
+
+/* ------------------------------------------------------------------ content */
+
+.cs-content {
+	flex: 1 1 auto;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+/* Measured: the search field sits at y = 21 and is 36 tall, so the bar is 78. */
+.cs-top {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	height: 78px;
+	padding: 0 24px;
+	border-bottom: 1px solid var(--border);
+}
+
+.cs-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	flex: 0 0 32px;
+	border: none;
+	border-radius: 8px;
+	background: transparent;
+	color: var(--muted-foreground);
+	font-family: inherit;
+	cursor: pointer;
+}
+
+.cs-iconglyph {
+	font-size: 14px;
+}
+
+.cs-crumb {
+	margin: 0;
+	font-size: 15px;
+	font-weight: 500;
+	white-space: nowrap;
+}
+
+/* Measured: 320 x 36, radius 8, 1px border, 14px type. */
+.cs-search {
+	width: 320px;
+	height: 36px;
+	box-sizing: border-box;
+	padding: 0 12px;
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	background: var(--card);
+	color: var(--foreground);
+	font-family: inherit;
+	font-size: 14px;
+}
+
+.cs-statusfilter {
+	height: 36px;
+	box-sizing: border-box;
+	padding: 0 10px;
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	background: var(--card);
+	color: var(--foreground);
+	font-family: inherit;
+	font-size: 14px;
+}
+
+.cs-topgap {
+	flex: 1 1 auto;
+}
+
+.cs-headline {
+	display: flex;
+	align-items: baseline;
+	gap: 16px;
+	padding: 16px 24px 0;
+}
+
+.cs-tally {
+	display: flex;
+	align-items: baseline;
+	gap: 6px;
+	margin: 0;
+}
+
+.cs-tallyshown {
+	font-size: 30px;
+	font-weight: 900;
+	letter-spacing: -0.75px;
+	line-height: 1;
+}
+
+.cs-tallytext {
+	color: var(--muted-foreground);
+	font-size: 13px;
+}
+
+.cs-summaryline {
+	display: flex;
+	align-items: baseline;
+	gap: 6px;
+	margin: 0;
+}
+
+.cs-summaryemoji {
+	font-size: 14px;
+}
+
+.cs-summarytext {
+	color: var(--muted-foreground);
+	font-size: 13px;
+}
+
+/*
+ * The note is styled to be READ, not to sit quietly at the bottom. Same
+ * treatment `board.css` gives `.tb-note`, and for the same reason: it carries
+ * the card's own measurement.
+ */
+.cs-note {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	margin: 12px 24px 0;
+	padding: 10px 12px;
+	border: 1px solid var(--border);
+	border-radius: 10px;
+	background: var(--card);
+}
+
+.cs-notemark {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	flex: 0 0 18px;
+	border-radius: 999px;
+	background: var(--primary);
+	color: var(--primary-foreground);
+	font-size: 11px;
+	font-weight: 700;
+}
+
+.cs-notetext {
+	color: var(--foreground);
+	font-size: 12px;
+	line-height: 1.5;
+}
+
+.cs-main {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	padding: 16px 24px 32px;
+}
+
+/* Measured: three 370-wide cards at a 382 pitch, so a 12px gap. */
+.cs-grid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 12px;
+}
+
+/* --------------------------------------------------------------- the card */
+
+/*
+ * `.cs-card` is the `<article>` inside the keyed repeat and `.cs-preview` is the
+ * form's live preview `<div>`. They share every rule below, which is what lets
+ * one measured geometry serve both and makes the preview a like-for-like
+ * rehearsal of the row a submit would add.
+ */
+.cs-card,
+.cs-preview {
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	padding: 16px;
+	border: 1px solid var(--border);
+	border-radius: 14px;
+	background: var(--card);
+	color: var(--card-foreground);
+}
+
+.cs-cardtop {
+	display: grid;
+	grid-template-columns: 40px 1fr;
+	grid-template-rows: auto auto;
+	column-gap: 12px;
+	align-items: center;
+}
+
+/* Measured 40px disc. The reference fills it with a per-contact gradient; this
+ * one carries the contact's initials on `--secondary`, for the licence reason
+ * recorded at the top of this file. */
+.cs-avatar {
+	grid-row: 1 / span 2;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	overflow: hidden;
+	border-radius: 999px;
+	background: var(--secondary);
+	color: var(--secondary-foreground);
+	font-size: 13px;
+	font-weight: 600;
+	letter-spacing: 0.3px;
+}
+
+.cs-avatar-active {
+	background: var(--secondary);
+}
+
+.cs-avatar-prospect {
+	background: var(--accent);
+	color: var(--accent-foreground);
+}
+
+.cs-avatar-inactive {
+	background: var(--muted);
+	color: var(--muted-foreground);
+}
+
+.cs-cardhead {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	min-width: 0;
+}
+
+.cs-cardname {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	font-size: 15px;
+	font-weight: 600;
+}
+
+.cs-cardstar {
+	color: var(--muted-foreground);
+	font-size: 12px;
+}
+
+.cs-cardrole {
+	color: var(--muted-foreground);
+	font-size: 12px;
+}
+
+.cs-cardmeta {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.cs-metarow {
+	display: flex;
+	align-items: baseline;
+	gap: 6px;
+	min-width: 0;
+	font-size: 12px;
+}
+
+.cs-metaglyph {
+	display: inline-flex;
+	justify-content: center;
+	width: 14px;
+	flex: 0 0 14px;
+	color: var(--muted-foreground);
+	font-size: 11px;
+}
+
+.cs-metatext {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	color: var(--muted-foreground);
+}
+
+.cs-metadot {
+	color: var(--muted-foreground);
+}
+
+.cs-cardfoot {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-top: auto;
+	padding-top: 4px;
+}
+
+.cs-footgap {
+	flex: 1 1 auto;
+}
+
+/* Measured: 22 tall, 2px/8px padding, pill radius, 12px / 500. */
+.cs-chip {
+	display: inline-flex;
+	align-items: center;
+	height: 22px;
+	padding: 0 8px;
+	border-radius: 999px;
+	background: var(--secondary);
+	color: var(--secondary-foreground);
+	font-size: 12px;
+	font-weight: 500;
+	white-space: nowrap;
+}
+
+.cs-chip-on {
+	background: var(--primary);
+	color: var(--primary-foreground);
+}
+
+.cs-chip-mid {
+	background: var(--accent);
+	color: var(--accent-foreground);
+}
+
+.cs-chip-off {
+	background: var(--muted);
+	color: var(--muted-foreground);
+}
+
+.cs-empty {
+	margin: 0;
+	padding: 24px;
+	border: 1px dashed var(--border);
+	border-radius: 14px;
+	text-align: center;
+}
+
+.cs-emptytext {
+	color: var(--muted-foreground);
+	font-size: 13px;
+}
+
+/* ---------------------------------------------------------------- the form */
+
+/* Measured on the reference's New Contact DIALOG: 480 wide, radius 10, 24px
+ * padding. It is a persistent panel here rather than a modal - see the top of
+ * this file. */
+.cs-form {
+	box-sizing: border-box;
+	width: 480px;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+	padding: 24px;
+	border: 1px solid var(--border);
+	border-radius: 10px;
+	background: var(--card);
+	color: var(--card-foreground);
+}
+
+.cs-formhead {
+	margin: 0;
+	font-size: 16px;
+	font-weight: 600;
+}
+
+/* Measured: 209 + 12 + 209 = 430 inside the 480 panel's 24px padding. */
+.cs-fieldrow {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 12px;
+}
+
+.cs-field {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	min-width: 0;
+}
+
+/* Measured: 14px / 500, 14 tall, 8px above its control. */
+.cs-label {
+	font-size: 14px;
+	font-weight: 500;
+	line-height: 1;
+}
+
+.cs-labeltext {
+	display: inline-block;
+}
+
+/* Measured: 36 tall, radius 8, 1px border, 4px/12px padding, 14px type. One rule
+ * serves thirteen control kinds, which is only possible because every one of
+ * them is a real form control rather than a styled div. */
+.cs-input {
+	box-sizing: border-box;
+	width: 100%;
+	height: 36px;
+	padding: 4px 12px;
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	background: var(--background);
+	color: var(--foreground);
+	font-family: inherit;
+	font-size: 14px;
+}
+
+.cs-textarea {
+	box-sizing: border-box;
+	width: 100%;
+	height: 72px;
+	padding: 8px 12px;
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	background: var(--background);
+	color: var(--foreground);
+	font-family: inherit;
+	font-size: 14px;
+	resize: vertical;
+}
+
+.cs-range {
+	box-sizing: border-box;
+	width: 100%;
+	height: 36px;
+	accent-color: var(--primary);
+}
+
+.cs-radios {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	height: 36px;
+}
+
+.cs-radio,
+.cs-tagbox {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 13px;
+}
+
+.cs-radiobox,
+.cs-checkbox {
+	width: 14px;
+	height: 14px;
+	margin: 0;
+	accent-color: var(--primary);
+}
+
+.cs-tagboxes {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	min-height: 22px;
+}
+
+/*
+ * THE PRIORITY LADDER IS A CLASS NAME, NOT AN INLINE WIDTH, and that is a
+ * measured constraint rather than a style choice: no fixture in this corpus
+ * binds a `style` attribute, so the lowering is UNMEASURED in all six lanes. A
+ * range control is exactly where an inline width would have been reached for.
+ * See the fixture's constraint (13).
+ */
+.cs-prio {
+	display: inline-flex;
+	align-items: center;
+	height: 22px;
+	padding: 0 8px;
+	border-radius: 999px;
+	background: var(--muted);
+	color: var(--muted-foreground);
+	font-size: 12px;
+	font-weight: 500;
+}
+
+.cs-prio-3 {
+	background: var(--secondary);
+	color: var(--secondary-foreground);
+}
+
+.cs-prio-4 {
+	background: var(--accent);
+	color: var(--accent-foreground);
+}
+
+.cs-prio-5 {
+	background: var(--primary);
+	color: var(--primary-foreground);
+}
+
+.cs-actions {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.cs-actiongap {
+	flex: 1 1 auto;
+}
+
+.cs-hint {
+	color: var(--muted-foreground);
+	font-size: 12px;
+}
+
+/* Measured: 115 x 36. */
+.cs-submit {
+	min-width: 115px;
+	height: 36px;
+	padding: 0 16px;
+	border: none;
+	border-radius: 8px;
+	background: var(--primary);
+	color: var(--primary-foreground);
+	font-family: inherit;
+	font-size: 14px;
+	font-weight: 500;
+	cursor: pointer;
+}
+
+/*
+ * `aria-disabled` IS THE ONE BOOLEAN-SHAPED SPELLING ALL SIX LANES AGREE ON -
+ * S7's finding, and the reason this button does not carry a real `disabled`
+ * attribute: a static `disabled="true"` costs one `error TS` line in each of the
+ * three JSX lanes and `pnpm check` must not rise above 267. See the fixture's
+ * constraint (15). The guard itself is a ternary in the submit handler, so the
+ * button being clickable here changes nothing.
+ */
+.cs-submit[aria-disabled='true'] {
+	background: var(--muted);
+	color: var(--muted-foreground);
+	cursor: default;
+}

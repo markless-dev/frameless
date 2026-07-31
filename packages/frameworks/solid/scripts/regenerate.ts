@@ -94,6 +94,32 @@ const fixtures = [
 	// Like S10-S15 it stays OUT of the 6 x 9 three-way contract, which
 	// scripts/e2e.mjs pins to the literal ['s1'..'s9'].
 	['S16.tsx', 's16-task-board.json'],
+	// THE EIGHTH APPLICATION IN THE CORPUS - CONTACTS - and THE FORMS CARD, the
+	// FOURTH scenario all six lanes emit. THIRTEEN control kinds ship, every one
+	// bound and every one observable in a live preview card.
+	//
+	// THIS LANE IS THE CHEAPEST OF THE THREE JSX LANES ON STATIC FORM ATTRIBUTES,
+	// and that is a measurement rather than a note. Dropping a forty-attribute
+	// probe into this project's own `generated/` and running its own tsc:
+	// `maxlength`, `maxLength`, `minlength`, `size`, `tabindex`, `rows`, `cols`
+	// and `list` are ALL FREE here and every one of them costs the react lane, the
+	// qwik lane or both - this lane's JSX types take lowercase DOM attribute names
+	// with string values. What still costs it is the BOOLEAN-typed set, the same
+	// one that costs everybody: `required`, `multiple`, `disabled`, `readonly`,
+	// `autofocus`, `spellcheck`, a static `checked`. AND IT HAS ITS OWN CASING
+	// COST IN THE OPPOSITE DIRECTION FROM REACT: `autoComplete` costs THIS lane
+	// while `autocomplete` costs react, so no spelling of it is free in both and
+	// it is simply absent from the fixture.
+	//
+	// This lane has no component reference here and neither of the two emitter
+	// defects T003 isolated is reachable: S17 is a SINGLE component. Its repeats
+	// are all over a state cell or a field of a loop variable, never over a
+	// `computed` - which is why the contact filter is a per-card `hidden` binding
+	// rather than a filtered view, this lane's own "unconsumed keyed identity
+	// semantics" refusal being the reason.
+	//
+	// Like S10-S16 it stays OUT of the 6 x 9 three-way contract.
+	['S17.tsx', 's17-contacts.json'],
 ] as const;
 
 await mkdir(resolve(root, 'generated'), { recursive: true });

@@ -29,6 +29,7 @@ const FIXTURES = [
 	's14-hn-item.tsrx',
 	's15-habit-tracker.tsrx',
 	's16-task-board.tsrx',
+	's17-contacts.tsrx',
 ] as const;
 
 const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>> = {
@@ -869,6 +870,242 @@ const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>>
 		['span', 'class'],
 		['span', 'class'],
 	],
+	// THE EIGHTH APPLICATION - CONTACTS - and THE FORMS CARD. TWO HUNDRED AND
+	// TWELVE hosts, which takes the largest-template title off S16's eighty-nine
+	// by a factor of 2.4, and the census below says WHY rather than merely how
+	// many: FIFTEEN `input`s, TWO `select`s, FIVE `option`s, ONE `textarea` and
+	// SIXTEEN `label`s. A form control is never one host - it is a `div` wrapper,
+	// a `label`, a `span` carrying the label text (constraint 9) and the control
+	// itself, so thirteen control kinds cost four hosts apiece before one of them
+	// is bound.
+	//
+	// `textarea` appears ONCE and it is the reason it is here at all: the
+	// reference's own Notes field is a single-line `<input>` - measured live with
+	// its dialog open, SEVEN inputs, TWO selects, ZERO textareas - and this page
+	// declines to reproduce that.
+	//
+	// `h1` appears once and `h2` THREE times, which is the second place this
+	// module is deliberately more correct than the thing it reproduces:
+	// `document.querySelectorAll('h1,h2,h3,h4')` returns ZERO on the whole
+	// reference document.
+	//
+	// `article` appears once - inside the keyed repeat, so it is nine cards on
+	// screen - and the preview card is a `div` with the same internal shape, which
+	// is what lets one stylesheet rule serve both.
+	's17-contacts.tsrx': [
+		['section', 'class'],
+		['div', 'class'],
+		['aside', 'class'],
+		['div', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['button', 'type'],
+		['span', 'class'],
+		['span', 'class'],
+		['nav', 'class'],
+		['a', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['a', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['a', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['a', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['h2', 'class'],
+		['div', 'class'],
+		['a', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['h2', 'class'],
+		['div', 'class'],
+		['button', 'type'],
+		['span', 'class'],
+		['button', 'type'],
+		['span', 'class'],
+		['div', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['div', 'class'],
+		['header', 'class'],
+		['button', 'type'],
+		['span', 'class'],
+		['h1', 'class'],
+		['input', 'type'],
+		['select', 'class'],
+		['option', 'value'],
+		['option', 'value'],
+		['option', 'value'],
+		['option', 'value'],
+		['span', 'class'],
+		['button', 'type'],
+		['span', 'class'],
+		['button', 'type'],
+		['span', 'class'],
+		['button', 'type'],
+		['span', 'class'],
+		['div', 'class'],
+		['p', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['p', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['p', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['main', 'class'],
+		['div', 'class'],
+		['article', 'class'],
+		['div', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['div', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['div', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['p', 'class'],
+		['span', 'class'],
+		['form', 'class'],
+		['h2', 'class'],
+		['div', 'class'],
+		['div', 'class'],
+		['label', 'class'],
+		['span', 'class'],
+		['input', 'type'],
+		['div', 'class'],
+		['label', 'class'],
+		['span', 'class'],
+		['input', 'type'],
+		['div', 'class'],
+		['label', 'class'],
+		['span', 'class'],
+		['input', 'type'],
+		['div', 'class'],
+		['div', 'class'],
+		['label', 'class'],
+		['span', 'class'],
+		['input', 'type'],
+		['div', 'class'],
+		['label', 'class'],
+		['span', 'class'],
+		['input', 'type'],
+		['div', 'class'],
+		['label', 'class'],
+		['span', 'class'],
+		['input', 'type'],
+		['div', 'class'],
+		['div', 'class'],
+		['label', 'class'],
+		['span', 'class'],
+		['select', 'class'],
+		['option', 'value'],
+		['div', 'class'],
+		['label', 'class'],
+		['span', 'class'],
+		['input', 'type'],
+		['div', 'class'],
+		['div', 'class'],
+		['label', 'class'],
+		['span', 'class'],
+		['input', 'type'],
+		['div', 'class'],
+		['label', 'class'],
+		['span', 'class'],
+		['input', 'type'],
+		['div', 'class'],
+		['label', 'class'],
+		['span', 'class'],
+		['input', 'type'],
+		['div', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['div', 'class'],
+		['label', 'class'],
+		['input', 'type'],
+		['span', 'class'],
+		['label', 'class'],
+		['input', 'type'],
+		['span', 'class'],
+		['label', 'class'],
+		['input', 'type'],
+		['span', 'class'],
+		['div', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['div', 'class'],
+		['label', 'class'],
+		['input', 'type'],
+		['span', 'class'],
+		['div', 'class'],
+		['label', 'class'],
+		['span', 'class'],
+		['textarea', 'class'],
+		['div', 'class'],
+		['div', 'class'],
+		['span', 'data-preview'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['div', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'data-preview'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['div', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'data-preview'],
+		['div', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['span', 'class'],
+		['button', 'type'],
+		['span', 'class'],
+	],
 };
 
 async function fixtureIr(file: (typeof FIXTURES)[number]): Promise<EnrichedIR> {
@@ -1173,6 +1410,7 @@ describe('fixture-family sufficiency', () => {
 			's14-hn-item.tsrx',
 			's15-habit-tracker.tsrx',
 			's16-task-board.tsrx',
+			's17-contacts.tsrx',
 		];
 
 		test('CONTROL: every UNannotated corpus scenario carries NO type, and both sets are non-empty', async () => {
@@ -1723,6 +1961,35 @@ export function Probe({ label }: { label }) @{
 			// cell, so a lane that fired `move` and repainted only the clicked column
 			// would be INDISTINGUISHABLE HERE and is caught in the DOM instead.
 			's16-task-board.tsrx': ['move', 'nav', 'press'],
+			// EIGHT NAMES, THE MOST OF ANY FIXTURE HERE, AND SEVEN OF THEM EXIST
+			// BECAUSE THE AXIS IS FORM INPUT TYPES. `field` is authored FOURTEEN
+			// times - once per control on the new-contact form - and carries the
+			// control's own name in its detail rather than being split into fourteen
+			// channels, because what this card measures is whether each TYPE lowers
+			// and fires, not whether fourteen distinct trace names can be spelled.
+			// `search` and `statusfilter` are separate names for the two controls
+			// that write the VIEW rather than the draft, and they are separate from
+			// `tagfilter` because the three reach the same three observables - every
+			// card's `hidden`, the shown counter and the summary pair - by three
+			// different routes, which is what distinguishes a page that re-derives
+			// from one that repaints. `add` is the `<form>`'s submit channel and
+			// `reset` the sidebar button that writes FOURTEEN cells at once, the only
+			// multi-cell write in the corpus. `press` covers the six inert controls
+			// (the sidebar toggle, the two view-mode buttons, the theme toggle) plus
+			// the `<form>`'s own click trace, which constraint (16) requires: a form
+			// with a submit handler and no click handler makes the Svelte emitter's
+			// a11y suppression redundant and the module is refused. `nav` covers the
+			// four sidebar links and the five company links.
+			's17-contacts.tsrx': [
+				'add',
+				'field',
+				'nav',
+				'press',
+				'reset',
+				'search',
+				'statusfilter',
+				'tagfilter',
+			],
 		};
 		for (const file of FIXTURES) {
 			const ir = await fixtureIr(file);

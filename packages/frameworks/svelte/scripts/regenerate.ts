@@ -114,6 +114,33 @@ const fixtures = [
 	// leaves S14 unbuilt is reachable. Like S10-S15 it stays OUT of the 6 x 9
 	// three-way contract, which scripts/e2e.mjs pins to ['s1'..'s9'].
 	['S16.svelte', 's16-task-board.json'],
+	// THE EIGHTH APPLICATION IN THE CORPUS - CONTACTS - and THE FORMS CARD, the
+	// FOURTH scenario all six lanes emit. THIRTEEN control kinds ship, every one
+	// bound and every one observable in a live preview card.
+	//
+	// THIS LANE IS THE ONLY ONE THAT REFUSED ANYTHING ON THIS AXIS, and neither
+	// refusal is about an input TYPE. Both were reproduced on probes through this
+	// very emitter and both shaped the fixture:
+	//
+	//   * `htmlFor` on a `<label>`, verbatim: "Emitted Svelte module Probe.svelte
+	//     did not compile warning-free: a11y_label_has_associated_control,
+	//     attribute_invalid_property_name." The portable spelling is `for`, which
+	//     the REACT emitter rewrites to `htmlFor` on its own.
+	//   * a `<form>` with a submit handler and no click handler, verbatim:
+	//     "Emitted Svelte module ZProbe.svelte suppresses
+	//     [a11y_click_events_have_key_events,
+	//     a11y_no_noninteractive_element_interactions] but without those
+	//     annotations Svelte reports []. A suppression that changes nothing is a
+	//     silent over-fire." S13 constraint 13 and S14 constraint 11 recorded it;
+	//     it is RE-MEASURED here rather than inherited, and the fixture's form
+	//     carries a `press` trace beside its `add` trace for exactly this reason.
+	//
+	// A third probe refusal is recorded because it did NOT shape the fixture:
+	// `autofocus` and a redundant `role` are both a11y warnings here, on top of
+	// being type errors in the three JSX lanes.
+	//
+	// Like S10-S16 it stays OUT of the 6 x 9 three-way contract.
+	['S17.svelte', 's17-contacts.json'],
 ] as const;
 for (const [output, golden] of fixtures) {
 	const ir = JSON.parse(await readFile(resolve(goldenRoot, golden), 'utf8')) as EnrichedIR;

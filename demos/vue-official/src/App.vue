@@ -13,6 +13,7 @@ import TodoMvcAdvanced from './emitted/TodoMvcAdvanced.vue'
 import CodexClone from './emitted/CodexClone.vue'
 import HnFront from './emitted/HnFront.vue'
 import HabitTracker from './emitted/HabitTracker.vue'
+import Contacts from './emitted/Contacts.vue'
 import TaskBoard from './emitted/TaskBoard.vue'
 import WhitespaceBoard from './emitted/WhitespaceBoard.vue'
 import {
@@ -131,6 +132,20 @@ const board = computed(
     String(props.url ?? '')
       .replace(/^\/+/, '')
       .replace(/\/+$/, '') === 'board',
+)
+
+/**
+ * The /contacts branch, decided HERE for the identical reason `habits` and
+ * `board` above are: `scenarioFor` and its `ScenarioId` union live in
+ * `./scenario-props`, which is outside the file envelope of the card that added
+ * this route (`frameless-app-axes-v1` T006), so the id is not in that union. The
+ * path normalisation is character-for-character the one `scenarioFor` applies.
+ */
+const contacts = computed(
+  () =>
+    String(props.url ?? '')
+      .replace(/^\/+/, '')
+      .replace(/\/+$/, '') === 'contacts',
 )
 
 /**
@@ -353,6 +368,50 @@ const s8Ready = ref<Promise<string>>(s8ResolvedGate)
     <link rel="stylesheet" href="/shadcn-theme/tokens.css" />
     <link rel="stylesheet" href="/board-css/board.css" />
     <TaskBoard v-bind:onTrace="noTrace" />
+  </template>
+  <!--
+    THE EIGHTH APPLICATION - CONTACTS - and THE FORMS CARD. It is the FOURTH scenario
+    in this corpus that all six lanes emit and ship, after S13, S15 and S16, and
+    UNLIKE S16 THE AXIS IT MEASURES IS ACTUALLY ON THE PAGE: THIRTEEN control kinds -
+    text, search, email, tel, url, number, date, time, range, select, radio, checkbox
+    and textarea - every one bound and every one observable in the live preview card.
+
+    THE BOARD'S PREMISE IS PARTLY REFUTED AND THE REFUTATION IS ALREADY IN THIS DEMO.
+    It said only `checkbox` and `textarea` were proven and that `select`, `radio` and
+    the multi-field form shape were unmeasured in all six lanes. The /s7 route IS that
+    shape, emits in all six lanes, and `pnpm e2e` drives it in a real browser.
+
+    MEASURED ON A PROBE THROUGH ALL SIX REAL EMITTERS: every one of the sixteen
+    `type=` values emits everywhere; no emitter reads the VALUE of a `type` attribute
+    at all. What costs something is the attribute BESIDE the type, and it costs the
+    three JSX lanes rather than this one: `required`, `multiple`, `disabled`,
+    `readonly`, `autofocus`, `spellcheck` and a static `checked` each add an
+    `error TS` line there. `min`, `max` and `step` are free, which is why the number,
+    date, time and range fields here carry real bounds.
+
+    THIS PAGE MOVES worked example 12a IN src/gate/index.ts MORE THAN ANY SCENARIO
+    SINCE S7 - eighteen new instances and a THIRD tag, `<select>`, which no scenario
+    in this corpus had ever bound `value` on. That census is re-argued rather than
+    renumbered, and it now also carries its first NEGATIVE CONTROL: five
+    `<option value={row.id}>` hosts bind a value with no on-directive and are
+    correctly outside the domain.
+
+    TWO REFERENCE DEFECTS, MEASURED LIVE AND NOT COPIED: with its New Contact dialog
+    open the reference holds SEVEN inputs, TWO selects and ZERO textareas - its Notes
+    field is a single-line input - and `document.querySelectorAll('h1,h2,h3,h4')`
+    returns ZERO on the whole document.
+
+    TWO STYLESHEETS, ORDER LOAD-BEARING. `/shadcn-theme/tokens.css` is the vendored
+    shadcn/ui DEFAULT theme (MIT, (c) 2023 shadcn) and must load FIRST.
+    `/contact-css/contacts.css` is THIS REPOSITORY'S OWN WORK - the Square UI
+    reference is licence-restricted to REFERENCE-ONLY, so nothing was copied and its
+    geometry was MEASURED in a browser instead, dialog included. Both are linked HERE
+    rather than globally because `contacts.css` restyles `body`.
+  -->
+  <template v-else-if="contacts">
+    <link rel="stylesheet" href="/shadcn-theme/tokens.css" />
+    <link rel="stylesheet" href="/contact-css/contacts.css" />
+    <Contacts v-bind:onTrace="noTrace" />
   </template>
   <template v-else-if="hn">
     <link rel="stylesheet" href="/hn-css/hn.css" />

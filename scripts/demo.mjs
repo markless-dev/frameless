@@ -105,6 +105,23 @@ const SCENARIOS = [
 		path: '/board',
 		title: 'Task board (arrow moves — DRAG IS RECORDED AS REFUSED, see the page)',
 	},
+	// S17 IS THE FOURTH ROW WITH NO `unbuilt` ENTRY IN ANY LANE, AND THE FIRST
+	// APPLICATION ROW SINCE S15 WHOSE AXIS IS ACTUALLY ON THE PAGE. It is the FORMS
+	// scenario and it ships THIRTEEN control kinds - text, search, email, tel, url,
+	// number, date, time, range, select, radio, checkbox and textarea - each bound
+	// and each with its own observable in the live preview beneath the form.
+	// MEASURED THROUGH ALL SIX REAL EMITTERS: every one of the sixteen `type=`
+	// values emits in every lane, because no emitter reads the value of a `type`
+	// attribute at all. What costs something is the attribute BESIDE the type, and
+	// it costs the emitted TYPECHECK: `required`, `maxlength`, `size` and
+	// `multiple` are all off this page for that reason, while `min`, `max` and
+	// `step` are free and carry real bounds. See
+	// `packages/compiler/test/fixtures/s17-contacts.tsrx`.
+	{
+		id: 'S17',
+		path: '/contacts',
+		title: 'Contacts (THIRTEEN bound control kinds — the FORMS page)',
+	},
 ];
 
 /**
@@ -604,16 +621,33 @@ function announce() {
 		lines.push('');
 	}
 
+	// THE TWO FIGURES THAT KEPT GOING STALE ARE NOW DERIVED. T004 repaired this
+	// paragraph, T005 repaired it again and predicted a third break, and T006 is
+	// that third application - so the sentence that names which scenarios ALL SIX
+	// lanes serve is computed from `DEMOS` and `SCENARIOS` rather than written out.
+	// The prose around it is still hand-written; the COUNTS are not.
+	const applications = SCENARIOS.filter((scenario) => !/^S[1-9]$/.test(scenario.id));
+	const universal = applications
+		.filter((scenario) => !DEMOS.some((demo) => demo.unbuilt[scenario.id]))
+		.map((scenario) => scenario.id);
 	lines.push('  Scenarios: S1-S9 are the 6 x 9 three-way contract; S10 TodoMVC,');
 	lines.push('  S11 TodoMVC Advanced, S12 Codex clone, S13 Hacker News,');
-	lines.push('  S14 Hacker News item, S15 Habit tracker and S16 Task board are');
-	lines.push('  the applications. S13, S15 and S16 are the three that all SIX');
-	lines.push('  lanes serve. S14 is the RECURSION page and three lanes refuse it,');
-	lines.push('  each for a different recorded reason; S15 is the FAN-OUT page,');
-	lines.push('  where one click moves eight derived observables and no lane is');
-	lines.push('  lost; S16 is the DRAG page AND IT HAS NO DRAG - the events emit in');
-	lines.push('  five lanes and cost the type baseline 267 -> 280, so the axis is');
+	lines.push('  S14 Hacker News item, S15 Habit tracker, S16 Task board and');
+	lines.push(`  S17 Contacts are the ${applications.length} applications.`);
+	lines.push(
+		`  Of those, ${universal.join(', ')} are the ${universal.length} that all SIX`,
+	);
+	lines.push('  lanes serve. (S1-S9 are served by all six by construction.)');
+	lines.push('  S14 is the RECURSION page and three lanes refuse it, each for a');
+	lines.push('  different recorded reason; S15 is the FAN-OUT page, where one');
+	lines.push('  click moves eight derived observables and no lane is lost;');
+	lines.push('  S16 is the DRAG page AND IT HAS NO DRAG - the events emit in five');
+	lines.push('  lanes and cost the type baseline 267 -> 280, so the axis is');
 	lines.push('  RECORDED and the cards move with arrow buttons. The page says so.');
+	lines.push('  S17 is the FORMS page and its axis IS on it: thirteen bound');
+	lines.push('  control kinds, and the four attributes that would have cost the');
+	lines.push('  type baseline (required, maxlength, size, multiple) are named on');
+	lines.push('  the page rather than quietly omitted.');
 	lines.push('  Qwik routes keep their trailing slash — its router 301s without it.');
 	lines.push('  Walkthrough: README.md, "See It Yourself: Hydrate, Hydrate, Resume".');
 	lines.push(`  Ctrl-C stops all ${runners.length}.`);

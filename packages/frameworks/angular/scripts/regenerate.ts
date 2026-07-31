@@ -151,6 +151,31 @@ const fixtures = [
 	// Like S10-S15 it stays OUT of the 6 x 9 three-way contract, which
 	// scripts/e2e.mjs pins to the literal ['s1'..'s9'].
 	['S16.ts', 's16-task-board.json'],
+	// THE EIGHTH APPLICATION IN THE CORPUS - CONTACTS - and THE FORMS CARD, the
+	// FOURTH scenario all six lanes emit. THIRTEEN control kinds ship, every one
+	// bound and every one observable in a live preview card.
+	//
+	// THIS LANE ALMOST LOST THE CARD, AND NOT ON THE AXIS. The first spelling of
+	// the fixture used TEMPLATE LITERALS inside template expressions - a company
+	// link `href`, a per-status avatar class, a joined first/last name and the tag
+	// checkboxes' `id`/`for` pair - and this emitter refused it, verbatim:
+	//   "Angular emitter refuses the template expression \"`#/company/${row.id}`\":
+	//    a backtick, a ${ or a backslash would terminate or interpolate the
+	//    TypeScript template literal the inline template lives in"
+	// The other five lanes took every one of them. The narrowing is the same one
+	// constraint (10) makes for globals: the strings are SEEDED FIELDS on the
+	// rows (`href`, `avatarClass`, `full`, `initial`, `domId`, `controlId`) or
+	// `computed` getters, both of which live in the CLASS rather than in the
+	// inline template. A template literal in a computed body or a handler body is
+	// fine here; only the template is closed.
+	//
+	// AND THE CONSTRAINT THIS LANE IS FAMOUS FOR HELD WITHOUT COSTING THE AXIS: a
+	// `date` input is not a clock. `since` and `slot` are LITERAL seeded strings,
+	// so `Date` is never named and this lane is not lost for a reason unrelated to
+	// forms. See the fixture's constraint (10).
+	//
+	// Like S10-S16 it stays OUT of the 6 x 9 three-way contract.
+	['S17.ts', 's17-contacts.json'],
 ] as const;
 for (const [output, golden] of fixtures) {
 	const ir = JSON.parse(await readFile(resolve(goldenRoot, golden), 'utf8')) as EnrichedIR;

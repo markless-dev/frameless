@@ -4,14 +4,15 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "copy-emitted": "node -e \"require('fs').mkdirSync('src/emitted',{recursive:true});[['S1','RenderOnce'],['S2','KeyedTodo'],['S3','EventForm'],['S4','NestedBoard'],['S5','BranchBoard'],['S6','WhitespaceBoard'],['S7','FormBoard'],['S8','AsyncBoard'],['S9','AttrBoard'],['S10','TodoMvc'],['S11','TodoMvcAdvanced'],['S12','CodexClone'],['S13','HnFront'],['S15','HabitTracker'],['S16','TaskBoard']].forEach(([s,n])=>require('fs').copyFileSync('../../packages/frameworks/vue/generated/'+s+'.vue','src/emitted/'+n+'.vue'))\"",
+    "copy-emitted": "node -e \"require('fs').mkdirSync('src/emitted',{recursive:true});[['S1','RenderOnce'],['S2','KeyedTodo'],['S3','EventForm'],['S4','NestedBoard'],['S5','BranchBoard'],['S6','WhitespaceBoard'],['S7','FormBoard'],['S8','AsyncBoard'],['S9','AttrBoard'],['S10','TodoMvc'],['S11','TodoMvcAdvanced'],['S12','CodexClone'],['S13','HnFront'],['S15','HabitTracker'],['S16','TaskBoard'],['S17','Contacts']].forEach(([s,n])=>require('fs').copyFileSync('../../packages/frameworks/vue/generated/'+s+'.vue','src/emitted/'+n+'.vue'))\"",
     "copy-todomvc-css": "node ../shared/copy-todomvc-css.mjs public",
     "copy-shadcn-theme": "node ../shared/copy-shadcn-theme.mjs public",
     "copy-hn-css": "node ../shared/copy-hn-css.mjs public",
     "copy-habit-css": "node ../shared/copy-habit-css.mjs public",
     "copy-board-css": "node ../shared/copy-board-css.mjs public",
-    "dev": "pnpm copy-emitted && pnpm copy-todomvc-css && pnpm copy-shadcn-theme && pnpm copy-hn-css && pnpm copy-habit-css && pnpm copy-board-css && node server",
-    "build": "pnpm copy-emitted && pnpm copy-todomvc-css && pnpm copy-shadcn-theme && pnpm copy-hn-css && pnpm copy-habit-css && pnpm copy-board-css && vue-tsc -b && npm run build:client && npm run build:server",
+    "copy-contact-css": "node ../shared/copy-contact-css.mjs public",
+    "dev": "pnpm copy-emitted && pnpm copy-todomvc-css && pnpm copy-shadcn-theme && pnpm copy-hn-css && pnpm copy-habit-css && pnpm copy-board-css && pnpm copy-contact-css && node server",
+    "build": "pnpm copy-emitted && pnpm copy-todomvc-css && pnpm copy-shadcn-theme && pnpm copy-hn-css && pnpm copy-habit-css && pnpm copy-board-css && pnpm copy-contact-css && vue-tsc -b && npm run build:client && npm run build:server",
     "build:client": "vite build --outDir dist/client",
     "build:server": "vite build --ssr src/entry-server.ts --outDir dist/server",
     "preview": "cross-env NODE_ENV=production node server"

@@ -5,6 +5,7 @@ import { AsyncGate } from './async-gate';
 import { BranchBoard } from '../emitted/BranchBoard';
 import { EventForm } from '../emitted/EventForm';
 import { BoardPage } from './board-page';
+import { ContactsPage } from './contacts-page';
 import { HabitsPage } from './habits-page';
 import { HnPage } from './hn-page';
 import { FormBoard } from '../emitted/FormBoard';
@@ -174,5 +175,27 @@ export const routes: Routes = [
   {
     path: 'board',
     component: BoardPage,
+  },
+  // THE EIGHTH APPLICATION - CONTACTS - and THE FORMS CARD. It is the FOURTH
+  // scenario this lane ships alongside the other five, after S13, S15 and S16,
+  // and it survives here for the same reason S15 and S16 do: THE FIXTURE NAMES
+  // NO GLOBAL. That mattered more on this card than on either of those, because
+  // a `date` input's obvious default is today and `Date` is a global this
+  // emitter cannot resolve in a transplanted body; `since` and `slot` are
+  // literal seeded strings instead. See the fixture's constraint (10).
+  //
+  // IT ALSO ALMOST DIED ON SOMETHING THE OTHER FIVE LANES TOOK: this emitter
+  // refuses a TEMPLATE LITERAL inside a template expression, because a backtick
+  // or a ${ would terminate the TypeScript template literal the inline template
+  // lives in. The six that the first spelling used are seeded row fields and
+  // `computed` getters now. See `./contacts-page`.
+  //
+  // It goes through a WRAPPER, like /todomvc, /hn, /habits and /board and for
+  // the same reason: `contacts.css` restyles `body`, `:root`, `#root` and
+  // `#app`, so a global link would move the geometry of the nine three-way
+  // scenarios. It links TWO sheets, tokens first.
+  {
+    path: 'contacts',
+    component: ContactsPage,
   },
 ];
