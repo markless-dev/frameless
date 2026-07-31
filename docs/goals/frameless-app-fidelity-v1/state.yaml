@@ -47,6 +47,47 @@ goal:
 active_task: T009
 
 # ---------------------------------------------------------------------------
+# OWNER DECISIONS - taken from the owner DIRECTLY on 2026-07-31 while T009 ran.
+# These are the two items T008 and T999 both escalated as UN-JUDGEABLE, and
+# T009's own constraint says they "CANNOT BLOCK COMPLETION ON A JUDGE'S SAY-SO".
+# They are now ANSWERED. A Judge may rule against the board, not against these.
+# ---------------------------------------------------------------------------
+owner_decisions:
+  - id: OD1
+    subject: "S12 codex-clone and ORACLE PART 1"
+    asked: >-
+      S12's reference UI is recorded by T008 as login-walled, leaving only a public marketing
+      page as its renderable surface. Exempt S12 by name, accept the marketing page as the
+      named reference, or hold completion for owner-provided authenticated access?
+    owner_verbatim: "Huh? Nothing should be behind a login but if it is then skip it"
+    ruling: >-
+      S12 IS EXEMPT FROM ORACLE PART 1 BY NAME. Part 1's "EVERY SHIPPED APP" is amended to
+      "EVERY SHIPPED APP EXCEPT S12", and S12's absence of a rendered reference capture is a
+      RECORDED EXEMPTION, NOT A SILENT GAP. Parts 2 and 3 bind to S12 unchanged.
+    premise_honesty: >-
+      THE PM DID NOT PROVE THE LOGIN WALL AND WILL NOT CLAIM IT DID. Unauthenticated curl of
+      chatgpt.com/codex and openai.com/codex BOTH ANSWER 403, WHICH IS BOT-BLOCKING AND IS NOT
+      EVIDENCE OF A LOGIN WALL. The exemption rests on T008's recorded measurement plus the
+      owner's ruling. THE OWNER'S RULING IS CONDITIONAL BY ITS OWN WORDS - "nothing should be
+      behind a login BUT IF IT IS" - so if any later card reaches the live Codex UI without
+      authenticating, PART 1 REOPENS FOR S12 AUTOMATICALLY.
+  - id: OD2
+    subject: "/contacts type=url placeholder trap - the live silent submit dead-end"
+    asked: >-
+      s17-contacts.tsrx:1013-1017 ships `type="url"` beside `placeholder="example.com"`. The
+      placeholder teaches an input the field's own native validation rejects, so submit
+      dead-ends. Fix the placeholder, change the input type, add a hint, or record and ship?
+    owner_verbatim: "Fix the placeholder"
+    ruling: >-
+      FIX THE PLACEHOLDER. `example.com` becomes a scheme-bearing value the field accepts.
+      `type="url"` STAYS - the thirteen control kinds this page exists to demonstrate are not
+      reduced to twelve to dodge a validation message, and NO NEW DOM IS ADDED. Owned by T010.
+    scope_warning: >-
+      THIS CHANGES ONE STRING IN ONE FIXTURE AND IS RE-EMITTED TO SIX LANES. It is the FIRST
+      card on this board permitted to change WHAT AN APP DOES since T005. It does not license
+      any other behavioural edit.
+
+# ---------------------------------------------------------------------------
 # KNOWN WORKING-TREE DIRT - NOT OURS, DO NOT "CLEAN UP", DO NOT `git add -A`.
 # `git status --short` shows `M pnpm-lock.yaml`, `M pnpm-workspace.yaml` and
 # `?? website/` - EXACTLY the three paths every stop_if forbids touching.
@@ -1377,5 +1418,70 @@ tasks:
       - "full_outcome_complete: true | false"
       - "the two reference comparisons, verified or not"
       - "next task if not complete"
+    receipt: null
+
+  - id: T010
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: medium
+    objective: >-
+      CLOSE THE LIVE SILENT SUBMIT DEAD-END ON /contacts, on the owner's direct ruling OD2. The
+      Website field's own placeholder teaches a value its own `type="url"` rejects, so
+      checkValidity() is false, THE SUBMIT EVENT NEVER FIRES, and NOTHING ON THE PAGE SAYS SO.
+      Change ONE STRING in the fixture and RE-DERIVE all twelve artifacts. Nothing else.
+    THE_OWNER_RULED_THIS_ONE_DIRECTLY: >-
+      OD2, verbatim: "Fix the placeholder". `type="url"` STAYS - the thirteen control kinds this
+      page exists to demonstrate are NOT reduced to twelve to dodge a validation message. NO HINT
+      TEXT IS ADDED. NO NEW DOM. The single edit is s17-contacts.tsrx:1018
+      `placeholder="example.com"` -> `placeholder="https://example.com"`.
+    THE_DIAGNOSIS_IS_ALREADY_MEASURED_DO_NOT_REDISCOVER_IT: >-
+      T005 proved it PRE-EXISTING with a true before-arm AND at 1200px where its media query does
+      not apply: with the bare host filled, no card is added; with `https://` the SAME FORM adds
+      9 -> 10. YOUR JOB IS THE FIX AND THE AFTER-ARM, not the diagnosis.
+    THIS_IS_A_DERIVED_CORPUS_AND_THE_GOLDEN_IS_PART_OF_IT: >-
+      A PLACEHOLDER LIVES IN THE ENRICHED IR. `packages/compiler/test/goldens/s17-contacts.json`
+      line 17586 carries the literal `"example.com"` and `enriched-ir.test.ts` asserts the dump is
+      BYTE-EQUAL to it. Regenerate it with `UPDATE_GOLDENS=1` - DO NOT HAND-EDIT IT, and do not
+      "fix" the test. Then re-emit six lanes and re-run six copy-emitted steps.
+    allowed_files:
+      - "packages/compiler/test/fixtures/s17-contacts.tsrx"
+      - "packages/compiler/test/goldens/s17-contacts.json"
+      - "packages/frameworks/react/generated/S17.tsx"
+      - "packages/frameworks/solid/generated/S17.tsx"
+      - "packages/frameworks/qwik/generated/S17.tsx"
+      - "packages/frameworks/svelte/generated/S17.svelte"
+      - "packages/frameworks/vue/generated/S17.vue"
+      - "packages/frameworks/angular/generated/S17.ts"
+      - "demos/react-official/src/emitted/Contacts.tsx"
+      - "demos/solid-official/src/emitted/Contacts.tsx"
+      - "demos/qwik/src/emitted/Contacts.tsx"
+      - "demos/svelte-official/src/lib/emitted/Contacts.svelte"
+      - "demos/vue-official/src/emitted/Contacts.vue"
+      - "demos/angular-official/src/emitted/Contacts.ts"
+      - "docs/goals/frameless-app-fidelity-v1/notes/T010-contacts-submit.md"
+    verify:
+      - "THE AFTER-ARM IN A REAL BROWSER AT HEAD AFTER THE CHANGE: fill the form INCLUDING the Website field BY TYPING WHAT THE PLACEHOLDER NOW SHOWS, submit, and observe the card count RISE. Do it in AT LEAST TWO LANES - react and qwik are the two T999 reproduced the dead end in, so they are the two that must show it closed."
+      - "THE BEFORE-ARM IS ALREADY ON THE BOARD (T005). Do not re-break the fixture to re-measure it. If you want a negative control, use a DELIBERATELY INVALID value like `not a url` and show submit STILL refuses - THE FIELD IS STILL type=url AND THAT IS THE POINT."
+      - "REGENERATE, NEVER HAND-EDIT: `UPDATE_GOLDENS=1 pnpm test` for the golden, then `pnpm --dir packages/frameworks/<lane> regenerate` for all six lanes, then `pnpm --dir demos/<demo> copy-emitted` for all six demos. USE A SHELL ARRAY - zsh does not word-split and it has made FOUR cards' proofs vacuously true."
+      - "DERIVATION PROOF: after regenerating, assert the ONLY changed lines under generated/ and emitted/ are the placeholder string. `git diff --stat` over those trees, then `git diff` and READ IT. A placeholder change that moves anything else is a finding, not a nuisance."
+      - "'SIX LANES AGREE' IS FORBIDDEN as evidence that the fix works. The oracle is THE BROWSER OBSERVATION."
+      - "pnpm test at EXACTLY 1 failure (the foreign ARM B) / pnpm e2e 6 x 9 RUN ALONE, never concurrently with any regeneration or a running demo / pnpm lint / pnpm check:citations AFTER every edit."
+      - "pnpm check: BASELINE IS 261 (react 113 + solid 78 + qwik 70). PREDICTED DELTA 0 - this is a string literal. Report START and END. A rise means STOP, not a new baseline."
+      - "fingerprint the owner's three dirty paths at START and FINISH with `shasum -a 256`, sorting whole output LINES: f326d314 / aeb7edc1 / f936e169, 116 files."
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to change `type=\"url\"` to anything else. THE OWNER RULED THE PLACEHOLDER, NOT THE TYPE."
+      - "You are about to add hint text, an error message, or ANY new DOM. OD2 ruled those out BY NAME."
+      - "You are about to hand-edit ANYTHING under generated/, src/emitted/, src/lib/emitted/ or goldens/. ALL FOURTEEN ARE DERIVED - they are in allowed_files so the REGENERATOR may write them, not you."
+      - "You are about to edit `enriched-ir.test.ts` or any test to make a golden mismatch go away."
+      - "You are about to rewrite T005's or T007's receipt or note. PRIOR RECEIPTS ARE HISTORY AND ARE OUTSIDE EVERY WRITE SCOPE - T008 hit this exact wall and correctly RECORDED rather than edited."
+      - "You are about to read an HTTP 200 as proof a page exists. REACT, SOLID AND VUE ANSWER 200 FOR ANY PATH. Hash the body."
+      - "You are about to claim the fix works from the emitted SOURCE rather than from a BROWSER."
+      - "pnpm check rises at all. BASELINE 261, PREDICTED DELTA 0."
+      - "pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
+      - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched. ALL THREE ARE ALREADY DIRTY, YOU DID NOT DO IT, DO NOT `git add -A`."
+      - "NEVER pkill -f. FOUR FOREIGN PIDs ARE ALIVE: 64413, 24931, 31456, 51893. Stop only the demo you started, by its recorded PID."
+      - "Verification fails twice for the same reason."
     receipt: null
 
