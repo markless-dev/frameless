@@ -58,7 +58,7 @@ goal:
       evaporates. If drag refuses and is quietly replaced by click-to-move, the axis goes
       unmeasured while the demo looks complete.
 
-active_task: T012
+active_task: T014
 
 rules:
   - "state.yaml is board truth; goal.md is the charter."
@@ -1941,7 +1941,7 @@ tasks:
   - id: T012
     type: judge
     assignee: Judge
-    status: active
+    status: done
     reasoning_hint: high
     objective: >-
       DESIGN RULING: how should persistence be AUTHORED? T007 proved there is no authoring
@@ -1958,9 +1958,9 @@ tasks:
       (1) THE CONTRACT IS SCALAR-STRING-ONLY AND THE EMITTERS DO NOT ENFORCE IT - only the inert
       vendor boundary does, so an array or numeric binding LOWERS CLEANLY AND CORRUPTS. A todo
       list is an ARRAY, which is why S11 could not have been persisted even with a surface.
-      (2) THE READ HALF IS HOST-OWNED AND ABSENT FROM ALL SIX OFFICIAL SHELLS (0 of 6 install
+      (2) REFUTED BY T012 - THE READ HALF IS GENERATED, NOT HOST-OWNED: packages/cli/src/persistence.ts emits it in closed form with a contentSha256 and a cspHash. Only a ONE-LINE <script> include per shell is host-owned, and it is absent from all six (0 of 6 install
       __FRAMELESS_STATE__), so persistence shipped without the shell half WRITES AND NEVER READS.
-      (3) THE VENDORED MARKLESS TARBALL IS PINNED. Decide whether the channel goes in Markless
+      (3) REFUTED BY T012 - THE PIN DOES NOT BIND: Markless 0.1.1 silently accepts and ignores a second state() argument with the binding unchanged. The question is still worth answering, but it was never a blocker. Decide whether the channel goes in Markless
       (correct, slower, and the owner is upstream) or in the frameless compiler (faster, and a
       second place for semantics to live).
     constraints:
@@ -1973,8 +1973,45 @@ tasks:
       - "Markless or frameless-compiler, and why"
       - "what it excludes, stated plainly"
       - "the worker spec if it should proceed"
-    receipt: null
-
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      harness: claude-code
+      summary: "RULING: author persistence as a SECOND ARGUMENT on the state() call - state('all', { storage: 'markless:filter' }) - implemented in the FRAMELESS COMPILER, not Markless. THE DECIDING CONSTRAINT IS SCALAR-STRING-ONLY, NOT THE PIN. Excludes arrays, objects, numbers, booleans, non-literal initializers, cross-tab, SSR, and four of six lanes. THE OWNER'S BUG IS NOT FIXED BY THIS: todos is an array."
+      THE_STRAIGHT_ANSWER_TO_THE_OWNER: "THIS DESIGN DOES NOT FIX THE BUG YOU FOUND. /todomvc-advanced forgets the COMPLETED state, which is `todos = state([...])` - AN ARRAY OF OBJECTS. A scalar-string channel would persist filter, draft, query, editing, remoteStatus and syncNote; it would NOT persist todos, next (number) or serverFails (boolean). TO FIX THE LITERAL BUG YOU MUST ACCEPT AN ARRAY CHANNEL: authoredInitial stops being a string, __framelessWrite grows JSON.stringify, the seed and pre-paint script grow JSON.parse with a corruption fallback, and the data-markless-* anti-flash attribute - WHICH WOULD STRINGIFY THE WHOLE TODO LIST ONTO <html> BEFORE PAINT - needs a different mechanism. AND EVEN THEN ONLY REACT AND SOLID CAN CONSUME IT. That is a separate, explicitly-costed decision the owner must take."
+      THREE_ERRORS_IN_THE_PMs_BRIEF_ALL_MEASURED: "(1) 'THE READ HALF IS HOST-OWNED' IS FALSE. packages/cli/src/persistence.ts ALREADY GENERATES the pre-paint script in closed form via generatePrePaintPersistenceScript(), with a contentSha256 AND a cspHash, written by node-runtime.ts. The file in demos/persistence is THAT GENERATOR'S OUTPUT, not hand-written. What is host-owned is ONE <script src> TAG PER SHELL - a one-line change in six files, not a feature. (2) 'THE PIN BINDS' IS FALSE. Measured through the real buildEnrichedIr against pinned Markless 0.1.1: state('light', { storage: 'markless:theme' }) BUILDS CLEANLY and the binding is IDENTICAL to baseline - valueKind 'scalar', initialValue 'light', NO DIAGNOSTIC. Markless SILENTLY IGNORES a second argument. (3) 'ONLY THE INERT VENDOR BOUNDARY ENFORCES STRING-ONLY' IS A NAMING ARTIFACT. MarklessStorageSourceFact and its validator live in packages/compiler/src/persistence.ts - FRAMELESS-OWNED CODE. Markless ships nothing there."
+      THE_WRAPPER_SHAPE_IS_DISQUALIFIED_BY_MEASUREMENT: "state(persist('light', ...)) yields valueKind 'unknown' with initialValue GONE - IT DESTROYS THE FACT THE CONTRACT NEEDS. The on-the-call second argument survives intact. That is why the shape is decided by measurement rather than taste."
+      WHY_THE_DECIDING_CONSTRAINT_IS_SCALAR_NOT_THE_PIN: "authoredInitial is a string and __framelessWrite calls localStorage.setItem(key, value) WITH NO ENCODER, so the channel must be REFUSABLE PER BINDING AT MINT TIME - which the on-the-call form supports (the binding is right there with its valueKind) and a module-level manifest form does not. buildPersistenceRecords ALREADY cross-checks each fact against the enriched binding: THE SCALAR GUARD IS AN UNWRITTEN `if` AT A CHOKE POINT THAT ALREADY EXISTS."
+      COST_OF_CHOOSING_FRAMELESS_STATED_PLAINLY: "The second argument is invisible to state<T>(initial: T)'s types - SEMANTICS IN TWO PLACES until Markless 0.1.2. Mitigated by keeping the shape BYTE-IDENTICAL to what Markless would adopt, SO MIGRATION IS A DELETION IN FRAMELESS, not a rewrite of any app. And .tsrx is in no tsconfig include, so pnpm check never sees it - the 267 baseline is unaffected."
+      ONE_DEFECT_BLOCKS_AND_ONE_DOES_NOT: "SOLID'S DROPPED WRITE-THROUGH BLOCKS. Confirmed BY MECHANISM: appendPersistenceWrites only rewrites an ExpressionStatement whose expression is a CallExpression with an Identifier callee - the signal setter - and a handler-only binding lowers to a plain `let` assigning via AssignmentExpression, WHICH NEVER MATCHES. Open the channel and solid is 1 of only 2 consuming lanes, SEEDING FROM STORAGE AND NEVER WRITING BACK, WITH NO REFUSAL. THE INITIALIZER SWAP DOES NOT BLOCK: for a genuine string binding authoredInitial EQUALS initialValue, and the real extractor throws on a non-string, so it is UNREACHABLE today - it is THE ARRAY CHANNEL'S TRIPWIRE, not pre-work."
+      A_TRAP_THE_WORKER_MUST_NOT_WALK_INTO: "A PERSISTED FIXTURE CANNOT ENTER THE s(\\\\d+) CORPUS. Four lanes throw on persistence-bearing IR so their regenerate.ts would break, and the /^s(\\\\d+)-[\\\\w-]+\\\\.json$/ inventory is asserted exactly and moves the vue gate's derived census. generated-persistence/ ALREADY EXISTS as the two-lane escape hatch."
+      rationale: "Three brief errors, all measured rather than argued. The channel goes in frameless NOW, in the shape Markless would later adopt, making migration a deletion. Scalar-only is the honest scope and it excludes the owner's array. Solid's write-through hole blocks because solid is one of only two consuming lanes. T007's own correction is upheld and confirmed by mechanism: the four refusing lanes each carry an explicit emitter throw, a persistence-render-lowering gate policy AND a shipped mutation test - BEST-guarded, not unguarded."
+      evidence:
+        - "MEASURED via real buildEnrichedIr, pinned Markless 0.1.1: state('light', { storage: ... }) BUILDS; binding IDENTICAL to baseline. state('light','markless:theme') identical too. NO DIAGNOSTIC"
+        - "MEASURED same probe: state(persist(...)) yields valueKind 'unknown', initialValue ABSENT - wrapper shape disqualified"
+        - "packages/cli/src/persistence.ts generatePrePaintPersistenceScript() emits the closed-form seed with contentSha256 and cspHash; node-runtime.ts writes it. THE READ HALF IS GENERATED"
+        - "packages/compiler/src/build.ts helperCallArgument() already locates the state(...) CallExpression and returns arguments[0]; parseModule proves frameless already reparses author source"
+        - "packages/compiler/src/persistence.ts adaptPersistenceFacts and validateSourceFact are FRAMELESS-OWNED; buildPersistenceRecords already correlates each fact to the enriched binding, which carries valueKind"
+        - "Markless 0.1.1 d.ts: SemanticGraphBinding has NO storage field but DOES carry valueKind and initialValue - confirming T007 and supplying the scalar guard"
+        - "solid/src/emitter/index.ts appendPersistenceWrites only rewrites a CallExpression-with-Identifier-callee statement; a handler-only plain-let binding never matches. T007's defect confirmed BY MECHANISM"
+        - "react and solid persistenceSeed return t.stringLiteral(record.authoredInitial) whenever lowering is not pre-paint - unreachable through the real extractor"
+        - "Root tsconfig.json includes only packages/*/src/**/*.ts - .tsrx is TYPE-CHECKED BY NOTHING in pnpm check"
+        - "s11-todomvc-advanced.tsrx: todos = state([...]) ARRAY; next = state(4) NUMBER; serverFails = state(false) BOOLEAN; filter = state('all') STRING"
+        - "__FRAMELESS_STATE__ appears ONLY under demos/persistence - 0 of 6 official shells. packages/cli depends only on @frameless/react and @frameless/solid, so the CLI is a TWO-LANE pipeline BY CONSTRUCTION"
+        - "Gate policy persistence-render-lowering present in qwik, angular, vue and svelte gates - T007's correction upheld"
+      missing_evidence:
+        - "UNMEASURED: whether @markless/typescript-plugin red-squiggles state(initial, options) in the OWNER'S EDITOR. pnpm check is proven unaffected; THE EDITOR EXPERIENCE IS NOT."
+        - "UNCHECKED: whether react has an equivalent handler-only write-through hole on SHARED/store cells, as opposed to the component-local path T007 measured."
+        - "UNMEASURED: SSR interaction. The seed reads globalThis.__FRAMELESS_STATE__ and localStorage, both client-only."
+      remaining_blockers:
+        - "THE OWNER'S LITERAL BUG IS NOT FIXED BY THIS DESIGN - see the straight answer above. An array channel is a SEPARATE, EXPLICITLY-COSTED decision the owner must take."
+        - "EVEN WITH THE ARRAY CHANNEL, /todomvc-advanced ONLY SURVIVES IN REACT AND SOLID."
+        - "THE SHELL WIRING IS A SECOND SLICE: one <script src> tag in two index.html files plus routing those demos through the pre-paint emitter. Small and mechanical, but OUT OF SCOPE for the channel card."
+        - "SOLID'S DROPPED WRITE-THROUGH must be closed or refused INSIDE the channel card, and still needs a docs/DEFECTS.md entry."
+        - "THE JUDGE'S HARNESS FORBIDS REPORT .md FILES - its receipt IS the ruling, as T009's was."
+      verification_attempts: 1
+      stopped_because: null
   - id: T013
     type: worker
     assignee: Worker
@@ -2035,7 +2072,7 @@ tasks:
   - id: T014
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
     objective: >-
       LAND T009's ADMIT RULING. Admit `component-metadata:imports` to BASELINE_FORM_INVENTORY at
@@ -2140,6 +2177,78 @@ tasks:
       - "A form needs a ruling you cannot make from the six-gate policy alone - RECORD IT AND STOP. Two of the three angular forms may be in that category."
       - "You are about to raise a derived floor to admit a form. Report the cost and stop."
       - "NEVER pkill -f on a broad pattern. TWO FOREIGN PROCESSES ARE ALIVE: node PID 64413 on 5175 and PID 24931 on 5178."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
+  - id: T016
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    objective: >-
+      LAND T012's RULING: open the SCALAR-STRING persistence authoring channel in the FRAMELESS
+      COMPILER, and prove one app survives a refresh FROM AN AUTHORED .tsrx with NO synthesized
+      record anywhere in the path. Two lanes only: react and solid.
+    THE_SHAPE_AND_WHY_IT_IS_DECIDED_BY_MEASUREMENT: >-
+      state('all', { storage: 'markless:filter' }) - a SECOND ARGUMENT on the state() call.
+      MEASURED against pinned Markless 0.1.1: it BUILDS CLEANLY and the binding is IDENTICAL to
+      baseline (valueKind scalar, initialValue intact), no diagnostic - MARKLESS SILENTLY IGNORES
+      IT, SO THE PIN DOES NOT BIND. The wrapper form state(persist(...)) is DISQUALIFIED: it
+      yields valueKind 'unknown' with initialValue GONE. helperCallArgument already resolves that
+      exact CallExpression for arguments[0]; arguments[1] is the adjacent index.
+    THE_DECIDING_CONSTRAINT_IS_SCALAR_ONLY: >-
+      authoredInitial is a string and __framelessWrite calls localStorage.setItem WITH NO ENCODER,
+      so the channel MUST BE REFUSABLE PER BINDING AT MINT TIME - which the on-the-call form
+      supports and a module-level manifest does not. buildPersistenceRecords ALREADY correlates
+      each fact to the enriched binding: THE SCALAR GUARD IS AN UNWRITTEN `if` AT A CHOKE POINT
+      THAT ALREADY EXISTS.
+    IT_DOES_NOT_FIX_THE_OWNERS_BUG_AND_MUST_NOT_PRETEND_TO: >-
+      /todomvc-advanced forgets state:todos, AN ARRAY OF OBJECTS. This channel persists filter,
+      draft, query, editing, remoteStatus and syncNote - NOT the completed state. SAY SO in the
+      note. An array channel is a separate, explicitly-costed decision the OWNER must take.
+    allowed_files:
+      - "packages/compiler/src/build.ts"
+      - "packages/compiler/src/persistence.ts"
+      - "packages/compiler/src/schema.ts"
+      - "packages/compiler/test/persistence.test.ts"
+      - "packages/compiler/test/fixtures/persistence-facts.ts"
+      - "packages/compiler/test/fixtures/persistence-authored.tsrx"
+      - "packages/frameworks/solid/src/emitter/index.ts"
+      - "packages/frameworks/solid/test/emitter.test.ts"
+      - "packages/frameworks/solid/scripts/**"
+      - "packages/frameworks/solid/generated-persistence/**"
+      - "packages/frameworks/react/test/emitter.test.ts"
+      - "packages/frameworks/react/scripts/**"
+      - "packages/frameworks/react/generated-persistence/**"
+      - "packages/cli/src/persistence.ts"
+      - "packages/cli/test/persistence.test.ts"
+      - "docs/DEFECTS.md"
+      - "docs/goals/frameless-app-axes-v1/notes/T016-persistence-channel.md"
+    verify:
+      - "AUTHORED, NOT SYNTHESIZED: an authored .tsrx carrying state('x', { storage: ... }) produces a NON-ZERO ir.records.persistence through the real buildEnrichedIr, and NO test or script in the proof path constructs a record by hand. SHOW THE FACT CAME FROM THE AUTHOR'S OWN BYTES."
+      - "SCALAR REFUSAL, VERBATIM: bindings whose enriched valueKind is 'array', 'object' or 'unknown', and bindings whose initialValue is absent or non-string, REFUSE AT MINT TIME with a recorded message. PROVE THE REFUSAL FIRES ON AN ARRAY BINDING SHAPED LIKE s11's todos."
+      - "THE CORPUS IS UNMOVED: re-run the 24-fixture authoring census and assert TOTAL persistence records is still 0 for every EXISTING fixture. KEEP T007's POSITIVE CONTROL so a dead extractor cannot pass."
+      - "THE FOUR LANES STILL REFUSE: qwik, svelte, vue and angular still throw verbatim on persistence-bearing IR, and each lane's existing gate + emitter MUTATION test still passes untouched."
+      - "SOLID NO LONGER SILENTLY DROPS: for a handler-only persisted binding, solid emits the write-through (matching react's 1 __framelessWrite) OR REFUSES with a message. ZERO WRITES WITH NO REFUSAL IS A FAILURE. Keep the react/solid cross-lane pair naming each other."
+      - "BROWSER RELOAD PROOF: drive the authored app in chromium, change the value, RELOAD, assert it SURVIVED and localStorage is NON-EMPTY. Plus BOTH negative controls - clear the key, AND PLANT a value the app never wrote. A unit test asserting a seed was written is NOT this proof."
+      - "PRE-PAINT, GENERATED: the seed script must come from generatePrePaintPersistenceScript, NOT A KEYBOARD. Assert its contentSha256 matches the served bytes."
+      - "DERIVATION: delete every generated-persistence artifact, ASSERT PRESENT-AFTER-DELETE == 0 FIRST, rebuild, shasum byte-identical."
+      - "MEASURE AND RECORD whether @markless/typescript-plugin red-squiggles state(initial, options) IN AN EDITOR. pnpm check is proven unaffected; the editor experience is UNMEASURED and the owner authors in one."
+      - "pnpm test at EXACTLY 1 failure / pnpm check NOT ABOVE 267 / pnpm e2e 6 x 9 / pnpm lint / pnpm check:citations"
+      - "git diff --exit-code over every s-numbered fixture, golden and generated artifact, PAIRED WITH git status --short"
+      - "owner fingerprint at START and FINISH - SORT THE WHOLE shasum OUTPUT LINES"
+    stop_if:
+      - "You are about to persist an ARRAY, OBJECT, NUMBER or BOOLEAN. The contract is scalar-string-only. REFUSE IT AND RECORD THE MESSAGE."
+      - "You are about to add, renumber or edit an s-numbered corpus fixture or golden. FOUR LANES THROW ON PERSISTENCE-BEARING IR, so a persisted scenario breaks their regenerate and moves the vue gate's derived census. USE generated-persistence/, WHICH EXISTS FOR EXACTLY THIS."
+      - "You are about to SYNTHESIZE a persistence record in a test, fixture or regenerate script to make the end-to-end proof pass. THAT IS THE VACUOUS PROOF THIS CARD EXISTS TO END."
+      - "You are about to HAND-WRITE the pre-paint script. It comes out of generatePrePaintPersistenceScript like everything else."
+      - "You need demos/*/index.html or any of the six official shells. THAT IS THE NEXT SLICE, not this one."
+      - "You are about to change @markless/core, the vendored tarballs, or anything in vendor/."
+      - "Solid's dropped write-through can NEITHER be fixed NOR refused - stop and report. DO NOT SHIP A LANE THAT SEEDS FROM STORAGE AND NEVER WRITES BACK."
+      - "You are about to report 'the seed was written' as the behavioural proof. RELOAD THE PAGE or record the lane as UNVERIFIED."
+      - "pnpm check rises above 267, pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
+      - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched."
+      - "NEVER pkill -f on a broad pattern. FOREIGN node PID 64413 holds 5175 and PID 24931 holds 5178."
       - "Verification fails twice for the same reason."
     receipt: null
 
