@@ -1,4 +1,5 @@
 import { $, component$ } from "@qwik.dev/core";
+import { useNavigate } from "@qwik.dev/router";
 import { HnFront } from "../../emitted/HnFront.jsx";
 
 // THE FOURTH APPLICATION - the HACKER NEWS FRONT PAGE - and the FIRST in this
@@ -16,13 +17,34 @@ import { HnFront } from "../../emitted/HnFront.jsx";
 // exactly as S10, S11 and S12 seed theirs. There is no seed prop in any lane:
 // IR-8 has no lowering for an array type.
 //
-// WHAT THIS PAGE CANNOT DO, AND WHAT IS NOT FAKED. `past`, `comments`, `ask`,
-// `show`, `jobs` and `submit` are INERT: `.tsrx` has no routing construct at
-// all, and three host routes would mean three instances with independent state,
-// which is the opposite of the six-lane comparison this corpus exists to make.
-// The footer search FILTERS IN PLACE rather than handing the query to Algolia,
-// for the same reason. What DOES work is upvote (which moves the score, hides
-// the arrow and reveals `unvote`), unvote, hide, and the search filter.
+// WHAT THIS PAGE CANNOT DO, AND WHAT IS NOT FAKED - REWRITTEN BY
+// frameless-app-fidelity-v1 T006, BECAUSE THE OLD VERSION DREW A FALSE
+// INFERENCE FROM A TRUE PREMISE. It said `past`, `comments`, `ask`, `show`,
+// `jobs` and `submit` are inert BECAUSE `.tsrx` has no routing construct. The
+// premise is true - packages/compiler/src/schema.ts declares no route node kind
+// - but it never implied the conclusion: every stub in `HnFront` already emits
+// `event.preventDefault()` and then `props.onTrace$('nav', { to: ... }, event)`,
+// so the destination was NAMED, LOWERED AND TYPED all along. What was missing
+// was the SINK. THIS ROUTE USED TO PASS `$(() => {})` and that empty body is
+// where the links actually died.
+//
+// SO THE HANDLER BELOW DISPATCHES THROUGH THIS LANE'S REAL ROUTER. `useNavigate`
+// is @qwik.dev/router's own client navigation - the same one a `<Link>` uses -
+// which makes qwik the one lane of the six that reaches /hn-item WITHOUT a
+// document reload. The logo and the wordmark reach /hn; a story's comments link
+// reaches /hn-item, which THIS LANE SHIPS and svelte and vue do not.
+//
+// WHAT IS STILL INERT, AND IT IS SEVENTEEN OF THIRTY-ONE STUBS RATHER THAN SIX:
+// `new`, `past`, the MASTHEAD `comments` (which is /newcomments, not a story's
+// thread), `ask`, `show`, `jobs`, `submit`, `login`, `More` and the eight footer
+// links. Each is A SEPARATE APPLICATION this corpus does not contain, so no
+// routing construct in any authoring surface would reach them, and the page
+// LABELS them in `.hn-note` rather than pointing them somewhere false. `open`
+// is left alone on purpose too: it belongs to a story TITLE carrying a REAL
+// `href`, held on the page by the fixture's own `preventDefault`.
+// The footer search FILTERS IN PLACE rather than handing the query to Algolia.
+// What else works is upvote (which moves the score, hides the arrow and reveals
+// `unvote`), unvote, hide, and the search filter.
 //
 // ONE STYLESHEET, AND IT IS THIS REPOSITORY'S OWN WORK. Nothing was copied from
 // news.ycombinator.com - not a byte of `news.css`. `demos/shared/hn-css/hn.css`
@@ -38,9 +60,34 @@ import { HnFront } from "../../emitted/HnFront.jsx";
 // Like /todomvc, /todomvc-advanced and /codex this page is deliberately NOT part
 // of the 6 x 9 three-way contract - `scripts/e2e.mjs` pins `threeWayScenarios`
 // to the literal ['s1'..'s9'] - so it is browsable only.
-export default component$(() => (
-  <>
-    <link rel="stylesheet" href="/hn-css/hn.css" />
-    <HnFront onTrace$={$(() => {})} />
-  </>
-));
+/**
+ * The route a trace from `HnFront` should reach, or `null` if none exists.
+ *
+ * PURE, AND EXPORTED SO THE `null` ARM IS READABLE RATHER THAN IMPLIED. Two
+ * names map onto the two routes this corpus actually contains; everything else
+ * returns `null`, because there is nothing honest to map it to.
+ */
+export function hnDestination(
+  name: string,
+  detail: Record<string, unknown>,
+): "/hn" | "/hn-item" | null {
+  if (name === "nav" && detail["to"] === "home") return "/hn";
+  if (name === "comments") return "/hn-item";
+  return null;
+}
+
+export default component$(() => {
+  const navigate = useNavigate();
+  return (
+    <>
+      <link rel="stylesheet" href="/hn-css/hn.css" />
+      <HnFront
+        onTrace$={$((name: string, detail: Record<string, unknown>) => {
+          const to = hnDestination(name, detail);
+          if (to) return navigate(to);
+          return undefined;
+        })}
+      />
+    </>
+  );
+});

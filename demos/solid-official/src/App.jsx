@@ -28,6 +28,51 @@ import { WhitespaceBoard } from './emitted/WhitespaceBoard.jsx'
 // One shared IR, three emitters. These props are the same ones demos/qwik passes
 // in src/routes/**, so the three official demos are directly comparable.
 const noTrace = () => {}
+
+// ---------------------------------------------------------------------------
+// THE /hn NAV SINK, added by frameless-app-fidelity-v1 T006, and IDENTICAL in
+// shape to demos/react-official/src/App.jsx's - deliberately, because the two
+// lanes have the same router (none) and the same door out of it.
+//
+// THE EMITTED PAGE WAS NEVER MISSING THE DESTINATION. Every stub link in
+// `HnFront` already emits `event.preventDefault()` then
+// `onTrace('nav', { to: 'home' }, event)`; the intent is NAMED, LOWERED AND
+// TYPED. What was missing was the SINK - this module passed `noTrace`, whose
+// body is `{}` - so a correctly emitted navigation arrived nowhere. THE LINKS
+// DIED HERE, which is why no compiler in six lanes could see it.
+//
+// `hnDestination` RETURNS `null` FOR EVERYTHING IT CANNOT REACH, and that is
+// the honest half: seventeen of the thirty-one stubs on /hn are each a separate
+// application this corpus does not contain, so the page LABELS them in
+// `.hn-note` rather than pointing them somewhere false. `open` is absent on
+// purpose - that trace belongs to a story TITLE whose `href={story.url}` is a
+// REAL url, held on the page by the fixture's own `preventDefault` (constraint
+// 11), and navigating on it would break a working affordance.
+//
+// A FULL DOCUMENT NAVIGATION IS THIS LANE'S ROUTER. `scenarioFor(url)` below is
+// the routing here: this is the stock create-vite SSR scaffold, which threads
+// `req.originalUrl` into `render(url)` and ships no client router. So
+// `location.assign` is the same door the address bar uses - and it is also why
+// the proof that this works is a BODY HASH rather than an HTTP status, since
+// this lane answers 200 for any path at all.
+// ---------------------------------------------------------------------------
+/**
+ * The route a trace from `HnFront` should reach, or `null` if none exists.
+ *
+ * @param {string} name
+ * @param {Record<string, unknown>} detail
+ * @returns {'/hn' | '/hn-item' | null}
+ */
+export function hnDestination(name, detail) {
+	if (name === 'nav' && detail['to'] === 'home') return '/hn'
+	if (name === 'comments') return '/hn-item'
+	return null
+}
+
+const hnTrace = (name, detail) => {
+	const to = hnDestination(name, detail)
+	if (to) window.location.assign(to)
+}
 const s2Seed = [
   { id: 'a', title: 'one', done: false },
   { id: 'b', title: 'two', done: true },
@@ -400,7 +445,7 @@ export default function App(props) {
       </Match>
       <Match when={scenario() === 'hn'}>
         <link rel="stylesheet" href="/hn-css/hn.css" />
-        <HnFront onTrace={noTrace} />
+        <HnFront onTrace={hnTrace} />
       </Match>
       {/*
         THE ONLY ROUTE THAT LINKS A STYLESHEET, and deliberately so. The pair is

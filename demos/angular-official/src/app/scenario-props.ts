@@ -9,7 +9,9 @@
  * unrelated tests.
  *
  * `onTrace` is the emitted components' trace callback. The official demos are
- * activation lanes, not analyzer lanes, so every lane passes a no-op.
+ * activation lanes, not analyzer lanes, so every route here passes a no-op -
+ * EVERY ROUTE EXCEPT /hn, which since frameless-app-fidelity-v1 T006 passes a
+ * real sink built on `hnDestination` below.
  *
  * There is no `scenarioFor(url)` counterpart here, and that is the one real
  * structural difference from the five incumbent lanes: they branch on a URL
@@ -19,6 +21,42 @@
  * therefore the smaller delta here, not the larger one. See `app.routes.ts`.
  */
 export const noTrace = (): void => {};
+
+/**
+ * The route a trace from `HnFront` should reach, or `null` if none exists.
+ *
+ * PURE, AND THE SAME MAPPING IN ALL SIX LANES - only the navigation call that
+ * consumes it differs, because the six lanes have six routers. It exists at all
+ * because /hn's links were NEVER missing a destination: every stub in the
+ * emitted `HnFront` already carries `event.preventDefault()` and then
+ * `onTrace('nav', { to: 'home' }, event)`, so the intent was named, lowered and
+ * typed by the emitter. WHAT WAS MISSING WAS THE SINK - `noTrace` above - and
+ * that is where the links died in all six lanes at once. THIS FILE IS THE
+ * SHARPEST PLACE TO SAY SO, because the comment above already recorded that
+ * this lane, alone of the six, has a real `provideRouter` and an
+ * `app.routes.ts`: the router was here the whole time and nothing called it.
+ *
+ * IT RETURNS `null` FOR SEVENTEEN OF THE THIRTY-ONE STUBS ON /hn AND THAT IS
+ * NOT AN OMISSION. `new`, `past`, the masthead `comments` (/newcomments, which
+ * is not a story thread), `ask`, `show`, `jobs`, `submit`, `login`, `More` and
+ * the eight footer links are EACH A SEPARATE APPLICATION; no routing construct
+ * in any authoring surface would reach them, so the page labels them in
+ * `.hn-note` instead. `open` is absent for a different reason: that trace
+ * belongs to a story TITLE whose `href` is a REAL url, held on the page by the
+ * fixture's own `preventDefault`, and navigating on it would break something
+ * that works.
+ *
+ * BOTH ARMS ARE LIVE IN THIS LANE, which is true of only four of the six:
+ * svelte and vue emit no `HnItem` at all and have no /hn-item route to reach.
+ */
+export function hnDestination(
+  name: string,
+  detail: Record<string, unknown>,
+): '/hn' | '/hn-item' | null {
+  if (name === 'nav' && detail['to'] === 'home') return '/hn';
+  if (name === 'comments') return '/hn-item';
+  return null;
+}
 
 export const s2Seed = [
   { id: 'a', title: 'one', done: false },

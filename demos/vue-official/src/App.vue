@@ -18,6 +18,7 @@ import TaskBoard from './emitted/TaskBoard.vue'
 import WhitespaceBoard from './emitted/WhitespaceBoard.vue'
 import {
   armS8Gate,
+  hnDestination,
   noTrace,
   s8Gate,
   s8ResolvedGate,
@@ -40,6 +41,27 @@ import {
 // directly comparable.
 const props = defineProps<{ url?: string }>()
 const scenario = computed(() => scenarioFor(props.url))
+
+/**
+ * The /hn nav sink, added by frameless-app-fidelity-v1 T006.
+ *
+ * `location.assign` IS THIS LANE'S ROUTER RATHER THAN A WAY AROUND ONE. This
+ * demo is the create-vite SSR-Vue scaffold: `scenarioFor(props.url)` above IS
+ * the routing, the url arrives as a PROP so that server and client branch
+ * identically, and there is no client router to call. A document navigation is
+ * therefore the same door the address bar uses. It is also why the proof that
+ * this works is a BODY HASH and not an HTTP status - this lane answers 200 for
+ * any path at all.
+ *
+ * ONLY '/hn' IS ACTED ON. `hnDestination` also names '/hn-item', and this lane
+ * has no such route because it emits no `HnItem`; the guard is explicit so that
+ * a future lane gaining the page is a ONE-LINE change here and not a silent
+ * behaviour difference nobody wrote down.
+ */
+const hnTrace = (name: string, detail: Record<string, unknown>): void => {
+  const to = hnDestination(name, detail)
+  if (to === '/hn') window.location.assign(to)
+}
 
 /**
  * The /todomvc-advanced branch, decided HERE rather than inside `scenarioFor`.
@@ -278,9 +300,25 @@ const s8Ready = ref<Promise<string>>(s8ResolvedGate)
     IT CANNOT LOAD ON APPEAR AND NOTHING HERE PRETENDS OTHERWISE: fetch-on-render
     is unreachable in every lane, so the twelve stories are seeded inside the
     emitted component exactly as TodoMVC's are. No seed prop - IR-8 has no array
-    lowering. `past`, `comments`, `ask`, `show`, `jobs` and `submit` are INERT
-    because `.tsrx` has no routing construct, and the footer search FILTERS IN
-    PLACE rather than reaching Algolia for the same reason.
+    lowering.
+
+    THE LINKS, CORRECTED BY frameless-app-fidelity-v1 T006. The old wording said
+    `past`, `comments`, `ask`, `show`, `jobs` and `submit` are inert BECAUSE
+    `.tsrx` has no routing construct. TRUE PREMISE, FALSE INFERENCE: every stub
+    already emitted `preventDefault()` plus an `onTrace('nav', ...)` naming its
+    destination, and the `noTrace` this route used to pass was where they died.
+    The logo and the wordmark now reach /hn through `hnTrace`. SEVENTEEN OF THE
+    THIRTY-ONE STUBS STAY INERT BY DESIGN - `new`, `past`, the masthead
+    `comments` (/newcomments, not a story thread), `ask`, `show`, `jobs`,
+    `submit`, `login`, `More` and the eight footer links are EACH A SEPARATE
+    APPLICATION, which no routing construct anywhere would reach - and the page
+    LABELS them in `.hn-note` rather than pointing them somewhere false.
+    AND IN THIS LANE THE PER-STORY COMMENTS LINK IS INERT TOO, which is the one
+    thing this route may not fake: THIS LANE EMITS NO `HnItem` AT ALL. The
+    emitter's refusal, verbatim - "Vue emitter has no lowering for a same-module
+    component reference (HnItem)" - is why there is no /hn-item branch below to
+    navigate to. "The comments link works" IS A FOUR-LANE CLAIM.
+    The footer search FILTERS IN PLACE rather than reaching Algolia.
 
     ONE STYLESHEET, AND IT IS THIS REPOSITORY'S OWN WORK - nothing was copied from
     news.ycombinator.com. `demos/shared/hn-css/hn.css` reproduces the measured
@@ -415,7 +453,7 @@ const s8Ready = ref<Promise<string>>(s8ResolvedGate)
   </template>
   <template v-else-if="hn">
     <link rel="stylesheet" href="/hn-css/hn.css" />
-    <HnFront v-bind:onTrace="noTrace" />
+    <HnFront v-bind:onTrace="hnTrace" />
   </template>
   <RenderOnce
     v-else-if="scenario === 's1'"

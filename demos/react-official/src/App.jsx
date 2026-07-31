@@ -28,6 +28,54 @@ import { WhitespaceBoard } from './emitted/WhitespaceBoard.jsx'
 // One shared IR, three emitters. These props are the same ones demos/qwik passes
 // in src/routes/**, so the three official demos are directly comparable.
 const noTrace = () => {}
+
+// ---------------------------------------------------------------------------
+// THE /hn NAV SINK, and it is the WHOLE of what frameless-app-fidelity-v1 T006
+// had to add in this lane.
+//
+// THE EMITTED PAGE WAS NEVER MISSING THE DESTINATION. Every stub link in
+// `HnFront` already carries `event.preventDefault()` followed by
+// `onTrace('nav', { to: 'home' }, event)` - the intent is NAMED, LOWERED AND
+// TYPED by the emitter. What was missing was the SINK: this module passed
+// `noTrace` on the /hn route, so a correctly emitted navigation intent arrived
+// at a function whose body is `{}`. THE LINKS DIED HERE, not in the emitter and
+// not in the authoring surface, which is why no compiler in six lanes could see
+// it and why every check passed.
+//
+// `hnDestination` IS PURE AND IS THE PIECE WORTH READING. It maps trace names
+// onto the two routes this corpus actually contains and returns `null` for
+// everything else, WHICH IS THE POINT: seventeen of the thirty-one stubs are
+// each a separate application, so there is nothing to map them to and the page
+// says so in `.hn-note` instead. `open` is deliberately absent too - that is a
+// story TITLE, whose `href={story.url}` is a real url held on the page by the
+// fixture's own `preventDefault` (constraint 11), and navigating on it would
+// break a working affordance rather than fix a broken one.
+//
+// A FULL DOCUMENT NAVIGATION IS THIS LANE'S ROUTER, not a shortcut around one.
+// `scenarioFor(url)` above IS the routing here: this demo is the stock
+// create-vite SSR scaffold, which threads `req.originalUrl` into `render(url)`
+// and ships no client router at all. `window.location.assign` is therefore the
+// same door the address bar uses, and the server re-renders the target route -
+// which is also why the assertion that this works is a BODY HASH and not an
+// HTTP status: this lane answers 200 for any path whatsoever.
+// ---------------------------------------------------------------------------
+/**
+ * The route a trace from `HnFront` should reach, or `null` if none exists.
+ *
+ * @param {string} name
+ * @param {Record<string, unknown>} detail
+ * @returns {'/hn' | '/hn-item' | null}
+ */
+export function hnDestination(name, detail) {
+	if (name === 'nav' && detail['to'] === 'home') return '/hn'
+	if (name === 'comments') return '/hn-item'
+	return null
+}
+
+const hnTrace = (name, detail) => {
+	const to = hnDestination(name, detail)
+	if (to) window.location.assign(to)
+}
 const s2Seed = [
   { id: 'a', title: 'one', done: false },
   { id: 'b', title: 'two', done: true },
@@ -317,7 +365,7 @@ export default function App({ url }) {
       return (
         <>
           <link rel="stylesheet" href="/hn-css/hn.css" />
-          <HnFront onTrace={noTrace} />
+          <HnFront onTrace={hnTrace} />
         </>
       )
     case 'hn-item':
@@ -348,8 +396,21 @@ export default function App({ url }) {
       //       WHAT WORKS: collapse `[-]` and expand `[+]` on any comment - which take the
       //       whole recursive subtree with them - and the per-comment upvote arrow.
       //       WHAT IS INERT AND NOT FAKED: the story vote arrow, `hide`, `past`,
-      //       `favorite`, `reply` and the masthead links. `.tsrx` has no routing
-      //       construct, so this page is not reachable from /hn by clicking.
+      //       `favorite`, `reply` and the masthead links.
+      //       AND THE SENTENCE THAT USED TO FOLLOW THAT LIST WAS A NON-SEQUITUR,
+      //       CORRECTED BY frameless-app-fidelity-v1 T002. It read "`.tsrx` has no
+      //       routing construct, SO this page is not reachable from /hn by
+      //       clicking." THE PREMISE IS TRUE - verified at
+      //       packages/compiler/src/schema.ts, which declares no route node kind -
+      //       AND THE "SO" IS FALSE. Every stub on /hn already emitted
+      //       `preventDefault()` + `onTrace('comments', { id }, event)`, so the
+      //       destination was named and typed all along; what was missing was a
+      //       SINK, and `noTrace` above was it. THIS PAGE IS NOW REACHED BY
+      //       CLICKING a story's comments link on /hn - see `hnDestination`.
+      //       THAT IS A FOUR-LANE CLAIM AND IS LABELLED AS ONE: svelte and vue
+      //       emit no `HnItem` at all, so those two lanes have no /hn-item to
+      //       reach and their comments links stay inert. The /hn page says so
+      //       itself in `.hn-note`.
       //       WHAT IS ABSENT: the reference's reply BOX. A controlled `<textarea>` needs
       //       a scalar cell, and the Solid emitter mis-lowers every scalar read inside a
       //       handler once a module carries a same-module component reference - see

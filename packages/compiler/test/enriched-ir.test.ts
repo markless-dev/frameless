@@ -570,6 +570,16 @@ const EXPECTED_HOSTS: Record<(typeof FIXTURES)[number], Array<[string, string]>>
 		['a', 'class'],
 		['a', 'class'],
 		['footer', 'class'],
+		// THE `.hn-note` DISCLOSURE, added by frameless-app-fidelity-v1 T006, and
+		// the corpus's SECOND instance of the s16 `tb-note` shape rather than a new
+		// one. `p` is not new to this fixture's census, but this is its only
+		// appearance in the FOOTER, and the two spans beneath it are the mark and
+		// the text. It labels the SEVENTEEN of thirty-one stub links that have no
+		// destination in this corpus and cannot acquire one - each is a separate
+		// application - which is T002's ruled residual: LABELLED, NOT FIXED.
+		['p', 'class'],
+		['span', 'class'],
+		['span', 'class'],
 		['span', 'class'],
 		['a', 'class'],
 		['span', 'class'],

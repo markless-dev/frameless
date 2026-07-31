@@ -133,68 +133,72 @@ import { Component, Input, type OnInit } from '@angular/core';
 					}
 				</main>
 				<footer class="hn-foot" data-hn="footer">
+					<p class="hn-note" data-hn="stubnote">
+						<span class="hn-notemark">!</span>
+						<span class="hn-notetext">SEVENTEEN OF THE THIRTY-ONE STUB LINKS ON THIS PAGE HAVE NO DESTINATION AND CANNOT ACQUIRE ONE, and that absence is labelled here rather than faked. new, past, comments, ask, show, jobs, submit, login, More and the eight footer links are EACH A SEPARATE APPLICATION the reference has and this corpus does not, so pointing them anywhere would be a lie about what was built. WHAT DOES NAVIGATE: the per-story comments link reaches the item page in the FOUR lanes that emit it — svelte and vue refuse a same-module component reference outright, so those two lanes have no item page to reach. The logo and the Hacker News wordmark point at this front page, which is the page you are already on: five lanes re-enter it, and the Angular router declines a same-URL navigation, so nothing moves there and nothing is faked. THE TWELVE STORY TITLES ARE REAL URLS and the status bar and a middle click both behave; a left click is held on this page by a deliberate preventDefault, because a demo that left for github.com on the first click would be unobservable in every lane at once.</span>
+					</p>
 					<span class="hn-footlinks">
 						<a
 							class="hn-navlink"
 							href="#/guidelines"
 							data-foot="guidelines"
-							(click)="onH44Click($event)"
+							(click)="onH47Click($event)"
 						>Guidelines</a>
 						<span class="hn-bar">|</span>
 						<a
 							class="hn-navlink"
 							href="#/faq"
 							data-foot="faq"
-							(click)="onH46Click($event)"
+							(click)="onH49Click($event)"
 						>FAQ</a>
 						<span class="hn-bar">|</span>
 						<a
 							class="hn-navlink"
 							href="#/lists"
 							data-foot="lists"
-							(click)="onH48Click($event)"
+							(click)="onH51Click($event)"
 						>Lists</a>
 						<span class="hn-bar">|</span>
 						<a
 							class="hn-navlink"
 							href="#/api"
 							data-foot="api"
-							(click)="onH50Click($event)"
+							(click)="onH53Click($event)"
 						>API</a>
 						<span class="hn-bar">|</span>
 						<a
 							class="hn-navlink"
 							href="#/security"
 							data-foot="security"
-							(click)="onH52Click($event)"
+							(click)="onH55Click($event)"
 						>Security</a>
 						<span class="hn-bar">|</span>
 						<a
 							class="hn-navlink"
 							href="#/legal"
 							data-foot="legal"
-							(click)="onH54Click($event)"
+							(click)="onH57Click($event)"
 						>Legal</a>
 						<span class="hn-bar">|</span>
 						<a
 							class="hn-navlink"
 							href="#/apply"
 							data-foot="apply"
-							(click)="onH56Click($event)"
+							(click)="onH59Click($event)"
 						>Apply to YC</a>
 						<span class="hn-bar">|</span>
 						<a
 							class="hn-navlink"
 							href="#/contact"
 							data-foot="contact"
-							(click)="onH58Click($event)"
+							(click)="onH61Click($event)"
 						>Contact</a>
 					</span>
 					<form
 						class="hn-search"
 						data-action="search"
-						(click)="onH59Click($event)"
-						(submit)="onH59Submit($event)"
+						(click)="onH62Click($event)"
+						(submit)="onH62Submit($event)"
 					>
 						<label class="hn-searchlabel" for="hn-search-input">Search:</label>
 						<input
@@ -203,7 +207,7 @@ import { Component, Input, type OnInit } from '@angular/core';
 							type="text"
 							data-action="search-term"
 							[value]="query"
-							(input)="onH61Input($event)"
+							(input)="onH64Input($event)"
 						>
 					</form>
 				</footer>
@@ -253,19 +257,19 @@ export class HnFront implements OnInit {
 		event.preventDefault();
 		this.onTrace('more', { shown: this.stories.length }, event);
 	}
-	onH44Click(event: any): void {
+	onH47Click(event: any): void {
 		event.preventDefault();
 		this.onTrace('nav', { to: 'guidelines' }, event);
 	}
-	onH46Click(event: any): void {
+	onH49Click(event: any): void {
 		event.preventDefault();
 		this.onTrace('nav', { to: 'faq' }, event);
 	}
-	onH48Click(event: any): void {
+	onH51Click(event: any): void {
 		event.preventDefault();
 		this.onTrace('nav', { to: 'lists' }, event);
 	}
-	onH50Click(event: any): void {
+	onH53Click(event: any): void {
 		event.preventDefault();
 		this.onTrace('nav', { to: 'api' }, event);
 	}
@@ -273,30 +277,30 @@ export class HnFront implements OnInit {
 		event.preventDefault();
 		this.onTrace('nav', { to: 'new' }, event);
 	}
-	onH52Click(event: any): void {
+	onH55Click(event: any): void {
 		event.preventDefault();
 		this.onTrace('nav', { to: 'security' }, event);
 	}
-	onH54Click(event: any): void {
+	onH57Click(event: any): void {
 		event.preventDefault();
 		this.onTrace('nav', { to: 'legal' }, event);
 	}
-	onH56Click(event: any): void {
+	onH59Click(event: any): void {
 		event.preventDefault();
 		this.onTrace('nav', { to: 'apply' }, event);
 	}
-	onH58Click(event: any): void {
+	onH61Click(event: any): void {
 		event.preventDefault();
 		this.onTrace('nav', { to: 'contact' }, event);
 	}
-	onH59Click(event: any): void {
+	onH62Click(event: any): void {
 		this.onTrace('press', { area: 'search' }, event);
 	}
-	onH59Submit(event: any): void {
+	onH62Submit(event: any): void {
 		event.preventDefault();
 		this.onTrace('search', { query: this.query }, event);
 	}
-	onH61Input(event: any): void {
+	onH64Input(event: any): void {
 		this.query = event.currentTarget.value;
 	}
 	onH9Click(event: any): void {

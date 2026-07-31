@@ -220,29 +220,38 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// S13 (the HACKER NEWS FRONT PAGE) IS THE CORPUS'S NEW HEAVYWEIGHT ON BOTH
 	// AXES, and the FIRST application row here with a twin in all SIX lanes -
 	// S11 and S12 exist in five `generated/` directories, S13 in six. Against
-	// S11, the previous heaviest in this lane: 578/440 = 1.31x the physical lines
-	// and 2138/1930 = 1.11x the structural nodes, so the two ratios are 19% apart
+	// S11, the previous heaviest in this lane: 599/440 = 1.36x the physical lines
+	// and 2171/1930 = 1.12x the structural nodes, so the two ratios are 21% apart
 	// where every earlier application row agreed to within 6%. MEASURED CAUSE,
-	// not a guess: sixteen of the template's sixty-two hosts are
+	// not a guess: sixteen of the template's sixty-five hosts are
 	// `<span class="hn-bar">|</span>` separators carrying one character and no
 	// binding, which cost a LINE each and almost no nodes. The reference
 	// separates its links with a literal `" | "` text node that is unauthorable
 	// in this corpus, so the separators have to become elements.
 	// A CLAIM THIS ROW DECLINES TO MAKE. The obvious reading is that S13 narrows
-	// this lane's premium over react, since 578/555 = 1.04x on lines. MEASURED
+	// this lane's premium over react, since 599/576 = 1.04x on lines. MEASURED
 	// ACROSS THE FOUR APPLICATIONS, THE PREMIUM HAS NO TREND TO NARROW: S10 is
 	// 304/275 = 1.11x, S11 is 440/424 = 1.04x, and S12 is 362/386 = 0.94x - this
 	// lane is SMALLER than react on the codex clone. So S13's 1.04x is the middle
 	// of a scattered series, not a new low, and the row says so instead of
 	// describing a trend three data points refute.
-	S13: { physicalLoc: 578, structuralNodes: 2138 },
+	// RE-MEASURED BY frameless-app-fidelity-v1 T006, which added the `.hn-note`
+	// disclosure labelling the SEVENTEEN stub links that have no destination in
+	// this corpus: +33 structural nodes and +21 physical lines, the SAME DELTA
+	// this scenario took in the react lane. The three new hosts are worth about
+	// six of those lines; the other fifteen are THE FORMATTER WRAPPING ONE LONG
+	// PROSE STRING, which is a third line-expensive node-cheap source shape
+	// alongside the separator spans - so the split widened from 19% to 21% rather
+	// than closing. THE PREMIUM OVER REACT DID NOT MOVE AT ALL: 1.04x before and
+	// 1.04x after, because both lanes wrap the same prose at the same width.
+	S13: { physicalLoc: 599, structuralNodes: 2171 },
 	// S14 (the HACKER NEWS ITEM PAGE) IS THE FIRST ROW IN THIS TABLE WHOSE NUMBER
 	// DOES NOT BOUND WHAT IT RENDERS. Its `HnItem` NAMES ITSELF, so thirty-nine
 	// authored hosts render once per comment per level - fifteen instances for the
 	// seeded forest - and the emitted size is independent of the tree. A budget on
 	// a recursive component measures the source only.
-	// AGAINST S13: 340/578 = 0.59x the physical lines and 1261/2138 = 0.59x the
-	// structural nodes - the two axes agree to the percent, which is what S13's
+	// AGAINST S13: 340/599 = 0.57x the physical lines and 1261/2171 = 0.58x the
+	// structural nodes - the two axes agree to within 2%, which is what S13's
 	// row predicted would happen once its sixteen separator spans went away.
 	// THE PREMIUM SERIES, RE-DERIVED RATHER THAN CARRIED. S13's row declined to
 	// name a trend in this lane's size against react, and S14 is the fifth point
@@ -252,22 +261,26 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// describe one.
 	S14: { physicalLoc: 340, structuralNodes: 1261 },
 	// S15 (THE HABIT TRACKER) IS THE CORPUS'S LARGEST TEMPLATE AND ITS CHEAPEST
-	// ONE PER HOST. EIGHTY-ONE hosts - nineteen more than S13, the previous largest
-	// - emit 425 physical lines against S13's 578, which is 5.25 lines per host
-	// against S13's 9.32: the lowest in this table.
+	// ONE PER HOST. EIGHTY-ONE hosts - sixteen more than S13, the previous largest
+	// - emit 425 physical lines against S13's 599, which is 5.25 lines per host
+	// against S13's 9.22: the lowest in this table.
 	// THE CAUSE IS DERIVED: emitted size tracks HANDLER BODIES, and this app has
 	// SEVEN recorded events and exactly ONE state write, fewer than any other
 	// application in the corpus (S13: 27 events, S11: 19, S10: 15), because its
 	// whole mechanism is one write fanning out through `computed` values and
 	// class/hidden bindings.
-	// AGAINST S13: 425/578 = 0.74x the physical lines and 2029/2138 = 0.95x the
-	// structural nodes - 21% apart, and DIVERGING THE OPPOSITE WAY from S13's own
-	// split. S13's lines ran ahead of its nodes because of sixteen one-character
-	// separator spans; S15's nodes run ahead of its lines because its seed carries
-	// thirty-six nested `{ id: 'h1d1', on: true },` literals that the formatter
-	// packs one per line. Two opposite divergences of similar magnitude from two
-	// different source shapes is what confirms the split tracks the SOURCE'S SHAPE
-	// rather than a per-element tax.
+	// AGAINST S13: 425/599 = 0.71x the physical lines and 2029/2171 = 0.93x the
+	// structural nodes - 32% apart, and DIVERGING THE OPPOSITE WAY from S13's own
+	// split. S13's lines run ahead of its nodes because of sixteen one-character
+	// separator spans and one wrapped prose note; S15's nodes run ahead of its
+	// lines because its seed carries thirty-six nested `{ id: 'h1d1', on: true },`
+	// literals that the formatter packs one per line. OPPOSITE DIVERGENCES FROM
+	// DIFFERENT SOURCE SHAPES is what confirms the split tracks the SOURCE'S SHAPE
+	// rather than a per-element tax - and the magnitudes are NOT similar any more,
+	// 32% against 21%, because frameless-app-fidelity-v1 T006 moved S13 further in
+	// S13's own direction and left S15 alone. The DIRECTIONS were always the
+	// argument; the near-equal magnitudes were a coincidence of two corpora, and
+	// this row now says so rather than repeating a number that stopped being true.
 	// THE SOLID PREMIUM, re-derived rather than carried: 425/411 = 1.03x react on
 	// lines and 2029/2002 = 1.01x on nodes. The series is now 1.11 / 1.04 / 0.94 /
 	// 1.04 / 1.03 / 1.03 across S10-S15 and STILL REFUSES TO NAME A TREND - it has
@@ -280,7 +293,7 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	S15: { physicalLoc: 425, structuralNodes: 2029 },
 	// S16 (THE TASK BOARD) IS THE CORPUS'S LARGEST TEMPLATE AT EIGHTY-NINE HOSTS,
 	// eight more than S15, and costs 6.27 lines per host - second-cheapest in this
-	// table behind S15's 5.25 and well under S13's 9.32. Both figures interpolate
+	// table behind S15's 5.25 and well under S13's 9.22. Both figures interpolate
 	// the claim S12 opened and S15 sharpened, that emitted size tracks HANDLER
 	// BODIES rather than host count: S16 records TWELVE events and TWO state
 	// writes, between S15's seven-and-one and S13's twenty-seven-and-four, and its

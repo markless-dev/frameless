@@ -44,7 +44,7 @@ goal:
       FIXING THE FIVE FINDINGS AND LEAVING THE ORACLE HOLE OPEN. The findings are symptoms; the
       cause is that nothing ever compared a shipped app to the thing it copies.
 
-active_task: T006
+active_task: T007
 
 # ---------------------------------------------------------------------------
 # KNOWN WORKING-TREE DIRT - NOT OURS, DO NOT "CLEAN UP", DO NOT `git add -A`.
@@ -546,7 +546,7 @@ tasks:
   - id: T006
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     serialize_against: >-
       MUST NOT RUN CONCURRENTLY WITH T003'S EVENTUAL WORKER. Both need
@@ -643,12 +643,128 @@ tasks:
       - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched."
       - "NEVER pkill -f on a broad pattern. FOREIGN node PID 64413 holds 5175 and PID 24931 holds 5178."
       - "Verification fails twice for the same reason."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T006-routing.md
+      summary: "Wired the sink the emitted pages always needed - NO emitter, IR node kind or authoring construct touched - and LABELLED the seventeen stubs that cannot acquire one. The comments link LANDS ON /hn-item IN FOUR LANES, proved BY BODY HASH and 15 rendered threads; svelte and vue refuse HnItem, recorded verbatim, NO ROUTE INVENTED - proved by their /hn-item body being BYTE-IDENTICAL TO A BOGUS PATH. Compared against a RENDERED CAPTURE of news.ycombinator.com. pnpm check 251 -> 251, predicted 0 in advance."
+      THE_BRIEF_ERROR_WAS_LOAD_BEARING_AND_WOULD_HAVE_TRIPPED_A_STOP_IF: "I wrote 'nav to:home -> /hn and comments -> /hn-item' AS IF BOTH WERE nav TRACES. THEY ARE NOT. The MASTHEAD comments link fires onTrace('nav', { to: 'comments' }) and points at #/newcomments - ONE OF THE SEVENTEEN DEAD LINKS - while the PER-STORY link fires a differently-NAMED event, onTrace('comments', { id: story.id }). A HANDLER KEYED ON detail.to === 'comments' WOULD HAVE POINTED THE MASTHEAD /newcomments LINK AT THE ITEM PAGE, which is exactly the stop_if 'point any of the 17 destination-less links at a page'. The sink keys on the event NAME for comments and on detail.to ONLY for home."
+      THE_HOME_LINK_NAVIGATES_IN_FIVE_LANES_NOT_SIX: "Angular's Router treats a SAME-URL navigation as a no-op, and /hn's wordmark targets /hn: MEASURED zero history calls and no reload there, against a document reload in react/solid/vue and one history call in qwik/svelte. The sink is still proven reached in angular BY DIFFERENCE - the comments arm of the SAME handler through the SAME router moves to /hn-item. NOT REPAIRED: onSameUrlNavigation:'reload' would invent behaviour the reference does not have either. ITS OWN FIRST NOTE TEXT CLAIMED THE WORDMARK 'REACHES' THE PAGE; IT RE-MEASURED, REWROTE IT AND RE-DERIVED EVERY ARTIFACT rather than ship a claim one lane refutes."
+      THE_REFERENCE_COMPARISON_PRODUCED_THE_DECIDING_NUMBER: "Masthead SET matches 1:1 (9 links, same labels and order); footer SET matches 1:1 (8 links). AND: THE REFERENCE HAS ZERO href='#' OUT OF 227 ANCHORS - it has a real destination for all seventeen. Domain: 30 of 30 sitebits on the reference are ANCHORS (from?site=) against our 12 SPANS. Front-page collapse controls: 0, MATCHING OUR 0 - which is why the owner's disclosure expectation was refused."
+      THE_CENSUS_NUMBER_ITSELF_WAS_NEVER_SIX_LANE: "'71 stubs of 84' is A THREE-LANE NUMBER. Re-measured per lane in a browser: react/solid/qwik 84/71/13, angular 81/68/13 (no S11/S12), svelte and vue 63/51/12 (no S14). T002 flagged its census as react-only; the re-measurement shows THE TOTAL ITSELF WAS NEVER CORPUS-WIDE."
+      A_REFUSAL_THIS_CARD_BOUGHT: "The note first read \"each story's comments link\" and the REACT DOSSIER GATE refused the emitted output on eslint:react/no-unescaped-entities. NARROWED BY SPELLING THE POSSESSIVE WITHOUT AN APOSTROPHE, not by escaping it - an &apos; in AUTHORED source would reach the svelte, vue and angular templates AS SIX LITERAL CHARACTERS. No emitter and no gate touched. Recorded as fixture constraint (14)."
+      ANGULARS_BUILD_IS_STRICTER_THAN_PNPM_CHECK: "detail.to failed the angular AOT build with TS4111 (noPropertyAccessFromIndexSignature) EVEN THOUGH pnpm check WAS GREEN, because the root tsconfig does not include demos. Switched to detail['to'] IN ALL SIX LANES so the mapping stays literally identical rather than diverging per lane."
+      changed_files:
+        - packages/compiler/test/fixtures/s13-hn-front.tsrx
+        - packages/compiler/test/goldens/s13-hn-front.json
+        - packages/compiler/test/enriched-ir.test.ts
+        - packages/frameworks/react/test/size.test.ts
+        - packages/frameworks/solid/test/size.test.ts
+        - packages/frameworks/react/generated/S13.tsx
+        - packages/frameworks/solid/generated/S13.tsx
+        - packages/frameworks/qwik/generated/S13.tsx
+        - packages/frameworks/svelte/generated/S13.svelte
+        - packages/frameworks/vue/generated/S13.vue
+        - packages/frameworks/angular/generated/S13.ts
+        - demos/shared/hn-css/hn.css
+        - demos/react-official/public/hn-css/hn.css
+        - demos/solid-official/public/hn-css/hn.css
+        - demos/qwik/public/hn-css/hn.css
+        - demos/svelte-official/static/hn-css/hn.css
+        - demos/vue-official/public/hn-css/hn.css
+        - demos/angular-official/public/hn-css/hn.css
+        - demos/react-official/src/emitted/HnFront.tsx
+        - demos/solid-official/src/emitted/HnFront.tsx
+        - demos/qwik/src/emitted/HnFront.tsx
+        - demos/svelte-official/src/lib/emitted/HnFront.svelte
+        - demos/vue-official/src/emitted/HnFront.vue
+        - demos/angular-official/src/emitted/HnFront.ts
+        - demos/react-official/src/App.jsx
+        - demos/solid-official/src/App.jsx
+        - demos/qwik/src/routes/hn/index.tsx
+        - demos/qwik/src/routes/hn-item/index.tsx
+        - "demos/svelte-official/src/routes/hn/+page.svelte"
+        - demos/svelte-official/src/lib/scenario-props.ts
+        - demos/vue-official/src/App.vue
+        - demos/vue-official/src/scenario-props.ts
+        - demos/angular-official/src/app/hn-page.ts
+        - demos/angular-official/src/app/hn-item-page.ts
+        - demos/angular-official/src/app/scenario-props.ts
+        - docs/goals/frameless-app-fidelity-v1/notes/T006-routing.md
+      commands:
+        - cmd: "owner fingerprint START and FINISH, shasum -a 256, relative, whole lines"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169, 116 files. IDENTICAL; website file list diffs to zero. The three dirty paths NOT TOUCHED"
+        - cmd: "ORACLE PART 1: playwright capture of news.ycombinator.com at 1440x1000"
+          status: pass
+          note: "RENDERED CAPTURE compared feature by feature - see the deciding number. NEVER compared against the other lanes"
+        - cmd: "pnpm check"
+          status: pass
+          note: "PREDICTED RISE 0 STATED IN ADVANCE. START 251 -> END 251"
+        - cmd: "pnpm test"
+          status: pass
+          note: "1 failed / 1380 passed - EXACTLY the foreign ARM B"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "PASS - 6 demos x 9 scenarios, all observations equal"
+        - cmd: "pnpm lint / pnpm check:citations"
+          status: pass
+          note: "0/0 over 552 files; citations clean, 604 swept. A 1-warning intermediate was ITS OWN probe files being counted - deleted"
+        - cmd: "browser drive, six lanes at HEAD after the change"
+          status: pass
+          note: "Real mouse click on 'N comments' LANDS ON /hn-item in react, solid, qwik and angular: URL moves, DOM hash moves, 15 .hn-thread on screen. Svelte and vue do not move at all"
+        - cmd: "BODY HASHES, not HTTP 200"
+          status: pass
+          note: "react/solid/qwik/angular: /hn, /hn-item and a bogus path ALL DISTINCT. svelte /hn-item 404 BYTE-IDENTICAL to its bogus 404; vue /hn-item 200 BYTE-IDENTICAL to its bogus body. THAT IDENTITY IS THE PROOF NO ROUTE WAS INVENTED"
+        - cmd: "NEGATIVE CONTROL: three destination-less links x six lanes"
+          status: pass
+          note: "#/ask, #/jobs, #/guidelines clicked with a real mouse: URL did not move and body hash did not move, 18 of 18"
+        - cmd: "NEGATIVE CONTROL ON THE HOME PROBE ITSELF"
+          status: pass
+          note: "the same sentinel+history measurement on #/ask reports navigated=false in all six while the wordmark reports true in five. THE ASSERTION CAN FAIL"
+        - cmd: "ANCHOR CENSUS RE-MEASURED PER LANE IN A BROWSER over all eight routes"
+          status: pass
+          note: "react/solid/qwik 84/71/13 - T002's react-only number REPRODUCES EXACTLY. angular 81/68/13, svelte and vue 63/51/12. Presence tested by APP ROOT MARKER, never by status"
+        - cmd: "verbatim S14 refusals through the REAL emitters"
+          status: pass
+          note: "'a .svelte file declares exactly one component, and a snippet cannot own state or a lifecycle' / 'a .vue SFC declares exactly one component'. NO ROUTE INVENTED"
+        - cmd: "DERIVATION PROOF with a shell ARRAY"
+          status: pass
+          note: "19 artifacts: 19 -> PRESENT AFTER DELETE 0 ASSERTED BEFORE ANY REBUILD -> 19 rebuilt byte-identical"
+        - cmd: "note renders STYLED in six lanes"
+          status: pass
+          note: "display:flex, border-left 3px rgb(255,102,0), 16px round mark. An unstyled <p> would report display:block / 0px / square"
+        - cmd: "story titles untouched"
+          status: pass
+          note: "href={story.url} NOT EDITED; real absolute url, left click leaves the page unmoved in all six"
+        - cmd: "git diff --exit-code paired with git status --short"
+          status: pass
+          note: "S13 IS THE ONLY s-NUMBERED ARTIFACT THAT MOVED"
+        - cmd: "demo teardown by recorded PID"
+          status: pass
+          note: "Six PIDs killed individually. FOREIGN 64413 and 24931 CONFIRMED ALIVE afterwards. pkill NEVER RUN"
+      deviations:
+        - "THE BRIEF CONFLATED TWO DIFFERENT TRACES AND IT WAS LOAD-BEARING - see above."
+        - "THE HOME LINK NAVIGATES IN FIVE LANES, NOT SIX - measured, explained, and its own note text rewritten rather than shipped."
+        - "'71 STUBS OF 84' IS A THREE-LANE NUMBER - see above."
+        - "A REFUSAL THIS CARD BOUGHT, recorded as fixture constraint (14)."
+        - "ANGULAR'S BUILD IS STRICTER THAN pnpm check and caught what it could not."
+        - "The card budgeted four lanes' test/** and vue's gate. NONE were needed. Only react and solid size budgets moved, and EVERY DERIVED RATIO IN THEM WAS RE-COMPUTED rather than left to rot - including one reading that did not survive and WAS REWRITTEN INSTEAD OF ROUNDED."
+        - "Reference and lane captures went to the scratchpad, not the repo - committing binary captures of news.ycombinator.com into a tree whose README says nothing was copied from YC would be a worse outcome."
+      remaining_blockers:
+        - "THE DOMAIN IS A <span> HERE AND AN ANCHOR ON REAL HN - 30 of 30 sitebits on the reference carry href='from?site='. CONFIRMED by this card's own capture and deliberately NOT closed: needs a fixture change with its own ruling. UNOWNED."
+        - "NEWLY SURFACED: the reference links its subtext AUTHOR and AGE; ours carries both as plain text. A second fidelity gap, UNOWNED."
+        - "Seventeen of thirty-one stubs REMAIN DEAD BY DESIGN, documented not fixed. THE FINAL AUDIT MUST READ THAT AS A MEASURED REFUSAL. Note the reference has ZERO dead links, so this IS a recorded fidelity gap."
+        - "The angular home link is a same-URL no-op - measured, matches the reference's own behaviour, labelled. 'The home link navigates' is a FIVE-lane claim."
+        - "Any successor quoting '84 anchors / 71 stubs' MUST SAY WHICH LANES."
+        - "Inherited: hn.css's stale Angular claim, and the cascade sweep of the other shared sheets."
+        - "SERIALIZATION STILL BINDING: T007 needs the same generated/ and src/emitted/ scope this card wrote."
+      stopped_because: null
   - id: T007
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: high
     serialize_against: >-
       MUST NOT RUN CONCURRENTLY WITH T006. Both need packages/frameworks/{vue,angular}/generated/**

@@ -231,12 +231,12 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// S13 (the HACKER NEWS FRONT PAGE) IS THE CORPUS'S NEW HEAVYWEIGHT ON BOTH
 	// AXES, and it is the FIRST application row in this table that has a twin in
 	// all SIX lanes: S11 and S12 exist in five `generated/` directories, S13 in
-	// six. Against S11, the previous heaviest: 555/424 = 1.31x the physical lines
-	// and 2073/1891 = 1.10x the structural nodes. THE TWO RATIOS DO NOT AGREE
+	// six. Against S11, the previous heaviest: 576/424 = 1.36x the physical lines
+	// and 2106/1891 = 1.11x the structural nodes. THE TWO RATIOS DO NOT AGREE
 	// HERE, and that is the reading worth recording rather than smoothing - every
 	// earlier application row in this table (S10 vs S7 at 2.33/2.20, S11 vs S10 at
-	// 1.54/1.50, S12 vs S11 at 0.91/0.93) agreed to within 6%, and this one is 19%
-	// apart. The cause is measured, not guessed: S13's template is sixty-two hosts
+	// 1.54/1.50, S12 vs S11 at 0.91/0.93) agreed to within 6%, and this one is 22%
+	// apart. The cause is measured, not guessed: S13's template is sixty-five hosts
 	// of which SIXTEEN are `<span class="hn-bar">|</span>` separators carrying one
 	// character and no binding. A separator span is nearly free in NODES - one
 	// element, one text - but the formatter still spends a LINE on it, so lines
@@ -244,23 +244,34 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// separates every link with a literal `" | "` this corpus cannot author (see
 	// the fixture's constraint 8), and NOT evidence of a per-element tax: the
 	// divergence points the safe way, with nodes growing SLOWER than lines.
-	S13: { physicalLoc: 555, structuralNodes: 2073 },
+	// RE-MEASURED BY frameless-app-fidelity-v1 T006, WHICH MOVED THIS ROW AND
+	// WIDENED ITS SPLIT FROM 19% TO 22%. That card added the `.hn-note` disclosure
+	// - three hosts labelling the SEVENTEEN stub links that have no destination in
+	// this corpus and cannot acquire one - for +33 structural nodes and +21
+	// physical lines. THE HOSTS ARE NOT WHAT COST THE LINES: three hosts are worth
+	// about six, and the other fifteen are THE FORMATTER WRAPPING ONE LONG PROSE
+	// STRING at the print width. So the split widened for a THIRD source shape -
+	// long text - which is line-expensive and node-cheap in exactly the way a
+	// separator span is, and this row's original claim that the split tracks what
+	// the source is MADE OF survives the change that moved it.
+	S13: { physicalLoc: 576, structuralNodes: 2106 },
 	// S14 (the HACKER NEWS ITEM PAGE) IS THE FIRST ROW IN THIS TABLE WHOSE NUMBER
 	// DOES NOT BOUND WHAT IT RENDERS, and that is the whole reading. Every earlier
 	// row measures a template whose emitted size and whose DOM are the same order:
-	// sixty-two hosts emit sixty-two hosts. S14's `HnItem` NAMES ITSELF, so its
+	// sixty-five hosts emit sixty-five hosts. S14's `HnItem` NAMES ITSELF, so its
 	// thirty-nine authored hosts render once per comment per level - fifteen
 	// instances and roughly two hundred `<li>` for the seeded forest - and the
 	// EMITTED SIZE IS INDEPENDENT OF THE TREE. A budget on a recursive component
 	// measures the source and says nothing at all about the output, which is worth
 	// stating because every other row in this table is legitimately read as a
 	// proxy for both.
-	// AGAINST S13, the previous heaviest: 329/555 = 0.59x the physical lines and
-	// 1237/2073 = 0.60x the structural nodes. THE TWO RATIOS AGREE TO WITHIN 1%,
-	// which restores the pattern S13 broke - S13's 19% split was caused by its
-	// sixteen single-character separator spans, and this page has three. So S13's
-	// row was right to blame the separators rather than to suspect a per-element
-	// tax: remove most of them and the axes re-converge.
+	// AGAINST S13, the previous heaviest: 329/576 = 0.57x the physical lines and
+	// 1237/2106 = 0.59x the structural nodes. THE TWO RATIOS AGREE TO WITHIN 3%,
+	// which restores the pattern S13 broke - S13's 22% split is caused by its
+	// sixteen single-character separator spans and its one wrapped prose note, and
+	// this page has three separators and no note. So S13's row was right to blame
+	// the SOURCE SHAPE rather than to suspect a per-element tax: remove most of
+	// them and the axes re-converge.
 	// WHAT THE NUMBER CANNOT SEE, and here it is bigger than usual: this lane is
 	// one of only FOUR that emit S14 at all - svelte and vue refuse a same-module
 	// component reference outright - and one of only THREE that ship it, because
@@ -269,9 +280,9 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	S14: { physicalLoc: 329, structuralNodes: 1237 },
 	// S15 (THE HABIT TRACKER) IS THE CORPUS'S LARGEST TEMPLATE AND ITS CHEAPEST
 	// ONE PER HOST, and that inversion is a stronger version of the reading S12's
-	// row opened. EIGHTY-ONE hosts - nineteen more than S13, the previous largest,
+	// row opened. EIGHTY-ONE hosts - sixteen more than S13, the previous largest,
 	// and more than half again S12's fifty-three - emit 411 physical lines against
-	// S13's 555. That is 5.07 lines per host against S13's 8.95, S14's 8.44 and
+	// S13's 576. That is 5.07 lines per host against S13's 8.86, S14's 8.44 and
 	// S12's 7.28: the LOWEST in the corpus.
 	// THE CAUSE IS DERIVED, NOT GUESSED: emitted size tracks HANDLER BODIES, and
 	// this app has SEVEN recorded events and exactly ONE STATE WRITE - fewer than
@@ -281,20 +292,27 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// row claimed emitted size follows handlers and not host count; S15 is that
 	// claim's strongest instance, with the largest host count in the corpus and the
 	// smallest write count of any application in it.
-	// AGAINST S13: 411/555 = 0.74x the physical lines and 2002/2073 = 0.97x the
-	// structural nodes. THE TWO RATIOS ARE 22% APART - as far apart as S13's own
-	// 19% split - AND THEY DIVERGE IN THE OPPOSITE DIRECTION, which is what makes
+	// AGAINST S13: 411/576 = 0.71x the physical lines and 2002/2106 = 0.95x the
+	// structural nodes. THE TWO RATIOS ARE 33% APART - HALF AGAIN S13's own 22%
+	// split - AND THEY DIVERGE IN THE OPPOSITE DIRECTION, which is what makes
 	// this row confirm S13's explanation instead of merely repeating it. S13's
-	// lines ran AHEAD of its nodes because sixteen one-character separator spans
-	// each cost a line and almost no nodes. S15's nodes run ahead of its LINES
-	// because of its SEED: six habits each carrying a nested six-day array is
-	// thirty-six `{ id: 'h1d1', on: true },` object literals, and the formatter
-	// packs every one of them onto a SINGLE LINE. A nested seed is node-dense and
-	// line-cheap; a separator span is line-expensive and node-cheap. Two opposite
-	// divergences of the same magnitude from two different source shapes is
-	// evidence that the split tracks WHAT THE SOURCE IS MADE OF and not a
-	// per-element tax in the emitter - which is exactly what S13's row asserted and
-	// could not, on its own evidence, distinguish.
+	// lines run AHEAD of its nodes because sixteen one-character separator spans
+	// and one wrapped prose note each cost lines and almost no nodes. S15's nodes
+	// run ahead of its LINES because of its SEED: six habits each carrying a
+	// nested six-day array is thirty-six `{ id: 'h1d1', on: true },` object
+	// literals, and the formatter packs every one of them onto a SINGLE LINE. A
+	// nested seed is node-dense and line-cheap; a separator span and a wrapped
+	// paragraph are line-expensive and node-cheap. Opposite divergences from
+	// different source shapes are evidence that the split tracks WHAT THE SOURCE
+	// IS MADE OF and not a per-element tax in the emitter - which is exactly what
+	// S13's row asserted and could not, on its own evidence, distinguish.
+	// THE TWO MAGNITUDES ARE NO LONGER EQUAL AND THIS ROW SAYS SO RATHER THAN
+	// ROUNDING IT AWAY. They were 22% against 19% until frameless-app-fidelity-v1
+	// T006 added S13's disclosure note; they are 33% against 22% now, because that
+	// note moved S13 further in S13's OWN direction and left S15 untouched. EQUAL
+	// MAGNITUDES WERE NEVER THE ARGUMENT - OPPOSITE DIRECTIONS WERE - and one edit
+	// separating them is the evidence that the old equality was a coincidence of
+	// two corpora rather than a law this table had found.
 	// WHAT THE NUMBER CANNOT SEE, and on this row it is the entire point of the
 	// scenario. S15 is the SECOND scenario in the corpus that all six lanes emit
 	// and the first built to be so deliberately, and its claim is that ONE CLICK
@@ -305,7 +323,7 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	S15: { physicalLoc: 411, structuralNodes: 2002 },
 	// S16 (THE TASK BOARD) TAKES THE LARGEST-TEMPLATE TITLE OFF S15 AT EIGHTY-NINE
 	// HOSTS and comes second on cost per host at 5.88 lines, behind S15's 5.07 and
-	// ahead of S12's 7.28, S14's 8.44 and S13's 8.95. Both facts are the same
+	// ahead of S12's 7.28, S14's 8.44 and S13's 8.86. Both facts are the same
 	// claim S12 opened and S15 sharpened - emitted size tracks HANDLER BODIES, not
 	// host count - and this row is the first one that tests it in the MIDDLE of
 	// the range instead of at an end. S16 records TWELVE events and TWO state
@@ -342,7 +360,7 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// each of those rows used the EVENT COUNT as its proxy. S17 breaks that proxy:
 	// it has the most events AND the most writes of anything here and still costs
 	// 1373/212 = 6.48 lines per host, BELOW S12's 7.28 on nine events and well
-	// below S13's 8.95 on twenty-seven. The proxy was wrong and the underlying
+	// below S13's 8.86 on twenty-seven. The proxy was wrong and the underlying
 	// claim survives: fourteen of S17's thirty-two events are THREE-LINE field
 	// handlers - take `next`, write one cell, trace - while S12's nine include a
 	// handler that suspends three times. It is the SIZE OF THE BODIES, and an event

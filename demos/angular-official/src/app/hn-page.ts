@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { Router } from '@angular/router';
 
 import { HnFront } from '../emitted/HnFront';
-import { noTrace } from './scenario-props';
+import { hnDestination } from './scenario-props';
 
 /**
  * The /hn route, and the THIRD of three wrapper components in this lane.
@@ -36,7 +37,42 @@ import { noTrace } from './scenario-props';
  * carries no seed for the same reason /todomvc carries none.
  *
  * NOTHING HERE IS EMITTED OUTPUT and nothing here is app code: this component
- * renders the emitted `<frameless-hn-front>` and one `<link>`.
+ * renders the emitted `<frameless-hn-front>`, one `<link>`, and - since
+ * frameless-app-fidelity-v1 T006 - the NAV SINK the page always needed.
+ *
+ * THE LINKS ON /hn WERE NEVER MISSING A DESTINATION AND THEY DIED HERE. Every
+ * stub in the emitted `HnFront` already carries `event.preventDefault()` and
+ * then `onTrace('nav', { to: 'home' }, event)`; the intent is named, lowered
+ * and typed by the emitter. This component passed `noTrace`, whose body is
+ * `{}`, so a correctly emitted navigation arrived at nothing. THAT IS SHARPEST
+ * IN THIS LANE OF THE SIX: Angular is the one demo that already had a real
+ * `provideRouter` and an `app.routes.ts` with `hn` and `hn-item` in it, so the
+ * destination existed, the router existed, and nothing connected them.
+ *
+ * `router.navigateByUrl` IS THE APPLICATION'S OWN ROUTER, not a document
+ * reload, so this lane reaches /hn-item without leaving the SPA. BOTH ARMS OF
+ * `hnDestination` ARE LIVE HERE, which is true of only FOUR of the six lanes:
+ * svelte and vue emit no `HnItem` at all and have no /hn-item to reach. Any
+ * claim that "the comments link works" IS A FOUR-LANE CLAIM.
+ *
+ * AND THE HOME ARM IS OBSERVABLY INERT IN THIS LANE ALONE - MEASURED, NOT
+ * INFERRED, AND NOT A DEFECT. /hn's logo and wordmark target /hn, which is the
+ * route already showing, and the Angular Router treats a same-URL navigation as
+ * a no-op (`onSameUrlNavigation` defaults to `'ignore'`). Driven in a browser
+ * at HEAD: clicking the wordmark produces NO document reload and ZERO
+ * history.pushState/replaceState calls here, while react, solid and vue reload
+ * the document and qwik and svelte each record one history call. THE SINK IS
+ * STILL PROVEN REACHED, BY DIFFERENCE: the comments arm of THIS VERY handler,
+ * through THIS VERY router, moves /hn to /hn-item and renders fifteen threads.
+ * Same handler, same router, different target - so what differs is the target,
+ * not the wiring. Making it move would mean passing `onSameUrlNavigation:
+ * 'reload'`, which would be inventing a behaviour the reference does not have:
+ * the wordmark on news.ycombinator.com points at /news from /news too.
+ *
+ * THE OTHER SEVENTEEN STUBS STAY DEAD AND THE PAGE SAYS SO. `new`, `past`, the
+ * masthead `comments` (/newcomments, not a story thread), `ask`, `show`,
+ * `jobs`, `submit`, `login`, `More` and the eight footer links are EACH A
+ * SEPARATE APPLICATION; they are LABELLED in `.hn-note`, not pointed anywhere.
  *
  * `hn.css` IS THIS REPOSITORY'S OWN WORK - nothing was copied from
  * news.ycombinator.com. It is copied into `public/hn-css/` by `pnpm copy-hn-css`
@@ -52,5 +88,10 @@ import { noTrace } from './scenario-props';
   `,
 })
 export class HnPage {
-  readonly trace = noTrace;
+  private readonly router = inject(Router);
+
+  readonly trace = (name: string, detail: Record<string, unknown>): void => {
+    const to = hnDestination(name, detail);
+    if (to) void this.router.navigateByUrl(to);
+  };
 }

@@ -452,6 +452,27 @@ export function HnFront(props: {
 					</Show>
 				</main>
 				<footer class="hn-foot" data-hn="footer">
+					<p class="hn-note" data-hn="stubnote">
+						<span class="hn-notemark">!</span>
+						<span class="hn-notetext">
+							SEVENTEEN OF THE THIRTY-ONE STUB LINKS ON THIS PAGE HAVE NO DESTINATION
+							AND CANNOT ACQUIRE ONE, and that absence is labelled here rather than
+							faked. new, past, comments, ask, show, jobs, submit, login, More and the
+							eight footer links are EACH A SEPARATE APPLICATION the reference has and
+							this corpus does not, so pointing them anywhere would be a lie about
+							what was built. WHAT DOES NAVIGATE: the per-story comments link reaches
+							the item page in the FOUR lanes that emit it — svelte and vue refuse a
+							same-module component reference outright, so those two lanes have no
+							item page to reach. The logo and the Hacker News wordmark point at this
+							front page, which is the page you are already on: five lanes re-enter
+							it, and the Angular router declines a same-URL navigation, so nothing
+							moves there and nothing is faked. THE TWELVE STORY TITLES ARE REAL URLS
+							and the status bar and a middle click both behave; a left click is held
+							on this page by a deliberate preventDefault, because a demo that left
+							for github.com on the first click would be unobservable in every lane at
+							once.
+						</span>
+					</p>
 					<span class="hn-footlinks">
 						<a
 							class="hn-navlink"

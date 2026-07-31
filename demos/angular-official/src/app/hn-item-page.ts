@@ -61,8 +61,16 @@ import { HnItem } from '../emitted/HnItem';
  * WHAT WORKS: collapse `[-]` and expand `[+]` on any comment - which take the
  * whole recursive subtree with them - and the per-comment upvote arrow.
  * WHAT IS INERT AND NOT FAKED: the story vote arrow, `hide`, `past`, `favorite`,
- * `reply` and the masthead links. `.tsrx` has no routing construct, so this page
- * is not reachable from /hn by clicking.
+ * `reply` and the masthead links.
+ * AND THE SENTENCE THAT FOLLOWED THAT LIST WAS A NON-SEQUITUR, corrected by
+ * frameless-app-fidelity-v1 T002/T006. It read "`.tsrx` has no routing construct,
+ * SO this page is not reachable from /hn by clicking." THE PREMISE IS TRUE -
+ * packages/compiler/src/schema.ts declares no route node kind - AND THE "SO" IS
+ * FALSE. /hn's comments links already emitted `preventDefault()` plus
+ * `onTrace('comments', { id }, event)`, so the destination was named and typed
+ * all along; the missing piece was a SINK, and `./hn-page.ts` now dispatches it
+ * through this lane's own `Router`. THIS PAGE IS REACHED BY CLICKING.
+ * THAT IS A FOUR-LANE CLAIM: svelte and vue emit no `HnItem` at all.
  * WHAT IS ABSENT: the reference's reply BOX - see the fixture's constraint (16).
  *
  * NO TRACE CHANNEL, AND THAT IS ALSO A MEASUREMENT. S14 is the only module in the

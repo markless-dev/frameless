@@ -9,7 +9,9 @@
  * unrelated tests.
  *
  * `onTrace` is the emitted components' trace callback. The official demos are
- * activation lanes, not analyzer lanes, so every lane passes a no-op.
+ * activation lanes, not analyzer lanes, so every route here passes a no-op -
+ * EVERY ROUTE EXCEPT /hn, which since frameless-app-fidelity-v1 T006 passes a
+ * real sink built on `hnDestination` below.
  */
 export type ScenarioId =
   | 's1'
@@ -24,6 +26,44 @@ export type ScenarioId =
   | 'todomvc'
 
 export const noTrace = () => {}
+
+/**
+ * The route a trace from `HnFront` should reach, or `null` if none exists.
+ *
+ * PURE, AND THE SAME MAPPING IN ALL SIX LANES - only the navigation call that
+ * consumes it differs, because the six lanes have six routers. It exists at all
+ * because /hn's links were NEVER missing a destination: every stub in the
+ * emitted `HnFront` already carries `event.preventDefault()` and then
+ * `onTrace('nav', { to: 'home' }, event)`, so the intent was named, lowered and
+ * typed by the emitter. WHAT WAS MISSING WAS THE SINK - `noTrace` above - and
+ * that is where the links died in all six lanes at once.
+ *
+ * IT RETURNS `null` FOR SEVENTEEN OF THE THIRTY-ONE STUBS ON /hn AND THAT IS
+ * NOT AN OMISSION. `new`, `past`, the masthead `comments` (/newcomments, which
+ * is not a story thread), `ask`, `show`, `jobs`, `submit`, `login`, `More` and
+ * the eight footer links are EACH A SEPARATE APPLICATION; no routing construct
+ * in any authoring surface would reach them, so the page labels them in
+ * `.hn-note` instead. `open` is absent for a different reason: that trace
+ * belongs to a story TITLE whose `href` is a REAL url, held on the page by the
+ * fixture's own `preventDefault`, and navigating on it would break something
+ * that works.
+ *
+ * IN THIS LANE '/hn-item' IS NEVER REACHED. The Vue emitter refuses S14 - "Vue
+ * emitter has no lowering for a same-module component reference (HnItem)" -
+ * because a `.vue` SFC declares exactly one component and `HnItem` names
+ * ITSELF, so no such route exists here and `App.vue` must not invent one. The
+ * mapping still NAMES it, so that the four lanes which ship the page and the
+ * two which do not run the same function rather than two different ones, and
+ * the difference lives where it belongs: at the navigation call.
+ */
+export function hnDestination(
+  name: string,
+  detail: Record<string, unknown>,
+): '/hn' | '/hn-item' | null {
+  if (name === 'nav' && detail['to'] === 'home') return '/hn'
+  if (name === 'comments') return '/hn-item'
+  return null
+}
 
 export const s2Seed = [
   { id: 'a', title: 'one', done: false },

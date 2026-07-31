@@ -421,6 +421,58 @@ body:has(.hn, .hn-thread) {
 	font-size: 8pt;
 }
 
+/*
+ * THE STUB-LINK DISCLOSURE, added by frameless-app-fidelity-v1 T006.
+ *
+ * IT COPIES `.tb-note` FROM demos/shared/board-css/board.css RATHER THAN
+ * INVENTING A SHAPE - same three classes (note / notemark / notetext), same
+ * flex row, same left rule, same round mark - because that is this corpus's
+ * DISCLOSURE PRECEDENT and a second spelling of the same idea would be a second
+ * thing to keep in step. What differs is the PALETTE ONLY: `board.css` reads
+ * shadcn `var()` tokens, and this page has no token sheet linked, so the two
+ * greys and the #ff6600 rule are literal here and taken from this file's own
+ * measured scale.
+ *
+ * NOTHING ON news.ycombinator.com LOOKS LIKE THIS AND THAT IS DELIBERATE. The
+ * reference has a real destination behind all seventeen of these links and zero
+ * `href="#"` anywhere on its front page - measured on a rendered capture - so
+ * the note is not a fidelity claim. It is the label on the gap, and it is
+ * styled to read as an ANNOTATION rather than as part of the reproduction:
+ * left-aligned where the footer centres, and off the Verdana scale the rest of
+ * the page keeps.
+ */
+.hn-note {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	margin: 0 0 10px 0;
+	padding: 8px 10px;
+	border: 1px solid #d8d8c8;
+	border-left: 3px solid #ff6600;
+	background: #ffffff;
+	text-align: left;
+}
+
+.hn-notemark {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 16px;
+	height: 16px;
+	flex: 0 0 16px;
+	border-radius: 999px;
+	background: #ff6600;
+	color: #ffffff;
+	font-size: 9pt;
+	font-weight: 700;
+}
+
+.hn-notetext {
+	font-size: 8pt;
+	line-height: 1.45;
+	color: #3c3c3c;
+}
+
 .hn-search {
 	display: flex;
 	justify-content: center;

@@ -18,10 +18,10 @@ import { state } from '@markless/core';
 // assume it talks to the Firebase API and read the absence as an oversight. It is
 // not an oversight; it is the measurement.
 //
-// THE THIRTEEN CONSTRAINTS BELOW ARE MEASURED. (1)-(8) are inherited from S10/
-// S11/S12 because the same lanes still enforce them; (9)-(13) were measured ON
-// THIS SOURCE, and (12) and (13) were each bought with a REFUSAL this module hit
-// on its first emit attempt.
+// THE FOURTEEN CONSTRAINTS BELOW ARE MEASURED. (1)-(8) are inherited from S10/
+// S11/S12 because the same lanes still enforce them; (9)-(14) were measured ON
+// THIS SOURCE, and (12), (13) and (14) were each bought with a REFUSAL this
+// module hit on an emit attempt - (12) and (13) on its first, (14) on T006's.
 //
 // (1) NO SEED PROP. IR-8 has no lowering for `TSArrayType` - react, svelte and
 //     angular each throw "has no IR-8 lowering for the type node TSArrayType" -
@@ -138,12 +138,40 @@ import { state } from '@markless/core';
 //     earlier fixture ever reached it. This one now does the same, which is the
 //     narrowing rather than a workaround: `press` is a real observation channel.
 //
-// WHAT IS DELIBERATELY NOT HERE. There is no page routing: `.tsrx` has no routing
-// construct at all, so `past`, `comments`, `ask`, `show`, `jobs` and `submit` are
-// INERT and recorded as such - three host routes would mean three instances with
-// independent state, which is the opposite of the six-lane comparison this corpus
-// exists to make. And the footer search FILTERS IN PLACE instead of handing the
-// query to Algolia, for the same reason.
+// (14) NO APOSTROPHE MAY APPEAR IN TEMPLATE TEXT, MEASURED ON THIS MODULE BY
+//     T006 ON ITS FIRST EMIT ATTEMPT. The `.hn-note` disclosure below originally
+//     read "each story's comments link", and the REACT DOSSIER GATE refused the
+//     emitted result, VERBATIM:
+//       generated/S13.tsx eslint:react/no-unescaped-entities (T002 ruling 10):
+//       `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.
+//     No other lane objects - this is JSX text, so only the three JSX lanes could
+//     see it and only react gates on it. THE NARROWING IS TO SPELL THE POSSESSIVE
+//     WITHOUT THE APOSTROPHE ("the per-story comments link"), not to escape it:
+//     an `&apos;` entity in the AUTHORED source would reach the svelte, vue and
+//     angular templates as six literal characters. Sixteen fixtures preceded this
+//     one without ever putting an apostrophe in template text, so nothing had
+//     reached it before. NO EMITTER AND NO GATE WAS TOUCHED.
+//
+// WHAT IS DELIBERATELY NOT HERE, CORRECTED BY frameless-app-fidelity-v1 T002.
+// `.tsrx` has no routing construct - TRUE, verified at packages/compiler/src/
+// schema.ts - BUT THE INFERENCE THAT USED TO STAND HERE ("so every link is
+// inert") WAS FALSE. Every stub below already carries `event.preventDefault()`
+// plus `onTrace('nav', ...)`, so the DESTINATION IS ALREADY NAMED, LOWERED AND
+// TYPED; what was missing was the SINK, and the sink is host code. T006 wired it:
+// `nav`/`to: 'home'` reaches the front page and the per-story `comments` trace
+// reaches the item page in the four lanes that emit S14.
+//
+// WHAT STILL HAS NOWHERE TO GO IS SEVENTEEN OF THE THIRTY-ONE STUBS, and they are
+// LABELLED ON THE PAGE rather than pointed somewhere false - `.hn-note` in the
+// footer, copying `.tb-note` from s16-task-board.tsrx, which is this corpus's
+// disclosure precedent. `new`, `past`, `comments` (the MASTHEAD one, which is
+// /newcomments and not a story's comments), `ask`, `show`, `jobs`, `submit`,
+// `login`, `More` and the eight footer links are EACH A SEPARATE APPLICATION;
+// no routing construct in any authoring surface would reach them. MEASURED on a
+// rendered capture of news.ycombinator.com: the reference has a real destination
+// for all seventeen, and zero `href="#"` anywhere on its front page.
+// And the footer search FILTERS IN PLACE instead of handing the query to Algolia,
+// for the same reason it always did.
 export function HnFront({ onTrace }: {
 	onTrace: (name: string, detail: Record<string, unknown>, event: unknown) => void;
 }) @{
@@ -518,6 +546,10 @@ export function HnFront({ onTrace }: {
 				}
 			</main>
 			<footer class="hn-foot" data-hn="footer">
+				<p class="hn-note" data-hn="stubnote">
+					<span class="hn-notemark">!</span>
+					<span class="hn-notetext">SEVENTEEN OF THE THIRTY-ONE STUB LINKS ON THIS PAGE HAVE NO DESTINATION AND CANNOT ACQUIRE ONE, and that absence is labelled here rather than faked. new, past, comments, ask, show, jobs, submit, login, More and the eight footer links are EACH A SEPARATE APPLICATION the reference has and this corpus does not, so pointing them anywhere would be a lie about what was built. WHAT DOES NAVIGATE: the per-story comments link reaches the item page in the FOUR lanes that emit it — svelte and vue refuse a same-module component reference outright, so those two lanes have no item page to reach. The logo and the Hacker News wordmark point at this front page, which is the page you are already on: five lanes re-enter it, and the Angular router declines a same-URL navigation, so nothing moves there and nothing is faked. THE TWELVE STORY TITLES ARE REAL URLS and the status bar and a middle click both behave; a left click is held on this page by a deliberate preventDefault, because a demo that left for github.com on the first click would be unobservable in every lane at once.</span>
+				</p>
 				<span class="hn-footlinks">
 					<a
 						class="hn-navlink"
