@@ -9,8 +9,9 @@ import { computed, state } from '@markless/core';
 // so this app does NOT join the 6 x 9 three-way contract - browsable first.
 //
 // ==========================================================================
-// THE AXIS THIS CARD EXISTS TO MEASURE IS DRAG AND DROP, AND THIS MODULE DOES
-// NOT CONTAIN IT. THAT IS THE MEASUREMENT, AND IT IS STATED ON THE PAGE.
+// THE AXIS THIS CARD EXISTS TO MEASURE IS DRAG AND DROP, AND THIS MODULE NOW
+// CONTAINS IT. IT SHIPS IN FIVE OF THE SIX LANES AND IS INERT IN REACT, AND
+// THAT ASYMMETRY IS THE MEASUREMENT. THE PAGE SAYS WHICH LANE DOES WHICH.
 // ==========================================================================
 //
 // The board predicted `onDragStart` / `onDragOver` / `onDrop` / `onPointerDown`
@@ -19,38 +20,69 @@ import { computed, state } from '@markless/core';
 // MEASURED ON A PROBE THROUGH ALL SIX REAL EMITTERS - see the T005 note - AND
 // THE PREDICTION IS WRONG IN BOTH DIRECTIONS:
 //
-//   * THEY ARE PRODUCED. Five of the six emitters take them without complaint.
-//     DEFECTS.md 15 says so itself - "there is no refusal in front of it" - so
-//     the compiler ACCEPTS a spelling it is about to destroy. The sixth lane,
-//     svelte, refuses only on the ELEMENT, not on the event: a `<div>` or
-//     `<span>` carrying any drag handler fails `a11y_no_static_element_
-//     interactions`, while the identical handlers on `<ul>` and `<li>` emit.
+//   * THEY ARE PRODUCED. Every emitter takes them on THESE hosts. The one
+//     recorded refusal is SVELTE'S AND IT IS ABOUT THE ELEMENT, NOT THE EVENT:
+//     a `<div>` or `<span>` carrying any drag handler fails
+//     `a11y_no_static_element_interactions`, while the identical handlers on
+//     `<ul>` and `<li>` emit. THE DROP ZONE HERE IS THE COLUMN'S `<ul>` AND THE
+//     DRAGGABLE IS THE CARD'S `<li>` FOR EXACTLY THAT REASON, so the "five of
+//     six emitters" figure quoted around this repo is the count for a `<div>`
+//     drop zone; on this markup it is SIX. DEFECTS.md 15 says so itself -
+//     "there is no refusal in front of it" - so the compiler ACCEPTS a spelling
+//     it is about to destroy.
 //
 //   * THEY ARE NOT UNIFORMLY INERT EITHER. The casing loss is fatal only where
 //     the lane binds by a FRAMEWORK PROP NAME. react prints `onDragover` and
 //     react-dom never fires it; vue prints `@dragover`, angular prints
-//     `(dragover)`, svelte prints `ondragover` - and `dragover` IS the real DOM
-//     event name, so those three are CORRECT BY ACCIDENT OF THE SAME BUG.
+//     `(dragover)`, svelte prints `ondragover`, solid and qwik bind the
+//     flattened string through `addEventListener` - and `dragover` IS the real
+//     DOM event name, so those FIVE are CORRECT BY ACCIDENT OF THE SAME BUG.
+//     REACT IS THE ONLY DAMAGED LANE and it keeps the ◀ ▶ arrows, which is why
+//     they are still below and why removing them would break a working lane.
 //
-// WHAT ACTUALLY KEEPS THE DRAG OFF THIS PAGE IS THE TYPE BASELINE, and it was
-// measured rather than guessed. A single drop zone plus a single draggable card
-// takes `pnpm check` from 267 to 280: react 117 -> 123 and solid 80 -> 86 (one
+//   * AND ONE OF THE FIVE HAS A MEASURED INTERMITTENCY THAT ONLY A DRIVEN
+//     BROWSER COULD HAVE FOUND. IN THE QWIK LANE, THE FIRST DROP AFTER A DRAG
+//     THAT ENDED OUTSIDE A DROP ZONE IS LOST; THE NEXT DROP LANDS. Reproduced
+//     from a fresh page in three arms with a real mouse:
+//       drop, drop                       -> both land
+//       cancel, drop, drop               -> FIRST DROP LOST, second lands
+//       cancel, cancel, drop, drop       -> FIRST DROP LOST, second lands
+//     Every visible precondition is correct when the lost drop happens: the
+//     `drop` event is delivered to the column's `<ul>`, `defaultPrevented` is
+//     true so the `dragover` guard ran, `data-dragging` reads the right card so
+//     `dragId` holds the right id, and there is NO console or page error. A 2.5s
+//     settle does not help, so this is NOT simply a chunk still downloading.
+//     THE MECHANISM IS UNRESOLVED AND IS RECORDED AS UNRESOLVED. The suspect is
+//     visible in the emitted output - this lane alone splits the handler into a
+//     synchronous `sync$` that calls `preventDefault()` and a LAZILY RESOLVED
+//     `$()` that does the work - but that was not proven and the settle result
+//     argues against the obvious version of it. It is inside qwik's own
+//     resumability envelope and is NOT a defect to file upstream.
+//
+// WHAT USED TO KEEP THE DRAG OFF THIS PAGE WAS THE TYPE BASELINE, AND THAT WAS
+// A BUDGET READ AS A WALL. A single drop zone plus a single draggable card was
+// measured at `pnpm check` 267 -> 280: react 117 -> 123 and solid 80 -> 86 (one
 // TS2322 per host for the unknown prop plus one TS7006 per handler, whose
 // parameter can no longer be contextually typed), and qwik 70 -> 71 - the last
 // one NOT from an event at all but from `draggable="true"`, which this corpus
 // lowers as a STRING while qwik's JSX types declare `draggable?: boolean`. That
-// is constraint (14)'s `rows="6"` finding in a second, non-numeric shape.
-// This board's oracle part 3 says `pnpm check` MUST NOT RISE above 267, so the
-// axis is not shippable here. It is RECORDED, NOT SUBSTITUTED: the page says so
-// in `.tb-note`, and cards move with the ARROW BUTTONS below, which is a
-// DIFFERENT INTERACTION AND IS LABELLED AS ONE.
+// is constraint (14)'s `rows="6"` finding in a second, non-numeric shape, AND
+// IT IS THE ONE COST THIS MODULE AVOIDS RATHER THAN PAYS: `draggable` here is
+// BOUND to an expression, not spelled as a static string, so constraint (14)
+// still holds and the qwik line never appears. The rest of the rise is STATED
+// IN ADVANCE AND ATTRIBUTED LINE BY LINE on the card that landed it; the
+// remaining TS2322/TS7006 lines are the SAME react-only defect DEFECTS.md 15
+// already carries, now visible in the type checker instead of only at runtime.
 //
-// FOR THE RECORD, THE REFERENCE HAS NO WORKING DRAG EITHER - QA'd live by the
-// PM (the drag selects text), its Filter popover does not filter and "Add task"
-// is inert. Measured again here: `document.querySelectorAll('[draggable="true"]')`
-// returns ZERO on that page.
+// FOR THE RECORD, THE REFERENCE HAS NO WORKING DRAG - QA'd live by the PM (the
+// drag selects text), its Filter popover does not filter and "Add task" is
+// inert. Measured again: `document.querySelectorAll('[draggable="true"]')`
+// returns ZERO on that page. SO THIS PAGE NOW DOES SOMETHING THE THING IT
+// COPIES DOES NOT DO, and that is stated rather than implied.
 //
-// WHAT THE MOVE ARROWS MOVE, all derived from the SINGLE `columns` cell and
+// WHAT A MOVE MOVES - AND A DROP AND AN ARROW PRESS ARE THE SAME MOVE, written
+// once each against the SAME `columns` cell rather than sharing a helper, since
+// this corpus has never printed one. All derived from that SINGLE cell and
 // none of it written twice by the handler. NINE OBSERVABLES, and they are
 // deliberately NOT all reachable from one click - which click moves which is
 // itself part of the measurement, because a lane that repainted the whole page
@@ -98,9 +130,14 @@ import { computed, state } from '@markless/core';
 //     `href="#"` and `href=""` outright (`a11y_invalid_attribute`), which is why
 //     every inert link here is spelled `href="#/..."`.
 //
-// (4) NO TWO-WORD DOM EVENT IS SHIPPED - see the block above. This is the first
-//     fixture in the corpus whose axis IS that constraint, so it is the first
-//     one where (4) is a finding rather than an avoidance.
+// (4) THREE TWO-WORD DOM EVENTS ARE SHIPPED - `onDragStart`, `onDragOver` and
+//     `onDragEnd` - AND THIS IS THE ONLY FIXTURE IN THE CORPUS THAT SHIPS ONE.
+//     `onDrop` is spelled here too and it is the CONTROL: it is ONE word, so
+//     `.toLowerCase()` is a no-op on it and it round-trips to react's own
+//     `onDrop`. React therefore RECEIVES the drop handler and still never fires
+//     it, because a drop only happens after a `dragover` that called
+//     `preventDefault()` and react never sees the `dragover`. THAT PAIR IS THE
+//     WHOLE MECHANISM OF DEFECTS.md 15 ON ONE ELEMENT.
 //
 // (5) NO STATE WRITE SITS INSIDE AN `if`. DEFECTS.md 8.1: the react emitter
 //     lowers only TOP-LEVEL handler statements, so a write nested in an `if` is
@@ -147,11 +184,30 @@ import { computed, state } from '@markless/core';
 //     same `reduce` five times. It is S10's proven shape and the one the whole
 //     corpus prints.
 //
-// (13) NO `style` ATTRIBUTE IS BOUND ANYWHERE. No fixture in this corpus binds
-//     one, so the lowering is UNMEASURED in all six lanes; a drag ghost or a
-//     drop-target highlight is exactly where a `style` binding would have been
-//     reached for, and this page uses class names instead - which is also why
-//     there is no highlight to bind.
+// (13) NO `style` OR `class` ATTRIBUTE IS BOUND ANYWHERE, AND THE DRAG DID NOT
+//     CHANGE THAT - IT ROUTED AROUND IT. No fixture in this corpus binds
+//     either, so both lowerings are UNMEASURED in all six lanes, and a drag
+//     ghost or a dragging highlight is exactly where one would have been
+//     reached for. THE HIGHLIGHT SHIPS ANYWAY, THROUGH A BOUND `data-` ATTRIBUTE
+//     AND A CSS ATTRIBUTE SELECTOR: `data-dragging={task.id === dragId ? 'yes' :
+//     'no'}` plus a `.tb-card[data-dragging='yes']` rule in
+//     `demos/shared/board-css/board.css`. A bound `data-` attribute is the
+//     BEST-MEASURED lowering on this page - `data-card`, `data-cards`,
+//     `data-colcount` and a dozen more already use it in all six lanes - so the
+//     effect a bound `class` would have bought costs NOTHING unmeasured. The
+//     `cursor: grab` affordance is the same trick against the emitted
+//     `[draggable="true"]`. So: no style binding, no class binding, and there IS
+//     a highlight.
+//     AND IT IS NOT ONLY COSMETIC. Binding `dragId` into the template is what
+//     makes it a template READ, which decides its LOWERING in the react lane:
+//     read by the template it becomes `useState`, unread it becomes `useRef` -
+//     and the `useRef` form makes the react emitter open every writing handler
+//     with a `const currentStateN = cell.current` snapshot that a
+//     write-without-read handler NEVER USES. `onDragStart` and `onDragEnd` are
+//     the first handlers in this corpus of that shape, and the react lane's own
+//     dossier gate caught the dead binding as `eslint:no-unused-vars`. THAT IS A
+//     REAL EMITTER WART AND IT IS RECORDED HERE RATHER THAN SILENCED: this page
+//     avoids it, it is not fixed, and any future write-only cell will hit it.
 //
 // (14) NO STATIC NUMERIC ATTRIBUTE IS SPELLED ANYWHERE, and this card widens
 //     that constraint. T003 measured `rows="6"` failing the react lane's
@@ -159,6 +215,13 @@ import { computed, state } from '@markless/core';
 //     STRING; T005 measured the SAME FAILURE ON A NON-NUMERIC ATTRIBUTE -
 //     `draggable="true"` against qwik's `draggable?: boolean`. The rule is not
 //     "no numbers", it is NO STATIC ATTRIBUTE WHOSE DOM TYPE IS NOT `string`.
+//     THE DRAG OBEYS IT RATHER THAN BREAKING IT: `draggable={task.id !== ''}`
+//     is a BOUND boolean, which is the same shape as the `hidden={...}` bindings
+//     already on this page, so the one qwik diagnostic the earlier probe
+//     measured never appears. The predicate is a TAUTOLOGY on this seed - every
+//     card is draggable - and it is spelled as one rather than as `{true}`
+//     because a bound attribute in this corpus carries READS, and a binding
+//     with no reads is a lowering nothing here has measured.
 //
 // (15) THE COUNTS ARE `{column.tasks.length}` READ STRAIGHT OFF THE LOOP
 //     VARIABLE, not a per-column `computed`, because a `computed` is
@@ -178,11 +241,50 @@ import { computed, state } from '@markless/core';
 //     edges are 0 / <2 / <4 / <9 / else, so the very first review move crosses
 //     one.
 //
+// (17) THE DRAG CARRIES ONE EXTRA STATE CELL AND IT IS A `''`-SENTINEL STRING,
+//     `dragId`, NOT the dragged task object. Constraint (6) is half the reason;
+//     the other half is that `state([])` would infer `never[]` and the first
+//     write would not type, which is constraint (6)'s hazard one container
+//     over. The dropped card is recovered from `columns` itself with a
+//     `flatMap` over the PRE-WRITE value, so no second copy of a task ever
+//     exists and nothing has to be kept in sync.
+//     NOTHING IS READ OFF `event.dataTransfer`. Chromium starts a drag from a
+//     `draggable` element with no `setData` call at all, and reaching into a
+//     handler parameter typed `unknown` in five of the six lanes would cost the
+//     emitted typecheck more than the whole rest of this axis does. THE COST OF
+//     THAT CHOICE IS STATED: FIREFOX REQUIRES `dataTransfer.setData` TO START A
+//     DRAG, SO THIS PAGE'S DRAG IS A CHROMIUM CLAIM AND IS LABELLED AS ONE.
+//
+// (18) THE DROP HANDLER'S THIRD TERNARY ARM RETURNS `entry` ITSELF, exactly as
+//     the arrows' does, so a keyed repeat still sees TWO changed columns and
+//     TWO unchanged ones. A drop on the card's OWN column takes the first arm,
+//     which removes and re-appends it - the card moves to the END of its
+//     column, which is a real observable and not a no-op. A drop with no drag
+//     in flight has `dragId === ''`, so the filter keeps everything and the
+//     flatMap finds nothing: A NO-OP BY CONSTRUCTION RATHER THAN BY A GUARD,
+//     which is what keeps constraint (5) - no state write inside an `if`.
+//
+// (19) EVERY `onTrace` CALL IS THE LAST STATEMENT IN ITS HANDLER, and this is a
+//     MEASURED EMITTER RULE rather than a style choice. The qwik emitter throws
+//     "Qwik v1 rejects synchronous actions after an awaited callback" for any
+//     statement that follows a callback-prop call in a handler body - it was
+//     reproduced on this module's first drop handler, which reset `dragId`
+//     AFTER tracing. THE VISIBLE COST IS IN THE TRACE DETAIL: `drop` carries
+//     only `{ to }` and not the moved card's id, because the id lives in
+//     `dragId` and `dragId` has to be cleared before the trace runs. The card's
+//     id is on the `dragstart` trace instead, so the pair still describes the
+//     whole move. `event.preventDefault()` is FIRST in the drop handler for the
+//     same rule.
+//
 // WHAT IS DELIBERATELY NOT HERE, each with a reason rather than an omission.
 // There is no page routing - `.tsrx` has no routing construct at all - so the
 // sidebar links, `Filter`, `Sort`, `Import / Export`, `Request task`, the
 // per-column `+` and `Add task` are INERT and recorded as such, exactly as the
-// reference's own `Filter` and `Add task` are. There are no assignee avatars:
+// reference's own `Filter` and `Add task` are. THE DRAG IS THE ONE PLACE THIS
+// PAGE OVERSHOOTS ITS REFERENCE RATHER THAN FALLING SHORT OF IT.
+// There is no drop INDICATOR and no reordering WITHIN a column: both need a
+// per-hover bound `class` or `style`, and (13) refuses that lowering by name.
+// There are no assignee avatars:
 // the reference draws overlapping gradient discs that carry no state and would
 // add a third nesting level measuring nothing.
 export function TaskBoard({ onTrace }: {
@@ -316,6 +418,9 @@ export function TaskBoard({ onTrace }: {
 			],
 		},
 	]);
+	// THE ONLY CELL THE DRAG ADDS. See constraint (17): a `''` sentinel, never
+	// the task object, and never `state(null)`.
+	let dragId = state('');
 
 	const shipped = computed(() =>
 		columns
@@ -473,7 +578,7 @@ export function TaskBoard({ onTrace }: {
 				</div>
 				<p class="tb-note" data-tb="dragnote">
 					<span class="tb-notemark">!</span>
-					<span class="tb-notetext">DRAG AND DROP IS NOT WIRED ON THIS PAGE, and that absence is the measurement. Cards move with the ◀ and ▶ arrows instead — a different interaction, labelled as one. Measured through all six real emitters: the drag events DO emit in five lanes and are inert only where the lane binds by a framework prop name, but one drop zone and one draggable card take pnpm check from 267 to 280. See the fixture header.</span>
+					<span class="tb-notetext">DRAG A CARD ONTO ANOTHER COLUMN — it works in solid, qwik, svelte, vue and angular, and IT DOES NOT WORK IN REACT, which is the measurement rather than a shortfall. All six emitters produce the handlers from one .tsrx source; react-dom alone binds by a prop name of its own, so the flattened onDragover this compiler emits never fires there and the drop is never allowed. THE ◀ AND ▶ ARROWS MOVE A CARD IN ALL SIX LANES and are how react moves one. The reference this page was measured against has no working drag at all. See the fixture header.</span>
 				</p>
 				<main class="tb-board" data-tb="board">
 					@for (const column of columns; key column.id) {
@@ -491,9 +596,58 @@ export function TaskBoard({ onTrace }: {
 									onClick={(event) => onTrace('press', { area: 'col-add' }, event)}
 								><span class="tb-iconglyph">+</span></button>
 							</div>
-							<ul class="tb-cards" data-cards={column.id}>
+							<ul
+								class="tb-cards"
+								data-cards={column.id}
+								onDragOver={(event) => event.preventDefault()}
+								onDrop={(event) => {
+									event.preventDefault();
+									columns = columns.map((entry) =>
+										entry.id === column.id
+											? {
+													id: entry.id,
+													title: entry.title,
+													mark: entry.mark,
+													prevId: entry.prevId,
+													nextId: entry.nextId,
+													tasks: entry.tasks
+														.filter((row) => row.id !== dragId)
+														.concat(
+															columns.flatMap((source) =>
+																source.tasks.filter((row) => row.id === dragId),
+															),
+														),
+												}
+											: entry.tasks.filter((row) => row.id === dragId).length === 0
+												? entry
+												: {
+														id: entry.id,
+														title: entry.title,
+														mark: entry.mark,
+														prevId: entry.prevId,
+														nextId: entry.nextId,
+														tasks: entry.tasks.filter((row) => row.id !== dragId),
+													},
+									);
+									dragId = '';
+									onTrace('drop', { to: column.id }, event);
+								}}
+							>
 								@for (const task of column.tasks; key task.id) {
-									<li class="tb-card" data-card={task.id}>
+									<li
+										class="tb-card"
+										data-card={task.id}
+										data-dragging={task.id === dragId ? 'yes' : 'no'}
+										draggable={task.id !== ''}
+										onDragStart={(event) => {
+											dragId = task.id;
+											onTrace('dragstart', { id: task.id, from: column.id }, event);
+										}}
+										onDragEnd={(event) => {
+											dragId = '';
+											onTrace('dragend', { id: task.id }, event);
+										}}
+									>
 										<div class="tb-cardtop">
 											<span class="tb-cardmark">{column.mark}</span>
 											<span class="tb-cardtitle" data-cardtitle={task.id}>{task.title}</span>

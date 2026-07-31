@@ -686,6 +686,54 @@ body:has(.tb) {
 	color: var(--card-foreground);
 }
 
+/*
+ * THE ONLY DRAG AFFORDANCE IN THIS SHEET, AND IT IS DELIBERATELY THE SMALLEST
+ * ONE THAT WORKS.
+ *
+ * The selector is the EMITTED ATTRIBUTE, not a class, which is why it costs
+ * nothing in the fixture: `draggable` is bound to a boolean expression there and
+ * all six lanes serialize it to `draggable="true"`, so this rule reaches every
+ * lane without any lane-specific markup. It is also a LIVE CHECK on that
+ * serialization - if a lane wrote `draggable=""` or dropped the attribute, the
+ * grab cursor would silently disappear in that lane alone.
+ *
+ * WHAT IS NOT HERE, and the fixture's constraint (13) is the reason: no drop
+ * target highlight and no drag ghost. Both need a bound `class` or `style`,
+ * whose lowering is unmeasured in all six lanes, and the card that shipped the
+ * drag refused to reach for one. `:active` is the whole feedback.
+ *
+ * REACT GETS THE CURSOR AND NOT THE DRAG. `draggable="true"` is a real DOM
+ * attribute and react-dom sets it, so a react card LOOKS draggable and the
+ * browser will start a native drag on it - what never arrives is the
+ * `dragover` listener, so no column will accept the drop. That is DEFECTS.md 15
+ * on screen, and `.tb-note` on the page says so in words.
+ */
+.tb-card[draggable='true'] {
+	cursor: grab;
+}
+
+.tb-card[draggable='true']:active {
+	cursor: grabbing;
+}
+
+/*
+ * THE DRAGGING HIGHLIGHT, and it exists because a bound `data-` attribute got
+ * round the fixture's constraint (13). `data-dragging` is `'yes'` on exactly the
+ * card whose id is in the `dragId` cell and `'no'` on the other eight, so this
+ * rule is a LIVE READING of that cell rather than a CSS-only effect - it is the
+ * only place on the page where the drag state is visible without moving a card.
+ *
+ * IT IS ALSO THE ONE VISIBLE DIFFERENCE BETWEEN THE FIVE DRAGGING LANES AND
+ * REACT. React never fires the flattened `onDragstart`, so `dragId` stays `''`
+ * there and no card ever reaches `data-dragging="yes"` - the card lifts under
+ * the cursor because the browser drags it natively, and nothing on the page
+ * responds.
+ */
+.tb-card[data-dragging='yes'] {
+	opacity: 0.45;
+	border-color: var(--ring);
+}
+
 .tb-cardtop {
 	display: flex;
 	align-items: center;

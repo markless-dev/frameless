@@ -8,20 +8,24 @@ import { computed, state } from '@markless/core';
 // FILTERING, REMOTE QUERY WITH AN ARTIFICIAL DELAY, and an OPTIMISTIC WRITE
 // FOLLOWED BY A REVERT with a per-row pending flag.
 //
-// ITS ASYNC AXES RUN IN FOUR LANES, NOT FIVE AND NOT SIX. TWO LANES CANNOT NAME
-// A TIMER, AND THEY FAIL AT TWO DIFFERENT STAGES. This corrects the dispatch AND
-// T002's own ruling table, both of which predicted the `new Promise` + setTimeout
-// shape would lose ANGULAR ALONE.
+// ITS ASYNC AXES NOW RUN IN ALL SIX LANES. THEY USED TO RUN IN FOUR, AND THE TWO
+// THAT COULD NOT NAME A TIMER FAILED AT TWO DIFFERENT STAGES - BOTH ARE CLOSED,
+// BY ONE SHARED TWO-NAME ALLOWLIST (`Promise` and `setTimeout`, NOTHING ELSE),
+// ruled by `frameless-app-fidelity-v1` T003 and landed by T007. The history is
+// kept rather than erased, because the SHAPE of the two failures is the finding:
 //
-//   ANGULAR - REFUSES AT EMIT. The emitter resolves every Identifier in a
+//   ANGULAR - USED TO REFUSE AT EMIT. The emitter resolves every Identifier in a
 //   transplanted body against lexical scope plus declared component members and
-//   throws otherwise: `Angular emitter cannot resolve the identifier "Promise" in
+//   threw otherwise: `Angular emitter cannot resolve the identifier "Promise" in
 //   a transplanted body`. Measured on a FULLY SYNCHRONOUS control too
-//   (probes/async-door PC), so it is a global-identifier ban, not an async limit.
-//   There is no generated/S11.ts and no angular route.
+//   (probes/async-door PC), so it was a global-identifier ban, not an async
+//   limit. THAT BEHAVIOUR WAS THE BETTER OF THE TWO - loud and early beats
+//   silent until runtime - so the repair KEPT the throw and merely admitted two
+//   names to it. generated/S11.ts and the angular /todomvc-advanced route both
+//   exist now.
 //
-//   VUE - EMITS, PASSES ITS OWN GATE, AND THEN THROWS IN THE BROWSER. This one
-//   was NOT predicted by anything and no static check in this repo catches it.
+//   VUE - EMITTED, PASSED ITS OWN GATE, AND THEN THREW IN THE BROWSER. This one
+//   was NOT predicted by anything and no static check in this repo caught it.
 //   The vue emitter inlines handlers into TEMPLATE EXPRESSIONS
 //   (`@change="async (event) => { ... }"`), and Vue's template compiler prefixes
 //   every identifier outside its own allowlist with `_ctx.`. MEASURED at
@@ -30,18 +34,29 @@ import { computed, state } from '@markless/core';
 //   decodeURIComponent,encodeURI,encodeURIComponent,Math,Number,Date,Array,
 //   Object,Boolean,String,RegExp,Map,Set,JSON,Intl,BigInt,console,Error,Symbol"
 //   - it contains Date and JSON and it does NOT contain Promise or setTimeout.
-//   So `new Promise(...)` compiles to `new _ctx.Promise(...)` and the browser
-//   reports, verbatim: `_ctx.Promise is not a constructor`. compileScript is
-//   happy, the vue gate is happy, `pnpm check` is happy. ONLY A BROWSER SEES IT.
+//   So `new Promise(...)` compiled to `new _ctx.Promise(...)` and the browser
+//   reported, verbatim: `_ctx.Promise is not a constructor`. compileScript was
+//   happy, the vue gate was happy, vue-tsc was happy and `pnpm check` was happy.
+//   ONLY A BROWSER EVER SAW IT.
+//   THE REPAIR IS NOT AN EXTENSION OF GLOBALS_ALLOWED. That list is upstream's
+//   and `canPrefix(id)` takes no options, so there is no hook - and none was
+//   needed: a `<script setup>` BINDING is never `_ctx.`-prefixed at all, so the
+//   emitter writes one shim const per allowlisted free identifier, bound with
+//   `.bind(globalThis)`. THE BINDING IS LOAD-BEARING: @vitejs/plugin-vue compiles
+//   a setup binding to a `$setup.setTimeout(...)` METHOD CALL, and an unbound
+//   shim traded `_ctx.Promise is not a constructor` for `Illegal invocation`
+//   while every compile-level instrument stayed green. AND VUE'S NEW CHECK IS
+//   DELIBERATELY STRICTER THAN UPSTREAM'S: it throws on Date, JSON, Math and
+//   console even though upstream would accept them, because that asymmetry is the
+//   bug class - it would let a fixture pass vue and fail angular.
 //
-// Both are LANE LIMITS INSIDE EACH FRAMEWORK'S OWN DESIGN ENVELOPE - Angular
+// Both were LANE LIMITS INSIDE EACH FRAMEWORK'S OWN DESIGN ENVELOPE - Angular
 // scopes transplanted bodies deliberately and Vue scopes template expressions
-// deliberately - so neither is a defect to file upstream. The four lanes whose
-// async axes actually run are REACT, SOLID, QWIK and SVELTE, each driven through
-// all seven axes in a real browser with zero console errors. Vue's route is still
-// generated and still shipped, because four of its seven axes work and because
-// deleting it would delete the evidence; it is labelled EMITS-BUT-MISBEHAVES,
-// which is the third verdict T001 established.
+// deliberately - so neither was ever a defect to file upstream, and the repair is
+// on OUR side of both boundaries. All seven axes were then DRIVEN in a real
+// browser in the two repaired lanes, because a page that MOUNTS proves nothing
+// here: the broken arms HUNG at "saving" rather than failing on load, which is
+// exactly why the lane's mount-every-SFC smoke test never saw this bug.
 //
 // THIRTEEN CONSTRAINTS BELOW ARE MEASURED, NOT STYLISTIC. The first eight are
 // S10's, unchanged and re-inherited because the same lanes still enforce them;

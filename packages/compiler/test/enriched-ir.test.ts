@@ -1953,24 +1953,34 @@ export function Probe({ label }: { label }) @{
 			// clicked row would be INDISTINGUISHABLE HERE and is caught in the DOM
 			// instead. S14's row records the same move for a different reason.
 			's15-habit-tracker.tsrx': ['nav', 'press', 'toggle'],
-			// THREE NAMES, AND THE INTERESTING ONE IS THE NAME THAT IS NOT HERE.
-			// S16 is the DRAG card, and there is no `drag`, `drop` or `pointer`
-			// channel in this row because no two-word DOM event ships on that page -
-			// see the fixture header for the measurement that decided it. `move` is
-			// the interaction that replaced it and it is authored TWICE, once per
-			// arrow, which is the only interaction in this corpus whose two handlers
-			// differ by a single identifier (`prevId` against `nextId`); the pair is
-			// deliberate, because a single handler taking a direction would have
-			// needed either a second argument channel or an `if`, and DEFECTS.md 8.1
-			// closes the second door. `press` covers the SEVEN inert controls and
-			// `nav` the three sidebar links, exactly as S15's row does.
+			// SIX NAMES, AND THE THREE DRAG NAMES ARE THE ONLY TWO-WORD DOM EVENTS
+			// IN THIS CORPUS. This row used to read `['move', 'nav', 'press']` and
+			// carried a comment saying the interesting thing about it was the name
+			// that was NOT here; that absence was a TYPE-BUDGET decision recorded as
+			// if it were a capability limit, and it is closed. `dragstart`, `drop`
+			// and `dragend` now ship. The FOURTH drag handler - `onDragOver` on the
+			// column's `<ul>` - deliberately has NO channel: it fires many times per
+			// second while a card is over a column and exists only to call
+			// `preventDefault()`, so tracing it would drown every other observation
+			// on the page. ITS ABSENCE FROM THIS LIST IS THEREFORE LOAD-BEARING and
+			// is the reason the list is six rather than seven.
+			// `move` is the ARROW interaction and it stays, because REACT CANNOT
+			// DRAG - react-dom binds by prop name and the compiler emits the
+			// flattened `onDragover` - so the arrows are that lane's whole
+			// interaction. It is authored TWICE, once per arrow, which is the only
+			// interaction in this corpus whose two handlers differ by a single
+			// identifier (`prevId` against `nextId`); the pair is deliberate,
+			// because a single handler taking a direction would have needed either a
+			// second argument channel or an `if`, and DEFECTS.md 8.1 closes the
+			// second door. `press` covers the SEVEN inert controls and `nav` the
+			// three sidebar links, exactly as S15's row does.
 			// THE REST OF THE PAGE IS DERIVED AND HAS NO CHANNEL AT ALL: the two
 			// column counts, the shipped counter, the total, the summary sentence and
 			// its emoji, the empty placeholder and the two arrows' own `hidden` are
 			// every one of them a `computed` or a binding off the single `columns`
 			// cell, so a lane that fired `move` and repainted only the clicked column
 			// would be INDISTINGUISHABLE HERE and is caught in the DOM instead.
-			's16-task-board.tsrx': ['move', 'nav', 'press'],
+			's16-task-board.tsrx': ['dragend', 'dragstart', 'drop', 'move', 'nav', 'press'],
 			// EIGHT NAMES, THE MOST OF ANY FIXTURE HERE, AND SEVEN OF THEM EXIST
 			// BECAUSE THE AXIS IS FORM INPUT TYPES. `field` is authored FOURTEEN
 			// times - once per control on the new-contact form - and carries the

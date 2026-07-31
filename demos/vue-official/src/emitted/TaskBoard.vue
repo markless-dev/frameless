@@ -3,6 +3,7 @@
 	import { computed, ref } from 'vue';
 	const props = defineProps({ onTrace: { type: Function, required: true } });
 	const columns = ref([{ id: 'backlog', title: 'Backlog', mark: '◌', prevId: '', nextId: 'todo', tasks: [{ id: 't1', title: 'Mobile app redesign', blurb: 'Complete redesign of mobile application for better UX', date: 'Feb 10', comments: '2', links: '3', tags: [{ id: 't1g1', name: 'Design' }] }, { id: 't2', title: 'API documentation update', blurb: 'Update API docs with latest endpoints and examples', date: 'Feb 15', comments: '', links: '8', tags: [{ id: 't2g1', name: 'Product' }] }, { id: 't3', title: 'Accessibility improvements', blurb: 'Enhance accessibility for screen readers and keyboard navigation', date: 'Feb 20', comments: '1', links: '5', tags: [{ id: 't3g1', name: 'Design' }, { id: 't3g2', name: 'New releases' }] }] }, { id: 'todo', title: 'Todo', mark: '○', prevId: 'backlog', nextId: 'progress', tasks: [{ id: 't4', title: 'Design system update', blurb: 'Enhance design system for consistency and usability', date: 'Jan 25', comments: '4', links: '', tags: [{ id: 't4g1', name: 'Design' }, { id: 't4g2', name: 'New releases' }] }, { id: 't5', title: 'Retention rate by 23%', blurb: 'Improve retention through campaigns and feature updates', date: 'Jan 25', comments: '4', links: '12', tags: [{ id: 't5g1', name: 'Marketing' }, { id: 't5g2', name: 'Product' }] }, { id: 't6', title: 'Icon system', blurb: 'Develop scalable icons for cohesive platform visuals', date: 'Jan 25', comments: '4', links: '', tags: [{ id: 't6g1', name: 'Design' }] }] }, { id: 'progress', title: 'In Progress', mark: '◑', prevId: 'todo', nextId: 'review', tasks: [{ id: 't7', title: 'Search features', blurb: 'Upgrade search for faster, accurate user results', date: 'Jan 25', comments: '', links: '12', tags: [{ id: 't7g1', name: 'Product' }] }, { id: 't8', title: 'Checkout flow design', blurb: 'Optimize checkout process to improve conversion rates', date: 'Jan 25', comments: '', links: '12', tags: [{ id: 't8g1', name: 'Design' }] }] }, { id: 'review', title: 'Technical Review', mark: '◍', prevId: 'progress', nextId: '', tasks: [{ id: 't9', title: 'Payment gateway integration', blurb: 'Integrate Stripe payment system for subscriptions', date: 'Jan 28', comments: '2', links: '5', tags: [{ id: 't9g1', name: 'Product' }] }] }]);
+	const dragId = ref('');
 	const shipped = computed(() => columns.value.filter((column) => column.nextId === '').reduce((sum, column) => sum + column.tasks.length, 0));
 	const totalLabel = computed(() => `/${columns.value.reduce((sum, column) => sum + column.tasks.length, 0)}`);
 	const tally = computed(() => `${columns.value.filter((column) => column.nextId === '').reduce((sum, column) => sum + column.tasks.length, 0)}/${columns.value.reduce((sum, column) => sum + column.tasks.length, 0)}`);
@@ -129,7 +130,7 @@
 				</div>
 				<p class="tb-note" data-tb="dragnote">
 					<span class="tb-notemark">!</span>
-					<span class="tb-notetext">DRAG AND DROP IS NOT WIRED ON THIS PAGE, and that absence is the measurement. Cards move with the ◀ and ▶ arrows instead — a different interaction, labelled as one. Measured through all six real emitters: the drag events DO emit in five lanes and are inert only where the lane binds by a framework prop name, but one drop zone and one draggable card take pnpm check from 267 to 280. See the fixture header.</span>
+					<span class="tb-notetext">DRAG A CARD ONTO ANOTHER COLUMN — it works in solid, qwik, svelte, vue and angular, and IT DOES NOT WORK IN REACT, which is the measurement rather than a shortfall. All six emitters produce the handlers from one .tsrx source; react-dom alone binds by a prop name of its own, so the flattened onDragover this compiler emits never fires there and the drop is never allowed. THE ◀ AND ▶ ARROWS MOVE A CARD IN ALL SIX LANES and are how react moves one. The reference this page was measured against has no working drag at all. See the fixture header.</span>
 				</p>
 				<main class="tb-board" data-tb="board">
 					<div
@@ -153,12 +154,32 @@
 								<span class="tb-iconglyph">+</span>
 							</button>
 						</div>
-						<ul class="tb-cards" :data-cards="column.id">
+						<ul
+							class="tb-cards"
+							:data-cards="column.id"
+							@dragover="(event) => event.preventDefault()"
+							@drop="(event) => {
+								event.preventDefault();
+								columns = columns.map((entry) => entry.id === column.id ? { id: entry.id, title: entry.title, mark: entry.mark, prevId: entry.prevId, nextId: entry.nextId, tasks: entry.tasks.filter((row) => row.id !== dragId).concat(columns.flatMap((source) => source.tasks.filter((row) => row.id === dragId))) } : entry.tasks.filter((row) => row.id === dragId).length === 0 ? entry : { id: entry.id, title: entry.title, mark: entry.mark, prevId: entry.prevId, nextId: entry.nextId, tasks: entry.tasks.filter((row) => row.id !== dragId) });
+								dragId = '';
+								onTrace('drop', { to: column.id }, event);
+							}"
+						>
 							<li
 								v-for="task in column.tasks"
 								:key="task.id"
 								class="tb-card"
 								:data-card="task.id"
+								:data-dragging="task.id === dragId ? 'yes' : 'no'"
+								:draggable="task.id !== ''"
+								@dragstart="(event) => {
+									dragId = task.id;
+									onTrace('dragstart', { id: task.id, from: column.id }, event);
+								}"
+								@dragend="(event) => {
+									dragId = '';
+									onTrace('dragend', { id: task.id }, event);
+								}"
 							>
 								<div class="tb-cardtop">
 									<span class="tb-cardmark">{{ column.mark }}</span>

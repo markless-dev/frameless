@@ -321,34 +321,39 @@ const EMITTED_BUDGETS: Record<string, { physicalLoc: number; structuralNodes: nu
 	// byte-identical output and measure identically here. Only a driven browser
 	// separates them, which is where that claim is actually settled.
 	S15: { physicalLoc: 411, structuralNodes: 2002 },
-	// S16 (THE TASK BOARD) TAKES THE LARGEST-TEMPLATE TITLE OFF S15 AT EIGHTY-NINE
-	// HOSTS and comes second on cost per host at 5.88 lines, behind S15's 5.07 and
-	// ahead of S12's 7.28, S14's 8.44 and S13's 8.86. Both facts are the same
-	// claim S12 opened and S15 sharpened - emitted size tracks HANDLER BODIES, not
-	// host count - and this row is the first one that tests it in the MIDDLE of
-	// the range instead of at an end. S16 records TWELVE events and TWO state
-	// writes against S15's seven and one and S13's twenty-seven and four, and its
-	// lines per host land between them in the same order. Two extremes agreeing
-	// could be a coincidence of two shapes; an interpolated point that lands where
-	// the rule predicts is the first evidence here that the relation is monotone.
-	// AGAINST S15: 523/411 = 1.27x the physical lines on 89/81 = 1.10x the hosts,
-	// and 2410/2002 = 1.20x the structural nodes. The line and node ratios are 7%
-	// apart with LINES AHEAD, which is S13's direction rather than S15's, and the
-	// cause is visible in the source: the two arrow handlers are twenty-line
-	// object-rebuilding `.map` bodies that differ by ONE identifier, so this app
-	// pays twice for one idea. A single handler taking a direction argument would
-	// have halved it and is not authorable - it needs either a second argument
-	// channel or an `if`, and DEFECTS.md 8.1 closes the second door.
-	// WHAT THE NUMBER CANNOT SEE, and on this row it is the whole card: S16 is the
-	// DRAG scenario and contains NO DRAG. The four two-word drag events emit
+	// S16 (THE TASK BOARD) HOLDS EIGHTY-NINE HOSTS - unchanged when the drag
+	// landed, because the drop zone and the draggable card are the `<ul>` and the
+	// `<li>` THIS PAGE ALREADY HAD - and now costs 6.64 lines per host, against
+	// S15's 5.07, S12's 7.28, S14's 8.44 and S13's 8.86. It still sits in the
+	// MIDDLE of the range and it is still the only row that does.
+	// THIS ROW IS NOW A CONTROLLED EXPERIMENT ON THIS FILE'S OWN CLAIM - that
+	// emitted size tracks HANDLER BODIES rather than host count - because
+	// `frameless-app-fidelity-v1` T004 added FOUR EVENTS AND FOUR STATE WRITES TO
+	// A TEMPLATE WHOSE HOST COUNT DID NOT MOVE AT ALL. Events went 12 -> 16 and
+	// writes 2 -> 6; hosts stayed at 89; lines went 523 -> 591 (+13.0%) and nodes
+	// 2410 -> 2679 (+11.2%). THE CLAIM SURVIVES ITS SHARPEST AVAILABLE TEST: with
+	// the host term pinned by construction, size moved with handler weight alone,
+	// and it moved in the same direction and roughly the same proportion in the
+	// solid lane (+14.9% / +11.0%) from an INDEPENDENT emitter over the same IR.
+	// AGAINST S15: 591/411 = 1.44x the physical lines on 89/81 = 1.10x the hosts,
+	// and 2679/2002 = 1.34x the structural nodes. Lines are still AHEAD of nodes,
+	// which is S13's direction rather than S15's, and the cause is unchanged and
+	// now larger: the two arrow handlers are twenty-line object-rebuilding `.map`
+	// bodies that differ by ONE identifier, and the drop handler is a THIRD copy
+	// of the same idea. A single handler taking a direction argument would have
+	// collapsed all three and is not authorable - it needs either a second
+	// argument channel or an `if`, and DEFECTS.md 8.1 closes the second door.
+	// WHAT THE NUMBER STILL CANNOT SEE, and it is the whole card: THE DRAG IS ON
+	// THE PAGE NOW AND THIS LANE CANNOT RUN IT. The two-word drag events emit
 	// cleanly from this emitter - `onDragover`, `onDragstart`, `onDragend`,
-	// `onPointerdown`, exactly as DEFECTS.md 15 predicts and refuses to refuse -
-	// and are inert in THIS lane only, because react-dom matches by prop name
-	// while vue, svelte and angular print the real DOM event name and fire. What
-	// kept them out of the shipped module is measurable here and nowhere else in
-	// this file: one drop zone and one draggable card add SIX `error TS` lines to
-	// this project (117 -> 123) and take `pnpm check` from 267 to 280.
-	S16: { physicalLoc: 523, structuralNodes: 2410 },
+	// exactly as DEFECTS.md 15 predicts and refuses to refuse - and are inert in
+	// THIS lane only, because react-dom matches by prop name while the other five
+	// bind the real DOM event name and fire. The page keeps its arrow buttons for
+	// that reason. The type cost was STATED IN ADVANCE and landed at FIVE new
+	// `error TS` lines in this project (108 -> 113), `pnpm check` 251 -> 261 across
+	// the three JSX lanes; the older 267 -> 280 figure included a qwik
+	// `draggable?: boolean` diagnostic this fixture avoids by BINDING `draggable`.
+	S16: { physicalLoc: 591, structuralNodes: 2679 },
 	// S17 (CONTACTS) IS THE FORMS CARD AND IT TAKES THE LARGEST-TEMPLATE TITLE OFF
 	// S16 BY A FACTOR OF 2.4 - TWO HUNDRED AND TWELVE HOSTS against eighty-nine.
 	// It also records THIRTY-TWO events and THIRTY-FIVE state writes, more than any

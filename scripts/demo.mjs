@@ -62,11 +62,14 @@ const SCENARIOS = [
 	{ id: 'S10', path: '/todomvc', title: 'TodoMVC' },
 	{ id: 'S11', path: '/todomvc-advanced', title: 'TodoMVC Advanced' },
 	{ id: 'S12', path: '/codex', title: 'Codex clone' },
-	// S13 IS THE FIRST APPLICATION IN THIS TABLE WITH NO `unbuilt` ENTRY IN ANY
-	// LANE. S11 and S12 are absent from angular because that emitter refuses them
-	// on its global-identifier ban; S13 names no global at all, because every
-	// relative age on the page is a literal string in the seeded data rather than
-	// something computed from `Date`. Six lanes, six routes.
+	// S13 WAS THE FIRST APPLICATION IN THIS TABLE WITH NO `unbuilt` ENTRY IN ANY
+	// LANE, AND IT IS NO LONGER THE ONLY EARLY ONE: S11 and S12 used to be absent
+	// from angular on that emitter's global-identifier ban, and
+	// `frameless-app-fidelity-v1` T007 closed the hole with a two-name allowlist
+	// (`Promise` and `setTimeout`, nothing else), so both now serve in six lanes.
+	// S13 still names NO global at all, because every relative age on the page is
+	// a literal string in the seeded data rather than something computed from
+	// `Date` - which stays a refused name, on determinism grounds.
 	{ id: 'S13', path: '/hn', title: 'Hacker News front page' },
 	// S14 IS THE RECURSION MEASUREMENT, and FOUR of the six lanes serve it.
 	// `HnItem` names ITSELF in its own template, so the thread on screen is
@@ -92,21 +95,28 @@ const SCENARIOS = [
 	// STRING in the seeded data, which is the one constraint the six-lane claim
 	// actually rests on. ONE CLICK MOVES EIGHT DERIVED OBSERVABLES.
 	{ id: 'S15', path: '/habits', title: 'Habit tracker (one click, eight derived updates)' },
-	// S16 IS THE THIRD ROW IN THIS TABLE WITH NO `unbuilt` ENTRY IN ANY LANE, and
-	// the ONLY ONE WHOSE TITLE NAMES SOMETHING THE PAGE DOES NOT DO. It is the DRAG
-	// scenario and it has no drag, which is the measurement rather than a shortfall:
-	// the two-word drag events ARE produced by five of the six emitters (svelte
-	// refuses the ELEMENT, not the event), and they are inert only where the lane
-	// binds by a framework prop name - react's `onDragover` never fires while vue's
-	// `@dragover`, angular's `(dragover)` and svelte's `ondragover` are the real DOM
-	// event names. What kept them off the page is the TYPE BASELINE: one drop zone
-	// and one draggable card take `pnpm check` from 267 to 280. Cards move with the
-	// arrow buttons instead and THE PAGE SAYS SO. See
+	// S16 IS THE THIRD ROW IN THIS TABLE WITH NO `unbuilt` ENTRY IN ANY LANE, AND
+	// ITS TITLE USED TO NAME SOMETHING THE PAGE DID NOT DO. IT DRAGS NOW.
+	// `frameless-app-fidelity-v1` T004 shipped it, and what had kept it off the
+	// page was never a capability: the two-word drag events are produced by EVERY
+	// emitter on this markup (svelte's recorded refusal is about a `<div>`/`<span>`
+	// host, not about the event, and the drop zone here is the column's `<ul>`
+	// while the draggable is the card's `<li>`). They are inert only where the lane
+	// binds by a framework prop name - react's `onDragover` never fires, while
+	// vue's `@dragover`, angular's `(dragover)`, svelte's `ondragover` and
+	// solid's/qwik's flattened `addEventListener` names are the real DOM event
+	// name. What kept them off the page was the TYPE BASELINE, read as a wall when
+	// it is a budget: the rise was STATED IN ADVANCE and landed at
+	// `pnpm check` 251 -> 261, every new line attributed, and the earlier
+	// 267 -> 280 figure included one qwik diagnostic this page avoids by BINDING
+	// `draggable` rather than spelling it as a static string.
+	// REACT IS THE ONE LANE THAT CANNOT DRAG and it keeps the ◀ ▶ arrows, which
+	// all six lanes still have. THE PAGE SAYS WHICH LANE DOES WHICH. See
 	// `packages/compiler/test/fixtures/s16-task-board.tsrx`.
 	{
 		id: 'S16',
 		path: '/board',
-		title: 'Task board (arrow moves — DRAG IS RECORDED AS REFUSED, see the page)',
+		title: 'Task board (DRAG A CARD — works in five lanes, inert in react, see the page)',
 	},
 	// S17 IS THE FOURTH ROW WITH NO `unbuilt` ENTRY IN ANY LANE, AND THE FIRST
 	// APPLICATION ROW SINCE S15 WHOSE AXIS IS ACTUALLY ON THE PAGE. It is the FORMS
@@ -127,23 +137,26 @@ const SCENARIOS = [
 	},
 ];
 
-/**
- * ANGULAR'S TWO ABSENCES ARE RECORDED, NOT OMITTED. The lane is built for
- * everything else in the corpus including S10, so this is a recorded lane limit
- * and not a missing lane. The refusal is read off the real modules and lives in
- * `packages/frameworks/angular/scripts/regenerate.ts`:
+/*
+ * ANGULAR'S TWO ABSENCES ARE CLOSED, AND THE CONSTANT THAT NAMED THEM IS GONE
+ * RATHER THAN LEFT BEHIND UNUSED.
  *
- *   Angular emitter cannot resolve the identifier "Promise" in a transplanted
- *   body: it is neither a body-local binding, a function parameter, a @for
- *   variable, nor a declared component member (...). The emitter throws rather
- *   than guessing whether it is a global
+ * It read `emitter refuses: cannot name the global \`Promise\`` and sat in this
+ * lane's `unbuilt` map for S11 and S12, which made `routeFor()` return null for
+ * both - so the front door printed a refusal instead of `/todomvc-advanced` and
+ * `/codex`, AND dropped both from the derived "all six lanes serve" count below.
  *
- * It is NOT about async: every identifier in a transplanted body must resolve to
- * lexical scope or a declared component member, and `Promise`, `setTimeout`,
- * `fetch`, `Date` and `JSON` are all globals. Both apps need an artificial delay
- * built from `new Promise` + `setTimeout`, so neither can be NAMED in this lane.
+ * `frameless-app-fidelity-v1` T003 ruled and T007 landed a TWO-NAME allowlist -
+ * `Promise` and `setTimeout`, nothing else - in the angular emitter, and gave
+ * the vue emitter the SAME check so a fixture that passes vue passes angular.
+ * `Date`, `JSON`, `Math`, `console`, `fetch`, `localStorage`, `document` and
+ * `window` are still refused, each with a stated reason; `Date` on determinism
+ * grounds, which is why every date in this corpus is a literal string.
+ *
+ * IF A THIRD ABSENCE EVER APPEARS, IT GETS ITS OWN CONSTANT AND ITS OWN
+ * MEASURED WORDING. Reviving this one would be reviving a refusal that has been
+ * measured false in a browser.
  */
-const ANGULAR_REFUSAL = 'emitter refuses: cannot name the global `Promise`';
 
 /**
  * THE THREE S14 ABSENCES, AND THEY ARE NOT THE SAME KIND OF ABSENCE.
@@ -288,7 +301,10 @@ const DEMOS = [
 		portFlag: true,
 		portEnv: false,
 		trailingSlash: false,
-		unbuilt: { S11: ANGULAR_REFUSAL, S12: ANGULAR_REFUSAL },
+		// EMPTY SINCE T007 CLOSED THE GLOBALS HOLE. See the deleted refusal
+		// constant above: this map held S11 and S12 and it was the last executable
+		// thing in the repo still saying angular refuses them.
+		unbuilt: {},
 	},
 ];
 
@@ -663,9 +679,11 @@ function announce() {
 	);
 	lines.push('  each for a different recorded reason. S15 is the FAN-OUT page, where one');
 	lines.push('  click moves eight derived observables and no lane is lost;');
-	lines.push('  S16 is the DRAG page AND IT HAS NO DRAG - the events emit in five');
-	lines.push('  lanes and cost the type baseline 267 -> 280, so the axis is');
-	lines.push('  RECORDED and the cards move with arrow buttons. The page says so.');
+	lines.push('  S16 is the DRAG page AND IT DRAGS: pick a card up and drop it on');
+	lines.push('  another column in solid, qwik, svelte, vue or angular. REACT IS INERT');
+	lines.push('  ON DRAG - react-dom binds by its own prop name while the compiler emits');
+	lines.push('  the flattened onDragover - so the arrow buttons stay in ALL SIX lanes');
+	lines.push('  and they are how react moves a card. The page says which is which.');
 	lines.push('  S17 is the FORMS page and its axis IS on it: thirteen bound');
 	lines.push('  control kinds, and the four attributes that would have cost the');
 	lines.push('  type baseline (required, maxlength, size, multiple) are named on');

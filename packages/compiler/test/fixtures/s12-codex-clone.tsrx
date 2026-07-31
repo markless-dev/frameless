@@ -9,20 +9,29 @@ import { computed, state } from '@markless/core';
 // IT IS AUTHORED ONCE AND ATTEMPTED IN ALL SIX LANES. What it can and cannot
 // express was MEASURED on this module, not inherited:
 //
-//   ANGULAR - REFUSES AT EMIT, exactly as S11 does and for the same reason.
-//   Every Identifier in a transplanted body must resolve to lexical scope, a
-//   function parameter, a `@for` variable, or a declared component member, and
-//   `Promise` is none of those. There is no generated/S12.ts and no angular
-//   route. Recorded in that lane's `test/unbuilt-scenarios.ts`, which drives the
-//   real `emit()` and asserts the recorded message.
+//   ANGULAR - USED TO REFUSE AT EMIT, exactly as S11 did and for the same
+//   reason. Every Identifier in a transplanted body must resolve to lexical
+//   scope, a function parameter, a `@for` variable, or a declared component
+//   member, and `Promise` was none of those. `frameless-app-fidelity-v1` T007
+//   admitted exactly two names - `Promise` and `setTimeout` - to that same
+//   resolver, so generated/S12.ts and the angular /codex route both exist now.
+//   THE THROW ITSELF WAS KEPT: `Date`, `JSON`, `Math`, `console`, `fetch`,
+//   `localStorage`, `document` and `window` are still refused by name. That
+//   lane's `test/unbuilt-scenarios.ts` used to record this module's refusal and
+//   is now EMPTY - which is why the suites over it assert `toEqual([])` rather
+//   than iterating, since an empty iteration asserts nothing.
 //
-//   VUE - EMITS, PASSES ITS OWN GATE, AND THROWS IN THE BROWSER, again exactly
-//   as S11 does: the emitter inlines handlers into TEMPLATE EXPRESSIONS and
+//   VUE - EMITTED, PASSED ITS OWN GATE, AND THREW IN THE BROWSER, again exactly
+//   as S11 did: the emitter inlines handlers into TEMPLATE EXPRESSIONS and
 //   Vue's template compiler prefixes every identifier outside GLOBALS_ALLOWED
 //   with `_ctx.`, a list carrying Date and JSON but NOT Promise or setTimeout.
 //   `_ctx.Promise is not a constructor`. Its SYNCHRONOUS axes - thread
-//   navigation, both tab pairs, the draft binding - all work; only the stream
-//   is lost. EMITS-BUT-MISBEHAVES, the third verdict T001 established.
+//   navigation, both tab pairs, the draft binding - all worked; only the stream
+//   was lost, which is EMITS-BUT-MISBEHAVES, the third verdict T001 established.
+//   REPAIRED BY BOUND `<script setup>` SHIM CONSTS rather than by touching
+//   upstream's list, which has no hook and was never needed - see S11's header
+//   for why the `.bind(globalThis)` is load-bearing. The streamed answer was then
+//   DRIVEN in a browser and observed GROWING across three distinct readings.
 //
 // THE FOURTEEN CONSTRAINTS BELOW ARE MEASURED. (1)-(13) are S11's, re-inherited
 // because the same lanes still enforce them; (14) is this module's own and was

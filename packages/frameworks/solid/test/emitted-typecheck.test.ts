@@ -401,6 +401,36 @@ describe('Solid emitted output type-checks', () => {
 			`generated/S17.tsx: TS2322 Type '{ type: string; class: string; id: string; name: string; placeholder: string; "data-control": string; value: string; "attr:value": string; onInput: (event: InputEvent & { currentTarget: HTMLInputElement; target: HTMLInputElement; }) => void; }' is not assignable to type 'InputHTMLAttributes<HTMLInputElement>'.   Property 'attr:value' does not exist on type 'InputHTMLAttributes<HTMLInputElement>'.`,
 			"OPEN FINDING 002 - not an artifact. One of S17's SIX labelled text-shaped inputs on the new-contact form (text, text, email, tel, url, text). All six print the identical attribute set and are separate hosts, so this row legitimately appears six times, for the same reason C4-attach's `.dataset` does. See notes/findings-002-solid-attr-namespace.md.",
 		],
+		// THE TWO BELOW LOOK IDENTICAL TO THE REACT LANE'S TWIN ROWS AND THEY MEAN
+		// SOMETHING DIFFERENT. READ THIS BEFORE COPYING EITHER SET.
+		//
+		// S16 is the DRAG page. The compiler's `jsxEventName` does
+		// `name.slice(2).toLowerCase()`, so an authored `onDragOver` reaches every
+		// emitter as `dragover` and this lane re-spells it `onDragover`. tsc says
+		// the property does not exist and even suggests "Did you mean 'onDragOver'?"
+		// - AND THE BINDING WORKS ANYWAY. Solid's `on*` prop is delegated by
+		// LOWERCASING the suffix and calling `addEventListener`, and `dragover` IS
+		// the real DOM event name, so the listener lands. `frameless-app-fidelity-v1`
+		// T004 DROVE A REAL MOUSE DRAG IN THIS LANE and the card moved and stayed.
+		//
+		// SO THIS IS A TYPE-SURFACE GAP, NOT A BROKEN BINDING: solid's JSX types
+		// enumerate `onDragOver` and `ondragover` and do not enumerate the
+		// capitalised-flattened middle form the emitter prints. The REACT lane's
+		// twin rows are a genuinely dead binding, which is why DEFECTS.md 15 is
+		// amended to REACT-ONLY. This lane's own dossier gate says the same thing in
+		// its own words - `solid/event-handlers` calls it a READABILITY rename while
+		// react's rule calls it an unknown property.
+		//
+		// Both disappear the day the IR records where the word boundary was, and the
+		// exact-equality assertion below will force these rows to be deleted then.
+		[
+			`generated/S16.tsx: TS2322 Type '{ children: Element; class: string; "data-cards": string; onDragover: (event: any) => void; onDrop: (event: DragEvent & { currentTarget: HTMLUListElement; target: Element; }) => void; }' is not assignable to type 'HTMLAttributes<HTMLUListElement>'.   Property 'onDragover' does not exist on type 'HTMLAttributes<HTMLUListElement>'. Did you mean 'onDragOver'?`,
+			"S16's column drop zone. A TYPE-SURFACE gap, not a dead binding - solid delegates by the lowercased suffix so `dragover` lands, and the drag was driven with a real mouse in this lane. `onDrop` in the same object types cleanly because it is one word and round-trips.",
+		],
+		[
+			`generated/S16.tsx: TS2322 Type '{ children: Element[]; class: string; "data-card": string; "data-dragging": string; draggable: boolean; onDragstart: (event: any) => void; onDragend: (event: any) => void; }' is not assignable to type 'LiHTMLAttributes<HTMLLIElement>'.   Property 'onDragstart' does not exist on type 'LiHTMLAttributes<HTMLLIElement>'. Did you mean 'onDragStart'?`,
+			"S16's draggable card, same type-surface gap on the source element. `draggable: boolean` types CLEANLY because the fixture BINDS it instead of spelling `draggable=\"true\"`, which is what keeps the qwik lane's `draggable?: boolean` diagnostic off this axis.",
+		],
 	];
 
 	test('produces exactly the accepted diagnostics and no others', () => {

@@ -44,7 +44,7 @@ goal:
       FIXING THE FIVE FINDINGS AND LEAVING THE ORACLE HOLE OPEN. The findings are symptoms; the
       cause is that nothing ever compared a shipped app to the thing it copies.
 
-active_task: T004
+active_task: T005
 
 # ---------------------------------------------------------------------------
 # KNOWN WORKING-TREE DIRT - NOT OURS, DO NOT "CLEAN UP", DO NOT `git add -A`.
@@ -383,7 +383,7 @@ tasks:
   - id: T004
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: high
     ALSO_FIX_THE_FRONT_DOOR_T007_FOUND_AN_EXECUTABLE_STALE_CLAIM: >-
       scripts/demo.mjs STILL CARRIES `unbuilt: { S11: ANGULAR_REFUSAL, S12: ANGULAR_REFUSAL }`,
@@ -479,12 +479,123 @@ tasks:
       - "Verification fails twice for the same reason."
       - "You are about to remove the arrow controls. React cannot drag; the arrows are its interaction and removing them breaks a working lane."
       - "You are about to claim react drags because a synthetic event fired. THE PREVIOUS BOARD MEASURED REACT'S BINDINGS SEEING NOTHING FROM A REAL NATIVE DRAG."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T004-drag.md
+      summary: "S16 DRAGS. A REAL MOUSE DRAG moves a card between columns AND IT STAYS, in FIVE LANES; react is inert, keeps the arrows, and the page labels which lane does which. pnpm check 251 -> 261, PREDICTED +13 AND BOUNDED +16 IN ADVANCE, every line attributed. The front door now prints angular's two new routes."
+      THE_WHOLE_MECHANISM_IN_ONE_DIAGNOSTIC_LINE_THAT_CONTAINS_ITS_OWN_CONTROL: "`TS2322 ... onDragover: (event: any) => void; onDrop: (event: DragEvent<HTMLUListElement>) => void ... Property 'onDragover' does not exist ... Did you mean 'onDragOver'?` ONE ELEMENT, TWO HANDLERS. onDrop IS ONE WORD, so .toLowerCase() is a NO-OP and it round-trips to react's own prop name and types cleanly; onDragOver IS TWO WORDS AND DIES. That is DEFECTS.md 15 entire, in a single line - and it is why react gets the arrows and the other five get the drag."
+      ANGULAR_MAKES_IT_FIVE_LANES_NOT_FOUR: "DEFECTS.md 15 records FOUR lanes completing a real drag with angular 'unresolved rather than settled'. ANGULAR NOW COMPLETES A REAL NATIVE MOUSE DRAG ON A SHIPPED PAGE. Also: 'produced in five lanes' is the count for a <div> drop zone - on this fixture's <ul>/<li> hosts ALL SIX EMITTERS PRODUCE THEM."
+      THE_REFERENCE_COMPARISON_SHOWS_THIS_PAGE_OVERSHOOTS_WHAT_IT_COPIES: "Captured square-ui-task-management DRIVEN, 161,874 bytes. h1 'Task' EXACT, card title 14px/500 EXACT, six card titles verbatim, four columns and five controls EXACT. [draggable] = ZERO. A REAL MOUSE DRAG ON THE REFERENCE CHANGED NOTHING AND SELECTED TEXT INSTEAD, captured verbatim. We ship something the original does not have, and the fixture SAYS SO."
+      THE_BRIEF_UNDERCOUNTED_THE_STALE_PROSE: "I said THREE now-false blocks in App.vue. THERE ARE FOUR - the S15 block ALSO states '_ctx.Promise is not a constructor' as LIVE, and leaving it would have kept the lie IN THE VERY LANE T007 REPAIRED. A fifth block in the same file (S16's drag prose) was also stale. All five corrected."
+      IT_CAUGHT_ITS_OWN_VACUOUS_PAIRWISE_CHECK: "The derivation proof's pairwise comparison used zsh non-splitting and made SIX DIGESTS EMPTY, then printed EQUAL. Caught, redone with arrays AND an empty-digest abort: 6 of 6 GENUINELY equal, 21 artifacts byte-identical."
+      TWO_GATES_DISAGREE_ABOUT_THE_SAME_EMITTED_STRING_AND_THAT_IS_A_NEW_FINDING: "react's rule says 'Unknown property'; solid's says 'should be renamed FOR READABILITY'. A THIRD, STATIC instrument agreeing DEFECTS.md 15 is REACT-ONLY. Written into both test files so nobody copies the react framing into the solid lane."
+      changed_files:
+        - packages/compiler/test/fixtures/s16-task-board.tsrx
+        - packages/compiler/test/goldens/s16-task-board.json
+        - packages/compiler/test/fixtures/s11-todomvc-advanced.tsrx
+        - packages/compiler/test/goldens/s11-todomvc-advanced.json
+        - packages/compiler/test/fixtures/s12-codex-clone.tsrx
+        - packages/compiler/test/goldens/s12-codex-clone.json
+        - packages/compiler/test/enriched-ir.test.ts
+        - packages/frameworks/react/generated/S16.tsx
+        - packages/frameworks/solid/generated/S16.tsx
+        - packages/frameworks/qwik/generated/S16.tsx
+        - packages/frameworks/svelte/generated/S16.svelte
+        - packages/frameworks/vue/generated/S16.vue
+        - packages/frameworks/angular/generated/S16.ts
+        - packages/frameworks/react/test/gate.test.ts
+        - packages/frameworks/react/test/emitted-typecheck.test.ts
+        - packages/frameworks/react/test/size.test.ts
+        - packages/frameworks/solid/test/gate.test.ts
+        - packages/frameworks/solid/test/emitted-typecheck.test.ts
+        - packages/frameworks/solid/test/size.test.ts
+        - demos/shared/board-css/board.css
+        - demos/react-official/public/board-css/board.css
+        - demos/solid-official/public/board-css/board.css
+        - demos/qwik/public/board-css/board.css
+        - demos/svelte-official/static/board-css/board.css
+        - demos/vue-official/public/board-css/board.css
+        - demos/angular-official/public/board-css/board.css
+        - demos/react-official/src/emitted/TaskBoard.tsx
+        - demos/solid-official/src/emitted/TaskBoard.tsx
+        - demos/qwik/src/emitted/TaskBoard.tsx
+        - demos/svelte-official/src/lib/emitted/TaskBoard.svelte
+        - demos/vue-official/src/emitted/TaskBoard.vue
+        - demos/angular-official/src/emitted/TaskBoard.ts
+        - demos/vue-official/src/App.vue
+        - scripts/demo.mjs
+        - docs/goals/frameless-app-fidelity-v1/notes/T004-drag.md
+      commands:
+        - cmd: "owner fingerprint START and FINISH, shasum -a 256"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169, 116 files. IDENTICAL. The three dirty paths not touched, not cleaned, not committed"
+        - cmd: "A PRIORI pnpm check prediction WRITTEN TO DISK BEFORE ANY EDIT"
+          status: pass
+          note: "PREDICTED +13 (END 264), BOUND STATED +16 max"
+        - cmd: "pnpm check"
+          status: pass
+          note: "START 251 -> END 261, +10, UNDER the prediction and the bound. react 108->113, solid 73->78, qwik 70->70. All ten lines listed individually"
+        - cmd: "REAL MOUSE DRAG in all six lanes on the shipped app"
+          status: pass
+          note: "NO synthetic DragEvent anywhere. FIVE LANES moved the card AND IT STAYED on a second read 1.3s later. REACT INERT - card did not move"
+        - cmd: "REACT INERTNESS recorded three ways"
+          status: pass
+          note: "card does not move; react-dom ITSELF warns 'Invalid event handler property onDragstart/onDragend/onDragover'; the ARROWS still work. React is NOT reported as dragging"
+        - cmd: "ORACLE PART 1: rendered capture of the reference, DRIVEN"
+          status: pass
+          note: "[draggable] = ZERO; a real drag on the reference SELECTED TEXT. Geometry matches exactly. WE OVERSHOOT and the fixture says so"
+        - cmd: "NEGATIVE CONTROL A: identical gesture onto a non-drop zone"
+          status: pass
+          note: "REFUSED in all five dragging lanes; the same gesture onto a real zone ACCEPTED"
+        - cmd: "NEGATIVE CONTROL C: both gate rules driven in three arms"
+          status: pass
+          note: "flattened spelling REPORTS, framework's own spelling SILENT, unrelated two-word event REPORTS. The rules answer to the SPELLING"
+        - cmd: "body hashes, never HTTP 200"
+          status: pass
+          note: "/board vs a bogus route SHA-256'd in all six: ALL DISTINCT, data-app=\"task-board\" in all six SSR payloads"
+        - cmd: "pnpm demo"
+          status: pass
+          note: "angular now prints S11 /todomvc-advanced and S12 /codex WITH NO REFUSAL LINE; derived 'all six lanes serve' count 5 -> 7. Allocator routed around FOUR occupied ports and killed nothing"
+        - cmd: "DERIVATION PROOF with a shell array, run twice"
+          status: pass
+          note: "21 artifacts: 21 -> PRESENT AFTER DELETE 0 ASSERTED BEFORE REBUILD -> 21 byte-identical. CAUGHT ITS OWN VACUOUS pairwise check"
+        - cmd: "pnpm test"
+          status: pass
+          note: "1 failed / 1412 passed - EXACTLY the foreign ARM B"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "PASS - 6 demos x 9 scenarios, all observations equal"
+        - cmd: "pnpm lint / pnpm check:citations"
+          status: pass
+          note: "0/0 over 558 files; citations clean, 610 swept, re-run after every prose edit"
+        - cmd: "git diff --exit-code over unintended artifacts"
+          status: pass
+          note: "CLEAN over all six emitters, the compiler, and every host file except App.vue. S11/S12 golden diffs are 100% SOURCE SPANS, zero non-span lines, and NO S11/S12 emitted artifact moved"
+        - cmd: "demo teardown by recorded PID"
+          status: pass
+          note: "FOUR foreign PIDs - 64413, 24931, 31456, 51893 - all CONFIRMED ALIVE. pkill NEVER RUN"
+      deviations:
+        - "THE BRIEF SAID THREE now-false blocks in App.vue AND THERE ARE FOUR (plus a fifth) - see above."
+        - "THE BRIEF'S 'FOUR LANES' IS NOW FIVE - see above."
+        - "THE FIXTURE BINDS draggable={task.id !== ''} INSTEAD OF SPELLING draggable=\"true\". THAT IS THE ENTIRE REASON QWIK COST +0 rather than the +1 the old 267->280 probe measured, and it keeps the static-attribute constraint intact."
+        - "ADDED A BOUND data-dragging ATTRIBUTE THE CARD DID NOT ASK FOR. It buys the dragging highlight a prior constraint had refused, AND it makes dragId a template read, which changes react's lowering from useRef to useState and REMOVES A REAL EMITTER WART. Routed around, recorded, NOT fixed - the emitter is outside allowed_files."
+        - "TWO GATE EXPECTATIONS MOVED FROM [] TO AN EXACT THREE-ITEM LIST. The react and solid dossier gates refuse the emitted drag handlers - THAT IS DEFECTS.md 15 and cannot be avoided while shipping the axis. Recorded by exact equality MINUS THE LINE ORDINAL (which rots), rule NOT disabled, plus a new three-arm calibration per lane. A FOURTH violation still fails."
+        - "THE drop TRACE CARRIES { to } AND NOT THE MOVED CARD'S ID. The qwik emitter throws for any statement after a callback-prop call, reproduced on the first drop handler, so dragId must be cleared BEFORE onTrace runs. The card's id is on the dragstart trace instead."
+      remaining_blockers:
+        - "MEASURED QWIK LANE LIMIT: the FIRST drop after a drag released outside a drop zone IS LOST; the next drop lands. Reproduced from a fresh page in three arms with a real mouse. EVERY VISIBLE PRECONDITION IS CORRECT WHEN IT HAPPENS - drop delivered, defaultPrevented true, dragId correct, NO console or page error - and a 2.5s settle does not help. MECHANISM UNRESOLVED AND RECORDED AS UNRESOLVED. Inside qwik's own resumability envelope, NOT to file upstream."
+        - "DEFECTS.md 15 IS NOW UNDERSTATED and is outside allowed_files: it records FOUR lanes with angular unresolved; angular is MEASURED completing one. It also has no row for the four static instruments this card added."
+        - "SIX MORE HOST FILES CARRY THE SAME STALE S16 DRAG PROSE, all outside allowed_files, plus demos/shared/board-css/README.md still saying 'S16 is the drag scenario and it has no drag'. SAME CLASS AS THE demo.mjs BLOCKER T007 RECORDED."
+        - "THE REACT EMITTER EMITS A DEAD `const currentStateN` for any handler that writes a useRef-lowered cell without reading it. Newly surfaced, avoided on this page, NOT fixed."
+        - "NO DROP INDICATOR AND NO REORDERING WITHIN A COLUMN - both need a bound class or style, whose lowering is UNMEASURED in all six lanes. Refused BY NAME rather than attempted."
+        - "THE DRAG IS A CHROMIUM CLAIM. Firefox requires dataTransfer.setData to start a drag and this fixture reads nothing off event.dataTransfer, deliberately. UNMEASURED IN FIREFOX."
+        - "Inherited: hn.css's stale Angular claim, the cascade sweep, the HN domain span-vs-anchor, the seventeen stubs, and Oracle Part 1 for S12 being partial."
+      stopped_because: null
   - id: T005
     type: worker
     assignee: Worker
-    status: queued
+    status: active
     reasoning_hint: medium
     objective: >-
       Close the two DISCOVERABILITY findings: the habit toggle and the contacts form.

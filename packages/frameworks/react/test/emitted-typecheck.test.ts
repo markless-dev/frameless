@@ -209,6 +209,39 @@ describe('React emitted output type-checks', () => {
 			"generated-composition/C8-page-store.tsx: TS2349 This expression is not callable.   Type '{}' has no call signatures.",
 			"C8-page-store's `increment()` dispatch loop calls `listener()` off `countListeners`, declared `new Set()`.",
 		],
+		// THE TWO BELOW ARE NOT "CORRECT AT RUNTIME" AND THEY ARE THE ONLY ENTRIES
+		// IN THIS TABLE THAT ARE NOT. Every other row above says tsc cannot express
+		// something JS does correctly. THESE TWO SAY THE EMITTED OUTPUT IS WRONG,
+		// and tsc is right: `onDragover` and `onDragstart` are not react props and
+		// react-dom will never fire them. THAT IS DEFECTS.md 15, and this table is
+		// the first STATIC instrument in the repo that reports it.
+		//
+		// `frameless-app-fidelity-v1` T004 shipped the drag axis on S16 knowing this
+		// lane cannot run it - the compiler's `jsxEventName` does
+		// `name.slice(2).toLowerCase()`, which is LOSSLESS with respect to the DOM
+		// (`dragover` IS the event name, and five lanes bind by it and work) and
+		// destructive only against react-dom's camelCase prop table. The S16 page
+		// keeps its arrow buttons for that reason and says so in words.
+		//
+		// READ WHAT TSC ADDED UNPROMPTED: "Did you mean 'onDragOver'?" - it named
+		// the authored spelling the compiler destroyed. AND READ WHAT IT DID NOT
+		// COMPLAIN ABOUT: `onDrop`, in the same failing object literal, is typed
+		// `(event: DragEvent<HTMLUListElement>) => void`. `onDrop` is ONE word, so
+		// `.toLowerCase()` is a no-op on it and it round-trips to react's own prop
+		// name. ONE ELEMENT, TWO HANDLERS, AND ONLY THE TWO-WORD ONES ARE BROKEN -
+		// which is the whole mechanism of that defect entry in a single diagnostic.
+		//
+		// FIXING THIS MEANS RECORDING THE WORD BOUNDARY IN THE IR. It is a compiler
+		// change and it is not this table's to make; when it lands, these two rows
+		// must be DELETED, and the exact-equality assertion below will force that.
+		[
+			"generated/S16.tsx: TS2322 Type '{ children: Element[]; className: string; \"data-cards\": string; onDragover: (event: any) => void; onDrop: (event: DragEvent<HTMLUListElement>) => void; }' is not assignable to type 'DetailedHTMLProps<HTMLAttributes<HTMLUListElement>, HTMLUListElement>'.   Property 'onDragover' does not exist on type 'DetailedHTMLProps<HTMLAttributes<HTMLUListElement>, HTMLUListElement>'. Did you mean 'onDragOver'?",
+			"S16's column drop zone. DEFECTS.md 15: the compiler flattened `onDragOver` to `dragover` and this lane re-spells it `onDragover`, which react-dom does not know. NOT correct at runtime - it is the defect. `onDrop` beside it is fine because it is one word.",
+		],
+		[
+			"generated/S16.tsx: TS2322 Type '{ children: Element[]; key: string; className: string; \"data-card\": string; \"data-dragging\": string; draggable: boolean; onDragstart: (event: any) => void; onDragend: (event: any) => void; }' is not assignable to type 'DetailedHTMLProps<LiHTMLAttributes<HTMLLIElement>, HTMLLIElement>'.   Property 'onDragstart' does not exist on type 'DetailedHTMLProps<LiHTMLAttributes<HTMLLIElement>, HTMLLIElement>'. Did you mean 'onDragStart'?",
+			"S16's draggable card, same defect on the source element. Note `draggable: boolean` types CLEANLY: the fixture BINDS it rather than spelling `draggable=\"true\"`, which is what keeps the qwik lane's `draggable?: boolean` diagnostic off this axis entirely.",
+		],
 	];
 
 	test('produces exactly the accepted diagnostics and no others', () => {

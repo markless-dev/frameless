@@ -136,6 +136,7 @@ export function TaskBoard({
 			},
 		];
 	});
+	const [dragId, setDragId] = useState('');
 	const shipped = columns
 		.filter((column) => column.nextId === '')
 		.reduce((sum, column) => sum + column.tasks.length, 0);
@@ -326,12 +327,14 @@ export function TaskBoard({
 					<p className="tb-note" data-tb="dragnote">
 						<span className="tb-notemark">!</span>
 						<span className="tb-notetext">
-							DRAG AND DROP IS NOT WIRED ON THIS PAGE, and that absence is the
-							measurement. Cards move with the ◀ and ▶ arrows instead — a different
-							interaction, labelled as one. Measured through all six real emitters:
-							the drag events DO emit in five lanes and are inert only where the lane
-							binds by a framework prop name, but one drop zone and one draggable card
-							take pnpm check from 267 to 280. See the fixture header.
+							DRAG A CARD ONTO ANOTHER COLUMN — it works in solid, qwik, svelte, vue
+							and angular, and IT DOES NOT WORK IN REACT, which is the measurement
+							rather than a shortfall. All six emitters produce the handlers from one
+							.tsrx source; react-dom alone binds by a prop name of its own, so the
+							flattened onDragover this compiler emits never fires there and the drop
+							is never allowed. THE ◀ AND ▶ ARROWS MOVE A CARD IN ALL SIX LANES and
+							are how react moves one. The reference this page was measured against
+							has no working drag at all. See the fixture header.
 						</span>
 					</p>
 					<main className="tb-board" data-tb="board">
@@ -358,9 +361,74 @@ export function TaskBoard({
 										<span className="tb-iconglyph">+</span>
 									</button>
 								</div>
-								<ul className="tb-cards" data-cards={column.id}>
+								<ul
+									className="tb-cards"
+									data-cards={column.id}
+									onDragover={(event) => {
+										event.preventDefault();
+									}}
+									onDrop={(event) => {
+										event.preventDefault();
+										const nextColumns = columns.map((entry) =>
+											entry.id === column.id
+												? {
+														id: entry.id,
+														title: entry.title,
+														mark: entry.mark,
+														prevId: entry.prevId,
+														nextId: entry.nextId,
+														tasks: entry.tasks
+															.filter((row) => row.id !== dragId)
+															.concat(
+																columns.flatMap((source) =>
+																	source.tasks.filter(
+																		(row) => row.id === dragId,
+																	),
+																),
+															),
+													}
+												: entry.tasks.filter((row) => row.id === dragId)
+															.length === 0
+													? entry
+													: {
+															id: entry.id,
+															title: entry.title,
+															mark: entry.mark,
+															prevId: entry.prevId,
+															nextId: entry.nextId,
+															tasks: entry.tasks.filter(
+																(row) => row.id !== dragId,
+															),
+														},
+										);
+										setColumns(nextColumns);
+										const nextDragId = '';
+										setDragId(nextDragId);
+										onTrace('drop', { to: column.id }, event);
+									}}
+								>
 									{column.tasks.map((task) => (
-										<li key={task.id} className="tb-card" data-card={task.id}>
+										<li
+											key={task.id}
+											className="tb-card"
+											data-card={task.id}
+											data-dragging={task.id === dragId ? 'yes' : 'no'}
+											draggable={task.id !== ''}
+											onDragstart={(event) => {
+												const nextDragId = task.id;
+												setDragId(nextDragId);
+												onTrace(
+													'dragstart',
+													{ id: task.id, from: column.id },
+													event,
+												);
+											}}
+											onDragend={(event) => {
+												const nextDragId = '';
+												setDragId(nextDragId);
+												onTrace('dragend', { id: task.id }, event);
+											}}
+										>
 											<div className="tb-cardtop">
 												<span className="tb-cardmark">{column.mark}</span>
 												<span

@@ -206,31 +206,39 @@ const s8Ready = ref<Promise<string>>(s8ResolvedGate)
 
 <template>
   <!--
-    THE SECOND APPLICATION, and the first route in this demo whose lane count is
-    FIVE rather than six: the angular emitter REFUSES S11 on its
-    global-identifier ban ("Angular emitter cannot resolve the identifier
-    Promise in a transplanted body"), so demos/angular-official has no
-    counterpart to this page. Like /todomvc it is deliberately OUT of the 6 x 9
-    three-way contract - scripts/e2e.mjs pins threeWayScenarios to the literal
-    ['s1'..'s9'] - so this page is browsable only. It takes no seed prop: IR-8
-    has no lowering for an array type, so the list is seeded inside the emitted
-    component.
+    THE SECOND APPLICATION, and a route whose lane count USED TO BE FIVE and is
+    now SIX. The angular emitter refused S11 on its global-identifier ban
+    ("Angular emitter cannot resolve the identifier Promise in a transplanted
+    body"); `frameless-app-fidelity-v1` T007 closed that with a TWO-NAME
+    allowlist - Promise and setTimeout, nothing else - so
+    demos/angular-official now serves /todomvc-advanced. Like /todomvc it is
+    deliberately OUT of the 6 x 9 three-way contract - scripts/e2e.mjs pins
+    threeWayScenarios to the literal ['s1'..'s9'] - so this page is browsable
+    only. It takes no seed prop: IR-8 has no lowering for an array type, so the
+    list is seeded inside the emitted component.
 
-    THIS LANE EMITS, PASSES ITS OWN GATE, AND THEN THROWS. MEASURED IN A BROWSER
-    at this route, verbatim: `_ctx.Promise is not a constructor`.
-    The vue emitter inlines handlers into TEMPLATE EXPRESSIONS, and Vue's template
-    compiler prefixes every identifier outside its own allowlist with `_ctx.`.
-    @vue/shared@3.5.40's GLOBALS_ALLOWED carries Date and JSON and does NOT carry
-    Promise or setTimeout, so S11's artificial delay compiles to
-    `new _ctx.Promise(...)` and is undefined at runtime. compileScript is happy,
-    the vue gate is happy and `pnpm check` is happy; ONLY A BROWSER SEES IT.
-    CONSEQUENCE, STATED PLAINLY: on this page add, destroy, filter and LOCAL
-    search work, and the REMOTE SEARCH and the OPTIMISTIC TOGGLE do not - each
-    throws on its first statement past the boundary. The route is kept rather than
-    deleted because it is genuinely emitted and four of its seven axes run, and
-    because removing it would delete a measured finding. It is a LANE LIMIT inside
-    Vue's own design envelope - template expressions are deliberately scoped to
-    the render context - not a defect to file upstream.
+    THIS LANE USED TO EMIT, PASS ITS OWN GATE, AND THEN THROW, AND THAT IS FIXED.
+    The historical failure, measured in a browser at this route, was verbatim
+    `_ctx.Promise is not a constructor`: the vue emitter inlines handlers into
+    TEMPLATE EXPRESSIONS, and Vue's template compiler prefixes every identifier
+    outside its own allowlist with `_ctx.`. @vue/shared@3.5.40's GLOBALS_ALLOWED
+    carries Date and JSON and does NOT carry Promise or setTimeout, so S11's
+    artificial delay compiled to `new _ctx.Promise(...)` and was undefined at
+    runtime. compileScript was happy, the vue gate was happy, vue-tsc was happy
+    and `pnpm check` was happy; ONLY A BROWSER EVER SAW IT.
+    THE REPAIR DID NOT TOUCH THAT UPSTREAM LIST, WHICH IS NOT OURS AND HAS NO
+    HOOK. The emitter now writes a `<script setup>` SHIM CONST for each
+    allowlisted free identifier, bound with `.bind(globalThis)` - binding
+    matters, because @vitejs/plugin-vue compiles a setup binding to a
+    `$setup.setTimeout(...)` METHOD CALL whose receiver Web IDL rejects, and an
+    unbound shim merely traded one runtime throw for `Illegal invocation` while
+    every compile-level instrument stayed green. A setup binding is not
+    `_ctx.`-prefixed at all, so the defect has no path left.
+    STATED PLAINLY: every axis on this page runs - add, destroy, filter, LOCAL
+    search, the REMOTE SEARCH and the OPTIMISTIC TOGGLE. Driven in a browser at
+    the commit that repaired it, not inferred from a mount: a page that MOUNTS
+    proved nothing here, because both broken arms HUNG at "saving" rather than
+    crashing on load.
 
     IT MUST BE THE FIRST ARM OF THIS CHAIN, not the last, and that is a real
     constraint rather than a layout choice: `scenarioFor` does not know this
@@ -256,18 +264,22 @@ const s8Ready = ref<Promise<string>>(s8ResolvedGate)
     this path either, so it falls through to 's1', and the chain's first
     `v-else-if` tests for 's1'. A trailing arm could never fire.
 
-    THIS LANE EMITS S12 AND MISBEHAVES ON EXACTLY ONE AXIS, which is why the route
-    is served rather than withheld. The emitter inlines handlers into TEMPLATE
-    EXPRESSIONS and Vue's template compiler prefixes any identifier outside
-    GLOBALS_ALLOWED with `_ctx.`; that list carries Date and JSON and does NOT carry
-    Promise or setTimeout (measured at @vue/shared@3.5.40), so the composer's
-    three-chunk stream throws `_ctx.Promise is not a constructor`. Thread
-    navigation, both tab pairs and the composer draft all work here. Deleting the
-    route would delete a measured finding - it is EMITS-BUT-MISBEHAVES, the third
-    verdict T001 established, and a LANE LIMIT inside Vue's own design envelope
-    rather than a defect to file upstream.
+    THIS LANE USED TO EMIT S12 AND MISBEHAVE ON EXACTLY ONE AXIS, AND THAT AXIS
+    NOW RUNS. The emitter inlines handlers into TEMPLATE EXPRESSIONS and Vue's
+    template compiler prefixes any identifier outside GLOBALS_ALLOWED with
+    `_ctx.`; that list carries Date and JSON and does NOT carry Promise or
+    setTimeout (measured at @vue/shared@3.5.40), so the composer's three-chunk
+    stream threw `_ctx.Promise is not a constructor`. `frameless-app-fidelity-v1`
+    T007 repaired it with bound `<script setup>` shim consts - see the
+    /todomvc-advanced comment above for why the binding is load-bearing - and the
+    streamed answer was then DRIVEN in a browser and observed GROWING across
+    three distinct readings. Thread navigation, both tab pairs and the composer
+    draft worked throughout. The route was kept rather than deleted while it was
+    broken because it was genuinely emitted and the failure was a measured
+    finding; it is now simply correct.
 
-    ANGULAR has no counterpart page at all: that emitter refuses S12 outright.
+    ANGULAR SERVES /codex TOO, since the same card. It refused S12 outright until
+    the two-name allowlist landed.
 
     Two stylesheets, and the order is load-bearing: `/shadcn-theme/tokens.css`
     carries the shadcn/ui default theme (MIT, (c) 2023 shadcn) and must load first;
@@ -288,14 +300,17 @@ const s8Ready = ref<Promise<string>>(s8ResolvedGate)
     's1', and the chain's first `v-else-if` tests for 's1'. A trailing arm could
     never fire.
 
-    THIS IS THE FIRST APPLICATION ROUTE IN THIS DEMO WHOSE LANE COUNT IS SIX, and
-    the first that this lane serves with NOTHING misbehaving. S11 and S12 both
-    throw here on `_ctx.Promise is not a constructor`, because the emitter inlines
+    THIS WAS THE FIRST APPLICATION ROUTE IN THIS DEMO WHOSE LANE COUNT WAS SIX,
+    and the first that this lane served with NOTHING misbehaving. S11 and S12
+    USED TO throw on `_ctx.Promise is not a constructor` - the emitter inlines
     handlers into template expressions and @vue/shared@3.5.40's GLOBALS_ALLOWED
-    omits Promise and setTimeout. S13 NAMES NO GLOBAL AT ALL - every relative age
-    is a literal string in the seeded data rather than something computed from
-    `Date` - so the pincer that costs this lane its two async apps does not reach
-    it. That is a constraint of the fixture (constraint 9), not luck.
+    omits Promise and setTimeout - and `frameless-app-fidelity-v1` T007 closed
+    that with bound `<script setup>` shim consts, so all three routes are now
+    six-lane and none misbehaves. S13's own reason is UNCHANGED AND DIFFERENT: it
+    NAMES NO GLOBAL AT ALL - every relative age is a literal string in the seeded
+    data rather than something computed from `Date`, which is still a refused
+    name on determinism grounds - so the pincer never reached it in the first
+    place. That is a constraint of the fixture (constraint 9), not luck.
 
     IT CANNOT LOAD ON APPEAR AND NOTHING HERE PRETENDS OTHERWISE: fetch-on-render
     is unreachable in every lane, so the twelve stories are seeded inside the
@@ -364,12 +379,16 @@ const s8Ready = ref<Promise<string>>(s8ResolvedGate)
         `threeWayScenarios` to ['s1'..'s9'].
 
     AND THIS LANE'S OWN HISTORY IS THE REASON THE ABSENCE OF ASYNC MATTERS HERE.
-    S11 and S12 EMIT in this lane, pass its gate, pass its typecheck, and THROW IN
-    THE BROWSER - `_ctx.Promise is not a constructor` - because this emitter
-    inlines handlers into TEMPLATE EXPRESSIONS and Vue's compiler prefixes any
-    identifier outside GLOBALS_ALLOWED with `_ctx.`, a list carrying Date and JSON
-    but not Promise or setTimeout. S15 names NO global at all, so five static
-    gates AND the browser agree. That was checked in a browser, not assumed.
+    S11 and S12 EMITTED in this lane, passed its gate, passed its typecheck, and
+    THREW IN THE BROWSER - `_ctx.Promise is not a constructor` - because this
+    emitter inlines handlers into TEMPLATE EXPRESSIONS and Vue's compiler
+    prefixes any identifier outside GLOBALS_ALLOWED with `_ctx.`, a list carrying
+    Date and JSON but not Promise or setTimeout. THAT IS REPAIRED - see the
+    /todomvc-advanced comment - so this page is no longer the only async-free
+    refuge. WHAT DOES NOT CHANGE IS THE POINT THIS ROUTE MAKES: S15 names NO
+    global at all, so five static gates AND the browser agree, and it would have
+    been correct even if the repair had never landed. That was checked in a
+    browser, not assumed.
   -->
   <template v-else-if="habits">
     <link rel="stylesheet" href="/shadcn-theme/tokens.css" />
@@ -380,20 +399,26 @@ const s8Ready = ref<Promise<string>>(s8ResolvedGate)
     THE SEVENTH APPLICATION - the TASK BOARD - and THE DRAG CARD. It is the THIRD
     scenario in this corpus that all six lanes emit and ship, after S13 and S15.
 
-    THE AXIS THIS PAGE EXISTS TO MEASURE IS NOT ON IT, AND THAT IS THE MEASUREMENT.
-    The board predicted the two-word drag events "cannot be produced" because the
-    compiler does `name.slice(2).toLowerCase()`. Measured on a probe through all six
-    real emitters, THEY ARE PRODUCED - and THIS LANE prints `@dragover`, `@dragstart`,
-    `@dragend` and `@pointerdown`, which ARE the real DOM event names, so this lane
-    would have FIRED them and it costs this lane no type error at all. What kept them
-    off the page is the type baseline in the three JSX lanes: `pnpm check` 267 -> 280,
-    which this board's oracle forbids. Cards move with the arrow buttons instead - a
-    DIFFERENT INTERACTION - and the page SAYS SO in `.tb-note`.
+    THE AXIS THIS PAGE EXISTS TO MEASURE IS NOW ON IT. The board predicted the
+    two-word drag events "cannot be produced" because the compiler does
+    `name.slice(2).toLowerCase()`. Measured on a probe through all six real
+    emitters, THEY ARE PRODUCED - and THIS LANE prints `@dragover`, `@dragstart`
+    and `@dragend`, which ARE the real DOM event names, so THIS LANE FIRES THEM
+    and it costs this lane no type error at all. What kept them off the page was
+    the type baseline in the three JSX lanes, `pnpm check` 267 -> 280, read as a
+    wall when it was a budget; `frameless-app-fidelity-v1` T004 stated the rise in
+    advance and landed 251 -> 261, attributing every new line.
+    DRAG A CARD ONTO ANOTHER COLUMN HERE AND IT STAYS. Five lanes do this; REACT
+    DOES NOT, because react-dom binds by its own prop name and never sees the
+    compiler's `onDragover`. The arrow buttons remain in ALL SIX lanes and are how
+    react moves a card, and the page SAYS which is which in `.tb-note`.
 
-    WHAT ONE ARROW CLICK MOVES, all derived from ONE `columns` cell: the card leaves
-    one column's list and appears in another's, both column counts, the source
-    column's empty placeholder, the header's shipped counter and total, the summary
-    sentence AND its emoji, and the moved card's own arrows. NINE observables.
+    WHAT ONE MOVE MOVES - AND A DROP AND AN ARROW CLICK ARE THE SAME MOVE - all
+    derived from ONE `columns` cell: the card leaves one column's list and appears
+    in another's, both column counts, the source column's empty placeholder, the
+    header's shipped counter and total, the summary sentence AND its emoji, and the
+    moved card's own arrows. NINE observables. The drag adds ONE more state cell,
+    `dragId`, and it is a `''`-sentinel string that no part of the template reads.
 
     TWO STYLESHEETS, ORDER LOAD-BEARING. `/shadcn-theme/tokens.css` is the vendored
     shadcn/ui DEFAULT theme (MIT, (c) 2023 shadcn) and must load FIRST.
