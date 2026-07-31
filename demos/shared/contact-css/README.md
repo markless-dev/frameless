@@ -70,12 +70,47 @@ Both measured live, both recorded rather than reproduced:
 The reference opens the form as a **modal dialog**. `.tsrx` has no portal, no
 focus trap and no `dialog` construct, and a modal that is merely an absolutely
 positioned `<div>` is a worse artifact than a panel — so the form is a
-**persistent panel below the grid**, at the dialog's own measured 480px width.
+**persistent right rail beside the grid**, at the dialog's own measured 480px
+width, from a viewport width of 1360px up.
 
-That is deliberately the cheaper divergence: it keeps **both** geometries
-comparable at once. The grid still reads 370 / 12 / 14 and the form still reads
-480 / 24 / 10 / 74, where a right-hand rail would have cost the grid a column and
-made the card pitch unmeasurable.
+### This section used to say "panel below the grid", and that was the defect
+
+It also argued that a rail "would have cost the grid a column and made the card
+pitch unmeasurable", and **chose the wrong side of that trade**. Measured at
+1440×900 in all six lanes with the panel below the grid: document `scrollHeight`
+**2003**, the form's top edge at **y = 848** — fifty-two pixels of title band
+inside a 900px fold — its first field at **y = 935** and its submit button at
+**y = 1910**. Thirteen bound control kinds, and **zero** of them visible on first
+load. The page read as a static card wall, which is exactly how it was reported.
+
+The reference does not have this problem and its numbers say why: its whole
+document is **900 tall at a 900 fold** (`scrollHeight === innerHeight`, no page
+scroll at all), its `New Contact` button sits at **[16, 72, 224, 36]**, above the
+fold, and clicking it opens a `[role="dialog"]` at **[480, 112, 480, 676]**,
+entirely in view. We cannot copy the construct, so the rail reaches the same
+*property* — the form is on screen without scrolling — with the construct this
+authoring surface has.
+
+### What the rail costs, measured rather than waved away
+
+| | below-grid | rail (≥ 1360px) |
+| --- | --- | --- |
+| grid columns at 1440 | 3 | **2** |
+| card width at 1440 | 370 | **314** |
+| column pitch at 1440 | 382 | **326** |
+| document `scrollHeight` | 2003 | **1277** |
+| form top | y = 848 | **y = 249** |
+| control kinds visible in the fold | **1** of 13 | **11** of 13 |
+
+The one was the **search field in the top bar**, which is above the fold in both
+arms and is the only reason this row is not a zero; every control kind that lives
+in the form — all twelve of them — was out of view. The eleven are search, text,
+email, tel, url, select, number, date, time, range and radio; the checkbox group
+and the textarea sit below and are reached by scrolling the rail, which has its
+own scroller and is `position: sticky`. The grid's 370/382 numbers remain in `contacts.css` as what
+was **measured on the reference**, and they were already viewport-dependent here:
+the grid is three `1fr` columns, so at 1359px wide it renders 343.66, not 370.
+Below 1360px the rail does not apply and the page keeps the layout it had.
 
 ## What is NOT in this file, and it is a measurement
 

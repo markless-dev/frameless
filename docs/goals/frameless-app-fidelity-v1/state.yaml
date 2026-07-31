@@ -44,7 +44,7 @@ goal:
       FIXING THE FIVE FINDINGS AND LEAVING THE ORACLE HOLE OPEN. The findings are symptoms; the
       cause is that nothing ever compared a shipped app to the thing it copies.
 
-active_task: T005
+active_task: T999
 
 # ---------------------------------------------------------------------------
 # KNOWN WORKING-TREE DIRT - NOT OURS, DO NOT "CLEAN UP", DO NOT `git add -A`.
@@ -595,7 +595,7 @@ tasks:
   - id: T005
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: >-
       Close the two DISCOVERABILITY findings: the habit toggle and the contacts form.
@@ -668,8 +668,98 @@ tasks:
       - "NEVER pkill -f on a broad pattern. TWO FOREIGN PROCESSES ARE ALIVE: node PID 64413 on 5175 and PID 24931 on 5178. Kill by recorded PID only."
       - "Verification fails twice for the same reason."
       - "You are about to change WHAT the apps do. This card changes only what a user can FIND. The five habit updates and the thirteen contact controls must behave exactly as they do today."
-    receipt: null
-
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T005-discoverability.md
+      summary: "Both findings closed WITHOUT touching a single emitted artifact. HABITS: the whole 664x74 row is now the target - name, row body and dot strip went 0 -> 12 observables IN ALL SIX LANES - bought with ONE transparent ::after overlay on the SAME button. CONTACTS: the form is the RIGHT RAIL its own fixture always claimed; the first field moved from y=935 (out of view) to y=336, and 11 of 13 control kinds are now in a MEASURED 1440x900 fold, up from 1. Both compared against DRIVEN captures of their own references. pnpm check 261 -> 261, predicted 0 in advance."
+      THE_BRIEFS_CLAIM_ABOUT_THE_EMOJI_IS_FALSE_AND_IT_MEASURED_BEFORE_TRUSTING_IT: "I wrote 'the emoji and the sidebar name do nothing'. `.ht-checkemoji` IS A CHILD OF THE TOGGLE BUTTON - at HEAD, clicking it moved ALL TWELVE OBSERVABLES IN ALL SIX LANES. What was actually inert was the NAME, the META LINE, the DOT STRIP and the SIDEBAR. TAKING THE BRIEF LITERALLY WOULD HAVE SENT IT HUNTING A BROKEN BINDING ON A CONTROL THAT ALREADY WORKED."
+      THE_NEGATIVE_CONTROL_CAUGHT_ITS_OWN_FIRST_FIX_NOT_THE_PAGE: "The first overlay used `inset: -14px -16px`. INSET RESOLVES AGAINST THE CONTAINING BLOCK'S PADDING BOX, NOT ITS BORDER BOX, so it reached 13px OUTSIDE every card and SWALLOWED THE 10px ROW GAP - a click in the gap TOGGLED THE CARD BELOW IT in all six lanes, WITH NOTHING VISIBLY WRONG. Fixed to `inset: 0` and re-proved in both directions."
+      IT_DELIVERED_THE_HIT_AREA_IN_CSS_AND_LEFT_21_ARTIFACTS_UNTOUCHED: "The fixture, golden, six generated/, six src/emitted/, enriched-ir.test.ts and six size budgets were ALL INSIDE allowed_files AND DELIBERATELY NOT TOUCHED. Wrapping the row content in the button would have MOVED 21 ARTIFACTS TO BUY A HIT AREA; the pseudo-element buys the SAME hit area on the SAME button, so the handler, the single write and EVERY EMITTED BYTE are unchanged."
+      BOTH_REFERENCES_WERE_DRIVEN_AND_WE_OVERSHOOT_BOTH_DELIBERATELY: "The habit reference's target is ALSO a 44x44 button with the emoji inside, cursor DEFAULT, and its row name, row body and sidebar are ALL INERT with NO row hover at all. The contacts reference has ZERO headings and a type=text Notes field. WE FOLLOW ITS 480px WIDTH AND ITS NO-SCROLL PROPERTY, NOT ITS MODAL CONSTRUCT - which is the one thing .tsrx cannot express. Where we overshoot, the READMEs say so."
+      changed_files:
+        - demos/shared/habit-css/habits.css
+        - demos/shared/habit-css/README.md
+        - demos/shared/contact-css/contacts.css
+        - demos/shared/contact-css/README.md
+        - demos/react-official/public/habit-css/habits.css
+        - demos/solid-official/public/habit-css/habits.css
+        - demos/qwik/public/habit-css/habits.css
+        - demos/svelte-official/static/habit-css/habits.css
+        - demos/vue-official/public/habit-css/habits.css
+        - demos/angular-official/public/habit-css/habits.css
+        - demos/react-official/public/contact-css/contacts.css
+        - demos/solid-official/public/contact-css/contacts.css
+        - demos/qwik/public/contact-css/contacts.css
+        - demos/svelte-official/static/contact-css/contacts.css
+        - demos/vue-official/public/contact-css/contacts.css
+        - demos/angular-official/public/contact-css/contacts.css
+        - docs/goals/frameless-app-fidelity-v1/notes/T005-discoverability.md
+      commands:
+        - cmd: "owner fingerprint START and FINISH, shasum -a 256"
+          status: pass
+          note: "f326d314 / aeb7edc1 / f936e169, 116 files. IDENTICAL. The three dirty paths untouched"
+        - cmd: "A PRIORI pnpm check prediction written to disk BEFORE the first edit"
+          status: pass
+          note: "PREDICTED END 261, DELTA 0, BOUND +0 - css and md only. ALSO recorded that the card's 'Baseline is 251' IS STALE"
+        - cmd: "pnpm check"
+          status: pass
+          note: "START 261 -> END 261. Delta 0 exactly as predicted. RE-MEASURED at HEAD, not inherited"
+        - cmd: "ORACLE PART 1: both references DRIVEN at 1440x900"
+          status: pass
+          note: "habit target is also a 44x44 button, row inert, no hover; contacts scrollHeight 900 == fold, dialog fully in view, 0 headings, notes type=text"
+        - cmd: "HABITS driven in six lanes, five click points"
+          status: pass
+          note: "circle 12->12, emoji 12->12, NAME 0->12, ROW BLANK 0->12, DOT STRIP 0->12 IN ALL SIX. Card and toggle rects unchanged"
+        - cmd: "NEGATIVE CONTROLS (habits)"
+          status: pass
+          note: "CAUGHT A REAL DEFECT IN ITS OWN FIRST VERSION - see the inset finding. After the fix the gap returns UL.ht-list and moves nothing; sidebar inert; row 2 toggles h2 ONLY"
+        - cmd: "CONTACTS at a MEASURED 1440x900 viewport, six lanes"
+          status: pass
+          note: "form top 848 -> 249, first field 935 (out of view) -> 336 (in view), scrollHeight 2003 -> 1277, control kinds in the fold 1 of 13 -> 11 of 13"
+        - cmd: "CONTACTS behaviour unchanged: all thirteen control kinds driven"
+          status: pass
+          note: "every field moves the live preview, search 9->1, status filter 2, submit adds 9->10, sidebar reset clears 14 cells - IN ALL SIX LANES"
+        - cmd: "TRUE BEFORE-ARM: react lane temporarily served the HEAD stylesheet, then restored"
+          status: pass
+          note: "identical results in both arms; lane copy restored and re-digested byte-identical"
+        - cmd: "body hashes, never HTTP 200"
+          status: pass
+          note: "react, solid AND vue answer 200 for a bogus path; /habits, /contacts and bogus hashes ALL DISTINCT in all six"
+        - cmd: "DERIVATION PROOF with a shell ARRAY, run twice"
+          status: pass
+          note: "12 artifacts: 12 -> PRESENT AFTER DELETE 0 ASSERTED BEFORE REBUILD -> ALL 12 BYTE-IDENTICAL. Array-length AND empty-digest guards both abort"
+        - cmd: "pnpm test"
+          status: pass
+          note: "1 failed / 1412 passed - exactly the foreign ARM B"
+        - cmd: "pnpm e2e"
+          status: pass
+          note: "PASS - 6 demos x 9 scenarios, all observations equal. Run AGAIN after the last prose edit"
+        - cmd: "pnpm lint / pnpm check:citations"
+          status: pass
+          note: "0/0 over 558 files; citations clean, 610 swept - re-run after every prose edit"
+        - cmd: "git diff --exit-code over unintended artifacts"
+          status: pass
+          note: "CLEAN over packages/, scripts/, state.yaml, all six lanes' src/, the other shared sheets and both copy scripts. NO fixture, golden, generated/ or src/emitted/ artifact moved"
+        - cmd: "demo teardown by recorded PID"
+          status: pass
+          note: "FOUR foreign PIDs confirmed alive at start AND exit. pkill NEVER RUN"
+      deviations:
+        - "THE BRIEF'S 'THE EMOJI DOES NOTHING' IS FALSE - see above. Measured before trusting it."
+        - "THE CARD'S VERIFY SAYS 'Baseline is 251' AND IT IS STALE - T004 spent a stated +10. Re-measured 261 and recorded in the a-priori file BEFORE editing."
+        - "DELIVERED THE ROW TARGET IN CSS rather than by restructuring the fixture - see above."
+        - "ITS FIRST OVERLAY WAS WRONG AND ITS OWN NEGATIVE CONTROL CAUGHT IT - see above."
+        - "THE CONTACTS RAIL IS GATED AT @media (min-width: 1360px). Below that the 480px rail leaves the two card columns UNDER 240px - narrower than a single email address - so the page keeps the layout it had."
+        - "THE RAIL COSTS THE CARD GRID A COLUMN AT >=1360px: cards 370 -> 314 wide, columns 3 -> 2. THE REFERENCE KEEPS THREE BECAUSE ITS FORM IS A MODAL THAT COSTS THE GRID NOTHING, which is the one construct .tsrx does not have. Recorded as a MEASURED TRADE TABLE rather than omitted."
+        - "TEXT INSIDE A HABIT CARD IS NO LONGER MOUSE-SELECTABLE. Accepted deliberately and written into the sheet and the README."
+        - "EDITED BOTH SHARED README.md FILES because their prose had gone FALSE: contacts' README described a 'persistent panel below the grid' and argued AGAINST the rail on card-pitch grounds, WHILE THE FIXTURE'S OWN CONSTRAINT (18) HAD CLAIMED A RAIL ALL ALONG."
+      remaining_blockers:
+        - "A LIVE SUBMIT TRAP ON /contacts, FOUND, DIAGNOSED AND DELIBERATELY NOT FIXED. The Website field is type=\"url\" and ITS OWN PLACEHOLDER IS `example.com` - a bare host, WHICH IS NOT A VALID URL. With it filled, checkValidity() is false, THE SUBMIT EVENT NEVER FIRES, no card is added, and NOTHING ON THE PAGE SAYS SO - the guard hint keys on the three required fields, which ARE filled. With https:// the same form adds 9 -> 10. PROVED PRE-EXISTING by a true before-arm AND at 1200px where this card's media query does not apply. Every fix changes what the app DOES, which is this card's stop_if."
+        - "Below 1360px the contacts form is still below the fold, exactly as it was."
+        - "The sidebar habit rows stay inert in both apps. BOTH REFERENCES AGREE; making them live is a behaviour change needing its own card."
+        - "Inherited and untouched: the seventeen destination-less /hn stubs, DEFECTS.md 15 being understated, the qwik first-drop loss, and the stale S16 drag prose in six host files."
+      stopped_because: null
   - id: T006
     type: worker
     assignee: Worker
@@ -1064,7 +1154,7 @@ tasks:
   - id: T999
     type: judge
     assignee: Judge
-    status: queued
+    status: active
     reasoning_hint: high
     objective: "Final audit: certify all three oracle parts, or refuse."
     constraints:

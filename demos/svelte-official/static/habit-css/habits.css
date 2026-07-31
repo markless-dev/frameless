@@ -783,7 +783,16 @@ body:has(.ht) {
 	padding: 0;
 }
 
+/*
+ * `position: relative` IS LOAD-BEARING AND IT IS NOT DECORATION - it is the
+ * containing block for `.ht-check::after`, which is what makes THE WHOLE ROW the
+ * click target. See the block on `.ht-check::after` below. It moves nothing:
+ * `.ht-card` is a flex row with no absolutely positioned descendant of its own,
+ * and MEASURED across all six lanes the card rect is unchanged at
+ * 516,377,664,74.
+ */
 .ht-card {
+	position: relative;
 	display: flex;
 	align-items: center;
 	gap: 14px;
@@ -793,10 +802,28 @@ body:has(.ht) {
 	border-radius: var(--radius-xl);
 	background: var(--card);
 	color: var(--card-foreground);
+	transition:
+		background 160ms ease,
+		border-color 160ms ease;
 }
 
 .ht-card-done {
 	background: var(--muted);
+}
+
+/*
+ * THE ROW-WIDE HOVER, AND IT IS THE HALF OF THE AFFORDANCE A CURSOR CANNOT
+ * CARRY. `:has()` is already this sheet's idiom (`html:has(.ht)` and four
+ * siblings above), and it is the only spelling that can style an ANCESTOR from
+ * the hovered control. Because `.ht-check::after` covers the row, hovering
+ * ANYWHERE on the card - the emoji, the name, the dot strip, the empty space to
+ * the right of the rate - satisfies `.ht-check:hover` and lights the whole row.
+ * A hover that stops at a 44px circle is exactly what let a working page read as
+ * a dead one.
+ */
+.ht-card:has(.ht-check:hover) {
+	border-color: color-mix(in oklab, var(--primary) 45%, var(--border));
+	background: color-mix(in oklab, var(--primary) 5%, var(--card));
 }
 
 /*
@@ -831,7 +858,76 @@ body:has(.ht) {
 }
 
 .ht-check:hover {
-	border-color: color-mix(in oklab, var(--muted-foreground) 60%, transparent);
+	border-color: color-mix(in oklab, var(--primary) 70%, transparent);
+	background: color-mix(in oklab, var(--primary) 8%, transparent);
+}
+
+/*
+ * ==========================================================================
+ * THE WHOLE ROW IS THE TARGET, AND IT IS ONE PSEUDO-ELEMENT RATHER THAN A
+ * SECOND HANDLER.
+ * ==========================================================================
+ *
+ * THE MEASURED FINDING THIS CLOSES. At 1440x900, in ALL SIX LANES, the only
+ * thing on a 664x74 habit card that answered a click was the 44x44 toggle -
+ * 1936 of 49136 px2, FOUR PER CENT of the row. Everything else - the name, the
+ * streak chip, the seven-dot strip, the rate, the empty space - was inert, so a
+ * reader who clicked the row and not the circle saw NOTHING MOVE and concluded
+ * the page was dead. It was never dead: one click moves TWELVE observables here
+ * (the eight the fixture header lists, plus the toggle's two hidden halves, the
+ * card's own class and the sidebar name), and the ONLY problem was finding it.
+ *
+ * WHY A PSEUDO-ELEMENT AND NOT MARKUP. The alternative is to wrap the row's
+ * content in the `<button>` in `s15-habit-tracker.tsrx`, which would move the
+ * fixture, the golden, six `generated/` artifacts, six `src/emitted/` copies,
+ * the eighty-one-row host census in `enriched-ir.test.ts` and six per-lane size
+ * budgets - to buy a hit area. `.ht-check::after` buys the SAME hit area in
+ * this one file: it is a child box of the BUTTON, so a click that lands on it
+ * is a click on the button - the same button, the same single handler, the same
+ * one `habits` write. NOTHING THE APP DOES CHANGES; only what a user can FIND.
+ *
+ * HOW THE GEOMETRY RESOLVES. `.ht-check` is `position: static`, so the
+ * containing block of its `::after` is the nearest positioned ancestor -
+ * `.ht-card`, which is why the `position: relative` above is load-bearing.
+ * `border-radius: inherit` would inherit the BUTTON's radius, so the card's
+ * `--radius-xl` is named directly.
+ *
+ * `inset: 0` AND NOT `inset: -14px -16px`, AND A NEGATIVE CONTROL IS WHY. The
+ * first version of this rule used the negative of `.ht-card`'s own padding, on
+ * the belief that the insets resolve against the card's BORDER box. THEY DO
+ * NOT: an absolutely positioned box resolves its insets against the containing
+ * block's PADDING BOX, which already contains the padding. The overlay
+ * therefore reached 13px OUTSIDE each card, and since `.ht-list`'s row gap is
+ * 10px, IT SWALLOWED THE WHOLE GAP: `document.elementFromPoint` in the gap
+ * between two cards returned `BUTTON.ht-check`, and a real click in the gap
+ * toggled the card BELOW it, in all six lanes. Caught by the negative control
+ * that clicks the gap and asserts nothing moves, not by looking at the page.
+ * `inset: 0` covers the card's padding box - every pixel of the row except its
+ * own 1px border ring - and the gap goes inert again.
+ *
+ * `cursor` IS INHERITED BY PSEUDO-ELEMENTS FROM THEIR ORIGINATING ELEMENT, so
+ * `.ht-check`'s `cursor: pointer` now covers the whole row: the pointer appears
+ * the moment the mouse enters the card, which is the affordance the 4% target
+ * could not give at any contrast.
+ *
+ * THE COST, MEASURED AND KEPT. The overlay sits above the card's text in paint
+ * order, so TEXT INSIDE A HABIT CARD CAN NO LONGER BE SELECTED with the mouse.
+ * That is a real regression against the reference, where the row is inert and
+ * the name selects; it is accepted here because the reference's row is inert in
+ * BOTH directions - measured live, clicking its habit name, its row body and
+ * its blank space moves nothing - and a corpus page whose one interaction reads
+ * as dead is the worse artifact. The name is still selectable in the SIDEBAR
+ * repeat, which is not overlaid.
+ *
+ * NOTHING ELSE IN THE CARD IS INTERACTIVE, so the overlay steals no other
+ * target: the row holds exactly one control and it is this button.
+ */
+.ht-check::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	border-radius: var(--radius-xl);
+	background: transparent;
 }
 
 .ht-check-on {

@@ -41,6 +41,35 @@ measured geometry, which is the thing the licence ruling forbids. The fan-out is
 unaffected: the toggle still goes from a dashed transparent ring to a solid
 filled field, which is what is asserted.
 
+## Where this page deliberately overshoots the reference: the row is the target
+
+The reference's habit row is a `<div>` carrying one `<button>`, and that button
+is **44×44** — the same 44 this sheet measured and reproduced. Everything else in
+the row is inert there, and it was inert here too. Driven live on the reference
+at 1440×900, one page per arm from a fresh load:
+
+| clicked | reference | this page, before | this page, now |
+| --- | --- | --- | --- |
+| the 44×44 toggle | `0/6 → 1/6`, 2 strikethroughs | 12 observables move | 12 observables move |
+| the emoji inside it | `0/6 → 1/6` | 12 observables move | 12 observables move |
+| the habit **name** | **nothing** | **nothing** | **12 observables move** |
+| the row body / dot strip | **nothing** | **nothing** | **12 observables move** |
+
+The reference's own toggle even computes `cursor: default`; this one is
+`cursor: pointer`, over the whole row. That is a **deliberate divergence**, and
+it is recorded here rather than in a comparison table that quietly reports a
+match: a 44×44 target on a 664×74 row is **four per cent** of the row, and a
+reader who clicks the other ninety-six per cent sees nothing move and concludes
+the page is dead — which is what happened.
+
+It is bought with `.ht-check::after`, one transparent overlay that belongs to the
+**same button**, so no handler, no markup and no emitted artifact changes. The
+cost is measured and kept: text inside a habit card can no longer be selected
+with the mouse (`getSelection()` returns `''` over the card name and `'Meditate'`
+over the sidebar name, which is not overlaid). `habits.css` carries the full
+argument, including the negative control that caught the first version
+swallowing the 10px gap between cards.
+
 ## Cascade order is load-bearing
 
 ```html

@@ -54,10 +54,17 @@
  * AND ONE PLACE THE LAYOUT DIVERGES, WITH A REASON: the reference opens the form
  * as a MODAL DIALOG. `.tsrx` has no portal, no focus trap and no `dialog`
  * construct, and a modal that is merely an absolutely positioned `<div>` is a
- * worse artifact than a panel, so the form is a PERSISTENT PANEL below the grid
- * at the dialog's own measured 480px width. That keeps BOTH geometries
+ * worse artifact than a panel, so the form is a PERSISTENT RIGHT RAIL beside the
+ * grid at the dialog's own measured 480px width. That keeps BOTH geometries
  * comparable: the grid still reads 370/12/14 and the form still reads
  * 480/24/10/74.
+ *
+ * THAT SENTENCE USED TO SAY "PANEL BELOW THE GRID", AND THE PAGE MEANT IT: the
+ * form's top sat at y=848 of a 900px fold with its first field at y=935, so a
+ * page carrying thirteen live control kinds read as a static card wall. The rail
+ * is built in the `@media (min-width: 1360px)` block beside `.cs-main` below,
+ * which carries the before-and-after measurement and the reference's dialog
+ * rects.
  */
 
 /*
@@ -624,6 +631,88 @@ body:has(.cs) {
 	display: grid;
 	grid-template-columns: repeat(3, minmax(0, 1fr));
 	gap: 12px;
+}
+
+/*
+ * ==========================================================================
+ * THE RAIL, AND IT IS THE LAYOUT THE FIXTURE HEADER HAS CLAIMED SINCE THE PAGE
+ * SHIPPED.
+ * ==========================================================================
+ *
+ * `s17-contacts.tsrx` constraint (18) says, verbatim, "THE FORM IS A PERSISTENT
+ * RIGHT RAIL, NOT A MODAL", and the header at the top of THIS file said
+ * "PERSISTENT PANEL BELOW THE GRID". Only the second one was true, and it is the
+ * whole finding: `.cs-main` was a single flex COLUMN, so nine cards in a
+ * three-wide grid pushed the form down the page.
+ *
+ * MEASURED AT 1440x900 IN ALL SIX LANES BEFORE THIS BLOCK EXISTED: document
+ * scrollHeight 2003, `[data-cs="form"]` top at y=848 - fifty-two pixels of
+ * title band inside a 900px fold - `[data-control="first"]` at y=935 (OUT of
+ * view) and the submit button at y=1910. Every one of the thirteen control kinds
+ * worked; exactly ONE of them could be seen, and only because the SEARCH field
+ * lives in the top bar rather than in the form. All TWELVE form controls were
+ * below the fold. The page read as a static card wall. With the rail: ELEVEN of
+ * the thirteen are in the fold on first load - search, text, email, tel, url,
+ * select, number, date, time, range and radio - with the checkbox group and the
+ * textarea one scroll of the rail's own scroller away.
+ *
+ * THE REFERENCE'S ANSWER IS A MODAL AND WE CANNOT COPY IT - measured live at the
+ * same 1440x900: its whole document is exactly 900 tall (scrollHeight 900, NO
+ * page scroll at all), its "New Contact" button sits at [16,72,224,36] above the
+ * fold, and clicking it opens a `[role="dialog"]` at [480,112,480,676], fully in
+ * view. `.tsrx` has no portal, no focus trap and no `dialog` construct, so the
+ * rail is the shape that reaches the same PROPERTY - the form is on screen with
+ * no scrolling - through the construct this authoring surface actually has. Its
+ * 480px width IS the dialog's measured width, so both geometries still read
+ * 480/24/10/74.
+ *
+ * PLACEMENT IS EXPLICIT AND THAT IS DELIBERATE. `.cs-main`'s children are, in
+ * DOM order, the grid, the empty-state note and the form; auto-placement would
+ * put the empty note in column 2 and wrap the form. Nothing in the DOM moves -
+ * this card changes what a user can FIND, never what the app does or what it
+ * emits.
+ *
+ * THE BREAKPOINT IS MEASURED, NOT ROUND. Below 1360px the 480px rail leaves the
+ * two card columns under 240px, narrower than a single email address, so the
+ * page keeps the stacked layout it has always had and the sidebar's "New
+ * contact" button remains the above-the-fold affordance. At 1440 the content
+ * column is 1184: 1136 inside the 24px padding, minus 480 minus the 16px gap
+ * leaves 640, which is two 314px cards.
+ */
+@media (min-width: 1360px) {
+	.cs-main {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) 480px;
+		align-items: start;
+		gap: 16px;
+	}
+
+	.cs-grid {
+		grid-column: 1;
+		grid-row: 1;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+
+	.cs-empty {
+		grid-column: 1;
+		grid-row: 2;
+	}
+
+	/*
+	 * STICKY WITH ITS OWN SCROLLER, which is the closest a non-modal panel gets
+	 * to the reference's dialog: the form is 1123px tall and no fold is, so
+	 * pinning it and letting IT scroll is what makes every one of the thirteen
+	 * controls reachable without scrolling the PAGE. `top: 16px` matches
+	 * `.cs-main`'s own top padding.
+	 */
+	.cs-form {
+		grid-column: 2;
+		grid-row: 1 / span 2;
+		position: sticky;
+		top: 16px;
+		max-height: calc(100vh - 32px);
+		overflow-y: auto;
+	}
 }
 
 /* --------------------------------------------------------------- the card */
