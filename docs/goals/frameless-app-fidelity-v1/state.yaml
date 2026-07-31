@@ -46,6 +46,17 @@ goal:
 
 active_task: T006
 
+# ---------------------------------------------------------------------------
+# KNOWN WORKING-TREE DIRT - NOT OURS, DO NOT "CLEAN UP", DO NOT `git add -A`.
+# `git status --short` shows `M pnpm-lock.yaml`, `M pnpm-workspace.yaml` and
+# `?? website/` - EXACTLY the three paths every stop_if forbids touching.
+# VERIFIED BY THE PM: mtimes are 2026-07-28, three days before this session, and
+# the last commit touching either file is d1ad075, long predating it. NO CARD
+# CAUSED THEM. Every card's verify pairs `git diff --exit-code` with
+# `git status --short`, so a worker WILL see this - it is the owner's in-flight
+# work and it stays exactly as it is.
+# ---------------------------------------------------------------------------
+
 rules:
   - "state.yaml is board truth; goal.md is the charter."
   - "Exactly one active task unless disjoint write scopes are proven."
@@ -297,7 +308,7 @@ tasks:
   - id: T003
     type: judge
     assignee: Judge
-    status: queued
+    status: done
     concurrent_with: >-
       DISPATCHED ALONGSIDE T002, AND THE DISJOINTNESS IS PROVEN NOT ASSUMED: both are READ-ONLY
       Judges, so neither writes a product file at all, and their only writes are their own notes
@@ -333,8 +344,42 @@ tasks:
       - "what it excludes, stated plainly"
       - "whether vue's runtime throw closes here or upstream"
       - "worker spec if it should proceed"
-    receipt: null
-
+    receipt:
+      result: done
+      decision: approved
+      full_outcome_complete: false
+      harness: claude-code
+      summary: "ADMIT EXACTLY TWO NAMES: Promise and setTimeout. Refuse Date, JSON, Math, console, fetch, localStorage, document, window. VUE IS FIXABLE HERE: GLOBALS_ALLOWED is upstream's and unhookable, BUT EXTENDING IT WAS NEVER REQUIRED - binding metadata bypasses _ctx prefixing entirely. Angular S11/S12 ALREADY MEASURED emitting, typechecking and gate-clean under the two-name allowlist."
+      THE_FIX_IS_INVERTED_FROM_WHAT_THE_BRIEF_ASSUMED: "The brief's best observation was that ANGULAR'S BEHAVIOUR IS BETTER. Its conclusion should have been drawn: THE FIX IS NOT 'GIVE ANGULAR VUE'S ALLOWLIST' - IT IS 'GIVE VUE ANGULAR'S THROW'. Vue's new check is DELIBERATELY STRICTER than upstream's GLOBALS_ALLOWED: it throws on Date, JSON, Math and console even though upstream would accept them, BECAUSE THAT ASYMMETRY IS THE BUG CLASS - it lets a fixture pass vue and fail angular, which is today's failure in reverse."
+      THE_FALSE_DICHOTOMY_WAS_THE_LOAD_BEARING_ERROR: "I asked whether vue's throw closes HERE or UPSTREAM. BOTH HALVES ARE TRUE AT ONCE, WHICH IS WHY THE QUESTION DECIDES NOTHING. canPrefix(id) in @vue/compiler-core@3.5.40 calls isGloballyAllowed and TAKES NO OPTIONS - there is no hook, so the list is not ours. AND EXTENDING IT WAS NEVER REQUIRED: prefixing is decided per identifier and is BYPASSED ENTIRELY by <script setup> binding metadata. Three arms measured through @vue/compiler-sfc: ARM A (today, handler inline) _ctx hits ['_ctx.Promise','_ctx.setTimeout'] - DEFECT REPRODUCED AT ORIGIN; ARM B (handler hoisted) []; ARM C (inline + shim const) [], 0 errors."
+      IT_CHOSE_ARM_C_ON_MEASURED_BLAST_RADIUS: "Arm B works and MOVES ALL SIXTEEN VUE ARTIFACTS, forcing the gate's worked example 12a census to be RE-DERIVED FROM A DIFFERENT SOURCE because it walks handler bodies in the emitted templates. ARM C MOVES TWO. And the obvious objection to a shim - unbound setTimeout throwing 'Illegal invocation' - IS REFUTED IN REAL CHROMIUM: unbound setTimeout, unbound fetch and a strict-mode module-scope shim all returned OK. No .bind() needed."
+      THE_CENSUS_IS_THE_DECIDING_ARGUMENT_NOT_A_TAXONOMY: "Comment-stripped across all 17 fixtures, the ONLY globals named in authored executable code are Promise and setTimeout, in S11 and S12 ALONE. Date, JSON, Math, console, fetch, localStorage and document score ZERO. That makes the angular emitter's OWN RECORDED STANDARD decisive and still true: 'THERE IS NO GLOBALS ALLOWLIST, deliberately... an allowlist would be untested dead code, which in an emitter is worse than absent code.' Admitting Date or fetch TODAY would ship exactly that."
+      DATE_IS_REFUSED_ON_A_STRONGER_GROUND_THAN_THE_BRIEF_OFFERED: "I argued Date should wait because admitting it 'changes what those fixtures could have been' - an argument for DEFERRING. THE REAL REASON IS THAT DATE IS A NONDETERMINISTIC CLOCK AND THIS REPO PROVES BY BYTE-EQUALITY: the derivation proofs, the ratified goldens, and e2e's 'all observations equal' across six lanes. THE LITERAL DATES IN S13/S15/S17 ARE NOT A WORKAROUND FOR A MISSING CAPABILITY - THEY ARE THE DETERMINISM THE ORACLE REQUIRES. Keep the ban; record it as a determinism rule."
+      FOUR_BRIEF_ERRORS: "(1) The false dichotomy, above. (2) 'This is what costs S11 and S12 their sixth lane' is HALF RIGHT AND HIDES A SECOND DELIVERABLE: angular is the sixth lane (0 of 2 emitted), BUT VUE IS THE FIFTH LANE AND IT IS SHIPPED-AND-DEAD - TodoMvcAdvanced.vue and CodexClone.vue ARE SERVED AND THROW ON INTERACTION. The card is GAIN A SIXTH AND REPAIR A FIFTH. (3) 'Promise, setTimeout, Date, JSON and fetch are all refused' was COPIED FROM regenerate.ts PROSE, NOT MEASURED - only Promise is a measured refusal, plus Math in a unit test. (4) Promise is ALREADY in the emitted angular surface - generated/S8.ts prints `async onH4Click(event: any): Promise<void>`. THE BAN IS ON TRANSPLANTING A NAME, NOT ON THE EMITTER PRINTING IT."
+      FIVE_PREDICTIONS_ALREADY_MEASURED_NOT_PREDICTED: "A SCRATCHPAD-ONLY copy of qualify() run over the real goldens: (1) both emit, S11 10,858 bytes and S12 10,086 - NO SECOND REFUSAL WAITS BEHIND THE FIRST; (2) the lane's own typecheck oracle reports 2 diagnostics, both the expected TS2307, 0 UNEXPECTED; (3) collectEmittedForms reports NOVEL: [] and parseTemplate 0 errors - ANGULAR_BASELINE_FLOOR does not move and no dossier ruling is needed, unlike S14's imports; (4) pnpm check delta is 0 BY CONSTRUCTION, since the angular and vue tsconfigs DO NOT include generated/**; (5) e2e stays 6x9 because scripts/e2e.mjs pins ['s1'..'s9']."
+      rationale: "A census decides it, not a taxonomy. The two names have ten call sites and two whole applications exercising them; every other candidate has zero and would ship untested emitter code by the lane's own recorded standard. Vue's repair is a total setup-binding shim plus angular's fail-closed throw - blast radius two artifacts, not sixteen."
+      evidence:
+        - "GLOBALS_ALLOWED at origin, @vue/shared@3.5.40: ALLOW Date/JSON/Math/console/Number/Object/Array/Symbol/Intl; DENY Promise/setTimeout/fetch/localStorage/document/window. Math and console are ALSO already allowed, which the brief did not say"
+        - "@vue/compiler-core@3.5.40 canPrefix(id) takes NO options argument - there is no hook"
+        - "Three-arm vue probe through @vue/compiler-sfc@3.5.40 - see the finding"
+        - "Corpus census, comment-stripped, 17 fixtures: s11 {Promise:2,setTimeout:2}, s12 {Promise:3,setTimeout:3}, ALL OTHERS {}. Residual hits in s13/s15/s17 are a story-title string, a CSS class and prose, each checked by hand"
+        - "Angular refusal REPRODUCED AT HEAD through the real emitter over the real goldens; S12's declared-member list matches regenerate.ts verbatim"
+        - "Scratchpad qualify() patch: both emit; typecheck oracle 0 unexpected; gate NOVEL: []"
+        - "pnpm check re-measured BY THE JUDGE at HEAD: 251. angular and vue tsconfigs include only src/test/scripts, NOT generated/**"
+        - "demos/{react,solid,qwik,svelte,vue}-official each carry BOTH TodoMvcAdvanced and CodexClone in src/emitted; demos/angular-official carries NEITHER"
+        - "this-binding hazard refuted in real chromium (playwright 1.58.2)"
+        - "READ-ONLY CONFIRMED: git diff --stat shows only pre-existing dirt; HEAD unchanged. Foreign PIDs 64413 and 24931 both alive at exit"
+      missing_evidence:
+        - "AOT was NOT run on the candidate angular S11/S12 - the package deliberately has no @angular/core, so AOT is only reachable from demos/angular-official. THE WORKER'S BROWSER DRIVE COVERS IT."
+        - "The vue shim was proven AT THE COMPILER LEVEL (0 _ctx hits) but NOT end-to-end through @vitejs/plugin-vue in the served demo. THAT IS THE LOAD-BEARING STEP."
+        - "No reference capture of todomvc.com or the Codex UI was made - Oracle Part 1 for S11/S12 is the worker's."
+      remaining_blockers:
+        - "THE WORKING TREE IS ALREADY DIRTY ON EXACTLY THE THREE PATHS EVERY stop_if FORBIDS: M pnpm-lock.yaml, M pnpm-workspace.yaml, ?? website/. PM VERIFIED INDEPENDENTLY: mtimes are 2026-07-28, three days before this session, and the last commit touching them is d1ad075, long predating it. NO CARD CAUSED THEM. A worker that sees this may blame itself or sweep it into a commit with `git add -A`. NOW STATED ON THE BOARD."
+        - "Deleting both ANGULAR_UNBUILT_SCENARIOS rows leaves the array EMPTY, and four suites iterate it - AN EMPTY ITERATION ASSERTS NOTHING. The Math refusal test in emitter.test.ts is the surviving negative control and must be shown STILL RED-CAPABLE."
+        - "demos/angular-official/package.json's copy-emitted map is a LITERAL array with no S11/S12 row, and the app needs two wrapper pages plus route entries. NONE of those paths is in T001/T004/T005's allowed_files - the scope gap is real."
+        - "Carried from T001: hn.css's stale Angular claim, and the shared-sheet cascade sweep."
+      verification_attempts: 1
+      stopped_because: null
   - id: T004
     type: worker
     assignee: Worker
@@ -596,6 +641,75 @@ tasks:
       - "You are about to raise pnpm check without STATING THE AMOUNT IN ADVANCE."
       - "pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
       - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched."
+      - "NEVER pkill -f on a broad pattern. FOREIGN node PID 64413 holds 5175 and PID 24931 holds 5178."
+      - "Verification fails twice for the same reason."
+    receipt: null
+
+  - id: T007
+    type: worker
+    assignee: Worker
+    status: queued
+    reasoning_hint: high
+    serialize_against: >-
+      MUST NOT RUN CONCURRENTLY WITH T006. Both need packages/frameworks/{vue,angular}/generated/**
+      and src/emitted/**. T002 flagged this itself: SEPARATE CARDS ARE NOT PROOF OF DISJOINTNESS.
+    objective: >-
+      Close the globals hole in BOTH emitters with ONE SHARED TWO-NAME ALLOWLIST - Promise and
+      setTimeout, nothing else. GAIN A SIXTH LANE AND REPAIR A FIFTH.
+    THE_FIX_IS_INVERTED_FROM_WHAT_THE_BOARD_ASSUMED: >-
+      Angular's behaviour is the BETTER one, so THE FIX IS NOT 'GIVE ANGULAR VUE'S ALLOWLIST' - IT
+      IS 'GIVE VUE ANGULAR'S THROW'. ANGULAR: admit the two names in qualify(), delete both
+      ANGULAR_UNBUILT_SCENARIOS rows, regenerate, wire the two demo routes. VUE: emit a
+      `<script setup>` SHIM CONST for each allowlisted free identifier in a transplanted body, and
+      THROW on any free identifier that is neither a declared binding nor allowlisted - INCLUDING
+      names upstream would accept. THE STRICTER VUE CHECK IS THE POINT: it guarantees a fixture
+      that passes vue passes angular.
+    VUE_IS_A_SHIPPED_AND_DEAD_FIFTH_LANE: >-
+      The board said this costs S11/S12 their SIXTH lane. HALF RIGHT, AND IT HID A SECOND
+      DELIVERABLE: angular is the sixth (0 of 2 emitted), but TodoMvcAdvanced.vue and
+      CodexClone.vue ARE SERVED AND THROW ON INTERACTION. Five emitted lanes of which FOUR WORK.
+    allowed_files:
+      - "packages/frameworks/angular/src/emitter/index.ts"
+      - "packages/frameworks/angular/src/gate/index.ts"
+      - "packages/frameworks/angular/scripts/regenerate.ts"
+      - "packages/frameworks/angular/generated/**"
+      - "packages/frameworks/angular/test/**"
+      - "packages/frameworks/vue/src/emitter/index.ts"
+      - "packages/frameworks/vue/src/gate/index.ts"
+      - "packages/frameworks/vue/scripts/regenerate.ts"
+      - "packages/frameworks/vue/generated/**"
+      - "packages/frameworks/vue/test/**"
+      - "demos/angular-official/package.json"
+      - "demos/angular-official/src/app/**"
+      - "demos/angular-official/src/emitted/**"
+      - "demos/vue-official/src/emitted/**"
+      - "docs/goals/frameless-app-fidelity-v1/notes/T007-globals.md"
+    verify:
+      - "STATE THE FIVE PREDICTIONS BEFORE TOUCHING CODE, then falsify or confirm each. T003 ALREADY MEASURED THEM WITH A SCRATCHPAD PATCH: both emit with no second refusal behind the first; the typecheck oracle reports 0 UNEXPECTED diagnostics; the gate reports NOVEL: [] and the floor does not move; pnpm check delta 0; e2e stays 6x9."
+      - "pnpm check: REPORT START AND END. Baseline 251, RE-MEASURED at HEAD by T003, not inherited. PREDICTED DELTA IS 0 BY CONSTRUCTION - the angular and vue tsconfigs do NOT include generated/**. ANY RISE MEANS SOMETHING ELSE MOVED: STOP AND REPORT IT."
+      - "VUE RUNTIME PROOF, WHICH IS THE WHOLE POINT: drive S11's optimistic toggle AND its remote search, and S12's streamed answer, IN A REAL BROWSER at HEAD after the change. Assert `_ctx.Promise is not a constructor` NO LONGER APPEARS and the observable state ACTUALLY ADVANCES. A PAGE THAT MOUNTS IS NOT THE PROOF - emitted-smoke.browser.test.ts mounts every SFC and NEVER SAW THIS BUG because it does not fire handlers."
+      - "NEGATIVE CONTROL ON THE VUE REPAIR: confirm the assertion CAN FAIL by restoring the pre-fix emission in memory and observing the browser throw. AN UNFALSIFIABLE GREEN IS WHAT SHIPPED THIS DEFECT."
+      - "GREP THE EMITTED VUE OUTPUT FOR `_ctx.` AFTER Vue's own compileTemplate WITH bindingMetadata, NOT off the .vue source. THE .vue FILE NEVER CONTAINS _ctx - the defect is created by Vue's template compiler, so reading the SFC PROVES NOTHING."
+      - "ANGULAR EMPTY-LIST TRAP: with both rows deleted ANGULAR_UNBUILT_SCENARIOS becomes []. Four suites iterate it and AN EMPTY ITERATION ASSERTS NOTHING. Prove the suite is not vacuous - the Math refusal test in emitter.test.ts is the surviving negative control; assert it STILL THROWS."
+      - "DERIVATION PROOF: delete every artifact this card rebuilt, ASSERT present-after-delete == 0 BEFORE rebuilding, then rebuild and shasum -a 256 byte-identical. USE A SHELL ARRAY - zsh does not word-split and T001 caught exactly this making its proof VACUOUSLY TRUE."
+      - "ORACLE PART 1: compare S11 and S12 against their references - todomvc.com and the Codex UI - feature by feature, WITH A RENDERED CAPTURE. 'Six lanes agree' is FORBIDDEN as fidelity evidence."
+      - "pnpm test at EXACTLY 1 failure / pnpm e2e 6 x 9 / pnpm lint / pnpm check:citations AFTER the prose edits - the Ruling 3e comment saying 'THERE IS NO GLOBALS ALLOWLIST, deliberately' becomes FALSE, as do both angular regenerate.ts refusal blocks, the vue S11 block, and five comments in demos/angular-official/src/app/app.routes.ts."
+      - "git diff --exit-code over every artifact this card did not intend to move, PAIRED WITH git status --short. EXPECT THE THREE OWNER PATHS TO BE DIRTY - THEY ARE NOT YOURS."
+      - "fingerprint the owner's three paths at START and FINISH with `shasum -a 256`, RELATIVE paths, WHOLE OUTPUT LINES: f326d314 / aeb7edc1 / f936e169, 116 files"
+    stop_if:
+      - "Need files outside allowed_files."
+      - "You are about to admit a THIRD name. THE LIST IS Promise AND setTimeout. Date, JSON, Math, console, fetch, localStorage, document and window are REFUSED, each with a stated reason, and adding one is A NEW RULING, NOT A DETAIL."
+      - "You are about to admit Date. IT IS A NONDETERMINISTIC CLOCK AND THIS REPO PROVES BY BYTE-EQUALITY - the derivation proofs, the ratified goldens and e2e's 'all observations equal'. The literal dates in S13/S15/S17 ARE THE DETERMINISM THE ORACLE REQUIRES, not a workaround."
+      - "You are about to hoist vue handler bodies out of template expressions. MEASURED: that works, and IT MOVES ALL SIXTEEN VUE ARTIFACTS and forces the gate's worked example 12a census to be RE-DERIVED FROM A DIFFERENT SOURCE. THE SHIM MOVES TWO. TAKE THE SHIM."
+      - "You are about to extend @vue/shared's GLOBALS_ALLOWED or patch node_modules. MEASURED: canPrefix(id) TAKES NO OPTIONS and there is no hook. THAT LIST IS UPSTREAM'S AND YOU DO NOT NEED IT."
+      - "You are about to let vue keep accepting Date/JSON/Math/console because upstream allows them. THAT ASYMMETRY IS THE BUG CLASS - it lets a fixture pass vue and fail angular, which is today's failure in reverse. VUE'S NEW CHECK IS DELIBERATELY STRICTER THAN UPSTREAM'S."
+      - "You are about to report the vue lane fixed on the strength of a mount, a compileScript, a vue-tsc or a pnpm check. ALL FIVE PASSED ON THE BROKEN OUTPUT. ONLY A DRIVEN BROWSER CLOSES THIS."
+      - "You are about to hand-write or hand-edit anything under generated/ or src/emitted/ that did not come out of a regenerate or copy script."
+      - "You are about to offer 'the six lanes agree' as evidence of FIDELITY. THIS BOARD'S ORACLE FORBIDS IT."
+      - "You are about to read an HTTP 200 as proof a page exists. REACT, SOLID AND VUE ANSWER 200 FOR ANY PATH. Hash the body."
+      - "pnpm check rises at all without stating the amount in advance. PREDICTED DELTA IS 0."
+      - "pnpm test exceeds exactly 1 failure, or pnpm e2e leaves 6 x 9."
+      - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched. ALL THREE ARE ALREADY DIRTY AND YOU DID NOT DO IT - DO NOT 'CLEAN UP', DO NOT COMMIT THEM, DO NOT `git add -A`."
       - "NEVER pkill -f on a broad pattern. FOREIGN node PID 64413 holds 5175 and PID 24931 holds 5178."
       - "Verification fails twice for the same reason."
     receipt: null
