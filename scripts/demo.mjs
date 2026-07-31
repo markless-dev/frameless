@@ -39,13 +39,17 @@ const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'
  * THE ONE SCENARIO TABLE. Ordinals are load-bearing well beyond this file:
  * ten-plus per-lane suites derive their `generated/` inventory from
  * /^s(\d+)-[\w-]+\.json$/ and assert it exactly, which is why the applications
- * ride ordinal slots (S10, S11, S12, S13, S14) instead of taking names of their own.
+ * ride ordinal slots (S10 through S17) instead of taking names of their own.
  *
  * `path` is the CANONICAL, UNSLASHED form. Lanes transform it — see `routeFor`.
  *
  * S1-S9 are the three-way contract `scripts/e2e.mjs` pins to the literal
- * ['s1'..'s9']. S10-S14 are the applications, deliberately OUTSIDE that contract
- * and browsable only. Both kinds belong in the front door regardless.
+ * ['s1'..'s9']. S10-S17 are the EIGHT applications, deliberately OUTSIDE that
+ * contract and browsable only. Both kinds belong in the front door regardless.
+ * THESE TWO RANGES ARE HAND-WRITTEN AND BOTH HAVE GONE STALE BEFORE - they read
+ * "S10, S11, S12, S13, S14" and "S10-S14" while S15, S16 and S17 were already in
+ * the table below. `announce()` derives its equivalents from `SCENARIOS`; these
+ * do not, so extend them when a row is appended.
  *
  * @type {ReadonlyArray<{ id: string, path: string, title: string }>}
  */
@@ -62,11 +66,15 @@ const SCENARIOS = [
 	{ id: 'S10', path: '/todomvc', title: 'TodoMVC' },
 	{ id: 'S11', path: '/todomvc-advanced', title: 'TodoMVC Advanced' },
 	{ id: 'S12', path: '/codex', title: 'Codex clone' },
-	// S13 WAS THE FIRST APPLICATION IN THIS TABLE WITH NO `unbuilt` ENTRY IN ANY
-	// LANE, AND IT IS NO LONGER THE ONLY EARLY ONE: S11 and S12 used to be absent
-	// from angular on that emitter's global-identifier ban, and
-	// `frameless-app-fidelity-v1` T007 closed the hole with a two-name allowlist
-	// (`Promise` and `setTimeout`, nothing else), so both now serve in six lanes.
+	// S13 IS THE FOURTH OF THE SEVEN APPLICATION ROWS WITH NO `unbuilt` ENTRY IN
+	// ANY LANE, AND IT WAS NEVER THE FIRST. This comment used to say it was, and
+	// that was wrong ON THE DAY IT WAS WRITTEN: in the very commit that added the
+	// S13 row (c50595f) S10 TodoMVC already carried no `unbuilt` entry in any
+	// lane, and it never has in any revision of this file. S11 and S12 then joined
+	// them - both used to be absent from angular on that emitter's
+	// global-identifier ban, and `frameless-app-fidelity-v1` T007 closed the hole
+	// with a two-name allowlist (`Promise` and `setTimeout`, nothing else), so
+	// both now serve in six lanes. THE ORDER IS S10, S11, S12, S13, S15, S16, S17.
 	// S13 still names NO global at all, because every relative age on the page is
 	// a literal string in the seeded data rather than something computed from
 	// `Date` - which stays a refused name, on determinism grounds.
@@ -85,17 +93,22 @@ const SCENARIOS = [
 	//     NOT move: 19.0 before, 19.0 after.
 	// See the refusal constant below for the two that remain.
 	{ id: 'S14', path: '/hn-item', title: 'Hacker News item page (recursive comments)' },
-	// S15 IS THE SECOND ROW IN THIS TABLE WITH NO `unbuilt` ENTRY IN ANY LANE, and
-	// the FIRST that was designed to be so rather than turning out that way. S13
+	// S15 IS THE FIFTH ROW IN THIS TABLE WITH NO `unbuilt` ENTRY IN ANY LANE, and
+	// the FIRST that was DESIGNED to be so rather than turning out that way. S13
 	// kept six lanes because nothing in it happened to name a global; S15 keeps
 	// them because its axis IS six-lane fan-out - it is pure SYNCHRONOUS DERIVED
 	// STATE, so there is no `Promise`/`setTimeout` for angular's global-identifier
 	// ban, no async door for vue's GLOBALS_ALLOWED gap, and no component reference
-	// for either of the two emitter defects S14 exposed. Its date is a LITERAL
-	// STRING in the seeded data, which is the one constraint the six-lane claim
-	// actually rests on. ONE CLICK MOVES EIGHT DERIVED OBSERVABLES.
+	// for either of the two emitter defects S14 exposed. TWO OF THOSE THREE DOORS
+	// ARE NOW SHUT ANYWAY: T007's two-name allowlist admits exactly `Promise` and
+	// `setTimeout` in both the angular and vue emitters, so avoiding them no
+	// longer buys a lane. Only the S14 component-reference refusal still costs one,
+	// which is why S14 above is the ONLY row in this table with an `unbuilt` entry.
+	// S15's date is a LITERAL STRING in the seeded data, which is the one
+	// constraint the six-lane claim actually rests on.
+	// ONE CLICK MOVES EIGHT DERIVED OBSERVABLES.
 	{ id: 'S15', path: '/habits', title: 'Habit tracker (one click, eight derived updates)' },
-	// S16 IS THE THIRD ROW IN THIS TABLE WITH NO `unbuilt` ENTRY IN ANY LANE, AND
+	// S16 IS THE SIXTH ROW IN THIS TABLE WITH NO `unbuilt` ENTRY IN ANY LANE, AND
 	// ITS TITLE USED TO NAME SOMETHING THE PAGE DID NOT DO. IT DRAGS NOW.
 	// `frameless-app-fidelity-v1` T004 shipped it, and what had kept it off the
 	// page was never a capability: the two-word drag events are produced by EVERY
@@ -118,9 +131,20 @@ const SCENARIOS = [
 		path: '/board',
 		title: 'Task board (DRAG A CARD — works in five lanes, inert in react, see the page)',
 	},
-	// S17 IS THE FOURTH ROW WITH NO `unbuilt` ENTRY IN ANY LANE, AND THE FIRST
-	// APPLICATION ROW SINCE S15 WHOSE AXIS IS ACTUALLY ON THE PAGE. It is the FORMS
-	// scenario and it ships THIRTEEN control kinds - text, search, email, tel, url,
+	// S17 IS THE SEVENTH AND LAST ROW WITH NO `unbuilt` ENTRY IN ANY LANE, AND ITS
+	// AXIS IS ON THE PAGE - AS S16'S NOW IS TOO. This comment used to read "the
+	// FIRST APPLICATION ROW SINCE S15 WHOSE AXIS IS ACTUALLY ON THE PAGE", which
+	// asserted that S16's axis was NOT on its page. That was FALSE, and it
+	// contradicted this very file twice over - the S16 row above already said "IT
+	// DRAGS NOW" and `announce()` below already prints "S16 is the DRAG page AND IT
+	// DRAGS". RE-DRIVEN AT HEAD by `frameless-app-fidelity-v1` T012 with a real
+	// native HTML5 drag in all six lanes: the first card of column 1 lands in
+	// column 3 and STAYS there 1.3s after the drop in solid, qwik, svelte, vue and
+	// angular (column sizes 3/3/2/1 -> 2/3/3/1), while REACT ALONE IS INERT at
+	// 3/3/2/1 -> 3/3/2/1, logging `Invalid event handler property` three times.
+	//
+	// S17 itself is the FORMS scenario and it ships THIRTEEN control kinds - text,
+	// search, email, tel, url,
 	// number, date, time, range, select, radio, checkbox and textarea - each bound
 	// and each with its own observable in the live preview beneath the form.
 	// MEASURED THROUGH ALL SIX REAL EMITTERS: every one of the sixteen `type=`

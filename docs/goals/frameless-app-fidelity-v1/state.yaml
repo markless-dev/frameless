@@ -44,7 +44,7 @@ goal:
       FIXING THE FIVE FINDINGS AND LEAVING THE ORACLE HOLE OPEN. The findings are symptoms; the
       cause is that nothing ever compared a shipped app to the thing it copies.
 
-active_task: T012
+active_task: T013
 
 # ---------------------------------------------------------------------------
 # OWNER DECISIONS - taken from the owner DIRECTLY on 2026-07-31 while T009 ran.
@@ -1788,7 +1788,7 @@ tasks:
   - id: T012
     type: worker
     assignee: Worker
-    status: active
+    status: done
     reasoning_hint: medium
     objective: >-
       CLOSE THE TWENTIETH CLAIM-SITE - the one T011 correctly REFUSED because it sat outside its
@@ -1832,4 +1832,101 @@ tasks:
       - "Any dependency is added, or pnpm-lock.yaml / pnpm-workspace.yaml / website/ is touched. ALL THREE ARE ALREADY DIRTY, YOU DID NOT DO IT, DO NOT `git add -A`."
       - "NEVER pkill -f. The four PIDs earlier cards recited are ALL DEAD - stop only what you started, by its recorded PID."
       - "Verification fails twice for the same reason."
+    receipt:
+      result: done
+      harness: claude-code
+      verification_attempts: 1
+      note: notes/T012-front-door.md
+      summary: "Swept ALL FOUR scripts FOR THE CLAIM and found SEVEN claim-sites against the ONE the card named - all in scripts/demo.mjs, a MEASURED ZERO elsewhere (0 occurrences of S10-S17 across e2e.mjs, check-citations.mjs and corpus-mutation.mjs). Beyond the named S16-axis lie at :121-122, the file HAND-WRITES AN ORDINAL CHAIN THAT WAS WRONG WHEN WRITTEN. Drag re-driven by this card in all six lanes with real HTML5 drag: five drag, react inert. check 261 -> 261, test exactly 1, e2e 6 x 9, derived trees clean by 13 EXPLICIT paths."
+      THE_ROOT_CAUSE_IS_OLDER_THAN_THIS_BOARD: "'S13 IS THE FIRST APPLICATION IN THIS TABLE WITH NO `unbuilt` ENTRY' WAS FALSE ON THE DAY IT WAS WRITTEN. All NINE historical revisions of demo.mjs read: in c50595f - THE VERY COMMIT THAT ADDED THE S13 ROW - S10 TodoMVC ALREADY had no unbuilt entry, and never has in ANY revision. S13 WAS THE SECOND. S15/S16/S17 then counted off that error and drifted further when T007 landed. MEASURED AT HEAD: S13/S15/S16/S17 are the 4th/5th/6th/7th, NOT 1st/2nd/3rd/4th. PM INDEPENDENTLY VERIFIED c50595f: the S10 row carries no unbuilt entry while line 65 of that same commit declares S13 the first."
+      THE_SCRIPT_HAS_BEEN_PRINTING_THE_RIGHT_ANSWER_ALL_ALONG: "announce() DERIVES AND PRINTS the correct order - S10, S11, S12, S13, S15, S16, S17 - THIRTY LINES BELOW comments asserting a different one. The derived value and the hand-written value have disagreed in the same file for nine revisions."
+      IT_FIXED_TWO_OF_ITS_OWN_INSTRUMENTS_BEFORE_TRUSTING_THEM: "(1) ITS FIRST DRAG HARNESS WAS WRONG - raw page.mouse.down/move/up reported NOTHING MOVED IN ANY LANE, INCLUDING LANES THAT DO DRAG, because Chromium does not synthesise HTML5 drag from raw mouse events. Redone with locator.dragTo. (2) ITS FIRST HISTORICAL READ WAS VACUOUS - zsh parameter-modifier parsing of `git show $c:path` returned EMPTY INPUT and it NEARLY RECORDED 'S10 never unbuilt' OFF NOTHING. Redone with quoting and a byte-length assert. Same class as the shell-array trap that has made four cards' proofs vacuously true."
+      THE_PM_BRIEFS_WILDCARD_RECIPE_DOES_NOT_REPRODUCE_ON_THIS_FILE: "`git diff -- 'scripts/*.mjs'` returns 1, NOT 0, because that wildcard MATCHES THE PATH DIRECTLY - the hazard is specifically LEADING-DIRECTORY matching. Reproduced properly on real data over 8b321af instead: wildcard 'demos/*/src/emitted' --exit-code returns rc=0 OVER A COMMIT THAT GENUINELY MOVED THOSE TREES, while explicit paths return rc=1. THE HAZARD IS REAL BUT MY BRIEF STATED IT TOO BROADLY."
+      changed_files:
+        - scripts/demo.mjs
+        - docs/goals/frameless-app-fidelity-v1/notes/T012-front-door.md
+      commands:
+        - cmd: "owner fingerprint START and FINISH, shasum -a 256, sorted whole LINES"
+          status: pass
+          note: "BOTH ENDS f326d314 / aeb7edc1 / f936e169, 116 files. NEVER STAGED"
+        - cmd: "SWEEP all four files in scripts/ FOR THE CLAIM"
+          status: pass
+          note: "SEVEN claim-sites, ALL in demo.mjs, vs the ONE the card predicted. Three families: (A) the named S16-axis lie :121-122; (B) FOUR stale ordinals S13/S15/S16/S17; (C) TWO stale app enumerations :42 and :47. MEASURED ZERO in the other three - 0 occurrences of S10-S17 between them"
+        - cmd: "measure the ordinals by IMPORTING the real SCENARIOS/DEMOS tables"
+          status: pass
+          note: "8 applications, 7 with no unbuilt entry: S10,S11,S12,S13,S15,S16,S17. S13=4th S15=5th S16=6th S17=7th. Only S14 has entries (svelte+vue)"
+        - cmd: "read ALL NINE historical revisions of demo.mjs"
+          status: pass
+          note: "ROOT CAUSE: the claim was FALSE THE DAY IT WAS WRITTEN - S10 already qualified in c50595f, the commit that added S13. FIRST ATTEMPT VACUOUS via zsh-eaten `git show`; redone with quoting and a byte-length assert"
+        - cmd: "DRAG RE-DRIVEN AT HEAD, real native HTML5 drag, ALL SIX LANES"
+          status: pass
+          note: "FIRST HARNESS WRONG - raw page.mouse reported nothing moved in ANY lane. Redone with locator.dragTo: react 3/3/2/1 -> 3/3/2/1 INERT with 3 'Invalid event handler property' errors; solid/qwik/svelte/vue/angular ALL -> 2/3/3/1 and STAY 1.3s after the drop"
+        - cmd: "pnpm demo run #1 (pre-edit) and run #2 (post-edit)"
+          status: pass
+          note: "BOTH booted all six lanes. Run #2 renders the S16 and S17 rows; banner BYTE-IDENTICAL to run #1. Run #1's streamed log independently names all three react errors VERBATIM, confirming demo.mjs:105"
+        - cmd: "stopped both demos BY RECORDED PID"
+          status: pass
+          note: "run #1 node 32780, run #2 node 34915. No listeners left on 5173-5195. pkill NEVER RUN. The four recited PIDs re-measured at start: ALL FOUR DEAD"
+        - cmd: "pnpm check:citations after every edit + NEGATIVE CONTROL"
+          status: pass
+          note: "Clean each time. PROVED RED-CAPABLE: planted first-party ordinal caught at scripts/demo.mjs:156:6. Restored byte-identically (cb452208) both times"
+        - cmd: "derivation proof, 13 EXPLICIT paths, each asserted to exist and be NON-EMPTY"
+          status: pass
+          note: "rc=0 BEFORE and AFTER pnpm e2e. NO WILDCARD PATHSPEC USED. Paired with git status --short"
+        - cmd: "CALIBRATION of the wildcard hazard on REAL DATA"
+          status: pass
+          note: "The card's recipe does NOT reproduce on scripts/. Reproduced over 8b321af instead: wildcard rc=0 FALSE PASS over a commit that moved those trees vs explicit rc=1"
+        - cmd: "pnpm check"
+          status: pass
+          note: "START 261 -> END 261. Delta 0 as predicted"
+        - cmd: "pnpm test"
+          status: pass
+          note: "EXACTLY 1 failure - the foreign package-inventory ARM B. 1 failed / 1412 passed"
+        - cmd: "pnpm e2e RUN ALONE"
+          status: pass
+          note: "PASS - '6 demos x 9 scenarios, all observations equal'"
+        - cmd: "pnpm lint"
+          status: pass
+          note: "0 warnings, 0 errors, 558 files"
+        - cmd: "comment-only assertion"
+          status: pass
+          note: "Every changed line in demo.mjs is a comment; node --check passes. PM RE-CHECKED THIS AND ITS OWN FIRST GREP WAS TOO NARROW - it matched only `//` lines and flagged 10 false positives that are `/** */` BLOCK-COMMENT lines. THE WORKER WAS RIGHT; THE PM'S INSTRUMENT WAS WRONG"
+      deviations:
+        - "CORRECTED SEVEN SITES rather than the one named. This is the card's EXPLICIT INSTRUCTION, not a widening of scope."
+        - "Also corrected an EIGHTH, BORDERLINE item inside the S15 comment block it was already editing: it listed angular's global-identifier ban and vue's GLOBALS_ALLOWED gap as LIVE reasons S15 keeps six lanes, when T007's two-name allowlist SHUT BOTH. Left uncorrected it would have made the block contradict THE VERY NEXT BLOCK - the exact 'file arguing with itself' shape T011 flagged. RECORDED rather than silently absorbed."
+        - "Ran the citation red-capability proof although the card's clause was CONDITIONAL on editing check-citations.mjs, which it did not edit. IT SURFACED A COVERAGE FINDING."
+        - "TWO OF ITS OWN INSTRUMENTS WERE WRONG ON FIRST USE and one measurement was VACUOUS. All three caught and redone."
+        - "demo.mjs:82's 'FOUR of the six lanes serve S14' was LEFT ALONE: it agrees with the unbuilt table and the derived banner, but it did NOT re-hash the six /hn-item bodies, SO IT MAKES NO CLAIM TO HAVE RE-VERIFIED IT."
+      remaining_blockers:
+        - "check-citations.mjs DOES NOT VERIFY THAT A CITED PATH EXISTS - a bogus path in a comment in any of the 610 swept files PASSES CLEAN. Only first-party LINE ORDINALS are caught, and scripts/demo.mjs is SWEPT, NOT WATCHED_SOURCE. Found by a deliberate negative control. UNOWNED."
+        - "THE ORDINAL CHAIN IS STILL HAND-WRITTEN while announce() DERIVES its equivalents from SCENARIOS. T012 added a warning comment but DID NOT DERIVE IT, because deriving would change what the script DOES, which the card forbids. THE ROT WILL RECUR WHEN S18 LANDS."
+        - "The drag remains a CHROMIUM claim in all six lanes. Firefox still unmeasured."
+        - "Carried from T011 and untouched: the qwik lost drop (1 of 16 from a fresh page), inside qwik's own resumability envelope."
+      stopped_because: null
+  - id: T013
+    type: judge
+    assignee: Judge
+    status: active
+    reasoning_hint: high
+    objective: >-
+      FINAL AUDIT. T009 ruled not_complete on TWO grounds: T010 unrun, and the record population
+      open. T010, T011 and T012 all landed. RULE ON full_outcome_complete.
+    scope:
+      - "THE OWNER ANSWERED BOTH ESCALATIONS - see owner_decisions OD1 and OD2. S12 IS EXEMPT FROM ORACLE PART 1 BY NAME. Do NOT rule the board incomplete for S12's missing reference capture. T009 MEASURED the exemption's premise: chatgpt.com/codex answers 200 in a real browser but the body is a MARKETING page with ZERO composer elements."
+      - "CERTIFY OR REFUSE ALL THREE ORACLE PARTS AT HEAD. Part 1 binds to EVERY SHIPPED APP EXCEPT S12. Part 2 is all five owner findings. Part 3 is the machine gates. QUOTE EACH PART VERBATIM FROM goal.oracle BEFORE RULING ON IT - THE PM HAS UNDER-COUNTED THIS ORACLE'S PARTS BEFORE."
+      - "T009 CERTIFIED PARTS 2 AND 3 AT 72ee1bd/f86713c. FOUR COMMITS HAVE LANDED SINCE. PROVE THE TRANSFER with git diff over packages/ demos/ scripts/ - do not assume it, and note that T011 and T012 BOTH edited files T009 read."
+      - "THE RECORD POPULATION IS THE THING THIS BOARD KEEPS GETTING WRONG. Counts ran six -> four -> five -> 18 -> 19 -> 7-more-in-scripts. SWEEP IT YOURSELF AND REPORT YOUR OWN NUMBER. If sites remain, say whether they block completion or are recorded gaps."
+      - "T012 FOUND AN OFF-BY-ONE OLDER THAN THIS BOARD - 'S13 WAS THE FIRST row with no unbuilt entry' was false in c50595f, the commit that added S13. CHECK THAT AT ITS ORIGIN, not at T012's write-up."
+    constraints:
+      - "READ-ONLY. If your harness forbids report .md files, SAY SO and let your receipt be the ruling - six Judges before you did."
+      - "TWO INSTRUMENT HAZARDS PROVEN ON THIS BOARD, USE NEITHER: a WILDCARD PATHSPEC silently under-matches (`git diff -- 'demos/*/src/emitted'` exits CLEAN over a commit that moved those trees - T012 reproduced it over 8b321af); and 'prose-only, so nothing derives' IS FALSE FOR .tsrx FIXTURES, because the golden stores ABSOLUTE CHARACTER OFFSETS and regenerate does NOT write goldens - only pnpm test catches it."
+      - "pnpm e2e MUST BE RUN ALONE. Never concurrently with regeneration or a running demo."
+      - "DO NOT TEST ANY FRAMEWORK OUTSIDE ITS DESIGN ENVELOPE and do not read such output as a defect. Svelte's and Vue's S14 refusals are ENVELOPE FACTS. FILE NOTHING UPSTREAM."
+      - "Assume this brief contains at least one error and find it. EVERY card on this board has found one in the PM's - T009 caught a stale count four cards deep, T010 found three, T011 found a twentieth site, T012 found SEVEN where the PM predicted ONE and disproved the PM's own wildcard recipe."
+    expected_output:
+      - "complete | not_complete"
+      - "full_outcome_complete: true | false"
+      - "each of the three oracle parts, certified or refused, quoted verbatim"
+      - "your own record-population count"
+      - "next task if not complete"
     receipt: null
